@@ -1,0 +1,24 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Report extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'application_id',
+        'description',
+        'document_file',
+        'status'
+    ];
+
+    // Veza: izvještaj pripada aplikaciji
+    public function application()
+    {
+        return $this->belongsTo(Application::class);
+    }
+}
