@@ -67,8 +67,8 @@
         .masthead .brand-sub { color:rgba(255,255,255,.85); }
         .masthead .nav-link { color:#fff; }
         .masthead .nav-link:hover { color:#fff; text-decoration:underline; }
-        .masthead .btn-outline { border-color:#fff; color:#fff; background:transparent; }
-        .masthead .btn-outline:hover { background:rgba(255,255,255,.1); border-color:#fff; color:#fff; }
+        .masthead .btn-outline { border-color:#fff; color:#fff !important; background:transparent; }
+        .masthead .btn-outline:hover { background:rgba(255,255,255,.1); border-color:#fff; color:#fff !important; }
         .masthead .hamburger { border-color:rgba(255,255,255,.5); background:transparent; color:#fff; }
         .masthead .hamburger:focus { outline:2px solid rgba(255,255,255,.4); }
     </style>
@@ -100,16 +100,16 @@
                     <nav class="nav">
                         <div class="nav-links" aria-label="Primarna navigacija">
                             <a class="nav-link" href="{{ route('home') }}">Početna</a>
-                            <a class="nav-link" href="{{ route('payments.index') }}">Plaćanja</a>
-                            <a class="nav-link" href="{{ route('competitions.index') }}">Konkursi</a>
-                            <a class="nav-link" href="{{ route('tenders.index') }}">Tenderi</a>
+                            <a class="nav-link" href="#placanja">Plaćanja</a>
+                            <a class="nav-link" href="#konkursi">Konkursi</a>
+                            <a class="nav-link" href="#tenderi">Tenderi</a>
                         </div>
-                        @guest
+                        @auth
+                            <a class="btn btn-outline" href="{{ route('dashboard') }}">Moj panel</a>
+                        @else
                             <a class="btn btn-outline" href="{{ route('register') }}">Kreiraj nalog</a>
                             <a class="btn btn-primary" href="{{ route('login') }}">Prijava</a>
-                        @else
-                            <a class="btn btn-outline" href="{{ route('dashboard') }}">Moj panel</a>
-                        @endguest
+                        @endauth
                         <button id="menuToggle" class="hamburger" aria-controls="mobileMenu" aria-expanded="false" aria-label="Meni">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="3" y1="6" x2="21" y2="6"/>
@@ -121,9 +121,9 @@
                 </div>
                 <div id="mobileMenu" class="mobile-menu" role="menu" aria-labelledby="menuToggle">
                     <a class="nav-link" href="{{ route('home') }}" role="menuitem">Početna</a>
-                    <a class="nav-link" href="{{ route('payments.index') }}" role="menuitem">Plaćanja</a>
-                    <a class="nav-link" href="{{ route('competitions.index') }}" role="menuitem">Konkursi</a>
-                    <a class="nav-link" href="{{ route('tenders.index') }}" role="menuitem">Tenderi</a>
+                    <a class="nav-link" href="#placanja" role="menuitem">Plaćanja</a>
+                    <a class="nav-link" href="#konkursi" role="menuitem">Konkursi</a>
+                    <a class="nav-link" href="#tenderi" role="menuitem">Tenderi</a>
                 </div>
                 <div class="banner">
                     <small>Zvanični portal opštine KOTOR. Pažljivo čuvamo vaše podatke. <span class="highlight">e-Usluge</span> dostupne 24/7.</small>
@@ -135,26 +135,30 @@
                     <h1 class="hero-title">Dobrodošli na centralni portal opštine Kotor</h1>
                     <p class="hero-sub">Pristupite bezbjedno svim opštinskim uslugama: plaćanja, prijave na konkurse, tenderska dokumentacija i više.</p>
                     <div class="cta">
-                        <a class="btn btn-primary" href="{{ route('login') }}">Prijavi se</a>
-                        <a class="btn btn-outline" href="{{ route('register') }}">Kreiraj nalog</a>
+                        @auth
+                            <a class="btn btn-primary" href="{{ route('dashboard') }}">Moj panel</a>
+                        @else
+                            <a class="btn btn-primary" href="{{ route('login') }}">Prijavi se</a>
+                            <a class="btn btn-outline" href="{{ route('register') }}">Kreiraj nalog</a>
+                        @endauth
                     </div>
                     <p class="note">Nakon prijave, pristupate personalizovanom panelu i istoriji zahtjeva.</p>
                     <div class="services">
-                        <a href="{{ route('payments.index') }}" class="service">
+                        <a href="#placanja" class="service">
                             <div class="service-icon">₿</div>
                             <div>
                                 <h4>Online plaćanja</h4>
                                 <p>Uplate komunalija, taksi i drugih opštinskih naknada.</p>
                             </div>
                         </a>
-                        <a href="{{ route('competitions.index') }}" class="service">
+                        <a href="#konkursi" class="service">
                             <div class="service-icon">★</div>
                             <div>
                                 <h4>Konkursi</h4>
                                 <p>Prijava i praćenje statusa na programe podrške.</p>
                             </div>
                         </a>
-                        <a href="{{ route('tenders.index') }}" class="service">
+                        <a href="#tenderi" class="service">
                             <div class="service-icon">§</div>
                             <div>
                                 <h4>Tenderska dokumentacija</h4>
