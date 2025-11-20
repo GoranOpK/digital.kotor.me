@@ -56,13 +56,16 @@ class VerifyEmailNotification extends Notification
      */
     protected function verificationUrl($notifiable): string
     {
+        $expires = Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60));
+        
         return URL::temporarySignedRoute(
             'verification.verify',
-            Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60)),
+            $expires,
             [
                 'id' => $notifiable->getKey(),
                 'hash' => sha1($notifiable->email),
-            ]
+            ],
+            true // absolute URL
         );
     }
 
