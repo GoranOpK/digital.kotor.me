@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -244,13 +243,8 @@ class HomeController extends Controller
         $validated['first_name'] = ucfirst(mb_strtolower($validated['first_name'], 'UTF-8'));
         $validated['last_name'] = ucfirst(mb_strtolower($validated['last_name'], 'UTF-8'));
 
-        // Pronađi ulogu "korisnik" ili kreiraj ako ne postoji
-        $role = Role::firstOrCreate(
-            ['name' => 'korisnik'],
-            ['display_name' => 'Korisnik']
-        );
-
         // Priprema podataka za kreiranje korisnika
+        // Podrazumevana rola je 3 (korisnik) - dodeljena će se kasnije ako treba
         $userData = [
             'name' => $validated['first_name'] . ' ' . $validated['last_name'],
             'user_type' => $request->business_type ?? $validated['user_type'],
@@ -260,7 +254,7 @@ class HomeController extends Controller
             'email' => strtolower($validated['email']),
             'phone' => $validated['phone_full'],
             'password' => Hash::make($validated['password']),
-            'role_id' => $role->id,
+            'role_id' => 3, // Podrazumevana rola: korisnik
             'activation_status' => 'active',
         ];
 
