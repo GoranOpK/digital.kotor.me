@@ -13,7 +13,7 @@ class RoleSeeder extends Seeder
     public function run(): void
     {
         // Insertujemo tri osnovne uloge u bazu:
-        // 1 - admin, 2 - komisija, 3 - prijavitelj
+        // 1 - admin, 2 - komisija, 3 - korisnik
         Role::insert([
             [
                 'id' => 1,
@@ -27,8 +27,8 @@ class RoleSeeder extends Seeder
             ],
             [
                 'id' => 3,
-                'name' => 'prijavitelj',
-                'display_name' => 'Prijavitelj'
+                'name' => 'korisnik',
+                'display_name' => 'Korisnik'
             ],
         ]);
     }
