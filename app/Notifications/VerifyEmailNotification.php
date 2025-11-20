@@ -38,10 +38,11 @@ class VerifyEmailNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         $verificationUrl = $this->verificationUrl($notifiable);
+        $firstName = $notifiable->first_name ?? $notifiable->name ?? 'korisnik';
 
         return (new MailMessage)
             ->subject('Verifikacija email adrese - Digital Kotor')
-            ->greeting('Poštovani/a ' . $notifiable->first_name . ',')
+            ->greeting('Poštovani/a ' . $firstName . ',')
             ->line('Hvala vam što ste se registrovali na Digital Kotor portal.')
             ->line('Molimo vas da kliknete na dugme ispod da biste verifikovali svoju email adresu:')
             ->action('Verifikuj email adresu', $verificationUrl)
