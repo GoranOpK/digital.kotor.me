@@ -436,10 +436,30 @@
                     return { valid: false, message: 'Mesec rođenja mora biti između 01 i 12' };
                 }
 
-                // Validacija godine
+                // Validacija godine u JMB-u
+                // Format: 
+                // - 900 <= GGG <= 999 → godina = 1900 + (GGG - 900) = 1000 + GGG (period 1900-1999)
+                // - 000 <= GGG <= [trenutna godina - 2000] → godina = 2000 + GGG (period 2000-trenutna godina)
                 const currentYear = new Date().getFullYear();
-                const yearFull = GGG >= 900 ? 1900 + GGG : 2000 + GGG;
-                if (yearFull < 1900 || yearFull > currentYear) {
+                const currentYearLastTwo = currentYear - 2000; // npr. 2025 -> 25
+                let yearFull;
+                
+                if (GGG >= 900 && GGG <= 999) {
+                    // Period 1900-1999
+                    yearFull = 1000 + GGG;
+                    // Provera: godina mora biti između 1900 i 1999
+                    if (yearFull < 1900 || yearFull > 1999) {
+                        return { valid: false, message: 'Godina rođenja nije validna' };
+                    }
+                } else if (GGG >= 0 && GGG <= currentYearLastTwo) {
+                    // Period 2000-trenutna godina
+                    yearFull = 2000 + GGG;
+                    // Provera: godina ne može biti veća od trenutne
+                    if (yearFull > currentYear) {
+                        return { valid: false, message: 'Godina rođenja nije validna' };
+                    }
+                } else {
+                    // GGG je van validnog opsega
                     return { valid: false, message: 'Godina rođenja nije validna' };
                 }
 
