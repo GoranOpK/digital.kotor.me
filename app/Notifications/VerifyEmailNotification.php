@@ -8,6 +8,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 
 class VerifyEmailNotification extends Notification
@@ -56,17 +57,26 @@ class VerifyEmailNotification extends Notification
      */
     protected function verificationUrl($notifiable): string
     {
-        $expires = Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60));
-        
-        return URL::temporarySignedRoute(
-            'verification.verify',
-            $expires,
-            [
-                'id' => $notifiable->getKey(),
-                'hash' => sha1($notifiable->email),
-            ],
-            true // absolute URL
-        );
+        try {
+            $expires = Carbon::now()->addMinutes(Config::get('auth.verification.expire', 60));
+            
+            return URL::temporarySignedRoute(
+                'verification.verify',
+                $expires,
+                [
+                    'id' => $notifiable->getKey(),
+                    'hash' => sha1($notifiable->email),
+                ],
+                true // absolute URL
+            );
+        } catch (\Illuminate\Routing\Exceptions\UrlGenerationException $e) {
+            // Fallback ako ruta nije pronađena - koristi route() direktno
+            Log::error('URL generation exception in VerifyEmailNotification: ' . $e->getMessage());
+            throw new \RuntimeException('Ne može se generisati URL za verifikaciju email-a. Proverite APP_URL u .env fajlu.', 0, $e);
+        } catch (\Exception $e) {
+            Log::error('Exception in VerifyEmailNotification: ' . $e->getMessage());
+            throw new \RuntimeException('Greška pri slanju email verifikacije: ' . $e->getMessage(), 0, $e);
+        }
     }
 
     /**
