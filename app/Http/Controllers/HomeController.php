@@ -60,21 +60,29 @@ class HomeController extends Controller
             return false;
         }
 
-        // Validacija godine
-        // Format za godinu u JMB-u:
-        // - Ako je GGG < 800: godina = 2000 + GGG (21. vek)
-        // - Ako je 800 <= GGG < 900: godina = 1800 + (GGG - 800) = 1000 + GGG (18. vek)
-        // - Ako je GGG >= 900: godina = 1900 + (GGG - 900) = 1000 + GGG (20. vek)
+        // Validacija godine u JMB-u
+        // Format: 
+        // - 900 <= GGG <= 999 → godina = 1900 + (GGG - 900) = 1000 + GGG (period 1900-1999)
+        // - 000 <= GGG <= [trenutna godina - 2000] → godina = 2000 + GGG (period 2000-trenutna godina)
         $currentYear = (int)date('Y');
+        $currentYearLastTwo = $currentYear - 2000; // npr. 2025 -> 25
         
-        if ($GGG < 800) {
-            $yearFull = 2000 + $GGG;
-        } else {
+        if ($GGG >= 900 && $GGG <= 999) {
+            // Period 1900-1999
             $yearFull = 1000 + $GGG;
-        }
-        
-        // Godina mora biti između 1900 i trenutne godine
-        if ($yearFull < 1900 || $yearFull > $currentYear) {
+            // Provera: godina mora biti između 1900 i 1999
+            if ($yearFull < 1900 || $yearFull > 1999) {
+                return false;
+            }
+        } elseif ($GGG >= 0 && $GGG <= $currentYearLastTwo) {
+            // Period 2000-trenutna godina
+            $yearFull = 2000 + $GGG;
+            // Provera: godina ne može biti veća od trenutne
+            if ($yearFull > $currentYear) {
+                return false;
+            }
+        } else {
+            // GGG je van validnog opsega
             return false;
         }
 
