@@ -41,13 +41,14 @@ class HomeController extends Controller
             return false;
         }
 
-        // Izdvajanje delova
-        $DD = (int)substr($jmb, 0, 2);
-        $MM = (int)substr($jmb, 2, 4);
-        $GGG = (int)substr($jmb, 4, 7);
-        $RR = (int)substr($jmb, 7, 9);
-        $BBB = (int)substr($jmb, 9, 12);
-        $K = (int)substr($jmb, 12, 13);
+        // Izdvajanje delova JMB formata: DDMMGGGRRBBBK
+        // Pozicije: 0-1 (DD), 2-3 (MM), 4-6 (GGG), 7-8 (RR), 9-11 (BBB), 12 (K)
+        $DD = (int)substr($jmb, 0, 2);      // Dan: pozicije 0-1
+        $MM = (int)substr($jmb, 2, 2);      // Mesec: pozicije 2-3
+        $GGG = (int)substr($jmb, 4, 3);     // Godina (3 cifre): pozicije 4-6
+        $RR = (int)substr($jmb, 7, 2);      // Region: pozicije 7-8
+        $BBB = (int)substr($jmb, 9, 3);     // Redni broj: pozicije 9-11
+        $K = (int)substr($jmb, 12, 1);      // Kontrolna cifra: pozicija 12
 
         // Validacija dana (1-31)
         if ($DD < 1 || $DD > 31) {
@@ -60,8 +61,19 @@ class HomeController extends Controller
         }
 
         // Validacija godine
+        // Format za godinu u JMB-u:
+        // - Ako je GGG < 800: godina = 2000 + GGG (21. vek)
+        // - Ako je 800 <= GGG < 900: godina = 1800 + (GGG - 800) = 1000 + GGG (18. vek)
+        // - Ako je GGG >= 900: godina = 1900 + (GGG - 900) = 1000 + GGG (20. vek)
         $currentYear = (int)date('Y');
-        $yearFull = $GGG >= 900 ? 1900 + $GGG : 2000 + $GGG;
+        
+        if ($GGG < 800) {
+            $yearFull = 2000 + $GGG;
+        } else {
+            $yearFull = 1000 + $GGG;
+        }
+        
+        // Godina mora biti između 1900 i trenutne godine
         if ($yearFull < 1900 || $yearFull > $currentYear) {
             return false;
         }
