@@ -11,6 +11,9 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\NotificationController;
 
+// Učitaj auth rute (za email verifikaciju i sl.)
+require __DIR__.'/auth.php';
+
 // Početna stranica (landing/home)
 Route::get('/', [HomeController::class, 'index'])->name('home'); // Prikaz početne strane
 
