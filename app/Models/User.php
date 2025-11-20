@@ -28,13 +28,18 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $fillable = [
         'name',
+        'activation_status',
         'user_type',
+        'residential_status',
         'first_name',
         'last_name',
+        'jmb',
+        'pib',
+        'passport_number',
         'email',
         'phone',
-        'date_of_birth',
         'password',
+        'role_id',
     ];
 
     /**
@@ -56,9 +61,45 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return [
             'email_verified_at' => 'datetime',
-            'date_of_birth' => 'date',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Accessor za name - automatski kombinuje first_name i last_name.
+     * Podržava srpske dijakritičke znakove (š, đ, ž, č, ć) zahvaljujući utf8mb4 charset-u.
+     *
+     * @return string
+     */
+    public function getNameAttribute($value)
+    {
+        // Ako postoji name u bazi, vrati ga, inače kombinuj first_name + last_name
+        if ($value) {
+            return $value;
+        }
+        
+        $firstName = $this->attributes['first_name'] ?? '';
+        $lastName = $this->attributes['last_name'] ?? '';
+        
+        return trim($firstName . ' ' . $lastName);
+    }
+
+    /**
+     * Mutator koji automatski ažurira name kada se postavi first_name ili last_name.
+     * Poziva se pre čuvanja u bazu.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Automatski popuni name kada se postave first_name ili last_name
+        static::saving(function ($user) {
+            if ($user->first_name || $user->last_name) {
+                $user->attributes['name'] = trim(
+                    ($user->first_name ?? '') . ' ' . ($user->last_name ?? '')
+                );
+            }
+        });
     }
 
     /**
