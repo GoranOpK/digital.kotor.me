@@ -75,7 +75,6 @@
 
         <div class="auth-actions">
             <button type="submit">Prijavi se</button>
-            <a href="{{ route('register') }}">Nemate nalog? Registrujte se</a>
         </div>
     </form>
 </div>
