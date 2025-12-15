@@ -6,7 +6,7 @@
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-gray-800 dark:text-gray-200" />
+                        <img src="{{ asset('img/logo.png') }}" alt="Digital Kotor" class="block h-10 w-auto">
                     </a>
                 </div>
 
@@ -51,11 +51,6 @@
                             </form>
                         </x-slot>
                     </x-dropdown>
-                @else
-                    <div class="flex space-x-4">
-                        <a href="{{ route('login') }}" class="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">{{ __('Log in') }}</a>
-                        <a href="{{ route('register') }}" class="text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">{{ __('Register') }}</a>
-                    </div>
                 @endauth
             </div>
 
@@ -102,15 +97,6 @@
                             {{ __('Log Out') }}
                         </x-responsive-nav-link>
                     </form>
-                </div>
-            @else
-                <div class="px-4 space-y-2">
-                    <x-responsive-nav-link :href="route('login')">
-                        {{ __('Log in') }}
-                    </x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('register')">
-                        {{ __('Register') }}
-                    </x-responsive-nav-link>
                 </div>
             @endauth
         </div>
