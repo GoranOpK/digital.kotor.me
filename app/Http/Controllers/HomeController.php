@@ -23,7 +23,22 @@ class HomeController extends Controller
 
     public function login(Request $request)
     {
-        // login logika
+        $credentials = $request->validate([
+            'email' => ['required', 'email'],
+            'password' => ['required'],
+        ]);
+
+        // Dozvoli samo aktivne naloge
+        $credentials['activation_status'] = 'active';
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+            $request->session()->regenerate();
+            return redirect()->intended(route('dashboard'));
+        }
+
+        return back()->withErrors([
+            'email' => 'Pogrešan email ili lozinka, ili nalog nije aktivan.',
+        ])->onlyInput('email');
     }
 
     public function registerForm()
