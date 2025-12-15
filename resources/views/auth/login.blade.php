@@ -39,8 +39,9 @@
     .auth-actions {
         display: flex;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         gap: 12px;
+        margin-top: 4px;
     }
     .auth-actions button {
         background: #4f46e5;
@@ -55,6 +56,7 @@
         font-size: 14px;
         color: #4f46e5;
         text-decoration: none;
+        font-weight: 600;
     }
 </style>
 
@@ -75,6 +77,7 @@
 
         <div class="auth-actions">
             <button type="submit">Prijavi se</button>
+            <a href="{{ route('register') }}">Registruj nalog</a>
         </div>
     </form>
 </div>
