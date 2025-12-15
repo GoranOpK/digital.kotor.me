@@ -34,25 +34,25 @@
 <body>
     <div class="container">
         <div class="verify-card">
-            <h1 class="verify-title">Verifikacija email adrese</h1>
+            <h1 class="verify-title">Verifikacija e-mail adrese</h1>
             
             @if (session('status') == 'registration-success')
                 <div class="verify-success">
-                    <strong>Uspješno ste kreirali nalog!</strong> Podaci su sačuvani. Molimo vas da provjerite email adresu <span class="email-address">{{ auth()->user()->email }}</span> i kliknite na link za verifikaciju.
+                    <strong>Uspješno ste kreirali nalog!</strong> Podaci su sačuvani. Molimo vas da provjerite e-mail adresu <span class="email-address">{{ auth()->user()->email }}</span> i kliknite na link za verifikaciju.
                 </div>
             @endif
 
             <div class="verify-message">
-                Hvala vam što ste se registrovali! Prije nego što počnete, molimo vas da verifikujete svoju email adresu klikom na link koji smo vam poslali na email adresu <span class="email-address">{{ auth()->user()->email }}</span>.
+                Hvala vam što ste se registrovali! Prije nego što počnete, molimo vas da verifikujete svoju e-mail adresu klikom na link koji smo vam poslali na e-mail adresu <span class="email-address">{{ auth()->user()->email }}</span>.
             </div>
 
             <div class="verify-info">
-                Ako niste primili email, možemo vam poslati novi link za verifikaciju.
+                Ako niste primili e-mail, možemo vam poslati novi link za verifikaciju.
             </div>
 
             @if (session('status') == 'verification-link-sent')
                 <div class="verify-success">
-                    Novi link za verifikaciju je poslat na vašu email adresu.
+                    Novi link za verifikaciju je poslat na vašu e-mail adresu.
                 </div>
             @endif
 
