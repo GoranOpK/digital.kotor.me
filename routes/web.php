@@ -24,7 +24,7 @@ Route::get('/register', [HomeController::class, 'registerForm'])->name('register
 Route::post('/register', [HomeController::class, 'register']); // Slanje podataka za registraciju
 
 // Grupe ruta dostupne samo prijavljenim korisnicima
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard - profil korisnika nakon prijave
     Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard'); // Prikaz korisničkog panela
 
