@@ -38,12 +38,12 @@
             
             @if (session('status') == 'registration-success')
                 <div class="verify-success">
-                    <strong>Uspešno ste kreirali nalog!</strong> Podaci su sačuvani. Molimo vas da proverite email adresu <span class="email-address">{{ auth()->user()->email }}</span> i kliknite na link za verifikaciju.
+                    <strong>Uspješno ste kreirali nalog!</strong> Podaci su sačuvani. Molimo vas da provjerite email adresu <span class="email-address">{{ auth()->user()->email }}</span> i kliknite na link za verifikaciju.
                 </div>
             @endif
 
             <div class="verify-message">
-                Hvala vam što ste se registrovali! Pre nego što počnete, molimo vas da verifikujete svoju email adresu klikom na link koji smo vam poslali na email adresu <span class="email-address">{{ auth()->user()->email }}</span>.
+                Hvala vam što ste se registrovali! Prije nego što počnete, molimo vas da verifikujete svoju email adresu klikom na link koji smo vam poslali na email adresu <span class="email-address">{{ auth()->user()->email }}</span>.
             </div>
 
             <div class="verify-info">
