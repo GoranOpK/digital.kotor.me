@@ -67,12 +67,26 @@
 
         <div class="auth-field">
             <label for="email">Email adresa</label>
-            <input id="email" type="email" name="email" required autofocus>
+            <input
+                id="email"
+                type="email"
+                name="email"
+                value="{{ old('email') }}"
+                autocomplete="username"
+                required
+                autofocus
+            >
         </div>
 
         <div class="auth-field">
             <label for="password">Šifra</label>
-            <input id="password" type="password" name="password" required>
+            <input
+                id="password"
+                type="password"
+                name="password"
+                autocomplete="current-password"
+                required
+            >
         </div>
 
         <div class="auth-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 8px;">
