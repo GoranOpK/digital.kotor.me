@@ -6,7 +6,7 @@
         <h1 class="text-3xl font-bold">Pregled korisnika</h1>
         <div>
             <a href="{{ route('admin.users.index') }}" class="text-gray-600 hover:text-gray-900 mr-4">← Nazad</a>
-            <a href="{{ route('admin.users.edit', $user) }}" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Izmijeni</a>
+            <a href="{{ route('admin.users.edit', $user) }}" class="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600">Izmeni</a>
         </div>
     </div>
 
@@ -67,7 +67,7 @@
                     <dt class="text-sm font-medium text-gray-500">Registrovan</dt>
                     <dd class="text-sm text-gray-900">{{ $user->created_at->format('d.m.Y H:i') }}</dd>
 
-                    <dt class="text-sm font-medium text-gray-500">Posljednja izmjena</dt>
+                    <dt class="text-sm font-medium text-gray-500">Poslednja izmena</dt>
                     <dd class="text-sm text-gray-900">{{ $user->updated_at->format('d.m.Y H:i') }}</dd>
                 </dl>
             </div>

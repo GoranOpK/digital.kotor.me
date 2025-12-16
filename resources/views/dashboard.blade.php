@@ -216,7 +216,7 @@
         <!-- Alerts -->
         @if (session('verified'))
             <div class="alert alert-success">
-                <strong>Uspješno!</strong> Vaša email adresa je verifikovana.
+                <strong>Uspešno!</strong> Vaša email adresa je verifikovana.
             </div>
         @endif
 

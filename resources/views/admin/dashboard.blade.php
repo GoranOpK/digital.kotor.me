@@ -240,7 +240,7 @@
                             @endforelse
                         </tbody>
                     </table>
-                    <a href="{{ route('admin.users.index') }}" class="view-all-link">Prikažite sve korisnike →</a>
+                    <a href="{{ route('admin.users.index') }}" class="view-all-link">Prikaži sve korisnike →</a>
                 </div>
             </div>
 

@@ -3,7 +3,7 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">Izmjena korisnika</h1>
+        <h1 class="text-3xl font-bold">Izmena korisnika</h1>
         <a href="{{ route('admin.users.show', $user) }}" class="text-gray-600 hover:text-gray-900">← Nazad</a>
     </div>
 
@@ -69,7 +69,7 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Nova lozinka (ostavite prazno ako ne želite da je mijenjate)</label>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">Nova lozinka (ostavite prazno ako ne želite da je menjate)</label>
                     <input type="password" name="password" id="password" 
                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
@@ -83,7 +83,7 @@
 
             <div class="mt-6 flex gap-4">
                 <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">
-                    Sačuvaj izmjene
+                    Sačuvaj izmene
                 </button>
                 <a href="{{ route('admin.users.show', $user) }}" class="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400">
                     Otkaži
