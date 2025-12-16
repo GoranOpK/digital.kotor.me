@@ -62,7 +62,7 @@
 
 <div class="auth-wrapper">
     <h2>Prijava</h2>
-<form method="POST" action="{{ route('login') }}" autocomplete="on">
+    <form method="POST" action="{{ route('login') }}" autocomplete="on" name="login">
         @csrf
 
         <div class="auth-field">
@@ -72,10 +72,12 @@
                 type="email"
                 name="email"
                 value="{{ old('email') }}"
-                autocomplete="email"
+                autocomplete="username"
                 required
                 autofocus
             >
+            <!-- Skriveno "username" polje za password managere koji očekuju taj naziv -->
+            <input type="text" name="username" value="{{ old('email') }}" autocomplete="username" style="display:none;">
         </div>
 
         <div class="auth-field">
