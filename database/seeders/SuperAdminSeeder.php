@@ -47,7 +47,6 @@ class SuperAdminSeeder extends Seeder
         $this->command->info('Super admin korisnik je kreiran!');
         $this->command->info('Email: informatika@kotor.me');
         $this->command->info('Lozinka: 3TpTjPrDhYIF0G');
-        $this->command->warn('MOLIMO PROMENITE LOZINKU NAKON PRVE PRIJAVE!');
     }
 }
 

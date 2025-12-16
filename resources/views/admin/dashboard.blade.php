@@ -2,7 +2,15 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold mb-6">Administratorski Dashboard</h1>
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Administratorski Dashboard</h1>
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600" style="background:#ef4444; color:#fff; padding:8px 16px; border-radius:6px; border:none; cursor:pointer;">
+                Odjava
+            </button>
+        </form>
+    </div>
 
     <!-- Statistike -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
