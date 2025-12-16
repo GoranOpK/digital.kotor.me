@@ -31,9 +31,9 @@
                             class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold"
                             style="
                                 min-width: 100px;
-                                background: #4f46e5;
+                                background: #0d6efd;
                                 color: #ffffff;
-                                border: 1px solid #4f46e5;
+                                border: 1px solid #0d6efd;
                                 border-radius: 8px;
                                 padding: 8px 14px;
                                 display: inline-flex;
