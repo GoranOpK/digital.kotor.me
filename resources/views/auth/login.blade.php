@@ -75,6 +75,11 @@
             <input id="password" type="password" name="password" required>
         </div>
 
+        <div class="auth-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <input id="remember" type="checkbox" name="remember" value="1" style="width:16px; height:16px; margin:0;">
+            <label for="remember" style="margin:0; font-size: 14px;">Zapamti me</label>
+        </div>
+
         <div class="auth-actions">
             <button type="submit">Prijavi se</button>
             <a href="{{ route('register') }}">Registruj nalog</a>
