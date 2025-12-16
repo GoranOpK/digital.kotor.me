@@ -19,17 +19,17 @@
             </div>
 
             <!-- User info + Logout -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <div class="sm:flex sm:items-center sm:ms-6" style="display:flex; align-items:center; gap:12px;">
                 @auth
-                    <span class="mr-6 text-sm text-gray-700 dark:text-gray-200">
+                    <span class="text-sm text-gray-700 dark:text-gray-200" style="margin-right: 16px;">
                         {{ Auth::user()->name }}
                     </span>
-                    <form method="POST" action="{{ route('logout') }}">
+                    <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                         @csrf
                         <button
                             type="submit"
                             class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600"
-                            style="min-width: 90px;"
+                            style="min-width: 90px; background:#4f46e5; color:#fff; border:none; border-radius:8px; padding:8px 12px; font-weight:600; cursor:pointer;"
                         >
                             Odjava
                         </button>
