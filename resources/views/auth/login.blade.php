@@ -72,7 +72,7 @@
                 type="email"
                 name="email"
                 value="{{ old('email') }}"
-                autocomplete="username"
+                autocomplete="email"
                 required
                 autofocus
             >
