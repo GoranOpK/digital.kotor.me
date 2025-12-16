@@ -140,6 +140,7 @@ class HomeController extends Controller
             'email_confirmation' => ['required', 'same:email'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
             'phone_full' => ['required', 'string', 'max:50'],
+            'address' => ['required', 'string', 'max:500'],
         ];
 
         $messages = [
@@ -155,6 +156,8 @@ class HomeController extends Controller
             'password.required' => 'Lozinka je obavezna.',
             'password.confirmed' => 'Lozinke se ne poklapaju.',
             'phone_full.required' => 'Broj telefona je obavezan.',
+            'address.required' => 'Adresa je obavezna.',
+            'address.max' => 'Adresa ne može biti duža od 500 karaktera.',
         ];
 
         // Validacija u zavisnosti od tipa korisnika
@@ -268,6 +271,7 @@ class HomeController extends Controller
             'last_name' => $validated['last_name'],
             'email' => strtolower($validated['email']),
             'phone' => $validated['phone_full'],
+            'address' => $validated['address'],
             'password' => Hash::make($validated['password']),
             'role_id' => 3, // Podrazumevana rola: korisnik
             'activation_status' => 'active',

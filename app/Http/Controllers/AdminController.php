@@ -99,7 +99,7 @@ class AdminController extends Controller
         $user->save();
 
         return redirect()->route('admin.users.show', $user)
-            ->with('success', 'Korisnik je uspešno ažuriran.');
+            ->with('success', 'Korisnik je uspješno ažuriran.');
     }
 
     /**

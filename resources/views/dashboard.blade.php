@@ -122,6 +122,69 @@
         margin: 0;
         line-height: 1.5;
     }
+    .info-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.06);
+        margin-bottom: 24px;
+    }
+    .info-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .info-card-header h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+    }
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    @media (min-width: 768px) {
+        .info-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+    .info-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+    .info-value {
+        font-size: 14px;
+        color: #111827;
+        font-weight: 500;
+    }
+    .btn-edit {
+        background: var(--primary);
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 600;
+        display: inline-block;
+        transition: background-color .2s;
+    }
+    .btn-edit:hover {
+        background: var(--primary-dark);
+    }
 </style>
 
 @php
@@ -153,7 +216,7 @@
         <!-- Alerts -->
         @if (session('verified'))
             <div class="alert alert-success">
-                <strong>Uspešno!</strong> Vaša email adresa je verifikovana.
+                <strong>Uspješno!</strong> Vaša email adresa je verifikovana.
             </div>
         @endif
 
@@ -162,6 +225,78 @@
                 <strong>Važno:</strong> Molimo vas da <a href="{{ route('verification.notice') }}">verifikujete svoju email adresu</a>.
             </div>
         @endif
+
+        @if(session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <!-- Informacije o korisniku -->
+        <div class="info-card">
+            <div class="info-card-header">
+                <h2>Informacije o korisniku</h2>
+                <a href="{{ route('profile.edit') }}" class="btn-edit">Izmijeni podatke</a>
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">Ime i prezime</span>
+                    <span class="info-value">{{ $user->name ?? 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email adresa</span>
+                    <span class="info-value">{{ $user->email ?? 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Broj telefona</span>
+                    <span class="info-value">{{ $user->phone ?? 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Adresa</span>
+                    <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Tip korisnika</span>
+                    <span class="info-value">{{ $userTypeLabel }}</span>
+                </div>
+                @if($user->jmb)
+                    <div class="info-item">
+                        <span class="info-label">JMB</span>
+                        <span class="info-value">{{ $user->jmb }}</span>
+                    </div>
+                @endif
+                @if($user->pib)
+                    <div class="info-item">
+                        <span class="info-label">PIB</span>
+                        <span class="info-value">{{ $user->pib }}</span>
+                    </div>
+                @endif
+                @if($user->passport_number)
+                    <div class="info-item">
+                        <span class="info-label">Broj pasoša</span>
+                        <span class="info-value">{{ $user->passport_number }}</span>
+                    </div>
+                @endif
+                <div class="info-item">
+                    <span class="info-label">Status naloga</span>
+                    <span class="info-value">
+                        <span style="display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; {{ $user->activation_status === 'active' ? 'background: #d1fae5; color: #065f46;' : 'background: #fee2e2; color: #991b1b;' }}">
+                            {{ $user->activation_status === 'active' ? 'Aktivan' : 'Deaktiviran' }}
+                        </span>
+                    </span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email verifikovan</span>
+                    <span class="info-value">
+                        @if($user->email_verified_at)
+                            <span style="color: #065f46; font-weight: 600;">Da ({{ $user->email_verified_at->format('d.m.Y H:i') }})</span>
+                        @else
+                            <span style="color: #991b1b; font-weight: 600;">Ne</span>
+                        @endif
+                    </span>
+                </div>
+            </div>
+        </div>
 
         <!-- Services - Fizičko lice (Rezident) -->
         @if ($isPhysicalPerson && $isResident)

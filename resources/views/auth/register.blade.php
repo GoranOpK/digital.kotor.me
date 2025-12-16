@@ -351,6 +351,13 @@
                     <div class="form-error" id="phone_error"></div>
                 </div>
 
+                {{-- Adresa --}}
+                <div class="form-group">
+                    <label for="address" class="form-label">Adresa <span class="required">*</span></label>
+                    <input type="text" name="address" id="address" class="form-control" required autocomplete="street-address" placeholder="Ulica i broj, mesto">
+                    <div class="form-error" id="address_error"></div>
+                </div>
+
                 {{-- Greške --}}
                 @if($errors->any())
                     <div class="form-group">

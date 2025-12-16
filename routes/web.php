@@ -29,6 +29,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Dashboard - profil korisnika nakon prijave
     Route::get('/dashboard', [HomeController::class, 'dashboard'])->name('dashboard'); // Prikaz korisničkog panela
 
+    // Profil korisnika
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
+
     // Modul za online plaćanja opštinskih prihoda
     Route::get('/payments', [PaymentsController::class, 'index'])->name('payments.index'); // Prikaz forme i istorije uplata
     Route::post('/payments/pay', [PaymentsController::class, 'pay'])->name('payments.pay'); // Slanje zahtjeva za uplatu
