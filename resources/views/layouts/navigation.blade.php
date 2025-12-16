@@ -21,14 +21,14 @@
             <!-- User info + Logout -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 @auth
-                    <span class="mr-4 text-sm text-gray-700 dark:text-gray-200">
+                    <span class="mr-6 text-sm text-gray-700 dark:text-gray-200">
                         {{ Auth::user()->name }}
                     </span>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button
                             type="submit"
-                            class="inline-flex items-center px-3 py-2 bg-red-600 border border-transparent rounded-md text-sm font-semibold text-white hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600"
+                            class="inline-flex items-center px-3 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600"
                         >
                             Odjava
                         </button>
