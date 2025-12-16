@@ -28,8 +28,21 @@
                         @csrf
                         <button
                             type="submit"
-                            class="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md text-sm font-semibold text-white hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600"
-                            style="min-width: 90px;"
+                            class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold"
+                            style="
+                                min-width: 100px;
+                                background: #4f46e5;
+                                color: #ffffff;
+                                border: 1px solid #4f46e5;
+                                border-radius: 8px;
+                                padding: 8px 14px;
+                                display: inline-flex;
+                                align-items: center;
+                                justify-content: center;
+                                gap: 6px;
+                                cursor: pointer;
+                                text-decoration: none;
+                            "
                         >
                             Odjava
                         </button>
