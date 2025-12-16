@@ -62,7 +62,7 @@
 
 <div class="auth-wrapper">
     <h2>Prijava</h2>
-    <form method="POST" action="{{ route('login') }}">
+<form method="POST" action="{{ route('login') }}" autocomplete="on">
         @csrf
 
         <div class="auth-field">
