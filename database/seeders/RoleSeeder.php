@@ -12,13 +12,12 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        // Insertujemo tri osnovne uloge u bazu:
-        // 1 - admin, 2 - komisija, 3 - korisnik
-        Role::insert([
+        // Kreiraj ili ažuriraj role u bazi (može se pokrenuti više puta bez greške)
+        $roles = [
             [
                 'id' => 1,
-                'name' => 'admin',           // Sistematsko ime uloge
-                'display_name' => 'Administrator' // Ime za prikaz
+                'name' => 'admin',
+                'display_name' => 'Administrator'
             ],
             [
                 'id' => 2,
@@ -35,6 +34,13 @@ class RoleSeeder extends Seeder
                 'name' => 'superadmin',
                 'display_name' => 'Super administrator'
             ],
-        ]);
+        ];
+
+        foreach ($roles as $role) {
+            Role::updateOrCreate(
+                ['id' => $role['id']],
+                ['name' => $role['name'], 'display_name' => $role['display_name']]
+            );
+        }
     }
 }
