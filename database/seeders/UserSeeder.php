@@ -21,6 +21,19 @@ class UserSeeder extends Seeder
             'role_id' => 1, // admin
         ]);
 
+        // Super administrator (podatke čitamo iz .env ako su postavljeni)
+        $superAdminEmail = env('SUPERADMIN_EMAIL', 'superadmin@example.com');
+        $superAdminPass = env('SUPERADMIN_PASSWORD', 'password');
+
+        User::updateOrCreate(
+            ['email' => $superAdminEmail],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make($superAdminPass),
+                'role_id' => 4, // superadmin
+            ]
+        );
+
         // Član komisije
         User::create([
             'name' => 'Komisija',

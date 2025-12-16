@@ -18,11 +18,24 @@ class RoleMiddleware
      */
     public function handle($request, Closure $next, $role)
     {
-        // Provjeravamo da li je korisnik ulogovan i da li ima traženu ulogu
-        if(auth()->check() && auth()->user()->role->name === $role){
+        // Provjeravamo da li je korisnik ulogovan
+        if(!auth()->check()) {
+            abort(403);
+        }
+
+        $user = auth()->user();
+        
+        // Super admin može sve - propuštamo zahtjev
+        if($user->role && $user->role->name === 'superadmin') {
+            return $next($request);
+        }
+        
+        // Provjeravamo da li korisnik ima traženu ulogu
+        if($user->role && $user->role->name === $role){
             // Ako ima traženu ulogu, propuštamo zahtjev dalje (npr. do kontrolera)
             return $next($request);
         }
+        
         // Ako nema odgovarajuću ulogu, vraćamo 403 Forbidden (zabranjen pristup)
         abort(403);
     }

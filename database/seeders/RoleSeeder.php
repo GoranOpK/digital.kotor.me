@@ -30,6 +30,11 @@ class RoleSeeder extends Seeder
                 'name' => 'korisnik',
                 'display_name' => 'Korisnik'
             ],
+            [
+                'id' => 4,
+                'name' => 'superadmin',
+                'display_name' => 'Super administrator'
+            ],
         ]);
     }
 }

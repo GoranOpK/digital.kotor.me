@@ -10,6 +10,7 @@ use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\AdminController;
 
 // Učitaj auth rute (za email verifikaciju i sl.)
 require __DIR__.'/auth.php';
@@ -74,12 +75,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index'); // Prikaz obavještenja korisniku
     Route::post('/notifications/send', [NotificationController::class, 'send'])->name('notifications.send'); // Slanje obavještenja
 
-    // Admin rute (dostupne korisnicima sa admin ulogom)
+    // Admin rute (dostupne superadmin i admin ulogama)
     Route::middleware('role:admin')->group(function () {
-        Route::get('/admin', function () {
-            return 'Admin dashboard';
-        }); // Glavni admin panel
-        // Ovdje možeš dodati dodatne admin rute (upravljanje korisnicima, konkursima, tenderima, izvještaji itd.)
+        Route::prefix('admin')->name('admin.')->group(function () {
+            Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+            
+            // Upravljanje korisnicima
+            Route::get('/users', [AdminController::class, 'users'])->name('users.index');
+            Route::get('/users/{user}', [AdminController::class, 'showUser'])->name('users.show');
+            Route::get('/users/{user}/edit', [AdminController::class, 'editUser'])->name('users.edit');
+            Route::put('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
+            Route::post('/users/{user}/activate', [AdminController::class, 'activateUser'])->name('users.activate');
+            Route::post('/users/{user}/deactivate', [AdminController::class, 'deactivateUser'])->name('users.deactivate');
+        });
     });
 });
 
