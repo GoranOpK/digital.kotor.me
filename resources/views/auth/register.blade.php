@@ -940,6 +940,13 @@
                     isValid = false;
                 }
 
+                // Validacija adrese
+                const address = document.getElementById('address');
+                if (address && !address.value.trim()) {
+                    showError('address_error', 'Adresa je obavezna');
+                    isValid = false;
+                }
+
                 if (!isValid) {
                     e.preventDefault();
                     return false;
