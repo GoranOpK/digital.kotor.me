@@ -235,7 +235,8 @@
             </div>
         @endif
 
-        <!-- Informacije o korisniku -->
+        <!-- Informacije o korisniku (ne prikazuje se za super admin) -->
+        @if (!$isSuperAdmin)
         <div class="info-card">
             <div class="info-card-header">
                 <h2>Informacije o korisniku</h2>
@@ -300,6 +301,7 @@
                 </div>
             </div>
         </div>
+        @endif
 
         <!-- Services - Super Admin (vidi sve opcije) -->
         @if ($isSuperAdmin)
