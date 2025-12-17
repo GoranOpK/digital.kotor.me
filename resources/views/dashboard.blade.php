@@ -223,6 +223,13 @@
     } else {
         $userTypeLabel = $user->user_type ?? 'Pravno lice';
     }
+    
+    // Izračunaj korišćen prostor za dokumente
+    $usedStorage = $user->used_storage_bytes ?? 0;
+    $maxStorage = 20 * 1024 * 1024; // 20 MB
+    $usedStorageMB = round($usedStorage / 1024 / 1024, 2);
+    $maxStorageMB = 20;
+    $storagePercentage = $maxStorage > 0 ? round(($usedStorage / $maxStorage) * 100, 1) : 0;
 @endphp
 
 <div class="user-dashboard">
@@ -331,9 +338,18 @@
                 <p style="margin: 0 0 12px; color: #6b7280; font-size: 14px;">
                     Centralno mjesto gdje možete čuvati lična, finansijska i poslovna dokumenta i koristiti ih pri prijavama na konkurse i tendere.
                 </p>
-                <p style="margin: 0; color: #374151; font-size: 14px; font-weight: 600;">
-                    Dostupnih 20 MB prostora po korisniku.
-                </p>
+                <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Iskorišćen prostor</span>
+                        <span style="font-size: 14px; font-weight: 600; color: var(--primary);">{{ $usedStorageMB }} MB / {{ $maxStorageMB }} MB</span>
+                    </div>
+                    <div style="width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
+                        <div style="height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-dark)); width: {{ min($storagePercentage, 100) }}%; transition: width 0.3s ease;"></div>
+                    </div>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                        {{ $storagePercentage }}% iskorišćeno
+                    </div>
+                </div>
             </div>
         </div>
 
