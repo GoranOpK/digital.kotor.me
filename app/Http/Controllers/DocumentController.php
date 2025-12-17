@@ -26,10 +26,10 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         
-        // Grupiši dokumente po kategorijama
+        // Grupiši dokumente po kategorijama (najnoviji na vrhu unutar svake kategorije)
         $documents = UserDocument::where('user_id', $user->id)
-            ->orderBy('category')
-            ->orderBy('created_at', 'desc')
+            ->orderBy('created_at', 'desc') // Prvo sortiraj po datumu (najnoviji na vrhu)
+            ->orderBy('category') // Zatim po kategoriji
             ->get()
             ->groupBy('category');
 
