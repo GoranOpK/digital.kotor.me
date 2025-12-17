@@ -301,8 +301,7 @@
                 @csrf
                 <div class="form-group">
                     <label for="name" class="form-label">Naziv dokumenta <span style="color: #ef4444;">*</span></label>
-                    <input type="text" name="name" id="name" class="form-control" required 
-                           placeholder="npr. Lična karta, Izvod iz CRPS, Diploma...">
+                    <input type="text" name="name" id="name" class="form-control" required>
                 </div>
                 <div class="form-group">
                     <label for="category" class="form-label">Kategorija <span style="color: #ef4444;">*</span></label>
