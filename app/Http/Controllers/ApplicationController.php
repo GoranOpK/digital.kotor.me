@@ -14,11 +14,6 @@ use Illuminate\View\View;
 
 class ApplicationController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     /**
      * Prikaz forme za prijavu na konkurs (Obrazac 1a/1b)
      */

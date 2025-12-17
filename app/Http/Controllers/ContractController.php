@@ -12,11 +12,6 @@ use Illuminate\View\View;
 
 class ContractController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     /**
      * Generisanje ugovora za prijavu
      */

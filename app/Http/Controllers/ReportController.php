@@ -12,11 +12,6 @@ use Illuminate\View\View;
 
 class ReportController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     /**
      * Forma za kreiranje izvještaja o realizaciji (Obrazac 4)
      */

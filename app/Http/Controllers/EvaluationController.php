@@ -13,11 +13,6 @@ use Illuminate\View\View;
 
 class EvaluationController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     /**
      * Lista prijava za ocjenjivanje
      */

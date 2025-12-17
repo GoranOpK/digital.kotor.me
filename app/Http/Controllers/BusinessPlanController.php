@@ -11,11 +11,6 @@ use Illuminate\View\View;
 
 class BusinessPlanController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
     /**
      * Prikaz forme za popunjavanje biznis plana (Obrazac 2)
      */
