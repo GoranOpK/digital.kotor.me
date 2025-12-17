@@ -257,7 +257,7 @@
                                     {{ old('business_stage', 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
-                                <label for="business_stage_zapocinjanje">Započinjanje poslovne delatnosti</label>
+                                <label for="business_stage_zapocinjanje">Započinjanje poslovne djelatnosti</label>
                             </div>
                             <div class="radio-option">
                                 <input 
@@ -268,7 +268,7 @@
                                     {{ old('business_stage') === 'razvoj' ? 'checked' : '' }}
                                     required
                                 >
-                                <label for="business_stage_razvoj">Razvoj postojeće poslovne delatnosti</label>
+                                <label for="business_stage_razvoj">Razvoj postojeće poslovne djelatnosti</label>
                             </div>
                         </div>
                         @error('business_stage')
