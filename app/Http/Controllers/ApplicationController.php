@@ -166,10 +166,22 @@ class ApplicationController extends Controller
             abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
+        // Proveri da li dokument iz biblioteke pripada korisniku (pre validacije)
+        if ($request->filled('user_document_id')) {
+            $userDocument = UserDocument::where('id', $request->user_document_id)
+                ->where('user_id', Auth::id())
+                ->where('status', 'active')
+                ->first();
+            
+            if (!$userDocument) {
+                return back()->withErrors(['user_document_id' => 'Izabrani dokument nije validan ili ne pripada vašoj biblioteci.'])->withInput();
+            }
+        }
+
         $validated = $request->validate([
             'document_type' => 'required|string|in:licna_karta,crps_resenje,pib_resenje,pdv_resenje,statut,karton_potpisa,potvrda_neosudjivanost,uvjerenje_opstina_porezi,uvjerenje_opstina_nepokretnost,potvrda_upc_porezi,ioppd_obrazac,godisnji_racuni,biznis_plan_usb,izvjestaj_realizacija,finansijski_izvjestaj,ostalo',
             'file' => 'required_without:user_document_id|file|mimes:pdf,jpg,jpeg,png|max:20480', // 20MB max
-            'user_document_id' => 'required_without:file|exists:user_documents,id',
+            'user_document_id' => 'nullable|required_without:file',
         ], [
             'document_type.required' => 'Tip dokumenta je obavezan.',
             'file.required_without' => 'Morate priložiti fajl ili izabrati dokument iz biblioteke.',
@@ -187,14 +199,14 @@ class ApplicationController extends Controller
         }
 
         // Ako je izabran dokument iz biblioteke
-        if (isset($validated['user_document_id'])) {
+        if (!empty($validated['user_document_id'])) {
             $userDocument = UserDocument::where('id', $validated['user_document_id'])
                 ->where('user_id', Auth::id())
                 ->where('status', 'active')
                 ->first();
 
             if (!$userDocument) {
-                return back()->withErrors(['user_document_id' => 'Dokument nije pronađen u biblioteci.'])->withInput();
+                return back()->withErrors(['user_document_id' => 'Izabrani dokument nije validan ili ne pripada vašoj biblioteci.'])->withInput();
             }
 
             // Kreiraj vezu sa prijavom

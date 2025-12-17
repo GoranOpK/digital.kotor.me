@@ -528,15 +528,6 @@
                             }
                         }
                     </script>
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 400;">Ili izaberite iz biblioteke dokumenata</label>
-                        <select name="user_document_id" class="form-control">
-                            <option value="">Izaberite dokument iz biblioteke</option>
-                            @foreach(auth()->user()->documents()->where('status', 'active')->get() as $userDoc)
-                                <option value="{{ $userDoc->id }}">{{ $userDoc->name }} ({{ $userDoc->category }})</option>
-                            @endforeach
-                        </select>
-                    </div>
                     <button type="submit" class="btn btn-primary">Priloži dokument</button>
                 </form>
             </div>
