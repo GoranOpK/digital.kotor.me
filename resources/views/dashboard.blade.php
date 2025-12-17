@@ -356,33 +356,14 @@
             @endif
         </div>
 
-        <!-- Services - Super Admin (vidi sve opcije) -->
+        <!-- Services - Super Admin (samo Administracija) -->
         @if ($isSuperAdmin)
             <div class="services-grid">
-                <a href="{{ route('payments.index') }}" class="service-card">
-                    <div class="service-icon">₿</div>
-                    <h3>Online plaćanja</h3>
-                    <p>Uplate komunalija, taksi i drugih opštinskih naknada. Pregled istorije uplata i novih zahteva.</p>
-                </a>
-
-                <a href="{{ route('competitions.index') }}" class="service-card">
-                    <div class="service-icon">★</div>
-                    <h3>Moje prijave na konkurse</h3>
-                    <p>Prijava i praćenje statusa na programe podrške. Pregled svih vaših prijava i njihovog stanja.</p>
-                </a>
-
-                <a href="{{ route('tenders.index') }}" class="service-card">
-                    <div class="service-icon">§</div>
-                    <h3>Moje tenderske kupovine</h3>
-                    <p>Pregled, preuzimanje i otkup tenderske dokumentacije. Istorija svih vaših kupovina.</p>
-                </a>
-
                 <a href="{{ route('admin.dashboard') }}" class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
                     <div class="service-icon" style="border-color: var(--primary);">⚙️</div>
                     <h3>Administracija</h3>
                     <p>Upravljanje korisnicima, konkursima, tenderima i svim aspektima sistema.</p>
                 </a>
-
             </div>
         @endif
 
