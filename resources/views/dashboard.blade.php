@@ -457,15 +457,59 @@
             </div>
         @endif
 
-        <!-- Services - Administrator konkursa -->
+        <!-- Administratorski Dashboard - Administrator konkursa -->
         @if ($isCompetitionAdmin)
-            <div class="services-grid">
-                <a href="{{ route('admin.dashboard') }}" class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
-                    <div class="service-icon" style="border-color: var(--primary);">⚙️</div>
-                    <h3>Administracija konkursa</h3>
-                    <p>Upravljanje konkursima, komisijama i prijavama. Pristup administratorskom panelu za upravljanje konkursima.</p>
-                </a>
+            <!-- Statistike -->
+            <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 24px;">
+                <div class="info-card">
+                    <h3 style="color: #6b7280; font-size: 14px; font-weight: 600; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.5px;">Konkursi</h3>
+                    <p style="font-size: 36px; font-weight: 800; color: var(--primary); margin: 0; line-height: 1;">{{ $stats['total_competitions'] ?? 0 }}</p>
+                </div>
+                <div class="info-card">
+                    <h3 style="color: #6b7280; font-size: 14px; font-weight: 600; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.5px;">Prijave</h3>
+                    <p style="font-size: 36px; font-weight: 800; color: var(--primary); margin: 0; line-height: 1;">{{ $stats['total_applications'] ?? 0 }}</p>
+                </div>
+                <div class="info-card">
+                    <h3 style="color: #6b7280; font-size: 14px; font-weight: 600; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.5px;">Komisije</h3>
+                    <p style="font-size: 36px; font-weight: 800; color: var(--primary); margin: 0; line-height: 1;">{{ $stats['total_commissions'] ?? 0 }}</p>
+                    <p style="color: #6b7280; font-size: 13px; margin-top: 8px;">Aktivnih: {{ $stats['active_commissions'] ?? 0 }}</p>
+                </div>
             </div>
+
+            <!-- Brzi linkovi -->
+            <div class="info-card" style="margin-top: 24px;">
+                <div class="info-card-header">
+                    <h2>Brzi linkovi</h2>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; padding: 20px;">
+                    <a href="{{ route('admin.competitions.index') }}" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center; color: var(--primary); text-decoration: none; font-weight: 600; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='#f9fafb'">
+                        📋 Konkursi
+                    </a>
+                    <a href="{{ route('admin.commissions.index') }}" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center; color: var(--primary); text-decoration: none; font-weight: 600; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='#f9fafb'">
+                        👥 Komisija
+                    </a>
+                </div>
+            </div>
+
+            <!-- Najnovije prijave -->
+            @if(isset($recent_applications))
+            <div class="info-card" style="margin-top: 24px;">
+                <div class="info-card-header">
+                    <h2>Najnovije prijave na konkurse</h2>
+                </div>
+                <div style="padding: 20px;">
+                    @forelse($recent_applications as $application)
+                        <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
+                            <p style="font-weight: 600; color: #111827; margin: 0 0 4px;">{{ $application->user->name ?? 'N/A' }}</p>
+                            <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;">{{ $application->competition->title ?? 'N/A' }}</p>
+                            <p style="color: #9ca3af; font-size: 12px; margin: 0;">{{ $application->created_at->format('d.m.Y H:i') }}</p>
+                        </div>
+                    @empty
+                        <p style="color: #6b7280; text-align: center; padding: 24px;">Nema prijava</p>
+                    @endforelse
+                </div>
+            </div>
+            @endif
         @endif
     </div>
 </div>

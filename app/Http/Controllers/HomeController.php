@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Competition;
+use App\Models\Application;
+use App\Models\Commission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -302,6 +305,26 @@ class HomeController extends Controller
 
     public function dashboard()
     {
+        $user = auth()->user();
+        $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
+        
+        // Ako je konkurs admin, pripremi podatke za admin dashboard
+        if ($isCompetitionAdmin) {
+            $stats = [
+                'total_competitions' => Competition::count(),
+                'total_applications' => Application::count(),
+                'total_commissions' => Commission::count(),
+                'active_commissions' => Commission::where('status', 'active')->count(),
+            ];
+            
+            $recent_applications = Application::with('user', 'competition')
+                ->latest()
+                ->take(10)
+                ->get();
+            
+            return view('dashboard', compact('stats', 'recent_applications'));
+        }
+        
         return view('dashboard');
     }
 }
