@@ -219,21 +219,6 @@
             </div>
         @endif
 
-        <!-- Informacije o prostoru -->
-        <div class="storage-info">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span style="font-weight: 600; color: #374151;">Korišćen prostor</span>
-                <span style="font-weight: 600; color: var(--primary);">{{ $usedStorageMB }} MB / {{ $maxStorageMB }} MB</span>
-            </div>
-            <div class="storage-bar">
-                <div class="storage-fill {{ $storagePercentage > 80 ? 'danger' : ($storagePercentage > 60 ? 'warning' : '') }}" 
-                     style="width: {{ $storagePercentage }}%"></div>
-            </div>
-            <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                {{ $storagePercentage }}% iskorišćeno
-            </div>
-        </div>
-
         <!-- Upload sekcija -->
         <div class="upload-section">
             <h2>Dodaj novi dokument</h2>
@@ -274,10 +259,10 @@
 
         <!-- Lista dokumenata po kategorijama -->
         <div class="documents-grid">
-            @forelse($categories as $categoryKey => $categoryName)
-                @if(isset($documents[$categoryKey]) && $documents[$categoryKey]->count() > 0)
-                    <div class="category-section">
-                        <h3>{{ $categoryName }}</h3>
+            @foreach($categories as $categoryKey => $categoryName)
+                <div class="category-section">
+                    <h3>{{ $categoryName }}</h3>
+                    @if(isset($documents[$categoryKey]) && $documents[$categoryKey]->count() > 0)
                         @foreach($documents[$categoryKey] as $document)
                             <div class="document-item">
                                 <div class="document-info">
@@ -307,17 +292,28 @@
                                 </div>
                             </div>
                         @endforeach
-                    </div>
-                @endif
-            @empty
-                <div class="category-section">
-                    <div class="empty-state">
-                        <div class="empty-state-icon">📄</div>
-                        <h3 style="color: #374151; margin-bottom: 8px;">Nemate upload-ovanih dokumenata</h3>
-                        <p style="color: #6b7280;">Počnite sa upload-om dokumenata kako biste ih kasnije mogli koristiti pri prijavama na konkurse.</p>
-                    </div>
+                    @else
+                        <div class="empty-state" style="padding: 20px; text-align: center; color: #6b7280;">
+                            <p style="margin: 0; font-size: 14px;">Nema upload-ovanih dokumenata u ovoj kategoriji.</p>
+                        </div>
+                    @endif
                 </div>
-            @endforelse
+            @endforeach
+        </div>
+
+        <!-- Informacije o prostoru -->
+        <div class="storage-info" style="margin-top: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: 600; color: #374151;">Iskorišćen prostor</span>
+                <span style="font-weight: 600; color: var(--primary);">{{ $usedStorageMB }} MB / {{ $maxStorageMB }} MB</span>
+            </div>
+            <div class="storage-bar">
+                <div class="storage-fill {{ $storagePercentage > 80 ? 'danger' : ($storagePercentage > 60 ? 'warning' : '') }}" 
+                     style="width: {{ $storagePercentage }}%"></div>
+            </div>
+            <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                {{ $storagePercentage }}% iskorišćeno
+            </div>
         </div>
     </div>
 </div>
