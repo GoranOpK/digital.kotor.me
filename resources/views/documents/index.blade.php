@@ -100,7 +100,18 @@
     }
     .documents-grid {
         display: grid;
+        grid-template-columns: 1fr;
         gap: 24px;
+    }
+    @media (min-width: 768px) {
+        .documents-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    @media (min-width: 1024px) {
+        .documents-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
     }
     .category-section {
         background: #fff;
@@ -235,7 +246,6 @@
                         <option value="">Izaberite kategoriju</option>
                         <option value="Lični dokumenti">Lični dokumenti</option>
                         <option value="Finansijski dokumenti">Finansijski dokumenti</option>
-                        <option value="Tehnički dokumenti">Tehnički dokumenti</option>
                         <option value="Poslovni dokumenti">Poslovni dokumenti</option>
                         <option value="Ostali dokumenti">Ostali dokumenti</option>
                     </select>

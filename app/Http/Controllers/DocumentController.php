@@ -36,7 +36,6 @@ class DocumentController extends Controller
         $categories = [
             'Lični dokumenti' => 'Lični dokumenti',
             'Finansijski dokumenti' => 'Finansijski dokumenti',
-            'Tehnički dokumenti' => 'Tehnički dokumenti',
             'Poslovni dokumenti' => 'Poslovni dokumenti',
             'Ostali dokumenti' => 'Ostali dokumenti',
         ];
@@ -57,7 +56,7 @@ class DocumentController extends Controller
     {
         $request->validate([
             'file' => 'required|file|mimes:jpeg,jpg,png,pdf|max:10240', // Max 10MB originalni fajl
-            'category' => 'required|in:Lični dokumenti,Finansijski dokumenti,Tehnički dokumenti,Poslovni dokumenti,Ostali dokumenti',
+            'category' => 'required|in:Lični dokumenti,Finansijski dokumenti,Poslovni dokumenti,Ostali dokumenti',
             'name' => 'required|string|max:255',
             'expires_at' => 'nullable|date|after:today',
         ]);
