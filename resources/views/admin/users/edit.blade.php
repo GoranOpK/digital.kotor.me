@@ -3,7 +3,7 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-3xl font-bold">Izmena korisnika</h1>
+        <h1 class="text-3xl font-bold">Izmjena korisnika</h1>
         <a href="{{ route('admin.users.show', $user) }}" class="text-gray-600 hover:text-gray-900">← Nazad</a>
     </div>
 

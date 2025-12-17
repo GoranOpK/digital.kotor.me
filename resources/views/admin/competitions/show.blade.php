@@ -84,7 +84,7 @@
                 @if($competition->status === 'closed' || $competition->status === 'published')
                     <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
                 @endif
-                <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn btn-primary">Izmeni</a>
+                <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn btn-primary">Izmijeni</a>
             </div>
         </div>
 

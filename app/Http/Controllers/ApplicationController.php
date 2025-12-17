@@ -212,7 +212,7 @@ class ApplicationController extends Controller
                 'user_document_id' => $userDocument->id,
             ]);
 
-            return back()->with('success', 'Dokument je uspešno priložen iz biblioteke.');
+            return back()->with('success', 'Dokument je uspješno priložen iz biblioteke.');
         }
 
         // Ako je upload-ovan novi fajl
@@ -235,7 +235,7 @@ class ApplicationController extends Controller
                 'is_required' => in_array($validated['document_type'], $application->getRequiredDocuments()),
             ]);
 
-            return back()->with('success', 'Dokument je uspešno upload-ovan i priložen.');
+            return back()->with('success', 'Dokument je uspješno upload-ovan i priložen.');
         }
 
         return back()->withErrors(['error' => 'Greška pri priložavanju dokumenta.'])->withInput();

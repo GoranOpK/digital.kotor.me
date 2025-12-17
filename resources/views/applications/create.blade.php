@@ -476,7 +476,7 @@
                                 required
                             >
                             <label for="de_minimis_declaration">
-                                Izjavljujem da će ukupna de minimis podrška koju sam dobio/la u poslednje tri godine 
+                                Izjavljujem da će ukupna de minimis podrška koju sam dobio/la u posljednje tri godine 
                                 biti u skladu sa propisima Evropske unije o de minimis podršci 
                                 <span class="required">*</span>
                             </label>

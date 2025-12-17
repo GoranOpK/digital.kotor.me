@@ -151,7 +151,7 @@ class EvaluationController extends Controller
         $this->updateApplicationScores($application);
 
         return redirect()->route('evaluation.index')
-            ->with('success', 'Ocjena je uspešno sačuvana.');
+            ->with('success', 'Ocjena je uspješno sačuvana.');
     }
 
     /**

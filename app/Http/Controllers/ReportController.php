@@ -81,7 +81,7 @@ class ReportController extends Controller
         );
 
         return redirect()->route('applications.show', $application)
-            ->with('success', 'Izvještaj o realizaciji je uspešno podnesen.');
+            ->with('success', 'Izvještaj o realizaciji je uspješno podnesen.');
     }
 
     /**
@@ -135,7 +135,7 @@ class ReportController extends Controller
         );
 
         return redirect()->route('applications.show', $application)
-            ->with('success', 'Finansijski izvještaj je uspešno podnesen.');
+            ->with('success', 'Finansijski izvještaj je uspješno podnesen.');
     }
 
     /**
@@ -168,7 +168,7 @@ class ReportController extends Controller
             'document_file' => $filePath,
         ]);
 
-        return back()->with('success', 'Dokument je uspešno upload-ovan.');
+        return back()->with('success', 'Dokument je uspješno upload-ovan.');
     }
 
     /**
@@ -195,7 +195,7 @@ class ReportController extends Controller
             'evaluated_at' => now(),
         ]);
 
-        return back()->with('success', 'Izvještaj je uspešno ocjenjen.');
+        return back()->with('success', 'Izvještaj je uspješno ocjenjen.');
     }
 
     /**

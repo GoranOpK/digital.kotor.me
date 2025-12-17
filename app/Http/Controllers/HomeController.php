@@ -145,7 +145,7 @@ class HomeController extends Controller
 
         $messages = [
             'user_type.required' => 'Vrsta korisnika je obavezna.',
-            'user_type.in' => 'Izaberite validnu vrstu korisnika.',
+            'user_type.in' => 'Odaberite validnu vrstu korisnika.',
             'first_name.required' => 'Ime je obavezno.',
             'last_name.required' => 'Prezime je obavezno.',
             'email.required' => 'E-mail adresa je obavezna.',
@@ -163,7 +163,7 @@ class HomeController extends Controller
         // Validacija u zavisnosti od tipa korisnika
         if ($request->user_type === 'Registrovan privredni subjekt') {
             $rules['business_type'] = ['required', 'in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)'];
-            $messages['business_type.required'] = 'Izaberite tip privrednog subjekta.';
+            $messages['business_type.required'] = 'Odaberite tip privrednog subjekta.';
 
             // Ako nije Preduzetnik, PIB je obavezan
             if ($request->business_type && $request->business_type !== 'Preduzetnik') {
@@ -196,7 +196,7 @@ class HomeController extends Controller
             }
         } elseif ($request->residential_status === 'non-resident') {
             $rules['non_resident_id_type'] = ['required', 'in:jmb,passport'];
-            $messages['non_resident_id_type.required'] = 'Izaberite vrstu identifikacije.';
+            $messages['non_resident_id_type.required'] = 'Odaberite vrstu identifikacije.';
 
             if ($request->non_resident_id_type === 'jmb') {
                 $rules['jmb_non_resident'] = ['required', 'string', 'regex:/^[0-9]{13}$/'];

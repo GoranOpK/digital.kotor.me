@@ -136,7 +136,7 @@ class AdminController extends Controller
         $user->save();
 
         return redirect()->route('admin.users.show', $user)
-            ->with('success', 'Korisnik je uspešno ažuriran.');
+            ->with('success', 'Korisnik je uspješno ažuriran.');
     }
 
     /**
@@ -231,7 +231,7 @@ class AdminController extends Controller
         ]);
 
         return redirect()->route('admin.competitions.show', $competition)
-            ->with('success', 'Konkurs je uspešno kreiran.');
+            ->with('success', 'Konkurs je uspješno kreiran.');
     }
 
     /**
@@ -278,7 +278,7 @@ class AdminController extends Controller
         $competition->update($validated);
 
         return redirect()->route('admin.competitions.show', $competition)
-            ->with('success', 'Konkurs je uspešno ažuriran.');
+            ->with('success', 'Konkurs je uspješno ažuriran.');
     }
 
     /**
@@ -295,7 +295,7 @@ class AdminController extends Controller
             'published_at' => now(),
         ]);
 
-        return redirect()->back()->with('success', 'Konkurs je uspešno objavljen.');
+        return redirect()->back()->with('success', 'Konkurs je uspješno objavljen.');
     }
 
     /**
@@ -308,7 +308,7 @@ class AdminController extends Controller
             'closed_at' => now(),
         ]);
 
-        return redirect()->back()->with('success', 'Konkurs je uspešno zatvoren.');
+        return redirect()->back()->with('success', 'Konkurs je uspješno zatvoren.');
     }
 
     /**
@@ -409,7 +409,7 @@ class AdminController extends Controller
         ]);
 
         return redirect()->route('admin.commissions.show', $commission)
-            ->with('success', 'Komisija je uspešno kreirana.');
+            ->with('success', 'Komisija je uspješno kreirana.');
     }
 
     /**
@@ -449,7 +449,7 @@ class AdminController extends Controller
         $commission->update($validated);
 
         return redirect()->route('admin.commissions.show', $commission)
-            ->with('success', 'Komisija je uspešno ažurirana.');
+            ->with('success', 'Komisija je uspješno ažurirana.');
     }
 
     /**
@@ -484,7 +484,7 @@ class AdminController extends Controller
             'status' => 'active',
         ]);
 
-        return back()->with('success', 'Član komisije je uspešno dodat.');
+        return back()->with('success', 'Član komisije je uspješno dodat.');
     }
 
     /**
@@ -515,7 +515,7 @@ class AdminController extends Controller
         ]);
 
         return redirect()->route('admin.commissions.show', $member->commission)
-            ->with('success', 'Izjave su uspešno potpisane.');
+            ->with('success', 'Izjave su uspješno potpisane.');
     }
 
     /**
@@ -529,7 +529,7 @@ class AdminController extends Controller
 
         $member->update(['status' => $validated['status']]);
 
-        return back()->with('success', 'Status člana je uspešno ažuriran.');
+        return back()->with('success', 'Status člana je uspješno ažuriran.');
     }
 
     /**
@@ -541,7 +541,7 @@ class AdminController extends Controller
         $member->delete();
 
         return redirect()->route('admin.commissions.show', $commission)
-            ->with('success', 'Član komisije je uspešno obrisan.');
+            ->with('success', 'Član komisije je uspješno obrisan.');
     }
 
     /**
@@ -649,7 +649,7 @@ class AdminController extends Controller
             ->update(['status' => 'rejected']);
 
         return redirect()->route('admin.competitions.ranking', $competition)
-            ->with('success', 'Dobitnici su uspešno odabrani.');
+            ->with('success', 'Dobitnici su uspješno odabrani.');
     }
 
     /**

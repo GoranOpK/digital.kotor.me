@@ -69,7 +69,7 @@ class ContractController extends Controller
         );
 
         return redirect()->route('contracts.show', $contract)
-            ->with('success', 'Ugovor je uspešno kreiran.');
+            ->with('success', 'Ugovor je uspješno kreiran.');
     }
 
     /**
@@ -145,7 +145,7 @@ class ContractController extends Controller
             'signed_at' => now(),
         ]);
 
-        return back()->with('success', 'Potpisani ugovor je uspešno upload-ovan.');
+        return back()->with('success', 'Potpisani ugovor je uspješno upload-ovan.');
     }
 
     /**
@@ -165,6 +165,6 @@ class ContractController extends Controller
             'status' => 'approved',
         ]);
 
-        return back()->with('success', 'Ugovor je uspešno potvrđen.');
+        return back()->with('success', 'Ugovor je uspješno potvrđen.');
     }
 }

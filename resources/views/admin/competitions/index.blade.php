@@ -127,7 +127,7 @@
                             <td>{{ $competition->applications_count }}</td>
                             <td>
                                 <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-sm btn-view">Pregled</a>
-                                <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn-sm btn-edit">Izmeni</a>
+                                <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn-sm btn-edit">Izmijeni</a>
                             </td>
                         </tr>
                     @empty

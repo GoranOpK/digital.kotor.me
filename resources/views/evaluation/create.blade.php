@@ -147,7 +147,7 @@
 
         @if($existingScore)
         <div class="info-card" style="background: #dbeafe; border-left: 4px solid #3b82f6;">
-            <p><strong>Ocjena je već unesena.</strong> Možete je izmeniti ispod.</p>
+            <p><strong>Ocjena je već unesena.</strong> Možete je izmijeniti ispod.</p>
         </div>
         @endif
 

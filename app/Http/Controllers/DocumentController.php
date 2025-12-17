@@ -98,7 +98,7 @@ class DocumentController extends Controller
         $this->documentProcessor->updateUserStorage($user->id, $result['file_size']);
 
         return redirect()->route('documents.index')
-            ->with('success', 'Dokument je uspešno upload-ovan i optimizovan.');
+            ->with('success', 'Dokument je uspješno upload-ovan i optimizovan.');
     }
 
     /**
@@ -142,7 +142,7 @@ class DocumentController extends Controller
             $document->delete();
             
             return redirect()->route('documents.index')
-                ->with('success', 'Dokument je uspešno obrisan.');
+                ->with('success', 'Dokument je uspješno obrisan.');
         }
 
         return back()->withErrors(['error' => 'Greška pri brisanju dokumenta.']);

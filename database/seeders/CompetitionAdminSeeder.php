@@ -39,7 +39,7 @@ class CompetitionAdminSeeder extends Seeder
             ]
         );
 
-        $this->command->info('Administrator konkursa je uspešno kreiran/ažuriran!');
+        $this->command->info('Administrator konkursa je uspješno kreiran/ažuriran!');
         $this->command->info('Email: konkurs.admin@kotor.me');
         $this->command->info('Lozinka: M4nuyN4AIfaHDPxfpWD7');
     }

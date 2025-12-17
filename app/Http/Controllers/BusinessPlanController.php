@@ -134,7 +134,7 @@ class BusinessPlanController extends Controller
         }
 
         return redirect()->route('applications.show', $application)
-            ->with('success', 'Biznis plan je uspešno sačuvan.');
+            ->with('success', 'Biznis plan je uspješno sačuvan.');
     }
 }
 
