@@ -16,7 +16,7 @@ class RoleMiddleware
      * @param  string  $role  - naziv uloge koja je dozvoljena (prosleđuje se iz rute)
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function handle($request, Closure $next, $role)
+    public function handle($request, Closure $next, ...$roles)
     {
         // Provjeravamo da li je korisnik ulogovan
         if(!auth()->check()) {
@@ -30,8 +30,8 @@ class RoleMiddleware
             return $next($request);
         }
         
-        // Provjeravamo da li korisnik ima traženu ulogu
-        if($user->role && $user->role->name === $role){
+        // Provjeravamo da li korisnik ima jednu od traženih uloga
+        if($user->role && in_array($user->role->name, $roles)){
             // Ako ima traženu ulogu, propuštamo zahtjev dalje (npr. do kontrolera)
             return $next($request);
         }

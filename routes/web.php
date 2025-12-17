@@ -107,12 +107,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index'); // Prikaz obavještenja korisniku
     Route::post('/notifications/send', [NotificationController::class, 'send'])->name('notifications.send'); // Slanje obavještenja
 
-    // Admin rute (dostupne superadmin i admin ulogama)
-    Route::middleware('role:admin')->group(function () {
+    // Admin rute (dostupne superadmin, admin i konkurs_admin ulogama)
+    Route::middleware('role:admin,konkurs_admin')->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
-            
-            // Upravljanje korisnicima
+        });
+    });
+    
+    // Admin rute (dostupne samo superadmin i admin ulogama)
+    Route::middleware('role:admin')->group(function () {
+        Route::prefix('admin')->name('admin.')->group(function () {
+            // Upravljanje korisnicima (samo admin i superadmin)
             Route::get('/users', [AdminController::class, 'users'])->name('users.index');
             Route::get('/users/{user}', [AdminController::class, 'showUser'])->name('users.show');
             Route::get('/users/{user}/edit', [AdminController::class, 'editUser'])->name('users.edit');
@@ -120,6 +125,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/users/{user}/activate', [AdminController::class, 'activateUser'])->name('users.activate');
             Route::post('/users/{user}/deactivate', [AdminController::class, 'deactivateUser'])->name('users.deactivate');
             
+            // Pregled prijava (samo admin i superadmin)
+            Route::get('/applications', [AdminController::class, 'applications'])->name('applications.index');
+            Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
+        });
+    });
+
+    // Rute za upravljanje konkursima (dostupne superadmin, admin i konkurs_admin ulogama)
+    Route::middleware('role:admin,konkurs_admin')->group(function () {
+        Route::prefix('admin')->name('admin.')->group(function () {
             // Upravljanje konkursima
             Route::get('/competitions', [AdminController::class, 'competitions'])->name('competitions.index');
             Route::get('/competitions/create', [AdminController::class, 'createCompetition'])->name('competitions.create');
@@ -129,17 +143,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/competitions/{competition}', [AdminController::class, 'updateCompetition'])->name('competitions.update');
             Route::post('/competitions/{competition}/publish', [AdminController::class, 'publishCompetition'])->name('competitions.publish');
             Route::post('/competitions/{competition}/close', [AdminController::class, 'closeCompetition'])->name('competitions.close');
-            
-            // Pregled prijava
-            Route::get('/applications', [AdminController::class, 'applications'])->name('applications.index');
-            Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
+            Route::delete('/competitions/{competition}', [AdminController::class, 'destroyCompetition'])->name('competitions.destroy');
             
             // Rang lista
             Route::get('/competitions/{competition}/ranking', [AdminController::class, 'rankingList'])->name('competitions.ranking');
             Route::post('/competitions/{competition}/winners', [AdminController::class, 'selectWinners'])->name('competitions.select-winners');
             Route::get('/competitions/{competition}/decision', [AdminController::class, 'generateDecision'])->name('competitions.decision');
             
-            // Upravljanje komisijom
+            // Upravljanje komisijom za konkurse (dodavanje evaluatora) - dostupno i konkurs_admin roli
             Route::get('/commissions', [AdminController::class, 'commissions'])->name('commissions.index');
             Route::get('/commissions/create', [AdminController::class, 'createCommission'])->name('commissions.create');
             Route::post('/commissions', [AdminController::class, 'storeCommission'])->name('commissions.store');

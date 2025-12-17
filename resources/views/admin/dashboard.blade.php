@@ -175,16 +175,18 @@
     <div class="container mx-auto px-4">
         <!-- Header -->
         <div class="admin-header">
-            <h1>Administratorski Dashboard</h1>
+            <h1>@if($isCompetitionAdmin) Administratorski Dashboard - Konkursi @else Administratorski Dashboard @endif</h1>
         </div>
 
         <!-- Statistike -->
         <div class="stats-grid">
+            @if(!$isCompetitionAdmin)
             <div class="stat-card">
                 <h3>Ukupno korisnika</h3>
-                <p class="number">{{ $stats['total_users'] }}</p>
-                <p class="subtitle">Aktivnih: {{ $stats['active_users'] }}</p>
+                <p class="number">{{ $stats['total_users'] ?? 0 }}</p>
+                <p class="subtitle">Aktivnih: {{ $stats['active_users'] ?? 0 }}</p>
             </div>
+            @endif
 
             <div class="stat-card">
                 <h3>Konkursi</h3>
@@ -196,10 +198,18 @@
                 <p class="number">{{ $stats['total_applications'] }}</p>
             </div>
 
+            @if(!$isCompetitionAdmin)
             <div class="stat-card">
                 <h3>Tenderi</h3>
-                <p class="number">{{ $stats['total_tenders'] }}</p>
+                <p class="number">{{ $stats['total_tenders'] ?? 0 }}</p>
             </div>
+            @else
+            <div class="stat-card">
+                <h3>Komisije</h3>
+                <p class="number">{{ $stats['total_commissions'] }}</p>
+                <p class="subtitle">Aktivnih: {{ $stats['active_commissions'] }}</p>
+            </div>
+            @endif
         </div>
 
         <!-- Brzi linkovi -->
@@ -211,20 +221,23 @@
                 <a href="{{ route('admin.competitions.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
                     📋 Konkursi
                 </a>
-                <a href="{{ route('admin.applications.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
-                    📝 Prijave
-                </a>
                 <a href="{{ route('admin.commissions.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
                     👥 Komisija
+                </a>
+                @if(!$isCompetitionAdmin)
+                <a href="{{ route('admin.applications.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    📝 Prijave
                 </a>
                 <a href="{{ route('admin.users.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
                     👤 Korisnici
                 </a>
+                @endif
             </div>
         </div>
 
         <!-- Sadržaj -->
         <div class="content-grid">
+            @if(!$isCompetitionAdmin && $recent_users)
             <!-- Najnoviji korisnici -->
             <div class="content-card">
                 <div class="content-card-header">
@@ -264,6 +277,7 @@
                     <a href="{{ route('admin.users.index') }}" class="view-all-link">Prikaži sve korisnike →</a>
                 </div>
             </div>
+            @endif
 
             <!-- Najnovije prijave -->
             <div class="content-card">

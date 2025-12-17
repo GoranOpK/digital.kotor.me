@@ -20,21 +20,31 @@ class AdminController extends Controller
      */
     public function dashboard()
     {
+        $user = auth()->user();
+        $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
+        
         // Statistike za admin dashboard
         $stats = [
-            'total_users' => User::count(),
-            'active_users' => User::where('activation_status', 'active')->count(),
             'total_competitions' => Competition::count(),
             'total_applications' => Application::count(),
             'total_commissions' => Commission::count(),
             'active_commissions' => Commission::where('status', 'active')->count(),
-            'total_tenders' => Tender::count(),
-            'total_contracts' => Contract::count(),
-            'total_reports' => Report::count(),
         ];
+        
+        // Dodatne statistike samo za superadmin i admin
+        if (!$isCompetitionAdmin) {
+            $stats['total_users'] = User::count();
+            $stats['active_users'] = User::where('activation_status', 'active')->count();
+            $stats['total_tenders'] = Tender::count();
+            $stats['total_contracts'] = Contract::count();
+            $stats['total_reports'] = Report::count();
+        }
 
-        // Najnoviji korisnici
-        $recent_users = User::latest()->take(10)->get();
+        // Najnoviji korisnici (samo za superadmin i admin)
+        $recent_users = null;
+        if (!$isCompetitionAdmin) {
+            $recent_users = User::latest()->take(10)->get();
+        }
 
         // Najnovije prijave na konkurse
         $recent_applications = Application::with('user', 'competition')
@@ -42,7 +52,7 @@ class AdminController extends Controller
             ->take(10)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'recent_users', 'recent_applications'));
+        return view('admin.dashboard', compact('stats', 'recent_users', 'recent_applications', 'isCompetitionAdmin'));
     }
 
     /**
@@ -50,6 +60,12 @@ class AdminController extends Controller
      */
     public function users()
     {
+        // Proveri da li je konkurs_admin - oni nemaju pristup upravljanju korisnicima
+        $user = auth()->user();
+        if ($user->role && $user->role->name === 'konkurs_admin') {
+            abort(403, 'Nemate pristup upravljanju korisnicima.');
+        }
+        
         $users = User::with('role')->latest()->paginate(20);
         return view('admin.users.index', compact('users'));
     }
@@ -59,6 +75,12 @@ class AdminController extends Controller
      */
     public function showUser(User $user)
     {
+        // Proveri da li je konkurs_admin
+        $currentUser = auth()->user();
+        if ($currentUser->role && $currentUser->role->name === 'konkurs_admin') {
+            abort(403, 'Nemate pristup upravljanju korisnicima.');
+        }
+        
         $user->load('role');
         return view('admin.users.show', compact('user'));
     }
@@ -68,6 +90,12 @@ class AdminController extends Controller
      */
     public function editUser(User $user)
     {
+        // Proveri da li je konkurs_admin
+        $currentUser = auth()->user();
+        if ($currentUser->role && $currentUser->role->name === 'konkurs_admin') {
+            abort(403, 'Nemate pristup upravljanju korisnicima.');
+        }
+        
         $user->load('role');
         $roles = \App\Models\Role::all();
         return view('admin.users.edit', compact('user', 'roles'));
@@ -78,6 +106,11 @@ class AdminController extends Controller
      */
     public function updateUser(Request $request, User $user)
     {
+        // Proveri da li je konkurs_admin
+        $currentUser = auth()->user();
+        if ($currentUser->role && $currentUser->role->name === 'konkurs_admin') {
+            abort(403, 'Nemate pristup upravljanju korisnicima.');
+        }
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -111,6 +144,11 @@ class AdminController extends Controller
      */
     public function deactivateUser(User $user)
     {
+        // Proveri da li je konkurs_admin
+        $currentUser = auth()->user();
+        if ($currentUser->role && $currentUser->role->name === 'konkurs_admin') {
+            abort(403, 'Nemate pristup upravljanju korisnicima.');
+        }
         $user->activation_status = 'deactivated';
         $user->save();
 
@@ -122,6 +160,11 @@ class AdminController extends Controller
      */
     public function activateUser(User $user)
     {
+        // Proveri da li je konkurs_admin
+        $currentUser = auth()->user();
+        if ($currentUser->role && $currentUser->role->name === 'konkurs_admin') {
+            abort(403, 'Nemate pristup upravljanju korisnicima.');
+        }
         $user->activation_status = 'active';
         $user->save();
 
@@ -273,6 +316,12 @@ class AdminController extends Controller
      */
     public function applications(Request $request)
     {
+        // Proveri da li je konkurs_admin - oni nemaju pristup upravljanju aplikacijama
+        $user = auth()->user();
+        if ($user->role && $user->role->name === 'konkurs_admin') {
+            abort(403, 'Nemate pristup upravljanju aplikacijama.');
+        }
+        
         $query = Application::with(['user', 'competition']);
 
         // Filtriranje po statusu
@@ -301,6 +350,11 @@ class AdminController extends Controller
      */
     public function showApplication(Application $application)
     {
+        // Proveri da li je konkurs_admin
+        $user = auth()->user();
+        if ($user->role && $user->role->name === 'konkurs_admin') {
+            abort(403, 'Nemate pristup upravljanju aplikacijama.');
+        }
         $application->load(['user', 'competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember']);
         
         return view('admin.applications.show', compact('application'));
