@@ -29,7 +29,8 @@
         background: #fff;
         border-radius: 12px;
         padding: 20px;
-        margin-bottom: 24px;
+        margin: 0 auto 24px;
+        max-width: 600px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .storage-bar {
@@ -55,7 +56,8 @@
         background: #fff;
         border-radius: 12px;
         padding: 24px;
-        margin-bottom: 24px;
+        margin: 0 auto 24px;
+        max-width: 600px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .upload-section h2 {
@@ -312,7 +314,7 @@
         </div>
 
         <!-- Informacije o prostoru -->
-        <div class="storage-info" style="margin-top: 24px;">
+        <div class="storage-info">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <span style="font-weight: 600; color: #374151;">Iskorišćen prostor</span>
                 <span style="font-weight: 600; color: var(--primary);">{{ $usedStorageMB }} MB / {{ $maxStorageMB }} MB</span>
