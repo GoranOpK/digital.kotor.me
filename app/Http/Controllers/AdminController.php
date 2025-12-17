@@ -387,11 +387,19 @@ class AdminController extends Controller
      */
     public function storeCommission(Request $request)
     {
+        // Automatski izračunaj datum završetka (2 godine od početka)
+        $startDate = $request->input('start_date');
+        $endDate = null;
+        if ($startDate) {
+            $start = \Carbon\Carbon::parse($startDate);
+            $endDate = $start->copy()->addYears(2)->format('Y-m-d');
+        }
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
+            'end_date' => 'required|date',
             'members' => 'required|array|size:5',
             'members.0.name' => 'required|string|max:255',
             'members.0.position' => 'required|in:predsjednik',
@@ -433,7 +441,7 @@ class AdminController extends Controller
             'name' => $validated['name'],
             'year' => $validated['year'],
             'start_date' => $validated['start_date'],
-            'end_date' => $validated['end_date'],
+            'end_date' => $endDate ?? $validated['end_date'],
             'status' => 'active',
         ]);
 
