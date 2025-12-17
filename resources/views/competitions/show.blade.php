@@ -262,6 +262,34 @@
         </div>
         @endif
 
+        <!-- Prioriteti za raspodjelu sredstava -->
+        <div class="info-card" style="background: #f0f9ff; border-left: 4px solid var(--primary);">
+            <h2 style="color: var(--primary);">Prioriteti za raspodjelu sredstava</h2>
+            <p style="color: #374151; line-height: 1.8; margin-bottom: 12px;">
+                Sredstva opredijeljena Budžetom Opštine Kotor raspodjeljuju se za biznis planove koji:
+            </p>
+            <ul style="color: #374151; line-height: 1.8; margin: 0; padding-left: 20px;">
+                <li><strong>Podstiču ekonomski razvoj opštine</strong> (započinjanje biznisa, povećanje zaposlenosti i kreiranje novih radnih mjesta, smanjenje sive ekonomije, povećanje životnog standarda, razvoj lokalne zajednice, osvajanje novih tržišta i povećanje konkurentnosti, kreiranje nove ponude, osnaživanje žena u biznisu itd);</li>
+                <li><strong>Podstiču razvoj turizma</strong> (naročito razvoj ruralnog turizma - pružanje usluga u seoskom domaćinstvu, etno sela, turistička valorizacija kulturnog potencijala, tradicije i kulturne posebnosti, bogatija i raznovrsnija turistička ponuda);</li>
+                <li><strong>Podstiču razvoj trgovine</strong>;</li>
+                <li><strong>Podstiču razvoj kreativnih industrija</strong> (aktivnosti koje su bazirane na individualnoj kreativnosti, vještini i talentu: zanati, arhitektura, umjetnost, dizajn, produkcija, mediji, izdavaštvo, razvoj software-a);</li>
+                <li><strong>Podstiču razvoj start-up-ova</strong> (inovativnih tehnoloških biznisa koji imaju potencijal brzog rasta i velikih dometa);</li>
+                <li><strong>Doprinose razvoju fizičke kulture i sporta i zdravih stilova života</strong>;</li>
+                <li><strong>Doprinose očuvanju životne sredine i održivog razvoja</strong>.</li>
+            </ul>
+        </div>
+
+        <!-- Biznis planovi koji se neće podržati -->
+        <div class="info-card" style="background: #fef2f2; border-left: 4px solid #ef4444;">
+            <h2 style="color: #991b1b;">Biznis planovi koji se neće podržati</h2>
+            <ul style="color: #374151; line-height: 1.8; margin: 0; padding-left: 20px;">
+                <li>Aktivnosti koje su u nadležnosti ili odgovornosti Vlade, kao što je formalno obrazovanje, formalna zdravstvena zaštita i sl.;</li>
+                <li>Biznis planovi kojim se traže finansijska sredstva za kupovinu i raspodjelu humanitarne pomoći;</li>
+                <li>Biznis planovi koji se isključivo temelje na jednokratnoj izradi, pripremi i štampanju knjiga, brošura, biltena, časopisa i slično, ukoliko objava takvih publikacija nije dio nekog šireg programa ili sveobuhvatnijih i kontinuiranih aktivnosti;</li>
+                <li>Aktivnost koja se smatra nezakonitom ili štetnom po okolinu i opasnom za ljudsko zdravlje: igre na sreću, duvan, alkoholna pića (izuzev proizvodnje vina i voćnih rakija).</li>
+            </ul>
+        </div>
+
         <!-- Obavezna dokumentacija -->
         <div class="info-card">
             <h2>Obavezna dokumentacija</h2>
