@@ -392,12 +392,41 @@ class AdminController extends Controller
             'year' => 'required|integer|min:2020|max:2100',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
+            'members' => 'required|array|size:5',
+            'members.0.name' => 'required|string|max:255',
+            'members.0.position' => 'required|in:predsjednik',
+            'members.0.member_type' => 'required|in:opstina',
+            'members.0.organization' => 'nullable|string|max:255',
+            'members.1.name' => 'required|string|max:255',
+            'members.1.position' => 'required|in:clan',
+            'members.1.member_type' => 'required|in:opstina',
+            'members.1.organization' => 'nullable|string|max:255',
+            'members.2.name' => 'required|string|max:255',
+            'members.2.position' => 'required|in:clan',
+            'members.2.member_type' => 'required|in:opstina',
+            'members.2.organization' => 'nullable|string|max:255',
+            'members.3.name' => 'required|string|max:255',
+            'members.3.position' => 'required|in:clan',
+            'members.3.member_type' => 'required|in:udruzenje',
+            'members.3.organization' => 'required|string|max:255',
+            'members.4.name' => 'required|string|max:255',
+            'members.4.position' => 'required|in:clan',
+            'members.4.member_type' => 'required|in:zene_mreza',
+            'members.4.organization' => 'nullable|string|max:255',
         ], [
             'name.required' => 'Naziv komisije je obavezan.',
             'year.required' => 'Godina je obavezna.',
             'start_date.required' => 'Datum početka je obavezan.',
             'end_date.required' => 'Datum završetka je obavezan.',
             'end_date.after' => 'Datum završetka mora biti posle datuma početka.',
+            'members.required' => 'Morate dodati sve 5 članova komisije.',
+            'members.size' => 'Komisija mora imati tačno 5 članova.',
+            'members.0.name.required' => 'Ime i prezime predsjednika je obavezno.',
+            'members.1.name.required' => 'Ime i prezime prvog člana (Opština) je obavezno.',
+            'members.2.name.required' => 'Ime i prezime drugog člana (Opština) je obavezno.',
+            'members.3.name.required' => 'Ime i prezime člana (Udruženje) je obavezno.',
+            'members.3.organization.required' => 'Organizacija za člana iz udruženja je obavezna.',
+            'members.4.name.required' => 'Ime i prezime člana (Ženske mreže) je obavezno.',
         ]);
 
         $commission = Commission::create([
@@ -408,8 +437,20 @@ class AdminController extends Controller
             'status' => 'active',
         ]);
 
+        // Kreiraj sve članove komisije
+        foreach ($validated['members'] as $memberData) {
+            CommissionMember::create([
+                'commission_id' => $commission->id,
+                'name' => $memberData['name'],
+                'position' => $memberData['position'],
+                'member_type' => $memberData['member_type'],
+                'organization' => $memberData['organization'] ?? null,
+                'status' => 'active',
+            ]);
+        }
+
         return redirect()->route('admin.commissions.show', $commission)
-            ->with('success', 'Komisija je uspješno kreirana.');
+            ->with('success', 'Komisija sa svim članovima je uspješno kreirana.');
     }
 
     /**

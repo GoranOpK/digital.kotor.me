@@ -115,8 +115,99 @@
                     </div>
                 </div>
 
+                <!-- Informacije o sastavu komisije -->
+                <div style="background: #f0f9ff; border-left: 4px solid var(--primary); padding: 16px; border-radius: 8px; margin: 24px 0;">
+                    <h3 style="font-size: 16px; font-weight: 600; color: var(--primary); margin: 0 0 12px;">Sastav komisije</h3>
+                    <p style="font-size: 14px; color: #374151; margin: 0 0 8px;"><strong>Komisija se sastoji od 5 članova:</strong></p>
+                    <ul style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px;">
+                        <li>1 predsjednik (iz reda potpredsjednika Opštine ili starješina organa lokalne uprave)</li>
+                        <li>2 člana - predstavnici Opštine</li>
+                        <li>1 član - predstavnica Udruženja preduzetnica Crne Gore ili strukovnih udruženja, ili biznisa, ili akademske zajednice</li>
+                        <li>1 član - predstavnica Ženske političke mreže</li>
+                    </ul>
+                </div>
+
+                <!-- Članovi komisije -->
+                <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
+                    <h2 style="font-size: 20px; font-weight: 700; color: var(--primary); margin: 0 0 20px;">Članovi komisije</h2>
+                    
+                    <!-- Predsjednik -->
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">1. Predsjednik *</h3>
+                        <div class="form-group">
+                            <label class="form-label">Ime i prezime *</label>
+                            <input type="text" name="members[0][name]" class="form-control" value="{{ old('members.0.name') }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Organizacija (opciono)</label>
+                            <input type="text" name="members[0][organization]" class="form-control" value="{{ old('members.0.organization') }}" placeholder="Potpredsjednik Opštine / Starješina organa lokalne uprave">
+                        </div>
+                        <input type="hidden" name="members[0][position]" value="predsjednik">
+                        <input type="hidden" name="members[0][member_type]" value="opstina">
+                    </div>
+
+                    <!-- 2 člana - Opština -->
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">2. Član - Predstavnik Opštine *</h3>
+                        <div class="form-group">
+                            <label class="form-label">Ime i prezime *</label>
+                            <input type="text" name="members[1][name]" class="form-control" value="{{ old('members.1.name') }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Organizacija (opciono)</label>
+                            <input type="text" name="members[1][organization]" class="form-control" value="{{ old('members.1.organization') }}" placeholder="Naziv organizacije">
+                        </div>
+                        <input type="hidden" name="members[1][position]" value="clan">
+                        <input type="hidden" name="members[1][member_type]" value="opstina">
+                    </div>
+
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">3. Član - Predstavnik Opštine *</h3>
+                        <div class="form-group">
+                            <label class="form-label">Ime i prezime *</label>
+                            <input type="text" name="members[2][name]" class="form-control" value="{{ old('members.2.name') }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Organizacija (opciono)</label>
+                            <input type="text" name="members[2][organization]" class="form-control" value="{{ old('members.2.organization') }}" placeholder="Naziv organizacije">
+                        </div>
+                        <input type="hidden" name="members[2][position]" value="clan">
+                        <input type="hidden" name="members[2][member_type]" value="opstina">
+                    </div>
+
+                    <!-- 1 član - Udruženje -->
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">4. Član - Predstavnica Udruženja/Udruženja preduzetnica/Biznisa/Akademske zajednice *</h3>
+                        <div class="form-group">
+                            <label class="form-label">Ime i prezime *</label>
+                            <input type="text" name="members[3][name]" class="form-control" value="{{ old('members.3.name') }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Organizacija *</label>
+                            <input type="text" name="members[3][organization]" class="form-control" value="{{ old('members.3.organization') }}" placeholder="Naziv udruženja/organizacije" required>
+                        </div>
+                        <input type="hidden" name="members[3][position]" value="clan">
+                        <input type="hidden" name="members[3][member_type]" value="udruzenje">
+                    </div>
+
+                    <!-- 1 član - Ženske mreže -->
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">5. Član - Predstavnica Ženske političke mreže *</h3>
+                        <div class="form-group">
+                            <label class="form-label">Ime i prezime *</label>
+                            <input type="text" name="members[4][name]" class="form-control" value="{{ old('members.4.name') }}" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Organizacija (opciono)</label>
+                            <input type="text" name="members[4][organization]" class="form-control" value="{{ old('members.4.organization') }}" placeholder="Ženska politička mreža">
+                        </div>
+                        <input type="hidden" name="members[4][position]" value="clan">
+                        <input type="hidden" name="members[4][member_type]" value="zene_mreza">
+                    </div>
+                </div>
+
                 <div style="margin-top: 24px;">
-                    <button type="submit" class="btn-primary">Sačuvaj komisiju</button>
+                    <button type="submit" class="btn-primary">Sačuvaj komisiju sa članovima</button>
                     <a href="{{ route('admin.commissions.index') }}" style="margin-left: 12px; color: #6b7280;">Otkaži</a>
                 </div>
             </form>
