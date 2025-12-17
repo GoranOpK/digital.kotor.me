@@ -189,6 +189,27 @@
         border-color: var(--primary);
         box-shadow: 0 0 0 3px rgba(11, 61, 145, 0.1);
     }
+    input[type="file"] {
+        color: transparent;
+    }
+    input[type="file"]::-webkit-file-upload-button {
+        visibility: hidden;
+    }
+    input[type="file"]::before {
+        content: 'Izaberi fajl';
+        display: inline-block;
+        background: var(--primary);
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        margin-right: 10px;
+    }
+    input[type="file"]:hover::before {
+        background: var(--primary-dark);
+    }
     .alert {
         border-radius: 12px;
         padding: 16px 20px;

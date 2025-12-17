@@ -81,6 +81,27 @@
         border-radius: 8px;
         font-size: 14px;
     }
+    input[type="file"] {
+        color: transparent;
+    }
+    input[type="file"]::-webkit-file-upload-button {
+        visibility: hidden;
+    }
+    input[type="file"]::before {
+        content: 'Izaberi fajl';
+        display: inline-block;
+        background: var(--primary);
+        color: #fff;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 600;
+        margin-right: 10px;
+    }
+    input[type="file"]:hover::before {
+        background: var(--primary-dark);
+    }
     .btn {
         padding: 12px 24px;
         border-radius: 8px;
