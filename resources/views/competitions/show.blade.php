@@ -152,13 +152,56 @@
             <p style="color: rgba(255,255,255,0.9); margin: 0;">Detalji konkursa za podršku ženskom preduzetništvu</p>
         </div>
 
-        @if($isOpen && $daysRemaining > 0)
-            <div class="deadline-alert">
-                <strong>⚠️ Preostalo vreme za prijavu: {{ $daysRemaining }} {{ $daysRemaining == 1 ? 'dan' : 'dana' }}</strong>
+        @if($isOpen && ($daysRemaining > 0 || $hoursRemaining > 0 || $minutesRemaining > 0))
+            <div class="deadline-alert" id="deadlineAlert">
+                <strong>⚠️ Preostalo vreme za prijavu: <span id="countdown">Učitavanje...</span></strong>
                 <div style="font-size: 14px; color: #92400e; margin-top: 4px;">
                     Rok za podnošenje prijava: {{ $deadline->format('d.m.Y H:i') }}
                 </div>
             </div>
+            
+            <script>
+                (function() {
+                    const deadline = new Date('{{ $deadline->format('Y-m-d H:i:s') }}').getTime();
+                    const countdownEl = document.getElementById('countdown');
+                    
+                    function updateCountdown() {
+                        const now = new Date().getTime();
+                        const distance = deadline - now;
+                        
+                        if (distance < 0) {
+                            countdownEl.textContent = 'Rok je istekao';
+                            return;
+                        }
+                        
+                        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                        
+                        let text = '';
+                        if (days > 0) {
+                            text += days + ' ' + (days === 1 ? 'dan' : 'dana');
+                            if (hours > 0 || minutes > 0) text += ', ';
+                        }
+                        if (hours > 0) {
+                            text += hours + ' ' + (hours === 1 ? 'sat' : (hours < 5 ? 'sata' : 'sati'));
+                            if (minutes > 0) text += ', ';
+                        }
+                        if (minutes > 0) {
+                            text += minutes + ' ' + (minutes === 1 ? 'minut' : (minutes < 5 ? 'minuta' : 'minuta'));
+                        }
+                        if (days === 0 && hours === 0 && minutes === 0) {
+                            text = seconds + ' ' + (seconds === 1 ? 'sekund' : (seconds < 5 ? 'sekunda' : 'sekundi'));
+                        }
+                        
+                        countdownEl.textContent = text;
+                    }
+                    
+                    updateCountdown();
+                    setInterval(updateCountdown, 1000);
+                })();
+            </script>
         @elseif(!$isOpen)
             <div class="alert" style="background: #fee2e2; border-color: #ef4444; color: #991b1b;">
                 <strong>Konkurs je zatvoren</strong> - rok za prijave je istekao.

@@ -27,11 +27,23 @@ class CompetitionsController extends Controller
                 if ($competition->published_at) {
                     $deadline = $competition->published_at->addDays($competition->deadline_days ?? 20);
                     $competition->deadline = $deadline;
-                    $competition->days_remaining = max(0, now()->diffInDays($deadline, false));
                     $competition->is_open = $deadline->isFuture();
+                    
+                    if ($deadline->isFuture()) {
+                        $diff = now()->diff($deadline);
+                        $competition->days_remaining = $diff->days;
+                        $competition->hours_remaining = $diff->h;
+                        $competition->minutes_remaining = $diff->i;
+                    } else {
+                        $competition->days_remaining = 0;
+                        $competition->hours_remaining = 0;
+                        $competition->minutes_remaining = 0;
+                    }
                 } else {
                     $competition->deadline = null;
                     $competition->days_remaining = 0;
+                    $competition->hours_remaining = 0;
+                    $competition->minutes_remaining = 0;
                     $competition->is_open = false;
                 }
                 return $competition;
@@ -53,12 +65,20 @@ class CompetitionsController extends Controller
         // Izračunaj preostalo vreme
         $deadline = null;
         $daysRemaining = 0;
+        $hoursRemaining = 0;
+        $minutesRemaining = 0;
         $isOpen = false;
 
         if ($competition->published_at) {
             $deadline = $competition->published_at->copy()->addDays($competition->deadline_days ?? 20);
-            $daysRemaining = max(0, now()->diffInDays($deadline, false));
             $isOpen = $deadline->isFuture();
+            
+            if ($isOpen) {
+                $diff = now()->diff($deadline);
+                $daysRemaining = $diff->days;
+                $hoursRemaining = $diff->h;
+                $minutesRemaining = $diff->i;
+            }
         }
 
         // Lista obaveznih dokumenata (opšta lista - detalji će biti u formi za prijavu)
@@ -85,6 +105,8 @@ class CompetitionsController extends Controller
             'competition',
             'deadline',
             'daysRemaining',
+            'hoursRemaining',
+            'minutesRemaining',
             'isOpen',
             'requiredDocuments',
             'userApplication'

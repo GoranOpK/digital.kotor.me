@@ -142,9 +142,9 @@
                             </p>
                         @endif
 
-                        @if($competition->is_open && $competition->days_remaining > 0)
-                            <div class="deadline-info">
-                                <strong>Preostalo vreme za prijavu: {{ $competition->days_remaining }} {{ $competition->days_remaining == 1 ? 'dan' : 'dana' }}</strong>
+                        @if($competition->is_open && ($competition->days_remaining > 0 || $competition->hours_remaining > 0 || $competition->minutes_remaining > 0))
+                            <div class="deadline-info" data-deadline="{{ $competition->deadline->format('Y-m-d H:i:s') }}">
+                                <strong>Preostalo vreme za prijavu: <span class="countdown-{{ $competition->id }}">Učitavanje...</span></strong>
                                 <div style="font-size: 12px; color: #92400e; margin-top: 4px;">
                                     Rok za prijave: {{ $competition->deadline->format('d.m.Y H:i') }}
                                 </div>
@@ -166,4 +166,51 @@
         @endif
     </div>
 </div>
+
+<script>
+    (function() {
+        document.querySelectorAll('[data-deadline]').forEach(function(element) {
+            const deadline = new Date(element.getAttribute('data-deadline')).getTime();
+            const countdownEl = element.querySelector('[class^="countdown-"]');
+            
+            if (!countdownEl) return;
+            
+            function updateCountdown() {
+                const now = new Date().getTime();
+                const distance = deadline - now;
+                
+                if (distance < 0) {
+                    countdownEl.textContent = 'Rok je istekao';
+                    return;
+                }
+                
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                
+                let text = '';
+                if (days > 0) {
+                    text += days + ' ' + (days === 1 ? 'dan' : 'dana');
+                    if (hours > 0 || minutes > 0) text += ', ';
+                }
+                if (hours > 0) {
+                    text += hours + ' ' + (hours === 1 ? 'sat' : (hours < 5 ? 'sata' : 'sati'));
+                    if (minutes > 0) text += ', ';
+                }
+                if (minutes > 0) {
+                    text += minutes + ' ' + (minutes === 1 ? 'minut' : (minutes < 5 ? 'minuta' : 'minuta'));
+                }
+                if (days === 0 && hours === 0 && minutes === 0) {
+                    text = seconds + ' ' + (seconds === 1 ? 'sekund' : (seconds < 5 ? 'sekunda' : 'sekundi'));
+                }
+                
+                countdownEl.textContent = text;
+            }
+            
+            updateCountdown();
+            setInterval(updateCountdown, 1000);
+        });
+    })();
+</script>
 @endsection
