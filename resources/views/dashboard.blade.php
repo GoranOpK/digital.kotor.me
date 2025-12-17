@@ -329,7 +329,8 @@
             </div>
             @endif
 
-            <!-- Kratka sekcija za biblioteku dokumenata -->
+            <!-- Kratka sekcija za biblioteku dokumenata (ne prikazuje se za super admin) -->
+            @if (!$isSuperAdmin)
             <div class="info-card" style="min-height: 100%;">
                 <div class="info-card-header">
                     <h2>Moja biblioteka dokumenata</h2>
@@ -351,6 +352,7 @@
                     </div>
                 </div>
             </div>
+            @endif
         </div>
 
         <!-- Services - Super Admin (vidi sve opcije) -->
