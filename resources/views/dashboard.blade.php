@@ -475,6 +475,17 @@
 
             </div>
         @endif
+
+        <!-- Services - Administrator konkursa -->
+        @if ($isCompetitionAdmin)
+            <div class="services-grid">
+                <a href="{{ route('admin.dashboard') }}" class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
+                    <div class="service-icon" style="border-color: var(--primary);">⚙️</div>
+                    <h3>Administracija konkursa</h3>
+                    <p>Upravljanje konkursima, komisijama i prijavama. Pristup administratorskom panelu za upravljanje konkursima.</p>
+                </a>
+            </div>
+        @endif
     </div>
 </div>
 @endsection
