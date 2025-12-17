@@ -119,9 +119,11 @@ class DocumentController extends Controller
             abort(404, 'Dokument nije pronađen.');
         }
 
+        $extension = pathinfo($document->file_path, PATHINFO_EXTENSION) ?: 'dat';
+
         return Storage::disk('local')->download(
             $document->file_path,
-            $document->name . '.pdf'
+            $document->name . '.' . $extension
         );
     }
 

@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -15,17 +14,9 @@ class DocumentProcessor
     const MAX_STORAGE_PER_USER = 20 * 1024 * 1024; // 20 MB u bajtovima
 
     /**
-     * Putanja do Python skripte
-     */
-    protected string $pythonScriptPath;
-
-    public function __construct()
-    {
-        $this->pythonScriptPath = base_path('scripts/process_document.py');
-    }
-
-    /**
-     * Procesira upload-ovani dokument i kreira optimizovani PDF
+     * Procesira upload-ovani dokument i kreira optimizovanu verziju fajla.
+     * Za slike (JPEG/PNG) radi se resize + JPEG kompresija.
+     * Za PDF fajlove, fajl se snima bez izmjene.
      *
      * @param \Illuminate\Http\UploadedFile $file
      * @param int $userId
@@ -34,69 +25,87 @@ class DocumentProcessor
     public function processDocument($file, int $userId): array
     {
         try {
-            // Validacija tipa fajla
+            // Dozvoljeni tipovi – slike (JPEG/PNG) i PDF
+            $mime = $file->getMimeType();
             $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
-            if (!in_array($file->getMimeType(), $allowedMimes)) {
+            if (!in_array($mime, $allowedMimes)) {
                 return [
                     'success' => false,
                     'error' => 'Tip fajla nije dozvoljen. Dozvoljeni su: JPEG, PNG, PDF.'
                 ];
             }
 
-            // Privremena putanja za originalni fajl
-            $tempInputPath = $file->storeAs('temp', uniqid('doc_', true) . '.' . $file->getClientOriginalExtension(), 'local');
-            $fullTempInputPath = Storage::disk('local')->path($tempInputPath);
+            // Direktorijum za korisnika
+            $directory = "documents/user_{$userId}";
 
-            // Putanja za optimizovani PDF
-            $outputFilename = uniqid('doc_', true) . '.pdf';
-            $outputPath = "documents/user_{$userId}/{$outputFilename}";
-            $fullOutputPath = Storage::disk('local')->path($outputPath);
+            // Ako je PDF – ne diramo fajl, samo ga snimimo
+            if ($mime === 'application/pdf') {
+                $outputFilename = uniqid('doc_', true) . '.pdf';
+                $path = $file->storeAs($directory, $outputFilename, 'local');
 
-            // Kreiraj direktorijum ako ne postoji
-            $outputDir = dirname($fullOutputPath);
-            if (!is_dir($outputDir)) {
-                mkdir($outputDir, 0755, true);
-            }
-
-            // Pozovi Python skriptu
-            $pythonCommand = $this->getPythonCommand();
-            $result = Process::run([
-                $pythonCommand,
-                $this->pythonScriptPath,
-                $fullTempInputPath,
-                $fullOutputPath
-            ]);
-
-            // Obriši privremeni fajl
-            Storage::disk('local')->delete($tempInputPath);
-
-            if (!$result->successful()) {
-                Log::error('Document processing failed', [
-                    'error' => $result->errorOutput(),
-                    'user_id' => $userId
-                ]);
+                $fullPath = Storage::disk('local')->path($path);
+                $fileSize = filesize($fullPath);
 
                 return [
-                    'success' => false,
-                    'error' => 'Greška pri obradi dokumenta. Pokušajte ponovo.'
+                    'success' => true,
+                    'file_path' => $path,
+                    'file_size' => $fileSize,
+                    'error' => null,
                 ];
             }
 
-            // Proveri da li je fajl kreiran
-            if (!file_exists($fullOutputPath)) {
+            // Za slike – kompresija u JPEG sa smanjenom rezolucijom
+            $outputFilename = uniqid('doc_', true) . '.jpg';
+            $outputPath = "{$directory}/{$outputFilename}";
+
+            // Maksimalna širina/visina (u pikselima)
+            $maxWidth = 2000;
+            $maxHeight = 2000;
+
+            $imageResource = $this->createImageResource($file->getRealPath(), $mime);
+            if (!$imageResource) {
                 return [
                     'success' => false,
-                    'error' => 'Optimizovani fajl nije kreiran.'
+                    'error' => 'Greška pri otvaranju slike. Pokušajte sa drugim fajlom.',
                 ];
             }
 
-            $fileSize = filesize($fullOutputPath);
+            $width = imagesx($imageResource);
+            $height = imagesy($imageResource);
+
+            // Izračunaj novu veličinu uz očuvanje proporcija
+            $ratio = min($maxWidth / $width, $maxHeight / $height, 1);
+            $newWidth = (int) floor($width * $ratio);
+            $newHeight = (int) floor($height * $ratio);
+
+            $resized = imagecreatetruecolor($newWidth, $newHeight);
+            imagecopyresampled($resized, $imageResource, 0, 0, 0, 0, $newWidth, $newHeight, $width, $height);
+
+            // Sačuvaj u buffer kao JPEG sa kvalitetom 75
+            ob_start();
+            imagejpeg($resized, null, 75);
+            $imageData = ob_get_clean();
+
+            imagedestroy($imageResource);
+            imagedestroy($resized);
+
+            if ($imageData === false) {
+                return [
+                    'success' => false,
+                    'error' => 'Greška pri kompresiji slike.',
+                ];
+            }
+
+            // Snimi kompresovani fajl u storage
+            Storage::disk('local')->put($outputPath, $imageData);
+
+            $fileSize = strlen($imageData);
 
             return [
                 'success' => true,
                 'file_path' => $outputPath,
                 'file_size' => $fileSize,
-                'error' => null
+                'error' => null,
             ];
 
         } catch (Exception $e) {
@@ -107,7 +116,7 @@ class DocumentProcessor
 
             return [
                 'success' => false,
-                'error' => 'Greška pri obradi dokumenta: ' . $e->getMessage()
+                'error' => 'Greška pri obradi dokumenta: ' . $e->getMessage(),
             ];
         }
     }
@@ -149,27 +158,6 @@ class DocumentProcessor
     }
 
     /**
-     * Vraća komandu za Python (proverava različite opcije)
-     *
-     * @return string
-     */
-    protected function getPythonCommand(): string
-    {
-        // Proveri različite Python komande
-        $pythonCommands = ['python3', 'python', '/usr/bin/python3', '/usr/bin/python'];
-        
-        foreach ($pythonCommands as $cmd) {
-            $result = Process::run([$cmd, '--version']);
-            if ($result->successful()) {
-                return $cmd;
-            }
-        }
-
-        // Fallback na python3
-        return 'python3';
-    }
-
-    /**
      * Briše fajl i ažurira storage
      *
      * @param string $filePath
@@ -199,6 +187,34 @@ class DocumentProcessor
             
             return false;
         }
+    }
+
+    /**
+     * Kreira GD image resource iz fajla na osnovu MIME tipa.
+     *
+     * @param string $path
+     * @param string $mime
+     * @return resource|false
+     */
+    protected function createImageResource(string $path, string $mime)
+    {
+        try {
+            if ($mime === 'image/jpeg' || $mime === 'image/jpg') {
+                return imagecreatefromjpeg($path);
+            }
+
+            if ($mime === 'image/png') {
+                return imagecreatefrompng($path);
+            }
+        } catch (Exception $e) {
+            Log::error('Image resource creation failed', [
+                'path' => $path,
+                'mime' => $mime,
+                'error' => $e->getMessage(),
+            ]);
+        }
+
+        return false;
     }
 }
 
