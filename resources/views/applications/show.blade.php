@@ -189,14 +189,23 @@
         border-color: var(--primary);
         box-shadow: 0 0 0 3px rgba(11, 61, 145, 0.1);
     }
+    .file-input-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+        min-height: 40px;
+    }
     input[type="file"] {
-        color: transparent;
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 40px;
+        cursor: pointer;
+        z-index: 2;
+        top: 0;
+        left: 0;
     }
-    input[type="file"]::-webkit-file-upload-button {
-        visibility: hidden;
-    }
-    input[type="file"]::before {
-        content: 'Izaberi fajl';
+    .file-input-label-custom {
         display: inline-block;
         background: var(--primary);
         color: #fff;
@@ -205,10 +214,27 @@
         cursor: pointer;
         font-size: 14px;
         font-weight: 600;
-        margin-right: 10px;
+        transition: background 0.2s;
     }
-    input[type="file"]:hover::before {
+    .file-input-label-custom:hover {
         background: var(--primary-dark);
+    }
+    .file-input-wrapper:hover .file-input-label-custom {
+        background: var(--primary-dark);
+    }
+    .file-name-display {
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--primary);
+        font-weight: 600;
+    }
+    .error-message {
+        color: #ef4444;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+    .form-control.error {
+        border-color: #ef4444;
     }
     .alert {
         border-radius: 12px;
@@ -436,24 +462,72 @@
                 </h3>
                 <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data">
                     @csrf
+                    @if($errors->any())
+                        <div class="alert" style="background: #fee2e2; border-color: #ef4444; color: #991b1b; margin-bottom: 16px;">
+                            <strong>Greška:</strong>
+                            <ul style="margin: 8px 0 0 0; padding-left: 20px;">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    @if(session('success'))
+                        <div class="alert" style="background: #d1fae5; border-color: #10b981; color: #065f46; margin-bottom: 16px;">
+                            {{ session('success') }}
+                        </div>
+                    @endif
                     <div class="form-group">
                         <label class="form-label">Tip dokumenta</label>
-                        <select name="document_type" class="form-control" required>
+                        <select name="document_type" class="form-control @error('document_type') error @enderror" required>
                             <option value="">Izaberite tip dokumenta</option>
                             @foreach($requiredDocs as $docType)
                                 @if(!in_array($docType, $uploadedDocs))
-                                    <option value="{{ $docType }}">{{ $documentLabels[$docType] ?? $docType }}</option>
+                                    <option value="{{ $docType }}" {{ old('document_type') === $docType ? 'selected' : '' }}>{{ $documentLabels[$docType] ?? $docType }}</option>
                                 @endif
                             @endforeach
                         </select>
+                        @error('document_type')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
                     <div class="form-group">
                         <label class="form-label">Fajl</label>
-                        <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                        <div class="file-input-wrapper">
+                            <input type="file" name="file" id="file-input-{{ $application->id }}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateFileName(this, 'file-name-{{ $application->id }}')">
+                            <label for="file-input-{{ $application->id }}" class="file-input-label-custom">Izaberi fajl</label>
+                            <span id="file-name-{{ $application->id }}" class="file-name-display" style="display: none;"></span>
+                        </div>
                         <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
                             Dozvoljeni formati: PDF, JPEG, PNG (max 20MB)
                         </div>
+                        @error('file')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 400;">Ili izaberite iz biblioteke dokumenata</label>
+                        <select name="user_document_id" class="form-control @error('user_document_id') error @enderror">
+                            <option value="">Izaberite dokument iz biblioteke</option>
+                            @foreach(auth()->user()->documents()->where('status', 'active')->get() as $userDoc)
+                                <option value="{{ $userDoc->id }}" {{ old('user_document_id') == $userDoc->id ? 'selected' : '' }}>{{ $userDoc->name }} ({{ $userDoc->category }})</option>
+                            @endforeach
+                        </select>
+                        @error('user_document_id')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <script>
+                        function updateFileName(input, displayId) {
+                            const display = document.getElementById(displayId);
+                            if (input.files && input.files[0]) {
+                                display.textContent = input.files[0].name;
+                                display.style.display = 'block';
+                            } else {
+                                display.style.display = 'none';
+                            }
+                        }
+                    </script>
                     <div class="form-group">
                         <label class="form-label" style="font-weight: 400;">Ili izaberite iz biblioteke dokumenata</label>
                         <select name="user_document_id" class="form-control">
