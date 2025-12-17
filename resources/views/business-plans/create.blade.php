@@ -269,7 +269,7 @@
                         @error('pricing')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
-                        <div class="form-text">Strategija cijena, cenovna lista, konkurentnost cijena</div>
+                        <div class="form-text">Strategija cijena, cjenovna lista, konkurentnost cijena</div>
                     </div>
 
                     <div class="form-group">
