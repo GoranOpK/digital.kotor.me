@@ -41,6 +41,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'address',
         'password',
         'role_id',
+        'used_storage_bytes',
     ];
 
     /**
@@ -113,5 +114,15 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         // Ovdje kažemo da svaki korisnik (User) pripada jednoj ulozi (Role)
         return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Veza sa dokumentima korisnika.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function documents()
+    {
+        return $this->hasMany(UserDocument::class);
     }
 }

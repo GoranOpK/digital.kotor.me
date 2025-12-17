@@ -329,6 +329,12 @@
                     <h3>Administracija</h3>
                     <p>Upravljanje korisnicima, konkursima, tenderima i svim aspektima sistema.</p>
                 </a>
+
+                <a href="{{ route('documents.index') }}" class="service-card">
+                    <div class="service-icon">📄</div>
+                    <h3>Moja biblioteka dokumenata</h3>
+                    <p>Upravljajte svojim dokumentima i koristite ih pri prijavama na konkurse i tenderima.</p>
+                </a>
             </div>
         @endif
 
@@ -351,6 +357,12 @@
                     <div class="service-icon">§</div>
                     <h3>Moje tenderske kupovine</h3>
                     <p>Pregled, preuzimanje i otkup tenderske dokumentacije. Istorija svih vaših kupovina.</p>
+                </a>
+
+                <a href="{{ route('documents.index') }}" class="service-card">
+                    <div class="service-icon">📄</div>
+                    <h3>Moja biblioteka dokumenata</h3>
+                    <p>Upravljajte svojim dokumentima i koristite ih pri prijavama na konkurse i tenderima.</p>
                 </a>
             </div>
         @endif
@@ -381,6 +393,12 @@
                     <h3>Nerezident servisi</h3>
                     <p>Dodatne informacije i usluge dostupne nerezidentima. Pregled posebnih procedura i zahteva.</p>
                 </div>
+
+                <a href="{{ route('documents.index') }}" class="service-card">
+                    <div class="service-icon">📄</div>
+                    <h3>Moja biblioteka dokumenata</h3>
+                    <p>Upravljajte svojim dokumentima i koristite ih pri prijavama na konkurse i tenderima.</p>
+                </a>
             </div>
         @endif
 
@@ -416,6 +434,12 @@
                     <h3>Upravljanje dokumentacijom</h3>
                     <p>Centralizovano upravljanje svim dokumentima vašeg privrednog subjekta. Pregled i ažuriranje podataka.</p>
                 </div>
+
+                <a href="{{ route('documents.index') }}" class="service-card">
+                    <div class="service-icon">📄</div>
+                    <h3>Moja biblioteka dokumenata</h3>
+                    <p>Upravljajte svojim dokumentima i koristite ih pri prijavama na konkurse i tenderima.</p>
+                </a>
             </div>
         @endif
     </div>
