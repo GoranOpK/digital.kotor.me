@@ -141,6 +141,9 @@
         padding: 24px;
         box-shadow: 0 1px 2px rgba(0,0,0,.06);
         margin-bottom: 24px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
     .info-card-header {
         display: flex;
