@@ -65,6 +65,18 @@
         text-decoration: underline;
         font-weight: 600;
     }
+    .top-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    @media (min-width: 1024px) {
+        .top-grid {
+            grid-template-columns: 2fr 1.5fr;
+            align-items: flex-start;
+        }
+    }
     .services-grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -235,73 +247,89 @@
             </div>
         @endif
 
-        <!-- Informacije o korisniku (ne prikazuje se za super admin) -->
-        @if (!$isSuperAdmin)
-        <div class="info-card">
-            <div class="info-card-header">
-                <h2>Informacije o korisniku</h2>
-                <a href="{{ route('profile.edit') }}" class="btn-edit">Izmijeni podatke</a>
-            </div>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Ime i prezime</span>
-                    <span class="info-value">{{ $user->name ?? 'N/A' }}</span>
+        <div class="top-grid">
+            <!-- Informacije o korisniku (ne prikazuje se za super admin) -->
+            @if (!$isSuperAdmin)
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h2>Informacije o korisniku</h2>
+                    <a href="{{ route('profile.edit') }}" class="btn-edit">Izmijeni podatke</a>
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Email adresa</span>
-                    <span class="info-value">{{ $user->email ?? 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Broj telefona</span>
-                    <span class="info-value">{{ $user->phone ?? 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Adresa</span>
-                    <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Tip korisnika</span>
-                    <span class="info-value">{{ $userTypeLabel }}</span>
-                </div>
-                @if($user->jmb)
+                <div class="info-grid">
                     <div class="info-item">
-                        <span class="info-label">JMB</span>
-                        <span class="info-value">{{ $user->jmb }}</span>
+                        <span class="info-label">Ime i prezime</span>
+                        <span class="info-value">{{ $user->name ?? 'N/A' }}</span>
                     </div>
-                @endif
-                @if($user->pib)
                     <div class="info-item">
-                        <span class="info-label">PIB</span>
-                        <span class="info-value">{{ $user->pib }}</span>
+                        <span class="info-label">Email adresa</span>
+                        <span class="info-value">{{ $user->email ?? 'N/A' }}</span>
                     </div>
-                @endif
-                @if($user->passport_number)
                     <div class="info-item">
-                        <span class="info-label">Broj pasoša</span>
-                        <span class="info-value">{{ $user->passport_number }}</span>
+                        <span class="info-label">Broj telefona</span>
+                        <span class="info-value">{{ $user->phone ?? 'N/A' }}</span>
                     </div>
-                @endif
-                <div class="info-item">
-                    <span class="info-label">Status naloga</span>
-                    <span class="info-value">
-                        <span style="display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; {{ $user->activation_status === 'active' ? 'background: #d1fae5; color: #065f46;' : 'background: #fee2e2; color: #991b1b;' }}">
-                            {{ $user->activation_status === 'active' ? 'Aktivan' : 'Deaktiviran' }}
+                    <div class="info-item">
+                        <span class="info-label">Adresa</span>
+                        <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tip korisnika</span>
+                        <span class="info-value">{{ $userTypeLabel }}</span>
+                    </div>
+                    @if($user->jmb)
+                        <div class="info-item">
+                            <span class="info-label">JMB</span>
+                            <span class="info-value">{{ $user->jmb }}</span>
+                        </div>
+                    @endif
+                    @if($user->pib)
+                        <div class="info-item">
+                            <span class="info-label">PIB</span>
+                            <span class="info-value">{{ $user->pib }}</span>
+                        </div>
+                    @endif
+                    @if($user->passport_number)
+                        <div class="info-item">
+                            <span class="info-label">Broj pasoša</span>
+                            <span class="info-value">{{ $user->passport_number }}</span>
+                        </div>
+                    @endif
+                    <div class="info-item">
+                        <span class="info-label">Status naloga</span>
+                        <span class="info-value">
+                            <span style="display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; {{ $user->activation_status === 'active' ? 'background: #d1fae5; color: #065f46;' : 'background: #fee2e2; color: #991b1b;' }}">
+                                {{ $user->activation_status === 'active' ? 'Aktivan' : 'Deaktiviran' }}
+                            </span>
                         </span>
-                    </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email verifikovan</span>
+                        <span class="info-value">
+                            @if($user->email_verified_at)
+                                <span style="color: #065f46; font-weight: 600;">Da ({{ $user->email_verified_at->format('d.m.Y H:i') }})</span>
+                            @else
+                                <span style="color: #991b1b; font-weight: 600;">Ne</span>
+                            @endif
+                        </span>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Email verifikovan</span>
-                    <span class="info-value">
-                        @if($user->email_verified_at)
-                            <span style="color: #065f46; font-weight: 600;">Da ({{ $user->email_verified_at->format('d.m.Y H:i') }})</span>
-                        @else
-                            <span style="color: #991b1b; font-weight: 600;">Ne</span>
-                        @endif
-                    </span>
+            </div>
+            @endif
+
+            <!-- Kratka sekcija za biblioteku dokumenata -->
+            <div class="info-card" style="min-height: 100%;">
+                <div class="info-card-header">
+                    <h2>Moja biblioteka dokumenata</h2>
+                    <a href="{{ route('documents.index') }}" class="btn-edit">Otvori biblioteku</a>
                 </div>
+                <p style="margin: 0 0 12px; color: #6b7280; font-size: 14px;">
+                    Centralno mjesto gdje možete čuvati lična, finansijska i poslovna dokumenta i koristiti ih pri prijavama na konkurse i tendere.
+                </p>
+                <p style="margin: 0; color: #374151; font-size: 14px; font-weight: 600;">
+                    Dostupnih 20 MB prostora po korisniku.
+                </p>
             </div>
         </div>
-        @endif
 
         <!-- Services - Super Admin (vidi sve opcije) -->
         @if ($isSuperAdmin)
