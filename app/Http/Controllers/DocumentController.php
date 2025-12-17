@@ -17,7 +17,6 @@ class DocumentController extends Controller
     public function __construct(DocumentProcessor $documentProcessor)
     {
         $this->documentProcessor = $documentProcessor;
-        $this->middleware('auth');
     }
 
     /**
