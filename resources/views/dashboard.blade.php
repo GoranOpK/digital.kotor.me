@@ -208,6 +208,7 @@
 @php
     $user = auth()->user();
     $isSuperAdmin = $user->role && $user->role->name === 'superadmin';
+    $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
     $isPhysicalPerson = $user->user_type === 'Fizičko lice';
     $isResident = $user->residential_status === 'resident';
     $isNonResident = $user->residential_status === 'non-resident';
@@ -261,8 +262,8 @@
         @endif
 
         <div class="top-grid">
-            <!-- Informacije o korisniku (ne prikazuje se za super admin) -->
-            @if (!$isSuperAdmin)
+            <!-- Informacije o korisniku (ne prikazuje se za super admin i konkurs admin) -->
+            @if (!$isSuperAdmin && !$isCompetitionAdmin)
             <div class="info-card">
                 <div class="info-card-header">
                     <h2>Informacije o korisniku</h2>
@@ -329,8 +330,8 @@
             </div>
             @endif
 
-            <!-- Kratka sekcija za biblioteku dokumenata (ne prikazuje se za super admin) -->
-            @if (!$isSuperAdmin)
+            <!-- Kratka sekcija za biblioteku dokumenata (ne prikazuje se za super admin i konkurs admin) -->
+            @if (!$isSuperAdmin && !$isCompetitionAdmin)
             <div class="info-card" style="min-height: 100%;">
                 <div class="info-card-header">
                     <h2>Moja biblioteka dokumenata</h2>
