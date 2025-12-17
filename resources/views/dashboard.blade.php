@@ -387,7 +387,7 @@
         @endif
 
         <!-- Services - Fizičko lice (Rezident) -->
-        @if (!$isSuperAdmin && $isPhysicalPerson && $isResident)
+        @if (!$isSuperAdmin && !$isCompetitionAdmin && $isPhysicalPerson && $isResident)
             <div class="services-grid">
                 <a href="{{ route('payments.index') }}" class="service-card">
                     <div class="service-icon">₿</div>
@@ -411,7 +411,7 @@
         @endif
 
         <!-- Services - Fizičko lice (Nerezident) -->
-        @if (!$isSuperAdmin && $isPhysicalPerson && $isNonResident)
+        @if (!$isSuperAdmin && !$isCompetitionAdmin && $isPhysicalPerson && $isNonResident)
             <div class="services-grid">
                 <a href="{{ route('payments.index') }}" class="service-card">
                     <div class="service-icon">₿</div>
@@ -441,7 +441,7 @@
         @endif
 
         <!-- Services - Pravno lice -->
-        @if (!$isSuperAdmin && $isLegalEntity)
+        @if (!$isSuperAdmin && !$isCompetitionAdmin && $isLegalEntity)
             <div class="services-grid">
                 <a href="{{ route('payments.index') }}" class="service-card">
                     <div class="service-icon">₿</div>
