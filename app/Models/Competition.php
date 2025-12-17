@@ -15,7 +15,25 @@ class Competition extends Model
         'start_date',
         'end_date',
         'type',
-        'status'
+        'status',
+        'competition_number',
+        'year',
+        'budget',
+        'max_support_percentage',
+        'deadline_days',
+        'published_at',
+        'closed_at',
+    ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
+        'published_at' => 'datetime',
+        'closed_at' => 'datetime',
+        'budget' => 'decimal:2',
+        'max_support_percentage' => 'decimal:2',
+        'year' => 'integer',
+        'deadline_days' => 'integer',
     ];
 
     // Veza: jedan konkurs ima više prijava
