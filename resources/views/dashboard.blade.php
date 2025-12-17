@@ -74,7 +74,10 @@
     @media (min-width: 1024px) {
         .top-grid {
             grid-template-columns: 2fr 1.5fr;
-            align-items: flex-start;
+            align-items: stretch;
+        }
+        .top-grid > .info-card {
+            height: 100%;
         }
     }
     .services-grid {
