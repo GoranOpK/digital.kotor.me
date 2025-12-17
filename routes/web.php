@@ -6,6 +6,7 @@ use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\CompetitionsController;
 use App\Http\Controllers\TendersController;
 use App\Http\Controllers\ApplicationController;
+use App\Http\Controllers\BusinessPlanController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ReportController;
@@ -47,8 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Modul za konkurse (žensko/omladinsko preduzetništvo)
     Route::get('/competitions', [CompetitionsController::class, 'index'])->name('competitions.index'); // Lista konkursa
-    Route::get('/competitions/{id}', [CompetitionsController::class, 'show'])->name('competitions.show'); // Detalji konkursa
-    Route::post('/competitions/apply', [CompetitionsController::class, 'apply'])->name('competitions.apply'); // Prijava na konkurs
+    Route::get('/competitions/{competition}', [CompetitionsController::class, 'show'])->name('competitions.show'); // Detalji konkursa
 
     // Modul za tendersku dokumentaciju
     Route::get('/tenders', [TendersController::class, 'index'])->name('tenders.index'); // Lista tendera
@@ -62,25 +62,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/competitions/{competition}/apply', [ApplicationController::class, 'store'])->name('applications.store'); // Snimi prijavu
     Route::get('/applications/{application}', [ApplicationController::class, 'show'])->name('applications.show'); // Prikaz detalja prijave
     Route::post('/applications/{application}/upload', [ApplicationController::class, 'uploadDocument'])->name('applications.upload'); // Upload dokumenata
+    Route::get('/applications/{application}/documents/{document}/download', [ApplicationController::class, 'downloadDocument'])->name('applications.document.download'); // Download dokumenta
     Route::get('/applications/{application}/status', [ApplicationController::class, 'status'])->name('applications.status'); // Prikaz statusa prijave
 
+    // Biznis plan (BusinessPlanController)
+    Route::get('/applications/{application}/business-plan', [BusinessPlanController::class, 'create'])->name('applications.business-plan.create'); // Prikaz forme za biznis plan
+    Route::post('/applications/{application}/business-plan', [BusinessPlanController::class, 'store'])->name('applications.business-plan.store'); // Snimi biznis plan
+
     // Evaluacija prijava (EvaluationController, dostupno komisiji/evaluatorima)
+    Route::middleware('role:komisija')->group(function () {
+        Route::prefix('evaluation')->name('evaluation.')->group(function () {
+            Route::get('/', [EvaluationController::class, 'index'])->name('index');
+            Route::get('/applications/{application}', [EvaluationController::class, 'create'])->name('create');
+            Route::post('/applications/{application}', [EvaluationController::class, 'store'])->name('store');
+            Route::get('/applications/{application}/show', [EvaluationController::class, 'show'])->name('show');
+        });
+    });
+    
+    // Stara ruta za evaluatore (ako postoji)
     Route::middleware('role:evaluator')->group(function () {
         Route::get('/evaluations', [EvaluationController::class, 'index'])->name('evaluations.index'); // Prikaz svih prijava za bodovanje
         Route::post('/evaluations/{application}/score', [EvaluationController::class, 'score'])->name('evaluations.score'); // Unos bodova
         Route::post('/evaluations/{application}/comment', [EvaluationController::class, 'comment'])->name('evaluations.comment'); // Unos komentara
     });
 
-    // Ugovori (ContractController, dostupno adminu)
-    Route::middleware('role:admin')->group(function () {
-        Route::get('/contracts/{application}/generate', [ContractController::class, 'generate'])->name('contracts.generate'); // Generisanje ugovora
-        Route::get('/contracts/{contract}/show', [ContractController::class, 'show'])->name('contracts.show'); // Prikaz/download ugovora
-    });
+    // Ugovori (ContractController)
+    Route::get('/contracts/{application}/generate', [ContractController::class, 'generate'])->name('contracts.generate'); // Generisanje ugovora
+    Route::post('/contracts/{application}', [ContractController::class, 'store'])->name('contracts.store'); // Kreiranje ugovora
+    Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show'); // Prikaz ugovora
+    Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download'); // Download ugovora
+    Route::post('/contracts/{contract}/upload', [ContractController::class, 'upload'])->name('contracts.upload'); // Upload potpisanog ugovora
+    Route::middleware('role:admin')->post('/contracts/{contract}/approve', [ContractController::class, 'approve'])->name('contracts.approve'); // Potvrda ugovora (admin)
 
     // Izvještaji o realizaciji (ReportController)
-    Route::get('/applications/{application}/report', [ReportController::class, 'create'])->name('reports.create'); // Prikaz forme za izvještaj
-    Route::post('/applications/{application}/report', [ReportController::class, 'store'])->name('reports.store'); // Snimi izvještaj
+    Route::get('/applications/{application}/report', [ReportController::class, 'create'])->name('reports.create'); // Prikaz forme za izvještaj o realizaciji
+    Route::post('/applications/{application}/report', [ReportController::class, 'store'])->name('reports.store'); // Snimi izvještaj o realizaciji
+    Route::get('/applications/{application}/report/financial', [ReportController::class, 'createFinancial'])->name('reports.create-financial'); // Prikaz forme za finansijski izvještaj
+    Route::post('/applications/{application}/report/financial', [ReportController::class, 'storeFinancial'])->name('reports.store-financial'); // Snimi finansijski izvještaj
     Route::post('/reports/{report}/upload', [ReportController::class, 'upload'])->name('reports.upload'); // Upload dokaza realizacije
+    Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download'); // Download izvještaja
     Route::middleware('role:admin')->post('/reports/{report}/evaluate', [ReportController::class, 'evaluate'])->name('reports.evaluate'); // Ocjena izvještaja
 
     // Obavještenja (NotificationController)
@@ -99,6 +119,38 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
             Route::post('/users/{user}/activate', [AdminController::class, 'activateUser'])->name('users.activate');
             Route::post('/users/{user}/deactivate', [AdminController::class, 'deactivateUser'])->name('users.deactivate');
+            
+            // Upravljanje konkursima
+            Route::get('/competitions', [AdminController::class, 'competitions'])->name('competitions.index');
+            Route::get('/competitions/create', [AdminController::class, 'createCompetition'])->name('competitions.create');
+            Route::post('/competitions', [AdminController::class, 'storeCompetition'])->name('competitions.store');
+            Route::get('/competitions/{competition}', [AdminController::class, 'showCompetition'])->name('competitions.show');
+            Route::get('/competitions/{competition}/edit', [AdminController::class, 'editCompetition'])->name('competitions.edit');
+            Route::put('/competitions/{competition}', [AdminController::class, 'updateCompetition'])->name('competitions.update');
+            Route::post('/competitions/{competition}/publish', [AdminController::class, 'publishCompetition'])->name('competitions.publish');
+            Route::post('/competitions/{competition}/close', [AdminController::class, 'closeCompetition'])->name('competitions.close');
+            
+            // Pregled prijava
+            Route::get('/applications', [AdminController::class, 'applications'])->name('applications.index');
+            Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
+            
+            // Rang lista
+            Route::get('/competitions/{competition}/ranking', [AdminController::class, 'rankingList'])->name('competitions.ranking');
+            Route::post('/competitions/{competition}/winners', [AdminController::class, 'selectWinners'])->name('competitions.select-winners');
+            Route::get('/competitions/{competition}/decision', [AdminController::class, 'generateDecision'])->name('competitions.decision');
+            
+            // Upravljanje komisijom
+            Route::get('/commissions', [AdminController::class, 'commissions'])->name('commissions.index');
+            Route::get('/commissions/create', [AdminController::class, 'createCommission'])->name('commissions.create');
+            Route::post('/commissions', [AdminController::class, 'storeCommission'])->name('commissions.store');
+            Route::get('/commissions/{commission}', [AdminController::class, 'showCommission'])->name('commissions.show');
+            Route::get('/commissions/{commission}/edit', [AdminController::class, 'editCommission'])->name('commissions.edit');
+            Route::put('/commissions/{commission}', [AdminController::class, 'updateCommission'])->name('commissions.update');
+            Route::post('/commissions/{commission}/members', [AdminController::class, 'addCommissionMember'])->name('commissions.members.add');
+            Route::get('/commissions/members/{member}/sign', [AdminController::class, 'signDeclarations'])->name('commissions.members.sign');
+            Route::post('/commissions/members/{member}/sign', [AdminController::class, 'storeDeclarations'])->name('commissions.members.store-declarations');
+            Route::post('/commissions/members/{member}/status', [AdminController::class, 'updateMemberStatus'])->name('commissions.members.update-status');
+            Route::delete('/commissions/members/{member}', [AdminController::class, 'deleteMember'])->name('commissions.members.delete');
         });
     });
 });

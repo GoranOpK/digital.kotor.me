@@ -1,0 +1,295 @@
+@extends('layouts.app')
+
+@section('content')
+<style>
+    :root {
+        --primary: #0B3D91;
+        --primary-dark: #0A347B;
+    }
+    .admin-page {
+        background: #f9fafb;
+        min-height: 100vh;
+        padding: 24px 0;
+    }
+    .page-header {
+        background: linear-gradient(90deg, var(--primary), var(--primary-dark));
+        color: #fff;
+        padding: 24px;
+        border-radius: 16px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .page-header h1 {
+        color: #fff;
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0;
+    }
+    .btn {
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+    .btn-primary {
+        background: #fff;
+        color: var(--primary);
+    }
+    .btn-success {
+        background: #10b981;
+        color: #fff;
+    }
+    .info-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .info-card h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 0 0 20px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    .budget-info {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    .budget-item {
+        padding: 16px;
+        background: #f9fafb;
+        border-radius: 8px;
+        text-align: center;
+    }
+    .budget-label {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 8px;
+    }
+    .budget-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+        font-weight: 600;
+        color: #374151;
+        font-size: 12px;
+        text-transform: uppercase;
+        background: #f9fafb;
+    }
+    .ranking-badge {
+        display: inline-block;
+        width: 32px;
+        height: 32px;
+        background: var(--primary);
+        color: #fff;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 32px;
+        font-weight: 700;
+        font-size: 14px;
+    }
+    .score-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    .score-high {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    .score-medium {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    .score-low {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+    .checkbox-cell {
+        text-align: center;
+    }
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .alert {
+        border-radius: 12px;
+        padding: 16px 20px;
+        margin-bottom: 20px;
+        border: 1px solid;
+    }
+    .alert-success {
+        background: #d1fae5;
+        border-color: #10b981;
+        color: #065f46;
+    }
+</style>
+
+<div class="admin-page">
+    <div class="container mx-auto px-4">
+        <div class="page-header">
+            <h1>Rang lista - {{ $competition->title }}</h1>
+            <div>
+                <a href="{{ route('admin.competitions.show', $competition) }}" class="btn btn-primary">Nazad</a>
+            </div>
+        </div>
+
+        @if(session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        <!-- Informacije o budžetu -->
+        <div class="info-card">
+            <h2>Informacije o budžetu</h2>
+            <div class="budget-info">
+                <div class="budget-item">
+                    <div class="budget-label">Ukupan budžet</div>
+                    <div class="budget-value">{{ number_format($totalBudget, 2, ',', '.') }} €</div>
+                </div>
+                <div class="budget-item">
+                    <div class="budget-label">Iskorišćen budžet</div>
+                    <div class="budget-value">{{ number_format($usedBudget, 2, ',', '.') }} €</div>
+                </div>
+                <div class="budget-item">
+                    <div class="budget-label">Preostali budžet</div>
+                    <div class="budget-value">{{ number_format($remainingBudget, 2, ',', '.') }} €</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rang lista -->
+        <div class="info-card">
+            <h2>Rang lista prijava</h2>
+            <p style="color: #6b7280; margin-bottom: 20px;">
+                Prikazane su samo prijave koje su ocjenjene i imaju minimum 30 bodova.
+            </p>
+
+            @if($applications->count() > 0)
+            <form method="POST" action="{{ route('admin.competitions.select-winners', $competition) }}" id="winnersForm">
+                @csrf
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Poz.</th>
+                            <th>Naziv biznis plana</th>
+                            <th>Podnosilac</th>
+                            <th>Tip</th>
+                            <th style="text-align: center;">Ocjena</th>
+                            <th style="text-align: right;">Traženi iznos</th>
+                            <th style="text-align: right;">Odobreni iznos</th>
+                            <th style="text-align: center;">Dobitnik</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($applications as $application)
+                            <tr style="{{ $application->status === 'approved' ? 'background: #d1fae5;' : '' }}">
+                                <td>
+                                    <span class="ranking-badge">{{ $application->ranking_position ?? $loop->iteration }}</span>
+                                </td>
+                                <td>{{ $application->business_plan_name }}</td>
+                                <td>{{ $application->user->name ?? 'N/A' }}</td>
+                                <td>
+                                    {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : 'DOO' }} - 
+                                    {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
+                                </td>
+                                <td style="text-align: center;">
+                                    @php
+                                        $score = $application->final_score ?? 0;
+                                        $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
+                                    @endphp
+                                    <span class="score-badge {{ $scoreClass }}">
+                                        {{ number_format($score, 2) }} / 50
+                                    </span>
+                                </td>
+                                <td style="text-align: right;">
+                                    {{ number_format($application->requested_amount, 2, ',', '.') }} €
+                                </td>
+                                <td style="text-align: right;">
+                                    @if($application->approved_amount)
+                                        <strong style="color: #10b981;">
+                                            {{ number_format($application->approved_amount, 2, ',', '.') }} €
+                                        </strong>
+                                    @else
+                                        <input 
+                                            type="number" 
+                                            name="winners[{{ $application->id }}][approved_amount]" 
+                                            class="form-control" 
+                                            step="0.01" 
+                                            min="0" 
+                                            max="{{ min($application->requested_amount, ($competition->budget * ($competition->max_support_percentage / 100))) }}"
+                                            placeholder="0.00"
+                                            style="max-width: 150px;"
+                                        >
+                                        <input type="hidden" name="winners[{{ $application->id }}][application_id]" value="{{ $application->id }}">
+                                    @endif
+                                </td>
+                                <td class="checkbox-cell">
+                                    @if($application->status === 'approved')
+                                        <span style="color: #10b981; font-weight: 600;">✓ Dobitnik</span>
+                                    @else
+                                        <input 
+                                            type="checkbox" 
+                                            name="winners[{{ $application->id }}][selected]" 
+                                            value="1"
+                                            onchange="toggleAmountInput({{ $application->id }}, this.checked)"
+                                        >
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 24px; text-align: center;">
+                    <button type="submit" class="btn btn-success">Sačuvaj odabir dobitnika</button>
+                    <a href="{{ route('admin.competitions.decision', $competition) }}" class="btn btn-primary">Generiši Odluku</a>
+                </div>
+            </form>
+            @else
+                <p style="text-align: center; padding: 40px; color: #6b7280;">
+                    Nema prijava koje zadovoljavaju uslove za rang listu (minimum 30 bodova).
+                </p>
+            @endif
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleAmountInput(applicationId, checked) {
+        const amountInput = document.querySelector(`input[name="winners[${applicationId}][approved_amount]"]`);
+        if (amountInput) {
+            amountInput.disabled = !checked;
+            if (!checked) {
+                amountInput.value = '';
+            }
+        }
+    }
+</script>
+@endsection
+

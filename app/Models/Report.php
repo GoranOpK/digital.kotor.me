@@ -11,9 +11,16 @@ class Report extends Model
 
     protected $fillable = [
         'application_id',
+        'type',
         'description',
         'document_file',
-        'status'
+        'status',
+        'evaluation_notes',
+        'evaluated_at',
+    ];
+
+    protected $casts = [
+        'evaluated_at' => 'datetime',
     ];
 
     // Veza: izvještaj pripada aplikaciji

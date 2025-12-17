@@ -13,7 +13,11 @@ class Contract extends Model
         'application_id',
         'status',
         'contract_file',
-        'signed_at'
+        'signed_at',
+    ];
+
+    protected $casts = [
+        'signed_at' => 'datetime',
     ];
 
     // Veza: ugovor pripada aplikaciji

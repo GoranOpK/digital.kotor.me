@@ -202,6 +202,27 @@
             </div>
         </div>
 
+        <!-- Brzi linkovi -->
+        <div class="content-card" style="margin-bottom: 20px;">
+            <div class="content-card-header">
+                <h2>Brzi linkovi</h2>
+            </div>
+            <div class="content-card-body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <a href="{{ route('admin.competitions.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    📋 Konkursi
+                </a>
+                <a href="{{ route('admin.applications.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    📝 Prijave
+                </a>
+                <a href="{{ route('admin.commissions.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    👥 Komisija
+                </a>
+                <a href="{{ route('admin.users.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    👤 Korisnici
+                </a>
+            </div>
+        </div>
+
         <!-- Sadržaj -->
         <div class="content-grid">
             <!-- Najnoviji korisnici -->
