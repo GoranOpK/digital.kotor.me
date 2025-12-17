@@ -487,14 +487,24 @@ class AdminController extends Controller
      */
     public function updateCommission(Request $request, Commission $commission)
     {
+        // Automatski izračunaj datum završetka (2 godine od početka)
+        $startDate = $request->input('start_date');
+        $endDate = null;
+        if ($startDate) {
+            $start = \Carbon\Carbon::parse($startDate);
+            $endDate = $start->copy()->addYears(2)->format('Y-m-d');
+        }
+        
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
+            'end_date' => 'required|date',
             'status' => 'required|in:active,inactive',
         ]);
 
+        $validated['end_date'] = $endDate ?? $validated['end_date'];
+        
         $commission->update($validated);
 
         return redirect()->route('admin.commissions.show', $commission)
