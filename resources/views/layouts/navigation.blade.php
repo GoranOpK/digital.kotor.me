@@ -16,7 +16,7 @@
                         {{ __('Dashboard') }}
                     </x-nav-link>
                     @auth
-                        @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin' || auth()->user()->role->name === 'konkurs_admin'))
+                        @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
                             <x-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
                                 Administracija
                             </x-nav-link>
@@ -76,7 +76,7 @@
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
             @auth
-                @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin' || auth()->user()->role->name === 'konkurs_admin'))
+                @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
                     <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
                         Administracija
                     </x-responsive-nav-link>
