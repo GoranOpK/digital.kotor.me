@@ -10,654 +10,290 @@
     .application-form-page {
         background: #f9fafb;
         min-height: 100vh;
-        padding: 24px 0;
+        padding: 16px 0;
+    }
+    @media (min-width: 768px) {
+        .application-form-page {
+            padding: 24px 0;
+        }
     }
     .page-header {
         background: linear-gradient(90deg, var(--primary), var(--primary-dark));
         color: #fff;
-        padding: 24px;
-        border-radius: 16px;
-        margin-bottom: 24px;
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+    @media (min-width: 768px) {
+        .page-header {
+            padding: 24px;
+            border-radius: 16px;
+        }
     }
     .page-header h1 {
         color: #fff;
-        font-size: 28px;
+        font-size: 18px;
         font-weight: 700;
-        margin: 0 0 8px;
+        margin: 0 0 4px;
+    }
+    @media (min-width: 768px) {
+        .page-header h1 {
+            font-size: 24px;
+        }
     }
     .form-card {
         background: #fff;
-        border-radius: 16px;
-        padding: 32px;
+        border-radius: 12px;
+        padding: 20px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        margin-bottom: 24px;
-    }
-    .form-section {
-        margin-bottom: 32px;
-    }
-    .form-section:last-child {
-        margin-bottom: 0;
-    }
-    .form-section h2 {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--primary);
-        margin: 0 0 20px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid #e5e7eb;
-    }
-    .form-group {
         margin-bottom: 20px;
     }
+    @media (min-width: 768px) {
+        .form-card {
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+    }
+    .form-section h2 {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary);
+        margin: 0 0 16px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    @media (min-width: 768px) {
+        .form-section h2 {
+            font-size: 18px;
+        }
+    }
+    .form-group { margin-bottom: 16px; }
     .form-label {
         display: block;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
         color: #374151;
-        margin-bottom: 8px;
-    }
-    .form-label .required {
-        color: #ef4444;
-        margin-left: 4px;
+        margin-bottom: 6px;
     }
     .form-control {
         width: 100%;
-        padding: 10px 14px;
+        padding: 10px 12px;
         border: 1px solid #d1d5db;
         border-radius: 8px;
         font-size: 14px;
-        transition: border-color 0.2s;
-    }
-    .form-control:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(11, 61, 145, 0.1);
-    }
-    .form-control.error {
-        border-color: #ef4444;
-    }
-    .form-text {
-        font-size: 12px;
-        color: #6b7280;
-        margin-top: 4px;
     }
     .form-row {
         display: grid;
         grid-template-columns: 1fr;
-        gap: 20px;
-    }
-    @media (min-width: 768px) {
-        .form-row {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    .radio-group {
-        display: flex;
-        gap: 24px;
-        flex-wrap: wrap;
-    }
-    .radio-option {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    .radio-option input[type="radio"] {
-        width: 18px;
-        height: 18px;
-        cursor: pointer;
-    }
-    .radio-option label {
-        font-size: 14px;
-        color: #374151;
-        cursor: pointer;
-        margin: 0;
-    }
-    .checkbox-group {
-        display: flex;
-        align-items: flex-start;
         gap: 12px;
     }
-    .checkbox-group input[type="checkbox"] {
-        width: 18px;
-        height: 18px;
-        margin-top: 2px;
-        cursor: pointer;
+    @media (min-width: 640px) {
+        .form-row {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
     }
-    .checkbox-group label {
-        font-size: 14px;
+    .radio-group, .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    @media (min-width: 640px) {
+        .radio-group {
+            flex-direction: row;
+            gap: 24px;
+        }
+    }
+    .radio-option, .checkbox-option {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .radio-option input, .checkbox-option input {
+        margin-top: 3px;
+        flex-shrink: 0;
+    }
+    .radio-option label, .checkbox-option label {
+        font-size: 13px;
         color: #374151;
-        cursor: pointer;
-        margin: 0;
-        line-height: 1.5;
+        line-height: 1.4;
     }
     .btn-primary {
         background: var(--primary);
         color: #fff;
-        padding: 12px 32px;
-        border: none;
+        padding: 12px 24px;
         border-radius: 8px;
         font-weight: 600;
-        font-size: 16px;
+        font-size: 15px;
+        width: 100%;
+        text-align: center;
+        border: none;
         cursor: pointer;
-        transition: background 0.2s;
     }
-    .btn-primary:hover {
-        background: var(--primary-dark);
+    @media (min-width: 640px) {
+        .btn-primary { width: auto; padding: 12px 40px; }
     }
-    .btn-primary:disabled {
-        background: #9ca3af;
-        cursor: not-allowed;
-    }
-    .alert {
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 20px;
-        border: 1px solid;
-    }
-    .alert-info {
-        background: #dbeafe;
-        border-color: #3b82f6;
-        color: #1e40af;
-    }
-    .error-message {
-        color: #ef4444;
-        font-size: 12px;
-        margin-top: 4px;
-    }
-    .conditional-field {
-        display: none;
-    }
-    .conditional-field.show {
-        display: block;
-    }
+    .conditional-field { display: none; }
+    .conditional-field.show { display: block; }
 </style>
 
 <div class="application-form-page">
     <div class="container mx-auto px-4">
         <div class="page-header">
-            <h1>Prijava na konkurs - Obrazac 1a/1b</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 0;">{{ $competition->title }}</p>
-        </div>
-
-        @if(session('success'))
-            <div class="alert alert-info">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        <!-- Prioriteti za raspodjelu sredstava -->
-        <div class="form-card" style="background: #f0f9ff; border-left: 4px solid var(--primary); margin-bottom: 24px;">
-            <h2 style="color: var(--primary); font-size: 18px; margin-bottom: 12px;">Prioriteti za raspodjelu sredstava</h2>
-            <p style="color: #374151; line-height: 1.6; margin-bottom: 12px; font-size: 14px;">
-                Sredstva opredijeljena Budžetom Opštine Kotor raspodjeljuju se za biznis planove koji:
-            </p>
-            <ul style="color: #374151; line-height: 1.6; margin: 0; padding-left: 20px; font-size: 14px;">
-                <li>Podstiču ekonomski razvoj opštine (započinjanje biznisa, povećanje zaposlenosti i kreiranje novih radnih mjesta, smanjenje sive ekonomije, povećanje životnog standarda, razvoj lokalne zajednice, osvajanje novih tržišta i povećanje konkurentnosti, kreiranje nove ponude, osnaživanje žena u biznisu itd);</li>
-                <li>Podstiču razvoj turizma (naročito razvoj ruralnog turizma - pružanje usluga u seoskom domaćinstvu, etno sela, turistička valorizacija kulturnog potencijala, tradicije i kulturne posebnosti, bogatija i raznovrsnija turistička ponuda);</li>
-                <li>Podstiču razvoj trgovine;</li>
-                <li>Podstiču razvoj kreativnih industrija (aktivnosti koje su bazirane na individualnoj kreativnosti, vještini i talentu: zanati, arhitektura, umjetnost, dizajn, produkcija, mediji, izdavaštvo, razvoj software-a);</li>
-                <li>Podstiču razvoj start-up-ova (inovativnih tehnoloških biznisa koji imaju potencijal brzog rasta i velikih dometa);</li>
-                <li>Doprinose razvoju fizičke kulture i sporta i zdravih stilova života;</li>
-                <li>Doprinose očuvanju životne sredine i održivog razvoja.</li>
-            </ul>
-        </div>
-
-        <!-- Biznis planovi koji se neće podržati -->
-        <div class="form-card" style="background: #fef2f2; border-left: 4px solid #ef4444; margin-bottom: 24px;">
-            <h2 style="color: #991b1b; font-size: 18px; margin-bottom: 12px;">Biznis planovi koji se neće podržati</h2>
-            <ul style="color: #374151; line-height: 1.6; margin: 0; padding-left: 20px; font-size: 14px;">
-                <li>Aktivnosti koje su u nadležnosti ili odgovornosti Vlade, kao što je formalno obrazovanje, formalna zdravstvena zaštita i sl.;</li>
-                <li>Biznis planovi kojim se traže finansijska sredstva za kupovinu i raspodjelu humanitarne pomoći;</li>
-                <li>Biznis planovi koji se isključivo temelje na jednokratnoj izradi, pripremi i štampanju knjiga, brošura, biltena, časopisa i slično, ukoliko objava takvih publikacija nije dio nekog šireg programa ili sveobuhvatnijih i kontinuiranih aktivnosti;</li>
-                <li>Aktivnost koja se smatra nezakonitom ili štetnom po okolinu i opasnom za ljudsko zdravlje: igre na sreću, duvan, alkoholna pića (izuzev proizvodnje vina i voćnih rakija).</li>
-            </ul>
+            <h1>Obrazac 1a/1b - Nova prijava</h1>
+            <p style="color: rgba(255,255,255,0.9); margin: 0; font-size: 12px;">{{ $competition->title }}</p>
         </div>
 
         <form method="POST" action="{{ route('applications.store', $competition) }}" id="applicationForm">
             @csrf
 
-            <!-- Sekcija 1: Osnovni podaci o biznis planu -->
+            <!-- Sekcija 1 -->
             <div class="form-card">
                 <div class="form-section">
-                    <h2>1. Osnovni podaci o biznis planu</h2>
-                    
+                    <h2>1. Osnovni podaci</h2>
                     <div class="form-group">
-                        <label class="form-label">
-                            Naziv biznis plana <span class="required">*</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            name="business_plan_name" 
-                            class="form-control @error('business_plan_name') error @enderror"
-                            value="{{ old('business_plan_name') }}"
-                            required
-                            maxlength="255"
-                        >
-                        @error('business_plan_name')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
+                        <label class="form-label">Naziv biznis plana <span style="color:#ef4444">*</span></label>
+                        <input type="text" name="business_plan_name" class="form-control" value="{{ old('business_plan_name') }}" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Tip podnosioca <span style="color:#ef4444">*</span></label>
+                            <div class="radio-group">
+                                <div class="radio-option">
+                                    <input type="radio" id="type_p" name="applicant_type" value="preduzetnica" {{ old('applicant_type', 'preduzetnica') === 'preduzetnica' ? 'checked' : '' }} required>
+                                    <label for="type_p">Preduzetnica</label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" id="type_d" name="applicant_type" value="doo" {{ old('applicant_type') === 'doo' ? 'checked' : '' }} required>
+                                    <label for="type_d">DOO</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Faza biznisa <span style="color:#ef4444">*</span></label>
+                            <div class="radio-group">
+                                <div class="radio-option">
+                                    <input type="radio" id="stage_z" name="business_stage" value="započinjanje" {{ old('business_stage', 'započinjanje') === 'započinjanje' ? 'checked' : '' }} required>
+                                    <label for="stage_z">Započinjanje</label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" id="stage_r" name="business_stage" value="razvoj" {{ old('business_stage') === 'razvoj' ? 'checked' : '' }} required>
+                                    <label for="stage_r">Razvoj</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">
-                            Tip podnosioca prijave <span class="required">*</span>
-                        </label>
-                        @php
-                            $userType = auth()->user()->user_type;
-                            $defaultType = 'preduzetnica';
-                            
-                            if (str_contains($userType, 'Društvo sa ograničenom odgovornošću') || str_contains($userType, 'DOO')) {
-                                $defaultType = 'doo';
-                            } elseif ($userType === 'Fizičko lice' || $userType === 'Preduzetnik') {
-                                $defaultType = 'preduzetnica';
-                            } else {
-                                // Za ostale pravne subjekte (NVO, AD, itd.) koristimo DOO obrazac jer su pravna lica
-                                $defaultType = 'doo';
-                            }
-                        @endphp
+                        <label class="form-label">Registrovana djelatnost? <span style="color:#ef4444">*</span></label>
                         <div class="radio-group">
                             <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="applicant_type_preduzetnica" 
-                                    name="applicant_type" 
-                                    value="preduzetnica"
-                                    {{ old('applicant_type', $defaultType) === 'preduzetnica' ? 'checked' : '' }}
-                                    required
-                                >
-                                <label for="applicant_type_preduzetnica">Preduzetnica</label>
+                                <input type="radio" id="reg_y" name="is_registered" value="1" {{ old('is_registered', '1') === '1' ? 'checked' : '' }} required>
+                                <label for="reg_y">Da</label>
                             </div>
                             <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="applicant_type_doo" 
-                                    name="applicant_type" 
-                                    value="doo"
-                                    {{ old('applicant_type', $defaultType) === 'doo' ? 'checked' : '' }}
-                                    required
-                                >
-                                <label for="applicant_type_doo">DOO (Društvo sa ograničenom odgovornošću)</label>
+                                <input type="radio" id="reg_n" name="is_registered" value="0" {{ old('is_registered') === '0' ? 'checked' : '' }} required>
+                                <label for="reg_n">Ne (Fizičko lice)</label>
                             </div>
                         </div>
-                        @error('applicant_type')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
+                        <div id="registration_notice" style="display:none; font-size: 11px; color: #0B3D91; margin-top: 8px; background: #eff6ff; padding: 10px; border-radius: 6px;">
+                            ℹ️ Ukoliko dobijete sredstva, obavezni ste registrovati djelatnost prije potpisivanja ugovora.
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">
-                            Faza biznisa <span class="required">*</span>
-                        </label>
-                        <div class="radio-group">
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="business_stage_zapocinjanje" 
-                                    name="business_stage" 
-                                    value="započinjanje"
-                                    {{ old('business_stage', 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
-                                    required
-                                >
-                                <label for="business_stage_zapocinjanje">Započinjanje poslovne djelatnosti</label>
-                            </div>
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="business_stage_razvoj" 
-                                    name="business_stage" 
-                                    value="razvoj"
-                                    {{ old('business_stage') === 'razvoj' ? 'checked' : '' }}
-                                    required
-                                >
-                                <label for="business_stage_razvoj">Razvoj postojeće poslovne djelatnosti</label>
-                            </div>
-                        </div>
-                        @error('business_stage')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Imate li registrovanu djelatnost? <span class="required">*</span>
-                        </label>
-                        <div class="radio-group">
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="is_registered_yes" 
-                                    name="is_registered" 
-                                    value="1"
-                                    {{ old('is_registered', '1') === '1' ? 'checked' : '' }}
-                                    required
-                                >
-                                <label for="is_registered_yes">Da</label>
-                            </div>
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="is_registered_no" 
-                                    name="is_registered" 
-                                    value="0"
-                                    {{ old('is_registered') === '0' ? 'checked' : '' }}
-                                    required
-                                >
-                                <label for="is_registered_no">Ne (Fizičko lice bez registrovane djelatnosti)</label>
-                            </div>
-                        </div>
-                        <div id="registration_notice" class="form-text" style="color: #0B3D91; font-weight: 500; display: none; margin-top: 8px;">
-                            ℹ️ Ukoliko nemate registrovanu djelatnost, u obavezi ste da je registrujete najkasnije do dana potpisivanja ugovora ukoliko vam sredstva budu odobrena.
-                        </div>
-                        @error('is_registered')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Oblast biznisa <span class="required">*</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            name="business_area" 
-                            class="form-control @error('business_area') error @enderror"
-                            value="{{ old('business_area') }}"
-                            required
-                            maxlength="255"
-                            placeholder="Npr. IT usluge, turizam, poljoprivreda..."
-                        >
-                        @error('business_area')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
+                        <label class="form-label">Oblast biznisa <span style="color:#ef4444">*</span></label>
+                        <input type="text" name="business_area" class="form-control" placeholder="Npr. IT, turizam, trgovina..." value="{{ old('business_area') }}" required>
                     </div>
                 </div>
             </div>
 
-            <!-- Sekcija 2: Podaci o DOO (samo ako je izabran DOO) -->
+            <!-- Sekcija 2 (DOO) -->
             <div class="form-card conditional-field" id="dooFields">
                 <div class="form-section">
-                    <h2>2. Podaci o DOO</h2>
-                    
+                    <h2>2. Podaci o firmi (DOO)</h2>
                     <div class="form-group">
-                        <label class="form-label">
-                            Ime i prezime osnivača/ice <span class="required">*</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            name="founder_name" 
-                            class="form-control @error('founder_name') error @enderror"
-                            value="{{ old('founder_name', auth()->user()->name) }}"
-                            maxlength="255"
-                        >
-                        @error('founder_name')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
+                        <label class="form-label">Osnivač/ica <span style="color:#ef4444">*</span></label>
+                        <input type="text" name="founder_name" class="form-control" value="{{ old('founder_name', auth()->user()->name) }}">
                     </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Ime i prezime izvršnog direktora/ice <span class="required">*</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            name="director_name" 
-                            class="form-control @error('director_name') error @enderror"
-                            value="{{ old('director_name', auth()->user()->name) }}"
-                            maxlength="255"
-                        >
-                        @error('director_name')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Sjedište društva <span class="required">*</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            name="company_seat" 
-                            class="form-control @error('company_seat') error @enderror"
-                            value="{{ old('company_seat', auth()->user()->address) }}"
-                            maxlength="255"
-                            placeholder="Npr. Kotor, Njegoševa 1"
-                        >
-                        @error('company_seat')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sekcija 3: Finansijski podaci -->
-            <div class="form-card">
-                <div class="form-section">
-                    <h2>3. Finansijski podaci</h2>
-                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">
-                                Traženi iznos podrške (€) <span class="required">*</span>
-                            </label>
-                            <input 
-                                type="number" 
-                                name="requested_amount" 
-                                class="form-control @error('requested_amount') error @enderror"
-                                value="{{ old('requested_amount') }}"
-                                required
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                            >
-                            @error('requested_amount')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                            <div class="form-text">
-                                Maksimalno: {{ number_format(($competition->budget ?? 0) * (($competition->max_support_percentage ?? 30) / 100), 2, ',', '.') }} € 
-                                ({{ $competition->max_support_percentage ?? 30 }}% budžeta)
-                            </div>
+                            <label class="form-label">Izvršni direktor <span style="color:#ef4444">*</span></label>
+                            <input type="text" name="director_name" class="form-control" value="{{ old('director_name', auth()->user()->name) }}">
                         </div>
-
                         <div class="form-group">
-                            <label class="form-label">
-                                Ukupan budžet potreban za realizaciju (€) <span class="required">*</span>
-                            </label>
-                            <input 
-                                type="number" 
-                                name="total_budget_needed" 
-                                class="form-control @error('total_budget_needed') error @enderror"
-                                value="{{ old('total_budget_needed') }}"
-                                required
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                            >
-                            @error('total_budget_needed')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                            <div class="form-text">
-                                Mora biti veći ili jednak traženom iznosu
-                            </div>
+                            <label class="form-label">Sjedište <span style="color:#ef4444">*</span></label>
+                            <input type="text" name="company_seat" class="form-control" value="{{ old('company_seat', auth()->user()->address) }}">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Sekcija 4: Dodatni podaci -->
+            <!-- Sekcija 3 -->
             <div class="form-card">
                 <div class="form-section">
-                    <h2>4. Dodatni podaci</h2>
-                    
-                    <div class="form-group">
-                        <label class="form-label">Website (opciono)</label>
-                        <input 
-                            type="url" 
-                            name="website" 
-                            class="form-control @error('website') error @enderror"
-                            value="{{ old('website') }}"
-                            maxlength="255"
-                            placeholder="https://example.com"
-                        >
-                        @error('website')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-
+                    <h2>3. Finansije</h2>
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">Broj računa (opciono)</label>
-                            <input 
-                                type="text" 
-                                name="bank_account" 
-                                class="form-control @error('bank_account') error @enderror"
-                                value="{{ old('bank_account') }}"
-                                maxlength="50"
-                                placeholder="Npr. 510-0000000000123-45"
-                            >
-                            @error('bank_account')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
+                            <label class="form-label">Traženi iznos (€) <span style="color:#ef4444">*</span></label>
+                            <input type="number" name="requested_amount" step="0.01" class="form-control" value="{{ old('requested_amount') }}" required>
                         </div>
-
                         <div class="form-group">
-                            <label class="form-label">PDV broj (opciono)</label>
-                            <input 
-                                type="text" 
-                                name="vat_number" 
-                                class="form-control @error('vat_number') error @enderror"
-                                value="{{ old('vat_number') }}"
-                                maxlength="50"
-                                placeholder="Npr. ME123456789"
-                            >
-                            @error('vat_number')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
+                            <label class="form-label">Ukupan budžet (€) <span style="color:#ef4444">*</span></label>
+                            <input type="number" name="total_budget_needed" step="0.01" class="form-control" value="{{ old('total_budget_needed') }}" required>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Sekcija 5: Izjave -->
+            <!-- Sekcija 4 -->
             <div class="form-card">
                 <div class="form-section">
-                    <h2>5. Izjave</h2>
-                    
-                    <div class="form-group">
-                        <div class="checkbox-group">
-                            <input 
-                                type="checkbox" 
-                                id="de_minimis_declaration" 
-                                name="de_minimis_declaration" 
-                                value="1"
-                                {{ old('de_minimis_declaration') ? 'checked' : '' }}
-                                required
-                            >
-                            <label for="de_minimis_declaration">
-                                Izjavljujem da će ukupna de minimis podrška koju sam dobio/la u posljednje tri godine 
-                                biti u skladu sa propisima Evropske unije o de minimis podršci 
-                                <span class="required">*</span>
-                            </label>
-                        </div>
-                        @error('de_minimis_declaration')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
+                    <h2>4. Izjave</h2>
+                    <div class="checkbox-option" style="margin-bottom: 15px;">
+                        <input type="checkbox" id="de_minimis" name="de_minimis_declaration" value="1" required>
+                        <label for="de_minimis">Prihvatam uslove o <strong>de minimis</strong> pomoći. <span style="color:#ef4444">*</span></label>
                     </div>
-
-                    <div class="form-group">
-                        <div class="checkbox-group">
-                            <input 
-                                type="checkbox" 
-                                id="previous_support_declaration" 
-                                name="previous_support_declaration" 
-                                value="1"
-                                {{ old('previous_support_declaration') ? 'checked' : '' }}
-                            >
-                            <label for="previous_support_declaration">
-                                Prethodno sam dobio/la podršku iz budžeta Opštine Kotor za žensko preduzetništvo
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <div class="checkbox-group">
-                            <input 
-                                type="checkbox" 
-                                id="accuracy_declaration" 
-                                name="accuracy_declaration" 
-                                value="1"
-                                {{ old('accuracy_declaration') ? 'checked' : '' }}
-                                required
-                            >
-                            <label for="accuracy_declaration">
-                                Izjavljujem da su svi dati podaci tačni i da za njihovu tačnost snosim punu odgovornost 
-                                <span class="required">*</span>
-                            </label>
-                        </div>
-                        @error('accuracy_declaration')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
+                    <div class="checkbox-option">
+                        <input type="checkbox" id="accuracy" name="accuracy_declaration" value="1" required>
+                        <label for="accuracy">Garantujem za tačnost svih unesenih podataka. <span style="color:#ef4444">*</span></label>
                     </div>
                 </div>
             </div>
 
-            <!-- Dugme za slanje -->
-            <div class="form-card" style="text-align: center;">
-                <button type="submit" class="btn-primary">
-                    Nastavi na biznis plan
-                </button>
-                <p style="color: #6b7280; font-size: 14px; margin-top: 16px;">
-                    Nakon čuvanja osnovnih podataka, bićete preusmereni na formu za popunjavanje biznis plana.
-                </p>
+            <div style="text-align: center; margin-bottom: 40px;">
+                <button type="submit" class="btn-primary">Sačuvaj i nastavi na biznis plan →</button>
             </div>
         </form>
     </div>
 </div>
 
 <script>
-    // Dinamičko prikazivanje/sakrivanje polja za DOO i obaveštenja o registraciji
     document.addEventListener('DOMContentLoaded', function() {
-        const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"]');
-        const isRegisteredInputs = document.querySelectorAll('input[name="is_registered"]');
-        const registrationNotice = document.getElementById('registration_notice');
+        const typeInputs = document.querySelectorAll('input[name="applicant_type"]');
+        const regInputs = document.querySelectorAll('input[name="is_registered"]');
         const dooFields = document.getElementById('dooFields');
-        const dooRequiredFields = dooFields.querySelectorAll('input[required]');
+        const notice = document.getElementById('registration_notice');
 
-        function toggleFields() {
-            const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
-            const isRegistered = document.querySelector('input[name="is_registered"]:checked')?.value;
+        function toggle() {
+            const isDoo = document.querySelector('input[name="applicant_type"]:checked')?.value === 'doo';
+            const isNotReg = document.querySelector('input[name="is_registered"]:checked')?.value === '0';
             
-            // DOO polja
-            if (selectedType === 'doo') {
-                dooFields.classList.add('show');
-                dooRequiredFields.forEach(field => {
-                    field.setAttribute('required', 'required');
-                });
-            } else {
-                dooFields.classList.remove('show');
-                dooRequiredFields.forEach(field => {
-                    field.removeAttribute('required');
-                });
-            }
-
-            // Obaveštenje o registraciji
-            if (isRegistered === '0') {
-                registrationNotice.style.display = 'block';
-            } else {
-                registrationNotice.style.display = 'none';
-            }
+            dooFields.style.display = isDoo ? 'block' : 'none';
+            notice.style.display = isNotReg ? 'block' : 'none';
+            
+            const dooInputs = dooFields.querySelectorAll('input');
+            dooInputs.forEach(input => {
+                if (isDoo) input.setAttribute('required', 'required');
+                else input.removeAttribute('required');
+            });
         }
 
-        applicantTypeInputs.forEach(input => {
-            input.addEventListener('change', toggleFields);
-        });
-
-        isRegisteredInputs.forEach(input => {
-            input.addEventListener('change', toggleFields);
-        });
-
-        // Pozovi na učitavanju stranice
-        toggleFields();
+        typeInputs.forEach(i => i.addEventListener('change', toggle));
+        regInputs.forEach(i => i.addEventListener('change', toggle));
+        toggle();
     });
 </script>
 @endsection
-

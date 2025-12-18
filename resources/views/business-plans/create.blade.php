@@ -10,457 +10,155 @@
     .business-plan-page {
         background: #f9fafb;
         min-height: 100vh;
-        padding: 24px 0;
+        padding: 16px 0;
+    }
+    @media (min-width: 768px) {
+        .business-plan-page { padding: 24px 0; }
     }
     .page-header {
         background: linear-gradient(90deg, var(--primary), var(--primary-dark));
         color: #fff;
-        padding: 24px;
-        border-radius: 16px;
-        margin-bottom: 24px;
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+    }
+    @media (min-width: 768px) {
+        .page-header { padding: 24px; border-radius: 16px; }
     }
     .page-header h1 {
-        color: #fff;
-        font-size: 28px;
-        font-weight: 700;
-        margin: 0 0 8px;
+        color: #fff; font-size: 18px; font-weight: 700; margin: 0 0 4px;
+    }
+    @media (min-width: 768px) {
+        .page-header h1 { font-size: 24px; }
     }
     .form-card {
-        background: #fff;
-        border-radius: 16px;
-        padding: 32px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        margin-bottom: 24px;
+        background: #fff; border-radius: 12px; padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 20px;
     }
-    .form-section {
-        margin-bottom: 32px;
-    }
-    .form-section:last-child {
-        margin-bottom: 0;
+    @media (min-width: 768px) {
+        .form-card { border-radius: 16px; padding: 32px; margin-bottom: 24px; }
     }
     .form-section h2 {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--primary);
-        margin: 0 0 20px;
-        padding-bottom: 12px;
-        border-bottom: 2px solid #e5e7eb;
+        font-size: 16px; font-weight: 700; color: var(--primary);
+        display: flex; align-items: center; gap: 10px;
+        margin: 0 0 16px; padding-bottom: 10px; border-bottom: 2px solid #e5e7eb;
     }
-    .form-group {
-        margin-bottom: 20px;
+    .section-num {
+        width: 24px; height: 24px; background: var(--primary); color: #fff;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-size: 12px; flex-shrink: 0;
     }
+    .form-group { margin-bottom: 16px; }
     .form-label {
-        display: block;
-        font-size: 14px;
-        font-weight: 600;
-        color: #374151;
-        margin-bottom: 8px;
-    }
-    .form-label .required {
-        color: #ef4444;
-        margin-left: 4px;
+        display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px;
     }
     .form-control {
-        width: 100%;
-        padding: 10px 14px;
-        border: 1px solid #d1d5db;
-        border-radius: 8px;
-        font-size: 14px;
-        transition: border-color 0.2s;
-        font-family: inherit;
+        width: 100%; padding: 10px 12px; border: 1px solid #d1d5db;
+        border-radius: 8px; font-size: 14px; font-family: inherit;
     }
-    textarea.form-control {
-        min-height: 120px;
-        resize: vertical;
-    }
-    .form-control:focus {
-        outline: none;
-        border-color: var(--primary);
-        box-shadow: 0 0 0 3px rgba(11, 61, 145, 0.1);
-    }
-    .form-control.error {
-        border-color: #ef4444;
-    }
-    .form-text {
-        font-size: 12px;
-        color: #6b7280;
-        margin-top: 4px;
-    }
-    .error-message {
-        color: #ef4444;
-        font-size: 12px;
-        margin-top: 4px;
-    }
+    textarea.form-control { min-height: 100px; resize: vertical; }
+    .form-text { font-size: 11px; color: #6b7280; margin-top: 4px; line-height: 1.4; }
+    
     .btn-primary {
-        background: var(--primary);
-        color: #fff;
-        padding: 12px 32px;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 16px;
-        cursor: pointer;
-        transition: background 0.2s;
+        background: var(--primary); color: #fff; padding: 12px 24px;
+        border-radius: 8px; font-weight: 600; font-size: 15px;
+        width: 100%; text-align: center; border: none; cursor: pointer;
     }
-    .btn-primary:hover {
-        background: var(--primary-dark);
-    }
-    .alert {
-        border-radius: 12px;
-        padding: 16px 20px;
-        margin-bottom: 20px;
-        border: 1px solid;
-    }
-    .alert-info {
-        background: #dbeafe;
-        border-color: #3b82f6;
-        color: #1e40af;
-    }
-    .section-number {
-        display: inline-block;
-        width: 28px;
-        height: 28px;
-        background: var(--primary);
-        color: #fff;
-        border-radius: 50%;
-        text-align: center;
-        line-height: 28px;
-        font-weight: 700;
-        font-size: 14px;
-        margin-right: 12px;
-    }
+    @media (min-width: 640px) { .btn-primary { width: auto; padding: 12px 40px; } }
 </style>
 
 <div class="business-plan-page">
     <div class="container mx-auto px-4">
         <div class="page-header">
-            <h1>Biznis plan - Obrazac 2</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 0;">{{ $application->business_plan_name ?? 'Biznis plan' }}</p>
+            <h1>Obrazac 2 - Biznis plan</h1>
+            <p style="color:rgba(255,255,255,0.8); font-size:12px; margin:0;">Popunite detalje vaše poslovne ideje</p>
         </div>
 
-        @if(session('success'))
-            <div class="alert alert-info">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        <form method="POST" action="{{ route('applications.business-plan.store', $application) }}" id="businessPlanForm">
+        <form method="POST" action="{{ route('applications.business-plan.store', $application) }}">
             @csrf
 
-            <!-- I. OSNOVNI PODACI -->
+            <!-- I. Osnovni podaci -->
             <div class="form-card">
                 <div class="form-section">
-                    <h2>
-                        <span class="section-number">I</span>
-                        Osnovni podaci
-                    </h2>
-                    
+                    <h2><span class="section-num">I</span> Osnovni podaci</h2>
                     <div class="form-group">
-                        <label class="form-label">
-                            Naziv biznis ideje <span class="required">*</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            name="business_idea_name" 
-                            class="form-control @error('business_idea_name') error @enderror"
-                            value="{{ old('business_idea_name', $businessPlan->business_idea_name ?? '') }}"
-                            required
-                            maxlength="255"
-                        >
-                        @error('business_idea_name')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
+                        <label class="form-label">Naziv biznis ideje <span style="color:#ef4444">*</span></label>
+                        <input type="text" name="business_idea_name" class="form-control" value="{{ old('business_idea_name', $businessPlan->business_idea_name ?? '') }}" required>
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">
-                            Podaci o podnosiocu <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="applicant_data" 
-                            class="form-control @error('applicant_data') error @enderror"
-                            required
-                        >{{ old('applicant_data', $businessPlan->applicant_data ?? '') }}</textarea>
-                        @error('applicant_data')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Unesite detaljne podatke o podnosiocu prijave (ime, prezime, JMB, adresa, kontakt...)</div>
+                        <label class="form-label">Podaci o podnosiocu <span style="color:#ef4444">*</span></label>
+                        <textarea name="applicant_data" class="form-control" required>{{ old('applicant_data', $businessPlan->applicant_data ?? '') }}</textarea>
+                        <p class="form-text">Ime, prezime, JMBG, adresa i kontakt podaci.</p>
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">
-                            Podaci o registrovanoj djelatnosti <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="registered_activity_data" 
-                            class="form-control @error('registered_activity_data') error @enderror"
-                            required
-                        >{{ old('registered_activity_data', $businessPlan->registered_activity_data ?? '') }}</textarea>
-                        @error('registered_activity_data')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Unesite podatke o registrovanoj djelatnosti (šifra djelatnosti, datum registracije, status...)</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Rezime <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="summary" 
-                            class="form-control @error('summary') error @enderror"
-                            required
-                        >{{ old('summary', $businessPlan->summary ?? '') }}</textarea>
-                        @error('summary')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Kratak pregled biznis ideje (do 500 reči)</div>
+                        <label class="form-label">Rezime <span style="color:#ef4444">*</span></label>
+                        <textarea name="summary" class="form-control" required>{{ old('summary', $businessPlan->summary ?? '') }}</textarea>
+                        <p class="form-text">Kratak opis vaše vizije i ciljeva.</p>
                     </div>
                 </div>
             </div>
 
-            <!-- II. MARKETING -->
+            <!-- II. Marketing -->
             <div class="form-card">
                 <div class="form-section">
-                    <h2>
-                        <span class="section-number">II</span>
-                        Marketing
-                    </h2>
-                    
+                    <h2><span class="section-num">II</span> Marketing</h2>
                     <div class="form-group">
-                        <label class="form-label">
-                            Proizvod/Usluga <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="product_service" 
-                            class="form-control @error('product_service') error @enderror"
-                            required
-                        >{{ old('product_service', $businessPlan->product_service ?? '') }}</textarea>
-                        @error('product_service')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Opis proizvoda ili usluge koju planirate da nudite</div>
+                        <label class="form-label">Proizvod / Usluga <span style="color:#ef4444">*</span></label>
+                        <textarea name="product_service" class="form-control" required>{{ old('product_service', $businessPlan->product_service ?? '') }}</textarea>
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">
-                            Lokacija <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="location" 
-                            class="form-control @error('location') error @enderror"
-                            required
-                        >{{ old('location', $businessPlan->location ?? '') }}</textarea>
-                        @error('location')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Opis lokacije poslovanja (adresa, karakteristike prostora, pristup...)</div>
+                        <label class="form-label">Ciljno tržište i lokacija <span style="color:#ef4444">*</span></label>
+                        <textarea name="location" class="form-control" required>{{ old('location', $businessPlan->location ?? '') }}</textarea>
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">
-                            Cijena <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="pricing" 
-                            class="form-control @error('pricing') error @enderror"
-                            required
-                        >{{ old('pricing', $businessPlan->pricing ?? '') }}</textarea>
-                        @error('pricing')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Strategija cijena, cjenovna lista, konkurentnost cijena</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Promocija <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="promotion" 
-                            class="form-control @error('promotion') error @enderror"
-                            required
-                        >{{ old('promotion', $businessPlan->promotion ?? '') }}</textarea>
-                        @error('promotion')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Plan promocije i marketing aktivnosti</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Ljudi (marketing) <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="people_marketing" 
-                            class="form-control @error('people_marketing') error @enderror"
-                            required
-                        >{{ old('people_marketing', $businessPlan->people_marketing ?? '') }}</textarea>
-                        @error('people_marketing')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Osoblje zaduženo za marketing i prodaju</div>
+                        <label class="form-label">Cijene i promocija <span style="color:#ef4444">*</span></label>
+                        <textarea name="pricing" class="form-control" required>{{ old('pricing', $businessPlan->pricing ?? '') }}</textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- III. POSLOVANJE -->
+            <!-- III. Poslovanje -->
             <div class="form-card">
                 <div class="form-section">
-                    <h2>
-                        <span class="section-number">III</span>
-                        Poslovanje
-                    </h2>
-                    
+                    <h2><span class="section-num">III</span> Poslovanje</h2>
                     <div class="form-group">
-                        <label class="form-label">
-                            Analiza dosadašnjeg poslovanja <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="business_analysis" 
-                            class="form-control @error('business_analysis') error @enderror"
-                            required
-                        >{{ old('business_analysis', $businessPlan->business_analysis ?? '') }}</textarea>
-                        @error('business_analysis')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Analiza dosadašnjeg poslovanja (ako postoji) ili plan za započinjanje</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Nabavno tržište <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="supply_market" 
-                            class="form-control @error('supply_market') error @enderror"
-                            required
-                        >{{ old('supply_market', $businessPlan->supply_market ?? '') }}</textarea>
-                        @error('supply_market')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Analiza dobavljača, nabavnih kanala, uslova nabavke</div>
+                        <label class="form-label">Analiza procesa rada <span style="color:#ef4444">*</span></label>
+                        <textarea name="business_analysis" class="form-control" required>{{ old('business_analysis', $businessPlan->business_analysis ?? '') }}</textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- IV. FINANSIJE -->
+            <!-- IV. Finansije -->
             <div class="form-card">
                 <div class="form-section">
-                    <h2>
-                        <span class="section-number">IV</span>
-                        Finansije
-                    </h2>
-                    
+                    <h2><span class="section-num">IV</span> Finansije</h2>
                     <div class="form-group">
-                        <label class="form-label">
-                            Potrebna sredstva i izvori finansiranja <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="required_funds" 
-                            class="form-control @error('required_funds') error @enderror"
-                            required
-                        >{{ old('required_funds', $businessPlan->required_funds ?? '') }}</textarea>
-                        @error('required_funds')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Detaljan pregled potrebnih sredstava i planiranih izvora finansiranja</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">
-                            Projekcija prihoda i rashoda <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="revenue_expense_projection" 
-                            class="form-control @error('revenue_expense_projection') error @enderror"
-                            required
-                        >{{ old('revenue_expense_projection', $businessPlan->revenue_expense_projection ?? '') }}</textarea>
-                        @error('revenue_expense_projection')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Projekcija prihoda i rashoda za prve 12-24 mjeseca</div>
+                        <label class="form-label">Plan ulaganja i izvori <span style="color:#ef4444">*</span></label>
+                        <textarea name="required_funds" class="form-control" required>{{ old('required_funds', $businessPlan->required_funds ?? '') }}</textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- V. LJUDI -->
+            <!-- V. Ljudi i Rizici -->
             <div class="form-card">
                 <div class="form-section">
-                    <h2>
-                        <span class="section-number">V</span>
-                        Ljudi
-                    </h2>
-                    
+                    <h2><span class="section-num">V</span> Ljudi i Rizici</h2>
                     <div class="form-group">
-                        <label class="form-label">
-                            Podaci o preduzetnici <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="entrepreneur_data" 
-                            class="form-control @error('entrepreneur_data') error @enderror"
-                            required
-                        >{{ old('entrepreneur_data', $businessPlan->entrepreneur_data ?? '') }}</textarea>
-                        @error('entrepreneur_data')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Obrazovanje, iskustvo, kvalifikacije preduzetnice</div>
+                        <label class="form-label">Kvalifikacije i iskustvo <span style="color:#ef4444">*</span></label>
+                        <textarea name="entrepreneur_data" class="form-control" required>{{ old('entrepreneur_data', $businessPlan->entrepreneur_data ?? '') }}</textarea>
                     </div>
-
                     <div class="form-group">
-                        <label class="form-label">
-                            Raspored poslova <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="job_schedule" 
-                            class="form-control @error('job_schedule') error @enderror"
-                            required
-                        >{{ old('job_schedule', $businessPlan->job_schedule ?? '') }}</textarea>
-                        @error('job_schedule')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Organizacija rada, raspored poslova, plan zapošljavanja</div>
+                        <label class="form-label">Glavni rizici <span style="color:#ef4444">*</span></label>
+                        <textarea name="risk_matrix" class="form-control" required>{{ old('risk_matrix', $businessPlan->risk_matrix ?? '') }}</textarea>
                     </div>
                 </div>
             </div>
 
-            <!-- VI. RIZICI -->
-            <div class="form-card">
-                <div class="form-section">
-                    <h2>
-                        <span class="section-number">VI</span>
-                        Rizici
-                    </h2>
-                    
-                    <div class="form-group">
-                        <label class="form-label">
-                            Matrica upravljanja rizicima <span class="required">*</span>
-                        </label>
-                        <textarea 
-                            name="risk_matrix" 
-                            class="form-control @error('risk_matrix') error @enderror"
-                            required
-                            style="min-height: 200px;"
-                        >{{ old('risk_matrix', $businessPlan->risk_matrix ?? '') }}</textarea>
-                        @error('risk_matrix')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Identifikacija rizika, procjena verovatnoće i uticaja, plan ublažavanja rizika</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Dugme za slanje -->
-            <div class="form-card" style="text-align: center;">
-                <button type="submit" class="btn-primary">
-                    Sačuvaj biznis plan
-                </button>
-                <p style="color: #6b7280; font-size: 14px; margin-top: 16px;">
-                    Nakon čuvanja biznis plana, možete priložiti potrebne dokumente.
-                </p>
+            <div style="text-align:center; margin-bottom:40px;">
+                <button type="submit" class="btn-primary">SAČUVAJ BIZNIS PLAN</button>
+                <p style="margin-top:15px; font-size:12px; color:#6b7280;">Nakon čuvanja, moći ćete da priložite ostala dokumenta.</p>
             </div>
         </form>
     </div>
 </div>
 @endsection
-
