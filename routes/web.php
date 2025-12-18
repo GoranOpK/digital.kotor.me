@@ -13,6 +13,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\FeedbackController;
 
 // Učitaj auth rute (za email verifikaciju i sl.)
 require __DIR__.'/auth.php';
@@ -168,6 +169,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('/commissions/members/{member}', [AdminController::class, 'deleteMember'])->name('commissions.members.delete');
         });
     });
+});
+
+// Povratne informacije (feedback) - javno dostupno svima
+Route::get('/feedback', [FeedbackController::class, 'create'])->name('feedback.create'); // Forma za slanje povratne informacije
+Route::post('/feedback', [FeedbackController::class, 'store'])->name('feedback.store'); // Slanje povratne informacije
+
+// Admin rute za pregled povratnih informacija
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/feedback', [FeedbackController::class, 'index'])->name('feedback.index'); // Lista svih povratnih informacija
+    Route::get('/feedback/{feedback}', [FeedbackController::class, 'show'])->name('feedback.show'); // Detalji pojedinačne povratne informacije
+    Route::put('/feedback/{feedback}', [FeedbackController::class, 'update'])->name('feedback.update'); // Ažuriranje povratne informacije
 });
 
 // Ako želiš javno dostupne rute za prikaz konkursa/tendera (bez prijave), možeš ih dodati ovdje:

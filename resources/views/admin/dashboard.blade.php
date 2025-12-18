@@ -255,6 +255,9 @@
                 @endif
                 <a href="{{ route('admin.competitions.index') }}" class="link-primary" style="padding: 10px; background: #f9fafb; border-radius: 8px; text-align: center; font-size: 13px;">📋 Konkursi</a>
                 <a href="{{ route('admin.commissions.index') }}" class="link-primary" style="padding: 10px; background: #f9fafb; border-radius: 8px; text-align: center; font-size: 13px;">👥 Komisija</a>
+                @if(!$isCompetitionAdmin)
+                    <a href="{{ route('admin.feedback.index') }}" class="link-primary" style="padding: 10px; background: #f9fafb; border-radius: 8px; text-align: center; font-size: 13px;">💬 Povratne informacije</a>
+                @endif
             </div>
         </div>
 
