@@ -541,36 +541,58 @@
                 </div>
             </div>
 
-            <!-- Lista obaveznih dokumenata -->
+            <!-- Lista dokumenata -->
             <ul class="documents-list">
-                @foreach($requiredDocs as $docType)
-                    @php
-                        $uploaded = in_array($docType, $uploadedDocs);
-                        $doc = $application->documents->where('document_type', $docType)->first();
-                    @endphp
-                    <li class="document-item {{ $uploaded ? 'uploaded' : 'required' }}">
+                {{-- Prvo prikaži sve upload-ovane dokumente --}}
+                @foreach($application->documents as $doc)
+                    <li class="document-item uploaded">
                         <div class="document-info">
                             <div class="document-name">
-                                {{ $documentLabels[$docType] ?? $docType }}
-                                @if(!$uploaded)
-                                    <span style="color: #ef4444; font-size: 12px; margin-left: 8px;">(Obavezno)</span>
+                                {{ $documentLabels[$doc->document_type] ?? $doc->document_type }}
+                                @if(in_array($doc->document_type, $requiredDocs))
+                                    <span style="color: #10b981; font-size: 12px; margin-left: 8px;">(Obavezno)</span>
                                 @endif
                             </div>
-                            @if($uploaded && $doc)
-                                <div class="document-type">
-                                    Upload-ovano: {{ $doc->created_at->format('d.m.Y H:i') }}
-                                </div>
-                            @endif
+                            <div class="document-type">
+                                Naziv fajla: {{ $doc->name }} | Upload-ovano: {{ $doc->created_at->format('d.m.Y H:i') }}
+                            </div>
                         </div>
                         <div class="document-actions">
-                            @if($uploaded && $doc)
-                                <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" 
-                                   class="btn btn-secondary">
-                                    Preuzmi
-                                </a>
+                            <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" 
+                               class="btn btn-secondary">
+                                Preuzmi
+                            </a>
+                            @if($application->status === 'draft')
+                                <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $doc]) }}" 
+                                      method="POST" 
+                                      style="display: inline;" 
+                                      onsubmit="return confirm('Da li ste sigurni da želite da uklonite ovaj dokument iz prijave?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger" style="padding: 8px 12px;">
+                                        Ukloni
+                                    </button>
+                                </form>
                             @endif
                         </div>
                     </li>
+                @endforeach
+
+                {{-- Zatim prikaži preostale obavezne dokumente koji nisu upload-ovani --}}
+                @foreach($requiredDocs as $docType)
+                    @if(!in_array($docType, $uploadedDocs))
+                        <li class="document-item required">
+                            <div class="document-info">
+                                <div class="document-name">
+                                    {{ $documentLabels[$docType] ?? $docType }}
+                                    <span style="color: #ef4444; font-size: 12px; margin-left: 8px;">(Obavezno - Nedostaje)</span>
+                                </div>
+                                <div class="document-type">
+                                    Molimo priložite ovaj dokument koristeći formu iznad.
+                                </div>
+                            </div>
+                        </li>
+                    @endif
                 @endforeach
             </ul>
         </div>

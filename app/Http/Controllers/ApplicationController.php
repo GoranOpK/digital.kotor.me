@@ -306,7 +306,53 @@ class ApplicationController extends Controller
      */
     public function downloadDocument(Application $application, ApplicationDocument $document)
     {
-        // ... (existing code) ...
+        // Proveri da li dokument pripada prijavi
+        if ($document->application_id !== $application->id) {
+            abort(404);
+        }
+
+        // Proveri pristup
+        $user = Auth::user();
+        if ($application->user_id !== $user->id && !($user->role && in_array($user->role->name, ['admin', 'superadmin', 'konkurs_admin']))) {
+            abort(403);
+        }
+
+        if (!Storage::disk('local')->exists($document->file_path)) {
+            return back()->withErrors(['error' => 'Fajl nije pronađen na serveru.']);
+        }
+
+        return Storage::disk('local')->download($document->file_path, $document->name);
+    }
+
+    /**
+     * Brisanje dokumenta iz prijave
+     */
+    public function destroyDocument(Application $application, ApplicationDocument $document): RedirectResponse
+    {
+        // Proveri da li prijava pripada korisniku
+        if ($application->user_id !== Auth::id()) {
+            abort(403, 'Nemate pristup ovoj prijavi.');
+        }
+
+        // Proveri da li dokument pripada prijavi
+        if ($document->application_id !== $application->id) {
+            abort(404, 'Dokument nije pronađen.');
+        }
+
+        // Korisnik može brisati dokumente samo dok je prijava u nacrtu
+        if ($application->status !== 'draft') {
+            return back()->withErrors(['error' => 'Dokumente možete brisati samo dok je prijava u nacrtu.']);
+        }
+
+        // Ako dokument NIJE iz biblioteke (user_document_id je null), obriši fizički fajl
+        if (!$document->user_document_id) {
+            Storage::disk('local')->delete($document->file_path);
+        }
+
+        // Obriši zapis iz baze
+        $document->delete();
+
+        return back()->with('success', 'Dokument je uspješno uklonjen iz prijave.');
     }
 
     /**
