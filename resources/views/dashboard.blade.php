@@ -73,7 +73,7 @@
     }
     @media (min-width: 1024px) {
         .top-grid {
-            grid-template-columns: 2fr 1.5fr;
+            grid-template-columns: repeat(3, 1fr);
             align-items: stretch;
         }
         .top-grid > .info-card {
@@ -263,15 +263,15 @@
             </div>
         @endif
 
+        @if (!$isSuperAdmin && !$isCompetitionAdmin)
         <div class="top-grid">
-            <!-- Informacije o korisniku (ne prikazuje se za super admin i konkurs admin) -->
-            @if (!$isSuperAdmin && !$isCompetitionAdmin)
+            <!-- 1. Informacije o korisniku -->
             <div class="info-card">
                 <div class="info-card-header">
                     <h2>Informacije o korisniku</h2>
-                    <a href="{{ route('profile.edit') }}" class="btn-edit">Izmijeni podatke</a>
+                    <a href="{{ route('profile.edit') }}" class="btn-edit">Izmijeni</a>
                 </div>
-                <div class="info-grid">
+                <div class="info-grid" style="grid-template-columns: 1fr; gap: 12px;">
                     <div class="info-item">
                         <span class="info-label">Ime i prezime</span>
                         <span class="info-value">{{ $user->name ?? 'N/A' }}</span>
@@ -304,143 +304,94 @@
                             <span class="info-value">{{ $user->pib }}</span>
                         </div>
                     @endif
-                    @if($user->passport_number)
-                        <div class="info-item">
-                            <span class="info-label">Broj pasoša</span>
-                            <span class="info-value">{{ $user->passport_number }}</span>
-                        </div>
-                    @endif
-                    <div class="info-item">
-                        <span class="info-label">Status naloga</span>
-                        <span class="info-value">
-                            <span style="display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; {{ $user->activation_status === 'active' ? 'background: #d1fae5; color: #065f46;' : 'background: #fee2e2; color: #991b1b;' }}">
-                                {{ $user->activation_status === 'active' ? 'Aktivan' : 'Deaktiviran' }}
-                            </span>
-                        </span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Email verifikovan</span>
-                        <span class="info-value">
-                            @if($user->email_verified_at)
-                                <span style="color: #065f46; font-weight: 600;">Da</span>
-                            @else
-                                <span style="color: #991b1b; font-weight: 600;">Ne</span>
-                            @endif
-                        </span>
-                    </div>
                 </div>
             </div>
-            @endif
 
-            <!-- Moje prijave (za obične korisnike) -->
-            @if (!$isSuperAdmin && !$isCompetitionAdmin)
+            <!-- 2. Moja biblioteka dokumenata -->
             <div class="info-card">
                 <div class="info-card-header">
-                    <h2>Moje prijave na konkurse</h2>
-                    <a href="{{ route('competitions.index') }}" class="btn-edit">Novi konkursi</a>
+                    <h2>Biblioteka dokumenata</h2>
+                    <a href="{{ route('documents.index') }}" class="btn-edit">Otvori</a>
                 </div>
-                @if(isset($applications) && $applications->count() > 0)
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                            <thead>
-                                <tr style="border-bottom: 2px solid #e5e7eb; text-align: left;">
-                                    <th style="padding: 12px 8px; color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 11px;">Konkurs / Biznis plan</th>
-                                    <th style="padding: 12px 8px; color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 11px;">Status</th>
-                                    <th style="padding: 12px 8px; color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 11px;">Akcija</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($applications as $app)
-                                    <tr style="border-bottom: 1px solid #f3f4f6;">
-                                        <td style="padding: 12px 8px;">
-                                            <div style="font-weight: 600; color: #111827;">{{ Str::limit($app->business_plan_name, 30) }}</div>
-                                            <div style="font-size: 12px; color: #6b7280;">{{ Str::limit($app->competition->title, 30) }}</div>
-                                        </td>
-                                        <td style="padding: 12px 8px;">
-                                            @php
-                                                $statusLabels = [
-                                                    'draft' => 'Nacrt',
-                                                    'submitted' => 'U obradi',
-                                                    'evaluated' => 'Ocjenjena',
-                                                    'approved' => 'Odobrena',
-                                                    'rejected' => 'Odbijena',
-                                                ];
-                                                $statusColors = [
-                                                    'draft' => 'background: #fef3c7; color: #92400e;',
-                                                    'submitted' => 'background: #dbeafe; color: #1e40af;',
-                                                    'evaluated' => 'background: #d1fae5; color: #065f46;',
-                                                    'approved' => 'background: #d1fae5; color: #065f46;',
-                                                    'rejected' => 'background: #fee2e2; color: #991b1b;',
-                                                ];
-                                            @endphp
-                                            <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; font-weight: 600; {{ $statusColors[$app->status] ?? '' }}">
-                                                {{ $statusLabels[$app->status] ?? $app->status }}
-                                            </span>
-                                        </td>
-                                        <td style="padding: 12px 8px;">
-                                            <div style="display: flex; gap: 8px; align-items: center;">
-                                                <a href="{{ route('applications.show', $app) }}" style="color: var(--primary); font-weight: 600; text-decoration: none;">Pregled</a>
-                                                <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu prijavu?');" style="display: inline;">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" style="background: none; border: none; color: #ef4444; font-weight: 600; padding: 0; cursor: pointer; font-size: 14px;">Obriši</button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <div style="text-align: center; padding: 32px 0;">
-                        <p style="color: #6b7280; font-size: 14px; margin-bottom: 16px;">Nemate aktivnih prijava na konkurse.</p>
-                        <a href="{{ route('competitions.index') }}" class="btn-edit">Prijavi se na konkurs</a>
-                    </div>
-                @endif
-            </div>
-            @endif
-        </div>
-
-        @if (!$isSuperAdmin && !$isCompetitionAdmin)
-        <div class="top-grid">
-            <!-- Moja biblioteka dokumenata -->
-            <div class="info-card">
-                <div class="info-card-header">
-                    <h2>Moja biblioteka dokumenata</h2>
-                    <a href="{{ route('documents.index') }}" class="btn-edit">Otvori biblioteku</a>
-                </div>
-                <p style="margin: 0 0 16px; color: #6b7280; font-size: 14px;">
-                    Centralno mjesto gdje možete čuvati lična, finansijska i poslovna dokumenta i koristiti ih pri prijavama na konkurse i tendere.
+                <p style="margin: 0 0 16px; color: #6b7280; font-size: 13px;">
+                    Čuvajte lična, finansijska i poslovna dokumenta za prijave na konkurse i tendere.
                 </p>
                 <div style="margin-top: auto; padding-top: 16px; border-top: 1px solid #e5e7eb;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <span style="font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Iskorišćen prostor</span>
-                        <span style="font-size: 14px; font-weight: 600; color: var(--primary);">{{ $usedStorageMB ?? 0 }} MB / {{ $maxStorageMB ?? 20 }} MB</span>
+                        <span style="font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase;">Iskorišćeno</span>
+                        <span style="font-size: 13px; font-weight: 600; color: var(--primary);">{{ $usedStorageMB ?? 0 }} MB / 20 MB</span>
                     </div>
                     <div style="width: 100%; height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden;">
                         <div style="height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-dark)); width: {{ min($storagePercentage ?? 0, 100) }}%; transition: width 0.3s ease;"></div>
                     </div>
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                        {{ $storagePercentage ?? 0 }}% iskorišćeno
+                    <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
+                        {{ $storagePercentage ?? 0 }}% od ukupnog prostora
                     </div>
                 </div>
             </div>
-            
-            <!-- Brzi servisi -->
-            <div class="info-card" style="background: transparent; border: none; box-shadow: none; padding: 0;">
-                <div class="services-grid" style="margin-top: 0; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
-                    <a href="{{ route('payments.index') }}" class="service-card" style="margin: 0;">
-                        <div class="service-icon" style="margin-bottom: 12px; width: 40px; height: 40px; font-size: 20px;">₿</div>
-                        <h3 style="font-size: 16px;">Plaćanja</h3>
-                        <p style="font-size: 12px;">Uplate taksi i naknada.</p>
-                    </a>
-                    <a href="{{ route('tenders.index') }}" class="service-card" style="margin: 0;">
-                        <div class="service-icon" style="margin-bottom: 12px; width: 40px; height: 40px; font-size: 20px;">§</div>
-                        <h3 style="font-size: 16px;">Tenderi</h3>
-                        <p style="font-size: 12px;">Otkup dokumentacije.</p>
-                    </a>
+
+            <!-- 3. Moje prijave na konkurse -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h2>Moje prijave</h2>
+                    <a href="{{ route('competitions.index') }}" class="btn-edit">Novi</a>
                 </div>
+                @if(isset($applications) && $applications->count() > 0)
+                    <div style="overflow-y: auto; max-height: 350px;">
+                        @foreach($applications->take(5) as $app)
+                            <div style="padding: 12px 0; border-bottom: 1px solid #f3f4f6;">
+                                <div style="font-weight: 600; color: #111827; font-size: 13px;">{{ Str::limit($app->business_plan_name, 25) }}</div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                                    @php
+                                        $statusLabels = ['draft' => 'Nacrt', 'submitted' => 'U obradi', 'evaluated' => 'Ocjenjena', 'approved' => 'Odobrena', 'rejected' => 'Odbijena'];
+                                        $statusColors = ['draft' => 'background: #fef3c7; color: #92400e;', 'submitted' => 'background: #dbeafe; color: #1e40af;', 'evaluated' => 'background: #d1fae5; color: #065f46;', 'approved' => 'background: #d1fae5; color: #065f46;', 'rejected' => 'background: #fee2e2; color: #991b1b;'];
+                                    @endphp
+                                    <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; {{ $statusColors[$app->status] ?? '' }}">
+                                        {{ $statusLabels[$app->status] ?? $app->status }}
+                                    </span>
+                                    <div style="display: flex; gap: 8px;">
+                                        <a href="{{ route('applications.show', $app) }}" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 12px;">Pregled</a>
+                                        <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Obrisati prijavu?');" style="display: inline;">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" style="background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; font-size: 12px; padding: 0;">Obriši</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                        @if($applications->count() > 5)
+                            <p style="text-align: center; margin-top: 12px; font-size: 12px; color: #6b7280;">+ još {{ $applications->count() - 5 }} prijave</p>
+                        @endif
+                    </div>
+                @else
+                    <div style="text-align: center; padding: 24px 0;">
+                        <p style="color: #6b7280; font-size: 13px; margin-bottom: 12px;">Nemate aktivnih prijava.</p>
+                        <a href="{{ route('competitions.index') }}" class="btn-edit" style="font-size: 12px;">Prijavi se</a>
+                    </div>
+                @endif
+            </div>
+        </div>
+
+        <!-- Brzi servisi (Plati, Tenderi) -->
+        <div style="margin-bottom: 24px;">
+            <div class="services-grid" style="margin-top: 0;">
+                <a href="{{ route('payments.index') }}" class="service-card">
+                    <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">₿</div>
+                    <h3 style="font-size: 16px;">Online plaćanja</h3>
+                    <p style="font-size: 12px;">Uplate komunalija, taksi i naknada.</p>
+                </a>
+                <a href="{{ route('tenders.index') }}" class="service-card">
+                    <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">§</div>
+                    <h3 style="font-size: 16px;">Tenderi</h3>
+                    <p style="font-size: 12px;">Otkup i pregled tenderske dokumentacije.</p>
+                </a>
+                @if($isLegalEntity)
+                <div class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
+                    <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">🏢</div>
+                    <h3 style="font-size: 16px;">Servisi za pravna lica</h3>
+                    <p style="font-size: 12px;">Izvještaji i administrativne procedure.</p>
+                </div>
+                @endif
             </div>
         </div>
         @endif
@@ -449,100 +400,10 @@
         @if ($isSuperAdmin)
             <div class="services-grid">
                 <a href="{{ route('admin.dashboard') }}" class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
-                    <div class="service-icon" style="border-color: var(--primary);">⚙️</div>
+                    <div class="service-icon">⚙️</div>
                     <h3>Administracija</h3>
                     <p>Upravljanje korisnicima, konkursima, tenderima i svim aspektima sistema.</p>
                 </a>
-            </div>
-        @endif
-
-        <!-- Services - Fizičko lice (Rezident) -->
-        @if (!$isSuperAdmin && !$isCompetitionAdmin && $isPhysicalPerson && $isResident)
-            <div class="services-grid">
-                <a href="{{ route('payments.index') }}" class="service-card">
-                    <div class="service-icon">₿</div>
-                    <h3>Online plaćanja</h3>
-                    <p>Uplate komunalija, taksi i drugih opštinskih naknada. Pregled istorije uplata i novih zahteva.</p>
-                </a>
-
-                <a href="{{ route('competitions.index') }}" class="service-card">
-                    <div class="service-icon">★</div>
-                    <h3>Moje prijave na konkurse</h3>
-                    <p>Prijava i praćenje statusa na programe podrške. Pregled svih vaših prijava i njihovog stanja.</p>
-                </a>
-
-                <a href="{{ route('tenders.index') }}" class="service-card">
-                    <div class="service-icon">§</div>
-                    <h3>Moje tenderske kupovine</h3>
-                    <p>Pregled, preuzimanje i otkup tenderske dokumentacije. Istorija svih vaših kupovina.</p>
-                </a>
-
-            </div>
-        @endif
-
-        <!-- Services - Fizičko lice (Nerezident) -->
-        @if (!$isSuperAdmin && !$isCompetitionAdmin && $isPhysicalPerson && $isNonResident)
-            <div class="services-grid">
-                <a href="{{ route('payments.index') }}" class="service-card">
-                    <div class="service-icon">₿</div>
-                    <h3>Online plaćanja</h3>
-                    <p>Uplate komunalija, taksi i drugih opštinskih naknada. Pregled istorije uplata i novih zahteva.</p>
-                </a>
-
-                <a href="{{ route('competitions.index') }}" class="service-card">
-                    <div class="service-icon">★</div>
-                    <h3>Moje prijave na konkurse</h3>
-                    <p>Prijava i praćenje statusa na programe podrške. Pregled svih vaših prijava i njihovog stanja.</p>
-                </a>
-
-                <a href="{{ route('tenders.index') }}" class="service-card">
-                    <div class="service-icon">§</div>
-                    <h3>Moje tenderske kupovine</h3>
-                    <p>Pregled, preuzimanje i otkup tenderske dokumentacije. Istorija svih vaših kupovina.</p>
-                </a>
-
-                <div class="service-card" style="border-color: var(--secondary); background: linear-gradient(135deg, rgba(184,134,11,0.05), rgba(184,134,11,0.1));">
-                    <div class="service-icon" style="border-color: var(--secondary); color: var(--secondary);">🌍</div>
-                    <h3>Nerezident servisi</h3>
-                    <p>Dodatne informacije i usluge dostupne nerezidentima. Pregled posebnih procedura i zahteva.</p>
-                </div>
-
-            </div>
-        @endif
-
-        <!-- Services - Pravno lice -->
-        @if (!$isSuperAdmin && !$isCompetitionAdmin && $isLegalEntity)
-            <div class="services-grid">
-                <a href="{{ route('payments.index') }}" class="service-card">
-                    <div class="service-icon">₿</div>
-                    <h3>Online plaćanja</h3>
-                    <p>Uplate komunalija, taksi i drugih opštinskih naknada. Pregled istorije uplata i novih zahteva.</p>
-                </a>
-
-                <a href="{{ route('competitions.index') }}" class="service-card">
-                    <div class="service-icon">★</div>
-                    <h3>Moje prijave na konkurse</h3>
-                    <p>Prijava i praćenje statusa na programe podrške. Pregled svih vaših prijava i njihovog stanja.</p>
-                </a>
-
-                <a href="{{ route('tenders.index') }}" class="service-card">
-                    <div class="service-icon">§</div>
-                    <h3>Moje tenderske kupovine</h3>
-                    <p>Pregled, preuzimanje i otkup tenderske dokumentacije. Istorija svih vaših kupovina.</p>
-                </a>
-
-                <div class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
-                    <div class="service-icon" style="border-color: var(--primary);">🏢</div>
-                    <h3>Servisi za pravna lica</h3>
-                    <p>Specijalizovane usluge za privredne subjekte. Pregled dokumentacije, izvještaja i administrativnih procedura.</p>
-                </div>
-
-                <div class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
-                    <div class="service-icon" style="border-color: var(--primary);">📋</div>
-                    <h3>Upravljanje dokumentacijom</h3>
-                    <p>Centralizovano upravljanje svim dokumentima vašeg privrednog subjekta. Pregled i ažuriranje podataka.</p>
-                </div>
-
             </div>
         @endif
 
