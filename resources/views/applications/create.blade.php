@@ -319,6 +319,42 @@
 
                     <div class="form-group">
                         <label class="form-label">
+                            Imate li registrovanu djelatnost? <span class="required">*</span>
+                        </label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input 
+                                    type="radio" 
+                                    id="is_registered_yes" 
+                                    name="is_registered" 
+                                    value="1"
+                                    {{ old('is_registered', '1') === '1' ? 'checked' : '' }}
+                                    required
+                                >
+                                <label for="is_registered_yes">Da</label>
+                            </div>
+                            <div class="radio-option">
+                                <input 
+                                    type="radio" 
+                                    id="is_registered_no" 
+                                    name="is_registered" 
+                                    value="0"
+                                    {{ old('is_registered') === '0' ? 'checked' : '' }}
+                                    required
+                                >
+                                <label for="is_registered_no">Ne (Fizičko lice bez registrovane djelatnosti)</label>
+                            </div>
+                        </div>
+                        <div id="registration_notice" class="form-text" style="color: #0B3D91; font-weight: 500; display: none; margin-top: 8px;">
+                            ℹ️ Ukoliko nemate registrovanu djelatnost, u obavezi ste da je registrujete najkasnije do dana potpisivanja ugovora ukoliko vam sredstva budu odobrena.
+                        </div>
+                        @error('is_registered')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
                             Oblast biznisa <span class="required">*</span>
                         </label>
                         <input 
@@ -541,6 +577,26 @@
                             </label>
                         </div>
                     </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input 
+                                type="checkbox" 
+                                id="accuracy_declaration" 
+                                name="accuracy_declaration" 
+                                value="1"
+                                {{ old('accuracy_declaration') ? 'checked' : '' }}
+                                required
+                            >
+                            <label for="accuracy_declaration">
+                                Izjavljujem da su svi dati podaci tačni i da za njihovu tačnost snosim punu odgovornost 
+                                <span class="required">*</span>
+                            </label>
+                        </div>
+                        @error('accuracy_declaration')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
             </div>
 
@@ -558,15 +614,19 @@
 </div>
 
 <script>
-    // Dinamičko prikazivanje/sakrivanje polja za DOO
+    // Dinamičko prikazivanje/sakrivanje polja za DOO i obaveštenja o registraciji
     document.addEventListener('DOMContentLoaded', function() {
         const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"]');
+        const isRegisteredInputs = document.querySelectorAll('input[name="is_registered"]');
+        const registrationNotice = document.getElementById('registration_notice');
         const dooFields = document.getElementById('dooFields');
         const dooRequiredFields = dooFields.querySelectorAll('input[required]');
 
-        function toggleDooFields() {
+        function toggleFields() {
             const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
+            const isRegistered = document.querySelector('input[name="is_registered"]:checked')?.value;
             
+            // DOO polja
             if (selectedType === 'doo') {
                 dooFields.classList.add('show');
                 dooRequiredFields.forEach(field => {
@@ -578,14 +638,25 @@
                     field.removeAttribute('required');
                 });
             }
+
+            // Obaveštenje o registraciji
+            if (isRegistered === '0') {
+                registrationNotice.style.display = 'block';
+            } else {
+                registrationNotice.style.display = 'none';
+            }
         }
 
         applicantTypeInputs.forEach(input => {
-            input.addEventListener('change', toggleDooFields);
+            input.addEventListener('change', toggleFields);
+        });
+
+        isRegisteredInputs.forEach(input => {
+            input.addEventListener('change', toggleFields);
         });
 
         // Pozovi na učitavanju stranice
-        toggleDooFields();
+        toggleFields();
     });
 </script>
 @endsection

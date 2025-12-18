@@ -74,6 +74,7 @@ class ApplicationController extends Controller
             'business_plan_name' => 'required|string|max:255',
             'applicant_type' => 'required|in:preduzetnica,doo',
             'business_stage' => 'required|in:započinjanje,razvoj',
+            'is_registered' => 'required|boolean',
             'business_area' => 'required|string|max:255',
             'requested_amount' => 'required|numeric|min:0',
             'total_budget_needed' => 'required|numeric|min:0|gte:requested_amount',
@@ -81,6 +82,7 @@ class ApplicationController extends Controller
             'bank_account' => 'nullable|string|max:50',
             'vat_number' => 'nullable|string|max:50',
             'de_minimis_declaration' => 'required|accepted',
+            'accuracy_declaration' => 'required|accepted',
         ];
 
         // Dodatna polja za DOO
@@ -94,11 +96,13 @@ class ApplicationController extends Controller
             'business_plan_name.required' => 'Naziv biznis plana je obavezan.',
             'applicant_type.required' => 'Tip podnosioca je obavezan.',
             'business_stage.required' => 'Faza biznisa je obavezna.',
+            'is_registered.required' => 'Morate navesti da li imate registrovanu djelatnost.',
             'business_area.required' => 'Oblast biznisa je obavezna.',
             'requested_amount.required' => 'Traženi iznos je obavezan.',
             'total_budget_needed.required' => 'Ukupan budžet je obavezan.',
             'total_budget_needed.gte' => 'Ukupan budžet mora biti veći ili jednak traženom iznosu.',
             'de_minimis_declaration.required' => 'Morate potvrditi de minimis izjavu.',
+            'accuracy_declaration.required' => 'Morate potvrditi da odgovarate za tačnost podataka.',
             'founder_name.required' => 'Ime osnivača/ice je obavezno za DOO.',
             'director_name.required' => 'Ime izvršnog direktora/ice je obavezno za DOO.',
             'company_seat.required' => 'Sjedište društva je obavezno za DOO.',
@@ -119,6 +123,7 @@ class ApplicationController extends Controller
             'business_plan_name' => $validated['business_plan_name'],
             'applicant_type' => $validated['applicant_type'],
             'business_stage' => $validated['business_stage'],
+            'is_registered' => $validated['is_registered'],
             'founder_name' => $validated['founder_name'] ?? null,
             'director_name' => $validated['director_name'] ?? null,
             'company_seat' => $validated['company_seat'] ?? null,
@@ -130,6 +135,7 @@ class ApplicationController extends Controller
             'vat_number' => $validated['vat_number'] ?? null,
             'de_minimis_declaration' => true,
             'previous_support_declaration' => $request->has('previous_support_declaration'),
+            'accuracy_declaration' => true,
             'status' => 'draft', // Draft dok se ne prilože svi dokumenti
         ]);
 
