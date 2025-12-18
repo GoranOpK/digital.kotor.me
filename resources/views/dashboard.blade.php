@@ -217,6 +217,8 @@
     // Određivanje tipa korisnika za prikaz
     if ($isSuperAdmin) {
         $userTypeLabel = 'Super Administrator';
+    } elseif ($isCompetitionAdmin) {
+        $userTypeLabel = 'Administrator konkursa';
     } elseif ($isPhysicalPerson && $isResident) {
         $userTypeLabel = 'Fizičko lice (Rezident)';
     } elseif ($isPhysicalPerson && $isNonResident) {
