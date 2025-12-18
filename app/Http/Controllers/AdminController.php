@@ -282,10 +282,14 @@ class AdminController extends Controller
         $data = $validated;
         $data['deadline_days'] = 20;
         
+        // Ako vraćamo konkurs u status 'published' ili 'draft', poništi datum zatvaranja
+        if (in_array($validated['status'], ['published', 'draft'])) {
+            $data['closed_at'] = null;
+        }
+
         if (!empty($validated['start_date'])) {
             $start = \Carbon\Carbon::parse($validated['start_date']);
             $data['start_date'] = $start->toDateString();
-            // end_date u bazi neka bude start_date + 20 dana (za svaki slučaj)
             $data['end_date'] = $start->copy()->addDays(20)->toDateString();
         }
 
