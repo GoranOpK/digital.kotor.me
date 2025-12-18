@@ -238,7 +238,11 @@
         @endif
 
         <div style="text-align: center; margin-top: 24px;">
-            <a href="{{ route('admin.applications.index') }}" class="btn btn-primary">Nazad na listu</a>
+            @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
+                <a href="{{ route('admin.competitions.show', $application->competition_id) }}" class="btn btn-primary">Nazad na konkurs</a>
+            @else
+                <a href="{{ route('admin.applications.index') }}" class="btn btn-primary">Nazad na listu</a>
+            @endif
         </div>
     </div>
 </div>
