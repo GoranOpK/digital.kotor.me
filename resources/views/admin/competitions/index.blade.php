@@ -102,7 +102,7 @@
                     <tr>
                         <th>Naziv</th>
                         <th>Tip</th>
-                        <th>Trajanje</th>
+                        <th>Preostalo vrijeme</th>
                         <th>Budžet</th>
                         <th>Status</th>
                         <th>Prijave</th>
@@ -120,15 +120,12 @@
                                 @endif
                             </td>
                             <td>
-                                @if($competition->status === 'published' && $competition->published_at)
-                                    @php
-                                        $deadline = $competition->published_at->copy()->addDays($competition->deadline_days)->startOfDay()->addDay();
-                                    @endphp
-                                    <div class="countdown-timer" data-deadline="{{ $deadline->format('Y-m-d H:i:s') }}">
+                                @if($competition->status === 'published' && $competition->deadline)
+                                    <div class="countdown-timer" data-deadline="{{ $competition->deadline->format('Y-m-d H:i:s') }}">
                                         Učitavanje...
                                     </div>
                                     <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
-                                        Rok: {{ $deadline->subSecond()->format('d.m.Y H:i') }}
+                                        Rok: {{ $competition->deadline->copy()->subSecond()->format('d.m.Y H:i') }}
                                     </div>
                                 @elseif($competition->status === 'closed' && $competition->published_at)
                                     <span style="color: #dc2626; font-size: 13px; font-weight: 600;">Zatvoren</span>
