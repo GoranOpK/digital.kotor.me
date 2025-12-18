@@ -88,7 +88,7 @@ class FeedbackController extends Controller
     public function update(Request $request, Feedback $feedback)
     {
         $validated = $request->validate([
-            'status' => 'required|in:new,in_progress,resolved,closed',
+            'status' => 'required|in:' . implode(',', array_keys(Feedback::getStatuses())),
             'admin_response' => 'nullable|string|max:2000',
         ]);
 

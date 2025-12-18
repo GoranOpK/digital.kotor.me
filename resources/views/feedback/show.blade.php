@@ -26,10 +26,11 @@
                         <div class="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                             <span>
                                 <strong>Od:</strong> 
+                                {{ $feedback->getSenderName() }}
                                 @if($feedback->user)
-                                    {{ $feedback->user->name }} ({{ $feedback->user->email }})
-                                @else
-                                    {{ $feedback->name ?? 'Nepoznato' }} ({{ $feedback->email ?? 'Nema emaila' }})
+                                    ({{ $feedback->user->email }})
+                                @elseif($feedback->email)
+                                    ({{ $feedback->email }})
                                 @endif
                             </span>
                             <span>
@@ -73,10 +74,11 @@
                                 id="status"
                                 class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                             >
-                                <option value="new" {{ $feedback->status === 'new' ? 'selected' : '' }}>Novo</option>
-                                <option value="in_progress" {{ $feedback->status === 'in_progress' ? 'selected' : '' }}>U toku</option>
-                                <option value="resolved" {{ $feedback->status === 'resolved' ? 'selected' : '' }}>Riješeno</option>
-                                <option value="closed" {{ $feedback->status === 'closed' ? 'selected' : '' }}>Zatvoreno</option>
+                                @foreach(App\Models\Feedback::getStatuses() as $value => $label)
+                                    <option value="{{ $value }}" {{ $feedback->status === $value ? 'selected' : '' }}>
+                                        {{ $label }}
+                                    </option>
+                                @endforeach
                             </select>
                             @error('status')
                                 <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>

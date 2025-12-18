@@ -38,33 +38,24 @@
                                             {{ $feedback->created_at->format('d.m.Y H:i') }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                                            @if($feedback->user)
-                                                {{ $feedback->user->name }}
-                                            @else
-                                                {{ $feedback->name ?? $feedback->email ?? 'Anonimno' }}
-                                            @endif
+                                            {{ $feedback->getSenderName() }}
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-900 dark:text-gray-100">
                                             {{ Str::limit($feedback->subject, 50) }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                            @if($feedback->status === 'new')
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                                                    Novo
-                                                </span>
-                                            @elseif($feedback->status === 'in_progress')
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">
-                                                    U toku
-                                                </span>
-                                            @elseif($feedback->status === 'resolved')
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
-                                                    Riješeno
-                                                </span>
-                                            @else
-                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
-                                                    Zatvoreno
-                                                </span>
-                                            @endif
+                                            @php
+                                                $statusColors = [
+                                                    'new' => 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                                                    'in_progress' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+                                                    'resolved' => 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                                                    'closed' => 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+                                                ];
+                                                $statuses = App\Models\Feedback::getStatuses();
+                                            @endphp
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $statusColors[$feedback->status] ?? $statusColors['closed'] }}">
+                                                {{ $statuses[$feedback->status] ?? 'Nepoznato' }}
+                                            </span>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <a href="{{ route('admin.feedback.show', $feedback) }}" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
