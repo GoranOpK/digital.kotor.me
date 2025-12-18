@@ -56,6 +56,7 @@ class CompetitionsController extends Controller
         }
 
         $isOpen = $competition->is_open;
+        $isUpcoming = $competition->is_upcoming;
         $deadline = $competition->deadline;
         
         $daysRemaining = 0;
