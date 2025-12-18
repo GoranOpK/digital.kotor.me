@@ -79,6 +79,16 @@
             <h1>Izmeni konkurs</h1>
         </div>
 
+        @if($errors->any())
+            <div class="alert alert-danger" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                <ul style="margin: 0; padding-left: 20px;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="form-card">
             <form method="POST" action="{{ route('admin.competitions.update', $competition) }}">
                 @csrf
@@ -94,69 +104,99 @@
 
                 <div class="form-group">
                     <label class="form-label">Opis</label>
-                    <textarea name="description" class="form-control" rows="4">{{ old('description', $competition->description) }}</textarea>
+                    <textarea name="description" class="form-control @error('description') error @enderror" rows="4">{{ old('description', $competition->description) }}</textarea>
+                    @error('description')
+                        <div class="error-message">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Tip konkursa *</label>
-                        <select name="type" class="form-control" required>
+                        <select name="type" class="form-control @error('type') error @enderror" required>
                             <option value="zensko" {{ old('type', $competition->type) === 'zensko' ? 'selected' : '' }}>Žensko preduzetništvo</option>
                             <option value="omladinsko" {{ old('type', $competition->type) === 'omladinsko' ? 'selected' : '' }}>Omladinsko preduzetništvo</option>
                             <option value="ostalo" {{ old('type', $competition->type) === 'ostalo' ? 'selected' : '' }}>Ostalo</option>
                         </select>
+                        @error('type')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Status *</label>
-                        <select name="status" class="form-control" required>
+                        <select name="status" class="form-control @error('status') error @enderror" required>
                             <option value="draft" {{ old('status', $competition->status) === 'draft' ? 'selected' : '' }}>Nacrt</option>
                             <option value="published" {{ old('status', $competition->status) === 'published' ? 'selected' : '' }}>Objavljen</option>
                             <option value="closed" {{ old('status', $competition->status) === 'closed' ? 'selected' : '' }}>Zatvoren</option>
                             <option value="completed" {{ old('status', $competition->status) === 'completed' ? 'selected' : '' }}>Završen</option>
                         </select>
+                        @error('status')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Broj konkursa</label>
-                        <input type="number" name="competition_number" class="form-control" value="{{ old('competition_number', $competition->competition_number) }}">
+                        <input type="number" name="competition_number" class="form-control @error('competition_number') error @enderror" value="{{ old('competition_number', $competition->competition_number) }}">
+                        @error('competition_number')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Godina *</label>
-                        <input type="number" name="year" class="form-control" value="{{ old('year', $competition->year ?? date('Y')) }}" min="2020" max="2100" required>
+                        <input type="number" name="year" class="form-control @error('year') error @enderror" value="{{ old('year', $competition->year ?? date('Y')) }}" min="2020" max="2100" required>
+                        @error('year')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Budžet (€) *</label>
-                        <input type="number" name="budget" class="form-control" value="{{ old('budget', $competition->budget) }}" step="0.01" min="0" required>
+                        <input type="number" name="budget" class="form-control @error('budget') error @enderror" value="{{ old('budget', $competition->budget) }}" step="0.01" min="0" required>
+                        @error('budget')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Maksimalna podrška (%) *</label>
-                        <input type="number" name="max_support_percentage" class="form-control" value="{{ old('max_support_percentage', $competition->max_support_percentage ?? 30) }}" step="0.01" min="0" max="100" required>
+                        <input type="number" name="max_support_percentage" class="form-control @error('max_support_percentage') error @enderror" value="{{ old('max_support_percentage', $competition->max_support_percentage ?? 30) }}" step="0.01" min="0" max="100" required>
+                        @error('max_support_percentage')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Rok za prijave (dana) *</label>
-                        <input type="number" name="deadline_days" class="form-control" value="{{ old('deadline_days', $competition->deadline_days ?? 20) }}" min="1" max="365" required>
+                        <input type="number" name="deadline_days" class="form-control @error('deadline_days') error @enderror" value="{{ old('deadline_days', $competition->deadline_days ?? 20) }}" min="1" max="365" required>
+                        @error('deadline_days')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">Datum početka</label>
-                        <input type="date" name="start_date" class="form-control" value="{{ old('start_date', $competition->start_date?->format('Y-m-d')) }}">
+                        <input type="date" name="start_date" class="form-control @error('start_date') error @enderror" value="{{ old('start_date', $competition->start_date?->format('Y-m-d')) }}">
+                        @error('start_date')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Datum završetka</label>
-                    <input type="date" name="end_date" class="form-control" value="{{ old('end_date', $competition->end_date?->format('Y-m-d')) }}">
+                    <input type="date" name="end_date" class="form-control @error('end_date') error @enderror" value="{{ old('end_date', $competition->end_date?->format('Y-m-d')) }}">
+                    @error('end_date')
+                        <div class="error-message">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div style="margin-top: 24px;">

@@ -278,6 +278,14 @@ class AdminController extends Controller
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'status' => 'required|in:draft,published,closed,completed',
+        ], [
+            'title.required' => 'Naziv konkursa je obavezan.',
+            'type.required' => 'Tip konkursa je obavezan.',
+            'year.required' => 'Godina je obavezna.',
+            'budget.required' => 'Budžet je obavezan.',
+            'max_support_percentage.required' => 'Maksimalna podrška je obavezna.',
+            'deadline_days.required' => 'Rok za prijave je obavezan.',
+            'end_date.after_or_equal' => 'Datum završetka mora biti nakon ili jednak datumu početka.',
         ]);
 
         $competition->update($validated);
