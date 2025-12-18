@@ -187,6 +187,35 @@
                     @enderror
                 </div>
 
+                @if($user->user_type !== 'Fizičko lice')
+                <div class="form-group">
+                    <label for="user_type" class="form-label">Tip pravnog lica <span class="required">*</span></label>
+                    <select name="user_type" id="user_type" class="form-control" required>
+                        @php
+                            $businessTypes = [
+                                'Preduzetnik',
+                                'Ortačko društvo',
+                                'Komanditno društvo',
+                                'Društvo sa ograničenom odgovornošću',
+                                'Akcionarsko društvo',
+                                'Dio stranog društva (predstavništvo ili poslovna jedinica)',
+                                'Udruženje (nvo, fondacije, sportske organizacije)',
+                                'Ustanova (državne i privatne)',
+                                'Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)'
+                            ];
+                        @endphp
+                        @foreach($businessTypes as $type)
+                            <option value="{{ $type }}" {{ old('user_type', $user->user_type) === $type ? 'selected' : '' }}>
+                                {{ $type }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('user_type')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+                @endif
+
                 <div style="display: flex; gap: 12px; margin-top: 24px;">
                     <button type="submit" class="btn btn-primary">Sačuvaj izmjene</button>
                     <a href="{{ route('dashboard') }}" class="btn btn-secondary">Otkaži</a>

@@ -35,6 +35,11 @@ class ProfileController extends Controller
         $user->phone = $request->phone;
         $user->address = $request->address;
 
+        // Ažuriraj tip korisnika ako je dostupno u zahtjevu
+        if ($request->has('user_type')) {
+            $user->user_type = $request->user_type;
+        }
+
         // Ažuriraj email ako je promijenjen
         if ($user->email !== $request->email) {
             $user->email = strtolower($request->email);

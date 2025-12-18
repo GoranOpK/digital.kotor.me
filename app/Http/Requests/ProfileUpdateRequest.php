@@ -13,7 +13,8 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $user = $this->user();
+        $rules = [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => [
@@ -22,11 +23,18 @@ class ProfileUpdateRequest extends FormRequest
                 'lowercase',
                 'email',
                 'max:255',
-                Rule::unique(User::class)->ignore($this->user()->id),
+                Rule::unique(User::class)->ignore($user->id),
             ],
             'phone' => ['required', 'string', 'max:50'],
             'address' => ['required', 'string', 'max:500'],
         ];
+
+        // Ako je korisnik pravno lice ili preduzetnik, dozvoli promenu tipa
+        if ($user->user_type !== 'Fizičko lice') {
+            $rules['user_type'] = ['required', 'string', 'in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)'];
+        }
+
+        return $rules;
     }
 
     /**
@@ -43,6 +51,8 @@ class ProfileUpdateRequest extends FormRequest
             'phone.required' => 'Broj telefona je obavezan.',
             'address.required' => 'Adresa je obavezna.',
             'address.max' => 'Adresa ne može biti duža od 500 karaktera.',
+            'user_type.required' => 'Tip pravnog lica je obavezan.',
+            'user_type.in' => 'Izaberite validan tip pravnog lica.',
         ];
     }
 }
