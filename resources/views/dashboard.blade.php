@@ -378,7 +378,16 @@
                                             </span>
                                         </td>
                                         <td style="padding: 12px 8px;">
-                                            <a href="{{ route('applications.show', $app) }}" style="color: var(--primary); font-weight: 600; text-decoration: none;">Pregled</a>
+                                            <div style="display: flex; gap: 8px; align-items: center;">
+                                                <a href="{{ route('applications.show', $app) }}" style="color: var(--primary); font-weight: 600; text-decoration: none;">Pregled</a>
+                                                @if($app->status === 'draft')
+                                                    <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu prijavu?');" style="display: inline;">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" style="background: none; border: none; color: #ef4444; font-weight: 600; padding: 0; cursor: pointer; font-size: 14px;">Obriši</button>
+                                                    </form>
+                                                @endif
+                                            </div>
                                         </td>
                                     </tr>
                                 @endforeach
