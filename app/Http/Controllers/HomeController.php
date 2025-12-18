@@ -307,6 +307,7 @@ class HomeController extends Controller
     {
         $user = auth()->user();
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
+        $isSuperAdmin = $user->role && $user->role->name === 'superadmin';
         
         // Ako je konkurs admin, pripremi podatke za admin dashboard
         if ($isCompetitionAdmin) {
@@ -325,6 +326,17 @@ class HomeController extends Controller
             return view('dashboard', compact('stats', 'recent_applications'));
         }
         
-        return view('dashboard');
+        // Za običnog korisnika
+        $applications = Application::where('user_id', $user->id)
+            ->with('competition')
+            ->latest()
+            ->get();
+
+        // Podaci za skladište dokumenata
+        $maxStorageMB = 20;
+        $usedStorageMB = round($user->used_storage_bytes / (1024 * 1024), 2);
+        $storagePercentage = min(round(($usedStorageMB / $maxStorageMB) * 100), 100);
+
+        return view('dashboard', compact('applications', 'usedStorageMB', 'maxStorageMB', 'storagePercentage', 'isSuperAdmin'));
     }
 }

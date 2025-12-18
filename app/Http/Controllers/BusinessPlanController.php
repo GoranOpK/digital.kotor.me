@@ -119,17 +119,8 @@ class BusinessPlanController extends Controller
             ]
         );
 
-        // Ažuriraj status prijave na 'submitted' ako su svi podaci popunjeni
-        // (možda treba dodati proveru dokumenata)
-        if ($application->status === 'draft') {
-            $application->update([
-                'status' => 'submitted',
-                'submitted_at' => now(),
-            ]);
-        }
-
         return redirect()->route('applications.show', $application)
-            ->with('success', 'Biznis plan je uspješno sačuvan.');
+            ->with('success', 'Biznis plan je uspješno sačuvan. Sada možete pregledati prijavu i priložiti dokumente.');
     }
 }
 

@@ -145,7 +145,7 @@ class ApplicationController extends Controller
         // Proveri da li prijava pripada korisniku ili je admin/superadmin
         $user = Auth::user();
         $isOwner = $application->user_id === $user->id;
-        $isAdmin = $user->role && ($user->role->name === 'admin' || $user->role->name === 'superadmin');
+        $isAdmin = $user->role && ($user->role->name === 'admin' || $user->role->name === 'superadmin' || $user->role->name === 'konkurs_admin');
         
         if (!$isOwner && !$isAdmin) {
             abort(403, 'Nemate pristup ovoj prijavi.');
@@ -153,7 +153,54 @@ class ApplicationController extends Controller
 
         $application->load(['competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember', 'contract', 'reports']);
 
-        return view('applications.show', compact('application'));
+        // Provjeri da li je prijava spremna za podnošenje
+        $requiredDocs = $application->getRequiredDocuments();
+        $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+        $missingDocs = array_diff($requiredDocs, $uploadedDocs);
+        
+        $isReadyToSubmit = $application->status === 'draft' && 
+                           $application->businessPlan !== null && 
+                           empty($missingDocs);
+
+        return view('applications.show', compact('application', 'isReadyToSubmit'));
+    }
+
+    /**
+     * Konačno podnošenje prijave
+     */
+    public function submit(Application $application): RedirectResponse
+    {
+        // Proveri da li prijava pripada korisniku
+        if ($application->user_id !== Auth::id()) {
+            abort(403, 'Nemate pristup ovoj prijavi.');
+        }
+
+        if ($application->status !== 'draft') {
+            return back()->withErrors(['error' => 'Prijava je već podnesena ili je u obradi.']);
+        }
+
+        // Provjera biznis plana
+        if (!$application->businessPlan) {
+            return back()->withErrors(['error' => 'Morate popuniti biznis plan prije podnošenja prijave.']);
+        }
+
+        // Provjera dokumenata
+        $requiredDocs = $application->getRequiredDocuments();
+        $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+        $missingDocs = array_diff($requiredDocs, $uploadedDocs);
+
+        if (!empty($missingDocs)) {
+            return back()->withErrors(['error' => 'Niste priložili sve obavezne dokumente.']);
+        }
+
+        // Sve je u redu, podnesi prijavu
+        $application->update([
+            'status' => 'submitted',
+            'submitted_at' => now(),
+        ]);
+
+        return redirect()->route('applications.show', $application)
+            ->with('success', 'Vaša prijava je uspješno podnesena i proslijeđena komisiji na razmatranje.');
     }
 
     /**

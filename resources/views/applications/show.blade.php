@@ -299,17 +299,36 @@
             </div>
         @endif
 
-        <!-- Status prijave -->
+        <!-- Status prijave i Biznis plan -->
         <div class="info-card">
-            <h2>Status prijave</h2>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px;">
+                <h2 style="margin: 0; border: none; padding: 0;">Status prijave</h2>
+                @if($application->status === 'draft')
+                    <div style="text-align: right;">
+                        @if($isReadyToSubmit)
+                            <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Da li ste sigurni da želite da podnesete prijavu? Nakon podnošenja više nećete moći da mijenjate podatke.');">
+                                @csrf
+                                <button type="submit" class="btn btn-primary" style="background: #10b981;">
+                                    🚀 Podnesi konačnu prijavu
+                                </button>
+                            </form>
+                        @else
+                            <button class="btn btn-secondary" disabled title="Niste popunili biznis plan ili priložili sve dokumente">
+                                Podnesi konačnu prijavu
+                            </button>
+                            <p style="font-size: 11px; color: #ef4444; margin-top: 4px;">Fale dokumenti ili biznis plan</p>
+                        @endif
+                    </div>
+                @endif
+            </div>
             <div class="info-grid">
                 <div class="info-item">
-                    <span class="info-label">Status</span>
+                    <span class="info-label">Trenutni Status</span>
                     <span class="info-value">
                         @php
                             $statusLabels = [
-                                'draft' => 'Nacrt',
-                                'submitted' => 'Podnesena',
+                                'draft' => 'Nacrt (U pripremi)',
+                                'submitted' => 'Podnesena (U obradi)',
                                 'evaluated' => 'Ocjenjena',
                                 'approved' => 'Odobrena',
                                 'rejected' => 'Odbijena',
@@ -322,25 +341,36 @@
                     </span>
                 </div>
                 <div class="info-item">
-                    <span class="info-label">Datum podnošenja</span>
+                    <span class="info-label">Biznis Plan (Obrazac 2)</span>
                     <span class="info-value">
-                        {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'N/A' }}
+                        @if($application->businessPlan)
+                            <span style="color: #10b981; font-weight: 600;">✅ Popunjen</span>
+                            <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Uredi</a>
+                        @else
+                            <span style="color: #ef4444; font-weight: 600;">❌ Nije popunjen</span>
+                            <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Popuni odmah</a>
+                        @endif
                     </span>
                 </div>
-                @if($application->final_score)
                 <div class="info-item">
-                    <span class="info-label">Konačna ocjena</span>
-                    <span class="info-value">{{ number_format($application->final_score, 2) }} / 50</span>
+                    <span class="info-label">Datum podnošenja</span>
+                    <span class="info-value">
+                        {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije još podnesena' }}
+                    </span>
                 </div>
-                @endif
-                @if($application->ranking_position)
-                <div class="info-item">
-                    <span class="info-label">Pozicija na rang listi</span>
-                    <span class="info-value">#{{ $application->ranking_position }}</span>
-                </div>
-                @endif
             </div>
         </div>
+
+        @if($errors->any())
+            <div class="alert" style="background: #fee2e2; border-color: #ef4444; color: #991b1b; margin-bottom: 24px;">
+                <strong>Greška pri podnošenju:</strong>
+                <ul style="margin-top: 8px; padding-left: 20px;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <!-- Osnovni podaci -->
         <div class="info-card">
@@ -601,14 +631,16 @@
             <a href="{{ route('competitions.show', $application->competition) }}" class="btn btn-secondary">
                 Nazad na konkurs
             </a>
-            @if($application->businessPlan)
-                <a href="{{ route('applications.business-plan.create', $application) }}" class="btn btn-primary" style="margin-left: 8px;">
-                    Uredi biznis plan
-                </a>
-            @else
-                <a href="{{ route('applications.business-plan.create', $application) }}" class="btn btn-primary" style="margin-left: 8px;">
-                    Popuni biznis plan
-                </a>
+            @if($application->status === 'draft')
+                @if($application->businessPlan)
+                    <a href="{{ route('applications.business-plan.create', $application) }}" class="btn btn-primary" style="margin-left: 8px;">
+                        Uredi biznis plan
+                    </a>
+                @else
+                    <a href="{{ route('applications.business-plan.create', $application) }}" class="btn btn-primary" style="margin-left: 8px;">
+                        Popuni biznis plan
+                    </a>
+                @endif
             @endif
         </div>
     </div>
