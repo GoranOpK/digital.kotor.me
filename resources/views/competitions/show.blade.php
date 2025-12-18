@@ -152,7 +152,12 @@
             <p style="color: rgba(255,255,255,0.9); margin: 0;">Detalji konkursa za podršku ženskom preduzetništvu</p>
         </div>
 
-        @if($isOpen && ($daysRemaining > 0 || $hoursRemaining > 0 || $minutesRemaining > 0))
+        @if($isUpcoming)
+            <div class="alert alert-info" style="background: #eff6ff; border-color: #3b82f6; color: #1e40af;">
+                <strong>🔜 Konkurs uskoro počinje!</strong><br>
+                Prijave će biti moguće od: <strong>{{ $competition->start_date->format('d.m.Y') }}</strong>
+            </div>
+        @elseif($isOpen && ($daysRemaining > 0 || $hoursRemaining > 0 || $minutesRemaining > 0))
             <div class="deadline-alert" id="deadlineAlert">
                 <strong>⚠️ Preostalo vreme za prijavu: <span id="countdown">Učitavanje...</span></strong>
                 <div style="font-size: 14px; color: #92400e; margin-top: 4px;">

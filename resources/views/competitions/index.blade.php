@@ -130,8 +130,15 @@
                                 <span>Budžet: {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</span>
                             </div>
                             <div class="meta-item">
-                                <span class="status-badge {{ $competition->is_open ? 'status-open' : 'status-closed' }}">
-                                    {{ $competition->is_open ? 'Otvoren' : 'Zatvoren' }}
+                                <span class="status-badge {{ $competition->is_open ? 'status-open' : ($competition->is_upcoming ? 'status-upcoming' : 'status-closed') }}" 
+                                      style="{{ $competition->is_upcoming ? 'background: #dbeafe; color: #1e40af;' : '' }}">
+                                    @if($competition->is_open)
+                                        Otvoren
+                                    @elseif($competition->is_upcoming)
+                                        Uskoro počinje
+                                    @else
+                                        Zatvoren
+                                    @endif
                                 </span>
                             </div>
                         </div>
@@ -142,7 +149,11 @@
                             </p>
                         @endif
 
-                        @if($competition->is_open && ($competition->days_remaining > 0 || $competition->hours_remaining > 0 || $competition->minutes_remaining > 0))
+                        @if($competition->is_upcoming)
+                            <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 8px; margin-top: 16px;">
+                                <strong style="color: #1e40af;">Počinje: {{ $competition->start_date->format('d.m.Y') }}</strong>
+                            </div>
+                        @elseif($competition->is_open && ($competition->days_remaining > 0 || $competition->hours_remaining > 0 || $competition->minutes_remaining > 0))
                             <div class="deadline-info" data-deadline="{{ $competition->deadline->format('Y-m-d H:i:s') }}">
                                 <strong>Preostalo vreme za prijavu: <span class="countdown-{{ $competition->id }}">Učitavanje...</span></strong>
                                 <div style="font-size: 12px; color: #92400e; margin-top: 4px;">

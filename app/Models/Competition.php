@@ -59,16 +59,50 @@ class Competition extends Model
      */
     public function getDeadlineAttribute()
     {
-        // Ako postoji eksplicitno podešen end_date (koji se sada računa kao start_date + 20 dana)
-        if ($this->end_date) {
-            return $this->end_date->endOfDay();
+        $days = 20; // Fiksno po zakonu/odluci
+
+        // 1. Ako je postavljen datum početka, on je baza za 20 dana
+        if ($this->start_date) {
+            return $this->start_date->copy()->addDays($days)->endOfDay();
         }
 
-        if (!$this->published_at || !$this->deadline_days) {
-            return null;
+        // 2. Fallback na datum objavljivanja ako nema početka
+        if ($this->published_at) {
+            return $this->published_at->copy()->addDays($days)->endOfDay();
         }
 
-        // Podrazumevano: 20 dana od dana objavljivanja
-        return $this->published_at->copy()->addDays($this->deadline_days)->endOfDay();
+        return null;
+    }
+
+    /**
+     * Proverava da li je konkurs trenutno otvoren za prijave
+     */
+    public function getIsOpenAttribute()
+    {
+        if ($this->status !== 'published') {
+            return false;
+        }
+
+        $now = now();
+        $start = $this->start_date ? $this->start_date->startOfDay() : ($this->published_at ? $this->published_at : null);
+        $deadline = $this->deadline;
+
+        if (!$start || !$deadline) {
+            return false;
+        }
+
+        return $now >= $start && $now <= $deadline;
+    }
+
+    /**
+     * Proverava da li konkurs tek treba da počne
+     */
+    public function getIsUpcomingAttribute()
+    {
+        if ($this->status !== 'published' || !$this->start_date) {
+            return false;
+        }
+
+        return now() < $this->start_date->startOfDay();
     }
 }

@@ -14,37 +14,28 @@ class CompetitionsController extends Controller
      */
     public function index(): View
     {
+        $now = now();
         $competitions = Competition::where('status', 'published')
             ->where('type', 'zensko')
-            ->where(function ($query) {
-                $query->whereNull('closed_at')
-                    ->orWhere('closed_at', '>', now());
+            ->where(function ($query) use ($now) {
+                // Konkurs je vidljiv korisnicima samo ako je datum početka danas ili u prošlosti
+                $query->where('start_date', '<=', $now->toDateString())
+                      ->orWhereNull('start_date');
             })
-            ->orderBy('published_at', 'desc')
+            ->orderBy('start_date', 'asc')
             ->get()
             ->map(function ($competition) {
-                // Izračunaj preostalo vreme
-                if ($competition->published_at) {
-                    $deadline = $competition->published_at->addDays($competition->deadline_days ?? 20);
-                    $competition->deadline = $deadline;
-                    $competition->is_open = $deadline->isFuture();
-                    
-                    if ($deadline->isFuture()) {
-                        $diff = now()->diff($deadline);
-                        $competition->days_remaining = $diff->days;
-                        $competition->hours_remaining = $diff->h;
-                        $competition->minutes_remaining = $diff->i;
-                    } else {
-                        $competition->days_remaining = 0;
-                        $competition->hours_remaining = 0;
-                        $competition->minutes_remaining = 0;
-                    }
+                $competition->is_open = $competition->is_open;
+                
+                if ($competition->is_open) {
+                    $diff = now()->diff($competition->deadline);
+                    $competition->days_remaining = $diff->days;
+                    $competition->hours_remaining = $diff->h;
+                    $competition->minutes_remaining = $diff->i;
                 } else {
-                    $competition->deadline = null;
                     $competition->days_remaining = 0;
                     $competition->hours_remaining = 0;
                     $competition->minutes_remaining = 0;
-                    $competition->is_open = false;
                 }
                 return $competition;
             });
@@ -57,31 +48,28 @@ class CompetitionsController extends Controller
      */
     public function show(Competition $competition): View
     {
-        // Proveri da li je konkurs objavljen
-        if ($competition->status !== 'published') {
-            abort(404, 'Konkurs nije pronađen ili nije objavljen.');
+        $now = now();
+        
+        // Proveri da li je konkurs objavljen i da li je počeo
+        if ($competition->status !== 'published' || ($competition->start_date && $competition->start_date->startOfDay() > $now)) {
+            abort(404, 'Konkurs nije pronađen ili još uvijek nije počeo.');
         }
 
-        // Izračunaj preostalo vreme
-        $deadline = null;
+        $isOpen = $competition->is_open;
+        $deadline = $competition->deadline;
+        
         $daysRemaining = 0;
         $hoursRemaining = 0;
         $minutesRemaining = 0;
-        $isOpen = false;
 
-        if ($competition->published_at) {
-            $deadline = $competition->published_at->copy()->addDays($competition->deadline_days ?? 20);
-            $isOpen = $deadline->isFuture();
-            
-            if ($isOpen) {
-                $diff = now()->diff($deadline);
-                $daysRemaining = $diff->days;
-                $hoursRemaining = $diff->h;
-                $minutesRemaining = $diff->i;
-            }
+        if ($isOpen) {
+            $diff = now()->diff($deadline);
+            $daysRemaining = $diff->days;
+            $hoursRemaining = $diff->h;
+            $minutesRemaining = $diff->i;
         }
 
-        // Lista obaveznih dokumenata (opšta lista - detalji će biti u formi za prijavu)
+        // ... ostatak koda ...
         $requiredDocuments = [
             'Prijava na konkurs (Obrazac 1a ili 1b)',
             'Popunjena forma za biznis plan (Obrazac 2)',
@@ -108,6 +96,7 @@ class CompetitionsController extends Controller
             'hoursRemaining',
             'minutesRemaining',
             'isOpen',
+            'isUpcoming',
             'requiredDocuments',
             'userApplication'
         ));
