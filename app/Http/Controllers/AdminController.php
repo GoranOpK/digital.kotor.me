@@ -370,11 +370,6 @@ class AdminController extends Controller
      */
     public function showApplication(Application $application)
     {
-        // Proveri da li je konkurs_admin
-        $user = auth()->user();
-        if ($user->role && $user->role->name === 'konkurs_admin') {
-            abort(403, 'Nemate pristup upravljanju aplikacijama.');
-        }
         $application->load(['user', 'competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember']);
         
         return view('admin.applications.show', compact('application'));

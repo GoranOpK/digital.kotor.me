@@ -111,6 +111,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:admin,konkurs_admin')->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
+            // Dozvoli pregled pojedinačne prijave i administratoru konkursa
+            Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
         });
     });
     
@@ -127,7 +129,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             
             // Pregled prijava (samo admin i superadmin)
             Route::get('/applications', [AdminController::class, 'applications'])->name('applications.index');
-            Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
         });
     });
 
