@@ -278,6 +278,18 @@
         font-weight: 600;
         display: inline-block;
     }
+    .summary-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+        align-items: stretch;
+    }
+    @media (min-width: 992px) {
+        .summary-grid {
+            grid-template-columns: 3fr 2fr;
+        }
+    }
 </style>
 
 <div class="application-detail-page">
@@ -299,64 +311,103 @@
             </div>
         @endif
 
-        <!-- Status prijave i Biznis plan -->
-        <div class="info-card">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px;">
-                <h2 style="margin: 0; border: none; padding: 0;">Status prijave</h2>
-                @if($application->status === 'draft')
-                    <div style="text-align: right;">
-                        @if($isReadyToSubmit)
-                            <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Da li ste sigurni da želite da podnesete prijavu? Nakon podnošenja više nećete moći da mijenjate podatke.');">
-                                @csrf
-                                <button type="submit" class="btn btn-primary" style="background: #10b981;">
-                                    🚀 Podnesi konačnu prijavu
-                                </button>
-                            </form>
-                        @else
-                            <button class="btn btn-secondary" disabled title="Niste popunili biznis plan ili priložili sve dokumente">
-                                Podnesi konačnu prijavu
-                            </button>
-                            <p style="font-size: 11px; color: #ef4444; margin-top: 4px;">Fale dokumenti ili biznis plan</p>
-                        @endif
-                    </div>
-                @endif
-            </div>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Trenutni Status</span>
-                    <span class="info-value">
-                        @php
-                            $statusLabels = [
-                                'draft' => 'Nacrt (U pripremi)',
-                                'submitted' => 'Podnesena (U obradi)',
-                                'evaluated' => 'Ocjenjena',
-                                'approved' => 'Odobrena',
-                                'rejected' => 'Odbijena',
-                            ];
-                            $statusClass = 'status-' . $application->status;
-                        @endphp
-                        <span class="status-badge {{ $statusClass }}">
-                            {{ $statusLabels[$application->status] ?? $application->status }}
+        <div class="summary-grid">
+            <!-- Osnovni podaci -->
+            <div class="info-card">
+                <h2>Osnovni podaci</h2>
+                <div class="info-grid" style="grid-template-columns: 1fr;">
+                    <div class="info-item">
+                        <span class="info-label">Tip podnosioca</span>
+                        <span class="info-value">
+                            {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : 'DOO' }}
                         </span>
-                    </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Faza biznisa</span>
+                        <span class="info-value">
+                            {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Oblast biznisa</span>
+                        <span class="info-value">{{ $application->business_area }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Traženi iznos</span>
+                        <span class="info-value">{{ number_format($application->requested_amount, 2, ',', '.') }} €</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ukupan budžet</span>
+                        <span class="info-value">{{ number_format($application->total_budget_needed, 2, ',', '.') }} €</span>
+                    </div>
+                    @if($application->approved_amount)
+                    <div class="info-item">
+                        <span class="info-label">Odobreni iznos</span>
+                        <span class="info-value">{{ number_format($application->approved_amount, 2, ',', '.') }} €</span>
+                    </div>
+                    @endif
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Biznis Plan (Obrazac 2)</span>
-                    <span class="info-value">
-                        @if($application->businessPlan)
-                            <span style="color: #10b981; font-weight: 600;">✅ Popunjen</span>
-                            <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Uredi</a>
-                        @else
-                            <span style="color: #ef4444; font-weight: 600;">❌ Nije popunjen</span>
-                            <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Popuni odmah</a>
-                        @endif
-                    </span>
+            </div>
+
+            <!-- Status prijave i Biznis plan -->
+            <div class="info-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px;">
+                    <h2 style="margin: 0; border: none; padding: 0;">Status prijave</h2>
+                    @if($application->status === 'draft')
+                        <div style="text-align: right;">
+                            @if($isReadyToSubmit)
+                                <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Da li ste sigurni da želite da podnesete prijavu? Nakon podnošenja više nećete moći da mijenjate podatke.');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary" style="background: #10b981;">
+                                        🚀 Podnesi konačnu prijavu
+                                    </button>
+                                </form>
+                            @else
+                                <button class="btn btn-secondary" disabled title="Niste popunili biznis plan ili priložili sve dokumente">
+                                    Podnesi konačnu prijavu
+                                </button>
+                                <p style="font-size: 11px; color: #ef4444; margin-top: 4px;">Fale dokumenti ili biznis plan</p>
+                            @endif
+                        </div>
+                    @endif
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Datum podnošenja</span>
-                    <span class="info-value">
-                        {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije još podnesena' }}
-                    </span>
+                <div class="info-grid" style="grid-template-columns: 1fr;">
+                    <div class="info-item">
+                        <span class="info-label">Trenutni Status</span>
+                        <span class="info-value">
+                            @php
+                                $statusLabels = [
+                                    'draft' => 'Nacrt (U pripremi)',
+                                    'submitted' => 'Podnesena (U obradi)',
+                                    'evaluated' => 'Ocjenjena',
+                                    'approved' => 'Odobrena',
+                                    'rejected' => 'Odbijena',
+                                ];
+                                $statusClass = 'status-' . $application->status;
+                            @endphp
+                            <span class="status-badge {{ $statusClass }}">
+                                {{ $statusLabels[$application->status] ?? $application->status }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Biznis Plan (Obrazac 2)</span>
+                        <span class="info-value">
+                            @if($application->businessPlan)
+                                <span style="color: #10b981; font-weight: 600;">✅ Popunjen</span>
+                                <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Uredi</a>
+                            @else
+                                <span style="color: #ef4444; font-weight: 600;">❌ Nije popunjen</span>
+                                <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Popuni odmah</a>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Datum podnošenja</span>
+                        <span class="info-value">
+                            {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije još podnesena' }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -371,43 +422,6 @@
                 </ul>
             </div>
         @endif
-
-        <!-- Osnovni podaci -->
-        <div class="info-card">
-            <h2>Osnovni podaci</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Tip podnosioca</span>
-                    <span class="info-value">
-                        {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : 'DOO' }}
-                    </span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Faza biznisa</span>
-                    <span class="info-value">
-                        {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
-                    </span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Oblast biznisa</span>
-                    <span class="info-value">{{ $application->business_area }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Traženi iznos</span>
-                    <span class="info-value">{{ number_format($application->requested_amount, 2, ',', '.') }} €</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Ukupan budžet</span>
-                    <span class="info-value">{{ number_format($application->total_budget_needed, 2, ',', '.') }} €</span>
-                </div>
-                @if($application->approved_amount)
-                <div class="info-item">
-                    <span class="info-label">Odobreni iznos</span>
-                    <span class="info-value">{{ number_format($application->approved_amount, 2, ',', '.') }} €</span>
-                </div>
-                @endif
-            </div>
-        </div>
 
         <!-- Forma za upload dokumenata -->
         @if($application->status === 'draft' || $application->status === 'submitted')
