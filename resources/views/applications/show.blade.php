@@ -409,87 +409,11 @@
             </div>
         </div>
 
-        <!-- Dokumenti -->
+        <!-- Forma za upload dokumenata -->
+        @if($application->status === 'draft' || $application->status === 'submitted')
         <div class="info-card">
-            <h2>Priložena dokumentacija</h2>
-            
-            @php
-                $requiredDocs = $application->getRequiredDocuments();
-                $documentLabels = [
-                    'licna_karta' => 'Ovjerena kopija lične karte',
-                    'crps_resenje' => 'Rješenje o upisu u CRPS',
-                    'pib_resenje' => 'Rješenje o registraciji PJ Uprave prihoda i carina (PIB)',
-                    'pdv_resenje' => 'Rješenje o registraciji za PDV',
-                    'statut' => 'Statut društva',
-                    'karton_potpisa' => 'Karton potpisa',
-                    'potvrda_neosudjivanost' => 'Potvrda o neosuđivanosti',
-                    'uvjerenje_opstina_porezi' => 'Uvjerenje Opštine o urednom izmirivanju poreza',
-                    'uvjerenje_opstina_nepokretnost' => 'Uvjerenje Opštine o nepostojanju nepokretnosti',
-                    'potvrda_upc_porezi' => 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza',
-                    'ioppd_obrazac' => 'Obrazac IOPPD',
-                    'godisnji_racuni' => 'Godišnji računi',
-                    'biznis_plan_usb' => 'Štampana i elektronska verzija biznis plana na USB-u',
-                    'izvjestaj_realizacija' => 'Izvještaj o realizaciji',
-                    'finansijski_izvjestaj' => 'Finansijski izvještaj',
-                    'ostalo' => 'Ostalo',
-                ];
-                $uploadedDocs = $application->documents->pluck('document_type')->toArray();
-            @endphp
-
-            <!-- Progress bar -->
-            <div style="margin-bottom: 20px;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="font-size: 14px; color: #374151; font-weight: 600;">
-                        Dokumenti: {{ count($uploadedDocs) }} / {{ count($requiredDocs) }}
-                    </span>
-                    <span style="font-size: 14px; color: #6b7280;">
-                        {{ round((count($uploadedDocs) / max(count($requiredDocs), 1)) * 100) }}%
-                    </span>
-                </div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: {{ (count($uploadedDocs) / max(count($requiredDocs), 1)) * 100 }}%"></div>
-                </div>
-            </div>
-
-            <!-- Lista obaveznih dokumenata -->
-            <ul class="documents-list">
-                @foreach($requiredDocs as $docType)
-                    @php
-                        $uploaded = in_array($docType, $uploadedDocs);
-                        $doc = $application->documents->where('document_type', $docType)->first();
-                    @endphp
-                    <li class="document-item {{ $uploaded ? 'uploaded' : 'required' }}">
-                        <div class="document-info">
-                            <div class="document-name">
-                                {{ $documentLabels[$docType] ?? $docType }}
-                                @if(!$uploaded)
-                                    <span style="color: #ef4444; font-size: 12px; margin-left: 8px;">(Obavezno)</span>
-                                @endif
-                            </div>
-                            @if($uploaded && $doc)
-                                <div class="document-type">
-                                    Upload-ovano: {{ $doc->created_at->format('d.m.Y H:i') }}
-                                </div>
-                            @endif
-                        </div>
-                        <div class="document-actions">
-                            @if($uploaded && $doc)
-                                <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" 
-                                   class="btn btn-secondary">
-                                    Preuzmi
-                                </a>
-                            @endif
-                        </div>
-                    </li>
-                @endforeach
-            </ul>
-
-            <!-- Forma za upload dokumenata -->
-            @if($application->status === 'draft' || $application->status === 'submitted')
-            <div class="upload-section">
-                <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin-bottom: 16px;">
-                    Dodaj dokument
-                </h3>
+            <h2>Dodaj dokument</h2>
+            <div class="upload-section" style="margin-top: 0; background: #f9fafb;">
                 <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data">
                     @csrf
                     @if($errors->any())
@@ -511,6 +435,28 @@
                         <label class="form-label">Tip dokumenta</label>
                         <select name="document_type" class="form-control @error('document_type') error @enderror" required>
                             <option value="">Izaberite tip dokumenta</option>
+                            @php
+                                $requiredDocs = $application->getRequiredDocuments();
+                                $documentLabels = [
+                                    'licna_karta' => 'Ovjerena kopija lične karte',
+                                    'crps_resenje' => 'Rješenje o upisu u CRPS',
+                                    'pib_resenje' => 'Rješenje o registraciji PJ Uprave prihoda i carina (PIB)',
+                                    'pdv_resenje' => 'Rješenje o registraciji za PDV',
+                                    'statut' => 'Statut društva',
+                                    'karton_potpisa' => 'Karton potpisa',
+                                    'potvrda_neosudjivanost' => 'Potvrda o neosuđivanosti',
+                                    'uvjerenje_opstina_porezi' => 'Uvjerenje Opštine o urednom izmirivanju poreza',
+                                    'uvjerenje_opstina_nepokretnost' => 'Uvjerenje Opštine o nepostojanju nepokretnosti',
+                                    'potvrda_upc_porezi' => 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza',
+                                    'ioppd_obrazac' => 'Obrazac IOPPD',
+                                    'godisnji_racuni' => 'Godišnji računi',
+                                    'biznis_plan_usb' => 'Štampana i elektronska verzija biznis plana na USB-u',
+                                    'izvjestaj_realizacija' => 'Izvještaj o realizaciji',
+                                    'finansijski_izvjestaj' => 'Finansijski izvještaj',
+                                    'ostalo' => 'Ostalo',
+                                ];
+                                $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+                            @endphp
                             @foreach($requiredDocs as $docType)
                                 @if(!in_array($docType, $uploadedDocs))
                                     <option value="{{ $docType }}" {{ old('document_type') === $docType ? 'selected' : '' }}>{{ $documentLabels[$docType] ?? $docType }}</option>
@@ -561,7 +507,66 @@
                     <button type="submit" class="btn btn-primary">Priloži dokument</button>
                 </form>
             </div>
-            @endif
+        </div>
+        @endif
+
+        <!-- Dokumenti -->
+        <div class="info-card">
+            <h2>Priložena dokumentacija</h2>
+            
+            @php
+                // Ovdje koristimo već definisane varijable ako su dostupne, ili ih ponovo definišemo za ovaj blok
+                $requiredDocs = $application->getRequiredDocuments();
+                $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+            @endphp
+
+            <!-- Progress bar -->
+            <div style="margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="font-size: 14px; color: #374151; font-weight: 600;">
+                        Dokumenti: {{ count($uploadedDocs) }} / {{ count($requiredDocs) }}
+                    </span>
+                    <span style="font-size: 14px; color: #6b7280;">
+                        {{ round((count($uploadedDocs) / max(count($requiredDocs), 1)) * 100) }}%
+                    </span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {{ (count($uploadedDocs) / max(count($requiredDocs), 1)) * 100 }}%"></div>
+                </div>
+            </div>
+
+            <!-- Lista obaveznih dokumenata -->
+            <ul class="documents-list">
+                @foreach($requiredDocs as $docType)
+                    @php
+                        $uploaded = in_array($docType, $uploadedDocs);
+                        $doc = $application->documents->where('document_type', $docType)->first();
+                    @endphp
+                    <li class="document-item {{ $uploaded ? 'uploaded' : 'required' }}">
+                        <div class="document-info">
+                            <div class="document-name">
+                                {{ $documentLabels[$docType] ?? $docType }}
+                                @if(!$uploaded)
+                                    <span style="color: #ef4444; font-size: 12px; margin-left: 8px;">(Obavezno)</span>
+                                @endif
+                            </div>
+                            @if($uploaded && $doc)
+                                <div class="document-type">
+                                    Upload-ovano: {{ $doc->created_at->format('d.m.Y H:i') }}
+                                </div>
+                            @endif
+                        </div>
+                        <div class="document-actions">
+                            @if($uploaded && $doc)
+                                <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" 
+                                   class="btn btn-secondary">
+                                    Preuzmi
+                                </a>
+                            @endif
+                        </div>
+                    </li>
+                @endforeach
+            </ul>
         </div>
 
         <!-- Ugovor -->
