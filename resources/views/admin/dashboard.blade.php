@@ -236,7 +236,52 @@
         </div>
 
         <!-- Sadržaj -->
-        <div class="content-grid">
+        <div class="content-grid" style="grid-template-columns: @if($isCompetitionAdmin) 1fr 1fr @else 1.2fr 0.8fr @endif;">
+            @if($isCompetitionAdmin)
+            <!-- Aktivni konkursi (Pregled trajanja) -->
+            <div class="content-card">
+                <div class="content-card-header">
+                    <h2>Aktivni konkursi - Pregled trajanja</h2>
+                </div>
+                <div class="content-card-body">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Konkurs</th>
+                                <th>Datum isteka</th>
+                                <th>Preostalo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($active_competitions as $comp)
+                                @php
+                                    $deadline = $comp->published_at->addDays($comp->deadline_days);
+                                    $daysLeft = now()->diffInDays($deadline, false);
+                                @endphp
+                                <tr>
+                                    <td>
+                                        <a href="{{ route('admin.competitions.show', $comp) }}" class="link-primary">{{ $comp->title }}</a>
+                                    </td>
+                                    <td>{{ $deadline->format('d.m.Y') }}</td>
+                                    <td>
+                                        @if($daysLeft > 0)
+                                            <span style="color: #059669; font-weight: 600;">{{ ceil($daysLeft) }} dana</span>
+                                        @else
+                                            <span style="color: #dc2626; font-weight: 600;">Isteklo</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" style="text-align: center; color: #6b7280; padding: 24px;">Nema aktivnih konkursa</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+
             @if(!$isCompetitionAdmin && $recent_users)
             <!-- Najnoviji korisnici -->
             <div class="content-card">

@@ -53,4 +53,16 @@ class Competition extends Model
     {
         return $this->hasMany(Priority::class);
     }
+
+    /**
+     * Izračunava datum i vreme isteka konkursa
+     */
+    public function getDeadlineAttribute()
+    {
+        if (!$this->published_at || !$this->deadline_days) {
+            return null;
+        }
+
+        return $this->published_at->copy()->addDays($this->deadline_days)->startOfDay();
+    }
 }

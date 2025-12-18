@@ -81,6 +81,12 @@
     .btn-view { background: #3b82f6; color: #fff; }
     .btn-edit { background: #f59e0b; color: #fff; }
     .btn-delete { background: #ef4444; color: #fff; border: none; cursor: pointer; }
+    .countdown-timer {
+        font-family: monospace;
+        font-weight: 700;
+        color: #ef4444;
+        font-size: 13px;
+    }
 </style>
 
 <div class="admin-page">
@@ -96,7 +102,7 @@
                     <tr>
                         <th>Naziv</th>
                         <th>Tip</th>
-                        <th>Godina</th>
+                        <th>Trajanje</th>
                         <th>Budžet</th>
                         <th>Status</th>
                         <th>Prijave</th>
@@ -113,7 +119,23 @@
                                 @else Ostalo
                                 @endif
                             </td>
-                            <td>{{ $competition->year ?? date('Y') }}</td>
+                            <td>
+                                @if($competition->status === 'published' && $competition->published_at)
+                                    @php
+                                        $deadline = $competition->published_at->copy()->addDays($competition->deadline_days)->startOfDay()->addDay();
+                                    @endphp
+                                    <div class="countdown-timer" data-deadline="{{ $deadline->format('Y-m-d H:i:s') }}">
+                                        Učitavanje...
+                                    </div>
+                                    <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
+                                        Rok: {{ $deadline->subSecond()->format('d.m.Y H:i') }}
+                                    </div>
+                                @elseif($competition->status === 'closed' && $competition->published_at)
+                                    <span style="color: #dc2626; font-size: 13px; font-weight: 600;">Zatvoren</span>
+                                @else
+                                    <span style="color: #6b7280; font-size: 13px;">Predviđeno: {{ $competition->deadline_days }} dana</span>
+                                @endif
+                            </td>
                             <td>{{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</td>
                             <td>
                                 <span class="status-badge status-{{ $competition->status }}">
@@ -152,5 +174,48 @@
         </div>
     </div>
 </div>
+
+<script>
+    function updateCountdowns() {
+        const timers = document.querySelectorAll('.countdown-timer');
+        
+        timers.forEach(timer => {
+            const deadlineStr = timer.getAttribute('data-deadline');
+            const deadline = new Date(deadlineStr).getTime();
+            const now = new Date().getTime();
+            const distance = deadline - now;
+            
+            if (distance < 0) {
+                timer.innerHTML = "ISTEKLO";
+                timer.style.color = "#dc2626";
+                return;
+            }
+            
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            let html = "";
+            if (days > 0) html += days + "d ";
+            html += (hours < 10 ? "0" + hours : hours) + "h " + 
+                    (minutes < 10 ? "0" + minutes : minutes) + "m " + 
+                    (seconds < 10 ? "0" + seconds : seconds) + "s";
+            
+            timer.innerHTML = html;
+            
+            // Boja upozorenja ako je manje od 24h
+            if (distance < (1000 * 60 * 60 * 24)) {
+                timer.style.color = "#ef4444";
+            } else {
+                timer.style.color = "#059669";
+            }
+        });
+    }
+
+    // Pokreni odmah i postavi interval
+    updateCountdowns();
+    setInterval(updateCountdowns, 1000);
+</script>
 @endsection
 

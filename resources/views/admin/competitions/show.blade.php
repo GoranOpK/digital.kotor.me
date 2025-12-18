@@ -63,6 +63,17 @@
     .status-draft { background: #fef3c7; color: #92400e; }
     .status-published { background: #d1fae5; color: #065f46; }
     .status-closed { background: #fee2e2; color: #991b1b; }
+    .countdown-timer {
+        font-family: monospace;
+        font-weight: 700;
+        color: #ef4444;
+        font-size: 18px;
+        background: #fef2f2;
+        padding: 8px 16px;
+        border-radius: 8px;
+        display: inline-block;
+        border: 1px solid #fee2e2;
+    }
 </style>
 
 <div class="admin-page">
@@ -95,11 +106,31 @@
 
         <div class="info-card">
             <h2 style="font-size: 20px; margin-bottom: 16px;">Osnovne informacije</h2>
-            <p><strong>Status:</strong> <span class="status-badge status-{{ $competition->status }}">{{ $competition->status }}</span></p>
-            <p><strong>Budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
-            <p><strong>Maksimalna podrška:</strong> {{ $competition->max_support_percentage ?? 30 }}%</p>
-            <p><strong>Rok za prijave:</strong> {{ $competition->deadline_days ?? 20 }} dana</p>
-            <p><strong>Broj prijava:</strong> {{ $applications->total() }}</p>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                <div>
+                    <p><strong>Status:</strong> <span class="status-badge status-{{ $competition->status }}">{{ $competition->status }}</span></p>
+                    <p><strong>Budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
+                    <p><strong>Maksimalna podrška:</strong> {{ $competition->max_support_percentage ?? 30 }}%</p>
+                    <p><strong>Broj prijava:</strong> {{ $applications->total() }}</p>
+                </div>
+                <div>
+                    <p><strong>Rok za prijave:</strong> {{ $competition->deadline_days ?? 20 }} dana</p>
+                    @if($competition->published_at && $competition->deadline)
+                        <p><strong>Datum objave:</strong> {{ $competition->published_at->format('d.m.Y H:i') }}</p>
+                        <p><strong>Datum isteka:</strong> {{ $competition->deadline->subSecond()->format('d.m.Y H:i') }}</p>
+                        @if($competition->status === 'published')
+                            <p><strong>Preostalo vremena:</strong><br>
+                                <span class="countdown-timer" data-deadline="{{ $competition->deadline->format('Y-m-d H:i:s') }}">
+                                    Učitavanje...
+                                </span>
+                            </p>
+                        @endif
+                    @endif
+                    @if($competition->closed_at)
+                        <p><strong>Datum zatvaranja:</strong> {{ $competition->closed_at->format('d.m.Y H:i') }}</p>
+                    @endif
+                </div>
+            </div>
         </div>
 
         <div class="info-card">
@@ -138,5 +169,51 @@
         </div>
     </div>
 </div>
+
+<script>
+    function updateCountdowns() {
+        const timers = document.querySelectorAll('.countdown-timer');
+        
+        timers.forEach(timer => {
+            const deadlineStr = timer.getAttribute('data-deadline');
+            const deadline = new Date(deadlineStr).getTime();
+            const now = new Date().getTime();
+            const distance = deadline - now;
+            
+            if (distance < 0) {
+                timer.innerHTML = "ISTEKLO";
+                timer.style.color = "#dc2626";
+                timer.style.background = "#fee2e2";
+                return;
+            }
+            
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            let html = "";
+            if (days > 0) html += days + "d ";
+            html += (hours < 10 ? "0" + hours : hours) + "h " + 
+                    (minutes < 10 ? "0" + minutes : minutes) + "m " + 
+                    (seconds < 10 ? "0" + seconds : seconds) + "s";
+            
+            timer.innerHTML = html;
+            
+            // Boja upozorenja ako je manje od 24h
+            if (distance < (1000 * 60 * 60 * 24)) {
+                timer.style.color = "#ef4444";
+                timer.style.background = "#fef2f2";
+            } else {
+                timer.style.color = "#059669";
+                timer.style.background = "#f0fdf4";
+            }
+        });
+    }
+
+    // Pokreni odmah i postavi interval
+    updateCountdowns();
+    setInterval(updateCountdowns, 1000);
+</script>
 @endsection
 

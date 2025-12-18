@@ -52,7 +52,12 @@ class AdminController extends Controller
             ->take(10)
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'recent_users', 'recent_applications', 'isCompetitionAdmin'));
+        // Aktivni konkursi sa trajanjem
+        $active_competitions = Competition::where('status', 'published')
+            ->orderBy('published_at', 'desc')
+            ->get();
+
+        return view('admin.dashboard', compact('stats', 'recent_users', 'recent_applications', 'isCompetitionAdmin', 'active_competitions'));
     }
 
     /**
