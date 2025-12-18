@@ -99,7 +99,6 @@
                     </div>
                     <nav class="nav">
                         <div class="nav-links" aria-label="Primarna navigacija">
-                            <a class="nav-link" href="{{ route('home') }}">Početna</a>
                             <a class="nav-link" href="{{ route('payments.index') }}">Plaćanja</a>
                             <a class="nav-link" href="{{ route('competitions.index') }}">Konkursi</a>
                             <a class="nav-link" href="{{ route('tenders.index') }}">Tenderi</a>
@@ -120,7 +119,6 @@
                     </nav>
                 </div>
                 <div id="mobileMenu" class="mobile-menu" role="menu" aria-labelledby="menuToggle">
-                    <a class="nav-link" href="{{ route('home') }}" role="menuitem">Početna</a>
                     <a class="nav-link" href="{{ route('payments.index') }}" role="menuitem">Plaćanja</a>
                     <a class="nav-link" href="{{ route('competitions.index') }}" role="menuitem">Konkursi</a>
                     <a class="nav-link" href="{{ route('tenders.index') }}" role="menuitem">Tenderi</a>
