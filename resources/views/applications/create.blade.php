@@ -242,6 +242,19 @@
                         <label class="form-label">
                             Tip podnosioca prijave <span class="required">*</span>
                         </label>
+                        @php
+                            $userType = auth()->user()->user_type;
+                            $defaultType = 'preduzetnica';
+                            
+                            if (str_contains($userType, 'Društvo sa ograničenom odgovornošću') || str_contains($userType, 'DOO')) {
+                                $defaultType = 'doo';
+                            } elseif ($userType === 'Fizičko lice' || $userType === 'Preduzetnik') {
+                                $defaultType = 'preduzetnica';
+                            } else {
+                                // Za ostale pravne subjekte (NVO, AD, itd.) koristimo DOO obrazac jer su pravna lica
+                                $defaultType = 'doo';
+                            }
+                        @endphp
                         <div class="radio-group">
                             <div class="radio-option">
                                 <input 
@@ -249,7 +262,7 @@
                                     id="applicant_type_preduzetnica" 
                                     name="applicant_type" 
                                     value="preduzetnica"
-                                    {{ old('applicant_type', 'preduzetnica') === 'preduzetnica' ? 'checked' : '' }}
+                                    {{ old('applicant_type', $defaultType) === 'preduzetnica' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="applicant_type_preduzetnica">Preduzetnica</label>
@@ -260,7 +273,7 @@
                                     id="applicant_type_doo" 
                                     name="applicant_type" 
                                     value="doo"
-                                    {{ old('applicant_type') === 'doo' ? 'checked' : '' }}
+                                    {{ old('applicant_type', $defaultType) === 'doo' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="applicant_type_doo">DOO (Društvo sa ograničenom odgovornošću)</label>
@@ -337,7 +350,7 @@
                             type="text" 
                             name="founder_name" 
                             class="form-control @error('founder_name') error @enderror"
-                            value="{{ old('founder_name') }}"
+                            value="{{ old('founder_name', auth()->user()->name) }}"
                             maxlength="255"
                         >
                         @error('founder_name')
@@ -353,7 +366,7 @@
                             type="text" 
                             name="director_name" 
                             class="form-control @error('director_name') error @enderror"
-                            value="{{ old('director_name') }}"
+                            value="{{ old('director_name', auth()->user()->name) }}"
                             maxlength="255"
                         >
                         @error('director_name')
@@ -369,7 +382,7 @@
                             type="text" 
                             name="company_seat" 
                             class="form-control @error('company_seat') error @enderror"
-                            value="{{ old('company_seat') }}"
+                            value="{{ old('company_seat', auth()->user()->address) }}"
                             maxlength="255"
                             placeholder="Npr. Kotor, Njegoševa 1"
                         >
