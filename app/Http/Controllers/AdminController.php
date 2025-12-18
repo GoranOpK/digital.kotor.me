@@ -209,31 +209,26 @@ class AdminController extends Controller
             'year' => 'required|integer|min:2020|max:2100',
             'budget' => 'required|numeric|min:0',
             'max_support_percentage' => 'required|numeric|min:0|max:100',
-            'deadline_days' => 'required|integer|min:1|max:365',
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
         ], [
             'title.required' => 'Naziv konkursa je obavezan.',
             'type.required' => 'Tip konkursa je obavezan.',
             'year.required' => 'Godina je obavezna.',
             'budget.required' => 'Budžet je obavezan.',
             'max_support_percentage.required' => 'Maksimalna podrška je obavezna.',
-            'deadline_days.required' => 'Rok za prijave je obavezan.',
         ]);
 
-        $competition = Competition::create([
-            'title' => $validated['title'],
-            'description' => $validated['description'] ?? null,
-            'type' => $validated['type'],
-            'competition_number' => $validated['competition_number'] ?? null,
-            'year' => $validated['year'],
-            'budget' => $validated['budget'],
-            'max_support_percentage' => $validated['max_support_percentage'],
-            'deadline_days' => $validated['deadline_days'],
-            'start_date' => $validated['start_date'] ?? null,
-            'end_date' => $validated['end_date'] ?? null,
-            'status' => 'draft',
-        ]);
+        $data = $validated;
+        $data['deadline_days'] = 20; // Fiksno 20 dana
+        $data['status'] = 'draft';
+
+        if (!empty($validated['start_date'])) {
+            $start = \Carbon\Carbon::parse($validated['start_date']);
+            $data['start_date'] = $start;
+            $data['end_date'] = $start->copy()->addDays($data['deadline_days']);
+        }
+
+        $competition = Competition::create($data);
 
         return redirect()->route('admin.competitions.show', $competition)
             ->with('success', 'Konkurs je uspješno kreiran.');
@@ -274,9 +269,7 @@ class AdminController extends Controller
             'year' => 'required|integer|min:2020|max:2100',
             'budget' => 'required|numeric|min:0',
             'max_support_percentage' => 'required|numeric|min:0|max:100',
-            'deadline_days' => 'required|integer|min:1|max:365',
             'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
             'status' => 'required|in:draft,published,closed,completed',
         ], [
             'title.required' => 'Naziv konkursa je obavezan.',
@@ -284,11 +277,18 @@ class AdminController extends Controller
             'year.required' => 'Godina je obavezna.',
             'budget.required' => 'Budžet je obavezan.',
             'max_support_percentage.required' => 'Maksimalna podrška je obavezna.',
-            'deadline_days.required' => 'Rok za prijave je obavezan.',
-            'end_date.after_or_equal' => 'Datum završetka mora biti nakon ili jednak datumu početka.',
         ]);
 
-        $competition->update($validated);
+        $data = $validated;
+        $data['deadline_days'] = 20; // Fiksno 20 dana
+        
+        if (!empty($validated['start_date'])) {
+            $start = \Carbon\Carbon::parse($validated['start_date']);
+            $data['start_date'] = $start;
+            $data['end_date'] = $start->copy()->addDays($data['deadline_days']);
+        }
+
+        $competition->update($data);
 
         return redirect()->route('admin.competitions.show', $competition)
             ->with('success', 'Konkurs je uspješno ažuriran.');
@@ -303,10 +303,21 @@ class AdminController extends Controller
             return redirect()->back()->withErrors(['error' => 'Samo nacrti konkursa mogu biti objavljeni.']);
         }
 
-        $competition->update([
+        // Pri objavljivanju, ako nije postavljen start_date, postavi ga na danas
+        // i izračunaj end_date (20 dana od danas)
+        $now = now();
+        $updateData = [
             'status' => 'published',
-            'published_at' => now(),
-        ]);
+            'published_at' => $now,
+            'deadline_days' => 20,
+        ];
+
+        if (!$competition->start_date) {
+            $updateData['start_date'] = $now->toDateString();
+            $updateData['end_date'] = $now->copy()->addDays(20)->toDateString();
+        }
+
+        $competition->update($updateData);
 
         return redirect()->back()->with('success', 'Konkurs je uspješno objavljen.');
     }

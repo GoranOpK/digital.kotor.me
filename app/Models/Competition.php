@@ -59,10 +59,16 @@ class Competition extends Model
      */
     public function getDeadlineAttribute()
     {
+        // Ako postoji eksplicitno podešen end_date (koji se sada računa kao start_date + 20 dana)
+        if ($this->end_date) {
+            return $this->end_date->endOfDay();
+        }
+
         if (!$this->published_at || !$this->deadline_days) {
             return null;
         }
 
-        return $this->published_at->copy()->addDays($this->deadline_days)->startOfDay();
+        // Podrazumevano: 20 dana od dana objavljivanja
+        return $this->published_at->copy()->addDays($this->deadline_days)->endOfDay();
     }
 }

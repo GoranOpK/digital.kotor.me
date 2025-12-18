@@ -175,29 +175,40 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Rok za prijave (dana) *</label>
-                        <input type="number" name="deadline_days" class="form-control @error('deadline_days') error @enderror" value="{{ old('deadline_days', $competition->deadline_days ?? 20) }}" min="1" max="365" required>
-                        @error('deadline_days')
+                        <label class="form-label">Datum početka</label>
+                        <input type="date" name="start_date" id="start_date" class="form-control @error('start_date') error @enderror" value="{{ old('start_date', $competition->start_date?->format('Y-m-d')) }}">
+                        @error('start_date')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Datum početka</label>
-                        <input type="date" name="start_date" class="form-control @error('start_date') error @enderror" value="{{ old('start_date', $competition->start_date?->format('Y-m-d')) }}">
-                        @error('start_date')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
+                        <label class="form-label">Informacije o roku</label>
+                        <div style="padding: 10px 14px; background: #f3f4f6; border-radius: 8px; border: 1px solid #d1d5db; font-size: 14px; color: #374151;">
+                            <p style="margin: 0;"><strong>Rok za prijave:</strong> 20 dana</p>
+                            <p style="margin: 5px 0 0 0;"><strong>Datum završetka:</strong> <span id="display_end_date">{{ $competition->end_date ? $competition->end_date->format('d.m.Y') : 'Nije definisano' }}</span></p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">Datum završetka</label>
-                    <input type="date" name="end_date" class="form-control @error('end_date') error @enderror" value="{{ old('end_date', $competition->end_date?->format('Y-m-d')) }}">
-                    @error('end_date')
-                        <div class="error-message">{{ $message }}</div>
-                    @enderror
-                </div>
+                <script>
+                    document.getElementById('start_date').addEventListener('change', function() {
+                        const startDateVal = this.value;
+                        if (startDateVal) {
+                            const startDate = new Date(startDateVal);
+                            const endDate = new Date(startDate);
+                            endDate.setDate(startDate.getDate() + 20);
+                            
+                            const day = String(endDate.getDate()).padStart(2, '0');
+                            const month = String(endDate.getMonth() + 1).padStart(2, '0');
+                            const year = endDate.getFullYear();
+                            
+                            document.getElementById('display_end_date').innerText = day + '.' + month + '.' + year;
+                        } else {
+                            document.getElementById('display_end_date').innerText = 'Nije definisano';
+                        }
+                    });
+                </script>
 
                 <div style="margin-top: 24px;">
                     <button type="submit" class="btn-primary">Sačuvaj izmene</button>
