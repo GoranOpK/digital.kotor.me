@@ -287,7 +287,7 @@
     }
     @media (min-width: 992px) {
         .summary-grid {
-            grid-template-columns: 3fr 2fr;
+            grid-template-columns: repeat(3, 1fr);
         }
     }
 </style>
@@ -311,8 +311,22 @@
             </div>
         @endif
 
-        <div class="summary-grid">
-            <!-- Osnovni podaci -->
+        @php
+            $showUpload = ($application->status === 'draft' || $application->status === 'submitted');
+            // Ako ne prikazujemo upload, grid ide na 2 kolone, inače na 3 (iste širine)
+            $gridColumnsStyle = $showUpload ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)';
+        @endphp
+
+        <div class="summary-grid" style="grid-template-columns: 1fr;">
+            <style>
+                @media (min-width: 992px) {
+                    .summary-grid {
+                        grid-template-columns: {{ $gridColumnsStyle }} !important;
+                    }
+                }
+            </style>
+
+            <!-- 1. Osnovni podaci -->
             <div class="info-card">
                 <h2>Osnovni podaci</h2>
                 <div class="info-grid" style="grid-template-columns: 1fr;">
@@ -349,72 +363,134 @@
                 </div>
             </div>
 
-            <!-- Status prijave i Biznis plan -->
+            <!-- 2. Dodaj dokument (Sredina) -->
+            @if($showUpload)
             <div class="info-card">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px;">
-                    <h2 style="margin: 0; border: none; padding: 0;">Status prijave</h2>
-                    @if($application->status === 'draft')
-                        <div style="text-align: right;">
-                            @if($isReadyToSubmit)
-                                <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Da li ste sigurni da želite da podnesete prijavu? Nakon podnošenja više nećete moći da mijenjate podatke.');">
-                                    @csrf
-                                    <button type="submit" class="btn btn-primary" style="background: #10b981;">
-                                        🚀 Podnesi konačnu prijavu
-                                    </button>
-                                </form>
-                            @else
-                                <button class="btn btn-secondary" disabled title="Niste popunili biznis plan ili priložili sve dokumente">
-                                    Podnesi konačnu prijavu
-                                </button>
-                                <p style="font-size: 11px; color: #ef4444; margin-top: 4px;">Fale dokumenti ili biznis plan</p>
-                            @endif
+                <h2>Dodaj dokument</h2>
+                <div class="upload-section" style="margin-top: 0; background: #f9fafb; padding: 15px;">
+                    <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data">
+                        @csrf
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label" style="font-size: 13px;">Tip dokumenta</label>
+                            <select name="document_type" class="form-control" style="font-size: 13px; padding: 8px;" required>
+                                <option value="">Izaberite tip</option>
+                                @php
+                                    $requiredDocs = $application->getRequiredDocuments();
+                                    $documentLabels = [
+                                        'licna_karta' => 'Lična karta',
+                                        'crps_resenje' => 'CRPS rješenje',
+                                        'pib_resenje' => 'PIB rješenje',
+                                        'pdv_resenje' => 'PDV rješenje',
+                                        'statut' => 'Statut',
+                                        'karton_potpisa' => 'Karton potpisa',
+                                        'potvrda_neosudjivanost' => 'Neosuđivanost',
+                                        'uvjerenje_opstina_porezi' => 'Porezi Opština',
+                                        'uvjerenje_opstina_nepokretnost' => 'Nepokretnost Opština',
+                                        'potvrda_upc_porezi' => 'Porezi UPC',
+                                        'ioppd_obrazac' => 'IOPPD',
+                                        'godisnji_racuni' => 'Godišnji računi',
+                                        'biznis_plan_usb' => 'USB verzija',
+                                        'ostalo' => 'Ostalo',
+                                    ];
+                                    $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+                                @endphp
+                                @foreach($requiredDocs as $docType)
+                                    @if(!in_array($docType, $uploadedDocs))
+                                        <option value="{{ $docType }}">{{ $documentLabels[$docType] ?? $docType }}</option>
+                                    @endif
+                                @endforeach
+                                <option value="ostalo">Ostalo</option>
+                            </select>
                         </div>
-                    @endif
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label" style="font-size: 13px;">Fajl</label>
+                            <div class="file-input-wrapper" style="min-height: 32px;">
+                                <input type="file" name="file" id="file-input-{{ $application->id }}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateFileName(this, 'file-name-{{ $application->id }}')" style="height: 32px;">
+                                <label for="file-input-{{ $application->id }}" class="file-input-label-custom" style="padding: 6px 12px; font-size: 12px;">Izaberi fajl</label>
+                                <span id="file-name-{{ $application->id }}" class="file-name-display" style="display: none; font-size: 11px;"></span>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label class="form-label" style="font-weight: 400; font-size: 12px;">Ili iz biblioteke</label>
+                            <select name="user_document_id" class="form-control" style="font-size: 12px; padding: 6px;">
+                                <option value="">Izaberi...</option>
+                                @foreach(auth()->user()->documents()->where('status', 'active')->latest()->get() as $userDoc)
+                                    <option value="{{ $userDoc->id }}">{{ Str::limit($userDoc->name, 20) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 13px; padding: 10px;">Priloži dokument</button>
+                    </form>
+                </div>
+            </div>
+            @endif
+
+            <!-- 3. Status prijave i Biznis plan -->
+            <div class="info-card">
+                <div style="border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px;">
+                    <h2 style="margin: 0; border: none; padding: 0;">Status prijave</h2>
                 </div>
                 <div class="info-grid" style="grid-template-columns: 1fr;">
-                    <div class="info-item">
+                    <div class="info-item" style="margin-bottom: 16px;">
                         <span class="info-label">Trenutni Status</span>
                         <span class="info-value">
                             @php
                                 $statusLabels = [
-                                    'draft' => 'Nacrt (U pripremi)',
-                                    'submitted' => 'Podnesena (U obradi)',
+                                    'draft' => 'Nacrt',
+                                    'submitted' => 'U obradi',
                                     'evaluated' => 'Ocjenjena',
                                     'approved' => 'Odobrena',
                                     'rejected' => 'Odbijena',
                                 ];
                                 $statusClass = 'status-' . $application->status;
                             @endphp
-                            <span class="status-badge {{ $statusClass }}">
+                            <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">
                                 {{ $statusLabels[$application->status] ?? $application->status }}
                             </span>
                         </span>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Biznis Plan (Obrazac 2)</span>
+                    <div class="info-item" style="margin-bottom: 16px;">
+                        <span class="info-label">Biznis Plan</span>
                         <span class="info-value">
                             @if($application->businessPlan)
                                 <span style="color: #10b981; font-weight: 600;">✅ Popunjen</span>
                                 <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Uredi</a>
                             @else
                                 <span style="color: #ef4444; font-weight: 600;">❌ Nije popunjen</span>
-                                <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Popuni odmah</a>
+                                <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Popuni</a>
                             @endif
                         </span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Datum podnošenja</span>
-                        <span class="info-value">
-                            {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije još podnesena' }}
+                        <span class="info-value" style="font-size: 13px;">
+                            {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}
                         </span>
                     </div>
+                    @if($application->status === 'draft')
+                        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
+                            @if($isReadyToSubmit)
+                                <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Podnijeti prijavu?');">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary" style="background: #10b981; width: 100%; font-size: 13px;">
+                                        🚀 Podnesi prijavu
+                                    </button>
+                                </form>
+                            @else
+                                <button class="btn btn-secondary" disabled style="width: 100%; font-size: 13px; background: #9ca3af;">
+                                    Podnesi prijavu
+                                </button>
+                                <p style="font-size: 10px; color: #ef4444; margin-top: 6px; text-align: center;">Fale dokumenti ili biznis plan</p>
+                            @endif
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
 
         @if($errors->any())
             <div class="alert" style="background: #fee2e2; border-color: #ef4444; color: #991b1b; margin-bottom: 24px;">
-                <strong>Greška pri podnošenju:</strong>
+                <strong>Greška:</strong>
                 <ul style="margin-top: 8px; padding-left: 20px;">
                     @foreach($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -423,115 +499,31 @@
             </div>
         @endif
 
-        <!-- Forma za upload dokumenata -->
-        @if($application->status === 'draft' || $application->status === 'submitted')
-        <div class="info-card">
-            <h2>Dodaj dokument</h2>
-            <div class="upload-section" style="margin-top: 0; background: #f9fafb;">
-                <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data">
-                    @csrf
-                    @if($errors->any())
-                        <div class="alert" style="background: #fee2e2; border-color: #ef4444; color: #991b1b; margin-bottom: 16px;">
-                            <strong>Greška:</strong>
-                            <ul style="margin: 8px 0 0 0; padding-left: 20px;">
-                                @foreach($errors->all() as $error)
-                                    <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    @endif
-                    @if(session('success'))
-                        <div class="alert" style="background: #d1fae5; border-color: #10b981; color: #065f46; margin-bottom: 16px;">
-                            {{ session('success') }}
-                        </div>
-                    @endif
-                    <div class="form-group">
-                        <label class="form-label">Tip dokumenta</label>
-                        <select name="document_type" class="form-control @error('document_type') error @enderror" required>
-                            <option value="">Izaberite tip dokumenta</option>
-                            @php
-                                $requiredDocs = $application->getRequiredDocuments();
-                                $documentLabels = [
-                                    'licna_karta' => 'Ovjerena kopija lične karte',
-                                    'crps_resenje' => 'Rješenje o upisu u CRPS',
-                                    'pib_resenje' => 'Rješenje o registraciji PJ Uprave prihoda i carina (PIB)',
-                                    'pdv_resenje' => 'Rješenje o registraciji za PDV',
-                                    'statut' => 'Statut društva',
-                                    'karton_potpisa' => 'Karton potpisa',
-                                    'potvrda_neosudjivanost' => 'Potvrda o neosuđivanosti',
-                                    'uvjerenje_opstina_porezi' => 'Uvjerenje Opštine o urednom izmirivanju poreza',
-                                    'uvjerenje_opstina_nepokretnost' => 'Uvjerenje Opštine o nepostojanju nepokretnosti',
-                                    'potvrda_upc_porezi' => 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza',
-                                    'ioppd_obrazac' => 'Obrazac IOPPD',
-                                    'godisnji_racuni' => 'Godišnji računi',
-                                    'biznis_plan_usb' => 'Štampana i elektronska verzija biznis plana na USB-u',
-                                    'izvjestaj_realizacija' => 'Izvještaj o realizaciji',
-                                    'finansijski_izvjestaj' => 'Finansijski izvještaj',
-                                    'ostalo' => 'Ostalo',
-                                ];
-                                $uploadedDocs = $application->documents->pluck('document_type')->toArray();
-                            @endphp
-                            @foreach($requiredDocs as $docType)
-                                @if(!in_array($docType, $uploadedDocs))
-                                    <option value="{{ $docType }}" {{ old('document_type') === $docType ? 'selected' : '' }}>{{ $documentLabels[$docType] ?? $docType }}</option>
-                                @endif
-                            @endforeach
-                        </select>
-                        @error('document_type')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Fajl</label>
-                        <div class="file-input-wrapper">
-                            <input type="file" name="file" id="file-input-{{ $application->id }}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateFileName(this, 'file-name-{{ $application->id }}')">
-                            <label for="file-input-{{ $application->id }}" class="file-input-label-custom">Izaberi fajl</label>
-                            <span id="file-name-{{ $application->id }}" class="file-name-display" style="display: none;"></span>
-                        </div>
-                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                            Dozvoljeni formati: PDF, JPEG, PNG (max 20MB)
-                        </div>
-                        @error('file')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 400;">Ili izaberite iz biblioteke dokumenata</label>
-                        <select name="user_document_id" class="form-control @error('user_document_id') error @enderror">
-                            <option value="">Izaberite dokument iz biblioteke</option>
-                            @foreach(auth()->user()->documents()->where('status', 'active')->get() as $userDoc)
-                                <option value="{{ $userDoc->id }}" {{ old('user_document_id') == $userDoc->id ? 'selected' : '' }}>{{ $userDoc->name }} ({{ $userDoc->category }})</option>
-                            @endforeach
-                        </select>
-                        @error('user_document_id')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-                    <script>
-                        function updateFileName(input, displayId) {
-                            const display = document.getElementById(displayId);
-                            if (input.files && input.files[0]) {
-                                display.textContent = input.files[0].name;
-                                display.style.display = 'block';
-                            } else {
-                                display.style.display = 'none';
-                            }
-                        }
-                    </script>
-                    <button type="submit" class="btn btn-primary">Priloži dokument</button>
-                </form>
-            </div>
-        </div>
-        @endif
-
         <!-- Dokumenti -->
         <div class="info-card">
             <h2>Priložena dokumentacija</h2>
             
             @php
-                // Ovdje koristimo već definisane varijable ako su dostupne, ili ih ponovo definišemo za ovaj blok
                 $requiredDocs = $application->getRequiredDocuments();
                 $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+                $documentLabels = [
+                    'licna_karta' => 'Ovjerena kopija lične karte',
+                    'crps_resenje' => 'Rješenje o upisu u CRPS',
+                    'pib_resenje' => 'Rješenje o registraciji PJ Uprave prihoda i carina (PIB)',
+                    'pdv_resenje' => 'Rješenje o registraciji za PDV',
+                    'statut' => 'Statut društva',
+                    'karton_potpisa' => 'Karton potpisa',
+                    'potvrda_neosudjivanost' => 'Potvrda o neosuđivanosti',
+                    'uvjerenje_opstina_porezi' => 'Uvjerenje Opštine o urednom izmirivanju poreza',
+                    'uvjerenje_opstina_nepokretnost' => 'Uvjerenje Opštine o nepostojanju nepokretnosti',
+                    'potvrda_upc_porezi' => 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza',
+                    'ioppd_obrazac' => 'Obrazac IOPPD',
+                    'godisnji_racuni' => 'Godišnji računi',
+                    'biznis_plan_usb' => 'Štampana i elektronska verzija biznis plana na USB-u',
+                    'izvjestaj_realizacija' => 'Izvještaj o realizaciji',
+                    'finansijski_izvjestaj' => 'Finansijski izvještaj',
+                    'ostalo' => 'Ostalo',
+                ];
             @endphp
 
             <!-- Progress bar -->
@@ -672,5 +664,16 @@
         </div>
     </div>
 </div>
-@endsection
 
+<script>
+    function updateFileName(input, displayId) {
+        const display = document.getElementById(displayId);
+        if (input.files && input.files[0]) {
+            display.textContent = input.files[0].name;
+            display.style.display = 'block';
+        } else {
+            display.style.display = 'none';
+        }
+    }
+</script>
+@endsection
