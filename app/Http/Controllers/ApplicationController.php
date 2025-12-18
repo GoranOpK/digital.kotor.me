@@ -308,15 +308,17 @@ class ApplicationController extends Controller
      */
     public function destroy(Application $application): RedirectResponse
     {
-        // Proveri da li prijava pripada korisniku
-        if ($application->user_id !== Auth::id()) {
+        // Proveri da li prijava pripada korisniku ili je administrator
+        $user = Auth::user();
+        $isOwner = $application->user_id === $user->id;
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin', 'konkurs_admin']);
+
+        if (!$isOwner && !$isAdmin) {
             abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
-        // Dozvoli brisanje samo ako je prijava u statusu draft
-        if ($application->status !== 'draft') {
-            return back()->withErrors(['error' => 'Ne možete obrisati prijavu koja je već podnesena.']);
-        }
+        // Korisnik ili admin mogu obrisati prijavu u bilo kom momentu
+        // (Uklonjen uslov za 'draft' status na zahtjev korisnika)
 
         // Obriši biznis plan ako postoji
         if ($application->businessPlan) {
@@ -328,6 +330,10 @@ class ApplicationController extends Controller
 
         // Obriši samu prijavu
         $application->delete();
+
+        if ($isAdmin) {
+            return redirect()->route('admin.applications.index')->with('success', 'Prijava je uspješno obrisana.');
+        }
 
         return redirect()->route('dashboard')->with('success', 'Prijava je uspješno obrisana.');
     }

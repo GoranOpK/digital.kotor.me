@@ -176,7 +176,14 @@
                             <td style="padding: 12px;">{{ $app->user->name ?? 'N/A' }}</td>
                             <td style="padding: 12px;">{{ $app->status }}</td>
                             <td style="padding: 12px;">
-                                <a href="{{ route('admin.applications.show', $app) }}" style="color: #3b82f6;">Pregled</a>
+                                <div style="display: flex; gap: 8px;">
+                                    <a href="{{ route('admin.applications.show', $app) }}" style="color: #3b82f6;">Pregled</a>
+                                    <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu prijavu?');" style="display: inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" style="background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; padding: 0;">Obriši</button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                     @empty

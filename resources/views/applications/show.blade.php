@@ -641,15 +641,15 @@
                         Popuni biznis plan
                     </a>
                 @endif
-                
-                <form action="{{ route('applications.destroy', $application) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu prijavu? Svi podaci o biznis planu i priloženi dokumenti će biti uklonjeni.');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger" style="margin-left: 8px;">
-                        Obriši prijavu
-                    </button>
-                </form>
             @endif
+            
+            <form action="{{ route('applications.destroy', $application) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu prijavu? Svi podaci o biznis planu i priloženi dokumenti će biti uklonjeni.');">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="btn btn-danger" style="margin-left: 8px;">
+                    Obriši prijavu
+                </button>
+            </form>
         </div>
     </div>
 </div>
