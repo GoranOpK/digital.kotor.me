@@ -251,6 +251,10 @@
                     <span class="info-value">{{ $competition->published_at ? $competition->published_at->format('d.m.Y H:i') : 'N/A' }}</span>
                 </div>
                 <div class="info-item">
+                    <span class="info-label">Datum početka</span>
+                    <span class="info-value">{{ $competition->start_date ? $competition->start_date->format('d.m.Y') : 'N/A' }}</span>
+                </div>
+                <div class="info-item">
                     <span class="info-label">Rok za prijave</span>
                     <span class="info-value">{{ $deadline ? $deadline->format('d.m.Y H:i') : 'N/A' }}</span>
                 </div>

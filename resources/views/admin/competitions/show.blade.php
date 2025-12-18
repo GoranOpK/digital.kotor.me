@@ -133,6 +133,7 @@
                     <p><strong>Rok za prijave:</strong> {{ $competition->deadline_days ?? 20 }} dana</p>
                     @if($competition->published_at && $competition->deadline)
                         <p><strong>Datum objave:</strong> {{ $competition->published_at->format('d.m.Y H:i') }}</p>
+                        <p><strong>Datum početka:</strong> {{ $competition->start_date ? $competition->start_date->format('d.m.Y') : 'N/A' }}</p>
                         <p><strong>Datum isteka:</strong> {{ $competition->deadline->subSecond()->format('d.m.Y H:i') }}</p>
                         @if($competition->status === 'published')
                             @if($competition->is_upcoming)
