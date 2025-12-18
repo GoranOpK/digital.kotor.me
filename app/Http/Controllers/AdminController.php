@@ -17,7 +17,6 @@ class AdminController extends Controller
 {
     /**
      * Prikaz admin dashboard-a
-     * Updated at 11:45
      */
     public function dashboard()
     {
