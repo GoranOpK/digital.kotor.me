@@ -121,9 +121,16 @@
                             </td>
                             <td>
                                 @if($competition->status === 'published' && $competition->deadline)
-                                    <div class="countdown-timer" data-deadline="{{ $competition->deadline->format('Y-m-d H:i:s') }}">
-                                        Učitavanje...
-                                    </div>
+                                    @if($competition->is_upcoming)
+                                        <span style="color: #3b82f6; font-size: 13px; font-weight: 600;">Počinje za:</span>
+                                        <div class="countdown-timer" data-deadline="{{ $competition->start_date->startOfDay()->format('Y-m-d H:i:s') }}" style="color: #3b82f6;">
+                                            Učitavanje...
+                                        </div>
+                                    @else
+                                        <div class="countdown-timer" data-deadline="{{ $competition->deadline->format('Y-m-d H:i:s') }}">
+                                            Učitavanje...
+                                        </div>
+                                    @endif
                                     <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
                                         Rok: {{ $competition->deadline->copy()->subSecond()->format('d.m.Y H:i') }}
                                     </div>

@@ -135,11 +135,19 @@
                         <p><strong>Datum objave:</strong> {{ $competition->published_at->format('d.m.Y H:i') }}</p>
                         <p><strong>Datum isteka:</strong> {{ $competition->deadline->subSecond()->format('d.m.Y H:i') }}</p>
                         @if($competition->status === 'published')
-                            <p><strong>Preostalo vremena:</strong><br>
-                                <span class="countdown-timer" data-deadline="{{ $competition->deadline->format('Y-m-d H:i:s') }}">
-                                    Učitavanje...
-                                </span>
-                            </p>
+                            @if($competition->is_upcoming)
+                                <p><strong>Počinje za:</strong><br>
+                                    <span class="countdown-timer" data-deadline="{{ $competition->start_date->startOfDay()->format('Y-m-d H:i:s') }}" style="color: #3b82f6; background: #eff6ff; border-color: #dbeafe;">
+                                        Učitavanje...
+                                    </span>
+                                </p>
+                            @else
+                                <p><strong>Preostalo vremena:</strong><br>
+                                    <span class="countdown-timer" data-deadline="{{ $competition->deadline->format('Y-m-d H:i:s') }}">
+                                        Učitavanje...
+                                    </span>
+                                </p>
+                            @endif
                         @endif
                     @endif
                     @if($competition->closed_at)
