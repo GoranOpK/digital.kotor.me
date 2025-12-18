@@ -104,6 +104,22 @@
             </div>
         </div>
 
+        @if(session('success'))
+            <div style="background: #d1fae5; border: 1px solid #10b981; color: #065f46; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                <ul style="margin: 0; padding-left: 20px;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <div class="info-card">
             <h2 style="font-size: 20px; margin-bottom: 16px;">Osnovne informacije</h2>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
