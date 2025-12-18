@@ -312,6 +312,21 @@ class AdminController extends Controller
     }
 
     /**
+     * Brisanje konkursa
+     */
+    public function destroyCompetition(Competition $competition)
+    {
+        // Proveri da li ima prijava
+        if ($competition->applications()->count() > 0) {
+            return redirect()->back()->withErrors(['error' => 'Ne možete obrisati konkurs koji već ima prijave.']);
+        }
+
+        $competition->delete();
+
+        return redirect()->route('admin.competitions.index')->with('success', 'Konkurs je uspješno obrisan.');
+    }
+
+    /**
      * Lista svih prijava
      */
     public function applications(Request $request)

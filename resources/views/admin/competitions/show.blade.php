@@ -85,6 +85,11 @@
                     <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
                 @endif
                 <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn btn-primary">Izmijeni</a>
+                <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">Obriši</button>
+                </form>
             </div>
         </div>
 

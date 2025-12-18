@@ -80,6 +80,7 @@
     }
     .btn-view { background: #3b82f6; color: #fff; }
     .btn-edit { background: #f59e0b; color: #fff; }
+    .btn-delete { background: #ef4444; color: #fff; border: none; cursor: pointer; }
 </style>
 
 <div class="admin-page">
@@ -128,6 +129,11 @@
                             <td>
                                 <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-sm btn-view">Pregled</a>
                                 <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn-sm btn-edit">Izmijeni</a>
+                                <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-sm btn-delete">Obriši</button>
+                                </form>
                             </td>
                         </tr>
                     @empty
