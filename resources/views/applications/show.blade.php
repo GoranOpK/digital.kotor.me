@@ -562,18 +562,16 @@
                                class="btn btn-secondary">
                                 Preuzmi
                             </a>
-                            @if($application->status === 'draft')
-                                <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $doc]) }}" 
-                                      method="POST" 
-                                      style="display: inline;" 
-                                      onsubmit="return confirm('Da li ste sigurni da želite da uklonite ovaj dokument iz prijave?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" style="padding: 8px 12px;">
-                                        Ukloni
-                                    </button>
-                                </form>
-                            @endif
+                            <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $doc]) }}" 
+                                  method="POST" 
+                                  style="display: inline;" 
+                                  onsubmit="return confirm('Da li ste sigurni da želite da uklonite ovaj dokument iz prijave?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-danger" style="padding: 8px 12px;">
+                                    Ukloni
+                                </button>
+                            </form>
                         </div>
                     </li>
                 @endforeach

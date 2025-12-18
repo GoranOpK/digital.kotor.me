@@ -339,11 +339,6 @@ class ApplicationController extends Controller
             abort(404, 'Dokument nije pronađen.');
         }
 
-        // Korisnik može brisati dokumente samo dok je prijava u nacrtu
-        if ($application->status !== 'draft') {
-            return back()->withErrors(['error' => 'Dokumente možete brisati samo dok je prijava u nacrtu.']);
-        }
-
         // Ako dokument NIJE iz biblioteke (user_document_id je null), obriši fizički fajl
         if (!$document->user_document_id) {
             Storage::disk('local')->delete($document->file_path);
