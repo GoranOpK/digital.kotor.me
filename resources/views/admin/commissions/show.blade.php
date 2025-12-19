@@ -165,6 +165,24 @@
         border-color: #f59e0b;
         color: #92400e;
     }
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+        align-items: stretch;
+    }
+    @media (min-width: 1024px) {
+        .info-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    .info-grid .info-card {
+        margin-bottom: 0;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
 </style>
 
 <div class="admin-page">
@@ -182,18 +200,19 @@
             </div>
         @endif
 
-        <!-- Osnovne informacije -->
-        <div class="info-card">
-            <h2>Osnovne informacije</h2>
-            <p><strong>Naziv:</strong> {{ $commission->name }}</p>
-            <p><strong>Godina:</strong> {{ $commission->year }}</p>
-            <p><strong>Mandat:</strong> {{ $commission->start_date->format('d.m.Y') }} - {{ $commission->end_date->format('d.m.Y') }}</p>
-            <p><strong>Status:</strong> <span class="status-badge status-{{ $commission->status }}">{{ $commission->status === 'active' ? 'Aktivna' : 'Neaktivna' }}</span></p>
-            <p><strong>Broj članova:</strong> {{ $commission->members->count() }} / 5</p>
-        </div>
+        <div class="info-grid">
+            <!-- Osnovne informacije -->
+            <div class="info-card">
+                <h2>Osnovne informacije</h2>
+                <p><strong>Naziv:</strong> {{ $commission->name }}</p>
+                <p><strong>Godina:</strong> {{ $commission->year }}</p>
+                <p><strong>Mandat:</strong> {{ $commission->start_date->format('d.m.Y') }} - {{ $commission->end_date->format('d.m.Y') }}</p>
+                <p><strong>Status:</strong> <span class="status-badge status-{{ $commission->status }}">{{ $commission->status === 'active' ? 'Aktivna' : 'Neaktivna' }}</span></p>
+                <p><strong>Broj članova:</strong> {{ $commission->members->count() }} / 5</p>
+            </div>
 
-        <!-- Članovi komisije -->
-        <div class="info-card">
+            <!-- Članovi komisije -->
+            <div class="info-card">
             <h2>Članovi komisije</h2>
             
             @if($commission->members->count() > 0)
@@ -298,6 +317,7 @@
                     Komisija je popunjena (5/5 članova). Za dodavanje novog člana, prvo uklonite postojećeg.
                 </div>
             @endif
+            </div>
         </div>
     </div>
 </div>
