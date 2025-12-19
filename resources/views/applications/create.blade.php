@@ -334,6 +334,47 @@
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Imate li registrovanu djelatnost u skladu sa Zakonom o privrednim društvima? <span class="required">*</span>
+                        </label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input 
+                                    type="radio" 
+                                    id="is_registered_yes" 
+                                    name="is_registered" 
+                                    value="1"
+                                    {{ old('is_registered', '1') === '1' ? 'checked' : '' }}
+                                    required
+                                >
+                                <label for="is_registered_yes">Da</label>
+                            </div>
+                            <div class="radio-option">
+                                <input 
+                                    type="radio" 
+                                    id="is_registered_no" 
+                                    name="is_registered" 
+                                    value="0"
+                                    {{ old('is_registered') === '0' ? 'checked' : '' }}
+                                    required
+                                >
+                                <label for="is_registered_no">Ne</label>
+                            </div>
+                        </div>
+                        @error('is_registered')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Upozorenje za neregistrovanu djelatnost -->
+                    <div class="alert alert-info conditional-field" id="unregisteredInfo" style="display: none;">
+                        <strong>Važno:</strong> Ukoliko nemate registrovanu djelatnost, u slučaju da vam sredstva budu odobrena, 
+                        u obavezi ste da svoju djelatnost registrujete u neki od oblika registracije koji predviđa 
+                        Zakon o privrednim društvima i priložite dokaz (rješenje o registraciji u CRPS i rješenje o 
+                        registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
+                    </div>
                 </div>
             </div>
 
@@ -541,6 +582,26 @@
                             </label>
                         </div>
                     </div>
+
+                    <!-- Izjava o tačnosti podataka (samo ako nema registrovanu djelatnost) -->
+                    <div class="form-group conditional-field" id="accuracyDeclarationGroup" style="display: none;">
+                        <div class="checkbox-group">
+                            <input 
+                                type="checkbox" 
+                                id="accuracy_declaration" 
+                                name="accuracy_declaration" 
+                                value="1"
+                                {{ old('accuracy_declaration') ? 'checked' : '' }}
+                            >
+                            <label for="accuracy_declaration">
+                                Izjavljujem da za tačnost datih podataka odgovaram kao podnosioc prijave 
+                                <span class="required">*</span>
+                            </label>
+                        </div>
+                        @error('accuracy_declaration')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
             </div>
 
@@ -586,6 +647,35 @@
 
         // Pozovi na učitavanju stranice
         toggleDooFields();
+
+        // Dinamičko prikazivanje/sakrivanje polja za neregistrovanu djelatnost
+        const isRegisteredInputs = document.querySelectorAll('input[name="is_registered"]');
+        const unregisteredInfo = document.getElementById('unregisteredInfo');
+        const accuracyDeclarationGroup = document.getElementById('accuracyDeclarationGroup');
+        const accuracyDeclarationCheckbox = document.getElementById('accuracy_declaration');
+
+        function toggleRegistrationFields() {
+            const selectedRegistration = document.querySelector('input[name="is_registered"]:checked')?.value;
+            
+            if (selectedRegistration === '0') {
+                // Nema registrovanu djelatnost
+                unregisteredInfo.style.display = 'block';
+                accuracyDeclarationGroup.style.display = 'block';
+                accuracyDeclarationCheckbox.setAttribute('required', 'required');
+            } else {
+                // Ima registrovanu djelatnost
+                unregisteredInfo.style.display = 'none';
+                accuracyDeclarationGroup.style.display = 'none';
+                accuracyDeclarationCheckbox.removeAttribute('required');
+            }
+        }
+
+        isRegisteredInputs.forEach(input => {
+            input.addEventListener('change', toggleRegistrationFields);
+        });
+
+        // Pozovi na učitavanju stranice
+        toggleRegistrationFields();
     });
 </script>
 @endsection

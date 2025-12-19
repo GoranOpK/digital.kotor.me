@@ -311,6 +311,15 @@
             </div>
         @endif
 
+        @if(!$application->is_registered)
+            <div class="alert alert-warning">
+                <strong>Važno:</strong> Nemate registrovanu djelatnost. U slučaju da vam sredstva budu odobrena, 
+                u obavezi ste da svoju djelatnost registrujete u neki od oblika registracije koji predviđa 
+                Zakon o privrednim društvima i priložite dokaz (rješenje o registraciji u CRPS i rješenje o 
+                registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
+            </div>
+        @endif
+
         @php
             $showUpload = ($application->status === 'draft' || $application->status === 'submitted');
             // Ako ne prikazujemo upload, grid ide na 2 kolone, inače na 3 (iste širine)
@@ -345,6 +354,16 @@
                     <div class="info-item">
                         <span class="info-label">Oblast biznisa</span>
                         <span class="info-value">{{ $application->business_area }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Registrovana djelatnost</span>
+                        <span class="info-value">
+                            @if($application->is_registered)
+                                <span style="color: #10b981;">✓ Da</span>
+                            @else
+                                <span style="color: #f59e0b;">✗ Ne</span>
+                            @endif
+                        </span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Traženi iznos</span>

@@ -27,6 +27,8 @@ class Application extends Model
         'vat_number',
         'de_minimis_declaration',
         'previous_support_declaration',
+        'is_registered',
+        'accuracy_declaration',
         'status',
         'final_score',
         'ranking_position',
@@ -43,6 +45,8 @@ class Application extends Model
         'final_score' => 'decimal:2',
         'de_minimis_declaration' => 'boolean',
         'previous_support_declaration' => 'boolean',
+        'is_registered' => 'boolean',
+        'accuracy_declaration' => 'boolean',
         'submitted_at' => 'datetime',
         'evaluated_at' => 'datetime',
         'interview_scheduled_at' => 'datetime',
@@ -187,6 +191,9 @@ class Application extends Model
     public function getRequiredDocuments(): array
     {
         $documents = [];
+        
+        // Dokumenti vezani za registraciju (ne obavezni ako nema registrovanu djelatnost)
+        $registrationDocs = ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_upc_porezi', 'ioppd_obrazac', 'godisnji_racuni'];
 
         if ($this->applicant_type === 'preduzetnica' && $this->business_stage === 'započinjanje') {
             $documents = [
@@ -243,12 +250,19 @@ class Application extends Model
             ];
         }
 
+        // Ako nema registrovanu djelatnost, ukloni dokumente vezane za registraciju
+        if ($this->is_registered === false) {
+            $documents = array_filter($documents, function($doc) use ($registrationDocs) {
+                return !in_array($doc, $registrationDocs);
+            });
+        }
+
         // Ako je prethodno dobijala podršku, dodaj izvještaj
         if ($this->previous_support_declaration) {
             $documents[] = 'izvjestaj_realizacija';
             $documents[] = 'finansijski_izvjestaj';
         }
 
-        return $documents;
+        return array_values($documents); // Reindex array
     }
 }

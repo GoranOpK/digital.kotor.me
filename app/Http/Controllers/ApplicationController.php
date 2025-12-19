@@ -75,6 +75,7 @@ class ApplicationController extends Controller
             'applicant_type' => 'required|in:preduzetnica,doo',
             'business_stage' => 'required|in:započinjanje,razvoj',
             'business_area' => 'required|string|max:255',
+            'is_registered' => 'required|in:0,1',
             'requested_amount' => 'required|numeric|min:0',
             'total_budget_needed' => 'required|numeric|min:0|gte:requested_amount',
             'website' => 'nullable|url|max:255',
@@ -82,6 +83,11 @@ class ApplicationController extends Controller
             'vat_number' => 'nullable|string|max:50',
             'de_minimis_declaration' => 'required|accepted',
         ];
+
+        // Ako nema registrovanu djelatnost, izjava o tačnosti je obavezna
+        if ($request->is_registered == '0' || $request->is_registered === false) {
+            $rules['accuracy_declaration'] = 'required|accepted';
+        }
 
         // Dodatna polja za DOO
         if ($request->applicant_type === 'doo') {
@@ -95,6 +101,9 @@ class ApplicationController extends Controller
             'applicant_type.required' => 'Tip podnosioca je obavezan.',
             'business_stage.required' => 'Faza biznisa je obavezna.',
             'business_area.required' => 'Oblast biznisa je obavezna.',
+            'is_registered.required' => 'Molimo navedite da li imate registrovanu djelatnost.',
+            'accuracy_declaration.required' => 'Morate potvrditi izjavu o tačnosti podataka.',
+            'accuracy_declaration.accepted' => 'Morate potvrditi izjavu o tačnosti podataka.',
             'requested_amount.required' => 'Traženi iznos je obavezan.',
             'total_budget_needed.required' => 'Ukupan budžet je obavezan.',
             'total_budget_needed.gte' => 'Ukupan budžet mora biti veći ili jednak traženom iznosu.',
@@ -128,6 +137,8 @@ class ApplicationController extends Controller
             'website' => $validated['website'] ?? null,
             'bank_account' => $validated['bank_account'] ?? null,
             'vat_number' => $validated['vat_number'] ?? null,
+            'is_registered' => $validated['is_registered'] == '1' || $validated['is_registered'] === true,
+            'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
             'de_minimis_declaration' => true,
             'previous_support_declaration' => $request->has('previous_support_declaration'),
             'status' => 'draft', // Draft dok se ne prilože svi dokumenti
