@@ -99,10 +99,9 @@
                     </div>
                     <nav class="nav">
                         <div class="nav-links" aria-label="Primarna navigacija">
-                            <a class="nav-link" href="{{ route('home') }}">Početna</a>
-                            <a class="nav-link" href="#placanja">Plaćanja</a>
-                            <a class="nav-link" href="#konkursi">Konkursi</a>
-                            <a class="nav-link" href="#tenderi">Tenderi</a>
+                            <a class="nav-link" href="{{ route('payments.index') }}">Plaćanja</a>
+                            <a class="nav-link" href="{{ route('competitions.index') }}">Konkursi</a>
+                            <a class="nav-link" href="{{ route('tenders.index') }}">Tenderi</a>
                         </div>
                         @auth
                             <a class="btn btn-outline" href="{{ route('dashboard') }}">Moj panel</a>
@@ -120,10 +119,9 @@
                     </nav>
                 </div>
                 <div id="mobileMenu" class="mobile-menu" role="menu" aria-labelledby="menuToggle">
-                    <a class="nav-link" href="{{ route('home') }}" role="menuitem">Početna</a>
-                    <a class="nav-link" href="#placanja" role="menuitem">Plaćanja</a>
-                    <a class="nav-link" href="#konkursi" role="menuitem">Konkursi</a>
-                    <a class="nav-link" href="#tenderi" role="menuitem">Tenderi</a>
+                    <a class="nav-link" href="{{ route('payments.index') }}" role="menuitem">Plaćanja</a>
+                    <a class="nav-link" href="{{ route('competitions.index') }}" role="menuitem">Konkursi</a>
+                    <a class="nav-link" href="{{ route('tenders.index') }}" role="menuitem">Tenderi</a>
                 </div>
                 <div class="banner">
                     <small>Zvanični portal opštine KOTOR. Pažljivo čuvamo vaše podatke. <span class="highlight">e-Usluge</span> dostupne 24/7.</small>
@@ -144,21 +142,21 @@
                     </div>
                     <p class="note">Nakon prijave, pristupate personalizovanom panelu i istoriji zahtjeva.</p>
                     <div class="services">
-                        <a href="#placanja" class="service">
+                        <a href="{{ route('payments.index') }}" class="service">
                             <div class="service-icon">₿</div>
                             <div>
                                 <h4>Online plaćanja</h4>
                                 <p>Uplate komunalija, taksi i drugih opštinskih naknada.</p>
                             </div>
                         </a>
-                        <a href="#konkursi" class="service">
+                        <a href="{{ route('competitions.index') }}" class="service">
                             <div class="service-icon">★</div>
                             <div>
                                 <h4>Konkursi</h4>
                                 <p>Prijava i praćenje statusa na programe podrške.</p>
                             </div>
                         </a>
-                        <a href="#tenderi" class="service">
+                        <a href="{{ route('tenders.index') }}" class="service">
                             <div class="service-icon">§</div>
                             <div>
                                 <h4>Tenderska dokumentacija</h4>
