@@ -94,8 +94,8 @@ class ApplicationController extends Controller
             $rules['accuracy_declaration'] = 'required|accepted';
         }
 
-        // Dodatna polja za DOO
-        if ($request->applicant_type === 'doo') {
+        // Dodatna polja za DOO i Ostalo (ista polja)
+        if ($request->applicant_type === 'doo' || $request->applicant_type === 'ostalo') {
             $rules['founder_name'] = 'required|string|max:255';
             $rules['director_name'] = 'required|string|max:255';
             $rules['company_seat'] = 'required|string|max:255';
@@ -121,9 +121,9 @@ class ApplicationController extends Controller
             'total_budget_needed.required' => 'Ukupan budžet je obavezan.',
             'total_budget_needed.gte' => 'Ukupan budžet mora biti veći ili jednak traženom iznosu.',
             'de_minimis_declaration.required' => 'Morate potvrditi de minimis izjavu.',
-            'founder_name.required' => 'Ime osnivača/ice je obavezno za DOO.',
-            'director_name.required' => 'Ime izvršnog direktora/ice je obavezno za DOO.',
-            'company_seat.required' => 'Sjedište društva je obavezno za DOO.',
+            'founder_name.required' => 'Ime osnivača/ice je obavezno.',
+            'director_name.required' => 'Ime izvršnog direktora/ice je obavezno.',
+            'company_seat.required' => 'Sjedište društva je obavezno.',
             'physical_person_name.required' => 'Ime i prezime je obavezno za fizičko lice.',
             'physical_person_jmbg.required' => 'JMBG je obavezan za fizičko lice.',
             'physical_person_jmbg.regex' => 'JMBG mora imati tačno 13 cifara.',

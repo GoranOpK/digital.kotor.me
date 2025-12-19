@@ -497,6 +497,62 @@
                 </div>
             </div>
 
+            <!-- Sekcija 2a: Podaci o djelatnosti (samo ako je izabrano Ostalo) -->
+            <div class="form-card conditional-field" id="ostaloFields">
+                <div class="form-section">
+                    <h2>2. Podaci o djelatnosti</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">
+                            Ime i prezime osnivača/ice <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            name="founder_name" 
+                            class="form-control @error('founder_name') error @enderror"
+                            value="{{ old('founder_name', auth()->user()->name) }}"
+                            maxlength="255"
+                        >
+                        @error('founder_name')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Ime i prezime izvršnog direktora/ice <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            name="director_name" 
+                            class="form-control @error('director_name') error @enderror"
+                            value="{{ old('director_name', auth()->user()->name) }}"
+                            maxlength="255"
+                        >
+                        @error('director_name')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Sjedište društva <span class="required">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            name="company_seat" 
+                            class="form-control @error('company_seat') error @enderror"
+                            value="{{ old('company_seat', auth()->user()->address) }}"
+                            maxlength="255"
+                            placeholder="Npr. Kotor, Njegoševa 1"
+                        >
+                        @error('company_seat')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+
             <!-- Sekcija 3: Finansijski podaci -->
             <div class="form-card">
                 <div class="form-section">
@@ -691,6 +747,8 @@
         const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"]');
         const dooFields = document.getElementById('dooFields');
         const dooRequiredFields = dooFields ? dooFields.querySelectorAll('input[required]') : [];
+        const ostaloFields = document.getElementById('ostaloFields');
+        const ostaloRequiredFields = ostaloFields ? ostaloFields.querySelectorAll('input[required]') : [];
         const fizickoLiceFields = document.getElementById('fizickoLiceFields');
         const fizickoLiceRequiredFields = fizickoLiceFields ? fizickoLiceFields.querySelectorAll('input[required], input[name="physical_person_name"], input[name="physical_person_jmbg"], input[name="physical_person_phone"], input[name="physical_person_email"]') : [];
         const fizickoLiceNotice = document.getElementById('fizickoLiceNotice');
@@ -704,6 +762,13 @@
             if (dooFields) {
                 dooFields.classList.remove('show');
                 dooRequiredFields.forEach(field => {
+                    field.removeAttribute('required');
+                });
+            }
+            
+            if (ostaloFields) {
+                ostaloFields.classList.remove('show');
+                ostaloRequiredFields.forEach(field => {
                     field.removeAttribute('required');
                 });
             }
@@ -735,6 +800,14 @@
                         field.setAttribute('required', 'required');
                     });
                 }
+            } else if (selectedType === 'ostalo') {
+                // Ostalo - prikaži polja za djelatnost (ista kao DOO)
+                if (ostaloFields) {
+                    ostaloFields.classList.add('show');
+                    ostaloRequiredFields.forEach(field => {
+                        field.setAttribute('required', 'required');
+                    });
+                }
             } else if (selectedType === 'fizicko_lice') {
                 // Fizičko lice BEZ registrovane djelatnosti
                 // Prikaži napomenu o obavezi registracije
@@ -756,7 +829,7 @@
                     accuracyDeclarationCheckbox.setAttribute('required', 'required');
                 }
             }
-            // Za 'preduzetnica' i 'ostalo' ne prikazujemo dodatna polja
+            // Za 'preduzetnica' ne prikazujemo dodatna polja
         }
 
         applicantTypeInputs.forEach(input => {

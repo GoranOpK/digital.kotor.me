@@ -262,6 +262,37 @@ class Application extends Model
                 'ioppd_obrazac',
                 'biznis_plan_usb',
             ];
+        } elseif ($this->applicant_type === 'ostalo' && $this->business_stage === 'započinjanje') {
+            // Ostalo - isti dokumenti kao DOO za započinjanje
+            $documents = [
+                'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'statut',
+                'karton_potpisa',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'biznis_plan_usb',
+            ];
+        } elseif ($this->applicant_type === 'ostalo' && $this->business_stage === 'razvoj') {
+            // Ostalo - isti dokumenti kao DOO za razvoj
+            $documents = [
+                'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'statut',
+                'karton_potpisa',
+                'godisnji_racuni',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'potvrda_upc_porezi',
+                'ioppd_obrazac',
+                'biznis_plan_usb',
+            ];
         }
 
         // Ako nema registrovanu djelatnost, ukloni dokumente vezane za registraciju
