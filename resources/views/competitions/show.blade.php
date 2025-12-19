@@ -32,6 +32,21 @@
         margin-bottom: 24px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
+    .main-content-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    @media (min-width: 992px) {
+        .main-content-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .main-content-grid .info-card {
+            margin-bottom: 0;
+            height: 100%;
+        }
+    }
     .info-card h2 {
         font-size: 20px;
         font-weight: 700;
@@ -222,42 +237,61 @@
             </div>
         @endif
 
-        <!-- Osnovne informacije -->
-        <div class="info-card">
-            <h2>Osnovne informacije</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Status konkursa</span>
-                    <span class="info-value">
-                        <span class="status-badge {{ $isOpen ? 'status-open' : 'status-closed' }}">
-                            {{ $isOpen ? 'Otvoren' : 'Zatvoren' }}
+        <div class="main-content-grid">
+            <!-- Osnovne informacije -->
+            <div class="info-card">
+                <h2>Osnovne informacije</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="info-label">Status konkursa</span>
+                        <span class="info-value">
+                            <span class="status-badge {{ $isOpen ? 'status-open' : 'status-closed' }}">
+                                {{ $isOpen ? 'Otvoren' : 'Zatvoren' }}
+                            </span>
                         </span>
-                    </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Broj konkursa</span>
+                        <span class="info-value">{{ $competition->competition_number ?? 'N/A' }}. konkurs {{ $competition->year ?? date('Y') }}. godine</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ukupan budžet</span>
+                        <span class="info-value">{{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Maksimalna podrška po biznis planu</span>
+                        <span class="info-value">{{ $competition->max_support_percentage ?? 30 }}% ({{ number_format(($competition->budget ?? 0) * (($competition->max_support_percentage ?? 30) / 100), 2, ',', '.') }} €)</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Datum objavljivanja</span>
+                        <span class="info-value">{{ $competition->published_at ? $competition->published_at->format('d.m.Y H:i') : 'N/A' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Datum početka</span>
+                        <span class="info-value">{{ $competition->start_date ? $competition->start_date->format('d.m.Y') : 'N/A' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Rok za prijave</span>
+                        <span class="info-value">{{ $deadline ? $deadline->format('d.m.Y H:i') : 'N/A' }}</span>
+                    </div>
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Broj konkursa</span>
-                    <span class="info-value">{{ $competition->competition_number ?? 'N/A' }}. konkurs {{ $competition->year ?? date('Y') }}. godine</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Ukupan budžet</span>
-                    <span class="info-value">{{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Maksimalna podrška po biznis planu</span>
-                    <span class="info-value">{{ $competition->max_support_percentage ?? 30 }}% ({{ number_format(($competition->budget ?? 0) * (($competition->max_support_percentage ?? 30) / 100), 2, ',', '.') }} €)</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Datum objavljivanja</span>
-                    <span class="info-value">{{ $competition->published_at ? $competition->published_at->format('d.m.Y H:i') : 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Datum početka</span>
-                    <span class="info-value">{{ $competition->start_date ? $competition->start_date->format('d.m.Y') : 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Rok za prijave</span>
-                    <span class="info-value">{{ $deadline ? $deadline->format('d.m.Y H:i') : 'N/A' }}</span>
-                </div>
+            </div>
+
+            <!-- Obavezna dokumentacija -->
+            <div class="info-card">
+                <h2>Obavezna dokumentacija</h2>
+                <p style="color: #6b7280; margin-bottom: 16px;">
+                    Prilikom prijave na konkurs, potrebno je priložiti sledeće dokumente:
+                </p>
+                <ul class="documents-list">
+                    @foreach($requiredDocuments as $document)
+                        <li>{{ $document }}</li>
+                    @endforeach
+                </ul>
+                <p style="color: #6b7280; font-size: 12px; margin-top: 16px; font-style: italic;">
+                    Napomena: Lista dokumenata zavisi od tipa prijave (preduzetnica/DOO, započinjanje/razvoj). 
+                    Tačna lista će biti prikazana u formi za prijavu.
+                </p>
             </div>
         </div>
 
@@ -297,23 +331,6 @@
                 <li>Biznis planovi koji se isključivo temelje na jednokratnoj izradi, pripremi i štampanju knjiga, brošura, biltena, časopisa i slično, ukoliko objava takvih publikacija nije dio nekog šireg programa ili sveobuhvatnijih i kontinuiranih aktivnosti;</li>
                 <li>Aktivnost koja se smatra nezakonitom ili štetnom po okolinu i opasnom za ljudsko zdravlje: igre na sreću, duvan, alkoholna pića (izuzev proizvodnje vina i voćnih rakija).</li>
             </ul>
-        </div>
-
-        <!-- Obavezna dokumentacija -->
-        <div class="info-card">
-            <h2>Obavezna dokumentacija</h2>
-            <p style="color: #6b7280; margin-bottom: 16px;">
-                Prilikom prijave na konkurs, potrebno je priložiti sledeće dokumente:
-            </p>
-            <ul class="documents-list">
-                @foreach($requiredDocuments as $document)
-                    <li>{{ $document }}</li>
-                @endforeach
-            </ul>
-            <p style="color: #6b7280; font-size: 12px; margin-top: 16px; font-style: italic;">
-                Napomena: Lista dokumenata zavisi od tipa prijave (preduzetnica/DOO, započinjanje/razvoj). 
-                Tačna lista će biti prikazana u formi za prijavu.
-            </p>
         </div>
 
         <!-- Akcije -->
