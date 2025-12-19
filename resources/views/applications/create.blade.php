@@ -242,6 +242,10 @@
                         <label class="form-label">
                             Tip podnosioca prijave <span class="required">*</span>
                         </label>
+                        <div class="form-text" style="margin-bottom: 12px; color: #6b7280; font-size: 13px;">
+                            <strong>Napomena:</strong> "Fizičko lice (nema registrovanu djelatnost)" se odnosi na osobe koje nemaju registrovanu djelatnost u skladu sa Zakonom o privrednim društvima. 
+                            "Preduzetnica" se odnosi na fizička lica koja imaju registrovanu djelatnost (preduzetnici).
+                        </div>
                         @php
                             $userType = auth()->user()->user_type;
                             $defaultType = 'preduzetnica';
@@ -259,13 +263,24 @@
                             <div class="radio-option">
                                 <input 
                                     type="radio" 
+                                    id="applicant_type_fizicko_lice" 
+                                    name="applicant_type" 
+                                    value="fizicko_lice"
+                                    {{ old('applicant_type', $defaultType) === 'fizicko_lice' ? 'checked' : '' }}
+                                    required
+                                >
+                                <label for="applicant_type_fizicko_lice">Fizičko lice (nema registrovanu djelatnost)</label>
+                            </div>
+                            <div class="radio-option">
+                                <input 
+                                    type="radio" 
                                     id="applicant_type_preduzetnica" 
                                     name="applicant_type" 
                                     value="preduzetnica"
                                     {{ old('applicant_type', $defaultType) === 'preduzetnica' ? 'checked' : '' }}
                                     required
                                 >
-                                <label for="applicant_type_preduzetnica">Preduzetnica</label>
+                                <label for="applicant_type_preduzetnica">Preduzetnica (fizičko lice sa registrovanom djelatnošću)</label>
                             </div>
                             <div class="radio-option">
                                 <input 
@@ -278,10 +293,98 @@
                                 >
                                 <label for="applicant_type_doo">DOO (Društvo sa ograničenom odgovornošću)</label>
                             </div>
+                            <div class="radio-option">
+                                <input 
+                                    type="radio" 
+                                    id="applicant_type_ostalo" 
+                                    name="applicant_type" 
+                                    value="ostalo"
+                                    {{ old('applicant_type', $defaultType) === 'ostalo' ? 'checked' : '' }}
+                                    required
+                                >
+                                <label for="applicant_type_ostalo">Ostalo</label>
+                            </div>
                         </div>
                         @error('applicant_type')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
+                    </div>
+
+                    <!-- Sekcija za Fizičko lice (nema registrovanu djelatnost) -->
+                    <div class="conditional-field" id="fizickoLiceFields">
+                        <div class="form-group">
+                            <label class="form-label">
+                                Ime i prezime <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                name="physical_person_name" 
+                                class="form-control @error('physical_person_name') error @enderror"
+                                value="{{ old('physical_person_name', auth()->user()->name) }}"
+                                maxlength="255"
+                            >
+                            @error('physical_person_name')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                JMBG <span class="required">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                name="physical_person_jmbg" 
+                                class="form-control @error('physical_person_jmbg') error @enderror"
+                                value="{{ old('physical_person_jmbg') }}"
+                                maxlength="13"
+                                pattern="[0-9]{13}"
+                                placeholder="13 cifara"
+                            >
+                            @error('physical_person_jmbg')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    Kontakt telefon <span class="required">*</span>
+                                </label>
+                                <input 
+                                    type="tel" 
+                                    name="physical_person_phone" 
+                                    class="form-control @error('physical_person_phone') error @enderror"
+                                    value="{{ old('physical_person_phone', auth()->user()->phone) }}"
+                                    maxlength="50"
+                                    placeholder="Npr. +382 67 123 456"
+                                >
+                                @error('physical_person_phone')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    E-mail <span class="required">*</span>
+                                </label>
+                                <input 
+                                    type="email" 
+                                    name="physical_person_email" 
+                                    class="form-control @error('physical_person_email') error @enderror"
+                                    value="{{ old('physical_person_email', auth()->user()->email) }}"
+                                    maxlength="255"
+                                >
+                                @error('physical_person_email')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <!-- Napomena o obavezi registracije -->
+                        <div class="alert alert-info" style="margin-top: 20px;">
+                            <strong>Važno:</strong> Ukoliko podnosioc biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena u obavezi je da svoju djelatnost registruje u neki od oblika registracije koji predviđa Zakon o privrednim društvima i priloži dokaz (rješenje o registraciji u CRPS i rješenje o registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -619,54 +722,128 @@
 </div>
 
 <script>
-    // Dinamičko prikazivanje/sakrivanje polja za DOO
+    // Dinamičko prikazivanje/sakrivanje polja na osnovu tipa podnosioca
+    // VAŽNO: 'fizicko_lice' = Fizičko lice BEZ registrovane djelatnosti
+    //        'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (preduzetnik)
     document.addEventListener('DOMContentLoaded', function() {
         const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"]');
         const dooFields = document.getElementById('dooFields');
-        const dooRequiredFields = dooFields.querySelectorAll('input[required]');
+        const dooRequiredFields = dooFields ? dooFields.querySelectorAll('input[required]') : [];
+        const fizickoLiceFields = document.getElementById('fizickoLiceFields');
+        const fizickoLiceRequiredFields = fizickoLiceFields ? fizickoLiceFields.querySelectorAll('input[required], input[name="physical_person_name"], input[name="physical_person_jmbg"], input[name="physical_person_phone"], input[name="physical_person_email"]') : [];
+        // Pronađi form-group koji sadrži polje za registrovanu djelatnost
+        const isRegisteredInputs = document.querySelectorAll('input[name="is_registered"]');
+        const isRegisteredGroup = isRegisteredInputs.length > 0 ? isRegisteredInputs[0].closest('.form-group') : null;
+        const unregisteredInfo = document.getElementById('unregisteredInfo');
+        const accuracyDeclarationGroup = document.getElementById('accuracyDeclarationGroup');
+        const accuracyDeclarationCheckbox = document.getElementById('accuracy_declaration');
 
-        function toggleDooFields() {
+        function toggleFieldsByApplicantType() {
             const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
             
-            if (selectedType === 'doo') {
-                dooFields.classList.add('show');
-                dooRequiredFields.forEach(field => {
-                    field.setAttribute('required', 'required');
-                });
-            } else {
+            // Resetuj sve polja
+            if (dooFields) {
                 dooFields.classList.remove('show');
                 dooRequiredFields.forEach(field => {
                     field.removeAttribute('required');
                 });
             }
+            
+            if (fizickoLiceFields) {
+                fizickoLiceFields.classList.remove('show');
+                fizickoLiceRequiredFields.forEach(field => {
+                    field.removeAttribute('required');
+                });
+            }
+
+            // Prikaži/sakrij polja na osnovu tipa
+            if (selectedType === 'doo') {
+                if (dooFields) {
+                    dooFields.classList.add('show');
+                    dooRequiredFields.forEach(field => {
+                        field.setAttribute('required', 'required');
+                    });
+                }
+                // Prikaži polje za registrovanu djelatnost (DOO može imati registrovanu djelatnost)
+                if (isRegisteredGroup) {
+                    isRegisteredGroup.style.display = 'block';
+                }
+            } else if (selectedType === 'fizicko_lice') {
+                // Fizičko lice BEZ registrovane djelatnosti
+                if (fizickoLiceFields) {
+                    fizickoLiceFields.classList.add('show');
+                    fizickoLiceRequiredFields.forEach(field => {
+                        field.setAttribute('required', 'required');
+                    });
+                }
+                // Sakrij polje za registrovanu djelatnost jer fizičko lice automatski nema registrovanu djelatnost
+                if (isRegisteredGroup) {
+                    isRegisteredGroup.style.display = 'none';
+                }
+                // Automatski postavi na "Ne" (nema registrovanu djelatnost)
+                const noRegisteredInput = document.getElementById('is_registered_no');
+                if (noRegisteredInput) {
+                    noRegisteredInput.checked = true;
+                }
+                // Prikaži izjavu o tačnosti (obavezna za fizička lica bez registrovane djelatnosti)
+                if (accuracyDeclarationGroup) {
+                    accuracyDeclarationGroup.style.display = 'block';
+                }
+                if (accuracyDeclarationCheckbox) {
+                    accuracyDeclarationCheckbox.setAttribute('required', 'required');
+                }
+            } else {
+                // Preduzetnica (fizičko lice SA registrovanom djelatnošću) ili Ostalo - prikaži polje za registrovanu djelatnost
+                if (isRegisteredGroup) {
+                    isRegisteredGroup.style.display = 'block';
+                }
+            }
         }
 
         applicantTypeInputs.forEach(input => {
-            input.addEventListener('change', toggleDooFields);
+            input.addEventListener('change', toggleFieldsByApplicantType);
         });
 
         // Pozovi na učitavanju stranice
-        toggleDooFields();
+        toggleFieldsByApplicantType();
 
         // Dinamičko prikazivanje/sakrivanje polja za neregistrovanu djelatnost
-        const isRegisteredInputs = document.querySelectorAll('input[name="is_registered"]');
-        const unregisteredInfo = document.getElementById('unregisteredInfo');
-        const accuracyDeclarationGroup = document.getElementById('accuracyDeclarationGroup');
-        const accuracyDeclarationCheckbox = document.getElementById('accuracy_declaration');
-
         function toggleRegistrationFields() {
+            const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
+            
+            // Ako je fizičko lice BEZ registrovane djelatnosti, automatski je neregistrovano
+            // (polje za registrovanu djelatnost je već sakriveno u toggleFieldsByApplicantType)
+            if (selectedType === 'fizicko_lice') {
+                if (unregisteredInfo) {
+                    unregisteredInfo.style.display = 'none'; // Već je prikazana napomena u sekciji za fizičko lice
+                }
+                return;
+            }
+
             const selectedRegistration = document.querySelector('input[name="is_registered"]:checked')?.value;
             
             if (selectedRegistration === '0') {
                 // Nema registrovanu djelatnost
-                unregisteredInfo.style.display = 'block';
-                accuracyDeclarationGroup.style.display = 'block';
-                accuracyDeclarationCheckbox.setAttribute('required', 'required');
+                if (unregisteredInfo) {
+                    unregisteredInfo.style.display = 'block';
+                }
+                if (accuracyDeclarationGroup) {
+                    accuracyDeclarationGroup.style.display = 'block';
+                }
+                if (accuracyDeclarationCheckbox) {
+                    accuracyDeclarationCheckbox.setAttribute('required', 'required');
+                }
             } else {
                 // Ima registrovanu djelatnost
-                unregisteredInfo.style.display = 'none';
-                accuracyDeclarationGroup.style.display = 'none';
-                accuracyDeclarationCheckbox.removeAttribute('required');
+                if (unregisteredInfo) {
+                    unregisteredInfo.style.display = 'none';
+                }
+                if (accuracyDeclarationGroup) {
+                    accuracyDeclarationGroup.style.display = 'none';
+                }
+                if (accuracyDeclarationCheckbox) {
+                    accuracyDeclarationCheckbox.removeAttribute('required');
+                }
             }
         }
 

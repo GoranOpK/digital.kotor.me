@@ -18,6 +18,10 @@ class Application extends Model
         'founder_name',
         'director_name',
         'company_seat',
+        'physical_person_name',
+        'physical_person_jmbg',
+        'physical_person_phone',
+        'physical_person_email',
         'requested_amount',
         'total_budget_needed',
         'approved_amount',
@@ -187,6 +191,9 @@ class Application extends Model
 
     /**
      * Vraća listu obaveznih dokumenata prema tipu prijave
+     * 
+     * VAŽNO: 'fizicko_lice' = Fizičko lice BEZ registrovane djelatnosti
+     *        'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (preduzetnik)
      */
     public function getRequiredDocuments(): array
     {
@@ -195,7 +202,14 @@ class Application extends Model
         // Dokumenti vezani za registraciju (ne obavezni ako nema registrovanu djelatnost)
         $registrationDocs = ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_upc_porezi', 'ioppd_obrazac', 'godisnji_racuni'];
 
-        if ($this->applicant_type === 'preduzetnica' && $this->business_stage === 'započinjanje') {
+        // Fizičko lice BEZ registrovane djelatnosti (nema registrovanu djelatnost u skladu sa Zakonom o privrednim društvima)
+        if ($this->applicant_type === 'fizicko_lice') {
+            // Fizičko lice nema registrovanu djelatnost, samo lična karta i biznis plan
+            $documents = [
+                'licna_karta',
+                'biznis_plan_usb',
+            ];
+        } elseif ($this->applicant_type === 'preduzetnica' && $this->business_stage === 'započinjanje') {
             $documents = [
                 'licna_karta',
                 'crps_resenje',
