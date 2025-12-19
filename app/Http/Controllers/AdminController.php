@@ -91,7 +91,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Forma za izmenu korisnika
+     * Forma za izmjenu korisnika
      */
     public function editUser(User $user)
     {
@@ -249,7 +249,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Forma za izmenu konkursa
+     * Forma za izmjenu konkursa
      */
     public function editCompetition(Competition $competition)
     {
@@ -517,7 +517,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Forma za izmenu komisije
+     * Forma za izmjenu komisije
      */
     public function editCommission(Commission $commission)
     {

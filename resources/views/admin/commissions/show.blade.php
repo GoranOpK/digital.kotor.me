@@ -190,7 +190,7 @@
         <div class="page-header">
             <h1>{{ $commission->name }}</h1>
             <div>
-                <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn btn-primary">Izmeni</a>
+                <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn btn-primary">Izmijeni</a>
             </div>
         </div>
 
