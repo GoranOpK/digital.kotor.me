@@ -165,24 +165,6 @@
         border-color: #f59e0b;
         color: #92400e;
     }
-    .info-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 24px;
-        margin-bottom: 24px;
-        align-items: stretch;
-    }
-    @media (min-width: 1024px) {
-        .info-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    .info-grid .info-card {
-        margin-bottom: 0;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-    }
 </style>
 
 <div class="admin-page">
@@ -190,7 +172,7 @@
         <div class="page-header">
             <h1>{{ $commission->name }}</h1>
             <div>
-                <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn btn-primary">Izmijeni</a>
+                <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn btn-primary">Izmeni</a>
             </div>
         </div>
 
@@ -200,19 +182,18 @@
             </div>
         @endif
 
-        <div class="info-grid">
-            <!-- Osnovne informacije -->
-            <div class="info-card">
-                <h2>Osnovne informacije</h2>
-                <p><strong>Naziv:</strong> {{ $commission->name }}</p>
-                <p><strong>Godina:</strong> {{ $commission->year }}</p>
-                <p><strong>Mandat:</strong> {{ $commission->start_date->format('d.m.Y') }} - {{ $commission->end_date->format('d.m.Y') }}</p>
-                <p><strong>Status:</strong> <span class="status-badge status-{{ $commission->status }}">{{ $commission->status === 'active' ? 'Aktivna' : 'Neaktivna' }}</span></p>
-                <p><strong>Broj članova:</strong> {{ $commission->members->count() }} / 5</p>
-            </div>
+        <!-- Osnovne informacije -->
+        <div class="info-card">
+            <h2>Osnovne informacije</h2>
+            <p><strong>Naziv:</strong> {{ $commission->name }}</p>
+            <p><strong>Godina:</strong> {{ $commission->year }}</p>
+            <p><strong>Mandat:</strong> {{ $commission->start_date->format('d.m.Y') }} - {{ $commission->end_date->format('d.m.Y') }}</p>
+            <p><strong>Status:</strong> <span class="status-badge status-{{ $commission->status }}">{{ $commission->status === 'active' ? 'Aktivna' : 'Neaktivna' }}</span></p>
+            <p><strong>Broj članova:</strong> {{ $commission->members->count() }} / 5</p>
+        </div>
 
-            <!-- Članovi komisije -->
-            <div class="info-card">
+        <!-- Članovi komisije -->
+        <div class="info-card">
             <h2>Članovi komisije</h2>
             
             @if($commission->members->count() > 0)
@@ -242,9 +223,29 @@
                                             {{ $member->status === 'active' ? 'Aktivan' : ($member->status === 'resigned' ? 'Podneo ostavku' : 'Razriješen') }}
                                         </span>
                                     </div>
+                                    @if($member->hasSignedDeclarations())
+                                        <div style="color: #10b981; margin-top: 4px;">
+                                            ✓ Izjave potpisane: {{ $member->declarations_signed_at->format('d.m.Y') }}
+                                        </div>
+                                    @else
+                                        <div style="color: #f59e0b; margin-top: 4px;">
+                                            ⚠ Izjave nisu potpisane
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                             <div class="member-actions">
+                                @if(!$member->hasSignedDeclarations())
+                                    <a href="{{ route('admin.commissions.members.sign', $member) }}" class="btn-sm btn-warning">Potpiši izjave</a>
+                                @endif
+                                <form method="POST" action="{{ route('admin.commissions.members.update-status', $member) }}" style="display: inline;">
+                                    @csrf
+                                    <select name="status" onchange="this.form.submit()" style="padding: 6px; border-radius: 6px; border: 1px solid #d1d5db;">
+                                        <option value="active" {{ $member->status === 'active' ? 'selected' : '' }}>Aktivan</option>
+                                        <option value="resigned" {{ $member->status === 'resigned' ? 'selected' : '' }}>Podneo ostavku</option>
+                                        <option value="dismissed" {{ $member->status === 'dismissed' ? 'selected' : '' }}>Razriješen</option>
+                                    </select>
+                                </form>
                                 <form method="POST" action="{{ route('admin.commissions.members.delete', $member) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovog člana?');">
                                     @csrf
                                     @method('DELETE')
@@ -317,7 +318,6 @@
                     Komisija je popunjena (5/5 članova). Za dodavanje novog člana, prvo uklonite postojećeg.
                 </div>
             @endif
-            </div>
         </div>
     </div>
 </div>

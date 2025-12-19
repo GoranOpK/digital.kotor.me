@@ -83,7 +83,7 @@
 
             <div class="mt-6 flex gap-4">
                 <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded hover:bg-indigo-700">
-                    Sačuvaj izmjene
+                    Sačuvaj izmene
                 </button>
                 <a href="{{ route('admin.users.show', $user) }}" class="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400">
                     Otkaži

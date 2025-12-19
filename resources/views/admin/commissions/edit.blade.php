@@ -76,7 +76,7 @@
 <div class="admin-page">
     <div class="container mx-auto px-4">
         <div class="page-header">
-            <h1>Izmijeni komisiju</h1>
+            <h1>Izmeni komisiju</h1>
         </div>
 
         <div class="form-card">
@@ -153,7 +153,7 @@
                 </script>
 
                 <div style="margin-top: 24px;">
-                    <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
+                    <button type="submit" class="btn-primary">Sačuvaj izmene</button>
                     <a href="{{ route('admin.commissions.show', $commission) }}" style="margin-left: 12px; color: #6b7280;">Otkaži</a>
                 </div>
             </form>

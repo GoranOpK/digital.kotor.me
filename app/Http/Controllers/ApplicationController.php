@@ -74,7 +74,6 @@ class ApplicationController extends Controller
             'business_plan_name' => 'required|string|max:255',
             'applicant_type' => 'required|in:preduzetnica,doo',
             'business_stage' => 'required|in:započinjanje,razvoj',
-            'is_registered' => 'required|boolean',
             'business_area' => 'required|string|max:255',
             'requested_amount' => 'required|numeric|min:0',
             'total_budget_needed' => 'required|numeric|min:0|gte:requested_amount',
@@ -82,7 +81,6 @@ class ApplicationController extends Controller
             'bank_account' => 'nullable|string|max:50',
             'vat_number' => 'nullable|string|max:50',
             'de_minimis_declaration' => 'required|accepted',
-            'accuracy_declaration' => 'required|accepted',
         ];
 
         // Dodatna polja za DOO
@@ -96,13 +94,11 @@ class ApplicationController extends Controller
             'business_plan_name.required' => 'Naziv biznis plana je obavezan.',
             'applicant_type.required' => 'Tip podnosioca je obavezan.',
             'business_stage.required' => 'Faza biznisa je obavezna.',
-            'is_registered.required' => 'Morate navesti da li imate registrovanu djelatnost.',
             'business_area.required' => 'Oblast biznisa je obavezna.',
             'requested_amount.required' => 'Traženi iznos je obavezan.',
             'total_budget_needed.required' => 'Ukupan budžet je obavezan.',
             'total_budget_needed.gte' => 'Ukupan budžet mora biti veći ili jednak traženom iznosu.',
             'de_minimis_declaration.required' => 'Morate potvrditi de minimis izjavu.',
-            'accuracy_declaration.required' => 'Morate potvrditi da odgovarate za tačnost podataka.',
             'founder_name.required' => 'Ime osnivača/ice je obavezno za DOO.',
             'director_name.required' => 'Ime izvršnog direktora/ice je obavezno za DOO.',
             'company_seat.required' => 'Sjedište društva je obavezno za DOO.',
@@ -123,7 +119,6 @@ class ApplicationController extends Controller
             'business_plan_name' => $validated['business_plan_name'],
             'applicant_type' => $validated['applicant_type'],
             'business_stage' => $validated['business_stage'],
-            'is_registered' => $validated['is_registered'],
             'founder_name' => $validated['founder_name'] ?? null,
             'director_name' => $validated['director_name'] ?? null,
             'company_seat' => $validated['company_seat'] ?? null,
@@ -135,7 +130,6 @@ class ApplicationController extends Controller
             'vat_number' => $validated['vat_number'] ?? null,
             'de_minimis_declaration' => true,
             'previous_support_declaration' => $request->has('previous_support_declaration'),
-            'accuracy_declaration' => true,
             'status' => 'draft', // Draft dok se ne prilože svi dokumenti
         ]);
 
@@ -306,48 +300,7 @@ class ApplicationController extends Controller
      */
     public function downloadDocument(Application $application, ApplicationDocument $document)
     {
-        // Proveri da li dokument pripada prijavi
-        if ($document->application_id !== $application->id) {
-            abort(404);
-        }
-
-        // Proveri pristup
-        $user = Auth::user();
-        if ($application->user_id !== $user->id && !($user->role && in_array($user->role->name, ['admin', 'superadmin', 'konkurs_admin']))) {
-            abort(403);
-        }
-
-        if (!Storage::disk('local')->exists($document->file_path)) {
-            return back()->withErrors(['error' => 'Fajl nije pronađen na serveru.']);
-        }
-
-        return Storage::disk('local')->download($document->file_path, $document->name);
-    }
-
-    /**
-     * Brisanje dokumenta iz prijave
-     */
-    public function destroyDocument(Application $application, ApplicationDocument $document): RedirectResponse
-    {
-        // Proveri da li prijava pripada korisniku
-        if ($application->user_id !== Auth::id()) {
-            abort(403, 'Nemate pristup ovoj prijavi.');
-        }
-
-        // Proveri da li dokument pripada prijavi
-        if ($document->application_id !== $application->id) {
-            abort(404, 'Dokument nije pronađen.');
-        }
-
-        // Ako dokument NIJE iz biblioteke (user_document_id je null), obriši fizički fajl
-        if (!$document->user_document_id) {
-            Storage::disk('local')->delete($document->file_path);
-        }
-
-        // Obriši zapis iz baze
-        $document->delete();
-
-        return back()->with('success', 'Dokument je uspješno uklonjen iz prijave.');
+        // ... (existing code) ...
     }
 
     /**

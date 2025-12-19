@@ -25,10 +25,8 @@ class Application extends Model
         'website',
         'bank_account',
         'vat_number',
-        'is_registered',
         'de_minimis_declaration',
         'previous_support_declaration',
-        'accuracy_declaration',
         'status',
         'final_score',
         'ranking_position',
@@ -189,22 +187,18 @@ class Application extends Model
     public function getRequiredDocuments(): array
     {
         $documents = [];
-        $isRegistered = $this->is_registered ?? true;
 
         if ($this->applicant_type === 'preduzetnica' && $this->business_stage === 'započinjanje') {
-            $documents = ['licna_karta'];
-            
-            if ($isRegistered) {
-                $documents[] = 'crps_resenje';
-                $documents[] = 'pib_resenje';
-                $documents[] = 'pdv_resenje';
-            }
-            
-            $documents[] = 'potvrda_neosudjivanost';
-            $documents[] = 'uvjerenje_opstina_porezi';
-            $documents[] = 'uvjerenje_opstina_nepokretnost';
-            $documents[] = 'biznis_plan_usb';
-            
+            $documents = [
+                'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'biznis_plan_usb',
+            ];
         } elseif ($this->applicant_type === 'preduzetnica' && $this->business_stage === 'razvoj') {
             $documents = [
                 'licna_karta',
@@ -219,21 +213,18 @@ class Application extends Model
                 'biznis_plan_usb',
             ];
         } elseif ($this->applicant_type === 'doo' && $this->business_stage === 'započinjanje') {
-            $documents = ['licna_karta'];
-
-            if ($isRegistered) {
-                $documents[] = 'crps_resenje';
-                $documents[] = 'pib_resenje';
-                $documents[] = 'pdv_resenje';
-                $documents[] = 'statut';
-                $documents[] = 'karton_potpisa';
-            }
-
-            $documents[] = 'potvrda_neosudjivanost';
-            $documents[] = 'uvjerenje_opstina_porezi';
-            $documents[] = 'uvjerenje_opstina_nepokretnost';
-            $documents[] = 'biznis_plan_usb';
-            
+            $documents = [
+                'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'statut',
+                'karton_potpisa',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'biznis_plan_usb',
+            ];
         } elseif ($this->applicant_type === 'doo' && $this->business_stage === 'razvoj') {
             $documents = [
                 'licna_karta',

@@ -130,7 +130,7 @@
                             </td>
                             <td>
                                 <a href="{{ route('admin.commissions.show', $commission) }}" class="btn-sm btn-view">Pregled</a>
-                                <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn-sm btn-edit">Izmijeni</a>
+                                <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn-sm btn-edit">Izmeni</a>
                             </td>
                         </tr>
                     @empty
