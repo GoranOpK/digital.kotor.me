@@ -349,7 +349,7 @@
             <!-- Najnovije prijave -->
             <div class="content-card">
                 <div class="content-card-header">
-                    <h2>Zadnje prijave</h2>
+                    <h2>Poslednje prijave</h2>
                 </div>
                 <div class="content-card-body">
                     @forelse($recent_applications->take(5) as $application)

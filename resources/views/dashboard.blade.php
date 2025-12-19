@@ -473,7 +473,7 @@
             @if(isset($recent_applications))
             <div class="info-card" style="margin-top: 16px;">
                 <div class="info-card-header">
-                    <h2>Zadnje prijave</h2>
+                    <h2>Poslednje prijave</h2>
                 </div>
                 <div style="padding: 5px;">
                     @forelse($recent_applications->take(5) as $application)
