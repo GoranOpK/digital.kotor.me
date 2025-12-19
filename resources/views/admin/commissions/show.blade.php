@@ -235,17 +235,6 @@
                                 </div>
                             </div>
                             <div class="member-actions">
-                                @if(!$member->hasSignedDeclarations())
-                                    <a href="{{ route('admin.commissions.members.sign', $member) }}" class="btn-sm btn-warning">Potpiši izjave</a>
-                                @endif
-                                <form method="POST" action="{{ route('admin.commissions.members.update-status', $member) }}" style="display: inline;">
-                                    @csrf
-                                    <select name="status" onchange="this.form.submit()" style="padding: 6px; border-radius: 6px; border: 1px solid #d1d5db;">
-                                        <option value="active" {{ $member->status === 'active' ? 'selected' : '' }}>Aktivan</option>
-                                        <option value="resigned" {{ $member->status === 'resigned' ? 'selected' : '' }}>Podneo ostavku</option>
-                                        <option value="dismissed" {{ $member->status === 'dismissed' ? 'selected' : '' }}>Razriješen</option>
-                                    </select>
-                                </form>
                                 <form method="POST" action="{{ route('admin.commissions.members.delete', $member) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovog člana?');">
                                     @csrf
                                     @method('DELETE')
