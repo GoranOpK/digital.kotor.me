@@ -242,15 +242,6 @@
                                             {{ $member->status === 'active' ? 'Aktivan' : ($member->status === 'resigned' ? 'Podneo ostavku' : 'Razriješen') }}
                                         </span>
                                     </div>
-                                    @if($member->hasSignedDeclarations())
-                                        <div style="color: #10b981; margin-top: 4px;">
-                                            ✓ Izjave potpisane: {{ $member->declarations_signed_at->format('d.m.Y') }}
-                                        </div>
-                                    @else
-                                        <div style="color: #f59e0b; margin-top: 4px;">
-                                            ⚠ Izjave nisu potpisane
-                                        </div>
-                                    @endif
                                 </div>
                             </div>
                             <div class="member-actions">
