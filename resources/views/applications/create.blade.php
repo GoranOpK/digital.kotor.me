@@ -280,7 +280,7 @@
                                     {{ old('applicant_type', $defaultType) === 'preduzetnica' ? 'checked' : '' }}
                                     required
                                 >
-                                <label for="applicant_type_preduzetnica">Preduzetnica (fizičko lice sa registrovanom djelatnošću)</label>
+                                <label for="applicant_type_preduzetnica">Preduzetnica</label>
                             </div>
                             <div class="radio-option">
                                 <input 
