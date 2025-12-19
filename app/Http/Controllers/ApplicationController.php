@@ -72,9 +72,9 @@ class ApplicationController extends Controller
         // Validacija osnovnih podataka
         // VAŽNO: applicant_type vrednosti:
         // - 'fizicko_lice' = Fizičko lice BEZ registrovane djelatnosti (nema registrovanu djelatnost u skladu sa Zakonom o privrednim društvima)
-        // - 'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (preduzetnik)
-        // - 'doo' = Društvo sa ograničenom odgovornošću
-        // - 'ostalo' = Ostali pravni subjekti
+        // - 'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (preduzetnik) - automatski ima registrovanu djelatnost
+        // - 'doo' = Društvo sa ograničenom odgovornošću - automatski ima registrovanu djelatnost
+        // - 'ostalo' = Ostali pravni subjekti - automatski ima registrovanu djelatnost
         $rules = [
             'business_plan_name' => 'required|string|max:255',
             'applicant_type' => 'required|in:preduzetnica,doo,fizicko_lice,ostalo',
@@ -88,15 +88,9 @@ class ApplicationController extends Controller
             'de_minimis_declaration' => 'required|accepted',
         ];
 
-        // Polja za registrovanu djelatnost (ne obavezno za fizičko lice BEZ registrovane djelatnosti)
-        // Fizičko lice (fizicko_lice) automatski ima is_registered = false
-        if ($request->applicant_type !== 'fizicko_lice') {
-            $rules['is_registered'] = 'required|in:0,1';
-        }
-
-        // Ako nema registrovanu djelatnost ili je fizičko lice BEZ registrovane djelatnosti, izjava o tačnosti je obavezna
-        if ($request->applicant_type === 'fizicko_lice' || 
-            ($request->has('is_registered') && ($request->is_registered == '0' || $request->is_registered === false))) {
+        // Izjava o tačnosti je obavezna samo za fizičko lice BEZ registrovane djelatnosti
+        // Preduzetnica, DOO i Ostalo automatski imaju registrovanu djelatnost
+        if ($request->applicant_type === 'fizicko_lice') {
             $rules['accuracy_declaration'] = 'required|accepted';
         }
 
@@ -121,7 +115,6 @@ class ApplicationController extends Controller
             'applicant_type.required' => 'Tip podnosioca je obavezan.',
             'business_stage.required' => 'Faza biznisa je obavezna.',
             'business_area.required' => 'Oblast biznisa je obavezna.',
-            'is_registered.required' => 'Molimo navedite da li imate registrovanu djelatnost.',
             'accuracy_declaration.required' => 'Morate potvrditi izjavu o tačnosti podataka.',
             'accuracy_declaration.accepted' => 'Morate potvrditi izjavu o tačnosti podataka.',
             'requested_amount.required' => 'Traženi iznos je obavezan.',
@@ -148,9 +141,11 @@ class ApplicationController extends Controller
         }
 
         // Kreiraj prijavu
-        // VAŽNO: Za 'fizicko_lice' tip, automatski postavljamo is_registered = false
-        // jer se radi o fizičkom licu BEZ registrovane djelatnosti
-        // Za 'preduzetnica' tip, korisnik bira da li ima registrovanu djelatnost
+        // VAŽNO: Automatsko postavljanje is_registered na osnovu tipa podnosioca:
+        // - 'fizicko_lice' → is_registered = false (nema registrovanu djelatnost)
+        // - 'preduzetnica' → is_registered = true (preduzetnik ima registrovanu djelatnost)
+        // - 'doo' → is_registered = true (DOO ima registrovanu djelatnost)
+        // - 'ostalo' → is_registered = true (ostali pravni subjekti imaju registrovanu djelatnost)
         $application = Application::create([
             'competition_id' => $competition->id,
             'user_id' => Auth::id(),
@@ -171,9 +166,8 @@ class ApplicationController extends Controller
             'website' => $validated['website'] ?? null,
             'bank_account' => $validated['bank_account'] ?? null,
             'vat_number' => $validated['vat_number'] ?? null,
-            // Fizičko lice (fizicko_lice) automatski nema registrovanu djelatnost
-            // Preduzetnica može imati ili nemati registrovanu djelatnost (zavisi od korisnika)
-            'is_registered' => ($validated['applicant_type'] === 'fizicko_lice') ? false : (isset($validated['is_registered']) && ($validated['is_registered'] == '1' || $validated['is_registered'] === true)),
+            // Automatsko postavljanje is_registered na osnovu tipa
+            'is_registered' => $validated['applicant_type'] !== 'fizicko_lice',
             'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
             'de_minimis_declaration' => true,
             'previous_support_declaration' => $request->has('previous_support_declaration'),

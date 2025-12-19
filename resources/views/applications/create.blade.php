@@ -310,6 +310,11 @@
                         @enderror
                     </div>
 
+                    <!-- Napomena za Fizičko lice (nema registrovanu djelatnost) - prikazuje se kada je izabrano -->
+                    <div class="alert alert-info conditional-field" id="fizickoLiceNotice" style="display: none; margin-bottom: 24px;">
+                        <strong>Važno:</strong> Ukoliko podnosioc biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena u obavezi je da svoju djelatnost registruje u neki od oblika registracije koji predviđa Zakon o privrednim društvima i priloži dokaz (rješenje o registraciji u CRPS i rješenje o registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
+                    </div>
+
                     <!-- Sekcija za Fizičko lice (nema registrovanu djelatnost) -->
                     <div class="conditional-field" id="fizickoLiceFields">
                         <div class="form-group">
@@ -380,11 +385,6 @@
                                 @enderror
                             </div>
                         </div>
-
-                        <!-- Napomena o obavezi registracije -->
-                        <div class="alert alert-info" style="margin-top: 20px;">
-                            <strong>Važno:</strong> Ukoliko podnosioc biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena u obavezi je da svoju djelatnost registruje u neki od oblika registracije koji predviđa Zakon o privrednim društvima i priloži dokaz (rješenje o registraciji u CRPS i rješenje o registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
-                        </div>
                     </div>
 
                     <div class="form-group">
@@ -438,46 +438,6 @@
                         @enderror
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label">
-                            Imate li registrovanu djelatnost u skladu sa Zakonom o privrednim društvima? <span class="required">*</span>
-                        </label>
-                        <div class="radio-group">
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="is_registered_yes" 
-                                    name="is_registered" 
-                                    value="1"
-                                    {{ old('is_registered', '1') === '1' ? 'checked' : '' }}
-                                    required
-                                >
-                                <label for="is_registered_yes">Da</label>
-                            </div>
-                            <div class="radio-option">
-                                <input 
-                                    type="radio" 
-                                    id="is_registered_no" 
-                                    name="is_registered" 
-                                    value="0"
-                                    {{ old('is_registered') === '0' ? 'checked' : '' }}
-                                    required
-                                >
-                                <label for="is_registered_no">Ne</label>
-                            </div>
-                        </div>
-                        @error('is_registered')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <!-- Upozorenje za neregistrovanu djelatnost -->
-                    <div class="alert alert-info conditional-field" id="unregisteredInfo" style="display: none;">
-                        <strong>Važno:</strong> Ukoliko nemate registrovanu djelatnost, u slučaju da vam sredstva budu odobrena, 
-                        u obavezi ste da svoju djelatnost registrujete u neki od oblika registracije koji predviđa 
-                        Zakon o privrednim društvima i priložite dokaz (rješenje o registraciji u CRPS i rješenje o 
-                        registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
-                    </div>
                 </div>
             </div>
 
@@ -723,18 +683,17 @@
 
 <script>
     // Dinamičko prikazivanje/sakrivanje polja na osnovu tipa podnosioca
-    // VAŽNO: 'fizicko_lice' = Fizičko lice BEZ registrovane djelatnosti
-    //        'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (preduzetnik)
+    // VAŽNO: 'fizicko_lice' = Fizičko lice BEZ registrovane djelatnosti (automatski is_registered = false)
+    //        'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (automatski is_registered = true)
+    //        'doo' = Društvo sa ograničenom odgovornošću (automatski is_registered = true)
+    //        'ostalo' = Ostali pravni subjekti (automatski is_registered = true)
     document.addEventListener('DOMContentLoaded', function() {
         const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"]');
         const dooFields = document.getElementById('dooFields');
         const dooRequiredFields = dooFields ? dooFields.querySelectorAll('input[required]') : [];
         const fizickoLiceFields = document.getElementById('fizickoLiceFields');
         const fizickoLiceRequiredFields = fizickoLiceFields ? fizickoLiceFields.querySelectorAll('input[required], input[name="physical_person_name"], input[name="physical_person_jmbg"], input[name="physical_person_phone"], input[name="physical_person_email"]') : [];
-        // Pronađi form-group koji sadrži polje za registrovanu djelatnost
-        const isRegisteredInputs = document.querySelectorAll('input[name="is_registered"]');
-        const isRegisteredGroup = isRegisteredInputs.length > 0 ? isRegisteredInputs[0].closest('.form-group') : null;
-        const unregisteredInfo = document.getElementById('unregisteredInfo');
+        const fizickoLiceNotice = document.getElementById('fizickoLiceNotice');
         const accuracyDeclarationGroup = document.getElementById('accuracyDeclarationGroup');
         const accuracyDeclarationCheckbox = document.getElementById('accuracy_declaration');
 
@@ -756,34 +715,38 @@
                 });
             }
 
+            // Resetuj napomenu i izjavu o tačnosti
+            if (fizickoLiceNotice) {
+                fizickoLiceNotice.style.display = 'none';
+            }
+            if (accuracyDeclarationGroup) {
+                accuracyDeclarationGroup.style.display = 'none';
+            }
+            if (accuracyDeclarationCheckbox) {
+                accuracyDeclarationCheckbox.removeAttribute('required');
+            }
+
             // Prikaži/sakrij polja na osnovu tipa
             if (selectedType === 'doo') {
+                // DOO - prikaži polja za DOO
                 if (dooFields) {
                     dooFields.classList.add('show');
                     dooRequiredFields.forEach(field => {
                         field.setAttribute('required', 'required');
                     });
                 }
-                // Prikaži polje za registrovanu djelatnost (DOO može imati registrovanu djelatnost)
-                if (isRegisteredGroup) {
-                    isRegisteredGroup.style.display = 'block';
-                }
             } else if (selectedType === 'fizicko_lice') {
                 // Fizičko lice BEZ registrovane djelatnosti
+                // Prikaži napomenu o obavezi registracije
+                if (fizickoLiceNotice) {
+                    fizickoLiceNotice.style.display = 'block';
+                }
+                // Prikaži polja za fizičko lice
                 if (fizickoLiceFields) {
                     fizickoLiceFields.classList.add('show');
                     fizickoLiceRequiredFields.forEach(field => {
                         field.setAttribute('required', 'required');
                     });
-                }
-                // Sakrij polje za registrovanu djelatnost jer fizičko lice automatski nema registrovanu djelatnost
-                if (isRegisteredGroup) {
-                    isRegisteredGroup.style.display = 'none';
-                }
-                // Automatski postavi na "Ne" (nema registrovanu djelatnost)
-                const noRegisteredInput = document.getElementById('is_registered_no');
-                if (noRegisteredInput) {
-                    noRegisteredInput.checked = true;
                 }
                 // Prikaži izjavu o tačnosti (obavezna za fizička lica bez registrovane djelatnosti)
                 if (accuracyDeclarationGroup) {
@@ -792,12 +755,8 @@
                 if (accuracyDeclarationCheckbox) {
                     accuracyDeclarationCheckbox.setAttribute('required', 'required');
                 }
-            } else {
-                // Preduzetnica (fizičko lice SA registrovanom djelatnošću) ili Ostalo - prikaži polje za registrovanu djelatnost
-                if (isRegisteredGroup) {
-                    isRegisteredGroup.style.display = 'block';
-                }
             }
+            // Za 'preduzetnica' i 'ostalo' ne prikazujemo dodatna polja
         }
 
         applicantTypeInputs.forEach(input => {
@@ -806,53 +765,6 @@
 
         // Pozovi na učitavanju stranice
         toggleFieldsByApplicantType();
-
-        // Dinamičko prikazivanje/sakrivanje polja za neregistrovanu djelatnost
-        function toggleRegistrationFields() {
-            const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
-            
-            // Ako je fizičko lice BEZ registrovane djelatnosti, automatski je neregistrovano
-            // (polje za registrovanu djelatnost je već sakriveno u toggleFieldsByApplicantType)
-            if (selectedType === 'fizicko_lice') {
-                if (unregisteredInfo) {
-                    unregisteredInfo.style.display = 'none'; // Već je prikazana napomena u sekciji za fizičko lice
-                }
-                return;
-            }
-
-            const selectedRegistration = document.querySelector('input[name="is_registered"]:checked')?.value;
-            
-            if (selectedRegistration === '0') {
-                // Nema registrovanu djelatnost
-                if (unregisteredInfo) {
-                    unregisteredInfo.style.display = 'block';
-                }
-                if (accuracyDeclarationGroup) {
-                    accuracyDeclarationGroup.style.display = 'block';
-                }
-                if (accuracyDeclarationCheckbox) {
-                    accuracyDeclarationCheckbox.setAttribute('required', 'required');
-                }
-            } else {
-                // Ima registrovanu djelatnost
-                if (unregisteredInfo) {
-                    unregisteredInfo.style.display = 'none';
-                }
-                if (accuracyDeclarationGroup) {
-                    accuracyDeclarationGroup.style.display = 'none';
-                }
-                if (accuracyDeclarationCheckbox) {
-                    accuracyDeclarationCheckbox.removeAttribute('required');
-                }
-            }
-        }
-
-        isRegisteredInputs.forEach(input => {
-            input.addEventListener('change', toggleRegistrationFields);
-        });
-
-        // Pozovi na učitavanju stranice
-        toggleRegistrationFields();
     });
 </script>
 @endsection
