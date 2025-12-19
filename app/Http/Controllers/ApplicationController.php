@@ -304,6 +304,39 @@ class ApplicationController extends Controller
     }
 
     /**
+     * Brisanje pojedinačnog dokumenta iz prijave
+     */
+    public function destroyDocument(Application $application, ApplicationDocument $document): RedirectResponse
+    {
+        // Proveri da li dokument pripada ovoj prijavi
+        if ($document->application_id !== $application->id) {
+            abort(404, 'Dokument nije pronađen.');
+        }
+
+        // Proveri da li korisnik ima pravo da briše dokument
+        $user = Auth::user();
+        $isOwner = $application->user_id === $user->id;
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin', 'konkurs_admin']);
+
+        if (!$isOwner && !$isAdmin) {
+            abort(403, 'Nemate pravo da brišete ovaj dokument.');
+        }
+
+        // Ako dokument nije iz korisničke biblioteke, obriši fizički fajl
+        if (!$document->user_document_id && $document->file_path) {
+            if (Storage::disk('local')->exists($document->file_path)) {
+                Storage::disk('local')->delete($document->file_path);
+            }
+        }
+
+        // Obriši zapis iz baze
+        $document->delete();
+
+        return redirect()->route('applications.show', $application)
+            ->with('success', 'Dokument je uspješno obrisan.');
+    }
+
+    /**
      * Brisanje prijave
      */
     public function destroy(Application $application): RedirectResponse
