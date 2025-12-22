@@ -17,7 +17,7 @@ class ProcessDocumentJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $tries = 3;
-    public $timeout = 300; // 5 minuta timeout
+    public $timeout = 600; // 10 minuta timeout (za velike fajlove)
 
     /**
      * Create a new job instance.
@@ -35,6 +35,13 @@ class ProcessDocumentJob implements ShouldQueue
     public function handle(DocumentProcessor $documentProcessor): void
     {
         try {
+            Log::info('Starting document processing job', [
+                'document_id' => $this->document->id,
+                'attempt' => $this->attempts(),
+                'max_tries' => $this->tries,
+                'original_file_path' => $this->originalFilePath
+            ]);
+            
             // Proveri da li izvorni fajl još postoji
             if (!Storage::disk('local')->exists($this->originalFilePath)) {
                 Log::error('Original file not found for processing', [
@@ -70,8 +77,24 @@ class ProcessDocumentJob implements ShouldQueue
             $originalBasename = basename($this->originalFilePath);
             $baseFilename = pathinfo($originalBasename, PATHINFO_FILENAME); // Uklanja ekstenziju
             
+            Log::info('Calling processDocument', [
+                'document_id' => $this->document->id,
+                'base_filename' => $baseFilename,
+                'mime_type' => $mimeType,
+                'temp_file_size' => filesize($tempFilePath)
+            ]);
+            
             // Procesiraj dokument sa istim base filename-om kao izvorni fajl
+            $startTime = microtime(true);
             $result = $documentProcessor->processDocument($uploadedFile, $this->document->user_id, $baseFilename);
+            $processingTime = microtime(true) - $startTime;
+            
+            Log::info('processDocument completed', [
+                'document_id' => $this->document->id,
+                'success' => $result['success'] ?? false,
+                'processing_time' => round($processingTime, 2) . ' seconds',
+                'error' => $result['error'] ?? null
+            ]);
 
             // Obriši privremeni fajl
             if (file_exists($tempFilePath)) {
@@ -120,10 +143,24 @@ class ProcessDocumentJob implements ShouldQueue
             Log::error('Document processing job exception', [
                 'document_id' => $this->document->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'attempts' => $this->attempts(),
+                'max_tries' => $this->tries
             ]);
             
+            // Ažuriraj status na failed
             $this->document->update(['status' => 'failed']);
+            
+            // Ne bacaj exception ako smo već probali maksimalan broj puta
+            // ili ako je greška vezana za fajl koji ne postoji
+            if ($this->attempts() >= $this->tries) {
+                Log::error('Max attempts reached, not retrying', [
+                    'document_id' => $this->document->id
+                ]);
+                return;
+            }
+            
+            // Za druge greške, baci exception da bi Laravel ponovo pokušao
             throw $e;
         }
     }
