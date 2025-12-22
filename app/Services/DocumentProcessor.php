@@ -207,59 +207,30 @@ class DocumentProcessor
         try {
             $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('processed_', true) . '.pdf';
 
-            // Konvertuj u greyscale i PDF sa 300 DPI
-            // Koristimo dvostepenu konverziju: prvo u PNG (greyscale), pa u PDF
-            // Koristimo -strip da uklonimo ICC profile i metapodatke koji mogu da prave probleme
-            $tempPngPath = sys_get_temp_dir() . '/' . uniqid('temp_grey_', true) . '.png';
-            
+            // Direktna konverzija u greyscale PDF sa 300 DPI
+            // Koristimo jednostavnije opcije za bolju kompatibilnost
             if ($mime === 'application/pdf') {
-                // Za PDF: konvertuj prvu stranicu u greyscale PNG sa 300 DPI
-                // -strip uklanja ICC profile i metapodatke
-                // -background white -flatten uklanja alpha kanal i postavlja belu pozadinu
-                $pngCommand = sprintf(
-                    '%s -density 300 "%s[0]" -strip -background white -flatten -colorspace Gray -type Grayscale "%s" 2>&1',
+                // Za PDF: konvertuj prvu stranicu direktno u greyscale PDF sa 300 DPI
+                $command = sprintf(
+                    '%s -density 300 "%s[0]" -strip -colorspace Gray "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
-                    escapeshellarg($tempPngPath)
+                    escapeshellarg($tempPdfPath)
                 );
             } else {
-                // Za slike: konvertuj u greyscale PNG sa 300 DPI
+                // Za slike: konvertuj direktno u greyscale PDF sa 300 DPI
                 // -strip uklanja ICC profile i metapodatke
-                // -background white -flatten uklanja alpha kanal i postavlja belu pozadinu
-                $pngCommand = sprintf(
-                    '%s -density 300 "%s" -strip -background white -flatten -colorspace Gray -type Grayscale "%s" 2>&1',
+                // -colorspace Gray konvertuje u greyscale
+                // Bez kompresije za maksimalnu kompatibilnost
+                $command = sprintf(
+                    '%s -density 300 "%s" -strip -colorspace Gray "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
-                    escapeshellarg($tempPngPath)
+                    escapeshellarg($tempPdfPath)
                 );
             }
-            
-            exec($pngCommand, $pngOutput, $pngReturnCode);
-            
-            if ($pngReturnCode !== 0 || !file_exists($tempPngPath)) {
-                Log::error('ImageMagick PNG conversion failed', [
-                    'command' => $pngCommand,
-                    'output' => implode("\n", $pngOutput),
-                    'return_code' => $pngReturnCode
-                ]);
-                return false;
-            }
-            
-            // Sada konvertuj PNG u PDF sa 300 DPI
-            // Koristimo -strip i za PDF da uklonimo sve metapodatke
-            $command = sprintf(
-                '%s -density 300 -strip "%s" "%s" 2>&1',
-                escapeshellarg($convertPath),
-                escapeshellarg($tempPngPath),
-                escapeshellarg($tempPdfPath)
-            );
 
             exec($command, $output, $returnCode);
-            
-            // Obriši privremeni PNG
-            if (file_exists($tempPngPath)) {
-                @unlink($tempPngPath);
-            }
 
             if ($returnCode !== 0 || !file_exists($tempPdfPath)) {
                 Log::error('ImageMagick PDF conversion failed', [
@@ -283,22 +254,10 @@ class DocumentProcessor
                 return false;
             }
 
-            // Proveri da li PDF počinje sa validnim PDF header-om
-            $pdfHeader = file_get_contents($tempPdfPath, false, null, 0, 8);
-            if (strpos($pdfHeader, '%PDF') !== 0) {
-                Log::error('Generated file is not a valid PDF', [
-                    'header' => $pdfHeader,
-                    'temp_path' => $tempPdfPath
-                ]);
-                if (file_exists($tempPdfPath)) {
-                    unlink($tempPdfPath);
-                }
-                return false;
-            }
-
+            // Pročitaj PDF data
             $pdfData = file_get_contents($tempPdfPath);
             
-            // Obriši privremeni fajl
+            // Obriši privremeni fajl odmah nakon čitanja
             if (file_exists($tempPdfPath)) {
                 unlink($tempPdfPath);
             }
@@ -311,10 +270,20 @@ class DocumentProcessor
                 return false;
             }
 
+            // Proveri da li PDF počinje sa validnim PDF header-om
+            if (strpos($pdfData, '%PDF') !== 0) {
+                Log::error('PDF data does not start with valid PDF header', [
+                    'header' => substr($pdfData, 0, 8),
+                    'data_length' => strlen($pdfData)
+                ]);
+                return false;
+            }
+
             // Proveri da li PDF ima validan footer (%%EOF)
             if (strpos($pdfData, '%%EOF') === false) {
                 Log::warning('PDF may be incomplete - EOF marker not found', [
-                    'data_length' => strlen($pdfData)
+                    'data_length' => strlen($pdfData),
+                    'last_100_chars' => substr($pdfData, -100)
                 ]);
             }
 
@@ -533,9 +502,10 @@ class DocumentProcessor
 
             // Konvertuj PNG u PDF sa 300 DPI
             // Koristi -strip da uklonimo ICC profile i metapodatke
-            // -background white -flatten uklanja alpha kanal i postavlja belu pozadinu
+            // -colorspace Gray konvertuje u greyscale
+            // Bez kompresije za maksimalnu kompatibilnost
             $command = sprintf(
-                '%s -density %d -strip -background white -flatten -colorspace Gray "%s" "%s" 2>&1',
+                '%s -density %d -strip -colorspace Gray "%s" "%s" 2>&1',
                 escapeshellarg($convertPath),
                 $dpi,
                 escapeshellarg($tempImagePath),
