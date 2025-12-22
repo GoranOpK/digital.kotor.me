@@ -207,31 +207,56 @@ class DocumentProcessor
         try {
             $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('processed_', true) . '.pdf';
 
-            // Konvertuj u greyscale i PDF sa 300 DPI u jednom koraku
+            // Konvertuj u greyscale i PDF sa 300 DPI
+            // Koristimo dvostepenu konverziju: prvo u PNG (greyscale), pa u PDF
+            $tempPngPath = sys_get_temp_dir() . '/' . uniqid('temp_grey_', true) . '.png';
+            
             if ($mime === 'application/pdf') {
-                // Za PDF: konvertuj prvu stranicu u greyscale PDF sa 300 DPI
-                // Koristi -compress zip za bolju kompatibilnost i -alpha remove za uklanjanje alpha kanala
-                $command = sprintf(
-                    '%s -density 300 "%s[0]" -alpha remove -colorspace Gray -compress zip -quality 95 "%s" 2>&1',
+                // Za PDF: konvertuj prvu stranicu u greyscale PNG sa 300 DPI
+                $pngCommand = sprintf(
+                    '%s -density 300 "%s[0]" -alpha off -colorspace Gray -type Grayscale "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
-                    escapeshellarg($tempPdfPath)
+                    escapeshellarg($tempPngPath)
                 );
             } else {
-                // Za slike: konvertuj u greyscale PDF sa 300 DPI
-                // Koristi -alpha remove za PNG slike sa transparentnošću i -compress zip za bolju kompatibilnost
-                $command = sprintf(
-                    '%s -density 300 "%s" -alpha remove -colorspace Gray -compress zip -quality 95 "%s" 2>&1',
+                // Za slike: konvertuj u greyscale PNG sa 300 DPI
+                $pngCommand = sprintf(
+                    '%s -density 300 "%s" -alpha off -colorspace Gray -type Grayscale "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
-                    escapeshellarg($tempPdfPath)
+                    escapeshellarg($tempPngPath)
                 );
             }
+            
+            exec($pngCommand, $pngOutput, $pngReturnCode);
+            
+            if ($pngReturnCode !== 0 || !file_exists($tempPngPath)) {
+                Log::error('ImageMagick PNG conversion failed', [
+                    'command' => $pngCommand,
+                    'output' => implode("\n", $pngOutput),
+                    'return_code' => $pngReturnCode
+                ]);
+                return false;
+            }
+            
+            // Sada konvertuj PNG u PDF sa 300 DPI
+            $command = sprintf(
+                '%s -density 300 "%s" "%s" 2>&1',
+                escapeshellarg($convertPath),
+                escapeshellarg($tempPngPath),
+                escapeshellarg($tempPdfPath)
+            );
 
             exec($command, $output, $returnCode);
+            
+            // Obriši privremeni PNG
+            if (file_exists($tempPngPath)) {
+                @unlink($tempPngPath);
+            }
 
             if ($returnCode !== 0 || !file_exists($tempPdfPath)) {
-                Log::error('ImageMagick processing failed', [
+                Log::error('ImageMagick PDF conversion failed', [
                     'command' => $command,
                     'output' => implode("\n", $output),
                     'return_code' => $returnCode
@@ -244,6 +269,19 @@ class DocumentProcessor
             if ($fileSize < 100) {
                 Log::error('Generated PDF is too small, likely corrupted', [
                     'file_size' => $fileSize,
+                    'temp_path' => $tempPdfPath
+                ]);
+                if (file_exists($tempPdfPath)) {
+                    unlink($tempPdfPath);
+                }
+                return false;
+            }
+
+            // Proveri da li PDF počinje sa validnim PDF header-om
+            $pdfHeader = file_get_contents($tempPdfPath, false, null, 0, 8);
+            if (strpos($pdfHeader, '%PDF') !== 0) {
+                Log::error('Generated file is not a valid PDF', [
+                    'header' => $pdfHeader,
                     'temp_path' => $tempPdfPath
                 ]);
                 if (file_exists($tempPdfPath)) {
@@ -265,6 +303,13 @@ class DocumentProcessor
                     'data_length' => $pdfData ? strlen($pdfData) : 0
                 ]);
                 return false;
+            }
+
+            // Proveri da li PDF ima validan footer (%%EOF)
+            if (strpos($pdfData, '%%EOF') === false) {
+                Log::warning('PDF may be incomplete - EOF marker not found', [
+                    'data_length' => strlen($pdfData)
+                ]);
             }
 
             return $pdfData;
@@ -481,9 +526,9 @@ class DocumentProcessor
             $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('pdf_', true) . '.pdf';
 
             // Konvertuj PNG u PDF sa 300 DPI
-            // Koristi -alpha remove za uklanjanje alpha kanala i -compress zip za bolju kompatibilnost
+            // Koristi -alpha off za uklanjanje alpha kanala i -colorspace Gray za greyscale konverziju
             $command = sprintf(
-                '%s -density %d -alpha remove -compress zip -quality 95 "%s" "%s" 2>&1',
+                '%s -density %d -alpha off -colorspace Gray -compress lzw "%s" "%s" 2>&1',
                 escapeshellarg($convertPath),
                 $dpi,
                 escapeshellarg($tempImagePath),
