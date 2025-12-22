@@ -209,20 +209,25 @@ class DocumentProcessor
 
             // Konvertuj u greyscale i PDF sa 300 DPI
             // Koristimo dvostepenu konverziju: prvo u PNG (greyscale), pa u PDF
+            // Koristimo -strip da uklonimo ICC profile i metapodatke koji mogu da prave probleme
             $tempPngPath = sys_get_temp_dir() . '/' . uniqid('temp_grey_', true) . '.png';
             
             if ($mime === 'application/pdf') {
                 // Za PDF: konvertuj prvu stranicu u greyscale PNG sa 300 DPI
+                // -strip uklanja ICC profile i metapodatke
+                // -background white -flatten uklanja alpha kanal i postavlja belu pozadinu
                 $pngCommand = sprintf(
-                    '%s -density 300 "%s[0]" -alpha off -colorspace Gray -type Grayscale "%s" 2>&1',
+                    '%s -density 300 "%s[0]" -strip -background white -flatten -colorspace Gray -type Grayscale "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
                     escapeshellarg($tempPngPath)
                 );
             } else {
                 // Za slike: konvertuj u greyscale PNG sa 300 DPI
+                // -strip uklanja ICC profile i metapodatke
+                // -background white -flatten uklanja alpha kanal i postavlja belu pozadinu
                 $pngCommand = sprintf(
-                    '%s -density 300 "%s" -alpha off -colorspace Gray -type Grayscale "%s" 2>&1',
+                    '%s -density 300 "%s" -strip -background white -flatten -colorspace Gray -type Grayscale "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
                     escapeshellarg($tempPngPath)
@@ -241,8 +246,9 @@ class DocumentProcessor
             }
             
             // Sada konvertuj PNG u PDF sa 300 DPI
+            // Koristimo -strip i za PDF da uklonimo sve metapodatke
             $command = sprintf(
-                '%s -density 300 "%s" "%s" 2>&1',
+                '%s -density 300 -strip "%s" "%s" 2>&1',
                 escapeshellarg($convertPath),
                 escapeshellarg($tempPngPath),
                 escapeshellarg($tempPdfPath)
@@ -526,9 +532,10 @@ class DocumentProcessor
             $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('pdf_', true) . '.pdf';
 
             // Konvertuj PNG u PDF sa 300 DPI
-            // Koristi -alpha off za uklanjanje alpha kanala i -colorspace Gray za greyscale konverziju
+            // Koristi -strip da uklonimo ICC profile i metapodatke
+            // -background white -flatten uklanja alpha kanal i postavlja belu pozadinu
             $command = sprintf(
-                '%s -density %d -alpha off -colorspace Gray -compress lzw "%s" "%s" 2>&1',
+                '%s -density %d -strip -background white -flatten -colorspace Gray "%s" "%s" 2>&1',
                 escapeshellarg($convertPath),
                 $dpi,
                 escapeshellarg($tempImagePath),
