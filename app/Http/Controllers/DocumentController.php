@@ -8,6 +8,7 @@ use App\Services\DocumentProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -105,11 +106,96 @@ class DocumentController extends Controller
         // Ažuriraj korišćen prostor za izvorni fajl
         $this->documentProcessor->updateUserStorage($user->id, $originalFileSize);
 
-        // Pokreni job za asinhronu obradu
-        ProcessDocumentJob::dispatch($document, $originalFilePath);
+        // Odluči da li da obrađujemo direktno ili preko queue-a
+        // Za fajlove manje od 2MB, obrađujemo direktno (brže za korisnika)
+        // Za veće fajlove, koristimo queue (ne blokira korisnika)
+        $fileSizeMB = $originalFileSize / 1024 / 1024;
+        $useQueue = $fileSizeMB > 2; // 2MB threshold
 
-        return redirect()->route('documents.index')
-            ->with('success', 'Dokument je uspješno upload-ovan. Obrada je u toku i bićete obavešteni kada bude završena.');
+        if ($useQueue) {
+            // Pokreni job za asinhronu obradu (veliki fajlovi)
+            ProcessDocumentJob::dispatch($document, $originalFilePath);
+
+            return redirect()->route('documents.index')
+                ->with('success', 'Dokument je uspješno upload-ovan. Obrada je u toku i bićete obavešteni kada bude završena.');
+        } else {
+            // Direktna obrada za male fajlove (brže iskustvo)
+            try {
+                // Učitaj izvorni fajl
+                $fileContent = Storage::disk('local')->get($originalFilePath);
+                $tempFilePath = sys_get_temp_dir() . '/' . uniqid('doc_process_', true) . '_' . basename($originalFilePath);
+                
+                // Sačuvaj privremeno za obradu
+                file_put_contents($tempFilePath, $fileContent);
+                
+                // Ažuriraj status na 'processing'
+                $document->update(['status' => 'processing']);
+                
+                // Kreiraj UploadedFile objekat
+                $mimeType = mime_content_type($tempFilePath) ?: 'application/octet-stream';
+                $uploadedFile = new \Illuminate\Http\UploadedFile(
+                    $tempFilePath,
+                    basename($originalFilePath),
+                    $mimeType,
+                    null,
+                    true // test mode
+                );
+
+                // Izvuci base filename
+                $originalBasename = basename($originalFilePath);
+                $baseFilename = pathinfo($originalBasename, PATHINFO_FILENAME);
+                
+                // Procesiraj dokument direktno
+                $result = $this->documentProcessor->processDocument($uploadedFile, $user->id, $baseFilename);
+                
+                // Obriši privremeni fajl
+                if (file_exists($tempFilePath)) {
+                    unlink($tempFilePath);
+                }
+
+                if (!$result['success']) {
+                    $document->update(['status' => 'failed']);
+                    return back()->withErrors(['file' => $result['error'] ?? 'Greška pri obradi dokumenta.'])->withInput();
+                }
+
+                // Proveri da li korisnik ima dovoljno prostora
+                if (!$this->documentProcessor->hasEnoughStorage($user->id, $result['file_size'])) {
+                    Storage::disk('local')->delete($result['file_path']);
+                    $document->update(['status' => 'failed']);
+                    
+                    return back()->withErrors([
+                        'file' => 'Nemate dovoljno prostora. Maksimalno dozvoljeno: 20 MB.'
+                    ])->withInput();
+                }
+
+                // Ažuriraj dokument sa putanjom do obrađenog fajla
+                $document->update([
+                    'file_path' => $result['file_path'],
+                    'file_size' => $result['file_size'],
+                    'status' => 'processed',
+                    'processed_at' => now(),
+                ]);
+
+                // Ažuriraj korišćen prostor
+                $this->documentProcessor->updateUserStorage($user->id, $result['file_size']);
+
+                return redirect()->route('documents.index')
+                    ->with('success', 'Dokument je uspješno upload-ovan i obrađen.');
+                    
+            } catch (\Exception $e) {
+                // Ako direktna obrada ne uspe, prebaci na queue
+                Log::error('Direct processing failed, falling back to queue', [
+                    'document_id' => $document->id,
+                    'error' => $e->getMessage()
+                ]);
+                
+                $document->update(['status' => 'pending']);
+                ProcessDocumentJob::dispatch($document, $originalFilePath);
+                
+                return redirect()->route('documents.index')
+                    ->with('success', 'Dokument je uspješno upload-ovan. Obrada je u toku.');
+            }
+        }
     }
 
     /**

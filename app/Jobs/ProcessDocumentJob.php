@@ -65,8 +65,13 @@ class ProcessDocumentJob implements ShouldQueue
                 true // test mode
             );
 
-            // Procesiraj dokument
-            $result = $documentProcessor->processDocument($uploadedFile, $this->document->user_id);
+            // Izvuci base filename iz original_file_path (bez ekstenzije i _original dela)
+            // Primer: documents/user_8/8-20251220-abc123_original.jpg -> 8-20251220-abc123
+            $originalBasename = basename($this->originalFilePath);
+            $baseFilename = pathinfo($originalBasename, PATHINFO_FILENAME); // Uklanja ekstenziju
+            
+            // Procesiraj dokument sa istim base filename-om kao izvorni fajl
+            $result = $documentProcessor->processDocument($uploadedFile, $this->document->user_id, $baseFilename);
 
             // Obriši privremeni fajl
             if (file_exists($tempFilePath)) {

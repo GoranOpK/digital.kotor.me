@@ -19,9 +19,10 @@ class DocumentProcessor
      *
      * @param \Illuminate\Http\UploadedFile $file
      * @param int $userId
+     * @param string|null $baseFilename Opciono: base filename (bez ekstenzije) - ako se prosledi, koristi se umesto generisanog
      * @return array ['success' => bool, 'file_path' => string|null, 'file_size' => int|null, 'error' => string|null]
      */
-    public function processDocument($file, int $userId): array
+    public function processDocument($file, int $userId, ?string $baseFilename = null): array
     {
         try {
             // Dozvoljeni tipovi – slike (JPEG/PNG) i PDF
@@ -37,11 +38,19 @@ class DocumentProcessor
             // Direktorijum za korisnika
             $directory = "documents/user_{$userId}";
 
-            // Generiši novo ime fajla: id-korisnika-datum-upload-a-XXXXXXXX.pdf
-            $date = now()->format('Ymd'); // YYYYMMDD format
-            $randomString = bin2hex(random_bytes(4)); // 8 karaktera (4 bytes = 8 hex karaktera)
-            $baseFilename = "{$userId}-{$date}-{$randomString}";
-            $outputFilename = "{$baseFilename}.pdf";
+            // Generiši ime fajla: id-korisnika-datum-upload-a-XXXXXXXX.pdf
+            // Ako je prosleđen baseFilename, koristi ga (uklanjuje _original ako postoji)
+            if ($baseFilename !== null) {
+                // Ukloni _original ako postoji u baseFilename
+                $baseFilename = str_replace('_original', '', $baseFilename);
+                $outputFilename = "{$baseFilename}.pdf";
+            } else {
+                // Generiši novo ime
+                $date = now()->format('Ymd'); // YYYYMMDD format
+                $randomString = bin2hex(random_bytes(4)); // 8 karaktera (4 bytes = 8 hex karaktera)
+                $baseFilename = "{$userId}-{$date}-{$randomString}";
+                $outputFilename = "{$baseFilename}.pdf";
+            }
             $outputPath = "{$directory}/{$outputFilename}";
 
             // Pokušaj da koristiš ImageMagick za kompletnu obradu (najbrže i najpouzdanije)
