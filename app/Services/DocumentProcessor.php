@@ -210,18 +210,18 @@ class DocumentProcessor
             // Konvertuj u greyscale i PDF sa 300 DPI u jednom koraku
             if ($mime === 'application/pdf') {
                 // Za PDF: konvertuj prvu stranicu u greyscale PDF sa 300 DPI
-                // Koristi -compress jpeg za bolju kompresiju
+                // Koristi -compress zip za bolju kompatibilnost i -alpha remove za uklanjanje alpha kanala
                 $command = sprintf(
-                    '%s -density 300 "%s[0]" -colorspace Gray -compress jpeg -quality 100 "%s" 2>&1',
+                    '%s -density 300 "%s[0]" -alpha remove -colorspace Gray -compress zip -quality 95 "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
                     escapeshellarg($tempPdfPath)
                 );
             } else {
                 // Za slike: konvertuj u greyscale PDF sa 300 DPI
-                // Prvo učitaj sa 300 DPI, zatim konvertuj u greyscale i PDF
+                // Koristi -alpha remove za PNG slike sa transparentnošću i -compress zip za bolju kompatibilnost
                 $command = sprintf(
-                    '%s -density 300 "%s" -colorspace Gray -compress jpeg -quality 100 "%s" 2>&1',
+                    '%s -density 300 "%s" -alpha remove -colorspace Gray -compress zip -quality 95 "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
                     escapeshellarg($tempPdfPath)
@@ -239,8 +239,33 @@ class DocumentProcessor
                 return false;
             }
 
+            // Proveri da li je PDF validan (ima minimalnu veličinu)
+            $fileSize = filesize($tempPdfPath);
+            if ($fileSize < 100) {
+                Log::error('Generated PDF is too small, likely corrupted', [
+                    'file_size' => $fileSize,
+                    'temp_path' => $tempPdfPath
+                ]);
+                if (file_exists($tempPdfPath)) {
+                    unlink($tempPdfPath);
+                }
+                return false;
+            }
+
             $pdfData = file_get_contents($tempPdfPath);
-            unlink($tempPdfPath);
+            
+            // Obriši privremeni fajl
+            if (file_exists($tempPdfPath)) {
+                unlink($tempPdfPath);
+            }
+
+            // Proveri da li je PDF data validan
+            if ($pdfData === false || empty($pdfData) || strlen($pdfData) < 100) {
+                Log::error('PDF data is invalid or too small', [
+                    'data_length' => $pdfData ? strlen($pdfData) : 0
+                ]);
+                return false;
+            }
 
             return $pdfData;
         } catch (Exception $e) {
@@ -456,8 +481,9 @@ class DocumentProcessor
             $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('pdf_', true) . '.pdf';
 
             // Konvertuj PNG u PDF sa 300 DPI
+            // Koristi -alpha remove za uklanjanje alpha kanala i -compress zip za bolju kompatibilnost
             $command = sprintf(
-                '%s -density %d -quality 100 "%s" "%s" 2>&1',
+                '%s -density %d -alpha remove -compress zip -quality 95 "%s" "%s" 2>&1',
                 escapeshellarg($convertPath),
                 $dpi,
                 escapeshellarg($tempImagePath),
@@ -480,12 +506,33 @@ class DocumentProcessor
                 return false;
             }
 
+            // Proveri da li je PDF validan (ima minimalnu veličinu)
+            $fileSize = filesize($tempPdfPath);
+            if ($fileSize < 100) {
+                Log::error('Generated PDF is too small, likely corrupted', [
+                    'file_size' => $fileSize,
+                    'temp_path' => $tempPdfPath
+                ]);
+                if (file_exists($tempPdfPath)) {
+                    unlink($tempPdfPath);
+                }
+                return false;
+            }
+
             // Pročitaj PDF data
             $pdfData = file_get_contents($tempPdfPath);
             
             // Obriši privremeni PDF
             if (file_exists($tempPdfPath)) {
                 unlink($tempPdfPath);
+            }
+
+            // Proveri da li je PDF data validan
+            if ($pdfData === false || empty($pdfData) || strlen($pdfData) < 100) {
+                Log::error('PDF data is invalid or too small', [
+                    'data_length' => $pdfData ? strlen($pdfData) : 0
+                ]);
+                return false;
             }
 
             return $pdfData;
