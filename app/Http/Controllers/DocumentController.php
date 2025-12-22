@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\ProcessDocumentJob;
 use App\Models\UserDocument;
 use App\Services\DocumentProcessor;
 use Illuminate\Http\Request;
@@ -64,17 +65,24 @@ class DocumentController extends Controller
         $user = Auth::user();
         $file = $request->file('file');
 
-        // Procesiraj dokument (konvertuj u optimizovani PDF)
-        $result = $this->documentProcessor->processDocument($file, $user->id);
+        // Direktorijum za korisnika
+        $directory = "documents/user_{$user->id}";
+        
+        // Generiši ime za izvorni fajl (isti format kao obrađeni, ali sa originalnom ekstenzijom)
+        $date = now()->format('Ymd');
+        $randomString = bin2hex(random_bytes(4));
+        $baseFilename = "{$user->id}-{$date}-{$randomString}";
+        $originalExtension = $file->getClientOriginalExtension();
+        $originalFilename = "{$baseFilename}_original.{$originalExtension}";
+        $originalFilePath = "{$directory}/{$originalFilename}";
 
-        if (!$result['success']) {
-            return back()->withErrors(['file' => $result['error']])->withInput();
-        }
+        // Sačuvaj izvorni fajl
+        $originalFileSize = $file->getSize();
+        Storage::disk('local')->putFileAs($directory, $file, $originalFilename);
 
-        // Proveri da li korisnik ima dovoljno prostora
-        if (!$this->documentProcessor->hasEnoughStorage($user->id, $result['file_size'])) {
-            // Obriši kreirani fajl
-            Storage::disk('local')->delete($result['file_path']);
+        // Proveri da li korisnik ima dovoljno prostora za izvorni fajl
+        if (!$this->documentProcessor->hasEnoughStorage($user->id, $originalFileSize)) {
+            Storage::disk('local')->delete($originalFilePath);
             
             return back()->withErrors([
                 'file' => 'Nemate dovoljno prostora. Maksimalno dozvoljeno: 20 MB. Trenutno korišćeno: ' . 
@@ -82,23 +90,26 @@ class DocumentController extends Controller
             ])->withInput();
         }
 
-        // Kreiraj zapis u bazi
+        // Kreiraj zapis u bazi sa statusom 'pending'
         $document = UserDocument::create([
             'user_id' => $user->id,
             'category' => $request->category,
             'name' => $request->name,
-            'file_path' => $result['file_path'],
+            'original_file_path' => $originalFilePath,
             'original_filename' => $file->getClientOriginalName(),
-            'file_size' => $result['file_size'],
+            'file_size' => $originalFileSize, // Privremeno, ažuriraće se nakon obrade
             'expires_at' => $request->expires_at,
-            'status' => 'active',
+            'status' => 'pending',
         ]);
 
-        // Ažuriraj korišćen prostor
-        $this->documentProcessor->updateUserStorage($user->id, $result['file_size']);
+        // Ažuriraj korišćen prostor za izvorni fajl
+        $this->documentProcessor->updateUserStorage($user->id, $originalFileSize);
+
+        // Pokreni job za asinhronu obradu
+        ProcessDocumentJob::dispatch($document, $originalFilePath);
 
         return redirect()->route('documents.index')
-            ->with('success', 'Dokument je uspješno upload-ovan i optimizovan.');
+            ->with('success', 'Dokument je uspješno upload-ovan. Obrada je u toku i bićete obavešteni kada bude završena.');
     }
 
     /**
@@ -113,14 +124,22 @@ class DocumentController extends Controller
             abort(403, 'Nemate pristup ovom dokumentu.');
         }
 
-        if (!Storage::disk('local')->exists($document->file_path)) {
+        // Proveri da li je dokument obrađen
+        if ($document->status !== 'processed' && $document->status !== 'active') {
+            abort(404, 'Dokument još nije obrađen.');
+        }
+
+        // Koristi obrađeni fajl ako postoji, inače izvorni
+        $filePath = $document->file_path ?? $document->original_file_path;
+        
+        if (!$filePath || !Storage::disk('local')->exists($filePath)) {
             abort(404, 'Dokument nije pronađen.');
         }
 
-        $extension = pathinfo($document->file_path, PATHINFO_EXTENSION) ?: 'dat';
+        $extension = pathinfo($filePath, PATHINFO_EXTENSION) ?: 'pdf';
 
         return Storage::disk('local')->download(
-            $document->file_path,
+            $filePath,
             $document->name . '.' . $extension
         );
     }
@@ -137,15 +156,34 @@ class DocumentController extends Controller
             abort(403, 'Nemate pristup ovom dokumentu.');
         }
 
-        // Obriši fajl i ažuriraj storage
-        if ($this->documentProcessor->deleteDocument($document->file_path, $user->id)) {
+        // Obriši fajlove (obrađeni i izvorni) i ažuriraj storage
+        $deleted = false;
+        
+        if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
+            $fileSize = Storage::disk('local')->size($document->file_path);
+            Storage::disk('local')->delete($document->file_path);
+            $this->documentProcessor->updateUserStorage($user->id, -$fileSize);
+            $deleted = true;
+        }
+        
+        if ($document->original_file_path && Storage::disk('local')->exists($document->original_file_path)) {
+            $originalFileSize = Storage::disk('local')->size($document->original_file_path);
+            Storage::disk('local')->delete($document->original_file_path);
+            $this->documentProcessor->updateUserStorage($user->id, -$originalFileSize);
+            $deleted = true;
+        }
+        
+        if ($deleted) {
             $document->delete();
             
             return redirect()->route('documents.index')
                 ->with('success', 'Dokument je uspješno obrisan.');
         }
 
-        return back()->withErrors(['error' => 'Greška pri brisanju dokumenta.']);
+        // Ako nema fajlova, samo obriši zapis
+        $document->delete();
+        return redirect()->route('documents.index')
+            ->with('success', 'Dokument je uspješno obrisan.');
     }
 }
 

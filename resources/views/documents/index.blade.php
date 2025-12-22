@@ -323,7 +323,7 @@
                         <div id="file-name" class="file-name-display" style="display: none;"></div>
                     </div>
                     <small style="color: #6b7280; display: block; margin-top: 4px;">
-                        Dozvoljeni formati: JPEG, PNG, PDF (max 10MB). Dokument će biti automatski optimizovan u PDF format.
+                        Dozvoljeni formati: JPEG, PNG, PDF (max 10MB). Dokument će biti automatski konvertovan u greyscale PDF format sa 300 DPI rezolucijom.
                     </small>
                 </div>
                 <div class="form-group">
@@ -356,11 +356,30 @@
                                             <span style="color: #ef4444; font-weight: 600;"> (ISTEKLO)</span>
                                         @endif
                                     </div>
+                                    @if($document->status === 'pending')
+                                        <div style="margin-top: 8px; color: #f59e0b; font-size: 13px; font-weight: 500;">
+                                            ⏳ Čeka obradu...
+                                        </div>
+                                    @elseif($document->status === 'processing')
+                                        <div style="margin-top: 8px; color: #3b82f6; font-size: 13px; font-weight: 500;">
+                                            🔄 U obradi...
+                                        </div>
+                                    @elseif($document->status === 'failed')
+                                        <div style="margin-top: 8px; color: #ef4444; font-size: 13px; font-weight: 500;">
+                                            ❌ Greška pri obradi
+                                        </div>
+                                    @elseif($document->status === 'processed' && $document->processed_at)
+                                        <div style="margin-top: 8px; color: #10b981; font-size: 13px; font-weight: 500;">
+                                            ✅ Obrađeno: {{ $document->processed_at->format('d.m.Y H:i') }}
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="document-actions">
-                                    <a href="{{ route('documents.download', $document) }}" class="btn-sm btn-download">
-                                        Preuzmi
-                                    </a>
+                                    @if($document->status === 'processed' || $document->status === 'active')
+                                        <a href="{{ route('documents.download', $document) }}" class="btn-sm btn-download">
+                                            Preuzmi
+                                        </a>
+                                    @endif
                                     <form action="{{ route('documents.destroy', $document) }}" method="POST" 
                                           style="display: inline;" 
                                           onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj dokument?');">
