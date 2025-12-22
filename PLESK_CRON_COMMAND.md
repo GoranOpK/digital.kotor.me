@@ -6,9 +6,16 @@ U **Plesk Scheduled Tasks**, dodajte sledeću komandu:
 
 ### Opcija 1: Obrada svih job-ova (preporučeno)
 
-**Command:**
+**VAŽNO:** Plesk Scheduled Tasks možda ne podržava `&&` operator. Koristite jednu od sledećih varijanti:
+
+**Varijanta A (sa cd):**
 ```bash
 cd /putanja/do/projekta && php artisan queue:work --tries=3 --timeout=300 --stop-when-empty
+```
+
+**Varijanta B (bez cd - preporučeno ako Varijanta A ne radi):**
+```bash
+php /putanja/do/projekta/artisan queue:work --tries=3 --timeout=300 --stop-when-empty
 ```
 
 **Run:** `Every minute` (ili `Every 5 minutes` ako želite manje opterećenje)
@@ -17,6 +24,7 @@ cd /putanja/do/projekta && php artisan queue:work --tries=3 --timeout=300 --stop
 - `--stop-when-empty` znači da će komanda završiti kada nema više job-ova za obradu
 - Ovo je idealno za cron jer ne ostavlja proces koji radi u pozadini
 - Pokreće se periodično i obrađuje sve job-ove koji čekaju
+- **Ako dobijate "No such file or directory" grešku, koristite Varijantu B ili proverite putanju**
 
 ### Opcija 2: Obrada jednog job-a po pokretanju
 
@@ -34,9 +42,48 @@ cd /putanja/do/projekta && php artisan queue:work --once --tries=3 --timeout=300
 
 ## Kako pronaći putanju do projekta
 
-1. U **Laravel Toolkit** → **Application Root Path**
-2. Ili u **File Manager**, idite do `artisan` fajla i kopirajte putanju
-3. Obično: `/var/www/vhosts/yourdomain.com/httpdocs`
+### Metoda 1: Kroz Artisan komandu (NAJPOUZDANIJE!)
+
+U **Laravel Toolkit** → **Artisan** tab, pokrenite:
+
+```
+path:show
+```
+
+**Ovo će vam pokazati tačnu putanju do projekta!**
+
+**Napomena:** Ova komanda je kreirana posebno za ovu svrhu. Ako ne radi, koristite Metodu 2.
+
+### Metoda 2: Kroz File Manager - Home Directory
+
+Pošto vidite "Home directory" u File Manager-u, putanja je verovatno:
+
+```
+/home/opstinakotor/digital.kotor.me
+```
+
+Ili:
+
+```
+/home/opstin/digital.kotor.me
+```
+
+### Metoda 3: Test komanda u Scheduled Tasks
+
+Dodajte test task u Scheduled Tasks:
+
+**Command:**
+```bash
+test -f /home/opstinakotor/digital.kotor.me/artisan && echo "TAČNA: /home/opstinakotor/digital.kotor.me" || test -f /home/opstin/digital.kotor.me/artisan && echo "TAČNA: /home/opstin/digital.kotor.me" || find /home -name "artisan" -path "*/digital.kotor.me/artisan" 2>/dev/null | head -1
+```
+
+**Run:** `Once`
+
+Ova komanda će pokazati tačnu putanju.
+
+**VAŽNO:** 
+- Ako dobijate "No such file or directory" grešku, koristite **Varijantu B** (bez cd)
+- Ili proverite putanju kroz File Manager (Metoda 1)
 
 ## Primer konfiguracije u Plesk Scheduled Tasks
 
