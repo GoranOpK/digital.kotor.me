@@ -239,12 +239,22 @@ class DocumentProcessor
             $imagick->setImageFormat('pdf');
             
             // Postavi kompresiju za manji PDF
-            // Koristimo JPEG kompresiju sa kvalitetom 85 (balans između kvaliteta i veličine)
+            // Koristimo JPEG kompresiju sa kvalitetom 75 za veću kompresiju
             $imagick->setImageCompression(\Imagick::COMPRESSION_JPEG);
-            $imagick->setImageCompressionQuality(85);
+            $imagick->setImageCompressionQuality(75);
             
             // Optimizuj PDF za manju veličinu
             $imagick->setOption('pdf:use-trimbox', 'true');
+            $imagick->setOption('pdf:fit-page', 'true');
+            
+            // Smanji rezoluciju ako je slika prevelika (optimizacija)
+            $width = $imagick->getImageWidth();
+            $height = $imagick->getImageHeight();
+            $maxDimension = 2000; // Maksimalna dimenzija u pikselima
+            
+            if ($width > $maxDimension || $height > $maxDimension) {
+                $imagick->resizeImage($maxDimension, $maxDimension, \Imagick::FILTER_LANCZOS, 1, true);
+            }
             
             // Kreiraj PDF
             $pdfData = $imagick->getImageBlob();
@@ -307,9 +317,9 @@ class DocumentProcessor
             
             if ($mime === 'application/pdf') {
                 // Za PDF: konvertuj prvu stranicu direktno u greyscale PDF sa 300 DPI
-                // Koristimo -colorspace Gray i -compress JPEG za kompresiju
+                // Koristimo -colorspace Gray i -compress JPEG sa quality 75 za veću kompresiju
                 $command = sprintf(
-                    '%s -density 300 "%s[0]" -colorspace Gray -compress JPEG -quality 85 "%s" 2>&1',
+                    '%s -density 300 "%s[0]" -colorspace Gray -compress JPEG -quality 75 "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
                     escapeshellarg($tempPdfPath)
@@ -317,9 +327,10 @@ class DocumentProcessor
             } else {
                 // Za slike: konvertuj direktno u greyscale PDF sa 300 DPI
                 // -colorspace Gray konvertuje u greyscale
-                // -compress JPEG -quality 85 za kompresiju (balans između kvaliteta i veličine)
+                // -compress JPEG -quality 75 za veću kompresiju
+                // -resize ako je slika prevelika (maksimalno 2000px)
                 $command = sprintf(
-                    '%s -density 300 "%s" -colorspace Gray -compress JPEG -quality 85 "%s" 2>&1',
+                    '%s -density 300 "%s" -colorspace Gray -resize "2000x2000>" -compress JPEG -quality 75 "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
                     escapeshellarg($tempPdfPath)
@@ -610,9 +621,10 @@ class DocumentProcessor
 
             // Konvertuj PNG u PDF sa 300 DPI
             // -colorspace Gray konvertuje u greyscale
-            // -compress JPEG -quality 85 za kompresiju (balans između kvaliteta i veličine)
+            // -compress JPEG -quality 75 za veću kompresiju
+            // -resize ako je slika prevelika (maksimalno 2000px)
             $command = sprintf(
-                '%s -density %d -colorspace Gray -compress JPEG -quality 85 "%s" "%s" 2>&1',
+                '%s -density %d -colorspace Gray -resize "2000x2000>" -compress JPEG -quality 75 "%s" "%s" 2>&1',
                 escapeshellarg($convertPath),
                 $dpi,
                 escapeshellarg($tempImagePath),
