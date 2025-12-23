@@ -306,6 +306,13 @@ class DocumentController extends Controller
                     'processed_at' => $document->processed_at ? $document->processed_at->format('d.m.Y H:i') : null,
                 ];
             });
+        
+        // Log za debug
+        Log::info('Status API pozvan', [
+            'user_id' => $user->id,
+            'documents_count' => $documents->count(),
+            'statuses' => $documents->pluck('status')->toArray()
+        ]);
 
         return response()->json([
             'documents' => $documents,
