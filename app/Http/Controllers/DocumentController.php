@@ -129,8 +129,10 @@ class DocumentController extends Controller
                 // Sačuvaj privremeno za obradu
                 file_put_contents($tempFilePath, $fileContent);
                 
-                // Ažuriraj status na 'processing'
+                // Ažuriraj status na 'processing' i osveži model
+                $document->refresh();
                 $document->update(['status' => 'processing']);
+                $document->refresh(); // Osveži da bi se promena videla
                 
                 // Kreiraj UploadedFile objekat
                 $mimeType = mime_content_type($tempFilePath) ?: 'application/octet-stream';

@@ -548,15 +548,15 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Pokreni proveru statusa ako ima dokumenata u obradi
     if (hasPendingOrProcessing) {
-        // Prva provera nakon 2 sekunde
+        // Prva provera nakon 1 sekunde (brže da uhvatimo processing status)
         setTimeout(function() {
             checkDocumentStatus();
             
-            // Pokreni interval za proveru svakih 3 sekunde
+            // Pokreni interval za proveru svakih 1 sekund (brže ažuriranje)
             if (!statusCheckInterval) {
-                statusCheckInterval = setInterval(checkDocumentStatus, 3000);
+                statusCheckInterval = setInterval(checkDocumentStatus, 1000);
             }
-        }, 2000);
+        }, 1000);
     } else {
         // Proveri jednom da vidimo da li ima dokumenata u obradi (možda su se promenili)
         setTimeout(function() {
@@ -569,9 +569,9 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             
             if (stillProcessing && !statusCheckInterval) {
-                statusCheckInterval = setInterval(checkDocumentStatus, 3000);
+                statusCheckInterval = setInterval(checkDocumentStatus, 1000);
             }
-        }, 2000);
+        }, 1000);
     }
 });
 </script>
