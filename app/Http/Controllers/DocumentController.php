@@ -280,9 +280,17 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         
-        // Vrati samo dokumente koji su u pending ili processing statusu
+        // Vrati dokumente koji su u pending, processing statusu
+        // ILI su nedavno obrađeni (u poslednjih 5 minuta) - da bi se ažurirao status na stranici
         $documents = UserDocument::where('user_id', $user->id)
-            ->whereIn('status', ['pending', 'processing'])
+            ->where(function ($query) {
+                $query->whereIn('status', ['pending', 'processing'])
+                    ->orWhere(function ($q) {
+                        // Dokumenti obrađeni u poslednjih 5 minuta
+                        $q->where('status', 'processed')
+                          ->where('processed_at', '>=', now()->subMinutes(5));
+                    });
+            })
             ->get(['id', 'status', 'processed_at'])
             ->map(function ($document) {
                 return [

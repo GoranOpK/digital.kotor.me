@@ -405,16 +405,25 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Funkcija za ažuriranje statusa dokumenta u DOM-u
     function updateDocumentStatus(documentId, status, processedAt) {
+        console.log('updateDocumentStatus pozvan:', { documentId, status, processedAt });
+        
         // Pronađi document-item sa odgovarajućim ID-jem
         const documentItem = document.querySelector(`.document-item[data-document-id="${documentId}"]`);
-        if (!documentItem) return;
+        if (!documentItem) {
+            console.warn('Dokument nije pronađen u DOM-u:', documentId);
+            return;
+        }
         
         const documentInfo = documentItem.querySelector('.document-info');
-        if (!documentInfo) return;
+        if (!documentInfo) {
+            console.warn('Document info nije pronađen za dokument:', documentId);
+            return;
+        }
         
         // Pronađi ili kreiraj status element
         let statusElement = documentInfo.querySelector('.document-status');
         if (!statusElement) {
+            console.log('Kreiram novi status element');
             statusElement = document.createElement('div');
             statusElement.className = 'document-status';
             statusElement.style.marginTop = '8px';
@@ -436,7 +445,12 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (status === 'processed' && processedAt) {
             statusElement.innerHTML = '✅ Obrađeno: ' + processedAt;
             statusElement.style.color = '#10b981';
+        } else if (status === 'processed') {
+            statusElement.innerHTML = '✅ Obrađeno';
+            statusElement.style.color = '#10b981';
         }
+        
+        console.log('Status ažuriran:', statusElement.innerHTML);
         
         // Ažuriraj actions sekciju (dodaj/ukloni download dugme)
         const actionsElement = documentItem.querySelector('.document-actions');
@@ -450,11 +464,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 downloadLink.className = 'btn-sm btn-download';
                 downloadLink.textContent = 'Preuzmi';
                 actionsElement.insertBefore(downloadLink, actionsElement.firstChild);
+                console.log('Download dugme dodato');
             } else if (status !== 'processed' && status !== 'active') {
                 // Ukloni download dugme ako status nije processed ili active
                 const downloadLink = actionsElement.querySelector('.btn-download');
                 if (downloadLink) {
                     downloadLink.remove();
+                    console.log('Download dugme uklonjeno');
                 }
             }
         }
@@ -464,6 +480,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let statusCheckInterval = null;
     
     function checkDocumentStatus() {
+        console.log('Proveravam status dokumenata...');
+        
         fetch('{{ route("documents.status") }}', {
             method: 'GET',
             headers: {
@@ -472,10 +490,18 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             credentials: 'same-origin'
         })
-        .then(response => response.json())
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log('Status data:', data);
+            
             if (data.documents && data.documents.length > 0) {
+                console.log('Pronađeno dokumenata u obradi:', data.documents.length);
+                
                 data.documents.forEach(doc => {
+                    console.log('Ažuriram dokument ID:', doc.id, 'Status:', doc.status);
                     updateDocumentStatus(doc.id, doc.status, doc.processed_at);
                 });
                 
@@ -484,12 +510,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     doc.status === 'pending' || doc.status === 'processing'
                 );
                 
+                console.log('Ima dokumenata u obradi:', hasProcessing);
+                
                 // Ako nema više dokumenata u obradi, zaustavi proveru
                 if (!hasProcessing && statusCheckInterval) {
+                    console.log('Zaustavljam proveru statusa');
                     clearInterval(statusCheckInterval);
                     statusCheckInterval = null;
                 }
             } else {
+                console.log('Nema dokumenata u obradi');
                 // Ako nema dokumenata u obradi, zaustavi proveru
                 if (statusCheckInterval) {
                     clearInterval(statusCheckInterval);
