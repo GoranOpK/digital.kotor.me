@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Illuminate\Http\JsonResponse;
 
 class DocumentController extends Controller
 {
@@ -270,6 +271,30 @@ class DocumentController extends Controller
         $document->delete();
         return redirect()->route('documents.index')
             ->with('success', 'Dokument je uspješno obrisan.');
+    }
+
+    /**
+     * Vraća status dokumenata koji su u obradi (API endpoint)
+     */
+    public function status(): JsonResponse
+    {
+        $user = Auth::user();
+        
+        // Vrati samo dokumente koji su u pending ili processing statusu
+        $documents = UserDocument::where('user_id', $user->id)
+            ->whereIn('status', ['pending', 'processing'])
+            ->get(['id', 'status', 'processed_at'])
+            ->map(function ($document) {
+                return [
+                    'id' => $document->id,
+                    'status' => $document->status,
+                    'processed_at' => $document->processed_at ? $document->processed_at->format('d.m.Y H:i') : null,
+                ];
+            });
+
+        return response()->json([
+            'documents' => $documents,
+        ]);
     }
 }
 

@@ -343,7 +343,7 @@
                     <h3>{{ $categoryName }}</h3>
                     @if(isset($documents[$categoryKey]) && $documents[$categoryKey]->count() > 0)
                         @foreach($documents[$categoryKey] as $document)
-                            <div class="document-item">
+                            <div class="document-item" data-document-id="{{ $document->id }}">
                                 <div class="document-info">
                                     <div class="document-name">{{ $document->name }}</div>
                                     <div class="document-meta">
@@ -357,24 +357,24 @@
                                         @endif
                                     </div>
                                     @if($document->status === 'pending')
-                                        <div style="margin-top: 8px; color: #f59e0b; font-size: 13px; font-weight: 500;">
+                                        <div class="document-status" style="margin-top: 8px; color: #f59e0b; font-size: 13px; font-weight: 500;">
                                             ⏳ Čeka obradu...
                                         </div>
                                     @elseif($document->status === 'processing')
-                                        <div style="margin-top: 8px; color: #3b82f6; font-size: 13px; font-weight: 500;">
+                                        <div class="document-status" style="margin-top: 8px; color: #3b82f6; font-size: 13px; font-weight: 500;">
                                             🔄 U obradi...
                                         </div>
                                     @elseif($document->status === 'failed')
-                                        <div style="margin-top: 8px; color: #ef4444; font-size: 13px; font-weight: 500;">
+                                        <div class="document-status" style="margin-top: 8px; color: #ef4444; font-size: 13px; font-weight: 500;">
                                             ❌ Greška pri obradi
                                         </div>
                                     @elseif($document->status === 'processed' && $document->processed_at)
-                                        <div style="margin-top: 8px; color: #10b981; font-size: 13px; font-weight: 500;">
+                                        <div class="document-status" style="margin-top: 8px; color: #10b981; font-size: 13px; font-weight: 500;">
                                             ✅ Obrađeno: {{ $document->processed_at->format('d.m.Y H:i') }}
                                         </div>
                                     @endif
                                 </div>
-                                <div class="document-actions">
+                                <div class="document-actions" data-document-status="{{ $document->status }}">
                                     @if($document->status === 'processed' || $document->status === 'active')
                                         <a href="{{ route('documents.download', $document) }}" class="btn-sm btn-download">
                                             Preuzmi
@@ -400,5 +400,112 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Funkcija za ažuriranje statusa dokumenta u DOM-u
+    function updateDocumentStatus(documentId, status, processedAt) {
+        // Pronađi document-item sa odgovarajućim ID-jem
+        const documentItem = document.querySelector(`.document-item[data-document-id="${documentId}"]`);
+        if (!documentItem) return;
+        
+        const documentInfo = documentItem.querySelector('.document-info');
+        if (!documentInfo) return;
+        
+        // Pronađi ili kreiraj status element
+        let statusElement = documentInfo.querySelector('.document-status');
+        if (!statusElement) {
+            statusElement = document.createElement('div');
+            statusElement.className = 'document-status';
+            statusElement.style.marginTop = '8px';
+            statusElement.style.fontSize = '13px';
+            statusElement.style.fontWeight = '500';
+            documentInfo.appendChild(statusElement);
+        }
+        
+        // Ažuriraj status
+        if (status === 'pending') {
+            statusElement.innerHTML = '⏳ Čeka obradu...';
+            statusElement.style.color = '#f59e0b';
+        } else if (status === 'processing') {
+            statusElement.innerHTML = '🔄 U obradi...';
+            statusElement.style.color = '#3b82f6';
+        } else if (status === 'failed') {
+            statusElement.innerHTML = '❌ Greška pri obradi';
+            statusElement.style.color = '#ef4444';
+        } else if (status === 'processed' && processedAt) {
+            statusElement.innerHTML = '✅ Obrađeno: ' + processedAt;
+            statusElement.style.color = '#10b981';
+        }
+        
+        // Ažuriraj actions sekciju (dodaj/ukloni download dugme)
+        const actionsElement = documentItem.querySelector('.document-actions');
+        if (actionsElement) {
+            actionsElement.setAttribute('data-document-status', status);
+            
+            // Ako je status processed ili active, dodaj download dugme ako ne postoji
+            if ((status === 'processed' || status === 'active') && !actionsElement.querySelector('.btn-download')) {
+                const downloadLink = document.createElement('a');
+                downloadLink.href = `/documents/${documentId}/download`;
+                downloadLink.className = 'btn-sm btn-download';
+                downloadLink.textContent = 'Preuzmi';
+                actionsElement.insertBefore(downloadLink, actionsElement.firstChild);
+            } else if (status !== 'processed' && status !== 'active') {
+                // Ukloni download dugme ako status nije processed ili active
+                const downloadLink = actionsElement.querySelector('.btn-download');
+                if (downloadLink) {
+                    downloadLink.remove();
+                }
+            }
+        }
+    }
+    
+    // Funkcija za proveru statusa
+    function checkDocumentStatus() {
+        fetch('{{ route("documents.status") }}', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.documents && data.documents.length > 0) {
+                data.documents.forEach(doc => {
+                    updateDocumentStatus(doc.id, doc.status, doc.processed_at);
+                });
+                
+                // Ako ima dokumenata u obradi, nastavi sa proverom
+                const hasProcessing = data.documents.some(doc => 
+                    doc.status === 'pending' || doc.status === 'processing'
+                );
+                
+                if (hasProcessing) {
+                    // Proveri ponovo za 3 sekunde
+                    setTimeout(checkDocumentStatus, 3000);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Greška pri proveri statusa:', error);
+        });
+    }
+    
+    // Proveri da li ima dokumenata u pending ili processing statusu
+    const hasPendingOrProcessing = document.querySelectorAll(
+        '.document-item[data-document-id] .document-status'
+    ).length > 0 && Array.from(document.querySelectorAll('.document-item[data-document-id]')).some(item => {
+        const status = item.querySelector('.document-status');
+        return status && (status.textContent.includes('Čeka obradu') || status.textContent.includes('U obradi'));
+    });
+    
+    if (hasPendingOrProcessing) {
+        // Počni sa proverom statusa nakon 2 sekunde
+        setTimeout(checkDocumentStatus, 2000);
+    }
+});
+</script>
 @endsection
 
