@@ -218,8 +218,8 @@ class DocumentProcessor
 
             $imagick = new \Imagick();
             
-            // Postavi DPI na 200 (dovoljno za dokumente, manji fajl)
-            $imagick->setResolution(200, 200);
+            // Postavi DPI na 300 (bolji kvalitet za dokumente)
+            $imagick->setResolution(300, 300);
             
             if ($mime === 'application/pdf') {
                 // Za PDF: učitaj prvu stranicu
@@ -306,20 +306,20 @@ class DocumentProcessor
             ]);
             
             if ($mime === 'application/pdf') {
-                // Za PDF: konvertuj prvu stranicu direktno u greyscale PDF sa 200 DPI
-                // Koristimo -colorspace Gray i -compress JPEG sa quality 70 za veću kompresiju
+                // Za PDF: konvertuj prvu stranicu direktno u greyscale PDF sa 300 DPI
+                // Koristimo -colorspace Gray i -compress JPEG sa quality 70 za kompresiju
                 $command = sprintf(
-                    '%s -density 200 "%s[0]" -colorspace Gray -compress JPEG -quality 70 "%s" 2>&1',
+                    '%s -density 300 "%s[0]" -colorspace Gray -compress JPEG -quality 70 "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
                     escapeshellarg($tempPdfPath)
                 );
             } else {
-                // Za slike: konvertuj direktno u greyscale PDF sa 200 DPI
+                // Za slike: konvertuj direktno u greyscale PDF sa 300 DPI
                 // -colorspace Gray konvertuje u greyscale
-                // -compress JPEG -quality 70 za veću kompresiju
+                // -compress JPEG -quality 70 za kompresiju
                 $command = sprintf(
-                    '%s -density 200 "%s" -colorspace Gray -compress JPEG -quality 70 "%s" 2>&1',
+                    '%s -density 300 "%s" -colorspace Gray -compress JPEG -quality 70 "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
                     escapeshellarg($tempPdfPath)
@@ -437,8 +437,8 @@ class DocumentProcessor
                 return false;
             }
 
-            // Kreiraj PDF sa 200 DPI (dovoljno za dokumente, manji fajl)
-            $pdfData = $this->createPdfFromImage($greyscaleImage, 200);
+            // Kreiraj PDF sa 300 DPI (bolji kvalitet)
+            $pdfData = $this->createPdfFromImage($greyscaleImage, 300);
             
             imagedestroy($imageResource);
             imagedestroy($greyscaleImage);
@@ -586,7 +586,7 @@ class DocumentProcessor
      * @param int $dpi
      * @return string|false PDF data
      */
-    protected function createPdfFromImage($imageResource, int $dpi = 200)
+    protected function createPdfFromImage($imageResource, int $dpi = 300)
     {
         try {
             // Proveri da li je ImageMagick dostupan
@@ -608,11 +608,11 @@ class DocumentProcessor
             // Kreiraj privremeni PDF
             $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('pdf_', true) . '.pdf';
 
-            // Konvertuj PNG u PDF sa 200 DPI (dovoljno za dokumente)
+            // Konvertuj PNG u PDF sa 300 DPI (bolji kvalitet)
             // -colorspace Gray konvertuje u greyscale
-            // -compress JPEG -quality 70 za veću kompresiju
+            // -compress JPEG -quality 70 za kompresiju
             $command = sprintf(
-                '%s -density 200 -colorspace Gray -compress JPEG -quality 70 "%s" "%s" 2>&1',
+                '%s -density 300 -colorspace Gray -compress JPEG -quality 70 "%s" "%s" 2>&1',
                 escapeshellarg($convertPath),
                 escapeshellarg($tempImagePath),
                 escapeshellarg($tempPdfPath)
@@ -679,7 +679,7 @@ class DocumentProcessor
      * @param int $dpi
      * @return string|false PDF data
      */
-    protected function createPdfFromImageGd($imageResource, int $dpi = 200)
+    protected function createPdfFromImageGd($imageResource, int $dpi = 300)
     {
         try {
             $width = imagesx($imageResource);
