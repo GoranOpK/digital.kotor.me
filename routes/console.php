@@ -11,9 +11,3 @@ Artisan::command('path:show', function () {
     $this->info('Putanja do projekta:');
     $this->line(base_path());
 })->purpose('Prikazuje putanju do projekta');
-
-// Registruj CheckImageMagick komandu
-Artisan::command('imagemagick:check', function () {
-    $command = new \App\Console\Commands\CheckImageMagick();
-    return $command->handle();
-})->purpose('Proverava da li je ImageMagick instaliran i dostupan');
