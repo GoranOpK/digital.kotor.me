@@ -134,6 +134,10 @@ class DocumentController extends Controller
                 $document->update(['status' => 'processing']);
                 $document->refresh(); // Osveži da bi se promena videla
                 
+                // Mala pauza da bi JavaScript stigao da pročita "processing" status
+                // (obrada je vrlo brza, pa treba da status bude vidljiv)
+                usleep(500000); // 0.5 sekunde pauza
+                
                 Log::info('Status postavljen na processing (direktna obrada)', [
                     'document_id' => $document->id,
                     'current_status' => $document->status

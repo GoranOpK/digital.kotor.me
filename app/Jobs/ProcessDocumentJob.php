@@ -64,6 +64,10 @@ class ProcessDocumentJob implements ShouldQueue
             $this->document->update(['status' => 'processing']);
             $this->document->refresh(); // Osveži da bi se promena videla u sledećim proverama
             
+            // Mala pauza da bi JavaScript stigao da pročita "processing" status
+            // (obrada je vrlo brza - 0.39 sekundi, pa treba da status bude vidljiv)
+            usleep(500000); // 0.5 sekunde pauza
+            
             Log::info('Status postavljen na processing', [
                 'document_id' => $this->document->id,
                 'current_status' => $this->document->status

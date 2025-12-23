@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('Pronađeno dokumenata u obradi:', data.documents.length);
                 
                 data.documents.forEach(doc => {
-                    console.log('Ažuriram dokument ID:', doc.id, 'Status:', doc.status);
+                    console.log('Ažuriram dokument ID:', doc.id, 'Status:', doc.status, 'Processed at:', doc.processed_at);
                     updateDocumentStatus(doc.id, doc.status, doc.processed_at);
                 });
                 
