@@ -461,6 +461,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Funkcija za proveru statusa
+    let statusCheckInterval = null;
+    
     function checkDocumentStatus() {
         fetch('{{ route("documents.status") }}', {
             method: 'GET',
@@ -477,14 +479,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateDocumentStatus(doc.id, doc.status, doc.processed_at);
                 });
                 
-                // Ako ima dokumenata u obradi, nastavi sa proverom
+                // Proveri da li još ima dokumenata u obradi
                 const hasProcessing = data.documents.some(doc => 
                     doc.status === 'pending' || doc.status === 'processing'
                 );
                 
-                if (hasProcessing) {
-                    // Proveri ponovo za 3 sekunde
-                    setTimeout(checkDocumentStatus, 3000);
+                // Ako nema više dokumenata u obradi, zaustavi proveru
+                if (!hasProcessing && statusCheckInterval) {
+                    clearInterval(statusCheckInterval);
+                    statusCheckInterval = null;
+                }
+            } else {
+                // Ako nema dokumenata u obradi, zaustavi proveru
+                if (statusCheckInterval) {
+                    clearInterval(statusCheckInterval);
+                    statusCheckInterval = null;
                 }
             }
         })
@@ -494,16 +503,45 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Proveri da li ima dokumenata u pending ili processing statusu
-    const hasPendingOrProcessing = document.querySelectorAll(
-        '.document-item[data-document-id] .document-status'
-    ).length > 0 && Array.from(document.querySelectorAll('.document-item[data-document-id]')).some(item => {
-        const status = item.querySelector('.document-status');
-        return status && (status.textContent.includes('Čeka obradu') || status.textContent.includes('U obradi'));
+    const documentItems = document.querySelectorAll('.document-item[data-document-id]');
+    let hasPendingOrProcessing = false;
+    
+    documentItems.forEach(item => {
+        const statusElement = item.querySelector('.document-status');
+        if (statusElement) {
+            const statusText = statusElement.textContent;
+            if (statusText.includes('Čeka obradu') || statusText.includes('U obradi')) {
+                hasPendingOrProcessing = true;
+            }
+        }
     });
     
+    // Pokreni proveru statusa ako ima dokumenata u obradi
     if (hasPendingOrProcessing) {
-        // Počni sa proverom statusa nakon 2 sekunde
-        setTimeout(checkDocumentStatus, 2000);
+        // Prva provera nakon 2 sekunde
+        setTimeout(function() {
+            checkDocumentStatus();
+            
+            // Pokreni interval za proveru svakih 3 sekunde
+            if (!statusCheckInterval) {
+                statusCheckInterval = setInterval(checkDocumentStatus, 3000);
+            }
+        }, 2000);
+    } else {
+        // Proveri jednom da vidimo da li ima dokumenata u obradi (možda su se promenili)
+        setTimeout(function() {
+            checkDocumentStatus();
+            
+            // Ako nakon provere ima dokumenata u obradi, pokreni interval
+            const stillProcessing = Array.from(document.querySelectorAll('.document-item[data-document-id]')).some(item => {
+                const status = item.querySelector('.document-status');
+                return status && (status.textContent.includes('Čeka obradu') || status.textContent.includes('U obradi'));
+            });
+            
+            if (stillProcessing && !statusCheckInterval) {
+                statusCheckInterval = setInterval(checkDocumentStatus, 3000);
+            }
+        }, 2000);
     }
 });
 </script>
