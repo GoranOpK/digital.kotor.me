@@ -134,6 +134,11 @@ class DocumentController extends Controller
                 $document->update(['status' => 'processing']);
                 $document->refresh(); // Osveži da bi se promena videla
                 
+                Log::info('Status postavljen na processing (direktna obrada)', [
+                    'document_id' => $document->id,
+                    'current_status' => $document->status
+                ]);
+                
                 // Kreiraj UploadedFile objekat
                 $mimeType = mime_content_type($tempFilePath) ?: 'application/octet-stream';
                 $uploadedFile = new \Illuminate\Http\UploadedFile(

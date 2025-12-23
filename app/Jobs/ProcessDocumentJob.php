@@ -64,6 +64,11 @@ class ProcessDocumentJob implements ShouldQueue
             $this->document->update(['status' => 'processing']);
             $this->document->refresh(); // Osveži da bi se promena videla u sledećim proverama
             
+            Log::info('Status postavljen na processing', [
+                'document_id' => $this->document->id,
+                'current_status' => $this->document->status
+            ]);
+            
             // Kreiraj UploadedFile objekat za procesiranje
             $mimeType = mime_content_type($tempFilePath) ?: 'application/octet-stream';
             $uploadedFile = new \Illuminate\Http\UploadedFile(
