@@ -53,12 +53,19 @@ class DocumentProcessor
             }
             $outputPath = "{$directory}/{$outputFilename}";
 
-            // Pokušaj da koristiš ImageMagick za kompletnu obradu (najbrže i najpouzdanije)
-            $convertPath = $this->findImageMagickConvert();
+            // Pokušaj da koristiš PHP Imagick ekstenziju direktno (najbrže i najpouzdanije)
             $pdfData = false;
             
-            if ($convertPath) {
-                $pdfData = $this->processWithImageMagick($file->getRealPath(), $mime, $convertPath);
+            if (extension_loaded('imagick')) {
+                $pdfData = $this->processWithPhpImagick($file->getRealPath(), $mime);
+            }
+            
+            // Ako PHP Imagick nije dostupan, pokušaj sa convert komandom
+            if ($pdfData === false) {
+                $convertPath = $this->findImageMagickConvert();
+                if ($convertPath) {
+                    $pdfData = $this->processWithImageMagick($file->getRealPath(), $mime, $convertPath);
+                }
             }
             
             // Ako ImageMagick nije dostupan ili nije uspeo, koristi GD metodu
@@ -195,7 +202,82 @@ class DocumentProcessor
     }
 
     /**
-     * Obrađuje dokument koristeći ImageMagick (najbrže i najpouzdanije)
+     * Obrađuje dokument koristeći PHP Imagick ekstenziju direktno
+     *
+     * @param string $filePath
+     * @param string $mime
+     * @return string|false PDF data
+     */
+    protected function processWithPhpImagick(string $filePath, string $mime)
+    {
+        try {
+            Log::info('Starting PHP Imagick conversion', [
+                'mime' => $mime,
+                'file_path' => $filePath
+            ]);
+
+            $imagick = new \Imagick();
+            
+            // Postavi DPI na 300
+            $imagick->setResolution(300, 300);
+            
+            if ($mime === 'application/pdf') {
+                // Za PDF: učitaj prvu stranicu
+                $imagick->readImage($filePath . '[0]');
+            } else {
+                // Za slike: učitaj direktno
+                $imagick->readImage($filePath);
+            }
+            
+            // Konvertuj u greyscale
+            $imagick->transformImageColorspace(\Imagick::COLORSPACE_GRAY);
+            
+            // Ukloni ICC profile i metapodatke
+            $imagick->stripImage();
+            
+            // Postavi format na PDF
+            $imagick->setImageFormat('pdf');
+            
+            // Kreiraj PDF
+            $pdfData = $imagick->getImageBlob();
+            
+            $imagick->clear();
+            $imagick->destroy();
+            
+            Log::info('PHP Imagick conversion completed', [
+                'pdf_size' => strlen($pdfData)
+            ]);
+            
+            // Proveri da li je PDF validan
+            if ($pdfData === false || empty($pdfData) || strlen($pdfData) < 100) {
+                Log::error('PHP Imagick PDF data is invalid or too small', [
+                    'data_length' => $pdfData ? strlen($pdfData) : 0
+                ]);
+                return false;
+            }
+            
+            // Proveri da li PDF počinje sa validnim PDF header-om
+            if (strpos($pdfData, '%PDF') !== 0) {
+                Log::error('PHP Imagick PDF data does not start with valid PDF header', [
+                    'header' => substr($pdfData, 0, 8),
+                    'data_length' => strlen($pdfData)
+                ]);
+                return false;
+            }
+            
+            return $pdfData;
+            
+        } catch (\Exception $e) {
+            Log::error('PHP Imagick processing exception', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return false;
+        }
+    }
+
+    /**
+     * Obrađuje dokument koristeći ImageMagick convert komandu (fallback)
      *
      * @param string $filePath
      * @param string $mime
@@ -209,34 +291,52 @@ class DocumentProcessor
 
             // Direktna konverzija u greyscale PDF sa 300 DPI
             // Koristimo jednostavnije opcije za bolju kompatibilnost
+            Log::info('Starting ImageMagick conversion', [
+                'mime' => $mime,
+                'file_path' => $filePath,
+                'temp_pdf_path' => $tempPdfPath
+            ]);
+            
             if ($mime === 'application/pdf') {
                 // Za PDF: konvertuj prvu stranicu direktno u greyscale PDF sa 300 DPI
+                // Koristimo -colorspace Gray bez -strip da izbegnemo probleme
                 $command = sprintf(
-                    '%s -density 300 "%s[0]" -strip -colorspace Gray "%s" 2>&1',
+                    '%s -density 300 "%s[0]" -colorspace Gray "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
                     escapeshellarg($tempPdfPath)
                 );
             } else {
                 // Za slike: konvertuj direktno u greyscale PDF sa 300 DPI
-                // -strip uklanja ICC profile i metapodatke
                 // -colorspace Gray konvertuje u greyscale
-                // Bez kompresije za maksimalnu kompatibilnost
+                // Bez -strip da izbegnemo probleme sa oštećenim PDF-ovima
                 $command = sprintf(
-                    '%s -density 300 "%s" -strip -colorspace Gray "%s" 2>&1',
+                    '%s -density 300 "%s" -colorspace Gray "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
                     escapeshellarg($tempPdfPath)
                 );
             }
+            
+            Log::info('ImageMagick command', ['command' => $command]);
 
+            $startTime = microtime(true);
             exec($command, $output, $returnCode);
+            $executionTime = microtime(true) - $startTime;
+            
+            Log::info('ImageMagick conversion completed', [
+                'execution_time' => round($executionTime, 2) . ' seconds',
+                'return_code' => $returnCode,
+                'output_lines' => count($output),
+                'file_exists' => file_exists($tempPdfPath)
+            ]);
 
             if ($returnCode !== 0 || !file_exists($tempPdfPath)) {
                 Log::error('ImageMagick PDF conversion failed', [
                     'command' => $command,
                     'output' => implode("\n", $output),
-                    'return_code' => $returnCode
+                    'return_code' => $returnCode,
+                    'execution_time' => round($executionTime, 2) . ' seconds'
                 ]);
                 return false;
             }
@@ -501,11 +601,10 @@ class DocumentProcessor
             $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('pdf_', true) . '.pdf';
 
             // Konvertuj PNG u PDF sa 300 DPI
-            // Koristi -strip da uklonimo ICC profile i metapodatke
             // -colorspace Gray konvertuje u greyscale
-            // Bez kompresije za maksimalnu kompatibilnost
+            // Bez -strip da izbegnemo probleme sa oštećenim PDF-ovima
             $command = sprintf(
-                '%s -density %d -strip -colorspace Gray "%s" "%s" 2>&1',
+                '%s -density %d -colorspace Gray "%s" "%s" 2>&1',
                 escapeshellarg($convertPath),
                 $dpi,
                 escapeshellarg($tempImagePath),
