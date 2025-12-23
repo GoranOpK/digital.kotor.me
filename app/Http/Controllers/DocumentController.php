@@ -108,10 +108,10 @@ class DocumentController extends Controller
         $this->documentProcessor->updateUserStorage($user->id, $originalFileSize);
 
         // Odluči da li da obrađujemo direktno ili preko queue-a
-        // Za fajlove manje od 2MB, obrađujemo direktno (brže za korisnika)
+        // Za fajlove manje od 5MB, obrađujemo direktno (brže za korisnika)
         // Za veće fajlove, koristimo queue (ne blokira korisnika)
         $fileSizeMB = $originalFileSize / 1024 / 1024;
-        $useQueue = $fileSizeMB > 2; // 2MB threshold
+        $useQueue = $fileSizeMB > 5; // 5MB threshold
 
         if ($useQueue) {
             // Pokreni job za asinhronu obradu (veliki fajlovi)
