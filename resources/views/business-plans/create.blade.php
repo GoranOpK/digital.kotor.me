@@ -386,7 +386,7 @@
                         </label>
                         <div class="form-group">
                             <label class="form-label">
-                                6. Navedite sve postojeće/planirane proizvode/usluge. (Proširite tabelu ukoliko je potrebno.)
+                                6. Navedite sve postojeće/planirane proizvode/usluge. (Proširite tabelu koliko je potrebno.)
                             </label>
                             <table class="dynamic-table" id="productsServicesTable">
                                 <thead>
@@ -443,7 +443,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            8. Navedite glavne kupce Vaših proizvoda/usluga tj. ciljnu grupu. (Proširite tabelu ukoliko je potrebno.)
+                            8. Navedite glavne kupce Vaših proizvoda/usluga tj. ciljnu grupu. (Proširite tabelu koliko je potrebno.)
                         </label>
                         <table class="dynamic-table" id="targetCustomersTable">
                             <thead>
@@ -531,7 +531,7 @@
                         </label>
                         <div class="form-group">
                             <label class="form-label">
-                                11. Koje su trenutne/planirane cijene Vaših proizvoda/usluga? (Proširite tabelu ukoliko je potrebno)
+                                11. Koje su trenutne/planirane cijene Vaših proizvoda/usluga? (Proširite tabelu koliko je potrebno)
                             </label>
                             <table class="dynamic-table" id="pricingTable">
                                 <thead>
@@ -667,7 +667,7 @@
                                 <textarea name="competition_analysis" class="form-control" rows="6">{{ old('competition_analysis', $businessPlan->competition_analysis ?? '') }}</textarea>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Navedite jake i slabe strane konkurencije. (Proširite tabelu ukoliko je potrebno)</label>
+                                <label class="form-label">Navedite jake i slabe strane konkurencije. (Proširite tabelu koliko je potrebno)</label>
                                 <textarea name="competition_analysis" class="form-control" rows="6">{{ old('competition_analysis', $businessPlan->competition_analysis ?? '') }}</textarea>
                             </div>
                         </div>
@@ -728,7 +728,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            19. Navedite što Vam je sve potrebno kako biste proizveli proizvod/uslugu. (Proširite tabelu ukoliko je potrebno)
+                            19. Navedite što Vam je sve potrebno kako biste proizveli proizvod/uslugu. (Proširite tabelu koliko je potrebno)
                         </label>
                         <textarea name="required_resources" class="form-control" rows="6">{{ old('required_resources', $businessPlan->required_resources ?? '') }}</textarea>
                     </div>
@@ -739,7 +739,7 @@
                         </label>
                         <div class="form-group">
                             <label class="form-label">
-                                a. Gdje ćete nabavljati sirovine, alat, mašine, opremu, programe tj. sve što Vam je potrebno kako biste kreirali proizvod /pružili uslugu? (Proširite tabelu ukoliko je potrebno.)
+                                a. Gdje ćete nabavljati sirovine, alat, mašine, opremu, programe tj. sve što Vam je potrebno kako biste kreirali proizvod /pružili uslugu? (Proširite tabelu koliko je potrebno.)
                             </label>
                             <table class="dynamic-table" id="suppliersTable">
                                 <thead>
@@ -791,7 +791,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            22. Koliki iznos podrške tražite od Opštine Kotor i navedite na što biste tačno utrošiti tražena sredstva? (Proširite tabelu ukoliko je potrebno.)
+                            22. Koliki iznos podrške tražite od Opštine Kotor i navedite na što biste tačno utrošiti tražena sredstva? (Proširite tabelu koliko je potrebno.)
                         </label>
                         <div class="form-group">
                             <label class="form-label">Iznos podrške:</label>
@@ -860,7 +860,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            24. Projekcija prihoda u naredne 3 godine (Proširite tabelu ukoliko je potrebno):
+                            24. Projekcija prihoda u naredne 3 godine (Proširite tabelu koliko je potrebno):
                         </label>
                         <table class="dynamic-table" id="revenueProjectionTable">
                             <thead>
@@ -907,7 +907,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            25. Projekcija rashoda u naredne 3 godine (Proširite tabelu ukoliko je potrebno):
+                            25. Projekcija rashoda u naredne 3 godine (Proširite tabelu koliko je potrebno):
                         </label>
                         <table class="dynamic-table" id="expenseProjectionTable">
                             <thead>
@@ -998,14 +998,14 @@
                     
                     <div class="form-group">
                         <label class="form-label">
-                            26. Predstavite Vaše radno iskustvo, te opišite znanja i vještine koje posjedujete, a za koje smatrate da su od važnosti za realizaciju biznis plana. (Proširite tabelu ukoliko je potrebno.)
+                            26. Predstavite Vaše radno iskustvo, te opišite znanja i vještine koje posjedujete, a za koje smatrate da su od važnosti za realizaciju biznis plana. (Proširite tabelu koliko je potrebno.)
                         </label>
                         <textarea name="work_experience" class="form-control" rows="6">{{ old('work_experience', $businessPlan->work_experience ?? '') }}</textarea>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            27. Za koje Vaše osobine smatrate da su prednosti, a koje osobine smatrate da biste trebali unaprijediti? (Proširite tabelu ukoliko je potrebno.)
+                            27. Za koje Vaše osobine smatrate da su prednosti, a koje osobine smatrate da biste trebali unaprijediti? (Proširite tabelu koliko je potrebno.)
                         </label>
                         <textarea name="personal_strengths_weaknesses" class="form-control" rows="6">{{ old('personal_strengths_weaknesses', $businessPlan->personal_strengths_weaknesses ?? '') }}</textarea>
                     </div>
@@ -1091,7 +1091,7 @@
                     
                     <div class="form-group">
                         <label class="form-label">
-                            30. Matrica upravljanja rizicima (Proširite tabelu ukoliko je potrebno):
+                            30. Matrica upravljanja rizicima (Proširite tabelu koliko je potrebno):
                         </label>
                         <table class="dynamic-table" id="riskMatrixTable">
                             <thead>
