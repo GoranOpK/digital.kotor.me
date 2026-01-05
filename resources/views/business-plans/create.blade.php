@@ -597,7 +597,7 @@
                         </label>
                         <div class="form-group">
                             <label class="form-label">
-                                14. Definišite Vašu marketing strategiju (prodor na tržište, distribucija proizvoda/usluga, komunikacija sa tržištem, promocija/reklama…proširite tabelu ukoliko je potrebno):
+                                14. Definišite Vašu marketing strategiju (prodor na tržište, distribucija proizvoda/usluga, komunikacija sa tržištem, promocija/reklama…proširite tabelu koliko je potrebno):
                             </label>
                             <textarea 
                                 name="promotion" 
