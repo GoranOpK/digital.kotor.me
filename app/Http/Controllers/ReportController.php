@@ -167,6 +167,14 @@ class ReportController extends Controller
         }
 
         $report = $application->reports()->where('type', 'financial')->first();
+        
+        // Učitaj podatke iz aplikacije ako nema izvještaja
+        if (!$report) {
+            $report = new Report();
+            $report->entrepreneur_name = $application->user->name ?? '';
+            $report->business_plan_name = $application->business_plan_name ?? '';
+            $report->approved_amount = $application->approved_amount ?? 0;
+        }
 
         return view('reports.create-financial', compact('application', 'report'));
     }
@@ -181,29 +189,48 @@ class ReportController extends Controller
             abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
-        $validated = $request->validate([
-            'description' => 'required|string|max:10000',
-            'document_file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx|max:10240',
-        ], [
-            'description.required' => 'Opis finansijskog izvještaja je obavezan.',
-            'document_file.required' => 'Finansijski izvještaj je obavezan.',
-            'document_file.mimes' => 'Dokument mora biti PDF, DOC, DOCX, XLS ili XLSX.',
-            'document_file.max' => 'Dokument ne može biti veći od 10MB.',
-        ]);
+        // Proveri da li već postoji izvještaj
+        $existingReport = $application->reports()->where('type', 'financial')->first();
 
-        $file = $request->file('document_file');
-        $filePath = $file->store('reports/financial', 'local');
+        $validated = $request->validate([
+            // Osnovni podaci
+            'entrepreneur_name' => 'required|string|max:255',
+            'legal_status' => 'required|string|max:255',
+            'business_plan_name' => 'required|string|max:255',
+            'approved_amount' => 'required|numeric|min:0',
+            'total_amount' => 'required|numeric|min:0',
+            'report_date' => 'required|date',
+            
+            // Tabela sa nabavkama
+            'purchases_table' => 'required|array|min:1',
+            'purchases_table.*.purchase_type' => 'nullable|string|max:255',
+            'purchases_table.*.amount' => 'nullable|numeric|min:0',
+            'purchases_table.*.supplier' => 'nullable|string|max:255',
+            'purchases_table.*.invoice_number' => 'nullable|string|max:255',
+            'purchases_table.*.invoice_date' => 'nullable|date',
+            'purchases_table.*.payment_info' => 'nullable|string|max:255',
+        ], [
+            'entrepreneur_name.required' => 'Ime i prezime preduzetnice je obavezno.',
+            'legal_status.required' => 'Pravni status i naziv biznisa je obavezan.',
+            'business_plan_name.required' => 'Naziv biznis plana je obavezan.',
+            'approved_amount.required' => 'Iznos odobrenih sredstava je obavezan.',
+            'total_amount.required' => 'Iznos ukupnih sredstava je obavezan.',
+            'report_date.required' => 'Datum popunjavanja izvještaja je obavezan.',
+            'purchases_table.required' => 'Morate dodati najmanje jednu nabavku.',
+            'purchases_table.min' => 'Morate dodati najmanje jednu nabavku.',
+        ]);
 
         $report = Report::updateOrCreate(
             [
                 'application_id' => $application->id,
                 'type' => 'financial',
             ],
-            [
-                'description' => $validated['description'],
-                'document_file' => $filePath,
-                'status' => 'submitted',
-            ]
+            array_merge(
+                $validated,
+                [
+                    'status' => 'submitted',
+                ]
+            )
         );
 
         return redirect()->route('applications.show', $application)

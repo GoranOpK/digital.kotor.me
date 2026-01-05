@@ -34,6 +34,9 @@ class Report extends Model
         'financial_report_file',
         'invoices_file',
         'bank_statement_file',
+        'total_amount',
+        'report_date',
+        'purchases_table',
         'status',
         'evaluation_notes',
         'evaluated_at',
@@ -41,8 +44,11 @@ class Report extends Model
 
     protected $casts = [
         'approved_amount' => 'decimal:2',
+        'total_amount' => 'decimal:2',
         'report_period_start' => 'date',
         'report_period_end' => 'date',
+        'report_date' => 'date',
+        'purchases_table' => 'array',
         'evaluated_at' => 'datetime',
     ];
 
