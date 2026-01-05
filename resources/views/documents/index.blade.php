@@ -323,7 +323,7 @@
                         <div id="file-name" class="file-name-display" style="display: none;"></div>
                     </div>
                     <small style="color: #6b7280; display: block; margin-top: 4px;">
-                        Dozvoljeni formati: JPEG, PNG, PDF (max 10MB). Dokument će biti automatski optimizovan u PDF format.
+                        Dozvoljeni formati: JPEG, PNG, PDF (max 10MB). Dokument će biti automatski konvertovan u greyscale PDF format sa 300 DPI rezolucijom.
                     </small>
                 </div>
                 <div class="form-group">
@@ -343,7 +343,7 @@
                     <h3>{{ $categoryName }}</h3>
                     @if(isset($documents[$categoryKey]) && $documents[$categoryKey]->count() > 0)
                         @foreach($documents[$categoryKey] as $document)
-                            <div class="document-item">
+                            <div class="document-item" data-document-id="{{ $document->id }}">
                                 <div class="document-info">
                                     <div class="document-name">{{ $document->name }}</div>
                                     <div class="document-meta">
@@ -356,11 +356,30 @@
                                             <span style="color: #ef4444; font-weight: 600;"> (ISTEKLO)</span>
                                         @endif
                                     </div>
+                                    @if($document->status === 'pending')
+                                        <div class="document-status" style="margin-top: 8px; color: #f59e0b; font-size: 13px; font-weight: 500;">
+                                            ⏳ Čeka obradu...
+                                        </div>
+                                    @elseif($document->status === 'processing')
+                                        <div class="document-status" style="margin-top: 8px; color: #3b82f6; font-size: 13px; font-weight: 500;">
+                                            🔄 U obradi...
+                                        </div>
+                                    @elseif($document->status === 'failed')
+                                        <div class="document-status" style="margin-top: 8px; color: #ef4444; font-size: 13px; font-weight: 500;">
+                                            ❌ Greška pri obradi
+                                        </div>
+                                    @elseif($document->status === 'processed' && $document->processed_at)
+                                        <div class="document-status" style="margin-top: 8px; color: #10b981; font-size: 13px; font-weight: 500;">
+                                            ✅ Obrađeno: {{ $document->processed_at->format('d.m.Y H:i') }}
+                                        </div>
+                                    @endif
                                 </div>
-                                <div class="document-actions">
-                                    <a href="{{ route('documents.download', $document) }}" class="btn-sm btn-download">
-                                        Preuzmi
-                                    </a>
+                                <div class="document-actions" data-document-status="{{ $document->status }}">
+                                    @if($document->status === 'processed' || $document->status === 'active')
+                                        <a href="{{ route('documents.download', $document) }}" class="btn-sm btn-download">
+                                            Preuzmi
+                                        </a>
+                                    @endif
                                     <form action="{{ route('documents.destroy', $document) }}" method="POST" 
                                           style="display: inline;" 
                                           onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj dokument?');">
@@ -381,5 +400,180 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Funkcija za ažuriranje statusa dokumenta u DOM-u
+    function updateDocumentStatus(documentId, status, processedAt) {
+        console.log('updateDocumentStatus pozvan:', { documentId, status, processedAt });
+        
+        // Pronađi document-item sa odgovarajućim ID-jem
+        const documentItem = document.querySelector(`.document-item[data-document-id="${documentId}"]`);
+        if (!documentItem) {
+            console.warn('Dokument nije pronađen u DOM-u:', documentId);
+            return;
+        }
+        
+        const documentInfo = documentItem.querySelector('.document-info');
+        if (!documentInfo) {
+            console.warn('Document info nije pronađen za dokument:', documentId);
+            return;
+        }
+        
+        // Pronađi ili kreiraj status element
+        let statusElement = documentInfo.querySelector('.document-status');
+        if (!statusElement) {
+            console.log('Kreiram novi status element');
+            statusElement = document.createElement('div');
+            statusElement.className = 'document-status';
+            statusElement.style.marginTop = '8px';
+            statusElement.style.fontSize = '13px';
+            statusElement.style.fontWeight = '500';
+            documentInfo.appendChild(statusElement);
+        }
+        
+        // Ažuriraj status
+        if (status === 'pending') {
+            statusElement.innerHTML = '⏳ Čeka obradu...';
+            statusElement.style.color = '#f59e0b';
+        } else if (status === 'processing') {
+            statusElement.innerHTML = '🔄 U obradi...';
+            statusElement.style.color = '#3b82f6';
+        } else if (status === 'failed') {
+            statusElement.innerHTML = '❌ Greška pri obradi';
+            statusElement.style.color = '#ef4444';
+        } else if (status === 'processed' && processedAt) {
+            statusElement.innerHTML = '✅ Obrađeno: ' + processedAt;
+            statusElement.style.color = '#10b981';
+        } else if (status === 'processed') {
+            statusElement.innerHTML = '✅ Obrađeno';
+            statusElement.style.color = '#10b981';
+        }
+        
+        console.log('Status ažuriran:', statusElement.innerHTML);
+        
+        // Ažuriraj actions sekciju (dodaj/ukloni download dugme)
+        const actionsElement = documentItem.querySelector('.document-actions');
+        if (actionsElement) {
+            actionsElement.setAttribute('data-document-status', status);
+            
+            // Ako je status processed ili active, dodaj download dugme ako ne postoji
+            if ((status === 'processed' || status === 'active') && !actionsElement.querySelector('.btn-download')) {
+                const downloadLink = document.createElement('a');
+                downloadLink.href = `/documents/${documentId}/download`;
+                downloadLink.className = 'btn-sm btn-download';
+                downloadLink.textContent = 'Preuzmi';
+                actionsElement.insertBefore(downloadLink, actionsElement.firstChild);
+                console.log('Download dugme dodato');
+            } else if (status !== 'processed' && status !== 'active') {
+                // Ukloni download dugme ako status nije processed ili active
+                const downloadLink = actionsElement.querySelector('.btn-download');
+                if (downloadLink) {
+                    downloadLink.remove();
+                    console.log('Download dugme uklonjeno');
+                }
+            }
+        }
+    }
+    
+    // Funkcija za proveru statusa
+    let statusCheckInterval = null;
+    
+    function checkDocumentStatus() {
+        console.log('Proveravam status dokumenata...');
+        
+        fetch('{{ route("documents.status") }}', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Status data:', data);
+            
+            if (data.documents && data.documents.length > 0) {
+                console.log('Pronađeno dokumenata u obradi:', data.documents.length);
+                
+                data.documents.forEach(doc => {
+                    console.log('Ažuriram dokument ID:', doc.id, 'Status:', doc.status, 'Processed at:', doc.processed_at);
+                    updateDocumentStatus(doc.id, doc.status, doc.processed_at);
+                });
+                
+                // Proveri da li još ima dokumenata u obradi
+                const hasProcessing = data.documents.some(doc => 
+                    doc.status === 'pending' || doc.status === 'processing'
+                );
+                
+                console.log('Ima dokumenata u obradi:', hasProcessing);
+                
+                // Ako nema više dokumenata u obradi, zaustavi proveru
+                if (!hasProcessing && statusCheckInterval) {
+                    console.log('Zaustavljam proveru statusa');
+                    clearInterval(statusCheckInterval);
+                    statusCheckInterval = null;
+                }
+            } else {
+                console.log('Nema dokumenata u obradi');
+                // Ako nema dokumenata u obradi, zaustavi proveru
+                if (statusCheckInterval) {
+                    clearInterval(statusCheckInterval);
+                    statusCheckInterval = null;
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Greška pri proveri statusa:', error);
+        });
+    }
+    
+    // Proveri da li ima dokumenata u pending ili processing statusu
+    const documentItems = document.querySelectorAll('.document-item[data-document-id]');
+    let hasPendingOrProcessing = false;
+    
+    documentItems.forEach(item => {
+        const statusElement = item.querySelector('.document-status');
+        if (statusElement) {
+            const statusText = statusElement.textContent;
+            if (statusText.includes('Čeka obradu') || statusText.includes('U obradi')) {
+                hasPendingOrProcessing = true;
+            }
+        }
+    });
+    
+    // Pokreni proveru statusa ako ima dokumenata u obradi
+    if (hasPendingOrProcessing) {
+        // Prva provera nakon 1 sekunde (brže da uhvatimo processing status)
+        setTimeout(function() {
+            checkDocumentStatus();
+            
+            // Pokreni interval za proveru svakih 1 sekund (brže ažuriranje)
+            if (!statusCheckInterval) {
+                statusCheckInterval = setInterval(checkDocumentStatus, 1000);
+            }
+        }, 1000);
+    } else {
+        // Proveri jednom da vidimo da li ima dokumenata u obradi (možda su se promenili)
+        setTimeout(function() {
+            checkDocumentStatus();
+            
+            // Ako nakon provere ima dokumenata u obradi, pokreni interval
+            const stillProcessing = Array.from(document.querySelectorAll('.document-item[data-document-id]')).some(item => {
+                const status = item.querySelector('.document-status');
+                return status && (status.textContent.includes('Čeka obradu') || status.textContent.includes('U obradi'));
+            });
+            
+            if (stillProcessing && !statusCheckInterval) {
+                statusCheckInterval = setInterval(checkDocumentStatus, 1000);
+            }
+        }, 1000);
+    }
+});
+</script>
 @endsection
 

@@ -15,14 +15,17 @@ class UserDocument extends Model
         'category',
         'name',
         'file_path',
+        'original_file_path',
         'original_filename',
         'file_size',
         'expires_at',
         'status',
+        'processed_at',
     ];
 
     protected $casts = [
         'expires_at' => 'date',
+        'processed_at' => 'datetime',
         'file_size' => 'integer',
     ];
 
