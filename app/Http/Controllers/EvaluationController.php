@@ -99,10 +99,26 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
+        // Validacija - provjera dokumentacije
+        $rules = [
+            'documents_complete' => 'required|boolean',
+        ];
+        $messages = [
+            'documents_complete.required' => 'Morate odgovoriti da li su sva potrebna dokumenta dostavljena.',
+        ];
+
+        // Ako dokumentacija nije kompletna, automatski odbiti prijavu
+        if (!$request->has('documents_complete') || !$request->boolean('documents_complete')) {
+            $application->update([
+                'status' => 'rejected',
+                'rejection_reason' => 'Nedostaju potrebna dokumenta.',
+            ]);
+            
+            return redirect()->route('evaluation.index')
+                ->with('error', 'Prijava je odbijena jer nisu dostavljena sva potrebna dokumenta.');
+        }
+
         // Validacija - svaki kriterijum 1-5 poena
-        $rules = [];
-        $messages = [];
-        
         for ($i = 1; $i <= 10; $i++) {
             $rules["criterion_{$i}"] = 'required|integer|min:1|max:5';
             $messages["criterion_{$i}.required"] = "Kriterijum {$i} je obavezan.";
@@ -111,6 +127,7 @@ class EvaluationController extends Controller
         }
 
         $rules['notes'] = 'nullable|string|max:5000';
+        $rules['justification'] = 'nullable|string|max:5000';
 
         $validated = $request->validate($rules, $messages);
 
@@ -127,6 +144,7 @@ class EvaluationController extends Controller
                 'commission_member_id' => $commissionMember->id,
             ],
             [
+                'documents_complete' => $validated['documents_complete'],
                 'criterion_1' => $validated['criterion_1'],
                 'criterion_2' => $validated['criterion_2'],
                 'criterion_3' => $validated['criterion_3'],
@@ -139,6 +157,7 @@ class EvaluationController extends Controller
                 'criterion_10' => $validated['criterion_10'],
                 'final_score' => $totalScore,
                 'notes' => $validated['notes'] ?? null,
+                'justification' => $validated['justification'] ?? null,
             ]
         );
 
@@ -174,10 +193,19 @@ class EvaluationController extends Controller
         // Izračunaj konačnu ocjenu (zbir prosjeka)
         $finalScore = round(array_sum($averages), 2);
 
+        // Ako je ocjena ispod 30, automatski odbiti
+        $status = 'evaluated';
+        if ($finalScore < 30) {
+            $status = 'rejected';
+            $application->update([
+                'rejection_reason' => 'Ukupna ocjena ispod 30 bodova (minimum za podršku).',
+            ]);
+        }
+
         // Ažuriraj prijavu
         $application->update([
             'final_score' => $finalScore,
-            'status' => 'evaluated',
+            'status' => $status,
             'evaluated_at' => now(),
         ]);
 
@@ -213,5 +241,130 @@ class EvaluationController extends Controller
         $application->load(['user', 'competition', 'businessPlan']);
 
         return view('evaluation.show', compact('application', 'commissionMember', 'evaluationScore'));
+    }
+
+    /**
+     * Pregled svih ocjena za predsjednika komisije
+     */
+    public function chairmanReview(Application $application): View
+    {
+        $user = Auth::user();
+        
+        // Pronađi člana komisije
+        $commissionMember = CommissionMember::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$commissionMember) {
+            abort(403, 'Niste član komisije.');
+        }
+
+        // Proveri da li je predsjednik
+        if ($commissionMember->position !== 'predsjednik') {
+            abort(403, 'Samo predsjednik komisije može donijeti zaključak.');
+        }
+
+        $application->load(['user', 'competition', 'businessPlan', 'evaluationScores.commissionMember']);
+        
+        // Učitaj sve ocjene
+        $allScores = EvaluationScore::where('application_id', $application->id)
+            ->with('commissionMember')
+            ->get();
+
+        // Izračunaj prosjeke po kriterijumima
+        $criterionAverages = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $scores = $allScores->pluck("criterion_{$i}")->filter()->toArray();
+            if (!empty($scores)) {
+                $criterionAverages[$i] = round(array_sum($scores) / count($scores), 2);
+            } else {
+                $criterionAverages[$i] = 0;
+            }
+        }
+
+        return view('evaluation.chairman-review', compact('application', 'commissionMember', 'allScores', 'criterionAverages'));
+    }
+
+    /**
+     * Snimanje zaključka komisije od strane predsjednika
+     */
+    public function storeDecision(Request $request, Application $application): RedirectResponse
+    {
+        $user = Auth::user();
+        
+        // Pronađi člana komisije
+        $commissionMember = CommissionMember::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$commissionMember) {
+            abort(403, 'Niste član komisije.');
+        }
+
+        // Proveri da li je predsjednik
+        if ($commissionMember->position !== 'predsjednik') {
+            abort(403, 'Samo predsjednik komisije može donijeti zaključak.');
+        }
+
+        $validated = $request->validate([
+            'commission_decision' => 'required|in:podrzava_potpuno,podrzava_djelimicno,odbija',
+            'commission_justification' => 'required|string|max:5000',
+            'commission_notes' => 'nullable|string|max:5000',
+            'approved_amount' => 'nullable|numeric|min:0',
+        ], [
+            'commission_decision.required' => 'Morate odabrati zaključak komisije.',
+            'commission_justification.required' => 'Obrazloženje je obavezno.',
+        ]);
+
+        // Ažuriraj prijavu sa zaključkom
+        $application->update([
+            'commission_decision' => $validated['commission_decision'],
+            'commission_justification' => $validated['commission_justification'],
+            'commission_notes' => $validated['commission_notes'] ?? null,
+            'approved_amount' => $validated['approved_amount'] ?? null,
+            'commission_decision_date' => now(),
+            'signed_by_chairman' => true,
+        ]);
+
+        // Ažuriraj status prijave na osnovu zaključka
+        if ($validated['commission_decision'] === 'odbija') {
+            $application->update(['status' => 'rejected']);
+        } elseif ($validated['commission_decision'] === 'podrzava_potpuno' || $validated['commission_decision'] === 'podrzava_djelimicno') {
+            $application->update(['status' => 'approved']);
+        }
+
+        return redirect()->route('evaluation.chairman-review', $application)
+            ->with('success', 'Zaključak komisije je uspješno sačuvan.');
+    }
+
+    /**
+     * Potpisivanje odluke od strane člana komisije
+     */
+    public function signDecision(Application $application): RedirectResponse
+    {
+        $user = Auth::user();
+        
+        // Pronađi člana komisije
+        $commissionMember = CommissionMember::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$commissionMember) {
+            abort(403, 'Niste član komisije.');
+        }
+
+        // Proveri da li je predsjednik već potpisao
+        if (!$application->signed_by_chairman) {
+            return back()->with('error', 'Predsjednik komisije mora prvo donijeti zaključak.');
+        }
+
+        // Dodaj člana u listu potpisanih
+        $signedMembers = $application->signed_by_members ?? [];
+        if (!in_array($commissionMember->id, $signedMembers)) {
+            $signedMembers[] = $commissionMember->id;
+            $application->update(['signed_by_members' => $signedMembers]);
+        }
+
+        return back()->with('success', 'Odluka je uspješno potpisana.');
     }
 }

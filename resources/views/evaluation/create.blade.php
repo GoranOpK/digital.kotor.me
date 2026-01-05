@@ -157,21 +157,54 @@
                 @csrf
 
                 <h2 style="font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 24px;">
-                    Ocjene po kriterijumima (1-5 poena)
+                    LISTA ZA OCJENJIVANJE BIZNIS PLANOVA
                 </h2>
+
+                <!-- Provjera dokumentacije -->
+                <div class="form-group" style="background: #f0f9ff; padding: 20px; border-radius: 8px; border-left: 4px solid var(--primary); margin-bottom: 24px;">
+                    <label class="form-label" style="font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 12px;">
+                        2. Dostavljena su sva potrebna dokumenta? *
+                    </label>
+                    <div style="display: flex; gap: 24px; margin-top: 12px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="documents_complete" value="1" {{ old('documents_complete', $existingScore?->documents_complete ?? true) ? 'checked' : '' }} required>
+                            <span>Da</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="documents_complete" value="0" {{ old('documents_complete') === '0' || ($existingScore && !$existingScore->documents_complete) ? 'checked' : '' }} required>
+                            <span>Ne *</span>
+                        </label>
+                    </div>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                        * Ukoliko je odgovor "Ne", prijava će biti automatski odbijena
+                    </div>
+                    @error('documents_complete')
+                        <div class="error-message">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <h3 style="font-size: 18px; font-weight: 700; color: var(--primary); margin-bottom: 16px; margin-top: 32px;">
+                    3. Ocjena biznis plana u brojkama:
+                </h3>
+                <div style="background: #f9fafb; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-size: 14px; color: #374151;">
+                    <strong>KRITERIJUMI ZA OCJENU (Član 18 stav 2 Odluke)</strong><br>
+                    Komisija dodijeljuje ocjenu za biznis plan na skali od 1 do 5, pri čemu je:<br>
+                    1 = uopšte ne odgovara navedenom,<br>
+                    5 = u potpunosti odgovara navedenom.
+                </div>
 
                 @php
                     $criteria = [
-                        1 => 'Obrazac biznis plana detaljno popunjen',
-                        2 => 'Biznis ideja je inovativna',
-                        3 => 'Jasno identifikovani potencijalni kupci',
-                        4 => 'Omogućava samozapošljavanje/zapošljavanje',
-                        5 => 'Prepoznata konkurencija',
-                        6 => 'Jasno navedeni potrebni resursi',
-                        7 => 'Finansijski održiva',
-                        8 => 'Podaci o preduzetnici',
-                        9 => 'Razvijena matrica rizika',
-                        10 => 'Usmeno obrazloženje',
+                        1 => 'Obrazac biznis plana je detaljno popunjen sa svim neophodnim informacijama i jasno su precizirani proizvodi/usluge koje će se ponuditi na tržištu.',
+                        2 => 'Biznis ideja je inovativna (stvaranje novog proizvoda/usluge, unaprijeđenje proizvoda/usluga, uvećan obim proizvodnje)',
+                        3 => 'Jasno su identifikovani potencijalni kupci i njihove karakteristike.',
+                        4 => 'Biznis plan će omogućiti samozapošljavanje i/ili zapošljavanje (stalno ili sezonsko) lica sa teritorije opštine Kotor.',
+                        5 => 'Prepoznata je i navedena konkurencija, kao i slabosti i snage iste.',
+                        6 => 'Jasno su navedeni potrebni resursi i identifikovani dobavljači.',
+                        7 => 'Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).',
+                        8 => 'Podaci o preduzetnici (preduzetnica posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti, preduzetnica planira raspored poslova uz identifikaciju osoba za njihovo obavljanje).',
+                        9 => 'Razvijena matrica rizika je jasna i logična.',
+                        10 => 'Usmeno obrazloženje biznis plana (preduzetnica je uvjerljiva i sigurna u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovara na sva pitanja).',
                     ];
                 @endphp
 
@@ -197,16 +230,26 @@
                     @enderror
                 @endforeach
 
-                <div class="form-group">
-                    <label class="form-label">
-                        Napomene
-                        <span class="description">(Opciono)</span>
+                <div class="form-group" style="margin-top: 32px;">
+                    <label class="form-label" style="font-size: 16px; font-weight: 700; color: var(--primary);">
+                        5. Obrazloženje:
                     </label>
-                    <textarea name="notes" class="form-control" rows="4" placeholder="Unesite dodatne napomene o prijavi...">{{ old('notes', $existingScore?->notes) }}</textarea>
+                    <textarea name="justification" class="form-control" rows="4" placeholder="Unesite obrazloženje ocjene...">{{ old('justification', $existingScore?->justification) }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" style="font-size: 16px; font-weight: 700; color: var(--primary);">
+                        6. Ostale napomene:
+                    </label>
+                    <textarea name="notes" class="form-control" rows="4" placeholder="Unesite dodatne napomene...">{{ old('notes', $existingScore?->notes) }}</textarea>
+                </div>
+
+                <div style="background: #f9fafb; padding: 16px; border-radius: 8px; margin: 24px 0; font-size: 14px; color: #374151;">
+                    <strong>Napomena:</strong> Biznis planovi sa ukupnim brojem bodova ispod 30 se neće podržati.
                 </div>
 
                 <div class="total-score" id="totalScore">
-                    Ukupno: 0 / 50 poena
+                    KONAČNA OCJENA: 0 / 50 poena
                 </div>
 
                 <div style="margin-top: 24px; text-align: center;">

@@ -174,9 +174,23 @@
                                 @endif
                             </td>
                             <td>
-                                <a href="{{ route('evaluation.create', $application) }}" class="btn-sm {{ $isEvaluated ? 'evaluated' : '' }}">
-                                    {{ $isEvaluated ? 'Pregledaj ocjenu' : 'Ocjeni' }}
-                                </a>
+                                @php
+                                    $allScoresCount = \App\Models\EvaluationScore::where('application_id', $application->id)->count();
+                                    $commission = $commissionMember->commission;
+                                    $totalMembers = $commission->activeMembers()->count();
+                                    $allEvaluated = $allScoresCount >= $totalMembers;
+                                    $isChairman = $commissionMember->position === 'predsjednik';
+                                @endphp
+                                
+                                @if($isChairman && $allEvaluated && $application->status === 'evaluated')
+                                    <a href="{{ route('evaluation.chairman-review', $application) }}" class="btn-sm" style="background: var(--primary); color: #fff;">
+                                        Pregled i zaključak
+                                    </a>
+                                @else
+                                    <a href="{{ route('evaluation.create', $application) }}" class="btn-sm {{ $isEvaluated ? 'evaluated' : '' }}">
+                                        {{ $isEvaluated ? 'Pregledaj ocjenu' : 'Ocjeni' }}
+                                    </a>
+                                @endif
                             </td>
                         </tr>
                     @empty

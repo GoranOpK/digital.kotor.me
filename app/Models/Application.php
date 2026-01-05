@@ -37,6 +37,12 @@ class Application extends Model
         'final_score',
         'ranking_position',
         'rejection_reason',
+        'commission_decision',
+        'commission_justification',
+        'commission_notes',
+        'commission_decision_date',
+        'signed_by_chairman',
+        'signed_by_members',
         'submitted_at',
         'evaluated_at',
         'interview_scheduled_at',
@@ -54,6 +60,9 @@ class Application extends Model
         'submitted_at' => 'datetime',
         'evaluated_at' => 'datetime',
         'interview_scheduled_at' => 'datetime',
+        'commission_decision_date' => 'date',
+        'signed_by_chairman' => 'boolean',
+        'signed_by_members' => 'array',
     ];
 
     // Veza: aplikacija pripada konkursu

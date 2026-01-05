@@ -13,6 +13,7 @@ class EvaluationScore extends Model
     protected $fillable = [
         'application_id',
         'commission_member_id',
+        'documents_complete',
         'criterion_1',
         'criterion_2',
         'criterion_3',
@@ -26,9 +27,11 @@ class EvaluationScore extends Model
         'average_score',
         'final_score',
         'notes',
+        'justification',
     ];
 
     protected $casts = [
+        'documents_complete' => 'boolean',
         'criterion_1' => 'integer',
         'criterion_2' => 'integer',
         'criterion_3' => 'integer',
