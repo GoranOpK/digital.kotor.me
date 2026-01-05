@@ -921,18 +921,49 @@
                                 </tr>
                             </thead>
                             <tbody id="expenseProjectionTableBody">
+                                <!-- Investicioni troškovi kategorija -->
+                                <tr class="category-header" style="background: #f3f4f6; font-weight: 600;">
+                                    <td colspan="6">Investicioni troškovi (alati, oprema, mašine, software, licence, osiguranja, amortizacija i sl.)</td>
+                                </tr>
                                 @php
-                                    $expenseProjection = old('expense_projection', $businessPlan->expense_projection ?? [['type' => '', 'year1' => '', 'year2' => '', 'year3' => '']]);
+                                    $investmentExpenses = old('investment_expenses', $businessPlan->investment_expenses ?? [['type' => '', 'year1' => '', 'year2' => '', 'year3' => '']]);
                                 @endphp
-                                @foreach($expenseProjection as $index => $item)
+                                @if(empty($investmentExpenses) || (count($investmentExpenses) === 1 && empty($investmentExpenses[0]['type'])))
+                                    @php $investmentExpenses = [['type' => '', 'year1' => '', 'year2' => '', 'year3' => '']]; @endphp
+                                @endif
+                                @foreach($investmentExpenses as $index => $item)
                                     @php
                                         $rowTotal = (float)($item['year1'] ?? 0) + (float)($item['year2'] ?? 0) + (float)($item['year3'] ?? 0);
                                     @endphp
-                                    <tr>
-                                        <td><input type="text" name="expense_projection[{{ $index }}][type]" class="form-control" value="{{ $item['type'] ?? '' }}"></td>
-                                        <td><input type="number" name="expense_projection[{{ $index }}][year1]" class="form-control expense-year" value="{{ $item['year1'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
-                                        <td><input type="number" name="expense_projection[{{ $index }}][year2]" class="form-control expense-year" value="{{ $item['year2'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
-                                        <td><input type="number" name="expense_projection[{{ $index }}][year3]" class="form-control expense-year" value="{{ $item['year3'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
+                                    <tr data-category="investment">
+                                        <td><input type="text" name="investment_expenses[{{ $index }}][type]" class="form-control" value="{{ $item['type'] ?? '' }}" placeholder="Npr. Alati, oprema..."></td>
+                                        <td><input type="number" name="investment_expenses[{{ $index }}][year1]" class="form-control expense-year" value="{{ $item['year1'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
+                                        <td><input type="number" name="investment_expenses[{{ $index }}][year2]" class="form-control expense-year" value="{{ $item['year2'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
+                                        <td><input type="number" name="investment_expenses[{{ $index }}][year3]" class="form-control expense-year" value="{{ $item['year3'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
+                                        <td><input type="text" class="form-control expense-total" value="{{ number_format($rowTotal, 2, ',', '.') }}" readonly style="background: #f9fafb;"></td>
+                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                    </tr>
+                                @endforeach
+                                
+                                <!-- Tekući troškovi kategorija -->
+                                <tr class="category-header" style="background: #f3f4f6; font-weight: 600;">
+                                    <td colspan="6">Tekući troškovi (sirovine, bruto zarade, renta, struja, voda, telefon, internet, marketing itd.)</td>
+                                </tr>
+                                @php
+                                    $operatingExpenses = old('operating_expenses', $businessPlan->operating_expenses ?? [['type' => '', 'year1' => '', 'year2' => '', 'year3' => '']]);
+                                @endphp
+                                @if(empty($operatingExpenses) || (count($operatingExpenses) === 1 && empty($operatingExpenses[0]['type'])))
+                                    @php $operatingExpenses = [['type' => '', 'year1' => '', 'year2' => '', 'year3' => '']]; @endphp
+                                @endif
+                                @foreach($operatingExpenses as $index => $item)
+                                    @php
+                                        $rowTotal = (float)($item['year1'] ?? 0) + (float)($item['year2'] ?? 0) + (float)($item['year3'] ?? 0);
+                                    @endphp
+                                    <tr data-category="operating">
+                                        <td><input type="text" name="operating_expenses[{{ $index }}][type]" class="form-control" value="{{ $item['type'] ?? '' }}" placeholder="Npr. Sirovine, renta..."></td>
+                                        <td><input type="number" name="operating_expenses[{{ $index }}][year1]" class="form-control expense-year" value="{{ $item['year1'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
+                                        <td><input type="number" name="operating_expenses[{{ $index }}][year2]" class="form-control expense-year" value="{{ $item['year2'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
+                                        <td><input type="number" name="operating_expenses[{{ $index }}][year3]" class="form-control expense-year" value="{{ $item['year3'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
                                         <td><input type="text" class="form-control expense-total" value="{{ number_format($rowTotal, 2, ',', '.') }}" readonly style="background: #f9fafb;"></td>
                                         <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                     </tr>
@@ -949,7 +980,10 @@
                                 </tr>
                             </tfoot>
                         </table>
-                        <button type="button" class="btn-secondary" onclick="addTableRow('expenseProjectionTableBody', ['type', 'year1', 'year2', 'year3'])">+ Dodaj red</button>
+                        <div style="margin-top: 12px;">
+                            <button type="button" class="btn-secondary" onclick="addExpenseRow('investment')">+ Dodaj red (Investicioni troškovi)</button>
+                            <button type="button" class="btn-secondary" onclick="addExpenseRow('operating')">+ Dodaj red (Tekući troškovi)</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1257,7 +1291,9 @@ function calculateExpenseRowTotal(input) {
 }
 
 function calculateExpenseGrandTotal() {
-    const rows = document.querySelectorAll('#expenseProjectionTableBody tr');
+    const tbody = document.getElementById('expenseProjectionTableBody');
+    const rows = tbody.querySelectorAll('tr:not(.category-header)');
+    
     let year1Total = 0;
     let year2Total = 0;
     let year3Total = 0;
@@ -1297,6 +1333,50 @@ function calculateExpenseGrandTotal() {
     if (grandTotalInput) {
         grandTotalInput.value = grandTotal.toFixed(2).replace('.', ',');
     }
+}
+
+function addExpenseRow(category) {
+    const tbody = document.getElementById('expenseProjectionTableBody');
+    const categoryRows = Array.from(tbody.querySelectorAll('tr.category-header'));
+    
+    let targetRow = null;
+    if (category === 'investment') {
+        targetRow = categoryRows.find(row => row.textContent.includes('Investicioni troškovi'));
+    } else {
+        targetRow = categoryRows.find(row => row.textContent.includes('Tekući troškovi'));
+    }
+    
+    if (!targetRow) return;
+    
+    // Pronađi poslednji red u toj kategoriji
+    let currentRow = targetRow.nextElementSibling;
+    let lastRowInCategory = targetRow;
+    
+    while (currentRow && !currentRow.classList.contains('category-header')) {
+        lastRowInCategory = currentRow;
+        currentRow = currentRow.nextElementSibling;
+    }
+    
+    // Broj redova u kategoriji
+    const categoryRowsList = Array.from(tbody.querySelectorAll(`tr[data-category="${category}"]`));
+    const rowIndex = categoryRowsList.length;
+    
+    const newRow = document.createElement('tr');
+    newRow.setAttribute('data-category', category);
+    
+    const fieldName = category === 'investment' ? 'investment_expenses' : 'operating_expenses';
+    
+    newRow.innerHTML = `
+        <td><input type="text" name="${fieldName}[${rowIndex}][type]" class="form-control" placeholder="Npr. ${category === 'investment' ? 'Alati, oprema...' : 'Sirovine, renta...'}"></td>
+        <td><input type="number" name="${fieldName}[${rowIndex}][year1]" class="form-control expense-year" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
+        <td><input type="number" name="${fieldName}[${rowIndex}][year2]" class="form-control expense-year" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
+        <td><input type="number" name="${fieldName}[${rowIndex}][year3]" class="form-control expense-year" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
+        <td><input type="text" class="form-control expense-total" value="0.00" readonly style="background: #f9fafb;"></td>
+        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+    `;
+    
+    lastRowInCategory.insertAdjacentElement('afterend', newRow);
+    calculateExpenseGrandTotal();
 }
 
 // Pozovi funkcije za računanje pri učitavanju stranice
