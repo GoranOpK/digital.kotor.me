@@ -393,7 +393,7 @@
                                     <tr>
                                         <th>Proizvod/usluga</th>
                                         <th>Opis i karakteristike</th>
-                                        <th>Akcije</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody id="productsServicesTableBody">
@@ -450,7 +450,7 @@
                                 <tr>
                                     <th>Ciljna grupa</th>
                                     <th>Opis</th>
-                                    <th>Akcije</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="targetCustomersTableBody">
@@ -482,7 +482,7 @@
                                     <tr>
                                         <th>Lokacija prodaje</th>
                                         <th>Opis</th>
-                                        <th>Akcije</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody id="salesLocationsTableBody">
@@ -538,7 +538,7 @@
                                     <tr>
                                         <th>Proizvod/usluga</th>
                                         <th>Cijena</th>
-                                        <th>Akcije</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody id="pricingTableBody">
@@ -571,7 +571,7 @@
                                     <tr>
                                         <th>Proizvod/usluga</th>
                                         <th>Učešće u ukupnim prihodima (%)</th>
-                                        <th>Akcije</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody id="revenueShareTableBody">
@@ -624,7 +624,7 @@
                                         <th>Godina</th>
                                         <th>Broj stalno zaposlenih</th>
                                         <th>Kvalifikaciona struktura zaposlenih</th>
-                                        <th>Akcije</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody id="employmentStructureTableBody">
@@ -704,7 +704,7 @@
                                         <th>Broj zaposlenih</th>
                                         <th>Godišnji promet</th>
                                         <th>Važne prekretnice u razvoju biznisa</th>
-                                        <th>Akcije</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody id="businessHistoryTableBody">
@@ -746,7 +746,7 @@
                                     <tr>
                                         <th>Potrebno mi je</th>
                                         <th>Dobavljač</th>
-                                        <th>Akcije</th>
+                                        <th></th>
                                     </tr>
                                 </thead>
                                 <tbody id="suppliersTableBody">
@@ -802,7 +802,8 @@
                                 <tr>
                                     <th>Vrsta nabavke</th>
                                     <th>Cijena po predračunu (u EUR)</th>
-                                    <th>Akcije</th>
+                                    <th>Ukupno</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="fundingSourcesTableBody">
@@ -812,11 +813,19 @@
                                 @foreach($fundingSources as $index => $item)
                                     <tr>
                                         <td><input type="text" name="funding_sources_table[{{ $index }}][type]" class="form-control" value="{{ $item['type'] ?? '' }}"></td>
-                                        <td><input type="number" name="funding_sources_table[{{ $index }}][price]" class="form-control" value="{{ $item['price'] ?? '' }}" step="0.01" min="0"></td>
+                                        <td><input type="number" name="funding_sources_table[{{ $index }}][price]" class="form-control funding-price" value="{{ $item['price'] ?? '' }}" step="0.01" min="0" oninput="calculateFundingTotal()"></td>
+                                        <td><input type="text" class="form-control funding-total" value="{{ $item['price'] ?? '' }}" readonly style="background: #f9fafb;"></td>
                                         <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
+                            <tfoot>
+                                <tr style="background: #f9fafb; font-weight: 600;">
+                                    <td colspan="2" style="text-align: right;">UKUPNO:</td>
+                                    <td><input type="text" id="fundingGrandTotal" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                         <button type="button" class="btn-secondary" onclick="addTableRow('fundingSourcesTableBody', ['type', 'price'])">+ Dodaj red</button>
                     </div>
@@ -860,7 +869,8 @@
                                     <th>I godina (tekuća)</th>
                                     <th>II godina</th>
                                     <th>III godina</th>
-                                    <th>Akcije</th>
+                                    <th>Ukupno</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="revenueProjectionTableBody">
@@ -868,15 +878,26 @@
                                     $revenueProjection = old('revenue_projection', $businessPlan->revenue_projection ?? [['product' => '', 'year1' => '', 'year2' => '', 'year3' => '']]);
                                 @endphp
                                 @foreach($revenueProjection as $index => $item)
+                                    @php
+                                        $rowTotal = (float)($item['year1'] ?? 0) + (float)($item['year2'] ?? 0) + (float)($item['year3'] ?? 0);
+                                    @endphp
                                     <tr>
                                         <td><input type="text" name="revenue_projection[{{ $index }}][product]" class="form-control" value="{{ $item['product'] ?? '' }}"></td>
-                                        <td><input type="number" name="revenue_projection[{{ $index }}][year1]" class="form-control" value="{{ $item['year1'] ?? '' }}" step="0.01" min="0"></td>
-                                        <td><input type="number" name="revenue_projection[{{ $index }}][year2]" class="form-control" value="{{ $item['year2'] ?? '' }}" step="0.01" min="0"></td>
-                                        <td><input type="number" name="revenue_projection[{{ $index }}][year3]" class="form-control" value="{{ $item['year3'] ?? '' }}" step="0.01" min="0"></td>
+                                        <td><input type="number" name="revenue_projection[{{ $index }}][year1]" class="form-control revenue-year" value="{{ $item['year1'] ?? '' }}" step="0.01" min="0" oninput="calculateRevenueRowTotal(this)"></td>
+                                        <td><input type="number" name="revenue_projection[{{ $index }}][year2]" class="form-control revenue-year" value="{{ $item['year2'] ?? '' }}" step="0.01" min="0" oninput="calculateRevenueRowTotal(this)"></td>
+                                        <td><input type="number" name="revenue_projection[{{ $index }}][year3]" class="form-control revenue-year" value="{{ $item['year3'] ?? '' }}" step="0.01" min="0" oninput="calculateRevenueRowTotal(this)"></td>
+                                        <td><input type="text" class="form-control revenue-total" value="{{ number_format($rowTotal, 2, ',', '.') }}" readonly style="background: #f9fafb;"></td>
                                         <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
+                            <tfoot>
+                                <tr style="background: #f9fafb; font-weight: 600;">
+                                    <td colspan="4" style="text-align: right;">UKUPNO:</td>
+                                    <td><input type="text" id="revenueGrandTotal" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                         <button type="button" class="btn-secondary" onclick="addTableRow('revenueProjectionTableBody', ['product', 'year1', 'year2', 'year3'])">+ Dodaj red</button>
                     </div>
@@ -892,7 +913,8 @@
                                     <th>I godina (tekuća)</th>
                                     <th>II godina</th>
                                     <th>III godina</th>
-                                    <th>Akcije</th>
+                                    <th>Ukupno</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="expenseProjectionTableBody">
@@ -900,15 +922,26 @@
                                     $expenseProjection = old('expense_projection', $businessPlan->expense_projection ?? [['type' => '', 'year1' => '', 'year2' => '', 'year3' => '']]);
                                 @endphp
                                 @foreach($expenseProjection as $index => $item)
+                                    @php
+                                        $rowTotal = (float)($item['year1'] ?? 0) + (float)($item['year2'] ?? 0) + (float)($item['year3'] ?? 0);
+                                    @endphp
                                     <tr>
                                         <td><input type="text" name="expense_projection[{{ $index }}][type]" class="form-control" value="{{ $item['type'] ?? '' }}"></td>
-                                        <td><input type="number" name="expense_projection[{{ $index }}][year1]" class="form-control" value="{{ $item['year1'] ?? '' }}" step="0.01" min="0"></td>
-                                        <td><input type="number" name="expense_projection[{{ $index }}][year2]" class="form-control" value="{{ $item['year2'] ?? '' }}" step="0.01" min="0"></td>
-                                        <td><input type="number" name="expense_projection[{{ $index }}][year3]" class="form-control" value="{{ $item['year3'] ?? '' }}" step="0.01" min="0"></td>
+                                        <td><input type="number" name="expense_projection[{{ $index }}][year1]" class="form-control expense-year" value="{{ $item['year1'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
+                                        <td><input type="number" name="expense_projection[{{ $index }}][year2]" class="form-control expense-year" value="{{ $item['year2'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
+                                        <td><input type="number" name="expense_projection[{{ $index }}][year3]" class="form-control expense-year" value="{{ $item['year3'] ?? '' }}" step="0.01" min="0" oninput="calculateExpenseRowTotal(this)"></td>
+                                        <td><input type="text" class="form-control expense-total" value="{{ number_format($rowTotal, 2, ',', '.') }}" readonly style="background: #f9fafb;"></td>
                                         <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
                                     </tr>
                                 @endforeach
                             </tbody>
+                            <tfoot>
+                                <tr style="background: #f9fafb; font-weight: 600;">
+                                    <td colspan="4" style="text-align: right;">UKUPNO:</td>
+                                    <td><input type="text" id="expenseGrandTotal" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
                         </table>
                         <button type="button" class="btn-secondary" onclick="addTableRow('expenseProjectionTableBody', ['type', 'year1', 'year2', 'year3'])">+ Dodaj red</button>
                     </div>
@@ -954,7 +987,7 @@
                                     <th>Dio biznis plana</th>
                                     <th>Ko bi mogao ovo raditi u početku?</th>
                                     <th>Ko bi ovo mogao raditi kasnije?</th>
-                                    <th>Akcije</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="jobScheduleTableBody">
@@ -996,7 +1029,7 @@
                                     <th>Uticaj na Vaše poslovanje</th>
                                     <th>Mjere koje ćete preduzeti</th>
                                     <th>Odgovorna osoba (Ko će to uraditi?)</th>
-                                    <th>Akcije</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="riskMatrixTableBody">
@@ -1068,6 +1101,19 @@ function addTableRow(tableBodyId, fieldNames) {
             if (fieldName === 'share') {
                 input.max = '100';
             }
+            // Dodaj event listener za automatsko računanje
+            if (fieldName === 'price' && tableBodyId === 'fundingSourcesTableBody') {
+                input.className += ' funding-price';
+                input.oninput = function() { calculateFundingTotal(); };
+            } else if (fieldName === 'year1' || fieldName === 'year2' || fieldName === 'year3') {
+                if (tableBodyId === 'revenueProjectionTableBody') {
+                    input.className += ' revenue-year';
+                    input.oninput = function() { calculateRevenueRowTotal(this); };
+                } else if (tableBodyId === 'expenseProjectionTableBody') {
+                    input.className += ' expense-year';
+                    input.oninput = function() { calculateExpenseRowTotal(this); };
+                }
+            }
             cell.appendChild(input);
         } else {
             const input = document.createElement('input');
@@ -1078,6 +1124,39 @@ function addTableRow(tableBodyId, fieldNames) {
         }
         row.appendChild(cell);
     });
+    
+    // Dodaj kolonu "Ukupno" ako je potrebno
+    if (tableBodyId === 'fundingSourcesTableBody') {
+        const totalCell = document.createElement('td');
+        const totalInput = document.createElement('input');
+        totalInput.type = 'text';
+        totalInput.className = 'form-control funding-total';
+        totalInput.readOnly = true;
+        totalInput.style.background = '#f9fafb';
+        totalInput.value = '0.00';
+        totalCell.appendChild(totalInput);
+        row.appendChild(totalCell);
+    } else if (tableBodyId === 'revenueProjectionTableBody') {
+        const totalCell = document.createElement('td');
+        const totalInput = document.createElement('input');
+        totalInput.type = 'text';
+        totalInput.className = 'form-control revenue-total';
+        totalInput.readOnly = true;
+        totalInput.style.background = '#f9fafb';
+        totalInput.value = '0.00';
+        totalCell.appendChild(totalInput);
+        row.appendChild(totalCell);
+    } else if (tableBodyId === 'expenseProjectionTableBody') {
+        const totalCell = document.createElement('td');
+        const totalInput = document.createElement('input');
+        totalInput.type = 'text';
+        totalInput.className = 'form-control expense-total';
+        totalInput.readOnly = true;
+        totalInput.style.background = '#f9fafb';
+        totalInput.value = '0.00';
+        totalCell.appendChild(totalInput);
+        row.appendChild(totalCell);
+    }
     
     const actionCell = document.createElement('td');
     const removeBtn = document.createElement('button');
@@ -1093,6 +1172,98 @@ function addTableRow(tableBodyId, fieldNames) {
 
 function removeTableRow(button) {
     button.closest('tr').remove();
+    // Ponovo izračunaj ukupno nakon brisanja reda
+    calculateFundingTotal();
+    calculateRevenueGrandTotal();
+    calculateExpenseGrandTotal();
 }
+
+// Funkcije za računanje ukupnih iznosa
+function calculateFundingTotal() {
+    const rows = document.querySelectorAll('#fundingSourcesTableBody tr');
+    let grandTotal = 0;
+    
+    rows.forEach(row => {
+        const priceInput = row.querySelector('.funding-price');
+        const totalInput = row.querySelector('.funding-total');
+        const price = parseFloat(priceInput?.value || 0);
+        totalInput.value = price.toFixed(2).replace('.', ',');
+        grandTotal += price;
+    });
+    
+    const grandTotalInput = document.getElementById('fundingGrandTotal');
+    if (grandTotalInput) {
+        grandTotalInput.value = grandTotal.toFixed(2).replace('.', ',');
+    }
+}
+
+function calculateRevenueRowTotal(input) {
+    const row = input.closest('tr');
+    const year1 = parseFloat(row.querySelector('input[name*="[year1]"]')?.value || 0);
+    const year2 = parseFloat(row.querySelector('input[name*="[year2]"]')?.value || 0);
+    const year3 = parseFloat(row.querySelector('input[name*="[year3]"]')?.value || 0);
+    const total = year1 + year2 + year3;
+    
+    const totalInput = row.querySelector('.revenue-total');
+    if (totalInput) {
+        totalInput.value = total.toFixed(2).replace('.', ',');
+    }
+    
+    calculateRevenueGrandTotal();
+}
+
+function calculateRevenueGrandTotal() {
+    const rows = document.querySelectorAll('#revenueProjectionTableBody tr');
+    let grandTotal = 0;
+    
+    rows.forEach(row => {
+        const totalInput = row.querySelector('.revenue-total');
+        const total = parseFloat(totalInput?.value.replace(',', '.') || 0);
+        grandTotal += total;
+    });
+    
+    const grandTotalInput = document.getElementById('revenueGrandTotal');
+    if (grandTotalInput) {
+        grandTotalInput.value = grandTotal.toFixed(2).replace('.', ',');
+    }
+}
+
+function calculateExpenseRowTotal(input) {
+    const row = input.closest('tr');
+    const year1 = parseFloat(row.querySelector('input[name*="[year1]"]')?.value || 0);
+    const year2 = parseFloat(row.querySelector('input[name*="[year2]"]')?.value || 0);
+    const year3 = parseFloat(row.querySelector('input[name*="[year3]"]')?.value || 0);
+    const total = year1 + year2 + year3;
+    
+    const totalInput = row.querySelector('.expense-total');
+    if (totalInput) {
+        totalInput.value = total.toFixed(2).replace('.', ',');
+    }
+    
+    calculateExpenseGrandTotal();
+}
+
+function calculateExpenseGrandTotal() {
+    const rows = document.querySelectorAll('#expenseProjectionTableBody tr');
+    let grandTotal = 0;
+    
+    rows.forEach(row => {
+        const totalInput = row.querySelector('.expense-total');
+        const total = parseFloat(totalInput?.value.replace(',', '.') || 0);
+        grandTotal += total;
+    });
+    
+    const grandTotalInput = document.getElementById('expenseGrandTotal');
+    if (grandTotalInput) {
+        grandTotalInput.value = grandTotal.toFixed(2).replace('.', ',');
+    }
+}
+
+// Pozovi funkcije za računanje pri učitavanju stranice
+document.addEventListener('DOMContentLoaded', function() {
+    calculateFundingTotal();
+    calculateRevenueGrandTotal();
+    calculateExpenseGrandTotal();
+});
 </script>
 @endsection
