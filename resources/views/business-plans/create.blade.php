@@ -893,7 +893,10 @@
                             </tbody>
                             <tfoot>
                                 <tr style="background: #f9fafb; font-weight: 600;">
-                                    <td colspan="4" style="text-align: right;">UKUPNO:</td>
+                                    <td style="text-align: right;">UKUPNO:</td>
+                                    <td><input type="text" id="revenueYear1Total" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
+                                    <td><input type="text" id="revenueYear2Total" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
+                                    <td><input type="text" id="revenueYear3Total" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
                                     <td><input type="text" id="revenueGrandTotal" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
                                     <td></td>
                                 </tr>
@@ -937,7 +940,10 @@
                             </tbody>
                             <tfoot>
                                 <tr style="background: #f9fafb; font-weight: 600;">
-                                    <td colspan="4" style="text-align: right;">UKUPNO:</td>
+                                    <td style="text-align: right;">UKUPNO:</td>
+                                    <td><input type="text" id="expenseYear1Total" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
+                                    <td><input type="text" id="expenseYear2Total" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
+                                    <td><input type="text" id="expenseYear3Total" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
                                     <td><input type="text" id="expenseGrandTotal" class="form-control" value="0.00" readonly style="background: #fff; font-weight: 600;"></td>
                                     <td></td>
                                 </tr>
@@ -1198,62 +1204,96 @@ function calculateFundingTotal() {
 }
 
 function calculateRevenueRowTotal(input) {
-    const row = input.closest('tr');
-    const year1 = parseFloat(row.querySelector('input[name*="[year1]"]')?.value || 0);
-    const year2 = parseFloat(row.querySelector('input[name*="[year2]"]')?.value || 0);
-    const year3 = parseFloat(row.querySelector('input[name*="[year3]"]')?.value || 0);
-    const total = year1 + year2 + year3;
-    
-    const totalInput = row.querySelector('.revenue-total');
-    if (totalInput) {
-        totalInput.value = total.toFixed(2).replace('.', ',');
-    }
-    
+    // Pozovi funkciju koja računa sve ukupne iznose
     calculateRevenueGrandTotal();
 }
 
 function calculateRevenueGrandTotal() {
     const rows = document.querySelectorAll('#revenueProjectionTableBody tr');
+    let year1Total = 0;
+    let year2Total = 0;
+    let year3Total = 0;
     let grandTotal = 0;
     
     rows.forEach(row => {
+        const year1 = parseFloat(row.querySelector('input[name*="[year1]"]')?.value || 0);
+        const year2 = parseFloat(row.querySelector('input[name*="[year2]"]')?.value || 0);
+        const year3 = parseFloat(row.querySelector('input[name*="[year3]"]')?.value || 0);
         const totalInput = row.querySelector('.revenue-total');
-        const total = parseFloat(totalInput?.value.replace(',', '.') || 0);
+        const total = year1 + year2 + year3;
+        
+        year1Total += year1;
+        year2Total += year2;
+        year3Total += year3;
         grandTotal += total;
+        
+        if (totalInput) {
+            totalInput.value = total.toFixed(2).replace('.', ',');
+        }
     });
     
+    const year1TotalInput = document.getElementById('revenueYear1Total');
+    const year2TotalInput = document.getElementById('revenueYear2Total');
+    const year3TotalInput = document.getElementById('revenueYear3Total');
     const grandTotalInput = document.getElementById('revenueGrandTotal');
+    
+    if (year1TotalInput) {
+        year1TotalInput.value = year1Total.toFixed(2).replace('.', ',');
+    }
+    if (year2TotalInput) {
+        year2TotalInput.value = year2Total.toFixed(2).replace('.', ',');
+    }
+    if (year3TotalInput) {
+        year3TotalInput.value = year3Total.toFixed(2).replace('.', ',');
+    }
     if (grandTotalInput) {
         grandTotalInput.value = grandTotal.toFixed(2).replace('.', ',');
     }
 }
 
 function calculateExpenseRowTotal(input) {
-    const row = input.closest('tr');
-    const year1 = parseFloat(row.querySelector('input[name*="[year1]"]')?.value || 0);
-    const year2 = parseFloat(row.querySelector('input[name*="[year2]"]')?.value || 0);
-    const year3 = parseFloat(row.querySelector('input[name*="[year3]"]')?.value || 0);
-    const total = year1 + year2 + year3;
-    
-    const totalInput = row.querySelector('.expense-total');
-    if (totalInput) {
-        totalInput.value = total.toFixed(2).replace('.', ',');
-    }
-    
+    // Pozovi funkciju koja računa sve ukupne iznose
     calculateExpenseGrandTotal();
 }
 
 function calculateExpenseGrandTotal() {
     const rows = document.querySelectorAll('#expenseProjectionTableBody tr');
+    let year1Total = 0;
+    let year2Total = 0;
+    let year3Total = 0;
     let grandTotal = 0;
     
     rows.forEach(row => {
+        const year1 = parseFloat(row.querySelector('input[name*="[year1]"]')?.value || 0);
+        const year2 = parseFloat(row.querySelector('input[name*="[year2]"]')?.value || 0);
+        const year3 = parseFloat(row.querySelector('input[name*="[year3]"]')?.value || 0);
         const totalInput = row.querySelector('.expense-total');
-        const total = parseFloat(totalInput?.value.replace(',', '.') || 0);
+        const total = year1 + year2 + year3;
+        
+        year1Total += year1;
+        year2Total += year2;
+        year3Total += year3;
         grandTotal += total;
+        
+        if (totalInput) {
+            totalInput.value = total.toFixed(2).replace('.', ',');
+        }
     });
     
+    const year1TotalInput = document.getElementById('expenseYear1Total');
+    const year2TotalInput = document.getElementById('expenseYear2Total');
+    const year3TotalInput = document.getElementById('expenseYear3Total');
     const grandTotalInput = document.getElementById('expenseGrandTotal');
+    
+    if (year1TotalInput) {
+        year1TotalInput.value = year1Total.toFixed(2).replace('.', ',');
+    }
+    if (year2TotalInput) {
+        year2TotalInput.value = year2Total.toFixed(2).replace('.', ',');
+    }
+    if (year3TotalInput) {
+        year3TotalInput.value = year3Total.toFixed(2).replace('.', ',');
+    }
     if (grandTotalInput) {
         grandTotalInput.value = grandTotal.toFixed(2).replace('.', ',');
     }
