@@ -386,7 +386,7 @@
                         </label>
                         <div class="form-group">
                             <label class="form-label">
-                                6. Navedite sve postojeće/planirane proizvode/usluge. (Proširite tabelu koliko je potrebno.)
+                                6. Navedite sve postojeće/planirane proizvode/usluge. (Proširite tabelu ukoliko je potrebno.)
                             </label>
                             <table class="dynamic-table" id="productsServicesTable">
                                 <thead>
@@ -531,7 +531,7 @@
                         </label>
                         <div class="form-group">
                             <label class="form-label">
-                                11. Koje su trenutne/planirane cijene Vaših proizvoda/usluga? (Proširite tabelu koliko je potrebno)
+                                11. Koje su trenutne/planirane cijene Vaših proizvoda/usluga? (Proširite tabelu ukoliko je potrebno)
                             </label>
                             <table class="dynamic-table" id="pricingTable">
                                 <thead>
@@ -667,7 +667,7 @@
                                 <textarea name="competition_analysis" class="form-control" rows="6">{{ old('competition_analysis', $businessPlan->competition_analysis ?? '') }}</textarea>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Navedite jake i slabe strane konkurencije. (Proširite tabelu koliko je potrebno)</label>
+                                <label class="form-label">Navedite jake i slabe strane konkurencije. (Proširite tabelu ukoliko je potrebno)</label>
                                 <textarea name="competition_analysis" class="form-control" rows="6">{{ old('competition_analysis', $businessPlan->competition_analysis ?? '') }}</textarea>
                             </div>
                         </div>
@@ -728,7 +728,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            19. Navedite što Vam je sve potrebno kako biste proizveli proizvod/uslugu. (Proširite tabelu koliko je potrebno)
+                            19. Navedite što Vam je sve potrebno kako biste proizveli proizvod/uslugu. (Proširite tabelu ukoliko je potrebno)
                         </label>
                         <textarea name="required_resources" class="form-control" rows="6">{{ old('required_resources', $businessPlan->required_resources ?? '') }}</textarea>
                     </div>
@@ -739,7 +739,7 @@
                         </label>
                         <div class="form-group">
                             <label class="form-label">
-                                a. Gdje ćete nabavljati sirovine, alat, mašine, opremu, programe tj. sve što Vam je potrebno kako biste kreirali proizvod /pružili uslugu? (Proširite tabelu koliko je potrebno.)
+                                a. Gdje ćete nabavljati sirovine, alat, mašine, opremu, programe tj. sve što Vam je potrebno kako biste kreirali proizvod /pružili uslugu? (Proširite tabelu ukoliko je potrebno.)
                             </label>
                             <table class="dynamic-table" id="suppliersTable">
                                 <thead>
@@ -791,7 +791,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            22. Koliki iznos podrške tražite od Opštine Kotor i navedite na što biste tačno utrošiti tražena sredstva? (Proširite tabelu koliko je potrebno.)
+                            22. Koliki iznos podrške tražite od Opštine Kotor i navedite na što biste tačno utrošiti tražena sredstva? (Proširite tabelu ukoliko je potrebno.)
                         </label>
                         <div class="form-group">
                             <label class="form-label">Iznos podrške:</label>
@@ -860,7 +860,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            24. Projekcija prihoda u naredne 3 godine (Proširite tabelu koliko je potrebno):
+                            24. Projekcija prihoda u naredne 3 godine (Proširite tabelu ukoliko je potrebno):
                         </label>
                         <table class="dynamic-table" id="revenueProjectionTable">
                             <thead>
@@ -907,7 +907,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            25. Projekcija rashoda u naredne 3 godine (Proširite tabelu koliko je potrebno):
+                            25. Projekcija rashoda u naredne 3 godine (Proširite tabelu ukoliko je potrebno):
                         </label>
                         <table class="dynamic-table" id="expenseProjectionTable">
                             <thead>
@@ -998,14 +998,14 @@
                     
                     <div class="form-group">
                         <label class="form-label">
-                            26. Predstavite Vaše radno iskustvo, te opišite znanja i vještine koje posjedujete, a za koje smatrate da su od važnosti za realizaciju biznis plana. (Proširite tabelu koliko je potrebno.)
+                            26. Predstavite Vaše radno iskustvo, te opišite znanja i vještine koje posjedujete, a za koje smatrate da su od važnosti za realizaciju biznis plana. (Proširite tabelu ukoliko je potrebno.)
                         </label>
                         <textarea name="work_experience" class="form-control" rows="6">{{ old('work_experience', $businessPlan->work_experience ?? '') }}</textarea>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            27. Za koje Vaše osobine smatrate da su prednosti, a koje osobine smatrate da biste trebali unaprijediti? (Proširite tabelu koliko je potrebno.)
+                            27. Za koje Vaše osobine smatrate da su prednosti, a koje osobine smatrate da biste trebali unaprijediti? (Proširite tabelu ukoliko je potrebno.)
                         </label>
                         <textarea name="personal_strengths_weaknesses" class="form-control" rows="6">{{ old('personal_strengths_weaknesses', $businessPlan->personal_strengths_weaknesses ?? '') }}</textarea>
                     </div>
@@ -1027,24 +1027,56 @@
                                     <th>Dio biznis plana</th>
                                     <th>Ko bi mogao ovo raditi u početku?</th>
                                     <th>Ko bi ovo mogao raditi kasnije?</th>
-                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody id="jobScheduleTableBody">
                                 @php
-                                    $jobSchedule = old('job_schedule', $businessPlan->job_schedule ?? [['part' => '', 'initially' => '', 'later' => '']]);
+                                    $defaultJobSchedule = [
+                                        ['part' => 'Marketing', 'initially' => '', 'later' => ''],
+                                        ['part' => 'Poslovanje', 'initially' => '', 'later' => ''],
+                                        ['part' => 'Finansije', 'initially' => '', 'later' => '']
+                                    ];
+                                    $jobSchedule = old('job_schedule', $businessPlan->job_schedule ?? $defaultJobSchedule);
+                                    
+                                    // Osiguraj da imamo sve tri kategorije
+                                    $parts = array_column($jobSchedule, 'part');
+                                    if (!in_array('Marketing', $parts)) {
+                                        $jobSchedule[] = ['part' => 'Marketing', 'initially' => '', 'later' => ''];
+                                    }
+                                    if (!in_array('Poslovanje', $parts)) {
+                                        $jobSchedule[] = ['part' => 'Poslovanje', 'initially' => '', 'later' => ''];
+                                    }
+                                    if (!in_array('Finansije', $parts)) {
+                                        $jobSchedule[] = ['part' => 'Finansije', 'initially' => '', 'later' => ''];
+                                    }
+                                    
+                                    // Sortiraj da budu u redosledu: Marketing, Poslovanje, Finansije
+                                    usort($jobSchedule, function($a, $b) {
+                                        $order = ['Marketing' => 1, 'Poslovanje' => 2, 'Finansije' => 3];
+                                        $aOrder = $order[$a['part']] ?? 999;
+                                        $bOrder = $order[$b['part']] ?? 999;
+                                        return $aOrder <=> $bOrder;
+                                    });
                                 @endphp
                                 @foreach($jobSchedule as $index => $item)
-                                    <tr>
-                                        <td><input type="text" name="job_schedule[{{ $index }}][part]" class="form-control" value="{{ $item['part'] ?? '' }}"></td>
-                                        <td><textarea name="job_schedule[{{ $index }}][initially]" class="form-control" rows="2">{{ $item['initially'] ?? '' }}</textarea></td>
-                                        <td><textarea name="job_schedule[{{ $index }}][later]" class="form-control" rows="2">{{ $item['later'] ?? '' }}</textarea></td>
-                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                    @php
+                                        $isFixed = in_array($item['part'], ['Marketing', 'Poslovanje', 'Finansije']);
+                                    @endphp
+                                    <tr data-part="{{ $item['part'] }}" data-fixed="{{ $isFixed ? 'true' : 'false' }}">
+                                        <td>
+                                            @if($isFixed)
+                                                <input type="text" name="job_schedule[{{ $index }}][part]" class="form-control" value="{{ $item['part'] }}" readonly style="background: #f9fafb; font-weight: 600;">
+                                            @else
+                                                <input type="text" name="job_schedule[{{ $index }}][part]" class="form-control" value="{{ $item['part'] ?? '' }}">
+                                            @endif
+                                        </td>
+                                        <td><textarea name="job_schedule[{{ $index }}][initially]" class="form-control" rows="2" placeholder="-">{{ $item['initially'] ?? '' }}</textarea></td>
+                                        <td><textarea name="job_schedule[{{ $index }}][later]" class="form-control" rows="2" placeholder="-">{{ $item['later'] ?? '' }}</textarea></td>
                                     </tr>
                                 @endforeach
                             </tbody>
                         </table>
-                        <button type="button" class="btn-secondary" onclick="addTableRow('jobScheduleTableBody', ['part', 'initially', 'later'])">+ Dodaj red</button>
+                        <button type="button" class="btn-secondary" onclick="addJobScheduleRow()">+ Dodaj red</button>
                     </div>
                 </div>
             </div>
@@ -1059,7 +1091,7 @@
                     
                     <div class="form-group">
                         <label class="form-label">
-                            29. Matrica upravljanja rizicima (Proširite tabelu koliko je potrebno):
+                            30. Matrica upravljanja rizicima (Proširite tabelu ukoliko je potrebno):
                         </label>
                         <table class="dynamic-table" id="riskMatrixTable">
                             <thead>
@@ -1211,11 +1243,35 @@ function addTableRow(tableBodyId, fieldNames) {
 }
 
 function removeTableRow(button) {
-    button.closest('tr').remove();
+    const row = button.closest('tr');
+    const isFixed = row.getAttribute('data-fixed') === 'true';
+    
+    if (isFixed) {
+        alert('Ne možete obrisati ovaj red. Ovo je obavezna kategorija.');
+        return;
+    }
+    
+    row.remove();
     // Ponovo izračunaj ukupno nakon brisanja reda
     calculateFundingTotal();
     calculateRevenueGrandTotal();
     calculateExpenseGrandTotal();
+}
+
+function addJobScheduleRow() {
+    const tbody = document.getElementById('jobScheduleTableBody');
+    const rows = tbody.querySelectorAll('tr');
+    const rowIndex = rows.length;
+    
+    const newRow = document.createElement('tr');
+    newRow.setAttribute('data-fixed', 'false');
+    newRow.innerHTML = `
+        <td><input type="text" name="job_schedule[${rowIndex}][part]" class="form-control" placeholder="Dio biznis plana"></td>
+        <td><textarea name="job_schedule[${rowIndex}][initially]" class="form-control" rows="2" placeholder="-"></textarea></td>
+        <td><textarea name="job_schedule[${rowIndex}][later]" class="form-control" rows="2" placeholder="-"></textarea></td>
+    `;
+    
+    tbody.appendChild(newRow);
 }
 
 // Funkcije za računanje ukupnih iznosa
