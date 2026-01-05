@@ -41,82 +41,80 @@ class BusinessPlanController extends Controller
         $validated = $request->validate([
             // I. OSNOVNI PODACI
             'business_idea_name' => 'required|string|max:255',
-            'applicant_data' => 'required|string',
-            'registered_activity_data' => 'required|string',
+            'applicant_name' => 'required|string|max:255',
+            'applicant_jmbg' => 'required|string|max:13',
+            'applicant_address' => 'required|string',
+            'applicant_phone' => 'required|string|max:50',
+            'applicant_email' => 'required|email|max:255',
+            'has_registered_business' => 'nullable|boolean',
+            'registration_form' => 'nullable|string|max:255',
+            'company_name' => 'nullable|string|max:255',
+            'pib' => 'nullable|string|max:50',
+            'vat_number' => 'nullable|string|max:50',
+            'company_address' => 'nullable|string',
+            'company_phone' => 'nullable|string|max:50',
+            'company_email' => 'nullable|email|max:255',
+            'company_website' => 'nullable|string|max:255',
+            'bank_account' => 'nullable|string|max:255',
             'summary' => 'required|string',
             
             // II. MARKETING
-            'product_service' => 'required|string',
-            'location' => 'required|string',
-            'pricing' => 'required|string',
-            'promotion' => 'required|string',
-            'people_marketing' => 'required|string',
+            'products_services_table' => 'nullable|array',
+            'realization_type' => 'nullable|string|max:255',
+            'target_customers' => 'nullable|array',
+            'sales_locations' => 'nullable|array',
+            'has_business_space' => 'nullable|string|max:50',
+            'pricing_table' => 'nullable|array',
+            'annual_sales_volume' => 'nullable|numeric|min:0',
+            'revenue_share_table' => 'nullable|array',
+            'promotion' => 'nullable|string',
+            'employment_structure' => 'nullable|array',
+            'has_seasonal_workers' => 'nullable|boolean',
+            'competition_analysis' => 'nullable|string',
             
             // III. POSLOVANJE
-            'business_analysis' => 'required|string',
-            'supply_market' => 'required|string',
+            'business_analysis' => 'nullable|string',
+            'business_history' => 'nullable|array',
+            'required_resources' => 'nullable|string',
+            'suppliers_table' => 'nullable|array',
+            'annual_purchases_volume' => 'nullable|numeric|min:0',
             
             // IV. FINANSIJE
-            'required_funds' => 'required|string',
-            'revenue_expense_projection' => 'required|string',
+            'required_amount' => 'nullable|numeric|min:0',
+            'requested_amount' => 'nullable|numeric|min:0',
+            'funding_sources_table' => 'nullable|array',
+            'funding_alternative' => 'nullable|string|max:50',
+            'revenue_projection' => 'nullable|array',
+            'expense_projection' => 'nullable|array',
             
             // V. LJUDI
-            'entrepreneur_data' => 'required|string',
-            'job_schedule' => 'required|string',
+            'work_experience' => 'nullable|string',
+            'personal_strengths_weaknesses' => 'nullable|string',
+            'biggest_support' => 'nullable|string|max:255',
+            'job_schedule' => 'nullable|array',
             
             // VI. RIZICI
-            'risk_matrix' => 'required|string',
+            'risk_matrix' => 'nullable|array',
         ], [
             'business_idea_name.required' => 'Naziv biznis ideje je obavezan.',
-            'applicant_data.required' => 'Podaci o podnosiocu su obavezni.',
-            'registered_activity_data.required' => 'Podaci o registrovanoj djelatnosti su obavezni.',
+            'applicant_name.required' => 'Ime i prezime podnosioca je obavezno.',
+            'applicant_jmbg.required' => 'JMBG je obavezan.',
+            'applicant_address.required' => 'Adresa je obavezna.',
+            'applicant_phone.required' => 'Kontakt telefon je obavezan.',
+            'applicant_email.required' => 'E-mail je obavezan.',
             'summary.required' => 'Rezime je obavezno.',
-            'product_service.required' => 'Proizvod/Usluga je obavezan.',
-            'location.required' => 'Lokacija je obavezna.',
-            'pricing.required' => 'Cijena je obavezna.',
-            'promotion.required' => 'Promocija je obavezna.',
-            'people_marketing.required' => 'Ljudi (marketing) je obavezno.',
-            'business_analysis.required' => 'Analiza dosadašnjeg poslovanja je obavezna.',
-            'supply_market.required' => 'Nabavno tržište je obavezno.',
-            'required_funds.required' => 'Potrebna sredstva i izvori finansiranja su obavezni.',
-            'revenue_expense_projection.required' => 'Projekcija prihoda i rashoda je obavezna.',
-            'entrepreneur_data.required' => 'Podaci o preduzetnici su obavezni.',
-            'job_schedule.required' => 'Raspored poslova je obavezan.',
-            'risk_matrix.required' => 'Matrica upravljanja rizicima je obavezna.',
         ]);
 
         // Kreiraj ili ažuriraj biznis plan
         $businessPlan = BusinessPlan::updateOrCreate(
             ['application_id' => $application->id],
-            [
-                // I. OSNOVNI PODACI
-                'business_idea_name' => $validated['business_idea_name'],
-                'applicant_data' => $validated['applicant_data'],
-                'registered_activity_data' => $validated['registered_activity_data'],
-                'summary' => $validated['summary'],
-                
-                // II. MARKETING
-                'product_service' => $validated['product_service'],
-                'location' => $validated['location'],
-                'pricing' => $validated['pricing'],
-                'promotion' => $validated['promotion'],
-                'people_marketing' => $validated['people_marketing'],
-                
-                // III. POSLOVANJE
-                'business_analysis' => $validated['business_analysis'],
-                'supply_market' => $validated['supply_market'],
-                
-                // IV. FINANSIJE
-                'required_funds' => $validated['required_funds'],
-                'revenue_expense_projection' => $validated['revenue_expense_projection'],
-                
-                // V. LJUDI
-                'entrepreneur_data' => $validated['entrepreneur_data'],
-                'job_schedule' => $validated['job_schedule'],
-                
-                // VI. RIZICI
-                'risk_matrix' => $validated['risk_matrix'],
-            ]
+            array_merge(
+                $validated,
+                [
+                    'has_registered_business' => $request->has('has_registered_business') ? (bool)$request->has_registered_business : null,
+                    'has_seasonal_workers' => $request->has('has_seasonal_workers') ? (bool)$request->has_seasonal_workers : null,
+                ]
+            )
         );
 
         return redirect()->route('applications.show', $application)

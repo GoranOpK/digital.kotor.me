@@ -105,6 +105,19 @@
     .btn-primary:hover {
         background: var(--primary-dark);
     }
+    .btn-secondary {
+        background: #6b7280;
+        color: #fff;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    .btn-secondary:hover {
+        background: #4b5563;
+    }
     .alert {
         border-radius: 12px;
         padding: 16px 20px;
@@ -129,12 +142,82 @@
         font-size: 14px;
         margin-right: 12px;
     }
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    @media (min-width: 768px) {
+        .form-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    .radio-group {
+        display: flex;
+        gap: 24px;
+        flex-wrap: wrap;
+    }
+    .radio-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .radio-option input[type="radio"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    .radio-option label {
+        font-size: 14px;
+        color: #374151;
+        cursor: pointer;
+        margin: 0;
+    }
+    .dynamic-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+    }
+    .dynamic-table th,
+    .dynamic-table td {
+        padding: 12px;
+        border: 1px solid #e5e7eb;
+        text-align: left;
+    }
+    .dynamic-table th {
+        background: #f9fafb;
+        font-weight: 600;
+        color: #374151;
+    }
+    .dynamic-table input,
+    .dynamic-table textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    .conditional-field {
+        display: none;
+    }
+    .conditional-field.show {
+        display: block;
+    }
+    .info-box {
+        background: #f0f9ff;
+        border-left: 4px solid var(--primary);
+        padding: 16px;
+        border-radius: 8px;
+        margin: 16px 0;
+        font-size: 14px;
+        color: #374151;
+    }
 </style>
 
 <div class="business-plan-page">
     <div class="container mx-auto px-4">
         <div class="page-header">
-            <h1>Biznis plan - Obrazac 2</h1>
+            <h1>FORMA ZA BIZNIS PLAN</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 0;">{{ $application->business_plan_name ?? 'Biznis plan' }}</p>
         </div>
 
@@ -152,12 +235,12 @@
                 <div class="form-section">
                     <h2>
                         <span class="section-number">I</span>
-                        Osnovni podaci
+                        OSNOVNI PODACI
                     </h2>
                     
                     <div class="form-group">
                         <label class="form-label">
-                            Naziv biznis ideje <span class="required">*</span>
+                            1. Naziv biznis ideje: <span class="required">*</span>
                         </label>
                         <input 
                             type="text" 
@@ -174,47 +257,117 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            Podaci o podnosiocu <span class="required">*</span>
+                            2. Podaci o podnosiocu biznis plana: <span class="required">*</span>
                         </label>
-                        <textarea 
-                            name="applicant_data" 
-                            class="form-control @error('applicant_data') error @enderror"
-                            required
-                        >{{ old('applicant_data', $businessPlan->applicant_data ?? '') }}</textarea>
-                        @error('applicant_data')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Unesite detaljne podatke o podnosiocu prijave (ime, prezime, JMB, adresa, kontakt...)</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Ime i prezime:</label>
+                                <input type="text" name="applicant_name" class="form-control" value="{{ old('applicant_name', $businessPlan->applicant_name ?? '') }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">JMBG:</label>
+                                <input type="text" name="applicant_jmbg" class="form-control" value="{{ old('applicant_jmbg', $businessPlan->applicant_jmbg ?? '') }}" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Adresa:</label>
+                            <textarea name="applicant_address" class="form-control" rows="2" required>{{ old('applicant_address', $businessPlan->applicant_address ?? '') }}</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Kontakt telefon:</label>
+                                <input type="text" name="applicant_phone" class="form-control" value="{{ old('applicant_phone', $businessPlan->applicant_phone ?? '') }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">E-mail:</label>
+                                <input type="email" name="applicant_email" class="form-control" value="{{ old('applicant_email', $businessPlan->applicant_email ?? '') }}" required>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            Podaci o registrovanoj djelatnosti <span class="required">*</span>
+                            3. Da li imate registrovan biznis? <span class="required">*</span>
                         </label>
-                        <textarea 
-                            name="registered_activity_data" 
-                            class="form-control @error('registered_activity_data') error @enderror"
-                            required
-                        >{{ old('registered_activity_data', $businessPlan->registered_activity_data ?? '') }}</textarea>
-                        @error('registered_activity_data')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Unesite podatke o registrovanoj djelatnosti (šifra djelatnosti, datum registracije, status...)</div>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" name="has_registered_business" value="1" id="has_business_yes" {{ old('has_registered_business', $businessPlan->has_registered_business ?? false) ? 'checked' : '' }} onchange="toggleRegisteredBusinessFields()">
+                                <label for="has_business_yes">Da</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="has_registered_business" value="0" id="has_business_no" {{ old('has_registered_business') === '0' || ($businessPlan && !$businessPlan->has_registered_business) ? 'checked' : '' }} onchange="toggleRegisteredBusinessFields()">
+                                <label for="has_business_no">Ne</label>
+                            </div>
+                        </div>
+                        <div class="info-box">
+                            <strong>Napomena:</strong> Ukoliko podnosilac biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena, mora svoju djelatnost registrovati u neki od oblika registracije koji predviđa Zakon o privrednim društvima, najkasnije do dana potpisivanja ugovora.
+                        </div>
+                    </div>
+
+                    <div id="registeredBusinessFields" class="conditional-field {{ old('has_registered_business', $businessPlan->has_registered_business ?? false) ? 'show' : '' }}">
+                        <div class="form-group">
+                            <label class="form-label">
+                                4. Podaci o registrovanoj djelatnosti:
+                            </label>
+                            <div class="form-group">
+                                <label class="form-label">Oblik registracije:</label>
+                                <input type="text" name="registration_form" class="form-control" value="{{ old('registration_form', $businessPlan->registration_form ?? '') }}" placeholder="Preduzetnik / DOO / itd.">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nosioca biznisa* i naziv društva za oblik registracije "DOO":</label>
+                                <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $businessPlan->company_name ?? '') }}">
+                                <div class="form-text">*Nosioc biznisa je vlasnica ili jedna od vlasnika i izvršna direktorica društva</div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">PIB:</label>
+                                    <input type="text" name="pib" class="form-control" value="{{ old('pib', $businessPlan->pib ?? '') }}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Broj PDV registracije (ukoliko ste PDV obveznik):</label>
+                                    <input type="text" name="vat_number" class="form-control" value="{{ old('vat_number', $businessPlan->vat_number ?? '') }}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Adresa/sjedište:</label>
+                                <textarea name="company_address" class="form-control" rows="2">{{ old('company_address', $businessPlan->company_address ?? '') }}</textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Kontakt telefon:</label>
+                                    <input type="text" name="company_phone" class="form-control" value="{{ old('company_phone', $businessPlan->company_phone ?? '') }}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">E-mail:</label>
+                                    <input type="email" name="company_email" class="form-control" value="{{ old('company_email', $businessPlan->company_email ?? '') }}">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Website:</label>
+                                    <input type="text" name="company_website" class="form-control" value="{{ old('company_website', $businessPlan->company_website ?? '') }}">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Broj žiro računa i naziv banke:</label>
+                                    <input type="text" name="bank_account" class="form-control" value="{{ old('bank_account', $businessPlan->bank_account ?? '') }}">
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            Rezime <span class="required">*</span>
+                            5. Rezime (ukratko opišite ideju, proširite tabelu koliko je potrebno): <span class="required">*</span>
                         </label>
                         <textarea 
                             name="summary" 
                             class="form-control @error('summary') error @enderror"
                             required
+                            rows="6"
                         >{{ old('summary', $businessPlan->summary ?? '') }}</textarea>
                         @error('summary')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
-                        <div class="form-text">Kratak pregled biznis ideje (do 500 reči)</div>
                     </div>
                 </div>
             </div>
@@ -224,82 +377,300 @@
                 <div class="form-section">
                     <h2>
                         <span class="section-number">II</span>
-                        Marketing
+                        MARKETING
                     </h2>
                     
                     <div class="form-group">
                         <label class="form-label">
-                            Proizvod/Usluga <span class="required">*</span>
+                            PROIZVOD/USLUGA
                         </label>
-                        <textarea 
-                            name="product_service" 
-                            class="form-control @error('product_service') error @enderror"
-                            required
-                        >{{ old('product_service', $businessPlan->product_service ?? '') }}</textarea>
-                        @error('product_service')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Opis proizvoda ili usluge koju planirate da nudite</div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                6. Navedite sve postojeće/planirane proizvode/usluge. (Proširite tabelu koliko je potrebno.)
+                            </label>
+                            <table class="dynamic-table" id="productsServicesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Proizvod/usluga</th>
+                                        <th>Opis i karakteristike</th>
+                                        <th>Akcije</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsServicesTableBody">
+                                    @php
+                                        $productsServices = old('products_services_table', $businessPlan->products_services_table ?? [['product' => '', 'description' => '']]);
+                                    @endphp
+                                    @foreach($productsServices as $index => $item)
+                                        <tr>
+                                            <td><input type="text" name="products_services_table[{{ $index }}][product]" class="form-control" value="{{ $item['product'] ?? '' }}"></td>
+                                            <td><textarea name="products_services_table[{{ $index }}][description]" class="form-control" rows="2">{{ $item['description'] ?? '' }}</textarea></td>
+                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn-secondary" onclick="addTableRow('productsServicesTableBody', ['product', 'description'])">+ Dodaj red</button>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            Lokacija <span class="required">*</span>
+                            7. Realizacijom moje biznis ideje (označite odgovarajuću kolonu sa x ili dopunite): <span class="required">*</span>
                         </label>
-                        <textarea 
-                            name="location" 
-                            class="form-control @error('location') error @enderror"
-                            required
-                        >{{ old('location', $businessPlan->location ?? '') }}</textarea>
-                        @error('location')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Opis lokacije poslovanja (adresa, karakteristike prostora, pristup...)</div>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" name="realization_type" value="stvori_novi" id="realization_new" {{ old('realization_type', $businessPlan->realization_type ?? '') === 'stvori_novi' ? 'checked' : '' }}>
+                                <label for="realization_new">a. Stvoriću novi proizvod/uslugu</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="realization_type" value="unaprijedi" id="realization_improve" {{ old('realization_type', $businessPlan->realization_type ?? '') === 'unaprijedi' ? 'checked' : '' }}>
+                                <label for="realization_improve">b. Unaprijediću postojeći proizvod/postojeću uslugu</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="realization_type" value="uveca_obim" id="realization_volume" {{ old('realization_type', $businessPlan->realization_type ?? '') === 'uveca_obim' ? 'checked' : '' }}>
+                                <label for="realization_volume">c. Neće nastati novi proizvod/usluga, ali će se uvećati obim poslovanja</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="realization_type" value="nista_se_nece_promijeniti" id="realization_nothing" {{ old('realization_type', $businessPlan->realization_type ?? '') === 'nista_se_nece_promijeniti' ? 'checked' : '' }}>
+                                <label for="realization_nothing">d. Ništa se neće promijeniti u odnosu na sadašnje stanje</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="realization_type" value="nista_od_navedenog" id="realization_none" {{ old('realization_type', $businessPlan->realization_type ?? '') === 'nista_od_navedenog' ? 'checked' : '' }}>
+                                <label for="realization_none">e. Ništa od navedenog</label>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            Cijena <span class="required">*</span>
+                            8. Navedite glavne kupce Vaših proizvoda/usluga tj. ciljnu grupu. (Proširite tabelu ukoliko je potrebno.)
                         </label>
-                        <textarea 
-                            name="pricing" 
-                            class="form-control @error('pricing') error @enderror"
-                            required
-                        >{{ old('pricing', $businessPlan->pricing ?? '') }}</textarea>
-                        @error('pricing')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Strategija cijena, cjenovna lista, konkurentnost cijena</div>
+                        <table class="dynamic-table" id="targetCustomersTable">
+                            <thead>
+                                <tr>
+                                    <th>Ciljna grupa</th>
+                                    <th>Opis</th>
+                                    <th>Akcije</th>
+                                </tr>
+                            </thead>
+                            <tbody id="targetCustomersTableBody">
+                                @php
+                                    $targetCustomers = old('target_customers', $businessPlan->target_customers ?? [['group' => '', 'description' => '']]);
+                                @endphp
+                                @foreach($targetCustomers as $index => $item)
+                                    <tr>
+                                        <td><input type="text" name="target_customers[{{ $index }}][group]" class="form-control" value="{{ $item['group'] ?? '' }}"></td>
+                                        <td><textarea name="target_customers[{{ $index }}][description]" class="form-control" rows="2">{{ $item['description'] ?? '' }}</textarea></td>
+                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn-secondary" onclick="addTableRow('targetCustomersTableBody', ['group', 'description'])">+ Dodaj red</button>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            Promocija <span class="required">*</span>
+                            LOKACIJA
                         </label>
-                        <textarea 
-                            name="promotion" 
-                            class="form-control @error('promotion') error @enderror"
-                            required
-                        >{{ old('promotion', $businessPlan->promotion ?? '') }}</textarea>
-                        @error('promotion')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Plan promocije i marketing aktivnosti</div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                9. Gdje ćete prodavati Vaše proizvode/usluge? (fizička lokacija, online,…, proširite tabelu koliko je potrebno.)
+                            </label>
+                            <table class="dynamic-table" id="salesLocationsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Lokacija prodaje</th>
+                                        <th>Opis</th>
+                                        <th>Akcije</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="salesLocationsTableBody">
+                                    @php
+                                        $salesLocations = old('sales_locations', $businessPlan->sales_locations ?? [['location' => '', 'description' => '']]);
+                                    @endphp
+                                    @foreach($salesLocations as $index => $item)
+                                        <tr>
+                                            <td><input type="text" name="sales_locations[{{ $index }}][location]" class="form-control" value="{{ $item['location'] ?? '' }}"></td>
+                                            <td><textarea name="sales_locations[{{ $index }}][description]" class="form-control" rows="2">{{ $item['description'] ?? '' }}</textarea></td>
+                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn-secondary" onclick="addTableRow('salesLocationsTableBody', ['location', 'description'])">+ Dodaj red</button>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                10. Ukoliko Vam je za realizaciju biznis ideje potreban poslovni prostor, da li imate lokaciju sa svom potrebnom infrastrukturom: struja, voda, put i dr. (označiti odgovarajući red sa x)? <span class="required">*</span>
+                            </label>
+                            <div class="radio-group">
+                                <div class="radio-option">
+                                    <input type="radio" name="has_business_space" value="sopstveni" id="space_own" {{ old('has_business_space', $businessPlan->has_business_space ?? '') === 'sopstveni' ? 'checked' : '' }}>
+                                    <label for="space_own">a. Da, sopstveni prostor</label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" name="has_business_space" value="iznajmljeni" id="space_rented" {{ old('has_business_space', $businessPlan->has_business_space ?? '') === 'iznajmljeni' ? 'checked' : '' }}>
+                                    <label for="space_rented">b. Da, iznajmljeni prostor</label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" name="has_business_space" value="trazim" id="space_searching" {{ old('has_business_space', $businessPlan->has_business_space ?? '') === 'trazim' ? 'checked' : '' }}>
+                                    <label for="space_searching">c. Radim na pronalaženju lokacije</label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" name="has_business_space" value="nemam" id="space_none" {{ old('has_business_space', $businessPlan->has_business_space ?? '') === 'nemam' ? 'checked' : '' }}>
+                                    <label for="space_none">d. Nemam</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            Ljudi (marketing) <span class="required">*</span>
+                            CIJENA
                         </label>
-                        <textarea 
-                            name="people_marketing" 
-                            class="form-control @error('people_marketing') error @enderror"
-                            required
-                        >{{ old('people_marketing', $businessPlan->people_marketing ?? '') }}</textarea>
-                        @error('people_marketing')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Osoblje zaduženo za marketing i prodaju</div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                11. Koje su trenutne/planirane cijene Vaših proizvoda/usluga? (Proširite tabelu koliko je potrebno)
+                            </label>
+                            <table class="dynamic-table" id="pricingTable">
+                                <thead>
+                                    <tr>
+                                        <th>Proizvod/usluga</th>
+                                        <th>Cijena</th>
+                                        <th>Akcije</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pricingTableBody">
+                                    @php
+                                        $pricing = old('pricing_table', $businessPlan->pricing_table ?? [['product' => '', 'price' => '']]);
+                                    @endphp
+                                    @foreach($pricing as $index => $item)
+                                        <tr>
+                                            <td><input type="text" name="pricing_table[{{ $index }}][product]" class="form-control" value="{{ $item['product'] ?? '' }}"></td>
+                                            <td><input type="text" name="pricing_table[{{ $index }}][price]" class="form-control" value="{{ $item['price'] ?? '' }}"></td>
+                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn-secondary" onclick="addTableRow('pricingTableBody', ['product', 'price'])">+ Dodaj red</button>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                12. Koliki obim godišnje prodaje očekujete (u EUR)?
+                            </label>
+                            <input type="number" name="annual_sales_volume" class="form-control" value="{{ old('annual_sales_volume', $businessPlan->annual_sales_volume ?? '') }}" step="0.01" min="0" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                13. Učešće proizvoda/usluga u ukupnim prihodima (u %):
+                            </label>
+                            <table class="dynamic-table" id="revenueShareTable">
+                                <thead>
+                                    <tr>
+                                        <th>Proizvod/usluga</th>
+                                        <th>Učešće u ukupnim prihodima (%)</th>
+                                        <th>Akcije</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="revenueShareTableBody">
+                                    @php
+                                        $revenueShare = old('revenue_share_table', $businessPlan->revenue_share_table ?? [['product' => '', 'share' => '']]);
+                                    @endphp
+                                    @foreach($revenueShare as $index => $item)
+                                        <tr>
+                                            <td><input type="text" name="revenue_share_table[{{ $index }}][product]" class="form-control" value="{{ $item['product'] ?? '' }}"></td>
+                                            <td><input type="number" name="revenue_share_table[{{ $index }}][share]" class="form-control" value="{{ $item['share'] ?? '' }}" step="0.01" min="0" max="100"></td>
+                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn-secondary" onclick="addTableRow('revenueShareTableBody', ['product', 'share'])">+ Dodaj red</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            PROMOCIJA
+                        </label>
+                        <div class="form-group">
+                            <label class="form-label">
+                                14. Definišite Vašu marketing strategiju (prodor na tržište, distribucija proizvoda/usluga, komunikacija sa tržištem, promocija/reklama…proširite tabelu ukoliko je potrebno):
+                            </label>
+                            <textarea 
+                                name="promotion" 
+                                class="form-control @error('promotion') error @enderror"
+                                rows="6"
+                            >{{ old('promotion', $businessPlan->promotion ?? '') }}</textarea>
+                            @error('promotion')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            LJUDI
+                        </label>
+                        <div class="form-group">
+                            <label class="form-label">
+                                15. Zaposlenost i kvalifikaciona struktura
+                            </label>
+                            <table class="dynamic-table" id="employmentStructureTable">
+                                <thead>
+                                    <tr>
+                                        <th>Godina</th>
+                                        <th>Broj stalno zaposlenih</th>
+                                        <th>Kvalifikaciona struktura zaposlenih</th>
+                                        <th>Akcije</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="employmentStructureTableBody">
+                                    @php
+                                        $employmentStructure = old('employment_structure', $businessPlan->employment_structure ?? [['year' => '', 'employees' => '', 'qualifications' => '']]);
+                                    @endphp
+                                    @foreach($employmentStructure as $index => $item)
+                                        <tr>
+                                            <td><input type="text" name="employment_structure[{{ $index }}][year]" class="form-control" value="{{ $item['year'] ?? '' }}"></td>
+                                            <td><input type="number" name="employment_structure[{{ $index }}][employees]" class="form-control" value="{{ $item['employees'] ?? '' }}" min="0"></td>
+                                            <td><textarea name="employment_structure[{{ $index }}][qualifications]" class="form-control" rows="2">{{ $item['qualifications'] ?? '' }}</textarea></td>
+                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn-secondary" onclick="addTableRow('employmentStructureTableBody', ['year', 'employees', 'qualifications'])">+ Dodaj red</button>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                16. Da li ćete angažovati sezonske radnike (označiti odgovarajuću kolonu sa x)? <span class="required">*</span>
+                            </label>
+                            <div class="radio-group">
+                                <div class="radio-option">
+                                    <input type="radio" name="has_seasonal_workers" value="1" id="seasonal_yes" {{ old('has_seasonal_workers', $businessPlan->has_seasonal_workers ?? false) ? 'checked' : '' }}>
+                                    <label for="seasonal_yes">a. Da</label>
+                                </div>
+                                <div class="radio-option">
+                                    <input type="radio" name="has_seasonal_workers" value="0" id="seasonal_no" {{ old('has_seasonal_workers') === '0' || ($businessPlan && !$businessPlan->has_seasonal_workers) ? 'checked' : '' }}>
+                                    <label for="seasonal_no">b. Ne</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                17. Analiza konkurencije
+                            </label>
+                            <div class="form-group">
+                                <label class="form-label">Da li isti ili slični proizvodi već postoje na lokalnom nivou? (Izbjegavajte odgovore kojima se negira postojanje konkurencije.)</label>
+                                <textarea name="competition_analysis" class="form-control" rows="6">{{ old('competition_analysis', $businessPlan->competition_analysis ?? '') }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Navedite jake i slabe strane konkurencije. (Proširite tabelu koliko je potrebno)</label>
+                                <textarea name="competition_analysis" class="form-control" rows="6">{{ old('competition_analysis', $businessPlan->competition_analysis ?? '') }}</textarea>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -309,37 +680,96 @@
                 <div class="form-section">
                     <h2>
                         <span class="section-number">III</span>
-                        Poslovanje
+                        POSLOVANJE
                     </h2>
                     
                     <div class="form-group">
                         <label class="form-label">
-                            Analiza dosadašnjeg poslovanja <span class="required">*</span>
+                            18. Analiza dosadašnjeg poslovanja (Ne popunjavate ukoliko još niste registrovali biznis.)
                         </label>
-                        <textarea 
-                            name="business_analysis" 
-                            class="form-control @error('business_analysis') error @enderror"
-                            required
-                        >{{ old('business_analysis', $businessPlan->business_analysis ?? '') }}</textarea>
-                        @error('business_analysis')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Analiza dosadašnjeg poslovanja (ako postoji) ili plan za započinjanje</div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                a. Kratak opis poslovanja (istorija, proizvodi/usluge, klijenti, obim i potencijal za razvoj):
+                            </label>
+                            <textarea name="business_analysis" class="form-control" rows="6">{{ old('business_analysis', $businessPlan->business_analysis ?? '') }}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                b. Kratka istorija poslovanja:
+                            </label>
+                            <table class="dynamic-table" id="businessHistoryTable">
+                                <thead>
+                                    <tr>
+                                        <th>Godina</th>
+                                        <th>Broj zaposlenih</th>
+                                        <th>Godišnji promet</th>
+                                        <th>Važne prekretnice u razvoju biznisa</th>
+                                        <th>Akcije</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="businessHistoryTableBody">
+                                    @php
+                                        $businessHistory = old('business_history', $businessPlan->business_history ?? [['year' => '', 'employees' => '', 'revenue' => '', 'milestones' => '']]);
+                                    @endphp
+                                    @foreach($businessHistory as $index => $item)
+                                        <tr>
+                                            <td><input type="text" name="business_history[{{ $index }}][year]" class="form-control" value="{{ $item['year'] ?? '' }}"></td>
+                                            <td><input type="number" name="business_history[{{ $index }}][employees]" class="form-control" value="{{ $item['employees'] ?? '' }}" min="0"></td>
+                                            <td><input type="number" name="business_history[{{ $index }}][revenue]" class="form-control" value="{{ $item['revenue'] ?? '' }}" step="0.01" min="0"></td>
+                                            <td><textarea name="business_history[{{ $index }}][milestones]" class="form-control" rows="2">{{ $item['milestones'] ?? '' }}</textarea></td>
+                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn-secondary" onclick="addTableRow('businessHistoryTableBody', ['year', 'employees', 'revenue', 'milestones'])">+ Dodaj red</button>
+                        </div>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            Nabavno tržište <span class="required">*</span>
+                            19. Navedite što Vam je sve potrebno kako biste proizveli proizvod/uslugu. (Proširite tabelu koliko je potrebno)
                         </label>
-                        <textarea 
-                            name="supply_market" 
-                            class="form-control @error('supply_market') error @enderror"
-                            required
-                        >{{ old('supply_market', $businessPlan->supply_market ?? '') }}</textarea>
-                        @error('supply_market')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Analiza dobavljača, nabavnih kanala, uslova nabavke</div>
+                        <textarea name="required_resources" class="form-control" rows="6">{{ old('required_resources', $businessPlan->required_resources ?? '') }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            20. Nabavno tržište
+                        </label>
+                        <div class="form-group">
+                            <label class="form-label">
+                                a. Gdje ćete nabavljati sirovine, alat, mašine, opremu, programe tj. sve što Vam je potrebno kako biste kreirali proizvod /pružili uslugu? (Proširite tabelu koliko je potrebno.)
+                            </label>
+                            <table class="dynamic-table" id="suppliersTable">
+                                <thead>
+                                    <tr>
+                                        <th>Potrebno mi je</th>
+                                        <th>Dobavljač</th>
+                                        <th>Akcije</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="suppliersTableBody">
+                                    @php
+                                        $suppliers = old('suppliers_table', $businessPlan->suppliers_table ?? [['item' => '', 'supplier' => '']]);
+                                    @endphp
+                                    @foreach($suppliers as $index => $item)
+                                        <tr>
+                                            <td><input type="text" name="suppliers_table[{{ $index }}][item]" class="form-control" value="{{ $item['item'] ?? '' }}"></td>
+                                            <td><input type="text" name="suppliers_table[{{ $index }}][supplier]" class="form-control" value="{{ $item['supplier'] ?? '' }}"></td>
+                                            <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                            <button type="button" class="btn-secondary" onclick="addTableRow('suppliersTableBody', ['item', 'supplier'])">+ Dodaj red</button>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">
+                                b. Koliki je obim godišnjih nabavki (u EUR) za sve što ste naveli u prethodnoj tabeli?
+                            </label>
+                            <input type="number" name="annual_purchases_volume" class="form-control" value="{{ old('annual_purchases_volume', $businessPlan->annual_purchases_volume ?? '') }}" step="0.01" min="0" placeholder="0.00">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -349,37 +779,138 @@
                 <div class="form-section">
                     <h2>
                         <span class="section-number">IV</span>
-                        Finansije
+                        FINANSIJE
                     </h2>
                     
                     <div class="form-group">
                         <label class="form-label">
-                            Potrebna sredstva i izvori finansiranja <span class="required">*</span>
+                            21. Koliki iznos sredstava Vam je potreban za realizaciju biznis ideje?
                         </label>
-                        <textarea 
-                            name="required_funds" 
-                            class="form-control @error('required_funds') error @enderror"
-                            required
-                        >{{ old('required_funds', $businessPlan->required_funds ?? '') }}</textarea>
-                        @error('required_funds')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Detaljan pregled potrebnih sredstava i planiranih izvora finansiranja</div>
+                        <input type="number" name="required_amount" class="form-control" value="{{ old('required_amount', $businessPlan->required_amount ?? '') }}" step="0.01" min="0" placeholder="0.00">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            Projekcija prihoda i rashoda <span class="required">*</span>
+                            22. Koliki iznos podrške tražite od Opštine Kotor i navedite na što biste tačno utrošiti tražena sredstva? (Proširite tabelu koliko je potrebno.)
                         </label>
-                        <textarea 
-                            name="revenue_expense_projection" 
-                            class="form-control @error('revenue_expense_projection') error @enderror"
-                            required
-                        >{{ old('revenue_expense_projection', $businessPlan->revenue_expense_projection ?? '') }}</textarea>
-                        @error('revenue_expense_projection')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Projekcija prihoda i rashoda za prve 12-24 mjeseca</div>
+                        <div class="form-group">
+                            <label class="form-label">Iznos podrške:</label>
+                            <input type="number" name="requested_amount" class="form-control" value="{{ old('requested_amount', $businessPlan->requested_amount ?? '') }}" step="0.01" min="0" placeholder="0.00">
+                        </div>
+                        <table class="dynamic-table" id="fundingSourcesTable">
+                            <thead>
+                                <tr>
+                                    <th>Vrsta nabavke</th>
+                                    <th>Cijena po predračunu (u EUR)</th>
+                                    <th>Akcije</th>
+                                </tr>
+                            </thead>
+                            <tbody id="fundingSourcesTableBody">
+                                @php
+                                    $fundingSources = old('funding_sources_table', $businessPlan->funding_sources_table ?? [['type' => '', 'price' => '']]);
+                                @endphp
+                                @foreach($fundingSources as $index => $item)
+                                    <tr>
+                                        <td><input type="text" name="funding_sources_table[{{ $index }}][type]" class="form-control" value="{{ $item['type'] ?? '' }}"></td>
+                                        <td><input type="number" name="funding_sources_table[{{ $index }}][price]" class="form-control" value="{{ $item['price'] ?? '' }}" step="0.01" min="0"></td>
+                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn-secondary" onclick="addTableRow('fundingSourcesTableBody', ['type', 'price'])">+ Dodaj red</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            23. Ukoliko Vam iznos podrške ne bude dovoljan za realizaciju biznis ideje, kako planirate pokriti ostatak? (označiti odgovarajući red sa x)
+                        </label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" name="funding_alternative" value="vlastita" id="funding_own" {{ old('funding_alternative', $businessPlan->funding_alternative ?? '') === 'vlastita' ? 'checked' : '' }}>
+                                <label for="funding_own">a. Vlastita sredstva</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="funding_alternative" value="pozajmljena" id="funding_borrowed" {{ old('funding_alternative', $businessPlan->funding_alternative ?? '') === 'pozajmljena' ? 'checked' : '' }}>
+                                <label for="funding_borrowed">b. Pozajmljena sredstva (porodica/prijatelji)</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="funding_alternative" value="kredit" id="funding_credit" {{ old('funding_alternative', $businessPlan->funding_alternative ?? '') === 'kredit' ? 'checked' : '' }}>
+                                <label for="funding_credit">c. Kredit</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="funding_alternative" value="ostali" id="funding_other" {{ old('funding_alternative', $businessPlan->funding_alternative ?? '') === 'ostali' ? 'checked' : '' }}>
+                                <label for="funding_other">d. Ostali izvori (ulagači, državne subvencije, fondovi, donacije, sponzorstva i dr.)</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" name="funding_alternative" value="ne_znam" id="funding_dont_know" {{ old('funding_alternative', $businessPlan->funding_alternative ?? '') === 'ne_znam' ? 'checked' : '' }}>
+                                <label for="funding_dont_know">e. Ne znam</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            24. Projekcija prihoda u naredne 3 godine (Proširite tabelu koliko je potrebno):
+                        </label>
+                        <table class="dynamic-table" id="revenueProjectionTable">
+                            <thead>
+                                <tr>
+                                    <th>Proizvod/usluga</th>
+                                    <th>I godina (tekuća)</th>
+                                    <th>II godina</th>
+                                    <th>III godina</th>
+                                    <th>Akcije</th>
+                                </tr>
+                            </thead>
+                            <tbody id="revenueProjectionTableBody">
+                                @php
+                                    $revenueProjection = old('revenue_projection', $businessPlan->revenue_projection ?? [['product' => '', 'year1' => '', 'year2' => '', 'year3' => '']]);
+                                @endphp
+                                @foreach($revenueProjection as $index => $item)
+                                    <tr>
+                                        <td><input type="text" name="revenue_projection[{{ $index }}][product]" class="form-control" value="{{ $item['product'] ?? '' }}"></td>
+                                        <td><input type="number" name="revenue_projection[{{ $index }}][year1]" class="form-control" value="{{ $item['year1'] ?? '' }}" step="0.01" min="0"></td>
+                                        <td><input type="number" name="revenue_projection[{{ $index }}][year2]" class="form-control" value="{{ $item['year2'] ?? '' }}" step="0.01" min="0"></td>
+                                        <td><input type="number" name="revenue_projection[{{ $index }}][year3]" class="form-control" value="{{ $item['year3'] ?? '' }}" step="0.01" min="0"></td>
+                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn-secondary" onclick="addTableRow('revenueProjectionTableBody', ['product', 'year1', 'year2', 'year3'])">+ Dodaj red</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            25. Projekcija rashoda u naredne 3 godine (Proširite tabelu koliko je potrebno):
+                        </label>
+                        <table class="dynamic-table" id="expenseProjectionTable">
+                            <thead>
+                                <tr>
+                                    <th>Vrsta troška</th>
+                                    <th>I godina (tekuća)</th>
+                                    <th>II godina</th>
+                                    <th>III godina</th>
+                                    <th>Akcije</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenseProjectionTableBody">
+                                @php
+                                    $expenseProjection = old('expense_projection', $businessPlan->expense_projection ?? [['type' => '', 'year1' => '', 'year2' => '', 'year3' => '']]);
+                                @endphp
+                                @foreach($expenseProjection as $index => $item)
+                                    <tr>
+                                        <td><input type="text" name="expense_projection[{{ $index }}][type]" class="form-control" value="{{ $item['type'] ?? '' }}"></td>
+                                        <td><input type="number" name="expense_projection[{{ $index }}][year1]" class="form-control" value="{{ $item['year1'] ?? '' }}" step="0.01" min="0"></td>
+                                        <td><input type="number" name="expense_projection[{{ $index }}][year2]" class="form-control" value="{{ $item['year2'] ?? '' }}" step="0.01" min="0"></td>
+                                        <td><input type="number" name="expense_projection[{{ $index }}][year3]" class="form-control" value="{{ $item['year3'] ?? '' }}" step="0.01" min="0"></td>
+                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn-secondary" onclick="addTableRow('expenseProjectionTableBody', ['type', 'year1', 'year2', 'year3'])">+ Dodaj red</button>
                     </div>
                 </div>
             </div>
@@ -389,37 +920,58 @@
                 <div class="form-section">
                     <h2>
                         <span class="section-number">V</span>
-                        Ljudi
+                        LJUDI
                     </h2>
                     
                     <div class="form-group">
                         <label class="form-label">
-                            Podaci o preduzetnici <span class="required">*</span>
+                            26. Predstavite Vaše radno iskustvo, te opišite znanja i vještine koje posjedujete, a za koje smatrate da su od važnosti za realizaciju biznis plana. (Proširite tabelu koliko je potrebno.)
                         </label>
-                        <textarea 
-                            name="entrepreneur_data" 
-                            class="form-control @error('entrepreneur_data') error @enderror"
-                            required
-                        >{{ old('entrepreneur_data', $businessPlan->entrepreneur_data ?? '') }}</textarea>
-                        @error('entrepreneur_data')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Obrazovanje, iskustvo, kvalifikacije preduzetnice</div>
+                        <textarea name="work_experience" class="form-control" rows="6">{{ old('work_experience', $businessPlan->work_experience ?? '') }}</textarea>
                     </div>
 
                     <div class="form-group">
                         <label class="form-label">
-                            Raspored poslova <span class="required">*</span>
+                            27. Za koje Vaše osobine smatrate da su prednosti, a koje osobine smatrate da biste trebali unaprijediti? (Proširite tabelu koliko je potrebno.)
                         </label>
-                        <textarea 
-                            name="job_schedule" 
-                            class="form-control @error('job_schedule') error @enderror"
-                            required
-                        >{{ old('job_schedule', $businessPlan->job_schedule ?? '') }}</textarea>
-                        @error('job_schedule')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Organizacija rada, raspored poslova, plan zapošljavanja</div>
+                        <textarea name="personal_strengths_weaknesses" class="form-control" rows="6">{{ old('personal_strengths_weaknesses', $businessPlan->personal_strengths_weaknesses ?? '') }}</textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            28. Ko Vam je najveća podrška na Vašem preduzetničkom putovanju?
+                        </label>
+                        <input type="text" name="biggest_support" class="form-control" value="{{ old('biggest_support', $businessPlan->biggest_support ?? '') }}">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            29. Kako ćete rasporediti poslove?
+                        </label>
+                        <table class="dynamic-table" id="jobScheduleTable">
+                            <thead>
+                                <tr>
+                                    <th>Dio biznis plana</th>
+                                    <th>Ko bi mogao ovo raditi u početku?</th>
+                                    <th>Ko bi ovo mogao raditi kasnije?</th>
+                                    <th>Akcije</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jobScheduleTableBody">
+                                @php
+                                    $jobSchedule = old('job_schedule', $businessPlan->job_schedule ?? [['part' => '', 'initially' => '', 'later' => '']]);
+                                @endphp
+                                @foreach($jobSchedule as $index => $item)
+                                    <tr>
+                                        <td><input type="text" name="job_schedule[{{ $index }}][part]" class="form-control" value="{{ $item['part'] ?? '' }}"></td>
+                                        <td><textarea name="job_schedule[{{ $index }}][initially]" class="form-control" rows="2">{{ $item['initially'] ?? '' }}</textarea></td>
+                                        <td><textarea name="job_schedule[{{ $index }}][later]" class="form-control" rows="2">{{ $item['later'] ?? '' }}</textarea></td>
+                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn-secondary" onclick="addTableRow('jobScheduleTableBody', ['part', 'initially', 'later'])">+ Dodaj red</button>
                     </div>
                 </div>
             </div>
@@ -429,23 +981,41 @@
                 <div class="form-section">
                     <h2>
                         <span class="section-number">VI</span>
-                        Rizici
+                        RIZICI
                     </h2>
                     
                     <div class="form-group">
                         <label class="form-label">
-                            Matrica upravljanja rizicima <span class="required">*</span>
+                            29. Matrica upravljanja rizicima (Proširite tabelu koliko je potrebno):
                         </label>
-                        <textarea 
-                            name="risk_matrix" 
-                            class="form-control @error('risk_matrix') error @enderror"
-                            required
-                            style="min-height: 200px;"
-                        >{{ old('risk_matrix', $businessPlan->risk_matrix ?? '') }}</textarea>
-                        @error('risk_matrix')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                        <div class="form-text">Identifikacija rizika, procjena verovatnoće i uticaja, plan ublažavanja rizika</div>
+                        <table class="dynamic-table" id="riskMatrixTable">
+                            <thead>
+                                <tr>
+                                    <th>Rizik</th>
+                                    <th>Vjerovatnoća da će se dogoditi</th>
+                                    <th>Uticaj na Vaše poslovanje</th>
+                                    <th>Mjere koje ćete preduzeti</th>
+                                    <th>Odgovorna osoba (Ko će to uraditi?)</th>
+                                    <th>Akcije</th>
+                                </tr>
+                            </thead>
+                            <tbody id="riskMatrixTableBody">
+                                @php
+                                    $riskMatrix = old('risk_matrix', $businessPlan->risk_matrix ?? [['risk' => '', 'probability' => '', 'impact' => '', 'measures' => '', 'responsible' => '']]);
+                                @endphp
+                                @foreach($riskMatrix as $index => $item)
+                                    <tr>
+                                        <td><input type="text" name="risk_matrix[{{ $index }}][risk]" class="form-control" value="{{ $item['risk'] ?? '' }}"></td>
+                                        <td><textarea name="risk_matrix[{{ $index }}][probability]" class="form-control" rows="2">{{ $item['probability'] ?? '' }}</textarea></td>
+                                        <td><textarea name="risk_matrix[{{ $index }}][impact]" class="form-control" rows="2">{{ $item['impact'] ?? '' }}</textarea></td>
+                                        <td><textarea name="risk_matrix[{{ $index }}][measures]" class="form-control" rows="2">{{ $item['measures'] ?? '' }}</textarea></td>
+                                        <td><input type="text" name="risk_matrix[{{ $index }}][responsible]" class="form-control" value="{{ $item['responsible'] ?? '' }}"></td>
+                                        <td><button type="button" class="btn-secondary" onclick="removeTableRow(this)">Ukloni</button></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                        <button type="button" class="btn-secondary" onclick="addTableRow('riskMatrixTableBody', ['risk', 'probability', 'impact', 'measures', 'responsible'])">+ Dodaj red</button>
                     </div>
                 </div>
             </div>
@@ -462,5 +1032,67 @@
         </form>
     </div>
 </div>
-@endsection
 
+<script>
+function toggleRegisteredBusinessFields() {
+    const hasBusiness = document.querySelector('input[name="has_registered_business"]:checked')?.value === '1';
+    const fields = document.getElementById('registeredBusinessFields');
+    if (hasBusiness) {
+        fields.classList.add('show');
+    } else {
+        fields.classList.remove('show');
+    }
+}
+
+function addTableRow(tableBodyId, fieldNames) {
+    const tbody = document.getElementById(tableBodyId);
+    const row = document.createElement('tr');
+    const rowIndex = tbody.children.length;
+    const tableName = tableBodyId.replace('TableBody', '').replace(/([A-Z])/g, '_$1').toLowerCase().substring(1);
+    
+    fieldNames.forEach(fieldName => {
+        const cell = document.createElement('td');
+        if (fieldName === 'description' || fieldName === 'qualifications' || fieldName === 'initially' || fieldName === 'later' || fieldName === 'probability' || fieldName === 'impact' || fieldName === 'measures' || fieldName === 'milestones') {
+            const textarea = document.createElement('textarea');
+            textarea.name = `${tableName}[${rowIndex}][${fieldName}]`;
+            textarea.className = 'form-control';
+            textarea.rows = 2;
+            cell.appendChild(textarea);
+        } else if (fieldName === 'share' || fieldName === 'employees' || fieldName === 'price' || fieldName === 'revenue' || fieldName === 'year1' || fieldName === 'year2' || fieldName === 'year3') {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.name = `${tableName}[${rowIndex}][${fieldName}]`;
+            input.className = 'form-control';
+            input.step = '0.01';
+            input.min = '0';
+            if (fieldName === 'share') {
+                input.max = '100';
+            }
+            cell.appendChild(input);
+        } else {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = `${tableName}[${rowIndex}][${fieldName}]`;
+            input.className = 'form-control';
+            cell.appendChild(input);
+        }
+        row.appendChild(cell);
+    });
+    
+    const actionCell = document.createElement('td');
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn-secondary';
+    removeBtn.textContent = 'Ukloni';
+    removeBtn.onclick = function() { removeTableRow(this); };
+    actionCell.appendChild(removeBtn);
+    row.appendChild(actionCell);
+    
+    tbody.appendChild(row);
+}
+
+function removeTableRow(button) {
+    button.closest('tr').remove();
+}
+</script>
+@endsection
