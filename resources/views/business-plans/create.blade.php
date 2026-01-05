@@ -420,23 +420,23 @@
                         <div class="radio-group">
                             <div class="radio-option">
                                 <input type="radio" name="realization_type" value="stvori_novi" id="realization_new" {{ old('realization_type', $businessPlan->realization_type ?? '') === 'stvori_novi' ? 'checked' : '' }}>
-                                <label for="realization_new">a. Stvoriću novi proizvod/uslugu</label>
+                                <label for="realization_new">Stvoriću novi proizvod/uslugu</label>
                             </div>
                             <div class="radio-option">
                                 <input type="radio" name="realization_type" value="unaprijedi" id="realization_improve" {{ old('realization_type', $businessPlan->realization_type ?? '') === 'unaprijedi' ? 'checked' : '' }}>
-                                <label for="realization_improve">b. Unaprijediću postojeći proizvod/postojeću uslugu</label>
+                                <label for="realization_improve">Unaprijediću postojeći proizvod/postojeću uslugu</label>
                             </div>
                             <div class="radio-option">
                                 <input type="radio" name="realization_type" value="uveca_obim" id="realization_volume" {{ old('realization_type', $businessPlan->realization_type ?? '') === 'uveca_obim' ? 'checked' : '' }}>
-                                <label for="realization_volume">c. Neće nastati novi proizvod/usluga, ali će se uvećati obim poslovanja</label>
+                                <label for="realization_volume">Neće nastati novi proizvod/usluga, ali će se uvećati obim poslovanja</label>
                             </div>
                             <div class="radio-option">
                                 <input type="radio" name="realization_type" value="nista_se_nece_promijeniti" id="realization_nothing" {{ old('realization_type', $businessPlan->realization_type ?? '') === 'nista_se_nece_promijeniti' ? 'checked' : '' }}>
-                                <label for="realization_nothing">d. Ništa se neće promijeniti u odnosu na sadašnje stanje</label>
+                                <label for="realization_nothing">Ništa se neće promijeniti u odnosu na sadašnje stanje</label>
                             </div>
                             <div class="radio-option">
                                 <input type="radio" name="realization_type" value="nista_od_navedenog" id="realization_none" {{ old('realization_type', $businessPlan->realization_type ?? '') === 'nista_od_navedenog' ? 'checked' : '' }}>
-                                <label for="realization_none">e. Ništa od navedenog</label>
+                                <label for="realization_none">Ništa od navedenog</label>
                             </div>
                         </div>
                     </div>
@@ -507,19 +507,19 @@
                             <div class="radio-group">
                                 <div class="radio-option">
                                     <input type="radio" name="has_business_space" value="sopstveni" id="space_own" {{ old('has_business_space', $businessPlan->has_business_space ?? '') === 'sopstveni' ? 'checked' : '' }}>
-                                    <label for="space_own">a. Da, sopstveni prostor</label>
+                                    <label for="space_own">Da, sopstveni prostor</label>
                                 </div>
                                 <div class="radio-option">
                                     <input type="radio" name="has_business_space" value="iznajmljeni" id="space_rented" {{ old('has_business_space', $businessPlan->has_business_space ?? '') === 'iznajmljeni' ? 'checked' : '' }}>
-                                    <label for="space_rented">b. Da, iznajmljeni prostor</label>
+                                    <label for="space_rented">Da, iznajmljeni prostor</label>
                                 </div>
                                 <div class="radio-option">
                                     <input type="radio" name="has_business_space" value="trazim" id="space_searching" {{ old('has_business_space', $businessPlan->has_business_space ?? '') === 'trazim' ? 'checked' : '' }}>
-                                    <label for="space_searching">c. Radim na pronalaženju lokacije</label>
+                                    <label for="space_searching">Radim na pronalaženju lokacije</label>
                                 </div>
                                 <div class="radio-option">
                                     <input type="radio" name="has_business_space" value="nemam" id="space_none" {{ old('has_business_space', $businessPlan->has_business_space ?? '') === 'nemam' ? 'checked' : '' }}>
-                                    <label for="space_none">d. Nemam</label>
+                                    <label for="space_none">Nemam</label>
                                 </div>
                             </div>
                         </div>
@@ -650,11 +650,11 @@
                             <div class="radio-group">
                                 <div class="radio-option">
                                     <input type="radio" name="has_seasonal_workers" value="1" id="seasonal_yes" {{ old('has_seasonal_workers', $businessPlan->has_seasonal_workers ?? false) ? 'checked' : '' }}>
-                                    <label for="seasonal_yes">a. Da</label>
+                                    <label for="seasonal_yes">Da</label>
                                 </div>
                                 <div class="radio-option">
                                     <input type="radio" name="has_seasonal_workers" value="0" id="seasonal_no" {{ old('has_seasonal_workers') === '0' || ($businessPlan && !$businessPlan->has_seasonal_workers) ? 'checked' : '' }}>
-                                    <label for="seasonal_no">b. Ne</label>
+                                    <label for="seasonal_no">Ne</label>
                                 </div>
                             </div>
                         </div>
@@ -837,23 +837,23 @@
                         <div class="radio-group">
                             <div class="radio-option">
                                 <input type="radio" name="funding_alternative" value="vlastita" id="funding_own" {{ old('funding_alternative', $businessPlan->funding_alternative ?? '') === 'vlastita' ? 'checked' : '' }}>
-                                <label for="funding_own">a. Vlastita sredstva</label>
+                                <label for="funding_own">Vlastita sredstva</label>
                             </div>
                             <div class="radio-option">
                                 <input type="radio" name="funding_alternative" value="pozajmljena" id="funding_borrowed" {{ old('funding_alternative', $businessPlan->funding_alternative ?? '') === 'pozajmljena' ? 'checked' : '' }}>
-                                <label for="funding_borrowed">b. Pozajmljena sredstva (porodica/prijatelji)</label>
+                                <label for="funding_borrowed">Pozajmljena sredstva (porodica/prijatelji)</label>
                             </div>
                             <div class="radio-option">
                                 <input type="radio" name="funding_alternative" value="kredit" id="funding_credit" {{ old('funding_alternative', $businessPlan->funding_alternative ?? '') === 'kredit' ? 'checked' : '' }}>
-                                <label for="funding_credit">c. Kredit</label>
+                                <label for="funding_credit">Kredit</label>
                             </div>
                             <div class="radio-option">
                                 <input type="radio" name="funding_alternative" value="ostali" id="funding_other" {{ old('funding_alternative', $businessPlan->funding_alternative ?? '') === 'ostali' ? 'checked' : '' }}>
-                                <label for="funding_other">d. Ostali izvori (ulagači, državne subvencije, fondovi, donacije, sponzorstva i dr.)</label>
+                                <label for="funding_other">Ostali izvori (ulagači, državne subvencije, fondovi, donacije, sponzorstva i dr.)</label>
                             </div>
                             <div class="radio-option">
                                 <input type="radio" name="funding_alternative" value="ne_znam" id="funding_dont_know" {{ old('funding_alternative', $businessPlan->funding_alternative ?? '') === 'ne_znam' ? 'checked' : '' }}>
-                                <label for="funding_dont_know">e. Ne znam</label>
+                                <label for="funding_dont_know">Ne znam</label>
                             </div>
                         </div>
                     </div>
