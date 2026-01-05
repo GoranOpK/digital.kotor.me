@@ -34,6 +34,17 @@ class ReportController extends Controller
 
         // Proveri da li već postoji izvještaj
         $report = $application->reports()->where('type', 'realization')->first();
+        
+        // Učitaj podatke iz aplikacije i biznis plana ako nema izvještaja
+        if (!$report) {
+            $report = new Report();
+            $report->entrepreneur_name = $application->user->name ?? '';
+            $report->business_plan_name = $application->business_plan_name ?? '';
+            $report->approved_amount = $application->approved_amount ?? 0;
+            if ($application->contract) {
+                $report->contract_number = 'Ugovor #' . $application->contract->id;
+            }
+        }
 
         return view('reports.create', compact('application', 'report'));
     }
@@ -48,19 +59,81 @@ class ReportController extends Controller
             abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
+        // Proveri da li već postoji izvještaj sa fajlovima
+        $existingReport = $application->reports()->where('type', 'realization')->first();
+        $hasExistingFiles = $existingReport && ($existingReport->financial_report_file || $existingReport->invoices_file || $existingReport->bank_statement_file);
+
         $validated = $request->validate([
-            'description' => 'required|string|max:10000',
-            'document_file' => 'nullable|file|mimes:pdf,doc,docx|max:10240', // 10MB
+            // Osnovni podaci
+            'entrepreneur_name' => 'required|string|max:255',
+            'legal_status' => 'required|string|max:255',
+            'business_plan_name' => 'required|string|max:255',
+            'approved_amount' => 'required|numeric|min:0',
+            'contract_number' => 'nullable|string|max:255',
+            'report_period_start' => 'required|date',
+            'report_period_end' => 'required|date|after_or_equal:report_period_start',
+            
+            // Pitanja
+            'activities_description' => 'required|string',
+            'problems_description' => 'nullable|string',
+            'successes_description' => 'nullable|string',
+            'new_employees' => 'nullable|string',
+            'new_product_service' => 'nullable|string',
+            'purchases_description' => 'nullable|string',
+            'deviations_description' => 'nullable|string',
+            'satisfaction_with_cooperation' => 'required|in:da,ne',
+            'recommendations' => 'nullable|string',
+            'will_apply_again' => 'required|in:da,ne',
+            
+            // Prilozi - obavezni samo ako ne postoje već upload-ovani fajlovi
+            'financial_report_file' => $hasExistingFiles && $existingReport->financial_report_file ? 'nullable' : 'required|file|mimes:pdf,doc,docx,xls,xlsx|max:10240',
+            'invoices_file' => $hasExistingFiles && $existingReport->invoices_file ? 'nullable' : 'required|file|mimes:pdf,jpg,jpeg,png,zip|max:10240',
+            'bank_statement_file' => $hasExistingFiles && $existingReport->bank_statement_file ? 'nullable' : 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ], [
-            'description.required' => 'Opis realizacije je obavezan.',
-            'document_file.mimes' => 'Dokument mora biti PDF, DOC ili DOCX.',
-            'document_file.max' => 'Dokument ne može biti veći od 10MB.',
+            'entrepreneur_name.required' => 'Ime i prezime preduzetnice je obavezno.',
+            'legal_status.required' => 'Pravni status i naziv biznisa je obavezan.',
+            'business_plan_name.required' => 'Naziv biznis plana je obavezan.',
+            'approved_amount.required' => 'Iznos odobrenih sredstava je obavezan.',
+            'report_period_start.required' => 'Početak izvještajnog perioda je obavezan.',
+            'report_period_end.required' => 'Kraj izvještajnog perioda je obavezan.',
+            'report_period_end.after_or_equal' => 'Kraj perioda mora biti posle ili jednak početku perioda.',
+            'activities_description.required' => 'Opis aktivnosti je obavezan.',
+            'satisfaction_with_cooperation.required' => 'Morate odgovoriti da li ste zadovoljni saradnjom.',
+            'will_apply_again.required' => 'Morate odgovoriti da li ćete aplicirati ponovo.',
+            'financial_report_file.required' => 'Finansijski izvještaj je obavezan.',
+            'invoices_file.required' => 'Fakture su obavezne.',
+            'bank_statement_file.required' => 'Izvod sa banke je obavezan.',
         ]);
 
-        $filePath = null;
-        if ($request->hasFile('document_file')) {
-            $file = $request->file('document_file');
-            $filePath = $file->store('reports/realization', 'local');
+        // Upload fajlova - obriši stare ako se upload-uju novi
+        $financialReportPath = $existingReport->financial_report_file ?? null;
+        if ($request->hasFile('financial_report_file')) {
+            // Obriši stari fajl ako postoji
+            if ($financialReportPath && Storage::disk('local')->exists($financialReportPath)) {
+                Storage::disk('local')->delete($financialReportPath);
+            }
+            $file = $request->file('financial_report_file');
+            $financialReportPath = $file->store('reports/financial', 'local');
+        }
+
+        $invoicesPath = $existingReport->invoices_file ?? null;
+        if ($request->hasFile('invoices_file')) {
+            // Obriši stari fajl ako postoji
+            if ($invoicesPath && Storage::disk('local')->exists($invoicesPath)) {
+                Storage::disk('local')->delete($invoicesPath);
+            }
+            $file = $request->file('invoices_file');
+            $invoicesPath = $file->store('reports/invoices', 'local');
+        }
+
+        $bankStatementPath = $existingReport->bank_statement_file ?? null;
+        if ($request->hasFile('bank_statement_file')) {
+            // Obriši stari fajl ako postoji
+            if ($bankStatementPath && Storage::disk('local')->exists($bankStatementPath)) {
+                Storage::disk('local')->delete($bankStatementPath);
+            }
+            $file = $request->file('bank_statement_file');
+            $bankStatementPath = $file->store('reports/bank-statements', 'local');
         }
 
         $report = Report::updateOrCreate(
@@ -68,11 +141,15 @@ class ReportController extends Controller
                 'application_id' => $application->id,
                 'type' => 'realization',
             ],
-            [
-                'description' => $validated['description'],
-                'document_file' => $filePath,
-                'status' => 'submitted',
-            ]
+            array_merge(
+                $validated,
+                [
+                    'financial_report_file' => $financialReportPath,
+                    'invoices_file' => $invoicesPath,
+                    'bank_statement_file' => $bankStatementPath,
+                    'status' => 'submitted',
+                ]
+            )
         );
 
         return redirect()->route('applications.show', $application)
