@@ -415,7 +415,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            7. Realizacijom moje biznis ideje (označite odgovarajuću kolonu sa x ili dopunite): <span class="required">*</span>
+                            7. Realizacijom moje biznis ideje (označite odgovarajuću kolonu): <span class="required">*</span>
                         </label>
                         <div class="radio-group">
                             <div class="radio-option">
