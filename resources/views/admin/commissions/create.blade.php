@@ -169,7 +169,25 @@
                         <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">1. Predsjednik *</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime *</label>
-                            <input type="text" name="members[0][name]" class="form-control" value="{{ old('members.0.name') }}" required>
+                            <input type="text" name="members[0][name]" class="form-control @error('members.0.name') error @enderror" value="{{ old('members.0.name') }}" required>
+                            @error('members.0.name')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">E-mail *</label>
+                            <input type="email" name="members[0][email]" class="form-control @error('members.0.email') error @enderror" value="{{ old('members.0.email') }}" required>
+                            @error('members.0.email')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password *</label>
+                            <input type="password" name="members[0][password]" class="form-control @error('members.0.password') error @enderror" required minlength="8">
+                            @error('members.0.password')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Organizacija (opciono)</label>
@@ -184,7 +202,25 @@
                         <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">2. Član - Predstavnik Opštine *</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime *</label>
-                            <input type="text" name="members[1][name]" class="form-control" value="{{ old('members.1.name') }}" required>
+                            <input type="text" name="members[1][name]" class="form-control @error('members.1.name') error @enderror" value="{{ old('members.1.name') }}" required>
+                            @error('members.1.name')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">E-mail *</label>
+                            <input type="email" name="members[1][email]" class="form-control @error('members.1.email') error @enderror" value="{{ old('members.1.email') }}" required>
+                            @error('members.1.email')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password *</label>
+                            <input type="password" name="members[1][password]" class="form-control @error('members.1.password') error @enderror" required minlength="8">
+                            @error('members.1.password')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Organizacija (opciono)</label>
@@ -198,7 +234,25 @@
                         <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">3. Član - Predstavnik Opštine *</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime *</label>
-                            <input type="text" name="members[2][name]" class="form-control" value="{{ old('members.2.name') }}" required>
+                            <input type="text" name="members[2][name]" class="form-control @error('members.2.name') error @enderror" value="{{ old('members.2.name') }}" required>
+                            @error('members.2.name')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">E-mail *</label>
+                            <input type="email" name="members[2][email]" class="form-control @error('members.2.email') error @enderror" value="{{ old('members.2.email') }}" required>
+                            @error('members.2.email')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password *</label>
+                            <input type="password" name="members[2][password]" class="form-control @error('members.2.password') error @enderror" required minlength="8">
+                            @error('members.2.password')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Organizacija (opciono)</label>
@@ -213,11 +267,32 @@
                         <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">4. Član - Predstavnica Udruženja/Udruženja preduzetnica/Biznisa/Akademske zajednice *</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime *</label>
-                            <input type="text" name="members[3][name]" class="form-control" value="{{ old('members.3.name') }}" required>
+                            <input type="text" name="members[3][name]" class="form-control @error('members.3.name') error @enderror" value="{{ old('members.3.name') }}" required>
+                            @error('members.3.name')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">E-mail *</label>
+                            <input type="email" name="members[3][email]" class="form-control @error('members.3.email') error @enderror" value="{{ old('members.3.email') }}" required>
+                            @error('members.3.email')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password *</label>
+                            <input type="password" name="members[3][password]" class="form-control @error('members.3.password') error @enderror" required minlength="8">
+                            @error('members.3.password')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Organizacija *</label>
-                            <input type="text" name="members[3][organization]" class="form-control" value="{{ old('members.3.organization') }}" placeholder="Naziv udruženja/organizacije" required>
+                            <input type="text" name="members[3][organization]" class="form-control @error('members.3.organization') error @enderror" value="{{ old('members.3.organization') }}" placeholder="Naziv udruženja/organizacije" required>
+                            @error('members.3.organization')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
                         </div>
                         <input type="hidden" name="members[3][position]" value="clan">
                         <input type="hidden" name="members[3][member_type]" value="udruzenje">
@@ -228,7 +303,25 @@
                         <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">5. Član - Predstavnica Ženske političke mreže *</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime *</label>
-                            <input type="text" name="members[4][name]" class="form-control" value="{{ old('members.4.name') }}" required>
+                            <input type="text" name="members[4][name]" class="form-control @error('members.4.name') error @enderror" value="{{ old('members.4.name') }}" required>
+                            @error('members.4.name')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">E-mail *</label>
+                            <input type="email" name="members[4][email]" class="form-control @error('members.4.email') error @enderror" value="{{ old('members.4.email') }}" required>
+                            @error('members.4.email')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password *</label>
+                            <input type="password" name="members[4][password]" class="form-control @error('members.4.password') error @enderror" required minlength="8">
+                            @error('members.4.password')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Organizacija (opciono)</label>

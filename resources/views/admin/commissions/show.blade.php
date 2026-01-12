@@ -269,7 +269,7 @@
                     
                     <div class="form-group">
                         <label class="form-label">Korisnik iz sistema (opciono)</label>
-                        <select name="user_id" class="form-control">
+                        <select name="user_id" id="member_user_id" class="form-control" onchange="toggleMemberFields()">
                             <option value="">Izaberi korisnika...</option>
                             @foreach($users as $user)
                                 <option value="{{ $user->id }}">{{ $user->name }} ({{ $user->email }})</option>
@@ -282,7 +282,32 @@
 
                     <div class="form-group">
                         <label class="form-label">Ime i prezime *</label>
-                        <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
+                        <input type="text" name="name" id="member_name" class="form-control @error('name') error @enderror" value="{{ old('name') }}" required>
+                        @error('name')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group" id="member_email_group">
+                        <label class="form-label">E-mail *</label>
+                        <input type="email" name="email" id="member_email" class="form-control @error('email') error @enderror" value="{{ old('email') }}">
+                        @error('email')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            Obavezno ako član ne postoji u sistemu
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="member_password_group">
+                        <label class="form-label">Password *</label>
+                        <input type="password" name="password" id="member_password" class="form-control @error('password') error @enderror" minlength="8">
+                        @error('password')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            Minimum 8 karaktera. Obavezno ako član ne postoji u sistemu.
+                        </div>
                     </div>
 
                     <div class="form-row">
@@ -321,5 +346,45 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleMemberFields() {
+    const userSelect = document.getElementById('member_user_id');
+    const emailGroup = document.getElementById('member_email_group');
+    const passwordGroup = document.getElementById('member_password_group');
+    const emailInput = document.getElementById('member_email');
+    const passwordInput = document.getElementById('member_password');
+    const nameInput = document.getElementById('member_name');
+    
+    if (userSelect.value) {
+        // Ako je izabran postojeći korisnik, sakrij email i password polja
+        emailGroup.style.display = 'none';
+        passwordGroup.style.display = 'none';
+        emailInput.removeAttribute('required');
+        passwordInput.removeAttribute('required');
+        
+        // Preuzmi ime iz izabranog korisnika
+        const selectedOption = userSelect.options[userSelect.selectedIndex];
+        if (selectedOption.value) {
+            const userText = selectedOption.text;
+            const nameMatch = userText.match(/^(.+?)\s*\(/);
+            if (nameMatch) {
+                nameInput.value = nameMatch[1].trim();
+            }
+        }
+    } else {
+        // Ako nije izabran postojeći korisnik, prikaži email i password polja
+        emailGroup.style.display = 'block';
+        passwordGroup.style.display = 'block';
+        emailInput.setAttribute('required', 'required');
+        passwordInput.setAttribute('required', 'required');
+    }
+}
+
+// Pozovi funkciju na učitavanju stranice
+document.addEventListener('DOMContentLoaded', function() {
+    toggleMemberFields();
+});
+</script>
 @endsection
 

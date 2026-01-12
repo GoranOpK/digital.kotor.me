@@ -7,6 +7,7 @@ use App\Models\Competition;
 use App\Models\Application;
 use App\Models\Commission;
 use App\Models\CommissionMember;
+use App\Models\Role;
 use App\Models\Tender;
 use App\Models\Contract;
 use App\Models\Report;
@@ -437,6 +438,18 @@ class AdminController extends Controller
             $endDate = $start->copy()->addYears(2)->format('Y-m-d');
         }
         
+        // Proveri da li se email-ovi ponavljaju između članova
+        $emails = [];
+        foreach ($request->input('members', []) as $index => $member) {
+            if (!empty($member['email'])) {
+                $email = strtolower($member['email']);
+                if (in_array($email, $emails)) {
+                    return back()->withErrors(['members.' . $index . '.email' => 'E-mail se ne može ponavljati između članova komisije.'])->withInput();
+                }
+                $emails[] = $email;
+            }
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
@@ -444,22 +457,32 @@ class AdminController extends Controller
             'end_date' => 'required|date',
             'members' => 'required|array|size:5',
             'members.0.name' => 'required|string|max:255',
+            'members.0.email' => 'required|email|max:255|unique:users,email',
+            'members.0.password' => 'required|string|min:8',
             'members.0.position' => 'required|in:predsjednik',
             'members.0.member_type' => 'required|in:opstina',
             'members.0.organization' => 'nullable|string|max:255',
             'members.1.name' => 'required|string|max:255',
+            'members.1.email' => 'required|email|max:255|unique:users,email',
+            'members.1.password' => 'required|string|min:8',
             'members.1.position' => 'required|in:clan',
             'members.1.member_type' => 'required|in:opstina',
             'members.1.organization' => 'nullable|string|max:255',
             'members.2.name' => 'required|string|max:255',
+            'members.2.email' => 'required|email|max:255|unique:users,email',
+            'members.2.password' => 'required|string|min:8',
             'members.2.position' => 'required|in:clan',
             'members.2.member_type' => 'required|in:opstina',
             'members.2.organization' => 'nullable|string|max:255',
             'members.3.name' => 'required|string|max:255',
+            'members.3.email' => 'required|email|max:255|unique:users,email',
+            'members.3.password' => 'required|string|min:8',
             'members.3.position' => 'required|in:clan',
             'members.3.member_type' => 'required|in:udruzenje',
             'members.3.organization' => 'required|string|max:255',
             'members.4.name' => 'required|string|max:255',
+            'members.4.email' => 'required|email|max:255|unique:users,email',
+            'members.4.password' => 'required|string|min:8',
             'members.4.position' => 'required|in:clan',
             'members.4.member_type' => 'required|in:zene_mreza',
             'members.4.organization' => 'nullable|string|max:255',
@@ -472,11 +495,36 @@ class AdminController extends Controller
             'members.required' => 'Morate dodati sve 5 članova komisije.',
             'members.size' => 'Komisija mora imati tačno 5 članova.',
             'members.0.name.required' => 'Ime i prezime predsjednika je obavezno.',
+            'members.0.email.required' => 'E-mail predsjednika je obavezan.',
+            'members.0.email.email' => 'E-mail predsjednika mora biti validan.',
+            'members.0.email.unique' => 'E-mail predsjednika već postoji u sistemu.',
+            'members.0.password.required' => 'Password predsjednika je obavezan.',
+            'members.0.password.min' => 'Password predsjednika mora imati minimum 8 karaktera.',
             'members.1.name.required' => 'Ime i prezime prvog člana (Opština) je obavezno.',
+            'members.1.email.required' => 'E-mail prvog člana (Opština) je obavezan.',
+            'members.1.email.email' => 'E-mail prvog člana (Opština) mora biti validan.',
+            'members.1.email.unique' => 'E-mail prvog člana (Opština) već postoji u sistemu.',
+            'members.1.password.required' => 'Password prvog člana (Opština) je obavezan.',
+            'members.1.password.min' => 'Password prvog člana (Opština) mora imati minimum 8 karaktera.',
             'members.2.name.required' => 'Ime i prezime drugog člana (Opština) je obavezno.',
+            'members.2.email.required' => 'E-mail drugog člana (Opština) je obavezan.',
+            'members.2.email.email' => 'E-mail drugog člana (Opština) mora biti validan.',
+            'members.2.email.unique' => 'E-mail drugog člana (Opština) već postoji u sistemu.',
+            'members.2.password.required' => 'Password drugog člana (Opština) je obavezan.',
+            'members.2.password.min' => 'Password drugog člana (Opština) mora imati minimum 8 karaktera.',
             'members.3.name.required' => 'Ime i prezime člana (Udruženje) je obavezno.',
+            'members.3.email.required' => 'E-mail člana (Udruženje) je obavezan.',
+            'members.3.email.email' => 'E-mail člana (Udruženje) mora biti validan.',
+            'members.3.email.unique' => 'E-mail člana (Udruženje) već postoji u sistemu.',
+            'members.3.password.required' => 'Password člana (Udruženje) je obavezan.',
+            'members.3.password.min' => 'Password člana (Udruženje) mora imati minimum 8 karaktera.',
             'members.3.organization.required' => 'Organizacija za člana iz udruženja je obavezna.',
             'members.4.name.required' => 'Ime i prezime člana (Ženske mreže) je obavezno.',
+            'members.4.email.required' => 'E-mail člana (Ženske mreže) je obavezan.',
+            'members.4.email.email' => 'E-mail člana (Ženske mreže) mora biti validan.',
+            'members.4.email.unique' => 'E-mail člana (Ženske mreže) već postoji u sistemu.',
+            'members.4.password.required' => 'Password člana (Ženske mreže) je obavezan.',
+            'members.4.password.min' => 'Password člana (Ženske mreže) mora imati minimum 8 karaktera.',
         ]);
 
         $commission = Commission::create([
@@ -487,10 +535,30 @@ class AdminController extends Controller
             'status' => 'active',
         ]);
 
-        // Kreiraj sve članove komisije
+        // Pronađi rolu za komisiju
+        $komisijaRole = Role::where('name', 'komisija')->first();
+        if (!$komisijaRole) {
+            return back()->withErrors(['error' => 'Rola "komisija" ne postoji u sistemu.'])->withInput();
+        }
+
+        // Kreiraj sve članove komisije sa User nalozima
         foreach ($validated['members'] as $memberData) {
+            // Kreiraj User nalog za člana komisije
+            $user = User::create([
+                'name' => $memberData['name'],
+                'email' => strtolower($memberData['email']),
+                'password' => Hash::make($memberData['password']),
+                'role_id' => $komisijaRole->id,
+                'activation_status' => 'active',
+                'email_verified_at' => now(), // Automatski verifikovan email
+                'user_type' => 'Fizičko lice',
+                'residential_status' => 'resident',
+            ]);
+
+            // Kreiraj člana komisije i poveži sa User nalogom
             CommissionMember::create([
                 'commission_id' => $commission->id,
+                'user_id' => $user->id,
                 'name' => $memberData['name'],
                 'position' => $memberData['position'],
                 'member_type' => $memberData['member_type'],
@@ -561,11 +629,18 @@ class AdminController extends Controller
         $validated = $request->validate([
             'user_id' => 'nullable|exists:users,id',
             'name' => 'required|string|max:255',
+            'email' => 'required_without:user_id|email|max:255|unique:users,email',
+            'password' => 'required_without:user_id|string|min:8',
             'position' => 'required|string|max:255',
             'member_type' => 'required|in:opstina,udruzenje,zene_mreza',
             'organization' => 'nullable|string|max:255',
         ], [
             'name.required' => 'Ime i prezime je obavezno.',
+            'email.required_without' => 'E-mail je obavezan ako član ne postoji u sistemu.',
+            'email.email' => 'E-mail mora biti validan.',
+            'email.unique' => 'E-mail već postoji u sistemu.',
+            'password.required_without' => 'Password je obavezan ako član ne postoji u sistemu.',
+            'password.min' => 'Password mora imati minimum 8 karaktera.',
             'position.required' => 'Pozicija je obavezna.',
             'member_type.required' => 'Tip člana je obavezan.',
         ]);
@@ -575,9 +650,35 @@ class AdminController extends Controller
             return back()->withErrors(['error' => 'Komisija može imati najviše 5 članova.'])->withInput();
         }
 
+        // Ako je izabran postojeći korisnik, koristi njegov ID
+        $userId = $validated['user_id'];
+        
+        // Ako nije izabran postojeći korisnik, kreiraj novog
+        if (!$userId) {
+            // Pronađi rolu za komisiju
+            $komisijaRole = Role::where('name', 'komisija')->first();
+            if (!$komisijaRole) {
+                return back()->withErrors(['error' => 'Rola "komisija" ne postoji u sistemu.'])->withInput();
+            }
+
+            // Kreiraj User nalog za člana komisije
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => strtolower($validated['email']),
+                'password' => Hash::make($validated['password']),
+                'role_id' => $komisijaRole->id,
+                'activation_status' => 'active',
+                'email_verified_at' => now(), // Automatski verifikovan email
+                'user_type' => 'Fizičko lice',
+                'residential_status' => 'resident',
+            ]);
+            
+            $userId = $user->id;
+        }
+
         CommissionMember::create([
             'commission_id' => $commission->id,
-            'user_id' => $validated['user_id'] ?? null,
+            'user_id' => $userId,
             'name' => $validated['name'],
             'position' => $validated['position'],
             'member_type' => $validated['member_type'],
