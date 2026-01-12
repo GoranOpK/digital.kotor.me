@@ -308,6 +308,7 @@ class HomeController extends Controller
         $user = auth()->user();
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
         $isSuperAdmin = $user->role && $user->role->name === 'superadmin';
+        $isKomisija = $user->role && $user->role->name === 'komisija';
         
         // Ako je konkurs admin, pripremi podatke za admin dashboard
         if ($isCompetitionAdmin) {
@@ -324,6 +325,24 @@ class HomeController extends Controller
                 ->get();
             
             return view('dashboard', compact('stats', 'recent_applications'));
+        }
+        
+        // Ako je član komisije, pripremi podatke za dashboard komisije
+        if ($isKomisija) {
+            // Pronađi člana komisije
+            $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)->first();
+            
+            if ($commissionMember) {
+                // Pronađi sve prijave koje treba da se ocjenjuju
+                $competitions = Competition::where('status', 'active')->get();
+                $applications = Application::whereIn('competition_id', $competitions->pluck('id'))
+                    ->whereIn('status', ['submitted', 'evaluated'])
+                    ->with('competition', 'evaluationScores')
+                    ->latest()
+                    ->get();
+                
+                return view('dashboard', compact('applications', 'commissionMember', 'isKomisija'));
+            }
         }
         
         // Za običnog korisnika
