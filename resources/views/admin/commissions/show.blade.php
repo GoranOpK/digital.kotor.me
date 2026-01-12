@@ -243,9 +243,9 @@
                                 <div class="member-details">
                                     <div>Pozicija: {{ $member->position }}</div>
                                     <div>Tip: 
-                                        @if($member->member_type === 'opstina') Opština
-                                        @elseif($member->member_type === 'udruzenje') Udruženje
-                                        @elseif($member->member_type === 'zene_mreza') Žene mreža
+                                        @if($member->member_type === 'opstina') Predstavnik Opštine
+                                        @elseif($member->member_type === 'udruzenje') Predstavnica Udruženja
+                                        @elseif($member->member_type === 'zene_mreza') Predstavnica Ženske političke mreže
                                         @endif
                                     </div>
                                     @if($member->organization)
@@ -336,9 +336,9 @@
                         <div class="form-group">
                             <label class="form-label">Tip člana *</label>
                             <select name="member_type" class="form-control" required>
-                                <option value="opstina">Opština</option>
-                                <option value="udruzenje">Udruženje</option>
-                                <option value="zene_mreza">Žene mreža</option>
+                                <option value="opstina">Predstavnik Opštine</option>
+                                <option value="udruzenje">Predstavnica Udruženja</option>
+                                <option value="zene_mreza">Predstavnica Ženske političke mreže</option>
                             </select>
                         </div>
                     </div>
