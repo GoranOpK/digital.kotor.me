@@ -28,7 +28,7 @@ class CompetitionAdminSeeder extends Seeder
             [
                 'name' => 'Administrator konkursa',
                 'first_name' => 'Administrator',
-                'last_name' => 'Konkursa',
+                'last_name' => 'konkursa',
                 'email' => 'konkurs.admin@kotor.me',
                 'password' => Hash::make('M4nuyN4AIfaHDPxfpWD7'),
                 'role_id' => $role->id,

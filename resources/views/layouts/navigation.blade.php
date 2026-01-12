@@ -19,7 +19,11 @@
                         Home
                     </x-nav-link>
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
+                        @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
+                            Moj Panel
+                        @else
+                            {{ __('Dashboard') }}
+                        @endif
                     </x-nav-link>
                     @auth
                         @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
@@ -85,7 +89,11 @@
                 Home
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
+                @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
+                    Moj Panel
+                @else
+                    {{ __('Dashboard') }}
+                @endif
             </x-responsive-nav-link>
             @auth
                 @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
