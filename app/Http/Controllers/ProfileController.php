@@ -35,9 +35,29 @@ class ProfileController extends Controller
         $user->phone = $request->phone;
         $user->address = $request->address;
 
-        // Ažuriraj tip korisnika ako je dostupno u zahtjevu
+        // Ažuriraj tip korisnika
         if ($request->has('user_type')) {
             $user->user_type = $request->user_type;
+        }
+
+        // Ažuriraj status rezidentnosti
+        if ($request->has('residential_status')) {
+            $user->residential_status = $request->residential_status;
+        }
+
+        // Ažuriraj JMB (za fizička lica)
+        if ($request->has('jmb')) {
+            $user->jmb = $request->jmb;
+        }
+
+        // Ažuriraj PIB (za pravna lica)
+        if ($request->has('pib')) {
+            $user->pib = $request->pib;
+        }
+
+        // Ažuriraj broj pasoša (za nerezidente)
+        if ($request->has('passport_number')) {
+            $user->passport_number = $request->passport_number ? strtoupper($request->passport_number) : null;
         }
 
         // Ažuriraj email ako je promijenjen

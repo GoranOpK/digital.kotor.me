@@ -187,10 +187,10 @@
                     @enderror
                 </div>
 
-                @if($user->user_type !== 'Fizičko lice')
                 <div class="form-group">
-                    <label for="user_type" class="form-label">Tip pravnog lica <span class="required">*</span></label>
-                    <select name="user_type" id="user_type" class="form-control" required>
+                    <label for="user_type" class="form-label">Tip korisnika <span class="required">*</span></label>
+                    <select name="user_type" id="user_type" class="form-control" required onchange="toggleUserTypeFields()">
+                        <option value="Fizičko lice" {{ old('user_type', $user->user_type) === 'Fizičko lice' ? 'selected' : '' }}>Fizičko lice</option>
                         @php
                             $businessTypes = [
                                 'Preduzetnik',
@@ -214,7 +214,71 @@
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>
-                @endif
+
+                <div class="form-group">
+                    <label for="residential_status" class="form-label">Status rezidentnosti <span class="required">*</span></label>
+                    <select name="residential_status" id="residential_status" class="form-control" required>
+                        <option value="resident" {{ old('residential_status', $user->residential_status) === 'resident' ? 'selected' : '' }}>Rezident</option>
+                        <option value="non-resident" {{ old('residential_status', $user->residential_status) === 'non-resident' ? 'selected' : '' }}>Nerezident</option>
+                        <option value="ex-non-resident" {{ old('residential_status', $user->residential_status) === 'ex-non-resident' ? 'selected' : '' }}>Bivši nerezident</option>
+                    </select>
+                    @error('residential_status')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <!-- Polja za fizičko lice -->
+                <div id="physicalPersonFields" class="{{ old('user_type', $user->user_type) === 'Fizičko lice' ? '' : 'conditional-field' }}" style="{{ old('user_type', $user->user_type) === 'Fizičko lice' ? '' : 'display: none;' }}">
+                    <div class="form-group">
+                        <label for="jmb" class="form-label">JMB <span class="required">*</span></label>
+                        <input type="text" name="jmb" id="jmb" class="form-control" 
+                               value="{{ old('jmb', $user->jmb) }}" 
+                               maxlength="13" 
+                               pattern="[0-9]{13}"
+                               placeholder="13 cifara">
+                        @error('jmb')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            Jedinstveni matični broj (13 cifara)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Polja za pravno lice -->
+                <div id="legalEntityFields" class="{{ old('user_type', $user->user_type) !== 'Fizičko lice' ? '' : 'conditional-field' }}" style="{{ old('user_type', $user->user_type) !== 'Fizičko lice' ? '' : 'display: none;' }}">
+                    <div class="form-group">
+                        <label for="pib" class="form-label">PIB <span class="required">*</span></label>
+                        <input type="text" name="pib" id="pib" class="form-control" 
+                               value="{{ old('pib', $user->pib) }}" 
+                               maxlength="9"
+                               pattern="[0-9]{9}"
+                               placeholder="9 cifara">
+                        @error('pib')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            Poreski identifikacioni broj (9 cifara)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Polje za passport (opciono za nerezidente) -->
+                <div id="passportFields" class="{{ old('residential_status', $user->residential_status) !== 'resident' ? '' : 'conditional-field' }}" style="{{ old('residential_status', $user->residential_status) !== 'resident' ? '' : 'display: none;' }}">
+                    <div class="form-group">
+                        <label for="passport_number" class="form-label">Broj pasoša</label>
+                        <input type="text" name="passport_number" id="passport_number" class="form-control" 
+                               value="{{ old('passport_number', $user->passport_number) }}" 
+                               maxlength="50"
+                               placeholder="Broj pasoša">
+                        @error('passport_number')
+                            <div class="form-error">{{ $message }}</div>
+                        @enderror
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            Obavezno za nerezidente koji nemaju JMB
+                        </div>
+                    </div>
+                </div>
 
                 <div style="display: flex; gap: 12px; margin-top: 24px;">
                     <button type="submit" class="btn btn-primary">Sačuvaj izmjene</button>
@@ -258,4 +322,75 @@
         </div>
     </div>
 </div>
+
+<script>
+function toggleUserTypeFields() {
+    const userType = document.getElementById('user_type').value;
+    const physicalPersonFields = document.getElementById('physicalPersonFields');
+    const legalEntityFields = document.getElementById('legalEntityFields');
+    const jmbInput = document.getElementById('jmb');
+    const pibInput = document.getElementById('pib');
+    
+    if (userType === 'Fizičko lice') {
+        if (physicalPersonFields) {
+            physicalPersonFields.style.display = 'block';
+        }
+        if (legalEntityFields) {
+            legalEntityFields.style.display = 'none';
+        }
+        if (jmbInput) {
+            jmbInput.setAttribute('required', 'required');
+        }
+        if (pibInput) {
+            pibInput.removeAttribute('required');
+        }
+    } else {
+        if (physicalPersonFields) {
+            physicalPersonFields.style.display = 'none';
+        }
+        if (legalEntityFields) {
+            legalEntityFields.style.display = 'block';
+        }
+        if (jmbInput) {
+            jmbInput.removeAttribute('required');
+        }
+        if (pibInput) {
+            pibInput.setAttribute('required', 'required');
+        }
+    }
+    
+    // Takođe proveri residential_status za passport polje
+    togglePassportField();
+}
+
+function togglePassportField() {
+    const residentialStatus = document.getElementById('residential_status').value;
+    const passportFields = document.getElementById('passportFields');
+    const passportInput = document.getElementById('passport_number');
+    
+    if (residentialStatus !== 'resident') {
+        if (passportFields) {
+            passportFields.style.display = 'block';
+        }
+    } else {
+        if (passportFields) {
+            passportFields.style.display = 'none';
+        }
+        if (passportInput) {
+            passportInput.removeAttribute('required');
+        }
+    }
+}
+
+// Dodaj event listener za residential_status
+document.addEventListener('DOMContentLoaded', function() {
+    const residentialStatusSelect = document.getElementById('residential_status');
+    if (residentialStatusSelect) {
+        residentialStatusSelect.addEventListener('change', togglePassportField);
+    }
+    
+    // Pozovi funkcije na učitavanju
+    toggleUserTypeFields();
+});
+</script>
 @endsection
