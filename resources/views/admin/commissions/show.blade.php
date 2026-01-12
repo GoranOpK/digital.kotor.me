@@ -38,6 +38,15 @@
         background: #fff;
         color: var(--primary);
     }
+    .btn-danger {
+        background: #ef4444;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-danger:hover {
+        background: #dc2626;
+    }
     .info-card {
         background: #fff;
         border-radius: 16px;
@@ -190,7 +199,12 @@
         <div class="page-header">
             <h1>{{ $commission->name }}</h1>
             <div>
-                <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn btn-primary">Izmeni</a>
+                <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn btn-primary">Izmijeni</a>
+                <form action="{{ route('admin.commissions.destroy', $commission) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu komisiju? Ova akcija je nepovratna.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">Obriši</button>
+                </form>
             </div>
         </div>
 

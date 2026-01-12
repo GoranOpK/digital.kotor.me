@@ -76,7 +76,7 @@
 <div class="admin-page">
     <div class="container mx-auto px-4">
         <div class="page-header">
-            <h1>Izmeni komisiju</h1>
+            <h1>Izmijeni komisiju</h1>
         </div>
 
         <div class="form-card">

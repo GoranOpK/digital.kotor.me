@@ -622,6 +622,21 @@ class AdminController extends Controller
     }
 
     /**
+     * Brisanje komisije
+     */
+    public function destroyCommission(Commission $commission)
+    {
+        // Brisanje komisije će automatski obrisati sve članove komisije zbog cascade delete
+        // Takođe, treba proveriti da li postoje ocjene povezane sa ovom komisijom
+        $commissionName = $commission->name;
+        
+        $commission->delete();
+
+        return redirect()->route('admin.commissions.index')
+            ->with('success', "Komisija '{$commissionName}' je uspješno obrisana.");
+    }
+
+    /**
      * Dodavanje člana komisije
      */
     public function addCommissionMember(Request $request, Commission $commission)

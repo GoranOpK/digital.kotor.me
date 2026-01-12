@@ -166,6 +166,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/commissions/{commission}', [AdminController::class, 'showCommission'])->name('commissions.show');
             Route::get('/commissions/{commission}/edit', [AdminController::class, 'editCommission'])->name('commissions.edit');
             Route::put('/commissions/{commission}', [AdminController::class, 'updateCommission'])->name('commissions.update');
+            Route::delete('/commissions/{commission}', [AdminController::class, 'destroyCommission'])->name('commissions.destroy');
             Route::post('/commissions/{commission}/members', [AdminController::class, 'addCommissionMember'])->name('commissions.members.add');
             Route::get('/commissions/members/{member}/sign', [AdminController::class, 'signDeclarations'])->name('commissions.members.sign');
             Route::post('/commissions/members/{member}/sign', [AdminController::class, 'storeDeclarations'])->name('commissions.members.store-declarations');

@@ -30,7 +30,7 @@
             <!-- Page Content -->
             <main>
                 @if (isset($slot))
-                    {{ $slot }}
+                {{ $slot }}
                 @else
                     @yield('content')
                 @endif
