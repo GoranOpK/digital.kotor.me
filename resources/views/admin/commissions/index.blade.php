@@ -90,6 +90,15 @@
         background: #f59e0b;
         color: #fff;
     }
+    .btn-delete {
+        background: #ef4444;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-delete:hover {
+        background: #dc2626;
+    }
 </style>
 
 <div class="admin-page">
@@ -131,6 +140,11 @@
                             <td>
                                 <a href="{{ route('admin.commissions.show', $commission) }}" class="btn-sm btn-view">Pregled</a>
                                 <a href="{{ route('admin.commissions.edit', $commission) }}" class="btn-sm btn-edit">Izmijeni</a>
+                                <form action="{{ route('admin.commissions.destroy', $commission) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu komisiju? Ova akcija je nepovratna.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-sm btn-delete">Obriši</button>
+                                </form>
                             </td>
                         </tr>
                     @empty
