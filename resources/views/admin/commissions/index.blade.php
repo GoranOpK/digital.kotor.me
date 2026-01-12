@@ -130,7 +130,7 @@
                                 {{ $commission->end_date->format('d.m.Y') }}
                             </td>
                             <td>
-                                {{ $commission->active_members_count }} / {{ $commission->members_count }} aktivnih
+                                {{ $commission->active_members_count }} / 5 aktivnih
                             </td>
                             <td>
                                 <span class="status-badge status-{{ $commission->status }}">
