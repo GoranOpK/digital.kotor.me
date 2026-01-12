@@ -39,7 +39,11 @@
             <div class="sm:flex sm:items-center sm:ms-6" style="display:flex; align-items:center; gap:12px;">
                 @auth
                     <span class="text-sm text-gray-700 dark:text-gray-200" style="margin-right: 16px;">
-                        {{ Auth::user()->name }}
+                        @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
+                            Administrator konkursa
+                        @else
+                            {{ Auth::user()->name }}
+                        @endif
                     </span>
                     <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                         @csrf
@@ -108,7 +112,13 @@
         <div class="pt-4 pb-1 border-t border-gray-200 dark:border-gray-600">
             @auth
                 <div class="px-4">
-                    <div class="font-medium text-base text-gray-800 dark:text-gray-200">{{ Auth::user()->name }}</div>
+                    <div class="font-medium text-base text-gray-800 dark:text-gray-200">
+                        @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
+                            Administrator konkursa
+                        @else
+                            {{ Auth::user()->name }}
+                        @endif
+                    </div>
                     <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
                 </div>
 
