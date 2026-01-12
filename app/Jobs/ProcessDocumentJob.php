@@ -59,10 +59,10 @@ class ProcessDocumentJob implements ShouldQueue
             // Sačuvaj privremeno za obradu
             file_put_contents($tempFilePath, $fileContent);
             
-            // Ažuriraj status na 'processing' i osveži model da bi se promena videla
+            // Ažuriraj status na 'processing' i osveži model da bi se promjena vidjela
             $this->document->refresh();
             $this->document->update(['status' => 'processing']);
-            $this->document->refresh(); // Osveži da bi se promena videla u sledećim proverama
+            $this->document->refresh(); // Osveži da bi se promjena vidjela u sljedećim provjerama
             
             // Mala pauza da bi JavaScript stigao da pročita "processing" status
             // (obrada je vrlo brza - 0.39 sekundi, pa treba da status bude vidljiv)

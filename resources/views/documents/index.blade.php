@@ -558,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 1000);
     } else {
-        // Proveri jednom da vidimo da li ima dokumenata u obradi (možda su se promenili)
+        // Proveri jednom da vidimo da li ima dokumenata u obradi (možda su se promijenili)
         setTimeout(function() {
             checkDocumentStatus();
             

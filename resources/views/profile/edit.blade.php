@@ -287,9 +287,9 @@
             </form>
         </div>
 
-        <!-- Promena lozinke -->
+        <!-- Promjena lozinke -->
         <div class="profile-card">
-            <h2>Promena lozinke</h2>
+            <h2>Promjena lozinke</h2>
             <form method="POST" action="{{ route('profile.password.update') }}">
                 @csrf
                 @method('PUT')
@@ -316,7 +316,7 @@
                 </div>
 
                 <div style="margin-top: 24px;">
-                    <button type="submit" class="btn btn-primary">Promeni lozinku</button>
+                    <button type="submit" class="btn btn-primary">Promijeni lozinku</button>
                 </div>
             </form>
         </div>

@@ -132,7 +132,7 @@ class DocumentController extends Controller
                 // Ažuriraj status na 'processing' i osveži model
                 $document->refresh();
                 $document->update(['status' => 'processing']);
-                $document->refresh(); // Osveži da bi se promena videla
+                $document->refresh(); // Osveži da bi se promjena vidjela
                 
                 // Mala pauza da bi JavaScript stigao da pročita "processing" status
                 // (obrada je vrlo brza, pa treba da status bude vidljiv)
