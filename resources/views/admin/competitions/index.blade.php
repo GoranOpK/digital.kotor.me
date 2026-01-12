@@ -96,6 +96,20 @@
             <a href="{{ route('admin.competitions.create') }}" class="btn-primary">+ Novi konkurs</a>
         </div>
 
+        <!-- Tabovi za aktivne i arhivirane konkursi -->
+        <div style="background: #fff; border-radius: 16px; padding: 0; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="display: flex; border-bottom: 2px solid #e5e7eb;">
+                <a href="{{ route('admin.competitions.index', ['tab' => 'active']) }}" 
+                   style="flex: 1; padding: 16px 24px; text-align: center; text-decoration: none; font-weight: 600; color: {{ $tab === 'active' ? 'var(--primary)' : '#6b7280' }}; border-bottom: 3px solid {{ $tab === 'active' ? 'var(--primary)' : 'transparent' }}; transition: all 0.2s;">
+                    Aktivni konkursi
+                </a>
+                <a href="{{ route('admin.competitions.index', ['tab' => 'archive']) }}" 
+                   style="flex: 1; padding: 16px 24px; text-align: center; text-decoration: none; font-weight: 600; color: {{ $tab === 'archive' ? 'var(--primary)' : '#6b7280' }}; border-bottom: 3px solid {{ $tab === 'archive' ? 'var(--primary)' : 'transparent' }}; transition: all 0.2s;">
+                    Arhiva konkursa
+                </a>
+            </div>
+        </div>
+
         <div class="table-card">
             <table>
                 <thead>
@@ -165,7 +179,11 @@
                     @empty
                         <tr>
                             <td colspan="7" style="text-align: center; padding: 40px; color: #6b7280;">
-                                Nema konkursa. <a href="{{ route('admin.competitions.create') }}">Kreiraj prvi konkurs</a>
+                                @if($tab === 'archive')
+                                    Nema arhiviranih konkursa.
+                                @else
+                                    Nema konkursa. <a href="{{ route('admin.competitions.create') }}">Kreiraj prvi konkurs</a>
+                                @endif
                             </td>
                         </tr>
                     @endforelse
