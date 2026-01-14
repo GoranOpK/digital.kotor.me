@@ -158,7 +158,7 @@
                         <li>1 član - predstavnica Udruženja preduzetnica Crne Gore ili strukovnih udruženja, ili biznisa, ili akademske zajednice</li>
                         <li>1 član - predstavnica Ženske političke mreže</li>
                     </ul>
-                    <p style="font-size: 13px; color: #6b7280; margin: 12px 0 0; font-style: italic;">Možete kreirati komisiju sa bilo kojim brojem članova (1-5) i dodati ostale članove kasnije.</p>
+                    <p style="font-size: 13px; color: #6b7280; margin: 12px 0 0; font-style: italic;">Možete kreirati komisiju sa bilo kojim brojem članova (1-5). Nema obaveznih članova - možete dodati bilo koji član. Ostale članove možete dodati kasnije.</p>
                 </div>
 
                 <!-- Članovi komisije -->
@@ -167,7 +167,7 @@
                     
                     <!-- Predsjednik -->
                     <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">1. Predsjednik (opciono)</h3>
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">1. Predsjednik</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime</label>
                             <input type="text" name="members[0][name]" class="form-control @error('members.0.name') error @enderror" value="{{ old('members.0.name') }}">
@@ -191,7 +191,7 @@
                             <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Organizacija (opciono)</label>
+                            <label class="form-label">Organizacija</label>
                             <input type="text" name="members[0][organization]" class="form-control" value="{{ old('members.0.organization') }}" placeholder="Potpredsjednik Opštine / Starješina organa lokalne uprave">
                         </div>
                         <input type="hidden" name="members[0][position]" value="predsjednik">
@@ -200,7 +200,7 @@
 
                     <!-- 2 člana - Opština -->
                     <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">2. Član - Predstavnik Opštine (opciono)</h3>
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">2. Član - Predstavnik Opštine</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime</label>
                             <input type="text" name="members[1][name]" class="form-control @error('members.1.name') error @enderror" value="{{ old('members.1.name') }}">
@@ -224,7 +224,7 @@
                             <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Organizacija (opciono)</label>
+                            <label class="form-label">Organizacija</label>
                             <input type="text" name="members[1][organization]" class="form-control" value="{{ old('members.1.organization') }}" placeholder="Naziv organizacije">
                         </div>
                         <input type="hidden" name="members[1][position]" value="clan">
@@ -232,7 +232,7 @@
                     </div>
 
                     <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">3. Član - Predstavnik Opštine (opciono)</h3>
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">3. Član - Predstavnik Opštine</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime</label>
                             <input type="text" name="members[2][name]" class="form-control @error('members.2.name') error @enderror" value="{{ old('members.2.name') }}">
@@ -256,7 +256,7 @@
                             <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Organizacija (opciono)</label>
+                            <label class="form-label">Organizacija</label>
                             <input type="text" name="members[2][organization]" class="form-control" value="{{ old('members.2.organization') }}" placeholder="Naziv organizacije">
                         </div>
                         <input type="hidden" name="members[2][position]" value="clan">
@@ -265,7 +265,7 @@
 
                     <!-- 1 član - Udruženje -->
                     <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">4. Član - Predstavnica Udruženja/Udruženja preduzetnica/Biznisa/Akademske zajednice (opciono)</h3>
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">4. Član - Predstavnica Udruženja/Udruženja preduzetnica/Biznisa/Akademske zajednice</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime</label>
                             <input type="text" name="members[3][name]" class="form-control @error('members.3.name') error @enderror" value="{{ old('members.3.name') }}">
@@ -301,7 +301,7 @@
 
                     <!-- 1 član - Ženske mreže -->
                     <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">5. Član - Predstavnica Ženske političke mreže (opciono)</h3>
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">5. Član - Predstavnica Ženske političke mreže</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime</label>
                             <input type="text" name="members[4][name]" class="form-control @error('members.4.name') error @enderror" value="{{ old('members.4.name') }}">
@@ -325,7 +325,7 @@
                             <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Organizacija (opciono)</label>
+                            <label class="form-label">Organizacija</label>
                             <input type="text" name="members[4][organization]" class="form-control" value="{{ old('members.4.organization') }}" placeholder="Ženska politička mreža">
                         </div>
                         <input type="hidden" name="members[4][position]" value="clan">
@@ -339,7 +339,7 @@
                 </div>
                 <div style="margin-top: 12px; padding: 12px; background: #f0f9ff; border-left: 4px solid var(--primary); border-radius: 4px;">
                     <p style="font-size: 13px; color: #374151; margin: 0;">
-                        <strong>Napomena:</strong> Možete kreirati komisiju sa bilo kojim brojem članova (1-5). Ako dodajete člana, sva polja za tog člana moraju biti popunjena. Ostale članove možete dodati kasnije na stranici za upravljanje komisijom.
+                        <strong>Napomena:</strong> Možete kreirati komisiju sa bilo kojim brojem članova (1-5). Nema obaveznih članova - možete dodati bilo koji član. Ako dodajete člana, sva polja za tog člana moraju biti popunjena. Ostale članove možete dodati kasnije na stranici za upravljanje komisijom.
                     </p>
                 </div>
             </form>

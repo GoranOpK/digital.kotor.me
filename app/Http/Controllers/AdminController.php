@@ -13,6 +13,7 @@ use App\Models\Contract;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Auth\Events\Registered;
 
 class AdminController extends Controller
 {
@@ -564,10 +565,12 @@ class AdminController extends Controller
                 'password' => Hash::make($memberData['password']),
                 'role_id' => $komisijaRole->id,
                 'activation_status' => 'active',
-                'email_verified_at' => now(), // Automatski verifikovan email
                 'user_type' => 'Fizičko lice',
                 'residential_status' => 'resident',
             ]);
+            
+            // Pošalji email za verifikaciju
+            event(new Registered($user));
 
             // Kreiraj člana komisije i poveži sa User nalogom
             CommissionMember::create([
@@ -703,10 +706,12 @@ class AdminController extends Controller
                 'password' => Hash::make($validated['password']),
                 'role_id' => $komisijaRole->id,
                 'activation_status' => 'active',
-                'email_verified_at' => now(), // Automatski verifikovan email
                 'user_type' => 'Fizičko lice',
                 'residential_status' => 'resident',
             ]);
+            
+            // Pošalji email za verifikaciju
+            event(new Registered($user));
             
             $userId = $user->id;
         }
