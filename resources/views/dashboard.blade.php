@@ -209,6 +209,7 @@
     $user = auth()->user();
     $isSuperAdmin = $user->role && $user->role->name === 'superadmin';
     $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
+    $isKomisija = isset($isKomisija) ? $isKomisija : ($user->role && $user->role->name === 'komisija');
     $isPhysicalPerson = $user->user_type === 'Fizičko lice';
     $isResident = $user->residential_status === 'resident';
     $isNonResident = $user->residential_status === 'non-resident';
@@ -219,6 +220,9 @@
         $userTypeLabel = 'Super Administrator';
     } elseif ($isCompetitionAdmin) {
         $userTypeLabel = 'Administrator konkursa';
+    } elseif ($isKomisija && isset($commissionMember)) {
+        $positionLabel = $commissionMember->position === 'predsjednik' ? 'Predsjednik' : 'Član';
+        $userTypeLabel = $positionLabel . ' komisije';
     } elseif ($isPhysicalPerson && $isResident) {
         $userTypeLabel = 'Fizičko lice (Rezident)';
     } elseif ($isPhysicalPerson && $isNonResident) {
@@ -405,6 +409,136 @@
                     <p>Upravljanje korisnicima, konkursima, tenderima i svim aspektima sistema.</p>
                 </a>
             </div>
+        @endif
+
+        <!-- Dashboard za članove komisije -->
+        @if ($isKomisija && isset($commissionMember) && isset($commission))
+            <!-- Informacije o komisiji i konkursu -->
+            <div class="info-grid" style="margin-top: 24px;">
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <h2>Informacije o komisiji</h2>
+                    </div>
+                    <div class="info-grid" style="grid-template-columns: 1fr; gap: 12px;">
+                        <div class="info-item">
+                            <span class="info-label">Naziv komisije</span>
+                            <span class="info-value">{{ $commission->name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Godina</span>
+                            <span class="info-value">{{ $commission->year }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Mandat</span>
+                            <span class="info-value">{{ $commission->start_date->format('d.m.Y') }} - {{ $commission->end_date->format('d.m.Y') }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Pozicija</span>
+                            <span class="info-value">{{ $commissionMember->position === 'predsjednik' ? 'Predsjednik' : 'Član' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status</span>
+                            <span class="info-value" style="color: {{ $commission->status === 'active' ? '#10b981' : '#6b7280' }};">
+                                {{ $commission->status === 'active' ? 'Aktivna' : 'Neaktivna' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                @if($commission->competitions->count() > 0)
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <h2>Dodijeljeni konkursi</h2>
+                    </div>
+                    <div style="padding: 20px;">
+                        @foreach($commission->competitions as $competition)
+                            <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
+                                <h3 style="font-size: 18px; font-weight: 700; color: #111827; margin: 0 0 8px;">
+                                    {{ $competition->title }}
+                                </h3>
+                                <div class="info-grid" style="grid-template-columns: 1fr; gap: 8px; margin-top: 12px;">
+                                    <div class="info-item">
+                                        <span class="info-label">Godina</span>
+                                        <span class="info-value">{{ $competition->year }}</span>
+                                    </div>
+                                    @if($competition->published_at)
+                                    <div class="info-item">
+                                        <span class="info-label">Datum objave</span>
+                                        <span class="info-value">{{ $competition->published_at->format('d.m.Y') }}</span>
+                                    </div>
+                                    @endif
+                                    @if($competition->deadline)
+                                    <div class="info-item">
+                                        <span class="info-label">Rok za prijave</span>
+                                        <span class="info-value">{{ $competition->deadline->format('d.m.Y') }}</span>
+                                    </div>
+                                    @endif
+                                    <div class="info-item">
+                                        <span class="info-label">Status</span>
+                                        <span class="info-value" style="color: {{ $competition->status === 'published' ? '#10b981' : ($competition->status === 'closed' ? '#ef4444' : '#6b7280') }};">
+                                            @if($competition->status === 'published') Objavljen
+                                            @elseif($competition->status === 'closed') Zatvoren
+                                            @elseif($competition->status === 'draft') Nacrt
+                                            @else Završen
+                                            @endif
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                @else
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <h2>Dodijeljeni konkursi</h2>
+                    </div>
+                    <div style="padding: 20px; text-align: center;">
+                        <p style="color: #6b7280; font-size: 14px;">Komisiji još nije dodijeljen nijedan konkurs.</p>
+                    </div>
+                </div>
+                @endif
+            </div>
+
+            <!-- Prijave za ocjenjivanje -->
+            @if(isset($applications) && $applications->count() > 0)
+            <div class="info-card" style="margin-top: 24px;">
+                <div class="info-card-header">
+                    <h2>Prijave za ocjenjivanje</h2>
+                </div>
+                <div style="padding: 20px;">
+                    @foreach($applications as $application)
+                        <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
+                            <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 8px;">
+                                <a href="{{ route('evaluation.show', $application) }}" style="color: var(--primary); text-decoration: none;">
+                                    {{ $application->business_plan_name ?? 'Naziv biznis plana' }}
+                                </a>
+                            </h3>
+                            <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;">
+                                Konkurs: {{ $application->competition->title ?? 'N/A' }}
+                            </p>
+                            <p style="color: #9ca3af; font-size: 12px; margin: 0 0 8px;">
+                                Podnosilac: {{ $application->user->name ?? 'N/A' }} | {{ $application->created_at->format('d.m.Y H:i') }}
+                            </p>
+                            <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                <a href="{{ route('evaluation.show', $application) }}" class="btn-edit" style="font-size: 12px; padding: 6px 12px;">
+                                    Pregledaj prijavu
+                                </a>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            @else
+            <div class="info-card" style="margin-top: 24px;">
+                <div class="info-card-header">
+                    <h2>Prijave za ocjenjivanje</h2>
+                </div>
+                <div style="padding: 20px; text-align: center;">
+                    <p style="color: #6b7280; font-size: 14px;">Trenutno nema prijava za ocjenjivanje.</p>
+                </div>
+            </div>
+            @endif
         @endif
 
         <!-- Administratorski Dashboard - Administrator konkursa -->

@@ -333,15 +333,19 @@ class HomeController extends Controller
             $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)->first();
             
             if ($commissionMember) {
-                // Pronađi sve prijave koje treba da se ocjenjuju
-                $competitions = Competition::where('status', 'active')->get();
-                $applications = Application::whereIn('competition_id', $competitions->pluck('id'))
+                // Učitaj komisiju sa njenim konkursima
+                $commission = $commissionMember->commission;
+                $commission->load('competitions');
+                
+                // Pronađi prijave za konkurse koje je ova komisija dodeljena
+                $competitionIds = $commission->competitions->pluck('id');
+                $applications = Application::whereIn('competition_id', $competitionIds)
                     ->whereIn('status', ['submitted', 'evaluated'])
                     ->with('competition', 'evaluationScores')
                     ->latest()
                     ->get();
                 
-                return view('dashboard', compact('applications', 'commissionMember', 'isKomisija'));
+                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija'));
             }
         }
         
