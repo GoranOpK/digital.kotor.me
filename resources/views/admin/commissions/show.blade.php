@@ -282,7 +282,7 @@
                     @csrf
                     
                     <div class="form-group">
-                        <label class="form-label">Korisnik iz sistema (opciono)</label>
+                        <label class="form-label">Korisnik iz sistema</label>
                         <select name="user_id" id="member_user_id" class="form-control" onchange="toggleMemberFields()">
                             <option value="">Izaberi korisnika...</option>
                             @foreach($users as $user)
@@ -328,7 +328,12 @@
                         <div class="form-group">
                             <label class="form-label">Pozicija *</label>
                             <select name="position" class="form-control" required>
-                                <option value="predsjednik">Predsjednik</option>
+                                @php
+                                    $hasPredsjednik = $commission->members->where('position', 'predsjednik')->count() > 0;
+                                @endphp
+                                @if(!$hasPredsjednik)
+                                    <option value="predsjednik">Predsjednik</option>
+                                @endif
                                 <option value="clan">Član</option>
                             </select>
                         </div>
@@ -336,15 +341,29 @@
                         <div class="form-group">
                             <label class="form-label">Tip člana *</label>
                             <select name="member_type" class="form-control" required>
-                                <option value="opstina">Predstavnik Opštine</option>
-                                <option value="udruzenje">Predstavnica Udruženja</option>
-                                <option value="zene_mreza">Predstavnica Ženske političke mreže</option>
+                                @php
+                                    // Opština može biti maksimalno 3 (1 predsjednik + 2 člana)
+                                    $opstinaCount = $commission->members->where('member_type', 'opstina')->count();
+                                    // Udruženje može biti maksimalno 1
+                                    $udruzenjeCount = $commission->members->where('member_type', 'udruzenje')->count();
+                                    // Ženske mreže može biti maksimalno 1
+                                    $zeneMrezaCount = $commission->members->where('member_type', 'zene_mreza')->count();
+                                @endphp
+                                @if($opstinaCount < 3)
+                                    <option value="opstina">Predstavnik Opštine</option>
+                                @endif
+                                @if($udruzenjeCount < 1)
+                                    <option value="udruzenje">Predstavnica Udruženja</option>
+                                @endif
+                                @if($zeneMrezaCount < 1)
+                                    <option value="zene_mreza">Predstavnica Ženske političke mreže</option>
+                                @endif
                             </select>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Organizacija (opciono)</label>
+                        <label class="form-label">Organizacija</label>
                         <input type="text" name="organization" class="form-control" value="{{ old('organization') }}" placeholder="Naziv organizacije...">
                     </div>
 
@@ -392,6 +411,10 @@ function toggleMemberFields() {
         passwordGroup.style.display = 'block';
         emailInput.setAttribute('required', 'required');
         passwordInput.setAttribute('required', 'required');
+        // Očisti polja
+        nameInput.value = '';
+        emailInput.value = '';
+        passwordInput.value = '';
     }
 }
 
