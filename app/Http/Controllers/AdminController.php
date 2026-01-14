@@ -503,8 +503,7 @@ class AdminController extends Controller
             $rules["members.{$i}.password"] = 'nullable|required_with:members.' . $i . '.email|string|min:8';
             $rules["members.{$i}.position"] = 'nullable|required_with:members.' . $i . '.email|in:predsjednik,clan';
             $rules["members.{$i}.member_type"] = 'nullable|required_with:members.' . $i . '.email|in:opstina,udruzenje,zene_mreza';
-            // Specijalna validacija za člana sa member_type=udruzenje - organizacija je obavezna
-            $rules["members.{$i}.organization"] = 'nullable|required_if:members.' . $i . '.member_type,udruzenje|string|max:255';
+            $rules["members.{$i}.organization"] = 'nullable|string|max:255';
         }
         
         $messages = [
@@ -535,6 +534,14 @@ class AdminController extends Controller
         }
         
         $validated = $request->validate($rules, $messages);
+        
+        // Custom validacija: organizacija je obavezna za člana iz udruženja ako je član popunjen
+        if (!empty($validated['members'][3]['email']) && 
+            isset($validated['members'][3]['member_type']) && 
+            $validated['members'][3]['member_type'] === 'udruzenje' && 
+            empty($validated['members'][3]['organization'])) {
+            return back()->withErrors(['members.3.organization' => 'Organizacija je obavezna za člana iz udruženja.'])->withInput();
+        }
 
         $commission = Commission::create([
             'name' => $validated['name'],
