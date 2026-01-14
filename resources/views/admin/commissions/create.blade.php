@@ -338,16 +338,17 @@
                 <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
                     <h2 style="font-size: 20px; font-weight: 700; color: var(--primary); margin: 0 0 20px;">Dodjela konkursa</h2>
                     <div class="form-group">
-                        <label class="form-label">Izaberi konkurse za ovu komisiju</label>
-                        <select name="competition_ids[]" class="form-control" multiple style="min-height: 120px;">
+                        <label class="form-label">Izaberi konkurs za ovu komisiju</label>
+                        <select name="competition_id" class="form-control">
+                            <option value="">-- Izaberi konkurs --</option>
                             @foreach($competitions as $competition)
-                                <option value="{{ $competition->id }}" {{ in_array($competition->id, old('competition_ids', [])) ? 'selected' : '' }}>
+                                <option value="{{ $competition->id }}" {{ old('competition_id') == $competition->id ? 'selected' : '' }}>
                                     {{ $competition->title }} ({{ $competition->year }})
                                 </option>
                             @endforeach
                         </select>
                         <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                            Držite Ctrl (ili Cmd na Mac) da izaberete više konkursa. Možete dodijeliti konkurse kasnije.
+                            Možete dodijeliti konkurs kasnije.
                         </div>
                     </div>
                 </div>
