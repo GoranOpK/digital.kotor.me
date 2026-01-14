@@ -128,6 +128,15 @@
                     <p><strong>Budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
                     <p><strong>Maksimalna podrška:</strong> {{ $competition->max_support_percentage ?? 30 }}%</p>
                     <p><strong>Broj prijava:</strong> {{ $applications->total() }}</p>
+                    @if($competition->commission)
+                        <p><strong>Komisija:</strong> 
+                            <a href="{{ route('admin.commissions.show', $competition->commission) }}" style="color: var(--primary); text-decoration: underline;">
+                                {{ $competition->commission->name }} ({{ $competition->commission->year }})
+                            </a>
+                        </p>
+                    @else
+                        <p><strong>Komisija:</strong> <span style="color: #6b7280;">Nije dodeljena</span></p>
+                    @endif
                 </div>
                 <div>
                     <p><strong>Rok za prijave:</strong> {{ $competition->deadline_days ?? 20 }} dana</p>
@@ -176,14 +185,7 @@
                             <td style="padding: 12px;">{{ $app->user->name ?? 'N/A' }}</td>
                             <td style="padding: 12px;">{{ $app->status }}</td>
                             <td style="padding: 12px;">
-                                <div style="display: flex; gap: 8px;">
-                                    <a href="{{ route('admin.applications.show', $app) }}" style="color: #3b82f6;">Pregled</a>
-                                    <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu prijavu?');" style="display: inline;">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" style="background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; padding: 0;">Obriši</button>
-                                    </form>
-                                </div>
+                                <a href="{{ route('admin.applications.show', $app) }}" style="color: #3b82f6;">Pregled</a>
                             </td>
                         </tr>
                     @empty

@@ -208,7 +208,8 @@ class AdminController extends Controller
      */
     public function createCompetition()
     {
-        return view('admin.competitions.create');
+        $commissions = Commission::where('status', 'active')->orderBy('year', 'desc')->get();
+        return view('admin.competitions.create', compact('commissions'));
     }
 
     /**
@@ -225,12 +226,14 @@ class AdminController extends Controller
             'budget' => 'required|numeric|min:0',
             'max_support_percentage' => 'required|numeric|min:0|max:100',
             'start_date' => 'nullable|date',
+            'commission_id' => 'nullable|exists:commissions,id',
         ], [
             'title.required' => 'Naziv konkursa je obavezan.',
             'type.required' => 'Tip konkursa je obavezan.',
             'year.required' => 'Godina je obavezna.',
             'budget.required' => 'Budžet je obavezan.',
             'max_support_percentage.required' => 'Maksimalna podrška je obavezna.',
+            'commission_id.exists' => 'Izabrana komisija ne postoji.',
         ]);
 
         $data = $validated;
@@ -255,6 +258,7 @@ class AdminController extends Controller
     public function showCompetition(Competition $competition)
     {
         $competition->loadCount('applications');
+        $competition->load('commission');
         $applications = $competition->applications()
             ->with('user')
             ->latest()
@@ -268,7 +272,8 @@ class AdminController extends Controller
      */
     public function editCompetition(Competition $competition)
     {
-        return view('admin.competitions.edit', compact('competition'));
+        $commissions = Commission::where('status', 'active')->orderBy('year', 'desc')->get();
+        return view('admin.competitions.edit', compact('competition', 'commissions'));
     }
 
     /**
@@ -286,12 +291,14 @@ class AdminController extends Controller
             'max_support_percentage' => 'required|numeric|min:0|max:100',
             'start_date' => 'nullable|date',
             'status' => 'required|in:draft,published,closed,completed',
+            'commission_id' => 'nullable|exists:commissions,id',
         ], [
             'title.required' => 'Naziv konkursa je obavezan.',
             'type.required' => 'Tip konkursa je obavezan.',
             'year.required' => 'Godina je obavezna.',
             'budget.required' => 'Budžet je obavezan.',
             'max_support_percentage.required' => 'Maksimalna podrška je obavezna.',
+            'commission_id.exists' => 'Izabrana komisija ne postoji.',
         ]);
 
         $data = $validated;

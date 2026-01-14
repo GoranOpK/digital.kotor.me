@@ -23,6 +23,7 @@ class Competition extends Model
         'deadline_days',
         'published_at',
         'closed_at',
+        'commission_id',
     ];
 
     protected $casts = [
@@ -52,6 +53,12 @@ class Competition extends Model
     public function priorities()
     {
         return $this->hasMany(Priority::class);
+    }
+
+    // Veza: konkurs pripada komisiji
+    public function commission()
+    {
+        return $this->belongsTo(Commission::class);
     }
 
     /**

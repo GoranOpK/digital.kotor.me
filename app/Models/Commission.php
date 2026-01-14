@@ -48,5 +48,13 @@ class Commission extends Model
         $totalMembers = $this->activeMembers()->count();
         return $totalMembers >= 3; // Većina od 5 članova je 3
     }
+
+    /**
+     * Veza: komisija ima više konkursa
+     */
+    public function competitions()
+    {
+        return $this->hasMany(Competition::class);
+    }
 }
 
