@@ -296,7 +296,7 @@
 
                     <div class="form-group">
                         <label class="form-label">Ime i prezime *</label>
-                        <input type="text" name="name" id="member_name" class="form-control @error('name') error @enderror" value="{{ old('name') }}" required>
+                        <input type="text" name="name" id="member_name" class="form-control @error('name') error @enderror" value="{{ old('name', '') }}" autocomplete="off" required>
                         @error('name')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
@@ -315,7 +315,7 @@
 
                     <div class="form-group" id="member_password_group">
                         <label class="form-label">Password *</label>
-                        <input type="password" name="password" id="member_password" class="form-control @error('password') error @enderror" minlength="8">
+                        <input type="password" name="password" id="member_password" class="form-control @error('password') error @enderror" value="" minlength="8" autocomplete="new-password">
                         @error('password')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
@@ -420,6 +420,19 @@ function toggleMemberFields() {
 
 // Pozovi funkciju na učitavanju stranice
 document.addEventListener('DOMContentLoaded', function() {
+    // Očisti polja na učitavanju stranice
+    const nameInput = document.getElementById('member_name');
+    const emailInput = document.getElementById('member_email');
+    const passwordInput = document.getElementById('member_password');
+    const userSelect = document.getElementById('member_user_id');
+    
+    // Ako nije izabran korisnik, očisti polja
+    if (!userSelect.value) {
+        nameInput.value = '';
+        emailInput.value = '';
+        passwordInput.value = '';
+    }
+    
     toggleMemberFields();
 });
 </script>
