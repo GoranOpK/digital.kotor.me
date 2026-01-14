@@ -443,7 +443,13 @@ class AdminController extends Controller
      */
     public function createCommission()
     {
-        return view('admin.commissions.create');
+        // Konkursi koji još nemaju dodijeljenu komisiju
+        $competitions = Competition::whereNull('commission_id')
+            ->whereIn('status', ['draft', 'published'])
+            ->orderBy('year', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        return view('admin.commissions.create', compact('competitions'));
     }
 
     /**
@@ -501,6 +507,8 @@ class AdminController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date',
             'members' => 'required|array|min:1|max:5',
+            'competition_ids' => 'nullable|array',
+            'competition_ids.*' => 'exists:competitions,id',
         ];
         
         // Validacija za sve članove (0-4) - ako je bilo koje polje popunjeno, sva polja moraju biti popunjena
@@ -600,9 +608,21 @@ class AdminController extends Controller
             $createdMembers++;
         }
 
+        // Dodijeli komisiju izabranim konkursima
+        if (!empty($validated['competition_ids'])) {
+            Competition::whereIn('id', $validated['competition_ids'])
+                ->whereNull('commission_id')
+                ->update(['commission_id' => $commission->id]);
+        }
+
         $message = $createdMembers == 1 
             ? 'Komisija sa 1 članom je uspješno kreirana. Možete dodati ostale članove kasnije.' 
             : "Komisija sa {$createdMembers} članova je uspješno kreirana. Možete dodati ostale članove kasnije.";
+
+        if (!empty($validated['competition_ids'])) {
+            $assignedCount = count($validated['competition_ids']);
+            $message .= " Dodijeljeno {$assignedCount} " . ($assignedCount == 1 ? 'konkurs' : 'konkursa') . " ovoj komisiji.";
+        }
 
         return redirect()->route('admin.commissions.show', $commission)
             ->with('success', $message);
@@ -613,7 +633,7 @@ class AdminController extends Controller
      */
     public function showCommission(Commission $commission)
     {
-        $commission->load(['members.user']);
+        $commission->load(['members.user', 'competitions']);
         $users = User::whereHas('role', function($query) {
             $query->where('name', 'komisija');
         })->get();
@@ -626,7 +646,17 @@ class AdminController extends Controller
      */
     public function editCommission(Commission $commission)
     {
-        return view('admin.commissions.edit', compact('commission'));
+        // Konkursi koji još nemaju dodijeljenu komisiju ili su već dodijeljeni ovoj komisiji
+        $competitions = Competition::where(function($query) use ($commission) {
+            $query->whereNull('commission_id')
+                  ->orWhere('commission_id', $commission->id);
+        })
+        ->whereIn('status', ['draft', 'published'])
+        ->orderBy('year', 'desc')
+        ->orderBy('created_at', 'desc')
+        ->get();
+        
+        return view('admin.commissions.edit', compact('commission', 'competitions'));
     }
 
     /**
@@ -648,11 +678,30 @@ class AdminController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date',
             'status' => 'required|in:active,inactive',
+            'competition_ids' => 'nullable|array',
+            'competition_ids.*' => 'exists:competitions,id',
         ]);
 
         $validated['end_date'] = $endDate ?? $validated['end_date'];
         
-        $commission->update($validated);
+        $commission->update([
+            'name' => $validated['name'],
+            'year' => $validated['year'],
+            'start_date' => $validated['start_date'],
+            'end_date' => $validated['end_date'],
+            'status' => $validated['status'],
+        ]);
+
+        // Ažuriraj dodjelu konkursa
+        // Prvo ukloni dodjelu sa svih konkursa koji su bili dodijeljeni ovoj komisiji
+        Competition::where('commission_id', $commission->id)
+            ->update(['commission_id' => null]);
+        
+        // Zatim dodijeli izabrane konkurse ovoj komisiji
+        if (!empty($validated['competition_ids'])) {
+            Competition::whereIn('id', $validated['competition_ids'])
+                ->update(['commission_id' => $commission->id]);
+        }
 
         return redirect()->route('admin.commissions.show', $commission)
             ->with('success', 'Komisija je uspješno ažurirana.');

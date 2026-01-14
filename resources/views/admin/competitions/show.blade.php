@@ -135,7 +135,7 @@
                             </a>
                         </p>
                     @else
-                        <p><strong>Komisija:</strong> <span style="color: #6b7280;">Nije dodeljena</span></p>
+                        <p><strong>Komisija:</strong> <span style="color: #6b7280;">Nije dodijeljena</span></p>
                     @endif
                 </div>
                 <div>
