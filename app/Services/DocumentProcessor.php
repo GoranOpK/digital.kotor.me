@@ -331,9 +331,18 @@ class DocumentProcessor
                     // Konvertuj u greyscale
                     $imagick->transformImageColorspace(\Imagick::COLORSPACE_GRAY);
                     $imagick->stripImage();
+                    
+                    // Postavi rezoluciju za svaku sliku (300 DPI)
+                    $imagick->setImageResolution(300, 300);
 
                     // Dodaj sve stranice u merged PDF
+                    // Za slike: svaka slika je jedna stranica
+                    // Za PDF: sve stranice iz PDF-a se dodaju
                     foreach ($imagick as $page) {
+                        // Postavi rezoluciju za svaku stranicu
+                        $page->setImageResolution(300, 300);
+                        
+                        // Dodaj stranicu u merged PDF
                         $mergedPdf->addImage($page);
                     }
 
@@ -351,76 +360,61 @@ class DocumentProcessor
                 }
 
                 Log::info('Preparing to merge PDF', [
-                    'images_count' => $mergedPdf->getNumberImages()
+                    'images_count' => $mergedPdf->getNumberImages(),
+                    'files_count' => count($files)
                 ]);
 
-                // Postavi format i kompresiju za merged PDF
+                // Postavi format i kompresiju za sve stranice u merged PDF-u
                 $mergedPdf->setImageFormat('pdf');
                 $mergedPdf->setImageCompression(\Imagick::COMPRESSION_JPEG);
                 $mergedPdf->setImageCompressionQuality(70);
                 $mergedPdf->setOption('pdf:use-trimbox', 'true');
-
-                // Spoji sve stranice u jedan PDF koristeći appendImages
-                $mergedPdf->setFirstIterator();
-                $finalPdf = $mergedPdf->appendImages(true);
                 
-                if (!$finalPdf) {
-                    Log::error('appendImages returned false', [
-                        'images_count' => $mergedPdf->getNumberImages()
+                // Generiši PDF sa svim stranicama koristeći writeImages
+                // true = append sve stranice u jedan multi-page PDF
+                // Svaka slika je jedna stranica u finalnom PDF-u
+                $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('merged_pdf_', true) . '.pdf';
+                $writeResult = $mergedPdf->writeImages($tempPdfPath, true);
+                
+                if (!$writeResult || !file_exists($tempPdfPath)) {
+                    Log::error('writeImages failed', [
+                        'images_count' => $mergedPdf->getNumberImages(),
+                        'write_result' => $writeResult,
+                        'temp_path' => $tempPdfPath
                     ]);
                     $mergedPdf->clear();
                     $mergedPdf->destroy();
                     return [
                         'success' => false,
-                        'error' => 'Greška pri spajanju slika u PDF.',
+                        'error' => 'Greška pri kreiranju PDF-a sa stranicama.',
+                    ];
+                }
+                
+                Log::info('writeImages successful', [
+                    'images_count' => $mergedPdf->getNumberImages(),
+                    'temp_path' => $tempPdfPath,
+                    'file_size' => filesize($tempPdfPath)
+                ]);
+                
+                // Pročitaj kreirani PDF
+                $pdfData = file_get_contents($tempPdfPath);
+                @unlink($tempPdfPath);
+                
+                if ($pdfData === false || empty($pdfData)) {
+                    Log::error('Failed to read PDF file', [
+                        'temp_path' => $tempPdfPath
+                    ]);
+                    $mergedPdf->clear();
+                    $mergedPdf->destroy();
+                    return [
+                        'success' => false,
+                        'error' => 'Greška pri čitanju kreiranog PDF-a.',
                     ];
                 }
 
-                Log::info('appendImages successful', [
-                    'final_images_count' => $finalPdf->getNumberImages()
-                ]);
-
-                // Postavi format i kompresiju na finalnom PDF-u
-                $finalPdf->setImageFormat('pdf');
-                $finalPdf->setImageCompression(\Imagick::COMPRESSION_JPEG);
-                $finalPdf->setImageCompressionQuality(70);
-                $finalPdf->setOption('pdf:use-trimbox', 'true');
-
-                // Generiši PDF blob direktno
-                try {
-                    $pdfData = $finalPdf->getImagesBlob();
-                    
-                    Log::info('getImagesBlob successful', [
-                        'pdf_size' => strlen($pdfData)
-                    ]);
-                } catch (\Exception $e) {
-                    Log::error('getImagesBlob failed, trying writeImages', [
-                        'error' => $e->getMessage()
-                    ]);
-                    
-                    // Fallback: kreiraj privremeni fajl
-                    $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('merged_pdf_', true) . '.pdf';
-                    $finalPdf->writeImages($tempPdfPath, false);
-                    
-                    if (!file_exists($tempPdfPath)) {
-                        $mergedPdf->clear();
-                        $mergedPdf->destroy();
-                        $finalPdf->clear();
-                        $finalPdf->destroy();
-                        return [
-                            'success' => false,
-                            'error' => 'PDF fajl nije kreiran.',
-                        ];
-                    }
-                    
-                    $pdfData = file_get_contents($tempPdfPath);
-                    @unlink($tempPdfPath);
-                }
-
+                // Očisti memoriju
                 $mergedPdf->clear();
                 $mergedPdf->destroy();
-                $finalPdf->clear();
-                $finalPdf->destroy();
 
                 // Proveri da li je PDF validan
                 if ($pdfData === false || empty($pdfData) || strlen($pdfData) < 100) {
