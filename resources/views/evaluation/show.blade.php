@@ -205,7 +205,7 @@
         .form-section textarea,
         .form-section .readonly-value {
             text-align: left !important;
-            padding-left: 20mm !important;
+            padding-left: 0 !important;
             padding-right: 0 !important;
             margin-left: 0 !important;
             margin-right: 0 !important;
