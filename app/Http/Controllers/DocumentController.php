@@ -53,160 +53,334 @@ class DocumentController extends Controller
     }
 
     /**
-     * Upload novog dokumenta
+     * Upload novog dokumenta (podržava više fajlova odjednom)
      */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'file' => 'required|file|mimes:jpeg,jpg,png,pdf|max:10240', // Max 10MB originalni fajl
+            'files' => 'required|array|min:1',
+            'files.*' => 'required|file|mimes:jpeg,jpg,png,pdf|max:10240', // Max 10MB po fajlu
             'category' => 'required|in:Lični dokumenti,Finansijski dokumenti,Poslovni dokumenti,Ostali dokumenti',
             'name' => 'required|string|max:255',
             'expires_at' => 'nullable|date|after:today',
         ]);
 
         $user = Auth::user();
-        $file = $request->file('file');
+        $files = $request->file('files');
+        
+        if (empty($files)) {
+            return back()->withErrors(['files' => 'Molimo izaberite barem jedan fajl.'])->withInput();
+        }
 
         // Direktorijum za korisnika
         $directory = "documents/user_{$user->id}";
-        
-        // Generiši ime za izvorni fajl (isti format kao obrađeni, ali sa originalnom ekstenzijom)
         $date = now()->format('Ymd');
-        $randomString = bin2hex(random_bytes(4));
-        $baseFilename = "{$user->id}-{$date}-{$randomString}";
-        $originalExtension = $file->getClientOriginalExtension();
-        $originalFilename = "{$baseFilename}_original.{$originalExtension}";
-        $originalFilePath = "{$directory}/{$originalFilename}";
-
-        // Sačuvaj izvorni fajl
-        $originalFileSize = $file->getSize();
-        Storage::disk('local')->putFileAs($directory, $file, $originalFilename);
-
-        // Proveri da li korisnik ima dovoljno prostora za izvorni fajl
-        if (!$this->documentProcessor->hasEnoughStorage($user->id, $originalFileSize)) {
-            Storage::disk('local')->delete($originalFilePath);
-            
-            return back()->withErrors([
-                'file' => 'Nemate dovoljno prostora. Maksimalno dozvoljeno: 20 MB. Trenutno korišćeno: ' . 
-                         round(($user->used_storage_bytes ?? 0) / 1024 / 1024, 2) . ' MB'
-            ])->withInput();
+        
+        // Ako ima više fajlova, spoji ih u jedan PDF
+        if (count($files) > 1) {
+            return $this->handleMultipleFilesMerge($files, $user, $request, $directory, $date);
         }
+        
+        // Ako ima samo jedan fajl, koristi postojeću logiku
+        $file = $files[0];
+        $uploadedCount = 0;
+        $queuedCount = 0;
+        $failedCount = 0;
+        $errors = [];
 
-        // Kreiraj zapis u bazi sa statusom 'pending'
-        $document = UserDocument::create([
-            'user_id' => $user->id,
-            'category' => $request->category,
-            'name' => $request->name,
-            'original_file_path' => $originalFilePath,
-            'original_filename' => $file->getClientOriginalName(),
-            'file_size' => $originalFileSize, // Privremeno, ažuriraće se nakon obrade
-            'expires_at' => $request->expires_at,
-            'status' => 'pending',
-        ]);
+        try {
+            // Generiši jedinstveno ime za izvorni fajl
+            $randomString = bin2hex(random_bytes(4));
+            $baseFilename = "{$user->id}-{$date}-{$randomString}";
+            $originalExtension = $file->getClientOriginalExtension();
+            $originalFilename = "{$baseFilename}_original.{$originalExtension}";
+            $originalFilePath = "{$directory}/{$originalFilename}";
 
-        // Ažuriraj korišćen prostor za izvorni fajl
-        $this->documentProcessor->updateUserStorage($user->id, $originalFileSize);
+            // Sačuvaj izvorni fajl
+            $originalFileSize = $file->getSize();
+            
+            // Proveri da li korisnik ima dovoljno prostora za izvorni fajl
+            if (!$this->documentProcessor->hasEnoughStorage($user->id, $originalFileSize)) {
+                return back()->withErrors([
+                    'file' => 'Nemate dovoljno prostora. Maksimalno dozvoljeno: 20 MB. Trenutno korišćeno: ' . 
+                             round(($user->used_storage_bytes ?? 0) / 1024 / 1024, 2) . ' MB'
+                ])->withInput();
+            }
 
-        // Odluči da li da obrađujemo direktno ili preko queue-a
-        // Za fajlove manje od 5MB, obrađujemo direktno (brže za korisnika)
-        // Za veće fajlove, koristimo queue (ne blokira korisnika)
-        $fileSizeMB = $originalFileSize / 1024 / 1024;
-        $useQueue = $fileSizeMB > 5; // 5MB threshold
+                Storage::disk('local')->putFileAs($directory, $file, $originalFilename);
 
-        if ($useQueue) {
-            // Pokreni job za asinhronu obradu (veliki fajlovi)
-            ProcessDocumentJob::dispatch($document, $originalFilePath);
+                // Kreiraj zapis u bazi sa statusom 'pending'
+                $document = UserDocument::create([
+                    'user_id' => $user->id,
+                    'category' => $request->category,
+                    'name' => $request->name . (count($files) > 1 ? ' (' . $file->getClientOriginalName() . ')' : ''),
+                    'original_file_path' => $originalFilePath,
+                    'original_filename' => $file->getClientOriginalName(),
+                    'file_size' => $originalFileSize, // Privremeno, ažuriraće se nakon obrade
+                    'expires_at' => $request->expires_at,
+                    'status' => 'pending',
+                ]);
 
-            return redirect()->route('documents.index')
-                ->with('success', 'Dokument je uspješno upload-ovan. Obrada je u toku i bićete obavešteni kada bude završena.');
-        } else {
-            // Direktna obrada za male fajlove (brže iskustvo)
-            try {
-                // Učitaj izvorni fajl
-                $fileContent = Storage::disk('local')->get($originalFilePath);
-                $tempFilePath = sys_get_temp_dir() . '/' . uniqid('doc_process_', true) . '_' . basename($originalFilePath);
+                // Ažuriraj korišćen prostor za izvorni fajl
+                $this->documentProcessor->updateUserStorage($user->id, $originalFileSize);
+
+                // Odluči da li da obrađujemo direktno ili preko queue-a
+                $fileSizeMB = $originalFileSize / 1024 / 1024;
+                $useQueue = $fileSizeMB > 5; // 5MB threshold
+
+                if ($useQueue) {
+                    // Pokreni job za asinhronu obradu (veliki fajlovi)
+                    ProcessDocumentJob::dispatch($document, $originalFilePath);
+                    $queuedCount++;
+                } else {
+                    // Direktna obrada za male fajlove (brže iskustvo)
+                    try {
+                        // Učitaj izvorni fajl
+                        $fileContent = Storage::disk('local')->get($originalFilePath);
+                        $tempFilePath = sys_get_temp_dir() . '/' . uniqid('doc_process_', true) . '_' . basename($originalFilePath);
+                        
+                        // Sačuvaj privremeno za obradu
+                        file_put_contents($tempFilePath, $fileContent);
+                        
+                        // Ažuriraj status na 'processing' i osveži model
+                        $document->refresh();
+                        $document->update(['status' => 'processing']);
+                        $document->refresh();
+                        
+                        // Mala pauza da bi JavaScript stigao da pročita "processing" status
+                        usleep(500000); // 0.5 sekunde pauza
+                        
+                        // Kreiraj UploadedFile objekat
+                        $mimeType = mime_content_type($tempFilePath) ?: 'application/octet-stream';
+                        $uploadedFile = new \Illuminate\Http\UploadedFile(
+                            $tempFilePath,
+                            basename($originalFilePath),
+                            $mimeType,
+                            null,
+                            true // test mode
+                        );
+
+                        // Izvuci base filename
+                        $originalBasename = basename($originalFilePath);
+                        $baseFilename = pathinfo($originalBasename, PATHINFO_FILENAME);
+                        
+                        // Procesiraj dokument direktno
+                        $result = $this->documentProcessor->processDocument($uploadedFile, $user->id, $baseFilename);
+                        
+                        // Obriši privremeni fajl
+                        if (file_exists($tempFilePath)) {
+                            unlink($tempFilePath);
+                        }
+
+                        if (!$result['success']) {
+                            $document->update(['status' => 'failed']);
+                            return back()->withErrors(['file' => $result['error'] ?? 'Greška pri obradi dokumenta.'])->withInput();
+                        }
+
+                        // Proveri da li korisnik ima dovoljno prostora
+                        if (!$this->documentProcessor->hasEnoughStorage($user->id, $result['file_size'])) {
+                            Storage::disk('local')->delete($result['file_path']);
+                            $document->update(['status' => 'failed']);
+                            
+                            return back()->withErrors([
+                                'file' => 'Nemate dovoljno prostora. Maksimalno dozvoljeno: 20 MB.'
+                            ])->withInput();
+                        }
+
+                        // Ažuriraj dokument sa putanjom do obrađenog fajla
+                        $document->update([
+                            'file_path' => $result['file_path'],
+                            'file_size' => $result['file_size'],
+                            'status' => 'processed',
+                            'processed_at' => now(),
+                        ]);
+
+                        // Ažuriraj korišćen prostor
+                        $this->documentProcessor->updateUserStorage($user->id, $result['file_size']);
+
+                        return redirect()->route('documents.index')
+                            ->with('success', 'Dokument je uspješno upload-ovan i obrađen.');
+                            
+                    } catch (\Exception $e) {
+                        // Ako direktna obrada ne uspe, prebaci na queue
+                        Log::error('Direct processing failed, falling back to queue', [
+                            'document_id' => $document->id,
+                            'error' => $e->getMessage()
+                        ]);
+                        
+                        $document->update(['status' => 'pending']);
+                        ProcessDocumentJob::dispatch($document, $originalFilePath);
+                        
+                        return redirect()->route('documents.index')
+                            ->with('success', 'Dokument je uspješno upload-ovan. Obrada je u toku.');
+                    }
+                }
+        } catch (\Exception $e) {
+            Log::error('File upload failed', [
+                'filename' => $file->getClientOriginalName(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return back()->withErrors(['file' => 'Greška pri upload-u dokumenta: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    /**
+     * Obrađuje više fajlova i spaja ih u jedan PDF
+     */
+    private function handleMultipleFilesMerge(array $files, $user, Request $request, string $directory, string $date): RedirectResponse
+    {
+        try {
+            // Proveri ukupnu veličinu svih fajlova
+            $totalSize = 0;
+            foreach ($files as $file) {
+                $totalSize += $file->getSize();
+            }
+            
+            // Proveri da li korisnik ima dovoljno prostora
+            if (!$this->documentProcessor->hasEnoughStorage($user->id, $totalSize)) {
+                return back()->withErrors([
+                    'files' => 'Nemate dovoljno prostora za sve fajlove. Maksimalno dozvoljeno: 20 MB. Trenutno korišćeno: ' . 
+                             round(($user->used_storage_bytes ?? 0) / 1024 / 1024, 2) . ' MB'
+                ])->withInput();
+            }
+
+            // Sačuvaj sve originalne fajlove privremeno
+            $originalFilePaths = [];
+            $totalOriginalSize = 0;
+            $tempFiles = [];
+            
+            foreach ($files as $index => $file) {
+                $randomString = bin2hex(random_bytes(4));
+                $baseFilename = "{$user->id}-{$date}-{$randomString}";
+                $originalExtension = $file->getClientOriginalExtension();
+                $originalFilename = "{$baseFilename}_original.{$originalExtension}";
+                $originalFilePath = "{$directory}/{$originalFilename}";
                 
-                // Sačuvaj privremeno za obradu
+                Storage::disk('local')->putFileAs($directory, $file, $originalFilename);
+                $originalFilePaths[] = $originalFilePath;
+                $totalOriginalSize += $file->getSize();
+                
+                // Kreiraj privremeni UploadedFile za merge
+                $fileContent = Storage::disk('local')->get($originalFilePath);
+                $tempFilePath = sys_get_temp_dir() . '/' . uniqid('merge_', true) . '_' . basename($originalFilePath);
                 file_put_contents($tempFilePath, $fileContent);
                 
-                // Ažuriraj status na 'processing' i osveži model
-                $document->refresh();
-                $document->update(['status' => 'processing']);
-                $document->refresh(); // Osveži da bi se promjena vidjela
-                
-                // Mala pauza da bi JavaScript stigao da pročita "processing" status
-                // (obrada je vrlo brza, pa treba da status bude vidljiv)
-                usleep(500000); // 0.5 sekunde pauza
-                
-                Log::info('Status postavljen na processing (direktna obrada)', [
-                    'document_id' => $document->id,
-                    'current_status' => $document->status
-                ]);
-                
-                // Kreiraj UploadedFile objekat
                 $mimeType = mime_content_type($tempFilePath) ?: 'application/octet-stream';
-                $uploadedFile = new \Illuminate\Http\UploadedFile(
+                $tempFiles[] = new \Illuminate\Http\UploadedFile(
                     $tempFilePath,
                     basename($originalFilePath),
                     $mimeType,
                     null,
-                    true // test mode
+                    true
                 );
-
-                // Izvuci base filename
-                $originalBasename = basename($originalFilePath);
-                $baseFilename = pathinfo($originalBasename, PATHINFO_FILENAME);
-                
-                // Procesiraj dokument direktno
-                $result = $this->documentProcessor->processDocument($uploadedFile, $user->id, $baseFilename);
-                
-                // Obriši privremeni fajl
-                if (file_exists($tempFilePath)) {
-                    unlink($tempFilePath);
-                }
-
-                if (!$result['success']) {
-                    $document->update(['status' => 'failed']);
-                    return back()->withErrors(['file' => $result['error'] ?? 'Greška pri obradi dokumenta.'])->withInput();
-                }
-
-                // Proveri da li korisnik ima dovoljno prostora
-                if (!$this->documentProcessor->hasEnoughStorage($user->id, $result['file_size'])) {
-                    Storage::disk('local')->delete($result['file_path']);
-                    $document->update(['status' => 'failed']);
-                    
-                    return back()->withErrors([
-                        'file' => 'Nemate dovoljno prostora. Maksimalno dozvoljeno: 20 MB.'
-                    ])->withInput();
-                }
-
-                // Ažuriraj dokument sa putanjom do obrađenog fajla
-                $document->update([
-                    'file_path' => $result['file_path'],
-                    'file_size' => $result['file_size'],
-                    'status' => 'processed',
-                    'processed_at' => now(),
-                ]);
-
-                // Ažuriraj korišćen prostor
-                $this->documentProcessor->updateUserStorage($user->id, $result['file_size']);
-
-                return redirect()->route('documents.index')
-                    ->with('success', 'Dokument je uspješno upload-ovan i obrađen.');
-                    
-            } catch (\Exception $e) {
-                // Ako direktna obrada ne uspe, prebaci na queue
-                Log::error('Direct processing failed, falling back to queue', [
-                    'document_id' => $document->id,
-                    'error' => $e->getMessage()
-                ]);
-                
-                $document->update(['status' => 'pending']);
-                ProcessDocumentJob::dispatch($document, $originalFilePath);
-                
-                return redirect()->route('documents.index')
-                    ->with('success', 'Dokument je uspješno upload-ovan. Obrada je u toku.');
             }
+
+            // Ažuriraj korišćen prostor za originalne fajlove
+            $this->documentProcessor->updateUserStorage($user->id, $totalOriginalSize);
+
+            // Generiši ime za spojeni PDF
+            $randomString = bin2hex(random_bytes(4));
+            $baseFilename = "{$user->id}-{$date}-{$randomString}";
+
+            // Kreiraj zapis u bazi sa statusom 'processing'
+            $document = UserDocument::create([
+                'user_id' => $user->id,
+                'category' => $request->category,
+                'name' => $request->name,
+                'original_file_path' => implode('|', $originalFilePaths), // Sačuvaj sve putanje odvojeno sa |
+                'original_filename' => count($files) . ' fajlova',
+                'file_size' => $totalOriginalSize,
+                'expires_at' => $request->expires_at,
+                'status' => 'processing',
+            ]);
+
+            // Direktna obrada (za sada, queue može biti dodato kasnije)
+            return $this->processMergeDirectly($document, $tempFiles, $user, $baseFilename, $originalFilePaths);
+
+        } catch (\Exception $e) {
+            Log::error('Multiple files merge failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors(['files' => 'Greška pri spajanju fajlova: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    /**
+     * Direktno procesira spajanje fajlova
+     */
+    private function processMergeDirectly($document, array $tempFiles, $user, string $baseFilename, array $originalFilePaths): RedirectResponse
+    {
+        try {
+            // Mala pauza da bi JavaScript stigao da pročita "processing" status
+            usleep(500000); // 0.5 sekunde pauza
+
+            // Spoji fajlove u jedan PDF
+            $result = $this->documentProcessor->mergeDocuments($tempFiles, $user->id, $baseFilename);
+
+            // Obriši privremene fajlove
+            foreach ($tempFiles as $tempFile) {
+                if ($tempFile->getRealPath() && file_exists($tempFile->getRealPath())) {
+                    @unlink($tempFile->getRealPath());
+                }
+            }
+
+            if (!$result['success']) {
+                $document->update(['status' => 'failed']);
+                return back()->withErrors(['files' => $result['error'] ?? 'Greška pri spajanju fajlova.'])->withInput();
+            }
+
+            // Proveri da li korisnik ima dovoljno prostora za spojeni PDF
+            if (!$this->documentProcessor->hasEnoughStorage($user->id, $result['file_size'])) {
+                Storage::disk('local')->delete($result['file_path']);
+                $document->update(['status' => 'failed']);
+                
+                return back()->withErrors([
+                    'files' => 'Nemate dovoljno prostora za spojeni PDF. Maksimalno dozvoljeno: 20 MB.'
+                ])->withInput();
+            }
+
+            // Ažuriraj dokument sa putanjom do spojenog PDF-a
+            $document->update([
+                'file_path' => $result['file_path'],
+                'file_size' => $result['file_size'],
+                'status' => 'processed',
+                'processed_at' => now(),
+            ]);
+
+            // Ažuriraj korišćen prostor (dodaj razliku između spojenog PDF-a i originalnih fajlova)
+            $originalTotalSize = 0;
+            foreach ($originalFilePaths as $path) {
+                if (Storage::disk('local')->exists($path)) {
+                    $originalTotalSize += Storage::disk('local')->size($path);
+                }
+            }
+            
+            // Oduzmi originalne fajlove i dodaj spojeni PDF
+            $this->documentProcessor->updateUserStorage($user->id, -$originalTotalSize);
+            $this->documentProcessor->updateUserStorage($user->id, $result['file_size']);
+
+            // Obriši originalne fajlove (sada imamo spojeni PDF)
+            foreach ($originalFilePaths as $path) {
+                if (Storage::disk('local')->exists($path)) {
+                    Storage::disk('local')->delete($path);
+                }
+            }
+
+            return redirect()->route('documents.index')
+                ->with('success', 'Fajlovi su uspješno spojeni u jedan PDF dokument i obrađeni.');
+
+        } catch (\Exception $e) {
+            Log::error('Direct merge processing failed', [
+                'document_id' => $document->id,
+                'error' => $e->getMessage()
+            ]);
+
+            $document->update(['status' => 'failed']);
+            return back()->withErrors(['files' => 'Greška pri spajanju fajlova: ' . $e->getMessage()])->withInput();
         }
     }
 
