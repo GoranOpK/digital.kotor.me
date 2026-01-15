@@ -126,7 +126,7 @@
     }
     .evaluation-table th {
         background: #f9fafb;
-        font-weight: 600;
+        font-weight: bold !important;
         color: #111827;
         font-size: 12px;
     }
@@ -258,11 +258,20 @@
             border: 1px solid #000 !important;
             padding: 6px 4px;
         }
+        .evaluation-table th {
+            font-weight: bold !important;
+        }
+        .evaluation-table .final-score-row td {
+            font-weight: bold !important;
+        }
         .info-box,
         .warning-box {
             page-break-inside: avoid;
         }
         .criteria-info-box {
+            display: none !important;
+        }
+        .notes-info-box {
             display: none !important;
         }
         .signature-section {
@@ -409,11 +418,11 @@
                                 </tr>
                             @endforeach
                             <tr class="final-score-row">
-                                <td class="criterion-col" style="text-align: center;">
+                                <td class="criterion-col" style="text-align: center; font-weight: bold !important;">
                                     <strong>KONAČNA OCJENA:</strong>
                                 </td>
                                 @foreach($allMembers as $member)
-                                    <td>
+                                    <td style="font-weight: bold !important;">
                                         @php
                                             $memberScore = $allScores->get($member->id);
                                             $memberTotal = $memberScore ? $memberScore->calculateTotalScore() : 0;
@@ -421,19 +430,19 @@
                                         <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
                                     </td>
                                 @endforeach
-                                <td class="average-col" id="final_score">
+                                <td class="average-col" id="final_score" style="font-weight: bold !important;">
                                     <strong>{{ $finalScore > 0 ? number_format($finalScore, 2) : '—' }}</strong>
                                 </td>
                             </tr>
                         </tbody>
                     </table>
 
-                    <div class="info-box" style="margin-top: 16px; font-size: 12px;">
+                    <div class="info-box notes-info-box" style="margin-top: 16px; font-size: 12px;">
                         * Prosječna ocjena za svaki kriterijum se dobija odnosom zbira ocjena svih članova Komisije i broja članova Komisije.<br>
                         Konačna ocjena je zbir svih prosječnih ocjena po kriterijumima.
                     </div>
 
-                    <div class="warning-box" style="margin-top: 16px;">
+                    <div class="warning-box notes-info-box" style="margin-top: 16px;">
                         <strong>Napomena:</strong> Biznis planovi sa ukupnim brojem bodova ispod 30 se neće podržati.
                     </div>
 
