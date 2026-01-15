@@ -120,7 +120,7 @@
     }
     .evaluation-table th,
     .evaluation-table td {
-        border: 1px solid #e5e7eb;
+        border: 1px solid #e5e7eb !important;
         padding: 6px 4px;
         text-align: center;
     }
@@ -242,6 +242,7 @@
         }
         .evaluation-table {
             page-break-inside: auto;
+            page-break-after: always;
         }
         .evaluation-table thead {
             display: table-header-group;
@@ -254,6 +255,7 @@
         }
         .evaluation-table th,
         .evaluation-table td {
+            border: 1px solid #000 !important;
             padding: 6px 4px;
         }
         .info-box,
@@ -359,7 +361,6 @@
                         ];
                     @endphp
 
-                    @if(isset($allMembers) && $allMembers->count() > 0)
                     <table class="evaluation-table">
                         <thead>
                             <tr>
