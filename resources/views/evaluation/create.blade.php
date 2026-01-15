@@ -241,6 +241,11 @@
         }
         .form-section {
             margin-bottom: 8px;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        .commission-decision-section {
+            margin-top: 20mm !important;
         }
         .form-label-large {
             page-break-after: avoid;

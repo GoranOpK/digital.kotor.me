@@ -199,6 +199,8 @@
         }
         .form-section {
             margin-bottom: 8px;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
         }
         .form-label-large {
             page-break-after: avoid;
@@ -243,8 +245,13 @@
             display: none !important;
         }
         .commission-decision-section {
-            padding-left: 20mm !important;
-            padding-right: 20mm !important;
+            margin-top: 20mm !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        .form-section {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
         }
         .signature-section {
             page-break-inside: avoid;
