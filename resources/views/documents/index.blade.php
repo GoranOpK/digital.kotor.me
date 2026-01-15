@@ -319,8 +319,8 @@
                         <input type="file" name="files[]" id="file" required multiple
                                accept="image/jpeg,image/png,image/jpg,application/pdf"
                                onchange="updateFileDisplay(this)">
-                        <label for="file" class="file-input-label" id="file-label" onclick="event.stopPropagation();">Izaberi fajlove (možete izabrati više)</label>
-                        <div id="file-names" class="file-name-display" style="display: none; margin-top: 8px;" onclick="event.stopPropagation();"></div>
+                        <label class="file-input-label" id="file-label">Izaberi fajlove (možete izabrati više)</label>
+                        <div id="file-names" class="file-name-display" style="display: none; margin-top: 8px;"></div>
                     </div>
                     <small style="color: #6b7280; display: block; margin-top: 4px;">
                         Dozvoljeni formati: JPEG, PNG, PDF (max 10MB po fajlu). Dokumenti će biti automatski konvertovani u greyscale PDF format sa 300 DPI rezolucijom.
@@ -595,8 +595,8 @@ function prepareFormSubmit(event) {
     return true;
 }
 
-// Event listener za dugmad (umesto inline onclick) - koristi capture fazu da spreči propagaciju
-document.addEventListener('click', function(event) {
+// Event listener za dugmad - koristi mousedown i capture fazu da spreči propagaciju
+document.addEventListener('mousedown', function(event) {
     // Proveri da li je klik na dugme ili unutar dugmeta
     const btn = event.target.closest('.file-action-btn');
     if (!btn) return;
@@ -606,30 +606,47 @@ document.addEventListener('click', function(event) {
     event.stopPropagation();
     event.stopImmediatePropagation();
     
-    // Spreči aktivaciju label-a
-    const label = document.getElementById('file-label');
-    if (label) {
-        label.style.pointerEvents = 'none';
-        setTimeout(() => {
-            label.style.pointerEvents = 'auto';
-        }, 100);
-    }
-    
     const action = btn.getAttribute('data-action');
     const index = parseInt(btn.getAttribute('data-index'));
     
-    if (action === 'move-up') {
-        moveFileUp(index, event);
-    } else if (action === 'move-down') {
-        moveFileDown(index, event);
-    } else if (action === 'remove') {
-        removeFile(index, event);
-    }
+    // Izvrši akciju nakon kratke pauze da se osiguramo da je event zaustavljen
+    setTimeout(() => {
+        if (action === 'move-up') {
+            moveFileUp(index, null);
+        } else if (action === 'move-down') {
+            moveFileDown(index, null);
+        } else if (action === 'remove') {
+            removeFile(index, null);
+        }
+    }, 10);
     
     return false;
 }, true); // useCapture = true da bi se event uhvatio pre propagacije
 
+// Takođe dodaj za click event kao backup
+document.addEventListener('click', function(event) {
+    const btn = event.target.closest('.file-action-btn');
+    if (btn) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+        return false;
+    }
+}, true);
+
+// Event listener za label klik (aktivira file input samo ako nije klik na dugme)
 document.addEventListener('DOMContentLoaded', function() {
+    const fileLabel = document.getElementById('file-label');
+    const fileInput = document.getElementById('file');
+    
+    if (fileLabel && fileInput) {
+        fileLabel.addEventListener('click', function(event) {
+            // Proveri da li je klik direktno na label, a ne na dugme unutar file-names
+            if (!event.target.closest('.file-action-btn') && !event.target.closest('#file-names')) {
+                fileInput.click();
+            }
+        });
+    }
     
     // Funkcija za ažuriranje statusa dokumenta u DOM-u
     function updateDocumentStatus(documentId, status, processedAt) {
