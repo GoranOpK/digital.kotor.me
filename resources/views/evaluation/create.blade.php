@@ -217,237 +217,40 @@
         margin-top: 12px;
     }
     @media print {
-        * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-            color-adjust: exact !important;
-        }
         body {
             margin: 0;
             padding: 0;
             background: #fff;
         }
         .container {
-            max-width: 100%;
             padding: 0;
         }
         .evaluation-page {
             background: #fff;
             padding: 0;
-            min-height: auto;
         }
         .page-header {
-            background: linear-gradient(90deg, #0B3D91, #0A347B) !important;
+            background: #0B3D91 !important;
             color: #fff !important;
             padding: 24px;
-            border-radius: 16px;
             margin-bottom: 24px;
-            page-break-after: avoid;
-        }
-        .page-header h1 {
-            color: #fff !important;
-        }
-        .page-header .subtitle {
-            color: rgba(255, 255, 255, 0.9) !important;
         }
         .form-card {
             box-shadow: none;
             padding: 40px;
-            max-width: 100%;
             background: #fff;
-            border-radius: 16px;
-        }
-        .form-title {
-            text-align: center;
-            font-size: 20px;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-        .form-subtitle {
-            text-align: center;
-            font-size: 14px;
-            color: #6b7280;
-            margin-bottom: 32px;
-            font-style: italic;
-        }
-        .form-section {
-            margin-bottom: 32px;
-        }
-        .form-label,
-        .form-label-large {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-        .form-label-large {
-            font-size: 16px;
-            font-weight: 700;
-            color: #111827;
-        }
-        .form-control,
-        .form-control-readonly {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 14px;
-            background: #fff;
-            color: #111827;
-        }
-        .form-control-readonly {
-            background: #f9fafb;
-            color: #6b7280;
-        }
-        .radio-group {
-            display: flex;
-            gap: 24px;
-            margin-top: 12px;
-        }
-        .radio-option {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        input[type="radio"] {
-            width: 16px;
-            height: 16px;
-            border: 2px solid #d1d5db;
-            border-radius: 50%;
-            appearance: none;
-            -webkit-appearance: none;
-            position: relative;
-        }
-        input[type="radio"]:checked {
-            border-color: #0B3D91;
-            background: #0B3D91;
-        }
-        input[type="radio"]:checked::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 8px;
-            height: 8px;
-            background: #fff;
-            border-radius: 50%;
-        }
-        .info-box {
-            background: #f9fafb;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            font-size: 14px;
-            color: #374151;
-            border-left: 4px solid #0B3D91;
-        }
-        .warning-box {
-            background: #fef3c7;
-            border-left: 4px solid #f59e0b;
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 24px;
-            font-size: 13px;
-            color: #92400e;
-        }
-        .evaluation-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 24px 0;
-            font-size: 13px;
-            page-break-inside: avoid;
-        }
-        .evaluation-table th,
-        .evaluation-table td {
-            border: 1px solid #e5e7eb;
-            padding: 12px 8px;
-            text-align: center;
-        }
-        .evaluation-table th {
-            background: #f9fafb;
-            font-weight: 600;
-            color: #111827;
-            font-size: 12px;
-        }
-        .evaluation-table td {
-            background: #fff;
-        }
-        .evaluation-table .criterion-col {
-            text-align: left;
-            font-size: 12px;
-            width: 40%;
-            padding: 12px;
-        }
-        .evaluation-table .score-input {
-            width: 60px;
-            padding: 6px;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            text-align: center;
-            font-size: 13px;
-            background: #fff;
-            color: #111827;
-        }
-        .evaluation-table .score-display {
-            color: #111827;
-            font-weight: 500;
-        }
-        .evaluation-table .average-col {
-            background: #f0f9ff;
-            font-weight: 600;
-            color: #0B3D91;
-        }
-        .evaluation-table .final-score-row {
-            background: #0B3D91;
-            color: #fff;
-            font-weight: 700;
-        }
-        .evaluation-table .final-score-row td {
-            background: #0B3D91;
-            color: #fff;
-        }
-        .signature-section {
-            margin-top: 48px;
-            padding-top: 32px;
-            border-top: 2px solid #e5e7eb;
-            page-break-inside: avoid;
-        }
-        .signature-row {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 24px;
-            font-size: 14px;
-        }
-        .signature-item {
-            width: 180px;
-            padding-bottom: 40px;
-        }
-        textarea {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 14px;
-            background: #fff;
-            color: #111827;
-            font-family: inherit;
-        }
-        input[type="date"] {
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            padding: 10px 14px;
-            font-size: 14px;
-            background: #fff;
-            color: #111827;
         }
         .btn-primary,
         button[type="submit"],
+        button[type="button"],
         a[href] {
             display: none !important;
+        }
+        .evaluation-table {
+            page-break-inside: avoid;
+        }
+        .signature-section {
+            page-break-inside: avoid;
         }
         @page {
             size: A4;
