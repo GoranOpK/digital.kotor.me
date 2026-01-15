@@ -235,7 +235,28 @@
             box-shadow: none;
         }
         .form-section {
-            margin-bottom: 16px;
+            margin-bottom: 8px;
+            page-break-inside: avoid;
+        }
+        .evaluation-table {
+            page-break-inside: avoid;
+        }
+        .evaluation-table thead {
+            display: table-header-group;
+        }
+        .evaluation-table tbody {
+            display: table-row-group;
+        }
+        .evaluation-table tr {
+            page-break-inside: avoid;
+            page-break-after: auto;
+        }
+        .evaluation-table th,
+        .evaluation-table td {
+            padding: 6px 4px;
+        }
+        .signature-section {
+            page-break-inside: avoid;
         }
         @page {
             size: A4;
