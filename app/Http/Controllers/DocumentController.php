@@ -89,23 +89,23 @@ class DocumentController extends Controller
         $errors = [];
 
         try {
-            try {
-                // Generiši jedinstveno ime za izvorni fajl
-                $randomString = bin2hex(random_bytes(4));
-                $baseFilename = "{$user->id}-{$date}-{$randomString}";
-                $originalExtension = $file->getClientOriginalExtension();
-                $originalFilename = "{$baseFilename}_original.{$originalExtension}";
-                $originalFilePath = "{$directory}/{$originalFilename}";
+            // Generiši jedinstveno ime za izvorni fajl
+            $randomString = bin2hex(random_bytes(4));
+            $baseFilename = "{$user->id}-{$date}-{$randomString}";
+            $originalExtension = $file->getClientOriginalExtension();
+            $originalFilename = "{$baseFilename}_original.{$originalExtension}";
+            $originalFilePath = "{$directory}/{$originalFilename}";
 
-                // Sačuvaj izvorni fajl
-                $originalFileSize = $file->getSize();
-                
-                // Proveri da li korisnik ima dovoljno prostora za izvorni fajl
-                if (!$this->documentProcessor->hasEnoughStorage($user->id, $originalFileSize)) {
-                    $errors[] = "Fajl '{$file->getClientOriginalName()}' nije upload-ovan: Nemate dovoljno prostora.";
-                    $failedCount++;
-                    continue;
-                }
+            // Sačuvaj izvorni fajl
+            $originalFileSize = $file->getSize();
+            
+            // Proveri da li korisnik ima dovoljno prostora za izvorni fajl
+            if (!$this->documentProcessor->hasEnoughStorage($user->id, $originalFileSize)) {
+                return back()->withErrors([
+                    'file' => 'Nemate dovoljno prostora. Maksimalno dozvoljeno: 20 MB. Trenutno korišćeno: ' . 
+                             round(($user->used_storage_bytes ?? 0) / 1024 / 1024, 2) . ' MB'
+                ])->withInput();
+            }
 
                 Storage::disk('local')->putFileAs($directory, $file, $originalFilename);
 
@@ -174,18 +174,17 @@ class DocumentController extends Controller
 
                         if (!$result['success']) {
                             $document->update(['status' => 'failed']);
-                            $errors[] = "Fajl '{$file->getClientOriginalName()}' nije obrađen: " . ($result['error'] ?? 'Greška pri obradi.');
-                            $failedCount++;
-                            continue;
+                            return back()->withErrors(['file' => $result['error'] ?? 'Greška pri obradi dokumenta.'])->withInput();
                         }
 
                         // Proveri da li korisnik ima dovoljno prostora
                         if (!$this->documentProcessor->hasEnoughStorage($user->id, $result['file_size'])) {
                             Storage::disk('local')->delete($result['file_path']);
                             $document->update(['status' => 'failed']);
-                            $errors[] = "Fajl '{$file->getClientOriginalName()}' nije obrađen: Nemate dovoljno prostora.";
-                            $failedCount++;
-                            continue;
+                            
+                            return back()->withErrors([
+                                'file' => 'Nemate dovoljno prostora. Maksimalno dozvoljeno: 20 MB.'
+                            ])->withInput();
                         }
 
                         // Ažuriraj dokument sa putanjom do obrađenog fajla
@@ -198,8 +197,10 @@ class DocumentController extends Controller
 
                         // Ažuriraj korišćen prostor
                         $this->documentProcessor->updateUserStorage($user->id, $result['file_size']);
-                        $uploadedCount++;
-                        
+
+                        return redirect()->route('documents.index')
+                            ->with('success', 'Dokument je uspješno upload-ovan i obrađen.');
+                            
                     } catch (\Exception $e) {
                         // Ako direktna obrada ne uspe, prebaci na queue
                         Log::error('Direct processing failed, falling back to queue', [
@@ -209,39 +210,19 @@ class DocumentController extends Controller
                         
                         $document->update(['status' => 'pending']);
                         ProcessDocumentJob::dispatch($document, $originalFilePath);
-                        $queuedCount++;
+                        
+                        return redirect()->route('documents.index')
+                            ->with('success', 'Dokument je uspješno upload-ovan. Obrada je u toku.');
                     }
                 }
-            } catch (\Exception $e) {
-                Log::error('File upload failed', [
-                    'filename' => $file->getClientOriginalName(),
-                    'error' => $e->getMessage()
-                ]);
-                $errors[] = "Fajl '{$file->getClientOriginalName()}' nije upload-ovan: " . $e->getMessage();
-                $failedCount++;
-            }
+        } catch (\Exception $e) {
+            Log::error('File upload failed', [
+                'filename' => $file->getClientOriginalName(),
+                'error' => $e->getMessage()
+            ]);
+            
+            return back()->withErrors(['file' => 'Greška pri upload-u dokumenta: ' . $e->getMessage()])->withInput();
         }
-
-        // Pripremi poruku za korisnika
-        $message = '';
-        if ($uploadedCount > 0) {
-            $message .= $uploadedCount . ' dokument' . ($uploadedCount > 1 ? 'a' : '') . ' uspješno upload-ovan' . ($uploadedCount > 1 ? 'o' : '') . ' i obrađen' . ($uploadedCount > 1 ? 'o' : '') . '. ';
-        }
-        if ($queuedCount > 0) {
-            $message .= $queuedCount . ' dokument' . ($queuedCount > 1 ? 'a' : '') . ' je u redu za obradu. ';
-        }
-        if ($failedCount > 0) {
-            $message .= $failedCount . ' dokument' . ($failedCount > 1 ? 'a' : '') . ' nije uspješno upload-ovan' . ($failedCount > 1 ? 'o' : '') . '.';
-        }
-
-        if (!empty($errors)) {
-            return redirect()->route('documents.index')
-                ->with('success', trim($message))
-                ->withErrors(['files' => $errors]);
-        }
-
-        return redirect()->route('documents.index')
-            ->with('success', trim($message));
     }
 
     /**
