@@ -127,8 +127,8 @@
     }
     .evaluation-table .final-score-row {
         background: var(--primary);
-        color: #fff;
-        font-weight: 700;
+        color: #000 !important;
+        font-weight: bold !important;
     }
     .evaluation-table .final-score-row .average-col {
         font-weight: bold !important;
@@ -136,7 +136,8 @@
     }
     .evaluation-table .final-score-row td {
         background: var(--primary);
-        color: #fff;
+        color: #000 !important;
+        font-weight: bold !important;
     }
     .signature-section {
         margin-top: 48px;
@@ -225,6 +226,7 @@
         }
         .evaluation-table .final-score-row td {
             font-weight: bold !important;
+            color: #000 !important;
         }
         .evaluation-table .final-score-row .average-col {
             font-weight: bold !important;
