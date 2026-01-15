@@ -143,8 +143,11 @@ class EvaluationController extends Controller
             'documents_complete.required' => 'Morate odgovoriti da li su sva potrebna dokumenta dostavljena.',
         ];
 
+        // Validiraj samo documents_complete prvo
+        $request->validate($rules, $messages);
+
         // Ako dokumentacija nije kompletna, automatski odbiti prijavu
-        if (!$request->has('documents_complete') || !$request->boolean('documents_complete')) {
+        if (!$request->boolean('documents_complete')) {
             $application->update([
                 'status' => 'rejected',
                 'rejection_reason' => 'Nedostaju potrebna dokumenta.',
