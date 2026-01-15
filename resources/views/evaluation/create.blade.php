@@ -240,7 +240,7 @@
             box-shadow: none;
         }
         .form-section {
-            margin-bottom: 8px;
+            margin-bottom: 4px;
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
