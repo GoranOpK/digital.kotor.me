@@ -297,7 +297,7 @@
             <!-- Upload sekcija -->
             <div class="upload-section">
             <h2>Dodaj novi dokument</h2>
-            <form action="{{ route('documents.store') }}" method="POST" enctype="multipart/form-data" id="document-upload-form">
+            <form action="{{ route('documents.store') }}" method="POST" enctype="multipart/form-data" id="document-upload-form" onsubmit="return prepareFormSubmit(event)">
                 @csrf
                 <div class="form-group">
                     <label for="name" class="form-label">Naziv dokumenta <span style="color: #ef4444;">*</span></label>
@@ -455,20 +455,20 @@ function updateFileDisplay(input) {
             
             // Dugme za pomeranje gore
             if (index > 0) {
-                fileList += '<button type="button" onclick="moveFileUp(' + index + ')" title="Pomeri gore" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬆️</button>';
+                fileList += '<button type="button" onclick="moveFileUp(' + index + ', event); return false;" title="Pomeri gore" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬆️</button>';
             } else {
                 fileList += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬆️</button>';
             }
             
             // Dugme za pomeranje dole
             if (index < selectedFiles.length - 1) {
-                fileList += '<button type="button" onclick="moveFileDown(' + index + ')" title="Pomeri dole" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬇️</button>';
+                fileList += '<button type="button" onclick="moveFileDown(' + index + ', event); return false;" title="Pomeri dole" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬇️</button>';
             } else {
                 fileList += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬇️</button>';
             }
             
             // Dugme za uklanjanje
-            fileList += '<button type="button" onclick="removeFile(' + index + ')" title="Ukloni" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">✕</button>';
+            fileList += '<button type="button" onclick="removeFile(' + index + ', event); return false;" title="Ukloni" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">✕</button>';
             fileList += '</div>';
             fileList += '</li>';
         });
@@ -489,7 +489,12 @@ function updateFileDisplay(input) {
 }
 
 // Funkcija za uklanjanje fajla iz liste
-function removeFile(index) {
+function removeFile(index, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     selectedFiles.splice(index, 1);
     
     // Ažuriraj input sa preostalim fajlovima
@@ -502,10 +507,17 @@ function removeFile(index) {
     
     // Ažuriraj prikaz
     updateFileDisplay(input);
+    
+    return false;
 }
 
 // Funkcija za pomeranje fajla gore
-function moveFileUp(index) {
+function moveFileUp(index, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     if (index > 0) {
         // Zameni pozicije
         const temp = selectedFiles[index];
@@ -523,10 +535,17 @@ function moveFileUp(index) {
         // Ažuriraj prikaz
         updateFileDisplay(input);
     }
+    
+    return false;
 }
 
 // Funkcija za pomeranje fajla dole
-function moveFileDown(index) {
+function moveFileDown(index, event) {
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+    }
+    
     if (index < selectedFiles.length - 1) {
         // Zameni pozicije
         const temp = selectedFiles[index];
@@ -544,22 +563,39 @@ function moveFileDown(index) {
         // Ažuriraj prikaz
         updateFileDisplay(input);
     }
+    
+    return false;
+}
+
+// Funkcija za pripremu forme pre submit-a
+function prepareFormSubmit(event) {
+    const input = document.getElementById('file');
+    
+    // Proveri da li ima izabranih fajlova
+    if (selectedFiles.length === 0) {
+        event.preventDefault();
+        alert('Molimo izaberite barem jedan fajl.');
+        return false;
+    }
+    
+    // Osiguraj da su fajlovi u input-u pre submit-a
+    const dataTransfer = new DataTransfer();
+    selectedFiles.forEach(file => {
+        dataTransfer.items.add(file);
+    });
+    input.files = dataTransfer.files;
+    
+    // Resetuj listu nakon kratke pauze (da forma stigne da se pošalje)
+    setTimeout(function() {
+        selectedFiles = [];
+        input.value = '';
+        updateFileDisplay(input);
+    }, 100);
+    
+    return true;
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Resetuj listu fajlova nakon uspešnog submit-a
-    const form = document.getElementById('document-upload-form');
-    if (form) {
-        form.addEventListener('submit', function() {
-            // Resetuj listu nakon kratke pauze (da forma stigne da se pošalje)
-            setTimeout(function() {
-                selectedFiles = [];
-                const input = document.getElementById('file');
-                input.value = '';
-                updateFileDisplay(input);
-            }, 100);
-        });
-    }
     
     // Funkcija za ažuriranje statusa dokumenta u DOM-u
     function updateDocumentStatus(documentId, status, processedAt) {
