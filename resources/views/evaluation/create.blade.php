@@ -346,7 +346,7 @@
                                 </tr>
                             @endforeach
                             <tr class="final-score-row">
-                                <td class="criterion-col" style="text-align: right; padding-right: 16px;">
+                                <td class="criterion-col" style="text-align: center;">
                                     <strong>KONAČNA OCJENA:</strong>
                                 </td>
                                 @foreach($allMembers as $member)
