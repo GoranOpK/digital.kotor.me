@@ -69,7 +69,23 @@ class DocumentController extends Controller
             'category' => 'required|in:Lični dokumenti,Finansijski dokumenti,Poslovni dokumenti,Ostali dokumenti',
             'name' => 'required|string|max:255',
             'expires_at' => 'nullable|date|after:today',
+        ], [
+            'files.*.max' => 'Fajl ne može biti veći od 2 MB.',
         ]);
+        
+        // Proveri ukupnu veličinu svih fajlova (max 7MB zbog post_max_size = 8M)
+        $maxTotalSize = 7 * 1024 * 1024; // 7MB u bajtovima (ostavljamo marginu od 1MB)
+        $totalSize = 0;
+        foreach ($request->file('files') as $file) {
+            $totalSize += $file->getSize();
+        }
+        
+        if ($totalSize > $maxTotalSize) {
+            $totalSizeMB = round($totalSize / 1024 / 1024, 2);
+            return back()->withErrors([
+                'files' => "Ukupna veličina svih fajlova ({$totalSizeMB} MB) prelazi dozvoljeno ograničenje. Maksimalna ukupna veličina je 7 MB. Molimo smanjite broj ili veličinu fajlova."
+            ])->withInput();
+        }
 
         $user = Auth::user();
         $files = $request->file('files');

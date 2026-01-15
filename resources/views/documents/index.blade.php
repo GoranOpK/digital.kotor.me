@@ -323,7 +323,7 @@
                     </div>
                     <div id="file-names" class="file-name-display" style="display: none; margin-top: 8px;"></div>
                     <small style="color: #6b7280; display: block; margin-top: 4px;">
-                        Dozvoljeni formati: JPEG, PNG, PDF (max 2MB po fajlu). Dokumenti će biti automatski konvertovani u greyscale PDF format sa 300 DPI rezolucijom.
+                        Dozvoljeni formati: JPEG, PNG, PDF (max 2MB po fajlu, max 7MB ukupno za sve fajlove). Dokumenti će biti automatski konvertovani u greyscale PDF format sa 300 DPI rezolucijom.
                     </small>
                     <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 12px; border-radius: 4px;">
                         <strong style="color: #1e40af; display: block; margin-bottom: 4px;">ℹ️ Važno:</strong>
@@ -575,6 +575,31 @@ function prepareFormSubmit(event) {
     if (selectedFiles.length === 0) {
         event.preventDefault();
         alert('Molimo izaberite barem jedan fajl.');
+        return false;
+    }
+    
+    // Proveri veličinu svakog fajla (max 2MB po fajlu)
+    const maxFileSize = 2 * 1024 * 1024; // 2MB u bajtovima
+    for (let i = 0; i < selectedFiles.length; i++) {
+        if (selectedFiles[i].size > maxFileSize) {
+            event.preventDefault();
+            const fileSizeMB = (selectedFiles[i].size / 1024 / 1024).toFixed(2);
+            alert(`Fajl "${selectedFiles[i].name}" je prevelik (${fileSizeMB} MB).\nMaksimalna dozvoljena veličina po fajlu je 2 MB.`);
+            return false;
+        }
+    }
+    
+    // Proveri ukupnu veličinu svih fajlova (max 7MB zbog post_max_size ograničenja)
+    const maxTotalSize = 7 * 1024 * 1024; // 7MB u bajtovima (ostavljamo marginu od 1MB)
+    let totalSize = 0;
+    for (let i = 0; i < selectedFiles.length; i++) {
+        totalSize += selectedFiles[i].size;
+    }
+    
+    if (totalSize > maxTotalSize) {
+        event.preventDefault();
+        const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+        alert(`Ukupna veličina svih fajlova (${totalSizeMB} MB) prelazi dozvoljeno ograničenje.\nMaksimalna ukupna veličina je 7 MB.\nMolimo smanjite broj ili veličinu fajlova.`);
         return false;
     }
     
