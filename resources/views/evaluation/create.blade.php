@@ -260,9 +260,13 @@
         .warning-box {
             page-break-inside: avoid;
         }
+        .criteria-info-box {
+            display: none !important;
+        }
         .signature-section {
             page-break-inside: avoid;
             page-break-before: auto;
+            border-top: none !important;
         }
         .form-control-readonly,
         textarea.form-control {
@@ -332,7 +336,7 @@
                 <div class="form-section">
                     <label class="form-label form-label-large">3. Ocjena biznis plana u brojkama:</label>
                     
-                    <div class="info-box">
+                    <div class="info-box criteria-info-box">
                         <strong>KRITERIJUMI ZA OCJENU</strong><br>
                         (Član 18 stav 2 Odluke)<br>
                         Komisija dodijeljuje ocjenu za biznis plan na skali od 1 do 5, pri čemu je:<br>
