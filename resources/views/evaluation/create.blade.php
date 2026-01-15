@@ -393,7 +393,7 @@
         }
         @page {
             size: A4;
-            margin: 20mm;
+            margin: 30mm 25mm;
         }
     }
 </style>
