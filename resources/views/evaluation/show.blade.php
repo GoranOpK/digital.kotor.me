@@ -175,43 +175,179 @@
         white-space: pre-wrap;
     }
     @media print {
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+        }
         body {
             margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+        .container {
+            max-width: 100%;
             padding: 0;
         }
         .evaluation-page {
             background: #fff;
             padding: 0;
+            min-height: auto;
         }
         .page-header {
-            background: #0B3D91 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
+            background: linear-gradient(90deg, #0B3D91, #0A347B) !important;
+            color: #fff !important;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
             page-break-after: avoid;
+        }
+        .page-header h1 {
+            color: #fff !important;
+        }
+        .page-header .subtitle {
+            color: rgba(255, 255, 255, 0.9) !important;
         }
         .form-card {
             box-shadow: none;
-            padding: 20px;
+            padding: 40px;
             max-width: 100%;
+            background: #fff;
+            border-radius: 16px;
         }
-        .btn-primary,
-        a[href] {
-            display: none !important;
+        .form-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .form-subtitle {
+            text-align: center;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 32px;
+            font-style: italic;
+        }
+        .form-section {
+            margin-bottom: 32px;
+        }
+        .form-label,
+        .form-label-large {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+        .form-label-large {
+            font-size: 16px;
+            font-weight: 700;
+            color: #111827;
+        }
+        .form-control-readonly {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            background: #f9fafb;
+            color: #6b7280;
+        }
+        .readonly-value {
+            padding: 12px;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            color: #111827;
+            font-size: 14px;
+            min-height: 100px;
+            white-space: pre-wrap;
+        }
+        .info-box {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            color: #374151;
+            border-left: 4px solid #0B3D91;
+        }
+        .warning-box {
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 13px;
+            color: #92400e;
         }
         .evaluation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 24px 0;
+            font-size: 13px;
             page-break-inside: avoid;
         }
         .evaluation-table th,
         .evaluation-table td {
-            border: 1px solid #000 !important;
+            border: 1px solid #e5e7eb;
+            padding: 12px 8px;
+            text-align: center;
+        }
+        .evaluation-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            color: #111827;
+            font-size: 12px;
+        }
+        .evaluation-table td {
+            background: #fff;
+        }
+        .evaluation-table .criterion-col {
+            text-align: left;
+            font-size: 12px;
+            width: 40%;
+            padding: 12px;
+        }
+        .evaluation-table .score-display {
+            color: #111827;
+            font-weight: 500;
+        }
+        .evaluation-table .average-col {
+            background: #f0f9ff;
+            font-weight: 600;
+            color: #0B3D91;
+        }
+        .evaluation-table .final-score-row {
+            background: #0B3D91;
+            color: #fff;
+            font-weight: 700;
+        }
+        .evaluation-table .final-score-row td {
+            background: #0B3D91;
+            color: #fff;
         }
         .signature-section {
+            margin-top: 48px;
+            padding-top: 32px;
+            border-top: 2px solid #e5e7eb;
             page-break-inside: avoid;
-            margin-top: 40px;
         }
-        .info-box,
-        .warning-box {
-            page-break-inside: avoid;
+        .signature-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24px;
+            font-size: 14px;
+        }
+        .signature-item {
+            width: 180px;
+            padding-bottom: 40px;
+        }
+        .btn-primary,
+        a[href] {
+            display: none !important;
         }
         @page {
             size: A4;
