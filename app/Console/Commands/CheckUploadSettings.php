@@ -42,7 +42,10 @@ class CheckUploadSettings extends Command
         
         $this->newLine();
         $this->info('=== Laravel Validacija ===');
-        $this->line("Maksimalna veličina po fajlu: <fg=cyan>10 MB</> (10240 KB)");
+        // Laravel validacija za dokumente: max:2048 (2MB)
+        $laravelMaxKB = 2048;
+        $laravelMaxMB = round($laravelMaxKB / 1024, 1);
+        $this->line("Maksimalna veličina po fajlu (dokumenti): <fg=cyan>{$laravelMaxMB} MB</> ({$laravelMaxKB} KB)");
         
         $this->newLine();
         $this->info('=== Preporuke ===');
@@ -50,11 +53,11 @@ class CheckUploadSettings extends Command
         // Konvertujemo u bajtove za poređenje
         $uploadMaxBytes = $this->convertToBytes($uploadMaxFilesize);
         $postMaxBytes = $this->convertToBytes($postMaxSize);
-        $laravelMaxBytes = 10 * 1024 * 1024; // 10 MB
+        $laravelMaxBytes = $laravelMaxKB * 1024; // 2 MB
         
         if ($uploadMaxBytes < $laravelMaxBytes) {
-            $this->warn("⚠️  upload_max_filesize ({$uploadMaxFilesize}) je manji od Laravel limita (10 MB)!");
-            $this->line("   Preporuka: Povećajte upload_max_filesize na najmanje 10M");
+            $this->warn("⚠️  upload_max_filesize ({$uploadMaxFilesize}) je manji od Laravel limita ({$laravelMaxMB} MB)!");
+            $this->line("   Preporuka: Povećajte upload_max_filesize na najmanje {$laravelMaxMB}M");
         } else {
             $this->line("✓ upload_max_filesize je dovoljno velik");
         }

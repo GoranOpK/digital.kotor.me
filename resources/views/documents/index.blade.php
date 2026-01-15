@@ -323,7 +323,7 @@
                     </div>
                     <div id="file-names" class="file-name-display" style="display: none; margin-top: 8px;"></div>
                     <small style="color: #6b7280; display: block; margin-top: 4px;">
-                        Dozvoljeni formati: JPEG, PNG, PDF (max 10MB po fajlu). Dokumenti će biti automatski konvertovani u greyscale PDF format sa 300 DPI rezolucijom.
+                        Dozvoljeni formati: JPEG, PNG, PDF (max 2MB po fajlu). Dokumenti će biti automatski konvertovani u greyscale PDF format sa 300 DPI rezolucijom.
                     </small>
                     <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 12px; border-radius: 4px;">
                         <strong style="color: #1e40af; display: block; margin-bottom: 4px;">ℹ️ Važno:</strong>

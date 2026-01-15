@@ -45,7 +45,8 @@ $memoryLimit = ini_get('memory_limit');
 
 $uploadMaxBytes = convertToBytes($uploadMaxFilesize);
 $postMaxBytes = convertToBytes($postMaxSize);
-$laravelMaxBytes = 10 * 1024 * 1024; // 10 MB
+$laravelMaxKB = 2048; // 2 MB (ograničeno PHP upload_max_filesize)
+$laravelMaxBytes = $laravelMaxKB * 1024;
 
 ?>
 <!DOCTYPE html>
@@ -145,14 +146,14 @@ $laravelMaxBytes = 10 * 1024 * 1024; // 10 MB
         
         <h2>Laravel Validacija</h2>
         <div class="info">
-            <strong>Maksimalna veličina po fajlu:</strong> 10 MB (10240 KB)
+            <strong>Maksimalna veličina po fajlu (dokumenti):</strong> <?php echo round($laravelMaxKB / 1024, 1); ?> MB (<?php echo $laravelMaxKB; ?> KB)
         </div>
         
         <h2>Preporuke</h2>
         <?php if ($uploadMaxBytes < $laravelMaxBytes): ?>
             <div class="warning">
-                <strong>⚠️ Upozorenje:</strong> upload_max_filesize (<?php echo htmlspecialchars($uploadMaxFilesize); ?>) je manji od Laravel limita (10 MB)!<br>
-                <strong>Preporuka:</strong> Povećajte upload_max_filesize na najmanje 10M u PHP konfiguraciji.
+                <strong>⚠️ Upozorenje:</strong> upload_max_filesize (<?php echo htmlspecialchars($uploadMaxFilesize); ?>) je manji od Laravel limita (<?php echo round($laravelMaxKB / 1024, 1); ?> MB)!<br>
+                <strong>Preporuka:</strong> Povećajte upload_max_filesize na najmanje <?php echo round($laravelMaxKB / 1024, 1); ?>M u PHP konfiguraciji.
             </div>
         <?php else: ?>
             <div class="success">

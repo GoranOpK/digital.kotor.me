@@ -65,7 +65,7 @@ class DocumentController extends Controller
     {
         $request->validate([
             'files' => 'required|array|min:1',
-            'files.*' => 'required|file|mimes:jpeg,jpg,png,pdf|max:10240', // Max 10MB po fajlu
+            'files.*' => 'required|file|mimes:jpeg,jpg,png,pdf|max:2048', // Max 2MB po fajlu (ograničeno PHP upload_max_filesize)
             'category' => 'required|in:Lični dokumenti,Finansijski dokumenti,Poslovni dokumenti,Ostali dokumenti',
             'name' => 'required|string|max:255',
             'expires_at' => 'nullable|date|after:today',
