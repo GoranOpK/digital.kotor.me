@@ -143,7 +143,7 @@ class DocumentProcessor
 
     /**
      * Proverava i ažurira stvarno iskorišćen prostor za korisnika
-     * Računa na osnovu stvarnih fajlova na disku
+     * Računa samo obrađene PDF fajlove (file_path), ne računa originalne fajlove
      *
      * @param int $userId
      * @return array ['actual_size' => int, 'stored_size' => int, 'updated' => bool]
@@ -162,37 +162,59 @@ class DocumentProcessor
         $actualSize = 0;
         $documents = \App\Models\UserDocument::where('user_id', $userId)->get();
 
+        Log::info('Recalculating storage for user', [
+            'user_id' => $userId,
+            'documents_count' => $documents->count()
+        ]);
+
         foreach ($documents as $document) {
-            // Proveri obrađeni fajl
+            // Računaj samo obrađene PDF fajlove (file_path)
+            // Ne računaj originalne fajlove jer se oni brišu nakon obrade
             if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
-                $actualSize += Storage::disk('local')->size($document->file_path);
-            }
-            
-            // Proveri originalni fajl (ako postoji i nije obrisan)
-            if ($document->original_file_path) {
-                // Ako je original_file_path string sa više putanja (odvojeno sa |)
-                $originalPaths = explode('|', $document->original_file_path);
-                foreach ($originalPaths as $path) {
-                    if (Storage::disk('local')->exists($path)) {
-                        $actualSize += Storage::disk('local')->size($path);
-                    }
-                }
+                $fileSize = Storage::disk('local')->size($document->file_path);
+                $actualSize += $fileSize;
+                
+                Log::debug('Document file found', [
+                    'document_id' => $document->id,
+                    'file_path' => $document->file_path,
+                    'file_size' => $fileSize,
+                    'status' => $document->status
+                ]);
+            } else {
+                Log::debug('Document file not found or missing', [
+                    'document_id' => $document->id,
+                    'file_path' => $document->file_path,
+                    'file_exists' => $document->file_path ? Storage::disk('local')->exists($document->file_path) : false,
+                    'status' => $document->status
+                ]);
             }
         }
 
         $storedSize = $user->used_storage_bytes ?? 0;
         $updated = false;
 
+        Log::info('Storage calculation result', [
+            'user_id' => $userId,
+            'actual_size' => $actualSize,
+            'stored_size' => $storedSize,
+            'difference' => $actualSize - $storedSize
+        ]);
+
         if ($actualSize != $storedSize) {
             $user->used_storage_bytes = $actualSize;
             $user->save();
             $updated = true;
 
-            Log::info('Storage recalculated for user', [
+            Log::info('Storage updated for user', [
                 'user_id' => $userId,
                 'old_size' => $storedSize,
                 'new_size' => $actualSize,
                 'difference' => $actualSize - $storedSize,
+            ]);
+        } else {
+            Log::info('Storage already correct, no update needed', [
+                'user_id' => $userId,
+                'size' => $actualSize
             ]);
         }
 
