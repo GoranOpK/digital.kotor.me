@@ -175,6 +175,9 @@
         border: none;
         border-radius: 8px;
         color: #111827;
+    }
+    .form-section .readonly-value {
+        padding: 0 !important;
         font-size: 14px;
         min-height: 100px;
         white-space: pre-wrap;
@@ -202,8 +205,7 @@
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
-        .form-section textarea,
-        .form-section .readonly-value {
+        .form-section textarea {
             text-align: left !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
@@ -213,6 +215,11 @@
         }
         .form-section .readonly-value {
             text-align: left !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            width: 100% !important;
         }
         .form-label-large {
             page-break-after: avoid;
