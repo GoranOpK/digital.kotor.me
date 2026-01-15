@@ -196,7 +196,14 @@ class DocumentController extends Controller
                         ]);
 
                         // Ažuriraj korišćen prostor
+                        // Oduzmi originalni fajl i dodaj obrađeni PDF
+                        $this->documentProcessor->updateUserStorage($user->id, -$originalFileSize);
                         $this->documentProcessor->updateUserStorage($user->id, $result['file_size']);
+                        
+                        // Obriši originalni fajl (sada imamo obrađeni PDF)
+                        if (Storage::disk('local')->exists($originalFilePath)) {
+                            Storage::disk('local')->delete($originalFilePath);
+                        }
 
                         return redirect()->route('documents.index')
                             ->with('success', 'Dokument je uspješno upload-ovan i obrađen.');
@@ -352,6 +359,7 @@ class DocumentController extends Controller
             ]);
 
             // Ažuriraj korišćen prostor (dodaj razliku između spojenog PDF-a i originalnih fajlova)
+            // Prvo izračunaj ukupnu veličinu originalnih fajlova PRE brisanja
             $originalTotalSize = 0;
             foreach ($originalFilePaths as $path) {
                 if (Storage::disk('local')->exists($path)) {
@@ -359,9 +367,16 @@ class DocumentController extends Controller
                 }
             }
             
+            Log::info('Updating storage for merged PDF', [
+                'original_total_size' => $originalTotalSize,
+                'merged_pdf_size' => $result['file_size'],
+                'difference' => $result['file_size'] - $originalTotalSize
+            ]);
+            
             // Oduzmi originalne fajlove i dodaj spojeni PDF
-            $this->documentProcessor->updateUserStorage($user->id, -$originalTotalSize);
-            $this->documentProcessor->updateUserStorage($user->id, $result['file_size']);
+            // Koristimo jedan poziv sa razlikom umesto dva poziva
+            $sizeDifference = $result['file_size'] - $originalTotalSize;
+            $this->documentProcessor->updateUserStorage($user->id, $sizeDifference);
 
             // Obriši originalne fajlove (sada imamo spojeni PDF)
             foreach ($originalFilePaths as $path) {
