@@ -246,6 +246,7 @@
         }
         .commission-decision-section {
             margin-top: 20mm !important;
+            page-break-after: always;
         }
         .form-label-large {
             page-break-after: avoid;
@@ -255,7 +256,6 @@
         }
         .evaluation-table {
             page-break-inside: auto;
-            page-break-after: always;
         }
         .evaluation-table thead {
             display: table-header-group;
