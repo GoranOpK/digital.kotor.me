@@ -359,6 +359,7 @@
                         ];
                     @endphp
 
+                    @if(isset($allMembers) && $allMembers->count() > 0)
                     <table class="evaluation-table">
                         <thead>
                             <tr>
