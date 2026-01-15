@@ -239,6 +239,10 @@ class DocumentProcessor
                     ];
                 }
 
+                Log::info('Preparing to merge PDF', [
+                    'images_count' => $mergedPdf->getNumberImages()
+                ]);
+
                 // Postavi format i kompresiju za merged PDF
                 $mergedPdf->setImageFormat('pdf');
                 $mergedPdf->setImageCompression(\Imagick::COMPRESSION_JPEG);
@@ -248,31 +252,56 @@ class DocumentProcessor
                 // Kreiraj privremeni fajl za PDF
                 $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('merged_pdf_', true) . '.pdf';
                 
+                Log::info('Writing PDF to temp file', [
+                    'temp_path' => $tempPdfPath,
+                    'images_count' => $mergedPdf->getNumberImages()
+                ]);
+                
                 // Spoji sve stranice u jedan PDF koristeći writeImages
                 // writeImages sa jednim fajlom automatski spaja sve slike u jedan multi-page PDF
                 $mergedPdf->setFirstIterator();
                 $result = $mergedPdf->writeImages($tempPdfPath, false);
                 
+                Log::info('writeImages result', [
+                    'result' => $result,
+                    'file_exists' => file_exists($tempPdfPath),
+                    'temp_path' => $tempPdfPath
+                ]);
+                
                 if (!$result) {
+                    Log::error('writeImages returned false', [
+                        'temp_path' => $tempPdfPath,
+                        'images_count' => $mergedPdf->getNumberImages()
+                    ]);
                     $mergedPdf->clear();
                     $mergedPdf->destroy();
                     return [
                         'success' => false,
-                        'error' => 'Greška pri kreiranju PDF fajla.',
+                        'error' => 'Greška pri kreiranju PDF fajla (writeImages failed).',
                     ];
                 }
 
                 // Pročitaj generisani PDF
                 if (!file_exists($tempPdfPath)) {
+                    Log::error('PDF file was not created', [
+                        'temp_path' => $tempPdfPath,
+                        'directory_exists' => is_dir(dirname($tempPdfPath)),
+                        'directory_writable' => is_writable(dirname($tempPdfPath))
+                    ]);
                     $mergedPdf->clear();
                     $mergedPdf->destroy();
                     return [
                         'success' => false,
-                        'error' => 'PDF fajl nije kreiran.',
+                        'error' => 'PDF fajl nije kreiran. Proverite dozvole za privremeni direktorijum.',
                     ];
                 }
                 
                 $pdfData = file_get_contents($tempPdfPath);
+                
+                Log::info('PDF file read', [
+                    'file_size' => strlen($pdfData),
+                    'file_exists' => file_exists($tempPdfPath)
+                ]);
                 
                 // Obriši privremeni PDF fajl
                 @unlink($tempPdfPath);
