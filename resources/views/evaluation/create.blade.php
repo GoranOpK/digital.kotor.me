@@ -217,28 +217,173 @@
         margin-top: 12px;
     }
     @media print {
-        body {
+        * {
             margin: 0;
             padding: 0;
+        }
+        body {
             background: #fff;
+            font-family: Arial, sans-serif;
+            font-size: 12pt;
+            line-height: 1.5;
         }
         .container {
             padding: 0;
+            max-width: 100%;
         }
         .evaluation-page {
             background: #fff;
             padding: 0;
         }
         .page-header {
-            background: #0B3D91 !important;
-            color: #fff !important;
-            padding: 24px;
-            margin-bottom: 24px;
+            display: none !important;
         }
         .form-card {
             box-shadow: none;
-            padding: 40px;
+            padding: 0;
             background: #fff;
+            border: none;
+        }
+        .form-title {
+            text-align: center;
+            font-size: 14pt;
+            font-weight: bold;
+            margin-bottom: 4pt;
+            text-transform: uppercase;
+        }
+        .form-subtitle {
+            text-align: center;
+            font-size: 10pt;
+            margin-bottom: 16pt;
+            font-style: italic;
+        }
+        .form-section {
+            margin-bottom: 16pt;
+        }
+        .form-label,
+        .form-label-large {
+            font-size: 11pt;
+            font-weight: bold;
+            margin-bottom: 4pt;
+        }
+        .form-control,
+        .form-control-readonly {
+            border: none;
+            border-bottom: 1px solid #000;
+            background: transparent;
+            padding: 2pt 0;
+            font-size: 11pt;
+            border-radius: 0;
+        }
+        .form-control-readonly {
+            border-bottom: 1px solid #000;
+        }
+        .radio-group {
+            margin-top: 4pt;
+        }
+        .radio-option {
+            display: inline-block;
+            margin-right: 16pt;
+        }
+        input[type="radio"] {
+            margin-right: 4pt;
+        }
+        .info-box {
+            background: transparent;
+            border: none;
+            border-left: none;
+            padding: 8pt 0;
+            margin-bottom: 12pt;
+            font-size: 10pt;
+        }
+        .warning-box {
+            background: transparent;
+            border: none;
+            border-left: none;
+            padding: 8pt 0;
+            margin-bottom: 12pt;
+            font-size: 10pt;
+        }
+        .evaluation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12pt 0;
+            font-size: 10pt;
+            page-break-inside: avoid;
+        }
+        .evaluation-table th,
+        .evaluation-table td {
+            border: 1px solid #000;
+            padding: 6pt 4pt;
+            text-align: center;
+        }
+        .evaluation-table th {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+        .evaluation-table .criterion-col {
+            text-align: left;
+            padding: 6pt;
+        }
+        .evaluation-table .score-input {
+            border: none;
+            background: transparent;
+            width: 30pt;
+            text-align: center;
+            font-size: 10pt;
+        }
+        .evaluation-table .average-col {
+            background: #f0f0f0;
+            font-weight: bold;
+        }
+        .evaluation-table .final-score-row {
+            background: #000;
+            color: #fff;
+            font-weight: bold;
+        }
+        .evaluation-table .final-score-row td {
+            background: #000;
+            color: #fff;
+        }
+        textarea {
+            border: 1px solid #000;
+            background: transparent;
+            padding: 4pt;
+            font-size: 11pt;
+            min-height: 60pt;
+            width: 100%;
+            border-radius: 0;
+        }
+        input[type="date"] {
+            border: none;
+            border-bottom: 1px solid #000;
+            background: transparent;
+            padding: 2pt 0;
+            font-size: 11pt;
+        }
+        .signature-section {
+            margin-top: 32pt;
+            padding-top: 16pt;
+            border-top: 1px solid #000;
+            page-break-inside: avoid;
+        }
+        .signature-row {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 24pt;
+        }
+        .signature-item {
+            width: 140pt;
+            text-align: center;
+        }
+        .signature-item > div:first-child {
+            font-weight: bold;
+            margin-bottom: 4pt;
+        }
+        .signature-item > div:last-child {
+            margin-top: 32pt;
+            border-top: 1px solid #000;
+            padding-top: 4pt;
         }
         .btn-primary,
         button[type="submit"],
@@ -246,15 +391,9 @@
         a[href] {
             display: none !important;
         }
-        .evaluation-table {
-            page-break-inside: avoid;
-        }
-        .signature-section {
-            page-break-inside: avoid;
-        }
         @page {
             size: A4;
-            margin: 15mm;
+            margin: 20mm;
         }
     }
 </style>
