@@ -349,10 +349,10 @@
                 <div class="signature-row">
                     @foreach($allMembers as $member)
                         <div class="signature-item">
-                            <div style="font-weight: 600; margin-bottom: 8px;">
+                            <div style="font-weight: 600; margin-bottom: 8px; text-align: center;">
                                 {{ $member->position === 'predsjednik' ? 'Predsjednik Komisije' : 'Član ' . ($loop->index) }}:
                             </div>
-                            <div style="margin-top: 40px; border-top: 1px solid #d1d5db; padding-top: 8px;">
+                            <div style="margin-top: 40px; border-top: 1px solid #d1d5db; padding-top: 8px; text-align: center;">
                                 {{ $member->name }}
                             </div>
                         </div>
