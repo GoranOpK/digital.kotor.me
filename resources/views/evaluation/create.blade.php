@@ -299,6 +299,9 @@
             border: none !important;
             background: transparent !important;
         }
+        .form-title {
+            margin-top: 20mm !important;
+        }
         @page {
             size: A4;
             margin: 25mm;
