@@ -236,10 +236,12 @@
         }
         .form-section {
             margin-bottom: 8px;
-            page-break-inside: avoid;
+        }
+        .form-label-large {
+            page-break-after: avoid;
         }
         .evaluation-table {
-            page-break-inside: avoid;
+            page-break-inside: auto;
         }
         .evaluation-table thead {
             display: table-header-group;
@@ -249,14 +251,18 @@
         }
         .evaluation-table tr {
             page-break-inside: avoid;
-            page-break-after: auto;
         }
         .evaluation-table th,
         .evaluation-table td {
             padding: 6px 4px;
         }
+        .info-box,
+        .warning-box {
+            page-break-inside: avoid;
+        }
         .signature-section {
             page-break-inside: avoid;
+            page-break-before: auto;
         }
         @page {
             size: A4;
