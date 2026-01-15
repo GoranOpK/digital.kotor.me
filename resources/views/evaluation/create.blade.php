@@ -264,9 +264,14 @@
             page-break-inside: avoid;
             page-break-before: auto;
         }
+        .form-control-readonly,
+        textarea.form-control {
+            border: none !important;
+            background: transparent !important;
+        }
         @page {
             size: A4;
-            margin: 20mm 25mm 25mm 25mm;
+            margin: 25mm;
         }
     }
 </style>
@@ -329,7 +334,7 @@
                     
                     <div class="info-box">
                         <strong>KRITERIJUMI ZA OCJENU</strong><br>
-                        (Član 18 stav 2 Odluke)<br><br>
+                        (Član 18 stav 2 Odluke)<br>
                         Komisija dodijeljuje ocjenu za biznis plan na skali od 1 do 5, pri čemu je:<br>
                         1 = uopšte ne odgovara navedenom,<br>
                         5 = u potpunosti odgovara navedenom.
