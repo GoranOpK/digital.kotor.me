@@ -250,6 +250,9 @@
         .form-label-large {
             page-break-after: avoid;
         }
+        .form-title {
+            margin-top: 15mm !important;
+        }
         .evaluation-table {
             page-break-inside: auto;
             page-break-after: always;
@@ -298,9 +301,6 @@
         textarea.form-control {
             border: none !important;
             background: transparent !important;
-        }
-        .form-title {
-            margin-top: 20mm !important;
         }
         @page {
             size: A4;
