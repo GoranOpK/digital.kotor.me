@@ -308,7 +308,7 @@
 <div class="evaluation-page">
     <div class="container mx-auto px-4">
         <div class="page-header">
-            <h1>Pregled ocjene</h1>
+            <h1>Pregled liste za ocjenjivanje Biznis planova</h1>
             <p class="subtitle">{{ $application->business_plan_name }}</p>
         </div>
 
