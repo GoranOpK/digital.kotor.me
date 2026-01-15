@@ -274,6 +274,10 @@
         .evaluation-table th {
             font-weight: bold !important;
         }
+        .evaluation-table .average-col {
+            font-weight: bold !important;
+            color: #000 !important;
+        }
         .evaluation-table .final-score-row td {
             font-weight: bold !important;
             color: #000 !important;
