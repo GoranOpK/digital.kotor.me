@@ -127,16 +127,16 @@
     }
     .evaluation-table .final-score-row {
         background: var(--primary);
-        color: #000 !important;
+        color: #fff !important;
         font-weight: bold !important;
     }
     .evaluation-table .final-score-row .average-col {
         font-weight: bold !important;
-        color: #000 !important;
+        color: #fff !important;
     }
     .evaluation-table .final-score-row td {
         background: var(--primary);
-        color: #000 !important;
+        color: #fff !important;
         font-weight: bold !important;
     }
     .signature-section {
