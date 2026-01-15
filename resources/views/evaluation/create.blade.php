@@ -216,6 +216,62 @@
         max-width: 200px;
         margin-top: 12px;
     }
+    @media print {
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .evaluation-page {
+            background: #fff;
+            padding: 0;
+        }
+        .page-header {
+            background: #0B3D91 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            page-break-after: avoid;
+        }
+        .form-card {
+            box-shadow: none;
+            padding: 20px;
+            max-width: 100%;
+        }
+        .btn-primary,
+        button[type="submit"],
+        a[href] {
+            display: none !important;
+        }
+        .evaluation-table {
+            page-break-inside: avoid;
+        }
+        .evaluation-table th,
+        .evaluation-table td {
+            border: 1px solid #000 !important;
+        }
+        .signature-section {
+            page-break-inside: avoid;
+            margin-top: 40px;
+        }
+        .info-box,
+        .warning-box {
+            page-break-inside: avoid;
+        }
+        input[type="radio"],
+        input[type="number"],
+        input[type="date"],
+        textarea,
+        select {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            -webkit-appearance: none;
+            -moz-appearance: textfield;
+        }
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+    }
 </style>
 
 <div class="evaluation-page">
@@ -475,6 +531,7 @@
 
                 <div style="margin-top: 32px; text-align: center;">
                     <button type="submit" class="btn-primary">Sačuvaj ocjenu</button>
+                    <button type="button" onclick="window.print()" class="btn-primary" style="margin-left: 12px;">Štampaj</button>
                     <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                 </div>
             </form>

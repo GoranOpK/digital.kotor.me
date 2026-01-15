@@ -174,6 +174,50 @@
         min-height: 100px;
         white-space: pre-wrap;
     }
+    @media print {
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .evaluation-page {
+            background: #fff;
+            padding: 0;
+        }
+        .page-header {
+            background: #0B3D91 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            page-break-after: avoid;
+        }
+        .form-card {
+            box-shadow: none;
+            padding: 20px;
+            max-width: 100%;
+        }
+        .btn-primary,
+        a[href] {
+            display: none !important;
+        }
+        .evaluation-table {
+            page-break-inside: avoid;
+        }
+        .evaluation-table th,
+        .evaluation-table td {
+            border: 1px solid #000 !important;
+        }
+        .signature-section {
+            page-break-inside: avoid;
+            margin-top: 40px;
+        }
+        .info-box,
+        .warning-box {
+            page-break-inside: avoid;
+        }
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+    }
 </style>
 
 <div class="evaluation-page">
@@ -361,7 +405,8 @@
             </div>
 
             <div style="margin-top: 32px; text-align: center;">
-                <a href="{{ route('evaluation.create', $application) }}" class="btn-primary">Izmijeni ocjenu</a>
+                <a href="{{ route('evaluation.create', $application) }}" class="btn-primary">Izmijeni</a>
+                <button type="button" onclick="window.print()" class="btn-primary" style="margin-left: 12px;">Štampaj</button>
                 <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Nazad na listu</a>
             </div>
         </div>
