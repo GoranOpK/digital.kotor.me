@@ -175,9 +175,14 @@
         color: #fff !important;
         font-weight: bold !important;
     }
-    .justification-section textarea,
+    .justification-section textarea.form-control {
+        padding-left: 2em !important;
+        padding-right: 14px !important;
+        margin-left: 0 !important;
+    }
     .justification-section .readonly-value {
-        padding-left: 2.5em !important;
+        padding-left: 2em !important;
+        margin-left: 0 !important;
     }
     .signature-section {
         margin-top: 48px;
@@ -260,9 +265,14 @@
         .form-section .readonly-value {
             text-align: left !important;
         }
-        .justification-section textarea,
+        .justification-section textarea.form-control {
+            padding-left: 2em !important;
+            padding-right: 0 !important;
+            margin-left: 0 !important;
+        }
         .justification-section .readonly-value {
-            padding-left: 2.5em !important;
+            padding-left: 2em !important;
+            margin-left: 0 !important;
         }
         .commission-decision-section {
             margin-top: 20mm !important;

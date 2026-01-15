@@ -176,9 +176,14 @@
         border-radius: 8px;
         color: #111827;
     }
-    .justification-section textarea,
+    .justification-section textarea.form-control {
+        padding-left: 2em !important;
+        padding-right: 14px !important;
+        margin-left: 0 !important;
+    }
     .justification-section .readonly-value {
-        padding-left: 2.5em !important;
+        padding-left: 2em !important;
+        margin-left: 0 !important;
     }
     .form-section .readonly-value {
         padding: 0 !important;
