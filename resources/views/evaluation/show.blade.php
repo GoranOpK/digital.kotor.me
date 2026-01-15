@@ -175,6 +175,7 @@
         white-space: pre-wrap;
     }
     @media print {
+        nav,
         .page-header,
         .btn-primary,
         button,
@@ -190,6 +191,9 @@
         .form-card {
             padding: 20px;
             box-shadow: none;
+        }
+        .form-section {
+            margin-bottom: 16px;
         }
         @page {
             size: A4;
