@@ -121,7 +121,7 @@
     .evaluation-table th,
     .evaluation-table td {
         border: 1px solid #e5e7eb;
-        padding: 12px 8px;
+        padding: 6px 4px;
         text-align: center;
     }
     .evaluation-table th {
@@ -137,7 +137,7 @@
         text-align: left;
         font-size: 12px;
         width: 40%;
-        padding: 12px;
+        padding: 6px;
     }
     .evaluation-table .score-input {
         width: 60px;
@@ -266,7 +266,7 @@
         }
         @page {
             size: A4;
-            margin: 25mm;
+            margin: 20mm 25mm 25mm 25mm;
         }
     }
 </style>
