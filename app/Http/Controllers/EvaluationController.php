@@ -38,7 +38,7 @@ class EvaluationController extends Controller
             $query->where('competition_id', $request->competition_id);
         }
 
-        // Prijave koje korisnik još nije ocjenio
+        // Prijave koje član komisije još nije ocjenio
         $evaluatedApplicationIds = EvaluationScore::where('commission_member_id', $commissionMember->id)
             ->pluck('application_id')
             ->toArray();
