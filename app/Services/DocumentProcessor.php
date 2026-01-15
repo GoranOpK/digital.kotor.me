@@ -179,7 +179,6 @@ class DocumentProcessor
             $mergedPdf->setResolution(300, 300);
 
             $tempFiles = [];
-            $allPagesProcessed = true;
 
             try {
                 // Procesiraj svaki fajl i dodaj u merged PDF
@@ -246,25 +245,64 @@ class DocumentProcessor
                 $mergedPdf->setImageCompressionQuality(70);
                 $mergedPdf->setOption('pdf:use-trimbox', 'true');
 
+                // Kreiraj privremeni fajl za PDF
+                $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('merged_pdf_', true) . '.pdf';
+                
                 // Spoji sve stranice u jedan PDF koristeći writeImages
+                // writeImages sa jednim fajlom automatski spaja sve slike u jedan multi-page PDF
                 $mergedPdf->setFirstIterator();
-                $pdfData = $mergedPdf->getImagesBlob();
+                $result = $mergedPdf->writeImages($tempPdfPath, false);
+                
+                if (!$result) {
+                    $mergedPdf->clear();
+                    $mergedPdf->destroy();
+                    return [
+                        'success' => false,
+                        'error' => 'Greška pri kreiranju PDF fajla.',
+                    ];
+                }
+
+                // Pročitaj generisani PDF
+                if (!file_exists($tempPdfPath)) {
+                    $mergedPdf->clear();
+                    $mergedPdf->destroy();
+                    return [
+                        'success' => false,
+                        'error' => 'PDF fajl nije kreiran.',
+                    ];
+                }
+                
+                $pdfData = file_get_contents($tempPdfPath);
+                
+                // Obriši privremeni PDF fajl
+                @unlink($tempPdfPath);
 
                 $mergedPdf->clear();
                 $mergedPdf->destroy();
 
                 // Proveri da li je PDF validan
                 if ($pdfData === false || empty($pdfData) || strlen($pdfData) < 100) {
+                    Log::error('Merged PDF data is invalid or too small', [
+                        'data_length' => $pdfData ? strlen($pdfData) : 0,
+                        'files_count' => count($files)
+                    ]);
                     return [
                         'success' => false,
                         'error' => 'Greška pri spajanju fajlova u PDF.',
                     ];
                 }
 
+                // Proveri da li PDF počinje sa validnim PDF header-om
+                $pdfHeader = substr($pdfData, 0, 8);
                 if (strpos($pdfData, '%PDF') !== 0) {
+                    Log::error('Merged PDF does not start with valid PDF header', [
+                        'header' => $pdfHeader,
+                        'data_length' => strlen($pdfData),
+                        'files_count' => count($files)
+                    ]);
                     return [
                         'success' => false,
-                        'error' => 'Spojeni PDF nije validan.',
+                        'error' => 'Spojeni PDF nije validan. Header: ' . $pdfHeader,
                     ];
                 }
 
