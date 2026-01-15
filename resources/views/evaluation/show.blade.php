@@ -210,6 +210,7 @@
         }
         .evaluation-table {
             page-break-inside: auto;
+            page-break-after: always;
         }
         .evaluation-table thead {
             display: table-header-group;
@@ -254,7 +255,6 @@
             margin-top: 20mm !important;
             padding-left: 0 !important;
             padding-right: 0 !important;
-            page-break-after: always;
         }
         .form-section {
             padding-left: 0 !important;
