@@ -175,6 +175,10 @@
         color: #fff !important;
         font-weight: bold !important;
     }
+    .justification-section textarea,
+    .justification-section .readonly-value {
+        padding-left: 2.5em !important;
+    }
     .signature-section {
         margin-top: 48px;
         padding-top: 32px;
@@ -255,6 +259,10 @@
         }
         .form-section .readonly-value {
             text-align: left !important;
+        }
+        .justification-section textarea,
+        .justification-section .readonly-value {
+            padding-left: 2.5em !important;
         }
         .commission-decision-section {
             margin-top: 20mm !important;
@@ -542,7 +550,7 @@
                 </div>
 
                 <!-- 5. Obrazloženje -->
-                <div class="form-section">
+                <div class="form-section justification-section">
                     <label class="form-label form-label-large">5. Obrazloženje:</label>
                     <textarea 
                         name="justification" 

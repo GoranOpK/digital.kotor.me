@@ -176,6 +176,10 @@
         border-radius: 8px;
         color: #111827;
     }
+    .justification-section textarea,
+    .justification-section .readonly-value {
+        padding-left: 2.5em !important;
+    }
     .form-section .readonly-value {
         padding: 0 !important;
         font-size: 14px;
@@ -446,7 +450,7 @@
             </div>
 
             <!-- 5. Obrazloženje -->
-            <div class="form-section">
+            <div class="form-section justification-section">
                 <label class="form-label form-label-large">5. Obrazloženje:</label>
                 <div class="readonly-value">
                     {{ $evaluationScore->justification ?? $application->commission_justification ?? 'Nema obrazloženja' }}
