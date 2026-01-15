@@ -297,7 +297,7 @@
             <!-- Upload sekcija -->
             <div class="upload-section">
             <h2>Dodaj novi dokument</h2>
-            <form action="{{ route('documents.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('documents.store') }}" method="POST" enctype="multipart/form-data" id="document-upload-form">
                 @csrf
                 <div class="form-group">
                     <label for="name" class="form-label">Naziv dokumenta <span style="color: #ef4444;">*</span></label>
@@ -314,16 +314,16 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="file" class="form-label">Fajl <span style="color: #ef4444;">*</span></label>
+                    <label for="file" class="form-label">Fajlovi <span style="color: #ef4444;">*</span></label>
                     <div class="file-input-wrapper">
-                        <input type="file" name="file" id="file" required 
+                        <input type="file" name="files[]" id="file" required multiple
                                accept="image/jpeg,image/png,image/jpg,application/pdf"
-                               onchange="if(this.files[0]) { document.getElementById('file-label').textContent = this.files[0].name; document.getElementById('file-name').textContent = this.files[0].name; document.getElementById('file-name').style.display = 'block'; } else { document.getElementById('file-label').textContent = 'Izaberi fajl'; document.getElementById('file-name').style.display = 'none'; }">
-                        <label for="file" class="file-input-label" id="file-label">Izaberi fajl</label>
-                        <div id="file-name" class="file-name-display" style="display: none;"></div>
+                               onchange="updateFileDisplay(this)">
+                        <label for="file" class="file-input-label" id="file-label">Izaberi fajlove (možete izabrati više)</label>
+                        <div id="file-names" class="file-name-display" style="display: none; margin-top: 8px;"></div>
                     </div>
                     <small style="color: #6b7280; display: block; margin-top: 4px;">
-                        Dozvoljeni formati: JPEG, PNG, PDF (max 10MB). Dokument će biti automatski konvertovan u greyscale PDF format sa 300 DPI rezolucijom.
+                        Dozvoljeni formati: JPEG, PNG, PDF (max 10MB po fajlu). Dokumenti će biti automatski konvertovani u greyscale PDF format sa 300 DPI rezolucijom.
                     </small>
                 </div>
                 <div class="form-group">
@@ -402,7 +402,98 @@
 </div>
 
 <script>
+// Čuva prethodno izabrane fajlove
+let selectedFiles = [];
+
+// Funkcija za prikaz izabranih fajlova
+function updateFileDisplay(input) {
+    const fileNamesDiv = document.getElementById('file-names');
+    const fileLabel = document.getElementById('file-label');
+    
+    // Dodaj nove fajlove u listu (izbegni duplikate)
+    if (input.files && input.files.length > 0) {
+        const newFiles = Array.from(input.files);
+        
+        // Proveri da li fajl već postoji (po imenu i veličini)
+        newFiles.forEach(newFile => {
+            const exists = selectedFiles.some(existingFile => 
+                existingFile.name === newFile.name && existingFile.size === newFile.size
+            );
+            
+            if (!exists) {
+                selectedFiles.push(newFile);
+            }
+        });
+        
+        // Kreiraj novi DataTransfer objekat sa svim fajlovima
+        const dataTransfer = new DataTransfer();
+        selectedFiles.forEach(file => {
+            dataTransfer.items.add(file);
+        });
+        
+        // Postavi novi FileList na input
+        input.files = dataTransfer.files;
+    }
+    
+    // Prikaži sve izabrane fajlove
+    if (selectedFiles.length > 0) {
+        let fileList = '<div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 4px;">Izabrano fajlova: ' + selectedFiles.length + '</div>';
+        fileList += '<ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #6b7280;">';
+        
+        selectedFiles.forEach((file, index) => {
+            const fileSize = (file.size / 1024 / 1024).toFixed(2);
+            fileList += '<li style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">';
+            fileList += '<span>' + file.name + ' (' + fileSize + ' MB)</span>';
+            fileList += '<button type="button" onclick="removeFile(' + index + ')" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 2px 8px; font-size: 11px; cursor: pointer; margin-left: 8px;">Ukloni</button>';
+            fileList += '</li>';
+        });
+        
+        fileList += '</ul>';
+        fileNamesDiv.innerHTML = fileList;
+        fileNamesDiv.style.display = 'block';
+        
+        if (selectedFiles.length === 1) {
+            fileLabel.textContent = selectedFiles[0].name;
+        } else {
+            fileLabel.textContent = 'Izabrano ' + selectedFiles.length + ' fajlova';
+        }
+    } else {
+        fileNamesDiv.style.display = 'none';
+        fileLabel.textContent = 'Izaberi fajlove (možete izabrati više)';
+    }
+}
+
+// Funkcija za uklanjanje fajla iz liste
+function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    
+    // Ažuriraj input sa preostalim fajlovima
+    const input = document.getElementById('file');
+    const dataTransfer = new DataTransfer();
+    selectedFiles.forEach(file => {
+        dataTransfer.items.add(file);
+    });
+    input.files = dataTransfer.files;
+    
+    // Ažuriraj prikaz
+    updateFileDisplay(input);
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Resetuj listu fajlova nakon uspešnog submit-a
+    const form = document.getElementById('document-upload-form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            // Resetuj listu nakon kratke pauze (da forma stigne da se pošalje)
+            setTimeout(function() {
+                selectedFiles = [];
+                const input = document.getElementById('file');
+                input.value = '';
+                updateFileDisplay(input);
+            }, 100);
+        });
+    }
+    
     // Funkcija za ažuriranje statusa dokumenta u DOM-u
     function updateDocumentStatus(documentId, status, processedAt) {
         console.log('updateDocumentStatus pozvan:', { documentId, status, processedAt });
