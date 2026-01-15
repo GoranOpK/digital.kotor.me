@@ -290,9 +290,47 @@ class EvaluationController extends Controller
             return redirect()->route('evaluation.create', $application);
         }
 
+        // Učitaj komisiju sa svim članovima
+        $commission = $commissionMember->commission;
+        $allMembers = $commission->members()
+            ->where('status', 'active')
+            ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
+            ->orderBy('id')
+            ->get();
+
+        // Učitaj sve postojeće ocjene za ovu prijavu
+        $allScores = EvaluationScore::where('application_id', $application->id)
+            ->whereIn('commission_member_id', $allMembers->pluck('id'))
+            ->with('commissionMember')
+            ->get()
+            ->keyBy('commission_member_id');
+
+        // Izračunaj prosječne ocjene za svaki kriterijum
+        $averageScores = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $scores = $allScores->pluck("criterion_{$i}")->filter()->values();
+            if ($scores->count() > 0) {
+                $averageScores[$i] = round($scores->sum() / $scores->count(), 2);
+            } else {
+                $averageScores[$i] = null;
+            }
+        }
+
+        // Izračunaj konačnu ocjenu (zbir prosječnih ocjena)
+        $finalScore = array_sum(array_filter($averageScores));
+
         $application->load(['user', 'competition', 'businessPlan']);
 
-        return view('evaluation.show', compact('application', 'commissionMember', 'evaluationScore'));
+        return view('evaluation.show', compact(
+            'application', 
+            'commissionMember', 
+            'evaluationScore',
+            'allMembers',
+            'allScores',
+            'averageScores',
+            'finalScore',
+            'commission'
+        ));
     }
 
     /**
