@@ -184,7 +184,6 @@
     .signature-item {
         width: 180px;
         padding-bottom: 40px;
-        border-bottom: 1px solid #d1d5db;
     }
     .btn-primary {
         background: var(--primary);
