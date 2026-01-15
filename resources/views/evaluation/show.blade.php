@@ -130,6 +130,10 @@
         color: #fff;
         font-weight: 700;
     }
+    .evaluation-table .final-score-row .average-col {
+        font-weight: bold !important;
+        color: #000 !important;
+    }
     .evaluation-table .final-score-row td {
         background: var(--primary);
         color: #fff;
@@ -221,6 +225,10 @@
         }
         .evaluation-table .final-score-row td {
             font-weight: bold !important;
+        }
+        .evaluation-table .final-score-row .average-col {
+            font-weight: bold !important;
+            color: #000 !important;
         }
         .info-box,
         .warning-box {
