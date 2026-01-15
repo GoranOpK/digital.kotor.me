@@ -29,6 +29,12 @@ class DocumentController extends Controller
     {
         $user = Auth::user();
         
+        // Proveri i ažuriraj stvarno iskorišćen prostor
+        $storageCheck = $this->documentProcessor->recalculateUserStorage($user->id);
+        
+        // Osveži korisnika da dobijemo ažurirane podatke
+        $user->refresh();
+        
         // Grupiši dokumente po kategorijama (najnoviji na vrhu unutar svake kategorije)
         $documents = UserDocument::where('user_id', $user->id)
             ->orderBy('created_at', 'desc') // Prvo sortiraj po datumu (najnoviji na vrhu)

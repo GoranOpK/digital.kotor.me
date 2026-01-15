@@ -142,6 +142,68 @@ class DocumentProcessor
     }
 
     /**
+     * Proverava i ažurira stvarno iskorišćen prostor za korisnika
+     * Računa na osnovu stvarnih fajlova na disku
+     *
+     * @param int $userId
+     * @return array ['actual_size' => int, 'stored_size' => int, 'updated' => bool]
+     */
+    public function recalculateUserStorage(int $userId): array
+    {
+        $user = \App\Models\User::find($userId);
+        if (!$user) {
+            return [
+                'actual_size' => 0,
+                'stored_size' => 0,
+                'updated' => false,
+            ];
+        }
+
+        $actualSize = 0;
+        $documents = \App\Models\UserDocument::where('user_id', $userId)->get();
+
+        foreach ($documents as $document) {
+            // Proveri obrađeni fajl
+            if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
+                $actualSize += Storage::disk('local')->size($document->file_path);
+            }
+            
+            // Proveri originalni fajl (ako postoji i nije obrisan)
+            if ($document->original_file_path) {
+                // Ako je original_file_path string sa više putanja (odvojeno sa |)
+                $originalPaths = explode('|', $document->original_file_path);
+                foreach ($originalPaths as $path) {
+                    if (Storage::disk('local')->exists($path)) {
+                        $actualSize += Storage::disk('local')->size($path);
+                    }
+                }
+            }
+        }
+
+        $storedSize = $user->used_storage_bytes ?? 0;
+        $updated = false;
+
+        if ($actualSize != $storedSize) {
+            $user->used_storage_bytes = $actualSize;
+            $user->save();
+            $updated = true;
+
+            Log::info('Storage recalculated for user', [
+                'user_id' => $userId,
+                'old_size' => $storedSize,
+                'new_size' => $actualSize,
+                'difference' => $actualSize - $storedSize,
+            ]);
+        }
+
+        return [
+            'actual_size' => $actualSize,
+            'stored_size' => $storedSize,
+            'updated' => $updated,
+        ];
+    }
+
+    /**
      * Spaja više fajlova u jedan PDF dokument
      *
      * @param array $files Array of \Illuminate\Http\UploadedFile objects
