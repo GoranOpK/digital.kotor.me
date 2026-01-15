@@ -599,7 +599,7 @@
                 </div>
 
                 <div style="margin-top: 32px; text-align: center;">
-                    <button type="submit" class="btn-primary">Sačuvaj ocjenu</button>
+                    <button type="submit" class="btn-primary">Ocijeni</button>
                     <button type="button" onclick="window.print()" class="btn-primary" style="margin-left: 12px;">Štampaj</button>
                     <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                 </div>
