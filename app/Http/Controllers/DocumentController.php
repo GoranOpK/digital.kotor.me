@@ -76,13 +76,19 @@ class DocumentController extends Controller
         $directory = "documents/user_{$user->id}";
         $date = now()->format('Ymd');
         
+        // Ako ima više fajlova, spoji ih u jedan PDF
+        if (count($files) > 1) {
+            return $this->handleMultipleFilesMerge($files, $user, $request, $directory, $date);
+        }
+        
+        // Ako ima samo jedan fajl, koristi postojeću logiku
+        $file = $files[0];
         $uploadedCount = 0;
         $queuedCount = 0;
         $failedCount = 0;
         $errors = [];
 
-        // Obradi svaki fajl
-        foreach ($files as $file) {
+        try {
             try {
                 // Generiši jedinstveno ime za izvorni fajl
                 $randomString = bin2hex(random_bytes(4));
@@ -236,6 +242,165 @@ class DocumentController extends Controller
 
         return redirect()->route('documents.index')
             ->with('success', trim($message));
+    }
+
+    /**
+     * Obrađuje više fajlova i spaja ih u jedan PDF
+     */
+    private function handleMultipleFilesMerge(array $files, $user, Request $request, string $directory, string $date): RedirectResponse
+    {
+        try {
+            // Proveri ukupnu veličinu svih fajlova
+            $totalSize = 0;
+            foreach ($files as $file) {
+                $totalSize += $file->getSize();
+            }
+            
+            // Proveri da li korisnik ima dovoljno prostora
+            if (!$this->documentProcessor->hasEnoughStorage($user->id, $totalSize)) {
+                return back()->withErrors([
+                    'files' => 'Nemate dovoljno prostora za sve fajlove. Maksimalno dozvoljeno: 20 MB. Trenutno korišćeno: ' . 
+                             round(($user->used_storage_bytes ?? 0) / 1024 / 1024, 2) . ' MB'
+                ])->withInput();
+            }
+
+            // Sačuvaj sve originalne fajlove privremeno
+            $originalFilePaths = [];
+            $totalOriginalSize = 0;
+            $tempFiles = [];
+            
+            foreach ($files as $index => $file) {
+                $randomString = bin2hex(random_bytes(4));
+                $baseFilename = "{$user->id}-{$date}-{$randomString}";
+                $originalExtension = $file->getClientOriginalExtension();
+                $originalFilename = "{$baseFilename}_original.{$originalExtension}";
+                $originalFilePath = "{$directory}/{$originalFilename}";
+                
+                Storage::disk('local')->putFileAs($directory, $file, $originalFilename);
+                $originalFilePaths[] = $originalFilePath;
+                $totalOriginalSize += $file->getSize();
+                
+                // Kreiraj privremeni UploadedFile za merge
+                $fileContent = Storage::disk('local')->get($originalFilePath);
+                $tempFilePath = sys_get_temp_dir() . '/' . uniqid('merge_', true) . '_' . basename($originalFilePath);
+                file_put_contents($tempFilePath, $fileContent);
+                
+                $mimeType = mime_content_type($tempFilePath) ?: 'application/octet-stream';
+                $tempFiles[] = new \Illuminate\Http\UploadedFile(
+                    $tempFilePath,
+                    basename($originalFilePath),
+                    $mimeType,
+                    null,
+                    true
+                );
+            }
+
+            // Ažuriraj korišćen prostor za originalne fajlove
+            $this->documentProcessor->updateUserStorage($user->id, $totalOriginalSize);
+
+            // Generiši ime za spojeni PDF
+            $randomString = bin2hex(random_bytes(4));
+            $baseFilename = "{$user->id}-{$date}-{$randomString}";
+
+            // Kreiraj zapis u bazi sa statusom 'processing'
+            $document = UserDocument::create([
+                'user_id' => $user->id,
+                'category' => $request->category,
+                'name' => $request->name,
+                'original_file_path' => implode('|', $originalFilePaths), // Sačuvaj sve putanje odvojeno sa |
+                'original_filename' => count($files) . ' fajlova',
+                'file_size' => $totalOriginalSize,
+                'expires_at' => $request->expires_at,
+                'status' => 'processing',
+            ]);
+
+            // Direktna obrada (za sada, queue može biti dodato kasnije)
+            return $this->processMergeDirectly($document, $tempFiles, $user, $baseFilename, $originalFilePaths);
+
+        } catch (\Exception $e) {
+            Log::error('Multiple files merge failed', [
+                'user_id' => $user->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return back()->withErrors(['files' => 'Greška pri spajanju fajlova: ' . $e->getMessage()])->withInput();
+        }
+    }
+
+    /**
+     * Direktno procesira spajanje fajlova
+     */
+    private function processMergeDirectly($document, array $tempFiles, $user, string $baseFilename, array $originalFilePaths): RedirectResponse
+    {
+        try {
+            // Mala pauza da bi JavaScript stigao da pročita "processing" status
+            usleep(500000); // 0.5 sekunde pauza
+
+            // Spoji fajlove u jedan PDF
+            $result = $this->documentProcessor->mergeDocuments($tempFiles, $user->id, $baseFilename);
+
+            // Obriši privremene fajlove
+            foreach ($tempFiles as $tempFile) {
+                if ($tempFile->getRealPath() && file_exists($tempFile->getRealPath())) {
+                    @unlink($tempFile->getRealPath());
+                }
+            }
+
+            if (!$result['success']) {
+                $document->update(['status' => 'failed']);
+                return back()->withErrors(['files' => $result['error'] ?? 'Greška pri spajanju fajlova.'])->withInput();
+            }
+
+            // Proveri da li korisnik ima dovoljno prostora za spojeni PDF
+            if (!$this->documentProcessor->hasEnoughStorage($user->id, $result['file_size'])) {
+                Storage::disk('local')->delete($result['file_path']);
+                $document->update(['status' => 'failed']);
+                
+                return back()->withErrors([
+                    'files' => 'Nemate dovoljno prostora za spojeni PDF. Maksimalno dozvoljeno: 20 MB.'
+                ])->withInput();
+            }
+
+            // Ažuriraj dokument sa putanjom do spojenog PDF-a
+            $document->update([
+                'file_path' => $result['file_path'],
+                'file_size' => $result['file_size'],
+                'status' => 'processed',
+                'processed_at' => now(),
+            ]);
+
+            // Ažuriraj korišćen prostor (dodaj razliku između spojenog PDF-a i originalnih fajlova)
+            $originalTotalSize = 0;
+            foreach ($originalFilePaths as $path) {
+                if (Storage::disk('local')->exists($path)) {
+                    $originalTotalSize += Storage::disk('local')->size($path);
+                }
+            }
+            
+            // Oduzmi originalne fajlove i dodaj spojeni PDF
+            $this->documentProcessor->updateUserStorage($user->id, -$originalTotalSize);
+            $this->documentProcessor->updateUserStorage($user->id, $result['file_size']);
+
+            // Obriši originalne fajlove (sada imamo spojeni PDF)
+            foreach ($originalFilePaths as $path) {
+                if (Storage::disk('local')->exists($path)) {
+                    Storage::disk('local')->delete($path);
+                }
+            }
+
+            return redirect()->route('documents.index')
+                ->with('success', 'Fajlovi su uspješno spojeni u jedan PDF dokument i obrađeni.');
+
+        } catch (\Exception $e) {
+            Log::error('Direct merge processing failed', [
+                'document_id' => $document->id,
+                'error' => $e->getMessage()
+            ]);
+
+            $document->update(['status' => 'failed']);
+            return back()->withErrors(['files' => 'Greška pri spajanju fajlova: ' . $e->getMessage()])->withInput();
+        }
     }
 
     /**

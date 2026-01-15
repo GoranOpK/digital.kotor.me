@@ -325,6 +325,13 @@
                     <small style="color: #6b7280; display: block; margin-top: 4px;">
                         Dozvoljeni formati: JPEG, PNG, PDF (max 10MB po fajlu). Dokumenti će biti automatski konvertovani u greyscale PDF format sa 300 DPI rezolucijom.
                     </small>
+                    <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 12px; border-radius: 4px;">
+                        <strong style="color: #1e40af; display: block; margin-bottom: 4px;">ℹ️ Važno:</strong>
+                        <span style="color: #1e3a8a; font-size: 13px;">
+                            Ako izaberete više fajlova, oni će biti spojeni u <strong>jedan PDF dokument</strong> tim redosledom kako su navedeni. 
+                            Možete promeniti redosled fajlova pomoću dugmadi "Gore" i "Dole" pre upload-a.
+                        </span>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="expires_at" class="form-label">Datum isteka (opciono)</label>
@@ -437,14 +444,32 @@ function updateFileDisplay(input) {
     
     // Prikaži sve izabrane fajlove
     if (selectedFiles.length > 0) {
-        let fileList = '<div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 4px;">Izabrano fajlova: ' + selectedFiles.length + '</div>';
-        fileList += '<ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #6b7280;">';
+        let fileList = '<div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 4px;">Izabrano fajlova: ' + selectedFiles.length + (selectedFiles.length > 1 ? ' (biće spojeni u jedan PDF)' : '') + '</div>';
+        fileList += '<ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #6b7280; list-style: none;">';
         
         selectedFiles.forEach((file, index) => {
             const fileSize = (file.size / 1024 / 1024).toFixed(2);
-            fileList += '<li style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">';
-            fileList += '<span>' + file.name + ' (' + fileSize + ' MB)</span>';
-            fileList += '<button type="button" onclick="removeFile(' + index + ')" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 2px 8px; font-size: 11px; cursor: pointer; margin-left: 8px;">Ukloni</button>';
+            fileList += '<li style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 6px; background: #f9fafb; border-radius: 4px;">';
+            fileList += '<span style="flex: 1;"><strong style="color: var(--primary);">' + (index + 1) + '.</strong> ' + file.name + ' (' + fileSize + ' MB)</span>';
+            fileList += '<div style="display: flex; gap: 4px; margin-left: 8px;">';
+            
+            // Dugme za pomeranje gore
+            if (index > 0) {
+                fileList += '<button type="button" onclick="moveFileUp(' + index + ')" title="Pomeri gore" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬆️</button>';
+            } else {
+                fileList += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬆️</button>';
+            }
+            
+            // Dugme za pomeranje dole
+            if (index < selectedFiles.length - 1) {
+                fileList += '<button type="button" onclick="moveFileDown(' + index + ')" title="Pomeri dole" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬇️</button>';
+            } else {
+                fileList += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬇️</button>';
+            }
+            
+            // Dugme za uklanjanje
+            fileList += '<button type="button" onclick="removeFile(' + index + ')" title="Ukloni" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">✕</button>';
+            fileList += '</div>';
             fileList += '</li>';
         });
         
@@ -455,7 +480,7 @@ function updateFileDisplay(input) {
         if (selectedFiles.length === 1) {
             fileLabel.textContent = selectedFiles[0].name;
         } else {
-            fileLabel.textContent = 'Izabrano ' + selectedFiles.length + ' fajlova';
+            fileLabel.textContent = 'Izabrano ' + selectedFiles.length + ' fajlova (biće spojeni u jedan PDF)';
         }
     } else {
         fileNamesDiv.style.display = 'none';
@@ -477,6 +502,48 @@ function removeFile(index) {
     
     // Ažuriraj prikaz
     updateFileDisplay(input);
+}
+
+// Funkcija za pomeranje fajla gore
+function moveFileUp(index) {
+    if (index > 0) {
+        // Zameni pozicije
+        const temp = selectedFiles[index];
+        selectedFiles[index] = selectedFiles[index - 1];
+        selectedFiles[index - 1] = temp;
+        
+        // Ažuriraj input sa novim redosledom
+        const input = document.getElementById('file');
+        const dataTransfer = new DataTransfer();
+        selectedFiles.forEach(file => {
+            dataTransfer.items.add(file);
+        });
+        input.files = dataTransfer.files;
+        
+        // Ažuriraj prikaz
+        updateFileDisplay(input);
+    }
+}
+
+// Funkcija za pomeranje fajla dole
+function moveFileDown(index) {
+    if (index < selectedFiles.length - 1) {
+        // Zameni pozicije
+        const temp = selectedFiles[index];
+        selectedFiles[index] = selectedFiles[index + 1];
+        selectedFiles[index + 1] = temp;
+        
+        // Ažuriraj input sa novim redosledom
+        const input = document.getElementById('file');
+        const dataTransfer = new DataTransfer();
+        selectedFiles.forEach(file => {
+            dataTransfer.items.add(file);
+        });
+        input.files = dataTransfer.files;
+        
+        // Ažuriraj prikaz
+        updateFileDisplay(input);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {

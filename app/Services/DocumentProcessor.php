@@ -142,6 +142,167 @@ class DocumentProcessor
     }
 
     /**
+     * Spaja više fajlova u jedan PDF dokument
+     *
+     * @param array $files Array of \Illuminate\Http\UploadedFile objects
+     * @param int $userId
+     * @param string|null $baseFilename Opciono: base filename (bez ekstenzije)
+     * @return array ['success' => bool, 'file_path' => string|null, 'file_size' => int|null, 'error' => string|null]
+     */
+    public function mergeDocuments(array $files, int $userId, ?string $baseFilename = null): array
+    {
+        try {
+            if (empty($files)) {
+                return [
+                    'success' => false,
+                    'error' => 'Nema fajlova za spajanje.',
+                ];
+            }
+
+            // Direktorijum za korisnika
+            $directory = "documents/user_{$userId}";
+
+            // Generiši ime fajla
+            if ($baseFilename !== null) {
+                $baseFilename = str_replace('_original', '', $baseFilename);
+                $outputFilename = "{$baseFilename}.pdf";
+            } else {
+                $date = now()->format('Ymd');
+                $randomString = bin2hex(random_bytes(4));
+                $baseFilename = "{$userId}-{$date}-{$randomString}";
+                $outputFilename = "{$baseFilename}.pdf";
+            }
+            $outputPath = "{$directory}/{$outputFilename}";
+
+            // Kreiraj Imagick objekat za spajanje
+            $mergedPdf = new \Imagick();
+            $mergedPdf->setResolution(300, 300);
+
+            $tempFiles = [];
+            $allPagesProcessed = true;
+
+            try {
+                // Procesiraj svaki fajl i dodaj u merged PDF
+                foreach ($files as $index => $file) {
+                    $mime = $file->getMimeType();
+                    $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+                    
+                    if (!in_array($mime, $allowedMimes)) {
+                        Log::warning('Skipping invalid file type in merge', [
+                            'mime' => $mime,
+                            'filename' => $file->getClientOriginalName()
+                        ]);
+                        continue;
+                    }
+
+                    // Sačuvaj privremeno fajl ako je UploadedFile
+                    $tempFilePath = null;
+                    if ($file instanceof \Illuminate\Http\UploadedFile) {
+                        $tempFilePath = sys_get_temp_dir() . '/' . uniqid('merge_', true) . '_' . $file->getClientOriginalName();
+                        $file->move(sys_get_temp_dir(), basename($tempFilePath));
+                        $tempFilePath = sys_get_temp_dir() . '/' . basename($tempFilePath);
+                        $tempFiles[] = $tempFilePath;
+                    } else {
+                        $tempFilePath = $file;
+                    }
+
+                    // Učitaj fajl u Imagick
+                    $imagick = new \Imagick();
+                    $imagick->setResolution(300, 300);
+
+                    if ($mime === 'application/pdf') {
+                        // Za PDF: učitaj sve stranice
+                        $imagick->readImage($tempFilePath);
+                    } else {
+                        // Za slike: učitaj direktno
+                        $imagick->readImage($tempFilePath);
+                    }
+
+                    // Konvertuj u greyscale
+                    $imagick->transformImageColorspace(\Imagick::COLORSPACE_GRAY);
+                    $imagick->stripImage();
+
+                    // Dodaj sve stranice u merged PDF
+                    foreach ($imagick as $page) {
+                        $mergedPdf->addImage($page);
+                    }
+
+                    $imagick->clear();
+                    $imagick->destroy();
+                }
+
+                if ($mergedPdf->getNumberImages() === 0) {
+                    $mergedPdf->clear();
+                    $mergedPdf->destroy();
+                    return [
+                        'success' => false,
+                        'error' => 'Nijedan fajl nije uspešno učitan za spajanje.',
+                    ];
+                }
+
+                // Postavi format i kompresiju za merged PDF
+                $mergedPdf->setImageFormat('pdf');
+                $mergedPdf->setImageCompression(\Imagick::COMPRESSION_JPEG);
+                $mergedPdf->setImageCompressionQuality(70);
+                $mergedPdf->setOption('pdf:use-trimbox', 'true');
+
+                // Spoji sve stranice u jedan PDF koristeći writeImages
+                $mergedPdf->setFirstIterator();
+                $pdfData = $mergedPdf->getImagesBlob();
+
+                $mergedPdf->clear();
+                $mergedPdf->destroy();
+
+                // Proveri da li je PDF validan
+                if ($pdfData === false || empty($pdfData) || strlen($pdfData) < 100) {
+                    return [
+                        'success' => false,
+                        'error' => 'Greška pri spajanju fajlova u PDF.',
+                    ];
+                }
+
+                if (strpos($pdfData, '%PDF') !== 0) {
+                    return [
+                        'success' => false,
+                        'error' => 'Spojeni PDF nije validan.',
+                    ];
+                }
+
+                // Snimi merged PDF
+                Storage::disk('local')->put($outputPath, $pdfData);
+                $fileSize = strlen($pdfData);
+
+                return [
+                    'success' => true,
+                    'file_path' => $outputPath,
+                    'file_size' => $fileSize,
+                    'error' => null,
+                ];
+
+            } finally {
+                // Obriši privremene fajlove
+                foreach ($tempFiles as $tempFile) {
+                    if (file_exists($tempFile)) {
+                        @unlink($tempFile);
+                    }
+                }
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Document merge exception', [
+                'message' => $e->getMessage(),
+                'user_id' => $userId,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Greška pri spajanju dokumenata: ' . $e->getMessage(),
+            ];
+        }
+    }
+
+    /**
      * Briše fajl i ažurira storage
      *
      * @param string $filePath
