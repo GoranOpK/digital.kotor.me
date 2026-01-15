@@ -242,6 +242,33 @@ class DocumentProcessor
                     'error' => 'Nema fajlova za spajanje.',
                 ];
             }
+            
+            // Proveri broj fajlova - previše fajlova može uzrokovati probleme sa memorijom
+            if (count($files) > 10) {
+                return [
+                    'success' => false,
+                    'error' => 'Previše fajlova za spajanje. Maksimalno dozvoljeno je 10 fajlova odjednom.',
+                ];
+            }
+            
+            // Proveri ukupnu veličinu fajlova
+            $totalSize = 0;
+            foreach ($files as $file) {
+                if ($file instanceof \Illuminate\Http\UploadedFile) {
+                    $totalSize += $file->getSize();
+                } elseif (is_string($file) && file_exists($file)) {
+                    $totalSize += filesize($file);
+                }
+            }
+            
+            // Proveri da li ukupna veličina prelazi razumnu granicu (15MB za procesiranje)
+            $maxProcessingSize = 15 * 1024 * 1024; // 15MB
+            if ($totalSize > $maxProcessingSize) {
+                return [
+                    'success' => false,
+                    'error' => 'Ukupna veličina fajlova (' . round($totalSize / 1024 / 1024, 2) . ' MB) je prevelika za procesiranje. Maksimalno dozvoljeno: 15 MB.',
+                ];
+            }
 
             // Direktorijum za korisnika
             $directory = "documents/user_{$userId}";

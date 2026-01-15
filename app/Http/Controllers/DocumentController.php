@@ -76,14 +76,23 @@ class DocumentController extends Controller
         // Proveri ukupnu veličinu svih fajlova (max 7MB zbog post_max_size = 8M)
         $maxTotalSize = 7 * 1024 * 1024; // 7MB u bajtovima (ostavljamo marginu od 1MB)
         $totalSize = 0;
+        $fileCount = 0;
         foreach ($request->file('files') as $file) {
             $totalSize += $file->getSize();
+            $fileCount++;
         }
         
         if ($totalSize > $maxTotalSize) {
             $totalSizeMB = round($totalSize / 1024 / 1024, 2);
             return back()->withErrors([
                 'files' => "Ukupna veličina svih fajlova ({$totalSizeMB} MB) prelazi dozvoljeno ograničenje. Maksimalna ukupna veličina je 7 MB. Molimo smanjite broj ili veličinu fajlova."
+            ])->withInput();
+        }
+        
+        // Proveri broj fajlova - previše fajlova može uzrokovati probleme sa memorijom
+        if ($fileCount > 10) {
+            return back()->withErrors([
+                'files' => "Previše fajlova odabrano ({$fileCount}). Maksimalno dozvoljeno je 10 fajlova odjednom. Molimo smanjite broj fajlova."
             ])->withInput();
         }
 
@@ -267,7 +276,9 @@ class DocumentController extends Controller
             }
             
             // Proveri da li korisnik ima dovoljno prostora
-            if (!$this->documentProcessor->hasEnoughStorage($user->id, $totalSize)) {
+            // Dodajemo buffer od 20% jer finalni PDF može biti veći od originalnih fajlova
+            $estimatedFinalSize = $totalSize * 1.2; // 20% buffer za finalni PDF
+            if (!$this->documentProcessor->hasEnoughStorage($user->id, $estimatedFinalSize)) {
                 return back()->withErrors([
                     'files' => 'Nemate dovoljno prostora za sve fajlove. Maksimalno dozvoljeno: 20 MB. Trenutno korišćeno: ' . 
                              round(($user->used_storage_bytes ?? 0) / 1024 / 1024, 2) . ' MB'
