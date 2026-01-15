@@ -319,8 +319,8 @@
                         <input type="file" name="files[]" id="file" required multiple
                                accept="image/jpeg,image/png,image/jpg,application/pdf"
                                onchange="updateFileDisplay(this)">
-                        <label for="file" class="file-input-label" id="file-label">Izaberi fajlove (možete izabrati više)</label>
-                        <div id="file-names" class="file-name-display" style="display: none; margin-top: 8px;"></div>
+                        <label for="file" class="file-input-label" id="file-label" onclick="event.stopPropagation();">Izaberi fajlove (možete izabrati više)</label>
+                        <div id="file-names" class="file-name-display" style="display: none; margin-top: 8px;" onclick="event.stopPropagation();"></div>
                     </div>
                     <small style="color: #6b7280; display: block; margin-top: 4px;">
                         Dozvoljeni formati: JPEG, PNG, PDF (max 10MB po fajlu). Dokumenti će biti automatski konvertovani u greyscale PDF format sa 300 DPI rezolucijom.
@@ -455,20 +455,20 @@ function updateFileDisplay(input) {
             
             // Dugme za pomeranje gore
             if (index > 0) {
-                fileList += '<button type="button" onclick="moveFileUp(' + index + ', event); return false;" title="Pomeri gore" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬆️</button>';
+                fileList += '<button type="button" class="file-action-btn" data-action="move-up" data-index="' + index + '" title="Pomeri gore" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬆️</button>';
             } else {
                 fileList += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬆️</button>';
             }
             
             // Dugme za pomeranje dole
             if (index < selectedFiles.length - 1) {
-                fileList += '<button type="button" onclick="moveFileDown(' + index + ', event); return false;" title="Pomeri dole" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬇️</button>';
+                fileList += '<button type="button" class="file-action-btn" data-action="move-down" data-index="' + index + '" title="Pomeri dole" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬇️</button>';
             } else {
                 fileList += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬇️</button>';
             }
             
             // Dugme za uklanjanje
-            fileList += '<button type="button" onclick="removeFile(' + index + ', event); return false;" title="Ukloni" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">✕</button>';
+            fileList += '<button type="button" class="file-action-btn" data-action="remove" data-index="' + index + '" title="Ukloni" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">✕</button>';
             fileList += '</div>';
             fileList += '</li>';
         });
@@ -594,6 +594,40 @@ function prepareFormSubmit(event) {
     
     return true;
 }
+
+// Event listener za dugmad (umesto inline onclick) - koristi capture fazu da spreči propagaciju
+document.addEventListener('click', function(event) {
+    // Proveri da li je klik na dugme ili unutar dugmeta
+    const btn = event.target.closest('.file-action-btn');
+    if (!btn) return;
+    
+    // Zaustavi sve propagacije
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation();
+    
+    // Spreči aktivaciju label-a
+    const label = document.getElementById('file-label');
+    if (label) {
+        label.style.pointerEvents = 'none';
+        setTimeout(() => {
+            label.style.pointerEvents = 'auto';
+        }, 100);
+    }
+    
+    const action = btn.getAttribute('data-action');
+    const index = parseInt(btn.getAttribute('data-index'));
+    
+    if (action === 'move-up') {
+        moveFileUp(index, event);
+    } else if (action === 'move-down') {
+        moveFileDown(index, event);
+    } else if (action === 'remove') {
+        removeFile(index, event);
+    }
+    
+    return false;
+}, true); // useCapture = true da bi se event uhvatio pre propagacije
 
 document.addEventListener('DOMContentLoaded', function() {
     
