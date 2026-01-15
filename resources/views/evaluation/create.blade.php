@@ -464,7 +464,7 @@
                 </div>
 
                 <!-- 4. Zaključak komisije -->
-                <div class="form-section">
+                <div class="form-section commission-decision-section">
                     <label class="form-label form-label-large">4. Na bazi konačne ocjene Komisija donosi zaključak da se biznis plan:</label>
                     @if($commissionMember->position === 'predsjednik')
                         <div class="radio-group">

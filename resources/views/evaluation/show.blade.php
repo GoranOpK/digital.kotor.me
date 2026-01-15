@@ -242,6 +242,10 @@
         .notes-info-box {
             display: none !important;
         }
+        .commission-decision-section {
+            padding-left: 20mm !important;
+            padding-right: 20mm !important;
+        }
         .signature-section {
             page-break-inside: avoid;
             page-break-before: auto;
@@ -386,7 +390,7 @@
             </div>
 
             <!-- 4. Zaključak komisije -->
-            <div class="form-section">
+            <div class="form-section commission-decision-section">
                 <label class="form-label form-label-large">4. Na bazi konačne ocjene Komisija donosi zaključak da se biznis plan:</label>
                 <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px;">
                     @php
