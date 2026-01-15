@@ -73,14 +73,50 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
-        // Proveri da li je već ocjenjeno
-        $existingScore = EvaluationScore::where('application_id', $application->id)
-            ->where('commission_member_id', $commissionMember->id)
-            ->first();
+        // Učitaj komisiju sa svim članovima
+        $commission = $commissionMember->commission;
+        $allMembers = $commission->members()
+            ->where('status', 'active')
+            ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
+            ->orderBy('id')
+            ->get();
+
+        // Učitaj sve postojeće ocjene za ovu prijavu
+        $allScores = EvaluationScore::where('application_id', $application->id)
+            ->whereIn('commission_member_id', $allMembers->pluck('id'))
+            ->with('commissionMember')
+            ->get()
+            ->keyBy('commission_member_id');
+
+        // Proveri da li je trenutni član već ocjenio
+        $existingScore = $allScores->get($commissionMember->id);
+
+        // Izračunaj prosječne ocjene za svaki kriterijum
+        $averageScores = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $scores = $allScores->pluck("criterion_{$i}")->filter()->values();
+            if ($scores->count() > 0) {
+                $averageScores[$i] = round($scores->sum() / $scores->count(), 2);
+            } else {
+                $averageScores[$i] = null;
+            }
+        }
+
+        // Izračunaj konačnu ocjenu (zbir prosječnih ocjena)
+        $finalScore = array_sum(array_filter($averageScores));
 
         $application->load(['user', 'competition', 'businessPlan']);
 
-        return view('evaluation.create', compact('application', 'commissionMember', 'existingScore'));
+        return view('evaluation.create', compact(
+            'application', 
+            'commissionMember', 
+            'existingScore',
+            'allMembers',
+            'allScores',
+            'averageScores',
+            'finalScore',
+            'commission'
+        ));
     }
 
     /**
@@ -128,6 +164,13 @@ class EvaluationController extends Controller
 
         $rules['notes'] = 'nullable|string|max:5000';
         $rules['justification'] = 'nullable|string|max:5000';
+        
+        // Ako je predsjednik, može unijeti zaključak i iznos
+        if ($commissionMember->position === 'predsjednik') {
+            $rules['commission_decision'] = 'nullable|in:podrzava_potpuno,podrzava_djelimicno,odbija';
+            $rules['approved_amount'] = 'nullable|numeric|min:0';
+            $rules['decision_date'] = 'nullable|date';
+        }
 
         $validated = $request->validate($rules, $messages);
 
@@ -160,6 +203,15 @@ class EvaluationController extends Controller
                 'justification' => $validated['justification'] ?? null,
             ]
         );
+
+        // Ako je predsjednik, ažuriraj zaključak komisije i iznos odobrenih sredstava
+        if ($commissionMember->position === 'predsjednik' && isset($validated['commission_decision'])) {
+            $application->update([
+                'commission_decision' => $validated['commission_decision'],
+                'approved_amount' => $validated['approved_amount'] ?? null,
+                'commission_decision_date' => $validated['decision_date'] ?? now(),
+            ]);
+        }
 
         // Ažuriraj prosječnu ocjenu prijave (prosjek svih članova komisije)
         $this->updateApplicationScores($application);
@@ -218,7 +270,7 @@ class EvaluationController extends Controller
     /**
      * Prikaz ocjene (read-only)
      */
-    public function show(Application $application): View
+    public function show(Application $application): View|\Illuminate\Http\RedirectResponse
     {
         $user = Auth::user();
         
