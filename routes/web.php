@@ -140,6 +140,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 
+    // Arhiva konkursa (dostupna administratoru konkursa i članovima komisije)
+    Route::middleware('role:admin,konkurs_admin,komisija')->group(function () {
+        Route::get('/competitions/archive', [AdminController::class, 'competitionsArchive'])->name('competitions.archive');
+    });
+
     // Rute za upravljanje konkursima (dostupne superadmin, admin i konkurs_admin ulogama)
     Route::middleware('role:admin,konkurs_admin')->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {

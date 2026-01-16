@@ -204,6 +204,20 @@ class AdminController extends Controller
     }
 
     /**
+     * Arhiva konkursa (dostupna administratoru konkursa i članovima komisije)
+     */
+    public function competitionsArchive(Request $request)
+    {
+        $competitions = Competition::withCount('applications')
+            ->where('status', 'completed')
+            ->orderBy('closed_at', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+        
+        return view('competitions.archive', compact('competitions'));
+    }
+
+    /**
      * Forma za kreiranje novog konkursa
      */
     public function createCompetition()
