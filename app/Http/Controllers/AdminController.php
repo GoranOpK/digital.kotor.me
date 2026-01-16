@@ -897,8 +897,8 @@ class AdminController extends Controller
         // Dodaj poziciju na rang listi
         $position = 1;
         foreach ($applications as $application) {
-            $application->ranking_position = $position;
-            $application->save();
+            // Koristi update() da sačuva samo ranking_position, bez privremenih atributa
+            $application->update(['ranking_position' => $position]);
             $position++;
         }
 
