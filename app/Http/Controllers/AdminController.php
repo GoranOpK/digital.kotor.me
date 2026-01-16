@@ -327,7 +327,7 @@ class AdminController extends Controller
         if (!$isAdmin) {
             abort(403, 'Nemate dozvolu za kreiranje konkursa.');
         }
-    {
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
