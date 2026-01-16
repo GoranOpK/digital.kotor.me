@@ -183,7 +183,7 @@
     }
     @media (min-width: 1024px) {
         .info-grid {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
         }
     }
     .info-grid .info-card {
