@@ -215,6 +215,7 @@
             </p>
 
             @if($applications->count() > 0)
+            @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
             <form method="POST" action="{{ route('admin.competitions.select-winners', $competition) }}" id="winnersForm">
                 @csrf
                 <table>
@@ -295,6 +296,66 @@
                     <a href="{{ route('admin.competitions.decision', $competition) }}" class="btn btn-primary">Generiši Odluku</a>
                 </div>
             </form>
+            @else
+                {{-- Read-only prikaz za članove komisije --}}
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Poz.</th>
+                            <th>Naziv biznis plana</th>
+                            <th>Podnosilac</th>
+                            <th>Tip</th>
+                            <th style="text-align: center;">Ocjena</th>
+                            <th style="text-align: right;">Traženi iznos</th>
+                            <th style="text-align: right;">Odobreni iznos</th>
+                            <th style="text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($applications as $application)
+                            <tr style="{{ $application->status === 'approved' ? 'background: #d1fae5;' : '' }}">
+                                <td>
+                                    <span class="ranking-badge">{{ $application->ranking_position ?? $loop->iteration }}</span>
+                                </td>
+                                <td>{{ $application->business_plan_name }}</td>
+                                <td>{{ $application->user->name ?? 'N/A' }}</td>
+                                <td>
+                                    {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : ($application->applicant_type === 'doo' ? 'DOO' : ($application->applicant_type === 'fizicko_lice' ? 'Fizičko lice' : 'Ostalo')) }} - 
+                                    {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
+                                </td>
+                                <td style="text-align: center;">
+                                    @php
+                                        $score = $application->final_score ?? 0;
+                                        $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
+                                    @endphp
+                                    <span class="score-badge {{ $scoreClass }}">
+                                        {{ number_format($score, 2) }} / 50
+                                    </span>
+                                </td>
+                                <td style="text-align: right;">
+                                    {{ number_format($application->requested_amount, 2, ',', '.') }} €
+                                </td>
+                                <td style="text-align: right;">
+                                    @if($application->approved_amount)
+                                        <strong style="color: #10b981;">
+                                            {{ number_format($application->approved_amount, 2, ',', '.') }} €
+                                        </strong>
+                                    @else
+                                        <span style="color: #6b7280;">-</span>
+                                    @endif
+                                </td>
+                                <td class="checkbox-cell">
+                                    @if($application->status === 'approved')
+                                        <span style="color: #10b981; font-weight: 600;">✓ Dobitnik</span>
+                                    @else
+                                        <span style="color: #6b7280;">-</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
             @else
                 <div style="text-align: center; padding: 40px; color: #6b7280;">
                     <p style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Nema prijava koje zadovoljavaju uslove za rang listu.</p>

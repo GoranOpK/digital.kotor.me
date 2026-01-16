@@ -1067,6 +1067,28 @@ class AdminController extends Controller
      */
     public function rankingList(Competition $competition)
     {
+        $user = auth()->user();
+        $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
+        $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
+        $isChairman = $this->isCommissionChairmanForCompetition($competition);
+        $isCommissionMember = $this->isCommissionMemberForCompetition($competition);
+        
+        // Administrator konkursa ne može pristupiti rang listi
+        if ($isCompetitionAdmin) {
+            abort(403, 'Nemate pristup rang listi. Samo predsjednik komisije može upravljati rang listom.');
+        }
+        
+        // Ako nije superadmin ili predsjednik komisije, proveri da li je član komisije i da li je konkurs zatvoren
+        if (!$isSuperAdmin && !$isChairman) {
+            if (!$isCommissionMember) {
+                abort(403, 'Nemate pristup ovom konkursu.');
+            }
+            // Članovi komisije mogu vidjeti rang listu samo kada je konkurs zatvoren
+            if ($competition->status !== 'closed') {
+                abort(403, 'Rang lista je dostupna članovima komisije samo kada je konkurs zatvoren.');
+            }
+        }
+        
         // Učitaj sve prijave za ovaj konkurs
         $allApplications = Application::where('competition_id', $competition->id)
             ->with(['user', 'businessPlan', 'evaluationScores'])
@@ -1115,7 +1137,7 @@ class AdminController extends Controller
         $usedBudget = $applications->sum('approved_amount');
         $remainingBudget = $totalBudget - $usedBudget;
 
-        return view('admin.competitions.ranking', compact('competition', 'applications', 'excludedApplications', 'totalBudget', 'usedBudget', 'remainingBudget'));
+        return view('admin.competitions.ranking', compact('competition', 'applications', 'excludedApplications', 'totalBudget', 'usedBudget', 'remainingBudget', 'isSuperAdmin', 'isChairman', 'isCommissionMember'));
     }
 
     /**
@@ -1123,6 +1145,16 @@ class AdminController extends Controller
      */
     public function selectWinners(Request $request, Competition $competition)
     {
+        $user = auth()->user();
+        $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
+        $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
+        $isChairman = $this->isCommissionChairmanForCompetition($competition);
+        
+        // Samo superadmin i predsjednik komisije mogu odabirati dobitnike
+        if ($isCompetitionAdmin || (!$isSuperAdmin && !$isChairman)) {
+            abort(403, 'Nemate dozvolu za odabir dobitnika. Samo predsjednik komisije može odabirati dobitnike.');
+        }
+        
         // Prikupi odabrane dobitnike iz forme
         $winnersData = [];
         foreach ($request->all() as $key => $value) {
@@ -1190,6 +1222,16 @@ class AdminController extends Controller
      */
     public function generateDecision(Competition $competition)
     {
+        $user = auth()->user();
+        $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
+        $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
+        $isChairman = $this->isCommissionChairmanForCompetition($competition);
+        
+        // Samo superadmin i predsjednik komisije mogu generisati odluku
+        if ($isCompetitionAdmin || (!$isSuperAdmin && !$isChairman)) {
+            abort(403, 'Nemate dozvolu za generisanje odluke. Samo predsjednik komisije može generisati odluku.');
+        }
+        
         $winners = Application::where('competition_id', $competition->id)
             ->where('status', 'approved')
             ->with(['user', 'businessPlan'])
