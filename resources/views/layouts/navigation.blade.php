@@ -27,7 +27,7 @@
                                 Administracija
                             </x-nav-link>
                         @endif
-                        @if(auth()->user()->role && (auth()->user()->role->name === 'konkurs_admin' || auth()->user()->role->name === 'komisija'))
+                        @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
                             <x-nav-link :href="route('admin.competitions.index')" :active="request()->is('admin/competitions*')">
                                 Upravljanje konkursima
                             </x-nav-link>
@@ -105,7 +105,7 @@
                         Administracija
                     </x-responsive-nav-link>
                 @endif
-                @if(auth()->user()->role && (auth()->user()->role->name === 'konkurs_admin' || auth()->user()->role->name === 'komisija'))
+                @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
                     <x-responsive-nav-link :href="route('admin.competitions.index')" :active="request()->is('admin/competitions*')">
                         Upravljanje konkursima
                     </x-responsive-nav-link>
