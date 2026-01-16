@@ -869,10 +869,9 @@ class AdminController extends Controller
      */
     public function rankingList(Competition $competition)
     {
-        // Učitaj sve prijave koje su ocjenjene ili podnesene
-        $applications = Application::where('competition_id', $competition->id)
-            ->whereIn('status', ['evaluated', 'submitted'])
-            ->with(['user', 'businessPlan'])
+        // Učitaj sve prijave za ovaj konkurs
+        $allApplications = Application::where('competition_id', $competition->id)
+            ->with(['user', 'businessPlan', 'evaluationScores'])
             ->get()
             ->map(function ($application) {
                 // Izračunaj konačnu ocjenu ako nije izračunata
@@ -880,11 +879,17 @@ class AdminController extends Controller
                     $application->final_score = $application->calculateFinalScore();
                     $application->save();
                 }
+                // Dodaj informacije o ocjenjivanju
+                $application->has_evaluations = $application->evaluationScores()->count() > 0;
+                $application->evaluation_count = $application->evaluationScores()->count();
                 return $application;
-            })
+            });
+
+        // Filtriraj samo one koje zadovoljavaju minimum (30 bodova) i imaju ocjene
+        $applications = $allApplications
             ->filter(function ($application) {
-                // Filtriraj samo one koje zadovoljavaju minimum (30 bodova)
-                return $application->meetsMinimumScore();
+                // Prijava mora imati ocjene i zadovoljavati minimum
+                return $application->has_evaluations && $application->meetsMinimumScore();
             })
             ->sortByDesc('final_score')
             ->values();
@@ -897,12 +902,19 @@ class AdminController extends Controller
             $position++;
         }
 
+        // Prijave koje nisu u rang listi (za informacije)
+        $excludedApplications = $allApplications
+            ->filter(function ($application) {
+                return !$application->has_evaluations || !$application->meetsMinimumScore();
+            })
+            ->values();
+
         // Izračunaj ukupan budžet i preostali budžet
         $totalBudget = $competition->budget ?? 0;
         $usedBudget = $applications->sum('approved_amount');
         $remainingBudget = $totalBudget - $usedBudget;
 
-        return view('admin.competitions.ranking', compact('competition', 'applications', 'totalBudget', 'usedBudget', 'remainingBudget'));
+        return view('admin.competitions.ranking', compact('competition', 'applications', 'excludedApplications', 'totalBudget', 'usedBudget', 'remainingBudget'));
     }
 
     /**
