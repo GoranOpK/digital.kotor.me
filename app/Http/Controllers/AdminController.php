@@ -417,6 +417,8 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
+        $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
         
         // Ako nije admin, proveri da li je član komisije i da li je konkurs dodijeljen njegovoj komisiji
         if (!$isAdmin && !$this->isCommissionMemberForCompetition($competition)) {
@@ -433,7 +435,7 @@ class AdminController extends Controller
             ->latest()
             ->paginate(20);
         
-        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isChairman'));
+        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman'));
     }
 
     /**
@@ -551,10 +553,16 @@ class AdminController extends Controller
     public function closeCompetition(Competition $competition)
     {
         $user = auth()->user();
-        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
+        $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
         
-        // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
-        if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
+        // Administrator konkursa ne može zatvarati konkurse
+        if ($isCompetitionAdmin) {
+            abort(403, 'Nemate dozvolu za zatvaranje konkursa. Samo predsjednik komisije može zatvarati konkurse.');
+        }
+        
+        // Ako nije superadmin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
+        if (!$isSuperAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
             abort(403, 'Nemate dozvolu za zatvaranje ovog konkursa.');
         }
         

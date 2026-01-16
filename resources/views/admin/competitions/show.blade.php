@@ -89,7 +89,7 @@
                         </form>
                     @endif
                 @endif
-                @if($competition->status === 'published' && (isset($isAdmin) && $isAdmin || isset($isChairman) && $isChairman))
+                @if($competition->status === 'published' && (isset($isSuperAdmin) && $isSuperAdmin || isset($isChairman) && $isChairman))
                     <form method="POST" action="{{ route('admin.competitions.close', $competition) }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="btn btn-danger">Zatvori konkurs</button>
