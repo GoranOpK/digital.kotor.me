@@ -93,7 +93,9 @@
     <div class="container mx-auto px-4">
         <div class="page-header">
             <h1>Upravljanje konkursima</h1>
-            <a href="{{ route('admin.competitions.create') }}" class="btn-primary">+ Novi konkurs</a>
+            @if(isset($isAdmin) && $isAdmin)
+                <a href="{{ route('admin.competitions.create') }}" class="btn-primary">+ Novi konkurs</a>
+            @endif
         </div>
 
         <!-- Tabovi za aktivne i arhivirane konkursi -->
@@ -172,12 +174,14 @@
                             <td>{{ $competition->applications_count }}</td>
                             <td>
                                 <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-sm btn-view">Pregled</a>
-                                <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn-sm btn-edit">Izmijeni</a>
-                                <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-sm btn-delete">Obriši</button>
-                                </form>
+                                @if(isset($isAdmin) && $isAdmin)
+                                    <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn-sm btn-edit">Izmijeni</a>
+                                    <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-sm btn-delete">Obriši</button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -188,7 +192,10 @@
                                 @elseif($tab === 'all')
                                     Nema konkursa u sistemu.
                                 @else
-                                    Nema aktivnih konkursa. <a href="{{ route('admin.competitions.create') }}">Kreiraj prvi konkurs</a>
+                                    Nema aktivnih konkursa.
+                                    @if(isset($isAdmin) && $isAdmin)
+                                        <a href="{{ route('admin.competitions.create') }}">Kreiraj prvi konkurs</a>
+                                    @endif
                                 @endif
                             </td>
                         </tr>

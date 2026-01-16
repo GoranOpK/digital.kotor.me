@@ -19,6 +19,71 @@ use Illuminate\Auth\Events\Registered;
 class AdminController extends Controller
 {
     /**
+     * Proverava da li je korisnik predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
+     */
+    protected function isCommissionChairmanForCompetition(Competition $competition): bool
+    {
+        $user = auth()->user();
+        
+        // Proveri da li je korisnik član komisije
+        $commissionMember = CommissionMember::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where('position', 'predsjednik')
+            ->first();
+        
+        if (!$commissionMember) {
+            return false;
+        }
+        
+        // Proveri da li je konkurs dodijeljen komisiji korisnika
+        return $competition->commission_id === $commissionMember->commission_id;
+    }
+    
+    /**
+     * Proverava da li je korisnik predsjednik komisije
+     */
+    protected function isCommissionChairman(): bool
+    {
+        $user = auth()->user();
+        
+        return CommissionMember::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where('position', 'predsjednik')
+            ->exists();
+    }
+    
+    /**
+     * Vraća ID komisije za predsjednika komisije
+     */
+    protected function getCommissionIdForChairman(): ?int
+    {
+        $user = auth()->user();
+        
+        $commissionMember = CommissionMember::where('user_id', $user->id)
+            ->where('status', 'active')
+            ->where('position', 'predsjednik')
+            ->first();
+        
+        return $commissionMember ? $commissionMember->commission_id : null;
+    }
+    
+    /**
+     * Proverava da li korisnik može da pristupi upravljanju konkursima
+     */
+    protected function canAccessCompetitionsManagement(): bool
+    {
+        $user = auth()->user();
+        
+        // Admin i konkurs_admin mogu pristupiti
+        if ($user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin'])) {
+            return true;
+        }
+        
+        // Proveri da li je predsjednik komisije
+        return $this->isCommissionChairman();
+    }
+
+    /**
      * Prikaz admin dashboard-a
      */
     public function dashboard()
@@ -184,29 +249,55 @@ class AdminController extends Controller
      */
     public function competitions(Request $request)
     {
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Ako je predsjednik komisije, prikaži samo konkurse dodijeljene njegovoj komisiji
+        if (!$isAdmin && $this->isCommissionChairman()) {
+            $commissionId = $this->getCommissionIdForChairman();
+            if (!$commissionId) {
+                abort(403, 'Nemate pristup upravljanju konkursima.');
+            }
+        }
+        
         $tab = $request->get('tab', 'active'); // 'active', 'archive' ili 'all'
         
         if ($tab === 'archive') {
             // Arhiva - završeni konkursi (closed ili completed)
-            $competitions = Competition::withCount('applications')
-                ->whereIn('status', ['closed', 'completed'])
-                ->orderBy('closed_at', 'desc')
+            $query = Competition::withCount('applications')
+                ->whereIn('status', ['closed', 'completed']);
+            
+            if (!$isAdmin && isset($commissionId)) {
+                $query->where('commission_id', $commissionId);
+            }
+            
+            $competitions = $query->orderBy('closed_at', 'desc')
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
         } elseif ($tab === 'all') {
             // Svi konkursi (bez obzira na status)
-            $competitions = Competition::withCount('applications')
-                ->orderBy('created_at', 'desc')
+            $query = Competition::withCount('applications');
+            
+            if (!$isAdmin && isset($commissionId)) {
+                $query->where('commission_id', $commissionId);
+            }
+            
+            $competitions = $query->orderBy('created_at', 'desc')
                 ->paginate(20);
         } else {
             // Aktivni konkursi (draft, published)
-            $competitions = Competition::withCount('applications')
-                ->whereIn('status', ['draft', 'published'])
-                ->orderBy('created_at', 'desc')
+            $query = Competition::withCount('applications')
+                ->whereIn('status', ['draft', 'published']);
+            
+            if (!$isAdmin && isset($commissionId)) {
+                $query->where('commission_id', $commissionId);
+            }
+            
+            $competitions = $query->orderBy('created_at', 'desc')
                 ->paginate(20);
         }
         
-        return view('admin.competitions.index', compact('competitions', 'tab'));
+        return view('admin.competitions.index', compact('competitions', 'tab', 'isAdmin'));
     }
 
     /**
@@ -228,6 +319,14 @@ class AdminController extends Controller
      */
     public function createCompetition()
     {
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Predsjednik komisije ne može kreirati konkurse
+        if (!$isAdmin) {
+            abort(403, 'Nemate dozvolu za kreiranje konkursa.');
+        }
+        
         $commissions = Commission::where('status', 'active')->orderBy('year', 'desc')->get();
         return view('admin.competitions.create', compact('commissions'));
     }
@@ -237,6 +336,14 @@ class AdminController extends Controller
      */
     public function storeCompetition(Request $request)
     {
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Predsjednik komisije ne može kreirati konkurse
+        if (!$isAdmin) {
+            abort(403, 'Nemate dozvolu za kreiranje konkursa.');
+        }
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -277,6 +384,14 @@ class AdminController extends Controller
      */
     public function showCompetition(Competition $competition)
     {
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
+        if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
+            abort(403, 'Nemate pristup ovom konkursu.');
+        }
+        
         $competition->loadCount('applications');
         $competition->load('commission');
         $applications = $competition->applications()
@@ -284,7 +399,7 @@ class AdminController extends Controller
             ->latest()
             ->paginate(20);
         
-        return view('admin.competitions.show', compact('competition', 'applications'));
+        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin'));
     }
 
     /**
@@ -292,8 +407,16 @@ class AdminController extends Controller
      */
     public function editCompetition(Competition $competition)
     {
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
+        if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
+            abort(403, 'Nemate dozvolu za izmjenu ovog konkursa.');
+        }
+        
         $commissions = Commission::where('status', 'active')->orderBy('year', 'desc')->get();
-        return view('admin.competitions.edit', compact('competition', 'commissions'));
+        return view('admin.competitions.edit', compact('competition', 'commissions', 'isAdmin'));
     }
 
     /**
@@ -301,6 +424,14 @@ class AdminController extends Controller
      */
     public function updateCompetition(Request $request, Competition $competition)
     {
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
+        if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
+            abort(403, 'Nemate dozvolu za izmjenu ovog konkursa.');
+        }
+        
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -346,6 +477,14 @@ class AdminController extends Controller
      */
     public function publishCompetition(Competition $competition)
     {
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Predsjednik komisije ne može objavljivati konkurse
+        if (!$isAdmin) {
+            abort(403, 'Nemate dozvolu za objavljivanje konkursa.');
+        }
+        
         if ($competition->status !== 'draft') {
             return redirect()->back()->withErrors(['error' => 'Samo nacrti konkursa mogu biti objavljeni.']);
         }
@@ -377,6 +516,14 @@ class AdminController extends Controller
      */
     public function closeCompetition(Competition $competition)
     {
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Predsjednik komisije ne može zatvarati konkurse
+        if (!$isAdmin) {
+            abort(403, 'Nemate dozvolu za zatvaranje konkursa.');
+        }
+        
         $competition->update([
             'status' => 'closed',
             'closed_at' => now(),
@@ -390,6 +537,14 @@ class AdminController extends Controller
      */
     public function destroyCompetition(Competition $competition)
     {
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
+        if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
+            abort(403, 'Nemate dozvolu za brisanje ovog konkursa.');
+        }
+        
         // Proveri da li ima prijava
         if ($competition->applications()->count() > 0) {
             return redirect()->back()->withErrors(['error' => 'Ne možete obrisati konkurs koji već ima prijave.']);
