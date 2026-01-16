@@ -63,8 +63,7 @@ class EvaluationController extends Controller
         }
 
         $applications = $query->latest()->paginate(20)->appends($request->query());
-        $competitions = \App\Models\Competition::where('status', 'published')
-            ->orWhere('status', 'closed')
+        $competitions = \App\Models\Competition::whereIn('status', ['published', 'closed', 'completed'])
             ->get();
 
         return view('evaluation.index', compact('applications', 'competitions', 'commissionMember'));
