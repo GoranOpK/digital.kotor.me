@@ -576,8 +576,8 @@
             </div>
         @endif
 
-        <!-- Najnovije prijave (samo za korisnike koji nisu administrator konkursa) -->
-        @if(isset($recent_applications) && !$isCompetitionAdmin)
+        <!-- Najnovije prijave (samo za članove komisije) -->
+        @if(isset($recent_applications) && $isKomisija)
         <div class="info-card" style="margin-top: 24px;">
             <div class="info-card-header">
                 <h2>Najnovije prijave na konkurse</h2>
