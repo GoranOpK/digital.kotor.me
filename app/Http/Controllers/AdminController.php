@@ -13,6 +13,7 @@ use App\Models\Contract;
 use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Auth\Events\Registered;
 
 class AdminController extends Controller
@@ -897,8 +898,11 @@ class AdminController extends Controller
         // Dodaj poziciju na rang listi
         $position = 1;
         foreach ($applications as $application) {
-            // Koristi update() da sačuva samo ranking_position, bez privremenih atributa
-            $application->update(['ranking_position' => $position]);
+            // Koristi direktan DB update da izbegneš privremene atribute
+            DB::table('applications')
+                ->where('id', $application->id)
+                ->update(['ranking_position' => $position]);
+            $application->ranking_position = $position; // Postavi na model za prikaz
             $position++;
         }
 
