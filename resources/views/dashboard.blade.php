@@ -568,7 +568,7 @@
                     <a href="{{ route('competitions.archive') }}" style="padding: 16px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 8px; text-align: center; color: #fff; text-decoration: none; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
                         📁 Arhiva konkursa
                     </a>
-                    <a href="{{ route('admin.commissions.index') }}" style="padding: 16px; background: #f9fafb; border-radius: 8px; text-align: center; color: var(--primary); text-decoration: none; font-weight: 600; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='#f9fafb'">
+                    <a href="{{ route('admin.commissions.index') }}" style="padding: 16px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 8px; text-align: center; color: #fff; text-decoration: none; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
                         👥 Komisija
                     </a>
                 </div>
