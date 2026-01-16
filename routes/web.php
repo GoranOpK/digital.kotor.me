@@ -151,6 +151,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/competitions', [AdminController::class, 'competitions'])->name('competitions.index');
             Route::get('/competitions/{competition}', [AdminController::class, 'showCompetition'])->name('competitions.show');
             
+            // Zatvaranje konkursa (dostupno i predsjedniku komisije)
+            Route::post('/competitions/{competition}/close', [AdminController::class, 'closeCompetition'])->name('competitions.close');
+            
             // Rang lista
             Route::get('/competitions/{competition}/ranking', [AdminController::class, 'rankingList'])->name('competitions.ranking');
             Route::post('/competitions/{competition}/winners', [AdminController::class, 'selectWinners'])->name('competitions.select-winners');
@@ -166,7 +169,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/competitions/{competition}/edit', [AdminController::class, 'editCompetition'])->name('competitions.edit');
             Route::put('/competitions/{competition}', [AdminController::class, 'updateCompetition'])->name('competitions.update');
             Route::post('/competitions/{competition}/publish', [AdminController::class, 'publishCompetition'])->name('competitions.publish');
-            Route::post('/competitions/{competition}/close', [AdminController::class, 'closeCompetition'])->name('competitions.close');
             Route::delete('/competitions/{competition}', [AdminController::class, 'destroyCompetition'])->name('competitions.destroy');
             
             // Upravljanje komisijom za konkurse (dodavanje evaluatora) - dostupno i konkurs_admin roli

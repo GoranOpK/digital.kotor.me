@@ -87,12 +87,13 @@
                             @csrf
                             <button type="submit" class="btn btn-success">Objavi konkurs</button>
                         </form>
-                    @elseif($competition->status === 'published')
-                        <form method="POST" action="{{ route('admin.competitions.close', $competition) }}" style="display: inline;">
-                            @csrf
-                            <button type="submit" class="btn btn-danger">Zatvori konkurs</button>
-                        </form>
                     @endif
+                @endif
+                @if($competition->status === 'published' && (isset($isAdmin) && $isAdmin || isset($isChairman) && $isChairman))
+                    <form method="POST" action="{{ route('admin.competitions.close', $competition) }}" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-danger">Zatvori konkurs</button>
+                    </form>
                 @endif
                 @if($competition->status === 'closed' || $competition->status === 'published')
                     <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
@@ -105,7 +106,7 @@
                         <button type="submit" class="btn btn-danger">Obriši</button>
                     </form>
                 @else
-                    {{-- Predsjednik komisije može da vidi i pristupa, ali ne može da edituje i briše --}}
+                    {{-- Članovi komisije mogu da vide i pristupaju, ali ne mogu da edituju i brišu --}}
                 @endif
             </div>
         </div>
