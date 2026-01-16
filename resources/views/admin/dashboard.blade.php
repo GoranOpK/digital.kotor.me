@@ -324,6 +324,7 @@
             </div>
             @endif
 
+            @if(!$isCompetitionAdmin)
             <!-- Najnovije prijave -->
             <div class="content-card">
                 <div class="content-card-header">
@@ -341,6 +342,7 @@
                     @endforelse
                 </div>
             </div>
+            @endif
         </div>
     </div>
 </div>

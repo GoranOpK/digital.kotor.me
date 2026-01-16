@@ -574,26 +574,26 @@
                     </a>
                 </div>
             </div>
+        @endif
 
-            <!-- Najnovije prijave -->
-            @if(isset($recent_applications))
-            <div class="info-card" style="margin-top: 24px;">
-                <div class="info-card-header">
-                    <h2>Najnovije prijave na konkurse</h2>
-                </div>
-                <div style="padding: 20px;">
-                    @forelse($recent_applications as $application)
-                        <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
-                            <p style="font-weight: 600; color: #111827; margin: 0 0 4px;">{{ $application->user->name ?? 'N/A' }}</p>
-                            <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;">{{ $application->competition->title ?? 'N/A' }}</p>
-                            <p style="color: #9ca3af; font-size: 12px; margin: 0;">{{ $application->created_at->format('d.m.Y H:i') }}</p>
-                        </div>
-                    @empty
-                        <p style="color: #6b7280; text-align: center; padding: 24px;">Nema prijava</p>
-                    @endforelse
-                </div>
+        <!-- Najnovije prijave (samo za korisnike koji nisu administrator konkursa) -->
+        @if(isset($recent_applications) && !$isCompetitionAdmin)
+        <div class="info-card" style="margin-top: 24px;">
+            <div class="info-card-header">
+                <h2>Najnovije prijave na konkurse</h2>
             </div>
-            @endif
+            <div style="padding: 20px;">
+                @forelse($recent_applications as $application)
+                    <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
+                        <p style="font-weight: 600; color: #111827; margin: 0 0 4px;">{{ $application->user->name ?? 'N/A' }}</p>
+                        <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;">{{ $application->competition->title ?? 'N/A' }}</p>
+                        <p style="color: #9ca3af; font-size: 12px; margin: 0;">{{ $application->created_at->format('d.m.Y H:i') }}</p>
+                    </div>
+                @empty
+                    <p style="color: #6b7280; text-align: center; padding: 24px;">Nema prijava</p>
+                @endforelse
+            </div>
+        </div>
         @endif
     </div>
 </div>
