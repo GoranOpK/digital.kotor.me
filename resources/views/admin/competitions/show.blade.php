@@ -142,7 +142,9 @@
                     <p><strong>Status:</strong> <span class="status-badge status-{{ $competition->status }}">{{ $competition->status }}</span></p>
                     <p><strong>Budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
                     <p><strong>Maksimalna podrška:</strong> {{ $competition->max_support_percentage ?? 30 }}%</p>
-                    <p><strong>Broj prijava:</strong> {{ $applications->total() }}</p>
+                    @if(!isset($isCompetitionAdmin) || !$isCompetitionAdmin)
+                        <p><strong>Broj prijava:</strong> {{ $applications->total() }}</p>
+                    @endif
                     @if($competition->commission)
                         <p><strong>Komisija:</strong> 
                             <a href="{{ route('admin.commissions.show', $competition->commission) }}" style="color: var(--primary); text-decoration: underline;">
@@ -182,6 +184,7 @@
             </div>
         </div>
 
+        @if(!isset($isCompetitionAdmin) || !$isCompetitionAdmin)
         <div class="info-card">
             <h2 style="font-size: 20px; margin-bottom: 16px;">Prijave</h2>
             <table style="width: 100%; border-collapse: collapse;">
@@ -216,6 +219,7 @@
                 {{ $applications->links() }}
             </div>
         </div>
+        @endif
     </div>
 </div>
 
