@@ -81,42 +81,26 @@
         <div class="page-header">
             <h1>{{ $competition->title }}</h1>
             <div>
-                @if(isset($isAdmin) && $isAdmin || !isset($isAdmin))
-                    @if($competition->status === 'draft')
-                        <form method="POST" action="{{ route('admin.competitions.publish', $competition) }}" style="display: inline;">
-                            @csrf
-                            <button type="submit" class="btn btn-success">Objavi konkurs</button>
-                        </form>
-                    @elseif($competition->status === 'published')
-                        <form method="POST" action="{{ route('admin.competitions.close', $competition) }}" style="display: inline;">
-                            @csrf
-                            <button type="submit" class="btn btn-danger">Zatvori konkurs</button>
-                        </form>
-                    @endif
+                @if($competition->status === 'draft')
+                    <form method="POST" action="{{ route('admin.competitions.publish', $competition) }}" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-success">Objavi konkurs</button>
+                    </form>
+                @elseif($competition->status === 'published')
+                    <form method="POST" action="{{ route('admin.competitions.close', $competition) }}" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-danger">Zatvori konkurs</button>
+                    </form>
                 @endif
                 @if($competition->status === 'closed' || $competition->status === 'published')
                     <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
                 @endif
-                @if(isset($isAdmin) && $isAdmin || !isset($isAdmin))
-                    <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn btn-primary">Izmijeni</a>
-                    <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger">Obriši</button>
-                    </form>
-                @else
-                    @php
-                        $user = auth()->user();
-                        $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
-                            ->where('status', 'active')
-                            ->where('position', 'predsjednik')
-                            ->first();
-                        $canEdit = $commissionMember && $competition->commission_id === $commissionMember->commission_id;
-                    @endphp
-                    @if($canEdit)
-                        <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn btn-primary">Izmijeni</a>
-                    @endif
-                @endif
+                <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn btn-primary">Izmijeni</a>
+                <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger">Obriši</button>
+                </form>
             </div>
         </div>
 

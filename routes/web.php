@@ -144,8 +144,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 
-    // Rute za upravljanje konkursima (dostupne superadmin, admin, konkurs_admin i predsjednik komisije)
-    Route::middleware('role:admin,konkurs_admin,komisija')->group(function () {
+    // Rute za upravljanje konkursima (dostupne superadmin, admin i konkurs_admin ulogama)
+    Route::middleware('role:admin,konkurs_admin')->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
             // Upravljanje konkursima
             Route::get('/competitions', [AdminController::class, 'competitions'])->name('competitions.index');
