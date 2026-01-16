@@ -107,6 +107,10 @@
                    style="flex: 1; padding: 16px 24px; text-align: center; text-decoration: none; font-weight: 600; color: {{ $tab === 'archive' ? 'var(--primary)' : '#6b7280' }}; border-bottom: 3px solid {{ $tab === 'archive' ? 'var(--primary)' : 'transparent' }}; transition: all 0.2s;">
                     Arhiva konkursa
                 </a>
+                <a href="{{ route('admin.competitions.index', ['tab' => 'all']) }}" 
+                   style="flex: 1; padding: 16px 24px; text-align: center; text-decoration: none; font-weight: 600; color: {{ $tab === 'all' ? 'var(--primary)' : '#6b7280' }}; border-bottom: 3px solid {{ $tab === 'all' ? 'var(--primary)' : 'transparent' }}; transition: all 0.2s;">
+                    Svi konkursi
+                </a>
             </div>
         </div>
 
@@ -181,8 +185,10 @@
                             <td colspan="7" style="text-align: center; padding: 40px; color: #6b7280;">
                                 @if($tab === 'archive')
                                     Nema arhiviranih konkursa.
+                                @elseif($tab === 'all')
+                                    Nema konkursa u sistemu.
                                 @else
-                                    Nema konkursa. <a href="{{ route('admin.competitions.create') }}">Kreiraj prvi konkurs</a>
+                                    Nema aktivnih konkursa. <a href="{{ route('admin.competitions.create') }}">Kreiraj prvi konkurs</a>
                                 @endif
                             </td>
                         </tr>

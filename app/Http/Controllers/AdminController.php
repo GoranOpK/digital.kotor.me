@@ -183,13 +183,18 @@ class AdminController extends Controller
      */
     public function competitions(Request $request)
     {
-        $tab = $request->get('tab', 'active'); // 'active' ili 'archive'
+        $tab = $request->get('tab', 'active'); // 'active', 'archive' ili 'all'
         
         if ($tab === 'archive') {
             // Arhiva - završeni konkursi (closed ili completed)
             $competitions = Competition::withCount('applications')
                 ->whereIn('status', ['closed', 'completed'])
                 ->orderBy('closed_at', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->paginate(20);
+        } elseif ($tab === 'all') {
+            // Svi konkursi (bez obzira na status)
+            $competitions = Competition::withCount('applications')
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
         } else {
