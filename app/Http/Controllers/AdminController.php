@@ -336,9 +336,26 @@ class AdminController extends Controller
      */
     public function competitionsArchive(Request $request)
     {
-        $competitions = Competition::withCount('applications')
-            ->where('status', 'completed')
-            ->orderBy('closed_at', 'desc')
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        $isCommissionMember = $this->isCommissionMember();
+        
+        // Filtriraj završene konkursi (closed ili completed)
+        $query = Competition::withCount('applications')
+            ->whereIn('status', ['closed', 'completed']);
+        
+        // Ako je član komisije, prikaži samo konkurse dodijeljene njegovoj komisiji
+        if (!$isAdmin && $isCommissionMember) {
+            $commissionId = $this->getCommissionIdForMember();
+            if ($commissionId) {
+                $query->where('commission_id', $commissionId);
+            } else {
+                // Ako nema komisiju, ne prikazuj ništa
+                $query->whereRaw('1 = 0');
+            }
+        }
+        
+        $competitions = $query->orderBy('closed_at', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
         
