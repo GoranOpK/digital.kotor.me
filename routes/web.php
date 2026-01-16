@@ -49,6 +49,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Modul za konkurse (žensko/omladinsko preduzetništvo)
     Route::get('/competitions', [CompetitionsController::class, 'index'])->name('competitions.index'); // Lista konkursa
+    // Arhiva konkursa (mora biti pre rute sa parametrom)
+    Route::middleware('role:admin,konkurs_admin,komisija')->group(function () {
+        Route::get('/competitions/archive', [AdminController::class, 'competitionsArchive'])->name('competitions.archive');
+    });
     Route::get('/competitions/{competition}', [CompetitionsController::class, 'show'])->name('competitions.show'); // Detalji konkursa
 
     // Modul za tendersku dokumentaciju
@@ -138,11 +142,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             // Pregled prijava (samo admin i superadmin)
             Route::get('/applications', [AdminController::class, 'applications'])->name('applications.index');
         });
-    });
-
-    // Arhiva konkursa (dostupna administratoru konkursa i članovima komisije)
-    Route::middleware('role:admin,konkurs_admin,komisija')->group(function () {
-        Route::get('/competitions/archive', [AdminController::class, 'competitionsArchive'])->name('competitions.archive');
     });
 
     // Rute za upravljanje konkursima (dostupne superadmin, admin i konkurs_admin ulogama)
