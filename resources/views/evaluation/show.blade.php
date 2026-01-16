@@ -491,7 +491,9 @@
 
             <div style="margin-top: 32px; text-align: center;">
                 <a href="{{ route('evaluation.create', $application) }}" class="btn-primary">Izmijeni</a>
-                <button type="button" onclick="window.print()" class="btn-primary" style="margin-left: 12px;">Štampaj</button>
+                @if($commissionMember->position === 'predsjednik')
+                    <button type="button" onclick="window.print()" class="btn-primary" style="margin-left: 12px;">Štampaj</button>
+                @endif
                 <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Nazad na listu</a>
             </div>
         </div>
