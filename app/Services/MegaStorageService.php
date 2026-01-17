@@ -56,22 +56,90 @@ class MegaStorageService
         $payload = is_array($request[0] ?? null) ? $request : [$request];
         
         try {
-            $response = Http::timeout(30)->post($url, $payload);
+            Log::debug('MEGA API request', [
+                'url' => $url,
+                'action' => $request['a'] ?? 'unknown',
+                'payload_keys' => array_keys($request),
+                'payload' => $payload
+            ]);
             
-            if (!$response->successful()) {
-                Log::error('MEGA API request failed', [
-                    'status' => $response->status(),
-                    'body' => $response->body()
+            // MEGA API zahteva JSON format - koristimo cURL direktno za bolju kontrolu
+            $jsonPayload = json_encode($payload);
+            
+            Log::debug('MEGA API sending request', [
+                'url' => $url,
+                'payload_length' => strlen($jsonPayload),
+                'payload_preview' => substr($jsonPayload, 0, 200)
+            ]);
+            
+            $ch = curl_init($url);
+            curl_setopt_array($ch, [
+                CURLOPT_POST => true,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_POSTFIELDS => $jsonPayload,
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'Content-Length: ' . strlen($jsonPayload)
+                ],
+                CURLOPT_TIMEOUT => 30,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_SSL_VERIFYHOST => 2
+            ]);
+            
+            $body = curl_exec($ch);
+            $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+            
+            if ($curlError) {
+                Log::error('MEGA API cURL error', [
+                    'error' => $curlError
                 ]);
                 return [];
             }
             
-            $data = $response->json();
-            return is_array($data) && isset($data[0]) ? $data[0] : $data;
+            if ($statusCode !== 200) {
+                Log::error('MEGA API HTTP error', [
+                    'status' => $statusCode,
+                    'body' => $body,
+                    'body_length' => strlen($body ?? '')
+                ]);
+                return [];
+            }
+            
+            $data = json_decode($body, true);
+            
+            if ($data === null) {
+                Log::error('MEGA API invalid JSON response', [
+                    'body' => $body,
+                    'json_error' => json_last_error_msg()
+                ]);
+                return [];
+            }
+            
+            // MEGA API vraća array sa jednim elementom ili direktno objekat
+            $result = is_array($data) && isset($data[0]) ? $data[0] : $data;
+            
+            // Proveri da li ima grešku u odgovoru
+            if (isset($result['e'])) {
+                Log::error('MEGA API error in response', [
+                    'error_code' => $result['e'],
+                    'action' => $request['a'] ?? 'unknown',
+                    'full_response' => $result
+                ]);
+            } else {
+                Log::debug('MEGA API request successful', [
+                    'action' => $request['a'] ?? 'unknown',
+                    'response_keys' => is_array($result) ? array_keys($result) : 'non-array'
+                ]);
+            }
+            
+            return $result;
             
         } catch (Exception $e) {
             Log::error('MEGA API request exception', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return [];
         }
@@ -334,7 +402,16 @@ class MegaStorageService
         }
         
         try {
+            Log::info('MEGA login attempt', [
+                'email' => $this->email
+            ]);
+            
             $uh = $this->megaUserHash($this->email, $this->password);
+            
+            Log::debug('MEGA user hash generated', [
+                'uh_length' => strlen($uh),
+                'uh_preview' => substr($uh, 0, 20) . '...'
+            ]);
             
             $response = $this->apiRequest([
                 'a' => 'us',
@@ -342,26 +419,77 @@ class MegaStorageService
                 'uh' => $uh
             ]);
             
+            Log::debug('MEGA login response', [
+                'response_keys' => is_array($response) ? array_keys($response) : 'non-array',
+                'has_csid' => isset($response['csid']),
+                'has_k' => isset($response['k']),
+                'has_e' => isset($response['e'])
+            ]);
+            
+            if (empty($response)) {
+                Log::error('MEGA login returned empty response');
+                return null;
+            }
+            
+            // MEGA vraća 'csid' za session ID ili 's' za sekvencu
             if (isset($response['csid'])) {
                 // Session ID je u csid parametru
                 $this->sessionId = $response['csid'];
                 $this->apiUrl = 'https://g.api.mega.co.nz/cs?id=' . $this->sessionId;
                 
+                Log::info('MEGA login successful with csid', [
+                    'session_id_preview' => substr($this->sessionId, 0, 20) . '...'
+                ]);
+                
                 // Dekriptuj master key ako postoji
                 if (isset($response['k'])) {
                     // TODO: Dekriptuj master key koristeći password
-                    // Za sada čuvamo response za dalju upotrebu
-                    Log::info('MEGA login successful', [
-                        'session_id' => substr($this->sessionId, 0, 10) . '...'
-                    ]);
+                    $this->masterKey = $response['k'];
                 }
                 
                 return $this->sessionId;
             }
             
+            // Alternativni format - možda koristi 's' za sekvencu
+            if (isset($response['s'])) {
+                Log::info('MEGA login successful with sequence', [
+                    'sequence' => $response['s']
+                ]);
+                // Možda treba da čuvamo sekvencu kao session
+                return 'sequence_' . $response['s'];
+            }
+            
+            // Proveri grešku
             if (isset($response['e'])) {
+                $errorCode = $response['e'];
+                $errorMessages = [
+                    -1 => 'Internal error',
+                    -2 => 'Bad arguments',
+                    -3 => 'Request failed, retry',
+                    -4 => 'Rate limit exceeded',
+                    -6 => 'Too many requests',
+                    -8 => 'Upload failed',
+                    -9 => 'Item not found',
+                    -11 => 'Access denied',
+                    -13 => 'Over quota',
+                    -14 => 'Temporarily unavailable',
+                    -15 => 'Blocked',
+                    -16 => 'Expired',
+                    -17 => 'Not found',
+                    -18 => 'Circular reference',
+                    -19 => 'Access denied'
+                ];
+                
+                $errorMsg = $errorMessages[$errorCode] ?? 'Unknown error';
+                
                 Log::error('MEGA login failed', [
-                    'error_code' => $response['e']
+                    'error_code' => $errorCode,
+                    'error_message' => $errorMsg,
+                    'full_response' => $response
+                ]);
+            } else {
+                Log::error('MEGA login failed - unexpected response format', [
+                    'response' => $response
                 ]);
             }
             
@@ -369,7 +497,8 @@ class MegaStorageService
             
         } catch (Exception $e) {
             Log::error('MEGA login exception', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return null;
         }
