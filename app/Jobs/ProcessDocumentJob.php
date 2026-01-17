@@ -151,7 +151,22 @@ class ProcessDocumentJob implements ShouldQueue
             $this->document->update($updateData);
 
             // Ažuriraj korišćen prostor
+            // Oduzmi originalni fajl i dodaj obrađeni PDF
+            $originalFileSize = Storage::disk('local')->exists($this->originalFilePath) 
+                ? Storage::disk('local')->size($this->originalFilePath) 
+                : 0;
+            
+            $documentProcessor->updateUserStorage($this->document->user_id, -$originalFileSize);
             $documentProcessor->updateUserStorage($this->document->user_id, $result['file_size']);
+
+            // Obriši originalni fajl nakon uspešne obrade
+            if (Storage::disk('local')->exists($this->originalFilePath)) {
+                Storage::disk('local')->delete($this->originalFilePath);
+                Log::info('Original file deleted after processing', [
+                    'document_id' => $this->document->id,
+                    'original_file_path' => $this->originalFilePath
+                ]);
+            }
 
             Log::info('Document processed successfully', [
                 'document_id' => $this->document->id,

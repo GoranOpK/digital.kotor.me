@@ -249,6 +249,10 @@ class DocumentController extends Controller
                         // Obriši originalni fajl (sada imamo obrađeni PDF)
                         if (Storage::disk('local')->exists($originalFilePath)) {
                             Storage::disk('local')->delete($originalFilePath);
+                            Log::info('Original file deleted after processing', [
+                                'document_id' => $document->id,
+                                'original_file_path' => $originalFilePath
+                            ]);
                         }
 
                         return redirect()->route('documents.index')
@@ -444,6 +448,10 @@ class DocumentController extends Controller
             foreach ($originalFilePaths as $path) {
                 if (Storage::disk('local')->exists($path)) {
                     Storage::disk('local')->delete($path);
+                    Log::info('Original file deleted after merge processing', [
+                        'document_id' => $document->id,
+                        'original_file_path' => $path
+                    ]);
                 }
             }
 
@@ -553,6 +561,12 @@ class DocumentController extends Controller
             Storage::disk('local')->delete($document->file_path);
             $this->documentProcessor->updateUserStorage($user->id, -$fileSize);
             $deleted = true;
+            
+            Log::info('Processed PDF file deleted', [
+                'document_id' => $document->id,
+                'file_path' => $document->file_path,
+                'file_size' => $fileSize
+            ]);
         }
         
         if ($document->original_file_path && Storage::disk('local')->exists($document->original_file_path)) {
@@ -560,6 +574,12 @@ class DocumentController extends Controller
             Storage::disk('local')->delete($document->original_file_path);
             $this->documentProcessor->updateUserStorage($user->id, -$originalFileSize);
             $deleted = true;
+            
+            Log::info('Original file deleted', [
+                'document_id' => $document->id,
+                'original_file_path' => $document->original_file_path,
+                'file_size' => $originalFileSize
+            ]);
         }
         
         // Obriši zapis iz baze
