@@ -56,8 +56,11 @@ class DocumentController extends Controller
         $usedStorageMB = round($usedStorage / 1024 / 1024, 2);
         $maxStorageMB = round($maxStorage / 1024 / 1024, 2);
         $storagePercentage = $maxStorage > 0 ? round(($usedStorage / $maxStorage) * 100, 1) : 0;
+        
+        // Proveri da li je uspešan MEGA upload (iz query parametra)
+        $megaUploadSuccess = request()->get('mega_upload_success');
 
-        return view('documents.index', compact('documents', 'categories', 'usedStorageMB', 'maxStorageMB', 'storagePercentage'));
+        return view('documents.index', compact('documents', 'categories', 'usedStorageMB', 'maxStorageMB', 'storagePercentage', 'megaUploadSuccess'));
     }
 
     /**
@@ -626,6 +629,140 @@ class DocumentController extends Controller
         return response()->json([
             'documents' => $documents,
         ]);
+    }
+
+    /**
+     * Vraća MEGA session token za browser upload
+     * 
+     * @return JsonResponse
+     */
+    public function getMegaSession(): JsonResponse
+    {
+        try {
+            $megaService = new MegaStorageService();
+            
+            if (!$megaService->isConfigured()) {
+                return response()->json([
+                    'error' => 'MEGA credentials not configured'
+                ], 500);
+            }
+
+            // Za sada vraćamo email/password (frontend će se ulogovati sa njima)
+            // TODO: Implementirati session token caching u budućnosti
+            $email = config('services.mega.email');
+            $password = config('services.mega.password');
+            
+            return response()->json([
+                'email' => $email,
+                'password' => $password
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get MEGA session', [
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to get MEGA session: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Čuva MEGA metadata (fajlovi su već upload-ovani na MEGA iz browser-a)
+     * 
+     * @param Request $request
+     * @return JsonResponse|RedirectResponse
+     */
+    public function storeMegaMetadata(Request $request)
+    {
+        try {
+            $user = Auth::user();
+
+            // Validacija
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'category' => 'required|string|in:Lični dokumenti,Finansijski dokumenti,Poslovni dokumenti,Ostali dokumenti',
+                'expires_at' => 'nullable|date|after:today',
+                'files' => 'required|array|min:1',
+                'files.*.mega_node_id' => 'required|string',
+                'files.*.mega_link' => 'required|url',
+                'files.*.name' => 'required|string',
+                'files.*.size' => 'required|integer|min:1',
+            ]);
+
+            // Ako ima više fajlova, spoji ih u jedan dokument
+            if (count($validated['files']) > 1) {
+                $firstFile = $validated['files'][0];
+                
+                $document = UserDocument::create([
+                    'user_id' => $user->id,
+                    'category' => $validated['category'],
+                    'name' => $validated['name'],
+                    'file_path' => null, // Nema lokalni fajl
+                    'cloud_path' => $firstFile['mega_link'], // Čuvamo MEGA link
+                    'file_size' => array_sum(array_column($validated['files'], 'size')),
+                    'status' => 'processed',
+                    'processed_at' => now(),
+                    'expires_at' => $validated['expires_at'] ? \Carbon\Carbon::parse($validated['expires_at']) : null,
+                ]);
+
+                Log::info('MEGA document created (merged)', [
+                    'document_id' => $document->id,
+                    'files_count' => count($validated['files']),
+                    'total_size' => $document->file_size
+                ]);
+
+            } else {
+                $file = $validated['files'][0];
+                
+                $document = UserDocument::create([
+                    'user_id' => $user->id,
+                    'category' => $validated['category'],
+                    'name' => $validated['name'],
+                    'file_path' => null,
+                    'cloud_path' => $file['mega_link'],
+                    'file_size' => $file['size'],
+                    'status' => 'processed',
+                    'processed_at' => now(),
+                    'expires_at' => $validated['expires_at'] ? \Carbon\Carbon::parse($validated['expires_at']) : null,
+                ]);
+
+                Log::info('MEGA document created', [
+                    'document_id' => $document->id,
+                    'mega_link' => $file['mega_link']
+                ]);
+            }
+
+            // Storage se ne računa jer su fajlovi na cloud-u
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'document_id' => $document->id,
+                    'message' => 'Dokument uspešno upload-ovan na MEGA'
+                ]);
+            }
+
+            return redirect()->route('documents.index')
+                ->with('success', 'Dokument uspešno upload-ovan na MEGA');
+
+        } catch (\Exception $e) {
+            Log::error('Failed to save MEGA metadata', [
+                'error' => $e->getMessage()
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'Greška pri čuvanju metadata: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->withErrors([
+                'error' => 'Greška pri čuvanju metadata: ' . $e->getMessage()
+            ])->withInput();
+        }
     }
 }
 

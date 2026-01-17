@@ -256,6 +256,11 @@
 
 <div class="documents-page">
     <div class="container mx-auto px-4">
+        @if(session('success') || (isset($megaUploadSuccess) && $megaUploadSuccess))
+            <div class="alert alert-success" style="background: #d1fae5; border: 1px solid #10b981; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px;">
+                {{ session('success') ?? 'Dokument uspešno upload-ovan na MEGA!' }}
+            </div>
+        @endif
         <div class="page-header">
             <h1>Moja biblioteka dokumenata</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 0;">Upravljajte svojim dokumentima i koristite ih pri prijavama na konkurse</p>
@@ -297,7 +302,7 @@
             <!-- Upload sekcija -->
             <div class="upload-section">
             <h2>Dodaj novi dokument</h2>
-            <form action="{{ route('documents.store') }}" method="POST" enctype="multipart/form-data" id="document-upload-form" onsubmit="return prepareFormSubmit(event)">
+            <form action="{{ route('documents.store') }}" method="POST" enctype="multipart/form-data" id="document-upload-form" onsubmit="return handleMegaUpload(event)">
                 @csrf
                 <div class="form-group">
                     <label for="name" class="form-label">Naziv dokumenta <span style="color: #ef4444;">*</span></label>
@@ -858,6 +863,70 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1000);
     }
 });
+
+// Funkcija za MEGA upload direktno iz browser-a
+async function handleMegaUpload(event) {
+    event.preventDefault();
+    
+    const form = event.target;
+    
+    // Validacija - koristi postojeću prepareFormSubmit logiku
+    if (!prepareFormSubmit(event)) {
+        return false;
+    }
+    
+    // Dobij vrednosti iz forme
+    const name = document.getElementById('name').value;
+    const category = document.getElementById('category').value;
+    const files = document.getElementById('file').files;
+    const expiresAt = document.getElementById('expires_at').value;
+    
+    if (!name || !category || !files || files.length === 0) {
+        alert('Molimo popunite sva obavezna polja.');
+        return false;
+    }
+    
+    // Prikaži loading
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Upload-ovanje na MEGA...';
+    
+    try {
+        // Proveri da li je MEGA upload modul dostupan
+        if (!window.megaUpload || !window.megaUpload.uploadFilesToMegaAndSave) {
+            console.error('MEGA upload modul nije učitan, koristim standardni upload');
+            // Fallback na standardni upload ako MEGA modul nije dostupan
+            form.submit();
+            return false;
+        }
+        
+        // Upload fajlova direktno na MEGA
+        const result = await window.megaUpload.uploadFilesToMegaAndSave(
+            files,
+            name,
+            category,
+            expiresAt || null
+        );
+        
+        if (result.success) {
+            // Redirect na listu dokumenata sa success porukom
+            window.location.href = '{{ route("documents.index") }}?mega_upload_success=1';
+        } else {
+            alert('Greška pri upload-u na MEGA: ' + (result.error || 'Nepoznata greška'));
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+        
+    } catch (error) {
+        console.error('MEGA upload error:', error);
+        alert('Greška pri upload-u na MEGA: ' + error.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+    
+    return false;
+}
 </script>
 @endsection
 
