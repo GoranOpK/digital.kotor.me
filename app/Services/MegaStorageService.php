@@ -481,54 +481,63 @@ class MegaStorageService
      * Rešava Hashcash proof-of-work challenge
      * 
      * Hashcash format: version:bits:timestamp:resource:ext:rand:counter
+     * MEGA format: version:bits:timestamp:resource (bez ext, rand, counter)
      * Treba naći counter tako da SHA1(hashcash_string) počinje sa bits nula
      */
     private function solveHashcash(string $challenge): ?string
     {
         try {
-            // Parsuj challenge
+            // Parsuj challenge - MEGA koristi format sa 4 delova
             $parts = explode(':', $challenge);
-            if (count($parts) < 6) {
-                Log::error('Invalid Hashcash challenge format', ['challenge' => $challenge]);
+            if (count($parts) < 4) {
+                Log::error('Invalid Hashcash challenge format', [
+                    'challenge' => $challenge,
+                    'parts_count' => count($parts)
+                ]);
                 return null;
             }
             
             $version = $parts[0];
             $bits = (int)$parts[1];
             $timestamp = $parts[2];
-            $resource = $parts[3];
-            $ext = $parts[4] ?? '';
-            $rand = $parts[5] ?? '';
+            $resource = $parts[3]; // Ostatak posle 3. dela može biti resource
             
             Log::debug('Solving Hashcash challenge', [
+                'version' => $version,
                 'bits' => $bits,
-                'timestamp' => $timestamp
+                'timestamp' => $timestamp,
+                'resource_length' => strlen($resource)
             ]);
             
-            // Konvertuj bits u broj nula (bits je broj bitova, ne bajtova)
-            // Svaki hex karakter = 4 bita, dakle bits/4 karaktera mora biti 0
-            $requiredZeros = (int)($bits / 4);
+            // Hashcash koristi bits za broj bitova, ne karaktera
+            // SHA1 daje 160 bita (40 hex karaktera)
+            // Treba naći hash gde prvih bits bitova su 0
             
-            // Hashcash 1.0 format koristi partial hash collision
-            // Moramo da nađemo counter gde SHA1 hash počinje sa bits nula (u bitovima)
-            // Za bits=192, to je 48 hex karaktera = 192 bita
+            // Konvertuj bits u broj hex karaktera (svaki hex karakter = 4 bita)
+            $requiredHexChars = (int)floor($bits / 4);
             
-            $targetPrefix = str_repeat('0', min($requiredZeros, 40)); // SHA1 je 40 hex karaktera max
+            // Takođe treba proveriti i bitove u poslednjem karakteru
+            $remainingBits = $bits % 4;
+            
+            Log::debug('Hashcash solving parameters', [
+                'bits' => $bits,
+                'required_hex_chars' => $requiredHexChars,
+                'remaining_bits' => $remainingBits
+            ]);
             
             $startTime = microtime(true);
             $counter = 0;
-            $maxAttempts = 10000000; // Limit pokušaja
+            $maxAttempts = 100000000; // Povećan limit za bits=192
             
             while ($counter < $maxAttempts) {
                 // Kreiraj full hashcash string sa counter-om
+                // MEGA format: version:bits:timestamp:resource:counter
                 $hashcashString = sprintf(
-                    '%s:%d:%s:%s:%s:%s:%d',
+                    '%s:%d:%s:%s:%d',
                     $version,
                     $bits,
                     $timestamp,
                     $resource,
-                    $ext,
-                    $rand,
                     $counter
                 );
                 
@@ -536,13 +545,35 @@ class MegaStorageService
                 $hash = sha1($hashcashString);
                 
                 // Proveri da li hash počinje sa potrebnim brojem nula
-                if (substr($hash, 0, $requiredZeros) === $targetPrefix) {
+                $hexPrefix = substr($hash, 0, $requiredHexChars);
+                $isValid = true;
+                
+                // Proveri sve hex karaktere moraju biti 0
+                for ($i = 0; $i < $requiredHexChars; $i++) {
+                    if ($hexPrefix[$i] !== '0') {
+                        $isValid = false;
+                        break;
+                    }
+                }
+                
+                // Ako ima remaining bits, proveri i taj karakter
+                if ($isValid && $remainingBits > 0 && isset($hash[$requiredHexChars])) {
+                    $lastChar = $hash[$requiredHexChars];
+                    $lastCharValue = hexdec($lastChar);
+                    // Proveri da li su prvi remainingBits bita 0
+                    if (($lastCharValue >> (4 - $remainingBits)) !== 0) {
+                        $isValid = false;
+                    }
+                }
+                
+                if ($isValid) {
                     $elapsed = microtime(true) - $startTime;
                     Log::info('Hashcash solution found', [
                         'counter' => $counter,
                         'hash' => $hash,
                         'time' => round($elapsed, 2) . 's',
-                        'attempts' => $counter + 1
+                        'attempts' => $counter + 1,
+                        'hashcash_string' => $hashcashString
                     ]);
                     
                     return $hashcashString;
@@ -550,25 +581,29 @@ class MegaStorageService
                 
                 $counter++;
                 
-                // Loguj progress svakih 1M pokušaja
-                if ($counter % 1000000 === 0) {
+                // Loguj progress svakih 10M pokušaja (za bits=192)
+                if ($counter % 10000000 === 0) {
+                    $elapsed = microtime(true) - $startTime;
                     Log::debug('Hashcash solving progress', [
                         'attempts' => $counter,
-                        'elapsed' => round(microtime(true) - $startTime, 2) . 's'
+                        'elapsed' => round($elapsed, 2) . 's',
+                        'hashes_per_second' => round($counter / $elapsed, 0)
                     ]);
                 }
             }
             
             Log::error('Hashcash solving failed - max attempts reached', [
                 'max_attempts' => $maxAttempts,
-                'bits' => $bits
+                'bits' => $bits,
+                'elapsed' => round(microtime(true) - $startTime, 2) . 's'
             ]);
             
             return null;
             
         } catch (Exception $e) {
             Log::error('Hashcash solving exception', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return null;
         }
