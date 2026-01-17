@@ -80,14 +80,64 @@ class DocumentProcessor
                 ];
             }
 
-            // Snimi PDF fajl u storage (na istom mestu gde će biti izvorni fajl)
-            Storage::disk('local')->put($outputPath, $pdfData);
+            // Snimi PDF fajl privremeno u lokalni storage (pre upload-a na cloud)
+            $tempLocalPath = $outputPath;
+            Storage::disk('local')->put($tempLocalPath, $pdfData);
 
             $fileSize = strlen($pdfData);
 
+            // Pokušaj da uploaduješ na Mega.nz i obrišeš lokalni fajl
+            $cloudPath = null;
+            $megaService = new MegaStorageService();
+            
+            if ($megaService->isConfigured()) {
+                try {
+                    // Kreiraj privremenu putanju za upload
+                    $localFullPath = Storage::disk('local')->path($tempLocalPath);
+                    
+                    // Upload na Mega.nz u osnovni folder (digital.kotor)
+                    $baseFolder = config('services.mega.base_folder', 'digital.kotor');
+                    $remotePath = "{$baseFolder}/documents/user_{$userId}/";
+                    $uploadResult = $megaService->upload($localFullPath, $remotePath);
+                    
+                    if ($uploadResult['success'] && !empty($uploadResult['cloud_path'])) {
+                        $cloudPath = $uploadResult['cloud_path'];
+                        
+                        // Obriši lokalni fajl nakon uspešnog upload-a
+                        Storage::disk('local')->delete($tempLocalPath);
+                        
+                        Log::info('Document uploaded to MEGA and local file deleted', [
+                            'user_id' => $userId,
+                            'local_path' => $tempLocalPath,
+                            'cloud_path' => $cloudPath
+                        ]);
+                    } else {
+                        // Ako upload ne uspe, ostavi fajl lokalno i loguj grešku
+                        Log::warning('MEGA upload failed, keeping file locally', [
+                            'user_id' => $userId,
+                            'local_path' => $tempLocalPath,
+                            'error' => $uploadResult['error'] ?? 'Unknown error'
+                        ]);
+                    }
+                } catch (Exception $e) {
+                    // Ako upload baci exception, ostavi fajl lokalno
+                    Log::error('MEGA upload exception, keeping file locally', [
+                        'user_id' => $userId,
+                        'local_path' => $tempLocalPath,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            } else {
+                Log::info('MEGA not configured, keeping file locally', [
+                    'user_id' => $userId,
+                    'local_path' => $tempLocalPath
+                ]);
+            }
+
             return [
                 'success' => true,
-                'file_path' => $outputPath,
+                'file_path' => $cloudPath ? null : $tempLocalPath, // Ako je na cloud-u, file_path je null
+                'cloud_path' => $cloudPath, // Mega.nz file handle ili putanja
                 'file_size' => $fileSize,
                 'error' => null,
             ];
@@ -168,13 +218,23 @@ class DocumentProcessor
         ]);
 
         foreach ($documents as $document) {
-            // Računaj samo obrađene PDF fajlove (file_path)
+            // Ako dokument ima cloud_path, preskači ga jer nije lokalno
+            if ($document->cloud_path) {
+                Log::debug('Document is on cloud, skipping from local storage calculation', [
+                    'document_id' => $document->id,
+                    'cloud_path' => $document->cloud_path,
+                    'status' => $document->status
+                ]);
+                continue;
+            }
+            
+            // Računaj samo obrađene PDF fajlove (file_path) koji su lokalno
             // Ne računaj originalne fajlove jer se oni brišu nakon obrade
             if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
                 $fileSize = Storage::disk('local')->size($document->file_path);
                 $actualSize += $fileSize;
                 
-                Log::debug('Document file found', [
+                Log::debug('Document file found (local)', [
                     'document_id' => $document->id,
                     'file_path' => $document->file_path,
                     'file_size' => $fileSize,
@@ -442,13 +502,56 @@ class DocumentProcessor
                     ];
                 }
 
-                // Snimi merged PDF
-                Storage::disk('local')->put($outputPath, $pdfData);
+                // Snimi merged PDF privremeno lokalno
+                $tempLocalPath = $outputPath;
+                Storage::disk('local')->put($tempLocalPath, $pdfData);
                 $fileSize = strlen($pdfData);
+
+                // Pokušaj da uploaduješ na Mega.nz i obrišeš lokalni fajl
+                $cloudPath = null;
+                $megaService = new MegaStorageService();
+                
+                if ($megaService->isConfigured()) {
+                    try {
+                        $localFullPath = Storage::disk('local')->path($tempLocalPath);
+                        $baseFolder = config('services.mega.base_folder', 'digital.kotor');
+                        $remotePath = "{$baseFolder}/documents/user_{$userId}/";
+                        $uploadResult = $megaService->upload($localFullPath, $remotePath);
+                        
+                        if ($uploadResult['success'] && !empty($uploadResult['cloud_path'])) {
+                            $cloudPath = $uploadResult['cloud_path'];
+                            Storage::disk('local')->delete($tempLocalPath);
+                            
+                            Log::info('Merged document uploaded to MEGA and local file deleted', [
+                                'user_id' => $userId,
+                                'local_path' => $tempLocalPath,
+                                'cloud_path' => $cloudPath
+                            ]);
+                        } else {
+                            Log::warning('MEGA upload failed for merged document, keeping file locally', [
+                                'user_id' => $userId,
+                                'local_path' => $tempLocalPath,
+                                'error' => $uploadResult['error'] ?? 'Unknown error'
+                            ]);
+                        }
+                    } catch (Exception $e) {
+                        Log::error('MEGA upload exception for merged document, keeping file locally', [
+                            'user_id' => $userId,
+                            'local_path' => $tempLocalPath,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                } else {
+                    Log::info('MEGA not configured for merged document, keeping file locally', [
+                        'user_id' => $userId,
+                        'local_path' => $tempLocalPath
+                    ]);
+                }
 
                 return [
                     'success' => true,
-                    'file_path' => $outputPath,
+                    'file_path' => $cloudPath ? null : $tempLocalPath,
+                    'cloud_path' => $cloudPath,
                     'file_size' => $fileSize,
                     'error' => null,
                 ];
@@ -478,6 +581,8 @@ class DocumentProcessor
 
     /**
      * Briše fajl i ažurira storage
+     * 
+     * Napomena: Ova metoda se koristi interno. Za brisanje dokumenata koristite DocumentController::destroy()
      *
      * @param string $filePath
      * @param int $userId
@@ -486,15 +591,22 @@ class DocumentProcessor
     public function deleteDocument(string $filePath, int $userId): bool
     {
         try {
+            // Proveri da li fajl postoji lokalno
             if (Storage::disk('local')->exists($filePath)) {
                 $fileSize = Storage::disk('local')->size($filePath);
                 Storage::disk('local')->delete($filePath);
                 
-                // Ažuriraj storage (oduzmi)
+                // Ažuriraj storage (oduzmi) - samo za lokalne fajlove
                 $this->updateUserStorage($userId, -$fileSize);
                 
                 return true;
             }
+            
+            // Ako fajl ne postoji lokalno, možda je na cloud-u - nije greška
+            Log::debug('Document file not found locally (may be on cloud)', [
+                'file_path' => $filePath,
+                'user_id' => $userId
+            ]);
             
             return false;
         } catch (Exception $e) {

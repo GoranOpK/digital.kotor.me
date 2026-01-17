@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Jobs\ProcessDocumentJob;
 use App\Models\UserDocument;
 use App\Services\DocumentProcessor;
+use App\Services\MegaStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -208,9 +209,11 @@ class DocumentController extends Controller
                             return back()->withErrors(['file' => $result['error'] ?? 'Greška pri obradi dokumenta.'])->withInput();
                         }
 
-                        // Proveri da li korisnik ima dovoljno prostora
-                        if (!$this->documentProcessor->hasEnoughStorage($user->id, $result['file_size'])) {
-                            Storage::disk('local')->delete($result['file_path']);
+                        // Proveri da li korisnik ima dovoljno prostora (samo ako fajl nije na cloud-u)
+                        if (!$result['cloud_path'] && !$this->documentProcessor->hasEnoughStorage($user->id, $result['file_size'])) {
+                            if ($result['file_path']) {
+                                Storage::disk('local')->delete($result['file_path']);
+                            }
                             $document->update(['status' => 'failed']);
                             
                             return back()->withErrors([
@@ -218,18 +221,23 @@ class DocumentController extends Controller
                             ])->withInput();
                         }
 
-                        // Ažuriraj dokument sa putanjom do obrađenog fajla
+                        // Ažuriraj dokument sa putanjom do obrađenog fajla i cloud_path-om ako postoji
                         $document->update([
                             'file_path' => $result['file_path'],
+                            'cloud_path' => $result['cloud_path'] ?? null,
                             'file_size' => $result['file_size'],
                             'status' => 'processed',
                             'processed_at' => now(),
                         ]);
 
-                        // Ažuriraj korišćen prostor
-                        // Oduzmi originalni fajl i dodaj obrađeni PDF
-                        $this->documentProcessor->updateUserStorage($user->id, -$originalFileSize);
-                        $this->documentProcessor->updateUserStorage($user->id, $result['file_size']);
+                        // Ažuriraj korišćen prostor (samo za lokalne fajlove, cloud fajlovi ne računaju se u lokalni prostor)
+                        if (!$result['cloud_path']) {
+                            $this->documentProcessor->updateUserStorage($user->id, -$originalFileSize);
+                            $this->documentProcessor->updateUserStorage($user->id, $result['file_size']);
+                        } else {
+                            // Ako je fajl na cloud-u, samo oduzmi originalni fajl iz lokalnog prostora
+                            $this->documentProcessor->updateUserStorage($user->id, -$originalFileSize);
+                        }
                         
                         // Obriši originalni fajl (sada imamo obrađeni PDF)
                         if (Storage::disk('local')->exists($originalFilePath)) {
@@ -373,9 +381,11 @@ class DocumentController extends Controller
                 return back()->withErrors(['files' => $result['error'] ?? 'Greška pri spajanju fajlova.'])->withInput();
             }
 
-            // Proveri da li korisnik ima dovoljno prostora za spojeni PDF
-            if (!$this->documentProcessor->hasEnoughStorage($user->id, $result['file_size'])) {
-                Storage::disk('local')->delete($result['file_path']);
+            // Proveri da li korisnik ima dovoljno prostora za spojeni PDF (samo ako nije na cloud-u)
+            if (!$result['cloud_path'] && !$this->documentProcessor->hasEnoughStorage($user->id, $result['file_size'])) {
+                if ($result['file_path']) {
+                    Storage::disk('local')->delete($result['file_path']);
+                }
                 $document->update(['status' => 'failed']);
                 
                 return back()->withErrors([
@@ -383,15 +393,16 @@ class DocumentController extends Controller
                 ])->withInput();
             }
 
-            // Ažuriraj dokument sa putanjom do spojenog PDF-a
+            // Ažuriraj dokument sa putanjom do spojenog PDF-a i cloud_path-om ako postoji
             $document->update([
                 'file_path' => $result['file_path'],
+                'cloud_path' => $result['cloud_path'] ?? null,
                 'file_size' => $result['file_size'],
                 'status' => 'processed',
                 'processed_at' => now(),
             ]);
 
-            // Ažuriraj korišćen prostor (dodaj razliku između spojenog PDF-a i originalnih fajlova)
+            // Ažuriraj korišćen prostor
             // Prvo izračunaj ukupnu veličinu originalnih fajlova PRE brisanja
             $originalTotalSize = 0;
             foreach ($originalFilePaths as $path) {
@@ -403,13 +414,18 @@ class DocumentController extends Controller
             Log::info('Updating storage for merged PDF', [
                 'original_total_size' => $originalTotalSize,
                 'merged_pdf_size' => $result['file_size'],
-                'difference' => $result['file_size'] - $originalTotalSize
+                'cloud_path' => $result['cloud_path'] ?? null,
+                'difference' => $result['cloud_path'] ? -$originalTotalSize : ($result['file_size'] - $originalTotalSize)
             ]);
             
-            // Oduzmi originalne fajlove i dodaj spojeni PDF
-            // Koristimo jedan poziv sa razlikom umesto dva poziva
-            $sizeDifference = $result['file_size'] - $originalTotalSize;
-            $this->documentProcessor->updateUserStorage($user->id, $sizeDifference);
+            // Ako je fajl na cloud-u, samo oduzmi originalne fajlove iz lokalnog prostora
+            // Ako nije na cloud-u, oduzmi originalne i dodaj spojeni PDF
+            if ($result['cloud_path']) {
+                $this->documentProcessor->updateUserStorage($user->id, -$originalTotalSize);
+            } else {
+                $sizeDifference = $result['file_size'] - $originalTotalSize;
+                $this->documentProcessor->updateUserStorage($user->id, $sizeDifference);
+            }
 
             // Obriši originalne fajlove (sada imamo spojeni PDF)
             foreach ($originalFilePaths as $path) {
@@ -449,7 +465,29 @@ class DocumentController extends Controller
             abort(404, 'Dokument još nije obrađen.');
         }
 
-        // Koristi obrađeni fajl ako postoji, inače izvorni
+        // Ako dokument ima cloud_path, preuzmi sa Mega.nz
+        if ($document->cloud_path) {
+            $megaService = new MegaStorageService();
+            $downloadResult = $megaService->download($document->cloud_path);
+            
+            if ($downloadResult['success'] && !empty($downloadResult['content'])) {
+                $extension = 'pdf'; // Obrađeni dokumenti su uvek PDF
+                $filename = $document->name . '.' . $extension;
+                
+                return response($downloadResult['content'])
+                    ->header('Content-Type', 'application/pdf')
+                    ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            } else {
+                Log::error('MEGA download failed', [
+                    'document_id' => $document->id,
+                    'cloud_path' => $document->cloud_path,
+                    'error' => $downloadResult['error'] ?? 'Unknown error'
+                ]);
+                abort(404, 'Dokument nije pronađen na cloud storage-u.');
+            }
+        }
+
+        // Ako nema cloud_path, preuzmi lokalno
         $filePath = $document->file_path ?? $document->original_file_path;
         
         if (!$filePath || !Storage::disk('local')->exists($filePath)) {
@@ -476,9 +514,27 @@ class DocumentController extends Controller
             abort(403, 'Nemate pristup ovom dokumentu.');
         }
 
-        // Obriši fajlove (obrađeni i izvorni) i ažuriraj storage
         $deleted = false;
+        $megaService = new MegaStorageService();
         
+        // Ako dokument ima cloud_path, obriši sa Mega.nz
+        if ($document->cloud_path) {
+            $deleted = $megaService->delete($document->cloud_path);
+            
+            if ($deleted) {
+                Log::info('Document deleted from MEGA', [
+                    'document_id' => $document->id,
+                    'cloud_path' => $document->cloud_path
+                ]);
+            } else {
+                Log::warning('MEGA delete failed, but continuing with local cleanup', [
+                    'document_id' => $document->id,
+                    'cloud_path' => $document->cloud_path
+                ]);
+            }
+        }
+
+        // Obriši lokalne fajlove ako postoje
         if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
             $fileSize = Storage::disk('local')->size($document->file_path);
             Storage::disk('local')->delete($document->file_path);
@@ -493,15 +549,9 @@ class DocumentController extends Controller
             $deleted = true;
         }
         
-        if ($deleted) {
-            $document->delete();
-            
-            return redirect()->route('documents.index')
-                ->with('success', 'Dokument je uspješno obrisan.');
-        }
-
-        // Ako nema fajlova, samo obriši zapis
+        // Obriši zapis iz baze
         $document->delete();
+        
         return redirect()->route('documents.index')
             ->with('success', 'Dokument je uspješno obrisan.');
     }

@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'mega' => [
+        'email' => env('MEGA_EMAIL'),
+        'password' => env('MEGA_PASSWORD'),
+        'base_folder' => env('MEGA_BASE_FOLDER', 'digital.kotor'),
+    ],
+
 ];

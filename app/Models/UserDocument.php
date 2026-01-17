@@ -15,6 +15,7 @@ class UserDocument extends Model
         'category',
         'name',
         'file_path',
+        'cloud_path',
         'original_file_path',
         'original_filename',
         'file_size',
