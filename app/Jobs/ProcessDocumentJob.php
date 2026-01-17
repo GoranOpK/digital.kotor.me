@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class ProcessDocumentJob implements ShouldQueue
@@ -134,13 +135,20 @@ class ProcessDocumentJob implements ShouldQueue
                 return;
             }
 
-            // Ažuriraj dokument sa putanjom do obrađenog fajla
-            $this->document->update([
+            // Ažuriraj dokument sa putanjom do obrađenog fajla i cloud_path-om ako postoji
+            $updateData = [
                 'file_path' => $result['file_path'],
                 'file_size' => $result['file_size'],
                 'status' => 'processed',
                 'processed_at' => now(),
-            ]);
+            ];
+            
+            // Dodaj cloud_path samo ako kolona postoji u bazi
+            if (Schema::hasColumn('user_documents', 'cloud_path')) {
+                $updateData['cloud_path'] = $result['cloud_path'] ?? null;
+            }
+            
+            $this->document->update($updateData);
 
             // Ažuriraj korišćen prostor
             $documentProcessor->updateUserStorage($this->document->user_id, $result['file_size']);

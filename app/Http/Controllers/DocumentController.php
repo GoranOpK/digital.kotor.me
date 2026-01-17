@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
@@ -222,13 +223,19 @@ class DocumentController extends Controller
                         }
 
                         // Ažuriraj dokument sa putanjom do obrađenog fajla i cloud_path-om ako postoji
-                        $document->update([
+                        $updateData = [
                             'file_path' => $result['file_path'],
-                            'cloud_path' => $result['cloud_path'] ?? null,
                             'file_size' => $result['file_size'],
                             'status' => 'processed',
                             'processed_at' => now(),
-                        ]);
+                        ];
+                        
+                        // Dodaj cloud_path samo ako kolona postoji u bazi
+                        if (\Schema::hasColumn('user_documents', 'cloud_path')) {
+                            $updateData['cloud_path'] = $result['cloud_path'] ?? null;
+                        }
+                        
+                        $document->update($updateData);
 
                         // Ažuriraj korišćen prostor (samo za lokalne fajlove, cloud fajlovi ne računaju se u lokalni prostor)
                         if (!$result['cloud_path']) {
@@ -394,13 +401,19 @@ class DocumentController extends Controller
             }
 
             // Ažuriraj dokument sa putanjom do spojenog PDF-a i cloud_path-om ako postoji
-            $document->update([
+            $updateData = [
                 'file_path' => $result['file_path'],
-                'cloud_path' => $result['cloud_path'] ?? null,
                 'file_size' => $result['file_size'],
                 'status' => 'processed',
                 'processed_at' => now(),
-            ]);
+            ];
+            
+            // Dodaj cloud_path samo ako kolona postoji u bazi
+            if (Schema::hasColumn('user_documents', 'cloud_path')) {
+                $updateData['cloud_path'] = $result['cloud_path'] ?? null;
+            }
+            
+            $document->update($updateData);
 
             // Ažuriraj korišćen prostor
             // Prvo izračunaj ukupnu veličinu originalnih fajlova PRE brisanja
