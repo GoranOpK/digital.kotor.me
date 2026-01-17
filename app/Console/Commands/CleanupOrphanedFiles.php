@@ -95,10 +95,16 @@ class CleanupOrphanedFiles extends Command
         // Napravi listu validnih putanja
         $validPaths = [];
         foreach ($documents as $doc) {
+            // Dodaj obrađeni fajl (file_path) - uvek je validan ako postoji
             if ($doc->file_path) {
                 $validPaths[] = $doc->file_path;
             }
-            if ($doc->original_file_path) {
+            
+            // Originalni fajl (original_file_path) je validan SAMO ako dokument NIJE obrađen
+            // Ako je dokument obrađen (ima file_path), originalni fajl bi trebalo da se obriše
+            // Prema tome, originalni fajl je validan samo ako dokument NEMA obrađeni fajl
+            if ($doc->original_file_path && !$doc->file_path) {
+                // Originalni fajl je validan samo ako dokument nije obrađen
                 $validPaths[] = $doc->original_file_path;
             }
         }
