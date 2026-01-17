@@ -489,8 +489,14 @@ class DocumentController extends Controller
             abort(404, 'Dokument još nije obrađen.');
         }
 
-        // Ako dokument ima cloud_path, preuzmi sa Mega.nz
+        // Ako dokument ima cloud_path (MEGA link), redirect direktno na MEGA
         if ($document->cloud_path) {
+            // Ako je cloud_path MEGA link (sadrži mega.nz), redirect direktno
+            if (strpos($document->cloud_path, 'mega.nz') !== false) {
+                return redirect($document->cloud_path);
+            }
+            
+            // Inače, pokušaj da downloaduješ koristeći MegaStorageService (za node handles)
             $megaService = new MegaStorageService();
             $downloadResult = $megaService->download($document->cloud_path);
             
@@ -501,14 +507,15 @@ class DocumentController extends Controller
                 return response($downloadResult['content'])
                     ->header('Content-Type', 'application/pdf')
                     ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
-            } else {
-                Log::error('MEGA download failed', [
-                    'document_id' => $document->id,
-                    'cloud_path' => $document->cloud_path,
-                    'error' => $downloadResult['error'] ?? 'Unknown error'
-                ]);
-                abort(404, 'Dokument nije pronađen na cloud storage-u.');
             }
+            
+            Log::error('MEGA download failed', [
+                'document_id' => $document->id,
+                'cloud_path' => $document->cloud_path,
+                'error' => $downloadResult['error'] ?? 'Unknown error'
+            ]);
+            
+            return back()->withErrors(['error' => 'Greška pri preuzimanju sa MEGA: ' . ($downloadResult['error'] ?? 'Nepoznata greška')]);
         }
 
         // Ako nema cloud_path, preuzmi lokalno
