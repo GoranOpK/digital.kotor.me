@@ -324,23 +324,7 @@
             </div>
             @endif
 
-            <!-- Najnovije prijave -->
-            <div class="content-card">
-                <div class="content-card-header">
-                    <h2>Najnovije prijave na konkurse</h2>
-                </div>
-                <div class="content-card-body">
-                    @forelse($recent_applications as $application)
-                        <div class="application-item">
-                            <p class="name">{{ $application->user->name ?? 'N/A' }}</p>
-                            <p class="competition">{{ $application->competition->title ?? 'N/A' }}</p>
-                            <p class="date">{{ $application->created_at->format('d.m.Y H:i') }}</p>
-                        </div>
-                    @empty
-                        <p style="color: #6b7280; text-align: center; padding: 24px;">Nema prijava</p>
-                    @endforelse
-                </div>
-            </div>
+            {{-- Najnovije prijave se ne prikazuju administratorima --}}
         </div>
     </div>
 </div>

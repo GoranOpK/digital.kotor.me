@@ -19,20 +19,20 @@
                         Home
                     </x-nav-link>
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        @auth
-                            @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
-                                Moj Panel
-                            @else
-                                {{ __('Dashboard') }}
-                            @endif
-                        @else
-                            {{ __('Dashboard') }}
-                        @endauth
+                        Moj Panel
                     </x-nav-link>
                     @auth
                         @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
                             <x-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
                                 Administracija
+                            </x-nav-link>
+                        @endif
+                        @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
+                            <x-nav-link :href="route('admin.competitions.index')" :active="request()->is('admin/competitions*')">
+                                Upravljanje konkursima
+                            </x-nav-link>
+                            <x-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
+                                Arhiva konkursa
                             </x-nav-link>
                         @endif
                     @endauth
@@ -97,20 +97,20 @@
                 Home
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                @auth
-                    @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
-                        Moj Panel
-                    @else
-                        {{ __('Dashboard') }}
-                    @endif
-                @else
-                    {{ __('Dashboard') }}
-                @endauth
+                Moj Panel
             </x-responsive-nav-link>
             @auth
                 @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
                     <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
                         Administracija
+                    </x-responsive-nav-link>
+                @endif
+                @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
+                    <x-responsive-nav-link :href="route('admin.competitions.index')" :active="request()->is('admin/competitions*')">
+                        Upravljanje konkursima
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
+                        Arhiva konkursa
                     </x-responsive-nav-link>
                 @endif
             @endauth

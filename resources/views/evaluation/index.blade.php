@@ -112,10 +112,10 @@
         </div>
 
         <div class="filters">
-            <form method="GET" action="{{ route('evaluation.index') }}">
+            <form method="GET" action="{{ route('evaluation.index') }}" id="filterForm">
                 <div class="form-group">
                     <label class="form-label">Filtriraj</label>
-                    <select name="filter" class="form-control">
+                    <select name="filter" class="form-control" onchange="document.getElementById('filterForm').submit();">
                         <option value="">Sve prijave</option>
                         <option value="pending" {{ request('filter') === 'pending' ? 'selected' : '' }}>Čeka ocjenjivanje</option>
                         <option value="evaluated" {{ request('filter') === 'evaluated' ? 'selected' : '' }}>Ocjenjene</option>
@@ -123,7 +123,7 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Konkurs</label>
-                    <select name="competition_id" class="form-control">
+                    <select name="competition_id" class="form-control" onchange="document.getElementById('filterForm').submit();">
                         <option value="">Svi konkursi</option>
                         @foreach($competitions as $comp)
                             <option value="{{ $comp->id }}" {{ request('competition_id') == $comp->id ? 'selected' : '' }}>
@@ -134,6 +134,9 @@
                 </div>
                 <div class="form-group">
                     <button type="submit" class="btn-primary">Filtriraj</button>
+                    @if(request('filter') || request('competition_id'))
+                        <a href="{{ route('evaluation.index') }}" class="btn-primary" style="margin-left: 8px; background: #6b7280; text-decoration: none; display: inline-block;">Resetuj</a>
+                    @endif
                 </div>
             </form>
         </div>

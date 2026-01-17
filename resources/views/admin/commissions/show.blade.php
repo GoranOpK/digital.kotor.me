@@ -183,7 +183,7 @@
     }
     @media (min-width: 1024px) {
         .info-grid {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
         }
     }
     .info-grid .info-card {
@@ -223,10 +223,38 @@
                 <p><strong>Mandat:</strong> {{ $commission->start_date->format('d.m.Y') }} - {{ $commission->end_date->format('d.m.Y') }}</p>
                 <p><strong>Status:</strong> <span class="status-badge status-{{ $commission->status }}">{{ $commission->status === 'active' ? 'Aktivna' : 'Neaktivna' }}</span></p>
                 <p><strong>Broj članova:</strong> {{ $commission->members->count() }} / 5</p>
-                @if($commission->competitions->count() > 0)
-                    <p><strong>Dodijeljeni konkursi:</strong> {{ $commission->competitions->count() }}</p>
-                @endif
             </div>
+
+            <!-- Dodijeljeni konkursi -->
+            @if($commission->competitions->count() > 0)
+            <div class="info-card">
+                <h2>Dodijeljeni konkursi</h2>
+                <ul class="members-list">
+                    @foreach($commission->competitions as $competition)
+                        <li class="member-item">
+                            <div class="member-info">
+                                <div class="member-name">
+                                    <a href="{{ route('admin.competitions.show', $competition) }}" style="color: var(--primary); text-decoration: none;">
+                                        {{ $competition->title }}
+                                    </a>
+                                </div>
+                                <div class="member-details">
+                                    <div>Godina: {{ $competition->year }}</div>
+                                    <div>Status: 
+                                        <span style="color: {{ $competition->status === 'published' ? '#10b981' : ($competition->status === 'closed' ? '#ef4444' : '#6b7280') }};">
+                                            {{ $competition->status === 'published' ? 'Objavljen' : ($competition->status === 'closed' ? 'Zatvoren' : ($competition->status === 'draft' ? 'Nacrt' : 'Završen')) }}
+                                        </span>
+                                    </div>
+                                    @if($competition->published_at)
+                                        <div>Datum objave: {{ $competition->published_at->format('d.m.Y') }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
 
             <!-- Članovi komisije -->
             <div class="info-card">
@@ -379,37 +407,6 @@
                 </div>
             @endif
             </div>
-
-            <!-- Dodijeljeni konkursi -->
-            @if($commission->competitions->count() > 0)
-            <div class="info-card">
-                <h2>Dodijeljeni konkursi</h2>
-                <ul class="members-list">
-                    @foreach($commission->competitions as $competition)
-                        <li class="member-item">
-                            <div class="member-info">
-                                <div class="member-name">
-                                    <a href="{{ route('admin.competitions.show', $competition) }}" style="color: var(--primary); text-decoration: none;">
-                                        {{ $competition->title }}
-                                    </a>
-                                </div>
-                                <div class="member-details">
-                                    <div>Godina: {{ $competition->year }}</div>
-                                    <div>Status: 
-                                        <span style="color: {{ $competition->status === 'published' ? '#10b981' : ($competition->status === 'closed' ? '#ef4444' : '#6b7280') }};">
-                                            {{ $competition->status === 'published' ? 'Objavljen' : ($competition->status === 'closed' ? 'Zatvoren' : ($competition->status === 'draft' ? 'Nacrt' : 'Završen')) }}
-                                        </span>
-                                    </div>
-                                    @if($competition->published_at)
-                                        <div>Datum objave: {{ $competition->published_at->format('d.m.Y') }}</div>
-                                    @endif
-                                </div>
-                            </div>
-                        </li>
-                    @endforeach
-                </ul>
-            </div>
-            @endif
         </div>
     </div>
 </div>

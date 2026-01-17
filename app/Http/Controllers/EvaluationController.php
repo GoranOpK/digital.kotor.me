@@ -34,7 +34,7 @@ class EvaluationController extends Controller
             ->whereIn('status', ['submitted', 'evaluated']);
 
         // Filtriranje po konkursu
-        if ($request->has('competition_id') && $request->competition_id !== '') {
+        if ($request->filled('competition_id')) {
             $query->where('competition_id', $request->competition_id);
         }
 
@@ -43,15 +43,27 @@ class EvaluationController extends Controller
             ->pluck('application_id')
             ->toArray();
 
-        if ($request->has('filter') && $request->filter === 'pending') {
-            $query->whereNotIn('id', $evaluatedApplicationIds);
-        } elseif ($request->has('filter') && $request->filter === 'evaluated') {
-            $query->whereIn('id', $evaluatedApplicationIds);
+        // Filtriranje po statusu ocjenjivanja
+        if ($request->filled('filter')) {
+            if ($request->filter === 'pending') {
+                // Prijave koje član komisije još nije ocjenio
+                if (!empty($evaluatedApplicationIds)) {
+                    $query->whereNotIn('id', $evaluatedApplicationIds);
+                }
+                // Ako nema ocjenjenih prijava, sve prijave su "pending"
+            } elseif ($request->filter === 'evaluated') {
+                // Prijave koje je član komisije već ocjenio
+                if (!empty($evaluatedApplicationIds)) {
+                    $query->whereIn('id', $evaluatedApplicationIds);
+                } else {
+                    // Ako nema ocjenjenih prijava, ne prikazuj ništa
+                    $query->whereRaw('1 = 0');
+                }
+            }
         }
 
-        $applications = $query->latest()->paginate(20);
-        $competitions = \App\Models\Competition::where('status', 'published')
-            ->orWhere('status', 'closed')
+        $applications = $query->latest()->paginate(20)->appends($request->query());
+        $competitions = \App\Models\Competition::whereIn('status', ['published', 'closed', 'completed'])
             ->get();
 
         return view('evaluation.index', compact('applications', 'competitions', 'commissionMember'));

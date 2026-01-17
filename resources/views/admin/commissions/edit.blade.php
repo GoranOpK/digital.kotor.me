@@ -157,20 +157,29 @@
                 <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
                     <h2 style="font-size: 20px; font-weight: 700; color: var(--primary); margin: 0 0 20px;">Dodjela konkursa</h2>
                     <div class="form-group">
-                        <label class="form-label">Izaberi konkurs za ovu komisiju</label>
-                        <select name="competition_id" class="form-control">
-                            <option value="">-- Izaberi konkurs --</option>
+                        <label class="form-label">Izaberi konkurs(e) za ovu komisiju</label>
+                        <div style="background: #f9fafb; padding: 16px; border-radius: 8px; max-height: 300px; overflow-y: auto; border: 1px solid #e5e7eb;">
                             @php
-                                $assignedCompetitionId = $commission->competitions->first()?->id;
+                                $assignedCompetitionIds = $commission->competitions->pluck('id')->toArray();
                             @endphp
                             @foreach($competitions as $competition)
-                                <option value="{{ $competition->id }}" {{ old('competition_id', $assignedCompetitionId) == $competition->id ? 'selected' : '' }}>
-                                    {{ $competition->title }} ({{ $competition->year }})
-                                </option>
+                                <div style="margin-bottom: 12px;">
+                                    <label style="display: flex; align-items: center; cursor: pointer;">
+                                        <input type="checkbox" name="competition_ids[]" value="{{ $competition->id }}" 
+                                               {{ in_array($competition->id, old('competition_ids', $assignedCompetitionIds)) ? 'checked' : '' }}
+                                               style="margin-right: 8px; width: 18px; height: 18px; cursor: pointer;">
+                                        <span style="font-size: 14px; color: #374151;">
+                                            {{ $competition->title }} ({{ $competition->year }})
+                                            @if($competition->commission && $competition->commission->id != $commission->id)
+                                                <span style="color: #6b7280; font-size: 12px;">- Već dodijeljeno: {{ $competition->commission->name }}</span>
+                                            @endif
+                                        </span>
+                                    </label>
+                                </div>
                             @endforeach
-                        </select>
-                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                            Možete dodijeliti konkurs kasnije.
+                        </div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                            Možete izabrati više konkursa. Ista komisija može biti dodijeljena više različitih konkursa.
                         </div>
                     </div>
                 </div>

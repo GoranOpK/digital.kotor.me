@@ -345,7 +345,13 @@ class HomeController extends Controller
                     ->latest()
                     ->get();
                 
-                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija'));
+                // Najnovije prijave na konkurse (samo za članove komisije)
+                $recent_applications = Application::with('user', 'competition')
+                    ->latest()
+                    ->take(10)
+                    ->get();
+                
+                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'recent_applications'));
             }
         }
         

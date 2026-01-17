@@ -550,10 +550,6 @@
                     <p style="font-size: 36px; font-weight: 800; color: var(--primary); margin: 0; line-height: 1;">{{ $stats['total_competitions'] ?? 0 }}</p>
                 </div>
                 <div class="info-card">
-                    <h3 style="color: #6b7280; font-size: 14px; font-weight: 600; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.5px;">Prijave</h3>
-                    <p style="font-size: 36px; font-weight: 800; color: var(--primary); margin: 0; line-height: 1;">{{ $stats['total_applications'] ?? 0 }}</p>
-                </div>
-                <div class="info-card">
                     <h3 style="color: #6b7280; font-size: 14px; font-weight: 600; margin: 0 0 12px; text-transform: uppercase; letter-spacing: 0.5px;">Komisije</h3>
                     <p style="font-size: 36px; font-weight: 800; color: var(--primary); margin: 0; line-height: 1;">{{ $stats['total_commissions'] ?? 0 }}</p>
                     <p style="color: #6b7280; font-size: 13px; margin-top: 8px;">Aktivnih: {{ $stats['active_commissions'] ?? 0 }}</p>
@@ -566,34 +562,37 @@
                     <h2>Brzi linkovi</h2>
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; padding: 20px;">
-                    <a href="{{ route('admin.competitions.index') }}" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center; color: var(--primary); text-decoration: none; font-weight: 600; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='#f9fafb'">
-                        📋 Konkursi
+                    <a href="{{ route('admin.competitions.index') }}" style="padding: 16px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 8px; text-align: center; color: #fff; text-decoration: none; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
+                        📋 Upravljanje konkursima
                     </a>
-                    <a href="{{ route('admin.commissions.index') }}" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center; color: var(--primary); text-decoration: none; font-weight: 600; transition: background 0.2s;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='#f9fafb'">
+                    <a href="{{ route('competitions.archive') }}" style="padding: 16px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 8px; text-align: center; color: #fff; text-decoration: none; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
+                        📁 Arhiva konkursa
+                    </a>
+                    <a href="{{ route('admin.commissions.index') }}" style="padding: 16px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 8px; text-align: center; color: #fff; text-decoration: none; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.15)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)';">
                         👥 Komisija
                     </a>
                 </div>
             </div>
+        @endif
 
-            <!-- Najnovije prijave -->
-            @if(isset($recent_applications))
-            <div class="info-card" style="margin-top: 24px;">
-                <div class="info-card-header">
-                    <h2>Najnovije prijave na konkurse</h2>
-                </div>
-                <div style="padding: 20px;">
-                    @forelse($recent_applications as $application)
-                        <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
-                            <p style="font-weight: 600; color: #111827; margin: 0 0 4px;">{{ $application->user->name ?? 'N/A' }}</p>
-                            <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;">{{ $application->competition->title ?? 'N/A' }}</p>
-                            <p style="color: #9ca3af; font-size: 12px; margin: 0;">{{ $application->created_at->format('d.m.Y H:i') }}</p>
-                        </div>
-                    @empty
-                        <p style="color: #6b7280; text-align: center; padding: 24px;">Nema prijava</p>
-                    @endforelse
-                </div>
+        <!-- Najnovije prijave (samo za članove komisije) -->
+        @if(isset($recent_applications) && $isKomisija)
+        <div class="info-card" style="margin-top: 24px;">
+            <div class="info-card-header">
+                <h2>Najnovije prijave na konkurse</h2>
             </div>
-            @endif
+            <div style="padding: 20px;">
+                @forelse($recent_applications as $application)
+                    <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
+                        <p style="font-weight: 600; color: #111827; margin: 0 0 4px;">{{ $application->user->name ?? 'N/A' }}</p>
+                        <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;">{{ $application->competition->title ?? 'N/A' }}</p>
+                        <p style="color: #9ca3af; font-size: 12px; margin: 0;">{{ $application->created_at->format('d.m.Y H:i') }}</p>
+                    </div>
+                @empty
+                    <p style="color: #6b7280; text-align: center; padding: 24px;">Nema prijava</p>
+                @endforelse
+            </div>
+        </div>
         @endif
     </div>
 </div>

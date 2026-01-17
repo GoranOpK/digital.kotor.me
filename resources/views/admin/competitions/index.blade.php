@@ -93,7 +93,9 @@
     <div class="container mx-auto px-4">
         <div class="page-header">
             <h1>Upravljanje konkursima</h1>
-            <a href="{{ route('admin.competitions.create') }}" class="btn-primary">+ Novi konkurs</a>
+            @if(isset($isAdmin) && $isAdmin)
+                <a href="{{ route('admin.competitions.create') }}" class="btn-primary">+ Novi konkurs</a>
+            @endif
         </div>
 
         <!-- Tabovi za aktivne i arhivirane konkursi -->
@@ -106,6 +108,10 @@
                 <a href="{{ route('admin.competitions.index', ['tab' => 'archive']) }}" 
                    style="flex: 1; padding: 16px 24px; text-align: center; text-decoration: none; font-weight: 600; color: {{ $tab === 'archive' ? 'var(--primary)' : '#6b7280' }}; border-bottom: 3px solid {{ $tab === 'archive' ? 'var(--primary)' : 'transparent' }}; transition: all 0.2s;">
                     Arhiva konkursa
+                </a>
+                <a href="{{ route('admin.competitions.index', ['tab' => 'all']) }}" 
+                   style="flex: 1; padding: 16px 24px; text-align: center; text-decoration: none; font-weight: 600; color: {{ $tab === 'all' ? 'var(--primary)' : '#6b7280' }}; border-bottom: 3px solid {{ $tab === 'all' ? 'var(--primary)' : 'transparent' }}; transition: all 0.2s;">
+                    Svi konkursi
                 </a>
             </div>
         </div>
@@ -168,12 +174,14 @@
                             <td>{{ $competition->applications_count }}</td>
                             <td>
                                 <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-sm btn-view">Pregled</a>
-                                <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn-sm btn-edit">Izmijeni</a>
-                                <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-sm btn-delete">Obriši</button>
-                                </form>
+                                @if(isset($isAdmin) && $isAdmin)
+                                    <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn-sm btn-edit">Izmijeni</a>
+                                    <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-sm btn-delete">Obriši</button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty
@@ -181,8 +189,13 @@
                             <td colspan="7" style="text-align: center; padding: 40px; color: #6b7280;">
                                 @if($tab === 'archive')
                                     Nema arhiviranih konkursa.
+                                @elseif($tab === 'all')
+                                    Nema konkursa u sistemu.
                                 @else
-                                    Nema konkursa. <a href="{{ route('admin.competitions.create') }}">Kreiraj prvi konkurs</a>
+                                    Nema aktivnih konkursa.
+                                    @if(isset($isAdmin) && $isAdmin)
+                                        <a href="{{ route('admin.competitions.create') }}">Kreiraj prvi konkurs</a>
+                                    @endif
                                 @endif
                             </td>
                         </tr>

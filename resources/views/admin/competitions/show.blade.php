@@ -81,26 +81,41 @@
         <div class="page-header">
             <h1>{{ $competition->title }}</h1>
             <div>
-                @if($competition->status === 'draft')
-                    <form method="POST" action="{{ route('admin.competitions.publish', $competition) }}" style="display: inline;">
-                        @csrf
-                        <button type="submit" class="btn btn-success">Objavi konkurs</button>
-                    </form>
-                @elseif($competition->status === 'published')
+                @if(isset($isAdmin) && $isAdmin)
+                    @if($competition->status === 'draft')
+                        <form method="POST" action="{{ route('admin.competitions.publish', $competition) }}" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="btn btn-success">Objavi konkurs</button>
+                        </form>
+                    @endif
+                @endif
+                @if($competition->status === 'published' && (isset($isSuperAdmin) && $isSuperAdmin || isset($isChairman) && $isChairman))
                     <form method="POST" action="{{ route('admin.competitions.close', $competition) }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="btn btn-danger">Zatvori konkurs</button>
                     </form>
                 @endif
-                @if($competition->status === 'closed' || $competition->status === 'published')
-                    <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
+                @if($competition->status === 'closed')
+                    {{-- Zatvoreni konkurs - svi članovi komisije mogu vidjeti rang listu --}}
+                    @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman) || (isset($isCommissionMember) && $isCommissionMember))
+                        <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
+                    @endif
+                @elseif($competition->status === 'published')
+                    {{-- Objavljeni konkurs - samo superadmin i predsjednik komisije mogu vidjeti rang listu --}}
+                    @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
+                        <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
+                    @endif
                 @endif
-                <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn btn-primary">Izmijeni</a>
-                <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">Obriši</button>
-                </form>
+                @if(isset($isAdmin) && $isAdmin)
+                    <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn btn-primary">Izmijeni</a>
+                    <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="btn btn-danger">Obriši</button>
+                    </form>
+                @else
+                    {{-- Članovi komisije mogu da vide i pristupaju, ali ne mogu da edituju i brišu --}}
+                @endif
             </div>
         </div>
 
@@ -127,7 +142,9 @@
                     <p><strong>Status:</strong> <span class="status-badge status-{{ $competition->status }}">{{ $competition->status }}</span></p>
                     <p><strong>Budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
                     <p><strong>Maksimalna podrška:</strong> {{ $competition->max_support_percentage ?? 30 }}%</p>
-                    <p><strong>Broj prijava:</strong> {{ $applications->total() }}</p>
+                    @if(!isset($isCompetitionAdmin) || !$isCompetitionAdmin)
+                        <p><strong>Broj prijava:</strong> {{ $applications->total() }}</p>
+                    @endif
                     @if($competition->commission)
                         <p><strong>Komisija:</strong> 
                             <a href="{{ route('admin.commissions.show', $competition->commission) }}" style="color: var(--primary); text-decoration: underline;">
@@ -167,6 +184,7 @@
             </div>
         </div>
 
+        @if(!isset($isCompetitionAdmin) || !$isCompetitionAdmin)
         <div class="info-card">
             <h2 style="font-size: 20px; margin-bottom: 16px;">Prijave</h2>
             <table style="width: 100%; border-collapse: collapse;">
@@ -201,6 +219,7 @@
                 {{ $applications->links() }}
             </div>
         </div>
+        @endif
     </div>
 </div>
 

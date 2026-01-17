@@ -49,6 +49,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Modul za konkurse (žensko/omladinsko preduzetništvo)
     Route::get('/competitions', [CompetitionsController::class, 'index'])->name('competitions.index'); // Lista konkursa
+    // Arhiva konkursa (mora biti pre rute sa parametrom)
+    Route::middleware('role:admin,konkurs_admin,komisija')->group(function () {
+        Route::get('/competitions/archive', [AdminController::class, 'competitionsArchive'])->name('competitions.archive');
+    });
     Route::get('/competitions/{competition}', [CompetitionsController::class, 'show'])->name('competitions.show'); // Detalji konkursa
 
     // Modul za tendersku dokumentaciju
@@ -140,24 +144,32 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
 
-    // Rute za upravljanje konkursima (dostupne superadmin, admin i konkurs_admin ulogama)
-    Route::middleware('role:admin,konkurs_admin')->group(function () {
+    // Rute za upravljanje konkursima (dostupne superadmin, admin, konkurs_admin i komisija ulogama)
+    Route::middleware('role:admin,konkurs_admin,komisija')->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
             // Upravljanje konkursima
             Route::get('/competitions', [AdminController::class, 'competitions'])->name('competitions.index');
-            Route::get('/competitions/create', [AdminController::class, 'createCompetition'])->name('competitions.create');
-            Route::post('/competitions', [AdminController::class, 'storeCompetition'])->name('competitions.store');
             Route::get('/competitions/{competition}', [AdminController::class, 'showCompetition'])->name('competitions.show');
-            Route::get('/competitions/{competition}/edit', [AdminController::class, 'editCompetition'])->name('competitions.edit');
-            Route::put('/competitions/{competition}', [AdminController::class, 'updateCompetition'])->name('competitions.update');
-            Route::post('/competitions/{competition}/publish', [AdminController::class, 'publishCompetition'])->name('competitions.publish');
+            
+            // Zatvaranje konkursa (dostupno i predsjedniku komisije)
             Route::post('/competitions/{competition}/close', [AdminController::class, 'closeCompetition'])->name('competitions.close');
-            Route::delete('/competitions/{competition}', [AdminController::class, 'destroyCompetition'])->name('competitions.destroy');
             
             // Rang lista
             Route::get('/competitions/{competition}/ranking', [AdminController::class, 'rankingList'])->name('competitions.ranking');
             Route::post('/competitions/{competition}/winners', [AdminController::class, 'selectWinners'])->name('competitions.select-winners');
             Route::get('/competitions/{competition}/decision', [AdminController::class, 'generateDecision'])->name('competitions.decision');
+        });
+    });
+    
+    // Rute za upravljanje konkursima (samo za admin i konkurs_admin - kreiranje, editovanje, brisanje)
+    Route::middleware('role:admin,konkurs_admin')->group(function () {
+        Route::prefix('admin')->name('admin.')->group(function () {
+            Route::get('/competitions/create', [AdminController::class, 'createCompetition'])->name('competitions.create');
+            Route::post('/competitions', [AdminController::class, 'storeCompetition'])->name('competitions.store');
+            Route::get('/competitions/{competition}/edit', [AdminController::class, 'editCompetition'])->name('competitions.edit');
+            Route::put('/competitions/{competition}', [AdminController::class, 'updateCompetition'])->name('competitions.update');
+            Route::post('/competitions/{competition}/publish', [AdminController::class, 'publishCompetition'])->name('competitions.publish');
+            Route::delete('/competitions/{competition}', [AdminController::class, 'destroyCompetition'])->name('competitions.destroy');
             
             // Upravljanje komisijom za konkurse (dodavanje evaluatora) - dostupno i konkurs_admin roli
             Route::get('/commissions', [AdminController::class, 'commissions'])->name('commissions.index');

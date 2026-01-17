@@ -147,6 +147,30 @@
         border-color: #10b981;
         color: #065f46;
     }
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .status-submitted {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    .status-evaluated {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+    .status-approved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    .status-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+    }
 </style>
 
 <div class="admin-page">
@@ -191,6 +215,7 @@
             </p>
 
             @if($applications->count() > 0)
+            @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
             <form method="POST" action="{{ route('admin.competitions.select-winners', $competition) }}" id="winnersForm">
                 @csrf
                 <table>
@@ -215,7 +240,7 @@
                                 <td>{{ $application->business_plan_name }}</td>
                                 <td>{{ $application->user->name ?? 'N/A' }}</td>
                                 <td>
-                                    {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : 'DOO' }} - 
+                                    {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : ($application->applicant_type === 'doo' ? 'DOO' : ($application->applicant_type === 'fizicko_lice' ? 'Fizičko lice' : 'Ostalo')) }} - 
                                     {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
                                 </td>
                                 <td style="text-align: center;">
@@ -272,9 +297,115 @@
                 </div>
             </form>
             @else
-                <p style="text-align: center; padding: 40px; color: #6b7280;">
-                    Nema prijava koje zadovoljavaju uslove za rang listu (minimum 30 bodova).
-                </p>
+                {{-- Read-only prikaz za članove komisije --}}
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">Poz.</th>
+                            <th>Naziv biznis plana</th>
+                            <th>Podnosilac</th>
+                            <th>Tip</th>
+                            <th style="text-align: center;">Ocjena</th>
+                            <th style="text-align: right;">Traženi iznos</th>
+                            <th style="text-align: right;">Odobreni iznos</th>
+                            <th style="text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($applications as $application)
+                            <tr style="{{ $application->status === 'approved' ? 'background: #d1fae5;' : '' }}">
+                                <td>
+                                    <span class="ranking-badge">{{ $application->ranking_position ?? $loop->iteration }}</span>
+                                </td>
+                                <td>{{ $application->business_plan_name }}</td>
+                                <td>{{ $application->user->name ?? 'N/A' }}</td>
+                                <td>
+                                    {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : ($application->applicant_type === 'doo' ? 'DOO' : ($application->applicant_type === 'fizicko_lice' ? 'Fizičko lice' : 'Ostalo')) }} - 
+                                    {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
+                                </td>
+                                <td style="text-align: center;">
+                                    @php
+                                        $score = $application->final_score ?? 0;
+                                        $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
+                                    @endphp
+                                    <span class="score-badge {{ $scoreClass }}">
+                                        {{ number_format($score, 2) }} / 50
+                                    </span>
+                                </td>
+                                <td style="text-align: right;">
+                                    {{ number_format($application->requested_amount, 2, ',', '.') }} €
+                                </td>
+                                <td style="text-align: right;">
+                                    @if($application->approved_amount)
+                                        <strong style="color: #10b981;">
+                                            {{ number_format($application->approved_amount, 2, ',', '.') }} €
+                                        </strong>
+                                    @else
+                                        <span style="color: #6b7280;">-</span>
+                                    @endif
+                                </td>
+                                <td class="checkbox-cell">
+                                    @if($application->status === 'approved')
+                                        <span style="color: #10b981; font-weight: 600;">✓ Dobitnik</span>
+                                    @else
+                                        <span style="color: #6b7280;">-</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @endif
+            @else
+                <div style="text-align: center; padding: 40px; color: #6b7280;">
+                    <p style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Nema prijava koje zadovoljavaju uslove za rang listu.</p>
+                    <p style="margin-bottom: 8px; font-size: 14px;">Uslovi za rang listu:</p>
+                    <ul style="text-align: left; display: inline-block; margin: 0; padding-left: 20px; font-size: 14px;">
+                        <li>Prijava mora biti ocjenjena (status: evaluated)</li>
+                        <li>Prijava mora imati minimum 30 bodova</li>
+                    </ul>
+                    @if(isset($excludedApplications) && $excludedApplications->count() > 0)
+                        <div style="margin-top: 24px; padding: 16px; background: #f9fafb; border-radius: 8px; text-align: left;">
+                            <p style="font-weight: 600; margin-bottom: 12px;">Prijave koje nisu u rang listi ({{ $excludedApplications->count() }}):</p>
+                            <table style="width: 100%; font-size: 13px;">
+                                <thead>
+                                    <tr>
+                                        <th style="padding: 8px;">Naziv biznis plana</th>
+                                        <th style="padding: 8px;">Podnosilac</th>
+                                        <th style="padding: 8px;">Status</th>
+                                        <th style="padding: 8px;">Ocjena</th>
+                                        <th style="padding: 8px;">Razlog</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($excludedApplications as $app)
+                                        <tr>
+                                            <td style="padding: 8px;">{{ $app->business_plan_name }}</td>
+                                            <td style="padding: 8px;">{{ $app->user->name ?? 'N/A' }}</td>
+                                            <td style="padding: 8px;">
+                                                <span class="status-badge status-{{ $app->status }}">
+                                                    {{ $app->status }}
+                                                </span>
+                                            </td>
+                                            <td style="padding: 8px; text-align: center;">
+                                                {{ number_format($app->final_score ?? 0, 2) }} / 50
+                                            </td>
+                                            <td style="padding: 8px; color: #991b1b; font-size: 12px;">
+                                                @if(!$app->has_evaluations)
+                                                    Nema ocjena od komisije
+                                                @elseif(!$app->meetsMinimumScore())
+                                                    Ispod minimuma (30 bodova)
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
             @endif
         </div>
     </div>
