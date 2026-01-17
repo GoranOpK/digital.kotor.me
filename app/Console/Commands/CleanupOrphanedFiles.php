@@ -14,7 +14,7 @@ class CleanupOrphanedFiles extends Command
      *
      * @var string
      */
-    protected $signature = 'documents:cleanup-orphaned 
+    protected $signature = 'documents:cleanup-orphaned
                             {--dry-run : Show what would be deleted without actually deleting}
                             {--user= : Only cleanup files for specific user ID}';
 
