@@ -83,17 +83,41 @@ class MegaStorageService
                 ],
                 CURLOPT_TIMEOUT => 30,
                 CURLOPT_SSL_VERIFYPEER => true,
-                CURLOPT_SSL_VERIFYHOST => 2
+                CURLOPT_SSL_VERIFYHOST => 2,
+                CURLOPT_VERBOSE => false,
+                CURLOPT_HEADER => true // Include headers in response
             ]);
             
-            $body = curl_exec($ch);
+            $response = curl_exec($ch);
             $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $curlError = curl_error($ch);
+            $curlErrno = curl_errno($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $contentType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
+            $totalTime = curl_getinfo($ch, CURLINFO_TOTAL_TIME);
+            $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE) ?? 0;
+            
+            // Parse headers and body BEFORE closing
+            $headers = substr($response, 0, $headerSize);
+            $body = substr($response, $headerSize);
+            
             curl_close($ch);
+            
+            Log::debug('MEGA API cURL response details', [
+                'status_code' => $statusCode,
+                'http_code' => $httpCode,
+                'curl_error' => $curlError,
+                'curl_errno' => $curlErrno,
+                'content_type' => $contentType,
+                'total_time' => $totalTime,
+                'body_length' => strlen($body ?? ''),
+                'headers_preview' => substr($headers, 0, 500)
+            ]);
             
             if ($curlError) {
                 Log::error('MEGA API cURL error', [
-                    'error' => $curlError
+                    'error' => $curlError,
+                    'errno' => $curlErrno
                 ]);
                 return [];
             }
@@ -102,8 +126,24 @@ class MegaStorageService
                 Log::error('MEGA API HTTP error', [
                     'status' => $statusCode,
                     'body' => $body,
-                    'body_length' => strlen($body ?? '')
+                    'body_length' => strlen($body ?? ''),
+                    'body_preview' => substr($body ?? '', 0, 500),
+                    'headers' => $headers
                 ]);
+                
+                // HTTP 402 (Payment Required) može značiti da MEGA blokira zahtev
+                // Pokušaj da pročitaš JSON iako status nije 200
+                if (!empty($body)) {
+                    $data = json_decode($body, true);
+                    if ($data !== null) {
+                        Log::error('MEGA API error response (non-200 but valid JSON)', [
+                            'status' => $statusCode,
+                            'data' => $data
+                        ]);
+                        return $data;
+                    }
+                }
+                
                 return [];
             }
             
@@ -410,7 +450,9 @@ class MegaStorageService
             
             Log::debug('MEGA user hash generated', [
                 'uh_length' => strlen($uh),
-                'uh_preview' => substr($uh, 0, 20) . '...'
+                'uh_full' => $uh, // Logujemo puni hash za debug
+                'email' => $this->email,
+                'password_length' => strlen($this->password)
             ]);
             
             $response = $this->apiRequest([
