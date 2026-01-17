@@ -72,6 +72,7 @@ class MegaStorageService
                 'payload_preview' => substr($jsonPayload, 0, 200)
             ]);
             
+            // Prvo pošalji zahtev da dobijemo Hashcash challenge
             $ch = curl_init($url);
             curl_setopt_array($ch, [
                 CURLOPT_POST => true,
@@ -122,6 +123,54 @@ class MegaStorageService
                 return [];
             }
             
+            // Proveri da li MEGA zahteva Hashcash proof-of-work
+            if ($statusCode === 402 && preg_match('/X-Hashcash:\s*([^\r\n]+)/i', $headers, $matches)) {
+                $hashcashChallenge = trim($matches[1]);
+                Log::info('MEGA API requires Hashcash proof-of-work', [
+                    'challenge' => $hashcashChallenge
+                ]);
+                
+                // Reši Hashcash proof-of-work
+                $hashcashSolution = $this->solveHashcash($hashcashChallenge);
+                
+                if (!$hashcashSolution) {
+                    Log::error('Failed to solve Hashcash challenge');
+                    return [];
+                }
+                
+                Log::info('Hashcash solution found', [
+                    'solution' => $hashcashSolution
+                ]);
+                
+                // Pošalji zahtev ponovo sa Hashcash rešenjem
+                $ch = curl_init($url);
+                curl_setopt_array($ch, [
+                    CURLOPT_POST => true,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_POSTFIELDS => $jsonPayload,
+                    CURLOPT_HTTPHEADER => [
+                        'Content-Type: application/json',
+                        'Content-Length: ' . strlen($jsonPayload),
+                        'X-Hashcash: ' . $hashcashSolution
+                    ],
+                    CURLOPT_TIMEOUT => 60, // Više vremena za drugi pokušaj
+                    CURLOPT_SSL_VERIFYPEER => true,
+                    CURLOPT_SSL_VERIFYHOST => 2,
+                    CURLOPT_HEADER => true
+                ]);
+                
+                $response = curl_exec($ch);
+                $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE) ?? 0;
+                $body = substr($response, $headerSize);
+                curl_close($ch);
+                
+                Log::debug('MEGA API retry with Hashcash', [
+                    'status_code' => $statusCode,
+                    'body_length' => strlen($body ?? '')
+                ]);
+            }
+            
             if ($statusCode !== 200) {
                 Log::error('MEGA API HTTP error', [
                     'status' => $statusCode,
@@ -131,7 +180,6 @@ class MegaStorageService
                     'headers' => $headers
                 ]);
                 
-                // HTTP 402 (Payment Required) može značiti da MEGA blokira zahtev
                 // Pokušaj da pročitaš JSON iako status nije 200
                 if (!empty($body)) {
                     $data = json_decode($body, true);
@@ -427,6 +475,103 @@ class MegaStorageService
         $passwordAes = $this->prepareKey($passwordA32);
         
         return $this->stringHash($emailLow, $passwordAes);
+    }
+
+    /**
+     * Rešava Hashcash proof-of-work challenge
+     * 
+     * Hashcash format: version:bits:timestamp:resource:ext:rand:counter
+     * Treba naći counter tako da SHA1(hashcash_string) počinje sa bits nula
+     */
+    private function solveHashcash(string $challenge): ?string
+    {
+        try {
+            // Parsuj challenge
+            $parts = explode(':', $challenge);
+            if (count($parts) < 6) {
+                Log::error('Invalid Hashcash challenge format', ['challenge' => $challenge]);
+                return null;
+            }
+            
+            $version = $parts[0];
+            $bits = (int)$parts[1];
+            $timestamp = $parts[2];
+            $resource = $parts[3];
+            $ext = $parts[4] ?? '';
+            $rand = $parts[5] ?? '';
+            
+            Log::debug('Solving Hashcash challenge', [
+                'bits' => $bits,
+                'timestamp' => $timestamp
+            ]);
+            
+            // Konvertuj bits u broj nula (bits je broj bitova, ne bajtova)
+            // Svaki hex karakter = 4 bita, dakle bits/4 karaktera mora biti 0
+            $requiredZeros = (int)($bits / 4);
+            
+            // Hashcash 1.0 format koristi partial hash collision
+            // Moramo da nađemo counter gde SHA1 hash počinje sa bits nula (u bitovima)
+            // Za bits=192, to je 48 hex karaktera = 192 bita
+            
+            $targetPrefix = str_repeat('0', min($requiredZeros, 40)); // SHA1 je 40 hex karaktera max
+            
+            $startTime = microtime(true);
+            $counter = 0;
+            $maxAttempts = 10000000; // Limit pokušaja
+            
+            while ($counter < $maxAttempts) {
+                // Kreiraj full hashcash string sa counter-om
+                $hashcashString = sprintf(
+                    '%s:%d:%s:%s:%s:%s:%d',
+                    $version,
+                    $bits,
+                    $timestamp,
+                    $resource,
+                    $ext,
+                    $rand,
+                    $counter
+                );
+                
+                // Izračunaj SHA1 hash
+                $hash = sha1($hashcashString);
+                
+                // Proveri da li hash počinje sa potrebnim brojem nula
+                if (substr($hash, 0, $requiredZeros) === $targetPrefix) {
+                    $elapsed = microtime(true) - $startTime;
+                    Log::info('Hashcash solution found', [
+                        'counter' => $counter,
+                        'hash' => $hash,
+                        'time' => round($elapsed, 2) . 's',
+                        'attempts' => $counter + 1
+                    ]);
+                    
+                    return $hashcashString;
+                }
+                
+                $counter++;
+                
+                // Loguj progress svakih 1M pokušaja
+                if ($counter % 1000000 === 0) {
+                    Log::debug('Hashcash solving progress', [
+                        'attempts' => $counter,
+                        'elapsed' => round(microtime(true) - $startTime, 2) . 's'
+                    ]);
+                }
+            }
+            
+            Log::error('Hashcash solving failed - max attempts reached', [
+                'max_attempts' => $maxAttempts,
+                'bits' => $bits
+            ]);
+            
+            return null;
+            
+        } catch (Exception $e) {
+            Log::error('Hashcash solving exception', [
+                'error' => $e->getMessage()
+            ]);
+            return null;
+        }
     }
 
     /**
