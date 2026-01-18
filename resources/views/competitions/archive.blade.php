@@ -99,9 +99,6 @@
                             <tr>
                                 <td>
                                     <strong>{{ $competition->title }}</strong>
-                                    @if($competition->competition_number)
-                                        <span style="color: #6b7280; font-size: 12px;">({{ $competition->competition_number }}. konkurs)</span>
-                                    @endif
                                 </td>
                                 <td>{{ $competition->year ?? 'N/A' }}</td>
                                 <td>{{ $competition->applications_count }}</td>
