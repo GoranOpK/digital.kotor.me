@@ -340,9 +340,13 @@
                     <h2>Moje prijave</h2>
                     <a href="{{ route('competitions.index') }}" class="btn-edit">Novi</a>
                 </div>
-                @if(isset($applications) && $applications->count() > 0)
+                @php
+                    // Za članove komisije koristi $myApplications, za ostale $applications
+                    $myApplicationsList = isset($myApplications) ? $myApplications : (isset($applications) ? $applications : collect());
+                @endphp
+                @if($myApplicationsList->count() > 0)
                     <div style="overflow-y: auto; max-height: 350px;">
-                        @foreach($applications->take(5) as $app)
+                        @foreach($myApplicationsList->take(5) as $app)
                             <div style="padding: 12px 0; border-bottom: 1px solid #f3f4f6;">
                                 <div style="font-weight: 600; color: #111827; font-size: 13px;">{{ Str::limit($app->business_plan_name, 25) }}</div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
@@ -363,8 +367,8 @@
                                 </div>
                             </div>
                         @endforeach
-                        @if($applications->count() > 5)
-                            <p style="text-align: center; margin-top: 12px; font-size: 12px; color: #6b7280;">+ još {{ $applications->count() - 5 }} prijave</p>
+                        @if($myApplicationsList->count() > 5)
+                            <p style="text-align: center; margin-top: 12px; font-size: 12px; color: #6b7280;">+ još {{ $myApplicationsList->count() - 5 }} prijave</p>
                         @endif
                     </div>
                 @else

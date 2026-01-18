@@ -359,7 +359,14 @@ class HomeController extends Controller
                     ->take(10)
                     ->get();
                 
-                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'recent_applications'));
+                // Moje prijave - samo prijave koje je korisnik lično podneo
+                $myApplications = Application::where('user_id', $user->id)
+                    ->whereIn('competition_id', $competitionIds)
+                    ->with('competition')
+                    ->latest()
+                    ->get();
+                
+                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'recent_applications', 'myApplications'));
             }
         }
         
