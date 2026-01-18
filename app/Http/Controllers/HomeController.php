@@ -345,8 +345,9 @@ class HomeController extends Controller
                     ->latest()
                     ->get();
                 
-                // Najnovije prijave na konkurse (samo za članove komisije)
-                $recent_applications = Application::with('user', 'competition')
+                // Najnovije prijave na konkurse (samo za konkurse dodijeljene ovoj komisiji)
+                $recent_applications = Application::whereIn('competition_id', $competitionIds)
+                    ->with('user', 'competition')
                     ->latest()
                     ->take(10)
                     ->get();
