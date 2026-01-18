@@ -29,11 +29,24 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
+        // Učitaj komisiju sa njenim konkursima
+        $commission = $commissionMember->commission;
+        $commission->load('competitions');
+        
         // Prijave koje treba ocjeniti (submitted ili evaluated status)
         $query = Application::with(['user', 'competition'])
             ->whereIn('status', ['submitted', 'evaluated']);
 
-        // Filtriranje po konkursu
+        // Filtriranje prijava samo za konkurse dodijeljene komisiji člana
+        $competitionIds = $commission->competitions->pluck('id');
+        if ($competitionIds->isNotEmpty()) {
+            $query->whereIn('competition_id', $competitionIds);
+        } else {
+            // Ako nema konkursa dodijeljenih komisiji, ne prikazuj ništa
+            $query->whereRaw('1 = 0');
+        }
+
+        // Filtriranje po konkursu (ako je dodatno odabran u filteru)
         if ($request->filled('competition_id')) {
             $query->where('competition_id', $request->competition_id);
         }
@@ -63,7 +76,10 @@ class EvaluationController extends Controller
         }
 
         $applications = $query->latest()->paginate(20)->appends($request->query());
-        $competitions = \App\Models\Competition::whereIn('status', ['published', 'closed', 'completed'])
+        
+        // Filtriranje konkursa samo za konkurse dodijeljene komisiji člana
+        $competitions = \App\Models\Competition::whereIn('id', $competitionIds->toArray())
+            ->whereIn('status', ['published', 'closed', 'completed'])
             ->get();
 
         return view('evaluation.index', compact('applications', 'competitions', 'commissionMember'));
