@@ -127,7 +127,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:admin,konkurs_admin')->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
-            // Dozvoli pregled pojedinačne prijave i administratoru konkursa
+        });
+    });
+    
+    // Admin rute za pregled prijave (dostupne admin, konkurs_admin i komisija ulogama)
+    Route::middleware('role:admin,konkurs_admin,komisija')->group(function () {
+        Route::prefix('admin')->name('admin.')->group(function () {
+            // Dozvoli pregled pojedinačne prijave i administratoru konkursa i članovima komisije
             Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
         });
     });

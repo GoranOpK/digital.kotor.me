@@ -653,6 +653,17 @@ class AdminController extends Controller
      */
     public function showApplication(Application $application)
     {
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Ako nije admin, proveri da li je član komisije i da li je prijava vezana za konkurs dodijeljen njegovoj komisiji
+        if (!$isAdmin) {
+            $competition = $application->competition;
+            if (!$competition || !$this->isCommissionMemberForCompetition($competition)) {
+                abort(403, 'Nemate pristup ovoj prijavi.');
+            }
+        }
+        
         $application->load(['user', 'competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember']);
         
         return view('admin.applications.show', compact('application'));
