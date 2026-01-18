@@ -118,9 +118,10 @@
                                 <td>
                                     @php
                                         $user = auth()->user();
-                                        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin']);
+                                        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+                                        $isCommissionMember = $user->role && $user->role->name === 'komisija';
                                     @endphp
-                                    @if($isAdmin)
+                                    @if($isAdmin || $isCommissionMember)
                                         <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-link">Pregled</a>
                                     @else
                                         <a href="{{ route('competitions.show', $competition) }}" class="btn-link">Pregled</a>
