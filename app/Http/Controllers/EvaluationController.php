@@ -181,7 +181,7 @@ class EvaluationController extends Controller
                 'rejection_reason' => 'Nedostaju potrebna dokumenta.',
             ]);
             
-            return redirect()->route('evaluation.index')
+            return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                 ->with('error', 'Prijava je odbijena jer nisu dostavljena sva potrebna dokumenta.');
         }
 
@@ -247,7 +247,8 @@ class EvaluationController extends Controller
         // Ažuriraj prosječnu ocjenu prijave (prosjek svih članova komisije)
         $this->updateApplicationScores($application);
 
-        return redirect()->route('evaluation.index')
+        // Redirektuj sa filterom "evaluated" da se odmah vidi ocjenjena prijava
+        return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
             ->with('success', 'Ocjena je uspješno sačuvana.');
     }
 
