@@ -228,7 +228,7 @@
                     });
                 </script>
 
-                <div style="margin-top: 24px;">
+                <div style="margin-top: 24px; text-align: center;">
                     <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
                     <a href="{{ route('admin.competitions.show', $competition) }}" style="margin-left: 12px; color: #6b7280;">Otkaži</a>
                 </div>
