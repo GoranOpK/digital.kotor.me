@@ -454,7 +454,9 @@
                         @foreach($commission->competitions as $competition)
                             <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
                                 <h3 style="font-size: 18px; font-weight: 700; color: #111827; margin: 0 0 8px;">
-                                    {{ $competition->title }}
+                                    <a href="{{ route('admin.competitions.show', $competition) }}" style="color: var(--primary); text-decoration: none;">
+                                        {{ $competition->title }}
+                                    </a>
                                 </h3>
                                 <div class="info-grid" style="grid-template-columns: 1fr; gap: 8px; margin-top: 12px;">
                                     <div class="info-item">
@@ -483,6 +485,11 @@
                                             @endif
                                         </span>
                                     </div>
+                                </div>
+                                <div style="margin-top: 12px;">
+                                    <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-edit" style="font-size: 12px; padding: 6px 12px; display: inline-block;">
+                                        Pregled konkursa
+                                    </a>
                                 </div>
                             </div>
                         @endforeach
