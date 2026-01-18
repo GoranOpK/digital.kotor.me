@@ -341,9 +341,16 @@ class HomeController extends Controller
                 $competitionIds = $commission->competitions->pluck('id');
                 $applications = Application::whereIn('competition_id', $competitionIds)
                     ->whereIn('status', ['submitted', 'evaluated'])
-                    ->with('competition', 'evaluationScores')
+                    ->with('competition', 'evaluationScores', 'evaluationScores.commissionMember')
                     ->latest()
                     ->get();
+                
+                // Dodaj informaciju o tome da li je član komisije ocjenio svaku prijavu
+                foreach ($applications as $application) {
+                    $application->is_evaluated_by_member = $application->evaluationScores
+                        ->where('commission_member_id', $commissionMember->id)
+                        ->isNotEmpty();
+                }
                 
                 // Najnovije prijave na konkurse (samo za konkurse dodijeljene ovoj komisiji)
                 $recent_applications = Application::whereIn('competition_id', $competitionIds)

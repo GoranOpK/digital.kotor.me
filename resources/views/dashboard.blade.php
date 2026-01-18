@@ -520,9 +520,14 @@
                             <p style="color: #9ca3af; font-size: 12px; margin: 0 0 8px;">
                                 Podnosilac: {{ $application->user->name ?? 'N/A' }} | {{ $application->created_at->format('d.m.Y H:i') }}
                             </p>
+                            @if(isset($application->is_evaluated_by_member) && $application->is_evaluated_by_member)
+                                <p style="color: #10b981; font-size: 12px; font-weight: 600; margin: 0 0 8px;">
+                                    ✓ Ocjenjeno
+                                </p>
+                            @endif
                             <div style="display: flex; gap: 8px; margin-top: 8px;">
                                 <a href="{{ route('evaluation.show', $application) }}" class="btn-edit" style="font-size: 12px; padding: 6px 12px;">
-                                    Pregledaj prijavu
+                                    {{ isset($application->is_evaluated_by_member) && $application->is_evaluated_by_member ? 'Pregledaj ocjenu' : 'Pregledaj prijavu' }}
                                 </a>
                             </div>
                         </div>
