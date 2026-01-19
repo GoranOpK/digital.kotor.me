@@ -270,6 +270,7 @@ class ApplicationController extends Controller
         
         // Debug: Loguj stanje
         \Log::info('=== Application Store Debug ===');
+        \Log::info('Application ID: ' . ($application->id ?? 'null'));
         \Log::info('isDraft: ' . ($isDraft ? 'true' : 'false'));
         \Log::info('business_stage from request: ' . ($request->business_stage ?? 'null'));
         \Log::info('business_stage in application: ' . ($application->business_stage ?? 'null'));
@@ -280,6 +281,7 @@ class ApplicationController extends Controller
         \Log::info('total_budget_needed: ' . ($application->total_budget_needed ?? 'null'));
         \Log::info('de_minimis_declaration: ' . ($application->de_minimis_declaration ? 'true' : 'false'));
         \Log::info('registration_form: ' . ($application->registration_form ?? 'null'));
+        \Log::info('status: ' . ($application->status ?? 'null'));
         
         // Proveri da li je Obrazac 1a/1b kompletno popunjen (sva polja + checkbox-ovi)
         $isObrazacComplete = $application->isObrazacComplete();
