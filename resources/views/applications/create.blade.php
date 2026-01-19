@@ -1546,8 +1546,38 @@
                             } else {
                                 field.value = '';
                             }
+                            // Takođe postavi disabled da se sigurno ne šalje
+                            field.setAttribute('disabled', 'disabled');
                         });
                     });
+                    
+                    // VAŽNO: Osiguraj da se vrednosti iz aktivnog obrasca šalju
+                    // Pronađi aktivni obrazac i kopiraj vrednosti u prvo polje sa istim name atributom
+                    const activeSection = document.querySelector('.conditional-field.show');
+                    if (activeSection) {
+                        const activeFields = activeSection.querySelectorAll('input, select, textarea');
+                        activeFields.forEach(activeField => {
+                            if (activeField.name && activeField.name !== 'save_as_draft' && activeField.name !== '_token') {
+                                // Pronađi prvo polje sa istim name atributom u formi
+                                const firstFieldWithSameName = form.querySelector(`[name="${activeField.name}"]`);
+                                if (firstFieldWithSameName && firstFieldWithSameName !== activeField) {
+                                    // Kopiraj vrednost iz aktivnog polja u prvo polje
+                                    if (firstFieldWithSameName.type === 'checkbox' || firstFieldWithSameName.type === 'radio') {
+                                        firstFieldWithSameName.checked = activeField.checked;
+                                    } else {
+                                        firstFieldWithSameName.value = activeField.value;
+                                    }
+                                    // Obriši vrednost iz aktivnog polja da se ne šalje duplikat
+                                    if (activeField.type === 'checkbox' || activeField.type === 'radio') {
+                                        activeField.checked = false;
+                                    } else {
+                                        activeField.value = '';
+                                    }
+                                    activeField.setAttribute('disabled', 'disabled');
+                                }
+                            }
+                        });
+                    }
                     
                     // Submit-uj formu
                     form.submit();
