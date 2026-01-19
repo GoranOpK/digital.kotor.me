@@ -1003,9 +1003,7 @@
                             >
                             <label for="de_minimis_declaration">
                                 Izjavljujem da će ukupna de minimis podrška koju sam dobio/la u posljednje tri godine 
-                                biti u skladu sa propisima Evropske unije o de minimis podršci. 
-                                Obrazac za pomoć male vrijednosti nalazi se na sajtu Agencije za zaštitu konkurencije 
-                                (<a href="https://azzk.me/obrasci-drzavne-pomoci/" target="_blank" rel="noopener noreferrer">https://azzk.me/obrasci-drzavne-pomoci/</a>).
+                                biti u skladu sa propisima Evropske unije o de minimis podršci 
                                 <span class="required">*</span>
                             </label>
                         </div>
