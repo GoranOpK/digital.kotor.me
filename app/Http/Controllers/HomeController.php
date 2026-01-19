@@ -170,9 +170,9 @@ class HomeController extends Controller
 
             // Ako nije Preduzetnik, PIB je obavezan
             if ($request->business_type && $request->business_type !== 'Preduzetnik') {
-                $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{9}$/', 'unique:users,pib'];
+                $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{8}$/', 'unique:users,pib'];
                 $messages['pib.required'] = 'PIB je obavezan.';
-                $messages['pib.regex'] = 'PIB mora imati tačno 9 cifara.';
+                $messages['pib.regex'] = 'PIB mora imati tačno 8 cifara.';
                 $messages['pib.unique'] = 'PIB je već registrovan.';
             }
 
