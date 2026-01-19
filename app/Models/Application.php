@@ -30,6 +30,7 @@ class Application extends Model
         'bank_account',
         'vat_number',
         'crps_number',
+        'registration_form',
         'de_minimis_declaration',
         'previous_support_declaration',
         'is_registered',

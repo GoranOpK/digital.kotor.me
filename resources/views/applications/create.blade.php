@@ -382,6 +382,35 @@
                         </div>
                     </div>
 
+                    <div class="form-group">
+                        <label class="form-label">
+                            Oblik registracije <span class="required">*</span>
+                        </label>
+                        <select 
+                            name="registration_form" 
+                            id="registration_form_1a"
+                            class="form-control @error('registration_form') error @enderror"
+                            required
+                        >
+                            <option value="">Izaberite oblik registracije</option>
+                            @php
+                                $defaultRegistrationForm = old('registration_form', auth()->user()->user_type ?? '');
+                            @endphp
+                            <option value="Preduzetnik" {{ $defaultRegistrationForm === 'Preduzetnik' ? 'selected' : '' }}>Preduzetnik</option>
+                            <option value="Ortačko društvo" {{ $defaultRegistrationForm === 'Ortačko društvo' ? 'selected' : '' }}>Ortačko društvo</option>
+                            <option value="Komanditno društvo" {{ $defaultRegistrationForm === 'Komanditno društvo' ? 'selected' : '' }}>Komanditno društvo</option>
+                            <option value="Društvo sa ograničenom odgovornošću" {{ $defaultRegistrationForm === 'Društvo sa ograničenom odgovornošću' ? 'selected' : '' }}>Društvo sa ograničenom odgovornošću</option>
+                            <option value="Akcionarsko društvo" {{ $defaultRegistrationForm === 'Akcionarsko društvo' ? 'selected' : '' }}>Akcionarsko društvo</option>
+                            <option value="Dio stranog društva (predstavništvo ili poslovna jedinica)" {{ $defaultRegistrationForm === 'Dio stranog društva (predstavništvo ili poslovna jedinica)' ? 'selected' : '' }}>Dio stranog društva (predstavništvo ili poslovna jedinica)</option>
+                            <option value="Udruženje (nvo, fondacije, sportske organizacije)" {{ $defaultRegistrationForm === 'Udruženje (nvo, fondacije, sportske organizacije)' ? 'selected' : '' }}>Udruženje (nvo, fondacije, sportske organizacije)</option>
+                            <option value="Ustanova (državne i privatne)" {{ $defaultRegistrationForm === 'Ustanova (državne i privatne)' ? 'selected' : '' }}>Ustanova (državne i privatne)</option>
+                            <option value="Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)" {{ $defaultRegistrationForm === 'Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)' ? 'selected' : '' }}>Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)</option>
+                        </select>
+                        @error('registration_form')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">*Broj registracije u CRPS:</label>
@@ -591,6 +620,35 @@
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            Oblik registracije <span class="required">*</span>
+                        </label>
+                        <select 
+                            name="registration_form" 
+                            id="registration_form_1b"
+                            class="form-control @error('registration_form') error @enderror"
+                            required
+                        >
+                            <option value="">Izaberite oblik registracije</option>
+                            @php
+                                $defaultRegistrationForm = old('registration_form', auth()->user()->user_type ?? '');
+                            @endphp
+                            <option value="Preduzetnik" {{ $defaultRegistrationForm === 'Preduzetnik' ? 'selected' : '' }}>Preduzetnik</option>
+                            <option value="Ortačko društvo" {{ $defaultRegistrationForm === 'Ortačko društvo' ? 'selected' : '' }}>Ortačko društvo</option>
+                            <option value="Komanditno društvo" {{ $defaultRegistrationForm === 'Komanditno društvo' ? 'selected' : '' }}>Komanditno društvo</option>
+                            <option value="Društvo sa ograničenom odgovornošću" {{ $defaultRegistrationForm === 'Društvo sa ograničenom odgovornošću' ? 'selected' : '' }}>Društvo sa ograničenom odgovornošću</option>
+                            <option value="Akcionarsko društvo" {{ $defaultRegistrationForm === 'Akcionarsko društvo' ? 'selected' : '' }}>Akcionarsko društvo</option>
+                            <option value="Dio stranog društva (predstavništvo ili poslovna jedinica)" {{ $defaultRegistrationForm === 'Dio stranog društva (predstavništvo ili poslovna jedinica)' ? 'selected' : '' }}>Dio stranog društva (predstavništvo ili poslovna jedinica)</option>
+                            <option value="Udruženje (nvo, fondacije, sportske organizacije)" {{ $defaultRegistrationForm === 'Udruženje (nvo, fondacije, sportske organizacije)' ? 'selected' : '' }}>Udruženje (nvo, fondacije, sportske organizacije)</option>
+                            <option value="Ustanova (državne i privatne)" {{ $defaultRegistrationForm === 'Ustanova (državne i privatne)' ? 'selected' : '' }}>Ustanova (državne i privatne)</option>
+                            <option value="Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)" {{ $defaultRegistrationForm === 'Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)' ? 'selected' : '' }}>Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)</option>
+                        </select>
+                        @error('registration_form')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="form-group">
@@ -1115,6 +1173,19 @@
                     const businessArea1a = obrazac1a.querySelector('input[name="business_area"]');
                     if (businessPlanName1a) businessPlanName1a.setAttribute('required', 'required');
                     if (businessArea1a) businessArea1a.setAttribute('required', 'required');
+                    
+                    // Automatski postavi oblik registracije na osnovu tipa prijave
+                    const registrationForm1a = obrazac1a.querySelector('#registration_form_1a');
+                    if (registrationForm1a) {
+                        // Prvo proveri da li korisnik ima user_type iz registracije
+                        const userRegistrationForm = '{{ auth()->user()->user_type ?? "" }}';
+                        if (userRegistrationForm && userRegistrationForm !== 'Fizičko lice') {
+                            registrationForm1a.value = userRegistrationForm;
+                        } else {
+                            // Ako nema iz registracije, postavi na osnovu tipa prijave
+                            registrationForm1a.value = 'Preduzetnik';
+                        }
+                    }
                 }
             } else if (selectedType === 'doo' || selectedType === 'ostalo') {
                 // DOO ili Ostalo - prikaži Obrazac 1b
@@ -1145,6 +1216,22 @@
                     if (founderName) founderName.setAttribute('required', 'required');
                     if (directorName) directorName.setAttribute('required', 'required');
                     if (companySeat) companySeat.setAttribute('required', 'required');
+                    
+                    // Automatski postavi oblik registracije na osnovu tipa prijave
+                    const registrationForm1b = obrazac1b.querySelector('#registration_form_1b');
+                    if (registrationForm1b) {
+                        // Prvo proveri da li korisnik ima user_type iz registracije
+                        const userRegistrationForm = '{{ auth()->user()->user_type ?? "" }}';
+                        if (userRegistrationForm && userRegistrationForm !== 'Fizičko lice') {
+                            registrationForm1b.value = userRegistrationForm;
+                        } else {
+                            // Ako nema iz registracije, postavi na osnovu tipa prijave
+                            if (selectedType === 'doo') {
+                                registrationForm1b.value = 'Društvo sa ograničenom odgovornošću';
+                            }
+                            // Za 'ostalo' ne postavljamo automatski, korisnik bira
+                        }
+                    }
                 }
             } else if (selectedType === 'fizicko_lice') {
                 // Fizičko lice BEZ registrovane djelatnosti

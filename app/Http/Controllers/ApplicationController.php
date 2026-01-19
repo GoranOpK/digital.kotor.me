@@ -111,6 +111,10 @@ class ApplicationController extends Controller
         }
 
         // Polja za CRPS broj (opciono za sve tipove)
+        // Oblik registracije je obavezan za sve tipove osim fizičkog lica bez registrovane djelatnosti
+        if ($request->applicant_type !== 'fizicko_lice') {
+            $rules['registration_form'] = 'required|in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)';
+        }
         $rules['crps_number'] = 'nullable|string|max:50';
 
         $validated = $request->validate($rules, [
@@ -127,6 +131,8 @@ class ApplicationController extends Controller
             'founder_name.required' => 'Ime osnivača/ice je obavezno.',
             'director_name.required' => 'Ime izvršnog direktora/ice je obavezno.',
             'company_seat.required' => 'Sjedište društva je obavezno.',
+            'registration_form.required' => 'Oblik registracije je obavezan.',
+            'registration_form.in' => 'Izabrani oblik registracije nije validan.',
             'physical_person_name.required' => 'Ime i prezime je obavezno za fizičko lice.',
             'physical_person_jmbg.required' => 'JMBG je obavezan za fizičko lice.',
             'physical_person_jmbg.regex' => 'JMBG mora imati tačno 13 cifara.',
@@ -170,6 +176,7 @@ class ApplicationController extends Controller
             'bank_account' => $validated['bank_account'] ?? null,
             'vat_number' => $validated['vat_number'] ?? null,
             'crps_number' => $validated['crps_number'] ?? null,
+            'registration_form' => $validated['registration_form'] ?? null,
             // Automatsko postavljanje is_registered na osnovu tipa
             'is_registered' => $validated['applicant_type'] !== 'fizicko_lice',
             'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
