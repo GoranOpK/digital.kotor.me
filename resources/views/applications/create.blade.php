@@ -258,7 +258,6 @@
                                     name="applicant_type" 
                                     value="preduzetnica"
                                     {{ old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType) === 'preduzetnica' ? 'checked' : '' }}
-                                    required
                                 >
                                 <label for="applicant_type_preduzetnica">Preduzetnica</label>
                             </div>
@@ -269,7 +268,6 @@
                                     name="applicant_type" 
                                     value="doo"
                                     {{ old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType) === 'doo' ? 'checked' : '' }}
-                                    required
                                 >
                                 <label for="applicant_type_doo">DOO (Društvo sa ograničenom odgovornošću)</label>
                             </div>
@@ -280,7 +278,6 @@
                                     name="applicant_type" 
                                     value="ostalo"
                                     {{ old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType) === 'ostalo' ? 'checked' : '' }}
-                                    required
                                 >
                                 <label for="applicant_type_ostalo">Ostalo</label>
                             </div>
@@ -410,7 +407,7 @@
                             name="registration_form" 
                             id="registration_form_1a"
                             class="form-control @error('registration_form') error @enderror"
-                            required
+                            data-required="true"
                         >
                             <option value="">Izaberite oblik registracije</option>
                             @php
@@ -550,7 +547,7 @@
                                     name="business_stage" 
                                     value="razvoj"
                                     {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'razvoj' ? 'checked' : '' }}
-                                    required
+                                    data-required="true"
                                 >
                                 <label for="business_stage_razvoj_1a">Razvoj postojeće poslovne djelatnosti</label>
                             </div>
@@ -854,7 +851,7 @@
                                     name="business_stage" 
                                     value="razvoj"
                                     {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'razvoj' ? 'checked' : '' }}
-                                    required
+                                    data-required="true"
                                 >
                                 <label for="business_stage_razvoj_1b">Razvoj postojeće poslovne djelatnosti</label>
                             </div>
@@ -978,7 +975,7 @@
                                     name="business_stage" 
                                     value="razvoj"
                                     {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'razvoj' ? 'checked' : '' }}
-                                    required
+                                    data-required="true"
                                 >
                                 <label for="business_stage_razvoj_fizicko">Razvoj postojeće poslovne djelatnosti</label>
                             </div>
@@ -1163,10 +1160,10 @@
             <!-- Dugme za slanje -->
             <div class="form-card" style="text-align: center;">
                 <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                    <button type="submit" name="save_as_draft" value="1" class="btn-secondary" style="background: #6b7280; color: #fff; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
+                    <button type="submit" name="save_as_draft" value="1" id="saveAsDraftBtn" class="btn-secondary" style="background: #6b7280; color: #fff; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
                         Sačuvaj kao nacrt
                     </button>
-                    <button type="submit" class="btn-primary">
+                    <button type="submit" class="btn-primary" id="submitBtn">
                         Nastavi na biznis plan
                     </button>
                 </div>
@@ -1287,11 +1284,11 @@
                     const founderName = obrazac1b.querySelector('input[name="founder_name"]');
                     const directorName = obrazac1b.querySelector('input[name="director_name"]');
                     const companySeat = obrazac1b.querySelector('input[name="company_seat"]');
-                    if (businessPlanName1b) businessPlanName1b.setAttribute('required', 'required');
-                    if (businessArea1b) businessArea1b.setAttribute('required', 'required');
-                    if (founderName) founderName.setAttribute('required', 'required');
-                    if (directorName) directorName.setAttribute('required', 'required');
-                    if (companySeat) companySeat.setAttribute('required', 'required');
+                    if (businessPlanName1b && businessPlanName1b.hasAttribute('data-required')) businessPlanName1b.setAttribute('required', 'required');
+                    if (businessArea1b && businessArea1b.hasAttribute('data-required')) businessArea1b.setAttribute('required', 'required');
+                    if (founderName && founderName.hasAttribute('data-required')) founderName.setAttribute('required', 'required');
+                    if (directorName && directorName.hasAttribute('data-required')) directorName.setAttribute('required', 'required');
+                    if (companySeat && companySeat.hasAttribute('data-required')) companySeat.setAttribute('required', 'required');
                     
                     // Automatski postavi oblik registracije na osnovu tipa prijave
                     setTimeout(function() {
@@ -1403,6 +1400,18 @@
         // Pripremi formu za submit - ukloni disabled sa svih polja
         const form = document.getElementById('applicationForm');
         if (form) {
+            // Kada se klikne "Sačuvaj kao nacrt", ukloni sve required atribute
+            const saveAsDraftBtn = document.getElementById('saveAsDraftBtn');
+            if (saveAsDraftBtn) {
+                saveAsDraftBtn.addEventListener('click', function(e) {
+                    // Ukloni required sa svih polja
+                    const allRequiredFields = form.querySelectorAll('[required]');
+                    allRequiredFields.forEach(field => {
+                        field.removeAttribute('required');
+                    });
+                });
+            }
+
             form.addEventListener('submit', function(e) {
                 // Ukloni disabled atribut sa svih polja u sakrivenim sekcijama
                 // (disabled polja se ne šalju u formi, što je ono što želimo)
