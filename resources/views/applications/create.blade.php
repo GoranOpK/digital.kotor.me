@@ -1525,8 +1525,18 @@
                         }
                     }
                     
-                    // 2. Ukloni disabled sa svih polja u aktivnoj sekciji
+                    // 2. PRVO proveri checked status za business_stage u aktivnoj sekciji PRE uklanjanja disabled
                     const activeSection = document.querySelector('.conditional-field.show');
+                    let checkedBusinessStageValue = null;
+                    if (activeSection) {
+                        const checkedBusinessStageInActive = activeSection.querySelector('input[name="business_stage"][type="radio"]:checked');
+                        if (checkedBusinessStageInActive) {
+                            checkedBusinessStageValue = checkedBusinessStageInActive.value;
+                            console.log('Found checked business_stage in active section:', checkedBusinessStageValue);
+                        }
+                    }
+                    
+                    // 3. Ukloni disabled sa svih polja u aktivnoj sekciji
                     if (activeSection) {
                         const activeFields = activeSection.querySelectorAll('input, select, textarea');
                         activeFields.forEach(field => {
@@ -1534,30 +1544,52 @@
                         });
                     }
                     
-                    // 3. Postavi disabled na sva polja u sakrivenim sekcijama (osim applicant_type)
+                    // 4. Postavi disabled na sva polja u sakrivenim sekcijama (osim applicant_type)
                     const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
                     hiddenSections.forEach(section => {
                         const allFieldsInSection = section.querySelectorAll('input, select, textarea');
                         allFieldsInSection.forEach(field => {
-                            if (field.name !== 'applicant_type') {
+                            if (field.name !== 'applicant_type' && field.name !== 'business_stage') {
                                 field.setAttribute('disabled', 'disabled');
                             }
                         });
                     });
                     
-                    // 4. Osiguraj da se business_stage šalje - ukloni disabled sa svih radio button-a
+                    // 5. Osiguraj da se business_stage šalje - ukloni disabled sa svih radio button-a u aktivnoj sekciji
                     // Browser će poslati samo one koji nisu disabled
-                    const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
-                    allBusinessStageRadios.forEach(radio => {
-                        radio.removeAttribute('disabled');
-                    });
+                    if (activeSection) {
+                        const businessStageRadiosInActive = activeSection.querySelectorAll('input[name="business_stage"][type="radio"]');
+                        businessStageRadiosInActive.forEach(radio => {
+                            radio.removeAttribute('disabled');
+                        });
+                    }
                     
-                    // 5. Proveri da li postoji checked business_stage - ako ne, postavi default
-                    const checkedBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]:checked');
-                    if (!checkedBusinessStageRadio) {
-                        const firstBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]');
-                        if (firstBusinessStageRadio) {
-                            firstBusinessStageRadio.checked = true;
+                    // 6. Postavi checked status na prvi business_stage radio button u formi sa sačuvanom vrednošću
+                    if (checkedBusinessStageValue) {
+                        console.log('Setting business_stage to:', checkedBusinessStageValue);
+                        const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"][type="radio"]');
+                        allBusinessStageRadios.forEach(radio => {
+                            if (radio.value === checkedBusinessStageValue) {
+                                radio.checked = true;
+                                radio.removeAttribute('disabled');
+                            } else {
+                                radio.checked = false;
+                            }
+                        });
+                    } else {
+                        // Ako nije bilo checked u aktivnoj sekciji, proveri da li postoji checked negde
+                        const checkedBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]:checked');
+                        if (!checkedBusinessStageRadio) {
+                            // Ako nijedan nije checked, postavi prvi (default "započinjanje")
+                            const firstBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]');
+                            if (firstBusinessStageRadio) {
+                                firstBusinessStageRadio.checked = true;
+                                firstBusinessStageRadio.removeAttribute('disabled');
+                                console.log('No checked business_stage found, setting default to započinjanje');
+                            }
+                        } else {
+                            // Ako postoji checked, osiguraj da nije disabled
+                            checkedBusinessStageRadio.removeAttribute('disabled');
                         }
                     }
                     
