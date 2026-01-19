@@ -1515,6 +1515,13 @@
             }
 
             form.addEventListener('submit', function(e) {
+                // VAŽNO: Ukloni disabled sa radio button-a za business_stage u svim sekcijama PRVO
+                // jer radio button-i moraju biti enabled da bi se njihova vrednost poslala
+                const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
+                allBusinessStageRadios.forEach(radio => {
+                    radio.removeAttribute('disabled');
+                });
+                
                 // Ukloni disabled atribut sa svih polja u sakrivenim sekcijama
                 // (disabled polja se ne šalju u formi, što je ono što želimo)
                 // Ali takođe ukloni required sa sakrivenih polja za dodatnu sigurnost
@@ -1525,13 +1532,6 @@
                         field.removeAttribute('required');
                         // Ostavi disabled - disabled polja se ne validiraju i ne šalju
                     });
-                });
-                
-                // VAŽNO: Ukloni disabled sa radio button-a za business_stage u svim sekcijama
-                // jer radio button-i moraju biti enabled da bi se njihova vrednost poslala
-                const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
-                allBusinessStageRadios.forEach(radio => {
-                    radio.removeAttribute('disabled');
                 });
             });
         }
