@@ -223,7 +223,11 @@ class ApplicationController extends Controller
             if ($existingApplication) {
             // Ažuriraj postojeću draft prijavu
             // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
-            $existingApplication->update([
+            \Log::info('Before update - PIB in request: ' . ($request->input('pib') ?? 'null'));
+            \Log::info('Before update - PIB filled check: ' . ($request->filled('pib') ? 'true' : 'false'));
+            \Log::info('Before update - PIB in existing: ' . ($existingApplication->pib ?? 'null'));
+            
+            $updateData = [
                 'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : $existingApplication->business_plan_name,
                 'applicant_type' => $request->filled('applicant_type') ? $request->applicant_type : $existingApplication->applicant_type,
                 'business_stage' => $request->filled('business_stage') ? $request->business_stage : $existingApplication->business_stage,
@@ -240,14 +244,18 @@ class ApplicationController extends Controller
                 'website' => $request->filled('website') ? $request->website : $existingApplication->website,
                 'bank_account' => $request->filled('bank_account') ? $request->bank_account : $existingApplication->bank_account,
                 'vat_number' => $request->filled('vat_number') ? $request->vat_number : $existingApplication->vat_number,
-                'pib' => $request->filled('pib') ? $request->pib : $existingApplication->pib,
+                'pib' => $request->has('pib') ? ($request->pib ?: null) : $existingApplication->pib,
                 'crps_number' => $request->filled('crps_number') ? $request->crps_number : $existingApplication->crps_number,
                 'registration_form' => $request->filled('registration_form') ? $request->registration_form : $existingApplication->registration_form,
                 'is_registered' => $request->filled('applicant_type') ? ($request->applicant_type !== 'fizicko_lice') : $existingApplication->is_registered,
                 'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
                 'de_minimis_declaration' => $request->has('de_minimis_declaration') && ($request->de_minimis_declaration == '1' || $request->de_minimis_declaration === true),
                 'previous_support_declaration' => $request->has('previous_support_declaration'),
-            ]);
+            ];
+            
+            \Log::info('Update data PIB value: ' . ($updateData['pib'] ?? 'null'));
+            
+            $existingApplication->update($updateData);
 
                 $application = $existingApplication;
                 \Log::info('Updated existing application ID: ' . $application->id);
