@@ -156,7 +156,11 @@ class ApplicationController extends Controller
         }
         $rules['crps_number'] = 'nullable|string|max:50';
 
-        $validated = $request->validate($rules, [
+        \Log::info('About to validate with rules: ' . json_encode($rules));
+        \Log::info('Request data before validation: ' . json_encode($request->all()));
+        
+        try {
+            $validated = $request->validate($rules, [
             'business_plan_name.required' => 'Naziv biznis plana je obavezan.',
             'applicant_type.required' => 'Tip podnosioca je obavezan.',
             'business_stage.required' => 'Faza biznisa je obavezna.',
@@ -180,6 +184,12 @@ class ApplicationController extends Controller
             'physical_person_email.required' => 'E-mail je obavezan za fizičko lice.',
             'physical_person_email.email' => 'E-mail mora biti validan.',
         ]);
+            \Log::info('Validation passed! Validated data: ' . json_encode($validated));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Log::error('Validation failed! Errors: ' . json_encode($e->errors()));
+            \Log::error('Request data: ' . json_encode($request->all()));
+            throw $e;
+        }
 
         // Proveri maksimalnu podršku (30% budžeta) - samo ako nije draft
         if (!$isDraft && isset($validated['requested_amount'])) {
