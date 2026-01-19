@@ -240,6 +240,7 @@ class ApplicationController extends Controller
                 'website' => $request->filled('website') ? $request->website : $existingApplication->website,
                 'bank_account' => $request->filled('bank_account') ? $request->bank_account : $existingApplication->bank_account,
                 'vat_number' => $request->filled('vat_number') ? $request->vat_number : $existingApplication->vat_number,
+                'pib' => $request->filled('pib') ? $request->pib : $existingApplication->pib,
                 'crps_number' => $request->filled('crps_number') ? $request->crps_number : $existingApplication->crps_number,
                 'registration_form' => $request->filled('registration_form') ? $request->registration_form : $existingApplication->registration_form,
                 'is_registered' => $request->filled('applicant_type') ? ($request->applicant_type !== 'fizicko_lice') : $existingApplication->is_registered,
