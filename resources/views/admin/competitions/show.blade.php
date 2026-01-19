@@ -154,6 +154,15 @@
                     @else
                         <p><strong>Komisija:</strong> <span style="color: #6b7280;">Nije dodijeljena</span></p>
                     @endif
+                    @if(in_array($competition->status, ['closed', 'completed']))
+                        @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman) || (isset($isCommissionMember) && $isCommissionMember))
+                            <p style="margin-top: 12px;">
+                                <a href="{{ route('admin.competitions.ranking', $competition) }}" style="display: inline-block; padding: 8px 16px; background: linear-gradient(135deg, #8b5cf6, #7c3aed); color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(139, 92, 246, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                                    📊 Rang lista
+                                </a>
+                            </p>
+                        @endif
+                    @endif
                 </div>
                 <div>
                     <p><strong>Rok za prijave:</strong> {{ $competition->deadline_days ?? 20 }} dana</p>

@@ -445,6 +445,9 @@ class AdminController extends Controller
         // Proveri da li je predsjednik komisije (za prikaz dodatnih opcija)
         $isChairman = $this->isCommissionChairmanForCompetition($competition);
         
+        // Proveri da li je član komisije
+        $isCommissionMember = $this->isCommissionMemberForCompetition($competition);
+        
         $competition->loadCount('applications');
         $competition->load('commission');
         $applications = $competition->applications()
@@ -452,7 +455,7 @@ class AdminController extends Controller
             ->latest()
             ->paginate(20);
         
-        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman'));
+        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember'));
     }
 
     /**
