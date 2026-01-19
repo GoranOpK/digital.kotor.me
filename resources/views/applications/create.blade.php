@@ -1441,14 +1441,21 @@
                 const directorName = form.querySelector('input[name="director_name"]');
                 const companySeat = form.querySelector('input[name="company_seat"]');
                 const registrationForm = form.querySelector('select[name="registration_form"]');
+                const pib = form.querySelector('input[name="pib"]');
 
                 if (!founderName || !founderName.value.trim()) return false;
                 if (!directorName || !directorName.value.trim()) return false;
                 if (!companySeat || !companySeat.value.trim()) return false;
                 if (!registrationForm || !registrationForm.value) return false;
+                // PIB je obavezan za DOO i ostalo
+                if (!pib || !pib.value.trim() || pib.value.trim().length !== 8) return false;
             } else if (applicantTypeValue === 'preduzetnica') {
                 const registrationForm = form.querySelector('select[name="registration_form"]');
+                const pib = form.querySelector('input[name="pib"]');
+                
                 if (!registrationForm || !registrationForm.value) return false;
+                // PIB je obavezan za preduzetnicu
+                if (!pib || !pib.value.trim() || pib.value.trim().length !== 8) return false;
             }
 
             return true;
