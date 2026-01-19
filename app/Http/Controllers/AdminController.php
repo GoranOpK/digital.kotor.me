@@ -1273,10 +1273,13 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za generisanje odluke. Samo predsjednik komisije može generisati odluku.');
         }
         
+        // Dobitnici su oni koji imaju approved_amount postavljen (veći od 0)
         $winners = Application::where('competition_id', $competition->id)
-            ->where('status', 'approved')
+            ->whereNotNull('approved_amount')
+            ->where('approved_amount', '>', 0)
             ->with(['user', 'businessPlan'])
             ->orderBy('ranking_position')
+            ->orderBy('id')
             ->get();
 
         // Generiši PDF ili pripremi podatke za prikaz
