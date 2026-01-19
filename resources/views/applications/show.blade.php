@@ -381,43 +381,6 @@
                     @endif
                 </div>
             </div>
-                        <div class="info-item">
-                            <span class="info-label">Faza biznisa</span>
-                            <span class="info-value">
-                                {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
-                            </span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Oblast biznisa</span>
-                            <span class="info-value">{{ $application->business_area }}</span>
-                        </div>
-                    @endif
-                    <div class="info-item">
-                        <span class="info-label">Registrovana djelatnost</span>
-                        <span class="info-value">
-                            @if($application->is_registered)
-                                <span style="color: #10b981;">✓ Da</span>
-                            @else
-                                <span style="color: #f59e0b;">✗ Ne</span>
-                            @endif
-                        </span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Traženi iznos</span>
-                        <span class="info-value">{{ number_format($application->requested_amount, 2, ',', '.') }} €</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Ukupan budžet</span>
-                        <span class="info-value">{{ number_format($application->total_budget_needed, 2, ',', '.') }} €</span>
-                    </div>
-                    @if($application->approved_amount)
-                    <div class="info-item">
-                        <span class="info-label">Odobreni iznos</span>
-                        <span class="info-value">{{ number_format($application->approved_amount, 2, ',', '.') }} €</span>
-                    </div>
-                    @endif
-                </div>
-            </div>
 
             <!-- 2. Dodaj dokument (Sredina) -->
             @if($showUpload)
