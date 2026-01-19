@@ -278,7 +278,7 @@
 
                     <div style="margin-top: 24px; text-align: center;">
                         <form method="GET" action="{{ route('admin.competitions.decision', $competition) }}" style="display: inline;">
-                            <button type="submit" class="btn btn-primary">Generiši odluku</button>
+                            <button type="submit" class="btn btn-primary" style="background: #fff; color: var(--primary); border: none; cursor: pointer;">Generiši odluku</button>
                         </form>
                     </div>
                 @else
