@@ -210,15 +210,6 @@ class Application extends Model
                 !$this->company_seat) {
                 return false;
             }
-            // PIB je obavezan za DOO i ostalo
-            if (!$this->pib || strlen($this->pib) !== 8) {
-                return false;
-            }
-        } elseif ($this->applicant_type === 'preduzetnica') {
-            // PIB je obavezan za preduzetnicu
-            if (!$this->pib || strlen($this->pib) !== 8) {
-                return false;
-            }
         }
 
         // Proveri oblik registracije (obavezan za sve osim fizičkog lica)

@@ -32,7 +32,7 @@ class EvaluationController extends Controller
         // Učitaj komisiju sa njenim konkursima
         $commission = $commissionMember->commission;
         $commission->load('competitions');
-        
+
         // Prijave koje treba ocjeniti (submitted ili evaluated status)
         $query = Application::with(['user', 'competition'])
             ->whereIn('status', ['submitted', 'evaluated']);
@@ -61,13 +61,13 @@ class EvaluationController extends Controller
             if ($request->filter === 'pending') {
                 // Prijave koje član komisije još nije ocjenio
                 if (!empty($evaluatedApplicationIds)) {
-                    $query->whereNotIn('id', $evaluatedApplicationIds);
+            $query->whereNotIn('id', $evaluatedApplicationIds);
                 }
                 // Ako nema ocjenjenih prijava, sve prijave su "pending"
             } elseif ($request->filter === 'evaluated') {
                 // Prijave koje je član komisije već ocjenio
                 if (!empty($evaluatedApplicationIds)) {
-                    $query->whereIn('id', $evaluatedApplicationIds);
+            $query->whereIn('id', $evaluatedApplicationIds);
                 } else {
                     // Ako nema ocjenjenih prijava, ne prikazuj ništa
                     $query->whereRaw('1 = 0');

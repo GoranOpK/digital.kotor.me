@@ -43,7 +43,7 @@
                         @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
                             Administrator konkursa
                         @else
-                            {{ Auth::user()->name }}
+                        {{ Auth::user()->name }}
                         @endif
                     </span>
                     <form method="POST" action="{{ route('logout') }}" style="margin:0;">

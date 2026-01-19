@@ -1535,6 +1535,44 @@
                         field.removeAttribute('disabled');
                     });
                     
+                    // VAŽNO: Prvo kopiraj vrednosti iz aktivnog obrasca u prvo polje sa istim name atributom
+                    // Ovo mora biti pre brisanja vrednosti iz sakrivenih sekcija
+                    const activeSection = document.querySelector('.conditional-field.show');
+                    if (activeSection) {
+                        const activeFields = activeSection.querySelectorAll('input, select, textarea');
+                        activeFields.forEach(activeField => {
+                            if (activeField.name && activeField.name !== 'save_as_draft' && activeField.name !== '_token') {
+                                // Posebna logika za radio button-e
+                                if (activeField.type === 'radio') {
+                                    // Ako je radio button checked u aktivnoj sekciji
+                                    if (activeField.checked) {
+                                        // Pronađi prvi radio button sa istim name atributom u formi (može biti u bilo kojoj sekciji)
+                                        const firstRadioWithSameName = form.querySelector(`input[name="${activeField.name}"][type="radio"]`);
+                                        if (firstRadioWithSameName && firstRadioWithSameName !== activeField) {
+                                            // Postavi checked na prvi radio button sa istom vrednošću
+                                            const allRadiosWithSameName = form.querySelectorAll(`input[name="${activeField.name}"][type="radio"]`);
+                                            allRadiosWithSameName.forEach(radio => {
+                                                radio.checked = (radio.value === activeField.value);
+                                            });
+                                        }
+                                    }
+                                } else if (activeField.type === 'checkbox') {
+                                    // Za checkbox-ove, kopiraj checked status
+                                    const firstCheckboxWithSameName = form.querySelector(`input[name="${activeField.name}"][type="checkbox"]`);
+                                    if (firstCheckboxWithSameName && firstCheckboxWithSameName !== activeField) {
+                                        firstCheckboxWithSameName.checked = activeField.checked;
+                                    }
+                                } else {
+                                    // Za ostala polja (input, select, textarea), kopiraj vrednost
+                                    const firstFieldWithSameName = form.querySelector(`[name="${activeField.name}"]`);
+                                    if (firstFieldWithSameName && firstFieldWithSameName !== activeField) {
+                                        firstFieldWithSameName.value = activeField.value;
+                                    }
+                                }
+                            }
+                        });
+                    }
+                    
                     // VAŽNO: Obriši vrednosti iz polja u sakrivenim sekcijama da se ne šalju duplikati
                     // (browser šalje samo prvo polje sa istim name atributom)
                     const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
@@ -1546,38 +1584,32 @@
                             } else {
                                 field.value = '';
                             }
-                            // Takođe postavi disabled da se sigurno ne šalje
+                            // Postavi disabled da se sigurno ne šalje
                             field.setAttribute('disabled', 'disabled');
                         });
                     });
                     
-                    // VAŽNO: Osiguraj da se vrednosti iz aktivnog obrasca šalju
-                    // Pronađi aktivni obrazac i kopiraj vrednosti u prvo polje sa istim name atributom
-                    const activeSection = document.querySelector('.conditional-field.show');
+                    // VAŽNO: Obriši checked status iz aktivnog radio button-a ako nije prvi u DOM-u
+                    // i osiguraj da se business_stage šalje - ukloni disabled sa svih radio button-a
                     if (activeSection) {
-                        const activeFields = activeSection.querySelectorAll('input, select, textarea');
-                        activeFields.forEach(activeField => {
-                            if (activeField.name && activeField.name !== 'save_as_draft' && activeField.name !== '_token') {
-                                // Pronađi prvo polje sa istim name atributom u formi
-                                const firstFieldWithSameName = form.querySelector(`[name="${activeField.name}"]`);
-                                if (firstFieldWithSameName && firstFieldWithSameName !== activeField) {
-                                    // Kopiraj vrednost iz aktivnog polja u prvo polje
-                                    if (firstFieldWithSameName.type === 'checkbox' || firstFieldWithSameName.type === 'radio') {
-                                        firstFieldWithSameName.checked = activeField.checked;
-                                    } else {
-                                        firstFieldWithSameName.value = activeField.value;
-                                    }
-                                    // Obriši vrednost iz aktivnog polja da se ne šalje duplikat
-                                    if (activeField.type === 'checkbox' || activeField.type === 'radio') {
-                                        activeField.checked = false;
-                                    } else {
-                                        activeField.value = '';
-                                    }
-                                    activeField.setAttribute('disabled', 'disabled');
+                        const activeRadioButtons = activeSection.querySelectorAll('input[type="radio"]');
+                        activeRadioButtons.forEach(activeRadio => {
+                            if (activeRadio.checked) {
+                                const firstRadioWithSameName = form.querySelector(`input[name="${activeRadio.name}"][type="radio"]`);
+                                if (firstRadioWithSameName && firstRadioWithSameName !== activeRadio) {
+                                    // Ako aktivni radio button nije prvi u DOM-u, obriši mu checked status
+                                    activeRadio.checked = false;
+                                    activeRadio.setAttribute('disabled', 'disabled');
                                 }
                             }
                         });
                     }
+                    
+                    // Ukloni disabled sa svih radio button-a za business_stage (i svih ostalih polja)
+                    const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
+                    allBusinessStageRadios.forEach(radio => {
+                        radio.removeAttribute('disabled');
+                    });
                     
                     // Submit-uj formu
                     form.submit();
