@@ -1069,9 +1069,30 @@
             // Resetuj sve obrazce
             if (obrazac1a) {
                 obrazac1a.classList.remove('show');
+                // Ukloni required sa polja u obrazac1a
+                const obrazac1aRequired = obrazac1a.querySelectorAll('[required]');
+                obrazac1aRequired.forEach(field => {
+                    if (field.type !== 'radio') {
+                        field.removeAttribute('required');
+                    }
+                });
             }
             if (obrazac1b) {
                 obrazac1b.classList.remove('show');
+                // Ukloni required sa polja u obrazac1b
+                const obrazac1bRequired = obrazac1b.querySelectorAll('[required]');
+                obrazac1bRequired.forEach(field => {
+                    if (field.type !== 'radio') {
+                        field.removeAttribute('required');
+                    }
+                });
+                // Ukloni required sa DOO/ostalo specifičnih polja
+                const founderName = obrazac1b.querySelector('input[name="founder_name"]');
+                const directorName = obrazac1b.querySelector('input[name="director_name"]');
+                const companySeat = obrazac1b.querySelector('input[name="company_seat"]');
+                if (founderName) founderName.removeAttribute('required');
+                if (directorName) directorName.removeAttribute('required');
+                if (companySeat) companySeat.removeAttribute('required');
             }
             if (fizickoLiceFields) {
                 fizickoLiceFields.classList.remove('show');
@@ -1090,6 +1111,11 @@
                 // Preduzetnica - prikaži Obrazac 1a
                 if (obrazac1a) {
                     obrazac1a.classList.add('show');
+                    // Dodaj required na obavezna polja u obrazac1a
+                    const businessPlanName1a = obrazac1a.querySelector('input[name="business_plan_name"]');
+                    const businessArea1a = obrazac1a.querySelector('input[name="business_area"]');
+                    if (businessPlanName1a) businessPlanName1a.setAttribute('required', 'required');
+                    if (businessArea1a) businessArea1a.setAttribute('required', 'required');
                 }
             } else if (selectedType === 'doo' || selectedType === 'ostalo') {
                 // DOO ili Ostalo - prikaži Obrazac 1b
@@ -1104,6 +1130,17 @@
                             obrazac1bSubtitle.textContent = '(za ostale pravne subjekte)';
                         }
                     }
+                    // Dodaj required na obavezna polja u obrazac1b
+                    const businessPlanName1b = obrazac1b.querySelector('input[name="business_plan_name"]');
+                    const businessArea1b = obrazac1b.querySelector('input[name="business_area"]');
+                    const founderName = obrazac1b.querySelector('input[name="founder_name"]');
+                    const directorName = obrazac1b.querySelector('input[name="director_name"]');
+                    const companySeat = obrazac1b.querySelector('input[name="company_seat"]');
+                    if (businessPlanName1b) businessPlanName1b.setAttribute('required', 'required');
+                    if (businessArea1b) businessArea1b.setAttribute('required', 'required');
+                    if (founderName) founderName.setAttribute('required', 'required');
+                    if (directorName) directorName.setAttribute('required', 'required');
+                    if (companySeat) companySeat.setAttribute('required', 'required');
                 }
             } else if (selectedType === 'fizicko_lice') {
                 // Fizičko lice BEZ registrovane djelatnosti
@@ -1127,6 +1164,29 @@
 
         // Pozovi na učitavanju stranice
         toggleFieldsByApplicantType();
+
+        // Ukloni required atribut sa sakrivenih polja pre submit-a
+        const form = document.getElementById('applicationForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Pronađi sve sakrivene sekcije
+                const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
+                
+                // Ukloni required atribut sa svih polja u sakrivenim sekcijama
+                hiddenSections.forEach(section => {
+                    const requiredFields = section.querySelectorAll('[required]');
+                    requiredFields.forEach(field => {
+                        field.removeAttribute('required');
+                    });
+                });
+
+                // Takođe ukloni required sa checkbox-ova koji nisu vidljivi
+                const hiddenCheckboxes = document.querySelectorAll('.conditional-field:not(.show) input[type="checkbox"][required]');
+                hiddenCheckboxes.forEach(checkbox => {
+                    checkbox.removeAttribute('required');
+                });
+            });
+        }
     });
 </script>
 @endsection
