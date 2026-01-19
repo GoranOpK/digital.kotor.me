@@ -64,6 +64,19 @@
     .btn-link:hover {
         text-decoration: underline;
     }
+    .btn-delete {
+        color: #ef4444;
+        text-decoration: none;
+        font-weight: 600;
+        margin-left: 12px;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+    .btn-delete:hover {
+        background: #fee2e2;
+        text-decoration: none;
+    }
     .empty-state {
         text-align: center;
         padding: 60px 20px;
@@ -116,12 +129,20 @@
                                     @php
                                         $user = auth()->user();
                                         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+                                        $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
                                         $isCommissionMember = $user->role && $user->role->name === 'komisija';
                                     @endphp
                                     @if($isAdmin || $isCommissionMember)
                                         <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-link">Pregled</a>
                                     @else
                                         <a href="{{ route('competitions.show', $competition) }}" class="btn-link">Pregled</a>
+                                    @endif
+                                    @if($isCompetitionAdmin)
+                                        <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs iz arhive? Ova akcija je nepovratna.');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn-delete">Obriši</button>
+                                        </form>
                                     @endif
                                 </td>
                             </tr>

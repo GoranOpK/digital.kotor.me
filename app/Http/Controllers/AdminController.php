@@ -611,9 +611,11 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
         
-        // Proveri da li je konkurs završen
-        if (in_array($competition->status, ['closed', 'completed'])) {
+        // Administrator konkursa može brisati završene konkurse iz arhive
+        // Ostali ne mogu brisati završene konkurse
+        if (in_array($competition->status, ['closed', 'completed']) && !$isCompetitionAdmin) {
             abort(403, 'Ne možete obrisati završeni konkurs.');
         }
         
@@ -622,14 +624,14 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za brisanje ovog konkursa.');
         }
         
-        // Proveri da li ima prijava
-        if ($competition->applications()->count() > 0) {
+        // Proveri da li ima prijava (samo za aktivne konkurse)
+        if (!in_array($competition->status, ['closed', 'completed']) && $competition->applications()->count() > 0) {
             return redirect()->back()->withErrors(['error' => 'Ne možete obrisati konkurs koji već ima prijave.']);
         }
 
         $competition->delete();
 
-        return redirect()->route('admin.competitions.index')->with('success', 'Konkurs je uspješno obrisan.');
+        return redirect()->back()->with('success', 'Konkurs je uspješno obrisan.');
     }
 
     /**
