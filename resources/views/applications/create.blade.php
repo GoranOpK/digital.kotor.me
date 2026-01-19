@@ -1530,10 +1530,20 @@
                     });
                     
                     // VAŽNO: Ukloni disabled sa svih polja PRVO da bi mogli da pročitamo vrednosti
+                    // OVO JE KRITIČNO - mora biti pre kopiranja vrednosti!
                     const allFields = form.querySelectorAll('input, select, textarea');
                     allFields.forEach(field => {
                         field.removeAttribute('disabled');
                     });
+                    
+                    // VAŽNO: Prvo proveri checked status za business_stage PRE kopiranja vrednosti
+                    // Pronađi checked radio button za business_stage (može biti u bilo kojoj sekciji)
+                    let checkedBusinessStageValue = null;
+                    const checkedBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]:checked');
+                    if (checkedBusinessStageRadio) {
+                        checkedBusinessStageValue = checkedBusinessStageRadio.value;
+                        console.log('BEFORE copy: Found checked business_stage:', checkedBusinessStageValue);
+                    }
                     
                     // VAŽNO: Prvo kopiraj vrednosti iz aktivnog obrasca u prvo polje sa istim name atributom
                     // Ovo mora biti pre brisanja vrednosti iz sakrivenih sekcija
@@ -1584,10 +1594,7 @@
                         });
                     }
                     
-                    // VAŽNO: Prvo osiguraj da se checked status postavi na prvi radio button pre brisanja iz sakrivenih sekcija
-                    // Ovo je kritično da se ne izgubi checked status
-                    
-                    // 1. Osiguraj da se applicant_type šalje
+                    // VAŽNO: Osiguraj da se applicant_type šalje
                     const allApplicantTypeRadios = form.querySelectorAll('input[name="applicant_type"]');
                     allApplicantTypeRadios.forEach(radio => {
                         radio.removeAttribute('disabled');
@@ -1601,37 +1608,36 @@
                         }
                     }
                     
-                    // 2. Osiguraj da se business_stage šalje - PRVO ukloni disabled sa svih radio button-a
+                    // VAŽNO: Osiguraj da se business_stage šalje koristeći vrednost koju smo sačuvali PRE kopiranja
                     const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
                     allBusinessStageRadios.forEach(radio => {
                         radio.removeAttribute('disabled');
                     });
                     
-                    // 3. Pronađi checked radio button za business_stage (može biti u bilo kojoj sekciji)
-                    const checkedBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]:checked');
-                    const firstBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]');
-                    
-                    if (checkedBusinessStageRadio && firstBusinessStageRadio) {
-                        // Ako postoji checked radio button, sačuvaj njegovu vrednost
-                        const checkedValue = checkedBusinessStageRadio.value;
-                        console.log('Found checked business_stage:', checkedValue);
-                        
+                    // Ako smo ranije našli checked radio button, koristi tu vrednost
+                    if (checkedBusinessStageValue) {
+                        console.log('AFTER copy: Setting business_stage to:', checkedBusinessStageValue);
                         // Postavi checked na SVE radio button-e sa istom vrednošću (da browser pošalje prvi)
-                        const allBusinessStageRadiosWithSameValue = form.querySelectorAll(`input[name="business_stage"][type="radio"][value="${checkedValue}"]`);
+                        const allBusinessStageRadiosWithSameValue = form.querySelectorAll(`input[name="business_stage"][type="radio"][value="${checkedBusinessStageValue}"]`);
                         allBusinessStageRadiosWithSameValue.forEach(radio => {
                             radio.checked = true;
                             radio.removeAttribute('disabled');
                         });
                         
                         // Obriši checked status iz svih ostalih radio button-a
-                        const allOtherBusinessStageRadios = form.querySelectorAll(`input[name="business_stage"][type="radio"]:not([value="${checkedValue}"])`);
+                        const allOtherBusinessStageRadios = form.querySelectorAll(`input[name="business_stage"][type="radio"]:not([value="${checkedBusinessStageValue}"])`);
                         allOtherBusinessStageRadios.forEach(radio => {
                             radio.checked = false;
                         });
-                    } else if (!checkedBusinessStageRadio && firstBusinessStageRadio) {
-                        // Ako nijedan nije checked, postavi prvi na checked (default "započinjanje")
-                        firstBusinessStageRadio.checked = true;
-                        console.log('No checked business_stage found, setting default to započinjanje');
+                    } else {
+                        // Ako nijedan nije checked, proveri ponovo (možda se postavio tokom kopiranja)
+                        const checkedBusinessStageRadioAfter = form.querySelector('input[name="business_stage"][type="radio"]:checked');
+                        const firstBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]');
+                        if (!checkedBusinessStageRadioAfter && firstBusinessStageRadio) {
+                            // Ako i dalje nijedan nije checked, postavi prvi na checked (default "započinjanje")
+                            firstBusinessStageRadio.checked = true;
+                            console.log('No checked business_stage found, setting default to započinjanje');
+                        }
                     }
                     
                     // VAŽNO: Obriši vrednosti iz polja u sakrivenim sekcijama da se ne šalju duplikati
