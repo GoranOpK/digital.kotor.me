@@ -1163,13 +1163,12 @@
                     <button type="submit" name="save_as_draft" value="1" id="saveAsDraftBtn" class="btn-secondary" style="background: #6b7280; color: #fff; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
                         Sačuvaj kao nacrt
                     </button>
-                    <button type="submit" class="btn-primary" id="submitBtn">
-                        Nastavi na biznis plan
+                    <button type="submit" class="btn-primary" id="submitBtn" style="display: none;">
+                        Sačuvaj i nastavi na biznis plan
                     </button>
                 </div>
-                <p style="color: #6b7280; font-size: 14px; margin-top: 16px;">
-                    <strong>Sačuvaj kao nacrt:</strong> Sačuvajte prijavu i nastavite je popunjavati kasnije.<br>
-                    <strong>Nastavi na biznis plan:</strong> Sačuvajte kompletnu prijavu i nastavite na popunjavanje biznis plana.
+                <p style="color: #6b7280; font-size: 14px; margin-top: 16px;" id="submitButtonInfo">
+                    <strong>Sačuvaj kao nacrt:</strong> Sačuvajte prijavu i nastavite je popunjavati kasnije.
                 </p>
             </div>
         </form>
