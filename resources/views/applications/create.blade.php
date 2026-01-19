@@ -937,21 +937,6 @@
                 <div class="form-section">
                     <h2>4. Dodatni podaci</h2>
                     
-                    <div class="form-group">
-                        <label class="form-label">Website (opciono)</label>
-                        <input 
-                            type="url" 
-                            name="website" 
-                            class="form-control @error('website') error @enderror"
-                            value="{{ old('website') }}"
-                            maxlength="255"
-                            placeholder="https://example.com"
-                        >
-                        @error('website')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Broj računa (opciono)</label>
@@ -982,6 +967,21 @@
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Website (opciono)</label>
+                        <input 
+                            type="url" 
+                            name="website" 
+                            class="form-control @error('website') error @enderror"
+                            value="{{ old('website') }}"
+                            maxlength="255"
+                            placeholder="https://example.com"
+                        >
+                        @error('website')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
             </div>
