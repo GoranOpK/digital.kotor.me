@@ -111,7 +111,7 @@ class ApplicationController extends Controller
             'bank_account' => 'nullable|string|max:50',
             'vat_number' => 'nullable|string|max:50',
             'pib' => 'nullable|string|regex:/^[0-9]{8}$/',
-            'de_minimis_declaration' => $isDraft ? 'nullable|accepted' : 'required|accepted',
+            'de_minimis_declaration' => $isDraft ? 'nullable|boolean' : 'required|accepted',
         ];
 
         // Izjava o tačnosti je obavezna samo za fizičko lice BEZ registrovane djelatnosti
