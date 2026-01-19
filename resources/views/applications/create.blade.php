@@ -406,56 +406,8 @@
                         </div>
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">*Broj žiro računa:</label>
-                            <input 
-                                type="text" 
-                                name="bank_account" 
-                                class="form-control @error('bank_account') error @enderror"
-                                value="{{ old('bank_account') }}"
-                                maxlength="50"
-                                placeholder="Npr. 510-0000000000123-45"
-                            >
-                            @error('bank_account')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">*Web site:</label>
-                            <input 
-                                type="url" 
-                                name="website" 
-                                class="form-control @error('website') error @enderror"
-                                value="{{ old('website') }}"
-                                maxlength="255"
-                                placeholder="https://example.com"
-                            >
-                            @error('website')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">**Broj PDV registracije:</label>
-                        <input 
-                            type="text" 
-                            name="vat_number" 
-                            class="form-control @error('vat_number') error @enderror"
-                            value="{{ old('vat_number') }}"
-                            maxlength="50"
-                            placeholder="Npr. ME123456789"
-                        >
-                        @error('vat_number')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-
                     <div style="margin: 16px 0; padding: 12px; background: #f3f4f6; border-radius: 8px; font-size: 13px;">
                         <p style="margin: 4px 0;"><strong>*</strong> Popunjavate samo ako imate registrovan biznis.</p>
-                        <p style="margin: 4px 0;"><strong>**</strong> Popunjavate samo ako ste obveznik PDV-a.</p>
                     </div>
 
                     <div class="form-group">
@@ -694,72 +646,22 @@
                         @enderror
                     </div>
 
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">*PIB:</label>
-                            <input 
-                                type="text" 
-                                name="pib" 
-                                class="form-control @error('pib') error @enderror"
-                                value="{{ old('pib', auth()->user()->pib) }}"
-                                maxlength="50"
-                            >
-                            @error('pib')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">*Broj žiro računa:</label>
-                            <input 
-                                type="text" 
-                                name="bank_account" 
-                                class="form-control @error('bank_account') error @enderror"
-                                value="{{ old('bank_account') }}"
-                                maxlength="50"
-                                placeholder="Npr. 510-0000000000123-45"
-                            >
-                            @error('bank_account')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">*Web site:</label>
-                            <input 
-                                type="url" 
-                                name="website" 
-                                class="form-control @error('website') error @enderror"
-                                value="{{ old('website') }}"
-                                maxlength="255"
-                                placeholder="https://example.com"
-                            >
-                            @error('website')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">**Broj PDV registracije:</label>
-                            <input 
-                                type="text" 
-                                name="vat_number" 
-                                class="form-control @error('vat_number') error @enderror"
-                                value="{{ old('vat_number') }}"
-                                maxlength="50"
-                                placeholder="Npr. ME123456789"
-                            >
-                            @error('vat_number')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">*PIB:</label>
+                        <input 
+                            type="text" 
+                            name="pib" 
+                            class="form-control @error('pib') error @enderror"
+                            value="{{ old('pib', auth()->user()->pib) }}"
+                            maxlength="50"
+                        >
+                        @error('pib')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div style="margin: 16px 0; padding: 12px; background: #f3f4f6; border-radius: 8px; font-size: 13px;">
                         <p style="margin: 4px 0;"><strong>*</strong> Popunjavate samo ako imate registrovan biznis.</p>
-                        <p style="margin: 4px 0;"><strong>**</strong> Popunjavate samo ako ste obveznik PDV-a.</p>
                     </div>
 
                     <div class="form-group">
@@ -1030,7 +932,61 @@
                 </div>
             </div>
 
-            <!-- Sekcija 4: Izjave -->
+            <!-- Sekcija 4: Dodatni podaci -->
+            <div class="form-card">
+                <div class="form-section">
+                    <h2>4. Dodatni podaci</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Website (opciono)</label>
+                        <input 
+                            type="url" 
+                            name="website" 
+                            class="form-control @error('website') error @enderror"
+                            value="{{ old('website') }}"
+                            maxlength="255"
+                            placeholder="https://example.com"
+                        >
+                        @error('website')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Broj računa (opciono)</label>
+                            <input 
+                                type="text" 
+                                name="bank_account" 
+                                class="form-control @error('bank_account') error @enderror"
+                                value="{{ old('bank_account') }}"
+                                maxlength="50"
+                                placeholder="Npr. 510-0000000000123-45"
+                            >
+                            @error('bank_account')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">PDV broj (opciono)</label>
+                            <input 
+                                type="text" 
+                                name="vat_number" 
+                                class="form-control @error('vat_number') error @enderror"
+                                value="{{ old('vat_number') }}"
+                                maxlength="50"
+                                placeholder="Npr. ME123456789"
+                            >
+                            @error('vat_number')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sekcija 5: Izjave -->
             <div class="form-card">
                 <div class="form-section">
                     <h2>5. Izjave</h2>
