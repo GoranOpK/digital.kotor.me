@@ -1317,8 +1317,46 @@
             }
         });
 
-        // Pozovi na učitavanju stranice
-        toggleFieldsByApplicantType();
+        // Pozovi na učitavanju stranice - ali samo nakon što se DOM učita
+        // Ovo će prikazati pravilnu sekciju na osnovu applicant_type iz existingApplication
+        // VAŽNO: Čekaj da se vrednosti iz existingApplication učitaju u HTML pre pozivanja
+        setTimeout(function() {
+            toggleFieldsByApplicantType();
+            
+            // Nakon što se prikaže pravilna sekcija, osiguraj da se vrednosti iz existingApplication očuvaju
+            // Proveri da li postoji existingApplication i osiguraj da su vrednosti vidljive
+            const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
+            if (hasExistingApplication) {
+                // Osiguraj da su sva polja u aktivnoj sekciji enabled
+                const activeSection = document.querySelector('.conditional-field.show');
+                if (activeSection) {
+                    const activeFields = activeSection.querySelectorAll('input, select, textarea');
+                    activeFields.forEach(field => {
+                        field.removeAttribute('disabled');
+                    });
+                    
+                    // Osiguraj da se business_stage radio button pravilno prikaže
+                    const existingBusinessStage = '{{ isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? $existingApplication->business_stage : '' }}';
+                    if (existingBusinessStage) {
+                        const businessStageRadio = activeSection.querySelector(`input[name="business_stage"][value="${existingBusinessStage}"]`);
+                        if (businessStageRadio) {
+                            businessStageRadio.checked = true;
+                            businessStageRadio.removeAttribute('disabled');
+                        }
+                    }
+                    
+                    // Osiguraj da se PIB prikaže
+                    const existingPib = '{{ isset($existingApplication) && $existingApplication && $existingApplication->pib ? $existingApplication->pib : '' }}';
+                    if (existingPib) {
+                        const pibField = activeSection.querySelector('input[name="pib"]');
+                        if (pibField && pibField.value !== existingPib) {
+                            pibField.value = existingPib;
+                            pibField.removeAttribute('disabled');
+                        }
+                    }
+                }
+            }
+        }, 200);
         
         // Funkcija za automatsko postavljanje obrasca registracije
         // VAŽNO: Ne prepisuj vrednosti ako postoje iz existingApplication

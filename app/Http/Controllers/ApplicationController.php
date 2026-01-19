@@ -310,6 +310,8 @@ class ApplicationController extends Controller
         \Log::info('isDraft: ' . ($isDraft ? 'true' : 'false'));
         \Log::info('business_stage from request: ' . ($request->business_stage ?? 'null'));
         \Log::info('business_stage in application: ' . ($application->business_stage ?? 'null'));
+        \Log::info('pib from request: ' . ($request->pib ?? 'null'));
+        \Log::info('pib in application: ' . ($application->pib ?? 'null'));
         \Log::info('business_plan_name: ' . ($application->business_plan_name ?? 'null'));
         \Log::info('applicant_type: ' . ($application->applicant_type ?? 'null'));
         \Log::info('business_area: ' . ($application->business_area ?? 'null'));
