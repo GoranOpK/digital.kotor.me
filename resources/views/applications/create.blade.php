@@ -1396,6 +1396,102 @@
             });
         });
 
+        // Funkcija za proveru da li su sva obavezna polja popunjena
+        function checkIfObrazacComplete() {
+            const form = document.getElementById('applicationForm');
+            if (!form) return false;
+
+            // Proveri tip podnosioca
+            const applicantType = form.querySelector('input[name="applicant_type"]:checked');
+            if (!applicantType) return false;
+
+            const applicantTypeValue = applicantType.value;
+
+            // Osnovna obavezna polja
+            const businessPlanName = form.querySelector('input[name="business_plan_name"]');
+            const businessStage = form.querySelector('input[name="business_stage"]:checked');
+            const businessArea = form.querySelector('input[name="business_area"]');
+            const requestedAmount = form.querySelector('input[name="requested_amount"]');
+            const totalBudgetNeeded = form.querySelector('input[name="total_budget_needed"]');
+            const deMinimisDeclaration = form.querySelector('input[name="de_minimis_declaration"]');
+
+            // Proveri osnovna polja
+            if (!businessPlanName || !businessPlanName.value.trim()) return false;
+            if (!businessStage) return false;
+            if (!businessArea || !businessArea.value.trim()) return false;
+            if (!requestedAmount || !requestedAmount.value || parseFloat(requestedAmount.value) <= 0) return false;
+            if (!totalBudgetNeeded || !totalBudgetNeeded.value || parseFloat(totalBudgetNeeded.value) <= 0) return false;
+            if (!deMinimisDeclaration || !deMinimisDeclaration.checked) return false;
+
+            // Proveri polja specifična za tip podnosioca
+            if (applicantTypeValue === 'fizicko_lice') {
+                const physicalPersonName = form.querySelector('input[name="physical_person_name"]');
+                const physicalPersonJmbg = form.querySelector('input[name="physical_person_jmbg"]');
+                const physicalPersonPhone = form.querySelector('input[name="physical_person_phone"]');
+                const physicalPersonEmail = form.querySelector('input[name="physical_person_email"]');
+                const accuracyDeclaration = form.querySelector('input[name="accuracy_declaration"]');
+
+                if (!physicalPersonName || !physicalPersonName.value.trim()) return false;
+                if (!physicalPersonJmbg || !physicalPersonJmbg.value.trim()) return false;
+                if (!physicalPersonPhone || !physicalPersonPhone.value.trim()) return false;
+                if (!physicalPersonEmail || !physicalPersonEmail.value.trim()) return false;
+                if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
+            } else if (applicantTypeValue === 'doo' || applicantTypeValue === 'ostalo') {
+                const founderName = form.querySelector('input[name="founder_name"]');
+                const directorName = form.querySelector('input[name="director_name"]');
+                const companySeat = form.querySelector('input[name="company_seat"]');
+                const registrationForm = form.querySelector('select[name="registration_form"]');
+
+                if (!founderName || !founderName.value.trim()) return false;
+                if (!directorName || !directorName.value.trim()) return false;
+                if (!companySeat || !companySeat.value.trim()) return false;
+                if (!registrationForm || !registrationForm.value) return false;
+            } else if (applicantTypeValue === 'preduzetnica') {
+                const registrationForm = form.querySelector('select[name="registration_form"]');
+                if (!registrationForm || !registrationForm.value) return false;
+            }
+
+            return true;
+        }
+
+        // Funkcija za ažuriranje dugmeta na osnovu kompletnosti obrasca
+        function updateSubmitButton() {
+            const saveAsDraftBtn = document.getElementById('saveAsDraftBtn');
+            const submitBtn = document.getElementById('submitBtn');
+            const submitButtonInfo = document.getElementById('submitButtonInfo');
+
+            if (!saveAsDraftBtn || !submitBtn || !submitButtonInfo) return;
+
+            const isComplete = checkIfObrazacComplete();
+
+            if (isComplete) {
+                // Ako je obrazac kompletan, sakrij "Sačuvaj kao nacrt" i prikaži "Sačuvaj prijavu"
+                saveAsDraftBtn.style.display = 'none';
+                submitBtn.style.display = 'inline-block';
+                submitBtn.textContent = 'Sačuvaj prijavu';
+                submitButtonInfo.innerHTML = '<strong>Sačuvaj prijavu:</strong> Sačuvajte kompletnu prijavu i nastavite na popunjavanje biznis plana.';
+            } else {
+                // Ako nije kompletan, prikaži "Sačuvaj kao nacrt" i sakrij "Sačuvaj prijavu"
+                saveAsDraftBtn.style.display = 'inline-block';
+                submitBtn.style.display = 'none';
+                submitButtonInfo.innerHTML = '<strong>Sačuvaj kao nacrt:</strong> Sačuvajte prijavu i nastavite je popunjavati kasnije.';
+            }
+        }
+
+        // Dodaj event listenere na sva polja za praćenje promena
+        const formForTracking = document.getElementById('applicationForm');
+        if (formForTracking) {
+            // Dodaj event listenere na sva input polja, select-ove i checkbox-ove
+            const allFields = formForTracking.querySelectorAll('input, select, textarea');
+            allFields.forEach(field => {
+                field.addEventListener('input', updateSubmitButton);
+                field.addEventListener('change', updateSubmitButton);
+            });
+
+            // Proveri inicijalno stanje nakon kratkog vremena
+            setTimeout(updateSubmitButton, 1000);
+        }
+
         // Pripremi formu za submit - ukloni disabled sa svih polja
         const form = document.getElementById('applicationForm');
         if (form) {
