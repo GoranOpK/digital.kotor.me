@@ -375,6 +375,15 @@ class HomeController extends Controller
             ->with('competition')
             ->latest()
             ->get();
+        
+        // Debug: Loguj aplikacije
+        \Log::info('=== Dashboard Debug ===');
+        \Log::info('User ID: ' . $user->id);
+        \Log::info('Total applications count: ' . $applications->count());
+        foreach ($applications as $app) {
+            \Log::info('Application ID: ' . $app->id . ', Status: ' . $app->status . ', business_plan_name: ' . ($app->business_plan_name ?? 'null'));
+        }
+        \Log::info('=== End Dashboard Debug ===');
 
         // Podaci za skladište dokumenata
         $maxStorageMB = 20;

@@ -348,7 +348,7 @@
                     <div style="overflow-y: auto; max-height: 350px;">
                         @foreach($myApplicationsList->take(5) as $app)
                             <div style="padding: 12px 0; border-bottom: 1px solid #f3f4f6;">
-                                <div style="font-weight: 600; color: #111827; font-size: 13px;">{{ Str::limit($app->business_plan_name, 25) }}</div>
+                                <div style="font-weight: 600; color: #111827; font-size: 13px;">{{ Str::limit($app->business_plan_name ?? 'Bez naziva', 25) }}</div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
                                     @php
                                         $statusLabels = ['draft' => 'Nacrt', 'submitted' => 'U obradi', 'evaluated' => 'Ocjenjena', 'approved' => 'Odobrena', 'rejected' => 'Odbijena'];
