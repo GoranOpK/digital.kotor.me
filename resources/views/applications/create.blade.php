@@ -1507,19 +1507,26 @@
         // Pripremi formu za submit - ukloni disabled sa svih polja
         const form = document.getElementById('applicationForm');
         if (form) {
-            // Kada se klikne "Sačuvaj kao nacrt", ukloni sve required atribute
+            let isDraftSave = false;
+            
+            // Označi da je kliknuto "Sačuvaj kao nacrt"
             const saveAsDraftBtn = document.getElementById('saveAsDraftBtn');
             if (saveAsDraftBtn) {
                 saveAsDraftBtn.addEventListener('click', function(e) {
-                    // Ukloni required sa svih polja
-                    const allRequiredFields = form.querySelectorAll('[required]');
-                    allRequiredFields.forEach(field => {
-                        field.removeAttribute('required');
-                    });
+                    isDraftSave = true;
                 });
             }
 
             form.addEventListener('submit', function(e) {
+                // Ako je kliknuto "Sačuvaj kao nacrt", ukloni sve required atribute PRVO
+                // pre nego što browser validira formu
+                if (isDraftSave) {
+                    const allRequiredFields = form.querySelectorAll('[required]');
+                    allRequiredFields.forEach(field => {
+                        field.removeAttribute('required');
+                    });
+                }
+                
                 // VAŽNO: Ukloni disabled sa radio button-a za business_stage u svim sekcijama PRVO
                 // jer radio button-i moraju biti enabled da bi se njihova vrednost poslala
                 const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
@@ -1538,6 +1545,11 @@
                         // Ostavi disabled - disabled polja se ne validiraju i ne šalju
                     });
                 });
+                
+                // Resetuj flag za sledeći submit
+                setTimeout(() => {
+                    isDraftSave = false;
+                }, 100);
             });
         }
     });
