@@ -106,7 +106,7 @@
                         <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
                     @endif
                 @endif
-                @if(isset($isAdmin) && $isAdmin)
+                @if(isset($isAdmin) && $isAdmin && !in_array($competition->status, ['closed', 'completed']))
                     <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn btn-primary">Izmijeni</a>
                     <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
                         @csrf

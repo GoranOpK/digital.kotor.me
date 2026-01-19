@@ -174,7 +174,7 @@
                             <td>{{ $competition->applications_count }}</td>
                             <td>
                                 <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-sm btn-view">Pregled</a>
-                                @if(isset($isAdmin) && $isAdmin)
+                                @if(isset($isAdmin) && $isAdmin && !in_array($competition->status, ['closed', 'completed']))
                                     <a href="{{ route('admin.competitions.edit', $competition) }}" class="btn-sm btn-edit">Izmijeni</a>
                                     <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs?');">
                                         @csrf

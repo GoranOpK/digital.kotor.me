@@ -463,6 +463,11 @@ class AdminController extends Controller
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
         
+        // Proveri da li je konkurs završen
+        if (in_array($competition->status, ['closed', 'completed'])) {
+            abort(403, 'Ne možete izmeniti završeni konkurs.');
+        }
+        
         // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
         if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
             abort(403, 'Nemate dozvolu za izmjenu ovog konkursa.');
@@ -479,6 +484,11 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Proveri da li je konkurs završen
+        if (in_array($competition->status, ['closed', 'completed'])) {
+            abort(403, 'Ne možete izmeniti završeni konkurs.');
+        }
         
         // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
         if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
@@ -598,6 +608,11 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Proveri da li je konkurs završen
+        if (in_array($competition->status, ['closed', 'completed'])) {
+            abort(403, 'Ne možete obrisati završeni konkurs.');
+        }
         
         // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
         if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
