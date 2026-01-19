@@ -1529,10 +1529,24 @@
                         field.removeAttribute('required');
                     });
                     
-                    // VAŽNO: Ukloni disabled sa SVIH polja u formi, ne samo iz sakrivenih sekcija
+                    // VAŽNO: Ukloni disabled sa SVIH polja u formi
                     const allFields = form.querySelectorAll('input, select, textarea');
                     allFields.forEach(field => {
                         field.removeAttribute('disabled');
+                    });
+                    
+                    // VAŽNO: Obriši vrednosti iz polja u sakrivenim sekcijama da se ne šalju duplikati
+                    // (browser šalje samo prvo polje sa istim name atributom)
+                    const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
+                    hiddenSections.forEach(section => {
+                        const allFieldsInSection = section.querySelectorAll('input, select, textarea');
+                        allFieldsInSection.forEach(field => {
+                            if (field.type === 'checkbox' || field.type === 'radio') {
+                                field.checked = false;
+                            } else {
+                                field.value = '';
+                            }
+                        });
                     });
                     
                     // Submit-uj formu
