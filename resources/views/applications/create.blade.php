@@ -1507,19 +1507,57 @@
         // Pripremi formu za submit - ukloni disabled sa svih polja
         const form = document.getElementById('applicationForm');
         if (form) {
+            // Dugme "Sačuvaj kao nacrt" - ručno submit-uj formu bez validacije
+            const saveAsDraftBtn = document.getElementById('saveAsDraftBtn');
+            if (saveAsDraftBtn) {
+                saveAsDraftBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Dodaj hidden input za save_as_draft
+                    let draftInput = form.querySelector('input[name="save_as_draft"]');
+                    if (!draftInput) {
+                        draftInput = document.createElement('input');
+                        draftInput.type = 'hidden';
+                        draftInput.name = 'save_as_draft';
+                        draftInput.value = '1';
+                        form.appendChild(draftInput);
+                    }
+                    
+                    // Ukloni sve required atribute
+                    const allRequiredFields = form.querySelectorAll('[required]');
+                    allRequiredFields.forEach(field => {
+                        field.removeAttribute('required');
+                    });
+                    
+                    // Ukloni disabled sa radio button-a za business_stage
+                    const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
+                    allBusinessStageRadios.forEach(radio => {
+                        radio.removeAttribute('disabled');
+                    });
+                    
+                    // Ukloni disabled sa svih polja u sakrivenim sekcijama
+                    const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
+                    hiddenSections.forEach(section => {
+                        const allFields = section.querySelectorAll('input, select, textarea');
+                        allFields.forEach(field => {
+                            field.removeAttribute('disabled');
+                        });
+                    });
+                    
+                    // Submit-uj formu
+                    form.submit();
+                });
+            }
+            
+            // Normalan submit (za "Sačuvaj prijavu" dugme)
             form.addEventListener('submit', function(e) {
-                // Proveri da li je kliknuto "Sačuvaj kao nacrt" dugme
-                const clickedButton = e.submitter || (window.event ? window.event.submitter : null);
-                const isDraftSave = clickedButton && clickedButton.id === 'saveAsDraftBtn';
-                
                 // VAŽNO: Ukloni disabled sa radio button-a za business_stage u svim sekcijama PRVO
-                // jer radio button-i moraju biti enabled da bi se njihova vrednost poslala
                 const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
                 allBusinessStageRadios.forEach(radio => {
                     radio.removeAttribute('disabled');
                 });
                 
-                // Ukloni disabled i required sa svih polja u sakrivenim sekcijama
+                // Ukloni disabled sa svih polja u sakrivenim sekcijama
                 const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
                 hiddenSections.forEach(section => {
                     const allFields = section.querySelectorAll('input, select, textarea');
@@ -1528,14 +1566,6 @@
                         field.removeAttribute('disabled');
                     });
                 });
-                
-                // Ako je draft save, ukloni sve required atribute (dodatna sigurnost)
-                if (isDraftSave) {
-                    const allRequiredFields = form.querySelectorAll('[required]');
-                    allRequiredFields.forEach(field => {
-                        field.removeAttribute('required');
-                    });
-                }
             });
         }
     });
