@@ -1676,11 +1676,40 @@
                     radio.removeAttribute('disabled');
                 });
                 
+                // VAŽNO: Osiguraj da se registration_form šalje iz aktivne sekcije
+                const activeSection = document.querySelector('.conditional-field.show');
+                if (activeSection) {
+                    const registrationFormInActive = activeSection.querySelector('select[name="registration_form"]');
+                    if (registrationFormInActive) {
+                        registrationFormInActive.removeAttribute('disabled');
+                        console.log('Enabled registration_form in active section, value:', registrationFormInActive.value);
+                        
+                        // Ako nema vrednost, postavi default na osnovu applicant_type
+                        if (!registrationFormInActive.value || registrationFormInActive.value === '') {
+                            const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
+                            if (selectedType === 'preduzetnica') {
+                                registrationFormInActive.value = 'Preduzetnik';
+                                console.log('Set registration_form to Preduzetnik (default for preduzetnica)');
+                            } else if (selectedType === 'doo') {
+                                registrationFormInActive.value = 'Društvo sa ograničenom odgovornošću';
+                                console.log('Set registration_form to DOO (default for doo)');
+                            }
+                        }
+                    }
+                }
+                
                 // Ukloni disabled sa svih polja u sakrivenim sekcijama
+                // ALI ne uklanjaj disabled sa registration_form select-a u sakrivenim sekcijama
+                // jer želimo da se šalje samo onaj iz aktivne sekcije
                 const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
                 hiddenSections.forEach(section => {
                     const allFields = section.querySelectorAll('input, select, textarea');
                     allFields.forEach(field => {
+                        // Ne uklanjaj disabled sa registration_form u sakrivenim sekcijama
+                        if (field.name === 'registration_form') {
+                            field.setAttribute('disabled', 'disabled');
+                            return;
+                        }
                         field.removeAttribute('required');
                         field.removeAttribute('disabled');
                     });
