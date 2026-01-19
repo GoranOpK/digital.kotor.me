@@ -24,7 +24,59 @@ class BusinessPlanController extends Controller
         // Proveri da li već postoji biznis plan
         $businessPlan = $application->businessPlan;
 
-        return view('business-plans.create', compact('application', 'businessPlan'));
+        // Pripremi podatke za automatsko popunjavanje iz prijave
+        $user = Auth::user();
+        $defaultData = [];
+        
+        // Podaci o podnosiocu - uzmi iz prijave ili korisničkog profila
+        if ($application->applicant_type === 'fizicko_lice') {
+            // Za fizičko lice, podaci su u prijavi
+            $defaultData['applicant_name'] = $application->physical_person_name ?? $user->name ?? '';
+            $defaultData['applicant_jmbg'] = $application->physical_person_jmbg ?? $user->jmb ?? '';
+            $defaultData['applicant_phone'] = $application->physical_person_phone ?? $user->phone ?? '';
+            $defaultData['applicant_email'] = $application->physical_person_email ?? $user->email ?? '';
+            $defaultData['applicant_address'] = $user->address ?? '';
+        } elseif ($application->applicant_type === 'preduzetnica') {
+            // Za preduzetnicu, podaci su u korisničkom profilu
+            $defaultData['applicant_name'] = $user->name ?? '';
+            $defaultData['applicant_jmbg'] = $user->jmb ?? '';
+            $defaultData['applicant_phone'] = $user->phone ?? '';
+            $defaultData['applicant_email'] = $user->email ?? '';
+            $defaultData['applicant_address'] = $user->address ?? '';
+        } elseif ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') {
+            // Za DOO/Ostalo, podaci su u korisničkom profilu
+            $defaultData['applicant_name'] = $user->name ?? '';
+            $defaultData['applicant_jmbg'] = $user->jmb ?? '';
+            $defaultData['applicant_phone'] = $user->phone ?? '';
+            $defaultData['applicant_email'] = $user->email ?? '';
+            $defaultData['applicant_address'] = $user->address ?? '';
+        }
+
+        // Podaci o registrovanom biznisu - uzmi iz prijave
+        $defaultData['has_registered_business'] = $application->is_registered ?? false;
+        $defaultData['pib'] = $application->pib ?? $user->pib ?? '';
+        $defaultData['vat_number'] = $application->vat_number ?? '';
+        $defaultData['bank_account'] = $application->bank_account ?? '';
+        $defaultData['company_website'] = $application->website ?? '';
+
+        // Ako već postoji biznis plan, koristi njegove podatke, inače koristi default podatke
+        if ($businessPlan) {
+            // Ako biznis plan već ima podatke, koristi ih
+            $defaultData = array_merge($defaultData, [
+                'applicant_name' => $businessPlan->applicant_name ?? $defaultData['applicant_name'],
+                'applicant_jmbg' => $businessPlan->applicant_jmbg ?? $defaultData['applicant_jmbg'],
+                'applicant_phone' => $businessPlan->applicant_phone ?? $defaultData['applicant_phone'],
+                'applicant_email' => $businessPlan->applicant_email ?? $defaultData['applicant_email'],
+                'applicant_address' => $businessPlan->applicant_address ?? $defaultData['applicant_address'],
+                'has_registered_business' => $businessPlan->has_registered_business ?? $defaultData['has_registered_business'],
+                'pib' => $businessPlan->pib ?? $defaultData['pib'],
+                'vat_number' => $businessPlan->vat_number ?? $defaultData['vat_number'],
+                'bank_account' => $businessPlan->bank_account ?? $defaultData['bank_account'],
+                'company_website' => $businessPlan->company_website ?? $defaultData['company_website'],
+            ]);
+        }
+
+        return view('business-plans.create', compact('application', 'businessPlan', 'defaultData'));
     }
 
     /**

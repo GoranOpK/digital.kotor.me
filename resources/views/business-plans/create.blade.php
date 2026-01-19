@@ -262,25 +262,25 @@
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Ime i prezime:</label>
-                                <input type="text" name="applicant_name" class="form-control" value="{{ old('applicant_name', $businessPlan->applicant_name ?? '') }}" required>
+                                <input type="text" name="applicant_name" class="form-control" value="{{ old('applicant_name', $businessPlan->applicant_name ?? ($defaultData['applicant_name'] ?? '')) }}" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">JMBG:</label>
-                                <input type="text" name="applicant_jmbg" class="form-control" value="{{ old('applicant_jmbg', $businessPlan->applicant_jmbg ?? '') }}" required>
+                                <input type="text" name="applicant_jmbg" class="form-control" value="{{ old('applicant_jmbg', $businessPlan->applicant_jmbg ?? ($defaultData['applicant_jmbg'] ?? '')) }}" required>
                             </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Adresa:</label>
-                            <textarea name="applicant_address" class="form-control" rows="2" required>{{ old('applicant_address', $businessPlan->applicant_address ?? '') }}</textarea>
+                            <textarea name="applicant_address" class="form-control" rows="2" required>{{ old('applicant_address', $businessPlan->applicant_address ?? ($defaultData['applicant_address'] ?? '')) }}</textarea>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Kontakt telefon:</label>
-                                <input type="text" name="applicant_phone" class="form-control" value="{{ old('applicant_phone', $businessPlan->applicant_phone ?? '') }}" required>
+                                <input type="text" name="applicant_phone" class="form-control" value="{{ old('applicant_phone', $businessPlan->applicant_phone ?? ($defaultData['applicant_phone'] ?? '')) }}" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">E-mail:</label>
-                                <input type="email" name="applicant_email" class="form-control" value="{{ old('applicant_email', $businessPlan->applicant_email ?? '') }}" required>
+                                <input type="email" name="applicant_email" class="form-control" value="{{ old('applicant_email', $businessPlan->applicant_email ?? ($defaultData['applicant_email'] ?? '')) }}" required>
                             </div>
                         </div>
                     </div>
@@ -291,11 +291,11 @@
                         </label>
                         <div class="radio-group">
                             <div class="radio-option">
-                                <input type="radio" name="has_registered_business" value="1" id="has_business_yes" {{ old('has_registered_business', $businessPlan->has_registered_business ?? false) ? 'checked' : '' }} onchange="toggleRegisteredBusinessFields()">
+                                <input type="radio" name="has_registered_business" value="1" id="has_business_yes" {{ old('has_registered_business', $businessPlan->has_registered_business ?? ($defaultData['has_registered_business'] ?? false)) ? 'checked' : '' }} onchange="toggleRegisteredBusinessFields()">
                                 <label for="has_business_yes">Da</label>
                             </div>
                             <div class="radio-option">
-                                <input type="radio" name="has_registered_business" value="0" id="has_business_no" {{ old('has_registered_business') === '0' || ($businessPlan && !$businessPlan->has_registered_business) ? 'checked' : '' }} onchange="toggleRegisteredBusinessFields()">
+                                <input type="radio" name="has_registered_business" value="0" id="has_business_no" {{ old('has_registered_business') === '0' || (($businessPlan && !$businessPlan->has_registered_business) || (!isset($defaultData['has_registered_business']) || !$defaultData['has_registered_business'])) ? 'checked' : '' }} onchange="toggleRegisteredBusinessFields()">
                                 <label for="has_business_no">Ne</label>
                             </div>
                         </div>
@@ -304,7 +304,7 @@
                         </div>
                     </div>
 
-                    <div id="registeredBusinessFields" class="conditional-field {{ old('has_registered_business', $businessPlan->has_registered_business ?? false) ? 'show' : '' }}">
+                    <div id="registeredBusinessFields" class="conditional-field {{ old('has_registered_business', $businessPlan->has_registered_business ?? ($defaultData['has_registered_business'] ?? false)) ? 'show' : '' }}">
                         <div class="form-group">
                             <label class="form-label">
                                 4. Podaci o registrovanoj djelatnosti:
@@ -321,11 +321,11 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">PIB:</label>
-                                    <input type="text" name="pib" class="form-control" value="{{ old('pib', $businessPlan->pib ?? '') }}">
+                                    <input type="text" name="pib" class="form-control" value="{{ old('pib', $businessPlan->pib ?? ($defaultData['pib'] ?? '')) }}">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Broj PDV registracije (ukoliko ste PDV obveznik):</label>
-                                    <input type="text" name="vat_number" class="form-control" value="{{ old('vat_number', $businessPlan->vat_number ?? '') }}">
+                                    <input type="text" name="vat_number" class="form-control" value="{{ old('vat_number', $businessPlan->vat_number ?? ($defaultData['vat_number'] ?? '')) }}">
                                 </div>
                             </div>
                             <div class="form-group">
@@ -345,11 +345,11 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Website:</label>
-                                    <input type="text" name="company_website" class="form-control" value="{{ old('company_website', $businessPlan->company_website ?? '') }}">
+                                    <input type="text" name="company_website" class="form-control" value="{{ old('company_website', $businessPlan->company_website ?? ($defaultData['company_website'] ?? '')) }}">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Broj žiro računa i naziv banke:</label>
-                                    <input type="text" name="bank_account" class="form-control" value="{{ old('bank_account', $businessPlan->bank_account ?? '') }}">
+                                    <input type="text" name="bank_account" class="form-control" value="{{ old('bank_account', $businessPlan->bank_account ?? ($defaultData['bank_account'] ?? '')) }}">
                                 </div>
                             </div>
                         </div>
