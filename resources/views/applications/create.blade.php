@@ -738,6 +738,7 @@
                                 class="form-control @error('founder_name') error @enderror"
                                 value="{{ old('founder_name', isset($existingApplication) && $existingApplication ? $existingApplication->founder_name : auth()->user()->name) }}"
                                 maxlength="255"
+                                required
                             >
                             @error('founder_name')
                                 <div class="error-message">{{ $message }}</div>
@@ -752,6 +753,7 @@
                                 class="form-control @error('director_name') error @enderror"
                                 value="{{ old('director_name', isset($existingApplication) && $existingApplication ? $existingApplication->director_name : auth()->user()->name) }}"
                                 maxlength="255"
+                                required
                             >
                             @error('director_name')
                                 <div class="error-message">{{ $message }}</div>
@@ -768,6 +770,7 @@
                             value="{{ old('company_seat', isset($existingApplication) && $existingApplication ? $existingApplication->company_seat : auth()->user()->address) }}"
                             maxlength="255"
                             placeholder="Npr. Kotor, Njegoševa 1"
+                            required
                         >
                         @error('company_seat')
                             <div class="error-message">{{ $message }}</div>
@@ -818,6 +821,7 @@
                                 name="accuracy_declaration" 
                                 value="1"
                                 {{ old('accuracy_declaration', isset($existingApplication) && $existingApplication ? $existingApplication->accuracy_declaration : false) ? 'checked' : '' }}
+                                required
                             >
                             <label for="accuracy_declaration_1b">
                                 Kao podnosilac prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
