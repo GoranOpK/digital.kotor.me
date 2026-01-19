@@ -165,10 +165,25 @@
         border-color: #3b82f6;
         color: #1e40af;
     }
+    .alert-danger {
+        background: #fee2e2;
+        border-color: #ef4444;
+        color: #991b1b;
+    }
     .error-message {
         color: #ef4444;
-        font-size: 12px;
-        margin-top: 4px;
+        font-size: 13px;
+        margin-top: 6px;
+        font-weight: 500;
+        display: block;
+    }
+    .form-control.error {
+        border-color: #ef4444;
+        background-color: #fef2f2;
+    }
+    .form-control.error:focus {
+        border-color: #ef4444;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
     }
     .conditional-field {
         display: none;
@@ -191,6 +206,16 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="alert alert-danger">
+                <strong>Greška!</strong> Molimo Vas da ispravite sledeće greške:
+                <ul style="margin: 12px 0 0 20px; padding: 0;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <form method="POST" action="{{ route('applications.store', $competition) }}" id="applicationForm">
             @csrf
@@ -297,7 +322,6 @@
                             name="business_plan_name" 
                             class="form-control @error('business_plan_name') error @enderror"
                             value="{{ old('business_plan_name') }}"
-                            required
                             maxlength="255"
                         >
                         @error('business_plan_name')
@@ -425,7 +449,6 @@
                             name="business_area" 
                             class="form-control @error('business_area') error @enderror"
                             value="{{ old('business_area') }}"
-                            required
                             maxlength="255"
                             placeholder="Npr. IT usluge, turizam, poljoprivreda..."
                         >
@@ -465,7 +488,6 @@
                                     name="business_stage" 
                                     value="započinjanje"
                                     {{ old('business_stage', 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
-                                    required
                                 >
                                 <label for="business_stage_zapocinjanje_1a">Započinjanje poslovne djelatnosti</label>
                             </div>
@@ -476,7 +498,6 @@
                                     name="business_stage" 
                                     value="razvoj"
                                     {{ old('business_stage') === 'razvoj' ? 'checked' : '' }}
-                                    required
                                 >
                                 <label for="business_stage_razvoj_1a">Razvoj postojeće poslovne djelatnosti</label>
                             </div>
@@ -508,7 +529,6 @@
                             name="business_plan_name" 
                             class="form-control @error('business_plan_name') error @enderror"
                             value="{{ old('business_plan_name') }}"
-                            required
                             maxlength="255"
                         >
                         @error('business_plan_name')
@@ -679,7 +699,6 @@
                             name="business_area" 
                             class="form-control @error('business_area') error @enderror"
                             value="{{ old('business_area') }}"
-                            required
                             maxlength="255"
                             placeholder="Npr. IT usluge, turizam, poljoprivreda..."
                         >
@@ -719,7 +738,6 @@
                                     name="business_stage" 
                                     value="započinjanje"
                                     {{ old('business_stage', 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
-                                    required
                                 >
                                 <label for="business_stage_zapocinjanje_1b">Započinjanje poslovne djelatnosti</label>
                             </div>
@@ -730,7 +748,6 @@
                                     name="business_stage" 
                                     value="razvoj"
                                     {{ old('business_stage') === 'razvoj' ? 'checked' : '' }}
-                                    required
                                 >
                                 <label for="business_stage_razvoj_1b">Razvoj postojeće poslovne djelatnosti</label>
                             </div>
@@ -754,7 +771,6 @@
                             name="business_plan_name" 
                             class="form-control @error('business_plan_name') error @enderror"
                             value="{{ old('business_plan_name') }}"
-                            required
                             maxlength="255"
                         >
                         @error('business_plan_name')
@@ -843,7 +859,6 @@
                                     name="business_stage" 
                                     value="započinjanje"
                                     {{ old('business_stage', 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
-                                    required
                                 >
                                 <label for="business_stage_zapocinjanje_fizicko">Započinjanje poslovne djelatnosti</label>
                             </div>
@@ -854,7 +869,6 @@
                                     name="business_stage" 
                                     value="razvoj"
                                     {{ old('business_stage') === 'razvoj' ? 'checked' : '' }}
-                                    required
                                 >
                                 <label for="business_stage_razvoj_fizicko">Razvoj postojeće poslovne djelatnosti</label>
                             </div>
@@ -873,7 +887,6 @@
                             name="business_area" 
                             class="form-control @error('business_area') error @enderror"
                             value="{{ old('business_area') }}"
-                            required
                             maxlength="255"
                             placeholder="Npr. IT usluge, turizam, poljoprivreda..."
                         >
@@ -1069,34 +1082,24 @@
             // Resetuj sve obrazce
             if (obrazac1a) {
                 obrazac1a.classList.remove('show');
-                // Ukloni required sa polja u obrazac1a
+                // Ukloni required sa svih polja u obrazac1a
                 const obrazac1aRequired = obrazac1a.querySelectorAll('[required]');
                 obrazac1aRequired.forEach(field => {
-                    if (field.type !== 'radio') {
-                        field.removeAttribute('required');
-                    }
+                    field.removeAttribute('required');
                 });
             }
             if (obrazac1b) {
                 obrazac1b.classList.remove('show');
-                // Ukloni required sa polja u obrazac1b
+                // Ukloni required sa svih polja u obrazac1b
                 const obrazac1bRequired = obrazac1b.querySelectorAll('[required]');
                 obrazac1bRequired.forEach(field => {
-                    if (field.type !== 'radio') {
-                        field.removeAttribute('required');
-                    }
+                    field.removeAttribute('required');
                 });
-                // Ukloni required sa DOO/ostalo specifičnih polja
-                const founderName = obrazac1b.querySelector('input[name="founder_name"]');
-                const directorName = obrazac1b.querySelector('input[name="director_name"]');
-                const companySeat = obrazac1b.querySelector('input[name="company_seat"]');
-                if (founderName) founderName.removeAttribute('required');
-                if (directorName) directorName.removeAttribute('required');
-                if (companySeat) companySeat.removeAttribute('required');
             }
             if (fizickoLiceFields) {
                 fizickoLiceFields.classList.remove('show');
-                fizickoLiceRequiredFields.forEach(field => {
+                const fizickoLiceAllRequired = fizickoLiceFields.querySelectorAll('[required]');
+                fizickoLiceAllRequired.forEach(field => {
                     field.removeAttribute('required');
                 });
             }
@@ -1114,8 +1117,13 @@
                     // Dodaj required na obavezna polja u obrazac1a
                     const businessPlanName1a = obrazac1a.querySelector('input[name="business_plan_name"]');
                     const businessArea1a = obrazac1a.querySelector('input[name="business_area"]');
+                    const businessStage1a = obrazac1a.querySelectorAll('input[name="business_stage"]');
                     if (businessPlanName1a) businessPlanName1a.setAttribute('required', 'required');
                     if (businessArea1a) businessArea1a.setAttribute('required', 'required');
+                    // Dodaj required na radio buttonima (barem jedan mora biti izabran)
+                    businessStage1a.forEach(radio => {
+                        radio.setAttribute('required', 'required');
+                    });
                 }
             } else if (selectedType === 'doo' || selectedType === 'ostalo') {
                 // DOO ili Ostalo - prikaži Obrazac 1b
@@ -1136,11 +1144,16 @@
                     const founderName = obrazac1b.querySelector('input[name="founder_name"]');
                     const directorName = obrazac1b.querySelector('input[name="director_name"]');
                     const companySeat = obrazac1b.querySelector('input[name="company_seat"]');
+                    const businessStage1b = obrazac1b.querySelectorAll('input[name="business_stage"]');
                     if (businessPlanName1b) businessPlanName1b.setAttribute('required', 'required');
                     if (businessArea1b) businessArea1b.setAttribute('required', 'required');
                     if (founderName) founderName.setAttribute('required', 'required');
                     if (directorName) directorName.setAttribute('required', 'required');
                     if (companySeat) companySeat.setAttribute('required', 'required');
+                    // Dodaj required na radio buttonima (barem jedan mora biti izabran)
+                    businessStage1b.forEach(radio => {
+                        radio.setAttribute('required', 'required');
+                    });
                 }
             } else if (selectedType === 'fizicko_lice') {
                 // Fizičko lice BEZ registrovane djelatnosti
@@ -1151,8 +1164,23 @@
                 // Prikaži polja za fizičko lice
                 if (fizickoLiceFields) {
                     fizickoLiceFields.classList.add('show');
-                    fizickoLiceRequiredFields.forEach(field => {
-                        field.setAttribute('required', 'required');
+                    // Dodaj required na sva obavezna polja
+                    const businessPlanNameFizicko = fizickoLiceFields.querySelector('input[name="business_plan_name"]');
+                    const businessAreaFizicko = fizickoLiceFields.querySelector('input[name="business_area"]');
+                    const physicalPersonName = fizickoLiceFields.querySelector('input[name="physical_person_name"]');
+                    const physicalPersonJmbg = fizickoLiceFields.querySelector('input[name="physical_person_jmbg"]');
+                    const physicalPersonPhone = fizickoLiceFields.querySelector('input[name="physical_person_phone"]');
+                    const physicalPersonEmail = fizickoLiceFields.querySelector('input[name="physical_person_email"]');
+                    const businessStageFizicko = fizickoLiceFields.querySelectorAll('input[name="business_stage"]');
+                    
+                    if (businessPlanNameFizicko) businessPlanNameFizicko.setAttribute('required', 'required');
+                    if (businessAreaFizicko) businessAreaFizicko.setAttribute('required', 'required');
+                    if (physicalPersonName) physicalPersonName.setAttribute('required', 'required');
+                    if (physicalPersonJmbg) physicalPersonJmbg.setAttribute('required', 'required');
+                    if (physicalPersonPhone) physicalPersonPhone.setAttribute('required', 'required');
+                    if (physicalPersonEmail) physicalPersonEmail.setAttribute('required', 'required');
+                    businessStageFizicko.forEach(radio => {
+                        radio.setAttribute('required', 'required');
                     });
                 }
             }
