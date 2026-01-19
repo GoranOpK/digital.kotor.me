@@ -14,7 +14,10 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (Schema::hasColumn('users', 'pib')) {
-                // Promeni dužinu kolone PIB sa 9 na 8 karaktera
+                // Prvo ažuriraj sve PIB-ove koji imaju 9 cifara - uzmi prvih 8 cifara
+                DB::statement("UPDATE `users` SET `pib` = LEFT(`pib`, 8) WHERE LENGTH(`pib`) = 9 AND `pib` IS NOT NULL");
+                
+                // Zatim promeni dužinu kolone PIB sa 9 na 8 karaktera
                 DB::statement('ALTER TABLE `users` MODIFY COLUMN `pib` VARCHAR(8) NULL');
             }
         });
