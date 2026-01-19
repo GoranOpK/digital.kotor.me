@@ -88,11 +88,8 @@ class ApplicationController extends Controller
             'de_minimis_declaration' => 'required|accepted',
         ];
 
-        // Izjava o tačnosti je obavezna samo za fizičko lice BEZ registrovane djelatnosti
-        // Preduzetnica, DOO i Ostalo automatski imaju registrovanu djelatnost
-        if ($request->applicant_type === 'fizicko_lice') {
-            $rules['accuracy_declaration'] = 'required|accepted';
-        }
+        // Izjava o tačnosti je obavezna za sve tipove podnosioca
+        $rules['accuracy_declaration'] = 'required|accepted';
 
         // Dodatna polja za DOO i Ostalo (ista polja)
         if ($request->applicant_type === 'doo' || $request->applicant_type === 'ostalo') {
@@ -109,6 +106,9 @@ class ApplicationController extends Controller
             $rules['physical_person_phone'] = 'required|string|max:50';
             $rules['physical_person_email'] = 'required|email|max:255';
         }
+
+        // Polja za CRPS broj (opciono za sve tipove)
+        $rules['crps_number'] = 'nullable|string|max:50';
 
         $validated = $request->validate($rules, [
             'business_plan_name.required' => 'Naziv biznis plana je obavezan.',
@@ -166,6 +166,7 @@ class ApplicationController extends Controller
             'website' => $validated['website'] ?? null,
             'bank_account' => $validated['bank_account'] ?? null,
             'vat_number' => $validated['vat_number'] ?? null,
+            'crps_number' => $validated['crps_number'] ?? null,
             // Automatsko postavljanje is_registered na osnovu tipa
             'is_registered' => $validated['applicant_type'] !== 'fizicko_lice',
             'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),

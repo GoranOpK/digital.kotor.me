@@ -29,6 +29,7 @@ class Application extends Model
         'website',
         'bank_account',
         'vat_number',
+        'crps_number',
         'de_minimis_declaration',
         'previous_support_declaration',
         'is_registered',
