@@ -93,6 +93,13 @@ class ApplicationController extends Controller
         // Proveri da li je ovo draft ili finalno čuvanje
         $isDraft = $request->has('save_as_draft') && $request->save_as_draft === '1';
         
+        // Debug log
+        \Log::info('=== Application Store ===');
+        \Log::info('isDraft: ' . ($isDraft ? 'true' : 'false'));
+        \Log::info('save_as_draft value: ' . ($request->input('save_as_draft') ?? 'null'));
+        \Log::info('business_plan_name: ' . ($request->input('business_plan_name') ?? 'null'));
+        \Log::info('All request data: ' . json_encode($request->all()));
+        
         $rules = [
             'business_plan_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'applicant_type' => $isDraft ? 'nullable|in:preduzetnica,doo,fizicko_lice,ostalo' : 'required|in:preduzetnica,doo,fizicko_lice,ostalo',
