@@ -380,13 +380,18 @@
             </div>
         </div>
 
-        <!-- Brzi servisi (Plati, Tenderi) -->
+        <!-- Brzi servisi (Plati, Konkursi, Tenderi) -->
         <div style="margin-bottom: 24px;">
             <div class="services-grid" style="margin-top: 0;">
                 <a href="{{ route('payments.index') }}" class="service-card">
                     <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">₿</div>
                     <h3 style="font-size: 16px;">Online plaćanja</h3>
                     <p style="font-size: 12px;">Uplate komunalija, taksi i naknada.</p>
+                </a>
+                <a href="{{ route('competitions.index') }}" class="service-card">
+                    <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">🏆</div>
+                    <h3 style="font-size: 16px;">Konkursi</h3>
+                    <p style="font-size: 12px;">Prijave na konkurse za podršku preduzetništvu.</p>
                 </a>
                 <a href="{{ route('tenders.index') }}" class="service-card">
                     <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">§</div>
