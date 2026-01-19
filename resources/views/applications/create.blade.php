@@ -453,7 +453,9 @@
                                 name="pib" 
                                 class="form-control @error('pib') error @enderror"
                                 value="{{ old('pib', auth()->user()->pib) }}"
-                                maxlength="50"
+                                maxlength="8"
+                                pattern="[0-9]{8}"
+                                placeholder="8 cifara"
                             >
                             @error('pib')
                                 <div class="error-message">{{ $message }}</div>

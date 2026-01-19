@@ -85,6 +85,7 @@ class ApplicationController extends Controller
             'website' => 'nullable|url|max:255',
             'bank_account' => 'nullable|string|max:50',
             'vat_number' => 'nullable|string|max:50',
+            'pib' => 'nullable|string|regex:/^[0-9]{8}$/',
             'de_minimis_declaration' => 'required|accepted',
         ];
 
@@ -133,6 +134,7 @@ class ApplicationController extends Controller
             'company_seat.required' => 'Sjedište društva je obavezno.',
             'registration_form.required' => 'Oblik registracije je obavezan.',
             'registration_form.in' => 'Izabrani oblik registracije nije validan.',
+            'pib.regex' => 'PIB mora imati tačno 8 cifara.',
             'physical_person_name.required' => 'Ime i prezime je obavezno za fizičko lice.',
             'physical_person_jmbg.required' => 'JMBG je obavezan za fizičko lice.',
             'physical_person_jmbg.regex' => 'JMBG mora imati tačno 13 cifara.',
