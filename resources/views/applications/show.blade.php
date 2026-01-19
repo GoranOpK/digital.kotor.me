@@ -698,25 +698,35 @@
                 Nazad na konkurs
             </a>
             @if($application->status === 'draft')
+                @php
+                    // Proveri da li je Obrazac kompletno popunjen
+                    $isObrazacComplete = $application->business_plan_name && 
+                        $application->applicant_type && 
+                        $application->business_stage && 
+                        $application->business_area && 
+                        $application->requested_amount && 
+                        $application->total_budget_needed &&
+                        ($application->applicant_type === 'fizicko_lice' ? 
+                            ($application->physical_person_name && $application->physical_person_jmbg && $application->physical_person_phone && $application->physical_person_email) :
+                            ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo' ?
+                                ($application->founder_name && $application->director_name && $application->company_seat) :
+                                true
+                            )
+                        ) &&
+                        ($application->applicant_type !== 'fizicko_lice' ? $application->registration_form : true);
+                @endphp
                 @if($application->businessPlan)
                     <a href="{{ route('applications.business-plan.create', $application) }}" class="btn btn-primary" style="margin-left: 8px;">
                         Uredi biznis plan
                     </a>
-                @else
+                @elseif($isObrazacComplete)
                     <a href="{{ route('applications.business-plan.create', $application) }}" class="btn btn-primary" style="margin-left: 8px;">
                         Popuni biznis plan
                     </a>
+                @else
+                    <span style="color: #6b7280; font-size: 12px; margin-left: 8px; display: inline-block;">Popunite Obrazac 1a/1b prvo</span>
                 @endif
             @endif
-            
-            <form action="{{ route('applications.destroy', $application) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu prijavu? Svi podaci o biznis planu i priloženi dokumenti će biti uklonjeni.');">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger" style="margin-left: 8px;">
-                    Obriši prijavu
-                </button>
-            </form>
-        </div>
     </div>
 </div>
 
