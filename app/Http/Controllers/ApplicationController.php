@@ -17,7 +17,7 @@ class ApplicationController extends Controller
     /**
      * Prikaz forme za prijavu na konkurs (Obrazac 1a/1b)
      */
-    public function create(Competition $competition): View
+    public function create(Competition $competition): View|RedirectResponse
     {
         // Proveri da li je konkurs otvoren
         if ($competition->status !== 'published') {
