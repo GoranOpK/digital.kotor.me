@@ -482,7 +482,7 @@
                 </div>
             </div>
 
-            <!-- Obrazac 1b: Za DOO -->
+            <!-- Obrazac 1b: Za DOO i Ostalo -->
             <div class="form-card conditional-field" id="obrazac1b">
                 <div class="form-section">
                     <div style="text-align: center; margin-bottom: 24px;">
@@ -490,7 +490,7 @@
                         <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">PRIJAVA</h2>
                         <p style="margin: 4px 0; font-size: 14px;">na javni konkurs za raspodjelu bespovratnih sredstava</p>
                         <p style="margin: 4px 0; font-size: 14px;">namjenjenih za podršku ženskom preduzetništvu</p>
-                        <p style="margin: 4px 0; font-size: 14px;">(za oblik registracije DOO)</p>
+                        <p style="margin: 4px 0; font-size: 14px;" id="obrazac1b-subtitle">(za oblik registracije DOO)</p>
                     </div>
 
                     <div class="form-group">
@@ -1116,6 +1116,15 @@
                 // DOO ili Ostalo - prikaži Obrazac 1b
                 if (obrazac1b) {
                     obrazac1b.classList.add('show');
+                    // Ažuriraj zaglavlje na osnovu tipa
+                    const obrazac1bSubtitle = document.getElementById('obrazac1b-subtitle');
+                    if (obrazac1bSubtitle) {
+                        if (selectedType === 'doo') {
+                            obrazac1bSubtitle.textContent = '(za oblik registracije DOO)';
+                        } else if (selectedType === 'ostalo') {
+                            obrazac1bSubtitle.textContent = '(za ostale pravne subjekte)';
+                        }
+                    }
                 }
             } else if (selectedType === 'fizicko_lice') {
                 // Fizičko lice BEZ registrovane djelatnosti
