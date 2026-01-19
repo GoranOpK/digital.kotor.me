@@ -197,6 +197,8 @@ class ApplicationController extends Controller
             ->where('status', 'draft')
             ->first();
 
+        \Log::info('Existing application check: ' . ($existingApplication ? 'found ID: ' . $existingApplication->id : 'not found'));
+
         if ($existingApplication) {
             // Ažuriraj postojeću draft prijavu
             // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
@@ -226,8 +228,10 @@ class ApplicationController extends Controller
             ]);
 
             $application = $existingApplication;
+            \Log::info('Updated existing application ID: ' . $application->id);
         } else {
             // Kreiraj novu prijavu
+            \Log::info('Creating new application...');
             // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
             // VAŽNO: Automatsko postavljanje is_registered na osnovu tipa podnosioca:
             // - 'fizicko_lice' → is_registered = false (nema registrovanu djelatnost)
@@ -263,10 +267,15 @@ class ApplicationController extends Controller
                 'previous_support_declaration' => $request->has('previous_support_declaration'),
                 'status' => 'draft', // Draft dok se ne prilože svi dokumenti
             ]);
+            \Log::info('Created new application ID: ' . $application->id);
         }
 
         // Refresh aplikaciju da dobijemo ažurirane podatke (posebno važno za existingApplication)
-        $application->refresh();
+        try {
+            $application->refresh();
+        } catch (\Exception $e) {
+            \Log::error('Error refreshing application: ' . $e->getMessage());
+        }
         
         // Debug: Loguj stanje
         \Log::info('=== Application Store Debug ===');
