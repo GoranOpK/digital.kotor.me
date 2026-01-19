@@ -1678,37 +1678,53 @@
                 
                 // VAŽNO: Osiguraj da se registration_form šalje iz aktivne sekcije
                 const activeSection = document.querySelector('.conditional-field.show');
-                if (activeSection) {
+                const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
+                
+                // Pronađi SVE registration_form select-e
+                const allRegistrationForms = form.querySelectorAll('select[name="registration_form"]');
+                
+                if (activeSection && selectedType) {
                     const registrationFormInActive = activeSection.querySelector('select[name="registration_form"]');
+                    
+                    // Postavi disabled na SVE registration_form select-e
+                    allRegistrationForms.forEach(select => {
+                        select.setAttribute('disabled', 'disabled');
+                    });
+                    
                     if (registrationFormInActive) {
+                        // Ukloni disabled samo sa select-a u aktivnoj sekciji
                         registrationFormInActive.removeAttribute('disabled');
-                        console.log('Enabled registration_form in active section, value:', registrationFormInActive.value);
+                        
+                        // VAŽNO: Uvek postavi vrednost, čak i ako već ima
+                        let registrationFormValue = registrationFormInActive.value;
                         
                         // Ako nema vrednost, postavi default na osnovu applicant_type
-                        if (!registrationFormInActive.value || registrationFormInActive.value === '') {
-                            const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
+                        if (!registrationFormValue || registrationFormValue === '') {
                             if (selectedType === 'preduzetnica') {
-                                registrationFormInActive.value = 'Preduzetnik';
-                                console.log('Set registration_form to Preduzetnik (default for preduzetnica)');
+                                registrationFormValue = 'Preduzetnik';
                             } else if (selectedType === 'doo') {
-                                registrationFormInActive.value = 'Društvo sa ograničenom odgovornošću';
-                                console.log('Set registration_form to DOO (default for doo)');
+                                registrationFormValue = 'Društvo sa ograničenom odgovornošću';
                             }
+                            registrationFormInActive.value = registrationFormValue;
+                            console.log('Set registration_form to:', registrationFormValue, 'for type:', selectedType);
+                        } else {
+                            console.log('Registration_form already has value:', registrationFormValue);
                         }
+                    } else {
+                        console.error('registration_form select not found in active section!');
                     }
+                } else {
+                    console.error('Active section or selectedType not found!', { activeSection, selectedType });
                 }
                 
-                // Ukloni disabled sa svih polja u sakrivenim sekcijama
-                // ALI ne uklanjaj disabled sa registration_form select-a u sakrivenim sekcijama
-                // jer želimo da se šalje samo onaj iz aktivne sekcije
+                // Ukloni disabled sa svih polja u sakrivenim sekcijama (osim registration_form)
                 const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
                 hiddenSections.forEach(section => {
                     const allFields = section.querySelectorAll('input, select, textarea');
                     allFields.forEach(field => {
                         // Ne uklanjaj disabled sa registration_form u sakrivenim sekcijama
                         if (field.name === 'registration_form') {
-                            field.setAttribute('disabled', 'disabled');
-                            return;
+                            return; // Već postavljen na disabled
                         }
                         field.removeAttribute('required');
                         field.removeAttribute('disabled');
