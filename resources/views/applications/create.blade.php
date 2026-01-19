@@ -1518,25 +1518,45 @@
             }
 
             form.addEventListener('submit', function(e) {
-                // Ako je kliknuto "Sačuvaj kao nacrt", ukloni sve required atribute PRVO
-                // pre nego što browser validira formu
+                // Ako je kliknuto "Sačuvaj kao nacrt", spreči browser validaciju i ukloni sve required atribute
                 if (isDraftSave) {
+                    e.preventDefault(); // Spreči browser validaciju
+                    
+                    // Ukloni sve required atribute
                     const allRequiredFields = form.querySelectorAll('[required]');
                     allRequiredFields.forEach(field => {
                         field.removeAttribute('required');
                     });
+                    
+                    // Ukloni disabled sa radio button-a za business_stage
+                    const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
+                    allBusinessStageRadios.forEach(radio => {
+                        radio.removeAttribute('disabled');
+                    });
+                    
+                    // Ukloni disabled i required sa svih polja u sakrivenim sekcijama
+                    const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
+                    hiddenSections.forEach(section => {
+                        const allFields = section.querySelectorAll('input, select, textarea');
+                        allFields.forEach(field => {
+                            field.removeAttribute('required');
+                            field.removeAttribute('disabled');
+                        });
+                    });
+                    
+                    // Ručno submit-uj formu
+                    form.submit();
+                    return;
                 }
                 
+                // Ako nije draft save, nastavi sa normalnom validacijom
                 // VAŽNO: Ukloni disabled sa radio button-a za business_stage u svim sekcijama PRVO
-                // jer radio button-i moraju biti enabled da bi se njihova vrednost poslala
                 const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
                 allBusinessStageRadios.forEach(radio => {
                     radio.removeAttribute('disabled');
                 });
                 
                 // Ukloni disabled atribut sa svih polja u sakrivenim sekcijama
-                // (disabled polja se ne šalju u formi, što je ono što želimo)
-                // Ali takođe ukloni required sa sakrivenih polja za dodatnu sigurnost
                 const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
                 hiddenSections.forEach(section => {
                     const allFields = section.querySelectorAll('input, select, textarea');
@@ -1545,11 +1565,6 @@
                         // Ostavi disabled - disabled polja se ne validiraju i ne šalju
                     });
                 });
-                
-                // Resetuj flag za sledeći submit
-                setTimeout(() => {
-                    isDraftSave = false;
-                }, 100);
             });
         }
     });
