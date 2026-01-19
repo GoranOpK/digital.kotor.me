@@ -1246,23 +1246,6 @@
                     const businessArea1a = obrazac1a.querySelector('input[name="business_area"]');
                     if (businessPlanName1a) businessPlanName1a.setAttribute('required', 'required');
                     if (businessArea1a) businessArea1a.setAttribute('required', 'required');
-                    
-                    // Automatski postavi oblik registracije na osnovu tipa prijave
-                    setTimeout(function() {
-                        const registrationForm1a = obrazac1a.querySelector('#registration_form_1a');
-                        if (registrationForm1a) {
-                            // Prvo proveri da li korisnik ima user_type iz registracije
-                            const userRegistrationForm = '{{ auth()->user()->user_type ?? "" }}';
-                            if (userRegistrationForm && userRegistrationForm !== 'Fizičko lice' && userRegistrationForm.trim() !== '') {
-                                registrationForm1a.value = userRegistrationForm;
-                            } else {
-                                // Ako nema iz registracije, postavi na osnovu tipa prijave
-                                registrationForm1a.value = 'Preduzetnik';
-                            }
-                            // Trigger change event da se osiguramo da se vrednost postavi
-                            registrationForm1a.dispatchEvent(new Event('change', { bubbles: true }));
-                        }
-                    }, 50);
                 }
             } else if (selectedType === 'doo' || selectedType === 'ostalo') {
                 // DOO ili Ostalo - prikaži Obrazac 1b
@@ -1293,29 +1276,6 @@
                     if (founderName && founderName.hasAttribute('data-required')) founderName.setAttribute('required', 'required');
                     if (directorName && directorName.hasAttribute('data-required')) directorName.setAttribute('required', 'required');
                     if (companySeat && companySeat.hasAttribute('data-required')) companySeat.setAttribute('required', 'required');
-                    
-                    // Automatski postavi oblik registracije na osnovu tipa prijave
-                    setTimeout(function() {
-                        const registrationForm1b = obrazac1b.querySelector('#registration_form_1b');
-                        if (registrationForm1b) {
-                            // Prvo proveri da li korisnik ima user_type iz registracije
-                            const userRegistrationForm = '{{ auth()->user()->user_type ?? "" }}';
-                            if (userRegistrationForm && userRegistrationForm !== 'Fizičko lice' && userRegistrationForm.trim() !== '') {
-                                registrationForm1b.value = userRegistrationForm;
-                            } else {
-                                // Ako nema iz registracije, postavi na osnovu tipa prijave
-                                if (selectedType === 'doo') {
-                                    registrationForm1b.value = 'Društvo sa ograničenom odgovornošću';
-                                }
-                                // Za 'ostalo' ne postavljamo automatski, korisnik bira
-                            }
-                            // Trigger change event da se osiguramo da se vrednost postavi
-                            if (registrationForm1b.value) {
-                                registrationForm1b.dispatchEvent(new Event('change', { bubbles: true }));
-                            }
-                            console.log('Postavljeno registration_form_1b na:', registrationForm1b.value);
-                        }
-                    }, 50);
                 }
             } else if (selectedType === 'fizicko_lice') {
                 // Fizičko lice BEZ registrovane djelatnosti
@@ -1361,37 +1321,56 @@
         toggleFieldsByApplicantType();
         
         // Funkcija za automatsko postavljanje obrasca registracije
+        // VAŽNO: Ne prepisuj vrednosti ako postoje iz existingApplication
         function setRegistrationForm() {
             const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
             const userRegistrationForm = '{{ auth()->user()->user_type ?? "" }}';
             
+            // Proveri da li postoji existingApplication
+            const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
+            
             if (selectedType === 'preduzetnica') {
                 const registrationForm1a = document.getElementById('registration_form_1a');
-                if (registrationForm1a && registrationForm1a.offsetParent !== null) { // Proveri da li je element vidljiv
-                    // Uvek postavi vrednost, bez obzira na trenutnu vrednost
+                if (registrationForm1a && registrationForm1a.offsetParent !== null) {
+                    // Ako već postoji vrednost (iz existingApplication ili old), ne menjaj je
+                    if (registrationForm1a.value && registrationForm1a.value !== '') {
+                        console.log('Registration form 1a već ima vrednost:', registrationForm1a.value);
+                        return;
+                    }
+                    
+                    // Ako nema vrednost, postavi default
                     if (userRegistrationForm && userRegistrationForm !== 'Fizičko lice' && userRegistrationForm.trim() !== '') {
                         registrationForm1a.value = userRegistrationForm;
                     } else {
                         registrationForm1a.value = 'Preduzetnik';
                     }
-                    console.log('Postavljeno registration_form_1a na:', registrationForm1a.value);
+                    console.log('Postavljeno registration_form_1a na default:', registrationForm1a.value);
                 }
             } else if (selectedType === 'doo') {
                 const registrationForm1b = document.getElementById('registration_form_1b');
-                if (registrationForm1b && registrationForm1b.offsetParent !== null) { // Proveri da li je element vidljiv
-                    // Uvek postavi vrednost, bez obzira na trenutnu vrednost
+                if (registrationForm1b && registrationForm1b.offsetParent !== null) {
+                    // Ako već postoji vrednost (iz existingApplication ili old), ne menjaj je
+                    if (registrationForm1b.value && registrationForm1b.value !== '') {
+                        console.log('Registration form 1b već ima vrednost:', registrationForm1b.value);
+                        return;
+                    }
+                    
+                    // Ako nema vrednost, postavi default
                     if (userRegistrationForm && userRegistrationForm !== 'Fizičko lice' && userRegistrationForm.trim() !== '') {
                         registrationForm1b.value = userRegistrationForm;
                     } else {
                         registrationForm1b.value = 'Društvo sa ograničenom odgovornošću';
                     }
-                    console.log('Postavljeno registration_form_1b na:', registrationForm1b.value);
+                    console.log('Postavljeno registration_form_1b na default:', registrationForm1b.value);
                 }
             }
         }
         
         // Pozovi funkciju nakon kratkog vremena da se osiguramo da je DOM spreman
-        setTimeout(setRegistrationForm, 500);
+        // Prvo pozovi toggleFieldsByApplicantType da prikaže pravilnu sekciju
+        toggleFieldsByApplicantType();
+        // Zatim pozovi setRegistrationForm nakon kratke pauze, ali samo ako polja nemaju vrednost
+        setTimeout(setRegistrationForm, 300);
         
         // Takođe pozovi kada se promeni tip prijave
         applicantTypeInputs.forEach(input => {
