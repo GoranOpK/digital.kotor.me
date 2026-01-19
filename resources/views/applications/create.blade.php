@@ -1529,19 +1529,10 @@
                         field.removeAttribute('required');
                     });
                     
-                    // Ukloni disabled sa radio button-a za business_stage
-                    const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
-                    allBusinessStageRadios.forEach(radio => {
-                        radio.removeAttribute('disabled');
-                    });
-                    
-                    // Ukloni disabled sa svih polja u sakrivenim sekcijama
-                    const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
-                    hiddenSections.forEach(section => {
-                        const allFields = section.querySelectorAll('input, select, textarea');
-                        allFields.forEach(field => {
-                            field.removeAttribute('disabled');
-                        });
+                    // VAŽNO: Ukloni disabled sa SVIH polja u formi, ne samo iz sakrivenih sekcija
+                    const allFields = form.querySelectorAll('input, select, textarea');
+                    allFields.forEach(field => {
+                        field.removeAttribute('disabled');
                     });
                     
                     // Submit-uj formu
