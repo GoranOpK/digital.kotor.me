@@ -1607,6 +1607,31 @@
                         radio.removeAttribute('disabled');
                     });
                     
+                    // VAŽNO: Eksplicitno osiguraj da se checked status postavi na prvi radio button
+                    // Pronađi prvi radio button za business_stage u formi
+                    const firstBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]');
+                    // Pronađi checked radio button za business_stage (može biti u bilo kojoj sekciji)
+                    const checkedBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]:checked');
+                    if (firstBusinessStageRadio) {
+                        if (checkedBusinessStageRadio && checkedBusinessStageRadio !== firstBusinessStageRadio) {
+                            // Ako je checked radio button različit od prvog, postavi checked na prvi sa istom vrednošću
+                            const checkedValue = checkedBusinessStageRadio.value;
+                            const allBusinessStageRadiosWithSameValue = form.querySelectorAll(`input[name="business_stage"][type="radio"][value="${checkedValue}"]`);
+                            allBusinessStageRadiosWithSameValue.forEach(radio => {
+                                radio.checked = true;
+                                radio.removeAttribute('disabled');
+                            });
+                            // Obriši checked status iz svih ostalih
+                            const allOtherBusinessStageRadios = form.querySelectorAll(`input[name="business_stage"][type="radio"]:not([value="${checkedValue}"])`);
+                            allOtherBusinessStageRadios.forEach(radio => {
+                                radio.checked = false;
+                            });
+                        } else if (!checkedBusinessStageRadio && firstBusinessStageRadio) {
+                            // Ako nijedan nije checked, postavi prvi na checked (default "započinjanje")
+                            firstBusinessStageRadio.checked = true;
+                        }
+                    }
+                    
                     // Submit-uj formu
                     form.submit();
                 });
