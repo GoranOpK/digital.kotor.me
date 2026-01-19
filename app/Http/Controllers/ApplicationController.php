@@ -40,8 +40,22 @@ class ApplicationController extends Controller
             ->first();
 
         if ($existingApplication) {
-            return redirect()->route('applications.show', $existingApplication)
-                ->with('info', 'Već ste podneli prijavu na ovaj konkurs.');
+            // Ako postoji draft prijava, omogući nastavak popunjavanja
+            if ($existingApplication->status === 'draft') {
+                // Preuzmi dokumente iz biblioteke korisnika
+                $user = Auth::user();
+                $userDocuments = UserDocument::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->get()
+                    ->groupBy('category');
+                
+                return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication'))
+                    ->with('info', 'Već imate započetu prijavu. Možete je nastaviti popunjavati.');
+            } else {
+                // Ako je prijava već podnesena, preusmeri na detalje
+                return redirect()->route('applications.show', $existingApplication)
+                    ->with('info', 'Već ste podneli prijavu na ovaj konkurs.');
+            }
         }
 
         $user = Auth::user();
@@ -75,46 +89,63 @@ class ApplicationController extends Controller
         // - 'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (preduzetnik) - automatski ima registrovanu djelatnost
         // - 'doo' = Društvo sa ograničenom odgovornošću - automatski ima registrovanu djelatnost
         // - 'ostalo' = Ostali pravni subjekti - automatski ima registrovanu djelatnost
+        
+        // Proveri da li je ovo draft ili finalno čuvanje
+        $isDraft = $request->has('save_as_draft') && $request->save_as_draft === '1';
+        
         $rules = [
-            'business_plan_name' => 'required|string|max:255',
-            'applicant_type' => 'required|in:preduzetnica,doo,fizicko_lice,ostalo',
-            'business_stage' => 'required|in:započinjanje,razvoj',
-            'business_area' => 'required|string|max:255',
-            'requested_amount' => 'required|numeric|min:0',
-            'total_budget_needed' => 'required|numeric|min:0|gte:requested_amount',
+            'business_plan_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
+            'applicant_type' => $isDraft ? 'nullable|in:preduzetnica,doo,fizicko_lice,ostalo' : 'required|in:preduzetnica,doo,fizicko_lice,ostalo',
+            'business_stage' => $isDraft ? 'nullable|in:započinjanje,razvoj' : 'required|in:započinjanje,razvoj',
+            'business_area' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
+            'requested_amount' => $isDraft ? 'nullable|numeric|min:0' : 'required|numeric|min:0',
+            'total_budget_needed' => $isDraft ? 'nullable|numeric|min:0' : 'required|numeric|min:0|gte:requested_amount',
             'website' => 'nullable|url|max:255',
             'bank_account' => 'nullable|string|max:50',
             'vat_number' => 'nullable|string|max:50',
             'pib' => 'nullable|string|regex:/^[0-9]{8}$/',
-            'de_minimis_declaration' => 'required|accepted',
+            'de_minimis_declaration' => $isDraft ? 'nullable|accepted' : 'required|accepted',
         ];
 
         // Izjava o tačnosti je obavezna samo za fizičko lice BEZ registrovane djelatnosti
         // Preduzetnica, DOO i Ostalo automatski imaju registrovanu djelatnost
-        if ($request->applicant_type === 'fizicko_lice') {
+        if ($request->applicant_type === 'fizicko_lice' && !$isDraft) {
             $rules['accuracy_declaration'] = 'required|accepted';
         }
 
         // Dodatna polja za DOO i Ostalo (ista polja)
-        if ($request->applicant_type === 'doo' || $request->applicant_type === 'ostalo') {
+        if (($request->applicant_type === 'doo' || $request->applicant_type === 'ostalo') && !$isDraft) {
             $rules['founder_name'] = 'required|string|max:255';
             $rules['director_name'] = 'required|string|max:255';
             $rules['company_seat'] = 'required|string|max:255';
+        } elseif ($isDraft) {
+            // Za draft, ova polja su opciona
+            $rules['founder_name'] = 'nullable|string|max:255';
+            $rules['director_name'] = 'nullable|string|max:255';
+            $rules['company_seat'] = 'nullable|string|max:255';
         }
 
         // Dodatna polja za fizičko lice BEZ registrovane djelatnosti
         // Ova polja se koriste samo za 'fizicko_lice' tip, ne za 'preduzetnica' (koja je takođe fizičko lice ali SA registrovanom djelatnošću)
-        if ($request->applicant_type === 'fizicko_lice') {
+        if ($request->applicant_type === 'fizicko_lice' && !$isDraft) {
             $rules['physical_person_name'] = 'required|string|max:255';
             $rules['physical_person_jmbg'] = 'required|string|regex:/^[0-9]{13}$/';
             $rules['physical_person_phone'] = 'required|string|max:50';
             $rules['physical_person_email'] = 'required|email|max:255';
+        } elseif ($isDraft && $request->applicant_type === 'fizicko_lice') {
+            // Za draft, ova polja su opciona
+            $rules['physical_person_name'] = 'nullable|string|max:255';
+            $rules['physical_person_jmbg'] = 'nullable|string|regex:/^[0-9]{13}$/';
+            $rules['physical_person_phone'] = 'nullable|string|max:50';
+            $rules['physical_person_email'] = 'nullable|email|max:255';
         }
 
         // Polja za CRPS broj (opciono za sve tipove)
         // Oblik registracije je obavezan za sve tipove osim fizičkog lica bez registrovane djelatnosti
-        if ($request->applicant_type !== 'fizicko_lice') {
+        if ($request->applicant_type !== 'fizicko_lice' && !$isDraft) {
             $rules['registration_form'] = 'required|in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)';
+        } elseif ($isDraft) {
+            $rules['registration_form'] = 'nullable|in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)';
         }
         $rules['crps_number'] = 'nullable|string|max:50';
 
@@ -143,52 +174,119 @@ class ApplicationController extends Controller
             'physical_person_email.email' => 'E-mail mora biti validan.',
         ]);
 
-        // Proveri maksimalnu podršku (30% budžeta)
-        $maxSupport = ($competition->budget ?? 0) * (($competition->max_support_percentage ?? 30) / 100);
-        if ($validated['requested_amount'] > $maxSupport) {
-            return back()->withErrors([
-                'requested_amount' => "Maksimalna podrška po biznis planu je {$maxSupport} € (30% budžeta)."
-            ])->withInput();
+        // Proveri maksimalnu podršku (30% budžeta) - samo ako nije draft
+        if (!$isDraft && isset($validated['requested_amount'])) {
+            $maxSupport = ($competition->budget ?? 0) * (($competition->max_support_percentage ?? 30) / 100);
+            if ($validated['requested_amount'] > $maxSupport) {
+                return back()->withErrors([
+                    'requested_amount' => "Maksimalna podrška po biznis planu je {$maxSupport} € (30% budžeta)."
+                ])->withInput();
+            }
         }
 
-        // Kreiraj prijavu
-        // VAŽNO: Automatsko postavljanje is_registered na osnovu tipa podnosioca:
-        // - 'fizicko_lice' → is_registered = false (nema registrovanu djelatnost)
-        // - 'preduzetnica' → is_registered = true (preduzetnik ima registrovanu djelatnost)
-        // - 'doo' → is_registered = true (DOO ima registrovanu djelatnost)
-        // - 'ostalo' → is_registered = true (ostali pravni subjekti imaju registrovanu djelatnost)
-        $application = Application::create([
-            'competition_id' => $competition->id,
-            'user_id' => Auth::id(),
-            'business_plan_name' => $validated['business_plan_name'],
-            'applicant_type' => $validated['applicant_type'],
-            'business_stage' => $validated['business_stage'],
-            'founder_name' => $validated['founder_name'] ?? null,
-            'director_name' => $validated['director_name'] ?? null,
-            'company_seat' => $validated['company_seat'] ?? null,
-            // Polja za fizičko lice BEZ registrovane djelatnosti (samo za 'fizicko_lice' tip)
-            'physical_person_name' => $validated['physical_person_name'] ?? null,
-            'physical_person_jmbg' => $validated['physical_person_jmbg'] ?? null,
-            'physical_person_phone' => $validated['physical_person_phone'] ?? null,
-            'physical_person_email' => $validated['physical_person_email'] ?? null,
-            'requested_amount' => $validated['requested_amount'],
-            'total_budget_needed' => $validated['total_budget_needed'],
-            'business_area' => $validated['business_area'],
-            'website' => $validated['website'] ?? null,
-            'bank_account' => $validated['bank_account'] ?? null,
-            'vat_number' => $validated['vat_number'] ?? null,
-            'crps_number' => $validated['crps_number'] ?? null,
-            'registration_form' => $validated['registration_form'] ?? null,
-            // Automatsko postavljanje is_registered na osnovu tipa
-            'is_registered' => $validated['applicant_type'] !== 'fizicko_lice',
-            'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
-            'de_minimis_declaration' => true,
-            'previous_support_declaration' => $request->has('previous_support_declaration'),
-            'status' => 'draft', // Draft dok se ne prilože svi dokumenti
-        ]);
+        // Proveri da li već postoji draft prijava za ovaj konkurs
+        $existingApplication = Application::where('competition_id', $competition->id)
+            ->where('user_id', Auth::id())
+            ->where('status', 'draft')
+            ->first();
 
-        return redirect()->route('applications.business-plan.create', $application)
-            ->with('success', 'Osnovni podaci prijave su sačuvani. Sada popunite biznis plan.');
+        if ($existingApplication) {
+            // Ažuriraj postojeću draft prijavu
+            $existingApplication->update([
+                'business_plan_name' => $validated['business_plan_name'] ?? $existingApplication->business_plan_name,
+                'applicant_type' => $validated['applicant_type'] ?? $existingApplication->applicant_type,
+                'business_stage' => $validated['business_stage'] ?? $existingApplication->business_stage,
+                'founder_name' => $validated['founder_name'] ?? $existingApplication->founder_name,
+                'director_name' => $validated['director_name'] ?? $existingApplication->director_name,
+                'company_seat' => $validated['company_seat'] ?? $existingApplication->company_seat,
+                'physical_person_name' => $validated['physical_person_name'] ?? $existingApplication->physical_person_name,
+                'physical_person_jmbg' => $validated['physical_person_jmbg'] ?? $existingApplication->physical_person_jmbg,
+                'physical_person_phone' => $validated['physical_person_phone'] ?? $existingApplication->physical_person_phone,
+                'physical_person_email' => $validated['physical_person_email'] ?? $existingApplication->physical_person_email,
+                'requested_amount' => $validated['requested_amount'] ?? $existingApplication->requested_amount,
+                'total_budget_needed' => $validated['total_budget_needed'] ?? $existingApplication->total_budget_needed,
+                'business_area' => $validated['business_area'] ?? $existingApplication->business_area,
+                'website' => $validated['website'] ?? $existingApplication->website,
+                'bank_account' => $validated['bank_account'] ?? $existingApplication->bank_account,
+                'vat_number' => $validated['vat_number'] ?? $existingApplication->vat_number,
+                'crps_number' => $validated['crps_number'] ?? $existingApplication->crps_number,
+                'registration_form' => $validated['registration_form'] ?? $existingApplication->registration_form,
+                'is_registered' => isset($validated['applicant_type']) ? ($validated['applicant_type'] !== 'fizicko_lice') : $existingApplication->is_registered,
+                'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
+                'de_minimis_declaration' => $request->has('de_minimis_declaration') && ($request->de_minimis_declaration == '1' || $request->de_minimis_declaration === true),
+                'previous_support_declaration' => $request->has('previous_support_declaration'),
+            ]);
+
+            $application = $existingApplication;
+        } else {
+            // Kreiraj novu prijavu
+            // VAŽNO: Automatsko postavljanje is_registered na osnovu tipa podnosioca:
+            // - 'fizicko_lice' → is_registered = false (nema registrovanu djelatnost)
+            // - 'preduzetnica' → is_registered = true (preduzetnik ima registrovanu djelatnost)
+            // - 'doo' → is_registered = true (DOO ima registrovanu djelatnost)
+            // - 'ostalo' → is_registered = true (ostali pravni subjekti imaju registrovanu djelatnost)
+            $application = Application::create([
+                'competition_id' => $competition->id,
+                'user_id' => Auth::id(),
+                'business_plan_name' => $validated['business_plan_name'] ?? null,
+                'applicant_type' => $validated['applicant_type'] ?? null,
+                'business_stage' => $validated['business_stage'] ?? null,
+                'founder_name' => $validated['founder_name'] ?? null,
+                'director_name' => $validated['director_name'] ?? null,
+                'company_seat' => $validated['company_seat'] ?? null,
+                // Polja za fizičko lice BEZ registrovane djelatnosti (samo za 'fizicko_lice' tip)
+                'physical_person_name' => $validated['physical_person_name'] ?? null,
+                'physical_person_jmbg' => $validated['physical_person_jmbg'] ?? null,
+                'physical_person_phone' => $validated['physical_person_phone'] ?? null,
+                'physical_person_email' => $validated['physical_person_email'] ?? null,
+                'requested_amount' => $validated['requested_amount'] ?? null,
+                'total_budget_needed' => $validated['total_budget_needed'] ?? null,
+                'business_area' => $validated['business_area'] ?? null,
+                'website' => $validated['website'] ?? null,
+                'bank_account' => $validated['bank_account'] ?? null,
+                'vat_number' => $validated['vat_number'] ?? null,
+                'crps_number' => $validated['crps_number'] ?? null,
+                'registration_form' => $validated['registration_form'] ?? null,
+                // Automatsko postavljanje is_registered na osnovu tipa
+                'is_registered' => isset($validated['applicant_type']) ? ($validated['applicant_type'] !== 'fizicko_lice') : false,
+                'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
+                'de_minimis_declaration' => $request->has('de_minimis_declaration') && ($request->de_minimis_declaration == '1' || $request->de_minimis_declaration === true),
+                'previous_support_declaration' => $request->has('previous_support_declaration'),
+                'status' => 'draft', // Draft dok se ne prilože svi dokumenti
+            ]);
+        }
+
+        // Proveri da li je prijava kompletna (ima sve obavezne podatke)
+        $isComplete = $application->business_plan_name && 
+                     $application->applicant_type && 
+                     $application->business_stage && 
+                     $application->business_area && 
+                     $application->requested_amount && 
+                     $application->total_budget_needed &&
+                     ($application->applicant_type === 'fizicko_lice' ? 
+                        ($application->physical_person_name && $application->physical_person_jmbg && $application->physical_person_phone && $application->physical_person_email) :
+                        ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo' ?
+                            ($application->founder_name && $application->director_name && $application->company_seat) :
+                            true
+                        )
+                     ) &&
+                     ($application->applicant_type !== 'fizicko_lice' ? $application->registration_form : true);
+
+        if ($isDraft) {
+            // Ako je draft, vrati na formu za nastavak popunjavanja
+            return redirect()->route('applications.create', $competition)
+                ->with('success', 'Prijava je sačuvana kao nacrt. Možete je nastaviti popunjavati.')
+                ->withInput();
+        } elseif ($isComplete) {
+            // Ako je kompletna, preusmeri na formu za biznis plan
+            return redirect()->route('applications.business-plan.create', $application)
+                ->with('success', 'Osnovni podaci prijave su sačuvani. Sada popunite biznis plan.');
+        } else {
+            // Ako nije kompletna, vrati na formu sa upozorenjem
+            return redirect()->route('applications.create', $competition)
+                ->with('warning', 'Prijava je sačuvana, ali još uvek nije kompletna. Molimo popunite sva obavezna polja.')
+                ->withInput();
+        }
     }
 
     /**

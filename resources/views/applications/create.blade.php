@@ -194,6 +194,26 @@
 
         <form method="POST" action="{{ route('applications.store', $competition) }}" id="applicationForm">
             @csrf
+            
+            @php
+                // Helper funkcija za dobijanje vrednosti polja (old > existingApplication > default)
+                function getFieldValue($field, $default = '') {
+                    $oldValue = old($field);
+                    if ($oldValue !== null) {
+                        return $oldValue;
+                    }
+                    if (isset($existingApplication) && $existingApplication && $existingApplication->$field) {
+                        return $existingApplication->$field;
+                    }
+                    return $default;
+                }
+            @endphp
+            
+            @if(isset($existingApplication) && $existingApplication)
+                <div class="alert alert-info" style="margin-bottom: 24px; padding: 16px; background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; color: #1e40af;">
+                    <strong>Nastavak popunjavanja:</strong> Već imate započetu prijavu. Možete je nastaviti popunjavati.
+                </div>
+            @endif
 
             <!-- Tip podnosioca prijave (prikazuje se prije obrazaca) -->
             <div class="form-card">
@@ -226,7 +246,7 @@
                                     id="applicant_type_fizicko_lice" 
                                     name="applicant_type" 
                                     value="fizicko_lice"
-                                    {{ old('applicant_type', $defaultType) === 'fizicko_lice' ? 'checked' : '' }}
+                                    {{ old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType) === 'fizicko_lice' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="applicant_type_fizicko_lice">Fizičko lice (nema registrovanu djelatnost)</label>
@@ -237,7 +257,7 @@
                                     id="applicant_type_preduzetnica" 
                                     name="applicant_type" 
                                     value="preduzetnica"
-                                    {{ old('applicant_type', $defaultType) === 'preduzetnica' ? 'checked' : '' }}
+                                    {{ old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType) === 'preduzetnica' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="applicant_type_preduzetnica">Preduzetnica</label>
@@ -248,7 +268,7 @@
                                     id="applicant_type_doo" 
                                     name="applicant_type" 
                                     value="doo"
-                                    {{ old('applicant_type', $defaultType) === 'doo' ? 'checked' : '' }}
+                                    {{ old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType) === 'doo' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="applicant_type_doo">DOO (Društvo sa ograničenom odgovornošću)</label>
@@ -259,7 +279,7 @@
                                     id="applicant_type_ostalo" 
                                     name="applicant_type" 
                                     value="ostalo"
-                                    {{ old('applicant_type', $defaultType) === 'ostalo' ? 'checked' : '' }}
+                                    {{ old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType) === 'ostalo' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="applicant_type_ostalo">Ostalo</label>
@@ -296,7 +316,7 @@
                             type="text" 
                             name="business_plan_name" 
                             class="form-control @error('business_plan_name') error @enderror"
-                            value="{{ old('business_plan_name') }}"
+                            value="{{ old('business_plan_name', isset($existingApplication) && $existingApplication ? $existingApplication->business_plan_name : '') }}"
                             required
                             maxlength="255"
                         >
@@ -396,8 +416,11 @@
                             @php
                                 // Automatski postavi na osnovu tipa prijave ili user_type iz registracije
                                 $defaultRegistrationForm = old('registration_form', '');
+                                if (empty($defaultRegistrationForm) && isset($existingApplication) && $existingApplication && $existingApplication->registration_form) {
+                                    $defaultRegistrationForm = $existingApplication->registration_form;
+                                }
                                 $userType = auth()->user()->user_type ?? '';
-                                $defaultApplicantType = old('applicant_type', $defaultType ?? '');
+                                $defaultApplicantType = old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType ?? '');
                                 
                                 // Ako nema old value, koristi user_type ako postoji i nije "Fizičko lice"
                                 if (empty($defaultRegistrationForm) && $userType && $userType !== 'Fizičko lice') {
@@ -438,7 +461,7 @@
                                 type="text" 
                                 name="crps_number" 
                                 class="form-control @error('crps_number') error @enderror"
-                                value="{{ old('crps_number') }}"
+                                value="{{ old('crps_number', isset($existingApplication) && $existingApplication ? $existingApplication->crps_number : '') }}"
                                 maxlength="50"
                             >
                             @error('crps_number')
@@ -452,7 +475,7 @@
                                 type="text" 
                                 name="pib" 
                                 class="form-control @error('pib') error @enderror"
-                                value="{{ old('pib', auth()->user()->pib) }}"
+                                value="{{ old('pib', isset($existingApplication) && $existingApplication ? $existingApplication->pib : auth()->user()->pib) }}"
                                 maxlength="8"
                                 pattern="[0-9]{8}"
                                 placeholder="8 cifara"
@@ -475,7 +498,7 @@
                             type="text" 
                             name="business_area" 
                             class="form-control @error('business_area') error @enderror"
-                            value="{{ old('business_area') }}"
+                            value="{{ old('business_area', isset($existingApplication) && $existingApplication ? $existingApplication->business_area : '') }}"
                             required
                             maxlength="255"
                             placeholder="Npr. IT usluge, turizam, poljoprivreda..."
@@ -492,7 +515,7 @@
                                 id="accuracy_declaration_1a" 
                                 name="accuracy_declaration" 
                                 value="1"
-                                {{ old('accuracy_declaration') ? 'checked' : '' }}
+                                {{ old('accuracy_declaration', isset($existingApplication) && $existingApplication ? $existingApplication->accuracy_declaration : false) ? 'checked' : '' }}
                             >
                             <label for="accuracy_declaration_1a">
                                 Kao podnosilac prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
@@ -515,7 +538,7 @@
                                     id="business_stage_zapocinjanje_1a" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_zapocinjanje_1a">Započinjanje poslovne djelatnosti</label>
@@ -526,7 +549,7 @@
                                     id="business_stage_razvoj_1a" 
                                     name="business_stage" 
                                     value="razvoj"
-                                    {{ old('business_stage') === 'razvoj' ? 'checked' : '' }}
+                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'razvoj' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_razvoj_1a">Razvoj postojeće poslovne djelatnosti</label>
@@ -558,7 +581,7 @@
                             type="text" 
                             name="business_plan_name" 
                             class="form-control @error('business_plan_name') error @enderror"
-                            value="{{ old('business_plan_name') }}"
+                            value="{{ old('business_plan_name', isset($existingApplication) && $existingApplication ? $existingApplication->business_plan_name : '') }}"
                             required
                             maxlength="255"
                         >
@@ -700,7 +723,7 @@
                             type="text" 
                             name="crps_number" 
                             class="form-control @error('crps_number') error @enderror"
-                            value="{{ old('crps_number') }}"
+                            value="{{ old('crps_number', isset($existingApplication) && $existingApplication ? $existingApplication->crps_number : '') }}"
                             maxlength="50"
                         >
                         @error('crps_number')
@@ -715,7 +738,7 @@
                                 type="text" 
                                 name="founder_name" 
                                 class="form-control @error('founder_name') error @enderror"
-                                value="{{ old('founder_name', auth()->user()->name) }}"
+                                value="{{ old('founder_name', isset($existingApplication) && $existingApplication ? $existingApplication->founder_name : auth()->user()->name) }}"
                                 maxlength="255"
                             >
                             @error('founder_name')
@@ -729,7 +752,7 @@
                                 type="text" 
                                 name="director_name" 
                                 class="form-control @error('director_name') error @enderror"
-                                value="{{ old('director_name', auth()->user()->name) }}"
+                                value="{{ old('director_name', isset($existingApplication) && $existingApplication ? $existingApplication->director_name : auth()->user()->name) }}"
                                 maxlength="255"
                             >
                             @error('director_name')
@@ -744,7 +767,7 @@
                             type="text" 
                             name="company_seat" 
                             class="form-control @error('company_seat') error @enderror"
-                            value="{{ old('company_seat', auth()->user()->address) }}"
+                            value="{{ old('company_seat', isset($existingApplication) && $existingApplication ? $existingApplication->company_seat : auth()->user()->address) }}"
                             maxlength="255"
                             placeholder="Npr. Kotor, Njegoševa 1"
                         >
@@ -759,7 +782,7 @@
                             type="text" 
                             name="pib" 
                             class="form-control @error('pib') error @enderror"
-                            value="{{ old('pib', auth()->user()->pib) }}"
+                            value="{{ old('pib', isset($existingApplication) && $existingApplication ? $existingApplication->pib : auth()->user()->pib) }}"
                             maxlength="50"
                         >
                         @error('pib')
@@ -779,7 +802,7 @@
                             type="text" 
                             name="business_area" 
                             class="form-control @error('business_area') error @enderror"
-                            value="{{ old('business_area') }}"
+                            value="{{ old('business_area', isset($existingApplication) && $existingApplication ? $existingApplication->business_area : '') }}"
                             required
                             maxlength="255"
                             placeholder="Npr. IT usluge, turizam, poljoprivreda..."
@@ -796,7 +819,7 @@
                                 id="accuracy_declaration_1b" 
                                 name="accuracy_declaration" 
                                 value="1"
-                                {{ old('accuracy_declaration') ? 'checked' : '' }}
+                                {{ old('accuracy_declaration', isset($existingApplication) && $existingApplication ? $existingApplication->accuracy_declaration : false) ? 'checked' : '' }}
                             >
                             <label for="accuracy_declaration_1b">
                                 Kao podnosilac prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
@@ -819,7 +842,7 @@
                                     id="business_stage_zapocinjanje_1b" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_zapocinjanje_1b">Započinjanje poslovne djelatnosti</label>
@@ -830,7 +853,7 @@
                                     id="business_stage_razvoj_1b" 
                                     name="business_stage" 
                                     value="razvoj"
-                                    {{ old('business_stage') === 'razvoj' ? 'checked' : '' }}
+                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'razvoj' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_razvoj_1b">Razvoj postojeće poslovne djelatnosti</label>
@@ -854,7 +877,7 @@
                             type="text" 
                             name="business_plan_name" 
                             class="form-control @error('business_plan_name') error @enderror"
-                            value="{{ old('business_plan_name') }}"
+                            value="{{ old('business_plan_name', isset($existingApplication) && $existingApplication ? $existingApplication->business_plan_name : '') }}"
                             required
                             maxlength="255"
                         >
@@ -871,7 +894,7 @@
                             type="text" 
                             name="physical_person_name" 
                             class="form-control @error('physical_person_name') error @enderror"
-                            value="{{ old('physical_person_name', auth()->user()->name) }}"
+                            value="{{ old('physical_person_name', isset($existingApplication) && $existingApplication ? $existingApplication->physical_person_name : auth()->user()->name) }}"
                             maxlength="255"
                         >
                         @error('physical_person_name')
@@ -887,7 +910,7 @@
                             type="text" 
                             name="physical_person_jmbg" 
                             class="form-control @error('physical_person_jmbg') error @enderror"
-                            value="{{ old('physical_person_jmbg') }}"
+                            value="{{ old('physical_person_jmbg', isset($existingApplication) && $existingApplication ? $existingApplication->physical_person_jmbg : '') }}"
                             maxlength="13"
                             pattern="[0-9]{13}"
                             placeholder="13 cifara"
@@ -906,7 +929,7 @@
                                 type="tel" 
                                 name="physical_person_phone" 
                                 class="form-control @error('physical_person_phone') error @enderror"
-                                value="{{ old('physical_person_phone', auth()->user()->phone) }}"
+                                value="{{ old('physical_person_phone', isset($existingApplication) && $existingApplication ? $existingApplication->physical_person_phone : auth()->user()->phone) }}"
                                 maxlength="50"
                                 placeholder="Npr. +382 67 123 456"
                             >
@@ -923,7 +946,7 @@
                                 type="email" 
                                 name="physical_person_email" 
                                 class="form-control @error('physical_person_email') error @enderror"
-                                value="{{ old('physical_person_email', auth()->user()->email) }}"
+                                value="{{ old('physical_person_email', isset($existingApplication) && $existingApplication ? $existingApplication->physical_person_email : auth()->user()->email) }}"
                                 maxlength="255"
                             >
                             @error('physical_person_email')
@@ -943,7 +966,7 @@
                                     id="business_stage_zapocinjanje_fizicko" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_zapocinjanje_fizicko">Započinjanje poslovne djelatnosti</label>
@@ -954,7 +977,7 @@
                                     id="business_stage_razvoj_fizicko" 
                                     name="business_stage" 
                                     value="razvoj"
-                                    {{ old('business_stage') === 'razvoj' ? 'checked' : '' }}
+                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'razvoj' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_razvoj_fizicko">Razvoj postojeće poslovne djelatnosti</label>
@@ -973,7 +996,7 @@
                             type="text" 
                             name="business_area" 
                             class="form-control @error('business_area') error @enderror"
-                            value="{{ old('business_area') }}"
+                            value="{{ old('business_area', isset($existingApplication) && $existingApplication ? $existingApplication->business_area : '') }}"
                             required
                             maxlength="255"
                             placeholder="Npr. IT usluge, turizam, poljoprivreda..."
@@ -999,7 +1022,7 @@
                                 type="number" 
                                 name="requested_amount" 
                                 class="form-control @error('requested_amount') error @enderror"
-                                value="{{ old('requested_amount') }}"
+                                value="{{ old('requested_amount', isset($existingApplication) && $existingApplication ? $existingApplication->requested_amount : '') }}"
                                 required
                                 min="0"
                                 step="0.01"
@@ -1022,7 +1045,7 @@
                                 type="number" 
                                 name="total_budget_needed" 
                                 class="form-control @error('total_budget_needed') error @enderror"
-                                value="{{ old('total_budget_needed') }}"
+                                value="{{ old('total_budget_needed', isset($existingApplication) && $existingApplication ? $existingApplication->total_budget_needed : '') }}"
                                 required
                                 min="0"
                                 step="0.01"
@@ -1051,7 +1074,7 @@
                                 type="text" 
                                 name="bank_account" 
                                 class="form-control @error('bank_account') error @enderror"
-                                value="{{ old('bank_account') }}"
+                                value="{{ old('bank_account', isset($existingApplication) && $existingApplication ? $existingApplication->bank_account : '') }}"
                                 maxlength="50"
                                 placeholder="Npr. 510-0000000000123-45"
                             >
@@ -1066,7 +1089,7 @@
                                 type="text" 
                                 name="vat_number" 
                                 class="form-control @error('vat_number') error @enderror"
-                                value="{{ old('vat_number') }}"
+                                value="{{ old('vat_number', isset($existingApplication) && $existingApplication ? $existingApplication->vat_number : '') }}"
                                 maxlength="50"
                                 placeholder="Npr. ME123456789"
                             >
@@ -1082,7 +1105,7 @@
                             type="url" 
                             name="website" 
                             class="form-control @error('website') error @enderror"
-                            value="{{ old('website') }}"
+                            value="{{ old('website', isset($existingApplication) && $existingApplication ? $existingApplication->website : '') }}"
                             maxlength="255"
                             placeholder="https://example.com"
                         >
@@ -1105,7 +1128,7 @@
                                 id="de_minimis_declaration" 
                                 name="de_minimis_declaration" 
                                 value="1"
-                                {{ old('de_minimis_declaration') ? 'checked' : '' }}
+                                {{ old('de_minimis_declaration', isset($existingApplication) && $existingApplication ? $existingApplication->de_minimis_declaration : false) ? 'checked' : '' }}
                                 required
                             >
                             <label for="de_minimis_declaration">
@@ -1126,7 +1149,7 @@
                                 id="previous_support_declaration" 
                                 name="previous_support_declaration" 
                                 value="1"
-                                {{ old('previous_support_declaration') ? 'checked' : '' }}
+                                {{ old('previous_support_declaration', isset($existingApplication) && $existingApplication ? $existingApplication->previous_support_declaration : false) ? 'checked' : '' }}
                             >
                             <label for="previous_support_declaration">
                                 Prethodno sam dobio/la podršku iz budžeta Opštine Kotor za žensko preduzetništvo po javnom konkursu u prethodnoj godini. 
@@ -1139,11 +1162,17 @@
 
             <!-- Dugme za slanje -->
             <div class="form-card" style="text-align: center;">
-                <button type="submit" class="btn-primary">
-                    Nastavi na biznis plan
-                </button>
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    <button type="submit" name="save_as_draft" value="1" class="btn-secondary" style="background: #6b7280; color: #fff; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
+                        Sačuvaj kao nacrt
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        Nastavi na biznis plan
+                    </button>
+                </div>
                 <p style="color: #6b7280; font-size: 14px; margin-top: 16px;">
-                    Nakon čuvanja osnovnih podataka, bićete preusmereni na formu za popunjavanje biznis plana.
+                    <strong>Sačuvaj kao nacrt:</strong> Sačuvajte prijavu i nastavite je popunjavati kasnije.<br>
+                    <strong>Nastavi na biznis plan:</strong> Sačuvajte kompletnu prijavu i nastavite na popunjavanje biznis plana.
                 </p>
             </div>
         </form>
