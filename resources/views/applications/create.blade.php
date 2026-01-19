@@ -407,7 +407,7 @@
                             name="registration_form" 
                             id="registration_form_1a"
                             class="form-control @error('registration_form') error @enderror"
-                            data-required="true"
+                            required
                         >
                             <option value="">Izaberite oblik registracije</option>
                             @php
@@ -513,6 +513,7 @@
                                 name="accuracy_declaration" 
                                 value="1"
                                 {{ old('accuracy_declaration', isset($existingApplication) && $existingApplication ? $existingApplication->accuracy_declaration : false) ? 'checked' : '' }}
+                                required
                             >
                             <label for="accuracy_declaration_1a">
                                 Kao podnosilac prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
