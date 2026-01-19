@@ -192,26 +192,27 @@ class ApplicationController extends Controller
 
         if ($existingApplication) {
             // Ažuriraj postojeću draft prijavu
+            // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
             $existingApplication->update([
-                'business_plan_name' => $validated['business_plan_name'] ?? $existingApplication->business_plan_name,
-                'applicant_type' => $validated['applicant_type'] ?? $existingApplication->applicant_type,
-                'business_stage' => $validated['business_stage'] ?? $existingApplication->business_stage,
-                'founder_name' => $validated['founder_name'] ?? $existingApplication->founder_name,
-                'director_name' => $validated['director_name'] ?? $existingApplication->director_name,
-                'company_seat' => $validated['company_seat'] ?? $existingApplication->company_seat,
-                'physical_person_name' => $validated['physical_person_name'] ?? $existingApplication->physical_person_name,
-                'physical_person_jmbg' => $validated['physical_person_jmbg'] ?? $existingApplication->physical_person_jmbg,
-                'physical_person_phone' => $validated['physical_person_phone'] ?? $existingApplication->physical_person_phone,
-                'physical_person_email' => $validated['physical_person_email'] ?? $existingApplication->physical_person_email,
-                'requested_amount' => $validated['requested_amount'] ?? $existingApplication->requested_amount,
-                'total_budget_needed' => $validated['total_budget_needed'] ?? $existingApplication->total_budget_needed,
-                'business_area' => $validated['business_area'] ?? $existingApplication->business_area,
-                'website' => $validated['website'] ?? $existingApplication->website,
-                'bank_account' => $validated['bank_account'] ?? $existingApplication->bank_account,
-                'vat_number' => $validated['vat_number'] ?? $existingApplication->vat_number,
-                'crps_number' => $validated['crps_number'] ?? $existingApplication->crps_number,
-                'registration_form' => $validated['registration_form'] ?? $existingApplication->registration_form,
-                'is_registered' => isset($validated['applicant_type']) ? ($validated['applicant_type'] !== 'fizicko_lice') : $existingApplication->is_registered,
+                'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : $existingApplication->business_plan_name,
+                'applicant_type' => $request->filled('applicant_type') ? $request->applicant_type : $existingApplication->applicant_type,
+                'business_stage' => $request->filled('business_stage') ? $request->business_stage : $existingApplication->business_stage,
+                'founder_name' => $request->filled('founder_name') ? $request->founder_name : $existingApplication->founder_name,
+                'director_name' => $request->filled('director_name') ? $request->director_name : $existingApplication->director_name,
+                'company_seat' => $request->filled('company_seat') ? $request->company_seat : $existingApplication->company_seat,
+                'physical_person_name' => $request->filled('physical_person_name') ? $request->physical_person_name : $existingApplication->physical_person_name,
+                'physical_person_jmbg' => $request->filled('physical_person_jmbg') ? $request->physical_person_jmbg : $existingApplication->physical_person_jmbg,
+                'physical_person_phone' => $request->filled('physical_person_phone') ? $request->physical_person_phone : $existingApplication->physical_person_phone,
+                'physical_person_email' => $request->filled('physical_person_email') ? $request->physical_person_email : $existingApplication->physical_person_email,
+                'requested_amount' => $request->filled('requested_amount') ? $request->requested_amount : $existingApplication->requested_amount,
+                'total_budget_needed' => $request->filled('total_budget_needed') ? $request->total_budget_needed : $existingApplication->total_budget_needed,
+                'business_area' => $request->filled('business_area') ? $request->business_area : $existingApplication->business_area,
+                'website' => $request->filled('website') ? $request->website : $existingApplication->website,
+                'bank_account' => $request->filled('bank_account') ? $request->bank_account : $existingApplication->bank_account,
+                'vat_number' => $request->filled('vat_number') ? $request->vat_number : $existingApplication->vat_number,
+                'crps_number' => $request->filled('crps_number') ? $request->crps_number : $existingApplication->crps_number,
+                'registration_form' => $request->filled('registration_form') ? $request->registration_form : $existingApplication->registration_form,
+                'is_registered' => $request->filled('applicant_type') ? ($request->applicant_type !== 'fizicko_lice') : $existingApplication->is_registered,
                 'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
                 'de_minimis_declaration' => $request->has('de_minimis_declaration') && ($request->de_minimis_declaration == '1' || $request->de_minimis_declaration === true),
                 'previous_support_declaration' => $request->has('previous_support_declaration'),
@@ -259,8 +260,24 @@ class ApplicationController extends Controller
         // Refresh aplikaciju da dobijemo ažurirane podatke (posebno važno za existingApplication)
         $application->refresh();
         
+        // Debug: Loguj stanje
+        \Log::info('=== Application Store Debug ===');
+        \Log::info('isDraft: ' . ($isDraft ? 'true' : 'false'));
+        \Log::info('business_stage from request: ' . ($request->business_stage ?? 'null'));
+        \Log::info('business_stage in application: ' . ($application->business_stage ?? 'null'));
+        \Log::info('business_plan_name: ' . ($application->business_plan_name ?? 'null'));
+        \Log::info('applicant_type: ' . ($application->applicant_type ?? 'null'));
+        \Log::info('business_area: ' . ($application->business_area ?? 'null'));
+        \Log::info('requested_amount: ' . ($application->requested_amount ?? 'null'));
+        \Log::info('total_budget_needed: ' . ($application->total_budget_needed ?? 'null'));
+        \Log::info('de_minimis_declaration: ' . ($application->de_minimis_declaration ? 'true' : 'false'));
+        \Log::info('registration_form: ' . ($application->registration_form ?? 'null'));
+        
         // Proveri da li je Obrazac 1a/1b kompletno popunjen (sva polja + checkbox-ovi)
         $isObrazacComplete = $application->isObrazacComplete();
+        
+        \Log::info('isObrazacComplete: ' . ($isObrazacComplete ? 'true' : 'false'));
+        \Log::info('=== End Debug ===');
 
         if ($isDraft) {
             // Ako je eksplicitno kliknuto "Sačuvaj kao nacrt", uvek čuvaj kao draft
