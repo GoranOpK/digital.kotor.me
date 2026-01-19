@@ -120,8 +120,14 @@
     .checkbox-group input[type="checkbox"] {
         width: 18px;
         height: 18px;
+        min-width: 18px;
+        min-height: 18px;
+        max-width: 18px;
+        max-height: 18px;
         margin-top: 2px;
         cursor: pointer;
+        flex-shrink: 0;
+        box-sizing: border-box;
     }
     .checkbox-group label {
         font-size: 14px;
