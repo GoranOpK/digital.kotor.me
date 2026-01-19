@@ -175,8 +175,11 @@
 <div class="application-form-page">
     <div class="container mx-auto px-4">
         <div class="page-header">
-            <h1>Prijava na konkurs - Obrazac 1a/1b</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 0;">{{ $competition->title }}</p>
+            <h1 style="text-align: center; font-size: 18px; font-weight: 700; margin-bottom: 8px;">Obrazac 1a</h1>
+            <h2 style="text-align: center; font-size: 16px; font-weight: 600; margin-bottom: 8px;">PRIJAVA</h2>
+            <p style="text-align: center; color: rgba(255,255,255,0.95); margin: 0 0 4px; font-size: 14px;">na javni konkurs za raspodjelu bespovratnih sredstava</p>
+            <p style="text-align: center; color: rgba(255,255,255,0.95); margin: 0 0 4px; font-size: 14px;">namjenjenih za podršku ženskom preduzetništvu</p>
+            <p style="text-align: center; color: rgba(255,255,255,0.95); margin: 0; font-size: 14px;">(za oblik registracije PREDUZETNIK)</p>
         </div>
 
         @if(session('success'))
@@ -414,7 +417,197 @@
                 </div>
             </div>
 
-            <!-- Sekcija 2: Podaci o DOO (samo ako je izabran DOO) -->
+            <!-- Sekcija 2: Podaci o preduzetnici (samo ako je izabrana Preduzetnica) -->
+            <div class="form-card conditional-field" id="preduzetnicaFields">
+                <div class="form-section">
+                    <h2>2. Podaci o preduzetnici</h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Ime i prezime:</label>
+                        <input 
+                            type="text" 
+                            name="preduzetnik_name" 
+                            class="form-control @error('preduzetnik_name') error @enderror"
+                            value="{{ old('preduzetnik_name', auth()->user()->name) }}"
+                            maxlength="255"
+                        >
+                        @error('preduzetnik_name')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">JMBG:</label>
+                        <input 
+                            type="text" 
+                            name="preduzetnik_jmbg" 
+                            class="form-control @error('preduzetnik_jmbg') error @enderror"
+                            value="{{ old('preduzetnik_jmbg', auth()->user()->jmb) }}"
+                            maxlength="13"
+                            pattern="[0-9]{13}"
+                            placeholder="13 cifara"
+                        >
+                        @error('preduzetnik_jmbg')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Adresa:</label>
+                        <input 
+                            type="text" 
+                            name="preduzetnik_address" 
+                            class="form-control @error('preduzetnik_address') error @enderror"
+                            value="{{ old('preduzetnik_address', auth()->user()->address) }}"
+                            maxlength="255"
+                        >
+                        @error('preduzetnik_address')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Kontakt telefon:</label>
+                        <input 
+                            type="tel" 
+                            name="preduzetnik_phone" 
+                            class="form-control @error('preduzetnik_phone') error @enderror"
+                            value="{{ old('preduzetnik_phone', auth()->user()->phone) }}"
+                            maxlength="50"
+                            placeholder="Npr. +382 67 123 456"
+                        >
+                        @error('preduzetnik_phone')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">E-mail:</label>
+                        <input 
+                            type="email" 
+                            name="preduzetnik_email" 
+                            class="form-control @error('preduzetnik_email') error @enderror"
+                            value="{{ old('preduzetnik_email', auth()->user()->email) }}"
+                            maxlength="255"
+                        >
+                        @error('preduzetnik_email')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">*Broj registracije u CRPS:</label>
+                        <div class="form-text" style="margin-bottom: 8px; color: #6b7280; font-size: 12px;">
+                            * Popunjavate samo ako imate registrovan biznis.
+                        </div>
+                        <input 
+                            type="text" 
+                            name="crps_number" 
+                            class="form-control @error('crps_number') error @enderror"
+                            value="{{ old('crps_number') }}"
+                            maxlength="50"
+                        >
+                        @error('crps_number')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">*PIB:</label>
+                        <div class="form-text" style="margin-bottom: 8px; color: #6b7280; font-size: 12px;">
+                            * Popunjavate samo ako imate registrovan biznis.
+                        </div>
+                        <input 
+                            type="text" 
+                            name="pib" 
+                            class="form-control @error('pib') error @enderror"
+                            value="{{ old('pib', auth()->user()->pib) }}"
+                            maxlength="50"
+                        >
+                        @error('pib')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">*Broj žiro računa:</label>
+                        <div class="form-text" style="margin-bottom: 8px; color: #6b7280; font-size: 12px;">
+                            * Popunjavate samo ako imate registrovan biznis.
+                        </div>
+                        <input 
+                            type="text" 
+                            name="bank_account" 
+                            class="form-control @error('bank_account') error @enderror"
+                            value="{{ old('bank_account') }}"
+                            maxlength="50"
+                            placeholder="Npr. 510-0000000000123-45"
+                        >
+                        @error('bank_account')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">*Web site:</label>
+                        <div class="form-text" style="margin-bottom: 8px; color: #6b7280; font-size: 12px;">
+                            * Popunjavate samo ako imate registrovan biznis.
+                        </div>
+                        <input 
+                            type="url" 
+                            name="website" 
+                            class="form-control @error('website') error @enderror"
+                            value="{{ old('website') }}"
+                            maxlength="255"
+                            placeholder="https://example.com"
+                        >
+                        @error('website')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">**Broj PDV registracije:</label>
+                        <div class="form-text" style="margin-bottom: 8px; color: #6b7280; font-size: 12px;">
+                            ** Popunjavate samo ako ste obveznik PDV-a.
+                        </div>
+                        <input 
+                            type="text" 
+                            name="vat_number" 
+                            class="form-control @error('vat_number') error @enderror"
+                            value="{{ old('vat_number') }}"
+                            maxlength="50"
+                            placeholder="Npr. ME123456789"
+                        >
+                        @error('vat_number')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Oblast u kojoj planirate realizaciju biznis plana:</label>
+                        <input 
+                            type="text" 
+                            name="business_area" 
+                            class="form-control @error('business_area') error @enderror"
+                            value="{{ old('business_area') }}"
+                            maxlength="255"
+                            placeholder="Npr. IT usluge, turizam, poljoprivreda..."
+                        >
+                        @error('business_area')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <!-- Izjava o tačnosti podataka -->
+                    <div class="form-group" style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
+                        <p style="color: #374151; font-size: 14px; line-height: 1.8; margin: 0;">
+                            Kao podnosilac prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sekcija 2b: Podaci o DOO (samo ako je izabran DOO) -->
             <div class="form-card conditional-field" id="dooFields">
                 <div class="form-section">
                     <h2>2. Podaci o DOO</h2>
@@ -718,6 +911,7 @@
     //        'ostalo' = Ostali pravni subjekti (automatski is_registered = true)
     document.addEventListener('DOMContentLoaded', function() {
         const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"]');
+        const preduzetnicaFields = document.getElementById('preduzetnicaFields');
         const dooFields = document.getElementById('dooFields');
         const dooRequiredFields = dooFields ? dooFields.querySelectorAll('input[required]') : [];
         const ostaloFields = document.getElementById('ostaloFields');
@@ -732,6 +926,9 @@
             const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
             
             // Resetuj sve polja
+            if (preduzetnicaFields) {
+                preduzetnicaFields.classList.remove('show');
+            }
             if (dooFields) {
                 dooFields.classList.remove('show');
                 dooRequiredFields.forEach(field => {
@@ -802,7 +999,10 @@
                     accuracyDeclarationCheckbox.setAttribute('required', 'required');
                 }
             }
-            // Za 'preduzetnica' ne prikazujemo dodatna polja
+            // Prikaži sekciju za preduzetnice
+            if (selectedType === 'preduzetnica' && preduzetnicaFields) {
+                preduzetnicaFields.classList.add('show');
+            }
         }
 
         applicantTypeInputs.forEach(input => {

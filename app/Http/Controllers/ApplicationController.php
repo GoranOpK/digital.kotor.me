@@ -101,6 +101,13 @@ class ApplicationController extends Controller
             $rules['company_seat'] = 'required|string|max:255';
         }
 
+        // Dodatna polja za preduzetnice
+        if ($request->applicant_type === 'preduzetnica') {
+            $rules['crps_number'] = 'nullable|string|max:50';
+            // Koristimo postojeća polja za preduzetnice, ali dozvoljavamo i nova polja sa prefiksom preduzetnik_
+            // Ako postoje nova polja, koristimo ih, inače koristimo postojeća
+        }
+
         // Dodatna polja za fizičko lice BEZ registrovane djelatnosti
         // Ova polja se koriste samo za 'fizicko_lice' tip, ne za 'preduzetnica' (koja je takođe fizičko lice ali SA registrovanom djelatnošću)
         if ($request->applicant_type === 'fizicko_lice') {
@@ -166,6 +173,7 @@ class ApplicationController extends Controller
             'website' => $validated['website'] ?? null,
             'bank_account' => $validated['bank_account'] ?? null,
             'vat_number' => $validated['vat_number'] ?? null,
+            'crps_number' => ($validated['applicant_type'] === 'preduzetnica' && $request->has('crps_number')) ? $request->crps_number : null,
             // Automatsko postavljanje is_registered na osnovu tipa
             'is_registered' => $validated['applicant_type'] !== 'fizicko_lice',
             'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
