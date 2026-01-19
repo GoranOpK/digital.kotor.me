@@ -311,7 +311,7 @@
                             </label>
                             <div class="form-group">
                                 <label class="form-label">Oblik registracije:</label>
-                                <input type="text" name="registration_form" class="form-control" value="{{ old('registration_form', $businessPlan->registration_form ?? '') }}" placeholder="Preduzetnik / DOO / itd.">
+                                <input type="text" name="registration_form" class="form-control" value="{{ old('registration_form', $businessPlan->registration_form ?? ($defaultData['registration_form'] ?? '')) }}" placeholder="Preduzetnik / DOO / itd.">
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nosioca biznisa* i naziv društva za oblik registracije "DOO":</label>

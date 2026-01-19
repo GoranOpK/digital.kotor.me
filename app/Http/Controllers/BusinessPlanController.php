@@ -54,6 +54,7 @@ class BusinessPlanController extends Controller
 
         // Podaci o registrovanom biznisu - uzmi iz prijave
         $defaultData['has_registered_business'] = $application->is_registered ?? false;
+        $defaultData['registration_form'] = $application->registration_form ?? '';
         $defaultData['pib'] = $application->pib ?? $user->pib ?? '';
         $defaultData['vat_number'] = $application->vat_number ?? '';
         $defaultData['bank_account'] = $application->bank_account ?? '';
@@ -69,6 +70,7 @@ class BusinessPlanController extends Controller
                 'applicant_email' => $businessPlan->applicant_email ?? $defaultData['applicant_email'],
                 'applicant_address' => $businessPlan->applicant_address ?? $defaultData['applicant_address'],
                 'has_registered_business' => $businessPlan->has_registered_business ?? $defaultData['has_registered_business'],
+                'registration_form' => $businessPlan->registration_form ?? $defaultData['registration_form'],
                 'pib' => $businessPlan->pib ?? $defaultData['pib'],
                 'vat_number' => $businessPlan->vat_number ?? $defaultData['vat_number'],
                 'bank_account' => $businessPlan->bank_account ?? $defaultData['bank_account'],
