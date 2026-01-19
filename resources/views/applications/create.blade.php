@@ -1473,6 +1473,9 @@
                 saveAsDraftBtn.style.display = 'none';
                 submitBtn.style.display = 'inline-block';
                 submitBtn.textContent = 'Sačuvaj prijavu';
+                // Ukloni name="save_as_draft" sa submitBtn da se ne šalje kao draft
+                submitBtn.removeAttribute('name');
+                submitBtn.removeAttribute('value');
                 submitButtonInfo.innerHTML = '<strong>Sačuvaj prijavu:</strong> Sačuvajte kompletnu prijavu i nastavite na popunjavanje biznis plana.';
             } else {
                 // Ako nije kompletan, prikaži "Sačuvaj kao nacrt" i sakrij "Sačuvaj prijavu"
