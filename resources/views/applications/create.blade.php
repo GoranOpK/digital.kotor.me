@@ -1327,34 +1327,52 @@
             // Proveri da li postoji existingApplication i osiguraj da su vrednosti vidljive
             const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
             if (hasExistingApplication) {
-                // Osiguraj da su sva polja u aktivnoj sekciji enabled
-                const activeSection = document.querySelector('.conditional-field.show');
-                if (activeSection) {
-                    const activeFields = activeSection.querySelectorAll('input, select, textarea');
-                    activeFields.forEach(field => {
-                        field.removeAttribute('disabled');
-                    });
-                    
-                    // Osiguraj da se business_stage radio button pravilno prikaže
-                    const existingBusinessStage = '{{ isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? $existingApplication->business_stage : '' }}';
-                    if (existingBusinessStage) {
-                        const businessStageRadio = activeSection.querySelector(`input[name="business_stage"][value="${existingBusinessStage}"]`);
-                        if (businessStageRadio) {
-                            businessStageRadio.checked = true;
-                            businessStageRadio.removeAttribute('disabled');
+                // Sačekaj još malo da se sekcija prikaže
+                setTimeout(function() {
+                    // Osiguraj da su sva polja u aktivnoj sekciji enabled
+                    const activeSection = document.querySelector('.conditional-field.show');
+                    if (activeSection) {
+                        const activeFields = activeSection.querySelectorAll('input, select, textarea');
+                        activeFields.forEach(field => {
+                            field.removeAttribute('disabled');
+                        });
+                        
+                        // Osiguraj da se business_stage radio button pravilno prikaže
+                        const existingBusinessStage = '{{ isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? addslashes($existingApplication->business_stage) : '' }}';
+                        if (existingBusinessStage) {
+                            const businessStageRadio = activeSection.querySelector(`input[name="business_stage"][value="${existingBusinessStage}"]`);
+                            if (businessStageRadio) {
+                                businessStageRadio.checked = true;
+                                businessStageRadio.removeAttribute('disabled');
+                                console.log('Set business_stage to:', existingBusinessStage);
+                            }
+                        }
+                        
+                        // Osiguraj da se PIB prikaže - proveri u aktivnoj sekciji
+                        const existingPib = '{{ isset($existingApplication) && $existingApplication && $existingApplication->pib ? addslashes($existingApplication->pib) : '' }}';
+                        console.log('Existing PIB from server:', existingPib);
+                        if (existingPib) {
+                            const pibField = activeSection.querySelector('input[name="pib"]');
+                            console.log('PIB field found:', pibField ? 'yes' : 'no');
+                            if (pibField) {
+                                console.log('PIB field current value:', pibField.value);
+                                pibField.value = existingPib;
+                                pibField.removeAttribute('disabled');
+                                console.log('PIB field set to:', pibField.value);
+                            } else {
+                                // Ako nije nađen u aktivnoj sekciji, proveri u svim sekcijama
+                                const allPibFields = form.querySelectorAll('input[name="pib"]');
+                                allPibFields.forEach(field => {
+                                    if (field.closest('.conditional-field.show')) {
+                                        field.value = existingPib;
+                                        field.removeAttribute('disabled');
+                                        console.log('PIB field set in all sections');
+                                    }
+                                });
+                            }
                         }
                     }
-                    
-                    // Osiguraj da se PIB prikaže
-                    const existingPib = '{{ isset($existingApplication) && $existingApplication && $existingApplication->pib ? $existingApplication->pib : '' }}';
-                    if (existingPib) {
-                        const pibField = activeSection.querySelector('input[name="pib"]');
-                        if (pibField && pibField.value !== existingPib) {
-                            pibField.value = existingPib;
-                            pibField.removeAttribute('disabled');
-                        }
-                    }
-                }
+                }, 300);
             }
         }, 200);
         
