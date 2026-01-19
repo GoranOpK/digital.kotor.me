@@ -106,7 +106,7 @@ class ApplicationController extends Controller
             'business_stage' => $isDraft ? 'nullable|in:započinjanje,razvoj' : 'required|in:započinjanje,razvoj',
             'business_area' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'requested_amount' => $isDraft ? 'nullable|numeric|min:0' : 'required|numeric|min:0',
-            'total_budget_needed' => $isDraft ? 'nullable|numeric|min:0' : 'required|numeric|min:0|gte:requested_amount',
+            'total_budget_needed' => $isDraft ? 'nullable|numeric|min:0' : 'required|numeric|min:0',
             'website' => 'nullable|url|max:255',
             'bank_account' => 'nullable|string|max:50',
             'vat_number' => 'nullable|string|max:50',
@@ -190,8 +190,18 @@ class ApplicationController extends Controller
                 ])->withInput();
             }
         }
+        
+        // Proveri da li je total_budget_needed >= requested_amount - samo ako nije draft i oba su popunjena
+        if (!$isDraft && isset($validated['requested_amount']) && isset($validated['total_budget_needed'])) {
+            if ($validated['total_budget_needed'] < $validated['requested_amount']) {
+                return back()->withErrors([
+                    'total_budget_needed' => 'Ukupan budžet mora biti veći ili jednak traženom iznosu.'
+                ])->withInput();
+            }
+        }
 
         // Proveri da li već postoji draft prijava za ovaj konkurs
+        // Proveri SVE aplikacije (draft i submitted) da ne bi pravio duplikate
         $existingApplication = Application::where('competition_id', $competition->id)
             ->where('user_id', Auth::id())
             ->where('status', 'draft')
@@ -199,7 +209,8 @@ class ApplicationController extends Controller
 
         \Log::info('Existing application check: ' . ($existingApplication ? 'found ID: ' . $existingApplication->id : 'not found'));
 
-        if ($existingApplication) {
+        try {
+            if ($existingApplication) {
             // Ažuriraj postojeću draft prijavu
             // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
             $existingApplication->update([
@@ -227,47 +238,52 @@ class ApplicationController extends Controller
                 'previous_support_declaration' => $request->has('previous_support_declaration'),
             ]);
 
-            $application = $existingApplication;
-            \Log::info('Updated existing application ID: ' . $application->id);
-        } else {
-            // Kreiraj novu prijavu
-            \Log::info('Creating new application...');
-            // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
-            // VAŽNO: Automatsko postavljanje is_registered na osnovu tipa podnosioca:
-            // - 'fizicko_lice' → is_registered = false (nema registrovanu djelatnost)
-            // - 'preduzetnica' → is_registered = true (preduzetnik ima registrovanu djelatnost)
-            // - 'doo' → is_registered = true (DOO ima registrovanu djelatnost)
-            // - 'ostalo' → is_registered = true (ostali pravni subjekti imaju registrovanu djelatnost)
-            $application = Application::create([
-                'competition_id' => $competition->id,
-                'user_id' => Auth::id(),
-                'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : null,
-                'applicant_type' => $request->filled('applicant_type') ? $request->applicant_type : null,
-                'business_stage' => $request->filled('business_stage') ? $request->business_stage : null,
-                'founder_name' => $request->filled('founder_name') ? $request->founder_name : null,
-                'director_name' => $request->filled('director_name') ? $request->director_name : null,
-                'company_seat' => $request->filled('company_seat') ? $request->company_seat : null,
-                // Polja za fizičko lice BEZ registrovane djelatnosti (samo za 'fizicko_lice' tip)
-                'physical_person_name' => $request->filled('physical_person_name') ? $request->physical_person_name : null,
-                'physical_person_jmbg' => $request->filled('physical_person_jmbg') ? $request->physical_person_jmbg : null,
-                'physical_person_phone' => $request->filled('physical_person_phone') ? $request->physical_person_phone : null,
-                'physical_person_email' => $request->filled('physical_person_email') ? $request->physical_person_email : null,
-                'requested_amount' => $request->filled('requested_amount') ? $request->requested_amount : null,
-                'total_budget_needed' => $request->filled('total_budget_needed') ? $request->total_budget_needed : null,
-                'business_area' => $request->filled('business_area') ? $request->business_area : null,
-                'website' => $request->filled('website') ? $request->website : null,
-                'bank_account' => $request->filled('bank_account') ? $request->bank_account : null,
-                'vat_number' => $request->filled('vat_number') ? $request->vat_number : null,
-                'crps_number' => $request->filled('crps_number') ? $request->crps_number : null,
-                'registration_form' => $request->filled('registration_form') ? $request->registration_form : null,
-                // Automatsko postavljanje is_registered na osnovu tipa
-                'is_registered' => $request->filled('applicant_type') ? ($request->applicant_type !== 'fizicko_lice') : false,
-                'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
-                'de_minimis_declaration' => $request->has('de_minimis_declaration') && ($request->de_minimis_declaration == '1' || $request->de_minimis_declaration === true),
-                'previous_support_declaration' => $request->has('previous_support_declaration'),
-                'status' => 'draft', // Draft dok se ne prilože svi dokumenti
-            ]);
-            \Log::info('Created new application ID: ' . $application->id);
+                $application = $existingApplication;
+                \Log::info('Updated existing application ID: ' . $application->id);
+            } else {
+                // Kreiraj novu prijavu
+                \Log::info('Creating new application...');
+                // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
+                // VAŽNO: Automatsko postavljanje is_registered na osnovu tipa podnosioca:
+                // - 'fizicko_lice' → is_registered = false (nema registrovanu djelatnost)
+                // - 'preduzetnica' → is_registered = true (preduzetnik ima registrovanu djelatnost)
+                // - 'doo' → is_registered = true (DOO ima registrovanu djelatnost)
+                // - 'ostalo' → is_registered = true (ostali pravni subjekti imaju registrovanu djelatnost)
+                $application = Application::create([
+                    'competition_id' => $competition->id,
+                    'user_id' => Auth::id(),
+                    'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : null,
+                    'applicant_type' => $request->filled('applicant_type') ? $request->applicant_type : null,
+                    'business_stage' => $request->filled('business_stage') ? $request->business_stage : null,
+                    'founder_name' => $request->filled('founder_name') ? $request->founder_name : null,
+                    'director_name' => $request->filled('director_name') ? $request->director_name : null,
+                    'company_seat' => $request->filled('company_seat') ? $request->company_seat : null,
+                    // Polja za fizičko lice BEZ registrovane djelatnosti (samo za 'fizicko_lice' tip)
+                    'physical_person_name' => $request->filled('physical_person_name') ? $request->physical_person_name : null,
+                    'physical_person_jmbg' => $request->filled('physical_person_jmbg') ? $request->physical_person_jmbg : null,
+                    'physical_person_phone' => $request->filled('physical_person_phone') ? $request->physical_person_phone : null,
+                    'physical_person_email' => $request->filled('physical_person_email') ? $request->physical_person_email : null,
+                    'requested_amount' => $request->filled('requested_amount') ? $request->requested_amount : null,
+                    'total_budget_needed' => $request->filled('total_budget_needed') ? $request->total_budget_needed : null,
+                    'business_area' => $request->filled('business_area') ? $request->business_area : null,
+                    'website' => $request->filled('website') ? $request->website : null,
+                    'bank_account' => $request->filled('bank_account') ? $request->bank_account : null,
+                    'vat_number' => $request->filled('vat_number') ? $request->vat_number : null,
+                    'crps_number' => $request->filled('crps_number') ? $request->crps_number : null,
+                    'registration_form' => $request->filled('registration_form') ? $request->registration_form : null,
+                    // Automatsko postavljanje is_registered na osnovu tipa
+                    'is_registered' => $request->filled('applicant_type') ? ($request->applicant_type !== 'fizicko_lice') : false,
+                    'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
+                    'de_minimis_declaration' => $request->has('de_minimis_declaration') && ($request->de_minimis_declaration == '1' || $request->de_minimis_declaration === true),
+                    'previous_support_declaration' => $request->has('previous_support_declaration'),
+                    'status' => 'draft', // Draft dok se ne prilože svi dokumenti
+                ]);
+                \Log::info('Created new application ID: ' . $application->id);
+            }
+        } catch (\Exception $e) {
+            \Log::error('Error creating/updating application: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            return back()->withErrors(['error' => 'Greška pri čuvanju prijave: ' . $e->getMessage()])->withInput();
         }
 
         // Refresh aplikaciju da dobijemo ažurirane podatke (posebno važno za existingApplication)
