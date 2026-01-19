@@ -1600,6 +1600,23 @@
                         });
                     });
                     
+                    // VAŽNO: Osiguraj da se applicant_type šalje - ukloni disabled sa svih radio button-a
+                    const allApplicantTypeRadios = form.querySelectorAll('input[name="applicant_type"]');
+                    allApplicantTypeRadios.forEach(radio => {
+                        radio.removeAttribute('disabled');
+                    });
+                    
+                    // VAŽNO: Eksplicitno osiguraj da se checked status postavi na prvi radio button za applicant_type
+                    const checkedApplicantTypeRadio = form.querySelector('input[name="applicant_type"][type="radio"]:checked');
+                    if (!checkedApplicantTypeRadio) {
+                        // Ako nijedan nije checked, postavi default na "preduzetnica" (ili prvi dostupan)
+                        const defaultApplicantTypeRadio = form.querySelector('input[name="applicant_type"][type="radio"][value="preduzetnica"]') 
+                            || form.querySelector('input[name="applicant_type"][type="radio"]');
+                        if (defaultApplicantTypeRadio) {
+                            defaultApplicantTypeRadio.checked = true;
+                        }
+                    }
+                    
                     // VAŽNO: Osiguraj da se business_stage šalje - ukloni disabled sa svih radio button-a
                     // Ovo mora biti na kraju, nakon što smo kopirali vrednosti i obrisali iz sakrivenih sekcija
                     const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
@@ -1639,6 +1656,12 @@
             
             // Normalan submit (za "Sačuvaj prijavu" dugme)
             form.addEventListener('submit', function(e) {
+                // VAŽNO: Ukloni disabled sa radio button-a za applicant_type
+                const allApplicantTypeRadios = form.querySelectorAll('input[name="applicant_type"]');
+                allApplicantTypeRadios.forEach(radio => {
+                    radio.removeAttribute('disabled');
+                });
+                
                 // VAŽNO: Ukloni disabled sa radio button-a za business_stage u svim sekcijama PRVO
                 const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
                 allBusinessStageRadios.forEach(radio => {
