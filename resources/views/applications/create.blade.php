@@ -1529,72 +1529,10 @@
                         field.removeAttribute('required');
                     });
                     
-                    // VAŽNO: Ukloni disabled sa svih polja PRVO da bi mogli da pročitamo vrednosti
-                    // OVO JE KRITIČNO - mora biti pre kopiranja vrednosti!
-                    const allFields = form.querySelectorAll('input, select, textarea');
-                    allFields.forEach(field => {
-                        field.removeAttribute('disabled');
-                    });
+                    // VAŽNO: Jednostavniji pristup - ukloni disabled samo iz aktivne sekcije i postavi disabled u sakrivenim
+                    // Ovo je sigurniji način jer ne kopiramo vrednosti, već samo kontrolišemo koja se šalju
                     
-                    // VAŽNO: Prvo proveri checked status za business_stage PRE kopiranja vrednosti
-                    // Pronađi checked radio button za business_stage (može biti u bilo kojoj sekciji)
-                    let checkedBusinessStageValue = null;
-                    const checkedBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]:checked');
-                    if (checkedBusinessStageRadio) {
-                        checkedBusinessStageValue = checkedBusinessStageRadio.value;
-                        console.log('BEFORE copy: Found checked business_stage:', checkedBusinessStageValue);
-                    }
-                    
-                    // VAŽNO: Prvo kopiraj vrednosti iz aktivnog obrasca u prvo polje sa istim name atributom
-                    // Ovo mora biti pre brisanja vrednosti iz sakrivenih sekcija
-                    const activeSection = document.querySelector('.conditional-field.show');
-                    if (activeSection) {
-                        const activeFields = activeSection.querySelectorAll('input, select, textarea');
-                        activeFields.forEach(activeField => {
-                            if (activeField.name && activeField.name !== 'save_as_draft' && activeField.name !== '_token') {
-                                // Posebna logika za radio button-e
-                                if (activeField.type === 'radio') {
-                                    // Ako je radio button checked u aktivnoj sekciji
-                                    if (activeField.checked) {
-                                        const checkedValue = activeField.value;
-                                        // Pronađi prvi radio button sa istim name atributom u formi
-                                        const firstRadioWithSameName = form.querySelector(`input[name="${activeField.name}"][type="radio"]`);
-                                        if (firstRadioWithSameName) {
-                                            // Postavi checked na sve radio button-e sa istom vrednošću
-                                            const allRadiosWithSameName = form.querySelectorAll(`input[name="${activeField.name}"][type="radio"]`);
-                                            allRadiosWithSameName.forEach(radio => {
-                                                if (radio.value === checkedValue) {
-                                                    radio.checked = true;
-                                                } else {
-                                                    radio.checked = false;
-                                                }
-                                            });
-                                            // Ako aktivni radio button nije prvi u DOM-u, obriši mu checked status
-                                            if (firstRadioWithSameName !== activeField) {
-                                                activeField.checked = false;
-                                            }
-                                        }
-                                    }
-                                } else if (activeField.type === 'checkbox') {
-                                    // Za checkbox-ove, kopiraj checked status
-                                    const firstCheckboxWithSameName = form.querySelector(`input[name="${activeField.name}"][type="checkbox"]`);
-                                    if (firstCheckboxWithSameName && firstCheckboxWithSameName !== activeField) {
-                                        firstCheckboxWithSameName.checked = activeField.checked;
-                                        activeField.checked = false;
-                                    }
-                                } else {
-                                    // Za ostala polja (input, select, textarea), kopiraj vrednost
-                                    const firstFieldWithSameName = form.querySelector(`[name="${activeField.name}"]`);
-                                    if (firstFieldWithSameName && firstFieldWithSameName !== activeField && firstFieldWithSameName.type !== 'radio' && firstFieldWithSameName.type !== 'checkbox') {
-                                        firstFieldWithSameName.value = activeField.value;
-                                        activeField.value = '';
-                                    }
-                                }
-                            }
-                        });
-                    }
-                    
-                    // VAŽNO: Osiguraj da se applicant_type šalje
+                    // 1. Osiguraj da se applicant_type šalje - ukloni disabled sa svih
                     const allApplicantTypeRadios = form.querySelectorAll('input[name="applicant_type"]');
                     allApplicantTypeRadios.forEach(radio => {
                         radio.removeAttribute('disabled');
@@ -1608,67 +1546,41 @@
                         }
                     }
                     
-                    // VAŽNO: Osiguraj da se business_stage šalje koristeći vrednost koju smo sačuvali PRE kopiranja
+                    // 2. Ukloni disabled sa svih polja u aktivnoj sekciji
+                    const activeSection = document.querySelector('.conditional-field.show');
+                    if (activeSection) {
+                        const activeFields = activeSection.querySelectorAll('input, select, textarea');
+                        activeFields.forEach(field => {
+                            field.removeAttribute('disabled');
+                        });
+                    }
+                    
+                    // 3. Postavi disabled na sva polja u sakrivenim sekcijama (osim applicant_type)
+                    const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
+                    hiddenSections.forEach(section => {
+                        const allFieldsInSection = section.querySelectorAll('input, select, textarea');
+                        allFieldsInSection.forEach(field => {
+                            if (field.name !== 'applicant_type') {
+                                field.setAttribute('disabled', 'disabled');
+                            }
+                        });
+                    });
+                    
+                    // 4. Osiguraj da se business_stage šalje - ukloni disabled sa svih radio button-a
+                    // Browser će poslati samo one koji nisu disabled
                     const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
                     allBusinessStageRadios.forEach(radio => {
                         radio.removeAttribute('disabled');
                     });
                     
-                    // Ako smo ranije našli checked radio button, koristi tu vrednost
-                    if (checkedBusinessStageValue) {
-                        console.log('AFTER copy: Setting business_stage to:', checkedBusinessStageValue);
-                        // Postavi checked na SVE radio button-e sa istom vrednošću (da browser pošalje prvi)
-                        const allBusinessStageRadiosWithSameValue = form.querySelectorAll(`input[name="business_stage"][type="radio"][value="${checkedBusinessStageValue}"]`);
-                        allBusinessStageRadiosWithSameValue.forEach(radio => {
-                            radio.checked = true;
-                            radio.removeAttribute('disabled');
-                        });
-                        
-                        // Obriši checked status iz svih ostalih radio button-a
-                        const allOtherBusinessStageRadios = form.querySelectorAll(`input[name="business_stage"][type="radio"]:not([value="${checkedBusinessStageValue}"])`);
-                        allOtherBusinessStageRadios.forEach(radio => {
-                            radio.checked = false;
-                        });
-                    } else {
-                        // Ako nijedan nije checked, proveri ponovo (možda se postavio tokom kopiranja)
-                        const checkedBusinessStageRadioAfter = form.querySelector('input[name="business_stage"][type="radio"]:checked');
+                    // 5. Proveri da li postoji checked business_stage - ako ne, postavi default
+                    const checkedBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]:checked');
+                    if (!checkedBusinessStageRadio) {
                         const firstBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]');
-                        if (!checkedBusinessStageRadioAfter && firstBusinessStageRadio) {
-                            // Ako i dalje nijedan nije checked, postavi prvi na checked (default "započinjanje")
+                        if (firstBusinessStageRadio) {
                             firstBusinessStageRadio.checked = true;
-                            console.log('No checked business_stage found, setting default to započinjanje');
                         }
                     }
-                    
-                    // VAŽNO: Obriši vrednosti iz polja u sakrivenim sekcijama da se ne šalju duplikati
-                    // (browser šalje samo prvo polje sa istim name atributom)
-                    // OVO MORA BITI NAKON što smo postavili checked status na prvi radio button!
-                    const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
-                    hiddenSections.forEach(section => {
-                        const allFieldsInSection = section.querySelectorAll('input, select, textarea');
-                        allFieldsInSection.forEach(field => {
-                            // NE obriši checked status za business_stage radio button-e jer smo ih već postavili na prvi
-                            if (field.name === 'business_stage' && field.type === 'radio') {
-                                // Ostavi checked status kako smo ga postavili
-                                field.setAttribute('disabled', 'disabled');
-                                return;
-                            }
-                            
-                            if (field.type === 'checkbox' || field.type === 'radio') {
-                                field.checked = false;
-                            } else {
-                                field.value = '';
-                            }
-                            // Postavi disabled da se sigurno ne šalje
-                            field.setAttribute('disabled', 'disabled');
-                        });
-                    });
-                    
-                    // VAŽNO: Na kraju, ponovo ukloni disabled sa business_stage radio button-a da se šalje
-                    const allBusinessStageRadiosFinal = form.querySelectorAll('input[name="business_stage"]');
-                    allBusinessStageRadiosFinal.forEach(radio => {
-                        radio.removeAttribute('disabled');
-                    });
                     
                     // Submit-uj formu
                     form.submit();
