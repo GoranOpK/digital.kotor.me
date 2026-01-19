@@ -394,7 +394,27 @@
                         >
                             <option value="">Izaberite oblik registracije</option>
                             @php
-                                $defaultRegistrationForm = old('registration_form', auth()->user()->user_type ?? '');
+                                // Automatski postavi na osnovu tipa prijave ili user_type iz registracije
+                                $defaultRegistrationForm = old('registration_form', '');
+                                $userType = auth()->user()->user_type ?? '';
+                                $defaultApplicantType = old('applicant_type', $defaultType ?? '');
+                                
+                                // Ako nema old value, koristi user_type ako postoji i nije "Fizičko lice"
+                                if (empty($defaultRegistrationForm) && $userType && $userType !== 'Fizičko lice') {
+                                    $defaultRegistrationForm = $userType;
+                                }
+                                
+                                // Ako i dalje nema vrednost, postavi na osnovu tipa prijave
+                                if (empty($defaultRegistrationForm)) {
+                                    if ($defaultApplicantType === 'preduzetnica') {
+                                        $defaultRegistrationForm = 'Preduzetnik';
+                                    } elseif ($defaultApplicantType === 'doo') {
+                                        $defaultRegistrationForm = 'Društvo sa ograničenom odgovornošću';
+                                    } else {
+                                        // Podrazumevano za obrazac 1a
+                                        $defaultRegistrationForm = 'Preduzetnik';
+                                    }
+                                }
                             @endphp
                             <option value="Preduzetnik" {{ $defaultRegistrationForm === 'Preduzetnik' ? 'selected' : '' }}>Preduzetnik</option>
                             <option value="Ortačko društvo" {{ $defaultRegistrationForm === 'Ortačko društvo' ? 'selected' : '' }}>Ortačko društvo</option>
@@ -634,9 +654,30 @@
                         >
                             <option value="">Izaberite oblik registracije</option>
                             @php
-                                $defaultRegistrationForm = old('registration_form', auth()->user()->user_type ?? '');
+                                // Automatski postavi na osnovu tipa prijave ili user_type iz registracije
+                                $defaultRegistrationForm1b = old('registration_form', '');
+                                $userType = auth()->user()->user_type ?? '';
+                                $defaultApplicantType = old('applicant_type', $defaultType ?? '');
+                                
+                                // Ako nema old value, koristi user_type ako postoji i nije "Fizičko lice"
+                                if (empty($defaultRegistrationForm1b) && $userType && $userType !== 'Fizičko lice') {
+                                    $defaultRegistrationForm1b = $userType;
+                                }
+                                
+                                // Ako i dalje nema vrednost, postavi na osnovu tipa prijave
+                                if (empty($defaultRegistrationForm1b)) {
+                                    if ($defaultApplicantType === 'doo') {
+                                        $defaultRegistrationForm1b = 'Društvo sa ograničenom odgovornošću';
+                                    } elseif ($defaultApplicantType === 'ostalo') {
+                                        // Za "Ostalo" ne postavljamo automatski, korisnik bira
+                                        $defaultRegistrationForm1b = '';
+                                    } else {
+                                        // Podrazumevano za obrazac 1b
+                                        $defaultRegistrationForm1b = 'Društvo sa ograničenom odgovornošću';
+                                    }
+                                }
                             @endphp
-                            <option value="Preduzetnik" {{ $defaultRegistrationForm === 'Preduzetnik' ? 'selected' : '' }}>Preduzetnik</option>
+                            <option value="Preduzetnik" {{ $defaultRegistrationForm1b === 'Preduzetnik' ? 'selected' : '' }}>Preduzetnik</option>
                             <option value="Ortačko društvo" {{ $defaultRegistrationForm === 'Ortačko društvo' ? 'selected' : '' }}>Ortačko društvo</option>
                             <option value="Komanditno društvo" {{ $defaultRegistrationForm === 'Komanditno društvo' ? 'selected' : '' }}>Komanditno društvo</option>
                             <option value="Društvo sa ograničenom odgovornošću" {{ $defaultRegistrationForm === 'Društvo sa ograničenom odgovornošću' ? 'selected' : '' }}>Društvo sa ograničenom odgovornošću</option>
@@ -1290,8 +1331,8 @@
             if (selectedType === 'preduzetnica') {
                 const registrationForm1a = document.getElementById('registration_form_1a');
                 if (registrationForm1a) {
-                    // Postavi vrednost samo ako je polje prazno
-                    if (!registrationForm1a.value || registrationForm1a.value === '') {
+                    // Postavi vrednost samo ako je polje prazno ili je "Izaberite oblik registracije"
+                    if (!registrationForm1a.value || registrationForm1a.value === '' || registrationForm1a.value === '0') {
                         if (userRegistrationForm && userRegistrationForm !== 'Fizičko lice' && userRegistrationForm.trim() !== '') {
                             registrationForm1a.value = userRegistrationForm;
                         } else {
@@ -1302,8 +1343,8 @@
             } else if (selectedType === 'doo') {
                 const registrationForm1b = document.getElementById('registration_form_1b');
                 if (registrationForm1b) {
-                    // Postavi vrednost samo ako je polje prazno
-                    if (!registrationForm1b.value || registrationForm1b.value === '') {
+                    // Postavi vrednost samo ako je polje prazno ili je "Izaberite oblik registracije"
+                    if (!registrationForm1b.value || registrationForm1b.value === '' || registrationForm1b.value === '0') {
                         if (userRegistrationForm && userRegistrationForm !== 'Fizičko lice' && userRegistrationForm.trim() !== '') {
                             registrationForm1b.value = userRegistrationForm;
                         } else {
@@ -1315,12 +1356,13 @@
         }
         
         // Pozovi funkciju nakon kratkog vremena da se osiguramo da je DOM spreman
-        setTimeout(setRegistrationForm, 200);
+        setTimeout(setRegistrationForm, 300);
         
         // Takođe pozovi kada se promeni tip prijave
         applicantTypeInputs.forEach(input => {
             input.addEventListener('change', function() {
-                setTimeout(setRegistrationForm, 100);
+                toggleFieldsByApplicantType();
+                setTimeout(setRegistrationForm, 200);
             });
         });
 
