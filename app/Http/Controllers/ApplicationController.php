@@ -88,8 +88,11 @@ class ApplicationController extends Controller
             'de_minimis_declaration' => 'required|accepted',
         ];
 
-        // Izjava o tačnosti je obavezna za sve tipove podnosioca
-        $rules['accuracy_declaration'] = 'required|accepted';
+        // Izjava o tačnosti je obavezna samo za fizičko lice BEZ registrovane djelatnosti
+        // Preduzetnica, DOO i Ostalo automatski imaju registrovanu djelatnost
+        if ($request->applicant_type === 'fizicko_lice') {
+            $rules['accuracy_declaration'] = 'required|accepted';
+        }
 
         // Dodatna polja za DOO i Ostalo (ista polja)
         if ($request->applicant_type === 'doo' || $request->applicant_type === 'ostalo') {

@@ -1003,7 +1003,9 @@
                             >
                             <label for="de_minimis_declaration">
                                 Izjavljujem da će ukupna de minimis podrška koju sam dobio/la u posljednje tri godine 
-                                biti u skladu sa propisima Evropske unije o de minimis podršci 
+                                biti u skladu sa propisima Evropske unije o de minimis podršci. 
+                                Obrazac za pomoć male vrijednosti nalazi se na sajtu Agencije za zaštitu konkurencije 
+                                (<a href="https://azzk.me/obrasci-drzavne-pomoci/" target="_blank" rel="noopener noreferrer">https://azzk.me/obrasci-drzavne-pomoci/</a>).
                                 <span class="required">*</span>
                             </label>
                         </div>
@@ -1022,29 +1024,10 @@
                                 {{ old('previous_support_declaration') ? 'checked' : '' }}
                             >
                             <label for="previous_support_declaration">
-                                Prethodno sam dobio/la podršku iz budžeta Opštine Kotor za žensko preduzetništvo
+                                Prethodno sam dobio/la podršku iz budžeta Opštine Kotor za žensko preduzetništvo po javnom konkursu u prethodnoj godini. 
+                                (Ukoliko je ova izjava tačna, priložiću Izvještaj o realizaciji biznis plana (obrazac 4) sa Finansijskim izvještajem (obrazac 4a) o utrošenim sredstvima za prethodnu godinu, sa kopijama računa, ugovora i izvoda banke po kojima su isti plaćeni.)
                             </label>
                         </div>
-                    </div>
-
-                    <!-- Izjava o tačnosti podataka (samo ako nema registrovanu djelatnost) -->
-                    <div class="form-group conditional-field" id="accuracyDeclarationGroup" style="display: none;">
-                        <div class="checkbox-group">
-                            <input 
-                                type="checkbox" 
-                                id="accuracy_declaration" 
-                                name="accuracy_declaration" 
-                                value="1"
-                                {{ old('accuracy_declaration') ? 'checked' : '' }}
-                            >
-                            <label for="accuracy_declaration">
-                                Izjavljujem da za tačnost datih podataka odgovaram kao podnosioc prijave 
-                                <span class="required">*</span>
-                            </label>
-                        </div>
-                        @error('accuracy_declaration')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
                     </div>
                 </div>
             </div>
@@ -1075,8 +1058,6 @@
         const fizickoLiceFields = document.getElementById('fizickoLiceFields');
         const fizickoLiceRequiredFields = fizickoLiceFields ? fizickoLiceFields.querySelectorAll('input[required], input[name="physical_person_name"], input[name="physical_person_jmbg"], input[name="physical_person_phone"], input[name="physical_person_email"]') : [];
         const fizickoLiceNotice = document.getElementById('fizickoLiceNotice');
-        const accuracyDeclarationGroup = document.getElementById('accuracyDeclarationGroup');
-        const accuracyDeclarationCheckbox = document.getElementById('accuracy_declaration');
 
         function toggleFieldsByApplicantType() {
             const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
@@ -1095,15 +1076,9 @@
                 });
             }
 
-            // Resetuj napomenu i izjavu o tačnosti
+            // Resetuj napomenu
             if (fizickoLiceNotice) {
                 fizickoLiceNotice.style.display = 'none';
-            }
-            if (accuracyDeclarationGroup) {
-                accuracyDeclarationGroup.style.display = 'none';
-            }
-            if (accuracyDeclarationCheckbox) {
-                accuracyDeclarationCheckbox.removeAttribute('required');
             }
 
             // Prikaži/sakrij obrazce na osnovu tipa
@@ -1138,13 +1113,6 @@
                     fizickoLiceRequiredFields.forEach(field => {
                         field.setAttribute('required', 'required');
                     });
-                }
-                // Prikaži izjavu o tačnosti (obavezna za fizička lica bez registrovane djelatnosti)
-                if (accuracyDeclarationGroup) {
-                    accuracyDeclarationGroup.style.display = 'block';
-                }
-                if (accuracyDeclarationCheckbox) {
-                    accuracyDeclarationCheckbox.setAttribute('required', 'required');
                 }
             }
         }
