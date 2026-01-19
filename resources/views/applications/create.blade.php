@@ -1656,6 +1656,14 @@
             
             // Normalan submit (za "Sačuvaj prijavu" dugme)
             form.addEventListener('submit', function(e) {
+                // VAŽNO: Ukloni save_as_draft hidden input ako postoji
+                // (ovo osigurava da se forma ne šalje kao draft kada je obrazac kompletan)
+                const saveAsDraftInput = form.querySelector('input[name="save_as_draft"]');
+                if (saveAsDraftInput) {
+                    saveAsDraftInput.remove();
+                    console.log('Removed save_as_draft input before submit');
+                }
+                
                 // VAŽNO: Ukloni disabled sa radio button-a za applicant_type
                 const allApplicantTypeRadios = form.querySelectorAll('input[name="applicant_type"]');
                 allApplicantTypeRadios.forEach(radio => {
