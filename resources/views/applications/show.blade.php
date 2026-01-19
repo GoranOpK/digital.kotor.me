@@ -463,9 +463,15 @@
                                 ];
                                 $statusClass = 'status-' . $application->status;
                             @endphp
-                            <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">
-                                {{ $statusLabels[$application->status] ?? $application->status }}
-                            </span>
+                            @if($application->status === 'draft')
+                                <a href="{{ route('applications.create', $application->competition_id) }}" class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: underline; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.opacity='0.8';" onmouseout="this.style.opacity='1';" title="Kliknite da nastavite popunjavanje prijave">
+                                    {{ $statusLabels[$application->status] ?? $application->status }} →
+                                </a>
+                            @else
+                                <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">
+                                    {{ $statusLabels[$application->status] ?? $application->status }}
+                                </span>
+                            @endif
                         </span>
                     </div>
                     <div class="info-item" style="margin-bottom: 16px;">
