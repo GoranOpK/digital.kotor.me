@@ -335,15 +335,17 @@ class ApplicationController extends Controller
         \Log::info('isObrazacComplete: ' . ($isObrazacComplete ? 'true' : 'false'));
         \Log::info('=== End Debug ===');
 
-        if ($isDraft) {
+        // VAŽNO: Prvo proveri da li je obrazac kompletan, pa tek onda proveri da li je draft
+        // Ako je obrazac kompletan, preusmeri na formu za biznis plan (bez obzira na $isDraft)
+        if ($isObrazacComplete) {
+            // Ako je obrazac kompletno popunjen, preusmeri na formu za biznis plan
+            return redirect()->route('applications.business-plan.create', $application)
+                ->with('success', 'Obrazac 1a/1b je kompletno popunjen. Sada popunite biznis plan.');
+        } elseif ($isDraft) {
             // Ako je eksplicitno kliknuto "Sačuvaj kao nacrt", uvek čuvaj kao draft
             return redirect()->route('applications.create', $competition)
                 ->with('success', 'Prijava je sačuvana kao nacrt. Možete je nastaviti popunjavati.')
                 ->withInput();
-        } elseif ($isObrazacComplete) {
-            // Ako nije draft i obrazac je kompletno popunjen, preusmeri na formu za biznis plan
-            return redirect()->route('applications.business-plan.create', $application)
-                ->with('success', 'Obrazac 1a/1b je kompletno popunjen. Sada popunite biznis plan.');
         } else {
             // Ako nije kompletna (kliknuo "Sačuvaj prijavu" ali nisu sva polja popunjena), sačuvaj kao draft i vrati na formu
             return redirect()->route('applications.create', $competition)
