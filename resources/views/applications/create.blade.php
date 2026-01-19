@@ -1507,64 +1507,35 @@
         // Pripremi formu za submit - ukloni disabled sa svih polja
         const form = document.getElementById('applicationForm');
         if (form) {
-            let isDraftSave = false;
-            
-            // Označi da je kliknuto "Sačuvaj kao nacrt"
-            const saveAsDraftBtn = document.getElementById('saveAsDraftBtn');
-            if (saveAsDraftBtn) {
-                saveAsDraftBtn.addEventListener('click', function(e) {
-                    isDraftSave = true;
-                });
-            }
-
             form.addEventListener('submit', function(e) {
-                // Ako je kliknuto "Sačuvaj kao nacrt", spreči browser validaciju i ukloni sve required atribute
-                if (isDraftSave) {
-                    e.preventDefault(); // Spreči browser validaciju
-                    
-                    // Ukloni sve required atribute
-                    const allRequiredFields = form.querySelectorAll('[required]');
-                    allRequiredFields.forEach(field => {
-                        field.removeAttribute('required');
-                    });
-                    
-                    // Ukloni disabled sa radio button-a za business_stage
-                    const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
-                    allBusinessStageRadios.forEach(radio => {
-                        radio.removeAttribute('disabled');
-                    });
-                    
-                    // Ukloni disabled i required sa svih polja u sakrivenim sekcijama
-                    const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
-                    hiddenSections.forEach(section => {
-                        const allFields = section.querySelectorAll('input, select, textarea');
-                        allFields.forEach(field => {
-                            field.removeAttribute('required');
-                            field.removeAttribute('disabled');
-                        });
-                    });
-                    
-                    // Ručno submit-uj formu
-                    form.submit();
-                    return;
-                }
+                // Proveri da li je kliknuto "Sačuvaj kao nacrt" dugme
+                const clickedButton = e.submitter || (window.event ? window.event.submitter : null);
+                const isDraftSave = clickedButton && clickedButton.id === 'saveAsDraftBtn';
                 
-                // Ako nije draft save, nastavi sa normalnom validacijom
                 // VAŽNO: Ukloni disabled sa radio button-a za business_stage u svim sekcijama PRVO
+                // jer radio button-i moraju biti enabled da bi se njihova vrednost poslala
                 const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
                 allBusinessStageRadios.forEach(radio => {
                     radio.removeAttribute('disabled');
                 });
                 
-                // Ukloni disabled atribut sa svih polja u sakrivenim sekcijama
+                // Ukloni disabled i required sa svih polja u sakrivenim sekcijama
                 const hiddenSections = document.querySelectorAll('.conditional-field:not(.show)');
                 hiddenSections.forEach(section => {
                     const allFields = section.querySelectorAll('input, select, textarea');
                     allFields.forEach(field => {
                         field.removeAttribute('required');
-                        // Ostavi disabled - disabled polja se ne validiraju i ne šalju
+                        field.removeAttribute('disabled');
                     });
                 });
+                
+                // Ako je draft save, ukloni sve required atribute (dodatna sigurnost)
+                if (isDraftSave) {
+                    const allRequiredFields = form.querySelectorAll('[required]');
+                    allRequiredFields.forEach(field => {
+                        field.removeAttribute('required');
+                    });
+                }
             });
         }
     });
