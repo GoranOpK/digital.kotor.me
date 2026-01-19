@@ -1523,6 +1523,13 @@
                         // Ostavi disabled - disabled polja se ne validiraju i ne šalju
                     });
                 });
+                
+                // VAŽNO: Ukloni disabled sa radio button-a za business_stage u svim sekcijama
+                // jer radio button-i moraju biti enabled da bi se njihova vrednost poslala
+                const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
+                allBusinessStageRadios.forEach(radio => {
+                    radio.removeAttribute('disabled');
+                });
             });
         }
     });
