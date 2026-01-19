@@ -354,9 +354,15 @@
                                         $statusLabels = ['draft' => 'Nacrt', 'submitted' => 'U obradi', 'evaluated' => 'Ocjenjena', 'approved' => 'Odobrena', 'rejected' => 'Odbijena'];
                                         $statusColors = ['draft' => 'background: #fef3c7; color: #92400e;', 'submitted' => 'background: #dbeafe; color: #1e40af;', 'evaluated' => 'background: #d1fae5; color: #065f46;', 'approved' => 'background: #d1fae5; color: #065f46;', 'rejected' => 'background: #fee2e2; color: #991b1b;'];
                                     @endphp
-                                    <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; {{ $statusColors[$app->status] ?? '' }}">
-                                        {{ $statusLabels[$app->status] ?? $app->status }}
-                                    </span>
+                                    @if($app->status === 'draft')
+                                        <a href="{{ route('applications.create', $app->competition_id) }}" style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; text-decoration: none; {{ $statusColors[$app->status] ?? '' }}; cursor: pointer;">
+                                            {{ $statusLabels[$app->status] ?? $app->status }}
+                                        </a>
+                                    @else
+                                        <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; {{ $statusColors[$app->status] ?? '' }}">
+                                            {{ $statusLabels[$app->status] ?? $app->status }}
+                                        </span>
+                                    @endif
                                     <div style="display: flex; gap: 8px;">
                                         <a href="{{ route('applications.show', $app) }}" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 12px;">Pregled</a>
                                         <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Obrisati prijavu?');" style="display: inline;">
