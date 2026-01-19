@@ -1409,6 +1409,7 @@
 
             // Osnovna obavezna polja
             const businessPlanName = form.querySelector('input[name="business_plan_name"]');
+            // Proveri business_stage u svim sekcijama (može biti u obrazac1a, obrazac1b ili fizickoLiceFields)
             const businessStage = form.querySelector('input[name="business_stage"]:checked');
             const businessArea = form.querySelector('input[name="business_area"]');
             const requestedAmount = form.querySelector('input[name="requested_amount"]');
@@ -1417,7 +1418,10 @@
 
             // Proveri osnovna polja
             if (!businessPlanName || !businessPlanName.value.trim()) return false;
-            if (!businessStage) return false;
+            if (!businessStage || !businessStage.value) {
+                console.log('Business stage not selected');
+                return false;
+            }
             if (!businessArea || !businessArea.value.trim()) return false;
             if (!requestedAmount || !requestedAmount.value || parseFloat(requestedAmount.value) <= 0) return false;
             if (!totalBudgetNeeded || !totalBudgetNeeded.value || parseFloat(totalBudgetNeeded.value) <= 0) return false;
@@ -1441,21 +1445,14 @@
                 const directorName = form.querySelector('input[name="director_name"]');
                 const companySeat = form.querySelector('input[name="company_seat"]');
                 const registrationForm = form.querySelector('select[name="registration_form"]');
-                const pib = form.querySelector('input[name="pib"]');
 
                 if (!founderName || !founderName.value.trim()) return false;
                 if (!directorName || !directorName.value.trim()) return false;
                 if (!companySeat || !companySeat.value.trim()) return false;
                 if (!registrationForm || !registrationForm.value) return false;
-                // PIB je obavezan za DOO i ostalo
-                if (!pib || !pib.value.trim() || pib.value.trim().length !== 8) return false;
             } else if (applicantTypeValue === 'preduzetnica') {
                 const registrationForm = form.querySelector('select[name="registration_form"]');
-                const pib = form.querySelector('input[name="pib"]');
-                
                 if (!registrationForm || !registrationForm.value) return false;
-                // PIB je obavezan za preduzetnicu
-                if (!pib || !pib.value.trim() || pib.value.trim().length !== 8) return false;
             }
 
             return true;
