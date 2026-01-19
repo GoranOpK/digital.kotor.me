@@ -256,6 +256,9 @@ class ApplicationController extends Controller
             ]);
         }
 
+        // Refresh aplikaciju da dobijemo ažurirane podatke (posebno važno za existingApplication)
+        $application->refresh();
+        
         // Proveri da li je Obrazac 1a/1b kompletno popunjen (sva polja + checkbox-ovi)
         $isObrazacComplete = $application->isObrazacComplete();
 
@@ -269,9 +272,9 @@ class ApplicationController extends Controller
             return redirect()->route('applications.business-plan.create', $application)
                 ->with('success', 'Obrazac 1a/1b je kompletno popunjen. Sada popunite biznis plan.');
         } else {
-            // Ako nije kompletna, vrati na formu sa upozorenjem
+            // Ako nije kompletna (kliknuo "Sačuvaj prijavu" ali nisu sva polja popunjena), sačuvaj kao draft i vrati na formu
             return redirect()->route('applications.create', $competition)
-                ->with('warning', 'Prijava je sačuvana, ali još uvek nije kompletna. Molimo popunite sva obavezna polja i potvrdite sve obavezne izjave.')
+                ->with('warning', 'Prijava je sačuvana kao nacrt jer još uvek nisu popunjena sva obavezna polja. Molimo popunite sva obavezna polja i potvrdite sve obavezne izjave.')
                 ->withInput();
         }
     }
