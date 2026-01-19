@@ -1529,7 +1529,7 @@
                         field.removeAttribute('required');
                     });
                     
-                    // VAŽNO: Ukloni disabled sa SVIH polja u formi
+                    // VAŽNO: Ukloni disabled sa svih polja PRVO da bi mogli da pročitamo vrednosti
                     const allFields = form.querySelectorAll('input, select, textarea');
                     allFields.forEach(field => {
                         field.removeAttribute('disabled');
@@ -1546,14 +1546,23 @@
                                 if (activeField.type === 'radio') {
                                     // Ako je radio button checked u aktivnoj sekciji
                                     if (activeField.checked) {
-                                        // Pronađi prvi radio button sa istim name atributom u formi (može biti u bilo kojoj sekciji)
+                                        const checkedValue = activeField.value;
+                                        // Pronađi prvi radio button sa istim name atributom u formi
                                         const firstRadioWithSameName = form.querySelector(`input[name="${activeField.name}"][type="radio"]`);
-                                        if (firstRadioWithSameName && firstRadioWithSameName !== activeField) {
-                                            // Postavi checked na prvi radio button sa istom vrednošću
+                                        if (firstRadioWithSameName) {
+                                            // Postavi checked na sve radio button-e sa istom vrednošću
                                             const allRadiosWithSameName = form.querySelectorAll(`input[name="${activeField.name}"][type="radio"]`);
                                             allRadiosWithSameName.forEach(radio => {
-                                                radio.checked = (radio.value === activeField.value);
+                                                if (radio.value === checkedValue) {
+                                                    radio.checked = true;
+                                                } else {
+                                                    radio.checked = false;
+                                                }
                                             });
+                                            // Ako aktivni radio button nije prvi u DOM-u, obriši mu checked status
+                                            if (firstRadioWithSameName !== activeField) {
+                                                activeField.checked = false;
+                                            }
                                         }
                                     }
                                 } else if (activeField.type === 'checkbox') {
@@ -1561,12 +1570,14 @@
                                     const firstCheckboxWithSameName = form.querySelector(`input[name="${activeField.name}"][type="checkbox"]`);
                                     if (firstCheckboxWithSameName && firstCheckboxWithSameName !== activeField) {
                                         firstCheckboxWithSameName.checked = activeField.checked;
+                                        activeField.checked = false;
                                     }
                                 } else {
                                     // Za ostala polja (input, select, textarea), kopiraj vrednost
                                     const firstFieldWithSameName = form.querySelector(`[name="${activeField.name}"]`);
-                                    if (firstFieldWithSameName && firstFieldWithSameName !== activeField) {
+                                    if (firstFieldWithSameName && firstFieldWithSameName !== activeField && firstFieldWithSameName.type !== 'radio' && firstFieldWithSameName.type !== 'checkbox') {
                                         firstFieldWithSameName.value = activeField.value;
+                                        activeField.value = '';
                                     }
                                 }
                             }
@@ -1589,23 +1600,8 @@
                         });
                     });
                     
-                    // VAŽNO: Obriši checked status iz aktivnog radio button-a ako nije prvi u DOM-u
-                    // i osiguraj da se business_stage šalje - ukloni disabled sa svih radio button-a
-                    if (activeSection) {
-                        const activeRadioButtons = activeSection.querySelectorAll('input[type="radio"]');
-                        activeRadioButtons.forEach(activeRadio => {
-                            if (activeRadio.checked) {
-                                const firstRadioWithSameName = form.querySelector(`input[name="${activeRadio.name}"][type="radio"]`);
-                                if (firstRadioWithSameName && firstRadioWithSameName !== activeRadio) {
-                                    // Ako aktivni radio button nije prvi u DOM-u, obriši mu checked status
-                                    activeRadio.checked = false;
-                                    activeRadio.setAttribute('disabled', 'disabled');
-                                }
-                            }
-                        });
-                    }
-                    
-                    // Ukloni disabled sa svih radio button-a za business_stage (i svih ostalih polja)
+                    // VAŽNO: Osiguraj da se business_stage šalje - ukloni disabled sa svih radio button-a
+                    // Ovo mora biti na kraju, nakon što smo kopirali vrednosti i obrisali iz sakrivenih sekcija
                     const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
                     allBusinessStageRadios.forEach(radio => {
                         radio.removeAttribute('disabled');
