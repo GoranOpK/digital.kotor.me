@@ -478,21 +478,8 @@
                         <span class="info-label">Biznis Plan</span>
                         <span class="info-value">
                             @php
-                                // Proveri da li je Obrazac kompletno popunjen
-                                $isObrazacComplete = $application->business_plan_name && 
-                                    $application->applicant_type && 
-                                    $application->business_stage && 
-                                    $application->business_area && 
-                                    $application->requested_amount && 
-                                    $application->total_budget_needed &&
-                                    ($application->applicant_type === 'fizicko_lice' ? 
-                                        ($application->physical_person_name && $application->physical_person_jmbg && $application->physical_person_phone && $application->physical_person_email) :
-                                        ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo' ?
-                                            ($application->founder_name && $application->director_name && $application->company_seat) :
-                                            true
-                                        )
-                                    ) &&
-                                    ($application->applicant_type !== 'fizicko_lice' ? $application->registration_form : true);
+                                // Proveri da li je Obrazac kompletno popunjen koristeći metodu iz modela
+                                $isObrazacComplete = $application->isObrazacComplete();
                             @endphp
                             @if($application->businessPlan)
                                 <span style="color: #10b981; font-weight: 600;">✅ Popunjen</span>

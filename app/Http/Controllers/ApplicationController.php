@@ -256,35 +256,22 @@ class ApplicationController extends Controller
             ]);
         }
 
-        // Proveri da li je prijava kompletna (ima sve obavezne podatke)
-        $isComplete = $application->business_plan_name && 
-                     $application->applicant_type && 
-                     $application->business_stage && 
-                     $application->business_area && 
-                     $application->requested_amount && 
-                     $application->total_budget_needed &&
-                     ($application->applicant_type === 'fizicko_lice' ? 
-                        ($application->physical_person_name && $application->physical_person_jmbg && $application->physical_person_phone && $application->physical_person_email) :
-                        ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo' ?
-                            ($application->founder_name && $application->director_name && $application->company_seat) :
-                            true
-                        )
-                     ) &&
-                     ($application->applicant_type !== 'fizicko_lice' ? $application->registration_form : true);
+        // Proveri da li je Obrazac 1a/1b kompletno popunjen (sva polja + checkbox-ovi)
+        $isObrazacComplete = $application->isObrazacComplete();
 
         if ($isDraft) {
             // Ako je draft, vrati na formu za nastavak popunjavanja
             return redirect()->route('applications.create', $competition)
                 ->with('success', 'Prijava je sačuvana kao nacrt. Možete je nastaviti popunjavati.')
                 ->withInput();
-        } elseif ($isComplete) {
-            // Ako je kompletna, preusmeri na formu za biznis plan
+        } elseif ($isObrazacComplete) {
+            // Ako je obrazac kompletno popunjen, preusmeri na formu za biznis plan
             return redirect()->route('applications.business-plan.create', $application)
-                ->with('success', 'Osnovni podaci prijave su sačuvani. Sada popunite biznis plan.');
+                ->with('success', 'Obrazac 1a/1b je kompletno popunjen. Sada popunite biznis plan.');
         } else {
             // Ako nije kompletna, vrati na formu sa upozorenjem
             return redirect()->route('applications.create', $competition)
-                ->with('warning', 'Prijava je sačuvana, ali još uvek nije kompletna. Molimo popunite sva obavezna polja.')
+                ->with('warning', 'Prijava je sačuvana, ali još uvek nije kompletna. Molimo popunite sva obavezna polja i potvrdite sve obavezne izjave.')
                 ->withInput();
         }
     }

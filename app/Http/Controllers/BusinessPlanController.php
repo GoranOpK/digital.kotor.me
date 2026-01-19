@@ -22,24 +22,9 @@ class BusinessPlanController extends Controller
         }
 
         // Proveri da li je Obrazac 1a/1b kompletno popunjen
-        $isComplete = $application->business_plan_name && 
-                     $application->applicant_type && 
-                     $application->business_stage && 
-                     $application->business_area && 
-                     $application->requested_amount && 
-                     $application->total_budget_needed &&
-                     ($application->applicant_type === 'fizicko_lice' ? 
-                        ($application->physical_person_name && $application->physical_person_jmbg && $application->physical_person_phone && $application->physical_person_email) :
-                        ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo' ?
-                            ($application->founder_name && $application->director_name && $application->company_seat) :
-                            true
-                        )
-                     ) &&
-                     ($application->applicant_type !== 'fizicko_lice' ? $application->registration_form : true);
-
-        if (!$isComplete) {
+        if (!$application->isObrazacComplete()) {
             return redirect()->route('applications.create', $application->competition_id)
-                ->withErrors(['error' => 'Molimo popunite kompletan Obrazac 1a ili 1b pre nego što nastavite na biznis plan.'])
+                ->withErrors(['error' => 'Molimo popunite kompletan Obrazac 1a ili 1b (sva obavezna polja i potvrdite sve obavezne izjave) pre nego što nastavite na biznis plan.'])
                 ->withInput();
         }
 
