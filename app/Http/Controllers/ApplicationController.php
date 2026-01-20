@@ -359,12 +359,28 @@ class ApplicationController extends Controller
      */
     public function show(Application $application): View
     {
-        // Proveri da li prijava pripada korisniku ili je admin/superadmin
+        // Prikaz prijave:
+        // - vlasnik prijave uvijek može da vidi
+        // - član komisije može da vidi samo prijave za konkurse dodijeljene njegovoj komisiji
         $user = Auth::user();
         $isOwner = $application->user_id === $user->id;
-        $isAdmin = $user->role && ($user->role->name === 'admin' || $user->role->name === 'superadmin' || $user->role->name === 'konkurs_admin');
-        
-        if (!$isOwner && !$isAdmin) {
+        $roleName = $user->role ? $user->role->name : null;
+
+        $isCommissionMemberForThisCompetition = false;
+        if ($roleName === 'komisija') {
+            $competition = $application->competition;
+            if ($competition && $competition->commission_id) {
+                $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->first();
+
+                if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                    $isCommissionMemberForThisCompetition = true;
+                }
+            }
+        }
+
+        if (!$isOwner && !$isCommissionMemberForThisCompetition) {
             abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
@@ -379,7 +395,10 @@ class ApplicationController extends Controller
                            $application->businessPlan !== null && 
                            empty($missingDocs);
 
-        return view('applications.show', compact('application', 'isReadyToSubmit'));
+        // Samo vlasnik može da mijenja (uploaduje/briše dokumente, podnosi prijavu, uređuje biznis plan)
+        $canManage = $isOwner;
+
+        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage'));
     }
 
     /**

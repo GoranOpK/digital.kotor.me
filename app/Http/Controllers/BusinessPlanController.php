@@ -16,8 +16,28 @@ class BusinessPlanController extends Controller
      */
     public function create(Application $application): View
     {
-        // Proveri da li prijava pripada korisniku
-        if ($application->user_id !== Auth::id()) {
+        // Prikaz biznis plana:
+        // - vlasnik prijave uvijek može da vidi/uređuje
+        // - član komisije može da vidi samo biznis plan za konkurse dodijeljene njegovoj komisiji (read-only)
+        $user = Auth::user();
+        $isOwner = $application->user_id === $user->id;
+        $roleName = $user->role ? $user->role->name : null;
+
+        $isCommissionMemberForThisCompetition = false;
+        if ($roleName === 'komisija') {
+            $competition = $application->competition;
+            if ($competition && $competition->commission_id) {
+                $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->first();
+
+                if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                    $isCommissionMemberForThisCompetition = true;
+                }
+            }
+        }
+
+        if (!$isOwner && !$isCommissionMemberForThisCompetition) {
             abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
@@ -85,7 +105,10 @@ class BusinessPlanController extends Controller
             ]);
         }
 
-        return view('business-plans.create', compact('application', 'businessPlan', 'defaultData'));
+        // Član komisije može samo da pregleda (read-only), bez izmjena
+        $readOnly = !$isOwner;
+
+        return view('business-plans.create', compact('application', 'businessPlan', 'defaultData', 'readOnly'));
     }
 
     /**

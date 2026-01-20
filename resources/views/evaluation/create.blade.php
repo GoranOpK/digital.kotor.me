@@ -368,13 +368,138 @@
                     (Popunjava Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu)
                 </div>
 
-                <!-- 1. Naziv biznis plana -->
+                <!-- SAŽETAK PRIJAVE (Obrazac 1a/1b) -->
                 <div class="form-section">
-                    <label class="form-label form-label-large">1. Naziv biznis plana:</label>
-                    <input type="text" class="form-control form-control-readonly" value="{{ $application->business_plan_name }}" readonly>
+                    <label class="form-label-large">1. Podaci iz prijave (Obrazac 1a/1b)</label>
+                    <div class="info-box">
+                        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+                            <div>
+                                <div class="form-label">Naziv biznis plana:</div>
+                                <div class="form-control form-control-readonly">{{ $application->business_plan_name }}</div>
+                            </div>
+                            <div>
+                                <div class="form-label">Podnosilac:</div>
+                                <div class="form-control form-control-readonly">{{ $application->user->name ?? '' }}</div>
+                            </div>
+                            <div>
+                                <div class="form-label">Kontakt telefon:</div>
+                                <div class="form-control form-control-readonly">
+                                    @if($application->applicant_type === 'fizicko_lice')
+                                        {{ $application->physical_person_phone }}
+                                    @else
+                                        {{ $application->user->phone ?? '' }}
+                                    @endif
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-label">E-mail:</div>
+                                <div class="form-control form-control-readonly">
+                                    @if($application->applicant_type === 'fizicko_lice')
+                                        {{ $application->physical_person_email }}
+                                    @else
+                                        {{ $application->user->email ?? '' }}
+                                    @endif
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-label">Oblik registracije:</div>
+                                <div class="form-control form-control-readonly">
+                                    {{ $application->registration_form ?? 'Neregistrovan biznis' }}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-label">Broj registracije u CRPS:</div>
+                                <div class="form-control form-control-readonly">{{ $application->crps_number }}</div>
+                            </div>
+                            <div>
+                                <div class="form-label">PIB:</div>
+                                <div class="form-control form-control-readonly">{{ $application->pib }}</div>
+                            </div>
+                            <div>
+                                <div class="form-label">Broj žiro računa:</div>
+                                <div class="form-control form-control-readonly">{{ $application->bank_account }}</div>
+                            </div>
+                            <div>
+                                <div class="form-label">Web sajt:</div>
+                                <div class="form-control form-control-readonly">{{ $application->website }}</div>
+                            </div>
+                            <div>
+                                <div class="form-label">Oblast u kojoj se realizuje biznis plan:</div>
+                                <div class="form-control form-control-readonly">{{ $application->business_area }}</div>
+                            </div>
+                            <div>
+                                <div class="form-label">Traženi iznos:</div>
+                                <div class="form-control form-control-readonly">
+                                    {{ $application->requested_amount ? number_format($application->requested_amount, 2, ',', '.') . ' €' : '' }}
+                                </div>
+                            </div>
+                            <div>
+                                <div class="form-label">Ukupan budžet:</div>
+                                <div class="form-control form-control-readonly">
+                                    {{ $application->total_budget_needed ? number_format($application->total_budget_needed, 2, ',', '.') . ' €' : '' }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- 2. Dostavljena su sva potrebna dokumenta? -->
+                <!-- SAŽETAK BIZNIS PLANA (Obrazac 2) -->
+                <div class="form-section">
+                    <label class="form-label-large">2. Sažetak biznis plana (Obrazac 2)</label>
+                    @php
+                        $bp = $application->businessPlan;
+                    @endphp
+                    @if($bp)
+                        <div class="info-box">
+                            <div style="margin-bottom: 8px;">
+                                <div class="form-label">Rezime biznis plana:</div>
+                                <div class="form-control form-control-readonly" style="min-height: 60px; white-space: pre-wrap;">
+                                    {{ $bp->summary }}
+                                </div>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 8px;">
+                                <div>
+                                    <div class="form-label">Podnosilac biznis plana:</div>
+                                    <div class="form-control form-control-readonly">{{ $bp->applicant_name }}</div>
+                                </div>
+                                <div>
+                                    <div class="form-label">JMBG:</div>
+                                    <div class="form-control form-control-readonly">{{ $bp->applicant_jmbg }}</div>
+                                </div>
+                                <div>
+                                    <div class="form-label">Adresa podnosioca:</div>
+                                    <div class="form-control form-control-readonly">{{ $bp->applicant_address }}</div>
+                                </div>
+                                <div>
+                                    <div class="form-label">Iskustvo podnosioca (sažeto):</div>
+                                    <div class="form-control form-control-readonly" style="min-height: 40px; white-space: pre-wrap;">
+                                        {{ $bp->work_experience }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="form-label">Potrebna sredstva za realizaciju plana:</div>
+                                    <div class="form-control form-control-readonly">
+                                        {{ $bp->required_amount ? number_format($bp->required_amount, 2, ',', '.') . ' €' : '' }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="form-label">Traženi iznos od Opštine:</div>
+                                    <div class="form-control form-control-readonly">
+                                        {{ $bp->requested_amount ? number_format($bp->requested_amount, 2, ',', '.') . ' €' : '' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <div class="warning-box">
+                            Biznis plan (Obrazac 2) još nije popunjen za ovu prijavu.
+                        </div>
+                    @endif
+                </div>
+
+                <!-- 3. Dostavljena dokumentacija -->
+
+                <!-- 3. Dostavljena su sva potrebna dokumenta? -->
                 <div class="form-section">
                     <label class="form-label form-label-large">2. Dostavljena su sva potrebna dokumenta?</label>
                     <div class="radio-group">
@@ -395,7 +520,7 @@
                     @enderror
                 </div>
 
-                <!-- 3. Ocjena biznis plana u brojkama -->
+                <!-- 4. Ocjena biznis plana u brojkama -->
                 <div class="form-section">
                     <label class="form-label form-label-large">3. Ocjena biznis plana u brojkama:</label>
                     
@@ -505,7 +630,7 @@
                     @endfor
                 </div>
 
-                <!-- 4. Zaključak komisije -->
+                <!-- 5. Zaključak komisije -->
                 <div class="form-section commission-decision-section">
                     <label class="form-label form-label-large">4. Na bazi konačne ocjene Komisija donosi zaključak da se biznis plan:</label>
                     @if($commissionMember->position === 'predsjednik')

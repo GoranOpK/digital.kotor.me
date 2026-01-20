@@ -233,6 +233,10 @@
             </div>
         @endif
 
+        @php
+            $readOnly = $readOnly ?? false;
+        @endphp
+
         <form method="POST" action="{{ route('applications.business-plan.store', $application) }}" id="businessPlanForm">
             @csrf
 
@@ -1132,14 +1136,22 @@
             </div>
 
             <!-- Dugme za slanje -->
-            <div class="form-card" style="text-align: center;">
-                <button type="submit" class="btn-primary">
-                    Sačuvaj biznis plan
-                </button>
-                <p style="color: #6b7280; font-size: 14px; margin-top: 16px;">
-                    Nakon čuvanja biznis plana, možete priložiti potrebne dokumente.
-                </p>
-            </div>
+            @if(!$readOnly)
+                <div class="form-card" style="text-align: center;">
+                    <button type="submit" class="btn-primary">
+                        Sačuvaj biznis plan
+                    </button>
+                    <p style="color: #6b7280; font-size: 14px; margin-top: 16px;">
+                        Nakon čuvanja biznis plana, možete priložiti potrebne dokumente.
+                    </p>
+                </div>
+            @else
+                <div class="form-card" style="text-align: center;">
+                    <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                        Ovo je prikaz biznis plana podnosioca prijave. Izmjene su dozvoljene samo podnosiocu.
+                    </p>
+                </div>
+            @endif
         </form>
     </div>
 </div>

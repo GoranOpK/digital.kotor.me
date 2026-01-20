@@ -321,7 +321,9 @@
         @endif
 
         @php
-            $showUpload = ($application->status === 'draft' || $application->status === 'submitted');
+            $canManage = $canManage ?? false;
+            // Upload i izmjene su dozvoljeni samo vlasniku prijave
+            $showUpload = $canManage && ($application->status === 'draft' || $application->status === 'submitted');
             // Ako ne prikazujemo upload, grid ide na 2 kolone, inače na 3 (iste širine)
             $gridColumnsStyle = $showUpload ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)';
         @endphp
@@ -499,7 +501,7 @@
                             {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}
                         </span>
                     </div>
-                    @if($application->status === 'draft')
+                    @if($application->status === 'draft' && $canManage)
                         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
                             @if($isReadyToSubmit)
                                 <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Podnijeti prijavu?');">
@@ -690,7 +692,7 @@
             <a href="{{ route('competitions.show', $application->competition) }}" class="btn btn-secondary">
                 Nazad na konkurs
             </a>
-            @if($application->status === 'draft')
+            @if($application->status === 'draft' && $canManage)
                 @php
                     // Proveri da li je Obrazac kompletno popunjen koristeći metodu iz modela
                     $isObrazacComplete = $application->isObrazacComplete();
@@ -708,13 +710,15 @@
                 @endif
             @endif
             
-            <form action="{{ route('applications.destroy', $application) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu prijavu? Svi podaci o biznis planu i priloženi dokumenti će biti uklonjeni.');">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger" style="margin-left: 8px;">
-                    Obriši prijavu
-                </button>
-            </form>
+            @if($canManage)
+                <form action="{{ route('applications.destroy', $application) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu prijavu? Svi podaci o biznis planu i priloženi dokumenti će biti uklonjeni.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger" style="margin-left: 8px;">
+                        Obriši prijavu
+                    </button>
+                </form>
+            @endif
     </div>
 </div>
 
