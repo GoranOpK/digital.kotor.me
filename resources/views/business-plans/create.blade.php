@@ -47,7 +47,7 @@
         border-bottom: 2px solid #e5e7eb;
     }
     .form-group {
-        margin-bottom: 20px;
+        margin-bottom: 16px;
     }
     .form-label {
         display: block;
@@ -62,16 +62,22 @@
     }
     .form-control {
         width: 100%;
-        padding: 10px 14px;
+        padding: 8px 12px;
         border: 1px solid #d1d5db;
-        border-radius: 8px;
+        border-radius: 6px;
         font-size: 14px;
         transition: border-color 0.2s;
         font-family: inherit;
     }
     textarea.form-control {
-        min-height: 120px;
+        min-height: 80px;
         resize: vertical;
+    }
+    textarea.form-control[rows="2"] {
+        min-height: 60px;
+    }
+    textarea.form-control[rows="1"] {
+        min-height: 40px;
     }
     .form-control:focus {
         outline: none;
@@ -271,7 +277,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Adresa:</label>
-                            <textarea name="applicant_address" class="form-control" rows="2" required>{{ old('applicant_address', $businessPlan->applicant_address ?? ($defaultData['applicant_address'] ?? '')) }}</textarea>
+                            <textarea name="applicant_address" class="form-control" rows="1" required style="min-height: 40px;">{{ old('applicant_address', $businessPlan->applicant_address ?? ($defaultData['applicant_address'] ?? '')) }}</textarea>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
@@ -330,7 +336,7 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Adresa/sjedište:</label>
-                                <textarea name="company_address" class="form-control" rows="2">{{ old('company_address', $businessPlan->company_address ?? '') }}</textarea>
+                                <textarea name="company_address" class="form-control" rows="1" style="min-height: 40px;">{{ old('company_address', $businessPlan->company_address ?? '') }}</textarea>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
