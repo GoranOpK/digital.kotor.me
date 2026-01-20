@@ -596,8 +596,12 @@
                         </div>
                         <div class="document-actions">
                             @if($uploaded && $doc)
+                                <a href="{{ route('applications.document.view', ['application' => $application, 'document' => $doc]) }}" 
+                                   class="btn btn-secondary" target="_blank" style="margin-right: 4px;">
+                                    Pogledaj
+                                </a>
                                 <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" 
-                                   class="btn btn-secondary">
+                                   class="btn btn-secondary" style="margin-right: 4px;">
                                     Preuzmi
                                 </a>
                                 <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $doc]) }}" 

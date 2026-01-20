@@ -513,6 +513,38 @@ class ApplicationController extends Controller
     }
 
     /**
+     * Pregled dokumenta prijave u pregledaču
+     */
+    public function viewDocument(Application $application, ApplicationDocument $document)
+    {
+        // Proveri da li dokument pripada ovoj prijavi
+        if ($document->application_id !== $application->id) {
+            abort(404, 'Dokument nije pronađen.');
+        }
+
+        // Proveri da li korisnik ima pravo pristupa dokumentu
+        $user = Auth::user();
+        $isOwner = $application->user_id === $user->id;
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin', 'konkurs_admin']);
+
+        if (!$isOwner && !$isAdmin) {
+            abort(403, 'Nemate pravo pristupa ovom dokumentu.');
+        }
+
+        // Proveri da li fajl postoji na disku
+        if (!$document->file_path || !Storage::disk('local')->exists($document->file_path)) {
+            abort(404, 'Fajl dokumenta nije pronađen na serveru.');
+        }
+
+        $path = Storage::disk('local')->path($document->file_path);
+        $mimeType = mime_content_type($path) ?: 'application/octet-stream';
+
+        return response()->file($path, [
+            'Content-Type' => $mimeType,
+        ]);
+    }
+
+    /**
      * Download dokumenta prijave
      */
     public function downloadDocument(Application $application, ApplicationDocument $document)

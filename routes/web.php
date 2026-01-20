@@ -73,6 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/applications/{application}', [ApplicationController::class, 'destroy'])->name('applications.destroy'); // Brisanje prijave
     Route::post('/applications/{application}/submit', [ApplicationController::class, 'submit'])->name('applications.final-submit'); // Konačno podnošenje prijave
     Route::post('/applications/{application}/upload', [ApplicationController::class, 'uploadDocument'])->name('applications.upload'); // Upload dokumenata
+    Route::get('/applications/{application}/documents/{document}/view', [ApplicationController::class, 'viewDocument'])->name('applications.document.view'); // Pregled dokumenta
     Route::get('/applications/{application}/documents/{document}/download', [ApplicationController::class, 'downloadDocument'])->name('applications.document.download'); // Download dokumenta
     Route::delete('/applications/{application}/documents/{document}', [ApplicationController::class, 'destroyDocument'])->name('applications.document.destroy'); // Brisanje dokumenta
     Route::get('/applications/{application}/status', [ApplicationController::class, 'status'])->name('applications.status'); // Prikaz statusa prijave
