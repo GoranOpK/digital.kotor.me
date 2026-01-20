@@ -525,9 +525,31 @@ class ApplicationController extends Controller
         // Proveri da li korisnik ima pravo pristupa dokumentu
         $user = Auth::user();
         $isOwner = $application->user_id === $user->id;
-        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin', 'konkurs_admin']);
+        $roleName = $user->role ? $user->role->name : null;
 
-        if (!$isOwner && !$isAdmin) {
+        // Samo:
+        // - vlasnik prijave, ili
+        // - član komisije (role: komisija) za konkurs dodijeljen njegovoj komisiji
+        // može da pregleda dokument
+        $isCommissionMemberForThisCompetition = false;
+
+        if ($roleName === 'komisija') {
+            // Učitaj konkurs povezano sa prijavom
+            $competition = $application->competition;
+
+            if ($competition && $competition->commission_id) {
+                // Provjeri da li je korisnik aktivni član iste komisije
+                $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->first();
+
+                if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                    $isCommissionMemberForThisCompetition = true;
+                }
+            }
+        }
+
+        if (!$isOwner && !$isCommissionMemberForThisCompetition) {
             abort(403, 'Nemate pravo pristupa ovom dokumentu.');
         }
 
@@ -554,13 +576,12 @@ class ApplicationController extends Controller
             abort(404, 'Dokument nije pronađen.');
         }
 
-        // Proveri da li korisnik ima pravo pristupa dokumentu
         $user = Auth::user();
         $isOwner = $application->user_id === $user->id;
-        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin', 'konkurs_admin']);
 
-        if (!$isOwner && !$isAdmin) {
-            abort(403, 'Nemate pravo pristupa ovom dokumentu.');
+        // Samo vlasnik prijave može da preuzme svoje dokumente
+        if (!$isOwner) {
+            abort(403, 'Samo podnosilac prijave može da preuzme ovaj dokument.');
         }
 
         // Proveri da li fajl postoji na disku
@@ -583,13 +604,12 @@ class ApplicationController extends Controller
             abort(404, 'Dokument nije pronađen.');
         }
 
-        // Proveri da li korisnik ima pravo da briše dokument
         $user = Auth::user();
         $isOwner = $application->user_id === $user->id;
-        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin', 'konkurs_admin']);
 
-        if (!$isOwner && !$isAdmin) {
-            abort(403, 'Nemate pravo da brišete ovaj dokument.');
+        // Samo vlasnik prijave može da briše svoje dokumente iz prijave
+        if (!$isOwner) {
+            abort(403, 'Samo podnosilac prijave može da briše svoje dokumente.');
         }
 
         // Ako dokument nije iz korisničke biblioteke, obriši fizički fajl

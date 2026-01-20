@@ -600,20 +600,22 @@
                                    class="btn btn-secondary" target="_blank" style="margin-right: 4px;">
                                     Pogledaj
                                 </a>
-                                <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" 
-                                   class="btn btn-secondary" style="margin-right: 4px;">
-                                    Preuzmi
-                                </a>
-                                <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $doc]) }}" 
-                                      method="POST" 
-                                      style="display: inline;" 
-                                      onsubmit="return confirm('Da li ste sigurni da želite da uklonite ovaj dokument iz prijave?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" style="padding: 8px 12px;">
-                                        Ukloni
-                                    </button>
-                                </form>
+                                @if(auth()->id() === $application->user_id)
+                                    <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" 
+                                       class="btn btn-secondary" style="margin-right: 4px;">
+                                        Preuzmi
+                                    </a>
+                                    <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $doc]) }}" 
+                                          method="POST" 
+                                          style="display: inline;" 
+                                          onsubmit="return confirm('Da li ste sigurni da želite da uklonite ovaj dokument iz prijave?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger" style="padding: 8px 12px;">
+                                            Ukloni
+                                        </button>
+                                    </form>
+                                @endif
                             @endif
                         </div>
                     </li>

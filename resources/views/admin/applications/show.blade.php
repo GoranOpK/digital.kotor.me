@@ -198,14 +198,24 @@
         </div>
 
         <!-- Dokumenti -->
-        @if($application->documents->count() > 0)
+        @php
+            $userRole = auth()->user()->role ? auth()->user()->role->name : null;
+        @endphp
+        @if($application->documents->count() > 0 && $userRole === 'komisija')
         <div class="info-card">
             <h2>Priložena dokumentacija</h2>
             <ul class="documents-list">
                 @foreach($application->documents as $doc)
                     <li class="document-item">
                         <span>{{ $doc->name }}</span>
-                        <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" class="btn btn-primary">Preuzmi</a>
+                        <div style="display: inline-flex; gap: 8px;">
+                            {{-- Samo članovi komisije mogu da vide dokument (server dodatno provjerava dodijeljenu komisiju) --}}
+                            <a href="{{ route('applications.document.view', ['application' => $application, 'document' => $doc]) }}"
+                               class="btn btn-secondary"
+                               target="_blank">
+                                Pogledaj
+                            </a>
+                        </div>
                     </li>
                 @endforeach
             </ul>
