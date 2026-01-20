@@ -265,7 +265,7 @@
                         <label class="form-label">
                             2. Podaci o podnosiocu biznis plana: <span class="required">*</span>
                         </label>
-                        <div class="form-row">
+                        <div class="form-row" style="grid-template-columns: repeat(3, 1fr);">
                             <div class="form-group">
                                 <label class="form-label">Ime i prezime:</label>
                                 <input type="text" name="applicant_name" class="form-control" value="{{ old('applicant_name', $businessPlan->applicant_name ?? ($defaultData['applicant_name'] ?? '')) }}" required>
@@ -274,10 +274,10 @@
                                 <label class="form-label">JMBG:</label>
                                 <input type="text" name="applicant_jmbg" class="form-control" value="{{ old('applicant_jmbg', $businessPlan->applicant_jmbg ?? ($defaultData['applicant_jmbg'] ?? '')) }}" required>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Adresa:</label>
-                            <textarea name="applicant_address" class="form-control" rows="1" required style="min-height: 40px;">{{ old('applicant_address', $businessPlan->applicant_address ?? ($defaultData['applicant_address'] ?? '')) }}</textarea>
+                            <div class="form-group">
+                                <label class="form-label">Adresa:</label>
+                                <input type="text" name="applicant_address" class="form-control" value="{{ old('applicant_address', $businessPlan->applicant_address ?? ($defaultData['applicant_address'] ?? '')) }}" required>
+                            </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
