@@ -1139,15 +1139,12 @@
             @if(!$readOnly)
                 <div class="form-card" style="text-align: center;">
                     <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                        <button type="button" id="bpSaveAsDraftBtn" class="btn-secondary" style="background: #6b7280; color: #fff; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
-                            Sačuvaj kao nacrt
-                        </button>
-                        <button type="submit" class="btn-primary" id="bpSubmitBtn">
-                            Sačuvaj biznis plan
+                        <button type="button" id="bpSubmitBtn" class="btn-primary" style="padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
+                            <span id="bpSubmitBtnText">Sačuvaj Nacrt plana</span>
                         </button>
                     </div>
                     <p style="color: #6b7280; font-size: 14px; margin-top: 16px;" id="bpSubmitButtonInfo">
-                        <strong>Sačuvaj biznis plan:</strong> Sačuvajte i vratite se na pregled prijave i priloženih dokumenata.
+                        <strong id="bpSubmitButtonInfoText">Sačuvaj Nacrt plana:</strong> <span id="bpSubmitButtonInfoDesc">Sačuvajte delimično popunjen biznis plan kao nacrt.</span>
                     </p>
                 </div>
             @else
@@ -1464,15 +1461,83 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateRevenueGrandTotal();
     calculateExpenseGrandTotal();
 
-    // Funkcionalnost za "Sačuvaj kao nacrt" na formi biznis plana
+    // Funkcionalnost za dinamičko dugme na formi biznis plana
     const bpForm = document.getElementById('businessPlanForm');
-    const bpSaveAsDraftBtn = document.getElementById('bpSaveAsDraftBtn');
+    const bpSubmitBtn = document.getElementById('bpSubmitBtn');
+    const bpSubmitBtnText = document.getElementById('bpSubmitBtnText');
+    const bpSubmitButtonInfoText = document.getElementById('bpSubmitButtonInfoText');
+    const bpSubmitButtonInfoDesc = document.getElementById('bpSubmitButtonInfoDesc');
 
-    if (bpForm && bpSaveAsDraftBtn) {
-        bpSaveAsDraftBtn.addEventListener('click', function (e) {
-            e.preventDefault();
+    // Obavezna polja koja treba provjeriti
+    const requiredFields = [
+        'business_idea_name',
+        'applicant_name',
+        'applicant_jmbg',
+        'applicant_address',
+        'applicant_phone',
+        'applicant_email',
+        'summary'
+    ];
 
-            // Dodaj hidden input za save_as_draft
+    // Funkcija za provjeru da li su sva obavezna polja popunjena
+    function checkRequiredFields() {
+        let allFilled = true;
+        
+        requiredFields.forEach(fieldName => {
+            const field = bpForm.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                const value = field.value ? field.value.trim() : '';
+                if (!value) {
+                    allFilled = false;
+                }
+            } else {
+                allFilled = false;
+            }
+        });
+        
+        return allFilled;
+    }
+
+    // Funkcija za ažuriranje teksta dugmeta i informacije
+    function updateSubmitButton() {
+        if (!bpForm || !bpSubmitBtn) return;
+        
+        const allFilled = checkRequiredFields();
+        
+        if (allFilled) {
+            // Ako su sva polja popunjena, prikaži "Sačuvaj Biznis plan"
+            bpSubmitBtnText.textContent = 'Sačuvaj Biznis plan';
+            bpSubmitBtn.className = 'btn-primary';
+            bpSubmitBtn.style.padding = '12px 24px';
+            bpSubmitBtn.style.fontSize = '14px';
+            bpSubmitButtonInfoText.textContent = 'Sačuvaj Biznis plan:';
+            bpSubmitButtonInfoDesc.textContent = 'Sačuvajte i vratite se na pregled prijave i priloženih dokumenata.';
+        } else {
+            // Ako nisu sva polja popunjena, prikaži "Sačuvaj Nacrt plana"
+            bpSubmitBtnText.textContent = 'Sačuvaj Nacrt plana';
+            bpSubmitBtn.className = 'btn-secondary';
+            bpSubmitBtn.style.padding = '12px 24px';
+            bpSubmitBtn.style.fontSize = '14px';
+            bpSubmitButtonInfoText.textContent = 'Sačuvaj Nacrt plana:';
+            bpSubmitButtonInfoDesc.textContent = 'Sačuvajte delimično popunjen biznis plan kao nacrt.';
+        }
+    }
+
+    // Funkcija za rukovanje klikom na dugme
+    function handleSubmit(e) {
+        e.preventDefault();
+        
+        const allFilled = checkRequiredFields();
+        
+        if (allFilled) {
+            // Ako su sva polja popunjena, ukloni save_as_draft i pošalji formu
+            const draftInput = bpForm.querySelector('input[name="save_as_draft"]');
+            if (draftInput) {
+                draftInput.remove();
+            }
+            bpForm.submit();
+        } else {
+            // Ako nisu sva polja popunjena, dodaj save_as_draft i ukloni required atribute
             let draftInput = bpForm.querySelector('input[name="save_as_draft"]');
             if (!draftInput) {
                 draftInput = document.createElement('input');
@@ -1483,13 +1548,30 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // Ukloni sve required atribute da bi se omogućilo delimično čuvanje
-            const requiredFields = bpForm.querySelectorAll('[required]');
-            requiredFields.forEach(field => {
+            const requiredFieldsElements = bpForm.querySelectorAll('[required]');
+            requiredFieldsElements.forEach(field => {
                 field.removeAttribute('required');
             });
 
             bpForm.submit();
+        }
+    }
+
+    if (bpForm && bpSubmitBtn) {
+        // Postavi event listener za klik
+        bpSubmitBtn.addEventListener('click', handleSubmit);
+        
+        // Postavi event listenere na sva obavezna polja za dinamičko ažuriranje
+        requiredFields.forEach(fieldName => {
+            const field = bpForm.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                field.addEventListener('input', updateSubmitButton);
+                field.addEventListener('change', updateSubmitButton);
+            }
         });
+        
+        // Ažuriraj dugme pri učitavanju stranice
+        updateSubmitButton();
     }
 });
 </script>
