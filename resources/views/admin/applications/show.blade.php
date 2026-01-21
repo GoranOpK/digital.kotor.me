@@ -265,7 +265,18 @@
         <div style="text-align: center; margin-top: 24px;">
             @php
                 $userRole = auth()->user()->role ? auth()->user()->role->name : null;
+                $isCommissionMember = $userRole === 'komisija';
             @endphp
+            
+            @if($isCommissionMember || $userRole === 'superadmin')
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px;">
+                    <a href="{{ route('applications.show', $application) }}" class="btn" style="background: #3b82f6; color: #fff; padding: 8px 16px; font-size: 14px; text-decoration: none;">Obrazac</a>
+                    @if($application->businessPlan)
+                        <a href="{{ route('applications.business-plan.create', $application) }}" class="btn" style="background: #10b981; color: #fff; padding: 8px 16px; font-size: 14px; text-decoration: none;">Biznis Plan</a>
+                    @endif
+                </div>
+            @endif
+            
             @if($userRole === 'konkurs_admin' || $userRole === 'komisija')
                 <a href="{{ route('admin.competitions.show', $application->competition) }}" class="btn btn-primary">Nazad na konkurs</a>
             @else

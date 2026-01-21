@@ -204,13 +204,7 @@
                             <td style="padding: 12px;">{{ $app->status }}</td>
                             <td style="padding: 12px;">
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                    <a href="{{ route('admin.applications.show', $app) }}" class="btn" style="background: #6b7280; color: #fff; padding: 4px 12px; font-size: 12px; text-decoration: none;">Pregled</a>
-                                    @if((isset($isCommissionMember) && $isCommissionMember) || (isset($isChairman) && $isChairman) || (isset($isSuperAdmin) && $isSuperAdmin))
-                                        <a href="{{ route('applications.show', $app) }}" class="btn" style="background: #3b82f6; color: #fff; padding: 4px 12px; font-size: 12px; text-decoration: none;">Obrazac</a>
-                                        @if($app->businessPlan)
-                                            <a href="{{ route('applications.business-plan.create', $app) }}" class="btn" style="background: #10b981; color: #fff; padding: 4px 12px; font-size: 12px; text-decoration: none;">Biznis Plan</a>
-                                        @endif
-                                    @endif
+                                    <a href="{{ route('admin.applications.show', $app) }}" class="btn" style="background: #6b7280; color: #fff; padding: 4px 12px; font-size: 12px; text-decoration: none;">Pregled prijave</a>
                                 </div>
                             </td>
                         </tr>
