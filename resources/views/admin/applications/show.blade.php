@@ -121,40 +121,154 @@
                 <!-- Status prijave -->
                 <div class="info-card">
                     <h2>Status prijave</h2>
-                    <div class="info-grid">
-                        <div class="info-item">
-                            <span class="info-label">Status</span>
-                            <span class="info-value">
-                                <span class="status-badge status-{{ $application->status }}">
-                                    @if($application->status === 'draft') Nacrt
-                                    @elseif($application->status === 'submitted') Podnesena
-                                    @elseif($application->status === 'evaluated') Ocjenjena
-                                    @elseif($application->status === 'approved') Odobrena
-                                    @elseif($application->status === 'rejected') Odbijena
-                                    @else {{ $application->status }}
+                    @php
+                        $userRole = auth()->user()->role ? auth()->user()->role->name : null;
+                        $isCommissionMember = $userRole === 'komisija';
+                    @endphp
+                    @if($isCommissionMember || $userRole === 'superadmin')
+                        {{-- Detaljni prikaz statusa za članove komisije --}}
+                        <div class="info-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-item" style="margin-bottom: 16px;">
+                                <span class="info-label">Trenutni Status</span>
+                                <span class="info-value">
+                                    @php
+                                        $statusLabels = [
+                                            'draft' => 'Nacrt',
+                                            'submitted' => 'U obradi',
+                                            'evaluated' => 'Ocjenjena',
+                                            'approved' => 'Odobrena',
+                                            'rejected' => 'Odbijena',
+                                        ];
+                                        $statusClass = 'status-' . $application->status;
+                                    @endphp
+                                    <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">
+                                        {{ $statusLabels[$application->status] ?? $application->status }}
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="info-item" style="margin-bottom: 16px;">
+                                <span class="info-label">Obrazac 1a/1b</span>
+                                <span class="info-value">
+                                    @php
+                                        $isObrazacComplete = $application->isObrazacComplete();
+                                        $obrazacLabel = null;
+                                        $obrazacClass = 'status-draft';
+                                        if ($isObrazacComplete) {
+                                            if ($application->applicant_type === 'preduzetnica') {
+                                                $obrazacLabel = 'Obrazac 1a popunjen';
+                                                $obrazacClass = 'status-evaluated';
+                                            } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
+                                                $obrazacLabel = 'Obrazac 1b popunjen';
+                                                $obrazacClass = 'status-evaluated';
+                                            }
+                                        } else {
+                                            // Obrazac nije kompletan - prikaži nacrt prema tipu
+                                            if ($application->applicant_type === 'preduzetnica') {
+                                                $obrazacLabel = 'Obrazac 1a - Nacrt';
+                                            } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
+                                                $obrazacLabel = 'Obrazac 1b - Nacrt';
+                                            }
+                                        }
+                                    @endphp
+                                    @if($obrazacLabel)
+                                        <a href="{{ route('applications.create', $application->competition_id) }}" class="status-badge {{ $obrazacClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                            {{ $obrazacLabel }}
+                                        </a>
+                                    @else
+                                        <span class="status-badge status-draft" style="font-size: 12px; padding: 4px 12px;">Nije popunjen</span>
                                     @endif
                                 </span>
-                            </span>
+                            </div>
+                            <div class="info-item" style="margin-bottom: 16px;">
+                                <span class="info-label">Biznis Plan</span>
+                                <span class="info-value">
+                                    @php
+                                        $isObrazacComplete = $application->isObrazacComplete();
+                                        $bizPlanLabel = null;
+                                        $bizPlanClass = 'status-draft';
+                                        
+                                        if ($application->businessPlan) {
+                                            if ($application->businessPlan->isComplete()) {
+                                                $bizPlanLabel = 'Biznis Plan - popunjen';
+                                                $bizPlanClass = 'status-evaluated';
+                                            } else {
+                                                $bizPlanLabel = 'Biznis Plan - nacrt';
+                                                $bizPlanClass = 'status-draft';
+                                            }
+                                        } elseif ($isObrazacComplete) {
+                                            // Obrazac je kompletan, ali biznis plan ne postoji - može da krene da popunjava
+                                            $bizPlanLabel = 'Biznis Plan - nacrt';
+                                            $bizPlanClass = 'status-draft';
+                                        }
+                                    @endphp
+                                    @if($bizPlanLabel)
+                                        <a href="{{ route('applications.business-plan.create', $application) }}" class="status-badge {{ $bizPlanClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                            {{ $bizPlanLabel }}
+                                        </a>
+                                    @else
+                                        <span class="status-badge status-draft" style="font-size: 12px; padding: 4px 12px;">
+                                            Nije dostupan
+                                        </span>
+                                        <span style="color: #6b7280; font-size: 11px; margin-left: 8px;">Popunite Obrazac 1a/1b prvo</span>
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Datum podnošenja</span>
+                                <span class="info-value" style="font-size: 13px;">
+                                    {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}
+                                </span>
+                            </div>
+                            @if($application->final_score)
+                            <div class="info-item">
+                                <span class="info-label">Konačna ocjena</span>
+                                <span class="info-value">{{ number_format($application->final_score, 2) }} / 50</span>
+                            </div>
+                            @endif
+                            @if($application->ranking_position)
+                            <div class="info-item">
+                                <span class="info-label">Pozicija na rang listi</span>
+                                <span class="info-value">#{{ $application->ranking_position }}</span>
+                            </div>
+                            @endif
                         </div>
-                        <div class="info-item">
-                            <span class="info-label">Datum podnošenja</span>
-                            <span class="info-value">
-                                {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'N/A' }}
-                            </span>
+                    @else
+                        {{-- Osnovni prikaz za ostale korisnike --}}
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Status</span>
+                                <span class="info-value">
+                                    <span class="status-badge status-{{ $application->status }}">
+                                        @if($application->status === 'draft') Nacrt
+                                        @elseif($application->status === 'submitted') Podnesena
+                                        @elseif($application->status === 'evaluated') Ocjenjena
+                                        @elseif($application->status === 'approved') Odobrena
+                                        @elseif($application->status === 'rejected') Odbijena
+                                        @else {{ $application->status }}
+                                        @endif
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Datum podnošenja</span>
+                                <span class="info-value">
+                                    {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'N/A' }}
+                                </span>
+                            </div>
+                            @if($application->final_score)
+                            <div class="info-item">
+                                <span class="info-label">Konačna ocjena</span>
+                                <span class="info-value">{{ number_format($application->final_score, 2) }} / 50</span>
+                            </div>
+                            @endif
+                            @if($application->ranking_position)
+                            <div class="info-item">
+                                <span class="info-label">Pozicija na rang listi</span>
+                                <span class="info-value">#{{ $application->ranking_position }}</span>
+                            </div>
+                            @endif
                         </div>
-                        @if($application->final_score)
-                        <div class="info-item">
-                            <span class="info-label">Konačna ocjena</span>
-                            <span class="info-value">{{ number_format($application->final_score, 2) }} / 50</span>
-                        </div>
-                        @endif
-                        @if($application->ranking_position)
-                        <div class="info-item">
-                            <span class="info-label">Pozicija na rang listi</span>
-                            <span class="info-value">#{{ $application->ranking_position }}</span>
-                        </div>
-                        @endif
-                    </div>
+                    @endif
                 </div>
 
                 <!-- Osnovni podaci -->
