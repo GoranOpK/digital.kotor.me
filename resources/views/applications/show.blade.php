@@ -465,14 +465,41 @@
                                 ];
                                 $statusClass = 'status-' . $application->status;
                             @endphp
-                            @if($application->status === 'draft')
-                                <a href="{{ route('applications.create', $application->competition_id) }}" class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: underline; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.opacity='0.8';" onmouseout="this.style.opacity='1';" title="Kliknite da nastavite popunjavanje prijave">
-                                    {{ $statusLabels[$application->status] ?? $application->status }} →
+                            <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">
+                                {{ $statusLabels[$application->status] ?? $application->status }}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 16px;">
+                        <span class="info-label">Obrazac 1a/1b</span>
+                        <span class="info-value">
+                            @php
+                                $isObrazacComplete = $application->isObrazacComplete();
+                                $obrazacLabel = null;
+                                $obrazacClass = 'status-draft';
+                                if ($isObrazacComplete) {
+                                    if ($application->applicant_type === 'preduzetnica') {
+                                        $obrazacLabel = 'Obrazac 1a popunjen';
+                                        $obrazacClass = 'status-evaluated';
+                                    } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
+                                        $obrazacLabel = 'Obrazac 1b popunjen';
+                                        $obrazacClass = 'status-evaluated';
+                                    }
+                                } else {
+                                    // Obrazac nije kompletan - prikaži nacrt prema tipu
+                                    if ($application->applicant_type === 'preduzetnica') {
+                                        $obrazacLabel = 'Obrazac 1a - Nacrt';
+                                    } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
+                                        $obrazacLabel = 'Obrazac 1b - Nacrt';
+                                    }
+                                }
+                            @endphp
+                            @if($obrazacLabel)
+                                <a href="{{ route('applications.create', $application->competition_id) }}" class="status-badge {{ $obrazacClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                    {{ $obrazacLabel }}
                                 </a>
                             @else
-                                <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">
-                                    {{ $statusLabels[$application->status] ?? $application->status }}
-                                </span>
+                                <span class="status-badge status-draft" style="font-size: 12px; padding: 4px 12px;">Nije popunjen</span>
                             @endif
                         </span>
                     </div>
