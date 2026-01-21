@@ -509,15 +509,31 @@
                             @php
                                 // Proveri da li je Obrazac kompletno popunjen koristeći metodu iz modela
                                 $isObrazacComplete = $application->isObrazacComplete();
+                                $bizPlanLabel = null;
+                                $bizPlanClass = 'status-draft';
+                                
+                                if ($application->businessPlan) {
+                                    if ($application->businessPlan->isComplete()) {
+                                        $bizPlanLabel = 'Biznis Plan - popunjen';
+                                        $bizPlanClass = 'status-evaluated';
+                                    } else {
+                                        $bizPlanLabel = 'Biznis Plan - nacrt';
+                                        $bizPlanClass = 'status-draft';
+                                    }
+                                } elseif ($isObrazacComplete) {
+                                    // Obrazac je kompletan, ali biznis plan ne postoji - može da krene da popunjava
+                                    $bizPlanLabel = 'Biznis Plan - nacrt';
+                                    $bizPlanClass = 'status-draft';
+                                }
                             @endphp
-                            @if($application->businessPlan)
-                                <span style="color: #10b981; font-weight: 600;">✅ Popunjen</span>
-                                <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Uredi</a>
-                            @elseif($isObrazacComplete)
-                                <span style="color: #ef4444; font-weight: 600;">❌ Nije popunjen</span>
-                                <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Popuni</a>
+                            @if($bizPlanLabel)
+                                <a href="{{ route('applications.business-plan.create', $application) }}" class="status-badge {{ $bizPlanClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                    {{ $bizPlanLabel }}
+                                </a>
                             @else
-                                <span style="color: #ef4444; font-weight: 600;">❌ Nije popunjen</span>
+                                <span class="status-badge status-draft" style="font-size: 12px; padding: 4px 12px;">
+                                    Nije dostupan
+                                </span>
                                 <span style="color: #6b7280; font-size: 11px; margin-left: 8px;">Popunite Obrazac 1a/1b prvo</span>
                             @endif
                         </span>
