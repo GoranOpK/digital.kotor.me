@@ -19,6 +19,12 @@ class ApplicationController extends Controller
      */
     public function create(Competition $competition): View|RedirectResponse
     {
+        // Administrator konkursa ne može se prijaviti na konkurse
+        $user = Auth::user();
+        if ($user->role && $user->role->name === 'konkurs_admin') {
+            abort(403, 'Administrator konkursa ne može se prijaviti na konkurse.');
+        }
+        
         // Proveri da li je konkurs otvoren
         if ($competition->status !== 'published') {
             abort(404, 'Konkurs nije pronađen ili nije objavljen.');
