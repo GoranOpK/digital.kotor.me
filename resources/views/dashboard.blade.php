@@ -373,8 +373,8 @@
                                                     $obrazacLabel = 'Obrazac 1b popunjen';
                                                     $obrazacStyle = 'background: #d1fae5; color: #065f46;';
                                                 }
-                                                // Klik na badge vodi na prikaz prijave (popunjen obrazac)
-                                                $obrazacUrl = route('applications.show', $app);
+                                                // Klik na badge vodi direktno na popunjen obrazac (formu prijave)
+                                                $obrazacUrl = route('applications.create', $app->competition_id);
                                             } else {
                                                 // Obrazac nije kompletan (nacrt)
                                                 if ($app->applicant_type === 'preduzetnica') {
@@ -429,8 +429,12 @@
                                         @endif
                                     </div>
                                     <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                                        <div style="display: flex; gap: 8px;">
-                                            <a href="{{ route('applications.show', $app) }}" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 12px;">Pregled</a>
+                                        <div style="display: flex; gap: 8px; align-items: center;">
+                                            {{-- Badge \"Status prijave\" kao link na prikaz prijave --}}
+                                            <a href="{{ route('applications.show', $app) }}"
+                                               style="display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; background: #e5e7eb; color: #111827; text-decoration: none;">
+                                                Status prijave
+                                            </a>
                                             <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Obrisati prijavu?');" style="display: inline;">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" style="background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; font-size: 12px; padding: 0;">Obriši</button>
