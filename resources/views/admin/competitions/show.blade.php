@@ -96,13 +96,13 @@
                     </form>
                 @endif
                 @if($competition->status === 'closed')
-                    {{-- Zatvoreni konkurs - svi članovi komisije mogu vidjeti rang listu --}}
-                    @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman) || (isset($isCommissionMember) && $isCommissionMember) || (isset($isCompetitionAdmin) && $isCompetitionAdmin))
+                    {{-- Zatvoreni konkurs - svi članovi komisije mogu vidjeti rang listu (ali ne i administrator konkursa) --}}
+                    @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman) || (isset($isCommissionMember) && $isCommissionMember))
                         <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
                     @endif
                 @elseif($competition->status === 'published')
-                    {{-- Objavljeni konkurs - superadmin, predsjednik komisije i administrator konkursa mogu vidjeti rang listu --}}
-                    @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman) || (isset($isCompetitionAdmin) && $isCompetitionAdmin))
+                    {{-- Objavljeni konkurs - superadmin i predsjednik komisije mogu vidjeti rang listu (ali ne i administrator konkursa) --}}
+                    @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
                         <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
                     @endif
                 @endif

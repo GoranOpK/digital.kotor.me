@@ -1200,8 +1200,13 @@ class AdminController extends Controller
         $isChairman = $this->isCommissionChairmanForCompetition($competition);
         $isCommissionMember = $this->isCommissionMemberForCompetition($competition);
         
-        // Ako nije superadmin, administrator konkursa ili predsjednik komisije, proveri da li je član komisije i da li je konkurs zatvoren
-        if (!$isSuperAdmin && !$isCompetitionAdmin && !$isChairman) {
+        // Administrator konkursa ne može pristupiti rang listi
+        if ($isCompetitionAdmin) {
+            abort(403, 'Administrator konkursa nema pristup rang listi.');
+        }
+        
+        // Ako nije superadmin ili predsjednik komisije, proveri da li je član komisije i da li je konkurs zatvoren
+        if (!$isSuperAdmin && !$isChairman) {
             if (!$isCommissionMember) {
                 abort(403, 'Nemate pristup ovom konkursu.');
             }
