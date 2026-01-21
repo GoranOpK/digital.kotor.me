@@ -455,7 +455,11 @@ class AdminController extends Controller
             ->latest()
             ->paginate(20);
         
-        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember'));
+        // Proveri da li je deadline prošao (za prikaz dugmeta "Zatvori konkurs")
+        $deadline = $competition->deadline;
+        $isDeadlinePassed = $deadline && now()->isAfter($deadline);
+        
+        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed'));
     }
 
     /**
@@ -596,9 +600,14 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za zatvaranje ovog konkursa.');
         }
         
-        // Proveri da li je deadline prošao
+        // Proveri da li je deadline prošao - konkurs se ne može zatvoriti dok je još otvoren za prijave
         $deadline = $competition->deadline;
         $isDeadlinePassed = $deadline && now()->isAfter($deadline);
+        
+        if (!$isDeadlinePassed) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Ne možete zatvoriti konkurs dok je još otvoren za prijave. Rok za prijave mora prvo isteći.']);
+        }
         
         // Proveri da li postoje prijave koje nisu ocijenjene
         $submittedApplications = $competition->applications()
