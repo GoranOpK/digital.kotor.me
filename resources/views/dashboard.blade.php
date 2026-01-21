@@ -360,8 +360,11 @@
                                         // 1) Status Obrasca 1a/1b
                                         $obrazacLabel = null;
                                         $obrazacStyle = '';
+                                        $obrazacUrl = null;
                                         if ($app->applicant_type) {
-                                            if ($app->isObrazacComplete()) {
+                                            $isObrazacComplete = $app->isObrazacComplete();
+
+                                            if ($isObrazacComplete) {
                                                 // Obrazac je kompletan
                                                 if ($app->applicant_type === 'preduzetnica') {
                                                     $obrazacLabel = 'Obrazac 1a popunjen';
@@ -370,6 +373,8 @@
                                                     $obrazacLabel = 'Obrazac 1b popunjen';
                                                     $obrazacStyle = 'background: #d1fae5; color: #065f46;';
                                                 }
+                                                // Klik na badge vodi na prikaz prijave (popunjen obrazac)
+                                                $obrazacUrl = route('applications.show', $app);
                                             } else {
                                                 // Obrazac nije kompletan (nacrt)
                                                 if ($app->applicant_type === 'preduzetnica') {
@@ -379,12 +384,15 @@
                                                     $obrazacLabel = 'Obrazac 1b - Nacrt';
                                                     $obrazacStyle = 'background: #fef3c7; color: #92400e;';
                                                 }
+                                                // Klik na badge vodi na nastavak popunjavanja Obrasca 1a/1b
+                                                $obrazacUrl = route('applications.create', $app->competition_id);
                                             }
                                         }
 
                                         // 2) Status biznis plana
                                         $bizPlanLabel = null;
                                         $bizPlanStyle = '';
+                                        $bizPlanUrl = null;
                                         if ($app->businessPlan) {
                                             if ($app->businessPlan->isComplete()) {
                                                 $bizPlanLabel = 'Biznis plan – popunjen';
@@ -393,22 +401,24 @@
                                                 $bizPlanLabel = 'Biznis plan – nacrt';
                                                 $bizPlanStyle = 'background: #fef3c7; color: #92400e;';
                                             }
+                                            // Klik na badge uvijek vodi na formu biznis plana (nastavak ili pregled)
+                                            $bizPlanUrl = route('applications.business-plan.create', $app);
                                         }
                                     @endphp
 
                                     <div style="display: flex; align-items: center; flex-wrap: wrap;">
-                                        {{-- Badge za Obrazac 1a/1b --}}
-                                        @if($obrazacLabel)
-                                            <span style="{{ $badgeBaseStyle }} {{ $obrazacStyle }}">
+                                        {{-- Badge za Obrazac 1a/1b (klikabilan) --}}
+                                        @if($obrazacLabel && $obrazacUrl)
+                                            <a href="{{ $obrazacUrl }}" style="{{ $badgeBaseStyle }} {{ $obrazacStyle }} text-decoration: none; cursor: pointer;">
                                                 {{ $obrazacLabel }}
-                                            </span>
+                                            </a>
                                         @endif
 
-                                        {{-- Badge za Biznis plan, ako postoji biznis plan --}}
-                                        @if($bizPlanLabel)
-                                            <span style="{{ $badgeBaseStyle }} {{ $bizPlanStyle }}">
+                                        {{-- Badge za Biznis plan, ako postoji biznis plan (klikabilan) --}}
+                                        @if($bizPlanLabel && $bizPlanUrl)
+                                            <a href="{{ $bizPlanUrl }}" style="{{ $badgeBaseStyle }} {{ $bizPlanStyle }} text-decoration: none; cursor: pointer;">
                                                 {{ $bizPlanLabel }}
-                                            </span>
+                                            </a>
                                         @endif
 
                                         {{-- Ako nema specifičnih bedžova, prikaži opšti status --}}
@@ -419,19 +429,6 @@
                                         @endif
                                     </div>
                                     <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
-                                        {{-- Linkovi za nastavak popunjavanja kod nacrta --}}
-                                        @if($app->status === 'draft')
-                                            <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
-                                                <a href="{{ route('applications.create', $app->competition_id) }}" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 11px;">
-                                                    Nastavi Obrazac 1a/1b
-                                                </a>
-                                                @if($app->businessPlan)
-                                                    <a href="{{ route('applications.business-plan.create', $app) }}" style="color: #047857; font-weight: 600; text-decoration: none; font-size: 11px;">
-                                                        Nastavi biznis plan
-                                                    </a>
-                                                @endif
-                                            </div>
-                                        @endif
                                         <div style="display: flex; gap: 8px;">
                                             <a href="{{ route('applications.show', $app) }}" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 12px;">Pregled</a>
                                             <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Obrisati prijavu?');" style="display: inline;">
