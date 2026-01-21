@@ -105,11 +105,11 @@
             <h1>Pregled prijave</h1>
         </div>
 
-        <!-- Status prijave i Osnovni podaci u istom redu -->
+        <!-- Status prijave, Osnovni podaci i Priložena dokumentacija u istom redu -->
         <style>
             @media (min-width: 768px) {
                 .status-and-basic-info {
-                    grid-template-columns: repeat(2, 1fr) !important;
+                    grid-template-columns: repeat(3, 1fr) !important;
                 }
             }
         </style>
@@ -205,33 +205,33 @@
                         @endif
                     </div>
                 </div>
+
+                <!-- Priložena dokumentacija -->
+                @php
+                    $userRole = auth()->user()->role ? auth()->user()->role->name : null;
+                @endphp
+                @if($application->documents->count() > 0 && $userRole === 'komisija')
+                <div class="info-card">
+                    <h2>Priložena dokumentacija</h2>
+                    <ul class="documents-list">
+                        @foreach($application->documents as $doc)
+                            <li class="document-item">
+                                <span>{{ $doc->name }}</span>
+                                <div style="display: inline-flex; gap: 8px;">
+                                    {{-- Samo članovi komisije mogu da vide dokument (server dodatno provjerava dodijeljenu komisiju) --}}
+                                    <a href="{{ route('applications.document.view', ['application' => $application, 'document' => $doc]) }}"
+                                       class="btn btn-secondary"
+                                       target="_blank">
+                                        Pogledaj
+                                    </a>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
             </div>
         </div>
-
-        <!-- Dokumenti -->
-        @php
-            $userRole = auth()->user()->role ? auth()->user()->role->name : null;
-        @endphp
-        @if($application->documents->count() > 0 && $userRole === 'komisija')
-        <div class="info-card">
-            <h2>Priložena dokumentacija</h2>
-            <ul class="documents-list">
-                @foreach($application->documents as $doc)
-                    <li class="document-item">
-                        <span>{{ $doc->name }}</span>
-                        <div style="display: inline-flex; gap: 8px;">
-                            {{-- Samo članovi komisije mogu da vide dokument (server dodatno provjerava dodijeljenu komisiju) --}}
-                            <a href="{{ route('applications.document.view', ['application' => $application, 'document' => $doc]) }}"
-                               class="btn btn-secondary"
-                               target="_blank">
-                                Pogledaj
-                            </a>
-                        </div>
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
 
         <!-- Ocjene -->
         @if($application->evaluationScores->count() > 0)
