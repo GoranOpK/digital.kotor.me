@@ -354,27 +354,49 @@
                                         $statusLabels = ['draft' => 'Nacrt', 'submitted' => 'U obradi', 'evaluated' => 'Ocjenjena', 'approved' => 'Odobrena', 'rejected' => 'Odbijena'];
                                         $statusColors = ['draft' => 'background: #fef3c7; color: #92400e;', 'submitted' => 'background: #dbeafe; color: #1e40af;', 'evaluated' => 'background: #d1fae5; color: #065f46;', 'approved' => 'background: #d1fae5; color: #065f46;', 'rejected' => 'background: #fee2e2; color: #991b1b;'];
                                     @endphp
+                                    {{-- Badge sa statusom --}}
                                     @if($app->status === 'draft')
                                         @php
-                                            // Ako postoji biznis plan, nastavi na formu biznis plana; u suprotnom, na Obrazac 1a/1b
-                                            $draftUrl = $app->businessPlan
-                                                ? route('applications.business-plan.create', $app)
-                                                : route('applications.create', $app->competition_id);
+                                            // Ako postoji biznis plan koji je nekompletan (draft), prikaži "Biznis plan – nacrt"
+                                            // Ako postoji biznis plan koji je kompletan, prikaži "Popunjen plan"
+                                            // Inače prikaži "Nacrt"
+                                            if ($app->businessPlan && $app->businessPlan->isDraft()) {
+                                                $draftLabel = 'Biznis plan – nacrt';
+                                            } elseif ($app->businessPlan && $app->businessPlan->isComplete()) {
+                                                $draftLabel = 'Popunjen plan';
+                                            } else {
+                                                $draftLabel = $statusLabels[$app->status] ?? $app->status;
+                                            }
                                         @endphp
-                                        <a href="{{ $draftUrl }}" style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; text-decoration: underline; {{ $statusColors[$app->status] ?? '' }}; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.opacity='0.8'; this.style.textDecoration='underline';" onmouseout="this.style.opacity='1'; this.style.textDecoration='underline';" title="Kliknite da nastavite popunjavanje prijave">
-                                            {{ $statusLabels[$app->status] ?? $app->status }} →
-                                        </a>
+                                        <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; {{ $statusColors[$app->status] ?? '' }}">
+                                            {{ $draftLabel }}
+                                        </span>
                                     @else
                                         <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; {{ $statusColors[$app->status] ?? '' }}">
                                             {{ $statusLabels[$app->status] ?? $app->status }}
                                         </span>
                                     @endif
-                                    <div style="display: flex; gap: 8px;">
-                                        <a href="{{ route('applications.show', $app) }}" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 12px;">Pregled</a>
-                                        <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Obrisati prijavu?');" style="display: inline;">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" style="background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; font-size: 12px; padding: 0;">Obriši</button>
-                                        </form>
+                                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                                        {{-- Linkovi za nastavak popunjavanja kod nacrta --}}
+                                        @if($app->status === 'draft')
+                                            <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+                                                <a href="{{ route('applications.create', $app->competition_id) }}" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 11px;">
+                                                    Nastavi Obrazac 1a/1b
+                                                </a>
+                                                @if($app->businessPlan)
+                                                    <a href="{{ route('applications.business-plan.create', $app) }}" style="color: #047857; font-weight: 600; text-decoration: none; font-size: 11px;">
+                                                        Nastavi biznis plan
+                                                    </a>
+                                                @endif
+                                            </div>
+                                        @endif
+                                        <div style="display: flex; gap: 8px;">
+                                            <a href="{{ route('applications.show', $app) }}" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 12px;">Pregled</a>
+                                            <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Obrisati prijavu?');" style="display: inline;">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" style="background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; font-size: 12px; padding: 0;">Obriši</button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

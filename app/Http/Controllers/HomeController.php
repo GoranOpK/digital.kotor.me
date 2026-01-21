@@ -362,7 +362,7 @@ class HomeController extends Controller
                 // Moje prijave - samo prijave koje je korisnik lično podneo
                 $myApplications = Application::where('user_id', $user->id)
                     ->whereIn('competition_id', $competitionIds)
-                    ->with('competition')
+                    ->with('competition', 'businessPlan')
                     ->latest()
                     ->get();
                 
@@ -372,7 +372,7 @@ class HomeController extends Controller
         
         // Za običnog korisnika
         $applications = Application::where('user_id', $user->id)
-            ->with('competition')
+            ->with('competition', 'businessPlan')
             ->latest()
             ->get();
         
