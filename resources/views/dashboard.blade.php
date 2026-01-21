@@ -353,29 +353,71 @@
                                     @php
                                         $statusLabels = ['draft' => 'Nacrt', 'submitted' => 'U obradi', 'evaluated' => 'Ocjenjena', 'approved' => 'Odobrena', 'rejected' => 'Odbijena'];
                                         $statusColors = ['draft' => 'background: #fef3c7; color: #92400e;', 'submitted' => 'background: #dbeafe; color: #1e40af;', 'evaluated' => 'background: #d1fae5; color: #065f46;', 'approved' => 'background: #d1fae5; color: #065f46;', 'rejected' => 'background: #fee2e2; color: #991b1b;'];
-                                    @endphp
-                                    {{-- Badge sa statusom --}}
-                                    @if($app->status === 'draft')
-                                        @php
-                                            // Ako postoji biznis plan koji je nekompletan (draft), prikaži "Biznis plan – nacrt"
-                                            // Ako postoji biznis plan koji je kompletan, prikaži "Popunjen plan"
-                                            // Inače prikaži "Nacrt"
-                                            if ($app->businessPlan && $app->businessPlan->isDraft()) {
-                                                $draftLabel = 'Biznis plan – nacrt';
-                                            } elseif ($app->businessPlan && $app->businessPlan->isComplete()) {
-                                                $draftLabel = 'Popunjen plan';
+
+                                        // Badge stil
+                                        $badgeBaseStyle = 'display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; margin-right: 4px;';
+
+                                        // 1) Status Obrasca 1a/1b
+                                        $obrazacLabel = null;
+                                        $obrazacStyle = '';
+                                        if ($app->applicant_type) {
+                                            if ($app->isObrazacComplete()) {
+                                                // Obrazac je kompletan
+                                                if ($app->applicant_type === 'preduzetnica') {
+                                                    $obrazacLabel = 'Obrazac 1a popunjen';
+                                                    $obrazacStyle = 'background: #d1fae5; color: #065f46;';
+                                                } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
+                                                    $obrazacLabel = 'Obrazac 1b popunjen';
+                                                    $obrazacStyle = 'background: #d1fae5; color: #065f46;';
+                                                }
                                             } else {
-                                                $draftLabel = $statusLabels[$app->status] ?? $app->status;
+                                                // Obrazac nije kompletan (nacrt)
+                                                if ($app->applicant_type === 'preduzetnica') {
+                                                    $obrazacLabel = 'Obrazac 1a - Nacrt';
+                                                    $obrazacStyle = 'background: #fef3c7; color: #92400e;';
+                                                } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
+                                                    $obrazacLabel = 'Obrazac 1b - Nacrt';
+                                                    $obrazacStyle = 'background: #fef3c7; color: #92400e;';
+                                                }
                                             }
-                                        @endphp
-                                        <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; {{ $statusColors[$app->status] ?? '' }}">
-                                            {{ $draftLabel }}
-                                        </span>
-                                    @else
-                                        <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; {{ $statusColors[$app->status] ?? '' }}">
-                                            {{ $statusLabels[$app->status] ?? $app->status }}
-                                        </span>
-                                    @endif
+                                        }
+
+                                        // 2) Status biznis plana
+                                        $bizPlanLabel = null;
+                                        $bizPlanStyle = '';
+                                        if ($app->businessPlan) {
+                                            if ($app->businessPlan->isComplete()) {
+                                                $bizPlanLabel = 'Biznis plan – popunjen';
+                                                $bizPlanStyle = 'background: #d1fae5; color: #065f46;';
+                                            } else {
+                                                $bizPlanLabel = 'Biznis plan – nacrt';
+                                                $bizPlanStyle = 'background: #fef3c7; color: #92400e;';
+                                            }
+                                        }
+                                    @endphp
+
+                                    <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                                        {{-- Badge za Obrazac 1a/1b --}}
+                                        @if($obrazacLabel)
+                                            <span style="{{ $badgeBaseStyle }} {{ $obrazacStyle }}">
+                                                {{ $obrazacLabel }}
+                                            </span>
+                                        @endif
+
+                                        {{-- Badge za Biznis plan, ako postoji biznis plan --}}
+                                        @if($bizPlanLabel)
+                                            <span style="{{ $badgeBaseStyle }} {{ $bizPlanStyle }}">
+                                                {{ $bizPlanLabel }}
+                                            </span>
+                                        @endif
+
+                                        {{-- Ako nema specifičnih bedžova, prikaži opšti status --}}
+                                        @if(!$obrazacLabel && !$bizPlanLabel)
+                                            <span style="{{ $badgeBaseStyle }} {{ $statusColors[$app->status] ?? '' }}">
+                                                {{ $statusLabels[$app->status] ?? $app->status }}
+                                            </span>
+                                        @endif
+                                    </div>
                                     <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
                                         {{-- Linkovi za nastavak popunjavanja kod nacrta --}}
                                         @if($app->status === 'draft')
