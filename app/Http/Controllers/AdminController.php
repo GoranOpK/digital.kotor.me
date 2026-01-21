@@ -596,6 +596,76 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za zatvaranje ovog konkursa.');
         }
         
+        // Proveri da li je deadline prošao
+        $deadline = $competition->deadline;
+        $isDeadlinePassed = $deadline && now()->isAfter($deadline);
+        
+        // Proveri da li postoje prijave koje nisu ocijenjene
+        $submittedApplications = $competition->applications()
+            ->where('status', 'submitted')
+            ->get();
+        
+        if ($submittedApplications->count() > 0) {
+            // Proveri da li sve prijave imaju ocjene od svih članova komisije
+            $commission = $competition->commission;
+            if ($commission) {
+                $activeMembers = $commission->activeMembers()->get();
+                $activeMemberIds = $activeMembers->pluck('id');
+                
+                foreach ($submittedApplications as $application) {
+                    // Ako je deadline prošao, provjeri da li je prijava kompletna
+                    $isIncomplete = false;
+                    if ($isDeadlinePassed) {
+                        // Provjeri da li prijava ima sve obavezne dokumente i biznis plan
+                        $hasAllDocuments = $application->hasAllRequiredDocuments();
+                        $hasBusinessPlan = $application->businessPlan !== null;
+                        $isObrazacComplete = $application->isObrazacComplete();
+                        
+                        // Ako prijava nije kompletna (nema sve dokumente ili biznis plan), tretiraj je kao nepotpunu
+                        if (!$hasAllDocuments || !$hasBusinessPlan || !$isObrazacComplete) {
+                            $isIncomplete = true;
+                            
+                            // Automatski postavi status na 'rejected' za nepotpune prijave nakon isteka deadline-a
+                            if ($application->status === 'submitted') {
+                                $application->update([
+                                    'status' => 'rejected',
+                                    'rejection_reason' => 'Prijava je nepotpuna (nedostaju dokumenti ili biznis plan) i rok za prijave je istekao.',
+                                ]);
+                            }
+                        }
+                    }
+                    
+                    // Ako prijava nije nepotpuna, provjeri da li je ocijenjena
+                    if (!$isIncomplete) {
+                        $evaluatedByMemberIds = $application->evaluationScores()
+                            ->whereIn('commission_member_id', $activeMemberIds)
+                            ->pluck('commission_member_id');
+                        
+                        // Ako neki član komisije nije ocijenio prijavu, preusmeri na formu za ocjenjivanje
+                        $missingEvaluations = $activeMemberIds->diff($evaluatedByMemberIds);
+                        if ($missingEvaluations->count() > 0) {
+                            return redirect()->route('evaluation.index', ['competition_id' => $competition->id])
+                                ->withErrors(['error' => 'Ne možete zatvoriti konkurs dok postoje prijave koje nisu ocijenjene od svih članova komisije. Molimo prvo ocijenite sve prijave.']);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Ako je deadline prošao, automatski odbij sve draft prijave
+        if ($isDeadlinePassed) {
+            $draftApplications = $competition->applications()
+                ->where('status', 'draft')
+                ->get();
+            
+            foreach ($draftApplications as $application) {
+                $application->update([
+                    'status' => 'rejected',
+                    'rejection_reason' => 'Prijava nije podnesena u roku i rok za prijave je istekao.',
+                ]);
+            }
+        }
+        
         $competition->update([
             'status' => 'closed',
             'closed_at' => now(),
