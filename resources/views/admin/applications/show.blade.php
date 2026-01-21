@@ -105,95 +105,106 @@
             <h1>Pregled prijave</h1>
         </div>
 
-        <!-- Status prijave -->
-        <div class="info-card">
-            <h2>Status prijave</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Status</span>
-                    <span class="info-value">
-                        <span class="status-badge status-{{ $application->status }}">
-                            @if($application->status === 'draft') Nacrt
-                            @elseif($application->status === 'submitted') Podnesena
-                            @elseif($application->status === 'evaluated') Ocjenjena
-                            @elseif($application->status === 'approved') Odobrena
-                            @elseif($application->status === 'rejected') Odbijena
-                            @else {{ $application->status }}
-                            @endif
-                        </span>
-                    </span>
+        <!-- Status prijave i Osnovni podaci u istom redu -->
+        <style>
+            @media (min-width: 768px) {
+                .status-and-basic-info {
+                    grid-template-columns: repeat(2, 1fr) !important;
+                }
+            }
+        </style>
+        <div class="status-and-basic-info" style="display: grid; grid-template-columns: 1fr; gap: 24px; margin-bottom: 24px;">
+                <!-- Status prijave -->
+                <div class="info-card">
+                    <h2>Status prijave</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Status</span>
+                            <span class="info-value">
+                                <span class="status-badge status-{{ $application->status }}">
+                                    @if($application->status === 'draft') Nacrt
+                                    @elseif($application->status === 'submitted') Podnesena
+                                    @elseif($application->status === 'evaluated') Ocjenjena
+                                    @elseif($application->status === 'approved') Odobrena
+                                    @elseif($application->status === 'rejected') Odbijena
+                                    @else {{ $application->status }}
+                                    @endif
+                                </span>
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Datum podnošenja</span>
+                            <span class="info-value">
+                                {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'N/A' }}
+                            </span>
+                        </div>
+                        @if($application->final_score)
+                        <div class="info-item">
+                            <span class="info-label">Konačna ocjena</span>
+                            <span class="info-value">{{ number_format($application->final_score, 2) }} / 50</span>
+                        </div>
+                        @endif
+                        @if($application->ranking_position)
+                        <div class="info-item">
+                            <span class="info-label">Pozicija na rang listi</span>
+                            <span class="info-value">#{{ $application->ranking_position }}</span>
+                        </div>
+                        @endif
+                    </div>
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Datum podnošenja</span>
-                    <span class="info-value">
-                        {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'N/A' }}
-                    </span>
-                </div>
-                @if($application->final_score)
-                <div class="info-item">
-                    <span class="info-label">Konačna ocjena</span>
-                    <span class="info-value">{{ number_format($application->final_score, 2) }} / 50</span>
-                </div>
-                @endif
-                @if($application->ranking_position)
-                <div class="info-item">
-                    <span class="info-label">Pozicija na rang listi</span>
-                    <span class="info-value">#{{ $application->ranking_position }}</span>
-                </div>
-                @endif
-            </div>
-        </div>
 
-        <!-- Osnovni podaci -->
-        <div class="info-card">
-            <h2>Osnovni podaci</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Naziv biznis plana</span>
-                    <span class="info-value">{{ $application->business_plan_name }}</span>
+                <!-- Osnovni podaci -->
+                <div class="info-card">
+                    <h2>Osnovni podaci</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Naziv biznis plana</span>
+                            <span class="info-value">{{ $application->business_plan_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Podnosilac</span>
+                            <span class="info-value">{{ $application->user->name ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ $application->user->email ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Konkurs</span>
+                            <span class="info-value">{{ $application->competition->title ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Tip podnosioca</span>
+                            <span class="info-value">
+                                {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : 'DOO' }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Faza biznisa</span>
+                            <span class="info-value">
+                                {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Oblast biznisa</span>
+                            <span class="info-value">{{ $application->business_area }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Traženi iznos</span>
+                            <span class="info-value">{{ number_format($application->requested_amount, 2, ',', '.') }} €</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ukupan budžet</span>
+                            <span class="info-value">{{ number_format($application->total_budget_needed, 2, ',', '.') }} €</span>
+                        </div>
+                        @if($application->approved_amount)
+                        <div class="info-item">
+                            <span class="info-label">Odobreni iznos</span>
+                            <span class="info-value">{{ number_format($application->approved_amount, 2, ',', '.') }} €</span>
+                        </div>
+                        @endif
+                    </div>
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Podnosilac</span>
-                    <span class="info-value">{{ $application->user->name ?? 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Email</span>
-                    <span class="info-value">{{ $application->user->email ?? 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Konkurs</span>
-                    <span class="info-value">{{ $application->competition->title ?? 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Tip podnosioca</span>
-                    <span class="info-value">
-                        {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : 'DOO' }}
-                    </span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Faza biznisa</span>
-                    <span class="info-value">
-                        {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
-                    </span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Oblast biznisa</span>
-                    <span class="info-value">{{ $application->business_area }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Traženi iznos</span>
-                    <span class="info-value">{{ number_format($application->requested_amount, 2, ',', '.') }} €</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Ukupan budžet</span>
-                    <span class="info-value">{{ number_format($application->total_budget_needed, 2, ',', '.') }} €</span>
-                </div>
-                @if($application->approved_amount)
-                <div class="info-item">
-                    <span class="info-label">Odobreni iznos</span>
-                    <span class="info-value">{{ number_format($application->approved_amount, 2, ',', '.') }} €</span>
-                </div>
-                @endif
             </div>
         </div>
 
