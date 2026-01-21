@@ -26,45 +26,48 @@
     }
     .info-card {
         background: #fff;
-        border-radius: 16px;
-        padding: 24px;
+        border-radius: 12px;
+        padding: 16px;
         margin-bottom: 24px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .info-card h2 {
-        font-size: 20px;
+        font-size: 16px;
         font-weight: 700;
         color: var(--primary);
-        margin: 0 0 20px;
-        padding-bottom: 12px;
+        margin: 0 0 12px;
+        padding-bottom: 8px;
         border-bottom: 2px solid #e5e7eb;
     }
     .info-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+        gap: 10px;
     }
     .info-item {
         display: flex;
         flex-direction: column;
+        margin-bottom: 0;
     }
     .info-label {
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         color: #6b7280;
         text-transform: uppercase;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
+        letter-spacing: 0.3px;
     }
     .info-value {
-        font-size: 14px;
+        font-size: 13px;
         color: #111827;
         font-weight: 500;
+        line-height: 1.4;
     }
     .status-badge {
         display: inline-block;
-        padding: 6px 16px;
+        padding: 4px 12px;
         border-radius: 9999px;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 600;
     }
     .status-draft { background: #fef3c7; color: #92400e; }
@@ -78,19 +81,20 @@
         margin: 0;
     }
     .document-item {
-        padding: 12px;
+        padding: 8px 10px;
         border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        margin-bottom: 8px;
+        border-radius: 6px;
+        margin-bottom: 6px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        font-size: 13px;
     }
     .btn {
-        padding: 8px 16px;
+        padding: 6px 12px;
         border-radius: 6px;
         text-decoration: none;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 600;
     }
     .btn-primary {
@@ -113,7 +117,7 @@
                 }
             }
         </style>
-        <div class="status-and-basic-info" style="display: grid; grid-template-columns: 1fr; gap: 24px; margin-bottom: 24px;">
+        <div class="status-and-basic-info" style="display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px;">
                 <!-- Status prijave -->
                 <div class="info-card">
                     <h2>Status prijave</h2>
