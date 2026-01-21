@@ -1138,11 +1138,16 @@
             <!-- Dugme za slanje -->
             @if(!$readOnly)
                 <div class="form-card" style="text-align: center;">
-                    <button type="submit" class="btn-primary">
-                        Sačuvaj biznis plan
-                    </button>
-                    <p style="color: #6b7280; font-size: 14px; margin-top: 16px;">
-                        Nakon čuvanja biznis plana, možete priložiti potrebne dokumente.
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" id="bpSaveAsDraftBtn" class="btn-secondary" style="background: #6b7280; color: #fff; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
+                            Sačuvaj kao nacrt
+                        </button>
+                        <button type="submit" class="btn-primary" id="bpSubmitBtn">
+                            Sačuvaj biznis plan
+                        </button>
+                    </div>
+                    <p style="color: #6b7280; font-size: 14px; margin-top: 16px;" id="bpSubmitButtonInfo">
+                        <strong>Sačuvaj biznis plan:</strong> Sačuvajte i vratite se na pregled prijave i priloženih dokumenata.
                     </p>
                 </div>
             @else
@@ -1458,6 +1463,34 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateFundingTotal();
     calculateRevenueGrandTotal();
     calculateExpenseGrandTotal();
+
+    // Funkcionalnost za "Sačuvaj kao nacrt" na formi biznis plana
+    const bpForm = document.getElementById('businessPlanForm');
+    const bpSaveAsDraftBtn = document.getElementById('bpSaveAsDraftBtn');
+
+    if (bpForm && bpSaveAsDraftBtn) {
+        bpSaveAsDraftBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            // Dodaj hidden input za save_as_draft
+            let draftInput = bpForm.querySelector('input[name="save_as_draft"]');
+            if (!draftInput) {
+                draftInput = document.createElement('input');
+                draftInput.type = 'hidden';
+                draftInput.name = 'save_as_draft';
+                draftInput.value = '1';
+                bpForm.appendChild(draftInput);
+            }
+
+            // Ukloni sve required atribute da bi se omogućilo delimično čuvanje
+            const requiredFields = bpForm.querySelectorAll('[required]');
+            requiredFields.forEach(field => {
+                field.removeAttribute('required');
+            });
+
+            bpForm.submit();
+        });
+    }
 });
 </script>
 @endsection

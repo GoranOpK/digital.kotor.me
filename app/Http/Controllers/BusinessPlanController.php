@@ -121,15 +121,18 @@ class BusinessPlanController extends Controller
             abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
+        // Proveri da li se čuva kao nacrt
+        $isDraft = $request->has('save_as_draft') && $request->save_as_draft === '1';
+
         // Validacija
         $validated = $request->validate([
             // I. OSNOVNI PODACI
-            'business_idea_name' => 'required|string|max:255',
-            'applicant_name' => 'required|string|max:255',
-            'applicant_jmbg' => 'required|string|max:13',
-            'applicant_address' => 'required|string',
-            'applicant_phone' => 'required|string|max:50',
-            'applicant_email' => 'required|email|max:255',
+            'business_idea_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
+            'applicant_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
+            'applicant_jmbg' => $isDraft ? 'nullable|string|max:13' : 'required|string|max:13',
+            'applicant_address' => $isDraft ? 'nullable|string' : 'required|string',
+            'applicant_phone' => $isDraft ? 'nullable|string|max:50' : 'required|string|max:50',
+            'applicant_email' => $isDraft ? 'nullable|email|max:255' : 'required|email|max:255',
             'has_registered_business' => 'nullable|boolean',
             'registration_form' => 'nullable|string|max:255',
             'company_name' => 'nullable|string|max:255',
@@ -140,7 +143,7 @@ class BusinessPlanController extends Controller
             'company_email' => 'nullable|email|max:255',
             'company_website' => 'nullable|string|max:255',
             'bank_account' => 'nullable|string|max:255',
-            'summary' => 'required|string',
+            'summary' => $isDraft ? 'nullable|string' : 'required|string',
             
             // II. MARKETING
             'products_services_table' => 'nullable|array',
@@ -201,6 +204,13 @@ class BusinessPlanController extends Controller
             )
         );
 
+        // Ako je sačuvano kao nacrt, vrati korisnika na Moj Panel
+        if ($isDraft) {
+            return redirect()->route('dashboard')
+                ->with('success', 'Biznis plan je sačuvan kao nacrt. Možete ga nastaviti popunjavati iz sekcije \"Moje prijave\".');
+        }
+
+        // U suprotnom, vrati na prikaz prijave
         return redirect()->route('applications.show', $application)
             ->with('success', 'Biznis plan je uspješno sačuvan. Sada možete pregledati prijavu i priložiti dokumente.');
     }

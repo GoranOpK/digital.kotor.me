@@ -355,7 +355,13 @@
                                         $statusColors = ['draft' => 'background: #fef3c7; color: #92400e;', 'submitted' => 'background: #dbeafe; color: #1e40af;', 'evaluated' => 'background: #d1fae5; color: #065f46;', 'approved' => 'background: #d1fae5; color: #065f46;', 'rejected' => 'background: #fee2e2; color: #991b1b;'];
                                     @endphp
                                     @if($app->status === 'draft')
-                                        <a href="{{ route('applications.create', $app->competition_id) }}" style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; text-decoration: underline; {{ $statusColors[$app->status] ?? '' }}; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.opacity='0.8'; this.style.textDecoration='underline';" onmouseout="this.style.opacity='1'; this.style.textDecoration='underline';" title="Kliknite da nastavite popunjavanje prijave">
+                                        @php
+                                            // Ako postoji biznis plan, nastavi na formu biznis plana; u suprotnom, na Obrazac 1a/1b
+                                            $draftUrl = $app->businessPlan
+                                                ? route('applications.business-plan.create', $app)
+                                                : route('applications.create', $app->competition_id);
+                                        @endphp
+                                        <a href="{{ $draftUrl }}" style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; text-decoration: underline; {{ $statusColors[$app->status] ?? '' }}; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.opacity='0.8'; this.style.textDecoration='underline';" onmouseout="this.style.opacity='1'; this.style.textDecoration='underline';" title="Kliknite da nastavite popunjavanje prijave">
                                             {{ $statusLabels[$app->status] ?? $app->status }} →
                                         </a>
                                     @else
