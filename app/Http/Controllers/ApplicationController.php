@@ -348,10 +348,9 @@ class ApplicationController extends Controller
             return redirect()->route('applications.business-plan.create', $application)
                 ->with('success', 'Obrazac 1a/1b je kompletno popunjen. Sada popunite biznis plan.');
         } elseif ($isDraft) {
-            // Ako je eksplicitno kliknuto "Sačuvaj kao nacrt", uvek čuvaj kao draft
-            return redirect()->route('applications.create', $competition)
-                ->with('success', 'Prijava je sačuvana kao nacrt. Možete je nastaviti popunjavati.')
-                ->withInput();
+            // Ako je eksplicitno kliknuto "Sačuvaj kao nacrt", čuvaj kao draft i vrati korisnika na Moj Panel
+            return redirect()->route('dashboard')
+                ->with('success', 'Prijava je sačuvana kao nacrt. U bilo kom trenutku je možete nastaviti iz sekcije \"Moje prijave\".');
         } else {
             // Ako nije kompletna (kliknuo "Sačuvaj prijavu" ali nisu sva polja popunjena), sačuvaj kao draft i vrati na formu
             return redirect()->route('applications.create', $competition)
