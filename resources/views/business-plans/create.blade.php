@@ -1226,6 +1226,25 @@ function addTableRow(tableBodyId, fieldNames) {
     if (tableName.startsWith('_')) {
         tableName = tableName.substring(1);
     }
+    // Dodaj _table na kraj (osim za tabele koje već imaju drugačiji format)
+    // Mapa za konverziju imena tabela
+    const tableNameMap = {
+        'products_services': 'products_services_table',
+        'pricing': 'pricing_table',
+        'revenue_share': 'revenue_share_table',
+        'suppliers': 'suppliers_table',
+        'target_customers': 'target_customers',
+        'sales_locations': 'sales_locations',
+        'employment_structure': 'employment_structure',
+        'business_history': 'business_history',
+        'job_schedule': 'job_schedule'
+    };
+    // Ako postoji u mapi, koristi mapirano ime, inače dodaj _table
+    if (tableNameMap[tableName]) {
+        tableName = tableNameMap[tableName];
+    } else if (!tableName.endsWith('_table') && !tableName.includes('_')) {
+        tableName = tableName + '_table';
+    }
     
     // Debug log
     console.log('Adding row to table:', tableBodyId, 'Table name:', tableName, 'Row index:', rowIndex);
@@ -1651,6 +1670,43 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Funkcija za rukovanje klikom na dugme (samo ako nije readOnly)
+    // Funkcija za re-indeksiranje svih name atributa u dinamičkim tabelama
+    function reindexTableRows() {
+        // Lista svih tabela koje treba re-indeksirati
+        const tableIds = [
+            'productsServicesTableBody',
+            'pricingTableBody',
+            'revenueShareTableBody',
+            'suppliersTableBody',
+            'targetCustomersTableBody',
+            'salesLocationsTableBody',
+            'employmentStructureTableBody',
+            'businessHistoryTableBody',
+            'jobScheduleTableBody'
+        ];
+        
+        tableIds.forEach(tableId => {
+            const tbody = document.getElementById(tableId);
+            if (!tbody) return;
+            
+            const rows = tbody.querySelectorAll('tr:not(.category-header)');
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input[name], textarea[name]');
+                inputs.forEach(input => {
+                    const name = input.name;
+                    // Pronađi ime tabele i polje iz name atributa
+                    const match = name.match(/^([^\[]+)\[\d+\]\[([^\]]+)\]$/);
+                    if (match) {
+                        const tableName = match[1];
+                        const fieldName = match[2];
+                        // Ažuriraj indeks
+                        input.name = `${tableName}[${index}][${fieldName}]`;
+                    }
+                });
+            });
+        });
+    }
+    
     function handleSubmit(e) {
         @if($readOnly ?? false)
             e.preventDefault();
@@ -1658,6 +1714,9 @@ document.addEventListener('DOMContentLoaded', function() {
         @endif
         
         e.preventDefault();
+        
+        // Re-indeksiraj sve name atribute prije slanja forme
+        reindexTableRows();
         
         const allFilled = checkRequiredFields();
         
