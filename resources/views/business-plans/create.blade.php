@@ -237,6 +237,12 @@
             $readOnly = $readOnly ?? false;
         @endphp
 
+        @if($readOnly)
+            <div class="alert alert-info" style="margin-bottom: 24px; padding: 16px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; color: #92400e;">
+                <strong>Pregled prijave:</strong> Ovo je pregled Biznis plana, ne možete mijenjati podatke.
+            </div>
+        @endif
+
         <form method="POST" action="{{ $readOnly ? '#' : route('applications.business-plan.store', $application) }}" id="businessPlanForm" @if($readOnly) onsubmit="event.preventDefault(); return false;" @endif>
             @csrf
 
@@ -1145,12 +1151,6 @@
                     </div>
                     <p style="color: #6b7280; font-size: 14px; margin-top: 16px;" id="bpSubmitButtonInfo">
                         <strong id="bpSubmitButtonInfoText">Sačuvaj Nacrt plana:</strong> <span id="bpSubmitButtonInfoDesc">Sačuvajte delimično popunjen biznis plan kao nacrt.</span>
-                    </p>
-                </div>
-            @else
-                <div class="form-card" style="text-align: center;">
-                    <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                        Ovo je prikaz biznis plana podnosioca prijave. Izmjene su dozvoljene samo podnosiocu.
                     </p>
                 </div>
             @endif
