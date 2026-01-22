@@ -1173,7 +1173,15 @@ function addTableRow(tableBodyId, fieldNames) {
     const tbody = document.getElementById(tableBodyId);
     const row = document.createElement('tr');
     const rowIndex = tbody.children.length;
-    const tableName = tableBodyId.replace('TableBody', '').replace(/([A-Z])/g, '_$1').toLowerCase().substring(1);
+    
+    // Ispravljeno: Generiši pravilno ime tabele
+    let tableName = tableBodyId.replace('TableBody', '');
+    // Konvertuj camelCase u snake_case
+    tableName = tableName.replace(/([A-Z])/g, '_$1').toLowerCase();
+    // Ukloni vodeći underscore ako postoji
+    if (tableName.startsWith('_')) {
+        tableName = tableName.substring(1);
+    }
     
     fieldNames.forEach(fieldName => {
         const cell = document.createElement('td');
@@ -1271,7 +1279,26 @@ function removeTableRow(button) {
         return;
     }
     
+    const tbody = row.parentElement;
     row.remove();
+    
+    // Ažuriraj indekse svih preostalih redova nakon brisanja
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((remainingRow, index) => {
+        const inputs = remainingRow.querySelectorAll('input[name], textarea[name]');
+        inputs.forEach(input => {
+            const name = input.name;
+            // Pronađi ime tabele i polje iz name atributa
+            const match = name.match(/^([^\[]+)\[\d+\]\[([^\]]+)\]$/);
+            if (match) {
+                const tableName = match[1];
+                const fieldName = match[2];
+                // Ažuriraj indeks
+                input.name = `${tableName}[${index}][${fieldName}]`;
+            }
+        });
+    });
+    
     // Ponovo izračunaj ukupno nakon brisanja reda
     calculateFundingTotal();
     calculateRevenueGrandTotal();
