@@ -451,7 +451,7 @@ class AdminController extends Controller
         $competition->loadCount('applications');
         $competition->load('commission');
         $applications = $competition->applications()
-            ->with('user')
+            ->with(['user', 'businessPlan'])
             ->latest()
             ->paginate(20);
         
