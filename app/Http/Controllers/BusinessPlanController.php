@@ -68,20 +68,32 @@ class BusinessPlanController extends Controller
             }
             
             // Razdvoji expense_projection na investment_expenses i operating_expenses
+            $investmentExpenses = [];
+            $operatingExpenses = [];
             if ($businessPlan->expense_projection && is_array($businessPlan->expense_projection)) {
-                $businessPlan->investment_expenses = [];
-                $businessPlan->operating_expenses = [];
-                
                 foreach ($businessPlan->expense_projection as $expense) {
                     if (isset($expense['category']) && $expense['category'] === 'investment') {
-                        unset($expense['category']);
-                        $businessPlan->investment_expenses[] = $expense;
+                        $expenseCopy = $expense;
+                        unset($expenseCopy['category']);
+                        $investmentExpenses[] = $expenseCopy;
                     } elseif (isset($expense['category']) && $expense['category'] === 'operating') {
-                        unset($expense['category']);
-                        $businessPlan->operating_expenses[] = $expense;
+                        $expenseCopy = $expense;
+                        unset($expenseCopy['category']);
+                        $operatingExpenses[] = $expenseCopy;
                     }
                 }
             }
+            
+            // Postavi privremene svojstva za prikaz u view-u
+            if (empty($investmentExpenses)) {
+                $investmentExpenses = [['type' => '', 'year1' => '', 'year2' => '', 'year3' => '']];
+            }
+            if (empty($operatingExpenses)) {
+                $operatingExpenses = [['type' => '', 'year1' => '', 'year2' => '', 'year3' => '']];
+            }
+            
+            $businessPlan->setAttribute('investment_expenses', $investmentExpenses);
+            $businessPlan->setAttribute('operating_expenses', $operatingExpenses);
         } else {
             \Log::info("No business plan found for application ID: " . $application->id);
         }
@@ -379,4 +391,6 @@ class BusinessPlanController extends Controller
             ->with('success', 'Biznis plan je uspješno sačuvan. Sada možete pregledati prijavu i priložiti dokumente.');
     }
 }
+
+
 
