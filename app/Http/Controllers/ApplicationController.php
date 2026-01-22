@@ -28,7 +28,7 @@ class ApplicationController extends Controller
         
         if ($request->has('application_id')) {
             // Ako je proslijeđen application_id, provjeri da li je član komisije
-            $existingApplication = Application::find($request->application_id);
+            $existingApplication = Application::with('user')->find($request->application_id);
             
             if ($existingApplication && $roleName === 'komisija') {
                 // Provjeri da li je član komisije za ovu prijavu
@@ -80,7 +80,7 @@ class ApplicationController extends Controller
 
         // Ako nije read-only, provjeri da li korisnik već ima prijavu
         if (!$readOnly && !$existingApplication) {
-            $existingApplication = Application::where('competition_id', $competition->id)
+            $existingApplication = Application::with('user')->where('competition_id', $competition->id)
                 ->where('user_id', Auth::id())
                 ->first();
 

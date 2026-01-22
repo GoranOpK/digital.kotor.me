@@ -338,7 +338,7 @@
                             type="text" 
                             name="preduzetnik_name" 
                             class="form-control @error('preduzetnik_name') error @enderror"
-                            value="{{ old('preduzetnik_name', auth()->user()->name) }}"
+                            value="{{ old('preduzetnik_name', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->name : auth()->user()->name) }}"
                             maxlength="255"
                         >
                         @error('preduzetnik_name')
@@ -353,7 +353,7 @@
                                 type="text" 
                                 name="preduzetnik_jmbg" 
                                 class="form-control @error('preduzetnik_jmbg') error @enderror"
-                                value="{{ old('preduzetnik_jmbg', auth()->user()->jmb) }}"
+                                value="{{ old('preduzetnik_jmbg', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->jmb : auth()->user()->jmb) }}"
                                 maxlength="13"
                                 pattern="[0-9]{13}"
                                 placeholder="13 cifara"
@@ -369,7 +369,7 @@
                                 type="tel" 
                                 name="preduzetnik_phone" 
                                 class="form-control @error('preduzetnik_phone') error @enderror"
-                                value="{{ old('preduzetnik_phone', auth()->user()->phone) }}"
+                                value="{{ old('preduzetnik_phone', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->phone : auth()->user()->phone) }}"
                                 maxlength="50"
                                 placeholder="Npr. +382 67 123 456"
                             >
@@ -386,7 +386,7 @@
                                 type="text" 
                                 name="preduzetnik_address" 
                                 class="form-control @error('preduzetnik_address') error @enderror"
-                                value="{{ old('preduzetnik_address', auth()->user()->address) }}"
+                                value="{{ old('preduzetnik_address', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->address : auth()->user()->address) }}"
                                 maxlength="255"
                             >
                             @error('preduzetnik_address')
@@ -400,7 +400,7 @@
                                 type="email" 
                                 name="preduzetnik_email" 
                                 class="form-control @error('preduzetnik_email') error @enderror"
-                                value="{{ old('preduzetnik_email', auth()->user()->email) }}"
+                                value="{{ old('preduzetnik_email', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->email : auth()->user()->email) }}"
                                 maxlength="255"
                             >
                             @error('preduzetnik_email')
@@ -604,7 +604,7 @@
                             type="text" 
                             name="doo_name" 
                             class="form-control @error('doo_name') error @enderror"
-                            value="{{ old('doo_name', auth()->user()->name) }}"
+                            value="{{ old('doo_name', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->name : auth()->user()->name) }}"
                             maxlength="255"
                         >
                         @error('doo_name')
@@ -619,7 +619,7 @@
                                 type="text" 
                                 name="doo_jmbg" 
                                 class="form-control @error('doo_jmbg') error @enderror"
-                                value="{{ old('doo_jmbg', auth()->user()->jmb) }}"
+                                value="{{ old('doo_jmbg', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->jmb : auth()->user()->jmb) }}"
                                 maxlength="13"
                                 pattern="[0-9]{13}"
                                 placeholder="13 cifara"
@@ -635,7 +635,7 @@
                                 type="tel" 
                                 name="doo_phone" 
                                 class="form-control @error('doo_phone') error @enderror"
-                                value="{{ old('doo_phone', auth()->user()->phone) }}"
+                                value="{{ old('doo_phone', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->phone : auth()->user()->phone) }}"
                                 maxlength="50"
                                 placeholder="Npr. +382 67 123 456"
                             >
@@ -652,7 +652,7 @@
                                 type="text" 
                                 name="doo_address" 
                                 class="form-control @error('doo_address') error @enderror"
-                                value="{{ old('doo_address', auth()->user()->address) }}"
+                                value="{{ old('doo_address', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->address : auth()->user()->address) }}"
                                 maxlength="255"
                             >
                             @error('doo_address')
@@ -666,7 +666,7 @@
                                 type="email" 
                                 name="doo_email" 
                                 class="form-control @error('doo_email') error @enderror"
-                                value="{{ old('doo_email', auth()->user()->email) }}"
+                                value="{{ old('doo_email', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->email : auth()->user()->email) }}"
                                 maxlength="255"
                             >
                             @error('doo_email')
