@@ -80,11 +80,35 @@ class ApplicationController extends Controller
 
         // Ako nije read-only, provjeri da li korisnik već ima prijavu
         if (!$readOnly && !$existingApplication) {
-            $existingApplication = Application::with('user')->where('competition_id', $competition->id)
-                ->where('user_id', Auth::id())
-                ->first();
+            // Prvo provjeri da li je proslijeđen application_id kao query parametar
+            if ($request->has('application_id')) {
+                $existingApplication = Application::with('user')->find($request->application_id);
+                
+                // Provjeri da li prijava pripada trenutnom korisniku
+                if ($existingApplication && $existingApplication->user_id !== Auth::id()) {
+                    abort(403, 'Nemate pristup ovoj prijavi.');
+                }
+            }
+            
+            // Ako još uvijek nema existingApplication, provjeri da li korisnik već ima prijavu za ovaj konkurs
+            if (!$existingApplication) {
+                $existingApplication = Application::with('user')->where('competition_id', $competition->id)
+                    ->where('user_id', Auth::id())
+                    ->first();
+            }
 
             if ($existingApplication) {
+                // Ako je proslijeđen application_id query parametar, prikaži formu bez obzira na status
+                if ($request->has('application_id')) {
+                    // Preuzmi dokumente iz biblioteke korisnika
+                    $userDocuments = UserDocument::where('user_id', $user->id)
+                        ->where('status', 'active')
+                        ->get()
+                        ->groupBy('category');
+                    
+                    return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly'));
+                }
+                
                 // Ako postoji draft prijava, omogući nastavak popunjavanja
                 if ($existingApplication->status === 'draft') {
                     // Preuzmi dokumente iz biblioteke korisnika

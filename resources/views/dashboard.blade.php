@@ -373,8 +373,8 @@
                                                     $obrazacLabel = 'Obrazac 1b popunjen';
                                                     $obrazacStyle = 'background: #d1fae5; color: #065f46;';
                                                 }
-                                                // Klik na badge vodi direktno na popunjen obrazac (formu prijave)
-                                                $obrazacUrl = route('applications.create', $app->competition_id);
+                                                // Klik na badge vodi direktno na popunjen obrazac (formu prijave sa application_id kao query parametar)
+                                                $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
                                             } else {
                                                 // Obrazac nije kompletan (nacrt)
                                                 if ($app->applicant_type === 'preduzetnica') {
