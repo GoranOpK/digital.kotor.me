@@ -414,7 +414,18 @@
                                 </thead>
                                 <tbody id="productsServicesTableBody">
                                     @php
-                                        $productsServices = old('products_services_table', $businessPlan->products_services_table ?? [['product' => '', 'description' => '']]);
+                                        // Osiguraj da se učitaju svi podaci iz baze
+                                        $productsServices = old('products_services_table');
+                                        if ($productsServices === null && isset($businessPlan) && $businessPlan->products_services_table) {
+                                            $productsServices = $businessPlan->products_services_table;
+                                        }
+                                        if (empty($productsServices)) {
+                                            $productsServices = [['product' => '', 'description' => '']];
+                                        }
+                                        // Osiguraj da je array
+                                        if (!is_array($productsServices)) {
+                                            $productsServices = [['product' => '', 'description' => '']];
+                                        }
                                     @endphp
                                     @foreach($productsServices as $index => $item)
                                         <tr>
@@ -559,7 +570,18 @@
                                 </thead>
                                 <tbody id="pricingTableBody">
                                     @php
-                                        $pricing = old('pricing_table', $businessPlan->pricing_table ?? [['product' => '', 'price' => '']]);
+                                        // Osiguraj da se učitaju svi podaci iz baze
+                                        $pricing = old('pricing_table');
+                                        if ($pricing === null && isset($businessPlan) && $businessPlan->pricing_table) {
+                                            $pricing = $businessPlan->pricing_table;
+                                        }
+                                        if (empty($pricing)) {
+                                            $pricing = [['product' => '', 'price' => '']];
+                                        }
+                                        // Osiguraj da je array
+                                        if (!is_array($pricing)) {
+                                            $pricing = [['product' => '', 'price' => '']];
+                                        }
                                     @endphp
                                     @foreach($pricing as $index => $item)
                                         <tr>
@@ -592,7 +614,18 @@
                                 </thead>
                                 <tbody id="revenueShareTableBody">
                                     @php
-                                        $revenueShare = old('revenue_share_table', $businessPlan->revenue_share_table ?? [['product' => '', 'share' => '']]);
+                                        // Osiguraj da se učitaju svi podaci iz baze
+                                        $revenueShare = old('revenue_share_table');
+                                        if ($revenueShare === null && isset($businessPlan) && $businessPlan->revenue_share_table) {
+                                            $revenueShare = $businessPlan->revenue_share_table;
+                                        }
+                                        if (empty($revenueShare)) {
+                                            $revenueShare = [['product' => '', 'share' => '']];
+                                        }
+                                        // Osiguraj da je array
+                                        if (!is_array($revenueShare)) {
+                                            $revenueShare = [['product' => '', 'share' => '']];
+                                        }
                                     @endphp
                                     @foreach($revenueShare as $index => $item)
                                         <tr>
@@ -767,7 +800,18 @@
                                 </thead>
                                 <tbody id="suppliersTableBody">
                                     @php
-                                        $suppliers = old('suppliers_table', $businessPlan->suppliers_table ?? [['item' => '', 'supplier' => '']]);
+                                        // Osiguraj da se učitaju svi podaci iz baze
+                                        $suppliers = old('suppliers_table');
+                                        if ($suppliers === null && isset($businessPlan) && $businessPlan->suppliers_table) {
+                                            $suppliers = $businessPlan->suppliers_table;
+                                        }
+                                        if (empty($suppliers)) {
+                                            $suppliers = [['item' => '', 'supplier' => '']];
+                                        }
+                                        // Osiguraj da je array
+                                        if (!is_array($suppliers)) {
+                                            $suppliers = [['item' => '', 'supplier' => '']];
+                                        }
                                     @endphp
                                     @foreach($suppliers as $index => $item)
                                         <tr>
@@ -1182,6 +1226,9 @@ function addTableRow(tableBodyId, fieldNames) {
     if (tableName.startsWith('_')) {
         tableName = tableName.substring(1);
     }
+    
+    // Debug log
+    console.log('Adding row to table:', tableBodyId, 'Table name:', tableName, 'Row index:', rowIndex);
     
     fieldNames.forEach(fieldName => {
         const cell = document.createElement('td');

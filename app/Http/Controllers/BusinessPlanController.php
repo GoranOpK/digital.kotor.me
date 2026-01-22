@@ -57,6 +57,15 @@ class BusinessPlanController extends Controller
             \Log::info("Employment structure raw: " . json_encode($businessPlan->getRawOriginal('employment_structure')));
             \Log::info("Employment structure casted: " . json_encode($businessPlan->employment_structure));
             
+            // Debug: Provjeri sve tabele
+            $tableFields = ['products_services_table', 'pricing_table', 'revenue_share_table', 'suppliers_table'];
+            foreach ($tableFields as $field) {
+                if (isset($businessPlan->getRawOriginal($field))) {
+                    \Log::info("{$field} raw: " . json_encode($businessPlan->getRawOriginal($field)));
+                    \Log::info("{$field} casted: " . json_encode($businessPlan->$field));
+                }
+            }
+            
             // Razdvoji expense_projection na investment_expenses i operating_expenses
             if ($businessPlan->expense_projection && is_array($businessPlan->expense_projection)) {
                 $businessPlan->investment_expenses = [];
@@ -262,8 +271,9 @@ class BusinessPlanController extends Controller
                 $cleanedData[$field] = array_filter($tableData, function($row) {
                     if (!is_array($row)) return false;
                     // Provjeri da li je barem jedno polje u redu popunjeno
-                    foreach ($row as $value) {
-                        if (!empty($value) && trim($value) !== '') {
+                    foreach ($row as $key => $value) {
+                        // Preskoči null vrijednosti i prazne stringove
+                        if ($value !== null && $value !== '' && trim($value) !== '') {
                             return true;
                         }
                     }
@@ -275,6 +285,11 @@ class BusinessPlanController extends Controller
                 // Debug log
                 \Log::info("Cleaned data count: " . count($cleanedData[$field]));
                 \Log::info("Cleaned data: " . json_encode($cleanedData[$field]));
+                
+                // Ako je niz prazan nakon filtriranja, postavi na null da se ne čuva prazan niz
+                if (empty($cleanedData[$field])) {
+                    $cleanedData[$field] = null;
+                }
             } elseif (isset($cleanedData[$field]) && is_array($cleanedData[$field])) {
                 // Ako nema u request-u, ali ima u validated, koristi validated
                 $cleanedData[$field] = array_filter($cleanedData[$field], function($row) {
