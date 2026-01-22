@@ -133,6 +133,15 @@ class EvaluationController extends Controller
         // Izračunaj konačnu ocjenu (zbir prosječnih ocjena)
         $finalScore = array_sum(array_filter($averageScores));
 
+        // Provjeri da li su svi članovi komisije ocjenili prijavu
+        $totalMembers = $commission->activeMembers()->count();
+        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
+            ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+            ->pluck('commission_member_id')
+            ->unique()
+            ->count();
+        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
+
         $application->load(['user', 'competition', 'businessPlan']);
 
         return view('evaluation.create', compact(
@@ -143,7 +152,10 @@ class EvaluationController extends Controller
             'allScores',
             'averageScores',
             'finalScore',
-            'commission'
+            'commission',
+            'allMembersEvaluated',
+            'evaluatedMemberIds',
+            'totalMembers'
         ));
     }
 
@@ -196,8 +208,18 @@ class EvaluationController extends Controller
         $rules['notes'] = 'nullable|string|max:5000';
         $rules['justification'] = 'nullable|string|max:5000';
         
-        // Ako je predsjednik, može unijeti zaključak i iznos
-        if ($commissionMember->position === 'predsjednik') {
+        // Provjeri da li su svi članovi komisije ocjenili prijavu
+        $commission = $commissionMember->commission;
+        $totalMembers = $commission->activeMembers()->count();
+        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
+            ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+            ->pluck('commission_member_id')
+            ->unique()
+            ->count();
+        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
+        
+        // Ako je predsjednik i svi članovi su ocjenili, može unijeti zaključak i iznos
+        if ($commissionMember->position === 'predsjednik' && $allMembersEvaluated) {
             $rules['commission_decision'] = 'nullable|in:podrzava_potpuno,podrzava_djelimicno,odbija';
             $rules['approved_amount'] = 'nullable|numeric|min:0';
             $rules['decision_date'] = 'nullable|date';
@@ -235,8 +257,8 @@ class EvaluationController extends Controller
             ]
         );
 
-        // Ako je predsjednik, ažuriraj zaključak komisije i iznos odobrenih sredstava
-        if ($commissionMember->position === 'predsjednik' && isset($validated['commission_decision'])) {
+        // Ako je predsjednik i svi članovi su ocjenili, ažuriraj zaključak komisije i iznos odobrenih sredstava
+        if ($commissionMember->position === 'predsjednik' && $allMembersEvaluated && isset($validated['commission_decision'])) {
             $application->update([
                 'commission_decision' => $validated['commission_decision'],
                 'approved_amount' => $validated['approved_amount'] ?? null,

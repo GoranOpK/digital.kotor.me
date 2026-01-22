@@ -508,7 +508,9 @@
                 <!-- 5. Zaključak komisije -->
                 <div class="form-section commission-decision-section">
                     <label class="form-label form-label-large">4. Na bazi konačne ocjene Komisija donosi zaključak da se biznis plan:</label>
-                    @if($commissionMember->position === 'predsjednik')
+                    
+                    @if($commissionMember->position === 'predsjednik' && isset($allMembersEvaluated) && $allMembersEvaluated)
+                        {{-- Predsjednik može unijeti zaključak kada su svi članovi ocjenili --}}
                         <div class="radio-group">
                             <label class="radio-option">
                                 <input type="radio" name="commission_decision" value="podrzava_potpuno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_potpuno' ? 'checked' : '' }}>
@@ -534,7 +536,18 @@
                                 value="{{ old('approved_amount', $application->approved_amount) }}"
                                 placeholder="0.00">
                         </div>
+                    @elseif($commissionMember->position === 'predsjednik' && (!isset($allMembersEvaluated) || !$allMembersEvaluated))
+                        {{-- Predsjednik vidi poruku da mora sačekati da svi članovi ocjene --}}
+                        <div style="padding: 16px; background: #fef3c7; border-radius: 8px; margin-top: 12px; border: 1px solid #fbbf24;">
+                            <div style="color: #92400e; font-weight: 600; margin-bottom: 8px;">
+                                ⚠️ Zaključak komisije može se donijeti tek kada svi članovi komisije ocjene prijavu.
+                            </div>
+                            <div style="color: #78350f; font-size: 13px;">
+                                Trenutno: {{ $evaluatedMemberIds ?? 0 }} / {{ $totalMembers ?? 0 }} članova je ocjenilo prijavu.
+                            </div>
+                        </div>
                     @else
+                        {{-- Ostali članovi komisije vide read-only prikaz zaključka --}}
                         <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px;">
                             @php
                                 $decisionLabels = [
@@ -544,12 +557,18 @@
                                 ];
                                 $currentDecision = $application->commission_decision;
                             @endphp
-                            <div style="margin-bottom: 12px;">
-                                <strong>{{ $currentDecision ? $decisionLabels[$currentDecision] ?? 'Nije doneseno' : 'Nije doneseno' }}</strong>
-                            </div>
-                            @if($application->approved_amount)
-                                <div>
-                                    <strong>Iznos odobrenih sredstava:</strong> {{ number_format($application->approved_amount, 2) }} €
+                            @if($currentDecision)
+                                <div style="margin-bottom: 12px;">
+                                    <strong>{{ $decisionLabels[$currentDecision] ?? 'Nije doneseno' }}</strong>
+                                </div>
+                                @if($application->approved_amount)
+                                    <div style="margin-bottom: 12px;">
+                                        <strong>Iznos odobrenih sredstava:</strong> {{ number_format($application->approved_amount, 2) }} €
+                                    </div>
+                                @endif
+                            @else
+                                <div style="margin-bottom: 12px; color: #6b7280;">
+                                    <em>Zaključak još nije donesen. Predsjednik komisije će donijeti zaključak nakon što svi članovi ocjene prijavu.</em>
                                 </div>
                             @endif
                             <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
