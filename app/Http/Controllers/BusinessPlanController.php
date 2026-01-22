@@ -58,7 +58,7 @@ class BusinessPlanController extends Controller
             \Log::info("Employment structure casted: " . json_encode($businessPlan->employment_structure));
             
             // Debug: Provjeri sve tabele
-            $tableFields = ['products_services_table', 'pricing_table', 'revenue_share_table', 'suppliers_table'];
+            $tableFields = ['products_services_table', 'pricing_table', 'revenue_share_table', 'suppliers_table', 'funding_sources_table'];
             foreach ($tableFields as $field) {
                 $rawValue = $businessPlan->getRawOriginal($field);
                 if ($rawValue !== null) {

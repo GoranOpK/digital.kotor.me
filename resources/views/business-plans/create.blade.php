@@ -868,7 +868,18 @@
                             </thead>
                             <tbody id="fundingSourcesTableBody">
                                 @php
-                                    $fundingSources = old('funding_sources_table', $businessPlan->funding_sources_table ?? [['type' => '', 'price' => '']]);
+                                    // Osiguraj da se učitaju svi podaci iz baze
+                                    $fundingSources = old('funding_sources_table');
+                                    if ($fundingSources === null && isset($businessPlan) && $businessPlan->funding_sources_table) {
+                                        $fundingSources = $businessPlan->funding_sources_table;
+                                    }
+                                    if (empty($fundingSources)) {
+                                        $fundingSources = [['type' => '', 'price' => '']];
+                                    }
+                                    // Osiguraj da je array
+                                    if (!is_array($fundingSources)) {
+                                        $fundingSources = [['type' => '', 'price' => '']];
+                                    }
                                 @endphp
                                 @foreach($fundingSources as $index => $item)
                                     <tr>
@@ -1237,7 +1248,8 @@ function addTableRow(tableBodyId, fieldNames) {
         'sales_locations': 'sales_locations',
         'employment_structure': 'employment_structure',
         'business_history': 'business_history',
-        'job_schedule': 'job_schedule'
+        'job_schedule': 'job_schedule',
+        'funding_sources': 'funding_sources_table'
     };
     // Ako postoji u mapi, koristi mapirano ime, inače dodaj _table
     if (tableNameMap[tableName]) {
@@ -1682,7 +1694,8 @@ document.addEventListener('DOMContentLoaded', function() {
             'salesLocationsTableBody',
             'employmentStructureTableBody',
             'businessHistoryTableBody',
-            'jobScheduleTableBody'
+            'jobScheduleTableBody',
+            'fundingSourcesTableBody'
         ];
         
         tableIds.forEach(tableId => {
