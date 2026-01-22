@@ -846,7 +846,7 @@
                         <label class="form-label">
                             21. Koliki iznos sredstava Vam je potreban za realizaciju biznis ideje?
                         </label>
-                        <input type="number" name="required_amount" class="form-control" value="{{ old('required_amount', $businessPlan->required_amount ?? '') }}" step="0.01" min="0" placeholder="0.00">
+                        <input type="number" name="required_amount" class="form-control" value="{{ old('required_amount', $businessPlan->required_amount ?? $defaultData['required_amount'] ?? '') }}" step="0.01" min="0" placeholder="0.00">
                     </div>
 
                     <div class="form-group">
@@ -855,7 +855,7 @@
                         </label>
                         <div class="form-group">
                             <label class="form-label">Iznos podrške:</label>
-                            <input type="number" name="requested_amount" class="form-control" value="{{ old('requested_amount', $businessPlan->requested_amount ?? '') }}" step="0.01" min="0" placeholder="0.00">
+                            <input type="number" name="requested_amount" class="form-control" value="{{ old('requested_amount', $businessPlan->requested_amount ?? $defaultData['requested_amount'] ?? '') }}" step="0.01" min="0" placeholder="0.00">
                         </div>
                         <table class="dynamic-table" id="fundingSourcesTable">
                             <thead>

@@ -122,6 +122,10 @@ class BusinessPlanController extends Controller
         $defaultData['bank_account'] = $application->bank_account ?? '';
         $defaultData['company_website'] = $application->website ?? '';
 
+        // IV. FINANSIJE - povuci podatke iz Obrasca 1a/1b
+        $defaultData['required_amount'] = $application->total_budget_needed ?? null;
+        $defaultData['requested_amount'] = $application->requested_amount ?? null;
+
         // Ako već postoji biznis plan, koristi njegove podatke, inače koristi default podatke
         if ($businessPlan) {
             // Ako biznis plan već ima podatke, koristi ih
@@ -137,6 +141,9 @@ class BusinessPlanController extends Controller
                 'vat_number' => $businessPlan->vat_number ?? $defaultData['vat_number'],
                 'bank_account' => $businessPlan->bank_account ?? $defaultData['bank_account'],
                 'company_website' => $businessPlan->company_website ?? $defaultData['company_website'],
+                // IV. FINANSIJE - koristi postojeće podatke ako postoje, inače koristi podatke iz prijave
+                'required_amount' => $businessPlan->required_amount ?? $defaultData['required_amount'],
+                'requested_amount' => $businessPlan->requested_amount ?? $defaultData['requested_amount'],
             ]);
         }
 
