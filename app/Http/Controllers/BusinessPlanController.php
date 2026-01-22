@@ -60,8 +60,9 @@ class BusinessPlanController extends Controller
             // Debug: Provjeri sve tabele
             $tableFields = ['products_services_table', 'pricing_table', 'revenue_share_table', 'suppliers_table'];
             foreach ($tableFields as $field) {
-                if (isset($businessPlan->getRawOriginal($field))) {
-                    \Log::info("{$field} raw: " . json_encode($businessPlan->getRawOriginal($field)));
+                $rawValue = $businessPlan->getRawOriginal($field);
+                if ($rawValue !== null) {
+                    \Log::info("{$field} raw: " . json_encode($rawValue));
                     \Log::info("{$field} casted: " . json_encode($businessPlan->$field));
                 }
             }
