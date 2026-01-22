@@ -946,7 +946,18 @@
                             </thead>
                             <tbody id="revenueProjectionTableBody">
                                 @php
-                                    $revenueProjection = old('revenue_projection', $businessPlan->revenue_projection ?? [['product' => '', 'year1' => '', 'year2' => '', 'year3' => '']]);
+                                    // Osiguraj da se učitaju svi podaci iz baze
+                                    $revenueProjection = old('revenue_projection');
+                                    if ($revenueProjection === null && isset($businessPlan) && $businessPlan->revenue_projection) {
+                                        $revenueProjection = $businessPlan->revenue_projection;
+                                    }
+                                    if (empty($revenueProjection)) {
+                                        $revenueProjection = [['product' => '', 'year1' => '', 'year2' => '', 'year3' => '']];
+                                    }
+                                    // Osiguraj da je array
+                                    if (!is_array($revenueProjection)) {
+                                        $revenueProjection = [['product' => '', 'year1' => '', 'year2' => '', 'year3' => '']];
+                                    }
                                 @endphp
                                 @foreach($revenueProjection as $index => $item)
                                     @php
@@ -1249,7 +1260,9 @@ function addTableRow(tableBodyId, fieldNames) {
         'employment_structure': 'employment_structure',
         'business_history': 'business_history',
         'job_schedule': 'job_schedule',
-        'funding_sources': 'funding_sources_table'
+        'funding_sources': 'funding_sources_table',
+        'revenue_projection': 'revenue_projection',
+        'expense_projection': 'expense_projection'
     };
     // Ako postoji u mapi, koristi mapirano ime, inače dodaj _table
     if (tableNameMap[tableName]) {
@@ -1695,7 +1708,9 @@ document.addEventListener('DOMContentLoaded', function() {
             'employmentStructureTableBody',
             'businessHistoryTableBody',
             'jobScheduleTableBody',
-            'fundingSourcesTableBody'
+            'fundingSourcesTableBody',
+            'revenueProjectionTableBody',
+            'expenseProjectionTableBody'
         ];
         
         tableIds.forEach(tableId => {
