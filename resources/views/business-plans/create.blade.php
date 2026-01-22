@@ -1279,25 +1279,52 @@ function removeTableRow(button) {
         return;
     }
     
+    // Ne briši category-header redove
+    if (row.classList.contains('category-header')) {
+        return;
+    }
+    
     const tbody = row.parentElement;
+    const category = row.getAttribute('data-category');
     row.remove();
     
     // Ažuriraj indekse svih preostalih redova nakon brisanja
-    const rows = tbody.querySelectorAll('tr');
-    rows.forEach((remainingRow, index) => {
-        const inputs = remainingRow.querySelectorAll('input[name], textarea[name]');
-        inputs.forEach(input => {
-            const name = input.name;
-            // Pronađi ime tabele i polje iz name atributa
-            const match = name.match(/^([^\[]+)\[\d+\]\[([^\]]+)\]$/);
-            if (match) {
-                const tableName = match[1];
-                const fieldName = match[2];
-                // Ažuriraj indeks
-                input.name = `${tableName}[${index}][${fieldName}]`;
-            }
+    // Za expense_projection tabele, ažuriraj samo redove u istoj kategoriji
+    if (category) {
+        // Ažuriraj indekse samo za redove u istoj kategoriji
+        const categoryRows = tbody.querySelectorAll(`tr[data-category="${category}"]`);
+        categoryRows.forEach((remainingRow, index) => {
+            const inputs = remainingRow.querySelectorAll('input[name], textarea[name]');
+            inputs.forEach(input => {
+                const name = input.name;
+                // Pronađi ime tabele i polje iz name atributa
+                const match = name.match(/^([^\[]+)\[\d+\]\[([^\]]+)\]$/);
+                if (match) {
+                    const tableName = match[1];
+                    const fieldName = match[2];
+                    // Ažuriraj indeks
+                    input.name = `${tableName}[${index}][${fieldName}]`;
+                }
+            });
         });
-    });
+    } else {
+        // Za obične tabele, ažuriraj sve redove
+        const rows = tbody.querySelectorAll('tr:not(.category-header)');
+        rows.forEach((remainingRow, index) => {
+            const inputs = remainingRow.querySelectorAll('input[name], textarea[name]');
+            inputs.forEach(input => {
+                const name = input.name;
+                // Pronađi ime tabele i polje iz name atributa
+                const match = name.match(/^([^\[]+)\[\d+\]\[([^\]]+)\]$/);
+                if (match) {
+                    const tableName = match[1];
+                    const fieldName = match[2];
+                    // Ažuriraj indeks
+                    input.name = `${tableName}[${index}][${fieldName}]`;
+                }
+            });
+        });
+    }
     
     // Ponovo izračunaj ukupno nakon brisanja reda
     calculateFundingTotal();

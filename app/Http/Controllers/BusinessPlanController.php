@@ -56,6 +56,22 @@ class BusinessPlanController extends Controller
             \Log::info("Business plan found, ID: " . $businessPlan->id);
             \Log::info("Employment structure raw: " . json_encode($businessPlan->getRawOriginal('employment_structure')));
             \Log::info("Employment structure casted: " . json_encode($businessPlan->employment_structure));
+            
+            // Razdvoji expense_projection na investment_expenses i operating_expenses
+            if ($businessPlan->expense_projection && is_array($businessPlan->expense_projection)) {
+                $businessPlan->investment_expenses = [];
+                $businessPlan->operating_expenses = [];
+                
+                foreach ($businessPlan->expense_projection as $expense) {
+                    if (isset($expense['category']) && $expense['category'] === 'investment') {
+                        unset($expense['category']);
+                        $businessPlan->investment_expenses[] = $expense;
+                    } elseif (isset($expense['category']) && $expense['category'] === 'operating') {
+                        unset($expense['category']);
+                        $businessPlan->operating_expenses[] = $expense;
+                    }
+                }
+            }
         } else {
             \Log::info("No business plan found for application ID: " . $application->id);
         }
@@ -271,6 +287,49 @@ class BusinessPlanController extends Controller
                     return false;
                 });
                 $cleanedData[$field] = array_values($cleanedData[$field]);
+            }
+        }
+        
+        // Posebna logika za expense_projection - kombinuj investment_expenses i operating_expenses
+        if ($request->has('investment_expenses') || $request->has('operating_expenses')) {
+            $expenseProjection = [];
+            
+            if ($request->has('investment_expenses') && is_array($request->input('investment_expenses'))) {
+                $investmentExpenses = array_filter($request->input('investment_expenses'), function($row) {
+                    if (!is_array($row)) return false;
+                    foreach ($row as $value) {
+                        if (!empty($value) && trim($value) !== '') {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                foreach (array_values($investmentExpenses) as $expense) {
+                    $expense['category'] = 'investment';
+                    $expenseProjection[] = $expense;
+                }
+            }
+            
+            if ($request->has('operating_expenses') && is_array($request->input('operating_expenses'))) {
+                $operatingExpenses = array_filter($request->input('operating_expenses'), function($row) {
+                    if (!is_array($row)) return false;
+                    foreach ($row as $value) {
+                        if (!empty($value) && trim($value) !== '') {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                foreach (array_values($operatingExpenses) as $expense) {
+                    $expense['category'] = 'operating';
+                    $expenseProjection[] = $expense;
+                }
+            }
+            
+            if (!empty($expenseProjection)) {
+                $cleanedData['expense_projection'] = $expenseProjection;
+                \Log::info("Expense projection combined count: " . count($expenseProjection));
+                \Log::info("Expense projection: " . json_encode($expenseProjection));
             }
         }
 
