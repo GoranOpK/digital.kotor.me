@@ -1183,9 +1183,6 @@
                             Sačuvaj i nastavi na biznis plan
                         </button>
                     </div>
-                    <p style="color: #6b7280; font-size: 14px; margin-top: 16px;" id="submitButtonInfo">
-                        <strong>Sačuvaj kao nacrt:</strong> Sačuvajte prijavu i nastavite je popunjavati kasnije.
-                    </p>
                 </div>
             @endif
         </form>
@@ -1542,9 +1539,8 @@
         function updateSubmitButton() {
             const saveAsDraftBtn = document.getElementById('saveAsDraftBtn');
             const submitBtn = document.getElementById('submitBtn');
-            const submitButtonInfo = document.getElementById('submitButtonInfo');
 
-            if (!saveAsDraftBtn || !submitBtn || !submitButtonInfo) return;
+            if (!saveAsDraftBtn || !submitBtn) return;
 
             const isComplete = checkIfObrazacComplete();
 
@@ -1556,12 +1552,10 @@
                 // Ukloni name="save_as_draft" sa submitBtn da se ne šalje kao draft
                 submitBtn.removeAttribute('name');
                 submitBtn.removeAttribute('value');
-                submitButtonInfo.innerHTML = '<strong>Sačuvaj prijavu:</strong> Sačuvajte kompletnu prijavu i nastavite na popunjavanje biznis plana.';
             } else {
                 // Ako nije kompletan, prikaži "Sačuvaj kao nacrt" i sakrij "Sačuvaj prijavu"
                 saveAsDraftBtn.style.display = 'inline-block';
                 submitBtn.style.display = 'none';
-                submitButtonInfo.innerHTML = '<strong>Sačuvaj kao nacrt:</strong> Sačuvajte prijavu i nastavite je popunjavati kasnije.';
             }
         }
 
