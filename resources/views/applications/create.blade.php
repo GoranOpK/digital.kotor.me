@@ -198,7 +198,7 @@
         
         @if($readOnly)
             <div class="alert alert-info" style="margin-bottom: 24px; padding: 16px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; color: #92400e;">
-                <strong>Pregled prijave:</strong> Ovo je pregled prijave u read-only modu. Ne možete mijenjati podatke.
+                <strong>Pregled prijave:</strong> Ovo je pregled prijave, ne možete mijenjati podatke.
             </div>
         @endif
 
@@ -1185,12 +1185,6 @@
                     </div>
                     <p style="color: #6b7280; font-size: 14px; margin-top: 16px;" id="submitButtonInfo">
                         <strong>Sačuvaj kao nacrt:</strong> Sačuvajte prijavu i nastavite je popunjavati kasnije.
-                    </p>
-                </div>
-            @else
-                <div class="form-card" style="text-align: center; padding: 20px;">
-                    <p style="color: #6b7280; font-size: 14px; margin: 0;">
-                        Ovo je pregled prijave. Izmjene nisu dozvoljene.
                     </p>
                 </div>
             @endif
