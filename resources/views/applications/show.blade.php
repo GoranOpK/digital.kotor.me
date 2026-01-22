@@ -477,6 +477,7 @@
                                 $isObrazacComplete = $application->isObrazacComplete();
                                 $obrazacLabel = null;
                                 $obrazacClass = 'status-draft';
+                                $obrazacUrl = null;
                                 if ($isObrazacComplete) {
                                     if ($application->applicant_type === 'preduzetnica') {
                                         $obrazacLabel = 'Obrazac 1a popunjen';
@@ -485,6 +486,8 @@
                                         $obrazacLabel = 'Obrazac 1b popunjen';
                                         $obrazacClass = 'status-evaluated';
                                     }
+                                    // Klik na badge vodi direktno na popunjen obrazac (formu prijave sa application_id kao query parametar)
+                                    $obrazacUrl = route('applications.create', $application->competition_id) . '?application_id=' . $application->id;
                                 } else {
                                     // Obrazac nije kompletan - prikaži nacrt prema tipu
                                     if ($application->applicant_type === 'preduzetnica') {
@@ -492,10 +495,12 @@
                                     } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
                                         $obrazacLabel = 'Obrazac 1b - Nacrt';
                                     }
+                                    // Klik na badge vodi na nastavak popunjavanja Obrasca 1a/1b
+                                    $obrazacUrl = route('applications.create', $application->competition_id) . '?application_id=' . $application->id;
                                 }
                             @endphp
                             @if($obrazacLabel)
-                                <a href="{{ route('applications.create', $application->competition_id) }}" class="status-badge {{ $obrazacClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                <a href="{{ $obrazacUrl }}" class="status-badge {{ $obrazacClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
                                     {{ $obrazacLabel }}
                                 </a>
                             @else
