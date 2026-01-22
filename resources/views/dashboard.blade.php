@@ -249,7 +249,7 @@
         </div>
 
         <!-- Alerts -->
-        @if (session('verified'))
+    @if (session('verified'))
             <div class="alert alert-success">
                 <strong>Uspješno!</strong> Vaša email adresa je verifikovana.
             </div>
@@ -484,7 +484,7 @@
                 @endif
             </div>
         </div>
-        @endif
+    @endif
 
         <!-- Services - Super Admin (samo Administracija) -->
         @if ($isSuperAdmin)
@@ -670,8 +670,8 @@
                         👥 Komisija
                     </a>
                 </div>
-            </div>
-        @endif
+        </div>
+    @endif
 
         <!-- Najnovije prijave (samo za članove komisije) -->
         @if(isset($recent_applications) && $isKomisija)

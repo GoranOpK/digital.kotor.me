@@ -171,7 +171,7 @@
                                         }
                                     @endphp
                                     @if($obrazacLabel)
-                                        <a href="{{ route('applications.create', $application->competition_id) }}" class="status-badge {{ $obrazacClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                        <a href="{{ route('applications.create', ['competition' => $application->competition_id, 'application_id' => $application->id]) }}" class="status-badge {{ $obrazacClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
                                             {{ $obrazacLabel }}
                                         </a>
                                     @else

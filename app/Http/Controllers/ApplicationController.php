@@ -17,62 +17,102 @@ class ApplicationController extends Controller
     /**
      * Prikaz forme za prijavu na konkurs (Obrazac 1a/1b)
      */
-    public function create(Competition $competition): View|RedirectResponse
+    public function create(Competition $competition, Request $request): View|RedirectResponse
     {
-        // Administrator konkursa ne može se prijaviti na konkurse
         $user = Auth::user();
-        if ($user->role && $user->role->name === 'konkurs_admin') {
+        $roleName = $user->role ? $user->role->name : null;
+        
+        // Provjeri da li je ovo read-only pristup za člana komisije
+        $readOnly = false;
+        $existingApplication = null;
+        
+        if ($request->has('application_id')) {
+            // Ako je proslijeđen application_id, provjeri da li je član komisije
+            $existingApplication = Application::find($request->application_id);
+            
+            if ($existingApplication && $roleName === 'komisija') {
+                // Provjeri da li je član komisije za ovu prijavu
+                $isCommissionMemberForThisCompetition = false;
+                $appCompetition = $existingApplication->competition;
+                if ($appCompetition && $appCompetition->commission_id) {
+                    $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
+                        ->where('status', 'active')
+                        ->first();
+
+                    if ($commissionMember && $commissionMember->commission_id === $appCompetition->commission_id) {
+                        $isCommissionMemberForThisCompetition = true;
+                        $readOnly = true;
+                    }
+                }
+                
+                if (!$isCommissionMemberForThisCompetition) {
+                    abort(403, 'Nemate pristup ovoj prijavi.');
+                }
+            }
+        }
+        
+        // Blokiraj članove komisije od pristupa formi osim ako nije read-only pristup
+        if ($roleName === 'komisija' && !$readOnly) {
+            abort(403, 'Članovi komisije mogu samo pregledati prijave u read-only modu.');
+        }
+        
+        // Administrator konkursa ne može se prijaviti na konkurse
+        if ($roleName === 'konkurs_admin' && !$readOnly) {
             abort(403, 'Administrator konkursa ne može se prijaviti na konkurse.');
         }
         
-        // Proveri da li je konkurs otvoren
-        if ($competition->status !== 'published') {
+        // Proveri da li je konkurs otvoren (samo ako nije read-only)
+        if (!$readOnly && $competition->status !== 'published') {
             abort(404, 'Konkurs nije pronađen ili nije objavljen.');
         }
 
-        // Proveri da li je konkurs još otvoren
-        $deadline = $competition->published_at 
-            ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 20)
-            : null;
-        
-        if ($deadline && $deadline->isPast()) {
-            return redirect()->route('competitions.show', $competition)
-                ->withErrors(['error' => 'Rok za prijave je istekao.']);
-        }
-
-        // Proveri da li korisnik već ima prijavu
-        $existingApplication = Application::where('competition_id', $competition->id)
-            ->where('user_id', Auth::id())
-            ->first();
-
-        if ($existingApplication) {
-            // Ako postoji draft prijava, omogući nastavak popunjavanja
-            if ($existingApplication->status === 'draft') {
-                // Preuzmi dokumente iz biblioteke korisnika
-                $user = Auth::user();
-                $userDocuments = UserDocument::where('user_id', $user->id)
-                    ->where('status', 'active')
-                    ->get()
-                    ->groupBy('category');
-                
-                return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication'))
-                    ->with('info', 'Već imate započetu prijavu. Možete je nastaviti popunjavati.');
-            } else {
-                // Ako je prijava već podnesena, preusmeri na detalje
-                return redirect()->route('applications.show', $existingApplication)
-                    ->with('info', 'Već ste podneli prijavu na ovaj konkurs.');
+        // Proveri da li je konkurs još otvoren (samo ako nije read-only)
+        if (!$readOnly) {
+            $deadline = $competition->published_at 
+                ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 20)
+                : null;
+            
+            if ($deadline && $deadline->isPast()) {
+                return redirect()->route('competitions.show', $competition)
+                    ->withErrors(['error' => 'Rok za prijave je istekao.']);
             }
         }
 
-        $user = Auth::user();
-        
-        // Preuzmi dokumente iz biblioteke korisnika
-        $userDocuments = UserDocument::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->get()
-            ->groupBy('category');
+        // Ako nije read-only, provjeri da li korisnik već ima prijavu
+        if (!$readOnly && !$existingApplication) {
+            $existingApplication = Application::where('competition_id', $competition->id)
+                ->where('user_id', Auth::id())
+                ->first();
 
-        return view('applications.create', compact('competition', 'user', 'userDocuments'));
+            if ($existingApplication) {
+                // Ako postoji draft prijava, omogući nastavak popunjavanja
+                if ($existingApplication->status === 'draft') {
+                    // Preuzmi dokumente iz biblioteke korisnika
+                    $userDocuments = UserDocument::where('user_id', $user->id)
+                        ->where('status', 'active')
+                        ->get()
+                        ->groupBy('category');
+                    
+                    return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly'))
+                        ->with('info', 'Već imate započetu prijavu. Možete je nastaviti popunjavati.');
+                } else {
+                    // Ako je prijava već podnesena, preusmeri na detalje
+                    return redirect()->route('applications.show', $existingApplication)
+                        ->with('info', 'Već ste podneli prijavu na ovaj konkurs.');
+                }
+            }
+        }
+
+        // Preuzmi dokumente iz biblioteke korisnika (samo za vlasnika)
+        $userDocuments = collect();
+        if (!$readOnly) {
+            $userDocuments = UserDocument::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->get()
+                ->groupBy('category');
+        }
+
+        return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly'));
     }
 
     /**
@@ -80,6 +120,13 @@ class ApplicationController extends Controller
      */
     public function store(Request $request, Competition $competition): RedirectResponse
     {
+        // Blokiraj članove komisije od čuvanja izmjena
+        $user = Auth::user();
+        $roleName = $user->role ? $user->role->name : null;
+        if ($roleName === 'komisija') {
+            abort(403, 'Članovi komisije mogu samo pregledati prijave, ne mogu ih mijenjati.');
+        }
+        
         // Proveri da li je konkurs otvoren
         $deadline = $competition->published_at 
             ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 20)

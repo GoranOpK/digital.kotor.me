@@ -237,7 +237,7 @@
             $readOnly = $readOnly ?? false;
         @endphp
 
-        <form method="POST" action="{{ route('applications.business-plan.store', $application) }}" id="businessPlanForm">
+        <form method="POST" action="{{ $readOnly ? '#' : route('applications.business-plan.store', $application) }}" id="businessPlanForm" @if($readOnly) onsubmit="event.preventDefault(); return false;" @endif>
             @csrf
 
             <!-- I. OSNOVNI PODACI -->
@@ -1457,6 +1457,32 @@ function addExpenseRow(category) {
 
 // Pozovi funkcije za računanje pri učitavanju stranice
 document.addEventListener('DOMContentLoaded', function() {
+    // Read-only mod - onemogući sva polja ako je readOnly = true
+    @if($readOnly ?? false)
+        const form = document.getElementById('businessPlanForm');
+        if (form) {
+            // Onemogući sva polja u formi (readonly za input/textarea, disabled za select i button)
+            const allFields = form.querySelectorAll('input, select, textarea');
+            allFields.forEach(field => {
+                if (field.type !== 'hidden' && field.type !== 'submit' && field.type !== 'button') {
+                    if (field.tagName === 'SELECT' || field.type === 'checkbox' || field.type === 'radio') {
+                        field.setAttribute('disabled', 'disabled');
+                    } else {
+                        field.setAttribute('readonly', 'readonly');
+                    }
+                    field.style.cursor = 'not-allowed';
+                    field.style.backgroundColor = '#f9fafb';
+                }
+            });
+            
+            // Sakrij sva dugmad za dodavanje redova
+            const addRowButtons = form.querySelectorAll('button[type="button"]');
+            addRowButtons.forEach(button => {
+                button.style.display = 'none';
+            });
+        }
+    @endif
+    
     calculateFundingTotal();
     calculateRevenueGrandTotal();
     calculateExpenseGrandTotal();
@@ -1523,8 +1549,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Funkcija za rukovanje klikom na dugme
+    // Funkcija za rukovanje klikom na dugme (samo ako nije readOnly)
     function handleSubmit(e) {
+        @if($readOnly ?? false)
+            e.preventDefault();
+            return false;
+        @endif
+        
         e.preventDefault();
         
         const allFilled = checkRequiredFields();
@@ -1558,7 +1589,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (bpForm && bpSubmitBtn) {
-        // Postavi event listener za klik
+        @if(!($readOnly ?? false))
+        // Postavi event listener za klik (samo ako nije readOnly)
         bpSubmitBtn.addEventListener('click', handleSubmit);
         
         // Postavi event listenere na sva obavezna polja za dinamičko ažuriranje
@@ -1572,6 +1604,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Ažuriraj dugme pri učitavanju stranice
         updateSubmitButton();
+        @endif
     }
 });
 </script>

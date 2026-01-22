@@ -192,7 +192,17 @@
         @endif
 
 
-        <form method="POST" action="{{ route('applications.store', $competition) }}" id="applicationForm">
+        @php
+            $readOnly = $readOnly ?? false;
+        @endphp
+        
+        @if($readOnly)
+            <div class="alert alert-info" style="margin-bottom: 24px; padding: 16px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; color: #92400e;">
+                <strong>Pregled prijave:</strong> Ovo je pregled prijave u read-only modu. Ne možete mijenjati podatke.
+            </div>
+        @endif
+
+        <form method="POST" action="{{ $readOnly ? '#' : route('applications.store', $competition) }}" id="applicationForm" @if($readOnly) onsubmit="event.preventDefault(); return false;" @endif>
             @csrf
             
             @php
@@ -209,7 +219,7 @@
                 }
             @endphp
             
-            @if(isset($existingApplication) && $existingApplication)
+            @if(isset($existingApplication) && $existingApplication && !$readOnly)
                 <div class="alert alert-info" style="margin-bottom: 24px; padding: 16px; background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; color: #1e40af;">
                     <strong>Nastavak popunjavanja:</strong> Već imate započetu prijavu. Možete je nastaviti popunjavati.
                 </div>
@@ -1163,24 +1173,60 @@
             </div>
 
             <!-- Dugme za slanje -->
-            <div class="form-card" style="text-align: center;">
-                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                    <button type="button" id="saveAsDraftBtn" class="btn-secondary" style="background: #6b7280; color: #fff; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
-                        Sačuvaj kao nacrt
-                    </button>
-                    <button type="submit" class="btn-primary" id="submitBtn" style="display: none;">
-                        Sačuvaj i nastavi na biznis plan
-                    </button>
+            @if(!$readOnly)
+                <div class="form-card" style="text-align: center;">
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" id="saveAsDraftBtn" class="btn-secondary" style="background: #6b7280; color: #fff; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
+                            Sačuvaj kao nacrt
+                        </button>
+                        <button type="submit" class="btn-primary" id="submitBtn" style="display: none;">
+                            Sačuvaj i nastavi na biznis plan
+                        </button>
+                    </div>
+                    <p style="color: #6b7280; font-size: 14px; margin-top: 16px;" id="submitButtonInfo">
+                        <strong>Sačuvaj kao nacrt:</strong> Sačuvajte prijavu i nastavite je popunjavati kasnije.
+                    </p>
                 </div>
-                <p style="color: #6b7280; font-size: 14px; margin-top: 16px;" id="submitButtonInfo">
-                    <strong>Sačuvaj kao nacrt:</strong> Sačuvajte prijavu i nastavite je popunjavati kasnije.
-                </p>
-            </div>
+            @else
+                <div class="form-card" style="text-align: center; padding: 20px;">
+                    <p style="color: #6b7280; font-size: 14px; margin: 0;">
+                        Ovo je pregled prijave. Izmjene nisu dozvoljene.
+                    </p>
+                </div>
+            @endif
         </form>
     </div>
 </div>
 
 <script>
+    // Read-only mod - onemogući sva polja ako je readOnly = true
+    @if($readOnly ?? false)
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('applicationForm');
+            if (form) {
+                // Onemogući sva polja u formi (readonly za input/textarea, disabled za select i button)
+                const allFields = form.querySelectorAll('input, select, textarea');
+                allFields.forEach(field => {
+                    if (field.type !== 'hidden' && field.type !== 'submit') {
+                        if (field.tagName === 'SELECT' || field.type === 'checkbox' || field.type === 'radio') {
+                            field.setAttribute('disabled', 'disabled');
+                        } else {
+                            field.setAttribute('readonly', 'readonly');
+                        }
+                        field.style.cursor = 'not-allowed';
+                        field.style.backgroundColor = '#f9fafb';
+                    }
+                });
+                
+                // Sakrij sva dugmad
+                const buttons = form.querySelectorAll('button');
+                buttons.forEach(button => {
+                    button.style.display = 'none';
+                });
+            }
+        });
+    @endif
+    
     // Dinamičko prikazivanje/sakrivanje polja na osnovu tipa podnosioca
     // VAŽNO: 'fizicko_lice' = Fizičko lice BEZ registrovane djelatnosti (automatski is_registered = false)
     //        'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (automatski is_registered = true)
@@ -1539,7 +1585,8 @@
             setTimeout(updateSubmitButton, 1000);
         }
 
-        // Pripremi formu za submit - ukloni disabled sa svih polja
+        // Pripremi formu za submit - ukloni disabled sa svih polja (samo ako nije readOnly)
+        @if(!($readOnly ?? false))
         const form = document.getElementById('applicationForm');
         if (form) {
             // Dugme "Sačuvaj kao nacrt" - ručno submit-uj formu bez validacije
@@ -1654,7 +1701,7 @@
                 });
             }
             
-            // Normalan submit (za "Sačuvaj prijavu" dugme)
+            // Normalan submit (za "Sačuvaj prijavu" dugme) - samo ako nije readOnly
             form.addEventListener('submit', function(e) {
                 // VAŽNO: Ukloni save_as_draft hidden input ako postoji
                 // (ovo osigurava da se forma ne šalje kao draft kada je obrazac kompletan)
@@ -1732,6 +1779,7 @@
                 });
             });
         }
+        @endif
     });
 </script>
 @endsection

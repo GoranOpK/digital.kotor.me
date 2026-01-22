@@ -107,6 +107,11 @@ class BusinessPlanController extends Controller
 
         // Član komisije može samo da pregleda (read-only), bez izmjena
         $readOnly = !$isOwner;
+        
+        // Ako je član komisije, osiguraj da je readOnly = true
+        if ($roleName === 'komisija' && !$readOnly) {
+            abort(403, 'Članovi komisije mogu samo pregledati biznis planove u read-only modu.');
+        }
 
         return view('business-plans.create', compact('application', 'businessPlan', 'defaultData', 'readOnly'));
     }
@@ -116,6 +121,13 @@ class BusinessPlanController extends Controller
      */
     public function store(Request $request, Application $application): RedirectResponse
     {
+        // Blokiraj članove komisije od čuvanja izmjena
+        $user = Auth::user();
+        $roleName = $user->role ? $user->role->name : null;
+        if ($roleName === 'komisija') {
+            abort(403, 'Članovi komisije mogu samo pregledati biznis planove, ne mogu ih mijenjati.');
+        }
+        
         // Proveri da li prijava pripada korisniku
         if ($application->user_id !== Auth::id()) {
             abort(403, 'Nemate pristup ovoj prijavi.');
