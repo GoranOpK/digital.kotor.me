@@ -159,14 +159,36 @@
                             $isEvaluated = \App\Models\EvaluationScore::where('application_id', $application->id)
                                 ->where('commission_member_id', $commissionMember->id)
                                 ->exists();
+                            
+                            // Provjeri da li su svi članovi komisije ocjenili prijavu
+                            $commission = $commissionMember->commission;
+                            $totalMembers = $commission->activeMembers()->count();
+                            
+                            // Broj različitih članova koji su ocjenili prijavu
+                            $evaluatedMemberIds = \App\Models\EvaluationScore::where('application_id', $application->id)
+                                ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+                                ->pluck('commission_member_id')
+                                ->unique()
+                                ->count();
+                            
+                            $allEvaluated = $evaluatedMemberIds >= $totalMembers;
+                            
+                            // Odredi status za prikaz
+                            if ($allEvaluated) {
+                                $displayStatus = 'Ocjenjena prijava';
+                                $statusClass = 'status-evaluated';
+                            } else {
+                                $displayStatus = 'U ocjenjivanju';
+                                $statusClass = 'status-submitted';
+                            }
                         @endphp
                         <tr>
                             <td>{{ $application->business_plan_name }}</td>
                             <td>{{ $application->user->name ?? 'N/A' }}</td>
                             <td>{{ $application->competition->title ?? 'N/A' }}</td>
                             <td>
-                                <span class="status-badge status-{{ $application->status }}">
-                                    {{ $application->status === 'submitted' ? 'Podnesena' : 'Ocjenjena' }}
+                                <span class="status-badge {{ $statusClass }}">
+                                    {{ $displayStatus }}
                                 </span>
                             </td>
                             <td>
@@ -178,10 +200,6 @@
                             </td>
                             <td>
                                 @php
-                                    $allScoresCount = \App\Models\EvaluationScore::where('application_id', $application->id)->count();
-                                    $commission = $commissionMember->commission;
-                                    $totalMembers = $commission->activeMembers()->count();
-                                    $allEvaluated = $allScoresCount >= $totalMembers;
                                     $isChairman = $commissionMember->position === 'predsjednik';
                                 @endphp
                                 
