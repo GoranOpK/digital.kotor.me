@@ -1215,9 +1215,6 @@
                             <span id="bpSubmitBtnText">Sačuvaj Nacrt plana</span>
                         </button>
                     </div>
-                    <p style="color: #6b7280; font-size: 14px; margin-top: 16px;" id="bpSubmitButtonInfo">
-                        <strong id="bpSubmitButtonInfoText">Sačuvaj Nacrt plana:</strong> <span id="bpSubmitButtonInfoDesc">Sačuvajte delimično popunjen biznis plan kao nacrt.</span>
-                    </p>
                 </div>
             @endif
         </form>
@@ -1636,8 +1633,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const bpForm = document.getElementById('businessPlanForm');
     const bpSubmitBtn = document.getElementById('bpSubmitBtn');
     const bpSubmitBtnText = document.getElementById('bpSubmitBtnText');
-    const bpSubmitButtonInfoText = document.getElementById('bpSubmitButtonInfoText');
-    const bpSubmitButtonInfoDesc = document.getElementById('bpSubmitButtonInfoDesc');
 
     // Obavezna polja koja treba provjeriti
     const requiredFields = [
@@ -1681,16 +1676,12 @@ document.addEventListener('DOMContentLoaded', function() {
             bpSubmitBtn.className = 'btn-primary';
             bpSubmitBtn.style.padding = '12px 24px';
             bpSubmitBtn.style.fontSize = '14px';
-            bpSubmitButtonInfoText.textContent = 'Sačuvaj Biznis plan:';
-            bpSubmitButtonInfoDesc.textContent = 'Sačuvajte i vratite se na pregled prijave i priloženih dokumenata.';
         } else {
             // Ako nisu sva polja popunjena, prikaži "Sačuvaj Nacrt plana"
             bpSubmitBtnText.textContent = 'Sačuvaj Nacrt plana';
             bpSubmitBtn.className = 'btn-secondary';
             bpSubmitBtn.style.padding = '12px 24px';
             bpSubmitBtn.style.fontSize = '14px';
-            bpSubmitButtonInfoText.textContent = 'Sačuvaj Nacrt plana:';
-            bpSubmitButtonInfoDesc.textContent = 'Sačuvajte delimično popunjen biznis plan kao nacrt.';
         }
     }
 
