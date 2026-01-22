@@ -50,6 +50,15 @@ class BusinessPlanController extends Controller
 
         // Proveri da li već postoji biznis plan
         $businessPlan = $application->businessPlan;
+        
+        // Debug: Provjeri kako se podaci učitavaju iz baze
+        if ($businessPlan) {
+            \Log::info("Business plan found, ID: " . $businessPlan->id);
+            \Log::info("Employment structure raw: " . json_encode($businessPlan->getRawOriginal('employment_structure')));
+            \Log::info("Employment structure casted: " . json_encode($businessPlan->employment_structure));
+        } else {
+            \Log::info("No business plan found for application ID: " . $application->id);
+        }
 
         // Pripremi podatke za automatsko popunjavanje iz prijave
         $user = Auth::user();
@@ -205,7 +214,7 @@ class BusinessPlanController extends Controller
         ]);
 
         // Očisti i pripremi podatke iz tabela - osiguraj da se čuvaju svi redovi
-        // Filtriraj prazne redove (redovi gdje su sva polja prazna)
+        // Koristi $request->all() umjesto $validated za tabela polja jer $validated možda ne sadrži sve podatke
         $tableFields = [
             'products_services_table',
             'target_customers',
@@ -224,9 +233,17 @@ class BusinessPlanController extends Controller
 
         $cleanedData = $validated;
         foreach ($tableFields as $field) {
-            if (isset($cleanedData[$field]) && is_array($cleanedData[$field])) {
+            // Koristi podatke direktno iz request-a, ne iz validated
+            if ($request->has($field) && is_array($request->input($field))) {
+                $tableData = $request->input($field);
+                
+                // Debug log
+                \Log::info("Processing table field: {$field}");
+                \Log::info("Raw data count: " . count($tableData));
+                \Log::info("Raw data: " . json_encode($tableData));
+                
                 // Filtriraj prazne redove - zadrži samo redove gdje je barem jedno polje popunjeno
-                $cleanedData[$field] = array_filter($cleanedData[$field], function($row) {
+                $cleanedData[$field] = array_filter($tableData, function($row) {
                     if (!is_array($row)) return false;
                     // Provjeri da li je barem jedno polje u redu popunjeno
                     foreach ($row as $value) {
@@ -237,6 +254,22 @@ class BusinessPlanController extends Controller
                     return false;
                 });
                 // Resetuj array ključeve da budu sekvencijalni (0, 1, 2, ...)
+                $cleanedData[$field] = array_values($cleanedData[$field]);
+                
+                // Debug log
+                \Log::info("Cleaned data count: " . count($cleanedData[$field]));
+                \Log::info("Cleaned data: " . json_encode($cleanedData[$field]));
+            } elseif (isset($cleanedData[$field]) && is_array($cleanedData[$field])) {
+                // Ako nema u request-u, ali ima u validated, koristi validated
+                $cleanedData[$field] = array_filter($cleanedData[$field], function($row) {
+                    if (!is_array($row)) return false;
+                    foreach ($row as $value) {
+                        if (!empty($value) && trim($value) !== '') {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
                 $cleanedData[$field] = array_values($cleanedData[$field]);
             }
         }
