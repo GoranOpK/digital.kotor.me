@@ -327,10 +327,10 @@
                             </label>
                             <div class="form-group">
                                 <label class="form-label">Oblik registracije:</label>
-                                <input type="text" name="registration_form" class="form-control" value="{{ old('registration_form', $businessPlan->registration_form ?? ($defaultData['registration_form'] ?? '')) }}" placeholder="Preduzetnik / DOO / itd.">
+                                <input type="text" name="registration_form" id="registration_form" class="form-control" value="{{ old('registration_form', $businessPlan->registration_form ?? ($defaultData['registration_form'] ?? '')) }}" placeholder="Preduzetnik / DOO / itd.">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nosioca biznisa* i naziv društva za oblik registracije "DOO":</label>
+                                <label class="form-label" id="company_name_label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nosioca biznisa* i naziv društva za oblik registracije "DOO":</label>
                                 <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $businessPlan->company_name ?? '') }}">
                                 <div class="form-text">*Nosioc biznisa je vlasnica ili jedna od vlasnika i izvršna direktorica društva</div>
                             </div>
@@ -1605,6 +1605,34 @@ document.addEventListener('DOMContentLoaded', function() {
         // Ažuriraj dugme pri učitavanju stranice
         updateSubmitButton();
         @endif
+        
+        // Dinamičko mijenjanje teksta labela za "company_name" u zavisnosti od "Oblika registracije"
+        const registrationFormInput = document.getElementById('registration_form');
+        const companyNameLabel = document.getElementById('company_name_label');
+        
+        function updateCompanyNameLabel() {
+            if (!registrationFormInput || !companyNameLabel) return;
+            
+            const registrationForm = registrationFormInput.value.trim().toLowerCase();
+            
+            if (registrationForm === 'preduzetnik') {
+                companyNameLabel.textContent = 'Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik":';
+            } else if (registrationForm !== '') {
+                // Za DOO ili ostale oblike registracije
+                companyNameLabel.textContent = 'Ime i prezime nosioca biznisa* i naziv društva za oblik registracije "' + registrationFormInput.value + '" ili ostali:';
+            } else {
+                // Default tekst ako nije ništa uneseno
+                companyNameLabel.textContent = 'Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nosioca biznisa* i naziv društva za oblik registracije "DOO":';
+            }
+        }
+        
+        // Ažuriraj label pri učitavanju stranice
+        if (registrationFormInput && companyNameLabel) {
+            updateCompanyNameLabel();
+            // Pratiti promjene u polju
+            registrationFormInput.addEventListener('input', updateCompanyNameLabel);
+            registrationFormInput.addEventListener('change', updateCompanyNameLabel);
+        }
     }
 });
 </script>
