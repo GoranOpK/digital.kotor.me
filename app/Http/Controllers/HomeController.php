@@ -341,7 +341,7 @@ class HomeController extends Controller
                 $competitionIds = $commission->competitions->pluck('id');
                 $applications = Application::whereIn('competition_id', $competitionIds)
                     ->whereIn('status', ['submitted', 'evaluated'])
-                    ->with('competition', 'evaluationScores', 'evaluationScores.commissionMember')
+                    ->with(['competition', 'user', 'businessPlan', 'evaluationScores', 'evaluationScores.commissionMember'])
                     ->latest()
                     ->get();
                 
