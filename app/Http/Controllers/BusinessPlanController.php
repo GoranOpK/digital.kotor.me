@@ -204,11 +204,48 @@ class BusinessPlanController extends Controller
             'summary.required' => 'Rezime je obavezno.',
         ]);
 
+        // Očisti i pripremi podatke iz tabela - osiguraj da se čuvaju svi redovi
+        // Filtriraj prazne redove (redovi gdje su sva polja prazna)
+        $tableFields = [
+            'products_services_table',
+            'target_customers',
+            'sales_locations',
+            'pricing_table',
+            'revenue_share_table',
+            'employment_structure',
+            'business_history',
+            'suppliers_table',
+            'funding_sources_table',
+            'revenue_projection',
+            'expense_projection',
+            'job_schedule',
+            'risk_matrix',
+        ];
+
+        $cleanedData = $validated;
+        foreach ($tableFields as $field) {
+            if (isset($cleanedData[$field]) && is_array($cleanedData[$field])) {
+                // Filtriraj prazne redove - zadrži samo redove gdje je barem jedno polje popunjeno
+                $cleanedData[$field] = array_filter($cleanedData[$field], function($row) {
+                    if (!is_array($row)) return false;
+                    // Provjeri da li je barem jedno polje u redu popunjeno
+                    foreach ($row as $value) {
+                        if (!empty($value) && trim($value) !== '') {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                // Resetuj array ključeve da budu sekvencijalni (0, 1, 2, ...)
+                $cleanedData[$field] = array_values($cleanedData[$field]);
+            }
+        }
+
         // Kreiraj ili ažuriraj biznis plan
         $businessPlan = BusinessPlan::updateOrCreate(
             ['application_id' => $application->id],
             array_merge(
-                $validated,
+                $cleanedData,
                 [
                     'has_registered_business' => $request->has('has_registered_business') ? (bool)$request->has_registered_business : null,
                     'has_seasonal_workers' => $request->has('has_seasonal_workers') ? (bool)$request->has_seasonal_workers : null,
