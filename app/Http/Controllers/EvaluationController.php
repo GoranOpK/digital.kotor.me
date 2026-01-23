@@ -175,6 +175,26 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
+        // Provjeri da li su svi članovi komisije ocjenili prijavu
+        $commission = $commissionMember->commission;
+        $totalMembers = $commission->activeMembers()->count();
+        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
+            ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+            ->pluck('commission_member_id')
+            ->unique()
+            ->count();
+        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
+        
+        // Osiguraj da samo predsjednik može slati zaključak i iznos odobrenih sredstava
+        if ($commissionMember->position !== 'predsjednik') {
+            // Ako nije predsjednik, ukloni te podatke iz requesta
+            $request->merge([
+                'commission_decision' => null,
+                'approved_amount' => null,
+                'decision_date' => null,
+            ]);
+        }
+
         // Validacija - provjera dokumentacije
         $rules = [
             'documents_complete' => 'required|boolean',
@@ -207,16 +227,6 @@ class EvaluationController extends Controller
 
         $rules['notes'] = 'nullable|string|max:5000';
         $rules['justification'] = 'nullable|string|max:5000';
-        
-        // Provjeri da li su svi članovi komisije ocjenili prijavu
-        $commission = $commissionMember->commission;
-        $totalMembers = $commission->activeMembers()->count();
-        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
-            ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
-            ->pluck('commission_member_id')
-            ->unique()
-            ->count();
-        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
         
         // Ako je predsjednik i svi članovi su ocjenili, može unijeti zaključak i iznos
         if ($commissionMember->position === 'predsjednik' && $allMembersEvaluated) {

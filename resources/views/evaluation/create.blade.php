@@ -571,9 +571,6 @@
                                     <em>Zaključak još nije donesen. Predsjednik komisije će donijeti zaključak nakon što svi članovi ocjene prijavu.</em>
                                 </div>
                             @endif
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                                (Samo predsjednik komisije može donijeti zaključak)
-                            </div>
                         </div>
                     @endif
                 </div>
