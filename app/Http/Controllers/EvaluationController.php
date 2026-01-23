@@ -368,9 +368,28 @@ class EvaluationController extends Controller
         
         if ($existingScore && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
             // Ako je već ocjenio ali prijava nije zaključena i nije predsjednik, može ažurirati samo notes
+            // Provjeri da li je notes poslan u request-u (čak i ako je null)
+            // Ako jeste poslan (čak i kao null), koristimo tu vrijednost (konvertujemo null u prazan string)
+            // Ako nije poslan, koristimo postojeću vrijednost
+            $notesValue = $existingScore->notes; // Default: postojeća vrijednost
+            
+            if ($request->has('notes')) {
+                // Notes je poslan u request-u (može biti null ili prazan string)
+                $inputNotes = $request->input('notes');
+                $notesValue = $inputNotes !== null ? $inputNotes : '';
+            }
+            
+            Log::info('=== DEBUG: Ažuriranje napomena (early block) ===');
+            Log::info('Request has notes: ' . ($request->has('notes') ? 'YES' : 'NO'));
+            Log::info('Request input notes: ' . json_encode($request->input('notes')));
+            Log::info('Existing notes: ' . json_encode($existingScore->notes));
+            Log::info('Final notes value to save: ' . json_encode($notesValue));
+            
             $existingScore->update([
-                'notes' => $validated['notes'] ?? $existingScore->notes,
+                'notes' => $notesValue,
             ]);
+            
+            Log::info('After update - saved notes: ' . json_encode($existingScore->fresh()->notes));
             
             return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                 ->with('success', 'Napomene su uspješno ažurirane.');
