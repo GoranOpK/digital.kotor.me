@@ -184,7 +184,17 @@ async function findOrCreateFolder(storage, folderPath) {
  */
 async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt = null) {
     console.log('=== uploadFilesToMegaAndSave START ===');
-    console.log('Parameters:', { documentName, category, expiresAt, filesCount: files.length });
+    console.log('Parameters:', { documentName, category, expiresAt });
+    console.log('Files parameter:', files);
+    console.log('Files type:', typeof files);
+    console.log('Files is Array?', Array.isArray(files));
+    console.log('Files length:', files?.length);
+    console.log('Files instanceof FileList?', files instanceof FileList);
+    
+    // Konvertuj FileList u Array ako nije već array
+    const filesArray = Array.isArray(files) ? files : Array.from(files || []);
+    console.log('Files array:', filesArray);
+    console.log('Files array length:', filesArray.length);
     
     const results = [];
 
@@ -199,8 +209,8 @@ async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt
         const userId = null; // TODO: Dobij user ID iz backend-a ili meta tag-a
         
         // Uploaduj svaki fajl
-        console.log('Starting MEGA upload for', files.length, 'file(s)');
-        for (const file of Array.from(files)) {
+        console.log('Starting MEGA upload for', filesArray.length, 'file(s)');
+        for (const file of filesArray) {
             console.log('Uploading file to MEGA:', file.name, file.size, 'bytes');
             try {
                 const result = await uploadFileToMega(file, 'digital.kotor/documents', userId);

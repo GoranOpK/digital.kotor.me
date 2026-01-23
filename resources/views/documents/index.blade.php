@@ -902,6 +902,10 @@ async function handleMegaUpload(event) {
         }
         
         // Upload fajlova direktno na MEGA
+        console.log('Calling uploadFilesToMegaAndSave with files:', files);
+        console.log('Files length:', files.length);
+        console.log('Files is FileList?', files instanceof FileList);
+        
         const result = await window.megaUpload.uploadFilesToMegaAndSave(
             files,
             name,
