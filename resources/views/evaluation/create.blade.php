@@ -673,8 +673,10 @@
                     <label class="form-label form-label-large">6. Ostale napomene:</label>
                     
                     @php
-                        // Prikupi napomene svih članova koji su ih dali
+                        // Prikupi napomene svih članova koji su ih dali, zadržavajući redoslijed iz $allMembers
+                        // $allMembers je već sortiran tako da predsjednik bude prvi, zatim ostali članovi po redoslijedu
                         $membersWithNotes = [];
+                        
                         foreach($allMembers as $member) {
                             $memberScore = $allScores->get($member->id);
                             if ($memberScore && $memberScore->notes && trim($memberScore->notes) !== '') {
