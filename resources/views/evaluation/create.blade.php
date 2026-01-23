@@ -677,13 +677,28 @@
                         // $allMembers je već sortiran tako da predsjednik bude prvi, zatim ostali članovi po redoslijedu
                         $membersWithNotes = [];
                         
-                        foreach($allMembers as $member) {
-                            $memberScore = $allScores->get($member->id);
-                            if ($memberScore && $memberScore->notes && trim($memberScore->notes) !== '') {
+                        // Prvo dodaj predsjednika ako ima napomenu
+                        $chairman = $allMembers->firstWhere('position', 'predsjednik');
+                        if ($chairman) {
+                            $chairmanScore = $allScores->get($chairman->id);
+                            if ($chairmanScore && $chairmanScore->notes && trim($chairmanScore->notes) !== '') {
                                 $membersWithNotes[] = [
-                                    'member' => $member,
-                                    'notes' => $memberScore->notes
+                                    'member' => $chairman,
+                                    'notes' => $chairmanScore->notes
                                 ];
+                            }
+                        }
+                        
+                        // Zatim dodaj ostale članove po redoslijedu iz $allMembers
+                        foreach($allMembers as $member) {
+                            if ($member->position !== 'predsjednik') {
+                                $memberScore = $allScores->get($member->id);
+                                if ($memberScore && $memberScore->notes && trim($memberScore->notes) !== '') {
+                                    $membersWithNotes[] = [
+                                        'member' => $member,
+                                        'notes' => $memberScore->notes
+                                    ];
+                                }
                             }
                         }
                         
