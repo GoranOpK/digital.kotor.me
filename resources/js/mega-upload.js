@@ -106,9 +106,13 @@ async function uploadFileToMega(file, folderPath = 'digital.kotor/documents', us
         const fileData = await file.arrayBuffer();
         
         // Upload u target folder
-        // megajs upload() metoda prima (filename, data) kao argumente
-        console.log('Calling targetFolder.upload() with:', file.name, fileData.byteLength, 'bytes');
-        const uploadedFile = await targetFolder.upload(file.name, fileData).complete;
+        // megajs upload() metoda prima ({name, size}, data) ili ({name, allowUploadBuffering: true}, data)
+        // Prvi argument je objekat sa name i size (ili allowUploadBuffering)
+        console.log('Calling targetFolder.upload() with:', file.name, file.size, 'bytes');
+        const uploadedFile = await targetFolder.upload({
+            name: file.name,
+            size: file.size
+        }, fileData).complete;
         console.log('Upload completed, uploadedFile:', uploadedFile);
 
         // Kreiraj public share link
