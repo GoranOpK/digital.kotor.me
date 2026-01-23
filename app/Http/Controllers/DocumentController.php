@@ -562,6 +562,106 @@ class DocumentController extends Controller
     }
 
     /**
+     * Obrađuje fajlove u PDF i vraća obrađene PDF-ove za MEGA upload
+     * Frontend šalje originalne fajlove, backend ih obrađuje i vraća obrađene PDF-ove
+     */
+    public function processDocumentsForMega(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            $request->validate([
+                'files' => 'required|array|min:1',
+                'files.*' => 'required|file|mimes:jpeg,jpg,png,pdf|max:2048',
+            ]);
+            
+            $files = $request->file('files');
+            $processedPdfs = [];
+            
+            // Ako ima više fajlova, spoji ih u jedan PDF
+            if (count($files) > 1) {
+                $result = $this->documentProcessor->mergeDocuments($files, $user->id);
+                
+                if (!$result['success']) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => $result['error'] ?? 'Greška pri obradi dokumenata'
+                    ], 500);
+                }
+                
+                // Pročitaj obrađeni PDF
+                $pdfPath = $result['file_path'];
+                $pdfContent = Storage::disk('local')->get($pdfPath);
+                
+                // Generiši ime fajla na osnovu originalnih fajlova
+                $originalNames = array_map(function($file) {
+                    $name = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                    return $name;
+                }, $files);
+                $mergedName = implode('_', $originalNames) . '.pdf';
+                
+                // Konvertuj u base64 za prenos preko JSON-a
+                $processedPdfs[] = [
+                    'name' => $mergedName,
+                    'content' => base64_encode($pdfContent),
+                    'size' => $result['file_size'],
+                    'mime' => 'application/pdf'
+                ];
+                
+                // Obriši privremeni fajl nakon čitanja
+                Storage::disk('local')->delete($pdfPath);
+                
+            } else {
+                // Jedan fajl - obradi ga
+                $file = $files[0];
+                $result = $this->documentProcessor->processDocument($file, $user->id);
+                
+                if (!$result['success']) {
+                    return response()->json([
+                        'success' => false,
+                        'error' => $result['error'] ?? 'Greška pri obradi dokumenta'
+                    ], 500);
+                }
+                
+                // Pročitaj obrađeni PDF
+                $pdfPath = $result['file_path'];
+                $pdfContent = Storage::disk('local')->get($pdfPath);
+                
+                // Generiši ime fajla na osnovu originalnog imena
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $pdfName = $originalName . '.pdf';
+                
+                // Konvertuj u base64 za prenos preko JSON-a
+                $processedPdfs[] = [
+                    'name' => $pdfName,
+                    'content' => base64_encode($pdfContent),
+                    'size' => $result['file_size'],
+                    'mime' => 'application/pdf'
+                ];
+                
+                // Obriši privremeni fajl nakon čitanja
+                Storage::disk('local')->delete($pdfPath);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'pdfs' => $processedPdfs
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to process documents for MEGA', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'error' => 'Greška pri obradi dokumenata: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Vraća status dokumenata koji su u obradi (API endpoint)
      */
     public function status(): JsonResponse

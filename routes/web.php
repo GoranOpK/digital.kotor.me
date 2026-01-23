@@ -39,6 +39,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Biblioteka dokumenata
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
     Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
+    Route::post('/documents/process-for-mega', [DocumentController::class, 'processDocumentsForMega'])->name('documents.process-for-mega');
     Route::post('/documents/store-mega', [DocumentController::class, 'storeMegaMetadata'])->name('documents.store-mega');
     Route::get('/documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');

@@ -293,6 +293,7 @@ async function findOrCreateFolder(storage, folderPath) {
 
 /**
  * Uploaduje fajlove i šalje metadata na backend
+ * Prvo obrađuje fajlove u PDF na backend-u, zatim uploaduje obrađene PDF-ove na MEGA
  */
 async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt = null) {
     console.log('=== uploadFilesToMegaAndSave START ===');
@@ -311,6 +312,36 @@ async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt
     const results = [];
 
     try {
+        // Prvo pošalji fajlove na backend za obradu u PDF
+        console.log('Sending files to backend for PDF processing...');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        
+        const formData = new FormData();
+        filesArray.forEach((file, index) => {
+            formData.append(`files[${index}]`, file);
+        });
+        
+        const processResponse = await fetch('/documents/process-for-mega', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: formData
+        });
+        
+        if (!processResponse.ok) {
+            const errorData = await processResponse.json().catch(() => ({ error: 'Unknown error' }));
+            throw new Error(errorData.error || `Backend processing failed: ${processResponse.status}`);
+        }
+        
+        const processData = await processResponse.json();
+        if (!processData.success || !processData.pdfs || processData.pdfs.length === 0) {
+            throw new Error(processData.error || 'No processed PDFs returned from backend');
+        }
+        
+        console.log('PDFs processed successfully, count:', processData.pdfs.length);
+        
         // Inicijalizuj MEGA Storage
         console.log('Initializing MEGA Storage...');
         await initMegaStorage();
@@ -320,22 +351,32 @@ async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt
         // Za sada koristimo folderPath bez user ID-a, ali možemo dodati kasnije
         const userId = null; // TODO: Dobij user ID iz backend-a ili meta tag-a
         
-        // Uploaduj svaki fajl
-        console.log('Starting MEGA upload for', filesArray.length, 'file(s)');
-        for (const file of filesArray) {
-            console.log('Uploading file to MEGA:', file.name, file.size, 'bytes');
+        // Konvertuj obrađene PDF-ove iz base64 u File objekte i uploaduj na MEGA
+        console.log('Starting MEGA upload for', processData.pdfs.length, 'processed PDF(s)');
+        for (const pdfData of processData.pdfs) {
+            console.log('Processing PDF:', pdfData.name, pdfData.size, 'bytes');
             try {
-                const result = await uploadFileToMega(file, 'digital.kotor/documents', userId);
+                // Konvertuj base64 u Blob, zatim u File
+                const binaryString = atob(pdfData.content);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: 'application/pdf' });
+                const pdfFile = new File([blob], pdfData.name || 'processed.pdf', { type: 'application/pdf' });
+                
+                console.log('Uploading processed PDF to MEGA:', pdfFile.name, pdfFile.size, 'bytes');
+                const result = await uploadFileToMega(pdfFile, 'digital.kotor/documents', userId);
                 console.log('Upload result:', result);
                 if (result.success) {
                     results.push(result);
-                    console.log('File uploaded successfully, added to results');
+                    console.log('PDF uploaded successfully, added to results');
                 } else {
                     console.error('Upload failed:', result.error);
-                    throw new Error(`Failed to upload ${file.name}: ${result.error}`);
+                    throw new Error(`Failed to upload ${pdfFile.name}: ${result.error}`);
                 }
             } catch (uploadError) {
-                console.error('Error during file upload:', uploadError);
+                console.error('Error during PDF upload:', uploadError);
                 throw uploadError;
             }
         }
