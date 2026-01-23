@@ -715,9 +715,10 @@
                         {{-- Trenutni član može unijeti svoje napomene dok predsjednik ne zaključi prijavu --}}
                         <div style="margin-top: {{ count($membersWithNotes) > 0 ? '20px' : '0' }};">
                             <label class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 8px;">
-                                Moje napomene
                                 @if(isset($isChairman) && $isChairman)
-                                    <span style="color: #6b7280; font-size: 12px;">(Predsjednik komisije)</span>
+                                    Napomena Predsjednik komisije ({{ $commissionMember->name }})
+                                @else
+                                    Napomena Član komisije ({{ $commissionMember->name }})
                                 @endif
                             </label>
                             <textarea 
