@@ -99,20 +99,31 @@ async function uploadFileToMega(file, folderPath = 'digital.kotor/documents', us
         }
 
         // Upload fajla
-        // megajs zahteva file content (ArrayBuffer ili Blob), ne File objekat direktno
-        console.log('Uploading file to MEGA:', file.name);
+        // megajs prima "strings, buffers or anything that can be converted to a buffer (like TypedArrays)"
+        // File nasleđuje Blob, ali možda treba eksplicitna konverzija
+        console.log('Uploading file to MEGA:', file.name, file.size, 'bytes');
+        console.log('File type:', file.constructor.name, 'is File?', file instanceof File);
+        console.log('File is Blob?', file instanceof Blob);
         
-        // Pročitaj file content kao ArrayBuffer
-        const fileData = await file.arrayBuffer();
-        
-        // Upload u target folder
-        // megajs upload() metoda prima ({name, size}, data) ili ({name, allowUploadBuffering: true}, data)
-        // Prvi argument je objekat sa name i size (ili allowUploadBuffering)
-        console.log('Calling targetFolder.upload() with:', file.name, file.size, 'bytes');
-        const uploadedFile = await targetFolder.upload({
-            name: file.name,
-            size: file.size
-        }, fileData).complete;
+        // Probajmo sa Blob direktno (File nasleđuje Blob)
+        // Ako ne radi, probaćemo sa ArrayBuffer/Uint8Array
+        console.log('Calling targetFolder.upload() with Blob/File');
+        let uploadedFile;
+        try {
+            // Probaj prvo sa File/Blob direktno
+            uploadedFile = await targetFolder.upload({
+                name: file.name,
+                size: file.size
+            }, file).complete;
+        } catch (blobError) {
+            console.warn('Upload with File/Blob failed, trying with ArrayBuffer:', blobError.message);
+            // Ako ne radi sa File/Blob, probaj sa ArrayBuffer
+            const fileData = await file.arrayBuffer();
+            uploadedFile = await targetFolder.upload({
+                name: file.name,
+                size: file.size
+            }, fileData).complete;
+        }
         console.log('Upload completed, uploadedFile:', uploadedFile);
 
         // Kreiraj public share link
