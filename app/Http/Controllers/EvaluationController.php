@@ -218,8 +218,13 @@ class EvaluationController extends Controller
         
         $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
         
-        // Ako je već ocjenio, zabrani izmjenu - redirectuj na pregled ocjene
-        if ($hasCompletedEvaluation) {
+        // Provjeri da li je prijava zaključena
+        $isDecisionMade = $application->commission_decision !== null;
+        $isChairman = $commissionMember->position === 'predsjednik';
+        
+        // Ako je već ocjenio, zabrani izmjenu - OSIM ako je predsjednik (može mijenjati sekciju 2)
+        // ILI ako nije zaključena prijava (tada članovi mogu mijenjati napomene)
+        if ($hasCompletedEvaluation && !$isChairman && $isDecisionMade) {
             return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                 ->with('error', 'Već ste ocjenili ovu prijavu. Ocjene se ne mogu mijenjati.');
         }
@@ -441,16 +446,13 @@ class EvaluationController extends Controller
             }
 
             // Provjeri da li član već ocjenio i da li je prijava zaključena
-            $existingScoreForMember = EvaluationScore::where('application_id', $application->id)
-                ->where('commission_member_id', $commissionMember->id)
-                ->first();
+            // Koristimo postojeći $existingScore umjesto ponovnog traženja
+            $isDecisionMadeForUpdate = $application->commission_decision !== null;
             
-            $isDecisionMade = $application->commission_decision !== null;
-            
-            if ($existingScoreForMember && $hasCompletedEvaluation && !$isDecisionMade && !$isChairman) {
+            if ($existingScore && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
                 // Ako je već ocjenio ali prijava nije zaključena i nije predsjednik, može ažurirati samo notes
-                $existingScoreForMember->update([
-                    'notes' => $validated['notes'] ?? $existingScoreForMember->notes,
+                $existingScore->update([
+                    'notes' => $validated['notes'] ?? $existingScore->notes,
                 ]);
                 
                 return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
