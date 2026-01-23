@@ -468,17 +468,24 @@
                                                 // Provjeri da li je drugi član završio ocjenjivanje
                                                 $otherMemberCompleted = $memberScore && $memberScore->criterion_1 !== null;
                                                 // Ako je predsjednik i već je ocjenio, može vidjeti sve ocjene
-                                                $canViewAllScores = isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation;
+                                                // ILI ako su svi članovi ocjenili, svi članovi mogu vidjeti sve ocjene
+                                                $canViewAllScores = (isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation) 
+                                                    || (isset($allMembersEvaluated) && $allMembersEvaluated);
                                             @endphp
                                             @if($isCurrentMember)
                                                 {{-- Trenutni član vidi svoje input polje --}}
-                                                @if(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && isset($isChairman) && $isChairman && isset($allMembersEvaluated) && $allMembersEvaluated)
-                                                    {{-- Predsjednik kada su svi ocjenili - kriterijumi su read-only (može mijenjati samo sekciju 2) --}}
+                                                @if(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && isset($isChairman) && $isChairman)
+                                                    {{-- Predsjednik kada je već ocjenio - kriterijumi su read-only (može mijenjati samo sekciju 2) --}}
+                                                    <span class="score-display">
+                                                        {{ $currentValue ? $currentValue : '—' }}
+                                                    </span>
+                                                @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && isset($allMembersEvaluated) && $allMembersEvaluated)
+                                                    {{-- Kada su svi članovi ocjenili, svi članovi vide svoje ocjene u read-only modu --}}
                                                     <span class="score-display">
                                                         {{ $currentValue ? $currentValue : '—' }}
                                                     </span>
                                                 @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && !(isset($isChairman) && $isChairman))
-                                                    {{-- Ako je već ocjenio i nije predsjednik, read-only --}}
+                                                    {{-- Ako je već ocjenio i nije predsjednik i nisu svi ocjenili, read-only --}}
                                                     <span class="score-display">
                                                         {{ $currentValue ? $currentValue : '—' }}
                                                     </span>
@@ -701,6 +708,16 @@
                             </a>
                         @endif
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                    @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && isset($allMembersEvaluated) && $allMembersEvaluated)
+                        {{-- Kada su svi članovi ocjenili, ostali članovi vide formu u read-only modu --}}
+                        <div style="padding: 16px; background: #f0f9ff; border-radius: 8px; margin-bottom: 16px; border: 1px solid #0ea5e9;">
+                            <div style="color: #0c4a6e; font-weight: 600; margin-bottom: 8px;">
+                                ℹ️ Svi članovi komisije su ocjenili ovu prijavu. Forma je dostupna samo za pregled.
+                            </div>
+                        </div>
+                        <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
+                            Nazad na listu
+                        </a>
                     @else
                         <button type="submit" class="btn-primary">Ocijeni</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>

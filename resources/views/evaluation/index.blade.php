@@ -204,15 +204,24 @@
                                 @endphp
                                 
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                    @if($isChairman && $allEvaluated && $application->status === 'evaluated')
-                                        {{-- Predsjednik vidi oba badge-a kada su svi članovi ocjenili --}}
-                                        <a href="{{ route('evaluation.create', $application) }}" class="btn-sm" style="background: #6b7280; color: #fff;">
-                                            Lista za ocjenjivanje
-                                        </a>
-                                        <a href="{{ route('evaluation.chairman-review', $application) }}" class="btn-sm" style="background: var(--primary); color: #fff;">
-                                            Pregled i zaključak
-                                        </a>
+                                    @if($allEvaluated)
+                                        {{-- Kada su svi članovi ocjenili, svi članovi komisije vide "Ocjenjena prijava" --}}
+                                        @if($isChairman)
+                                            {{-- Predsjednik vidi oba badge-a --}}
+                                            <a href="{{ route('evaluation.create', $application) }}" class="btn-sm" style="background: #6b7280; color: #fff;">
+                                                Lista za ocjenjivanje
+                                            </a>
+                                            <a href="{{ route('evaluation.chairman-review', $application) }}" class="btn-sm" style="background: var(--primary); color: #fff;">
+                                                Pregled i zaključak
+                                            </a>
+                                        @else
+                                            {{-- Ostali članovi vide "Ocjenjena prijava" --}}
+                                            <a href="{{ route('evaluation.create', $application) }}" class="btn-sm evaluated" style="background: #10b981; color: #fff;">
+                                                Ocjenjena prijava
+                                            </a>
+                                        @endif
                                     @else
+                                        {{-- Dok nisu svi ocjenili, normalni flow --}}
                                         <a href="{{ route('evaluation.create', $application) }}" class="btn-sm {{ $isEvaluated ? 'evaluated' : '' }}">
                                             {{ $isEvaluated ? 'Pregledaj ocjenu' : 'Ocjeni' }}
                                         </a>

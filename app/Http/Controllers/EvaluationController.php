@@ -137,9 +137,10 @@ class EvaluationController extends Controller
         $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
         
         // Ako je već ocjenio, zabrani izmjenu - OSIM ako je predsjednik (predsjednik može pristupiti bilo kada)
+        // ILI ako su svi članovi ocjenili (tada svi članovi mogu vidjeti formu u read-only modu)
         $isChairman = $commissionMember->position === 'predsjednik';
         
-        if ($hasCompletedEvaluation && !$isChairman) {
+        if ($hasCompletedEvaluation && !$isChairman && !$allMembersEvaluated) {
             return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                 ->with('error', 'Već ste ocjenili ovu prijavu. Ocjene se ne mogu mijenjati.');
         }
