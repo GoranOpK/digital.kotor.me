@@ -826,7 +826,7 @@
                     @elseif($hasCompletedEvaluation && $canEditNotesValue && !$isChairman)
                         {{-- Član koji je već ocjenio ali može editovati napomene --}}
                         {{-- Ova provjera mora biti PRIJE provjere za sve ocjenjene --}}
-                        <button type="submit" class="btn-primary">Sačuvaj izmjene napomena</button>
+                        <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @elseif($hasCompletedEvaluation && $allMembersEvaluated)
                         {{-- Kada su svi članovi ocjenili, ostali članovi vide formu u read-only modu --}}
