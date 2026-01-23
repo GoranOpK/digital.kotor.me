@@ -136,11 +136,15 @@ class EvaluationController extends Controller
             ->count();
         $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
         
+        // Provjeri da li je predsjednik zaključio prijavu
+        $isDecisionMade = $application->commission_decision !== null;
+        
         // Ako je već ocjenio, zabrani izmjenu - OSIM ako je predsjednik (predsjednik može pristupiti bilo kada)
         // ILI ako su svi članovi ocjenili (tada svi članovi mogu vidjeti formu u read-only modu)
+        // ILI ako nije zaključena prijava (tada članovi mogu mijenjati napomene)
         $isChairman = $commissionMember->position === 'predsjednik';
         
-        if ($hasCompletedEvaluation && !$isChairman && !$allMembersEvaluated) {
+        if ($hasCompletedEvaluation && !$isChairman && !$allMembersEvaluated && $isDecisionMade) {
             return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                 ->with('error', 'Već ste ocjenili ovu prijavu. Ocjene se ne mogu mijenjati.');
         }
@@ -395,20 +399,25 @@ class EvaluationController extends Controller
 
         // Kreiraj ili ažuriraj ocjenu
         if ($isChairman && $hasCompletedEvaluation) {
-            // Ako je predsjednik i već je ocjenio, ažuriraj samo documents_complete
+            // Ako je predsjednik i već je ocjenio, ažuriraj samo documents_complete i notes (dok ne zaključi prijavu)
             $existingScore = EvaluationScore::where('application_id', $application->id)
                 ->where('commission_member_id', $commissionMember->id)
                 ->first();
             
-            if ($existingScore) {
+            // Provjeri da li je predsjednik zaključio prijavu
+            $isDecisionMade = $application->commission_decision !== null;
+            
+            if ($existingScore && !$isDecisionMade) {
+                // Ako nije zaključio prijavu, može mijenjati documents_complete i notes
                 $existingScore->update([
                     'documents_complete' => $validated['documents_complete'] ?? $existingScore->documents_complete,
+                    'notes' => $validated['notes'] ?? $existingScore->notes,
                 ]);
             }
             
             // Redirectuj na listu sa porukom
             return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
-                ->with('success', 'Sekcija 2 (Dostavljena su sva potrebna dokumenta?) je uspješno ažurirana.');
+                ->with('success', 'Izmjene su uspješno sačuvane.');
         } else {
             // Normalno spremanje ocjene
             // Za ostale članove, koristi documents_complete od predsjednika

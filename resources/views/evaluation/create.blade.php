@@ -671,11 +671,60 @@
                 <!-- 6. Ostale napomene -->
                 <div class="form-section">
                     <label class="form-label form-label-large">6. Ostale napomene:</label>
-                    <textarea 
-                        name="notes" 
-                        class="form-control" 
-                        rows="6" 
-                        placeholder="Unesite dodatne napomene...">{{ old('notes', $existingScore?->notes) }}</textarea>
+                    
+                    @php
+                        // Prikupi napomene svih članova koji su ih dali
+                        $membersWithNotes = [];
+                        foreach($allMembers as $member) {
+                            $memberScore = $allScores->get($member->id);
+                            if ($memberScore && $memberScore->notes && trim($memberScore->notes) !== '') {
+                                $membersWithNotes[] = [
+                                    'member' => $member,
+                                    'notes' => $memberScore->notes
+                                ];
+                            }
+                        }
+                        
+                        // Provjeri da li je predsjednik zaključio prijavu
+                        $isDecisionMade = $application->commission_decision !== null;
+                        
+                        // Trenutni član može unijeti napomene dok predsjednik ne zaključi prijavu
+                        $canEditNotes = !$isDecisionMade;
+                    @endphp
+                    
+                    @if(count($membersWithNotes) > 0)
+                        {{-- Prikaži napomene članova koji su ih dali --}}
+                        @foreach($membersWithNotes as $memberNote)
+                            <div style="margin-bottom: 20px;">
+                                <label class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                    Napomene - {{ $memberNote['member']->name }}
+                                    @if($memberNote['member']->position === 'predsjednik')
+                                        <span style="color: #6b7280; font-size: 12px;">(Predsjednik komisije)</span>
+                                    @endif
+                                </label>
+                                <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap;">
+                                    {{ $memberNote['notes'] }}
+                                </div>
+                            </div>
+                        @endforeach
+                    @endif
+                    
+                    @if($canEditNotes)
+                        {{-- Trenutni član može unijeti svoje napomene dok predsjednik ne zaključi prijavu --}}
+                        <div style="margin-top: {{ count($membersWithNotes) > 0 ? '20px' : '0' }};">
+                            <label class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                Moje napomene
+                                @if(isset($isChairman) && $isChairman)
+                                    <span style="color: #6b7280; font-size: 12px;">(Predsjednik komisije)</span>
+                                @endif
+                            </label>
+                            <textarea 
+                                name="notes" 
+                                class="form-control" 
+                                rows="6" 
+                                placeholder="Unesite dodatne napomene...">{{ old('notes', $existingScore?->notes) }}</textarea>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Potpisi -->
