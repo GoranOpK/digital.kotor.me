@@ -350,6 +350,20 @@ class EvaluationController extends Controller
             }
         }
 
+        // Provjeri da li član već ocjenio i da li je prijava zaključena
+        // Koristimo postojeći $existingScore umjesto ponovnog traženja
+        $isDecisionMadeForUpdate = $application->commission_decision !== null;
+        
+        if ($existingScore && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
+            // Ako je već ocjenio ali prijava nije zaključena i nije predsjednik, može ažurirati samo notes
+            $existingScore->update([
+                'notes' => $validated['notes'] ?? $existingScore->notes,
+            ]);
+            
+            return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+                ->with('success', 'Napomene su uspješno ažurirane.');
+        }
+
         // Kreiraj ili ažuriraj ocjenu
         if ($isChairman && $allMembersEvaluated) {
             // Ako je predsjednik i svi su ocjenili, ažuriraj samo documents_complete
@@ -388,16 +402,16 @@ class EvaluationController extends Controller
                 ],
                 [
                     'documents_complete' => $documentsCompleteValue,
-                    'criterion_1' => $validated['criterion_1'],
-                    'criterion_2' => $validated['criterion_2'],
-                    'criterion_3' => $validated['criterion_3'],
-                    'criterion_4' => $validated['criterion_4'],
-                    'criterion_5' => $validated['criterion_5'],
-                    'criterion_6' => $validated['criterion_6'],
-                    'criterion_7' => $validated['criterion_7'],
-                    'criterion_8' => $validated['criterion_8'],
-                    'criterion_9' => $validated['criterion_9'],
-                    'criterion_10' => $validated['criterion_10'],
+                    'criterion_1' => $validated['criterion_1'] ?? $existingScore->criterion_1 ?? null,
+                    'criterion_2' => $validated['criterion_2'] ?? $existingScore->criterion_2 ?? null,
+                    'criterion_3' => $validated['criterion_3'] ?? $existingScore->criterion_3 ?? null,
+                    'criterion_4' => $validated['criterion_4'] ?? $existingScore->criterion_4 ?? null,
+                    'criterion_5' => $validated['criterion_5'] ?? $existingScore->criterion_5 ?? null,
+                    'criterion_6' => $validated['criterion_6'] ?? $existingScore->criterion_6 ?? null,
+                    'criterion_7' => $validated['criterion_7'] ?? $existingScore->criterion_7 ?? null,
+                    'criterion_8' => $validated['criterion_8'] ?? $existingScore->criterion_8 ?? null,
+                    'criterion_9' => $validated['criterion_9'] ?? $existingScore->criterion_9 ?? null,
+                    'criterion_10' => $validated['criterion_10'] ?? $existingScore->criterion_10 ?? null,
                     'final_score' => $totalScore,
                     'notes' => $validated['notes'] ?? null,
                     'justification' => $validated['justification'] ?? null,
@@ -449,10 +463,15 @@ class EvaluationController extends Controller
             // Koristimo postojeći $existingScore umjesto ponovnog traženja
             $isDecisionMadeForUpdate = $application->commission_decision !== null;
             
-            if ($existingScore && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
+            // Provjeri da li postoji postojeća ocjena za ovog člana
+            $existingScoreForNotes = EvaluationScore::where('application_id', $application->id)
+                ->where('commission_member_id', $commissionMember->id)
+                ->first();
+            
+            if ($existingScoreForNotes && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
                 // Ako je već ocjenio ali prijava nije zaključena i nije predsjednik, može ažurirati samo notes
-                $existingScore->update([
-                    'notes' => $validated['notes'] ?? $existingScore->notes,
+                $existingScoreForNotes->update([
+                    'notes' => $validated['notes'] ?? $existingScoreForNotes->notes,
                 ]);
                 
                 return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
@@ -466,16 +485,16 @@ class EvaluationController extends Controller
                 ],
                 [
                     'documents_complete' => $documentsCompleteValue,
-                    'criterion_1' => $validated['criterion_1'],
-                    'criterion_2' => $validated['criterion_2'],
-                    'criterion_3' => $validated['criterion_3'],
-                    'criterion_4' => $validated['criterion_4'],
-                    'criterion_5' => $validated['criterion_5'],
-                    'criterion_6' => $validated['criterion_6'],
-                    'criterion_7' => $validated['criterion_7'],
-                    'criterion_8' => $validated['criterion_8'],
-                    'criterion_9' => $validated['criterion_9'],
-                    'criterion_10' => $validated['criterion_10'],
+                    'criterion_1' => $validated['criterion_1'] ?? $existingScoreForNotes->criterion_1 ?? null,
+                    'criterion_2' => $validated['criterion_2'] ?? $existingScoreForNotes->criterion_2 ?? null,
+                    'criterion_3' => $validated['criterion_3'] ?? $existingScoreForNotes->criterion_3 ?? null,
+                    'criterion_4' => $validated['criterion_4'] ?? $existingScoreForNotes->criterion_4 ?? null,
+                    'criterion_5' => $validated['criterion_5'] ?? $existingScoreForNotes->criterion_5 ?? null,
+                    'criterion_6' => $validated['criterion_6'] ?? $existingScoreForNotes->criterion_6 ?? null,
+                    'criterion_7' => $validated['criterion_7'] ?? $existingScoreForNotes->criterion_7 ?? null,
+                    'criterion_8' => $validated['criterion_8'] ?? $existingScoreForNotes->criterion_8 ?? null,
+                    'criterion_9' => $validated['criterion_9'] ?? $existingScoreForNotes->criterion_9 ?? null,
+                    'criterion_10' => $validated['criterion_10'] ?? $existingScoreForNotes->criterion_10 ?? null,
                     'final_score' => $totalScore,
                     'notes' => $validated['notes'] ?? null,
                     'justification' => $validated['justification'] ?? null,
