@@ -9,6 +9,7 @@ use App\Models\Commission;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class EvaluationController extends Controller
@@ -473,12 +474,30 @@ class EvaluationController extends Controller
             
             if ($existingScoreForNotes && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
                 // Ako je već ocjenio ali prijava nije zaključena i nije predsjednik, može ažurirati samo notes
+                // DEBUG: Loguj šta dolazi u request-u
+                Log::info('=== DEBUG: Ažuriranje napomena ===');
+                Log::info('Request has notes: ' . ($request->has('notes') ? 'YES' : 'NO'));
+                Log::info('Request input notes: ' . json_encode($request->input('notes')));
+                Log::info('Request all: ' . json_encode($request->all()));
+                Log::info('Validated notes: ' . json_encode($validated['notes'] ?? 'NOT_IN_VALIDATED'));
+                Log::info('Existing notes: ' . json_encode($existingScoreForNotes->notes));
+                Log::info('Array key exists in validated: ' . (array_key_exists('notes', $validated) ? 'YES' : 'NO'));
+                
                 // Provjeri da li je notes poslan u request-u (čak i ako je prazan string)
                 // Koristimo $request->input() direktno jer $validated možda ne uključuje prazan string
                 $notesValue = $request->has('notes') ? ($request->input('notes') ?? '') : $existingScoreForNotes->notes;
+                
+                Log::info('Final notes value to save: ' . json_encode($notesValue));
+                Log::info('Notes value type: ' . gettype($notesValue));
+                Log::info('Notes value is empty: ' . (empty($notesValue) ? 'YES' : 'NO'));
+                Log::info('Notes value is null: ' . (is_null($notesValue) ? 'YES' : 'NO'));
+                
                 $existingScoreForNotes->update([
                     'notes' => $notesValue,
                 ]);
+                
+                Log::info('After update - saved notes: ' . json_encode($existingScoreForNotes->fresh()->notes));
+                Log::info('=== END DEBUG ===');
                 
                 return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                     ->with('success', 'Napomene su uspješno ažurirane.');
