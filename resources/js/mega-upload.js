@@ -20,19 +20,36 @@ async function initMegaStorage() {
 
     try {
         // Dobij MEGA kredencijale od backend-a (session token ili credentials)
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        console.log('Fetching MEGA session, CSRF token:', csrfToken ? 'present' : 'missing');
+        
         const response = await fetch('/api/mega/session', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
             }
         });
 
+        console.log('MEGA session response status:', response.status, response.statusText);
+        
         if (!response.ok) {
-            throw new Error('Failed to get MEGA session');
+            const contentType = response.headers.get('content-type');
+            let errorText = await response.text();
+            console.error('MEGA session error response:', errorText);
+            throw new Error(`Failed to get MEGA session: ${response.status} ${response.statusText}`);
+        }
+
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            console.error('MEGA session non-JSON response:', text);
+            throw new Error('Server returned non-JSON response');
         }
 
         const data = await response.json();
+        console.log('MEGA session data received:', data.email ? 'email present' : 'no email', data.password ? 'password present' : 'no password');
         
         // Inicijalizuj MEGA Storage
         if (data.session_token) {
@@ -159,53 +176,107 @@ async function findOrCreateFolder(storage, folderPath) {
  * Uploaduje fajlove i šalje metadata na backend
  */
 async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt = null) {
+    console.log('=== uploadFilesToMegaAndSave START ===');
+    console.log('Parameters:', { documentName, category, expiresAt, filesCount: files.length });
+    
     const results = [];
 
     try {
         // Inicijalizuj MEGA Storage
+        console.log('Initializing MEGA Storage...');
         await initMegaStorage();
+        console.log('MEGA Storage initialized successfully');
 
         // Dobij user ID iz meta tag-a ili drugog izvora (ako je dostupan)
         // Za sada koristimo folderPath bez user ID-a, ali možemo dodati kasnije
         const userId = null; // TODO: Dobij user ID iz backend-a ili meta tag-a
         
         // Uploaduj svaki fajl
+        console.log('Starting MEGA upload for', files.length, 'file(s)');
         for (const file of Array.from(files)) {
-            const result = await uploadFileToMega(file, 'digital.kotor/documents', userId);
-            if (result.success) {
-                results.push(result);
-            } else {
-                throw new Error(`Failed to upload ${file.name}: ${result.error}`);
+            console.log('Uploading file to MEGA:', file.name, file.size, 'bytes');
+            try {
+                const result = await uploadFileToMega(file, 'digital.kotor/documents', userId);
+                console.log('Upload result:', result);
+                if (result.success) {
+                    results.push(result);
+                    console.log('File uploaded successfully, added to results');
+                } else {
+                    console.error('Upload failed:', result.error);
+                    throw new Error(`Failed to upload ${file.name}: ${result.error}`);
+                }
+            } catch (uploadError) {
+                console.error('Error during file upload:', uploadError);
+                throw uploadError;
             }
         }
+        
+        console.log('All files uploaded successfully. Results count:', results.length);
+        console.log('Results:', results);
 
+        // Proveri da li ima rezultata
+        if (results.length === 0) {
+            console.error('No files were uploaded to MEGA - results array is empty');
+            throw new Error('No files were uploaded to MEGA');
+        }
+
+        console.log('Preparing to send metadata to backend. Files to send:', results.length);
+        
         // Pošalji metadata na backend
+        const requestBody = {
+            name: documentName,
+            category: category,
+            expires_at: expiresAt,
+            files: results.map(r => ({
+                mega_node_id: r.nodeId,
+                mega_link: r.megaLink,
+                name: r.name,
+                size: r.size,
+                timestamp: r.timestamp
+            }))
+        };
+        
+        console.log('Request body:', JSON.stringify(requestBody, null, 2));
+        
         const response = await fetch('/documents/store-mega', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                'Accept': 'application/json'
             },
-            body: JSON.stringify({
-                name: documentName,
-                category: category,
-                expires_at: expiresAt,
-                files: results.map(r => ({
-                    mega_node_id: r.nodeId,
-                    mega_link: r.megaLink,
-                    name: r.name,
-                    size: r.size,
-                    timestamp: r.timestamp
-                }))
-            })
+            body: JSON.stringify(requestBody)
         });
 
+        // Proveri response status
+        const contentType = response.headers.get('content-type');
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Failed to save metadata');
+            let errorMessage = 'Failed to save metadata';
+            if (contentType && contentType.includes('application/json')) {
+                try {
+                    const error = await response.json();
+                    errorMessage = error.message || error.error || errorMessage;
+                } catch (e) {
+                    // Ako ne može da parsira JSON, koristi status text
+                    errorMessage = `${response.status} ${response.statusText}`;
+                }
+            } else {
+                // Ako je HTML response, pokušaj da pročitaš tekst
+                const text = await response.text();
+                console.error('Non-JSON error response:', text);
+                errorMessage = `Server error: ${response.status} ${response.statusText}`;
+            }
+            throw new Error(errorMessage);
+        }
+
+        // Parsiraj JSON response
+        if (!contentType || !contentType.includes('application/json')) {
+            throw new Error('Server returned non-JSON response');
         }
 
         const data = await response.json();
+        console.log('Backend response:', data);
+        console.log('=== uploadFilesToMegaAndSave SUCCESS ===');
         return {
             success: true,
             document_id: data.document_id,
@@ -213,7 +284,10 @@ async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt
         };
 
     } catch (error) {
-        console.error('Upload and save error:', error);
+        console.error('=== uploadFilesToMegaAndSave ERROR ===');
+        console.error('Error details:', error);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
         return {
             success: false,
             error: error.message
