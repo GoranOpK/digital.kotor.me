@@ -423,9 +423,13 @@
                                             Preuzmi
                                         </a>
                                     @endif
-                                    <form action="{{ route('documents.destroy', $document) }}" method="POST" 
+                                    <form class="document-delete-form" action="{{ route('documents.destroy', $document) }}" method="POST" 
                                           style="display: inline;" 
-                                          onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj dokument?');">
+                                          data-document-id="{{ $document->id }}"
+                                          data-destroy-url="{{ route('documents.destroy', $document) }}"
+                                          data-is-mega="{{ $document->cloud_path && str_contains($document->cloud_path ?? '', 'mega.nz') ? '1' : '0' }}"
+                                          data-mega-file-name="{{ $document->mega_file_name ?? '' }}"
+                                          onsubmit="return handleDocumentDelete(event, this);">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn-sm btn-delete">Obriši</button>
@@ -445,6 +449,30 @@
 </div>
 
 <script>
+async function handleDocumentDelete(event, form) {
+    event.preventDefault();
+    if (!confirm('Da li ste sigurni da želite da obrišete ovaj dokument?')) return false;
+    const isMega = form.dataset.isMega === '1';
+    const megaFileName = (form.dataset.megaFileName || '').trim();
+    if (isMega && megaFileName && window.megaUpload?.deleteFromMega) {
+        const btn = form.querySelector('button[type="submit"]');
+        const origText = btn?.textContent;
+        if (btn) { btn.disabled = true; btn.textContent = 'Brisanje...'; }
+        try {
+            const r = await window.megaUpload.deleteFromMega(megaFileName);
+            if (!r.deleted && r.error) {
+                alert('Upozorenje: ' + r.error + '\nDokument će ipak biti uklonjen iz biblioteke.');
+            }
+        } catch (e) {
+            console.error('MEGA delete failed:', e);
+            alert('Greška pri brisanju sa MEGA. Dokument će biti uklonjen iz biblioteke.');
+        }
+        if (btn) { btn.disabled = false; btn.textContent = origText; }
+    }
+    form.submit();
+    return false;
+}
+
 // Savet za osvežavanje stranice (Ctrl+F5)
 (function() {
     const tip = document.getElementById('refresh-tip');

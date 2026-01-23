@@ -476,11 +476,34 @@ async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt
     }
 }
 
+/**
+ * Briše fajl sa MEGA (storage.find + delete), zatim backend briše zapis.
+ * Ako MEGA brisanje ne uspe, i dalje se poziva backend da se ukloni iz biblioteke.
+ */
+async function deleteFromMega(megaFileName) {
+    try {
+        const storage = await initMegaStorage();
+        if (!storage) throw new Error('MEGA Storage nije inicijalizovan');
+        const file = storage.find(megaFileName);
+        if (!file) {
+            console.warn('MEGA file not found for delete:', megaFileName);
+            return { deleted: false, error: 'Fajl nije pronađen na MEGA' };
+        }
+        await file.delete(true);
+        console.log('MEGA file deleted:', megaFileName);
+        return { deleted: true };
+    } catch (err) {
+        console.error('MEGA delete error:', err);
+        return { deleted: false, error: err.message };
+    }
+}
+
 // Export funkcija
 if (typeof window !== 'undefined') {
     window.megaUpload = {
         uploadFilesToMegaAndSave,
         uploadFileToMega,
-        initMegaStorage
+        initMegaStorage,
+        deleteFromMega
     };
 }

@@ -521,11 +521,9 @@ class DocumentController extends Controller
         }
 
         $deleted = false;
-        
-        // Napomena: Fajlovi na MEGA se ne brišu server-side
-        // megajs upload-uje direktno iz browser-a, tako da brisanje sa MEGA
-        // bi zahtevalo browser-side implementaciju ili MEGA API integraciju
-        // Za sada samo brišemo lokalne fajlove i database zapis
+
+        // Fajlovi na MEGA brišu se u browser-u (handleDocumentDelete → deleteFromMega) pre slanja forme.
+        // Ovde brišemo samo lokalne fajlove (ako postoje) i zapis u bazi.
 
         // Obriši lokalne fajlove ako postoje
         if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
@@ -801,10 +799,12 @@ class DocumentController extends Controller
                     'user_id' => $user->id,
                     'category' => $validated['category'],
                     'name' => $validated['name'],
-                    'file_path' => null, // Nema lokalni fajl
-                    'cloud_path' => $firstFile['mega_link'], // Čuvamo MEGA link
-                    'original_file_path' => null, // Nema originalni fajl (upload-ovan direktno na MEGA)
-                    'original_filename' => implode(', ', array_column($validated['files'], 'name')), // Imena svih fajlova
+                    'file_path' => null,
+                    'cloud_path' => $firstFile['mega_link'],
+                    'mega_node_id' => $firstFile['mega_node_id'],
+                    'mega_file_name' => $firstFile['name'], // PDF ime na MEGA (npr. 7-20260123-xxx.pdf)
+                    'original_file_path' => null,
+                    'original_filename' => implode(', ', array_column($validated['files'], 'name')),
                     'file_size' => array_sum(array_column($validated['files'], 'size')),
                     'status' => 'processed',
                     'processed_at' => now(),
@@ -824,10 +824,12 @@ class DocumentController extends Controller
                     'user_id' => $user->id,
                     'category' => $validated['category'],
                     'name' => $validated['name'],
-                    'file_path' => null, // Nema lokalni fajl
-                    'cloud_path' => $file['mega_link'], // Čuvamo MEGA link
-                    'original_file_path' => null, // Nema originalni fajl (upload-ovan direktno na MEGA)
-                    'original_filename' => $file['name'], // Ime fajla
+                    'file_path' => null,
+                    'cloud_path' => $file['mega_link'],
+                    'mega_node_id' => $file['mega_node_id'],
+                    'mega_file_name' => $file['name'],
+                    'original_file_path' => null,
+                    'original_filename' => $file['name'],
                     'file_size' => $file['size'],
                     'status' => 'processed',
                     'processed_at' => now(),

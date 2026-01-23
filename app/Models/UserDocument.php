@@ -16,6 +16,8 @@ class UserDocument extends Model
         'name',
         'file_path',
         'cloud_path',
+        'mega_node_id',
+        'mega_file_name',
         'original_file_path',
         'original_filename',
         'file_size',
