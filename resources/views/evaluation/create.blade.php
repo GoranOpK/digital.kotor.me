@@ -678,13 +678,22 @@
                         $membersWithNotes = [];
                         
                         // Prvo dodaj predsjednika ako ima napomenu
-                        $chairman = $allMembers->firstWhere('position', 'predsjednik');
+                        // Eksplicitno pronađi predsjednika iz sortirane kolekcije
+                        $chairman = null;
+                        foreach($allMembers as $member) {
+                            if ($member->position === 'predsjednik') {
+                                $chairman = $member;
+                                break;
+                            }
+                        }
+                        
                         if ($chairman) {
                             $chairmanScore = $allScores->get($chairman->id);
                             if ($chairmanScore && $chairmanScore->notes && trim($chairmanScore->notes) !== '') {
                                 $membersWithNotes[] = [
                                     'member' => $chairman,
-                                    'notes' => $chairmanScore->notes
+                                    'notes' => $chairmanScore->notes,
+                                    'isChairman' => true
                                 ];
                             }
                         }
@@ -696,11 +705,22 @@
                                 if ($memberScore && $memberScore->notes && trim($memberScore->notes) !== '') {
                                     $membersWithNotes[] = [
                                         'member' => $member,
-                                        'notes' => $memberScore->notes
+                                        'notes' => $memberScore->notes,
+                                        'isChairman' => false
                                     ];
                                 }
                             }
                         }
+                        
+                        // Eksplicitno sortiraj da osiguramo da predsjednik bude prvi
+                        usort($membersWithNotes, function($a, $b) {
+                            if ($a['isChairman'] && !$b['isChairman']) {
+                                return -1; // a je predsjednik, ide prvi
+                            } elseif (!$a['isChairman'] && $b['isChairman']) {
+                                return 1; // b je predsjednik, ide prvi
+                            }
+                            return 0; // zadrži redoslijed za ostale
+                        });
                         
                         // Provjeri da li je predsjednik zaključio prijavu
                         $isDecisionMade = $application->commission_decision !== null;
