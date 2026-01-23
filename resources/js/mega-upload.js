@@ -62,13 +62,19 @@ async function initMegaStorage() {
 /**
  * Uploaduje fajl direktno na MEGA
  */
-async function uploadFileToMega(file, folderPath = 'digital.kotor/documents') {
+async function uploadFileToMega(file, folderPath = 'digital.kotor/documents', userId = null) {
     try {
         // Inicijalizuj MEGA Storage ako nije već inicijalizovan
         const storage = await initMegaStorage();
 
+        // Konstruiši folder putanju sa user ID-om ako je dostupan
+        let fullFolderPath = folderPath;
+        if (userId) {
+            fullFolderPath = `${folderPath}/user_${userId}`;
+        }
+        
         // Pronađi ili kreiraj folder strukturu
-        let targetFolder = await findOrCreateFolder(storage, folderPath);
+        let targetFolder = await findOrCreateFolder(storage, fullFolderPath);
         
         if (!targetFolder) {
             // Ako nema folder strukture, uploaduj u root
@@ -76,28 +82,37 @@ async function uploadFileToMega(file, folderPath = 'digital.kotor/documents') {
         }
 
         // Upload fajla
+        // megajs zahteva file content (ArrayBuffer ili Blob), ne File objekat direktno
         console.log('Uploading file to MEGA:', file.name);
-        const uploadedFile = await storage.upload({
+        
+        // Pročitaj file content kao ArrayBuffer
+        const fileData = await file.arrayBuffer();
+        
+        // Upload u target folder
+        const uploadedFile = await targetFolder.upload({
             name: file.name,
             size: file.size
-        }, file, {
-            parent: targetFolder
-        }).complete;
+        }, fileData).complete;
 
         // Kreiraj public share link
-        const share = await uploadedFile.link({ downloadId: null });
-        const megaLink = share.url || `https://mega.nz/file/${uploadedFile.nodeId}`;
-
+        // link() kreira share link, vraća objekat sa url property
+        // megajs vraća File objekat sa različitim property-jima
+        // Proveri različite moguće property-je za node ID
+        const nodeId = uploadedFile.nodeId || uploadedFile.handle || uploadedFile.id || uploadedFile.downloadId;
+        const share = await uploadedFile.link();
+        const megaLink = share.url || share || `https://mega.nz/file/${nodeId}`;
+        
         console.log('File uploaded successfully:', {
-            nodeId: uploadedFile.nodeId,
+            nodeId: nodeId,
             name: uploadedFile.name,
             size: uploadedFile.size,
-            link: megaLink
+            link: megaLink,
+            fileObject: uploadedFile // Debug - videćemo strukturu objekta
         });
 
         return {
             success: true,
-            nodeId: uploadedFile.nodeId,
+            nodeId: nodeId,
             megaLink: megaLink,
             name: uploadedFile.name,
             size: uploadedFile.size,
@@ -122,14 +137,16 @@ async function findOrCreateFolder(storage, folderPath) {
 
     for (const folderName of folders) {
         // Pronađi folder u trenutnom parent-u
+        // Prvo proveri children trenutnog foldera
         const children = await currentFolder.children;
         let found = children.find(child => 
             child.directory && child.name === folderName
         );
 
         if (!found) {
-            // Kreiraj novi folder
-            found = await storage.mkdir(folderName, currentFolder);
+            // Kreiraj novi folder u trenutnom parent-u
+            // folder.mkdir() kreira folder u tom folderu
+            found = await currentFolder.mkdir(folderName);
         }
 
         currentFolder = found;
@@ -148,9 +165,13 @@ async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt
         // Inicijalizuj MEGA Storage
         await initMegaStorage();
 
+        // Dobij user ID iz meta tag-a ili drugog izvora (ako je dostupan)
+        // Za sada koristimo folderPath bez user ID-a, ali možemo dodati kasnije
+        const userId = null; // TODO: Dobij user ID iz backend-a ili meta tag-a
+        
         // Uploaduj svaki fajl
         for (const file of Array.from(files)) {
-            const result = await uploadFileToMega(file);
+            const result = await uploadFileToMega(file, 'digital.kotor/documents', userId);
             if (result.success) {
                 results.push(result);
             } else {

@@ -86,58 +86,14 @@ class DocumentProcessor
 
             $fileSize = strlen($pdfData);
 
-            // Pokušaj da uploaduješ na Mega.nz i obrišeš lokalni fajl
-            $cloudPath = null;
-            $megaService = new MegaStorageService();
-            
-            if ($megaService->isConfigured()) {
-                try {
-                    // Kreiraj privremenu putanju za upload
-                    $localFullPath = Storage::disk('local')->path($tempLocalPath);
-                    
-                    // Upload na Mega.nz u osnovni folder (digital.kotor)
-                    $baseFolder = config('services.mega.base_folder', 'digital.kotor');
-                    $remotePath = "{$baseFolder}/documents/user_{$userId}/";
-                    $uploadResult = $megaService->upload($localFullPath, $remotePath);
-                    
-                    if ($uploadResult['success'] && !empty($uploadResult['cloud_path'])) {
-                        $cloudPath = $uploadResult['cloud_path'];
-                        
-                        // Obriši lokalni fajl nakon uspešnog upload-a
-                        Storage::disk('local')->delete($tempLocalPath);
-                        
-                        Log::info('Document uploaded to MEGA and local file deleted', [
-                            'user_id' => $userId,
-                            'local_path' => $tempLocalPath,
-                            'cloud_path' => $cloudPath
-                        ]);
-                    } else {
-                        // Ako upload ne uspe, ostavi fajl lokalno i loguj grešku
-                        Log::warning('MEGA upload failed, keeping file locally', [
-                            'user_id' => $userId,
-                            'local_path' => $tempLocalPath,
-                            'error' => $uploadResult['error'] ?? 'Unknown error'
-                        ]);
-                    }
-                } catch (Exception $e) {
-                    // Ako upload baci exception, ostavi fajl lokalno
-                    Log::error('MEGA upload exception, keeping file locally', [
-                        'user_id' => $userId,
-                        'local_path' => $tempLocalPath,
-                        'error' => $e->getMessage()
-                    ]);
-                }
-            } else {
-                Log::info('MEGA not configured, keeping file locally', [
-                    'user_id' => $userId,
-                    'local_path' => $tempLocalPath
-                ]);
-            }
+            // Napomena: Upload na MEGA se sada vrši direktno iz browser-a preko megajs
+            // Ova metoda samo procesira i čuva fajl lokalno
+            // cloud_path se postavlja kada frontend pošalje metadata preko storeMegaMetadata endpoint-a
 
             return [
                 'success' => true,
-                'file_path' => $cloudPath ? null : $tempLocalPath, // Ako je na cloud-u, file_path je null
-                'cloud_path' => $cloudPath, // Mega.nz file handle ili putanja
+                'file_path' => $tempLocalPath,
+                'cloud_path' => null, // Postavlja se kada frontend uploaduje na MEGA
                 'file_size' => $fileSize,
                 'error' => null,
             ];
@@ -502,56 +458,19 @@ class DocumentProcessor
                     ];
                 }
 
-                // Snimi merged PDF privremeno lokalno
+                // Snimi merged PDF lokalno
                 $tempLocalPath = $outputPath;
                 Storage::disk('local')->put($tempLocalPath, $pdfData);
                 $fileSize = strlen($pdfData);
 
-                // Pokušaj da uploaduješ na Mega.nz i obrišeš lokalni fajl
-                $cloudPath = null;
-                $megaService = new MegaStorageService();
-                
-                if ($megaService->isConfigured()) {
-                    try {
-                        $localFullPath = Storage::disk('local')->path($tempLocalPath);
-                        $baseFolder = config('services.mega.base_folder', 'digital.kotor');
-                        $remotePath = "{$baseFolder}/documents/user_{$userId}/";
-                        $uploadResult = $megaService->upload($localFullPath, $remotePath);
-                        
-                        if ($uploadResult['success'] && !empty($uploadResult['cloud_path'])) {
-                            $cloudPath = $uploadResult['cloud_path'];
-                            Storage::disk('local')->delete($tempLocalPath);
-                            
-                            Log::info('Merged document uploaded to MEGA and local file deleted', [
-                                'user_id' => $userId,
-                                'local_path' => $tempLocalPath,
-                                'cloud_path' => $cloudPath
-                            ]);
-                        } else {
-                            Log::warning('MEGA upload failed for merged document, keeping file locally', [
-                                'user_id' => $userId,
-                                'local_path' => $tempLocalPath,
-                                'error' => $uploadResult['error'] ?? 'Unknown error'
-                            ]);
-                        }
-                    } catch (Exception $e) {
-                        Log::error('MEGA upload exception for merged document, keeping file locally', [
-                            'user_id' => $userId,
-                            'local_path' => $tempLocalPath,
-                            'error' => $e->getMessage()
-                        ]);
-                    }
-                } else {
-                    Log::info('MEGA not configured for merged document, keeping file locally', [
-                        'user_id' => $userId,
-                        'local_path' => $tempLocalPath
-                    ]);
-                }
+                // Napomena: Upload na MEGA se sada vrši direktno iz browser-a preko megajs
+                // Ova metoda samo procesira i čuva fajl lokalno
+                // cloud_path se postavlja kada frontend pošalje metadata preko storeMegaMetadata endpoint-a
 
                 return [
                     'success' => true,
-                    'file_path' => $cloudPath ? null : $tempLocalPath,
-                    'cloud_path' => $cloudPath,
+                    'file_path' => $tempLocalPath,
+                    'cloud_path' => null, // Postavlja se kada frontend uploaduje na MEGA
                     'file_size' => $fileSize,
                     'error' => null,
                 ];

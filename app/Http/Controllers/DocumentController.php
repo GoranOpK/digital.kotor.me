@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Jobs\ProcessDocumentJob;
 use App\Models\UserDocument;
 use App\Services\DocumentProcessor;
-use App\Services\MegaStorageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -490,32 +489,8 @@ class DocumentController extends Controller
         }
 
         // Ako dokument ima cloud_path (MEGA link), redirect direktno na MEGA
-        if ($document->cloud_path) {
-            // Ako je cloud_path MEGA link (sadrži mega.nz), redirect direktno
-            if (strpos($document->cloud_path, 'mega.nz') !== false) {
-                return redirect($document->cloud_path);
-            }
-            
-            // Inače, pokušaj da downloaduješ koristeći MegaStorageService (za node handles)
-            $megaService = new MegaStorageService();
-            $downloadResult = $megaService->download($document->cloud_path);
-            
-            if ($downloadResult['success'] && !empty($downloadResult['content'])) {
-                $extension = 'pdf'; // Obrađeni dokumenti su uvek PDF
-                $filename = $document->name . '.' . $extension;
-                
-                return response($downloadResult['content'])
-                    ->header('Content-Type', 'application/pdf')
-                    ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
-            }
-            
-            Log::error('MEGA download failed', [
-                'document_id' => $document->id,
-                'cloud_path' => $document->cloud_path,
-                'error' => $downloadResult['error'] ?? 'Unknown error'
-            ]);
-            
-            return back()->withErrors(['error' => 'Greška pri preuzimanju sa MEGA: ' . ($downloadResult['error'] ?? 'Nepoznata greška')]);
+        if ($document->cloud_path && strpos($document->cloud_path, 'mega.nz') !== false) {
+            return redirect($document->cloud_path);
         }
 
         // Ako nema cloud_path, preuzmi lokalno
@@ -546,24 +521,11 @@ class DocumentController extends Controller
         }
 
         $deleted = false;
-        $megaService = new MegaStorageService();
         
-        // Ako dokument ima cloud_path, obriši sa Mega.nz
-        if ($document->cloud_path) {
-            $deleted = $megaService->delete($document->cloud_path);
-            
-            if ($deleted) {
-                Log::info('Document deleted from MEGA', [
-                    'document_id' => $document->id,
-                    'cloud_path' => $document->cloud_path
-                ]);
-            } else {
-                Log::warning('MEGA delete failed, but continuing with local cleanup', [
-                    'document_id' => $document->id,
-                    'cloud_path' => $document->cloud_path
-                ]);
-            }
-        }
+        // Napomena: Fajlovi na MEGA se ne brišu server-side
+        // megajs upload-uje direktno iz browser-a, tako da brisanje sa MEGA
+        // bi zahtevalo browser-side implementaciju ili MEGA API integraciju
+        // Za sada samo brišemo lokalne fajlove i database zapis
 
         // Obriši lokalne fajlove ako postoje
         if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
@@ -646,9 +608,10 @@ class DocumentController extends Controller
     public function getMegaSession(): JsonResponse
     {
         try {
-            $megaService = new MegaStorageService();
+            $email = config('services.mega.email');
+            $password = config('services.mega.password');
             
-            if (!$megaService->isConfigured()) {
+            if (empty($email) || empty($password)) {
                 return response()->json([
                     'error' => 'MEGA credentials not configured'
                 ], 500);
@@ -656,8 +619,6 @@ class DocumentController extends Controller
 
             // Za sada vraćamo email/password (frontend će se ulogovati sa njima)
             // TODO: Implementirati session token caching u budućnosti
-            $email = config('services.mega.email');
-            $password = config('services.mega.password');
             
             return response()->json([
                 'email' => $email,
@@ -708,6 +669,8 @@ class DocumentController extends Controller
                     'name' => $validated['name'],
                     'file_path' => null, // Nema lokalni fajl
                     'cloud_path' => $firstFile['mega_link'], // Čuvamo MEGA link
+                    'original_file_path' => null, // Nema originalni fajl (upload-ovan direktno na MEGA)
+                    'original_filename' => implode(', ', array_column($validated['files'], 'name')), // Imena svih fajlova
                     'file_size' => array_sum(array_column($validated['files'], 'size')),
                     'status' => 'processed',
                     'processed_at' => now(),
@@ -727,8 +690,10 @@ class DocumentController extends Controller
                     'user_id' => $user->id,
                     'category' => $validated['category'],
                     'name' => $validated['name'],
-                    'file_path' => null,
-                    'cloud_path' => $file['mega_link'],
+                    'file_path' => null, // Nema lokalni fajl
+                    'cloud_path' => $file['mega_link'], // Čuvamo MEGA link
+                    'original_file_path' => null, // Nema originalni fajl (upload-ovan direktno na MEGA)
+                    'original_filename' => $file['name'], // Ime fajla
                     'file_size' => $file['size'],
                     'status' => 'processed',
                     'processed_at' => now(),

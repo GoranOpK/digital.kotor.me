@@ -64,21 +64,22 @@ Proveri da li u bilo kom fajlu imaš:
 ## 📝 Šta commit-ovati:
 
 ### NOVI FAJLOVI (kreirani za MEGA integraciju):
-- ✅ `app/Services/MegaStorageService.php`
 - ✅ `database/migrations/2025_01_16_000001_add_cloud_path_to_user_documents_table.php`
-- ✅ `config/services.php` (samo dodata MEGA sekcija)
+- ✅ `resources/js/mega-upload.js` (browser-side MEGA upload)
 
 ### MODIFIKOVANI FAJLOVI:
 - ✅ `app/Models/UserDocument.php` (dodato `cloud_path`)
-- ✅ `app/Services/DocumentProcessor.php` (modifikovan za MEGA upload)
-- ✅ `app/Http/Controllers/DocumentController.php` (modifikovan download/destroy)
-- ✅ `composer.json` (dodat `tuyenlaptrinh/php-mega-nz`)
+- ✅ `app/Services/DocumentProcessor.php` (uklonjen server-side MEGA upload)
+- ✅ `app/Http/Controllers/DocumentController.php` (dodati `getMegaSession` i `storeMegaMetadata`, modifikovan download)
+- ✅ `package.json` (dodat `megajs`)
+- ✅ `routes/web.php` (dodate rute za megajs)
+- ✅ `resources/views/documents/index.blade.php` (modifikovan upload form)
 
 ### DOKUMENTACIJA (opciono, ali preporučeno):
-- ✅ `MEGA_INTEGRATION_INSTRUCTIONS.md`
-- ✅ `PLESK_COMPOSER_INSTRUCTIONS.md`
-- ✅ `PLESK_UPDATE_INSTRUCTIONS.md`
-- ✅ `ALTERNATIVE_MEGA_INSTALL.md`
+- ✅ `MEGA_BROWSER_UPLOAD_PLAN.md`
+- ✅ `MEGA_BROWSER_UPLOAD_SETUP.md`
+- ✅ `MEGAJS_SETUP_COMPLETE.md`
+- ✅ `CLEANUP_SUMMARY.md`
 
 ## 🚀 Git komande za commit:
 
@@ -93,15 +94,15 @@ git add .
 git status
 
 # Commit sa opisom
-git commit -m "Add Mega.nz cloud storage integration
+git commit -m "Add browser-side MEGA.nz upload integration using megajs
 
-- Add MegaStorageService for upload/download/delete operations
 - Add cloud_path column to user_documents table
-- Modify DocumentProcessor to upload to Mega.nz after processing
-- Modify DocumentController to download/delete from Mega.nz
-- Update storage management to exclude cloud files from local quota
+- Add browser-side MEGA upload using megajs library
+- Add getMegaSession and storeMegaMetadata endpoints
+- Modify DocumentController download to redirect to MEGA links
+- Add mega-upload.js for client-side upload handling
+- Update package.json with megajs dependency
 - Add MEGA configuration to config/services.php
-- Update composer.json with tuyenlaptrinh/php-mega-nz package
 - Add integration documentation"
 
 # Push na GitHub

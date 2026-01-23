@@ -109,7 +109,7 @@ async function handleMegaUpload(event) {
 
 ### 4. Modifikuj download (`DocumentController::download()`) da koristi MEGA link:
 
-Trenutno `download()` pokušava da downloaduje sa MEGA koristeći `MegaStorageService`. Treba da modifikuješ da direktno redirect-uje na MEGA link:
+`download()` sada direktno redirect-uje na MEGA link ako je `cloud_path` MEGA URL:
 
 ```php
 // Ako dokument ima cloud_path (MEGA link), redirect direktno na MEGA

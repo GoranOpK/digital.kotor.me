@@ -25,14 +25,15 @@ git status
 ```
 
 Trebalo bi da vidiš:
-- `app/Services/MegaStorageService.php` (novi)
 - `database/migrations/2025_01_16_000001_add_cloud_path_to_user_documents_table.php` (novi)
-- `app/Models/UserDocument.php` (modifikovan)
+- `app/Models/UserDocument.php` (modifikovan - dodato `cloud_path`)
 - `app/Services/DocumentProcessor.php` (modifikovan)
-- `app/Http/Controllers/DocumentController.php` (modifikovan)
-- `config/services.php` (modifikovan)
-- `composer.json` (modifikovan)
-- `.md` dokumentacija fajlovi (novi)
+- `app/Http/Controllers/DocumentController.php` (modifikovan - dodati `getMegaSession` i `storeMegaMetadata`)
+- `config/services.php` (modifikovan - dodata MEGA sekcija)
+- `resources/js/mega-upload.js` (novi - browser-side MEGA upload)
+- `package.json` (modifikovan - dodat `megajs`)
+- `routes/web.php` (modifikovan - dodate rute za megajs)
+- `.md` dokumentacija fajlovi (browser-side MEGA)
 
 **NE bi trebalo da vidiš:**
 - `.env` ❌
@@ -40,16 +41,16 @@ Trebalo bi da vidiš:
 
 ### 4. Commit sa opisom:
 ```bash
-git commit -m "Add Mega.nz cloud storage integration
+git commit -m "Add browser-side MEGA.nz upload integration using megajs
 
-- Add MegaStorageService for upload/download/delete operations
 - Add cloud_path column to user_documents table
-- Modify DocumentProcessor to upload to Mega.nz after processing
-- Modify DocumentController to download/delete from Mega.nz
-- Update storage management to exclude cloud files from local quota
+- Add browser-side MEGA upload using megajs library
+- Add getMegaSession and storeMegaMetadata endpoints
+- Modify DocumentController download to redirect to MEGA links
+- Add mega-upload.js for client-side upload handling
+- Update package.json with megajs dependency
 - Add MEGA configuration to config/services.php
-- Update composer.json with tuyenlaptrinh/php-mega-nz package
-- Add integration and setup documentation"
+- Add browser-side upload documentation"
 ```
 
 ### 5. Push na GitHub:
