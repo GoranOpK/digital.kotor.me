@@ -5,7 +5,28 @@
  * Backend samo čuva metadata (nodeId, link, size, itd.)
  */
 
-import { Storage } from 'megajs';
+// Dinamički učitaj browser build od megajs-a preko CDN-a
+// Browser build dolazi sa Buffer polyfill-om
+let Storage;
+let megajsLoaded = false;
+
+async function loadMegaJS() {
+    if (megajsLoaded && Storage) {
+        return Storage;
+    }
+    
+    try {
+        // Učitaj browser ES module build koji dolazi sa Buffer polyfill-om
+        const megajsModule = await import('https://unpkg.com/megajs@1.3.0/dist/main.browser-es.mjs');
+        Storage = megajsModule.Storage;
+        megajsLoaded = true;
+        console.log('MEGA.js loaded successfully from CDN');
+        return Storage;
+    } catch (error) {
+        console.error('Failed to load MEGA.js from CDN:', error);
+        throw new Error('MEGA.js library failed to load');
+    }
+}
 
 let megaStorage = null;
 
@@ -19,6 +40,12 @@ async function initMegaStorage() {
     }
 
     try {
+        // Učitaj megajs ako nije već učitan
+        await loadMegaJS();
+        
+        if (!Storage) {
+            throw new Error('MEGA.js Storage not available');
+        }
         // Dobij MEGA kredencijale od backend-a (session token ili credentials)
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
         console.log('Fetching MEGA session, CSRF token:', csrfToken ? 'present' : 'missing');
@@ -99,33 +126,31 @@ async function uploadFileToMega(file, folderPath = 'digital.kotor/documents', us
         }
 
         // Upload fajla
-        // megajs prima "strings, buffers or anything that can be converted to a buffer (like TypedArrays)"
-        // File nasleđuje Blob, ali možda treba eksplicitna konverzija
+        // Browser build od megajs-a očekuje Buffer
+        // CDN build dolazi sa Buffer polyfill-om koji se postavlja na globalThis
         console.log('Uploading file to MEGA:', file.name, file.size, 'bytes');
         console.log('File type:', file.constructor.name, 'is File?', file instanceof File);
         console.log('File is Blob?', file instanceof Blob);
+        console.log('Buffer available?', typeof Buffer !== 'undefined', typeof globalThis.Buffer !== 'undefined');
         
-        // Probajmo sa Blob direktno (File nasleđuje Blob)
-        // Ako ne radi, probaćemo sa ArrayBuffer/Uint8Array
-        console.log('Calling targetFolder.upload() with Blob/File');
-        let uploadedFile;
-        try {
-            // Probaj prvo sa File/Blob direktno
-            uploadedFile = await targetFolder.upload({
-                name: file.name,
-                size: file.size
-            }, file).complete;
-        } catch (blobError) {
-            console.warn('Upload with File/Blob failed, trying with ArrayBuffer:', blobError.message);
-            // Ako ne radi sa File/Blob, probaj sa ArrayBuffer
-            // megajs bi trebalo da prihvata ArrayBuffer direktno
-            const fileData = await file.arrayBuffer();
-            console.log('Trying with ArrayBuffer, length:', fileData.byteLength);
-            uploadedFile = await targetFolder.upload({
-                name: file.name,
-                size: file.size
-            }, fileData).complete;
+        // Browser build od megajs-a zahteva Buffer
+        // Konvertuj File u Buffer koristeći Buffer koji dolazi sa CDN build-om
+        const fileData = await file.arrayBuffer();
+        
+        // Koristi Buffer ako je dostupan (bilo globalni ili globalThis)
+        const BufferClass = typeof Buffer !== 'undefined' ? Buffer : (typeof globalThis.Buffer !== 'undefined' ? globalThis.Buffer : null);
+        
+        if (!BufferClass) {
+            throw new Error('Buffer is not available. MEGA.js browser build requires Buffer polyfill.');
         }
+        
+        const buffer = BufferClass.from(fileData);
+        console.log('Using Buffer for upload, length:', buffer.length);
+        
+        const uploadedFile = await targetFolder.upload({
+            name: file.name,
+            size: file.size
+        }, buffer).complete;
         console.log('Upload completed, uploadedFile:', uploadedFile);
 
         // Kreiraj public share link
