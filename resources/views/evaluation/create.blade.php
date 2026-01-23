@@ -807,17 +807,23 @@
                 </div>
 
                 <div style="margin-top: 32px; text-align: center;">
-                    @if(isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation)
+                    @php
+                        // Provjeri da li trenutni član može editovati napomene
+                        $isDecisionMade = $application->commission_decision !== null;
+                        $canEditNotesValue = !$isDecisionMade;
+                    @endphp
+                    
+                    @if($isChairman && $hasCompletedEvaluation)
                         {{-- Predsjednik kada je već ocjenio - može mijenjati sekciju 2 --}}
                         <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
-                        @if(isset($allMembersEvaluated) && $allMembersEvaluated)
+                        @if($allMembersEvaluated)
                             {{-- Dugme za zaključak se prikazuje samo kada su svi članovi ocjenili --}}
                             <a href="{{ route('evaluation.chairman-review', $application) }}" class="btn-primary" style="margin-left: 12px; text-decoration: none; display: inline-block;">
                                 Zaključak komisije
                             </a>
                         @endif
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
-                    @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && isset($allMembersEvaluated) && $allMembersEvaluated)
+                    @elseif($hasCompletedEvaluation && $allMembersEvaluated)
                         {{-- Kada su svi članovi ocjenili, ostali članovi vide formu u read-only modu --}}
                         <div style="padding: 16px; background: #f0f9ff; border-radius: 8px; margin-bottom: 16px; border: 1px solid #0ea5e9;">
                             <div style="color: #0c4a6e; font-weight: 600; margin-bottom: 8px;">
@@ -827,7 +833,7 @@
                         <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             Nazad na listu
                         </a>
-                    @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && $canEditNotes && !(isset($isChairman) && $isChairman))
+                    @elseif($hasCompletedEvaluation && $canEditNotesValue && !$isChairman)
                         {{-- Član koji je već ocjenio ali može editovati napomene --}}
                         <button type="submit" class="btn-primary">Sačuvaj izmjene napomena</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
