@@ -88,7 +88,7 @@ class EvaluationController extends Controller
     /**
      * Forma za ocjenjivanje prijave
      */
-    public function create(Application $application): View
+    public function create(Application $application): View|RedirectResponse
     {
         $user = Auth::user();
         
