@@ -729,14 +729,40 @@
                         $canEditNotes = !$isDecisionMade;
                     @endphp
                     
+                    @php
+                        // Provjeri da li trenutni član već ima napomenu u listi
+                        $currentMemberHasNote = false;
+                        foreach($membersWithNotes as $note) {
+                            if ($note['member']->id === $commissionMember->id) {
+                                $currentMemberHasNote = true;
+                                break;
+                            }
+                        }
+                    @endphp
+                    
+                    @if($canEditNotes && isset($isChairman) && $isChairman && !$currentMemberHasNote)
+                        {{-- Polje za unos napomena predsjednika - prikaži na početku --}}
+                        <div style="margin-bottom: 20px;">
+                            <label class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                Napomena Predsjednik komisije ({{ $commissionMember->name }})
+                            </label>
+                            <textarea 
+                                name="notes" 
+                                class="form-control" 
+                                rows="6" 
+                                placeholder="Unesite dodatne napomene...">{{ old('notes', $existingScore?->notes) }}</textarea>
+                        </div>
+                    @endif
+                    
                     @if(count($membersWithNotes) > 0)
                         {{-- Prikaži napomene članova koji su ih dali --}}
                         @foreach($membersWithNotes as $memberNote)
                             <div style="margin-bottom: 20px;">
                                 <label class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 8px;">
-                                    Napomene - {{ $memberNote['member']->name }}
                                     @if($memberNote['member']->position === 'predsjednik')
-                                        <span style="color: #6b7280; font-size: 12px;">(Predsjednik komisije)</span>
+                                        Napomena Predsjednik komisije ({{ $memberNote['member']->name }})
+                                    @else
+                                        Napomene - {{ $memberNote['member']->name }}
                                     @endif
                                 </label>
                                 <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap;">
@@ -746,15 +772,11 @@
                         @endforeach
                     @endif
                     
-                    @if($canEditNotes)
-                        {{-- Trenutni član može unijeti svoje napomene dok predsjednik ne zaključi prijavu --}}
+                    @if($canEditNotes && !(isset($isChairman) && $isChairman) && !$currentMemberHasNote)
+                        {{-- Polje za unos napomena ostalih članova - prikaži na kraju --}}
                         <div style="margin-top: {{ count($membersWithNotes) > 0 ? '20px' : '0' }};">
                             <label class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 8px;">
-                                @if(isset($isChairman) && $isChairman)
-                                    Napomena Predsjednik komisije ({{ $commissionMember->name }})
-                                @else
-                                    Napomena Član komisije ({{ $commissionMember->name }})
-                                @endif
+                                Napomena Član komisije ({{ $commissionMember->name }})
                             </label>
                             <textarea 
                                 name="notes" 
