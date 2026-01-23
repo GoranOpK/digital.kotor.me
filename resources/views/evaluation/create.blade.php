@@ -390,9 +390,6 @@
                                 <span>b. Ne*</span>
                             </label>
                         </div>
-                        <div style="font-size: 12px; color: #6b7280; margin-top: 8px; margin-left: 24px;">
-                            *ukoliko je odgovor „Ne", odbiti aplikaciju
-                        </div>
                         @error('documents_complete')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
@@ -411,11 +408,6 @@
                                         {{ $documentsComplete ? 'a. Da' : 'b. Ne*' }}
                                     </strong>
                                 </div>
-                                @if(!$documentsComplete)
-                                    <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                                        *ukoliko je odgovor „Ne", odbiti aplikaciju
-                                    </div>
-                                @endif
                             @else
                                 <div style="color: #6b7280;">
                                     <em>Nije označeno</em>

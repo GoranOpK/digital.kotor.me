@@ -101,6 +101,11 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
+        // Provjeri da li je prijava već odbijena zbog nedostajućih dokumenata
+        if ($application->status === 'rejected' && $application->rejection_reason === 'Nedostaju potrebna dokumenta.') {
+            abort(403, 'Prijava je već odbijena zbog nedostajućih dokumenata.');
+        }
+
         // Učitaj komisiju sa svim članovima
         $commission = $commissionMember->commission;
         $allMembers = $commission->members()
@@ -175,6 +180,11 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
+        // Provjeri da li je prijava već odbijena zbog nedostajućih dokumenata
+        if ($application->status === 'rejected' && $application->rejection_reason === 'Nedostaju potrebna dokumenta.') {
+            abort(403, 'Prijava je već odbijena zbog nedostajućih dokumenata i ne može se ocjenjivati.');
+        }
+
         // Provjeri da li su svi članovi komisije ocjenili prijavu
         $commission = $commissionMember->commission;
         $totalMembers = $commission->activeMembers()->count();
@@ -209,8 +219,32 @@ class EvaluationController extends Controller
         if ($commissionMember->position === 'predsjednik' && !empty($rules)) {
             $request->validate($rules, $messages);
             
-            // Ako dokumentacija nije kompletna, automatski odbiti prijavu
+            // Ako dokumentacija nije kompletna, automatski odbiti prijavu i ne dozvoli dalje ocjenjivanje
             if (!$request->boolean('documents_complete')) {
+                // Sačuvaj ocjenu predsjednika samo sa documents_complete = false
+                EvaluationScore::updateOrCreate(
+                    [
+                        'application_id' => $application->id,
+                        'commission_member_id' => $commissionMember->id,
+                    ],
+                    [
+                        'documents_complete' => false,
+                        'criterion_1' => null,
+                        'criterion_2' => null,
+                        'criterion_3' => null,
+                        'criterion_4' => null,
+                        'criterion_5' => null,
+                        'criterion_6' => null,
+                        'criterion_7' => null,
+                        'criterion_8' => null,
+                        'criterion_9' => null,
+                        'criterion_10' => null,
+                        'final_score' => 0,
+                        'notes' => null,
+                        'justification' => null,
+                    ]
+                );
+                
                 $application->update([
                     'status' => 'rejected',
                     'rejection_reason' => 'Nedostaju potrebna dokumenta.',
