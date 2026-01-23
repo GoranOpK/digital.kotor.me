@@ -6,9 +6,56 @@
  */
 
 // Dinamički učitaj browser build od megajs-a preko CDN-a
-// Browser build dolazi sa Buffer polyfill-om
+// Prvo učitaj Buffer polyfill, zatim megajs
 let Storage;
 let megajsLoaded = false;
+let bufferLoaded = false;
+
+async function loadBuffer() {
+    if (bufferLoaded && typeof Buffer !== 'undefined') {
+        return Buffer;
+    }
+    
+    try {
+        // Učitaj Buffer polyfill preko CDN-a (HTTPS)
+        const bufferModule = await import('https://cdn.jsdelivr.net/npm/buffer@6.0.3/index.js');
+        const BufferClass = bufferModule.Buffer || bufferModule.default?.Buffer;
+        
+        if (BufferClass) {
+            // Postavi Buffer na globalThis
+            if (typeof globalThis.Buffer === 'undefined') {
+                globalThis.Buffer = BufferClass;
+            }
+            if (typeof window !== 'undefined' && typeof window.Buffer === 'undefined') {
+                window.Buffer = BufferClass;
+            }
+            bufferLoaded = true;
+            console.log('Buffer polyfill loaded successfully');
+            return BufferClass;
+        } else {
+            throw new Error('Buffer not found in buffer module');
+        }
+    } catch (error) {
+        console.error('Failed to load Buffer polyfill:', error);
+        // Probaj alternativni način - direktno sa jsdelivr
+        try {
+            const bufferModule = await import('https://cdn.jsdelivr.net/npm/buffer@6.0.3/+esm');
+            const BufferClass = bufferModule.Buffer || bufferModule.default?.Buffer;
+            if (BufferClass) {
+                globalThis.Buffer = BufferClass;
+                if (typeof window !== 'undefined') {
+                    window.Buffer = BufferClass;
+                }
+                bufferLoaded = true;
+                console.log('Buffer polyfill loaded successfully (alternative method)');
+                return BufferClass;
+            }
+        } catch (error2) {
+            console.error('Failed to load Buffer polyfill (alternative method):', error2);
+            throw new Error('Buffer polyfill failed to load');
+        }
+    }
+}
 
 async function loadMegaJS() {
     if (megajsLoaded && Storage) {
@@ -16,7 +63,10 @@ async function loadMegaJS() {
     }
     
     try {
-        // Učitaj browser ES module build koji dolazi sa Buffer polyfill-om
+        // Prvo učitaj Buffer polyfill
+        await loadBuffer();
+        
+        // Zatim učitaj browser ES module build (HTTPS)
         const megajsModule = await import('https://unpkg.com/megajs@1.3.0/dist/main.browser-es.mjs');
         Storage = megajsModule.Storage;
         megajsLoaded = true;
@@ -127,21 +177,41 @@ async function uploadFileToMega(file, folderPath = 'digital.kotor/documents', us
 
         // Upload fajla
         // Browser build od megajs-a očekuje Buffer
-        // CDN build dolazi sa Buffer polyfill-om koji se postavlja na globalThis
+        // Buffer polyfill je već učitan u loadMegaJS()
         console.log('Uploading file to MEGA:', file.name, file.size, 'bytes');
         console.log('File type:', file.constructor.name, 'is File?', file instanceof File);
         console.log('File is Blob?', file instanceof Blob);
-        console.log('Buffer available?', typeof Buffer !== 'undefined', typeof globalThis.Buffer !== 'undefined');
+        console.log('Buffer available?', typeof Buffer !== 'undefined', typeof globalThis.Buffer !== 'undefined', typeof window?.Buffer !== 'undefined');
         
         // Browser build od megajs-a zahteva Buffer
-        // Konvertuj File u Buffer koristeći Buffer koji dolazi sa CDN build-om
+        // Konvertuj File u Buffer koristeći Buffer koji je učitan preko CDN-a
         const fileData = await file.arrayBuffer();
         
-        // Koristi Buffer ako je dostupan (bilo globalni ili globalThis)
-        const BufferClass = typeof Buffer !== 'undefined' ? Buffer : (typeof globalThis.Buffer !== 'undefined' ? globalThis.Buffer : null);
+        // Koristi Buffer sa globalThis, window, ili direktno
+        const BufferClass = typeof Buffer !== 'undefined' ? Buffer 
+            : (typeof globalThis.Buffer !== 'undefined' ? globalThis.Buffer 
+            : (typeof window !== 'undefined' && typeof window.Buffer !== 'undefined' ? window.Buffer 
+            : null));
         
         if (!BufferClass) {
-            throw new Error('Buffer is not available. MEGA.js browser build requires Buffer polyfill.');
+            // Ako Buffer još nije učitan, probaj da ga učitaš
+            console.warn('Buffer not found, attempting to load...');
+            await loadBuffer();
+            const retryBuffer = typeof Buffer !== 'undefined' ? Buffer 
+                : (typeof globalThis.Buffer !== 'undefined' ? globalThis.Buffer 
+                : (typeof window?.Buffer !== 'undefined' ? window.Buffer : null));
+            
+            if (!retryBuffer) {
+                throw new Error('Buffer is not available. MEGA.js browser build requires Buffer polyfill.');
+            }
+            
+            const buffer = retryBuffer.from(fileData);
+            console.log('Using Buffer for upload (after retry), length:', buffer.length);
+            const uploadedFile = await targetFolder.upload({
+                name: file.name,
+                size: file.size
+            }, buffer).complete;
+            return uploadedFile;
         }
         
         const buffer = BufferClass.from(fileData);
