@@ -350,11 +350,6 @@
             <p class="subtitle">{{ $application->business_plan_name }}</p>
         </div>
 
-        @if($existingScore)
-        <div class="warning-box">
-            <strong>Ocjena je već unesena.</strong> Možete je izmijeniti ispod.
-        </div>
-        @endif
 
         <!-- Forma za ocjenjivanje -->
         <div class="form-card">
@@ -468,8 +463,13 @@
                                                 $memberScore = $allScores->get($member->id);
                                                 $currentValue = $memberScore ? $memberScore->{"criterion_{$num}"} : null;
                                                 $isCurrentMember = $member->id === $commissionMember->id;
+                                                // Provjeri da li je trenutni član završio ocjenjivanje
+                                                $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+                                                // Provjeri da li je drugi član završio ocjenjivanje
+                                                $otherMemberCompleted = $memberScore && $memberScore->criterion_1 !== null;
                                             @endphp
                                             @if($isCurrentMember)
+                                                {{-- Trenutni član vidi svoje input polje --}}
                                                 <input 
                                                     type="number" 
                                                     name="criterion_{{ $num }}" 
@@ -480,14 +480,29 @@
                                                     required
                                                     onchange="updateAverages()">
                                             @else
-                                                <span class="score-display">
-                                                    {{ $currentValue ? $currentValue : '—' }}
-                                                </span>
+                                                {{-- Ostali članovi - prikaži ocjenu samo ako je trenutni član završio ocjenjivanje I drugi član je završio ocjenjivanje --}}
+                                                @if($hasCompletedEvaluation && $otherMemberCompleted)
+                                                    <span class="score-display">
+                                                        {{ $currentValue ? $currentValue : '—' }}
+                                                    </span>
+                                                @else
+                                                    <span class="score-display" style="color: #d1d5db;">
+                                                        —
+                                                    </span>
+                                                @endif
                                             @endif
                                         </td>
                                     @endforeach
                                     <td class="average-col" id="avg_{{ $num }}">
-                                        {{ isset($averageScores[$num]) ? number_format($averageScores[$num], 2) : '—' }}
+                                        @php
+                                            // Prikaži prosječnu ocjenu samo ako je trenutni član završio ocjenjivanje
+                                            $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+                                        @endphp
+                                        @if($hasCompletedEvaluation && isset($averageScores[$num]))
+                                            {{ number_format($averageScores[$num], 2) }}
+                                        @else
+                                            —
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -500,12 +515,33 @@
                                         @php
                                             $memberScore = $allScores->get($member->id);
                                             $memberTotal = $memberScore ? $memberScore->calculateTotalScore() : 0;
+                                            $isCurrentMember = $member->id === $commissionMember->id;
+                                            $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+                                            $otherMemberCompleted = $memberScore && $memberScore->criterion_1 !== null;
                                         @endphp
-                                        <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
+                                        @if($isCurrentMember)
+                                            {{-- Trenutni član vidi svoju konačnu ocjenu --}}
+                                            <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
+                                        @else
+                                            {{-- Ostali članovi - prikaži ocjenu samo ako je trenutni član završio ocjenjivanje I drugi član je završio ocjenjivanje --}}
+                                            @if($hasCompletedEvaluation && $otherMemberCompleted)
+                                                <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
+                                            @else
+                                                <strong style="color: #d1d5db;">—</strong>
+                                            @endif
+                                        @endif
                                     </td>
                                 @endforeach
                                 <td class="average-col" id="final_score" style="font-weight: bold !important;">
-                                    <strong>{{ $finalScore > 0 ? number_format($finalScore, 2) : '—' }}</strong>
+                                    @php
+                                        // Prikaži konačnu ocjenu samo ako je trenutni član završio ocjenjivanje
+                                        $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+                                    @endphp
+                                    @if($hasCompletedEvaluation && $finalScore > 0)
+                                        <strong>{{ number_format($finalScore, 2) }}</strong>
+                                    @else
+                                        <strong>—</strong>
+                                    @endif
                                 </td>
                             </tr>
                         </tbody>

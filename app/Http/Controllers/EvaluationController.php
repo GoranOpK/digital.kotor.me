@@ -123,11 +123,24 @@ class EvaluationController extends Controller
 
         // Proveri da li je trenutni član već ocjenio
         $existingScore = $allScores->get($commissionMember->id);
+        
+        // Provjeri da li je trenutni član završio ocjenjivanje (ima sve kriterijume popunjene)
+        $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+        
+        // Ako je već ocjenio, zabrani izmjenu - redirectuj na pregled ocjene
+        if ($hasCompletedEvaluation) {
+            return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+                ->with('error', 'Već ste ocjenili ovu prijavu. Ocjene se ne mogu mijenjati.');
+        }
 
-        // Izračunaj prosječne ocjene za svaki kriterijum
+        // Izračunaj prosječne ocjene za svaki kriterijum (samo za članove koji su završili ocjenjivanje)
         $averageScores = [];
         for ($i = 1; $i <= 10; $i++) {
-            $scores = $allScores->pluck("criterion_{$i}")->filter()->values();
+            // Uzmi samo ocjene članova koji su završili ocjenjivanje (imaju sve kriterijume popunjene)
+            $scores = $allScores->filter(function($score) {
+                return $score->criterion_1 !== null; // Ako ima criterion_1, znači da je završio ocjenjivanje
+            })->pluck("criterion_{$i}")->filter()->values();
+            
             if ($scores->count() > 0) {
                 $averageScores[$i] = round($scores->sum() / $scores->count(), 2);
             } else {
@@ -180,9 +193,17 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
-        // Provjeri da li je prijava već odbijena zbog nedostajućih dokumenata
-        if ($application->status === 'rejected' && $application->rejection_reason === 'Nedostaju potrebna dokumenta.') {
-            abort(403, 'Prijava je već odbijena zbog nedostajućih dokumenata i ne može se ocjenjivati.');
+        // Provjeri da li je trenutni član završio ocjenjivanje (ima sve kriterijume popunjene)
+        $existingScore = EvaluationScore::where('application_id', $application->id)
+            ->where('commission_member_id', $commissionMember->id)
+            ->first();
+        
+        $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+        
+        // Ako je već ocjenio, zabrani izmjenu - redirectuj na pregled ocjene
+        if ($hasCompletedEvaluation) {
+            return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+                ->with('error', 'Već ste ocjenili ovu prijavu. Ocjene se ne mogu mijenjati.');
         }
 
         // Provjeri da li su svi članovi komisije ocjenili prijavu
