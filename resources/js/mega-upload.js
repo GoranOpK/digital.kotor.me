@@ -106,18 +106,25 @@ async function uploadFileToMega(file, folderPath = 'digital.kotor/documents', us
         const fileData = await file.arrayBuffer();
         
         // Upload u target folder
-        const uploadedFile = await targetFolder.upload({
-            name: file.name,
-            size: file.size
-        }, fileData).complete;
+        // megajs upload() metoda prima (filename, data) kao argumente
+        console.log('Calling targetFolder.upload() with:', file.name, fileData.byteLength, 'bytes');
+        const uploadedFile = await targetFolder.upload(file.name, fileData).complete;
+        console.log('Upload completed, uploadedFile:', uploadedFile);
 
         // Kreiraj public share link
         // link() kreira share link, vraća objekat sa url property
         // megajs vraća File objekat sa različitim property-jima
         // Proveri različite moguće property-je za node ID
+        console.log('Creating share link for uploaded file...');
         const nodeId = uploadedFile.nodeId || uploadedFile.handle || uploadedFile.id || uploadedFile.downloadId;
+        console.log('Node ID:', nodeId);
+        
         const share = await uploadedFile.link();
-        const megaLink = share.url || share || `https://mega.nz/file/${nodeId}`;
+        console.log('Share object:', share);
+        
+        // share može biti string (URL) ili objekat sa url property
+        const megaLink = typeof share === 'string' ? share : (share.url || share || `https://mega.nz/file/${nodeId}`);
+        console.log('MEGA link:', megaLink);
         
         console.log('File uploaded successfully:', {
             nodeId: nodeId,
