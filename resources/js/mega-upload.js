@@ -479,12 +479,13 @@ async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt
 /**
  * Briše fajl sa MEGA (storage.find + delete), zatim backend briše zapis.
  * Ako MEGA brisanje ne uspe, i dalje se poziva backend da se ukloni iz biblioteke.
+ * Fajlovi su u digital.kotor/documents/ – find(name, true) pretražuje rekurzivno.
  */
 async function deleteFromMega(megaFileName) {
     try {
         const storage = await initMegaStorage();
         if (!storage) throw new Error('MEGA Storage nije inicijalizovan');
-        const file = storage.find(megaFileName);
+        const file = storage.find(megaFileName, true);
         if (!file) {
             console.warn('MEGA file not found for delete:', megaFileName);
             return { deleted: false, error: 'Fajl nije pronađen na MEGA' };
