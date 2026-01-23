@@ -467,8 +467,8 @@
                                                 $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
                                                 // Provjeri da li je drugi član završio ocjenjivanje
                                                 $otherMemberCompleted = $memberScore && $memberScore->criterion_1 !== null;
-                                                // Ako je predsjednik i svi članovi su ocjenili, može vidjeti sve ocjene
-                                                $canViewAllScores = isset($isChairman) && $isChairman && isset($allMembersEvaluated) && $allMembersEvaluated;
+                                                // Ako je predsjednik i već je ocjenio, može vidjeti sve ocjene
+                                                $canViewAllScores = isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation;
                                             @endphp
                                             @if($isCurrentMember)
                                                 {{-- Trenutni član vidi svoje input polje --}}
@@ -510,9 +510,9 @@
                                     @endforeach
                                     <td class="average-col" id="avg_{{ $num }}">
                                         @php
-                                            // Prikaži prosječnu ocjenu samo ako je trenutni član završio ocjenjivanje ILI ako je predsjednik i svi su ocjenili
+                                            // Prikaži prosječnu ocjenu samo ako je trenutni član završio ocjenjivanje ILI ako je predsjednik i već je ocjenio
                                             $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
-                                            $canViewAllScores = isset($isChairman) && $isChairman && isset($allMembersEvaluated) && $allMembersEvaluated;
+                                            $canViewAllScores = isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation;
                                         @endphp
                                         @if(($hasCompletedEvaluation && isset($averageScores[$num])) || ($canViewAllScores && isset($averageScores[$num])))
                                             {{ number_format($averageScores[$num], 2) }}
@@ -534,7 +534,7 @@
                                             $isCurrentMember = $member->id === $commissionMember->id;
                                             $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
                                             $otherMemberCompleted = $memberScore && $memberScore->criterion_1 !== null;
-                                            $canViewAllScores = isset($isChairman) && $isChairman && isset($allMembersEvaluated) && $allMembersEvaluated;
+                                            $canViewAllScores = isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation;
                                         @endphp
                                         @if($isCurrentMember)
                                             {{-- Trenutni član vidi svoju konačnu ocjenu --}}
@@ -551,9 +551,9 @@
                                 @endforeach
                                 <td class="average-col" id="final_score" style="font-weight: bold !important;">
                                     @php
-                                        // Prikaži konačnu ocjenu samo ako je trenutni član završio ocjenjivanje ILI ako je predsjednik i svi su ocjenili
+                                        // Prikaži konačnu ocjenu samo ako je trenutni član završio ocjenjivanje ILI ako je predsjednik i već je ocjenio
                                         $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
-                                        $canViewAllScores = isset($isChairman) && $isChairman && isset($allMembersEvaluated) && $allMembersEvaluated;
+                                        $canViewAllScores = isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation;
                                     @endphp
                                     @if(($hasCompletedEvaluation && $finalScore > 0) || ($canViewAllScores && $finalScore > 0))
                                         <strong>{{ number_format($finalScore, 2) }}</strong>
@@ -691,12 +691,15 @@
                 </div>
 
                 <div style="margin-top: 32px; text-align: center;">
-                    @if(isset($isChairman) && $isChairman && isset($allMembersEvaluated) && $allMembersEvaluated)
-                        {{-- Predsjednik kada su svi članovi ocjenili - može mijenjati sekciju 2 i vidi dugme za zaključak --}}
+                    @if(isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation)
+                        {{-- Predsjednik kada je već ocjenio - može mijenjati sekciju 2 --}}
                         <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
-                        <a href="{{ route('evaluation.chairman-review', $application) }}" class="btn-primary" style="margin-left: 12px; text-decoration: none; display: inline-block;">
-                            Zaključak komisije
-                        </a>
+                        @if(isset($allMembersEvaluated) && $allMembersEvaluated)
+                            {{-- Dugme za zaključak se prikazuje samo kada su svi članovi ocjenili --}}
+                            <a href="{{ route('evaluation.chairman-review', $application) }}" class="btn-primary" style="margin-left: 12px; text-decoration: none; display: inline-block;">
+                                Zaključak komisije
+                            </a>
+                        @endif
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @else
                         <button type="submit" class="btn-primary">Ocijeni</button>

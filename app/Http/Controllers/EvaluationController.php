@@ -299,8 +299,8 @@ class EvaluationController extends Controller
             ->count();
         $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
         
-        // Ako je predsjednik i svi članovi su ocjenili, ne validiraj kriterijume (samo documents_complete)
-        if (!($isChairman && $allMembersEvaluated)) {
+        // Ako je predsjednik i već je ocjenio, ne validiraj kriterijume (može mijenjati samo sekciju 2)
+        if (!($isChairman && $hasCompletedEvaluation)) {
             for ($i = 1; $i <= 10; $i++) {
                 $rules["criterion_{$i}"] = 'required|integer|min:1|max:5';
                 $messages["criterion_{$i}.required"] = "Kriterijum {$i} je obavezan.";
@@ -323,12 +323,12 @@ class EvaluationController extends Controller
 
         // Izračunaj zbir ocjena (samo ako nije predsjednik koji mijenja samo sekciju 2)
         $totalScore = 0;
-        if (!($isChairman && $allMembersEvaluated)) {
+        if (!($isChairman && $hasCompletedEvaluation)) {
             for ($i = 1; $i <= 10; $i++) {
                 $totalScore += $validated["criterion_{$i}"] ?? 0;
             }
         } else {
-            // Ako je predsjednik i svi su ocjenili, koristi postojeću ocjenu
+            // Ako je predsjednik i već je ocjenio, koristi postojeću ocjenu
             $existingScore = EvaluationScore::where('application_id', $application->id)
                 ->where('commission_member_id', $commissionMember->id)
                 ->first();
@@ -393,8 +393,8 @@ class EvaluationController extends Controller
         }
 
         // Kreiraj ili ažuriraj ocjenu
-        if ($isChairman && $allMembersEvaluated) {
-            // Ako je predsjednik i svi su ocjenili, ažuriraj samo documents_complete
+        if ($isChairman && $hasCompletedEvaluation) {
+            // Ako je predsjednik i već je ocjenio, ažuriraj samo documents_complete
             $existingScore = EvaluationScore::where('application_id', $application->id)
                 ->where('commission_member_id', $commissionMember->id)
                 ->first();
