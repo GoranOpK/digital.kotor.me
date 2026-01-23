@@ -104,5 +104,38 @@ class BusinessPlan extends Model
     {
         return $this->belongsTo(Application::class);
     }
+
+    /**
+     * Provjerava da li je biznis plan kompletan (ima sva obavezna polja popunjena)
+     * Obavezna polja su: business_idea_name, applicant_name, applicant_jmbg, applicant_address, applicant_phone, applicant_email, summary
+     */
+    public function isComplete(): bool
+    {
+        $requiredFields = [
+            'business_idea_name',
+            'applicant_name',
+            'applicant_jmbg',
+            'applicant_address',
+            'applicant_phone',
+            'applicant_email',
+            'summary',
+        ];
+
+        foreach ($requiredFields as $field) {
+            if (empty($this->$field)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Provjerava da li je biznis plan nekompletan (draft)
+     */
+    public function isDraft(): bool
+    {
+        return !$this->isComplete();
+    }
 }
 

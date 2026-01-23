@@ -159,14 +159,36 @@
                             $isEvaluated = \App\Models\EvaluationScore::where('application_id', $application->id)
                                 ->where('commission_member_id', $commissionMember->id)
                                 ->exists();
+                            
+                            // Provjeri da li su svi članovi komisije ocjenili prijavu
+                            $commission = $commissionMember->commission;
+                            $totalMembers = $commission->activeMembers()->count();
+                            
+                            // Broj različitih članova koji su ocjenili prijavu
+                            $evaluatedMemberIds = \App\Models\EvaluationScore::where('application_id', $application->id)
+                                ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+                                ->pluck('commission_member_id')
+                                ->unique()
+                                ->count();
+                            
+                            $allEvaluated = $evaluatedMemberIds >= $totalMembers;
+                            
+                            // Odredi status za prikaz
+                            if ($allEvaluated) {
+                                $displayStatus = 'Ocjenjena prijava';
+                                $statusClass = 'status-evaluated';
+                            } else {
+                                $displayStatus = 'U ocjenjivanju';
+                                $statusClass = 'status-submitted';
+                            }
                         @endphp
                         <tr>
                             <td>{{ $application->business_plan_name }}</td>
                             <td>{{ $application->user->name ?? 'N/A' }}</td>
                             <td>{{ $application->competition->title ?? 'N/A' }}</td>
                             <td>
-                                <span class="status-badge status-{{ $application->status }}">
-                                    {{ $application->status === 'submitted' ? 'Podnesena' : 'Ocjenjena' }}
+                                <span class="status-badge {{ $statusClass }}">
+                                    {{ $displayStatus }}
                                 </span>
                             </td>
                             <td>
@@ -178,22 +200,33 @@
                             </td>
                             <td>
                                 @php
-                                    $allScoresCount = \App\Models\EvaluationScore::where('application_id', $application->id)->count();
-                                    $commission = $commissionMember->commission;
-                                    $totalMembers = $commission->activeMembers()->count();
-                                    $allEvaluated = $allScoresCount >= $totalMembers;
                                     $isChairman = $commissionMember->position === 'predsjednik';
                                 @endphp
                                 
-                                @if($isChairman && $allEvaluated && $application->status === 'evaluated')
-                                    <a href="{{ route('evaluation.chairman-review', $application) }}" class="btn-sm" style="background: var(--primary); color: #fff;">
-                                        Pregled i zaključak
-                                    </a>
-                                @else
-                                    <a href="{{ route('evaluation.create', $application) }}" class="btn-sm {{ $isEvaluated ? 'evaluated' : '' }}">
-                                        {{ $isEvaluated ? 'Pregledaj ocjenu' : 'Ocjeni' }}
-                                    </a>
-                                @endif
+                                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    @if($allEvaluated)
+                                        {{-- Kada su svi članovi ocjenili, svi članovi komisije vide "Ocjenjena prijava" --}}
+                                        @if($isChairman)
+                                            {{-- Predsjednik vidi oba badge-a --}}
+                                            <a href="{{ route('evaluation.create', $application) }}" class="btn-sm" style="background: #6b7280; color: #fff;">
+                                                Lista za ocjenjivanje
+                                            </a>
+                                            <a href="{{ route('evaluation.chairman-review', $application) }}" class="btn-sm" style="background: var(--primary); color: #fff;">
+                                                Pregled i zaključak
+                                            </a>
+                                        @else
+                                            {{-- Ostali članovi vide "Ocjenjena prijava" --}}
+                                            <a href="{{ route('evaluation.create', $application) }}" class="btn-sm evaluated" style="background: #10b981; color: #fff;">
+                                                Ocjenjena prijava
+                                            </a>
+                                        @endif
+                                    @else
+                                        {{-- Dok nisu svi ocjenili, normalni flow --}}
+                                        <a href="{{ route('evaluation.create', $application) }}" class="btn-sm {{ $isEvaluated ? 'evaluated' : '' }}">
+                                            {{ $isEvaluated ? 'Pregledaj ocjenu' : 'Ocjeni' }}
+                                        </a>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @empty

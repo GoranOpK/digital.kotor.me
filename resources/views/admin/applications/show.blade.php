@@ -26,45 +26,48 @@
     }
     .info-card {
         background: #fff;
-        border-radius: 16px;
-        padding: 24px;
+        border-radius: 12px;
+        padding: 16px;
         margin-bottom: 24px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     .info-card h2 {
-        font-size: 20px;
+        font-size: 16px;
         font-weight: 700;
         color: var(--primary);
-        margin: 0 0 20px;
-        padding-bottom: 12px;
+        margin: 0 0 12px;
+        padding-bottom: 8px;
         border-bottom: 2px solid #e5e7eb;
     }
     .info-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
+        gap: 10px;
     }
     .info-item {
         display: flex;
         flex-direction: column;
+        margin-bottom: 0;
     }
     .info-label {
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
         color: #6b7280;
         text-transform: uppercase;
-        margin-bottom: 4px;
+        margin-bottom: 2px;
+        letter-spacing: 0.3px;
     }
     .info-value {
-        font-size: 14px;
+        font-size: 13px;
         color: #111827;
         font-weight: 500;
+        line-height: 1.4;
     }
     .status-badge {
         display: inline-block;
-        padding: 6px 16px;
+        padding: 4px 12px;
         border-radius: 9999px;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 600;
     }
     .status-draft { background: #fef3c7; color: #92400e; }
@@ -78,19 +81,20 @@
         margin: 0;
     }
     .document-item {
-        padding: 12px;
+        padding: 8px 10px;
         border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        margin-bottom: 8px;
+        border-radius: 6px;
+        margin-bottom: 6px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        font-size: 13px;
     }
     .btn {
-        padding: 8px 16px;
+        padding: 6px 12px;
         border-radius: 6px;
         text-decoration: none;
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 600;
     }
     .btn-primary {
@@ -105,112 +109,247 @@
             <h1>Pregled prijave</h1>
         </div>
 
-        <!-- Status prijave -->
-        <div class="info-card">
-            <h2>Status prijave</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Status</span>
-                    <span class="info-value">
-                        <span class="status-badge status-{{ $application->status }}">
-                            @if($application->status === 'draft') Nacrt
-                            @elseif($application->status === 'submitted') Podnesena
-                            @elseif($application->status === 'evaluated') Ocjenjena
-                            @elseif($application->status === 'approved') Odobrena
-                            @elseif($application->status === 'rejected') Odbijena
-                            @else {{ $application->status }}
+        <!-- Status prijave, Osnovni podaci i Priložena dokumentacija u istom redu -->
+        <style>
+            @media (min-width: 768px) {
+                .status-and-basic-info {
+                    grid-template-columns: repeat(3, 1fr) !important;
+                }
+            }
+        </style>
+        <div class="status-and-basic-info" style="display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 24px;">
+                <!-- Status prijave -->
+                <div class="info-card">
+                    <h2>Status prijave</h2>
+                    @php
+                        $userRole = auth()->user()->role ? auth()->user()->role->name : null;
+                        $isCommissionMember = $userRole === 'komisija';
+                    @endphp
+                    @if($isCommissionMember || $userRole === 'superadmin')
+                        {{-- Detaljni prikaz statusa za članove komisije --}}
+                        <div class="info-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-item" style="margin-bottom: 16px;">
+                                <span class="info-label">Trenutni Status</span>
+                                <span class="info-value">
+                                    @php
+                                        $statusLabels = [
+                                            'draft' => 'Nacrt',
+                                            'submitted' => 'U obradi',
+                                            'evaluated' => 'Ocjenjena',
+                                            'approved' => 'Odobrena',
+                                            'rejected' => 'Odbijena',
+                                        ];
+                                        $statusClass = 'status-' . $application->status;
+                                    @endphp
+                                    <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">
+                                        {{ $statusLabels[$application->status] ?? $application->status }}
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="info-item" style="margin-bottom: 16px;">
+                                <span class="info-label">Obrazac 1a/1b</span>
+                                <span class="info-value">
+                                    @php
+                                        $isObrazacComplete = $application->isObrazacComplete();
+                                        $obrazacLabel = null;
+                                        $obrazacClass = 'status-draft';
+                                        if ($isObrazacComplete) {
+                                            if ($application->applicant_type === 'preduzetnica') {
+                                                $obrazacLabel = 'Obrazac 1a popunjen';
+                                                $obrazacClass = 'status-evaluated';
+                                            } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
+                                                $obrazacLabel = 'Obrazac 1b popunjen';
+                                                $obrazacClass = 'status-evaluated';
+                                            }
+                                        } else {
+                                            // Obrazac nije kompletan - prikaži nacrt prema tipu
+                                            if ($application->applicant_type === 'preduzetnica') {
+                                                $obrazacLabel = 'Obrazac 1a - Nacrt';
+                                            } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
+                                                $obrazacLabel = 'Obrazac 1b - Nacrt';
+                                            }
+                                        }
+                                    @endphp
+                                    @if($obrazacLabel)
+                                        <a href="{{ route('applications.create', ['competition' => $application->competition_id, 'application_id' => $application->id]) }}" class="status-badge {{ $obrazacClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                            {{ $obrazacLabel }}
+                                        </a>
+                                    @else
+                                        <span class="status-badge status-draft" style="font-size: 12px; padding: 4px 12px;">Nije popunjen</span>
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="info-item" style="margin-bottom: 16px;">
+                                <span class="info-label">Biznis Plan</span>
+                                <span class="info-value">
+                                    @php
+                                        $isObrazacComplete = $application->isObrazacComplete();
+                                        $bizPlanLabel = null;
+                                        $bizPlanClass = 'status-draft';
+                                        
+                                        if ($application->businessPlan) {
+                                            if ($application->businessPlan->isComplete()) {
+                                                $bizPlanLabel = 'Biznis Plan - popunjen';
+                                                $bizPlanClass = 'status-evaluated';
+                                            } else {
+                                                $bizPlanLabel = 'Biznis Plan - nacrt';
+                                                $bizPlanClass = 'status-draft';
+                                            }
+                                        } elseif ($isObrazacComplete) {
+                                            // Obrazac je kompletan, ali biznis plan ne postoji - može da krene da popunjava
+                                            $bizPlanLabel = 'Biznis Plan - nacrt';
+                                            $bizPlanClass = 'status-draft';
+                                        }
+                                    @endphp
+                                    @if($bizPlanLabel)
+                                        <a href="{{ route('applications.business-plan.create', $application) }}" class="status-badge {{ $bizPlanClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                            {{ $bizPlanLabel }}
+                                        </a>
+                                    @else
+                                        <span class="status-badge status-draft" style="font-size: 12px; padding: 4px 12px;">
+                                            Nije dostupan
+                                        </span>
+                                        <span style="color: #6b7280; font-size: 11px; margin-left: 8px;">Popunite Obrazac 1a/1b prvo</span>
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Datum podnošenja</span>
+                                <span class="info-value" style="font-size: 13px;">
+                                    {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}
+                                </span>
+                            </div>
+                            @if($application->final_score)
+                            <div class="info-item">
+                                <span class="info-label">Konačna ocjena</span>
+                                <span class="info-value">{{ number_format($application->final_score, 2) }} / 50</span>
+                            </div>
                             @endif
-                        </span>
-                    </span>
+                            @if($application->ranking_position)
+                            <div class="info-item">
+                                <span class="info-label">Pozicija na rang listi</span>
+                                <span class="info-value">#{{ $application->ranking_position }}</span>
+                            </div>
+                            @endif
+                        </div>
+                    @else
+                        {{-- Osnovni prikaz za ostale korisnike --}}
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Status</span>
+                                <span class="info-value">
+                                    <span class="status-badge status-{{ $application->status }}">
+                                        @if($application->status === 'draft') Nacrt
+                                        @elseif($application->status === 'submitted') Podnesena
+                                        @elseif($application->status === 'evaluated') Ocjenjena
+                                        @elseif($application->status === 'approved') Odobrena
+                                        @elseif($application->status === 'rejected') Odbijena
+                                        @else {{ $application->status }}
+                                        @endif
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Datum podnošenja</span>
+                                <span class="info-value">
+                                    {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'N/A' }}
+                                </span>
+                            </div>
+                            @if($application->final_score)
+                            <div class="info-item">
+                                <span class="info-label">Konačna ocjena</span>
+                                <span class="info-value">{{ number_format($application->final_score, 2) }} / 50</span>
+                            </div>
+                            @endif
+                            @if($application->ranking_position)
+                            <div class="info-item">
+                                <span class="info-label">Pozicija na rang listi</span>
+                                <span class="info-value">#{{ $application->ranking_position }}</span>
+                            </div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
-                <div class="info-item">
-                    <span class="info-label">Datum podnošenja</span>
-                    <span class="info-value">
-                        {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'N/A' }}
-                    </span>
+
+                <!-- Osnovni podaci -->
+                <div class="info-card">
+                    <h2>Osnovni podaci</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="info-label">Naziv biznis plana</span>
+                            <span class="info-value">{{ $application->business_plan_name }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Podnosilac</span>
+                            <span class="info-value">{{ $application->user->name ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email</span>
+                            <span class="info-value">{{ $application->user->email ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Konkurs</span>
+                            <span class="info-value">{{ $application->competition->title ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Tip podnosioca</span>
+                            <span class="info-value">
+                                {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : 'DOO' }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Faza biznisa</span>
+                            <span class="info-value">
+                                {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Oblast biznisa</span>
+                            <span class="info-value">{{ $application->business_area }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Traženi iznos</span>
+                            <span class="info-value">{{ number_format($application->requested_amount, 2, ',', '.') }} €</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ukupan budžet</span>
+                            <span class="info-value">{{ number_format($application->total_budget_needed, 2, ',', '.') }} €</span>
+                        </div>
+                        @if($application->approved_amount)
+                        <div class="info-item">
+                            <span class="info-label">Odobreni iznos</span>
+                            <span class="info-value">{{ number_format($application->approved_amount, 2, ',', '.') }} €</span>
+                        </div>
+                        @endif
+                    </div>
                 </div>
-                @if($application->final_score)
-                <div class="info-item">
-                    <span class="info-label">Konačna ocjena</span>
-                    <span class="info-value">{{ number_format($application->final_score, 2) }} / 50</span>
-                </div>
-                @endif
-                @if($application->ranking_position)
-                <div class="info-item">
-                    <span class="info-label">Pozicija na rang listi</span>
-                    <span class="info-value">#{{ $application->ranking_position }}</span>
+
+                <!-- Priložena dokumentacija -->
+                @php
+                    $userRole = auth()->user()->role ? auth()->user()->role->name : null;
+                @endphp
+                @if($application->documents->count() > 0 && $userRole === 'komisija')
+                <div class="info-card">
+                    <h2>Priložena dokumentacija</h2>
+                    <ul class="documents-list">
+                        @foreach($application->documents as $doc)
+                            <li class="document-item">
+                                <span>{{ $doc->name }}</span>
+                                <div style="display: inline-flex; gap: 8px;">
+                                    {{-- Samo članovi komisije mogu da vide dokument (server dodatno provjerava dodijeljenu komisiju) --}}
+                                    <a href="{{ route('applications.document.view', ['application' => $application, 'document' => $doc]) }}"
+                                       class="btn btn-secondary"
+                                       target="_blank">
+                                        Pogledaj
+                                    </a>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
                 @endif
             </div>
         </div>
-
-        <!-- Osnovni podaci -->
-        <div class="info-card">
-            <h2>Osnovni podaci</h2>
-            <div class="info-grid">
-                <div class="info-item">
-                    <span class="info-label">Naziv biznis plana</span>
-                    <span class="info-value">{{ $application->business_plan_name }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Podnosilac</span>
-                    <span class="info-value">{{ $application->user->name ?? 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Email</span>
-                    <span class="info-value">{{ $application->user->email ?? 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Konkurs</span>
-                    <span class="info-value">{{ $application->competition->title ?? 'N/A' }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Tip podnosioca</span>
-                    <span class="info-value">
-                        {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : 'DOO' }}
-                    </span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Faza biznisa</span>
-                    <span class="info-value">
-                        {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
-                    </span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Oblast biznisa</span>
-                    <span class="info-value">{{ $application->business_area }}</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Traženi iznos</span>
-                    <span class="info-value">{{ number_format($application->requested_amount, 2, ',', '.') }} €</span>
-                </div>
-                <div class="info-item">
-                    <span class="info-label">Ukupan budžet</span>
-                    <span class="info-value">{{ number_format($application->total_budget_needed, 2, ',', '.') }} €</span>
-                </div>
-                @if($application->approved_amount)
-                <div class="info-item">
-                    <span class="info-label">Odobreni iznos</span>
-                    <span class="info-value">{{ number_format($application->approved_amount, 2, ',', '.') }} €</span>
-                </div>
-                @endif
-            </div>
-        </div>
-
-        <!-- Dokumenti -->
-        @if($application->documents->count() > 0)
-        <div class="info-card">
-            <h2>Priložena dokumentacija</h2>
-            <ul class="documents-list">
-                @foreach($application->documents as $doc)
-                    <li class="document-item">
-                        <span>{{ $doc->name }}</span>
-                        <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" class="btn btn-primary">Preuzmi</a>
-                    </li>
-                @endforeach
-            </ul>
-        </div>
-        @endif
 
         <!-- Ocjene -->
         @if($application->evaluationScores->count() > 0)
@@ -238,8 +377,12 @@
         @endif
 
         <div style="text-align: center; margin-top: 24px;">
-            @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
-                <a href="{{ route('admin.competitions.show', $application->competition_id) }}" class="btn btn-primary">Nazad na konkurs</a>
+            @php
+                $userRole = auth()->user()->role ? auth()->user()->role->name : null;
+            @endphp
+            
+            @if($userRole === 'konkurs_admin' || $userRole === 'komisija')
+                <a href="{{ route('admin.competitions.show', $application->competition) }}" class="btn btn-primary">Nazad na konkurs</a>
             @else
                 <a href="{{ route('admin.applications.index') }}" class="btn btn-primary">Nazad na listu</a>
             @endif

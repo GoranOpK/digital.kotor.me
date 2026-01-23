@@ -216,86 +216,154 @@
 
             @if($applications->count() > 0)
             @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
-            <form method="POST" action="{{ route('admin.competitions.select-winners', $competition) }}" id="winnersForm">
-                @csrf
-                <table>
-                    <thead>
-                        <tr>
-                            <th style="width: 60px;">Poz.</th>
-                            <th>Naziv biznis plana</th>
-                            <th>Podnosilac</th>
-                            <th>Tip</th>
-                            <th style="text-align: center;">Ocjena</th>
-                            <th style="text-align: right;">Traženi iznos</th>
-                            <th style="text-align: right;">Odobreni iznos</th>
-                            <th style="text-align: center;">Dobitnik</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($applications as $application)
-                            <tr style="{{ $application->status === 'approved' ? 'background: #d1fae5;' : '' }}">
-                                <td>
-                                    <span class="ranking-badge">{{ $application->ranking_position ?? $loop->iteration }}</span>
-                                </td>
-                                <td>{{ $application->business_plan_name }}</td>
-                                <td>{{ $application->user->name ?? 'N/A' }}</td>
-                                <td>
-                                    {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : ($application->applicant_type === 'doo' ? 'DOO' : ($application->applicant_type === 'fizicko_lice' ? 'Fizičko lice' : 'Ostalo')) }} - 
-                                    {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
-                                </td>
-                                <td style="text-align: center;">
-                                    @php
-                                        $score = $application->final_score ?? 0;
-                                        $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
-                                    @endphp
-                                    <span class="score-badge {{ $scoreClass }}">
-                                        {{ number_format($score, 2) }} / 50
-                                    </span>
-                                </td>
-                                <td style="text-align: right;">
-                                    {{ number_format($application->requested_amount, 2, ',', '.') }} €
-                                </td>
-                                <td style="text-align: right;">
-                                    @if($application->approved_amount)
-                                        <strong style="color: #10b981;">
-                                            {{ number_format($application->approved_amount, 2, ',', '.') }} €
-                                        </strong>
-                                    @else
-                                        <input 
-                                            type="number" 
-                                            name="winners[{{ $application->id }}][approved_amount]" 
-                                            class="form-control" 
-                                            step="0.01" 
-                                            min="0" 
-                                            max="{{ min($application->requested_amount, ($competition->budget * ($competition->max_support_percentage / 100))) }}"
-                                            placeholder="0.00"
-                                            style="max-width: 150px;"
-                                        >
-                                        <input type="hidden" name="winners[{{ $application->id }}][application_id]" value="{{ $application->id }}">
-                                    @endif
-                                </td>
-                                <td class="checkbox-cell">
-                                    @if($application->status === 'approved')
-                                        <span style="color: #10b981; font-weight: 600;">✓ Dobitnik</span>
-                                    @else
-                                        <input 
-                                            type="checkbox" 
-                                            name="winners[{{ $application->id }}][selected]" 
-                                            value="1"
-                                            onchange="toggleAmountInput({{ $application->id }}, this.checked)"
-                                        >
-                                    @endif
-                                </td>
+                @if(in_array($competition->status, ['closed', 'completed']))
+                    {{-- Read-only prikaz za završene konkurse --}}
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 60px;">Poz.</th>
+                                <th>Naziv biznis plana</th>
+                                <th>Podnosilac</th>
+                                <th>Tip</th>
+                                <th style="text-align: center;">Ocjena</th>
+                                <th style="text-align: right;">Traženi iznos</th>
+                                <th style="text-align: right;">Odobreni iznos</th>
+                                <th style="text-align: center;">Status</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            @foreach($applications as $application)
+                                <tr style="{{ $application->status === 'approved' ? 'background: #d1fae5;' : '' }}">
+                                    <td>
+                                        <span class="ranking-badge">{{ $application->ranking_position ?? $loop->iteration }}</span>
+                                    </td>
+                                    <td>{{ $application->business_plan_name }}</td>
+                                    <td>{{ $application->user->name ?? 'N/A' }}</td>
+                                    <td>
+                                        {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : ($application->applicant_type === 'doo' ? 'DOO' : ($application->applicant_type === 'fizicko_lice' ? 'Fizičko lice' : 'Ostalo')) }} - 
+                                        {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
+                                    </td>
+                                    <td style="text-align: center;">
+                                        @php
+                                            $score = $application->final_score ?? 0;
+                                            $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
+                                        @endphp
+                                        <span class="score-badge {{ $scoreClass }}">
+                                            {{ number_format($score, 2) }} / 50
+                                        </span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        {{ number_format($application->requested_amount, 2, ',', '.') }} €
+                                    </td>
+                                    <td style="text-align: right;">
+                                        @if($application->approved_amount)
+                                            <strong style="color: #10b981;">
+                                                {{ number_format($application->approved_amount, 2, ',', '.') }} €
+                                            </strong>
+                                        @else
+                                            <span style="color: #6b7280;">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="checkbox-cell">
+                                        @if($application->status === 'approved')
+                                            <span style="color: #10b981; font-weight: 600;">✓ Dobitnik</span>
+                                        @else
+                                            <span style="color: #6b7280;">-</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
 
-                <div style="margin-top: 24px; text-align: center;">
-                    <button type="submit" class="btn btn-success">Sačuvaj odabir dobitnika</button>
-                    <a href="{{ route('admin.competitions.decision', $competition) }}" class="btn btn-primary">Generiši Odluku</a>
-                </div>
-            </form>
+                    <div style="margin-top: 24px; text-align: center;">
+                        <form method="GET" action="{{ route('admin.competitions.decision', $competition) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-primary" style="background: var(--primary); color: #fff; border: none; cursor: pointer; padding: 12px 24px;">Generiši odluku</button>
+                        </form>
+                    </div>
+                @else
+                    {{-- Interaktivni prikaz za aktivne konkurse --}}
+                    <form method="POST" action="{{ route('admin.competitions.select-winners', $competition) }}" id="winnersForm">
+                        @csrf
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">Poz.</th>
+                                    <th>Naziv biznis plana</th>
+                                    <th>Podnosilac</th>
+                                    <th>Tip</th>
+                                    <th style="text-align: center;">Ocjena</th>
+                                    <th style="text-align: right;">Traženi iznos</th>
+                                    <th style="text-align: right;">Odobreni iznos</th>
+                                    <th style="text-align: center;">Dobitnik</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($applications as $application)
+                                    <tr style="{{ $application->status === 'approved' ? 'background: #d1fae5;' : '' }}">
+                                        <td>
+                                            <span class="ranking-badge">{{ $application->ranking_position ?? $loop->iteration }}</span>
+                                        </td>
+                                        <td>{{ $application->business_plan_name }}</td>
+                                        <td>{{ $application->user->name ?? 'N/A' }}</td>
+                                        <td>
+                                            {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : ($application->applicant_type === 'doo' ? 'DOO' : ($application->applicant_type === 'fizicko_lice' ? 'Fizičko lice' : 'Ostalo')) }} - 
+                                            {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
+                                        </td>
+                                        <td style="text-align: center;">
+                                            @php
+                                                $score = $application->final_score ?? 0;
+                                                $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
+                                            @endphp
+                                            <span class="score-badge {{ $scoreClass }}">
+                                                {{ number_format($score, 2) }} / 50
+                                            </span>
+                                        </td>
+                                        <td style="text-align: right;">
+                                            {{ number_format($application->requested_amount, 2, ',', '.') }} €
+                                        </td>
+                                        <td style="text-align: right;">
+                                            @if($application->approved_amount)
+                                                <strong style="color: #10b981;">
+                                                    {{ number_format($application->approved_amount, 2, ',', '.') }} €
+                                                </strong>
+                                            @else
+                                                <input 
+                                                    type="number" 
+                                                    name="winners[{{ $application->id }}][approved_amount]" 
+                                                    class="form-control" 
+                                                    step="0.01" 
+                                                    min="0" 
+                                                    max="{{ min($application->requested_amount, ($competition->budget * ($competition->max_support_percentage / 100))) }}"
+                                                    placeholder="0.00"
+                                                    style="max-width: 150px;"
+                                                >
+                                                <input type="hidden" name="winners[{{ $application->id }}][application_id]" value="{{ $application->id }}">
+                                            @endif
+                                        </td>
+                                        <td class="checkbox-cell">
+                                            @if($application->status === 'approved')
+                                                <span style="color: #10b981; font-weight: 600;">✓ Dobitnik</span>
+                                            @else
+                                                <input 
+                                                    type="checkbox" 
+                                                    name="winners[{{ $application->id }}][selected]" 
+                                                    value="1"
+                                                    onchange="toggleAmountInput({{ $application->id }}, this.checked)"
+                                                >
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top: 24px; text-align: center;">
+                            <button type="submit" class="btn btn-success">Sačuvaj odabir dobitnika</button>
+                            <a href="{{ route('admin.competitions.decision', $competition) }}" class="btn btn-primary">Generiši Odluku</a>
+                        </div>
+                    </form>
+                @endif
             @else
                 {{-- Read-only prikaz za članove komisije --}}
                 <table>

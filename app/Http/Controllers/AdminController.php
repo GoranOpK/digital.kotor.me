@@ -445,14 +445,21 @@ class AdminController extends Controller
         // Proveri da li je predsjednik komisije (za prikaz dodatnih opcija)
         $isChairman = $this->isCommissionChairmanForCompetition($competition);
         
+        // Proveri da li je član komisije
+        $isCommissionMember = $this->isCommissionMemberForCompetition($competition);
+        
         $competition->loadCount('applications');
         $competition->load('commission');
         $applications = $competition->applications()
-            ->with('user')
+            ->with(['user', 'businessPlan'])
             ->latest()
             ->paginate(20);
         
-        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman'));
+        // Proveri da li je deadline prošao (za prikaz dugmeta "Zatvori konkurs")
+        $deadline = $competition->deadline;
+        $isDeadlinePassed = $deadline && now()->isAfter($deadline);
+        
+        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed'));
     }
 
     /**
@@ -462,6 +469,11 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Proveri da li je konkurs završen
+        if (in_array($competition->status, ['closed', 'completed'])) {
+            abort(403, 'Ne možete izmeniti završeni konkurs.');
+        }
         
         // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
         if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
@@ -479,6 +491,11 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Proveri da li je konkurs završen
+        if (in_array($competition->status, ['closed', 'completed'])) {
+            abort(403, 'Ne možete izmeniti završeni konkurs.');
+        }
         
         // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
         if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
@@ -583,6 +600,81 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za zatvaranje ovog konkursa.');
         }
         
+        // Proveri da li je deadline prošao - konkurs se ne može zatvoriti dok je još otvoren za prijave
+        $deadline = $competition->deadline;
+        $isDeadlinePassed = $deadline && now()->isAfter($deadline);
+        
+        if (!$isDeadlinePassed) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Ne možete zatvoriti konkurs dok je još otvoren za prijave. Rok za prijave mora prvo isteći.']);
+        }
+        
+        // Proveri da li postoje prijave koje nisu ocijenjene
+        $submittedApplications = $competition->applications()
+            ->where('status', 'submitted')
+            ->get();
+        
+        if ($submittedApplications->count() > 0) {
+            // Proveri da li sve prijave imaju ocjene od svih članova komisije
+            $commission = $competition->commission;
+            if ($commission) {
+                $activeMembers = $commission->activeMembers()->get();
+                $activeMemberIds = $activeMembers->pluck('id');
+                
+                foreach ($submittedApplications as $application) {
+                    // Ako je deadline prošao, provjeri da li je prijava kompletna
+                    $isIncomplete = false;
+                    if ($isDeadlinePassed) {
+                        // Provjeri da li prijava ima sve obavezne dokumente i biznis plan
+                        $hasAllDocuments = $application->hasAllRequiredDocuments();
+                        $hasBusinessPlan = $application->businessPlan !== null;
+                        $isObrazacComplete = $application->isObrazacComplete();
+                        
+                        // Ako prijava nije kompletna (nema sve dokumente ili biznis plan), tretiraj je kao nepotpunu
+                        if (!$hasAllDocuments || !$hasBusinessPlan || !$isObrazacComplete) {
+                            $isIncomplete = true;
+                            
+                            // Automatski postavi status na 'rejected' za nepotpune prijave nakon isteka deadline-a
+                            if ($application->status === 'submitted') {
+                                $application->update([
+                                    'status' => 'rejected',
+                                    'rejection_reason' => 'Prijava je nepotpuna (nedostaju dokumenti ili biznis plan) i rok za prijave je istekao.',
+                                ]);
+                            }
+                        }
+                    }
+                    
+                    // Ako prijava nije nepotpuna, provjeri da li je ocijenjena
+                    if (!$isIncomplete) {
+                        $evaluatedByMemberIds = $application->evaluationScores()
+                            ->whereIn('commission_member_id', $activeMemberIds)
+                            ->pluck('commission_member_id');
+                        
+                        // Ako neki član komisije nije ocijenio prijavu, preusmeri na formu za ocjenjivanje
+                        $missingEvaluations = $activeMemberIds->diff($evaluatedByMemberIds);
+                        if ($missingEvaluations->count() > 0) {
+                            return redirect()->route('evaluation.index', ['competition_id' => $competition->id])
+                                ->withErrors(['error' => 'Ne možete zatvoriti konkurs dok postoje prijave koje nisu ocijenjene od svih članova komisije. Molimo prvo ocijenite sve prijave.']);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Ako je deadline prošao, automatski odbij sve draft prijave
+        if ($isDeadlinePassed) {
+            $draftApplications = $competition->applications()
+                ->where('status', 'draft')
+                ->get();
+            
+            foreach ($draftApplications as $application) {
+                $application->update([
+                    'status' => 'rejected',
+                    'rejection_reason' => 'Prijava nije podnesena u roku i rok za prijave je istekao.',
+                ]);
+            }
+        }
+        
         $competition->update([
             'status' => 'closed',
             'closed_at' => now(),
@@ -598,20 +690,27 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
+        
+        // Administrator konkursa može brisati završene konkurse iz arhive
+        // Ostali ne mogu brisati završene konkurse
+        if (in_array($competition->status, ['closed', 'completed']) && !$isCompetitionAdmin) {
+            abort(403, 'Ne možete obrisati završeni konkurs.');
+        }
         
         // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
         if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
             abort(403, 'Nemate dozvolu za brisanje ovog konkursa.');
         }
         
-        // Proveri da li ima prijava
-        if ($competition->applications()->count() > 0) {
+        // Proveri da li ima prijava (samo za aktivne konkurse)
+        if (!in_array($competition->status, ['closed', 'completed']) && $competition->applications()->count() > 0) {
             return redirect()->back()->withErrors(['error' => 'Ne možete obrisati konkurs koji već ima prijave.']);
         }
 
         $competition->delete();
 
-        return redirect()->route('admin.competitions.index')->with('success', 'Konkurs je uspješno obrisan.');
+        return redirect()->back()->with('success', 'Konkurs je uspješno obrisan.');
     }
 
     /**
@@ -653,6 +752,17 @@ class AdminController extends Controller
      */
     public function showApplication(Application $application)
     {
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        
+        // Ako nije admin, proveri da li je član komisije i da li je prijava vezana za konkurs dodijeljen njegovoj komisiji
+        if (!$isAdmin) {
+            $competition = $application->competition;
+            if (!$competition || !$this->isCommissionMemberForCompetition($competition)) {
+                abort(403, 'Nemate pristup ovoj prijavi.');
+            }
+        }
+        
         $application->load(['user', 'competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember']);
         
         return view('admin.applications.show', compact('application'));
@@ -1092,7 +1202,7 @@ class AdminController extends Controller
         
         // Administrator konkursa ne može pristupiti rang listi
         if ($isCompetitionAdmin) {
-            abort(403, 'Nemate pristup rang listi. Samo predsjednik komisije može upravljati rang listom.');
+            abort(403, 'Administrator konkursa nema pristup rang listi.');
         }
         
         // Ako nije superadmin ili predsjednik komisije, proveri da li je član komisije i da li je konkurs zatvoren
@@ -1249,10 +1359,13 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za generisanje odluke. Samo predsjednik komisije može generisati odluku.');
         }
         
+        // Dobitnici su oni koji imaju approved_amount postavljen (veći od 0)
         $winners = Application::where('competition_id', $competition->id)
-            ->where('status', 'approved')
+            ->whereNotNull('approved_amount')
+            ->where('approved_amount', '>', 0)
             ->with(['user', 'businessPlan'])
             ->orderBy('ranking_position')
+            ->orderBy('id')
             ->get();
 
         // Generiši PDF ili pripremi podatke za prikaz

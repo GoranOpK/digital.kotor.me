@@ -170,9 +170,9 @@ class HomeController extends Controller
 
             // Ako nije Preduzetnik, PIB je obavezan
             if ($request->business_type && $request->business_type !== 'Preduzetnik') {
-                $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{9}$/', 'unique:users,pib'];
+                $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{8}$/', 'unique:users,pib'];
                 $messages['pib.required'] = 'PIB je obavezan.';
-                $messages['pib.regex'] = 'PIB mora imati tačno 9 cifara.';
+                $messages['pib.regex'] = 'PIB mora imati tačno 8 cifara.';
                 $messages['pib.unique'] = 'PIB je već registrovan.';
             }
 
@@ -341,25 +341,49 @@ class HomeController extends Controller
                 $competitionIds = $commission->competitions->pluck('id');
                 $applications = Application::whereIn('competition_id', $competitionIds)
                     ->whereIn('status', ['submitted', 'evaluated'])
-                    ->with('competition', 'evaluationScores')
+                    ->with(['competition', 'user', 'businessPlan', 'evaluationScores', 'evaluationScores.commissionMember'])
                     ->latest()
                     ->get();
                 
-                // Najnovije prijave na konkurse (samo za članove komisije)
-                $recent_applications = Application::with('user', 'competition')
+                // Dodaj informaciju o tome da li je član komisije ocjenio svaku prijavu
+                foreach ($applications as $application) {
+                    $application->is_evaluated_by_member = $application->evaluationScores
+                        ->where('commission_member_id', $commissionMember->id)
+                        ->isNotEmpty();
+                }
+                
+                // Najnovije prijave na konkurse (samo za konkurse dodijeljene ovoj komisiji)
+                $recent_applications = Application::whereIn('competition_id', $competitionIds)
+                    ->with('user', 'competition')
                     ->latest()
                     ->take(10)
                     ->get();
                 
-                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'recent_applications'));
+                // Moje prijave - samo prijave koje je korisnik lično podneo
+                $myApplications = Application::where('user_id', $user->id)
+                    ->whereIn('competition_id', $competitionIds)
+                    ->with('competition', 'businessPlan')
+                    ->latest()
+                    ->get();
+                
+                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'recent_applications', 'myApplications'));
             }
         }
         
         // Za običnog korisnika
         $applications = Application::where('user_id', $user->id)
-            ->with('competition')
+            ->with('competition', 'businessPlan')
             ->latest()
             ->get();
+        
+        // Debug: Loguj aplikacije
+        \Log::info('=== Dashboard Debug ===');
+        \Log::info('User ID: ' . $user->id);
+        \Log::info('Total applications count: ' . $applications->count());
+        foreach ($applications as $app) {
+            \Log::info('Application ID: ' . $app->id . ', Status: ' . $app->status . ', business_plan_name: ' . ($app->business_plan_name ?? 'null'));
+        }
+        \Log::info('=== End Dashboard Debug ===');
 
         // Podaci za skladište dokumenata
         $maxStorageMB = 20;

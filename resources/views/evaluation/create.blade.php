@@ -350,11 +350,6 @@
             <p class="subtitle">{{ $application->business_plan_name }}</p>
         </div>
 
-        @if($existingScore)
-        <div class="warning-box">
-            <strong>Ocjena je već unesena.</strong> Možete je izmijeniti ispod.
-        </div>
-        @endif
 
         <!-- Forma za ocjenjivanje -->
         <div class="form-card">
@@ -377,25 +372,47 @@
                 <!-- 2. Dostavljena su sva potrebna dokumenta? -->
                 <div class="form-section">
                     <label class="form-label form-label-large">2. Dostavljena su sva potrebna dokumenta?</label>
-                    <div class="radio-group">
-                        <label class="radio-option">
-                            <input type="radio" name="documents_complete" value="1" {{ old('documents_complete', $existingScore?->documents_complete ?? true) ? 'checked' : '' }} required>
-                            <span>a. Da</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="documents_complete" value="0" {{ old('documents_complete') === '0' || ($existingScore && !$existingScore->documents_complete) ? 'checked' : '' }} required>
-                            <span>b. Ne*</span>
-                        </label>
-                    </div>
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 8px; margin-left: 24px;">
-                        *ukoliko je odgovor „Ne", odbiti aplikaciju
-                    </div>
-                    @error('documents_complete')
-                        <div class="error-message">{{ $message }}</div>
-                    @enderror
+                    
+                    @if($commissionMember->position === 'predsjednik')
+                        {{-- Predsjednik može označiti --}}
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="documents_complete" value="1" {{ old('documents_complete', $existingScore?->documents_complete ?? true) ? 'checked' : '' }} required>
+                                <span>a. Da</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="documents_complete" value="0" {{ old('documents_complete') === '0' || ($existingScore && !$existingScore->documents_complete) ? 'checked' : '' }} required>
+                                <span>b. Ne*</span>
+                            </label>
+                        </div>
+                        @error('documents_complete')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    @else
+                        {{-- Ostali članovi vide samo read-only prikaz --}}
+                        @php
+                            // Pronađi predsjednika komisije i njegovu ocjenu
+                            $chairmanMember = $allMembers->firstWhere('position', 'predsjednik');
+                            $chairmanScore = $chairmanMember ? $allScores->get($chairmanMember->id) : null;
+                            $documentsComplete = $chairmanScore ? $chairmanScore->documents_complete : null;
+                        @endphp
+                        <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; border: 1px solid #e5e7eb;">
+                            @if($documentsComplete !== null)
+                                <div style="margin-bottom: 8px;">
+                                    <strong style="color: #111827;">
+                                        {{ $documentsComplete ? 'a. Da' : 'b. Ne*' }}
+                                    </strong>
+                                </div>
+                            @else
+                                <div style="color: #6b7280;">
+                                    <em>Nije označeno</em>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
-                <!-- 3. Ocjena biznis plana u brojkama -->
+                <!-- 4. Ocjena biznis plana u brojkama -->
                 <div class="form-section">
                     <label class="form-label form-label-large">3. Ocjena biznis plana u brojkama:</label>
                     
@@ -446,26 +463,69 @@
                                                 $memberScore = $allScores->get($member->id);
                                                 $currentValue = $memberScore ? $memberScore->{"criterion_{$num}"} : null;
                                                 $isCurrentMember = $member->id === $commissionMember->id;
+                                                // Provjeri da li je trenutni član završio ocjenjivanje
+                                                $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
+                                                // Provjeri da li je drugi član završio ocjenjivanje
+                                                $otherMemberCompleted = $memberScore && $memberScore->criterion_1 !== null;
+                                                // Ako je predsjednik i već je ocjenio, može vidjeti sve ocjene
+                                                // ILI ako su svi članovi ocjenili, svi članovi mogu vidjeti sve ocjene
+                                                $canViewAllScores = (isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation) 
+                                                    || (isset($allMembersEvaluated) && $allMembersEvaluated);
                                             @endphp
                                             @if($isCurrentMember)
-                                                <input 
-                                                    type="number" 
-                                                    name="criterion_{{ $num }}" 
-                                                    class="score-input" 
-                                                    min="1" 
-                                                    max="5" 
-                                                    value="{{ old("criterion_{$num}", $currentValue) }}"
-                                                    required
-                                                    onchange="updateAverages()">
+                                                {{-- Trenutni član vidi svoje input polje --}}
+                                                @if(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && isset($isChairman) && $isChairman)
+                                                    {{-- Predsjednik kada je već ocjenio - kriterijumi su read-only (može mijenjati samo sekciju 2) --}}
+                                                    <span class="score-display">
+                                                        {{ $currentValue ? $currentValue : '—' }}
+                                                    </span>
+                                                @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && isset($allMembersEvaluated) && $allMembersEvaluated)
+                                                    {{-- Kada su svi članovi ocjenili, svi članovi vide svoje ocjene u read-only modu --}}
+                                                    <span class="score-display">
+                                                        {{ $currentValue ? $currentValue : '—' }}
+                                                    </span>
+                                                @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && !(isset($isChairman) && $isChairman))
+                                                    {{-- Ako je već ocjenio i nije predsjednik i nisu svi ocjenili, read-only --}}
+                                                    <span class="score-display">
+                                                        {{ $currentValue ? $currentValue : '—' }}
+                                                    </span>
+                                                @else
+                                                    {{-- Može unijeti ili mijenjati --}}
+                                                    <input 
+                                                        type="number" 
+                                                        name="criterion_{{ $num }}" 
+                                                        class="score-input" 
+                                                        min="1" 
+                                                        max="5" 
+                                                        value="{{ old("criterion_{$num}", $currentValue) }}"
+                                                        required
+                                                        onchange="updateAverages()">
+                                                @endif
                                             @else
-                                                <span class="score-display">
-                                                    {{ $currentValue ? $currentValue : '—' }}
-                                                </span>
+                                                {{-- Ostali članovi - prikaži ocjenu samo ako je trenutni član završio ocjenjivanje I drugi član je završio ocjenjivanje, ILI ako je predsjednik i svi su ocjenili --}}
+                                                @if(($hasCompletedEvaluation && $otherMemberCompleted) || $canViewAllScores)
+                                                    <span class="score-display">
+                                                        {{ $currentValue ? $currentValue : '—' }}
+                                                    </span>
+                                                @else
+                                                    <span class="score-display" style="color: #d1d5db;">
+                                                        —
+                                                    </span>
+                                                @endif
                                             @endif
                                         </td>
                                     @endforeach
                                     <td class="average-col" id="avg_{{ $num }}">
-                                        {{ isset($averageScores[$num]) ? number_format($averageScores[$num], 2) : '—' }}
+                                        @php
+                                            // Prikaži prosječnu ocjenu samo ako je trenutni član završio ocjenjivanje ILI ako je predsjednik i već je ocjenio
+                                            $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
+                                            $canViewAllScores = isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation;
+                                        @endphp
+                                        @if(($hasCompletedEvaluation && isset($averageScores[$num])) || ($canViewAllScores && isset($averageScores[$num])))
+                                            {{ number_format($averageScores[$num], 2) }}
+                                        @else
+                                            —
+                                        @endif
                                     </td>
                                 </tr>
                             @endforeach
@@ -478,12 +538,35 @@
                                         @php
                                             $memberScore = $allScores->get($member->id);
                                             $memberTotal = $memberScore ? $memberScore->calculateTotalScore() : 0;
+                                            $isCurrentMember = $member->id === $commissionMember->id;
+                                            $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
+                                            $otherMemberCompleted = $memberScore && $memberScore->criterion_1 !== null;
+                                            $canViewAllScores = isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation;
                                         @endphp
-                                        <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
+                                        @if($isCurrentMember)
+                                            {{-- Trenutni član vidi svoju konačnu ocjenu --}}
+                                            <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
+                                        @else
+                                            {{-- Ostali članovi - prikaži ocjenu samo ako je trenutni član završio ocjenjivanje I drugi član je završio ocjenjivanje, ILI ako je predsjednik i svi su ocjenili --}}
+                                            @if(($hasCompletedEvaluation && $otherMemberCompleted) || $canViewAllScores)
+                                                <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
+                                            @else
+                                                <strong style="color: #d1d5db;">—</strong>
+                                            @endif
+                                        @endif
                                     </td>
                                 @endforeach
                                 <td class="average-col" id="final_score" style="font-weight: bold !important;">
-                                    <strong>{{ $finalScore > 0 ? number_format($finalScore, 2) : '—' }}</strong>
+                                    @php
+                                        // Prikaži konačnu ocjenu samo ako je trenutni član završio ocjenjivanje ILI ako je predsjednik i već je ocjenio
+                                        $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
+                                        $canViewAllScores = isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation;
+                                    @endphp
+                                    @if(($hasCompletedEvaluation && $finalScore > 0) || ($canViewAllScores && $finalScore > 0))
+                                        <strong>{{ number_format($finalScore, 2) }}</strong>
+                                    @else
+                                        <strong>—</strong>
+                                    @endif
                                 </td>
                             </tr>
                         </tbody>
@@ -505,10 +588,12 @@
                     @endfor
                 </div>
 
-                <!-- 4. Zaključak komisije -->
+                <!-- 5. Zaključak komisije -->
                 <div class="form-section commission-decision-section">
                     <label class="form-label form-label-large">4. Na bazi konačne ocjene Komisija donosi zaključak da se biznis plan:</label>
-                    @if($commissionMember->position === 'predsjednik')
+                    
+                    @if($commissionMember->position === 'predsjednik' && isset($allMembersEvaluated) && $allMembersEvaluated)
+                        {{-- Predsjednik može unijeti zaključak kada su svi članovi ocjenili --}}
                         <div class="radio-group">
                             <label class="radio-option">
                                 <input type="radio" name="commission_decision" value="podrzava_potpuno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_potpuno' ? 'checked' : '' }}>
@@ -534,7 +619,18 @@
                                 value="{{ old('approved_amount', $application->approved_amount) }}"
                                 placeholder="0.00">
                         </div>
+                    @elseif($commissionMember->position === 'predsjednik' && (!isset($allMembersEvaluated) || !$allMembersEvaluated))
+                        {{-- Predsjednik vidi poruku da mora sačekati da svi članovi ocjene --}}
+                        <div style="padding: 16px; background: #fef3c7; border-radius: 8px; margin-top: 12px; border: 1px solid #fbbf24;">
+                            <div style="color: #92400e; font-weight: 600; margin-bottom: 8px;">
+                                ⚠️ Zaključak komisije može se donijeti tek kada svi članovi komisije ocjene prijavu.
+                            </div>
+                            <div style="color: #78350f; font-size: 13px;">
+                                Trenutno: {{ $evaluatedMemberIds ?? 0 }} / {{ $totalMembers ?? 0 }} članova je ocjenilo prijavu.
+                            </div>
+                        </div>
                     @else
+                        {{-- Ostali članovi komisije vide read-only prikaz zaključka --}}
                         <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px;">
                             @php
                                 $decisionLabels = [
@@ -544,17 +640,20 @@
                                 ];
                                 $currentDecision = $application->commission_decision;
                             @endphp
-                            <div style="margin-bottom: 12px;">
-                                <strong>{{ $currentDecision ? $decisionLabels[$currentDecision] ?? 'Nije doneseno' : 'Nije doneseno' }}</strong>
-                            </div>
-                            @if($application->approved_amount)
-                                <div>
-                                    <strong>Iznos odobrenih sredstava:</strong> {{ number_format($application->approved_amount, 2) }} €
+                            @if($currentDecision)
+                                <div style="margin-bottom: 12px;">
+                                    <strong>{{ $decisionLabels[$currentDecision] ?? 'Nije doneseno' }}</strong>
+                                </div>
+                                @if($application->approved_amount)
+                                    <div style="margin-bottom: 12px;">
+                                        <strong>Iznos odobrenih sredstava:</strong> {{ number_format($application->approved_amount, 2) }} €
+                                    </div>
+                                @endif
+                            @else
+                                <div style="margin-bottom: 12px; color: #6b7280;">
+                                    <em>Zaključak još nije donesen. Predsjednik komisije će donijeti zaključak nakon što svi članovi ocjene prijavu.</em>
                                 </div>
                             @endif
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                                (Samo predsjednik komisije može donijeti zaključak)
-                            </div>
                         </div>
                     @endif
                 </div>
@@ -572,11 +671,120 @@
                 <!-- 6. Ostale napomene -->
                 <div class="form-section">
                     <label class="form-label form-label-large">6. Ostale napomene:</label>
-                    <textarea 
-                        name="notes" 
-                        class="form-control" 
-                        rows="6" 
-                        placeholder="Unesite dodatne napomene...">{{ old('notes', $existingScore?->notes) }}</textarea>
+                    
+                    @php
+                        // Prikupi napomene svih članova koji su ih dali, zadržavajući redoslijed iz $allMembers
+                        // $allMembers je već sortiran tako da predsjednik bude prvi, zatim ostali članovi po redoslijedu
+                        $membersWithNotes = [];
+                        
+                        // Prvo dodaj predsjednika ako ima napomenu
+                        // Eksplicitno pronađi predsjednika iz sortirane kolekcije
+                        $chairman = null;
+                        foreach($allMembers as $member) {
+                            if ($member->position === 'predsjednik') {
+                                $chairman = $member;
+                                break;
+                            }
+                        }
+                        
+                        if ($chairman) {
+                            $chairmanScore = $allScores->get($chairman->id);
+                            if ($chairmanScore && $chairmanScore->notes && trim($chairmanScore->notes) !== '') {
+                                $membersWithNotes[] = [
+                                    'member' => $chairman,
+                                    'notes' => $chairmanScore->notes,
+                                    'isChairman' => true
+                                ];
+                            }
+                        }
+                        
+                        // Zatim dodaj ostale članove po redoslijedu iz $allMembers
+                        foreach($allMembers as $member) {
+                            if ($member->position !== 'predsjednik') {
+                                $memberScore = $allScores->get($member->id);
+                                if ($memberScore && $memberScore->notes && trim($memberScore->notes) !== '') {
+                                    $membersWithNotes[] = [
+                                        'member' => $member,
+                                        'notes' => $memberScore->notes,
+                                        'isChairman' => false
+                                    ];
+                                }
+                            }
+                        }
+                        
+                        // Eksplicitno sortiraj da osiguramo da predsjednik bude prvi
+                        usort($membersWithNotes, function($a, $b) {
+                            if ($a['isChairman'] && !$b['isChairman']) {
+                                return -1; // a je predsjednik, ide prvi
+                            } elseif (!$a['isChairman'] && $b['isChairman']) {
+                                return 1; // b je predsjednik, ide prvi
+                            }
+                            return 0; // zadrži redoslijed za ostale
+                        });
+                        
+                        // Provjeri da li je predsjednik zaključio prijavu
+                        $isDecisionMade = $application->commission_decision !== null;
+                        
+                        // Trenutni član može unijeti napomene dok predsjednik ne zaključi prijavu
+                        $canEditNotes = !$isDecisionMade;
+                    @endphp
+                    
+                    @php
+                        // Provjeri da li trenutni član već ima napomenu u listi
+                        $currentMemberHasNote = false;
+                        foreach($membersWithNotes as $note) {
+                            if ($note['member']->id === $commissionMember->id) {
+                                $currentMemberHasNote = true;
+                                break;
+                            }
+                        }
+                    @endphp
+                    
+                    @if(count($membersWithNotes) > 0)
+                        {{-- Prikaži napomene članova koji su ih dali --}}
+                        @foreach($membersWithNotes as $memberNote)
+                            <div style="margin-bottom: 20px;">
+                                <label class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                    @if($memberNote['member']->position === 'predsjednik')
+                                        Napomena Predsjednik komisije ({{ $memberNote['member']->name }})
+                                    @else
+                                        Napomene - {{ $memberNote['member']->name }}
+                                    @endif
+                                </label>
+                                @if($canEditNotes && $memberNote['member']->id === $commissionMember->id)
+                                    {{-- Trenutni član može editovati svoju napomenu --}}
+                                    <textarea 
+                                        name="notes" 
+                                        class="form-control" 
+                                        rows="6" 
+                                        placeholder="Unesite dodatne napomene...">{{ old('notes', $memberNote['notes']) }}</textarea>
+                                @else
+                                    {{-- Read-only prikaz za ostale članove --}}
+                                    <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap;">
+                                        {{ $memberNote['notes'] }}
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+                    @endif
+                    
+                    @if($canEditNotes && !$currentMemberHasNote)
+                        {{-- Polje za unos napomena ako trenutni član još nema napomenu --}}
+                        <div style="margin-top: {{ count($membersWithNotes) > 0 ? '20px' : '0' }};">
+                            <label class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                @if(isset($isChairman) && $isChairman)
+                                    Napomena Predsjednik komisije ({{ $commissionMember->name }})
+                                @else
+                                    Napomena Član komisije ({{ $commissionMember->name }})
+                                @endif
+                            </label>
+                            <textarea 
+                                name="notes" 
+                                class="form-control" 
+                                rows="6" 
+                                placeholder="Unesite dodatne napomene...">{{ old('notes', $existingScore?->notes) }}</textarea>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Potpisi -->
@@ -599,8 +807,41 @@
                 </div>
 
                 <div style="margin-top: 32px; text-align: center;">
-                    <button type="submit" class="btn-primary">Ocijeni</button>
-                    <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                    @php
+                        // Provjeri da li trenutni član može editovati napomene
+                        $isDecisionMade = $application->commission_decision !== null;
+                        $canEditNotesValue = !$isDecisionMade;
+                    @endphp
+                    
+                    @if($isChairman && $hasCompletedEvaluation)
+                        {{-- Predsjednik kada je već ocjenio - može mijenjati sekciju 2 --}}
+                        <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
+                        @if($allMembersEvaluated)
+                            {{-- Dugme za zaključak se prikazuje samo kada su svi članovi ocjenili --}}
+                            <a href="{{ route('evaluation.chairman-review', $application) }}" class="btn-primary" style="margin-left: 12px; text-decoration: none; display: inline-block;">
+                                Zaključak komisije
+                            </a>
+                        @endif
+                        <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                    @elseif($hasCompletedEvaluation && $canEditNotesValue && !$isChairman)
+                        {{-- Član koji je već ocjenio ali može editovati napomene --}}
+                        {{-- Ova provjera mora biti PRIJE provjere za sve ocjenjene --}}
+                        <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
+                        <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                    @elseif($hasCompletedEvaluation && $allMembersEvaluated)
+                        {{-- Kada su svi članovi ocjenili, ostali članovi vide formu u read-only modu --}}
+                        <div style="padding: 16px; background: #f0f9ff; border-radius: 8px; margin-bottom: 16px; border: 1px solid #0ea5e9;">
+                            <div style="color: #0c4a6e; font-weight: 600; margin-bottom: 8px;">
+                                ℹ️ Svi članovi komisije su ocjenili ovu prijavu. Forma je dostupna samo za pregled.
+                            </div>
+                        </div>
+                        <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
+                            Nazad na listu
+                        </a>
+                    @else
+                        <button type="submit" class="btn-primary">Ocijeni</button>
+                        <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                    @endif
                 </div>
             </form>
         </div>

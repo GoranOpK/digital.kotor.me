@@ -203,6 +203,18 @@
     .btn-edit:hover {
         background: var(--primary-dark);
     }
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 9999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .status-draft { background: #fef3c7; color: #92400e; }
+    .status-submitted { background: #dbeafe; color: #1e40af; }
+    .status-evaluated { background: #d1fae5; color: #065f46; }
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
 </style>
 
 @php
@@ -249,7 +261,7 @@
         </div>
 
         <!-- Alerts -->
-        @if (session('verified'))
+    @if (session('verified'))
             <div class="alert alert-success">
                 <strong>Uspješno!</strong> Vaša email adresa je verifikovana.
             </div>
@@ -340,49 +352,135 @@
                     <h2>Moje prijave</h2>
                     <a href="{{ route('competitions.index') }}" class="btn-edit">Novi</a>
                 </div>
-                @if(isset($applications) && $applications->count() > 0)
+                @php
+                    // Za članove komisije koristi $myApplications, za ostale $applications
+                    $myApplicationsList = isset($myApplications) ? $myApplications : (isset($applications) ? $applications : collect());
+                @endphp
+                @if($myApplicationsList->count() > 0)
                     <div style="overflow-y: auto; max-height: 350px;">
-                        @foreach($applications->take(5) as $app)
+                        @foreach($myApplicationsList->take(5) as $app)
                             <div style="padding: 12px 0; border-bottom: 1px solid #f3f4f6;">
-                                <div style="font-weight: 600; color: #111827; font-size: 13px;">{{ Str::limit($app->business_plan_name, 25) }}</div>
+                                <div style="font-weight: 600; color: #111827; font-size: 13px;">{{ Str::limit($app->business_plan_name ?? 'Bez naziva', 25) }}</div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
                                     @php
                                         $statusLabels = ['draft' => 'Nacrt', 'submitted' => 'U obradi', 'evaluated' => 'Ocjenjena', 'approved' => 'Odobrena', 'rejected' => 'Odbijena'];
                                         $statusColors = ['draft' => 'background: #fef3c7; color: #92400e;', 'submitted' => 'background: #dbeafe; color: #1e40af;', 'evaluated' => 'background: #d1fae5; color: #065f46;', 'approved' => 'background: #d1fae5; color: #065f46;', 'rejected' => 'background: #fee2e2; color: #991b1b;'];
+
+                                        // Badge stil
+                                        $badgeBaseStyle = 'display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; margin-right: 4px;';
+
+                                        // 1) Status Obrasca 1a/1b
+                                        $obrazacLabel = null;
+                                        $obrazacStyle = '';
+                                        $obrazacUrl = null;
+                                        if ($app->applicant_type) {
+                                            $isObrazacComplete = $app->isObrazacComplete();
+
+                                            if ($isObrazacComplete) {
+                                                // Obrazac je kompletan
+                                                if ($app->applicant_type === 'preduzetnica') {
+                                                    $obrazacLabel = 'Obrazac 1a popunjen';
+                                                    $obrazacStyle = 'background: #d1fae5; color: #065f46;';
+                                                } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
+                                                    $obrazacLabel = 'Obrazac 1b popunjen';
+                                                    $obrazacStyle = 'background: #d1fae5; color: #065f46;';
+                                                }
+                                                // Klik na badge vodi direktno na popunjen obrazac (formu prijave sa application_id kao query parametar)
+                                                $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
+                                            } else {
+                                                // Obrazac nije kompletan (nacrt)
+                                                if ($app->applicant_type === 'preduzetnica') {
+                                                    $obrazacLabel = 'Obrazac 1a - Nacrt';
+                                                    $obrazacStyle = 'background: #fef3c7; color: #92400e;';
+                                                } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
+                                                    $obrazacLabel = 'Obrazac 1b - Nacrt';
+                                                    $obrazacStyle = 'background: #fef3c7; color: #92400e;';
+                                                }
+                                                // Klik na badge vodi na nastavak popunjavanja Obrasca 1a/1b
+                                                $obrazacUrl = route('applications.create', $app->competition_id);
+                                            }
+                                        }
+
+                                        // 2) Status biznis plana
+                                        $bizPlanLabel = null;
+                                        $bizPlanStyle = '';
+                                        $bizPlanUrl = null;
+                                        if ($app->businessPlan) {
+                                            if ($app->businessPlan->isComplete()) {
+                                                $bizPlanLabel = 'Biznis plan – popunjen';
+                                                $bizPlanStyle = 'background: #d1fae5; color: #065f46;';
+                                            } else {
+                                                $bizPlanLabel = 'Biznis plan – nacrt';
+                                                $bizPlanStyle = 'background: #fef3c7; color: #92400e;';
+                                            }
+                                            // Klik na badge uvijek vodi na formu biznis plana (nastavak ili pregled)
+                                            $bizPlanUrl = route('applications.business-plan.create', $app);
+                                        }
                                     @endphp
-                                    <span style="display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; {{ $statusColors[$app->status] ?? '' }}">
-                                        {{ $statusLabels[$app->status] ?? $app->status }}
-                                    </span>
-                                    <div style="display: flex; gap: 8px;">
-                                        <a href="{{ route('applications.show', $app) }}" style="color: var(--primary); font-weight: 600; text-decoration: none; font-size: 12px;">Pregled</a>
-                                        <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Obrisati prijavu?');" style="display: inline;">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" style="background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; font-size: 12px; padding: 0;">Obriši</button>
-                                        </form>
+
+                                    <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                                        {{-- Badge za Obrazac 1a/1b (klikabilan) --}}
+                                        @if($obrazacLabel && $obrazacUrl)
+                                            <a href="{{ $obrazacUrl }}" style="{{ $badgeBaseStyle }} {{ $obrazacStyle }} text-decoration: none; cursor: pointer;">
+                                                {{ $obrazacLabel }}
+                                            </a>
+                                        @endif
+
+                                        {{-- Badge za Biznis plan, ako postoji biznis plan (klikabilan) --}}
+                                        @if($bizPlanLabel && $bizPlanUrl)
+                                            <a href="{{ $bizPlanUrl }}" style="{{ $badgeBaseStyle }} {{ $bizPlanStyle }} text-decoration: none; cursor: pointer;">
+                                                {{ $bizPlanLabel }}
+                                            </a>
+                                        @endif
+
+                                        {{-- Ako nema specifičnih bedžova, prikaži opšti status --}}
+                                        @if(!$obrazacLabel && !$bizPlanLabel)
+                                            <span style="{{ $badgeBaseStyle }} {{ $statusColors[$app->status] ?? '' }}">
+                                                {{ $statusLabels[$app->status] ?? $app->status }}
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                                        <div style="display: flex; gap: 8px; align-items: center;">
+                                            {{-- Badge \"Status prijave\" kao link na prikaz prijave --}}
+                                            <a href="{{ route('applications.show', $app) }}"
+                                               style="display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; background: #e5e7eb; color: #111827; text-decoration: none;">
+                                                Status prijave
+                                            </a>
+                                            <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Obrisati prijavu?');" style="display: inline;">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" style="background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; font-size: 12px; padding: 0;">Obriši</button>
+                                            </form>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         @endforeach
-                        @if($applications->count() > 5)
-                            <p style="text-align: center; margin-top: 12px; font-size: 12px; color: #6b7280;">+ još {{ $applications->count() - 5 }} prijave</p>
+                        @if($myApplicationsList->count() > 5)
+                            <p style="text-align: center; margin-top: 12px; font-size: 12px; color: #6b7280;">+ još {{ $myApplicationsList->count() - 5 }} prijave</p>
                         @endif
                     </div>
                 @else
                     <div style="text-align: center; padding: 24px 0;">
                         <p style="color: #6b7280; font-size: 13px; margin-bottom: 12px;">Nemate aktivnih prijava.</p>
                         <a href="{{ route('competitions.index') }}" class="btn-edit" style="font-size: 12px;">Prijavi se</a>
-                    </div>
-                @endif
+            </div>
+            @endif
             </div>
         </div>
 
-        <!-- Brzi servisi (Plati, Tenderi) -->
+        <!-- Brzi servisi (Plati, Konkursi, Tenderi) -->
         <div style="margin-bottom: 24px;">
             <div class="services-grid" style="margin-top: 0;">
                 <a href="{{ route('payments.index') }}" class="service-card">
                     <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">₿</div>
                     <h3 style="font-size: 16px;">Online plaćanja</h3>
                     <p style="font-size: 12px;">Uplate komunalija, taksi i naknada.</p>
+                </a>
+                <a href="{{ route('competitions.index') }}" class="service-card">
+                    <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">🏆</div>
+                    <h3 style="font-size: 16px;">Konkursi</h3>
+                    <p style="font-size: 12px;">Prijave na konkurse za podršku preduzetništvu.</p>
                 </a>
                 <a href="{{ route('tenders.index') }}" class="service-card">
                     <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">§</div>
@@ -398,7 +496,7 @@
                 @endif
             </div>
         </div>
-        @endif
+    @endif
 
         <!-- Services - Super Admin (samo Administracija) -->
         @if ($isSuperAdmin)
@@ -454,7 +552,9 @@
                         @foreach($commission->competitions as $competition)
                             <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
                                 <h3 style="font-size: 18px; font-weight: 700; color: #111827; margin: 0 0 8px;">
-                                    {{ $competition->title }}
+                                    <a href="{{ route('admin.competitions.show', $competition) }}" style="color: var(--primary); text-decoration: none;">
+                                        {{ $competition->title }}
+                                    </a>
                                 </h3>
                                 <div class="info-grid" style="grid-template-columns: 1fr; gap: 8px; margin-top: 12px;">
                                     <div class="info-item">
@@ -484,6 +584,11 @@
                                         </span>
                                     </div>
                                 </div>
+                                <div style="margin-top: 12px;">
+                                    <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-edit" style="font-size: 12px; padding: 6px 12px; display: inline-block;">
+                                        Pregled konkursa
+                                    </a>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -506,27 +611,119 @@
                 <div class="info-card-header">
                     <h2>Prijave za ocjenjivanje</h2>
                 </div>
-                <div style="padding: 20px;">
-                    @foreach($applications as $application)
-                        <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
-                            <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 8px;">
-                                <a href="{{ route('evaluation.show', $application) }}" style="color: var(--primary); text-decoration: none;">
-                                    {{ $application->business_plan_name ?? 'Naziv biznis plana' }}
-                                </a>
-                            </h3>
-                            <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;">
-                                Konkurs: {{ $application->competition->title ?? 'N/A' }}
-                            </p>
-                            <p style="color: #9ca3af; font-size: 12px; margin: 0 0 8px;">
-                                Podnosilac: {{ $application->user->name ?? 'N/A' }} | {{ $application->created_at->format('d.m.Y H:i') }}
-                            </p>
-                            <div style="display: flex; gap: 8px; margin-top: 8px;">
-                                <a href="{{ route('evaluation.show', $application) }}" class="btn-edit" style="font-size: 12px; padding: 6px 12px;">
-                                    Pregledaj prijavu
-                                </a>
-                            </div>
-                        </div>
-                    @endforeach
+                <div style="padding: 20px; overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e5e7eb;">
+                                <th style="padding: 12px; text-align: left;">Naziv biznis plana</th>
+                                <th style="padding: 12px; text-align: left;">Podnosilac</th>
+                                <th style="padding: 12px; text-align: left;">Status prijave</th>
+                                <th style="padding: 12px; text-align: left;">Obrazac</th>
+                                <th style="padding: 12px; text-align: left;">Biznis Plan</th>
+                                <th style="padding: 12px; text-align: left;">Datum podnošenja</th>
+                                <th style="padding: 12px; text-align: left;">Akcije</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($applications as $app)
+                                @php
+                                    $isObrazacComplete = $app->isObrazacComplete();
+                                    $statusLabels = [
+                                        'draft' => 'Nacrt',
+                                        'submitted' => 'U obradi',
+                                        'evaluated' => 'Ocjenjena',
+                                        'approved' => 'Odobrena',
+                                        'rejected' => 'Odbijena',
+                                    ];
+                                    $statusClass = 'status-' . $app->status;
+                                    
+                                    // Badge za Obrazac
+                                    $obrazacLabel = null;
+                                    $obrazacClass = 'status-draft';
+                                    $obrazacUrl = null;
+                                    if ($isObrazacComplete) {
+                                        if ($app->applicant_type === 'preduzetnica') {
+                                            $obrazacLabel = 'Obrazac 1a popunjen';
+                                            $obrazacClass = 'status-evaluated';
+                                        } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
+                                            $obrazacLabel = 'Obrazac 1b popunjen';
+                                            $obrazacClass = 'status-evaluated';
+                                        }
+                                        $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
+                                    } else {
+                                        if ($app->applicant_type === 'preduzetnica') {
+                                            $obrazacLabel = 'Obrazac 1a - Nacrt';
+                                        } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
+                                            $obrazacLabel = 'Obrazac 1b - Nacrt';
+                                        }
+                                        $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
+                                    }
+                                    
+                                    // Badge za Biznis Plan
+                                    $bizPlanLabel = null;
+                                    $bizPlanClass = 'status-draft';
+                                    $bizPlanUrl = null;
+                                    if ($app->businessPlan) {
+                                        if ($app->businessPlan->isComplete()) {
+                                            $bizPlanLabel = 'Biznis Plan - popunjen';
+                                            $bizPlanClass = 'status-evaluated';
+                                        } else {
+                                            $bizPlanLabel = 'Biznis Plan - nacrt';
+                                            $bizPlanClass = 'status-draft';
+                                        }
+                                        $bizPlanUrl = route('applications.business-plan.create', $app);
+                                    } elseif ($isObrazacComplete) {
+                                        $bizPlanLabel = 'Biznis Plan - nacrt';
+                                        $bizPlanClass = 'status-draft';
+                                        $bizPlanUrl = route('applications.business-plan.create', $app);
+                                    }
+                                    
+                                    // Provjeri da li je član komisije ocjenio prijavu
+                                    $isEvaluated = isset($app->is_evaluated_by_member) && $app->is_evaluated_by_member;
+                                @endphp
+                                <tr style="border-bottom: 1px solid #e5e7eb;">
+                                    <td style="padding: 12px; vertical-align: top;">{{ $app->business_plan_name }}</td>
+                                    <td style="padding: 12px; vertical-align: top;">{{ $app->user->name ?? 'N/A' }}</td>
+                                    <td style="padding: 12px; vertical-align: top;">
+                                        <span class="status-badge {{ $statusClass }}" style="font-size: 11px; padding: 3px 10px;">
+                                            {{ $statusLabels[$app->status] ?? $app->status }}
+                                        </span>
+                                    </td>
+                                    <td style="padding: 12px; vertical-align: top;">
+                                        @if($obrazacLabel && $obrazacUrl)
+                                            <a href="{{ $obrazacUrl }}" class="status-badge {{ $obrazacClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;">
+                                                {{ $obrazacLabel }}
+                                            </a>
+                                        @else
+                                            <span class="status-badge status-draft" style="font-size: 11px; padding: 3px 10px;">Nije popunjen</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding: 12px; vertical-align: top;">
+                                        @if($bizPlanLabel && $bizPlanUrl)
+                                            <a href="{{ $bizPlanUrl }}" class="status-badge {{ $bizPlanClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;">
+                                                {{ $bizPlanLabel }}
+                                            </a>
+                                        @else
+                                            <span class="status-badge status-draft" style="font-size: 11px; padding: 3px 10px;">Nije dostupan</span>
+                                        @endif
+                                    </td>
+                                    <td style="padding: 12px; vertical-align: top; font-size: 12px;">
+                                        {{ $app->submitted_at ? $app->submitted_at->format('d.m.Y H:i') : '-' }}
+                                    </td>
+                                    <td style="padding: 12px; vertical-align: top;">
+                                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                            <a href="{{ route('admin.applications.show', $app) }}" class="btn-edit" style="font-size: 12px; padding: 6px 12px; text-decoration: none;">
+                                                Pregled prijave
+                                            </a>
+                                            <a href="{{ route('evaluation.create', $app) }}" class="btn-edit" style="font-size: 12px; padding: 6px 12px; text-decoration: none; background: var(--primary); color: #fff;">
+                                                {{ $isEvaluated ? 'Pregledaj ocjenu' : 'Ocjeni' }}
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
             </div>
             @else
@@ -572,27 +769,27 @@
                         👥 Komisija
                     </a>
                 </div>
-            </div>
-        @endif
+        </div>
+    @endif
 
         <!-- Najnovije prijave (samo za članove komisije) -->
         @if(isset($recent_applications) && $isKomisija)
         <div class="info-card" style="margin-top: 24px;">
             <div class="info-card-header">
                 <h2>Najnovije prijave na konkurse</h2>
-            </div>
+                </div>
             <div style="padding: 20px;">
                 @forelse($recent_applications as $application)
                     <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
                         <p style="font-weight: 600; color: #111827; margin: 0 0 4px;">{{ $application->user->name ?? 'N/A' }}</p>
                         <p style="color: #6b7280; font-size: 14px; margin: 0 0 4px;">{{ $application->competition->title ?? 'N/A' }}</p>
                         <p style="color: #9ca3af; font-size: 12px; margin: 0;">{{ $application->created_at->format('d.m.Y H:i') }}</p>
-                    </div>
+                </div>
                 @empty
                     <p style="color: #6b7280; text-align: center; padding: 24px;">Nema prijava</p>
                 @endforelse
             </div>
-        </div>
+            </div>
         @endif
     </div>
 </div>

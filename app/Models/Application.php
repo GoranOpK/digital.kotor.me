@@ -29,6 +29,9 @@ class Application extends Model
         'website',
         'bank_account',
         'vat_number',
+        'pib',
+        'crps_number',
+        'registration_form',
         'de_minimis_declaration',
         'previous_support_declaration',
         'is_registered',
@@ -176,6 +179,57 @@ class Application extends Model
         $evaluationCount = $this->evaluationScores()->count();
 
         return $evaluationCount >= $activeMembersCount;
+    }
+
+    /**
+     * Proverava da li je Obrazac 1a/1b kompletno popunjen
+     * (sva obavezna polja + svi obavezni checkbox-ovi)
+     */
+    public function isObrazacComplete(): bool
+    {
+        // Proveri osnovna obavezna polja
+        if (!$this->business_plan_name || 
+            !$this->applicant_type || 
+            !$this->business_stage || 
+            !$this->business_area || 
+            !$this->requested_amount || 
+            !$this->total_budget_needed) {
+            return false;
+        }
+
+        // Proveri polja specifična za tip podnosioca
+        if ($this->applicant_type === 'fizicko_lice') {
+            if (!$this->physical_person_name || 
+                !$this->physical_person_jmbg || 
+                !$this->physical_person_phone || 
+                !$this->physical_person_email) {
+                return false;
+            }
+        } elseif ($this->applicant_type === 'doo' || $this->applicant_type === 'ostalo') {
+            if (!$this->founder_name || 
+                !$this->director_name || 
+                !$this->company_seat) {
+                return false;
+            }
+        }
+
+        // Proveri oblik registracije (obavezan za sve osim fizičkog lica)
+        if ($this->applicant_type !== 'fizicko_lice' && !$this->registration_form) {
+            return false;
+        }
+
+        // Proveri obavezne checkbox-ove
+        // de_minimis_declaration je obavezan za sve
+        if (!$this->de_minimis_declaration) {
+            return false;
+        }
+
+        // accuracy_declaration je obavezan samo za fizičko lice
+        if ($this->applicant_type === 'fizicko_lice' && !$this->accuracy_declaration) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

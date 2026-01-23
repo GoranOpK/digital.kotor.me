@@ -321,7 +321,9 @@
         @endif
 
         @php
-            $showUpload = ($application->status === 'draft' || $application->status === 'submitted');
+            $canManage = $canManage ?? false;
+            // Upload i izmjene su dozvoljeni samo vlasniku prijave
+            $showUpload = $canManage && ($application->status === 'draft' || $application->status === 'submitted');
             // Ako ne prikazujemo upload, grid ide na 2 kolone, inače na 3 (iste širine)
             $gridColumnsStyle = $showUpload ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)';
         @endphp
@@ -355,43 +357,6 @@
                         <span class="info-label">Oblast biznisa</span>
                         <span class="info-value">{{ $application->business_area }}</span>
                     </div>
-                    <div class="info-item">
-                        <span class="info-label">Registrovana djelatnost</span>
-                        <span class="info-value">
-                            @if($application->is_registered)
-                                <span style="color: #10b981;">✓ Da</span>
-                            @else
-                                <span style="color: #f59e0b;">✗ Ne</span>
-                            @endif
-                        </span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Traženi iznos</span>
-                        <span class="info-value">{{ number_format($application->requested_amount, 2, ',', '.') }} €</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Ukupan budžet</span>
-                        <span class="info-value">{{ number_format($application->total_budget_needed, 2, ',', '.') }} €</span>
-                    </div>
-                    @if($application->approved_amount)
-                    <div class="info-item">
-                        <span class="info-label">Odobreni iznos</span>
-                        <span class="info-value">{{ number_format($application->approved_amount, 2, ',', '.') }} €</span>
-                    </div>
-                    @endif
-                </div>
-            </div>
-                        <div class="info-item">
-                            <span class="info-label">Faza biznisa</span>
-                            <span class="info-value">
-                                {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
-                            </span>
-                        </div>
-                        <div class="info-item">
-                            <span class="info-label">Oblast biznisa</span>
-                            <span class="info-value">{{ $application->business_area }}</span>
-                        </div>
-                    @endif
                     <div class="info-item">
                         <span class="info-label">Registrovana djelatnost</span>
                         <span class="info-value">
@@ -506,14 +471,75 @@
                         </span>
                     </div>
                     <div class="info-item" style="margin-bottom: 16px;">
+                        <span class="info-label">Obrazac 1a/1b</span>
+                        <span class="info-value">
+                            @php
+                                $isObrazacComplete = $application->isObrazacComplete();
+                                $obrazacLabel = null;
+                                $obrazacClass = 'status-draft';
+                                $obrazacUrl = null;
+                                if ($isObrazacComplete) {
+                                    if ($application->applicant_type === 'preduzetnica') {
+                                        $obrazacLabel = 'Obrazac 1a popunjen';
+                                        $obrazacClass = 'status-evaluated';
+                                    } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
+                                        $obrazacLabel = 'Obrazac 1b popunjen';
+                                        $obrazacClass = 'status-evaluated';
+                                    }
+                                    // Klik na badge vodi direktno na popunjen obrazac (formu prijave sa application_id kao query parametar)
+                                    $obrazacUrl = route('applications.create', $application->competition_id) . '?application_id=' . $application->id;
+                                } else {
+                                    // Obrazac nije kompletan - prikaži nacrt prema tipu
+                                    if ($application->applicant_type === 'preduzetnica') {
+                                        $obrazacLabel = 'Obrazac 1a - Nacrt';
+                                    } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
+                                        $obrazacLabel = 'Obrazac 1b - Nacrt';
+                                    }
+                                    // Klik na badge vodi na nastavak popunjavanja Obrasca 1a/1b
+                                    $obrazacUrl = route('applications.create', $application->competition_id) . '?application_id=' . $application->id;
+                                }
+                            @endphp
+                            @if($obrazacLabel)
+                                <a href="{{ $obrazacUrl }}" class="status-badge {{ $obrazacClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                    {{ $obrazacLabel }}
+                                </a>
+                            @else
+                                <span class="status-badge status-draft" style="font-size: 12px; padding: 4px 12px;">Nije popunjen</span>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 16px;">
                         <span class="info-label">Biznis Plan</span>
                         <span class="info-value">
-                            @if($application->businessPlan)
-                                <span style="color: #10b981; font-weight: 600;">✅ Popunjen</span>
-                                <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Uredi</a>
+                            @php
+                                // Proveri da li je Obrazac kompletno popunjen koristeći metodu iz modela
+                                $isObrazacComplete = $application->isObrazacComplete();
+                                $bizPlanLabel = null;
+                                $bizPlanClass = 'status-draft';
+                                
+                                if ($application->businessPlan) {
+                                    if ($application->businessPlan->isComplete()) {
+                                        $bizPlanLabel = 'Biznis Plan - popunjen';
+                                        $bizPlanClass = 'status-evaluated';
+                                    } else {
+                                        $bizPlanLabel = 'Biznis Plan - nacrt';
+                                        $bizPlanClass = 'status-draft';
+                                    }
+                                } elseif ($isObrazacComplete) {
+                                    // Obrazac je kompletan, ali biznis plan ne postoji - može da krene da popunjava
+                                    $bizPlanLabel = 'Biznis Plan - nacrt';
+                                    $bizPlanClass = 'status-draft';
+                                }
+                            @endphp
+                            @if($bizPlanLabel)
+                                <a href="{{ route('applications.business-plan.create', $application) }}" class="status-badge {{ $bizPlanClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                    {{ $bizPlanLabel }}
+                                </a>
                             @else
-                                <span style="color: #ef4444; font-weight: 600;">❌ Nije popunjen</span>
-                                <a href="{{ route('applications.business-plan.create', $application) }}" style="color: #3b82f6; font-size: 12px; margin-left: 8px;">Popuni</a>
+                                <span class="status-badge status-draft" style="font-size: 12px; padding: 4px 12px;">
+                                    Nije dostupan
+                                </span>
+                                <span style="color: #6b7280; font-size: 11px; margin-left: 8px;">Popunite Obrazac 1a/1b prvo</span>
                             @endif
                         </span>
                     </div>
@@ -523,7 +549,7 @@
                             {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}
                         </span>
                     </div>
-                    @if($application->status === 'draft')
+                    @if($application->status === 'draft' && $canManage)
                         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
                             @if($isReadyToSubmit)
                                 <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Podnijeti prijavu?');">
@@ -620,20 +646,26 @@
                         </div>
                         <div class="document-actions">
                             @if($uploaded && $doc)
-                                <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" 
-                                   class="btn btn-secondary">
-                                    Preuzmi
+                                <a href="{{ route('applications.document.view', ['application' => $application, 'document' => $doc]) }}" 
+                                   class="btn btn-secondary" target="_blank" style="margin-right: 4px;">
+                                    Pogledaj
                                 </a>
-                                <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $doc]) }}" 
-                                      method="POST" 
-                                      style="display: inline;" 
-                                      onsubmit="return confirm('Da li ste sigurni da želite da uklonite ovaj dokument iz prijave?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger" style="padding: 8px 12px;">
-                                        Ukloni
-                                    </button>
-                                </form>
+                                @if(auth()->id() === $application->user_id)
+                                    <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" 
+                                       class="btn btn-secondary" style="margin-right: 4px;">
+                                        Preuzmi
+                                    </a>
+                                    <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $doc]) }}" 
+                                          method="POST" 
+                                          style="display: inline;" 
+                                          onsubmit="return confirm('Da li ste sigurni da želite da uklonite ovaj dokument iz prijave?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger" style="padding: 8px 12px;">
+                                            Ukloni
+                                        </button>
+                                    </form>
+                                @endif
                             @endif
                         </div>
                     </li>
@@ -708,26 +740,33 @@
             <a href="{{ route('competitions.show', $application->competition) }}" class="btn btn-secondary">
                 Nazad na konkurs
             </a>
-            @if($application->status === 'draft')
+            @if($application->status === 'draft' && $canManage)
+                @php
+                    // Proveri da li je Obrazac kompletno popunjen koristeći metodu iz modela
+                    $isObrazacComplete = $application->isObrazacComplete();
+                @endphp
                 @if($application->businessPlan)
                     <a href="{{ route('applications.business-plan.create', $application) }}" class="btn btn-primary" style="margin-left: 8px;">
                         Uredi biznis plan
                     </a>
-                @else
+                @elseif($isObrazacComplete)
                     <a href="{{ route('applications.business-plan.create', $application) }}" class="btn btn-primary" style="margin-left: 8px;">
                         Popuni biznis plan
                     </a>
+                @else
+                    <span style="color: #6b7280; font-size: 12px; margin-left: 8px; display: inline-block;">Popunite Obrazac 1a/1b prvo</span>
                 @endif
             @endif
             
-            <form action="{{ route('applications.destroy', $application) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu prijavu? Svi podaci o biznis planu i priloženi dokumenti će biti uklonjeni.');">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn btn-danger" style="margin-left: 8px;">
-                    Obriši prijavu
-                </button>
-            </form>
-        </div>
+            @if($canManage)
+                <form action="{{ route('applications.destroy', $application) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu prijavu? Svi podaci o biznis planu i priloženi dokumenti će biti uklonjeni.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn btn-danger" style="margin-left: 8px;">
+                        Obriši prijavu
+                    </button>
+                </form>
+            @endif
     </div>
 </div>
 

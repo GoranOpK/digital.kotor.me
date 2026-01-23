@@ -47,7 +47,7 @@
         border-bottom: 2px solid #e5e7eb;
     }
     .form-group {
-        margin-bottom: 20px;
+        margin-bottom: 16px;
     }
     .form-label {
         display: block;
@@ -62,16 +62,22 @@
     }
     .form-control {
         width: 100%;
-        padding: 10px 14px;
+        padding: 8px 12px;
         border: 1px solid #d1d5db;
-        border-radius: 8px;
+        border-radius: 6px;
         font-size: 14px;
         transition: border-color 0.2s;
         font-family: inherit;
     }
     textarea.form-control {
-        min-height: 120px;
+        min-height: 80px;
         resize: vertical;
+    }
+    textarea.form-control[rows="2"] {
+        min-height: 60px;
+    }
+    textarea.form-control[rows="1"] {
+        min-height: 40px;
     }
     .form-control:focus {
         outline: none;
@@ -227,7 +233,17 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('applications.business-plan.store', $application) }}" id="businessPlanForm">
+        @php
+            $readOnly = $readOnly ?? false;
+        @endphp
+
+        @if($readOnly)
+            <div class="alert alert-info" style="margin-bottom: 24px; padding: 16px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; color: #92400e;">
+                <strong>Pregled prijave:</strong> Ovo je pregled Biznis plana, ne možete mijenjati podatke.
+            </div>
+        @endif
+
+        <form method="POST" action="{{ $readOnly ? '#' : route('applications.business-plan.store', $application) }}" id="businessPlanForm" @if($readOnly) onsubmit="event.preventDefault(); return false;" @endif>
             @csrf
 
             <!-- I. OSNOVNI PODACI -->
@@ -259,28 +275,28 @@
                         <label class="form-label">
                             2. Podaci o podnosiocu biznis plana: <span class="required">*</span>
                         </label>
-                        <div class="form-row">
+                        <div class="form-row" style="grid-template-columns: repeat(3, 1fr);">
                             <div class="form-group">
                                 <label class="form-label">Ime i prezime:</label>
-                                <input type="text" name="applicant_name" class="form-control" value="{{ old('applicant_name', $businessPlan->applicant_name ?? '') }}" required>
+                                <input type="text" name="applicant_name" class="form-control" value="{{ old('applicant_name', $businessPlan->applicant_name ?? ($defaultData['applicant_name'] ?? '')) }}" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">JMBG:</label>
-                                <input type="text" name="applicant_jmbg" class="form-control" value="{{ old('applicant_jmbg', $businessPlan->applicant_jmbg ?? '') }}" required>
+                                <input type="text" name="applicant_jmbg" class="form-control" value="{{ old('applicant_jmbg', $businessPlan->applicant_jmbg ?? ($defaultData['applicant_jmbg'] ?? '')) }}" required>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Adresa:</label>
-                            <textarea name="applicant_address" class="form-control" rows="2" required>{{ old('applicant_address', $businessPlan->applicant_address ?? '') }}</textarea>
+                            <div class="form-group">
+                                <label class="form-label">Adresa:</label>
+                                <input type="text" name="applicant_address" class="form-control" value="{{ old('applicant_address', $businessPlan->applicant_address ?? ($defaultData['applicant_address'] ?? '')) }}" required>
+                            </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Kontakt telefon:</label>
-                                <input type="text" name="applicant_phone" class="form-control" value="{{ old('applicant_phone', $businessPlan->applicant_phone ?? '') }}" required>
+                                <input type="text" name="applicant_phone" class="form-control" value="{{ old('applicant_phone', $businessPlan->applicant_phone ?? ($defaultData['applicant_phone'] ?? '')) }}" required>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">E-mail:</label>
-                                <input type="email" name="applicant_email" class="form-control" value="{{ old('applicant_email', $businessPlan->applicant_email ?? '') }}" required>
+                                <input type="email" name="applicant_email" class="form-control" value="{{ old('applicant_email', $businessPlan->applicant_email ?? ($defaultData['applicant_email'] ?? '')) }}" required>
                             </div>
                         </div>
                     </div>
@@ -291,11 +307,11 @@
                         </label>
                         <div class="radio-group">
                             <div class="radio-option">
-                                <input type="radio" name="has_registered_business" value="1" id="has_business_yes" {{ old('has_registered_business', $businessPlan->has_registered_business ?? false) ? 'checked' : '' }} onchange="toggleRegisteredBusinessFields()">
+                                <input type="radio" name="has_registered_business" value="1" id="has_business_yes" {{ old('has_registered_business', $businessPlan->has_registered_business ?? ($defaultData['has_registered_business'] ?? false)) ? 'checked' : '' }} onchange="toggleRegisteredBusinessFields()">
                                 <label for="has_business_yes">Da</label>
                             </div>
                             <div class="radio-option">
-                                <input type="radio" name="has_registered_business" value="0" id="has_business_no" {{ old('has_registered_business') === '0' || ($businessPlan && !$businessPlan->has_registered_business) ? 'checked' : '' }} onchange="toggleRegisteredBusinessFields()">
+                                <input type="radio" name="has_registered_business" value="0" id="has_business_no" {{ old('has_registered_business') === '0' || (($businessPlan && !$businessPlan->has_registered_business) || (!isset($defaultData['has_registered_business']) || !$defaultData['has_registered_business'])) ? 'checked' : '' }} onchange="toggleRegisteredBusinessFields()">
                                 <label for="has_business_no">Ne</label>
                             </div>
                         </div>
@@ -304,33 +320,33 @@
                         </div>
                     </div>
 
-                    <div id="registeredBusinessFields" class="conditional-field {{ old('has_registered_business', $businessPlan->has_registered_business ?? false) ? 'show' : '' }}">
+                    <div id="registeredBusinessFields" class="conditional-field {{ old('has_registered_business', $businessPlan->has_registered_business ?? ($defaultData['has_registered_business'] ?? false)) ? 'show' : '' }}">
                         <div class="form-group">
                             <label class="form-label">
                                 4. Podaci o registrovanoj djelatnosti:
                             </label>
                             <div class="form-group">
                                 <label class="form-label">Oblik registracije:</label>
-                                <input type="text" name="registration_form" class="form-control" value="{{ old('registration_form', $businessPlan->registration_form ?? '') }}" placeholder="Preduzetnik / DOO / itd.">
+                                <input type="text" name="registration_form" id="registration_form" class="form-control" value="{{ old('registration_form', $businessPlan->registration_form ?? ($defaultData['registration_form'] ?? '')) }}" placeholder="Preduzetnik / DOO / itd.">
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nosioca biznisa* i naziv društva za oblik registracije "DOO":</label>
+                                <label class="form-label" id="company_name_label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nosioca biznisa* i naziv društva za oblik registracije "DOO":</label>
                                 <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $businessPlan->company_name ?? '') }}">
                                 <div class="form-text">*Nosioc biznisa je vlasnica ili jedna od vlasnika i izvršna direktorica društva</div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">PIB:</label>
-                                    <input type="text" name="pib" class="form-control" value="{{ old('pib', $businessPlan->pib ?? '') }}">
+                                    <input type="text" name="pib" class="form-control" value="{{ old('pib', $businessPlan->pib ?? ($defaultData['pib'] ?? '')) }}">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Broj PDV registracije (ukoliko ste PDV obveznik):</label>
-                                    <input type="text" name="vat_number" class="form-control" value="{{ old('vat_number', $businessPlan->vat_number ?? '') }}">
+                                    <input type="text" name="vat_number" class="form-control" value="{{ old('vat_number', $businessPlan->vat_number ?? ($defaultData['vat_number'] ?? '')) }}">
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Adresa/sjedište:</label>
-                                <textarea name="company_address" class="form-control" rows="2">{{ old('company_address', $businessPlan->company_address ?? '') }}</textarea>
+                                <textarea name="company_address" class="form-control" rows="1" style="min-height: 40px;">{{ old('company_address', $businessPlan->company_address ?? '') }}</textarea>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -345,11 +361,11 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">Website:</label>
-                                    <input type="text" name="company_website" class="form-control" value="{{ old('company_website', $businessPlan->company_website ?? '') }}">
+                                    <input type="text" name="company_website" class="form-control" value="{{ old('company_website', $businessPlan->company_website ?? ($defaultData['company_website'] ?? '')) }}">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Broj žiro računa i naziv banke:</label>
-                                    <input type="text" name="bank_account" class="form-control" value="{{ old('bank_account', $businessPlan->bank_account ?? '') }}">
+                                    <input type="text" name="bank_account" class="form-control" value="{{ old('bank_account', $businessPlan->bank_account ?? ($defaultData['bank_account'] ?? '')) }}">
                                 </div>
                             </div>
                         </div>
@@ -398,7 +414,18 @@
                                 </thead>
                                 <tbody id="productsServicesTableBody">
                                     @php
-                                        $productsServices = old('products_services_table', $businessPlan->products_services_table ?? [['product' => '', 'description' => '']]);
+                                        // Osiguraj da se učitaju svi podaci iz baze
+                                        $productsServices = old('products_services_table');
+                                        if ($productsServices === null && isset($businessPlan) && $businessPlan->products_services_table) {
+                                            $productsServices = $businessPlan->products_services_table;
+                                        }
+                                        if (empty($productsServices)) {
+                                            $productsServices = [['product' => '', 'description' => '']];
+                                        }
+                                        // Osiguraj da je array
+                                        if (!is_array($productsServices)) {
+                                            $productsServices = [['product' => '', 'description' => '']];
+                                        }
                                     @endphp
                                     @foreach($productsServices as $index => $item)
                                         <tr>
@@ -543,7 +570,18 @@
                                 </thead>
                                 <tbody id="pricingTableBody">
                                     @php
-                                        $pricing = old('pricing_table', $businessPlan->pricing_table ?? [['product' => '', 'price' => '']]);
+                                        // Osiguraj da se učitaju svi podaci iz baze
+                                        $pricing = old('pricing_table');
+                                        if ($pricing === null && isset($businessPlan) && $businessPlan->pricing_table) {
+                                            $pricing = $businessPlan->pricing_table;
+                                        }
+                                        if (empty($pricing)) {
+                                            $pricing = [['product' => '', 'price' => '']];
+                                        }
+                                        // Osiguraj da je array
+                                        if (!is_array($pricing)) {
+                                            $pricing = [['product' => '', 'price' => '']];
+                                        }
                                     @endphp
                                     @foreach($pricing as $index => $item)
                                         <tr>
@@ -576,7 +614,18 @@
                                 </thead>
                                 <tbody id="revenueShareTableBody">
                                     @php
-                                        $revenueShare = old('revenue_share_table', $businessPlan->revenue_share_table ?? [['product' => '', 'share' => '']]);
+                                        // Osiguraj da se učitaju svi podaci iz baze
+                                        $revenueShare = old('revenue_share_table');
+                                        if ($revenueShare === null && isset($businessPlan) && $businessPlan->revenue_share_table) {
+                                            $revenueShare = $businessPlan->revenue_share_table;
+                                        }
+                                        if (empty($revenueShare)) {
+                                            $revenueShare = [['product' => '', 'share' => '']];
+                                        }
+                                        // Osiguraj da je array
+                                        if (!is_array($revenueShare)) {
+                                            $revenueShare = [['product' => '', 'share' => '']];
+                                        }
                                     @endphp
                                     @foreach($revenueShare as $index => $item)
                                         <tr>
@@ -751,7 +800,18 @@
                                 </thead>
                                 <tbody id="suppliersTableBody">
                                     @php
-                                        $suppliers = old('suppliers_table', $businessPlan->suppliers_table ?? [['item' => '', 'supplier' => '']]);
+                                        // Osiguraj da se učitaju svi podaci iz baze
+                                        $suppliers = old('suppliers_table');
+                                        if ($suppliers === null && isset($businessPlan) && $businessPlan->suppliers_table) {
+                                            $suppliers = $businessPlan->suppliers_table;
+                                        }
+                                        if (empty($suppliers)) {
+                                            $suppliers = [['item' => '', 'supplier' => '']];
+                                        }
+                                        // Osiguraj da je array
+                                        if (!is_array($suppliers)) {
+                                            $suppliers = [['item' => '', 'supplier' => '']];
+                                        }
                                     @endphp
                                     @foreach($suppliers as $index => $item)
                                         <tr>
@@ -786,7 +846,7 @@
                         <label class="form-label">
                             21. Koliki iznos sredstava Vam je potreban za realizaciju biznis ideje?
                         </label>
-                        <input type="number" name="required_amount" class="form-control" value="{{ old('required_amount', $businessPlan->required_amount ?? '') }}" step="0.01" min="0" placeholder="0.00">
+                        <input type="number" name="required_amount" class="form-control" value="{{ old('required_amount', $businessPlan->required_amount ?? $defaultData['required_amount'] ?? '') }}" step="0.01" min="0" placeholder="0.00">
                     </div>
 
                     <div class="form-group">
@@ -795,7 +855,7 @@
                         </label>
                         <div class="form-group">
                             <label class="form-label">Iznos podrške:</label>
-                            <input type="number" name="requested_amount" class="form-control" value="{{ old('requested_amount', $businessPlan->requested_amount ?? '') }}" step="0.01" min="0" placeholder="0.00">
+                            <input type="number" name="requested_amount" class="form-control" value="{{ old('requested_amount', $businessPlan->requested_amount ?? $defaultData['requested_amount'] ?? '') }}" step="0.01" min="0" placeholder="0.00">
                         </div>
                         <table class="dynamic-table" id="fundingSourcesTable">
                             <thead>
@@ -808,7 +868,18 @@
                             </thead>
                             <tbody id="fundingSourcesTableBody">
                                 @php
-                                    $fundingSources = old('funding_sources_table', $businessPlan->funding_sources_table ?? [['type' => '', 'price' => '']]);
+                                    // Osiguraj da se učitaju svi podaci iz baze
+                                    $fundingSources = old('funding_sources_table');
+                                    if ($fundingSources === null && isset($businessPlan) && $businessPlan->funding_sources_table) {
+                                        $fundingSources = $businessPlan->funding_sources_table;
+                                    }
+                                    if (empty($fundingSources)) {
+                                        $fundingSources = [['type' => '', 'price' => '']];
+                                    }
+                                    // Osiguraj da je array
+                                    if (!is_array($fundingSources)) {
+                                        $fundingSources = [['type' => '', 'price' => '']];
+                                    }
                                 @endphp
                                 @foreach($fundingSources as $index => $item)
                                     <tr>
@@ -875,7 +946,18 @@
                             </thead>
                             <tbody id="revenueProjectionTableBody">
                                 @php
-                                    $revenueProjection = old('revenue_projection', $businessPlan->revenue_projection ?? [['product' => '', 'year1' => '', 'year2' => '', 'year3' => '']]);
+                                    // Osiguraj da se učitaju svi podaci iz baze
+                                    $revenueProjection = old('revenue_projection');
+                                    if ($revenueProjection === null && isset($businessPlan) && $businessPlan->revenue_projection) {
+                                        $revenueProjection = $businessPlan->revenue_projection;
+                                    }
+                                    if (empty($revenueProjection)) {
+                                        $revenueProjection = [['product' => '', 'year1' => '', 'year2' => '', 'year3' => '']];
+                                    }
+                                    // Osiguraj da je array
+                                    if (!is_array($revenueProjection)) {
+                                        $revenueProjection = [['product' => '', 'year1' => '', 'year2' => '', 'year3' => '']];
+                                    }
                                 @endphp
                                 @foreach($revenueProjection as $index => $item)
                                     @php
@@ -1126,14 +1208,15 @@
             </div>
 
             <!-- Dugme za slanje -->
-            <div class="form-card" style="text-align: center;">
-                <button type="submit" class="btn-primary">
-                    Sačuvaj biznis plan
-                </button>
-                <p style="color: #6b7280; font-size: 14px; margin-top: 16px;">
-                    Nakon čuvanja biznis plana, možete priložiti potrebne dokumente.
-                </p>
-            </div>
+            @if(!$readOnly)
+                <div class="form-card" style="text-align: center;">
+                    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                        <button type="button" id="bpSubmitBtn" class="btn-primary" style="padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
+                            <span id="bpSubmitBtnText">Sačuvaj Nacrt plana</span>
+                        </button>
+                    </div>
+                </div>
+            @endif
         </form>
     </div>
 </div>
@@ -1153,7 +1236,40 @@ function addTableRow(tableBodyId, fieldNames) {
     const tbody = document.getElementById(tableBodyId);
     const row = document.createElement('tr');
     const rowIndex = tbody.children.length;
-    const tableName = tableBodyId.replace('TableBody', '').replace(/([A-Z])/g, '_$1').toLowerCase().substring(1);
+    
+    // Ispravljeno: Generiši pravilno ime tabele
+    let tableName = tableBodyId.replace('TableBody', '');
+    // Konvertuj camelCase u snake_case
+    tableName = tableName.replace(/([A-Z])/g, '_$1').toLowerCase();
+    // Ukloni vodeći underscore ako postoji
+    if (tableName.startsWith('_')) {
+        tableName = tableName.substring(1);
+    }
+    // Dodaj _table na kraj (osim za tabele koje već imaju drugačiji format)
+    // Mapa za konverziju imena tabela
+    const tableNameMap = {
+        'products_services': 'products_services_table',
+        'pricing': 'pricing_table',
+        'revenue_share': 'revenue_share_table',
+        'suppliers': 'suppliers_table',
+        'target_customers': 'target_customers',
+        'sales_locations': 'sales_locations',
+        'employment_structure': 'employment_structure',
+        'business_history': 'business_history',
+        'job_schedule': 'job_schedule',
+        'funding_sources': 'funding_sources_table',
+        'revenue_projection': 'revenue_projection',
+        'expense_projection': 'expense_projection'
+    };
+    // Ako postoji u mapi, koristi mapirano ime, inače dodaj _table
+    if (tableNameMap[tableName]) {
+        tableName = tableNameMap[tableName];
+    } else if (!tableName.endsWith('_table') && !tableName.includes('_')) {
+        tableName = tableName + '_table';
+    }
+    
+    // Debug log
+    console.log('Adding row to table:', tableBodyId, 'Table name:', tableName, 'Row index:', rowIndex);
     
     fieldNames.forEach(fieldName => {
         const cell = document.createElement('td');
@@ -1251,7 +1367,53 @@ function removeTableRow(button) {
         return;
     }
     
+    // Ne briši category-header redove
+    if (row.classList.contains('category-header')) {
+        return;
+    }
+    
+    const tbody = row.parentElement;
+    const category = row.getAttribute('data-category');
     row.remove();
+    
+    // Ažuriraj indekse svih preostalih redova nakon brisanja
+    // Za expense_projection tabele, ažuriraj samo redove u istoj kategoriji
+    if (category) {
+        // Ažuriraj indekse samo za redove u istoj kategoriji
+        const categoryRows = tbody.querySelectorAll(`tr[data-category="${category}"]`);
+        categoryRows.forEach((remainingRow, index) => {
+            const inputs = remainingRow.querySelectorAll('input[name], textarea[name]');
+            inputs.forEach(input => {
+                const name = input.name;
+                // Pronađi ime tabele i polje iz name atributa
+                const match = name.match(/^([^\[]+)\[\d+\]\[([^\]]+)\]$/);
+                if (match) {
+                    const tableName = match[1];
+                    const fieldName = match[2];
+                    // Ažuriraj indeks
+                    input.name = `${tableName}[${index}][${fieldName}]`;
+                }
+            });
+        });
+    } else {
+        // Za obične tabele, ažuriraj sve redove
+        const rows = tbody.querySelectorAll('tr:not(.category-header)');
+        rows.forEach((remainingRow, index) => {
+            const inputs = remainingRow.querySelectorAll('input[name], textarea[name]');
+            inputs.forEach(input => {
+                const name = input.name;
+                // Pronađi ime tabele i polje iz name atributa
+                const match = name.match(/^([^\[]+)\[\d+\]\[([^\]]+)\]$/);
+                if (match) {
+                    const tableName = match[1];
+                    const fieldName = match[2];
+                    // Ažuriraj indeks
+                    input.name = `${tableName}[${index}][${fieldName}]`;
+                }
+            });
+        });
+    }
+    
     // Ponovo izračunaj ukupno nakon brisanja reda
     calculateFundingTotal();
     calculateRevenueGrandTotal();
@@ -1437,9 +1599,220 @@ function addExpenseRow(category) {
 
 // Pozovi funkcije za računanje pri učitavanju stranice
 document.addEventListener('DOMContentLoaded', function() {
+    // Read-only mod - onemogući sva polja ako je readOnly = true
+    @if($readOnly ?? false)
+        const form = document.getElementById('businessPlanForm');
+        if (form) {
+            // Onemogući sva polja u formi (readonly za input/textarea, disabled za select i button)
+            const allFields = form.querySelectorAll('input, select, textarea');
+            allFields.forEach(field => {
+                if (field.type !== 'hidden' && field.type !== 'submit' && field.type !== 'button') {
+                    if (field.tagName === 'SELECT' || field.type === 'checkbox' || field.type === 'radio') {
+                        field.setAttribute('disabled', 'disabled');
+                    } else {
+                        field.setAttribute('readonly', 'readonly');
+                    }
+                    field.style.cursor = 'not-allowed';
+                    field.style.backgroundColor = '#f9fafb';
+                }
+            });
+            
+            // Sakrij sva dugmad za dodavanje redova
+            const addRowButtons = form.querySelectorAll('button[type="button"]');
+            addRowButtons.forEach(button => {
+                button.style.display = 'none';
+            });
+        }
+    @endif
+    
     calculateFundingTotal();
     calculateRevenueGrandTotal();
     calculateExpenseGrandTotal();
+
+    // Funkcionalnost za dinamičko dugme na formi biznis plana
+    const bpForm = document.getElementById('businessPlanForm');
+    const bpSubmitBtn = document.getElementById('bpSubmitBtn');
+    const bpSubmitBtnText = document.getElementById('bpSubmitBtnText');
+
+    // Obavezna polja koja treba provjeriti
+    const requiredFields = [
+        'business_idea_name',
+        'applicant_name',
+        'applicant_jmbg',
+        'applicant_address',
+        'applicant_phone',
+        'applicant_email',
+        'summary'
+    ];
+
+    // Funkcija za provjeru da li su sva obavezna polja popunjena
+    function checkRequiredFields() {
+        let allFilled = true;
+        
+        requiredFields.forEach(fieldName => {
+            const field = bpForm.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                const value = field.value ? field.value.trim() : '';
+                if (!value) {
+                    allFilled = false;
+                }
+            } else {
+                allFilled = false;
+            }
+        });
+        
+        return allFilled;
+    }
+
+    // Funkcija za ažuriranje teksta dugmeta i informacije
+    function updateSubmitButton() {
+        if (!bpForm || !bpSubmitBtn) return;
+        
+        const allFilled = checkRequiredFields();
+        
+        if (allFilled) {
+            // Ako su sva polja popunjena, prikaži "Sačuvaj Biznis plan"
+            bpSubmitBtnText.textContent = 'Sačuvaj Biznis plan';
+            bpSubmitBtn.className = 'btn-primary';
+            bpSubmitBtn.style.padding = '12px 24px';
+            bpSubmitBtn.style.fontSize = '14px';
+        } else {
+            // Ako nisu sva polja popunjena, prikaži "Sačuvaj Nacrt plana"
+            bpSubmitBtnText.textContent = 'Sačuvaj Nacrt plana';
+            bpSubmitBtn.className = 'btn-secondary';
+            bpSubmitBtn.style.padding = '12px 24px';
+            bpSubmitBtn.style.fontSize = '14px';
+        }
+    }
+
+    // Funkcija za rukovanje klikom na dugme (samo ako nije readOnly)
+    // Funkcija za re-indeksiranje svih name atributa u dinamičkim tabelama
+    function reindexTableRows() {
+        // Lista svih tabela koje treba re-indeksirati
+        const tableIds = [
+            'productsServicesTableBody',
+            'pricingTableBody',
+            'revenueShareTableBody',
+            'suppliersTableBody',
+            'targetCustomersTableBody',
+            'salesLocationsTableBody',
+            'employmentStructureTableBody',
+            'businessHistoryTableBody',
+            'jobScheduleTableBody',
+            'fundingSourcesTableBody',
+            'revenueProjectionTableBody',
+            'expenseProjectionTableBody'
+        ];
+        
+        tableIds.forEach(tableId => {
+            const tbody = document.getElementById(tableId);
+            if (!tbody) return;
+            
+            const rows = tbody.querySelectorAll('tr:not(.category-header)');
+            rows.forEach((row, index) => {
+                const inputs = row.querySelectorAll('input[name], textarea[name]');
+                inputs.forEach(input => {
+                    const name = input.name;
+                    // Pronađi ime tabele i polje iz name atributa
+                    const match = name.match(/^([^\[]+)\[\d+\]\[([^\]]+)\]$/);
+                    if (match) {
+                        const tableName = match[1];
+                        const fieldName = match[2];
+                        // Ažuriraj indeks
+                        input.name = `${tableName}[${index}][${fieldName}]`;
+                    }
+                });
+            });
+        });
+    }
+    
+    function handleSubmit(e) {
+        @if($readOnly ?? false)
+            e.preventDefault();
+            return false;
+        @endif
+        
+        e.preventDefault();
+        
+        // Re-indeksiraj sve name atribute prije slanja forme
+        reindexTableRows();
+        
+        const allFilled = checkRequiredFields();
+        
+        if (allFilled) {
+            // Ako su sva polja popunjena, ukloni save_as_draft i pošalji formu
+            const draftInput = bpForm.querySelector('input[name="save_as_draft"]');
+            if (draftInput) {
+                draftInput.remove();
+            }
+            bpForm.submit();
+        } else {
+            // Ako nisu sva polja popunjena, dodaj save_as_draft i ukloni required atribute
+            let draftInput = bpForm.querySelector('input[name="save_as_draft"]');
+            if (!draftInput) {
+                draftInput = document.createElement('input');
+                draftInput.type = 'hidden';
+                draftInput.name = 'save_as_draft';
+                draftInput.value = '1';
+                bpForm.appendChild(draftInput);
+            }
+
+            // Ukloni sve required atribute da bi se omogućilo delimično čuvanje
+            const requiredFieldsElements = bpForm.querySelectorAll('[required]');
+            requiredFieldsElements.forEach(field => {
+                field.removeAttribute('required');
+            });
+
+            bpForm.submit();
+        }
+    }
+
+    if (bpForm && bpSubmitBtn) {
+        @if(!($readOnly ?? false))
+        // Postavi event listener za klik (samo ako nije readOnly)
+        bpSubmitBtn.addEventListener('click', handleSubmit);
+        
+        // Postavi event listenere na sva obavezna polja za dinamičko ažuriranje
+        requiredFields.forEach(fieldName => {
+            const field = bpForm.querySelector(`[name="${fieldName}"]`);
+            if (field) {
+                field.addEventListener('input', updateSubmitButton);
+                field.addEventListener('change', updateSubmitButton);
+            }
+        });
+        
+        // Ažuriraj dugme pri učitavanju stranice
+        updateSubmitButton();
+        @endif
+        
+        // Dinamičko mijenjanje teksta labela za "company_name" u zavisnosti od "Oblika registracije"
+        const registrationFormInput = document.getElementById('registration_form');
+        const companyNameLabel = document.getElementById('company_name_label');
+        
+        function updateCompanyNameLabel() {
+            if (!registrationFormInput || !companyNameLabel) return;
+            
+            const registrationForm = registrationFormInput.value.trim().toLowerCase();
+            
+            if (registrationForm === 'preduzetnik') {
+                companyNameLabel.textContent = 'Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik":';
+            } else if (registrationForm !== '') {
+                // Za DOO ili ostale oblike registracije
+                companyNameLabel.textContent = 'Ime i prezime nosioca biznisa* i naziv društva za oblik registracije "' + registrationFormInput.value + '" ili ostali:';
+            } else {
+                // Default tekst ako nije ništa uneseno
+                companyNameLabel.textContent = 'Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nosioca biznisa* i naziv društva za oblik registracije "DOO":';
+            }
+        }
+        
+        // Ažuriraj label pri učitavanju stranice
+        if (registrationFormInput && companyNameLabel) {
+            updateCompanyNameLabel();
+            // Pratiti promjene u polju
+            registrationFormInput.addEventListener('input', updateCompanyNameLabel);
+            registrationFormInput.addEventListener('change', updateCompanyNameLabel);
+        }
+    }
 });
 </script>
 @endsection

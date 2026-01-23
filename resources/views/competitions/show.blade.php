@@ -307,6 +307,11 @@
 
 
         <!-- Akcije -->
+        @php
+            $userRole = auth()->check() ? (auth()->user()->role ? auth()->user()->role->name : null) : null;
+            $isCompetitionAdmin = $userRole === 'konkurs_admin';
+        @endphp
+        @if(!$isCompetitionAdmin)
         <div class="info-card" style="text-align: center;">
             @if($isOpen && !$userApplication && auth()->check())
                 <a href="{{ route('applications.create', $competition) }}" class="btn-primary">
@@ -325,6 +330,7 @@
                 <button class="btn-primary" disabled>Konkurs je zatvoren</button>
             @endif
         </div>
+        @endif
     </div>
 </div>
 @endsection

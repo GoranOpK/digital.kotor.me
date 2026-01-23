@@ -36,6 +36,32 @@
         width: 100%;
         box-sizing: border-box;
     }
+    .password-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .password-wrapper input {
+        padding-right: 40px;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #6b7280;
+        font-size: 18px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+    }
+    .password-toggle:hover {
+        color: #374151;
+    }
     .auth-actions {
         display: flex;
         align-items: center;
@@ -82,13 +108,18 @@
 
         <div class="auth-field">
             <label for="password">Šifra</label>
-            <input
-                id="password"
-                type="password"
-                name="password"
-                autocomplete="current-password"
-                required
-            >
+            <div class="password-wrapper">
+                <input
+                    id="password"
+                    type="password"
+                    name="password"
+                    autocomplete="current-password"
+                    required
+                >
+                <button type="button" class="password-toggle" onclick="togglePassword()" aria-label="Prikaži/Sakrij lozinku">
+                    <span id="password-toggle-icon">👁️</span>
+                </button>
+            </div>
         </div>
 
         <div class="auth-field" style="flex-direction: row; align-items: center; gap: 8px; margin-bottom: 8px;">
@@ -102,4 +133,19 @@
         </div>
     </form>
 </div>
+
+<script>
+    function togglePassword() {
+        const passwordInput = document.getElementById('password');
+        const toggleIcon = document.getElementById('password-toggle-icon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            toggleIcon.textContent = '🙈';
+        } else {
+            passwordInput.type = 'password';
+            toggleIcon.textContent = '👁️';
+        }
+    }
+</script>
 @endsection

@@ -28,9 +28,6 @@
                             </x-nav-link>
                         @endif
                         @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
-                            <x-nav-link :href="route('admin.competitions.index')" :active="request()->is('admin/competitions*')">
-                                Upravljanje konkursima
-                            </x-nav-link>
                             <x-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
                                 Arhiva konkursa
                             </x-nav-link>
@@ -46,7 +43,7 @@
                         @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
                             Administrator konkursa
                         @else
-                            {{ Auth::user()->name }}
+                        {{ Auth::user()->name }}
                         @endif
                     </span>
                     <form method="POST" action="{{ route('logout') }}" style="margin:0;">
@@ -106,9 +103,6 @@
                     </x-responsive-nav-link>
                 @endif
                 @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
-                    <x-responsive-nav-link :href="route('admin.competitions.index')" :active="request()->is('admin/competitions*')">
-                        Upravljanje konkursima
-                    </x-responsive-nav-link>
                     <x-responsive-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
                         Arhiva konkursa
                     </x-responsive-nav-link>
