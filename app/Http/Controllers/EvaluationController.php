@@ -203,6 +203,12 @@ class EvaluationController extends Controller
     {
         $user = Auth::user();
         
+        // DEBUG: Loguj početak metode
+        Log::info('=== DEBUG: EvaluationController@store START ===');
+        Log::info('Application ID: ' . $application->id);
+        Log::info('User ID: ' . $user->id);
+        Log::info('Request all: ' . json_encode($request->all()));
+        
         // Pronađi člana komisije
         $commissionMember = CommissionMember::where('user_id', $user->id)
             ->where('status', 'active')
@@ -219,9 +225,14 @@ class EvaluationController extends Controller
         
         $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
         
+        Log::info('Has completed evaluation: ' . ($hasCompletedEvaluation ? 'YES' : 'NO'));
+        
         // Provjeri da li je prijava zaključena
         $isDecisionMade = $application->commission_decision !== null;
         $isChairman = $commissionMember->position === 'predsjednik';
+        
+        Log::info('Is decision made: ' . ($isDecisionMade ? 'YES' : 'NO'));
+        Log::info('Is chairman: ' . ($isChairman ? 'YES' : 'NO'));
         
         // Ako je već ocjenio, zabrani izmjenu - OSIM ako je predsjednik (može mijenjati sekciju 2)
         // ILI ako nije zaključena prijava (tada članovi mogu mijenjati napomene)
@@ -472,35 +483,69 @@ class EvaluationController extends Controller
                 ->where('commission_member_id', $commissionMember->id)
                 ->first();
             
+            Log::info('=== DEBUG: Provjera za ažuriranje napomena ===');
+            Log::info('ExistingScoreForNotes exists: ' . ($existingScoreForNotes ? 'YES' : 'NO'));
+            Log::info('HasCompletedEvaluation: ' . ($hasCompletedEvaluation ? 'YES' : 'NO'));
+            Log::info('IsDecisionMadeForUpdate: ' . ($isDecisionMadeForUpdate ? 'YES' : 'NO'));
+            Log::info('IsChairman: ' . ($isChairman ? 'YES' : 'NO'));
+            
             if ($existingScoreForNotes && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
+                Log::info('=== ENTERING NOTES UPDATE BLOCK ===');
+                
                 // Ako je već ocjenio ali prijava nije zaključena i nije predsjednik, može ažurirati samo notes
                 // DEBUG: Loguj šta dolazi u request-u
                 Log::info('=== DEBUG: Ažuriranje napomena ===');
+                error_log('=== DEBUG: Ažuriranje napomena ===');
+                
                 Log::info('Request has notes: ' . ($request->has('notes') ? 'YES' : 'NO'));
+                error_log('Request has notes: ' . ($request->has('notes') ? 'YES' : 'NO'));
+                
                 Log::info('Request input notes: ' . json_encode($request->input('notes')));
+                error_log('Request input notes: ' . json_encode($request->input('notes')));
+                
                 Log::info('Request all: ' . json_encode($request->all()));
+                error_log('Request all: ' . json_encode($request->all()));
+                
                 Log::info('Validated notes: ' . json_encode($validated['notes'] ?? 'NOT_IN_VALIDATED'));
+                error_log('Validated notes: ' . json_encode($validated['notes'] ?? 'NOT_IN_VALIDATED'));
+                
                 Log::info('Existing notes: ' . json_encode($existingScoreForNotes->notes));
+                error_log('Existing notes: ' . json_encode($existingScoreForNotes->notes));
+                
                 Log::info('Array key exists in validated: ' . (array_key_exists('notes', $validated) ? 'YES' : 'NO'));
+                error_log('Array key exists in validated: ' . (array_key_exists('notes', $validated) ? 'YES' : 'NO'));
                 
                 // Provjeri da li je notes poslan u request-u (čak i ako je prazan string)
                 // Koristimo $request->input() direktno jer $validated možda ne uključuje prazan string
                 $notesValue = $request->has('notes') ? ($request->input('notes') ?? '') : $existingScoreForNotes->notes;
                 
                 Log::info('Final notes value to save: ' . json_encode($notesValue));
+                error_log('Final notes value to save: ' . json_encode($notesValue));
+                
                 Log::info('Notes value type: ' . gettype($notesValue));
+                error_log('Notes value type: ' . gettype($notesValue));
+                
                 Log::info('Notes value is empty: ' . (empty($notesValue) ? 'YES' : 'NO'));
+                error_log('Notes value is empty: ' . (empty($notesValue) ? 'YES' : 'NO'));
+                
                 Log::info('Notes value is null: ' . (is_null($notesValue) ? 'YES' : 'NO'));
+                error_log('Notes value is null: ' . (is_null($notesValue) ? 'YES' : 'NO'));
                 
                 $existingScoreForNotes->update([
                     'notes' => $notesValue,
                 ]);
                 
                 Log::info('After update - saved notes: ' . json_encode($existingScoreForNotes->fresh()->notes));
+                error_log('After update - saved notes: ' . json_encode($existingScoreForNotes->fresh()->notes));
+                
                 Log::info('=== END DEBUG ===');
+                error_log('=== END DEBUG ===');
                 
                 return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                     ->with('success', 'Napomene su uspješno ažurirane.');
+            } else {
+                Log::info('=== NOT ENTERING NOTES UPDATE BLOCK ===');
+                Log::info('Condition check failed');
             }
 
             $evaluationScore = EvaluationScore::updateOrCreate(
