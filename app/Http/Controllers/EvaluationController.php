@@ -127,8 +127,19 @@ class EvaluationController extends Controller
         // Provjeri da li je trenutni član završio ocjenjivanje (ima sve kriterijume popunjene)
         $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
         
-        // Ako je već ocjenio, zabrani izmjenu - redirectuj na pregled ocjene
-        if ($hasCompletedEvaluation) {
+        // Provjeri da li su svi članovi komisije ocjenili prijavu
+        $totalMembers = $commission->activeMembers()->count();
+        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
+            ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+            ->pluck('commission_member_id')
+            ->unique()
+            ->count();
+        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
+        
+        // Ako je već ocjenio, zabrani izmjenu - OSIM ako je predsjednik (predsjednik može pristupiti bilo kada)
+        $isChairman = $commissionMember->position === 'predsjednik';
+        
+        if ($hasCompletedEvaluation && !$isChairman) {
             return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                 ->with('error', 'Već ste ocjenili ovu prijavu. Ocjene se ne mogu mijenjati.');
         }
@@ -173,7 +184,9 @@ class EvaluationController extends Controller
             'commission',
             'allMembersEvaluated',
             'evaluatedMemberIds',
-            'totalMembers'
+            'totalMembers',
+            'hasCompletedEvaluation',
+            'isChairman'
         ));
     }
 
@@ -276,12 +289,24 @@ class EvaluationController extends Controller
             }
         }
 
-        // Validacija - svaki kriterijum 1-5 poena
-        for ($i = 1; $i <= 10; $i++) {
-            $rules["criterion_{$i}"] = 'required|integer|min:1|max:5';
-            $messages["criterion_{$i}.required"] = "Kriterijum {$i} je obavezan.";
-            $messages["criterion_{$i}.min"] = "Kriterijum {$i} mora biti najmanje 1 poen.";
-            $messages["criterion_{$i}.max"] = "Kriterijum {$i} može biti najviše 5 poena.";
+        // Validacija - svaki kriterijum 1-5 poena (samo ako nije predsjednik koji mijenja samo sekciju 2)
+        $isChairman = $commissionMember->position === 'predsjednik';
+        $totalMembers = $commission->activeMembers()->count();
+        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
+            ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+            ->pluck('commission_member_id')
+            ->unique()
+            ->count();
+        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
+        
+        // Ako je predsjednik i svi članovi su ocjenili, ne validiraj kriterijume (samo documents_complete)
+        if (!($isChairman && $allMembersEvaluated)) {
+            for ($i = 1; $i <= 10; $i++) {
+                $rules["criterion_{$i}"] = 'required|integer|min:1|max:5';
+                $messages["criterion_{$i}.required"] = "Kriterijum {$i} je obavezan.";
+                $messages["criterion_{$i}.min"] = "Kriterijum {$i} mora biti najmanje 1 poen.";
+                $messages["criterion_{$i}.max"] = "Kriterijum {$i} može biti najviše 5 poena.";
+            }
         }
 
         $rules['notes'] = 'nullable|string|max:5000';
@@ -296,68 +321,151 @@ class EvaluationController extends Controller
 
         $validated = $request->validate($rules, $messages);
 
-        // Izračunaj zbir ocjena
+        // Izračunaj zbir ocjena (samo ako nije predsjednik koji mijenja samo sekciju 2)
         $totalScore = 0;
-        for ($i = 1; $i <= 10; $i++) {
-            $totalScore += $validated["criterion_{$i}"];
-        }
-
-        // Za ostale članove, koristi documents_complete od predsjednika
-        $documentsCompleteValue = null;
-        if ($commissionMember->position === 'predsjednik') {
-            $documentsCompleteValue = $validated['documents_complete'] ?? null;
+        if (!($isChairman && $allMembersEvaluated)) {
+            for ($i = 1; $i <= 10; $i++) {
+                $totalScore += $validated["criterion_{$i}"] ?? 0;
+            }
         } else {
-            // Pronađi ocjenu predsjednika komisije
-            $chairmanMember = $commission->activeMembers()->where('position', 'predsjednik')->first();
-            if ($chairmanMember) {
-                $chairmanScore = EvaluationScore::where('application_id', $application->id)
-                    ->where('commission_member_id', $chairmanMember->id)
-                    ->first();
-                if ($chairmanScore) {
-                    $documentsCompleteValue = $chairmanScore->documents_complete;
-                }
+            // Ako je predsjednik i svi su ocjenili, koristi postojeću ocjenu
+            $existingScore = EvaluationScore::where('application_id', $application->id)
+                ->where('commission_member_id', $commissionMember->id)
+                ->first();
+            if ($existingScore) {
+                $totalScore = $existingScore->final_score ?? 0;
             }
         }
 
         // Kreiraj ili ažuriraj ocjenu
-        $evaluationScore = EvaluationScore::updateOrCreate(
-            [
-                'application_id' => $application->id,
-                'commission_member_id' => $commissionMember->id,
-            ],
-            [
-                'documents_complete' => $documentsCompleteValue,
-                'criterion_1' => $validated['criterion_1'],
-                'criterion_2' => $validated['criterion_2'],
-                'criterion_3' => $validated['criterion_3'],
-                'criterion_4' => $validated['criterion_4'],
-                'criterion_5' => $validated['criterion_5'],
-                'criterion_6' => $validated['criterion_6'],
-                'criterion_7' => $validated['criterion_7'],
-                'criterion_8' => $validated['criterion_8'],
-                'criterion_9' => $validated['criterion_9'],
-                'criterion_10' => $validated['criterion_10'],
-                'final_score' => $totalScore,
-                'notes' => $validated['notes'] ?? null,
-                'justification' => $validated['justification'] ?? null,
-            ]
-        );
+        if ($isChairman && $allMembersEvaluated) {
+            // Ako je predsjednik i svi su ocjenili, ažuriraj samo documents_complete
+            $existingScore = EvaluationScore::where('application_id', $application->id)
+                ->where('commission_member_id', $commissionMember->id)
+                ->first();
+            
+            if ($existingScore) {
+                $existingScore->update([
+                    'documents_complete' => $validated['documents_complete'] ?? $existingScore->documents_complete,
+                ]);
+            }
+        } else {
+            // Normalno spremanje ocjene
+            // Za ostale članove, koristi documents_complete od predsjednika
+            $documentsCompleteValue = null;
+            if ($commissionMember->position === 'predsjednik') {
+                $documentsCompleteValue = $validated['documents_complete'] ?? null;
+            } else {
+                // Pronađi ocjenu predsjednika komisije
+                $chairmanMember = $commission->activeMembers()->where('position', 'predsjednik')->first();
+                if ($chairmanMember) {
+                    $chairmanScore = EvaluationScore::where('application_id', $application->id)
+                        ->where('commission_member_id', $chairmanMember->id)
+                        ->first();
+                    if ($chairmanScore) {
+                        $documentsCompleteValue = $chairmanScore->documents_complete;
+                    }
+                }
+            }
 
-        // Ako je predsjednik i svi članovi su ocjenili, ažuriraj zaključak komisije i iznos odobrenih sredstava
-        if ($commissionMember->position === 'predsjednik' && $allMembersEvaluated && isset($validated['commission_decision'])) {
-            $application->update([
-                'commission_decision' => $validated['commission_decision'],
-                'approved_amount' => $validated['approved_amount'] ?? null,
-                'commission_decision_date' => $validated['decision_date'] ?? now(),
-            ]);
+            $evaluationScore = EvaluationScore::updateOrCreate(
+                [
+                    'application_id' => $application->id,
+                    'commission_member_id' => $commissionMember->id,
+                ],
+                [
+                    'documents_complete' => $documentsCompleteValue,
+                    'criterion_1' => $validated['criterion_1'],
+                    'criterion_2' => $validated['criterion_2'],
+                    'criterion_3' => $validated['criterion_3'],
+                    'criterion_4' => $validated['criterion_4'],
+                    'criterion_5' => $validated['criterion_5'],
+                    'criterion_6' => $validated['criterion_6'],
+                    'criterion_7' => $validated['criterion_7'],
+                    'criterion_8' => $validated['criterion_8'],
+                    'criterion_9' => $validated['criterion_9'],
+                    'criterion_10' => $validated['criterion_10'],
+                    'final_score' => $totalScore,
+                    'notes' => $validated['notes'] ?? null,
+                    'justification' => $validated['justification'] ?? null,
+                ]
+            );
         }
 
-        // Ažuriraj prosječnu ocjenu prijave (prosjek svih članova komisije)
-        $this->updateApplicationScores($application);
+        // Kreiraj ili ažuriraj ocjenu
+        if ($isChairman && $allMembersEvaluated) {
+            // Ako je predsjednik i svi su ocjenili, ažuriraj samo documents_complete
+            $existingScore = EvaluationScore::where('application_id', $application->id)
+                ->where('commission_member_id', $commissionMember->id)
+                ->first();
+            
+            if ($existingScore) {
+                $existingScore->update([
+                    'documents_complete' => $validated['documents_complete'] ?? $existingScore->documents_complete,
+                ]);
+            }
+            
+            // Redirectuj na listu sa porukom
+            return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+                ->with('success', 'Sekcija 2 (Dostavljena su sva potrebna dokumenta?) je uspješno ažurirana.');
+        } else {
+            // Normalno spremanje ocjene
+            // Za ostale članove, koristi documents_complete od predsjednika
+            $documentsCompleteValue = null;
+            if ($commissionMember->position === 'predsjednik') {
+                $documentsCompleteValue = $validated['documents_complete'] ?? null;
+            } else {
+                // Pronađi ocjenu predsjednika komisije
+                $chairmanMember = $commission->activeMembers()->where('position', 'predsjednik')->first();
+                if ($chairmanMember) {
+                    $chairmanScore = EvaluationScore::where('application_id', $application->id)
+                        ->where('commission_member_id', $chairmanMember->id)
+                        ->first();
+                    if ($chairmanScore) {
+                        $documentsCompleteValue = $chairmanScore->documents_complete;
+                    }
+                }
+            }
 
-        // Redirektuj sa filterom "evaluated" da se odmah vidi ocjenjena prijava
-        return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
-            ->with('success', 'Ocjena je uspješno sačuvana.');
+            $evaluationScore = EvaluationScore::updateOrCreate(
+                [
+                    'application_id' => $application->id,
+                    'commission_member_id' => $commissionMember->id,
+                ],
+                [
+                    'documents_complete' => $documentsCompleteValue,
+                    'criterion_1' => $validated['criterion_1'],
+                    'criterion_2' => $validated['criterion_2'],
+                    'criterion_3' => $validated['criterion_3'],
+                    'criterion_4' => $validated['criterion_4'],
+                    'criterion_5' => $validated['criterion_5'],
+                    'criterion_6' => $validated['criterion_6'],
+                    'criterion_7' => $validated['criterion_7'],
+                    'criterion_8' => $validated['criterion_8'],
+                    'criterion_9' => $validated['criterion_9'],
+                    'criterion_10' => $validated['criterion_10'],
+                    'final_score' => $totalScore,
+                    'notes' => $validated['notes'] ?? null,
+                    'justification' => $validated['justification'] ?? null,
+                ]
+            );
+            
+            // Ažuriraj prosječnu ocjenu prijave (prosjek svih članova komisije)
+            $this->updateApplicationScores($application);
+
+            // Ako je predsjednik i svi članovi su ocjenili, može ažurirati zaključak komisije i iznos odobrenih sredstava
+            if ($commissionMember->position === 'predsjednik' && $allMembersEvaluated && isset($validated['commission_decision'])) {
+                $application->update([
+                    'commission_decision' => $validated['commission_decision'],
+                    'approved_amount' => $validated['approved_amount'] ?? null,
+                    'commission_decision_date' => $validated['decision_date'] ?? now(),
+                ]);
+            }
+
+            // Redirektuj sa filterom "evaluated" da se odmah vidi ocjenjena prijava
+            return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+                ->with('success', 'Ocjena je uspješno sačuvana.');
+        }
     }
 
     /**

@@ -464,24 +464,39 @@
                                                 $currentValue = $memberScore ? $memberScore->{"criterion_{$num}"} : null;
                                                 $isCurrentMember = $member->id === $commissionMember->id;
                                                 // Provjeri da li je trenutni član završio ocjenjivanje
-                                                $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+                                                $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
                                                 // Provjeri da li je drugi član završio ocjenjivanje
                                                 $otherMemberCompleted = $memberScore && $memberScore->criterion_1 !== null;
+                                                // Ako je predsjednik i svi članovi su ocjenili, može vidjeti sve ocjene
+                                                $canViewAllScores = isset($isChairman) && $isChairman && isset($allMembersEvaluated) && $allMembersEvaluated;
                                             @endphp
                                             @if($isCurrentMember)
                                                 {{-- Trenutni član vidi svoje input polje --}}
-                                                <input 
-                                                    type="number" 
-                                                    name="criterion_{{ $num }}" 
-                                                    class="score-input" 
-                                                    min="1" 
-                                                    max="5" 
-                                                    value="{{ old("criterion_{$num}", $currentValue) }}"
-                                                    required
-                                                    onchange="updateAverages()">
+                                                @if(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && isset($isChairman) && $isChairman && isset($allMembersEvaluated) && $allMembersEvaluated)
+                                                    {{-- Predsjednik kada su svi ocjenili - kriterijumi su read-only (može mijenjati samo sekciju 2) --}}
+                                                    <span class="score-display">
+                                                        {{ $currentValue ? $currentValue : '—' }}
+                                                    </span>
+                                                @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && !(isset($isChairman) && $isChairman))
+                                                    {{-- Ako je već ocjenio i nije predsjednik, read-only --}}
+                                                    <span class="score-display">
+                                                        {{ $currentValue ? $currentValue : '—' }}
+                                                    </span>
+                                                @else
+                                                    {{-- Može unijeti ili mijenjati --}}
+                                                    <input 
+                                                        type="number" 
+                                                        name="criterion_{{ $num }}" 
+                                                        class="score-input" 
+                                                        min="1" 
+                                                        max="5" 
+                                                        value="{{ old("criterion_{$num}", $currentValue) }}"
+                                                        required
+                                                        onchange="updateAverages()">
+                                                @endif
                                             @else
-                                                {{-- Ostali članovi - prikaži ocjenu samo ako je trenutni član završio ocjenjivanje I drugi član je završio ocjenjivanje --}}
-                                                @if($hasCompletedEvaluation && $otherMemberCompleted)
+                                                {{-- Ostali članovi - prikaži ocjenu samo ako je trenutni član završio ocjenjivanje I drugi član je završio ocjenjivanje, ILI ako je predsjednik i svi su ocjenili --}}
+                                                @if(($hasCompletedEvaluation && $otherMemberCompleted) || $canViewAllScores)
                                                     <span class="score-display">
                                                         {{ $currentValue ? $currentValue : '—' }}
                                                     </span>
@@ -495,10 +510,11 @@
                                     @endforeach
                                     <td class="average-col" id="avg_{{ $num }}">
                                         @php
-                                            // Prikaži prosječnu ocjenu samo ako je trenutni član završio ocjenjivanje
-                                            $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+                                            // Prikaži prosječnu ocjenu samo ako je trenutni član završio ocjenjivanje ILI ako je predsjednik i svi su ocjenili
+                                            $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
+                                            $canViewAllScores = isset($isChairman) && $isChairman && isset($allMembersEvaluated) && $allMembersEvaluated;
                                         @endphp
-                                        @if($hasCompletedEvaluation && isset($averageScores[$num]))
+                                        @if(($hasCompletedEvaluation && isset($averageScores[$num])) || ($canViewAllScores && isset($averageScores[$num])))
                                             {{ number_format($averageScores[$num], 2) }}
                                         @else
                                             —
@@ -516,15 +532,16 @@
                                             $memberScore = $allScores->get($member->id);
                                             $memberTotal = $memberScore ? $memberScore->calculateTotalScore() : 0;
                                             $isCurrentMember = $member->id === $commissionMember->id;
-                                            $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+                                            $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
                                             $otherMemberCompleted = $memberScore && $memberScore->criterion_1 !== null;
+                                            $canViewAllScores = isset($isChairman) && $isChairman && isset($allMembersEvaluated) && $allMembersEvaluated;
                                         @endphp
                                         @if($isCurrentMember)
                                             {{-- Trenutni član vidi svoju konačnu ocjenu --}}
                                             <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
                                         @else
-                                            {{-- Ostali članovi - prikaži ocjenu samo ako je trenutni član završio ocjenjivanje I drugi član je završio ocjenjivanje --}}
-                                            @if($hasCompletedEvaluation && $otherMemberCompleted)
+                                            {{-- Ostali članovi - prikaži ocjenu samo ako je trenutni član završio ocjenjivanje I drugi član je završio ocjenjivanje, ILI ako je predsjednik i svi su ocjenili --}}
+                                            @if(($hasCompletedEvaluation && $otherMemberCompleted) || $canViewAllScores)
                                                 <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
                                             @else
                                                 <strong style="color: #d1d5db;">—</strong>
@@ -534,10 +551,11 @@
                                 @endforeach
                                 <td class="average-col" id="final_score" style="font-weight: bold !important;">
                                     @php
-                                        // Prikaži konačnu ocjenu samo ako je trenutni član završio ocjenjivanje
-                                        $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+                                        // Prikaži konačnu ocjenu samo ako je trenutni član završio ocjenjivanje ILI ako je predsjednik i svi su ocjenili
+                                        $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
+                                        $canViewAllScores = isset($isChairman) && $isChairman && isset($allMembersEvaluated) && $allMembersEvaluated;
                                     @endphp
-                                    @if($hasCompletedEvaluation && $finalScore > 0)
+                                    @if(($hasCompletedEvaluation && $finalScore > 0) || ($canViewAllScores && $finalScore > 0))
                                         <strong>{{ number_format($finalScore, 2) }}</strong>
                                     @else
                                         <strong>—</strong>
@@ -673,8 +691,17 @@
                 </div>
 
                 <div style="margin-top: 32px; text-align: center;">
-                    <button type="submit" class="btn-primary">Ocijeni</button>
-                    <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                    @if(isset($isChairman) && $isChairman && isset($allMembersEvaluated) && $allMembersEvaluated)
+                        {{-- Predsjednik kada su svi članovi ocjenili - može mijenjati sekciju 2 i vidi dugme za zaključak --}}
+                        <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
+                        <a href="{{ route('evaluation.chairman-review', $application) }}" class="btn-primary" style="margin-left: 12px; text-decoration: none; display: inline-block;">
+                            Zaključak komisije
+                        </a>
+                        <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                    @else
+                        <button type="submit" class="btn-primary">Ocijeni</button>
+                        <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                    @endif
                 </div>
             </form>
         </div>
