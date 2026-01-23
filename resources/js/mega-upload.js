@@ -347,23 +347,30 @@ async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt
         await initMegaStorage();
         console.log('MEGA Storage initialized successfully');
 
-        // Dobij user ID iz meta tag-a ili drugog izvora (ako je dostupan)
-        // Za sada koristimo folderPath bez user ID-a, ali možemo dodati kasnije
-        const userId = null; // TODO: Dobij user ID iz backend-a ili meta tag-a
+        const userId = null;
         
-        // Konvertuj obrađene PDF-ove iz base64 u File objekte i uploaduj na MEGA
+        // Preuzmi obrađene PDF-ove sa servera (jedan PDF, jedno kreiranje) i uploaduj na MEGA
         console.log('Starting MEGA upload for', processData.pdfs.length, 'processed PDF(s)');
         for (const pdfData of processData.pdfs) {
-            console.log('Processing PDF:', pdfData.name, pdfData.size, 'bytes');
+            const token = pdfData.download_token;
+            const name = pdfData.name || 'processed.pdf';
+            const size = pdfData.size;
+            console.log('Fetching PDF from server:', name, size, 'bytes');
+            
+            if (!token) {
+                throw new Error(`Missing download_token for PDF: ${name}`);
+            }
+            
             try {
-                // Konvertuj base64 u Blob, zatim u File
-                const binaryString = atob(pdfData.content);
-                const bytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    bytes[i] = binaryString.charCodeAt(i);
+                const downloadUrl = `/documents/temp-download-mega?token=${encodeURIComponent(token)}`;
+                const downloadResponse = await fetch(downloadUrl, { credentials: 'same-origin' });
+                
+                if (!downloadResponse.ok) {
+                    throw new Error(`Failed to download PDF: ${downloadResponse.status}`);
                 }
-                const blob = new Blob([bytes], { type: 'application/pdf' });
-                const pdfFile = new File([blob], pdfData.name || 'processed.pdf', { type: 'application/pdf' });
+                
+                const blob = await downloadResponse.blob();
+                const pdfFile = new File([blob], name, { type: 'application/pdf' });
                 
                 console.log('Uploading processed PDF to MEGA:', pdfFile.name, pdfFile.size, 'bytes');
                 const result = await uploadFileToMega(pdfFile, 'digital.kotor/documents', userId);
@@ -376,7 +383,7 @@ async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt
                     throw new Error(`Failed to upload ${pdfFile.name}: ${result.error}`);
                 }
             } catch (uploadError) {
-                console.error('Error during PDF upload:', uploadError);
+                console.error('Error during PDF fetch/upload:', uploadError);
                 throw uploadError;
             }
         }

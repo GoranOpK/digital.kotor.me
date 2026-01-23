@@ -562,8 +562,11 @@ class DocumentController extends Controller
     }
 
     /**
-     * Obrađuje fajlove u PDF i vraća obrađene PDF-ove za MEGA upload
-     * Frontend šalje originalne fajlove, backend ih obrađuje i vraća obrađene PDF-ove
+     * Obrađuje fajlove u PDF i vraća putanje za MEGA upload
+     * PDF se kreira jednom na serveru; frontend ga preuzme i uploaduje na MEGA.
+     *
+     * Ime PDF-a dodeljuje DocumentProcessor: {userId}-{YYYYMMDD}-{8 slučajnih hex}
+     * (npr. 7-20260123-0b057804.pdf). Ne prosleđujemo baseFilename, koristimo basename(file_path).
      */
     public function processDocumentsForMega(Request $request): JsonResponse
     {
@@ -589,30 +592,19 @@ class DocumentController extends Controller
                     ], 500);
                 }
                 
-                // Pročitaj obrađeni PDF
                 $pdfPath = $result['file_path'];
-                $pdfContent = Storage::disk('local')->get($pdfPath);
+                $pdfName = basename($pdfPath); // DocumentProcessor: userId-YYYYMMDD-8hex.pdf
                 
-                // Generiši ime fajla na osnovu originalnih fajlova
-                $originalNames = array_map(function($file) {
-                    $name = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                    return $name;
-                }, $files);
-                $mergedName = implode('_', $originalNames) . '.pdf';
+                $token = $this->storeTempDownloadToken($user->id, $pdfPath);
                 
-                // Konvertuj u base64 za prenos preko JSON-a
                 $processedPdfs[] = [
-                    'name' => $mergedName,
-                    'content' => base64_encode($pdfContent),
+                    'name' => $pdfName,
+                    'download_token' => $token,
                     'size' => $result['file_size'],
-                    'mime' => 'application/pdf'
+                    'mime' => 'application/pdf',
                 ];
                 
-                // Obriši privremeni fajl nakon čitanja
-                Storage::disk('local')->delete($pdfPath);
-                
             } else {
-                // Jedan fajl - obradi ga
                 $file = $files[0];
                 $result = $this->documentProcessor->processDocument($file, $user->id);
                 
@@ -623,29 +615,22 @@ class DocumentController extends Controller
                     ], 500);
                 }
                 
-                // Pročitaj obrađeni PDF
                 $pdfPath = $result['file_path'];
-                $pdfContent = Storage::disk('local')->get($pdfPath);
+                $pdfName = basename($pdfPath); // DocumentProcessor: userId-YYYYMMDD-8hex.pdf
                 
-                // Generiši ime fajla na osnovu originalnog imena
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $pdfName = $originalName . '.pdf';
+                $token = $this->storeTempDownloadToken($user->id, $pdfPath);
                 
-                // Konvertuj u base64 za prenos preko JSON-a
                 $processedPdfs[] = [
                     'name' => $pdfName,
-                    'content' => base64_encode($pdfContent),
+                    'download_token' => $token,
                     'size' => $result['file_size'],
-                    'mime' => 'application/pdf'
+                    'mime' => 'application/pdf',
                 ];
-                
-                // Obriši privremeni fajl nakon čitanja
-                Storage::disk('local')->delete($pdfPath);
             }
             
             return response()->json([
                 'success' => true,
-                'pdfs' => $processedPdfs
+                'pdfs' => $processedPdfs,
             ]);
             
         } catch (\Exception $e) {
@@ -659,6 +644,55 @@ class DocumentController extends Controller
                 'error' => 'Greška pri obradi dokumenata: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Privremeno preuzimanje obrađenog PDF-a za MEGA upload.
+     * PDF se kreira jednom na serveru; nakon slanja fajl se briše.
+     */
+    public function tempDownloadMegaPdf(Request $request)
+    {
+        $user = Auth::user();
+        $token = $request->query('token');
+        
+        if (!$token) {
+            abort(400, 'Token je obavezan.');
+        }
+        
+        $stored = \Illuminate\Support\Facades\Cache::get("mega_temp_download:{$token}");
+        
+        if (!$stored || (int) ($stored['user_id'] ?? 0) !== $user->id) {
+            abort(404, 'Link za preuzimanje je nevažeći ili je istekao.');
+        }
+        
+        $path = $stored['path'] ?? null;
+        if (!$path || !Storage::disk('local')->exists($path)) {
+            \Illuminate\Support\Facades\Cache::forget("mega_temp_download:{$token}");
+            abort(404, 'Fajl nije pronađen.');
+        }
+        
+        $name = basename($path);
+        $fullPath = Storage::disk('local')->path($path);
+        
+        \Illuminate\Support\Facades\Cache::forget("mega_temp_download:{$token}");
+        
+        return response()->download($fullPath, $name, [
+            'Content-Type' => 'application/pdf',
+        ])->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Čuva token za privremeno preuzimanje PDF-a (kratkotrajno).
+     */
+    private function storeTempDownloadToken(int $userId, string $path): string
+    {
+        $token = bin2hex(random_bytes(16));
+        \Illuminate\Support\Facades\Cache::put("mega_temp_download:{$token}", [
+            'user_id' => $userId,
+            'path' => $path,
+        ], now()->addMinutes(10));
+        
+        return $token;
     }
 
     /**
