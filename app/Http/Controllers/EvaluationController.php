@@ -431,9 +431,11 @@ class EvaluationController extends Controller
             
             if ($existingScore && !$isDecisionMade) {
                 // Ako nije zaključio prijavu, može mijenjati documents_complete i notes
+                // Provjeri da li je notes poslan u request-u (čak i ako je prazan string)
+                $notesValue = array_key_exists('notes', $validated) ? $validated['notes'] : $existingScore->notes;
                 $existingScore->update([
                     'documents_complete' => $validated['documents_complete'] ?? $existingScore->documents_complete,
-                    'notes' => $validated['notes'] ?? $existingScore->notes,
+                    'notes' => $notesValue,
                 ]);
             }
             
@@ -470,8 +472,10 @@ class EvaluationController extends Controller
             
             if ($existingScoreForNotes && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
                 // Ako je već ocjenio ali prijava nije zaključena i nije predsjednik, može ažurirati samo notes
+                // Provjeri da li je notes poslan u request-u (čak i ako je prazan string)
+                $notesValue = array_key_exists('notes', $validated) ? $validated['notes'] : $existingScoreForNotes->notes;
                 $existingScoreForNotes->update([
-                    'notes' => $validated['notes'] ?? $existingScoreForNotes->notes,
+                    'notes' => $notesValue,
                 ]);
                 
                 return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
