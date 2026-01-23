@@ -823,6 +823,11 @@
                             </a>
                         @endif
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
+                    @elseif($hasCompletedEvaluation && $canEditNotesValue && !$isChairman)
+                        {{-- Član koji je već ocjenio ali može editovati napomene --}}
+                        {{-- Ova provjera mora biti PRIJE provjere za sve ocjenjene --}}
+                        <button type="submit" class="btn-primary">Sačuvaj izmjene napomena</button>
+                        <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @elseif($hasCompletedEvaluation && $allMembersEvaluated)
                         {{-- Kada su svi članovi ocjenili, ostali članovi vide formu u read-only modu --}}
                         <div style="padding: 16px; background: #f0f9ff; border-radius: 8px; margin-bottom: 16px; border: 1px solid #0ea5e9;">
@@ -833,10 +838,6 @@
                         <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             Nazad na listu
                         </a>
-                    @elseif($hasCompletedEvaluation && $canEditNotesValue && !$isChairman)
-                        {{-- Član koji je već ocjenio ali može editovati napomene --}}
-                        <button type="submit" class="btn-primary">Sačuvaj izmjene napomena</button>
-                        <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @else
                         <button type="submit" class="btn-primary">Ocijeni</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
