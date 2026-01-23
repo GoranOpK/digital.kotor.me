@@ -252,6 +252,32 @@
         border-color: #ef4444;
         color: #991b1b;
     }
+    .refresh-tip {
+        background: #f0f9ff;
+        border: 1px solid #0ea5e9;
+        color: #0c4a6e;
+        padding: 12px 40px 12px 16px;
+        border-radius: 8px;
+        margin-bottom: 24px;
+        font-size: 14px;
+        position: relative;
+    }
+    .refresh-tip-close {
+        position: absolute;
+        top: 10px;
+        right: 12px;
+        background: none;
+        border: none;
+        color: #0c4a6e;
+        cursor: pointer;
+        font-size: 18px;
+        line-height: 1;
+        opacity: 0.7;
+        padding: 0;
+    }
+    .refresh-tip-close:hover {
+        opacity: 1;
+    }
 </style>
 
 <div class="documents-page">
@@ -281,6 +307,11 @@
                 </ul>
             </div>
         @endif
+
+        <div id="refresh-tip" class="refresh-tip" style="display: none;">
+            <strong>💡 Savet:</strong> Osvežite stranicu (<kbd>Ctrl</kbd>+<kbd>F5</kbd>) ako ne vidite najnovije izmene ili imate probleme pri upload-u.
+            <button type="button" class="refresh-tip-close" id="refresh-tip-close" aria-label="Zatvori">×</button>
+        </div>
 
         <!-- Informacije o prostoru i Upload sekcija u istom redu -->
         <div class="top-sections-grid">
@@ -414,6 +445,20 @@
 </div>
 
 <script>
+// Savet za osvežavanje stranice (Ctrl+F5)
+(function() {
+    const tip = document.getElementById('refresh-tip');
+    const closeBtn = document.getElementById('refresh-tip-close');
+    const key = 'documents-refresh-tip-dismissed';
+    if (tip && closeBtn && !localStorage.getItem(key)) {
+        tip.style.display = 'block';
+        closeBtn.addEventListener('click', function() {
+            tip.style.display = 'none';
+            localStorage.setItem(key, '1');
+        });
+    }
+})();
+
 // Čuva prethodno izabrane fajlove
 let selectedFiles = [];
 

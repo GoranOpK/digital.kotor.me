@@ -349,9 +349,13 @@ async function uploadFilesToMegaAndSave(files, documentName, category, expiresAt
 
         const userId = null;
         
-        // Preuzmi obrađene PDF-ove sa servera (jedan PDF, jedno kreiranje) i uploaduj na MEGA
+        // Preuzmi obrađene PDF-ove sa servera (token-based, ne base64)
+        console.log('MEGA upload flow: token-based fetch');
         console.log('Starting MEGA upload for', processData.pdfs.length, 'processed PDF(s)');
         for (const pdfData of processData.pdfs) {
+            if (pdfData.content) {
+                throw new Error('Backend je vratio base64 (content). Osvežite build: npm run build, zatim deploy. Koristi se samo download_token.');
+            }
             const token = pdfData.download_token;
             const name = pdfData.name || 'processed.pdf';
             const size = pdfData.size;
