@@ -740,20 +740,6 @@
                         }
                     @endphp
                     
-                    @if($canEditNotes && isset($isChairman) && $isChairman && !$currentMemberHasNote)
-                        {{-- Polje za unos napomena predsjednika - prikaži na početku --}}
-                        <div style="margin-bottom: 20px;">
-                            <label class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 8px;">
-                                Napomena Predsjednik komisije ({{ $commissionMember->name }})
-                            </label>
-                            <textarea 
-                                name="notes" 
-                                class="form-control" 
-                                rows="6" 
-                                placeholder="Unesite dodatne napomene...">{{ old('notes', $existingScore?->notes) }}</textarea>
-                        </div>
-                    @endif
-                    
                     @if(count($membersWithNotes) > 0)
                         {{-- Prikaži napomene članova koji su ih dali --}}
                         @foreach($membersWithNotes as $memberNote)
@@ -765,19 +751,32 @@
                                         Napomene - {{ $memberNote['member']->name }}
                                     @endif
                                 </label>
-                                <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap;">
-                                    {{ $memberNote['notes'] }}
-                                </div>
+                                @if($canEditNotes && $memberNote['member']->id === $commissionMember->id)
+                                    {{-- Trenutni član može editovati svoju napomenu --}}
+                                    <textarea 
+                                        name="notes" 
+                                        class="form-control" 
+                                        rows="6" 
+                                        placeholder="Unesite dodatne napomene...">{{ old('notes', $memberNote['notes']) }}</textarea>
+                                @else
+                                    {{-- Read-only prikaz za ostale članove --}}
+                                    <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap;">
+                                        {{ $memberNote['notes'] }}
+                                    </div>
+                                @endif
                             </div>
                         @endforeach
                     @endif
                     
-                    @if($canEditNotes && !(isset($isChairman) && $isChairman))
-                        {{-- Polje za unos napomena ostalih članova - prikaži na kraju --}}
-                        {{-- Članovi mogu editovati napomene dok prijava nije zaključena, čak i ako već imaju napomenu --}}
+                    @if($canEditNotes && !$currentMemberHasNote)
+                        {{-- Polje za unos napomena ako trenutni član još nema napomenu --}}
                         <div style="margin-top: {{ count($membersWithNotes) > 0 ? '20px' : '0' }};">
                             <label class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 8px;">
-                                Napomena Član komisije ({{ $commissionMember->name }})
+                                @if(isset($isChairman) && $isChairman)
+                                    Napomena Predsjednik komisije ({{ $commissionMember->name }})
+                                @else
+                                    Napomena Član komisije ({{ $commissionMember->name }})
+                                @endif
                             </label>
                             <textarea 
                                 name="notes" 
@@ -828,6 +827,10 @@
                         <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             Nazad na listu
                         </a>
+                    @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && $canEditNotes && !(isset($isChairman) && $isChairman))
+                        {{-- Član koji je već ocjenio ali može editovati napomene --}}
+                        <button type="submit" class="btn-primary">Sačuvaj izmjene napomena</button>
+                        <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @else
                         <button type="submit" class="btn-primary">Ocijeni</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>

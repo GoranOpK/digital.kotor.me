@@ -305,7 +305,10 @@ class EvaluationController extends Controller
         $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
         
         // Ako je predsjednik i već je ocjenio, ne validiraj kriterijume (može mijenjati samo sekciju 2)
-        if (!($isChairman && $hasCompletedEvaluation)) {
+        // Takođe, ako član već ocjenio i prijava nije zaključena, ne validiraj kriterijume (može mijenjati samo napomene)
+        $isDecisionMade = $application->commission_decision !== null;
+        
+        if (!($isChairman && $hasCompletedEvaluation) && !($hasCompletedEvaluation && !$isDecisionMade && !$isChairman)) {
             for ($i = 1; $i <= 10; $i++) {
                 $rules["criterion_{$i}"] = 'required|integer|min:1|max:5';
                 $messages["criterion_{$i}.required"] = "Kriterijum {$i} je obavezan.";
@@ -326,14 +329,14 @@ class EvaluationController extends Controller
 
         $validated = $request->validate($rules, $messages);
 
-        // Izračunaj zbir ocjena (samo ako nije predsjednik koji mijenja samo sekciju 2)
+        // Izračunaj zbir ocjena (samo ako nije predsjednik koji mijenja samo sekciju 2 ili član koji mijenja samo napomene)
         $totalScore = 0;
-        if (!($isChairman && $hasCompletedEvaluation)) {
+        if (!($isChairman && $hasCompletedEvaluation) && !($hasCompletedEvaluation && !$isDecisionMade && !$isChairman)) {
             for ($i = 1; $i <= 10; $i++) {
                 $totalScore += $validated["criterion_{$i}"] ?? 0;
             }
         } else {
-            // Ako je predsjednik i već je ocjenio, koristi postojeću ocjenu
+            // Ako je predsjednik ili član koji već ocjenio, koristi postojeću ocjenu
             $existingScore = EvaluationScore::where('application_id', $application->id)
                 ->where('commission_member_id', $commissionMember->id)
                 ->first();
