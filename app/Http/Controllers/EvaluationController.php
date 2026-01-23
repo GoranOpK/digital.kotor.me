@@ -432,7 +432,8 @@ class EvaluationController extends Controller
             if ($existingScore && !$isDecisionMade) {
                 // Ako nije zaključio prijavu, može mijenjati documents_complete i notes
                 // Provjeri da li je notes poslan u request-u (čak i ako je prazan string)
-                $notesValue = array_key_exists('notes', $validated) ? $validated['notes'] : $existingScore->notes;
+                // Koristimo $request->input() direktno jer $validated možda ne uključuje prazan string
+                $notesValue = $request->has('notes') ? ($request->input('notes') ?? '') : $existingScore->notes;
                 $existingScore->update([
                     'documents_complete' => $validated['documents_complete'] ?? $existingScore->documents_complete,
                     'notes' => $notesValue,
@@ -473,7 +474,8 @@ class EvaluationController extends Controller
             if ($existingScoreForNotes && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
                 // Ako je već ocjenio ali prijava nije zaključena i nije predsjednik, može ažurirati samo notes
                 // Provjeri da li je notes poslan u request-u (čak i ako je prazan string)
-                $notesValue = array_key_exists('notes', $validated) ? $validated['notes'] : $existingScoreForNotes->notes;
+                // Koristimo $request->input() direktno jer $validated možda ne uključuje prazan string
+                $notesValue = $request->has('notes') ? ($request->input('notes') ?? '') : $existingScoreForNotes->notes;
                 $existingScoreForNotes->update([
                     'notes' => $notesValue,
                 ]);
