@@ -377,22 +377,52 @@
                 <!-- 2. Dostavljena su sva potrebna dokumenta? -->
                 <div class="form-section">
                     <label class="form-label form-label-large">2. Dostavljena su sva potrebna dokumenta?</label>
-                    <div class="radio-group">
-                        <label class="radio-option">
-                            <input type="radio" name="documents_complete" value="1" {{ old('documents_complete', $existingScore?->documents_complete ?? true) ? 'checked' : '' }} required>
-                            <span>a. Da</span>
-                        </label>
-                        <label class="radio-option">
-                            <input type="radio" name="documents_complete" value="0" {{ old('documents_complete') === '0' || ($existingScore && !$existingScore->documents_complete) ? 'checked' : '' }} required>
-                            <span>b. Ne*</span>
-                        </label>
-                    </div>
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 8px; margin-left: 24px;">
-                        *ukoliko je odgovor „Ne", odbiti aplikaciju
-                    </div>
-                    @error('documents_complete')
-                        <div class="error-message">{{ $message }}</div>
-                    @enderror
+                    
+                    @if($commissionMember->position === 'predsjednik')
+                        {{-- Predsjednik može označiti --}}
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="documents_complete" value="1" {{ old('documents_complete', $existingScore?->documents_complete ?? true) ? 'checked' : '' }} required>
+                                <span>a. Da</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="documents_complete" value="0" {{ old('documents_complete') === '0' || ($existingScore && !$existingScore->documents_complete) ? 'checked' : '' }} required>
+                                <span>b. Ne*</span>
+                            </label>
+                        </div>
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 8px; margin-left: 24px;">
+                            *ukoliko je odgovor „Ne", odbiti aplikaciju
+                        </div>
+                        @error('documents_complete')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    @else
+                        {{-- Ostali članovi vide samo read-only prikaz --}}
+                        @php
+                            // Pronađi predsjednika komisije i njegovu ocjenu
+                            $chairmanMember = $allMembers->firstWhere('position', 'predsjednik');
+                            $chairmanScore = $chairmanMember ? $allScores->get($chairmanMember->id) : null;
+                            $documentsComplete = $chairmanScore ? $chairmanScore->documents_complete : null;
+                        @endphp
+                        <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; border: 1px solid #e5e7eb;">
+                            @if($documentsComplete !== null)
+                                <div style="margin-bottom: 8px;">
+                                    <strong style="color: #111827;">
+                                        {{ $documentsComplete ? 'a. Da' : 'b. Ne*' }}
+                                    </strong>
+                                </div>
+                                @if(!$documentsComplete)
+                                    <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                                        *ukoliko je odgovor „Ne", odbiti aplikaciju
+                                    </div>
+                                @endif
+                            @else
+                                <div style="color: #6b7280;">
+                                    <em>Nije označeno</em>
+                                </div>
+                            @endif
+                        </div>
+                    @endif
                 </div>
 
                 <!-- 4. Ocjena biznis plana u brojkama -->

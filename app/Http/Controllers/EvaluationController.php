@@ -185,36 +185,40 @@ class EvaluationController extends Controller
             ->count();
         $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
         
-        // Osiguraj da samo predsjednik može slati zaključak i iznos odobrenih sredstava
+        // Osiguraj da samo predsjednik može slati zaključak, iznos odobrenih sredstava i documents_complete
         if ($commissionMember->position !== 'predsjednik') {
             // Ako nije predsjednik, ukloni te podatke iz requesta
             $request->merge([
                 'commission_decision' => null,
                 'approved_amount' => null,
                 'decision_date' => null,
+                'documents_complete' => null,
             ]);
         }
 
-        // Validacija - provjera dokumentacije
-        $rules = [
-            'documents_complete' => 'required|boolean',
-        ];
-        $messages = [
-            'documents_complete.required' => 'Morate odgovoriti da li su sva potrebna dokumenta dostavljena.',
-        ];
+        // Validacija - provjera dokumentacije (samo za predsjednika)
+        $rules = [];
+        $messages = [];
+        
+        if ($commissionMember->position === 'predsjednik') {
+            $rules['documents_complete'] = 'required|boolean';
+            $messages['documents_complete.required'] = 'Morate odgovoriti da li su sva potrebna dokumenta dostavljena.';
+        }
 
-        // Validiraj samo documents_complete prvo
-        $request->validate($rules, $messages);
-
-        // Ako dokumentacija nije kompletna, automatski odbiti prijavu
-        if (!$request->boolean('documents_complete')) {
-            $application->update([
-                'status' => 'rejected',
-                'rejection_reason' => 'Nedostaju potrebna dokumenta.',
-            ]);
+        // Validiraj samo documents_complete prvo (ako je predsjednik)
+        if ($commissionMember->position === 'predsjednik' && !empty($rules)) {
+            $request->validate($rules, $messages);
             
-            return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
-                ->with('error', 'Prijava je odbijena jer nisu dostavljena sva potrebna dokumenta.');
+            // Ako dokumentacija nije kompletna, automatski odbiti prijavu
+            if (!$request->boolean('documents_complete')) {
+                $application->update([
+                    'status' => 'rejected',
+                    'rejection_reason' => 'Nedostaju potrebna dokumenta.',
+                ]);
+                
+                return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+                    ->with('error', 'Prijava je odbijena jer nisu dostavljena sva potrebna dokumenta.');
+            }
         }
 
         // Validacija - svaki kriterijum 1-5 poena
@@ -243,6 +247,23 @@ class EvaluationController extends Controller
             $totalScore += $validated["criterion_{$i}"];
         }
 
+        // Za ostale članove, koristi documents_complete od predsjednika
+        $documentsCompleteValue = null;
+        if ($commissionMember->position === 'predsjednik') {
+            $documentsCompleteValue = $validated['documents_complete'] ?? null;
+        } else {
+            // Pronađi ocjenu predsjednika komisije
+            $chairmanMember = $commission->activeMembers()->where('position', 'predsjednik')->first();
+            if ($chairmanMember) {
+                $chairmanScore = EvaluationScore::where('application_id', $application->id)
+                    ->where('commission_member_id', $chairmanMember->id)
+                    ->first();
+                if ($chairmanScore) {
+                    $documentsCompleteValue = $chairmanScore->documents_complete;
+                }
+            }
+        }
+
         // Kreiraj ili ažuriraj ocjenu
         $evaluationScore = EvaluationScore::updateOrCreate(
             [
@@ -250,7 +271,7 @@ class EvaluationController extends Controller
                 'commission_member_id' => $commissionMember->id,
             ],
             [
-                'documents_complete' => $validated['documents_complete'],
+                'documents_complete' => $documentsCompleteValue,
                 'criterion_1' => $validated['criterion_1'],
                 'criterion_2' => $validated['criterion_2'],
                 'criterion_3' => $validated['criterion_3'],
