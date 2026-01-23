@@ -10,10 +10,22 @@ export default defineConfig({
         }),
         tailwindcss(),
     ],
+    resolve: {
+        alias: {
+            buffer: 'buffer',
+        },
+    },
     optimizeDeps: {
         include: ['buffer'],
     },
-    define: {
-        'global': 'globalThis',
+    build: {
+        commonjsOptions: {
+            transformMixedEsModules: true,
+        },
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
+        },
     },
 });

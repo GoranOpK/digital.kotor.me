@@ -5,13 +5,7 @@
  * Backend samo čuva metadata (nodeId, link, size, itd.)
  */
 
-import { Buffer } from 'buffer';
 import { Storage } from 'megajs';
-
-// Buffer polyfill za browser (megajs zahteva Buffer)
-if (typeof globalThis.Buffer === 'undefined') {
-    globalThis.Buffer = Buffer;
-}
 
 let megaStorage = null;
 
@@ -122,15 +116,15 @@ async function uploadFileToMega(file, folderPath = 'digital.kotor/documents', us
                 size: file.size
             }, file).complete;
         } catch (blobError) {
-            console.warn('Upload with File/Blob failed, trying with Buffer:', blobError.message);
-            // Ako ne radi sa File/Blob, konvertuj u Buffer (što megajs očekuje)
+            console.warn('Upload with File/Blob failed, trying with ArrayBuffer:', blobError.message);
+            // Ako ne radi sa File/Blob, probaj sa ArrayBuffer
+            // megajs bi trebalo da prihvata ArrayBuffer direktno
             const fileData = await file.arrayBuffer();
-            const buffer = Buffer.from(fileData);
-            console.log('Trying with Buffer, length:', buffer.length);
+            console.log('Trying with ArrayBuffer, length:', fileData.byteLength);
             uploadedFile = await targetFolder.upload({
                 name: file.name,
                 size: file.size
-            }, buffer).complete;
+            }, fileData).complete;
         }
         console.log('Upload completed, uploadedFile:', uploadedFile);
 
