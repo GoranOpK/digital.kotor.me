@@ -437,6 +437,23 @@ class EvaluationController extends Controller
                 }
             }
 
+            // Provjeri da li član već ocjenio i da li je prijava zaključena
+            $existingScoreForMember = EvaluationScore::where('application_id', $application->id)
+                ->where('commission_member_id', $commissionMember->id)
+                ->first();
+            
+            $isDecisionMade = $application->commission_decision !== null;
+            
+            if ($existingScoreForMember && $hasCompletedEvaluation && !$isDecisionMade && !$isChairman) {
+                // Ako je već ocjenio ali prijava nije zaključena i nije predsjednik, može ažurirati samo notes
+                $existingScoreForMember->update([
+                    'notes' => $validated['notes'] ?? $existingScoreForMember->notes,
+                ]);
+                
+                return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+                    ->with('success', 'Napomene su uspješno ažurirane.');
+            }
+
             $evaluationScore = EvaluationScore::updateOrCreate(
                 [
                     'application_id' => $application->id,

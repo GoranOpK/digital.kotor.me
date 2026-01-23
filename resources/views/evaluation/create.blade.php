@@ -772,8 +772,9 @@
                         @endforeach
                     @endif
                     
-                    @if($canEditNotes && !(isset($isChairman) && $isChairman) && !$currentMemberHasNote)
+                    @if($canEditNotes && !(isset($isChairman) && $isChairman))
                         {{-- Polje za unos napomena ostalih članova - prikaži na kraju --}}
+                        {{-- Članovi mogu editovati napomene dok prijava nije zaključena, čak i ako već imaju napomenu --}}
                         <div style="margin-top: {{ count($membersWithNotes) > 0 ? '20px' : '0' }};">
                             <label class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 8px;">
                                 Napomena Član komisije ({{ $commissionMember->name }})
