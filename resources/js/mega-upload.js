@@ -5,13 +5,9 @@
  * Backend samo čuva metadata (nodeId, link, size, itd.)
  */
 
-import { Buffer } from 'buffer';
 import { Storage } from 'megajs';
 
-// Buffer polyfill za browser (megajs zahteva Buffer)
-if (typeof globalThis.Buffer === 'undefined') {
-    globalThis.Buffer = Buffer;
-}
+// Buffer je dostupan kroz vite-plugin-node-polyfills
 
 let megaStorage = null;
 
