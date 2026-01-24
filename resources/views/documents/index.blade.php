@@ -292,12 +292,6 @@
             <p style="color: rgba(255,255,255,0.9); margin: 0;">Upravljajte svojim dokumentima i koristite ih pri prijavama na konkurse</p>
         </div>
 
-        @if(session('success'))
-            <div class="alert alert-success">
-                {{ session('success') }}
-            </div>
-        @endif
-
         @if($errors->any())
             <div class="alert alert-error">
                 <ul style="margin: 0; padding-left: 20px;">
