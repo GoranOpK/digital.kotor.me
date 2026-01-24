@@ -38,20 +38,22 @@ Proveri da nema grešaka. Nova JS uključuje `deleteFromMega` i izmene u `mega-u
 
 1. `git pull`
 2. `php artisan migrate`
-3. `npm run build`
-4. (Opciono) Podesi Plesk task za `delete-expired-documents.php` – v. `PLESK_DELETE_EXPIRED_CRON.md`
+3. `npm install` (megajs, dotenv za Node skriptu)
+4. `npm run build`
+5. (Opciono) Plesk task za `delete-expired-documents.php` – v. `PLESK_DELETE_EXPIRED_CRON.md`. Cron mora imati pristup `node` (ili `NODE_BINARY` u .env).
 
 ## 6. Šta je dodato / izmenjeno
 
 - **Migration:** `mega_node_id`, `mega_file_name` u `user_documents`
 - **storeMegaMetadata:** upisuje `mega_node_id` i `mega_file_name`
-- **destroy:** i dalje briše samo lokalne fajlove i zapis; MEGA brisanje je u browseru
-- **Blade:** forma za brisanje ima `data-is-mega`, `data-mega-file-name`; `handleDocumentDelete` poziva `deleteFromMega` za MEGA dok ako ima `mega_file_name`
-- **mega-upload.js:** `deleteFromMega(megaFileName)` – megajs `storage.find` + `file.delete(true)`
-- **DeleteExpiredDocuments:** `documents:delete-expired` – briše istekle (samo DB za MEGA-only)
+- **destroy:** briše lokalne fajlove i zapis; MEGA brisanje je u browseru (handleDocumentDelete → deleteFromMega)
+- **Blade:** forma za brisanje ima `data-is-mega`, `data-mega-file-name`; `handleDocumentDelete` poziva `deleteFromMega` za MEGA dok
+- **mega-upload.js:** `deleteFromMega(megaFileName)` – megajs `storage.find(_, true)` + `file.delete(true)`
+- **DeleteExpiredDocuments:** briše istekle; za MEGA-only poziva Node skriptu `scripts/delete-expired-mega.js` (megajs), briše sa MEGA-e, pa zapis iz baze
+- **scripts/delete-expired-mega.js:** Node + megajs; čita queue JSON, briše fajlove sa MEGA-e, piše done JSON
 - **delete-expired-documents.php:** root skripta za Plesk cron
-- **routes/console.php:** uklonjen `Schedule::`; ostaje komentar da se koristi PHP skripta + Plesk
+- **package.json:** `megajs`, `dotenv` (za delete-expired-mega)
 
 ## 7. Stari dokumenti (pre ovog deploy-a)
 
-Nemaju `mega_file_name`. Klik "Obriši" za njih: preskače se MEGA brisanje (nema imena), šalje se forma, backend briše zapis. Fajl na MEGA ostaje.
+Nemaju `mega_file_name`. Klik "Obriši": preskače se MEGA brisanje, šalje se forma, backend briše zapis. Fajl na MEGA ostaje. Cron ih preskače (nema mega_file_name).

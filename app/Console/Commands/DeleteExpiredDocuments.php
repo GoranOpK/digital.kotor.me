@@ -6,6 +6,7 @@ use App\Models\UserDocument;
 use App\Services\DocumentProcessor;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
 
@@ -14,7 +15,7 @@ class DeleteExpiredDocuments extends Command
     protected $signature = 'documents:delete-expired
                             {--dry-run : Prikaži šta bi bilo obrisano, bez brisanja}';
 
-    protected $description = 'Briše dokumente čiji je datum isteka (expires_at) prošao. Jednom dnevno (cron).';
+    protected $description = 'Briše dokumente čiji je datum isteka (expires_at) prošao. Lokalne fajlove briše direktno; MEGA fajlove briše preko Node + megajs. Jednom dnevno (cron).';
 
     public function __construct(
         protected DocumentProcessor $documentProcessor
@@ -46,7 +47,7 @@ class DeleteExpiredDocuments extends Command
 
         $deleted = 0;
         $localFreed = 0;
-        $cloudOnly = 0;
+        $megaQueue = [];
 
         foreach ($docs as $doc) {
             $id = $doc->id;
@@ -58,14 +59,21 @@ class DeleteExpiredDocuments extends Command
             if ($dryRun) {
                 $this->line("  [dry-run] ID {$id}: {$name}" . ($hasCloud ? ' (MEGA)' : '') . ($hasLocal ? ' (lokalno)' : ''));
                 $deleted++;
-                if ($hasCloud && !$hasLocal) {
-                    $cloudOnly++;
+                continue;
+            }
+
+            if ($hasCloud && !$hasLocal) {
+                $megaFileName = $doc->mega_file_name ?? null;
+                if (!$megaFileName) {
+                    $this->warn("  ID {$id}: MEGA dokument bez mega_file_name, preskačem.");
+                    Log::warning('Expired MEGA document skipped (no mega_file_name)', ['document_id' => $id, 'name' => $name]);
+                    continue;
                 }
+                $megaQueue[] = ['id' => $id, 'mega_file_name' => $megaFileName];
                 continue;
             }
 
             $sizeFreed = 0;
-
             if ($doc->file_path && Storage::disk('local')->exists($doc->file_path)) {
                 $sizeFreed += Storage::disk('local')->size($doc->file_path);
                 Storage::disk('local')->delete($doc->file_path);
@@ -82,25 +90,64 @@ class DeleteExpiredDocuments extends Command
             $doc->delete();
             $deleted++;
             $localFreed += $sizeFreed;
-            if ($hasCloud && !$hasLocal) {
-                $cloudOnly++;
-            }
 
-            Log::info('Expired document deleted', [
+            Log::info('Expired document deleted (local)', [
                 'document_id' => $id,
                 'user_id' => $userId,
                 'name' => $name,
-                'had_cloud' => $hasCloud,
                 'local_freed' => $sizeFreed,
             ]);
         }
 
-        $this->info("Obrisano: {$deleted} dokumenata.");
+        if ($megaQueue !== [] && !$dryRun) {
+            $queuePath = Storage::disk('local')->path('expired_mega_queue.json');
+            Storage::disk('local')->put('expired_mega_queue.json', json_encode($megaQueue, JSON_UNESCAPED_UNICODE));
+
+            $nodeScript = base_path('scripts/delete-expired-mega.js');
+            $nodeBinary = env('NODE_BINARY', 'node');
+            $this->info('Pokretanje Node skripte za brisanje sa MEGA...');
+            $result = Process::path(base_path())->run([$nodeBinary, $nodeScript, $queuePath]);
+
+            if (!$result->successful()) {
+                $this->error('Node skripta nije uspela: ' . $result->errorOutput());
+                Log::error('delete-expired-mega.js failed', [
+                    'output' => $result->output(),
+                    'error' => $result->errorOutput(),
+                ]);
+            } else {
+                $this->line($result->output());
+            }
+
+            $doneIds = [];
+            if (Storage::disk('local')->exists('expired_mega_done.json')) {
+                $raw = Storage::disk('local')->get('expired_mega_done.json');
+                $done = json_decode($raw, true);
+                if (is_array($done)) {
+                    $doneIds = array_column($done, 'id');
+                }
+            }
+
+            foreach ($doneIds as $doneId) {
+                $d = UserDocument::find($doneId);
+                if ($d) {
+                    $d->delete();
+                    $deleted++;
+                    Log::info('Expired document deleted (MEGA)', [
+                        'document_id' => $doneId,
+                        'user_id' => $d->user_id,
+                        'name' => $d->name,
+                    ]);
+                }
+            }
+
+            Storage::disk('local')->delete(['expired_mega_queue.json', 'expired_mega_done.json']);
+
+            $this->info('MEGA: obrisano ' . count($doneIds) . ' fajlova.');
+        }
+
+        $this->info("Ukupno obrisano: {$deleted} dokumenata.");
         if ($localFreed > 0) {
             $this->info('Oslobođeno lokalnog prostora: ' . $this->formatBytes($localFreed));
-        }
-        if ($cloudOnly > 0) {
-            $this->warn("{$cloudOnly} dokumenata bilo je samo na MEGA. Fajlovi na MEGA se ne brišu iz cron-a (koristi se megajs u browser-u). Obrisani su samo zapisi iz baze.");
         }
 
         return Command::SUCCESS;
