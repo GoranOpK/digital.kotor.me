@@ -237,16 +237,16 @@
                             "Preduzetnica" se odnosi na fizička lica koja imaju registrovanu djelatnost (preduzetnici).
                         </div>
                         @php
-                            $userType = auth()->user()->user_type;
+                            $userType = auth()->user()->user_type ?? '';
+                            // Podrazumevano uvijek "Preduzetnica"
                             $defaultType = 'preduzetnica';
                             
                             if (str_contains($userType, 'Društvo sa ograničenom odgovornošću') || str_contains($userType, 'DOO')) {
+                                // Registrovani privredni subjekt tipa DOO
                                 $defaultType = 'doo';
-                            } elseif ($userType === 'Fizičko lice' || $userType === 'Preduzetnik') {
-                                $defaultType = 'preduzetnica';
-                            } else {
-                                // Za ostale pravne subjekte (NVO, AD, itd.) koristimo DOO obrazac jer su pravna lica
-                                $defaultType = 'doo';
+                            } elseif ($userType && $userType !== 'Fizičko lice' && $userType !== 'Preduzetnik') {
+                                // Svi ostali registrovani privredni subjekti (Akcionarsko društvo, NVO, Udruženje, itd.)
+                                $defaultType = 'ostalo';
                             }
                         @endphp
                         <div class="radio-group">
