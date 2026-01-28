@@ -192,10 +192,10 @@
                                 </span>
                             </td>
                             <td>
-                                @if($application->final_score)
+                                @if($allEvaluated && $application->final_score)
                                     {{ number_format($application->final_score, 2) }} / 50
                                 @else
-                                    -
+                                    Ocjenjivanje u toku
                                 @endif
                             </td>
                             <td>
