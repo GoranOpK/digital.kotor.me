@@ -760,38 +760,4 @@ class ApplicationController extends Controller
             ->with('success', 'Dokument je uspješno obrisan.');
     }
 
-    /**
-     * Brisanje prijave
-     */
-    public function destroy(Application $application): RedirectResponse
-    {
-        // Proveri da li prijava pripada korisniku ili je administrator
-        $user = Auth::user();
-        $isOwner = $application->user_id === $user->id;
-        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin', 'konkurs_admin']);
-
-        if (!$isOwner && !$isAdmin) {
-            abort(403, 'Nemate pristup ovoj prijavi.');
-        }
-
-        // Korisnik ili admin mogu obrisati prijavu u bilo kom momentu
-        // (Uklonjen uslov za 'draft' status na zahtjev korisnika)
-
-        // Obriši biznis plan ako postoji
-        if ($application->businessPlan) {
-            $application->businessPlan->delete();
-        }
-
-        // Obriši dokumente (ali ne i fizičke fajlove ako su iz biblioteke!)
-        $application->documents()->delete();
-
-        // Obriši samu prijavu
-        $application->delete();
-
-        if ($isAdmin) {
-            return redirect()->route('admin.applications.index')->with('success', 'Prijava je uspješno obrisana.');
-        }
-
-        return redirect()->route('dashboard')->with('success', 'Prijava je uspješno obrisana.');
-    }
 }
