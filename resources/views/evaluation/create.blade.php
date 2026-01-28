@@ -585,103 +585,6 @@
                     @endfor
                 </div>
 
-                <!-- 5. Zaključak komisije -->
-                <div class="form-section commission-decision-section">
-                    <label class="form-label form-label-large">4. Na bazi konačne ocjene Komisija donosi zaključak da se biznis plan:</label>
-                    
-                    @if($commissionMember->position === 'predsjednik' && isset($allMembersEvaluated) && $allMembersEvaluated)
-                        {{-- Predsjednik može unijeti zaključak kada su svi članovi ocjenili --}}
-                        <div class="radio-group">
-                            <label class="radio-option">
-                                <input type="radio" name="commission_decision" value="podrzava_potpuno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_potpuno' ? 'checked' : '' }}>
-                                <span>a. Podržava u potpunosti</span>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="commission_decision" value="podrzava_djelimicno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_djelimicno' ? 'checked' : '' }}>
-                                <span>b. Podržava djelimično</span>
-                            </label>
-                            <label class="radio-option">
-                                <input type="radio" name="commission_decision" value="odbija" {{ old('commission_decision', $application->commission_decision) === 'odbija' ? 'checked' : '' }}>
-                                <span>c. Odbija</span>
-                            </label>
-                        </div>
-                        <div style="margin-top: 16px;">
-                            <label class="form-label">Iznos odobrenih sredstava:</label>
-                            <input 
-                                type="number" 
-                                name="approved_amount" 
-                                class="form-control amount-input" 
-                                step="0.01" 
-                                min="0"
-                                value="{{ old('approved_amount', $application->approved_amount) }}"
-                                placeholder="0.00">
-                        </div>
-                    @elseif($commissionMember->position === 'predsjednik' && (!isset($allMembersEvaluated) || !$allMembersEvaluated))
-                        {{-- Predsjednik vidi poruku da mora sačekati da svi članovi ocjene --}}
-                        <div style="padding: 16px; background: #fef3c7; border-radius: 8px; margin-top: 12px; border: 1px solid #fbbf24;">
-                            <div style="color: #92400e; font-weight: 600; margin-bottom: 8px;">
-                                ⚠️ Zaključak komisije može se donijeti tek kada svi članovi komisije ocjene prijavu.
-                            </div>
-                            <div style="color: #78350f; font-size: 13px;">
-                                Trenutno: {{ $evaluatedMemberIds ?? 0 }} / {{ $totalMembers ?? 0 }} članova je ocjenilo prijavu.
-                            </div>
-                        </div>
-                    @else
-                        {{-- Ostali članovi komisije vide read-only prikaz zaključka --}}
-                        <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px;">
-                            @php
-                                $decisionLabels = [
-                                    'podrzava_potpuno' => 'a. Podržava u potpunosti',
-                                    'podrzava_djelimicno' => 'b. Podržava djelimično',
-                                    'odbija' => 'c. Odbija'
-                                ];
-                                $currentDecision = $application->commission_decision;
-                            @endphp
-                            @if($currentDecision)
-                                <div style="margin-bottom: 12px;">
-                                    <strong>{{ $decisionLabels[$currentDecision] ?? 'Nije doneseno' }}</strong>
-                                </div>
-                                @if($application->approved_amount)
-                                    <div style="margin-bottom: 12px;">
-                                        <strong>Iznos odobrenih sredstava:</strong> {{ number_format($application->approved_amount, 2) }} €
-                                    </div>
-                                @endif
-                            @else
-                                <div style="margin-bottom: 12px; color: #6b7280;">
-                                    <em>Zaključak još nije donesen. Predsjednik komisije će donijeti zaključak nakon što svi članovi ocjene prijavu.</em>
-                                </div>
-                            @endif
-                        </div>
-                    @endif
-                </div>
-
-                <!-- 5. Obrazloženje (samo predsjednik komisije unosi) -->
-                <div class="form-section justification-section">
-                    <label class="form-label form-label-large">5. Obrazloženje:</label>
-                    @if(isset($isChairman) && $isChairman)
-                        {{-- Samo predsjednik komisije može unositi/uređivati obrazloženje --}}
-                        <textarea 
-                            name="justification" 
-                            class="form-control" 
-                            rows="6" 
-                            placeholder="Unesite obrazloženje ocjene...">{{ old('justification', $existingScore?->justification ?? $application->commission_justification) }}</textarea>
-                    @else
-                        {{-- Ostali članovi vide (ako postoji) kao read-only, bez mogućnosti izmjene --}}
-                        @php
-                            $readonlyJustification = $existingScore?->justification ?? $application->commission_justification;
-                        @endphp
-                        @if($readonlyJustification)
-                            <div class="readonly-value">
-                                {{ $readonlyJustification }}
-                            </div>
-                        @else
-                            <div class="readonly-value" style="color: #9ca3af;">
-                                Obrazloženje će unijeti predsjednik komisije nakon ocjenjivanja.
-                            </div>
-                        @endif
-                    @endif
-                </div>
-
                 <!-- 6. Ostale napomene -->
                 <div class="form-section">
                     <label class="form-label form-label-large">6. Ostale napomene:</label>
@@ -807,25 +710,6 @@
                                 placeholder="Unesite dodatne napomene...">{{ old('notes', $existingScore?->notes) }}</textarea>
                         </div>
                     @endif
-                </div>
-
-                <!-- Potpisi -->
-                <div class="signature-section">
-                    <div style="text-align: right; margin-bottom: 24px; font-size: 14px;">
-                        Kotor, <input type="date" name="decision_date" class="form-control" style="display: inline-block; width: 150px; margin: 0 8px;" value="{{ old('decision_date', $application->commission_decision_date ? $application->commission_decision_date->format('Y-m-d') : '') }}">
-                    </div>
-                    <div class="signature-row">
-                        @foreach($allMembers as $member)
-                            <div class="signature-item">
-                                <div style="font-weight: 600; margin-bottom: 8px; text-align: center;">
-                                    {{ $member->position === 'predsjednik' ? 'Predsjednik Komisije' : 'Član ' . ($loop->index) }}:
-                                </div>
-                                <div style="margin-top: 40px; border-top: 1px solid #d1d5db; padding-top: 8px; text-align: center;">
-                                    {{ $member->name }}
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
                 </div>
 
                 <div style="margin-top: 32px; text-align: center;">
