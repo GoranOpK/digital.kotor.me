@@ -327,6 +327,25 @@
                 <!-- Priložena dokumentacija -->
                 @php
                     $userRole = auth()->user()->role ? auth()->user()->role->name : null;
+                    // Mapiranje tipova dokumenata na nazive traženih dokumenata (ne prikazujemo ime uploadovanog fajla)
+                    $documentLabels = [
+                        'licna_karta' => 'Ovjerena kopija lične karte',
+                        'crps_resenje' => 'Rješenje o upisu u CRPS',
+                        'pib_resenje' => 'Rješenje o registraciji PJ Uprave prihoda i carina (PIB)',
+                        'pdv_resenje' => 'Rješenje o registraciji za PDV',
+                        'statut' => 'Statut društva',
+                        'karton_potpisa' => 'Karton potpisa',
+                        'potvrda_neosudjivanost' => 'Potvrda o neosuđivanosti',
+                        'uvjerenje_opstina_porezi' => 'Uvjerenje Opštine o urednom izmirivanju poreza',
+                        'uvjerenje_opstina_nepokretnost' => 'Uvjerenje Opštine o nepostojanju nepokretnosti',
+                        'potvrda_upc_porezi' => 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza',
+                        'ioppd_obrazac' => 'Obrazac IOPPD',
+                        'godisnji_racuni' => 'Godišnji računi',
+                        'biznis_plan_usb' => 'Štampana i elektronska verzija biznis plana na USB-u',
+                        'izvjestaj_realizacija' => 'Izvještaj o realizaciji',
+                        'finansijski_izvjestaj' => 'Finansijski izvještaj',
+                        'ostalo' => 'Ostalo',
+                    ];
                 @endphp
                 @if($application->documents->count() > 0 && $userRole === 'komisija')
                 <div class="info-card">
@@ -334,7 +353,8 @@
                     <ul class="documents-list">
                         @foreach($application->documents as $doc)
                             <li class="document-item">
-                                <span>{{ $doc->name }}</span>
+                                {{-- Članovi komisije vide naziv traženog dokumenta, ne ime uploadovanog fajla --}}
+                                <span>{{ $documentLabels[$doc->document_type] ?? $doc->document_type }}</span>
                                 <div style="display: inline-flex; gap: 8px;">
                                     {{-- Samo članovi komisije mogu da vide dokument (server dodatno provjerava dodijeljenu komisiju) --}}
                                     <a href="{{ route('applications.document.view', ['application' => $application, 'document' => $doc]) }}"
