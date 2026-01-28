@@ -324,6 +324,17 @@
             $canManage = $canManage ?? false;
             // Upload i izmjene su dozvoljeni samo vlasniku prijave
             $showUpload = $canManage && ($application->status === 'draft' || $application->status === 'submitted');
+
+            // Izračun roka za prijavu – korisnik može obrisati prijavu samo do isteka roka
+            $competition = $application->competition;
+            $deadline = null;
+            $canDelete = false;
+
+            if ($competition && $competition->published_at) {
+                $deadline = $competition->published_at->copy()->addDays($competition->deadline_days ?? 20);
+                $canDelete = $canManage && $deadline && !$deadline->isPast();
+            }
+
             // Ako ne prikazujemo upload, grid ide na 2 kolone, inače na 3 (iste širine)
             $gridColumnsStyle = $showUpload ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)';
         @endphp
@@ -443,6 +454,28 @@
                         <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 13px; padding: 10px;">Priloži dokument</button>
                     </form>
                 </div>
+            </div>
+            @endif
+
+            <!-- 3. Akcije nad prijavom (brisanje) -->
+            @if($canDelete)
+            <div class="info-card">
+                <h2>Akcije nad prijavom</h2>
+                <p style="font-size: 13px; color: #4b5563; margin-bottom: 12px;">
+                    Prijavu možete obrisati najkasnije do isteka roka za prijavu na konkurs.
+                </p>
+                <form method="POST" action="{{ route('applications.destroy', $application) }}" onsubmit="return confirm('Da li ste sigurni da želite obrisati ovu prijavu? Ova akcija se ne može poništiti.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn-danger" style="background: #dc2626; color: #fff; padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600;">
+                        Obriši prijavu
+                    </button>
+                </form>
+                @if($deadline)
+                    <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                        Rok za prijave: {{ $deadline->format('d.m.Y. H:i') }}
+                    </p>
+                @endif
             </div>
             @endif
 

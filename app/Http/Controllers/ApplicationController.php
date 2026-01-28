@@ -478,6 +478,45 @@ class ApplicationController extends Controller
     }
 
     /**
+     * Brisanje prijave od strane korisnika
+     *
+     * Korisnik može obrisati svoju prijavu samo do isteka roka za prijavu na konkurs.
+     */
+    public function destroy(Application $application): RedirectResponse
+    {
+        $user = Auth::user();
+
+        // Dozvoli brisanje samo vlasniku prijave
+        if ($application->user_id !== $user->id) {
+            abort(403, 'Nemate pravo da obrišete ovu prijavu.');
+        }
+
+        $competition = $application->competition;
+
+        if (!$competition || !$competition->published_at) {
+            return redirect()->route('dashboard')
+                ->withErrors(['error' => 'Ova prijava nije povezana sa važećim konkursom. Brisanje nije moguće.']);
+        }
+
+        // Izračunaj rok za prijave (isto kao u create/store logici)
+        $deadline = $competition->published_at
+            ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 20)
+            : null;
+
+        // Nakon isteka roka – ne dozvoli brisanje
+        if ($deadline && $deadline->isPast()) {
+            return redirect()->route('applications.show', $application)
+                ->withErrors(['error' => 'Rok za prijave je istekao. Prijavu više nije moguće obrisati.']);
+        }
+
+        // Obriši prijavu (i kaskadno povezane podatke prema definisanim relacionim pravilima)
+        $application->delete();
+
+        return redirect()->route('dashboard')
+            ->with('success', 'Prijava je uspješno obrisana.');
+    }
+
+    /**
      * Konačno podnošenje prijave
      */
     public function submit(Application $application): RedirectResponse
