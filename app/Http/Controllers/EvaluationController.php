@@ -324,7 +324,15 @@ class EvaluationController extends Controller
         }
 
         $rules['notes'] = 'nullable|string|max:5000';
-        $rules['justification'] = 'nullable|string|max:5000';
+        // Obrazloženje unosi samo predsjednik komisije
+        if ($commissionMember->position === 'predsjednik') {
+            $rules['justification'] = 'nullable|string|max:5000';
+        } else {
+            // Za ostale članove zanemari eventualno poslato obrazloženje
+            $request->merge([
+                'justification' => null,
+            ]);
+        }
         
         // Ako je predsjednik i svi članovi su ocjenili, može unijeti zaključak i iznos
         if ($commissionMember->position === 'predsjednik' && $allMembersEvaluated) {
@@ -677,6 +685,21 @@ class EvaluationController extends Controller
         // Proveri da li je predsjednik
         if ($commissionMember->position !== 'predsjednik') {
             abort(403, 'Samo predsjednik komisije može donijeti zaključak.');
+        }
+
+        // Dozvoli pregled i zaključak tek kada svi članovi komisije završe ocjenjivanje
+        $commission = $commissionMember->commission;
+        $totalMembers = $commission->activeMembers()->count();
+        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
+            ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+            ->pluck('commission_member_id')
+            ->unique()
+            ->count();
+        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
+
+        if (!$allMembersEvaluated) {
+            return redirect()->route('evaluation.index', ['filter' => 'pending'])
+                ->with('error', 'Pregled svih ocjena i donošenje zaključka je moguće tek kada svi članovi komisije ocijene prijavu.');
         }
 
         $application->load(['user', 'competition', 'businessPlan', 'evaluationScores.commissionMember']);

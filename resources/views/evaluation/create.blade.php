@@ -467,10 +467,8 @@
                                                 $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
                                                 // Provjeri da li je drugi član završio ocjenjivanje
                                                 $otherMemberCompleted = $memberScore && $memberScore->criterion_1 !== null;
-                                                // Ako je predsjednik i već je ocjenio, može vidjeti sve ocjene
-                                                // ILI ako su svi članovi ocjenili, svi članovi mogu vidjeti sve ocjene
-                                                $canViewAllScores = (isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation) 
-                                                    || (isset($allMembersEvaluated) && $allMembersEvaluated);
+                                                // Prikaz ocjena ostalih članova dozvoljen je tek kada svi članovi završe ocjenjivanje
+                                                $canViewAllScores = isset($allMembersEvaluated) && $allMembersEvaluated;
                                             @endphp
                                             @if($isCurrentMember)
                                                 {{-- Trenutni član vidi svoje input polje --}}
@@ -502,8 +500,11 @@
                                                         onchange="updateAverages()">
                                                 @endif
                                             @else
-                                                {{-- Ostali članovi - prikaži ocjenu samo ako je trenutni član završio ocjenjivanje I drugi član je završio ocjenjivanje, ILI ako je predsjednik i svi su ocjenili --}}
-                                                @if(($hasCompletedEvaluation && $otherMemberCompleted) || $canViewAllScores)
+                                                {{-- Ostali članovi - prikaži ocjenu tek kada svi članovi završe ocjenjivanje, ili ako je predsjednik i već je ocjenio --}}
+                                                @php
+                                                    $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
+                                                @endphp
+                                                @if($allMembersEvaluatedFlag || $canViewAllScores)
                                                     <span class="score-display">
                                                         {{ $currentValue ? $currentValue : '—' }}
                                                     </span>
@@ -517,11 +518,10 @@
                                     @endforeach
                                     <td class="average-col" id="avg_{{ $num }}">
                                         @php
-                                            // Prikaži prosječnu ocjenu samo ako je trenutni član završio ocjenjivanje ILI ako je predsjednik i već je ocjenio
-                                            $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
-                                            $canViewAllScores = isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation;
+                                            // Prikaži prosječnu ocjenu tek kada svi članovi završe ocjenjivanje
+                                            $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
                                         @endphp
-                                        @if(($hasCompletedEvaluation && isset($averageScores[$num])) || ($canViewAllScores && isset($averageScores[$num])))
+                                        @if($allMembersEvaluatedFlag && isset($averageScores[$num]))
                                             {{ number_format($averageScores[$num], 2) }}
                                         @else
                                             —
@@ -535,20 +535,18 @@
                                 </td>
                                 @foreach($allMembers as $member)
                                     <td style="font-weight: bold !important;">
-                                        @php
-                                            $memberScore = $allScores->get($member->id);
-                                            $memberTotal = $memberScore ? $memberScore->calculateTotalScore() : 0;
-                                            $isCurrentMember = $member->id === $commissionMember->id;
-                                            $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
-                                            $otherMemberCompleted = $memberScore && $memberScore->criterion_1 !== null;
-                                            $canViewAllScores = isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation;
-                                        @endphp
+                                            @php
+                                                $memberScore = $allScores->get($member->id);
+                                                $memberTotal = $memberScore ? $memberScore->calculateTotalScore() : 0;
+                                                $isCurrentMember = $member->id === $commissionMember->id;
+                                                $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
+                                            @endphp
                                         @if($isCurrentMember)
                                             {{-- Trenutni član vidi svoju konačnu ocjenu --}}
                                             <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
                                         @else
-                                            {{-- Ostali članovi - prikaži ocjenu samo ako je trenutni član završio ocjenjivanje I drugi član je završio ocjenjivanje, ILI ako je predsjednik i svi su ocjenili --}}
-                                            @if(($hasCompletedEvaluation && $otherMemberCompleted) || $canViewAllScores)
+                                            {{-- Ostali članovi - prikaži konačne ocjene tek kada svi članovi završe ocjenjivanje --}}
+                                            @if($allMembersEvaluatedFlag)
                                                 <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
                                             @else
                                                 <strong style="color: #d1d5db;">—</strong>
@@ -558,11 +556,10 @@
                                 @endforeach
                                 <td class="average-col" id="final_score" style="font-weight: bold !important;">
                                     @php
-                                        // Prikaži konačnu ocjenu samo ako je trenutni član završio ocjenjivanje ILI ako je predsjednik i već je ocjenio
-                                        $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
-                                        $canViewAllScores = isset($isChairman) && $isChairman && isset($hasCompletedEvaluation) && $hasCompletedEvaluation;
+                                        // Prikaži konačnu prosječnu ocjenu tek kada svi članovi završe ocjenjivanje
+                                        $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
                                     @endphp
-                                    @if(($hasCompletedEvaluation && $finalScore > 0) || ($canViewAllScores && $finalScore > 0))
+                                    @if($allMembersEvaluatedFlag && $finalScore > 0)
                                         <strong>{{ number_format($finalScore, 2) }}</strong>
                                     @else
                                         <strong>—</strong>
@@ -658,14 +655,31 @@
                     @endif
                 </div>
 
-                <!-- 5. Obrazloženje -->
+                <!-- 5. Obrazloženje (samo predsjednik komisije unosi) -->
                 <div class="form-section justification-section">
                     <label class="form-label form-label-large">5. Obrazloženje:</label>
-                    <textarea 
-                        name="justification" 
-                        class="form-control" 
-                        rows="6" 
-                        placeholder="Unesite obrazloženje ocjene...">{{ old('justification', $existingScore?->justification ?? $application->commission_justification) }}</textarea>
+                    @if(isset($isChairman) && $isChairman)
+                        {{-- Samo predsjednik komisije može unositi/uređivati obrazloženje --}}
+                        <textarea 
+                            name="justification" 
+                            class="form-control" 
+                            rows="6" 
+                            placeholder="Unesite obrazloženje ocjene...">{{ old('justification', $existingScore?->justification ?? $application->commission_justification) }}</textarea>
+                    @else
+                        {{-- Ostali članovi vide (ako postoji) kao read-only, bez mogućnosti izmjene --}}
+                        @php
+                            $readonlyJustification = $existingScore?->justification ?? $application->commission_justification;
+                        @endphp
+                        @if($readonlyJustification)
+                            <div class="readonly-value">
+                                {{ $readonlyJustification }}
+                            </div>
+                        @else
+                            <div class="readonly-value" style="color: #9ca3af;">
+                                Obrazloženje će unijeti predsjednik komisije nakon ocjenjivanja.
+                            </div>
+                        @endif
+                    @endif
                 </div>
 
                 <!-- 6. Ostale napomene -->
