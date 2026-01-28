@@ -738,6 +738,14 @@
                                 break;
                             }
                         }
+
+                        // Ako trenutni član još nije završio ocjenjivanje, ne smije vidjeti napomene drugih članova
+                        // Dozvoli mu da vidi (i eventualno edituje) samo svoju napomenu
+                        if (!($hasCompletedEvaluation ?? false)) {
+                            $membersWithNotes = array_filter($membersWithNotes, function($note) use ($commissionMember) {
+                                return $note['member']->id === $commissionMember->id;
+                            });
+                        }
                     @endphp
                     
                     @if(count($membersWithNotes) > 0)
