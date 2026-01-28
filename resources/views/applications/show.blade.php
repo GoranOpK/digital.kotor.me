@@ -335,8 +335,8 @@
                 $canDelete = $canManage && $deadline && !$deadline->isPast();
             }
 
-            // Ako ne prikazujemo upload, grid ide na 2 kolone, inače na 3 (iste širine)
-            $gridColumnsStyle = $showUpload ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)';
+            // Prvi red: Osnovni podaci + Status prijave
+            $gridColumnsStyle = 'repeat(2, 1fr)';
         @endphp
 
         <div class="summary-grid" style="grid-template-columns: 1fr;">
@@ -395,91 +395,7 @@
                 </div>
             </div>
 
-            <!-- 2. Dodaj dokument (Sredina) -->
-            @if($showUpload)
-            <div class="info-card">
-                <h2>Dodaj dokument</h2>
-                <div class="upload-section" style="margin-top: 0; background: #f9fafb; padding: 15px;">
-                    <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data">
-                        @csrf
-                        <div class="form-group" style="margin-bottom: 12px;">
-                            <label class="form-label" style="font-size: 13px;">Tip dokumenta</label>
-                            <select name="document_type" class="form-control" style="font-size: 13px; padding: 8px;" required>
-                                <option value="">Izaberite tip</option>
-                                @php
-                                    $requiredDocs = $application->getRequiredDocuments();
-                                    $documentLabels = [
-                                        'licna_karta' => 'Lična karta',
-                                        'crps_resenje' => 'CRPS rješenje',
-                                        'pib_resenje' => 'PIB rješenje',
-                                        'pdv_resenje' => 'PDV rješenje',
-                                        'statut' => 'Statut',
-                                        'karton_potpisa' => 'Karton potpisa',
-                                        'potvrda_neosudjivanost' => 'Neosuđivanost',
-                                        'uvjerenje_opstina_porezi' => 'Porezi Opština',
-                                        'uvjerenje_opstina_nepokretnost' => 'Nepokretnost Opština',
-                                        'potvrda_upc_porezi' => 'Porezi UPC',
-                                        'ioppd_obrazac' => 'IOPPD',
-                                        'godisnji_racuni' => 'Godišnji računi',
-                                        'biznis_plan_usb' => 'USB verzija',
-                                        'ostalo' => 'Ostalo',
-                                    ];
-                                    $uploadedDocs = $application->documents->pluck('document_type')->toArray();
-                                @endphp
-                                @foreach($requiredDocs as $docType)
-                                    @if(!in_array($docType, $uploadedDocs))
-                                        <option value="{{ $docType }}">{{ $documentLabels[$docType] ?? $docType }}</option>
-                                    @endif
-                                @endforeach
-                                <option value="ostalo">Ostalo</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 12px;">
-                            <label class="form-label" style="font-size: 13px;">Fajl</label>
-                            <div class="file-input-wrapper" style="min-height: 32px;">
-                                <input type="file" name="file" id="file-input-{{ $application->id }}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateFileName(this, 'file-name-{{ $application->id }}')" style="height: 32px;">
-                                <label for="file-input-{{ $application->id }}" class="file-input-label-custom" style="padding: 6px 12px; font-size: 12px;">Izaberi fajl</label>
-                                <span id="file-name-{{ $application->id }}" class="file-name-display" style="display: none; font-size: 11px;"></span>
-                            </div>
-                        </div>
-                        <div class="form-group" style="margin-bottom: 15px;">
-                            <label class="form-label" style="font-weight: 400; font-size: 12px;">Ili iz biblioteke</label>
-                            <select name="user_document_id" class="form-control" style="font-size: 12px; padding: 6px;">
-                                <option value="">Izaberi...</option>
-                                @foreach(auth()->user()->documents()->where('status', 'active')->latest()->get() as $userDoc)
-                                    <option value="{{ $userDoc->id }}">{{ Str::limit($userDoc->name, 20) }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 13px; padding: 10px;">Priloži dokument</button>
-                    </form>
-                </div>
-            </div>
-            @endif
-
-            <!-- 3. Akcije nad prijavom (brisanje) -->
-            @if($canDelete)
-            <div class="info-card">
-                <h2>Akcije nad prijavom</h2>
-                <p style="font-size: 13px; color: #4b5563; margin-bottom: 12px;">
-                    Prijavu možete obrisati najkasnije do isteka roka za prijavu na konkurs.
-                </p>
-                <form method="POST" action="{{ route('applications.destroy', $application) }}" onsubmit="return confirm('Da li ste sigurni da želite obrisati ovu prijavu? Ova akcija se ne može poništiti.');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn-danger" style="background: #dc2626; color: #fff; padding: 10px 18px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600;">
-                        Obriši prijavu
-                    </button>
-                </form>
-                @if($deadline)
-                    <p style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                        Rok za prijave: {{ $deadline->format('d.m.Y. H:i') }}
-                    </p>
-                @endif
-            </div>
-            @endif
-
-            <!-- 3. Status prijave i Biznis plan -->
+            <!-- 2. Status prijave i Biznis plan (u prvom redu grida) -->
             <div class="info-card">
                 <div style="border-bottom: 2px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px;">
                     <h2 style="margin: 0; border: none; padding: 0;">Status prijave</h2>
@@ -588,6 +504,28 @@
                             {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}
                         </span>
                     </div>
+                    @if($canDelete)
+                        <div class="info-item" style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #e5e7eb;">
+                            <span class="info-label">Akcije nad prijavom</span>
+                            <div class="info-value" style="display: block; margin-top: 4px;">
+                                <p style="font-size: 13px; color: #4b5563; margin-bottom: 8px;">
+                                    Prijavu možete obrisati najkasnije do isteka roka za prijavu na konkurs.
+                                </p>
+                                <form method="POST" action="{{ route('applications.destroy', $application) }}" onsubmit="return confirm('Da li ste sigurni da želite obrisati ovu prijavu? Ova akcija se ne može poništiti.');" style="display: inline-block; margin-right: 12px;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn-danger" style="background: #dc2626; color: #fff; padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 13px; font-weight: 600;">
+                                        Obriši prijavu
+                                    </button>
+                                </form>
+                                @if($deadline)
+                                    <span style="display: inline-block; font-size: 12px; color: #6b7280; margin-top: 4px;">
+                                        Rok za prijave: {{ $deadline->format('d.m.Y. H:i') }}
+                                    </span>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
                     @if($application->status === 'draft' && $canManage)
                         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
                             @if($isReadyToSubmit)
@@ -607,6 +545,68 @@
                     @endif
                 </div>
             </div>
+
+            <!-- 3. Dodaj dokument (drugi red, ispod prve dvije sekcije) -->
+            @if($showUpload)
+            <div class="info-card">
+                <h2>Dodaj dokument</h2>
+                <div class="upload-section" style="margin-top: 0; background: #f9fafb; padding: 15px;">
+                    <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data">
+                        @csrf
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label" style="font-size: 13px;">Tip dokumenta</label>
+                            <select name="document_type" class="form-control" style="font-size: 13px; padding: 8px;" required>
+                                <option value="">Izaberite tip</option>
+                                @php
+                                    $requiredDocs = $application->getRequiredDocuments();
+                                    $documentLabels = [
+                                        'licna_karta' => 'Lična karta',
+                                        'crps_resenje' => 'CRPS rješenje',
+                                        'pib_resenje' => 'PIB rješenje',
+                                        'pdv_resenje' => 'PDV rješenje',
+                                        'statut' => 'Statut',
+                                        'karton_potpisa' => 'Karton potpisa',
+                                        'potvrda_neosudjivanost' => 'Neosuđivanost',
+                                        'uvjerenje_opstina_porezi' => 'Porezi Opština',
+                                        'uvjerenje_opstina_nepokretnost' => 'Nepokretnost Opština',
+                                        'potvrda_upc_porezi' => 'Porezi UPC',
+                                        'ioppd_obrazac' => 'IOPPD',
+                                        'godisnji_racuni' => 'Godišnji računi',
+                                        'biznis_plan_usb' => 'USB verzija',
+                                        'ostalo' => 'Ostalo',
+                                    ];
+                                    $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+                                @endphp
+                                @foreach($requiredDocs as $docType)
+                                    @if(!in_array($docType, $uploadedDocs))
+                                        <option value="{{ $docType }}">{{ $documentLabels[$docType] ?? $docType }}</option>
+                                    @endif
+                                @endforeach
+                                <option value="ostalo">Ostalo</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label" style="font-size: 13px;">Fajl</label>
+                            <div class="file-input-wrapper" style="min-height: 32px;">
+                                <input type="file" name="file" id="file-input-{{ $application->id }}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateFileName(this, 'file-name-{{ $application->id }}')" style="height: 32px;">
+                                <label for="file-input-{{ $application->id }}" class="file-input-label-custom" style="padding: 6px 12px; font-size: 12px;">Izaberi fajl</label>
+                                <span id="file-name-{{ $application->id }}" class="file-name-display" style="display: none; font-size: 11px;"></span>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label class="form-label" style="font-weight: 400; font-size: 12px;">Ili iz biblioteke</label>
+                            <select name="user_document_id" class="form-control" style="font-size: 12px; padding: 6px;">
+                                <option value="">Izaberi...</option>
+                                @foreach(auth()->user()->documents()->where('status', 'active')->latest()->get() as $userDoc)
+                                    <option value="{{ $userDoc->id }}">{{ Str::limit($userDoc->name, 20) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 13px; padding: 10px;">Priloži dokument</button>
+                    </form>
+                </div>
+            </div>
+            @endif
         </div>
 
         @if($errors->any())
@@ -797,15 +797,6 @@
                 @endif
             @endif
             
-            @if($canManage)
-                <form action="{{ route('applications.destroy', $application) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovu prijavu? Svi podaci o biznis planu i priloženi dokumenti će biti uklonjeni.');">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger" style="margin-left: 8px;">
-                        Obriši prijavu
-                    </button>
-                </form>
-            @endif
     </div>
 </div>
 
