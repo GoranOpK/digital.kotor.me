@@ -568,6 +568,12 @@
                                 <a href="{{ route('applications.business-plan.create', $application) }}" class="status-badge {{ $bizPlanClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
                                     {{ $bizPlanLabel }}
                                 </a>
+                                @if($application->businessPlan && $application->businessPlan->isComplete())
+                                    {{-- UX napomena: objašnjenje šta znači status "Biznis plan - popunjen" (lako uklonjivo ako ne odgovara) --}}
+                                    <div style="font-size: 11px; color: #6b7280; margin-top: 4px; max-width: 460px;">
+                                        Status „Biznis plan - popunjen“ znači da su ispunjeni minimalni uslovi za predaju. Sva polja biznis plana utiču na ocjenjivanje – što detaljnije popunite sve sekcije, to je veća šansa za bolju ocjenu.
+                                    </div>
+                                @endif
                             @else
                                 <span class="status-badge status-draft" style="font-size: 12px; padding: 4px 12px;">
                                     Nije dostupan
