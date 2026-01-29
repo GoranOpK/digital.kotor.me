@@ -414,15 +414,9 @@
                                 ];
                                 $statusClass = 'status-' . $application->status;
                             @endphp
-                            @if($application->status === 'rejected')
-                                <a href="{{ route('applications.show', $application) }}" class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; display: inline-block; cursor: pointer;">
-                                    {{ $statusLabels[$application->status] ?? $application->status }}
-                                </a>
-                            @else
-                                <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">
-                                    {{ $statusLabels[$application->status] ?? $application->status }}
-                                </span>
-                            @endif
+                            <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">
+                                {{ $statusLabels[$application->status] ?? $application->status }}
+                            </span>
                         </span>
                     </div>
                     @if($application->status === 'rejected' && $application->rejection_reason)

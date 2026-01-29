@@ -203,9 +203,15 @@
                             <td>{{ $application->user->name ?? 'N/A' }}</td>
                             <td>{{ $application->competition->title ?? 'N/A' }}</td>
                             <td>
-                                <span class="status-badge {{ $statusClass }}">
-                                    {{ $displayStatus }}
-                                </span>
+                                @if($application->status === 'rejected')
+                                    <a href="{{ route('evaluation.create', $application) }}" class="status-badge {{ $statusClass }}" style="text-decoration: none; cursor: pointer; display: inline-block;">
+                                        {{ $displayStatus }}
+                                    </a>
+                                @else
+                                    <span class="status-badge {{ $statusClass }}">
+                                        {{ $displayStatus }}
+                                    </span>
+                                @endif
                             </td>
                             <td>
                                 @if($application->status === 'rejected')

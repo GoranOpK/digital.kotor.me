@@ -323,7 +323,7 @@ class EvaluationController extends Controller
                     
                     $application->update([
                         'status' => 'rejected',
-                        'rejection_reason' => 'Nedostaju potrebna dokumenta.',
+                        'rejection_reason' => 'Nedostaju potrebna dokumenta',
                     ]);
                     
                     return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
@@ -562,7 +562,7 @@ class EvaluationController extends Controller
                     
                     $application->update([
                         'status' => 'rejected',
-                        'rejection_reason' => 'Nedostaju potrebna dokumenta.',
+                        'rejection_reason' => 'Nedostaju potrebna dokumenta',
                     ]);
                     
                     return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
