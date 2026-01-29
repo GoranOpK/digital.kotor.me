@@ -34,12 +34,13 @@ class EvaluationController extends Controller
         $commission = $commissionMember->commission;
         $commission->load('competitions');
 
-        // Prijave koje treba ocjeniti (submitted ili evaluated status)
-        $query = Application::with(['user', 'competition'])
-            ->whereIn('status', ['submitted', 'evaluated']);
-
         // Filtriranje prijava samo za konkurse dodijeljene komisiji člana
         $competitionIds = $commission->competitions->pluck('id');
+        
+        // Prijave koje treba ocjeniti (submitted, evaluated ili rejected status)
+        // Statusi se određuju na osnovu filtera
+        $query = Application::with(['user', 'competition']);
+        
         if ($competitionIds->isNotEmpty()) {
             $query->whereIn('competition_id', $competitionIds);
         } else {
@@ -60,20 +61,28 @@ class EvaluationController extends Controller
         // Filtriranje po statusu ocjenjivanja
         if ($request->filled('filter')) {
             if ($request->filter === 'pending') {
-                // Prijave koje član komisije još nije ocjenio
+                // Prijave koje član komisije još nije ocjenio (submitted status)
+                $query->whereIn('status', ['submitted', 'evaluated']);
                 if (!empty($evaluatedApplicationIds)) {
-            $query->whereNotIn('id', $evaluatedApplicationIds);
+                    $query->whereNotIn('id', $evaluatedApplicationIds);
                 }
                 // Ako nema ocjenjenih prijava, sve prijave su "pending"
             } elseif ($request->filter === 'evaluated') {
-                // Prijave koje je član komisije već ocjenio
+                // Prijave koje je član komisije već ocjenio (evaluated status)
+                $query->whereIn('status', ['submitted', 'evaluated']);
                 if (!empty($evaluatedApplicationIds)) {
-            $query->whereIn('id', $evaluatedApplicationIds);
+                    $query->whereIn('id', $evaluatedApplicationIds);
                 } else {
                     // Ako nema ocjenjenih prijava, ne prikazuj ništa
                     $query->whereRaw('1 = 0');
                 }
+            } elseif ($request->filter === 'rejected') {
+                // Odbijene prijave
+                $query->where('status', 'rejected');
             }
+        } else {
+            // Ako nema filtera, prikaži sve prijave (submitted, evaluated i rejected)
+            $query->whereIn('status', ['submitted', 'evaluated', 'rejected']);
         }
 
         $applications = $query->latest()->paginate(20)->appends($request->query());
@@ -141,11 +150,15 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
-        // Provjeri da li je prijava već odbijena zbog nedostajućih dokumenata
-        // Predsjednik može pristupiti formi čak i kada je prijava odbijena (može vidjeti šta je odlučio)
+        // Provjeri da li je prijava već odbijena
+        // Predsjednik može pristupiti formi čak i kada je prijava odbijena (može vidjeti šta je odlučio, ali samo read-only)
+        // Ostali članovi ne mogu pristupiti odbijenim prijavama
         $isChairman = $commissionMember->position === 'predsjednik';
-        if (!$isChairman && $application->status === 'rejected' && $application->rejection_reason === 'Nedostaju potrebna dokumenta.') {
-            abort(403, 'Prijava je već odbijena zbog nedostajućih dokumenata.');
+        if ($application->status === 'rejected') {
+            if (!$isChairman) {
+                abort(403, 'Prijava je već odbijena i ne može se editovati.');
+            }
+            // Ako je predsjednik, dozvoli pristup ali forma će biti read-only (provjera se vrši u view-u)
         }
 
         // Učitaj komisiju sa svim članovima
@@ -242,22 +255,6 @@ class EvaluationController extends Controller
      */
     public function store(Request $request, Application $application): RedirectResponse
     {
-        // Debug - provjeri da li se metoda poziva
-        // Koristimo file_put_contents jer je sigurniji način pisanja u fajl
-        $logFile = storage_path('logs/evaluation_debug.log');
-        file_put_contents($logFile, date('Y-m-d H:i:s') . " - STORE METHOD CALLED\n", FILE_APPEND);
-        file_put_contents($logFile, "Application ID: " . $application->id . "\n", FILE_APPEND);
-        file_put_contents($logFile, "Request all: " . json_encode($request->all()) . "\n", FILE_APPEND);
-        
-        error_log('=== EVALUATION STORE METHOD CALLED ===');
-        error_log('Application ID: ' . $application->id);
-        error_log('Request all: ' . json_encode($request->all()));
-        
-        // Provjeri da li se metoda uopće poziva - ako vidimo ovu poruku, znači da se poziva
-        \Log::info('EVALUATION STORE METHOD CALLED', [
-            'application_id' => $application->id,
-            'request_all' => $request->all(),
-        ]);
         
         $user = Auth::user();
         
@@ -270,22 +267,21 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
+        // Provjeri da li je prijava već odbijena - ako jeste, ne dozvoli izmjene
+        if ($application->status === 'rejected') {
+            return redirect()->route('evaluation.index', ['filter' => 'rejected'])
+                ->with('error', 'Prijava je već odbijena i ne može se editovati.');
+        }
+
         // PRIORITET: Provjeri documents_complete PRVO (ako je predsjednik) - prije bilo koje druge provjere
         // Ovo mora biti prvo jer ako dokumentacija nije kompletna, prijava se odmah odbija
         $isChairman = $commissionMember->position === 'predsjednik';
-        
-        \Log::info('Is Chairman: ' . ($isChairman ? 'YES' : 'NO'));
-        \Log::info('Has documents_complete: ' . ($request->has('documents_complete') ? 'YES' : 'NO'));
         
         // Provjeri documents_complete čim je predsjednik (bez obzira da li je već ocjenio ili ne)
         // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
         if ($isChairman) {
             // Provjeri da li postoji documents_complete u requestu
-            if (!$request->has('documents_complete')) {
-                // Ako nema documents_complete, možda je to prvi put kada predsjednik pristupa formi
-                // U tom slučaju, ne radimo ništa, samo nastavljamo dalje
-                \Log::info('=== DOCUMENTS_COMPLETE NOT IN REQUEST ===');
-            } else {
+            if ($request->has('documents_complete')) {
                 // Validacija documents_complete - obavezno polje za predsjednika
                 // Koristimo try-catch da uhvatimo validacijske greške
                 try {
@@ -305,20 +301,9 @@ class EvaluationController extends Controller
                 // Konvertuj documents_complete u boolean (Laravel automatski konvertuje "0" i "1")
                 $documentsComplete = $request->boolean('documents_complete');
                 
-                // Debug log za provjeru
-                \Log::info('=== DOCUMENTS_COMPLETE CHECK ===', [
-                    'raw_input' => $request->input('documents_complete'),
-                    'boolean_value' => $documentsComplete,
-                ]);
-                
                 // Ako dokumentacija nije kompletna, automatski odbiti prijavu i ne dozvoli dalje ocjenjivanje
                 // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
                 if (!$documentsComplete) {
-                    \Log::info('=== REJECTING APPLICATION ===', [
-                        'application_id' => $application->id,
-                        'reason' => 'documents_complete is false',
-                    ]);
-                    
                     // Sačuvaj ocjenu predsjednika samo sa documents_complete = false
                     EvaluationScore::updateOrCreate(
                         [
@@ -346,11 +331,6 @@ class EvaluationController extends Controller
                     $application->update([
                         'status' => 'rejected',
                         'rejection_reason' => 'Nedostaju potrebna dokumenta.',
-                    ]);
-                    
-                    \Log::info('=== APPLICATION REJECTED SUCCESSFULLY ===', [
-                        'application_id' => $application->id,
-                        'status' => 'rejected',
                     ]);
                     
                     return redirect()->route('evaluation.index', ['filter' => 'evaluated'])

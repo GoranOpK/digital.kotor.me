@@ -353,7 +353,10 @@
 
         <!-- Forma za ocjenjivanje -->
         <div class="form-card">
-            <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm">
+            @php
+                $isRejected = $application->status === 'rejected';
+            @endphp
+            <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" @if($isRejected) onsubmit="event.preventDefault(); return false;" @endif>
                 @csrf
 
                 <div class="form-title">
@@ -377,11 +380,11 @@
                         {{-- Predsjednik može označiti --}}
                         <div class="radio-group">
                             <label class="radio-option">
-                                <input type="radio" name="documents_complete" value="1" {{ old('documents_complete', $existingScore?->documents_complete ?? true) ? 'checked' : '' }} required>
+                                <input type="radio" name="documents_complete" value="1" {{ old('documents_complete', $existingScore?->documents_complete ?? true) ? 'checked' : '' }} @if($isRejected) disabled @else required @endif>
                                 <span>a. Da</span>
                             </label>
                             <label class="radio-option">
-                                <input type="radio" name="documents_complete" value="0" {{ old('documents_complete') === '0' || ($existingScore && !$existingScore->documents_complete) ? 'checked' : '' }} required>
+                                <input type="radio" name="documents_complete" value="0" {{ old('documents_complete') === '0' || ($existingScore && !$existingScore->documents_complete) ? 'checked' : '' }} @if($isRejected) disabled @else required @endif>
                                 <span>b. Ne*</span>
                             </label>
                         </div>
@@ -504,7 +507,8 @@
                                                         min="1" 
                                                         max="5" 
                                                         value="{{ old("criterion_{$num}", $currentValue) }}"
-                                                        @if(!$isDocumentsCompleteNo) required @endif
+                                                        @if(!$isDocumentsCompleteNo && !$isRejected) required @endif
+                                                        @if($isRejected) disabled @endif
                                                         onchange="updateAverages()">
                                                 @endif
                                             @else
@@ -690,7 +694,8 @@
                                         name="notes" 
                                         class="form-control" 
                                         rows="6" 
-                                        placeholder="Unesite dodatne napomene...">{{ old('notes', $memberNote['notes']) }}</textarea>
+                                        placeholder="Unesite dodatne napomene..."
+                                        @if($isRejected) disabled @endif>{{ old('notes', $memberNote['notes']) }}</textarea>
                                 @else
                                     {{-- Read-only prikaz za ostale članove --}}
                                     <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap;">
@@ -715,7 +720,8 @@
                                 name="notes" 
                                 class="form-control" 
                                 rows="6" 
-                                placeholder="Unesite dodatne napomene...">{{ old('notes', $existingScore?->notes) }}</textarea>
+                                placeholder="Unesite dodatne napomene..."
+                                @if($isRejected) disabled @endif>{{ old('notes', $existingScore?->notes) }}</textarea>
                         </div>
                     @endif
                 </div>
@@ -725,9 +731,25 @@
                         // Provjeri da li trenutni član može editovati napomene
                         $isDecisionMade = $application->commission_decision !== null;
                         $canEditNotesValue = !$isDecisionMade;
+                        $isRejected = $application->status === 'rejected';
                     @endphp
                     
-                    @if($isChairman && $hasCompletedEvaluation)
+                    @if($isRejected)
+                        {{-- Ako je prijava odbijena, prikaži samo read-only poruku --}}
+                        <div style="padding: 16px; background: #fee2e2; border-radius: 8px; margin-bottom: 16px; border: 1px solid #ef4444;">
+                            <div style="color: #991b1b; font-weight: 600; margin-bottom: 8px;">
+                                ⚠️ Ova prijava je odbijena i ne može se editovati.
+                            </div>
+                            @if($application->rejection_reason)
+                                <div style="color: #7f1d1d; font-size: 13px; margin-top: 4px;">
+                                    Razlog: {{ $application->rejection_reason }}
+                                </div>
+                            @endif
+                        </div>
+                        <a href="{{ route('evaluation.index', ['filter' => 'rejected']) }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
+                            Nazad na listu
+                        </a>
+                    @elseif($isChairman && $hasCompletedEvaluation)
                         {{-- Predsjednik kada je već ocjenio - može mijenjati sekciju 2 --}}
                         <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>

@@ -130,6 +130,7 @@
                         <option value="">Sve prijave</option>
                         <option value="pending" {{ request('filter') === 'pending' ? 'selected' : '' }}>Čeka ocjenjivanje</option>
                         <option value="evaluated" {{ request('filter') === 'evaluated' ? 'selected' : '' }}>Ocjenjene</option>
+                        <option value="rejected" {{ request('filter') === 'rejected' ? 'selected' : '' }}>Odbijene prijave</option>
                     </select>
                 </div>
                 <div class="form-group">
