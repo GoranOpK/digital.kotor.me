@@ -88,7 +88,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('role:komisija')->group(function () {
         Route::prefix('evaluation')->name('evaluation.')->group(function () {
             Route::get('/', [EvaluationController::class, 'index'])->name('index');
-            Route::get('/applications/{application}', [EvaluationController::class, 'create'])->name('create');
             Route::post('/applications/{application}', [EvaluationController::class, 'store'])->name('store');
             Route::get('/applications/{application}/show', [EvaluationController::class, 'show'])->name('show');
             // Rute za predsjednika komisije
@@ -96,6 +95,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/applications/{application}/sign', [EvaluationController::class, 'signDecision'])->name('sign-decision');
         });
     });
+    
+    // Ruta za pregled ocjenjivanja - dostupna i podnosiocu prijave kada je prijava odbijena
+    Route::get('/evaluation/applications/{application}', [EvaluationController::class, 'create'])->name('evaluation.create');
     
     // Stara ruta za evaluatore (ako postoji)
     Route::middleware('role:evaluator')->group(function () {

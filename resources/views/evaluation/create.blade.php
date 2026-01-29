@@ -355,8 +355,9 @@
         <div class="form-card">
             @php
                 $isRejected = $application->status === 'rejected';
+                $isApplicant = $isApplicant ?? false;
             @endphp
-            <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" @if($isRejected) onsubmit="event.preventDefault(); return false;" @endif>
+            <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" @if($isRejected || $isApplicant) onsubmit="event.preventDefault(); return false;" @endif>
                 @csrf
 
                 <div class="form-title">
@@ -376,15 +377,15 @@
                 <div class="form-section">
                     <label class="form-label form-label-large">2. Dostavljena su sva potrebna dokumenta?</label>
                     
-                    @if($commissionMember->position === 'predsjednik')
+                    @if($commissionMember && $commissionMember->position === 'predsjednik')
                         {{-- Predsjednik može označiti --}}
                         <div class="radio-group">
                             <label class="radio-option">
-                                <input type="radio" name="documents_complete" value="1" {{ old('documents_complete', $existingScore?->documents_complete ?? true) ? 'checked' : '' }} @if($isRejected) disabled @else required @endif>
+                                <input type="radio" name="documents_complete" value="1" {{ old('documents_complete', $existingScore?->documents_complete ?? true) ? 'checked' : '' }} @if($isRejected || $isApplicant) disabled @else required @endif>
                                 <span>a. Da</span>
                             </label>
                             <label class="radio-option">
-                                <input type="radio" name="documents_complete" value="0" {{ old('documents_complete') === '0' || ($existingScore && !$existingScore->documents_complete) ? 'checked' : '' }} @if($isRejected) disabled @else required @endif>
+                                <input type="radio" name="documents_complete" value="0" {{ old('documents_complete') === '0' || ($existingScore && !$existingScore->documents_complete) ? 'checked' : '' }} @if($isRejected || $isApplicant) disabled @else required @endif>
                                 <span>b. Ne*</span>
                             </label>
                         </div>
@@ -465,7 +466,7 @@
                                             @php
                                                 $memberScore = $allScores->get($member->id);
                                                 $currentValue = $memberScore ? $memberScore->{"criterion_{$num}"} : null;
-                                                $isCurrentMember = $member->id === $commissionMember->id;
+                                                $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
                                                 // Provjeri da li je trenutni član završio ocjenjivanje
                                                 $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
                                                 // Provjeri da li je drugi član završio ocjenjivanje
@@ -496,7 +497,7 @@
                                                     @php
                                                         $isDocumentsCompleteNo = false;
                                                         if (isset($isChairman) && $isChairman) {
-                                                            $chairmanScore = $allScores->get($commissionMember->id);
+                                                            $chairmanScore = $commissionMember ? $allScores->get($commissionMember->id) : null;
                                                             $isDocumentsCompleteNo = $chairmanScore && $chairmanScore->documents_complete === false;
                                                         }
                                                     @endphp
@@ -507,8 +508,8 @@
                                                         min="1" 
                                                         max="5" 
                                                         value="{{ old("criterion_{$num}", $currentValue) }}"
-                                                        @if(!$isDocumentsCompleteNo && !$isRejected) required @endif
-                                                        @if($isRejected) disabled @endif
+                                                        @if(!$isDocumentsCompleteNo && !$isRejected && !($isApplicant ?? false)) required @endif
+                                                        @if($isRejected || ($isApplicant ?? false)) disabled @endif
                                                         onchange="updateAverages()">
                                                 @endif
                                             @else
@@ -550,7 +551,7 @@
                                             @php
                                                 $memberScore = $allScores->get($member->id);
                                                 $memberTotal = $memberScore ? $memberScore->calculateTotalScore() : 0;
-                                                $isCurrentMember = $member->id === $commissionMember->id;
+                                                $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
                                                 $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
                                             @endphp
                                         @if($isCurrentMember)
@@ -662,7 +663,7 @@
                         // Provjeri da li trenutni član već ima napomenu u listi
                         $currentMemberHasNote = false;
                         foreach($membersWithNotes as $note) {
-                            if ($note['member']->id === $commissionMember->id) {
+                            if ($commissionMember && $note['member']->id === $commissionMember->id) {
                                 $currentMemberHasNote = true;
                                 break;
                             }
@@ -672,7 +673,7 @@
                         // Dozvoli mu da vidi (i eventualno edituje) samo svoju napomenu
                         if (!($hasCompletedEvaluation ?? false)) {
                             $membersWithNotes = array_filter($membersWithNotes, function($note) use ($commissionMember) {
-                                return $note['member']->id === $commissionMember->id;
+                                return $commissionMember && $note['member']->id === $commissionMember->id;
                             });
                         }
                     @endphp
@@ -688,14 +689,14 @@
                                         Napomene - {{ $memberNote['member']->name }}
                                     @endif
                                 </label>
-                                @if($canEditNotes && $memberNote['member']->id === $commissionMember->id)
+                                @if($canEditNotes && $commissionMember && $memberNote['member']->id === $commissionMember->id)
                                     {{-- Trenutni član može editovati svoju napomenu --}}
                                     <textarea 
                                         name="notes" 
                                         class="form-control" 
                                         rows="6" 
                                         placeholder="Unesite dodatne napomene..."
-                                        @if($isRejected) disabled @endif>{{ old('notes', $memberNote['notes']) }}</textarea>
+                                        @if($isRejected || $isApplicant) disabled @endif>{{ old('notes', $memberNote['notes']) }}</textarea>
                                 @else
                                     {{-- Read-only prikaz za ostale članove --}}
                                     <div style="padding: 12px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; white-space: pre-wrap;">
@@ -706,7 +707,7 @@
                         @endforeach
                     @endif
                     
-                    @if($canEditNotes && !$currentMemberHasNote)
+                    @if($canEditNotes && !$currentMemberHasNote && $commissionMember)
                         {{-- Polje za unos napomena ako trenutni član još nema napomenu --}}
                         <div style="margin-top: {{ count($membersWithNotes) > 0 ? '20px' : '0' }};">
                             <label class="form-label" style="font-weight: 600; color: #374151; margin-bottom: 8px;">
@@ -721,7 +722,7 @@
                                 class="form-control" 
                                 rows="6" 
                                 placeholder="Unesite dodatne napomene..."
-                                @if($isRejected) disabled @endif>{{ old('notes', $existingScore?->notes) }}</textarea>
+                                @if($isRejected || $isApplicant) disabled @endif>{{ old('notes', $existingScore?->notes) }}</textarea>
                         </div>
                     @endif
                 </div>
@@ -746,9 +747,15 @@
                                 </div>
                             @endif
                         </div>
-                        <a href="{{ route('evaluation.index', ['filter' => 'rejected']) }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
-                            Nazad na listu
-                        </a>
+                        @if($isApplicant)
+                            <a href="{{ route('applications.show', $application) }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
+                                Nazad na Status prijave
+                            </a>
+                        @else
+                            <a href="{{ route('evaluation.index', ['filter' => 'rejected']) }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
+                                Nazad na listu
+                            </a>
+                        @endif
                     @elseif($isChairman && $hasCompletedEvaluation)
                         {{-- Predsjednik kada je već ocjenio - može mijenjati sekciju 2 --}}
                         <button type="submit" class="btn-primary">Sačuvaj izmjene</button>

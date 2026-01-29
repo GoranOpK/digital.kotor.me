@@ -141,21 +141,37 @@ class EvaluationController extends Controller
     {
         $user = Auth::user();
         
+        // Provjeri da li je korisnik podnosilac prijave
+        $isApplicant = $application->user_id === $user->id;
+        
         // Pronađi člana komisije
         $commissionMember = CommissionMember::where('user_id', $user->id)
             ->where('status', 'active')
             ->first();
 
+        // Ako nije član komisije, provjeri da li je podnosilac prijave i da li je prijava odbijena
         if (!$commissionMember) {
-            abort(403, 'Niste član komisije.');
+            if ($isApplicant && $application->status === 'rejected') {
+                // Podnosilac prijave može pristupiti formi samo ako je prijava odbijena (read-only)
+                $commissionMember = null; // Postavimo na null da znamo da nije član komisije
+            } else {
+                abort(403, 'Niste član komisije.');
+            }
         }
 
         // Provjeri da li je prijava već odbijena
         // Svi članovi komisije mogu pristupiti odbijenim prijavama, ali forma će biti read-only (provjera se vrši u view-u)
-        // Nema potrebe za blokiranjem pristupa ovdje
+        // Podnosilac prijave takođe može pristupiti odbijenim prijavama u read-only modu
 
         // Učitaj komisiju sa svim članovima
-        $commission = $commissionMember->commission;
+        // Ako je podnosilac prijave, učitaj komisiju preko konkursa
+        if ($commissionMember) {
+            $commission = $commissionMember->commission;
+        } else {
+            // Podnosilac prijave - učitaj komisiju preko konkursa
+            $commission = $application->competition->commission;
+        }
+        
         $allMembers = $commission->members()
             ->where('status', 'active')
             ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
@@ -170,7 +186,7 @@ class EvaluationController extends Controller
             ->keyBy('commission_member_id');
 
         // Proveri da li je trenutni član već ocjenio
-        $existingScore = $allScores->get($commissionMember->id);
+        $existingScore = $commissionMember ? $allScores->get($commissionMember->id) : null;
         
         // Provjeri da li je trenutni član završio ocjenjivanje (ima sve kriterijume popunjene)
         $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
@@ -190,9 +206,10 @@ class EvaluationController extends Controller
         // Ako je već ocjenio, zabrani izmjenu - OSIM ako je predsjednik (predsjednik može pristupiti bilo kada)
         // ILI ako su svi članovi ocjenili (tada svi članovi mogu vidjeti formu u read-only modu)
         // ILI ako nije zaključena prijava (tada članovi mogu mijenjati napomene)
-        $isChairman = $commissionMember->position === 'predsjednik';
+        // Podnosilac prijave uvijek vidi formu u read-only modu
+        $isChairman = $commissionMember && $commissionMember->position === 'predsjednik';
         
-        if ($hasCompletedEvaluation && !$isChairman && !$allMembersEvaluated && $isDecisionMade) {
+        if ($commissionMember && $hasCompletedEvaluation && !$isChairman && !$allMembersEvaluated && $isDecisionMade) {
             return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                 ->with('error', 'Već ste ocjenili ovu prijavu. Ocjene se ne mogu mijenjati.');
         }
@@ -226,6 +243,9 @@ class EvaluationController extends Controller
 
         $application->load(['user', 'competition', 'businessPlan']);
 
+        // Provjeri da li je korisnik podnosilac prijave
+        $isApplicant = $application->user_id === $user->id;
+
         return view('evaluation.create', compact(
             'application', 
             'commissionMember', 
@@ -239,7 +259,8 @@ class EvaluationController extends Controller
             'evaluatedMemberIds',
             'totalMembers',
             'hasCompletedEvaluation',
-            'isChairman'
+            'isChairman',
+            'isApplicant'
         ));
     }
 
@@ -739,7 +760,13 @@ class EvaluationController extends Controller
         }
 
         // Učitaj komisiju sa svim članovima
-        $commission = $commissionMember->commission;
+        // Ako je podnosilac prijave, učitaj komisiju preko konkursa
+        if ($commissionMember) {
+            $commission = $commissionMember->commission;
+        } else {
+            // Podnosilac prijave - učitaj komisiju preko konkursa
+            $commission = $application->competition->commission;
+        }
         $allMembers = $commission->members()
             ->where('status', 'active')
             ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
