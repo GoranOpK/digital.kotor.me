@@ -83,7 +83,46 @@ class EvaluationController extends Controller
             ->whereIn('status', ['published', 'closed', 'completed'])
             ->get();
 
-        return view('evaluation.index', compact('applications', 'competitions', 'commissionMember'));
+        // Provjeri da li su sve prijave za određeni konkurs ocijenjene (za prikaz linka na rang listu)
+        $competitionsWithAllEvaluated = collect();
+        $isChairman = $commissionMember->position === 'predsjednik';
+        
+        if ($isChairman) {
+            foreach ($competitions as $competition) {
+                // Uzmi sve prijave za ovaj konkurs koje su submitted ili evaluated
+                $competitionApplications = Application::where('competition_id', $competition->id)
+                    ->whereIn('status', ['submitted', 'evaluated'])
+                    ->get();
+                
+                if ($competitionApplications->isEmpty()) {
+                    continue; // Nema prijava za ovaj konkurs
+                }
+                
+                // Provjeri da li su sve prijave ocijenjene od svih članova
+                $allEvaluated = true;
+                $activeMemberIds = $commission->activeMembers()->pluck('id');
+                $totalMembers = $activeMemberIds->count();
+                
+                foreach ($competitionApplications as $app) {
+                    $evaluatedMemberIds = EvaluationScore::where('application_id', $app->id)
+                        ->whereIn('commission_member_id', $activeMemberIds)
+                        ->pluck('commission_member_id')
+                        ->unique()
+                        ->count();
+                    
+                    if ($evaluatedMemberIds < $totalMembers) {
+                        $allEvaluated = false;
+                        break;
+                    }
+                }
+                
+                if ($allEvaluated) {
+                    $competitionsWithAllEvaluated->push($competition);
+                }
+            }
+        }
+
+        return view('evaluation.index', compact('applications', 'competitions', 'commissionMember', 'competitionsWithAllEvaluated', 'isChairman'));
     }
 
     /**

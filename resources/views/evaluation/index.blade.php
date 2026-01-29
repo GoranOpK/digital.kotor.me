@@ -109,6 +109,17 @@
     <div class="container mx-auto px-4">
         <div class="page-header">
             <h1>Ocjenjivanje prijava</h1>
+            @if(isset($isChairman) && $isChairman && isset($competitionsWithAllEvaluated) && $competitionsWithAllEvaluated->isNotEmpty())
+                <div style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+                    @foreach($competitionsWithAllEvaluated as $comp)
+                        <a href="{{ route('admin.competitions.ranking', $comp) }}" 
+                           class="btn-sm" 
+                           style="background: #8b5cf6; color: #fff; font-weight: 600; padding: 10px 20px;">
+                            📊 Rang lista - {{ $comp->title }}
+                        </a>
+                    @endforeach
+                </div>
+            @endif
         </div>
 
         <div class="filters">

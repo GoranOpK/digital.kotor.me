@@ -462,9 +462,9 @@
                 </div>
             </div>
 
-            <!-- 6. Ostale napomene -->
-            <div class="form-section">
-                <label class="form-label form-label-large">6. Ostale napomene:</label>
+            <!-- 4. Ostale napomene -->
+                <div class="form-section">
+                    <label class="form-label form-label-large">4. Ostale napomene:</label>
                 <div class="readonly-value">
                     {{ $evaluationScore->notes ?? 'Nema napomena' }}
                 </div>

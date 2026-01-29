@@ -585,9 +585,9 @@
                     @endfor
                 </div>
 
-                <!-- 6. Ostale napomene -->
+                <!-- 4. Ostale napomene -->
                 <div class="form-section">
-                    <label class="form-label form-label-large">6. Ostale napomene:</label>
+                    <label class="form-label form-label-large">4. Ostale napomene:</label>
                     
                     @php
                         // Prikupi napomene svih članova koji su ih dali, zadržavajući redoslijed iz $allMembers

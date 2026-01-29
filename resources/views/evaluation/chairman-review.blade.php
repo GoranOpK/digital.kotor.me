@@ -306,7 +306,7 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">6. Ostale napomene:</label>
+                    <label class="form-label">4. Ostale napomene:</label>
                     <textarea name="commission_notes" class="form-control" rows="4" placeholder="Unesite ostale napomene...">{{ old('commission_notes', $application->commission_notes) }}</textarea>
                 </div>
 
