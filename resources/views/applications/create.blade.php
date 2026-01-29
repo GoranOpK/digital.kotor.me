@@ -1673,8 +1673,9 @@
                     }
                     
                     // 4. Postavi disabled na sva polja u sakrivenim sekcijama (osim applicant_type)
-                    // VAŽNO: Osiguraj da se business_plan_name, registration_form i polja specifična za Obrazac 1b šalju samo iz aktivne sekcije
+                    // VAŽNO: Osiguraj da se business_plan_name, business_area, registration_form i polja specifična za Obrazac 1b šalju samo iz aktivne sekcije
                     const allBusinessPlanNames = form.querySelectorAll('input[name="business_plan_name"]');
+                    const allBusinessAreas = form.querySelectorAll('input[name="business_area"]');
                     const allRegistrationForms = form.querySelectorAll('select[name="registration_form"]');
                     const allFounderNames = form.querySelectorAll('input[name="founder_name"]');
                     const allDirectorNames = form.querySelectorAll('input[name="director_name"]');
@@ -1682,6 +1683,11 @@
                     
                     // Postavi disabled na SVE business_plan_name input-e
                     allBusinessPlanNames.forEach(input => {
+                        input.setAttribute('disabled', 'disabled');
+                    });
+                    
+                    // Postavi disabled na SVE business_area input-e
+                    allBusinessAreas.forEach(input => {
                         input.setAttribute('disabled', 'disabled');
                     });
                     
@@ -1708,6 +1714,7 @@
                     // Ukloni disabled samo iz aktivne sekcije
                     if (activeSection) {
                         const businessPlanNameInActive = activeSection.querySelector('input[name="business_plan_name"]');
+                        const businessAreaInActive = activeSection.querySelector('input[name="business_area"]');
                         const registrationFormInActive = activeSection.querySelector('select[name="registration_form"]');
                         const founderNameInActive = activeSection.querySelector('input[name="founder_name"]');
                         const directorNameInActive = activeSection.querySelector('input[name="director_name"]');
@@ -1715,6 +1722,9 @@
                         
                         if (businessPlanNameInActive) {
                             businessPlanNameInActive.removeAttribute('disabled');
+                        }
+                        if (businessAreaInActive) {
+                            businessAreaInActive.removeAttribute('disabled');
                         }
                         if (registrationFormInActive) {
                             registrationFormInActive.removeAttribute('disabled');
@@ -1738,7 +1748,7 @@
                             // Ostala polja već imaju disabled postavljen gore (business_plan_name, registration_form, founder_name, itd.)
                             if (field.name !== 'applicant_type' && field.name !== 'business_stage') {
                                 // Osiguraj da su polja koja se šalju samo iz aktivne sekcije disabled
-                                const fieldsToKeepDisabled = ['registration_form', 'business_plan_name', 'founder_name', 'director_name', 'company_seat'];
+                                const fieldsToKeepDisabled = ['registration_form', 'business_plan_name', 'business_area', 'founder_name', 'director_name', 'company_seat'];
                                 if (fieldsToKeepDisabled.includes(field.name)) {
                                     field.setAttribute('disabled', 'disabled');
                                 } else {
@@ -1818,9 +1828,10 @@
                 const activeSection = document.querySelector('.conditional-field.show');
                 const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
                 
-                // Pronađi SVE registration_form select-e, business_plan_name input-e i polja specifična za Obrazac 1b
+                // Pronađi SVE registration_form select-e, business_plan_name input-e, business_area input-e i polja specifična za Obrazac 1b
                 const allRegistrationForms = form.querySelectorAll('select[name="registration_form"]');
                 const allBusinessPlanNames = form.querySelectorAll('input[name="business_plan_name"]');
+                const allBusinessAreas = form.querySelectorAll('input[name="business_area"]');
                 const allFounderNames = form.querySelectorAll('input[name="founder_name"]');
                 const allDirectorNames = form.querySelectorAll('input[name="director_name"]');
                 const allCompanySeats = form.querySelectorAll('input[name="company_seat"]');
@@ -1828,6 +1839,7 @@
                 if (activeSection && selectedType) {
                     const registrationFormInActive = activeSection.querySelector('select[name="registration_form"]');
                     const businessPlanNameInActive = activeSection.querySelector('input[name="business_plan_name"]');
+                    const businessAreaInActive = activeSection.querySelector('input[name="business_area"]');
                     const founderNameInActive = activeSection.querySelector('input[name="founder_name"]');
                     const directorNameInActive = activeSection.querySelector('input[name="director_name"]');
                     const companySeatInActive = activeSection.querySelector('input[name="company_seat"]');
@@ -1839,6 +1851,11 @@
                     
                     // Postavi disabled na SVE business_plan_name input-e
                     allBusinessPlanNames.forEach(input => {
+                        input.setAttribute('disabled', 'disabled');
+                    });
+                    
+                    // Postavi disabled na SVE business_area input-e
+                    allBusinessAreas.forEach(input => {
                         input.setAttribute('disabled', 'disabled');
                     });
                     
@@ -1888,6 +1905,14 @@
                         console.error('business_plan_name input not found in active section!');
                     }
                     
+                    if (businessAreaInActive) {
+                        // Ukloni disabled samo sa input-a u aktivnoj sekciji
+                        businessAreaInActive.removeAttribute('disabled');
+                        console.log('Enabled business_area in active section:', businessAreaInActive.value);
+                    } else {
+                        console.error('business_area input not found in active section!');
+                    }
+                    
                     // Ukloni disabled sa polja specifična za Obrazac 1b (ako postoje u aktivnoj sekciji)
                     if (founderNameInActive) {
                         founderNameInActive.removeAttribute('disabled');
@@ -1911,7 +1936,7 @@
                     const allFields = section.querySelectorAll('input, select, textarea');
                     allFields.forEach(field => {
                         // Ne uklanjaj disabled sa polja koja se šalju samo iz aktivne sekcije
-                        const fieldsToKeepDisabled = ['registration_form', 'business_plan_name', 'founder_name', 'director_name', 'company_seat'];
+                        const fieldsToKeepDisabled = ['registration_form', 'business_plan_name', 'business_area', 'founder_name', 'director_name', 'company_seat'];
                         if (fieldsToKeepDisabled.includes(field.name)) {
                             return; // Već postavljen na disabled
                         }
