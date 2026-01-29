@@ -92,7 +92,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/applications/{application}', [EvaluationController::class, 'store'])->name('store');
             Route::get('/applications/{application}/show', [EvaluationController::class, 'show'])->name('show');
             // Rute za predsjednika komisije
-            Route::get('/applications/{application}/chairman-review', [EvaluationController::class, 'chairmanReview'])->name('chairman-review');
             Route::post('/applications/{application}/decision', [EvaluationController::class, 'storeDecision'])->name('store-decision');
             Route::post('/applications/{application}/sign', [EvaluationController::class, 'signDecision'])->name('sign-decision');
         });

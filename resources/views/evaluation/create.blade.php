@@ -722,12 +722,6 @@
                     @if($isChairman && $hasCompletedEvaluation)
                         {{-- Predsjednik kada je već ocjenio - može mijenjati sekciju 2 --}}
                         <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
-                        @if($allMembersEvaluated)
-                            {{-- Dugme za zaključak se prikazuje samo kada su svi članovi ocjenili --}}
-                            <a href="{{ route('evaluation.chairman-review', $application) }}" class="btn-primary" style="margin-left: 12px; text-decoration: none; display: inline-block;">
-                                Zaključak komisije
-                            </a>
-                        @endif
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @elseif($hasCompletedEvaluation && $canEditNotesValue && !$isChairman)
                         {{-- Član koji je već ocjenio ali može editovati napomene --}}
