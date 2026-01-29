@@ -754,5 +754,22 @@
         // Za sada, prosječne ocjene se računaju na serveru
         // Možemo dodati JavaScript za real-time izračun ako je potrebno
     }
+    
+    // Debug - provjeri da li se forma submit-uje
+    document.getElementById('evaluationForm').addEventListener('submit', function(e) {
+        console.log('=== FORM SUBMIT TRIGGERED ===');
+        console.log('Form action:', this.action);
+        console.log('Form method:', this.method);
+        
+        // Provjeri documents_complete
+        const documentsComplete = document.querySelector('input[name="documents_complete"]:checked');
+        if (documentsComplete) {
+            console.log('documents_complete value:', documentsComplete.value);
+        } else {
+            console.log('documents_complete: NOT SELECTED');
+        }
+        
+        // Ne blokiramo submit, samo logujemo
+    });
 </script>
 @endsection
