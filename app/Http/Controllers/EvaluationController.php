@@ -142,7 +142,9 @@ class EvaluationController extends Controller
         }
 
         // Provjeri da li je prijava već odbijena zbog nedostajućih dokumenata
-        if ($application->status === 'rejected' && $application->rejection_reason === 'Nedostaju potrebna dokumenta.') {
+        // Predsjednik može pristupiti formi čak i kada je prijava odbijena (može vidjeti šta je odlučio)
+        $isChairman = $commissionMember->position === 'predsjednik';
+        if (!$isChairman && $application->status === 'rejected' && $application->rejection_reason === 'Nedostaju potrebna dokumenta.') {
             abort(403, 'Prijava je već odbijena zbog nedostajućih dokumenata.');
         }
 
