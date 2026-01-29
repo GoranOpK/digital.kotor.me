@@ -535,14 +535,8 @@ class ApplicationController extends Controller
             return back()->withErrors(['error' => 'Morate popuniti biznis plan prije podnošenja prijave.']);
         }
 
-        // Provjera dokumenata
-        $requiredDocs = $application->getRequiredDocuments();
-        $uploadedDocs = $application->documents->pluck('document_type')->toArray();
-        $missingDocs = array_diff($requiredDocs, $uploadedDocs);
-
-        if (!empty($missingDocs)) {
-            return back()->withErrors(['error' => 'Niste priložili sve obavezne dokumente.']);
-        }
+        // Napomena: Provjera dokumenata je uklonjena - korisnici mogu podnijeti prijavu i bez svih dokumenata.
+        // Predsjednik komisije će odbiti prijavu ako nedostaju dokumenti kroz formu za ocjenjivanje.
 
         // Sve je u redu, podnesi prijavu
         $application->update([

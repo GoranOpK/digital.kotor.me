@@ -311,8 +311,8 @@
                                                 
                                                 $allEvaluated = $evaluatedMemberIds >= $totalMembers;
                                                 
-                                                // Ako su svi ocjenili, promijeni tekst dugmeta
-                                                if ($allEvaluated) {
+                                                // Ako su svi ocjenili ILI ako je prijava odbijena, promijeni tekst dugmeta
+                                                if ($allEvaluated || $app->status === 'rejected') {
                                                     $buttonText = 'Ocjene';
                                                 }
                                             }

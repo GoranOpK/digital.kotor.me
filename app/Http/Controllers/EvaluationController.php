@@ -676,11 +676,25 @@ class EvaluationController extends Controller
 
             // Ako je predsjednik i svi članovi su ocjenili, može ažurirati zaključak komisije i iznos odobrenih sredstava
             if ($commissionMember->position === 'predsjednik' && $allMembersEvaluated && isset($validated['commission_decision'])) {
-                $application->update([
+                $updateData = [
                     'commission_decision' => $validated['commission_decision'],
                     'approved_amount' => $validated['approved_amount'] ?? null,
                     'commission_decision_date' => $validated['decision_date'] ?? now(),
-                ]);
+                ];
+                
+                // Ako je zaključak "odbija", postavi status na rejected
+                // Napomena: Obrazloženje se unosi samo u rang listi kroz storeDecision metodu
+                if ($validated['commission_decision'] === 'odbija') {
+                    $updateData['status'] = 'rejected';
+                    // Ako postoji obrazloženje u requestu, postavi ga kao razlog odbijanja
+                    if (isset($validated['commission_justification']) && !empty($validated['commission_justification'])) {
+                        $updateData['rejection_reason'] = $validated['commission_justification'];
+                    }
+                } elseif ($validated['commission_decision'] === 'podrzava_potpuno' || $validated['commission_decision'] === 'podrzava_djelimicno') {
+                    $updateData['status'] = 'approved';
+                }
+                
+                $application->update($updateData);
             }
 
             // Redirektuj sa filterom "evaluated" da se odmah vidi ocjenjena prijava
@@ -851,7 +865,11 @@ class EvaluationController extends Controller
 
         // Ažuriraj status prijave na osnovu zaključka
         if ($validated['commission_decision'] === 'odbija') {
-            $application->update(['status' => 'rejected']);
+            // Postavi status na rejected i postavi obrazloženje kao razlog odbijanja
+            $application->update([
+                'status' => 'rejected',
+                'rejection_reason' => $validated['commission_justification'],
+            ]);
         } elseif ($validated['commission_decision'] === 'podrzava_potpuno' || $validated['commission_decision'] === 'podrzava_djelimicno') {
             $application->update(['status' => 'approved']);
         }

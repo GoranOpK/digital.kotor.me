@@ -625,20 +625,20 @@ class AdminController extends Controller
                     // Ako je deadline prošao, provjeri da li je prijava kompletna
                     $isIncomplete = false;
                     if ($isDeadlinePassed) {
-                        // Provjeri da li prijava ima sve obavezne dokumente i biznis plan
-                        $hasAllDocuments = $application->hasAllRequiredDocuments();
+                        // Provjeri da li prijava ima biznis plan i da li je obrazac kompletan
+                        // Napomena: Provjera dokumenata je uklonjena - predsjednik komisije će odbiti prijavu ako nedostaju dokumenti kroz formu za ocjenjivanje
                         $hasBusinessPlan = $application->businessPlan !== null;
                         $isObrazacComplete = $application->isObrazacComplete();
                         
-                        // Ako prijava nije kompletna (nema sve dokumente ili biznis plan), tretiraj je kao nepotpunu
-                        if (!$hasAllDocuments || !$hasBusinessPlan || !$isObrazacComplete) {
+                        // Ako prijava nije kompletna (nema biznis plan ili obrazac nije kompletan), tretiraj je kao nepotpunu
+                        if (!$hasBusinessPlan || !$isObrazacComplete) {
                             $isIncomplete = true;
                             
                             // Automatski postavi status na 'rejected' za nepotpune prijave nakon isteka deadline-a
                             if ($application->status === 'submitted') {
                                 $application->update([
                                     'status' => 'rejected',
-                                    'rejection_reason' => 'Prijava je nepotpuna (nedostaju dokumenti ili biznis plan) i rok za prijave je istekao.',
+                                    'rejection_reason' => 'Prijava je nepotpuna (nedostaje biznis plan ili obrazac nije kompletan) i rok za prijave je istekao.',
                                 ]);
                             }
                         }
