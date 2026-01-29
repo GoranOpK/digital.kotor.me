@@ -251,58 +251,18 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
-        // Provjeri da li je trenutni član završio ocjenjivanje (ima sve kriterijume popunjene)
-        $existingScore = EvaluationScore::where('application_id', $application->id)
-            ->where('commission_member_id', $commissionMember->id)
-            ->first();
-        
-        $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
-        
-        // Provjeri da li je prijava zaključena
-        $isDecisionMade = $application->commission_decision !== null;
+        // PRIORITET: Provjeri documents_complete PRVO (ako je predsjednik) - prije bilo koje druge provjere
+        // Ovo mora biti prvo jer ako dokumentacija nije kompletna, prijava se odmah odbija
         $isChairman = $commissionMember->position === 'predsjednik';
         
-        // Ako je već ocjenio, zabrani izmjenu - OSIM ako je predsjednik (može mijenjati sekciju 2)
-        // ILI ako nije zaključena prijava (tada članovi mogu mijenjati napomene)
-        if ($hasCompletedEvaluation && !$isChairman && $isDecisionMade) {
-            return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
-                ->with('error', 'Već ste ocjenili ovu prijavu. Ocjene se ne mogu mijenjati.');
-        }
-
-        // Provjeri da li su svi članovi komisije ocjenili prijavu
-        $commission = $commissionMember->commission;
-        $totalMembers = $commission->activeMembers()->count();
-        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
-            ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
-            ->pluck('commission_member_id')
-            ->unique()
-            ->count();
-        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
-        
-        // Osiguraj da samo predsjednik može slati zaključak, iznos odobrenih sredstava i documents_complete
-        if ($commissionMember->position !== 'predsjednik') {
-            // Ako nije predsjednik, ukloni te podatke iz requesta
-            $request->merge([
-                'commission_decision' => null,
-                'approved_amount' => null,
-                'decision_date' => null,
-                'documents_complete' => null,
+        // Provjeri documents_complete čim je predsjednik (bez obzira da li je već ocjenio ili ne)
+        if ($isChairman) {
+            // Validacija documents_complete - obavezno polje za predsjednika
+            $request->validate([
+                'documents_complete' => 'required|boolean',
+            ], [
+                'documents_complete.required' => 'Morate odgovoriti da li su sva potrebna dokumenta dostavljena.',
             ]);
-        }
-
-        // Validacija - provjera dokumentacije (samo za predsjednika)
-        $rules = [];
-        $messages = [];
-        
-        if ($commissionMember->position === 'predsjednik') {
-            // Laravel automatski konvertuje "0" i "1" u boolean
-            $rules['documents_complete'] = 'required|boolean';
-            $messages['documents_complete.required'] = 'Morate odgovoriti da li su sva potrebna dokumenta dostavljena.';
-        }
-
-        // Validiraj samo documents_complete prvo (ako je predsjednik)
-        if ($commissionMember->position === 'predsjednik' && !empty($rules)) {
-            $request->validate($rules, $messages);
             
             // Konvertuj documents_complete u boolean (Laravel automatski konvertuje "0" i "1")
             $documentsComplete = $request->boolean('documents_complete');
@@ -343,8 +303,18 @@ class EvaluationController extends Controller
             }
         }
 
-        // Validacija - svaki kriterijum 1-5 poena (samo ako nije predsjednik koji mijenja samo sekciju 2)
-        $isChairman = $commissionMember->position === 'predsjednik';
+        // Provjeri da li je trenutni član završio ocjenjivanje (ima sve kriterijume popunjene)
+        $existingScore = EvaluationScore::where('application_id', $application->id)
+            ->where('commission_member_id', $commissionMember->id)
+            ->first();
+        
+        $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+        
+        // Provjeri da li je prijava zaključena
+        $isDecisionMade = $application->commission_decision !== null;
+        
+        // Provjeri da li su svi članovi komisije ocjenili prijavu
+        $commission = $commissionMember->commission;
         $totalMembers = $commission->activeMembers()->count();
         $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
             ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
@@ -353,10 +323,20 @@ class EvaluationController extends Controller
             ->count();
         $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
         
+        // Osiguraj da samo predsjednik može slati zaključak, iznos odobrenih sredstava i documents_complete
+        if ($commissionMember->position !== 'predsjednik') {
+            // Ako nije predsjednik, ukloni te podatke iz requesta
+            $request->merge([
+                'commission_decision' => null,
+                'approved_amount' => null,
+                'decision_date' => null,
+                'documents_complete' => null,
+            ]);
+        }
+
+        // Validacija - svaki kriterijum 1-5 poena (samo ako nije predsjednik koji mijenja samo sekciju 2)
         // Ako je predsjednik i već je ocjenio, ne validiraj kriterijume (može mijenjati samo sekciju 2)
         // Takođe, ako član već ocjenio i prijava nije zaključena, ne validiraj kriterijume (može mijenjati samo napomene)
-        $isDecisionMade = $application->commission_decision !== null;
-        
         if (!($isChairman && $hasCompletedEvaluation) && !($hasCompletedEvaluation && !$isDecisionMade && !$isChairman)) {
             for ($i = 1; $i <= 10; $i++) {
                 $rules["criterion_{$i}"] = 'required|integer|min:1|max:5';
