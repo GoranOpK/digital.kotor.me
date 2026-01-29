@@ -293,9 +293,32 @@
                                         @php
                                             $userRole = auth()->user()->role ? auth()->user()->role->name : null;
                                             $isKomisija = $userRole === 'komisija';
+                                            
+                                            // Provjeri da li su svi članovi komisije ocjenili prijavu
+                                            $allEvaluated = false;
+                                            $buttonText = 'Ocijeni';
+                                            
+                                            if ($isKomisija && $competition->commission) {
+                                                $commission = $competition->commission;
+                                                $totalMembers = $commission->activeMembers()->count();
+                                                
+                                                // Broj različitih članova koji su ocjenili prijavu
+                                                $evaluatedMemberIds = \App\Models\EvaluationScore::where('application_id', $app->id)
+                                                    ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+                                                    ->pluck('commission_member_id')
+                                                    ->unique()
+                                                    ->count();
+                                                
+                                                $allEvaluated = $evaluatedMemberIds >= $totalMembers;
+                                                
+                                                // Ako su svi ocjenili, promijeni tekst dugmeta
+                                                if ($allEvaluated) {
+                                                    $buttonText = 'Ocjene';
+                                                }
+                                            }
                                         @endphp
                                         @if($isKomisija)
-                                            <a href="{{ route('evaluation.create', $app) }}" class="btn" style="background: var(--primary); color: #fff; padding: 4px 12px; font-size: 12px; text-decoration: none;">Ocjeni</a>
+                                            <a href="{{ route('evaluation.create', $app) }}" class="btn" style="background: var(--primary); color: #fff; padding: 4px 12px; font-size: 12px; text-decoration: none;">{{ $buttonText }}</a>
                                         @endif
                                     </div>
                                 </td>
