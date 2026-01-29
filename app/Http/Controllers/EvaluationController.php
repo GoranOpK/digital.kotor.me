@@ -272,8 +272,8 @@ class EvaluationController extends Controller
         // Ovo mora biti prvo jer ako dokumentacija nije kompletna, prijava se odmah odbija
         $isChairman = $commissionMember->position === 'predsjednik';
         
-        error_log('Is Chairman: ' . ($isChairman ? 'YES' : 'NO'));
-        error_log('Has documents_complete: ' . ($request->has('documents_complete') ? 'YES' : 'NO'));
+        \Log::info('Is Chairman: ' . ($isChairman ? 'YES' : 'NO'));
+        \Log::info('Has documents_complete: ' . ($request->has('documents_complete') ? 'YES' : 'NO'));
         
         // Provjeri documents_complete čim je predsjednik (bez obzira da li je već ocjenio ili ne)
         // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
@@ -282,7 +282,7 @@ class EvaluationController extends Controller
             if (!$request->has('documents_complete')) {
                 // Ako nema documents_complete, možda je to prvi put kada predsjednik pristupa formi
                 // U tom slučaju, ne radimo ništa, samo nastavljamo dalje
-                error_log('=== DOCUMENTS_COMPLETE NOT IN REQUEST ===');
+                \Log::info('=== DOCUMENTS_COMPLETE NOT IN REQUEST ===');
             } else {
                 // Validacija documents_complete - obavezno polje za predsjednika
                 // Koristimo try-catch da uhvatimo validacijske greške
@@ -294,8 +294,7 @@ class EvaluationController extends Controller
                     ]);
                 } catch (\Illuminate\Validation\ValidationException $e) {
                     // Ako validacija ne prođe, vrati grešku
-                    error_log('=== VALIDATION ERROR ===');
-                    error_log(json_encode($e->errors()));
+                    \Log::info('=== VALIDATION ERROR ===', ['errors' => $e->errors()]);
                     return redirect()->back()
                         ->withErrors($e->errors())
                         ->withInput();
@@ -305,16 +304,18 @@ class EvaluationController extends Controller
                 $documentsComplete = $request->boolean('documents_complete');
                 
                 // Debug log za provjeru
-                error_log('=== DOCUMENTS_COMPLETE CHECK ===');
-                error_log('Raw input: ' . $request->input('documents_complete'));
-                error_log('Boolean value: ' . ($documentsComplete ? 'true' : 'false'));
-                error_log('Request all: ' . json_encode($request->all()));
+                \Log::info('=== DOCUMENTS_COMPLETE CHECK ===', [
+                    'raw_input' => $request->input('documents_complete'),
+                    'boolean_value' => $documentsComplete,
+                ]);
                 
                 // Ako dokumentacija nije kompletna, automatski odbiti prijavu i ne dozvoli dalje ocjenjivanje
                 // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
                 if (!$documentsComplete) {
-                    error_log('=== REJECTING APPLICATION ===');
-                    error_log('Reason: documents_complete is false');
+                    \Log::info('=== REJECTING APPLICATION ===', [
+                        'application_id' => $application->id,
+                        'reason' => 'documents_complete is false',
+                    ]);
                     
                     // Sačuvaj ocjenu predsjednika samo sa documents_complete = false
                     EvaluationScore::updateOrCreate(
@@ -345,7 +346,10 @@ class EvaluationController extends Controller
                         'rejection_reason' => 'Nedostaju potrebna dokumenta.',
                     ]);
                     
-                    error_log('=== APPLICATION REJECTED SUCCESSFULLY ===');
+                    \Log::info('=== APPLICATION REJECTED SUCCESSFULLY ===', [
+                        'application_id' => $application->id,
+                        'status' => 'rejected',
+                    ]);
                     
                     return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                         ->with('error', 'Prijava je odbijena jer nisu dostavljena sva potrebna dokumenta.');
