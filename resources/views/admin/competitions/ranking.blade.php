@@ -358,10 +358,6 @@
                             </tbody>
                         </table>
 
-                        <div style="margin-top: 24px; text-align: center;">
-                            <button type="submit" class="btn btn-success">Sačuvaj odabir dobitnika</button>
-                            <a href="{{ route('admin.competitions.decision', $competition) }}" class="btn btn-primary">Generiši Odluku</a>
-                        </div>
                     </form>
                 @endif
             @else
@@ -480,108 +476,151 @@
         <!-- Sekcije 4 i 5: Zaključak komisije i Obrazloženje -->
         @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
             @if(!in_array($competition->status, ['closed', 'completed']))
-                <div class="info-card">
-                    <h2>4. Na bazi konačne ocjene Komisija donosi zaključak da se biznis plan:</h2>
-                    <p style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">
-                        Za svaku prijavu u rang listi unesite zaključak komisije i obrazloženje.
-                    </p>
+                @if($applications->count() > 0)
+                    <div class="info-card">
+                        <h2>Zaključak komisije i obrazloženje</h2>
+                        <p style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">
+                            Za svaku prijavu u rang listi unesite zaključak komisije i obrazloženje.
+                        </p>
 
-                    @foreach($applications as $application)
-                        <div style="background: #f9fafb; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
-                            <h3 style="font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 16px;">
-                                {{ $application->business_plan_name }} - {{ $application->user->name ?? 'N/A' }}
-                            </h3>
-                            
-                            @if(!$application->signed_by_chairman)
-                                <form method="POST" action="{{ route('evaluation.store-decision', $application) }}" style="margin-top: 16px;">
-                                    @csrf
-                                    
-                                    <div style="margin-bottom: 20px;">
-                                        <label style="display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 12px;">
-                                            Zaključak komisije:
-                                        </label>
-                                        <div style="display: flex; gap: 24px; flex-wrap: wrap;">
-                                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                                <input type="radio" name="commission_decision" value="podrzava_potpuno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_potpuno' ? 'checked' : '' }} required>
-                                                <span style="font-size: 14px; color: #374151;">a. Podržava u potpunosti</span>
-                                            </label>
-                                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                                <input type="radio" name="commission_decision" value="podrzava_djelimicno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_djelimicno' ? 'checked' : '' }} required>
-                                                <span style="font-size: 14px; color: #374151;">b. Podržava djelimično</span>
-                                            </label>
-                                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                                <input type="radio" name="commission_decision" value="odbija" {{ old('commission_decision', $application->commission_decision) === 'odbija' ? 'checked' : '' }} required>
-                                                <span style="font-size: 14px; color: #374151;">c. Odbija</span>
-                                            </label>
-                                        </div>
-                                        @error('commission_decision')
-                                            <div style="color: #ef4444; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
-                                        @enderror
+                        @foreach($applications as $application)
+                            <div style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
+                                    <div>
+                                        <h3 style="font-size: 18px; font-weight: 700; color: var(--primary); margin: 0 0 4px 0;">
+                                            {{ $application->business_plan_name }}
+                                        </h3>
+                                        <p style="font-size: 14px; color: #6b7280; margin: 0;">
+                                            Podnosilac: {{ $application->user->name ?? 'N/A' }} | 
+                                            Pozicija: <strong>#{{ $application->ranking_position ?? $loop->iteration }}</strong> | 
+                                            Ocjena: <strong>{{ number_format($application->final_score ?? 0, 2) }} / 50</strong>
+                                        </p>
                                     </div>
-
-                                    <div style="margin-bottom: 20px;">
-                                        <label style="display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px;">
-                                            Iznos odobrenih sredstava:
-                                        </label>
-                                        <input 
-                                            type="number" 
-                                            name="approved_amount" 
-                                            class="form-control" 
-                                            value="{{ old('approved_amount', $application->approved_amount) }}" 
-                                            step="0.01" 
-                                            min="0" 
-                                            placeholder="0.00"
-                                            style="max-width: 200px;"
-                                        >
-                                    </div>
-
-                                    <div style="margin-bottom: 20px;">
-                                        <label style="display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px;">
-                                            5. Obrazloženje: *
-                                        </label>
-                                        <textarea 
-                                            name="commission_justification" 
-                                            class="form-control" 
-                                            rows="6" 
-                                            required 
-                                            placeholder="Unesite obrazloženje zaključka komisije...">{{ old('commission_justification', $application->commission_justification) }}</textarea>
-                                        @error('commission_justification')
-                                            <div style="color: #ef4444; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <div style="text-align: right;">
-                                        <button type="submit" class="btn btn-success" style="padding: 8px 16px; font-size: 14px;">Sačuvaj zaključak</button>
-                                    </div>
-                                </form>
-                            @else
-                                {{-- Read-only prikaz ako je već zaključeno --}}
-                                <div style="background: #fff; padding: 16px; border-radius: 8px; margin-top: 12px;">
-                                    <p style="margin-bottom: 8px;"><strong>Zaključak:</strong> 
-                                        @if($application->commission_decision === 'podrzava_potpuno')
-                                            Podržava u potpunosti
-                                        @elseif($application->commission_decision === 'podrzava_djelimicno')
-                                            Podržava djelimično
-                                        @elseif($application->commission_decision === 'odbija')
-                                            Odbija
-                                        @else
-                                            Nije donesen
-                                        @endif
-                                    </p>
-                                    @if($application->approved_amount)
-                                        <p style="margin-bottom: 8px;"><strong>Iznos odobrenih sredstava:</strong> {{ number_format($application->approved_amount, 2, ',', '.') }} €</p>
-                                    @endif
-                                    @if($application->commission_justification)
-                                        <p style="margin-bottom: 8px;"><strong>Obrazloženje:</strong></p>
-                                        <div style="background: #f9fafb; padding: 12px; border-radius: 6px; margin-top: 8px; white-space: pre-wrap;">
-                                            {{ $application->commission_justification }}
-                                        </div>
+                                    @if($application->commission_decision)
+                                        <span style="display: inline-block; padding: 6px 12px; background: #d1fae5; color: #065f46; border-radius: 6px; font-size: 12px; font-weight: 600;">
+                                            ✓ Zaključeno
+                                        </span>
                                     @endif
                                 </div>
-                            @endif
+                                
+                                @if(!$application->signed_by_chairman)
+                                    <form method="POST" action="{{ route('evaluation.store-decision', $application) }}">
+                                        @csrf
+                                        
+                                        <div style="margin-bottom: 24px;">
+                                            <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 12px;">
+                                                Zaključak komisije: *
+                                            </label>
+                                            <div style="display: flex; gap: 32px; flex-wrap: wrap;">
+                                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px; background: #fff; border-radius: 8px; border: 2px solid #e5e7eb; transition: all 0.2s;">
+                                                    <input type="radio" name="commission_decision" value="podrzava_potpuno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_potpuno' ? 'checked' : '' }} required onchange="this.parentElement.style.borderColor = this.checked ? 'var(--primary)' : '#e5e7eb'; this.parentElement.style.background = this.checked ? '#eff6ff' : '#fff';">
+                                                    <span style="font-size: 14px; color: #374151; font-weight: 500;">a. Podržava u potpunosti</span>
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px; background: #fff; border-radius: 8px; border: 2px solid #e5e7eb; transition: all 0.2s;">
+                                                    <input type="radio" name="commission_decision" value="podrzava_djelimicno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_djelimicno' ? 'checked' : '' }} required onchange="this.parentElement.style.borderColor = this.checked ? 'var(--primary)' : '#e5e7eb'; this.parentElement.style.background = this.checked ? '#eff6ff' : '#fff';">
+                                                    <span style="font-size: 14px; color: #374151; font-weight: 500;">b. Podržava djelimično</span>
+                                                </label>
+                                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px; background: #fff; border-radius: 8px; border: 2px solid #e5e7eb; transition: all 0.2s;">
+                                                    <input type="radio" name="commission_decision" value="odbija" {{ old('commission_decision', $application->commission_decision) === 'odbija' ? 'checked' : '' }} required onchange="this.parentElement.style.borderColor = this.checked ? 'var(--primary)' : '#e5e7eb'; this.parentElement.style.background = this.checked ? '#eff6ff' : '#fff';">
+                                                    <span style="font-size: 14px; color: #374151; font-weight: 500;">c. Odbija</span>
+                                                </label>
+                                            </div>
+                                            @error('commission_decision')
+                                                <div style="color: #ef4444; font-size: 12px; margin-top: 8px;">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                                            <div>
+                                                <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                                    Iznos odobrenih sredstava:
+                                                </label>
+                                                <input 
+                                                    type="number" 
+                                                    name="approved_amount" 
+                                                    class="form-control" 
+                                                    value="{{ old('approved_amount', $application->approved_amount) }}" 
+                                                    step="0.01" 
+                                                    min="0" 
+                                                    max="{{ $application->requested_amount }}"
+                                                    placeholder="0.00"
+                                                    style="width: 100%;"
+                                                >
+                                            </div>
+                                            <div>
+                                                <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                                    Traženi iznos:
+                                                </label>
+                                                <div style="padding: 10px 12px; background: #f9fafb; border-radius: 6px; color: #6b7280; font-size: 14px;">
+                                                    {{ number_format($application->requested_amount, 2, ',', '.') }} €
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div style="margin-bottom: 24px;">
+                                            <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                                Obrazloženje: *
+                                            </label>
+                                            <textarea 
+                                                name="commission_justification" 
+                                                class="form-control" 
+                                                rows="6" 
+                                                required 
+                                                placeholder="Unesite obrazloženje zaključka komisije...">{{ old('commission_justification', $application->commission_justification) }}</textarea>
+                                            @error('commission_justification')
+                                                <div style="color: #ef4444; font-size: 12px; margin-top: 8px;">{{ $message }}</div>
+                                            @enderror
+                                        </div>
+
+                                        <div style="text-align: right;">
+                                            <button type="submit" class="btn btn-success" style="padding: 10px 24px; font-size: 14px; min-width: 160px;">Sačuvaj zaključak</button>
+                                        </div>
+                                    </form>
+                                @else
+                                    {{-- Read-only prikaz ako je već zaključeno --}}
+                                    <div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px;">
+                                            <div>
+                                                <p style="margin-bottom: 8px; font-size: 13px; color: #6b7280; font-weight: 600; text-transform: uppercase;">Zaključak:</p>
+                                                <p style="font-size: 15px; color: #374151; font-weight: 600;">
+                                                    @if($application->commission_decision === 'podrzava_potpuno')
+                                                        Podržava u potpunosti
+                                                    @elseif($application->commission_decision === 'podrzava_djelimicno')
+                                                        Podržava djelimično
+                                                    @elseif($application->commission_decision === 'odbija')
+                                                        Odbija
+                                                    @else
+                                                        Nije donesen
+                                                    @endif
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p style="margin-bottom: 8px; font-size: 13px; color: #6b7280; font-weight: 600; text-transform: uppercase;">Iznos odobrenih sredstava:</p>
+                                                <p style="font-size: 15px; color: #10b981; font-weight: 700;">
+                                                    {{ $application->approved_amount ? number_format($application->approved_amount, 2, ',', '.') . ' €' : '-' }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        @if($application->commission_justification)
+                                            <div>
+                                                <p style="margin-bottom: 8px; font-size: 13px; color: #6b7280; font-weight: 600; text-transform: uppercase;">Obrazloženje:</p>
+                                                <div style="background: #f9fafb; padding: 16px; border-radius: 6px; white-space: pre-wrap; font-size: 14px; color: #374151; line-height: 1.6;">
+                                                    {{ $application->commission_justification }}
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
+                        @endforeach
+
+                        <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb; text-align: center;">
+                            <a href="{{ route('admin.competitions.decision', $competition) }}" class="btn btn-primary" style="padding: 12px 32px; font-size: 16px; min-width: 200px;">
+                                Generiši Odluku o dodjeli sredstava
+                            </a>
                         </div>
-                    @endforeach
-                </div>
+                    </div>
+                @endif
             @endif
         @endif
     </div>
