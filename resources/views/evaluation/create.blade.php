@@ -742,7 +742,7 @@
                             </div>
                             @if($application->rejection_reason)
                                 <div style="color: #7f1d1d; font-size: 13px; margin-top: 4px;">
-                                    Razlog: {{ $application->rejection_reason }}
+                                    Razlog: {{ rtrim($application->rejection_reason, '.') }}
                                 </div>
                             @endif
                         </div>

@@ -414,16 +414,22 @@
                                 ];
                                 $statusClass = 'status-' . $application->status;
                             @endphp
-                            <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">
-                                {{ $statusLabels[$application->status] ?? $application->status }}
-                            </span>
+                            @if($application->status === 'rejected')
+                                <a href="{{ route('evaluation.create', $application) }}" class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer; display: inline-block;">
+                                    {{ $statusLabels[$application->status] ?? $application->status }}
+                                </a>
+                            @else
+                                <span class="status-badge {{ $statusClass }}" style="font-size: 12px; padding: 4px 12px;">
+                                    {{ $statusLabels[$application->status] ?? $application->status }}
+                                </span>
+                            @endif
                         </span>
                     </div>
                     @if($application->status === 'rejected' && $application->rejection_reason)
                         <div class="info-item" style="margin-bottom: 16px; padding: 12px; background: #fee2e2; border-radius: 8px; border-left: 4px solid #dc2626;">
                             <span class="info-label" style="color: #991b1b; font-weight: 600; margin-bottom: 8px;">Razlog odbijanja</span>
                             <span class="info-value" style="color: #7f1d1d; font-size: 13px;">
-                                {{ $application->rejection_reason }}
+                                {{ rtrim($application->rejection_reason, '.') }}
                             </span>
                         </div>
                     @endif
