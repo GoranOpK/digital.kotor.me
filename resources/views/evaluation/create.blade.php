@@ -489,6 +489,14 @@
                                                     </span>
                                                 @else
                                                     {{-- Može unijeti ili mijenjati --}}
+                                                    {{-- Ako je predsjednik i documents_complete je "Ne", ne treba required --}}
+                                                    @php
+                                                        $isDocumentsCompleteNo = false;
+                                                        if (isset($isChairman) && $isChairman) {
+                                                            $chairmanScore = $allScores->get($commissionMember->id);
+                                                            $isDocumentsCompleteNo = $chairmanScore && $chairmanScore->documents_complete === false;
+                                                        }
+                                                    @endphp
                                                     <input 
                                                         type="number" 
                                                         name="criterion_{{ $num }}" 
@@ -496,7 +504,7 @@
                                                         min="1" 
                                                         max="5" 
                                                         value="{{ old("criterion_{$num}", $currentValue) }}"
-                                                        required
+                                                        @if(!$isDocumentsCompleteNo) required @endif
                                                         onchange="updateAverages()">
                                                 @endif
                                             @else
@@ -756,20 +764,52 @@
     }
     
     // Debug - provjeri da li se forma submit-uje
-    document.getElementById('evaluationForm').addEventListener('submit', function(e) {
-        console.log('=== FORM SUBMIT TRIGGERED ===');
-        console.log('Form action:', this.action);
-        console.log('Form method:', this.method);
+    const form = document.getElementById('evaluationForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('=== FORM SUBMIT TRIGGERED ===');
+            console.log('Form action:', this.action);
+            console.log('Form method:', this.method);
+            
+            // Provjeri documents_complete
+            const documentsComplete = document.querySelector('input[name="documents_complete"]:checked');
+            if (documentsComplete) {
+                console.log('documents_complete value:', documentsComplete.value);
+                
+                // Ako je documents_complete "Ne" (value="0"), ukloni required sa svih kriterijuma
+                if (documentsComplete.value === '0') {
+                    console.log('Removing required from all criterion inputs');
+                    const criterionInputs = document.querySelectorAll('input[name^="criterion_"]');
+                    criterionInputs.forEach(function(input) {
+                        input.removeAttribute('required');
+                    });
+                }
+            } else {
+                console.log('documents_complete: NOT SELECTED');
+            }
+            
+            // Ne blokiramo submit, samo logujemo i uklanjamo required ako je potrebno
+        });
         
-        // Provjeri documents_complete
-        const documentsComplete = document.querySelector('input[name="documents_complete"]:checked');
-        if (documentsComplete) {
-            console.log('documents_complete value:', documentsComplete.value);
-        } else {
-            console.log('documents_complete: NOT SELECTED');
-        }
-        
-        // Ne blokiramo submit, samo logujemo
-    });
+        // Takođe, dodaj event listener na radio button-e za documents_complete
+        const documentsCompleteRadios = document.querySelectorAll('input[name="documents_complete"]');
+        documentsCompleteRadios.forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                if (this.value === '0') {
+                    // Ako je označeno "Ne", ukloni required sa svih kriterijuma
+                    const criterionInputs = document.querySelectorAll('input[name^="criterion_"]');
+                    criterionInputs.forEach(function(input) {
+                        input.removeAttribute('required');
+                    });
+                } else {
+                    // Ako je označeno "Da", dodaj required na sve kriterijume
+                    const criterionInputs = document.querySelectorAll('input[name^="criterion_"]');
+                    criterionInputs.forEach(function(input) {
+                        input.setAttribute('required', 'required');
+                    });
+                }
+            });
+        });
+    }
 </script>
 @endsection
