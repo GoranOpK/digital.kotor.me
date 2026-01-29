@@ -615,9 +615,11 @@
                         @endforeach
 
                         <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb; text-align: center;">
-                            <a href="{{ route('admin.competitions.decision', $competition) }}" class="btn btn-primary" style="padding: 12px 32px; font-size: 16px; min-width: 200px;">
-                                Generiši Odluku o dodjeli sredstava
-                            </a>
+                            <form method="GET" action="{{ route('admin.competitions.decision', $competition) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-primary" style="padding: 12px 32px; font-size: 16px; min-width: 200px; background: var(--primary); color: #fff; border: none; cursor: pointer; border-radius: 8px;">
+                                    Generiši Odluku o dodjeli sredstava
+                                </button>
+                            </form>
                         </div>
                     </div>
                 @endif
