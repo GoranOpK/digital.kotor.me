@@ -258,17 +258,38 @@ class EvaluationController extends Controller
         // Provjeri documents_complete čim je predsjednik (bez obzira da li je već ocjenio ili ne)
         if ($isChairman) {
             // Validacija documents_complete - obavezno polje za predsjednika
-            $request->validate([
-                'documents_complete' => 'required|boolean',
-            ], [
-                'documents_complete.required' => 'Morate odgovoriti da li su sva potrebna dokumenta dostavljena.',
-            ]);
+            // Koristimo try-catch da uhvatimo validacijske greške
+            try {
+                $request->validate([
+                    'documents_complete' => 'required|boolean',
+                ], [
+                    'documents_complete.required' => 'Morate odgovoriti da li su sva potrebna dokumenta dostavljena.',
+                ]);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                // Ako validacija ne prođe, vrati grešku
+                return redirect()->back()
+                    ->withErrors($e->errors())
+                    ->withInput();
+            }
             
             // Konvertuj documents_complete u boolean (Laravel automatski konvertuje "0" i "1")
             $documentsComplete = $request->boolean('documents_complete');
             
+            // Debug log za provjeru
+            Log::info('=== DOCUMENTS_COMPLETE CHECK ===', [
+                'application_id' => $application->id,
+                'raw_input' => $request->input('documents_complete'),
+                'boolean_value' => $documentsComplete,
+                'request_all' => $request->all(),
+            ]);
+            
             // Ako dokumentacija nije kompletna, automatski odbiti prijavu i ne dozvoli dalje ocjenjivanje
+            // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
             if (!$documentsComplete) {
+                Log::info('=== REJECTING APPLICATION ===', [
+                    'application_id' => $application->id,
+                    'reason' => 'documents_complete is false',
+                ]);
                 // Sačuvaj ocjenu predsjednika samo sa documents_complete = false
                 EvaluationScore::updateOrCreate(
                     [
@@ -337,7 +358,22 @@ class EvaluationController extends Controller
         // Validacija - svaki kriterijum 1-5 poena (samo ako nije predsjednik koji mijenja samo sekciju 2)
         // Ako je predsjednik i već je ocjenio, ne validiraj kriterijume (može mijenjati samo sekciju 2)
         // Takođe, ako član već ocjenio i prijava nije zaključena, ne validiraj kriterijume (može mijenjati samo napomene)
-        if (!($isChairman && $hasCompletedEvaluation) && !($hasCompletedEvaluation && !$isDecisionMade && !$isChairman)) {
+        // VAŽNO: Ako je documents_complete false (provjereno na početku), ova sekcija se ne bi trebala izvršiti
+        // ali dodajemo dodatnu provjeru kao sigurnost
+        $rules = [];
+        $messages = [];
+        
+        // Ako je predsjednik i documents_complete je false, preskoči validaciju kriterijuma
+        // (ovo je dodatna provjera, jer bi se već trebalo izvršiti redirect na liniji 316)
+        $shouldSkipCriteriaValidation = false;
+        if ($isChairman && $request->has('documents_complete')) {
+            $shouldSkipCriteriaValidation = !$request->boolean('documents_complete');
+        }
+        
+        // Ako je documents_complete false, ne validiraj kriterijume (prijava je već odbijena)
+        // Takođe, ako je predsjednik i već je ocjenio, ne validiraj kriterijume
+        // Takođe, ako član već ocjenio i prijava nije zaključena, ne validiraj kriterijume
+        if (!$shouldSkipCriteriaValidation && !($isChairman && $hasCompletedEvaluation) && !($hasCompletedEvaluation && !$isDecisionMade && !$isChairman)) {
             for ($i = 1; $i <= 10; $i++) {
                 $rules["criterion_{$i}"] = 'required|integer|min:1|max:5';
                 $messages["criterion_{$i}.required"] = "Kriterijum {$i} je obavezan.";
@@ -364,7 +400,22 @@ class EvaluationController extends Controller
             $rules['decision_date'] = 'nullable|date';
         }
 
-        $validated = $request->validate($rules, $messages);
+        // Validacija se izvršava samo ako ima pravila (ako nema kriterijuma za validaciju, preskoči)
+        // DODATNA PROVJERA: Ako je documents_complete false, ne izvršavaj validaciju kriterijuma
+        // (ovo je sigurnosna provjera, jer bi se već trebalo izvršiti redirect na liniji 310)
+        if (!empty($rules)) {
+            // Provjeri da li je documents_complete false (ako je predsjednik)
+            if ($isChairman && $request->has('documents_complete') && !$request->boolean('documents_complete')) {
+                // Ako je documents_complete false, ne izvršavaj validaciju kriterijuma
+                // (ovo ne bi trebalo biti potrebno jer bi se već trebalo izvršiti redirect)
+                // ali dodajemo kao dodatnu sigurnost
+                $validated = $request->all();
+            } else {
+                $validated = $request->validate($rules, $messages);
+            }
+        } else {
+            $validated = $request->all();
+        }
 
         // Izračunaj zbir ocjena (samo ako nije predsjednik koji mijenja samo sekciju 2 ili član koji mijenja samo napomene)
         $totalScore = 0;
