@@ -264,67 +264,80 @@ class EvaluationController extends Controller
         error_log('Has documents_complete: ' . ($request->has('documents_complete') ? 'YES' : 'NO'));
         
         // Provjeri documents_complete čim je predsjednik (bez obzira da li je već ocjenio ili ne)
+        // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
         if ($isChairman) {
-            // Validacija documents_complete - obavezno polje za predsjednika
-            // Koristimo try-catch da uhvatimo validacijske greške
-            try {
-                $request->validate([
-                    'documents_complete' => 'required|boolean',
-                ], [
-                    'documents_complete.required' => 'Morate odgovoriti da li su sva potrebna dokumenta dostavljena.',
-                ]);
-            } catch (\Illuminate\Validation\ValidationException $e) {
-                // Ako validacija ne prođe, vrati grešku
-                return redirect()->back()
-                    ->withErrors($e->errors())
-                    ->withInput();
-            }
-            
-            // Konvertuj documents_complete u boolean (Laravel automatski konvertuje "0" i "1")
-            $documentsComplete = $request->boolean('documents_complete');
-            
-            // Debug log za provjeru
-            error_log('=== DOCUMENTS_COMPLETE CHECK ===');
-            error_log('Raw input: ' . $request->input('documents_complete'));
-            error_log('Boolean value: ' . ($documentsComplete ? 'true' : 'false'));
-            error_log('Request all: ' . json_encode($request->all()));
-            
-            // Ako dokumentacija nije kompletna, automatski odbiti prijavu i ne dozvoli dalje ocjenjivanje
-            // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
-            if (!$documentsComplete) {
-                error_log('=== REJECTING APPLICATION ===');
-                error_log('Reason: documents_complete is false');
-                // Sačuvaj ocjenu predsjednika samo sa documents_complete = false
-                EvaluationScore::updateOrCreate(
-                    [
-                        'application_id' => $application->id,
-                        'commission_member_id' => $commissionMember->id,
-                    ],
-                    [
-                        'documents_complete' => false,
-                        'criterion_1' => null,
-                        'criterion_2' => null,
-                        'criterion_3' => null,
-                        'criterion_4' => null,
-                        'criterion_5' => null,
-                        'criterion_6' => null,
-                        'criterion_7' => null,
-                        'criterion_8' => null,
-                        'criterion_9' => null,
-                        'criterion_10' => null,
-                        'final_score' => 0,
-                        'notes' => null,
-                        'justification' => null,
-                    ]
-                );
+            // Provjeri da li postoji documents_complete u requestu
+            if (!$request->has('documents_complete')) {
+                // Ako nema documents_complete, možda je to prvi put kada predsjednik pristupa formi
+                // U tom slučaju, ne radimo ništa, samo nastavljamo dalje
+                error_log('=== DOCUMENTS_COMPLETE NOT IN REQUEST ===');
+            } else {
+                // Validacija documents_complete - obavezno polje za predsjednika
+                // Koristimo try-catch da uhvatimo validacijske greške
+                try {
+                    $request->validate([
+                        'documents_complete' => 'required|boolean',
+                    ], [
+                        'documents_complete.required' => 'Morate odgovoriti da li su sva potrebna dokumenta dostavljena.',
+                    ]);
+                } catch (\Illuminate\Validation\ValidationException $e) {
+                    // Ako validacija ne prođe, vrati grešku
+                    error_log('=== VALIDATION ERROR ===');
+                    error_log(json_encode($e->errors()));
+                    return redirect()->back()
+                        ->withErrors($e->errors())
+                        ->withInput();
+                }
                 
-                $application->update([
-                    'status' => 'rejected',
-                    'rejection_reason' => 'Nedostaju potrebna dokumenta.',
-                ]);
+                // Konvertuj documents_complete u boolean (Laravel automatski konvertuje "0" i "1")
+                $documentsComplete = $request->boolean('documents_complete');
                 
-                return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
-                    ->with('error', 'Prijava je odbijena jer nisu dostavljena sva potrebna dokumenta.');
+                // Debug log za provjeru
+                error_log('=== DOCUMENTS_COMPLETE CHECK ===');
+                error_log('Raw input: ' . $request->input('documents_complete'));
+                error_log('Boolean value: ' . ($documentsComplete ? 'true' : 'false'));
+                error_log('Request all: ' . json_encode($request->all()));
+                
+                // Ako dokumentacija nije kompletna, automatski odbiti prijavu i ne dozvoli dalje ocjenjivanje
+                // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
+                if (!$documentsComplete) {
+                    error_log('=== REJECTING APPLICATION ===');
+                    error_log('Reason: documents_complete is false');
+                    
+                    // Sačuvaj ocjenu predsjednika samo sa documents_complete = false
+                    EvaluationScore::updateOrCreate(
+                        [
+                            'application_id' => $application->id,
+                            'commission_member_id' => $commissionMember->id,
+                        ],
+                        [
+                            'documents_complete' => false,
+                            'criterion_1' => null,
+                            'criterion_2' => null,
+                            'criterion_3' => null,
+                            'criterion_4' => null,
+                            'criterion_5' => null,
+                            'criterion_6' => null,
+                            'criterion_7' => null,
+                            'criterion_8' => null,
+                            'criterion_9' => null,
+                            'criterion_10' => null,
+                            'final_score' => 0,
+                            'notes' => null,
+                            'justification' => null,
+                        ]
+                    );
+                    
+                    $application->update([
+                        'status' => 'rejected',
+                        'rejection_reason' => 'Nedostaju potrebna dokumenta.',
+                    ]);
+                    
+                    error_log('=== APPLICATION REJECTED SUCCESSFULLY ===');
+                    
+                    return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+                        ->with('error', 'Prijava je odbijena jer nisu dostavljena sva potrebna dokumenta.');
+                }
             }
         }
 
