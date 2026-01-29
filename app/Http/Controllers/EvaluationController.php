@@ -295,6 +295,7 @@ class EvaluationController extends Controller
         $messages = [];
         
         if ($commissionMember->position === 'predsjednik') {
+            // Laravel automatski konvertuje "0" i "1" u boolean
             $rules['documents_complete'] = 'required|boolean';
             $messages['documents_complete.required'] = 'Morate odgovoriti da li su sva potrebna dokumenta dostavljena.';
         }
@@ -303,8 +304,11 @@ class EvaluationController extends Controller
         if ($commissionMember->position === 'predsjednik' && !empty($rules)) {
             $request->validate($rules, $messages);
             
+            // Konvertuj documents_complete u boolean (Laravel automatski konvertuje "0" i "1")
+            $documentsComplete = $request->boolean('documents_complete');
+            
             // Ako dokumentacija nije kompletna, automatski odbiti prijavu i ne dozvoli dalje ocjenjivanje
-            if (!$request->boolean('documents_complete')) {
+            if (!$documentsComplete) {
                 // Sačuvaj ocjenu predsjednika samo sa documents_complete = false
                 EvaluationScore::updateOrCreate(
                     [
@@ -493,8 +497,31 @@ class EvaluationController extends Controller
                 // Provjeri da li je notes poslan u request-u (čak i ako je prazan string)
                 // Koristimo $request->input() direktno jer $validated možda ne uključuje prazan string
                 $notesValue = $request->has('notes') ? ($request->input('notes') ?? '') : $existingScore->notes;
+                
+                // Provjeri da li je documents_complete postavljen na false
+                // Koristimo $request->boolean() jer Laravel automatski konvertuje "0" i "1" u boolean
+                $documentsCompleteValue = $request->has('documents_complete') 
+                    ? $request->boolean('documents_complete')
+                    : ($existingScore->documents_complete ?? true);
+                
+                // Ako je documents_complete false, automatski odbiti prijavu
+                if ($documentsCompleteValue === false) {
+                    $existingScore->update([
+                        'documents_complete' => false,
+                        'notes' => $notesValue,
+                    ]);
+                    
+                    $application->update([
+                        'status' => 'rejected',
+                        'rejection_reason' => 'Nedostaju potrebna dokumenta.',
+                    ]);
+                    
+                    return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
+                        ->with('error', 'Prijava je odbijena jer nisu dostavljena sva potrebna dokumenta.');
+                }
+                
                 $existingScore->update([
-                    'documents_complete' => $validated['documents_complete'] ?? $existingScore->documents_complete,
+                    'documents_complete' => $documentsCompleteValue,
                     'notes' => $notesValue,
                 ]);
             }
