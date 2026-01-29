@@ -151,15 +151,8 @@ class EvaluationController extends Controller
         }
 
         // Provjeri da li je prijava već odbijena
-        // Predsjednik može pristupiti formi čak i kada je prijava odbijena (može vidjeti šta je odlučio, ali samo read-only)
-        // Ostali članovi ne mogu pristupiti odbijenim prijavama
-        $isChairman = $commissionMember->position === 'predsjednik';
-        if ($application->status === 'rejected') {
-            if (!$isChairman) {
-                abort(403, 'Prijava je već odbijena i ne može se editovati.');
-            }
-            // Ako je predsjednik, dozvoli pristup ali forma će biti read-only (provjera se vrši u view-u)
-        }
+        // Svi članovi komisije mogu pristupiti odbijenim prijavama, ali forma će biti read-only (provjera se vrši u view-u)
+        // Nema potrebe za blokiranjem pristupa ovdje
 
         // Učitaj komisiju sa svim članovima
         $commission = $commissionMember->commission;

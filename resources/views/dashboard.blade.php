@@ -685,9 +685,15 @@
                                     <td style="padding: 12px; vertical-align: top;">{{ $app->business_plan_name }}</td>
                                     <td style="padding: 12px; vertical-align: top;">{{ $app->user->name ?? 'N/A' }}</td>
                                     <td style="padding: 12px; vertical-align: top;">
-                                        <span class="status-badge {{ $statusClass }}" style="font-size: 11px; padding: 3px 10px;">
-                                            {{ $statusLabels[$app->status] ?? $app->status }}
-                                        </span>
+                                        @if($app->status === 'rejected')
+                                            <a href="{{ route('applications.show', $app) }}" class="status-badge {{ $statusClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;">
+                                                {{ $statusLabels[$app->status] ?? $app->status }}
+                                            </a>
+                                        @else
+                                            <span class="status-badge {{ $statusClass }}" style="font-size: 11px; padding: 3px 10px;">
+                                                {{ $statusLabels[$app->status] ?? $app->status }}
+                                            </span>
+                                        @endif
                                     </td>
                                     <td style="padding: 12px; vertical-align: top;">
                                         @if($obrazacLabel && $obrazacUrl)

@@ -92,6 +92,7 @@
     }
     .status-submitted { background: #dbeafe; color: #1e40af; }
     .status-evaluated { background: #d1fae5; color: #065f46; }
+    .status-rejected { background: #fee2e2; color: #991b1b; }
     .btn-sm {
         padding: 6px 12px;
         font-size: 12px;
@@ -186,7 +187,10 @@
                             $allEvaluated = $evaluatedMemberIds >= $totalMembers;
                             
                             // Odredi status za prikaz
-                            if ($allEvaluated) {
+                            if ($application->status === 'rejected') {
+                                $displayStatus = 'Odbijena prijava';
+                                $statusClass = 'status-rejected';
+                            } elseif ($allEvaluated) {
                                 $displayStatus = 'Ocjenjena prijava';
                                 $statusClass = 'status-evaluated';
                             } else {
@@ -204,7 +208,9 @@
                                 </span>
                             </td>
                             <td>
-                                @if($allEvaluated && $application->final_score)
+                                @if($application->status === 'rejected')
+                                    —
+                                @elseif($allEvaluated && $application->final_score)
                                     {{ number_format($application->final_score, 2) }} / 50
                                 @else
                                     Ocjenjivanje u toku
@@ -216,7 +222,12 @@
                                 @endphp
                                 
                                 <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                    @if($allEvaluated)
+                                    @if($application->status === 'rejected')
+                                        {{-- Odbijene prijave - svi članovi mogu pristupiti (read-only) --}}
+                                        <a href="{{ route('evaluation.create', $application) }}" class="btn-sm" style="background: #dc2626; color: #fff;">
+                                            Pregledaj
+                                        </a>
+                                    @elseif($allEvaluated)
                                         {{-- Kada su svi članovi ocjenili, svi članovi komisije vide "Ocjenjena prijava" --}}
                                         <a href="{{ route('evaluation.create', $application) }}" class="btn-sm evaluated" style="background: #10b981; color: #fff;">
                                             Ocjenjena prijava
