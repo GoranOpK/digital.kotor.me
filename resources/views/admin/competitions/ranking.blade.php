@@ -476,6 +476,114 @@
                 </div>
             @endif
         </div>
+
+        <!-- Sekcije 4 i 5: Zaključak komisije i Obrazloženje -->
+        @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
+            @if(!in_array($competition->status, ['closed', 'completed']))
+                <div class="info-card">
+                    <h2>4. Na bazi konačne ocjene Komisija donosi zaključak da se biznis plan:</h2>
+                    <p style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">
+                        Za svaku prijavu u rang listi unesite zaključak komisije i obrazloženje.
+                    </p>
+
+                    @foreach($applications as $application)
+                        <div style="background: #f9fafb; padding: 20px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
+                            <h3 style="font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 16px;">
+                                {{ $application->business_plan_name }} - {{ $application->user->name ?? 'N/A' }}
+                            </h3>
+                            
+                            @if(!$application->signed_by_chairman)
+                                <form method="POST" action="{{ route('evaluation.store-decision', $application) }}" style="margin-top: 16px;">
+                                    @csrf
+                                    
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 12px;">
+                                            Zaključak komisije:
+                                        </label>
+                                        <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                                <input type="radio" name="commission_decision" value="podrzava_potpuno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_potpuno' ? 'checked' : '' }} required>
+                                                <span style="font-size: 14px; color: #374151;">a. Podržava u potpunosti</span>
+                                            </label>
+                                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                                <input type="radio" name="commission_decision" value="podrzava_djelimicno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_djelimicno' ? 'checked' : '' }} required>
+                                                <span style="font-size: 14px; color: #374151;">b. Podržava djelimično</span>
+                                            </label>
+                                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                                <input type="radio" name="commission_decision" value="odbija" {{ old('commission_decision', $application->commission_decision) === 'odbija' ? 'checked' : '' }} required>
+                                                <span style="font-size: 14px; color: #374151;">c. Odbija</span>
+                                            </label>
+                                        </div>
+                                        @error('commission_decision')
+                                            <div style="color: #ef4444; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                            Iznos odobrenih sredstava:
+                                        </label>
+                                        <input 
+                                            type="number" 
+                                            name="approved_amount" 
+                                            class="form-control" 
+                                            value="{{ old('approved_amount', $application->approved_amount) }}" 
+                                            step="0.01" 
+                                            min="0" 
+                                            placeholder="0.00"
+                                            style="max-width: 200px;"
+                                        >
+                                    </div>
+
+                                    <div style="margin-bottom: 20px;">
+                                        <label style="display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 8px;">
+                                            5. Obrazloženje: *
+                                        </label>
+                                        <textarea 
+                                            name="commission_justification" 
+                                            class="form-control" 
+                                            rows="6" 
+                                            required 
+                                            placeholder="Unesite obrazloženje zaključka komisije...">{{ old('commission_justification', $application->commission_justification) }}</textarea>
+                                        @error('commission_justification')
+                                            <div style="color: #ef4444; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div style="text-align: right;">
+                                        <button type="submit" class="btn btn-success" style="padding: 8px 16px; font-size: 14px;">Sačuvaj zaključak</button>
+                                    </div>
+                                </form>
+                            @else
+                                {{-- Read-only prikaz ako je već zaključeno --}}
+                                <div style="background: #fff; padding: 16px; border-radius: 8px; margin-top: 12px;">
+                                    <p style="margin-bottom: 8px;"><strong>Zaključak:</strong> 
+                                        @if($application->commission_decision === 'podrzava_potpuno')
+                                            Podržava u potpunosti
+                                        @elseif($application->commission_decision === 'podrzava_djelimicno')
+                                            Podržava djelimično
+                                        @elseif($application->commission_decision === 'odbija')
+                                            Odbija
+                                        @else
+                                            Nije donesen
+                                        @endif
+                                    </p>
+                                    @if($application->approved_amount)
+                                        <p style="margin-bottom: 8px;"><strong>Iznos odobrenih sredstava:</strong> {{ number_format($application->approved_amount, 2, ',', '.') }} €</p>
+                                    @endif
+                                    @if($application->commission_justification)
+                                        <p style="margin-bottom: 8px;"><strong>Obrazloženje:</strong></p>
+                                        <div style="background: #f9fafb; padding: 12px; border-radius: 6px; margin-top: 8px; white-space: pre-wrap;">
+                                            {{ $application->commission_justification }}
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        @endif
     </div>
 </div>
 

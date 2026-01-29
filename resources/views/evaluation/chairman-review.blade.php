@@ -262,87 +262,43 @@
             </div>
         </div>
 
-        <!-- Zaključak komisije -->
-        @if(!$application->signed_by_chairman)
-        <div class="form-card">
-            <h2 style="font-size: 20px; font-weight: 700; color: var(--primary); margin-bottom: 24px;">
-                4. Na bazi konačne ocjene Komisija donosi zaključak da se biznis plan:
-            </h2>
-
-            <form method="POST" action="{{ route('evaluation.store-decision', $application) }}">
-                @csrf
-
-                <div class="form-group">
-                    <div class="radio-group">
-                        <div class="radio-option">
-                            <input type="radio" name="commission_decision" value="podrzava_potpuno" id="decision_potpuno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_potpuno' ? 'checked' : '' }} required>
-                            <label for="decision_potpuno">a. Podržava u potpunosti</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" name="commission_decision" value="podrzava_djelimicno" id="decision_djelimicno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_djelimicno' ? 'checked' : '' }} required>
-                            <label for="decision_djelimicno">b. Podržava djelimično</label>
-                        </div>
-                        <div class="radio-option">
-                            <input type="radio" name="commission_decision" value="odbija" id="decision_odbija" {{ old('commission_decision', $application->commission_decision) === 'odbija' ? 'checked' : '' }} required>
-                            <label for="decision_odbija">c. Odbija</label>
-                        </div>
-                    </div>
-                    @error('commission_decision')
-                        <div style="color: #ef4444; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Iznos odobrenih sredstava:</label>
-                    <input type="number" name="approved_amount" class="form-control" value="{{ old('approved_amount', $application->approved_amount) }}" step="0.01" min="0" placeholder="0.00">
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">5. Obrazloženje: *</label>
-                    <textarea name="commission_justification" class="form-control" rows="6" required placeholder="Unesite obrazloženje zaključka komisije...">{{ old('commission_justification', $application->commission_justification) }}</textarea>
-                    @error('commission_justification')
-                        <div style="color: #ef4444; font-size: 12px; margin-top: 4px;">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">4. Ostale napomene:</label>
-                    <textarea name="commission_notes" class="form-control" rows="4" placeholder="Unesite ostale napomene...">{{ old('commission_notes', $application->commission_notes) }}</textarea>
-                </div>
-
-                <div style="margin-top: 24px; text-align: center;">
-                    <button type="submit" class="btn-primary">Sačuvaj zaključak komisije</button>
-                    <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280;">Nazad</a>
-                </div>
-            </form>
-        </div>
-        @else
-        <!-- Prikaz zaključka ako je već donesen -->
+        <!-- Zaključak komisije - samo read-only prikaz ako je već donesen -->
+        @if($application->signed_by_chairman || $application->commission_decision)
         <div class="info-card">
             <h2>4. Zaključak komisije</h2>
-            <p><strong>Zaključak:</strong> 
-                @if($application->commission_decision === 'podrzava_potpuno')
-                    Podržava u potpunosti
-                @elseif($application->commission_decision === 'podrzava_djelimicno')
-                    Podržava djelimično
-                @else
-                    Odbija
+            @if($application->commission_decision)
+                <p><strong>Zaključak:</strong> 
+                    @if($application->commission_decision === 'podrzava_potpuno')
+                        Podržava u potpunosti
+                    @elseif($application->commission_decision === 'podrzava_djelimicno')
+                        Podržava djelimično
+                    @elseif($application->commission_decision === 'odbija')
+                        Odbija
+                    @else
+                        Nije donesen
+                    @endif
+                </p>
+                @if($application->approved_amount)
+                    <p><strong>Iznos odobrenih sredstava:</strong> {{ number_format($application->approved_amount, 2, ',', '.') }} €</p>
                 @endif
-            </p>
-            @if($application->approved_amount)
-                <p><strong>Iznos odobrenih sredstava:</strong> {{ number_format($application->approved_amount, 2, ',', '.') }} €</p>
+                @if($application->commission_justification)
+                    <p><strong>5. Obrazloženje:</strong></p>
+                    <div style="background: #f9fafb; padding: 16px; border-radius: 8px; margin-top: 8px; white-space: pre-wrap;">
+                        {{ $application->commission_justification }}
+                    </div>
+                @endif
+                @if($application->commission_notes)
+                    <p style="margin-top: 16px;"><strong>4. Ostale napomene:</strong></p>
+                    <div style="background: #f9fafb; padding: 16px; border-radius: 8px; margin-top: 8px; white-space: pre-wrap;">
+                        {{ $application->commission_notes }}
+                    </div>
+                @endif
+                @if($application->commission_decision_date)
+                    <p style="margin-top: 16px;"><strong>Datum donošenja zaključka:</strong> {{ $application->commission_decision_date->format('d.m.Y') }}</p>
+                @endif
+            @else
+                <p style="color: #6b7280;">Zaključak komisije još nije donesen. Molimo vas da unesete zaključak u Rang listi.</p>
             @endif
-            <p><strong>Obrazloženje:</strong></p>
-            <div style="background: #f9fafb; padding: 16px; border-radius: 8px; margin-top: 8px;">
-                {{ $application->commission_justification }}
-            </div>
-            @if($application->commission_notes)
-                <p style="margin-top: 16px;"><strong>Ostale napomene:</strong></p>
-                <div style="background: #f9fafb; padding: 16px; border-radius: 8px; margin-top: 8px;">
-                    {{ $application->commission_notes }}
-                </div>
-            @endif
-            <p style="margin-top: 16px;"><strong>Datum donošenja zaključka:</strong> {{ $application->commission_decision_date ? $application->commission_decision_date->format('d.m.Y') : 'N/A' }}</p>
         </div>
 
         <!-- Potpisivanje -->
