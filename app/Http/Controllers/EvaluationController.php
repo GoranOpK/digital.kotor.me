@@ -240,6 +240,11 @@ class EvaluationController extends Controller
      */
     public function store(Request $request, Application $application): RedirectResponse
     {
+        // Debug - provjeri da li se metoda poziva
+        error_log('=== EVALUATION STORE METHOD CALLED ===');
+        error_log('Application ID: ' . $application->id);
+        error_log('Request all: ' . json_encode($request->all()));
+        
         $user = Auth::user();
         
         // Pronađi člana komisije
@@ -254,6 +259,9 @@ class EvaluationController extends Controller
         // PRIORITET: Provjeri documents_complete PRVO (ako je predsjednik) - prije bilo koje druge provjere
         // Ovo mora biti prvo jer ako dokumentacija nije kompletna, prijava se odmah odbija
         $isChairman = $commissionMember->position === 'predsjednik';
+        
+        error_log('Is Chairman: ' . ($isChairman ? 'YES' : 'NO'));
+        error_log('Has documents_complete: ' . ($request->has('documents_complete') ? 'YES' : 'NO'));
         
         // Provjeri documents_complete čim je predsjednik (bez obzira da li je već ocjenio ili ne)
         if ($isChairman) {
@@ -276,20 +284,16 @@ class EvaluationController extends Controller
             $documentsComplete = $request->boolean('documents_complete');
             
             // Debug log za provjeru
-            Log::info('=== DOCUMENTS_COMPLETE CHECK ===', [
-                'application_id' => $application->id,
-                'raw_input' => $request->input('documents_complete'),
-                'boolean_value' => $documentsComplete,
-                'request_all' => $request->all(),
-            ]);
+            error_log('=== DOCUMENTS_COMPLETE CHECK ===');
+            error_log('Raw input: ' . $request->input('documents_complete'));
+            error_log('Boolean value: ' . ($documentsComplete ? 'true' : 'false'));
+            error_log('Request all: ' . json_encode($request->all()));
             
             // Ako dokumentacija nije kompletna, automatski odbiti prijavu i ne dozvoli dalje ocjenjivanje
             // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
             if (!$documentsComplete) {
-                Log::info('=== REJECTING APPLICATION ===', [
-                    'application_id' => $application->id,
-                    'reason' => 'documents_complete is false',
-                ]);
+                error_log('=== REJECTING APPLICATION ===');
+                error_log('Reason: documents_complete is false');
                 // Sačuvaj ocjenu predsjednika samo sa documents_complete = false
                 EvaluationScore::updateOrCreate(
                     [
@@ -345,13 +349,16 @@ class EvaluationController extends Controller
         $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
         
         // Osiguraj da samo predsjednik može slati zaključak, iznos odobrenih sredstava i documents_complete
+        // VAŽNO: Ne uklanjaj documents_complete prije provjere na početku metode!
+        // Provjera documents_complete se izvršava na početku metode (linija 267), prije ovog bloka
         if ($commissionMember->position !== 'predsjednik') {
             // Ako nije predsjednik, ukloni te podatke iz requesta
+            // ALI NE documents_complete - to se već provjerilo na početku
             $request->merge([
                 'commission_decision' => null,
                 'approved_amount' => null,
                 'decision_date' => null,
-                'documents_complete' => null,
+                // 'documents_complete' => null, // NE UKLANJAJ - već je provjereno na početku
             ]);
         }
 
