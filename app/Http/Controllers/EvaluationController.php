@@ -241,9 +241,21 @@ class EvaluationController extends Controller
     public function store(Request $request, Application $application): RedirectResponse
     {
         // Debug - provjeri da li se metoda poziva
+        // Koristimo file_put_contents jer je sigurniji način pisanja u fajl
+        $logFile = storage_path('logs/evaluation_debug.log');
+        file_put_contents($logFile, date('Y-m-d H:i:s') . " - STORE METHOD CALLED\n", FILE_APPEND);
+        file_put_contents($logFile, "Application ID: " . $application->id . "\n", FILE_APPEND);
+        file_put_contents($logFile, "Request all: " . json_encode($request->all()) . "\n", FILE_APPEND);
+        
         error_log('=== EVALUATION STORE METHOD CALLED ===');
         error_log('Application ID: ' . $application->id);
         error_log('Request all: ' . json_encode($request->all()));
+        
+        // Provjeri da li se metoda uopće poziva - ako vidimo ovu poruku, znači da se poziva
+        \Log::info('EVALUATION STORE METHOD CALLED', [
+            'application_id' => $application->id,
+            'request_all' => $request->all(),
+        ]);
         
         $user = Auth::user();
         
@@ -423,15 +435,22 @@ class EvaluationController extends Controller
         // Validacija se izvršava samo ako ima pravila (ako nema kriterijuma za validaciju, preskoči)
         // DODATNA PROVJERA: Ako je documents_complete false, ne izvršavaj validaciju kriterijuma
         // (ovo je sigurnosna provjera, jer bi se već trebalo izvršiti redirect na liniji 310)
-        if (!empty($rules)) {
-            // Provjeri da li je documents_complete false (ako je predsjednik)
-            if ($isChairman && $request->has('documents_complete') && !$request->boolean('documents_complete')) {
-                // Ako je documents_complete false, ne izvršavaj validaciju kriterijuma
-                // (ovo ne bi trebalo biti potrebno jer bi se već trebalo izvršiti redirect)
-                // ali dodajemo kao dodatnu sigurnost
-                $validated = $request->all();
-            } else {
+        // PRIJE SVE VALIDACIJE - provjeri da li je documents_complete false
+        if ($isChairman && $request->has('documents_complete') && !$request->boolean('documents_complete')) {
+            // Ako je documents_complete false, ne izvršavaj validaciju kriterijuma
+            // (ovo ne bi trebalo biti potrebno jer bi se već trebalo izvršiti redirect na liniji 310)
+            // ali dodajemo kao dodatnu sigurnost
+            $validated = $request->all();
+        } elseif (!empty($rules)) {
+            try {
                 $validated = $request->validate($rules, $messages);
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                // Ako validacija ne prođe, vrati grešku
+                error_log('=== VALIDATION FAILED ===');
+                error_log(json_encode($e->errors()));
+                return redirect()->back()
+                    ->withErrors($e->errors())
+                    ->withInput();
             }
         } else {
             $validated = $request->all();
