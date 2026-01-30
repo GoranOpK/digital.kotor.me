@@ -254,6 +254,7 @@ class Application extends Model
 
     /**
      * Vraća listu obaveznih dokumenata prema tipu prijave
+     * Prema Odluci, član 12
      * 
      * VAŽNO: 'fizicko_lice' = Fizičko lice BEZ registrovane djelatnosti
      *        'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (preduzetnik)
@@ -261,33 +262,34 @@ class Application extends Model
     public function getRequiredDocuments(): array
     {
         $documents = [];
+        $isRegistered = $this->is_registered ?? false;
         
-        // Dokumenti vezani za registraciju (ne obavezni ako nema registrovanu djelatnost)
-        $registrationDocs = ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_upc_porezi', 'ioppd_obrazac', 'godisnji_racuni'];
-
-        // Fizičko lice BEZ registrovane djelatnosti (nema registrovanu djelatnost u skladu sa Zakonom o privrednim društvima)
-        if ($this->applicant_type === 'fizicko_lice') {
-            // Fizičko lice nema registrovanu djelatnost, samo lična karta i biznis plan
+        // Preduzetnice koje započinju biznis (započinjanje)
+        if ($this->applicant_type === 'preduzetnica' && $this->business_stage === 'započinjanje') {
             $documents = [
                 'licna_karta',
-                'biznis_plan_usb',
-            ];
-        } elseif ($this->applicant_type === 'preduzetnica' && $this->business_stage === 'započinjanje') {
-            $documents = [
-                'licna_karta',
-                'crps_resenje',
-                'pib_resenje',
-                'pdv_resenje',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
                 'biznis_plan_usb',
             ];
-        } elseif ($this->applicant_type === 'preduzetnica' && $this->business_stage === 'razvoj') {
+            
+            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
+            if ($isRegistered) {
+                $documents[] = 'crps_resenje';
+                $documents[] = 'pib_resenje';
+                // PDV samo ako je obveznik PDV-a (provjerava se kroz vat_number ili pdv_resenje)
+                // Za sada dodajemo pdv_resenje ako ima registrovanu djelatnost
+                $documents[] = 'pdv_resenje';
+            }
+        }
+        // Preduzetnice koje planiraju razvoj poslovanja (razvoj)
+        elseif ($this->applicant_type === 'preduzetnica' && $this->business_stage === 'razvoj') {
             $documents = [
                 'licna_karta',
                 'crps_resenje',
                 'pib_resenje',
+                // PDV samo ako je obveznik PDV-a - za sada dodajemo kao obavezno
                 'pdv_resenje',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
@@ -296,55 +298,34 @@ class Application extends Model
                 'ioppd_obrazac',
                 'biznis_plan_usb',
             ];
-        } elseif ($this->applicant_type === 'doo' && $this->business_stage === 'započinjanje') {
+        }
+        // Društva (DOO) koja započinju biznis (započinjanje)
+        elseif ($this->applicant_type === 'doo' && $this->business_stage === 'započinjanje') {
             $documents = [
                 'licna_karta',
-                'crps_resenje',
-                'pib_resenje',
-                'pdv_resenje',
-                'statut',
-                'karton_potpisa',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
                 'biznis_plan_usb',
             ];
-        } elseif ($this->applicant_type === 'doo' && $this->business_stage === 'razvoj') {
+            
+            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
+            if ($isRegistered) {
+                $documents[] = 'crps_resenje';
+                $documents[] = 'pib_resenje';
+                // PDV samo ako je obveznik PDV-a
+                $documents[] = 'pdv_resenje';
+                $documents[] = 'statut';
+                $documents[] = 'karton_potpisa';
+            }
+        }
+        // Društva (DOO) koja planiraju razvoj poslovanja (razvoj)
+        elseif ($this->applicant_type === 'doo' && $this->business_stage === 'razvoj') {
             $documents = [
                 'licna_karta',
                 'crps_resenje',
                 'pib_resenje',
-                'pdv_resenje',
-                'statut',
-                'karton_potpisa',
-                'godisnji_racuni',
-                'potvrda_neosudjivanost',
-                'uvjerenje_opstina_porezi',
-                'uvjerenje_opstina_nepokretnost',
-                'potvrda_upc_porezi',
-                'ioppd_obrazac',
-                'biznis_plan_usb',
-            ];
-        } elseif ($this->applicant_type === 'ostalo' && $this->business_stage === 'započinjanje') {
-            // Ostalo - isti dokumenti kao DOO za započinjanje
-            $documents = [
-                'licna_karta',
-                'crps_resenje',
-                'pib_resenje',
-                'pdv_resenje',
-                'statut',
-                'karton_potpisa',
-                'potvrda_neosudjivanost',
-                'uvjerenje_opstina_porezi',
-                'uvjerenje_opstina_nepokretnost',
-                'biznis_plan_usb',
-            ];
-        } elseif ($this->applicant_type === 'ostalo' && $this->business_stage === 'razvoj') {
-            // Ostalo - isti dokumenti kao DOO za razvoj
-            $documents = [
-                'licna_karta',
-                'crps_resenje',
-                'pib_resenje',
+                // PDV samo ako je obveznik PDV-a - za sada dodajemo kao obavezno
                 'pdv_resenje',
                 'statut',
                 'karton_potpisa',
@@ -357,12 +338,49 @@ class Application extends Model
                 'biznis_plan_usb',
             ];
         }
-
-        // Ako nema registrovanu djelatnost, ukloni dokumente vezane za registraciju
-        if ($this->is_registered === false) {
-            $documents = array_filter($documents, function($doc) use ($registrationDocs) {
-                return !in_array($doc, $registrationDocs);
-            });
+        // Ostalo (druga društva) - isti dokumenti kao DOO
+        elseif ($this->applicant_type === 'ostalo' && $this->business_stage === 'započinjanje') {
+            $documents = [
+                'licna_karta',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'biznis_plan_usb',
+            ];
+            
+            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
+            if ($isRegistered) {
+                $documents[] = 'crps_resenje';
+                $documents[] = 'pib_resenje';
+                $documents[] = 'pdv_resenje';
+                $documents[] = 'statut';
+                $documents[] = 'karton_potpisa';
+            }
+        } elseif ($this->applicant_type === 'ostalo' && $this->business_stage === 'razvoj') {
+            $documents = [
+                'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                // PDV samo ako je obveznik PDV-a - za sada dodajemo kao obavezno
+                'pdv_resenje',
+                'statut',
+                'karton_potpisa',
+                'godisnji_racuni',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'potvrda_upc_porezi',
+                'ioppd_obrazac',
+                'biznis_plan_usb',
+            ];
+        }
+        // Fizičko lice BEZ registrovane djelatnosti
+        elseif ($this->applicant_type === 'fizicko_lice') {
+            // Fizičko lice nema registrovanu djelatnost, samo lična karta i biznis plan
+            $documents = [
+                'licna_karta',
+                'biznis_plan_usb',
+            ];
         }
 
         // Ako je prethodno dobijala podršku, dodaj izvještaj
