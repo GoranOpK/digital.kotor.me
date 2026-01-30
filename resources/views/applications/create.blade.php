@@ -1010,6 +1010,7 @@
                         </div>
                     </div>
 
+                    @if(!$isFizickoLiceRezident)
                     <div class="form-group">
                         <label class="form-label">
                             Faza biznisa <span class="required">*</span>
@@ -1018,30 +1019,31 @@
                             <div class="radio-option">
                                 <input 
                                     type="radio" 
-                                    id="business_stage_zapocinjanje_fizicko" 
+                                    id="business_stage_zapocinjanje_fizicko_old" 
                                     name="business_stage" 
                                     value="započinjanje"
                                     {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
-                                <label for="business_stage_zapocinjanje_fizicko">Započinjanje poslovne djelatnosti</label>
+                                <label for="business_stage_zapocinjanje_fizicko_old">Započinjanje poslovne djelatnosti</label>
                             </div>
                             <div class="radio-option">
                                 <input 
                                     type="radio" 
-                                    id="business_stage_razvoj_fizicko" 
+                                    id="business_stage_razvoj_fizicko_old" 
                                     name="business_stage" 
                                     value="razvoj"
                                     {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'razvoj' ? 'checked' : '' }}
                                     data-required="true"
                                 >
-                                <label for="business_stage_razvoj_fizicko">Razvoj postojeće poslovne djelatnosti</label>
+                                <label for="business_stage_razvoj_fizicko_old">Razvoj postojeće poslovne djelatnosti</label>
                             </div>
                         </div>
                         @error('business_stage')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
+                    @endif
 
                     <div class="form-group">
                         <label class="form-label">
@@ -1266,6 +1268,15 @@
     //        'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (automatski is_registered = true)
     //        'doo' = Društvo sa ograničenom odgovornošću (automatski is_registered = true)
     //        'ostalo' = Ostali pravni subjekti (automatski is_registered = true)
+    @php
+        $userType = auth()->user()->user_type ?? '';
+        $isFizickoLiceRezident = ($userType === 'Fizičko lice' || $userType === 'Rezident');
+    @endphp
+    <script>
+        const isFizickoLiceRezident = @json($isFizickoLiceRezident);
+        console.log('isFizickoLiceRezident:', isFizickoLiceRezident);
+    </script>
+    <script>
     document.addEventListener('DOMContentLoaded', function() {
         const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"]');
         const obrazac1a = document.getElementById('obrazac1a');
@@ -1319,6 +1330,21 @@
                 const businessStageRadios = fizickoLiceBusinessStage.querySelectorAll('input[name="business_stage"]');
                 businessStageRadios.forEach(radio => {
                     radio.removeAttribute('required');
+                    radio.checked = false;
+                });
+            }
+            
+            // Disable business_stage u obrazac1a i obrazac1b (reset)
+            if (obrazac1a) {
+                const businessStage1a = obrazac1a.querySelectorAll('input[name="business_stage"]');
+                businessStage1a.forEach(radio => {
+                    radio.setAttribute('disabled', 'disabled');
+                });
+            }
+            if (obrazac1b) {
+                const businessStage1b = obrazac1b.querySelectorAll('input[name="business_stage"]');
+                businessStage1b.forEach(radio => {
+                    radio.setAttribute('disabled', 'disabled');
                 });
             }
 
@@ -1337,6 +1363,15 @@
                     const businessArea1a = obrazac1a.querySelector('input[name="business_area"]');
                     if (businessPlanName1a) businessPlanName1a.setAttribute('required', 'required');
                     if (businessArea1a) businessArea1a.setAttribute('required', 'required');
+                    
+                    // Enable business_stage u obrazac1a
+                    const businessStage1a = obrazac1a.querySelectorAll('input[name="business_stage"]');
+                    businessStage1a.forEach(radio => {
+                        radio.removeAttribute('disabled');
+                        if (radio.hasAttribute('data-required')) {
+                            radio.setAttribute('required', 'required');
+                        }
+                    });
                 }
             } else if (selectedType === 'doo' || selectedType === 'ostalo') {
                 // DOO ili Ostalo - prikaži Obrazac 1b
@@ -1374,6 +1409,27 @@
                 if (fizickoLiceNotice) {
                     fizickoLiceNotice.style.display = 'block';
                 }
+                
+                // Provjeri da li je korisnik "Fizičko lice (Rezident)" - ako jeste, prikaži izbor tipa prijave
+                const fizickoLiceBusinessStage = document.getElementById('fizickoLiceBusinessStage');
+                console.log('fizickoLiceBusinessStage element:', fizickoLiceBusinessStage);
+                console.log('isFizickoLiceRezident value:', typeof isFizickoLiceRezident !== 'undefined' ? isFizickoLiceRezident : 'undefined');
+                if (fizickoLiceBusinessStage) {
+                    if (typeof isFizickoLiceRezident !== 'undefined' && isFizickoLiceRezident) {
+                        console.log('Prikazujem sekciju za izbor tipa prijave');
+                        fizickoLiceBusinessStage.style.display = 'block';
+                        // Dodaj required na radio button-e
+                        const businessStageRadios = fizickoLiceBusinessStage.querySelectorAll('input[name="business_stage"]');
+                        businessStageRadios.forEach(radio => {
+                            radio.setAttribute('required', 'required');
+                            radio.removeAttribute('disabled');
+                        });
+                    } else {
+                        console.log('Korisnik nije Fizičko lice (Rezident)');
+                        fizickoLiceBusinessStage.style.display = 'none';
+                    }
+                }
+                
                 // Prikaži polja za fizičko lice
                 if (fizickoLiceFields) {
                     fizickoLiceFields.classList.add('show');
@@ -1386,6 +1442,21 @@
                     fizickoLiceRequiredFields.forEach(field => {
                         field.setAttribute('required', 'required');
                     });
+                    
+                    // Ako je korisnik "Fizičko lice (Rezident)", sakrij business_stage polje u fizickoLiceFields
+                    if (typeof isFizickoLiceRezident !== 'undefined' && isFizickoLiceRezident) {
+                        const businessStageInFizickoLiceFields = fizickoLiceFields.querySelectorAll('input[name="business_stage"]');
+                        businessStageInFizickoLiceFields.forEach(radio => {
+                            radio.setAttribute('disabled', 'disabled');
+                            radio.removeAttribute('required');
+                            radio.checked = false;
+                            // Sakrij parent div
+                            const parentGroup = radio.closest('.form-group');
+                            if (parentGroup) {
+                                parentGroup.style.display = 'none';
+                            }
+                        });
+                    }
                 }
             }
         }
