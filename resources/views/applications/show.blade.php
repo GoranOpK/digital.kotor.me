@@ -713,6 +713,7 @@
             @php
                 // Provjeri da li je korisnik član komisije
                 $isCommissionMember = $isCommissionMemberForThisCompetition ?? false;
+                
                 // Fallback provjera - ako varijabla nije postavljena, provjeri direktno
                 if (!$isCommissionMember && auth()->check()) {
                     $user = auth()->user();
