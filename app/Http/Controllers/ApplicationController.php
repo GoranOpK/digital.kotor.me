@@ -195,6 +195,12 @@ class ApplicationController extends Controller
         // Preduzetnica, DOO i Ostalo automatski imaju registrovanu djelatnost
         if ($request->applicant_type === 'fizicko_lice' && !$isDraft) {
             $rules['accuracy_declaration'] = 'required|accepted';
+            
+            // Ako je korisnik "Fizičko lice (Rezident)", business_stage je obavezno
+            $userType = auth()->user()->user_type ?? '';
+            if ($userType === 'Fizičko lice' || $userType === 'Rezident') {
+                $rules['business_stage'] = 'required|in:započinjanje,razvoj';
+            }
         }
 
         // Dodatna polja za DOO i Ostalo (ista polja)

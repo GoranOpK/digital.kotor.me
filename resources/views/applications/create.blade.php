@@ -304,6 +304,49 @@
                 <strong>Važno:</strong> Ukoliko podnosioc biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena u obavezi je da svoju djelatnost registruje u neki od oblika registracije koji predviđa Zakon o privrednim društvima i priloži dokaz (rješenje o registraciji u CRPS i rješenje o registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
             </div>
 
+            <!-- Izbor tipa prijave za Fizičko lice (Rezident) -->
+            @php
+                $userType = auth()->user()->user_type ?? '';
+                $isFizickoLiceRezident = ($userType === 'Fizičko lice' || $userType === 'Rezident');
+            @endphp
+            <div class="form-card conditional-field" id="fizickoLiceBusinessStage" style="display: none;">
+                <div class="form-section">
+                    <div class="form-group">
+                        <label class="form-label">
+                            Tip prijave <span class="required">*</span>
+                        </label>
+                        <div class="form-text" style="margin-bottom: 12px; color: #6b7280; font-size: 13px;">
+                            <strong>Napomena:</strong> Molimo vas da izaberete da li se prijavljujete kao Preduzetnica koja započinje biznis ili Preduzetnica koja planira razvoj poslovanja. Na osnovu vašeg izbora, biće određen spisak obaveznih dokumenata.
+                        </div>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input 
+                                    type="radio" 
+                                    id="business_stage_zapocinjanje_fizicko" 
+                                    name="business_stage" 
+                                    value="započinjanje"
+                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'započinjanje' ? 'checked' : '' }}
+                                >
+                                <label for="business_stage_zapocinjanje_fizicko">Preduzetnica koja započinje biznis</label>
+                            </div>
+                            <div class="radio-option">
+                                <input 
+                                    type="radio" 
+                                    id="business_stage_razvoj_fizicko" 
+                                    name="business_stage" 
+                                    value="razvoj"
+                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'razvoj' ? 'checked' : '' }}
+                                >
+                                <label for="business_stage_razvoj_fizicko">Preduzetnica koja planira razvoj poslovanja</label>
+                            </div>
+                        </div>
+                        @error('business_stage')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+                </div>
+            </div>
+
             <!-- Obrazac 1a: Za Preduzetnice (PREDUZETNIK) -->
             <div class="form-card conditional-field" id="obrazac1a">
                 <div class="form-section">
@@ -1266,6 +1309,17 @@
             // Resetuj napomenu
             if (fizickoLiceNotice) {
                 fizickoLiceNotice.style.display = 'none';
+            }
+
+            // Resetuj sekciju za izbor tipa prijave za Fizičko lice (Rezident)
+            const fizickoLiceBusinessStage = document.getElementById('fizickoLiceBusinessStage');
+            if (fizickoLiceBusinessStage) {
+                fizickoLiceBusinessStage.style.display = 'none';
+                // Ukloni required sa radio button-a
+                const businessStageRadios = fizickoLiceBusinessStage.querySelectorAll('input[name="business_stage"]');
+                businessStageRadios.forEach(radio => {
+                    radio.removeAttribute('required');
+                });
             }
 
             // Prikaži/sakrij obrazce na osnovu tipa

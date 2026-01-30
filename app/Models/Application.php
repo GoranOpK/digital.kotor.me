@@ -375,12 +375,51 @@ class Application extends Model
             ];
         }
         // Fizičko lice BEZ registrovane djelatnosti
+        // Ako je korisnik registrovan kao "Fizičko lice (Rezident)", tretira se kao preduzetnica
+        // na osnovu business_stage (započinjanje ili razvoj)
         elseif ($this->applicant_type === 'fizicko_lice') {
-            // Fizičko lice nema registrovanu djelatnost, samo lična karta i biznis plan
-            $documents = [
-                'licna_karta',
-                'biznis_plan_usb',
-            ];
+            // Provjeri da li ima business_stage - ako ima, tretiraj kao preduzetnicu
+            if ($this->business_stage) {
+                if ($this->business_stage === 'započinjanje') {
+                    // Preduzetnice koje započinju biznis
+                    $documents = [
+                        'licna_karta',
+                        'potvrda_neosudjivanost',
+                        'uvjerenje_opstina_porezi',
+                        'uvjerenje_opstina_nepokretnost',
+                        'biznis_plan_usb',
+                    ];
+                    
+                    // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
+                    if ($isRegistered) {
+                        $documents[] = 'crps_resenje';
+                        $documents[] = 'pib_resenje';
+                        // PDV samo ako je obveznik PDV-a
+                        $documents[] = 'pdv_resenje';
+                    }
+                } elseif ($this->business_stage === 'razvoj') {
+                    // Preduzetnice koje planiraju razvoj poslovanja
+                    $documents = [
+                        'licna_karta',
+                        'crps_resenje',
+                        'pib_resenje',
+                        // PDV samo ako je obveznik PDV-a - za sada dodajemo kao obavezno
+                        'pdv_resenje',
+                        'potvrda_neosudjivanost',
+                        'uvjerenje_opstina_porezi',
+                        'uvjerenje_opstina_nepokretnost',
+                        'potvrda_upc_porezi',
+                        'ioppd_obrazac',
+                        'biznis_plan_usb',
+                    ];
+                }
+            } else {
+                // Ako nema business_stage, samo lična karta i biznis plan (stara logika)
+                $documents = [
+                    'licna_karta',
+                    'biznis_plan_usb',
+                ];
+            }
         }
 
         // Ako je prethodno dobijala podršku, dodaj izvještaj
