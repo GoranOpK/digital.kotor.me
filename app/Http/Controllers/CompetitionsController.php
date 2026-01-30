@@ -105,8 +105,8 @@ class CompetitionsController extends Controller
             'potvrda_neosudjivanost' => 'Potvrda o neosuđivanosti za krivična djela na ime preduzetnice izdatu od strane Osnovnog suda',
             'uvjerenje_opstina_porezi' => 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada',
             'uvjerenje_opstina_nepokretnost' => 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice',
-            'potvrda_upc_porezi' => 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana',
-            'ioppd_obrazac' => 'Obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina (IOPPD Obrazac)',
+            'potvrda_upc_porezi' => 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice',
+            'ioppd_obrazac' => 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)',
             'godisnji_racuni' => 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu',
             'biznis_plan_usb' => 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u',
             'izvjestaj_realizacija' => 'Izvještaj o realizaciji prethodne podrške',
@@ -130,18 +130,26 @@ class CompetitionsController extends Controller
         $requiredDocuments = array_map(function($docType) use ($documentLabels, $applicantType) {
             $label = $documentLabels[$docType] ?? $docType;
             
-            // Za preduzetnice i fizičko lice koje započinje, dodaj napomene za opcione dokumente
+            // Za preduzetnice i fizičko lice, dodaj napomene za opcione dokumente i ažuriraj tekstove
             if ($applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
                 if ($docType === 'crps_resenje') {
-                    $label = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
+                    // Za razvoj, CRPS je obavezan, za započinjanje je opcioni
+                    // Ovo će se ažurirati u JavaScript-u na osnovu izbora
+                    $label = 'Rješenje o upisu u CRPS';
                 } elseif ($docType === 'pib_resenje') {
-                    $label = 'Rješenje o registraciji PJ Uprave prihoda i carina (ukoliko ima registrovanu djelatnost)';
+                    // Za razvoj, PIB je obavezan, za započinjanje je opcioni
+                    $label = 'Rješenje o registraciji PJ Uprave prihoda i carina';
                 } elseif ($docType === 'pdv_resenje') {
-                    $label = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a)';
+                    // PDV je opcioni i za započinjanje i za razvoj
+                    $label = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a)';
                 } elseif ($docType === 'uvjerenje_opstina_porezi') {
                     $label = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
                 } elseif ($docType === 'uvjerenje_opstina_nepokretnost') {
                     $label = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                } elseif ($docType === 'potvrda_upc_porezi') {
+                    $label = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice';
+                } elseif ($docType === 'ioppd_obrazac') {
+                    $label = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
                 }
             }
             

@@ -386,7 +386,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje'] // Dokumenti koji su opcioni (ukoliko ima registrovanu djelatnost)
             },
             'razvoj': {
-                withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb']
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb'],
+                optional: ['pdv_resenje'] // PDV je opcioni (ako je obveznik PDV-a)
             }
         },
         'doo': {
@@ -446,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Dodaj obavezne dokumente koje svi moraju imati
         let allDocuments = [];
         
-        if (selectedStage === 'započinjanje' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
+        if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
             allDocuments = [
                 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)',
                 'Popunjena forma za biznis plan (obrazac 2)',
@@ -471,18 +472,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (docType === 'pib_resenje') {
                     docLabel = 'Rješenje o registraciji PJ Uprave prihoda i carina (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'pdv_resenje') {
-                    docLabel = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a)';
+                    if (selectedStage === 'započinjanje') {
+                        docLabel = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a)';
+                    } else if (selectedStage === 'razvoj') {
+                        docLabel = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a)';
+                    }
                 }
             }
             
             // Ažuriraj label za uvjerenje o nepokretnosti
-            if (docType === 'uvjerenje_opstina_nepokretnost' && selectedStage === 'započinjanje' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
+            if (docType === 'uvjerenje_opstina_nepokretnost' && (selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
                 docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
             }
             
             // Ažuriraj label za uvjerenje o porezima
-            if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'započinjanje' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
+            if (docType === 'uvjerenje_opstina_porezi' && (selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
                 docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+            }
+            
+            // Ažuriraj label za potvrdu UPC porezi
+            if (docType === 'potvrda_upc_porezi' && selectedStage === 'razvoj' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
+                docLabel = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice';
+            }
+            
+            // Ažuriraj label za IOPPD obrazac
+            if (docType === 'ioppd_obrazac' && selectedStage === 'razvoj' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
+                docLabel = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
             }
             
             allDocuments.push(docLabel);
