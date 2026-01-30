@@ -335,8 +335,8 @@
                 $canDelete = $canManage && $deadline && !$deadline->isPast();
             }
 
-            // Prvi red: Osnovni podaci + Status prijave
-            $gridColumnsStyle = 'repeat(2, 1fr)';
+            // Prvi red: Osnovni podaci + Status prijave + Dodaj dokument
+            $gridColumnsStyle = 'repeat(3, 1fr)';
         @endphp
 
         <div class="summary-grid" style="grid-template-columns: 1fr;">
@@ -591,70 +591,70 @@
                             @endif
                         </div>
                     @endif
-                    
-                    <!-- Dodaj dokument (na kraju sekcije Status prijave) -->
-                    @if($showUpload)
-                    <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e5e7eb;">
-                        <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 600; color: #111827;">Dodaj dokument</h3>
-                        <div class="upload-section" style="margin-top: 0; background: #f9fafb; padding: 15px; border-radius: 8px;">
-                            <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data">
-                                @csrf
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label class="form-label" style="font-size: 13px;">Tip dokumenta</label>
-                                    <select name="document_type" class="form-control" style="font-size: 13px; padding: 8px;" required>
-                                        <option value="">Izaberite tip</option>
-                                        @php
-                                            $requiredDocs = $application->getRequiredDocuments();
-                                            $documentLabels = [
-                                                'licna_karta' => 'Lična karta',
-                                                'crps_resenje' => 'CRPS rješenje',
-                                                'pib_resenje' => 'PIB rješenje',
-                                                'pdv_resenje' => 'PDV rješenje',
-                                                'statut' => 'Statut',
-                                                'karton_potpisa' => 'Karton potpisa',
-                                                'potvrda_neosudjivanost' => 'Neosuđivanost',
-                                                'uvjerenje_opstina_porezi' => 'Porezi Opština',
-                                                'uvjerenje_opstina_nepokretnost' => 'Nepokretnost Opština',
-                                                'potvrda_upc_porezi' => 'Porezi UPC',
-                                                'ioppd_obrazac' => 'IOPPD',
-                                                'godisnji_racuni' => 'Godišnji računi',
-                                                'biznis_plan_usb' => 'USB verzija',
-                                                'ostalo' => 'Ostalo',
-                                            ];
-                                            $uploadedDocs = $application->documents->pluck('document_type')->toArray();
-                                        @endphp
-                                        @foreach($requiredDocs as $docType)
-                                            @if(!in_array($docType, $uploadedDocs))
-                                                <option value="{{ $docType }}">{{ $documentLabels[$docType] ?? $docType }}</option>
-                                            @endif
-                                        @endforeach
-                                        <option value="ostalo">Ostalo</option>
-                                    </select>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 12px;">
-                                    <label class="form-label" style="font-size: 13px;">Fajl</label>
-                                    <div class="file-input-wrapper" style="min-height: 32px;">
-                                        <input type="file" name="file" id="file-input-{{ $application->id }}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateFileName(this, 'file-name-{{ $application->id }}')" style="height: 32px;">
-                                        <label for="file-input-{{ $application->id }}" class="file-input-label-custom" style="padding: 6px 12px; font-size: 12px;">Izaberi fajl</label>
-                                        <span id="file-name-{{ $application->id }}" class="file-name-display" style="display: none; font-size: 11px;"></span>
-                                    </div>
-                                </div>
-                                <div class="form-group" style="margin-bottom: 15px;">
-                                    <label class="form-label" style="font-weight: 400; font-size: 12px;">Ili iz biblioteke</label>
-                                    <select name="user_document_id" class="form-control" style="font-size: 12px; padding: 6px;">
-                                        <option value="">Izaberi...</option>
-                                        @foreach(auth()->user()->documents()->where('status', 'active')->latest()->get() as $userDoc)
-                                            <option value="{{ $userDoc->id }}">{{ Str::limit($userDoc->name, 20) }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 13px; padding: 10px;">Priloži dokument</button>
-                            </form>
-                        </div>
-                    </div>
-                    @endif
                 </div>
             </div>
+
+            <!-- 3. Dodaj dokument (treća sekcija u prvom redu) -->
+            @if($showUpload)
+            <div class="info-card">
+                <h2>Dodaj dokument</h2>
+                <div class="upload-section" style="margin-top: 0; background: #f9fafb; padding: 15px;">
+                    <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data">
+                        @csrf
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label" style="font-size: 13px;">Tip dokumenta</label>
+                            <select name="document_type" class="form-control" style="font-size: 13px; padding: 8px;" required>
+                                <option value="">Izaberite tip</option>
+                                @php
+                                    $requiredDocs = $application->getRequiredDocuments();
+                                    $documentLabels = [
+                                        'licna_karta' => 'Lična karta',
+                                        'crps_resenje' => 'CRPS rješenje',
+                                        'pib_resenje' => 'PIB rješenje',
+                                        'pdv_resenje' => 'PDV rješenje',
+                                        'statut' => 'Statut',
+                                        'karton_potpisa' => 'Karton potpisa',
+                                        'potvrda_neosudjivanost' => 'Neosuđivanost',
+                                        'uvjerenje_opstina_porezi' => 'Porezi Opština',
+                                        'uvjerenje_opstina_nepokretnost' => 'Nepokretnost Opština',
+                                        'potvrda_upc_porezi' => 'Porezi UPC',
+                                        'ioppd_obrazac' => 'IOPPD',
+                                        'godisnji_racuni' => 'Godišnji računi',
+                                        'biznis_plan_usb' => 'USB verzija',
+                                        'ostalo' => 'Ostalo',
+                                    ];
+                                    $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+                                @endphp
+                                @foreach($requiredDocs as $docType)
+                                    @if(!in_array($docType, $uploadedDocs))
+                                        <option value="{{ $docType }}">{{ $documentLabels[$docType] ?? $docType }}</option>
+                                    @endif
+                                @endforeach
+                                <option value="ostalo">Ostalo</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 12px;">
+                            <label class="form-label" style="font-size: 13px;">Fajl</label>
+                            <div class="file-input-wrapper" style="min-height: 32px;">
+                                <input type="file" name="file" id="file-input-{{ $application->id }}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateFileName(this, 'file-name-{{ $application->id }}')" style="height: 32px;">
+                                <label for="file-input-{{ $application->id }}" class="file-input-label-custom" style="padding: 6px 12px; font-size: 12px;">Izaberi fajl</label>
+                                <span id="file-name-{{ $application->id }}" class="file-name-display" style="display: none; font-size: 11px;"></span>
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label class="form-label" style="font-weight: 400; font-size: 12px;">Ili iz biblioteke</label>
+                            <select name="user_document_id" class="form-control" style="font-size: 12px; padding: 6px;">
+                                <option value="">Izaberi...</option>
+                                @foreach(auth()->user()->documents()->where('status', 'active')->latest()->get() as $userDoc)
+                                    <option value="{{ $userDoc->id }}">{{ Str::limit($userDoc->name, 20) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 13px; padding: 10px;">Priloži dokument</button>
+                    </form>
+                </div>
+            </div>
+            @endif
         </div>
 
         @if($errors->any())
