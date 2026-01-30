@@ -669,12 +669,19 @@
         @endif
 
         <!-- Dokumenti -->
-        <div class="info-card">
-            <h2>Priložena dokumentacija</h2>
+        <div class="info-card" style="background: #fff; border: 3px solid blue; padding: 20px; margin: 20px 0;">
+            <h2 style="color: blue; font-size: 24px;">Priložena dokumentacija - DEBUG</h2>
+            <p style="color: blue; font-weight: bold; font-size: 18px;">SEKCIJA JE RENDEROVANA!</p>
             
             @php
-                $requiredDocs = $application->getRequiredDocuments();
-                $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+                try {
+                    $requiredDocs = $application->getRequiredDocuments();
+                    $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+                } catch (\Exception $e) {
+                    $requiredDocs = [];
+                    $uploadedDocs = [];
+                    echo '<p style="color: red;">Error: ' . $e->getMessage() . '</p>';
+                }
                 $documentLabels = [
                     'licna_karta' => 'Ovjerena kopija lične karte',
                     'crps_resenje' => 'Rješenje o upisu u CRPS',
