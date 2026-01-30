@@ -710,7 +710,28 @@
                 </div>
             </div>
 
-            @if($isCommissionMemberForThisCompetition ?? false)
+            @php
+                // Provjeri da li je korisnik član komisije
+                $isCommissionMember = $isCommissionMemberForThisCompetition ?? false;
+                // Fallback provjera - ako varijabla nije postavljena, provjeri direktno
+                if (!$isCommissionMember && auth()->check()) {
+                    $user = auth()->user();
+                    $roleName = $user->role ? $user->role->name : null;
+                    if ($roleName === 'komisija') {
+                        $competition = $application->competition;
+                        if ($competition && $competition->commission_id) {
+                            $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
+                                ->where('status', 'active')
+                                ->first();
+                            if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                                $isCommissionMember = true;
+                            }
+                        }
+                    }
+                }
+            @endphp
+            
+            @if($isCommissionMember)
                 <!-- Tabela svih potrebnih dokumenata za članove komisije -->
                 <table style="width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; margin-top: 20px;">
                     <thead>
