@@ -113,10 +113,12 @@ class CompetitionsController extends Controller
             'finansijski_izvjestaj' => 'Finansijski izvještaj',
         ];
 
-        // Generiši početnu listu dokumenata (za preduzetnice koje započinju, bez registracije)
+        // Generiši početnu listu dokumenata (za preduzetnice koje započinju, sa SVIM dokumentima)
+        // Za preduzetnice koje započinju, prikazujemo sve dokumente sa napomenama za opcione
         $defaultDocuments = [];
         if ($applicantType === 'preduzetnica') {
-            $defaultDocuments = Application::getRequiredDocumentsForType('preduzetnica', 'započinjanje', false);
+            // Uzmi sve dokumente (uključujući CRPS, PIB, PDV) - JavaScript će dodati napomene
+            $defaultDocuments = Application::getRequiredDocumentsForType('preduzetnica', 'započinjanje', true);
         } elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
             $defaultDocuments = Application::getRequiredDocumentsForType($applicantType, 'započinjanje', false);
         } elseif ($applicantType === 'fizicko_lice') {
@@ -125,13 +127,35 @@ class CompetitionsController extends Controller
         }
 
         // Mapiraj dokumente u ljudski čitljive nazive
-        $requiredDocuments = array_map(function($docType) use ($documentLabels) {
-            return $documentLabels[$docType] ?? $docType;
+        $requiredDocuments = array_map(function($docType) use ($documentLabels, $applicantType) {
+            $label = $documentLabels[$docType] ?? $docType;
+            
+            // Za preduzetnice koje započinju, dodaj napomene za opcione dokumente
+            if ($applicantType === 'preduzetnica') {
+                if ($docType === 'crps_resenje') {
+                    $label = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
+                } elseif ($docType === 'pib_resenje') {
+                    $label = 'Rješenje o registraciji PJ Uprave prihoda i carina (ukoliko ima registrovanu djelatnost)';
+                } elseif ($docType === 'pdv_resenje') {
+                    $label = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a)';
+                } elseif ($docType === 'uvjerenje_opstina_porezi') {
+                    $label = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                } elseif ($docType === 'uvjerenje_opstina_nepokretnost') {
+                    $label = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                }
+            }
+            
+            return $label;
         }, $defaultDocuments);
 
         // Dodaj obavezne dokumente koje svi moraju imati
-        array_unshift($requiredDocuments, 'Prijava na konkurs (Obrazac 1a ili 1b)');
-        array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (Obrazac 2)');
+        if ($applicantType === 'preduzetnica') {
+            array_unshift($requiredDocuments, 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)');
+            array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (obrazac 2)');
+        } else {
+            array_unshift($requiredDocuments, 'Prijava na konkurs (Obrazac 1a ili 1b)');
+            array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (Obrazac 2)');
+        }
 
         return view('competitions.show', compact(
             'competition',

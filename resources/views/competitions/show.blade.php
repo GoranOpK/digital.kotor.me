@@ -476,8 +476,13 @@ document.addEventListener('DOMContentLoaded', function() {
         radio.addEventListener('change', updateDocumentsList);
     });
     
-    // Inicijalno ažuriraj listu
-    updateDocumentsList();
+    // Inicijalno ažuriraj listu - osiguraj da se izvrši nakon što se DOM učita
+    if (documentsList) {
+        // Sačekaj malo da se sve učita
+        setTimeout(function() {
+            updateDocumentsList();
+        }, 100);
+    }
 });
 </script>
 @endif
