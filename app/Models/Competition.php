@@ -112,4 +112,69 @@ class Competition extends Model
 
         return now() < $this->start_date->startOfDay();
     }
+
+    /**
+     * Proverava da li je prošlo 30 dana od zatvaranja konkursa
+     * Komisija mora donijeti odluku u roku od 30 dana od dana zatvaranja prijava
+     */
+    public function isEvaluationDeadlinePassed(): bool
+    {
+        if (!$this->closed_at) {
+            return false; // Ako konkurs još nije zatvoren, rok nije prošao
+        }
+
+        $deadline = $this->closed_at->copy()->addDays(30);
+        return now()->isAfter($deadline);
+    }
+
+    /**
+     * Vraća preostalo vrijeme do isteka roka za ocjenjivanje (u danima)
+     */
+    public function getDaysUntilEvaluationDeadline(): ?int
+    {
+        if (!$this->closed_at) {
+            return null;
+        }
+
+        $deadline = $this->closed_at->copy()->addDays(30);
+        $daysRemaining = now()->diffInDays($deadline, false);
+        
+        return $daysRemaining >= 0 ? $daysRemaining : 0;
+    }
+
+    /**
+     * Vraća preostalo vrijeme do isteka roka za prijave (u danima)
+     * Rok za prijave je 20 dana od početka konkursa
+     */
+    public function getDaysUntilApplicationDeadline(): ?int
+    {
+        if ($this->status !== 'published') {
+            return null;
+        }
+
+        $deadline = $this->deadline;
+        if (!$deadline) {
+            return null;
+        }
+
+        $daysRemaining = now()->diffInDays($deadline, false);
+        return $daysRemaining >= 0 ? $daysRemaining : 0;
+    }
+
+    /**
+     * Provjerava da li je rok za prijave istekao
+     */
+    public function isApplicationDeadlinePassed(): bool
+    {
+        if ($this->status !== 'published') {
+            return false;
+        }
+
+        $deadline = $this->deadline;
+        if (!$deadline) {
+            return false;
+        }
+
+        return now()->isAfter($deadline);
+    }
 }

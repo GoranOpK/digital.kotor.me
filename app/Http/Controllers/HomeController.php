@@ -368,7 +368,12 @@ class HomeController extends Controller
                     ->latest()
                     ->get();
                 
-                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'recent_applications', 'myApplications'));
+                // Učitaj konkursi za prikaz preostalog vremena
+                $competitions = \App\Models\Competition::whereIn('id', $competitionIds->toArray())
+                    ->whereIn('status', ['published', 'closed', 'completed'])
+                    ->get();
+                
+                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'recent_applications', 'myApplications', 'competitions'));
             }
         }
         

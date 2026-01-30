@@ -182,6 +182,23 @@
             </div>
         </div>
 
+        @php
+            $daysRemaining = $competition->getDaysUntilEvaluationDeadline();
+            $isDeadlinePassed = $competition->isEvaluationDeadlinePassed();
+        @endphp
+        
+        @if($competition->closed_at && !$isDeadlinePassed && $daysRemaining !== null)
+            <div class="alert alert-warning" style="background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px;">
+                <strong>⚠️ Upozorenje:</strong> Preostalo vremena za ocjenjivanje i donošenje odluke: <strong>{{ $daysRemaining }} {{ $daysRemaining == 1 ? 'dan' : ($daysRemaining < 5 ? 'dana' : 'dana') }}</strong>. Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.
+            </div>
+        @endif
+        
+        @if($isDeadlinePassed)
+            <div class="alert alert-danger" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px;">
+                <strong>❌ Rok istekao:</strong> Rok za ocjenjivanje i donošenje odluke je istekao. Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.
+            </div>
+        @endif
+
         @if(session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}
@@ -573,7 +590,7 @@
                                         </div>
 
                                         <div style="text-align: right;">
-                                            <button type="submit" class="btn btn-success" style="padding: 10px 24px; font-size: 14px; min-width: 160px;">Sačuvaj zaključak</button>
+                                            <button type="submit" class="btn btn-success" style="padding: 10px 24px; font-size: 14px; min-width: 160px;" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed; padding: 10px 24px; font-size: 14px; min-width: 160px;" @endif>Sačuvaj zaključak</button>
                                         </div>
                                     </form>
                                 @else

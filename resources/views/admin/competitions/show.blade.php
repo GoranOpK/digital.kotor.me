@@ -188,6 +188,65 @@
             </div>
         </div>
 
+        @php
+            $daysUntilApplicationDeadline = $competition->getDaysUntilApplicationDeadline();
+            $daysUntilEvaluationDeadline = $competition->getDaysUntilEvaluationDeadline();
+            $isApplicationDeadlinePassed = $competition->isApplicationDeadlinePassed();
+            $isEvaluationDeadlinePassed = $competition->isEvaluationDeadlinePassed();
+        @endphp
+
+        @if($competition->status === 'published' && $daysUntilApplicationDeadline !== null)
+            <div class="info-card" style="border-left: 4px solid {{ $daysUntilApplicationDeadline <= 3 ? '#ef4444' : ($daysUntilApplicationDeadline <= 7 ? '#f59e0b' : '#10b981') }};">
+                <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">
+                    <span>📅</span>
+                    <span>Rok za prijave na konkurs</span>
+                </h3>
+                @if($isApplicationDeadlinePassed)
+                    <p style="color: #991b1b; font-weight: 600; font-size: 16px; margin: 8px 0;">
+                        ⚠️ Rok za prijave je istekao
+                    </p>
+                    <p style="color: #6b7280; margin: 0;">
+                        Konkurs je zatvoren za prijave. Preostalo vremena: <strong>0 dana</strong>
+                    </p>
+                @else
+                    <p style="color: {{ $daysUntilApplicationDeadline <= 3 ? '#991b1b' : ($daysUntilApplicationDeadline <= 7 ? '#92400e' : '#065f46') }}; font-weight: 600; font-size: 18px; margin: 8px 0;">
+                        Preostalo vremena: <strong>{{ $daysUntilApplicationDeadline }} {{ $daysUntilApplicationDeadline == 1 ? 'dan' : ($daysUntilApplicationDeadline < 5 ? 'dana' : 'dana') }}</strong>
+                    </p>
+                    <p style="color: #6b7280; margin: 0;">
+                        Rok za prijave: <strong>{{ $competition->deadline ? $competition->deadline->format('d.m.Y H:i') : 'N/A' }}</strong>
+                    </p>
+                @endif
+            </div>
+        @endif
+
+        @if($competition->status === 'closed' && $daysUntilEvaluationDeadline !== null)
+            <div class="info-card" style="border-left: 4px solid {{ $daysUntilEvaluationDeadline <= 3 ? '#ef4444' : ($daysUntilEvaluationDeadline <= 7 ? '#f59e0b' : '#10b981') }};">
+                <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">
+                    <span>⏰</span>
+                    <span>Rok za donošenje odluke i zatvaranje konkursa</span>
+                </h3>
+                @if($isEvaluationDeadlinePassed)
+                    <p style="color: #991b1b; font-weight: 600; font-size: 16px; margin: 8px 0;">
+                        ❌ Rok za donošenje odluke je istekao
+                    </p>
+                    <p style="color: #6b7280; margin: 0;">
+                        Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs. Preostalo vremena: <strong>0 dana</strong>
+                    </p>
+                @else
+                    <p style="color: {{ $daysUntilEvaluationDeadline <= 3 ? '#991b1b' : ($daysUntilEvaluationDeadline <= 7 ? '#92400e' : '#065f46') }}; font-weight: 600; font-size: 18px; margin: 8px 0;">
+                        Preostalo vremena: <strong>{{ $daysUntilEvaluationDeadline }} {{ $daysUntilEvaluationDeadline == 1 ? 'dan' : ($daysUntilEvaluationDeadline < 5 ? 'dana' : 'dana') }}</strong>
+                    </p>
+                    <p style="color: #6b7280; margin: 0;">
+                        Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.
+                        @if($competition->closed_at)
+                            Datum zatvaranja: <strong>{{ $competition->closed_at->format('d.m.Y H:i') }}</strong> | 
+                            Rok za odluku: <strong>{{ $competition->closed_at->copy()->addDays(30)->format('d.m.Y H:i') }}</strong>
+                        @endif
+                    </p>
+                @endif
+            </div>
+        @endif
+
         @if(!isset($isCompetitionAdmin) || !$isCompetitionAdmin)
         <div class="info-card">
             <h2 style="font-size: 20px; margin-bottom: 16px;">Prijave</h2>

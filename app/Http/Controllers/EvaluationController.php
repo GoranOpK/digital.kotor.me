@@ -163,6 +163,12 @@ class EvaluationController extends Controller
             if ($application->status === 'draft') {
                 abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
             }
+            
+            // Provjeri da li je prošao rok od 30 dana za ocjenjivanje
+            $competition = $application->competition;
+            if ($competition && $competition->isEvaluationDeadlinePassed()) {
+                abort(403, 'Rok za ocjenjivanje je istekao. Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.');
+            }
         }
 
         // Provjeri da li je prijava već odbijena
@@ -275,8 +281,14 @@ class EvaluationController extends Controller
      */
     public function store(Request $request, Application $application): RedirectResponse
     {
-        
         $user = Auth::user();
+        
+        // Provjeri da li je prošao rok od 30 dana za ocjenjivanje
+        $competition = $application->competition;
+        if ($competition && $competition->isEvaluationDeadlinePassed()) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Rok za ocjenjivanje je istekao. Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.']);
+        }
         
         // Pronađi člana komisije
         $commissionMember = CommissionMember::where('user_id', $user->id)
@@ -888,6 +900,13 @@ class EvaluationController extends Controller
         // Proveri da li je predsjednik
         if ($commissionMember->position !== 'predsjednik') {
             abort(403, 'Samo predsjednik komisije može donijeti zaključak.');
+        }
+        
+        // Provjeri da li je prošao rok od 30 dana za donošenje odluke
+        $competition = $application->competition;
+        if ($competition && $competition->isEvaluationDeadlinePassed()) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Rok za donošenje odluke je istekao. Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.']);
         }
 
         $validated = $request->validate([

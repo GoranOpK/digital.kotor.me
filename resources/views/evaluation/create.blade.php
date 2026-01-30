@@ -356,8 +356,24 @@
             @php
                 $isRejected = $application->status === 'rejected';
                 $isApplicant = $isApplicant ?? false;
+                $competition = $application->competition;
+                $daysRemaining = $competition ? $competition->getDaysUntilEvaluationDeadline() : null;
+                $isDeadlinePassed = $competition ? $competition->isEvaluationDeadlinePassed() : false;
             @endphp
-            <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" @if($isRejected || $isApplicant) onsubmit="event.preventDefault(); return false;" @endif>
+            
+            @if($competition && $competition->closed_at && !$isDeadlinePassed && $daysRemaining !== null)
+                <div class="alert alert-warning" style="background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>⚠️ Upozorenje:</strong> Preostalo vremena za ocjenjivanje i donošenje odluke: <strong>{{ $daysRemaining }} {{ $daysRemaining == 1 ? 'dan' : ($daysRemaining < 5 ? 'dana' : 'dana') }}</strong>. Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.
+                </div>
+            @endif
+            
+            @if($isDeadlinePassed)
+                <div class="alert alert-danger" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong>❌ Rok istekao:</strong> Rok za ocjenjivanje i donošenje odluke je istekao. Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.
+                </div>
+            @endif
+            
+            <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" @if($isRejected || $isApplicant || $isDeadlinePassed) onsubmit="event.preventDefault(); return false;" @endif>
                 @csrf
 
                 <div class="form-title">
@@ -758,12 +774,12 @@
                         @endif
                     @elseif($isChairman && $hasCompletedEvaluation)
                         {{-- Predsjednik kada je već ocjenio - može mijenjati sekciju 2 --}}
-                        <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
+                        <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj izmjene</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @elseif($hasCompletedEvaluation && $canEditNotesValue && !$isChairman)
                         {{-- Član koji je već ocjenio ali može editovati napomene --}}
                         {{-- Ova provjera mora biti PRIJE provjere za sve ocjenjene --}}
-                        <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
+                        <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj izmjene</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @elseif($hasCompletedEvaluation && $allMembersEvaluated)
                         {{-- Kada su svi članovi ocjenili, ostali članovi vide formu u read-only modu --}}
@@ -776,7 +792,7 @@
                             Nazad na listu
                         </a>
                     @else
-                        <button type="submit" class="btn-primary">Ocijeni</button>
+                        <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Ocijeni</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @endif
                 </div>

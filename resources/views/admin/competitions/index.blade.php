@@ -140,22 +140,47 @@
                                 @endif
                             </td>
                             <td>
-                                @if($competition->status === 'published' && $competition->deadline)
+                                @php
+                                    $daysUntilApplicationDeadline = $competition->getDaysUntilApplicationDeadline();
+                                    $daysUntilEvaluationDeadline = $competition->getDaysUntilEvaluationDeadline();
+                                    $isApplicationDeadlinePassed = $competition->isApplicationDeadlinePassed();
+                                    $isEvaluationDeadlinePassed = $competition->isEvaluationDeadlinePassed();
+                                @endphp
+                                @if($competition->status === 'published' && $daysUntilApplicationDeadline !== null)
                                     @if($competition->is_upcoming)
                                         <span style="color: #3b82f6; font-size: 13px; font-weight: 600;">Počinje za:</span>
                                         <div class="countdown-timer" data-deadline="{{ $competition->start_date->startOfDay()->format('Y-m-d H:i:s') }}" style="color: #3b82f6;">
                                             Učitavanje...
                                         </div>
                                     @else
-                                        <div class="countdown-timer" data-deadline="{{ $competition->deadline->format('Y-m-d H:i:s') }}">
-                                            Učitavanje...
+                                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                                            <span style="font-size: 12px; color: #6b7280; font-weight: 600;">Rok za prijave:</span>
+                                            @if($isApplicationDeadlinePassed)
+                                                <span style="color: #991b1b; font-weight: 600; font-size: 14px;">⚠️ Isteklo (0 dana)</span>
+                                            @else
+                                                <span style="color: {{ $daysUntilApplicationDeadline <= 3 ? '#991b1b' : ($daysUntilApplicationDeadline <= 7 ? '#92400e' : '#065f46') }}; font-weight: 600; font-size: 14px;">
+                                                    📅 {{ $daysUntilApplicationDeadline }} {{ $daysUntilApplicationDeadline == 1 ? 'dan' : ($daysUntilApplicationDeadline < 5 ? 'dana' : 'dana') }}
+                                                </span>
+                                            @endif
+                                            <div style="font-size: 11px; color: #6b7280;">
+                                                Do: {{ $competition->deadline ? $competition->deadline->format('d.m.Y H:i') : 'N/A' }}
+                                            </div>
                                         </div>
                                     @endif
-                                    <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
-                                        Rok: {{ $competition->deadline->copy()->subSecond()->format('d.m.Y H:i') }}
+                                @elseif($competition->status === 'closed' && $daysUntilEvaluationDeadline !== null)
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <span style="font-size: 12px; color: #6b7280; font-weight: 600;">Rok za odluku:</span>
+                                        @if($isEvaluationDeadlinePassed)
+                                            <span style="color: #991b1b; font-weight: 600; font-size: 14px;">❌ Isteklo (0 dana)</span>
+                                        @else
+                                            <span style="color: {{ $daysUntilEvaluationDeadline <= 3 ? '#991b1b' : ($daysUntilEvaluationDeadline <= 7 ? '#92400e' : '#065f46') }}; font-weight: 600; font-size: 14px;">
+                                                ⏰ {{ $daysUntilEvaluationDeadline }} {{ $daysUntilEvaluationDeadline == 1 ? 'dan' : ($daysUntilEvaluationDeadline < 5 ? 'dana' : 'dana') }}
+                                            </span>
+                                        @endif
+                                        <div style="font-size: 11px; color: #6b7280;">
+                                            Do: {{ $competition->closed_at ? $competition->closed_at->copy()->addDays(30)->format('d.m.Y H:i') : 'N/A' }}
+                                        </div>
                                     </div>
-                                @elseif($competition->status === 'closed' && $competition->published_at)
-                                    <span style="color: #dc2626; font-size: 13px; font-weight: 600;">Zatvoren</span>
                                 @else
                                     <span style="color: #6b7280; font-size: 13px;">Predviđeno: {{ $competition->deadline_days }} dana</span>
                                 @endif
