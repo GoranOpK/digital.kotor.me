@@ -723,10 +723,34 @@ class EvaluationController extends Controller
             return;
         }
 
-        // Izračunaj prosjek za svaki kriterijum
+        // Provjeri da li su svi članovi komisije ocjenili prijavu
+        $competition = $application->competition;
+        if (!$competition || !$competition->commission_id) {
+            return;
+        }
+        
+        $commission = Commission::find($competition->commission_id);
+        if (!$commission) {
+            return;
+        }
+        
+        $activeMemberIds = $commission->activeMembers()->pluck('id');
+        $totalMembers = $activeMemberIds->count();
+        
+        // Provjeri da li su svi članovi ocijenili (imaju sve kriterijume popunjene)
+        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
+            ->whereIn('commission_member_id', $activeMemberIds)
+            ->whereNotNull('criterion_1') // Ako ima criterion_1, znači da je završio ocjenjivanje
+            ->pluck('commission_member_id')
+            ->unique()
+            ->count();
+        
+        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
+
+        // Izračunaj prosjek za svaki kriterijum (samo za članove koji su završili ocjenjivanje)
         $averages = [];
         for ($i = 1; $i <= 10; $i++) {
-            $criterionScores = $scores->pluck("criterion_{$i}")->filter()->toArray();
+            $criterionScores = $scores->whereNotNull("criterion_{$i}")->pluck("criterion_{$i}")->toArray();
             if (!empty($criterionScores)) {
                 $averages[$i] = round(array_sum($criterionScores) / count($criterionScores), 2);
             } else {
@@ -737,21 +761,29 @@ class EvaluationController extends Controller
         // Izračunaj konačnu ocjenu (zbir prosjeka)
         $finalScore = round(array_sum($averages), 2);
 
-        // Ako je ocjena ispod 30, automatski odbiti
-        $status = 'evaluated';
-        if ($finalScore < 30) {
-            $status = 'rejected';
-            $application->update([
-                'rejection_reason' => 'Ukupna ocjena ispod 30 bodova (minimum za podršku).',
-            ]);
+        // Ažuriraj final_score i evaluated_at
+        $updateData = [
+            'final_score' => $finalScore,
+            'evaluated_at' => now(),
+        ];
+
+        // Ako su svi članovi ocijenili i ocjena je ispod 30, odbiti prijavu
+        // Ako nisu svi ocijenili, ne odbijati prijavu (ostavi status 'evaluated' ili 'submitted')
+        if ($allMembersEvaluated) {
+            if ($finalScore < 30) {
+                $updateData['status'] = 'rejected';
+                $updateData['rejection_reason'] = 'Ukupna ocjena ispod 30 bodova (minimum za podršku).';
+            } else {
+                // Ako je ocjena 30 ili više, postavi status na 'evaluated'
+                $updateData['status'] = 'evaluated';
+            }
+        } else {
+            // Ako nisu svi ocijenili, ne mijenjaj status (ostavi postojeći)
+            // Samo ažuriraj final_score i evaluated_at
         }
 
         // Ažuriraj prijavu
-        $application->update([
-            'final_score' => $finalScore,
-            'status' => $status,
-            'evaluated_at' => now(),
-        ]);
+        $application->update($updateData);
 
         // Ažuriraj prosjek u svim ocjenama (za prikaz)
         foreach ($scores as $score) {

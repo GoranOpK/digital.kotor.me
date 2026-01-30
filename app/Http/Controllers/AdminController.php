@@ -7,6 +7,7 @@ use App\Models\Competition;
 use App\Models\Application;
 use App\Models\Commission;
 use App\Models\CommissionMember;
+use App\Models\EvaluationScore;
 use App\Models\Role;
 use App\Models\Tender;
 use App\Models\Contract;
@@ -1234,11 +1235,31 @@ class AdminController extends Controller
                 return $application;
             });
 
-        // Filtriraj samo one koje zadovoljavaju minimum (30 bodova) i imaju ocjene
+        // Pronađi predsjednika komisije
+        $commission = $competition->commission;
+        $chairmanMember = $commission ? $commission->activeMembers()->where('position', 'predsjednik')->first() : null;
+        
+        // Filtriraj samo one koje zadovoljavaju minimum (30 bodova), imaju ocjene i predsjednik NIJE označio "Ne" u sekciji 2
         $applications = $allApplications
-            ->filter(function ($application) {
+            ->filter(function ($application) use ($chairmanMember) {
                 // Prijava mora imati ocjene i zadovoljavati minimum
-                return $application->has_evaluations && $application->meetsMinimumScore();
+                if (!$application->has_evaluations || !$application->meetsMinimumScore()) {
+                    return false;
+                }
+                
+                // Provjeri da li je predsjednik označio "Ne" (documents_complete = false)
+                if ($chairmanMember) {
+                    $chairmanScore = EvaluationScore::where('application_id', $application->id)
+                        ->where('commission_member_id', $chairmanMember->id)
+                        ->first();
+                    
+                    // Ako predsjednik ima ocjenu i documents_complete je false, isključi prijavu
+                    if ($chairmanScore && $chairmanScore->documents_complete === false) {
+                        return false;
+                    }
+                }
+                
+                return true;
             })
             ->sortByDesc('final_score')
             ->values();
@@ -1256,8 +1277,24 @@ class AdminController extends Controller
 
         // Prijave koje nisu u rang listi (za informacije)
         $excludedApplications = $allApplications
-            ->filter(function ($application) {
-                return !$application->has_evaluations || !$application->meetsMinimumScore();
+            ->filter(function ($application) use ($chairmanMember) {
+                // Prijave koje nemaju ocjene ili ne zadovoljavaju minimum
+                if (!$application->has_evaluations || !$application->meetsMinimumScore()) {
+                    return true;
+                }
+                
+                // Prijave gdje je predsjednik označio "Ne" (documents_complete = false)
+                if ($chairmanMember) {
+                    $chairmanScore = EvaluationScore::where('application_id', $application->id)
+                        ->where('commission_member_id', $chairmanMember->id)
+                        ->first();
+                    
+                    if ($chairmanScore && $chairmanScore->documents_complete === false) {
+                        return true;
+                    }
+                }
+                
+                return false;
             })
             ->values();
 
