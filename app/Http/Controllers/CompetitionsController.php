@@ -102,7 +102,7 @@ class CompetitionsController extends Controller
             'pdv_resenje' => 'Rješenje o registraciji za PDV',
             'statut' => 'Važeći Statut društva',
             'karton_potpisa' => 'Važeći karton deponovanih potpisa',
-            'potvrda_neosudjivanost' => 'Potvrda o neosuđivanosti za krivična djela',
+            'potvrda_neosudjivanost' => 'Potvrda o neosuđivanosti za krivična djela na ime preduzetnice izdatu od strane Osnovnog suda',
             'uvjerenje_opstina_porezi' => 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada',
             'uvjerenje_opstina_nepokretnost' => 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost',
             'potvrda_upc_porezi' => 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana',
