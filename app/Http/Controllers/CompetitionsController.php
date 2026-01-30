@@ -113,25 +113,25 @@ class CompetitionsController extends Controller
             'finansijski_izvjestaj' => 'Finansijski izvještaj',
         ];
 
-        // Generiši početnu listu dokumenata (za preduzetnice koje započinju, sa SVIM dokumentima)
-        // Za preduzetnice koje započinju, prikazujemo sve dokumente sa napomenama za opcione
+        // Generiši početnu listu dokumenata (za preduzetnice i fizičko lice koje započinje, sa SVIM dokumentima)
+        // Za preduzetnice i fizičko lice koje započinje, prikazujemo sve dokumente sa napomenama za opcione
         $defaultDocuments = [];
         if ($applicantType === 'preduzetnica') {
             // Uzmi sve dokumente (uključujući CRPS, PIB, PDV) - JavaScript će dodati napomene
             $defaultDocuments = Application::getRequiredDocumentsForType('preduzetnica', 'započinjanje', true);
+        } elseif ($applicantType === 'fizicko_lice') {
+            // Za fizičko lice (Rezident), uzmi sve dokumente kao za preduzetnicu koja započinje
+            $defaultDocuments = Application::getRequiredDocumentsForType('fizicko_lice', 'započinjanje', true);
         } elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
             $defaultDocuments = Application::getRequiredDocumentsForType($applicantType, 'započinjanje', false);
-        } elseif ($applicantType === 'fizicko_lice') {
-            // Za fizičko lice, ne prikazujemo listu dokumenata dok korisnik ne izabere business_stage
-            $defaultDocuments = [];
         }
 
         // Mapiraj dokumente u ljudski čitljive nazive
         $requiredDocuments = array_map(function($docType) use ($documentLabels, $applicantType) {
             $label = $documentLabels[$docType] ?? $docType;
             
-            // Za preduzetnice koje započinju, dodaj napomene za opcione dokumente
-            if ($applicantType === 'preduzetnica') {
+            // Za preduzetnice i fizičko lice koje započinje, dodaj napomene za opcione dokumente
+            if ($applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
                 if ($docType === 'crps_resenje') {
                     $label = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'pib_resenje') {
@@ -149,7 +149,7 @@ class CompetitionsController extends Controller
         }, $defaultDocuments);
 
         // Dodaj obavezne dokumente koje svi moraju imati
-        if ($applicantType === 'preduzetnica') {
+        if ($applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
             array_unshift($requiredDocuments, 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)');
             array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (obrazac 2)');
         } else {

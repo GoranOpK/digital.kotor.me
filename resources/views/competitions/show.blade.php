@@ -409,6 +409,8 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         'fizicko_lice': {
             'započinjanje': {
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
+                optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje'], // Dokumenti koji su opcioni (ukoliko ima registrovanu djelatnost)
                 withoutRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
                 withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb']
             },
@@ -444,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Dodaj obavezne dokumente koje svi moraju imati
         let allDocuments = [];
         
-        if (selectedStage === 'započinjanje' && applicantType === 'preduzetnica') {
+        if (selectedStage === 'započinjanje' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
             allDocuments = [
                 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)',
                 'Popunjena forma za biznis plan (obrazac 2)',
@@ -474,12 +476,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // Ažuriraj label za uvjerenje o nepokretnosti
-            if (docType === 'uvjerenje_opstina_nepokretnost' && selectedStage === 'započinjanje' && applicantType === 'preduzetnica') {
+            if (docType === 'uvjerenje_opstina_nepokretnost' && selectedStage === 'započinjanje' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
                 docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
             }
             
             // Ažuriraj label za uvjerenje o porezima
-            if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'započinjanje' && applicantType === 'preduzetnica') {
+            if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'započinjanje' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
                 docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
             }
             
