@@ -372,11 +372,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const documentsList = document.getElementById('documents-list');
     
     // Mapa dokumenata po tipu prijave i fazi biznisa
+    // Za započinjanje, uvijek prikazujemo sve dokumente sa napomenama za opcione
     const documentsMap = {
         'preduzetnica': {
             'započinjanje': {
-                withoutRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
-                withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb']
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
+                optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje'] // Dokumenti koji su opcioni (ukoliko ima registrovanu djelatnost)
             },
             'razvoj': {
                 withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb']
@@ -415,17 +416,56 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectedStage = document.querySelector('input[name="business_stage_preview"]:checked')?.value;
         if (!selectedStage) return;
         
-        // Za sada koristimo withoutRegistration (pretpostavljamo da korisnik nema registrovanu djelatnost)
-        // U budućnosti možemo dodati checkbox za registraciju
-        const docTypes = documentsMap[applicantType]?.[selectedStage]?.withoutRegistration || 
+        // Uzmi listu dokumenata
+        const docTypes = documentsMap[applicantType]?.[selectedStage]?.all || 
+                        documentsMap[applicantType]?.[selectedStage]?.withoutRegistration || 
                         documentsMap[applicantType]?.[selectedStage]?.withRegistration || [];
         
+        // Uzmi listu opcionih dokumenata
+        const optionalDocs = documentsMap[applicantType]?.[selectedStage]?.optional || [];
+        
         // Dodaj obavezne dokumente koje svi moraju imati
-        const allDocuments = [
-            'Prijava na konkurs (Obrazac 1a ili 1b)',
-            'Popunjena forma za biznis plan (Obrazac 2)',
-            ...docTypes.map(docType => documentLabels[docType] || docType)
-        ];
+        let allDocuments = [];
+        
+        if (selectedStage === 'započinjanje' && applicantType === 'preduzetnica') {
+            allDocuments = [
+                'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)',
+                'Popunjena forma za biznis plan (obrazac 2)',
+            ];
+        } else {
+            allDocuments = [
+                'Prijava na konkurs (Obrazac 1a ili 1b)',
+                'Popunjena forma za biznis plan (Obrazac 2)',
+            ];
+        }
+        
+        // Dodaj dokumente sa napomenama za opcione
+        docTypes.forEach(docType => {
+            let docLabel = documentLabels[docType] || docType;
+            
+            // Ako je dokument opcioni, dodaj napomenu
+            if (optionalDocs.includes(docType)) {
+                if (docType === 'crps_resenje') {
+                    docLabel = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
+                } else if (docType === 'pib_resenje') {
+                    docLabel = 'Rješenje o registraciji PJ Uprave prihoda i carina (ukoliko ima registrovanu djelatnost)';
+                } else if (docType === 'pdv_resenje') {
+                    docLabel = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a)';
+                }
+            }
+            
+            // Ažuriraj label za uvjerenje o nepokretnosti
+            if (docType === 'uvjerenje_opstina_nepokretnost' && selectedStage === 'započinjanje' && applicantType === 'preduzetnica') {
+                docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+            }
+            
+            // Ažuriraj label za uvjerenje o porezima
+            if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'započinjanje' && applicantType === 'preduzetnica') {
+                docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+            }
+            
+            allDocuments.push(docLabel);
+        });
         
         // Ažuriraj listu
         documentsList.innerHTML = allDocuments.map(doc => `<li>${doc}</li>`).join('');
