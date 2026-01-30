@@ -366,16 +366,10 @@
 @if(auth()->check() && $applicantType && ($applicantType === 'preduzetnica' || $applicantType === 'doo' || $applicantType === 'ostalo' || ($applicantType === 'fizicko_lice' && ($userType === 'Fizičko lice' || $userType === 'Rezident'))))
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('=== DOCUMENTS LIST DEBUG START ===');
     const applicantType = @json($applicantType);
     const documentLabels = @json($documentLabels);
     const businessStageRadios = document.querySelectorAll('input[name="business_stage_preview"]');
     const documentsList = document.getElementById('documents-list');
-    
-    console.log('applicantType:', applicantType);
-    console.log('documentLabels:', documentLabels);
-    console.log('businessStageRadios found:', businessStageRadios.length);
-    console.log('documentsList found:', documentsList ? 'YES' : 'NO');
     
     // Mapa dokumenata po tipu prijave i fazi biznisa
     // Za započinjanje, uvijek prikazujemo sve dokumente sa napomenama za opcione
@@ -422,27 +416,16 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     
     function updateDocumentsList() {
-        console.log('=== updateDocumentsList CALLED ===');
         const selectedStage = document.querySelector('input[name="business_stage_preview"]:checked')?.value;
-        console.log('selectedStage:', selectedStage);
-        
-        if (!selectedStage) {
-            console.log('No stage selected, returning');
-            return;
-        }
+        if (!selectedStage) return;
         
         // Uzmi listu dokumenata
         const docTypes = documentsMap[applicantType]?.[selectedStage]?.all || 
                         documentsMap[applicantType]?.[selectedStage]?.withoutRegistration || 
                         documentsMap[applicantType]?.[selectedStage]?.withRegistration || [];
         
-        console.log('docTypes:', docTypes);
-        console.log('documentsMap for applicantType:', documentsMap[applicantType]);
-        console.log('documentsMap for selectedStage:', documentsMap[applicantType]?.[selectedStage]);
-        
         // Uzmi listu opcionih dokumenata
         const optionalDocs = documentsMap[applicantType]?.[selectedStage]?.optional || [];
-        console.log('optionalDocs:', optionalDocs);
         
         // Dodaj obavezne dokumente koje svi moraju imati
         let allDocuments = [];
@@ -458,8 +441,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Popunjena forma za biznis plan (Obrazac 2)',
             ];
         }
-        
-        console.log('Initial allDocuments:', allDocuments);
         
         // Dodaj dokumente sa napomenama za opcione
         docTypes.forEach(docType => {
@@ -503,43 +484,23 @@ document.addEventListener('DOMContentLoaded', function() {
             allDocuments.push(docLabel);
         });
         
-        console.log('Final allDocuments:', allDocuments);
-        console.log('documentsList element:', documentsList);
-        
         // Ažuriraj listu
         if (documentsList) {
             documentsList.innerHTML = allDocuments.map(doc => `<li>${doc}</li>`).join('');
-            console.log('List updated! New innerHTML length:', documentsList.innerHTML.length);
-        } else {
-            console.error('documentsList element not found!');
         }
-        
-        console.log('=== updateDocumentsList END ===');
     }
     
     // Dodaj event listener-e na radio button-e
-    console.log('Adding event listeners to radio buttons...');
-    businessStageRadios.forEach((radio, index) => {
-        console.log(`Adding listener to radio ${index}:`, radio.value);
-        radio.addEventListener('change', function() {
-            console.log('Radio button changed to:', this.value);
-            updateDocumentsList();
-        });
+    businessStageRadios.forEach(radio => {
+        radio.addEventListener('change', updateDocumentsList);
     });
     
     // Inicijalno ažuriraj listu - osiguraj da se izvrši nakon što se DOM učita
     if (documentsList) {
-        console.log('Initial update will be called...');
-        // Sačekaj malo da se sve učita
         setTimeout(function() {
-            console.log('Calling initial updateDocumentsList...');
             updateDocumentsList();
         }, 100);
-    } else {
-        console.error('documentsList not found on page load!');
     }
-    
-    console.log('=== DOCUMENTS LIST DEBUG END ===');
 });
 </script>
 @endif
