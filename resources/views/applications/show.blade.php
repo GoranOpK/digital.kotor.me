@@ -573,13 +573,13 @@
                                     @endphp
                                     <div style="margin-top: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
                                         <p style="font-size: 12px; color: #92400e; margin: 0 0 6px 0; font-weight: 600;">
-                                            ⚠️ Napomena: Niste uploadovali sva tražena dokumenta
+                                            ⚠️ Napomena: Niste priložili sva neophodna dokumenta
                                         </p>
                                         <p style="font-size: 11px; color: #78350f; margin: 0;">
                                             Nedostaju: {{ implode(', ', $missingDocLabels) }}
                                         </p>
                                         <p style="font-size: 11px; color: #78350f; margin: 6px 0 0 0;">
-                                            Možete podnijeti prijavu, ali predsjednik komisije može odbiti prijavu ako nedostaju dokumenti.
+                                            Možete podnijeti prijavu, ali Predsjednik komisije može odbiti prijavu zbog nepotpune dokumentacije.
                                         </p>
                                     </div>
                                 @endif
