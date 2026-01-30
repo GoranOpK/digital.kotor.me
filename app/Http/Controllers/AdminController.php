@@ -451,10 +451,16 @@ class AdminController extends Controller
         
         $competition->loadCount('applications');
         $competition->load('commission');
-        $applications = $competition->applications()
-            ->with(['user', 'businessPlan'])
-            ->latest()
-            ->paginate(20);
+        
+        // Članovi komisije ne mogu vidjeti draft prijave
+        $applicationsQuery = $competition->applications()
+            ->with(['user', 'businessPlan']);
+        
+        if ($isCommissionMember && !$isAdmin) {
+            $applicationsQuery->where('status', '!=', 'draft');
+        }
+        
+        $applications = $applicationsQuery->latest()->paginate(20);
         
         // Proveri da li je deadline prošao (za prikaz dugmeta "Zatvori konkurs")
         $deadline = $competition->deadline;
@@ -725,11 +731,19 @@ class AdminController extends Controller
             abort(403, 'Nemate pristup upravljanju aplikacijama.');
         }
         
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
+        $isKomisija = $user->role && $user->role->name === 'komisija';
+        
         $query = Application::with(['user', 'competition']);
 
         // Filtriranje po statusu
         if ($request->has('status') && $request->status !== '') {
             $query->where('status', $request->status);
+        }
+
+        // Članovi komisije ne mogu vidjeti draft prijave (uvijek, čak i ako eksplicitno traže status 'draft')
+        if ($isKomisija && !$isAdmin) {
+            $query->where('status', '!=', 'draft');
         }
 
         // Filtriranje po konkursu

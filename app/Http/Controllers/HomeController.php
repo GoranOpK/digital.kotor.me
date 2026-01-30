@@ -353,7 +353,9 @@ class HomeController extends Controller
                 }
                 
                 // Najnovije prijave na konkurse (samo za konkurse dodijeljene ovoj komisiji)
+                // Članovi komisije ne mogu vidjeti draft prijave
                 $recent_applications = Application::whereIn('competition_id', $competitionIds)
+                    ->where('status', '!=', 'draft')
                     ->with('user', 'competition')
                     ->latest()
                     ->take(10)
