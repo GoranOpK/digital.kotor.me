@@ -549,11 +549,45 @@
                                         🚀 Podnesi prijavu
                                     </button>
                                 </form>
+                                @if(!empty($missingDocs))
+                                    @php
+                                        $documentLabels = [
+                                            'licna_karta' => 'Lična karta',
+                                            'crps_resenje' => 'CRPS rješenje',
+                                            'pib_resenje' => 'PIB rješenje',
+                                            'pdv_resenje' => 'PDV rješenje',
+                                            'statut' => 'Statut',
+                                            'karton_potpisa' => 'Karton potpisa',
+                                            'potvrda_neosudjivanost' => 'Neosuđivanost',
+                                            'uvjerenje_opstina_porezi' => 'Porezi Opština',
+                                            'uvjerenje_opstina_nepokretnost' => 'Nepokretnost Opština',
+                                            'potvrda_upc_porezi' => 'Porezi UPC',
+                                            'ioppd_obrazac' => 'IOPPD',
+                                            'godisnji_racuni' => 'Godišnji računi',
+                                            'biznis_plan_usb' => 'USB verzija',
+                                            'ostalo' => 'Ostalo',
+                                        ];
+                                        $missingDocLabels = array_map(function($docType) use ($documentLabels) {
+                                            return $documentLabels[$docType] ?? $docType;
+                                        }, $missingDocs);
+                                    @endphp
+                                    <div style="margin-top: 10px; padding: 10px; background: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 4px;">
+                                        <p style="font-size: 12px; color: #92400e; margin: 0 0 6px 0; font-weight: 600;">
+                                            ⚠️ Napomena: Niste uploadovali sva tražena dokumenta
+                                        </p>
+                                        <p style="font-size: 11px; color: #78350f; margin: 0;">
+                                            Nedostaju: {{ implode(', ', $missingDocLabels) }}
+                                        </p>
+                                        <p style="font-size: 11px; color: #78350f; margin: 6px 0 0 0;">
+                                            Možete podnijeti prijavu, ali predsjednik komisije može odbiti prijavu ako nedostaju dokumenti.
+                                        </p>
+                                    </div>
+                                @endif
                             @else
                                 <button class="btn btn-secondary" disabled style="width: 100%; font-size: 13px; background: #9ca3af;">
                                     Podnesi prijavu
                                 </button>
-                                <p style="font-size: 10px; color: #ef4444; margin-top: 6px; text-align: center;">Fale dokumenti ili biznis plan</p>
+                                <p style="font-size: 10px; color: #ef4444; margin-top: 6px; text-align: center;">Morate popuniti biznis plan prije podnošenja prijave</p>
                             @endif
                         </div>
                     @endif

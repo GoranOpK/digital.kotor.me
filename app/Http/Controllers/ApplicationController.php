@@ -463,18 +463,19 @@ class ApplicationController extends Controller
         $application->load(['competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember', 'contract', 'reports']);
 
         // Provjeri da li je prijava spremna za podnošenje
+        // Napomena: Dozvoljavamo prijavu čak i ako nisu sva dokumenta uploadovana
+        // Predsjednik komisije će odbiti prijavu ako nedostaju dokumenti kroz formu za ocjenjivanje
         $requiredDocs = $application->getRequiredDocuments();
         $uploadedDocs = $application->documents->pluck('document_type')->toArray();
         $missingDocs = array_diff($requiredDocs, $uploadedDocs);
         
         $isReadyToSubmit = $application->status === 'draft' && 
-                           $application->businessPlan !== null && 
-                           empty($missingDocs);
+                           $application->businessPlan !== null;
 
         // Samo vlasnik može da mijenja (uploaduje/briše dokumente, podnosi prijavu, uređuje biznis plan)
         $canManage = $isOwner;
 
-        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage'));
+        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs'));
     }
 
     /**
