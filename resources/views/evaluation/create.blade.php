@@ -416,9 +416,82 @@
                     @endif
                 </div>
 
+                <!-- 3. Priložena dokumentacija -->
+                <div class="form-section">
+                    <label class="form-label form-label-large">3. Priložena dokumentacija:</label>
+                    
+                    @php
+                        $requiredDocs = $application->getRequiredDocuments();
+                        $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+                        $documentLabels = [
+                            'licna_karta' => 'Lična karta',
+                            'crps_resenje' => 'CRPS rješenje',
+                            'pib_resenje' => 'PIB rješenje',
+                            'pdv_resenje' => 'PDV rješenje',
+                            'statut' => 'Statut',
+                            'karton_potpisa' => 'Karton potpisa',
+                            'potvrda_neosudjivanost' => 'Neosuđivanost',
+                            'uvjerenje_opstina_porezi' => 'Porezi Opština',
+                            'uvjerenje_opstina_nepokretnost' => 'Nepokretnost Opština',
+                            'potvrda_upc_porezi' => 'Porezi UPC',
+                            'ioppd_obrazac' => 'IOPPD',
+                            'godisnji_racuni' => 'Godišnji računi',
+                            'biznis_plan_usb' => 'USB verzija',
+                            'ostalo' => 'Ostalo',
+                        ];
+                    @endphp
+                    
+                    <div style="margin-top: 12px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                            <thead>
+                                <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                    <th style="padding: 10px; text-align: left; font-weight: 600; color: #374151;">Dokument</th>
+                                    <th style="padding: 10px; text-align: center; font-weight: 600; color: #374151; width: 120px;">Status</th>
+                                    <th style="padding: 10px; text-align: center; font-weight: 600; color: #374151; width: 100px;">Akcija</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($requiredDocs as $docType)
+                                    @php
+                                        $isUploaded = in_array($docType, $uploadedDocs);
+                                        $document = $isUploaded ? $application->documents->firstWhere('document_type', $docType) : null;
+                                    @endphp
+                                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                                        <td style="padding: 10px; color: #111827;">
+                                            {{ $documentLabels[$docType] ?? $docType }}
+                                        </td>
+                                        <td style="padding: 10px; text-align: center;">
+                                            @if($isUploaded)
+                                                <span style="display: inline-block; padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                                                    ✓ Priloženo
+                                                </span>
+                                            @else
+                                                <span style="display: inline-block; padding: 4px 12px; background: #fee2e2; color: #991b1b; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                                                    ✗ Nedostaje
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td style="padding: 10px; text-align: center;">
+                                            @if($isUploaded && $document)
+                                                <a href="{{ route('applications.document.download', ['application' => $application->id, 'document' => $document->id]) }}" 
+                                                   target="_blank" 
+                                                   style="color: var(--primary); text-decoration: none; font-size: 12px; font-weight: 600;">
+                                                    Preuzmi
+                                                </a>
+                                            @else
+                                                <span style="color: #9ca3af; font-size: 12px;">—</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
                 <!-- 4. Ocjena biznis plana u brojkama -->
                 <div class="form-section">
-                    <label class="form-label form-label-large">3. Ocjena biznis plana u brojkama:</label>
+                    <label class="form-label form-label-large">4. Ocjena biznis plana u brojkama:</label>
                     
                     <div class="info-box criteria-info-box">
                         <strong>KRITERIJUMI ZA OCJENU</strong><br>
@@ -598,9 +671,9 @@
                     @endfor
                 </div>
 
-                <!-- 4. Ostale napomene -->
+                <!-- 5. Ostale napomene -->
                 <div class="form-section">
-                    <label class="form-label form-label-large">4. Ostale napomene:</label>
+                    <label class="form-label form-label-large">5. Ostale napomene:</label>
                     
                     @php
                         // Prikupi napomene svih članova koji su ih dali, zadržavajući redoslijed iz $allMembers

@@ -241,7 +241,7 @@ class EvaluationController extends Controller
             ->count();
         $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
 
-        $application->load(['user', 'competition', 'businessPlan']);
+        $application->load(['user', 'competition', 'businessPlan', 'documents']);
 
         // Provjeri da li je korisnik podnosilac prijave
         $isApplicant = $application->user_id === $user->id;
