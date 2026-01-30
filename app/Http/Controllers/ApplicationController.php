@@ -475,7 +475,7 @@ class ApplicationController extends Controller
         // Samo vlasnik može da mijenja (uploaduje/briše dokumente, podnosi prijavu, uređuje biznis plan)
         $canManage = $isOwner;
 
-        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs'));
+        return view('applications.show', compact('application', 'isReadyToSubmit', 'canManage', 'missingDocs', 'isCommissionMemberForThisCompetition'));
     }
 
     /**

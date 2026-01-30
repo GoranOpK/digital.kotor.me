@@ -710,54 +710,102 @@
                 </div>
             </div>
 
-            <!-- Lista obaveznih dokumenata -->
-            <ul class="documents-list">
-                @foreach($requiredDocs as $docType)
-                    @php
-                        $uploaded = in_array($docType, $uploadedDocs);
-                        $doc = $application->documents->where('document_type', $docType)->first();
-                    @endphp
-                    <li class="document-item {{ $uploaded ? 'uploaded' : 'required' }}">
-                        <div class="document-info">
-                            <div class="document-name">
-                                {{ $documentLabels[$docType] ?? $docType }}
-                                @if(!$uploaded)
-                                    <span style="color: #ef4444; font-size: 12px; margin-left: 8px;">(Obavezno)</span>
+            @if($isCommissionMemberForThisCompetition ?? false)
+                <!-- Tabela svih potrebnih dokumenata za članove komisije -->
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; margin-top: 20px;">
+                    <thead>
+                        <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                            <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Dokument</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600; color: #374151; width: 120px;">Status</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600; color: #374151; width: 100px;">Akcija</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($requiredDocs as $docType)
+                            @php
+                                $isUploaded = in_array($docType, $uploadedDocs);
+                                $document = $isUploaded ? $application->documents->firstWhere('document_type', $docType) : null;
+                            @endphp
+                            <tr style="border-bottom: 1px solid #e5e7eb;">
+                                <td style="padding: 12px; color: #111827;">
+                                    {{ $documentLabels[$docType] ?? $docType }}
+                                </td>
+                                <td style="padding: 12px; text-align: center;">
+                                    @if($isUploaded)
+                                        <span style="display: inline-block; padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                                            ✓ Priloženo
+                                        </span>
+                                    @else
+                                        <span style="display: inline-block; padding: 4px 12px; background: #fee2e2; color: #991b1b; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                                            ✗ Nedostaje
+                                        </span>
+                                    @endif
+                                </td>
+                                <td style="padding: 12px; text-align: center;">
+                                    @if($isUploaded && $document)
+                                        <a href="{{ route('applications.document.view', ['application' => $application, 'document' => $document]) }}" 
+                                           target="_blank" 
+                                           style="color: var(--primary); text-decoration: none; font-size: 12px; font-weight: 600;">
+                                            Pogledaj
+                                        </a>
+                                    @else
+                                        <span style="color: #9ca3af; font-size: 12px;">—</span>
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            @else
+                <!-- Lista obaveznih dokumenata za vlasnika prijave -->
+                <ul class="documents-list">
+                    @foreach($requiredDocs as $docType)
+                        @php
+                            $uploaded = in_array($docType, $uploadedDocs);
+                            $doc = $application->documents->where('document_type', $docType)->first();
+                        @endphp
+                        <li class="document-item {{ $uploaded ? 'uploaded' : 'required' }}">
+                            <div class="document-info">
+                                <div class="document-name">
+                                    {{ $documentLabels[$docType] ?? $docType }}
+                                    @if(!$uploaded)
+                                        <span style="color: #ef4444; font-size: 12px; margin-left: 8px;">(Obavezno)</span>
+                                    @endif
+                                </div>
+                                @if($uploaded && $doc)
+                                    <div class="document-type">
+                                        Upload-ovano: {{ $doc->created_at->format('d.m.Y H:i') }}
+                                    </div>
                                 @endif
                             </div>
-                            @if($uploaded && $doc)
-                                <div class="document-type">
-                                    Upload-ovano: {{ $doc->created_at->format('d.m.Y H:i') }}
-                                </div>
-                            @endif
-                        </div>
-                        <div class="document-actions">
-                            @if($uploaded && $doc)
-                                <a href="{{ route('applications.document.view', ['application' => $application, 'document' => $doc]) }}" 
-                                   class="btn btn-secondary" target="_blank" style="margin-right: 4px;">
-                                    Pogledaj
-                                </a>
-                                @if(auth()->id() === $application->user_id)
-                                    <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" 
-                                       class="btn btn-secondary" style="margin-right: 4px;">
-                                        Preuzmi
+                            <div class="document-actions">
+                                @if($uploaded && $doc)
+                                    <a href="{{ route('applications.document.view', ['application' => $application, 'document' => $doc]) }}" 
+                                       class="btn btn-secondary" target="_blank" style="margin-right: 4px;">
+                                        Pogledaj
                                     </a>
-                                    <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $doc]) }}" 
-                                          method="POST" 
-                                          style="display: inline;" 
-                                          onsubmit="return confirm('Da li ste sigurni da želite da uklonite ovaj dokument iz prijave?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger" style="padding: 8px 12px;">
-                                            Ukloni
-                                        </button>
-                                    </form>
+                                    @if(auth()->id() === $application->user_id)
+                                        <a href="{{ route('applications.document.download', ['application' => $application, 'document' => $doc]) }}" 
+                                           class="btn btn-secondary" style="margin-right: 4px;">
+                                            Preuzmi
+                                        </a>
+                                        <form action="{{ route('applications.document.destroy', ['application' => $application, 'document' => $doc]) }}" 
+                                              method="POST" 
+                                              style="display: inline;" 
+                                              onsubmit="return confirm('Da li ste sigurni da želite da uklonite ovaj dokument iz prijave?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger" style="padding: 8px 12px;">
+                                                Ukloni
+                                            </button>
+                                        </form>
+                                    @endif
                                 @endif
-                            @endif
-                        </div>
-                    </li>
-                @endforeach
-            </ul>
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
         </div>
 
         <!-- Ugovor -->
