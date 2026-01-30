@@ -327,7 +327,7 @@
                 <!-- Priložena dokumentacija -->
                 @php
                     $userRole = auth()->user()->role ? auth()->user()->role->name : null;
-                    // Mapiranje tipova dokumenata na nazive traženih dokumenata (ne prikazujemo ime uploadovanog fajla)
+                    // Mapiranje tipova dokumenata na nazive traženih dokumenata
                     $documentLabels = [
                         'licna_karta' => 'Ovjerena kopija lične karte',
                         'crps_resenje' => 'Rješenje o upisu u CRPS',
@@ -346,26 +346,60 @@
                         'finansijski_izvjestaj' => 'Finansijski izvještaj',
                         'ostalo' => 'Ostalo',
                     ];
+                    
+                    // Za članove komisije prikaži tabelu sa svim potrebnim dokumentima
+                    if ($userRole === 'komisija') {
+                        $requiredDocs = $application->getRequiredDocuments();
+                        $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+                    }
                 @endphp
-                @if($application->documents->count() > 0 && $userRole === 'komisija')
+                @if($userRole === 'komisija')
                 <div class="info-card">
                     <h2>Priložena dokumentacija</h2>
-                    <ul class="documents-list">
-                        @foreach($application->documents as $doc)
-                            <li class="document-item">
-                                {{-- Članovi komisije vide naziv traženog dokumenta, ne ime uploadovanog fajla --}}
-                                <span>{{ $documentLabels[$doc->document_type] ?? $doc->document_type }}</span>
-                                <div style="display: inline-flex; gap: 8px;">
-                                    {{-- Samo članovi komisije mogu da vide dokument (server dodatno provjerava dodijeljenu komisiju) --}}
-                                    <a href="{{ route('applications.document.view', ['application' => $application, 'document' => $doc]) }}"
-                                       class="btn btn-secondary"
-                                       target="_blank">
-                                        Pogledaj
-                                    </a>
-                                </div>
-                            </li>
-                        @endforeach
-                    </ul>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; margin-top: 10px;">
+                        <thead>
+                            <tr style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151;">Dokument</th>
+                                <th style="padding: 12px; text-align: center; font-weight: 600; color: #374151; width: 120px;">Status</th>
+                                <th style="padding: 12px; text-align: center; font-weight: 600; color: #374151; width: 100px;">Akcija</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($requiredDocs as $docType)
+                                @php
+                                    $isUploaded = in_array($docType, $uploadedDocs);
+                                    $document = $isUploaded ? $application->documents->firstWhere('document_type', $docType) : null;
+                                @endphp
+                                <tr style="border-bottom: 1px solid #e5e7eb;">
+                                    <td style="padding: 12px; color: #111827;">
+                                        {{ $documentLabels[$docType] ?? $docType }}
+                                    </td>
+                                    <td style="padding: 12px; text-align: center;">
+                                        @if($isUploaded)
+                                            <span style="display: inline-block; padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                                                ✓ Priloženo
+                                            </span>
+                                        @else
+                                            <span style="display: inline-block; padding: 4px 12px; background: #fee2e2; color: #991b1b; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                                                ✗ Nedostaje
+                                            </span>
+                                        @endif
+                                    </td>
+                                    <td style="padding: 12px; text-align: center;">
+                                        @if($isUploaded && $document)
+                                            <a href="{{ route('applications.document.view', ['application' => $application, 'document' => $document]) }}" 
+                                               target="_blank" 
+                                               style="color: var(--primary); text-decoration: none; font-size: 12px; font-weight: 600;">
+                                                Pogledaj
+                                            </a>
+                                        @else
+                                            <span style="color: #9ca3af; font-size: 12px;">—</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
                 @endif
             </div>

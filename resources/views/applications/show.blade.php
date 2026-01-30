@@ -299,6 +299,12 @@
             <p style="color: rgba(255,255,255,0.9); margin: 0;">{{ $application->business_plan_name }}</p>
         </div>
 
+        <!-- TEST SEKCIJA - NA SAMOM POČETKU -->
+        <div class="info-card" style="background: red !important; color: white !important; padding: 30px !important; margin: 30px 0 !important; border: 5px solid yellow !important; z-index: 9999 !important;">
+            <h1 style="color: white !important; font-size: 32px !important;">TEST - OVA SEKCIJA MORA BITI VIDLJIVA!</h1>
+            <p style="color: white !important; font-size: 20px !important;">Ako ne vidiš ovo, postoji problem sa renderovanjem stranice.</p>
+        </div>
+
         @if(session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}

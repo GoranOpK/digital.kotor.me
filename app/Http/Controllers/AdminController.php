@@ -765,6 +765,8 @@ class AdminController extends Controller
         
         $application->load(['user', 'competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember']);
         
+        $application->load(['competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember', 'contract', 'reports']);
+        
         return view('admin.applications.show', compact('application'));
     }
 
