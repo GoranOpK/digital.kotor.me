@@ -668,6 +668,12 @@
             </div>
         @endif
 
+        <!-- TEST SEKCIJA - MORA BITI VIDLJIVA -->
+        <div class="info-card" style="background: red !important; color: white !important; padding: 30px !important; margin: 30px 0 !important; border: 5px solid yellow !important;">
+            <h1 style="color: white !important; font-size: 32px !important;">TEST - OVA SEKCIJA MORA BITI VIDLJIVA!</h1>
+            <p style="color: white !important; font-size: 20px !important;">Ako ne vidiš ovo, postoji problem sa renderovanjem stranice.</p>
+        </div>
+
         <!-- Dokumenti -->
         <div class="info-card" style="background: #fff; border: 3px solid blue; padding: 20px; margin: 20px 0;">
             <h2 style="color: blue; font-size: 24px;">Priložena dokumentacija - DEBUG</h2>
