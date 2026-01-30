@@ -607,25 +607,56 @@
                                 <option value="">Izaberite tip</option>
                                 @php
                                     $requiredDocs = $application->getRequiredDocuments();
+                                    $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+                                    
+                                    // Definiši redoslijed dokumenata za dropdown
+                                    $order = [];
+                                    if ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') {
+                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'];
+                                    } elseif ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'razvoj') {
+                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb'];
+                                    } elseif ($application->applicant_type === 'fizicko_lice' && $application->business_stage === 'započinjanje') {
+                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'];
+                                    } elseif ($application->applicant_type === 'fizicko_lice' && $application->business_stage === 'razvoj') {
+                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb'];
+                                    }
+                                    
+                                    // Sortiraj dokumente prema redoslijedu
+                                    $orderedDocsForDropdown = [];
+                                    if (!empty($order)) {
+                                        foreach ($order as $docType) {
+                                            if (in_array($docType, $requiredDocs)) {
+                                                $orderedDocsForDropdown[] = $docType;
+                                            }
+                                        }
+                                        // Dodaj ostale dokumente koje nisu u listi
+                                        foreach ($requiredDocs as $docType) {
+                                            if (!in_array($docType, $orderedDocsForDropdown)) {
+                                                $orderedDocsForDropdown[] = $docType;
+                                            }
+                                        }
+                                    } else {
+                                        $orderedDocsForDropdown = $requiredDocs;
+                                    }
+                                    
                                     $documentLabels = [
-                                        'licna_karta' => 'Lična karta',
-                                        'crps_resenje' => 'CRPS rješenje',
-                                        'pib_resenje' => 'PIB rješenje',
-                                        'pdv_resenje' => 'PDV rješenje',
-                                        'statut' => 'Statut',
+                                        'licna_karta' => 'Ovjerena kopija lične karte',
+                                        'crps_resenje' => 'Rješenje o upisu u CRPS' . (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'započinjanje' ? ' (ukoliko ima registrovanu djelatnost)' : ''),
+                                        'pib_resenje' => 'Rješenje o registraciji PJ Uprave prihoda i carina' . (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'započinjanje' ? ' (ukoliko ima registrovanu djelatnost)' : ''),
+                                        'pdv_resenje' => 'Rješenje o registraciji za PDV' . (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'započinjanje' ? ' (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a)' : ($application->business_stage === 'razvoj' ? ' (ako je obveznik PDV-a)' : '')),
+                                        'statut' => 'Statut društva',
                                         'karton_potpisa' => 'Karton potpisa',
-                                        'potvrda_neosudjivanost' => 'Neosuđivanost',
-                                        'uvjerenje_opstina_porezi' => 'Porezi Opština',
-                                        'uvjerenje_opstina_nepokretnost' => 'Nepokretnost Opština',
-                                        'potvrda_upc_porezi' => 'Porezi UPC',
-                                        'ioppd_obrazac' => 'IOPPD',
+                                        'potvrda_neosudjivanost' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') ? 'Potvrda o neosuđivanosti za krivična djela na ime preduzetnice izdatu od strane Osnovnog suda' : 'Potvrda o neosuđivanosti',
+                                        'uvjerenje_opstina_porezi' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') ? 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada' : 'Uvjerenje Opštine o urednom izmirivanju poreza',
+                                        'uvjerenje_opstina_nepokretnost' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') ? 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice' : 'Uvjerenje Opštine o nepostojanju nepokretnosti',
+                                        'potvrda_upc_porezi' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'razvoj' ? 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice' : 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza',
+                                        'ioppd_obrazac' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'razvoj' ? 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)' : 'Obrazac IOPPD',
                                         'godisnji_racuni' => 'Godišnji računi',
-                                        'biznis_plan_usb' => 'USB verzija',
+                                        'biznis_plan_usb' => 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u',
                                         'ostalo' => 'Ostalo',
                                     ];
-                                    $uploadedDocs = $application->documents->pluck('document_type')->toArray();
                                 @endphp
-                                @foreach($requiredDocs as $docType)
+                                @foreach($orderedDocsForDropdown as $docType)
                                     @if(!in_array($docType, $uploadedDocs))
                                         <option value="{{ $docType }}">{{ $documentLabels[$docType] ?? $docType }}</option>
                                     @endif
@@ -675,20 +706,70 @@
             @php
                 $requiredDocs = $application->getRequiredDocuments();
                 $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+                
+                // Definiši redoslijed dokumenata na osnovu tipa prijave i faze biznisa
+                $orderedDocs = [];
+                if ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') {
+                    // Redoslijed za Preduzetnica koja započinje biznis
+                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'];
+                    // Dodaj ostale dokumente koje možda postoje (npr. izvještaji)
+                    foreach ($requiredDocs as $docType) {
+                        if (!in_array($docType, $order)) {
+                            $order[] = $docType;
+                        }
+                    }
+                    // Sortiraj prema definisanom redoslijedu
+                    $orderedDocs = array_intersect($order, $requiredDocs);
+                    $orderedDocs = array_merge($orderedDocs, array_diff($requiredDocs, $orderedDocs));
+                } elseif ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'razvoj') {
+                    // Redoslijed za Preduzetnica koja planira razvoj poslovanja
+                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb'];
+                    foreach ($requiredDocs as $docType) {
+                        if (!in_array($docType, $order)) {
+                            $order[] = $docType;
+                        }
+                    }
+                    $orderedDocs = array_intersect($order, $requiredDocs);
+                    $orderedDocs = array_merge($orderedDocs, array_diff($requiredDocs, $orderedDocs));
+                } elseif ($application->applicant_type === 'fizicko_lice' && $application->business_stage === 'započinjanje') {
+                    // Redoslijed za Fizičko lice koje započinje biznis (tretira se kao preduzetnica)
+                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'];
+                    foreach ($requiredDocs as $docType) {
+                        if (!in_array($docType, $order)) {
+                            $order[] = $docType;
+                        }
+                    }
+                    $orderedDocs = array_intersect($order, $requiredDocs);
+                    $orderedDocs = array_merge($orderedDocs, array_diff($requiredDocs, $orderedDocs));
+                } elseif ($application->applicant_type === 'fizicko_lice' && $application->business_stage === 'razvoj') {
+                    // Redoslijed za Fizičko lice koje planira razvoj poslovanja
+                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb'];
+                    foreach ($requiredDocs as $docType) {
+                        if (!in_array($docType, $order)) {
+                            $order[] = $docType;
+                        }
+                    }
+                    $orderedDocs = array_intersect($order, $requiredDocs);
+                    $orderedDocs = array_merge($orderedDocs, array_diff($requiredDocs, $orderedDocs));
+                } else {
+                    // Za ostale tipove, koristi originalni redoslijed
+                    $orderedDocs = $requiredDocs;
+                }
+                
                 $documentLabels = [
                     'licna_karta' => 'Ovjerena kopija lične karte',
-                    'crps_resenje' => 'Rješenje o upisu u CRPS',
-                    'pib_resenje' => 'Rješenje o registraciji PJ Uprave prihoda i carina (PIB)',
-                    'pdv_resenje' => 'Rješenje o registraciji za PDV',
+                    'crps_resenje' => 'Rješenje o upisu u CRPS' . (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'započinjanje' ? ' (ukoliko ima registrovanu djelatnost)' : ''),
+                    'pib_resenje' => 'Rješenje o registraciji PJ Uprave prihoda i carina' . (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'započinjanje' ? ' (ukoliko ima registrovanu djelatnost)' : ''),
+                    'pdv_resenje' => 'Rješenje o registraciji za PDV' . (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'započinjanje' ? ' (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a)' : ($application->business_stage === 'razvoj' ? ' (ako je obveznik PDV-a)' : '')),
                     'statut' => 'Statut društva',
                     'karton_potpisa' => 'Karton potpisa',
-                    'potvrda_neosudjivanost' => 'Potvrda o neosuđivanosti',
-                    'uvjerenje_opstina_porezi' => 'Uvjerenje Opštine o urednom izmirivanju poreza',
-                    'uvjerenje_opstina_nepokretnost' => 'Uvjerenje Opštine o nepostojanju nepokretnosti',
-                    'potvrda_upc_porezi' => 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza',
-                    'ioppd_obrazac' => 'Obrazac IOPPD',
+                    'potvrda_neosudjivanost' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') ? 'Potvrda o neosuđivanosti za krivična djela na ime preduzetnice izdatu od strane Osnovnog suda' : 'Potvrda o neosuđivanosti',
+                    'uvjerenje_opstina_porezi' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') ? 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada' : 'Uvjerenje Opštine o urednom izmirivanju poreza',
+                    'uvjerenje_opstina_nepokretnost' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') ? 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice' : 'Uvjerenje Opštine o nepostojanju nepokretnosti',
+                    'potvrda_upc_porezi' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'razvoj' ? 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice' : 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza',
+                    'ioppd_obrazac' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'razvoj' ? 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)' : 'Obrazac IOPPD',
                     'godisnji_racuni' => 'Godišnji računi',
-                    'biznis_plan_usb' => 'Štampana i elektronska verzija biznis plana na USB-u',
+                    'biznis_plan_usb' => 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u',
                     'izvjestaj_realizacija' => 'Izvještaj o realizaciji',
                     'finansijski_izvjestaj' => 'Finansijski izvještaj',
                     'ostalo' => 'Ostalo',
@@ -699,14 +780,14 @@
             <div style="margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                     <span style="font-size: 14px; color: #374151; font-weight: 600;">
-                        Dokumenti: {{ count($uploadedDocs) }} / {{ count($requiredDocs) }}
+                        Dokumenti: {{ count($uploadedDocs) }} / {{ count($orderedDocs) }}
                     </span>
                     <span style="font-size: 14px; color: #6b7280;">
-                        {{ round((count($uploadedDocs) / max(count($requiredDocs), 1)) * 100) }}%
+                        {{ round((count($uploadedDocs) / max(count($orderedDocs), 1)) * 100) }}%
                     </span>
                 </div>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: {{ (count($uploadedDocs) / max(count($requiredDocs), 1)) * 100 }}%"></div>
+                    <div class="progress-fill" style="width: {{ (count($uploadedDocs) / max(count($orderedDocs), 1)) * 100 }}%"></div>
                 </div>
             </div>
 
@@ -743,7 +824,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($requiredDocs as $docType)
+                        @foreach($orderedDocs as $docType)
                             @php
                                 $isUploaded = in_array($docType, $uploadedDocs);
                                 $document = $isUploaded ? $application->documents->firstWhere('document_type', $docType) : null;
@@ -781,7 +862,7 @@
             @else
                 <!-- Lista obaveznih dokumenata za vlasnika prijave -->
                 <ul class="documents-list">
-                    @foreach($requiredDocs as $docType)
+                    @foreach($orderedDocs as $docType)
                         @php
                             $uploaded = in_array($docType, $uploadedDocs);
                             $doc = $application->documents->where('document_type', $docType)->first();
