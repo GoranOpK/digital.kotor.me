@@ -157,6 +157,12 @@ class EvaluationController extends Controller
             } else {
                 abort(403, 'Niste član komisije.');
             }
+        } else {
+            // Članovi komisije mogu vidjeti samo prijave koje su podnesene (status 'submitted' ili viši)
+            // Ne mogu vidjeti draft prijave
+            if ($application->status === 'draft') {
+                abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
+            }
         }
 
         // Provjeri da li je prijava već odbijena

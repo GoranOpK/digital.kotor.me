@@ -762,6 +762,12 @@ class AdminController extends Controller
             if (!$competition || !$this->isCommissionMemberForCompetition($competition)) {
                 abort(403, 'Nemate pristup ovoj prijavi.');
             }
+            
+            // Članovi komisije mogu vidjeti samo prijave koje su podnesene (status 'submitted' ili viši)
+            // Ne mogu vidjeti draft prijave
+            if ($application->status === 'draft') {
+                abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
+            }
         }
         
         $application->load(['user', 'competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember']);

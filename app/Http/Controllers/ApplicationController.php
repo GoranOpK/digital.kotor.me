@@ -460,6 +460,12 @@ class ApplicationController extends Controller
             abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
+        // Članovi komisije mogu vidjeti samo prijave koje su podnesene (status 'submitted' ili viši)
+        // Ne mogu vidjeti draft prijave
+        if ($isCommissionMemberForThisCompetition && $application->status === 'draft') {
+            abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
+        }
+
         $application->load(['competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember', 'contract', 'reports']);
 
         // Provjeri da li je prijava spremna za podnošenje
