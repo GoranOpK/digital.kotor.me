@@ -512,9 +512,9 @@ class EvaluationController extends Controller
         } else {
             // Normalno spremanje ocjene
             // Za ostale članove, koristi documents_complete od predsjednika
-            $documentsCompleteValue = null;
+            $documentsCompleteValue = true; // Default vrijednost
             if ($commissionMember->position === 'predsjednik') {
-                $documentsCompleteValue = $validated['documents_complete'] ?? null;
+                $documentsCompleteValue = $validated['documents_complete'] ?? ($existingScore->documents_complete ?? true);
             } else {
                 // Pronađi ocjenu predsjednika komisije
                 $chairmanMember = $commission->activeMembers()->where('position', 'predsjednik')->first();
@@ -522,9 +522,13 @@ class EvaluationController extends Controller
                     $chairmanScore = EvaluationScore::where('application_id', $application->id)
                         ->where('commission_member_id', $chairmanMember->id)
                         ->first();
-                    if ($chairmanScore) {
+                    if ($chairmanScore && $chairmanScore->documents_complete !== null) {
                         $documentsCompleteValue = $chairmanScore->documents_complete;
                     }
+                }
+                // Ako predsjednik još nije ocjenio, koristi vrijednost iz existing score ako postoji
+                if ($documentsCompleteValue === true && $existingScore && $existingScore->documents_complete !== null) {
+                    $documentsCompleteValue = $existingScore->documents_complete;
                 }
             }
 
@@ -602,9 +606,9 @@ class EvaluationController extends Controller
         } else {
             // Normalno spremanje ocjene
             // Za ostale članove, koristi documents_complete od predsjednika
-            $documentsCompleteValue = null;
+            $documentsCompleteValue = true; // Default vrijednost
             if ($commissionMember->position === 'predsjednik') {
-                $documentsCompleteValue = $validated['documents_complete'] ?? null;
+                $documentsCompleteValue = $validated['documents_complete'] ?? true;
             } else {
                 // Pronađi ocjenu predsjednika komisije
                 $chairmanMember = $commission->activeMembers()->where('position', 'predsjednik')->first();
@@ -612,7 +616,7 @@ class EvaluationController extends Controller
                     $chairmanScore = EvaluationScore::where('application_id', $application->id)
                         ->where('commission_member_id', $chairmanMember->id)
                         ->first();
-                    if ($chairmanScore) {
+                    if ($chairmanScore && $chairmanScore->documents_complete !== null) {
                         $documentsCompleteValue = $chairmanScore->documents_complete;
                     }
                 }
@@ -626,6 +630,11 @@ class EvaluationController extends Controller
             $existingScoreForNotes = EvaluationScore::where('application_id', $application->id)
                 ->where('commission_member_id', $commissionMember->id)
                 ->first();
+            
+            // Ako postoji existing score, koristi njegov documents_complete ako nije null
+            if ($existingScoreForNotes && $existingScoreForNotes->documents_complete !== null) {
+                $documentsCompleteValue = $existingScoreForNotes->documents_complete;
+            }
             
             if ($existingScoreForNotes && $hasCompletedEvaluation && !$isDecisionMadeForUpdate && !$isChairman) {
                 // Ako je već ocjenio ali prijava nije zaključena i nije predsjednik, može ažurirati samo notes
