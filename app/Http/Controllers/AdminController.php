@@ -699,19 +699,19 @@ class AdminController extends Controller
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
         
-        // Administrator konkursa može brisati završene konkurse iz arhive
+        // Privremeno: Administrator konkursa može brisati sve konkurse
         // Ostali ne mogu brisati završene konkurse
-        if (in_array($competition->status, ['closed', 'completed']) && !$isCompetitionAdmin) {
+        if (in_array($competition->status, ['closed', 'completed']) && !$isCompetitionAdmin && !$isAdmin) {
             abort(403, 'Ne možete obrisati završeni konkurs.');
         }
         
-        // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
+        // Ako nije admin i nije konkurs_admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
         if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
             abort(403, 'Nemate dozvolu za brisanje ovog konkursa.');
         }
         
-        // Proveri da li ima prijava (samo za aktivne konkurse)
-        if (!in_array($competition->status, ['closed', 'completed']) && $competition->applications()->count() > 0) {
+        // Proveri da li ima prijava (samo za aktivne konkurse, ali ne blokiraj konkurs_admin)
+        if (!in_array($competition->status, ['closed', 'completed']) && $competition->applications()->count() > 0 && !$isCompetitionAdmin) {
             return redirect()->back()->withErrors(['error' => 'Ne možete obrisati konkurs koji već ima prijave.']);
         }
 
