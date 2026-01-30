@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Competition;
+use App\Models\Application;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Carbon\Carbon;
@@ -70,25 +71,67 @@ class CompetitionsController extends Controller
             $minutesRemaining = $diff->i;
         }
 
-        // ... ostatak koda ...
-        $requiredDocuments = [
-            'Prijava na konkurs (Obrazac 1a ili 1b)',
-            'Popunjena forma za biznis plan (Obrazac 2)',
-            'Ovjerena kopija lične karte',
-            'Rješenje o upisu u CRPS',
-            'Rješenje o registraciji PJ Uprave prihoda i carina',
-            'Potvrda o neosuđivanosti',
-            'Uvjerenje o urednom izmirivanju poreza',
-            'Štampana i elektronska verzija biznis plana na USB-u',
-        ];
-
         // Proveri da li korisnik već ima prijavu na ovaj konkurs
         $userApplication = null;
+        $userType = null;
+        $applicantType = null;
         if (auth()->check()) {
+            $user = auth()->user();
+            $userType = $user->user_type ?? null;
             $userApplication = $competition->applications()
                 ->where('user_id', auth()->id())
                 ->first();
+            
+            // Odredi applicant_type na osnovu user_type
+            if ($userType === 'Preduzetnik' || $userType === 'Preduzetnica') {
+                $applicantType = 'preduzetnica';
+            } elseif ($userType === 'Društvo sa ograničenom odgovornošću' || $userType === 'DOO') {
+                $applicantType = 'doo';
+            } elseif ($userType === 'Fizičko lice' || $userType === 'Rezident') {
+                $applicantType = 'fizicko_lice';
+            } else {
+                $applicantType = 'ostalo';
+            }
         }
+
+        // Dokument labels za mapiranje
+        $documentLabels = [
+            'licna_karta' => 'Ovjerena kopija lične karte',
+            'crps_resenje' => 'Rješenje o upisu u CRPS',
+            'pib_resenje' => 'Rješenje o registraciji PJ Uprave prihoda i carina',
+            'pdv_resenje' => 'Rješenje o registraciji za PDV',
+            'statut' => 'Važeći Statut društva',
+            'karton_potpisa' => 'Važeći karton deponovanih potpisa',
+            'potvrda_neosudjivanost' => 'Potvrda o neosuđivanosti za krivična djela',
+            'uvjerenje_opstina_porezi' => 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada',
+            'uvjerenje_opstina_nepokretnost' => 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost',
+            'potvrda_upc_porezi' => 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana',
+            'ioppd_obrazac' => 'Obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina (IOPPD Obrazac)',
+            'godisnji_racuni' => 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu',
+            'biznis_plan_usb' => 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u',
+            'izvjestaj_realizacija' => 'Izvještaj o realizaciji prethodne podrške',
+            'finansijski_izvjestaj' => 'Finansijski izvještaj',
+        ];
+
+        // Generiši početnu listu dokumenata (za preduzetnice koje započinju, bez registracije)
+        $defaultDocuments = [];
+        if ($applicantType === 'preduzetnica') {
+            $defaultDocuments = Application::getRequiredDocumentsForType('preduzetnica', 'započinjanje', false);
+        } elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
+            $defaultDocuments = Application::getRequiredDocumentsForType($applicantType, 'započinjanje', false);
+        } elseif ($applicantType === 'fizicko_lice') {
+            // Za fizičko lice, ne prikazujemo listu dokumenata dok korisnik ne izabere business_stage
+            $defaultDocuments = [];
+        }
+
+        // Mapiraj dokumente u ljudski čitljive nazive
+        $requiredDocuments = array_map(function($docType) use ($documentLabels) {
+            return $documentLabels[$docType] ?? $docType;
+        }, $defaultDocuments);
+
+        // Dodaj obavezne dokumente koje svi moraju imati
+        array_unshift($requiredDocuments, 'Prijava na konkurs (Obrazac 1a ili 1b)');
+        array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (Obrazac 2)');
 
         return view('competitions.show', compact(
             'competition',
@@ -99,7 +142,10 @@ class CompetitionsController extends Controller
             'isOpen',
             'isUpcoming',
             'requiredDocuments',
-            'userApplication'
+            'userApplication',
+            'userType',
+            'applicantType',
+            'documentLabels'
         ));
     }
 }

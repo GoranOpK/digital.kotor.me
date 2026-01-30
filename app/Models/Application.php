@@ -430,4 +430,151 @@ class Application extends Model
 
         return array_values($documents); // Reindex array
     }
+
+    /**
+     * Statička metoda za generisanje liste dokumenata na osnovu tipa prijave i faze biznisa
+     * Koristi se za prikaz liste dokumenata prije nego što korisnik krene u prijavu
+     */
+    public static function getRequiredDocumentsForType(string $applicantType, string $businessStage, bool $isRegistered = false): array
+    {
+        $documents = [];
+        
+        // Preduzetnice koje započinju biznis (započinjanje)
+        if ($applicantType === 'preduzetnica' && $businessStage === 'započinjanje') {
+            $documents = [
+                'licna_karta',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'biznis_plan_usb',
+            ];
+            
+            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
+            if ($isRegistered) {
+                $documents[] = 'crps_resenje';
+                $documents[] = 'pib_resenje';
+                $documents[] = 'pdv_resenje';
+            }
+        }
+        // Preduzetnice koje planiraju razvoj poslovanja (razvoj)
+        elseif ($applicantType === 'preduzetnica' && $businessStage === 'razvoj') {
+            $documents = [
+                'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'potvrda_upc_porezi',
+                'ioppd_obrazac',
+                'biznis_plan_usb',
+            ];
+        }
+        // Društva (DOO) koja započinju biznis (započinjanje)
+        elseif ($applicantType === 'doo' && $businessStage === 'započinjanje') {
+            $documents = [
+                'licna_karta',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'biznis_plan_usb',
+            ];
+            
+            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
+            if ($isRegistered) {
+                $documents[] = 'crps_resenje';
+                $documents[] = 'pib_resenje';
+                $documents[] = 'pdv_resenje';
+                $documents[] = 'statut';
+                $documents[] = 'karton_potpisa';
+            }
+        }
+        // Društva (DOO) koja planiraju razvoj poslovanja (razvoj)
+        elseif ($applicantType === 'doo' && $businessStage === 'razvoj') {
+            $documents = [
+                'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'statut',
+                'karton_potpisa',
+                'godisnji_racuni',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'potvrda_upc_porezi',
+                'ioppd_obrazac',
+                'biznis_plan_usb',
+            ];
+        }
+        // Ostalo (druga društva) - isti dokumenti kao DOO
+        elseif ($applicantType === 'ostalo' && $businessStage === 'započinjanje') {
+            $documents = [
+                'licna_karta',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'biznis_plan_usb',
+            ];
+            
+            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
+            if ($isRegistered) {
+                $documents[] = 'crps_resenje';
+                $documents[] = 'pib_resenje';
+                $documents[] = 'pdv_resenje';
+                $documents[] = 'statut';
+                $documents[] = 'karton_potpisa';
+            }
+        } elseif ($applicantType === 'ostalo' && $businessStage === 'razvoj') {
+            $documents = [
+                'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'statut',
+                'karton_potpisa',
+                'godisnji_racuni',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
+                'potvrda_upc_porezi',
+                'ioppd_obrazac',
+                'biznis_plan_usb',
+            ];
+        }
+        // Fizičko lice - ako ima business_stage, tretira se kao preduzetnica
+        elseif ($applicantType === 'fizicko_lice' && $businessStage) {
+            if ($businessStage === 'započinjanje') {
+                $documents = [
+                    'licna_karta',
+                    'potvrda_neosudjivanost',
+                    'uvjerenje_opstina_porezi',
+                    'uvjerenje_opstina_nepokretnost',
+                    'biznis_plan_usb',
+                ];
+                
+                if ($isRegistered) {
+                    $documents[] = 'crps_resenje';
+                    $documents[] = 'pib_resenje';
+                    $documents[] = 'pdv_resenje';
+                }
+            } elseif ($businessStage === 'razvoj') {
+                $documents = [
+                    'licna_karta',
+                    'crps_resenje',
+                    'pib_resenje',
+                    'pdv_resenje',
+                    'potvrda_neosudjivanost',
+                    'uvjerenje_opstina_porezi',
+                    'uvjerenje_opstina_nepokretnost',
+                    'potvrda_upc_porezi',
+                    'ioppd_obrazac',
+                    'biznis_plan_usb',
+                ];
+            }
+        }
+
+        return array_values($documents);
+    }
 }

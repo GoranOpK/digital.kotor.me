@@ -283,15 +283,44 @@
                 <p style="color: #6b7280; margin-bottom: 16px;">
                     Prilikom prijave na konkurs, potrebno je priložiti sledeće dokumente:
                 </p>
-                <ul class="documents-list">
+                
+                @if(auth()->check() && $applicantType && ($applicantType === 'preduzetnica' || $applicantType === 'doo' || $applicantType === 'ostalo' || ($applicantType === 'fizicko_lice' && ($userType === 'Fizičko lice' || $userType === 'Rezident'))))
+                <!-- Izbor faze biznisa -->
+                <div style="margin-bottom: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #374151;">
+                        Faza biznisa <span style="color: #dc2626;">*</span>
+                    </label>
+                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input 
+                                type="radio" 
+                                name="business_stage_preview" 
+                                value="započinjanje" 
+                                id="business_stage_zapocinjanje_preview"
+                                checked
+                                style="margin-right: 8px; cursor: pointer;"
+                            >
+                            <span>Preduzetnica koja započinje biznis</span>
+                        </label>
+                        <label style="display: flex; align-items: center; cursor: pointer;">
+                            <input 
+                                type="radio" 
+                                name="business_stage_preview" 
+                                value="razvoj" 
+                                id="business_stage_razvoj_preview"
+                                style="margin-right: 8px; cursor: pointer;"
+                            >
+                            <span>Preduzetnica koja planira razvoj poslovanja</span>
+                        </label>
+                    </div>
+                </div>
+                @endif
+                
+                <ul class="documents-list" id="documents-list">
                     @foreach($requiredDocuments as $document)
                         <li>{{ $document }}</li>
                     @endforeach
                 </ul>
-                <p style="color: #6b7280; font-size: 12px; margin-top: 16px; font-style: italic;">
-                    Napomena: Lista dokumenata zavisi od tipa prijave (preduzetnica/DOO, započinjanje/razvoj). 
-                    Tačna lista će biti prikazana u formi za prijavu.
-                </p>
             </div>
         </div>
 
@@ -333,4 +362,83 @@
         @endif
     </div>
 </div>
+
+@if(auth()->check() && $applicantType && ($applicantType === 'preduzetnica' || $applicantType === 'doo' || $applicantType === 'ostalo' || ($applicantType === 'fizicko_lice' && ($userType === 'Fizičko lice' || $userType === 'Rezident'))))
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const applicantType = @json($applicantType);
+    const documentLabels = @json($documentLabels);
+    const businessStageRadios = document.querySelectorAll('input[name="business_stage_preview"]');
+    const documentsList = document.getElementById('documents-list');
+    
+    // Mapa dokumenata po tipu prijave i fazi biznisa
+    const documentsMap = {
+        'preduzetnica': {
+            'započinjanje': {
+                withoutRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
+                withRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'biznis_plan_usb']
+            },
+            'razvoj': {
+                withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb']
+            }
+        },
+        'doo': {
+            'započinjanje': {
+                withoutRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
+                withRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'biznis_plan_usb']
+            },
+            'razvoj': {
+                withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb']
+            }
+        },
+        'ostalo': {
+            'započinjanje': {
+                withoutRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
+                withRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'biznis_plan_usb']
+            },
+            'razvoj': {
+                withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb']
+            }
+        },
+        'fizicko_lice': {
+            'započinjanje': {
+                withoutRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
+                withRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'biznis_plan_usb']
+            },
+            'razvoj': {
+                withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb']
+            }
+        }
+    };
+    
+    function updateDocumentsList() {
+        const selectedStage = document.querySelector('input[name="business_stage_preview"]:checked')?.value;
+        if (!selectedStage) return;
+        
+        // Za sada koristimo withoutRegistration (pretpostavljamo da korisnik nema registrovanu djelatnost)
+        // U budućnosti možemo dodati checkbox za registraciju
+        const docTypes = documentsMap[applicantType]?.[selectedStage]?.withoutRegistration || 
+                        documentsMap[applicantType]?.[selectedStage]?.withRegistration || [];
+        
+        // Dodaj obavezne dokumente koje svi moraju imati
+        const allDocuments = [
+            'Prijava na konkurs (Obrazac 1a ili 1b)',
+            'Popunjena forma za biznis plan (Obrazac 2)',
+            ...docTypes.map(docType => documentLabels[docType] || docType)
+        ];
+        
+        // Ažuriraj listu
+        documentsList.innerHTML = allDocuments.map(doc => `<li>${doc}</li>`).join('');
+    }
+    
+    // Dodaj event listener-e na radio button-e
+    businessStageRadios.forEach(radio => {
+        radio.addEventListener('change', updateDocumentsList);
+    });
+    
+    // Inicijalno ažuriraj listu
+    updateDocumentsList();
+});
+</script>
+@endif
 @endsection
