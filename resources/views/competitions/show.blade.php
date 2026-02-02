@@ -391,20 +391,22 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         'doo': {
             'započinjanje': {
-                withoutRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
-                withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb']
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
+                optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
             },
             'razvoj': {
-                withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb']
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb'],
+                optional: ['pdv_resenje']
             }
         },
         'ostalo': {
             'započinjanje': {
-                withoutRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
-                withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb']
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
+                optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
             },
             'razvoj': {
-                withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb']
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb'],
+                optional: ['pdv_resenje']
             }
         },
         'fizicko_lice': {
@@ -440,6 +442,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)',
                 'Popunjena forma za biznis plan (obrazac 2)',
             ];
+        } else if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'doo' || applicantType === 'ostalo')) {
+            allDocuments = [
+                'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1b)',
+                'Popunjena forma za biznis plan (obrazac 2)',
+            ];
         } else {
             allDocuments = [
                 'Prijava na konkurs (Obrazac 1a ili 1b)',
@@ -463,6 +470,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else if (selectedStage === 'razvoj') {
                         docLabel = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a)';
                     }
+                } else if (docType === 'statut') {
+                    docLabel = 'Važeći Statut društva (ukoliko ima registrovanu djelatnost)';
+                } else if (docType === 'karton_potpisa') {
+                    docLabel = 'Važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)';
                 }
             }
             
@@ -484,6 +495,44 @@ document.addEventListener('DOMContentLoaded', function() {
             // Ažuriraj label za IOPPD obrazac
             if (docType === 'ioppd_obrazac' && selectedStage === 'razvoj' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
                 docLabel = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
+            }
+            
+            // DOO/Ostalo - razvoj - posebni labeli prema Odluci (nosioc biznisa, društvo)
+            if ((applicantType === 'doo' || applicantType === 'ostalo') && selectedStage === 'razvoj') {
+                if (docType === 'licna_karta') {
+                    docLabel = 'Ovjerena kopija lične karte (osnivačica ili jedna od osnivača i izvršna direktorica)';
+                } else if (docType === 'statut') {
+                    docLabel = 'Važeći Statut društva';
+                } else if (docType === 'karton_potpisa') {
+                    docLabel = 'Važeći karton deponovanih potpisa';
+                } else if (docType === 'godisnji_racuni') {
+                    docLabel = 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu';
+                } else if (docType === 'potvrda_neosudjivanost') {
+                    docLabel = 'Potvrda o neosuđivanosti za krivična djela na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
+                } else if (docType === 'uvjerenje_opstina_porezi') {
+                    docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                } else if (docType === 'uvjerenje_opstina_nepokretnost') {
+                    docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
+                } else if (docType === 'potvrda_upc_porezi') {
+                    docLabel = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
+                } else if (docType === 'ioppd_obrazac') {
+                    docLabel = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
+                }
+            }
+            
+            // DOO/Ostalo - započinjanje - labeli za potvrdu i uvjerenje (na ime preduzetnice)
+            if ((applicantType === 'doo' || applicantType === 'ostalo') && selectedStage === 'započinjanje') {
+                if (docType === 'potvrda_neosudjivanost') {
+                    docLabel = 'Potvrda o neosuđivanosti za krivična djela na ime preduzetnice izdatu od strane Osnovnog suda';
+                } else if (docType === 'uvjerenje_opstina_porezi') {
+                    docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                } else if (docType === 'uvjerenje_opstina_nepokretnost') {
+                    docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                } else if (docType === 'statut' && !optionalDocs.includes(docType)) {
+                    docLabel = 'Važeći Statut društva';
+                } else if (docType === 'karton_potpisa' && !optionalDocs.includes(docType)) {
+                    docLabel = 'Važeći karton deponovanih potpisa';
+                }
             }
             
             allDocuments.push(docLabel);

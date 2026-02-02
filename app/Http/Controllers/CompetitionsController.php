@@ -123,7 +123,8 @@ class CompetitionsController extends Controller
             // Za fizičko lice (Rezident), uzmi sve dokumente kao za preduzetnicu koja započinje
             $defaultDocuments = Application::getRequiredDocumentsForType('fizicko_lice', 'započinjanje', true);
         } elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
-            $defaultDocuments = Application::getRequiredDocumentsForType($applicantType, 'započinjanje', false);
+            // Prikaži sve dokumente (sa opcionim napomenama) - JavaScript ažurira na osnovu izbora faze
+            $defaultDocuments = Application::getRequiredDocumentsForType($applicantType, 'započinjanje', true);
         }
 
         // Mapiraj dokumente u ljudski čitljive nazive
@@ -133,14 +134,10 @@ class CompetitionsController extends Controller
             // Za preduzetnice i fizičko lice, dodaj napomene za opcione dokumente i ažuriraj tekstove
             if ($applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
                 if ($docType === 'crps_resenje') {
-                    // Za razvoj, CRPS je obavezan, za započinjanje je opcioni
-                    // Ovo će se ažurirati u JavaScript-u na osnovu izbora
                     $label = 'Rješenje o upisu u CRPS';
                 } elseif ($docType === 'pib_resenje') {
-                    // Za razvoj, PIB je obavezan, za započinjanje je opcioni
                     $label = 'Rješenje o registraciji PJ Uprave prihoda i carina';
                 } elseif ($docType === 'pdv_resenje') {
-                    // PDV je opcioni i za započinjanje i za razvoj
                     $label = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a)';
                 } elseif ($docType === 'uvjerenje_opstina_porezi') {
                     $label = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
@@ -148,6 +145,32 @@ class CompetitionsController extends Controller
                     $label = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
                 } elseif ($docType === 'potvrda_upc_porezi') {
                     $label = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice';
+                } elseif ($docType === 'ioppd_obrazac') {
+                    $label = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
+                }
+            }
+            // Za DOO i Ostalo (započinjanje - početna lista)
+            elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
+                if ($docType === 'crps_resenje') {
+                    $label = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
+                } elseif ($docType === 'pib_resenje') {
+                    $label = 'Rješenje o registraciji PJ Uprave prihoda i carina (ukoliko ima registrovanu djelatnost)';
+                } elseif ($docType === 'pdv_resenje') {
+                    $label = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a)';
+                } elseif ($docType === 'statut') {
+                    $label = 'Važeći Statut društva (ukoliko ima registrovanu djelatnost)';
+                } elseif ($docType === 'karton_potpisa') {
+                    $label = 'Važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)';
+                } elseif ($docType === 'potvrda_neosudjivanost') {
+                    $label = 'Potvrda o neosuđivanosti za krivična djela na ime preduzetnice izdatu od strane Osnovnog suda';
+                } elseif ($docType === 'uvjerenje_opstina_porezi') {
+                    $label = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                } elseif ($docType === 'uvjerenje_opstina_nepokretnost') {
+                    $label = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                } elseif ($docType === 'godisnji_racuni') {
+                    $label = 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu';
+                } elseif ($docType === 'potvrda_upc_porezi') {
+                    $label = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime nosioca biznisa i na ime društva';
                 } elseif ($docType === 'ioppd_obrazac') {
                     $label = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
                 }
