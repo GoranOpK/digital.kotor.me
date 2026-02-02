@@ -68,8 +68,20 @@ class EvaluationController extends Controller
                 }
                 // Ako nema ocjenjenih prijava, sve prijave su "pending"
             } elseif ($request->filter === 'evaluated') {
-                // Prijave koje je član komisije već ocjenio (evaluated status)
-                $query->whereIn('status', ['submitted', 'evaluated']);
+                // Prijave koje je član komisije već ocjenio:
+                // - submitted/evaluated (prošle ili u obradi)
+                // - rejected zbog nedovoljno bodova (< 30) - prikaži sa stvarnom ocjenom
+                // - NE prikazuj odbijene zbog nedostatka dokumenata
+                $query->where(function ($q) {
+                    $q->whereIn('status', ['submitted', 'evaluated'])
+                        ->orWhere(function ($q2) {
+                            $q2->where('status', 'rejected')
+                                ->where(function ($q3) {
+                                    $q3->whereNull('rejection_reason')
+                                        ->orWhere('rejection_reason', 'not like', '%Nedostaju potrebna dokumenta%');
+                                });
+                        });
+                });
                 if (!empty($evaluatedApplicationIds)) {
                     $query->whereIn('id', $evaluatedApplicationIds);
                 } else {
