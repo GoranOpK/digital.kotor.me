@@ -227,9 +227,6 @@
         <!-- Rang lista -->
         <div class="info-card">
             <h2>Rang lista prijava</h2>
-            <p style="color: #6b7280; margin-bottom: 20px;">
-                Prikazane su samo prijave koje su ocjenjene i imaju minimum 30 bodova.
-            </p>
 
             @if($applications->count() > 0)
             @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
@@ -442,8 +439,7 @@
                     <p style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Nema prijava koje zadovoljavaju uslove za rang listu.</p>
                     <p style="margin-bottom: 8px; font-size: 14px;">Uslovi za rang listu:</p>
                     <ul style="text-align: left; display: inline-block; margin: 0; padding-left: 20px; font-size: 14px;">
-                        <li>Prijava mora biti ocjenjena (status: evaluated)</li>
-                        <li>Prijava mora imati minimum 30 bodova</li>
+                        <li>Prijava mora biti ocjenjena i imati minimum 30 bodova</li>
                     </ul>
                     @if(isset($excludedApplications) && $excludedApplications->count() > 0)
                         <div style="margin-top: 24px; padding: 16px; background: #f9fafb; border-radius: 8px; text-align: left;">
