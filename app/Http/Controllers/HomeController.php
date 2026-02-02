@@ -338,19 +338,21 @@ class HomeController extends Controller
                 $commission->load('competitions');
                 
                 // Pronađi prijave za konkurse koje je ova komisija dodeljena
+                // Samo prijave koje član komisije JOŠ NIJE ocjenio (sekcija "Prijave za ocjenjivanje")
                 $competitionIds = $commission->competitions->pluck('id');
-                $applications = Application::whereIn('competition_id', $competitionIds)
-                    ->whereIn('status', ['submitted', 'evaluated'])
-                    ->with(['competition', 'user', 'businessPlan', 'evaluationScores', 'evaluationScores.commissionMember'])
-                    ->latest()
-                    ->get();
+                $evaluatedApplicationIds = \App\Models\EvaluationScore::where('commission_member_id', $commissionMember->id)
+                    ->pluck('application_id')
+                    ->toArray();
                 
-                // Dodaj informaciju o tome da li je član komisije ocjenio svaku prijavu
-                foreach ($applications as $application) {
-                    $application->is_evaluated_by_member = $application->evaluationScores
-                        ->where('commission_member_id', $commissionMember->id)
-                        ->isNotEmpty();
+                $applicationsQuery = Application::whereIn('competition_id', $competitionIds)
+                    ->whereIn('status', ['submitted', 'evaluated'])
+                    ->with(['competition', 'user', 'businessPlan', 'evaluationScores', 'evaluationScores.commissionMember']);
+                
+                if (!empty($evaluatedApplicationIds)) {
+                    $applicationsQuery->whereNotIn('id', $evaluatedApplicationIds);
                 }
+                
+                $applications = $applicationsQuery->latest()->get();
                 
                 // Najnovije prijave na konkurse (samo za konkurse dodijeljene ovoj komisiji)
                 // Članovi komisije ne mogu vidjeti draft prijave
