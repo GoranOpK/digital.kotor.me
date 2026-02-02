@@ -325,7 +325,7 @@
                                     id="business_stage_zapocinjanje_fizicko" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? '') === 'započinjanje' ? 'checked' : '' }}
                                 >
                                 <label for="business_stage_zapocinjanje_fizicko">Preduzetnica koja započinje biznis</label>
                             </div>
@@ -335,7 +335,7 @@
                                     id="business_stage_razvoj_fizicko" 
                                     name="business_stage" 
                                     value="razvoj"
-                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'razvoj' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? '') === 'razvoj' ? 'checked' : '' }}
                                 >
                                 <label for="business_stage_razvoj_fizicko">Preduzetnica koja planira razvoj poslovanja</label>
                             </div>
@@ -589,7 +589,7 @@
                                     id="business_stage_zapocinjanje_1a" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_zapocinjanje_1a">Započinjanje poslovne djelatnosti</label>
@@ -600,7 +600,7 @@
                                     id="business_stage_razvoj_1a" 
                                     name="business_stage" 
                                     value="razvoj"
-                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'razvoj' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? 'započinjanje') === 'razvoj' ? 'checked' : '' }}
                                     data-required="true"
                                 >
                                 <label for="business_stage_razvoj_1a">Razvoj postojeće poslovne djelatnosti</label>
@@ -897,7 +897,7 @@
                                     id="business_stage_zapocinjanje_1b" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_zapocinjanje_1b">Započinjanje poslovne djelatnosti</label>
@@ -908,7 +908,7 @@
                                     id="business_stage_razvoj_1b" 
                                     name="business_stage" 
                                     value="razvoj"
-                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'razvoj' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? 'započinjanje') === 'razvoj' ? 'checked' : '' }}
                                     data-required="true"
                                 >
                                 <label for="business_stage_razvoj_1b">Razvoj postojeće poslovne djelatnosti</label>
@@ -1022,7 +1022,7 @@
                                     id="business_stage_zapocinjanje_fizicko_old" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_zapocinjanje_fizicko_old">Započinjanje poslovne djelatnosti</label>
@@ -1033,7 +1033,7 @@
                                     id="business_stage_razvoj_fizicko_old" 
                                     name="business_stage" 
                                     value="razvoj"
-                                    {{ old('business_stage', isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : '') === 'razvoj' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? 'započinjanje') === 'razvoj' ? 'checked' : '' }}
                                     data-required="true"
                                 >
                                 <label for="business_stage_razvoj_fizicko_old">Razvoj postojeće poslovne djelatnosti</label>
@@ -1500,7 +1500,7 @@
                         });
                         
                         // Osiguraj da se business_stage radio button pravilno prikaže
-                        const existingBusinessStage = '{{ isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? addslashes($existingApplication->business_stage) : '' }}';
+                        const existingBusinessStage = '{{ (isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? addslashes($existingApplication->business_stage) : addslashes($preselectedBusinessStage ?? '')) }}';
                         if (existingBusinessStage) {
                             const businessStageRadio = activeSection.querySelector(`input[name="business_stage"][value="${existingBusinessStage}"]`);
                             if (businessStageRadio) {

@@ -343,7 +343,7 @@
         @if(!$isCompetitionAdmin)
         <div class="info-card" style="text-align: center;">
             @if($isOpen && !$userApplication && auth()->check())
-                <a href="{{ route('applications.create', $competition) }}" class="btn-primary">
+                <a href="{{ route('applications.create', $competition) }}" class="btn-primary" id="applyBtn" data-base-url="{{ route('applications.create', $competition) }}">
                     Prijavi se na konkurs
                 </a>
             @elseif(!auth()->check())
@@ -493,14 +493,30 @@ document.addEventListener('DOMContentLoaded', function() {
     // Dodaj event listener-e na radio button-e
     businessStageRadios.forEach(radio => {
         radio.addEventListener('change', updateDocumentsList);
+        radio.addEventListener('change', updateApplyLink);
     });
     
-    // Inicijalno ažuriraj listu - osiguraj da se izvrši nakon što se DOM učita
+    // Ažuriraj link "Prijavi se" sa izabranim business_stage (prosljeđuje se kroz URL parametar)
+    function updateApplyLink() {
+        const applyBtn = document.getElementById('applyBtn');
+        if (!applyBtn) return;
+        const baseUrl = applyBtn.getAttribute('data-base-url');
+        if (!baseUrl) return;
+        const selectedStage = document.querySelector('input[name="business_stage_preview"]:checked')?.value;
+        const url = new URL(baseUrl, window.location.origin);
+        if (selectedStage) {
+            url.searchParams.set('business_stage', selectedStage);
+        }
+        applyBtn.href = url.toString();
+    }
+    
+    // Inicijalno ažuriraj listu i link
     if (documentsList) {
         setTimeout(function() {
             updateDocumentsList();
         }, 100);
     }
+    updateApplyLink();
 });
 </script>
 @endif

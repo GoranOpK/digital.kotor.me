@@ -105,8 +105,8 @@ class ApplicationController extends Controller
                         ->where('status', 'active')
                         ->get()
                         ->groupBy('category');
-                    
-                    return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly'));
+                    $preselectedBusinessStage = null;
+                    return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage'));
                 }
                 
                 // Ako postoji draft prijava, omogući nastavak popunjavanja
@@ -116,8 +116,8 @@ class ApplicationController extends Controller
                         ->where('status', 'active')
                         ->get()
                         ->groupBy('category');
-                    
-                    return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly'))
+                    $preselectedBusinessStage = null;
+                    return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage'))
                         ->with('info', 'Već imate započetu prijavu. Možete je nastaviti popunjavati.');
                 } else {
                     // Ako je prijava već podnesena, preusmeri na detalje
@@ -136,7 +136,13 @@ class ApplicationController extends Controller
                 ->groupBy('category');
         }
 
-        return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly'));
+        // Pročitaj business_stage iz URL parametra (prosljeđeno sa stranice konkursa)
+        $preselectedBusinessStage = $request->query('business_stage');
+        if ($preselectedBusinessStage && !in_array($preselectedBusinessStage, ['započinjanje', 'razvoj'])) {
+            $preselectedBusinessStage = null;
+        }
+
+        return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage'));
     }
 
     /**
