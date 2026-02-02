@@ -224,7 +224,7 @@
             </script>
         @elseif(!$isOpen)
             <div class="alert" style="background: #fee2e2; border-color: #ef4444; color: #991b1b;">
-                <strong>Konkurs je zatvoren</strong> - rok za prijave je istekao.
+                <strong>Konkurs je zatvoren za prijave</strong> - rok je istekao.
             </div>
         @endif
 
