@@ -265,7 +265,7 @@
                             </td>
                             <td>
                                 @if($application->status === 'rejected')
-                                    —
+                                    {{ number_format($application->getDisplayScore(), 2) }} / 50
                                 @elseif($allEvaluated && $application->final_score)
                                     {{ number_format($application->final_score, 2) }} / 50
                                 @else

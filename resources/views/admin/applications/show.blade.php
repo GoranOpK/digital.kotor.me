@@ -219,10 +219,10 @@
                                     {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}
                                 </span>
                             </div>
-                            @if($application->final_score)
+                            @if($application->evaluationScores->count() > 0 || $application->status === 'rejected')
                             <div class="info-item">
                                 <span class="info-label">Konačna ocjena</span>
-                                <span class="info-value">{{ number_format($application->final_score, 2) }} / 50</span>
+                                <span class="info-value">{{ number_format($application->getDisplayScore(), 2) }} / 50</span>
                             </div>
                             @endif
                             @if($application->ranking_position)
@@ -255,10 +255,10 @@
                                     {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'N/A' }}
                                 </span>
                             </div>
-                            @if($application->final_score)
+                            @if($application->evaluationScores->count() > 0 || $application->status === 'rejected')
                             <div class="info-item">
                                 <span class="info-label">Konačna ocjena</span>
-                                <span class="info-value">{{ number_format($application->final_score, 2) }} / 50</span>
+                                <span class="info-value">{{ number_format($application->getDisplayScore(), 2) }} / 50</span>
                             </div>
                             @endif
                             @if($application->ranking_position)
@@ -421,9 +421,12 @@
                 </thead>
                 <tbody>
                     @foreach($application->evaluationScores as $score)
+                        @php
+                            $memberScore = ($score->documents_complete === false) ? 0 : ($score->final_score ?? $score->calculateTotalScore());
+                        @endphp
                         <tr style="border-bottom: 1px solid #e5e7eb;">
                             <td style="padding: 12px;">{{ $score->commissionMember->name ?? 'N/A' }}</td>
-                            <td style="padding: 12px; text-align: center;">{{ $score->final_score ?? $score->calculateTotalScore() }} / 50</td>
+                            <td style="padding: 12px; text-align: center;">{{ number_format($memberScore, 2) }} / 50</td>
                             <td style="padding: 12px;">{{ $score->notes ? \Illuminate\Support\Str::limit($score->notes, 100) : '-' }}</td>
                         </tr>
                     @endforeach

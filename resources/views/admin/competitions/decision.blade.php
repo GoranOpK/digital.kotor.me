@@ -141,7 +141,7 @@
                                     <div class="winner-details">
                                         Podnosilac: {{ $winner->user->name ?? 'N/A' }} | 
                                         Tip: {{ $winner->applicant_type === 'preduzetnica' ? 'Preduzetnica' : 'DOO' }} | 
-                                        Ocjena: {{ number_format($winner->final_score ?? 0, 2) }} / 50
+                                        Ocjena: {{ number_format($winner->getDisplayScore(), 2) }} / 50
                                     </div>
                                 </div>
                                 <div class="winner-amount">

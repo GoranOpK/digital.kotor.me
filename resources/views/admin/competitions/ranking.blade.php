@@ -262,7 +262,7 @@
                                     </td>
                                     <td style="text-align: center;">
                                         @php
-                                            $score = $application->final_score ?? 0;
+                                            $score = $application->getDisplayScore();
                                             $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
                                         @endphp
                                         <span class="score-badge {{ $scoreClass }}">
@@ -329,7 +329,7 @@
                                         </td>
                                         <td style="text-align: center;">
                                             @php
-                                                $score = $application->final_score ?? 0;
+                                                $score = $application->getDisplayScore();
                                                 $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
                                             @endphp
                                             <span class="score-badge {{ $scoreClass }}">
@@ -469,7 +469,7 @@
                                                 </span>
                                             </td>
                                             <td style="padding: 8px; text-align: center;">
-                                                {{ number_format($app->final_score ?? 0, 2) }} / 50
+                                                {{ number_format($app->getDisplayScore(), 2) }} / 50
                                             </td>
                                             <td style="padding: 8px; color: #991b1b; font-size: 12px;">
                                                 @if(!$app->has_evaluations)
@@ -510,7 +510,7 @@
                                         <p style="font-size: 14px; color: #6b7280; margin: 0;">
                                             Podnosilac: {{ $application->user->name ?? 'N/A' }} | 
                                             Pozicija: <strong>#{{ $application->ranking_position ?? $loop->iteration }}</strong> | 
-                                            Ocjena: <strong>{{ number_format($application->final_score ?? 0, 2) }} / 50</strong>
+                                            Ocjena: <strong>{{ number_format($application->getDisplayScore(), 2) }} / 50</strong>
                                         </p>
                                     </div>
                                     @if($application->commission_decision)

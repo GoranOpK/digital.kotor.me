@@ -734,7 +734,7 @@ class AdminController extends Controller
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
         $isKomisija = $user->role && $user->role->name === 'komisija';
         
-        $query = Application::with(['user', 'competition']);
+        $query = Application::with(['user', 'competition', 'evaluationScores']);
 
         // Filtriranje po statusu
         if ($request->has('status') && $request->status !== '') {
