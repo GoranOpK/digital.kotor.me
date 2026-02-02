@@ -573,10 +573,24 @@
                                         <span class="info-value">{{ $competition->deadline->format('d.m.Y') }}</span>
                                     </div>
                                     @endif
+                                    @if($competition->isApplicationDeadlinePassed() && $competition->getEvaluationDeadlineDate())
+                                    <div class="info-item">
+                                        <span class="info-label">Rok za odluku (30 dana)</span>
+                                        <span class="info-value" style="color: {{ $competition->isEvaluationDeadlinePassed() ? '#991b1b' : '#065f46' }};">
+                                            {{ $competition->getEvaluationDeadlineDate()->format('d.m.Y') }}
+                                            @if(!$competition->isEvaluationDeadlinePassed())
+                                                ({{ $competition->getDaysUntilEvaluationDeadline() }} {{ $competition->getDaysUntilEvaluationDeadline() == 1 ? 'dan' : 'dana' }})
+                                            @else
+                                                (isteklo)
+                                            @endif
+                                        </span>
+                                    </div>
+                                    @endif
                                     <div class="info-item">
                                         <span class="info-label">Status</span>
-                                        <span class="info-value" style="color: {{ $competition->status === 'published' ? '#10b981' : ($competition->status === 'closed' ? '#ef4444' : '#6b7280') }};">
-                                            @if($competition->status === 'published') Objavljen
+                                        <span class="info-value" style="color: {{ $competition->status === 'published' && !$competition->isApplicationDeadlinePassed() ? '#10b981' : ($competition->status === 'published' && $competition->isApplicationDeadlinePassed() ? '#92400e' : ($competition->status === 'closed' ? '#ef4444' : '#6b7280')) }};">
+                                            @if($competition->status === 'published' && $competition->isApplicationDeadlinePassed()) Zatvoren za prijave
+                                            @elseif($competition->status === 'published') Objavljen
                                             @elseif($competition->status === 'closed') Zatvoren
                                             @elseif($competition->status === 'draft') Nacrt
                                             @else Završen
@@ -787,7 +801,7 @@
                     $isApplicationDeadlinePassed = $comp->isApplicationDeadlinePassed();
                     $isEvaluationDeadlinePassed = $comp->isEvaluationDeadlinePassed();
                 @endphp
-                @if($comp->status === 'published' && $daysUntilApplicationDeadline !== null)
+                @if($comp->status === 'published' && $daysUntilApplicationDeadline !== null && !$isApplicationDeadlinePassed)
                     <div class="info-card" style="margin-top: 24px; border-left: 4px solid {{ $daysUntilApplicationDeadline <= 3 ? '#ef4444' : ($daysUntilApplicationDeadline <= 7 ? '#f59e0b' : '#10b981') }};">
                         <div class="info-card-header">
                             <h2 style="display: flex; align-items: center; gap: 8px;">
@@ -796,21 +810,15 @@
                             </h2>
                         </div>
                         <div style="padding: 20px;">
-                            @if($isApplicationDeadlinePassed)
-                                <p style="color: #991b1b; font-weight: 600; font-size: 16px; margin: 8px 0;">
-                                    ⚠️ Rok za prijave je istekao (0 dana)
-                                </p>
-                            @else
-                                <p style="color: {{ $daysUntilApplicationDeadline <= 3 ? '#991b1b' : ($daysUntilApplicationDeadline <= 7 ? '#92400e' : '#065f46') }}; font-weight: 600; font-size: 18px; margin: 8px 0;">
-                                    Preostalo vremena: <strong>{{ $daysUntilApplicationDeadline }} {{ $daysUntilApplicationDeadline == 1 ? 'dan' : ($daysUntilApplicationDeadline < 5 ? 'dana' : 'dana') }}</strong>
-                                </p>
-                                <p style="color: #6b7280; font-size: 14px; margin: 4px 0;">
-                                    Rok za prijave: {{ $comp->deadline ? $comp->deadline->format('d.m.Y H:i') : 'N/A' }}
-                                </p>
-                            @endif
+                            <p style="color: {{ $daysUntilApplicationDeadline <= 3 ? '#991b1b' : ($daysUntilApplicationDeadline <= 7 ? '#92400e' : '#065f46') }}; font-weight: 600; font-size: 18px; margin: 8px 0;">
+                                Preostalo vremena: <strong>{{ $daysUntilApplicationDeadline }} {{ $daysUntilApplicationDeadline == 1 ? 'dan' : ($daysUntilApplicationDeadline < 5 ? 'dana' : 'dana') }}</strong>
+                            </p>
+                            <p style="color: #6b7280; font-size: 14px; margin: 4px 0;">
+                                Rok za prijave: {{ $comp->deadline ? $comp->deadline->format('d.m.Y H:i') : 'N/A' }}
+                            </p>
                         </div>
                     </div>
-                @elseif($comp->status === 'closed' && $daysUntilEvaluationDeadline !== null)
+                @elseif((($comp->status === 'published' && $isApplicationDeadlinePassed) || $comp->status === 'closed') && $daysUntilEvaluationDeadline !== null)
                     <div class="info-card" style="margin-top: 24px; border-left: 4px solid {{ $daysUntilEvaluationDeadline <= 3 ? '#ef4444' : ($daysUntilEvaluationDeadline <= 7 ? '#f59e0b' : '#10b981') }};">
                         <div class="info-card-header">
                             <h2 style="display: flex; align-items: center; gap: 8px;">
@@ -828,7 +836,7 @@
                                     Preostalo vremena: <strong>{{ $daysUntilEvaluationDeadline }} {{ $daysUntilEvaluationDeadline == 1 ? 'dan' : ($daysUntilEvaluationDeadline < 5 ? 'dana' : 'dana') }}</strong>
                                 </p>
                                 <p style="color: #6b7280; font-size: 14px; margin: 4px 0;">
-                                    Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava. Rok: {{ $comp->closed_at ? $comp->closed_at->copy()->addDays(30)->format('d.m.Y H:i') : 'N/A' }}
+                                    Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava. Rok: {{ $comp->getEvaluationDeadlineDate() ? $comp->getEvaluationDeadlineDate()->format('d.m.Y H:i') : 'N/A' }}
                                 </p>
                             @endif
                         </div>

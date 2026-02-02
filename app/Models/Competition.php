@@ -114,16 +114,33 @@ class Competition extends Model
     }
 
     /**
-     * Proverava da li je prošlo 30 dana od zatvaranja konkursa
+     * Vraća datum zatvaranja prijava (baza za 30-dnevni rok za odluku).
+     * Ako je closed_at postavljen (ručno zatvaranje), koristi ga.
+     * Inače, ako je rok za prijave istekao, koristi datum roka za prijave.
+     */
+    public function getApplicationsClosedAt(): ?\Carbon\Carbon
+    {
+        if ($this->closed_at) {
+            return $this->closed_at;
+        }
+        if ($this->isApplicationDeadlinePassed() && $this->deadline) {
+            return $this->deadline;
+        }
+        return null;
+    }
+
+    /**
+     * Proverava da li je prošlo 30 dana od zatvaranja prijava
      * Komisija mora donijeti odluku u roku od 30 dana od dana zatvaranja prijava
      */
     public function isEvaluationDeadlinePassed(): bool
     {
-        if (!$this->closed_at) {
-            return false; // Ako konkurs još nije zatvoren, rok nije prošao
+        $closedAt = $this->getApplicationsClosedAt();
+        if (!$closedAt) {
+            return false;
         }
 
-        $deadline = $this->closed_at->copy()->addDays(30);
+        $deadline = $closedAt->copy()->addDays(30);
         return now()->isAfter($deadline);
     }
 
@@ -132,14 +149,27 @@ class Competition extends Model
      */
     public function getDaysUntilEvaluationDeadline(): ?int
     {
-        if (!$this->closed_at) {
+        $closedAt = $this->getApplicationsClosedAt();
+        if (!$closedAt) {
             return null;
         }
 
-        $deadline = $this->closed_at->copy()->addDays(30);
+        $deadline = $closedAt->copy()->addDays(30);
         $daysRemaining = now()->diffInDays($deadline, false);
         
-        return $daysRemaining >= 0 ? $daysRemaining : 0;
+        return $daysRemaining >= 0 ? (int) $daysRemaining : 0;
+    }
+
+    /**
+     * Vraća datum isteka roka za donošenje odluke (30 dana od zatvaranja prijava)
+     */
+    public function getEvaluationDeadlineDate(): ?\Carbon\Carbon
+    {
+        $closedAt = $this->getApplicationsClosedAt();
+        if (!$closedAt) {
+            return null;
+        }
+        return $closedAt->copy()->addDays(30);
     }
 
     /**

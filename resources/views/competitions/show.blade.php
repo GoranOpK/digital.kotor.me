@@ -245,8 +245,13 @@
                     <div class="info-item">
                         <span class="info-label">Status konkursa</span>
                         <span class="info-value">
-                            <span class="status-badge {{ $isOpen ? 'status-open' : 'status-closed' }}">
-                                {{ $isOpen ? 'Otvoren' : 'Zatvoren' }}
+                            @php
+                                $isApplicationDeadlinePassed = $competition->isApplicationDeadlinePassed();
+                                $statusLabel = $isOpen ? 'Otvoren' : ($isApplicationDeadlinePassed ? 'Zatvoren za prijave' : 'Zatvoren');
+                                $statusClass = $isOpen ? 'status-open' : 'status-closed';
+                            @endphp
+                            <span class="status-badge {{ $statusClass }}">
+                                {{ $statusLabel }}
                             </span>
                         </span>
                     </div>

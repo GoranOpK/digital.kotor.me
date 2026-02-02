@@ -69,6 +69,7 @@
     }
     .status-draft { background: #fef3c7; color: #92400e; }
     .status-published { background: #d1fae5; color: #065f46; }
+    .status-evaluating { background: #fef3c7; color: #92400e; }
     .status-closed { background: #fee2e2; color: #991b1b; }
     .status-completed { background: #dbeafe; color: #1e40af; }
     .btn-sm {
@@ -152,6 +153,21 @@
                                         <div class="countdown-timer" data-deadline="{{ $competition->start_date->startOfDay()->format('Y-m-d H:i:s') }}" style="color: #3b82f6;">
                                             Učitavanje...
                                         </div>
+                                    @elseif($isApplicationDeadlinePassed && $daysUntilEvaluationDeadline !== null)
+                                        {{-- Prijave zatvorene, prikaži rok za donošenje odluke (30 dana) --}}
+                                        <div style="display: flex; flex-direction: column; gap: 4px;">
+                                            <span style="font-size: 12px; color: #6b7280; font-weight: 600;">Rok za odluku:</span>
+                                            @if($isEvaluationDeadlinePassed)
+                                                <span style="color: #991b1b; font-weight: 600; font-size: 14px;">❌ Isteklo (0 dana)</span>
+                                            @else
+                                                <span style="color: {{ $daysUntilEvaluationDeadline <= 3 ? '#991b1b' : ($daysUntilEvaluationDeadline <= 7 ? '#92400e' : '#065f46') }}; font-weight: 600; font-size: 14px;">
+                                                    ⏰ {{ $daysUntilEvaluationDeadline }} {{ $daysUntilEvaluationDeadline == 1 ? 'dan' : ($daysUntilEvaluationDeadline < 5 ? 'dana' : 'dana') }}
+                                                </span>
+                                            @endif
+                                            <div style="font-size: 11px; color: #6b7280;">
+                                                Do: {{ $competition->getEvaluationDeadlineDate() ? $competition->getEvaluationDeadlineDate()->format('d.m.Y H:i') : 'N/A' }}
+                                            </div>
+                                        </div>
                                     @else
                                         <div style="display: flex; flex-direction: column; gap: 4px;">
                                             <span style="font-size: 12px; color: #6b7280; font-weight: 600;">Rok za prijave:</span>
@@ -187,8 +203,9 @@
                             </td>
                             <td>{{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</td>
                             <td>
-                                <span class="status-badge status-{{ $competition->status }}">
+                                <span class="status-badge status-{{ $competition->status === 'published' && $isApplicationDeadlinePassed ? 'evaluating' : $competition->status }}">
                                     @if($competition->status === 'draft') Nacrt
+                                    @elseif($competition->status === 'published' && $isApplicationDeadlinePassed) Zatvoren za prijave
                                     @elseif($competition->status === 'published') Objavljen
                                     @elseif($competition->status === 'closed') Zatvoren
                                     @elseif($competition->status === 'completed') Završen

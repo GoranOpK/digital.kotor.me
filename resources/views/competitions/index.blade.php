@@ -136,6 +136,8 @@
                                         Otvoren
                                     @elseif($competition->is_upcoming)
                                         Uskoro počinje
+                                    @elseif($competition->isApplicationDeadlinePassed())
+                                        Zatvoren za prijave
                                     @else
                                         Zatvoren
                                     @endif
@@ -162,7 +164,7 @@
                             </div>
                         @elseif(!$competition->is_open)
                             <div style="background: #fee2e2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 8px; margin-top: 16px;">
-                                <strong style="color: #991b1b;">Konkurs je zatvoren</strong>
+                                <strong style="color: #991b1b;">Konkurs je zatvoren za prijave</strong>
                             </div>
                         @endif
                     </a>
