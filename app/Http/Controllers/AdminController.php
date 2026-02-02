@@ -1228,14 +1228,16 @@ class AdminController extends Controller
             abort(403, 'Administrator konkursa nema pristup rang listi.');
         }
         
-        // Ako nije superadmin ili predsjednik komisije, proveri da li je član komisije i da li je konkurs zatvoren
+        // Ako nije superadmin ili predsjednik komisije, proveri da li je član komisije
         if (!$isSuperAdmin && !$isChairman) {
             if (!$isCommissionMember) {
                 abort(403, 'Nemate pristup ovom konkursu.');
             }
-            // Članovi komisije mogu vidjeti rang listu samo kada je konkurs zatvoren
-            if ($competition->status !== 'closed') {
-                abort(403, 'Rang lista je dostupna članovima komisije samo kada je konkurs zatvoren.');
+            // Članovi komisije mogu vidjeti rang listu kada je konkurs zatvoren ILI kada je rok za prijave istekao
+            $canAccessRanking = $competition->status === 'closed'
+                || ($competition->status === 'published' && $competition->isApplicationDeadlinePassed());
+            if (!$canAccessRanking) {
+                abort(403, 'Rang lista je dostupna članovima komisije kada je konkurs zatvoren ili kada je rok za prijave istekao.');
             }
         }
         

@@ -105,11 +105,11 @@ class EvaluationController extends Controller
             ->get();
 
         // Provjeri da li su sve prijave za određeni konkurs ocijenjene (za prikaz linka na rang listu)
+        // Link se prikazuje SVIM članovima komisije kada su sve prijave ocijenjene
         $competitionsWithAllEvaluated = collect();
         $isChairman = $commissionMember->position === 'predsjednik';
         
-        if ($isChairman) {
-            foreach ($competitions as $competition) {
+        foreach ($competitions as $competition) {
                 // Uzmi sve prijave za ovaj konkurs koje su submitted ili evaluated
                 $competitionApplications = Application::where('competition_id', $competition->id)
                     ->whereIn('status', ['submitted', 'evaluated'])
@@ -140,7 +140,6 @@ class EvaluationController extends Controller
                 if ($allEvaluated) {
                     $competitionsWithAllEvaluated->push($competition);
                 }
-            }
         }
 
         return view('evaluation.index', compact('applications', 'competitions', 'commissionMember', 'competitionsWithAllEvaluated', 'isChairman'));
