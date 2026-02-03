@@ -1402,7 +1402,7 @@ class AdminController extends Controller
             ->update(['status' => 'rejected']);
 
         return redirect()->route('admin.competitions.ranking', $competition)
-            ->with('success', 'Dobitnici su uspješno odabrani.');
+            ->with('success', 'Dobitnici sredstava su uspješno odabrani.');
     }
 
     /**
@@ -1420,7 +1420,7 @@ class AdminController extends Controller
             abort(403, 'Nemate dozvolu za generisanje odluke. Samo predsjednik komisije može generisati odluku.');
         }
         
-        // Dobitnici su oni koji imaju approved_amount postavljen (veći od 0)
+        // Dobitnici sredstava su oni koji imaju approved_amount postavljen (veći od 0)
         $winners = Application::where('competition_id', $competition->id)
             ->whereNotNull('approved_amount')
             ->where('approved_amount', '>', 0)

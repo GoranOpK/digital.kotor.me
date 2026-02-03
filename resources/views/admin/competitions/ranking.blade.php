@@ -280,7 +280,7 @@
                                     </td>
                                     <td class="checkbox-cell">
                                         @if($application->status === 'approved')
-                                            <span style="color: #10b981; font-weight: 600;">✓ Dobitnik</span>
+                                            <span style="color: #10b981; font-weight: 600;">✓ Dobitnik sredstava</span>
                                         @else
                                             <span style="color: #6b7280;">-</span>
                                         @endif
@@ -309,7 +309,7 @@
                                     <th style="text-align: center;">Ocjena</th>
                                     <th style="text-align: right;">Traženi iznos</th>
                                     <th style="text-align: right;">Odobreni iznos</th>
-                                    <th style="text-align: center;">Dobitnik</th>
+                                    <th style="text-align: center;">Dobitnik sredstava</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -357,7 +357,7 @@
                                         </td>
                                         <td class="checkbox-cell">
                                             @if($application->status === 'approved')
-                                                <span style="color: #10b981; font-weight: 600;">✓ Dobitnik</span>
+                                                <span style="color: #10b981; font-weight: 600;">✓ Dobitnik sredstava</span>
                                             @else
                                                 <input 
                                                     type="checkbox" 
@@ -372,6 +372,11 @@
                             </tbody>
                         </table>
 
+                        <div style="margin-top: 24px; text-align: center;">
+                            <button type="submit" class="btn btn-primary" style="background: var(--primary); color: #fff; border: none; cursor: pointer; padding: 12px 24px; border-radius: 8px;" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed; padding: 12px 24px; border-radius: 8px;" @endif>
+                                Sačuvaj odabir dobitnika
+                            </button>
+                        </div>
                     </form>
                 @endif
             @else
@@ -424,7 +429,7 @@
                                 </td>
                                 <td class="checkbox-cell">
                                     @if($application->status === 'approved')
-                                        <span style="color: #10b981; font-weight: 600;">✓ Dobitnik</span>
+                                        <span style="color: #10b981; font-weight: 600;">✓ Dobitnik sredstava</span>
                                     @else
                                         <span style="color: #6b7280;">-</span>
                                     @endif

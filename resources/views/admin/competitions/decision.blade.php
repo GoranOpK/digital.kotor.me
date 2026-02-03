@@ -129,7 +129,7 @@
             </div>
 
             <div class="decision-section">
-                <h3>Dobitnici</h3>
+                <h3>Dobitnici sredstava</h3>
                 @if($winners->count() > 0)
                     <ul class="winners-list">
                         @foreach($winners as $winner)
@@ -163,7 +163,7 @@
             <div class="decision-section">
                 <h3>Napomena</h3>
                 <p style="color: #6b7280; line-height: 1.8;">
-                    Dobitnici su odabrani na osnovu ocjena komisije i dostupnog budžeta. 
+                    Dobitnici sredstava su odabrani na osnovu ocjena komisije i dostupnog budžeta. 
                     Svaki dobitnik će biti obaviješten o odluci i pozvan na potpisivanje ugovora.
                 </p>
             </div>

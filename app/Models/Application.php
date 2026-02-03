@@ -157,20 +157,6 @@ class Application extends Model
     }
 
     /**
-     * Vraća ocjenu za prikaz u sekciji Ocjena.
-     * - Odbijena zbog nedostatka dokumenata: 0
-     * - Odbijena zbog nedostatka bodova (< 30): stvarna ocjena
-     * - Ostalo: final_score ili izračunata ocjena
-     */
-    public function getDisplayScore(): float
-    {
-        if ($this->status === 'rejected' && $this->rejection_reason && str_contains($this->rejection_reason, 'Nedostaju potrebna dokumenta')) {
-            return 0;
-        }
-        return (float) ($this->final_score ?? $this->calculateFinalScore());
-    }
-
-    /**
      * Proverava da li su svi članovi komisije ocjenili prijavu
      */
     public function isFullyEvaluated(): bool
