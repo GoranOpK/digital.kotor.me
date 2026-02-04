@@ -1046,6 +1046,26 @@
                     @endif
 
                     <div class="form-group">
+                        <div class="checkbox-group">
+                            <input 
+                                type="checkbox" 
+                                id="accuracy_declaration_fizicko" 
+                                name="accuracy_declaration" 
+                                value="1"
+                                {{ old('accuracy_declaration', isset($existingApplication) && $existingApplication ? $existingApplication->accuracy_declaration : false) ? 'checked' : '' }}
+                                required
+                            >
+                            <label for="accuracy_declaration_fizicko">
+                                Kao podnosilac prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
+                                <span class="required">*</span>
+                            </label>
+                        </div>
+                        @error('accuracy_declaration')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
                         <label class="form-label">
                             Oblast u kojoj planirate realizaciju biznis plana: <span class="required">*</span>
                         </label>
@@ -1282,7 +1302,7 @@
         const obrazac1a = document.getElementById('obrazac1a');
         const obrazac1b = document.getElementById('obrazac1b');
         const fizickoLiceFields = document.getElementById('fizickoLiceFields');
-        const fizickoLiceRequiredFields = fizickoLiceFields ? fizickoLiceFields.querySelectorAll('input[required], input[name="physical_person_name"], input[name="physical_person_jmbg"], input[name="physical_person_phone"], input[name="physical_person_email"]') : [];
+        const fizickoLiceRequiredFields = fizickoLiceFields ? fizickoLiceFields.querySelectorAll('input[required], input[name="physical_person_name"], input[name="physical_person_jmbg"], input[name="physical_person_phone"], input[name="physical_person_email"], input[name="accuracy_declaration"]') : [];
         const fizickoLiceNotice = document.getElementById('fizickoLiceNotice');
         const additionalDataSection = document.getElementById('additional-data-section');
 
@@ -1475,6 +1495,11 @@
                 } else {
                     additionalDataSection.style.display = '';
                 }
+            }
+
+            // Ažuriraj dugme nakon promjene tipa (npr. za Fizičko lice - prikaži "Sačuvaj prijavu" ako je forma kompletna)
+            if (typeof updateSubmitButton === 'function') {
+                updateSubmitButton();
             }
         }
 
@@ -1727,7 +1752,7 @@
                 // Ako je obrazac kompletan, sakrij "Sačuvaj kao nacrt" i prikaži "Sačuvaj prijavu"
                 saveAsDraftBtn.style.display = 'none';
                 submitBtn.style.display = 'inline-block';
-                submitBtn.textContent = 'Sačuvaj prijavu';
+                submitBtn.textContent = 'Sačuvaj i nastavi na biznis plan';
                 // Ukloni name="save_as_draft" sa submitBtn da se ne šalje kao draft
                 submitBtn.removeAttribute('name');
                 submitBtn.removeAttribute('value');
