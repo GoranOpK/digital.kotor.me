@@ -262,7 +262,7 @@
                             type="text" 
                             name="business_idea_name" 
                             class="form-control @error('business_idea_name') error @enderror"
-                            value="{{ old('business_idea_name', $businessPlan->business_idea_name ?? '') }}"
+                            value="{{ old('business_idea_name', $businessPlan->business_idea_name ?? $application->business_plan_name ?? '') }}"
                             required
                             maxlength="255"
                         >
