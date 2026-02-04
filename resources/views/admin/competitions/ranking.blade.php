@@ -193,10 +193,17 @@
         .admin-page table thead {
             display: table-header-group;
         }
-        /* Zaključak komisije - cijela sekcija na jednoj stranici (ne dijeliti), page break nakon nje */
-        .commission-decision-section {
-            page-break-inside: avoid;
+        /* Stranica 1: Budget + Rang lista + Zaključak, zatim page break, zatim Potpis */
+        .ranking-main-content {
             page-break-after: always;
+        }
+        /* Svaki blok Zaključka za kandidata ostaje cijeli (ne dijeliti) */
+        .commission-decision-block {
+            page-break-inside: avoid;
+        }
+        /* Potpis uvijek na novoj stranici */
+        #signature-block {
+            page-break-before: always;
         }
         @page {
             size: A4;
@@ -238,6 +245,7 @@
             </div>
         @endif
 
+        <div class="ranking-main-content">
         <!-- Informacije o budžetu -->
         <div class="info-card">
             <h2>Informacije o budžetu</h2>
@@ -535,7 +543,7 @@
                         </p>
 
                         @foreach($applications as $application)
-                            <div style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
+                            <div class="commission-decision-block" style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
                                     <div>
                                         <h3 style="font-size: 18px; font-weight: 700; color: var(--primary); margin: 0 0 4px 0;">
@@ -676,6 +684,7 @@
                 @endif
             @endif
         @endif
+        </div>
 
         <!-- Potpis komisije -->
         <div class="info-card" id="signature-block">
