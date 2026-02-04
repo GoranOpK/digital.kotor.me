@@ -102,6 +102,10 @@
         .no-print {
             display: none;
         }
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
     }
 </style>
 

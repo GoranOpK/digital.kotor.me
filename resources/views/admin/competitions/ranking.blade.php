@@ -185,6 +185,10 @@
         .admin-page select { display: none !important; }
         .admin-page { background: #fff; padding: 0; }
         .info-card { box-shadow: none; border: 1px solid #e5e7eb; }
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
     }
 </style>
 
