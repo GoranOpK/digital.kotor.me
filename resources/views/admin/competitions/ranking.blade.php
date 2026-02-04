@@ -193,11 +193,19 @@
         .admin-page table thead {
             display: table-header-group;
         }
-        /* Zaključak komisije - cijela sekcija na jednoj stranici, page break nakon nje */
+        /* Za štampu: Zaključak komisije na prvoj stranici, zatim page break */
+        .admin-page .container {
+            display: flex;
+            flex-direction: column;
+        }
         .commission-decision-section {
+            order: 1;
             page-break-inside: avoid;
             page-break-after: always;
         }
+        .ranking-budget-card { order: 2; }
+        .ranking-list-card { order: 3; }
+        #signature-block { order: 4; }
         @page {
             size: A4;
             margin: 20mm;
@@ -239,7 +247,7 @@
         @endif
 
         <!-- Informacije o budžetu -->
-        <div class="info-card">
+        <div class="info-card ranking-budget-card">
             <h2>Informacije o budžetu</h2>
             <div class="budget-info">
                 <div class="budget-item">
@@ -258,7 +266,7 @@
         </div>
 
         <!-- Rang lista -->
-        <div class="info-card">
+        <div class="info-card ranking-list-card">
             <h2>Rang lista prijava</h2>
 
             @if($applications->count() > 0)
