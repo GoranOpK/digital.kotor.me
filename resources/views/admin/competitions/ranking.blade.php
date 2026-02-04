@@ -193,6 +193,11 @@
         .admin-page table thead {
             display: table-header-group;
         }
+        /* Zaključak komisije - cijela sekcija na jednoj stranici, page break nakon nje */
+        .commission-decision-section {
+            page-break-inside: avoid;
+            page-break-after: always;
+        }
         @page {
             size: A4;
             margin: 20mm;
@@ -523,7 +528,7 @@
         @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
             @if(!in_array($competition->status, ['closed', 'completed']))
                 @if($applications->count() > 0)
-                    <div class="info-card">
+                    <div class="info-card commission-decision-section">
                         <h2>Zaključak komisije i obrazloženje</h2>
                         <p style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">
                             Za svaku prijavu u rang listi unesite zaključak komisije i obrazloženje.
