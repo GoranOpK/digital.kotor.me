@@ -253,6 +253,10 @@
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
+        /* Sekcija "Ostale napomene" uvijek počinje na novoj stranici (nakon tabele) - dodaj gornju marginu */
+        .form-section-notes {
+            padding-top: 20mm !important;
+        }
         .form-section textarea,
         .form-section .readonly-value {
             text-align: left !important;
@@ -615,7 +619,7 @@
                 </div>
 
                 <!-- 4. Ostale napomene -->
-                <div class="form-section">
+                <div class="form-section form-section-notes">
                     <label class="form-label form-label-large">4. Ostale napomene:</label>
                     
                     @php
