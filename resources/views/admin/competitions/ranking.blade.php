@@ -171,13 +171,19 @@
         background: #fee2e2;
         color: #991b1b;
     }
+    @media print {
+        .no-print { display: none !important; }
+        .admin-page { background: #fff; padding: 0; }
+        .info-card { box-shadow: none; border: 1px solid #e5e7eb; }
+    }
 </style>
 
 <div class="admin-page">
     <div class="container mx-auto px-4">
         <div class="page-header">
             <h1>Rang lista - {{ $competition->title }}</h1>
-            <div>
+            <div class="no-print">
+                <button type="button" onclick="window.print();" class="btn" style="background: #6b7280; color: #fff; border: none; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 600;">Štampaj</button>
                 <a href="{{ route('admin.competitions.show', $competition) }}" class="btn btn-primary">Nazad</a>
             </div>
         </div>
@@ -643,6 +649,19 @@
                 @endif
             @endif
         @endif
+
+        <!-- Potpis komisije -->
+        <div class="info-card" id="signature-block">
+            <h2>Potpis komisije</h2>
+            <div style="margin-top: 48px; font-size: 15px; line-height: 2.2;">
+                <p style="margin-bottom: 32px;">Kotor, _______________ god.</p>
+                <p>Predsjednik Komisije: _______________________</p>
+                <p>Član 1: _______________________</p>
+                <p>Član 2: _______________________</p>
+                <p>Član 3: _______________________</p>
+                <p>Član 4: _______________________</p>
+            </div>
+        </div>
     </div>
 </div>
 

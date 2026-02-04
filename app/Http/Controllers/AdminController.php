@@ -1325,7 +1325,15 @@ class AdminController extends Controller
         $usedBudget = $applications->sum('approved_amount');
         $remainingBudget = $totalBudget - $usedBudget;
 
-        return view('admin.competitions.ranking', compact('competition', 'applications', 'excludedApplications', 'totalBudget', 'usedBudget', 'remainingBudget', 'isSuperAdmin', 'isChairman', 'isCommissionMember'));
+        // Članovi komisije za potpis (predsjednik prvi, zatim članovi)
+        $commissionMembers = $commission ? $commission->members()
+            ->where('status', 'active')
+            ->orderByRaw("CASE WHEN position = 'predsjednik' THEN 0 ELSE 1 END")
+            ->orderBy('id')
+            ->with('user')
+            ->get() : collect();
+
+        return view('admin.competitions.ranking', compact('competition', 'applications', 'excludedApplications', 'totalBudget', 'usedBudget', 'remainingBudget', 'isSuperAdmin', 'isChairman', 'isCommissionMember', 'commissionMembers'));
     }
 
     /**
