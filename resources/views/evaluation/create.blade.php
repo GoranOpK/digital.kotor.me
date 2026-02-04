@@ -496,21 +496,15 @@
                                             @endphp
                                             @if($isCurrentMember)
                                                 {{-- Trenutni član vidi svoje input polje --}}
-                                                @if(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && isset($isChairman) && $isChairman)
-                                                    {{-- Predsjednik kada je već ocjenio - kriterijumi su read-only (može mijenjati samo sekciju 2) --}}
+                                                {{-- Ocjene su vidljive SAMO kada svi članovi komisije završe ocjenjivanje --}}
+                                                @if(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && isset($allMembersEvaluated) && $allMembersEvaluated)
+                                                    {{-- Kada su svi članovi ocjenili, svi vide ocjene u read-only modu --}}
                                                     <span class="score-display">
                                                         {{ $currentValue ? $currentValue : '—' }}
                                                     </span>
-                                                @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && isset($allMembersEvaluated) && $allMembersEvaluated)
-                                                    {{-- Kada su svi članovi ocjenili, svi članovi vide svoje ocjene u read-only modu --}}
-                                                    <span class="score-display">
-                                                        {{ $currentValue ? $currentValue : '—' }}
-                                                    </span>
-                                                @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation && !(isset($isChairman) && $isChairman))
-                                                    {{-- Ako je već ocjenio i nije predsjednik i nisu svi ocjenili, read-only --}}
-                                                    <span class="score-display">
-                                                        {{ $currentValue ? $currentValue : '—' }}
-                                                    </span>
+                                                @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation)
+                                                    {{-- Član je ocjenio ali nisu svi - sakrij ocjenu --}}
+                                                    <span class="score-display" style="color: #d1d5db;">—</span>
                                                 @else
                                                     {{-- Može unijeti ili mijenjati --}}
                                                     {{-- Ako je predsjednik i documents_complete je "Ne", ne treba required --}}
@@ -575,8 +569,12 @@
                                                 $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
                                             @endphp
                                         @if($isCurrentMember)
-                                            {{-- Trenutni član vidi svoju konačnu ocjenu --}}
-                                            <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
+                                            {{-- Trenutni član vidi svoju konačnu ocjenu SAMO kada svi članovi završe ocjenjivanje --}}
+                                            @if($allMembersEvaluatedFlag)
+                                                <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
+                                            @else
+                                                <strong style="color: #d1d5db;">—</strong>
+                                            @endif
                                         @else
                                             {{-- Ostali članovi - prikaži konačne ocjene tek kada svi članovi završe ocjenjivanje --}}
                                             @if($allMembersEvaluatedFlag)
