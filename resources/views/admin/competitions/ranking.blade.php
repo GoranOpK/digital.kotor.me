@@ -189,13 +189,53 @@
         .admin-page table thead {
             display: table-header-group;
         }
+        /* Kompaktni stilovi za prvu stranicu - sve mora stati: Budžet + Rang lista + Zaključak */
+        .ranking-main-content .info-card {
+            padding: 12px !important;
+            margin-bottom: 12px !important;
+        }
+        .ranking-main-content .info-card h2 {
+            font-size: 16px !important;
+            margin-bottom: 10px !important;
+            padding-bottom: 8px !important;
+        }
+        .ranking-main-content .budget-info {
+            gap: 8px !important;
+            margin-bottom: 12px !important;
+        }
+        .ranking-main-content .budget-item {
+            padding: 8px !important;
+        }
+        .ranking-main-content .budget-value {
+            font-size: 18px !important;
+        }
+        .ranking-main-content table th,
+        .ranking-main-content table td {
+            padding: 6px 8px !important;
+            font-size: 11px !important;
+        }
+        .ranking-main-content .commission-decision-block {
+            padding: 12px !important;
+            margin-bottom: 12px !important;
+        }
+        .ranking-main-content .commission-decision-block h3 {
+            font-size: 14px !important;
+        }
+        .ranking-main-content .commission-decision-block p,
+        .ranking-main-content .commission-decision-block div {
+            font-size: 11px !important;
+        }
+        .ranking-main-content .commission-decision-section > p {
+            margin-bottom: 12px !important;
+            font-size: 11px !important;
+        }
+        /* Svaki blok kandidata ostaje cijeli - ne dijeli se na pola između stranica */
+        .commission-decision-block {
+            page-break-inside: avoid;
+        }
         /* Stranica 1: Budget + Rang lista + Zaključak, zatim page break, zatim Potpis */
         .ranking-main-content {
             page-break-after: always;
-        }
-        /* Svaki blok Zaključka za kandidata također ostaje cijeli */
-        .commission-decision-block {
-            page-break-inside: avoid;
         }
         /* Potpis uvijek na novoj stranici */
         #signature-block {
@@ -203,7 +243,7 @@
         }
         @page {
             size: A4;
-            margin: 20mm;
+            margin: 15mm;
         }
     }
 </style>
