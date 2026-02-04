@@ -172,7 +172,17 @@
         color: #991b1b;
     }
     @media print {
+        nav,
+        header,
         .no-print { display: none !important; }
+        .admin-page button,
+        .admin-page input[type="submit"],
+        .admin-page input[type="button"],
+        .admin-page input[type="checkbox"],
+        .admin-page input[type="number"],
+        .admin-page input[type="radio"],
+        .admin-page textarea,
+        .admin-page select { display: none !important; }
         .admin-page { background: #fff; padding: 0; }
         .info-card { box-shadow: none; border: 1px solid #e5e7eb; }
     }
