@@ -197,7 +197,11 @@
         .ranking-main-content {
             page-break-after: always;
         }
-        /* Svaki blok Zaključka za kandidata ostaje cijeli (ne dijeliti) */
+        /* Cijela sekcija Zaključak komisije ostaje na jednoj stranici - ne dijeliti između stranica */
+        .commission-decision-section {
+            page-break-inside: avoid;
+        }
+        /* Svaki blok Zaključka za kandidata također ostaje cijeli */
         .commission-decision-block {
             page-break-inside: avoid;
         }
