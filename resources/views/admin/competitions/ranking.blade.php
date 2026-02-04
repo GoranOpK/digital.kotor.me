@@ -185,6 +185,14 @@
         .admin-page select { display: none !important; }
         .admin-page { background: #fff; padding: 0; }
         .info-card { box-shadow: none; border: 1px solid #e5e7eb; }
+        /* Gornja margina za drugu, treću i ostale stranice - sekcije koje mogu početi na novoj stranici */
+        .admin-page .info-card:nth-of-type(n+2) {
+            padding-top: 20mm !important;
+        }
+        /* Tabela - zaglavlje se ponavlja na svakoj stranici */
+        .admin-page table thead {
+            display: table-header-group;
+        }
         @page {
             size: A4;
             margin: 20mm;
