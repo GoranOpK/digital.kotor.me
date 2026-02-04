@@ -160,6 +160,9 @@
                                             } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
                                                 $obrazacLabel = 'Obrazac 1b popunjen';
                                                 $obrazacClass = 'status-evaluated';
+                                            } elseif ($application->applicant_type === 'fizicko_lice') {
+                                                $obrazacLabel = 'Obrazac 1a/1b popunjen';
+                                                $obrazacClass = 'status-evaluated';
                                             }
                                         } else {
                                             // Obrazac nije kompletan - prikaži nacrt prema tipu
@@ -167,11 +170,13 @@
                                                 $obrazacLabel = 'Obrazac 1a - Nacrt';
                                             } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
                                                 $obrazacLabel = 'Obrazac 1b - Nacrt';
+                                            } elseif ($application->applicant_type === 'fizicko_lice') {
+                                                $obrazacLabel = 'Obrazac 1a/1b - Nacrt';
                                             }
                                         }
                                     @endphp
                                     @if($obrazacLabel)
-                                        <a href="{{ route('applications.create', ['competition' => $application->competition_id, 'application_id' => $application->id]) }}" class="status-badge {{ $obrazacClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                        <a href="{{ route('applications.create', $application->competition_id) }}?application_id={{ $application->id }}" class="status-badge {{ $obrazacClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
                                             {{ $obrazacLabel }}
                                         </a>
                                     @else

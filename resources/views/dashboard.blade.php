@@ -384,6 +384,9 @@
                                                 } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
                                                     $obrazacLabel = 'Obrazac 1b popunjen';
                                                     $obrazacStyle = 'background: #d1fae5; color: #065f46;';
+                                                } elseif ($app->applicant_type === 'fizicko_lice') {
+                                                    $obrazacLabel = 'Obrazac 1a/1b popunjen';
+                                                    $obrazacStyle = 'background: #d1fae5; color: #065f46;';
                                                 }
                                                 // Klik na badge vodi direktno na popunjen obrazac (formu prijave sa application_id kao query parametar)
                                                 $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
@@ -395,9 +398,12 @@
                                                 } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
                                                     $obrazacLabel = 'Obrazac 1b - Nacrt';
                                                     $obrazacStyle = 'background: #fef3c7; color: #92400e;';
+                                                } elseif ($app->applicant_type === 'fizicko_lice') {
+                                                    $obrazacLabel = 'Obrazac 1a/1b - Nacrt';
+                                                    $obrazacStyle = 'background: #fef3c7; color: #92400e;';
                                                 }
                                                 // Klik na badge vodi na nastavak popunjavanja Obrasca 1a/1b
-                                                $obrazacUrl = route('applications.create', $app->competition_id);
+                                                $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
                                             }
                                         }
 
@@ -667,6 +673,9 @@
                                         } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
                                             $obrazacLabel = 'Obrazac 1b popunjen';
                                             $obrazacClass = 'status-evaluated';
+                                        } elseif ($app->applicant_type === 'fizicko_lice') {
+                                            $obrazacLabel = 'Obrazac 1a/1b popunjen';
+                                            $obrazacClass = 'status-evaluated';
                                         }
                                         $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
                                     } else {
@@ -674,6 +683,8 @@
                                             $obrazacLabel = 'Obrazac 1a - Nacrt';
                                         } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
                                             $obrazacLabel = 'Obrazac 1b - Nacrt';
+                                        } elseif ($app->applicant_type === 'fizicko_lice') {
+                                            $obrazacLabel = 'Obrazac 1a/1b - Nacrt';
                                         }
                                         $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
                                     }

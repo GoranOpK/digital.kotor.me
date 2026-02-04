@@ -283,6 +283,9 @@
                                     } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
                                         $obrazacLabel = 'Obrazac 1b popunjen';
                                         $obrazacClass = 'status-evaluated';
+                                    } elseif ($app->applicant_type === 'fizicko_lice') {
+                                        $obrazacLabel = 'Obrazac 1a/1b popunjen';
+                                        $obrazacClass = 'status-evaluated';
                                     }
                                     $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
                                 } else {
@@ -290,6 +293,8 @@
                                         $obrazacLabel = 'Obrazac 1a - Nacrt';
                                     } elseif (in_array($app->applicant_type, ['doo', 'ostalo'])) {
                                         $obrazacLabel = 'Obrazac 1b - Nacrt';
+                                    } elseif ($app->applicant_type === 'fizicko_lice') {
+                                        $obrazacLabel = 'Obrazac 1a/1b - Nacrt';
                                     }
                                     $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
                                 }

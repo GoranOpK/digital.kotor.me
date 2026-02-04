@@ -448,6 +448,9 @@
                                     } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
                                         $obrazacLabel = 'Obrazac 1b popunjen';
                                         $obrazacClass = 'status-evaluated';
+                                    } elseif ($application->applicant_type === 'fizicko_lice') {
+                                        $obrazacLabel = 'Obrazac 1a/1b popunjen';
+                                        $obrazacClass = 'status-evaluated';
                                     }
                                     // Klik na badge vodi direktno na popunjen obrazac (formu prijave sa application_id kao query parametar)
                                     $obrazacUrl = route('applications.create', $application->competition_id) . '?application_id=' . $application->id;
@@ -457,6 +460,8 @@
                                         $obrazacLabel = 'Obrazac 1a - Nacrt';
                                     } elseif (in_array($application->applicant_type, ['doo', 'ostalo'])) {
                                         $obrazacLabel = 'Obrazac 1b - Nacrt';
+                                    } elseif ($application->applicant_type === 'fizicko_lice') {
+                                        $obrazacLabel = 'Obrazac 1a/1b - Nacrt';
                                     }
                                     // Klik na badge vodi na nastavak popunjavanja Obrasca 1a/1b
                                     $obrazacUrl = route('applications.create', $application->competition_id) . '?application_id=' . $application->id;
