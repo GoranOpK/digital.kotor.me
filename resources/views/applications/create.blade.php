@@ -1119,8 +1119,8 @@
                 </div>
             </div>
 
-            <!-- Sekcija 4: Dodatni podaci -->
-            <div class="form-card">
+            <!-- Sekcija 4: Dodatni podaci (sakriva se za Fizičko lice - sredstva se ne mogu uplaćivati na lične žiro račune) -->
+            <div class="form-card" id="additional-data-section">
                 <div class="form-section">
                     <h2>4. Dodatni podaci</h2>
                     
@@ -1284,6 +1284,7 @@
         const fizickoLiceFields = document.getElementById('fizickoLiceFields');
         const fizickoLiceRequiredFields = fizickoLiceFields ? fizickoLiceFields.querySelectorAll('input[required], input[name="physical_person_name"], input[name="physical_person_jmbg"], input[name="physical_person_phone"], input[name="physical_person_email"]') : [];
         const fizickoLiceNotice = document.getElementById('fizickoLiceNotice');
+        const additionalDataSection = document.getElementById('additional-data-section');
 
         function toggleFieldsByApplicantType() {
             const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
@@ -1457,6 +1458,22 @@
                             }
                         });
                     }
+                }
+            }
+
+            // Sekcija 4 Dodatni podaci - sakriva se za Fizičko lice (sredstva se ne mogu uplaćivati na lične žiro račune)
+            if (additionalDataSection) {
+                if (selectedType === 'fizicko_lice') {
+                    additionalDataSection.style.display = 'none';
+                    // Očisti polja da se slučajno ne pošalju lični podaci
+                    const bankAccount = additionalDataSection.querySelector('input[name="bank_account"]');
+                    const vatNumber = additionalDataSection.querySelector('input[name="vat_number"]');
+                    const website = additionalDataSection.querySelector('input[name="website"]');
+                    if (bankAccount) bankAccount.value = '';
+                    if (vatNumber) vatNumber.value = '';
+                    if (website) website.value = '';
+                } else {
+                    additionalDataSection.style.display = '';
                 }
             }
         }
