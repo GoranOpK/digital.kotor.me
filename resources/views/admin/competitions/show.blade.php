@@ -100,16 +100,9 @@
                     </form>
                 @endif
                 @php
-                    $showRankingLink = false;
-                    if ($competition->status === 'closed') {
-                        $showRankingLink = (isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman) || (isset($isCommissionMember) && $isCommissionMember);
-                    } elseif ($competition->status === 'published' && isset($isDeadlinePassed) && $isDeadlinePassed) {
-                        // Rok za prijave istekao - svi članovi komisije mogu vidjeti rang listu
-                        $showRankingLink = (isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman) || (isset($isCommissionMember) && $isCommissionMember);
-                    } elseif ($competition->status === 'published') {
-                        // Rok još nije istekao - samo superadmin i predsjednik
-                        $showRankingLink = (isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman);
-                    }
+                    // Rang lista se prikazuje samo kada je formirana (rok istekao + svi ocijenili sve prijave)
+                    $userCanAccessRanking = (isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman) || (isset($isCommissionMember) && $isCommissionMember);
+                    $showRankingLink = $userCanAccessRanking && $competition->isRankingFormed();
                 @endphp
                 @if($showRankingLink)
                     <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
