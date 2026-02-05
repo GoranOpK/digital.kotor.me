@@ -210,13 +210,18 @@ class EvaluationController extends Controller
 
         // Proveri da li je trenutni član već ocjenio
         $existingScore = $commissionMember ? $allScores->get($commissionMember->id) : null;
+        // Rezerva: direktan upit ako nije u allScores (npr. druga komisija)
+        if (!$existingScore && $commissionMember) {
+            $existingScore = EvaluationScore::where('application_id', $application->id)
+                ->where('commission_member_id', $commissionMember->id)
+                ->first();
+            if ($existingScore) {
+                $allScores->put($commissionMember->id, $existingScore);
+            }
+        }
         
-        // Provjeri da li je trenutni član završio ocjenjivanje (ima kriterijume popunjene ili je odbio zbog dokumenata)
-        $hasCompletedEvaluation = $existingScore && (
-            $existingScore->criterion_1 !== null ||
-            $existingScore->documents_complete === false ||
-            $existingScore->calculateTotalScore() > 0
-        );
+        // Član je završio ocjenjivanje ako ima zapis (submit-ovao je formu)
+        $hasCompletedEvaluation = $existingScore !== null;
         
         // Provjeri da li su svi članovi komisije ocjenili prijavu
         $totalMembers = $commission->activeMembers()->count();
