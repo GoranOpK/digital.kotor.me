@@ -353,27 +353,30 @@
                                         @php
                                             $userRole = auth()->user()->role ? auth()->user()->role->name : null;
                                             $isKomisija = $userRole === 'komisija';
-                                            
-                                            // Provjeri da li su svi članovi komisije ocjenili prijavu
-                                            $allEvaluated = false;
                                             $buttonText = 'Ocijeni';
                                             
                                             if ($isKomisija && $competition->commission) {
                                                 $commission = $competition->commission;
-                                                $totalMembers = $commission->activeMembers()->count();
                                                 
-                                                // Broj različitih članova koji su ocjenili prijavu
-                                                $evaluatedMemberIds = \App\Models\EvaluationScore::where('application_id', $app->id)
-                                                    ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
-                                                    ->pluck('commission_member_id')
-                                                    ->unique()
-                                                    ->count();
+                                                // Provjeri da li je trenutni član komisije već ocjenio prijavu
+                                                $currentMember = $commission->activeMembers()->where('user_id', auth()->id())->first();
+                                                $currentMemberHasEvaluated = $currentMember && \App\Models\EvaluationScore::where('application_id', $app->id)
+                                                    ->where('commission_member_id', $currentMember->id)
+                                                    ->exists();
                                                 
-                                                $allEvaluated = $evaluatedMemberIds >= $totalMembers;
-                                                
-                                                // Ako su svi ocjenili ILI ako je prijava odbijena, promijeni tekst dugmeta
-                                                if ($allEvaluated || $app->status === 'rejected') {
+                                                // Ako je trenutni član ocjenio ILI je prijava odbijena ILI su svi ocjenili -> dugme Ocjene
+                                                if ($currentMemberHasEvaluated || $app->status === 'rejected') {
                                                     $buttonText = 'Ocjene';
+                                                } else {
+                                                    $totalMembers = $commission->activeMembers()->count();
+                                                    $evaluatedCount = \App\Models\EvaluationScore::where('application_id', $app->id)
+                                                        ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+                                                        ->pluck('commission_member_id')
+                                                        ->unique()
+                                                        ->count();
+                                                    if ($evaluatedCount >= $totalMembers) {
+                                                        $buttonText = 'Ocjene';
+                                                    }
                                                 }
                                             }
                                         @endphp
