@@ -608,7 +608,7 @@
                                     <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-edit" style="font-size: 12px; padding: 6px 12px; display: inline-block;">
                                         Pregled konkursa
                                     </a>
-                                    @if($competition->status === 'closed' || ($competition->status === 'published' && $competition->isApplicationDeadlinePassed()))
+                                    @if($competition->isRankingFormed())
                                         <a href="{{ route('admin.competitions.ranking', $competition) }}" style="font-size: 12px; padding: 6px 12px; display: inline-block; background: #8b5cf6; color: #fff; border-radius: 6px; text-decoration: none;">
                                             Rang lista
                                         </a>

@@ -207,4 +207,42 @@ class Competition extends Model
 
         return now()->isAfter($deadline);
     }
+
+    /**
+     * Provjerava da li je rang lista formirana - svi članovi komisije su ocjenili sve prijave
+     */
+    public function isRankingFormed(): bool
+    {
+        $commission = $this->commission;
+        if (!$commission) {
+            return false;
+        }
+
+        $activeMemberIds = $commission->activeMembers()->pluck('id');
+        if ($activeMemberIds->isEmpty()) {
+            return false;
+        }
+
+        $applications = $this->applications()
+            ->whereIn('status', ['submitted', 'evaluated', 'rejected'])
+            ->get();
+
+        if ($applications->isEmpty()) {
+            return false;
+        }
+
+        foreach ($applications as $application) {
+            $evaluatedCount = \App\Models\EvaluationScore::where('application_id', $application->id)
+                ->whereIn('commission_member_id', $activeMemberIds)
+                ->pluck('commission_member_id')
+                ->unique()
+                ->count();
+
+            if ($evaluatedCount < $activeMemberIds->count()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

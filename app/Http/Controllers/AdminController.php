@@ -1233,11 +1233,13 @@ class AdminController extends Controller
             if (!$isCommissionMember) {
                 abort(403, 'Nemate pristup ovom konkursu.');
             }
-            // Članovi komisije mogu vidjeti rang listu kada je konkurs zatvoren ILI kada je rok za prijave istekao
-            $canAccessRanking = $competition->status === 'closed'
+            // Članovi komisije mogu vidjeti rang listu kada je formirana (svi su ocjenili sve prijave),
+            // ili kada je konkurs zatvoren, ili kada je rok za prijave istekao
+            $canAccessRanking = $competition->isRankingFormed()
+                || $competition->status === 'closed'
                 || ($competition->status === 'published' && $competition->isApplicationDeadlinePassed());
             if (!$canAccessRanking) {
-                abort(403, 'Rang lista je dostupna članovima komisije kada je konkurs zatvoren ili kada je rok za prijave istekao.');
+                abort(403, 'Rang lista je dostupna članovima komisije kada svi članovi ocjene sve prijave, kada je konkurs zatvoren ili kada je rok za prijave istekao.');
             }
         }
         
