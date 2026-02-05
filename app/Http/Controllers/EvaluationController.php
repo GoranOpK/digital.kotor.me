@@ -211,8 +211,12 @@ class EvaluationController extends Controller
         // Proveri da li je trenutni član već ocjenio
         $existingScore = $commissionMember ? $allScores->get($commissionMember->id) : null;
         
-        // Provjeri da li je trenutni član završio ocjenjivanje (ima sve kriterijume popunjene)
-        $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+        // Provjeri da li je trenutni član završio ocjenjivanje (ima kriterijume popunjene ili je odbio zbog dokumenata)
+        $hasCompletedEvaluation = $existingScore && (
+            $existingScore->criterion_1 !== null ||
+            $existingScore->documents_complete === false ||
+            $existingScore->calculateTotalScore() > 0
+        );
         
         // Provjeri da li su svi članovi komisije ocjenili prijavu
         $totalMembers = $commission->activeMembers()->count();
