@@ -209,10 +209,16 @@ class Competition extends Model
     }
 
     /**
-     * Provjerava da li je rang lista formirana - svi članovi komisije su ocjenili sve prijave
+     * Provjerava da li je rang lista formirana - rok za prijave je istekao
+     * i svi članovi komisije su ocjenili sve prijave
      */
     public function isRankingFormed(): bool
     {
+        // Rang lista se ne formira prije isteka roka za prijave (osim ako je konkurs već zatvoren)
+        if ($this->status !== 'closed' && !$this->isApplicationDeadlinePassed()) {
+            return false;
+        }
+
         $commission = $this->commission;
         if (!$commission) {
             return false;
