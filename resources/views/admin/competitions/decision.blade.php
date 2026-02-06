@@ -129,15 +129,18 @@
         margin-top: 40px;
         padding-top: 0;
     }
-    .decision-footer-inner {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 40px;
+    .decision-footer-row {
+        margin-bottom: 24px;
+    }
+    .decision-footer-signature-row {
+        text-align: right;
+    }
+    .decision-footer-distribution-row {
+        text-align: left;
     }
     .decision-signature {
         text-align: right;
-        flex-shrink: 0;
+        display: inline-block;
     }
     .decision-signature-title {
         font-size: 12pt;
@@ -214,7 +217,6 @@
         .debug-print .decision-title-sub { outline: 2px dashed purple; }
         .debug-print .decision-article { outline: 2px dashed #8B4513; }
         .debug-print .decision-footer { outline: 3px solid magenta; }
-        .debug-print .decision-footer-inner { outline: 2px dashed cyan; }
     }
 </style>
 
@@ -344,9 +346,16 @@
                 </p>
             </div>
 
-            {{-- Potpis i Dostaviti – uvijek na posljednjoj strani --}}
+            {{-- Potpis (iznad) i Dostaviti (ispod) – u istom redu vertikalno --}}
             <div class="decision-footer">
-                <div class="decision-footer-inner">
+                <div class="decision-footer-row decision-footer-signature-row">
+                    <div class="decision-signature">
+                        <div class="decision-signature-title">Predsjednica Komisije</div>
+                        <div class="decision-signature-line"></div>
+                        <div class="decision-signature-name">{{ $chairmanName ?? '_________________________' }}</div>
+                    </div>
+                </div>
+                <div class="decision-footer-row decision-footer-distribution-row">
                     <div class="decision-distribution">
                         <strong>Dostaviti:</strong>
                         <ul>
@@ -356,11 +365,6 @@
                             <li>- Arhivi</li>
                         </ul>
                     </div>
-                    <div class="decision-signature">
-                        <div class="decision-signature-title">Predsjednica Komisije</div>
-                        <div class="decision-signature-line"></div>
-                        <div class="decision-signature-name">{{ $chairmanName ?? '_________________________' }}</div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -369,7 +373,7 @@
             @if($debugPrint)
             <div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 12px 20px; border-radius: 8px; margin-bottom: 16px; text-align: left; font-size: 12px;">
                 <strong>DEBUG MODE</strong> – Pri štampi će se prikazati obojene granice sekcija:<br>
-                <span style="color:red;">●</span> document | <span style="color:blue;">●</span> header | <span style="color:green;">●</span> Broj+datum | <span style="color:orange;">●</span> preambula | <span style="color:purple;">●</span> naslov | <span style="color:brown;">●</span> članovi | <span style="color:magenta;">●</span> footer | <span style="color:cyan;">●</span> footer-inner<br>
+                <span style="color:red;">●</span> document | <span style="color:blue;">●</span> header | <span style="color:green;">●</span> Broj+datum | <span style="color:orange;">●</span> preambula | <span style="color:purple;">●</span> naslov | <span style="color:brown;">●</span> članovi | <span style="color:magenta;">●</span> footer<br>
                 <em>Ukloni ?debug iz URL-a za normalan prikaz.</em>
             </div>
             @endif
