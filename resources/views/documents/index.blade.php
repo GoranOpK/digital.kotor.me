@@ -413,7 +413,7 @@
                                 </div>
                                 <div class="document-actions" data-document-status="{{ $document->status }}">
                                     @if($document->status === 'processed' || $document->status === 'active')
-                                        <a href="{{ route('documents.download', $document) }}" class="btn-sm btn-download">
+                                        <a href="{{ route('documents.download', $document) }}" class="btn-sm btn-download" target="_blank" rel="noopener noreferrer">
                                             Preuzmi
                                         </a>
                                     @endif
@@ -818,6 +818,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 const downloadLink = document.createElement('a');
                 downloadLink.href = `/documents/${documentId}/download`;
                 downloadLink.className = 'btn-sm btn-download';
+                downloadLink.target = '_blank';
+                downloadLink.rel = 'noopener noreferrer';
                 downloadLink.textContent = 'Preuzmi';
                 actionsElement.insertBefore(downloadLink, actionsElement.firstChild);
                 console.log('Download dugme dodato');
