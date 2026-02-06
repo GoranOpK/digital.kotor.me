@@ -29,7 +29,7 @@
         padding: 40px 50px;
         max-width: 210mm;
         margin: 0 auto;
-        font-family: 'Times New Roman', Times, serif;
+        font-family: Arial, sans-serif;
         font-size: 12pt;
         line-height: 1.5;
         color: #111;
@@ -64,16 +64,16 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 20px;
-        font-size: 11pt;
+        font-size: 12pt;
     }
     .decision-preamble {
         text-align: justify;
         margin-bottom: 24px;
-        font-size: 11pt;
+        font-size: 12pt;
     }
     .decision-title-main {
         text-align: center;
-        font-size: 18pt;
+        font-size: 14pt;
         font-weight: 700;
         margin: 8px 0 4px;
     }
@@ -123,7 +123,7 @@
         text-align: right;
     }
     .decision-signature-title {
-        font-size: 11pt;
+        font-size: 12pt;
         margin-bottom: 4px;
     }
     .decision-signature-line {
@@ -133,11 +133,11 @@
         height: 24px;
     }
     .decision-signature-name {
-        font-size: 11pt;
+        font-size: 12pt;
     }
     .decision-distribution {
         margin-top: 40px;
-        font-size: 11pt;
+        font-size: 12pt;
     }
     .decision-distribution ul {
         margin: 8px 0 0 20px;
