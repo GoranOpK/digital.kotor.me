@@ -9,6 +9,8 @@ use App\Models\UserDocument;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
@@ -615,11 +617,14 @@ class ApplicationController extends Controller
                 return back()->withErrors(['user_document_id' => 'Izabrani dokument nije validan ili ne pripada vašoj biblioteci.'])->withInput();
             }
 
-            // Kreiraj vezu sa prijavom
+            // Kreiraj vezu sa prijavom (kopiraj i MEGA podatke ako postoje)
             ApplicationDocument::create([
                 'application_id' => $application->id,
                 'name' => $userDocument->name,
                 'file_path' => $userDocument->file_path,
+                'cloud_path' => $userDocument->cloud_path,
+                'mega_node_id' => $userDocument->mega_node_id,
+                'mega_file_name' => $userDocument->mega_file_name,
                 'document_type' => $validated['document_type'],
                 'is_required' => in_array($validated['document_type'], $application->getRequiredDocuments()),
                 'user_document_id' => $userDocument->id,
@@ -632,23 +637,61 @@ class ApplicationController extends Controller
         if ($request->hasFile('file')) {
             $file = $request->file('file');
             $documentProcessor = app(\App\Services\DocumentProcessor::class);
-            
+
             $result = $documentProcessor->processDocument($file, Auth::id());
 
             if (!$result['success']) {
                 return back()->withErrors(['file' => $result['error'] ?? 'Greška pri obradi fajla.'])->withInput();
             }
 
-            // Kreiraj zapis o dokumentu
+            $filePath = $result['file_path'];
+            $megaFileName = basename($filePath);
+            $cloudPath = null;
+            $megaNodeId = null;
+
+            // Upload na MEGA (dokument ostaje i lokalno, i na MEGA)
+            $fullPath = Storage::disk('local')->path($filePath);
+            $folderPath = 'digital.kotor/applications/user_' . Auth::id();
+            $nodeScript = base_path('scripts/upload-to-mega.js');
+            $nodeBinary = env('NODE_BINARY', 'node');
+
+            $processResult = Process::path(base_path())->run([
+                $nodeBinary,
+                $nodeScript,
+                $fullPath,
+                $folderPath,
+                $megaFileName,
+            ]);
+
+            if ($processResult->successful()) {
+                try {
+                    $megaData = json_decode(trim($processResult->output()), true);
+                    if (is_array($megaData) && !empty($megaData['mega_link'])) {
+                        $cloudPath = $megaData['mega_link'];
+                        $megaNodeId = $megaData['mega_node_id'] ?? null;
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('MEGA upload result parse failed', ['output' => $processResult->output(), 'error' => $e->getMessage()]);
+                }
+            } else {
+                Log::warning('MEGA upload failed for application document', [
+                    'file_path' => $filePath,
+                    'error' => $processResult->errorOutput(),
+                ]);
+            }
+
             ApplicationDocument::create([
                 'application_id' => $application->id,
                 'name' => $file->getClientOriginalName(),
-                'file_path' => $result['file_path'],
+                'file_path' => $filePath,
+                'cloud_path' => $cloudPath,
+                'mega_node_id' => $megaNodeId,
+                'mega_file_name' => $cloudPath ? $megaFileName : null,
                 'document_type' => $validated['document_type'],
                 'is_required' => in_array($validated['document_type'], $application->getRequiredDocuments()),
             ]);
 
-            return back()->with('success', 'Dokument je uspješno upload-ovan i priložen.');
+            return back()->with('success', 'Dokument je uspješno upload-ovan, priložen i podignut na MEGA.');
         }
 
         return back()->withErrors(['error' => 'Greška pri priložavanju dokumenta.'])->withInput();
@@ -695,8 +738,11 @@ class ApplicationController extends Controller
             abort(403, 'Nemate pravo pristupa ovom dokumentu.');
         }
 
-        // Proveri da li fajl postoji na disku
+        // Ako lokalni fajl ne postoji, a ima MEGA link – preuzmi sa MEGA-e
         if (!$document->file_path || !Storage::disk('local')->exists($document->file_path)) {
+            if ($document->cloud_path && str_contains((string) $document->cloud_path, 'mega.nz')) {
+                return $this->serveFromMega($document->cloud_path, $document->name ?? 'document.pdf', true);
+            }
             abort(404, 'Fajl dokumenta nije pronađen na serveru.');
         }
 
@@ -726,14 +772,44 @@ class ApplicationController extends Controller
             abort(403, 'Samo podnosilac prijave može da preuzme ovaj dokument.');
         }
 
-        // Proveri da li fajl postoji na disku
+        // Ako lokalni fajl ne postoji, a ima MEGA link – preuzmi sa MEGA-e
         if (!$document->file_path || !Storage::disk('local')->exists($document->file_path)) {
+            if ($document->cloud_path && str_contains((string) $document->cloud_path, 'mega.nz')) {
+                return $this->serveFromMega($document->cloud_path, $document->name ?? 'document.pdf', false);
+            }
             abort(404, 'Fajl dokumenta nije pronađen na serveru.');
         }
 
-        // Vrati fajl kao download sa originalnim imenom
         $downloadName = $document->name ?? basename($document->file_path);
         return Storage::disk('local')->download($document->file_path, $downloadName);
+    }
+
+    /**
+     * Preuzima fajl sa MEGA-e i servira ga (view ili download).
+     */
+    private function serveFromMega(string $cloudPath, string $downloadName, bool $inline): \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
+    {
+        $safeName = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '_', $downloadName) ?: 'document';
+        $ext = pathinfo($downloadName, PATHINFO_EXTENSION) ?: 'pdf';
+        $tempRel = 'temp_downloads/app_' . uniqid('dl_', true) . '_' . $safeName . '.' . $ext;
+        $tempFull = Storage::disk('local')->path($tempRel);
+
+        Storage::disk('local')->makeDirectory(dirname($tempRel));
+        $nodeScript = base_path('scripts/download-from-mega.js');
+        $nodeBinary = env('NODE_BINARY', 'node');
+
+        $result = Process::path(base_path())->run([$nodeBinary, $nodeScript, $cloudPath, $tempFull]);
+
+        if (!$result->successful()) {
+            Log::error('serveFromMega failed', ['output' => $result->output(), 'error' => $result->errorOutput()]);
+            return redirect()->away($cloudPath);
+        }
+
+        $disposition = $inline ? 'inline' : 'attachment';
+        return response()->download($tempFull, $downloadName, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => $disposition . '; filename="' . basename($downloadName) . '"',
+        ])->deleteFileAfterSend(true);
     }
 
     /**
