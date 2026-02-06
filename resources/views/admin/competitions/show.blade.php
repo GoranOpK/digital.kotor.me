@@ -93,12 +93,6 @@
                         </form>
                     @endif
                 @endif
-                @if($competition->status === 'published' && (isset($isSuperAdmin) && $isSuperAdmin || isset($isChairman) && $isChairman) && isset($isDeadlinePassed) && $isDeadlinePassed)
-                    <form method="POST" action="{{ route('admin.competitions.close', $competition) }}" style="display: inline;">
-                        @csrf
-                        <button type="submit" class="btn btn-danger">Zatvori konkurs</button>
-                    </form>
-                @endif
                 @php
                     // Rang lista se prikazuje samo kada je formirana (rok istekao + svi ocijenili sve prijave)
                     $userCanAccessRanking = (isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman) || (isset($isCommissionMember) && $isCommissionMember);

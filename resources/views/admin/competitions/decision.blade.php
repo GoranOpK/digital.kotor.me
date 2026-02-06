@@ -176,6 +176,12 @@
         <div style="text-align: center; margin-top: 24px;" class="no-print">
             <button onclick="window.print()" class="btn btn-primary">Štampaj Odluku</button>
             <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn btn-primary" style="background: #6b7280; margin-left: 8px;">Nazad na rang listu</a>
+            @if((isset($isSuperAdmin) && $isSuperAdmin || isset($isChairman) && $isChairman) && !in_array($competition->status, ['closed', 'completed']) && $competition->hasChairmanCompletedDecisions())
+                <form method="POST" action="{{ route('admin.competitions.close', $competition) }}" style="display: inline; margin-left: 8px;">
+                    @csrf
+                    <button type="submit" class="btn btn-primary" style="background: #dc2626; border: none; cursor: pointer;">Zatvori konkurs</button>
+                </form>
+            @endif
         </div>
     </div>
 </div>

@@ -251,4 +251,43 @@ class Competition extends Model
 
         return true;
     }
+
+    /**
+     * Provjerava da li je predsjednik komisije donio odluku za sve prijave u rang listi
+     * (zaključak komisije za svaku prijavu)
+     */
+    public function hasChairmanCompletedDecisions(): bool
+    {
+        if (!$this->isRankingFormed()) {
+            return false;
+        }
+
+        $commission = $this->commission;
+        $chairmanMember = $commission ? $commission->activeMembers()->where('position', 'predsjednik')->first() : null;
+        if (!$chairmanMember) {
+            return false;
+        }
+
+        $allApplications = $this->applications()
+            ->whereIn('status', ['submitted', 'evaluated', 'rejected'])
+            ->with('evaluationScores')
+            ->get();
+
+        $rankingApplications = $allApplications->filter(function ($application) use ($chairmanMember) {
+            if ($application->evaluationScores->isEmpty() || !$application->meetsMinimumScore()) {
+                return false;
+            }
+            $chairmanScore = $application->evaluationScores->firstWhere('commission_member_id', $chairmanMember->id);
+            if ($chairmanScore && $chairmanScore->documents_complete === false) {
+                return false;
+            }
+            return true;
+        });
+
+        // Ako nema prijava u rang listi (sve odbijene), predsjednik je završio
+        if ($rankingApplications->isEmpty()) {
+            return true;
+        }
+        return $rankingApplications->every(fn ($app) => $app->commission_decision !== null);
+    }
 }

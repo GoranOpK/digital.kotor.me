@@ -615,6 +615,12 @@ class AdminController extends Controller
             return redirect()->back()
                 ->withErrors(['error' => 'Ne možete zatvoriti konkurs dok je još otvoren za prijave. Rok za prijave mora prvo isteći.']);
         }
+
+        // Konkurs se može zatvoriti tek nakon što predsjednik generiše odluku (donese zaključak za sve prijave)
+        if (!$competition->hasChairmanCompletedDecisions()) {
+            return redirect()->back()
+                ->withErrors(['error' => 'Ne možete zatvoriti konkurs prije nego što donesete zaključak za sve prijave i generišete odluku o dodjeli sredstava.']);
+        }
         
         // Proveri da li postoje prijave koje nisu ocijenjene
         $submittedApplications = $competition->applications()
@@ -1440,7 +1446,7 @@ class AdminController extends Controller
             ->get();
 
         // Generiši PDF ili pripremi podatke za prikaz
-        return view('admin.competitions.decision', compact('competition', 'winners'));
+        return view('admin.competitions.decision', compact('competition', 'winners', 'isSuperAdmin', 'isChairman'));
     }
 }
 

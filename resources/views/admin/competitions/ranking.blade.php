@@ -685,13 +685,16 @@
                             </div>
                         @endforeach
 
+                        @if($competition->hasChairmanCompletedDecisions())
                         <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb; text-align: center;">
                             <form method="GET" action="{{ route('admin.competitions.decision', $competition) }}" style="display: inline;">
                                 <button type="submit" class="btn btn-primary" style="padding: 12px 32px; font-size: 16px; min-width: 200px; background: var(--primary); color: #fff; border: none; cursor: pointer; border-radius: 8px;">
                                     Generiši Odluku o dodjeli sredstava
                                 </button>
                             </form>
+                            <p style="margin-top: 12px; font-size: 14px; color: #6b7280;">Nakon generisanja odluke možete zatvoriti konkurs na stranici odluke.</p>
                         </div>
+                        @endif
                     </div>
                 @endif
             @endif
