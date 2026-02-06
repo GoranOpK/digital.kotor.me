@@ -124,9 +124,9 @@
         margin-bottom: 2px;
     }
     .decision-footer {
-        page-break-before: always;
+        page-break-before: avoid;
         page-break-inside: avoid;
-        margin-top: 0;
+        margin-top: 40px;
         padding-top: 0;
     }
     .decision-footer-inner {
@@ -188,11 +188,7 @@
             margin: 0;
         }
         .decision-footer {
-            min-height: 200mm;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding-bottom: 0;
+            margin-top: 40px;
         }
         .page-header { display: none; }
         .container {
