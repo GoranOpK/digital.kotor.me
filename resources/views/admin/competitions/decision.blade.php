@@ -190,7 +190,7 @@
             </div>
 
             <div class="decision-number">
-                Broj: {{ $competition->competition_number ? $competition->competition_number . '-' : '' }}{{ $competition->id }}/{{ $competition->year ?? date('Y') }}-{{ now()->format('His') }}
+                Broj:
             </div>
 
             {{-- Preambula --}}
