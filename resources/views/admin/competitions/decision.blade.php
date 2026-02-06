@@ -59,11 +59,10 @@
     .decision-org div:first-child { font-size: 13pt; }
     .decision-org div:nth-child(2) { font-size: 12pt; }
     .decision-org div:nth-child(3) { font-size: 11pt; color: #374151; max-width: 280px; }
-    .decision-date {
-        text-align: right;
-        font-size: 11pt;
-    }
-    .decision-number {
+    .decision-number-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 20px;
         font-size: 11pt;
     }
@@ -185,13 +184,11 @@
                         <div>Komisija za raspodjelu bespovratnih sredstava namijenjenih za podršku ženskom preduzetništvu</div>
                     </div>
                 </div>
-                <div class="decision-date">
-                    Kotor, {{ now()->format('d.m.Y') }}. godine
-                </div>
             </div>
 
-            <div class="decision-number">
-                Broj:
+            <div class="decision-number-row">
+                <span>Broj:</span>
+                <span>Kotor, {{ now()->format('d.m.Y') }}. godine</span>
             </div>
 
             {{-- Preambula --}}
