@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $debugPrint = request()->has('debug');
+@endphp
 <style>
     :root {
         --primary: #0B3D91;
@@ -202,9 +205,21 @@
             margin: 20mm;
         }
     }
+    /* DEBUG – pri štampi prikazuje granice sekcija (dodaj ?debug u URL) */
+    @media print {
+        .debug-print .decision-document { outline: 2px dashed red; }
+        .debug-print .decision-header { outline: 2px dashed blue; }
+        .debug-print .decision-number-row { outline: 2px dashed green; }
+        .debug-print .decision-preamble { outline: 2px dashed orange; }
+        .debug-print .decision-title-main { outline: 2px dashed purple; }
+        .debug-print .decision-title-sub { outline: 2px dashed purple; }
+        .debug-print .decision-article { outline: 2px dashed #8B4513; }
+        .debug-print .decision-footer { outline: 3px solid magenta; }
+        .debug-print .decision-footer-inner { outline: 2px dashed cyan; }
+    }
 </style>
 
-<div class="admin-page">
+<div class="admin-page {{ $debugPrint ? 'debug-print' : '' }}">
     <div class="container mx-auto px-4">
         <div class="page-header no-print">
             <h1>Odluka o dodjeli sredstava</h1>
@@ -352,8 +367,18 @@
         </div>
 
         <div style="text-align: center; margin-top: 24px;" class="no-print">
+            @if($debugPrint)
+            <div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 12px 20px; border-radius: 8px; margin-bottom: 16px; text-align: left; font-size: 12px;">
+                <strong>DEBUG MODE</strong> – Pri štampi će se prikazati obojene granice sekcija:<br>
+                <span style="color:red;">●</span> document | <span style="color:blue;">●</span> header | <span style="color:green;">●</span> Broj+datum | <span style="color:orange;">●</span> preambula | <span style="color:purple;">●</span> naslov | <span style="color:brown;">●</span> članovi | <span style="color:magenta;">●</span> footer | <span style="color:cyan;">●</span> footer-inner<br>
+                <em>Ukloni ?debug iz URL-a za normalan prikaz.</em>
+            </div>
+            @endif
             @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
             <button onclick="window.print()" class="btn" style="background: var(--primary); color: #fff; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600;">Štampaj Odluku</button>
+            <a href="{{ $debugPrint ? request()->url() : request()->fullUrlWithQuery(['debug' => '1']) }}" class="btn" style="background: {{ $debugPrint ? '#10b981' : '#f59e0b' }}; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-left: 8px; display: inline-block;">
+                {{ $debugPrint ? 'Isključi debug' : 'Debug štampa' }}
+            </a>
             @endif
             <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #6b7280; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-left: 8px; display: inline-block;">Nazad na rang listu</a>
             @if(((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman)) && !in_array($competition->status, ['closed', 'completed']) && $competition->hasChairmanCompletedDecisions())
