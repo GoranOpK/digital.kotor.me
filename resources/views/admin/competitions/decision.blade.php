@@ -89,6 +89,9 @@
     .decision-article {
         margin-bottom: 20px;
     }
+    .decision-obrazlozenje {
+        page-break-inside: avoid;
+    }
     .decision-article-title {
         font-weight: 700;
         font-size: 12pt;
@@ -202,6 +205,7 @@
         .decision-obrazlozenje {
             margin-top: 20mm;
             padding-top: 0;
+            page-break-inside: avoid;
         }
         .decision-obrazlozenje-last-block {
             page-break-inside: avoid;
