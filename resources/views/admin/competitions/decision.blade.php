@@ -192,6 +192,7 @@
         }
         .decision-obrazlozenje {
             page-break-before: always;
+            padding-top: 20mm;
         }
         .decision-footer {
             margin-top: 40px;
