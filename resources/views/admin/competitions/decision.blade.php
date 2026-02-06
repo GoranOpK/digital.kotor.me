@@ -202,12 +202,6 @@
             box-shadow: none;
             margin: 0;
         }
-        .decision-article {
-            margin-top: 15mm;
-        }
-        .decision-article:first-of-type {
-            margin-top: 0;
-        }
         .decision-obrazlozenje {
             margin-top: 20mm;
             padding-top: 0;
