@@ -253,7 +253,9 @@
         <div class="page-header">
             <h1>Rang lista - {{ $competition->title }}</h1>
             <div class="no-print">
+                @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
                 <button type="button" onclick="window.print();" class="btn" style="background: #6b7280; color: #fff; border: none; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 600;">Štampaj</button>
+                @endif
                 <a href="{{ route('admin.competitions.show', $competition) }}" class="btn btn-primary">Nazad</a>
             </div>
         </div>
