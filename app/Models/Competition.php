@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Log;
 
 class Competition extends Model
 {
@@ -216,16 +217,29 @@ class Competition extends Model
     {
         // Rang lista se ne formira prije isteka roka za prijave (osim ako je konkurs već zatvoren)
         if ($this->status !== 'closed' && !$this->isApplicationDeadlinePassed()) {
+            Log::channel('single')->info('[RANG LISTA DEBUG] isRankingFormed = false (rok nije istekao)', [
+                'competition_id' => $this->id,
+                'status' => $this->status,
+                'isApplicationDeadlinePassed' => $this->isApplicationDeadlinePassed(),
+            ]);
             return false;
         }
 
         $commission = $this->commission;
         if (!$commission) {
+            Log::channel('single')->info('[RANG LISTA DEBUG] isRankingFormed = false (nema komisije)', [
+                'competition_id' => $this->id,
+                'commission_id' => $this->commission_id,
+            ]);
             return false;
         }
 
         $activeMemberIds = $commission->activeMembers()->pluck('id');
         if ($activeMemberIds->isEmpty()) {
+            Log::channel('single')->info('[RANG LISTA DEBUG] isRankingFormed = false (nema aktivnih članova)', [
+                'competition_id' => $this->id,
+                'commission_id' => $commission->id,
+            ]);
             return false;
         }
 
@@ -234,9 +248,13 @@ class Competition extends Model
             ->get();
 
         if ($applications->isEmpty()) {
+            Log::channel('single')->info('[RANG LISTA DEBUG] isRankingFormed = false (nema prijava)', [
+                'competition_id' => $this->id,
+            ]);
             return false;
         }
 
+        $activeMembersCount = $activeMemberIds->count();
         foreach ($applications as $application) {
             $evaluatedCount = \App\Models\EvaluationScore::where('application_id', $application->id)
                 ->whereIn('commission_member_id', $activeMemberIds)
@@ -244,11 +262,22 @@ class Competition extends Model
                 ->unique()
                 ->count();
 
-            if ($evaluatedCount < $activeMemberIds->count()) {
+            if ($evaluatedCount < $activeMembersCount) {
+                Log::channel('single')->info('[RANG LISTA DEBUG] isRankingFormed - prijava nije sva ocijenjena', [
+                    'competition_id' => $this->id,
+                    'application_id' => $application->id,
+                    'evaluated_count' => $evaluatedCount,
+                    'active_members_count' => $activeMembersCount,
+                ]);
                 return false;
             }
         }
 
+        Log::channel('single')->info('[RANG LISTA DEBUG] isRankingFormed = true', [
+            'competition_id' => $this->id,
+            'applications_count' => $applications->count(),
+            'active_members_count' => $activeMembersCount,
+        ]);
         return true;
     }
 
