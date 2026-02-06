@@ -191,8 +191,8 @@
             margin: 0;
         }
         .decision-obrazlozenje {
-            page-break-before: always;
-            padding-top: 15mm;
+            margin-top: 20mm;
+            padding-top: 0;
         }
         .decision-footer {
             margin-top: 40px;
