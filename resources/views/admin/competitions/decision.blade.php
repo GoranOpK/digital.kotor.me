@@ -166,6 +166,15 @@
     .decision-distribution li {
         margin-bottom: 4px;
     }
+    .decision-obrazlozenje-last-block {
+        page-break-inside: avoid;
+    }
+    .decision-obrazlozenje-last-block .decision-article-intro {
+        margin-bottom: 8px;
+    }
+    .decision-obrazlozenje-last-block .decision-article-intro:last-child {
+        margin-bottom: 0;
+    }
     @media print {
         .no-print { display: none !important; }
         nav, .navigation, header.bg-white { display: none !important; }
@@ -193,6 +202,9 @@
         .decision-obrazlozenje {
             margin-top: 20mm;
             padding-top: 0;
+        }
+        .decision-obrazlozenje-last-block {
+            page-break-inside: avoid;
         }
         .decision-footer {
             margin-top: 40px;
@@ -342,12 +354,14 @@
                 <p class="decision-article-intro">
                     Radi potpunijeg uvida u sadržaj i izvodljivost biznis planova te lične kompetencije njihovih predlagača, Komisija je organizovala usmene prezentacije biznis planova dana {{ $oralDate ? $oralDate->format('d.m.Y') : '___' }}. u Palati Bizanti. Svrha prezentacija bila je da podnosioci prijava pred Komisijom kroz direktnu komunikaciju predstave svoje poslovne ideje, potencijal, motivaciju i spremnost za realizaciju.
                 </p>
-                <p class="decision-article-intro">
-                    Na osnovu pojedinačnih evaluacionih formulara i rezultirajuće rang liste sa prosječnom ocjenom biznis planova, Komisija je uspostavila Rang listu dana {{ $rankingDate ? $rankingDate->format('d.m.Y') : now()->format('d.m.Y') }}.
-                </p>
-                <p class="decision-article-intro">
-                    Na osnovu utvrđene Rang liste, Komisija je donijela Odluku o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $competition->year ?? date('Y') }}. godinu, dodjeljujući sredstva <strong>{{ $winners->count() }}</strong> biznis planova u ukupnom iznosu od <strong>{{ number_format($winners->sum('approved_amount'), 2, ',', '.') }} eura</strong>.
-                </p>
+                <div class="decision-obrazlozenje-last-block">
+                    <p class="decision-article-intro">
+                        Na osnovu pojedinačnih evaluacionih formulara i rezultirajuće rang liste sa prosječnom ocjenom biznis planova, Komisija je uspostavila Rang listu dana {{ $rankingDate ? $rankingDate->format('d.m.Y') : now()->format('d.m.Y') }}.
+                    </p>
+                    <p class="decision-article-intro">
+                        Na osnovu utvrđene Rang liste, Komisija je donijela Odluku o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $competition->year ?? date('Y') }}. godinu, dodjeljujući sredstva <strong>{{ $winners->count() }}</strong> biznis planova u ukupnom iznosu od <strong>{{ number_format($winners->sum('approved_amount'), 2, ',', '.') }} eura</strong>.
+                    </p>
+                </div>
             </div>
 
             {{-- Potpis (iznad) i Dostaviti (ispod) – u istom redu vertikalno --}}
