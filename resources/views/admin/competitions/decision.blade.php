@@ -91,10 +91,11 @@
         font-size: 12pt;
         margin-bottom: 12px;
         text-align: center;
+        page-break-after: avoid;
     }
     .decision-article-intro {
         text-align: justify;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
     }
     .decision-applicant-list {
         margin: 0 0 0 20px;
@@ -102,7 +103,8 @@
         list-style: none;
     }
     .decision-applicant-item {
-        margin-bottom: 16px;
+        margin-bottom: 12px;
+        page-break-inside: avoid;
     }
     .decision-applicant-head {
         font-weight: 600;
@@ -122,10 +124,17 @@
         page-break-before: always;
         page-break-inside: avoid;
         margin-top: 0;
-        padding-top: 40px;
+        padding-top: 0;
+    }
+    .decision-footer-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 40px;
     }
     .decision-signature {
         text-align: right;
+        flex-shrink: 0;
     }
     .decision-signature-title {
         font-size: 12pt;
@@ -141,7 +150,7 @@
         font-size: 12pt;
     }
     .decision-distribution {
-        margin-top: 40px;
+        margin-top: 0;
         font-size: 12pt;
     }
     .decision-distribution ul {
@@ -171,10 +180,16 @@
             width: 210mm;
             min-height: 297mm;
             padding: 20mm;
-            padding-top: 5mm;
             max-width: none;
             box-shadow: none;
             margin: 0;
+        }
+        .decision-footer {
+            min-height: 200mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding-bottom: 0;
         }
         .page-header { display: none; }
         .container {
@@ -184,10 +199,7 @@
         }
         @page {
             size: A4;
-            margin-top: 25mm;
-            margin-bottom: 25mm;
-            margin-left: 20mm;
-            margin-right: 20mm;
+            margin: 20mm;
         }
     }
 </style>
@@ -320,22 +332,22 @@
 
             {{-- Potpis i Dostaviti – uvijek na posljednjoj strani --}}
             <div class="decision-footer">
-            <div class="decision-signature">
-                <div class="decision-signature-title">Predsjednica Komisije</div>
-                <div class="decision-signature-line"></div>
-                <div class="decision-signature-name">{{ $chairmanName ?? '_________________________' }}</div>
-            </div>
-
-            {{-- Dostaviti --}}
-            <div class="decision-distribution" style="margin-top: 48px;">
-                <strong>Dostaviti:</strong>
-                <ul>
-                    <li>- Podnosiocima prijave (x{{ $winners->count() }})</li>
-                    <li>- Članovima Komisije (x{{ $commissionMembersCount ?: 5 }})</li>
-                    <li>- Sekretarijatu 16 (x2)</li>
-                    <li>- Arhivi</li>
-                </ul>
-            </div>
+                <div class="decision-footer-inner">
+                    <div class="decision-distribution">
+                        <strong>Dostaviti:</strong>
+                        <ul>
+                            <li>- Podnosiocima prijave (x{{ $winners->count() }})</li>
+                            <li>- Članovima Komisije (x{{ $commissionMembersCount ?: 5 }})</li>
+                            <li>- Sekretarijatu 16 (x2)</li>
+                            <li>- Arhivi</li>
+                        </ul>
+                    </div>
+                    <div class="decision-signature">
+                        <div class="decision-signature-title">Predsjednica Komisije</div>
+                        <div class="decision-signature-line"></div>
+                        <div class="decision-signature-name">{{ $chairmanName ?? '_________________________' }}</div>
+                    </div>
+                </div>
             </div>
         </div>
 
