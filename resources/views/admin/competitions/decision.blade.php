@@ -190,6 +190,9 @@
             box-shadow: none;
             margin: 0;
         }
+        .decision-obrazlozenje {
+            page-break-before: always;
+        }
         .decision-footer {
             margin-top: 40px;
         }
@@ -320,8 +323,8 @@
                 </p>
             </div>
 
-            {{-- Obrazloženje --}}
-            <div class="decision-article" style="margin-top: 32px;">
+            {{-- Obrazloženje – druga stranica počinje ovdje --}}
+            <div class="decision-article decision-obrazlozenje" style="margin-top: 32px;">
                 <div class="decision-article-title">Obrazloženje</div>
                 <p class="decision-article-intro">
                     Shodno Odluci o kriterijumima, načinu i postupku raspodjele sredstava za podršku ženskom preduzetništvu ("Službeni list Crne Gore - opštinski propisi", br. 011/24), Komisija je raspisala Javni konkurs za dodjelu bespovratnih sredstava za podršku ženskom preduzetništvu {{ $competition->year ?? date('Y') }}. godine. Konkurs je objavljen u trajanju od 20 dana, od {{ $pubStart ? $pubStart->format('d.m.Y') : '___' }}. do {{ $pubEnd ? $pubEnd->format('d.m.Y') : '___' }}. godine, na vebsajtu Opštine Kotor i lokalnom javnom emiteru "Radio Kotor".
