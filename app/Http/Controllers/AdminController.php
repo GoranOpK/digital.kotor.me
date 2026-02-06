@@ -466,7 +466,10 @@ class AdminController extends Controller
         $deadline = $competition->deadline;
         $isDeadlinePassed = $deadline && now()->isAfter($deadline);
         
-        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed'));
+        // Rang lista: vidljiva svima koji imaju pristup (superadmin, predsjednik, članovi komisije) kada je formirana
+        $showRankingLink = ($isSuperAdmin || $isChairman || $isCommissionMember) && $competition->isRankingFormed();
+        
+        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink'));
     }
 
     /**

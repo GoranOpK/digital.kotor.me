@@ -93,15 +93,7 @@
                         </form>
                     @endif
                 @endif
-                @php
-                    // Rang lista se prikazuje svim članovima komisije (uključujući predsjednika) kada je formirana
-                    $userCanAccessRanking = (isset($isSuperAdmin) && $isSuperAdmin)
-                        || (isset($isChairman) && $isChairman)
-                        || (isset($isCommissionMember) && $isCommissionMember)
-                        || (auth()->user()->role && auth()->user()->role->name === 'komisija');
-                    $showRankingLink = $userCanAccessRanking && $competition->isRankingFormed();
-                @endphp
-                @if($showRankingLink)
+                @if(isset($showRankingLink) && $showRankingLink)
                     <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
                 @endif
                 @if(isset($isAdmin) && $isAdmin && !in_array($competition->status, ['closed', 'completed']))
