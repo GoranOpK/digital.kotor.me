@@ -2,7 +2,7 @@
 /**
  * Čišći privremene MEGA download fajlove (temp_downloads) starije od 5 minuta.
  * Pokreće Artisan komandu documents:cleanup-temp-downloads.
- * Namena: Plesk Scheduled Tasks → Run a PHP script (svakih 5–10 minuta).
+ * Namena: Plesk Scheduled Tasks - Run a PHP script (svakih 5-10 minuta).
  *
  * Cron: preporučeno svakih 5 min. V. PLESK_DELETE_EXPIRED_CRON.md.
  */
