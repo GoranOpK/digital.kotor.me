@@ -224,6 +224,13 @@
                                         <button type="submit" class="btn-sm btn-delete">Obriši</button>
                                     </form>
                                 @endif
+                                @if(isset($isAdmin) && $isAdmin && in_array($competition->status, ['closed', 'completed']))
+                                    <form action="{{ route('admin.competitions.destroy', $competition) }}" method="POST" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovaj konkurs iz arhive? Ova akcija je nepovratna.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-sm btn-delete">Obriši</button>
+                                    </form>
+                                @endif
                             </td>
                         </tr>
                     @empty
