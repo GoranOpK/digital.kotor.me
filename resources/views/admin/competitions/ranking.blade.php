@@ -305,6 +305,7 @@
         <div class="info-card">
             <h2>Rang lista prijava</h2>
 
+            @if($applications->count() > 0 || (isset($belowLineApplications) && $belowLineApplications->count() > 0))
             @if($applications->count() > 0)
             @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
                 @if(in_array($competition->status, ['closed', 'completed']))
@@ -461,7 +462,7 @@
                                 </td>
                                 <td style="text-align: center;">
                                     @php
-                                        $score = $application->final_score ?? 0;
+                                        $score = $application->getDisplayScore();
                                         $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
                                     @endphp
                                     <span class="score-badge {{ $scoreClass }}">
@@ -492,54 +493,47 @@
                     </tbody>
                 </table>
             @endif
+            @endif
+            @if(isset($belowLineApplications) && $belowLineApplications->count() > 0)
+                <div style="margin-top: 32px; padding-top: 24px; border-top: 3px solid #e5e7eb;">
+                    <h3 style="font-size: 16px; font-weight: 600; color: #6b7280; margin-bottom: 16px;">Prijave ispod minimuma (30 bodova)</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Naziv biznis plana</th>
+                                <th>Podnosilac</th>
+                                <th>Tip</th>
+                                <th style="text-align: center;">Ocjena</th>
+                                <th style="text-align: right;">Traženi iznos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($belowLineApplications as $application)
+                                <tr style="background: #f9fafb;">
+                                    <td>{{ $application->business_plan_name }}</td>
+                                    <td>{{ $application->user->name ?? 'N/A' }}</td>
+                                    <td>
+                                        {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : ($application->applicant_type === 'doo' ? 'DOO' : ($application->applicant_type === 'fizicko_lice' ? 'Fizičko lice' : 'Ostalo')) }} -
+                                        {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <span class="score-badge score-low">
+                                            {{ number_format($application->getDisplayScore(), 2) }} / 50
+                                        </span>
+                                    </td>
+                                    <td style="text-align: right;">
+                                        {{ number_format($application->requested_amount, 2, ',', '.') }} €
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
             @else
                 <div style="text-align: center; padding: 40px; color: #6b7280;">
-                    <p style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Nema prijava koje zadovoljavaju uslove za rang listu.</p>
-                    <p style="margin-bottom: 8px; font-size: 14px;">Uslovi za rang listu:</p>
-                    <ul style="text-align: left; display: inline-block; margin: 0; padding-left: 20px; font-size: 14px;">
-                        <li>Prijava mora biti ocjenjena i imati minimum 30 bodova</li>
-                    </ul>
-                    @if(isset($excludedApplications) && $excludedApplications->count() > 0)
-                        <div style="margin-top: 24px; padding: 16px; background: #f9fafb; border-radius: 8px; text-align: left;">
-                            <p style="font-weight: 600; margin-bottom: 12px;">Prijave koje nisu u rang listi ({{ $excludedApplications->count() }}):</p>
-                            <table style="width: 100%; font-size: 13px;">
-                                <thead>
-                                    <tr>
-                                        <th style="padding: 8px;">Naziv biznis plana</th>
-                                        <th style="padding: 8px;">Podnosilac</th>
-                                        <th style="padding: 8px;">Status</th>
-                                        <th style="padding: 8px;">Ocjena</th>
-                                        <th style="padding: 8px;">Razlog</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($excludedApplications as $app)
-                                        <tr>
-                                            <td style="padding: 8px;">{{ $app->business_plan_name }}</td>
-                                            <td style="padding: 8px;">{{ $app->user->name ?? 'N/A' }}</td>
-                                            <td style="padding: 8px;">
-                                                <span class="status-badge status-{{ $app->status }}">
-                                                    {{ $app->status }}
-                                                </span>
-                                            </td>
-                                            <td style="padding: 8px; text-align: center;">
-                                                {{ number_format($app->getDisplayScore(), 2) }} / 50
-                                            </td>
-                                            <td style="padding: 8px; color: #991b1b; font-size: 12px;">
-                                                @if(!$app->has_evaluations)
-                                                    Nema ocjena od komisije
-                                                @elseif(!$app->meetsMinimumScore())
-                                                    Ispod minimuma (30 bodova)
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @endif
+                    <p style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Nema ocjenjenih prijava za ovaj konkurs.</p>
+                    <p style="margin-bottom: 8px; font-size: 14px;">Prijave odbijene zbog nedostatka dokumenata ne prikazuju se u rang listi.</p>
                 </div>
             @endif
         </div>
@@ -696,12 +690,23 @@
                         </div>
                         @endif
                     </div>
+                @elseif($competition->hasChairmanCompletedDecisions() && $applications->count() == 0 && (isset($belowLineApplications) && $belowLineApplications->count() > 0))
+                    <div class="info-card commission-decision-section">
+                        <h2>Zaključak komisije</h2>
+                        <p style="margin-bottom: 12px; font-size: 14px; color: #6b7280;">Sve prijave su ispod minimuma od 30 bodova. Možete generisati odluku i zatvoriti konkurs.</p>
+                        <form method="GET" action="{{ route('admin.competitions.decision', $competition) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-primary" style="padding: 12px 32px; font-size: 16px; min-width: 200px; background: var(--primary); color: #fff; border: none; cursor: pointer; border-radius: 8px;">
+                                Generiši Odluku o dodjeli sredstava
+                            </button>
+                        </form>
+                    </div>
                 @endif
             @endif
         @endif
         </div>
 
-        <!-- Potpis komisije -->
+        <!-- Potpis komisije (samo za predsjednika i superadmina) -->
+        @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
         <div class="info-card" id="signature-block">
             <h2>Potpis komisije</h2>
             <div style="margin-top: 48px; font-size: 15px; line-height: 2.2;">
@@ -713,6 +718,7 @@
                 <p>Član 4: _______________________</p>
             </div>
         </div>
+        @endif
     </div>
 </div>
 

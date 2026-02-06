@@ -1269,64 +1269,50 @@ class AdminController extends Controller
         $commission = $competition->commission;
         $chairmanMember = $commission ? $commission->activeMembers()->where('position', 'predsjednik')->first() : null;
         
-        // Filtriraj samo one koje zadovoljavaju minimum (30 bodova), imaju ocjene i predsjednik NIJE označio "Ne" u sekciji 2
-        $applications = $allApplications
-            ->filter(function ($application) use ($chairmanMember) {
-                // Prijava mora imati ocjene i zadovoljavati minimum
-                if (!$application->has_evaluations || !$application->meetsMinimumScore()) {
+        // Prijave odbijene zbog nedostatka dokumenata (documents_complete = false) - NE prikazuju se u rang listi
+        $isRejectedForDocuments = function ($application) use ($chairmanMember) {
+            if (!$chairmanMember) {
+                return false;
+            }
+            $chairmanScore = EvaluationScore::where('application_id', $application->id)
+                ->where('commission_member_id', $chairmanMember->id)
+                ->first();
+            return $chairmanScore && $chairmanScore->documents_complete === false;
+        };
+        
+        // Prijave koje se prikazuju u rang listi: imaju ocjene, NISU odbijene zbog dokumenata
+        $visibleApplications = $allApplications
+            ->filter(function ($application) use ($isRejectedForDocuments) {
+                if (!$application->has_evaluations) {
                     return false;
                 }
-                
-                // Provjeri da li je predsjednik označio "Ne" (documents_complete = false)
-                if ($chairmanMember) {
-                    $chairmanScore = EvaluationScore::where('application_id', $application->id)
-                        ->where('commission_member_id', $chairmanMember->id)
-                        ->first();
-                    
-                    // Ako predsjednik ima ocjenu i documents_complete je false, isključi prijavu
-                    if ($chairmanScore && $chairmanScore->documents_complete === false) {
-                        return false;
-                    }
+                if ($isRejectedForDocuments($application)) {
+                    return false;
                 }
-                
                 return true;
-            })
+            });
+        
+        // Iznad crte: 30+ bodova, sortirano po ocjeni
+        $applications = $visibleApplications
+            ->filter(fn ($app) => $app->meetsMinimumScore())
+            ->sortByDesc('final_score')
+            ->values();
+        
+        // Ispod crte: ispod 30 bodova, sortirano po ocjeni
+        $belowLineApplications = $visibleApplications
+            ->filter(fn ($app) => !$app->meetsMinimumScore())
             ->sortByDesc('final_score')
             ->values();
 
-        // Dodaj poziciju na rang listi
+        // Dodaj poziciju na rang listi samo za prijave iznad crte (30+ bodova)
         $position = 1;
         foreach ($applications as $application) {
-            // Koristi direktan DB update da izbegneš privremene atribute
             DB::table('applications')
                 ->where('id', $application->id)
                 ->update(['ranking_position' => $position]);
-            $application->ranking_position = $position; // Postavi na model za prikaz
+            $application->ranking_position = $position;
             $position++;
         }
-
-        // Prijave koje nisu u rang listi (za informacije)
-        $excludedApplications = $allApplications
-            ->filter(function ($application) use ($chairmanMember) {
-                // Prijave koje nemaju ocjene ili ne zadovoljavaju minimum
-                if (!$application->has_evaluations || !$application->meetsMinimumScore()) {
-                    return true;
-                }
-                
-                // Prijave gdje je predsjednik označio "Ne" (documents_complete = false)
-                if ($chairmanMember) {
-                    $chairmanScore = EvaluationScore::where('application_id', $application->id)
-                        ->where('commission_member_id', $chairmanMember->id)
-                        ->first();
-                    
-                    if ($chairmanScore && $chairmanScore->documents_complete === false) {
-                        return true;
-                    }
-                }
-                
-                return false;
-            })
-            ->values();
 
         // Izračunaj ukupan budžet i preostali budžet
         $totalBudget = $competition->budget ?? 0;
@@ -1341,7 +1327,7 @@ class AdminController extends Controller
             ->with('user')
             ->get() : collect();
 
-        return view('admin.competitions.ranking', compact('competition', 'applications', 'excludedApplications', 'totalBudget', 'usedBudget', 'remainingBudget', 'isSuperAdmin', 'isChairman', 'isCommissionMember', 'commissionMembers'));
+        return view('admin.competitions.ranking', compact('competition', 'applications', 'belowLineApplications', 'totalBudget', 'usedBudget', 'remainingBudget', 'isSuperAdmin', 'isChairman', 'isCommissionMember', 'commissionMembers'));
     }
 
     /**
