@@ -48,8 +48,8 @@
         gap: 16px;
     }
     .decision-logo {
-        width: 60px;
-        height: 70px;
+        width: auto;
+        height: 6em; /* 4 reda teksta (4 × 1.5 line-height) */
         object-fit: contain;
     }
     .decision-org {
@@ -149,6 +149,7 @@
     }
     @media print {
         .no-print { display: none !important; }
+        nav, .navigation, header.bg-white { display: none !important; }
         .admin-page { background: #fff; padding: 0; }
         .decision-document {
             padding: 15mm 20mm;
