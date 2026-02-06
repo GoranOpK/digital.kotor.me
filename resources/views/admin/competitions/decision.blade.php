@@ -169,7 +169,7 @@
         .decision-document {
             width: 210mm;
             min-height: 297mm;
-            padding: 0;
+            padding: 20mm;
             max-width: none;
             box-shadow: none;
             margin: 0;
