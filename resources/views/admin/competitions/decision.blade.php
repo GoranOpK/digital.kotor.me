@@ -142,7 +142,7 @@
         text-align: left;
     }
     .decision-signature {
-        text-align: right;
+        text-align: center;
         display: inline-block;
     }
     .decision-signature-title {
@@ -152,7 +152,7 @@
     .decision-signature-line {
         border-bottom: 1px solid #111;
         width: 200px;
-        margin: 0 0 4px auto;
+        margin: 0 auto 4px;
         height: 24px;
     }
     .decision-signature-name {
