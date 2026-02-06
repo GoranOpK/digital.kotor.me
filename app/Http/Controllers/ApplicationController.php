@@ -517,15 +517,10 @@ class ApplicationController extends Controller
                 ->withErrors(['error' => 'Ova prijava nije povezana sa važećim konkursom. Brisanje nije moguće.']);
         }
 
-        // Izračunaj rok za prijave (isto kao u create/store logici)
-        $deadline = $competition->published_at
-            ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 20)
-            : null;
-
-        // Nakon isteka roka – ne dozvoli brisanje
-        if ($deadline && $deadline->isPast()) {
+        // Kandidat ne može brisati prijavu nakon isteka roka od 20 dana ili ako je konkurs zatvoren
+        if ($competition->status === 'closed' || $competition->isApplicationDeadlinePassed()) {
             return redirect()->route('applications.show', $application)
-                ->withErrors(['error' => 'Rok za prijave je istekao. Prijavu više nije moguće obrisati.']);
+                ->withErrors(['error' => 'Rok za prijave je istekao ili je konkurs zatvoren. Prijavu više nije moguće obrisati.']);
         }
 
         // Obriši prijavu (i kaskadno povezane podatke prema definisanim relacionim pravilima)

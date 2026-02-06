@@ -15,7 +15,6 @@ use App\Models\Report;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Auth\Events\Registered;
 
 class AdminController extends Controller
@@ -53,18 +52,7 @@ class AdminController extends Controller
             ->where('status', 'active')
             ->first();
         
-        $result = $commissionMember && $competition->commission_id === $commissionMember->commission_id;
-
-        Log::channel('single')->info('[RANG LISTA DEBUG] isCommissionMemberForCompetition', [
-            'user_id' => $user->id,
-            'competition_id' => $competition->id,
-            'competition_commission_id' => $competition->commission_id,
-            'commission_member_id' => $commissionMember?->id,
-            'commission_member_commission_id' => $commissionMember?->commission_id,
-            'result' => $result,
-        ]);
-
-        return $result;
+        return $commissionMember && $competition->commission_id === $commissionMember->commission_id;
     }
     
     /**
@@ -474,23 +462,7 @@ class AdminController extends Controller
         $isDeadlinePassed = $deadline && now()->isAfter($deadline);
         
         // Rang lista: vidljiva svima koji imaju pristup (superadmin, predsjednik, članovi komisije) kada je formirana
-        $isRankingFormed = $competition->isRankingFormed();
-        $showRankingLink = ($isSuperAdmin || $isChairman || $isCommissionMember) && $isRankingFormed;
-
-        // DEBUG: Rang lista dugme
-        Log::channel('single')->info('[RANG LISTA DEBUG] showCompetition', [
-            'user_id' => $user->id,
-            'user_role' => $user->role?->name,
-            'competition_id' => $competition->id,
-            'competition_status' => $competition->status,
-            'competition_commission_id' => $competition->commission_id,
-            'isAdmin' => $isAdmin,
-            'isSuperAdmin' => $isSuperAdmin,
-            'isChairman' => $isChairman,
-            'isCommissionMember' => $isCommissionMember,
-            'isRankingFormed' => $isRankingFormed,
-            'showRankingLink' => $showRankingLink,
-        ]);
+        $showRankingLink = ($isSuperAdmin || $isChairman || $isCommissionMember) && $competition->isRankingFormed();
         
         return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink'));
     }

@@ -453,10 +453,13 @@
                                                style="display: inline-block; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 600; background: #e5e7eb; color: #111827; text-decoration: none;">
                                                 Status prijave
                                             </a>
+                                            @php $comp = $app->competition; $canDeleteApp = $comp && $comp->status !== 'closed' && !$comp->isApplicationDeadlinePassed(); @endphp
+                                            @if($canDeleteApp)
                                             <form action="{{ route('applications.destroy', $app) }}" method="POST" onsubmit="return confirm('Obrisati prijavu?');" style="display: inline;">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" style="background: none; border: none; color: #ef4444; font-weight: 600; cursor: pointer; font-size: 12px; padding: 0;">Obriši</button>
                                             </form>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

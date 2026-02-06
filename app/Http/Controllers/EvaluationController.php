@@ -34,7 +34,8 @@ class EvaluationController extends Controller
         $commission = $commissionMember->commission;
         $commission->load('competitions');
 
-        // Filtriranje prijava samo za konkurse dodijeljene komisiji člana
+        // Članovi komisije mogu vidjeti sve prijave sve vrijeme (i prije i poslije roka za prijave)
+        // Ocjenjivanje je blokirano do isteka roka od 20 dana (provjera u create/store)
         $competitionIds = $commission->competitions->pluck('id');
         
         // Prijave koje treba ocjeniti (submitted, evaluated ili rejected status)
@@ -175,8 +176,14 @@ class EvaluationController extends Controller
                 abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
             }
             
-            // Provjeri da li je prošao rok od 30 dana za ocjenjivanje
             $competition = $application->competition;
+            
+            // Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave
+            if ($competition && !$competition->isApplicationDeadlinePassed() && $competition->status !== 'closed') {
+                abort(403, 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 30 dana za donošenje odluke od strane komisije.');
+            }
+            
+            // Provjeri da li je prošao rok od 30 dana za ocjenjivanje
             if ($competition && $competition->isEvaluationDeadlinePassed()) {
                 abort(403, 'Rok za ocjenjivanje je istekao. Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.');
             }
@@ -303,8 +310,15 @@ class EvaluationController extends Controller
     {
         $user = Auth::user();
         
-        // Provjeri da li je prošao rok od 30 dana za ocjenjivanje
         $competition = $application->competition;
+        
+        // Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave
+        if ($competition && !$competition->isApplicationDeadlinePassed() && $competition->status !== 'closed') {
+            return redirect()->back()
+                ->withErrors(['error' => 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 30 dana za donošenje odluke od strane komisije.']);
+        }
+        
+        // Provjeri da li je prošao rok od 30 dana za ocjenjivanje
         if ($competition && $competition->isEvaluationDeadlinePassed()) {
             return redirect()->back()
                 ->withErrors(['error' => 'Rok za ocjenjivanje je istekao. Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.']);

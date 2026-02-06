@@ -363,7 +363,11 @@
                                             }
                                         @endphp
                                         @if($isKomisija)
-                                            <a href="{{ route('evaluation.create', $app) }}" class="btn" style="background: var(--primary); color: #fff; padding: 4px 12px; font-size: 12px; text-decoration: none;">{{ $buttonText }}</a>
+                                            @if($competition->isApplicationDeadlinePassed() || $competition->status === 'closed')
+                                                <a href="{{ route('evaluation.create', $app) }}" class="btn" style="background: var(--primary); color: #fff; padding: 4px 12px; font-size: 12px; text-decoration: none;">{{ $buttonText }}</a>
+                                            @else
+                                                <span style="font-size: 11px; color: #6b7280;">Ocjenjivanje nakon roka za prijave</span>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>

@@ -497,8 +497,11 @@
             @endif
             @endif
             @if(isset($belowLineApplications) && $belowLineApplications->count() > 0)
-                <div style="margin-top: 32px; padding-top: 24px; border-top: 3px solid #e5e7eb;">
-                    <h3 style="font-size: 16px; font-weight: 600; color: #6b7280; margin-bottom: 16px;">Prijave ispod minimuma (30 bodova)</h3>
+                <div style="margin-top: 48px; padding-top: 32px; border-top: 4px solid #374151; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);">
+                    <div style="background: #374151; color: #fff; padding: 14px 24px; margin-top: -32px; margin-bottom: 24px; border-radius: 8px; font-weight: 700; font-size: 16px; text-align: center; display: inline-block; width: 100%; box-sizing: border-box;">
+                        ——— Prijave ispod minimuma (30 bodova) ———
+                    </div>
+                    <h3 style="font-size: 16px; font-weight: 600; color: #6b7280; margin-bottom: 16px;">Prijave sa manje od 30 bodova</h3>
                     <table>
                         <thead>
                             <tr>

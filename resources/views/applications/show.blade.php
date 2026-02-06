@@ -325,15 +325,11 @@
             // Upload i izmjene su dozvoljeni samo vlasniku prijave
             $showUpload = $canManage && ($application->status === 'draft' || $application->status === 'submitted');
 
-            // Izračun roka za prijavu – korisnik može obrisati prijavu samo do isteka roka
+            // Izračun roka za prijavu – kandidat može obrisati prijavu samo do isteka roka od 20 dana
+            // Članovi komisije nikada ne mogu brisati prijave
             $competition = $application->competition;
-            $deadline = null;
-            $canDelete = false;
-
-            if ($competition && $competition->published_at) {
-                $deadline = $competition->published_at->copy()->addDays($competition->deadline_days ?? 20);
-                $canDelete = $canManage && $deadline && !$deadline->isPast();
-            }
+            $deadline = $competition?->deadline;
+            $canDelete = $canManage && $deadline && !$competition->isApplicationDeadlinePassed() && $competition->status !== 'closed';
 
             // Prvi red: Osnovni podaci + Status prijave + Dodaj dokument
             $gridColumnsStyle = 'repeat(3, 1fr)';
