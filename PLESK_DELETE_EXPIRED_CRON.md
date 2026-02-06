@@ -34,6 +34,18 @@ php delete-expired-documents.php --dry-run
 
 Ispisuje šta bi bilo obrisano, bez brisanja.
 
+## Čišćenje privremenih download fajlova (temp_downloads)
+
+Kada korisnik preuzima MEGA dokument, fajl se privremeno čuva u `temp_downloads/`. Laravel ga briše nakon slanja (`deleteFileAfterSend`). Ako to ne uspe (npr. prekid konekcije), fajl ostaje. Cron ga obriše posle 5 minuta.
+
+**Skripta:** `cleanup-temp-downloads.php`  
+**Komanda:** `documents:cleanup-temp-downloads --minutes=5`  
+**Preporuka:** pokretati svakih 5–10 minuta, npr. `*/5 * * * *` (svakih 5 min)
+
+Podešavanje: isto kao za `delete-expired-documents.php`, samo script path = `cleanup-temp-downloads.php`, cron = `*/5 * * * *`.
+
+**Dry-run:** `php cleanup-temp-downloads.php` (ili ručno: `php artisan documents:cleanup-temp-downloads --dry-run`).
+
 ## Napomene
 
-- Laravel 12 koristi `bootstrap/app.php`. Cron se radi preko **Run a PHP script** → `delete-expired-documents.php`, ne preko `php artisan schedule:run`.
+- Laravel 12 koristi `bootstrap/app.php`. Cron se radi preko **Run a PHP script**, ne preko `php artisan schedule:run`.

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -488,9 +489,33 @@ class DocumentController extends Controller
             abort(404, 'Dokument još nije obrađen.');
         }
 
-        // Ako dokument ima cloud_path (MEGA link), redirect direktno na MEGA
+        // Ako dokument ima cloud_path (MEGA link): preuzmi na server, serviraj sa korisničkim imenom, obriši posle
         if ($document->cloud_path && strpos($document->cloud_path, 'mega.nz') !== false) {
-            return redirect($document->cloud_path);
+            $safeName = preg_replace('/[^a-zA-Z0-9_\-\.\s]/', '_', $document->name) ?: 'document';
+            $ext = pathinfo($document->mega_file_name ?? 'x.pdf', PATHINFO_EXTENSION) ?: 'pdf';
+            $tempRel = 'temp_downloads/user_' . $user->id . '/' . uniqid('dl_', true) . '_' . $safeName . '.' . $ext;
+            $tempFull = Storage::disk('local')->path($tempRel);
+
+            Storage::disk('local')->makeDirectory(dirname($tempRel));
+            $nodeScript = base_path('scripts/download-from-mega.js');
+            $nodeBinary = env('NODE_BINARY', 'node');
+
+            $result = Process::path(base_path())->run([
+                $nodeBinary,
+                $nodeScript,
+                $document->cloud_path,
+                $tempFull,
+            ]);
+
+            if (!$result->successful()) {
+                Log::error('download-from-mega failed', ['output' => $result->output(), 'error' => $result->errorOutput()]);
+                return redirect($document->cloud_path); // Fallback: redirect na MEGA
+            }
+
+            $downloadName = $document->name . '.' . $ext;
+            return response()->download($tempFull, $downloadName, [
+                'Content-Type' => 'application/pdf',
+            ])->deleteFileAfterSend(true);
         }
 
         // Ako nema cloud_path, preuzmi lokalno
