@@ -282,13 +282,25 @@
             <div class="decision-article" style="margin-top: 32px;">
                 <div class="decision-article-title">Obrazloženje</div>
                 <p class="decision-article-intro">
-                    U skladu sa Odlukom o kriterijumima, načinu i postupku raspodjele sredstava za podršku ženskom preduzetništvu, Komisija je raspisala Javni konkurs za dodjelu bespovratnih sredstava za podršku ženskom preduzetništvu {{ $competition->year ?? date('Y') }}. godine.
+                    Shodno Odluci o kriterijumima, načinu i postupku raspodjele sredstava za podršku ženskom preduzetništvu ("Službeni list Crne Gore - opštinski propisi", br. 011/24), Komisija je raspisala Javni konkurs za dodjelu bespovratnih sredstava za podršku ženskom preduzetništvu {{ $competition->year ?? date('Y') }}. godine. Konkurs je objavljen u trajanju od 20 dana, od {{ $pubStart ? $pubStart->format('d.m.Y') : '___' }}. do {{ $pubEnd ? $pubEnd->format('d.m.Y') : '___' }}. godine, na vebsajtu Opštine Kotor i lokalnom javnom emiteru "Radio Kotor".
                 </p>
                 <p class="decision-article-intro">
-                    Nakon isteka roka za prijave, Komisija je obavila administrativnu provjeru dostavljene dokumentacije i vrednovanje biznis planova prema utvrđenim kriterijumima. Na osnovu pojedinačnih obrazaca ocjenjivanja i rezultirajuće rang liste sa prosječnom ocjenom biznis planova, Komisija je uspostavila Rang listu.
+                    Nakon isteka roka za podnošenje prijava ({{ $deadlineDay ? $deadlineDay->format('d.m.Y') : '___' }}.), primljeno je {{ $totalApplications }} prijava u roku. Komisija je pristupila otvaranju zapečaćenih koverti i sprovela administrativnu provjeru podnesene dokumentacije radi utvrđivanja potpunosti i valjanosti u skladu sa uslovima konkursa.
                 </p>
                 <p class="decision-article-intro">
-                    Na osnovu uspostavljene Rang liste, Komisija je donijela Odluku o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $competition->year ?? date('Y') }}. godinu, dodjeljujući sredstva <strong>{{ $winners->count() }}</strong> biznis planova u ukupnom iznosu od <strong>{{ number_format($winners->sum('approved_amount'), 2, ',', '.') }} €</strong>.
+                    Uvidom u podnesene prijave konstatovano je da {{ $incompleteCount }} prijava nije potpuna u pogledu dostavljene dokumentacije te nisu uzeti u dalji postupak.
+                </p>
+                <p class="decision-article-intro">
+                    Komisija je konstatovala da {{ $eligibleCount }} prijave mogu uzeti u dalji postupak razmatranja i vrednovanja prema kriterijumima utvrđenim Odlukom i Konkursom.
+                </p>
+                <p class="decision-article-intro">
+                    Radi potpunijeg uvida u sadržaj i izvodljivost biznis planova te lične kompetencije njihovih predlagača, Komisija je organizovala usmene prezentacije biznis planova dana {{ $oralDate ? $oralDate->format('d.m.Y') : '___' }}. u Palati Bizanti. Svrha prezentacija bila je da podnosioci prijava pred Komisijom kroz direktnu komunikaciju predstave svoje poslovne ideje, potencijal, motivaciju i spremnost za realizaciju.
+                </p>
+                <p class="decision-article-intro">
+                    Na osnovu pojedinačnih evaluacionih formulara i rezultirajuće rang liste sa prosječnom ocjenom biznis planova, Komisija je uspostavila Rang listu dana {{ $rankingDate ? $rankingDate->format('d.m.Y') : now()->format('d.m.Y') }}.
+                </p>
+                <p class="decision-article-intro">
+                    Na osnovu utvrđene Rang liste, Komisija je donijela Odluku o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $competition->year ?? date('Y') }}. godinu, dodjeljujući sredstva <strong>{{ $winners->count() }}</strong> biznis planova u ukupnom iznosu od <strong>{{ number_format($winners->sum('approved_amount'), 2, ',', '.') }} eura</strong>.
                 </p>
             </div>
 
