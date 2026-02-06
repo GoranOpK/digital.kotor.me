@@ -24,84 +24,138 @@
         font-weight: 700;
         margin: 0;
     }
-    .decision-card {
+    .decision-document {
         background: #fff;
-        border-radius: 16px;
-        padding: 40px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        margin-bottom: 24px;
+        padding: 40px 50px;
+        max-width: 210mm;
+        margin: 0 auto;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 12pt;
+        line-height: 1.5;
+        color: #111;
     }
     .decision-header {
-        text-align: center;
-        margin-bottom: 40px;
-        border-bottom: 3px solid var(--primary);
-        padding-bottom: 20px;
-    }
-    .decision-title {
-        font-size: 24px;
-        font-weight: 700;
-        color: var(--primary);
-        margin-bottom: 8px;
-    }
-    .decision-subtitle {
-        font-size: 16px;
-        color: #6b7280;
-    }
-    .decision-section {
-        margin-bottom: 32px;
-    }
-    .decision-section h3 {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--primary);
-        margin-bottom: 16px;
-    }
-    .winners-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-    .winner-item {
-        padding: 16px;
-        border: 1px solid #e5e7eb;
-        border-radius: 8px;
-        margin-bottom: 12px;
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        align-items: flex-start;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #e5e7eb;
     }
-    .winner-info {
-        flex: 1;
+    .decision-header-left {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
     }
-    .winner-name {
+    .decision-logo {
+        width: 60px;
+        height: 70px;
+        object-fit: contain;
+    }
+    .decision-org {
         font-weight: 600;
-        color: #111827;
+        line-height: 1.4;
+    }
+    .decision-org div:first-child { font-size: 13pt; }
+    .decision-org div:nth-child(2) { font-size: 12pt; }
+    .decision-org div:nth-child(3) { font-size: 11pt; color: #374151; max-width: 280px; }
+    .decision-date {
+        text-align: right;
+        font-size: 11pt;
+    }
+    .decision-number {
+        margin-bottom: 20px;
+        font-size: 11pt;
+    }
+    .decision-preamble {
+        text-align: justify;
+        margin-bottom: 24px;
+        font-size: 11pt;
+    }
+    .decision-title-main {
+        text-align: center;
+        font-size: 18pt;
+        font-weight: 700;
+        margin: 8px 0 4px;
+    }
+    .decision-title-sub {
+        text-align: center;
+        font-size: 13pt;
+        font-weight: 700;
+        margin-bottom: 24px;
+    }
+    .decision-article {
+        margin-bottom: 20px;
+    }
+    .decision-article-title {
+        font-weight: 700;
+        font-size: 12pt;
+        margin-bottom: 12px;
+        text-align: center;
+    }
+    .decision-article-intro {
+        text-align: justify;
+        margin-bottom: 16px;
+    }
+    .decision-applicant-list {
+        margin: 0 0 0 20px;
+        padding: 0;
+        list-style: none;
+    }
+    .decision-applicant-item {
+        margin-bottom: 16px;
+    }
+    .decision-applicant-head {
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+    .decision-applicant-head strong {
+        font-weight: 700;
+    }
+    .decision-applicant-details {
+        margin-left: 20px;
+        margin-top: 6px;
+    }
+    .decision-applicant-details div {
+        margin-bottom: 2px;
+    }
+    .decision-signature {
+        margin-top: 40px;
+        text-align: right;
+    }
+    .decision-signature-title {
+        font-size: 11pt;
         margin-bottom: 4px;
     }
-    .winner-details {
-        font-size: 14px;
-        color: #6b7280;
+    .decision-signature-line {
+        border-bottom: 1px solid #111;
+        width: 200px;
+        margin: 0 0 4px auto;
+        height: 24px;
     }
-    .winner-amount {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--primary);
+    .decision-signature-name {
+        font-size: 11pt;
     }
-    .btn {
-        padding: 12px 24px;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 600;
-        display: inline-block;
+    .decision-distribution {
+        margin-top: 40px;
+        font-size: 11pt;
     }
-    .btn-primary {
-        background: var(--primary);
-        color: #fff;
+    .decision-distribution ul {
+        margin: 8px 0 0 20px;
+        padding: 0;
+    }
+    .decision-distribution li {
+        margin-bottom: 4px;
     }
     @media print {
-        .no-print {
-            display: none;
+        .no-print { display: none !important; }
+        .admin-page { background: #fff; padding: 0; }
+        .decision-document {
+            padding: 15mm 20mm;
+            max-width: none;
+            box-shadow: none;
         }
+        .page-header { display: none; }
         @page {
             size: A4;
             margin: 20mm;
@@ -112,80 +166,150 @@
 <div class="admin-page">
     <div class="container mx-auto px-4">
         <div class="page-header no-print">
-            <h1>Odluka o dobitnicima</h1>
+            <h1>Odluka o dodjeli sredstava</h1>
         </div>
 
-        <div class="decision-card">
+        <div class="decision-document">
+            {{-- Zaglavlje --}}
             <div class="decision-header">
-                <div class="decision-title">ODLUKA</div>
-                <div class="decision-subtitle">
-                    o odabiru dobitnika {{ $competition->competition_number ?? '' }}. konkursa za podršku ženskom preduzetništvu
-                    {{ $competition->year ?? date('Y') }}. godine
+                <div class="decision-header-left">
+                    @if(file_exists(public_path('img/grb-kotor.png')))
+                        <img src="{{ asset('img/grb-kotor.png') }}" alt="Grb" class="decision-logo">
+                    @elseif(file_exists(public_path('img/logo.png')))
+                        <img src="{{ asset('img/logo.png') }}" alt="Logo" class="decision-logo">
+                    @endif
+                    <div class="decision-org">
+                        <div>Crna Gora</div>
+                        <div>Opština Kotor</div>
+                        <div>Komisija za raspodjelu bespovratnih sredstava namijenjenih za podršku ženskom preduzetništvu</div>
+                    </div>
+                </div>
+                <div class="decision-date">
+                    Kotor, {{ now()->format('d.m.Y') }}. godine
                 </div>
             </div>
 
-            <div class="decision-section">
-                <h3>Osnovni podaci</h3>
-                <p><strong>Konkurs:</strong> {{ $competition->title }}</p>
-                <p><strong>Godina:</strong> {{ $competition->year ?? date('Y') }}</p>
-                <p><strong>Ukupan budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
-                <p><strong>Datum:</strong> {{ now()->format('d.m.Y') }}</p>
+            <div class="decision-number">
+                Broj: {{ $competition->competition_number ? $competition->competition_number . '-' : '' }}{{ $competition->id }}/{{ $competition->year ?? date('Y') }}-{{ now()->format('His') }}
             </div>
 
-            <div class="decision-section">
-                <h3>Dobitnici sredstava</h3>
+            {{-- Preambula --}}
+            <div class="decision-preamble">
+                Na osnovu članova 20, 21, 22 i 23 Odluke o kriterijumima, načinu i postupku raspodjele sredstava za podršku ženskom preduzetništvu ("Službeni list Crne Gore - opštinski propisi", br. 011/24), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu donosi:
+            </div>
+
+            {{-- Naslov odluke --}}
+            <div class="decision-title-main">ODLUKU</div>
+            <div class="decision-title-sub">
+                o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $competition->year ?? date('Y') }}. godinu
+            </div>
+
+            {{-- Član 1 --}}
+            <div class="decision-article">
+                <div class="decision-article-title">Član 1</div>
+                <div class="decision-article-intro">
+                    Na osnovu utvrđenih kriterijuma vrednovanja i ocjene biznis planova, odlučeno je da se <strong>finansiraju</strong> biznis planovi sledećih podnosioca prijava na ime podrške ženskom preduzetništvu i to:
+                </div>
+
                 @if($winners->count() > 0)
-                    <ul class="winners-list">
+                    <ol class="decision-applicant-list" start="1">
                         @foreach($winners as $winner)
-                            <li class="winner-item">
-                                <div class="winner-info">
-                                    <div class="winner-name">
-                                        {{ $loop->iteration }}. {{ $winner->business_plan_name }}
-                                    </div>
-                                    <div class="winner-details">
-                                        Podnosilac: {{ $winner->user->name ?? 'N/A' }} | 
-                                        Tip: {{ $winner->applicant_type === 'preduzetnica' ? 'Preduzetnica' : 'DOO' }} | 
-                                        Ocjena: {{ number_format($winner->getDisplayScore(), 2) }} / 50
-                                    </div>
+                            <li class="decision-applicant-item">
+                                <div class="decision-applicant-head">
+                                    Podnosilac prijave: <strong>{{ $winner->getApplicantDisplayForDecision() }}</strong>
                                 </div>
-                                <div class="winner-amount">
-                                    {{ number_format($winner->approved_amount ?? 0, 2, ',', '.') }} €
+                                <div class="decision-applicant-details">
+                                    <div>Naziv biznis plana: "{{ $winner->business_plan_name }}";</div>
+                                    <div>Ukupno ostvareno: <strong>{{ number_format($winner->getDisplayScore(), 1, ',', '.') }}</strong> bodova;</div>
+                                    <div>Iznos odobrenih sredstava: {{ number_format($winner->approved_amount ?? 0, 2, ',', '.') }} €;</div>
+                                    <div>Potraživani iznos sredstava: {{ number_format($winner->requested_amount ?? 0, 2, ',', '.') }} €;</div>
+                                    <div>Ukupna vrijednost biznis plana: {{ number_format($winner->total_budget_needed ?? 0, 2, ',', '.') }} €.</div>
                                 </div>
                             </li>
                         @endforeach
-                    </ul>
-                    <p style="margin-top: 20px; font-weight: 600;">
-                        Ukupan iznos podrške: {{ number_format($winners->sum('approved_amount'), 2, ',', '.') }} €
-                    </p>
+                    </ol>
                 @else
-                    <p style="color: #6b7280; text-align: center; padding: 40px;">
-                        Nema odabranih dobitnika.
-                    </p>
+                    <p style="text-align: center; color: #6b7280; font-style: italic;">Nema odabranih dobitnika sredstava.</p>
                 @endif
             </div>
 
-            <div class="decision-section">
-                <h3>Napomena</h3>
-                <p style="color: #6b7280; line-height: 1.8;">
-                    Dobitnici sredstava su odabrani na osnovu ocjena komisije i dostupnog budžeta. 
-                    Svaki dobitnik će biti obaviješten o odluci i pozvan na potpisivanje ugovora.
+            {{-- Član 2 --}}
+            <div class="decision-article">
+                <div class="decision-article-title">Član 2</div>
+                <p class="decision-article-intro" style="margin-bottom: 0;">
+                    Međusobna prava i obaveze utvrdiće se posebnim aktom – Ugovorom koji Sekretar Sekretarijata za razvoj preduzetništva, komunalne poslove i saobraćaj zaključuje sa preduzetnicom odnosno nosiocem biznisa u društvu kojem su dodijeljena sredstva u roku od dvadeset dana od dana donošenja ove Odluke.
                 </p>
+            </div>
+
+            {{-- Član 3 --}}
+            <div class="decision-article">
+                <div class="decision-article-title">Član 3</div>
+                <p class="decision-article-intro" style="margin-bottom: 0;">
+                    Dodjeljena sredstva utvrđena članom 1 ove Odluke uplaćuju se na žiro račun preduzetnice/društva u roku od deset dana od dana potpisivanja Ugovora.
+                </p>
+            </div>
+
+            {{-- Član 4 --}}
+            <div class="decision-article">
+                <div class="decision-article-title">Član 4</div>
+                <p class="decision-article-intro" style="margin-bottom: 0;">
+                    Ova Odluka stupa na snagu danom donošenja.
+                </p>
+            </div>
+
+            {{-- Član 5 --}}
+            <div class="decision-article">
+                <div class="decision-article-title">Član 5</div>
+                <p class="decision-article-intro" style="margin-bottom: 0;">
+                    Odluka se dostavlja svim učesnicama Javnog konkursa, objavljuje na vebsajtu Opštine Kotor i lokalnom javnom emiteru "Radio Kotor".
+                </p>
+            </div>
+
+            {{-- Obrazloženje --}}
+            <div class="decision-article" style="margin-top: 32px;">
+                <div class="decision-article-title">Obrazloženje</div>
+                <p class="decision-article-intro">
+                    U skladu sa Odlukom o kriterijumima, načinu i postupku raspodjele sredstava za podršku ženskom preduzetništvu, Komisija je raspisala Javni konkurs za dodjelu bespovratnih sredstava za podršku ženskom preduzetništvu {{ $competition->year ?? date('Y') }}. godine.
+                </p>
+                <p class="decision-article-intro">
+                    Nakon isteka roka za prijave, Komisija je obavila administrativnu provjeru dostavljene dokumentacije i vrednovanje biznis planova prema utvrđenim kriterijumima. Na osnovu pojedinačnih obrazaca ocjenjivanja i rezultirajuće rang liste sa prosječnom ocjenom biznis planova, Komisija je uspostavila Rang listu.
+                </p>
+                <p class="decision-article-intro">
+                    Na osnovu uspostavljene Rang liste, Komisija je donijela Odluku o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $competition->year ?? date('Y') }}. godinu, dodjeljujući sredstva <strong>{{ $winners->count() }}</strong> biznis planova u ukupnom iznosu od <strong>{{ number_format($winners->sum('approved_amount'), 2, ',', '.') }} €</strong>.
+                </p>
+            </div>
+
+            {{-- Potpis --}}
+            <div class="decision-signature">
+                <div class="decision-signature-title">Predsjednica Komisije</div>
+                <div class="decision-signature-line"></div>
+                <div class="decision-signature-name">{{ $chairmanName ?? '_________________________' }}</div>
+            </div>
+
+            {{-- Dostaviti --}}
+            <div class="decision-distribution" style="margin-top: 48px;">
+                <strong>Dostaviti:</strong>
+                <ul>
+                    <li>- Podnosiocima prijave (x{{ $winners->count() }})</li>
+                    <li>- Članovima Komisije (x{{ $commissionMembersCount ?: 5 }})</li>
+                    <li>- Sekretarijatu 16 (x2)</li>
+                    <li>- Arhivi</li>
+                </ul>
             </div>
         </div>
 
         <div style="text-align: center; margin-top: 24px;" class="no-print">
             @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
-            <button onclick="window.print()" class="btn btn-primary">Štampaj Odluku</button>
+            <button onclick="window.print()" class="btn" style="background: var(--primary); color: #fff; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600;">Štampaj Odluku</button>
             @endif
-            <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn btn-primary" style="background: #6b7280; margin-left: 8px;">Nazad na rang listu</a>
-            @if((isset($isSuperAdmin) && $isSuperAdmin || isset($isChairman) && $isChairman) && !in_array($competition->status, ['closed', 'completed']) && $competition->hasChairmanCompletedDecisions())
+            <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #6b7280; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-left: 8px; display: inline-block;">Nazad na rang listu</a>
+            @if(((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman)) && !in_array($competition->status, ['closed', 'completed']) && $competition->hasChairmanCompletedDecisions())
                 <form method="POST" action="{{ route('admin.competitions.close', $competition) }}" style="display: inline; margin-left: 8px;">
                     @csrf
-                    <button type="submit" class="btn btn-primary" style="background: #dc2626; border: none; cursor: pointer;">Zatvori konkurs</button>
+                    <button type="submit" class="btn" style="background: #dc2626; color: #fff; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600;">Zatvori konkurs</button>
                 </form>
             @endif
         </div>
     </div>
 </div>
 @endsection
-

@@ -171,6 +171,38 @@ class Application extends Model
     }
 
     /**
+     * Vraća tekst podnosioca prijave u formatu za Odluku o dodjeli
+     * DOO: "NAZIV" DOO, koga zastupa osnivačica i izvršna direktorica [Ime]
+     * Preduzetnica: Preduzetnica [Ime] koja obavlja djelatnost u [oblast]
+     * Fizičko lice: [Ime]
+     */
+    public function getApplicantDisplayForDecision(): string
+    {
+        $companyName = $this->businessPlan?->company_name;
+        $repName = $this->founder_name ?: $this->director_name;
+        $userName = $this->user?->name ?? '';
+
+        if (in_array($this->applicant_type, ['doo', 'ostalo']) && ($companyName || $repName || $userName)) {
+            $name = $companyName ?: $userName;
+            $suffix = $this->applicant_type === 'doo' ? ' DOO' : '';
+            $quoted = str_contains($name, '"') ? $name : '"' . $name . '"';
+            $rep = $repName ?: $userName;
+            if ($rep) {
+                return $quoted . $suffix . ', koga zastupa osnivačica i izvršna direktorica ' . $rep . '.';
+            }
+            return $quoted . $suffix . '.';
+        }
+
+        if ($this->applicant_type === 'preduzetnica') {
+            $name = $repName ?: $userName ?: 'N/A';
+            $oblast = $this->business_area ? ' u ' . $this->business_area : '';
+            return 'Preduzetnica ' . $name . ' koja obavlja djelatnost' . $oblast . '.';
+        }
+
+        return $this->physical_person_name ?: $userName ?: 'N/A';
+    }
+
+    /**
      * Proverava da li su svi članovi komisije ocjenili prijavu
      */
     public function isFullyEvaluated(): bool

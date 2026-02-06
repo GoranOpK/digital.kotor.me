@@ -1429,8 +1429,24 @@ class AdminController extends Controller
             ->orderBy('id')
             ->get();
 
-        // Generiši PDF ili pripremi podatke za prikaz
-        return view('admin.competitions.decision', compact('competition', 'winners', 'isSuperAdmin', 'isChairman'));
+        // Ime predsjednika komisije za potpis
+        $chairmanName = null;
+        $commissionMembersCount = 0;
+        $competition->load('commission');
+        if ($competition->commission_id && $competition->commission) {
+            $chairman = CommissionMember::where('commission_id', $competition->commission_id)
+                ->where('status', 'active')
+                ->where('position', 'predsjednik')
+                ->with('user')
+                ->first();
+            $chairmanName = $chairman?->name ?: $chairman?->user?->name;
+            $commissionMembersCount = $competition->commission->activeMembers()->count();
+        }
+
+        return view('admin.competitions.decision', compact(
+            'competition', 'winners', 'isSuperAdmin', 'isChairman',
+            'chairmanName', 'commissionMembersCount'
+        ));
     }
 }
 
