@@ -149,16 +149,31 @@
     @media print {
         .no-print { display: none !important; }
         nav, .navigation, header.bg-white { display: none !important; }
-        .admin-page { background: #fff; padding: 0; }
+        html, body {
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0;
+            padding: 0;
+        }
+        .admin-page {
+            background: #fff;
+            padding: 0;
+            width: 210mm;
+            min-height: 297mm;
+        }
         .decision-document {
+            width: 210mm;
+            min-height: 297mm;
             padding: 15mm 20mm;
             max-width: none;
             box-shadow: none;
+            margin: 0;
         }
         .page-header { display: none; }
+        .container { max-width: none !important; padding: 0 !important; }
         @page {
             size: A4;
-            margin: 20mm;
+            margin: 15mm;
         }
     }
 </style>
