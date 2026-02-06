@@ -94,8 +94,11 @@
                     @endif
                 @endif
                 @php
-                    // Rang lista se prikazuje samo kada je formirana (rok istekao + svi ocijenili sve prijave)
-                    $userCanAccessRanking = (isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman) || (isset($isCommissionMember) && $isCommissionMember);
+                    // Rang lista se prikazuje svim članovima komisije (uključujući predsjednika) kada je formirana
+                    $userCanAccessRanking = (isset($isSuperAdmin) && $isSuperAdmin)
+                        || (isset($isChairman) && $isChairman)
+                        || (isset($isCommissionMember) && $isCommissionMember)
+                        || (auth()->user()->role && auth()->user()->role->name === 'komisija');
                     $showRankingLink = $userCanAccessRanking && $competition->isRankingFormed();
                 @endphp
                 @if($showRankingLink)
