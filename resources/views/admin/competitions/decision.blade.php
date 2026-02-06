@@ -157,12 +157,13 @@
         html, body {
             width: 210mm;
             min-height: 297mm;
-            margin: 0;
-            padding: 0;
+            margin: 0 !important;
+            padding: 0 !important;
         }
         .admin-page {
             background: #fff;
-            padding: 0;
+            padding: 0 !important;
+            margin: 0 !important;
             width: 210mm;
             min-height: 297mm;
         }
@@ -170,15 +171,23 @@
             width: 210mm;
             min-height: 297mm;
             padding: 20mm;
+            padding-top: 5mm;
             max-width: none;
             box-shadow: none;
             margin: 0;
         }
         .page-header { display: none; }
-        .container { max-width: none !important; padding: 0 !important; }
+        .container {
+            max-width: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
         @page {
             size: A4;
-            margin: 20mm;
+            margin-top: 25mm;
+            margin-bottom: 25mm;
+            margin-left: 20mm;
+            margin-right: 20mm;
         }
     }
 </style>
