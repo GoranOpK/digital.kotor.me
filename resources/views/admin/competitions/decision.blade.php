@@ -202,7 +202,10 @@
         }
         @page {
             size: A4;
-            margin: 20mm;
+            margin-top: 15mm;
+            margin-bottom: 20mm;
+            margin-left: 20mm;
+            margin-right: 20mm;
         }
     }
     /* DEBUG – pri štampi prikazuje granice sekcija (dodaj ?debug u URL) */
