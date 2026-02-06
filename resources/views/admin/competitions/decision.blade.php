@@ -118,8 +118,13 @@
     .decision-applicant-details div {
         margin-bottom: 2px;
     }
+    .decision-footer {
+        page-break-before: always;
+        page-break-inside: avoid;
+        margin-top: 0;
+        padding-top: 40px;
+    }
     .decision-signature {
-        margin-top: 40px;
         text-align: right;
     }
     .decision-signature-title {
@@ -164,7 +169,7 @@
         .decision-document {
             width: 210mm;
             min-height: 297mm;
-            padding: 15mm 20mm;
+            padding: 0;
             max-width: none;
             box-shadow: none;
             margin: 0;
@@ -173,7 +178,7 @@
         .container { max-width: none !important; padding: 0 !important; }
         @page {
             size: A4;
-            margin: 15mm;
+            margin: 20mm;
         }
     }
 </style>
@@ -304,7 +309,8 @@
                 </p>
             </div>
 
-            {{-- Potpis --}}
+            {{-- Potpis i Dostaviti – uvijek na posljednjoj strani --}}
+            <div class="decision-footer">
             <div class="decision-signature">
                 <div class="decision-signature-title">Predsjednica Komisije</div>
                 <div class="decision-signature-line"></div>
@@ -320,6 +326,7 @@
                     <li>- Sekretarijatu 16 (x2)</li>
                     <li>- Arhivi</li>
                 </ul>
+            </div>
             </div>
         </div>
 
