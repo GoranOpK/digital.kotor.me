@@ -230,7 +230,7 @@ class Competition extends Model
         }
 
         $applications = $this->applications()
-            ->whereIn('status', ['submitted', 'evaluated', 'rejected'])
+            ->whereIn('status', ['submitted', 'evaluated', 'rejected', 'approved'])
             ->get();
 
         if ($applications->isEmpty()) {
@@ -238,7 +238,23 @@ class Competition extends Model
         }
 
         $activeMembersCount = $activeMemberIds->count();
+        $chairmanMember = $commission->activeMembers()->where('position', 'predsjednik')->first();
+
         foreach ($applications as $application) {
+            // Prijave odbijene zbog nedostatka dokumenata: predsjednik samo označi dokumentaciju,
+            // niti jedan član komisije ih ne ocjenjuje, preskačemo ih u provjeri
+            $chairmanScore = $chairmanMember
+                ? \App\Models\EvaluationScore::where('application_id', $application->id)
+                    ->where('commission_member_id', $chairmanMember->id)
+                    ->first()
+                : null;
+            $rejectedForDocuments = $chairmanScore && $chairmanScore->documents_complete === false;
+
+            if ($rejectedForDocuments) {
+                continue; // Ne treba da ih ocjenjuje nijedan član – preskačemo
+            }
+
+            // Sve ostale prijave: svi članovi moraju ocjeniti
             $evaluatedCount = \App\Models\EvaluationScore::where('application_id', $application->id)
                 ->whereIn('commission_member_id', $activeMemberIds)
                 ->pluck('commission_member_id')
