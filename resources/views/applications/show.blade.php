@@ -600,7 +600,7 @@
             <div class="info-card">
                 <h2>Dodaj dokument</h2>
                 <div class="upload-section" style="margin-top: 0; background: #f9fafb; padding: 15px;">
-                    <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('applications.upload', $application) }}" enctype="multipart/form-data" id="upload-doc-form-{{ $application->id }}" data-app-id="{{ $application->id }}" onsubmit="return prepareUploadFormSubmit(event, {{ $application->id }})">
                         @csrf
                         <div class="form-group" style="margin-bottom: 12px;">
                             <label class="form-label" style="font-size: 13px;">Tip dokumenta</label>
@@ -668,9 +668,16 @@
                         <div class="form-group" style="margin-bottom: 12px;">
                             <label class="form-label" style="font-size: 13px;">Fajl</label>
                             <div class="file-input-wrapper" style="min-height: 32px;">
-                                <input type="file" name="file" id="file-input-{{ $application->id }}" accept=".pdf,.jpg,.jpeg,.png" onchange="updateFileName(this, 'file-name-{{ $application->id }}')" style="height: 32px;">
-                                <label for="file-input-{{ $application->id }}" class="file-input-label-custom" style="padding: 6px 12px; font-size: 12px;">Izaberi fajl</label>
-                                <span id="file-name-{{ $application->id }}" class="file-name-display" style="display: none; font-size: 11px;"></span>
+                                <input type="file" name="files[]" id="file-input-{{ $application->id }}" multiple accept="image/jpeg,image/png,image/jpg,application/pdf" onchange="updateFileDisplayApp(this)" style="height: 32px;">
+                                <label for="file-input-{{ $application->id }}" class="file-input-label-custom" id="file-label-{{ $application->id }}" style="padding: 6px 12px; font-size: 12px;">Izaberi fajlove (možete izabrati više)</label>
+                                <div id="file-names-app-{{ $application->id }}" class="file-names-app" style="display: none; margin-top: 8px;"></div>
+                            </div>
+                            <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 8px; border-radius: 4px;">
+                                <strong style="color: #1e40af; display: block; margin-bottom: 4px;">ℹ️ Važno:</strong>
+                                <span style="color: #1e3a8a; font-size: 12px;">
+                                    Ako izaberete više fajlova, oni će biti spojeni u <strong>jedan PDF dokument</strong> tim redosledom kako su navedeni.
+                                    Možete promeniti redosled fajlova pomoću dugmadi "Gore" i "Dole" pre upload-a.
+                                </span>
                             </div>
                         </div>
                         <div class="form-group" style="margin-bottom: 15px;">
@@ -681,6 +688,10 @@
                                     <option value="{{ $userDoc->id }}">{{ Str::limit($userDoc->name, 20) }}</option>
                                 @endforeach
                             </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" name="save_to_library" id="save-to-library-{{ $application->id }}" value="1" style="width: 18px; height: 18px; cursor: pointer;">
+                            <label for="save-to-library-{{ $application->id }}" class="form-label" style="font-weight: 400; font-size: 12px; margin: 0; cursor: pointer;">Sačuvaj dokument i u moju biblioteku</label>
                         </div>
                         <button type="submit" class="btn btn-primary" style="width: 100%; font-size: 13px; padding: 10px;">Priloži dokument</button>
                     </form>
@@ -1023,14 +1034,145 @@
 </div>
 
 <script>
-    function updateFileName(input, displayId) {
-        const display = document.getElementById(displayId);
-        if (input.files && input.files[0]) {
-            display.textContent = input.files[0].name;
-            display.style.display = 'block';
+(function() {
+    let selectedFilesApp = [];
+
+    function getAppIdFromInput(input) {
+        const form = input.closest('form');
+        return form ? form.dataset.appId : null;
+    }
+
+    window.updateFileDisplayApp = function(input) {
+        const appId = getAppIdFromInput(input);
+        if (!appId) return;
+        const fileNamesDiv = document.getElementById('file-names-app-' + appId);
+        const fileLabel = document.getElementById('file-label-' + appId);
+        if (!fileNamesDiv || !fileLabel) return;
+
+        if (input.files && input.files.length > 0) {
+            const newFiles = Array.from(input.files);
+            newFiles.forEach(function(newFile) {
+                const exists = selectedFilesApp.some(function(f) { return f.name === newFile.name && f.size === newFile.size; });
+                if (!exists) selectedFilesApp.push(newFile);
+            });
+            const dataTransfer = new DataTransfer();
+            selectedFilesApp.forEach(function(f) { dataTransfer.items.add(f); });
+            input.files = dataTransfer.files;
+        }
+
+        if (selectedFilesApp.length > 0) {
+            let html = '<div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 4px;">Izabrano fajlova: ' + selectedFilesApp.length + (selectedFilesApp.length > 1 ? ' (biće spojeni u jedan PDF)' : '') + '</div>';
+            html += '<ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #6b7280; list-style: none;">';
+            selectedFilesApp.forEach(function(file, index) {
+                const size = (file.size / 1024 / 1024).toFixed(2);
+                html += '<li style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; padding: 6px; background: #f9fafb; border-radius: 4px;">';
+                html += '<span style="flex: 1;"><strong style="color: var(--primary);">' + (index + 1) + '.</strong> ' + file.name + ' (' + size + ' MB)</span>';
+                html += '<div style="display: flex; gap: 4px; margin-left: 8px;">';
+                if (index > 0) {
+                    html += '<button type="button" class="file-action-btn-app" data-action="move-up" data-index="' + index + '" title="Pomeri gore" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬆️</button>';
+                } else {
+                    html += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬆️</button>';
+                }
+                if (index < selectedFilesApp.length - 1) {
+                    html += '<button type="button" class="file-action-btn-app" data-action="move-down" data-index="' + index + '" title="Pomeri dole" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬇️</button>';
+                } else {
+                    html += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬇️</button>';
+                }
+                html += '<button type="button" class="file-action-btn-app" data-action="remove" data-index="' + index + '" title="Ukloni" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">✕</button>';
+                html += '</div></li>';
+            });
+            html += '</ul>';
+            fileNamesDiv.innerHTML = html;
+            fileNamesDiv.style.display = 'block';
+            fileLabel.textContent = selectedFilesApp.length === 1 ? selectedFilesApp[0].name : 'Izabrano ' + selectedFilesApp.length + ' fajlova (biće spojeni u jedan PDF)';
         } else {
-            display.style.display = 'none';
+            fileNamesDiv.style.display = 'none';
+            fileLabel.textContent = 'Izaberi fajlove (možete izabrati više)';
+        }
+    };
+
+    function removeFileApp(index, input) {
+        selectedFilesApp.splice(index, 1);
+        const dataTransfer = new DataTransfer();
+        selectedFilesApp.forEach(function(f) { dataTransfer.items.add(f); });
+        input.files = dataTransfer.files;
+        updateFileDisplayApp(input);
+    }
+
+    function moveFileUpApp(index, input) {
+        if (index > 0) {
+            const t = selectedFilesApp[index];
+            selectedFilesApp[index] = selectedFilesApp[index - 1];
+            selectedFilesApp[index - 1] = t;
+            const dataTransfer = new DataTransfer();
+            selectedFilesApp.forEach(function(f) { dataTransfer.items.add(f); });
+            input.files = dataTransfer.files;
+            updateFileDisplayApp(input);
         }
     }
+
+    function moveFileDownApp(index, input) {
+        if (index < selectedFilesApp.length - 1) {
+            const t = selectedFilesApp[index];
+            selectedFilesApp[index] = selectedFilesApp[index + 1];
+            selectedFilesApp[index + 1] = t;
+            const dataTransfer = new DataTransfer();
+            selectedFilesApp.forEach(function(f) { dataTransfer.items.add(f); });
+            input.files = dataTransfer.files;
+            updateFileDisplayApp(input);
+        }
+    }
+
+    window.prepareUploadFormSubmit = function(event, appId) {
+        const userDocSelect = document.querySelector('select[name="user_document_id"]');
+        if (userDocSelect && userDocSelect.value) return true;
+
+        const input = document.getElementById('file-input-' + appId);
+        if (!input) return true;
+
+        if (selectedFilesApp.length === 0) {
+            event.preventDefault();
+            alert('Morate priložiti fajl ili izabrati dokument iz biblioteke.');
+            return false;
+        }
+
+        const maxFileSize = 20 * 1024 * 1024;
+        for (let i = 0; i < selectedFilesApp.length; i++) {
+            if (selectedFilesApp[i].size > maxFileSize) {
+                event.preventDefault();
+                alert('Fajl "' + selectedFilesApp[i].name + '" je prevelik. Maksimalno dozvoljeno je 20 MB po fajlu.');
+                return false;
+            }
+        }
+
+        const dataTransfer = new DataTransfer();
+        selectedFilesApp.forEach(function(f) { dataTransfer.items.add(f); });
+        input.files = dataTransfer.files;
+        return true;
+    };
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('mousedown', function(e) {
+            const btn = e.target.closest('.file-action-btn-app');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const action = btn.getAttribute('data-action');
+            const index = parseInt(btn.getAttribute('data-index'));
+            const form = btn.closest('form');
+            const input = form ? form.querySelector('input[type="file"]') : null;
+            if (!input) return;
+            if (action === 'move-up') moveFileUpApp(index, input);
+            else if (action === 'move-down') moveFileDownApp(index, input);
+            else if (action === 'remove') removeFileApp(index, input);
+        });
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.file-action-btn-app')) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, true);
+    });
+})();
 </script>
 @endsection

@@ -588,13 +588,14 @@ class ApplicationController extends Controller
 
         $validated = $request->validate([
             'document_type' => 'required|string|in:licna_karta,crps_resenje,pib_resenje,pdv_resenje,statut,karton_potpisa,potvrda_neosudjivanost,uvjerenje_opstina_porezi,uvjerenje_opstina_nepokretnost,potvrda_upc_porezi,ioppd_obrazac,godisnji_racuni,biznis_plan_usb,izvjestaj_realizacija,finansijski_izvjestaj,ostalo',
-            'file' => 'required_without:user_document_id|file|mimes:pdf,jpg,jpeg,png|max:20480', // 20MB max
-            'user_document_id' => 'nullable|required_without:file',
+            'files' => 'required_without:user_document_id|array|min:1',
+            'files.*' => 'file|mimes:pdf,jpg,jpeg,png|max:20480', // 20MB max po fajlu
+            'user_document_id' => 'nullable|required_without:files',
         ], [
             'document_type.required' => 'Tip dokumenta je obavezan.',
-            'file.required_without' => 'Morate priložiti fajl ili izabrati dokument iz biblioteke.',
+            'files.required_without' => 'Morate priložiti fajl ili izabrati dokument iz biblioteke.',
             'user_document_id.required_without' => 'Morate priložiti fajl ili izabrati dokument iz biblioteke.',
-            'file.max' => 'Fajl ne može biti veći od 20MB.',
+            'files.*.max' => 'Fajl ne može biti veći od 20MB.',
         ]);
 
         // Proveri da li je dokument već priložen
@@ -633,15 +634,19 @@ class ApplicationController extends Controller
             return back()->with('success', 'Dokument je uspješno priložen iz biblioteke.');
         }
 
-        // Ako je upload-ovan novi fajl
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
+        // Ako je upload-ovan novi fajl (jedan ili više)
+        if ($request->hasFile('files')) {
+            $files = $request->file('files');
             $documentProcessor = app(\App\Services\DocumentProcessor::class);
 
-            $result = $documentProcessor->processDocument($file, Auth::id());
+            if (count($files) > 1) {
+                $result = $documentProcessor->mergeDocuments($files, Auth::id());
+            } else {
+                $result = $documentProcessor->processDocument($files[0], Auth::id());
+            }
 
             if (!$result['success']) {
-                return back()->withErrors(['file' => $result['error'] ?? 'Greška pri obradi fajla.'])->withInput();
+                return back()->withErrors(['files' => $result['error'] ?? 'Greška pri obradi fajla.'])->withInput();
             }
 
             $filePath = $result['file_path'];
@@ -680,18 +685,48 @@ class ApplicationController extends Controller
                 ]);
             }
 
+            $documentName = count($files) === 1
+                ? $files[0]->getClientOriginalName()
+                : 'Spojeni dokument (' . count($files) . ' fajlova).pdf';
+
+            $fileSize = $result['file_size'] ?? (file_exists(Storage::disk('local')->path($filePath)) ? filesize(Storage::disk('local')->path($filePath)) : 0);
+            $userDocumentId = null;
+
+            // Ako je štrikirana opcija "Sačuvaj u biblioteku", kreiraj UserDocument
+            if ($request->boolean('save_to_library')) {
+                $userDocument = UserDocument::create([
+                    'user_id' => Auth::id(),
+                    'category' => 'Ostali dokumenti',
+                    'name' => $documentName,
+                    'file_path' => $filePath,
+                    'cloud_path' => $cloudPath,
+                    'mega_node_id' => $megaNodeId,
+                    'mega_file_name' => $cloudPath ? $megaFileName : null,
+                    'original_filename' => $documentName,
+                    'file_size' => $fileSize,
+                    'status' => 'active',
+                    'processed_at' => now(),
+                ]);
+                $userDocumentId = $userDocument->id;
+            }
+
             ApplicationDocument::create([
                 'application_id' => $application->id,
-                'name' => $file->getClientOriginalName(),
+                'name' => $documentName,
                 'file_path' => $filePath,
                 'cloud_path' => $cloudPath,
                 'mega_node_id' => $megaNodeId,
                 'mega_file_name' => $cloudPath ? $megaFileName : null,
                 'document_type' => $validated['document_type'],
                 'is_required' => in_array($validated['document_type'], $application->getRequiredDocuments()),
+                'user_document_id' => $userDocumentId,
             ]);
 
-            return back()->with('success', 'Dokument je uspješno upload-ovan, priložen i podignut na MEGA.');
+            $successMessage = 'Dokument je uspješno upload-ovan, priložen i podignut na MEGA.';
+            if ($userDocumentId) {
+                $successMessage .= ' Dokument je takođe sačuvan u vašu biblioteku dokumenata.';
+            }
+            return back()->with('success', $successMessage);
         }
 
         return back()->withErrors(['error' => 'Greška pri priložavanju dokumenta.'])->withInput();
