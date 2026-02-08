@@ -43,6 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/documents/temp-download-mega', [DocumentController::class, 'tempDownloadMegaPdf'])->name('documents.temp-download-mega');
     Route::post('/documents/store-mega', [DocumentController::class, 'storeMegaMetadata'])->name('documents.store-mega');
     Route::get('/documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
+    Route::patch('/documents/{document}/category', [DocumentController::class, 'updateCategory'])->name('documents.update-category');
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
     Route::get('/documents/status', [DocumentController::class, 'status'])->name('documents.status'); // API za proveru statusa
     

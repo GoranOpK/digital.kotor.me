@@ -534,6 +534,27 @@ class DocumentController extends Controller
     }
 
     /**
+     * Promjena kategorije dokumenta
+     */
+    public function updateCategory(Request $request, UserDocument $document): RedirectResponse
+    {
+        $user = Auth::user();
+
+        if ($document->user_id !== $user->id) {
+            abort(403, 'Nemate pristup ovom dokumentu.');
+        }
+
+        $validated = $request->validate([
+            'category' => 'required|in:Lični dokumenti,Finansijski dokumenti,Poslovni dokumenti,Ostali dokumenti',
+        ]);
+
+        $document->update(['category' => $validated['category']]);
+
+        return redirect()->route('documents.index')
+            ->with('success', 'Kategorija dokumenta je uspješno promijenjena.');
+    }
+
+    /**
      * Brisanje dokumenta
      */
     public function destroy(UserDocument $document): RedirectResponse

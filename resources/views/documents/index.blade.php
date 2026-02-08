@@ -202,6 +202,8 @@
     }
     .document-actions {
         display: flex;
+        flex-wrap: wrap;
+        align-items: center;
         gap: 8px;
     }
     .btn-sm {
@@ -226,6 +228,52 @@
     }
     .btn-delete:hover {
         background: #dc2626;
+    }
+    .btn-category {
+        background: #6b7280;
+        color: #fff;
+    }
+    .btn-category:hover {
+        background: #4b5563;
+    }
+    .category-change-wrapper {
+        display: inline-block;
+        position: relative;
+    }
+    .category-change-form {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        margin-top: 4px;
+        padding: 10px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 10;
+        min-width: 200px;
+    }
+    .category-change-form.visible {
+        display: block;
+    }
+    .category-change-form select {
+        width: 100%;
+        padding: 6px 8px;
+        font-size: 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        margin-bottom: 8px;
+    }
+    .category-change-form button[type="submit"] {
+        width: 100%;
+        padding: 6px 12px;
+        font-size: 12px;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
     }
     .empty-state {
         text-align: center;
@@ -416,6 +464,21 @@
                                         <a href="{{ route('documents.download', $document) }}" class="btn-sm btn-download" target="_blank" rel="noopener noreferrer">
                                             Preuzmi
                                         </a>
+                                        <div class="category-change-wrapper">
+                                            <button type="button" class="btn-sm btn-category" onclick="toggleCategoryForm(this)">Promijeni kategoriju</button>
+                                            <div class="category-change-form" id="category-form-{{ $document->id }}">
+                                                <form action="{{ route('documents.update-category', $document) }}" method="POST">
+                                                    @csrf
+                                                    @method('PATCH')
+                                                    <select name="category" required>
+                                                        @foreach($categories as $catKey => $catName)
+                                                            <option value="{{ $catName }}" {{ $document->category === $catName ? 'selected' : '' }}>{{ $catName }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                    <button type="submit">Sačuvaj</button>
+                                                </form>
+                                            </div>
+                                        </div>
                                     @endif
                                     <form class="document-delete-form" action="{{ route('documents.destroy', $document) }}" method="POST" 
                                           style="display: inline;" 
@@ -466,6 +529,26 @@ async function handleDocumentDelete(event, form) {
     form.submit();
     return false;
 }
+
+function toggleCategoryForm(btn) {
+    const wrapper = btn.closest('.category-change-wrapper');
+    const formEl = wrapper.querySelector('.category-change-form');
+    const isVisible = formEl.classList.contains('visible');
+    document.querySelectorAll('.category-change-form.visible').forEach(function(el) {
+        el.classList.remove('visible');
+    });
+    if (!isVisible) {
+        formEl.classList.add('visible');
+    }
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.category-change-wrapper')) {
+        document.querySelectorAll('.category-change-form.visible').forEach(function(el) {
+            el.classList.remove('visible');
+        });
+    }
+});
 
 // Savet za osvežavanje stranice (Ctrl+F5)
 (function() {
