@@ -624,4 +624,58 @@ class Application extends Model
 
         return array_values($documents);
     }
+
+    /**
+     * Tekst podataka iz obrasca 1a/1b za e-mail spiska kandidata (jedna prijava).
+     */
+    public function getObrazacTextForEmail(): string
+    {
+        $labels = [
+            'applicant_type' => 'Tip podnosioca',
+            'business_plan_name' => 'Naziv biznis plana',
+            'business_stage' => 'Faza (započinjanje/razvoj)',
+            'business_area' => 'Područje djelatnosti',
+            'founder_name' => 'Ime i prezime osnivača',
+            'director_name' => 'Ime i prezime direktora',
+            'company_seat' => 'Sjedište',
+            'physical_person_name' => 'Ime i prezime (fizičko lice)',
+            'physical_person_jmbg' => 'JMBG (fizičko lice)',
+            'physical_person_phone' => 'Telefon (fizičko lice)',
+            'physical_person_email' => 'E-mail (fizičko lice)',
+            'requested_amount' => 'Traženi iznos (€)',
+            'total_budget_needed' => 'Ukupna vrijednost biznis plana (€)',
+            'bank_account' => 'Žiro račun',
+            'vat_number' => 'PDV broj',
+            'pib' => 'PIB',
+            'crps_number' => 'CRPS broj',
+            'website' => 'Web stranica',
+            'registration_form' => 'Oblik registracije',
+        ];
+        $applicantTypeLabels = [
+            'fizicko_lice' => 'Fizičko lice (nema registrovanu djelatnost)',
+            'preduzetnica' => 'Preduzetnica',
+            'doo' => 'DOO',
+            'ostalo' => 'Ostalo',
+        ];
+        $stageLabels = ['započinjanje' => 'Započinjanje', 'razvoj' => 'Razvoj'];
+
+        $lines = [];
+        foreach ($labels as $key => $label) {
+            $value = $this->getAttribute($key);
+            if ($value === null || $value === '') {
+                continue;
+            }
+            if ($key === 'applicant_type') {
+                $value = $applicantTypeLabels[$value] ?? $value;
+            }
+            if ($key === 'business_stage') {
+                $value = $stageLabels[$value] ?? $value;
+            }
+            if (in_array($key, ['requested_amount', 'total_budget_needed']) && is_numeric($value)) {
+                $value = number_format((float) $value, 2, ',', '.');
+            }
+            $lines[] = $label . ': ' . $value;
+        }
+        return implode("\n", $lines);
+    }
 }

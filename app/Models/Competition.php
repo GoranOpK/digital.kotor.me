@@ -24,6 +24,7 @@ class Competition extends Model
         'published_at',
         'closed_at',
         'commission_id',
+        'candidates_list_email_sent_at',
     ];
 
     protected $casts = [
@@ -31,6 +32,7 @@ class Competition extends Model
         'end_date' => 'date',
         'published_at' => 'datetime',
         'closed_at' => 'datetime',
+        'candidates_list_email_sent_at' => 'datetime',
         'budget' => 'decimal:2',
         'max_support_percentage' => 'decimal:2',
         'year' => 'integer',
