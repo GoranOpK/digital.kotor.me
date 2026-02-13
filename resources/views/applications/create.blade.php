@@ -243,6 +243,14 @@
         color: #111;
         margin: 8px 0 0 0;
     }
+    .obrazac-podnaslov {
+        width: 100%;
+        text-align: center;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #374151;
+        margin: 12px 0 0 0;
+    }
     @media print {
         .obrazac-zaglavlje { box-shadow: none; border: 1px solid #ccc; }
         .obrazac-grb img { height: 2cm; }
@@ -267,7 +275,7 @@
         <div class="obrazac-zaglavlje">
             <div class="obrazac-zaglavlje-top">
                 <div class="obrazac-grb">
-                    <img src="{{ asset('images/srednji_grb.png') }}" alt="Grb Opštine Kotor" height="2cm">
+                    <img src="{{ asset('images/srednji_grb.png') }}" alt="Grb Opštine Kotor" class="obrazac-grb-img" onerror="this.onerror=null; this.src='{{ asset('images/srednji_grb.svg') }}';" style="height: 2cm; width: auto; display: block;">
                 </div>
                 <div class="obrazac-org">
                     <p><strong>Crna Gora</strong></p>
@@ -290,6 +298,11 @@
                 <div class="obrazac-1a-1b" id="obrazacLabelHeader">{{ $obrazacLabel }}</div>
             </div>
             <h1 class="obrazac-naslov-prijava">PRIJAVA</h1>
+            <p class="obrazac-podnaslov" id="obrazacPodnaslovHeader">
+                na javni konkurs za raspodjelu bespovratnih sredstava<br>
+                namjenjenih za podršku ženskom preduzetništvu<br>
+                <span id="obrazacRegistracijaHeader">(za oblik registracije PREDUZETNIK)</span>
+            </p>
         </div>
 
         <div class="page-header">
@@ -462,14 +475,6 @@
             <!-- Obrazac 1a: Za Preduzetnice (PREDUZETNIK) -->
             <div class="form-card conditional-field" id="obrazac1a">
                 <div class="form-section">
-                    <div style="text-align: center; margin-bottom: 24px;">
-                        <h1 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Obrazac 1a</h1>
-                        <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">PRIJAVA</h2>
-                        <p style="margin: 4px 0; font-size: 14px;">na javni konkurs za raspodjelu bespovratnih sredstava</p>
-                        <p style="margin: 4px 0; font-size: 14px;">namjenjenih za podršku ženskom preduzetništvu</p>
-                        <p style="margin: 4px 0; font-size: 14px;">(za oblik registracije PREDUZETNIK)</p>
-                    </div>
-
                     <div class="form-group">
                         <label class="form-label">
                             Naziv biznis plana <span class="required">*</span>
@@ -728,14 +733,6 @@
             <!-- Obrazac 1b: Za DOO i Ostalo -->
             <div class="form-card conditional-field" id="obrazac1b">
                 <div class="form-section">
-                    <div style="text-align: center; margin-bottom: 24px;">
-                        <h1 style="font-size: 20px; font-weight: 700; margin-bottom: 8px;">Obrazac 1b</h1>
-                        <h2 style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">PRIJAVA</h2>
-                        <p style="margin: 4px 0; font-size: 14px;">na javni konkurs za raspodjelu bespovratnih sredstava</p>
-                        <p style="margin: 4px 0; font-size: 14px;">namjenjenih za podršku ženskom preduzetništvu</p>
-                        <p style="margin: 4px 0; font-size: 14px;" id="obrazac1b-subtitle">(za oblik registracije DOO)</p>
-                    </div>
-
                     <div class="form-group">
                         <label class="form-label">
                             Naziv biznis plana <span class="required">*</span>
@@ -1426,6 +1423,13 @@
                 else if (selectedType === 'doo' || selectedType === 'ostalo') headerLabel.textContent = 'Obrazac 1b';
                 else headerLabel.textContent = 'Obrazac 1a/1b';
             }
+            const regHeader = document.getElementById('obrazacRegistracijaHeader');
+            if (regHeader) {
+                if (selectedType === 'preduzetnica' || selectedType === 'fizicko_lice') regHeader.textContent = '(za oblik registracije PREDUZETNIK)';
+                else if (selectedType === 'doo') regHeader.textContent = '(za oblik registracije DOO)';
+                else if (selectedType === 'ostalo') regHeader.textContent = '(za ostale pravne subjekte)';
+                else regHeader.textContent = '(za oblik registracije PREDUZETNIK)';
+            }
             // Resetuj sve obrazce - disable sva polja u sakrivenim sekcijama
             if (obrazac1a) {
                 obrazac1a.classList.remove('show');
@@ -1520,15 +1524,6 @@
                     obrazac1bFields.forEach(field => {
                         field.removeAttribute('disabled');
                     });
-                    // Ažuriraj zaglavlje na osnovu tipa
-                    const obrazac1bSubtitle = document.getElementById('obrazac1b-subtitle');
-                    if (obrazac1bSubtitle) {
-                        if (selectedType === 'doo') {
-                            obrazac1bSubtitle.textContent = '(za oblik registracije DOO)';
-                        } else if (selectedType === 'ostalo') {
-                            obrazac1bSubtitle.textContent = '(za ostale pravne subjekte)';
-                        }
-                    }
                     // Dodaj required na obavezna polja u obrazac1b
                     const businessPlanName1b = obrazac1b.querySelector('input[name="business_plan_name"]');
                     const businessArea1b = obrazac1b.querySelector('input[name="business_area"]');

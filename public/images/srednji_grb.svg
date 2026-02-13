@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" width="120" height="140">
+  <!-- Mural crown -->
+  <path fill="#c9a227" d="M10 8h100l-5 12H15L10 8z"/>
+  <rect x="15" y="20" width="12" height="8" fill="#c9a227"/>
+  <rect x="35" y="20" width="12" height="8" fill="#c9a227"/>
+  <rect x="55" y="20" width="12" height="8" fill="#c9a227"/>
+  <rect x="75" y="20" width="12" height="8" fill="#c9a227"/>
+  <rect x="93" y="20" width="12" height="8" fill="#c9a227"/>
+  <!-- Shield -->
+  <path fill="#e5e7eb" stroke="#374151" stroke-width="1" d="M60 35 L105 50 L105 115 Q105 135 60 135 Q15 135 15 115 L15 50 Z"/>
+  <!-- Saint / tower simplified -->
+  <circle cx="40" cy="65" r="12" fill="#dc2626"/>
+  <rect x="35" y="78" width="10" height="25" fill="#fff" stroke="#374151"/>
+  <rect x="72" y="60" width="18" height="35" fill="#fff" stroke="#374151"/>
+  <circle cx="81" cy="72" r="3" fill="#374151"/>
+  <!-- Lion base -->
+  <path fill="#dc2626" d="M30 105 Q60 95 90 105 L85 120 Q60 115 35 120 Z"/>
+</svg>
