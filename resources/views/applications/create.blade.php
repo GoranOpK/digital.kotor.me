@@ -305,11 +305,6 @@
             </p>
         </div>
 
-        <div class="page-header">
-            <h1>Prijava na konkurs - Obrazac 1a/1b</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 0;">{{ $competition->title }}</p>
-        </div>
-
         @if(session('success'))
             <div class="alert alert-info">
                 {{ session('success') }}
