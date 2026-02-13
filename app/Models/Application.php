@@ -49,6 +49,7 @@ class Application extends Model
         'submitted_at',
         'evaluated_at',
         'interview_scheduled_at',
+        'redni_broj',
     ];
 
     protected $casts = [

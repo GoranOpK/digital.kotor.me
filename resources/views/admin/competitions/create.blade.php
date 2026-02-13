@@ -114,8 +114,11 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Broj konkursa</label>
-                        <input type="number" name="competition_number" class="form-control" value="{{ old('competition_number') }}">
+                        <label class="form-label">UP broj konkursa *</label>
+                        <input type="text" name="up_number" class="form-control @error('up_number') error @enderror" value="{{ old('up_number') }}" required>
+                        @error('up_number')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="form-group">

@@ -61,6 +61,12 @@ class Competition extends Model
         return $this->belongsTo(Commission::class);
     }
 
+    // Veza: konkurs ima jedan UP broj
+    public function upNumber()
+    {
+        return $this->hasOne(UpNumber::class);
+    }
+
     /**
      * Izračunava datum i vreme isteka konkursa
      */

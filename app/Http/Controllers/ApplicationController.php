@@ -554,10 +554,12 @@ class ApplicationController extends Controller
         // Napomena: Provjera dokumenata je uklonjena - korisnici mogu podnijeti prijavu i bez svih dokumenata.
         // Predsjednik komisije će odbiti prijavu ako nedostaju dokumenti kroz formu za ocjenjivanje.
 
-        // Sve je u redu, podnesi prijavu
+        // Dodeli redni broj prijave (1, 2, 3, ...) po konkursu
+        $maxRedni = Application::where('competition_id', $application->competition_id)->max('redni_broj');
         $application->update([
             'status' => 'submitted',
             'submitted_at' => now(),
+            'redni_broj' => ($maxRedni ?? 0) + 1,
         ]);
 
         return redirect()->route('applications.show', $application)

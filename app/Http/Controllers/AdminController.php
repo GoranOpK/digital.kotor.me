@@ -12,6 +12,7 @@ use App\Models\Role;
 use App\Models\Tender;
 use App\Models\Contract;
 use App\Models\Report;
+use App\Models\UpNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -392,7 +393,7 @@ class AdminController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:zensko,omladinsko,ostalo',
-            'competition_number' => 'nullable|integer',
+            'up_number' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'budget' => 'required|numeric|min:0',
             'max_support_percentage' => 'required|numeric|min:0|max:100',
@@ -401,15 +402,24 @@ class AdminController extends Controller
         ], [
             'title.required' => 'Naziv konkursa je obavezan.',
             'type.required' => 'Tip konkursa je obavezan.',
+            'up_number.required' => 'UP broj konkursa je obavezan.',
             'year.required' => 'Godina je obavezna.',
             'budget.required' => 'Budžet je obavezan.',
             'max_support_percentage.required' => 'Maksimalna podrška je obavezna.',
             'commission_id.exists' => 'Izabrana komisija ne postoji.',
         ]);
 
-        $data = $validated;
-        $data['deadline_days'] = 20;
-        $data['status'] = 'draft';
+        $data = [
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'type' => $validated['type'],
+            'year' => $validated['year'],
+            'budget' => $validated['budget'],
+            'max_support_percentage' => $validated['max_support_percentage'],
+            'commission_id' => $validated['commission_id'] ?? null,
+            'deadline_days' => 20,
+            'status' => 'draft',
+        ];
 
         if (!empty($validated['start_date'])) {
             $start = \Carbon\Carbon::parse($validated['start_date']);
@@ -417,7 +427,28 @@ class AdminController extends Controller
             $data['end_date'] = $start->copy()->addDays(20)->toDateString();
         }
 
-        $competition = Competition::create($data);
+        $competition = DB::transaction(function () use ($data, $validated) {
+            $competition = Competition::create($data);
+            $datePart = $competition->created_at->format('Ymd');
+            $sameDay = Competition::where('id', '!=', $competition->id)
+                ->whereDate('created_at', $competition->created_at->toDateString())
+                ->get();
+            $maxN = 0;
+            foreach ($sameDay as $c) {
+                if ($c->competition_number && preg_match('/^\d{8}(\d+)$/', $c->competition_number, $m)) {
+                    $n = (int) $m[1];
+                    if ($n > $maxN) {
+                        $maxN = $n;
+                    }
+                }
+            }
+            $competition->update(['competition_number' => $datePart . ($maxN + 1)]);
+            UpNumber::create([
+                'competition_id' => $competition->id,
+                'number' => $validated['up_number'],
+            ]);
+            return $competition->fresh();
+        });
 
         return redirect()->route('admin.competitions.show', $competition)
             ->with('success', 'Konkurs je uspješno kreiran.');
@@ -511,7 +542,7 @@ class AdminController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
             'type' => 'required|in:zensko,omladinsko,ostalo',
-            'competition_number' => 'nullable|integer',
+            'up_number' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'budget' => 'required|numeric|min:0',
             'max_support_percentage' => 'required|numeric|min:0|max:100',
@@ -521,15 +552,25 @@ class AdminController extends Controller
         ], [
             'title.required' => 'Naziv konkursa je obavezan.',
             'type.required' => 'Tip konkursa je obavezan.',
+            'up_number.required' => 'UP broj konkursa je obavezan.',
             'year.required' => 'Godina je obavezna.',
             'budget.required' => 'Budžet je obavezan.',
             'max_support_percentage.required' => 'Maksimalna podrška je obavezna.',
             'commission_id.exists' => 'Izabrana komisija ne postoji.',
         ]);
 
-        $data = $validated;
-        $data['deadline_days'] = 20;
-        
+        $data = [
+            'title' => $validated['title'],
+            'description' => $validated['description'] ?? null,
+            'type' => $validated['type'],
+            'year' => $validated['year'],
+            'budget' => $validated['budget'],
+            'max_support_percentage' => $validated['max_support_percentage'],
+            'status' => $validated['status'],
+            'commission_id' => $validated['commission_id'] ?? null,
+            'deadline_days' => 20,
+        ];
+
         // Ako vraćamo konkurs u status 'published' ili 'draft', poništi datum zatvaranja
         if (in_array($validated['status'], ['published', 'draft'])) {
             $data['closed_at'] = null;
@@ -542,6 +583,11 @@ class AdminController extends Controller
         }
 
         $competition->update($data);
+
+        $competition->upNumber()->updateOrCreate(
+            ['competition_id' => $competition->id],
+            ['number' => $validated['up_number']]
+        );
 
         return redirect()->route('admin.competitions.show', $competition)
             ->with('success', 'Konkurs je uspješno ažuriran.');

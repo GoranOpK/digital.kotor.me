@@ -139,13 +139,20 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Broj konkursa</label>
-                        <input type="number" name="competition_number" class="form-control @error('competition_number') error @enderror" value="{{ old('competition_number', $competition->competition_number) }}">
-                        @error('competition_number')
+                        <label class="form-label">Broj konkursa (automatski)</label>
+                        <input type="text" class="form-control" value="{{ $competition->competition_number ?? '—' }}" readonly disabled style="background: #f3f4f6;">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">UP broj konkursa *</label>
+                        <input type="text" name="up_number" class="form-control @error('up_number') error @enderror" value="{{ old('up_number', $competition->upNumber?->number) }}" required>
+                        @error('up_number')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
+                </div>
 
+                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Godina *</label>
                         <input type="number" name="year" class="form-control @error('year') error @enderror" value="{{ old('year', $competition->year ?? date('Y')) }}" min="2020" max="2100" required>
