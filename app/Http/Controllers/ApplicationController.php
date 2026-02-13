@@ -21,6 +21,7 @@ class ApplicationController extends Controller
      */
     public function create(Competition $competition, Request $request): View|RedirectResponse
     {
+        $competition->load('upNumber');
         $user = Auth::user();
         $roleName = $user->role ? $user->role->name : null;
         

@@ -176,10 +176,122 @@
     .conditional-field.show {
         display: block;
     }
+    /* Zaglavlje obrasca 1a/1b – grb, ustanova, broj prijave */
+    .obrazac-zaglavlje {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .obrazac-zaglavlje-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 16px;
+    }
+    .obrazac-grb {
+        flex-shrink: 0;
+        line-height: 0;
+    }
+    .obrazac-grb img {
+        height: 2cm;
+        width: auto;
+        display: block;
+    }
+    .obrazac-org {
+        flex: 1;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #111;
+    }
+    .obrazac-org p { margin: 0 0 2px 0; }
+    .obrazac-contact {
+        text-align: right;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #111;
+    }
+    .obrazac-contact p { margin: 0 0 2px 0; }
+    .obrazac-broj-i-naslov {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e5e7eb;
+    }
+    .obrazac-broj-prijave {
+        font-size: 14px;
+        font-weight: 600;
+        color: #111;
+    }
+    .obrazac-1a-1b {
+        font-size: 14px;
+        font-weight: 700;
+        color: #374151;
+    }
+    .obrazac-naslov-prijava {
+        width: 100%;
+        text-align: center;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #111;
+        margin: 8px 0 0 0;
+    }
+    @media print {
+        .obrazac-zaglavlje { box-shadow: none; border: 1px solid #ccc; }
+        .obrazac-grb img { height: 2cm; }
+    }
 </style>
 
 <div class="application-form-page">
     <div class="container mx-auto px-4">
+        {{-- Zaglavlje obrasca 1a/1b: grb, ustanova, broj prijave, PRIJAVA --}}
+        @php
+            $upBroj = $competition->upNumber?->number ?? '—';
+            $redniBroj = isset($existingApplication) && $existingApplication ? ($existingApplication->redni_broj ?? '—') : '—';
+            $brojPrijave = $upBroj . '/' . $redniBroj;
+            $applicantType = old('applicant_type', isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null);
+            $obrazacLabel = 'Obrazac 1a/1b';
+            if ($applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
+                $obrazacLabel = 'Obrazac 1a';
+            } elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
+                $obrazacLabel = 'Obrazac 1b';
+            }
+        @endphp
+        <div class="obrazac-zaglavlje">
+            <div class="obrazac-zaglavlje-top">
+                <div class="obrazac-grb">
+                    <img src="{{ asset('images/srednji_grb.png') }}" alt="Grb Opštine Kotor" height="2cm">
+                </div>
+                <div class="obrazac-org">
+                    <p><strong>Crna Gora</strong></p>
+                    <p>Opština Kotor</p>
+                    <p>Sekretarijat za razvoj preduzetništva</p>
+                    <p>komunalne poslove i saobraćaj</p>
+                </div>
+                <div class="obrazac-contact">
+                    <p>Stari grad 317</p>
+                    <p>85330 Kotor, Crna Gora</p>
+                    <p>tel. +382(0)32 325 865</p>
+                    <p>privreda@kotor.me</p>
+                    <p>www.kotor.me</p>
+                </div>
+            </div>
+            <div class="obrazac-broj-i-naslov">
+                <div class="obrazac-broj-prijave">
+                    Broj prijave: {{ $brojPrijave }}
+                </div>
+                <div class="obrazac-1a-1b" id="obrazacLabelHeader">{{ $obrazacLabel }}</div>
+            </div>
+            <h1 class="obrazac-naslov-prijava">PRIJAVA</h1>
+        </div>
+
         <div class="page-header">
             <h1>Prijava na konkurs - Obrazac 1a/1b</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 0;">{{ $competition->title }}</p>
@@ -1308,7 +1420,12 @@
 
         function toggleFieldsByApplicantType() {
             const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
-            
+            const headerLabel = document.getElementById('obrazacLabelHeader');
+            if (headerLabel) {
+                if (selectedType === 'preduzetnica' || selectedType === 'fizicko_lice') headerLabel.textContent = 'Obrazac 1a';
+                else if (selectedType === 'doo' || selectedType === 'ostalo') headerLabel.textContent = 'Obrazac 1b';
+                else headerLabel.textContent = 'Obrazac 1a/1b';
+            }
             // Resetuj sve obrazce - disable sva polja u sakrivenim sekcijama
             if (obrazac1a) {
                 obrazac1a.classList.remove('show');
