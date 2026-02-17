@@ -35,7 +35,7 @@ class EvaluationController extends Controller
         $commission->load('competitions');
 
         // Članovi komisije mogu vidjeti sve prijave sve vrijeme (i prije i poslije roka za prijave)
-        // Ocjenjivanje je blokirano do isteka roka od 20 dana (provjera u create/store)
+        // Ocjenjivanje je blokirano do isteka roka od 15 dana (provjera u create/store)
         $competitionIds = $commission->competitions->pluck('id');
         
         // Prijave koje treba ocjeniti (submitted, evaluated ili rejected status)
@@ -145,9 +145,9 @@ class EvaluationController extends Controller
             
             $competition = $application->competition;
             
-            // Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave
+            // Ocjenjivanje počinje tek kada istekne rok od 15 dana za prijave
             if ($competition && !$competition->isApplicationDeadlinePassed() && $competition->status !== 'closed') {
-                abort(403, 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 30 dana za donošenje odluke od strane komisije.');
+                abort(403, 'Ocjenjivanje počinje tek kada istekne rok od 15 dana za prijave na konkurs. Nakon toga počinje rok od 30 dana za donošenje odluke od strane komisije.');
             }
             
             // Provjeri da li je prošao rok od 30 dana za ocjenjivanje
@@ -279,10 +279,10 @@ class EvaluationController extends Controller
         
         $competition = $application->competition;
         
-        // Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave
+        // Ocjenjivanje počinje tek kada istekne rok od 15 dana za prijave
         if ($competition && !$competition->isApplicationDeadlinePassed() && $competition->status !== 'closed') {
             return redirect()->back()
-                ->withErrors(['error' => 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 30 dana za donošenje odluke od strane komisije.']);
+                ->withErrors(['error' => 'Ocjenjivanje počinje tek kada istekne rok od 15 dana za prijave na konkurs. Nakon toga počinje rok od 30 dana za donošenje odluke od strane komisije.']);
         }
         
         // Provjeri da li je prošao rok od 30 dana za ocjenjivanje

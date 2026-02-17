@@ -325,7 +325,7 @@
             // Upload i izmjene su dozvoljeni samo vlasniku prijave
             $showUpload = $canManage && ($application->status === 'draft' || $application->status === 'submitted');
 
-            // Izračun roka za prijavu – kandidat može obrisati prijavu samo do isteka roka od 20 dana
+            // Izračun roka za prijavu – kandidat može obrisati prijavu samo do isteka roka od 15 dana
             // Članovi komisije nikada ne mogu brisati prijave
             $competition = $application->competition;
             $deadline = $competition?->deadline;

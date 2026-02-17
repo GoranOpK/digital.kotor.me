@@ -417,14 +417,14 @@ class AdminController extends Controller
             'budget' => $validated['budget'],
             'max_support_percentage' => $validated['max_support_percentage'],
             'commission_id' => $validated['commission_id'] ?? null,
-            'deadline_days' => 20,
+            'deadline_days' => 15,
             'status' => 'draft',
         ];
 
         if (!empty($validated['start_date'])) {
             $start = \Carbon\Carbon::parse($validated['start_date']);
             $data['start_date'] = $start->toDateString();
-            $data['end_date'] = $start->copy()->addDays(20)->toDateString();
+            $data['end_date'] = $start->copy()->addDays(15)->toDateString();
         }
 
         $competition = DB::transaction(function () use ($data, $validated) {
@@ -568,7 +568,7 @@ class AdminController extends Controller
             'max_support_percentage' => $validated['max_support_percentage'],
             'status' => $validated['status'],
             'commission_id' => $validated['commission_id'] ?? null,
-            'deadline_days' => 20,
+            'deadline_days' => 15,
         ];
 
         // Ako vraćamo konkurs u status 'published' ili 'draft', poništi datum zatvaranja
@@ -579,7 +579,7 @@ class AdminController extends Controller
         if (!empty($validated['start_date'])) {
             $start = \Carbon\Carbon::parse($validated['start_date']);
             $data['start_date'] = $start->toDateString();
-            $data['end_date'] = $start->copy()->addDays(20)->toDateString();
+            $data['end_date'] = $start->copy()->addDays(15)->toDateString();
         }
 
         $competition->update($data);
@@ -614,17 +614,17 @@ class AdminController extends Controller
         $updateData = [
             'status' => 'published',
             'published_at' => $now,
-            'deadline_days' => 20,
+            'deadline_days' => 15,
         ];
 
         // Ako nije postavljen start_date, postavi ga na danas
         if (!$competition->start_date) {
             $updateData['start_date'] = $now->toDateString();
-            $updateData['end_date'] = $now->copy()->addDays(20)->toDateString();
+            $updateData['end_date'] = $now->copy()->addDays(15)->toDateString();
         } else {
             // Ako je start_date postavljen (bio to današnji ili budući), 
-            // end_date mora biti 20 dana od tog start_date
-            $updateData['end_date'] = $competition->start_date->copy()->addDays(20)->toDateString();
+            // end_date mora biti 15 dana od tog start_date
+            $updateData['end_date'] = $competition->start_date->copy()->addDays(15)->toDateString();
         }
 
         $competition->update($updateData);

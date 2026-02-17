@@ -72,7 +72,7 @@ class ApplicationController extends Controller
         // Proveri da li je konkurs još otvoren (samo ako nije read-only)
         if (!$readOnly) {
             $deadline = $competition->published_at 
-                ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 20)
+                ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 15)
                 : null;
             
             if ($deadline && $deadline->isPast()) {
@@ -162,7 +162,7 @@ class ApplicationController extends Controller
         
         // Proveri da li je konkurs otvoren
         $deadline = $competition->published_at 
-            ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 20)
+            ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 15)
             : null;
         
         if ($deadline && $deadline->isPast()) {
@@ -520,7 +520,7 @@ class ApplicationController extends Controller
                 ->withErrors(['error' => 'Ova prijava nije povezana sa važećim konkursom. Brisanje nije moguće.']);
         }
 
-        // Kandidat ne može brisati prijavu nakon isteka roka od 20 dana ili ako je konkurs zatvoren
+        // Kandidat ne može brisati prijavu nakon isteka roka od 15 dana ili ako je konkurs zatvoren
         if ($competition->status === 'closed' || $competition->isApplicationDeadlinePassed()) {
             return redirect()->route('applications.show', $application)
                 ->withErrors(['error' => 'Rok za prijave je istekao ili je konkurs zatvoren. Prijavu više nije moguće obrisati.']);
