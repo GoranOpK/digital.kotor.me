@@ -10,6 +10,8 @@
     @endif
     <style>
         :root { --primary:#0B3D91; --primary-dark:#0A347B; --secondary:#B8860B; }
+        /* Match Tailwind preflight sizing so layout doesn't subtly shift */
+        *, *::before, *::after { box-sizing: border-box; }
         html, body { height:100%; margin:0; padding:0; }
         body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; }
         .container { max-width: 1200px; margin: 0 auto; padding: 16px; }
@@ -22,9 +24,6 @@
         .nav-links { display:none; gap:12px; }
         .nav-link { color:#374151; text-decoration:none; font-weight:600; padding:8px 10px; border-radius:8px; }
         .nav-link:hover { color:var(--primary); text-decoration:underline; }
-        .hamburger { display:inline-flex; width:40px; height:40px; align-items:center; justify-content:center; border-radius:8px; border:1px solid #e5e7eb; background:#fff; }
-        .hamburger:focus { outline:2px solid rgba(0,0,0,.15); }
-        .mobile-menu { display:none; flex-direction:column; gap:8px; padding:12px; border:1px solid #e5e7eb; border-radius:12px; background:#fff; margin-top:8px; }
         .btn { display:inline-block; padding:10px 14px; border-radius:8px; font-weight:600; text-decoration:none; border:1px solid transparent; }
         .btn-primary { background:var(--primary); color:#fff; }
         .btn-primary:hover { background:var(--primary-dark); }
@@ -34,9 +33,47 @@
         .masthead { background-size:cover; background-position:center center; background-repeat:no-repeat; }
         .masthead::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35)); }
         .masthead-inner { position:relative; z-index:1; padding:20px; max-width:1200px; margin:0 auto; }
-        .hero { display:grid; grid-template-columns:1fr; gap:20px; align-items:center; padding:12px 0; }
+        .hero { display:grid; grid-template-columns:1fr; gap:20px; align-items:start; padding:12px 0; }
         .hero-card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:20px; box-shadow:0 1px 2px rgba(0,0,0,.06); }
-        .hero-title { font-size:28px; line-height:1.2; color:#111827; margin:0 0 8px; }
+        /* Card background images (inside each card) */
+        .hero-card.has-bg { position:relative; overflow:hidden; }
+        .hero-card.has-bg::before {
+            content:"";
+            position:absolute;
+            inset:0;
+            background-image: var(--card-bg, none);
+            background-size:cover;
+            background-position:center;
+            background-repeat:no-repeat;
+            opacity: var(--card-bg-opacity, 0.55);
+        }
+        .hero-card.has-bg::after {
+            content:"";
+            position:absolute;
+            inset:0;
+            /* Fade image down (stronger top → lighter bottom) */
+            background: linear-gradient(
+                180deg,
+                rgba(255,255,255,.20) 0%,
+                rgba(255,255,255,.75) 25%,
+                rgba(255,255,255,.95) 50%
+            );
+        }
+        .hero-card.has-bg > * { position:relative; z-index:1; }
+
+        /* Make the SAME image feel continuous across columns (desktop only) */
+        @media (min-width: 768px) {
+            /* Grid columns are 1.8fr + .6fr => 75% + 25% */
+            .hero-card.bg-slice-left::before {
+                background-size: 133.333% auto; /* 100% / 0.75 */
+                background-position: left top;
+            }
+            .hero-card.bg-slice-right::before {
+                background-size: 400% auto; /* 100% / 0.25 */
+                background-position: right top;
+            }
+        }
+        .hero-title { font-size:28px; font-weight:700; line-height:1.2; color:#111827; margin:0 0 8px; }
         .hero-sub { color:#4b5563; margin:0 0 16px; }
         .services { display:grid; grid-template-columns:1fr; gap:12px; margin-top:12px; }
         .service { border:1px solid #e5e7eb; border-radius:12px; padding:14px; background:#ffffff; display:flex; gap:12px; align-items:flex-start; }
@@ -47,12 +84,10 @@
         .footer { border-top:1px solid #e5e7eb; padding:16px 0; color:#6b7280; font-size:14px; margin-top:24px; }
         @media (min-width: 768px) {
             .masthead { background-attachment:fixed; }
-            .hero { grid-template-columns:1.2fr .8fr; }
+            .hero { grid-template-columns:1.8fr .6fr; }
             .hero-title { font-size:36px; }
             .services { grid-template-columns:repeat(2, 1fr); }
             .nav-links { display:flex; }
-            .hamburger { display:none; }
-            .mobile-menu { display:none !important; }
         }
         @media (min-width: 1024px) {
             .services { grid-template-columns:repeat(3, 1fr); }
@@ -69,8 +104,25 @@
         .masthead .nav-link:hover { color:#fff; text-decoration:underline; }
         .masthead .btn-outline { border-color:#fff; color:#fff !important; background:transparent; }
         .masthead .btn-outline:hover { background:rgba(255,255,255,.1); border-color:#fff; color:#fff !important; }
-        .masthead .hamburger { border-color:rgba(255,255,255,.5); background:transparent; color:#fff; }
-        .masthead .hamburger:focus { outline:2px solid rgba(255,255,255,.4); }
+
+        /* Ensure semantic content stays styled even with CSS resets (e.g., Tailwind preflight) */
+        .hero-card section h2 {
+            margin: 16px 0 8px;
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.25;
+            color: #111827;
+        }
+        .hero-card section p { margin: 0 0 12px; color: #374151; }
+        .hero-card section strong { font-weight: 700; }
+        .hero-card section ul {
+            margin: 0 0 12px;
+            padding-left: 20px;
+            list-style: disc;
+            list-style-position: outside;
+            color: #374151;
+        }
+        .hero-card section li { margin: 6px 0; }
     </style>
     
     <link rel="icon" href="{{ asset('favicon.ico') }}">
@@ -93,83 +145,67 @@
                                 DK
                             @endif
                         </div>
-                        <div>
-                            <div class="brand-sub" style="font-size:12px;">Digitalni servisi za građane i privredu</div>
-                        </div>
+                        
                     </div>
                     <nav class="nav">
-                        <div class="nav-links" aria-label="Primarna navigacija">
-                            <a class="nav-link" href="{{ route('payments.index') }}">Plaćanja</a>
-                            <a class="nav-link" href="{{ route('competitions.index') }}">Konkursi</a>
-                            <a class="nav-link" href="{{ route('tenders.index') }}">Tenderi</a>
-                        </div>
                         @auth
                             <a class="btn btn-outline" href="{{ route('dashboard') }}">Moj panel</a>
                         @else
                             <a class="btn btn-outline" href="{{ route('register') }}">Kreiraj nalog</a>
                             <a class="btn btn-primary" href="{{ route('login') }}">Prijava</a>
                         @endauth
-                        <button id="menuToggle" class="hamburger" aria-controls="mobileMenu" aria-expanded="false" aria-label="Meni">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="3" y1="6" x2="21" y2="6"/>
-                                <line x1="3" y1="12" x2="21" y2="12"/>
-                                <line x1="3" y1="18" x2="21" y2="18"/>
-                            </svg>
-                        </button>
                     </nav>
-                </div>
-                <div id="mobileMenu" class="mobile-menu" role="menu" aria-labelledby="menuToggle">
-                    <a class="nav-link" href="{{ route('payments.index') }}" role="menuitem">Plaćanja</a>
-                    <a class="nav-link" href="{{ route('competitions.index') }}" role="menuitem">Konkursi</a>
-                    <a class="nav-link" href="{{ route('tenders.index') }}" role="menuitem">Tenderi</a>
                 </div>
                 <div class="banner">
                     <small>Zvanični portal opštine KOTOR. Pažljivo čuvamo vaše podatke. <span class="highlight">e-Usluge</span> dostupne 24/7.</small>
                 </div>
             </header>
             <section class="hero">
-                <div class="hero-card">
-                    <div class="badge"><span class="badge-dot"></span> Digital Kotor</div>
-                    <h1 class="hero-title">Dobrodošli na centralni portal opštine Kotor</h1>
-                    <p class="hero-sub">Pristupite bezbjedno svim opštinskim uslugama: plaćanja, prijave na konkurse, tenderska dokumentacija i više.</p>
-                    <div class="cta">
-                        @auth
-                            <a class="btn btn-primary" href="{{ route('dashboard') }}">Moj panel</a>
-                        @else
-                            <a class="btn btn-primary" href="{{ route('login') }}">Prijavi se</a>
-                            <a class="btn btn-outline" href="{{ route('register') }}">Kreiraj nalog</a>
-                        @endauth
-                    </div>
-                    <p class="note">Nakon prijave, pristupate personalizovanom panelu i istoriji zahtjeva.</p>
-                    <div class="services">
-                        <a href="{{ route('payments.index') }}" class="service">
-                            <div class="service-icon">₿</div>
-                            <div>
-                                <h4>Online plaćanja</h4>
-                                <p>Uplate komunalija, taksi i drugih opštinskih naknada.</p>
-                            </div>
-                        </a>
-                        <a href="{{ route('competitions.index') }}" class="service">
-                            <div class="service-icon">★</div>
-                            <div>
-                                <h4>Konkursi</h4>
-                                <p>Prijava i praćenje statusa na programe podrške.</p>
-                            </div>
-                        </a>
-                        <a href="{{ route('tenders.index') }}" class="service">
-                            <div class="service-icon">§</div>
-                            <div>
-                                <h4>Tenderska dokumentacija</h4>
-                                <p>Pregled, preuzimanje i otkup dokumentacije.</p>
-                            </div>
-                        </a>
-                    </div>
+                <div class="hero-card has-bg bg-slice-left" style="--card-bg:url('{{ asset('img/hero-left.jpg') }}');">
+                    <h1 class="hero-title">Dobrodošli na Bidon portal opštine Kotor</h1>
+                    <section>
+                        <h2>O platformi</h2>
+                        <p>
+                            <strong>Digital Kotor</strong> je savremena digitalna platforma namijenjena građanima, privredi i institucijama, 
+                            koja omogućava jednostavno, brzo i sigurno obavljanje različitih administrativnih i poslovnih usluga putem interneta.
+                        </p>
+
+                        <h2>Na jednom mjestu možete:</h2>
+                        <ul>
+                            <li>Podnositi zahtjeve i dokumentaciju elektronskim putem</li>
+                            <li>Pratiti i učestvovati u tenderima i javnim nabavkama</li>
+                            <li>Prijavljivati se na konkurse</li>
+                            <li>Izvršavati elektronska plaćanja taksi i drugih obaveza</li>
+                            <li>Pratiti status svojih zahtjeva u realnom vremenu</li>
+                        </ul>
+
+                        <p>
+                            Cilj platforme je da unaprijedi transparentnost, efikasnost i dostupnost javnih usluga, 
+                            smanji administrativne procedure i omogući građanima i privredi da svoje obaveze završavaju brzo i bez čekanja u redovima.
+                        </p>
+
+                        <p>
+                            Digital Kotor predstavlja korak ka modernoj i otvorenoj upravi, 
+                            u skladu sa savremenim standardima digitalne transformacije.
+                        </p>
+
+                        <div class="highlight">
+                            Jednostavno. Sigurno. Transparentno.
+                        </div>
+                    </section>
                 </div>
-                <div class="hero-card" aria-hidden="true">
-                    <div style="height:100%; display:grid; place-items:center; text-align:center; color:#0B3D91;">
-                        <div>
-                            <div style="font-size:56px; font-weight:800; letter-spacing:.5px;">KOTOR</div>
-                            <div style="font-size:14px; color:#6b7280;">Siguran pristup • Transparentno • 24/7</div>
+                <div class="hero-card has-bg bg-slice-right" aria-hidden="true" style="--card-bg:url('{{ asset('img/hero-left.jpg') }}');">
+                    <div style="text-align:center;">
+                        <h1 class="hero-title" style="font-weight:bold;">Kategorije</h1>
+                        <div style="font-size:14px; color:#6b7280; margin-top:8px; margin-bottom:16px;">Siguran pristup • Transparentno • 24/7</div>
+                        <div style="display:flex; flex-direction:column; gap:8px; align-items:center;">
+                            <a href="{{ route('payments.index') }}" style="color:#fff; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #0B3D91; background:#0B3D91; width:100%; max-width:200px;">Plaćanja</a>
+                            <a href="{{ route('competitions.index') }}" style="color:#fff; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #0B3D91; background:#0B3D91; width:100%; max-width:200px;">Konkursi</a>
+                            <a href="{{ route('tenders.index') }}" style="color:#fff; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #0B3D91; background:#0B3D91; width:100%; max-width:200px;">Tenderi</a>
+                            <div style="color:#9ca3af; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #d1d5db; background:#f3f4f6; width:100%; max-width:200px; cursor:not-allowed; opacity:0.6;">Blero Bliznar</div>
+                            <div style="color:#9ca3af; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #d1d5db; background:#f3f4f6; width:100%; max-width:200px; cursor:not-allowed; opacity:0.6;">Pudi Kator</div>
+                            <div style="color:#9ca3af; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #d1d5db; background:#f3f4f6; width:100%; max-width:200px; cursor:not-allowed; opacity:0.6;">Vunjaš Aznavur</div>
+                            <div style="color:#9ca3af; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #d1d5db; background:#f3f4f6; width:100%; max-width:200px; cursor:not-allowed; opacity:0.6;">Dunja Svibor</div>
                         </div>
                     </div>
                 </div>
@@ -178,19 +214,6 @@
     </section>
 
     <main class="container">
-        <script>
-            (function(){
-                var toggle = document.getElementById('menuToggle');
-                var menu = document.getElementById('mobileMenu');
-                if (toggle && menu) {
-                    toggle.addEventListener('click', function(){
-                        var open = menu.style.display === 'flex';
-                        menu.style.display = open ? 'none' : 'flex';
-                        toggle.setAttribute('aria-expanded', String(!open));
-                    });
-                }
-            })();
-        </script>
     </main>
 
     <footer class="container footer">
