@@ -113,6 +113,7 @@ class CompetitionsController extends Controller
             'finansijski_izvjestaj' => 'Finansijski izvještaj',
             'dokaz_ziro_racun' => 'Dokaz o broju poslovnog žiro računa preduzetnika',
             'predracuni_nabavka' => 'Predračuni za planiranu nabavku',
+            'izvjestaj_registar_kase' => 'Izvještaj sa registra kase',
         ];
 
         // Generiši početnu listu dokumenata (za preduzetnice i fizičko lice koje započinje, sa SVIM dokumentima)

@@ -395,7 +395,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
             },
             'razvoj': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'],
                 optional: ['pdv_resenje']
             }
         },
@@ -405,7 +405,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
             },
             'razvoj': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'],
                 optional: ['pdv_resenje']
             }
         },
@@ -504,26 +504,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 docLabel = 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od Poreske uprave';
             }
             
-            // DOO/Ostalo - razvoj - posebni labeli prema Odluci (nosioc biznisa, društvo)
+            // DOO/Ostalo - razvoj – tačni tekstovi prema Odluci (sva početna slova velika)
             if ((applicantType === 'doo' || applicantType === 'ostalo') && selectedStage === 'razvoj') {
                 if (docType === 'licna_karta') {
-                    docLabel = 'Ovjerena kopija lične karte (osnivačica ili jedna od osnivača i izvršna direktorica)';
+                    docLabel = 'Ovjerenu kopiju lične karte (osnivačica ili jedna od osnivača i izvršna direktorica)';
+                } else if (docType === 'crps_resenje') {
+                    docLabel = 'Rješenje o upisu u CRPS';
+                } else if (docType === 'pib_resenje') {
+                    docLabel = 'Rješenje o registraciji PJ Poreske uprave';
+                } else if (docType === 'pdv_resenje') {
+                    docLabel = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
                 } else if (docType === 'statut') {
                     docLabel = 'Važeći Statut društva';
                 } else if (docType === 'karton_potpisa') {
                     docLabel = 'Važeći karton deponovanih potpisa';
                 } else if (docType === 'godisnji_racuni') {
-                    docLabel = 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu';
+                    docLabel = 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu. Napomena: U slučaju da preduzetnica/društvo nema analitiku kupaca ima obavezu dostaviti periodični izvještaj';
+                } else if (docType === 'izvjestaj_registar_kase') {
+                    docLabel = 'Izvještaj sa registra kase';
                 } else if (docType === 'potvrda_neosudjivanost') {
-                    docLabel = 'Potvrda o neosuđivanosti za krivična djela na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
+                    docLabel = 'Potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
                 } else if (docType === 'uvjerenje_opstina_porezi') {
-                    docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
                 } else if (docType === 'uvjerenje_opstina_nepokretnost') {
-                    docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
+                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
                 } else if (docType === 'potvrda_upc_porezi') {
-                    docLabel = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
+                    docLabel = 'Potvrdu Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
                 } else if (docType === 'ioppd_obrazac') {
-                    docLabel = 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
+                    docLabel = 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
+                } else if (docType === 'predracuni_nabavka') {
+                    docLabel = 'Predračune za planiranu nabavku';
                 }
             }
             

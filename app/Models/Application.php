@@ -368,17 +368,17 @@ class Application extends Model
                 'licna_karta',
                 'crps_resenje',
                 'pib_resenje',
-                // PDV samo ako je obveznik PDV-a - za sada dodajemo kao obavezno
                 'pdv_resenje',
                 'statut',
                 'karton_potpisa',
                 'godisnji_racuni',
+                'izvjestaj_registar_kase',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
-                'biznis_plan_usb',
+                'predracuni_nabavka',
             ];
         }
         // Ostalo (druga društva) - isti dokumenti kao DOO
@@ -403,17 +403,17 @@ class Application extends Model
                 'licna_karta',
                 'crps_resenje',
                 'pib_resenje',
-                // PDV samo ako je obveznik PDV-a - za sada dodajemo kao obavezno
                 'pdv_resenje',
                 'statut',
                 'karton_potpisa',
                 'godisnji_racuni',
+                'izvjestaj_registar_kase',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
-                'biznis_plan_usb',
+                'predracuni_nabavka',
             ];
         }
         // Fizičko lice BEZ registrovane djelatnosti
@@ -550,12 +550,13 @@ $documents = [
                 'statut',
                 'karton_potpisa',
                 'godisnji_racuni',
+                'izvjestaj_registar_kase',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
-                'biznis_plan_usb',
+                'predracuni_nabavka',
             ];
         }
         // Ostalo (druga društva) - isti dokumenti kao DOO
@@ -584,12 +585,13 @@ $documents = [
                 'statut',
                 'karton_potpisa',
                 'godisnji_racuni',
+                'izvjestaj_registar_kase',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
-                'biznis_plan_usb',
+                'predracuni_nabavka',
             ];
         }
         // Fizičko lice (rezident) - prijava kao Preduzetnica koja započinje biznis - ista lista kao preduzetnica
