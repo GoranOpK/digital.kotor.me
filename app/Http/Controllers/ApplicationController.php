@@ -64,6 +64,12 @@ class ApplicationController extends Controller
             abort(403, 'Administrator konkursa ne može se prijaviti na konkurse.');
         }
         
+        // Pročitaj applicant_type iz URL parametra (prosljeđeno sa stranice konkursa) – koristi se u svim return view()
+        $preferredApplicantType = $request->query('applicant_type');
+        if ($preferredApplicantType && !in_array($preferredApplicantType, ['preduzetnica', 'doo', 'fizicko_lice', 'ostalo'])) {
+            $preferredApplicantType = null;
+        }
+
         // Proveri da li je konkurs otvoren (samo ako nije read-only)
         if (!$readOnly && $competition->status !== 'published') {
             abort(404, 'Konkurs nije pronađen ili nije objavljen.');
@@ -109,7 +115,7 @@ class ApplicationController extends Controller
                         ->get()
                         ->groupBy('category');
                     $preselectedBusinessStage = null;
-                    return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage'));
+                    return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage', 'preferredApplicantType'));
                 }
                 
                 // Ako postoji draft prijava, omogući nastavak popunjavanja
@@ -120,7 +126,7 @@ class ApplicationController extends Controller
                         ->get()
                         ->groupBy('category');
                     $preselectedBusinessStage = null;
-                    return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage'))
+                    return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage', 'preferredApplicantType'))
                         ->with('info', 'Već imate započetu prijavu. Možete je nastaviti popunjavati.');
                 } else {
                     // Ako je prijava već podnesena, preusmeri na detalje
@@ -139,13 +145,12 @@ class ApplicationController extends Controller
                 ->groupBy('category');
         }
 
-        // Pročitaj business_stage iz URL parametra (prosljeđeno sa stranice konkursa)
+        // Pročitaj business_stage i applicant_type iz URL parametara (prosljeđeno sa stranice konkursa)
         $preselectedBusinessStage = $request->query('business_stage');
         if ($preselectedBusinessStage && !in_array($preselectedBusinessStage, ['započinjanje', 'razvoj'])) {
             $preselectedBusinessStage = null;
         }
-
-        return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage'));
+        return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage', 'preferredApplicantType'));
     }
 
     /**

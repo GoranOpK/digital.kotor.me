@@ -305,7 +305,7 @@
                                 checked
                                 style="margin-right: 8px; cursor: pointer;"
                             >
-                            <span>Preduzetnica koja započinje biznis</span>
+                            <span>{{ ($applicantType === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje započinje biznis' : 'Preduzetnica koja započinje biznis' }}</span>
                         </label>
                         <label style="display: flex; align-items: center; cursor: pointer;">
                             <input 
@@ -315,7 +315,7 @@
                                 id="business_stage_razvoj_preview"
                                 style="margin-right: 8px; cursor: pointer;"
                             >
-                            <span>Preduzetnica koja planira razvoj poslovanja</span>
+                            <span>{{ ($applicantType === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje planira razvoj poslovanja' : 'Preduzetnica koja planira razvoj poslovanja' }}</span>
                         </label>
                     </div>
                 </div>
@@ -348,7 +348,7 @@
         @if(!$isCompetitionAdmin)
         <div class="info-card" style="text-align: center;">
             @if($isOpen && !$userApplication && auth()->check())
-                <a href="{{ route('applications.create', $competition) }}" class="btn-primary" id="applyBtn" data-base-url="{{ route('applications.create', $competition) }}">
+                <a href="{{ route('applications.create', $competition) }}" class="btn-primary" id="applyBtn" data-base-url="{{ route('applications.create', $competition) }}" data-applicant-type="{{ $applicantType ?? '' }}">
                     Prijavi se na konkurs
                 </a>
             @elseif(!auth()->check())
@@ -557,14 +557,18 @@ document.addEventListener('DOMContentLoaded', function() {
         radio.addEventListener('change', updateApplyLink);
     });
     
-    // Ažuriraj link "Prijavi se" sa izabranim business_stage (prosljeđuje se kroz URL parametar)
+    // Ažuriraj link "Prijavi se" sa izabranim business_stage i applicant_type (prosljeđuje se kroz URL parametar)
     function updateApplyLink() {
         const applyBtn = document.getElementById('applyBtn');
         if (!applyBtn) return;
         const baseUrl = applyBtn.getAttribute('data-base-url');
         if (!baseUrl) return;
+        const applicantTypeFromBtn = applyBtn.getAttribute('data-applicant-type');
         const selectedStage = document.querySelector('input[name="business_stage_preview"]:checked')?.value;
         const url = new URL(baseUrl, window.location.origin);
+        if (applicantTypeFromBtn && ['preduzetnica', 'doo', 'fizicko_lice', 'ostalo'].includes(applicantTypeFromBtn)) {
+            url.searchParams.set('applicant_type', applicantTypeFromBtn);
+        }
         if (selectedStage) {
             url.searchParams.set('business_stage', selectedStage);
         }

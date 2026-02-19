@@ -358,15 +358,22 @@
                         </div>
                         @php
                             $userType = auth()->user()->user_type ?? '';
-                            // Podrazumevano uvijek "Preduzetnica"
-                            $defaultType = 'preduzetnica';
-                            
-                            if (str_contains($userType, 'Društvo sa ograničenom odgovornošću') || str_contains($userType, 'DOO')) {
-                                // Registrovani privredni subjekt tipa DOO
-                                $defaultType = 'doo';
-                            } elseif ($userType && $userType !== 'Fizičko lice' && $userType !== 'Preduzetnik') {
-                                // Svi ostali registrovani privredni subjekti (Akcionarsko društvo, NVO, Udruženje, itd.)
-                                $defaultType = 'ostalo';
+                            // Ako je došao sa stranice konkursa s parametrom applicant_type, koristi ga
+                            $preferredApplicantType = $preferredApplicantType ?? null;
+                            if ($preferredApplicantType && in_array($preferredApplicantType, ['preduzetnica', 'doo', 'fizicko_lice', 'ostalo'])) {
+                                $defaultType = $preferredApplicantType;
+                            } else {
+                                // Odredi default iz user_type (ista logika kao na stranici konkursa)
+                                $defaultType = 'preduzetnica';
+                                if ($userType === 'Društvo sa ograničenom odgovornošću' || $userType === 'DOO') {
+                                    $defaultType = 'doo';
+                                } elseif ($userType === 'Fizičko lice' || $userType === 'Rezident') {
+                                    $defaultType = 'fizicko_lice';
+                                } elseif (in_array($userType, ['Preduzetnik', 'Preduzetnica'])) {
+                                    $defaultType = 'preduzetnica';
+                                } elseif ($userType && $userType !== 'Fizičko lice' && $userType !== 'Preduzetnik' && $userType !== 'Preduzetnica') {
+                                    $defaultType = 'ostalo';
+                                }
                             }
                         @endphp
                         <div class="radio-group">
