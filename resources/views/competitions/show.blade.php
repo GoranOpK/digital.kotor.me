@@ -391,7 +391,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         'doo': {
             'započinjanje': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'predracuni_nabavka'],
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
             },
             'razvoj': {
@@ -401,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         'ostalo': {
             'započinjanje': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'predracuni_nabavka'],
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
             },
             'razvoj': {
@@ -527,18 +527,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            // DOO/Ostalo - započinjanje - labeli za potvrdu i uvjerenje (na ime preduzetnice)
+            // DOO/Ostalo - započinjanje – tačni tekstovi prema Odluci
             if ((applicantType === 'doo' || applicantType === 'ostalo') && selectedStage === 'započinjanje') {
-                if (docType === 'potvrda_neosudjivanost') {
-                    docLabel = 'Potvrda o neosuđivanosti za krivična djela na ime preduzetnice izdatu od strane Osnovnog suda';
+                if (docType === 'licna_karta') {
+                    docLabel = 'ovjerenu kopiju lične karte';
+                } else if (docType === 'crps_resenje') {
+                    docLabel = 'rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
+                } else if (docType === 'pib_resenje') {
+                    docLabel = 'rješenje o registraciji PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
+                } else if (docType === 'pdv_resenje') {
+                    docLabel = 'rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
+                } else if (docType === 'statut') {
+                    docLabel = 'važeći Statut društva (ukoliko ima registrovanu djelatnost)';
+                } else if (docType === 'karton_potpisa') {
+                    docLabel = 'važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)';
+                } else if (docType === 'potvrda_neosudjivanost') {
+                    docLabel = 'potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
                 } else if (docType === 'uvjerenje_opstina_porezi') {
-                    docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                    docLabel = 'uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
                 } else if (docType === 'uvjerenje_opstina_nepokretnost') {
-                    docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
-                } else if (docType === 'statut' && !optionalDocs.includes(docType)) {
-                    docLabel = 'Važeći Statut društva';
-                } else if (docType === 'karton_potpisa' && !optionalDocs.includes(docType)) {
-                    docLabel = 'Važeći karton deponovanih potpisa';
+                    docLabel = 'uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                } else if (docType === 'predracuni_nabavka') {
+                    docLabel = 'predračune za planiranu nabavku';
                 }
             }
             

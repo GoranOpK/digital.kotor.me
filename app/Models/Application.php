@@ -348,20 +348,18 @@ class Application extends Model
         elseif ($this->applicant_type === 'doo' && $this->business_stage === 'započinjanje') {
             $documents = [
                 'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'statut',
+                'karton_potpisa',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
-                'biznis_plan_usb',
+                'predracuni_nabavka',
             ];
-            
-            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
-            if ($isRegistered) {
-                $documents[] = 'crps_resenje';
-                $documents[] = 'pib_resenje';
-                // PDV samo ako je obveznik PDV-a
-                $documents[] = 'pdv_resenje';
-                $documents[] = 'statut';
-                $documents[] = 'karton_potpisa';
+            if (!$isRegistered) {
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']));
             }
         }
         // Društva (DOO) koja planiraju razvoj poslovanja (razvoj)
@@ -387,19 +385,18 @@ class Application extends Model
         elseif ($this->applicant_type === 'ostalo' && $this->business_stage === 'započinjanje') {
             $documents = [
                 'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'statut',
+                'karton_potpisa',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
-                'biznis_plan_usb',
+                'predracuni_nabavka',
             ];
-            
-            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
-            if ($isRegistered) {
-                $documents[] = 'crps_resenje';
-                $documents[] = 'pib_resenje';
-                $documents[] = 'pdv_resenje';
-                $documents[] = 'statut';
-                $documents[] = 'karton_potpisa';
+            if (!$isRegistered) {
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']));
             }
         } elseif ($this->applicant_type === 'ostalo' && $this->business_stage === 'razvoj') {
             $documents = [
@@ -528,19 +525,18 @@ $documents = [
         elseif ($applicantType === 'doo' && $businessStage === 'započinjanje') {
             $documents = [
                 'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'statut',
+                'karton_potpisa',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
-                'biznis_plan_usb',
+                'predracuni_nabavka',
             ];
-            
-            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
-            if ($isRegistered) {
-                $documents[] = 'crps_resenje';
-                $documents[] = 'pib_resenje';
-                $documents[] = 'pdv_resenje';
-                $documents[] = 'statut';
-                $documents[] = 'karton_potpisa';
+            if (!$isRegistered) {
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']));
             }
         }
         // Društva (DOO) koja planiraju razvoj poslovanja (razvoj)
@@ -565,19 +561,18 @@ $documents = [
         elseif ($applicantType === 'ostalo' && $businessStage === 'započinjanje') {
             $documents = [
                 'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'statut',
+                'karton_potpisa',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
-                'biznis_plan_usb',
+                'predracuni_nabavka',
             ];
-            
-            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
-            if ($isRegistered) {
-                $documents[] = 'crps_resenje';
-                $documents[] = 'pib_resenje';
-                $documents[] = 'pdv_resenje';
-                $documents[] = 'statut';
-                $documents[] = 'karton_potpisa';
+            if (!$isRegistered) {
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']));
             }
         } elseif ($applicantType === 'ostalo' && $businessStage === 'razvoj') {
             $documents = [
