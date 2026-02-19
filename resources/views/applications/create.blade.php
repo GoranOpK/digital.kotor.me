@@ -1394,10 +1394,9 @@
         });
     @endif
 
-    // Samo pregled komisije = read-only (čita se iz data atributa forme kad se DOM učita)
+    // Privremeno: uvijek dozvoli uređivanje na klijentu (server i dalje blokira komisiju pri snimanju)
     function getIsCommissionView() {
-        const form = document.getElementById('applicationForm');
-        return form && form.getAttribute('data-commission-view') === '1';
+        return false;
     }
 
     // Dinamičko prikazivanje/sakrivanje polja na osnovu tipa podnosioca
