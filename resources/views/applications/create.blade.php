@@ -1403,11 +1403,12 @@
         $userType = auth()->user()->user_type ?? '';
         $isFizickoLiceRezident = ($userType === 'Fizičko lice' || $userType === 'Rezident');
     @endphp
-    <script>
-        const isFizickoLiceRezident = @json($isFizickoLiceRezident);
-        console.log('isFizickoLiceRezident:', isFizickoLiceRezident);
-    </script>
-    <script>
+</script>
+<script>
+    const isFizickoLiceRezident = @json($isFizickoLiceRezident);
+    console.log('isFizickoLiceRezident:', isFizickoLiceRezident);
+</script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         console.log('[OBRAZAC DEBUG] DOMContentLoaded start, server readOnly={{ $readOnly ? 'true' : 'false' }}');
         const form = document.getElementById('applicationForm');
@@ -1888,8 +1889,8 @@
 
         // Pripremi formu za submit - ukloni disabled sa svih polja (samo ako nije readOnly)
         @if(!($readOnly ?? false))
-        const form = document.getElementById('applicationForm');
-        if (form) {
+        const applicationForm = document.getElementById('applicationForm');
+        if (applicationForm) {
             // Dugme "Sačuvaj kao nacrt" - ručno submit-uj formu bez validacije
             const saveAsDraftBtn = document.getElementById('saveAsDraftBtn');
             if (saveAsDraftBtn) {
@@ -1897,17 +1898,17 @@
                     e.preventDefault();
                     
                     // Dodaj hidden input za save_as_draft
-                    let draftInput = form.querySelector('input[name="save_as_draft"]');
+                    let draftInput = applicationForm.querySelector('input[name="save_as_draft"]');
                     if (!draftInput) {
                         draftInput = document.createElement('input');
                         draftInput.type = 'hidden';
                         draftInput.name = 'save_as_draft';
                         draftInput.value = '1';
-                        form.appendChild(draftInput);
+                        applicationForm.appendChild(draftInput);
                     }
                     
                     // Ukloni sve required atribute
-                    const allRequiredFields = form.querySelectorAll('[required]');
+                    const allRequiredFields = applicationForm.querySelectorAll('[required]');
                     allRequiredFields.forEach(field => {
                         field.removeAttribute('required');
                     });
@@ -1916,14 +1917,14 @@
                     // Ovo je sigurniji način jer ne kopiramo vrednosti, već samo kontrolišemo koja se šalju
                     
                     // 1. Osiguraj da se applicant_type šalje - ukloni disabled sa svih
-                    const allApplicantTypeRadios = form.querySelectorAll('input[name="applicant_type"]');
+                    const allApplicantTypeRadios = applicationForm.querySelectorAll('input[name="applicant_type"]');
                     allApplicantTypeRadios.forEach(radio => {
                         radio.removeAttribute('disabled');
                     });
-                    const checkedApplicantTypeRadio = form.querySelector('input[name="applicant_type"][type="radio"]:checked');
+                    const checkedApplicantTypeRadio = applicationForm.querySelector('input[name="applicant_type"][type="radio"]:checked');
                     if (!checkedApplicantTypeRadio) {
-                        const defaultApplicantTypeRadio = form.querySelector('input[name="applicant_type"][type="radio"][value="preduzetnica"]') 
-                            || form.querySelector('input[name="applicant_type"][type="radio"]');
+                        const defaultApplicantTypeRadio = applicationForm.querySelector('input[name="applicant_type"][type="radio"][value="preduzetnica"]') 
+                            || applicationForm.querySelector('input[name="applicant_type"][type="radio"]');
                         if (defaultApplicantTypeRadio) {
                             defaultApplicantTypeRadio.checked = true;
                         }
@@ -1950,12 +1951,12 @@
                     
                     // 4. Postavi disabled na sva polja u sakrivenim sekcijama (osim applicant_type)
                     // VAŽNO: Osiguraj da se business_plan_name, business_area, registration_form i polja specifična za Obrazac 1b šalju samo iz aktivne sekcije
-                    const allBusinessPlanNames = form.querySelectorAll('input[name="business_plan_name"]');
-                    const allBusinessAreas = form.querySelectorAll('input[name="business_area"]');
-                    const allRegistrationForms = form.querySelectorAll('select[name="registration_form"]');
-                    const allFounderNames = form.querySelectorAll('input[name="founder_name"]');
-                    const allDirectorNames = form.querySelectorAll('input[name="director_name"]');
-                    const allCompanySeats = form.querySelectorAll('input[name="company_seat"]');
+                    const allBusinessPlanNames = applicationForm.querySelectorAll('input[name="business_plan_name"]');
+                    const allBusinessAreas = applicationForm.querySelectorAll('input[name="business_area"]');
+                    const allRegistrationForms = applicationForm.querySelectorAll('select[name="registration_form"]');
+                    const allFounderNames = applicationForm.querySelectorAll('input[name="founder_name"]');
+                    const allDirectorNames = applicationForm.querySelectorAll('input[name="director_name"]');
+                    const allCompanySeats = applicationForm.querySelectorAll('input[name="company_seat"]');
                     
                     // Postavi disabled na SVE business_plan_name input-e
                     allBusinessPlanNames.forEach(input => {
@@ -2047,7 +2048,7 @@
                     // 6. Postavi checked status na prvi business_stage radio button u formi sa sačuvanom vrednošću
                     if (checkedBusinessStageValue) {
                         console.log('Setting business_stage to:', checkedBusinessStageValue);
-                        const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"][type="radio"]');
+                        const allBusinessStageRadios = applicationForm.querySelectorAll('input[name="business_stage"][type="radio"]');
                         allBusinessStageRadios.forEach(radio => {
                             if (radio.value === checkedBusinessStageValue) {
                                 radio.checked = true;
@@ -2058,10 +2059,10 @@
                         });
                     } else {
                         // Ako nije bilo checked u aktivnoj sekciji, proveri da li postoji checked negde
-                        const checkedBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]:checked');
+                        const checkedBusinessStageRadio = applicationForm.querySelector('input[name="business_stage"][type="radio"]:checked');
                         if (!checkedBusinessStageRadio) {
                             // Ako nijedan nije checked, postavi prvi (default "započinjanje")
-                            const firstBusinessStageRadio = form.querySelector('input[name="business_stage"][type="radio"]');
+                            const firstBusinessStageRadio = applicationForm.querySelector('input[name="business_stage"][type="radio"]');
                             if (firstBusinessStageRadio) {
                                 firstBusinessStageRadio.checked = true;
                                 firstBusinessStageRadio.removeAttribute('disabled');
@@ -2074,28 +2075,28 @@
                     }
                     
                     // Submit-uj formu
-                    form.submit();
+                    applicationForm.submit();
                 });
             }
             
             // Normalan submit (za "Sačuvaj prijavu" dugme) - samo ako nije readOnly
-            form.addEventListener('submit', function(e) {
+            applicationForm.addEventListener('submit', function(e) {
                 // VAŽNO: Ukloni save_as_draft hidden input ako postoji
                 // (ovo osigurava da se forma ne šalje kao draft kada je obrazac kompletan)
-                const saveAsDraftInput = form.querySelector('input[name="save_as_draft"]');
+                const saveAsDraftInput = applicationForm.querySelector('input[name="save_as_draft"]');
                 if (saveAsDraftInput) {
                     saveAsDraftInput.remove();
                     console.log('Removed save_as_draft input before submit');
                 }
                 
                 // VAŽNO: Ukloni disabled sa radio button-a za applicant_type
-                const allApplicantTypeRadios = form.querySelectorAll('input[name="applicant_type"]');
+                const allApplicantTypeRadios = applicationForm.querySelectorAll('input[name="applicant_type"]');
                 allApplicantTypeRadios.forEach(radio => {
                     radio.removeAttribute('disabled');
                 });
                 
                 // VAŽNO: Ukloni disabled sa radio button-a za business_stage u svim sekcijama PRVO
-                const allBusinessStageRadios = form.querySelectorAll('input[name="business_stage"]');
+                const allBusinessStageRadios = applicationForm.querySelectorAll('input[name="business_stage"]');
                 allBusinessStageRadios.forEach(radio => {
                     radio.removeAttribute('disabled');
                 });
@@ -2105,12 +2106,12 @@
                 const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
                 
                 // Pronađi SVE registration_form select-e, business_plan_name input-e, business_area input-e i polja specifična za Obrazac 1b
-                const allRegistrationForms = form.querySelectorAll('select[name="registration_form"]');
-                const allBusinessPlanNames = form.querySelectorAll('input[name="business_plan_name"]');
-                const allBusinessAreas = form.querySelectorAll('input[name="business_area"]');
-                const allFounderNames = form.querySelectorAll('input[name="founder_name"]');
-                const allDirectorNames = form.querySelectorAll('input[name="director_name"]');
-                const allCompanySeats = form.querySelectorAll('input[name="company_seat"]');
+                const allRegistrationForms = applicationForm.querySelectorAll('select[name="registration_form"]');
+                const allBusinessPlanNames = applicationForm.querySelectorAll('input[name="business_plan_name"]');
+                const allBusinessAreas = applicationForm.querySelectorAll('input[name="business_area"]');
+                const allFounderNames = applicationForm.querySelectorAll('input[name="founder_name"]');
+                const allDirectorNames = applicationForm.querySelectorAll('input[name="director_name"]');
+                const allCompanySeats = applicationForm.querySelectorAll('input[name="company_seat"]');
                 
                 if (activeSection && selectedType) {
                     const registrationFormInActive = activeSection.querySelector('select[name="registration_form"]');
