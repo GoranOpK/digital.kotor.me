@@ -299,7 +299,17 @@
                         <div class="info-item">
                             <span class="info-label">Tip podnosioca</span>
                             <span class="info-value">
-                                {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : 'DOO' }}
+                                @if($application->applicant_type === 'preduzetnica')
+                                    Preduzetnica
+                                @elseif($application->applicant_type === 'fizicko_lice')
+                                    Fizičko lice (rezident) / nema registrovanu djelatnost
+                                @elseif($application->applicant_type === 'doo')
+                                    DOO
+                                @elseif($application->applicant_type === 'ostalo')
+                                    Ostalo
+                                @else
+                                    {{ $application->applicant_type ?? '—' }}
+                                @endif
                             </span>
                         </div>
                         <div class="info-item">

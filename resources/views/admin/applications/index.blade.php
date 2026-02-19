@@ -166,7 +166,12 @@
                             <td>{{ $application->user->name ?? 'N/A' }}</td>
                             <td>{{ $application->competition->title ?? 'N/A' }}</td>
                             <td>
-                                {{ $application->applicant_type === 'preduzetnica' ? 'Preduzetnica' : 'DOO' }} - 
+                                @if($application->applicant_type === 'preduzetnica') Preduzetnica
+                                @elseif($application->applicant_type === 'fizicko_lice') Fizičko lice (rezident)
+                                @elseif($application->applicant_type === 'doo') DOO
+                                @elseif($application->applicant_type === 'ostalo') Ostalo
+                                @else {{ $application->applicant_type ?? '—' }}
+                                @endif - 
                                 {{ $application->business_stage === 'započinjanje' ? 'Započinjanje' : 'Razvoj' }}
                             </td>
                             <td>{{ number_format($application->requested_amount, 2, ',', '.') }} €</td>
