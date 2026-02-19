@@ -222,7 +222,7 @@
                         if (startDateVal) {
                             const startDate = new Date(startDateVal);
                             const endDate = new Date(startDate);
-                            endDate.setDate(startDate.getDate() + 20);
+                            endDate.setDate(startDate.getDate() + 15);
                             
                             const day = String(endDate.getDate()).padStart(2, '0');
                             const month = String(endDate.getMonth() + 1).padStart(2, '0');
