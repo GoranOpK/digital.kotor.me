@@ -1409,6 +1409,7 @@
     </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('[OBRAZAC DEBUG] DOMContentLoaded start, server readOnly={{ $readOnly ? 'true' : 'false' }}');
         const form = document.getElementById('applicationForm');
         const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"]');
         const obrazac1a = document.getElementById('obrazac1a');
@@ -1418,8 +1419,11 @@
         const fizickoLiceNotice = document.getElementById('fizickoLiceNotice');
         const additionalDataSection = document.getElementById('additional-data-section');
 
+        console.log('[OBRAZAC DEBUG] obrazac1a=', !!obrazac1a, 'obrazac1b=', !!obrazac1b, 'fizickoLiceFields=', !!fizickoLiceFields, 'applicantTypeInputs count=', applicantTypeInputs.length);
+
         function toggleFieldsByApplicantType() {
             const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
+            console.log('[OBRAZAC DEBUG] toggleFieldsByApplicantType called, selectedType=', selectedType);
             const headerLabel = document.getElementById('obrazacLabelHeader');
             if (headerLabel) {
                 if (selectedType === 'preduzetnica' || selectedType === 'fizicko_lice') headerLabel.textContent = 'Obrazac 1a';
@@ -1495,9 +1499,11 @@
 
             // Prikaži/sakrij obrazce na osnovu tipa
             if (selectedType === 'preduzetnica') {
+                console.log('[OBRAZAC DEBUG] branch: preduzetnica -> prikazujem Obrazac 1a');
                 // Preduzetnica - prikaži Obrazac 1a
                 if (obrazac1a) {
                     obrazac1a.classList.add('show');
+                    console.log('[OBRAZAC DEBUG] obrazac1a.classList.add("show"), obrazac1a.show=', obrazac1a.classList.contains('show'));
                     // Enable sva polja u obrazac1a
                     const obrazac1aFields = obrazac1a.querySelectorAll('input, select, textarea');
                     obrazac1aFields.forEach(field => {
@@ -1516,9 +1522,11 @@
                     });
                 }
             } else if (selectedType === 'doo' || selectedType === 'ostalo') {
+                console.log('[OBRAZAC DEBUG] branch: doo/ostalo -> prikazujem Obrazac 1b');
                 // DOO ili Ostalo - prikaži Obrazac 1b
                 if (obrazac1b) {
                     obrazac1b.classList.add('show');
+                    console.log('[OBRAZAC DEBUG] obrazac1b.classList.add("show"), obrazac1b.show=', obrazac1b.classList.contains('show'));
                     // Enable sva polja u obrazac1b
                     const obrazac1bFields = obrazac1b.querySelectorAll('input, select, textarea');
                     obrazac1bFields.forEach(field => {
@@ -1536,6 +1544,7 @@
                     if (companySeat && companySeat.hasAttribute('data-required')) companySeat.setAttribute('required', 'required');
                 }
             } else if (selectedType === 'fizicko_lice') {
+                console.log('[OBRAZAC DEBUG] branch: fizicko_lice -> prikazujem polja za fizičko lice');
                 // Fizičko lice BEZ registrovane djelatnosti
                 // Prikaži napomenu o obavezi registracije
                 if (fizickoLiceNotice) {
@@ -1611,6 +1620,9 @@
             if (typeof updateSubmitButton === 'function') {
                 updateSubmitButton();
             }
+            if (!selectedType) {
+                console.warn('[OBRAZAC DEBUG] selectedType je prazan/undefined – nijedan radio za applicant_type nije checked!');
+            }
         }
 
         applicantTypeInputs.forEach(input => {
@@ -1621,7 +1633,11 @@
         });
 
         // Odmah prikaži Obrazac 1a ili 1b (ili polja za fizičko lice) prema izabranom tipu podnosioca
+        console.log('[OBRAZAC DEBUG] pozivam toggleFieldsByApplicantType()...');
         toggleFieldsByApplicantType();
+
+        const withShow = document.querySelectorAll('.conditional-field.show');
+        console.log('[OBRAZAC DEBUG] nakon toggle: broj sekcija sa .show =', withShow.length, withShow.length ? 'id-evi: ' + [].map.call(withShow, function(s){ return s.id || s.className; }).join(', ') : '');
 
         // Zatim onemogući polja samo u sekcijama koje su i dalje sakrivene
         const allConditionalFields = document.querySelectorAll('.conditional-field');
@@ -1633,6 +1649,7 @@
                 });
             }
         });
+        console.log('[OBRAZAC DEBUG] inicijalno disable gotovo. Sekcije sa .show:', document.querySelectorAll('.conditional-field.show').length);
 
         // Za postojeću prijavu popuni business_stage i PIB u aktivnoj sekciji
         const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
