@@ -311,7 +311,7 @@
             </div>
         @endif
 
-        @if(!$application->is_registered)
+        @if(!$application->is_registered && $application->status !== 'rejected')
             <div class="alert alert-warning">
                 <strong>Važno:</strong> Nemate registrovanu djelatnost. U slučaju da vam sredstva budu odobrena, 
                 u obavezi ste da svoju djelatnost registrujete u neki od oblika registracije koji predviđa 
