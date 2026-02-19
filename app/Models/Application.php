@@ -459,9 +459,10 @@ $documents = [
             }
         }
 
-        // Ako je prethodno dobijala podršku, dodaj izvještaj (ne za Preduzetnicu/Fizičko lice koja započinje biznis)
+        // Ako je prethodno dobijala podršku, dodaj izvještaj (ne za započinjanje: ni preduzetnica/fizičko lice, ni DOO/ostalo)
         $isZapocinjanjePreduzetnik = ($this->applicant_type === 'preduzetnica' || $this->applicant_type === 'fizicko_lice') && $this->business_stage === 'započinjanje';
-        if ($this->previous_support_declaration && !$isZapocinjanjePreduzetnik) {
+        $isZapocinjanjeDooOstalo = ($this->applicant_type === 'doo' || $this->applicant_type === 'ostalo') && $this->business_stage === 'započinjanje';
+        if ($this->previous_support_declaration && !$isZapocinjanjePreduzetnik && !$isZapocinjanjeDooOstalo) {
             $documents[] = 'izvjestaj_realizacija';
             $documents[] = 'finansijski_izvjestaj';
         }
