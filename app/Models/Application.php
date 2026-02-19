@@ -466,8 +466,9 @@ $documents = [
             }
         }
 
-        // Ako je prethodno dobijala podršku, dodaj izvještaj
-        if ($this->previous_support_declaration) {
+        // Ako je prethodno dobijala podršku, dodaj izvještaj (ne za Preduzetnicu/Fizičko lice koja započinje biznis)
+        $isZapocinjanjePreduzetnik = ($this->applicant_type === 'preduzetnica' || $this->applicant_type === 'fizicko_lice') && $this->business_stage === 'započinjanje';
+        if ($this->previous_support_declaration && !$isZapocinjanjePreduzetnik) {
             $documents[] = 'izvjestaj_realizacija';
             $documents[] = 'finansijski_izvjestaj';
         }

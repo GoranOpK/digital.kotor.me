@@ -613,11 +613,11 @@
                                     // Definiši redoslijed dokumenata za dropdown
                                     $order = [];
                                     if ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') {
-                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'];
+                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'dokaz_ziro_racun', 'predracuni_nabavka'];
                                     } elseif ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'razvoj') {
                                         $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb'];
                                     } elseif ($application->applicant_type === 'fizicko_lice' && $application->business_stage === 'započinjanje') {
-                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'];
+                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'dokaz_ziro_racun', 'predracuni_nabavka'];
                                     } elseif ($application->applicant_type === 'fizicko_lice' && $application->business_stage === 'razvoj') {
                                         $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb'];
                                     }
@@ -725,7 +725,7 @@
                 $orderedDocs = [];
                 if ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') {
                     // Redoslijed za Preduzetnica koja započinje biznis
-                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'dokaz_ziro_racun', 'predracuni_nabavka', 'biznis_plan_usb'];
+                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'dokaz_ziro_racun', 'predracuni_nabavka'];
                     // Dodaj ostale dokumente koje možda postoje (npr. izvještaji)
                     foreach ($requiredDocs as $docType) {
                         if (!in_array($docType, $order)) {
@@ -746,8 +746,8 @@
                     $orderedDocs = array_intersect($order, $requiredDocs);
                     $orderedDocs = array_merge($orderedDocs, array_diff($requiredDocs, $orderedDocs));
                 } elseif ($application->applicant_type === 'fizicko_lice' && $application->business_stage === 'započinjanje') {
-                    // Redoslijed za Fizičko lice koje započinje biznis (tretira se kao preduzetnica)
-                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'];
+                    // Redoslijed za Fizičko lice koje započinje biznis (ista lista kao preduzetnica)
+                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'dokaz_ziro_racun', 'predracuni_nabavka'];
                     foreach ($requiredDocs as $docType) {
                         if (!in_array($docType, $order)) {
                             $order[] = $docType;
