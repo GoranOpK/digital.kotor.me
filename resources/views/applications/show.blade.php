@@ -804,29 +804,63 @@
                     $orderedDocs = $requiredDocs;
                 }
                 
-                $documentLabels = [
-                    'licna_karta' => ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'razvoj'
-                        ? 'Ovjerenu kopiju lične karte (osnivačica ili jedna od osnivača i izvršna direktorica)'
-                        : ((($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'započinjanje') ? 'Ovjerenu kopiju lične karte' : 'Ovjerena kopija lične karte'),
-                    'crps_resenje' => 'Rješenje o upisu u CRPS' . (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'započinjanje' ? ' (ukoliko ima registrovanu djelatnost)' : (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'započinjanje' ? ' (ukoliko ima registrovanu djelatnost)' : '')),
-                    'pib_resenje' => (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'započinjanje' ? 'Rješenje o PIB-u PJ Poreske uprave (ukoliko ima registrovanu djelatnost)' : ((($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && ($application->business_stage === 'započinjanje' || $application->business_stage === 'razvoj')) ? 'Rješenje o registraciji PJ Poreske uprave' . ($application->business_stage === 'započinjanje' ? ' (ukoliko ima registrovanu djelatnost)' : '') : 'Rješenje o registraciji PJ Uprave prihoda i carina')),
-                    'pdv_resenje' => (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'započinjanje' ? 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)' : (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'razvoj' ? 'Rješenje o registraciji za PDV (ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)' : (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'započinjanje' ? 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)' : (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'razvoj' ? 'Rješenje o registraciji za PDV (ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)' : 'Rješenje o registraciji za PDV' . ($application->business_stage === 'razvoj' ? ' (ako je obveznik PDV-a)' : ''))))),
-                    'statut' => ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'započinjanje' ? 'Važeći Statut društva (ukoliko ima registrovanu djelatnost)' : 'Važeći Statut društva',
-                    'karton_potpisa' => ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'započinjanje' ? 'Važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)' : 'Važeći karton deponovanih potpisa',
-                    'potvrda_neosudjivanost' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') ? 'Potvrda da se ne vodi krivični postupak na ime preduzetnika izdatu od strane Osnovnog suda' : (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && ($application->business_stage === 'razvoj' || $application->business_stage === 'započinjanje') ? 'Potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda' : 'Potvrda o neosuđivanosti')),
-                    'uvjerenje_opstina_porezi' => (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && ($application->business_stage === 'započinjanje' || $application->business_stage === 'razvoj')) ? 'Uvjerenje od organa lokalne uprave o izmirenim obavezama po osnovu lokalnih javnih prihoda na ime preduzetnika ne starije od mjesec dana' : (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'razvoj' ? 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada' : (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'započinjanje' ? 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada' : 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada')),
-                    'uvjerenje_opstina_nepokretnost' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') ? 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice' : (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'razvoj' ? 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva' : ((($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'započinjanje') ? 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime preduzetnice' : 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice')),
-                    'potvrda_upc_porezi' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'razvoj' ? 'Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana na ime preduzetnika' : (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'razvoj' ? 'Potvrdu Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva' : 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza'),
-                    'ioppd_obrazac' => ($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'razvoj' ? 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od Poreske uprave' : (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'razvoj' ? 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac)' : 'Obrazac IOPPD'),
-                    'godisnji_racuni' => ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') ? 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu. Napomena: U slučaju da preduzetnica/društvo nema analitiku kupaca ima obavezu dostaviti periodični izvještaj' : 'Godišnji računi',
-                    'izvjestaj_registar_kase' => 'Izvještaj sa registra kase',
-                    'biznis_plan_usb' => 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u',
-                    'izvjestaj_realizacija' => 'Izvještaj o realizaciji',
-                    'finansijski_izvjestaj' => 'Finansijski izvještaj',
-                    'dokaz_ziro_racun' => ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') ? 'Dokaz o broju poslovnog žiro računa preduzetnika (ukoliko ima registrovanu djelatnost)' : 'Dokaz o broju poslovnog žiro računa',
-                    'predracuni_nabavka' => ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') ? 'Predračune za planiranu nabavku' : 'Predračuni za planiranu nabavku',
-                    'ostalo' => 'Ostalo',
-                ];
+                $isPreduzetnica = in_array($application->applicant_type, ['preduzetnica', 'fizicko_lice']);
+                    $isDooOstalo = in_array($application->applicant_type, ['doo', 'ostalo']);
+                    $isZapocinjanje = $application->business_stage === 'započinjanje';
+                    $isRazvoj = $application->business_stage === 'razvoj';
+
+                    $documentLabels = [];
+                    $documentLabels['licna_karta'] = ($isDooOstalo && $isRazvoj) ? 'Ovjerenu kopiju lične karte (osnivačica ili jedna od osnivača i izvršna direktorica)' : (($isDooOstalo && $isZapocinjanje) ? 'Ovjerenu kopiju lične karte' : 'Ovjerena kopija lične karte');
+                    $documentLabels['crps_resenje'] = 'Rješenje o upisu u CRPS' . (($isPreduzetnica && $isZapocinjanje) ? ' (ukoliko ima registrovanu djelatnost)' : (($isDooOstalo && $isZapocinjanje) ? ' (ukoliko ima registrovanu djelatnost)' : ''));
+                    if ($isPreduzetnica && $isZapocinjanje) {
+                        $documentLabels['pib_resenje'] = 'Rješenje o PIB-u PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
+                    } elseif ($isDooOstalo && ($isZapocinjanje || $isRazvoj)) {
+                        $documentLabels['pib_resenje'] = 'Rješenje o registraciji PJ Poreske uprave' . ($isZapocinjanje ? ' (ukoliko ima registrovanu djelatnost)' : '');
+                    } else {
+                        $documentLabels['pib_resenje'] = 'Rješenje o registraciji PJ Uprave prihoda i carina';
+                    }
+                    if ($isPreduzetnica && $isZapocinjanje) {
+                        $documentLabels['pdv_resenje'] = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
+                    } elseif ($isPreduzetnica && $isRazvoj) {
+                        $documentLabels['pdv_resenje'] = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
+                    } elseif ($isDooOstalo && $isZapocinjanje) {
+                        $documentLabels['pdv_resenje'] = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
+                    } elseif ($isDooOstalo && $isRazvoj) {
+                        $documentLabels['pdv_resenje'] = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
+                    } else {
+                        $documentLabels['pdv_resenje'] = 'Rješenje o registraciji za PDV' . ($isRazvoj ? ' (ako je obveznik PDV-a)' : '');
+                    }
+                    $documentLabels['statut'] = ($isDooOstalo && $isZapocinjanje) ? 'Važeći Statut društva (ukoliko ima registrovanu djelatnost)' : 'Važeći Statut društva';
+                    $documentLabels['karton_potpisa'] = ($isDooOstalo && $isZapocinjanje) ? 'Važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)' : 'Važeći karton deponovanih potpisa';
+                    $documentLabels['potvrda_neosudjivanost'] = $isPreduzetnica ? 'Potvrda da se ne vodi krivični postupak na ime preduzetnika izdatu od strane Osnovnog suda' : (($isDooOstalo && ($isRazvoj || $isZapocinjanje)) ? 'Potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda' : 'Potvrda o neosuđivanosti');
+                    if ($isPreduzetnica && ($isZapocinjanje || $isRazvoj)) {
+                        $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave o izmirenim obavezama po osnovu lokalnih javnih prihoda na ime preduzetnika ne starije od mjesec dana';
+                    } elseif ($isDooOstalo && $isRazvoj) {
+                        $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                    } elseif ($isDooOstalo && $isZapocinjanje) {
+                        $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                    } else {
+                        $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                    }
+                    if ($isPreduzetnica) {
+                        $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                    } elseif ($isDooOstalo && $isRazvoj) {
+                        $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
+                    } elseif ($isDooOstalo && $isZapocinjanje) {
+                        $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                    } else {
+                        $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                    }
+                    $documentLabels['potvrda_upc_porezi'] = ($isPreduzetnica && $isRazvoj) ? 'Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana na ime preduzetnika' : (($isDooOstalo && $isRazvoj) ? 'Potvrdu Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva' : 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza');
+                    $documentLabels['ioppd_obrazac'] = ($isPreduzetnica && $isRazvoj) ? 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od Poreske uprave' : (($isDooOstalo && $isRazvoj) ? 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac)' : 'Obrazac IOPPD');
+                    $documentLabels['godisnji_racuni'] = $isDooOstalo ? 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu. Napomena: U slučaju da preduzetnica/društvo nema analitiku kupaca ima obavezu dostaviti periodični izvještaj' : 'Godišnji računi';
+                    $documentLabels['izvjestaj_registar_kase'] = 'Izvještaj sa registra kase';
+                    $documentLabels['biznis_plan_usb'] = 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u';
+                    $documentLabels['izvjestaj_realizacija'] = 'Izvještaj o realizaciji';
+                    $documentLabels['finansijski_izvjestaj'] = 'Finansijski izvještaj';
+                    $documentLabels['dokaz_ziro_racun'] = ($application->applicant_type === 'preduzetnica' && $isZapocinjanje) ? 'Dokaz o broju poslovnog žiro računa preduzetnika (ukoliko ima registrovanu djelatnost)' : 'Dokaz o broju poslovnog žiro računa';
+                    $documentLabels['predracuni_nabavka'] = $isDooOstalo ? 'Predračune za planiranu nabavku' : 'Predračuni za planiranu nabavku';
+                    $documentLabels['ostalo'] = 'Ostalo';
             @endphp
 
             <!-- Progress bar -->
