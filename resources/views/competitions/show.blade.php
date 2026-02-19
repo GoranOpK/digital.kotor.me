@@ -381,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const documentsMap = {
         'preduzetnica': {
             'započinjanje': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'dokaz_ziro_racun', 'predracuni_nabavka', 'biznis_plan_usb'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'dokaz_ziro_racun', 'predracuni_nabavka'],
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']
             },
             'razvoj': {
@@ -411,10 +411,8 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         'fizicko_lice': {
             'započinjanje': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
-                optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje'], // Dokumenti koji su opcioni (ukoliko ima registrovanu djelatnost)
-                withoutRegistration: ['licna_karta', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb'],
-                withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'biznis_plan_usb']
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'dokaz_ziro_racun', 'predracuni_nabavka'],
+                optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']
             },
             'razvoj': {
                 withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb']
@@ -439,8 +437,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
             allDocuments = [
-                'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)',
-                'Popunjena forma za biznis plan (obrazac 2)',
+                'Prijava na konkurs (obrazac 1a - Prijava Preduzetnik)',
+                'Popunjena forma za biznis plan (obrazac 2 — Forma za biznis plan)',
             ];
         } else if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'doo' || applicantType === 'ostalo')) {
             allDocuments = [

@@ -189,8 +189,8 @@ class CompetitionsController extends Controller
 
         // Dodaj obavezne dokumente koje svi moraju imati
         if ($applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
-            array_unshift($requiredDocuments, 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)');
-            array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (obrazac 2)');
+            array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (obrazac 2 — Forma za biznis plan)');
+            array_unshift($requiredDocuments, 'Prijava na konkurs (obrazac 1a - Prijava Preduzetnik)');
         } else {
             array_unshift($requiredDocuments, 'Prijava na konkurs (Obrazac 1a ili 1b)');
             array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (Obrazac 2)');

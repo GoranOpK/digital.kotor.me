@@ -322,7 +322,6 @@ class Application extends Model
                 'uvjerenje_opstina_porezi',  // o izmirenim obavezama po osnovu lokalnih javnih prihoda, ne starije od mjesec dana
                 'dokaz_ziro_racun',  // ukoliko ima registrovanu djelatnost
                 'predracuni_nabavka',
-                'biznis_plan_usb',
             ];
             
             // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost (crps, pib, pdv, žiro račun)
@@ -426,24 +425,21 @@ class Application extends Model
         // Ako je korisnik registrovan kao "Fizičko lice (Rezident)", tretira se kao preduzetnica
         // na osnovu business_stage (započinjanje ili razvoj)
         elseif ($this->applicant_type === 'fizicko_lice') {
-            // Provjeri da li ima business_stage - ako ima, tretiraj kao preduzetnicu
+            // Fizičko lice rezident - prijava kao Preduzetnica koja započinje/razvija - ista lista kao preduzetnica
             if ($this->business_stage) {
                 if ($this->business_stage === 'započinjanje') {
-                    // Preduzetnice koje započinju biznis
-                    $documents = [
-                        'licna_karta',
-                        'potvrda_neosudjivanost',
-                        'uvjerenje_opstina_porezi',
-                        'uvjerenje_opstina_nepokretnost',
-                        'biznis_plan_usb',
-                    ];
-                    
-                    // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
-                    if ($isRegistered) {
-                        $documents[] = 'crps_resenje';
-                        $documents[] = 'pib_resenje';
-                        // PDV samo ako je obveznik PDV-a
-                        $documents[] = 'pdv_resenje';
+$documents = [
+                'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'dokaz_ziro_racun',
+                'predracuni_nabavka',
+            ];
+                    if (!$isRegistered) {
+                        $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']));
                     }
                 } elseif ($this->business_stage === 'razvoj') {
                     // Preduzetnice koje planiraju razvoj poslovanja
@@ -498,9 +494,7 @@ class Application extends Model
                 'uvjerenje_opstina_porezi',
                 'dokaz_ziro_racun',
                 'predracuni_nabavka',
-                'biznis_plan_usb',
             ];
-            // optional za prikaz: crps_resenje, pib_resenje, pdv_resenje, dokaz_ziro_racun (ukoliko ima registrovanu djelatnost)
             if (!$isRegistered) {
                 $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']));
             }
@@ -592,21 +586,22 @@ class Application extends Model
                 'biznis_plan_usb',
             ];
         }
-        // Fizičko lice - ako ima business_stage, tretira se kao preduzetnica
+        // Fizičko lice (rezident) - prijava kao Preduzetnica koja započinje biznis - ista lista kao preduzetnica
         elseif ($applicantType === 'fizicko_lice' && $businessStage) {
             if ($businessStage === 'započinjanje') {
                 $documents = [
                     'licna_karta',
+                    'crps_resenje',
+                    'pib_resenje',
+                    'pdv_resenje',
                     'potvrda_neosudjivanost',
                     'uvjerenje_opstina_porezi',
-                    'uvjerenje_opstina_nepokretnost',
+                    'dokaz_ziro_racun',
+                    'predracuni_nabavka',
                     'biznis_plan_usb',
                 ];
-                
-                if ($isRegistered) {
-                    $documents[] = 'crps_resenje';
-                    $documents[] = 'pib_resenje';
-                    $documents[] = 'pdv_resenje';
+                if (!$isRegistered) {
+                    $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']));
                 }
             } elseif ($businessStage === 'razvoj') {
                 $documents = [
