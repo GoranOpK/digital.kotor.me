@@ -330,20 +330,17 @@ class Application extends Model
                 $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']));
             }
         }
-        // Preduzetnice koje planiraju razvoj poslovanja (razvoj)
+        // Preduzetnice koje planiraju razvoj poslovanja (razvoj) – prema novoj Odluci
         elseif ($this->applicant_type === 'preduzetnica' && $this->business_stage === 'razvoj') {
             $documents = [
                 'licna_karta',
                 'crps_resenje',
                 'pib_resenje',
-                // PDV samo ako je obveznik PDV-a - za sada dodajemo kao obavezno
-                'pdv_resenje',
+                'pdv_resenje',  // ako je obveznik PDV-a ili potvrda da nije PDV obveznik
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
-                'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
-                'biznis_plan_usb',
             ];
         }
         // Društva (DOO) koja započinju biznis (započinjanje)
@@ -442,19 +439,16 @@ $documents = [
                         $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']));
                     }
                 } elseif ($this->business_stage === 'razvoj') {
-                    // Preduzetnice koje planiraju razvoj poslovanja
+                    // Preduzetnica/Fizičko lice koja planira razvoj – prema novoj Odluci (bez nepokretnosti i USB)
                     $documents = [
                         'licna_karta',
                         'crps_resenje',
                         'pib_resenje',
-                        // PDV samo ako je obveznik PDV-a - za sada dodajemo kao obavezno
                         'pdv_resenje',
                         'potvrda_neosudjivanost',
                         'uvjerenje_opstina_porezi',
-                        'uvjerenje_opstina_nepokretnost',
                         'potvrda_upc_porezi',
                         'ioppd_obrazac',
-                        'biznis_plan_usb',
                     ];
                 }
             } else {
@@ -500,7 +494,7 @@ $documents = [
                 $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']));
             }
         }
-        // Preduzetnice koje planiraju razvoj poslovanja (razvoj)
+        // Preduzetnice koje planiraju razvoj poslovanja (razvoj) – prema novoj Odluci
         elseif ($applicantType === 'preduzetnica' && $businessStage === 'razvoj') {
             $documents = [
                 'licna_karta',
@@ -509,10 +503,21 @@ $documents = [
                 'pdv_resenje',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
-                'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
-                'biznis_plan_usb',
+            ];
+        }
+        // Fizičko lice – razvoj (ista lista kao preduzetnica razvoj)
+        elseif ($applicantType === 'fizicko_lice' && $businessStage === 'razvoj') {
+            $documents = [
+                'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
+                'potvrda_neosudjivanost',
+                'uvjerenje_opstina_porezi',
+                'potvrda_upc_porezi',
+                'ioppd_obrazac',
             ];
         }
         // Društva (DOO) koja započinju biznis (započinjanje)

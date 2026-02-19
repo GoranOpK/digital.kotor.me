@@ -385,8 +385,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']
             },
             'razvoj': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb'],
-                optional: ['pdv_resenje'] // PDV je opcioni (ako je obveznik PDV-a)
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'potvrda_upc_porezi', 'ioppd_obrazac'],
+                optional: ['pdv_resenje']
             }
         },
         'doo': {
@@ -415,7 +415,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']
             },
             'razvoj': {
-                withRegistration: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'biznis_plan_usb']
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'potvrda_upc_porezi', 'ioppd_obrazac'],
+                optional: ['pdv_resenje']
             }
         }
     };
@@ -466,9 +467,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (selectedStage === 'započinjanje') {
                         docLabel = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
                     } else if (selectedStage === 'razvoj') {
-                        docLabel = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a)';
+                        docLabel = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
                     }
-                } else if (docType === 'potvrda_neosudjivanost' && selectedStage === 'započinjanje' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
+                } else if (docType === 'potvrda_neosudjivanost' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
                     docLabel = 'Potvrda da se ne vodi krivični postupak na ime preduzetnika izdatu od strane Osnovnog suda';
                 } else if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'započinjanje' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
                     docLabel = 'Uvjerenje od organa lokalne uprave o izmirenim obavezama po osnovu lokalnih javnih prihoda na ime preduzetnika ne starije od mjesec dana';
@@ -488,19 +489,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
             }
             
-            // Ažuriraj label za uvjerenje o porezima (samo za razvoj; za započinjanje je već postavljen iznad)
+            // Ažuriraj label za uvjerenje o porezima – razvoj (prema novoj Odluci)
             if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'razvoj' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
-                docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                docLabel = 'Uvjerenje od organa lokalne uprave o izmirenim obavezama po osnovu lokalnih javnih prihoda na ime preduzetnika ne starije od mjesec dana';
             }
             
-            // Ažuriraj label za potvrdu UPC porezi
+            // Ažuriraj label za potvrdu Poreske uprave – razvoj
             if (docType === 'potvrda_upc_porezi' && selectedStage === 'razvoj' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
-                docLabel = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice';
+                docLabel = 'Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana na ime preduzetnika';
             }
             
-            // Ažuriraj label za IOPPD obrazac
+            // Ažuriraj label za IOPPD obrazac – razvoj
             if (docType === 'ioppd_obrazac' && selectedStage === 'razvoj' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
-                docLabel = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
+                docLabel = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od Poreske uprave';
             }
             
             // DOO/Ostalo - razvoj - posebni labeli prema Odluci (nosioc biznisa, društvo)
