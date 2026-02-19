@@ -322,7 +322,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ $readOnly ? '#' : route('applications.store', $competition) }}" id="applicationForm" @if($readOnly) onsubmit="event.preventDefault(); return false;" @endif data-commission-view="{{ $readOnly ? '1' : '0' }}">
+        <form method="POST" action="{{ $readOnly ? '#' : route('applications.store', $competition) }}" id="applicationForm" @if($readOnly) onsubmit="event.preventDefault(); return false;" @endif>
             @csrf
             
             @php
@@ -1409,9 +1409,7 @@
     </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        var form = document.getElementById('applicationForm');
-        var isCommissionView = !!(form && form.getAttribute('data-commission-view') === '1');
-
+        const form = document.getElementById('applicationForm');
         const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"]');
         const obrazac1a = document.getElementById('obrazac1a');
         const obrazac1b = document.getElementById('obrazac1b');
@@ -1500,46 +1498,42 @@
                 // Preduzetnica - prikaži Obrazac 1a
                 if (obrazac1a) {
                     obrazac1a.classList.add('show');
-                    if (!isCommissionView) {
-                        // Enable sva polja u obrazac1a (ne za članove komisije - pregled samo)
-                        const obrazac1aFields = obrazac1a.querySelectorAll('input, select, textarea');
-                        obrazac1aFields.forEach(field => {
-                            field.removeAttribute('disabled');
-                        });
-                        const businessPlanName1a = obrazac1a.querySelector('input[name="business_plan_name"]');
-                        const businessArea1a = obrazac1a.querySelector('input[name="business_area"]');
-                        if (businessPlanName1a) businessPlanName1a.setAttribute('required', 'required');
-                        if (businessArea1a) businessArea1a.setAttribute('required', 'required');
-                        const businessStage1a = obrazac1a.querySelectorAll('input[name="business_stage"]');
-                        businessStage1a.forEach(radio => {
-                            radio.removeAttribute('disabled');
-                            if (radio.hasAttribute('data-required')) {
-                                radio.setAttribute('required', 'required');
-                            }
-                        });
-                    }
+                    // Enable sva polja u obrazac1a
+                    const obrazac1aFields = obrazac1a.querySelectorAll('input, select, textarea');
+                    obrazac1aFields.forEach(field => {
+                        field.removeAttribute('disabled');
+                    });
+                    const businessPlanName1a = obrazac1a.querySelector('input[name="business_plan_name"]');
+                    const businessArea1a = obrazac1a.querySelector('input[name="business_area"]');
+                    if (businessPlanName1a) businessPlanName1a.setAttribute('required', 'required');
+                    if (businessArea1a) businessArea1a.setAttribute('required', 'required');
+                    const businessStage1a = obrazac1a.querySelectorAll('input[name="business_stage"]');
+                    businessStage1a.forEach(radio => {
+                        radio.removeAttribute('disabled');
+                        if (radio.hasAttribute('data-required')) {
+                            radio.setAttribute('required', 'required');
+                        }
+                    });
                 }
             } else if (selectedType === 'doo' || selectedType === 'ostalo') {
                 // DOO ili Ostalo - prikaži Obrazac 1b
                 if (obrazac1b) {
                     obrazac1b.classList.add('show');
-                    if (!isCommissionView) {
-                        // Enable sva polja u obrazac1b (ne za članove komisije - pregled samo)
-                        const obrazac1bFields = obrazac1b.querySelectorAll('input, select, textarea');
-                        obrazac1bFields.forEach(field => {
-                            field.removeAttribute('disabled');
-                        });
-                        const businessPlanName1b = obrazac1b.querySelector('input[name="business_plan_name"]');
-                        const businessArea1b = obrazac1b.querySelector('input[name="business_area"]');
-                        const founderName = obrazac1b.querySelector('input[name="founder_name"]');
-                        const directorName = obrazac1b.querySelector('input[name="director_name"]');
-                        const companySeat = obrazac1b.querySelector('input[name="company_seat"]');
-                        if (businessPlanName1b && businessPlanName1b.hasAttribute('data-required')) businessPlanName1b.setAttribute('required', 'required');
-                        if (businessArea1b && businessArea1b.hasAttribute('data-required')) businessArea1b.setAttribute('required', 'required');
-                        if (founderName && founderName.hasAttribute('data-required')) founderName.setAttribute('required', 'required');
-                        if (directorName && directorName.hasAttribute('data-required')) directorName.setAttribute('required', 'required');
-                        if (companySeat && companySeat.hasAttribute('data-required')) companySeat.setAttribute('required', 'required');
-                    }
+                    // Enable sva polja u obrazac1b
+                    const obrazac1bFields = obrazac1b.querySelectorAll('input, select, textarea');
+                    obrazac1bFields.forEach(field => {
+                        field.removeAttribute('disabled');
+                    });
+                    const businessPlanName1b = obrazac1b.querySelector('input[name="business_plan_name"]');
+                    const businessArea1b = obrazac1b.querySelector('input[name="business_area"]');
+                    const founderName = obrazac1b.querySelector('input[name="founder_name"]');
+                    const directorName = obrazac1b.querySelector('input[name="director_name"]');
+                    const companySeat = obrazac1b.querySelector('input[name="company_seat"]');
+                    if (businessPlanName1b && businessPlanName1b.hasAttribute('data-required')) businessPlanName1b.setAttribute('required', 'required');
+                    if (businessArea1b && businessArea1b.hasAttribute('data-required')) businessArea1b.setAttribute('required', 'required');
+                    if (founderName && founderName.hasAttribute('data-required')) founderName.setAttribute('required', 'required');
+                    if (directorName && directorName.hasAttribute('data-required')) directorName.setAttribute('required', 'required');
+                    if (companySeat && companySeat.hasAttribute('data-required')) companySeat.setAttribute('required', 'required');
                 }
             } else if (selectedType === 'fizicko_lice') {
                 // Fizičko lice BEZ registrovane djelatnosti
@@ -1560,7 +1554,7 @@
                         const businessStageRadios = fizickoLiceBusinessStage.querySelectorAll('input[name="business_stage"]');
                         businessStageRadios.forEach(radio => {
                             radio.setAttribute('required', 'required');
-                            if (!isCommissionView) radio.removeAttribute('disabled');
+                            radio.removeAttribute('disabled');
                         });
                     } else {
                         console.log('Korisnik nije Fizičko lice (Rezident)');
@@ -1571,15 +1565,14 @@
                 // Prikaži polja za fizičko lice
                 if (fizickoLiceFields) {
                     fizickoLiceFields.classList.add('show');
-                    if (!isCommissionView) {
-                        const fizickoLiceAllFields = fizickoLiceFields.querySelectorAll('input, select, textarea');
-                        fizickoLiceAllFields.forEach(field => {
-                            field.removeAttribute('disabled');
-                        });
-                        fizickoLiceRequiredFields.forEach(field => {
-                            field.setAttribute('required', 'required');
-                        });
-                    }
+                    // Enable sva polja u fizickoLiceFields
+                    const fizickoLiceAllFields = fizickoLiceFields.querySelectorAll('input, select, textarea');
+                    fizickoLiceAllFields.forEach(field => {
+                        field.removeAttribute('disabled');
+                    });
+                    fizickoLiceRequiredFields.forEach(field => {
+                        field.setAttribute('required', 'required');
+                    });
                     
                     // Ako je korisnik "Fizičko lice (Rezident)", sakrij business_stage polje u fizickoLiceFields
                     if (typeof isFizickoLiceRezident !== 'undefined' && isFizickoLiceRezident) {
@@ -1627,60 +1620,60 @@
             });
         });
 
-        // Odmah prikaži odgovarajuću sekciju (Obrazac 1a, 1b ili Fizičko lice) na osnovu izabranog tipa
-        toggleFieldsByApplicantType();
+        // Inicijalno disable sva polja u sakrivenim sekcijama
+        const allConditionalFields = document.querySelectorAll('.conditional-field');
+        allConditionalFields.forEach(section => {
+            if (!section.classList.contains('show')) {
+                const fields = section.querySelectorAll('input, select, textarea');
+                fields.forEach(field => {
+                    field.setAttribute('disabled', 'disabled');
+                });
+            }
+        });
 
-        // Inicijalno disable sva polja samo u sekcijama koje su sakrivene (bez .show)
-        if (!isCommissionView) {
-            const allConditionalFields = document.querySelectorAll('.conditional-field');
-            allConditionalFields.forEach(section => {
-                if (!section.classList.contains('show')) {
-                    const fields = section.querySelectorAll('input, select, textarea');
-                    fields.forEach(field => {
-                        field.setAttribute('disabled', 'disabled');
-                    });
-                }
-            });
-        }
+        // Pozovi na učitavanju - prikaži pravilnu sekciju na osnovu applicant_type
+        setTimeout(function() {
+            toggleFieldsByApplicantType();
 
-        // Nakon prikaza sekcije, za postojeću prijavu popuni business_stage i PIB ako treba
-        const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
-        if (hasExistingApplication && !isCommissionView) {
-            setTimeout(function() {
-                const activeSection = document.querySelector('.conditional-field.show');
-                if (activeSection) {
-                    const activeFields = activeSection.querySelectorAll('input, select, textarea');
-                    activeFields.forEach(field => {
-                        field.removeAttribute('disabled');
-                    });
-                    const existingBusinessStage = '{{ (isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? addslashes($existingApplication->business_stage) : addslashes($preselectedBusinessStage ?? '')) }}';
-                    if (existingBusinessStage) {
-                        const businessStageRadio = activeSection.querySelector(`input[name="business_stage"][value="${existingBusinessStage}"]`);
-                        if (businessStageRadio) {
-                            businessStageRadio.checked = true;
-                            businessStageRadio.removeAttribute('disabled');
+            const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
+            if (hasExistingApplication) {
+                setTimeout(function() {
+                    const activeSection = document.querySelector('.conditional-field.show');
+                    if (activeSection) {
+                        const activeFields = activeSection.querySelectorAll('input, select, textarea');
+                        activeFields.forEach(field => {
+                            field.removeAttribute('disabled');
+                        });
+                        const existingBusinessStage = '{{ (isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? addslashes($existingApplication->business_stage) : addslashes($preselectedBusinessStage ?? '')) }}';
+                        if (existingBusinessStage) {
+                            const businessStageRadio = activeSection.querySelector(`input[name="business_stage"][value="${existingBusinessStage}"]`);
+                            if (businessStageRadio) {
+                                businessStageRadio.checked = true;
+                                businessStageRadio.removeAttribute('disabled');
+                                console.log('Set business_stage to:', existingBusinessStage);
+                            }
+                        }
+                        const existingPib = '{{ isset($existingApplication) && $existingApplication && $existingApplication->pib ? addslashes($existingApplication->pib) : '' }}';
+                        if (existingPib) {
+                            const pibField = activeSection.querySelector('input[name="pib"]');
+                            if (pibField) {
+                                pibField.value = existingPib;
+                                pibField.removeAttribute('disabled');
+                            } else {
+                                const allPibFields = form.querySelectorAll('input[name="pib"]');
+                                allPibFields.forEach(field => {
+                                    if (field.closest('.conditional-field.show')) {
+                                        field.value = existingPib;
+                                        field.removeAttribute('disabled');
+                                    }
+                                });
+                            }
                         }
                     }
-                    const existingPib = '{{ isset($existingApplication) && $existingApplication && $existingApplication->pib ? addslashes($existingApplication->pib) : '' }}';
-                    if (existingPib) {
-                        const pibField = activeSection.querySelector('input[name="pib"]');
-                        if (pibField) {
-                            pibField.value = existingPib;
-                            pibField.removeAttribute('disabled');
-                        } else {
-                            const allPibFields = form.querySelectorAll('input[name="pib"]');
-                            allPibFields.forEach(field => {
-                                if (field.closest('.conditional-field.show')) {
-                                    field.value = existingPib;
-                                    field.removeAttribute('disabled');
-                                }
-                            });
-                        }
-                    }
-                }
-            }, 100);
-        }
-        
+                }, 300);
+            }
+        }, 200);
+
         // Funkcija za automatsko postavljanje obrasca registracije
         // VAŽNO: Ne prepisuj vrednosti ako postoje iz existingApplication
         function setRegistrationForm() {
