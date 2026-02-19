@@ -358,12 +358,16 @@
                         </div>
                         @php
                             $userType = auth()->user()->user_type ?? '';
-                            // Ako je došao sa stranice konkursa s parametrom applicant_type, koristi ga
+                            $residentialStatus = auth()->user()->residential_status ?? '';
+                            $isFizickoLiceRezident = ($userType === 'Fizičko lice' && $residentialStatus === 'resident');
                             $preferredApplicantType = $preferredApplicantType ?? null;
                             if ($preferredApplicantType && in_array($preferredApplicantType, ['preduzetnica', 'doo', 'fizicko_lice', 'ostalo'])) {
-                                $defaultType = $preferredApplicantType;
+                                if ($preferredApplicantType === 'fizicko_lice' && $isFizickoLiceRezident) {
+                                    $defaultType = 'preduzetnica';
+                                } else {
+                                    $defaultType = $preferredApplicantType;
+                                }
                             } else {
-                                // Odredi default iz user_type: Fizičko lice (Rezident) -> Preduzetnica (Obrazac 1a), DOO -> DOO (Obrazac 1b)
                                 $defaultType = 'preduzetnica';
                                 if ($userType === 'Društvo sa ograničenom odgovornošću' || $userType === 'DOO') {
                                     $defaultType = 'doo';
