@@ -363,12 +363,12 @@
                             if ($preferredApplicantType && in_array($preferredApplicantType, ['preduzetnica', 'doo', 'fizicko_lice', 'ostalo'])) {
                                 $defaultType = $preferredApplicantType;
                             } else {
-                                // Odredi default iz user_type (ista logika kao na stranici konkursa)
+                                // Odredi default iz user_type: Fizičko lice (Rezident) -> Preduzetnica (Obrazac 1a), DOO -> DOO (Obrazac 1b)
                                 $defaultType = 'preduzetnica';
                                 if ($userType === 'Društvo sa ograničenom odgovornošću' || $userType === 'DOO') {
                                     $defaultType = 'doo';
                                 } elseif ($userType === 'Fizičko lice' || $userType === 'Rezident') {
-                                    $defaultType = 'fizicko_lice';
+                                    $defaultType = 'preduzetnica';
                                 } elseif (in_array($userType, ['Preduzetnik', 'Preduzetnica'])) {
                                     $defaultType = 'preduzetnica';
                                 } elseif ($userType && $userType !== 'Fizičko lice' && $userType !== 'Preduzetnik' && $userType !== 'Preduzetnica') {
@@ -1406,11 +1406,9 @@
 </script>
 <script>
     const isFizickoLiceRezident = @json($isFizickoLiceRezident);
-    console.log('isFizickoLiceRezident:', isFizickoLiceRezident);
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        console.log('[OBRAZAC DEBUG] DOMContentLoaded start, server readOnly={{ $readOnly ? 'true' : 'false' }}');
         const form = document.getElementById('applicationForm');
         const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"]');
         const obrazac1a = document.getElementById('obrazac1a');
@@ -1420,11 +1418,8 @@
         const fizickoLiceNotice = document.getElementById('fizickoLiceNotice');
         const additionalDataSection = document.getElementById('additional-data-section');
 
-        console.log('[OBRAZAC DEBUG] obrazac1a=', !!obrazac1a, 'obrazac1b=', !!obrazac1b, 'fizickoLiceFields=', !!fizickoLiceFields, 'applicantTypeInputs count=', applicantTypeInputs.length);
-
         function toggleFieldsByApplicantType() {
             const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
-            console.log('[OBRAZAC DEBUG] toggleFieldsByApplicantType called, selectedType=', selectedType);
             const headerLabel = document.getElementById('obrazacLabelHeader');
             if (headerLabel) {
                 if (selectedType === 'preduzetnica' || selectedType === 'fizicko_lice') headerLabel.textContent = 'Obrazac 1a';
@@ -1500,11 +1495,9 @@
 
             // Prikaži/sakrij obrazce na osnovu tipa
             if (selectedType === 'preduzetnica') {
-                console.log('[OBRAZAC DEBUG] branch: preduzetnica -> prikazujem Obrazac 1a');
                 // Preduzetnica - prikaži Obrazac 1a
                 if (obrazac1a) {
                     obrazac1a.classList.add('show');
-                    console.log('[OBRAZAC DEBUG] obrazac1a.classList.add("show"), obrazac1a.show=', obrazac1a.classList.contains('show'));
                     // Enable sva polja u obrazac1a
                     const obrazac1aFields = obrazac1a.querySelectorAll('input, select, textarea');
                     obrazac1aFields.forEach(field => {
@@ -1523,11 +1516,9 @@
                     });
                 }
             } else if (selectedType === 'doo' || selectedType === 'ostalo') {
-                console.log('[OBRAZAC DEBUG] branch: doo/ostalo -> prikazujem Obrazac 1b');
                 // DOO ili Ostalo - prikaži Obrazac 1b
                 if (obrazac1b) {
                     obrazac1b.classList.add('show');
-                    console.log('[OBRAZAC DEBUG] obrazac1b.classList.add("show"), obrazac1b.show=', obrazac1b.classList.contains('show'));
                     // Enable sva polja u obrazac1b
                     const obrazac1bFields = obrazac1b.querySelectorAll('input, select, textarea');
                     obrazac1bFields.forEach(field => {
@@ -1545,7 +1536,6 @@
                     if (companySeat && companySeat.hasAttribute('data-required')) companySeat.setAttribute('required', 'required');
                 }
             } else if (selectedType === 'fizicko_lice') {
-                console.log('[OBRAZAC DEBUG] branch: fizicko_lice -> prikazujem polja za fizičko lice');
                 // Fizičko lice BEZ registrovane djelatnosti
                 // Prikaži napomenu o obavezi registracije
                 if (fizickoLiceNotice) {
@@ -1554,11 +1544,8 @@
                 
                 // Provjeri da li je korisnik "Fizičko lice (Rezident)" - ako jeste, prikaži izbor tipa prijave
                 const fizickoLiceBusinessStage = document.getElementById('fizickoLiceBusinessStage');
-                console.log('fizickoLiceBusinessStage element:', fizickoLiceBusinessStage);
-                console.log('isFizickoLiceRezident value:', typeof isFizickoLiceRezident !== 'undefined' ? isFizickoLiceRezident : 'undefined');
                 if (fizickoLiceBusinessStage) {
                     if (typeof isFizickoLiceRezident !== 'undefined' && isFizickoLiceRezident) {
-                        console.log('Prikazujem sekciju za izbor tipa prijave');
                         fizickoLiceBusinessStage.style.display = 'block';
                         // Dodaj required na radio button-e
                         const businessStageRadios = fizickoLiceBusinessStage.querySelectorAll('input[name="business_stage"]');
@@ -1567,7 +1554,6 @@
                             radio.removeAttribute('disabled');
                         });
                     } else {
-                        console.log('Korisnik nije Fizičko lice (Rezident)');
                         fizickoLiceBusinessStage.style.display = 'none';
                     }
                 }
@@ -1621,9 +1607,6 @@
             if (typeof updateSubmitButton === 'function') {
                 updateSubmitButton();
             }
-            if (!selectedType) {
-                console.warn('[OBRAZAC DEBUG] selectedType je prazan/undefined – nijedan radio za applicant_type nije checked!');
-            }
         }
 
         applicantTypeInputs.forEach(input => {
@@ -1634,11 +1617,7 @@
         });
 
         // Odmah prikaži Obrazac 1a ili 1b (ili polja za fizičko lice) prema izabranom tipu podnosioca
-        console.log('[OBRAZAC DEBUG] pozivam toggleFieldsByApplicantType()...');
         toggleFieldsByApplicantType();
-
-        const withShow = document.querySelectorAll('.conditional-field.show');
-        console.log('[OBRAZAC DEBUG] nakon toggle: broj sekcija sa .show =', withShow.length, withShow.length ? 'id-evi: ' + [].map.call(withShow, function(s){ return s.id || s.className; }).join(', ') : '');
 
         // Zatim onemogući polja samo u sekcijama koje su i dalje sakrivene
         const allConditionalFields = document.querySelectorAll('.conditional-field');
@@ -1650,7 +1629,6 @@
                 });
             }
         });
-        console.log('[OBRAZAC DEBUG] inicijalno disable gotovo. Sekcije sa .show:', document.querySelectorAll('.conditional-field.show').length);
 
         // Za postojeću prijavu popuni business_stage i PIB u aktivnoj sekciji
         const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
@@ -1772,14 +1750,8 @@
             const deMinimisDeclaration = form.querySelector('input[name="de_minimis_declaration"]:not([disabled])');
 
             // Proveri osnovna polja
-            if (!businessPlanName || !businessPlanName.value.trim()) {
-                console.log('Business plan name missing or empty');
-                return false;
-            }
-            if (!businessStage || !businessStage.value) {
-                console.log('Business stage not selected');
-                return false;
-            }
+            if (!businessPlanName || !businessPlanName.value.trim()) return false;
+            if (!businessStage || !businessStage.value) return false;
             if (!businessArea || !businessArea.value.trim()) return false;
             if (!requestedAmount || !requestedAmount.value || parseFloat(requestedAmount.value) <= 0) return false;
             if (!totalBudgetNeeded || !totalBudgetNeeded.value || parseFloat(totalBudgetNeeded.value) <= 0) return false;
@@ -1794,26 +1766,11 @@
                 const physicalPersonEmail = activeSection ? activeSection.querySelector('input[name="physical_person_email"]') : form.querySelector('input[name="physical_person_email"]:not([disabled])');
                 const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
 
-                if (!physicalPersonName || !physicalPersonName.value.trim()) {
-                    console.log('Physical person name missing or empty');
-                    return false;
-                }
-                if (!physicalPersonJmbg || !physicalPersonJmbg.value.trim()) {
-                    console.log('Physical person JMBG missing or empty');
-                    return false;
-                }
-                if (!physicalPersonPhone || !physicalPersonPhone.value.trim()) {
-                    console.log('Physical person phone missing or empty');
-                    return false;
-                }
-                if (!physicalPersonEmail || !physicalPersonEmail.value.trim()) {
-                    console.log('Physical person email missing or empty');
-                    return false;
-                }
-                if (!accuracyDeclaration || !accuracyDeclaration.checked) {
-                    console.log('Accuracy declaration not checked');
-                    return false;
-                }
+                if (!physicalPersonName || !physicalPersonName.value.trim()) return false;
+                if (!physicalPersonJmbg || !physicalPersonJmbg.value.trim()) return false;
+                if (!physicalPersonPhone || !physicalPersonPhone.value.trim()) return false;
+                if (!physicalPersonEmail || !physicalPersonEmail.value.trim()) return false;
+                if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
             } else if (applicantTypeValue === 'doo' || applicantTypeValue === 'ostalo') {
                 // Traži polja samo u aktivnoj sekciji (Obrazac 1b)
                 const founderName = activeSection ? activeSection.querySelector('input[name="founder_name"]') : form.querySelector('input[name="founder_name"]:not([disabled])');
@@ -1821,29 +1778,13 @@
                 const companySeat = activeSection ? activeSection.querySelector('input[name="company_seat"]') : form.querySelector('input[name="company_seat"]:not([disabled])');
                 const registrationForm = activeSection ? activeSection.querySelector('select[name="registration_form"]') : form.querySelector('select[name="registration_form"]:not([disabled])');
 
-                if (!founderName || !founderName.value.trim()) {
-                    console.log('Founder name missing or empty');
-                    return false;
-                }
-                if (!directorName || !directorName.value.trim()) {
-                    console.log('Director name missing or empty');
-                    return false;
-                }
-                if (!companySeat || !companySeat.value.trim()) {
-                    console.log('Company seat missing or empty');
-                    return false;
-                }
-                if (!registrationForm || !registrationForm.value) {
-                    console.log('Registration form missing or empty');
-                    return false;
-                }
+                if (!founderName || !founderName.value.trim()) return false;
+                if (!directorName || !directorName.value.trim()) return false;
+                if (!companySeat || !companySeat.value.trim()) return false;
+                if (!registrationForm || !registrationForm.value) return false;
             } else if (applicantTypeValue === 'preduzetnica') {
-                // Traži registration_form samo u aktivnoj sekciji (Obrazac 1a)
                 const registrationForm = activeSection ? activeSection.querySelector('select[name="registration_form"]') : form.querySelector('select[name="registration_form"]:not([disabled])');
-                if (!registrationForm || !registrationForm.value) {
-                    console.log('Registration form missing or empty for preduzetnica');
-                    return false;
-                }
+                if (!registrationForm || !registrationForm.value) return false;
             }
 
             return true;
