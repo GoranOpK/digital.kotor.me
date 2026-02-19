@@ -1394,11 +1394,6 @@
         });
     @endif
 
-    // Privremeno: uvijek dozvoli uređivanje na klijentu (server i dalje blokira komisiju pri snimanju)
-    function getIsCommissionView() {
-        return false;
-    }
-
     // Dinamičko prikazivanje/sakrivanje polja na osnovu tipa podnosioca
     // VAŽNO: 'fizicko_lice' = Fizičko lice BEZ registrovane djelatnosti (automatski is_registered = false)
     //        'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (automatski is_registered = true)
@@ -1414,6 +1409,9 @@
     </script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        var form = document.getElementById('applicationForm');
+        var isCommissionView = !!(form && form.getAttribute('data-commission-view') === '1');
+
         const applicantTypeInputs = document.querySelectorAll('input[name="applicant_type"]');
         const obrazac1a = document.getElementById('obrazac1a');
         const obrazac1b = document.getElementById('obrazac1b');
@@ -1502,7 +1500,7 @@
                 // Preduzetnica - prikaži Obrazac 1a
                 if (obrazac1a) {
                     obrazac1a.classList.add('show');
-                    if (!getIsCommissionView()) {
+                    if (!isCommissionView) {
                         // Enable sva polja u obrazac1a (ne za članove komisije - pregled samo)
                         const obrazac1aFields = obrazac1a.querySelectorAll('input, select, textarea');
                         obrazac1aFields.forEach(field => {
@@ -1525,7 +1523,7 @@
                 // DOO ili Ostalo - prikaži Obrazac 1b
                 if (obrazac1b) {
                     obrazac1b.classList.add('show');
-                    if (!getIsCommissionView()) {
+                    if (!isCommissionView) {
                         // Enable sva polja u obrazac1b (ne za članove komisije - pregled samo)
                         const obrazac1bFields = obrazac1b.querySelectorAll('input, select, textarea');
                         obrazac1bFields.forEach(field => {
@@ -1562,7 +1560,7 @@
                         const businessStageRadios = fizickoLiceBusinessStage.querySelectorAll('input[name="business_stage"]');
                         businessStageRadios.forEach(radio => {
                             radio.setAttribute('required', 'required');
-                            if (!getIsCommissionView()) radio.removeAttribute('disabled');
+                            if (!isCommissionView) radio.removeAttribute('disabled');
                         });
                     } else {
                         console.log('Korisnik nije Fizičko lice (Rezident)');
@@ -1573,7 +1571,7 @@
                 // Prikaži polja za fizičko lice
                 if (fizickoLiceFields) {
                     fizickoLiceFields.classList.add('show');
-                    if (!getIsCommissionView()) {
+                    if (!isCommissionView) {
                         const fizickoLiceAllFields = fizickoLiceFields.querySelectorAll('input, select, textarea');
                         fizickoLiceAllFields.forEach(field => {
                             field.removeAttribute('disabled');
@@ -1630,7 +1628,7 @@
         });
 
         // Inicijalno disable sva polja u sakrivenim sekcijama (ne mijenjati ako je već read-only za komisiju)
-        if (!getIsCommissionView()) {
+        if (!isCommissionView) {
             const allConditionalFields = document.querySelectorAll('.conditional-field');
             allConditionalFields.forEach(section => {
                 if (!section.classList.contains('show')) {
@@ -1651,7 +1649,7 @@
             // Nakon što se prikaže pravilna sekcija, osiguraj da se vrednosti iz existingApplication očuvaju
             // Proveri da li postoji existingApplication i osiguraj da su vrednosti vidljive
             const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
-            if (hasExistingApplication && !getIsCommissionView()) {
+            if (hasExistingApplication && !isCommissionView) {
                 // Sačekaj još malo da se sekcija prikaže (samo za uređivanje – ne za pregled komisije)
                 setTimeout(function() {
                     const activeSection = document.querySelector('.conditional-field.show');
