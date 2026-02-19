@@ -71,6 +71,9 @@
         font-size: 12px;
         margin-top: 4px;
     }
+    .input-uppercase {
+        text-transform: uppercase !important;
+    }
 </style>
 
 <div class="admin-page">
@@ -145,7 +148,7 @@
 
                     <div class="form-group">
                         <label class="form-label">UP broj konkursa *</label>
-                        <input type="text" name="up_number" class="form-control @error('up_number') error @enderror" value="{{ old('up_number', $competition->upNumber?->number) }}" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
+                        <input type="text" id="up_number" name="up_number" class="form-control input-uppercase @error('up_number') error @enderror" value="{{ old('up_number', $competition->upNumber?->number) }}" required autocomplete="off">
                         @error('up_number')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
@@ -233,6 +236,21 @@
                             document.getElementById('display_end_date').innerText = 'Nije definisano';
                         }
                     });
+                </script>
+                <script>
+                    (function() {
+                        var el = document.getElementById('up_number');
+                        if (!el) return;
+                        function toUpper() {
+                            el.value = el.value.toUpperCase();
+                        }
+                        el.addEventListener('input', toUpper);
+                        el.addEventListener('keyup', toUpper);
+                        el.addEventListener('paste', function() {
+                            setTimeout(toUpper, 0);
+                        });
+                        toUpper();
+                    })();
                 </script>
 
                 <div style="margin-top: 24px; text-align: center;">
