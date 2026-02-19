@@ -530,25 +530,25 @@ document.addEventListener('DOMContentLoaded', function() {
             // DOO/Ostalo - započinjanje – tačni tekstovi prema Odluci
             if ((applicantType === 'doo' || applicantType === 'ostalo') && selectedStage === 'započinjanje') {
                 if (docType === 'licna_karta') {
-                    docLabel = 'ovjerenu kopiju lične karte';
+                    docLabel = 'Ovjerenu kopiju lične karte';
                 } else if (docType === 'crps_resenje') {
-                    docLabel = 'rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
+                    docLabel = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'pib_resenje') {
-                    docLabel = 'rješenje o registraciji PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
+                    docLabel = 'Rješenje o registraciji PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'pdv_resenje') {
-                    docLabel = 'rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
+                    docLabel = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
                 } else if (docType === 'statut') {
-                    docLabel = 'važeći Statut društva (ukoliko ima registrovanu djelatnost)';
+                    docLabel = 'Važeći Statut društva (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'karton_potpisa') {
-                    docLabel = 'važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)';
+                    docLabel = 'Važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'potvrda_neosudjivanost') {
-                    docLabel = 'potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
+                    docLabel = 'Potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
                 } else if (docType === 'uvjerenje_opstina_porezi') {
-                    docLabel = 'uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
                 } else if (docType === 'uvjerenje_opstina_nepokretnost') {
-                    docLabel = 'uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
                 } else if (docType === 'predracuni_nabavka') {
-                    docLabel = 'predračune za planiranu nabavku';
+                    docLabel = 'Predračune za planiranu nabavku';
                 }
             }
             

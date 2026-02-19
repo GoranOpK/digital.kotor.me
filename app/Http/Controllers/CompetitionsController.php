@@ -160,25 +160,25 @@ class CompetitionsController extends Controller
             // Za DOO i Ostalo (započinjanje - početna lista) – tekstovi prema Odluci
             elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
                 if ($docType === 'licna_karta') {
-                    $label = 'ovjerenu kopiju lične karte';
+                    $label = 'Ovjerenu kopiju lične karte';
                 } elseif ($docType === 'crps_resenje') {
-                    $label = 'rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
+                    $label = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'pib_resenje') {
-                    $label = 'rješenje o registraciji PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
+                    $label = 'Rješenje o registraciji PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'pdv_resenje') {
-                    $label = 'rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
+                    $label = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
                 } elseif ($docType === 'statut') {
-                    $label = 'važeći Statut društva (ukoliko ima registrovanu djelatnost)';
+                    $label = 'Važeći Statut društva (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'karton_potpisa') {
-                    $label = 'važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)';
+                    $label = 'Važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'potvrda_neosudjivanost') {
-                    $label = 'potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
+                    $label = 'Potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
                 } elseif ($docType === 'uvjerenje_opstina_porezi') {
-                    $label = 'uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                    $label = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
                 } elseif ($docType === 'uvjerenje_opstina_nepokretnost') {
-                    $label = 'uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                    $label = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
                 } elseif ($docType === 'predracuni_nabavka') {
-                    $label = 'predračune za planiranu nabavku';
+                    $label = 'Predračune za planiranu nabavku';
                 } elseif ($docType === 'godisnji_racuni') {
                     $label = 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu';
                 } elseif ($docType === 'potvrda_upc_porezi') {
