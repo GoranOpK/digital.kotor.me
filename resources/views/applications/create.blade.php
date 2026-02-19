@@ -1393,7 +1393,9 @@
             }
         });
     @endif
-    
+
+    const isReadOnly = @json($readOnly ?? false);
+
     // Dinamičko prikazivanje/sakrivanje polja na osnovu tipa podnosioca
     // VAŽNO: 'fizicko_lice' = Fizičko lice BEZ registrovane djelatnosti (automatski is_registered = false)
     //        'preduzetnica' = Fizičko lice SA registrovanom djelatnošću (automatski is_registered = true)
@@ -1497,46 +1499,46 @@
                 // Preduzetnica - prikaži Obrazac 1a
                 if (obrazac1a) {
                     obrazac1a.classList.add('show');
-                    // Enable sva polja u obrazac1a
-                    const obrazac1aFields = obrazac1a.querySelectorAll('input, select, textarea');
-                    obrazac1aFields.forEach(field => {
-                        field.removeAttribute('disabled');
-                    });
-                    // Dodaj required na obavezna polja u obrazac1a
-                    const businessPlanName1a = obrazac1a.querySelector('input[name="business_plan_name"]');
-                    const businessArea1a = obrazac1a.querySelector('input[name="business_area"]');
-                    if (businessPlanName1a) businessPlanName1a.setAttribute('required', 'required');
-                    if (businessArea1a) businessArea1a.setAttribute('required', 'required');
-                    
-                    // Enable business_stage u obrazac1a
-                    const businessStage1a = obrazac1a.querySelectorAll('input[name="business_stage"]');
-                    businessStage1a.forEach(radio => {
-                        radio.removeAttribute('disabled');
-                        if (radio.hasAttribute('data-required')) {
-                            radio.setAttribute('required', 'required');
-                        }
-                    });
+                    if (!isReadOnly) {
+                        // Enable sva polja u obrazac1a (ne za članove komisije - pregled samo)
+                        const obrazac1aFields = obrazac1a.querySelectorAll('input, select, textarea');
+                        obrazac1aFields.forEach(field => {
+                            field.removeAttribute('disabled');
+                        });
+                        const businessPlanName1a = obrazac1a.querySelector('input[name="business_plan_name"]');
+                        const businessArea1a = obrazac1a.querySelector('input[name="business_area"]');
+                        if (businessPlanName1a) businessPlanName1a.setAttribute('required', 'required');
+                        if (businessArea1a) businessArea1a.setAttribute('required', 'required');
+                        const businessStage1a = obrazac1a.querySelectorAll('input[name="business_stage"]');
+                        businessStage1a.forEach(radio => {
+                            radio.removeAttribute('disabled');
+                            if (radio.hasAttribute('data-required')) {
+                                radio.setAttribute('required', 'required');
+                            }
+                        });
+                    }
                 }
             } else if (selectedType === 'doo' || selectedType === 'ostalo') {
                 // DOO ili Ostalo - prikaži Obrazac 1b
                 if (obrazac1b) {
                     obrazac1b.classList.add('show');
-                    // Enable sva polja u obrazac1b
-                    const obrazac1bFields = obrazac1b.querySelectorAll('input, select, textarea');
-                    obrazac1bFields.forEach(field => {
-                        field.removeAttribute('disabled');
-                    });
-                    // Dodaj required na obavezna polja u obrazac1b
-                    const businessPlanName1b = obrazac1b.querySelector('input[name="business_plan_name"]');
-                    const businessArea1b = obrazac1b.querySelector('input[name="business_area"]');
-                    const founderName = obrazac1b.querySelector('input[name="founder_name"]');
-                    const directorName = obrazac1b.querySelector('input[name="director_name"]');
-                    const companySeat = obrazac1b.querySelector('input[name="company_seat"]');
-                    if (businessPlanName1b && businessPlanName1b.hasAttribute('data-required')) businessPlanName1b.setAttribute('required', 'required');
-                    if (businessArea1b && businessArea1b.hasAttribute('data-required')) businessArea1b.setAttribute('required', 'required');
-                    if (founderName && founderName.hasAttribute('data-required')) founderName.setAttribute('required', 'required');
-                    if (directorName && directorName.hasAttribute('data-required')) directorName.setAttribute('required', 'required');
-                    if (companySeat && companySeat.hasAttribute('data-required')) companySeat.setAttribute('required', 'required');
+                    if (!isReadOnly) {
+                        // Enable sva polja u obrazac1b (ne za članove komisije - pregled samo)
+                        const obrazac1bFields = obrazac1b.querySelectorAll('input, select, textarea');
+                        obrazac1bFields.forEach(field => {
+                            field.removeAttribute('disabled');
+                        });
+                        const businessPlanName1b = obrazac1b.querySelector('input[name="business_plan_name"]');
+                        const businessArea1b = obrazac1b.querySelector('input[name="business_area"]');
+                        const founderName = obrazac1b.querySelector('input[name="founder_name"]');
+                        const directorName = obrazac1b.querySelector('input[name="director_name"]');
+                        const companySeat = obrazac1b.querySelector('input[name="company_seat"]');
+                        if (businessPlanName1b && businessPlanName1b.hasAttribute('data-required')) businessPlanName1b.setAttribute('required', 'required');
+                        if (businessArea1b && businessArea1b.hasAttribute('data-required')) businessArea1b.setAttribute('required', 'required');
+                        if (founderName && founderName.hasAttribute('data-required')) founderName.setAttribute('required', 'required');
+                        if (directorName && directorName.hasAttribute('data-required')) directorName.setAttribute('required', 'required');
+                        if (companySeat && companySeat.hasAttribute('data-required')) companySeat.setAttribute('required', 'required');
+                    }
                 }
             } else if (selectedType === 'fizicko_lice') {
                 // Fizičko lice BEZ registrovane djelatnosti
@@ -1557,7 +1559,7 @@
                         const businessStageRadios = fizickoLiceBusinessStage.querySelectorAll('input[name="business_stage"]');
                         businessStageRadios.forEach(radio => {
                             radio.setAttribute('required', 'required');
-                            radio.removeAttribute('disabled');
+                            if (!isReadOnly) radio.removeAttribute('disabled');
                         });
                     } else {
                         console.log('Korisnik nije Fizičko lice (Rezident)');
@@ -1568,15 +1570,15 @@
                 // Prikaži polja za fizičko lice
                 if (fizickoLiceFields) {
                     fizickoLiceFields.classList.add('show');
-                    // Enable sva polja u fizickoLiceFields
-                    const fizickoLiceAllFields = fizickoLiceFields.querySelectorAll('input, select, textarea');
-                    fizickoLiceAllFields.forEach(field => {
-                        field.removeAttribute('disabled');
-                    });
-                    // Dodaj required na obavezna polja
-                    fizickoLiceRequiredFields.forEach(field => {
-                        field.setAttribute('required', 'required');
-                    });
+                    if (!isReadOnly) {
+                        const fizickoLiceAllFields = fizickoLiceFields.querySelectorAll('input, select, textarea');
+                        fizickoLiceAllFields.forEach(field => {
+                            field.removeAttribute('disabled');
+                        });
+                        fizickoLiceRequiredFields.forEach(field => {
+                            field.setAttribute('required', 'required');
+                        });
+                    }
                     
                     // Ako je korisnik "Fizičko lice (Rezident)", sakrij business_stage polje u fizickoLiceFields
                     if (typeof isFizickoLiceRezident !== 'undefined' && isFizickoLiceRezident) {
@@ -1624,16 +1626,18 @@
             });
         });
 
-        // Inicijalno disable sva polja u sakrivenim sekcijama
-        const allConditionalFields = document.querySelectorAll('.conditional-field');
-        allConditionalFields.forEach(section => {
-            if (!section.classList.contains('show')) {
-                const fields = section.querySelectorAll('input, select, textarea');
-                fields.forEach(field => {
-                    field.setAttribute('disabled', 'disabled');
-                });
-            }
-        });
+        // Inicijalno disable sva polja u sakrivenim sekcijama (ne mijenjati ako je već read-only za komisiju)
+        if (!isReadOnly) {
+            const allConditionalFields = document.querySelectorAll('.conditional-field');
+            allConditionalFields.forEach(section => {
+                if (!section.classList.contains('show')) {
+                    const fields = section.querySelectorAll('input, select, textarea');
+                    fields.forEach(field => {
+                        field.setAttribute('disabled', 'disabled');
+                    });
+                }
+            });
+        }
 
         // Pozovi na učitavanju stranice - ali samo nakon što se DOM učita
         // Ovo će prikazati pravilnu sekciju na osnovu applicant_type iz existingApplication
@@ -1644,10 +1648,9 @@
             // Nakon što se prikaže pravilna sekcija, osiguraj da se vrednosti iz existingApplication očuvaju
             // Proveri da li postoji existingApplication i osiguraj da su vrednosti vidljive
             const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
-            if (hasExistingApplication) {
-                // Sačekaj još malo da se sekcija prikaže
+            if (hasExistingApplication && !isReadOnly) {
+                // Sačekaj još malo da se sekcija prikaže (samo za uređivanje – ne za pregled komisije)
                 setTimeout(function() {
-                    // Osiguraj da su sva polja u aktivnoj sekciji enabled
                     const activeSection = document.querySelector('.conditional-field.show');
                     if (activeSection) {
                         const activeFields = activeSection.querySelectorAll('input, select, textarea');
@@ -1655,7 +1658,6 @@
                             field.removeAttribute('disabled');
                         });
                         
-                        // Osiguraj da se business_stage radio button pravilno prikaže
                         const existingBusinessStage = '{{ (isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? addslashes($existingApplication->business_stage) : addslashes($preselectedBusinessStage ?? '')) }}';
                         if (existingBusinessStage) {
                             const businessStageRadio = activeSection.querySelector(`input[name="business_stage"][value="${existingBusinessStage}"]`);
@@ -1666,7 +1668,6 @@
                             }
                         }
                         
-                        // Osiguraj da se PIB prikaže - proveri u aktivnoj sekciji
                         const existingPib = '{{ isset($existingApplication) && $existingApplication && $existingApplication->pib ? addslashes($existingApplication->pib) : '' }}';
                         console.log('Existing PIB from server:', existingPib);
                         if (existingPib) {
@@ -1678,7 +1679,6 @@
                                 pibField.removeAttribute('disabled');
                                 console.log('PIB field set to:', pibField.value);
                             } else {
-                                // Ako nije nađen u aktivnoj sekciji, proveri u svim sekcijama
                                 const allPibFields = form.querySelectorAll('input[name="pib"]');
                                 allPibFields.forEach(field => {
                                     if (field.closest('.conditional-field.show')) {
