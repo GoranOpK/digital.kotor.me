@@ -145,7 +145,7 @@
 
                     <div class="form-group">
                         <label class="form-label">UP broj konkursa *</label>
-                        <input type="text" name="up_number" class="form-control @error('up_number') error @enderror" value="{{ old('up_number', $competition->upNumber?->number) }}" required>
+                        <input type="text" name="up_number" class="form-control @error('up_number') error @enderror" value="{{ old('up_number', $competition->upNumber?->number) }}" required style="text-transform: uppercase;" oninput="this.value = this.value.toUpperCase()">
                         @error('up_number')
                             <div class="error-message">{{ $message }}</div>
                         @enderror
