@@ -1620,7 +1620,10 @@
             });
         });
 
-        // Inicijalno disable sva polja u sakrivenim sekcijama
+        // Odmah prikaži Obrazac 1a ili 1b (ili polja za fizičko lice) prema izabranom tipu podnosioca
+        toggleFieldsByApplicantType();
+
+        // Zatim onemogući polja samo u sekcijama koje su i dalje sakrivene
         const allConditionalFields = document.querySelectorAll('.conditional-field');
         allConditionalFields.forEach(section => {
             if (!section.classList.contains('show')) {
@@ -1631,48 +1634,43 @@
             }
         });
 
-        // Pozovi na učitavanju - prikaži pravilnu sekciju na osnovu applicant_type
-        setTimeout(function() {
-            toggleFieldsByApplicantType();
-
-            const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
-            if (hasExistingApplication) {
-                setTimeout(function() {
-                    const activeSection = document.querySelector('.conditional-field.show');
-                    if (activeSection) {
-                        const activeFields = activeSection.querySelectorAll('input, select, textarea');
-                        activeFields.forEach(field => {
-                            field.removeAttribute('disabled');
-                        });
-                        const existingBusinessStage = '{{ (isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? addslashes($existingApplication->business_stage) : addslashes($preselectedBusinessStage ?? '')) }}';
-                        if (existingBusinessStage) {
-                            const businessStageRadio = activeSection.querySelector(`input[name="business_stage"][value="${existingBusinessStage}"]`);
-                            if (businessStageRadio) {
-                                businessStageRadio.checked = true;
-                                businessStageRadio.removeAttribute('disabled');
-                                console.log('Set business_stage to:', existingBusinessStage);
-                            }
-                        }
-                        const existingPib = '{{ isset($existingApplication) && $existingApplication && $existingApplication->pib ? addslashes($existingApplication->pib) : '' }}';
-                        if (existingPib) {
-                            const pibField = activeSection.querySelector('input[name="pib"]');
-                            if (pibField) {
-                                pibField.value = existingPib;
-                                pibField.removeAttribute('disabled');
-                            } else {
-                                const allPibFields = form.querySelectorAll('input[name="pib"]');
-                                allPibFields.forEach(field => {
-                                    if (field.closest('.conditional-field.show')) {
-                                        field.value = existingPib;
-                                        field.removeAttribute('disabled');
-                                    }
-                                });
-                            }
+        // Za postojeću prijavu popuni business_stage i PIB u aktivnoj sekciji
+        const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
+        if (hasExistingApplication) {
+            setTimeout(function() {
+                const activeSection = document.querySelector('.conditional-field.show');
+                if (activeSection) {
+                    const activeFields = activeSection.querySelectorAll('input, select, textarea');
+                    activeFields.forEach(field => {
+                        field.removeAttribute('disabled');
+                    });
+                    const existingBusinessStage = '{{ (isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? addslashes($existingApplication->business_stage) : addslashes($preselectedBusinessStage ?? '')) }}';
+                    if (existingBusinessStage) {
+                        const businessStageRadio = activeSection.querySelector(`input[name="business_stage"][value="${existingBusinessStage}"]`);
+                        if (businessStageRadio) {
+                            businessStageRadio.checked = true;
+                            businessStageRadio.removeAttribute('disabled');
                         }
                     }
-                }, 300);
-            }
-        }, 200);
+                    const existingPib = '{{ isset($existingApplication) && $existingApplication && $existingApplication->pib ? addslashes($existingApplication->pib) : '' }}';
+                    if (existingPib) {
+                        const pibField = activeSection.querySelector('input[name="pib"]');
+                        if (pibField) {
+                            pibField.value = existingPib;
+                            pibField.removeAttribute('disabled');
+                        } else {
+                            const allPibFields = form.querySelectorAll('input[name="pib"]');
+                            allPibFields.forEach(field => {
+                                if (field.closest('.conditional-field.show')) {
+                                    field.value = existingPib;
+                                    field.removeAttribute('disabled');
+                                }
+                            });
+                        }
+                    }
+                }
+            }, 100);
+        }
 
         // Funkcija za automatsko postavljanje obrasca registracije
         // VAŽNO: Ne prepisuj vrednosti ako postoje iz existingApplication
