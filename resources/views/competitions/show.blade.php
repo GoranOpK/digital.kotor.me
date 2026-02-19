@@ -385,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']
             },
             'razvoj': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'potvrda_upc_porezi', 'ioppd_obrazac'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'],
                 optional: ['pdv_resenje']
             }
         },
@@ -415,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']
             },
             'razvoj': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'potvrda_upc_porezi', 'ioppd_obrazac'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'],
                 optional: ['pdv_resenje']
             }
         }
@@ -501,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Ažuriraj label za IOPPD obrazac – razvoj
             if (docType === 'ioppd_obrazac' && selectedStage === 'razvoj' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
-                docLabel = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od Poreske uprave';
+                docLabel = 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od Poreske uprave';
             }
             
             // DOO/Ostalo - razvoj - posebni labeli prema Odluci (nosioc biznisa, društvo)
@@ -523,7 +523,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (docType === 'potvrda_upc_porezi') {
                     docLabel = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
                 } else if (docType === 'ioppd_obrazac') {
-                    docLabel = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
+                    docLabel = 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
                 }
             }
             

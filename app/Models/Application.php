@@ -341,6 +341,7 @@ class Application extends Model
                 'uvjerenje_opstina_porezi',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
+                'predracuni_nabavka',
             ];
         }
         // Društva (DOO) koja započinju biznis (započinjanje)
@@ -449,6 +450,7 @@ $documents = [
                         'uvjerenje_opstina_porezi',
                         'potvrda_upc_porezi',
                         'ioppd_obrazac',
+                        'predracuni_nabavka',
                     ];
                 }
             } else {
@@ -505,6 +507,7 @@ $documents = [
                 'uvjerenje_opstina_porezi',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
+                'predracuni_nabavka',
             ];
         }
         // Fizičko lice – razvoj (ista lista kao preduzetnica razvoj)
@@ -518,6 +521,7 @@ $documents = [
                 'uvjerenje_opstina_porezi',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
+                'predracuni_nabavka',
             ];
         }
         // Društva (DOO) koja započinju biznis (započinjanje)

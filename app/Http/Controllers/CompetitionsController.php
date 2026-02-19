@@ -106,7 +106,7 @@ class CompetitionsController extends Controller
             'uvjerenje_opstina_porezi' => 'Uvjerenje od organa lokalne uprave o izmirenim obavezama po osnovu lokalnih javnih prihoda na ime preduzetnika ne starije od mjesec dana',
             'uvjerenje_opstina_nepokretnost' => 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice',
             'potvrda_upc_porezi' => 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice',
-            'ioppd_obrazac' => 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)',
+            'ioppd_obrazac' => 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)',
             'godisnji_racuni' => 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu',
             'biznis_plan_usb' => 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u',
             'izvjestaj_realizacija' => 'Izvještaj o realizaciji prethodne podrške',
@@ -154,7 +154,7 @@ class CompetitionsController extends Controller
                 } elseif ($docType === 'potvrda_upc_porezi') {
                     $label = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice';
                 } elseif ($docType === 'ioppd_obrazac') {
-                    $label = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
+                    $label = 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
                 }
             }
             // Za DOO i Ostalo (započinjanje - početna lista)
@@ -180,7 +180,7 @@ class CompetitionsController extends Controller
                 } elseif ($docType === 'potvrda_upc_porezi') {
                     $label = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime nosioca biznisa i na ime društva';
                 } elseif ($docType === 'ioppd_obrazac') {
-                    $label = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
+                    $label = 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
                 }
             }
             
