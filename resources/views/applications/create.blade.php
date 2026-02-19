@@ -1627,7 +1627,10 @@
             });
         });
 
-        // Inicijalno disable sva polja u sakrivenim sekcijama (ne mijenjati ako je već read-only za komisiju)
+        // Odmah prikaži odgovarajuću sekciju (Obrazac 1a, 1b ili Fizičko lice) na osnovu izabranog tipa
+        toggleFieldsByApplicantType();
+
+        // Inicijalno disable sva polja samo u sekcijama koje su sakrivene (bez .show)
         if (!isCommissionView) {
             const allConditionalFields = document.querySelectorAll('.conditional-field');
             allConditionalFields.forEach(section => {
@@ -1640,60 +1643,43 @@
             });
         }
 
-        // Pozovi na učitavanju stranice - ali samo nakon što se DOM učita
-        // Ovo će prikazati pravilnu sekciju na osnovu applicant_type iz existingApplication
-        // VAŽNO: Čekaj da se vrednosti iz existingApplication učitaju u HTML pre pozivanja
-        setTimeout(function() {
-            toggleFieldsByApplicantType();
-            
-            // Nakon što se prikaže pravilna sekcija, osiguraj da se vrednosti iz existingApplication očuvaju
-            // Proveri da li postoji existingApplication i osiguraj da su vrednosti vidljive
-            const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
-            if (hasExistingApplication && !isCommissionView) {
-                // Sačekaj još malo da se sekcija prikaže (samo za uređivanje – ne za pregled komisije)
-                setTimeout(function() {
-                    const activeSection = document.querySelector('.conditional-field.show');
-                    if (activeSection) {
-                        const activeFields = activeSection.querySelectorAll('input, select, textarea');
-                        activeFields.forEach(field => {
-                            field.removeAttribute('disabled');
-                        });
-                        
-                        const existingBusinessStage = '{{ (isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? addslashes($existingApplication->business_stage) : addslashes($preselectedBusinessStage ?? '')) }}';
-                        if (existingBusinessStage) {
-                            const businessStageRadio = activeSection.querySelector(`input[name="business_stage"][value="${existingBusinessStage}"]`);
-                            if (businessStageRadio) {
-                                businessStageRadio.checked = true;
-                                businessStageRadio.removeAttribute('disabled');
-                                console.log('Set business_stage to:', existingBusinessStage);
-                            }
-                        }
-                        
-                        const existingPib = '{{ isset($existingApplication) && $existingApplication && $existingApplication->pib ? addslashes($existingApplication->pib) : '' }}';
-                        console.log('Existing PIB from server:', existingPib);
-                        if (existingPib) {
-                            const pibField = activeSection.querySelector('input[name="pib"]');
-                            console.log('PIB field found:', pibField ? 'yes' : 'no');
-                            if (pibField) {
-                                console.log('PIB field current value:', pibField.value);
-                                pibField.value = existingPib;
-                                pibField.removeAttribute('disabled');
-                                console.log('PIB field set to:', pibField.value);
-                            } else {
-                                const allPibFields = form.querySelectorAll('input[name="pib"]');
-                                allPibFields.forEach(field => {
-                                    if (field.closest('.conditional-field.show')) {
-                                        field.value = existingPib;
-                                        field.removeAttribute('disabled');
-                                        console.log('PIB field set in all sections');
-                                    }
-                                });
-                            }
+        // Nakon prikaza sekcije, za postojeću prijavu popuni business_stage i PIB ako treba
+        const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};
+        if (hasExistingApplication && !isCommissionView) {
+            setTimeout(function() {
+                const activeSection = document.querySelector('.conditional-field.show');
+                if (activeSection) {
+                    const activeFields = activeSection.querySelectorAll('input, select, textarea');
+                    activeFields.forEach(field => {
+                        field.removeAttribute('disabled');
+                    });
+                    const existingBusinessStage = '{{ (isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? addslashes($existingApplication->business_stage) : addslashes($preselectedBusinessStage ?? '')) }}';
+                    if (existingBusinessStage) {
+                        const businessStageRadio = activeSection.querySelector(`input[name="business_stage"][value="${existingBusinessStage}"]`);
+                        if (businessStageRadio) {
+                            businessStageRadio.checked = true;
+                            businessStageRadio.removeAttribute('disabled');
                         }
                     }
-                }, 300);
-            }
-        }, 200);
+                    const existingPib = '{{ isset($existingApplication) && $existingApplication && $existingApplication->pib ? addslashes($existingApplication->pib) : '' }}';
+                    if (existingPib) {
+                        const pibField = activeSection.querySelector('input[name="pib"]');
+                        if (pibField) {
+                            pibField.value = existingPib;
+                            pibField.removeAttribute('disabled');
+                        } else {
+                            const allPibFields = form.querySelectorAll('input[name="pib"]');
+                            allPibFields.forEach(field => {
+                                if (field.closest('.conditional-field.show')) {
+                                    field.value = existingPib;
+                                    field.removeAttribute('disabled');
+                                }
+                            });
+                        }
+                    }
+                }
+            }, 100);
+        }
         
         // Funkcija za automatsko postavljanje obrasca registracije
         // VAŽNO: Ne prepisuj vrednosti ako postoje iz existingApplication
