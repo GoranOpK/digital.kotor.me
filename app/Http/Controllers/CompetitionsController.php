@@ -98,12 +98,12 @@ class CompetitionsController extends Controller
         $documentLabels = [
             'licna_karta' => 'Ovjerena kopija lične karte',
             'crps_resenje' => 'Rješenje o upisu u CRPS',
-            'pib_resenje' => 'Rješenje o registraciji PJ Uprave prihoda i carina',
+            'pib_resenje' => 'Rješenje o PIB-u PJ Poreske uprave',
             'pdv_resenje' => 'Rješenje o registraciji za PDV',
             'statut' => 'Važeći Statut društva',
             'karton_potpisa' => 'Važeći karton deponovanih potpisa',
-            'potvrda_neosudjivanost' => 'Potvrda o neosuđivanosti za krivična djela na ime preduzetnice izdatu od strane Osnovnog suda',
-            'uvjerenje_opstina_porezi' => 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada',
+            'potvrda_neosudjivanost' => 'Potvrda da se ne vodi krivični postupak na ime preduzetnika izdatu od strane Osnovnog suda',
+            'uvjerenje_opstina_porezi' => 'Uvjerenje od organa lokalne uprave o izmirenim obavezama po osnovu lokalnih javnih prihoda na ime preduzetnika ne starije od mjesec dana',
             'uvjerenje_opstina_nepokretnost' => 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice',
             'potvrda_upc_porezi' => 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice',
             'ioppd_obrazac' => 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)',
@@ -111,6 +111,8 @@ class CompetitionsController extends Controller
             'biznis_plan_usb' => 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u',
             'izvjestaj_realizacija' => 'Izvještaj o realizaciji prethodne podrške',
             'finansijski_izvjestaj' => 'Finansijski izvještaj',
+            'dokaz_ziro_racun' => 'Dokaz o broju poslovnog žiro računa preduzetnika',
+            'predracuni_nabavka' => 'Predračuni za planiranu nabavku',
         ];
 
         // Generiši početnu listu dokumenata (za preduzetnice i fizičko lice koje započinje, sa SVIM dokumentima)
@@ -134,15 +136,21 @@ class CompetitionsController extends Controller
             // Za preduzetnice i fizičko lice, dodaj napomene za opcione dokumente i ažuriraj tekstove
             if ($applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
                 if ($docType === 'crps_resenje') {
-                    $label = 'Rješenje o upisu u CRPS';
+                    $label = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'pib_resenje') {
-                    $label = 'Rješenje o registraciji PJ Uprave prihoda i carina';
+                    $label = 'Rješenje o PIB-u PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'pdv_resenje') {
-                    $label = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a)';
+                    $label = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
+                } elseif ($docType === 'potvrda_neosudjivanost') {
+                    $label = 'Potvrda da se ne vodi krivični postupak na ime preduzetnika izdatu od strane Osnovnog suda';
                 } elseif ($docType === 'uvjerenje_opstina_porezi') {
-                    $label = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                    $label = 'Uvjerenje od organa lokalne uprave o izmirenim obavezama po osnovu lokalnih javnih prihoda na ime preduzetnika ne starije od mjesec dana';
                 } elseif ($docType === 'uvjerenje_opstina_nepokretnost') {
                     $label = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                } elseif ($docType === 'dokaz_ziro_racun') {
+                    $label = 'Dokaz o broju poslovnog žiro računa preduzetnika (ukoliko ima registrovanu djelatnost)';
+                } elseif ($docType === 'predracuni_nabavka') {
+                    $label = 'Predračuni za planiranu nabavku';
                 } elseif ($docType === 'potvrda_upc_porezi') {
                     $label = 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice';
                 } elseif ($docType === 'ioppd_obrazac') {

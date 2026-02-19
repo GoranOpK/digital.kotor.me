@@ -315,19 +315,20 @@ class Application extends Model
         if ($this->applicant_type === 'preduzetnica' && $this->business_stage === 'započinjanje') {
             $documents = [
                 'licna_karta',
+                'crps_resenje',      // ukoliko ima registrovanu djelatnost
+                'pib_resenje',       // ukoliko ima registrovanu djelatnost
+                'pdv_resenje',       // ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a, ili potvrda da nije PDV obveznik
                 'potvrda_neosudjivanost',
-                'uvjerenje_opstina_porezi',
-                'uvjerenje_opstina_nepokretnost',
+                'uvjerenje_opstina_porezi',  // o izmirenim obavezama po osnovu lokalnih javnih prihoda, ne starije od mjesec dana
+                'dokaz_ziro_racun',  // ukoliko ima registrovanu djelatnost
+                'predracuni_nabavka',
                 'biznis_plan_usb',
             ];
             
-            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
-            if ($isRegistered) {
-                $documents[] = 'crps_resenje';
-                $documents[] = 'pib_resenje';
-                // PDV samo ako je obveznik PDV-a (provjerava se kroz vat_number ili pdv_resenje)
-                // Za sada dodajemo pdv_resenje ako ima registrovanu djelatnost
-                $documents[] = 'pdv_resenje';
+            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost (crps, pib, pdv, žiro račun)
+            // U listi su svi navedeni, a obaveznost se provjerava u evaluaciji prema napomenama
+            if (!$isRegistered) {
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']));
             }
         }
         // Preduzetnice koje planiraju razvoj poslovanja (razvoj)
@@ -490,17 +491,18 @@ class Application extends Model
         if ($applicantType === 'preduzetnica' && $businessStage === 'započinjanje') {
             $documents = [
                 'licna_karta',
+                'crps_resenje',
+                'pib_resenje',
+                'pdv_resenje',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
-                'uvjerenje_opstina_nepokretnost',
+                'dokaz_ziro_racun',
+                'predracuni_nabavka',
                 'biznis_plan_usb',
             ];
-            
-            // Dokumenti vezani za registraciju samo ako ima registrovanu djelatnost
-            if ($isRegistered) {
-                $documents[] = 'crps_resenje';
-                $documents[] = 'pib_resenje';
-                $documents[] = 'pdv_resenje';
+            // optional za prikaz: crps_resenje, pib_resenje, pdv_resenje, dokaz_ziro_racun (ukoliko ima registrovanu djelatnost)
+            if (!$isRegistered) {
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']));
             }
         }
         // Preduzetnice koje planiraju razvoj poslovanja (razvoj)
