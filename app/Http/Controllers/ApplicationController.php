@@ -307,18 +307,25 @@ class ApplicationController extends Controller
             }
         }
 
-        // Proveri da li već postoji draft prijava za ovaj konkurs
-        // Proveri SVE aplikacije (draft i submitted) da ne bi pravio duplikate
-        $existingApplication = Application::where('competition_id', $competition->id)
-            ->where('user_id', Auth::id())
-            ->where('status', 'draft')
-            ->first();
+        // Jedna prijava po korisniku po konkursu (Odluka): editovanje Obrazaca 1a/1b ili Forme biznis plana ažurira postojeću prijavu, ne kreira novu
+        $existingApplication = null;
+        if ($request->filled('application_id')) {
+            $existingApplication = Application::where('id', $request->application_id)
+                ->where('competition_id', $competition->id)
+                ->where('user_id', Auth::id())
+                ->first();
+        }
+        if (!$existingApplication) {
+            $existingApplication = Application::where('competition_id', $competition->id)
+                ->where('user_id', Auth::id())
+                ->first(); // bilo koji status (draft, submitted, evaluated, itd.)
+        }
 
-        \Log::info('Existing application check: ' . ($existingApplication ? 'found ID: ' . $existingApplication->id : 'not found'));
+        \Log::info('Existing application check: ' . ($existingApplication ? 'found ID: ' . $existingApplication->id . ', status: ' . $existingApplication->status : 'not found'));
 
         try {
             if ($existingApplication) {
-            // Ažuriraj postojeću draft prijavu
+            // Ažuriraj postojeću prijavu (draft ili već podnesenu) – jedna prijava po korisniku po konkursu, status se ne mijenja
             // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
             \Log::info('Before update - PIB in request: ' . ($request->input('pib') ?? 'null'));
             \Log::info('Before update - PIB filled check: ' . ($request->filled('pib') ? 'true' : 'false'));

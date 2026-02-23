@@ -324,6 +324,9 @@
 
         <form method="POST" action="{{ $readOnly ? '#' : route('applications.store', $competition) }}" id="applicationForm" @if($readOnly) onsubmit="event.preventDefault(); return false;" @endif>
             @csrf
+            @if(isset($existingApplication) && $existingApplication && !$readOnly)
+                <input type="hidden" name="application_id" value="{{ $existingApplication->id }}">
+            @endif
             
             @php
                 // Helper funkcija za dobijanje vrednosti polja (old > existingApplication > default)
