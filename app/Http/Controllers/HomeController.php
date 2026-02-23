@@ -337,14 +337,21 @@ class HomeController extends Controller
                 $commission = $commissionMember->commission;
                 $commission->load('competitions');
                 
-                // Pronađi prijave za konkurse koje je ova komisija dodeljena
-                // Samo prijave koje član komisije JOŠ NIJE ocjenio (sekcija "Prijave za ocjenjivanje")
                 $competitionIds = $commission->competitions->pluck('id');
+                
+                // Sekcija "Prijave za ocjenjivanje" vidljiva je komisiji tek nakon isteka roka za prijavljivanje
+                $competitionsWithDeadlinePassed = $commission->competitions->filter(function ($c) {
+                    return $c->status === 'closed' || $c->isApplicationDeadlinePassed();
+                });
+                $showEvaluationSection = $competitionsWithDeadlinePassed->isNotEmpty();
+                $competitionIdsForEvaluation = $competitionsWithDeadlinePassed->pluck('id');
+                
+                // Pronađi prijave za konkurse gdje je rok istekao – samo prijave koje član JOŠ NIJE ocjenio
                 $evaluatedApplicationIds = \App\Models\EvaluationScore::where('commission_member_id', $commissionMember->id)
                     ->pluck('application_id')
                     ->toArray();
                 
-                $applicationsQuery = Application::whereIn('competition_id', $competitionIds)
+                $applicationsQuery = Application::whereIn('competition_id', $competitionIdsForEvaluation)
                     ->whereIn('status', ['submitted', 'evaluated'])
                     ->with(['competition', 'user', 'businessPlan', 'evaluationScores', 'evaluationScores.commissionMember']);
                 
@@ -375,7 +382,7 @@ class HomeController extends Controller
                     ->whereIn('status', ['published', 'closed', 'completed'])
                     ->get();
                 
-                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'recent_applications', 'myApplications', 'competitions'));
+                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'recent_applications', 'myApplications', 'competitions', 'showEvaluationSection'));
             }
         }
         

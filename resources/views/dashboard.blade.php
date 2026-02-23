@@ -633,7 +633,8 @@
                 @endif
             </div>
 
-            <!-- Prijave za ocjenjivanje -->
+            <!-- Prijave za ocjenjivanje – vidljivo tek nakon isteka roka za prijavljivanje -->
+            @if(isset($showEvaluationSection) && $showEvaluationSection)
             @if(isset($applications) && $applications->count() > 0)
             <div class="info-card" style="margin-top: 24px;">
                 <div class="info-card-header">
@@ -774,6 +775,7 @@
                     <p style="color: #6b7280; font-size: 14px;">Trenutno nema prijava za ocjenjivanje.</p>
                 </div>
             </div>
+            @endif
             @endif
         @endif
 
