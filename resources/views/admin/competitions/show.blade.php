@@ -375,7 +375,11 @@
                         @empty
                             <tr>
                                 <td colspan="7" style="padding: 40px; text-align: center; color: #6b7280;">
-                                    Nema prijava na ovaj konkurs.
+                                    @if($isCommissionMember && !$isAdmin && !$competition->isApplicationDeadlinePassed() && $competition->status !== 'closed')
+                                        Prijave će biti prikazane nakon isteka roka za prijavljivanje na konkurs.
+                                    @else
+                                        Nema prijava na ovaj konkurs.
+                                    @endif
                                 </td>
                             </tr>
                         @endforelse
