@@ -1038,6 +1038,7 @@
 
             <!-- Sekcija za Fizičko lice (nema registrovanu djelatnost) -->
             <div class="form-card conditional-field" id="fizickoLiceFields">
+                <input type="hidden" name="business_stage" value="započinjanje" id="fizickoLiceBusinessStageHidden" disabled>
                 <div class="form-section">
                     <div class="form-group">
                         <label class="form-label">
@@ -1546,19 +1547,23 @@
                     fizickoLiceNotice.style.display = 'block';
                 }
                 
-                // Provjeri da li je korisnik "Fizičko lice (Rezident)" - ako jeste, prikaži izbor tipa prijave
+                // Za "Fizičko lice (nema registrovanu djelatnost)" ne prikazujemo izbor tipa prijave – podrazumijeva se započinjanje
                 const fizickoLiceBusinessStage = document.getElementById('fizickoLiceBusinessStage');
                 if (fizickoLiceBusinessStage) {
+                    fizickoLiceBusinessStage.style.display = 'none';
+                    const businessStageRadios = fizickoLiceBusinessStage.querySelectorAll('input[name="business_stage"]');
+                    businessStageRadios.forEach(radio => {
+                        radio.removeAttribute('required');
+                        radio.setAttribute('disabled', 'disabled');
+                    });
+                }
+                // Skriveni business_stage=započinjanje šalje se samo kada nema drugih business_stage polja (Rezident nema "Faza biznisa" u DOM-u)
+                const fizickoLiceBusinessStageHidden = document.getElementById('fizickoLiceBusinessStageHidden');
+                if (fizickoLiceBusinessStageHidden) {
                     if (typeof isFizickoLiceRezident !== 'undefined' && isFizickoLiceRezident) {
-                        fizickoLiceBusinessStage.style.display = 'block';
-                        // Dodaj required na radio button-e
-                        const businessStageRadios = fizickoLiceBusinessStage.querySelectorAll('input[name="business_stage"]');
-                        businessStageRadios.forEach(radio => {
-                            radio.setAttribute('required', 'required');
-                            radio.removeAttribute('disabled');
-                        });
+                        fizickoLiceBusinessStageHidden.removeAttribute('disabled');
                     } else {
-                        fizickoLiceBusinessStage.style.display = 'none';
+                        fizickoLiceBusinessStageHidden.setAttribute('disabled', 'disabled');
                     }
                 }
                 
