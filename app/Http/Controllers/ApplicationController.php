@@ -569,7 +569,7 @@ class ApplicationController extends Controller
         ]);
 
         return redirect()->route('applications.show', $application)
-            ->with('success', 'Vaša prijava je uspješno podnesena i proslijeđena komisiji na razmatranje.');
+            ->with('success', 'Poštovani, vaša prijava će biti proslijeđena komisiji na razmatranje, nakon isteka roka za prijavljivanje!');
     }
 
     /**
