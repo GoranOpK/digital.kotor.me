@@ -486,6 +486,14 @@ class ApplicationController extends Controller
             abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
         }
 
+        // Članovi komisije ne mogu vidjeti prijave dok ne istekne rok od 15 dana za prijavljivanje na konkurs
+        if ($isCommissionMemberForThisCompetition) {
+            $competition = $application->competition;
+            if ($competition && $competition->status !== 'closed' && !$competition->isApplicationDeadlinePassed()) {
+                abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (15 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
+            }
+        }
+
         $application->load(['competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember', 'contract', 'reports']);
 
         // Provjeri da li je prijava spremna za podnošenje

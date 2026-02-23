@@ -478,12 +478,16 @@ class AdminController extends Controller
         $competition->loadCount('applications');
         $competition->load('commission');
         
-        // Članovi komisije ne mogu vidjeti draft prijave
+        // Članovi komisije ne mogu vidjeti draft prijave; prijave su im vidljive tek nakon isteka roka za prijavljivanje
         $applicationsQuery = $competition->applications()
             ->with(['user', 'businessPlan']);
         
         if ($isCommissionMember && !$isAdmin) {
             $applicationsQuery->where('status', '!=', 'draft');
+            // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (15 dana)
+            if (!$competition->isApplicationDeadlinePassed() && $competition->status !== 'closed') {
+                $applicationsQuery->whereRaw('1 = 0'); // prazna lista
+            }
         }
         
         $applications = $applicationsQuery->latest()->paginate(20);
@@ -791,9 +795,18 @@ class AdminController extends Controller
             $query->where('status', $request->status);
         }
 
-        // Članovi komisije ne mogu vidjeti draft prijave (uvijek, čak i ako eksplicitno traže status 'draft')
+        // Članovi komisije ne mogu vidjeti draft prijave; prijave su im vidljive tek nakon isteka roka za prijavljivanje
         if ($isKomisija && !$isAdmin) {
             $query->where('status', '!=', 'draft');
+            $commissionId = $this->getCommissionIdForMember();
+            if ($commissionId) {
+                $competitionIdsVisible = Competition::where('commission_id', $commissionId)->get()
+                    ->filter(fn ($c) => $c->status === 'closed' || $c->isApplicationDeadlinePassed())
+                    ->pluck('id');
+                $query->whereIn('competition_id', $competitionIdsVisible);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
         }
 
         // Filtriranje po konkursu
@@ -831,6 +844,11 @@ class AdminController extends Controller
             // Ne mogu vidjeti draft prijave
             if ($application->status === 'draft') {
                 abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
+            }
+            // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (15 dana)
+            $competition = $application->competition;
+            if ($competition && $competition->status !== 'closed' && !$competition->isApplicationDeadlinePassed()) {
+                abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (15 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
             }
         }
         

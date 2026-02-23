@@ -34,9 +34,10 @@ class EvaluationController extends Controller
         $commission = $commissionMember->commission;
         $commission->load('competitions');
 
-        // Članovi komisije mogu vidjeti sve prijave sve vrijeme (i prije i poslije roka za prijave)
-        // Ocjenjivanje je blokirano do isteka roka od 15 dana (provjera u create/store)
-        $competitionIds = $commission->competitions->pluck('id');
+        // Prijave su komisiji vidljive i na ocjenjivanje tek nakon isteka roka za prijavljivanje (15 dana)
+        $competitionIds = $commission->competitions->filter(function ($c) {
+            return $c->status === 'closed' || $c->isApplicationDeadlinePassed();
+        })->pluck('id');
         
         // Prijave koje treba ocjeniti (submitted, evaluated ili rejected status)
         // Statusi se određuju na osnovu filtera
