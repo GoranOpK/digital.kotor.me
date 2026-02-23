@@ -1203,7 +1203,7 @@
             <!-- Sekcija 3: Finansijski podaci -->
             <div class="form-card">
                 <div class="form-section">
-                    <h2>3. Finansijski podaci</h2>
+                    <h2>Finansijski podaci</h2>
                     
                     <div class="form-row">
                         <div class="form-group">
@@ -1257,7 +1257,7 @@
             <!-- Sekcija 4: Dodatni podaci (sakriva se za Fizičko lice - sredstva se ne mogu uplaćivati na lične žiro račune) -->
             <div class="form-card" id="additional-data-section">
                 <div class="form-section">
-                    <h2>4. Dodatni podaci</h2>
+                    <h2>Dodatni podaci</h2>
                     
                     <div class="form-row">
                         <div class="form-group">
@@ -1311,7 +1311,7 @@
             <!-- Sekcija 5: Izjave -->
             <div class="form-card">
                 <div class="form-section">
-                    <h2>5. Izjave</h2>
+                    <h2>Izjave</h2>
                     
                     <div class="form-group">
                         <div class="checkbox-group">
