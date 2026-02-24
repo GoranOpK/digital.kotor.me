@@ -1067,8 +1067,8 @@
 
         <!-- Akcije -->
         <div class="info-card" style="text-align: center;">
-            <a href="{{ route('competitions.show', $application->competition) }}" class="btn btn-secondary">
-                Nazad na konkurs
+            <a href="{{ route('dashboard') }}" class="btn btn-secondary">
+                Nazad na Moj panel
             </a>
             @if($application->status === 'draft' && $canManage)
                 @php
