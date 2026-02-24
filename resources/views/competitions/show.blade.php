@@ -32,6 +32,11 @@
         margin-bottom: 24px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
+    /* Specijalno za box \"Opis konkursa\" – manji top razmak i manji uvlaka (indent) */
+    .info-card.competition-description-card {
+        /* prije: padding: 24px sa svih strana */
+        padding: 12px 12px 24px; /* top i bočne strane 50% sadašnjeg, dno ostavljeno isto */
+    }
     .main-content-grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -114,7 +119,7 @@
         border-left: 4px solid #f59e0b;
         padding: 16px 20px;
         border-radius: 8px;
-        margin-bottom: 16px;
+        margin-bottom: 24px;
     }
     .deadline-alert strong {
         color: #92400e;
