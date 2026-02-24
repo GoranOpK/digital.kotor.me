@@ -282,51 +282,53 @@
                 </div>
             </div>
 
-            <!-- Obavezna dokumentacija -->
-            <div class="info-card">
-                <h2>Obavezna dokumentacija</h2>
-                <p style="color: #6b7280; margin-bottom: 16px;">
-                    Prilikom prijave na konkurs, potrebno je priložiti sledeće dokumente:
-                </p>
-                
-                @if(auth()->check() && $applicantType && ($applicantType === 'preduzetnica' || $applicantType === 'doo' || $applicantType === 'ostalo' || ($applicantType === 'fizicko_lice' && ($userType === 'Fizičko lice' || $userType === 'Rezident'))))
-                <!-- Izbor faze biznisa -->
-                <div style="margin-bottom: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px;">
-                    <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #374151;">
-                        Faza biznisa <span style="color: #dc2626;">*</span>
-                    </label>
-                    <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input 
-                                type="radio" 
-                                name="business_stage_preview" 
-                                value="započinjanje" 
-                                id="business_stage_zapocinjanje_preview"
-                                checked
-                                style="margin-right: 8px; cursor: pointer;"
-                            >
-                            <span>{{ ($applicantType === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje započinje biznis' : 'Preduzetnica koja započinje biznis' }}</span>
+            @if(!$isCommissionMemberForThisCompetition)
+                <!-- Obavezna dokumentacija -->
+                <div class="info-card">
+                    <h2>Obavezna dokumentacija</h2>
+                    <p style="color: #6b7280; margin-bottom: 16px;">
+                        Prilikom prijave na konkurs, potrebno je priložiti sledeće dokumente:
+                    </p>
+                    
+                    @if(auth()->check() && $applicantType && ($applicantType === 'preduzetnica' || $applicantType === 'doo' || $applicantType === 'ostalo' || ($applicantType === 'fizicko_lice' && ($userType === 'Fizičko lice' || $userType === 'Rezident'))))
+                    <!-- Izbor faze biznisa -->
+                    <div style="margin-bottom: 20px; padding: 16px; background: #f3f4f6; border-radius: 8px;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 12px; color: #374151;">
+                            Faza biznisa <span style="color: #dc2626;">*</span>
                         </label>
-                        <label style="display: flex; align-items: center; cursor: pointer;">
-                            <input 
-                                type="radio" 
-                                name="business_stage_preview" 
-                                value="razvoj" 
-                                id="business_stage_razvoj_preview"
-                                style="margin-right: 8px; cursor: pointer;"
-                            >
-                            <span>{{ ($applicantType === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje planira razvoj poslovanja' : 'Preduzetnica koja planira razvoj poslovanja' }}</span>
-                        </label>
+                        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input 
+                                    type="radio" 
+                                    name="business_stage_preview" 
+                                    value="započinjanje" 
+                                    id="business_stage_zapocinjanje_preview"
+                                    checked
+                                    style="margin-right: 8px; cursor: pointer;"
+                                >
+                                <span>{{ ($applicantType === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje započinje biznis' : 'Preduzetnica koja započinje biznis' }}</span>
+                            </label>
+                            <label style="display: flex; align-items: center; cursor: pointer;">
+                                <input 
+                                    type="radio" 
+                                    name="business_stage_preview" 
+                                    value="razvoj" 
+                                    id="business_stage_razvoj_preview"
+                                    style="margin-right: 8px; cursor: pointer;"
+                                >
+                                <span>{{ ($applicantType === 'doo' || $applicantType === 'ostalo') ? 'Društvo koje planira razvoj poslovanja' : 'Preduzetnica koja planira razvoj poslovanja' }}</span>
+                            </label>
+                        </div>
                     </div>
+                    @endif
+                    
+                    <ul class="documents-list" id="documents-list">
+                        @foreach($requiredDocuments as $document)
+                            <li>{{ $document }}</li>
+                        @endforeach
+                    </ul>
                 </div>
-                @endif
-                
-                <ul class="documents-list" id="documents-list">
-                    @foreach($requiredDocuments as $document)
-                        <li>{{ $document }}</li>
-                    @endforeach
-                </ul>
-            </div>
+            @endif
         </div>
 
         <!-- Opis konkursa -->
