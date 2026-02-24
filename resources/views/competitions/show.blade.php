@@ -32,11 +32,6 @@
         margin-bottom: 24px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    /* Specijalno za box \"Opis konkursa\" – manji top razmak i manji uvlaka (indent) */
-    .info-card.competition-description-card {
-        /* prije: padding: 24px sa svih strana */
-        padding: 12px 12px 24px; /* top i bočne strane 50% sadašnjeg, dno ostavljeno isto */
-    }
     .main-content-grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -50,18 +45,6 @@
         .main-content-grid .info-card {
             margin-bottom: 0;
             height: 100%;
-        }
-        /* Kartica Opis konkursa: ista širina i visina, tekst od početka (vrh) */
-        .main-content-grid .info-card.competition-description-card {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: stretch;
-        }
-        .main-content-grid .info-card.competition-description-card .competition-description-body {
-            flex: 1 1 auto;
-            min-height: 0;
-            overflow-y: auto;
         }
     }
     .info-card h2 {
@@ -362,9 +345,9 @@
             @else
                 <!-- Za članove komisije: Opis konkursa u istom redu kao Osnovne informacije -->
                 @if($competition->description)
-                <div class="info-card competition-description-card">
+                <div class="info-card">
                     <h2>Opis konkursa</h2>
-                    <div class="competition-description-body" style="color: #374151; line-height: 1.8; white-space: pre-wrap;">
+                    <div style="color: #374151; line-height: 1.8; white-space: pre-wrap;">
                         {{ $competition->description }}
                     </div>
                 </div>
