@@ -114,7 +114,7 @@
         border-left: 4px solid #f59e0b;
         padding: 16px 20px;
         border-radius: 8px;
-        margin-bottom: 24px;
+        margin-bottom: 16px;
     }
     .deadline-alert strong {
         color: #92400e;
