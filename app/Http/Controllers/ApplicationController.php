@@ -54,9 +54,21 @@ class ApplicationController extends Controller
             }
         }
         
-        // Blokiraj članove komisije od pristupa formi osim ako nije read-only pristup
+        // Blokiraj članove komisije od prijavljivanja NA KONKURSE za koje su imenovani kao članovi,
+        // ali im dozvoli prijavu na druge konkurse
         if ($roleName === 'komisija' && !$readOnly) {
-            abort(403, 'Članovi komisije mogu samo pregledati prijave u read-only modu.');
+            $isCommissionMemberForThisCompetition = false;
+            if ($competition->commission_id) {
+                $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->first();
+                if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                    $isCommissionMemberForThisCompetition = true;
+                }
+            }
+            if ($isCommissionMemberForThisCompetition) {
+                abort(403, 'Članovi komisije ne mogu se prijaviti na konkurse za koje su imenovani kao članovi komisije.');
+            }
         }
         
         // Administrator konkursa ne može se prijaviti na konkurse
@@ -158,11 +170,22 @@ class ApplicationController extends Controller
      */
     public function store(Request $request, Competition $competition): RedirectResponse
     {
-        // Blokiraj članove komisije od čuvanja izmjena
         $user = Auth::user();
         $roleName = $user->role ? $user->role->name : null;
+        // Blokiraj članove komisije od podnošenja prijave NA KONKURSE za koje su imenovani kao članovi
         if ($roleName === 'komisija') {
-            abort(403, 'Članovi komisije mogu samo pregledati prijave, ne mogu ih mijenjati.');
+            $isCommissionMemberForThisCompetition = false;
+            if ($competition->commission_id) {
+                $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->first();
+                if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                    $isCommissionMemberForThisCompetition = true;
+                }
+            }
+            if ($isCommissionMemberForThisCompetition) {
+                abort(403, 'Članovi komisije ne mogu podnositi prijave na konkurse za koje su imenovani kao članovi komisije.');
+            }
         }
         
         // Proveri da li je konkurs otvoren

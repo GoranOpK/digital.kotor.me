@@ -344,13 +344,26 @@
         @php
             $userRole = auth()->check() ? (auth()->user()->role ? auth()->user()->role->name : null) : null;
             $isCompetitionAdmin = $userRole === 'konkurs_admin';
+            $isCommissionMemberForThisCompetition = false;
+            if (auth()->check() && $userRole === 'komisija' && $competition->commission_id) {
+                $commissionMember = \App\Models\CommissionMember::where('user_id', auth()->id())
+                    ->where('status', 'active')
+                    ->first();
+                if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                    $isCommissionMemberForThisCompetition = true;
+                }
+            }
         @endphp
         @if(!$isCompetitionAdmin)
         <div class="info-card" style="text-align: center;">
-            @if($isOpen && !$userApplication && auth()->check())
+            @if($isOpen && !$userApplication && auth()->check() && !$isCommissionMemberForThisCompetition)
                 <a href="{{ route('applications.create', $competition) }}" class="btn-primary" id="applyBtn" data-base-url="{{ route('applications.create', $competition) }}" data-applicant-type="{{ $applicantType ?? '' }}">
                     Prijavi se na konkurs
                 </a>
+            @elseif($isOpen && auth()->check() && $isCommissionMemberForThisCompetition)
+                <p style="color: #6b7280; margin-bottom: 0;">
+                    Članovi komisije ne mogu se prijaviti na konkurse za koje su imenovani kao članovi komisije.
+                </p>
             @elseif(!auth()->check())
                 <p style="color: #6b7280; margin-bottom: 16px;">
                     Za prijavu na konkurs potrebno je da budete prijavljeni.
