@@ -653,6 +653,8 @@
                                     } else {
                                         $orderedDocsForDropdown = $requiredDocs;
                                     }
+                                    // Ukloni "Ostalo" iz padajućeg menija – prikazuju se samo dokumenta potrebna za prijavu
+                                    $orderedDocsForDropdown = array_values(array_filter($orderedDocsForDropdown, fn($d) => $d !== 'ostalo'));
                                     
                                     $documentLabels = [
                                         'licna_karta' => 'Ovjerena kopija lične karte',
@@ -678,7 +680,6 @@
                                         <option value="{{ $docType }}">{{ $documentLabels[$docType] ?? $docType }}</option>
                                     @endif
                                 @endforeach
-                                <option value="ostalo">Ostalo</option>
                             </select>
                         </div>
                         <div class="form-group" style="margin-bottom: 12px;">
@@ -733,7 +734,9 @@
             
             @php
                 $requiredDocs = $application->getRequiredDocuments();
-                $uploadedDocs = $application->documents->pluck('document_type')->toArray();
+                // Za broj i prikaz računamo samo dokumenta potrebna za prijavu (isključujemo tip 'ostalo')
+                $allUploadedTypes = $application->documents->pluck('document_type')->toArray();
+                $uploadedDocs = array_values(array_filter($allUploadedTypes, fn($t) => $t !== 'ostalo'));
                 
                 // Definiši redoslijed dokumenata na osnovu tipa prijave i faze biznisa
                 $orderedDocs = [];
@@ -861,20 +864,22 @@
                     $documentLabels['dokaz_ziro_racun'] = ($application->applicant_type === 'preduzetnica' && $isZapocinjanje) ? 'Dokaz o broju poslovnog žiro računa preduzetnika (ukoliko ima registrovanu djelatnost)' : 'Dokaz o broju poslovnog žiro računa';
                     $documentLabels['predracuni_nabavka'] = $isDooOstalo ? 'Predračune za planiranu nabavku' : 'Predračuni za planiranu nabavku';
                     $documentLabels['ostalo'] = 'Ostalo';
+                    // Broj priloženih obaveznih dokumenata (samo tipovi iz $orderedDocs)
+                    $uploadedRequiredCount = count(array_intersect($orderedDocs, $allUploadedTypes));
             @endphp
 
             <!-- Progress bar -->
             <div style="margin-bottom: 20px;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                     <span style="font-size: 14px; color: #374151; font-weight: 600;">
-                        Dokumenti: {{ count($uploadedDocs) }} / {{ count($orderedDocs) }}
+                        Dokumenti: {{ $uploadedRequiredCount }} / {{ count($orderedDocs) }}
                     </span>
                     <span style="font-size: 14px; color: #6b7280;">
-                        {{ round((count($uploadedDocs) / max(count($orderedDocs), 1)) * 100) }}%
+                        {{ round(($uploadedRequiredCount / max(count($orderedDocs), 1)) * 100) }}%
                     </span>
                 </div>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: {{ (count($uploadedDocs) / max(count($orderedDocs), 1)) * 100 }}%"></div>
+                    <div class="progress-fill" style="width: {{ ($uploadedRequiredCount / max(count($orderedDocs), 1)) * 100 }}%"></div>
                 </div>
             </div>
 
