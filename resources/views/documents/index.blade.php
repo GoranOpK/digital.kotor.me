@@ -332,7 +332,7 @@
     <div class="container mx-auto px-4">
         @if(session('success') || (isset($megaUploadSuccess) && $megaUploadSuccess))
             <div class="alert alert-success" style="background: #d1fae5; border: 1px solid #10b981; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px;">
-                {{ session('success') ?? 'Dokument uspešno upload-ovan na MEGA!' }}
+                {{ session('success') ?? 'Dokument uspješno učitan na MEGA!' }}
             </div>
         @endif
         <div class="page-header">
@@ -351,7 +351,7 @@
         @endif
 
         <div id="refresh-tip" class="refresh-tip" style="display: none;">
-            <strong>💡 Savet:</strong> Osvežite stranicu (<kbd>Ctrl</kbd>+<kbd>F5</kbd>) ako ne vidite najnovije izmene ili imate probleme pri upload-u.
+            <strong>💡 Savjet:</strong> Osvježite stranicu (<kbd>Ctrl</kbd>+<kbd>F5</kbd>) ako ne vidite najnovije izmjene ili imate probleme pri upload-u.
             <button type="button" class="refresh-tip-close" id="refresh-tip-close" aria-label="Zatvori">×</button>
         </div>
 
@@ -406,8 +406,8 @@
                     <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 12px; border-radius: 4px;">
                         <strong style="color: #1e40af; display: block; margin-bottom: 4px;">ℹ️ Važno:</strong>
                         <span style="color: #1e3a8a; font-size: 13px;">
-                            Ako izaberete više fajlova, oni će biti spojeni u <strong>jedan PDF dokument</strong> tim redosledom kako su navedeni. 
-                            Možete promeniti redosled fajlova pomoću dugmadi "Gore" i "Dole" pre upload-a.
+                            Ako izaberete više fajlova, oni će biti spojeni u <strong>jedan PDF dokument</strong> tim redoslijedom kako su navedeni. 
+                            Možete promijeniti redoslijed fajlova pomoću dugmadi "Gore" i "Dolje" prije upload-a.
                         </span>
                     </div>
                 </div>
@@ -433,7 +433,7 @@
                                     <div class="document-name">{{ $document->name }}</div>
                                     <div class="document-meta">
                                         {{ $document->formatted_file_size }} • 
-                                        Upload-ovano: {{ $document->created_at->format('d.m.Y H:i') }}
+                                        Učitano: {{ $document->created_at->format('d.m.Y H:i') }}
                                         @if($document->expires_at)
                                             • Ističe: {{ $document->expires_at->format('d.m.Y') }}
                                         @endif
@@ -465,7 +465,7 @@
                                             Preuzmi
                                         </a>
                                         <div class="category-change-wrapper">
-                                            <button type="button" class="btn-sm btn-category" onclick="toggleCategoryForm(this)">Promijeni kategoriju</button>
+                                            <button type="button" class="btn-sm btn-category" onclick="toggleCategoryForm(this)">Promijenite kategoriju</button>
                                             <div class="category-change-form" id="category-form-{{ $document->id }}">
                                                 <form action="{{ route('documents.update-category', $document) }}" method="POST">
                                                     @csrf
@@ -496,7 +496,7 @@
                         @endforeach
                     @else
                         <div class="empty-state" style="padding: 20px; text-align: center; color: #6b7280;">
-                            <p style="margin: 0; font-size: 14px;">Nema upload-ovanih dokumenata u ovoj kategoriji.</p>
+                            <p style="margin: 0; font-size: 14px;">Nema učitanih dokumenata u ovoj kategoriji.</p>
                         </div>
                     @endif
                 </div>
@@ -550,7 +550,7 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// Savet za osvežavanje stranice (Ctrl+F5)
+// Savjet za osvježavanje stranice (Ctrl+F5)
 (function() {
     const tip = document.getElementById('refresh-tip');
     const closeBtn = document.getElementById('refresh-tip-close');
@@ -564,19 +564,19 @@ document.addEventListener('click', function(e) {
     }
 })();
 
-// Čuva prethodno izabrane fajlove
+// Čuva prethodno izabrane datoteke
 let selectedFiles = [];
 
-// Funkcija za prikaz izabranih fajlova
+// Funkcija za prikaz izabranih datoteka
 function updateFileDisplay(input) {
     const fileNamesDiv = document.getElementById('file-names');
     const fileLabel = document.getElementById('file-label');
     
-    // Dodaj nove fajlove u listu (izbegni duplikate)
+    // Dodaj nove datoteke u listu (izbjegni duplikate)
     if (input.files && input.files.length > 0) {
         const newFiles = Array.from(input.files);
         
-        // Proveri da li fajl već postoji (po imenu i veličini)
+        // Provjeri postoji li datoteka već (po imenu i veličini)
         newFiles.forEach(newFile => {
             const exists = selectedFiles.some(existingFile => 
                 existingFile.name === newFile.name && existingFile.size === newFile.size
@@ -587,7 +587,7 @@ function updateFileDisplay(input) {
             }
         });
         
-        // Kreiraj novi DataTransfer objekat sa svim fajlovima
+        // Kreiraj novi DataTransfer objekat sa svim datotekama
         const dataTransfer = new DataTransfer();
         selectedFiles.forEach(file => {
             dataTransfer.items.add(file);
@@ -597,9 +597,9 @@ function updateFileDisplay(input) {
         input.files = dataTransfer.files;
     }
     
-    // Prikaži sve izabrane fajlove
+    // Prikaži sve izabrane datoteke
     if (selectedFiles.length > 0) {
-        let fileList = '<div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 4px;">Izabrano fajlova: ' + selectedFiles.length + (selectedFiles.length > 1 ? ' (biće spojeni u jedan PDF)' : '') + '</div>';
+        let fileList = '<div style="font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 4px;">Izabrano datoteka: ' + selectedFiles.length + (selectedFiles.length > 1 ? ' (bit će spojene u jedan PDF)' : '') + '</div>';
         fileList += '<ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #6b7280; list-style: none;">';
         
         selectedFiles.forEach((file, index) => {
@@ -610,14 +610,14 @@ function updateFileDisplay(input) {
             
             // Dugme za pomeranje gore
             if (index > 0) {
-                fileList += '<button type="button" class="file-action-btn" data-action="move-up" data-index="' + index + '" title="Pomeri gore" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬆️</button>';
+                fileList += '<button type="button" class="file-action-btn" data-action="move-up" data-index="' + index + '" title="Pomakni gore" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬆️</button>';
             } else {
                 fileList += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬆️</button>';
             }
             
             // Dugme za pomeranje dole
             if (index < selectedFiles.length - 1) {
-                fileList += '<button type="button" class="file-action-btn" data-action="move-down" data-index="' + index + '" title="Pomeri dole" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬇️</button>';
+                fileList += '<button type="button" class="file-action-btn" data-action="move-down" data-index="' + index + '" title="Pomakni dolje" style="background: #3b82f6; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: pointer;">⬇️</button>';
             } else {
                 fileList += '<button type="button" disabled style="background: #d1d5db; color: #9ca3af; border: none; border-radius: 4px; padding: 4px 8px; font-size: 11px; cursor: not-allowed;">⬇️</button>';
             }
@@ -635,15 +635,15 @@ function updateFileDisplay(input) {
         if (selectedFiles.length === 1) {
             fileLabel.textContent = selectedFiles[0].name;
         } else {
-            fileLabel.textContent = 'Izabrano ' + selectedFiles.length + ' fajlova (biće spojeni u jedan PDF)';
+            fileLabel.textContent = 'Izabrano ' + selectedFiles.length + ' datoteka (bit će spojene u jedan PDF)';
         }
     } else {
         fileNamesDiv.style.display = 'none';
-        fileLabel.textContent = 'Izaberi fajlove (možete izabrati više)';
+        fileLabel.textContent = 'Izaberite datoteke (možete izabrati više)';
     }
 }
 
-// Funkcija za uklanjanje fajla iz liste
+// Funkcija za uklanjanje datoteke iz liste
 function removeFile(index, event) {
     if (event) {
         event.preventDefault();
@@ -652,7 +652,7 @@ function removeFile(index, event) {
     
     selectedFiles.splice(index, 1);
     
-    // Ažuriraj input sa preostalim fajlovima
+    // Ažuriraj input s preostalim datotekama
     const input = document.getElementById('file');
     const dataTransfer = new DataTransfer();
     selectedFiles.forEach(file => {
@@ -666,7 +666,7 @@ function removeFile(index, event) {
     return false;
 }
 
-// Funkcija za pomeranje fajla gore
+// Funkcija za pomicanje datoteke gore
 function moveFileUp(index, event) {
     if (event) {
         event.preventDefault();
@@ -674,12 +674,12 @@ function moveFileUp(index, event) {
     }
     
     if (index > 0) {
-        // Zameni pozicije
+        // Zamijeni pozicije
         const temp = selectedFiles[index];
         selectedFiles[index] = selectedFiles[index - 1];
         selectedFiles[index - 1] = temp;
         
-        // Ažuriraj input sa novim redosledom
+        // Ažuriraj input s novim redoslijedom
         const input = document.getElementById('file');
         const dataTransfer = new DataTransfer();
         selectedFiles.forEach(file => {
@@ -694,7 +694,7 @@ function moveFileUp(index, event) {
     return false;
 }
 
-// Funkcija za pomeranje fajla dole
+// Funkcija za pomicanje datoteke dolje
 function moveFileDown(index, event) {
     if (event) {
         event.preventDefault();
@@ -702,12 +702,12 @@ function moveFileDown(index, event) {
     }
     
     if (index < selectedFiles.length - 1) {
-        // Zameni pozicije
+        // Zamijeni pozicije
         const temp = selectedFiles[index];
         selectedFiles[index] = selectedFiles[index + 1];
         selectedFiles[index + 1] = temp;
         
-        // Ažuriraj input sa novim redosledom
+        // Ažuriraj input s novim redoslijedom
         const input = document.getElementById('file');
         const dataTransfer = new DataTransfer();
         selectedFiles.forEach(file => {
@@ -726,25 +726,25 @@ function moveFileDown(index, event) {
 function prepareFormSubmit(event) {
     const input = document.getElementById('file');
     
-    // Proveri da li ima izabranih fajlova
+    // Provjeri ima li izabranih datoteka
     if (selectedFiles.length === 0) {
         event.preventDefault();
-        alert('Molimo izaberite barem jedan fajl.');
+        alert('Molimo izaberite barem jednu datoteku.');
         return false;
     }
     
-    // Proveri veličinu svakog fajla (max 2MB po fajlu)
+    // Provjeri veličinu svake datoteke (max 2 MB po datoteci)
     const maxFileSize = 2 * 1024 * 1024; // 2MB u bajtovima
     for (let i = 0; i < selectedFiles.length; i++) {
         if (selectedFiles[i].size > maxFileSize) {
             event.preventDefault();
             const fileSizeMB = (selectedFiles[i].size / 1024 / 1024).toFixed(2);
-            alert(`Fajl "${selectedFiles[i].name}" je prevelik (${fileSizeMB} MB).\nMaksimalna dozvoljena veličina po fajlu je 2 MB.`);
+            alert(`Datoteka "${selectedFiles[i].name}" je prevelika (${fileSizeMB} MB).\nMaksimalna dozvoljena veličina po datoteci je 2 MB.`);
             return false;
         }
     }
     
-    // Proveri ukupnu veličinu svih fajlova (max 7MB zbog post_max_size ograničenja)
+    // Provjeri ukupnu veličinu svih datoteka (max 7 MB zbog post_max_size ograničenja)
     const maxTotalSize = 7 * 1024 * 1024; // 7MB u bajtovima (ostavljamo marginu od 1MB)
     let totalSize = 0;
     for (let i = 0; i < selectedFiles.length; i++) {
@@ -754,11 +754,11 @@ function prepareFormSubmit(event) {
     if (totalSize > maxTotalSize) {
         event.preventDefault();
         const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
-        alert(`Ukupna veličina svih fajlova (${totalSizeMB} MB) prelazi dozvoljeno ograničenje.\nMaksimalna ukupna veličina je 7 MB.\nMolimo smanjite broj ili veličinu fajlova.`);
+        alert(`Ukupna veličina svih datoteka (${totalSizeMB} MB) prelazi dozvoljeno ograničenje.\nMaksimalna ukupna veličina je 7 MB.\nMolimo smanjite broj ili veličinu datoteka.`);
         return false;
     }
     
-    // Osiguraj da su fajlovi u input-u pre submit-a
+    // Osiguraj da su datoteke u input-u prije submit-a
     const dataTransfer = new DataTransfer();
     selectedFiles.forEach(file => {
         dataTransfer.items.add(file);
@@ -835,7 +835,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (fileLabel && fileInput) {
         fileLabel.addEventListener('click', function(event) {
-            // Proveri da li je klik direktno na label, a ne na dugme unutar file-names
+            // Provjeri je li klik direktno na label, a ne na dugme unutar file-names
             if (!event.target.closest('.file-action-btn') && !event.target.closest('#file-names')) {
                 fileInput.click();
             }
@@ -846,7 +846,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateDocumentStatus(documentId, status, processedAt) {
         console.log('updateDocumentStatus pozvan:', { documentId, status, processedAt });
         
-        // Pronađi document-item sa odgovarajućim ID-jem
+        // Pronađi document-item s odgovarajućim ID-jem
         const documentItem = document.querySelector(`.document-item[data-document-id="${documentId}"]`);
         if (!documentItem) {
             console.warn('Dokument nije pronađen u DOM-u:', documentId);
@@ -855,14 +855,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const documentInfo = documentItem.querySelector('.document-info');
         if (!documentInfo) {
-            console.warn('Document info nije pronađen za dokument:', documentId);
+            console.warn('Podaci o dokumentu nisu pronađeni za dokument:', documentId);
             return;
         }
         
         // Pronađi ili kreiraj status element
         let statusElement = documentInfo.querySelector('.document-status');
         if (!statusElement) {
-            console.log('Kreiram novi status element');
+            console.log('Kreiran je novi status element');
             statusElement = document.createElement('div');
             statusElement.className = 'document-status';
             statusElement.style.marginTop = '8px';
@@ -917,11 +917,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Funkcija za proveru statusa
+    // Funkcija za provjeru statusa
     let statusCheckInterval = null;
     
     function checkDocumentStatus() {
-        console.log('Proveravam status dokumenata...');
+        console.log('Provjeravam status dokumenata...');
         
         fetch('{{ route("documents.status") }}', {
             method: 'GET',
@@ -946,22 +946,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateDocumentStatus(doc.id, doc.status, doc.processed_at);
                 });
                 
-                // Proveri da li još ima dokumenata u obradi
+                // Provjeri ima li još dokumenata u obradi
                 const hasProcessing = data.documents.some(doc => 
                     doc.status === 'pending' || doc.status === 'processing'
                 );
                 
                 console.log('Ima dokumenata u obradi:', hasProcessing);
                 
-                // Ako nema više dokumenata u obradi, zaustavi proveru
+                // Ako nema više dokumenata u obradi, zaustavi provjeru
                 if (!hasProcessing && statusCheckInterval) {
-                    console.log('Zaustavljam proveru statusa');
+                    console.log('Zaustavljam provjeru statusa');
                     clearInterval(statusCheckInterval);
                     statusCheckInterval = null;
                 }
             } else {
                 console.log('Nema dokumenata u obradi');
-                // Ako nema dokumenata u obradi, zaustavi proveru
+                // Ako nema dokumenata u obradi, zaustavi provjeru
                 if (statusCheckInterval) {
                     clearInterval(statusCheckInterval);
                     statusCheckInterval = null;
@@ -969,11 +969,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         })
         .catch(error => {
-            console.error('Greška pri proveri statusa:', error);
+            console.error('Greška pri provjeri statusa:', error);
         });
     }
     
-    // Proveri da li ima dokumenata u pending ili processing statusu
+    // Provjeri ima li dokumenata u pending ili processing statusu
     const documentItems = document.querySelectorAll('.document-item[data-document-id]');
     let hasPendingOrProcessing = false;
     
@@ -999,7 +999,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 1000);
     } else {
-        // Proveri jednom da vidimo da li ima dokumenata u obradi (možda su se promijenili)
+        // Provjeri jednom ima li dokumenata u obradi (možda su se promijenili)
         setTimeout(function() {
             checkDocumentStatus();
             
@@ -1027,7 +1027,7 @@ async function handleMegaUpload(event) {
         return false;
     }
     
-    // Dobij vrednosti iz forme
+    // Preuzmi vrijednosti iz forme
     const name = document.getElementById('name').value;
     const category = document.getElementById('category').value;
     const files = document.getElementById('file').files;
@@ -1042,10 +1042,10 @@ async function handleMegaUpload(event) {
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Upload-ovanje na MEGA...';
+    submitBtn.textContent = 'Učitavanje na MEGA...';
     
     try {
-        // Proveri da li je MEGA upload modul dostupan
+        // Provjeri je li MEGA upload modul dostupan
         if (!window.megaUpload || !window.megaUpload.uploadFilesToMegaAndSave) {
             console.error('MEGA upload modul nije učitan, koristim standardni upload');
             // Fallback na standardni upload ako MEGA modul nije dostupan
@@ -1053,7 +1053,7 @@ async function handleMegaUpload(event) {
             return false;
         }
         
-        // Upload fajlova direktno na MEGA
+        // Učitavanje datoteka direktno na MEGA
         console.log('Calling uploadFilesToMegaAndSave with files:', files);
         console.log('Files length:', files.length);
         console.log('Files is FileList?', files instanceof FileList);
@@ -1069,14 +1069,14 @@ async function handleMegaUpload(event) {
             // Redirect na listu dokumenata sa success porukom
             window.location.href = '{{ route("documents.index") }}?mega_upload_success=1';
         } else {
-            alert('Greška pri upload-u na MEGA: ' + (result.error || 'Nepoznata greška'));
+            alert('Greška pri učitavanju na MEGA: ' + (result.error || 'Nepoznata greška'));
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
         }
         
     } catch (error) {
         console.error('MEGA upload error:', error);
-        alert('Greška pri upload-u na MEGA: ' + error.message);
+        alert('Greška pri učitavanju na MEGA: ' + error.message);
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
     }
