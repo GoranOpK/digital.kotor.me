@@ -46,6 +46,11 @@
             margin-bottom: 0;
             height: 100%;
         }
+        /* Kartica Opis konkursa u gridu: prirodna visina da se tekst vidi od početka */
+        .main-content-grid .info-card.competition-description-card {
+            height: auto;
+            align-self: start;
+        }
     }
     .info-card h2 {
         font-size: 20px;
@@ -345,9 +350,9 @@
             @else
                 <!-- Za članove komisije: Opis konkursa u istom redu kao Osnovne informacije -->
                 @if($competition->description)
-                <div class="info-card">
+                <div class="info-card competition-description-card">
                     <h2>Opis konkursa</h2>
-                    <div style="color: #374151; line-height: 1.8; white-space: pre-wrap;">
+                    <div class="competition-description-body" style="color: #374151; line-height: 1.8; white-space: pre-wrap;">
                         {{ $competition->description }}
                     </div>
                 </div>
