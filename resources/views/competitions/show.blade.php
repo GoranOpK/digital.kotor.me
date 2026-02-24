@@ -342,11 +342,21 @@
                         @endforeach
                     </ul>
                 </div>
+            @else
+                <!-- Za članove komisije: Opis konkursa u istom redu kao Osnovne informacije -->
+                @if($competition->description)
+                <div class="info-card">
+                    <h2>Opis konkursa</h2>
+                    <div style="color: #374151; line-height: 1.8; white-space: pre-wrap;">
+                        {{ $competition->description }}
+                    </div>
+                </div>
+                @endif
             @endif
         </div>
 
-        <!-- Opis konkursa -->
-        @if($competition->description)
+        <!-- Opis konkursa (ispod grida samo kada nisu članovi komisije tog konkursa) -->
+        @if(!$isCommissionMemberForThisCompetition && $competition->description)
         <div class="info-card">
             <h2>Opis konkursa</h2>
             <div style="color: #374151; line-height: 1.8; white-space: pre-wrap;">
