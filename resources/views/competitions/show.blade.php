@@ -282,6 +282,20 @@
                 </div>
             </div>
 
+            @php
+                $isCommissionMemberForThisCompetition = false;
+                if (auth()->check()) {
+                    $userRole = auth()->user()->role ? auth()->user()->role->name : null;
+                    if ($userRole === 'komisija' && $competition->commission_id) {
+                        $commissionMember = \App\Models\CommissionMember::where('user_id', auth()->id())
+                            ->where('status', 'active')
+                            ->first();
+                        if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                            $isCommissionMemberForThisCompetition = true;
+                        }
+                    }
+                }
+            @endphp
             @if(!$isCommissionMemberForThisCompetition)
                 <!-- Obavezna dokumentacija -->
                 <div class="info-card">
