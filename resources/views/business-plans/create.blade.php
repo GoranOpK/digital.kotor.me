@@ -85,7 +85,7 @@
         box-shadow: 0 0 0 3px rgba(11, 61, 145, 0.1);
     }
     .form-control.error {
-        border-color: #ef4444;
+        border-color: #ef4444;                                                         
     }
     .form-text {
         font-size: 12px;
@@ -218,10 +218,72 @@
         font-size: 14px;
         color: #374151;
     }
+    /* Memorandum (zaglavlje) kao u Obrascima 1a/1b */
+    .obrazac-zaglavlje {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .obrazac-zaglavlje-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+    }
+    .obrazac-grb {
+        flex-shrink: 0;
+        line-height: 0;
+    }
+    .obrazac-grb img {
+        height: 2cm;
+        width: auto;
+        display: block;
+    }
+    .obrazac-org {
+        flex: 1;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #111;
+    }
+    .obrazac-org p { margin: 0 0 2px 0; }
+    .obrazac-contact {
+        text-align: right;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #111;
+    }
+    .obrazac-contact p { margin: 0 0 2px 0; }
+    @media print {
+        .obrazac-zaglavlje { box-shadow: none; border: 1px solid #ccc; }
+        .obrazac-grb img { height: 2cm; }
+    }
 </style>
 
 <div class="business-plan-page">
     <div class="container mx-auto px-4">
+        <div class="obrazac-zaglavlje">
+            <div class="obrazac-zaglavlje-top">
+                <div class="obrazac-grb">
+                    <img src="{{ asset('images/srednji_grb.png') }}" alt="Grb Opštine Kotor" class="obrazac-grb-img" onerror="this.onerror=null; this.src='{{ asset('images/srednji_grb.svg') }}';" style="height: 2cm; width: auto; display: block;">
+                </div>
+                <div class="obrazac-org">
+                    <p><strong>Crna Gora</strong></p>
+                    <p>Opština Kotor</p>
+                    <p>Sekretarijat za razvoj preduzetništva</p>
+                    <p>komunalne poslove i saobraćaj</p>
+                </div>
+                <div class="obrazac-contact">
+                    <p>Stari grad 317</p>
+                    <p>85330 Kotor, Crna Gora</p>
+                    <p>tel. +382(0)32 325 865</p>
+                    <p>privreda@kotor.me</p>
+                    <p>www.kotor.me</p>
+                </div>
+            </div>
+        </div>
+
         <div class="page-header">
             <h1>FORMA ZA BIZNIS PLAN</h1>
             <p style="color: rgba(255,255,255,0.9); margin: 0;">{{ $application->business_plan_name ?? 'Biznis plan' }}</p>
