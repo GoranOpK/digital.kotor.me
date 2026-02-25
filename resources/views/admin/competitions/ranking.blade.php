@@ -719,14 +719,18 @@
                 @if(isset($commissionMembers) && $commissionMembers->isNotEmpty())
                     @php $clanNum = 0; @endphp
                     @foreach($commissionMembers as $member)
-                        <p>{{ $member->position === 'predsjednik' ? 'Predsjednik Komisije' : 'Član ' . (++$clanNum) }}: {{ $member->name ?? '' }} _______________________</p>
+                        <div style="margin-bottom: 24px;">
+                            <div style="font-weight: 600; color: #374151;">{{ $member->position === 'predsjednik' ? 'Predsjednik Komisije' : 'Član ' . (++$clanNum) }}</div>
+                            <div style="margin: 4px 0 6px 0;">{{ $member->name ?? '' }}</div>
+                            <div style="width: 280px; border-bottom: 1px solid #111; min-height: 1px;"></div>
+                        </div>
                     @endforeach
                 @else
-                    <p>Predsjednik Komisije: _______________________</p>
-                    <p>Član 1: _______________________</p>
-                    <p>Član 2: _______________________</p>
-                    <p>Član 3: _______________________</p>
-                    <p>Član 4: _______________________</p>
+                    <div style="margin-bottom: 24px;"><div style="font-weight: 600;">Predsjednik Komisije</div><div style="width: 280px; border-bottom: 1px solid #111; margin-top: 6px; min-height: 1px;"></div></div>
+                    <div style="margin-bottom: 24px;"><div style="font-weight: 600;">Član 1</div><div style="width: 280px; border-bottom: 1px solid #111; margin-top: 6px; min-height: 1px;"></div></div>
+                    <div style="margin-bottom: 24px;"><div style="font-weight: 600;">Član 2</div><div style="width: 280px; border-bottom: 1px solid #111; margin-top: 6px; min-height: 1px;"></div></div>
+                    <div style="margin-bottom: 24px;"><div style="font-weight: 600;">Član 3</div><div style="width: 280px; border-bottom: 1px solid #111; margin-top: 6px; min-height: 1px;"></div></div>
+                    <div style="margin-bottom: 24px;"><div style="font-weight: 600;">Član 4</div><div style="width: 280px; border-bottom: 1px solid #111; margin-top: 6px; min-height: 1px;"></div></div>
                 @endif
             </div>
         </div>
