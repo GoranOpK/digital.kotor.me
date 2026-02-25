@@ -400,7 +400,7 @@
                                 <label for="has_business_no">Ne</label>
                             </div>
                         </div>
-                        <div class="info-box">
+                        <div id="napomenaNemaRegistraciju" class="info-box conditional-field {{ !old('has_registered_business', $businessPlan->has_registered_business ?? ($defaultData['has_registered_business'] ?? false)) ? 'show' : '' }}">
                             <strong>Napomena:</strong> Ukoliko podnosilac biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena, mora svoju djelatnost registrovati u neki od oblika registracije koji predviđa Zakon o privrednim društvima, najkasnije do dana potpisivanja ugovora.
                         </div>
                     </div>
@@ -1310,10 +1310,13 @@
 function toggleRegisteredBusinessFields() {
     const hasBusiness = document.querySelector('input[name="has_registered_business"]:checked')?.value === '1';
     const fields = document.getElementById('registeredBusinessFields');
+    const napomena = document.getElementById('napomenaNemaRegistraciju');
     if (hasBusiness) {
         fields.classList.add('show');
+        if (napomena) napomena.classList.remove('show');
     } else {
         fields.classList.remove('show');
+        if (napomena) napomena.classList.add('show');
     }
 }
 
