@@ -712,25 +712,25 @@
 
         <!-- Potpis komisije (samo za predsjednika i superadmina) -->
         @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
-        <div class="info-card" id="signature-block">
-            <h2>Potpis komisije</h2>
-            <div style="margin-top: 48px; font-size: 15px; line-height: 2.2;">
-                <p style="margin-bottom: 32px;">Kotor, _______________ god.</p>
+        <div class="info-card" id="signature-block" style="padding: 16px 24px;">
+            <h2 style="margin-bottom: 12px; font-size: 18px;">Potpis komisije</h2>
+            <div style="margin-top: 16px; font-size: 13px; line-height: 1.5;">
+                <p style="margin-bottom: 14px;">Kotor, _______________ god.</p>
                 @if(isset($commissionMembers) && $commissionMembers->isNotEmpty())
                     @php $clanNum = 0; @endphp
                     @foreach($commissionMembers as $member)
-                        <div style="margin-bottom: 12px;">
+                        <div style="margin-bottom: 6px;">
                             <div style="font-weight: 600; color: #374151;">{{ $member->position === 'predsjednik' ? 'Predsjednik Komisije' : 'Član ' . (++$clanNum) }}</div>
-                            <div style="margin: 4px 0 0 0;">{{ $member->name ?? '' }}</div>
-                            <div style="width: 280px; border-bottom: 1px solid #111; min-height: 1px; margin-top: 14px;"></div>
+                            <div style="margin: 2px 0 0 0;">{{ $member->name ?? '' }}</div>
+                            <div style="width: 200px; border-bottom: 1px solid #111; min-height: 1px; margin-top: 8px;"></div>
                         </div>
                     @endforeach
                 @else
-                    <div style="margin-bottom: 12px;"><div style="font-weight: 600;">Predsjednik Komisije</div><div style="width: 280px; border-bottom: 1px solid #111; margin-top: 14px; min-height: 1px;"></div></div>
-                    <div style="margin-bottom: 12px;"><div style="font-weight: 600;">Član 1</div><div style="width: 280px; border-bottom: 1px solid #111; margin-top: 14px; min-height: 1px;"></div></div>
-                    <div style="margin-bottom: 12px;"><div style="font-weight: 600;">Član 2</div><div style="width: 280px; border-bottom: 1px solid #111; margin-top: 14px; min-height: 1px;"></div></div>
-                    <div style="margin-bottom: 12px;"><div style="font-weight: 600;">Član 3</div><div style="width: 280px; border-bottom: 1px solid #111; margin-top: 14px; min-height: 1px;"></div></div>
-                    <div style="margin-bottom: 12px;"><div style="font-weight: 600;">Član 4</div><div style="width: 280px; border-bottom: 1px solid #111; margin-top: 14px; min-height: 1px;"></div></div>
+                    <div style="margin-bottom: 6px;"><div style="font-weight: 600;">Predsjednik Komisije</div><div style="width: 200px; border-bottom: 1px solid #111; margin-top: 8px; min-height: 1px;"></div></div>
+                    <div style="margin-bottom: 6px;"><div style="font-weight: 600;">Član 1</div><div style="width: 200px; border-bottom: 1px solid #111; margin-top: 8px; min-height: 1px;"></div></div>
+                    <div style="margin-bottom: 6px;"><div style="font-weight: 600;">Član 2</div><div style="width: 200px; border-bottom: 1px solid #111; margin-top: 8px; min-height: 1px;"></div></div>
+                    <div style="margin-bottom: 6px;"><div style="font-weight: 600;">Član 3</div><div style="width: 200px; border-bottom: 1px solid #111; margin-top: 8px; min-height: 1px;"></div></div>
+                    <div style="margin-bottom: 6px;"><div style="font-weight: 600;">Član 4</div><div style="width: 200px; border-bottom: 1px solid #111; margin-top: 8px; min-height: 1px;"></div></div>
                 @endif
             </div>
         </div>
