@@ -716,11 +716,18 @@
             <h2>Potpis komisije</h2>
             <div style="margin-top: 48px; font-size: 15px; line-height: 2.2;">
                 <p style="margin-bottom: 32px;">Kotor, _______________ god.</p>
-                <p>Predsjednik Komisije: _______________________</p>
-                <p>Član 1: _______________________</p>
-                <p>Član 2: _______________________</p>
-                <p>Član 3: _______________________</p>
-                <p>Član 4: _______________________</p>
+                @if(isset($commissionMembers) && $commissionMembers->isNotEmpty())
+                    @php $clanNum = 0; @endphp
+                    @foreach($commissionMembers as $member)
+                        <p>{{ $member->position === 'predsjednik' ? 'Predsjednik Komisije' : 'Član ' . (++$clanNum) }}: {{ $member->name ?? '' }} _______________________</p>
+                    @endforeach
+                @else
+                    <p>Predsjednik Komisije: _______________________</p>
+                    <p>Član 1: _______________________</p>
+                    <p>Član 2: _______________________</p>
+                    <p>Član 3: _______________________</p>
+                    <p>Član 4: _______________________</p>
+                @endif
             </div>
         </div>
         @endif
