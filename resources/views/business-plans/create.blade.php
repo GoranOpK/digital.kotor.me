@@ -255,6 +255,30 @@
         color: #111;
     }
     .obrazac-contact p { margin: 0 0 2px 0; }
+    .obrazac-broj-i-naslov {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e5e7eb;
+    }
+    .obrazac-1a-1b {
+        font-size: 14px;
+        font-weight: 700;
+        color: #374151;
+    }
+    .obrazac-naslov-prijava {
+        width: 100%;
+        text-align: center;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        color: #111;
+        margin: 8px 0 0 0;
+    }
     @media print {
         .obrazac-zaglavlje { box-shadow: none; border: 1px solid #ccc; }
         .obrazac-grb img { height: 2cm; }
@@ -282,11 +306,10 @@
                     <p>www.kotor.me</p>
                 </div>
             </div>
-        </div>
-
-        <div class="page-header">
-            <h1>FORMA ZA BIZNIS PLAN</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 0;">{{ $application->business_plan_name ?? 'Biznis plan' }}</p>
+            <div class="obrazac-broj-i-naslov">
+                <div class="obrazac-1a-1b">Obrazac 2</div>
+            </div>
+            <h1 class="obrazac-naslov-prijava">FORMA ZA BIZNIS PLAN</h1>
         </div>
 
         @if(session('success'))
