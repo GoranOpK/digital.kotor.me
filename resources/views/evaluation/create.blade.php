@@ -489,14 +489,6 @@
                 <!-- 4. Ocjena biznis plana u brojkama -->
                 <div class="form-section">
                     <label class="form-label form-label-large">4. Ocjena biznis plana u brojkama:</label>
-                    
-                    <div class="info-box criteria-info-box">
-                        <strong>KRITERIJUMI ZA OCJENU</strong><br>
-                        (Član 18 stav 2 Odluke)<br>
-                        Komisija dodijeljuje ocjenu za biznis plan na skali od 1 do 5, pri čemu je:<br>
-                        1 = uopšte ne odgovara navedenom,<br>
-                        5 = u potpunosti odgovara navedenom.
-                    </div>
 
                     @php
                         $criteria = [
