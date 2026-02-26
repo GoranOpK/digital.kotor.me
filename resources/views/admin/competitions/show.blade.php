@@ -200,7 +200,7 @@
             </div>
         @endif
 
-        @if((($competition->status === 'published' && $isApplicationDeadlinePassed) || $competition->status === 'closed') && $competition->status !== 'completed' && $daysUntilEvaluationDeadline !== null)
+        @if($competition->status === 'published' && $isApplicationDeadlinePassed && $daysUntilEvaluationDeadline !== null)
             <div class="info-card" style="border-left: 4px solid {{ $daysUntilEvaluationDeadline <= 3 ? '#ef4444' : ($daysUntilEvaluationDeadline <= 7 ? '#f59e0b' : '#10b981') }};">
                 <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">
                     <span>⏰</span>
