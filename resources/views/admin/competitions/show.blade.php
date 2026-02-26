@@ -183,7 +183,21 @@
             $daysUntilEvaluationDeadline = $competition->getDaysUntilEvaluationDeadline();
             $isApplicationDeadlinePassed = $competition->isApplicationDeadlinePassed();
             $isEvaluationDeadlinePassed = $competition->isEvaluationDeadlinePassed();
+            $showRokOdlukeBlock = $competition->status === 'published' && $isApplicationDeadlinePassed && $daysUntilEvaluationDeadline !== null;
         @endphp
+
+        {{-- DEBUG: ukloniti nakon provjere --}}
+        <div class="info-card" style="background: #fef3c7; border: 2px solid #f59e0b; margin-bottom: 16px;">
+            <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #92400e;">🔧 Debug – status i prikaz blokova</h3>
+            <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #78350f; line-height: 1.8;">
+                <li><strong>competition->status</strong> (raw): <code>{{ json_encode($competition->status) }}</code></li>
+                <li><strong>competition->id</strong>: {{ $competition->id }}</li>
+                <li>status === 'published': {{ $competition->status === 'published' ? 'da' : 'ne' }}</li>
+                <li>status === 'completed': {{ $competition->status === 'completed' ? 'da' : 'ne' }}</li>
+                <li>status === 'closed': {{ $competition->status === 'closed' ? 'da' : 'ne' }}</li>
+                <li><strong>Prikaz bloka „Rok za donošenje odluke”</strong>: {{ $showRokOdlukeBlock ? 'DA (prikazuje se)' : 'NE (skriven)' }}</li>
+            </ul>
+        </div>
 
         @if($competition->status === 'published' && $daysUntilApplicationDeadline !== null && !$isApplicationDeadlinePassed)
             <div class="info-card" style="border-left: 4px solid {{ $daysUntilApplicationDeadline <= 3 ? '#ef4444' : ($daysUntilApplicationDeadline <= 7 ? '#f59e0b' : '#10b981') }};">

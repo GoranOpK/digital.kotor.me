@@ -815,6 +815,18 @@
 
         <!-- Informacije o rokovima za konkurse (samo za članove komisije) -->
         @if(isset($commission) && $isKomisija && isset($competitions))
+            {{-- DEBUG: ukloniti nakon provjere --}}
+            <div class="info-card" style="background: #fef3c7; border: 2px solid #f59e0b; margin-bottom: 16px;">
+                <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #92400e;">🔧 Debug – konkursi i status (dashboard)</h3>
+                <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #78350f; line-height: 1.8;">
+                    @foreach($competitions as $c)
+                        @php
+                            $showRok = (($c->status === 'published' && $c->isApplicationDeadlinePassed()) || $c->status === 'closed') && $c->status !== 'completed' && $c->getDaysUntilEvaluationDeadline() !== null;
+                        @endphp
+                        <li><strong>{{ $c->title }}</strong> (id: {{ $c->id }}) — status: <code>{{ json_encode($c->status) }}</code>, prikaz „Rok odluke”: {{ $showRok ? 'DA' : 'NE' }}</li>
+                    @endforeach
+                </ul>
+            </div>
             @foreach($competitions as $comp)
                 @php
                     $daysUntilApplicationDeadline = $comp->getDaysUntilApplicationDeadline();
