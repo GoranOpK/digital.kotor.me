@@ -839,7 +839,7 @@
                             </p>
                         </div>
                     </div>
-                @elseif((($comp->status === 'published' && $isApplicationDeadlinePassed) || $comp->status === 'closed') && $daysUntilEvaluationDeadline !== null)
+                @elseif((($comp->status === 'published' && $isApplicationDeadlinePassed) || $comp->status === 'closed') && $comp->status !== 'completed' && $daysUntilEvaluationDeadline !== null)
                     <div class="info-card" style="margin-top: 24px; border-left: 4px solid {{ $daysUntilEvaluationDeadline <= 3 ? '#ef4444' : ($daysUntilEvaluationDeadline <= 7 ? '#f59e0b' : '#10b981') }};">
                         <div class="info-card-header">
                             <h2 style="display: flex; align-items: center; gap: 8px;">

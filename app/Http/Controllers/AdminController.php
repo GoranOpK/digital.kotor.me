@@ -737,11 +737,11 @@ class AdminController extends Controller
         }
         
         $competition->update([
-            'status' => 'closed',
+            'status' => 'completed',
             'closed_at' => now(),
         ]);
 
-        return redirect()->back()->with('success', 'Konkurs je uspješno zatvoren.');
+        return redirect()->back()->with('success', 'Konkurs je uspješno zatvoren. Status konkursa je Završen.');
     }
 
     /**

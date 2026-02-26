@@ -63,6 +63,7 @@
     .status-draft { background: #fef3c7; color: #92400e; }
     .status-published { background: #d1fae5; color: #065f46; }
     .status-closed { background: #fee2e2; color: #991b1b; }
+    .status-completed { background: #e0e7ff; color: #3730a3; }
     .status-submitted { background: #dbeafe; color: #1e40af; }
     .status-evaluated { background: #d1fae5; color: #065f46; }
     .status-approved { background: #d1fae5; color: #065f46; }
@@ -129,7 +130,10 @@
             <h2 style="font-size: 20px; margin-bottom: 16px;">Osnovne informacije</h2>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
                 <div>
-                    <p><strong>Status:</strong> <span class="status-badge status-{{ $competition->status }}">{{ $competition->status }}</span></p>
+                    @php
+                        $competitionStatusLabels = ['draft' => 'Nacrt', 'published' => 'Objavljen', 'closed' => 'Zatvoren', 'completed' => 'Završen'];
+                    @endphp
+                    <p><strong>Status:</strong> <span class="status-badge status-{{ $competition->status }}">{{ $competitionStatusLabels[$competition->status] ?? $competition->status }}</span></p>
                     <p><strong>Budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
                     <p><strong>Maksimalna podrška:</strong> {{ $competition->max_support_percentage ?? 30 }}%</p>
                     @if(!isset($isCompetitionAdmin) || !$isCompetitionAdmin)
@@ -196,7 +200,7 @@
             </div>
         @endif
 
-        @if((($competition->status === 'published' && $isApplicationDeadlinePassed) || $competition->status === 'closed') && $daysUntilEvaluationDeadline !== null)
+        @if((($competition->status === 'published' && $isApplicationDeadlinePassed) || $competition->status === 'closed') && $competition->status !== 'completed' && $daysUntilEvaluationDeadline !== null)
             <div class="info-card" style="border-left: 4px solid {{ $daysUntilEvaluationDeadline <= 3 ? '#ef4444' : ($daysUntilEvaluationDeadline <= 7 ? '#f59e0b' : '#10b981') }};">
                 <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">
                     <span>⏰</span>
@@ -363,7 +367,7 @@
                                             }
                                         @endphp
                                         @if($isKomisija)
-                                            @if($competition->isApplicationDeadlinePassed() || $competition->status === 'closed')
+                                            @if($competition->isApplicationDeadlinePassed() || in_array($competition->status, ['closed', 'completed']))
                                                 <a href="{{ route('evaluation.create', $app) }}" class="btn" style="background: var(--primary); color: #fff; padding: 4px 12px; font-size: 12px; text-decoration: none;">{{ $buttonText }}</a>
                                             @else
                                                 <span style="font-size: 11px; color: #6b7280;">Ocjenjivanje nakon roka za prijave</span>
@@ -375,7 +379,7 @@
                         @empty
                             <tr>
                                 <td colspan="7" style="padding: 40px; text-align: center; color: #6b7280;">
-                                    @if($isCommissionMember && !$isAdmin && !$competition->isApplicationDeadlinePassed() && $competition->status !== 'closed')
+                                    @if($isCommissionMember && !$isAdmin && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed']))
                                         Prijave će biti prikazane nakon isteka roka za prijavljivanje na konkurs.
                                     @else
                                         Nema prijava na ovaj konkurs.

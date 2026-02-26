@@ -175,7 +175,7 @@
                             Rok za prijave: {{ $comp->deadline ? $comp->deadline->format('d.m.Y H:i') : 'N/A' }}
                         </p>
                     </div>
-                @elseif(($isApplicationDeadlinePassed || $comp->status === 'closed') && $daysUntilEvaluationDeadline !== null)
+                @elseif(($isApplicationDeadlinePassed || $comp->status === 'closed') && $comp->status !== 'completed' && $daysUntilEvaluationDeadline !== null)
                     @php
                         $evalDeadlineDate = $comp->getEvaluationDeadlineDate();
                         $yearLabel = $comp->year ?? $comp->deadline?->year ?? $evalDeadlineDate?->year ?? now()->format('Y');
