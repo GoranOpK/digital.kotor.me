@@ -393,7 +393,7 @@ class EvaluationController extends Controller
             ->count();
         $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
         
-        // Osiguraj da samo predsjednik može slati zaključak, iznos odobrenih sredstava i documents_complete
+        // Osiguraj da samo predsjednik može slati zaključak, iznos odobrenih sredstava i bonus kriterijume
         // VAŽNO: Ne uklanjaj documents_complete prije provjere na početku metode!
         // Provjera documents_complete se izvršava na početku metode (linija 267), prije ovog bloka
         if ($commissionMember->position !== 'predsjednik') {
@@ -403,6 +403,8 @@ class EvaluationController extends Controller
                 'commission_decision' => null,
                 'approved_amount' => null,
                 'decision_date' => null,
+                'bonus_training' => null,
+                'bonus_women_business_mark' => null,
                 // 'documents_complete' => null, // NE UKLANJAJ - već je provjereno na početku
             ]);
         }
@@ -515,6 +517,13 @@ class EvaluationController extends Controller
             
             return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                 ->with('success', 'Napomene su uspješno ažurirane.');
+        }
+
+        // Sačuvaj dodatne kriterijume (bonus bodovi) – označava ih samo predsjednik
+        if ($commissionMember->position === 'predsjednik') {
+            $application->bonus_training = $request->boolean('bonus_training');
+            $application->bonus_women_business_mark = $request->boolean('bonus_women_business_mark');
+            $application->save();
         }
 
         // Kreiraj ili ažuriraj ocjenu
@@ -778,8 +787,8 @@ class EvaluationController extends Controller
             }
         }
 
-        // Izračunaj konačnu ocjenu (zbir prosjeka)
-        $finalScore = round(array_sum($averages), 2);
+        // Izračunaj konačnu ocjenu (zbir prosjeka + eventualni bonus bodovi)
+        $finalScore = round(array_sum($averages) + $application->getBonusScore(), 2);
 
         // Ažuriraj final_score i evaluated_at
         $updateData = [

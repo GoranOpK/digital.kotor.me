@@ -436,6 +436,56 @@
                     @endif
                 </div>
 
+                <!-- 3. Dodatni kriterijumi (bonus bodovi) -->
+                <div class="form-section">
+                    <label class="form-label form-label-large">3. Dodatni kriterijumi (bonus bodovi):</label>
+
+                    @if($commissionMember && $commissionMember->position === 'predsjednik')
+                        <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
+                            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+                                <input 
+                                    type="checkbox" 
+                                    name="bonus_training" 
+                                    value="1"
+                                    @if(old('bonus_training', $application->bonus_training ?? false)) checked @endif
+                                    @if($isRejected || $isApplicant || $isDeadlinePassed) disabled @endif
+                                >
+                                <span>
+                                    Prisustvovanje obuci za pisanje biznis plana koju organizuje Opština Kotor u okviru Info dana
+                                    <strong>(+1 bod)</strong>
+                                </span>
+                            </label>
+                            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
+                                <input 
+                                    type="checkbox" 
+                                    name="bonus_women_business_mark" 
+                                    value="1"
+                                    @if(old('bonus_women_business_mark', $application->bonus_women_business_mark ?? false)) checked @endif
+                                    @if($isRejected || $isApplicant || $isDeadlinePassed) disabled @endif
+                                >
+                                <span>
+                                    Posjedovanje žiga „Ženski biznis“
+                                    <strong>(+1 bod)</strong>
+                                </span>
+                            </label>
+                        </div>
+                        <p class="form-text" style="margin-top: 8px;">
+                            Dodatni bodovi se dodaju na zbir prosječnih ocjena. Ove kriterijume označava isključivo predsjednik komisije.
+                        </p>
+                    @else
+                        <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; border: 1px solid #e5e7eb;">
+                            <div style="margin-bottom: 4px;">
+                                <strong>Prisustvovanje obuci za pisanje biznis plana (Info dan Opštine Kotor):</strong>
+                                {{ ($application->bonus_training ?? false) ? 'da (+1 bod)' : 'ne' }}
+                            </div>
+                            <div>
+                                <strong>Posjedovanje žiga „Ženski biznis“:</strong>
+                                {{ ($application->bonus_women_business_mark ?? false) ? 'da (+1 bod)' : 'ne' }}
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
                 <!-- 4. Ocjena biznis plana u brojkama -->
                 <div class="form-section">
                     <label class="form-label form-label-large">3. Ocjena biznis plana u brojkama:</label>

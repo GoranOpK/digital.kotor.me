@@ -38,6 +38,8 @@ class Application extends Model
         'accuracy_declaration',
         'status',
         'final_score',
+        'bonus_training',
+        'bonus_women_business_mark',
         'ranking_position',
         'rejection_reason',
         'commission_decision',
@@ -61,6 +63,8 @@ class Application extends Model
         'previous_support_declaration' => 'boolean',
         'is_registered' => 'boolean',
         'accuracy_declaration' => 'boolean',
+        'bonus_training' => 'boolean',
+        'bonus_women_business_mark' => 'boolean',
         'submitted_at' => 'datetime',
         'evaluated_at' => 'datetime',
         'interview_scheduled_at' => 'datetime',
@@ -145,7 +149,26 @@ class Application extends Model
             $totalScore += $this->calculateAverageScorePerCriterion($i);
         }
 
+        // Dodaj dodatne bodove prema Odluci (obuka + žig „Ženski biznis“)
+        $totalScore += $this->getBonusScore();
+
         return round($totalScore, 2);
+    }
+
+    /**
+     * Vraća zbir dodatnih bodova (0–2) na osnovu prisustvovanja obuci
+     * i posjedovanja žiga „Ženski biznis“.
+     */
+    public function getBonusScore(): int
+    {
+        $bonus = 0;
+        if ($this->bonus_training) {
+            $bonus++;
+        }
+        if ($this->bonus_women_business_mark) {
+            $bonus++;
+        }
+        return $bonus;
     }
 
     /**
