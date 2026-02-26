@@ -128,11 +128,16 @@
 
                     <div class="form-group">
                         <label class="form-label">Status *</label>
+                        @php
+                            $displayStatus = old('status', $competition->status);
+                            if ($displayStatus === 'closed') {
+                                $displayStatus = 'completed'; // Zatvoren više nije u izboru, prikaži kao Završen
+                            }
+                        @endphp
                         <select name="status" class="form-control @error('status') error @enderror" required>
-                            <option value="draft" {{ old('status', $competition->status) === 'draft' ? 'selected' : '' }}>Nacrt</option>
-                            <option value="published" {{ old('status', $competition->status) === 'published' ? 'selected' : '' }}>Objavljen</option>
-                            <option value="closed" {{ old('status', $competition->status) === 'closed' ? 'selected' : '' }}>Zatvoren</option>
-                            <option value="completed" {{ old('status', $competition->status) === 'completed' ? 'selected' : '' }}>Završen</option>
+                            <option value="draft" {{ $displayStatus === 'draft' ? 'selected' : '' }}>Nacrt</option>
+                            <option value="published" {{ $displayStatus === 'published' ? 'selected' : '' }}>Objavljen</option>
+                            <option value="completed" {{ $displayStatus === 'completed' ? 'selected' : '' }}>Završen</option>
                         </select>
                         @error('status')
                             <div class="error-message">{{ $message }}</div>

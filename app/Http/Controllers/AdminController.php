@@ -551,7 +551,7 @@ class AdminController extends Controller
             'budget' => 'required|numeric|min:0',
             'max_support_percentage' => 'required|numeric|min:0|max:100',
             'start_date' => 'nullable|date',
-            'status' => 'required|in:draft,published,closed,completed',
+            'status' => 'required|in:draft,published,completed',
             'commission_id' => 'nullable|exists:commissions,id',
         ], [
             'title.required' => 'Naziv konkursa je obavezan.',

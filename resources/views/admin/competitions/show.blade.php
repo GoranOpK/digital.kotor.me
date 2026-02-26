@@ -178,26 +178,21 @@
             </div>
         </div>
 
+        <div class="info-card" style="background: #f0f9ff; border-left: 4px solid var(--primary);">
+            <h2 style="font-size: 16px; margin: 0 0 12px 0; color: #0c4a6e;">Tok konkursa</h2>
+            <ol style="margin: 0; padding-left: 20px; color: #075985; font-size: 14px; line-height: 1.8;">
+                <li><strong>Rok za prijave</strong> — Po objavi konkursa počinje rok od {{ $competition->deadline_days ?? 15 }} dana za prijave. Podnosioci mogu slati prijave.</li>
+                <li><strong>Zatvoren za prijave</strong> — Nakon isteka tog roka konkurs je zatvoren za nove prijave. Tada počinje da teče rok od 30 dana za donošenje odluke o raspodjeli sredstava (komisija ocjenjuje prijave, pravi rang listu i donosi odluku).</li>
+                <li><strong>Završen</strong> — Nakon što se ocijene prijave, napravi rang lista i donese odluka o raspodjeli, predsjednik komisije klikom na dugme „Zatvori konkurs” označava da je cijela procedura završena. Taj konkurs se tada pojavljuje u Arhivi.</li>
+            </ol>
+        </div>
+
         @php
             $daysUntilApplicationDeadline = $competition->getDaysUntilApplicationDeadline();
             $daysUntilEvaluationDeadline = $competition->getDaysUntilEvaluationDeadline();
             $isApplicationDeadlinePassed = $competition->isApplicationDeadlinePassed();
             $isEvaluationDeadlinePassed = $competition->isEvaluationDeadlinePassed();
-            $showRokOdlukeBlock = $competition->status === 'published' && $isApplicationDeadlinePassed && $daysUntilEvaluationDeadline !== null;
         @endphp
-
-        {{-- DEBUG: ukloniti nakon provjere --}}
-        <div class="info-card" style="background: #fef3c7; border: 2px solid #f59e0b; margin-bottom: 16px;">
-            <h3 style="margin: 0 0 8px 0; font-size: 14px; color: #92400e;">🔧 Debug – status i prikaz blokova</h3>
-            <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: #78350f; line-height: 1.8;">
-                <li><strong>competition->status</strong> (raw): <code>{{ json_encode($competition->status) }}</code></li>
-                <li><strong>competition->id</strong>: {{ $competition->id }}</li>
-                <li>status === 'published': {{ $competition->status === 'published' ? 'da' : 'ne' }}</li>
-                <li>status === 'completed': {{ $competition->status === 'completed' ? 'da' : 'ne' }}</li>
-                <li>status === 'closed': {{ $competition->status === 'closed' ? 'da' : 'ne' }}</li>
-                <li><strong>Prikaz bloka „Rok za donošenje odluke”</strong>: {{ $showRokOdlukeBlock ? 'DA (prikazuje se)' : 'NE (skriven)' }}</li>
-            </ul>
-        </div>
 
         @if($competition->status === 'published' && $daysUntilApplicationDeadline !== null && !$isApplicationDeadlinePassed)
             <div class="info-card" style="border-left: 4px solid {{ $daysUntilApplicationDeadline <= 3 ? '#ef4444' : ($daysUntilApplicationDeadline <= 7 ? '#f59e0b' : '#10b981') }};">
