@@ -470,7 +470,7 @@
                             </label>
                         </div>
                         <p class="form-text" style="margin-top: 8px;">
-                            Dodatni bodovi se dodaju na zbir prosječnih ocjena. Ove kriterijume označava isključivo predsjednik komisije.
+                            Dodatni bodovi se dodaju na zbir prosječnih ocjena.
                         </p>
                     @else
                         <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; border: 1px solid #e5e7eb;">
@@ -488,7 +488,7 @@
 
                 <!-- 4. Ocjena biznis plana u brojkama -->
                 <div class="form-section">
-                    <label class="form-label form-label-large">3. Ocjena biznis plana u brojkama:</label>
+                    <label class="form-label form-label-large">4. Ocjena biznis plana u brojkama:</label>
                     
                     <div class="info-box criteria-info-box">
                         <strong>KRITERIJUMI ZA OCJENU</strong><br>
@@ -658,9 +658,9 @@
                     @endfor
                 </div>
 
-                <!-- 4. Ostale napomene -->
+                <!-- 5. Ostale napomene -->
                 <div class="form-section form-section-notes">
-                    <label class="form-label form-label-large">4. Ostale napomene:</label>
+                    <label class="form-label form-label-large">5. Ostale napomene:</label>
                     
                     @php
                         // Prikupi napomene svih članova koji su ih dali, zadržavajući redoslijed iz $allMembers
