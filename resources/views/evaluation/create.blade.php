@@ -533,8 +533,8 @@
                                                 $hasCompletedEvaluation = isset($hasCompletedEvaluation) ? $hasCompletedEvaluation : ($existingScore && $existingScore->criterion_1 !== null);
                                                 // Provjeri da li je drugi član završio ocjenjivanje
                                                 $otherMemberCompleted = $memberScore && $memberScore->criterion_1 !== null;
-                                                // Prikaz ocjena ostalih članova dozvoljen je tek kada svi članovi završe ocjenjivanje
-                                                $canViewAllScores = isset($allMembersEvaluated) && $allMembersEvaluated;
+                                                // Prikaz ocjena ostalih članova dozvoljen je tek kada sve prijave na konkursu ocijene svi članovi
+                                                $canViewAllScores = isset($canViewOtherMembersScores) && $canViewOtherMembersScores;
                                             @endphp
                                             @if($isCurrentMember)
                                                 {{-- Trenutni član UVIJEK vidi svoje ocjene; ostale tek kada svi ocijene --}}
@@ -565,11 +565,11 @@
                                                         onchange="updateAverages()">
                                                 @endif
                                             @else
-                                                {{-- Ostali članovi - prikaži ocjenu tek kada svi članovi završe ocjenjivanje, ili ako je predsjednik i već je ocjenio --}}
+                                                {{-- Ostali članovi - prikaži ocjenu tek kada sve prijave na konkursu ocijene svi članovi --}}
                                                 @php
-                                                    $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
+                                                    $canViewOthers = isset($canViewOtherMembersScores) && $canViewOtherMembersScores;
                                                 @endphp
-                                                @if($allMembersEvaluatedFlag || $canViewAllScores)
+                                                @if($canViewOthers || $canViewAllScores)
                                                     <span class="score-display">
                                                         {{ $currentValue ? $currentValue : '—' }}
                                                     </span>
@@ -610,8 +610,8 @@
                                             {{-- Trenutni član UVIJEK vidi svoju konačnu ocjenu --}}
                                             <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
                                         @else
-                                            {{-- Ostali članovi - prikaži konačne ocjene tek kada svi članovi završe ocjenjivanje --}}
-                                            @if($allMembersEvaluatedFlag)
+                                            {{-- Ostali članovi - prikaži konačne ocjene tek kada sve prijave na konkursu ocijene svi članovi --}}
+                                            @if(isset($canViewOtherMembersScores) && $canViewOtherMembersScores)
                                                 <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
                                             @else
                                                 <strong style="color: #d1d5db;">—</strong>

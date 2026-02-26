@@ -390,14 +390,20 @@
                                         @php
                                             $memberScore = $allScores->get($member->id);
                                             $currentValue = $memberScore ? $memberScore->{"criterion_{$num}"} : null;
+                                            $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
+                                            $showScore = $isCurrentMember || ($canViewOtherMembersScores ?? false);
                                         @endphp
-                                        <span class="score-display">
-                                            {{ $currentValue ? $currentValue : '—' }}
+                                        <span class="score-display" @if(!$showScore) style="color: #d1d5db;" @endif>
+                                            {{ $showScore ? ($currentValue ? $currentValue : '—') : '—' }}
                                         </span>
                                     </td>
                                 @endforeach
                                 <td class="average-col">
-                                    {{ isset($averageScores[$num]) ? number_format($averageScores[$num], 2) : '—' }}
+                                    @if($canViewOtherMembersScores ?? true)
+                                        {{ isset($averageScores[$num]) ? number_format($averageScores[$num], 2) : '—' }}
+                                    @else
+                                        —
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -410,12 +416,18 @@
                                     @php
                                         $memberScore = $allScores->get($member->id);
                                         $memberTotal = $memberScore ? $memberScore->calculateTotalScore() : 0;
+                                        $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
+                                        $showScore = $isCurrentMember || ($canViewOtherMembersScores ?? false);
                                     @endphp
-                                    <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
+                                    <strong @if(!$showScore) style="color: #d1d5db;" @endif>{{ $showScore && $memberTotal > 0 ? $memberTotal : '—' }}</strong>
                                 </td>
                             @endforeach
                             <td class="average-col" style="font-weight: bold !important;">
-                                <strong>{{ $finalScore > 0 ? number_format($finalScore, 2) : '—' }}</strong>
+                                @if($canViewOtherMembersScores ?? true)
+                                    <strong>{{ $finalScore > 0 ? number_format($finalScore, 2) : '—' }}</strong>
+                                @else
+                                    <strong>—</strong>
+                                @endif
                             </td>
                         </tr>
                     </tbody>

@@ -239,7 +239,7 @@ class EvaluationController extends Controller
         // Izračunaj konačnu ocjenu (zbir prosječnih ocjena)
         $finalScore = array_sum(array_filter($averageScores));
 
-        // Provjeri da li su svi članovi komisije ocjenili prijavu
+        // Provjeri da li su svi članovi komisije ocjenili ovu prijavu
         $totalMembers = $commission->activeMembers()->count();
         $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
             ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
@@ -247,6 +247,25 @@ class EvaluationController extends Controller
             ->unique()
             ->count();
         $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
+
+        // Ocjene ostalih članova vidljive su tek kada su SVE prijave na ovom konkursu ocijenjene od SVIH članova
+        $competition = $application->competition;
+        $applicationIdsOnCompetition = Application::where('competition_id', $competition->id)
+            ->whereIn('status', ['submitted', 'evaluated', 'rejected', 'approved'])
+            ->pluck('id');
+        $activeMemberIds = $commission->activeMembers()->pluck('id');
+        $canViewOtherMembersScores = true;
+        if ($applicationIdsOnCompetition->isNotEmpty() && $totalMembers > 0) {
+            $evaluatedPerApplication = EvaluationScore::whereIn('application_id', $applicationIdsOnCompetition)
+                ->whereIn('commission_member_id', $activeMemberIds)
+                ->whereNotNull('criterion_1')
+                ->selectRaw('application_id, count(distinct commission_member_id) as cnt')
+                ->groupBy('application_id')
+                ->pluck('cnt', 'application_id');
+            $canViewOtherMembersScores = $applicationIdsOnCompetition->every(function ($appId) use ($evaluatedPerApplication, $totalMembers) {
+                return ($evaluatedPerApplication->get($appId, 0)) >= $totalMembers;
+            });
+        }
 
         $application->load(['user', 'competition', 'businessPlan', 'documents']);
 
@@ -263,6 +282,7 @@ class EvaluationController extends Controller
             'finalScore',
             'commission',
             'allMembersEvaluated',
+            'canViewOtherMembersScores',
             'evaluatedMemberIds',
             'totalMembers',
             'hasCompletedEvaluation',
@@ -878,6 +898,26 @@ class EvaluationController extends Controller
         // Izračunaj konačnu ocjenu (zbir prosječnih ocjena)
         $finalScore = array_sum(array_filter($averageScores));
 
+        // Ocjene ostalih članova vidljive su tek kada su SVE prijave na ovom konkursu ocijenjene od SVIH članova
+        $competition = $application->competition;
+        $applicationIdsOnCompetition = Application::where('competition_id', $competition->id)
+            ->whereIn('status', ['submitted', 'evaluated', 'rejected', 'approved'])
+            ->pluck('id');
+        $activeMemberIds = $commission->activeMembers()->pluck('id');
+        $totalMembers = $activeMemberIds->count();
+        $canViewOtherMembersScores = true;
+        if ($applicationIdsOnCompetition->isNotEmpty() && $totalMembers > 0) {
+            $evaluatedPerApplication = EvaluationScore::whereIn('application_id', $applicationIdsOnCompetition)
+                ->whereIn('commission_member_id', $activeMemberIds)
+                ->whereNotNull('criterion_1')
+                ->selectRaw('application_id, count(distinct commission_member_id) as cnt')
+                ->groupBy('application_id')
+                ->pluck('cnt', 'application_id');
+            $canViewOtherMembersScores = $applicationIdsOnCompetition->every(function ($appId) use ($evaluatedPerApplication, $totalMembers) {
+                return ($evaluatedPerApplication->get($appId, 0)) >= $totalMembers;
+            });
+        }
+
         $application->load(['user', 'competition', 'businessPlan']);
 
         return view('evaluation.show', compact(
@@ -888,7 +928,8 @@ class EvaluationController extends Controller
             'allScores',
             'averageScores',
             'finalScore',
-            'commission'
+            'commission',
+            'canViewOtherMembersScores'
         ));
     }
 
