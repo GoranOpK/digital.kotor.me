@@ -421,11 +421,6 @@
                     </tbody>
                 </table>
 
-                <div class="info-box notes-info-box" style="margin-top: 16px; font-size: 12px;">
-                    * Prosječna ocjena za svaki kriterijum se dobija odnosom zbira ocjena svih članova Komisije i broja članova Komisije.<br>
-                    Konačna ocjena je zbir svih prosječnih ocjena po kriterijumima.
-                </div>
-
                 <div class="info-box notes-info-box" style="margin-top: 16px; background: #fef3c7; border-left-color: #f59e0b;">
                     <strong>Napomena:</strong> Biznis planovi sa ukupnim brojem bodova ispod 30 se neće podržati.
                 </div>
