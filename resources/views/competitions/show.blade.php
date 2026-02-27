@@ -424,7 +424,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']
             },
             'razvoj': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'predracuni_nabavka'],
                 optional: ['pdv_resenje']
             }
         },
@@ -508,6 +508,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else if (selectedStage === 'razvoj') {
                         docLabel = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
                     }
+                } else if (docType === 'potvrda_neosudjivanost' && applicantType === 'preduzetnica' && selectedStage === 'razvoj') {
+                    docLabel = 'Potvrda da se ne vodi krivični postupak na ime preduzetnice izdatu od Osnovnog suda';
                 } else if (docType === 'potvrda_neosudjivanost' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
                     docLabel = 'Potvrda da se ne vodi krivični postupak na ime podnositeljke prijave odnosno preduzetnice izdatu od Osnovnog suda';
                 } else if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'započinjanje' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
@@ -523,24 +525,42 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
+            // Ažuriraj label za potvrdu neosuđivanosti – preduzetnica razvoj
+            if (docType === 'potvrda_neosudjivanost' && applicantType === 'preduzetnica' && selectedStage === 'razvoj') {
+                docLabel = 'Potvrda da se ne vodi krivični postupak na ime preduzetnice izdatu od Osnovnog suda';
+            }
+            
             // Ažuriraj label za uvjerenje o nepokretnosti
-            if (docType === 'uvjerenje_opstina_nepokretnost' && (selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
+            if (docType === 'uvjerenje_opstina_nepokretnost' && applicantType === 'preduzetnica' && selectedStage === 'razvoj') {
+                docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+            } else if (docType === 'uvjerenje_opstina_nepokretnost' && (selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
                 docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave odnosno preduzetnice';
             }
             
-            // Ažuriraj label za uvjerenje o porezima – razvoj (prema novoj Odluci)
-            if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'razvoj' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
+            // Ažuriraj label za uvjerenje o porezima – razvoj (preduzetnica)
+            if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'razvoj' && applicantType === 'preduzetnica') {
+                docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+            } else if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'razvoj' && applicantType === 'fizicko_lice') {
                 docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
             }
             
             // Ažuriraj label za potvrdu Poreske uprave – razvoj
-            if (docType === 'potvrda_upc_porezi' && selectedStage === 'razvoj' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
+            if (docType === 'potvrda_upc_porezi' && selectedStage === 'razvoj' && applicantType === 'preduzetnica') {
+                docLabel = 'Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice';
+            } else if (docType === 'potvrda_upc_porezi' && selectedStage === 'razvoj' && applicantType === 'fizicko_lice') {
                 docLabel = 'Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana na ime preduzetnika';
             }
             
             // Ažuriraj label za IOPPD obrazac – razvoj
-            if (docType === 'ioppd_obrazac' && selectedStage === 'razvoj' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
+            if (docType === 'ioppd_obrazac' && selectedStage === 'razvoj' && applicantType === 'preduzetnica') {
+                docLabel = 'Odgovarajući obrazac ovjeren od strane Poreske uprave za poslijednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od strane Poreske uprave da preduzetnica nema zaposlenih';
+            } else if (docType === 'ioppd_obrazac' && selectedStage === 'razvoj' && applicantType === 'fizicko_lice') {
                 docLabel = 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od Poreske uprave';
+            }
+            
+            // Dokaz žiro račun – preduzetnica razvoj
+            if (docType === 'dokaz_ziro_racun' && applicantType === 'preduzetnica' && selectedStage === 'razvoj') {
+                docLabel = 'Dokaz o broju poslovnog žiro računa preduzetnika';
             }
             
             // DOO/Ostalo - razvoj – tačni tekstovi prema Odluci (sva početna slova velika)

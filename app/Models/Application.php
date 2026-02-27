@@ -374,8 +374,10 @@ class Application extends Model
                 'pdv_resenje',  // ako je obveznik PDV-a ili potvrda da nije PDV obveznik
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
+                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
         }
@@ -540,8 +542,10 @@ $documents = [
                 'pdv_resenje',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
+                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
         }
