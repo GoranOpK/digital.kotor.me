@@ -890,11 +890,6 @@
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @elseif($hasCompletedEvaluation && $allMembersEvaluated)
                         {{-- Kada su svi članovi ocjenili, ostali članovi vide formu u read-only modu --}}
-                        <div style="padding: 16px; background: #f0f9ff; border-radius: 8px; margin-bottom: 16px; border: 1px solid #0ea5e9;">
-                            <div style="color: #0c4a6e; font-weight: 600; margin-bottom: 8px;">
-                                ℹ️ Svi članovi komisije su ocjenili ovu prijavu. Forma je dostupna samo za pregled.
-                            </div>
-                        </div>
                         <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
                         <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             Nazad na listu
