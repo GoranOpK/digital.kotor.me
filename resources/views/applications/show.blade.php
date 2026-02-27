@@ -870,7 +870,26 @@
                     $documentLabels['ostalo'] = 'Ostalo';
                     // Broj priloženih obaveznih dokumenata (samo tipovi iz $orderedDocs)
                     $uploadedRequiredCount = count(array_intersect($orderedDocs, $allUploadedTypes));
+
+                    // DEBUG: ukloni nakon provjere
+                    $debugPreduzetnicaRazvoj = ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'razvoj');
+                    $debugRequiredFromModel = $application->getRequiredDocuments();
+                    $debugHasNepokretnost = in_array('uvjerenje_opstina_nepokretnost', $debugRequiredFromModel);
+                    $debugHasZiro = in_array('dokaz_ziro_racun', $debugRequiredFromModel);
             @endphp
+
+            <!-- DEBUG - ukloni nakon provjere -->
+            <div style="background:#fff3cd;border:2px solid #856404;padding:12px;margin-bottom:16px;font-family:monospace;font-size:12px;">
+                <strong style="color:#856404;">[DEBUG] Pregled prijave</strong><br>
+                applicant_type = <code>{{ $application->applicant_type ?? 'null' }}</code><br>
+                business_stage = <code>{{ $application->business_stage ?? 'null' }}</code><br>
+                preduzetnica+razvoj? = <code>{{ $debugPreduzetnicaRazvoj ? 'DA' : 'NE' }}</code><br>
+                getRequiredDocuments() = <code>{{ implode(', ', $debugRequiredFromModel) }}</code><br>
+                Ima uvjerenje_opstina_nepokretnost? = <code>{{ $debugHasNepokretnost ? 'DA' : 'NE' }}</code><br>
+                Ima dokaz_ziro_racun? = <code>{{ $debugHasZiro ? 'DA' : 'NE' }}</code><br>
+                orderedDocs = <code>{{ implode(', ', $orderedDocs) }}</code><br>
+                Label potvrda_neosudjivanost = {{ Str::limit($documentLabels['potvrda_neosudjivanost'] ?? '—', 80) }}
+            </div>
 
             <!-- Progress bar -->
             <div style="margin-bottom: 20px;">
