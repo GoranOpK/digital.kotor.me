@@ -420,7 +420,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const documentsMap = {
         'preduzetnica': {
             'započinjanje': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'dokaz_ziro_racun', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'predracuni_nabavka'],
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']
             },
             'razvoj': {
@@ -450,7 +450,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         'fizicko_lice': {
             'započinjanje': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'dokaz_ziro_racun', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'predracuni_nabavka'],
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']
             },
             'razvoj': {
@@ -477,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
             allDocuments = [
-                'Prijava na konkurs (obrazac 1a - Prijava Preduzetnik)',
+                'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)',
                 'Popunjena forma za biznis plan (obrazac 2 — Forma za biznis plan)',
             ];
         } else if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'doo' || applicantType === 'ostalo')) {
@@ -509,9 +509,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         docLabel = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
                     }
                 } else if (docType === 'potvrda_neosudjivanost' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
-                    docLabel = 'Potvrda da se ne vodi krivični postupak na ime preduzetnika izdatu od strane Osnovnog suda';
+                    docLabel = 'Potvrda da se ne vodi krivični postupak na ime podnositeljke prijave odnosno preduzetnice izdatu od Osnovnog suda';
                 } else if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'započinjanje' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
-                    docLabel = 'Uvjerenje od organa lokalne uprave o izmirenim obavezama po osnovu lokalnih javnih prihoda na ime preduzetnika ne starije od mjesec dana';
+                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
                 } else if (docType === 'dokaz_ziro_racun') {
                     docLabel = 'Dokaz o broju poslovnog žiro računa preduzetnika (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'predracuni_nabavka') {
@@ -525,12 +525,12 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Ažuriraj label za uvjerenje o nepokretnosti
             if (docType === 'uvjerenje_opstina_nepokretnost' && (selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
-                docLabel = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave odnosno preduzetnice';
             }
             
             // Ažuriraj label za uvjerenje o porezima – razvoj (prema novoj Odluci)
             if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'razvoj' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
-                docLabel = 'Uvjerenje od organa lokalne uprave o izmirenim obavezama po osnovu lokalnih javnih prihoda na ime preduzetnika ne starije od mjesec dana';
+                docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
             }
             
             // Ažuriraj label za potvrdu Poreske uprave – razvoj

@@ -353,7 +353,8 @@ class Application extends Model
                 'pib_resenje',       // ukoliko ima registrovanu djelatnost
                 'pdv_resenje',       // ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a, ili potvrda da nije PDV obveznik
                 'potvrda_neosudjivanost',
-                'uvjerenje_opstina_porezi',  // o izmirenim obavezama po osnovu lokalnih javnih prihoda, ne starije od mjesec dana
+                'uvjerenje_opstina_porezi',  // ne starije od 30 dana, o urednom izmirivanju poreza po osnovu prireza, članskog doprinosa, lokalnih taksi i naknada
+                'uvjerenje_opstina_nepokretnost',  // ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost
                 'dokaz_ziro_racun',  // ukoliko ima registrovanu djelatnost
                 'predracuni_nabavka',
             ];
@@ -522,6 +523,7 @@ $documents = [
                 'pdv_resenje',
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
+                'uvjerenje_opstina_nepokretnost',
                 'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
@@ -639,6 +641,7 @@ $documents = [
                     'pdv_resenje',
                     'potvrda_neosudjivanost',
                     'uvjerenje_opstina_porezi',
+                    'uvjerenje_opstina_nepokretnost',
                     'dokaz_ziro_racun',
                     'predracuni_nabavka',
                     'biznis_plan_usb',
