@@ -236,8 +236,9 @@ class EvaluationController extends Controller
             }
         }
 
-        // Izračunaj konačnu ocjenu (zbir prosječnih ocjena + dodatni bodovi)
-        $finalScore = array_sum(array_filter($averageScores)) + $application->getBonusScore();
+        // Izračunaj konačnu ocjenu (zbir prosječnih ocjena, BEZ dodatnih bodova;
+        // dodatni bodovi se vizuelno dodaju u tabeli preko getBonusScore())
+        $finalScore = array_sum(array_filter($averageScores));
 
         // Provjeri da li su svi članovi komisije ocjenili ovu prijavu
         $totalMembers = $commission->activeMembers()->count();
