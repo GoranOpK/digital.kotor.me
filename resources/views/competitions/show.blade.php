@@ -336,8 +336,6 @@
                     </div>
                     @endif
                     
-                    <!-- DEBUG - ukloni nakon provjere -->
-                    <div id="debug-docs-competition" style="background:#fff3cd;border:2px solid #856404;padding:12px;margin-bottom:12px;font-family:monospace;font-size:11px;color:#856404;"></div>
                     <ul class="documents-list" id="documents-list">
                         @foreach($requiredDocuments as $document)
                             <li>{{ $document }}</li>
@@ -620,20 +618,6 @@ document.addEventListener('DOMContentLoaded', function() {
             
             allDocuments.push(docLabel);
         });
-
-        // DEBUG - ukloni nakon provjere
-        const debugEl = document.getElementById('debug-docs-competition');
-        if (debugEl) {
-            const isPreduzetnicaRazvoj = (applicantType === 'preduzetnica' && selectedStage === 'razvoj');
-            const hasNepokretnost = docTypes.includes('uvjerenje_opstina_nepokretnost');
-            const hasZiro = docTypes.includes('dokaz_ziro_racun');
-            debugEl.innerHTML = '<strong>[DEBUG] Konkurs – lista dokumenata</strong><br>' +
-                'applicantType = ' + applicantType + ' | selectedStage = ' + selectedStage + '<br>' +
-                'preduzetnica+razvoj? = ' + (isPreduzetnicaRazvoj ? 'DA' : 'NE') + '<br>' +
-                'docTypes (' + docTypes.length + ') = ' + docTypes.join(', ') + '<br>' +
-                'Ima uvjerenje_opstina_nepokretnost? = ' + (hasNepokretnost ? 'DA' : 'NE') + ' | Ima dokaz_ziro_racun? = ' + (hasZiro ? 'DA' : 'NE') + '<br>' +
-                'documentsMap.preduzetnica.razvoj.all = ' + (documentsMap.preduzetnica && documentsMap.preduzetnica.razvoj ? documentsMap.preduzetnica.razvoj.all.join(', ') : 'N/A');
-        }
         
         // Ažuriraj listu
         if (documentsList) {
