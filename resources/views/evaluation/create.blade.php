@@ -364,13 +364,7 @@
                 $daysRemaining = $competition ? $competition->getDaysUntilEvaluationDeadline() : null;
                 $isDeadlinePassed = $competition ? $competition->isEvaluationDeadlinePassed() : false;
             @endphp
-            
-            @if($competition && $competition->closed_at && !$isDeadlinePassed && $daysRemaining !== null)
-                <div class="alert alert-warning" style="background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
-                    <strong>⚠️ Upozorenje:</strong> Preostalo vremena za ocjenjivanje i donošenje odluke: <strong>{{ $daysRemaining }} {{ $daysRemaining == 1 ? 'dan' : ($daysRemaining < 5 ? 'dana' : 'dana') }}</strong>. Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.
-                </div>
-            @endif
-            
+                        
             @if($isDeadlinePassed)
                 <div class="alert alert-danger" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
                     <strong>❌ Rok istekao:</strong> Rok za ocjenjivanje i donošenje odluke je istekao. Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.
