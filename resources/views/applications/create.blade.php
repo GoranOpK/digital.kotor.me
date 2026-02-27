@@ -1204,61 +1204,7 @@
                 </div>
             </div>
 
-            <!-- Sekcija 3: Finansijski podaci -->
-            <div class="form-card">
-                <div class="form-section">
-                    <h2>Finansijski podaci</h2>
-                    
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">
-                                Traženi iznos podrške (€) <span class="required">*</span>
-                            </label>
-                            <input 
-                                type="number" 
-                                name="requested_amount" 
-                                class="form-control @error('requested_amount') error @enderror"
-                                value="{{ old('requested_amount', isset($existingApplication) && $existingApplication ? $existingApplication->requested_amount : '') }}"
-                                required
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                            >
-                            @error('requested_amount')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                            <div class="form-text">
-                                Maksimalno: {{ number_format(($competition->budget ?? 0) * (($competition->max_support_percentage ?? 30) / 100), 2, ',', '.') }} € 
-                                ({{ $competition->max_support_percentage ?? 30 }}% budžeta)
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">
-                                Ukupan budžet potreban za realizaciju (€) <span class="required">*</span>
-                            </label>
-                            <input 
-                                type="number" 
-                                name="total_budget_needed" 
-                                class="form-control @error('total_budget_needed') error @enderror"
-                                value="{{ old('total_budget_needed', isset($existingApplication) && $existingApplication ? $existingApplication->total_budget_needed : '') }}"
-                                required
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                            >
-                            @error('total_budget_needed')
-                                <div class="error-message">{{ $message }}</div>
-                            @enderror
-                            <div class="form-text">
-                                Mora biti veći ili jednak traženom iznosu
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sekcija 4: Dodatni podaci (sakriva se za Fizičko lice - sredstva se ne mogu uplaćivati na lične žiro račune) -->
+            <!-- Sekcija 3: Dodatni podaci (sakriva se za Fizičko lice - sredstva se ne mogu uplaćivati na lične žiro račune) -->
             <div class="form-card" id="additional-data-section">
                 <div class="form-section">
                     <h2>Dodatni podaci</h2>
@@ -1757,16 +1703,12 @@
             // Proveri business_stage u svim sekcijama (može biti u obrazac1a, obrazac1b ili fizickoLiceFields)
             const businessStage = form.querySelector('input[name="business_stage"]:checked');
             const businessArea = activeSection ? activeSection.querySelector('input[name="business_area"]') : form.querySelector('input[name="business_area"]:not([disabled])');
-            const requestedAmount = form.querySelector('input[name="requested_amount"]:not([disabled])');
-            const totalBudgetNeeded = form.querySelector('input[name="total_budget_needed"]:not([disabled])');
             const deMinimisDeclaration = form.querySelector('input[name="de_minimis_declaration"]:not([disabled])');
 
             // Proveri osnovna polja
             if (!businessPlanName || !businessPlanName.value.trim()) return false;
             if (!businessStage || !businessStage.value) return false;
             if (!businessArea || !businessArea.value.trim()) return false;
-            if (!requestedAmount || !requestedAmount.value || parseFloat(requestedAmount.value) <= 0) return false;
-            if (!totalBudgetNeeded || !totalBudgetNeeded.value || parseFloat(totalBudgetNeeded.value) <= 0) return false;
             if (!deMinimisDeclaration || !deMinimisDeclaration.checked) return false;
 
             // Proveri polja specifična za tip podnosioca

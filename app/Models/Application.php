@@ -270,13 +270,11 @@ class Application extends Model
      */
     public function isObrazacComplete(): bool
     {
-        // Proveri osnovna obavezna polja
+        // Proveri osnovna obavezna polja (bez finansijskih iznosa – oni se više ne unose u Obrazac 1a/1b)
         if (!$this->business_plan_name || 
             !$this->applicant_type || 
             !$this->business_stage || 
-            !$this->business_area || 
-            !$this->requested_amount || 
-            !$this->total_budget_needed) {
+            !$this->business_area) {
             return false;
         }
 
