@@ -719,23 +719,7 @@
                     @endfor
                 </div>
 
-                <!-- DODATNI BODOVI -->
-                <div class="form-section">
-                    <label class="form-label form-label-large">DODATNI BODOVI:</label>
-
-                    <div class="info-box" style="margin-top: 4px;">
-                        <ul style="margin: 0; padding-left: 20px;">
-                            <li>Prisustvovanje Info danu i radionici „Forma za biznis plan – Obrazac 2“ u okviru Info dana <strong>(1 bod)</strong></li>
-                            <li>Novi biznis – podnositeljka prijave nema već registrovanu djelatnost <strong>(2 boda)</strong></li>
-                            <li>Biznis ideja je inovativna i/ili „zelena“ <strong>(3 boda)</strong></li>
-                        </ul>
-                    </div>
-
-                    <p style="margin-top: 8px; font-size: 13px; color: #374151;">
-                        Navedeni dodatni bodovi se dodaju na zbir prosječnih ocjena iz tabele iznad i čine konačnu ocjenu.
-                        Checkbox dugmad u tabeli može označiti samo predsjednik komisije.
-                    </p>
-                </div>
+                {{-- Dodatni bodovi su sada u samoj tabeli iznad, pa se poseban boks sa objašnjenjem ne prikazuje. --}}
 
                 <!-- 5. Ostale napomene -->
                 <div class="form-section form-section-notes">
