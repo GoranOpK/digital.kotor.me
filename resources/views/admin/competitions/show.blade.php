@@ -154,7 +154,7 @@
                     @if($competition->published_at && $competition->deadline)
                         <p><strong>Datum objave:</strong> {{ $competition->published_at->format('d.m.Y H:i') }}</p>
                         <p><strong>Datum početka:</strong> {{ $competition->start_date ? $competition->start_date->format('d.m.Y') : 'N/A' }}</p>
-                        <p><strong>Datum isteka:</strong> {{ $competition->deadline->subSecond()->format('d.m.Y H:i') }}</p>
+                        <p><strong>Datum isteka roka za prijavu:</strong> {{ $competition->deadline->subSecond()->format('d.m.Y H:i') }}</p>
                         @if($competition->status === 'published')
                             @if($competition->is_upcoming)
                                 <p><strong>Počinje za:</strong><br>
@@ -172,7 +172,7 @@
                         @endif
                     @endif
                     @if($competition->closed_at)
-                        <p><strong>Datum zatvaranja:</strong> {{ $competition->closed_at->format('d.m.Y H:i') }}</p>
+                        <p><strong>Datum zatvaranja konkursa:</strong> {{ $competition->closed_at->format('d.m.Y H:i') }}</p>
                     @endif
                 </div>
             </div>
