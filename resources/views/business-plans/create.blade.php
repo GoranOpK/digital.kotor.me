@@ -1303,6 +1303,33 @@
                 </div>
             @endif
         </form>
+
+        @php
+            // Dugme "Štampaj" – vidljivo kandidatu koji popunjava obrazac ili predsjedniku komisije
+            $canPrintBusinessPlan = false;
+            if (!($readOnly ?? false)) {
+                $canPrintBusinessPlan = true; // kandidat
+            } else {
+                $currentUser = auth()->user();
+                if ($currentUser && $application->competition) {
+                    $commissionMember = \App\Models\CommissionMember::where('user_id', $currentUser->id)
+                        ->where('status', 'active')
+                        ->where('position', 'predsjednik')
+                        ->first();
+                    if ($commissionMember && (int) $commissionMember->commission_id === (int) $application->competition->commission_id) {
+                        $canPrintBusinessPlan = true;
+                    }
+                }
+            }
+        @endphp
+
+        @if($canPrintBusinessPlan)
+            <div class="form-card" style="text-align: center; margin-top: 8px; margin-bottom: 24px;">
+                <button type="button" class="btn-primary" onclick="window.print();" style="padding: 10px 24px; font-size: 14px; min-width: 180px;">
+                    Štampaj
+                </button>
+            </div>
+        @endif
     </div>
 </div>
 
