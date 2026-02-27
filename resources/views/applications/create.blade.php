@@ -1316,6 +1316,40 @@
                 </div>
             @endif
         </form>
+
+        @php
+            // Dugme "Štampa" za Obrazac 1a/1b
+            // Vidljivo je:
+            // - kandidatu koji popunjava obrazac (readOnly = false)
+            // - predsjedniku komisije koji gleda obrazac u read-only modu za odgovarajući konkurs
+            $canPrintObrazac = false;
+            $currentUser = $user ?? auth()->user();
+
+            if (!($readOnly ?? false)) {
+                // Kandidat koji popunjava obrazac
+                $canPrintObrazac = true;
+            } else {
+                // Read-only prikaz – provjeri da li je korisnik predsjednik komisije za ovaj konkurs
+                if ($currentUser && isset($existingApplication) && $existingApplication && $existingApplication->competition) {
+                    $commissionMember = \App\Models\CommissionMember::where('user_id', $currentUser->id)
+                        ->where('status', 'active')
+                        ->where('position', 'predsjednik')
+                        ->first();
+
+                    if ($commissionMember && $commissionMember->commission_id === $existingApplication->competition->commission_id) {
+                        $canPrintObrazac = true;
+                    }
+                }
+            }
+        @endphp
+
+        @if($canPrintObrazac)
+            <div class="form-card" style="text-align: center; margin-top: 8px; margin-bottom: 24px;">
+                <button type="button" class="btn-primary" onclick="window.print();" style="padding: 10px 24px; font-size: 14px; min-width: 180px;">
+                    Štampaj
+                </button>
+            </div>
+        @endif
     </div>
 </div>
 
