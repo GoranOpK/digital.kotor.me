@@ -313,23 +313,41 @@
         </div>
 
         <!-- Forma za prikaz ocjene -->
-        <div class="form-card">
-            <div class="form-title">
-                LISTA ZA OCJENJIVANJE BIZNIS PLANOVA
-            </div>
-            <div class="form-subtitle">
-                (Popunjava Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu)
-            </div>
+            <div class="form-card">
+                <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px;">
+                    Obrazac 3
+                </div>
+                <div class="form-title">
+                    LISTA ZA OCJENJIVANJE BIZNIS PLANOVA
+                </div>
+                <div class="form-subtitle">
+                    (Popunjava Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu)
+                </div>
 
-            <!-- 1. Naziv biznis plana -->
-            <div class="form-section">
-                <label class="form-label form-label-large">1. Naziv biznis plana:</label>
-                <input type="text" class="form-control-readonly" value="{{ $application->business_plan_name }}" readonly>
-            </div>
+                <!-- 1. Preduzetnica/Društvo -->
+                <div class="form-section">
+                    <label class="form-label form-label-large">1. Preduzetnica/Društvo:</label>
+                    @php
+                        $applicantLabel = $application->applicant_type === 'preduzetnica'
+                            ? 'Preduzetnica'
+                            : ($application->applicant_type === 'doo'
+                                ? 'DOO'
+                                : ($application->applicant_type === 'fizicko_lice'
+                                    ? 'Fizičko lice'
+                                    : 'Ostalo'));
+                    @endphp
+                    <input type="text" class="form-control-readonly" value="{{ $applicantLabel }} - {{ $application->user->name }}" readonly>
+                </div>
 
-            <!-- 2. Dostavljena su sva potrebna dokumenta? -->
-            <div class="form-section">
-                <label class="form-label form-label-large">2. Dostavljena su sva potrebna dokumenta?</label>
+                <!-- 2. Naziv biznis plana -->
+                <div class="form-section">
+                    <label class="form-label form-label-large">2. Naziv biznis plana:</label>
+                    <input type="text" class="form-control-readonly" value="{{ $application->business_plan_name }}" readonly>
+                </div>
+
+                <!-- 3. Dostavljena su sva potrebna dokumenta? -->
+                <div class="form-section">
+                    <label class="form-label form-label-large">3. Dostavljena su sva potrebna dokumenta?</label>
                 <div style="padding: 12px; background: #f9fafb; border-radius: 8px; margin-top: 12px;">
                     <strong>{{ $evaluationScore->documents_complete ? 'a. Da' : 'b. Ne*' }}</strong>
                     @if(!$evaluationScore->documents_complete)
@@ -340,9 +358,9 @@
                 </div>
             </div>
 
-            <!-- 3. Ocjena biznis plana u brojkama -->
+            <!-- 4. Ocjena biznis plana u brojkama -->
             <div class="form-section">
-                <label class="form-label form-label-large">3. Ocjena biznis plana u brojkama:</label>
+                <label class="form-label form-label-large">4. Ocjena biznis plana u brojkama:</label>
                 
                 <div class="info-box criteria-info-box">
                     <strong>KRITERIJUMI ZA OCJENU</strong><br>

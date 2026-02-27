@@ -380,6 +380,9 @@
             <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" @if($isRejected || $isApplicant || $isDeadlinePassed) onsubmit="event.preventDefault(); return false;" @endif>
                 @csrf
 
+                <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px;">
+                    Obrazac 3
+                </div>
                 <div class="form-title">
                     LISTA ZA OCJENJIVANJE BIZNIS PLANOVA
                 </div>
@@ -387,15 +390,30 @@
                     (Popunjava Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu)
                 </div>
 
-                <!-- 1. Naziv biznis plana -->
+                <!-- 1. Preduzetnica/Društvo -->
                 <div class="form-section">
-                    <label class="form-label form-label-large">1. Naziv biznis plana:</label>
+                    <label class="form-label form-label-large">1. Preduzetnica/Društvo:</label>
+                    @php
+                        $applicantLabel = $application->applicant_type === 'preduzetnica'
+                            ? 'Preduzetnica'
+                            : ($application->applicant_type === 'doo'
+                                ? 'DOO'
+                                : ($application->applicant_type === 'fizicko_lice'
+                                    ? 'Fizičko lice'
+                                    : 'Ostalo'));
+                    @endphp
+                    <input type="text" class="form-control form-control-readonly" value="{{ $applicantLabel }} - {{ $application->user->name }}" readonly>
+                </div>
+
+                <!-- 2. Naziv biznis plana -->
+                <div class="form-section">
+                    <label class="form-label form-label-large">2. Naziv biznis plana:</label>
                     <input type="text" class="form-control form-control-readonly" value="{{ $application->business_plan_name }}" readonly>
                 </div>
 
-                <!-- 2. Dostavljena su sva potrebna dokumenta? -->
+                <!-- 3. Dostavljena su sva potrebna dokumenta? -->
                 <div class="form-section">
-                    <label class="form-label form-label-large">2. Dostavljena su sva potrebna dokumenta?</label>
+                    <label class="form-label form-label-large">3. Dostavljena su sva potrebna dokumenta?</label>
                     
                     @if($commissionMember && $commissionMember->position === 'predsjednik')
                         {{-- Predsjednik može označiti --}}
@@ -436,56 +454,6 @@
                     @endif
                 </div>
 
-                <!-- 3. Dodatni kriterijumi (bonus bodovi) -->
-                <div class="form-section">
-                    <label class="form-label form-label-large">3. Dodatni kriterijumi (bonus bodovi):</label>
-
-                    @if($commissionMember && $commissionMember->position === 'predsjednik')
-                        <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 8px;">
-                            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
-                                <input 
-                                    type="checkbox" 
-                                    name="bonus_training" 
-                                    value="1"
-                                    @if(old('bonus_training', $application->bonus_training ?? false)) checked @endif
-                                    @if($isRejected || $isApplicant || $isDeadlinePassed) disabled @endif
-                                >
-                                <span>
-                                    Prisustvovanje obuci za pisanje biznis plana koju organizuje Opština Kotor u okviru Info dana
-                                    <strong>(+1 bod)</strong>
-                                </span>
-                            </label>
-                            <label style="display: flex; align-items: flex-start; gap: 8px; cursor: pointer;">
-                                <input 
-                                    type="checkbox" 
-                                    name="bonus_women_business_mark" 
-                                    value="1"
-                                    @if(old('bonus_women_business_mark', $application->bonus_women_business_mark ?? false)) checked @endif
-                                    @if($isRejected || $isApplicant || $isDeadlinePassed) disabled @endif
-                                >
-                                <span>
-                                    Posjedovanje žiga „Ženski biznis“
-                                    <strong>(+1 bod)</strong>
-                                </span>
-                            </label>
-                        </div>
-                        <p class="form-text" style="margin-top: 8px;">
-                            Dodatni bodovi se dodaju na zbir prosječnih ocjena.
-                        </p>
-                    @else
-                        <div style="padding: 16px; background: #f9fafb; border-radius: 8px; margin-top: 12px; border: 1px solid #e5e7eb;">
-                            <div style="margin-bottom: 4px;">
-                                <strong>Prisustvovanje obuci za pisanje biznis plana (Info dan Opštine Kotor):</strong>
-                                {{ ($application->bonus_training ?? false) ? 'da (+1 bod)' : 'ne' }}
-                            </div>
-                            <div>
-                                <strong>Posjedovanje žiga „Ženski biznis“:</strong>
-                                {{ ($application->bonus_women_business_mark ?? false) ? 'da (+1 bod)' : 'ne' }}
-                            </div>
-                        </div>
-                    @endif
-                </div>
-
                 <!-- 4. Ocjena biznis plana u brojkama -->
                 <div class="form-section">
                     <label class="form-label form-label-large">4. Ocjena biznis plana u brojkama:</label>
@@ -504,6 +472,14 @@
                             10 => 'Usmeno obrazloženje biznis plana (preduzetnica je uvjerljiva i sigurna u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovara na sva pitanja)',
                         ];
                     @endphp
+
+                    <div class="info-box criteria-info-box" style="margin-top: 8px;">
+                        <strong>KRITERIJUMI ZA OCJENU</strong><br>
+                        (Član 18 stav 2 Odluke)<br>
+                        Komisija dodijeljuje ocjenu za biznis plan na skali od 1 do 5, pri čemu je:<br>
+                        1 = uopšte ne odgovara navedenom,<br>
+                        5 = u potpunosti odgovara navedenom.
+                    </div>
 
                     <table class="evaluation-table">
                         <thead>
@@ -643,6 +619,25 @@
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     @endfor
+                </div>
+
+                <!-- DODATNI BODOVI -->
+                <div class="form-section">
+                    <label class="form-label form-label-large">DODATNI BODOVI:</label>
+
+                    <div class="info-box" style="margin-top: 4px;">
+                        <ul style="margin: 0; padding-left: 20px;">
+                            <li>Prisustvovanje Info danu i radionici „Forma za biznis plan – Obrazac 2“ u okviru Info dana <strong>(1 bod)</strong></li>
+                            <li>Novi biznis – podnositeljka prijave nema već registrovanu djelatnost <strong>(2 boda)</strong></li>
+                            <li>Biznis ideja je inovativna i/ili „zelena“ <strong>(3 boda)</strong></li>
+                        </ul>
+                    </div>
+
+                    @if($commissionMember && $commissionMember->position === 'predsjednik')
+                        <p style="margin-top: 8px; font-size: 13px; color: #374151;">
+                            Dodatni bodovi se unose u sistem od strane predsjednika komisije (poseban dio forme).
+                        </p>
+                    @endif
                 </div>
 
                 <!-- 5. Ostale napomene -->
