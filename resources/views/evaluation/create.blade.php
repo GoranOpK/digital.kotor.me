@@ -374,7 +374,7 @@
             <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" @if($isRejected || $isApplicant || $isDeadlinePassed) onsubmit="event.preventDefault(); return false;" @endif>
                 @csrf
 
-                <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px;">
+                <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px; text-align: right;">
                     Obrazac 3
                 </div>
                 <div class="form-title">
