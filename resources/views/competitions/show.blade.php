@@ -516,7 +516,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (docType === 'uvjerenje_opstina_porezi' && selectedStage === 'započinjanje' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
                     docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
                 } else if (docType === 'dokaz_ziro_racun') {
-                    docLabel = 'Dokaz o broju poslovnog žiro računa preduzetnika (ukoliko ima registrovanu djelatnost)';
+                    docLabel = 'Dokaz o broju poslovnog žiro računa preduzetnice (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'predracuni_nabavka') {
                     docLabel = 'Predračuni za planiranu nabavku';
                 } else if (docType === 'statut') {
@@ -555,7 +555,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // Dokaz žiro račun – preduzetnica/fizičko lice razvoj
             if (docType === 'dokaz_ziro_racun' && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice') && selectedStage === 'razvoj') {
-                docLabel = 'Dokaz o broju poslovnog žiro računa preduzetnika';
+                docLabel = 'Dokaz o broju poslovnog žiro računa preduzetnice';
             }
             
             // DOO/Ostalo - razvoj – tačni tekstovi prema Odluci (sva početna slova velika)

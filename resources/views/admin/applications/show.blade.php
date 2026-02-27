@@ -362,7 +362,7 @@
                         'biznis_plan_usb' => 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u',
                         'izvjestaj_realizacija' => 'Izvještaj o realizaciji',
                         'finansijski_izvjestaj' => 'Finansijski izvještaj',
-                        'dokaz_ziro_racun' => ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'razvoj') ? 'Dokaz o broju poslovnog žiro računa preduzetnika' : (($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') ? 'Dokaz o broju poslovnog žiro računa preduzetnika (ukoliko ima registrovanu djelatnost)' : 'Dokaz o broju poslovnog žiro računa'),
+                        'dokaz_ziro_racun' => ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'razvoj') ? 'Dokaz o broju poslovnog žiro računa preduzetnice' : (($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') ? 'Dokaz o broju poslovnog žiro računa preduzetnice (ukoliko ima registrovanu djelatnost)' : 'Dokaz o broju poslovnog žiro računa'),
                         'predracuni_nabavka' => ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') ? 'Predračune za planiranu nabavku' : 'Predračuni za planiranu nabavku',
                         'ostalo' => 'Ostalo',
                     ];

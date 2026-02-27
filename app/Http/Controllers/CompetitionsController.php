@@ -111,7 +111,7 @@ class CompetitionsController extends Controller
             'biznis_plan_usb' => 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u',
             'izvjestaj_realizacija' => 'Izvještaj o realizaciji prethodne podrške',
             'finansijski_izvjestaj' => 'Finansijski izvještaj',
-            'dokaz_ziro_racun' => 'Dokaz o broju poslovnog žiro računa preduzetnika',
+            'dokaz_ziro_racun' => 'Dokaz o broju poslovnog žiro računa preduzetnice',
             'predracuni_nabavka' => 'Predračuni za planiranu nabavku',
             'izvjestaj_registar_kase' => 'Izvještaj sa registra kase',
         ];
@@ -149,7 +149,7 @@ class CompetitionsController extends Controller
                 } elseif ($docType === 'uvjerenje_opstina_nepokretnost') {
                     $label = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave odnosno preduzetnice';
                 } elseif ($docType === 'dokaz_ziro_racun') {
-                    $label = 'Dokaz o broju poslovnog žiro računa preduzetnika (ukoliko ima registrovanu djelatnost)';
+                    $label = 'Dokaz o broju poslovnog žiro računa preduzetnice (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'predracuni_nabavka') {
                     $label = 'Predračuni za planiranu nabavku';
                 } elseif ($docType === 'potvrda_upc_porezi') {

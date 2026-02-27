@@ -670,7 +670,7 @@
                                         'ioppd_obrazac' => ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'razvoj') ? 'Odgovarajući obrazac ovjeren od strane Poreske uprave za poslijednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od strane Poreske uprave da preduzetnica nema zaposlenih' : (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'razvoj' ? 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od Poreske uprave' : 'Obrazac IOPPD'),
                                         'godisnji_racuni' => 'Godišnji računi',
                                         'biznis_plan_usb' => 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u',
-                                        'dokaz_ziro_racun' => ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'razvoj') ? 'Dokaz o broju poslovnog žiro računa preduzetnika' : (($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') ? 'Dokaz o broju poslovnog žiro računa preduzetnika (ukoliko ima registrovanu djelatnost)' : 'Dokaz o broju poslovnog žiro računa'),
+                                        'dokaz_ziro_racun' => ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'razvoj') ? 'Dokaz o broju poslovnog žiro računa preduzetnice' : (($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') ? 'Dokaz o broju poslovnog žiro računa preduzetnice (ukoliko ima registrovanu djelatnost)' : 'Dokaz o broju poslovnog žiro računa'),
                                         'predracuni_nabavka' => 'Predračuni za planiranu nabavku',
                                         'ostalo' => 'Ostalo',
                                     ];
@@ -865,7 +865,7 @@
                     $documentLabels['biznis_plan_usb'] = 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u';
                     $documentLabels['izvjestaj_realizacija'] = 'Izvještaj o realizaciji';
                     $documentLabels['finansijski_izvjestaj'] = 'Finansijski izvještaj';
-                    $documentLabels['dokaz_ziro_racun'] = ($application->applicant_type === 'preduzetnica' && $isRazvoj) ? 'Dokaz o broju poslovnog žiro računa preduzetnika' : (($application->applicant_type === 'preduzetnica' && $isZapocinjanje) ? 'Dokaz o broju poslovnog žiro računa preduzetnika (ukoliko ima registrovanu djelatnost)' : 'Dokaz o broju poslovnog žiro računa');
+                    $documentLabels['dokaz_ziro_racun'] = ($application->applicant_type === 'preduzetnica' && $isRazvoj) ? 'Dokaz o broju poslovnog žiro računa preduzetnice' : (($application->applicant_type === 'preduzetnica' && $isZapocinjanje) ? 'Dokaz o broju poslovnog žiro računa preduzetnice (ukoliko ima registrovanu djelatnost)' : 'Dokaz o broju poslovnog žiro računa');
                     $documentLabels['predracuni_nabavka'] = $isDooOstalo ? 'Predračune za planiranu nabavku' : 'Predračuni za planiranu nabavku';
                     $documentLabels['ostalo'] = 'Ostalo';
                     // Broj priloženih obaveznih dokumenata (samo tipovi iz $orderedDocs)
