@@ -433,8 +433,11 @@
                                 </td>
                             @endforeach
                             <td class="average-col" style="font-weight: bold !important;">
+                                @php
+                                    $bonusScore = $application->getBonusScore();
+                                @endphp
                                 @if($canViewOtherMembersScores ?? true)
-                                    <strong>{{ $finalScore > 0 ? number_format($finalScore, 2) : '—' }}</strong>
+                                    <strong>{{ $finalScore > 0 ? number_format($finalScore + $bonusScore, 2) : '—' }}</strong>
                                 @else
                                     <strong>—</strong>
                                 @endif

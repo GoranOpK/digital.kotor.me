@@ -40,6 +40,9 @@ class Application extends Model
         'final_score',
         'bonus_training',
         'bonus_women_business_mark',
+        'bonus_info_day',
+        'bonus_new_business',
+        'bonus_green_innovative',
         'ranking_position',
         'rejection_reason',
         'commission_decision',
@@ -65,6 +68,9 @@ class Application extends Model
         'accuracy_declaration' => 'boolean',
         'bonus_training' => 'boolean',
         'bonus_women_business_mark' => 'boolean',
+        'bonus_info_day' => 'boolean',
+        'bonus_new_business' => 'boolean',
+        'bonus_green_innovative' => 'boolean',
         'submitted_at' => 'datetime',
         'evaluated_at' => 'datetime',
         'interview_scheduled_at' => 'datetime',
@@ -156,18 +162,25 @@ class Application extends Model
     }
 
     /**
-     * Vraća zbir dodatnih bodova (0–2) na osnovu prisustvovanja obuci
-     * i posjedovanja žiga „Ženski biznis“.
+     * Vraća zbir dodatnih bodova na osnovu dodatnih kriterijuma:
+     * - Prisustvo Info danu i radionici (1 bod)
+     * - Novi biznis (2 boda)
+     * - Inovativna i/ili „zelena“ ideja (3 boda)
      */
     public function getBonusScore(): int
     {
         $bonus = 0;
-        if ($this->bonus_training) {
-            $bonus++;
+
+        if ($this->bonus_info_day) {
+            $bonus += 1;
         }
-        if ($this->bonus_women_business_mark) {
-            $bonus++;
+        if ($this->bonus_new_business) {
+            $bonus += 2;
         }
+        if ($this->bonus_green_innovative) {
+            $bonus += 3;
+        }
+
         return $bonus;
     }
 

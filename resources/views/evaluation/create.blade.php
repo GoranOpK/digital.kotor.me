@@ -562,6 +562,111 @@
                                     </td>
                                 </tr>
                             @endforeach
+
+                            {{-- Dodatni bodovi – posebni redovi koje može označiti samo predsjednik --}}
+                            <tr>
+                                <td class="criterion-col" colspan="{{ $allMembers->count() + 2 }}" style="font-weight: bold;">
+                                    DODATNI BODOVI:
+                                </td>
+                            </tr>
+
+                            {{-- 1) Prisustvovanje Info danu – 1 bod --}}
+                            <tr>
+                                <td class="criterion-col">
+                                    Prisustvovanje Info danu i radionici „Forma za biznis plan – Obrazac 2“ u okviru Info dana (1 bod)
+                                </td>
+                                @foreach($allMembers as $member)
+                                    @php
+                                        $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
+                                        $isChairmanMember = $member->position === 'predsjednik';
+                                    @endphp
+                                    <td style="text-align: center;">
+                                        @if($isCurrentMember && $isChairmanMember && !$isRejected && !($isApplicant ?? false))
+                                            <input 
+                                                type="checkbox" 
+                                                name="bonus_info_day" 
+                                                value="1"
+                                                {{ old('bonus_info_day', $application->bonus_info_day ?? false) ? 'checked' : '' }}
+                                            >
+                                        @else
+                                            @if(($application->bonus_info_day ?? false) && $isChairmanMember)
+                                                ✓
+                                            @else
+                                                —
+                                            @endif
+                                        @endif
+                                    </td>
+                                @endforeach
+                                <td class="average-col">
+                                    {{ ($application->bonus_info_day ?? false) ? '1.00' : '—' }}
+                                </td>
+                            </tr>
+
+                            {{-- 2) Novi biznis – 2 boda --}}
+                            <tr>
+                                <td class="criterion-col">
+                                    Novi biznis – podnositeljka prijave nema već registrovanu djelatnost (2 boda)
+                                </td>
+                                @foreach($allMembers as $member)
+                                    @php
+                                        $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
+                                        $isChairmanMember = $member->position === 'predsjednik';
+                                    @endphp
+                                    <td style="text-align: center;">
+                                        @if($isCurrentMember && $isChairmanMember && !$isRejected && !($isApplicant ?? false))
+                                            <input 
+                                                type="checkbox" 
+                                                name="bonus_new_business" 
+                                                value="1"
+                                                {{ old('bonus_new_business', $application->bonus_new_business ?? false) ? 'checked' : '' }}
+                                            >
+                                        @else
+                                            @if(($application->bonus_new_business ?? false) && $isChairmanMember)
+                                                ✓
+                                            @else
+                                                —
+                                            @endif
+                                        @endif
+                                    </td>
+                                @endforeach
+                                <td class="average-col">
+                                    {{ ($application->bonus_new_business ?? false) ? '2.00' : '—' }}
+                                </td>
+                            </tr>
+
+                            {{-- 3) Inovativna i/ili „zelena“ – 3 boda --}}
+                            <tr>
+                                <td class="criterion-col">
+                                    Biznis ideja je inovativna i/ili „zelena“ (3 boda)
+                                </td>
+                                @foreach($allMembers as $member)
+                                    @php
+                                        $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
+                                        $isChairmanMember = $member->position === 'predsjednik';
+                                    @endphp
+                                    <td style="text-align: center;">
+                                        @if($isCurrentMember && $isChairmanMember && !$isRejected && !($isApplicant ?? false))
+                                            <input 
+                                                type="checkbox" 
+                                                name="bonus_green_innovative" 
+                                                value="1"
+                                                {{ old('bonus_green_innovative', $application->bonus_green_innovative ?? false) ? 'checked' : '' }}
+                                            >
+                                        @else
+                                            @if(($application->bonus_green_innovative ?? false) && $isChairmanMember)
+                                                ✓
+                                            @else
+                                                —
+                                            @endif
+                                        @endif
+                                    </td>
+                                @endforeach
+                                <td class="average-col">
+                                    {{ ($application->bonus_green_innovative ?? false) ? '3.00' : '—' }}
+                                </td>
+                            </tr>
+
+                            {{-- Konačna ocjena = zbir prosječnih ocjena + dodatni bodovi --}}
                             <tr class="final-score-row">
                                 <td class="criterion-col" style="text-align: center; font-weight: bold !important;">
                                     <strong>KONAČNA OCJENA:</strong>
@@ -575,7 +680,7 @@
                                                 $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
                                             @endphp
                                         @if($isCurrentMember)
-                                            {{-- Trenutni član UVIJEK vidi svoju konačnu ocjenu --}}
+                                            {{-- Trenutni član UVIJEK vidi svoju konačnu ocjenu (bez dodatnih bodova – oni su zajednički) --}}
                                             <strong>{{ $memberTotal > 0 ? $memberTotal : '—' }}</strong>
                                         @else
                                             {{-- Ostali članovi - prikaži konačne ocjene tek kada sve prijave na konkursu ocijene svi članovi --}}
@@ -591,9 +696,10 @@
                                     @php
                                         // Prikaži konačnu prosječnu ocjenu tek kada svi članovi završe ocjenjivanje
                                         $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
+                                        $bonusScore = $application->getBonusScore();
                                     @endphp
                                     @if($allMembersEvaluatedFlag && $finalScore > 0)
-                                        <strong>{{ number_format($finalScore, 2) }}</strong>
+                                        <strong>{{ number_format($finalScore + $bonusScore, 2) }}</strong>
                                     @else
                                         <strong>—</strong>
                                     @endif
@@ -625,11 +731,10 @@
                         </ul>
                     </div>
 
-                    @if($commissionMember && $commissionMember->position === 'predsjednik')
-                        <p style="margin-top: 8px; font-size: 13px; color: #374151;">
-                            Dodatni bodovi se unose u sistem od strane predsjednika komisije (poseban dio forme).
-                        </p>
-                    @endif
+                    <p style="margin-top: 8px; font-size: 13px; color: #374151;">
+                        Navedeni dodatni bodovi se dodaju na zbir prosječnih ocjena iz tabele iznad i čine konačnu ocjenu.
+                        Checkbox dugmad u tabeli može označiti samo predsjednik komisije.
+                    </p>
                 </div>
 
                 <!-- 5. Ostale napomene -->

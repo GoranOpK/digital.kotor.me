@@ -236,8 +236,8 @@ class EvaluationController extends Controller
             }
         }
 
-        // Izračunaj konačnu ocjenu (zbir prosječnih ocjena)
-        $finalScore = array_sum(array_filter($averageScores));
+        // Izračunaj konačnu ocjenu (zbir prosječnih ocjena + dodatni bodovi)
+        $finalScore = array_sum(array_filter($averageScores)) + $application->getBonusScore();
 
         // Provjeri da li su svi članovi komisije ocjenili ovu prijavu
         $totalMembers = $commission->activeMembers()->count();
@@ -423,8 +423,9 @@ class EvaluationController extends Controller
                 'commission_decision' => null,
                 'approved_amount' => null,
                 'decision_date' => null,
-                'bonus_training' => null,
-                'bonus_women_business_mark' => null,
+                'bonus_info_day' => null,
+                'bonus_new_business' => null,
+                'bonus_green_innovative' => null,
                 // 'documents_complete' => null, // NE UKLANJAJ - već je provjereno na početku
             ]);
         }
@@ -541,8 +542,9 @@ class EvaluationController extends Controller
 
         // Sačuvaj dodatne kriterijume (bonus bodovi) – označava ih samo predsjednik
         if ($commissionMember->position === 'predsjednik') {
-            $application->bonus_training = $request->boolean('bonus_training');
-            $application->bonus_women_business_mark = $request->boolean('bonus_women_business_mark');
+            $application->bonus_info_day = $request->boolean('bonus_info_day');
+            $application->bonus_new_business = $request->boolean('bonus_new_business');
+            $application->bonus_green_innovative = $request->boolean('bonus_green_innovative');
             $application->save();
         }
 
