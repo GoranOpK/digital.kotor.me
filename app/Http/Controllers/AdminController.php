@@ -417,14 +417,14 @@ class AdminController extends Controller
             'budget' => $validated['budget'],
             'max_support_percentage' => $validated['max_support_percentage'],
             'commission_id' => $validated['commission_id'] ?? null,
-            'deadline_days' => 15,
+            'deadline_days' => 20,
             'status' => 'draft',
         ];
 
         if (!empty($validated['start_date'])) {
             $start = \Carbon\Carbon::parse($validated['start_date']);
             $data['start_date'] = $start->toDateString();
-            $data['end_date'] = $start->copy()->addDays(15)->toDateString();
+            $data['end_date'] = $start->copy()->addDays(20)->toDateString();
         }
 
         $competition = DB::transaction(function () use ($data, $validated) {
@@ -484,7 +484,7 @@ class AdminController extends Controller
         
         if ($isCommissionMember && !$isAdmin) {
             $applicationsQuery->where('status', '!=', 'draft');
-            // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (15 dana)
+            // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (20 dana)
             if (!$competition->isApplicationDeadlinePassed() && $competition->status !== 'closed') {
                 $applicationsQuery->whereRaw('1 = 0'); // prazna lista
             }
@@ -572,7 +572,7 @@ class AdminController extends Controller
             'max_support_percentage' => $validated['max_support_percentage'],
             'status' => $validated['status'],
             'commission_id' => $validated['commission_id'] ?? null,
-            'deadline_days' => 15,
+            'deadline_days' => 20,
         ];
 
         // Ako vraćamo konkurs u status 'published' ili 'draft', poništi datum zatvaranja
@@ -583,7 +583,7 @@ class AdminController extends Controller
         if (!empty($validated['start_date'])) {
             $start = \Carbon\Carbon::parse($validated['start_date']);
             $data['start_date'] = $start->toDateString();
-            $data['end_date'] = $start->copy()->addDays(15)->toDateString();
+            $data['end_date'] = $start->copy()->addDays(20)->toDateString();
         }
 
         $competition->update($data);
@@ -618,17 +618,17 @@ class AdminController extends Controller
         $updateData = [
             'status' => 'published',
             'published_at' => $now,
-            'deadline_days' => 15,
+            'deadline_days' => 20,
         ];
 
         // Ako nije postavljen start_date, postavi ga na danas
         if (!$competition->start_date) {
             $updateData['start_date'] = $now->toDateString();
-            $updateData['end_date'] = $now->copy()->addDays(15)->toDateString();
+            $updateData['end_date'] = $now->copy()->addDays(20)->toDateString();
         } else {
             // Ako je start_date postavljen (bio to današnji ili budući), 
-            // end_date mora biti 15 dana od tog start_date
-            $updateData['end_date'] = $competition->start_date->copy()->addDays(15)->toDateString();
+            // end_date mora biti 20 dana od tog start_date
+            $updateData['end_date'] = $competition->start_date->copy()->addDays(20)->toDateString();
         }
 
         $competition->update($updateData);
@@ -845,10 +845,10 @@ class AdminController extends Controller
             if ($application->status === 'draft') {
                 abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
             }
-            // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (15 dana)
+            // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (20 dana)
             $competition = $application->competition;
             if ($competition && $competition->status !== 'closed' && !$competition->isApplicationDeadlinePassed()) {
-                abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (15 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
+                abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (20 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
             }
         }
         

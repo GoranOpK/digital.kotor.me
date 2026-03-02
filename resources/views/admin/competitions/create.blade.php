@@ -163,7 +163,7 @@
                 <div class="form-group">
                     <label class="form-label">Informacije o roku</label>
                     <div style="padding: 10px 14px; background: #f3f4f6; border-radius: 8px; border: 1px solid #d1d5db; font-size: 14px; color: #374151; max-width: 400px;">
-                        <p style="margin: 0;"><strong>Rok za prijave:</strong> 15 dana</p>
+                        <p style="margin: 0;"><strong>Rok za prijave:</strong> 20 dana</p>
                         <p style="margin: 5px 0 0 0;"><strong>Datum završetka:</strong> <span id="display_end_date">Izaberite datum početka</span></p>
                     </div>
                 </div>

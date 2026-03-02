@@ -74,9 +74,9 @@ class Competition extends Model
      */
     public function getDeadlineAttribute()
     {
-        $days = 15; // Fiksno po zakonu/odluci
+        $days = (int) ($this->deadline_days ?? 20); // Rok za prijave (20 dana)
 
-        // 1. Ako je postavljen datum početka, on je baza za 15 dana
+        // 1. Ako je postavljen datum početka, on je baza za rok (npr. 20 dana)
         if ($this->start_date) {
             return $this->start_date->copy()->addDays($days)->endOfDay();
         }
@@ -182,7 +182,7 @@ class Competition extends Model
 
     /**
      * Vraća preostalo vrijeme do isteka roka za prijave (u danima)
-     * Rok za prijave je 15 dana od početka konkursa
+     * Rok za prijave je 20 dana od početka konkursa
      */
     public function getDaysUntilApplicationDeadline(): ?int
     {

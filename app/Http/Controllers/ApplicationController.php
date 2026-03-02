@@ -90,7 +90,7 @@ class ApplicationController extends Controller
         // Proveri da li je konkurs još otvoren (samo ako nije read-only)
         if (!$readOnly) {
             $deadline = $competition->published_at 
-                ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 15)
+                ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 20)
                 : null;
             
             if ($deadline && $deadline->isPast()) {
@@ -190,7 +190,7 @@ class ApplicationController extends Controller
         
         // Proveri da li je konkurs otvoren
         $deadline = $competition->published_at 
-            ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 15)
+            ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 20)
             : null;
         
         if ($deadline && $deadline->isPast()) {
@@ -513,11 +513,11 @@ class ApplicationController extends Controller
             abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
         }
 
-        // Članovi komisije ne mogu vidjeti prijave dok ne istekne rok od 15 dana za prijavljivanje na konkurs
+        // Članovi komisije ne mogu vidjeti prijave dok ne istekne rok od 20 dana za prijavljivanje na konkurs
         if ($isCommissionMemberForThisCompetition) {
             $competition = $application->competition;
             if ($competition && $competition->status !== 'closed' && !$competition->isApplicationDeadlinePassed()) {
-                abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (15 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
+                abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (20 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
             }
         }
 
@@ -560,7 +560,7 @@ class ApplicationController extends Controller
                 ->withErrors(['error' => 'Ova prijava nije povezana sa važećim konkursom. Brisanje nije moguće.']);
         }
 
-        // Kandidat ne može brisati prijavu nakon isteka roka od 15 dana ili ako je konkurs zatvoren
+        // Kandidat ne može brisati prijavu nakon isteka roka od 20 dana ili ako je konkurs zatvoren
         if ($competition->status === 'closed' || $competition->isApplicationDeadlinePassed()) {
             return redirect()->route('applications.show', $application)
                 ->withErrors(['error' => 'Rok za prijave je istekao ili je konkurs zatvoren. Prijavu više nije moguće obrisati.']);

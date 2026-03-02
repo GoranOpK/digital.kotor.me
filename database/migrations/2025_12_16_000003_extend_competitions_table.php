@@ -25,7 +25,7 @@ return new class extends Migration
                 $table->decimal('max_support_percentage', 5, 2)->default(30.00)->after('budget'); // Maksimalno 30% po biznis planu
             }
             if (!Schema::hasColumn('competitions', 'deadline_days')) {
-                $table->integer('deadline_days')->default(15)->after('max_support_percentage'); // Rok za prijave (15 dana)
+                $table->integer('deadline_days')->default(20)->after('max_support_percentage'); // Rok za prijave (20 dana)
             }
             if (!Schema::hasColumn('competitions', 'published_at')) {
                 $table->timestamp('published_at')->nullable()->after('end_date'); // Datum objavljivanja
