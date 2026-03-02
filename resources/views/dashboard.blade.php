@@ -552,13 +552,16 @@
                     </div>
                 </div>
 
-                @if($commission->competitions->count() > 0)
+                @php
+                    $activeCompetitions = $commission->competitions->whereNotIn('status', ['closed', 'completed']);
+                @endphp
+                @if($activeCompetitions->count() > 0)
                 <div class="info-card">
                     <div class="info-card-header">
                         <h2>Dodijeljeni konkursi</h2>
                     </div>
                     <div style="padding: 20px;">
-                        @foreach($commission->competitions as $competition)
+                        @foreach($activeCompetitions as $competition)
                             <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
                                 <h3 style="font-size: 18px; font-weight: 700; color: #111827; margin: 0 0 8px;">
                                     <a href="{{ route('admin.competitions.show', $competition) }}" style="color: var(--primary); text-decoration: none;">

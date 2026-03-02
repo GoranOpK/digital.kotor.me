@@ -225,12 +225,15 @@
                 <p><strong>Broj članova:</strong> {{ $commission->members->count() }} / 5</p>
             </div>
 
-            <!-- Dodijeljeni konkursi -->
-            @if($commission->competitions->count() > 0)
+            <!-- Dodijeljeni konkursi (bez arhiviranih: closed/completed) -->
+            @php
+                $activeCompetitions = $commission->competitions->whereNotIn('status', ['closed', 'completed']);
+            @endphp
+            @if($activeCompetitions->count() > 0)
             <div class="info-card">
                 <h2>Dodijeljeni konkursi</h2>
                 <ul class="members-list">
-                    @foreach($commission->competitions as $competition)
+                    @foreach($activeCompetitions as $competition)
                         <li class="member-item">
                             <div class="member-info">
                                 <div class="member-name">
