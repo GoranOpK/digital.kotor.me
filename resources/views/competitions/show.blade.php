@@ -430,8 +430,8 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         'doo': {
             'započinjanje': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'predracuni_nabavka'],
-                optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'predracuni_nabavka'],
+                optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'dokaz_ziro_racun']
             },
             'razvoj': {
                 all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'],
@@ -440,8 +440,8 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         'ostalo': {
             'započinjanje': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'predracuni_nabavka'],
-                optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'predracuni_nabavka'],
+                optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'dokaz_ziro_racun']
             },
             'razvoj': {
                 all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'],
@@ -483,8 +483,8 @@ document.addEventListener('DOMContentLoaded', function() {
             ];
         } else if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'doo' || applicantType === 'ostalo')) {
             allDocuments = [
-                'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1b)',
-                'Popunjena forma za biznis plan (obrazac 2)',
+                'Prijavu na konkurs za podsticaj ženskog preduzetništva (obrazac 1b)',
+                'Popunjenu formu za biznis plan (obrazac 2)',
             ];
         } else {
             allDocuments = [
@@ -606,11 +606,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (docType === 'karton_potpisa') {
                     docLabel = 'Važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'potvrda_neosudjivanost') {
-                    docLabel = 'Potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
+                    docLabel = 'Potvrda da se ne vodi krivični postupak na ime podnositeljke prijave odnosno na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
                 } else if (docType === 'uvjerenje_opstina_porezi') {
-                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
                 } else if (docType === 'uvjerenje_opstina_nepokretnost') {
-                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave odnosno nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice)';
+                } else if (docType === 'dokaz_ziro_racun') {
+                    docLabel = 'Dokaz o broju poslovnog žiro računa društva (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'predracuni_nabavka') {
                     docLabel = 'Predračune za planiranu nabavku';
                 }

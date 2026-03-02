@@ -173,11 +173,13 @@ class CompetitionsController extends Controller
                 } elseif ($docType === 'karton_potpisa') {
                     $label = 'Važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'potvrda_neosudjivanost') {
-                    $label = 'Potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
+                    $label = 'Potvrda da se ne vodi krivični postupak na ime podnositeljke prijave odnosno na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
                 } elseif ($docType === 'uvjerenje_opstina_porezi') {
-                    $label = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                    $label = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
                 } elseif ($docType === 'uvjerenje_opstina_nepokretnost') {
-                    $label = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+                    $label = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave odnosno nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice)';
+                } elseif ($docType === 'dokaz_ziro_racun') {
+                    $label = 'Dokaz o broju poslovnog žiro računa društva (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'predracuni_nabavka') {
                     $label = 'Predračune za planiranu nabavku';
                 } elseif ($docType === 'godisnji_racuni') {
@@ -196,9 +198,12 @@ class CompetitionsController extends Controller
         if ($applicantType === 'preduzetnica' || $applicantType === 'fizicko_lice') {
             array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (obrazac 2 — Forma za biznis plan)');
             array_unshift($requiredDocuments, 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)');
+        } elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
+            array_unshift($requiredDocuments, 'Popunjenu formu za biznis plan (obrazac 2)');
+            array_unshift($requiredDocuments, 'Prijavu na konkurs za podsticaj ženskog preduzetništva (obrazac 1b)');
         } else {
-            array_unshift($requiredDocuments, 'Prijava na konkurs (Obrazac 1a ili 1b)');
             array_unshift($requiredDocuments, 'Popunjena forma za biznis plan (Obrazac 2)');
+            array_unshift($requiredDocuments, 'Prijava na konkurs (Obrazac 1a ili 1b)');
         }
 
         return view('competitions.show', compact(

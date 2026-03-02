@@ -393,10 +393,11 @@ class Application extends Model
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
+                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
             if (!$isRegistered) {
-                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']));
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'dokaz_ziro_racun']));
             }
         }
         // Društva (DOO) koja planiraju razvoj poslovanja (razvoj)
@@ -430,10 +431,11 @@ class Application extends Model
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
+                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
             if (!$isRegistered) {
-                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']));
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'dokaz_ziro_racun']));
             }
         } elseif ($this->applicant_type === 'ostalo' && $this->business_stage === 'razvoj') {
             $documents = [
@@ -575,10 +577,11 @@ $documents = [
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
+                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
             if (!$isRegistered) {
-                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']));
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'dokaz_ziro_racun']));
             }
         }
         // Društva (DOO) koja planiraju razvoj poslovanja (razvoj)
@@ -612,10 +615,11 @@ $documents = [
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
+                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
             if (!$isRegistered) {
-                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']));
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'dokaz_ziro_racun']));
             }
         } elseif ($applicantType === 'ostalo' && $businessStage === 'razvoj') {
             $documents = [
