@@ -201,7 +201,7 @@
                         <label class="form-label">Informacije o roku</label>
                         <div style="padding: 10px 14px; background: #f3f4f6; border-radius: 8px; border: 1px solid #d1d5db; font-size: 14px; color: #374151;">
                             <p style="margin: 0;"><strong>Rok za prijave:</strong> 20 dana</p>
-                            <p style="margin: 5px 0 0 0;"><strong>Datum završetka:</strong> <span id="display_end_date">{{ $competition->end_date ? $competition->end_date->format('d.m.Y') : 'Nije definisano' }}</span></p>
+                            <p style="margin: 5px 0 0 0;"><strong>Datum završetka:</strong> <span id="display_end_date">{{ $competition->deadline ? $competition->deadline->format('d.m.Y') : ($competition->end_date ? $competition->end_date->format('d.m.Y') : 'Nije definisano') }}</span></p>
                         </div>
                     </div>
                 </div>
@@ -230,7 +230,7 @@
                         if (startDateVal) {
                             const startDate = new Date(startDateVal);
                             const endDate = new Date(startDate);
-                            endDate.setDate(startDate.getDate() + 15);
+                            endDate.setDate(startDate.getDate() + 20);
                             
                             const day = String(endDate.getDate()).padStart(2, '0');
                             const month = String(endDate.getMonth() + 1).padStart(2, '0');
