@@ -416,6 +416,7 @@ class Application extends Model
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
+                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
         }
@@ -452,6 +453,7 @@ class Application extends Model
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
+                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
         }
@@ -600,6 +602,7 @@ $documents = [
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
+                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
         }
@@ -636,6 +639,7 @@ $documents = [
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
+                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
         }

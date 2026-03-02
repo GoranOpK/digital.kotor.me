@@ -434,7 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'dokaz_ziro_racun']
             },
             'razvoj': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'predracuni_nabavka'],
                 optional: ['pdv_resenje']
             }
         },
@@ -444,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 optional: ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'dokaz_ziro_racun']
             },
             'razvoj': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'predracuni_nabavka'],
                 optional: ['pdv_resenje']
             }
         },
@@ -558,10 +558,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 docLabel = 'Dokaz o broju poslovnog žiro računa preduzetnice';
             }
             
-            // DOO/Ostalo - razvoj – tačni tekstovi prema Odluci (sva početna slova velika)
+            // DOO/Ostalo - razvoj – tačni tekstovi prema Odluci
             if ((applicantType === 'doo' || applicantType === 'ostalo') && selectedStage === 'razvoj') {
                 if (docType === 'licna_karta') {
-                    docLabel = 'Ovjerenu kopiju lične karte (osnivačica ili jedna od osnivača i izvršna direktorica)';
+                    docLabel = 'Ovjerenu kopiju lične karte nosioca biznisa (osnivačica ili jedna od osnivača i izvršna direktorica)';
                 } else if (docType === 'crps_resenje') {
                     docLabel = 'Rješenje o upisu u CRPS';
                 } else if (docType === 'pib_resenje') {
@@ -573,19 +573,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else if (docType === 'karton_potpisa') {
                     docLabel = 'Važeći karton deponovanih potpisa';
                 } else if (docType === 'godisnji_racuni') {
-                    docLabel = 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu. Napomena: U slučaju da preduzetnica/društvo nema analitiku kupaca ima obavezu dostaviti periodični izvještaj';
+                    docLabel = 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i Analitika dobavljača) za prethodnu godinu. Napomena: U slučaju da preduzetnica/društvo ne vodi analitiku kupaca tj. posluje isključivo sa fizičkim licima i naplata se vrši odmah putem registar kase, preduzetnica/društvo ima obavezu dostaviti periodični izvještaj sa registar kase';
                 } else if (docType === 'izvjestaj_registar_kase') {
                     docLabel = 'Izvještaj sa registra kase';
                 } else if (docType === 'potvrda_neosudjivanost') {
                     docLabel = 'Potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda';
                 } else if (docType === 'uvjerenje_opstina_porezi') {
-                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
                 } else if (docType === 'uvjerenje_opstina_nepokretnost') {
-                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od mjesec dana, o urednom izmirivanju poreza na nepokretnost na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
+                    docLabel = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
                 } else if (docType === 'potvrda_upc_porezi') {
                     docLabel = 'Potvrdu Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
                 } else if (docType === 'ioppd_obrazac') {
-                    docLabel = 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
+                    docLabel = 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od strane Poreske uprave, kao dokaz o broju zaposlenih (IOPPD Obrazac)';
+                } else if (docType === 'dokaz_ziro_racun') {
+                    docLabel = 'Dokaz o broju poslovnog žiro računa društva';
                 } else if (docType === 'predracuni_nabavka') {
                     docLabel = 'Predračune za planiranu nabavku';
                 }
