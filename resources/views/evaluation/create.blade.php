@@ -943,32 +943,20 @@
         // Možemo dodati JavaScript za real-time izračun ako je potrebno
     }
     
-    // Debug - provjeri da li se forma submit-uje
     const form = document.getElementById('evaluationForm');
     if (form) {
         form.addEventListener('submit', function(e) {
-            console.log('=== FORM SUBMIT TRIGGERED ===');
-            console.log('Form action:', this.action);
-            console.log('Form method:', this.method);
-            
             // Provjeri documents_complete
             const documentsComplete = document.querySelector('input[name="documents_complete"]:checked');
             if (documentsComplete) {
-                console.log('documents_complete value:', documentsComplete.value);
-                
                 // Ako je documents_complete "Ne" (value="0"), ukloni required sa svih kriterijuma
                 if (documentsComplete.value === '0') {
-                    console.log('Removing required from all criterion inputs');
                     const criterionInputs = document.querySelectorAll('input[name^="criterion_"]');
                     criterionInputs.forEach(function(input) {
                         input.removeAttribute('required');
                     });
                 }
-            } else {
-                console.log('documents_complete: NOT SELECTED');
             }
-            
-            // Ne blokiramo submit, samo logujemo i uklanjamo required ako je potrebno
         });
         
         // Takođe, dodaj event listener na radio button-e za documents_complete

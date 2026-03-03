@@ -238,14 +238,6 @@ async function uploadFileToMega(file, folderPath = 'digital.kotor/documents', us
         const megaLink = typeof share === 'string' ? share : (share.url || share || `https://mega.nz/file/${nodeId}`);
         console.log('MEGA link:', megaLink);
         
-        console.log('File uploaded successfully:', {
-            nodeId: nodeId,
-            name: uploadedFile.name,
-            size: uploadedFile.size,
-            link: megaLink,
-            fileObject: uploadedFile // Debug - videćemo strukturu objekta
-        });
-
         return {
             success: true,
             nodeId: nodeId,

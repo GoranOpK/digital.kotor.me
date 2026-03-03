@@ -207,13 +207,6 @@ class ApplicationController extends Controller
         // Proveri da li je ovo draft ili finalno čuvanje
         $isDraft = $request->has('save_as_draft') && $request->save_as_draft === '1';
         
-        // Debug log
-        \Log::info('=== Application Store ===');
-        \Log::info('isDraft: ' . ($isDraft ? 'true' : 'false'));
-        \Log::info('save_as_draft value: ' . ($request->input('save_as_draft') ?? 'null'));
-        \Log::info('business_plan_name: ' . ($request->input('business_plan_name') ?? 'null'));
-        \Log::info('All request data: ' . json_encode($request->all()));
-        
         $rules = [
             'business_plan_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'applicant_type' => $isDraft ? 'nullable|in:preduzetnica,doo,fizicko_lice,ostalo' : 'required|in:preduzetnica,doo,fizicko_lice,ostalo',
@@ -275,10 +268,6 @@ class ApplicationController extends Controller
             $rules['registration_form'] = 'nullable|in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)';
         }
         $rules['crps_number'] = 'nullable|string|max:50';
-
-        \Log::info('About to validate with rules: ' . json_encode($rules));
-        \Log::info('Request data before validation: ' . json_encode($request->all()));
-        
         try {
             $validated = $request->validate($rules, [
             'business_plan_name.required' => 'Naziv biznis plana je obavezan.',
@@ -303,8 +292,6 @@ class ApplicationController extends Controller
         ]);
             \Log::info('Validation passed! Validated data: ' . json_encode($validated));
         } catch (\Illuminate\Validation\ValidationException $e) {
-            \Log::error('Validation failed! Errors: ' . json_encode($e->errors()));
-            \Log::error('Request data: ' . json_encode($request->all()));
             throw $e;
         }
 
@@ -341,16 +328,10 @@ class ApplicationController extends Controller
                 ->first(); // bilo koji status (draft, submitted, evaluated, itd.)
         }
 
-        \Log::info('Existing application check: ' . ($existingApplication ? 'found ID: ' . $existingApplication->id . ', status: ' . $existingApplication->status : 'not found'));
-
         try {
             if ($existingApplication) {
             // Ažuriraj postojeću prijavu (draft ili već podnesenu) – jedna prijava po korisniku po konkursu, status se ne mijenja
             // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
-            \Log::info('Before update - PIB in request: ' . ($request->input('pib') ?? 'null'));
-            \Log::info('Before update - PIB filled check: ' . ($request->filled('pib') ? 'true' : 'false'));
-            \Log::info('Before update - PIB in existing: ' . ($existingApplication->pib ?? 'null'));
-            
             $updateData = [
                 'business_plan_name' => $request->filled('business_plan_name') ? $request->business_plan_name : $existingApplication->business_plan_name,
                 'applicant_type' => $request->filled('applicant_type') ? $request->applicant_type : $existingApplication->applicant_type,
@@ -377,15 +358,11 @@ class ApplicationController extends Controller
                 'previous_support_declaration' => $request->has('previous_support_declaration'),
             ];
             
-            \Log::info('Update data PIB value: ' . ($updateData['pib'] ?? 'null'));
-            
             $existingApplication->update($updateData);
 
                 $application = $existingApplication;
-                \Log::info('Updated existing application ID: ' . $application->id);
             } else {
                 // Kreiraj novu prijavu
-                \Log::info('Creating new application...');
                 // VAŽNO: Koristimo direktno iz request-a, ne iz $validated, jer $validated može biti prazan za neka polja
                 // VAŽNO: Automatsko postavljanje is_registered na osnovu tipa podnosioca:
                 // - 'fizicko_lice' → is_registered = false (nema registrovanu djelatnost)
@@ -421,43 +398,13 @@ class ApplicationController extends Controller
                     'previous_support_declaration' => $request->has('previous_support_declaration'),
                     'status' => 'draft', // Draft dok se ne prilože svi dokumenti
                 ]);
-                \Log::info('Created new application ID: ' . $application->id);
             }
         } catch (\Exception $e) {
-            \Log::error('Error creating/updating application: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return back()->withErrors(['error' => 'Greška pri čuvanju prijave: ' . $e->getMessage()])->withInput();
         }
 
-        // Refresh aplikaciju da dobijemo ažurirane podatke (posebno važno za existingApplication)
-        try {
-            $application->refresh();
-        } catch (\Exception $e) {
-            \Log::error('Error refreshing application: ' . $e->getMessage());
-        }
-        
-        // Debug: Loguj stanje
-        \Log::info('=== Application Store Debug ===');
-        \Log::info('Application ID: ' . ($application->id ?? 'null'));
-        \Log::info('isDraft: ' . ($isDraft ? 'true' : 'false'));
-        \Log::info('business_stage from request: ' . ($request->business_stage ?? 'null'));
-        \Log::info('business_stage in application: ' . ($application->business_stage ?? 'null'));
-        \Log::info('pib from request: ' . ($request->pib ?? 'null'));
-        \Log::info('pib in application: ' . ($application->pib ?? 'null'));
-        \Log::info('business_plan_name: ' . ($application->business_plan_name ?? 'null'));
-        \Log::info('applicant_type: ' . ($application->applicant_type ?? 'null'));
-        \Log::info('business_area: ' . ($application->business_area ?? 'null'));
-        \Log::info('requested_amount: ' . ($application->requested_amount ?? 'null'));
-        \Log::info('total_budget_needed: ' . ($application->total_budget_needed ?? 'null'));
-        \Log::info('de_minimis_declaration: ' . ($application->de_minimis_declaration ? 'true' : 'false'));
-        \Log::info('registration_form: ' . ($application->registration_form ?? 'null'));
-        \Log::info('status: ' . ($application->status ?? 'null'));
-        
         // Proveri da li je Obrazac 1a/1b kompletno popunjen (sva polja + checkbox-ovi)
         $isObrazacComplete = $application->isObrazacComplete();
-        
-        \Log::info('isObrazacComplete: ' . ($isObrazacComplete ? 'true' : 'false'));
-        \Log::info('=== End Debug ===');
 
         // VAŽNO: Prvo proveri da li je obrazac kompletan, pa tek onda proveri da li je draft
         // Ako je obrazac kompletan, preusmeri na formu za biznis plan (bez obzira na $isDraft)

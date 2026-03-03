@@ -494,8 +494,6 @@ class EvaluationController extends Controller
                 $validated = $request->validate($rules, $messages);
             } catch (\Illuminate\Validation\ValidationException $e) {
                 // Ako validacija ne prođe, vrati grešku
-                error_log('=== VALIDATION FAILED ===');
-                error_log(json_encode($e->errors()));
                 return redirect()->back()
                     ->withErrors($e->errors())
                     ->withInput();

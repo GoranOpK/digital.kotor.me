@@ -51,22 +51,7 @@ class BusinessPlanController extends Controller
         // Proveri da li već postoji biznis plan
         $businessPlan = $application->businessPlan;
         
-        // Debug: Provjeri kako se podaci učitavaju iz baze
         if ($businessPlan) {
-            \Log::info("Business plan found, ID: " . $businessPlan->id);
-            \Log::info("Employment structure raw: " . json_encode($businessPlan->getRawOriginal('employment_structure')));
-            \Log::info("Employment structure casted: " . json_encode($businessPlan->employment_structure));
-            
-            // Debug: Provjeri sve tabele
-            $tableFields = ['products_services_table', 'pricing_table', 'revenue_share_table', 'suppliers_table', 'funding_sources_table'];
-            foreach ($tableFields as $field) {
-                $rawValue = $businessPlan->getRawOriginal($field);
-                if ($rawValue !== null) {
-                    \Log::info("{$field} raw: " . json_encode($rawValue));
-                    \Log::info("{$field} casted: " . json_encode($businessPlan->$field));
-                }
-            }
-            
             // Razdvoji expense_projection na investment_expenses i operating_expenses
             $investmentExpenses = [];
             $operatingExpenses = [];
@@ -282,11 +267,6 @@ class BusinessPlanController extends Controller
             if ($request->has($field) && is_array($request->input($field))) {
                 $tableData = $request->input($field);
                 
-                // Debug log
-                \Log::info("Processing table field: {$field}");
-                \Log::info("Raw data count: " . count($tableData));
-                \Log::info("Raw data: " . json_encode($tableData));
-                
                 // Filtriraj prazne redove - zadrži samo redove gdje je barem jedno polje popunjeno
                 $cleanedData[$field] = array_filter($tableData, function($row) {
                     if (!is_array($row)) return false;
@@ -301,10 +281,6 @@ class BusinessPlanController extends Controller
                 });
                 // Resetuj array ključeve da budu sekvencijalni (0, 1, 2, ...)
                 $cleanedData[$field] = array_values($cleanedData[$field]);
-                
-                // Debug log
-                \Log::info("Cleaned data count: " . count($cleanedData[$field]));
-                \Log::info("Cleaned data: " . json_encode($cleanedData[$field]));
                 
                 // Ako je niz prazan nakon filtriranja, postavi na null da se ne čuva prazan niz
                 if (empty($cleanedData[$field])) {

@@ -1383,9 +1383,6 @@ function addTableRow(tableBodyId, fieldNames) {
         tableName = tableName + '_table';
     }
     
-    // Debug log
-    console.log('Adding row to table:', tableBodyId, 'Table name:', tableName, 'Row index:', rowIndex);
-    
     fieldNames.forEach(fieldName => {
         const cell = document.createElement('td');
         if (fieldName === 'description' || fieldName === 'qualifications' || fieldName === 'initially' || fieldName === 'later' || fieldName === 'probability' || fieldName === 'impact' || fieldName === 'measures' || fieldName === 'milestones') {
