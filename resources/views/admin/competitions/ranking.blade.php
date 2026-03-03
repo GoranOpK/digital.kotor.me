@@ -737,23 +737,13 @@
                         @endforeach
 
                         @if($competition->hasChairmanCompletedDecisions())
-                        <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb; text-align: center;">
-                            <p style="margin-bottom: 0; font-size: 14px; color: #6b7280;">
-                                Kada završite sa pregledom rang liste, na dnu stranice možete kliknuti na dugme
-                                <strong>“Generiši odluku”</strong> da biste pripremili odluku o dodjeli sredstava.
-                            </p>
-                            <p style="margin-top: 12px; font-size: 14px; color: #6b7280;">Nakon generisanja odluke možete zatvoriti konkurs na stranici odluke.</p>
-                        </div>
+                        <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;"></div>
                         @endif
                     </div>
                 @elseif($competition->hasChairmanCompletedDecisions() && $applications->count() == 0 && (isset($belowLineApplications) && $belowLineApplications->count() > 0))
                     <div class="info-card commission-decision-section">
                         <h2>Zaključak komisije</h2>
                         <p style="margin-bottom: 12px; font-size: 14px; color: #6b7280;">Sve prijave su ispod minimuma od 30 bodova. Možete generisati odluku i zatvoriti konkurs.</p>
-                        <p style="margin-top: 12px; font-size: 14px; color: #6b7280;">
-                            Na dnu ove stranice nalazi se dugme <strong>“Generiši odluku”</strong> kojim možete
-                            pripremiti odluku i zatvoriti konkurs.
-                        </p>
                     </div>
                 @endif
             @endif
