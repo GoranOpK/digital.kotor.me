@@ -1191,8 +1191,8 @@ class AdminController extends Controller
         $validated = $request->validate([
             'user_id' => 'nullable|exists:users,id',
             'name' => 'required|string|max:255',
-            'email' => 'required_without:user_id|email|max:255|unique:users,email',
-            'password' => 'required_without:user_id|string|min:8',
+            'email' => 'nullable|required_without:user_id|email|max:255|unique:users,email',
+            'password' => 'nullable|required_without:user_id|string|min:8',
             'position' => 'required|string|max:255',
             'member_type' => 'required|in:opstina,udruzenje,zene_mreza',
             'organization' => 'nullable|string|max:255',
