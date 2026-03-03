@@ -475,7 +475,7 @@ class EvaluationController extends Controller
         
         // Ako je predsjednik i svi članovi su ocjenili, može unijeti zaključak i iznos
         if ($commissionMember->position === 'predsjednik' && $allMembersEvaluated) {
-            $rules['commission_decision'] = 'nullable|in:podrzava_potpuno,podrzava_djelimicno,odbija';
+            $rules['commission_decision'] = 'nullable|in:podrzava_potpuno,odbija';
             $rules['approved_amount'] = 'nullable|numeric|min:0';
             $rules['decision_date'] = 'nullable|date';
         }
@@ -755,7 +755,7 @@ class EvaluationController extends Controller
                     if (isset($validated['commission_justification']) && !empty($validated['commission_justification'])) {
                         $updateData['rejection_reason'] = $validated['commission_justification'];
                     }
-                } elseif ($validated['commission_decision'] === 'podrzava_potpuno' || $validated['commission_decision'] === 'podrzava_djelimicno') {
+                } elseif ($validated['commission_decision'] === 'podrzava_potpuno') {
                     $updateData['status'] = 'approved';
                 }
                 
@@ -969,7 +969,7 @@ class EvaluationController extends Controller
         }
 
         $validated = $request->validate([
-            'commission_decision' => 'required|in:podrzava_potpuno,podrzava_djelimicno,odbija',
+            'commission_decision' => 'required|in:podrzava_potpuno,odbija',
             'commission_justification' => 'required|string|max:5000',
             'commission_notes' => 'nullable|string|max:5000',
             'approved_amount' => 'nullable|numeric|min:0',
@@ -995,7 +995,7 @@ class EvaluationController extends Controller
                 'status' => 'rejected',
                 'rejection_reason' => $validated['commission_justification'],
             ]);
-        } elseif ($validated['commission_decision'] === 'podrzava_potpuno' || $validated['commission_decision'] === 'podrzava_djelimicno') {
+        } elseif ($validated['commission_decision'] === 'podrzava_potpuno') {
             $application->update(['status' => 'approved']);
         }
 

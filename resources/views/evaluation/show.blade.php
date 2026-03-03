@@ -458,8 +458,7 @@
                     @php
                         $decisionLabels = [
                             'podrzava_potpuno' => 'a. Podržava u potpunosti',
-                            'podrzava_djelimicno' => 'b. Podržava djelimično',
-                            'odbija' => 'c. Odbija'
+                            'odbija' => 'b. Odbija'
                         ];
                         $currentDecision = $application->commission_decision;
                     @endphp

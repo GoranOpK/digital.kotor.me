@@ -651,12 +651,8 @@
                                                     <span style="font-size: 14px; color: #374151; font-weight: 500;">a. Podržava u potpunosti</span>
                                                 </label>
                                                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px; background: #fff; border-radius: 8px; border: 2px solid #e5e7eb; transition: all 0.2s;">
-                                                    <input type="radio" name="commission_decision" value="podrzava_djelimicno" {{ old('commission_decision', $application->commission_decision) === 'podrzava_djelimicno' ? 'checked' : '' }} required onchange="this.parentElement.style.borderColor = this.checked ? 'var(--primary)' : '#e5e7eb'; this.parentElement.style.background = this.checked ? '#eff6ff' : '#fff';">
-                                                    <span style="font-size: 14px; color: #374151; font-weight: 500;">b. Podržava djelimično</span>
-                                                </label>
-                                                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px; background: #fff; border-radius: 8px; border: 2px solid #e5e7eb; transition: all 0.2s;">
                                                     <input type="radio" name="commission_decision" value="odbija" {{ old('commission_decision', $application->commission_decision) === 'odbija' ? 'checked' : '' }} required onchange="this.parentElement.style.borderColor = this.checked ? 'var(--primary)' : '#e5e7eb'; this.parentElement.style.background = this.checked ? '#eff6ff' : '#fff';">
-                                                    <span style="font-size: 14px; color: #374151; font-weight: 500;">c. Odbija</span>
+                                                    <span style="font-size: 14px; color: #374151; font-weight: 500;">b. Odbija</span>
                                                 </label>
                                             </div>
                                             @error('commission_decision')
@@ -719,8 +715,6 @@
                                                 <p style="font-size: 15px; color: #374151; font-weight: 600;">
                                                     @if($application->commission_decision === 'podrzava_potpuno')
                                                         Podržava u potpunosti
-                                                    @elseif($application->commission_decision === 'podrzava_djelimicno')
-                                                        Podržava djelimično
                                                     @elseif($application->commission_decision === 'odbija')
                                                         Odbija
                                                     @else
