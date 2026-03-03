@@ -543,17 +543,20 @@
                                             @endif
                                         </td>
                                     @endforeach
-                                    <td class="average-col" id="avg_{{ $num }}">
-                                        @php
-                                            // Prikaži prosječnu ocjenu tek kada svi članovi završe ocjenjivanje
-                                            $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
-                                        @endphp
-                                        @if($allMembersEvaluatedFlag && isset($averageScores[$num]))
-                                            {{ number_format($averageScores[$num], 2) }}
-                                        @else
-                                            —
-                                        @endif
-                                    </td>
+                            <td class="average-col" id="avg_{{ $num }}">
+                                @php
+                                    // Prosječne ocjene vidljive tek kada SVI članovi ocijene SVE prijave na konkursu
+                                    $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
+                                    $canViewAggregates = $allMembersEvaluatedFlag
+                                        && isset($canViewOtherMembersScores)
+                                        && $canViewOtherMembersScores;
+                                @endphp
+                                @if($canViewAggregates && isset($averageScores[$num]))
+                                    {{ number_format($averageScores[$num], 2) }}
+                                @else
+                                    —
+                                @endif
+                            </td>
                                 </tr>
                             @endforeach
 
@@ -688,11 +691,15 @@
                                 @endforeach
                                 <td class="average-col" id="final_score" style="font-weight: bold !important;">
                                     @php
-                                        // Prikaži konačnu prosječnu ocjenu tek kada svi članovi završe ocjenjivanje
+                                        // Konačna prosječna ocjena (sa bonus bodovima) vidljiva tek kada
+                                        // SVI članovi ocijene SVE prijave na konkursu
                                         $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
                                         $bonusScore = $application->getBonusScore();
+                                        $canViewAggregates = $allMembersEvaluatedFlag
+                                            && isset($canViewOtherMembersScores)
+                                            && $canViewOtherMembersScores;
                                     @endphp
-                                    @if($allMembersEvaluatedFlag && $finalScore > 0)
+                                    @if($canViewAggregates && $finalScore > 0)
                                         <strong>{{ number_format($finalScore + $bonusScore, 2) }}</strong>
                                     @else
                                         <strong>—</strong>

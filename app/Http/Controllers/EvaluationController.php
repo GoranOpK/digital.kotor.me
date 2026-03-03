@@ -106,15 +106,29 @@ class EvaluationController extends Controller
             ->whereIn('status', ['draft', 'published', 'closed', 'completed'])
             ->get();
 
-        // Link na rang listu se prikazuje u ekranu za ocjenjivanje samo za aktivne konkurse,
-        // ne i za arhivirane (status 'closed' ili 'completed')
-        // uslov: rang lista je formirana (isRankingFormed) I status nije arhiviran
+        // Link na rang listu na ekranu za ocjenjivanje:
+        // prikaži samo za konkurse koji imaju formiranu rang listu (isRankingFormed)
+        // i koji nijesu arhivirani (status nije 'closed' ili 'completed')
         $competitionsWithAllEvaluated = $competitions
             ->filter(fn ($c) => $c->isRankingFormed() && !in_array($c->status, ['closed', 'completed']))
             ->values();
+
+        // Kontrola vidljivosti konačne ocjene u listi prijava:
+        // konačna ocjena je vidljiva tek kada je rang lista formirana za čitav konkurs
+        $canViewFinalScoresByCompetition = $competitions
+            ->mapWithKeys(fn ($c) => [$c->id => $c->isRankingFormed()])
+            ->toArray();
+
         $isChairman = $commissionMember->position === 'predsjednik';
 
-        return view('evaluation.index', compact('applications', 'competitions', 'commissionMember', 'competitionsWithAllEvaluated', 'isChairman'));
+        return view('evaluation.index', compact(
+            'applications',
+            'competitions',
+            'commissionMember',
+            'competitionsWithAllEvaluated',
+            'canViewFinalScoresByCompetition',
+            'isChairman'
+        ));
     }
 
     /**

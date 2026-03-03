@@ -262,9 +262,15 @@
                                 @endif
                             </td>
                             <td>
+                                @php
+                                    // Konačna ocjena vidljiva tek kada je rang lista formirana za cijeli konkurs
+                                    $canViewFinalScores = isset($canViewFinalScoresByCompetition[$application->competition_id])
+                                        ? $canViewFinalScoresByCompetition[$application->competition_id]
+                                        : false;
+                                @endphp
                                 @if($application->status === 'rejected')
                                     {{ number_format($application->getDisplayScore(), 2) }} / 50
-                                @elseif($allEvaluated && $application->final_score)
+                                @elseif($canViewFinalScores && $allEvaluated && $application->final_score)
                                     {{ number_format($application->final_score, 2) }} / 50
                                 @else
                                     Ocjenjivanje u toku
