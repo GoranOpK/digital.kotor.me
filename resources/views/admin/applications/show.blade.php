@@ -230,7 +230,7 @@
                             @if($canSeeAggregatesForCommission && ($application->evaluationScores->count() > 0 || $application->status === 'rejected'))
                             <div class="info-item">
                                 <span class="info-label">Konačna ocjena</span>
-                                <span class="info-value">{{ number_format($application->getDisplayScore(), 2) }} / 50</span>
+                                <span class="info-value">{{ number_format($application->getDisplayScore(), 2) }} / 56</span>
                             </div>
                             @endif
                             @if($application->ranking_position)
@@ -266,7 +266,7 @@
                             @if($canSeeAggregatesForCommission && ($application->evaluationScores->count() > 0 || $application->status === 'rejected'))
                             <div class="info-item">
                                 <span class="info-label">Konačna ocjena</span>
-                                <span class="info-value">{{ number_format($application->getDisplayScore(), 2) }} / 50</span>
+                                <span class="info-value">{{ number_format($application->getDisplayScore(), 2) }} / 56</span>
                             </div>
                             @endif
                             @if($application->ranking_position)
@@ -454,7 +454,7 @@
                         @endphp
                         <tr style="border-bottom: 1px solid #e5e7eb;">
                             <td style="padding: 12px;">{{ $score->commissionMember->name ?? 'N/A' }}</td>
-                            <td style="padding: 12px; text-align: center;">{{ number_format($memberScore, 2) }} / 50</td>
+                            <td style="padding: 12px; text-align: center;">{{ number_format($memberScore, 2) }} / 56</td>
                             <td style="padding: 12px;">{{ $score->notes ? \Illuminate\Support\Str::limit($score->notes, 100) : '-' }}</td>
                         </tr>
                     @endforeach

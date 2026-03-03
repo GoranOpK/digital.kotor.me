@@ -188,7 +188,7 @@
                             </td>
                             <td>
                                 @if($application->evaluationScores->count() > 0 || $application->status === 'rejected')
-                                    {{ number_format($application->getDisplayScore(), 2) }} / 50
+                                    {{ number_format($application->getDisplayScore(), 2) }} / 56
                                 @else
                                     -
                                 @endif
