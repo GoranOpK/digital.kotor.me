@@ -123,12 +123,18 @@
             @endif
         </div>
 
+        @php
+            // Defaultni konkurs u filteru: posljednji (najnoviji) iz kolekcije
+            $lastCompetitionId = isset($competitions) && $competitions->isNotEmpty()
+                ? $competitions->last()->id
+                : null;
+        @endphp
         <div class="filters">
             <form method="GET" action="{{ route('evaluation.index') }}" id="filterForm">
                 <div class="form-group">
                     <label class="form-label">Filtriraj</label>
                     <select name="filter" class="form-control" onchange="document.getElementById('filterForm').submit();">
-                        <option value="">Sve prijave</option>
+                        <option value="" {{ request('filter') === null || request('filter') === '' ? 'selected' : '' }}>Sve prijave</option>
                         <option value="pending" {{ request('filter') === 'pending' ? 'selected' : '' }}>Čeka ocjenjivanje</option>
                         <option value="evaluated" {{ request('filter') === 'evaluated' ? 'selected' : '' }}>Ocjenjene</option>
                         <option value="rejected" {{ request('filter') === 'rejected' ? 'selected' : '' }}>Odbijene prijave</option>
@@ -139,7 +145,10 @@
                     <select name="competition_id" class="form-control" onchange="document.getElementById('filterForm').submit();">
                         <option value="">Svi konkursi</option>
                         @foreach($competitions as $comp)
-                            <option value="{{ $comp->id }}" {{ request('competition_id') == $comp->id ? 'selected' : '' }}>
+                            @php
+                                $selectedCompetitionId = request('competition_id', $lastCompetitionId);
+                            @endphp
+                            <option value="{{ $comp->id }}" {{ (string) $selectedCompetitionId === (string) $comp->id ? 'selected' : '' }}>
                                 {{ $comp->title }}
                             </option>
                         @endforeach
