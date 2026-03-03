@@ -266,24 +266,11 @@ class EvaluationController extends Controller
             ->count();
         $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
 
-        // Ocjene ostalih članova vidljive su tek kada su SVE prijave na ovom konkursu ocijenjene od SVIH članova
+        // Ocjene ostalih članova i zbirne ocjene (prosjeci, konačna) vidljive su tek kada su
+        // SVE prijave na ovom konkursu ocijenjene od SVIH članova - logika je centralizovana
+        // u Competition::isRankingFormed(). Oslanjamo se direktno na taj metod.
         $competition = $application->competition;
-        $applicationIdsOnCompetition = Application::where('competition_id', $competition->id)
-            ->whereIn('status', ['submitted', 'evaluated', 'rejected', 'approved'])
-            ->pluck('id');
-        $activeMemberIds = $commission->activeMembers()->pluck('id');
-        $canViewOtherMembersScores = true;
-        if ($applicationIdsOnCompetition->isNotEmpty() && $totalMembers > 0) {
-            $evaluatedPerApplication = EvaluationScore::whereIn('application_id', $applicationIdsOnCompetition)
-                ->whereIn('commission_member_id', $activeMemberIds)
-                ->whereNotNull('criterion_1')
-                ->selectRaw('application_id, count(distinct commission_member_id) as cnt')
-                ->groupBy('application_id')
-                ->pluck('cnt', 'application_id');
-            $canViewOtherMembersScores = $applicationIdsOnCompetition->every(function ($appId) use ($evaluatedPerApplication, $totalMembers) {
-                return ($evaluatedPerApplication->get($appId, 0)) >= $totalMembers;
-            });
-        }
+        $canViewOtherMembersScores = $competition ? $competition->isRankingFormed() : false;
 
         $application->load(['user', 'competition', 'businessPlan', 'documents']);
 
