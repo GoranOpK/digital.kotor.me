@@ -382,6 +382,7 @@ class Application extends Model
             ];
         }
         // Društva (DOO) koja započinju biznis (započinjanje)
+        // NAPOMENA: Za DOO više se NE traži "Dokaz o broju poslovnog žiro računa društva"
         elseif ($this->applicant_type === 'doo' && $this->business_stage === 'započinjanje') {
             $documents = [
                 'licna_karta',
@@ -393,14 +394,14 @@ class Application extends Model
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
-                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
             if (!$isRegistered) {
-                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'dokaz_ziro_racun']));
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']));
             }
         }
         // Društva (DOO) koja planiraju razvoj poslovanja (razvoj)
+        // NAPOMENA: Za DOO više se NE traži "Dokaz o broju poslovnog žiro računa društva"
         elseif ($this->applicant_type === 'doo' && $this->business_stage === 'razvoj') {
             $documents = [
                 'licna_karta',
@@ -416,11 +417,11 @@ class Application extends Model
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
-                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
         }
         // Ostalo (druga društva) - isti dokumenti kao DOO
+        // NAPOMENA: Za ova društva takođe se NE traži "Dokaz o broju poslovnog žiro računa društva"
         elseif ($this->applicant_type === 'ostalo' && $this->business_stage === 'započinjanje') {
             $documents = [
                 'licna_karta',
@@ -432,11 +433,10 @@ class Application extends Model
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
-                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
             if (!$isRegistered) {
-                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'dokaz_ziro_racun']));
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']));
             }
         } elseif ($this->applicant_type === 'ostalo' && $this->business_stage === 'razvoj') {
             $documents = [
@@ -453,7 +453,6 @@ class Application extends Model
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
-                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
         }
@@ -568,6 +567,7 @@ $documents = [
             ];
         }
         // Društva (DOO) koja započinju biznis (započinjanje)
+        // NAPOMENA: Za DOO više se NE traži "Dokaz o broju poslovnog žiro računa društva"
         elseif ($applicantType === 'doo' && $businessStage === 'započinjanje') {
             $documents = [
                 'licna_karta',
@@ -579,14 +579,14 @@ $documents = [
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
-                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
             if (!$isRegistered) {
-                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'dokaz_ziro_racun']));
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']));
             }
         }
         // Društva (DOO) koja planiraju razvoj poslovanja (razvoj)
+        // NAPOMENA: Za DOO više se NE traži "Dokaz o broju poslovnog žiro računa društva"
         elseif ($applicantType === 'doo' && $businessStage === 'razvoj') {
             $documents = [
                 'licna_karta',
@@ -602,11 +602,11 @@ $documents = [
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
-                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
         }
         // Ostalo (druga društva) - isti dokumenti kao DOO
+        // NAPOMENA: I ovdje se NE traži "Dokaz o broju poslovnog žiro računa društva"
         elseif ($applicantType === 'ostalo' && $businessStage === 'započinjanje') {
             $documents = [
                 'licna_karta',
@@ -618,11 +618,10 @@ $documents = [
                 'potvrda_neosudjivanost',
                 'uvjerenje_opstina_porezi',
                 'uvjerenje_opstina_nepokretnost',
-                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
             if (!$isRegistered) {
-                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'dokaz_ziro_racun']));
+                $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']));
             }
         } elseif ($applicantType === 'ostalo' && $businessStage === 'razvoj') {
             $documents = [
@@ -639,7 +638,6 @@ $documents = [
                 'uvjerenje_opstina_nepokretnost',
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
-                'dokaz_ziro_racun',
                 'predracuni_nabavka',
             ];
         }
