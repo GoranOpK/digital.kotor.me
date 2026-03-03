@@ -883,6 +883,9 @@
                                 </div>
                             @endif
                         </div>
+                        @if($rejectedForDocuments)
+                            <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                        @endif
                         @if($isApplicant)
                             <a href="{{ route('applications.show', $application) }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                                 Nazad na Status prijave
