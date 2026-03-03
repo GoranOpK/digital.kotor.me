@@ -14,6 +14,7 @@ use App\Models\Contract;
 use App\Models\Report;
 use App\Models\UpNumber;
 use App\Mail\CommissionAssignedToCompetition;
+use App\Mail\CommissionMemberAdded;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
@@ -1047,7 +1048,7 @@ class AdminController extends Controller
             event(new Registered($user));
 
             // Kreiraj člana komisije i poveži sa User nalogom
-            CommissionMember::create([
+            $member = CommissionMember::create([
                 'commission_id' => $commission->id,
                 'user_id' => $user->id,
                 'name' => $memberData['name'],
@@ -1056,6 +1057,13 @@ class AdminController extends Controller
                 'organization' => $memberData['organization'] ?? null,
                 'status' => 'active',
             ]);
+
+            // Pošalji e-mail o imenovanju u komisiju
+            try {
+                Mail::to($user->email)->send(new CommissionMemberAdded($member));
+            } catch (\Throwable $e) {
+                // Ne prekidaj tok zbog mail greške
+            }
             
             $createdMembers++;
         }
@@ -1240,7 +1248,7 @@ class AdminController extends Controller
             $userId = $user->id;
         }
 
-        CommissionMember::create([
+        $member = CommissionMember::create([
             'commission_id' => $commission->id,
             'user_id' => $userId,
             'name' => $validated['name'],
@@ -1249,6 +1257,16 @@ class AdminController extends Controller
             'organization' => $validated['organization'] ?? null,
             'status' => 'active',
         ]);
+
+        // Pošalji e-mail o imenovanju u komisiju
+        $targetUser = $member->user;
+        if ($targetUser && $targetUser->email) {
+            try {
+                Mail::to($targetUser->email)->send(new CommissionMemberAdded($member));
+            } catch (\Throwable $e) {
+                // Ne prekidaj tok zbog mail greške
+            }
+        }
 
         return back()->with('success', 'Član komisije je uspješno dodat.');
     }
