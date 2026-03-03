@@ -11,7 +11,7 @@
         min-height: 100vh;
         padding: 24px 0;
     }
-    /* Memorandum (zaglavlje) kao u Obrazcima 1a/1b */
+    /* Memorandum (zaglavlje) – potpuno usklađen sa Obrascima 1a/1b */
     .obrazac-zaglavlje {
         background: #fff;
         border: 1px solid #e5e7eb;
@@ -24,7 +24,6 @@
         display: flex;
         align-items: flex-start;
         gap: 20px;
-        margin-bottom: 16px;
     }
     .obrazac-grb {
         flex-shrink: 0;
@@ -35,18 +34,29 @@
         width: auto;
         display: block;
     }
-    .obrazac-org p,
-    .obrazac-contact p {
-        margin: 0;
+    .obrazac-org {
+        flex: 1;
         font-size: 13px;
-        line-height: 1.4;
-        color: #374151;
+        line-height: 1.5;
+        color: #111;
     }
+    .obrazac-org p { margin: 0 0 2px 0; }
+    .obrazac-contact {
+        text-align: right;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #111;
+    }
+    .obrazac-contact p { margin: 0 0 2px 0; }
     .obrazac-broj-i-naslov {
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-top: 8px;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 12px;
+        padding-top: 12px;
+        border-top: 1px solid #e5e7eb;
     }
     .obrazac-broj-prijave {
         font-size: 13px;
@@ -54,18 +64,20 @@
         font-weight: 500;
     }
     .obrazac-1a-1b {
-        font-size: 13px;
-        font-weight: 600;
-        color: #111827;
+        font-size: 14px;
+        font-weight: 700;
+        color: #374151;
         text-transform: uppercase;
     }
     .obrazac-naslov-prijava {
+        width: 100%;
         text-align: center;
-        font-size: 18px;
+        font-size: 22px;
         font-weight: 700;
-        margin: 12px 0 4px 0;
+        letter-spacing: 0.02em;
+        color: #111;
+        margin: 8px 0 0 0;
         text-transform: uppercase;
-        color: #111827;
     }
     .obrazac-podnaslov {
         text-align: center;
