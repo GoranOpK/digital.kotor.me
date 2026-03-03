@@ -369,9 +369,6 @@
                 <div class="obrazac-broj-prijave">
                     Konkurs: {{ $competition->competition_number ?? '—' }} / {{ $competition->year ?? '' }}
                 </div>
-                <div class="obrazac-1a-1b">
-                    Rang lista
-                </div>
             </div>
             <h1 class="obrazac-naslov-prijava">RANG LISTA BIZNIS PLANOVA</h1>
             <p class="obrazac-podnaslov">
