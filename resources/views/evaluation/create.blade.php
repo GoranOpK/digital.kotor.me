@@ -859,6 +859,18 @@
                         $isRejected = $application->status === 'rejected';
                     @endphp
                     
+                    @php
+                        // Da li je prijava odbijena zbog nepotpune dokumentacije (documents_complete = false od strane predsjednika)
+                        $chairmanMemberForPrint = $allMembers->firstWhere('position', 'predsjednik');
+                        $chairmanScoreForPrint = $chairmanMemberForPrint ? $allScores->get($chairmanMemberForPrint->id) : null;
+                        $rejectedForDocuments = $chairmanScoreForPrint && $chairmanScoreForPrint->documents_complete === false;
+                        $allMembersEvaluatedFlag = isset($allMembersEvaluated) ? $allMembersEvaluated : false;
+                        // Štampanje je dozvoljeno kada:
+                        // - sve prijave na konkursu ocijene svi članovi (rang lista spremna), ILI
+                        // - prijava je odbijena zbog nepotpune dokumentacije
+                        $canPrintNow = $allMembersEvaluatedFlag || $rejectedForDocuments;
+                    @endphp
+
                     @if($isRejected)
                         {{-- Ako je prijava odbijena, prikaži samo read-only poruku --}}
                         <div style="padding: 16px; background: #fee2e2; border-radius: 8px; margin-bottom: 16px; border: 1px solid #ef4444;">
@@ -882,7 +894,7 @@
                         @endif
                     @elseif($isChairman && $hasCompletedEvaluation)
                         {{-- Predsjednik kada je već ocjenio - može mijenjati sekciju 2 --}}
-                        @if($allMembersEvaluated ?? false)
+                        @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
                         @endif
                         <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj izmjene</button>
@@ -890,20 +902,22 @@
                     @elseif($hasCompletedEvaluation && $canEditNotesValue && !$isChairman)
                         {{-- Član koji je već ocjenio ali može editovati napomene --}}
                         {{-- Ova provjera mora biti PRIJE provjere za sve ocjenjene --}}
-                        @if($allMembersEvaluated ?? false)
+                        @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
                         @endif
                         <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Sačuvaj izmjene</button>
                         <a href="{{ route('evaluation.index') }}" style="margin-left: 12px; color: #6b7280; text-decoration: none;">Otkaži</a>
                     @elseif($hasCompletedEvaluation && $allMembersEvaluated)
                         {{-- Kada su svi članovi ocjenili, ostali članovi vide formu u read-only modu --}}
-                        <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                        @if($canPrintNow)
+                            <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
+                        @endif
                         <a href="{{ route('evaluation.index') }}" class="btn-primary" style="text-decoration: none; display: inline-block;">
                             Nazad na listu
                         </a>
                     @elseif($hasCompletedEvaluation)
                         {{-- Član je završio ocjenjivanje (prije ostalih) - vidi svoje ocjene, dugme Ocjene --}}
-                        @if($allMembersEvaluated ?? false)
+                        @if($canPrintNow)
                             <button type="button" onclick="window.print();" class="btn-primary" style="margin-right: 12px; background: #6b7280;">Štampaj</button>
                         @endif
                         <button type="submit" class="btn-primary" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed;" @endif>Ocjene</button>
