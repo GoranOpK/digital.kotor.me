@@ -103,12 +103,15 @@ class EvaluationController extends Controller
         
         // Filtriranje konkursa samo za konkurse dodijeljene komisiji člana
         $competitions = \App\Models\Competition::whereIn('id', $competitionIds->toArray())
-            ->whereIn('status', ['published', 'closed', 'completed'])
+            ->whereIn('status', ['draft', 'published', 'closed', 'completed'])
             ->get();
 
-        // Link na rang listu se prikazuje SVIM članovima komisije kada je rang lista formirana
-        // (rok za prijave istekao + svi članovi su ocijenili sve prijave)
-        $competitionsWithAllEvaluated = $competitions->filter(fn ($c) => $c->isRankingFormed())->values();
+        // Link na rang listu se prikazuje u ekranu za ocjenjivanje samo za aktivne konkurse,
+        // ne i za arhivirane (status 'closed' ili 'completed')
+        // uslov: rang lista je formirana (isRankingFormed) I status nije arhiviran
+        $competitionsWithAllEvaluated = $competitions
+            ->filter(fn ($c) => $c->isRankingFormed() && !in_array($c->status, ['closed', 'completed']))
+            ->values();
         $isChairman = $commissionMember->position === 'predsjednik';
 
         return view('evaluation.index', compact('applications', 'competitions', 'commissionMember', 'competitionsWithAllEvaluated', 'isChairman'));
