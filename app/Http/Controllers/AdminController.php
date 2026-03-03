@@ -13,9 +13,11 @@ use App\Models\Tender;
 use App\Models\Contract;
 use App\Models\Report;
 use App\Models\UpNumber;
+use App\Mail\CommissionAssignedToCompetition;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Auth\Events\Registered;
 
 class AdminController extends Controller
@@ -450,6 +452,11 @@ class AdminController extends Controller
             return $competition->fresh();
         });
 
+        // Ako je konkursu odmah dodijeljena komisija, obavijesti članove komisije
+        if ($competition->commission_id && $competition->commission) {
+            $this->notifyCommissionMembersAboutCompetition($competition->commission, $competition);
+        }
+
         return redirect()->route('admin.competitions.show', $competition)
             ->with('success', 'Konkurs je uspješno kreiran.');
     }
@@ -586,12 +593,23 @@ class AdminController extends Controller
             $data['end_date'] = $start->copy()->addDays(20)->toDateString();
         }
 
+        $oldCommissionId = $competition->commission_id;
+
         $competition->update($data);
 
         $competition->upNumber()->updateOrCreate(
             ['competition_id' => $competition->id],
             ['number' => $validated['up_number']]
         );
+
+        // Ako je dodijeljena nova komisija, obavijesti članove te komisije
+        $newCommissionId = $validated['commission_id'] ?? null;
+        if ($newCommissionId && $newCommissionId !== $oldCommissionId) {
+            $commission = Commission::with(['activeMembers.user'])->find($newCommissionId);
+            if ($commission) {
+                $this->notifyCommissionMembersAboutCompetition($commission, $competition);
+            }
+        }
 
         return redirect()->route('admin.competitions.show', $competition)
             ->with('success', 'Konkurs je uspješno ažuriran.');
@@ -1046,6 +1064,12 @@ class AdminController extends Controller
         if (!empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
             Competition::whereIn('id', $validated['competition_ids'])
                 ->update(['commission_id' => $commission->id]);
+
+            // Obavijesti članove komisije o dodijeljenim konkursima
+            $assignedCompetitions = Competition::whereIn('id', $validated['competition_ids'])->get();
+            foreach ($assignedCompetitions as $assignedCompetition) {
+                $this->notifyCommissionMembersAboutCompetition($commission, $assignedCompetition);
+            }
         }
 
         $message = $createdMembers == 1 
@@ -1132,6 +1156,12 @@ class AdminController extends Controller
         if (!empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
             Competition::whereIn('id', $validated['competition_ids'])
                 ->update(['commission_id' => $commission->id]);
+
+            // Obavijesti članove komisije o (ponovno) dodijeljenim konkursima
+            $assignedCompetitions = Competition::whereIn('id', $validated['competition_ids'])->get();
+            foreach ($assignedCompetitions as $assignedCompetition) {
+                $this->notifyCommissionMembersAboutCompetition($commission, $assignedCompetition);
+            }
         }
 
         return redirect()->route('admin.commissions.show', $commission)
@@ -1221,6 +1251,28 @@ class AdminController extends Controller
         ]);
 
         return back()->with('success', 'Član komisije je uspješno dodat.');
+    }
+
+    /**
+     * Slanje obavještenja članovima komisije da su dodijeljeni na određeni konkurs
+     */
+    protected function notifyCommissionMembersAboutCompetition(Commission $commission, Competition $competition): void
+    {
+        $commission->loadMissing(['activeMembers.user']);
+
+        foreach ($commission->activeMembers as $member) {
+            if (!$member->user || !$member->user->email) {
+                continue;
+            }
+
+            try {
+                Mail::to($member->user->email)->send(
+                    new CommissionAssignedToCompetition($member, $competition)
+                );
+            } catch (\Throwable $e) {
+                // Ne prekidaj tok zbog problema sa slanjem e-maila
+            }
+        }
     }
 
     /**
