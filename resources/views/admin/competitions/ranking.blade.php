@@ -11,6 +11,69 @@
         min-height: 100vh;
         padding: 24px 0;
     }
+    /* Memorandum (zaglavlje) kao u Obrazcima 1a/1b */
+    .obrazac-zaglavlje {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .obrazac-zaglavlje-top {
+        display: flex;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 16px;
+    }
+    .obrazac-grb {
+        flex-shrink: 0;
+        line-height: 0;
+    }
+    .obrazac-grb img {
+        height: 2cm;
+        width: auto;
+        display: block;
+    }
+    .obrazac-org p,
+    .obrazac-contact p {
+        margin: 0;
+        font-size: 13px;
+        line-height: 1.4;
+        color: #374151;
+    }
+    .obrazac-broj-i-naslov {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 8px;
+    }
+    .obrazac-broj-prijave {
+        font-size: 13px;
+        color: #374151;
+        font-weight: 500;
+    }
+    .obrazac-1a-1b {
+        font-size: 13px;
+        font-weight: 600;
+        color: #111827;
+        text-transform: uppercase;
+    }
+    .obrazac-naslov-prijava {
+        text-align: center;
+        font-size: 18px;
+        font-weight: 700;
+        margin: 12px 0 4px 0;
+        text-transform: uppercase;
+        color: #111827;
+    }
+    .obrazac-podnaslov {
+        text-align: center;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #374151;
+        margin: 4px 0 0 0;
+    }
     .page-header {
         background: linear-gradient(90deg, var(--primary), var(--primary-dark));
         color: #fff;
@@ -184,6 +247,8 @@
         .admin-page textarea,
         .admin-page select { display: none !important; }
         .admin-page { background: #fff; padding: 0; }
+        .obrazac-zaglavlje { box-shadow: none; border: 1px solid #ccc; }
+        .obrazac-grb img { height: 2cm; }
         .info-card { box-shadow: none; border: 1px solid #e5e7eb; }
         /* Tabela - zaglavlje se ponavlja na svakoj stranici */
         .admin-page table thead {
@@ -276,6 +341,41 @@
                 {{ session('success') }}
             </div>
         @endif
+
+        {{-- Memorandum (zaglavlje) kao u Obrazcima 1a/1b --}}
+        <div class="obrazac-zaglavlje">
+            <div class="obrazac-zaglavlje-top">
+                <div class="obrazac-grb">
+                    <img src="{{ asset('images/srednji_grb.png') }}" alt="Grb Opštine Kotor" onerror="this.onerror=null; this.src='{{ asset('images/srednji_grb.svg') }}';">
+                </div>
+                <div class="obrazac-org">
+                    <p><strong>Crna Gora</strong></p>
+                    <p>Opština Kotor</p>
+                    <p>Sekretarijat za razvoj preduzetništva</p>
+                    <p>komunalne poslove i saobraćaj</p>
+                </div>
+                <div class="obrazac-contact">
+                    <p>Stari grad 317</p>
+                    <p>85330 Kotor, Crna Gora</p>
+                    <p>tel. +382(0)32 325 865</p>
+                    <p>privreda@kotor.me</p>
+                    <p>www.kotor.me</p>
+                </div>
+            </div>
+            <div class="obrazac-broj-i-naslov">
+                <div class="obrazac-broj-prijave">
+                    UP broj: {{ $competition->upNumber->number ?? '—' }} &nbsp;|&nbsp;
+                    Konkurs: {{ $competition->competition_number ?? '—' }} / {{ $competition->year ?? '' }}
+                </div>
+                <div class="obrazac-1a-1b">
+                    Rang lista
+                </div>
+            </div>
+            <h1 class="obrazac-naslov-prijava">RANG LISTA BIZNIS PLANOVA</h1>
+            <p class="obrazac-podnaslov">
+                {{ $competition->title }}
+            </p>
+        </div>
 
         <div class="ranking-main-content">
         <!-- Informacije o budžetu -->
