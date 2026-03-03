@@ -315,15 +315,6 @@
 
 <div class="admin-page">
     <div class="container mx-auto px-4">
-        <div class="page-header">
-            <h1>Rang lista - {{ $competition->title }}</h1>
-            <div class="no-print">
-                @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
-                <button type="button" onclick="window.print();" class="btn" style="background: #6b7280; color: #fff; border: none; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 600;">Štampaj</button>
-                @endif
-                <a href="{{ route('admin.competitions.show', $competition) }}" class="btn btn-primary">Nazad</a>
-            </div>
-        </div>
 
         @php
             $daysRemaining = $competition->getDaysUntilEvaluationDeadline();
@@ -380,8 +371,6 @@
         <div class="ranking-main-content">
         <!-- Rang lista -->
         <div class="info-card">
-            <h2>Rang lista prijava</h2>
-
             @if($applications->count() > 0 || (isset($belowLineApplications) && $belowLineApplications->count() > 0))
             @if($applications->count() > 0)
             @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
@@ -810,6 +799,14 @@
             </div>
         </div>
         @endif
+
+        <!-- Dugmad na dnu (ekran) -->
+        <div class="no-print" style="margin: 24px 0 8px 0; text-align: right;">
+            @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
+                <button type="button" onclick="window.print();" class="btn" style="background: #6b7280; color: #fff; border: none; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 600;">Štampaj</button>
+            @endif
+            <a href="{{ route('admin.competitions.show', $competition) }}" class="btn btn-primary">Nazad</a>
+        </div>
     </div>
 </div>
 
