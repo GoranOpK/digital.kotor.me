@@ -367,7 +367,6 @@
             </div>
             <div class="obrazac-broj-i-naslov">
                 <div class="obrazac-broj-prijave">
-                    UP broj: {{ $competition->upNumber->number ?? '—' }} &nbsp;|&nbsp;
                     Konkurs: {{ $competition->competition_number ?? '—' }} / {{ $competition->year ?? '' }}
                 </div>
                 <div class="obrazac-1a-1b">
