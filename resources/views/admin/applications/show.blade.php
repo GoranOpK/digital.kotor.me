@@ -124,6 +124,9 @@
                     @php
                         $userRole = auth()->user()->role ? auth()->user()->role->name : null;
                         $isCommissionMember = $userRole === 'komisija';
+                        $competition = $application->competition;
+                        // Članovi komisije vide zbirne ocjene (konačna ocjena, ocjene komisije) tek kada je za cijeli konkurs formirana rang lista
+                        $canSeeAggregatesForCommission = !$isCommissionMember || ($competition && $competition->isRankingFormed());
                     @endphp
                     @if($isCommissionMember || $userRole === 'superadmin')
                         {{-- Detaljni prikaz statusa za članove komisije --}}
@@ -224,7 +227,7 @@
                                     {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'Nije podnesena' }}
                                 </span>
                             </div>
-                            @if($application->evaluationScores->count() > 0 || $application->status === 'rejected')
+                            @if($canSeeAggregatesForCommission && ($application->evaluationScores->count() > 0 || $application->status === 'rejected'))
                             <div class="info-item">
                                 <span class="info-label">Konačna ocjena</span>
                                 <span class="info-value">{{ number_format($application->getDisplayScore(), 2) }} / 50</span>
@@ -260,7 +263,7 @@
                                     {{ $application->submitted_at ? $application->submitted_at->format('d.m.Y H:i') : 'N/A' }}
                                 </span>
                             </div>
-                            @if($application->evaluationScores->count() > 0 || $application->status === 'rejected')
+                            @if($canSeeAggregatesForCommission && ($application->evaluationScores->count() > 0 || $application->status === 'rejected'))
                             <div class="info-item">
                                 <span class="info-label">Konačna ocjena</span>
                                 <span class="info-value">{{ number_format($application->getDisplayScore(), 2) }} / 50</span>
@@ -426,7 +429,14 @@
         </div>
 
         <!-- Ocjene -->
-        @if($application->evaluationScores->count() > 0)
+        @php
+            $userRole = auth()->user()->role ? auth()->user()->role->name : null;
+            $isCommissionMember = $userRole === 'komisija';
+            $competition = $application->competition;
+            // Članovi komisije vide detaljne ocjene i napomene tek kada je rang lista formirana (sve prijave ocijenjene)
+            $canSeeAggregatesForCommission = !$isCommissionMember || ($competition && $competition->isRankingFormed());
+        @endphp
+        @if($canSeeAggregatesForCommission && $application->evaluationScores->count() > 0)
         <div class="info-card">
             <h2>Ocjene komisije</h2>
             <table style="width: 100%; border-collapse: collapse;">
