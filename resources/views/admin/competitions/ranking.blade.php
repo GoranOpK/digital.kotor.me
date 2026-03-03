@@ -433,12 +433,6 @@
                             @endforeach
                         </tbody>
                     </table>
-
-                    <div style="margin-top: 24px; text-align: center;">
-                        <form method="GET" action="{{ route('admin.competitions.decision', $competition) }}" style="display: inline;">
-                            <button type="submit" class="btn btn-primary" style="background: var(--primary); color: #fff; border: none; cursor: pointer; padding: 12px 24px;">Generiši odluku</button>
-                        </form>
-                    </div>
                 @else
                     {{-- Read-only prikaz za aktivne konkurse - odabir dobitnika se vrši u sekciji Zaključak komisije --}}
                     <table>
@@ -744,11 +738,10 @@
 
                         @if($competition->hasChairmanCompletedDecisions())
                         <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb; text-align: center;">
-                            <form method="GET" action="{{ route('admin.competitions.decision', $competition) }}" style="display: inline;">
-                                <button type="submit" class="btn btn-primary" style="padding: 12px 32px; font-size: 16px; min-width: 200px; background: var(--primary); color: #fff; border: none; cursor: pointer; border-radius: 8px;">
-                                    Generiši Odluku o dodjeli sredstava
-                                </button>
-                            </form>
+                            <p style="margin-bottom: 0; font-size: 14px; color: #6b7280;">
+                                Kada završite sa pregledom rang liste, na dnu stranice možete kliknuti na dugme
+                                <strong>“Generiši odluku”</strong> da biste pripremili odluku o dodjeli sredstava.
+                            </p>
                             <p style="margin-top: 12px; font-size: 14px; color: #6b7280;">Nakon generisanja odluke možete zatvoriti konkurs na stranici odluke.</p>
                         </div>
                         @endif
@@ -757,11 +750,10 @@
                     <div class="info-card commission-decision-section">
                         <h2>Zaključak komisije</h2>
                         <p style="margin-bottom: 12px; font-size: 14px; color: #6b7280;">Sve prijave su ispod minimuma od 30 bodova. Možete generisati odluku i zatvoriti konkurs.</p>
-                        <form method="GET" action="{{ route('admin.competitions.decision', $competition) }}" style="display: inline;">
-                            <button type="submit" class="btn btn-primary" style="padding: 12px 32px; font-size: 16px; min-width: 200px; background: var(--primary); color: #fff; border: none; cursor: pointer; border-radius: 8px;">
-                                Generiši Odluku o dodjeli sredstava
-                            </button>
-                        </form>
+                        <p style="margin-top: 12px; font-size: 14px; color: #6b7280;">
+                            Na dnu ove stranice nalazi se dugme <strong>“Generiši odluku”</strong> kojim možete
+                            pripremiti odluku i zatvoriti konkurs.
+                        </p>
                     </div>
                 @endif
             @endif
@@ -795,11 +787,20 @@
         @endif
 
         <!-- Dugmad na dnu (ekran) -->
-        <div class="no-print" style="margin: 24px 0 8px 0; text-align: right;">
+        <div class="no-print" style="margin: 24px 0 8px 0; text-align: center;">
             @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
-                <button type="button" onclick="window.print();" class="btn" style="background: #6b7280; color: #fff; border: none; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 600;">Štampaj</button>
+                @if($competition->hasChairmanCompletedDecisions())
+                    <form method="GET" action="{{ route('admin.competitions.decision', $competition) }}" style="display: inline-block; margin: 0 8px;">
+                        <button type="submit" class="btn btn-primary" style="background: var(--primary); color: #fff; border: none; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 600;">
+                            Generiši odluku
+                        </button>
+                    </form>
+                @endif
+                <button type="button" onclick="window.print();" class="btn" style="background: #6b7280; color: #fff; border: none; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 600; margin: 0 8px;">
+                    Štampaj
+                </button>
             @endif
-            <a href="{{ route('admin.competitions.show', $competition) }}" class="btn btn-primary">Nazad</a>
+            <a href="{{ route('admin.competitions.show', $competition) }}" class="btn btn-primary" style="margin: 0 8px;">Nazad</a>
         </div>
     </div>
 </div>
