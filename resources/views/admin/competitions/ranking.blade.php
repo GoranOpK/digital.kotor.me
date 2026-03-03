@@ -378,25 +378,6 @@
         </div>
 
         <div class="ranking-main-content">
-        <!-- Informacije o budžetu -->
-        <div class="info-card">
-            <h2>Informacije o budžetu</h2>
-            <div class="budget-info">
-                <div class="budget-item">
-                    <div class="budget-label">Ukupan budžet</div>
-                    <div class="budget-value">{{ number_format($totalBudget, 2, ',', '.') }} €</div>
-                </div>
-                <div class="budget-item">
-                    <div class="budget-label">Iskorišćen budžet</div>
-                    <div class="budget-value">{{ number_format($usedBudget, 2, ',', '.') }} €</div>
-                </div>
-                <div class="budget-item">
-                    <div class="budget-label">Preostali budžet</div>
-                    <div class="budget-value">{{ number_format($remainingBudget, 2, ',', '.') }} €</div>
-                </div>
-            </div>
-        </div>
-
         <!-- Rang lista -->
         <div class="info-card">
             <h2>Rang lista prijava</h2>
