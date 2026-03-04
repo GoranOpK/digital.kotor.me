@@ -85,7 +85,7 @@
         @media (min-width: 768px) {
             .masthead { background-attachment:fixed; }
             .hero { grid-template-columns:1.8fr .6fr; }
-            .hero-title { font-size:36px; }
+            .hero-title { font-size:34px; }
             .services { grid-template-columns:repeat(2, 1fr); }
             .nav-links { display:flex; }
         }
