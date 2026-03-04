@@ -162,7 +162,7 @@
             </header>
             <section class="hero">
                 <div class="hero-card has-bg bg-slice-left" style="--card-bg:url('{{ asset('img/hero-left.jpg') }}');">
-                    <h1 class="hero-title">Dobrodošli na Bidon portal opštine Kotor</h1>
+                    <h1 class="hero-title">Dobrodošli na digitalnu platformu opštine Kotor</h1>
                     <section>
                         <h2>O platformi</h2>
                         <p>
@@ -218,7 +218,7 @@
 
     <footer class="container footer">
         <div>© {{ date('Y') }} Opština Kotor • Sva prava zadržana</div>
-        <div style="font-size:12px;">Kontakt: <a href="mailto:info@kotor.me" style="color:var(--gov-blue); text-decoration:none;">info@kotor.me</a></div>
+        <div style="font-size:12px;">Kontakt: <a href="mailto:informatika@kotor.me" style="color:var(--gov-blue); text-decoration:none;">informatika@kotor.me</a></div>
     </footer>
 </body>
 </html>
