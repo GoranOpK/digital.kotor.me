@@ -63,7 +63,7 @@
                     <select name="user_type" id="user_type" class="form-control" required>
                         <option value="">Izaberite vrstu korisnika</option>
                         <option value="Fizičko lice">Fizičko lice</option>
-                        <option value="Registrovan privredni subjekt">Registrovan privredni subjekt</option>
+                        <option value="Registrovan privredni subjekat">Registrovan privredni subjekat</option>
                     </select>
                     <div class="form-error" id="user_type_error"></div>
                 </div>
@@ -354,7 +354,7 @@
                 {{-- Adresa --}}
                 <div class="form-group">
                     <label for="address" class="form-label">Adresa <span class="required">*</span></label>
-                    <input type="text" name="address" id="address" class="form-control" required autocomplete="street-address" placeholder="Ulica i broj, mesto">
+                    <input type="text" name="address" id="address" class="form-control" required autocomplete="street-address" placeholder="Ulica i broj, mjesto">
                     <div class="form-error" id="address_error"></div>
                 </div>
 
@@ -808,12 +808,12 @@
             function updatePhonePlaceholder() {
                 const prefix = phoneCountry.value;
                 const example = phoneExamples[prefix] || '123456789';
-                phone.placeholder = `Primer: ${example}`;
+                phone.placeholder = `Primjer: ${example}`;
                 
                 // Ažuriraj obaveštenje
                 const selectedOption = phoneCountry.options[phoneCountry.selectedIndex];
                 const countryName = selectedOption ? selectedOption.text.split(' ')[1] : 'odabranoj državi';
-                phoneFormatNote.textContent = `Format: Unesite broj bez nacionalnog prefiksa ${prefix} i bez vodeće nule. Primer: ${example}`;
+                phoneFormatNote.textContent = `Format: Unesite broj bez nacionalnog prefiksa ${prefix} i bez vodeće nule. Primjer: ${example}`;
             }
 
             phoneCountry.addEventListener('change', function() {
