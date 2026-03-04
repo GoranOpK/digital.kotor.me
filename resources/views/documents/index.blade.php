@@ -146,15 +146,19 @@
         background: var(--primary-dark);
     }
     .documents-grid {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        height: 100%;
     }
     .category-section {
         background: #fff;
         border-radius: 12px;
         padding: 24px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 0;
     }
     .category-section h3 {
         font-size: 18px;
@@ -347,23 +351,24 @@
 
         <!-- Informacije o prostoru i Upload sekcija u istom redu -->
         <div class="top-sections-grid">
-            <!-- Informacije o prostoru -->
-            <div class="storage-info">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <span style="font-weight: 600; color: #374151;">Iskorišćen prostor</span>
-                    <span style="font-weight: 600; color: var(--primary);">{{ $usedStorageMB }} MB / {{ $maxStorageMB }} MB</span>
+            <div>
+                <!-- Informacije o prostoru -->
+                <div class="storage-info">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-weight: 600; color: #374151;">Iskorišćen prostor</span>
+                        <span style="font-weight: 600; color: var(--primary);">{{ $usedStorageMB }} MB / {{ $maxStorageMB }} MB</span>
+                    </div>
+                    <div class="storage-bar">
+                        <div class="storage-fill {{ $storagePercentage > 80 ? 'danger' : ($storagePercentage > 60 ? 'warning' : '') }}" 
+                             style="width: {{ $storagePercentage }}%"></div>
+                    </div>
+                    <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
+                        {{ $storagePercentage }}% iskorišćeno
+                    </div>
                 </div>
-                <div class="storage-bar">
-                    <div class="storage-fill {{ $storagePercentage > 80 ? 'danger' : ($storagePercentage > 60 ? 'warning' : '') }}" 
-                         style="width: {{ $storagePercentage }}%"></div>
-                </div>
-                <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                    {{ $storagePercentage }}% iskorišćeno
-                </div>
-            </div>
 
-            <!-- Upload sekcija -->
-            <div class="upload-section">
+                <!-- Upload sekcija -->
+                <div class="upload-section">
             <h2>Dodaj novi dokument</h2>
             <form action="{{ route('documents.store') }}" method="POST" enctype="multipart/form-data" id="document-upload-form" onsubmit="return handleMegaUpload(event)">
                 @csrf
@@ -408,17 +413,17 @@
                 </div>
                 <button type="submit" class="btn-primary">Upload dokumenta</button>
             </form>
+                </div>
             </div>
-        </div>
 
-        <!-- Lista dokumenata po kategorijama -->
-        <div class="documents-grid">
-            @foreach($categories as $categoryKey => $categoryName)
-                <div class="category-section">
-                    <h3>{{ $categoryName }}</h3>
-                    @if(isset($documents[$categoryKey]) && $documents[$categoryKey]->count() > 0)
-                        @foreach($documents[$categoryKey] as $document)
-                            <div class="document-item" data-document-id="{{ $document->id }}">
+            <!-- Lista dokumenata po kategorijama - desna kolona, iste ukupne visine kao upload sekcija -->
+            <div class="documents-grid">
+                @foreach($categories as $categoryKey => $categoryName)
+                    <div class="category-section">
+                        <h3>{{ $categoryName }}</h3>
+                        @if(isset($documents[$categoryKey]) && $documents[$categoryKey]->count() > 0)
+                            @foreach($documents[$categoryKey] as $document)
+                                <div class="document-item" data-document-id="{{ $document->id }}">
                                 <div class="document-info">
                                     <div class="document-name">{{ $document->name }}</div>
                                     <div class="document-meta">
@@ -491,6 +496,7 @@
                     @endif
                 </div>
             @endforeach
+            </div>
         </div>
     </div>
 </div>
