@@ -150,16 +150,6 @@
         grid-template-columns: 1fr;
         gap: 24px;
     }
-    @media (min-width: 768px) {
-        .documents-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    @media (min-width: 1024px) {
-        .documents-grid {
-            grid-template-columns: repeat(3, 1fr);
-        }
-    }
     .category-section {
         background: #fff;
         border-radius: 12px;
