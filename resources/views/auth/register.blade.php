@@ -55,15 +55,15 @@
             <p class="register-subtitle">Popunite formu za kreiranje novog naloga</p>
             
             <form method="POST" action="{{ route('register') }}" id="registerForm">
-        @csrf
+                @csrf
                 
                 {{-- Vrsta korisnika --}}
                 <div class="form-group">
                     <label for="user_type" class="form-label">Vrsta korisnika <span class="required">*</span></label>
                     <select name="user_type" id="user_type" class="form-control" required>
                         <option value="">Izaberite vrstu korisnika</option>
-                        <option value="Fizičko lice">Fizičko lice</option>
-                        <option value="Registrovan privredni subjekat">Registrovan privredni subjekat</option>
+                        <option value="Fizičko lice" @selected(old('user_type') === 'Fizičko lice')>Fizičko lice</option>
+                        <option value="Registrovan privredni subjekt" @selected(old('user_type') === 'Registrovan privredni subjekt')>Registrovan privredni subjekt</option>
                     </select>
                     <div class="form-error" id="user_type_error"></div>
                 </div>
@@ -73,15 +73,15 @@
                     <label for="business_type" class="form-label">Tip privrednog subjekta <span class="required">*</span></label>
                     <select name="business_type" id="business_type" class="form-control">
                         <option value="">Izaberite tip</option>
-                        <option value="Preduzetnik">Preduzetnik</option>
-                        <option value="Ortačko društvo">Ortačko društvo</option>
-                        <option value="Komanditno društvo">Komanditno društvo</option>
-                        <option value="Društvo sa ograničenom odgovornošću">Društvo sa ograničenom odgovornošću</option>
-                        <option value="Akcionarsko društvo">Akcionarsko društvo</option>
-                        <option value="Dio stranog društva (predstavništvo ili poslovna jedinica)">Dio stranog društva (predstavništvo ili poslovna jedinica)</option>
-                        <option value="Udruženje (nvo, fondacije, sportske organizacije)">Udruženje (nvo, fondacije, sportske organizacije)</option>
-                        <option value="Ustanova (državne i privatne)">Ustanova (državne i privatne)</option>
-                        <option value="Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)">Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)</option>
+                        <option value="Preduzetnik" @selected(old('business_type') === 'Preduzetnik')>Preduzetnik</option>
+                        <option value="Ortačko društvo" @selected(old('business_type') === 'Ortačko društvo')>Ortačko društvo</option>
+                        <option value="Komanditno društvo" @selected(old('business_type') === 'Komanditno društvo')>Komanditno društvo</option>
+                        <option value="Društvo sa ograničenom odgovornošću" @selected(old('business_type') === 'Društvo sa ograničenom odgovornošću')>Društvo sa ograničenom odgovornošću</option>
+                        <option value="Akcionarsko društvo" @selected(old('business_type') === 'Akcionarsko društvo')>Akcionarsko društvo</option>
+                        <option value="Dio stranog društva (predstavništvo ili poslovna jedinica)" @selected(old('business_type') === 'Dio stranog društva (predstavništvo ili poslovna jedinica)')>Dio stranog društva (predstavništvo ili poslovna jedinica)</option>
+                        <option value="Udruženje (nvo, fondacije, sportske organizacije)" @selected(old('business_type') === 'Udruženje (nvo, fondacije, sportske organizacije)')>Udruženje (nvo, fondacije, sportske organizacije)</option>
+                        <option value="Ustanova (državne i privatne)" @selected(old('business_type') === 'Ustanova (državne i privatne)')>Ustanova (državne i privatne)</option>
+                        <option value="Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)" @selected(old('business_type') === 'Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)')>Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)</option>
                     </select>
                     <div class="form-error" id="business_type_error"></div>
                 </div>
@@ -91,8 +91,8 @@
                     <label for="residential_status" class="form-label">Status prebivališta <span class="required">*</span></label>
                     <select name="residential_status" id="residential_status" class="form-control">
                         <option value="">Izaberite status</option>
-                        <option value="resident">Rezident</option>
-                        <option value="non-resident">Nerezident</option>
+                        <option value="resident" @selected(old('residential_status') === 'resident')>Rezident</option>
+                        <option value="non-resident" @selected(old('residential_status') === 'non-resident')>Nerezident</option>
                     </select>
                     <div class="form-error" id="residential_status_error"></div>
                 </div>
@@ -100,21 +100,21 @@
                 {{-- Ime --}}
                 <div class="form-group">
                     <label for="first_name" class="form-label">Ime / Ime ovlašćenog lica <span class="required">*</span></label>
-                    <input type="text" name="first_name" id="first_name" class="form-control" required autocomplete="given-name">
+                    <input type="text" name="first_name" id="first_name" class="form-control" required autocomplete="given-name" value="{{ old('first_name') }}">
                     <div class="form-error" id="first_name_error"></div>
                 </div>
 
                 {{-- Prezime --}}
                 <div class="form-group">
                     <label for="last_name" class="form-label">Prezime / Prezime ovlašćenog lica <span class="required">*</span></label>
-                    <input type="text" name="last_name" id="last_name" class="form-control" required autocomplete="family-name">
+                    <input type="text" name="last_name" id="last_name" class="form-control" required autocomplete="family-name" value="{{ old('last_name') }}">
                     <div class="form-error" id="last_name_error"></div>
                 </div>
 
                 {{-- JMB (za rezidenti) --}}
                 <div class="form-group conditional-field" id="jmb_group">
                     <label for="jmb" class="form-label">Jedinstveni matični broj (JMB) <span class="required">*</span></label>
-                    <input type="text" name="jmb" id="jmb" class="form-control" maxlength="13" pattern="[0-9]{13}" placeholder="13 cifara">
+                    <input type="text" name="jmb" id="jmb" class="form-control" maxlength="13" pattern="[0-9]{13}" placeholder="13 cifara" value="{{ old('jmb') }}">
                     <div class="form-note">Format: DDMMGGGRRBBBK (13 cifara bez razmaka)</div>
                     <div class="form-error" id="jmb_error"></div>
                 </div>
@@ -124,8 +124,8 @@
                     <label for="non_resident_id_type" class="form-label">Vrsta identifikacije <span class="required">*</span></label>
                     <select name="non_resident_id_type" id="non_resident_id_type" class="form-control">
                         <option value="">Izaberite vrstu</option>
-                        <option value="jmb">JMB</option>
-                        <option value="passport">Broj pasoša</option>
+                        <option value="jmb" @selected(old('non_resident_id_type') === 'jmb')>JMB</option>
+                        <option value="passport" @selected(old('non_resident_id_type') === 'passport')>Broj pasoša</option>
                     </select>
                     <div class="form-error" id="non_resident_id_type_error"></div>
                 </div>
@@ -133,7 +133,7 @@
                 {{-- JMB za nerezident --}}
                 <div class="form-group conditional-field" id="jmb_non_resident_group">
                     <label for="jmb_non_resident" class="form-label">Jedinstveni matični broj (JMB) <span class="required">*</span></label>
-                    <input type="text" name="jmb_non_resident" id="jmb_non_resident" class="form-control" maxlength="13" pattern="[0-9]{13}" placeholder="13 cifara">
+                    <input type="text" name="jmb_non_resident" id="jmb_non_resident" class="form-control" maxlength="13" pattern="[0-9]{13}" placeholder="13 cifara" value="{{ old('jmb_non_resident') }}">
                     <div class="form-note">Format: DDMMGGGRRBBBK (13 cifara bez razmaka)</div>
                     <div class="form-error" id="jmb_non_resident_error"></div>
                 </div>
@@ -141,7 +141,7 @@
                 {{-- Broj pasoša --}}
                 <div class="form-group conditional-field" id="passport_group">
                     <label for="passport_number" class="form-label">Broj pasoša <span class="required">*</span></label>
-                    <input type="text" name="passport_number" id="passport_number" class="form-control uppercase" placeholder="Brojevi i velika slova">
+                    <input type="text" name="passport_number" id="passport_number" class="form-control uppercase" placeholder="Brojevi i velika slova" value="{{ old('passport_number') }}">
                     <div class="form-note">Kombinacija brojeva i velikih slova</div>
                     <div class="form-error" id="passport_number_error"></div>
                 </div>
@@ -149,7 +149,7 @@
                 {{-- PIB (za privredne subjekte osim Preduzetnika) --}}
                 <div class="form-group conditional-field" id="pib_group">
                     <label for="pib" class="form-label">Poreski identifikacioni broj (PIB) <span class="required">*</span></label>
-                    <input type="text" name="pib" id="pib" class="form-control" maxlength="8" pattern="[0-9]{8}" placeholder="8 cifara">
+                    <input type="text" name="pib" id="pib" class="form-control" maxlength="8" pattern="[0-9]{8}" placeholder="8 cifara" value="{{ old('pib') }}">
                     <div class="form-note">Format: 8 cifara</div>
                     <div class="form-error" id="pib_error"></div>
                 </div>
@@ -157,14 +157,14 @@
                 {{-- Email --}}
                 <div class="form-group">
                     <label for="email" class="form-label">E-mail <span class="required">*</span></label>
-                    <input type="email" name="email" id="email" class="form-control" required autocomplete="email">
+                    <input type="email" name="email" id="email" class="form-control" required autocomplete="email" value="{{ old('email') }}">
                     <div class="form-error" id="email_error"></div>
                 </div>
 
                 {{-- Potvrda emaila --}}
                 <div class="form-group">
                     <label for="email_confirmation" class="form-label">Potvrdi e-mail <span class="required">*</span></label>
-                    <input type="email" name="email_confirmation" id="email_confirmation" class="form-control" required autocomplete="email">
+                    <input type="email" name="email_confirmation" id="email_confirmation" class="form-control" required autocomplete="email" value="{{ old('email_confirmation') }}">
                     <div class="form-error" id="email_confirmation_error"></div>
                 </div>
 
@@ -340,7 +340,7 @@
                                 ];
                                 @endphp
                                 @foreach($countries as $country)
-                                    <option value="{{ $country['code'] }}" data-flag="{{ $country['flag'] }}">{{ $country['flag'] }} {{ $country['name'] }} ({{ $country['code'] }})</option>
+                                    <option value="{{ $country['code'] }}" data-flag="{{ $country['flag'] }}" @selected(old('phone_full') && str_starts_with(old('phone_full'), $country['code']))>{{ $country['flag'] }} {{ $country['name'] }} ({{ $country['code'] }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -354,7 +354,7 @@
                 {{-- Adresa --}}
                 <div class="form-group">
                     <label for="address" class="form-label">Adresa <span class="required">*</span></label>
-                    <input type="text" name="address" id="address" class="form-control" required autocomplete="street-address" placeholder="Ulica i broj, mjesto">
+                    <input type="text" name="address" id="address" class="form-control" required autocomplete="street-address" placeholder="Ulica i broj, mjesto" value="{{ old('address') }}">
                     <div class="form-error" id="address_error"></div>
                 </div>
 
@@ -395,6 +395,8 @@
             const jmbNonResident = document.getElementById('jmb_non_resident');
             const passportNumber = document.getElementById('passport_number');
             const pib = document.getElementById('pib');
+            const firstName = document.getElementById('first_name');
+            const lastName = document.getElementById('last_name');
 
             // Funkcija za prikaz/sakrivanje polja
             function toggleField(fieldId, show) {
@@ -839,6 +841,51 @@
                 const number = phone.value.replace(/\D/g, '');
                 phoneFull.value = number ? prefix + number : '';
             }
+
+            function normalizeName(value) {
+                const trimmed = (value || '').trim();
+                if (!trimmed) return '';
+                const lower = trimmed.toLocaleLowerCase('sr-Latn');
+                return lower.charAt(0).toLocaleUpperCase('sr-Latn') + lower.slice(1);
+            }
+
+            firstName.addEventListener('blur', function () {
+                this.value = normalizeName(this.value);
+            });
+
+            lastName.addEventListener('blur', function () {
+                this.value = normalizeName(this.value);
+            });
+
+            // Inicijalno prikaži polja na osnovu old() vrednosti (nakon server validacije)
+            function initConditionalFields() {
+                const type = userType.value;
+                if (type === 'Fizičko lice') {
+                    toggleField('residential_status_group', true);
+                } else if (type === 'Registrovan privredni subjekt') {
+                    toggleField('business_type_group', true);
+                }
+
+                if (businessType.value === 'Preduzetnik') {
+                    toggleField('residential_status_group', true);
+                } else if (type === 'Registrovan privredni subjekt' && businessType.value && businessType.value !== 'Preduzetnik') {
+                    toggleField('pib_group', true);
+                }
+
+                if (residentialStatus.value === 'resident') {
+                    toggleField('jmb_group', true);
+                } else if (residentialStatus.value === 'non-resident') {
+                    toggleField('non_resident_id_type_group', true);
+                }
+
+                if (nonResidentIdType.value === 'jmb') {
+                    toggleField('jmb_non_resident_group', true);
+                } else if (nonResidentIdType.value === 'passport') {
+                    toggleField('passport_group', true);
+                }
+            }
+
+            initConditionalFields();
 
             // Validacija forme pre slanja
             form.addEventListener('submit', function(e) {
