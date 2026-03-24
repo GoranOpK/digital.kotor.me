@@ -13,6 +13,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\CulturalCalendarController;
 
 // Učitaj auth rute (za email verifikaciju i sl.)
 require __DIR__.'/auth.php';
@@ -66,6 +67,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tenders', [TendersController::class, 'index'])->name('tenders.index'); // Lista tendera
     Route::get('/tenders/{id}', [TendersController::class, 'show'])->name('tenders.show'); // Detalji tendera
     Route::post('/tenders/purchase', [TendersController::class, 'purchase'])->name('tenders.purchase'); // Otkup tenderske dokumentacije
+
+    // Modul za kalendar kulturnih događaja
+    Route::get('/kalendar-kulture', [CulturalCalendarController::class, 'index'])->name('cultural-calendar.index');
 
     // --- DOPUNA: RUTE ZA PORTAL ŽENSKOG PREDUZETNIŠTVA ---
 
