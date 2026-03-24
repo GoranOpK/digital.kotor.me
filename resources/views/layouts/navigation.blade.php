@@ -2,6 +2,7 @@
     @php
         $user = auth()->user();
         $isKkAdmin = $user && $user->role && $user->role->name === 'kk_admin';
+        $isCompetitionAdmin = $user && $user->role && $user->role->name === 'konkurs_admin';
     @endphp
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -9,7 +10,7 @@
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ $isKkAdmin ? route('cultural-calendar.index') : route('dashboard') }}">
+                    <a href="{{ $isKkAdmin ? route('cultural-calendar.index') : ($isCompetitionAdmin ? route('admin.dashboard') : route('dashboard')) }}">
                         <img src="{{ asset('img/logo.png') }}" alt="Digital Kotor" class="block h-10 w-auto">
                     </a>
                 </div>
@@ -22,6 +23,16 @@
                         </x-nav-link>
                         <x-nav-link :href="route('cultural-events.index')" :active="request()->routeIs('cultural-events.*')">
                             Događaji
+                        </x-nav-link>
+                    @elseif($isCompetitionAdmin)
+                        <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
+                            Konkursi panel
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.competitions.index')" :active="request()->routeIs('admin.competitions.*')">
+                            Konkursi
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
+                            Komisije
                         </x-nav-link>
                     @else
                         <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
@@ -106,6 +117,16 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('cultural-events.index')" :active="request()->routeIs('cultural-events.*')">
                     Događaji
+                </x-responsive-nav-link>
+            @elseif($isCompetitionAdmin)
+                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
+                    Konkursi panel
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.competitions.index')" :active="request()->routeIs('admin.competitions.*')">
+                    Konkursi
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
+                    Komisije
                 </x-responsive-nav-link>
             @else
                 <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
