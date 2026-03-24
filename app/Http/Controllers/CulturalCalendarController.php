@@ -16,7 +16,6 @@ class CulturalCalendarController extends Controller
         $weekEnd = Carbon::today()->endOfWeek();
         $minMonthStart = Carbon::today()->startOfMonth();
         $maxMonthStart = Carbon::today()->copy()->addYear()->startOfMonth();
-        $maxAllowedDate = Carbon::today()->copy()->addYear()->endOfMonth();
 
         $selectedMonth = $request->query('month');
         $monthStart = $minMonthStart->copy();
@@ -113,11 +112,14 @@ class CulturalCalendarController extends Controller
         }
 
         $calendarMonthLabel = ucfirst($monthStart->translatedFormat('F Y'));
-        $previousMonth = $monthStart->copy()->subMonth();
-        $nextMonth = $monthStart->copy()->addMonth();
-        $previousMonthQuery = $previousMonth->gte($minMonthStart) ? $previousMonth->format('Y-m') : null;
-        $nextMonthQuery = $nextMonth->lte($maxMonthStart) ? $nextMonth->format('Y-m') : null;
-        $calendarWindowLabel = $today->format('d.m.Y') . ' - ' . $maxAllowedDate->format('d.m.Y');
+        $monthOptions = [];
+        for ($cursor = $minMonthStart->copy(); $cursor->lte($maxMonthStart); $cursor->addMonth()) {
+            $monthOptions[] = [
+                'value' => $cursor->format('Y-m'),
+                'label' => ucfirst($cursor->translatedFormat('F Y')),
+            ];
+        }
+        $selectedMonthValue = $monthStart->format('Y-m');
 
         return view('cultural-calendar.index', compact(
             'todayCount',
@@ -126,9 +128,8 @@ class CulturalCalendarController extends Controller
             'featuredEvents',
             'calendarDays',
             'calendarMonthLabel',
-            'previousMonthQuery',
-            'nextMonthQuery',
-            'calendarWindowLabel'
+            'monthOptions',
+            'selectedMonthValue'
         ));
     }
 
