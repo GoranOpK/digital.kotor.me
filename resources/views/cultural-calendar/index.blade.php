@@ -148,7 +148,7 @@
         </p>
         <div class="kk-hero-actions">
             <a href="#" class="kk-btn-secondary">Kotor grad kulture</a>
-            <a href="#" class="kk-btn-primary">Pogledaj događaje</a>
+            <a href="{{ route('cultural-calendar.events') }}" class="kk-btn-primary">Pogledaj događaje</a>
             <a href="{{ route('cultural-events.index') }}" class="kk-btn-secondary">Administracija događaja</a>
         </div>
     </section>
@@ -156,40 +156,62 @@
     <section class="kk-grid-3">
         <article class="kk-stat-card">
             <div class="kk-stat-label">Danas</div>
-            <div class="kk-stat-value">4 događaja</div>
+            <div class="kk-stat-value">{{ $todayCount }} događaja</div>
         </article>
         <article class="kk-stat-card">
             <div class="kk-stat-label">Ove sedmice</div>
-            <div class="kk-stat-value">17 događaja</div>
+            <div class="kk-stat-value">{{ $weekCount }} događaja</div>
         </article>
         <article class="kk-stat-card">
             <div class="kk-stat-label">Ovog mjeseca</div>
-            <div class="kk-stat-value">42 događaja</div>
+            <div class="kk-stat-value">{{ $monthCount }} događaja</div>
         </article>
     </section>
 
     <section>
         <h2 class="kk-section-title">Istaknuti događaji</h2>
         <div class="kk-featured">
-            <article class="kk-card kk-feature-main">
-                <div class="kk-feature-meta">Petak, 27. mart • 20:00 • Kulturni centar Kotor</div>
-                <div class="kk-feature-title">Veče kamerne muzike: Gudački kvartet Mediteran</div>
-                <p class="mb-0 text-muted">Placeholder opis događaja za wireframe. Ovdje će ići kratka najava, izvođači i osnovne informacije.</p>
-            </article>
-            <div class="kk-feature-list">
-                <article class="kk-card kk-feature-item">
-                    <div class="kk-feature-meta">Subota • Stari grad</div>
-                    <div class="fw-semibold">Otvaranje izložbe savremene fotografije</div>
+            @if($featuredEvents->isNotEmpty())
+                @php($mainEvent = $featuredEvents->first())
+                <article class="kk-card kk-feature-main">
+                    <div class="kk-feature-meta">
+                        {{ optional($mainEvent->datum_od)->format('d.m.Y') }}
+                        @if($mainEvent->vrijeme)
+                            • {{ substr((string) $mainEvent->vrijeme, 0, 5) }}
+                        @endif
+                        @if($mainEvent->lokacija)
+                            • {{ $mainEvent->lokacija }}
+                        @endif
+                    </div>
+                    <div class="kk-feature-title">{{ $mainEvent->naslov }}</div>
+                    <p class="mb-0 text-muted">{{ \Illuminate\Support\Str::limit($mainEvent->opis ?? '', 220) }}</p>
                 </article>
-                <article class="kk-card kk-feature-item">
-                    <div class="kk-feature-meta">Nedjelja • Kino</div>
-                    <div class="fw-semibold">Filmsko veče: Mediteranske priče</div>
+                <div class="kk-feature-list">
+                    @foreach($featuredEvents->slice(1) as $event)
+                        <article class="kk-card kk-feature-item">
+                            <div class="kk-feature-meta">
+                                {{ optional($event->datum_od)->format('d.m.Y') }}
+                                @if($event->lokacija)
+                                    • {{ $event->lokacija }}
+                                @endif
+                            </div>
+                            <div class="fw-semibold">{{ $event->naslov }}</div>
+                        </article>
+                    @endforeach
+                </div>
+            @else
+                <article class="kk-card kk-feature-main">
+                    <div class="kk-feature-meta">Nema istaknutih događaja</div>
+                    <div class="kk-feature-title">Dodajte istaknuti događaj iz administracije</div>
+                    <p class="mb-0 text-muted">Kada označite događaj kao istaknuti, biće prikazan na ovoj početnoj stranici.</p>
                 </article>
-                <article class="kk-card kk-feature-item">
-                    <div class="kk-feature-meta">Ponedjeljak • Trg od oružja</div>
-                    <div class="fw-semibold">Dječji kulturni program na otvorenom</div>
-                </article>
-            </div>
+                <div class="kk-feature-list">
+                    <article class="kk-card kk-feature-item">
+                        <div class="kk-feature-meta">Savjet</div>
+                        <div class="fw-semibold">Otvorite "Administracija događaja"</div>
+                    </article>
+                </div>
+            @endif
         </div>
     </section>
 

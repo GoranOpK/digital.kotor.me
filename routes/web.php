@@ -72,6 +72,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Modul za kalendar kulturnih događaja (samo KK administrator)
     Route::middleware('role:kk_admin')->group(function () {
         Route::get('/kalendar-kulture', [CulturalCalendarController::class, 'index'])->name('cultural-calendar.index');
+        Route::get('/kalendar-kulture/pregled-dogadjaja', [CulturalCalendarController::class, 'events'])->name('cultural-calendar.events');
         Route::resource('/kalendar-kulture/dogadjaji', CulturalEventController::class)
             ->except(['show'])
             ->names('cultural-events');
