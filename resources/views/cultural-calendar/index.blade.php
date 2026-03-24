@@ -63,7 +63,7 @@
         overflow: hidden;
         background:
             linear-gradient(rgba(11, 20, 37, 0.78), rgba(11, 20, 37, 0.78)),
-            url('{{ asset('img/hero-left.jpg') }}') center/cover no-repeat;
+            url('{{ asset('img/kotor-bedemi-view.png') }}') center/cover no-repeat;
         color: #fff;
     }
     .kk-newsletter {
