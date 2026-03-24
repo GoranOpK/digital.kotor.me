@@ -69,10 +69,13 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::get('/tenders/{id}', [TendersController::class, 'show'])->name('tenders.show'); // Detalji tendera
     Route::post('/tenders/purchase', [TendersController::class, 'purchase'])->name('tenders.purchase'); // Otkup tenderske dokumentacije
 
-    // Modul za kalendar kulturnih događaja (samo KK administrator)
+    // Modul za kalendar kulturnih događaja (pregled za sve prijavljene korisnike)
+    Route::get('/kalendar-kulture', [CulturalCalendarController::class, 'index'])->name('cultural-calendar.index');
+    Route::get('/kalendar-kulture/pregled-dogadjaja', [CulturalCalendarController::class, 'events'])->name('cultural-calendar.events');
+    Route::get('/kalendar-kulture/dan/{date}', [CulturalCalendarController::class, 'day'])->name('cultural-calendar.day');
+
+    // Administracija događaja (samo KK administrator)
     Route::middleware('role:kk_admin')->group(function () {
-        Route::get('/kalendar-kulture', [CulturalCalendarController::class, 'index'])->name('cultural-calendar.index');
-        Route::get('/kalendar-kulture/pregled-dogadjaja', [CulturalCalendarController::class, 'events'])->name('cultural-calendar.events');
         Route::resource('/kalendar-kulture/dogadjaji', CulturalEventController::class)
             ->except(['show'])
             ->names('cultural-events');

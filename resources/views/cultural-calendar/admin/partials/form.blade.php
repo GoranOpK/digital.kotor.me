@@ -1,5 +1,9 @@
 @php
     $isEdit = isset($event) && $event;
+    $defaultStartDate = request('datum_od');
+    if ($defaultStartDate === null && isset($event->datum_od)) {
+        $defaultStartDate = $event->datum_od->format('Y-m-d');
+    }
     $timeValue = old('vrijeme');
     if ($timeValue === null && $isEdit && $event->vrijeme) {
         $timeValue = substr((string) $event->vrijeme, 0, 5);
@@ -45,7 +49,7 @@
 
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Datum od *</label>
-        <input type="date" name="datum_od" value="{{ old('datum_od', isset($event->datum_od) ? $event->datum_od->format('Y-m-d') : '') }}" class="w-full border-gray-300 rounded-md" required>
+        <input type="date" name="datum_od" value="{{ old('datum_od', $defaultStartDate) }}" class="w-full border-gray-300 rounded-md" required>
     </div>
 
     <div>

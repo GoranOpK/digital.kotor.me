@@ -54,6 +54,7 @@
     .kk-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
     .kk-day { border-radius: 8px; border: 1px solid var(--kk-border); text-align: center; padding: 8px 0; font-size: .9rem; background: #fff; }
     .kk-day.has-event { border-color: #f3c0c4; background: #fff4f5; color: var(--kk-burgundy); font-weight: 600; }
+    .kk-day-link { display: block; text-decoration: none; color: inherit; }
     .kk-filter-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 5px; display: block; }
     .kk-filter-box { border: 1px solid var(--kk-border); border-radius: 8px; padding: 9px 10px; margin-bottom: 10px; color: #111827; background: #fff; min-height: 40px; display: flex; align-items: center; }
     .kk-block-title { text-align: center; margin-bottom: 12px; }
@@ -149,7 +150,9 @@
         <div class="kk-hero-actions">
             <a href="#" class="kk-btn-secondary">Kotor grad kulture</a>
             <a href="{{ route('cultural-calendar.events') }}" class="kk-btn-primary">Pogledaj događaje</a>
-            <a href="{{ route('cultural-events.index') }}" class="kk-btn-secondary">Administracija događaja</a>
+            @if(auth()->user() && auth()->user()->role && auth()->user()->role->name === 'kk_admin')
+                <a href="{{ route('cultural-events.index') }}" class="kk-btn-secondary">Administracija događaja</a>
+            @endif
         </div>
     </section>
 
@@ -217,12 +220,14 @@
 
     <section class="kk-bottom">
         <article class="kk-card kk-calendar">
-            <h3 class="h5 mb-0 kk-block-title">Mjesečni kalendar (placeholder)</h3>
-            <div class="text-muted small mt-1 text-center">Mart 2026</div>
+            <h3 class="h5 mb-0 kk-block-title">Mjesečni kalendar</h3>
+            <div class="text-muted small mt-1 text-center">{{ $calendarMonthLabel }}</div>
             <div class="kk-calendar-grid">
-                <div class="kk-day">1</div><div class="kk-day">2</div><div class="kk-day has-event">3</div><div class="kk-day">4</div><div class="kk-day">5</div><div class="kk-day">6</div><div class="kk-day">7</div>
-                <div class="kk-day">8</div><div class="kk-day">9</div><div class="kk-day has-event">10</div><div class="kk-day">11</div><div class="kk-day">12</div><div class="kk-day">13</div><div class="kk-day has-event">14</div>
-                <div class="kk-day">15</div><div class="kk-day">16</div><div class="kk-day">17</div><div class="kk-day has-event">18</div><div class="kk-day">19</div><div class="kk-day">20</div><div class="kk-day">21</div>
+                @foreach($calendarDays as $day)
+                    <div class="kk-day {{ $day['has_event'] ? 'has-event' : '' }}">
+                        <a href="{{ route('cultural-calendar.day', $day['date']) }}" class="kk-day-link">{{ $day['day'] }}</a>
+                    </div>
+                @endforeach
             </div>
         </article>
 
