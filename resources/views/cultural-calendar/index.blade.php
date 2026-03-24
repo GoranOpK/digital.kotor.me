@@ -219,7 +219,7 @@
     <section class="kk-footer-wrap">
         <div class="kk-newsletter">
             <h3>Pratite <span>kalendar kulture</span></h3>
-            <p>Ostavite e-mail na koji želite da vas obavještavamo o novim događajima. Ovo je vizuelni placeholder do povezivanja sa backend-om.</p>
+            <p>Informišite se o kulturnim dešavanjima u Kotoru putem e-mail obavještenja.</p>
             <div class="kk-news-form">
                 <input type="email" placeholder="email@email.com">
                 <label class="kk-news-check">
