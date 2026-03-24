@@ -44,11 +44,24 @@
     .kk-stat-value { font-size: 1.45rem; font-weight: 700; color: #111827; }
     .kk-section-title { font-size: 1.25rem; margin-bottom: 14px; font-weight: 700; color: #111827; text-align: center; }
     .kk-featured { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: stretch; }
-    .kk-feature-main { background: var(--kk-bg-soft); padding: 20px; }
+    .kk-feature-card {
+        border: 1px solid var(--kk-border);
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+    }
+    .kk-feature-image {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        display: block;
+    }
+    .kk-feature-content {
+        padding: 12px 14px;
+    }
     .kk-feature-meta { font-size: .88rem; color: var(--kk-muted); margin-bottom: 8px; }
-    .kk-feature-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
-    .kk-feature-list { display: grid; gap: 12px; }
-    .kk-feature-item { padding: 14px; background: #fff; min-height: 90px; }
+    .kk-feature-title { font-size: 1rem; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
+    .kk-feature-desc { font-size: .88rem; color: #4b5563; margin: 0; }
     .kk-bottom { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; margin-bottom: 30px; align-items: start; }
     .kk-calendar { padding: 20px; }
     .kk-featured-wrap { padding: 20px; }
@@ -294,38 +307,40 @@
             <h2 class="kk-section-title">Istaknuti događaji</h2>
             <div class="kk-featured">
                 @if($featuredEvents->isNotEmpty())
-                    @php($mainEvent = $featuredEvents->first())
-                    <article class="kk-card kk-feature-main">
-                        <div class="kk-feature-meta">
-                            {{ optional($mainEvent->datum_od)->format('d.m.Y') }}
-                            @if($mainEvent->vrijeme)
-                                • {{ substr((string) $mainEvent->vrijeme, 0, 5) }}
-                            @endif
-                            @if($mainEvent->lokacija)
-                                • {{ $mainEvent->lokacija }}
-                            @endif
-                        </div>
-                        <div class="kk-feature-title">{{ $mainEvent->naslov }}</div>
-                        <p class="mb-0 text-muted">{{ \Illuminate\Support\Str::limit($mainEvent->opis ?? '', 220) }}</p>
-                    </article>
-                    <div class="kk-feature-list">
-                        @foreach($featuredEvents->slice(1) as $event)
-                            <article class="kk-card kk-feature-item">
+                    @foreach($featuredEvents as $event)
+                        <article class="kk-feature-card">
+                            <img
+                                src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
+                                alt="{{ $event->naslov }}"
+                                class="kk-feature-image"
+                            >
+                            <div class="kk-feature-content">
                                 <div class="kk-feature-meta">
                                     {{ optional($event->datum_od)->format('d.m.Y') }}
+                                    @if($event->vrijeme)
+                                        • {{ substr((string) $event->vrijeme, 0, 5) }}
+                                    @endif
                                     @if($event->lokacija)
                                         • {{ $event->lokacija }}
                                     @endif
                                 </div>
-                                <div class="fw-semibold">{{ $event->naslov }}</div>
-                            </article>
-                        @endforeach
-                    </div>
+                                <div class="kk-feature-title">{{ $event->naslov }}</div>
+                                <p class="kk-feature-desc">{{ \Illuminate\Support\Str::limit($event->opis ?? '', 120) }}</p>
+                            </div>
+                        </article>
+                    @endforeach
                 @else
-                    <article class="kk-card kk-feature-main">
+                    <article class="kk-feature-card">
+                        <img
+                            src="{{ asset('img/kalendar-kulture-default-event.png') }}"
+                            alt="Podrazumijevana slika događaja"
+                            class="kk-feature-image"
+                        >
+                        <div class="kk-feature-content">
                         <div class="kk-feature-meta">Nema istaknutih događaja</div>
                         <div class="kk-feature-title">Dodajte istaknuti događaj iz administracije</div>
-                        <p class="mb-0 text-muted">Kada označite događaj kao istaknuti, biće prikazan na ovoj početnoj stranici.</p>
+                        <p class="kk-feature-desc">Kada označite događaj kao istaknuti, biće prikazan na ovoj početnoj stranici.</p>
+                        </div>
                     </article>
                 @endif
             </div>

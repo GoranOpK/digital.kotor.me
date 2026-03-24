@@ -88,6 +88,10 @@
             <div class="mt-3">
                 <div class="text-xs text-gray-500 mb-2">Trenutna slika:</div>
                 <img src="{{ asset('storage/' . $event->slika) }}" alt="Slika događaja" class="h-28 rounded-md border border-gray-200">
+                <label class="inline-flex items-center gap-2 text-sm text-gray-700 mt-3">
+                    <input type="checkbox" name="remove_image" value="1" class="rounded border-gray-300" @checked(old('remove_image'))>
+                    Ukloni postojeću sliku
+                </label>
             </div>
         @endif
     </div>

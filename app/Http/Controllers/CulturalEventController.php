@@ -67,12 +67,16 @@ class CulturalEventController extends Controller
         $validated = $request->validate($this->rules());
         $validated['featured'] = $request->boolean('featured');
         $this->assertFeaturedLimit($validated, $culturalEvent);
+        $removeImage = $request->boolean('remove_image');
 
         if ($request->hasFile('slika')) {
             if ($culturalEvent->slika) {
                 Storage::disk('public')->delete($culturalEvent->slika);
             }
             $validated['slika'] = $request->file('slika')->store('cultural-events', 'public');
+        } elseif ($removeImage && $culturalEvent->slika) {
+            Storage::disk('public')->delete($culturalEvent->slika);
+            $validated['slika'] = null;
         }
 
         $validated['created_by'] = $culturalEvent->created_by ?? auth()->id();
@@ -111,6 +115,7 @@ class CulturalEventController extends Controller
             'lokacija' => ['nullable', 'string', 'max:255'],
             'kategorija' => ['required', Rule::in(CulturalEvent::CATEGORIES)],
             'slika' => ['nullable', 'image', 'max:5120'],
+            'remove_image' => ['nullable', 'boolean'],
             'status' => ['required', Rule::in(CulturalEvent::STATUSES)],
             'featured' => ['nullable', 'boolean'],
         ];
