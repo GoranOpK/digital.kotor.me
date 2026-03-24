@@ -147,7 +147,7 @@
             Savremeni pregled kulturnih događaja u Kotoru: koncerti, izložbe, predstave, dječji program i manifestacije na jednom mjestu.
         </p>
         <div class="kk-hero-actions">
-            <a href="#" class="kk-btn-secondary">O nama</a>
+            <a href="#" class="kk-btn-secondary">Kotor grad kulture</a>
             <a href="#" class="kk-btn-primary">Pogledaj događaje</a>
         </div>
     </section>
