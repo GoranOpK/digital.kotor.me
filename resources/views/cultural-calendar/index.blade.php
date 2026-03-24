@@ -57,22 +57,82 @@
     .kk-filter-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 5px; display: block; }
     .kk-filter-box { border: 1px solid var(--kk-border); border-radius: 8px; padding: 9px 10px; margin-bottom: 10px; color: #111827; background: #fff; min-height: 40px; display: flex; align-items: center; }
     .kk-block-title { text-align: center; margin-bottom: 12px; }
+    .kk-footer-wrap {
+        margin-top: 34px;
+        border-radius: 14px;
+        overflow: hidden;
+        background:
+            linear-gradient(rgba(11, 20, 37, 0.78), rgba(11, 20, 37, 0.78)),
+            url('{{ asset('img/hero-left.jpg') }}') center/cover no-repeat;
+        color: #fff;
+    }
+    .kk-newsletter {
+        padding: 34px 20px 30px;
+        text-align: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .kk-newsletter h3 {
+        margin-bottom: 8px;
+        font-size: 1.9rem;
+        font-weight: 700;
+    }
+    .kk-newsletter h3 span {
+        color: #d7263d;
+    }
+    .kk-newsletter p {
+        margin: 0 auto 16px;
+        max-width: 700px;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.92rem;
+    }
+    .kk-news-form {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .kk-news-form input[type="email"] {
+        width: min(320px, 100%);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 6px;
+        padding: 9px 10px;
+        font-size: 0.9rem;
+    }
+    .kk-news-check {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.88rem;
+        color: rgba(255, 255, 255, 0.92);
+    }
+    .kk-news-btn {
+        border: 1px solid #d7263d;
+        color: #fff;
+        background: #d7263d;
+        border-radius: 6px;
+        padding: 9px 16px;
+        font-size: 0.88rem;
+        font-weight: 600;
+    }
     .kk-contact {
-        margin-top: 30px;
-        border: 1px solid var(--kk-border);
-        border-radius: 12px;
-        padding: 20px;
-        background: #fff;
+        text-align: center;
+        padding: 24px 16px 28px;
     }
     .kk-contact-title {
         font-size: 1.05rem;
         font-weight: 700;
         margin-bottom: 10px;
-        color: #111827;
+        color: #fff;
     }
     .kk-contact p {
-        margin-bottom: 8px;
-        color: #374151;
+        margin-bottom: 6px;
+        color: rgba(255, 255, 255, 0.92);
+    }
+    .kk-contact a {
+        color: #fff;
+        text-decoration: underline;
     }
     @media (max-width: 992px) {
         .kk-grid-3, .kk-featured, .kk-bottom { grid-template-columns: 1fr; }
@@ -156,13 +216,28 @@
         </aside>
     </section>
 
-    <section class="kk-contact">
-        <h3 class="kk-contact-title">Sekretarijat za kulturu, sport i društvene djelatnosti</h3>
-        <p><strong>Radno vrijeme:</strong></p>
-        <p>Svakog radnog dana od 7:00 do 15:00 časova.</p>
-        <p class="mt-3 mb-1"><strong>Kontakt:</strong></p>
-        <p class="mb-1">tel. 032/325-874</p>
-        <p class="mb-0">E-mail adresa: <a href="mailto:kultura@kotor.me">kultura@kotor.me</a></p>
+    <section class="kk-footer-wrap">
+        <div class="kk-newsletter">
+            <h3>Saznajte <span>novosti</span></h3>
+            <p>Ostavite e-mail na koji želite da vas obavještavamo o novim događajima. Ovo je vizuelni placeholder do povezivanja sa backend-om.</p>
+            <div class="kk-news-form">
+                <input type="email" placeholder="email@email.com">
+                <label class="kk-news-check">
+                    <span>Odjavi me</span>
+                    <input type="checkbox">
+                </label>
+                <button type="button" class="kk-news-btn">Pošalji</button>
+            </div>
+        </div>
+
+        <div class="kk-contact">
+            <h3 class="kk-contact-title">Sekretarijat za kulturu, sport i društvene djelatnosti</h3>
+            <p><strong>Radno vrijeme:</strong></p>
+            <p>Svakog radnog dana od 7:00 do 15:00 časova.</p>
+            <p class="mt-3 mb-1"><strong>Kontakt:</strong></p>
+            <p class="mb-1">tel. 032/325-874</p>
+            <p class="mb-0">E-mail adresa: <a href="mailto:kultura@kotor.me">kultura@kotor.me</a></p>
+        </div>
     </section>
 </div>
 @endsection
