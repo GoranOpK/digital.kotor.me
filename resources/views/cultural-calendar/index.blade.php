@@ -69,6 +69,21 @@
         padding: 8px 10px;
     }
     .kk-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+    .kk-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .kk-weekday {
+        text-align: center;
+        font-size: 12px;
+        font-weight: 700;
+        color: #6b7280;
+        padding: 4px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
     .kk-day {
         position: relative;
         border-radius: 8px;
@@ -240,6 +255,15 @@
                         @endforeach
                     </select>
                 </form>
+            </div>
+            <div class="kk-weekdays">
+                <div class="kk-weekday">Ponedeljak</div>
+                <div class="kk-weekday">Utorak</div>
+                <div class="kk-weekday">Srijeda</div>
+                <div class="kk-weekday">Četvrtak</div>
+                <div class="kk-weekday">Petak</div>
+                <div class="kk-weekday">Subota</div>
+                <div class="kk-weekday">Nedjelja</div>
             </div>
             <div class="kk-calendar-grid">
                 @foreach($calendarDays as $day)
