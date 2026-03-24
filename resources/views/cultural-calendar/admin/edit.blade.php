@@ -13,8 +13,8 @@
         @csrf
         @method('PUT')
         @include('cultural-calendar.admin.partials.form', ['event' => $event])
-        <div class="mt-6">
-            <button type="submit" class="px-5 py-2.5 bg-red-700 text-white rounded-md hover:bg-red-800">
+        <div style="margin-top:24px; padding-top:12px; border-top:1px solid #e5e7eb;">
+            <button type="submit" style="display:inline-block; background:#b91c1c; color:#fff; border:none; border-radius:8px; padding:10px 16px; font-weight:600; cursor:pointer;">
                 Sačuvaj izmjene
             </button>
         </div>

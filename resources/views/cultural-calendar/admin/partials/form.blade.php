@@ -59,8 +59,14 @@
     </div>
 
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Lokacija</label>
-        <input type="text" name="lokacija" value="{{ old('lokacija', $event->lokacija ?? '') }}" class="w-full border-gray-300 rounded-md">
+        <label style="display:block; font-size:14px; font-weight:600; color:#374151; margin-bottom:6px;">Lokacija</label>
+        <input
+            type="text"
+            name="lokacija"
+            value="{{ old('lokacija', $event->lokacija ?? '') }}"
+            placeholder="Npr. Kulturni centar Kotor"
+            style="width:100%; border:1px solid #d1d5db; border-radius:6px; padding:9px 10px;"
+        >
     </div>
 
     <div class="md:col-span-2">
