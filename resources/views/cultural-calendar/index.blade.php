@@ -57,6 +57,23 @@
     .kk-filter-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 5px; display: block; }
     .kk-filter-box { border: 1px solid var(--kk-border); border-radius: 8px; padding: 9px 10px; margin-bottom: 10px; color: #111827; background: #fff; min-height: 40px; display: flex; align-items: center; }
     .kk-block-title { text-align: center; margin-bottom: 12px; }
+    .kk-contact {
+        margin-top: 30px;
+        border: 1px solid var(--kk-border);
+        border-radius: 12px;
+        padding: 20px;
+        background: #fff;
+    }
+    .kk-contact-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+        color: #111827;
+    }
+    .kk-contact p {
+        margin-bottom: 8px;
+        color: #374151;
+    }
     @media (max-width: 992px) {
         .kk-grid-3, .kk-featured, .kk-bottom { grid-template-columns: 1fr; }
     }
@@ -137,6 +154,15 @@
             <label class="kk-filter-label">Datum do</label>
             <div class="kk-filter-box">dd.mm.gggg</div>
         </aside>
+    </section>
+
+    <section class="kk-contact">
+        <h3 class="kk-contact-title">Sekretarijat za kulturu, sport i društvene djelatnosti</h3>
+        <p><strong>Radno vrijeme:</strong></p>
+        <p>Svakog radnog dana od 7:00 do 15:00 časova.</p>
+        <p class="mt-3 mb-1"><strong>Kontakt:</strong></p>
+        <p class="mb-1">tel. 032/325-874</p>
+        <p class="mb-0">E-mail adresa: <a href="mailto:kultura@kotor.me">kultura@kotor.me</a></p>
     </section>
 </div>
 @endsection
