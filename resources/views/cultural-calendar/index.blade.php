@@ -53,7 +53,8 @@
     .kk-feature-image {
         width: 100%;
         height: 150px;
-        object-fit: cover;
+        object-fit: contain;
+        background: #f3f4f6;
         display: block;
     }
     .kk-feature-content {
