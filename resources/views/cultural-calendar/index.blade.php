@@ -1,27 +1,135 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container py-4">
-    <div class="text-center mb-4">
-        <img
-            src="{{ asset('img/kalendar-kulture-logo.png') }}"
-            alt="Logo Kalendara kulture"
-            style="max-width: 260px; width: 100%; height: auto;"
-        >
-    </div>
+<style>
+    .kk-page {
+        --kk-burgundy: #7a0f17;
+        --kk-muted: #6b7280;
+        --kk-border: #e5e7eb;
+        --kk-bg-soft: #f8f9fb;
+    }
+    .kk-hero {
+        border-radius: 16px;
+        padding: 40px 28px;
+        background:
+            linear-gradient(rgba(20, 20, 20, 0.45), rgba(20, 20, 20, 0.45)),
+            url('{{ asset('img/hero-left.jpg') }}') center/cover no-repeat;
+        color: #fff;
+        margin-bottom: 24px;
+    }
+    .kk-logo {
+        max-width: 170px;
+        width: 100%;
+        height: auto;
+        margin-bottom: 18px;
+        background: rgba(255, 255, 255, 0.94);
+        border-radius: 10px;
+        padding: 10px;
+    }
+    .kk-hero-title { font-size: 2rem; line-height: 1.2; margin-bottom: 10px; font-weight: 700; }
+    .kk-hero-text { max-width: 560px; color: #f3f4f6; margin-bottom: 16px; }
+    .kk-btn-primary, .kk-btn-secondary {
+        display: inline-block; text-decoration: none; border-radius: 8px; padding: 9px 14px; font-weight: 600; font-size: .95rem;
+    }
+    .kk-btn-primary { background: var(--kk-burgundy); color: #fff; border: 1px solid var(--kk-burgundy); }
+    .kk-btn-secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.55); margin-left: 8px; }
+    .kk-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .kk-stat-card, .kk-card { border: 1px solid var(--kk-border); border-radius: 12px; background: #fff; }
+    .kk-stat-card { padding: 16px; }
+    .kk-stat-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 6px; }
+    .kk-stat-value { font-size: 1.45rem; font-weight: 700; color: #111827; }
+    .kk-section-title { font-size: 1.25rem; margin-bottom: 14px; font-weight: 700; color: #111827; }
+    .kk-featured { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .kk-feature-main { background: var(--kk-bg-soft); padding: 20px; }
+    .kk-feature-meta { font-size: .88rem; color: var(--kk-muted); margin-bottom: 8px; }
+    .kk-feature-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
+    .kk-feature-list { display: grid; gap: 12px; }
+    .kk-feature-item { padding: 14px; background: #fff; }
+    .kk-bottom { display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; }
+    .kk-calendar, .kk-filters { padding: 18px; }
+    .kk-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+    .kk-day { border-radius: 8px; border: 1px solid var(--kk-border); text-align: center; padding: 8px 0; font-size: .9rem; background: #fff; }
+    .kk-day.has-event { border-color: #f3c0c4; background: #fff4f5; color: var(--kk-burgundy); font-weight: 600; }
+    .kk-filter-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 5px; display: block; }
+    .kk-filter-box { border: 1px solid var(--kk-border); border-radius: 8px; padding: 9px 10px; margin-bottom: 10px; color: #111827; background: #fff; }
+    @media (max-width: 992px) {
+        .kk-grid-3, .kk-featured, .kk-bottom { grid-template-columns: 1fr; }
+    }
+</style>
 
-    <h2 class="mb-3">Kalendar kulture</h2>
-    <p class="text-muted mb-4">
-        Dobrodošli u modul za pregled kulturnih događaja. Uskoro će ovdje biti dostupan kalendar sa najavama manifestacija, koncerata, izložbi i drugih dešavanja.
-    </p>
+<div class="container py-4 kk-page">
+    <section class="kk-hero">
+        <img src="{{ asset('img/kalendar-kulture-logo.png') }}" alt="Logo Kalendara kulture" class="kk-logo">
+        <h1 class="kk-hero-title">Kalendar kulture</h1>
+        <p class="kk-hero-text">
+            Savremeni pregled kulturnih događaja u Kotoru: koncerti, izložbe, predstave, dječji program i manifestacije na jednom mjestu.
+        </p>
+        <a href="#" class="kk-btn-primary">Pogledaj događaje</a>
+        <a href="#" class="kk-btn-secondary">Današnji program</a>
+    </section>
 
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title mb-2">Modul je aktivan</h5>
-            <p class="card-text mb-0">
-                Ovo je početna stranica modula <strong>Kalendar kulture</strong>.
-            </p>
+    <section class="kk-grid-3">
+        <article class="kk-stat-card">
+            <div class="kk-stat-label">Danas</div>
+            <div class="kk-stat-value">4 događaja</div>
+        </article>
+        <article class="kk-stat-card">
+            <div class="kk-stat-label">Ove sedmice</div>
+            <div class="kk-stat-value">17 događaja</div>
+        </article>
+        <article class="kk-stat-card">
+            <div class="kk-stat-label">Ovog mjeseca</div>
+            <div class="kk-stat-value">42 događaja</div>
+        </article>
+    </section>
+
+    <section>
+        <h2 class="kk-section-title">Istaknuti događaji</h2>
+        <div class="kk-featured">
+            <article class="kk-card kk-feature-main">
+                <div class="kk-feature-meta">Petak, 27. mart • 20:00 • Kulturni centar Kotor</div>
+                <div class="kk-feature-title">Veče kamerne muzike: Gudački kvartet Mediteran</div>
+                <p class="mb-0 text-muted">Placeholder opis događaja za wireframe. Ovdje će ići kratka najava, izvođači i osnovne informacije.</p>
+            </article>
+            <div class="kk-feature-list">
+                <article class="kk-card kk-feature-item">
+                    <div class="kk-feature-meta">Subota • Stari grad</div>
+                    <div class="fw-semibold">Otvaranje izložbe savremene fotografije</div>
+                </article>
+                <article class="kk-card kk-feature-item">
+                    <div class="kk-feature-meta">Nedjelja • Kino</div>
+                    <div class="fw-semibold">Filmsko veče: Mediteranske priče</div>
+                </article>
+                <article class="kk-card kk-feature-item">
+                    <div class="kk-feature-meta">Ponedjeljak • Trg od oružja</div>
+                    <div class="fw-semibold">Dječji kulturni program na otvorenom</div>
+                </article>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <section class="kk-bottom">
+        <article class="kk-card kk-calendar">
+            <h3 class="h5 mb-0">Mjesečni kalendar (placeholder)</h3>
+            <div class="text-muted small mt-1">Mart 2026</div>
+            <div class="kk-calendar-grid">
+                <div class="kk-day">1</div><div class="kk-day">2</div><div class="kk-day has-event">3</div><div class="kk-day">4</div><div class="kk-day">5</div><div class="kk-day">6</div><div class="kk-day">7</div>
+                <div class="kk-day">8</div><div class="kk-day">9</div><div class="kk-day has-event">10</div><div class="kk-day">11</div><div class="kk-day">12</div><div class="kk-day">13</div><div class="kk-day has-event">14</div>
+                <div class="kk-day">15</div><div class="kk-day">16</div><div class="kk-day">17</div><div class="kk-day has-event">18</div><div class="kk-day">19</div><div class="kk-day">20</div><div class="kk-day">21</div>
+            </div>
+        </article>
+
+        <aside class="kk-card kk-filters">
+            <h3 class="h5 mb-3">Filteri (placeholder)</h3>
+            <label class="kk-filter-label">Kategorija</label>
+            <div class="kk-filter-box">Svi događaji</div>
+            <label class="kk-filter-label">Lokacija</label>
+            <div class="kk-filter-box">Sve lokacije</div>
+            <label class="kk-filter-label">Datum od</label>
+            <div class="kk-filter-box">dd.mm.gggg</div>
+            <label class="kk-filter-label">Datum do</label>
+            <div class="kk-filter-box">dd.mm.gggg</div>
+        </aside>
+    </section>
 </div>
 @endsection
