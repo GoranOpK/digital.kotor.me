@@ -43,7 +43,7 @@
     .kk-stat-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 6px; }
     .kk-stat-value { font-size: 1.45rem; font-weight: 700; color: #111827; }
     .kk-section-title { font-size: 1.25rem; margin-bottom: 14px; font-weight: 700; color: #111827; text-align: center; }
-    .kk-featured { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 30px; align-items: stretch; }
+    .kk-featured { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; margin-bottom: 30px; align-items: stretch; }
     .kk-feature-main { background: var(--kk-bg-soft); padding: 20px; }
     .kk-feature-meta { font-size: .88rem; color: var(--kk-muted); margin-bottom: 8px; }
     .kk-feature-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
