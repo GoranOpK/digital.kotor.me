@@ -233,7 +233,7 @@
         <div class="kk-contact">
             <h3 class="kk-contact-title">Sekretarijat za kulturu, sport i društvene djelatnosti</h3>
             <p><strong>Radno vrijeme:</strong></p>
-            <p>Svakog radnog dana od 7:00 do 15:00 časova.</p>
+            <p>Radnim danima od 7:00 do 15:00 časova.</p>
             <p class="mt-3 mb-1"><strong>Kontakt:</strong></p>
             <p class="mb-1">tel. 032/325-874</p>
             <p class="mb-0">E-mail adresa: <a href="mailto:kultura@kotor.me">kultura@kotor.me</a></p>
