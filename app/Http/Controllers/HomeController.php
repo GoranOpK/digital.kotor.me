@@ -309,6 +309,12 @@ class HomeController extends Controller
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
         $isSuperAdmin = $user->role && $user->role->name === 'superadmin';
         $isKomisija = $user->role && $user->role->name === 'komisija';
+        $isKkAdmin = $user->role && $user->role->name === 'kk_admin';
+
+        // KK administrator koristi isključivo modul Kalendar kulture
+        if ($isKkAdmin) {
+            return redirect()->route('cultural-calendar.index');
+        }
         
         // Ako je konkurs admin, pripremi podatke za admin dashboard
         if ($isCompetitionAdmin) {
