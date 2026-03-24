@@ -51,6 +51,30 @@
     .kk-feature-item { padding: 14px; background: #fff; min-height: 90px; }
     .kk-bottom { margin-bottom: 30px; }
     .kk-calendar { padding: 20px; }
+    .kk-calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+    .kk-cal-nav {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 10px;
+        border-radius: 8px;
+        border: 1px solid #d1d5db;
+        color: #374151;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        background: #fff;
+    }
+    .kk-cal-nav.disabled {
+        opacity: 0.45;
+        pointer-events: none;
+    }
     .kk-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
     .kk-day {
         position: relative;
@@ -215,7 +239,22 @@
 
     <section class="kk-bottom">
         <article class="kk-card kk-calendar">
-            <div class="text-muted small mt-1 text-center">{{ $calendarMonthLabel }}</div>
+            <div class="kk-calendar-header">
+                @if($previousMonthQuery)
+                    <a href="{{ route('cultural-calendar.index', ['month' => $previousMonthQuery]) }}" class="kk-cal-nav">Prethodni</a>
+                @else
+                    <span class="kk-cal-nav disabled">Prethodni</span>
+                @endif
+                <div class="text-muted small text-center" style="font-weight:700;">{{ $calendarMonthLabel }}</div>
+                @if($nextMonthQuery)
+                    <a href="{{ route('cultural-calendar.index', ['month' => $nextMonthQuery]) }}" class="kk-cal-nav">Naredni</a>
+                @else
+                    <span class="kk-cal-nav disabled">Naredni</span>
+                @endif
+            </div>
+            <div class="text-muted small text-center" style="margin-bottom:10px;">
+                Planiranje dostupno: {{ $calendarWindowLabel }}
+            </div>
             <div class="kk-calendar-grid">
                 @foreach($calendarDays as $day)
                     <div class="kk-day

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CulturalEvent;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -24,6 +25,7 @@ class CulturalEventController extends Controller
         return view('cultural-calendar.admin.create', [
             'categories' => CulturalEvent::CATEGORIES,
             'statuses' => CulturalEvent::STATUSES,
+            'maxEventDate' => Carbon::today()->addYear()->endOfMonth()->format('Y-m-d'),
         ]);
     }
 
@@ -51,6 +53,7 @@ class CulturalEventController extends Controller
             'event' => $culturalEvent,
             'categories' => CulturalEvent::CATEGORIES,
             'statuses' => CulturalEvent::STATUSES,
+            'maxEventDate' => Carbon::today()->addYear()->endOfMonth()->format('Y-m-d'),
         ]);
     }
 
@@ -90,11 +93,13 @@ class CulturalEventController extends Controller
 
     private function rules(): array
     {
+        $maxDate = Carbon::today()->addYear()->endOfMonth()->format('Y-m-d');
+
         return [
             'naslov' => ['required', 'string', 'max:255'],
             'opis' => ['nullable', 'string'],
-            'datum_od' => ['required', 'date'],
-            'datum_do' => ['nullable', 'date', 'after_or_equal:datum_od'],
+            'datum_od' => ['required', 'date', 'before_or_equal:' . $maxDate],
+            'datum_do' => ['nullable', 'date', 'after_or_equal:datum_od', 'before_or_equal:' . $maxDate],
             'vrijeme' => ['nullable', 'date_format:H:i'],
             'lokacija' => ['nullable', 'string', 'max:255'],
             'kategorija' => ['required', Rule::in(CulturalEvent::CATEGORIES)],

@@ -8,14 +8,35 @@ use Illuminate\Http\Request;
 
 class CulturalCalendarController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         Carbon::setLocale('sr');
 
         $today = Carbon::today();
         $weekEnd = Carbon::today()->endOfWeek();
-        $monthEnd = Carbon::today()->endOfMonth();
-        $monthStart = Carbon::today()->startOfMonth();
+        $minMonthStart = Carbon::today()->startOfMonth();
+        $maxMonthStart = Carbon::today()->copy()->addYear()->startOfMonth();
+        $maxAllowedDate = Carbon::today()->copy()->addYear()->endOfMonth();
+
+        $selectedMonth = $request->query('month');
+        $monthStart = $minMonthStart->copy();
+
+        if ($selectedMonth) {
+            try {
+                $candidate = Carbon::createFromFormat('Y-m', $selectedMonth)->startOfMonth();
+                if ($candidate->lt($minMonthStart)) {
+                    $monthStart = $minMonthStart->copy();
+                } elseif ($candidate->gt($maxMonthStart)) {
+                    $monthStart = $maxMonthStart->copy();
+                } else {
+                    $monthStart = $candidate;
+                }
+            } catch (\Throwable $e) {
+                $monthStart = $minMonthStart->copy();
+            }
+        }
+
+        $monthEnd = $monthStart->copy()->endOfMonth();
 
         $todayCount = CulturalEvent::query()
             ->where('status', 'published')
@@ -92,6 +113,11 @@ class CulturalCalendarController extends Controller
         }
 
         $calendarMonthLabel = ucfirst($monthStart->translatedFormat('F Y'));
+        $previousMonth = $monthStart->copy()->subMonth();
+        $nextMonth = $monthStart->copy()->addMonth();
+        $previousMonthQuery = $previousMonth->gte($minMonthStart) ? $previousMonth->format('Y-m') : null;
+        $nextMonthQuery = $nextMonth->lte($maxMonthStart) ? $nextMonth->format('Y-m') : null;
+        $calendarWindowLabel = $today->format('d.m.Y') . ' - ' . $maxAllowedDate->format('d.m.Y');
 
         return view('cultural-calendar.index', compact(
             'todayCount',
@@ -99,7 +125,10 @@ class CulturalCalendarController extends Controller
             'monthCount',
             'featuredEvents',
             'calendarDays',
-            'calendarMonthLabel'
+            'calendarMonthLabel',
+            'previousMonthQuery',
+            'nextMonthQuery',
+            'calendarWindowLabel'
         ));
     }
 

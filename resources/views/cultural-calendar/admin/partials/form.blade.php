@@ -49,12 +49,15 @@
 
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Datum od *</label>
-        <input type="date" name="datum_od" value="{{ old('datum_od', $defaultStartDate) }}" class="w-full border-gray-300 rounded-md" required>
+        <input type="date" name="datum_od" value="{{ old('datum_od', $defaultStartDate) }}" max="{{ $maxEventDate ?? '' }}" class="w-full border-gray-300 rounded-md" required>
     </div>
 
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Datum do</label>
-        <input type="date" name="datum_do" value="{{ old('datum_do', isset($event->datum_do) ? $event->datum_do->format('Y-m-d') : '') }}" class="w-full border-gray-300 rounded-md">
+        <input type="date" name="datum_do" value="{{ old('datum_do', isset($event->datum_do) ? $event->datum_do->format('Y-m-d') : '') }}" max="{{ $maxEventDate ?? '' }}" class="w-full border-gray-300 rounded-md">
+        @if(isset($maxEventDate))
+            <div style="font-size:12px; color:#6b7280; margin-top:6px;">Maksimalni dozvoljeni datum: {{ \Carbon\Carbon::parse($maxEventDate)->format('d.m.Y') }}</div>
+        @endif
     </div>
 
     <div>

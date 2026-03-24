@@ -11,7 +11,7 @@
 
     <form method="POST" action="{{ route('cultural-events.store') }}" enctype="multipart/form-data" class="bg-white rounded-lg border border-gray-200 p-6">
         @csrf
-        @include('cultural-calendar.admin.partials.form', ['event' => null])
+        @include('cultural-calendar.admin.partials.form', ['event' => null, 'maxEventDate' => $maxEventDate])
         <div style="margin-top:24px; padding-top:12px; border-top:1px solid #e5e7eb;">
             <button type="submit" style="display:inline-block; background:#b91c1c; color:#fff; border:none; border-radius:8px; padding:10px 16px; font-weight:600; cursor:pointer;">
                 Sačuvaj događaj
