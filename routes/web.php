@@ -14,6 +14,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\CulturalCalendarController;
+use App\Http\Controllers\CulturalEventController;
 
 // Učitaj auth rute (za email verifikaciju i sl.)
 require __DIR__.'/auth.php';
@@ -71,6 +72,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Modul za kalendar kulturnih događaja (samo KK administrator)
     Route::middleware('role:kk_admin')->group(function () {
         Route::get('/kalendar-kulture', [CulturalCalendarController::class, 'index'])->name('cultural-calendar.index');
+        Route::resource('/kalendar-kulture/dogadjaji', CulturalEventController::class)
+            ->except(['show'])
+            ->names('cultural-events');
     });
 
     // --- DOPUNA: RUTE ZA PORTAL ŽENSKOG PREDUZETNIŠTVA ---

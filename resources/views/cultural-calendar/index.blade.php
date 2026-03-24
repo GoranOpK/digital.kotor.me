@@ -149,6 +149,7 @@
         <div class="kk-hero-actions">
             <a href="#" class="kk-btn-secondary">Kotor grad kulture</a>
             <a href="#" class="kk-btn-primary">Pogledaj događaje</a>
+            <a href="{{ route('cultural-events.index') }}" class="kk-btn-secondary">Administracija događaja</a>
         </div>
     </section>
 
