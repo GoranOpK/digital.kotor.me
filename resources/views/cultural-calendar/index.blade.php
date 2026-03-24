@@ -43,14 +43,15 @@
     .kk-stat-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 6px; }
     .kk-stat-value { font-size: 1.45rem; font-weight: 700; color: #111827; }
     .kk-section-title { font-size: 1.25rem; margin-bottom: 14px; font-weight: 700; color: #111827; text-align: center; }
-    .kk-featured { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; margin-bottom: 30px; align-items: stretch; }
+    .kk-featured { display: grid; grid-template-columns: 1fr; gap: 12px; align-items: stretch; }
     .kk-feature-main { background: var(--kk-bg-soft); padding: 20px; }
     .kk-feature-meta { font-size: .88rem; color: var(--kk-muted); margin-bottom: 8px; }
     .kk-feature-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
     .kk-feature-list { display: grid; gap: 12px; }
     .kk-feature-item { padding: 14px; background: #fff; min-height: 90px; }
-    .kk-bottom { margin-bottom: 30px; }
+    .kk-bottom { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; margin-bottom: 30px; align-items: start; }
     .kk-calendar { padding: 20px; }
+    .kk-featured-wrap { padding: 20px; }
     .kk-calendar-header {
         display: flex;
         justify-content: center;
@@ -218,7 +219,7 @@
         text-decoration: underline;
     }
     @media (max-width: 992px) {
-        .kk-grid-3, .kk-featured { grid-template-columns: 1fr; }
+        .kk-grid-3, .kk-bottom { grid-template-columns: 1fr; }
     }
 </style>
 
@@ -288,53 +289,47 @@
                 @endforeach
             </div>
         </article>
-    </section>
 
-    <section>
-        <h2 class="kk-section-title">Istaknuti događaji</h2>
-        <div class="kk-featured">
-            @if($featuredEvents->isNotEmpty())
-                @php($mainEvent = $featuredEvents->first())
-                <article class="kk-card kk-feature-main">
-                    <div class="kk-feature-meta">
-                        {{ optional($mainEvent->datum_od)->format('d.m.Y') }}
-                        @if($mainEvent->vrijeme)
-                            • {{ substr((string) $mainEvent->vrijeme, 0, 5) }}
-                        @endif
-                        @if($mainEvent->lokacija)
-                            • {{ $mainEvent->lokacija }}
-                        @endif
-                    </div>
-                    <div class="kk-feature-title">{{ $mainEvent->naslov }}</div>
-                    <p class="mb-0 text-muted">{{ \Illuminate\Support\Str::limit($mainEvent->opis ?? '', 220) }}</p>
-                </article>
-                <div class="kk-feature-list">
-                    @foreach($featuredEvents->slice(1) as $event)
-                        <article class="kk-card kk-feature-item">
-                            <div class="kk-feature-meta">
-                                {{ optional($event->datum_od)->format('d.m.Y') }}
-                                @if($event->lokacija)
-                                    • {{ $event->lokacija }}
-                                @endif
-                            </div>
-                            <div class="fw-semibold">{{ $event->naslov }}</div>
-                        </article>
-                    @endforeach
-                </div>
-            @else
-                <article class="kk-card kk-feature-main">
-                    <div class="kk-feature-meta">Nema istaknutih događaja</div>
-                    <div class="kk-feature-title">Dodajte istaknuti događaj iz administracije</div>
-                    <p class="mb-0 text-muted">Kada označite događaj kao istaknuti, biće prikazan na ovoj početnoj stranici.</p>
-                </article>
-                <div class="kk-feature-list">
-                    <article class="kk-card kk-feature-item">
-                        <div class="kk-feature-meta">Savjet</div>
-                        <div class="fw-semibold">Otvorite "Administracija događaja"</div>
+        <aside class="kk-card kk-featured-wrap">
+            <h2 class="kk-section-title">Istaknuti događaji</h2>
+            <div class="kk-featured">
+                @if($featuredEvents->isNotEmpty())
+                    @php($mainEvent = $featuredEvents->first())
+                    <article class="kk-card kk-feature-main">
+                        <div class="kk-feature-meta">
+                            {{ optional($mainEvent->datum_od)->format('d.m.Y') }}
+                            @if($mainEvent->vrijeme)
+                                • {{ substr((string) $mainEvent->vrijeme, 0, 5) }}
+                            @endif
+                            @if($mainEvent->lokacija)
+                                • {{ $mainEvent->lokacija }}
+                            @endif
+                        </div>
+                        <div class="kk-feature-title">{{ $mainEvent->naslov }}</div>
+                        <p class="mb-0 text-muted">{{ \Illuminate\Support\Str::limit($mainEvent->opis ?? '', 220) }}</p>
                     </article>
-                </div>
-            @endif
-        </div>
+                    <div class="kk-feature-list">
+                        @foreach($featuredEvents->slice(1) as $event)
+                            <article class="kk-card kk-feature-item">
+                                <div class="kk-feature-meta">
+                                    {{ optional($event->datum_od)->format('d.m.Y') }}
+                                    @if($event->lokacija)
+                                        • {{ $event->lokacija }}
+                                    @endif
+                                </div>
+                                <div class="fw-semibold">{{ $event->naslov }}</div>
+                            </article>
+                        @endforeach
+                    </div>
+                @else
+                    <article class="kk-card kk-feature-main">
+                        <div class="kk-feature-meta">Nema istaknutih događaja</div>
+                        <div class="kk-feature-title">Dodajte istaknuti događaj iz administracije</div>
+                        <p class="mb-0 text-muted">Kada označite događaj kao istaknuti, biće prikazan na ovoj početnoj stranici.</p>
+                    </article>
+                @endif
+            </div>
+        </aside>
     </section>
 
     <section class="kk-footer-wrap">

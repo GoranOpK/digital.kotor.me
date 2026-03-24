@@ -67,8 +67,17 @@ class CulturalCalendarController extends Controller
         $featuredEvents = CulturalEvent::query()
             ->where('status', 'published')
             ->where('featured', true)
+            ->where(function ($query) use ($today) {
+                $query->where(function ($q) use ($today) {
+                    $q->whereNotNull('datum_do')
+                        ->whereDate('datum_do', '>=', $today);
+                })->orWhere(function ($q) use ($today) {
+                    $q->whereNull('datum_do')
+                        ->whereDate('datum_od', '>=', $today);
+                });
+            })
             ->orderBy('datum_od')
-            ->take(4)
+            ->take(3)
             ->get();
 
         $monthEvents = CulturalEvent::query()

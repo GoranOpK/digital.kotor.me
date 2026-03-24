@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class CulturalEventController extends Controller
 {
@@ -32,12 +33,13 @@ class CulturalEventController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate($this->rules());
+        $validated['featured'] = $request->boolean('featured');
+        $this->assertFeaturedLimit($validated);
 
         if ($request->hasFile('slika')) {
             $validated['slika'] = $request->file('slika')->store('cultural-events', 'public');
         }
 
-        $validated['featured'] = $request->boolean('featured');
         $validated['created_by'] = auth()->id();
 
         CulturalEvent::create($validated);
@@ -60,6 +62,8 @@ class CulturalEventController extends Controller
     public function update(Request $request, CulturalEvent $culturalEvent)
     {
         $validated = $request->validate($this->rules());
+        $validated['featured'] = $request->boolean('featured');
+        $this->assertFeaturedLimit($validated, $culturalEvent);
 
         if ($request->hasFile('slika')) {
             if ($culturalEvent->slika) {
@@ -68,7 +72,6 @@ class CulturalEventController extends Controller
             $validated['slika'] = $request->file('slika')->store('cultural-events', 'public');
         }
 
-        $validated['featured'] = $request->boolean('featured');
         $validated['created_by'] = $culturalEvent->created_by ?? auth()->id();
 
         $culturalEvent->update($validated);
@@ -107,5 +110,51 @@ class CulturalEventController extends Controller
             'status' => ['required', Rule::in(CulturalEvent::STATUSES)],
             'featured' => ['nullable', 'boolean'],
         ];
+    }
+
+    private function assertFeaturedLimit(array $validated, ?CulturalEvent $currentEvent = null): void
+    {
+        if (empty($validated['featured'])) {
+            return;
+        }
+
+        $status = $validated['status'] ?? 'draft';
+        if ($status !== 'published') {
+            return;
+        }
+
+        $today = Carbon::today();
+        $start = Carbon::parse($validated['datum_od'])->startOfDay();
+        $end = !empty($validated['datum_do'])
+            ? Carbon::parse($validated['datum_do'])->startOfDay()
+            : $start->copy();
+
+        // Dozvoljeno je isticanje, ali ne ulazi u limit ako je događaj završen.
+        if ($end->lt($today)) {
+            return;
+        }
+
+        $activeFeaturedCount = CulturalEvent::query()
+            ->where('featured', true)
+            ->where('status', 'published')
+            ->when($currentEvent, function ($query) use ($currentEvent) {
+                $query->where('id', '!=', $currentEvent->id);
+            })
+            ->where(function ($query) use ($today) {
+                $query->where(function ($q) use ($today) {
+                    $q->whereNotNull('datum_do')
+                        ->whereDate('datum_do', '>=', $today);
+                })->orWhere(function ($q) use ($today) {
+                    $q->whereNull('datum_do')
+                        ->whereDate('datum_od', '>=', $today);
+                });
+            })
+            ->count();
+
+        if ($activeFeaturedCount >= 3) {
+            throw ValidationException::withMessages([
+                'featured' => 'Dozvoljeno je maksimalno 3 aktivna istaknuta događaja. Novi možete označiti kao istaknuti kada se jedan od trenutnih završi.',
+            ]);
+        }
     }
 }
