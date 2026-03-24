@@ -49,8 +49,10 @@ class CulturalEventController extends Controller
             ->with('status', 'Događaj je uspješno kreiran.');
     }
 
-    public function edit(CulturalEvent $culturalEvent)
+    public function edit(CulturalEvent $dogadjaji)
     {
+        $culturalEvent = $dogadjaji;
+
         return view('cultural-calendar.admin.edit', [
             'event' => $culturalEvent,
             'categories' => CulturalEvent::CATEGORIES,
@@ -59,8 +61,9 @@ class CulturalEventController extends Controller
         ]);
     }
 
-    public function update(Request $request, CulturalEvent $culturalEvent)
+    public function update(Request $request, CulturalEvent $dogadjaji)
     {
+        $culturalEvent = $dogadjaji;
         $validated = $request->validate($this->rules());
         $validated['featured'] = $request->boolean('featured');
         $this->assertFeaturedLimit($validated, $culturalEvent);
@@ -81,8 +84,9 @@ class CulturalEventController extends Controller
             ->with('status', 'Događaj je uspješno ažuriran.');
     }
 
-    public function destroy(CulturalEvent $culturalEvent)
+    public function destroy(CulturalEvent $dogadjaji)
     {
+        $culturalEvent = $dogadjaji;
         if ($culturalEvent->slika) {
             Storage::disk('public')->delete($culturalEvent->slika);
         }

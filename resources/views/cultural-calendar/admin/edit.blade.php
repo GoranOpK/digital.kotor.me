@@ -9,7 +9,8 @@
         </a>
     </div>
 
-    <form method="POST" action="{{ route('cultural-events.update', ['dogadjaji' => $event->id]) }}" enctype="multipart/form-data" class="bg-white rounded-lg border border-gray-200 p-6">
+    @php($eventId = $event->getKey() ?? request()->route('dogadjaji'))
+    <form method="POST" action="{{ route('cultural-events.update', ['dogadjaji' => $eventId]) }}" enctype="multipart/form-data" class="bg-white rounded-lg border border-gray-200 p-6">
         @csrf
         @method('PUT')
         @include('cultural-calendar.admin.partials.form', ['event' => $event, 'maxEventDate' => $maxEventDate])
