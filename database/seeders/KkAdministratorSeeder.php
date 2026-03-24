@@ -14,10 +14,10 @@ class KkAdministratorSeeder extends Seeder
      */
     public function run(): void
     {
-        $role = Role::where('name', 'admin')->first();
+        $role = Role::where('name', 'kk_admin')->first();
 
         if (!$role) {
-            $this->command->error('Rola "admin" ne postoji. Prvo pokrenite RoleSeeder.');
+            $this->command->error('Rola "kk_admin" ne postoji. Prvo pokrenite RoleSeeder.');
             return;
         }
 

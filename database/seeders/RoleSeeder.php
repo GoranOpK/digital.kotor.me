@@ -39,6 +39,11 @@ class RoleSeeder extends Seeder
                 'name' => 'konkurs_admin',
                 'display_name' => 'Administrator konkursa'
             ],
+            [
+                'id' => 6,
+                'name' => 'kk_admin',
+                'display_name' => 'Administrator kalendara kulture'
+            ],
         ];
 
         foreach ($roles as $role) {

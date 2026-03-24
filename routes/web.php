@@ -68,8 +68,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tenders/{id}', [TendersController::class, 'show'])->name('tenders.show'); // Detalji tendera
     Route::post('/tenders/purchase', [TendersController::class, 'purchase'])->name('tenders.purchase'); // Otkup tenderske dokumentacije
 
-    // Modul za kalendar kulturnih događaja
-    Route::get('/kalendar-kulture', [CulturalCalendarController::class, 'index'])->name('cultural-calendar.index');
+    // Modul za kalendar kulturnih događaja (samo KK administrator)
+    Route::middleware('role:kk_admin')->group(function () {
+        Route::get('/kalendar-kulture', [CulturalCalendarController::class, 'index'])->name('cultural-calendar.index');
+    });
 
     // --- DOPUNA: RUTE ZA PORTAL ŽENSKOG PREDUZETNIŠTVA ---
 
