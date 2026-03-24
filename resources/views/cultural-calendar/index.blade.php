@@ -93,7 +93,7 @@
         flex-wrap: wrap;
     }
     .kk-news-form input[type="email"] {
-        width: min(320px, 100%);
+        width: min(213px, 100%);
         border: 1px solid rgba(255, 255, 255, 0.4);
         background: rgba(255, 255, 255, 0.95);
         border-radius: 6px;
