@@ -195,9 +195,6 @@
         <div class="kk-hero-actions">
             <a href="#" class="kk-btn-secondary">Kotor grad kulture</a>
             <a href="{{ route('cultural-calendar.events') }}" class="kk-btn-primary">Pogledaj događaje</a>
-            @if(auth()->user() && auth()->user()->role && auth()->user()->role->name === 'kk_admin')
-                <a href="{{ route('cultural-events.index') }}" class="kk-btn-secondary">Administracija događaja</a>
-            @endif
         </div>
     </section>
 
