@@ -1,38 +1,51 @@
 <nav x-data="{ open: false }" class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 print:hidden">
+    @php
+        $user = auth()->user();
+        $isKkAdmin = $user && $user->role && $user->role->name === 'kk_admin';
+    @endphp
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
             <div class="flex">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
+                    <a href="{{ $isKkAdmin ? route('cultural-calendar.index') : route('dashboard') }}">
                         <img src="{{ asset('img/logo.png') }}" alt="Digital Kotor" class="block h-10 w-auto">
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline-block align-text-bottom" style="margin-right: 4px;">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125h9.75a1.125 1.125 0 0 0 1.125-1.125V9.75M8.25 21h8.25" />
-                        </svg>
-                        Home
-                    </x-nav-link>
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        Moj Panel
-                    </x-nav-link>
-                    @auth
-                        @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
-                            <x-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
-                                Administracija
-                            </x-nav-link>
-                        @endif
-                        @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
-                            <x-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
-                                Arhiva konkursa
-                            </x-nav-link>
-                        @endif
-                    @endauth
+                    @if($isKkAdmin)
+                        <x-nav-link :href="route('cultural-calendar.index')" :active="request()->routeIs('cultural-calendar.index')">
+                            Kalendar kulture
+                        </x-nav-link>
+                        <x-nav-link :href="route('cultural-events.index')" :active="request()->routeIs('cultural-events.*')">
+                            Događaji
+                        </x-nav-link>
+                    @else
+                        <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline-block align-text-bottom" style="margin-right: 4px;">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125h9.75a1.125 1.125 0 0 0 1.125-1.125V9.75M8.25 21h8.25" />
+                            </svg>
+                            Home
+                        </x-nav-link>
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                            Moj Panel
+                        </x-nav-link>
+                        @auth
+                            @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
+                                <x-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
+                                    Administracija
+                                </x-nav-link>
+                            @endif
+                            @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
+                                <x-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
+                                    Arhiva konkursa
+                                </x-nav-link>
+                            @endif
+                        @endauth
+                    @endif
                 </div>
             </div>
 
@@ -87,27 +100,36 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline-block align-text-bottom" style="margin-right: 4px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125h9.75a1.125 1.125 0 0 0 1.125-1.125V9.75M8.25 21h8.25" />
-                </svg>
-                Home
-            </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                Moj Panel
-            </x-responsive-nav-link>
-            @auth
-                @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
-                    <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
-                        Administracija
-                    </x-responsive-nav-link>
-                @endif
-                @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
-                    <x-responsive-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
-                        Arhiva konkursa
-                    </x-responsive-nav-link>
-                @endif
-            @endauth
+            @if($isKkAdmin)
+                <x-responsive-nav-link :href="route('cultural-calendar.index')" :active="request()->routeIs('cultural-calendar.index')">
+                    Kalendar kulture
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('cultural-events.index')" :active="request()->routeIs('cultural-events.*')">
+                    Događaji
+                </x-responsive-nav-link>
+            @else
+                <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline-block align-text-bottom" style="margin-right: 4px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125h9.75a1.125 1.125 0 0 0 1.125-1.125V9.75M8.25 21h8.25" />
+                    </svg>
+                    Home
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    Moj Panel
+                </x-responsive-nav-link>
+                @auth
+                    @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
+                        <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
+                            Administracija
+                        </x-responsive-nav-link>
+                    @endif
+                    @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
+                        <x-responsive-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
+                            Arhiva konkursa
+                        </x-responsive-nav-link>
+                    @endif
+                @endauth
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

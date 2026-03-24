@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             // 'role' je alias koji koristimo u rutama, a desno je putanja do tvog middleware-a
             'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'kk_admin_restrict' => \App\Http\Middleware\RestrictKkAdminAccess::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
