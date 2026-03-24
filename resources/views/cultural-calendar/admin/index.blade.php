@@ -2,10 +2,15 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto p-6">
-    <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Kalendar kulture - Događaji</h1>
-        <a href="{{ route('cultural-events.create') }}" class="px-4 py-2 bg-red-700 text-white rounded-md hover:bg-red-800">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+        <h1 style="font-size:28px; font-weight:700; margin:0; color:#111827;">Kalendar kulture - Događaji</h1>
+        <a href="{{ route('cultural-events.create') }}" style="display:inline-block; background:#b91c1c; color:#fff; text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600;">
             + Novi događaj
+        </a>
+    </div>
+    <div style="margin-bottom:18px;">
+        <a href="{{ route('cultural-events.create') }}" style="color:#b91c1c; font-weight:600; text-decoration:underline;">
+            Klikni ovdje za unos novog događaja
         </a>
     </div>
 
