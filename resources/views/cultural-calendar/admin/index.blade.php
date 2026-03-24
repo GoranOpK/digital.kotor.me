@@ -42,10 +42,10 @@
                             <td class="px-4 py-3 text-gray-700">{{ $event->featured ? 'Da' : 'Ne' }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex justify-end gap-2">
-                                    <a href="{{ route('cultural-events.edit', $event) }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                                    <a href="{{ route('cultural-events.edit', ['dogadjaji' => $event->id]) }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
                                         Uredi
                                     </a>
-                                    <form method="POST" action="{{ route('cultural-events.destroy', $event) }}" onsubmit="return confirm('Da li ste sigurni da želite obrisati događaj?');">
+                                    <form method="POST" action="{{ route('cultural-events.destroy', ['dogadjaji' => $event->id]) }}" onsubmit="return confirm('Da li ste sigurni da želite obrisati događaj?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="px-3 py-1.5 border border-red-300 rounded-md text-red-700 hover:bg-red-50">
