@@ -99,10 +99,20 @@ class CulturalCalendarController extends Controller
         }
 
         $calendarDays = [];
+        $firstWeekdayIso = $monthStart->dayOfWeekIso; // 1 = ponedjeljak, 7 = nedjelja
+
+        // Prazna mjesta prije prvog dana mjeseca radi pravilnog poravnanja kolona.
+        for ($i = 1; $i < $firstWeekdayIso; $i++) {
+            $calendarDays[] = [
+                'is_placeholder' => true,
+            ];
+        }
+
         for ($date = $monthStart->copy(); $date->lte($monthEnd); $date->addDay()) {
             $dateKey = $date->format('Y-m-d');
             $eventCount = $eventDayCounts[$dateKey] ?? 0;
             $calendarDays[] = [
+                'is_placeholder' => false,
                 'day' => $date->day,
                 'date' => $dateKey,
                 'event_count' => $eventCount,

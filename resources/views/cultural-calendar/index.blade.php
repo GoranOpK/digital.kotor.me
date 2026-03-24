@@ -93,6 +93,11 @@
         font-size: .9rem;
         background: #fff;
     }
+    .kk-day.placeholder {
+        background: transparent;
+        border: none;
+        pointer-events: none;
+    }
     .kk-day.has-event-1 {
         border-color: #f3c0c4;
         background: #fff4f5;
@@ -267,15 +272,19 @@
             </div>
             <div class="kk-calendar-grid">
                 @foreach($calendarDays as $day)
-                    <div class="kk-day
-                        {{ $day['event_count'] === 1 ? 'has-event-1' : '' }}
-                        {{ $day['event_count'] >= 2 ? 'has-event-2plus' : '' }}
-                        {{ $day['is_today'] ? 'is-today' : '' }}">
-                        <a href="{{ route('cultural-calendar.day', $day['date']) }}" class="kk-day-link">{{ $day['day'] }}</a>
-                        @if($day['event_count'] > 0)
-                            <span class="kk-day-count">{{ $day['event_count'] }}</span>
-                        @endif
-                    </div>
+                    @if(!empty($day['is_placeholder']))
+                        <div class="kk-day placeholder"></div>
+                    @else
+                        <div class="kk-day
+                            {{ $day['event_count'] === 1 ? 'has-event-1' : '' }}
+                            {{ $day['event_count'] >= 2 ? 'has-event-2plus' : '' }}
+                            {{ $day['is_today'] ? 'is-today' : '' }}">
+                            <a href="{{ route('cultural-calendar.day', $day['date']) }}" class="kk-day-link">{{ $day['day'] }}</a>
+                            @if($day['event_count'] > 0)
+                                <span class="kk-day-count">{{ $day['event_count'] }}</span>
+                            @endif
+                        </div>
+                    @endif
                 @endforeach
             </div>
         </article>
