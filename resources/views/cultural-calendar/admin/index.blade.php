@@ -8,12 +8,6 @@
             + Novi događaj
         </a>
     </div>
-    <div style="margin-bottom:18px;">
-        <a href="{{ route('cultural-events.create') }}" style="color:#b91c1c; font-weight:600; text-decoration:underline;">
-            Klikni ovdje za unos novog događaja
-        </a>
-    </div>
-
     @if(session('status'))
         <div class="mb-4 rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3">
             {{ session('status') }}
