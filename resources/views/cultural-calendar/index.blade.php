@@ -52,9 +52,56 @@
     .kk-bottom { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
     .kk-calendar, .kk-filters { padding: 20px; }
     .kk-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
-    .kk-day { border-radius: 8px; border: 1px solid var(--kk-border); text-align: center; padding: 8px 0; font-size: .9rem; background: #fff; }
-    .kk-day.has-event { border-color: #f3c0c4; background: #fff4f5; color: var(--kk-burgundy); font-weight: 600; }
-    .kk-day-link { display: block; text-decoration: none; color: inherit; }
+    .kk-day {
+        position: relative;
+        border-radius: 8px;
+        border: 1px solid var(--kk-border);
+        text-align: center;
+        padding: 8px 0;
+        font-size: .9rem;
+        background: #fff;
+    }
+    .kk-day.has-event-1 {
+        border-color: #f3c0c4;
+        background: #fff4f5;
+        color: var(--kk-burgundy);
+        font-weight: 600;
+    }
+    .kk-day.has-event-2plus {
+        border-color: #a71524;
+        background: #7a0f17;
+        color: #fff;
+        font-weight: 700;
+    }
+    .kk-day.is-today {
+        box-shadow: 0 0 0 2px #2563eb;
+    }
+    .kk-day-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        line-height: 1;
+    }
+    .kk-day-count {
+        position: absolute;
+        top: 2px;
+        right: 4px;
+        min-width: 16px;
+        height: 16px;
+        border-radius: 9999px;
+        font-size: 10px;
+        line-height: 16px;
+        text-align: center;
+        background: rgba(255, 255, 255, 0.9);
+        color: #7a0f17;
+        font-weight: 700;
+        padding: 0 3px;
+    }
+    .kk-day.has-event-2plus .kk-day-count {
+        background: rgba(255, 255, 255, 0.2);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
     .kk-filter-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 5px; display: block; }
     .kk-filter-box { border: 1px solid var(--kk-border); border-radius: 8px; padding: 9px 10px; margin-bottom: 10px; color: #111827; background: #fff; min-height: 40px; display: flex; align-items: center; }
     .kk-block-title { text-align: center; margin-bottom: 12px; }
@@ -224,8 +271,14 @@
             <div class="text-muted small mt-1 text-center">{{ $calendarMonthLabel }}</div>
             <div class="kk-calendar-grid">
                 @foreach($calendarDays as $day)
-                    <div class="kk-day {{ $day['has_event'] ? 'has-event' : '' }}">
+                    <div class="kk-day
+                        {{ $day['event_count'] === 1 ? 'has-event-1' : '' }}
+                        {{ $day['event_count'] >= 2 ? 'has-event-2plus' : '' }}
+                        {{ $day['is_today'] ? 'is-today' : '' }}">
                         <a href="{{ route('cultural-calendar.day', $day['date']) }}" class="kk-day-link">{{ $day['day'] }}</a>
+                        @if($day['event_count'] > 0)
+                            <span class="kk-day-count">{{ $day['event_count'] }}</span>
+                        @endif
                     </div>
                 @endforeach
             </div>

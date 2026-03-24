@@ -60,7 +60,7 @@ class CulturalCalendarController extends Controller
             })
             ->get(['datum_od', 'datum_do']);
 
-        $eventDays = [];
+        $eventDayCounts = [];
         foreach ($monthEvents as $event) {
             $start = Carbon::parse($event->datum_od)->startOfDay();
             $end = $event->datum_do ? Carbon::parse($event->datum_do)->startOfDay() : $start->copy();
@@ -73,16 +73,21 @@ class CulturalCalendarController extends Controller
             }
 
             for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
-                $eventDays[$date->format('Y-m-d')] = true;
+                $dateKey = $date->format('Y-m-d');
+                $eventDayCounts[$dateKey] = ($eventDayCounts[$dateKey] ?? 0) + 1;
             }
         }
 
         $calendarDays = [];
         for ($date = $monthStart->copy(); $date->lte($monthEnd); $date->addDay()) {
+            $dateKey = $date->format('Y-m-d');
+            $eventCount = $eventDayCounts[$dateKey] ?? 0;
             $calendarDays[] = [
                 'day' => $date->day,
-                'date' => $date->format('Y-m-d'),
-                'has_event' => isset($eventDays[$date->format('Y-m-d')]),
+                'date' => $dateKey,
+                'event_count' => $eventCount,
+                'has_event' => $eventCount > 0,
+                'is_today' => $date->isSameDay($today),
             ];
         }
 
