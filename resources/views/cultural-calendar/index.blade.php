@@ -7,51 +7,56 @@
         --kk-muted: #6b7280;
         --kk-border: #e5e7eb;
         --kk-bg-soft: #f8f9fb;
+        max-width: 1120px;
+        margin: 0 auto;
     }
     .kk-hero {
         border-radius: 16px;
-        padding: 40px 28px;
+        padding: 52px 32px;
         background:
             linear-gradient(rgba(20, 20, 20, 0.45), rgba(20, 20, 20, 0.45)),
-            url('{{ asset('img/hero-left.jpg') }}') center/cover no-repeat;
+            url('{{ asset('img/hero.jpg') }}') center/cover no-repeat;
         color: #fff;
-        margin-bottom: 24px;
+        margin-bottom: 30px;
+        text-align: center;
     }
     .kk-logo {
         max-width: 170px;
         width: 100%;
         height: auto;
-        margin-bottom: 18px;
+        margin: 0 auto 18px;
         background: rgba(255, 255, 255, 0.94);
         border-radius: 10px;
         padding: 10px;
     }
-    .kk-hero-title { font-size: 2rem; line-height: 1.2; margin-bottom: 10px; font-weight: 700; }
-    .kk-hero-text { max-width: 560px; color: #f3f4f6; margin-bottom: 16px; }
+    .kk-hero-title { font-size: 2.1rem; line-height: 1.2; margin-bottom: 10px; font-weight: 700; }
+    .kk-hero-text { max-width: 640px; color: #f3f4f6; margin: 0 auto 16px; }
+    .kk-hero-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
     .kk-btn-primary, .kk-btn-secondary {
         display: inline-block; text-decoration: none; border-radius: 8px; padding: 9px 14px; font-weight: 600; font-size: .95rem;
     }
     .kk-btn-primary { background: var(--kk-burgundy); color: #fff; border: 1px solid var(--kk-burgundy); }
-    .kk-btn-secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.55); margin-left: 8px; }
-    .kk-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .kk-btn-secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.55); }
+    .kk-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 30px; }
     .kk-stat-card, .kk-card { border: 1px solid var(--kk-border); border-radius: 12px; background: #fff; }
-    .kk-stat-card { padding: 16px; }
+    .kk-stat-card { padding: 18px; min-height: 110px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
     .kk-stat-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 6px; }
     .kk-stat-value { font-size: 1.45rem; font-weight: 700; color: #111827; }
-    .kk-section-title { font-size: 1.25rem; margin-bottom: 14px; font-weight: 700; color: #111827; }
-    .kk-featured { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14px; margin-bottom: 24px; }
+    .kk-section-title { font-size: 1.25rem; margin-bottom: 14px; font-weight: 700; color: #111827; text-align: center; }
+    .kk-featured { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; margin-bottom: 30px; align-items: stretch; }
     .kk-feature-main { background: var(--kk-bg-soft); padding: 20px; }
     .kk-feature-meta { font-size: .88rem; color: var(--kk-muted); margin-bottom: 8px; }
     .kk-feature-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
     .kk-feature-list { display: grid; gap: 12px; }
-    .kk-feature-item { padding: 14px; background: #fff; }
-    .kk-bottom { display: grid; grid-template-columns: 1.2fr .8fr; gap: 14px; }
-    .kk-calendar, .kk-filters { padding: 18px; }
+    .kk-feature-item { padding: 14px; background: #fff; min-height: 90px; }
+    .kk-bottom { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
+    .kk-calendar, .kk-filters { padding: 20px; }
     .kk-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
     .kk-day { border-radius: 8px; border: 1px solid var(--kk-border); text-align: center; padding: 8px 0; font-size: .9rem; background: #fff; }
     .kk-day.has-event { border-color: #f3c0c4; background: #fff4f5; color: var(--kk-burgundy); font-weight: 600; }
     .kk-filter-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 5px; display: block; }
-    .kk-filter-box { border: 1px solid var(--kk-border); border-radius: 8px; padding: 9px 10px; margin-bottom: 10px; color: #111827; background: #fff; }
+    .kk-filter-box { border: 1px solid var(--kk-border); border-radius: 8px; padding: 9px 10px; margin-bottom: 10px; color: #111827; background: #fff; min-height: 40px; display: flex; align-items: center; }
+    .kk-block-title { text-align: center; margin-bottom: 12px; }
     @media (max-width: 992px) {
         .kk-grid-3, .kk-featured, .kk-bottom { grid-template-columns: 1fr; }
     }
@@ -64,8 +69,10 @@
         <p class="kk-hero-text">
             Savremeni pregled kulturnih događaja u Kotoru: koncerti, izložbe, predstave, dječji program i manifestacije na jednom mjestu.
         </p>
-        <a href="#" class="kk-btn-primary">Pogledaj događaje</a>
-        <a href="#" class="kk-btn-secondary">Današnji program</a>
+        <div class="kk-hero-actions">
+            <a href="#" class="kk-btn-primary">Pogledaj događaje</a>
+            <a href="#" class="kk-btn-secondary">Današnji program</a>
+        </div>
     </section>
 
     <section class="kk-grid-3">
@@ -110,8 +117,8 @@
 
     <section class="kk-bottom">
         <article class="kk-card kk-calendar">
-            <h3 class="h5 mb-0">Mjesečni kalendar (placeholder)</h3>
-            <div class="text-muted small mt-1">Mart 2026</div>
+            <h3 class="h5 mb-0 kk-block-title">Mjesečni kalendar (placeholder)</h3>
+            <div class="text-muted small mt-1 text-center">Mart 2026</div>
             <div class="kk-calendar-grid">
                 <div class="kk-day">1</div><div class="kk-day">2</div><div class="kk-day has-event">3</div><div class="kk-day">4</div><div class="kk-day">5</div><div class="kk-day">6</div><div class="kk-day">7</div>
                 <div class="kk-day">8</div><div class="kk-day">9</div><div class="kk-day has-event">10</div><div class="kk-day">11</div><div class="kk-day">12</div><div class="kk-day">13</div><div class="kk-day has-event">14</div>
@@ -120,7 +127,7 @@
         </article>
 
         <aside class="kk-card kk-filters">
-            <h3 class="h5 mb-3">Filteri (placeholder)</h3>
+            <h3 class="h5 mb-3 kk-block-title">Filteri (placeholder)</h3>
             <label class="kk-filter-label">Kategorija</label>
             <div class="kk-filter-box">Svi događaji</div>
             <label class="kk-filter-label">Lokacija</label>
