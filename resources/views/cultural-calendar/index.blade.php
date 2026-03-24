@@ -49,8 +49,8 @@
     .kk-feature-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 10px; }
     .kk-feature-list { display: grid; gap: 12px; }
     .kk-feature-item { padding: 14px; background: #fff; min-height: 90px; }
-    .kk-bottom { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
-    .kk-calendar, .kk-filters { padding: 20px; }
+    .kk-bottom { margin-bottom: 30px; }
+    .kk-calendar { padding: 20px; }
     .kk-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
     .kk-day {
         position: relative;
@@ -102,8 +102,6 @@
         color: #fff;
         border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    .kk-filter-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 5px; display: block; }
-    .kk-filter-box { border: 1px solid var(--kk-border); border-radius: 8px; padding: 9px 10px; margin-bottom: 10px; color: #111827; background: #fff; min-height: 40px; display: flex; align-items: center; }
     .kk-block-title { text-align: center; margin-bottom: 12px; }
     .kk-footer-wrap {
         margin-top: 34px;
@@ -183,7 +181,7 @@
         text-decoration: underline;
     }
     @media (max-width: 992px) {
-        .kk-grid-3, .kk-featured, .kk-bottom { grid-template-columns: 1fr; }
+        .kk-grid-3, .kk-featured { grid-template-columns: 1fr; }
     }
 </style>
 
@@ -215,6 +213,25 @@
         <article class="kk-stat-card">
             <div class="kk-stat-label">Ovog mjeseca</div>
             <div class="kk-stat-value">{{ $monthCount }} događaja</div>
+        </article>
+    </section>
+
+    <section class="kk-bottom">
+        <article class="kk-card kk-calendar">
+            <div class="text-muted small mt-1 text-center">{{ $calendarMonthLabel }}</div>
+            <div class="kk-calendar-grid">
+                @foreach($calendarDays as $day)
+                    <div class="kk-day
+                        {{ $day['event_count'] === 1 ? 'has-event-1' : '' }}
+                        {{ $day['event_count'] >= 2 ? 'has-event-2plus' : '' }}
+                        {{ $day['is_today'] ? 'is-today' : '' }}">
+                        <a href="{{ route('cultural-calendar.day', $day['date']) }}" class="kk-day-link">{{ $day['day'] }}</a>
+                        @if($day['event_count'] > 0)
+                            <span class="kk-day-count">{{ $day['event_count'] }}</span>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
         </article>
     </section>
 
@@ -263,38 +280,6 @@
                 </div>
             @endif
         </div>
-    </section>
-
-    <section class="kk-bottom">
-        <article class="kk-card kk-calendar">
-            <h3 class="h5 mb-0 kk-block-title">Mjesečni kalendar</h3>
-            <div class="text-muted small mt-1 text-center">{{ $calendarMonthLabel }}</div>
-            <div class="kk-calendar-grid">
-                @foreach($calendarDays as $day)
-                    <div class="kk-day
-                        {{ $day['event_count'] === 1 ? 'has-event-1' : '' }}
-                        {{ $day['event_count'] >= 2 ? 'has-event-2plus' : '' }}
-                        {{ $day['is_today'] ? 'is-today' : '' }}">
-                        <a href="{{ route('cultural-calendar.day', $day['date']) }}" class="kk-day-link">{{ $day['day'] }}</a>
-                        @if($day['event_count'] > 0)
-                            <span class="kk-day-count">{{ $day['event_count'] }}</span>
-                        @endif
-                    </div>
-                @endforeach
-            </div>
-        </article>
-
-        <aside class="kk-card kk-filters">
-            <h3 class="h5 mb-3 kk-block-title">Filteri (placeholder)</h3>
-            <label class="kk-filter-label">Kategorija</label>
-            <div class="kk-filter-box">Svi događaji</div>
-            <label class="kk-filter-label">Lokacija</label>
-            <div class="kk-filter-box">Sve lokacije</div>
-            <label class="kk-filter-label">Datum od</label>
-            <div class="kk-filter-box">dd.mm.gggg</div>
-            <label class="kk-filter-label">Datum do</label>
-            <div class="kk-filter-box">dd.mm.gggg</div>
-        </aside>
     </section>
 
     <section class="kk-footer-wrap">
