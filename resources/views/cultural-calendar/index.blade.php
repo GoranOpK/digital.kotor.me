@@ -84,6 +84,39 @@
         padding: 8px 10px;
     }
     .kk-calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+    .kk-upcoming {
+        margin-top: 16px;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 12px;
+    }
+    .kk-upcoming-title {
+        text-align: center;
+        font-size: 14px;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 10px;
+    }
+    .kk-upcoming-list {
+        display: grid;
+        gap: 8px;
+    }
+    .kk-upcoming-item {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 8px 10px;
+        background: #fff;
+    }
+    .kk-upcoming-meta {
+        font-size: 12px;
+        color: #6b7280;
+        margin-bottom: 3px;
+    }
+    .kk-upcoming-name {
+        font-size: 13px;
+        color: #111827;
+        font-weight: 700;
+        line-height: 1.3;
+    }
     .kk-weekdays {
         display: grid;
         grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -301,6 +334,30 @@
                         </div>
                     @endif
                 @endforeach
+            </div>
+
+            <div class="kk-upcoming">
+                <div class="kk-upcoming-title">Naredna 2 događaja</div>
+                <div class="kk-upcoming-list">
+                    @forelse($upcomingEvents as $event)
+                        <div class="kk-upcoming-item">
+                            <div class="kk-upcoming-meta">
+                                {{ optional($event->datum_od)->format('d.m.Y') }}
+                                @if($event->vrijeme)
+                                    • {{ substr((string) $event->vrijeme, 0, 5) }}
+                                @endif
+                                @if($event->lokacija)
+                                    • {{ $event->lokacija }}
+                                @endif
+                            </div>
+                            <div class="kk-upcoming-name">{{ $event->naslov }}</div>
+                        </div>
+                    @empty
+                        <div class="kk-upcoming-item">
+                            <div class="kk-upcoming-name" style="font-weight:500; color:#6b7280;">Nema narednih događaja.</div>
+                        </div>
+                    @endforelse
+                </div>
             </div>
         </article>
 

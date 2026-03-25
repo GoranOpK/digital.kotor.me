@@ -80,6 +80,14 @@ class CulturalCalendarController extends Controller
             ->take(3)
             ->get();
 
+        $upcomingEvents = CulturalEvent::query()
+            ->where('status', 'published')
+            ->whereDate('datum_od', '>=', $today)
+            ->orderBy('datum_od')
+            ->orderBy('vrijeme')
+            ->take(2)
+            ->get();
+
         $monthEvents = CulturalEvent::query()
             ->where('status', 'published')
             ->whereDate('datum_od', '<=', $monthEnd)
@@ -145,6 +153,7 @@ class CulturalCalendarController extends Controller
             'weekCount',
             'monthCount',
             'featuredEvents',
+            'upcomingEvents',
             'calendarDays',
             'calendarMonthLabel',
             'monthOptions',
