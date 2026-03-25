@@ -242,7 +242,7 @@
         <img src="{{ asset('img/kalendar-kulture-logo.png') }}" alt="Logo Kalendara kulture" class="kk-logo">
         <h1 class="kk-hero-title">Kalendar kulture</h1>
         <p class="kk-hero-text">
-            Savremeni pregled kulturnih događaja u Kotoru: koncerti, izložbe, predstave, dječji program i manifestacije na jednom mjestu.
+            Savremeni pregled kulturnih događaja u Kotoru: koncerti, izložbe, predstave, dječji program i manifestacije na jednom mjestu
         </p>
         <div class="kk-hero-actions">
             <a href="#" class="kk-btn-secondary">Kotor grad kulture</a>
