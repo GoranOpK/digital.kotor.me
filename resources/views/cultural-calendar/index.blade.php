@@ -106,6 +106,15 @@
         padding: 8px 10px;
         background: #fff;
     }
+    .kk-upcoming-image {
+        width: 100%;
+        height: 70px;
+        object-fit: contain;
+        background: #f3f4f6;
+        border-radius: 6px;
+        display: block;
+        margin-bottom: 8px;
+    }
     .kk-upcoming-meta {
         font-size: 12px;
         color: #6b7280;
@@ -337,10 +346,15 @@
             </div>
 
             <div class="kk-upcoming">
-                <div class="kk-upcoming-title">Naredna 2 događaja</div>
+                <div class="kk-upcoming-title">naredni događaji</div>
                 <div class="kk-upcoming-list">
                     @forelse($upcomingEvents as $event)
                         <div class="kk-upcoming-item">
+                            <img
+                                src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
+                                alt="{{ $event->naslov }}"
+                                class="kk-upcoming-image"
+                            >
                             <div class="kk-upcoming-meta">
                                 {{ optional($event->datum_od)->format('d.m.Y') }}
                                 @if($event->vrijeme)
