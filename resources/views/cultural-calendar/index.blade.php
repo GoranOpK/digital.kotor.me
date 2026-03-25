@@ -91,7 +91,7 @@
     }
     .kk-upcoming-title {
         text-align: center;
-        font-size: 14px;
+        font-size: 1.25rem;
         font-weight: 700;
         color: #111827;
         margin-bottom: 10px;
@@ -346,7 +346,7 @@
             </div>
 
             <div class="kk-upcoming">
-                <div class="kk-upcoming-title">naredni događaji</div>
+                <div class="kk-upcoming-title">Naredni događaji</div>
                 <div class="kk-upcoming-list">
                     @forelse($upcomingEvents as $event)
                         <div class="kk-upcoming-item">
