@@ -17,6 +17,9 @@ class CulturalCalendarController extends Controller
         $minMonthStart = Carbon::today()->startOfMonth();
         $maxMonthStart = Carbon::today()->copy()->addYear()->startOfMonth();
 
+        $user = auth()->user();
+        $isKkAdmin = $user && $user->role && $user->role->name === 'kk_admin';
+
         $selectedMonth = $request->query('month');
         $monthStart = $minMonthStart->copy();
 
@@ -36,6 +39,31 @@ class CulturalCalendarController extends Controller
         }
 
         $monthEnd = $monthStart->copy()->endOfMonth();
+
+        $selectedDate = null;
+        $selectedDateEvents = null;
+        $selectedDateParam = $request->query('date');
+
+        // Samo za korisnički pregled: kad korisnik klikne datum, podvučemo događaje za taj datum ispod kalendara.
+        if ($selectedDateParam && !$isKkAdmin) {
+            try {
+                $selectedDate = Carbon::createFromFormat('Y-m-d', $selectedDateParam)->startOfDay();
+
+                $selectedDateEvents = CulturalEvent::query()
+                    ->where('status', 'published')
+                    ->whereDate('datum_od', '<=', $selectedDate)
+                    ->where(function ($query) use ($selectedDate) {
+                        $query->whereNull('datum_do')
+                            ->orWhereDate('datum_do', '>=', $selectedDate);
+                    })
+                    ->orderBy('vrijeme')
+                    ->orderBy('id')
+                    ->get();
+            } catch (\Throwable $e) {
+                $selectedDate = null;
+                $selectedDateEvents = null;
+            }
+        }
 
         $todayCount = CulturalEvent::query()
             ->where('status', 'published')
@@ -157,7 +185,10 @@ class CulturalCalendarController extends Controller
             'calendarDays',
             'calendarMonthLabel',
             'monthOptions',
-            'selectedMonthValue'
+            'selectedMonthValue',
+            'selectedDate',
+            'selectedDateEvents',
+            'isKkAdmin'
         ));
     }
 

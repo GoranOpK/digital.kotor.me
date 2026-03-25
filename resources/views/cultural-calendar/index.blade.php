@@ -176,6 +176,11 @@
         color: inherit;
         line-height: 1;
     }
+    .kk-day-link-disabled {
+        pointer-events: none;
+        cursor: default;
+        opacity: .6;
+    }
     .kk-day-count {
         position: absolute;
         top: 2px;
@@ -336,7 +341,15 @@
                             {{ $day['event_count'] === 1 ? 'has-event-1' : '' }}
                             {{ $day['event_count'] >= 2 ? 'has-event-2plus' : '' }}
                             {{ $day['is_today'] ? 'is-today' : '' }}">
-                            <a href="{{ route('cultural-calendar.day', $day['date']) }}" class="kk-day-link">{{ $day['day'] }}</a>
+                            @if(!empty($isKkAdmin))
+                                <a href="{{ route('cultural-calendar.day', $day['date']) }}" class="kk-day-link">{{ $day['day'] }}</a>
+                            @else
+                                @if(!empty($day['has_event']))
+                                    <a href="{{ route('cultural-calendar.index', ['month' => $selectedMonthValue, 'date' => $day['date']]) }}" class="kk-day-link">{{ $day['day'] }}</a>
+                                @else
+                                    <span class="kk-day-link kk-day-link-disabled">{{ $day['day'] }}</span>
+                                @endif
+                            @endif
                             @if($day['event_count'] > 0)
                                 <span class="kk-day-count">{{ $day['event_count'] }}</span>
                             @endif
@@ -346,32 +359,63 @@
             </div>
 
             <div class="kk-upcoming">
-                <div class="kk-upcoming-title">Naredni događaji</div>
-                <div class="kk-upcoming-list">
-                    @forelse($upcomingEvents as $event)
-                        <div class="kk-upcoming-item">
-                            <img
-                                src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
-                                alt="{{ $event->naslov }}"
-                                class="kk-upcoming-image"
-                            >
-                            <div class="kk-upcoming-meta">
-                                {{ optional($event->datum_od)->format('d.m.Y') }}
-                                @if($event->vrijeme)
-                                    • {{ substr((string) $event->vrijeme, 0, 5) }}
-                                @endif
-                                @if($event->lokacija)
-                                    • {{ $event->lokacija }}
-                                @endif
+                @if(!is_null($selectedDateEvents))
+                    <div class="kk-upcoming-title">
+                        Događaji za {{ $selectedDate ? $selectedDate->format('d.m.Y') : '' }}
+                    </div>
+                    <div class="kk-upcoming-list">
+                        @forelse($selectedDateEvents as $event)
+                            <div class="kk-upcoming-item">
+                                <img
+                                    src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
+                                    alt="{{ $event->naslov }}"
+                                    class="kk-upcoming-image"
+                                >
+                                <div class="kk-upcoming-meta">
+                                    {{ optional($event->datum_od)->format('d.m.Y') }}
+                                    @if($event->vrijeme)
+                                        • {{ substr((string) $event->vrijeme, 0, 5) }}
+                                    @endif
+                                    @if($event->lokacija)
+                                        • {{ $event->lokacija }}
+                                    @endif
+                                </div>
+                                <div class="kk-upcoming-name">{{ $event->naslov }}</div>
                             </div>
-                            <div class="kk-upcoming-name">{{ $event->naslov }}</div>
-                        </div>
-                    @empty
-                        <div class="kk-upcoming-item">
-                            <div class="kk-upcoming-name" style="font-weight:500; color:#6b7280;">Nema narednih događaja.</div>
-                        </div>
-                    @endforelse
-                </div>
+                        @empty
+                            <div class="kk-upcoming-item">
+                                <div class="kk-upcoming-name" style="font-weight:500; color:#6b7280;">Nema događaja za odabrani datum.</div>
+                            </div>
+                        @endforelse
+                    </div>
+                @else
+                    <div class="kk-upcoming-title">Naredni događaji</div>
+                    <div class="kk-upcoming-list">
+                        @forelse($upcomingEvents as $event)
+                            <div class="kk-upcoming-item">
+                                <img
+                                    src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
+                                    alt="{{ $event->naslov }}"
+                                    class="kk-upcoming-image"
+                                >
+                                <div class="kk-upcoming-meta">
+                                    {{ optional($event->datum_od)->format('d.m.Y') }}
+                                    @if($event->vrijeme)
+                                        • {{ substr((string) $event->vrijeme, 0, 5) }}
+                                    @endif
+                                    @if($event->lokacija)
+                                        • {{ $event->lokacija }}
+                                    @endif
+                                </div>
+                                <div class="kk-upcoming-name">{{ $event->naslov }}</div>
+                            </div>
+                        @empty
+                            <div class="kk-upcoming-item">
+                                <div class="kk-upcoming-name" style="font-weight:500; color:#6b7280;">Nema narednih događaja.</div>
+                            </div>
+                        @endforelse
+                    </div>
+                @endif
             </div>
         </article>
 
