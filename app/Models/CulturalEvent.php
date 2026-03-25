@@ -13,6 +13,7 @@ class CulturalEvent extends Model
         'Koncerti',
         'Predstave',
         'Izložbe',
+        'Sportski događaji',
         'Književne večeri',
         'Filmske projekcije',
         'Radionice',
