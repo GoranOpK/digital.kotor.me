@@ -345,7 +345,7 @@
                                 <a href="{{ route('cultural-calendar.day', $day['date']) }}" class="kk-day-link">{{ $day['day'] }}</a>
                             @else
                                 @if(!empty($day['has_event']))
-                                    <a href="{{ route('cultural-calendar.index', ['month' => $selectedMonthValue, 'date' => $day['date']]) }}" class="kk-day-link">{{ $day['day'] }}</a>
+                                    <a href="{{ route('cultural-calendar.index', ['month' => $selectedMonthValue, 'date' => $day['date']]) . '#dogadjaji-za-datum' }}" class="kk-day-link">{{ $day['day'] }}</a>
                                 @else
                                     <span class="kk-day-link kk-day-link-disabled">{{ $day['day'] }}</span>
                                 @endif
@@ -358,7 +358,7 @@
                 @endforeach
             </div>
 
-            <div class="kk-upcoming">
+            <div class="kk-upcoming" id="dogadjaji-za-datum">
                 @if(!is_null($selectedDateEvents))
                     <div class="kk-upcoming-title">
                         Događaji za {{ $selectedDate ? $selectedDate->format('d.m.Y') : '' }}
