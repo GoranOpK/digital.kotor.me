@@ -467,14 +467,29 @@
         <div class="kk-newsletter">
             <h3>Pratite <span>kalendar kulture</span></h3>
             <p>Informišite se o kulturnim dešavanjima u Kotoru putem e-mail obavještenja.</p>
-            <div class="kk-news-form">
-                <input type="email" placeholder="email@email.com">
+            @if(session('newsletter_status'))
+                <div style="margin: 0 auto 12px; max-width: 620px; padding: 10px 12px; border-radius: 8px; background: rgba(255,255,255,0.15); color: #fff; font-size: 13px;">
+                    {{ session('newsletter_status') }}
+                </div>
+            @endif
+            <form method="POST" action="{{ route('cultural-calendar.newsletter.store') }}" class="kk-news-form">
+                @csrf
+                <input
+                    type="email"
+                    name="email"
+                    value="{{ old('email', auth()->user()->email ?? '') }}"
+                    placeholder="email@email.com"
+                    required
+                >
                 <label class="kk-news-check">
                     <span>Odjavi me</span>
-                    <input type="checkbox">
+                    <input type="checkbox" name="unsubscribe" value="1" @checked(old('unsubscribe'))>
                 </label>
-                <button type="button" class="kk-news-btn">Pošalji</button>
-            </div>
+                <button type="submit" class="kk-news-btn">Pošalji</button>
+            </form>
+            @error('email')
+                <p style="margin-top: 8px; color: #fecaca; font-size: 12px;">{{ $message }}</p>
+            @enderror
         </div>
 
         <div class="kk-contact">

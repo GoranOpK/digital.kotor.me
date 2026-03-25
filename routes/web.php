@@ -15,6 +15,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\CulturalCalendarController;
 use App\Http\Controllers\CulturalEventController;
+use App\Http\Controllers\CulturalCalendarNewsletterController;
 
 // Učitaj auth rute (za email verifikaciju i sl.)
 require __DIR__.'/auth.php';
@@ -73,6 +74,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::get('/kalendar-kulture', [CulturalCalendarController::class, 'index'])->name('cultural-calendar.index');
     Route::get('/kalendar-kulture/pregled-dogadjaja', [CulturalCalendarController::class, 'events'])->name('cultural-calendar.events');
     Route::get('/kalendar-kulture/dan/{date}', [CulturalCalendarController::class, 'day'])->name('cultural-calendar.day');
+    Route::post('/kalendar-kulture/newsletter', [CulturalCalendarNewsletterController::class, 'store'])->name('cultural-calendar.newsletter.store');
 
     // Administracija događaja (samo KK administrator)
     Route::middleware('role:kk_admin')->group(function () {

@@ -3,7 +3,23 @@
 @section('content')
 <div class="max-w-7xl mx-auto p-6">
     <div class="flex items-center justify-between mb-6">
-        <h1 class="text-2xl font-bold text-gray-900">Pregled događaja</h1>
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">
+                @if($weekStart && $weekEnd)
+                    Događaji za narednu sedmicu
+                @elseif($date)
+                    Događaji za {{ \Carbon\Carbon::createFromFormat('Y-m-d', $date)->format('d.m.Y') }}
+                @else
+                    Pregled događaja
+                @endif
+            </h1>
+            @if($weekStart && $weekEnd)
+                <p class="text-sm text-gray-500 mt-1">
+                    Period: {{ $weekStart->format('d.m.Y') }} - {{ $weekEnd->format('d.m.Y') }}.
+                    Prije dolaska na događaj provjerite eventualne izmjene termina, otkazivanja ili nova dešavanja.
+                </p>
+            @endif
+        </div>
         <a href="{{ route('cultural-calendar.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
             Nazad na Kalendar kulture
         </a>
@@ -17,9 +33,11 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($events as $event)
                 <article class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    @if($event->slika)
-                        <img src="{{ asset('storage/' . $event->slika) }}" alt="{{ $event->naslov }}" class="w-full h-44 object-cover">
-                    @endif
+                    <img
+                        src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
+                        alt="{{ $event->naslov }}"
+                        class="w-full h-44 object-cover"
+                    >
                     <div class="p-4">
                         <div class="text-xs text-gray-500 mb-1">
                             {{ optional($event->datum_od)->format('d.m.Y') }}

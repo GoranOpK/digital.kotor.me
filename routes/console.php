@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -14,3 +15,9 @@ Artisan::command('path:show', function () {
 
 // Cron / scheduler: koristimo delete-expired-documents.php u root-u + Plesk "Run a PHP script"
 // (Schedule:: nije korišćen jer Plesk Scheduled Tasks ne pokreće php artisan schedule:run)
+
+// Newsletter Kalendara kulture - svakog ponedjeljka u 09:00.
+Schedule::command('cultural-calendar:send-weekly-newsletter')
+    ->mondays()
+    ->at('09:00')
+    ->timezone(config('app.timezone', 'Europe/Podgorica'));

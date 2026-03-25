@@ -195,10 +195,36 @@ class CulturalCalendarController extends Controller
     public function events(Request $request)
     {
         $date = $request->query('date');
+        $weekStart = null;
+        $weekEnd = null;
 
         $eventsQuery = CulturalEvent::query()
             ->where('status', 'published')
             ->orderBy('datum_od');
+
+        $weekStartParam = $request->query('week_start');
+        $weekEndParam = $request->query('week_end');
+
+        if ($weekStartParam && $weekEndParam) {
+            try {
+                $weekStart = Carbon::createFromFormat('Y-m-d', $weekStartParam)->startOfDay();
+                $weekEnd = Carbon::createFromFormat('Y-m-d', $weekEndParam)->endOfDay();
+
+                if ($weekStart->gt($weekEnd)) {
+                    [$weekStart, $weekEnd] = [$weekEnd->copy()->startOfDay(), $weekStart->copy()->endOfDay()];
+                }
+
+                $eventsQuery
+                    ->whereDate('datum_od', '<=', $weekEnd->toDateString())
+                    ->where(function ($query) use ($weekStart) {
+                        $query->whereNull('datum_do')
+                            ->orWhereDate('datum_do', '>=', $weekStart->toDateString());
+                    });
+            } catch (\Throwable $e) {
+                $weekStart = null;
+                $weekEnd = null;
+            }
+        }
 
         if ($date) {
             try {
@@ -216,7 +242,7 @@ class CulturalCalendarController extends Controller
 
         $events = $eventsQuery->paginate(12)->withQueryString();
 
-        return view('cultural-calendar.events', compact('events', 'date'));
+        return view('cultural-calendar.events', compact('events', 'date', 'weekStart', 'weekEnd'));
     }
 
     public function day(string $date)
