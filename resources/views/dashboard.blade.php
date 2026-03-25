@@ -478,33 +478,18 @@
             </div>
         </div>
 
-        <!-- Brzi servisi (Plati, Konkursi, Tenderi) -->
-        <div style="margin-bottom: 24px;">
-            <div class="services-grid" style="margin-top: 0;">
-                <a href="{{ route('payments.index') }}" class="service-card">
-                    <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">₿</div>
-                    <h3 style="font-size: 16px;">Online plaćanja</h3>
-                    <p style="font-size: 12px;">Uplate komunalija, taksi i naknada.</p>
-                </a>
-                <a href="{{ route('competitions.index') }}" class="service-card">
-                    <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">🏆</div>
-                    <h3 style="font-size: 16px;">Konkursi</h3>
-                    <p style="font-size: 12px;">Prijave na konkurse za podršku preduzetništvu.</p>
-                </a>
-                <a href="{{ route('tenders.index') }}" class="service-card">
-                    <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">§</div>
-                    <h3 style="font-size: 16px;">Tenderi</h3>
-                    <p style="font-size: 12px;">Otkup i pregled tenderske dokumentacije.</p>
-                </a>
-                @if($isLegalEntity)
-                <div class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
-                    <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">🏢</div>
-                    <h3 style="font-size: 16px;">Servisi za pravna lica</h3>
-                    <p style="font-size: 12px;">Izvještaji i administrativne procedure.</p>
+        <!-- Brzi servisi (samo za pravna lica) -->
+        @if($isLegalEntity)
+            <div style="margin-bottom: 24px;">
+                <div class="services-grid" style="margin-top: 0;">
+                    <div class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
+                        <div class="service-icon" style="width: 40px; height: 40px; font-size: 20px;">🏢</div>
+                        <h3 style="font-size: 16px;">Servisi za pravna lica</h3>
+                        <p style="font-size: 12px;">Izvještaji i administrativne procedure.</p>
+                    </div>
                 </div>
-                @endif
             </div>
-        </div>
+        @endif
     @endif
 
         <!-- Services - Super Admin (samo Administracija) -->
