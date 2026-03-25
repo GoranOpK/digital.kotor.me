@@ -12,6 +12,9 @@
                 <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="max-width:640px; width:100%; background:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #e5e7eb;">
                     <tr>
                         <td style="background:#0b3d91; padding:18px 24px;">
+                            <div style="text-align:center; margin-bottom:12px;">
+                                <img src="{{ asset('img/kalendar-kulture-logo.png') }}" alt="Logo Kalendara kulture" style="display:inline-block; max-width:120px; width:100%; height:auto;">
+                            </div>
                             <h1 style="margin:0; color:#ffffff; font-size:22px; line-height:1.3;">Sedmični pregled događaja</h1>
                         </td>
                     </tr>

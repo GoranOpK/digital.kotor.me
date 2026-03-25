@@ -12,6 +12,9 @@
                 <table role="presentation" width="640" cellpadding="0" cellspacing="0" style="max-width:640px; width:100%; background:#ffffff; border-radius:12px; overflow:hidden; border:1px solid #e5e7eb;">
                     <tr>
                         <td style="background:#7a0f17; padding:18px 24px;">
+                            <div style="text-align:center; margin-bottom:12px;">
+                                <img src="{{ asset('img/kalendar-kulture-logo.png') }}" alt="Logo Kalendara kulture" style="display:inline-block; max-width:120px; width:100%; height:auto;">
+                            </div>
                             <h1 style="margin:0; color:#ffffff; font-size:22px; line-height:1.3;">Kalendar kulture Opštine Kotor</h1>
                         </td>
                     </tr>
@@ -21,10 +24,10 @@
                                 Poštovani,
                             </p>
                             <p style="margin:0 0 14px; font-size:15px; line-height:1.6;">
-                                hvala što ste se prijavili na newsletter Kalendara kulture Opštine Kotor.
+                                Hvala što ste se prijavili na newsletter Kalendara kulture Opštine Kotor.
                             </p>
                             <p style="margin:0 0 14px; font-size:15px; line-height:1.6;">
-                                Od sada ćete svakog ponedjeljka u 09:00 dobijati sedmični pregled događaja sa linkom ka aktuelnoj listi za narednu sedmicu.
+                                Od sada ćete svakog ponedjeljka u 09:00h dobijati sedmični pregled događaja sa linkom ka aktuelnoj listi događaja za narednu sedmicu.
                             </p>
                             <p style="margin:0 0 14px; font-size:15px; line-height:1.6;">
                                 Molimo vas da prije dolaska na željeni događaj provjerite ažuriranja na linku iz mejla (otkazivanje, promjena datuma/termina ili novi događaji).
