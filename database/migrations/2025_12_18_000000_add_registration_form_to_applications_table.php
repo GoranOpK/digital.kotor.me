@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('applications', function (Blueprint $table) {
             if (!Schema::hasColumn('applications', 'registration_form')) {
-                $table->string('registration_form')->nullable()->after('crps_number');
+                $table->string('registration_form')->nullable()->after('vat_number');
             }
         });
     }

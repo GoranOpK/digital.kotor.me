@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (!Schema::hasColumn('users', 'used_storage_bytes')) {
-                $table->bigInteger('used_storage_bytes')->default(0)->after('address');
+                $table->bigInteger('used_storage_bytes')->default(0)->after('remember_token');
             }
         });
     }

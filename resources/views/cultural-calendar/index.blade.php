@@ -12,31 +12,33 @@
     }
     .kk-hero {
         border-radius: 16px;
-        padding: 52px 32px;
+        padding: 18px 20px;
+        max-height: min(42vh, 340px);
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        box-sizing: border-box;
         background:
-            linear-gradient(rgba(20, 20, 20, 0.45), rgba(20, 20, 20, 0.45)),
-            url('{{ asset('img/hero.jpg') }}') center/cover no-repeat;
+            url('{{ asset('img/heroKK.jpg') }}') center/cover no-repeat;
         color: #fff;
         margin-bottom: 30px;
         text-align: center;
     }
+    .kk-hero .kk-logo {
+        max-width: 260px;
+        margin-bottom: 0;
+    }
     .kk-logo {
-        max-width: 170px;
+        max-width: 300px;
         width: 100%;
         height: auto;
         margin: 0 auto 18px;
-        background: rgba(255, 255, 255, 0.94);
-        border-radius: 10px;
-        padding: 10px;
+        display: block;
+        object-fit: contain;
     }
-    .kk-hero-title { font-size: 2.1rem; line-height: 1.2; margin-bottom: 10px; font-weight: 700; }
-    .kk-hero-text { max-width: 640px; color: #f3f4f6; margin: 0 auto 16px; }
-    .kk-hero-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-    .kk-btn-primary, .kk-btn-secondary {
-        display: inline-block; text-decoration: none; border-radius: 8px; padding: 9px 14px; font-weight: 600; font-size: .95rem;
-    }
-    .kk-btn-primary { background: var(--kk-burgundy); color: #fff; border: 1px solid var(--kk-burgundy); }
-    .kk-btn-secondary { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.55); }
     .kk-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 30px; }
     .kk-stat-card, .kk-card { border: 1px solid var(--kk-border); border-radius: 12px; background: #fff; }
     .kk-stat-card { padding: 18px; min-height: 110px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
@@ -201,7 +203,7 @@
         color: #fff;
         border: 1px solid rgba(255, 255, 255, 0.3);
     }
-    .kk-block-title { text-align: center; margin-bottom: 12px; }
+    .kk-block-title { text-align: center; margin-bottom: 0; }
     .kk-footer-wrap {
         margin-top: 34px;
         border-radius: 14px;
@@ -285,16 +287,8 @@
 </style>
 
 <div class="container py-4 kk-page">
-    <section class="kk-hero">
-        <img src="{{ asset('img/kalendar-kulture-logo.png') }}" alt="Logo Kalendara kulture" class="kk-logo">
-        <h1 class="kk-hero-title">Kalendar kulture</h1>
-        <p class="kk-hero-text">
-            Savremeni pregled kulturnih događaja u Kotoru: koncerti, izložbe, predstave, dječji program i manifestacije na jednom mjestu
-        </p>
-        <div class="kk-hero-actions">
-            <a href="#" class="kk-btn-secondary">Kotor grad kulture</a>
-            <a href="{{ route('cultural-calendar.events') }}" class="kk-btn-primary">Pogledaj događaje</a>
-        </div>
+    <section class="kk-hero" aria-label="Kalendar kulture">
+        <img src="{{ asset('img/KKLOGOC.png') }}" alt="Logo Kalendara kulture" class="kk-logo">
     </section>
 
     <section class="kk-grid-3">
