@@ -73,6 +73,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     // Modul za kalendar kulturnih događaja (pregled za sve prijavljene korisnike)
     Route::get('/kalendar-kulture', [CulturalCalendarController::class, 'index'])->name('cultural-calendar.index');
     Route::get('/kalendar-kulture/pregled-dogadjaja', [CulturalCalendarController::class, 'events'])->name('cultural-calendar.events');
+    Route::get('/kalendar-kulture/arhiva-dogadjaja', [CulturalCalendarController::class, 'archive'])->name('cultural-calendar.archive');
     Route::get('/kalendar-kulture/dan/{date}', [CulturalCalendarController::class, 'day'])->name('cultural-calendar.day');
     Route::post('/kalendar-kulture/newsletter', [CulturalCalendarNewsletterController::class, 'store'])->name('cultural-calendar.newsletter.store');
 

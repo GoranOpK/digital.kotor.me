@@ -281,4 +281,26 @@ class CulturalCalendarController extends Controller
             'selectedDate' => $selectedDate,
         ]);
     }
+
+    public function archive(Request $request)
+    {
+        $today = Carbon::today();
+        $events = CulturalEvent::query()
+            ->where('status', 'published')
+            ->where(function ($query) use ($today) {
+                $query->where(function ($q) use ($today) {
+                    $q->whereNotNull('datum_do')
+                        ->whereDate('datum_do', '<', $today);
+                })->orWhere(function ($q) use ($today) {
+                    $q->whereNull('datum_do')
+                        ->whereDate('datum_od', '<', $today);
+                });
+            })
+            ->orderByDesc('datum_od')
+            ->orderByDesc('id')
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('cultural-calendar.archive', compact('events'));
+    }
 }
