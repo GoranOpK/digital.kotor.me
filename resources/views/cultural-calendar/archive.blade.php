@@ -51,7 +51,8 @@
                     <img
                         src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
                         alt="{{ $event->naslov }}"
-                        class="w-full h-44 object-cover"
+                        class="w-full"
+                        style="height:53px; object-fit:cover;"
                     >
                     <div class="p-4">
                         <div class="text-xs text-gray-500 mb-1">
