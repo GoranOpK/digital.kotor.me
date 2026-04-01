@@ -197,9 +197,19 @@ class CulturalCalendarController extends Controller
         $date = $request->query('date');
         $weekStart = null;
         $weekEnd = null;
+        $today = Carbon::today();
 
         $eventsQuery = CulturalEvent::query()
             ->where('status', 'published')
+            ->where(function ($query) use ($today) {
+                $query->where(function ($q) use ($today) {
+                    $q->whereNotNull('datum_do')
+                        ->whereDate('datum_do', '>=', $today);
+                })->orWhere(function ($q) use ($today) {
+                    $q->whereNull('datum_do')
+                        ->whereDate('datum_od', '>=', $today);
+                });
+            })
             ->orderBy('datum_od');
 
         $weekStartParam = $request->query('week_start');
