@@ -479,7 +479,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'preduzetnica' || applicantType === 'fizicko_lice')) {
             allDocuments = [
                 'Prijava na konkurs za podsticaj ženskog preduzetništva (obrazac 1a)',
-                'Popunjena forma za biznis plan (obrazac 2 — Forma za biznis plan)',
+                'Popunjena forma za biznis plan (obrazac 2)',
             ];
         } else if ((selectedStage === 'započinjanje' || selectedStage === 'razvoj') && (applicantType === 'doo' || applicantType === 'ostalo')) {
             allDocuments = [
