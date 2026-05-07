@@ -98,7 +98,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label" style="font-size: 12px; color: #6b7280;">
-                            Mandat komisije traje 2 godine
+                            Mandat komisije traje 1 godinu
                         </label>
                     </div>
                 </div>
@@ -107,7 +107,7 @@
                     <label class="form-label">Datum početka mandata *</label>
                     <input type="date" name="start_date" id="start_date" class="form-control" value="{{ old('start_date') }}" required onchange="calculateEndDate()">
                     <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                        Mandat komisije traje tačno 2 godine od datuma početka
+                        Mandat komisije traje tačno 1 godinu od datuma početka
                     </div>
                 </div>
 
@@ -115,7 +115,7 @@
                     <label class="form-label">Datum završetka mandata</label>
                     <input type="date" name="end_date" id="end_date" class="form-control" value="{{ old('end_date') }}" readonly style="background: #f3f4f6;">
                     <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                        Automatski izračunato (2 godine od datuma početka)
+                        Automatski izračunato (1 godina od datuma početka)
                     </div>
                 </div>
 
@@ -127,7 +127,7 @@
                         if (startDateInput.value) {
                             const startDate = new Date(startDateInput.value);
                             const endDate = new Date(startDate);
-                            endDate.setFullYear(endDate.getFullYear() + 2);
+                            endDate.setFullYear(endDate.getFullYear() + 1);
                             
                             // Formatiraj datum kao YYYY-MM-DD
                             const year = endDate.getFullYear();

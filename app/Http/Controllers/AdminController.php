@@ -892,12 +892,12 @@ class AdminController extends Controller
      */
     public function storeCommission(Request $request)
     {
-        // Automatski izračunaj datum završetka (2 godine od početka)
+        // Automatski izračunaj datum završetka (1 godina od početka)
         $startDate = $request->input('start_date');
         $endDate = null;
         if ($startDate) {
             $start = \Carbon\Carbon::parse($startDate);
-            $endDate = $start->copy()->addYears(2)->format('Y-m-d');
+            $endDate = $start->copy()->addYears(1)->format('Y-m-d');
         }
         
         // Proveri da li se email-ovi ponavljaju između članova
@@ -1077,9 +1077,13 @@ class AdminController extends Controller
             }
         }
 
-        $message = $createdMembers == 1 
-            ? 'Komisija sa 1 članom je uspješno kreirana. Možete dodati ostale članove kasnije.' 
-            : "Komisija sa {$createdMembers} članova je uspješno kreirana. Možete dodati ostale članove kasnije.";
+        $message = $createdMembers == 1
+            ? 'Komisija sa 1 članom je uspješno kreirana.'
+            : "Komisija sa {$createdMembers} članova je uspješno kreirana.";
+
+        if ($createdMembers < 5) {
+            $message .= ' Možete dodati ostale članove komisije.';
+        }
 
         if (!empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
             $count = count($validated['competition_ids']);
@@ -1124,12 +1128,12 @@ class AdminController extends Controller
      */
     public function updateCommission(Request $request, Commission $commission)
     {
-        // Automatski izračunaj datum završetka (2 godine od početka)
+        // Automatski izračunaj datum završetka (1 godina od početka)
         $startDate = $request->input('start_date');
         $endDate = null;
         if ($startDate) {
             $start = \Carbon\Carbon::parse($startDate);
-            $endDate = $start->copy()->addYears(2)->format('Y-m-d');
+            $endDate = $start->copy()->addYears(1)->format('Y-m-d');
         }
         
         $validated = $request->validate([
