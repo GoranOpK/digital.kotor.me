@@ -80,7 +80,7 @@
         </div>
 
         <div class="form-card">
-            <form method="POST" action="{{ route('admin.commissions.store') }}">
+            <form method="POST" action="{{ route('admin.commissions.store') }}" autocomplete="on">
                 @csrf
                 
                 <div class="form-group">
@@ -177,18 +177,18 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">E-mail</label>
-                            <input type="email" name="members[0][email]" class="form-control @error('members.0.email') error @enderror" value="{{ old('members.0.email') }}">
+                            <input type="email" name="members[0][email]" class="form-control @error('members.0.email') error @enderror" value="{{ old('members.0.email') }}" autocomplete="section-commission-member-0 username" autocapitalize="off" spellcheck="false">
                             @error('members.0.email')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="form-group">
                             <label class="form-label">Password</label>
-                            <input type="password" name="members[0][password]" class="form-control @error('members.0.password') error @enderror" minlength="8">
+                            <input type="password" name="members[0][password]" class="form-control @error('members.0.password') error @enderror" minlength="8" autocomplete="section-commission-member-0 current-password">
                             @error('members.0.password')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Organizacija</label>
@@ -210,18 +210,18 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">E-mail</label>
-                            <input type="email" name="members[1][email]" class="form-control @error('members.1.email') error @enderror" value="{{ old('members.1.email') }}">
+                            <input type="email" name="members[1][email]" class="form-control @error('members.1.email') error @enderror" value="{{ old('members.1.email') }}" autocomplete="section-commission-member-1 username" autocapitalize="off" spellcheck="false">
                             @error('members.1.email')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="form-group">
                             <label class="form-label">Password</label>
-                            <input type="password" name="members[1][password]" class="form-control @error('members.1.password') error @enderror" minlength="8">
+                            <input type="password" name="members[1][password]" class="form-control @error('members.1.password') error @enderror" minlength="8" autocomplete="section-commission-member-1 current-password">
                             @error('members.1.password')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Organizacija</label>
@@ -242,18 +242,18 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">E-mail</label>
-                            <input type="email" name="members[2][email]" class="form-control @error('members.2.email') error @enderror" value="{{ old('members.2.email') }}">
+                            <input type="email" name="members[2][email]" class="form-control @error('members.2.email') error @enderror" value="{{ old('members.2.email') }}" autocomplete="section-commission-member-2 username" autocapitalize="off" spellcheck="false">
                             @error('members.2.email')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="form-group">
                             <label class="form-label">Password</label>
-                            <input type="password" name="members[2][password]" class="form-control @error('members.2.password') error @enderror" minlength="8">
+                            <input type="password" name="members[2][password]" class="form-control @error('members.2.password') error @enderror" minlength="8" autocomplete="section-commission-member-2 current-password">
                             @error('members.2.password')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Organizacija</label>
@@ -275,18 +275,18 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">E-mail</label>
-                            <input type="email" name="members[3][email]" class="form-control @error('members.3.email') error @enderror" value="{{ old('members.3.email') }}">
+                            <input type="email" name="members[3][email]" class="form-control @error('members.3.email') error @enderror" value="{{ old('members.3.email') }}" autocomplete="section-commission-member-3 username" autocapitalize="off" spellcheck="false">
                             @error('members.3.email')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="form-group">
                             <label class="form-label">Password</label>
-                            <input type="password" name="members[3][password]" class="form-control @error('members.3.password') error @enderror" minlength="8">
+                            <input type="password" name="members[3][password]" class="form-control @error('members.3.password') error @enderror" minlength="8" autocomplete="section-commission-member-3 current-password">
                             @error('members.3.password')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Organizacija</label>
@@ -311,18 +311,18 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">E-mail</label>
-                            <input type="email" name="members[4][email]" class="form-control @error('members.4.email') error @enderror" value="{{ old('members.4.email') }}">
+                            <input type="email" name="members[4][email]" class="form-control @error('members.4.email') error @enderror" value="{{ old('members.4.email') }}" autocomplete="section-commission-member-4 username" autocapitalize="off" spellcheck="false">
                             @error('members.4.email')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="form-group">
                             <label class="form-label">Password</label>
-                            <input type="password" name="members[4][password]" class="form-control @error('members.4.password') error @enderror" minlength="8">
+                            <input type="password" name="members[4][password]" class="form-control @error('members.4.password') error @enderror" minlength="8" autocomplete="section-commission-member-4 current-password">
                             @error('members.4.password')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
-                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera</div>
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
                         </div>
                         <div class="form-group">
                             <label class="form-label">Organizacija</label>

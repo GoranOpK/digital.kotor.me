@@ -900,7 +900,7 @@ class AdminController extends Controller
             $endDate = $start->copy()->addYears(2)->format('Y-m-d');
         }
         
-        // Proveri da li se email-ovi ponavljaju između članova i da li već postoje u bazi
+        // Proveri da li se email-ovi ponavljaju između članova
         $emails = [];
         $membersData = $request->input('members', []);
         
@@ -914,11 +914,6 @@ class AdminController extends Controller
                 // Proveri da li se email ponavlja između članova
                 if (in_array($email, $emails)) {
                     return back()->withErrors(['members.' . $index . '.email' => 'E-mail se ne može ponavljati između članova komisije.'])->withInput();
-                }
-                
-                // Proveri da li email već postoji u bazi
-                if (User::where('email', $email)->exists()) {
-                    return back()->withErrors(['members.' . $index . '.email' => 'E-mail već postoji u sistemu.'])->withInput();
                 }
                 
                 $emails[] = $email;
@@ -950,7 +945,8 @@ class AdminController extends Controller
         for ($i = 0; $i <= 4; $i++) {
             $rules["members.{$i}.name"] = 'nullable|required_with:members.' . $i . '.email|string|max:255';
             $rules["members.{$i}.email"] = 'nullable|required_with:members.' . $i . '.name|email|max:255';
-            $rules["members.{$i}.password"] = 'nullable|required_with:members.' . $i . '.email|string|min:8';
+            // Password je obavezan samo za nove korisnike (email koji ne postoji u sistemu)
+            $rules["members.{$i}.password"] = 'nullable|string|min:8';
             $rules["members.{$i}.position"] = 'nullable|required_with:members.' . $i . '.email|in:predsjednik,clan';
             $rules["members.{$i}.member_type"] = 'nullable|required_with:members.' . $i . '.email|in:opstina,udruzenje,zene_mreza';
             $rules["members.{$i}.organization"] = 'nullable|string|max:255';
@@ -972,7 +968,6 @@ class AdminController extends Controller
             $messages["members.{$i}.name.required_with"] = "Ime i prezime člana je obavezno ako dodajete člana.";
             $messages["members.{$i}.email.required_with"] = "E-mail člana je obavezan ako dodajete člana.";
             $messages["members.{$i}.email.email"] = "E-mail člana mora biti validan.";
-            $messages["members.{$i}.password.required_with"] = "Password člana je obavezan ako dodajete člana.";
             $messages["members.{$i}.password.min"] = "Password člana mora imati minimum 8 karaktera.";
             $messages["members.{$i}.position.required_with"] = "Pozicija člana je obavezna ako dodajete člana.";
             $messages["members.{$i}.member_type.required_with"] = "Tip člana je obavezan ako dodajete člana.";
@@ -991,6 +986,21 @@ class AdminController extends Controller
             $validated['members'][3]['member_type'] === 'udruzenje' && 
             empty($validated['members'][3]['organization'])) {
             return back()->withErrors(['members.3.organization' => 'Organizacija je obavezna za člana iz udruženja.'])->withInput();
+        }
+
+        // Custom validacija: password je obavezan samo za nove email adrese
+        foreach ($validated['members'] as $index => $memberData) {
+            if (empty($memberData['email'])) {
+                continue;
+            }
+
+            $normalizedEmail = strtolower($memberData['email']);
+            $userExists = User::where('email', $normalizedEmail)->exists();
+            if (!$userExists && empty($memberData['password'])) {
+                return back()->withErrors([
+                    "members.{$index}.password" => 'Password člana je obavezan za novi e-mail.',
+                ])->withInput();
+            }
         }
 
         $commission = Commission::create([
@@ -1015,19 +1025,24 @@ class AdminController extends Controller
                 continue;
             }
             
-            // Kreiraj User nalog za člana komisije
-            $user = User::create([
-                'name' => $memberData['name'],
-                'email' => strtolower($memberData['email']),
-                'password' => Hash::make($memberData['password']),
-                'role_id' => $komisijaRole->id,
-                'activation_status' => 'active',
-                'user_type' => 'Fizičko lice',
-                'residential_status' => 'resident',
-            ]);
-            
-            // Pošalji email za verifikaciju
-            event(new Registered($user));
+            $normalizedEmail = strtolower($memberData['email']);
+            $user = User::where('email', $normalizedEmail)->first();
+
+            // Ako korisnik sa tim e-mailom ne postoji, kreiraj novi nalog
+            if (!$user) {
+                $user = User::create([
+                    'name' => $memberData['name'],
+                    'email' => $normalizedEmail,
+                    'password' => Hash::make($memberData['password']),
+                    'role_id' => $komisijaRole->id,
+                    'activation_status' => 'active',
+                    'user_type' => 'Fizičko lice',
+                    'residential_status' => 'resident',
+                ]);
+
+                // Pošalji email za verifikaciju samo za novi nalog
+                event(new Registered($user));
+            }
 
             // Kreiraj člana komisije i poveži sa User nalogom
             $member = CommissionMember::create([
