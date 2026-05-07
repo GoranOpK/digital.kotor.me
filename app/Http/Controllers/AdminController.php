@@ -772,7 +772,8 @@ class AdminController extends Controller
 
         $competition->delete();
 
-        return redirect()->back()->with('success', 'Konkurs je uspješno obrisan.');
+        return redirect()->route('admin.competitions.index')
+            ->with('success', 'Konkurs je uspješno obrisan.');
     }
 
     /**
