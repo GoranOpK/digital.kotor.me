@@ -415,7 +415,7 @@
                                 <input type="text" name="registration_form" id="registration_form" class="form-control" value="{{ old('registration_form', $businessPlan->registration_form ?? ($defaultData['registration_form'] ?? '')) }}" placeholder="Preduzetnik / DOO / itd.">
                             </div>
                             <div class="form-group">
-                                <label class="form-label" id="company_name_label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nosioca biznisa* i naziv društva za oblik registracije "DOO":</label>
+                                <label class="form-label" id="company_name_label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nositeljke biznisa* i naziv društva za oblik registracije "DOO":</label>
                                 <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $businessPlan->company_name ?? '') }}">
                                 <div class="form-text">*Nosioc biznisa je vlasnica ili jedna od vlasnika i izvršna direktorica društva</div>
                             </div>
@@ -1910,10 +1910,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 companyNameLabel.textContent = 'Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik":';
             } else if (registrationForm !== '') {
                 // Za DOO ili ostale oblike registracije
-                companyNameLabel.textContent = 'Ime i prezime nosioca biznisa* i naziv društva za oblik registracije "' + registrationFormInput.value + '" ili ostali:';
+                companyNameLabel.textContent = 'Ime i prezime nositeljke biznisa* i naziv društva za oblik registracije "' + registrationFormInput.value + '" ili ostali:';
             } else {
                 // Default tekst ako nije ništa uneseno
-                companyNameLabel.textContent = 'Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nosioca biznisa* i naziv društva za oblik registracije "DOO":';
+                companyNameLabel.textContent = 'Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nositeljke biznisa* i naziv društva za oblik registracije "DOO":';
             }
         }
         
