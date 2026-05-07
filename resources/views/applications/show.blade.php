@@ -664,7 +664,7 @@
                                         'licna_karta' => ($isDooOstalo && $isRazvoj) ? 'Ovjerenu kopiju lične karte nosioca biznisa (osnivačica ili jedna od osnivača i izvršna direktorica)' : 'Ovjerena kopija lične karte',
                                         'crps_resenje' => 'Rješenje o upisu u CRPS' . ($isPreduzetnicaFizicko && $isZapocinjanje ? ' (ukoliko ima registrovanu djelatnost)' : ''),
                                         'pib_resenje' => ($isPreduzetnicaFizicko && $isZapocinjanje)
-                                            ? 'Rješenje o PIB-u PJ Poreske uprave (ukoliko ima registrovanu djelatnost)'
+                                            ? 'Rješenje o registraciji PJ Poreske uprave (ukoliko ima registrovanu djelatnost)'
                                             : (($isPreduzetnicaFizicko && $isRazvoj)
                                                 ? 'Rješenje o registraciji PJ Poreske uprave'
                                                 : 'Rješenje o registraciji PJ Uprave prihoda i carina'),
@@ -859,7 +859,7 @@
                     $documentLabels['licna_karta'] = ($isDooOstalo && $isRazvoj) ? 'Ovjerenu kopiju lične karte nosioca biznisa (osnivačica ili jedna od osnivača i izvršna direktorica)' : (($isDooOstalo && $isZapocinjanje) ? 'Ovjerenu kopiju lične karte' : 'Ovjerena kopija lične karte');
                     $documentLabels['crps_resenje'] = 'Rješenje o upisu u CRPS' . (($isPreduzetnica && $isZapocinjanje) ? ' (ukoliko ima registrovanu djelatnost)' : (($isDooOstalo && $isZapocinjanje) ? ' (ukoliko ima registrovanu djelatnost)' : ''));
                     if ($isPreduzetnica && $isZapocinjanje) {
-                        $documentLabels['pib_resenje'] = 'Rješenje o PIB-u PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
+                        $documentLabels['pib_resenje'] = 'Rješenje o registraciji PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
                     } elseif ($isDooOstalo && ($isZapocinjanje || $isRazvoj)) {
                         $documentLabels['pib_resenje'] = 'Rješenje o registraciji PJ Poreske uprave' . ($isZapocinjanje ? ' (ukoliko ima registrovanu djelatnost)' : '');
                     } elseif ($isPreduzetnica && $isRazvoj) {

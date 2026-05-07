@@ -352,7 +352,7 @@
                             : 'Ovjerena kopija lične karte',
                         'crps_resenje' => 'Rješenje o upisu u CRPS' . (($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice' || $application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'započinjanje' ? ' (ukoliko ima registrovanu djelatnost)' : ''),
                         'pib_resenje' => ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje')
-                            ? 'Rješenje o PIB-u PJ Poreske uprave (ukoliko ima registrovanu djelatnost)'
+                            ? 'Rješenje o registraciji PJ Poreske uprave (ukoliko ima registrovanu djelatnost)'
                             : ((($application->applicant_type === 'preduzetnica' || $application->applicant_type === 'fizicko_lice') && $application->business_stage === 'razvoj')
                                 ? 'Rješenje o registraciji PJ Poreske uprave'
                                 : ((($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && ($application->business_stage === 'započinjanje' || $application->business_stage === 'razvoj'))

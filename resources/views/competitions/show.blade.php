@@ -502,7 +502,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (docType === 'crps_resenje') {
                     docLabel = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
                 } else if (docType === 'pib_resenje') {
-                    docLabel = 'Rješenje o PIB-u PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
+                    if ((applicantType === 'preduzetnica' || applicantType === 'fizicko_lice') && selectedStage === 'razvoj') {
+                        docLabel = 'Rješenje o registraciji PJ Poreske uprave';
+                    } else {
+                        docLabel = 'Rješenje o registraciji PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
+                    }
                 } else if (docType === 'pdv_resenje') {
                     if (selectedStage === 'započinjanje') {
                         docLabel = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';

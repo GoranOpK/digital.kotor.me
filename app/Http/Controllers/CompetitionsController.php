@@ -98,7 +98,7 @@ class CompetitionsController extends Controller
         $documentLabels = [
             'licna_karta' => 'Ovjerena kopija lične karte',
             'crps_resenje' => 'Rješenje o upisu u CRPS',
-            'pib_resenje' => 'Rješenje o PIB-u PJ Poreske uprave',
+            'pib_resenje' => 'Rješenje o registraciji PJ Poreske uprave',
             'pdv_resenje' => 'Rješenje o registraciji za PDV',
             'statut' => 'Važeći Statut društva',
             'karton_potpisa' => 'Važeći karton deponovanih potpisa',
@@ -139,7 +139,7 @@ class CompetitionsController extends Controller
                 if ($docType === 'crps_resenje') {
                     $label = 'Rješenje o upisu u CRPS (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'pib_resenje') {
-                    $label = 'Rješenje o PIB-u PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
+                    $label = 'Rješenje o registraciji PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
                 } elseif ($docType === 'pdv_resenje') {
                     $label = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
                 } elseif ($docType === 'potvrda_neosudjivanost') {
