@@ -147,12 +147,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Broj konkursa (automatski)</label>
-                        <input type="text" class="form-control" value="{{ $competition->competition_number ?? '—' }}" readonly disabled style="background: #f3f4f6;">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">UP broj konkursa *</label>
+                        <label class="form-label">Broj konkursa *</label>
                         <input type="text" id="up_number" name="up_number" class="form-control input-uppercase @error('up_number') error @enderror" value="{{ old('up_number', $competition->upNumber?->number) }}" required autocomplete="off">
                         @error('up_number')
                             <div class="error-message">{{ $message }}</div>
