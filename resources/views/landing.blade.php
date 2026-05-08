@@ -154,7 +154,7 @@
                             <a class="btn btn-outline" href="{{ route('dashboard') }}">Moj panel</a>
                             <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                                 @csrf
-                                <button type="submit" class="btn btn-danger-outline">Odjava</button>
+                                <button type="submit" class="btn btn-primary">Odjava</button>
                             </form>
                         @else
                             <a class="btn btn-outline" href="{{ route('register') }}">Kreiraj nalog</a>
