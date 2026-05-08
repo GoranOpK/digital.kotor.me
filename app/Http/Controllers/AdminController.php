@@ -1242,6 +1242,7 @@ class AdminController extends Controller
 
         // Ako je zamjenski član, preuzmi istu poziciju/tip kao član kojeg mijenja
         $isSubstitute = ($validated['member_type'] ?? null) === 'zamjenski';
+        $replacedMember = null;
         if ($isSubstitute) {
             $replacementRoleMap = [
                 1 => ['position' => 'predsjednik', 'member_type' => 'opstina'],
@@ -1253,6 +1254,14 @@ class AdminController extends Controller
             $replacesNumber = (int)($validated['replaces_member_number'] ?? 0);
             if (!isset($replacementRoleMap[$replacesNumber])) {
                 return back()->withErrors(['replaces_member_number' => 'Neispravan izbor člana za zamjenu.'])->withInput();
+            }
+
+            // Zamjenski može preuzeti samo aktivnog redovnog člana koji je trenutno na toj poziciji
+            $replacedMember = $this->resolveMemberByReplacementSlot($commission, $replacesNumber, true);
+            if (!$replacedMember) {
+                return back()->withErrors([
+                    'replaces_member_number' => 'Izabrani član/predsjednik trenutno nije aktivan ili ne postoji.',
+                ])->withInput();
             }
 
             $validated['position'] = $replacementRoleMap[$replacesNumber]['position'];
@@ -1308,17 +1317,24 @@ class AdminController extends Controller
             $userId = $user->id;
         }
 
-        $member = CommissionMember::create([
-            'commission_id' => $commission->id,
-            'user_id' => $userId,
-            'name' => $validated['name'],
-            'position' => $validated['position'],
-            'member_type' => $validated['member_type'],
-            'organization' => $validated['organization'] ?? null,
-            'is_substitute' => $isSubstitute,
-            'replaces_member_number' => $isSubstitute ? (int)$validated['replaces_member_number'] : null,
-            'status' => 'active',
-        ]);
+        $member = DB::transaction(function () use ($commission, $userId, $validated, $isSubstitute, $replacedMember) {
+            if ($isSubstitute && $replacedMember) {
+                // Originalni član postaje neaktivan dok ga zamjenski mijenja.
+                $replacedMember->update(['status' => 'dismissed']);
+            }
+
+            return CommissionMember::create([
+                'commission_id' => $commission->id,
+                'user_id' => $userId,
+                'name' => $validated['name'],
+                'position' => $validated['position'],
+                'member_type' => $validated['member_type'],
+                'organization' => $validated['organization'] ?? null,
+                'is_substitute' => $isSubstitute,
+                'replaces_member_number' => $isSubstitute ? (int)$validated['replaces_member_number'] : null,
+                'status' => 'active',
+            ]);
+        });
 
         // Pošalji e-mail o imenovanju u komisiju
         $targetUser = $member->user;
@@ -1406,10 +1422,67 @@ class AdminController extends Controller
     public function deleteMember(CommissionMember $member)
     {
         $commission = $member->commission;
-        $member->delete();
+
+        DB::transaction(function () use ($member, $commission) {
+            $isSubstitute = !empty($member->is_substitute);
+            $replacementSlot = (int)($member->replaces_member_number ?? 0);
+
+            $member->delete();
+
+            // Ako je obrisan zamjenski član, aktiviraj nazad originalnog člana kojeg je mijenjao.
+            if ($isSubstitute && $replacementSlot > 0) {
+                $replacedMember = $this->resolveMemberByReplacementSlot($commission, $replacementSlot, false);
+                if ($replacedMember && $replacedMember->status !== 'active') {
+                    $replacedMember->update(['status' => 'active']);
+                }
+            }
+        });
 
         return redirect()->route('admin.commissions.show', $commission)
             ->with('success', 'Član komisije je uspješno obrisan.');
+    }
+
+    /**
+     * Pronalazi redovnog člana na logičkom mjestu 1-5.
+     * 1 = predsjednik, 2/3 = opština članovi (redosled po ID), 4 = udruženje, 5 = ženska mreža
+     */
+    protected function resolveMemberByReplacementSlot(Commission $commission, int $slot, bool $onlyActive = true): ?CommissionMember
+    {
+        $members = $commission->members()
+            ->where(function ($q) {
+                $q->whereNull('is_substitute')->orWhere('is_substitute', false);
+            })
+            ->when($onlyActive, fn ($q) => $q->where('status', 'active'))
+            ->orderBy('id')
+            ->get();
+
+        if ($slot === 1) {
+            return $members->first(fn ($m) => $m->position === 'predsjednik');
+        }
+
+        if ($slot === 2) {
+            return $members
+                ->filter(fn ($m) => $m->position === 'clan' && $m->member_type === 'opstina')
+                ->values()
+                ->get(0);
+        }
+
+        if ($slot === 3) {
+            return $members
+                ->filter(fn ($m) => $m->position === 'clan' && $m->member_type === 'opstina')
+                ->values()
+                ->get(1);
+        }
+
+        if ($slot === 4) {
+            return $members->first(fn ($m) => $m->position === 'clan' && $m->member_type === 'udruzenje');
+        }
+
+        if ($slot === 5) {
+            return $members->first(fn ($m) => $m->position === 'clan' && $m->member_type === 'zene_mreza');
+        }
+
+        return null;
     }
 
     /**
