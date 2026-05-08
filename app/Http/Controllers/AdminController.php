@@ -1606,6 +1606,13 @@ class AdminController extends Controller
         $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
         $isChairman = $this->isCommissionChairmanForCompetition($competition);
+
+        // Opcija B: nakon finalnog završetka konkursa nema izmjena rang liste/odobrenih iznosa
+        if ($competition->status === 'completed') {
+            return back()->withErrors([
+                'error' => 'Rang lista je zaključena. Nakon završetka konkursa izmjene nijesu dozvoljene.',
+            ]);
+        }
         
         // Samo superadmin i predsjednik komisije mogu odabirati dobitnike
         if ($isCompetitionAdmin || (!$isSuperAdmin && !$isChairman)) {

@@ -961,6 +961,10 @@ class EvaluationController extends Controller
         
         // Provjeri da li je prošao rok od 30 dana za donošenje odluke
         $competition = $application->competition;
+        if ($competition && $competition->status === 'completed') {
+            return redirect()->back()
+                ->withErrors(['error' => 'Rang lista je zaključena. Nakon završetka konkursa izmjene nijesu dozvoljene.']);
+        }
         if ($competition && $competition->isEvaluationDeadlinePassed()) {
             return redirect()->back()
                 ->withErrors(['error' => 'Rok za donošenje odluke je istekao. Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.']);
