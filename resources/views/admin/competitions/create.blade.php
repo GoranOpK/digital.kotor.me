@@ -117,7 +117,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">UP broj konkursa *</label>
+                        <label class="form-label">Broj konkursa</label>
                         <input type="text" id="up_number" name="up_number" class="form-control input-uppercase @error('up_number') error @enderror" value="{{ old('up_number') }}" required autocomplete="off">
                         @error('up_number')
                             <div class="error-message">{{ $message }}</div>

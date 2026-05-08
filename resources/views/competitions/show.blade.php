@@ -257,7 +257,7 @@
                     </div>
                     <div class="info-item">
                         <span class="info-label">Broj konkursa</span>
-                        <span class="info-value">{{ $competition->competition_number ?? 'N/A' }}. konkurs {{ $competition->year ?? date('Y') }}. godine</span>
+                        <span class="info-value">{{ $competition->upNumber?->number ?? 'N/A' }}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Ukupan budžet</span>
