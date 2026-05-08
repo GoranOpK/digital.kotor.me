@@ -1227,7 +1227,7 @@ class AdminController extends Controller
 
         // Pravila kapaciteta: najviše 5 redovnih članova + 1 zamjenski
         $commission->loadMissing('members');
-        $hasSubstituteMember = $commission->members->contains(fn ($m) => !empty($m->is_substitute));
+        $hasSubstituteMember = $commission->members->contains(fn ($m) => !empty($m->is_substitute) && $m->status === 'active');
         $regularMembersCount = $commission->members->reject(fn ($m) => !empty($m->is_substitute))->count();
 
         if (($validated['member_type'] ?? null) === 'zamjenski') {

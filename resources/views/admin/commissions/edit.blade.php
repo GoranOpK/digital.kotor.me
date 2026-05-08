@@ -92,7 +92,7 @@
         </div>
 
         <div class="form-card">
-            <form method="POST" action="{{ route('admin.commissions.update', $commission) }}">
+            <form id="commission-edit-form" method="POST" action="{{ route('admin.commissions.update', $commission) }}">
                 @csrf
                 @method('PUT')
                 
@@ -197,10 +197,6 @@
                 </div>
                 @endif
 
-                <div class="form-actions">
-                    <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
-                    <a href="{{ route('admin.commissions.show', $commission) }}" class="btn-cancel">Otkaži</a>
-                </div>
             </form>
 
             <div style="margin-top: 36px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
@@ -209,6 +205,15 @@
                     Zamjenski član se imenuje ukoliko je neki član opravdano odsutan i preuzima ista prava i obaveze člana/predsjednika kojeg mijenja.
                 </p>
 
+                @php
+                    $activeSubstituteExists = $commission->members->contains(fn($m) => !empty($m->is_substitute) && $m->status === 'active');
+                @endphp
+
+                @if($activeSubstituteExists)
+                    <div style="background:#fef3c7; border:1px solid #f59e0b; color:#92400e; border-radius:8px; padding:12px 14px; margin-bottom:16px;">
+                        Već postoji aktivan zamjenski član. Dodavanje drugog zamjenskog člana nije dozvoljeno dok je prvi aktivan.
+                    </div>
+                @else
                 <form method="POST" action="{{ route('admin.commissions.members.add', $commission) }}" autocomplete="on">
                     @csrf
                     <input type="hidden" name="position" value="clan">
@@ -297,6 +302,12 @@
                         <button type="submit" class="btn-primary">Dodaj zamjenskog člana</button>
                     </div>
                 </form>
+                @endif
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" form="commission-edit-form" class="btn-primary">Sačuvaj izmjene</button>
+                <a href="{{ route('admin.commissions.show', $commission) }}" class="btn-cancel">Otkaži</a>
             </div>
         </div>
     </div>
