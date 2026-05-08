@@ -179,7 +179,7 @@
                             @endforeach
                         </div>
                         <div style="font-size: 12px; color: #6b7280; margin-top: 8px;">
-                            Možete izabrati više konkursa. Ista komisija može biti dodijeljena više različitih konkursa.
+                            Možete izabrati više konkursa. Ista komisija može biti dodijeljena na više različitih konkursa.
                         </div>
                     </div>
                 </div>
