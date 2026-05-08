@@ -401,7 +401,7 @@
                             </div>
                         </div>
                         <div id="napomenaNemaRegistraciju" class="info-box conditional-field {{ !old('has_registered_business', $businessPlan->has_registered_business ?? ($defaultData['has_registered_business'] ?? false)) ? 'show' : '' }}">
-                            <strong>Napomena:</strong> Ukoliko podnosilac biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena, mora svoju djelatnost registrovati u neki od oblika registracije koji predviđa Zakon o privrednim društvima, najkasnije do dana potpisivanja ugovora.
+                            <strong>Napomena:</strong> Ukoliko podnositeljka biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena, mora svoju djelatnost registrovati u neki od oblika registracije koji predviđa Zakon o privrednim društvima ili na način definisan pravilima djelatnosti kojom namjerava da se bavi, najkasnije do dana potpisivanja ugovora.
                         </div>
                     </div>
 
@@ -417,7 +417,7 @@
                             <div class="form-group">
                                 <label class="form-label" id="company_name_label">Ime i prezime preduzetnice i trgovački naziv za oblik registracije "Preduzetnik", odnosno ime i prezime nositeljke biznisa* i naziv društva za oblik registracije "DOO":</label>
                                 <input type="text" name="company_name" class="form-control" value="{{ old('company_name', $businessPlan->company_name ?? '') }}">
-                                <div class="form-text">*Nosioc biznisa je vlasnica ili jedna od vlasnika i izvršna direktorica društva</div>
+                                <div class="form-text">*Nositeljka biznisa je osnivačica ili jedna od osnivača i izvršna direktorica društva</div>
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -649,7 +649,7 @@
                                 <thead>
                                     <tr>
                                         <th>Proizvod/usluga</th>
-                                        <th>Cijena</th>
+                                        <th>Cijena (u EUR)</th>
                                         <th></th>
                                     </tr>
                                 </thead>

@@ -356,6 +356,14 @@ class BusinessPlanController extends Controller
             )
         );
 
+        // Uskladi ključne iznose iz Biznis plana sa prijavom (za sve ostale prikaze u sistemu):
+        // - stavka 21 (required_amount) -> applications.total_budget_needed
+        // - stavka 22 (requested_amount) -> applications.requested_amount
+        $application->update([
+            'total_budget_needed' => $businessPlan->required_amount,
+            'requested_amount' => $businessPlan->requested_amount,
+        ]);
+
         // Ako je sačuvano kao nacrt, vrati korisnika na Moj Panel
         if ($isDraft) {
             return redirect()->route('dashboard')

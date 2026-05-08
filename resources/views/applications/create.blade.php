@@ -435,7 +435,7 @@
 
             <!-- Napomena za Fizičko lice (nema registrovanu djelatnost) - prikazuje se kada je izabrano -->
             <div class="alert alert-info conditional-field" id="fizickoLiceNotice" style="display: none; margin-bottom: 24px;">
-                <strong>Važno:</strong> Ukoliko podnosioc biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena u obavezi je da svoju djelatnost registruje u neki od oblika registracije koji predviđa Zakon o privrednim društvima i priloži dokaz (rješenje o registraciji u CRPS i rješenje o registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
+                <strong>Važno:</strong> Ukoliko podnositeljka biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena u obavezi je da svoju djelatnost registruje u neki od oblika registracije koji predviđa Zakon o privrednim društvima i priloži dokaz (rješenje o registraciji u CRPS i rješenje o registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
             </div>
 
             <!-- Izbor tipa prijave za Fizičko lice (Rezident) -->
@@ -695,7 +695,7 @@
                                 required
                             >
                             <label for="accuracy_declaration_1a">
-                                Kao podnosilac prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
+                                Kao podnositeljka prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
                                 <span class="required">*</span>
                             </label>
                         </div>
@@ -995,7 +995,7 @@
                                 required
                             >
                             <label for="accuracy_declaration_1b">
-                                Kao podnosilac prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
+                                Kao podnositeljka prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
                                 <span class="required">*</span>
                             </label>
                         </div>
@@ -1175,7 +1175,7 @@
                                 required
                             >
                             <label for="accuracy_declaration_fizicko">
-                                Kao podnosilac prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
+                                Kao podnositeljka prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.
                                 <span class="required">*</span>
                             </label>
                         </div>

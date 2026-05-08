@@ -976,6 +976,19 @@ class EvaluationController extends Controller
             'commission_justification.required' => 'Obrazloženje je obavezno.',
         ]);
 
+        if (
+            isset($validated['approved_amount']) &&
+            $validated['approved_amount'] !== null &&
+            $application->requested_amount !== null &&
+            (float) $validated['approved_amount'] > (float) $application->requested_amount
+        ) {
+            return redirect()->back()
+                ->withErrors([
+                    'approved_amount' => 'Odobreni iznos ne može biti veći od traženog iznosa.',
+                ])
+                ->withInput();
+        }
+
         // Ažuriraj prijavu sa zaključkom
         $application->update([
             'commission_decision' => $validated['commission_decision'],

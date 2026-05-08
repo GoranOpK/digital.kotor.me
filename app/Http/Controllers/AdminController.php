@@ -1648,8 +1648,10 @@ class AdminController extends Controller
             }
 
             // Proveri da li je iznos validan
+            $requestedAmountCap = $application->requested_amount ?? $winner['approved_amount'];
             $approvedAmount = min(
                 $winner['approved_amount'],
+                $requestedAmountCap,
                 $maxSupportPerPlan,
                 $totalBudget - $usedBudget
             );

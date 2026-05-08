@@ -384,13 +384,19 @@
                             @endif
                         </span>
                     </div>
+                    @php
+                        // Usklađeno sa Formom za biznis plan (IV Finansije):
+                        // 21 = required_amount (ukupan potrebni iznos), 22 = requested_amount (traženi iznos podrške)
+                        $statusRequestedAmount = $application->businessPlan?->requested_amount ?? $application->requested_amount;
+                        $statusTotalBudget = $application->businessPlan?->required_amount ?? $application->total_budget_needed;
+                    @endphp
                     <div class="info-item">
                         <span class="info-label">Traženi iznos</span>
-                        <span class="info-value">{{ number_format($application->requested_amount, 2, ',', '.') }} €</span>
+                        <span class="info-value">{{ number_format((float)($statusRequestedAmount ?? 0), 2, ',', '.') }} €</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Ukupan budžet</span>
-                        <span class="info-value">{{ number_format($application->total_budget_needed, 2, ',', '.') }} €</span>
+                        <span class="info-value">{{ number_format((float)($statusTotalBudget ?? 0), 2, ',', '.') }} €</span>
                     </div>
                     @if($application->approved_amount)
                     <div class="info-item">
@@ -569,7 +575,7 @@
                                             'pdv_resenje' => 'PDV rješenje',
                                             'statut' => 'Statut',
                                             'karton_potpisa' => 'Karton potpisa',
-                                            'potvrda_neosudjivanost' => 'Neosuđivanost',
+                                            'potvrda_neosudjivanost' => 'Potvrda - Osnovni sud',
                                             'uvjerenje_opstina_porezi' => 'Porezi Opština',
                                             'uvjerenje_opstina_nepokretnost' => 'Nepokretnost Opština',
                                             'potvrda_upc_porezi' => 'Porezi UPC',
