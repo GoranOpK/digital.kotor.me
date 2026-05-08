@@ -29,6 +29,8 @@
         .btn-primary:hover { background:var(--primary-dark); }
         .btn-outline { border-color:var(--primary); color:var(--primary); background:#fff; }
         .btn-outline:hover { border-color:var(--primary-dark); color:var(--primary-dark); }
+        .btn-danger-outline { border-color:#dc2626; color:#dc2626; background:#fff; }
+        .btn-danger-outline:hover { border-color:#b91c1c; color:#b91c1c; }
         .masthead { position:relative; min-height:50vh; border-radius:0; overflow:hidden; margin-top:0; width:100%; background-color:var(--primary); }
         .masthead { background-size:cover; background-position:center center; background-repeat:no-repeat; }
         .masthead::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.35)); }
@@ -150,6 +152,10 @@
                     <nav class="nav">
                         @auth
                             <a class="btn btn-outline" href="{{ route('dashboard') }}">Moj panel</a>
+                            <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                                @csrf
+                                <button type="submit" class="btn btn-danger-outline">Odjava</button>
+                            </form>
                         @else
                             <a class="btn btn-outline" href="{{ route('register') }}">Kreiraj nalog</a>
                             <a class="btn btn-primary" href="{{ route('login') }}">Prijava</a>
