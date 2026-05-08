@@ -153,9 +153,6 @@
                             <div class="error-message">{{ $message }}</div>
                         @enderror
                     </div>
-                </div>
-
-                <div class="form-row">
                     <div class="form-group">
                         <label class="form-label">Godina *</label>
                         <input type="number" name="year" class="form-control @error('year') error @enderror" value="{{ old('year', $competition->year ?? date('Y')) }}" min="2020" max="2100" required>
