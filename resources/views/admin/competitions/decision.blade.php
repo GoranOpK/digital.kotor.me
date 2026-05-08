@@ -287,7 +287,8 @@
                                     <div>Ukupno ostvareno: <strong>{{ number_format($winner->getDisplayScore(), 1, ',', '.') }}</strong> bodova;</div>
                                     <div>Iznos odobrenih sredstava: {{ number_format($winner->approved_amount ?? 0, 2, ',', '.') }} €;</div>
                                     <div>Potraživani iznos sredstava: {{ number_format($winner->requested_amount ?? 0, 2, ',', '.') }} €;</div>
-                                    <div>Ukupna vrijednost biznis plana: {{ number_format($winner->total_budget_needed ?? 0, 2, ',', '.') }} €.</div>
+                                    <div>Ukupna vrijednost biznis plana: {{ number_format($winner->total_budget_needed ?? 0, 2, ',', '.') }} €;</div>
+                                    <div>Unio: {{ $chairmanName ?? 'Predsjednik komisije' }}; Datum unosa: {{ $winner->commission_decision_date ? \Carbon\Carbon::parse($winner->commission_decision_date)->format('d.m.Y H:i') : '—' }}.</div>
                                 </div>
                             </li>
                         @endforeach

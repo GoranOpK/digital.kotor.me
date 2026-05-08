@@ -130,16 +130,9 @@
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">Maksimalna podrška (%) *</label>
-                        <input type="number" name="max_support_percentage" class="form-control" value="{{ old('max_support_percentage', 30) }}" step="0.01" min="0" max="100" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label">Datum početka</label>
-                        <input type="date" name="start_date" id="start_date" class="form-control" value="{{ old('start_date') }}">
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Datum početka</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control" value="{{ old('start_date') }}">
                 </div>
 
                 <div class="form-group">

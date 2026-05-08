@@ -972,12 +972,11 @@ class EvaluationController extends Controller
 
         $validated = $request->validate([
             'commission_decision' => 'required|in:podrzava_potpuno,odbija',
-            'commission_justification' => 'required|string|max:5000',
+            'commission_justification' => 'nullable|string|max:5000',
             'commission_notes' => 'nullable|string|max:5000',
             'approved_amount' => 'nullable|numeric|min:0',
         ], [
             'commission_decision.required' => 'Morate odabrati zaključak komisije.',
-            'commission_justification.required' => 'Obrazloženje je obavezno.',
         ]);
 
         if (
@@ -989,6 +988,19 @@ class EvaluationController extends Controller
             return redirect()->back()
                 ->withErrors([
                     'approved_amount' => 'Odobreni iznos ne može biti veći od traženog iznosa.',
+                ])
+                ->withInput();
+        }
+
+        if (
+            isset($validated['approved_amount']) &&
+            $validated['approved_amount'] !== null &&
+            (float) $validated['approved_amount'] > 0 &&
+            empty(trim((string)($validated['commission_justification'] ?? '')))
+        ) {
+            return redirect()->back()
+                ->withErrors([
+                    'commission_justification' => 'Obrazloženje je obavezno kada unosite odobreni iznos.',
                 ])
                 ->withInput();
         }

@@ -295,16 +295,6 @@ class ApplicationController extends Controller
             throw $e;
         }
 
-        // Proveri maksimalnu podršku (30% budžeta) - samo ako nije draft
-        if (!$isDraft && isset($validated['requested_amount'])) {
-            $maxSupport = ($competition->budget ?? 0) * (($competition->max_support_percentage ?? 30) / 100);
-            if ($validated['requested_amount'] > $maxSupport) {
-                return back()->withErrors([
-                    'requested_amount' => "Maksimalna podrška po biznis planu je {$maxSupport} € (30% budžeta)."
-                ])->withInput();
-            }
-        }
-        
         // Proveri da li je total_budget_needed >= requested_amount - samo ako nije draft i oba su popunjena
         if (!$isDraft && isset($validated['requested_amount']) && isset($validated['total_budget_needed'])) {
             if ($validated['total_budget_needed'] < $validated['requested_amount']) {

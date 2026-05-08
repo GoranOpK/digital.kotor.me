@@ -135,7 +135,6 @@
                     @endphp
                     <p><strong>Status:</strong> <span class="status-badge status-{{ $competition->status }}">{{ $competitionStatusLabels[$competition->status] ?? $competition->status }}</span></p>
                     <p><strong>Budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
-                    <p><strong>Maksimalna podrška:</strong> {{ $competition->max_support_percentage ?? 30 }}%</p>
                     @if(!isset($isCompetitionAdmin) || !$isCompetitionAdmin)
                         <p><strong>Broj prijava:</strong> {{ $applications->total() }}</p>
                     @endif

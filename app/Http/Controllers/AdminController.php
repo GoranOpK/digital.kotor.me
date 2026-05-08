@@ -381,7 +381,6 @@ class AdminController extends Controller
             'up_number' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'budget' => 'required|numeric|min:0',
-            'max_support_percentage' => 'required|numeric|min:0|max:100',
             'start_date' => 'nullable|date',
             'commission_id' => 'nullable|exists:commissions,id',
         ], [
@@ -390,7 +389,6 @@ class AdminController extends Controller
             'up_number.required' => 'UP broj konkursa je obavezan.',
             'year.required' => 'Godina je obavezna.',
             'budget.required' => 'Budžet je obavezan.',
-            'max_support_percentage.required' => 'Maksimalna podrška je obavezna.',
             'commission_id.exists' => 'Izabrana komisija ne postoji.',
         ]);
 
@@ -400,7 +398,6 @@ class AdminController extends Controller
             'type' => $validated['type'],
             'year' => $validated['year'],
             'budget' => $validated['budget'],
-            'max_support_percentage' => $validated['max_support_percentage'],
             'commission_id' => $validated['commission_id'] ?? null,
             'deadline_days' => 20,
             'status' => 'draft',
@@ -539,7 +536,6 @@ class AdminController extends Controller
             'up_number' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
             'budget' => 'required|numeric|min:0',
-            'max_support_percentage' => 'required|numeric|min:0|max:100',
             'start_date' => 'nullable|date',
             'status' => 'required|in:draft,published,completed',
             'commission_id' => 'nullable|exists:commissions,id',
@@ -549,7 +545,6 @@ class AdminController extends Controller
             'up_number.required' => 'UP broj konkursa je obavezan.',
             'year.required' => 'Godina je obavezna.',
             'budget.required' => 'Budžet je obavezan.',
-            'max_support_percentage.required' => 'Maksimalna podrška je obavezna.',
             'commission_id.exists' => 'Izabrana komisija ne postoji.',
         ]);
 
@@ -559,7 +554,6 @@ class AdminController extends Controller
             'type' => $validated['type'],
             'year' => $validated['year'],
             'budget' => $validated['budget'],
-            'max_support_percentage' => $validated['max_support_percentage'],
             'status' => $validated['status'],
             'commission_id' => $validated['commission_id'] ?? null,
             'deadline_days' => 20,
@@ -1594,7 +1588,9 @@ class AdminController extends Controller
             ->with('user')
             ->get() : collect();
 
-        return view('admin.competitions.ranking', compact('competition', 'applications', 'belowLineApplications', 'totalBudget', 'usedBudget', 'remainingBudget', 'isSuperAdmin', 'isChairman', 'isCommissionMember', 'commissionMembers'));
+        $decisionEnteredBy = $commissionMembers->firstWhere('position', 'predsjednik')?->name ?? 'Predsjednik komisije';
+
+        return view('admin.competitions.ranking', compact('competition', 'applications', 'belowLineApplications', 'totalBudget', 'usedBudget', 'remainingBudget', 'isSuperAdmin', 'isChairman', 'isCommissionMember', 'commissionMembers', 'decisionEnteredBy'));
     }
 
     /**
@@ -1642,7 +1638,6 @@ class AdminController extends Controller
         }
 
         $totalBudget = $competition->budget ?? 0;
-        $maxSupportPerPlan = ($totalBudget * (($competition->max_support_percentage ?? 30) / 100));
         $usedBudget = Application::where('competition_id', $competition->id)
             ->where('status', 'approved')
             ->sum('approved_amount');
@@ -1659,7 +1654,6 @@ class AdminController extends Controller
             $approvedAmount = min(
                 $winner['approved_amount'],
                 $requestedAmountCap,
-                $maxSupportPerPlan,
                 $totalBudget - $usedBudget
             );
 

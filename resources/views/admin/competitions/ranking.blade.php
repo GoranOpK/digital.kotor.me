@@ -691,7 +691,7 @@
 
                                         <div style="margin-bottom: 24px;">
                                             <label style="display: block; font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 8px;">
-                                                Obrazloženje: *
+                                                Obrazloženje (obavezno ako unosite odobreni iznos):
                                             </label>
                                             <textarea 
                                                 name="commission_justification" 
@@ -728,6 +728,15 @@
                                                 <p style="margin-bottom: 8px; font-size: 13px; color: #6b7280; font-weight: 600; text-transform: uppercase;">Iznos odobrenih sredstava:</p>
                                                 <p style="font-size: 15px; color: #10b981; font-weight: 700;">
                                                     {{ $application->approved_amount ? number_format($application->approved_amount, 2, ',', '.') . ' €' : '-' }}
+                                                </p>
+                                                <p style="margin: 8px 0 0 0; font-size: 12px; color: #6b7280;">
+                                                    Traženi iznos: <strong>{{ number_format($application->requested_amount ?? 0, 2, ',', '.') }} €</strong>
+                                                </p>
+                                                <p style="margin: 4px 0 0 0; font-size: 12px; color: #6b7280;">
+                                                    Unio: <strong>{{ $decisionEnteredBy ?? 'Predsjednik komisije' }}</strong>
+                                                    @if($application->commission_decision_date)
+                                                        | Datum: <strong>{{ \Carbon\Carbon::parse($application->commission_decision_date)->format('d.m.Y H:i') }}</strong>
+                                                    @endif
                                                 </p>
                                             </div>
                                         </div>

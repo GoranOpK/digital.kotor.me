@@ -264,10 +264,6 @@
                         <span class="info-value">{{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Maksimalna podrška po biznis planu</span>
-                        <span class="info-value">{{ $competition->max_support_percentage ?? 30 }}% ({{ number_format(($competition->budget ?? 0) * (($competition->max_support_percentage ?? 30) / 100), 2, ',', '.') }} €)</span>
-                    </div>
-                    <div class="info-item">
                         <span class="info-label">Datum objavljivanja</span>
                         <span class="info-value">{{ $competition->published_at ? $competition->published_at->format('d.m.Y H:i') : 'N/A' }}</span>
                     </div>

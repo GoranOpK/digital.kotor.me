@@ -52,7 +52,6 @@ class CompetitionService
         $rankingList = $this->generateRankingList($competition);
         $remainingBudget = $competition->budget ?? 0;
         $winners = [];
-        $maxSupportPerPlan = ($competition->budget * ($competition->max_support_percentage / 100)) ?? 0;
 
         foreach ($rankingList as $application) {
             $requestedAmount = $application['requested_amount'] ?? 0;
@@ -62,8 +61,8 @@ class CompetitionService
                 break;
             }
 
-            // Ako je traženi iznos veći od maksimalnog dozvoljenog, ograniči ga
-            $approvedAmount = min($requestedAmount, $maxSupportPerPlan, $remainingBudget);
+            // Ograniči odobrenje na traženi iznos i raspoloživi budžet konkursa
+            $approvedAmount = min($requestedAmount, $remainingBudget);
 
             if ($approvedAmount > 0) {
                 $winners[] = [
