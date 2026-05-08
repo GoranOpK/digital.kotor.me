@@ -229,14 +229,43 @@
                             <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Mijenja člana/predsjednika *</label>
+                            <label class="form-label">Mijenja /predsjednika/člana *</label>
                             <select name="replaces_member_number" class="form-control @error('replaces_member_number') error @enderror">
                                 <option value="">-- Izaberite --</option>
-                                <option value="1" {{ old('replaces_member_number') == '1' ? 'selected' : '' }}>Predsjednik komisije</option>
-                                <option value="2" {{ old('replaces_member_number') == '2' ? 'selected' : '' }}>Član 2 - Predstavnik Opštine</option>
-                                <option value="3" {{ old('replaces_member_number') == '3' ? 'selected' : '' }}>Član 3 - Predstavnik Opštine</option>
-                                <option value="4" {{ old('replaces_member_number') == '4' ? 'selected' : '' }}>Član 4 - Predstavnica Udruženja/Biznisa/Akademske zajednice</option>
-                                <option value="5" {{ old('replaces_member_number') == '5' ? 'selected' : '' }}>Član 5 - Predstavnica Ženske političke mreže</option>
+                                @php
+                                    $regularMembers = $commission->members
+                                        ->reject(fn($m) => !empty($m->is_substitute))
+                                        ->values();
+                                    $chairmanMember = $regularMembers->first(fn($m) => $m->position === 'predsjednik');
+                                    $opstinaMembers = $regularMembers->filter(fn($m) => $m->position === 'clan' && $m->member_type === 'opstina')->values();
+                                    $udruzenjeMember = $regularMembers->first(fn($m) => $m->position === 'clan' && $m->member_type === 'udruzenje');
+                                    $zeneMrezaMember = $regularMembers->first(fn($m) => $m->position === 'clan' && $m->member_type === 'zene_mreza');
+                                @endphp
+                                @if($chairmanMember)
+                                    <option value="1" {{ old('replaces_member_number') == '1' ? 'selected' : '' }}>
+                                        Predsjednik - {{ $chairmanMember->name }}
+                                    </option>
+                                @endif
+                                @if($opstinaMembers->get(0))
+                                    <option value="2" {{ old('replaces_member_number') == '2' ? 'selected' : '' }}>
+                                        Član 2 - {{ $opstinaMembers->get(0)->name }}
+                                    </option>
+                                @endif
+                                @if($opstinaMembers->get(1))
+                                    <option value="3" {{ old('replaces_member_number') == '3' ? 'selected' : '' }}>
+                                        Član 3 - {{ $opstinaMembers->get(1)->name }}
+                                    </option>
+                                @endif
+                                @if($udruzenjeMember)
+                                    <option value="4" {{ old('replaces_member_number') == '4' ? 'selected' : '' }}>
+                                        Član 4 - {{ $udruzenjeMember->name }}
+                                    </option>
+                                @endif
+                                @if($zeneMrezaMember)
+                                    <option value="5" {{ old('replaces_member_number') == '5' ? 'selected' : '' }}>
+                                        Član 5 - {{ $zeneMrezaMember->name }}
+                                    </option>
+                                @endif
                             </select>
                             @error('replaces_member_number')
                                 <div class="error-message">{{ $message }}</div>
