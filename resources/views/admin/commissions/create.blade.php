@@ -151,10 +151,9 @@
                 <!-- Informacije o sastavu komisije -->
                 <div style="background: #f0f9ff; border-left: 4px solid var(--primary); padding: 16px; border-radius: 8px; margin: 24px 0;">
                     <h3 style="font-size: 16px; font-weight: 600; color: var(--primary); margin: 0 0 12px;">Sastav komisije</h3>
-                    <p style="font-size: 14px; color: #374151; margin: 0 0 8px;"><strong>Komisija se sastoji od maksimalno 5 članova:</strong></p>
+                    <p style="font-size: 14px; color: #374151; margin: 0 0 8px;"><strong>Članovi Komisije su:</strong></p>
                     <ul style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px;">
-                        <li>1 predsjednik (iz reda potpredsjednika Opštine ili starješina organa lokalne uprave)</li>
-                        <li>2 člana - predstavnici Opštine</li>
+                        <li>3 člana - predstavnici Opštine Kotor (1 član - predsjednik Komisije, 2 člana - iz redova zaposlenih u Sekretarijatu od kojih je jedan sekretar Komisije)</li>
                         <li>1 član - predstavnica Udruženja preduzetnica Crne Gore ili strukovnih udruženja, ili biznisa, ili akademske zajednice</li>
                         <li>1 član - predstavnica Ženske političke mreže</li>
                     </ul>
@@ -192,7 +191,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Organizacija</label>
-                            <input type="text" name="members[0][organization]" class="form-control" value="{{ old('members.0.organization') }}" placeholder="Potpredsjednik Opštine / Starješina organa lokalne uprave">
+                            <input type="text" name="members[0][organization]" class="form-control" value="{{ old('members.0.organization') }}" placeholder="Opština Kotor">
                         </div>
                         <input type="hidden" name="members[0][position]" value="predsjednik">
                         <input type="hidden" name="members[0][member_type]" value="opstina">
@@ -200,7 +199,7 @@
 
                     <!-- 2 člana - Opština -->
                     <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">2. Član - Predstavnik Opštine</h3>
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">2. Član - Predstavnik Opštine Kotor (Sekretarijat)</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime</label>
                             <input type="text" name="members[1][name]" class="form-control @error('members.1.name') error @enderror" value="{{ old('members.1.name') }}">
@@ -232,7 +231,7 @@
                     </div>
 
                     <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">3. Član - Predstavnik Opštine</h3>
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">3. Član - Predstavnik Opštine Kotor (Sekretarijat)</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime</label>
                             <input type="text" name="members[2][name]" class="form-control @error('members.2.name') error @enderror" value="{{ old('members.2.name') }}">
@@ -265,7 +264,7 @@
 
                     <!-- 1 član - Udruženje -->
                     <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">4. Član - Predstavnica Udruženja/Udruženja preduzetnica/Biznisa/Akademske zajednice</h3>
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">4. Član - Predstavnica Udruženja preduzetnica Crne Gore ili strukovnih udruženja, ili biznisa, ili akademske zajednice</h3>
                         <div class="form-group">
                             <label class="form-label">Ime i prezime</label>
                             <input type="text" name="members[3][name]" class="form-control @error('members.3.name') error @enderror" value="{{ old('members.3.name') }}">

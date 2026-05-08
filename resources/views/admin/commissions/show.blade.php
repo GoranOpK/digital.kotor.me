@@ -323,10 +323,10 @@
                                     @endif
                                 </div>
                                 <div class="member-details">
-                                    <div>Pozicija: {{ $member->position }}</div>
+                                    <div>Pozicija: {{ $member->position === 'predsjednik' ? 'predsjednik' : 'član' }}</div>
                                     <div>Tip: 
-                                        @if($member->member_type === 'opstina') Predstavnik Opštine
-                                        @elseif($member->member_type === 'udruzenje') Predstavnica Udruženja
+                                        @if($member->member_type === 'opstina') Predstavnik Opštine Kotor
+                                        @elseif($member->member_type === 'udruzenje') Predstavnica Udruženja preduzetnica Crne Gore ili strukovnih udruženja, ili biznisa, ili akademske zajednice
                                         @elseif($member->member_type === 'zene_mreza') Predstavnica Ženske političke mreže
                                         @endif
                                     </div>
@@ -436,10 +436,10 @@
                                     $zeneMrezaCount = $commission->members->where('member_type', 'zene_mreza')->count();
                                 @endphp
                                 @if($opstinaCount < 3)
-                                    <option value="opstina">Predstavnik Opštine</option>
+                                    <option value="opstina">Predstavnik Opštine Kotor</option>
                                 @endif
                                 @if($udruzenjeCount < 1)
-                                    <option value="udruzenje">Predstavnica Udruženja</option>
+                                    <option value="udruzenje">Predstavnica Udruženja preduzetnica Crne Gore / strukovnih udruženja / biznisa / akademske zajednice</option>
                                 @endif
                                 @if($zeneMrezaCount < 1)
                                     <option value="zene_mreza">Predstavnica Ženske političke mreže</option>

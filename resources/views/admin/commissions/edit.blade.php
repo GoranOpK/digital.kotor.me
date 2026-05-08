@@ -265,17 +265,17 @@
                                 @endif
                                 @if($opstinaMembers->get(0))
                                     <option value="2" {{ old('replaces_member_number') == '2' ? 'selected' : '' }}>
-                                        Član 2 - {{ $opstinaMembers->get(0)->name }}
+                                        Član 2 (Opština Kotor - Sekretarijat) - {{ $opstinaMembers->get(0)->name }}
                                     </option>
                                 @endif
                                 @if($opstinaMembers->get(1))
                                     <option value="3" {{ old('replaces_member_number') == '3' ? 'selected' : '' }}>
-                                        Član 3 - {{ $opstinaMembers->get(1)->name }}
+                                        Član 3 (Opština Kotor - Sekretarijat) - {{ $opstinaMembers->get(1)->name }}
                                     </option>
                                 @endif
                                 @if($udruzenjeMember)
                                     <option value="4" {{ old('replaces_member_number') == '4' ? 'selected' : '' }}>
-                                        Član 4 - {{ $udruzenjeMember->name }}
+                                        Član 4 (Udruženja preduzetnica/strukovna udruženja/biznis/akademska zajednica) - {{ $udruzenjeMember->name }}
                                     </option>
                                 @endif
                                 @if($zeneMrezaMember)
