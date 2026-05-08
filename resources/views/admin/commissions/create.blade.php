@@ -151,14 +151,14 @@
                 <!-- Informacije o sastavu komisije -->
                 <div style="background: #f0f9ff; border-left: 4px solid var(--primary); padding: 16px; border-radius: 8px; margin: 24px 0;">
                     <h3 style="font-size: 16px; font-weight: 600; color: var(--primary); margin: 0 0 12px;">Sastav komisije</h3>
-                    <p style="font-size: 14px; color: #374151; margin: 0 0 8px;"><strong>Komisija se sastoji od maksimalno 5 članova:</strong></p>
+                    <p style="font-size: 14px; color: #374151; margin: 0 0 8px;"><strong>Komisija se sastoji od 5 članova, uz mogućnost imenovanja 1 zamjenskog člana:</strong></p>
                     <ul style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px;">
                         <li>1 predsjednik (iz reda potpredsjednika Opštine ili starješina organa lokalne uprave)</li>
                         <li>2 člana - predstavnici Opštine</li>
                         <li>1 član - predstavnica Udruženja preduzetnica Crne Gore ili strukovnih udruženja, ili biznisa, ili akademske zajednice</li>
                         <li>1 član - predstavnica Ženske političke mreže</li>
                     </ul>
-                    <p style="font-size: 13px; color: #6b7280; margin: 12px 0 0; font-style: italic;">Možete kreirati komisiju sa bilo kojim brojem članova (1-5). Nema obaveznih članova - možete dodati bilo koji član. Ostale članove možete dodati kasnije.</p>
+                    <p style="font-size: 13px; color: #6b7280; margin: 12px 0 0; font-style: italic;">Zamjenski član se može imenovati ukoliko je neki od članova komisije opravdano odsutan. Zamjenski član ima ista prava i obaveze kao član/predsjednik kojeg mijenja i preuzima njegovu ulogu.</p>
                 </div>
 
                 <!-- Članovi komisije -->
@@ -331,6 +331,57 @@
                         <input type="hidden" name="members[4][position]" value="clan">
                         <input type="hidden" name="members[4][member_type]" value="zene_mreza">
                     </div>
+
+                    <!-- Zamjenski član -->
+                    <div style="background: #f9fafb; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3 style="font-size: 16px; font-weight: 600; color: #111827; margin: 0 0 16px;">6. Zamjenski član (opciono)</h3>
+                        <div class="form-group">
+                            <label class="form-label">Ime i prezime</label>
+                            <input type="text" name="members[5][name]" class="form-control @error('members.5.name') error @enderror" value="{{ old('members.5.name') }}">
+                            @error('members.5.name')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">E-mail</label>
+                            <input type="email" name="members[5][email]" class="form-control @error('members.5.email') error @enderror" value="{{ old('members.5.email') }}" autocomplete="section-commission-member-5 username" autocapitalize="off" spellcheck="false">
+                            @error('members.5.email')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="members[5][password]" class="form-control @error('members.5.password') error @enderror" minlength="8" autocomplete="section-commission-member-5 current-password">
+                            @error('members.5.password')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mijenja člana komisije *</label>
+                            <select name="members[5][replaces_member_number]" class="form-control @error('members.5.replaces_member_number') error @enderror">
+                                <option value="">-- Izaberite člana --</option>
+                                <option value="1" {{ old('members.5.replaces_member_number') == '1' ? 'selected' : '' }}>Predsjednik komisije</option>
+                                <option value="2" {{ old('members.5.replaces_member_number') == '2' ? 'selected' : '' }}>Član 2 - Predstavnik Opštine</option>
+                                <option value="3" {{ old('members.5.replaces_member_number') == '3' ? 'selected' : '' }}>Član 3 - Predstavnik Opštine</option>
+                                <option value="4" {{ old('members.5.replaces_member_number') == '4' ? 'selected' : '' }}>Član 4 - Predstavnica Udruženja/Biznisa/Akademske zajednice</option>
+                                <option value="5" {{ old('members.5.replaces_member_number') == '5' ? 'selected' : '' }}>Član 5 - Predstavnica Ženske političke mreže</option>
+                            </select>
+                            @error('members.5.replaces_member_number')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Zamjenski član preuzima istu ulogu i obaveze člana/predsjednika kojeg mijenja.</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Organizacija</label>
+                            <input type="text" name="members[5][organization]" class="form-control @error('members.5.organization') error @enderror" value="{{ old('members.5.organization') }}" placeholder="Obavezno ako mijenja člana iz udruženja">
+                            @error('members.5.organization')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <input type="hidden" name="members[5][position]" value="clan">
+                        <input type="hidden" name="members[5][member_type]" value="zamjenski">
+                    </div>
                 </div>
 
                 <!-- Dodjela konkursa komisiji -->
@@ -369,7 +420,7 @@
                 </div>
                 <div style="margin-top: 12px; padding: 12px; background: #f0f9ff; border-left: 4px solid var(--primary); border-radius: 4px;">
                     <p style="font-size: 13px; color: #374151; margin: 0;">
-                        <strong>Napomena:</strong> Možete kreirati komisiju sa bilo kojim brojem članova (1-5). Nema obaveznih članova - možete dodati bilo koji član. Ako dodajete člana, sva polja za tog člana moraju biti popunjena. Ostale članove možete dodati kasnije na stranici za upravljanje komisijom.
+                        <strong>Napomena:</strong> Možete kreirati komisiju sa bilo kojim brojem članova (1-5), uz opcioni zamjenski član. Ako dodajete člana, sva polja za tog člana moraju biti popunjena. Za zamjenskog člana je obavezno navesti koga mijenja.
                     </p>
                 </div>
             </form>

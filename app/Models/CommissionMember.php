@@ -18,6 +18,8 @@ class CommissionMember extends Model
         'position',
         'member_type',
         'organization',
+        'is_substitute',
+        'replaces_member_number',
         'confidentiality_declaration',
         'conflict_of_interest_declaration',
         'declarations_signed_at',
@@ -26,6 +28,8 @@ class CommissionMember extends Model
 
     protected $casts = [
         'declarations_signed_at' => 'datetime',
+        'is_substitute' => 'boolean',
+        'replaces_member_number' => 'integer',
     ];
 
     /**
