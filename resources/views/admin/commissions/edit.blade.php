@@ -190,6 +190,73 @@
                     <a href="{{ route('admin.commissions.show', $commission) }}" style="margin-left: 12px; color: #6b7280;">Otkaži</a>
                 </div>
             </form>
+
+            <div style="margin-top: 36px; padding-top: 24px; border-top: 2px solid #e5e7eb;">
+                <h2 style="font-size: 20px; font-weight: 700; color: var(--primary); margin: 0 0 16px;">Dodaj zamjenskog člana</h2>
+                <p style="font-size: 13px; color: #6b7280; margin: 0 0 16px;">
+                    Zamjenski član se imenuje ukoliko je neki član opravdano odsutan i preuzima ista prava i obaveze člana/predsjednika kojeg mijenja.
+                </p>
+
+                <form method="POST" action="{{ route('admin.commissions.members.add', $commission) }}" autocomplete="on">
+                    @csrf
+                    <input type="hidden" name="position" value="clan">
+                    <input type="hidden" name="member_type" value="zamjenski">
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Ime i prezime *</label>
+                            <input type="text" name="name" class="form-control @error('name') error @enderror" value="{{ old('name') }}">
+                            @error('name')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">E-mail *</label>
+                            <input type="email" name="email" class="form-control @error('email') error @enderror" value="{{ old('email') }}" autocapitalize="off" spellcheck="false" autocomplete="section-commission-substitute username">
+                            @error('email')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Password</label>
+                            <input type="password" name="password" class="form-control @error('password') error @enderror" minlength="8" autocomplete="section-commission-substitute current-password">
+                            @error('password')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">Minimum 8 karaktera (obavezno samo za novi e-mail)</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Mijenja člana/predsjednika *</label>
+                            <select name="replaces_member_number" class="form-control @error('replaces_member_number') error @enderror">
+                                <option value="">-- Izaberite --</option>
+                                <option value="1" {{ old('replaces_member_number') == '1' ? 'selected' : '' }}>Predsjednik komisije</option>
+                                <option value="2" {{ old('replaces_member_number') == '2' ? 'selected' : '' }}>Član 2 - Predstavnik Opštine</option>
+                                <option value="3" {{ old('replaces_member_number') == '3' ? 'selected' : '' }}>Član 3 - Predstavnik Opštine</option>
+                                <option value="4" {{ old('replaces_member_number') == '4' ? 'selected' : '' }}>Član 4 - Predstavnica Udruženja/Biznisa/Akademske zajednice</option>
+                                <option value="5" {{ old('replaces_member_number') == '5' ? 'selected' : '' }}>Član 5 - Predstavnica Ženske političke mreže</option>
+                            </select>
+                            @error('replaces_member_number')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Organizacija</label>
+                        <input type="text" name="organization" class="form-control @error('organization') error @enderror" value="{{ old('organization') }}" placeholder="Obavezno ako mijenja člana iz udruženja">
+                        @error('organization')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div style="margin-top: 16px;">
+                        <button type="submit" class="btn-primary">Dodaj zamjenskog člana</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>

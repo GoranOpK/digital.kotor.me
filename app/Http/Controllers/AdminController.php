@@ -926,9 +926,9 @@ class AdminController extends Controller
             return back()->withErrors(['members' => 'Morate dodati najmanje jednog člana komisije.'])->withInput();
         }
         
-        // Proveri da li je dodato više od 6 članova (5 redovnih + 1 zamjenski)
-        if (count($filledMembers) > 6) {
-            return back()->withErrors(['members' => 'Komisija može imati najviše 5 članova i 1 zamjenskog člana.'])->withInput();
+        // Proveri da li je dodato više od 5 članova
+        if (count($filledMembers) > 5) {
+            return back()->withErrors(['members' => 'Komisija može imati najviše 5 članova.'])->withInput();
         }
 
         // Validacija - svi članovi koji se dodaju moraju imati sva polja popunjena
@@ -937,22 +937,21 @@ class AdminController extends Controller
             'year' => 'required|integer|min:2020|max:2100',
             'start_date' => 'required|date',
             'end_date' => 'required|date',
-            'members' => 'required|array|min:1|max:6',
+            'members' => 'required|array|min:1|max:5',
             'competition_ids' => 'nullable|array',
             'competition_ids.*' => 'exists:competitions,id',
         ];
         
-        // Validacija za sve članove (0-5) - ako je bilo koje polje popunjeno, sva polja moraju biti popunjena
-        for ($i = 0; $i <= 5; $i++) {
+        // Validacija za sve članove (0-4) - ako je bilo koje polje popunjeno, sva polja moraju biti popunjena
+        for ($i = 0; $i <= 4; $i++) {
             $rules["members.{$i}.name"] = 'nullable|required_with:members.' . $i . '.email|string|max:255';
             $rules["members.{$i}.email"] = 'nullable|required_with:members.' . $i . '.name|email|max:255';
             // Password je obavezan samo za nove korisnike (email koji ne postoji u sistemu)
             $rules["members.{$i}.password"] = 'nullable|string|min:8';
             $rules["members.{$i}.position"] = 'nullable|required_with:members.' . $i . '.email|in:predsjednik,clan';
-            $rules["members.{$i}.member_type"] = 'nullable|required_with:members.' . $i . '.email|in:opstina,udruzenje,zene_mreza,zamjenski';
+            $rules["members.{$i}.member_type"] = 'nullable|required_with:members.' . $i . '.email|in:opstina,udruzenje,zene_mreza';
             $rules["members.{$i}.organization"] = 'nullable|string|max:255';
         }
-        $rules['members.5.replaces_member_number'] = 'nullable|required_with:members.5.email|integer|in:1,2,3,4,5';
         
         $messages = [
             'name.required' => 'Naziv komisije je obavezan.',
@@ -962,11 +961,11 @@ class AdminController extends Controller
             'end_date.after' => 'Datum završetka mora biti posle datuma početka.',
             'members.required' => 'Morate dodati najmanje jednog člana komisije.',
             'members.min' => 'Morate dodati najmanje jednog člana komisije.',
-            'members.max' => 'Komisija može imati najviše 5 članova i 1 zamjenskog člana.',
+            'members.max' => 'Komisija može imati najviše 5 članova.',
         ];
         
         // Dodaj poruke za sve članove
-        for ($i = 0; $i <= 5; $i++) {
+        for ($i = 0; $i <= 4; $i++) {
             $messages["members.{$i}.name.required_with"] = "Ime i prezime člana je obavezno ako dodajete člana.";
             $messages["members.{$i}.email.required_with"] = "E-mail člana je obavezan ako dodajete člana.";
             $messages["members.{$i}.email.email"] = "E-mail člana mora biti validan.";
@@ -974,11 +973,9 @@ class AdminController extends Controller
             $messages["members.{$i}.position.required_with"] = "Pozicija člana je obavezna ako dodajete člana.";
             $messages["members.{$i}.member_type.required_with"] = "Tip člana je obavezan ako dodajete člana.";
         }
-        $messages['members.5.replaces_member_number.required_with'] = 'Za zamjenskog člana morate navesti koga mijenja.';
-        $messages['members.5.replaces_member_number.in'] = 'Zamjenski član može mijenjati predsjednika ili člana 2, 3, 4, 5.';
         
         // Dodaj poruke za organizaciju
-        for ($i = 0; $i <= 5; $i++) {
+        for ($i = 0; $i <= 4; $i++) {
             $messages["members.{$i}.organization.required_if"] = 'Organizacija je obavezna za člana iz udruženja.';
         }
         
@@ -992,33 +989,6 @@ class AdminController extends Controller
             return back()->withErrors(['members.3.organization' => 'Organizacija je obavezna za člana iz udruženja.'])->withInput();
         }
 
-        // Zamjenski član mora imati definisano koga mijenja i preuzima isti tip/poziciju
-        if (!empty($validated['members'][5]['email'])) {
-            $replacesMemberNumber = (int)($validated['members'][5]['replaces_member_number'] ?? 0);
-            $replacementRoleMap = [
-                1 => ['position' => 'predsjednik', 'member_type' => 'opstina'],
-                2 => ['position' => 'clan', 'member_type' => 'opstina'],
-                3 => ['position' => 'clan', 'member_type' => 'opstina'],
-                4 => ['position' => 'clan', 'member_type' => 'udruzenje'],
-                5 => ['position' => 'clan', 'member_type' => 'zene_mreza'],
-            ];
-
-            if (!isset($replacementRoleMap[$replacesMemberNumber])) {
-                return back()->withErrors([
-                    'members.5.replaces_member_number' => 'Zamjenski član može mijenjati predsjednika ili člana 2, 3, 4, 5.',
-                ])->withInput();
-            }
-
-            $validated['members'][5]['position'] = $replacementRoleMap[$replacesMemberNumber]['position'];
-            $validated['members'][5]['member_type'] = $replacementRoleMap[$replacesMemberNumber]['member_type'];
-
-            // Ako mijenja člana iz udruženja, organizacija je obavezna
-            if ($replacementRoleMap[$replacesMemberNumber]['member_type'] === 'udruzenje' && empty($validated['members'][5]['organization'])) {
-                return back()->withErrors([
-                    'members.5.organization' => 'Organizacija je obavezna kada zamjenski član mijenja člana iz udruženja.',
-                ])->withInput();
-            }
-        }
 
         // Custom validacija: password je obavezan samo za nove email adrese
         foreach ($validated['members'] as $index => $memberData) {
@@ -1077,7 +1047,6 @@ class AdminController extends Controller
             }
 
             // Kreiraj člana komisije i poveži sa User nalogom
-            $isSubstituteMember = isset($memberData['replaces_member_number']) && !empty($memberData['replaces_member_number']);
             $member = CommissionMember::create([
                 'commission_id' => $commission->id,
                 'user_id' => $user->id,
@@ -1085,8 +1054,6 @@ class AdminController extends Controller
                 'position' => $memberData['position'],
                 'member_type' => $memberData['member_type'],
                 'organization' => $memberData['organization'] ?? null,
-                'is_substitute' => $isSubstituteMember,
-                'replaces_member_number' => $isSubstituteMember ? (int)$memberData['replaces_member_number'] : null,
                 'status' => 'active',
             ]);
 
@@ -1232,34 +1199,85 @@ class AdminController extends Controller
      */
     public function addCommissionMember(Request $request, Commission $commission)
     {
+        // Dozvoliti dodavanje članova samo dok mandat traje (aktivna komisija + datum u periodu)
+        if ($commission->status !== 'active' || now()->lt($commission->start_date) || now()->gt($commission->end_date)) {
+            return back()->withErrors(['error' => 'Mandat komisije nije aktivan. Nije moguće dodavanje zamjenskog člana.'])->withInput();
+        }
+
         $validated = $request->validate([
             'user_id' => 'nullable|exists:users,id',
             'name' => 'required|string|max:255',
-            'email' => 'nullable|required_without:user_id|email|max:255|unique:users,email',
-            'password' => 'nullable|required_without:user_id|string|min:8',
+            'email' => 'nullable|required_without:user_id|email|max:255',
+            // Password tražimo samo ako korisnik sa tim e-mailom ne postoji u sistemu
+            'password' => 'nullable|string|min:8',
             'position' => 'required|string|max:255',
-            'member_type' => 'required|in:opstina,udruzenje,zene_mreza',
+            'member_type' => 'required|in:opstina,udruzenje,zene_mreza,zamjenski',
+            'replaces_member_number' => 'nullable|required_if:member_type,zamjenski|integer|in:1,2,3,4,5',
             'organization' => 'nullable|string|max:255',
         ], [
             'name.required' => 'Ime i prezime je obavezno.',
             'email.required_without' => 'E-mail je obavezan ako član ne postoji u sistemu.',
             'email.email' => 'E-mail mora biti validan.',
-            'email.unique' => 'E-mail već postoji u sistemu.',
-            'password.required_without' => 'Password je obavezan ako član ne postoji u sistemu.',
             'password.min' => 'Password mora imati minimum 8 karaktera.',
             'position.required' => 'Pozicija je obavezna.',
             'member_type.required' => 'Tip člana je obavezan.',
+            'replaces_member_number.required_if' => 'Za zamjenskog člana morate navesti koga mijenja.',
+            'replaces_member_number.in' => 'Zamjenski član može mijenjati predsjednika ili člana 2, 3, 4, 5.',
         ]);
 
-        // Proveri da li već postoji 5 članova
-        if ($commission->members()->count() >= 5) {
-            return back()->withErrors(['error' => 'Komisija može imati najviše 5 članova.'])->withInput();
+        // Pravila kapaciteta: najviše 5 redovnih članova + 1 zamjenski
+        $commission->loadMissing('members');
+        $hasSubstituteMember = $commission->members->contains(fn ($m) => !empty($m->is_substitute));
+        $regularMembersCount = $commission->members->reject(fn ($m) => !empty($m->is_substitute))->count();
+
+        if (($validated['member_type'] ?? null) === 'zamjenski') {
+            if ($hasSubstituteMember) {
+                return back()->withErrors(['error' => 'Komisija može imati samo jednog zamjenskog člana.'])->withInput();
+            }
+        } else {
+            if ($regularMembersCount >= 5) {
+                return back()->withErrors(['error' => 'Komisija može imati najviše 5 redovnih članova.'])->withInput();
+            }
+        }
+
+        // Ako je zamjenski član, preuzmi istu poziciju/tip kao član kojeg mijenja
+        $isSubstitute = ($validated['member_type'] ?? null) === 'zamjenski';
+        if ($isSubstitute) {
+            $replacementRoleMap = [
+                1 => ['position' => 'predsjednik', 'member_type' => 'opstina'],
+                2 => ['position' => 'clan', 'member_type' => 'opstina'],
+                3 => ['position' => 'clan', 'member_type' => 'opstina'],
+                4 => ['position' => 'clan', 'member_type' => 'udruzenje'],
+                5 => ['position' => 'clan', 'member_type' => 'zene_mreza'],
+            ];
+            $replacesNumber = (int)($validated['replaces_member_number'] ?? 0);
+            if (!isset($replacementRoleMap[$replacesNumber])) {
+                return back()->withErrors(['replaces_member_number' => 'Neispravan izbor člana za zamjenu.'])->withInput();
+            }
+
+            $validated['position'] = $replacementRoleMap[$replacesNumber]['position'];
+            $validated['member_type'] = $replacementRoleMap[$replacesNumber]['member_type'];
+
+            if ($validated['member_type'] === 'udruzenje' && empty($validated['organization'])) {
+                return back()->withErrors(['organization' => 'Organizacija je obavezna kada zamjenski član mijenja člana iz udruženja.'])->withInput();
+            }
         }
 
         // Ako je izabran postojeći korisnik, koristi njegov ID
-        $userId = $validated['user_id'];
+        $userId = $validated['user_id'] ?? null;
+        $normalizedEmail = isset($validated['email']) && $validated['email'] !== '' ? strtolower($validated['email']) : null;
         
-        // Ako nije izabran postojeći korisnik, kreiraj novog
+        // Ako nije izabran postojeći korisnik, provjeri da li korisnik već postoji po e-mailu
+        if (!$userId) {
+            if ($normalizedEmail) {
+                $existingUser = User::where('email', $normalizedEmail)->first();
+                if ($existingUser) {
+                    $userId = $existingUser->id;
+                }
+            }
+        }
+
+        // Ako korisnik i dalje ne postoji, kreiraj novog (ali tada mora postojati password)
         if (!$userId) {
             // Pronađi rolu za komisiju
             $komisijaRole = Role::where('name', 'komisija')->first();
@@ -1267,10 +1285,16 @@ class AdminController extends Controller
                 return back()->withErrors(['error' => 'Rola "komisija" ne postoji u sistemu.'])->withInput();
             }
 
+            if (empty($validated['password'])) {
+                return back()->withErrors([
+                    'password' => 'Password je obavezan kada korisnik ne postoji u sistemu.',
+                ])->withInput();
+            }
+
             // Kreiraj User nalog za člana komisije
             $user = User::create([
                 'name' => $validated['name'],
-                'email' => strtolower($validated['email']),
+                'email' => $normalizedEmail,
                 'password' => Hash::make($validated['password']),
                 'role_id' => $komisijaRole->id,
                 'activation_status' => 'active',
@@ -1291,6 +1315,8 @@ class AdminController extends Controller
             'position' => $validated['position'],
             'member_type' => $validated['member_type'],
             'organization' => $validated['organization'] ?? null,
+            'is_substitute' => $isSubstitute,
+            'replaces_member_number' => $isSubstitute ? (int)$validated['replaces_member_number'] : null,
             'status' => 'active',
         ]);
 

@@ -222,7 +222,10 @@
                 <p><strong>Godina:</strong> {{ $commission->year }}</p>
                 <p><strong>Mandat:</strong> {{ $commission->start_date->format('d.m.Y') }} - {{ $commission->end_date->format('d.m.Y') }}</p>
                 <p><strong>Status:</strong> <span class="status-badge status-{{ $commission->status }}">{{ $commission->status === 'active' ? 'Aktivna' : 'Neaktivna' }}</span></p>
-                <p><strong>Broj članova:</strong> {{ $commission->members->count() }} / 5</p>
+                <p><strong>Broj članova:</strong>
+                    {{ $commission->members->reject(fn($m) => !empty($m->is_substitute))->count() }} / 5
+                    @if($commission->members->contains(fn($m) => !empty($m->is_substitute))) + 1 zamjenski @endif
+                </p>
             </div>
 
             <!-- Dodijeljeni konkursi (bez arhiviranih: closed/completed) -->
@@ -264,6 +267,13 @@
             <h2>Članovi komisije</h2>
             
             @if($commission->members->count() > 0)
+                @php
+                    $regularMembers = $commission->members->reject(fn($m) => !empty($m->is_substitute))->values();
+                    $chairmanMember = $regularMembers->first(fn($m) => $m->position === 'predsjednik');
+                    $opstinaClanovi = $regularMembers->filter(fn($m) => $m->position === 'clan' && $m->member_type === 'opstina')->values();
+                    $udruzenjeMember = $regularMembers->first(fn($m) => $m->member_type === 'udruzenje');
+                    $zeneMrezaMember = $regularMembers->first(fn($m) => $m->member_type === 'zene_mreza');
+                @endphp
                 <ul class="members-list">
                     @foreach($commission->members as $member)
                         <li class="member-item">
@@ -272,6 +282,44 @@
                                     {{ $member->name }}
                                     @if($member->position === 'predsjednik')
                                         <span style="color: var(--primary); font-size: 12px;">(Predsjednik)</span>
+                                    @endif
+                                    @if(!empty($member->is_substitute))
+                                        @php
+                                            $replaces = (int)($member->replaces_member_number ?? 0);
+                                            $replacesLabel = $replaces === 1
+                                                ? 'Predsjednika komisije'
+                                                : ($replaces === 2 ? 'Člana 2' : ($replaces === 3 ? 'Člana 3' : ($replaces === 4 ? 'Člana 4' : ($replaces === 5 ? 'Člana 5' : '—'))));
+
+                                            $replacedMember = null;
+                                            $replacedRoleLabel = null;
+                                            if ($replaces === 1) {
+                                                $replacedMember = $chairmanMember;
+                                                $replacedRoleLabel = 'predsjednik';
+                                            } elseif ($replaces === 2) {
+                                                $replacedMember = $opstinaClanovi->get(0);
+                                                $replacedRoleLabel = 'član';
+                                            } elseif ($replaces === 3) {
+                                                $replacedMember = $opstinaClanovi->get(1);
+                                                $replacedRoleLabel = 'član';
+                                            } elseif ($replaces === 4) {
+                                                $replacedMember = $udruzenjeMember;
+                                                $replacedRoleLabel = 'član';
+                                            } elseif ($replaces === 5) {
+                                                $replacedMember = $zeneMrezaMember;
+                                                $replacedRoleLabel = 'član';
+                                            }
+                                        @endphp
+                                        <div style="color: #6b7280; font-size: 12px; margin-top: 4px;">
+                                            (Zamjenski za: {{ $replacesLabel }})
+                                        </div>
+                                        <div style="color: #374151; font-size: 12px; margin-top: 4px; font-weight: 600;">
+                                            Zamjenski član aktivno mijenja:
+                                            @if($replacedMember)
+                                                {{ $replacedMember->name }} ({{ $replacedRoleLabel }})
+                                            @else
+                                                [nije dodijeljeno ime] ({{ $replacedRoleLabel ?? 'uloga' }})
+                                            @endif
+                                        </div>
                                     @endif
                                 </div>
                                 <div class="member-details">
@@ -309,7 +357,11 @@
             @endif
 
             <!-- Forma za dodavanje člana -->
-            @if($commission->members->count() < 5)
+            @php
+                $regularMembersCount = $commission->members->reject(fn($m) => !empty($m->is_substitute))->count();
+                $hasSubstituteMember = $commission->members->contains(fn($m) => !empty($m->is_substitute));
+            @endphp
+            @if($regularMembersCount < 5)
             <div class="form-card">
                 <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px;">Dodaj novog člana</h3>
                 <form method="POST" action="{{ route('admin.commissions.members.add', $commission) }}">
@@ -406,7 +458,12 @@
             </div>
             @else
                 <div class="alert alert-warning">
-                    Komisija je popunjena (5/5 članova). Za dodavanje novog člana, prvo uklonite postojećeg.
+                    Komisija je popunjena (5/5 redovnih članova).
+                    @if(!$hasSubstituteMember)
+                        Možete dodati još <strong>1 zamjenskog člana</strong> kroz <a href="{{ route('admin.commissions.edit', $commission) }}" style="color: var(--primary); font-weight: 700;">Izmijeni komisiju</a>.
+                    @else
+                        Zamjenski član je već imenovan.
+                    @endif
                 </div>
             @endif
             </div>
@@ -422,6 +479,11 @@ function toggleMemberFields() {
     const emailInput = document.getElementById('member_email');
     const passwordInput = document.getElementById('member_password');
     const nameInput = document.getElementById('member_name');
+
+    // Ako se forma ne prikazuje (npr. komisija je puna), elementi mogu biti null.
+    if (!userSelect || !emailGroup || !passwordGroup || !emailInput || !passwordInput || !nameInput) {
+        return;
+    }
     
     if (userSelect.value) {
         // Ako je izabran postojeći korisnik, sakrij email i password polja
@@ -459,6 +521,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const emailInput = document.getElementById('member_email');
     const passwordInput = document.getElementById('member_password');
     const userSelect = document.getElementById('member_user_id');
+
+    // Ako se forma ne prikazuje, izađi da ne bacimo JS grešku.
+    if (!userSelect || !nameInput || !emailInput || !passwordInput) {
+        return;
+    }
     
     // Ako nije izabran korisnik, očisti polja
     if (!userSelect.value) {
