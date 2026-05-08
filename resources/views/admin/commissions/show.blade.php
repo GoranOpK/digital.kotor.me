@@ -335,7 +335,7 @@
                                     @endif
                                     <div>Status: 
                                         <span style="color: {{ $member->status === 'active' ? '#10b981' : '#ef4444' }};">
-                                            {{ $member->status === 'active' ? 'Aktivan' : ($member->status === 'resigned' ? 'Podneo ostavku' : 'Razriješen') }}
+                                            {{ $member->status === 'active' ? 'Aktivan' : ($member->status === 'inactive' ? 'Neaktivan' : ($member->status === 'resigned' ? 'Podneo ostavku' : 'Razriješen')) }}
                                         </span>
                                     </div>
                                 </div>

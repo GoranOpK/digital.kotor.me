@@ -1320,7 +1320,7 @@ class AdminController extends Controller
         $member = DB::transaction(function () use ($commission, $userId, $validated, $isSubstitute, $replacedMember) {
             if ($isSubstitute && $replacedMember) {
                 // Originalni član postaje neaktivan dok ga zamjenski mijenja.
-                $replacedMember->update(['status' => 'dismissed']);
+                $replacedMember->update(['status' => 'inactive']);
             }
 
             return CommissionMember::create([
@@ -1408,7 +1408,7 @@ class AdminController extends Controller
     public function updateMemberStatus(Request $request, CommissionMember $member)
     {
         $validated = $request->validate([
-            'status' => 'required|in:active,resigned,dismissed',
+            'status' => 'required|in:active,inactive,resigned,dismissed',
         ]);
 
         $member->update(['status' => $validated['status']]);

@@ -71,6 +71,18 @@
         font-size: 12px;
         margin-top: 4px;
     }
+    .form-actions {
+        margin-top: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+    }
+    .btn-cancel {
+        color: #6b7280;
+        text-decoration: none;
+        font-weight: 500;
+    }
 </style>
 
 <div class="admin-page">
@@ -185,9 +197,9 @@
                 </div>
                 @endif
 
-                <div style="margin-top: 24px;">
+                <div class="form-actions">
                     <button type="submit" class="btn-primary">Sačuvaj izmjene</button>
-                    <a href="{{ route('admin.commissions.show', $commission) }}" style="margin-left: 12px; color: #6b7280;">Otkaži</a>
+                    <a href="{{ route('admin.commissions.show', $commission) }}" class="btn-cancel">Otkaži</a>
                 </div>
             </form>
 
