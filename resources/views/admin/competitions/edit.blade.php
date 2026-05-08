@@ -190,29 +190,29 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Informacije o roku</label>
-                        <div style="padding: 10px 14px; background: #f3f4f6; border-radius: 8px; border: 1px solid #d1d5db; font-size: 14px; color: #374151;">
-                            <p style="margin: 0;"><strong>Rok za prijave:</strong> 20 dana</p>
-                            <p style="margin: 5px 0 0 0;"><strong>Datum završetka:</strong> <span id="display_end_date">{{ $competition->deadline ? $competition->deadline->format('d.m.Y') : ($competition->end_date ? $competition->end_date->format('d.m.Y') : 'Nije definisano') }}</span></p>
+                        <label class="form-label">Komisija</label>
+                        <select name="commission_id" class="form-control @error('commission_id') error @enderror">
+                            <option value="">Izaberi komisiju...</option>
+                            @foreach($commissions as $commission)
+                                <option value="{{ $commission->id }}" {{ old('commission_id', $competition->commission_id) == $commission->id ? 'selected' : '' }}>
+                                    {{ $commission->name }} ({{ $commission->year }})
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('commission_id')
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                        <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                            Izaberite komisiju koja će evaluirati prijave za ovaj konkurs
                         </div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Komisija</label>
-                    <select name="commission_id" class="form-control @error('commission_id') error @enderror">
-                        <option value="">Izaberi komisiju...</option>
-                        @foreach($commissions as $commission)
-                            <option value="{{ $commission->id }}" {{ old('commission_id', $competition->commission_id) == $commission->id ? 'selected' : '' }}>
-                                {{ $commission->name }} ({{ $commission->year }})
-                            </option>
-                        @endforeach
-                    </select>
-                    @error('commission_id')
-                        <div class="error-message">{{ $message }}</div>
-                    @enderror
-                    <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                        Izaberite komisiju koja će evaluirati prijave za ovaj konkurs
+                    <label class="form-label">Informacije o roku</label>
+                    <div style="padding: 10px 14px; background: #f3f4f6; border-radius: 8px; border: 1px solid #d1d5db; font-size: 14px; color: #374151;">
+                        <p style="margin: 0;"><strong>Rok za prijave:</strong> 20 dana</p>
+                        <p style="margin: 5px 0 0 0;"><strong>Datum završetka:</strong> <span id="display_end_date">{{ $competition->deadline ? $competition->deadline->format('d.m.Y') : ($competition->end_date ? $competition->end_date->format('d.m.Y') : 'Nije definisano') }}</span></p>
                     </div>
                 </div>
 
