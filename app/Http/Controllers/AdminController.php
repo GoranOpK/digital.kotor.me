@@ -282,6 +282,7 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+        $commissionId = null;
         
         // Ako je član komisije, prikaži samo konkurse dodijeljene njegovoj komisiji
         if (!$isAdmin && $this->isCommissionMember()) {
@@ -294,12 +295,31 @@ class AdminController extends Controller
         $tab = $request->get('tab', 'active'); // 'active', 'archive' ili 'all'
         
         if ($tab === 'archive') {
+            if (!$isAdmin) {
+                $commissionMember = CommissionMember::where('user_id', $user->id)
+                    ->where('status', 'active')
+                    ->with('commission')
+                    ->first();
+
+                $commission = $commissionMember?->commission;
+                $isMandateActive = $commission
+                    && $commission->status === 'active'
+                    && now()->between($commission->start_date, $commission->end_date);
+
+                if (!$isMandateActive) {
+                    abort(403, 'Arhiva konkursa je dostupna članovima komisije samo tokom trajanja mandata.');
+                }
+            }
+
             // Arhiva - završeni konkursi (closed ili completed)
-            // Predsjednik/članovi komisije ovdje mogu vidjeti sve završene konkurse
             $query = Competition::withCount('applications')
                 ->whereIn('status', ['closed', 'completed']);
+
+            if (!$isAdmin && $commissionId) {
+                $query->where('commission_id', $commissionId);
+            }
             
-            $competitions = $query->orderBy('closed_at', 'desc')
+            $competitions = $query->orderByRaw('COALESCE(published_at, created_at) DESC')
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
         } elseif ($tab === 'all') {
@@ -333,13 +353,33 @@ class AdminController extends Controller
      */
     public function competitionsArchive(Request $request)
     {
-        // Filtriraj završene konkursi (closed ili completed)
-        // Arhiva je vidljiva svim ovlašćenim korisnicima (admin, konkurs admin, članovi komisije)
-        $competitions = Competition::withCount('applications')
+        $user = auth()->user();
+        $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
+
+        $query = Competition::withCount('applications')
             ->whereIn('status', ['closed', 'completed'])
-            ->orderBy('closed_at', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->orderByRaw('COALESCE(published_at, created_at) DESC')
+            ->orderBy('created_at', 'desc');
+
+        if (!$isAdmin) {
+            $commissionMember = CommissionMember::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->with('commission')
+                ->first();
+
+            $commission = $commissionMember?->commission;
+            $isMandateActive = $commission
+                && $commission->status === 'active'
+                && now()->between($commission->start_date, $commission->end_date);
+
+            if (!$isMandateActive) {
+                abort(403, 'Arhiva konkursa je dostupna članovima komisije samo tokom trajanja mandata.');
+            }
+
+            $query->where('commission_id', $commission->id);
+        }
+
+        $competitions = $query->paginate(20);
         
         return view('competitions.archive', compact('competitions'));
     }
