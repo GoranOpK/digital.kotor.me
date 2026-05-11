@@ -299,12 +299,6 @@ class Application extends Model
             return false;
         }
 
-        // Proveri obavezne checkbox-ove
-        // de_minimis_declaration je obavezan za sve
-        if (!$this->de_minimis_declaration) {
-            return false;
-        }
-
         // accuracy_declaration je obavezan samo za fizičko lice
         if ($this->applicant_type === 'fizicko_lice' && !$this->accuracy_declaration) {
             return false;

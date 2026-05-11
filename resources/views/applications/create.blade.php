@@ -1258,50 +1258,6 @@
                 </div>
             </div>
 
-            <!-- Sekcija 5: Izjave -->
-            <div class="form-card">
-                <div class="form-section">
-                    <h2>Izjave</h2>
-                    
-                    <div class="form-group">
-                        <div class="checkbox-group">
-                            <input 
-                                type="checkbox" 
-                                id="de_minimis_declaration" 
-                                name="de_minimis_declaration" 
-                                value="1"
-                                {{ old('de_minimis_declaration', isset($existingApplication) && $existingApplication ? $existingApplication->de_minimis_declaration : false) ? 'checked' : '' }}
-                                required
-                            >
-                            <label for="de_minimis_declaration">
-                                Izjavljujem da će ukupna de minimis podrška koju sam dobio/la u posljednje tri godine 
-                                biti u skladu sa propisima Evropske unije o de minimis podršci 
-                                <span class="required">*</span>
-                            </label>
-                        </div>
-                        @error('de_minimis_declaration')
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="form-group">
-                        <div class="checkbox-group">
-                            <input 
-                                type="checkbox" 
-                                id="previous_support_declaration" 
-                                name="previous_support_declaration" 
-                                value="1"
-                                {{ old('previous_support_declaration', isset($existingApplication) && $existingApplication ? $existingApplication->previous_support_declaration : false) ? 'checked' : '' }}
-                            >
-                            <label for="previous_support_declaration">
-                                Prethodno sam dobio/la podršku iz budžeta Opštine Kotor za žensko preduzetništvo po javnom konkursu u prethodnoj godini. 
-                                (Ukoliko je ova izjava tačna, priložiću Izvještaj o realizaciji biznis plana (obrazac 4) sa Finansijskim izvještajem (obrazac 4a) o utrošenim sredstvima za prethodnu godinu, sa kopijama računa, ugovora i izvoda banke po kojima su isti plaćeni.)
-                            </label>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Dugme za slanje -->
             @if(!$readOnly)
                 <div class="form-card" style="text-align: center;">
@@ -1737,13 +1693,11 @@
             // Proveri business_stage u svim sekcijama (može biti u obrazac1a, obrazac1b ili fizickoLiceFields)
             const businessStage = form.querySelector('input[name="business_stage"]:checked');
             const businessArea = activeSection ? activeSection.querySelector('input[name="business_area"]') : form.querySelector('input[name="business_area"]:not([disabled])');
-            const deMinimisDeclaration = form.querySelector('input[name="de_minimis_declaration"]:not([disabled])');
 
             // Proveri osnovna polja
             if (!businessPlanName || !businessPlanName.value.trim()) return false;
             if (!businessStage || !businessStage.value) return false;
             if (!businessArea || !businessArea.value.trim()) return false;
-            if (!deMinimisDeclaration || !deMinimisDeclaration.checked) return false;
 
             // Proveri polja specifična za tip podnosioca
             if (applicantTypeValue === 'fizicko_lice') {

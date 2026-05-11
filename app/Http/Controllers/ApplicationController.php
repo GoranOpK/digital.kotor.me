@@ -218,7 +218,7 @@ class ApplicationController extends Controller
             'bank_account' => 'nullable|string|max:50',
             'vat_number' => 'nullable|string|max:50',
             'pib' => 'nullable|string|regex:/^[0-9]{8}$/',
-            'de_minimis_declaration' => $isDraft ? 'nullable|boolean' : 'required|accepted',
+            'de_minimis_declaration' => 'nullable|boolean',
         ];
 
         // Izjava o tačnosti je obavezna samo za fizičko lice BEZ registrovane djelatnosti
@@ -276,7 +276,6 @@ class ApplicationController extends Controller
             'business_area.required' => 'Oblast biznisa je obavezna.',
             'accuracy_declaration.required' => 'Morate potvrditi izjavu o tačnosti podataka.',
             'accuracy_declaration.accepted' => 'Morate potvrditi izjavu o tačnosti podataka.',
-            'de_minimis_declaration.required' => 'Morate potvrditi de minimis izjavu.',
             'founder_name.required' => 'Ime osnivača/ice je obavezno.',
             'director_name.required' => 'Ime izvršnog direktora/ice je obavezno.',
             'company_seat.required' => 'Sjedište društva je obavezno.',
