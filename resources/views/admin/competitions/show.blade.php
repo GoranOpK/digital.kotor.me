@@ -210,14 +210,14 @@
                         ❌ Rok za donošenje odluke je istekao
                     </p>
                     <p style="color: #6b7280; margin: 0;">
-                        Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs. Preostalo vremena: <strong>0 dana</strong>
+                        Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs. Preostalo vremena: <strong>0 dana</strong>
                     </p>
                 @else
                     <p style="color: {{ $daysUntilEvaluationDeadline <= 3 ? '#991b1b' : ($daysUntilEvaluationDeadline <= 7 ? '#92400e' : '#065f46') }}; font-weight: 600; font-size: 18px; margin: 8px 0;">
                         Preostalo vremena: <strong>{{ $daysUntilEvaluationDeadline }} {{ $daysUntilEvaluationDeadline == 1 ? 'dan' : ($daysUntilEvaluationDeadline < 5 ? 'dana' : 'dana') }}</strong>
                     </p>
                     <p style="color: #6b7280; margin: 0;">
-                        Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava na konkurs.
+                        Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs.
                         @php $evalDeadline = $competition->getEvaluationDeadlineDate(); $closedAt = $competition->getApplicationsClosedAt(); @endphp
                         @if($evalDeadline && $closedAt)
                             Datum zatvaranja prijava: <strong>{{ $closedAt->format('d.m.Y H:i') }}</strong> | 

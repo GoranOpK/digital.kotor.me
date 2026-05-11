@@ -194,7 +194,7 @@
                                             </span>
                                         @endif
                                         <div style="font-size: 11px; color: #6b7280;">
-                                            Do: {{ $competition->closed_at ? $competition->closed_at->copy()->addDays(30)->format('d.m.Y H:i') : 'N/A' }}
+                                            Do: {{ $competition->closed_at ? $competition->closed_at->copy()->addDays(45)->format('d.m.Y H:i') : 'N/A' }}
                                         </div>
                                     </div>
                                 @else

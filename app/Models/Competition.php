@@ -122,7 +122,7 @@ class Competition extends Model
     }
 
     /**
-     * Vraća datum zatvaranja prijava (baza za 30-dnevni rok za odluku).
+     * Vraća datum zatvaranja prijava (baza za 45-dnevni rok za odluku).
      * Ako je closed_at postavljen (ručno zatvaranje), koristi ga.
      * Inače, ako je rok za prijave istekao, koristi datum roka za prijave.
      */
@@ -138,8 +138,8 @@ class Competition extends Model
     }
 
     /**
-     * Proverava da li je prošlo 30 dana od zatvaranja prijava
-     * Komisija mora donijeti odluku u roku od 30 dana od dana zatvaranja prijava
+     * Proverava da li je prošlo 45 dana od zatvaranja prijava
+     * Komisija mora donijeti odluku u roku od 45 dana od dana zatvaranja prijava
      */
     public function isEvaluationDeadlinePassed(): bool
     {
@@ -148,7 +148,7 @@ class Competition extends Model
             return false;
         }
 
-        $deadline = $closedAt->copy()->addDays(30);
+        $deadline = $closedAt->copy()->addDays(45);
         return now()->isAfter($deadline);
     }
 
@@ -162,14 +162,14 @@ class Competition extends Model
             return null;
         }
 
-        $deadline = $closedAt->copy()->addDays(30);
+        $deadline = $closedAt->copy()->addDays(45);
         $daysRemaining = now()->diffInDays($deadline, false);
         
         return $daysRemaining >= 0 ? (int) $daysRemaining : 0;
     }
 
     /**
-     * Vraća datum isteka roka za donošenje odluke (30 dana od zatvaranja prijava)
+     * Vraća datum isteka roka za donošenje odluke (45 dana od zatvaranja prijava)
      */
     public function getEvaluationDeadlineDate(): ?\Carbon\Carbon
     {
@@ -177,7 +177,7 @@ class Competition extends Model
         if (!$closedAt) {
             return null;
         }
-        return $closedAt->copy()->addDays(30);
+        return $closedAt->copy()->addDays(45);
     }
 
     /**

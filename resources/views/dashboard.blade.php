@@ -845,7 +845,7 @@
                                     Preostalo vremena: <strong>{{ $daysUntilEvaluationDeadline }} {{ $daysUntilEvaluationDeadline == 1 ? 'dan' : ($daysUntilEvaluationDeadline < 5 ? 'dana' : 'dana') }}</strong>
                                 </p>
                                 <p style="color: #6b7280; font-size: 14px; margin: 4px 0;">
-                                    Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava. Rok: {{ $comp->getEvaluationDeadlineDate() ? $comp->getEvaluationDeadlineDate()->format('d.m.Y H:i') : 'N/A' }}
+                                    Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava. Rok: {{ $comp->getEvaluationDeadlineDate() ? $comp->getEvaluationDeadlineDate()->format('d.m.Y H:i') : 'N/A' }}
                                 </p>
                             @endif
                         </div>

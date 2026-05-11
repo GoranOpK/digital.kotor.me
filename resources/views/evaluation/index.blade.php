@@ -204,7 +204,7 @@
                             </p>
                         @endif
                         <p style="color: #6b7280; font-size: 13px; margin: 4px 0;">
-                            Komisija je dužna donijeti odluku u roku od 30 dana od dana zatvaranja prijava. Rok: {{ $evalDeadlineDate ? $evalDeadlineDate->format('d.m.Y H:i') : 'N/A' }}
+                            Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava. Rok: {{ $evalDeadlineDate ? $evalDeadlineDate->format('d.m.Y H:i') : 'N/A' }}
                         </p>
                     </div>
                 @endif
