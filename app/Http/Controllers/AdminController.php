@@ -1635,7 +1635,7 @@ class AdminController extends Controller
 
         $decisionEnteredBy = $commissionMembers->firstWhere('position', 'predsjednik')?->name ?? 'Predsjednik komisije';
 
-        return view('admin.competitions.ranking', compact('competition', 'applications', 'belowLineApplications', 'totalBudget', 'usedBudget', 'remainingBudget', 'isSuperAdmin', 'isChairman', 'isCommissionMember', 'commissionMembers', 'decisionEnteredBy'));
+        return view('admin.competitions.ranking', compact('competition', 'applications', 'belowLineApplications', 'totalBudget', 'usedBudget', 'remainingBudget', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'commissionMembers', 'decisionEnteredBy'));
     }
 
     /**
@@ -1731,9 +1731,13 @@ class AdminController extends Controller
         $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
         $isChairman = $this->isCommissionChairmanForCompetition($competition);
+        $isCommissionMember = $this->isCommissionMemberForCompetition($competition);
+        $isArchivedCompetition = in_array($competition->status, ['closed', 'completed']);
+        $isArchiveViewer = $isArchivedCompetition && ($isCompetitionAdmin || $isCommissionMember);
         
-        // Samo superadmin i predsjednik komisije mogu generisati odluku
-        if ($isCompetitionAdmin || (!$isSuperAdmin && !$isChairman)) {
+        // Za aktivne konkurse: samo superadmin i predsjednik komisije.
+        // Za arhivirane konkurse: read-only uvid imaju i konkurs_admin i članovi komisije.
+        if (!$isSuperAdmin && !$isChairman && !$isArchiveViewer) {
             abort(403, 'Nemate dozvolu za generisanje odluke. Samo predsjednik komisije može generisati odluku.');
         }
         

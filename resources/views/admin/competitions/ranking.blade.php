@@ -795,6 +795,13 @@
 
         <!-- Dugmad na dnu (ekran) -->
         <div class="no-print" style="margin: 24px 0 8px 0; text-align: center;">
+            @php
+                $canViewDecisionInArchive = in_array($competition->status, ['closed', 'completed'])
+                    && (
+                        (isset($isCompetitionAdmin) && $isCompetitionAdmin)
+                        || (isset($isCommissionMember) && $isCommissionMember)
+                    );
+            @endphp
             @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
                 @if($competition->hasChairmanCompletedDecisions())
                     <form method="GET" action="{{ route('admin.competitions.decision', $competition) }}" style="display: inline-block; margin: 0 8px;">
@@ -806,6 +813,13 @@
                 <button type="button" onclick="window.print();" class="btn" style="background: #6b7280; color: #fff; border: none; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 600; margin: 0 8px;">
                     Štampaj
                 </button>
+            @endif
+            @if($canViewDecisionInArchive && $competition->hasChairmanCompletedDecisions())
+                <form method="GET" action="{{ route('admin.competitions.decision', $competition) }}" style="display: inline-block; margin: 0 8px;">
+                    <button type="submit" class="btn btn-primary" style="background: var(--primary); color: #fff; border: none; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 600;">
+                        Pregled odluke
+                    </button>
+                </form>
             @endif
             <a href="{{ route('admin.competitions.show', $competition) }}" class="btn btn-primary" style="margin: 0 8px;">Nazad</a>
         </div>
