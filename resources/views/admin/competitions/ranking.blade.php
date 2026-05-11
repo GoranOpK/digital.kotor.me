@@ -814,7 +814,7 @@
                     Štampaj
                 </button>
             @endif
-            @if($canViewDecisionInArchive && $competition->hasChairmanCompletedDecisions())
+            @if($canViewDecisionInArchive)
                 <form method="GET" action="{{ route('admin.competitions.decision', $competition) }}" style="display: inline-block; margin: 0 8px;">
                     <button type="submit" class="btn btn-primary" style="background: var(--primary); color: #fff; border: none; cursor: pointer; padding: 10px 20px; border-radius: 8px; font-weight: 600;">
                         Pregled odluke
