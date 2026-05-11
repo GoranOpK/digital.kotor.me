@@ -483,8 +483,12 @@ class AdminController extends Controller
         $deadline = $competition->deadline;
         $isDeadlinePassed = $deadline && now()->isAfter($deadline);
         
-        // Rang lista: vidljiva svima koji imaju pristup (superadmin, predsjednik, članovi komisije) kada je formirana
-        $showRankingLink = ($isSuperAdmin || $isChairman || $isCommissionMember) && $competition->isRankingFormed();
+        // Rang lista:
+        // - za zaključene konkurse (closed/completed) dostupna je i konkurs_admin roli kao read-only
+        // - za ostale statuse ostaje stara logika (kada je rang lista formirana)
+        $showRankingLink = in_array($competition->status, ['closed', 'completed'])
+            ? ($isSuperAdmin || $isChairman || $isCommissionMember || $isCompetitionAdmin)
+            : (($isSuperAdmin || $isChairman || $isCommissionMember) && $competition->isRankingFormed());
         
         return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink'));
     }
@@ -1489,14 +1493,15 @@ class AdminController extends Controller
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
         $isChairman = $this->isCommissionChairmanForCompetition($competition);
         $isCommissionMember = $this->isCommissionMemberForCompetition($competition);
+        $isArchiveReadonlyAccess = $isCompetitionAdmin && in_array($competition->status, ['closed', 'completed']);
         
-        // Administrator konkursa ne može pristupiti rang listi
-        if ($isCompetitionAdmin) {
+        // Administrator konkursa može pristupiti rang listi samo za zaključene konkurse (read-only arhiva)
+        if ($isCompetitionAdmin && !$isArchiveReadonlyAccess) {
             abort(403, 'Administrator konkursa nema pristup rang listi.');
         }
         
         // Ako nije superadmin ili predsjednik komisije, proveri da li je član komisije
-        if (!$isSuperAdmin && !$isChairman) {
+        if (!$isSuperAdmin && !$isChairman && !$isArchiveReadonlyAccess) {
             if (!$isCommissionMember) {
                 abort(403, 'Nemate pristup ovom konkursu.');
             }

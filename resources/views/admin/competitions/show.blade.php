@@ -126,6 +126,12 @@
             </div>
         @endif
 
+        @php
+            $canCompetitionAdminSeeApplications = !isset($isCompetitionAdmin)
+                || !$isCompetitionAdmin
+                || in_array($competition->status, ['closed', 'completed']);
+        @endphp
+
         <div class="info-card">
             <h2 style="font-size: 20px; margin-bottom: 16px;">Osnovne informacije</h2>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
@@ -135,7 +141,7 @@
                     @endphp
                     <p><strong>Status:</strong> <span class="status-badge status-{{ $competition->status }}">{{ $competitionStatusLabels[$competition->status] ?? $competition->status }}</span></p>
                     <p><strong>Budžet:</strong> {{ number_format($competition->budget ?? 0, 2, ',', '.') }} €</p>
-                    @if(!isset($isCompetitionAdmin) || !$isCompetitionAdmin)
+                    @if($canCompetitionAdminSeeApplications)
                         <p><strong>Broj prijava:</strong> {{ $applications->total() }}</p>
                     @endif
                     @if($competition->commission)
@@ -228,11 +234,11 @@
             </div>
         @endif
 
-        @if(!isset($isCompetitionAdmin) || !$isCompetitionAdmin)
-        <div class="info-card">
-            <h2 style="font-size: 20px; margin-bottom: 16px;">Prijave</h2>
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+        @if($canCompetitionAdminSeeApplications)
+            <div class="info-card">
+                <h2 style="font-size: 20px; margin-bottom: 16px;">Prijave</h2>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
                     <thead>
                         <tr style="border-bottom: 2px solid #e5e7eb;">
                             <th style="padding: 12px; text-align: left;">Naziv biznis plana</th>
@@ -387,12 +393,12 @@
                             </tr>
                         @endforelse
                     </tbody>
-                </table>
+                    </table>
+                </div>
+                <div style="margin-top: 20px;">
+                    {{ $applications->links() }}
+                </div>
             </div>
-            <div style="margin-top: 20px;">
-                {{ $applications->links() }}
-            </div>
-        </div>
         @endif
     </div>
 </div>
