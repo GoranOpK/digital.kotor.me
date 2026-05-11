@@ -337,7 +337,7 @@ class HomeController extends Controller
                 
                 // Sekcija "Prijave za ocjenjivanje" vidljiva je komisiji tek nakon isteka roka za prijavljivanje
                 $competitionsWithDeadlinePassed = $commission->competitions->filter(function ($c) {
-                    return $c->status === 'closed' || $c->isApplicationDeadlinePassed();
+                    return in_array($c->status, ['closed', 'completed']) || $c->isApplicationDeadlinePassed();
                 });
                 $showEvaluationSection = $competitionsWithDeadlinePassed->isNotEmpty();
                 $competitionIdsForEvaluation = $competitionsWithDeadlinePassed->pluck('id');

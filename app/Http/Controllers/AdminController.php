@@ -472,7 +472,7 @@ class AdminController extends Controller
         if ($isCommissionMember && !$isAdmin) {
             $applicationsQuery->where('status', '!=', 'draft');
             // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (20 dana)
-            if (!$competition->isApplicationDeadlinePassed() && $competition->status !== 'closed') {
+            if (!$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed'])) {
                 $applicationsQuery->whereRaw('1 = 0'); // prazna lista
             }
         }
@@ -801,7 +801,7 @@ class AdminController extends Controller
             $commissionId = $this->getCommissionIdForMember();
             if ($commissionId) {
                 $competitionIdsVisible = Competition::where('commission_id', $commissionId)->get()
-                    ->filter(fn ($c) => $c->status === 'closed' || $c->isApplicationDeadlinePassed())
+                    ->filter(fn ($c) => in_array($c->status, ['closed', 'completed']) || $c->isApplicationDeadlinePassed())
                     ->pluck('id');
                 $query->whereIn('competition_id', $competitionIdsVisible);
             } else {
@@ -847,7 +847,7 @@ class AdminController extends Controller
             }
             // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (20 dana)
             $competition = $application->competition;
-            if ($competition && $competition->status !== 'closed' && !$competition->isApplicationDeadlinePassed()) {
+            if ($competition && !in_array($competition->status, ['closed', 'completed']) && !$competition->isApplicationDeadlinePassed()) {
                 abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (20 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
             }
         }
@@ -1508,7 +1508,7 @@ class AdminController extends Controller
             // Članovi komisije mogu vidjeti rang listu kada je formirana (svi su ocjenili sve prijave),
             // ili kada je konkurs zatvoren, ili kada je rok za prijave istekao
             $canAccessRanking = $competition->isRankingFormed()
-                || $competition->status === 'closed'
+                || in_array($competition->status, ['closed', 'completed'])
                 || ($competition->status === 'published' && $competition->isApplicationDeadlinePassed());
             if (!$canAccessRanking) {
                 abort(403, 'Rang lista je dostupna članovima komisije kada svi članovi ocjene sve prijave, kada je konkurs zatvoren ili kada je rok za prijave istekao.');

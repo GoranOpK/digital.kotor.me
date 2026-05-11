@@ -36,7 +36,7 @@ class EvaluationController extends Controller
 
         // Prijave su komisiji vidljive i na ocjenjivanje tek nakon isteka roka za prijavljivanje (20 dana)
         $competitionIds = $commission->competitions->filter(function ($c) {
-            return $c->status === 'closed' || $c->isApplicationDeadlinePassed();
+            return in_array($c->status, ['closed', 'completed']) || $c->isApplicationDeadlinePassed();
         })->pluck('id');
         
         // Prijave koje treba ocjeniti (submitted, evaluated ili rejected status)
@@ -164,7 +164,7 @@ class EvaluationController extends Controller
             $competition = $application->competition;
             
             // Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave
-            if ($competition && !$competition->isApplicationDeadlinePassed() && $competition->status !== 'closed') {
+            if ($competition && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed'])) {
                 abort(403, 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 45 dana za donošenje odluke od strane komisije.');
             }
             
@@ -306,7 +306,7 @@ class EvaluationController extends Controller
         $competition = $application->competition;
         
         // Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave
-        if ($competition && !$competition->isApplicationDeadlinePassed() && $competition->status !== 'closed') {
+        if ($competition && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed'])) {
             return redirect()->back()
                 ->withErrors(['error' => 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 45 dana za donošenje odluke od strane komisije.']);
         }

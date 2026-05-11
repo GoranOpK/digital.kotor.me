@@ -452,7 +452,7 @@ class ApplicationController extends Controller
         // Članovi komisije ne mogu vidjeti prijave dok ne istekne rok od 20 dana za prijavljivanje na konkurs
         if ($isCommissionMemberForThisCompetition) {
             $competition = $application->competition;
-            if ($competition && $competition->status !== 'closed' && !$competition->isApplicationDeadlinePassed()) {
+            if ($competition && !in_array($competition->status, ['closed', 'completed']) && !$competition->isApplicationDeadlinePassed()) {
                 abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (20 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
             }
         }
