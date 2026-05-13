@@ -358,7 +358,7 @@
 
                     <div class="form-group">
                         <label class="form-label">
-                            2. Podaci o podnosiocu biznis plana: <span class="required">*</span>
+                            2. Podaci o podnositeljki biznis plana: <span class="required">*</span>
                         </label>
                         <div class="form-row" style="grid-template-columns: repeat(3, 1fr);">
                             <div class="form-group">
