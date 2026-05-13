@@ -70,26 +70,31 @@ class EvaluationController extends Controller
                 }
                 // Ako nema ocjenjenih prijava, sve prijave su "pending"
             } elseif ($request->filter === 'evaluated') {
-                // Prijave koje je član komisije već ocjenio:
-                // - submitted/evaluated (prošle ili u obradi)
-                // - rejected zbog nedovoljno bodova (< 30) - prikaži sa stvarnom ocjenom
-                // - NE prikazuj odbijene zbog nedostatka dokumenata
-                $query->where(function ($q) {
-                    $q->whereIn('status', ['submitted', 'evaluated'])
-                        ->orWhere(function ($q2) {
-                            $q2->where('status', 'rejected')
-                                ->where(function ($q3) {
-                                    $q3->whereNull('rejection_reason')
-                                        ->orWhere('rejection_reason', 'not like', '%Nedostaju potrebna dokumenta%');
+                // Prijave koje je član komisije već ocjenio (ima EvaluationScore za sebe), PLUS
+                // odbijene zbog nedostajuće dokumentacije – vidljive SVIM članovima odmah (samo predsjednik ima zapis).
+                $query->where(function ($outer) use ($evaluatedApplicationIds) {
+                    $outer->where(function ($q) use ($evaluatedApplicationIds) {
+                        $q->where(function ($inner) {
+                            $inner->whereIn('status', ['submitted', 'evaluated'])
+                                ->orWhere(function ($q2) {
+                                    $q2->where('status', 'rejected')
+                                        ->where(function ($q3) {
+                                            $q3->whereNull('rejection_reason')
+                                                ->orWhere('rejection_reason', 'not like', '%Nedostaju potrebna dokumenta%');
+                                        });
                                 });
                         });
+                        if (!empty($evaluatedApplicationIds)) {
+                            $q->whereIn('id', $evaluatedApplicationIds);
+                        } else {
+                            $q->whereRaw('1 = 0');
+                        }
+                    });
+                    $outer->orWhere(function ($q) {
+                        $q->where('status', 'rejected')
+                            ->where('rejection_reason', 'like', '%Nedostaju potrebna dokumenta%');
+                    });
                 });
-                if (!empty($evaluatedApplicationIds)) {
-                    $query->whereIn('id', $evaluatedApplicationIds);
-                } else {
-                    // Ako nema ocjenjenih prijava, ne prikazuj ništa
-                    $query->whereRaw('1 = 0');
-                }
             } elseif ($request->filter === 'rejected') {
                 // Odbijene prijave
                 $query->where('status', 'rejected');
@@ -271,6 +276,10 @@ class EvaluationController extends Controller
         // u Competition::isRankingFormed(). Oslanjamo se direktno na taj metod.
         $competition = $application->competition;
         $canViewOtherMembersScores = $competition ? $competition->isRankingFormed() : false;
+        // Odbijene zbog dokumentacije: ostali članovi odmah vide stanje (predsjednikovo „Ne”), bez čekanja rang liste
+        if ($application->isRejectedForMissingDocuments()) {
+            $canViewOtherMembersScores = true;
+        }
 
         $application->load(['user', 'competition', 'businessPlan', 'documents']);
 

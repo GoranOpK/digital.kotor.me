@@ -201,10 +201,20 @@ class Application extends Model
      */
     public function getDisplayScore(): float
     {
-        if ($this->status === 'rejected' && $this->rejection_reason && str_contains($this->rejection_reason, 'Nedostaju potrebna dokumenta')) {
+        if ($this->isRejectedForMissingDocuments()) {
             return 0;
         }
         return (float) ($this->final_score ?? $this->calculateFinalScore());
+    }
+
+    /**
+     * Prijava odbijena jer predsjednik komisije nije prihvatio dokumentaciju (bez bodovanja ostalih članova).
+     */
+    public function isRejectedForMissingDocuments(): bool
+    {
+        return $this->status === 'rejected'
+            && $this->rejection_reason
+            && str_contains($this->rejection_reason, 'Nedostaju potrebna dokumenta');
     }
 
     /**
