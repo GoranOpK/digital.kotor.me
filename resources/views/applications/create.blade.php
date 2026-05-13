@@ -760,7 +760,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Ime i prezime:</label>
+                        <label class="form-label">Ime i prezime nositeljke biznisa:</label>
                         <input 
                             type="text" 
                             name="doo_name" 
