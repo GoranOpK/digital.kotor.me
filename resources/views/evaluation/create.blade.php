@@ -499,8 +499,9 @@
                                                 $canViewAllScores = isset($canViewOtherMembersScores) && $canViewOtherMembersScores;
                                             @endphp
                                             @if($isCurrentMember)
-                                                {{-- Trenutni član UVIJEK vidi svoje ocjene; ostale tek kada svi ocijene --}}
-                                                @if(isset($hasCompletedEvaluation) && $hasCompletedEvaluation)
+                                                @if($isRejected)
+                                                    <span class="score-display">—</span>
+                                                @elseif(isset($hasCompletedEvaluation) && $hasCompletedEvaluation)
                                                     {{-- Član je ocjenio - prikaži svoju ocjenu (read-only) --}}
                                                     <span class="score-display">
                                                         {{ $currentValue ? $currentValue : '—' }}

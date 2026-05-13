@@ -265,6 +265,7 @@ class Competition extends Model
             // Sve ostale prijave: svi članovi moraju ocjeniti
             $evaluatedCount = \App\Models\EvaluationScore::where('application_id', $application->id)
                 ->whereIn('commission_member_id', $activeMemberIds)
+                ->whereNotNull('criterion_1')
                 ->pluck('commission_member_id')
                 ->unique()
                 ->count();

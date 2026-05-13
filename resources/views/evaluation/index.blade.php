@@ -228,6 +228,7 @@
                         @php
                             $isEvaluated = \App\Models\EvaluationScore::where('application_id', $application->id)
                                 ->where('commission_member_id', $commissionMember->id)
+                                ->whereNotNull('criterion_1')
                                 ->exists();
                             
                             // Provjeri da li su svi članovi komisije ocjenili prijavu
@@ -237,6 +238,7 @@
                             // Broj različitih članova koji su ocjenili prijavu
                             $evaluatedMemberIds = \App\Models\EvaluationScore::where('application_id', $application->id)
                                 ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+                                ->whereNotNull('criterion_1')
                                 ->pluck('commission_member_id')
                                 ->unique()
                                 ->count();

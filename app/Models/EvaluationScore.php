@@ -63,6 +63,14 @@ class EvaluationScore extends Model
     }
 
     /**
+     * Član je završio unos svih kriterijuma (Obrazac 3).
+     */
+    public function hasCompletedCriteria(): bool
+    {
+        return $this->criterion_1 !== null;
+    }
+
+    /**
      * Izračunava zbir svih kriterijuma
      */
     public function calculateTotalScore(): int

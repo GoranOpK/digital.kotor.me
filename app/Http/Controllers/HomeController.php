@@ -344,6 +344,7 @@ class HomeController extends Controller
                 
                 // Pronađi prijave za konkurse gdje je rok istekao – samo prijave koje član JOŠ NIJE ocjenio
                 $evaluatedApplicationIds = \App\Models\EvaluationScore::where('commission_member_id', $commissionMember->id)
+                    ->whereNotNull('criterion_1')
                     ->pluck('application_id')
                     ->toArray();
                 
@@ -376,6 +377,7 @@ class HomeController extends Controller
                     }
                     $app->is_evaluated_by_member = \App\Models\EvaluationScore::where('application_id', $app->id)
                         ->where('commission_member_id', $commissionMember->id)
+                        ->whereNotNull('criterion_1')
                         ->exists();
                 });
                 

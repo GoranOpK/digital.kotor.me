@@ -6,6 +6,7 @@ use App\Models\Application;
 use App\Models\EvaluationScore;
 use App\Models\CommissionMember;
 use App\Models\Commission;
+use App\Services\DocumentationRejectionEvaluationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -57,6 +58,7 @@ class EvaluationController extends Controller
 
         // Prijave koje član komisije još nije ocjenio
         $evaluatedApplicationIds = EvaluationScore::where('commission_member_id', $commissionMember->id)
+            ->whereNotNull('criterion_1')
             ->pluck('application_id')
             ->toArray();
 
@@ -70,8 +72,8 @@ class EvaluationController extends Controller
                 }
                 // Ako nema ocjenjenih prijava, sve prijave su "pending"
             } elseif ($request->filter === 'evaluated') {
-                // Prijave koje je član komisije već ocjenio (ima EvaluationScore za sebe), PLUS
-                // odbijene zbog nedostajuće dokumentacije – vidljive SVIM članovima odmah (samo predsjednik ima zapis).
+                // Prijave koje je član komisije već ocjenio (ima EvaluationScore sa kriterijumima), PLUS
+                // odbijene zbog nedostajuće dokumentacije – vidljive SVIM članovima odmah (bez bodova u tabeli).
                 $query->where(function ($outer) use ($evaluatedApplicationIds) {
                     $outer->where(function ($q) use ($evaluatedApplicationIds) {
                         $q->where(function ($inner) {
@@ -217,13 +219,14 @@ class EvaluationController extends Controller
             }
         }
         
-        // Član je završio ocjenjivanje ako ima zapis (submit-ovao je formu)
-        $hasCompletedEvaluation = $existingScore !== null;
-        
-        // Provjeri da li su svi članovi komisije ocjenili prijavu
+        // Član je završio ocjenjivanje kada su uneseni svi kriterijumi (ne samo prazan red nakon odbijanja zbog dokumentacije)
+        $hasCompletedEvaluation = $existingScore && $existingScore->criterion_1 !== null;
+
+        // Provjeri da li su svi članovi komisije ocjenili prijavu (samo zapisi sa popunjenim kriterijumima)
         $totalMembers = $commission->activeMembers()->count();
         $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
             ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+            ->whereNotNull('criterion_1')
             ->pluck('commission_member_id')
             ->unique()
             ->count();
@@ -261,15 +264,6 @@ class EvaluationController extends Controller
         // Izračunaj konačnu ocjenu (zbir prosječnih ocjena, BEZ dodatnih bodova;
         // dodatni bodovi se vizuelno dodaju u tabeli preko getBonusScore())
         $finalScore = array_sum(array_filter($averageScores));
-
-        // Provjeri da li su svi članovi komisije ocjenili ovu prijavu
-        $totalMembers = $commission->activeMembers()->count();
-        $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
-            ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
-            ->pluck('commission_member_id')
-            ->unique()
-            ->count();
-        $allMembersEvaluated = $evaluatedMemberIds >= $totalMembers;
 
         // Ocjene ostalih članova i zbirne ocjene (prosjeci, konačna) vidljive su tek kada su
         // SVE prijave na ovom konkursu ocijenjene od SVIH članova - logika je centralizovana
@@ -372,35 +366,12 @@ class EvaluationController extends Controller
                 // Ako dokumentacija nije kompletna, automatski odbiti prijavu i ne dozvoli dalje ocjenjivanje
                 // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
                 if (!$documentsComplete) {
-                    // Sačuvaj ocjenu predsjednika samo sa documents_complete = false
-                    EvaluationScore::updateOrCreate(
-                        [
-                            'application_id' => $application->id,
-                            'commission_member_id' => $commissionMember->id,
-                        ],
-                        [
-                            'documents_complete' => false,
-                            'criterion_1' => null,
-                            'criterion_2' => null,
-                            'criterion_3' => null,
-                            'criterion_4' => null,
-                            'criterion_5' => null,
-                            'criterion_6' => null,
-                            'criterion_7' => null,
-                            'criterion_8' => null,
-                            'criterion_9' => null,
-                            'criterion_10' => null,
-                            'final_score' => 0,
-                            'notes' => null,
-                            'justification' => null,
-                        ]
+                    DocumentationRejectionEvaluationService::rejectApplicationAndVoidScores(
+                        $application,
+                        $commissionMember,
+                        null,
                     );
-                    
-                    $application->update([
-                        'status' => 'rejected',
-                        'rejection_reason' => 'Nedostaju potrebna dokumenta',
-                    ]);
-                    
+
                     return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                         ->with('error', 'Prijava je odbijena jer nisu dostavljena sva potrebna dokumenta.');
                 }
@@ -422,6 +393,7 @@ class EvaluationController extends Controller
         $totalMembers = $commission->activeMembers()->count();
         $evaluatedMemberIds = EvaluationScore::where('application_id', $application->id)
             ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+            ->whereNotNull('criterion_1')
             ->pluck('commission_member_id')
             ->unique()
             ->count();
@@ -643,16 +615,12 @@ class EvaluationController extends Controller
                 
                 // Ako je documents_complete false, automatski odbiti prijavu
                 if ($documentsCompleteValue === false) {
-                    $existingScore->update([
-                        'documents_complete' => false,
-                        'notes' => $notesValue,
-                    ]);
-                    
-                    $application->update([
-                        'status' => 'rejected',
-                        'rejection_reason' => 'Nedostaju potrebna dokumenta',
-                    ]);
-                    
+                    DocumentationRejectionEvaluationService::rejectApplicationAndVoidScores(
+                        $application,
+                        $commissionMember,
+                        $notesValue === null || $notesValue === '' ? null : (string) $notesValue,
+                    );
+
                     return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
                         ->with('error', 'Prijava je odbijena jer nisu dostavljena sva potrebna dokumenta.');
                 }
@@ -780,6 +748,12 @@ class EvaluationController extends Controller
      */
     private function updateApplicationScores(Application $application): void
     {
+        $application->refresh();
+
+        if ($application->isRejectedForMissingDocuments()) {
+            return;
+        }
+
         $scores = EvaluationScore::where('application_id', $application->id)->get();
 
         if ($scores->isEmpty()) {

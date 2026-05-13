@@ -356,6 +356,7 @@
                                                 $currentMember = $commission->activeMembers()->where('user_id', auth()->id())->first();
                                                 $currentMemberHasEvaluated = $currentMember && \App\Models\EvaluationScore::where('application_id', $app->id)
                                                     ->where('commission_member_id', $currentMember->id)
+                                                    ->whereNotNull('criterion_1')
                                                     ->exists();
                                                 
                                                 // Ako je trenutni član ocjenio ILI je prijava odbijena ILI su svi ocjenili -> dugme Ocjene
@@ -365,6 +366,7 @@
                                                     $totalMembers = $commission->activeMembers()->count();
                                                     $evaluatedCount = \App\Models\EvaluationScore::where('application_id', $app->id)
                                                         ->whereIn('commission_member_id', $commission->activeMembers()->pluck('id'))
+                                                        ->whereNotNull('criterion_1')
                                                         ->pluck('commission_member_id')
                                                         ->unique()
                                                         ->count();
