@@ -86,14 +86,6 @@
         font-size: 14pt;
         font-weight: 700;
         margin: 8px 0 4px;
-        letter-spacing: 0.35em;
-    }
-    .decision-obrazlozenje-title {
-        text-align: center;
-        font-size: 12pt;
-        font-weight: 700;
-        margin: 32px 0 20px;
-        letter-spacing: 0.2em;
     }
     .decision-title-sub {
         text-align: center;
@@ -105,7 +97,7 @@
         margin-bottom: 20px;
     }
     .decision-obrazlozenje {
-        page-break-inside: avoid;
+        margin-top: 32px;
     }
     .decision-article-title {
         font-weight: 700;
@@ -220,7 +212,6 @@
         .decision-obrazlozenje {
             margin-top: 20mm;
             padding-top: 0;
-            page-break-inside: avoid;
         }
         .decision-obrazlozenje-last-block {
             page-break-inside: avoid;
@@ -283,7 +274,7 @@
                 Na osnovu članova 22, 23 i 24 Odluke o podršci ženskom preduzetništvu ("Službeni list Crne Gore - opštinski propisi", br. ), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu donosi:
             </div>
 
-            <div class="decision-title-main">O D L U K U</div>
+            <div class="decision-title-main">ODLUKU</div>
             <div class="decision-title-sub">
                 o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $year }}. godinu
             </div>
@@ -354,8 +345,8 @@
             </div>
 
             {{-- Obrazloženje – druga stranica počinje ovdje --}}
-            <div class="decision-article decision-obrazlozenje" style="margin-top: 32px;">
-                <div class="decision-obrazlozenje-title">O b r a z l o ž e n j e</div>
+            <div class="decision-article decision-obrazlozenje">
+                <div class="decision-article-title">Obrazloženje</div>
                 <p class="decision-article-intro">
                     Shodno Odluci o podršci ženskom preduzetništvu ("Službeni list Crne Gore - opštinski propisi", br. ) (u daljem tekstu: Odluka), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu raspisala je Javni konkurs za raspodjelu bespovratnih sredstava namijenjenih za podršku ženskom preduzetništvu u {{ $year }}. godini (u daljem tekstu: Konkurs). Konkurs je objavljen {{ $pubStart ? $fmtDate($pubStart) : '___' }}. godine i isti je trajao 20 dana, zaključno sa {{ $pubEnd ? $fmtDate($pubEnd) : '___' }}. godine, te je bio objavljen na vebsajtu Opštine Kotor, kao i putem lokalnog javnog emitera "Radio Kotor".
                 </p>
@@ -390,7 +381,7 @@
                     <div class="decision-signature">
                         <div class="decision-signature-title">Predsjednik/ca Komisije</div>
                         <div class="decision-signature-line"></div>
-                        <div class="decision-signature-name">{{ $chairmanName ?? '' }}</div>
+                        <div class="decision-signature-name">{{ $chairmanName ?? '_________________________' }}</div>
                     </div>
                 </div>
                 <div class="decision-footer-row decision-footer-distribution-row">
