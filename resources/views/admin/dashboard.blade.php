@@ -224,6 +224,11 @@
                 <a href="{{ route('admin.commissions.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
                     👥 Komisija
                 </a>
+                @if($isCompetitionAdmin)
+                <a href="{{ route('competitions.archive') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    📁 Arhiva konkursa
+                </a>
+                @endif
                 @if(!$isCompetitionAdmin)
                 <a href="{{ route('admin.applications.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
                     📝 Prijave
