@@ -218,6 +218,64 @@
         font-size: 14px;
         color: #374151;
     }
+    .finances-notice-box {
+        background: #fffbeb;
+        border: 1px solid #f59e0b;
+        border-left: 4px solid #f59e0b;
+        padding: 16px 20px;
+        border-radius: 8px;
+        margin: 20px 0 16px;
+        font-size: 14px;
+        color: #374151;
+        line-height: 1.6;
+    }
+    .finances-notice-box h3 {
+        margin: 0 0 12px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #92400e;
+    }
+    .finances-notice-box ol {
+        margin: 0;
+        padding-left: 20px;
+    }
+    .finances-notice-box li {
+        margin-bottom: 12px;
+    }
+    .finances-notice-box li:last-child {
+        margin-bottom: 0;
+    }
+    .finances-notice-confirm {
+        margin: 16px 0 20px;
+        padding: 14px 16px;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+    }
+    .finances-notice-confirm label {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        color: #111827;
+        margin: 0;
+    }
+    .finances-notice-confirm input[type="checkbox"] {
+        margin-top: 3px;
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
+    .finances-notice-confirm.has-error {
+        border-color: #ef4444;
+        background: #fef2f2;
+    }
+    .finances-after-notice.locked {
+        opacity: 0.55;
+        pointer-events: none;
+        user-select: none;
+    }
     /* Memorandum (zaglavlje) kao u Obrascima 1a/1b */
     .obrazac-zaglavlje {
         background: #fff;
@@ -934,6 +992,50 @@
                         <input type="number" name="required_amount" class="form-control" value="{{ old('required_amount', $businessPlan->required_amount ?? $defaultData['required_amount'] ?? '') }}" step="0.01" min="0" placeholder="0.00">
                     </div>
 
+                    @php
+                        $financesNoticeConfirmed = (bool) old('finances_notice_confirmed')
+                            || (!empty($businessPlan?->requested_amount) && (float) $businessPlan->requested_amount > 0);
+                    @endphp
+                    <div class="finances-notice-box" id="financesNoticeBox">
+                        <h3>Napomena:</h3>
+                        <p style="margin: 0 0 12px;">
+                            Maksimalan iznos dodijeljenih sredstava za jedan biznis plan ne može iznositi više od:
+                        </p>
+                        <ol>
+                            <li>
+                                <strong>20%</strong> od ukupnog iznosa definisanog u Javnim konkursima za tekuću godinu za:
+                                <ul style="margin: 8px 0 0; padding-left: 20px; list-style-type: disc;">
+                                    <li>inovativne djelatnosti (stvaranje novog proizvoda/usluge ili bitno unaprijeđenje postojećeg, primjena novih tehnologija i novih načina proizvodnje ili pružanja usluge, novi model poslovanja ili upravljanja...);</li>
+                                    <li>zeleno preduzetništvo (korišćenje ekološki prihvatljivih materijala i tehnologija, smanjenje zagađenja, otpada i potrošnje energije, korišćenje obnovljivih izvora energije, podstiče kružnu ekonomiju i održivi razvoj...).</li>
+                                </ul>
+                            </li>
+                            <li>
+                                <strong>10%</strong> od ukupnog iznosa definisanog u Javnim konkursima za tekuću godinu za fizička lica/preduzetnice/društva kojima ranije nisu dodjeljivana budžetska sredstva Opštine Kotor za podršku ženskom preduzetništvu.
+                            </li>
+                            <li>
+                                <strong>5%</strong> od ukupnog iznosa definisanog u Javnim konkursima za tekuću godinu za preduzetnice/društva kojima su ranije dodjeljivana budžetska sredstva Opštine Kotor za podršku ženskom preduzetništvu.
+                            </li>
+                        </ol>
+                    </div>
+
+                    <div class="finances-notice-confirm" id="financesNoticeConfirmWrap">
+                        <label>
+                            <input
+                                type="checkbox"
+                                name="finances_notice_confirmed"
+                                id="finances_notice_confirmed"
+                                value="1"
+                                {{ $financesNoticeConfirmed ? 'checked' : '' }}
+                                @if($readOnly ?? false) disabled @endif
+                            >
+                            <span>Potvrđujem da sam pročitala napomenu: <span class="required">*</span></span>
+                        </label>
+                        @error('finances_notice_confirmed')
+                            <div class="form-error" style="margin-top: 8px;">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div id="financesAfterNotice" class="finances-after-notice {{ $financesNoticeConfirmed ? '' : 'locked' }}">
                     <div class="form-group">
                         <label class="form-label">
                             22. Koliki iznos podrške tražite od Opštine Kotor i navedite na što biste tačno utrošiti tražena sredstva? (Proširite tabelu koliko je potrebno.)
@@ -1151,6 +1253,7 @@
                             <button type="button" class="btn-secondary" onclick="addExpenseRow('investment')">+ Dodaj red (Investicioni troškovi)</button>
                             <button type="button" class="btn-secondary" onclick="addExpenseRow('operating')">+ Dodaj red (Tekući troškovi)</button>
                         </div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -1741,6 +1844,33 @@ document.addEventListener('DOMContentLoaded', function() {
     calculateRevenueGrandTotal();
     calculateExpenseGrandTotal();
 
+    const financesNoticeCheckbox = document.getElementById('finances_notice_confirmed');
+    const financesAfterNotice = document.getElementById('financesAfterNotice');
+    const financesNoticeConfirmWrap = document.getElementById('financesNoticeConfirmWrap');
+
+    function updateFinancesNoticeLock() {
+        if (!financesNoticeCheckbox || !financesAfterNotice) {
+            return;
+        }
+        if (financesNoticeCheckbox.checked) {
+            financesAfterNotice.classList.remove('locked');
+            if (financesNoticeConfirmWrap) {
+                financesNoticeConfirmWrap.classList.remove('has-error');
+            }
+        } else {
+            financesAfterNotice.classList.add('locked');
+        }
+    }
+
+    function isFinancesNoticeConfirmed() {
+        return financesNoticeCheckbox && financesNoticeCheckbox.checked;
+    }
+
+    if (financesNoticeCheckbox) {
+        financesNoticeCheckbox.addEventListener('change', updateFinancesNoticeLock);
+        updateFinancesNoticeLock();
+    }
+
     // Funkcionalnost za dinamičko dugme na formi biznis plana
     const bpForm = document.getElementById('businessPlanForm');
     const bpSubmitBtn = document.getElementById('bpSubmitBtn');
@@ -1852,6 +1982,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const allFilled = checkRequiredFields();
         
         if (allFilled) {
+            if (!isFinancesNoticeConfirmed()) {
+                if (financesNoticeConfirmWrap) {
+                    financesNoticeConfirmWrap.classList.add('has-error');
+                    financesNoticeConfirmWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                alert('Potrebno je potvrditi da ste pročitala napomenu prije unosa iznosa podrške (pitanje 22 i dalje).');
+                return;
+            }
+
             // Ako su sva polja popunjena, ukloni save_as_draft i pošalji formu
             const draftInput = bpForm.querySelector('input[name="save_as_draft"]');
             if (draftInput) {

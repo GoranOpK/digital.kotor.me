@@ -201,7 +201,7 @@
                                 'Dio stranog društva (predstavništvo ili poslovna jedinica)',
                                 'Udruženje (nvo, fondacije, sportske organizacije)',
                                 'Ustanova (državne i privatne)',
-                                'Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)'
+                                'Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)'
                             ];
                         @endphp
                         @foreach($businessTypes as $type)

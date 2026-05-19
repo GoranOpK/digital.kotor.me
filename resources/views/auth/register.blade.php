@@ -81,7 +81,7 @@
                         <option value="Dio stranog društva (predstavništvo ili poslovna jedinica)" @selected(old('business_type') === 'Dio stranog društva (predstavništvo ili poslovna jedinica)')>Dio stranog društva (predstavništvo ili poslovna jedinica)</option>
                         <option value="Udruženje (nvo, fondacije, sportske organizacije)" @selected(old('business_type') === 'Udruženje (nvo, fondacije, sportske organizacije)')>Udruženje (nvo, fondacije, sportske organizacije)</option>
                         <option value="Ustanova (državne i privatne)" @selected(old('business_type') === 'Ustanova (državne i privatne)')>Ustanova (državne i privatne)</option>
-                        <option value="Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)" @selected(old('business_type') === 'Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)')>Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)</option>
+                        <option value="Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)" @selected(old('business_type') === 'Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)')>Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)</option>
                     </select>
                     <div class="form-error" id="business_type_error"></div>
                 </div>

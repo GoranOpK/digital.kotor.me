@@ -163,7 +163,7 @@ class HomeController extends Controller
 
         // Validacija u zavisnosti od tipa korisnika
         if ($request->user_type === 'Registrovan privredni subjekt') {
-            $rules['business_type'] = ['required', 'in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)'];
+            $rules['business_type'] = ['required', 'in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)'];
             $messages['business_type.required'] = 'Odaberite tip privrednog subjekta.';
 
             // Ako nije Preduzetnik, PIB je obavezan

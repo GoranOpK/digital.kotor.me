@@ -233,6 +233,8 @@ class BusinessPlanController extends Controller
             
             // VI. RIZICI
             'risk_matrix' => 'nullable|array',
+
+            'finances_notice_confirmed' => $isDraft ? 'nullable' : 'accepted',
         ], [
             'business_idea_name.required' => 'Naziv biznis ideje je obavezan.',
             'applicant_name.required' => 'Ime i prezime podnosioca je obavezno.',
@@ -241,6 +243,7 @@ class BusinessPlanController extends Controller
             'applicant_phone.required' => 'Kontakt telefon je obavezan.',
             'applicant_email.required' => 'E-mail je obavezan.',
             'summary.required' => 'Rezime je obavezno.',
+            'finances_notice_confirmed.accepted' => 'Potrebno je potvrditi da ste pročitali napomenu u dijelu IV. Finansije.',
         ]);
 
         // Očisti i pripremi podatke iz tabela - osiguraj da se čuvaju svi redovi

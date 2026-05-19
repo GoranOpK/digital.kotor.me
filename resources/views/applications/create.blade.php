@@ -623,7 +623,7 @@
                             <option value="Dio stranog društva (predstavništvo ili poslovna jedinica)" {{ $defaultRegistrationForm === 'Dio stranog društva (predstavništvo ili poslovna jedinica)' ? 'selected' : '' }}>Dio stranog društva (predstavništvo ili poslovna jedinica)</option>
                             <option value="Udruženje (nvo, fondacije, sportske organizacije)" {{ $defaultRegistrationForm === 'Udruženje (nvo, fondacije, sportske organizacije)' ? 'selected' : '' }}>Udruženje (nvo, fondacije, sportske organizacije)</option>
                             <option value="Ustanova (državne i privatne)" {{ $defaultRegistrationForm === 'Ustanova (državne i privatne)' ? 'selected' : '' }}>Ustanova (državne i privatne)</option>
-                            <option value="Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)" {{ $defaultRegistrationForm === 'Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)' ? 'selected' : '' }}>Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)</option>
+                            <option value="Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)" {{ $defaultRegistrationForm === 'Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)' ? 'selected' : '' }}>Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)</option>
                         </select>
                         @error('registration_form')
                             <div class="error-message">{{ $message }}</div>
@@ -879,7 +879,7 @@
                             <option value="Dio stranog društva (predstavništvo ili poslovna jedinica)" {{ $defaultRegistrationForm === 'Dio stranog društva (predstavništvo ili poslovna jedinica)' ? 'selected' : '' }}>Dio stranog društva (predstavništvo ili poslovna jedinica)</option>
                             <option value="Udruženje (nvo, fondacije, sportske organizacije)" {{ $defaultRegistrationForm === 'Udruženje (nvo, fondacije, sportske organizacije)' ? 'selected' : '' }}>Udruženje (nvo, fondacije, sportske organizacije)</option>
                             <option value="Ustanova (državne i privatne)" {{ $defaultRegistrationForm === 'Ustanova (državne i privatne)' ? 'selected' : '' }}>Ustanova (državne i privatne)</option>
-                            <option value="Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)" {{ $defaultRegistrationForm === 'Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)' ? 'selected' : '' }}>Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)</option>
+                            <option value="Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)" {{ $defaultRegistrationForm === 'Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)' ? 'selected' : '' }}>Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)</option>
                         </select>
                         @error('registration_form')
                             <div class="error-message">{{ $message }}</div>
