@@ -1528,6 +1528,8 @@ class AdminController extends Controller
      */
     public function rankingList(Competition $competition)
     {
+        $competition->load('upNumber');
+
         $user = auth()->user();
         $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
