@@ -1766,7 +1766,7 @@ class AdminController extends Controller
             $commissionMembersCount = $competition->commission->activeMembers()->count();
         }
 
-        // Podaci za Obrazloženje
+        // Podaci za Obrazloženje i tekst odluke
         $allApplications = $competition->applications()->whereIn('status', ['submitted', 'evaluated', 'rejected', 'approved'])->get();
         $totalApplications = $allApplications->count();
         $incompleteCount = $allApplications->filter(fn ($a) => $a->rejection_reason && str_contains($a->rejection_reason, 'Nedostaju potrebna dokumenta'))->count();
@@ -1774,14 +1774,22 @@ class AdminController extends Controller
         $pubStart = $competition->start_date ?? $competition->published_at;
         $pubEnd = $competition->deadline;
         $deadlineDay = $competition->deadline ? $competition->deadline->copy()->addDay()->startOfDay() : null;
-        $oralDate = $allApplications->min('interview_scheduled_at') ?? ($competition->deadline ? $competition->deadline->copy()->addDays(4) : null);
+        $oralDate = $allApplications->min('interview_scheduled_at')
+            ?? ($competition->deadline ? $competition->deadline->copy()->addDays(4) : null);
         $rankingDate = $competition->closed_at ?? now();
+        $firstSessionDate = $pubEnd ? $pubEnd->copy()->addDay() : null;
+        $winnersCount = $winners->count();
+        $totalApprovedAmount = (float) $winners->sum('approved_amount');
+        $competitionYear = $competition->year ?? (int) date('Y');
+        $decisionDate = $rankingDate ? \Carbon\Carbon::parse($rankingDate) : now();
 
         return view('admin.competitions.decision', compact(
             'competition', 'winners', 'isSuperAdmin', 'isChairman',
             'chairmanName', 'commissionMembersCount',
             'totalApplications', 'incompleteCount', 'eligibleCount',
-            'pubStart', 'pubEnd', 'deadlineDay', 'oralDate', 'rankingDate'
+            'pubStart', 'pubEnd', 'deadlineDay', 'oralDate', 'rankingDate',
+            'firstSessionDate', 'winnersCount', 'totalApprovedAmount',
+            'competitionYear', 'decisionDate'
         ));
     }
 }

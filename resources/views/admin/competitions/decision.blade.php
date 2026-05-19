@@ -86,6 +86,14 @@
         font-size: 14pt;
         font-weight: 700;
         margin: 8px 0 4px;
+        letter-spacing: 0.35em;
+    }
+    .decision-obrazlozenje-title {
+        text-align: center;
+        font-size: 12pt;
+        font-weight: 700;
+        margin: 32px 0 20px;
+        letter-spacing: 0.2em;
     }
     .decision-title-sub {
         text-align: center;
@@ -260,47 +268,50 @@
             </div>
 
             @php
-                $decisionPlaceDate = isset($rankingDate) && $rankingDate
-                    ? \Carbon\Carbon::parse($rankingDate)
-                    : now();
+                $fmtDate = fn ($date) => $date ? \Carbon\Carbon::parse($date)->format('d.m.Y') : '___';
+                $decisionPlaceDate = isset($decisionDate) ? \Carbon\Carbon::parse($decisionDate) : (isset($rankingDate) && $rankingDate ? \Carbon\Carbon::parse($rankingDate) : now());
+                $year = $competitionYear ?? ($competition->year ?? date('Y'));
+                $approvedWinnersCount = $winnersCount ?? $winners->count();
+                $approvedTotalEur = $totalApprovedAmount ?? (float) $winners->sum('approved_amount');
             @endphp
             <div class="decision-number-row">
                 <span class="decision-number-label">Broj:</span>
-                <span class="decision-number-date">Kotor, {{ $decisionPlaceDate->format('d.m.Y') }}. godine</span>
+                <span class="decision-number-date">Kotor, {{ $decisionPlaceDate->format('d.m.') }} {{ $year }}. godine</span>
             </div>
 
-            {{-- Preambula --}}
             <div class="decision-preamble">
-                Na osnovu članova 20, 21, 22 i 23 Odluke o kriterijumima, načinu i postupku raspodjele sredstava za podršku ženskom preduzetništvu ("Službeni list Crne Gore - opštinski propisi", br. 011/24), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu donosi:
+                Na osnovu članova 22, 23 i 24 Odluke o podršci ženskom preduzetništvu ("Službeni list Crne Gore - opštinski propisi", br. ), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu donosi:
             </div>
 
-            {{-- Naslov odluke --}}
-            <div class="decision-title-main">ODLUKU</div>
+            <div class="decision-title-main">O D L U K U</div>
             <div class="decision-title-sub">
-                o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $competition->year ?? date('Y') }}. godinu
+                o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $year }}. godinu
             </div>
 
             {{-- Član 1 --}}
             <div class="decision-article">
                 <div class="decision-article-title">Član 1</div>
                 <div class="decision-article-intro">
-                    Na osnovu utvrđenih kriterijuma vrednovanja i ocjene biznis planova, odlučeno je da se <strong>finansiraju</strong> biznis planovi sledećih podnosioca prijava na ime podrške ženskom preduzetništvu i to:
+                    Na osnovu utvrđenih kriterijuma vrednovanja i ocjene biznis planova, odlučeno je da se finansiraju biznis planovi sledećih podnositeljki prijava na ime podrške ženskom preduzetništvu i to:
                 </div>
 
                 @if($winners->count() > 0)
                     <ol class="decision-applicant-list" start="1">
                         @foreach($winners as $winner)
+                            @php
+                                $planTotal = $winner->businessPlan?->required_amount
+                                    ?? $winner->total_budget_needed
+                                    ?? 0;
+                            @endphp
                             <li class="decision-applicant-item">
                                 <div class="decision-applicant-head">
-                                    Podnosilac prijave: <strong>{{ $winner->getApplicantDisplayForDecision() }}</strong>
+                                    Podnositeljka prijave: <strong>{{ $winner->getApplicantDisplayForDecision() }}</strong>
                                 </div>
                                 <div class="decision-applicant-details">
-                                    <div>Naziv biznis plana: "{{ $winner->business_plan_name }}";</div>
-                                    <div>Ukupno ostvareno: <strong>{{ number_format($winner->getDisplayScore(), 1, ',', '.') }}</strong> bodova;</div>
-                                    <div>Iznos odobrenih sredstava: {{ number_format($winner->approved_amount ?? 0, 2, ',', '.') }} €;</div>
-                                    <div>Potraživani iznos sredstava: {{ number_format($winner->requested_amount ?? 0, 2, ',', '.') }} €;</div>
-                                    <div>Ukupna vrijednost biznis plana: {{ number_format($winner->total_budget_needed ?? 0, 2, ',', '.') }} €;</div>
-                                    <div>Unio: {{ $chairmanName ?? 'Predsjednik komisije' }}; Datum unosa: {{ $winner->commission_decision_date ? \Carbon\Carbon::parse($winner->commission_decision_date)->format('d.m.Y H:i') : '—' }}.</div>
+                                    <div>Naziv biznis plana: "{{ $winner->business_plan_name }}"</div>
+                                    <div>Ukupno bodova: <strong>{{ number_format($winner->getDisplayScore(), 1, ',', '.') }}</strong></div>
+                                    <div>Iznos odobrenih sredstava: {{ number_format($winner->approved_amount ?? 0, 2, ',', '.') }} €</div>
+                                    <div>Ukupna vrijednost biznis plana: {{ number_format((float) $planTotal, 2, ',', '.') }} €</div>
                                 </div>
                             </li>
                         @endforeach
@@ -314,7 +325,7 @@
             <div class="decision-article">
                 <div class="decision-article-title">Član 2</div>
                 <p class="decision-article-intro" style="margin-bottom: 0;">
-                    Međusobna prava i obaveze utvrdiće se posebnim aktom – Ugovorom koji Sekretar Sekretarijata za razvoj preduzetništva, komunalne poslove i saobraćaj zaključuje sa preduzetnicom odnosno nosiocem biznisa u društvu kojem su dodijeljena sredstva u roku od dvadeset dana od dana donošenja ove Odluke.
+                    Međusobna prava i obaveze utvrdiće se posebnim aktom – Ugovorom koji sekretar Sekretarijata za razvoj preduzetništva, komunalne poslove i saobraćaj zaključuje sa preduzetnicom odnosno nositeljkom biznisa u društvu kojem su dodijeljena sredstva u roku od 10 dana od dana izvršnosti ove Odluke.
                 </p>
             </div>
 
@@ -344,28 +355,31 @@
 
             {{-- Obrazloženje – druga stranica počinje ovdje --}}
             <div class="decision-article decision-obrazlozenje" style="margin-top: 32px;">
-                <div class="decision-article-title">Obrazloženje</div>
+                <div class="decision-obrazlozenje-title">O b r a z l o ž e n j e</div>
                 <p class="decision-article-intro">
-                    Shodno Odluci o kriterijumima, načinu i postupku raspodjele sredstava za podršku ženskom preduzetništvu ("Službeni list Crne Gore - opštinski propisi", br. 011/24), Komisija je raspisala Javni konkurs za dodjelu bespovratnih sredstava za podršku ženskom preduzetništvu {{ $competition->year ?? date('Y') }}. godine. Konkurs je objavljen u trajanju od 20 dana, od {{ $pubStart ? $pubStart->format('d.m.Y') : '___' }}. do {{ $pubEnd ? $pubEnd->format('d.m.Y') : '___' }}. godine, na vebsajtu Opštine Kotor i lokalnom javnom emiteru "Radio Kotor".
+                    Shodno Odluci o podršci ženskom preduzetništvu ("Službeni list Crne Gore - opštinski propisi", br. ) (u daljem tekstu: Odluka), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu raspisala je Javni konkurs za raspodjelu bespovratnih sredstava namijenjenih za podršku ženskom preduzetništvu u {{ $year }}. godini (u daljem tekstu: Konkurs). Konkurs je objavljen {{ $pubStart ? $fmtDate($pubStart) : '___' }}. godine i isti je trajao 20 dana, zaključno sa {{ $pubEnd ? $fmtDate($pubEnd) : '___' }}. godine, te je bio objavljen na vebsajtu Opštine Kotor, kao i putem lokalnog javnog emitera "Radio Kotor".
                 </p>
                 <p class="decision-article-intro">
-                    Nakon isteka roka za podnošenje prijava ({{ $deadlineDay ? $deadlineDay->format('d.m.Y') : '___' }}.), primljeno je {{ $totalApplications }} prijava u roku. Komisija je pristupila otvaranju zapečaćenih koverti i sprovela administrativnu provjeru podnesene dokumentacije radi utvrđivanja potpunosti i valjanosti u skladu sa uslovima konkursa.
+                    Podnošenje prijava odvijalo se isključivo elektronski putem digitalnog servisa Opštine Kotor (digital.kotor.me).
                 </p>
                 <p class="decision-article-intro">
-                    Uvidom u podnesene prijave konstatovano je da {{ $incompleteCount }} prijava nije potpuna u pogledu dostavljene dokumentacije te nisu uzeti u dalji postupak.
+                    Nakon isteka roka za podnošenje prijava na Konkurs, Komisija je na prvoj sjednici održanoj dana {{ $firstSessionDate ? $fmtDate($firstSessionDate) : '___' }}. godine utvrdila da je pristiglo ukupno {{ $totalApplications }} blagovremenih prijava. Komisija je pregledala elektronski zaprimljene prijave, nakon čega je konstatovala da su {{ $incompleteCount }} prijave nepotpune u smislu priložene dokumentacije, te iste nije dalje razmatrala. Podnositeljke nepotpunih prijava imale su pravo prigovora Komisiji, nakon čega je Komisija donijela odluku o prihvatanju ili odbijanju prigovora. Komisija je konstatovala da {{ $eligibleCount }} prijave mogu biti uzete u dalje razmatranje i vrednovanje po kriterijumima utvrđenim Odlukom i Konkursom.
                 </p>
                 <p class="decision-article-intro">
-                    Komisija je konstatovala da {{ $eligibleCount }} prijave mogu uzeti u dalji postupak razmatranja i vrednovanja prema kriterijumima utvrđenim Odlukom i Konkursom.
-                </p>
-                <p class="decision-article-intro">
-                    Radi potpunijeg uvida u sadržaj i izvodljivost biznis planova te lične kompetencije njihovih predlagača, Komisija je organizovala usmene prezentacije biznis planova dana {{ $oralDate ? $oralDate->format('d.m.Y') : '___' }}. u Palati Bizanti. Svrha prezentacija bila je da podnosioci prijava pred Komisijom kroz direktnu komunikaciju predstave svoje poslovne ideje, potencijal, motivaciju i spremnost za realizaciju.
+                    Radi potpunijeg uvida u sadržaj i izvodljivost biznis planova, kao i sagledavanja ličnih kompetencija njihovih podnositeljki za realizaciju istih, Komisija je na drugoj sjednici Komisije organizovala usmeno obrazloženje biznis planova koji su obavljeni dana {{ $oralDate ? $fmtDate($oralDate) : '___' }}. godine. Nakon sprovedenih usmenih obrazloženja biznis planova, svaki član Komisije elektronski putem digitalnog servisa Opštine Kotor dodjeljuje bodove za svaki od pozitivnih kriterijuma.
                 </p>
                 <div class="decision-obrazlozenje-last-block">
                     <p class="decision-article-intro">
-                        Na osnovu pojedinačnih evaluacionih formulara i rezultirajuće rang liste sa prosječnom ocjenom biznis planova, Komisija je uspostavila Rang listu dana {{ $rankingDate ? $rankingDate->format('d.m.Y') : now()->format('d.m.Y') }}.
+                        Na osnovu pojedinačnih ocjena, prosječne ocjene i dodatnih bodova, te izvedene preliminarne rang liste sa konačnim ocjenama biznis planova, Komisija je dana na trećoj sjednici održanoj dana {{ $rankingDate ? $fmtDate($rankingDate) : '___' }}. godine konstatovala za svaki biznis plan na preliminarnoj rang listi da li se podržava ili odbija i iznos sredstava koji se dodjeljuje i na taj način utvrdila konačnu rang listu.
                     </p>
                     <p class="decision-article-intro">
-                        Na osnovu utvrđene Rang liste, Komisija je donijela Odluku o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $competition->year ?? date('Y') }}. godinu, dodjeljujući sredstva <strong>{{ $winners->count() }}</strong> biznis planova u ukupnom iznosu od <strong>{{ number_format($winners->sum('approved_amount'), 2, ',', '.') }} eura</strong>.
+                        Na osnovu utvrđene rang liste, Komisija je donijela Odluku o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $year }} godinu, kojom se dodijeljuju sredstva za <strong>{{ $approvedWinnersCount }}</strong> biznis planova u ukupnom iznosu <strong>{{ number_format($approvedTotalEur, 2, ',', '.') }} eura</strong>.
+                    </p>
+                    <p class="decision-article-intro">
+                        Dinamiku realizacije podržanih biznis planova i kontrolu utroška i namjenskog korišćenja sredstava vršiće nadležni Sekretarijat, u skladu sa Odlukom.
+                    </p>
+                    <p class="decision-article-intro" style="margin-bottom: 0;">
+                        Na osnovu gore navedenog odlučeno je kao u dispozitivu ove Odluke.
                     </p>
                 </div>
             </div>
@@ -374,16 +388,16 @@
             <div class="decision-footer">
                 <div class="decision-footer-row decision-footer-signature-row">
                     <div class="decision-signature">
-                        <div class="decision-signature-title">Predsjednica Komisije</div>
+                        <div class="decision-signature-title">Predsjednik/ca Komisije</div>
                         <div class="decision-signature-line"></div>
-                        <div class="decision-signature-name">{{ $chairmanName ?? '_________________________' }}</div>
+                        <div class="decision-signature-name">{{ $chairmanName ?? '' }}</div>
                     </div>
                 </div>
                 <div class="decision-footer-row decision-footer-distribution-row">
                     <div class="decision-distribution">
                         <strong>Dostaviti:</strong>
                         <ul>
-                            <li>- Podnosiocima prijave (x{{ $winners->count() }})</li>
+                            <li>- Podnosiocima prijave (x{{ $approvedWinnersCount }})</li>
                             <li>- Članovima Komisije (x{{ $commissionMembersCount ?: 5 }})</li>
                             <li>- Sekretarijatu 16 (x2)</li>
                             <li>- Arhivi</li>
