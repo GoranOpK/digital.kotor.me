@@ -69,6 +69,13 @@
         margin-bottom: 20px;
         font-size: 11pt;
     }
+    /* Broj odluke se ne popunjava iz sistema — samo natpis za ručni upis pri štampi */
+    .decision-number-label {
+        flex-shrink: 0;
+    }
+    .decision-number-date {
+        text-align: right;
+    }
     .decision-preamble {
         text-align: justify;
         margin-bottom: 24px;
@@ -252,9 +259,14 @@
                 </div>
             </div>
 
+            @php
+                $decisionPlaceDate = isset($rankingDate) && $rankingDate
+                    ? \Carbon\Carbon::parse($rankingDate)
+                    : now();
+            @endphp
             <div class="decision-number-row">
-                <span>Broj:</span>
-                <span>Kotor, {{ now()->format('d.m.Y') }}. godine</span>
+                <span class="decision-number-label">Broj:</span>
+                <span class="decision-number-date">Kotor, {{ $decisionPlaceDate->format('d.m.Y') }}. godine</span>
             </div>
 
             {{-- Preambula --}}
