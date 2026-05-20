@@ -86,6 +86,13 @@
                     <div class="form-error" id="business_type_error"></div>
                 </div>
 
+                {{-- Naziv privrednog subjekta (sve osim Preduzetnika) --}}
+                <div class="form-group conditional-field" id="company_name_group">
+                    <label for="company_name" class="form-label">Naziv privrednog subjekta <span class="required">*</span></label>
+                    <input type="text" name="company_name" id="company_name" class="form-control" value="{{ old('company_name') }}" maxlength="255" autocomplete="organization">
+                    <div class="form-error" id="company_name_error"></div>
+                </div>
+
                 {{-- Residential status (samo za Fizičko lice i Preduzetnik) --}}
                 <div class="form-group conditional-field" id="residential_status_group">
                     <label for="residential_status" class="form-label">Status prebivališta <span class="required">*</span></label>
@@ -395,6 +402,7 @@
             const jmbNonResident = document.getElementById('jmb_non_resident');
             const passportNumber = document.getElementById('passport_number');
             const pib = document.getElementById('pib');
+            const companyName = document.getElementById('company_name');
             const firstName = document.getElementById('first_name');
             const lastName = document.getElementById('last_name');
 
@@ -558,6 +566,7 @@
                 toggleField('jmb_non_resident_group', false);
                 toggleField('passport_group', false);
                 toggleField('pib_group', false);
+                toggleField('company_name_group', false);
 
                 if (value === 'Fizičko lice') {
                     toggleField('residential_status_group', true);
@@ -573,11 +582,17 @@
                 if (value === 'Preduzetnik') {
                     toggleField('residential_status_group', true);
                     toggleField('pib_group', false);
+                    toggleField('company_name_group', false);
+                    if (companyName) companyName.value = '';
                 } else if (value && value !== 'Preduzetnik') {
                     toggleField('residential_status_group', false);
+                    toggleField('company_name_group', true);
                     toggleField('pib_group', true);
                     toggleField('jmb_group', false);
                     toggleField('non_resident_id_type_group', false);
+                } else {
+                    toggleField('company_name_group', false);
+                    if (companyName) companyName.value = '';
                 }
             });
 
@@ -869,6 +884,7 @@
                 if (businessType.value === 'Preduzetnik') {
                     toggleField('residential_status_group', true);
                 } else if (type === 'Registrovan privredni subjekt' && businessType.value && businessType.value !== 'Preduzetnik') {
+                    toggleField('company_name_group', true);
                     toggleField('pib_group', true);
                 }
 
@@ -957,8 +973,15 @@
                     }
                 }
 
-                // Validacija PIB za privredne subjekte (osim Preduzetnika)
+                // Validacija naziva i PIB za privredne subjekte (osim Preduzetnika)
                 if (userType.value === 'Registrovan privredni subjekt' && businessType.value && businessType.value !== 'Preduzetnik') {
+                    if (!companyName || !companyName.value.trim()) {
+                        showError('company_name_error', 'Naziv privrednog subjekta je obavezan');
+                        isValid = false;
+                    } else {
+                        hideError('company_name_error');
+                    }
+
                     if (!pib.value) {
                         showError('pib_error', 'PIB je obavezan');
                     isValid = false;

@@ -33,6 +33,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'residential_status',
         'first_name',
         'last_name',
+        'company_name',
         'jmb',
         'pib',
         'passport_number',

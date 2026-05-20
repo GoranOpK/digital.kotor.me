@@ -166,8 +166,10 @@ class HomeController extends Controller
             $rules['business_type'] = ['required', 'in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)'];
             $messages['business_type.required'] = 'Odaberite tip privrednog subjekta.';
 
-            // Ako nije Preduzetnik, PIB je obavezan
+            // Ako nije Preduzetnik, naziv subjekta i PIB su obavezni
             if ($request->business_type && $request->business_type !== 'Preduzetnik') {
+                $rules['company_name'] = ['required', 'string', 'max:255'];
+                $messages['company_name.required'] = 'Naziv privrednog subjekta je obavezan.';
                 $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{8}$/', 'unique:users,pib'];
                 $messages['pib.required'] = 'PIB je obavezan.';
                 $messages['pib.regex'] = 'PIB mora imati tačno 8 cifara.';
@@ -281,6 +283,9 @@ class HomeController extends Controller
         // Dodavanje JMB/PIB/Passport
         if ($jmbToValidate) {
             $userData['jmb'] = $jmbToValidate;
+        }
+        if (isset($validated['company_name'])) {
+            $userData['company_name'] = trim($validated['company_name']);
         }
         if (isset($validated['pib'])) {
             $userData['pib'] = $validated['pib'];
