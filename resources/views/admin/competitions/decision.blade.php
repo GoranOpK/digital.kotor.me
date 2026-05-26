@@ -33,7 +33,7 @@
         max-width: 210mm;
         margin: 0 auto;
         font-family: Arial, sans-serif;
-        font-size: 12pt;
+        font-size: 13.2pt;
         line-height: 1.5;
         color: #111;
     }
@@ -59,15 +59,15 @@
         font-weight: 600;
         line-height: 1.4;
     }
-    .decision-org div:first-child { font-size: 12pt; }
-    .decision-org div:nth-child(2) { font-size: 12pt; }
-    .decision-org div:nth-child(3) { font-size: 12pt; color: #374151; max-width: 280px; }
+    .decision-org div:first-child { font-size: 13.2pt; }
+    .decision-org div:nth-child(2) { font-size: 13.2pt; }
+    .decision-org div:nth-child(3) { font-size: 13.2pt; color: #374151; max-width: 340px; }
     .decision-number-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 20px;
-        font-size: 12pt;
+        font-size: 13.2pt;
     }
     /* Broj odluke se ne popunjava iz sistema — samo natpis za ručni upis pri štampi */
     .decision-number-label {
@@ -79,17 +79,17 @@
     .decision-preamble {
         text-align: justify;
         margin-bottom: 24px;
-        font-size: 12pt;
+        font-size: 13.2pt;
     }
     .decision-title-main {
         text-align: center;
-        font-size: 14pt;
+        font-size: 15.4pt;
         font-weight: 700;
         margin: 8px 0 4px;
     }
     .decision-title-sub {
         text-align: center;
-        font-size: 12pt;
+        font-size: 13.2pt;
         font-weight: 700;
         margin-bottom: 24px;
     }
@@ -101,7 +101,7 @@
     }
     .decision-article-title {
         font-weight: 700;
-        font-size: 12pt;
+        font-size: 13.2pt;
         margin-bottom: 12px;
         text-align: center;
         page-break-after: avoid;
@@ -134,8 +134,6 @@
         margin-bottom: 2px;
     }
     .decision-footer {
-        page-break-before: avoid;
-        page-break-inside: avoid;
         margin-top: 40px;
         padding-top: 0;
     }
@@ -153,7 +151,7 @@
         display: inline-block;
     }
     .decision-signature-title {
-        font-size: 12pt;
+        font-size: 13.2pt;
         margin-bottom: 4px;
     }
     .decision-signature-line {
@@ -163,11 +161,11 @@
         height: 24px;
     }
     .decision-signature-name {
-        font-size: 12pt;
+        font-size: 13.2pt;
     }
     .decision-distribution {
         margin-top: 0;
-        font-size: 12pt;
+        font-size: 13.2pt;
     }
     .decision-distribution ul {
         margin: 8px 0 0 20px;
@@ -187,8 +185,9 @@
         .no-print { display: none !important; }
         nav, .navigation, header.bg-white { display: none !important; }
         html, body {
-            width: 210mm;
-            min-height: 297mm;
+            width: 100%;
+            max-width: 100%;
+            min-height: 0;
             margin: 0 !important;
             padding: 0 !important;
         }
@@ -196,19 +195,26 @@
             background: #fff;
             padding: 0 !important;
             margin: 0 !important;
-            width: 210mm;
+            width: 100%;
+            max-width: 100%;
             min-height: 0;
         }
         .decision-document {
-            width: 210mm;
+            width: 100%;
+            max-width: 100%;
             min-height: 0;
-            padding: 20mm;
+            padding: 0;
             max-width: none;
             box-shadow: none;
             margin: 0;
+            box-sizing: border-box;
+        }
+        .decision-applicant-item {
+            page-break-inside: auto;
+            break-inside: auto;
         }
         .decision-obrazlozenje {
-            margin-top: 20mm;
+            margin-top: 12mm;
             padding-top: 0;
         }
         .decision-preamble,
@@ -217,7 +223,7 @@
             widows: 3;
         }
         .decision-footer {
-            margin-top: 40px;
+            margin-top: 28px;
         }
         .page-header { display: none; }
         .container {
@@ -227,10 +233,7 @@
         }
         @page {
             size: A4;
-            margin-top: 15mm;
-            margin-bottom: 20mm;
-            margin-left: 20mm;
-            margin-right: 20mm;
+            margin: 12mm 10mm;
         }
     }
 </style>
