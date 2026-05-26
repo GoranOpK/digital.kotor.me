@@ -176,9 +176,7 @@
     .decision-distribution li {
         margin-bottom: 4px;
     }
-    .decision-obrazlozenje-last-block {
-        page-break-inside: avoid;
-    }
+
     .decision-obrazlozenje-last-block .decision-article-intro {
         margin-bottom: 8px;
     }
@@ -199,11 +197,11 @@
             padding: 0 !important;
             margin: 0 !important;
             width: 210mm;
-            min-height: 297mm;
+            min-height: 0;
         }
         .decision-document {
             width: 210mm;
-            min-height: 297mm;
+            min-height: 0;
             padding: 20mm;
             max-width: none;
             box-shadow: none;
@@ -213,8 +211,10 @@
             margin-top: 20mm;
             padding-top: 0;
         }
-        .decision-obrazlozenje-last-block {
-            page-break-inside: avoid;
+        .decision-preamble,
+        .decision-article-intro {
+            orphans: 3;
+            widows: 3;
         }
         .decision-footer {
             margin-top: 40px;
