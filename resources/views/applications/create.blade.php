@@ -252,8 +252,85 @@
         margin: 12px 0 0 0;
     }
     @media print {
-        .obrazac-zaglavlje { box-shadow: none; border: 1px solid #ccc; }
+        @page { margin: 12mm 10mm; }
+
+        .no-print { display: none !important; }
+
+        nav { display: none !important; }
+
+        .application-form-page {
+            background: #fff;
+            padding: 0;
+            min-height: 0;
+        }
+        .application-form-page .container {
+            padding: 0;
+            max-width: 100%;
+        }
+
+        .obrazac-zaglavlje {
+            box-shadow: none;
+            border: 1px solid #ccc;
+            margin-bottom: 12px;
+            padding: 12px 16px;
+        }
         .obrazac-grb img { height: 2cm; }
+
+        .form-card {
+            padding: 0;
+            box-shadow: none;
+            margin-bottom: 8px;
+            border-radius: 0;
+        }
+
+        .form-group {
+            margin-bottom: 6px;
+        }
+        .form-label {
+            font-size: 11pt;
+            margin-bottom: 2px;
+        }
+        .form-control {
+            font-size: 10pt;
+            padding: 4px 6px;
+            border-radius: 0;
+        }
+        .error-message,
+        .required {
+            display: none !important;
+        }
+        .form-control::placeholder {
+            color: transparent;
+        }
+
+        #obrazac1a.show .form-section,
+        #obrazac1b.show .form-section,
+        #fizickoLiceFields.show .form-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 16px;
+            margin-bottom: 0;
+        }
+
+        #obrazac1a .form-row,
+        #obrazac1b .form-row,
+        #fizickoLiceFields .form-row {
+            display: contents;
+        }
+
+        #obrazac1a .form-section > .form-group:has(select),
+        #obrazac1b .form-section > .form-group:has(select),
+        #fizickoLiceFields .form-section > .form-group:has(select),
+        #obrazac1a .form-section > .form-group:has(.checkbox-group),
+        #obrazac1b .form-section > .form-group:has(.checkbox-group),
+        #fizickoLiceFields .form-section > .form-group:has(.checkbox-group),
+        #obrazac1a .form-section > .form-group:has(.radio-group),
+        #obrazac1b .form-section > .form-group:has(.radio-group),
+        #fizickoLiceFields .form-section > .form-group:has(.radio-group),
+        #obrazac1a .form-section > div[style*="background"],
+        #obrazac1b .form-section > div[style*="background"] {
+            grid-column: 1 / -1;
+        }
     }
 </style>
 
@@ -306,7 +383,7 @@
         </div>
 
         @if(session('success'))
-            <div class="alert alert-info">
+            <div class="alert alert-info no-print">
                 {{ session('success') }}
             </div>
         @endif
@@ -317,7 +394,7 @@
         @endphp
         
         @if($readOnly)
-            <div class="alert alert-info" style="margin-bottom: 24px; padding: 16px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; color: #92400e;">
+            <div class="alert alert-info no-print" style="margin-bottom: 24px; padding: 16px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; color: #92400e;">
                 <strong>Pregled prijave:</strong> Ovo je pregled prijave, ne možete mijenjati podatke.
             </div>
         @endif
@@ -343,13 +420,13 @@
             @endphp
             
             @if(isset($existingApplication) && $existingApplication && !$readOnly)
-                <div class="alert alert-info" style="margin-bottom: 24px; padding: 16px; background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; color: #1e40af;">
+                <div class="alert alert-info no-print" style="margin-bottom: 24px; padding: 16px; background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; color: #1e40af;">
                     <strong>Nastavak popunjavanja:</strong> Već imate započetu prijavu. Možete je nastaviti popunjavati.
                 </div>
             @endif
 
             <!-- Tip podnosioca prijave (prikazuje se prije obrazaca) -->
-            <div class="form-card">
+            <div class="form-card no-print">
                 <div class="form-section">
                     <div class="form-group">
                         <label class="form-label">
@@ -434,7 +511,7 @@
             </div>
 
             <!-- Napomena za Fizičko lice (nema registrovanu djelatnost) - prikazuje se kada je izabrano -->
-            <div class="alert alert-info conditional-field" id="fizickoLiceNotice" style="display: none; margin-bottom: 24px;">
+            <div class="alert alert-info conditional-field no-print" id="fizickoLiceNotice" style="display: none; margin-bottom: 24px;">
                 <strong>Važno:</strong> Ukoliko podnositeljka biznis plana nema registrovanu djelatnost, u slučaju da joj sredstva budu odobrena u obavezi je da svoju djelatnost registruje u neki od oblika registracije koji predviđa Zakon o privrednim društvima i priloži dokaz (rješenje o registraciji u CRPS i rješenje o registraciji PJ Uprave prihoda i carina), najkasnije do dana potpisivanja ugovora.
             </div>
 
@@ -443,7 +520,7 @@
                 $userType = auth()->user()->user_type ?? '';
                 $isFizickoLiceRezident = ($userType === 'Fizičko lice' || $userType === 'Rezident');
             @endphp
-            <div class="form-card conditional-field" id="fizickoLiceBusinessStage" style="display: none;">
+            <div class="form-card conditional-field no-print" id="fizickoLiceBusinessStage" style="display: none;">
                 <div class="form-section">
                     <div class="form-group">
                         <label class="form-label">
@@ -1205,7 +1282,7 @@
             </div>
 
             <!-- Sekcija 3: Dodatni podaci (sakriva se za Fizičko lice - sredstva se ne mogu uplaćivati na lične žiro račune) -->
-            <div class="form-card" id="additional-data-section">
+            <div class="form-card no-print" id="additional-data-section">
                 <div class="form-section">
                     <h2>Dodatni podaci</h2>
                     
@@ -1260,7 +1337,7 @@
 
             <!-- Dugme za slanje -->
             @if(!$readOnly)
-                <div class="form-card" style="text-align: center;">
+                <div class="form-card no-print" style="text-align: center;">
                     <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                         <button type="button" id="saveAsDraftBtn" class="btn-secondary" style="background: #6b7280; color: #fff; padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
                             Sačuvaj kao nacrt
@@ -1300,7 +1377,7 @@
         @endphp
 
         @if($canPrintObrazac)
-            <div class="form-card" style="text-align: center; margin-top: 8px; margin-bottom: 24px;">
+            <div class="form-card no-print" style="text-align: center; margin-top: 8px; margin-bottom: 24px;">
                 <button type="button" class="btn-primary" onclick="window.print();" style="padding: 10px 24px; font-size: 14px; min-width: 180px;">
                     Štampaj
                 </button>
