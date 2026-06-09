@@ -275,6 +275,20 @@
             padding: 12px 16px;
         }
         .obrazac-grb img { height: 2cm; }
+        .obrazac-org,
+        .obrazac-contact {
+            font-size: 11.7px;
+        }
+        .obrazac-broj-prijave,
+        .obrazac-1a-1b {
+            font-size: 12.6px;
+        }
+        .obrazac-naslov-prijava {
+            font-size: 19.8px;
+        }
+        .obrazac-podnaslov {
+            font-size: 12.6px;
+        }
 
         .form-card {
             padding: 0;
@@ -287,13 +301,17 @@
             margin-bottom: 6px;
         }
         .form-label {
-            font-size: 11pt;
+            font-size: 9.9pt;
             margin-bottom: 2px;
         }
         .form-control {
-            font-size: 10pt;
-            padding: 4px 6px;
+            font-size: 9pt;
+            padding: 3px 5px;
             border-radius: 0;
+        }
+        .checkbox-group label,
+        .radio-option label {
+            font-size: 9pt;
         }
         .error-message,
         .required {
@@ -330,6 +348,7 @@
         #obrazac1a .form-section > div[style*="background"],
         #obrazac1b .form-section > div[style*="background"] {
             grid-column: 1 / -1;
+            font-size: 11.7px;
         }
     }
 </style>
