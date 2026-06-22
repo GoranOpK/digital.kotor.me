@@ -416,42 +416,42 @@ document.addEventListener('DOMContentLoaded', function() {
     const documentsMap = {
         'preduzetnica': {
             'započinjanje': {
-                all: ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
                 optional: ['potvrda_zavod_nezaposleni', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']
             },
             'razvoj': {
-                all: ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
                 optional: ['potvrda_zavod_nezaposleni', 'pdv_resenje']
             }
         },
         'doo': {
             'započinjanje': {
-                all: ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
                 optional: ['potvrda_zavod_nezaposleni', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
             },
             'razvoj': {
-                all: ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
                 optional: ['potvrda_zavod_nezaposleni', 'pdv_resenje']
             }
         },
         'ostalo': {
             'započinjanje': {
-                all: ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
                 optional: ['potvrda_zavod_nezaposleni', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
             },
             'razvoj': {
-                all: ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
                 optional: ['potvrda_zavod_nezaposleni', 'pdv_resenje']
             }
         },
         'fizicko_lice': {
             'započinjanje': {
-                all: ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
                 optional: ['potvrda_zavod_nezaposleni', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']
             },
             'razvoj': {
                 // ista lista kao za preduzetnicu - razvoj
-                all: ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
                 optional: ['potvrda_zavod_nezaposleni', 'pdv_resenje']
             }
         }

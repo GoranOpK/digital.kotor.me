@@ -364,13 +364,25 @@ class Application extends Model
         ));
     }
 
-    private static function prependZavodNezaposleniDocument(array $documents, string $applicantType, ?string $businessStage): array
+    private static function insertZavodNezaposleniDocument(array $documents, string $applicantType, ?string $businessStage): array
     {
-        if ($businessStage
-            && in_array($businessStage, ['započinjanje', 'razvoj'], true)
-            && in_array($applicantType, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true)) {
-            array_unshift($documents, self::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI);
+        if (!$businessStage
+            || !in_array($businessStage, ['započinjanje', 'razvoj'], true)
+            || !in_array($applicantType, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true)
+            || count($documents) === 0) {
+            return $documents;
         }
+
+        if (in_array(self::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI, $documents, true)) {
+            return $documents;
+        }
+
+        $insertBefore = array_search('predracuni_nabavka', $documents, true);
+        if ($insertBefore === false) {
+            $insertBefore = count($documents) - 1;
+        }
+
+        array_splice($documents, $insertBefore, 0, [self::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI]);
 
         return $documents;
     }
@@ -541,6 +553,8 @@ $documents = [
             }
         }
 
+        $documents = self::insertZavodNezaposleniDocument($documents, $this->applicant_type, $this->business_stage);
+
         // Ako je prethodno dobijala podršku, dodaj izvještaj (ne za započinjanje: ni preduzetnica/fizičko lice, ni DOO/ostalo; ne za DOO/ostalo razvoj)
         $isZapocinjanjePreduzetnik = ($this->applicant_type === 'preduzetnica' || $this->applicant_type === 'fizicko_lice') && $this->business_stage === 'započinjanje';
         $isZapocinjanjeDooOstalo = ($this->applicant_type === 'doo' || $this->applicant_type === 'ostalo') && $this->business_stage === 'započinjanje';
@@ -549,8 +563,6 @@ $documents = [
             $documents[] = 'izvjestaj_realizacija';
             $documents[] = 'finansijski_izvjestaj';
         }
-
-        $documents = self::prependZavodNezaposleniDocument($documents, $this->applicant_type, $this->business_stage);
 
         return array_values($documents); // Reindex array
     }
@@ -719,7 +731,7 @@ $documents = [
             }
         }
 
-        $documents = self::prependZavodNezaposleniDocument($documents, $applicantType, $businessStage);
+        $documents = self::insertZavodNezaposleniDocument($documents, $applicantType, $businessStage);
 
         return array_values($documents);
     }

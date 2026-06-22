@@ -630,17 +630,17 @@
                                     // Definiši redoslijed dokumenata za dropdown
                                     $order = [];
                                     if ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') {
-                                        $order = ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'predracuni_nabavka'];
+                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                                     } elseif ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'razvoj') {
-                                        $order = ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'predracuni_nabavka'];
+                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                                     } elseif ($application->applicant_type === 'fizicko_lice' && $application->business_stage === 'započinjanje') {
-                                        $order = ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'predracuni_nabavka'];
+                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                                     } elseif ($application->applicant_type === 'fizicko_lice' && $application->business_stage === 'razvoj') {
-                                        $order = ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'];
+                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                                     } elseif (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'započinjanje') {
-                                        $order = ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'predracuni_nabavka'];
+                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                                     } elseif (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'razvoj') {
-                                        $order = ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'];
+                                        $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                                     }
                                     
                                     // Sortiraj dokumente prema redoslijedu
@@ -793,7 +793,7 @@
                 $orderedDocs = [];
                 if ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'započinjanje') {
                     // Redoslijed za Preduzetnica koja započinje biznis
-                    $order = ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'predracuni_nabavka'];
+                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                     // Dodaj ostale dokumente koje možda postoje (npr. izvještaji)
                     foreach ($requiredDocs as $docType) {
                         if (!in_array($docType, $order)) {
@@ -805,7 +805,7 @@
                     $orderedDocs = array_merge($orderedDocs, array_diff($requiredDocs, $orderedDocs));
                 } elseif ($application->applicant_type === 'preduzetnica' && $application->business_stage === 'razvoj') {
                     // Redoslijed za Preduzetnica koja planira razvoj poslovanja (prema novoj Odluci)
-                    $order = ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'predracuni_nabavka'];
+                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                     foreach ($requiredDocs as $docType) {
                         if (!in_array($docType, $order)) {
                             $order[] = $docType;
@@ -815,7 +815,7 @@
                     $orderedDocs = array_merge($orderedDocs, array_diff($requiredDocs, $orderedDocs));
                 } elseif ($application->applicant_type === 'fizicko_lice' && $application->business_stage === 'započinjanje') {
                     // Redoslijed za Fizičko lice koje započinje biznis (ista lista kao preduzetnica)
-                    $order = ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'predracuni_nabavka'];
+                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                     foreach ($requiredDocs as $docType) {
                         if (!in_array($docType, $order)) {
                             $order[] = $docType;
@@ -825,7 +825,7 @@
                     $orderedDocs = array_merge($orderedDocs, array_diff($requiredDocs, $orderedDocs));
                 } elseif ($application->applicant_type === 'fizicko_lice' && $application->business_stage === 'razvoj') {
                     // Redoslijed za Fizičko lice koje planira razvoj poslovanja (prema novoj Odluci)
-                    $order = ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'potvrda_upc_porezi', 'ioppd_obrazac', 'predracuni_nabavka'];
+                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                     foreach ($requiredDocs as $docType) {
                         if (!in_array($docType, $order)) {
                             $order[] = $docType;
@@ -835,7 +835,7 @@
                     $orderedDocs = array_merge($orderedDocs, array_diff($requiredDocs, $orderedDocs));
                 } elseif (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'započinjanje') {
                     // Redoslijed za DOO/Ostalo koja započinju biznis
-                    $order = ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'predracuni_nabavka'];
+                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                     foreach ($requiredDocs as $docType) {
                         if (!in_array($docType, $order)) {
                             $order[] = $docType;
@@ -845,7 +845,7 @@
                     $orderedDocs = array_merge($orderedDocs, array_diff($requiredDocs, $orderedDocs));
                 } elseif (($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'razvoj') {
                     // Redoslijed za DOO/Ostalo koja planiraju razvoj poslovanja
-                    $order = ['potvrda_zavod_nezaposleni', 'licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'predracuni_nabavka'];
+                    $order = ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'dokaz_ziro_racun', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'];
                     foreach ($requiredDocs as $docType) {
                         if (!in_array($docType, $order)) {
                             $order[] = $docType;
