@@ -411,6 +411,7 @@ class EvaluationController extends Controller
                 'decision_date' => null,
                 'bonus_info_day' => null,
                 'bonus_new_business' => null,
+                'bonus_zavod_nezaposleni' => null,
                 'bonus_green_innovative' => null,
                 // 'documents_complete' => null, // NE UKLANJAJ - već je provjereno na početku
             ]);
@@ -528,6 +529,7 @@ class EvaluationController extends Controller
         if ($commissionMember->position === 'predsjednik') {
             $application->bonus_info_day = $request->boolean('bonus_info_day');
             $application->bonus_new_business = $request->boolean('bonus_new_business');
+            $application->bonus_zavod_nezaposleni = $request->boolean('bonus_zavod_nezaposleni');
             $application->bonus_green_innovative = $request->boolean('bonus_green_innovative');
             $application->save();
         }
