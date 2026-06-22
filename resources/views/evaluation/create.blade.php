@@ -280,19 +280,15 @@
             margin-bottom: 0;
         }
         .print-document-header {
-            margin-bottom: 1em;
-            padding-bottom: 0;
-        }
-        .form-section {
-            margin-bottom: 0;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
+            margin-bottom: 2.5em;
+            padding-bottom: 0.5em;
         }
         .print-segment-intro {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 2px 10px;
             margin-bottom: 4px;
+            margin-top: 0.25em;
             page-break-inside: avoid;
             break-inside: avoid;
         }
@@ -301,6 +297,11 @@
         }
         .print-segment-intro .form-section-compact:last-child {
             grid-column: 1 / -1;
+        }
+        .form-section {
+            margin-bottom: 0;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
         }
         .form-section-compact .form-label-large,
         .form-section-scores > .form-label-large,
@@ -370,7 +371,7 @@
             break-inside: auto;
             page-break-after: auto;
             font-size: 7.5pt;
-            margin: 3px 0;
+            margin: 4px 0;
             width: 100%;
             table-layout: fixed;
         }
@@ -402,20 +403,26 @@
         .evaluation-table th,
         .evaluation-table td {
             border: 1px solid #000 !important;
-            padding: 1px 2px;
-            line-height: 1.2;
+            padding: 2px 2px;
+            line-height: 1.44;
         }
         .evaluation-table th {
             font-size: 7pt;
             font-weight: bold !important;
+            padding-top: 3px;
+            padding-bottom: 3px;
         }
         .evaluation-table .criterion-col {
             font-size: 7pt;
-            padding: 1px 3px;
+            padding: 2px 4px;
         }
         .evaluation-table .score-input,
         .evaluation-table .score-display {
             font-size: 7.5pt;
+            line-height: 1.44;
+        }
+        .evaluation-table .score-input {
+            padding: 3px 2px;
         }
         .evaluation-table .average-col {
             font-weight: bold !important;
