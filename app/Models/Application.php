@@ -44,6 +44,7 @@ class Application extends Model
         'bonus_women_business_mark',
         'bonus_info_day',
         'bonus_new_business',
+        'bonus_zavod_nezaposleni',
         'bonus_green_innovative',
         'ranking_position',
         'rejection_reason',
@@ -72,6 +73,7 @@ class Application extends Model
         'bonus_women_business_mark' => 'boolean',
         'bonus_info_day' => 'boolean',
         'bonus_new_business' => 'boolean',
+        'bonus_zavod_nezaposleni' => 'boolean',
         'bonus_green_innovative' => 'boolean',
         'submitted_at' => 'datetime',
         'evaluated_at' => 'datetime',
@@ -167,6 +169,7 @@ class Application extends Model
      * Vraća zbir dodatnih bodova na osnovu dodatnih kriterijuma:
      * - Prisustvo Info danu i radionici (1 bod)
      * - Novi biznis (2 boda)
+     * - Evidencija Zavoda za zapošljavanje duže od 12 mjeseci (2 boda)
      * - Inovativna i/ili „zelena“ ideja (3 boda)
      */
     public function getBonusScore(): int
@@ -177,6 +180,9 @@ class Application extends Model
             $bonus += 1;
         }
         if ($this->bonus_new_business) {
+            $bonus += 2;
+        }
+        if ($this->bonus_zavod_nezaposleni) {
             $bonus += 2;
         }
         if ($this->bonus_green_innovative) {

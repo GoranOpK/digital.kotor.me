@@ -711,7 +711,39 @@
                                 </td>
                             </tr>
 
-                            {{-- 3) Inovativna i/ili „zelena“ – 3 boda --}}
+                            {{-- 3) Evidencija Zavoda za zapošljavanje – 2 boda --}}
+                            <tr>
+                                <td class="criterion-col">
+                                    Podnositeljka prijave koja se nalazi na evidenciji Zavoda za zapošljavanje duže od 12 mjeseci (2 boda)
+                                </td>
+                                @foreach($allMembers as $member)
+                                    @php
+                                        $isCurrentMember = $commissionMember && $member->id === $commissionMember->id;
+                                        $isChairmanMember = $member->position === 'predsjednik';
+                                    @endphp
+                                    <td style="text-align: center;">
+                                        @if($isCurrentMember && $isChairmanMember && !$isRejected && !($isApplicant ?? false))
+                                            <input 
+                                                type="checkbox" 
+                                                name="bonus_zavod_nezaposleni" 
+                                                value="1"
+                                                {{ old('bonus_zavod_nezaposleni', $application->bonus_zavod_nezaposleni ?? false) ? 'checked' : '' }}
+                                            >
+                                        @else
+                                            @if(($application->bonus_zavod_nezaposleni ?? false) && $isChairmanMember)
+                                                ✓
+                                            @else
+                                                —
+                                            @endif
+                                        @endif
+                                    </td>
+                                @endforeach
+                                <td class="average-col">
+                                    {{ ($application->bonus_zavod_nezaposleni ?? false) ? '2.00' : '—' }}
+                                </td>
+                            </tr>
+
+                            {{-- 4) Inovativna i/ili „zelena“ – 3 boda --}}
                             <tr>
                                 <td class="criterion-col">
                                     Biznis ideja je inovativna i/ili „zelena“ (3 boda)
