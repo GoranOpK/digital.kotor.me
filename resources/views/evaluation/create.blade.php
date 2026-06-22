@@ -120,6 +120,10 @@
         border-collapse: collapse;
         margin: 24px 0;
         font-size: 13px;
+        table-layout: fixed;
+    }
+    .evaluation-table-bonus {
+        margin-top: 24px;
     }
     .evaluation-table th,
     .evaluation-table td {
@@ -310,14 +314,13 @@
             padding: 4px 6px !important;
             margin-top: 4px !important;
         }
-        .print-segment-table {
+        .print-segment-bonus-page {
             page-break-before: always;
             break-before: page;
         }
         .form-section-notes {
-            page-break-before: always;
-            break-before: page;
             padding-top: 0 !important;
+            margin-top: 12px;
         }
         .form-section textarea,
         .form-section .readonly-value {
@@ -355,6 +358,19 @@
             page-break-after: auto;
             font-size: 8.5pt;
             margin: 8px 0;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .evaluation-table-criteria {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        .evaluation-table-bonus {
+            margin-top: 0;
+            page-break-inside: auto;
+            break-inside: auto;
         }
         .evaluation-table thead {
             display: table-header-group;
@@ -528,7 +544,7 @@
                 </div>
 
                 <!-- 4. Ocjena biznis plana u brojkama -->
-                <div class="form-section form-section-scores print-segment-table">
+                <div class="form-section form-section-scores">
                     <label class="form-label form-label-large">4. Ocjena biznis plana u brojkama:</label>
 
                     @php
@@ -546,7 +562,7 @@
                         ];
                     @endphp
 
-                    <table class="evaluation-table">
+                    <table class="evaluation-table evaluation-table-criteria">
                         <thead>
                             <tr>
                                 <th class="criterion-col">KRITERIJUMI ZA OCJENU</th>
@@ -639,14 +655,30 @@
                             </td>
                                 </tr>
                             @endforeach
+                        </tbody>
+                    </table>
 
-                            {{-- Dodatni bodovi – posebni redovi koje može označiti samo predsjednik --}}
+                    @for($i = 1; $i <= 10; $i++)
+                        @error("criterion_{$i}")
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    @endfor
+                </div>
+
+                <div class="print-segment-bonus-page">
+                    <table class="evaluation-table evaluation-table-bonus">
+                        <thead>
                             <tr>
-                                <td class="criterion-col" colspan="{{ $allMembers->count() + 2 }}" style="font-weight: bold;">
-                                    DODATNI BODOVI:
-                                </td>
+                                <th class="criterion-col">DODATNI BODOVI</th>
+                                @foreach($allMembers as $member)
+                                    <th style="font-size: 11px;">
+                                        {{ $member->position === 'predsjednik' ? 'Predsjednik' : 'Član ' . ($loop->index) }}
+                                    </th>
+                                @endforeach
+                                <th class="average-col">Prosječna ocjena*</th>
                             </tr>
-
+                        </thead>
+                        <tbody>
                             {{-- 1) Prisustvovanje Info danu – 1 bod --}}
                             <tr>
                                 <td class="criterion-col">
@@ -825,17 +857,8 @@
                         <strong>Napomena:</strong> Biznis planovi sa ukupnim brojem bodova ispod 30 se neće podržati.
                     </div>
 
-                    @for($i = 1; $i <= 10; $i++)
-                        @error("criterion_{$i}")
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    @endfor
-                </div>
-
-                {{-- Dodatni bodovi su sada u samoj tabeli iznad, pa se poseban boks sa objašnjenjem ne prikazuje. --}}
-
                 <!-- 5. Ostale napomene -->
-                <div class="form-section form-section-notes print-segment-notes">
+                <div class="form-section form-section-notes">
                     <label class="form-label form-label-large">5. Ostale napomene:</label>
                     
                     @php
@@ -961,6 +984,7 @@
                                 @if($isRejected || $isApplicant) disabled @endif>{{ old('notes', $existingScore?->notes) }}</textarea>
                         </div>
                     @endif
+                </div>
                 </div>
 
                 <div style="margin-top: 32px; text-align: center;" class="no-print">
