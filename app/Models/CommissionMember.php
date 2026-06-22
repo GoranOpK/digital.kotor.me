@@ -65,5 +65,44 @@ class CommissionMember extends Model
             && !empty($this->confidentiality_declaration)
             && !empty($this->conflict_of_interest_declaration);
     }
+
+    /**
+     * Aktivan član komisije za korisnika na konkretnoj komisiji.
+     */
+    public static function activeForCommission(int $userId, int $commissionId): ?self
+    {
+        return static::where('user_id', $userId)
+            ->where('commission_id', $commissionId)
+            ->where('status', 'active')
+            ->first();
+    }
+
+    /**
+     * Aktivno članstvo ulogovanog člana komisije (bez konkursa u kontekstu).
+     *
+     * Koristi se na dashboardu i listi ocjenjivanja. Za konkurs podrške ženskom
+     * preduzetništvu postoji jedna komisija po mandatu; više konkursa dijeli isti commission_id.
+     */
+    public static function activeMembershipForUser(int $userId): ?self
+    {
+        return static::where('user_id', $userId)
+            ->where('status', 'active')
+            ->first();
+    }
+
+    /**
+     * Oznaka uloge za zamjenu (slot 1–5).
+     */
+    public static function replacementSlotLabel(int $slot): string
+    {
+        return match ($slot) {
+            1 => 'predsjednik komisije',
+            2 => 'član 2',
+            3 => 'član 3',
+            4 => 'član 4',
+            5 => 'član 5',
+            default => 'član komisije',
+        };
+    }
 }
 

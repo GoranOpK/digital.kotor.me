@@ -38,11 +38,12 @@ class ApplicationController extends Controller
                 $isCommissionMemberForThisCompetition = false;
                 $appCompetition = $existingApplication->competition;
                 if ($appCompetition && $appCompetition->commission_id) {
-                    $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
-                        ->where('status', 'active')
-                        ->first();
+                    $commissionMember = \App\Models\CommissionMember::activeForCommission(
+                        $user->id,
+                        $appCompetition->commission_id
+                    );
 
-                    if ($commissionMember && $commissionMember->commission_id === $appCompetition->commission_id) {
+                    if ($commissionMember) {
                         $isCommissionMemberForThisCompetition = true;
                         $readOnly = true;
                     }
@@ -59,10 +60,11 @@ class ApplicationController extends Controller
         if ($roleName === 'komisija' && !$readOnly) {
             $isCommissionMemberForThisCompetition = false;
             if ($competition->commission_id) {
-                $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
-                    ->where('status', 'active')
-                    ->first();
-                if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                $commissionMember = \App\Models\CommissionMember::activeForCommission(
+                    $user->id,
+                    $competition->commission_id
+                );
+                if ($commissionMember) {
                     $isCommissionMemberForThisCompetition = true;
                 }
             }
@@ -176,10 +178,11 @@ class ApplicationController extends Controller
         if ($roleName === 'komisija') {
             $isCommissionMemberForThisCompetition = false;
             if ($competition->commission_id) {
-                $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
-                    ->where('status', 'active')
-                    ->first();
-                if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                $commissionMember = \App\Models\CommissionMember::activeForCommission(
+                    $user->id,
+                    $competition->commission_id
+                );
+                if ($commissionMember) {
                     $isCommissionMemberForThisCompetition = true;
                 }
             }
@@ -429,11 +432,12 @@ class ApplicationController extends Controller
         if ($roleName === 'komisija') {
             $competition = $application->competition;
             if ($competition && $competition->commission_id) {
-                $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
-                    ->where('status', 'active')
-                    ->first();
+                $commissionMember = \App\Models\CommissionMember::activeForCommission(
+                    $user->id,
+                    $competition->commission_id
+                );
 
-                if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                if ($commissionMember) {
                     $isCommissionMemberForThisCompetition = true;
                 }
             }
@@ -737,12 +741,12 @@ class ApplicationController extends Controller
             $competition = $application->competition;
 
             if ($competition && $competition->commission_id) {
-                // Provjeri da li je korisnik aktivni član iste komisije
-                $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
-                    ->where('status', 'active')
-                    ->first();
+                $commissionMember = \App\Models\CommissionMember::activeForCommission(
+                    $user->id,
+                    $competition->commission_id
+                );
 
-                if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                if ($commissionMember) {
                     $isCommissionMemberForThisCompetition = true;
                 }
             }

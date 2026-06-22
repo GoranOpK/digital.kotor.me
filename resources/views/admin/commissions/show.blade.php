@@ -214,6 +214,14 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div class="alert alert-warning">
+                @foreach($errors->all() as $error)
+                    <div>{{ $error }}</div>
+                @endforeach
+            </div>
+        @endif
+
         <div class="info-grid">
             <!-- Osnovne informacije -->
             <div class="info-card">
@@ -224,7 +232,7 @@
                 <p><strong>Status:</strong> <span class="status-badge status-{{ $commission->status }}">{{ $commission->status === 'active' ? 'Aktivna' : 'Neaktivna' }}</span></p>
                 <p><strong>Broj članova:</strong>
                     {{ $commission->members->reject(fn($m) => !empty($m->is_substitute))->count() }} / 5
-                    @if($commission->members->contains(fn($m) => !empty($m->is_substitute))) + 1 zamjenski @endif
+                    @if($commission->members->contains(fn($m) => !empty($m->is_substitute) && $m->status === 'active')) + 1 zamjenski @endif
                 </p>
             </div>
 
@@ -341,11 +349,54 @@
                                 </div>
                             </div>
                             <div class="member-actions">
-                                <form method="POST" action="{{ route('admin.commissions.members.delete', $member) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovog člana?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-sm btn-danger">Obriši</button>
-                                </form>
+                                @php
+                                    $memberSlot = null;
+                                    $blockedBySubstitute = false;
+                                    if (empty($member->is_substitute)) {
+                                        for ($slot = 1; $slot <= 5; $slot++) {
+                                            $resolved = null;
+                                            if ($slot === 1) {
+                                                $resolved = $regularMembers->first(fn($m) => $m->position === 'predsjednik');
+                                            } elseif ($slot === 2) {
+                                                $resolved = $opstinaClanovi->get(0);
+                                            } elseif ($slot === 3) {
+                                                $resolved = $opstinaClanovi->get(1);
+                                            } elseif ($slot === 4) {
+                                                $resolved = $udruzenjeMember;
+                                            } elseif ($slot === 5) {
+                                                $resolved = $zeneMrezaMember;
+                                            }
+                                            if ($resolved && $resolved->id === $member->id) {
+                                                $memberSlot = $slot;
+                                                break;
+                                            }
+                                        }
+                                        if ($memberSlot) {
+                                            $blockedBySubstitute = $commission->members->contains(
+                                                fn($m) => !empty($m->is_substitute)
+                                                    && $m->status === 'active'
+                                                    && (int)($m->replaces_member_number ?? 0) === $memberSlot
+                                            );
+                                        }
+                                    }
+                                @endphp
+                                @if(!empty($member->is_substitute))
+                                    <form method="POST" action="{{ route('admin.commissions.members.delete', $member) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da uklonite zamjenskog člana? Redovni član će biti vraćen u aktivni status.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-sm btn-danger">Ukloni zamjenskog</button>
+                                    </form>
+                                @elseif($blockedBySubstitute)
+                                    <span style="font-size: 12px; color: #92400e; max-width: 220px; display: inline-block;">
+                                        Prvo uklonite zamjenskog člana da biste vratili redovnog člana.
+                                    </span>
+                                @else
+                                    <form method="POST" action="{{ route('admin.commissions.members.delete', $member) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovog člana?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn-sm btn-danger">Obriši</button>
+                                    </form>
+                                @endif
                             </div>
                         </li>
                     @endforeach
@@ -359,7 +410,7 @@
             <!-- Forma za dodavanje člana -->
             @php
                 $regularMembersCount = $commission->members->reject(fn($m) => !empty($m->is_substitute))->count();
-                $hasSubstituteMember = $commission->members->contains(fn($m) => !empty($m->is_substitute));
+                $hasActiveSubstituteMember = $commission->members->contains(fn($m) => !empty($m->is_substitute) && $m->status === 'active');
             @endphp
             @if($regularMembersCount < 5)
             <div class="form-card">
@@ -459,10 +510,10 @@
             @else
                 <div class="alert alert-warning">
                     Komisija je popunjena (5/5 redovnih članova).
-                    @if(!$hasSubstituteMember)
+                    @if(!$hasActiveSubstituteMember)
                         Možete dodati još <strong>1 zamjenskog člana</strong> kroz <a href="{{ route('admin.commissions.edit', $commission) }}" style="color: var(--primary); font-weight: 700;">Izmijeni komisiju</a>.
                     @else
-                        Zamjenski član je već imenovan.
+                        Aktivan zamjenski član je već imenovan.
                     @endif
                 </div>
             @endif

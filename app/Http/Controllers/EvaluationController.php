@@ -16,6 +16,21 @@ use Illuminate\View\View;
 class EvaluationController extends Controller
 {
     /**
+     * Aktivan član komisije za konkurs na koji se odnosi prijava.
+     */
+    protected function commissionMemberForApplication(Application $application, int $userId): ?CommissionMember
+    {
+        $application->loadMissing('competition');
+        $commissionId = $application->competition?->commission_id;
+
+        if (!$commissionId) {
+            return null;
+        }
+
+        return CommissionMember::activeForCommission($userId, $commissionId);
+    }
+
+    /**
      * Lista prijava za ocjenjivanje
      */
     public function index(Request $request): View
@@ -23,9 +38,7 @@ class EvaluationController extends Controller
         $user = Auth::user();
         
         // Pronađi člana komisije za trenutnog korisnika
-        $commissionMember = CommissionMember::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->first();
+        $commissionMember = CommissionMember::activeMembershipForUser($user->id);
 
         if (!$commissionMember) {
             abort(403, 'Niste član komisije.');
@@ -149,9 +162,7 @@ class EvaluationController extends Controller
         $isApplicant = $application->user_id === $user->id;
         
         // Pronađi člana komisije
-        $commissionMember = CommissionMember::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->first();
+        $commissionMember = $this->commissionMemberForApplication($application, $user->id);
 
         // Ako nije član komisije, provjeri da li je podnosilac prijave i da li je prijava odbijena
         if (!$commissionMember) {
@@ -321,9 +332,7 @@ class EvaluationController extends Controller
         }
         
         // Pronađi člana komisije
-        $commissionMember = CommissionMember::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->first();
+        $commissionMember = $this->commissionMemberForApplication($application, $user->id);
 
         if (!$commissionMember) {
             abort(403, 'Niste član komisije.');
@@ -837,9 +846,7 @@ class EvaluationController extends Controller
     {
         $user = Auth::user();
         
-        $commissionMember = CommissionMember::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->first();
+        $commissionMember = $this->commissionMemberForApplication($application, $user->id);
 
         if (!$commissionMember) {
             abort(403, 'Niste član komisije.');
@@ -931,9 +938,7 @@ class EvaluationController extends Controller
         $user = Auth::user();
         
         // Pronađi člana komisije
-        $commissionMember = CommissionMember::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->first();
+        $commissionMember = $this->commissionMemberForApplication($application, $user->id);
 
         if (!$commissionMember) {
             abort(403, 'Niste član komisije.');
@@ -1023,9 +1028,7 @@ class EvaluationController extends Controller
         $user = Auth::user();
         
         // Pronađi člana komisije
-        $commissionMember = CommissionMember::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->first();
+        $commissionMember = $this->commissionMemberForApplication($application, $user->id);
 
         if (!$commissionMember) {
             abort(403, 'Niste član komisije.');

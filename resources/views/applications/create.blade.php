@@ -1383,12 +1383,12 @@
             } else {
                 // Read-only prikaz – provjeri da li je korisnik predsjednik komisije za ovaj konkurs
                 if ($currentUser && isset($existingApplication) && $existingApplication && $existingApplication->competition) {
-                    $commissionMember = \App\Models\CommissionMember::where('user_id', $currentUser->id)
-                        ->where('status', 'active')
-                        ->where('position', 'predsjednik')
-                        ->first();
+                    $competitionId = $existingApplication->competition->commission_id;
+                    $commissionMember = $competitionId
+                        ? \App\Models\CommissionMember::activeForCommission($currentUser->id, $competitionId)
+                        : null;
 
-                    if ($commissionMember && $commissionMember->commission_id === $existingApplication->competition->commission_id) {
+                    if ($commissionMember && $commissionMember->position === 'predsjednik') {
                         $canPrintObrazac = true;
                     }
                 }

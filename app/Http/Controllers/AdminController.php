@@ -29,19 +29,14 @@ class AdminController extends Controller
     protected function isCommissionChairmanForCompetition(Competition $competition): bool
     {
         $user = auth()->user();
-        
-        // Proveri da li je korisnik predsjednik komisije
-        $commissionMember = CommissionMember::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->where('position', 'predsjednik')
-            ->first();
-        
-        if (!$commissionMember) {
+
+        if (!$competition->commission_id) {
             return false;
         }
-        
-        // Proveri da li je konkurs dodijeljen komisiji korisnika
-        return $competition->commission_id === $commissionMember->commission_id;
+
+        $commissionMember = CommissionMember::activeForCommission($user->id, $competition->commission_id);
+
+        return $commissionMember && $commissionMember->position === 'predsjednik';
     }
     
     /**
@@ -50,13 +45,12 @@ class AdminController extends Controller
     protected function isCommissionMemberForCompetition(Competition $competition): bool
     {
         $user = auth()->user();
-        
-        // Proveri da li je korisnik član komisije (bilo koji član)
-        $commissionMember = CommissionMember::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->first();
-        
-        return $commissionMember && $competition->commission_id === $commissionMember->commission_id;
+
+        if (!$competition->commission_id) {
+            return false;
+        }
+
+        return CommissionMember::activeForCommission($user->id, $competition->commission_id) !== null;
     }
     
     /**
@@ -65,11 +59,10 @@ class AdminController extends Controller
     protected function isCommissionChairman(): bool
     {
         $user = auth()->user();
-        
-        return CommissionMember::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->where('position', 'predsjednik')
-            ->exists();
+
+        $member = CommissionMember::activeMembershipForUser($user->id);
+
+        return $member && $member->position === 'predsjednik';
     }
     
     /**
@@ -78,10 +71,8 @@ class AdminController extends Controller
     protected function isCommissionMember(): bool
     {
         $user = auth()->user();
-        
-        return CommissionMember::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->exists();
+
+        return CommissionMember::activeMembershipForUser($user->id) !== null;
     }
     
     /**
@@ -90,12 +81,10 @@ class AdminController extends Controller
     protected function getCommissionIdForMember(): ?int
     {
         $user = auth()->user();
-        
-        $commissionMember = CommissionMember::where('user_id', $user->id)
-            ->where('status', 'active')
-            ->first();
-        
-        return $commissionMember ? $commissionMember->commission_id : null;
+
+        $commissionMember = CommissionMember::activeMembershipForUser($user->id);
+
+        return $commissionMember?->commission_id;
     }
     
     /**
@@ -296,10 +285,8 @@ class AdminController extends Controller
         
         if ($tab === 'archive') {
             if (!$isAdmin) {
-                $commissionMember = CommissionMember::where('user_id', $user->id)
-                    ->where('status', 'active')
-                    ->with('commission')
-                    ->first();
+                $commissionMember = CommissionMember::activeMembershipForUser($user->id);
+                $commissionMember?->loadMissing('commission');
 
                 $commission = $commissionMember?->commission;
                 $isMandateActive = $commission
@@ -362,10 +349,8 @@ class AdminController extends Controller
             ->orderBy('created_at', 'desc');
 
         if (!$isAdmin) {
-            $commissionMember = CommissionMember::where('user_id', $user->id)
-                ->where('status', 'active')
-                ->with('commission')
-                ->first();
+            $commissionMember = CommissionMember::activeMembershipForUser($user->id);
+            $commissionMember?->loadMissing('commission');
 
             $commission = $commissionMember?->commission;
             $isMandateActive = $commission
@@ -1159,6 +1144,8 @@ class AdminController extends Controller
             ->orderBy('year', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
+
+        $commission->load(['members', 'competitions']);
         
         return view('admin.commissions.edit', compact('commission', 'competitions'));
     }
@@ -1237,9 +1224,14 @@ class AdminController extends Controller
      */
     public function addCommissionMember(Request $request, Commission $commission)
     {
+        $isSubstituteRequest = $request->input('member_type') === 'zamjenski';
+        $mandateInactiveMessage = $isSubstituteRequest
+            ? 'Mandat komisije nije aktivan. Nije moguće dodavanje zamjenskog člana.'
+            : 'Mandat komisije nije aktivan. Nije moguće dodavanje člana.';
+
         // Dozvoliti dodavanje članova samo dok mandat traje (aktivna komisija + datum u periodu)
         if ($commission->status !== 'active' || now()->lt($commission->start_date) || now()->gt($commission->end_date)) {
-            return back()->withErrors(['error' => 'Mandat komisije nije aktivan. Nije moguće dodavanje zamjenskog člana.'])->withInput();
+            return back()->withErrors(['error' => $mandateInactiveMessage])->withInput();
         }
 
         $validated = $request->validate([
@@ -1264,13 +1256,19 @@ class AdminController extends Controller
         ]);
 
         // Pravila kapaciteta: najviše 5 redovnih članova + 1 zamjenski
-        $commission->loadMissing('members');
-        $hasSubstituteMember = $commission->members->contains(fn ($m) => !empty($m->is_substitute) && $m->status === 'active');
+        $commission->loadMissing(['members', 'competitions']);
+        $hasSubstituteMember = $commission->hasActiveSubstitute();
         $regularMembersCount = $commission->members->reject(fn ($m) => !empty($m->is_substitute))->count();
 
         if (($validated['member_type'] ?? null) === 'zamjenski') {
             if ($hasSubstituteMember) {
-                return back()->withErrors(['error' => 'Komisija može imati samo jednog zamjenskog člana.'])->withInput();
+                return back()->withErrors(['error' => 'Komisija može imati samo jednog aktivnog zamjenskog člana.'])->withInput();
+            }
+
+            if ($commission->isEvaluationInProgressOnAnyCompetition()) {
+                return back()->withErrors([
+                    'error' => 'Zamjena članova nije dozvoljena usred ocjenjivanja prijava na konkurs.',
+                ])->withInput();
             }
         } else {
             if ($regularMembersCount >= 5) {
@@ -1302,6 +1300,12 @@ class AdminController extends Controller
                 ])->withInput();
             }
 
+            if ($replacesNumber === 1 && $commission->isDecisionMakingInProgressOnAnyCompetition()) {
+                return back()->withErrors([
+                    'replaces_member_number' => 'Zamjena predsjednika nije dozvoljena usred donošenja odluka na konkursu.',
+                ])->withInput();
+            }
+
             $validated['position'] = $replacementRoleMap[$replacesNumber]['position'];
             $validated['member_type'] = $replacementRoleMap[$replacesNumber]['member_type'];
 
@@ -1322,6 +1326,16 @@ class AdminController extends Controller
                     $userId = $existingUser->id;
                 }
             }
+        }
+
+        $duplicateMemberError = $this->validateCommissionMemberUserUniqueness(
+            $commission,
+            $userId,
+            $normalizedEmail,
+            $isSubstitute ? $replacedMember : null
+        );
+        if ($duplicateMemberError) {
+            return back()->withErrors($duplicateMemberError)->withInput();
         }
 
         // Ako korisnik i dalje ne postoji, kreiraj novog (ali tada mora postojati password)
@@ -1378,13 +1392,21 @@ class AdminController extends Controller
         $targetUser = $member->user;
         if ($targetUser && $targetUser->email) {
             try {
-                Mail::to($targetUser->email)->send(new CommissionMemberAdded($member));
+                $replacedForMail = null;
+                if ($isSubstitute && $replacedMember) {
+                    $replacedForMail = $replacedMember;
+                }
+                Mail::to($targetUser->email)->send(new CommissionMemberAdded($member, $replacedForMail));
             } catch (\Throwable $e) {
                 // Ne prekidaj tok zbog mail greške
             }
         }
 
-        return back()->with('success', 'Član komisije je uspješno dodat.');
+        $successMessage = $isSubstitute
+            ? 'Zamjenski član komisije je uspješno dodat.'
+            : 'Član komisije je uspješno dodat.';
+
+        return back()->with('success', $successMessage);
     }
 
     /**
@@ -1445,6 +1467,12 @@ class AdminController extends Controller
      */
     public function updateMemberStatus(Request $request, CommissionMember $member)
     {
+        if (!empty($member->is_substitute)) {
+            return back()->withErrors([
+                'error' => 'Status zamjenskog člana nije moguće mijenjati ručno. Uklonite zamjenskog člana da biste završili zamjenu.',
+            ]);
+        }
+
         $validated = $request->validate([
             'status' => 'required|in:active,inactive,resigned,dismissed',
         ]);
@@ -1460,9 +1488,38 @@ class AdminController extends Controller
     public function deleteMember(CommissionMember $member)
     {
         $commission = $member->commission;
+        $commission->loadMissing(['members', 'competitions']);
 
-        DB::transaction(function () use ($member, $commission) {
-            $isSubstitute = !empty($member->is_substitute);
+        $isSubstitute = !empty($member->is_substitute);
+
+        if (!$isSubstitute) {
+            $memberSlot = $this->getMemberReplacementSlot($commission, $member);
+            if ($memberSlot && $commission->hasActiveSubstituteForSlot($memberSlot)) {
+                return redirect()->route('admin.commissions.show', $commission)
+                    ->withErrors([
+                        'error' => 'Prvo uklonite zamjenskog člana da biste vratili redovnog člana.',
+                    ]);
+            }
+        }
+
+        if ($isSubstitute && $commission->isEvaluationInProgressOnAnyCompetition()) {
+            return redirect()->route('admin.commissions.show', $commission)
+                ->withErrors([
+                    'error' => 'Uklanjanje zamjenskog člana nije dozvoljeno usred ocjenjivanja prijava na konkurs.',
+                ]);
+        }
+
+        if ($isSubstitute) {
+            $replacementSlot = (int)($member->replaces_member_number ?? 0);
+            if ($replacementSlot === 1 && $commission->isDecisionMakingInProgressOnAnyCompetition()) {
+                return redirect()->route('admin.commissions.show', $commission)
+                    ->withErrors([
+                        'error' => 'Uklanjanje zamjenskog predsjednika nije dozvoljeno usred donošenja odluka na konkursu.',
+                    ]);
+            }
+        }
+
+        DB::transaction(function () use ($member, $commission, $isSubstitute) {
             $replacementSlot = (int)($member->replaces_member_number ?? 0);
 
             $member->delete();
@@ -1476,8 +1533,12 @@ class AdminController extends Controller
             }
         });
 
+        $successMessage = $isSubstitute
+            ? 'Zamjenski član komisije je uspješno uklonjen. Redovni član je vraćen u aktivni status.'
+            : 'Član komisije je uspješno obrisan.';
+
         return redirect()->route('admin.commissions.show', $commission)
-            ->with('success', 'Član komisije je uspješno obrisan.');
+            ->with('success', $successMessage);
     }
 
     /**
@@ -1518,6 +1579,74 @@ class AdminController extends Controller
 
         if ($slot === 5) {
             return $members->first(fn ($m) => $m->position === 'clan' && $m->member_type === 'zene_mreza');
+        }
+
+        return null;
+    }
+
+    /**
+     * Pronalazi logički slot (1–5) za redovnog člana komisije.
+     */
+    protected function getMemberReplacementSlot(Commission $commission, CommissionMember $member): ?int
+    {
+        if (!empty($member->is_substitute)) {
+            return null;
+        }
+
+        for ($slot = 1; $slot <= 5; $slot++) {
+            $resolved = $this->resolveMemberByReplacementSlot($commission, $slot, false);
+            if ($resolved && $resolved->id === $member->id) {
+                return $slot;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Provjerava da korisnik nije već aktivan član iste komisije niti osoba koju zamjenjuje.
+     *
+     * @return array<string, string>|null
+     */
+    protected function validateCommissionMemberUserUniqueness(
+        Commission $commission,
+        ?int $userId,
+        ?string $email,
+        ?CommissionMember $replacedMember = null
+    ): ?array {
+        $message = ['error' => 'Ovaj korisnik je već član komisije.'];
+
+        if ($userId) {
+            $isActiveMember = CommissionMember::where('commission_id', $commission->id)
+                ->where('user_id', $userId)
+                ->where('status', 'active')
+                ->exists();
+
+            if ($isActiveMember) {
+                return $message;
+            }
+
+            if ($replacedMember && (int)$replacedMember->user_id === (int)$userId) {
+                return $message;
+            }
+        }
+
+        if ($email) {
+            $existingUser = User::where('email', strtolower($email))->first();
+            if ($existingUser) {
+                $isActiveMember = CommissionMember::where('commission_id', $commission->id)
+                    ->where('user_id', $existingUser->id)
+                    ->where('status', 'active')
+                    ->exists();
+
+                if ($isActiveMember) {
+                    return $message;
+                }
+
+                if ($replacedMember && (int)$replacedMember->user_id === (int)$existingUser->id) {
+                    return $message;
+                }
+            }
         }
 
         return null;
