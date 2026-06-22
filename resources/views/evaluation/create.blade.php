@@ -55,6 +55,9 @@
     .form-section {
         margin-bottom: 32px;
     }
+    .form-section-compact {
+        margin-bottom: 20px;
+    }
     .form-label {
         display: block;
         font-size: 14px;
@@ -117,6 +120,18 @@
         border-collapse: collapse;
         margin: 24px 0;
         font-size: 13px;
+        table-layout: fixed;
+    }
+    .evaluation-table-bonus {
+        margin-top: 24px;
+    }
+    .print-document-header {
+        margin-bottom: 16px;
+    }
+    .print-segment-bonus-page {
+        margin-top: 20px;
+        padding-top: 12px;
+        border-top: 1px solid #d1d5db;
     }
     .evaluation-table th,
     .evaluation-table td {
@@ -231,11 +246,17 @@
         margin-top: 12px;
     }
     @media print {
+        @page {
+            size: A4;
+            margin: 10mm 8mm;
+        }
+
         nav,
         .page-header,
         .btn-primary,
         button,
-        a[href] {
+        a[href],
+        .no-print {
             display: none !important;
         }
         .evaluation-page {
@@ -243,19 +264,79 @@
         }
         .container {
             padding: 0;
+            max-width: 100%;
         }
         .form-card {
-            padding: 20px;
+            padding: 0;
             box-shadow: none;
         }
-        .form-section {
+        .form-title {
+            font-size: 12px !important;
+            margin-top: 0 !important;
+            margin-bottom: 1px !important;
+        }
+        .form-subtitle {
+            font-size: 8px;
+            margin-bottom: 0;
+        }
+        .print-document-header {
+            margin-bottom: 2.5em;
+            padding-bottom: 0.5em;
+        }
+        .print-segment-intro {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2px 10px;
             margin-bottom: 4px;
+            margin-top: 0.25em;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .print-segment-intro .form-section-compact {
+            margin-bottom: 0;
+        }
+        .print-segment-intro .form-section-compact:last-child {
+            grid-column: 1 / -1;
+        }
+        .form-section {
+            margin-bottom: 0;
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
-        /* Sekcija "Ostale napomene" uvijek počinje na novoj stranici (nakon tabele) - dodaj gornju marginu */
+        .form-section-compact .form-label-large,
+        .form-section-scores > .form-label-large,
+        .form-section-notes > .form-label-large {
+            font-size: 9.5pt;
+            margin-bottom: 2px;
+        }
+        .form-section-compact .form-control,
+        .form-section-compact .form-control-readonly {
+            font-size: 9pt;
+            padding: 2px 4px;
+        }
+        .form-section-compact .radio-group {
+            margin-top: 4px;
+            gap: 12px;
+        }
+        .form-section-compact .radio-option,
+        .form-section-compact .radio-option label,
+        .form-section-compact div[style*="background"] {
+            font-size: 9pt;
+        }
+        .form-section-compact div[style*="background"] {
+            padding: 4px 6px !important;
+            margin-top: 4px !important;
+        }
+        .print-segment-bonus-page {
+            margin-top: 1em;
+            padding-top: 0.35em;
+            border-top: 1px solid #666;
+            page-break-before: auto;
+            break-before: auto;
+        }
         .form-section-notes {
-            padding-top: 20mm !important;
+            padding-top: 0 !important;
+            margin-top: 6px;
         }
         .form-section textarea,
         .form-section .readonly-value {
@@ -265,6 +346,7 @@
             margin-left: 0 !important;
             margin-right: 0 !important;
             width: 100% !important;
+            font-size: 9pt;
         }
         .form-section .readonly-value {
             text-align: left !important;
@@ -279,17 +361,30 @@
             margin-left: 0 !important;
         }
         .commission-decision-section {
-            margin-top: 20mm !important;
+            margin-top: 0 !important;
         }
         .form-label-large {
             page-break-after: avoid;
         }
-        .form-title {
-            margin-top: 15mm !important;
-        }
         .evaluation-table {
             page-break-inside: auto;
-            page-break-after: always;
+            break-inside: auto;
+            page-break-after: auto;
+            font-size: 7.5pt;
+            margin: 4px 0;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .evaluation-table-criteria {
+            page-break-inside: auto;
+            break-inside: auto;
+            page-break-after: auto;
+            break-after: auto;
+        }
+        .evaluation-table-bonus {
+            margin-top: 0;
+            page-break-inside: auto;
+            break-inside: auto;
         }
         .evaluation-table thead {
             display: table-header-group;
@@ -298,15 +393,36 @@
             display: table-row-group;
         }
         .evaluation-table tr {
+            page-break-inside: auto;
+            break-inside: auto;
+        }
+        .evaluation-table .final-score-row {
             page-break-inside: avoid;
+            break-inside: avoid;
         }
         .evaluation-table th,
         .evaluation-table td {
             border: 1px solid #000 !important;
-            padding: 6px 4px;
+            padding: 2px 2px;
+            line-height: 1.44;
         }
         .evaluation-table th {
+            font-size: 7pt;
             font-weight: bold !important;
+            padding-top: 3px;
+            padding-bottom: 3px;
+        }
+        .evaluation-table .criterion-col {
+            font-size: 7pt;
+            padding: 2px 4px;
+        }
+        .evaluation-table .score-input,
+        .evaluation-table .score-display {
+            font-size: 7.5pt;
+            line-height: 1.44;
+        }
+        .evaluation-table .score-input {
+            padding: 3px 2px;
         }
         .evaluation-table .average-col {
             font-weight: bold !important;
@@ -323,6 +439,10 @@
         .info-box,
         .warning-box {
             page-break-inside: avoid;
+            font-size: 7.5pt;
+            margin-top: 4px !important;
+            margin-bottom: 4px !important;
+            padding: 4px 6px !important;
         }
         .criteria-info-box {
             display: none !important;
@@ -330,8 +450,13 @@
         .notes-info-box {
             display: none !important;
         }
+        .form-section-notes textarea {
+            min-height: 2em;
+            max-height: 3.5em;
+        }
         .signature-section {
             page-break-inside: avoid;
+            break-inside: avoid;
             page-break-before: auto;
             border-top: none !important;
         }
@@ -339,10 +464,6 @@
         textarea.form-control {
             border: none !important;
             background: transparent !important;
-        }
-        @page {
-            size: A4;
-            margin: 20mm;
         }
     }
 </style>
@@ -366,7 +487,7 @@
             @endphp
                         
             @if($isDeadlinePassed)
-                <div class="alert alert-danger" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
+                <div class="alert alert-danger no-print" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
                     <strong>❌ Rok istekao:</strong> Rok za ocjenjivanje i donošenje odluke je istekao. Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs.
                 </div>
             @endif
@@ -374,6 +495,7 @@
             <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" @if($isRejected || $isApplicant || $isDeadlinePassed) onsubmit="event.preventDefault(); return false;" @endif>
                 @csrf
 
+                <div class="print-document-header">
                 <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px; text-align: right;">
                     Obrazac 3
                 </div>
@@ -383,9 +505,11 @@
                 <div class="form-subtitle">
                     (Popunjava Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu)
                 </div>
+                </div>
 
+                <div class="print-segment-intro">
                 <!-- 1. Preduzetnica/Društvo -->
-                <div class="form-section">
+                <div class="form-section form-section-compact">
                     <label class="form-label form-label-large">1. Preduzetnica/Društvo:</label>
                     @php
                         $applicantLabel = $application->applicant_type === 'preduzetnica'
@@ -400,13 +524,13 @@
                 </div>
 
                 <!-- 2. Naziv biznis plana -->
-                <div class="form-section">
+                <div class="form-section form-section-compact">
                     <label class="form-label form-label-large">2. Naziv biznis plana:</label>
                     <input type="text" class="form-control form-control-readonly" value="{{ $application->business_plan_name }}" readonly>
                 </div>
 
                 <!-- 3. Dostavljena su sva potrebna dokumenta? -->
-                <div class="form-section">
+                <div class="form-section form-section-compact">
                     <label class="form-label form-label-large">3. Dostavljena su sva potrebna dokumenta?</label>
                     
                     @if($commissionMember && $commissionMember->position === 'predsjednik')
@@ -447,9 +571,10 @@
                         </div>
                     @endif
                 </div>
+                </div>
 
                 <!-- 4. Ocjena biznis plana u brojkama -->
-                <div class="form-section">
+                <div class="form-section form-section-scores">
                     <label class="form-label form-label-large">4. Ocjena biznis plana u brojkama:</label>
 
                     @php
@@ -467,7 +592,7 @@
                         ];
                     @endphp
 
-                    <table class="evaluation-table">
+                    <table class="evaluation-table evaluation-table-criteria">
                         <thead>
                             <tr>
                                 <th class="criterion-col">KRITERIJUMI ZA OCJENU</th>
@@ -560,14 +685,30 @@
                             </td>
                                 </tr>
                             @endforeach
+                        </tbody>
+                    </table>
 
-                            {{-- Dodatni bodovi – posebni redovi koje može označiti samo predsjednik --}}
+                    @for($i = 1; $i <= 10; $i++)
+                        @error("criterion_{$i}")
+                            <div class="error-message">{{ $message }}</div>
+                        @enderror
+                    @endfor
+                </div>
+
+                <div class="print-segment-bonus-page">
+                    <table class="evaluation-table evaluation-table-bonus">
+                        <thead>
                             <tr>
-                                <td class="criterion-col" colspan="{{ $allMembers->count() + 2 }}" style="font-weight: bold;">
-                                    DODATNI BODOVI:
-                                </td>
+                                <th class="criterion-col">DODATNI BODOVI</th>
+                                @foreach($allMembers as $member)
+                                    <th style="font-size: 11px;">
+                                        {{ $member->position === 'predsjednik' ? 'Predsjednik' : 'Član ' . ($loop->index) }}
+                                    </th>
+                                @endforeach
+                                <th class="average-col">Prosječna ocjena*</th>
                             </tr>
-
+                        </thead>
+                        <tbody>
                             {{-- 1) Prisustvovanje Info danu – 1 bod --}}
                             <tr>
                                 <td class="criterion-col">
@@ -746,15 +887,6 @@
                         <strong>Napomena:</strong> Biznis planovi sa ukupnim brojem bodova ispod 30 se neće podržati.
                     </div>
 
-                    @for($i = 1; $i <= 10; $i++)
-                        @error("criterion_{$i}")
-                            <div class="error-message">{{ $message }}</div>
-                        @enderror
-                    @endfor
-                </div>
-
-                {{-- Dodatni bodovi su sada u samoj tabeli iznad, pa se poseban boks sa objašnjenjem ne prikazuje. --}}
-
                 <!-- 5. Ostale napomene -->
                 <div class="form-section form-section-notes">
                     <label class="form-label form-label-large">5. Ostale napomene:</label>
@@ -883,8 +1015,9 @@
                         </div>
                     @endif
                 </div>
+                </div>
 
-                <div style="margin-top: 32px; text-align: center;">
+                <div style="margin-top: 32px; text-align: center;" class="no-print">
                     @php
                         // Provjeri da li trenutni član može editovati napomene
                         $isDecisionMade = $application->commission_decision !== null;
