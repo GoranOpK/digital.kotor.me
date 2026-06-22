@@ -956,10 +956,11 @@
                     if ($roleName === 'komisija') {
                         $competition = $application->competition;
                         if ($competition && $competition->commission_id) {
-                            $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
-                                ->where('status', 'active')
-                                ->first();
-                            if ($commissionMember && $commissionMember->commission_id === $competition->commission_id) {
+                            $commissionMember = \App\Models\CommissionMember::activeForCommission(
+                                $user->id,
+                                $competition->commission_id
+                            );
+                            if ($commissionMember) {
                                 $isCommissionMember = true;
                             }
                         }

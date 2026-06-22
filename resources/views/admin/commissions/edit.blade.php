@@ -207,9 +207,22 @@
 
                 @php
                     $activeSubstituteExists = $commission->members->contains(fn($m) => !empty($m->is_substitute) && $m->status === 'active');
+                    $mandateActive = $commission->status === 'active'
+                        && now()->gte($commission->start_date)
+                        && now()->lte($commission->end_date);
+                    $evaluationInProgress = $commission->isEvaluationInProgressOnAnyCompetition();
+                    $decisionInProgress = $commission->isDecisionMakingInProgressOnAnyCompetition();
                 @endphp
 
-                @if($activeSubstituteExists)
+                @if(!$mandateActive)
+                    <div style="background:#fee2e2; border:1px solid #ef4444; color:#991b1b; border-radius:8px; padding:12px 14px; margin-bottom:16px;">
+                        Mandat komisije nije aktivan. Nije moguće dodavanje zamjenskog člana.
+                    </div>
+                @elseif($evaluationInProgress)
+                    <div style="background:#fee2e2; border:1px solid #ef4444; color:#991b1b; border-radius:8px; padding:12px 14px; margin-bottom:16px;">
+                        Zamjena članova nije dozvoljena usred ocjenjivanja prijava na konkurs.
+                    </div>
+                @elseif($activeSubstituteExists)
                     <div style="background:#fef3c7; border:1px solid #f59e0b; color:#92400e; border-radius:8px; padding:12px 14px; margin-bottom:16px;">
                         Već postoji aktivan zamjenski član. Dodavanje drugog zamjenskog člana nije dozvoljeno dok je prvi aktivan.
                     </div>
@@ -252,13 +265,14 @@
                                 @php
                                     $regularMembers = $commission->members
                                         ->reject(fn($m) => !empty($m->is_substitute))
+                                        ->filter(fn($m) => $m->status === 'active')
                                         ->values();
                                     $chairmanMember = $regularMembers->first(fn($m) => $m->position === 'predsjednik');
                                     $opstinaMembers = $regularMembers->filter(fn($m) => $m->position === 'clan' && $m->member_type === 'opstina')->values();
                                     $udruzenjeMember = $regularMembers->first(fn($m) => $m->position === 'clan' && $m->member_type === 'udruzenje');
                                     $zeneMrezaMember = $regularMembers->first(fn($m) => $m->position === 'clan' && $m->member_type === 'zene_mreza');
                                 @endphp
-                                @if($chairmanMember)
+                                @if($chairmanMember && !$decisionInProgress)
                                     <option value="1" {{ old('replaces_member_number') == '1' ? 'selected' : '' }}>
                                         Predsjednik - {{ $chairmanMember->name }}
                                     </option>
@@ -284,6 +298,11 @@
                                     </option>
                                 @endif
                             </select>
+                            @if($decisionInProgress)
+                                <div style="font-size: 12px; color: #92400e; margin-top: 6px;">
+                                    Zamjena predsjednika nije dostupna usred donošenja odluka na konkursu.
+                                </div>
+                            @endif
                             @error('replaces_member_number')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror

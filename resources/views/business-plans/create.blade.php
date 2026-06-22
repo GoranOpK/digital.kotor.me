@@ -1415,11 +1415,11 @@
             } else {
                 $currentUser = auth()->user();
                 if ($currentUser && $application->competition) {
-                    $commissionMember = \App\Models\CommissionMember::where('user_id', $currentUser->id)
-                        ->where('status', 'active')
-                        ->where('position', 'predsjednik')
-                        ->first();
-                    if ($commissionMember && (int) $commissionMember->commission_id === (int) $application->competition->commission_id) {
+                    $competitionId = $application->competition->commission_id;
+                    $commissionMember = $competitionId
+                        ? \App\Models\CommissionMember::activeForCommission($currentUser->id, $competitionId)
+                        : null;
+                    if ($commissionMember && $commissionMember->position === 'predsjednik') {
                         $canPrintBusinessPlan = true;
                     }
                 }

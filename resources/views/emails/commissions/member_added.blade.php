@@ -7,10 +7,23 @@
 <body style="font-family: Arial, sans-serif; font-size: 14px; color: #111827;">
     <p>Poštovani/a {{ $member->name }},</p>
 
-    <p>
-        Obavještavamo Vas da ste imenovani za člana
-        <strong>Komisije za raspodjelu bespovratnih sredstava namijenjenih za podršku ženskom preduzetništvu</strong>.
-    </p>
+    @if(!empty($member->is_substitute) && $replacedMember)
+        <p>
+            Obavještavamo Vas da ste imenovani za <strong>zamjenskog člana</strong>
+            <strong>Komisije za raspodjelu sredstava za podršku ženskom preduzetništvu</strong>.
+        </p>
+        <p>
+            <strong>Privremeno mijenjate:</strong> {{ $replacedMember->name }}<br>
+            <strong>Uloga:</strong> {{ \App\Models\CommissionMember::replacementSlotLabel((int)($member->replaces_member_number ?? 0)) }}<br>
+            <strong>Napomena:</strong> Ovo je privremena zamjena u slučaju opravdanog odsustva redovnog člana komisije.
+            Vaša uloga i prava odgovaraju ulozi člana kojeg mijenjate.
+        </p>
+    @else
+        <p>
+            Obavještavamo Vas da ste imenovani za člana
+            <strong>Komisije za raspodjelu sredstava za podršku ženskom preduzetništvu</strong>.
+        </p>
+    @endif
 
     @if(!empty($commission->name))
         <p>
@@ -45,4 +58,3 @@
     </p>
 </body>
 </html>
-

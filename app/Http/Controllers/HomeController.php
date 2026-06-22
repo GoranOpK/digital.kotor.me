@@ -329,9 +329,7 @@ class HomeController extends Controller
         // Ako je član komisije, pripremi podatke za dashboard komisije
         if ($isKomisija) {
             // Pronađi člana komisije
-            $commissionMember = \App\Models\CommissionMember::where('user_id', $user->id)
-                ->where('status', 'active')
-                ->first();
+            $commissionMember = \App\Models\CommissionMember::activeMembershipForUser($user->id);
             
             if ($commissionMember) {
                 // Učitaj komisiju sa njenim konkursima
