@@ -125,6 +125,14 @@
     .evaluation-table-bonus {
         margin-top: 24px;
     }
+    .print-document-header {
+        margin-bottom: 16px;
+    }
+    .print-segment-bonus-page {
+        margin-top: 20px;
+        padding-top: 12px;
+        border-top: 1px solid #d1d5db;
+    }
     .evaluation-table th,
     .evaluation-table td {
         border: 1px solid #e5e7eb !important;
@@ -240,7 +248,7 @@
     @media print {
         @page {
             size: A4;
-            margin: 12mm 10mm;
+            margin: 10mm 8mm;
         }
 
         nav,
@@ -263,13 +271,17 @@
             box-shadow: none;
         }
         .form-title {
-            font-size: 13px !important;
+            font-size: 12px !important;
             margin-top: 0 !important;
-            margin-bottom: 2px !important;
+            margin-bottom: 1px !important;
         }
         .form-subtitle {
-            font-size: 9px;
-            margin-bottom: 10px;
+            font-size: 8px;
+            margin-bottom: 0;
+        }
+        .print-document-header {
+            margin-bottom: 1em;
+            padding-bottom: 0;
         }
         .form-section {
             margin-bottom: 0;
@@ -279,8 +291,8 @@
         .print-segment-intro {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 4px 12px;
-            margin-bottom: 8px;
+            gap: 2px 10px;
+            margin-bottom: 4px;
             page-break-inside: avoid;
             break-inside: avoid;
         }
@@ -315,12 +327,15 @@
             margin-top: 4px !important;
         }
         .print-segment-bonus-page {
-            page-break-before: always;
-            break-before: page;
+            margin-top: 1em;
+            padding-top: 0.35em;
+            border-top: 1px solid #666;
+            page-break-before: auto;
+            break-before: auto;
         }
         .form-section-notes {
             padding-top: 0 !important;
-            margin-top: 12px;
+            margin-top: 6px;
         }
         .form-section textarea,
         .form-section .readonly-value {
@@ -345,8 +360,6 @@
             margin-left: 0 !important;
         }
         .commission-decision-section {
-            page-break-before: always;
-            break-before: page;
             margin-top: 0 !important;
         }
         .form-label-large {
@@ -356,16 +369,16 @@
             page-break-inside: auto;
             break-inside: auto;
             page-break-after: auto;
-            font-size: 8.5pt;
-            margin: 8px 0;
+            font-size: 7.5pt;
+            margin: 3px 0;
             width: 100%;
             table-layout: fixed;
         }
         .evaluation-table-criteria {
-            page-break-inside: avoid;
-            break-inside: avoid;
-            page-break-after: avoid;
-            break-after: avoid;
+            page-break-inside: auto;
+            break-inside: auto;
+            page-break-after: auto;
+            break-after: auto;
         }
         .evaluation-table-bonus {
             margin-top: 0;
@@ -389,19 +402,20 @@
         .evaluation-table th,
         .evaluation-table td {
             border: 1px solid #000 !important;
-            padding: 3px 2px;
+            padding: 1px 2px;
+            line-height: 1.2;
         }
         .evaluation-table th {
-            font-size: 8pt;
+            font-size: 7pt;
             font-weight: bold !important;
         }
         .evaluation-table .criterion-col {
-            font-size: 8pt;
-            padding: 3px 4px;
+            font-size: 7pt;
+            padding: 1px 3px;
         }
         .evaluation-table .score-input,
         .evaluation-table .score-display {
-            font-size: 8.5pt;
+            font-size: 7.5pt;
         }
         .evaluation-table .average-col {
             font-weight: bold !important;
@@ -418,13 +432,20 @@
         .info-box,
         .warning-box {
             page-break-inside: avoid;
-            font-size: 8.5pt;
+            font-size: 7.5pt;
+            margin-top: 4px !important;
+            margin-bottom: 4px !important;
+            padding: 4px 6px !important;
         }
         .criteria-info-box {
             display: none !important;
         }
         .notes-info-box {
             display: none !important;
+        }
+        .form-section-notes textarea {
+            min-height: 2em;
+            max-height: 3.5em;
         }
         .signature-section {
             page-break-inside: avoid;
@@ -467,6 +488,7 @@
             <form method="POST" action="{{ route('evaluation.store', $application) }}" id="evaluationForm" @if($isRejected || $isApplicant || $isDeadlinePassed) onsubmit="event.preventDefault(); return false;" @endif>
                 @csrf
 
+                <div class="print-document-header">
                 <div class="form-title" style="text-transform: none; font-size: 16px; margin-bottom: 4px; text-align: right;">
                     Obrazac 3
                 </div>
@@ -475,6 +497,7 @@
                 </div>
                 <div class="form-subtitle">
                     (Popunjava Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu)
+                </div>
                 </div>
 
                 <div class="print-segment-intro">
