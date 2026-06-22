@@ -55,6 +55,9 @@
     .form-section {
         margin-bottom: 32px;
     }
+    .form-section-compact {
+        margin-bottom: 20px;
+    }
     .form-label {
         display: block;
         font-size: 14px;
@@ -231,11 +234,17 @@
         margin-top: 12px;
     }
     @media print {
+        @page {
+            size: A4;
+            margin: 12mm 10mm;
+        }
+
         nav,
         .page-header,
         .btn-primary,
         button,
-        a[href] {
+        a[href],
+        .no-print {
             display: none !important;
         }
         .evaluation-page {
@@ -243,19 +252,72 @@
         }
         .container {
             padding: 0;
+            max-width: 100%;
         }
         .form-card {
-            padding: 20px;
+            padding: 0;
             box-shadow: none;
         }
+        .form-title {
+            font-size: 13px !important;
+            margin-top: 0 !important;
+            margin-bottom: 2px !important;
+        }
+        .form-subtitle {
+            font-size: 9px;
+            margin-bottom: 10px;
+        }
         .form-section {
-            margin-bottom: 4px;
+            margin-bottom: 0;
             padding-left: 0 !important;
             padding-right: 0 !important;
         }
-        /* Sekcija "Ostale napomene" uvijek počinje na novoj stranici (nakon tabele) - dodaj gornju marginu */
+        .print-segment-intro {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4px 12px;
+            margin-bottom: 8px;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .print-segment-intro .form-section-compact {
+            margin-bottom: 0;
+        }
+        .print-segment-intro .form-section-compact:last-child {
+            grid-column: 1 / -1;
+        }
+        .form-section-compact .form-label-large,
+        .form-section-scores > .form-label-large,
+        .form-section-notes > .form-label-large {
+            font-size: 9.5pt;
+            margin-bottom: 2px;
+        }
+        .form-section-compact .form-control,
+        .form-section-compact .form-control-readonly {
+            font-size: 9pt;
+            padding: 2px 4px;
+        }
+        .form-section-compact .radio-group {
+            margin-top: 4px;
+            gap: 12px;
+        }
+        .form-section-compact .radio-option,
+        .form-section-compact .radio-option label,
+        .form-section-compact div[style*="background"] {
+            font-size: 9pt;
+        }
+        .form-section-compact div[style*="background"] {
+            padding: 4px 6px !important;
+            margin-top: 4px !important;
+        }
+        .print-segment-table {
+            page-break-before: always;
+            break-before: page;
+        }
         .form-section-notes {
-            padding-top: 20mm !important;
+            page-break-before: always;
+            break-before: page;
+            padding-top: 0 !important;
         }
         .form-section textarea,
         .form-section .readonly-value {
@@ -265,6 +327,7 @@
             margin-left: 0 !important;
             margin-right: 0 !important;
             width: 100% !important;
+            font-size: 9pt;
         }
         .form-section .readonly-value {
             text-align: left !important;
@@ -279,17 +342,19 @@
             margin-left: 0 !important;
         }
         .commission-decision-section {
-            margin-top: 20mm !important;
+            page-break-before: always;
+            break-before: page;
+            margin-top: 0 !important;
         }
         .form-label-large {
             page-break-after: avoid;
         }
-        .form-title {
-            margin-top: 15mm !important;
-        }
         .evaluation-table {
             page-break-inside: auto;
-            page-break-after: always;
+            break-inside: auto;
+            page-break-after: auto;
+            font-size: 8.5pt;
+            margin: 8px 0;
         }
         .evaluation-table thead {
             display: table-header-group;
@@ -298,15 +363,29 @@
             display: table-row-group;
         }
         .evaluation-table tr {
+            page-break-inside: auto;
+            break-inside: auto;
+        }
+        .evaluation-table .final-score-row {
             page-break-inside: avoid;
+            break-inside: avoid;
         }
         .evaluation-table th,
         .evaluation-table td {
             border: 1px solid #000 !important;
-            padding: 6px 4px;
+            padding: 3px 2px;
         }
         .evaluation-table th {
+            font-size: 8pt;
             font-weight: bold !important;
+        }
+        .evaluation-table .criterion-col {
+            font-size: 8pt;
+            padding: 3px 4px;
+        }
+        .evaluation-table .score-input,
+        .evaluation-table .score-display {
+            font-size: 8.5pt;
         }
         .evaluation-table .average-col {
             font-weight: bold !important;
@@ -323,6 +402,7 @@
         .info-box,
         .warning-box {
             page-break-inside: avoid;
+            font-size: 8.5pt;
         }
         .criteria-info-box {
             display: none !important;
@@ -332,6 +412,7 @@
         }
         .signature-section {
             page-break-inside: avoid;
+            break-inside: avoid;
             page-break-before: auto;
             border-top: none !important;
         }
@@ -339,10 +420,6 @@
         textarea.form-control {
             border: none !important;
             background: transparent !important;
-        }
-        @page {
-            size: A4;
-            margin: 20mm;
         }
     }
 </style>
@@ -366,7 +443,7 @@
             @endphp
                         
             @if($isDeadlinePassed)
-                <div class="alert alert-danger" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
+                <div class="alert alert-danger no-print" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
                     <strong>❌ Rok istekao:</strong> Rok za ocjenjivanje i donošenje odluke je istekao. Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs.
                 </div>
             @endif
@@ -384,8 +461,9 @@
                     (Popunjava Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu)
                 </div>
 
+                <div class="print-segment-intro">
                 <!-- 1. Preduzetnica/Društvo -->
-                <div class="form-section">
+                <div class="form-section form-section-compact">
                     <label class="form-label form-label-large">1. Preduzetnica/Društvo:</label>
                     @php
                         $applicantLabel = $application->applicant_type === 'preduzetnica'
@@ -400,13 +478,13 @@
                 </div>
 
                 <!-- 2. Naziv biznis plana -->
-                <div class="form-section">
+                <div class="form-section form-section-compact">
                     <label class="form-label form-label-large">2. Naziv biznis plana:</label>
                     <input type="text" class="form-control form-control-readonly" value="{{ $application->business_plan_name }}" readonly>
                 </div>
 
                 <!-- 3. Dostavljena su sva potrebna dokumenta? -->
-                <div class="form-section">
+                <div class="form-section form-section-compact">
                     <label class="form-label form-label-large">3. Dostavljena su sva potrebna dokumenta?</label>
                     
                     @if($commissionMember && $commissionMember->position === 'predsjednik')
@@ -447,9 +525,10 @@
                         </div>
                     @endif
                 </div>
+                </div>
 
                 <!-- 4. Ocjena biznis plana u brojkama -->
-                <div class="form-section">
+                <div class="form-section form-section-scores print-segment-table">
                     <label class="form-label form-label-large">4. Ocjena biznis plana u brojkama:</label>
 
                     @php
@@ -724,7 +803,7 @@
                 {{-- Dodatni bodovi su sada u samoj tabeli iznad, pa se poseban boks sa objašnjenjem ne prikazuje. --}}
 
                 <!-- 5. Ostale napomene -->
-                <div class="form-section form-section-notes">
+                <div class="form-section form-section-notes print-segment-notes">
                     <label class="form-label form-label-large">5. Ostale napomene:</label>
                     
                     @php
@@ -852,7 +931,7 @@
                     @endif
                 </div>
 
-                <div style="margin-top: 32px; text-align: center;">
+                <div style="margin-top: 32px; text-align: center;" class="no-print">
                     @php
                         // Provjeri da li trenutni član može editovati napomene
                         $isDecisionMade = $application->commission_decision !== null;
