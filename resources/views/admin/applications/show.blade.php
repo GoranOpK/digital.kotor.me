@@ -347,6 +347,7 @@
                     $userRole = auth()->user()->role ? auth()->user()->role->name : null;
                     // Mapiranje tipova dokumenata na nazive traženih dokumenata (prema Odluci)
                     $documentLabels = [
+                        'potvrda_zavod_nezaposleni' => \App\Models\Application::getZavodNezaposleniDocumentLabel(),
                         'licna_karta' => ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') && $application->business_stage === 'razvoj'
                             ? 'Ovjerenu kopiju lične karte nosioca biznisa (osnivačica ili jedna od osnivača i izvršna direktorica)'
                             : 'Ovjerena kopija lične karte',

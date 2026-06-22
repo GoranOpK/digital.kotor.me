@@ -462,7 +462,7 @@ class ApplicationController extends Controller
         // Provjeri da li je prijava spremna za podnošenje
         // Napomena: Dozvoljavamo prijavu čak i ako nisu sva dokumenta uploadovana
         // Predsjednik komisije će odbiti prijavu ako nedostaju dokumenti kroz formu za ocjenjivanje
-        $requiredDocs = $application->getRequiredDocuments();
+        $requiredDocs = $application->getStrictlyRequiredDocuments();
         $uploadedDocs = $application->documents->pluck('document_type')->toArray();
         $missingDocs = array_diff($requiredDocs, $uploadedDocs);
         
@@ -566,7 +566,7 @@ class ApplicationController extends Controller
         }
 
         $validated = $request->validate([
-            'document_type' => 'required|string|in:licna_karta,crps_resenje,pib_resenje,pdv_resenje,statut,karton_potpisa,potvrda_neosudjivanost,uvjerenje_opstina_porezi,uvjerenje_opstina_nepokretnost,potvrda_upc_porezi,ioppd_obrazac,godisnji_racuni,biznis_plan_usb,izvjestaj_realizacija,finansijski_izvjestaj,izvjestaj_registar_kase,dokaz_ziro_racun,predracuni_nabavka,ostalo',
+            'document_type' => 'required|string|in:licna_karta,crps_resenje,pib_resenje,pdv_resenje,statut,karton_potpisa,potvrda_neosudjivanost,uvjerenje_opstina_porezi,uvjerenje_opstina_nepokretnost,potvrda_upc_porezi,ioppd_obrazac,godisnji_racuni,biznis_plan_usb,izvjestaj_realizacija,finansijski_izvjestaj,izvjestaj_registar_kase,dokaz_ziro_racun,predracuni_nabavka,potvrda_zavod_nezaposleni,ostalo',
             'files' => 'required_without:user_document_id|array|min:1',
             'files.*' => 'file|mimes:pdf,jpg,jpeg,png|max:20480', // 20MB max po fajlu
             'user_document_id' => 'nullable|required_without:files',
@@ -606,7 +606,7 @@ class ApplicationController extends Controller
                 'mega_node_id' => $userDocument->mega_node_id,
                 'mega_file_name' => $userDocument->mega_file_name,
                 'document_type' => $validated['document_type'],
-                'is_required' => in_array($validated['document_type'], $application->getRequiredDocuments()),
+                'is_required' => in_array($validated['document_type'], $application->getStrictlyRequiredDocuments()),
                 'user_document_id' => $userDocument->id,
             ]);
 
@@ -697,7 +697,7 @@ class ApplicationController extends Controller
                 'mega_node_id' => $megaNodeId,
                 'mega_file_name' => $cloudPath ? $megaFileName : null,
                 'document_type' => $validated['document_type'],
-                'is_required' => in_array($validated['document_type'], $application->getRequiredDocuments()),
+                'is_required' => in_array($validated['document_type'], $application->getStrictlyRequiredDocuments()),
                 'user_document_id' => $userDocumentId,
             ]);
 

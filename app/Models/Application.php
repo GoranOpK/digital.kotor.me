@@ -9,6 +9,8 @@ class Application extends Model
 {
     use HasFactory;
 
+    public const DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI = 'potvrda_zavod_nezaposleni';
+
     protected $fillable = [
         'competition_id',
         'user_id',
@@ -322,7 +324,7 @@ class Application extends Model
      */
     public function hasAllRequiredDocuments(): bool
     {
-        $requiredDocs = $this->getRequiredDocuments();
+        $requiredDocs = $this->getStrictlyRequiredDocuments();
         $uploadedDocs = $this->documents()
             ->where('is_required', true)
             ->pluck('document_type')
@@ -335,6 +337,42 @@ class Application extends Model
         }
 
         return true;
+    }
+
+    /**
+     * Dokumenti koji se prikazuju u listi obavezne dokumentacije, ali nisu obavezni za podnošenje prijave
+     * (npr. potvrda Zavoda za dodatne bodove).
+     */
+    public static function getConditionallyRequiredDocumentTypes(): array
+    {
+        return [self::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI];
+    }
+
+    public static function getZavodNezaposleniDocumentLabel(): string
+    {
+        return 'Potvrda Zavoda za zapošljavanje Crne Gore da se podnositeljka prijave nalazi na evidenciji nezaposlenih lica duže od 12 mjeseci (ukoliko ostvaruje pravo na dodatne bodove po tom osnovu)';
+    }
+
+    /**
+     * Obavezni dokumenti bez uslovnih stavki (za provjeru kompletnosti prijave).
+     */
+    public function getStrictlyRequiredDocuments(): array
+    {
+        return array_values(array_diff(
+            $this->getRequiredDocuments(),
+            self::getConditionallyRequiredDocumentTypes()
+        ));
+    }
+
+    private static function prependZavodNezaposleniDocument(array $documents, string $applicantType, ?string $businessStage): array
+    {
+        if ($businessStage
+            && in_array($businessStage, ['započinjanje', 'razvoj'], true)
+            && in_array($applicantType, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true)) {
+            array_unshift($documents, self::DOCUMENT_POTVRDA_ZAVOD_NEZAPOSLENI);
+        }
+
+        return $documents;
     }
 
     /**
@@ -512,6 +550,8 @@ $documents = [
             $documents[] = 'finansijski_izvjestaj';
         }
 
+        $documents = self::prependZavodNezaposleniDocument($documents, $this->applicant_type, $this->business_stage);
+
         return array_values($documents); // Reindex array
     }
 
@@ -678,6 +718,8 @@ $documents = [
                 ];
             }
         }
+
+        $documents = self::prependZavodNezaposleniDocument($documents, $applicantType, $businessStage);
 
         return array_values($documents);
     }

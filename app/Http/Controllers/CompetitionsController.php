@@ -96,6 +96,7 @@ class CompetitionsController extends Controller
 
         // Dokument labels za mapiranje
         $documentLabels = [
+            'potvrda_zavod_nezaposleni' => Application::getZavodNezaposleniDocumentLabel(),
             'licna_karta' => 'Ovjerena kopija lične karte',
             'crps_resenje' => 'Rješenje o upisu u CRPS',
             'pib_resenje' => 'Rješenje o registraciji PJ Poreske uprave',
