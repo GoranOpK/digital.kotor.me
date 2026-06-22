@@ -260,17 +260,19 @@
                         <tbody>
                             @forelse($active_competitions as $comp)
                                 @php
-                                    $deadline = $comp->published_at->addDays($comp->deadline_days);
-                                    $daysLeft = now()->diffInDays($deadline, false);
+                                    $deadline = $comp->deadline;
+                                    $daysLeft = $comp->getDaysUntilApplicationDeadline();
                                 @endphp
                                 <tr>
                                     <td>
                                         <a href="{{ route('admin.competitions.show', $comp) }}" class="link-primary">{{ $comp->title }}</a>
                                     </td>
-                                    <td>{{ $deadline->format('d.m.Y') }}</td>
+                                    <td>{{ $deadline ? $deadline->format('d.m.Y') : '—' }}</td>
                                     <td>
-                                        @if($daysLeft > 0)
-                                            <span style="color: #059669; font-weight: 600;">{{ ceil($daysLeft) }} dana</span>
+                                        @if($daysLeft === null)
+                                            <span style="color: #6b7280;">—</span>
+                                        @elseif($daysLeft > 0)
+                                            <span style="color: #059669; font-weight: 600;">{{ $daysLeft }} {{ $daysLeft == 1 ? 'dan' : 'dana' }}</span>
                                         @else
                                             <span style="color: #dc2626; font-weight: 600;">Isteklo</span>
                                         @endif
