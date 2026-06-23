@@ -983,6 +983,7 @@
                             @php
                                 $isUploaded = in_array($docType, $uploadedDocs);
                                 $document = $isUploaded ? $application->documents->firstWhere('document_type', $docType) : null;
+                                $isOptionalDoc = in_array($docType, \App\Models\Application::getConditionallyRequiredDocumentTypes(), true);
                             @endphp
                             <tr style="border-bottom: 1px solid #e5e7eb;">
                                 <td style="padding: 12px; color: #111827;">
@@ -992,6 +993,10 @@
                                     @if($isUploaded)
                                         <span style="display: inline-block; padding: 4px 12px; background: #d1fae5; color: #065f46; border-radius: 9999px; font-size: 12px; font-weight: 600;">
                                             ✓ Priloženo
+                                        </span>
+                                    @elseif($isOptionalDoc)
+                                        <span style="display: inline-block; padding: 4px 12px; background: #fef3c7; color: #92400e; border-radius: 9999px; font-size: 12px; font-weight: 600;">
+                                            Opciono (za dodatne bodove)
                                         </span>
                                     @else
                                         <span style="display: inline-block; padding: 4px 12px; background: #fee2e2; color: #991b1b; border-radius: 9999px; font-size: 12px; font-weight: 600;">
