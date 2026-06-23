@@ -490,7 +490,6 @@ class Application extends Model
             ? 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i Analitika dobavljača) za prethodnu godinu. Napomena: U slučaju da preduzetnica/društvo ne vodi analitiku kupaca tj. posluje isključivo sa fizičkim licima i naplata se vrši odmah putem registar kase, preduzetnica/društvo ima obavezu dostaviti periodični izvještaj sa registar kase'
             : 'Godišnji računi';
         $documentLabels['izvjestaj_registar_kase'] = 'Izvještaj sa registra kase';
-        $documentLabels['biznis_plan_usb'] = 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u';
         $documentLabels['izvjestaj_realizacija'] = 'Izvještaj o realizaciji';
         $documentLabels['finansijski_izvjestaj'] = 'Finansijski izvještaj';
         $documentLabels['dokaz_ziro_racun'] = ($this->applicant_type === 'preduzetnica' && $isRazvoj)
@@ -671,7 +670,7 @@ $documents = [
                         $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']));
                     }
                 } elseif ($this->business_stage === 'razvoj') {
-                    // Preduzetnica/Fizičko lice koja planira razvoj – prema novoj Odluci (bez nepokretnosti i USB)
+                    // Preduzetnica/Fizičko lice koja planira razvoj – prema Odluci (bez nepokretnosti)
                     $documents = [
                         'licna_karta',
                         'crps_resenje',
@@ -685,10 +684,8 @@ $documents = [
                     ];
                 }
             } else {
-                // Ako nema business_stage, samo lična karta i biznis plan (stara logika)
                 $documents = [
                     'licna_karta',
-                    'biznis_plan_usb',
                 ];
             }
         }
@@ -850,7 +847,6 @@ $documents = [
                     'uvjerenje_opstina_nepokretnost',
                     'dokaz_ziro_racun',
                     'predracuni_nabavka',
-                    'biznis_plan_usb',
                 ];
                 if (!$isRegistered) {
                     $documents = array_values(array_diff($documents, ['crps_resenje', 'pib_resenje', 'pdv_resenje', 'dokaz_ziro_racun']));
@@ -866,7 +862,6 @@ $documents = [
                     'uvjerenje_opstina_nepokretnost',
                     'potvrda_upc_porezi',
                     'ioppd_obrazac',
-                    'biznis_plan_usb',
                 ];
             }
         }

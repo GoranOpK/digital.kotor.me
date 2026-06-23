@@ -109,7 +109,6 @@ class CompetitionsController extends Controller
             'potvrda_upc_porezi' => 'Potvrda Uprave prihoda i carina o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice',
             'ioppd_obrazac' => 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od Uprave prihoda i carina, kao dokaz o broju zaposlenih (IOPPD Obrazac)',
             'godisnji_racuni' => 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i dobavljača) za prethodnu godinu',
-            'biznis_plan_usb' => 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u',
             'izvjestaj_realizacija' => 'Izvještaj o realizaciji prethodne podrške',
             'finansijski_izvjestaj' => 'Finansijski izvještaj',
             'dokaz_ziro_racun' => 'Dokaz o broju poslovnog žiro računa preduzetnice',

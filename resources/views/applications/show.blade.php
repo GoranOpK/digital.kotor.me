@@ -582,7 +582,6 @@
                                             'potvrda_upc_porezi' => 'Porezi UPC',
                                             'ioppd_obrazac' => 'IOPPD',
                                             'godisnji_racuni' => 'Godišnji računi',
-                                            'biznis_plan_usb' => 'USB verzija',
                                             'ostalo' => 'Ostalo',
                                         ];
                                         $missingDocLabels = array_map(function($docType) use ($documentLabels) {
@@ -685,7 +684,6 @@
                                         'potvrda_upc_porezi' => '',
                                         'ioppd_obrazac' => '',
                                         'godisnji_racuni' => 'Godišnji računi',
-                                        'biznis_plan_usb' => 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u',
                                         'dokaz_ziro_racun' => 'Dokaz o broju poslovnog žiro računa',
                                         'predracuni_nabavka' => 'Predračuni za planiranu nabavku',
                                         'ostalo' => 'Ostalo',
@@ -916,7 +914,6 @@
                     $documentLabels['ioppd_obrazac'] = ($application->applicant_type === 'preduzetnica' && $isRazvoj) ? 'Odgovarajući obrazac ovjeren od strane Poreske uprave za poslijednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od strane Poreske uprave da preduzetnica nema zaposlenih' : (($isPreduzetnica && $isRazvoj) ? 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od Poreske uprave' : (($isDooOstalo && $isRazvoj) ? 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od strane Poreske uprave, kao dokaz o broju zaposlenih (IOPPD Obrazac)' : 'Obrazac IOPPD'));
                     $documentLabels['godisnji_racuni'] = $isDooOstalo ? 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i Analitika dobavljača) za prethodnu godinu. Napomena: U slučaju da preduzetnica/društvo ne vodi analitiku kupaca tj. posluje isključivo sa fizičkim licima i naplata se vrši odmah putem registar kase, preduzetnica/društvo ima obavezu dostaviti periodični izvještaj sa registar kase' : 'Godišnji računi';
                     $documentLabels['izvjestaj_registar_kase'] = 'Izvještaj sa registra kase';
-                    $documentLabels['biznis_plan_usb'] = 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u';
                     $documentLabels['izvjestaj_realizacija'] = 'Izvještaj o realizaciji';
                     $documentLabels['finansijski_izvjestaj'] = 'Finansijski izvještaj';
                     $documentLabels['dokaz_ziro_racun'] = ($application->applicant_type === 'preduzetnica' && $isRazvoj)

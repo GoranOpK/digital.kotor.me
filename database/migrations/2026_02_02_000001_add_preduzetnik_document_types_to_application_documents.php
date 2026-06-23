@@ -26,7 +26,6 @@ return new class extends Migration
                 'potvrda_upc_porezi',
                 'ioppd_obrazac',
                 'godisnji_racuni',
-                'biznis_plan_usb',
                 'izvjestaj_realizacija',
                 'finansijski_izvjestaj',
                 'ostalo',
