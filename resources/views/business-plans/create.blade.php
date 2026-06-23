@@ -461,7 +461,7 @@
 
         /* Narrative fill-out areas (outside tables) – visible box for handwriting/answers */
         .form-group > textarea.form-control,
-        .form-group .form-group textarea.form-control {
+        .form-group .form-group > textarea.form-control {
             border: 1px solid #000 !important;
             background: #fff !important;
             padding: 6px 8px !important;
@@ -470,12 +470,12 @@
         }
         .form-group > textarea.form-control[rows="1"],
         .form-group > textarea.form-control[rows="2"],
-        .form-group .form-group textarea.form-control[rows="1"],
-        .form-group .form-group textarea.form-control[rows="2"] {
+        .form-group .form-group > textarea.form-control[rows="1"],
+        .form-group .form-group > textarea.form-control[rows="2"] {
             min-height: 2.5em;
         }
         .form-group > textarea.form-control[rows="6"],
-        .form-group .form-group textarea.form-control[rows="6"] {
+        .form-group .form-group > textarea.form-control[rows="6"] {
             min-height: 8em;
         }
 
@@ -489,8 +489,8 @@
         }
         .form-group > textarea.form-control[readonly],
         .form-group > textarea.form-control:disabled,
-        .form-group .form-group textarea.form-control[readonly],
-        .form-group .form-group textarea.form-control:disabled {
+        .form-group .form-group > textarea.form-control[readonly],
+        .form-group .form-group > textarea.form-control:disabled {
             background: #fff !important;
         }
 
@@ -549,7 +549,9 @@
         .dynamic-table input.form-control,
         .dynamic-table textarea.form-control,
         .form-group .dynamic-table input,
-        .form-group .dynamic-table textarea {
+        .form-group .dynamic-table textarea,
+        .form-group .form-group .dynamic-table textarea.form-control,
+        .form-group .form-group .dynamic-table input.form-control {
             border: none !important;
             background: transparent !important;
             padding: 0 !important;
