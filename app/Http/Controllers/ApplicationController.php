@@ -223,7 +223,6 @@ class ApplicationController extends Controller
             'bank_account' => 'nullable|string|max:50',
             'vat_number' => 'nullable|string|max:50',
             'pib' => 'nullable|string|regex:/^[0-9]{8}$/',
-            'de_minimis_declaration' => 'nullable|boolean',
         ];
 
         // Izjava o tačnosti je obavezna samo za fizičko lice BEZ registrovane djelatnosti
@@ -377,7 +376,6 @@ class ApplicationController extends Controller
                 'registration_form' => $request->filled('registration_form') ? $request->registration_form : $existingApplication->registration_form,
                 'is_registered' => $request->filled('applicant_type') ? ($request->applicant_type !== 'fizicko_lice') : $existingApplication->is_registered,
                 'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
-                'de_minimis_declaration' => $request->has('de_minimis_declaration') && ($request->de_minimis_declaration == '1' || $request->de_minimis_declaration === true),
                 'previous_support_declaration' => $request->has('previous_support_declaration'),
             ];
             
@@ -417,7 +415,6 @@ class ApplicationController extends Controller
                     // Automatsko postavljanje is_registered na osnovu tipa
                     'is_registered' => $request->filled('applicant_type') ? ($request->applicant_type !== 'fizicko_lice') : false,
                     'accuracy_declaration' => $request->has('accuracy_declaration') && ($request->accuracy_declaration == '1' || $request->accuracy_declaration === true),
-                    'de_minimis_declaration' => $request->has('de_minimis_declaration') && ($request->de_minimis_declaration == '1' || $request->de_minimis_declaration === true),
                     'previous_support_declaration' => $request->has('previous_support_declaration'),
                     'status' => 'draft', // Draft dok se ne prilože svi dokumenti
                 ]);

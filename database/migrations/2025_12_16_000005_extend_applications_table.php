@@ -60,11 +60,8 @@ return new class extends Migration
             }
             
             // Izjave i deklaracije
-            if (!Schema::hasColumn('applications', 'de_minimis_declaration')) {
-                $table->boolean('de_minimis_declaration')->default(false)->after('vat_number'); // De minimis izjava
-            }
             if (!Schema::hasColumn('applications', 'previous_support_declaration')) {
-                $table->boolean('previous_support_declaration')->default(false)->after('de_minimis_declaration'); // Prethodna podrška
+                $table->boolean('previous_support_declaration')->default(false)->after('vat_number'); // Prethodna podrška
             }
             
             // Status i ocjene
@@ -111,7 +108,6 @@ return new class extends Migration
                 'website',
                 'bank_account',
                 'vat_number',
-                'de_minimis_declaration',
                 'previous_support_declaration',
                 'final_score',
                 'ranking_position',
