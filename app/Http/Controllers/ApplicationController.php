@@ -6,6 +6,8 @@ use App\Models\Competition;
 use App\Models\Application;
 use App\Models\ApplicationDocument;
 use App\Models\UserDocument;
+use App\Rules\KotorMunicipalityAddress;
+use App\Support\KotorAddress;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -240,12 +242,18 @@ class ApplicationController extends Controller
         if (($request->applicant_type === 'doo' || $request->applicant_type === 'ostalo') && !$isDraft) {
             $rules['founder_name'] = 'required|string|max:255';
             $rules['director_name'] = 'required|string|max:255';
-            $rules['company_seat'] = 'required|string|max:255';
+            $rules['company_seat'] = ['required', 'string', 'max:255', new KotorMunicipalityAddress()];
         } elseif ($isDraft) {
             // Za draft, ova polja su opciona
             $rules['founder_name'] = 'nullable|string|max:255';
             $rules['director_name'] = 'nullable|string|max:255';
-            $rules['company_seat'] = 'nullable|string|max:255';
+            $rules['company_seat'] = ['nullable', 'string', 'max:255', new KotorMunicipalityAddress()];
+        }
+
+        if ($request->applicant_type === 'preduzetnica' && !$isDraft) {
+            $rules['preduzetnik_address'] = ['required', 'string', 'max:500', new KotorMunicipalityAddress()];
+        } elseif ($isDraft && $request->filled('preduzetnik_address')) {
+            $rules['preduzetnik_address'] = ['nullable', 'string', 'max:500', new KotorMunicipalityAddress()];
         }
 
         // Dodatna polja za fizičko lice BEZ registrovane djelatnosti
@@ -271,6 +279,15 @@ class ApplicationController extends Controller
             $rules['registration_form'] = 'nullable|in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)';
         }
         $rules['crps_number'] = 'nullable|string|max:50';
+
+        if (in_array($request->applicant_type, ['doo', 'ostalo'], true) && !$request->filled('company_seat') && $request->filled('doo_address')) {
+            $request->merge(['company_seat' => $request->doo_address]);
+        }
+
+        if (in_array($request->applicant_type, ['doo', 'ostalo'], true) && $request->filled('doo_address')) {
+            $rules['doo_address'] = ['nullable', 'string', 'max:255', new KotorMunicipalityAddress()];
+        }
+
         try {
             $validated = $request->validate($rules, [
             'business_plan_name.required' => 'Naziv biznis plana je obavezan.',
@@ -282,6 +299,7 @@ class ApplicationController extends Controller
             'founder_name.required' => 'Ime osnivača/ice je obavezno.',
             'director_name.required' => 'Ime izvršnog direktora/ice je obavezno.',
             'company_seat.required' => 'Sjedište društva je obavezno.',
+            'preduzetnik_address.required' => 'Adresa preduzetnice je obavezna.',
             'registration_form.required' => 'Oblik registracije je obavezan.',
             'registration_form.in' => 'Izabrani oblik registracije nije validan.',
             'pib.regex' => 'PIB mora imati tačno 8 cifara.',
@@ -295,6 +313,19 @@ class ApplicationController extends Controller
             \Log::info('Validation passed! Validated data: ' . json_encode($validated));
         } catch (\Illuminate\Validation\ValidationException $e) {
             throw $e;
+        }
+
+        if (!$isDraft && $request->applicant_type === 'fizicko_lice') {
+            $address = trim((string) ($request->user()->address ?? ''));
+            if (!KotorAddress::isInKotorMunicipality($address)) {
+                return back()
+                    ->withErrors(['error' => KotorAddress::validationMessage() . ' Ažurirajte adresu u profilu.'])
+                    ->withInput();
+            }
+        }
+
+        if (!$isDraft && $request->applicant_type === 'preduzetnica' && $request->filled('preduzetnik_address')) {
+            $request->user()->update(['address' => $request->preduzetnik_address]);
         }
 
         // Proveri da li je total_budget_needed >= requested_amount - samo ako nije draft i oba su popunjena
@@ -530,6 +561,11 @@ class ApplicationController extends Controller
         // Provjera biznis plana
         if (!$application->businessPlan) {
             return back()->withErrors(['error' => 'Morate popuniti biznis plan prije podnošenja prijave.']);
+        }
+
+        $kotorAddressError = $this->kotorAddressErrorForApplication($application);
+        if ($kotorAddressError !== null) {
+            return back()->withErrors(['error' => $kotorAddressError]);
         }
 
         // Napomena: Provjera dokumenata je uklonjena - korisnici mogu podnijeti prijavu i bez svih dokumenata.
@@ -860,6 +896,29 @@ class ApplicationController extends Controller
 
         return redirect()->route('applications.show', $application)
             ->with('success', 'Dokument je uspješno obrisan.');
+    }
+
+    protected function kotorAddressErrorForApplication(Application $application): ?string
+    {
+        $application->loadMissing(['businessPlan', 'user']);
+
+        if (in_array($application->applicant_type, ['doo', 'ostalo'], true)) {
+            if (!KotorAddress::isInKotorMunicipality($application->company_seat)) {
+                return 'Sjedište društva mora biti na teritoriji Opštine Kotor.';
+            }
+        } else {
+            $address = $application->businessPlan?->applicant_address ?: $application->user?->address;
+            if (!KotorAddress::isInKotorMunicipality($address)) {
+                return KotorAddress::validationMessage();
+            }
+        }
+
+        $companyAddress = trim((string) ($application->businessPlan?->company_address ?? ''));
+        if ($companyAddress !== '' && !KotorAddress::isInKotorMunicipality($companyAddress)) {
+            return 'Adresa/sjedište registrovane djelatnosti mora biti na teritoriji Opštine Kotor.';
+        }
+
+        return null;
     }
 
 }

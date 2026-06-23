@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Application;
+use App\Rules\KotorMunicipalityAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -197,7 +198,7 @@ class HomeController extends Controller
                 $messages['jmb.required'] = 'JMB je obavezan za rezidente.';
                 $messages['jmb.regex'] = 'JMB mora imati tačno 13 cifara.';
             }
-        } elseif ($request->residential_status === 'non-resident') {
+        } else        if ($request->residential_status === 'non-resident') {
             $rules['non_resident_id_type'] = ['required', 'in:jmb,passport'];
             $messages['non_resident_id_type.required'] = 'Odaberite vrstu identifikacije.';
 
@@ -211,6 +212,10 @@ class HomeController extends Controller
                 $messages['passport_number.regex'] = 'Broj pasoša može sadržati samo velika slova i brojeve.';
                 $messages['passport_number.unique'] = 'Broj pasoša je već registrovan.';
             }
+        }
+
+        if ($this->registrationRequiresKotorAddress($request)) {
+            $rules['address'][] = new KotorMunicipalityAddress();
         }
 
         $validated = $request->validate($rules, $messages);
@@ -421,5 +426,20 @@ class HomeController extends Controller
         $storagePercentage = min(round(($usedStorageMB / $maxStorageMB) * 100), 100);
 
         return view('dashboard', compact('applications', 'usedStorageMB', 'maxStorageMB', 'storagePercentage', 'isSuperAdmin'));
+    }
+
+    private function registrationRequiresKotorAddress(Request $request): bool
+    {
+        if ($request->residential_status === 'resident') {
+            return true;
+        }
+
+        if ($request->user_type === 'Registrovan privredni subjekt'
+            && $request->business_type
+            && $request->business_type !== 'Preduzetnik') {
+            return true;
+        }
+
+        return false;
     }
 }

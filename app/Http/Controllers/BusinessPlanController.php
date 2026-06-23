@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Application;
 use App\Models\BusinessPlan;
+use App\Rules\KotorMunicipalityAddress;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -182,7 +183,7 @@ class BusinessPlanController extends Controller
             'business_idea_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'applicant_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'applicant_jmbg' => $isDraft ? 'nullable|string|max:13' : 'required|string|max:13',
-            'applicant_address' => $isDraft ? 'nullable|string' : 'required|string',
+            'applicant_address' => $isDraft ? ['nullable', 'string'] : ['required', 'string', new KotorMunicipalityAddress()],
             'applicant_phone' => $isDraft ? 'nullable|string|max:50' : 'required|string|max:50',
             'applicant_email' => $isDraft ? 'nullable|email|max:255' : 'required|email|max:255',
             'has_registered_business' => 'nullable|boolean',
@@ -190,7 +191,7 @@ class BusinessPlanController extends Controller
             'company_name' => 'nullable|string|max:255',
             'pib' => 'nullable|string|max:50',
             'vat_number' => 'nullable|string|max:50',
-            'company_address' => 'nullable|string',
+            'company_address' => ['nullable', 'string', new KotorMunicipalityAddress()],
             'company_phone' => 'nullable|string|max:50',
             'company_email' => 'nullable|email|max:255',
             'company_website' => 'nullable|string|max:255',

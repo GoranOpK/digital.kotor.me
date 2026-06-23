@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\User;
+use App\Rules\KotorMunicipalityAddress;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -30,6 +31,10 @@ class ProfileUpdateRequest extends FormRequest
             'user_type' => ['required', 'string', 'in:Fizičko lice,Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)'],
             'residential_status' => ['required', 'string', 'in:resident,non-resident,ex-non-resident'],
         ];
+
+        if ($this->requiresKotorAddress()) {
+            $rules['address'][] = new KotorMunicipalityAddress();
+        }
 
         // Validacija za JMB (obavezno za fizička lica)
         if ($this->input('user_type') === 'Fizičko lice') {
@@ -66,6 +71,17 @@ class ProfileUpdateRequest extends FormRequest
         }
 
         return $rules;
+    }
+
+    private function requiresKotorAddress(): bool
+    {
+        if ($this->input('residential_status') === 'resident') {
+            return true;
+        }
+
+        $userType = $this->input('user_type');
+
+        return is_string($userType) && $userType !== 'Fizičko lice';
     }
 
     /**
