@@ -130,8 +130,8 @@
     }
     .print-segment-bonus-page {
         margin-top: 20px;
-        padding-top: 12px;
-        border-top: 1px solid #d1d5db;
+        padding-top: 0;
+        border-top: none;
     }
     .evaluation-table th,
     .evaluation-table td {
@@ -150,9 +150,15 @@
     }
     .evaluation-table .criterion-col {
         text-align: left;
-        font-size: 12px;
-        width: 40%;
+        width: 46%;
         padding: 6px;
+    }
+    .evaluation-table thead .criterion-col {
+        font-size: 12px;
+    }
+    .evaluation-table tbody .criterion-col {
+        font-size: 15.6px;
+        line-height: 1.35;
     }
     .evaluation-table .score-input {
         width: 60px;
@@ -328,9 +334,9 @@
             margin-top: 4px !important;
         }
         .print-segment-bonus-page {
-            margin-top: 1em;
-            padding-top: 0.35em;
-            border-top: 1px solid #666;
+            margin-top: 0.75em;
+            padding-top: 0;
+            border-top: none;
             page-break-before: auto;
             break-before: auto;
         }
@@ -412,9 +418,15 @@
             padding-top: 3px;
             padding-bottom: 3px;
         }
-        .evaluation-table .criterion-col {
+        .evaluation-table thead .criterion-col {
             font-size: 7pt;
             padding: 2px 4px;
+        }
+        .evaluation-table tbody .criterion-col {
+            font-size: 9.1pt;
+            width: 46%;
+            padding: 3px 5px;
+            line-height: 1.35;
         }
         .evaluation-table .score-input,
         .evaluation-table .score-display {
