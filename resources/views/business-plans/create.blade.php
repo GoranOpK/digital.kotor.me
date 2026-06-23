@@ -460,18 +460,22 @@
         }
 
         /* Narrative fill-out areas (outside tables) – visible box for handwriting/answers */
-        .form-group textarea.form-control {
+        .form-group > textarea.form-control,
+        .form-group .form-group textarea.form-control {
             border: 1px solid #000 !important;
             background: #fff !important;
             padding: 6px 8px !important;
             min-height: 5em;
             margin-top: 2px;
         }
-        .form-group textarea.form-control[rows="1"],
-        .form-group textarea.form-control[rows="2"] {
+        .form-group > textarea.form-control[rows="1"],
+        .form-group > textarea.form-control[rows="2"],
+        .form-group .form-group textarea.form-control[rows="1"],
+        .form-group .form-group textarea.form-control[rows="2"] {
             min-height: 2.5em;
         }
-        .form-group textarea.form-control[rows="6"] {
+        .form-group > textarea.form-control[rows="6"],
+        .form-group .form-group textarea.form-control[rows="6"] {
             min-height: 8em;
         }
 
@@ -483,8 +487,10 @@
             background: transparent !important;
             -webkit-text-fill-color: #000;
         }
-        .form-group textarea.form-control[readonly],
-        .form-group textarea.form-control:disabled {
+        .form-group > textarea.form-control[readonly],
+        .form-group > textarea.form-control:disabled,
+        .form-group .form-group textarea.form-control[readonly],
+        .form-group .form-group textarea.form-control:disabled {
             background: #fff !important;
         }
 
@@ -539,12 +545,18 @@
             display: none !important;
         }
         .dynamic-table input,
-        .dynamic-table textarea {
+        .dynamic-table textarea,
+        .dynamic-table input.form-control,
+        .dynamic-table textarea.form-control,
+        .form-group .dynamic-table input,
+        .form-group .dynamic-table textarea {
             border: none !important;
             background: transparent !important;
             padding: 0 !important;
             font-size: 9pt;
             min-height: 0 !important;
+            margin-top: 0 !important;
+            box-shadow: none !important;
         }
 
         div[style*="background: #f9fafb"],
