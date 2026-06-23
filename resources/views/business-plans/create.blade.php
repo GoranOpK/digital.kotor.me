@@ -366,14 +366,15 @@
 
         .obrazac-zaglavlje {
             box-shadow: none;
-            border: 1px solid #ccc;
+            border: none !important;
             border-radius: 0;
-            padding: 10px 14px;
-            margin-bottom: 10px;
+            padding: 0 0 8px 0;
+            margin-bottom: 8px;
         }
         .obrazac-grb img { height: 2cm; }
         .obrazac-broj-i-naslov {
-            border-top: 1px solid #ccc;
+            border-top: none !important;
+            padding-top: 6px;
         }
 
         .form-card {
@@ -383,6 +384,12 @@
             border-radius: 0;
             padding: 0;
             margin-bottom: 10px;
+            page-break-before: always;
+            break-before: page;
+        }
+        .form-card:first-of-type {
+            page-break-before: auto;
+            break-before: auto;
         }
 
         .form-section {
@@ -394,6 +401,18 @@
             margin-bottom: 8px;
             font-size: 12pt;
             color: #000;
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        .form-group {
+            margin-bottom: 8px;
+            page-break-inside: avoid;
+            break-inside: avoid-page;
+        }
+        .dynamic-table,
+        .form-group:has(.dynamic-table) {
+            page-break-inside: auto;
+            break-inside: auto;
         }
         .section-number {
             background: transparent;
@@ -407,9 +426,6 @@
             font-size: 11pt;
         }
 
-        .form-group {
-            margin-bottom: 8px;
-        }
         .form-label {
             font-size: 10pt;
             margin-bottom: 2px;
@@ -442,14 +458,34 @@
             resize: none;
             overflow: visible;
         }
+
+        /* Narrative fill-out areas (outside tables) – visible box for handwriting/answers */
+        .form-group textarea.form-control {
+            border: 1px solid #000 !important;
+            background: #fff !important;
+            padding: 6px 8px !important;
+            min-height: 5em;
+            margin-top: 2px;
+        }
+        .form-group textarea.form-control[rows="1"],
+        .form-group textarea.form-control[rows="2"] {
+            min-height: 2.5em;
+        }
+        .form-group textarea.form-control[rows="6"] {
+            min-height: 8em;
+        }
+
         .form-control[readonly],
         .form-control:disabled,
-        input[style*="background"],
-        textarea[style*="background"] {
+        input[style*="background"] {
             color: #000 !important;
             opacity: 1 !important;
             background: transparent !important;
             -webkit-text-fill-color: #000;
+        }
+        .form-group textarea.form-control[readonly],
+        .form-group textarea.form-control:disabled {
+            background: #fff !important;
         }
 
         .info-box,
@@ -508,6 +544,7 @@
             background: transparent !important;
             padding: 0 !important;
             font-size: 9pt;
+            min-height: 0 !important;
         }
 
         div[style*="background: #f9fafb"],
