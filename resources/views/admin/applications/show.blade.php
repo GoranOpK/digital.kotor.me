@@ -149,6 +149,18 @@
                                     </span>
                                 </span>
                             </div>
+                            @if($userRole === 'superadmin' && $application->status === 'rejected' && str_contains($application->rejection_reason ?? '', 'Nedostaju potrebna dokumenta'))
+                            <div class="info-item" style="margin-bottom: 16px;">
+                                <span class="info-label">Mail o nepotpunoj dokumentaciji</span>
+                                <span class="info-value">
+                                    @if((int) $application->documents_rejection_email_sent === 1)
+                                        <span class="status-badge status-evaluated" style="font-size: 12px; padding: 4px 12px;">Poslat</span>
+                                    @else
+                                        <span class="status-badge status-draft" style="font-size: 12px; padding: 4px 12px;">Nije poslat</span>
+                                    @endif
+                                </span>
+                            </div>
+                            @endif
                             <div class="info-item" style="margin-bottom: 16px;">
                                 <span class="info-label">Obrazac 1a/1b</span>
                                 <span class="info-value">

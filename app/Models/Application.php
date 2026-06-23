@@ -48,6 +48,7 @@ class Application extends Model
         'bonus_green_innovative',
         'ranking_position',
         'rejection_reason',
+        'documents_rejection_email_sent',
         'commission_decision',
         'commission_justification',
         'commission_notes',
@@ -75,6 +76,7 @@ class Application extends Model
         'bonus_new_business' => 'boolean',
         'bonus_zavod_nezaposleni' => 'boolean',
         'bonus_green_innovative' => 'boolean',
+        'documents_rejection_email_sent' => 'integer',
         'submitted_at' => 'datetime',
         'evaluated_at' => 'datetime',
         'interview_scheduled_at' => 'datetime',
@@ -368,6 +370,138 @@ class Application extends Model
             $this->getRequiredDocuments(),
             self::getConditionallyRequiredDocumentTypes()
         ));
+    }
+
+    /**
+     * Tipovi obaveznih dokumenata koji nisu priloženi.
+     *
+     * @return list<string>
+     */
+    public function getMissingRequiredDocumentTypes(): array
+    {
+        $uploadedDocs = $this->relationLoaded('documents')
+            ? $this->documents->pluck('document_type')->toArray()
+            : $this->documents()->pluck('document_type')->toArray();
+
+        return array_values(array_diff($this->getStrictlyRequiredDocuments(), $uploadedDocs));
+    }
+
+    /**
+     * Nazivi nedostajućih obaveznih dokumenata (za mail i prikaz).
+     *
+     * @return list<string>
+     */
+    public function getMissingRequiredDocumentLabels(): array
+    {
+        $labels = $this->getDocumentLabelsMap();
+
+        return array_values(array_map(
+            fn (string $docType) => $labels[$docType] ?? $docType,
+            $this->getMissingRequiredDocumentTypes()
+        ));
+    }
+
+    /**
+     * Mapa tipova dokumenata na nazive prema tipu prijave (Odluka, čl. 13).
+     *
+     * @return array<string, string>
+     */
+    public function getDocumentLabelsMap(): array
+    {
+        $isPreduzetnica = in_array($this->applicant_type, ['preduzetnica', 'fizicko_lice'], true);
+        $isDooOstalo = in_array($this->applicant_type, ['doo', 'ostalo'], true);
+        $isZapocinjanje = $this->business_stage === 'započinjanje';
+        $isRazvoj = $this->business_stage === 'razvoj';
+
+        $documentLabels = [];
+        $documentLabels['potvrda_zavod_nezaposleni'] = self::getZavodNezaposleniDocumentLabel();
+        $documentLabels['licna_karta'] = ($isDooOstalo && $isRazvoj)
+            ? 'Ovjerenu kopiju lične karte nosioca biznisa (osnivačica ili jedna od osnivača i izvršna direktorica)'
+            : (($isDooOstalo && $isZapocinjanje) ? 'Ovjerenu kopiju lične karte' : 'Ovjerena kopija lične karte');
+        $documentLabels['crps_resenje'] = 'Rješenje o upisu u CRPS' . (($isPreduzetnica && $isZapocinjanje) ? ' (ukoliko ima registrovanu djelatnost)' : (($isDooOstalo && $isZapocinjanje) ? ' (ukoliko ima registrovanu djelatnost)' : ''));
+        if ($isPreduzetnica && $isZapocinjanje) {
+            $documentLabels['pib_resenje'] = 'Rješenje o registraciji PJ Poreske uprave (ukoliko ima registrovanu djelatnost)';
+        } elseif ($isDooOstalo && ($isZapocinjanje || $isRazvoj)) {
+            $documentLabels['pib_resenje'] = 'Rješenje o registraciji PJ Poreske uprave' . ($isZapocinjanje ? ' (ukoliko ima registrovanu djelatnost)' : '');
+        } elseif ($isPreduzetnica && $isRazvoj) {
+            $documentLabels['pib_resenje'] = 'Rješenje o registraciji PJ Poreske uprave';
+        } else {
+            $documentLabels['pib_resenje'] = 'Rješenje o registraciji PJ Uprave prihoda i carina';
+        }
+        if ($isPreduzetnica && $isZapocinjanje) {
+            $documentLabels['pdv_resenje'] = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
+        } elseif ($isPreduzetnica && $isRazvoj) {
+            $documentLabels['pdv_resenje'] = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
+        } elseif ($isDooOstalo && $isZapocinjanje) {
+            $documentLabels['pdv_resenje'] = 'Rješenje o registraciji za PDV (ukoliko ima registrovanu djelatnost i ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
+        } elseif ($isDooOstalo && $isRazvoj) {
+            $documentLabels['pdv_resenje'] = 'Rješenje o registraciji za PDV (ako je obveznik PDV-a) ili potvrdu da nije PDV obveznik (ukoliko nije PDV obveznik)';
+        } else {
+            $documentLabels['pdv_resenje'] = 'Rješenje o registraciji za PDV' . ($isRazvoj ? ' (ako je obveznik PDV-a)' : '');
+        }
+        $documentLabels['statut'] = ($isDooOstalo && $isZapocinjanje) ? 'Važeći Statut društva (ukoliko ima registrovanu djelatnost)' : 'Važeći Statut društva';
+        $documentLabels['karton_potpisa'] = ($isDooOstalo && $isZapocinjanje) ? 'Važeći karton deponovanih potpisa (ukoliko ima registrovanu djelatnost)' : 'Važeći karton deponovanih potpisa';
+        $documentLabels['potvrda_neosudjivanost'] = ($this->applicant_type === 'preduzetnica' && $isRazvoj)
+            ? 'Potvrda da se ne vodi krivični postupak na ime preduzetnice izdatu od Osnovnog suda'
+            : ($isPreduzetnica
+                ? 'Potvrda da se ne vodi krivični postupak na ime podnositeljke prijave odnosno preduzetnice izdatu od Osnovnog suda'
+                : (($isDooOstalo && $isZapocinjanje)
+                    ? 'Potvrda da se ne vodi krivični postupak na ime podnositeljke prijave odnosno na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda'
+                    : (($isDooOstalo && $isRazvoj)
+                        ? 'Potvrda da se ne vodi krivični postupak na ime društva i na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) izdatu od strane Osnovnog suda'
+                        : 'Potvrda o neosuđivanosti')));
+        if ($this->applicant_type === 'preduzetnica' && $isRazvoj) {
+            $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+        } elseif ($isPreduzetnica && ($isZapocinjanje || $isRazvoj)) {
+            $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+        } elseif ($isDooOstalo && $isRazvoj) {
+            $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+        } elseif ($isDooOstalo && $isZapocinjanje) {
+            $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na ime podnositeljke prijave odnosno nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+        } else {
+            $documentLabels['uvjerenje_opstina_porezi'] = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na ime preduzetnice po osnovu prireza porezu, članskog doprinosa, lokalnih komunalnih taksi i naknada';
+        }
+        if ($this->applicant_type === 'preduzetnica' && $isRazvoj) {
+            $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+        } elseif ($isPreduzetnica) {
+            $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave odnosno preduzetnice';
+        } elseif ($isDooOstalo && $isRazvoj) {
+            $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva';
+        } elseif ($isDooOstalo && $isZapocinjanje) {
+            $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave, ne starije od 30 dana, o urednom izmirivanju poreza na nepokretnost na ime podnositeljke prijave odnosno nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice)';
+        } else {
+            $documentLabels['uvjerenje_opstina_nepokretnost'] = 'Uvjerenje od organa lokalne uprave o urednom izmirivanju poreza na nepokretnost na ime preduzetnice';
+        }
+        $documentLabels['potvrda_upc_porezi'] = ($this->applicant_type === 'preduzetnica' && $isRazvoj)
+            ? 'Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime preduzetnice'
+            : (($isPreduzetnica && $isRazvoj)
+                ? 'Potvrda Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana na ime preduzetnika'
+                : (($isDooOstalo && $isRazvoj)
+                    ? 'Potvrdu Poreske uprave o urednom izmirivanju poreza i doprinosa ne stariju od 30 dana, na ime nosioca biznisa (osnivačice ili jedne od osnivača i izvršne direktorice) i na ime društva'
+                    : 'Potvrda Uprave za javne prihode o urednom izmirivanju poreza'));
+        $documentLabels['ioppd_obrazac'] = ($this->applicant_type === 'preduzetnica' && $isRazvoj)
+            ? 'Odgovarajući obrazac ovjeren od strane Poreske uprave za poslijednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od strane Poreske uprave da preduzetnica nema zaposlenih'
+            : (($isPreduzetnica && $isRazvoj)
+                ? 'Odgovarajući obrazac za posljednji mjesec uplate poreza i doprinosa za zaposlene, kao dokaz o broju zaposlenih (IOPPD Obrazac) ili potvrdu ovjerenu od Poreske uprave'
+                : (($isDooOstalo && $isRazvoj)
+                    ? 'Odgovarajući obrazac za poslijednji mjesec uplate poreza i doprinosa za zaposlene ovjeren od strane Poreske uprave, kao dokaz o broju zaposlenih (IOPPD Obrazac)'
+                    : 'Obrazac IOPPD'));
+        $documentLabels['godisnji_racuni'] = $isDooOstalo
+            ? 'Komplet obrazaca za godišnje račune (Bilans stanja, Bilans uspjeha, Analitika kupaca i Analitika dobavljača) za prethodnu godinu. Napomena: U slučaju da preduzetnica/društvo ne vodi analitiku kupaca tj. posluje isključivo sa fizičkim licima i naplata se vrši odmah putem registar kase, preduzetnica/društvo ima obavezu dostaviti periodični izvještaj sa registar kase'
+            : 'Godišnji računi';
+        $documentLabels['izvjestaj_registar_kase'] = 'Izvještaj sa registra kase';
+        $documentLabels['biznis_plan_usb'] = 'Jedna štampana i jedna elektronska verzija biznis plana na USB-u';
+        $documentLabels['izvjestaj_realizacija'] = 'Izvještaj o realizaciji';
+        $documentLabels['finansijski_izvjestaj'] = 'Finansijski izvještaj';
+        $documentLabels['dokaz_ziro_racun'] = ($this->applicant_type === 'preduzetnica' && $isRazvoj)
+            ? 'Dokaz o broju poslovnog žiro računa preduzetnice'
+            : (($this->applicant_type === 'preduzetnica' && $isZapocinjanje)
+                ? 'Dokaz o broju poslovnog žiro računa preduzetnice (ukoliko ima registrovanu djelatnost)'
+                : 'Dokaz o broju poslovnog žiro računa preduzetnice');
+        $documentLabels['predracuni_nabavka'] = $isDooOstalo ? 'Predračune za planiranu nabavku' : 'Predračuni za planiranu nabavku';
+        $documentLabels['ostalo'] = 'Ostalo';
+
+        return $documentLabels;
     }
 
     private static function insertZavodNezaposleniDocument(array $documents, string $applicantType, ?string $businessStage): array

@@ -2,10 +2,13 @@
 
 namespace App\Services;
 
+use App\Mail\ApplicationRejectedMissingDocumentsMail;
 use App\Models\Application;
 use App\Models\CommissionMember;
 use App\Models\EvaluationScore;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class DocumentationRejectionEvaluationService
 {
@@ -67,5 +70,34 @@ class DocumentationRejectionEvaluationService
                 'evaluated_at' => null,
             ]);
         });
+
+        self::sendMissingDocumentsRejectionEmail($application->fresh(['documents', 'user', 'competition.upNumber']), $chairmanNotes);
+    }
+
+    /**
+     * Šalje obavještenje podnositeljki o odbijanju zbog nepotpune dokumentacije (jednom po prijavi).
+     */
+    protected static function sendMissingDocumentsRejectionEmail(Application $application, ?string $chairmanNotes = null): void
+    {
+        if ((int) ($application->documents_rejection_email_sent ?? 0) === 1) {
+            return;
+        }
+
+        $recipientEmail = $application->user?->email;
+        if (!$recipientEmail) {
+            return;
+        }
+
+        try {
+            $missingLabels = $application->getMissingRequiredDocumentLabels();
+
+            Mail::to($recipientEmail)->send(
+                new ApplicationRejectedMissingDocumentsMail($application, $missingLabels, $chairmanNotes)
+            );
+
+            $application->update(['documents_rejection_email_sent' => 1]);
+        } catch (\Throwable $e) {
+            Log::error('Greška pri slanju maila o nepotpunoj dokumentaciji prijave ID ' . $application->id . ': ' . $e->getMessage());
+        }
     }
 }

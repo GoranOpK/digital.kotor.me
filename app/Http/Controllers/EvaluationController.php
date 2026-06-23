@@ -375,10 +375,14 @@ class EvaluationController extends Controller
                 // Ako dokumentacija nije kompletna, automatski odbiti prijavu i ne dozvoli dalje ocjenjivanje
                 // OVO MORA BITI PRIJE BILO KOJE VALIDACIJE KRITERIJUMA
                 if (!$documentsComplete) {
+                    $chairmanNotes = $request->has('notes') && trim((string) $request->input('notes')) !== ''
+                        ? trim((string) $request->input('notes'))
+                        : null;
+
                     DocumentationRejectionEvaluationService::rejectApplicationAndVoidScores(
                         $application,
                         $commissionMember,
-                        null,
+                        $chairmanNotes,
                     );
 
                     return redirect()->route('evaluation.index', ['filter' => 'evaluated'])
