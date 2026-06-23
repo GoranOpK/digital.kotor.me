@@ -338,8 +338,184 @@
         margin: 8px 0 0 0;
     }
     @media print {
-        .obrazac-zaglavlje { box-shadow: none; border: 1px solid #ccc; }
+        @page {
+            size: A4;
+            margin: 12mm 10mm;
+        }
+
+        nav,
+        .no-print,
+        button,
+        .btn-primary,
+        .btn-secondary,
+        a[href],
+        .error-message,
+        .form-label .required {
+            display: none !important;
+        }
+
+        .business-plan-page {
+            background: #fff;
+            padding: 0;
+            min-height: 0;
+        }
+        .business-plan-page .container {
+            padding: 0;
+            max-width: 100%;
+        }
+
+        .obrazac-zaglavlje {
+            box-shadow: none;
+            border: 1px solid #ccc;
+            border-radius: 0;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+        }
         .obrazac-grb img { height: 2cm; }
+        .obrazac-broj-i-naslov {
+            border-top: 1px solid #ccc;
+        }
+
+        .form-card {
+            background: transparent;
+            box-shadow: none;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            margin-bottom: 10px;
+        }
+
+        .form-section {
+            margin-bottom: 14px;
+        }
+        .form-section h2 {
+            border-bottom: 1px solid #000;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+            font-size: 12pt;
+            color: #000;
+        }
+        .section-number {
+            background: transparent;
+            color: #000;
+            border: 1px solid #000;
+            border-radius: 0;
+            width: auto;
+            height: auto;
+            line-height: 1.2;
+            padding: 0 5px;
+            font-size: 11pt;
+        }
+
+        .form-group {
+            margin-bottom: 8px;
+        }
+        .form-label {
+            font-size: 10pt;
+            margin-bottom: 2px;
+            color: #000;
+        }
+        .form-text {
+            font-size: 9pt;
+            color: #000;
+        }
+
+        .form-control,
+        .dynamic-table input,
+        .dynamic-table textarea,
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"],
+        textarea,
+        select {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            padding: 1px 0 !important;
+            font-size: 10pt;
+            color: #000 !important;
+            min-height: 0 !important;
+        }
+        textarea.form-control {
+            resize: none;
+            overflow: visible;
+        }
+        .form-control[readonly],
+        .form-control:disabled,
+        input[style*="background"],
+        textarea[style*="background"] {
+            color: #000 !important;
+            opacity: 1 !important;
+            background: transparent !important;
+            -webkit-text-fill-color: #000;
+        }
+
+        .info-box,
+        .finances-notice-box,
+        .finances-notice-confirm,
+        .alert {
+            background: transparent !important;
+            border: none !important;
+            border-left: none !important;
+            box-shadow: none !important;
+            padding: 4px 0 !important;
+            margin: 6px 0 !important;
+            color: #000 !important;
+        }
+        .finances-notice-box h3 {
+            color: #000;
+            font-size: 10pt;
+        }
+        .finances-notice-confirm {
+            display: none !important;
+        }
+        .finances-after-notice.locked {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        .radio-group {
+            gap: 12px;
+        }
+        .radio-option label {
+            font-size: 10pt;
+            color: #000;
+        }
+
+        .dynamic-table {
+            font-size: 9pt;
+            margin: 8px 0;
+        }
+        .dynamic-table th,
+        .dynamic-table td {
+            border: 1px solid #000 !important;
+            padding: 3px 5px;
+            background: transparent !important;
+        }
+        .dynamic-table th {
+            font-weight: bold;
+            color: #000;
+        }
+        .dynamic-table td:last-child:has(button),
+        .dynamic-table th:last-child:empty {
+            display: none !important;
+        }
+        .dynamic-table input,
+        .dynamic-table textarea {
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+            font-size: 9pt;
+        }
+
+        div[style*="background: #f9fafb"],
+        div[style*="background:#f9fafb"] {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+        }
     }
 </style>
 
@@ -371,7 +547,7 @@
         </div>
 
         @if(session('success'))
-            <div class="alert alert-info">
+            <div class="alert alert-info no-print">
                 {{ session('success') }}
             </div>
         @endif
@@ -381,7 +557,7 @@
         @endphp
 
         @if($readOnly)
-            <div class="alert alert-info" style="margin-bottom: 24px; padding: 16px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; color: #92400e;">
+            <div class="alert alert-info no-print" style="margin-bottom: 24px; padding: 16px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; color: #92400e;">
                 <strong>Pregled prijave:</strong> Ovo je pregled Biznis plana, ne možete mijenjati podatke.
             </div>
         @endif
@@ -1397,7 +1573,7 @@
 
             <!-- Dugme za slanje -->
             @if(!$readOnly)
-                <div class="form-card" style="text-align: center;">
+                <div class="form-card no-print" style="text-align: center;">
                     <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
                         <button type="button" id="bpSubmitBtn" class="btn-primary" style="padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer;">
                             <span id="bpSubmitBtnText">Sačuvaj Nacrt plana</span>
@@ -1427,7 +1603,7 @@
         @endphp
 
         @if($canPrintBusinessPlan)
-            <div class="form-card" style="text-align: center; margin-top: 8px; margin-bottom: 24px;">
+            <div class="form-card no-print" style="text-align: center; margin-top: 8px; margin-bottom: 24px;">
                 <button type="button" class="btn-primary" onclick="window.print();" style="padding: 10px 24px; font-size: 14px; min-width: 180px;">
                     Štampaj
                 </button>
