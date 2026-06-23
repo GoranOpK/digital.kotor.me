@@ -9,11 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('applications', function (Blueprint $table) {
-            if (!Schema::hasColumn('applications', 'documents_rejection_email_sent')) {
-                $table->unsignedTinyInteger('documents_rejection_email_sent')
+            if (!Schema::hasColumn('applications', 'email')) {
+                $table->unsignedTinyInteger('email')
                     ->default(0)
                     ->after('rejection_reason')
-                    ->comment('0 = mail o nepotpunoj dokumentaciji nije poslat, 1 = poslat');
+                    ->comment('0 = obavještenje e-mailom nije poslato, 1 = poslato');
             }
         });
     }
@@ -21,8 +21,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('applications', function (Blueprint $table) {
-            if (Schema::hasColumn('applications', 'documents_rejection_email_sent')) {
-                $table->dropColumn('documents_rejection_email_sent');
+            if (Schema::hasColumn('applications', 'email')) {
+                $table->dropColumn('email');
             }
         });
     }

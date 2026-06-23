@@ -79,7 +79,7 @@ class DocumentationRejectionEvaluationService
      */
     protected static function sendMissingDocumentsRejectionEmail(Application $application, ?string $chairmanNotes = null): void
     {
-        if ((int) ($application->documents_rejection_email_sent ?? 0) === 1) {
+        if ((int) ($application->email ?? 0) === 1) {
             return;
         }
 
@@ -95,7 +95,7 @@ class DocumentationRejectionEvaluationService
                 new ApplicationRejectedMissingDocumentsMail($application, $missingLabels, $chairmanNotes)
             );
 
-            $application->update(['documents_rejection_email_sent' => 1]);
+            $application->update(['email' => 1]);
         } catch (\Throwable $e) {
             Log::error('Greška pri slanju maila o nepotpunoj dokumentaciji prijave ID ' . $application->id . ': ' . $e->getMessage());
         }
