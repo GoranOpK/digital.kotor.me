@@ -44,7 +44,7 @@ class DocumentationRejectionEvaluationService
                         'commission_member_id' => $member->id,
                     ],
                     [
-                        'documents_complete' => $isChairman ? false : null,
+                        'documents_complete' => false,
                         'criterion_1' => null,
                         'criterion_2' => null,
                         'criterion_3' => null,
