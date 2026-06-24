@@ -391,6 +391,14 @@
             page-break-before: auto;
             break-before: auto;
         }
+        .print-chapter-group {
+            page-break-before: always;
+            break-before: page;
+        }
+        .print-chapter-group > .form-card {
+            page-break-before: auto !important;
+            break-before: auto !important;
+        }
 
         .form-section {
             margin-bottom: 14px;
@@ -1485,6 +1493,8 @@
                 </div>
             </div>
 
+            <!-- V. LJUDI & VI. RIZICI (same print page) -->
+            <div class="print-chapter-group">
             <!-- V. LJUDI -->
             <div class="form-card">
                 <div class="form-section">
@@ -1620,6 +1630,7 @@
                         <button type="button" class="btn-secondary" onclick="addTableRow('riskMatrixTableBody', ['risk', 'probability', 'impact', 'measures', 'responsible'])">+ Dodaj red</button>
                     </div>
                 </div>
+            </div>
             </div>
 
             <!-- Dugme za slanje -->

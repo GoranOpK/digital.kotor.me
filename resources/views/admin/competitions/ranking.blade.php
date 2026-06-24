@@ -247,80 +247,190 @@
         color: #991b1b;
     }
     @media print {
-        nav,
-        header,
-        .no-print { display: none !important; }
-        .admin-page button,
-        .admin-page input[type="submit"],
-        .admin-page input[type="button"],
-        .admin-page input[type="checkbox"],
-        .admin-page input[type="number"],
-        .admin-page input[type="radio"],
-        .admin-page textarea,
-        .admin-page select { display: none !important; }
-        .admin-page { background: #fff; padding: 0; }
-        .obrazac-zaglavlje { box-shadow: none; border: 1px solid #ccc; }
-        .obrazac-grb img { height: 2cm; }
-        .info-card { box-shadow: none; border: 1px solid #e5e7eb; }
-        /* Tabela - zaglavlje se ponavlja na svakoj stranici */
-        .admin-page table thead {
-            display: table-header-group;
-        }
-        /* Kompaktni stilovi za prvu stranicu - sve mora stati: Budžet + Rang lista + Zaključak */
-        .ranking-main-content .info-card {
-            padding: 12px !important;
-            margin-bottom: 12px !important;
-        }
-        .ranking-main-content .info-card h2 {
-            font-size: 16px !important;
-            margin-bottom: 10px !important;
-            padding-bottom: 8px !important;
-        }
-        .ranking-main-content .budget-info {
-            gap: 8px !important;
-            margin-bottom: 12px !important;
-        }
-        .ranking-main-content .budget-item {
-            padding: 8px !important;
-        }
-        .ranking-main-content .budget-value {
-            font-size: 18px !important;
-        }
-        .ranking-main-content table th,
-        .ranking-main-content table td {
-            padding: 6px 8px !important;
-            font-size: 11px !important;
-        }
-        .ranking-main-content .commission-decision-block {
-            padding: 12px !important;
-            margin-bottom: 12px !important;
-        }
-        .ranking-main-content .commission-decision-block h3 {
-            font-size: 14px !important;
-        }
-        .ranking-main-content .commission-decision-block p,
-        .ranking-main-content .commission-decision-block div {
-            font-size: 11px !important;
-        }
-        .ranking-main-content .commission-decision-section > p {
-            margin-bottom: 12px !important;
-            font-size: 11px !important;
-        }
-        /* Svaki blok kandidata ostaje cijeli - ne dijeli se na pola između stranica */
-        .commission-decision-block {
-            page-break-inside: avoid;
-        }
-        /* Stranica 1: Budget + Rang lista + Zaključak, zatim page break, zatim Potpis */
-        .ranking-main-content {
-            page-break-after: always;
-        }
-        /* Potpis uvijek na novoj stranici */
-        #signature-block {
-            page-break-before: always;
-        }
         @page {
             size: A4;
-            margin: 15mm;
+            margin: 10mm 8mm;
+        }
+
+        nav,
+        header,
+        .page-header,
+        button,
+        a[href],
+        .no-print {
+            display: none !important;
+        }
+
+        .admin-page {
+            background: #fff;
+            padding: 0;
+            min-height: auto;
+        }
+        .admin-page .container {
+            padding: 0 !important;
+            max-width: 100% !important;
+        }
+
+        .obrazac-zaglavlje {
+            box-shadow: none;
+            border: none !important;
+            border-radius: 0;
+            padding: 0 0 8px 0;
+            margin-bottom: 8px;
+        }
+        .obrazac-grb img { height: 2cm; }
+        .obrazac-broj-i-naslov {
+            border-top: none !important;
+            padding-top: 6px;
+        }
+        .obrazac-org,
+        .obrazac-contact {
+            font-size: 9pt;
+        }
+        .obrazac-naslov-prijava {
+            font-size: 14pt;
+            margin-top: 4px;
+        }
+        .obrazac-podnaslov {
+            font-size: 9pt;
+        }
+
+        .info-card {
+            box-shadow: none;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            margin-bottom: 10px;
+        }
+        .info-card h2 {
+            font-size: 11pt;
+            border-bottom: 1px solid #000;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: auto;
+            break-inside: auto;
+            font-size: 8pt;
+            margin: 4px 0;
+        }
+        table thead {
+            display: table-header-group;
+        }
+        table tbody {
+            display: table-row-group;
+        }
+        table tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        th, td {
+            border: 1px solid #000 !important;
+            border-bottom: 1px solid #000 !important;
+            padding: 3px 4px !important;
+            font-size: 8pt !important;
+            background: transparent !important;
+            color: #000 !important;
+        }
+        th {
+            font-weight: bold !important;
+            font-size: 7pt !important;
+            text-transform: uppercase;
+        }
+        tbody tr {
+            background: transparent !important;
+        }
+
+        .ranking-badge {
+            background: transparent !important;
+            color: #000 !important;
+            border: 1px solid #000;
+            width: 22px;
+            height: 22px;
+            line-height: 22px;
+            font-size: 8pt;
+        }
+        .score-badge {
+            background: transparent !important;
+            color: #000 !important;
+            border: none;
+            padding: 0;
+            font-size: 8pt;
+        }
+
+        .below-minimum-section {
+            margin-top: 12px !important;
+            padding-top: 8px !important;
+            border-top: 1px solid #000 !important;
+            box-shadow: none !important;
+        }
+        .below-minimum-section > div:first-child {
+            background: transparent !important;
+            color: #000 !important;
+            border: 1px solid #000 !important;
+            padding: 4px 8px !important;
+            margin: 0 0 8px 0 !important;
+            font-size: 9pt !important;
+            border-radius: 0 !important;
+        }
+        .below-minimum-section h3 {
+            font-size: 9pt !important;
+            color: #000 !important;
+            margin-bottom: 6px !important;
+        }
+
+        .commission-decision-section > p {
+            display: none !important;
+        }
+        .commission-decision-block {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            background: transparent !important;
+            border: 1px solid #000 !important;
+            border-radius: 0;
+            padding: 8px !important;
+            margin-bottom: 8px !important;
+        }
+        .commission-decision-block h3 {
+            font-size: 10pt !important;
+            color: #000 !important;
+        }
+        .commission-decision-block p,
+        .commission-decision-block div {
+            font-size: 9pt !important;
+            color: #000 !important;
+        }
+        .commission-decision-block > div:first-child {
+            border-bottom: 1px solid #000 !important;
+            padding-bottom: 6px !important;
+            margin-bottom: 8px !important;
+        }
+        .commission-decision-block span[style*="background"] {
+            background: transparent !important;
+            color: #000 !important;
+            border: 1px solid #000 !important;
+        }
+
+        .ranking-main-content {
+            page-break-after: always;
+            break-after: page;
+        }
+        #signature-block {
+            page-break-before: always;
+            break-before: page;
+            padding: 0 !important;
+        }
+        #signature-block h2 {
+            font-size: 11pt;
+            margin-bottom: 8px;
+        }
+        #signature-block p,
+        #signature-block div {
+            font-size: 9pt;
         }
     }
 </style>
@@ -334,13 +444,13 @@
         @endphp
                 
         @if($isDeadlinePassed)
-            <div class="alert alert-danger" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px;">
+            <div class="alert alert-danger no-print" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px;">
                 <strong>❌ Rok istekao:</strong> Rok za ocjenjivanje i donošenje odluke je istekao. Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs.
             </div>
         @endif
 
         @if(session('success'))
-            <div class="alert alert-success">
+            <div class="alert alert-success no-print">
                 {{ session('success') }}
             </div>
         @endif
@@ -563,7 +673,7 @@
             @endif
             @endif
             @if(isset($belowLineApplications) && $belowLineApplications->count() > 0)
-                <div style="margin-top: 48px; padding-top: 32px; border-top: 4px solid #374151; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);">
+                <div class="below-minimum-section" style="margin-top: 48px; padding-top: 32px; border-top: 4px solid #374151; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);">
                     <div style="background: #374151; color: #fff; padding: 14px 24px; margin-top: -32px; margin-bottom: 24px; border-radius: 8px; font-weight: 700; font-size: 16px; text-align: center; display: inline-block; width: 100%; box-sizing: border-box;">
                         ——— Prijave ispod minimuma (30 bodova) ———
                     </div>
@@ -615,7 +725,7 @@
                 @if($applications->count() > 0)
                     <div class="info-card commission-decision-section">
                         <h2>Zaključak komisije i obrazloženje</h2>
-                        <p style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">
+                        <p class="no-print" style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">
                             Za svaku prijavu u rang listi unesite zaključak komisije i obrazloženje.
                         </p>
 
@@ -640,7 +750,7 @@
                                 </div>
                                 
                                 @if(!$application->signed_by_chairman)
-                                    <form method="POST" action="{{ route('evaluation.store-decision', $application) }}">
+                                    <form class="no-print" method="POST" action="{{ route('evaluation.store-decision', $application) }}">
                                         @csrf
                                         
                                         <div style="margin-bottom: 24px;">
@@ -754,7 +864,7 @@
                         @endforeach
 
                         @if($competition->hasChairmanCompletedDecisions())
-                        <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;"></div>
+                        <div class="no-print" style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;"></div>
                         @endif
                     </div>
                 @elseif($competition->hasChairmanCompletedDecisions() && $applications->count() == 0 && (isset($belowLineApplications) && $belowLineApplications->count() > 0))
