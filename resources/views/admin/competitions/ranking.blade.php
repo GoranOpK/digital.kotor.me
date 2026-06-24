@@ -364,18 +364,20 @@
 
         .below-minimum-section {
             margin-top: 12px !important;
-            padding-top: 8px !important;
-            border-top: 1px solid #000 !important;
+            padding-top: 0 !important;
+            border-top: none !important;
             box-shadow: none !important;
         }
-        .below-minimum-section > div:first-child {
+        .below-minimum-section > div:first-child,
+        .below-minimum-heading {
             background: transparent !important;
             color: #000 !important;
-            border: 1px solid #000 !important;
-            padding: 4px 8px !important;
-            margin: 0 0 8px 0 !important;
+            border: none !important;
+            padding: 0 0 6px 0 !important;
+            margin: 0 0 6px 0 !important;
             font-size: 9pt !important;
             border-radius: 0 !important;
+            box-shadow: none !important;
         }
         .below-minimum-section h3 {
             font-size: 9pt !important;
@@ -390,9 +392,9 @@
             page-break-inside: avoid;
             break-inside: avoid;
             background: transparent !important;
-            border: 1px solid #000 !important;
+            border: none !important;
             border-radius: 0;
-            padding: 8px !important;
+            padding: 8px 0 !important;
             margin-bottom: 8px !important;
         }
         .commission-decision-block h3 {
@@ -404,15 +406,21 @@
             font-size: 9pt !important;
             color: #000 !important;
         }
+        .commission-decision-block > .commission-decision-header,
         .commission-decision-block > div:first-child {
-            border-bottom: 1px solid #000 !important;
-            padding-bottom: 6px !important;
-            margin-bottom: 8px !important;
+            border-bottom: none !important;
+            padding-bottom: 4px !important;
+            margin-bottom: 6px !important;
         }
-        .commission-decision-block span[style*="background"] {
+        .commission-decision-block span[style*="background"],
+        .commission-decision-content,
+        .commission-justification-box {
             background: transparent !important;
             color: #000 !important;
-            border: 1px solid #000 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
         }
 
         .ranking-main-content {
@@ -674,7 +682,7 @@
             @endif
             @if(isset($belowLineApplications) && $belowLineApplications->count() > 0)
                 <div class="below-minimum-section" style="margin-top: 48px; padding-top: 32px; border-top: 4px solid #374151; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);">
-                    <div style="background: #374151; color: #fff; padding: 14px 24px; margin-top: -32px; margin-bottom: 24px; border-radius: 8px; font-weight: 700; font-size: 16px; text-align: center; display: inline-block; width: 100%; box-sizing: border-box;">
+                    <div class="below-minimum-heading" style="background: #374151; color: #fff; padding: 14px 24px; margin-top: -32px; margin-bottom: 24px; border-radius: 8px; font-weight: 700; font-size: 16px; text-align: center; display: inline-block; width: 100%; box-sizing: border-box;">
                         ——— Prijave ispod minimuma (30 bodova) ———
                     </div>
                     <h3 style="font-size: 16px; font-weight: 600; color: #6b7280; margin-bottom: 16px;">Prijave sa manje od 30 bodova</h3>
@@ -731,7 +739,7 @@
 
                         @foreach($applications as $application)
                             <div class="commission-decision-block" style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
+                                <div class="commission-decision-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
                                     <div>
                                         <h3 style="font-size: 18px; font-weight: 700; color: var(--primary); margin: 0 0 4px 0;">
                                             {{ $application->business_plan_name }}
@@ -820,7 +828,7 @@
                                     </form>
                                 @else
                                     {{-- Read-only prikaz ako je već zaključeno --}}
-                                    <div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
+                                    <div class="commission-decision-content" style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
                                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px;">
                                             <div>
                                                 <p style="margin-bottom: 8px; font-size: 13px; color: #6b7280; font-weight: 600; text-transform: uppercase;">Zaključak:</p>
@@ -853,7 +861,7 @@
                                         @if($application->commission_justification)
                                             <div>
                                                 <p style="margin-bottom: 8px; font-size: 13px; color: #6b7280; font-weight: 600; text-transform: uppercase;">Obrazloženje:</p>
-                                                <div style="background: #f9fafb; padding: 16px; border-radius: 6px; white-space: pre-wrap; font-size: 14px; color: #374151; line-height: 1.6;">
+                                                <div class="commission-justification-box" style="background: #f9fafb; padding: 16px; border-radius: 6px; white-space: pre-wrap; font-size: 14px; color: #374151; line-height: 1.6;">
                                                     {{ $application->commission_justification }}
                                                 </div>
                                             </div>
