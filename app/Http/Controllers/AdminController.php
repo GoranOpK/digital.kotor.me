@@ -1236,8 +1236,43 @@ class AdminController extends Controller
         $users = User::whereHas('role', function($query) {
             $query->where('name', 'komisija');
         })->get();
+
+        $compositionSlots = $this->buildCommissionCompositionSlots($commission);
         
-        return view('admin.commissions.show', compact('commission', 'users'));
+        return view('admin.commissions.show', compact('commission', 'users', 'compositionSlots'));
+    }
+
+    /**
+     * Strukturirani sastav komisije po slotovima 1–5 (+ zamjene).
+     */
+    protected function buildCommissionCompositionSlots(Commission $commission): array
+    {
+        $slotLabels = [
+            1 => '1. Predsjednik — Predstavnik Opštine Kotor',
+            2 => '2. Član — Predstavnik Opštine Kotor (Sekretarijat)',
+            3 => '3. Član — Predstavnik Opštine Kotor (Sekretarijat)',
+            4 => '4. Član — Predstavnica udruženja preduzetnica / strukovnih udruženja / biznisa / akademske zajednice',
+            5 => '5. Član — Predstavnica Ženske političke mreže',
+        ];
+
+        $substitutes = $commission->members->filter(fn ($m) => !empty($m->is_substitute));
+        $slots = [];
+
+        foreach ($slotLabels as $slotNumber => $label) {
+            $regularMember = $this->resolveMemberByReplacementSlot($commission, $slotNumber, false);
+            $activeSubstitute = $substitutes->first(
+                fn ($m) => (int) ($m->replaces_member_number ?? 0) === $slotNumber && $m->status === 'active'
+            );
+
+            $slots[] = [
+                'number' => $slotNumber,
+                'label' => $label,
+                'regular_member' => $regularMember,
+                'active_substitute' => $activeSubstitute,
+            ];
+        }
+
+        return $slots;
     }
 
     /**
