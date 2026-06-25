@@ -169,14 +169,181 @@
     .view-all-link:hover {
         text-decoration: underline;
     }
+    .programs-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    .program-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 1px 2px rgba(0,0,0,.06);
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        transition: box-shadow 0.2s, transform 0.2s;
+        text-decoration: none;
+        color: inherit;
+    }
+    a.program-card:hover {
+        box-shadow: 0 8px 24px rgba(11, 61, 145, 0.12);
+        transform: translateY(-2px);
+    }
+    .program-card.is-development {
+        border-style: dashed;
+        border-color: #d1d5db;
+    }
+    .program-card-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .program-card-icon {
+        font-size: 36px;
+        line-height: 1;
+    }
+    .program-card h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 8px;
+    }
+    .program-card p {
+        color: #6b7280;
+        font-size: 14px;
+        margin: 0;
+        line-height: 1.5;
+    }
+    .program-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 9999px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        white-space: nowrap;
+    }
+    .program-badge-active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    .program-badge-development {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    .program-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        padding-top: 8px;
+        border-top: 1px solid #f3f4f6;
+    }
+    .program-stat-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        margin-bottom: 4px;
+    }
+    .program-stat-value {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--primary);
+        line-height: 1;
+    }
+    .program-deadline {
+        font-size: 13px;
+        color: #374151;
+        background: #f9fafb;
+        border-radius: 8px;
+        padding: 10px 12px;
+    }
+    .program-card-action {
+        color: var(--primary);
+        font-weight: 700;
+        font-size: 14px;
+        margin-top: auto;
+    }
+    .secondary-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 8px;
+    }
+    .secondary-links a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .secondary-links a:hover {
+        text-decoration: underline;
+    }
 </style>
 
 <div class="admin-dashboard">
     <div class="container mx-auto px-4">
         <!-- Header -->
         <div class="admin-header">
-            <h1>@if($isCompetitionAdmin) Administratorski Dashboard - Konkursi @else Administratorski Dashboard @endif</h1>
+            <h1>@if($isCompetitionAdmin) Programi konkursa @else Administratorski Dashboard @endif</h1>
+            @if($isCompetitionAdmin)
+                <p style="margin: 8px 0 0; opacity: 0.9; font-size: 15px;">Odaberite program za upravljanje konkursima</p>
+            @endif
         </div>
+
+        @if($isCompetitionAdmin && !empty($competitionPrograms))
+        <div class="programs-grid">
+            @foreach($competitionPrograms as $program)
+                <a href="{{ route('admin.competitions.index', ['type' => $program['type'], 'tab' => 'active']) }}" class="program-card {{ $program['status'] === 'development' ? 'is-development' : '' }}">
+                    <div class="program-card-header">
+                        <div>
+                            <div class="program-card-icon">{{ $program['icon'] }}</div>
+                        </div>
+                        <span class="program-badge {{ $program['status'] === 'active' ? 'program-badge-active' : 'program-badge-development' }}">
+                            {{ $program['status'] === 'active' ? 'Aktivan modul' : 'U razvoju' }}
+                        </span>
+                    </div>
+                    <div>
+                        <h2>{{ $program['title'] }}</h2>
+                        <p>{{ $program['description'] }}</p>
+                    </div>
+                    <div class="program-stats">
+                        <div>
+                            <span class="program-stat-label">Aktivni</span>
+                            <span class="program-stat-value">{{ $program['active_competitions'] }}</span>
+                        </div>
+                        <div>
+                            <span class="program-stat-label">Ukupno</span>
+                            <span class="program-stat-value">{{ $program['total_competitions'] }}</span>
+                        </div>
+                        <div>
+                            <span class="program-stat-label">Prijave</span>
+                            <span class="program-stat-value">{{ $program['total_applications'] }}</span>
+                        </div>
+                    </div>
+                    @if($program['next_deadline_competition'] && $program['next_deadline_days'] !== null)
+                        <div class="program-deadline">
+                            Najbliži rok: <strong>{{ $program['next_deadline_competition']->title }}</strong>
+                            — {{ $program['next_deadline_days'] }} {{ $program['next_deadline_days'] == 1 ? 'dan' : 'dana' }}
+                        </div>
+                    @endif
+                    <span class="program-card-action">Otvori konkursi programa →</span>
+                </a>
+            @endforeach
+        </div>
+
+        <div class="secondary-links">
+            <a href="{{ route('admin.commissions.index') }}">Komisije</a>
+            <a href="{{ route('competitions.archive') }}">Arhiva konkursa</a>
+        </div>
+        @else
 
         <!-- Statistike -->
         <div class="stats-grid">
@@ -241,54 +408,7 @@
         </div>
 
         <!-- Sadržaj -->
-        <div class="content-grid" style="grid-template-columns: @if($isCompetitionAdmin) 1fr 1fr @else 1.2fr 0.8fr @endif;">
-            @if($isCompetitionAdmin)
-            <!-- Aktivni konkursi (Pregled trajanja) -->
-            <div class="content-card">
-                <div class="content-card-header">
-                    <h2>Aktivni konkursi - Pregled trajanja</h2>
-                </div>
-                <div class="content-card-body">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Konkurs</th>
-                                <th>Datum isteka</th>
-                                <th>Preostalo</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($active_competitions as $comp)
-                                @php
-                                    $deadline = $comp->deadline;
-                                    $daysLeft = $comp->getDaysUntilApplicationDeadline();
-                                @endphp
-                                <tr>
-                                    <td>
-                                        <a href="{{ route('admin.competitions.show', $comp) }}" class="link-primary">{{ $comp->title }}</a>
-                                    </td>
-                                    <td>{{ $deadline ? $deadline->format('d.m.Y') : '—' }}</td>
-                                    <td>
-                                        @if($daysLeft === null)
-                                            <span style="color: #6b7280;">—</span>
-                                        @elseif($daysLeft > 0)
-                                            <span style="color: #059669; font-weight: 600;">{{ $daysLeft }} {{ $daysLeft == 1 ? 'dan' : 'dana' }}</span>
-                                        @else
-                                            <span style="color: #dc2626; font-weight: 600;">Isteklo</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="3" style="text-align: center; color: #6b7280; padding: 24px;">Nema aktivnih konkursa</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-            @endif
-
+        <div class="content-grid" style="grid-template-columns: 1.2fr 0.8fr;">
             @if(!$isCompetitionAdmin && $recent_users)
             <!-- Najnoviji korisnici -->
             <div class="content-card">
@@ -333,6 +453,7 @@
 
             {{-- Najnovije prijave se ne prikazuju administratorima --}}
         </div>
+        @endif
     </div>
 </div>
 @endsection

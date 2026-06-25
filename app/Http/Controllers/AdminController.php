@@ -104,12 +104,84 @@ class AdminController extends Controller
     }
 
     /**
+     * Definicije programa konkursa (hub na dashboardu administratora konkursa).
+     */
+    protected function getCompetitionProgramDefinitions(): array
+    {
+        return [
+            'zensko' => [
+                'type' => 'zensko',
+                'title' => 'Podrška ženskom preduzetništvu',
+                'description' => 'Kompletan modul — prijave, dokumentacija, komisija i evaluacija.',
+                'status' => 'active',
+                'icon' => '👩‍💼',
+            ],
+            'omladinsko' => [
+                'type' => 'omladinsko',
+                'title' => 'Podrška preduzetništvu mladih',
+                'description' => 'Modul u razvoju — upravljanje konkursima ovog tipa.',
+                'status' => 'development',
+                'icon' => '🎓',
+            ],
+        ];
+    }
+
+    /**
+     * Statistike po programu konkursa za dashboard administratora konkursa.
+     */
+    protected function getCompetitionProgramsOverview(): array
+    {
+        $programs = [];
+
+        foreach ($this->getCompetitionProgramDefinitions() as $definition) {
+            $type = $definition['type'];
+            $competitionQuery = Competition::where('type', $type);
+            $competitionIds = (clone $competitionQuery)->pluck('id');
+
+            $nextDeadlineCompetition = Competition::where('type', $type)
+                ->where('status', 'published')
+                ->orderBy('published_at', 'desc')
+                ->get()
+                ->filter(function (Competition $competition) {
+                    $daysLeft = $competition->getDaysUntilApplicationDeadline();
+
+                    return $daysLeft !== null && $daysLeft >= 0;
+                })
+                ->sortBy(fn (Competition $competition) => $competition->deadline?->timestamp ?? PHP_INT_MAX)
+                ->first();
+
+            $programs[] = array_merge($definition, [
+                'total_competitions' => (clone $competitionQuery)->count(),
+                'active_competitions' => (clone $competitionQuery)->whereIn('status', ['draft', 'published'])->count(),
+                'total_applications' => Application::whereIn('competition_id', $competitionIds)->count(),
+                'next_deadline_competition' => $nextDeadlineCompetition,
+                'next_deadline_days' => $nextDeadlineCompetition?->getDaysUntilApplicationDeadline(),
+            ]);
+        }
+
+        return $programs;
+    }
+
+    /**
+     * Naziv programa konkursa po tipu.
+     */
+    protected function getCompetitionTypeLabel(?string $type): ?string
+    {
+        if (!$type) {
+            return null;
+        }
+
+        return $this->getCompetitionProgramDefinitions()[$type]['title'] ?? null;
+    }
+
+    /**
      * Prikaz admin dashboard-a
      */
     public function dashboard()
     {
         $user = auth()->user();
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
+        $competitionPrograms = $isCompetitionAdmin ? $this->getCompetitionProgramsOverview() : null;
         
         // Statistike za admin dashboard
         $stats = [
@@ -145,7 +217,14 @@ class AdminController extends Controller
             ->orderBy('published_at', 'desc')
             ->get();
 
-        return view('admin.dashboard', compact('stats', 'recent_users', 'recent_applications', 'isCompetitionAdmin', 'active_competitions'));
+        return view('admin.dashboard', compact(
+            'stats',
+            'recent_users',
+            'recent_applications',
+            'isCompetitionAdmin',
+            'active_competitions',
+            'competitionPrograms'
+        ));
     }
 
     /**
@@ -282,6 +361,18 @@ class AdminController extends Controller
         }
         
         $tab = $request->get('tab', 'active'); // 'active', 'archive' ili 'all'
+        $type = $request->get('type');
+        $allowedTypes = array_keys($this->getCompetitionProgramDefinitions());
+        if ($type && !in_array($type, $allowedTypes, true)) {
+            $type = null;
+        }
+        $typeLabel = $this->getCompetitionTypeLabel($type);
+
+        $applyTypeFilter = function ($query) use ($type) {
+            if ($type) {
+                $query->where('type', $type);
+            }
+        };
         
         if ($tab === 'archive') {
             if (!$isAdmin) {
@@ -305,10 +396,13 @@ class AdminController extends Controller
             if (!$isAdmin && $commissionId) {
                 $query->where('commission_id', $commissionId);
             }
+
+            $applyTypeFilter($query);
             
             $competitions = $query->orderByRaw('COALESCE(published_at, created_at) DESC')
                 ->orderBy('created_at', 'desc')
-                ->paginate(20);
+                ->paginate(20)
+                ->appends(['tab' => $tab, 'type' => $type]);
         } elseif ($tab === 'all') {
             // Svi konkursi (bez obzira na status)
             $query = Competition::withCount('applications');
@@ -316,9 +410,12 @@ class AdminController extends Controller
             if (!$isAdmin && isset($commissionId)) {
                 $query->where('commission_id', $commissionId);
             }
+
+            $applyTypeFilter($query);
             
             $competitions = $query->orderBy('created_at', 'desc')
-                ->paginate(20);
+                ->paginate(20)
+                ->appends(['tab' => $tab, 'type' => $type]);
         } else {
             // Aktivni konkursi (draft, published)
             $query = Competition::withCount('applications')
@@ -327,12 +424,15 @@ class AdminController extends Controller
             if (!$isAdmin && isset($commissionId)) {
                 $query->where('commission_id', $commissionId);
             }
+
+            $applyTypeFilter($query);
             
             $competitions = $query->orderBy('created_at', 'desc')
-                ->paginate(20);
+                ->paginate(20)
+                ->appends(['tab' => $tab, 'type' => $type]);
         }
         
-        return view('admin.competitions.index', compact('competitions', 'tab', 'isAdmin'));
+        return view('admin.competitions.index', compact('competitions', 'tab', 'isAdmin', 'type', 'typeLabel'));
     }
 
     /**
@@ -383,7 +483,13 @@ class AdminController extends Controller
         }
         
         $commissions = Commission::where('status', 'active')->orderBy('year', 'desc')->get();
-        return view('admin.competitions.create', compact('commissions'));
+        $presetType = request('type');
+        $allowedTypes = array_keys($this->getCompetitionProgramDefinitions());
+        if (!$presetType || !in_array($presetType, $allowedTypes, true)) {
+            $presetType = null;
+        }
+
+        return view('admin.competitions.create', compact('commissions', 'presetType'));
     }
 
     /**

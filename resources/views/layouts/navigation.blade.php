@@ -26,10 +26,7 @@
                         </x-nav-link>
                     @elseif($isCompetitionAdmin)
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                            Konkursi panel
-                        </x-nav-link>
-                        <x-nav-link :href="route('admin.competitions.index')" :active="request()->routeIs('admin.competitions.*')">
-                            Konkursi
+                            Programi konkursa
                         </x-nav-link>
                         <x-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
                             Komisije
@@ -123,10 +120,7 @@
                 </x-responsive-nav-link>
             @elseif($isCompetitionAdmin)
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                    Konkursi panel
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.competitions.index')" :active="request()->routeIs('admin.competitions.*')">
-                    Konkursi
+                    Programi konkursa
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
                     Komisije
