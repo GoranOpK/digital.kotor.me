@@ -306,7 +306,7 @@
                     </div>
                     @if($program['next_deadline_competition'] && $program['next_deadline_days'] !== null)
                         <div class="program-deadline">
-                            Najbliži rok: <strong>{{ $program['next_deadline_competition']->title }}</strong>
+                            Rok za prijavu: <strong>{{ $program['next_deadline_competition']->title }}</strong>
                             — {{ $program['next_deadline_days'] }} {{ $program['next_deadline_days'] == 1 ? 'dan' : 'dana' }}
                         </div>
                     @endif
