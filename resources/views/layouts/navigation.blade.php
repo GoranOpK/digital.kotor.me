@@ -34,6 +34,16 @@
                         <x-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
                             Arhiva konkursa
                         </x-nav-link>
+                    @elseif($user && $user->role && $user->role->name === 'komisija')
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                            Moj panel
+                        </x-nav-link>
+                        <x-nav-link :href="route('evaluation.index')" :active="request()->routeIs('evaluation.*')">
+                            Ocjenjivanje
+                        </x-nav-link>
+                        <x-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
+                            Arhiva konkursa
+                        </x-nav-link>
                     @else
                         <x-nav-link :href="route('home')" :active="request()->routeIs('home')">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline-block align-text-bottom" style="margin-right: 4px;">
@@ -48,11 +58,6 @@
                             @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
                                 <x-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
                                     Administracija
-                                </x-nav-link>
-                            @endif
-                            @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
-                                <x-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
-                                    Arhiva konkursa
                                 </x-nav-link>
                             @endif
                         @endauth
@@ -128,6 +133,16 @@
                 <x-responsive-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
                     Arhiva konkursa
                 </x-responsive-nav-link>
+            @elseif($user && $user->role && $user->role->name === 'komisija')
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    Moj panel
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('evaluation.index')" :active="request()->routeIs('evaluation.*')">
+                    Ocjenjivanje
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
+                    Arhiva konkursa
+                </x-responsive-nav-link>
             @else
                 <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline-block align-text-bottom" style="margin-right: 4px;">
@@ -142,11 +157,6 @@
                     @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
                         <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
                             Administracija
-                        </x-responsive-nav-link>
-                    @endif
-                    @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
-                        <x-responsive-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
-                            Arhiva konkursa
                         </x-responsive-nav-link>
                     @endif
                 @endauth

@@ -235,6 +235,8 @@
     } elseif ($isKomisija && isset($commissionMember)) {
         $positionLabel = $commissionMember->position === 'predsjednik' ? 'Predsjednik' : 'Član';
         $userTypeLabel = $positionLabel . ' komisije';
+    } elseif ($isKomisija) {
+        $userTypeLabel = 'Član komisije';
     } elseif ($isPhysicalPerson && $isResident) {
         $userTypeLabel = 'Fizičko lice (Rezident)';
     } elseif ($isPhysicalPerson && $isNonResident) {
@@ -279,7 +281,46 @@
             </div>
         @endif
 
-        @if (!$isSuperAdmin && !$isCompetitionAdmin)
+        @if (!$isSuperAdmin && !$isCompetitionAdmin && $isKomisija)
+        <div class="top-grid" style="grid-template-columns: 1fr; max-width: 480px;">
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h2>Informacije o korisniku</h2>
+                    <a href="{{ route('profile.edit') }}" class="btn-edit">Izmijeni</a>
+                </div>
+                <div class="info-grid" style="grid-template-columns: 1fr; gap: 12px;">
+                    <div class="info-item">
+                        <span class="info-label">Tip korisnika</span>
+                        <span class="info-value">{{ $userTypeLabel }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ime i prezime</span>
+                        <span class="info-value">{{ $user->name ?? 'N/A' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email adresa</span>
+                        <span class="info-value">{{ $user->email ?? 'N/A' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Broj telefona</span>
+                        <span class="info-value">{{ $user->phone ?? 'N/A' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Adresa</span>
+                        <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if(!isset($commissionMember))
+            <div class="alert alert-warning" style="background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;">
+                Vaš nalog ima ulogu člana komisije, ali trenutno niste dodijeljeni aktivnoj komisiji. Obratite se administratoru konkursa.
+            </div>
+        @endif
+        @endif
+
+        @if (!$isSuperAdmin && !$isCompetitionAdmin && !$isKomisija)
         <div class="top-grid">
             <!-- 1. Informacije o korisniku -->
             <div class="info-card">
@@ -478,8 +519,8 @@
             </div>
         </div>
 
-        <!-- Brzi servisi (samo za pravna lica) -->
-        @if($isLegalEntity)
+        <!-- Brzi servisi (samo za pravna lica, ne za komisiju) -->
+        @if($isLegalEntity && !$isKomisija)
             <div style="margin-bottom: 24px;">
                 <div class="services-grid" style="margin-top: 0;">
                     <div class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
@@ -657,7 +698,7 @@
                                     // Badge za Obrazac
                                     $obrazacLabel = null;
                                     $obrazacClass = 'status-draft';
-                                    $obrazacUrl = null;
+                                    $obrazacUrl = route('admin.applications.show', $app);
                                     if ($isObrazacComplete) {
                                         if ($app->applicant_type === 'preduzetnica') {
                                             $obrazacLabel = 'Obrazac 1a popunjen';
@@ -669,7 +710,6 @@
                                             $obrazacLabel = 'Obrazac 1a/1b popunjen';
                                             $obrazacClass = 'status-evaluated';
                                         }
-                                        $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
                                     } else {
                                         if ($app->applicant_type === 'preduzetnica') {
                                             $obrazacLabel = 'Obrazac 1a - Nacrt';
@@ -678,13 +718,12 @@
                                         } elseif ($app->applicant_type === 'fizicko_lice') {
                                             $obrazacLabel = 'Obrazac 1a/1b - Nacrt';
                                         }
-                                        $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
                                     }
                                     
                                     // Badge za Biznis Plan
                                     $bizPlanLabel = null;
                                     $bizPlanClass = 'status-draft';
-                                    $bizPlanUrl = null;
+                                    $bizPlanUrl = route('admin.applications.show', $app);
                                     if ($app->businessPlan) {
                                         if ($app->businessPlan->isComplete()) {
                                             $bizPlanLabel = 'Biznis Plan - popunjen';
@@ -693,11 +732,9 @@
                                             $bizPlanLabel = 'Biznis Plan - nacrt';
                                             $bizPlanClass = 'status-draft';
                                         }
-                                        $bizPlanUrl = route('applications.business-plan.create', $app);
                                     } elseif ($isObrazacComplete) {
                                         $bizPlanLabel = 'Biznis Plan - nacrt';
                                         $bizPlanClass = 'status-draft';
-                                        $bizPlanUrl = route('applications.business-plan.create', $app);
                                     }
                                     
                                     // Provjeri da li je član komisije ocjenio prijavu
@@ -708,7 +745,7 @@
                                     <td style="padding: 12px; vertical-align: top;">{{ $app->user->name ?? 'N/A' }}</td>
                                     <td style="padding: 12px; vertical-align: top;">
                                         @if($app->status === 'rejected')
-                                            <a href="{{ route('applications.show', $app) }}" class="status-badge {{ $statusClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;">
+                                            <a href="{{ route('admin.applications.show', $app) }}" class="status-badge {{ $statusClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;">
                                                 {{ $statusLabels[$app->status] ?? $app->status }}
                                             </a>
                                         @else

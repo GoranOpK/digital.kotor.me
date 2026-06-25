@@ -412,6 +412,8 @@ class HomeController extends Controller
                 
                 return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'recent_applications', 'myApplications', 'competitions', 'showEvaluationSection'));
             }
+
+            return view('dashboard', compact('isKomisija', 'isSuperAdmin'));
         }
         
         // Za običnog korisnika
