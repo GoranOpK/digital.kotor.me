@@ -289,6 +289,10 @@
                 </div>
                 <div class="info-grid" style="grid-template-columns: 1fr; gap: 12px;">
                     <div class="info-item">
+                        <span class="info-label">Tip korisnika</span>
+                        <span class="info-value">{{ $userTypeLabel }}</span>
+                    </div>
+                    <div class="info-item">
                         <span class="info-label">Ime i prezime</span>
                         <span class="info-value">{{ $user->name ?? 'N/A' }}</span>
                     </div>
@@ -303,10 +307,6 @@
                     <div class="info-item">
                         <span class="info-label">Adresa</span>
                         <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Tip korisnika</span>
-                        <span class="info-value">{{ $userTypeLabel }}</span>
                     </div>
                     @if($user->jmb)
                         <div class="info-item">
