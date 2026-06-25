@@ -26,7 +26,7 @@
                         </x-nav-link>
                     @elseif($isCompetitionAdmin)
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                            Programi konkursa
+                            Konkursi
                         </x-nav-link>
                         <x-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
                             Komisije
@@ -120,7 +120,7 @@
                 </x-responsive-nav-link>
             @elseif($isCompetitionAdmin)
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                    Programi konkursa
+                    Konkursi
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
                     Komisije

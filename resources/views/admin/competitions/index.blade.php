@@ -118,7 +118,7 @@
     <div class="container mx-auto px-4">
         @if(!empty($typeLabel))
             <div class="program-context">
-                <a href="{{ route('admin.dashboard') }}">← Programi konkursa</a>
+                <a href="{{ route('admin.dashboard') }}">← Konkursi</a>
             </div>
         @endif
 

@@ -265,37 +265,13 @@
         border-radius: 8px;
         padding: 10px 12px;
     }
-    .program-card-action {
-        color: var(--primary);
-        font-weight: 700;
-        font-size: 14px;
-        margin-top: auto;
-    }
-    .secondary-links {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 16px;
-        margin-top: 8px;
-    }
-    .secondary-links a {
-        color: var(--primary);
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 14px;
-    }
-    .secondary-links a:hover {
-        text-decoration: underline;
-    }
 </style>
 
 <div class="admin-dashboard">
     <div class="container mx-auto px-4">
         <!-- Header -->
         <div class="admin-header">
-            <h1>@if($isCompetitionAdmin) Programi konkursa @else Administratorski Dashboard @endif</h1>
-            @if($isCompetitionAdmin)
-                <p style="margin: 8px 0 0; opacity: 0.9; font-size: 15px;">Odaberite program za upravljanje konkursima</p>
-            @endif
+            <h1>@if($isCompetitionAdmin) Konkursi @else Administratorski Dashboard @endif</h1>
         </div>
 
         @if($isCompetitionAdmin && !empty($competitionPrograms))
@@ -334,14 +310,8 @@
                             — {{ $program['next_deadline_days'] }} {{ $program['next_deadline_days'] == 1 ? 'dan' : 'dana' }}
                         </div>
                     @endif
-                    <span class="program-card-action">Otvori konkursi programa →</span>
                 </a>
             @endforeach
-        </div>
-
-        <div class="secondary-links">
-            <a href="{{ route('admin.commissions.index') }}">Komisije</a>
-            <a href="{{ route('competitions.archive') }}">Arhiva konkursa</a>
         </div>
         @else
 
