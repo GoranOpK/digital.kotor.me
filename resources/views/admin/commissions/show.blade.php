@@ -254,7 +254,7 @@
         @if($errors->any())
             <div class="alert alert-warning">
                 @foreach($errors->all() as $error)
-                    <div>{{ $error }}</div>
+                    <div>{{ is_array($error) ? implode(' ', $error) : $error }}</div>
                 @endforeach
             </div>
         @endif
@@ -312,10 +312,10 @@
         <div class="info-card">
             <h2>Sastav komisije</h2>
 
-            @foreach($compositionSlots as $slot)
+            @foreach($compositionSlots as $compositionSlot)
                 @php
-                    $regularMember = $slot['regular_member'];
-                    $activeSubstitute = $slot['active_substitute'];
+                    $regularMember = $compositionSlot['regular_member'];
+                    $activeSubstitute = $compositionSlot['active_substitute'];
                     $slotClass = 'composition-slot';
                     if ($activeSubstitute) {
                         $slotClass .= ' is-substituted';
@@ -324,7 +324,7 @@
                     }
                 @endphp
                 <div class="{{ $slotClass }}">
-                    <div class="composition-slot-title">{{ $slot['label'] }}</div>
+                    <div class="composition-slot-title">{{ $compositionSlot['label'] }}</div>
 
                     @if($activeSubstitute)
                         <div class="composition-slot-name">
