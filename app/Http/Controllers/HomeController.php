@@ -167,7 +167,7 @@ class HomeController extends Controller
             'password.required' => 'Lozinka je obavezna.',
             'password.confirmed' => 'Lozinke se ne poklapaju.',
             'phone_full.required' => 'Broj telefona je obavezan.',
-            'address.required' => 'Adresa (ulica i broj) je obavezna.',
+            'address.required' => 'Ulica i broj (ili bb) je obavezna.',
             'address.max' => 'Adresa ne može biti duža od 500 karaktera.',
             'city.required' => 'Grad je obavezan.',
             'city.max' => 'Naziv grada ne može biti duži od 255 karaktera.',
@@ -182,9 +182,9 @@ class HomeController extends Controller
             if ($request->business_type && $request->business_type !== 'Preduzetnik') {
                 $rules['company_name'] = ['required', 'string', 'max:255'];
                 $messages['company_name.required'] = 'Naziv privrednog subjekta je obavezan.';
-                $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{8}$/', 'unique:users,pib'];
+                $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{9}$/', 'unique:users,pib'];
                 $messages['pib.required'] = 'PIB je obavezan.';
-                $messages['pib.regex'] = 'PIB mora imati tačno 8 cifara.';
+                $messages['pib.regex'] = 'PIB mora imati tačno 9 cifara.';
                 $messages['pib.unique'] = 'PIB je već registrovan.';
             }
 
@@ -228,6 +228,10 @@ class HomeController extends Controller
         $validated = $request->validate($rules, $messages);
 
         if ($this->registrationRequiresKotorAddress($request)) {
+            if (!\App\Support\KotorAddress::isValidStreetLine($validated['address'])) {
+                return back()->withErrors(['address' => \App\Support\KotorAddress::streetLineValidationMessage()])->withInput();
+            }
+
             if (\App\Support\KotorAddress::isOnlyLocality($validated['address'])) {
                 return back()->withErrors(['address' => \App\Support\KotorAddress::streetValidationMessage()])->withInput();
             }

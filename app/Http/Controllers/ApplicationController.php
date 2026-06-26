@@ -239,7 +239,7 @@ class ApplicationController extends Controller
             'website' => 'nullable|url|max:255',
             'bank_account' => 'nullable|string|max:50',
             'vat_number' => 'nullable|string|max:50',
-            'pib' => 'nullable|string|regex:/^[0-9]{8}$/',
+            'pib' => 'nullable|string|regex:/^[0-9]{9}$/',
         ];
 
         // Izjava o tačnosti je obavezna za sve tipove prijave
@@ -320,7 +320,7 @@ class ApplicationController extends Controller
             'preduzetnik_address.required' => 'Adresa preduzetnice je obavezna.',
             'registration_form.required' => 'Oblik registracije je obavezan.',
             'registration_form.in' => 'Izabrani oblik registracije nije validan.',
-            'pib.regex' => 'PIB mora imati tačno 8 cifara.',
+            'pib.regex' => 'PIB mora imati tačno 9 cifara.',
             'physical_person_name.required' => 'Ime i prezime je obavezno za fizičko lice.',
             'physical_person_jmbg.required' => 'JMBG je obavezan za fizičko lice.',
             'physical_person_jmbg.regex' => 'JMBG mora imati tačno 13 cifara.',

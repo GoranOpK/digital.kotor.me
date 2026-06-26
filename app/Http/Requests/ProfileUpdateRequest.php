@@ -92,6 +92,12 @@ class ProfileUpdateRequest extends FormRequest
                 return;
             }
 
+            if (!KotorAddress::isValidStreetLine($this->input('address'))) {
+                $validator->errors()->add('address', KotorAddress::streetLineValidationMessage());
+
+                return;
+            }
+
             if (KotorAddress::isOnlyLocality($this->input('address'))) {
                 $validator->errors()->add('address', KotorAddress::streetValidationMessage());
 
@@ -131,7 +137,7 @@ class ProfileUpdateRequest extends FormRequest
             'email.email' => 'Unijete validnu email adresu.',
             'email.unique' => 'Email adresa je već u upotrebi.',
             'phone.required' => 'Broj telefona je obavezan.',
-            'address.required' => 'Adresa (ulica i broj) je obavezna.',
+            'address.required' => 'Ulica i broj (ili bb) je obavezna.',
             'address.max' => 'Adresa ne može biti duža od 500 karaktera.',
             'city.required' => 'Grad je obavezan.',
             'city.max' => 'Naziv grada ne može biti duži od 255 karaktera.',

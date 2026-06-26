@@ -155,8 +155,8 @@
                 {{-- PIB (za privredne subjekte osim Preduzetnika) --}}
                 <div class="form-group conditional-field" id="pib_group">
                     <label for="pib" class="form-label">Poreski identifikacioni broj (PIB) <span class="required">*</span></label>
-                    <input type="text" name="pib" id="pib" class="form-control" maxlength="8" pattern="[0-9]{8}" placeholder="8 cifara" value="{{ old('pib') }}">
-                    <div class="form-note">Format: 8 cifara</div>
+                    <input type="text" name="pib" id="pib" class="form-control" maxlength="9" pattern="[0-9]{9}" placeholder="9 cifara" value="{{ old('pib') }}">
+                    <div class="form-note">Format: 9 cifara</div>
                     <div class="form-error" id="pib_error"></div>
                 </div>
 
@@ -359,9 +359,9 @@
 
                 {{-- Adresa --}}
                 <div class="form-group">
-                    <label for="address" class="form-label">Ulica i broj <span class="required">*</span></label>
-                    <input type="text" name="address" id="address" class="form-control" required autocomplete="street-address" placeholder="Npr. Njegoševa 1" value="{{ old('address') }}">
-                    <div class="form-note">Unesite samo ulicu i broj. Grad se unosi u posebno polje ispod.</div>
+                    <label for="address" class="form-label">Ulica i broj (ili bb) <span class="required">*</span></label>
+                    <input type="text" name="address" id="address" class="form-control" required autocomplete="address-line1" placeholder="Npr. Njegoševa 12 ili Maserikova bb" value="{{ old('address') }}">
+                    <div class="form-note">Unesite ulicu i broj ili oznaku bb (bez broja). Grad unosite u posebno polje ispod.</div>
                     <div class="form-error" id="address_error"></div>
                 </div>
 
@@ -533,10 +533,10 @@
 
             // Funkcija za validaciju PIB
             function validatePIB(pibValue) {
-                if (!pibValue || pibValue.length !== 8) {
-                    return { valid: false, message: 'PIB mora imati tačno 8 cifara' };
+                if (!pibValue || pibValue.length !== 9) {
+                    return { valid: false, message: 'PIB mora imati tačno 9 cifara' };
                 }
-                if (!/^[0-9]{8}$/.test(pibValue)) {
+                if (!/^[0-9]{9}$/.test(pibValue)) {
                     return { valid: false, message: 'PIB mora sadržati samo cifre' };
                 }
                 return { valid: true };

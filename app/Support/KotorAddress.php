@@ -40,7 +40,30 @@ final class KotorAddress
 
     public static function streetValidationMessage(): string
     {
-        return 'U polje Ulica i broj unesite samo ulicu i broj. Grad unesite u posebno polje ispod.';
+        return 'Unesite naziv ulice i broj ili oznaku bb (bez broja), npr. Njegoševa 12 ili Maserikova bb. Grad unesite u posebno polje ispod.';
+    }
+
+    public static function streetLineValidationMessage(): string
+    {
+        return 'Unesite naziv ulice i broj ili oznaku bb (bez broja), npr. Njegoševa 12 ili Maserikova bb.';
+    }
+
+    /**
+     * Ulica može imati kućni broj, bb/b.b./bez broja ili drugu oznaku – numerički broj nije obavezan.
+     */
+    public static function isValidStreetLine(?string $street): bool
+    {
+        $street = trim((string) $street);
+
+        if ($street === '' || mb_strlen($street) < 2) {
+            return false;
+        }
+
+        if (self::isOnlyLocality($street)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -89,7 +112,7 @@ final class KotorAddress
 
         if (!$looksLikeCity) {
             foreach (self::LOCALITIES as $locality) {
-                if ($normalizedLast === $locality || self::containsLocality($normalizedLast, $locality)) {
+                if ($normalizedLast === $locality) {
                     $looksLikeCity = true;
                     break;
                 }
