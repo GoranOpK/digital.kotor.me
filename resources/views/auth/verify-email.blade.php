@@ -28,7 +28,7 @@
         .actions { display:flex; gap:16px; flex-wrap:wrap; margin-top:24px; }
         .email-address { font-weight:600; color:var(--primary); }
     </style>
-    <link rel="icon" href="{{ asset('favicon.ico') }}">
+    @include('layouts.partials.favicon')
     <meta name="theme-color" content="#0B3D91">
 </head>
 <body>

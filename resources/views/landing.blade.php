@@ -127,7 +127,7 @@
         .hero-card section li { margin: 6px 0; }
     </style>
     
-    <link rel="icon" href="{{ asset('favicon.ico') }}">
+    @include('layouts.partials.favicon')
     <meta name="theme-color" content="#0B3D91">
 </head>
 <body style="background:#f9fafb; margin:0; padding:0;">
