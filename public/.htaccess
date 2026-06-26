@@ -1,7 +1,7 @@
 <IfModule mod_headers.c>
-    <Files "favicon.ico">
-        Header set Content-Type "image/png"
-    </Files>
+    <FilesMatch "\.(ico|png)$">
+        Header set Cache-Control "public, max-age=86400"
+    </FilesMatch>
 </IfModule>
 
 <IfModule mod_rewrite.c>

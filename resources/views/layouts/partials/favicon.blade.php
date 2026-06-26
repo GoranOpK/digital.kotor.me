@@ -25,10 +25,8 @@
     <link rel="icon" type="image/png" sizes="64x64" href="{{ asset('favicon-64.png') }}?v={{ $faviconVersion }}">
 @endif
 @if (is_file($faviconIco))
-    <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v={{ $faviconVersion }}">
+    <link rel="icon" href="{{ asset('favicon.ico') }}?v={{ $faviconVersion }}">
 @endif
 @if (is_file($appleTouch))
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}?v={{ $faviconVersion }}">
-@elseif (is_file($favicon48))
-    <link rel="apple-touch-icon" href="{{ asset('favicon-48.png') }}?v={{ $faviconVersion }}">
 @endif
