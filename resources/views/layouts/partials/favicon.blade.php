@@ -20,6 +20,9 @@
 @if (is_file($favicon48))
     <link rel="icon" type="image/png" sizes="48x48" href="{{ asset('favicon-48.png') }}?v={{ $faviconVersion }}">
 @endif
+@if (is_file(public_path('favicon-64.png')))
+    <link rel="icon" type="image/png" sizes="64x64" href="{{ asset('favicon-64.png') }}?v={{ $faviconVersion }}">
+@endif
 @if (is_file($faviconIco))
     <link rel="shortcut icon" href="{{ asset('favicon.ico') }}?v={{ $faviconVersion }}">
 @endif
