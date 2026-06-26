@@ -99,6 +99,40 @@ class RestrictRoleModuleAccess
             return redirect()->route('admin.dashboard');
         }
 
+        if ($roleName === 'komisija') {
+            $allowedRouteNames = [
+                'dashboard',
+                'competitions.archive',
+                'evaluation.index',
+                'evaluation.store',
+                'evaluation.show',
+                'evaluation.store-decision',
+                'evaluation.sign-decision',
+                'evaluation.create',
+                'admin.applications.show',
+                'admin.competitions.index',
+                'admin.competitions.show',
+                'admin.competitions.ranking',
+                'admin.competitions.decision',
+            ];
+
+            if ($routeName && in_array($routeName, $allowedRouteNames, true)) {
+                return $next($request);
+            }
+
+            if (
+                $request->is('evaluation*')
+                || $request->is('admin/applications/*')
+                || $request->is('admin/competitions*')
+                || $request->is('competitions/archive')
+                || $request->is('profile*')
+            ) {
+                return $next($request);
+            }
+
+            return redirect()->route('dashboard');
+        }
+
         // Ostale role nemaju dodatna ograničenja ovim middleware-om.
         return $next($request);
     }

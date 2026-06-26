@@ -246,81 +246,272 @@
         background: #fee2e2;
         color: #991b1b;
     }
+    .commission-decision-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+    }
+    .commission-decision-table th,
+    .commission-decision-table td {
+        padding: 10px 12px;
+        border: 1px solid #e5e7eb;
+        text-align: left;
+        vertical-align: top;
+    }
+    .commission-decision-table th {
+        width: 28%;
+        font-weight: 600;
+        background: #f9fafb;
+        color: #374151;
+        font-size: 13px;
+    }
+    .commission-decision-table td {
+        color: #374151;
+        font-size: 14px;
+    }
+    .commission-decision-table .commission-decision-name th {
+        width: auto;
+        background: #fff;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    .commission-decision-block-saved {
+        background: transparent !important;
+        border: none !important;
+        border-radius: 0 !important;
+        padding: 0 !important;
+    }
+    .print-only {
+        display: none;
+    }
     @media print {
-        nav,
-        header,
-        .no-print { display: none !important; }
-        .admin-page button,
-        .admin-page input[type="submit"],
-        .admin-page input[type="button"],
-        .admin-page input[type="checkbox"],
-        .admin-page input[type="number"],
-        .admin-page input[type="radio"],
-        .admin-page textarea,
-        .admin-page select { display: none !important; }
-        .admin-page { background: #fff; padding: 0; }
-        .obrazac-zaglavlje { box-shadow: none; border: 1px solid #ccc; }
-        .obrazac-grb img { height: 2cm; }
-        .info-card { box-shadow: none; border: 1px solid #e5e7eb; }
-        /* Tabela - zaglavlje se ponavlja na svakoj stranici */
-        .admin-page table thead {
-            display: table-header-group;
-        }
-        /* Kompaktni stilovi za prvu stranicu - sve mora stati: Budžet + Rang lista + Zaključak */
-        .ranking-main-content .info-card {
-            padding: 12px !important;
-            margin-bottom: 12px !important;
-        }
-        .ranking-main-content .info-card h2 {
-            font-size: 16px !important;
-            margin-bottom: 10px !important;
-            padding-bottom: 8px !important;
-        }
-        .ranking-main-content .budget-info {
-            gap: 8px !important;
-            margin-bottom: 12px !important;
-        }
-        .ranking-main-content .budget-item {
-            padding: 8px !important;
-        }
-        .ranking-main-content .budget-value {
-            font-size: 18px !important;
-        }
-        .ranking-main-content table th,
-        .ranking-main-content table td {
-            padding: 6px 8px !important;
-            font-size: 11px !important;
-        }
-        .ranking-main-content .commission-decision-block {
-            padding: 12px !important;
-            margin-bottom: 12px !important;
-        }
-        .ranking-main-content .commission-decision-block h3 {
-            font-size: 14px !important;
-        }
-        .ranking-main-content .commission-decision-block p,
-        .ranking-main-content .commission-decision-block div {
-            font-size: 11px !important;
-        }
-        .ranking-main-content .commission-decision-section > p {
-            margin-bottom: 12px !important;
-            font-size: 11px !important;
-        }
-        /* Svaki blok kandidata ostaje cijeli - ne dijeli se na pola između stranica */
-        .commission-decision-block {
-            page-break-inside: avoid;
-        }
-        /* Stranica 1: Budget + Rang lista + Zaključak, zatim page break, zatim Potpis */
-        .ranking-main-content {
-            page-break-after: always;
-        }
-        /* Potpis uvijek na novoj stranici */
-        #signature-block {
-            page-break-before: always;
-        }
         @page {
             size: A4;
-            margin: 15mm;
+            margin: 10mm 8mm;
+        }
+
+        nav,
+        header,
+        .page-header,
+        button,
+        a[href],
+        .no-print {
+            display: none !important;
+        }
+
+        .admin-page {
+            background: #fff;
+            padding: 0;
+            min-height: auto;
+        }
+        .admin-page .container {
+            padding: 0 !important;
+            max-width: 100% !important;
+        }
+
+        .obrazac-zaglavlje {
+            box-shadow: none;
+            border: none !important;
+            border-radius: 0;
+            padding: 0 0 8px 0;
+            margin-bottom: 8px;
+        }
+        .obrazac-grb img { height: 2cm; }
+        .obrazac-broj-i-naslov {
+            border-top: none !important;
+            padding-top: 6px;
+        }
+        .obrazac-org,
+        .obrazac-contact {
+            font-size: 9pt;
+        }
+        .obrazac-naslov-prijava {
+            font-size: 14pt;
+            margin-top: 4px;
+        }
+        .obrazac-podnaslov {
+            font-size: 9pt;
+        }
+
+        .info-card {
+            box-shadow: none;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            margin-bottom: 10px;
+        }
+        .info-card h2 {
+            font-size: 11pt;
+            border-bottom: 1px solid #000;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+            color: #000;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: auto;
+            break-inside: auto;
+            font-size: 8pt;
+            margin: 4px 0;
+        }
+        table thead {
+            display: table-header-group;
+        }
+        table tbody {
+            display: table-row-group;
+        }
+        table tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        th, td {
+            border: 1px solid #000 !important;
+            border-bottom: 1px solid #000 !important;
+            padding: 3px 4px !important;
+            font-size: 8pt !important;
+            background: transparent !important;
+            color: #000 !important;
+        }
+        th {
+            font-weight: bold !important;
+            font-size: 7pt !important;
+            text-transform: uppercase;
+        }
+        tbody tr {
+            background: transparent !important;
+        }
+        [style*="color: #10b981"],
+        [style*="color: #10b981"] strong {
+            color: #000 !important;
+        }
+
+        .print-only {
+            display: table !important;
+        }
+
+        .commission-decision-table {
+            width: 100%;
+            border-collapse: collapse;
+            page-break-inside: avoid;
+            break-inside: avoid;
+            margin-bottom: 10px !important;
+        }
+        .commission-decision-table th,
+        .commission-decision-table td {
+            border: 1px solid #000 !important;
+            padding: 3px 4px !important;
+            font-size: 8pt !important;
+            background: transparent !important;
+            color: #000 !important;
+        }
+        .commission-decision-table th {
+            font-weight: bold !important;
+            font-size: 7pt !important;
+            width: 28%;
+        }
+        .commission-decision-table .commission-decision-name th {
+            font-size: 9pt !important;
+            color: #000 !important;
+        }
+
+        .ranking-badge {
+            background: transparent !important;
+            color: #000 !important;
+            border: 1px solid #000;
+            width: 22px;
+            height: 22px;
+            line-height: 22px;
+            font-size: 8pt;
+        }
+        .score-badge {
+            background: transparent !important;
+            color: #000 !important;
+            border: none;
+            padding: 0;
+            font-size: 8pt;
+        }
+
+        .below-minimum-section {
+            margin-top: 12px !important;
+            padding-top: 0 !important;
+            border-top: none !important;
+            box-shadow: none !important;
+        }
+        .below-minimum-section > div:first-child,
+        .below-minimum-heading {
+            background: transparent !important;
+            color: #000 !important;
+            border: none !important;
+            padding: 0 0 6px 0 !important;
+            margin: 0 0 6px 0 !important;
+            font-size: 9pt !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        .below-minimum-section h3 {
+            font-size: 9pt !important;
+            color: #000 !important;
+            margin-bottom: 6px !important;
+        }
+
+        .commission-decision-section > p {
+            display: none !important;
+        }
+        .commission-decision-block,
+        .commission-decision-block-saved {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin-bottom: 10px !important;
+        }
+        .commission-decision-block h3 {
+            font-size: 10pt !important;
+            color: #000 !important;
+        }
+        .commission-decision-block p,
+        .commission-decision-block div {
+            font-size: 9pt !important;
+            color: #000 !important;
+        }
+        .commission-decision-block > .commission-decision-header,
+        .commission-decision-block > div:first-child {
+            border-bottom: none !important;
+            padding-bottom: 4px !important;
+            margin-bottom: 6px !important;
+        }
+        .commission-decision-block span[style*="background"],
+        .commission-decision-content,
+        .commission-justification-box {
+            background: transparent !important;
+            color: #000 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+        }
+        .commission-decision-block strong {
+            color: #000 !important;
+        }
+
+        .ranking-main-content {
+            page-break-after: always;
+            break-after: page;
+        }
+        #signature-block {
+            page-break-before: always;
+            break-before: page;
+            padding: 0 !important;
+        }
+        #signature-block h2 {
+            font-size: 11pt;
+            margin-bottom: 8px;
+        }
+        #signature-block p,
+        #signature-block div {
+            font-size: 9pt;
         }
     }
 </style>
@@ -334,13 +525,13 @@
         @endphp
                 
         @if($isDeadlinePassed)
-            <div class="alert alert-danger" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px;">
+            <div class="alert alert-danger no-print" style="background: #fee2e2; border: 1px solid #ef4444; color: #991b1b; padding: 16px 20px; border-radius: 12px; margin-bottom: 24px;">
                 <strong>❌ Rok istekao:</strong> Rok za ocjenjivanje i donošenje odluke je istekao. Komisija je dužna donijeti odluku u roku od 45 dana od dana zatvaranja prijava na konkurs.
             </div>
         @endif
 
         @if(session('success'))
-            <div class="alert alert-success">
+            <div class="alert alert-success no-print">
                 {{ session('success') }}
             </div>
         @endif
@@ -423,7 +614,7 @@
                                     </td>
                                     <td style="text-align: right;">
                                         @if($application->approved_amount)
-                                            <strong style="color: #10b981;">
+                                            <strong>
                                                 {{ number_format($application->approved_amount, 2, ',', '.') }} €
                                             </strong>
                                         @else
@@ -432,7 +623,7 @@
                                     </td>
                                     <td class="checkbox-cell">
                                         @if($application->status === 'approved')
-                                            <span style="color: #10b981; font-weight: 600;">✓ Dobitnik sredstava</span>
+                                            <span style="font-weight: 600;">✓ Dobitnik sredstava</span>
                                         @else
                                             <span style="color: #6b7280;">-</span>
                                         @endif
@@ -482,7 +673,7 @@
                                     </td>
                                     <td style="text-align: right;">
                                         @if($application->approved_amount)
-                                            <strong style="color: #10b981;">
+                                            <strong>
                                                 {{ number_format($application->approved_amount, 2, ',', '.') }} €
                                             </strong>
                                         @else
@@ -491,7 +682,7 @@
                                     </td>
                                     <td class="checkbox-cell">
                                         @if($application->status === 'approved')
-                                            <span style="color: #10b981; font-weight: 600;">✓ Dobitnik sredstava</span>
+                                            <span style="font-weight: 600;">✓ Dobitnik sredstava</span>
                                         @else
                                             <span style="color: #6b7280;">-</span>
                                         @endif
@@ -542,7 +733,7 @@
                                 </td>
                                 <td style="text-align: right;">
                                     @if($application->approved_amount)
-                                        <strong style="color: #10b981;">
+                                        <strong>
                                             {{ number_format($application->approved_amount, 2, ',', '.') }} €
                                         </strong>
                                     @else
@@ -551,7 +742,7 @@
                                 </td>
                                 <td class="checkbox-cell">
                                     @if($application->status === 'approved')
-                                        <span style="color: #10b981; font-weight: 600;">✓ Dobitnik sredstava</span>
+                                        <span style="font-weight: 600;">✓ Dobitnik sredstava</span>
                                     @else
                                         <span style="color: #6b7280;">-</span>
                                     @endif
@@ -563,8 +754,8 @@
             @endif
             @endif
             @if(isset($belowLineApplications) && $belowLineApplications->count() > 0)
-                <div style="margin-top: 48px; padding-top: 32px; border-top: 4px solid #374151; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);">
-                    <div style="background: #374151; color: #fff; padding: 14px 24px; margin-top: -32px; margin-bottom: 24px; border-radius: 8px; font-weight: 700; font-size: 16px; text-align: center; display: inline-block; width: 100%; box-sizing: border-box;">
+                <div class="below-minimum-section" style="margin-top: 48px; padding-top: 32px; border-top: 4px solid #374151; box-shadow: 0 -2px 8px rgba(0,0,0,0.08);">
+                    <div class="below-minimum-heading" style="background: #374151; color: #fff; padding: 14px 24px; margin-top: -32px; margin-bottom: 24px; border-radius: 8px; font-weight: 700; font-size: 16px; text-align: center; display: inline-block; width: 100%; box-sizing: border-box;">
                         ——— Prijave ispod minimuma (30 bodova) ———
                     </div>
                     <h3 style="font-size: 16px; font-weight: 600; color: #6b7280; margin-bottom: 16px;">Prijave sa manje od 30 bodova</h3>
@@ -615,20 +806,21 @@
                 @if($applications->count() > 0)
                     <div class="info-card commission-decision-section">
                         <h2>Zaključak komisije i obrazloženje</h2>
-                        <p style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">
+                        <p class="no-print" style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">
                             Za svaku prijavu u rang listi unesite zaključak komisije i obrazloženje.
                         </p>
 
                         @foreach($applications as $application)
-                            <div class="commission-decision-block" style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
+                            <div class="commission-decision-block{{ $application->signed_by_chairman ? ' commission-decision-block-saved' : '' }}" style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
+                                @if(!$application->signed_by_chairman)
+                                <div class="commission-decision-header no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
                                     <div>
                                         <h3 style="font-size: 18px; font-weight: 700; color: var(--primary); margin: 0 0 4px 0;">
                                             {{ $application->business_plan_name }}
                                         </h3>
                                         <p style="font-size: 14px; color: #6b7280; margin: 0;">
-                                            Podnosilac: {{ $application->user->name ?? 'N/A' }} | 
-                                            Pozicija: <strong>#{{ $application->ranking_position ?? $loop->iteration }}</strong> | 
+                                            Podnosilac: {{ $application->user->name ?? 'N/A' }} |
+                                            Pozicija: <strong>#{{ $application->ranking_position ?? $loop->iteration }}</strong> |
                                             Ocjena: <strong>{{ number_format($application->getDisplayScore(), 2) }} / 56</strong>
                                         </p>
                                     </div>
@@ -638,9 +830,8 @@
                                         </span>
                                     @endif
                                 </div>
-                                
-                                @if(!$application->signed_by_chairman)
-                                    <form method="POST" action="{{ route('evaluation.store-decision', $application) }}">
+
+                                    <form class="no-print" method="POST" action="{{ route('evaluation.store-decision', $application) }}">
                                         @csrf
                                         
                                         <div style="margin-bottom: 24px;">
@@ -708,53 +899,69 @@
                                             <button type="submit" class="btn btn-success" style="padding: 10px 24px; font-size: 14px; min-width: 160px;" @if($isDeadlinePassed) disabled style="opacity: 0.5; cursor: not-allowed; padding: 10px 24px; font-size: 14px; min-width: 160px;" @endif>Sačuvaj zaključak</button>
                                         </div>
                                     </form>
-                                @else
-                                    {{-- Read-only prikaz ako je već zaključeno --}}
-                                    <div style="background: #fff; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb;">
-                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 16px;">
-                                            <div>
-                                                <p style="margin-bottom: 8px; font-size: 13px; color: #6b7280; font-weight: 600; text-transform: uppercase;">Zaključak:</p>
-                                                <p style="font-size: 15px; color: #374151; font-weight: 600;">
-                                                    @if($application->commission_decision === 'podrzava_potpuno')
-                                                        Podržava u potpunosti
-                                                    @elseif($application->commission_decision === 'odbija')
-                                                        Odbija
-                                                    @else
-                                                        Nije donesen
-                                                    @endif
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p style="margin-bottom: 8px; font-size: 13px; color: #6b7280; font-weight: 600; text-transform: uppercase;">Iznos odobrenih sredstava:</p>
-                                                <p style="font-size: 15px; color: #10b981; font-weight: 700;">
-                                                    {{ $application->approved_amount ? number_format($application->approved_amount, 2, ',', '.') . ' €' : '-' }}
-                                                </p>
-                                                <p style="margin: 8px 0 0 0; font-size: 12px; color: #6b7280;">
-                                                    Traženi iznos: <strong>{{ number_format($application->requested_amount ?? 0, 2, ',', '.') }} €</strong>
-                                                </p>
-                                                <p style="margin: 4px 0 0 0; font-size: 12px; color: #6b7280;">
-                                                    Unio: <strong>{{ $decisionEnteredBy ?? 'Predsjednik komisije' }}</strong>
-                                                    @if($application->commission_decision_date)
-                                                        | Datum: <strong>{{ \Carbon\Carbon::parse($application->commission_decision_date)->format('d.m.Y H:i') }}</strong>
-                                                    @endif
-                                                </p>
-                                            </div>
-                                        </div>
-                                        @if($application->commission_justification)
-                                            <div>
-                                                <p style="margin-bottom: 8px; font-size: 13px; color: #6b7280; font-weight: 600; text-transform: uppercase;">Obrazloženje:</p>
-                                                <div style="background: #f9fafb; padding: 16px; border-radius: 6px; white-space: pre-wrap; font-size: 14px; color: #374151; line-height: 1.6;">
-                                                    {{ $application->commission_justification }}
-                                                </div>
-                                            </div>
-                                        @endif
-                                    </div>
                                 @endif
+
+                                <table class="commission-decision-table{{ !$application->signed_by_chairman ? ' print-only' : '' }}">
+                                    <tbody>
+                                        <tr class="commission-decision-name">
+                                            <th colspan="2">{{ $application->business_plan_name }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th>Podnosilac</th>
+                                            <td>{{ $application->user->name ?? 'N/A' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Pozicija</th>
+                                            <td>#{{ $application->ranking_position ?? $loop->iteration }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Ocjena</th>
+                                            <td>{{ number_format($application->getDisplayScore(), 2) }} / 56</td>
+                                        </tr>
+                                        @if($application->signed_by_chairman)
+                                        <tr>
+                                            <th>Zaključak</th>
+                                            <td>
+                                                @if($application->commission_decision === 'podrzava_potpuno')
+                                                    Podržava u potpunosti
+                                                @elseif($application->commission_decision === 'odbija')
+                                                    Odbija
+                                                @else
+                                                    Nije donesen
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Iznos odobrenih sredstava</th>
+                                            <td>{{ $application->approved_amount ? number_format($application->approved_amount, 2, ',', '.') . ' €' : '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Traženi iznos</th>
+                                            <td>{{ number_format($application->requested_amount ?? 0, 2, ',', '.') }} €</td>
+                                        </tr>
+                                        <tr>
+                                            <th>Unio / Datum</th>
+                                            <td>
+                                                {{ $decisionEnteredBy ?? 'Predsjednik komisije' }}
+                                                @if($application->commission_decision_date)
+                                                    | {{ \Carbon\Carbon::parse($application->commission_decision_date)->format('d.m.Y H:i') }}
+                                                @endif
+                                            </td>
+                                        </tr>
+                                        @if($application->commission_justification)
+                                        <tr>
+                                            <th>Obrazloženje</th>
+                                            <td style="white-space: pre-wrap;">{{ $application->commission_justification }}</td>
+                                        </tr>
+                                        @endif
+                                        @endif
+                                    </tbody>
+                                </table>
                             </div>
                         @endforeach
 
                         @if($competition->hasChairmanCompletedDecisions())
-                        <div style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;"></div>
+                        <div class="no-print" style="margin-top: 32px; padding-top: 24px; border-top: 2px solid #e5e7eb;"></div>
                         @endif
                     </div>
                 @elseif($competition->hasChairmanCompletedDecisions() && $applications->count() == 0 && (isset($belowLineApplications) && $belowLineApplications->count() > 0))

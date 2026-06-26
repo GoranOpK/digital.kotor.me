@@ -88,29 +88,64 @@
         color: #ef4444;
         font-size: 13px;
     }
+    .program-context {
+        margin-bottom: 16px;
+    }
+    .program-context a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .program-context a:hover {
+        text-decoration: underline;
+    }
+    .page-header-text h1 {
+        margin: 0 0 4px;
+    }
+    .page-header-text p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 14px;
+    }
 </style>
+
+@php
+    $listQuery = array_filter(['tab' => $tab ?? 'active', 'type' => $type ?? null]);
+@endphp
 
 <div class="admin-page">
     <div class="container mx-auto px-4">
+        @if(!empty($typeLabel))
+            <div class="program-context">
+                <a href="{{ route('admin.dashboard') }}">← Konkursi</a>
+            </div>
+        @endif
+
         <div class="page-header">
-            <h1>Upravljanje konkursima</h1>
+            <div class="page-header-text">
+                <h1>{{ !empty($typeLabel) ? $typeLabel : 'Upravljanje konkursima' }}</h1>
+                @if(!empty($typeLabel))
+                    <p>Lista konkursa za odabrani program</p>
+                @endif
+            </div>
             @if(isset($isAdmin) && $isAdmin)
-                <a href="{{ route('admin.competitions.create') }}" class="btn-primary">+ Novi konkurs</a>
+                <a href="{{ route('admin.competitions.create', $type ? ['type' => $type] : []) }}" class="btn-primary">+ Novi konkurs</a>
             @endif
         </div>
 
         <!-- Tabovi za aktivne i arhivirane konkursi -->
         <div style="background: #fff; border-radius: 16px; padding: 0; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
             <div style="display: flex; border-bottom: 2px solid #e5e7eb;">
-                <a href="{{ route('admin.competitions.index', ['tab' => 'active']) }}" 
+                <a href="{{ route('admin.competitions.index', array_merge($listQuery, ['tab' => 'active'])) }}" 
                    style="flex: 1; padding: 16px 24px; text-align: center; text-decoration: none; font-weight: 600; color: {{ $tab === 'active' ? 'var(--primary)' : '#6b7280' }}; border-bottom: 3px solid {{ $tab === 'active' ? 'var(--primary)' : 'transparent' }}; transition: all 0.2s;">
                     Aktivni konkursi
                 </a>
-                <a href="{{ route('admin.competitions.index', ['tab' => 'archive']) }}" 
+                <a href="{{ route('admin.competitions.index', array_merge($listQuery, ['tab' => 'archive'])) }}" 
                    style="flex: 1; padding: 16px 24px; text-align: center; text-decoration: none; font-weight: 600; color: {{ $tab === 'archive' ? 'var(--primary)' : '#6b7280' }}; border-bottom: 3px solid {{ $tab === 'archive' ? 'var(--primary)' : 'transparent' }}; transition: all 0.2s;">
                     Arhiva konkursa
                 </a>
-                <a href="{{ route('admin.competitions.index', ['tab' => 'all']) }}" 
+                <a href="{{ route('admin.competitions.index', array_merge($listQuery, ['tab' => 'all'])) }}" 
                    style="flex: 1; padding: 16px 24px; text-align: center; text-decoration: none; font-weight: 600; color: {{ $tab === 'all' ? 'var(--primary)' : '#6b7280' }}; border-bottom: 3px solid {{ $tab === 'all' ? 'var(--primary)' : 'transparent' }}; transition: all 0.2s;">
                     Svi konkursi
                 </a>
@@ -122,7 +157,9 @@
                 <thead>
                     <tr>
                         <th>Naziv</th>
+                        @if(empty($type))
                         <th>Tip</th>
+                        @endif
                         <th>Preostalo vrijeme</th>
                         <th>Budžet</th>
                         <th>Status</th>
@@ -134,12 +171,14 @@
                     @forelse($competitions as $competition)
                         <tr>
                             <td>{{ $competition->title }}</td>
+                            @if(empty($type))
                             <td>
                                 @if($competition->type === 'zensko') Žensko preduzetništvo
                                 @elseif($competition->type === 'omladinsko') Omladinsko preduzetništvo
                                 @else Ostalo
                                 @endif
                             </td>
+                            @endif
                             <td>
                                 @php
                                     $daysUntilApplicationDeadline = $competition->getDaysUntilApplicationDeadline();
@@ -235,7 +274,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 40px; color: #6b7280;">
+                            <td colspan="{{ empty($type) ? 7 : 6 }}" style="text-align: center; padding: 40px; color: #6b7280;">
                                 @if($tab === 'archive')
                                     Nema arhiviranih konkursa.
                                 @elseif($tab === 'all')
@@ -243,7 +282,7 @@
                                 @else
                                     Nema aktivnih konkursa.
                                     @if(isset($isAdmin) && $isAdmin)
-                                        <a href="{{ route('admin.competitions.create') }}">Kreiraj prvi konkurs</a>
+                                        <a href="{{ route('admin.competitions.create', $type ? ['type' => $type] : []) }}">Kreiraj prvi konkurs</a>
                                     @endif
                                 @endif
                             </td>

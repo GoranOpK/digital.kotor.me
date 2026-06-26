@@ -78,7 +78,37 @@
         }
         .top-grid > .info-card {
             height: 100%;
+            display: flex;
+            flex-direction: column;
         }
+    }
+    .commission-competitions-list {
+        flex: 1;
+        overflow-y: auto;
+        max-height: 420px;
+        padding: 0 4px 4px;
+    }
+    .commission-competition-item {
+        padding: 16px 0;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    .commission-competition-item:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+    }
+    .commission-competition-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 8px;
+        line-height: 1.35;
+    }
+    .commission-competition-title a {
+        color: var(--primary);
+        text-decoration: none;
+    }
+    .commission-competition-title a:hover {
+        text-decoration: underline;
     }
     .services-grid {
         display: grid;
@@ -235,6 +265,8 @@
     } elseif ($isKomisija && isset($commissionMember)) {
         $positionLabel = $commissionMember->position === 'predsjednik' ? 'Predsjednik' : 'Član';
         $userTypeLabel = $positionLabel . ' komisije';
+    } elseif ($isKomisija) {
+        $userTypeLabel = 'Član komisije';
     } elseif ($isPhysicalPerson && $isResident) {
         $userTypeLabel = 'Fizičko lice (Rezident)';
     } elseif ($isPhysicalPerson && $isNonResident) {
@@ -279,15 +311,18 @@
             </div>
         @endif
 
-        @if (!$isSuperAdmin && !$isCompetitionAdmin)
-        <div class="top-grid">
-            <!-- 1. Informacije o korisniku -->
+        @if (!$isSuperAdmin && !$isCompetitionAdmin && $isKomisija && !isset($commissionMember))
+        <div class="top-grid" style="grid-template-columns: 1fr; max-width: 480px;">
             <div class="info-card">
                 <div class="info-card-header">
-                    <h2>Informacije o korisniku</h2>
+                    <h2>Osnovne informacije</h2>
                     <a href="{{ route('profile.edit') }}" class="btn-edit">Izmijeni</a>
                 </div>
                 <div class="info-grid" style="grid-template-columns: 1fr; gap: 12px;">
+                    <div class="info-item">
+                        <span class="info-label">Tip korisnika</span>
+                        <span class="info-value">{{ $userTypeLabel }}</span>
+                    </div>
                     <div class="info-item">
                         <span class="info-label">Ime i prezime</span>
                         <span class="info-value">{{ $user->name ?? 'N/A' }}</span>
@@ -304,9 +339,43 @@
                         <span class="info-label">Adresa</span>
                         <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-warning" style="background: #fef3c7; border: 1px solid #f59e0b; color: #92400e; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px;">
+            Vaš nalog ima ulogu člana komisije, ali trenutno niste dodijeljeni aktivnoj komisiji. Obratite se administratoru konkursa.
+        </div>
+        @endif
+
+        @if (!$isSuperAdmin && !$isCompetitionAdmin && !$isKomisija)
+        <div class="top-grid">
+            <!-- 1. Informacije o korisniku -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h2>Informacije o korisniku</h2>
+                    <a href="{{ route('profile.edit') }}" class="btn-edit">Izmijeni</a>
+                </div>
+                <div class="info-grid" style="grid-template-columns: 1fr; gap: 12px;">
                     <div class="info-item">
                         <span class="info-label">Tip korisnika</span>
                         <span class="info-value">{{ $userTypeLabel }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Ime i prezime</span>
+                        <span class="info-value">{{ $user->name ?? 'N/A' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Email adresa</span>
+                        <span class="info-value">{{ $user->email ?? 'N/A' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Broj telefona</span>
+                        <span class="info-value">{{ $user->phone ?? 'N/A' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Adresa</span>
+                        <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
                     </div>
                     @if($user->jmb)
                         <div class="info-item">
@@ -478,8 +547,8 @@
             </div>
         </div>
 
-        <!-- Brzi servisi (samo za pravna lica) -->
-        @if($isLegalEntity)
+        <!-- Brzi servisi (samo za pravna lica, ne za komisiju) -->
+        @if($isLegalEntity && !$isKomisija)
             <div style="margin-bottom: 24px;">
                 <div class="services-grid" style="margin-top: 0;">
                     <div class="service-card" style="border-color: var(--primary); background: linear-gradient(135deg, rgba(11,61,145,0.05), rgba(11,61,145,0.1));">
@@ -505,8 +574,39 @@
 
         <!-- Dashboard za članove komisije -->
         @if ($isKomisija && isset($commissionMember) && isset($commission))
-            <!-- Informacije o komisiji i konkursu -->
-            <div class="info-grid" style="margin-top: 24px;">
+            @php
+                $activeCompetitions = $commission->competitions->whereNotIn('status', ['closed', 'completed']);
+            @endphp
+            <div class="top-grid">
+                <div class="info-card">
+                    <div class="info-card-header">
+                        <h2>Osnovne informacije</h2>
+                        <a href="{{ route('profile.edit') }}" class="btn-edit">Izmijeni</a>
+                    </div>
+                    <div class="info-grid" style="grid-template-columns: 1fr; gap: 12px;">
+                        <div class="info-item">
+                            <span class="info-label">Tip korisnika</span>
+                            <span class="info-value">{{ $userTypeLabel }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ime i prezime</span>
+                            <span class="info-value">{{ $user->name ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Email adresa</span>
+                            <span class="info-value">{{ $user->email ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Broj telefona</span>
+                            <span class="info-value">{{ $user->phone ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Adresa</span>
+                            <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="info-card">
                     <div class="info-card-header">
                         <h2>Informacije o komisiji</h2>
@@ -537,19 +637,16 @@
                     </div>
                 </div>
 
-                @php
-                    $activeCompetitions = $commission->competitions->whereNotIn('status', ['closed', 'completed']);
-                @endphp
-                @if($activeCompetitions->count() > 0)
                 <div class="info-card">
                     <div class="info-card-header">
                         <h2>Dodijeljeni konkursi</h2>
                     </div>
-                    <div style="padding: 20px;">
+                    @if($activeCompetitions->count() > 0)
+                    <div class="commission-competitions-list">
                         @foreach($activeCompetitions as $competition)
-                            <div style="padding: 16px 0; border-bottom: 1px solid #e5e7eb;">
-                                <h3 style="font-size: 18px; font-weight: 700; color: #111827; margin: 0 0 8px;">
-                                    <a href="{{ route('admin.competitions.show', $competition) }}" style="color: var(--primary); text-decoration: none;">
+                            <div class="commission-competition-item">
+                                <h3 class="commission-competition-title">
+                                    <a href="{{ route('admin.competitions.show', $competition) }}">
                                         {{ $competition->title }}
                                     </a>
                                 </h3>
@@ -608,17 +705,12 @@
                             </div>
                         @endforeach
                     </div>
-                </div>
-                @else
-                <div class="info-card">
-                    <div class="info-card-header">
-                        <h2>Dodijeljeni konkursi</h2>
-                    </div>
+                    @else
                     <div style="padding: 20px; text-align: center;">
-                        <p style="color: #6b7280; font-size: 14px;">Komisiji još nije dodijeljen nijedan konkurs.</p>
+                        <p style="color: #6b7280; font-size: 14px; margin: 0;">Komisiji još nije dodijeljen nijedan konkurs.</p>
                     </div>
+                    @endif
                 </div>
-                @endif
             </div>
 
             <!-- Prijave za ocjenjivanje – vidljivo tek nakon isteka roka za prijavljivanje -->
@@ -657,7 +749,7 @@
                                     // Badge za Obrazac
                                     $obrazacLabel = null;
                                     $obrazacClass = 'status-draft';
-                                    $obrazacUrl = null;
+                                    $obrazacUrl = route('admin.applications.show', $app);
                                     if ($isObrazacComplete) {
                                         if ($app->applicant_type === 'preduzetnica') {
                                             $obrazacLabel = 'Obrazac 1a popunjen';
@@ -669,7 +761,6 @@
                                             $obrazacLabel = 'Obrazac 1a/1b popunjen';
                                             $obrazacClass = 'status-evaluated';
                                         }
-                                        $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
                                     } else {
                                         if ($app->applicant_type === 'preduzetnica') {
                                             $obrazacLabel = 'Obrazac 1a - Nacrt';
@@ -678,13 +769,12 @@
                                         } elseif ($app->applicant_type === 'fizicko_lice') {
                                             $obrazacLabel = 'Obrazac 1a/1b - Nacrt';
                                         }
-                                        $obrazacUrl = route('applications.create', $app->competition_id) . '?application_id=' . $app->id;
                                     }
                                     
                                     // Badge za Biznis Plan
                                     $bizPlanLabel = null;
                                     $bizPlanClass = 'status-draft';
-                                    $bizPlanUrl = null;
+                                    $bizPlanUrl = route('admin.applications.show', $app);
                                     if ($app->businessPlan) {
                                         if ($app->businessPlan->isComplete()) {
                                             $bizPlanLabel = 'Biznis Plan - popunjen';
@@ -693,11 +783,9 @@
                                             $bizPlanLabel = 'Biznis Plan - nacrt';
                                             $bizPlanClass = 'status-draft';
                                         }
-                                        $bizPlanUrl = route('applications.business-plan.create', $app);
                                     } elseif ($isObrazacComplete) {
                                         $bizPlanLabel = 'Biznis Plan - nacrt';
                                         $bizPlanClass = 'status-draft';
-                                        $bizPlanUrl = route('applications.business-plan.create', $app);
                                     }
                                     
                                     // Provjeri da li je član komisije ocjenio prijavu
@@ -708,7 +796,7 @@
                                     <td style="padding: 12px; vertical-align: top;">{{ $app->user->name ?? 'N/A' }}</td>
                                     <td style="padding: 12px; vertical-align: top;">
                                         @if($app->status === 'rejected')
-                                            <a href="{{ route('applications.show', $app) }}" class="status-badge {{ $statusClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;">
+                                            <a href="{{ route('admin.applications.show', $app) }}" class="status-badge {{ $statusClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;">
                                                 {{ $statusLabels[$app->status] ?? $app->status }}
                                             </a>
                                         @else

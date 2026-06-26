@@ -26,13 +26,20 @@
                         </x-nav-link>
                     @elseif($isCompetitionAdmin)
                         <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                            Konkursi panel
-                        </x-nav-link>
-                        <x-nav-link :href="route('admin.competitions.index')" :active="request()->routeIs('admin.competitions.*')">
                             Konkursi
                         </x-nav-link>
                         <x-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
                             Komisije
+                        </x-nav-link>
+                        <x-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
+                            Arhiva konkursa
+                        </x-nav-link>
+                    @elseif($user && $user->role && $user->role->name === 'komisija')
+                        <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                            Moj panel
+                        </x-nav-link>
+                        <x-nav-link :href="route('evaluation.index')" :active="request()->routeIs('evaluation.*')">
+                            Ocjenjivanje
                         </x-nav-link>
                         <x-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
                             Arhiva konkursa
@@ -51,11 +58,6 @@
                             @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
                                 <x-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
                                     Administracija
-                                </x-nav-link>
-                            @endif
-                            @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
-                                <x-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
-                                    Arhiva konkursa
                                 </x-nav-link>
                             @endif
                         @endauth
@@ -123,13 +125,20 @@
                 </x-responsive-nav-link>
             @elseif($isCompetitionAdmin)
                 <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                    Konkursi panel
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('admin.competitions.index')" :active="request()->routeIs('admin.competitions.*')">
                     Konkursi
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
                     Komisije
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
+                    Arhiva konkursa
+                </x-responsive-nav-link>
+            @elseif($user && $user->role && $user->role->name === 'komisija')
+                <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    Moj panel
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('evaluation.index')" :active="request()->routeIs('evaluation.*')">
+                    Ocjenjivanje
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
                     Arhiva konkursa
@@ -148,11 +157,6 @@
                     @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
                         <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
                             Administracija
-                        </x-responsive-nav-link>
-                    @endif
-                    @if(auth()->user()->role && auth()->user()->role->name === 'komisija')
-                        <x-responsive-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
-                            Arhiva konkursa
                         </x-responsive-nav-link>
                     @endif
                 @endauth

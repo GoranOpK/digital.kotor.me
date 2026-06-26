@@ -183,14 +183,51 @@
     }
     @media (min-width: 1024px) {
         .info-grid {
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(2, 1fr);
         }
     }
     .info-grid .info-card {
         margin-bottom: 0;
         height: 100%;
+    }
+    .composition-slot {
+        padding: 16px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        background: #fff;
+    }
+    .composition-slot.is-substituted {
+        border-color: #f59e0b;
+        background: #fffbeb;
+    }
+    .composition-slot.is-empty {
+        border-style: dashed;
+        background: #f9fafb;
+    }
+    .composition-slot-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 8px;
+    }
+    .composition-slot-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #111827;
+    }
+    .composition-slot-meta {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 6px;
+        line-height: 1.5;
+    }
+    .composition-slot-actions {
+        margin-top: 12px;
         display: flex;
-        flex-direction: column;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
     }
 </style>
 
@@ -217,7 +254,7 @@
         @if($errors->any())
             <div class="alert alert-warning">
                 @foreach($errors->all() as $error)
-                    <div>{{ $error }}</div>
+                    <div>{{ is_array($error) ? implode(' ', $error) : $error }}</div>
                 @endforeach
             </div>
         @endif
@@ -269,143 +306,78 @@
                 </ul>
             </div>
             @endif
+        </div>
 
-            <!-- Članovi komisije -->
-            <div class="info-card">
-            <h2>Članovi komisije</h2>
-            
-            @if($commission->members->count() > 0)
+        <!-- Sastav komisije (puna širina) -->
+        <div class="info-card">
+            <h2>Sastav komisije</h2>
+
+            @foreach($compositionSlots as $compositionSlot)
                 @php
-                    $regularMembers = $commission->members->reject(fn($m) => !empty($m->is_substitute))->values();
-                    $chairmanMember = $regularMembers->first(fn($m) => $m->position === 'predsjednik');
-                    $opstinaClanovi = $regularMembers->filter(fn($m) => $m->position === 'clan' && $m->member_type === 'opstina')->values();
-                    $udruzenjeMember = $regularMembers->first(fn($m) => $m->member_type === 'udruzenje');
-                    $zeneMrezaMember = $regularMembers->first(fn($m) => $m->member_type === 'zene_mreza');
+                    $regularMember = $compositionSlot['regular_member'];
+                    $activeSubstitute = $compositionSlot['active_substitute'];
+                    $slotClass = 'composition-slot';
+                    if ($activeSubstitute) {
+                        $slotClass .= ' is-substituted';
+                    } elseif (!$regularMember) {
+                        $slotClass .= ' is-empty';
+                    }
                 @endphp
-                <ul class="members-list">
-                    @foreach($commission->members as $member)
-                        <li class="member-item">
-                            <div class="member-info">
-                                <div class="member-name">
-                                    {{ $member->name }}
-                                    @if($member->position === 'predsjednik')
-                                        <span style="color: var(--primary); font-size: 12px;">(Predsjednik)</span>
-                                    @endif
-                                    @if(!empty($member->is_substitute))
-                                        @php
-                                            $replaces = (int)($member->replaces_member_number ?? 0);
-                                            $replacesLabel = $replaces === 1
-                                                ? 'Predsjednika komisije'
-                                                : ($replaces === 2 ? 'Člana 2' : ($replaces === 3 ? 'Člana 3' : ($replaces === 4 ? 'Člana 4' : ($replaces === 5 ? 'Člana 5' : '—'))));
+                <div class="{{ $slotClass }}">
+                    <div class="composition-slot-title">{{ $compositionSlot['label'] }}</div>
 
-                                            $replacedMember = null;
-                                            $replacedRoleLabel = null;
-                                            if ($replaces === 1) {
-                                                $replacedMember = $chairmanMember;
-                                                $replacedRoleLabel = 'predsjednik';
-                                            } elseif ($replaces === 2) {
-                                                $replacedMember = $opstinaClanovi->get(0);
-                                                $replacedRoleLabel = 'član';
-                                            } elseif ($replaces === 3) {
-                                                $replacedMember = $opstinaClanovi->get(1);
-                                                $replacedRoleLabel = 'član';
-                                            } elseif ($replaces === 4) {
-                                                $replacedMember = $udruzenjeMember;
-                                                $replacedRoleLabel = 'član';
-                                            } elseif ($replaces === 5) {
-                                                $replacedMember = $zeneMrezaMember;
-                                                $replacedRoleLabel = 'član';
-                                            }
-                                        @endphp
-                                        <div style="color: #6b7280; font-size: 12px; margin-top: 4px;">
-                                            (Zamjenski za: {{ $replacesLabel }})
-                                        </div>
-                                        <div style="color: #374151; font-size: 12px; margin-top: 4px; font-weight: 600;">
-                                            Zamjenski član aktivno mijenja:
-                                            @if($replacedMember)
-                                                {{ $replacedMember->name }} ({{ $replacedRoleLabel }})
-                                            @else
-                                                [nije dodijeljeno ime] ({{ $replacedRoleLabel ?? 'uloga' }})
-                                            @endif
-                                        </div>
-                                    @endif
-                                </div>
-                                <div class="member-details">
-                                    <div>Pozicija: {{ $member->position === 'predsjednik' ? 'predsjednik' : 'član' }}</div>
-                                    <div>Tip: 
-                                        @if($member->member_type === 'opstina') Predstavnik Opštine Kotor
-                                        @elseif($member->member_type === 'udruzenje') Predstavnica Udruženja preduzetnica Crne Gore ili strukovnih udruženja, ili biznisa, ili akademske zajednice
-                                        @elseif($member->member_type === 'zene_mreza') Predstavnica Ženske političke mreže
-                                        @endif
-                                    </div>
-                                    @if($member->organization)
-                                        <div>Organizacija: {{ $member->organization }}</div>
-                                    @endif
-                                    <div>Status: 
-                                        <span style="color: {{ $member->status === 'active' ? '#10b981' : '#ef4444' }};">
-                                            {{ $member->status === 'active' ? 'Aktivan' : ($member->status === 'inactive' ? 'Neaktivan' : ($member->status === 'resigned' ? 'Podneo ostavku' : 'Razriješen')) }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="member-actions">
-                                @php
-                                    $memberSlot = null;
-                                    $blockedBySubstitute = false;
-                                    if (empty($member->is_substitute)) {
-                                        for ($slot = 1; $slot <= 5; $slot++) {
-                                            $resolved = null;
-                                            if ($slot === 1) {
-                                                $resolved = $regularMembers->first(fn($m) => $m->position === 'predsjednik');
-                                            } elseif ($slot === 2) {
-                                                $resolved = $opstinaClanovi->get(0);
-                                            } elseif ($slot === 3) {
-                                                $resolved = $opstinaClanovi->get(1);
-                                            } elseif ($slot === 4) {
-                                                $resolved = $udruzenjeMember;
-                                            } elseif ($slot === 5) {
-                                                $resolved = $zeneMrezaMember;
-                                            }
-                                            if ($resolved && $resolved->id === $member->id) {
-                                                $memberSlot = $slot;
-                                                break;
-                                            }
-                                        }
-                                        if ($memberSlot) {
-                                            $blockedBySubstitute = $commission->members->contains(
-                                                fn($m) => !empty($m->is_substitute)
-                                                    && $m->status === 'active'
-                                                    && (int)($m->replaces_member_number ?? 0) === $memberSlot
-                                            );
-                                        }
-                                    }
-                                @endphp
-                                @if(!empty($member->is_substitute))
-                                    <form method="POST" action="{{ route('admin.commissions.members.delete', $member) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da uklonite zamjenskog člana? Redovni član će biti vraćen u aktivni status.');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn-sm btn-danger">Ukloni zamjenskog</button>
-                                    </form>
-                                @elseif($blockedBySubstitute)
-                                    <span style="font-size: 12px; color: #92400e; max-width: 220px; display: inline-block;">
-                                        Prvo uklonite zamjenskog člana da biste vratili redovnog člana.
-                                    </span>
-                                @else
-                                    <form method="POST" action="{{ route('admin.commissions.members.delete', $member) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovog člana?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn-sm btn-danger">Obriši</button>
-                                    </form>
+                    @if($activeSubstitute)
+                        <div class="composition-slot-name">
+                            {{ $activeSubstitute->name }}
+                            <span style="color: #92400e; font-size: 12px; font-weight: 700;">(Zamjenski član)</span>
+                        </div>
+                        <div class="composition-slot-meta">
+                            Aktivno mijenja:
+                            @if($regularMember)
+                                {{ $regularMember->name }}
+                                @if($regularMember->status !== 'active')
+                                    — redovni član privremeno neaktivan
                                 @endif
-                            </div>
-                        </li>
-                    @endforeach
-                </ul>
-            @else
-                <p style="color: #6b7280; text-align: center; padding: 40px;">
-                    Nema članova u komisiji.
-                </p>
-            @endif
+                            @else
+                                nije dodijeljen redovni član na ovoj poziciji
+                            @endif
+                            @if($activeSubstitute->organization)
+                                <br>Organizacija: {{ $activeSubstitute->organization }}
+                            @endif
+                        </div>
+                        <div class="composition-slot-actions">
+                            <form method="POST" action="{{ route('admin.commissions.members.delete', $activeSubstitute) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da uklonite zamjenskog člana? Redovni član će biti vraćen u aktivni status.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-sm btn-danger">Ukloni zamjenskog</button>
+                            </form>
+                        </div>
+                    @elseif($regularMember)
+                        <div class="composition-slot-name">{{ $regularMember->name }}</div>
+                        <div class="composition-slot-meta">
+                            Status:
+                            <span style="color: {{ $regularMember->status === 'active' ? '#10b981' : '#ef4444' }}; font-weight: 600;">
+                                {{ $regularMember->status === 'active' ? 'Aktivan' : ($regularMember->status === 'inactive' ? 'Neaktivan' : ($regularMember->status === 'resigned' ? 'Podneo ostavku' : 'Razriješen')) }}
+                            </span>
+                            @if($regularMember->organization)
+                                <br>Organizacija: {{ $regularMember->organization }}
+                            @endif
+                            @if($regularMember->user)
+                                <br>E-mail: {{ $regularMember->user->email }}
+                            @endif
+                        </div>
+                        <div class="composition-slot-actions">
+                            <form method="POST" action="{{ route('admin.commissions.members.delete', $regularMember) }}" style="display: inline;" onsubmit="return confirm('Da li ste sigurni da želite da obrišete ovog člana?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn-sm btn-danger">Obriši</button>
+                            </form>
+                        </div>
+                    @else
+                        <div class="composition-slot-name" style="color: #9ca3af; font-weight: 500;">Nije dodijeljen</div>
+                    @endif
+                </div>
+            @endforeach
 
             <!-- Forma za dodavanje člana -->
             @php
@@ -517,7 +489,6 @@
                     @endif
                 </div>
             @endif
-            </div>
         </div>
     </div>
 </div>

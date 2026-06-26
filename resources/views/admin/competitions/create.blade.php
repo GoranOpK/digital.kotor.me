@@ -103,9 +103,9 @@
                     <div class="form-group">
                         <label class="form-label">Tip konkursa *</label>
                         <select name="type" class="form-control" required>
-                            <option value="zensko" {{ old('type') === 'zensko' ? 'selected' : '' }}>Žensko preduzetništvo</option>
-                            <option value="omladinsko" {{ old('type') === 'omladinsko' ? 'selected' : '' }}>Omladinsko preduzetništvo</option>
-                            <option value="ostalo" {{ old('type') === 'ostalo' ? 'selected' : '' }}>Ostalo</option>
+                            <option value="zensko" {{ old('type', $presetType ?? 'zensko') === 'zensko' ? 'selected' : '' }}>Žensko preduzetništvo</option>
+                            <option value="omladinsko" {{ old('type', $presetType ?? 'zensko') === 'omladinsko' ? 'selected' : '' }}>Omladinsko preduzetništvo</option>
+                            <option value="ostalo" {{ old('type', $presetType ?? 'zensko') === 'ostalo' ? 'selected' : '' }}>Ostalo</option>
                         </select>
                     </div>
 
