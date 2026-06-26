@@ -125,7 +125,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label">Budžet (€) *</label>
+                        <label class="form-label">Ukupan budžet (€) *</label>
                         <input type="number" name="budget" class="form-control" value="{{ old('budget') }}" step="0.01" min="0" required>
                     </div>
                 </div>

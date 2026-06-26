@@ -326,6 +326,62 @@ class Application extends Model
     }
 
     /**
+     * Traženi iznos za prikaz na statusu prijave (biznis plan ili sačuvana vrijednost na prijavi).
+     */
+    public function displayRequestedAmount(): ?float
+    {
+        $fromPlan = $this->businessPlan?->resolvedRequestedAmount();
+        if ($fromPlan !== null && $fromPlan > 0) {
+            return $fromPlan;
+        }
+
+        if ($this->requested_amount !== null && (float) $this->requested_amount > 0) {
+            return (float) $this->requested_amount;
+        }
+
+        return null;
+    }
+
+    /**
+     * Potrebna sredstva za realizaciju biznis ideje (pitanje 21 u biznis planu).
+     */
+    public function displayRequiredFunds(): ?float
+    {
+        $fromPlan = $this->businessPlan?->resolvedRequiredAmount();
+        if ($fromPlan !== null && $fromPlan > 0) {
+            return $fromPlan;
+        }
+
+        if ($this->total_budget_needed !== null && (float) $this->total_budget_needed > 0) {
+            return (float) $this->total_budget_needed;
+        }
+
+        return null;
+    }
+
+    /**
+     * Ukupan budžet konkursa (definisan pri kreiranju konkursa).
+     */
+    public function displayCompetitionBudget(): ?float
+    {
+        $budget = $this->competition?->budget;
+
+        if ($budget === null) {
+            return null;
+        }
+
+        return (float) $budget;
+    }
+
+    /**
+     * @deprecated Koristiti displayRequiredFunds()
+     */
+    public function displayTotalBudget(): ?float
+    {
+        return $this->displayRequiredFunds();
+    }
+
+    /**
      * Proverava da li prijava ima sve obavezne dokumente
      */
     public function hasAllRequiredDocuments(): bool
@@ -887,7 +943,7 @@ $documents = [
             'physical_person_phone' => 'Telefon (fizičko lice)',
             'physical_person_email' => 'E-mail (fizičko lice)',
             'requested_amount' => 'Traženi iznos (€)',
-            'total_budget_needed' => 'Ukupna vrijednost biznis plana (€)',
+            'total_budget_needed' => 'Potrebna sredstva (€)',
             'bank_account' => 'Žiro račun',
             'vat_number' => 'PDV broj',
             'pib' => 'PIB',

@@ -164,7 +164,7 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label class="form-label">Budžet (€) *</label>
+                        <label class="form-label">Ukupan budžet (€) *</label>
                         <input type="number" name="budget" class="form-control @error('budget') error @enderror" value="{{ old('budget', $competition->budget) }}" step="0.01" min="0" required>
                         @error('budget')
                             <div class="error-message">{{ $message }}</div>

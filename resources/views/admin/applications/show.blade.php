@@ -339,11 +339,33 @@
                         </div>
                         <div class="info-item">
                             <span class="info-label">Traženi iznos</span>
-                            <span class="info-value">{{ number_format($application->requested_amount, 2, ',', '.') }} €</span>
+                            <span class="info-value">
+                                @if($application->displayRequestedAmount() !== null)
+                                    {{ number_format($application->displayRequestedAmount(), 2, ',', '.') }} €
+                                @else
+                                    —
+                                @endif
+                            </span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Potrebna sredstva</span>
+                            <span class="info-value">
+                                @if($application->displayRequiredFunds() !== null)
+                                    {{ number_format($application->displayRequiredFunds(), 2, ',', '.') }} €
+                                @else
+                                    —
+                                @endif
+                            </span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Ukupan budžet</span>
-                            <span class="info-value">{{ number_format($application->total_budget_needed, 2, ',', '.') }} €</span>
+                            <span class="info-value">
+                                @if($application->displayCompetitionBudget() !== null)
+                                    {{ number_format($application->displayCompetitionBudget(), 2, ',', '.') }} €
+                                @else
+                                    —
+                                @endif
+                            </span>
                         </div>
                         @if($application->approved_amount)
                         <div class="info-item">

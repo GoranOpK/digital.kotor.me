@@ -363,13 +363,34 @@ class BusinessPlanController extends Controller
             )
         );
 
-        // Uskladi ključne iznose iz Biznis plana sa prijavom (za sve ostale prikaze u sistemu):
-        // - stavka 21 (required_amount) -> applications.total_budget_needed
-        // - stavka 22 (requested_amount) -> applications.requested_amount
-        $application->update([
-            'total_budget_needed' => $businessPlan->required_amount,
-            'requested_amount' => $businessPlan->requested_amount,
-        ]);
+        $businessPlan->refresh();
+
+        $resolvedRequired = $businessPlan->resolvedRequiredAmount();
+        $resolvedRequested = $businessPlan->resolvedRequestedAmount();
+
+        $businessPlanUpdates = [];
+        if ($resolvedRequired !== null && ((float) ($businessPlan->required_amount ?? 0)) <= 0) {
+            $businessPlanUpdates['required_amount'] = $resolvedRequired;
+        }
+        if ($resolvedRequested !== null && ((float) ($businessPlan->requested_amount ?? 0)) <= 0) {
+            $businessPlanUpdates['requested_amount'] = $resolvedRequested;
+        }
+        if (!empty($businessPlanUpdates)) {
+            $businessPlan->update($businessPlanUpdates);
+            $businessPlan->refresh();
+        }
+
+        // Uskladi ključne iznose iz Biznis plana sa prijavom (za sve ostale prikaze u sistemu)
+        $applicationUpdate = [];
+        if ($resolvedRequired !== null) {
+            $applicationUpdate['total_budget_needed'] = $resolvedRequired;
+        }
+        if ($resolvedRequested !== null) {
+            $applicationUpdate['requested_amount'] = $resolvedRequested;
+        }
+        if (!empty($applicationUpdate)) {
+            $application->update($applicationUpdate);
+        }
 
         // Ako je sačuvano kao nacrt, vrati korisnika na Moj Panel
         if ($isDraft) {

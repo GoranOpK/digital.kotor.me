@@ -1222,7 +1222,7 @@
                     
                     <div class="form-group">
                         <label class="form-label">
-                            21. Koliki iznos sredstava Vam je potreban za realizaciju biznis ideje?
+                            21. Potrebna sredstva — koliki iznos Vam je potreban za realizaciju biznis ideje?
                         </label>
                         <input type="number" name="required_amount" class="form-control" value="{{ old('required_amount', $businessPlan->required_amount ?? $defaultData['required_amount'] ?? '') }}" step="0.01" min="0" placeholder="0.00">
                     </div>

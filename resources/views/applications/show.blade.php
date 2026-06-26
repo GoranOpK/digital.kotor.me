@@ -335,6 +335,12 @@
             $gridColumnsStyle = 'repeat(3, 1fr)';
         @endphp
 
+        @php
+            $displayRequestedAmount = $application->displayRequestedAmount();
+            $displayRequiredFunds = $application->displayRequiredFunds();
+            $displayCompetitionBudget = $application->displayCompetitionBudget();
+        @endphp
+
         <div class="summary-grid" style="grid-template-columns: 1fr;">
             <style>
                 @media (min-width: 992px) {
@@ -385,18 +391,38 @@
                         </span>
                     </div>
                     @php
-                        // Usklađeno sa Formom za biznis plan (IV Finansije):
-                        // 21 = required_amount (ukupan potrebni iznos), 22 = requested_amount (traženi iznos podrške)
-                        $statusRequestedAmount = $application->businessPlan?->requested_amount ?? $application->requested_amount;
-                        $statusTotalBudget = $application->businessPlan?->required_amount ?? $application->total_budget_needed;
+                        // Traženi iznos i potrebna sredstva iz biznis plana (IV. Finansije);
+                        // ukupan budžet iz definicije konkursa.
                     @endphp
                     <div class="info-item">
                         <span class="info-label">Traženi iznos</span>
-                        <span class="info-value">{{ number_format((float)($statusRequestedAmount ?? 0), 2, ',', '.') }} €</span>
+                        <span class="info-value">
+                            @if($displayRequestedAmount !== null)
+                                {{ number_format($displayRequestedAmount, 2, ',', '.') }} €
+                            @else
+                                <span style="color: #6b7280;">Nije unijeto</span>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Potrebna sredstva</span>
+                        <span class="info-value">
+                            @if($displayRequiredFunds !== null)
+                                {{ number_format($displayRequiredFunds, 2, ',', '.') }} €
+                            @else
+                                <span style="color: #6b7280;">Nije unijeto</span>
+                            @endif
+                        </span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Ukupan budžet</span>
-                        <span class="info-value">{{ number_format((float)($statusTotalBudget ?? 0), 2, ',', '.') }} €</span>
+                        <span class="info-value">
+                            @if($displayCompetitionBudget !== null)
+                                {{ number_format($displayCompetitionBudget, 2, ',', '.') }} €
+                            @else
+                                <span style="color: #6b7280;">Nije definisan</span>
+                            @endif
+                        </span>
                     </div>
                     @if($application->approved_amount)
                     <div class="info-item">
@@ -445,6 +471,36 @@
                             </span>
                         </div>
                     @endif
+                    <div class="info-item" style="margin-bottom: 16px;">
+                        <span class="info-label">Traženi iznos</span>
+                        <span class="info-value">
+                            @if($displayRequestedAmount !== null)
+                                {{ number_format($displayRequestedAmount, 2, ',', '.') }} €
+                            @else
+                                <span style="color: #6b7280;">Nije unijeto</span>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 16px;">
+                        <span class="info-label">Potrebna sredstva</span>
+                        <span class="info-value">
+                            @if($displayRequiredFunds !== null)
+                                {{ number_format($displayRequiredFunds, 2, ',', '.') }} €
+                            @else
+                                <span style="color: #6b7280;">Nije unijeto</span>
+                            @endif
+                        </span>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 16px;">
+                        <span class="info-label">Ukupan budžet</span>
+                        <span class="info-value">
+                            @if($displayCompetitionBudget !== null)
+                                {{ number_format($displayCompetitionBudget, 2, ',', '.') }} €
+                            @else
+                                <span style="color: #6b7280;">Nije definisan</span>
+                            @endif
+                        </span>
+                    </div>
                     <div class="info-item" style="margin-bottom: 16px;">
                         <span class="info-label">Obrazac 1a/1b</span>
                         <span class="info-value">
