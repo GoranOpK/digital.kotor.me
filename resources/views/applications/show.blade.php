@@ -1023,13 +1023,18 @@
                         @php
                             $uploaded = in_array($docType, $uploadedDocs);
                             $doc = $application->documents->where('document_type', $docType)->first();
+                            $isOptionalDoc = in_array($docType, \App\Models\Application::getConditionallyRequiredDocumentTypes(), true);
                         @endphp
-                        <li class="document-item {{ $uploaded ? 'uploaded' : 'required' }}">
+                        <li class="document-item {{ $uploaded ? 'uploaded' : ($isOptionalDoc ? '' : 'required') }}">
                             <div class="document-info">
                                 <div class="document-name">
                                     {{ $documentLabels[$docType] ?? $docType }}
                                     @if(!$uploaded)
-                                        <span style="color: #ef4444; font-size: 12px; margin-left: 8px;">(Obavezno)</span>
+                                        @if($isOptionalDoc)
+                                            <span style="color: #92400e; font-size: 12px; margin-left: 8px;">(Opciono — za dodatne bodove)</span>
+                                        @else
+                                            <span style="color: #ef4444; font-size: 12px; margin-left: 8px;">(Obavezno)</span>
+                                        @endif
                                     @endif
                                 </div>
                                 @if($uploaded && $doc)
