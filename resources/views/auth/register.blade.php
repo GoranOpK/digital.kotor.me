@@ -45,7 +45,6 @@
             .phone-flag-select { width:100%; }
         }
     </style>
-    @include('layouts.partials.favicon')
     <meta name="theme-color" content="#0B3D91">
 </head>
 <body>

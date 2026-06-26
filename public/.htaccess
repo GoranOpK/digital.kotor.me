@@ -1,9 +1,3 @@
-<IfModule mod_headers.c>
-    <FilesMatch "\.(ico|png)$">
-        Header set Cache-Control "public, max-age=86400"
-    </FilesMatch>
-</IfModule>
-
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
