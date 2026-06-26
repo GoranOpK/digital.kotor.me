@@ -1,3 +1,9 @@
+<IfModule mod_headers.c>
+    <Files "favicon.ico">
+        Header set Content-Type "image/png"
+    </Files>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes
