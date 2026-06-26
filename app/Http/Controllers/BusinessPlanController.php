@@ -45,7 +45,9 @@ class BusinessPlanController extends Controller
 
         // Proveri da li je Obrazac 1a/1b kompletno popunjen
         if (!$application->isObrazacComplete()) {
-            return redirect()->route('applications.create', $application->competition_id)
+            $url = route('applications.create', $application->competition_id) . '?application_id=' . $application->id;
+
+            return redirect()->to($url)
                 ->withErrors(['error' => 'Molimo popunite kompletan Obrazac 1a ili 1b (sva obavezna polja i potvrdite sve obavezne izjave) pre nego što nastavite na biznis plan.'])
                 ->withInput();
         }

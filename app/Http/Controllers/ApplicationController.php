@@ -215,12 +215,18 @@ class ApplicationController extends Controller
         $this->mergeProfileAddressIntoRequest($request);
 
         if (!$isDraft && in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true)) {
-            $profileUser = $request->user();
-            if (trim((string) $profileUser->address) === '' || trim((string) $profileUser->city) === '') {
-                return back()
-                    ->withErrors(['error' => 'Popunite ulicu i grad u svom profilu prije podnošenja prijave.'])
-                    ->withInput();
+            $profileAddressError = $this->profileAddressErrorForUser($request->user());
+            if ($profileAddressError !== null) {
+                return back()->withErrors(['preduzetnik_address' => $profileAddressError])->withInput();
             }
+        }
+
+        if (!$isDraft && $request->applicant_type === 'preduzetnica' && !$request->filled('business_stage')) {
+            $request->merge(['business_stage' => 'započinjanje']);
+        }
+
+        if (!$isDraft && $request->applicant_type === 'preduzetnica' && !$request->filled('registration_form')) {
+            $request->merge(['registration_form' => 'Preduzetnik']);
         }
         
         $rules = [
@@ -236,11 +242,13 @@ class ApplicationController extends Controller
             'pib' => 'nullable|string|regex:/^[0-9]{8}$/',
         ];
 
-        // Izjava o tačnosti je obavezna samo za fizičko lice BEZ registrovane djelatnosti
-        // Preduzetnica, DOO i Ostalo automatski imaju registrovanu djelatnost
-        if ($request->applicant_type === 'fizicko_lice' && !$isDraft) {
+        // Izjava o tačnosti je obavezna za sve tipove prijave
+        if (in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true) && !$isDraft) {
             $rules['accuracy_declaration'] = 'required|accepted';
-            
+        }
+
+        // Dodatna pravila za fizičko lice BEZ registrovane djelatnosti
+        if ($request->applicant_type === 'fizicko_lice' && !$isDraft) {
             // Ako je korisnik "Fizičko lice (Rezident)", business_stage je obavezno
             $userType = auth()->user()->user_type ?? '';
             if ($userType === 'Fizičko lice' || $userType === 'Rezident') {
@@ -261,7 +269,7 @@ class ApplicationController extends Controller
         }
 
         if ($request->applicant_type === 'preduzetnica' && !$isDraft) {
-            $rules['preduzetnik_address'] = ['required', 'string', 'max:500', new KotorMunicipalityAddress()];
+            // Adresa se povlači iz profila u mergeProfileAddressIntoRequest()
         } elseif ($isDraft && $request->filled('preduzetnik_address')) {
             $rules['preduzetnik_address'] = ['nullable', 'string', 'max:500', new KotorMunicipalityAddress()];
         }
@@ -326,10 +334,10 @@ class ApplicationController extends Controller
         }
 
         if (!$isDraft && $request->applicant_type === 'fizicko_lice') {
-            $address = $request->user()->formattedAddress();
-            if (!KotorAddress::isInKotorMunicipality($address)) {
+            $profileAddressError = $this->profileAddressErrorForUser($request->user());
+            if ($profileAddressError !== null) {
                 return back()
-                    ->withErrors(['error' => KotorAddress::validationMessage() . ' Ažurirajte adresu u profilu.'])
+                    ->withErrors(['error' => $profileAddressError . ' Ažurirajte adresu u profilu.'])
                     ->withInput();
             }
         }
@@ -430,25 +438,26 @@ class ApplicationController extends Controller
             return back()->withErrors(['error' => 'Greška pri čuvanju prijave: ' . $e->getMessage()])->withInput();
         }
 
+        $application->refresh();
+
         // Proveri da li je Obrazac 1a/1b kompletno popunjen (sva polja + checkbox-ovi)
         $isObrazacComplete = $application->isObrazacComplete();
 
         // VAŽNO: Prvo proveri da li je obrazac kompletan, pa tek onda proveri da li je draft
         // Ako je obrazac kompletan, preusmeri na formu za biznis plan (bez obzira na $isDraft)
         if ($isObrazacComplete) {
-            // Ako je obrazac kompletno popunjen, preusmeri na formu za biznis plan
             return redirect()->route('applications.business-plan.create', $application)
                 ->with('success', 'Obrazac 1a/1b je kompletno popunjen. Sada popunite biznis plan.');
-        } elseif ($isDraft) {
-            // Ako je eksplicitno kliknuto "Sačuvaj kao nacrt", čuvaj kao draft i vrati korisnika na Moj Panel
+        }
+
+        if ($isDraft) {
             return redirect()->route('dashboard')
                 ->with('success', 'Prijava je sačuvana kao nacrt. U bilo kom trenutku je možete nastaviti iz sekcije \"Moje prijave\".');
-        } else {
-            // Ako nije kompletna (kliknuo "Sačuvaj prijavu" ali nisu sva polja popunjena), sačuvaj kao draft i vrati na formu
-            return redirect()->route('applications.create', $competition)
-                ->with('warning', 'Prijava je sačuvana kao nacrt jer još uvek nisu popunjena sva obavezna polja. Molimo popunite sva obavezna polja i potvrdite sve obavezne izjave.')
-                ->withInput();
         }
+
+        return redirect()->to($this->applicationCreateUrl($competition, $application))
+            ->with('warning', 'Prijava je sačuvana, ali još nisu popunjena sva obavezna polja. Provjerite formu i pokušajte ponovo.')
+            ->withInput();
     }
 
     /**
@@ -950,6 +959,29 @@ class ApplicationController extends Controller
                 'company_seat' => $profileAddress,
             ]);
         }
+    }
+
+    protected function profileAddressErrorForUser(?\App\Models\User $user): ?string
+    {
+        if (!$user) {
+            return 'Nije moguće učitati adresu iz profila.';
+        }
+
+        $profileAddress = $user->formattedAddress();
+        if ($profileAddress === '') {
+            return 'Popunite ulicu i grad u svom profilu prije nastavka prijave.';
+        }
+
+        if (!KotorAddress::isInKotorMunicipality($profileAddress)) {
+            return KotorAddress::validationMessage();
+        }
+
+        return null;
+    }
+
+    protected function applicationCreateUrl(Competition $competition, Application $application): string
+    {
+        return route('applications.create', $competition) . '?application_id=' . $application->id;
     }
 
 }

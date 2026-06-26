@@ -422,6 +422,29 @@
             </div>
         @endif
 
+        @if(session('error'))
+            <div class="alert alert-danger no-print" style="margin-bottom: 24px; padding: 16px; background: #fee2e2; border: 1px solid #f87171; border-radius: 8px; color: #991b1b;">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        @if(session('warning'))
+            <div class="alert alert-warning no-print" style="margin-bottom: 24px; padding: 16px; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; color: #92400e;">
+                {{ session('warning') }}
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger no-print" style="margin-bottom: 24px; padding: 16px; background: #fee2e2; border: 1px solid #f87171; border-radius: 8px; color: #991b1b;">
+                <strong>Ispravite sljedeće greške:</strong>
+                <ul style="margin: 8px 0 0; padding-left: 20px;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
 
         @php
             $readOnly = $readOnly ?? false;
@@ -662,14 +685,15 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Adresa:</label>
-                            <input 
-                                type="text" 
-                                name="preduzetnik_address" 
+                            <input
+                                type="text"
                                 class="form-control @error('preduzetnik_address') error @enderror"
                                 value="{{ old('preduzetnik_address', $userProfileAddress) }}"
                                 maxlength="500"
                                 readonly
+                                tabindex="-1"
                             >
+                            <input type="hidden" name="preduzetnik_address" value="{{ old('preduzetnik_address', $userProfileAddress) }}">
                             <p class="address-from-profile-note">
                                 Adresa se povlači iz vašeg profila (ulica i grad iz registracije).
                                 <a href="{{ route('profile.edit') }}">Izmijeni u profilu</a>
@@ -925,14 +949,15 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">Adresa:</label>
-                            <input 
-                                type="text" 
-                                name="doo_address" 
+                            <input
+                                type="text"
                                 class="form-control @error('doo_address') error @enderror"
                                 value="{{ old('doo_address', $userProfileAddress) }}"
                                 maxlength="500"
                                 readonly
+                                tabindex="-1"
                             >
+                            <input type="hidden" name="doo_address" value="{{ old('doo_address', $userProfileAddress) }}">
                             <p class="address-from-profile-note">
                                 Adresa se povlači iz vašeg profila (ulica i grad iz registracije).
                                 <a href="{{ route('profile.edit') }}">Izmijeni u profilu</a>
@@ -1055,15 +1080,15 @@
 
                     <div class="form-group">
                         <label class="form-label">*Sjedište društva:</label>
-                        <input 
-                            type="text" 
-                            name="company_seat" 
+                        <input
+                            type="text"
                             class="form-control @error('company_seat') error @enderror"
                             value="{{ old('company_seat', $userProfileAddress) }}"
                             maxlength="500"
                             readonly
-                            required
+                            tabindex="-1"
                         >
+                        <input type="hidden" name="company_seat" value="{{ old('company_seat', $userProfileAddress) }}">
                         <p class="address-from-profile-note">
                             Sjedište se povlači iz vašeg profila (ulica i grad iz registracije).
                             <a href="{{ route('profile.edit') }}">Izmijeni u profilu</a>
@@ -1574,14 +1599,14 @@
                     });
                     const businessPlanName1a = obrazac1a.querySelector('input[name="business_plan_name"]');
                     const businessArea1a = obrazac1a.querySelector('input[name="business_area"]');
+                    const accuracyDeclaration1a = obrazac1a.querySelector('input[name="accuracy_declaration"]');
                     if (businessPlanName1a) businessPlanName1a.setAttribute('required', 'required');
                     if (businessArea1a) businessArea1a.setAttribute('required', 'required');
+                    if (accuracyDeclaration1a) accuracyDeclaration1a.setAttribute('required', 'required');
                     const businessStage1a = obrazac1a.querySelectorAll('input[name="business_stage"]');
                     businessStage1a.forEach(radio => {
                         radio.removeAttribute('disabled');
-                        if (radio.hasAttribute('data-required')) {
-                            radio.setAttribute('required', 'required');
-                        }
+                        radio.setAttribute('required', 'required');
                     });
                 }
             } else if (selectedType === 'doo' || selectedType === 'ostalo') {
@@ -1598,11 +1623,17 @@
                     const founderName = obrazac1b.querySelector('input[name="founder_name"]');
                     const directorName = obrazac1b.querySelector('input[name="director_name"]');
                     const companySeat = obrazac1b.querySelector('input[name="company_seat"]');
+                    const accuracyDeclaration1b = obrazac1b.querySelector('input[name="accuracy_declaration"]');
                     if (businessPlanName1b && businessPlanName1b.hasAttribute('data-required')) businessPlanName1b.setAttribute('required', 'required');
                     if (businessArea1b && businessArea1b.hasAttribute('data-required')) businessArea1b.setAttribute('required', 'required');
                     if (founderName && founderName.hasAttribute('data-required')) founderName.setAttribute('required', 'required');
                     if (directorName && directorName.hasAttribute('data-required')) directorName.setAttribute('required', 'required');
-                    if (companySeat && companySeat.hasAttribute('data-required')) companySeat.setAttribute('required', 'required');
+                    if (accuracyDeclaration1b) accuracyDeclaration1b.setAttribute('required', 'required');
+                    const businessStage1b = obrazac1b.querySelectorAll('input[name="business_stage"]');
+                    businessStage1b.forEach(radio => {
+                        radio.removeAttribute('disabled');
+                        radio.setAttribute('required', 'required');
+                    });
                 }
             } else if (selectedType === 'fizicko_lice') {
                 // Fizičko lice BEZ registrovane djelatnosti
@@ -1849,9 +1880,16 @@
                 if (!directorName || !directorName.value.trim()) return false;
                 if (!companySeat || !companySeat.value.trim()) return false;
                 if (!registrationForm || !registrationForm.value) return false;
+                const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
+                if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
             } else if (applicantTypeValue === 'preduzetnica') {
                 const registrationForm = activeSection ? activeSection.querySelector('select[name="registration_form"]') : form.querySelector('select[name="registration_form"]:not([disabled])');
+                const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
+                const profileAddress = @json($userProfileAddress);
+
                 if (!registrationForm || !registrationForm.value) return false;
+                if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
+                if (!profileAddress || !profileAddress.trim()) return false;
             }
 
             return true;

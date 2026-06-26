@@ -317,8 +317,8 @@ class Application extends Model
             return false;
         }
 
-        // accuracy_declaration je obavezan samo za fizičko lice
-        if ($this->applicant_type === 'fizicko_lice' && !$this->accuracy_declaration) {
+        // Izjava o tačnosti je obavezna za sve tipove prijave
+        if (!$this->accuracy_declaration) {
             return false;
         }
 
