@@ -40,6 +40,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email',
         'phone',
         'address',
+        'city',
         'password',
         'role_id',
         'used_storage_bytes',
@@ -115,6 +116,21 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         // Ovdje kažemo da svaki korisnik (User) pripada jednoj ulozi (Role)
         return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Puna adresa iz profila (ulica i broj + grad) za obrasce prijave.
+     */
+    public function formattedAddress(): string
+    {
+        $street = trim((string) ($this->address ?? ''));
+        $city = trim((string) ($this->city ?? ''));
+
+        if ($street !== '' && $city !== '') {
+            return $street . ', ' . $city;
+        }
+
+        return $street !== '' ? $street : $city;
     }
 
     /**

@@ -143,6 +143,7 @@ class HomeController extends Controller
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
             'phone_full' => ['required', 'string', 'max:50'],
             'address' => ['required', 'string', 'max:500'],
+            'city' => ['required', 'string', 'max:255'],
         ];
 
         $messages = [
@@ -158,8 +159,10 @@ class HomeController extends Controller
             'password.required' => 'Lozinka je obavezna.',
             'password.confirmed' => 'Lozinke se ne poklapaju.',
             'phone_full.required' => 'Broj telefona je obavezan.',
-            'address.required' => 'Adresa je obavezna.',
+            'address.required' => 'Adresa (ulica i broj) je obavezna.',
             'address.max' => 'Adresa ne može biti duža od 500 karaktera.',
+            'city.required' => 'Grad je obavezan.',
+            'city.max' => 'Naziv grada ne može biti duži od 255 karaktera.',
         ];
 
         // Validacija u zavisnosti od tipa korisnika
@@ -216,9 +219,17 @@ class HomeController extends Controller
 
         if ($this->registrationRequiresKotorAddress($request)) {
             $rules['address'][] = new KotorMunicipalityAddress();
+            $rules['city'][] = new KotorMunicipalityAddress();
         }
 
         $validated = $request->validate($rules, $messages);
+
+        if ($this->registrationRequiresKotorAddress($request)) {
+            $fullAddress = trim($validated['address'] . ', ' . $validated['city']);
+            if (!\App\Support\KotorAddress::isInKotorMunicipality($fullAddress)) {
+                return back()->withErrors(['city' => \App\Support\KotorAddress::validationMessage()])->withInput();
+            }
+        }
 
         // Dodatna validacija JMB-a (kontrolna cifra)
         $jmbToValidate = null;
@@ -280,6 +291,7 @@ class HomeController extends Controller
             'email' => strtolower($validated['email']),
             'phone' => $validated['phone_full'],
             'address' => $validated['address'],
+            'city' => $validated['city'],
             'password' => Hash::make($validated['password']),
             'role_id' => 3, // Podrazumevana rola: korisnik
             'activation_status' => 'active',

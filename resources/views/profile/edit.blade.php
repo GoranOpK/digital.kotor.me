@@ -179,10 +179,19 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="address" class="form-label">Adresa <span class="required">*</span></label>
+                    <label for="address" class="form-label">Ulica i broj <span class="required">*</span></label>
                     <input type="text" name="address" id="address" class="form-control" 
                            value="{{ old('address', $user->address) }}" required>
                     @error('address')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="city" class="form-label">Grad <span class="required">*</span></label>
+                    <input type="text" name="city" id="city" class="form-control" 
+                           value="{{ old('city', $user->city) }}" required>
+                    @error('city')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>

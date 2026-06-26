@@ -359,9 +359,16 @@
 
                 {{-- Adresa --}}
                 <div class="form-group">
-                    <label for="address" class="form-label">Adresa <span class="required">*</span></label>
-                    <input type="text" name="address" id="address" class="form-control" required autocomplete="street-address" placeholder="Ulica i broj, mjesto" value="{{ old('address') }}">
+                    <label for="address" class="form-label">Ulica i broj <span class="required">*</span></label>
+                    <input type="text" name="address" id="address" class="form-control" required autocomplete="street-address" placeholder="Npr. Njegoševa 1" value="{{ old('address') }}">
                     <div class="form-error" id="address_error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="city" class="form-label">Grad <span class="required">*</span></label>
+                    <input type="text" name="city" id="city" class="form-control" required autocomplete="address-level2" placeholder="Npr. Kotor" value="{{ old('city') }}">
+                    <div class="form-note">Za rezidente i pravna lica grad mora biti na teritoriji Opštine Kotor.</div>
+                    <div class="form-error" id="city_error"></div>
                 </div>
 
                 {{-- Greške --}}
@@ -1012,7 +1019,13 @@
                 // Validacija adrese
                 const address = document.getElementById('address');
                 if (address && !address.value.trim()) {
-                    showError('address_error', 'Adresa je obavezna');
+                    showError('address_error', 'Ulica i broj su obavezni');
+                    isValid = false;
+                }
+
+                const city = document.getElementById('city');
+                if (city && !city.value.trim()) {
+                    showError('city_error', 'Grad je obavezan');
                     isValid = false;
                 }
 

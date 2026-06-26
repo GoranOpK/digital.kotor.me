@@ -67,7 +67,8 @@ Za svaki tip prijave birate i **fazu biznisa**:
    - Ime i prezime (odnosno ime ovlašćenog lica)
    - Email adresa
    - Broj telefona
-   - Adresa
+   - **Ulica i broj**
+   - **Grad** (obavezno)
    - JMB (za rezidente) ili PIB (za privredne subjekte)
    - Lozinka
 4. Kliknite **Registruj se**.
@@ -88,7 +89,7 @@ Za svaki tip prijave birate i **fazu biznisa**:
 
 ### Korak 3.4 — Ažuriranje profila
 
-Na panelu kliknite **Izmijeni** u kartici *Informacije o korisniku*, ili idite na **Profil**. Provjerite da su svi podaci tačni prije podnošenja prijave — dio podataka se automatski prenosi u obrasce.
+Na panelu kliknite **Izmijeni** u kartici *Informacije o korisniku*, ili idite na **Profil**. Provjerite da su svi podaci tačni prije podnošenja prijave — uključujući **ulicu i broj** i **grad**. Ti podaci se automatski prenose u Obrazac 1a/1b.
 
 ---
 
@@ -146,7 +147,8 @@ Registracija → Izbor konkursa → Obrazac 1a/1b → Obrazac 2 (Biznis plan) �
 Obavezno popunite:
 
 - Naziv biznis plana
-- Podatke o podnositeljki (ime, JMBG, telefon, email, adresa)
+- Podatke o podnositeljki (ime, JMBG, telefon, email)
+- **Adresa** (automatski iz profila — ulica i grad; mijenja se u Profilu)
 - Da li imate registrovanu djelatnost (Da/Ne)
 - Oblast u kojoj planirate realizaciju biznis plana
 - Obrazac registracije (preduzetnik, DOO itd.) — ako je primjenjivo
@@ -160,7 +162,7 @@ Obavezno popunite:
 - Naziv biznis plana
 - Podatke o osnivačici / nosiocu biznisa
 - Podatke o izvršnoj direktorici
-- Sjedište društva
+- **Sjedište društva** (automatski iz profila — ulica i grad; mijenja se u Profilu)
 - Oblast biznisa
 - Obrazac registracije
 - Izjavu o prethodnoj podršci (ako je primjenjivo)

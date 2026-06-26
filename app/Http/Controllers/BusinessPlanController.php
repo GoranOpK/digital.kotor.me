@@ -96,21 +96,21 @@ class BusinessPlanController extends Controller
             $defaultData['applicant_jmbg'] = $application->physical_person_jmbg ?? $user->jmb ?? '';
             $defaultData['applicant_phone'] = $application->physical_person_phone ?? $user->phone ?? '';
             $defaultData['applicant_email'] = $application->physical_person_email ?? $user->email ?? '';
-            $defaultData['applicant_address'] = $user->address ?? '';
+            $defaultData['applicant_address'] = $user->formattedAddress();
         } elseif ($application->applicant_type === 'preduzetnica') {
             // Za preduzetnicu, podaci su u korisničkom profilu
             $defaultData['applicant_name'] = $user->name ?? '';
             $defaultData['applicant_jmbg'] = $user->jmb ?? '';
             $defaultData['applicant_phone'] = $user->phone ?? '';
             $defaultData['applicant_email'] = $user->email ?? '';
-            $defaultData['applicant_address'] = $user->address ?? '';
+            $defaultData['applicant_address'] = $user->formattedAddress();
         } elseif ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') {
             // Za DOO/Ostalo, podaci su u korisničkom profilu
             $defaultData['applicant_name'] = $user->name ?? '';
             $defaultData['applicant_jmbg'] = $user->jmb ?? '';
             $defaultData['applicant_phone'] = $user->phone ?? '';
             $defaultData['applicant_email'] = $user->email ?? '';
-            $defaultData['applicant_address'] = $user->address ?? '';
+            $defaultData['applicant_address'] = $user->formattedAddress();
         }
 
         // Podaci o registrovanom biznisu - uzmi iz prijave

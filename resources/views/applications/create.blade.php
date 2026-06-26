@@ -76,6 +76,20 @@
     .form-control.error {
         border-color: #ef4444;
     }
+    .form-control[readonly] {
+        background: #f3f4f6;
+        color: #374151;
+        cursor: not-allowed;
+    }
+    .address-from-profile-note {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 6px;
+    }
+    .address-from-profile-note a {
+        color: var(--primary);
+        font-weight: 600;
+    }
     .form-text {
         font-size: 12px;
         color: #6b7280;
@@ -367,6 +381,7 @@
             } elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
                 $obrazacLabel = 'Obrazac 1b';
             }
+            $userProfileAddress = auth()->user()->formattedAddress();
         @endphp
         <div class="obrazac-zaglavlje">
             <div class="obrazac-zaglavlje-top">
@@ -651,9 +666,14 @@
                                 type="text" 
                                 name="preduzetnik_address" 
                                 class="form-control @error('preduzetnik_address') error @enderror"
-                                value="{{ old('preduzetnik_address', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->address : auth()->user()->address) }}"
-                                maxlength="255"
+                                value="{{ old('preduzetnik_address', $userProfileAddress) }}"
+                                maxlength="500"
+                                readonly
                             >
+                            <p class="address-from-profile-note">
+                                Adresa se povlači iz vašeg profila (ulica i grad iz registracije).
+                                <a href="{{ route('profile.edit') }}">Izmijeni u profilu</a>
+                            </p>
                             @error('preduzetnik_address')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
@@ -909,9 +929,14 @@
                                 type="text" 
                                 name="doo_address" 
                                 class="form-control @error('doo_address') error @enderror"
-                                value="{{ old('doo_address', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->address : auth()->user()->address) }}"
-                                maxlength="255"
+                                value="{{ old('doo_address', $userProfileAddress) }}"
+                                maxlength="500"
+                                readonly
                             >
+                            <p class="address-from-profile-note">
+                                Adresa se povlači iz vašeg profila (ulica i grad iz registracije).
+                                <a href="{{ route('profile.edit') }}">Izmijeni u profilu</a>
+                            </p>
                             @error('doo_address')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
@@ -1034,11 +1059,15 @@
                             type="text" 
                             name="company_seat" 
                             class="form-control @error('company_seat') error @enderror"
-                            value="{{ old('company_seat', isset($existingApplication) && $existingApplication ? $existingApplication->company_seat : auth()->user()->address) }}"
-                            maxlength="255"
-                            placeholder="Npr. Kotor, Njegoševa 1"
+                            value="{{ old('company_seat', $userProfileAddress) }}"
+                            maxlength="500"
+                            readonly
                             required
                         >
+                        <p class="address-from-profile-note">
+                            Sjedište se povlači iz vašeg profila (ulica i grad iz registracije).
+                            <a href="{{ route('profile.edit') }}">Izmijeni u profilu</a>
+                        </p>
                         @error('company_seat')
                             <div class="error-message">{{ $message }}</div>
                         @enderror

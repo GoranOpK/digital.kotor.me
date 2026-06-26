@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\User;
 use App\Rules\KotorMunicipalityAddress;
+use App\Support\KotorAddress;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -28,12 +29,14 @@ class ProfileUpdateRequest extends FormRequest
             ],
             'phone' => ['required', 'string', 'max:50'],
             'address' => ['required', 'string', 'max:500'],
+            'city' => ['required', 'string', 'max:255'],
             'user_type' => ['required', 'string', 'in:Fizičko lice,Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)'],
             'residential_status' => ['required', 'string', 'in:resident,non-resident,ex-non-resident'],
         ];
 
         if ($this->requiresKotorAddress()) {
             $rules['address'][] = new KotorMunicipalityAddress();
+            $rules['city'][] = new KotorMunicipalityAddress();
         }
 
         // Validacija za JMB (obavezno za fizička lica)
@@ -73,6 +76,20 @@ class ProfileUpdateRequest extends FormRequest
         return $rules;
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if (!$this->requiresKotorAddress()) {
+                return;
+            }
+
+            $fullAddress = trim((string) $this->input('address') . ', ' . (string) $this->input('city'));
+            if (!KotorAddress::isInKotorMunicipality($fullAddress)) {
+                $validator->errors()->add('city', KotorAddress::validationMessage());
+            }
+        });
+    }
+
     private function requiresKotorAddress(): bool
     {
         if ($this->input('residential_status') === 'resident') {
@@ -96,8 +113,10 @@ class ProfileUpdateRequest extends FormRequest
             'email.email' => 'Unijete validnu email adresu.',
             'email.unique' => 'Email adresa je već u upotrebi.',
             'phone.required' => 'Broj telefona je obavezan.',
-            'address.required' => 'Adresa je obavezna.',
+            'address.required' => 'Adresa (ulica i broj) je obavezna.',
             'address.max' => 'Adresa ne može biti duža od 500 karaktera.',
+            'city.required' => 'Grad je obavezan.',
+            'city.max' => 'Naziv grada ne može biti duži od 255 karaktera.',
             'user_type.required' => 'Tip korisnika je obavezan.',
             'user_type.in' => 'Izaberite validan tip korisnika.',
             'residential_status.required' => 'Status rezidentnosti je obavezan.',

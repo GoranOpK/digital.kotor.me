@@ -211,6 +211,17 @@ class ApplicationController extends Controller
         
         // Proveri da li je ovo draft ili finalno čuvanje
         $isDraft = $request->has('save_as_draft') && $request->save_as_draft === '1';
+
+        $this->mergeProfileAddressIntoRequest($request);
+
+        if (!$isDraft && in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true)) {
+            $profileUser = $request->user();
+            if (trim((string) $profileUser->address) === '' || trim((string) $profileUser->city) === '') {
+                return back()
+                    ->withErrors(['error' => 'Popunite ulicu i grad u svom profilu prije podnošenja prijave.'])
+                    ->withInput();
+            }
+        }
         
         $rules = [
             'business_plan_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
@@ -315,16 +326,12 @@ class ApplicationController extends Controller
         }
 
         if (!$isDraft && $request->applicant_type === 'fizicko_lice') {
-            $address = trim((string) ($request->user()->address ?? ''));
+            $address = $request->user()->formattedAddress();
             if (!KotorAddress::isInKotorMunicipality($address)) {
                 return back()
                     ->withErrors(['error' => KotorAddress::validationMessage() . ' Ažurirajte adresu u profilu.'])
                     ->withInput();
             }
-        }
-
-        if (!$isDraft && $request->applicant_type === 'preduzetnica' && $request->filled('preduzetnik_address')) {
-            $request->user()->update(['address' => $request->preduzetnik_address]);
         }
 
         // Proveri da li je total_budget_needed >= requested_amount - samo ako nije draft i oba su popunjena
@@ -904,7 +911,7 @@ class ApplicationController extends Controller
                 return 'Sjedište društva mora biti na teritoriji Opštine Kotor.';
             }
         } else {
-            $address = $application->businessPlan?->applicant_address ?: $application->user?->address;
+            $address = $application->businessPlan?->applicant_address ?: $application->user?->formattedAddress();
             if (!KotorAddress::isInKotorMunicipality($address)) {
                 return KotorAddress::validationMessage();
             }
@@ -916,6 +923,33 @@ class ApplicationController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Adresa u Obrascu 1a/1b uvijek se povlači iz profila korisnika (registracija).
+     */
+    protected function mergeProfileAddressIntoRequest(Request $request): void
+    {
+        $applicantType = $request->input('applicant_type');
+        if (!$applicantType) {
+            return;
+        }
+
+        $profileAddress = $request->user()->formattedAddress();
+        if ($profileAddress === '') {
+            return;
+        }
+
+        if ($applicantType === 'preduzetnica') {
+            $request->merge(['preduzetnik_address' => $profileAddress]);
+        }
+
+        if (in_array($applicantType, ['doo', 'ostalo'], true)) {
+            $request->merge([
+                'doo_address' => $profileAddress,
+                'company_seat' => $profileAddress,
+            ]);
+        }
     }
 
 }
