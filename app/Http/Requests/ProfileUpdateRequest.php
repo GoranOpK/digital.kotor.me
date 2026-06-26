@@ -3,13 +3,25 @@
 namespace App\Http\Requests;
 
 use App\Models\User;
-use App\Rules\KotorMunicipalityAddress;
 use App\Support\KotorAddress;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        [$street, $city] = KotorAddress::normalizeStreetAndCityInputs(
+            $this->input('address'),
+            $this->input('city')
+        );
+
+        $this->merge([
+            'address' => $street,
+            'city' => $city,
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      */
@@ -34,10 +46,7 @@ class ProfileUpdateRequest extends FormRequest
             'residential_status' => ['required', 'string', 'in:resident,non-resident,ex-non-resident'],
         ];
 
-        if ($this->requiresKotorAddress()) {
-            $rules['address'][] = new KotorMunicipalityAddress();
-            $rules['city'][] = new KotorMunicipalityAddress();
-        }
+        // Adresa se provjerava kao ulica + grad zajedno (v. withValidator)
 
         // Validacija za JMB (obavezno za fizička lica)
         if ($this->input('user_type') === 'Fizičko lice') {
@@ -83,9 +92,18 @@ class ProfileUpdateRequest extends FormRequest
                 return;
             }
 
-            $fullAddress = trim((string) $this->input('address') . ', ' . (string) $this->input('city'));
+            if (KotorAddress::isOnlyLocality($this->input('address'))) {
+                $validator->errors()->add('address', KotorAddress::streetValidationMessage());
+
+                return;
+            }
+
+            $fullAddress = KotorAddress::formatStreetAndCity(
+                $this->input('address'),
+                $this->input('city')
+            );
             if (!KotorAddress::isInKotorMunicipality($fullAddress)) {
-                $validator->errors()->add('city', KotorAddress::validationMessage());
+                $validator->errors()->add('city', KotorAddress::cityValidationMessage());
             }
         });
     }

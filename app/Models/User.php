@@ -123,14 +123,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function formattedAddress(): string
     {
-        $street = trim((string) ($this->address ?? ''));
-        $city = trim((string) ($this->city ?? ''));
-
-        if ($street !== '' && $city !== '') {
-            return $street . ', ' . $city;
-        }
-
-        return $street !== '' ? $street : $city;
+        return \App\Support\KotorAddress::formatStreetAndCity($this->address, $this->city);
     }
 
     /**

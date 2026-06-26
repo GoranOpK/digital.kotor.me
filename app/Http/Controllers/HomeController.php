@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Application;
-use App\Rules\KotorMunicipalityAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -133,6 +132,15 @@ class HomeController extends Controller
 
     public function register(Request $request)
     {
+        [$street, $city] = \App\Support\KotorAddress::normalizeStreetAndCityInputs(
+            $request->input('address'),
+            $request->input('city')
+        );
+        $request->merge([
+            'address' => $street,
+            'city' => $city,
+        ]);
+
         // Osnovne validacije
         $rules = [
             'user_type' => ['required', 'in:Fizičko lice,Registrovan privredni subjekt'],
@@ -217,17 +225,19 @@ class HomeController extends Controller
             }
         }
 
-        if ($this->registrationRequiresKotorAddress($request)) {
-            $rules['address'][] = new KotorMunicipalityAddress();
-            $rules['city'][] = new KotorMunicipalityAddress();
-        }
-
         $validated = $request->validate($rules, $messages);
 
         if ($this->registrationRequiresKotorAddress($request)) {
-            $fullAddress = trim($validated['address'] . ', ' . $validated['city']);
+            if (\App\Support\KotorAddress::isOnlyLocality($validated['address'])) {
+                return back()->withErrors(['address' => \App\Support\KotorAddress::streetValidationMessage()])->withInput();
+            }
+
+            $fullAddress = \App\Support\KotorAddress::formatStreetAndCity(
+                $validated['address'],
+                $validated['city']
+            );
             if (!\App\Support\KotorAddress::isInKotorMunicipality($fullAddress)) {
-                return back()->withErrors(['city' => \App\Support\KotorAddress::validationMessage()])->withInput();
+                return back()->withErrors(['city' => \App\Support\KotorAddress::cityValidationMessage()])->withInput();
             }
         }
 

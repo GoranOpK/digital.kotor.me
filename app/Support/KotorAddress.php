@@ -33,6 +33,135 @@ final class KotorAddress
         return 'Adresa mora biti na teritoriji Opštine Kotor (npr. Kotor, Dobrota, Prčanj, Risan, Perast ili poštanski broj 85310/85330).';
     }
 
+    public static function cityValidationMessage(): string
+    {
+        return 'Grad mora biti naselje na teritoriji Opštine Kotor (npr. Kotor, Dobrota, Prčanj, Risan, Perast ili poštanski broj 85310/85330).';
+    }
+
+    public static function streetValidationMessage(): string
+    {
+        return 'U polje Ulica i broj unesite samo ulicu i broj. Grad unesite u posebno polje ispod.';
+    }
+
+    /**
+     * Priprema ulicu i grad za čuvanje: razdvaja staru punu adresu i uklanja dupli grad.
+     *
+     * @return array{0: string, 1: string}
+     */
+    public static function normalizeStreetAndCityInputs(?string $street, ?string $city): array
+    {
+        $street = trim((string) $street);
+        $city = trim((string) $city);
+
+        if ($street !== '' && $city === '') {
+            return self::splitStreetAndCity($street);
+        }
+
+        if ($street !== '' && $city !== '') {
+            $street = self::stripRedundantCityFromStreet($street, $city);
+        }
+
+        return [$street, $city];
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    public static function splitStreetAndCity(string $fullAddress): array
+    {
+        $fullAddress = trim($fullAddress);
+        if ($fullAddress === '') {
+            return ['', ''];
+        }
+
+        $parts = preg_split('/,\s*/u', $fullAddress) ?: [];
+        if (count($parts) < 2) {
+            return [$fullAddress, ''];
+        }
+
+        $lastPart = trim((string) array_pop($parts));
+        if ($lastPart === '') {
+            return [$fullAddress, ''];
+        }
+
+        $normalizedLast = self::normalize($lastPart);
+        $looksLikeCity = preg_match('/\b85310\b|\b85330\b/', $normalizedLast);
+
+        if (!$looksLikeCity) {
+            foreach (self::LOCALITIES as $locality) {
+                if ($normalizedLast === $locality || self::containsLocality($normalizedLast, $locality)) {
+                    $looksLikeCity = true;
+                    break;
+                }
+            }
+        }
+
+        if (!$looksLikeCity) {
+            return [$fullAddress, ''];
+        }
+
+        $street = trim(implode(', ', $parts));
+
+        return [$street !== '' ? $street : $fullAddress, $lastPart];
+    }
+
+    public static function stripRedundantCityFromStreet(string $street, string $city): string
+    {
+        $street = trim($street);
+        $city = trim($city);
+
+        if ($street === '' || $city === '') {
+            return $street;
+        }
+
+        $normalizedCity = self::normalize($city);
+        $normalizedStreet = self::normalize($street);
+
+        if (!preg_match('/,\s*' . preg_quote($normalizedCity, '/') . '\s*$/u', $normalizedStreet)) {
+            return $street;
+        }
+
+        $lastComma = strrpos($street, ',');
+        if ($lastComma === false) {
+            return $street;
+        }
+
+        return trim(substr($street, 0, $lastComma));
+    }
+
+    public static function isOnlyLocality(?string $value): bool
+    {
+        if ($value === null || trim($value) === '') {
+            return false;
+        }
+
+        $normalized = self::normalize($value);
+
+        if (preg_match('/^\s*85310\s*$/', $normalized) || preg_match('/^\s*85330\s*$/', $normalized)) {
+            return true;
+        }
+
+        foreach (self::LOCALITIES as $locality) {
+            if ($normalized === $locality) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static function formatStreetAndCity(?string $street, ?string $city): string
+    {
+        $street = trim((string) $street);
+        $city = trim((string) $city);
+
+        if ($street !== '' && $city !== '') {
+            return $street . ', ' . $city;
+        }
+
+        return $street !== '' ? $street : $city;
+    }
+
     public static function isInKotorMunicipality(?string $address): bool
     {
         if ($address === null || trim($address) === '') {

@@ -361,6 +361,7 @@
                 <div class="form-group">
                     <label for="address" class="form-label">Ulica i broj <span class="required">*</span></label>
                     <input type="text" name="address" id="address" class="form-control" required autocomplete="street-address" placeholder="Npr. Njegoševa 1" value="{{ old('address') }}">
+                    <div class="form-note">Unesite samo ulicu i broj. Grad se unosi u posebno polje ispod.</div>
                     <div class="form-error" id="address_error"></div>
                 </div>
 
