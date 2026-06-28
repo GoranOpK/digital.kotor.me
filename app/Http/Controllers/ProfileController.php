@@ -34,6 +34,7 @@ class ProfileController extends Controller
         $user->name = $request->first_name . ' ' . $request->last_name;
         $user->phone = $request->phone;
         $user->address = $request->address;
+        $user->city = $request->city;
 
         // Ažuriraj tip korisnika
         if ($request->has('user_type')) {

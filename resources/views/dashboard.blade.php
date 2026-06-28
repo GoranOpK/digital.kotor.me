@@ -339,6 +339,10 @@
                         <span class="info-label">Adresa</span>
                         <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
                     </div>
+                    <div class="info-item">
+                        <span class="info-label">Grad</span>
+                        <span class="info-value">{{ $user->city ?? 'N/A' }}</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -376,6 +380,10 @@
                     <div class="info-item">
                         <span class="info-label">Adresa</span>
                         <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Grad</span>
+                        <span class="info-value">{{ $user->city ?? 'N/A' }}</span>
                     </div>
                     @if($user->jmb)
                         <div class="info-item">
@@ -603,6 +611,10 @@
                         <div class="info-item">
                             <span class="info-label">Adresa</span>
                             <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Grad</span>
+                            <span class="info-value">{{ $user->city ?? 'N/A' }}</span>
                         </div>
                     </div>
                 </div>

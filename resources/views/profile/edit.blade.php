@@ -179,10 +179,28 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="address" class="form-label">Adresa <span class="required">*</span></label>
+                    <label for="address" class="form-label">Ulica i broj (ili bb) <span class="required">*</span></label>
                     <input type="text" name="address" id="address" class="form-control" 
-                           value="{{ old('address', $user->address) }}" required>
+                           value="{{ old('address', $user->address) }}" required
+                           autocomplete="address-line1"
+                           placeholder="Npr. Njegoševa 12 ili Maserikova bb">
+                    <p style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                        Unesite ulicu i broj ili oznaku bb (bez broja). Grad unesite u polje ispod.
+                    </p>
                     @error('address')
+                        <div class="form-error">{{ $message }}</div>
+                    @enderror
+                </div>
+
+                <div class="form-group">
+                    <label for="city" class="form-label">Grad <span class="required">*</span></label>
+                    <input type="text" name="city" id="city" class="form-control" 
+                           value="{{ old('city', $user->city) }}" required
+                           placeholder="Npr. Kotor, Dobrota, Risan">
+                    <p style="font-size: 12px; color: #6b7280; margin-top: 4px;">
+                        Za rezidente i pravna lica grad mora biti na teritoriji Opštine Kotor.
+                    </p>
+                    @error('city')
                         <div class="form-error">{{ $message }}</div>
                     @enderror
                 </div>

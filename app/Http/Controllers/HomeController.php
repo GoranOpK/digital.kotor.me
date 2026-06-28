@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Application;
-use App\Rules\KotorMunicipalityAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -133,6 +132,15 @@ class HomeController extends Controller
 
     public function register(Request $request)
     {
+        [$street, $city] = \App\Support\KotorAddress::normalizeStreetAndCityInputs(
+            $request->input('address'),
+            $request->input('city')
+        );
+        $request->merge([
+            'address' => $street,
+            'city' => $city,
+        ]);
+
         // Osnovne validacije
         $rules = [
             'user_type' => ['required', 'in:Fizičko lice,Registrovan privredni subjekt'],
@@ -143,6 +151,7 @@ class HomeController extends Controller
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
             'phone_full' => ['required', 'string', 'max:50'],
             'address' => ['required', 'string', 'max:500'],
+            'city' => ['required', 'string', 'max:255'],
         ];
 
         $messages = [
@@ -158,8 +167,10 @@ class HomeController extends Controller
             'password.required' => 'Lozinka je obavezna.',
             'password.confirmed' => 'Lozinke se ne poklapaju.',
             'phone_full.required' => 'Broj telefona je obavezan.',
-            'address.required' => 'Adresa je obavezna.',
+            'address.required' => 'Ulica i broj (ili bb) je obavezna.',
             'address.max' => 'Adresa ne može biti duža od 500 karaktera.',
+            'city.required' => 'Grad je obavezan.',
+            'city.max' => 'Naziv grada ne može biti duži od 255 karaktera.',
         ];
 
         // Validacija u zavisnosti od tipa korisnika
@@ -171,9 +182,9 @@ class HomeController extends Controller
             if ($request->business_type && $request->business_type !== 'Preduzetnik') {
                 $rules['company_name'] = ['required', 'string', 'max:255'];
                 $messages['company_name.required'] = 'Naziv privrednog subjekta je obavezan.';
-                $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{8}$/', 'unique:users,pib'];
+                $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{9}$/', 'unique:users,pib'];
                 $messages['pib.required'] = 'PIB je obavezan.';
-                $messages['pib.regex'] = 'PIB mora imati tačno 8 cifara.';
+                $messages['pib.regex'] = 'PIB mora imati tačno 9 cifara.';
                 $messages['pib.unique'] = 'PIB je već registrovan.';
             }
 
@@ -214,11 +225,25 @@ class HomeController extends Controller
             }
         }
 
-        if ($this->registrationRequiresKotorAddress($request)) {
-            $rules['address'][] = new KotorMunicipalityAddress();
-        }
-
         $validated = $request->validate($rules, $messages);
+
+        if ($this->registrationRequiresKotorAddress($request)) {
+            if (!\App\Support\KotorAddress::isValidStreetLine($validated['address'])) {
+                return back()->withErrors(['address' => \App\Support\KotorAddress::streetLineValidationMessage()])->withInput();
+            }
+
+            if (\App\Support\KotorAddress::isOnlyLocality($validated['address'])) {
+                return back()->withErrors(['address' => \App\Support\KotorAddress::streetValidationMessage()])->withInput();
+            }
+
+            $fullAddress = \App\Support\KotorAddress::formatStreetAndCity(
+                $validated['address'],
+                $validated['city']
+            );
+            if (!\App\Support\KotorAddress::isInKotorMunicipality($fullAddress)) {
+                return back()->withErrors(['city' => \App\Support\KotorAddress::cityValidationMessage()])->withInput();
+            }
+        }
 
         // Dodatna validacija JMB-a (kontrolna cifra)
         $jmbToValidate = null;
@@ -280,6 +305,7 @@ class HomeController extends Controller
             'email' => strtolower($validated['email']),
             'phone' => $validated['phone_full'],
             'address' => $validated['address'],
+            'city' => $validated['city'],
             'password' => Hash::make($validated['password']),
             'role_id' => 3, // Podrazumevana rola: korisnik
             'activation_status' => 'active',

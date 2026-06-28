@@ -3,12 +3,25 @@
 namespace App\Http\Requests;
 
 use App\Models\User;
-use App\Rules\KotorMunicipalityAddress;
+use App\Support\KotorAddress;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        [$street, $city] = KotorAddress::normalizeStreetAndCityInputs(
+            $this->input('address'),
+            $this->input('city')
+        );
+
+        $this->merge([
+            'address' => $street,
+            'city' => $city,
+        ]);
+    }
+
     /**
      * Get the validation rules that apply to the request.
      */
@@ -28,13 +41,12 @@ class ProfileUpdateRequest extends FormRequest
             ],
             'phone' => ['required', 'string', 'max:50'],
             'address' => ['required', 'string', 'max:500'],
+            'city' => ['required', 'string', 'max:255'],
             'user_type' => ['required', 'string', 'in:Fizičko lice,Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)'],
             'residential_status' => ['required', 'string', 'in:resident,non-resident,ex-non-resident'],
         ];
 
-        if ($this->requiresKotorAddress()) {
-            $rules['address'][] = new KotorMunicipalityAddress();
-        }
+        // Adresa se provjerava kao ulica + grad zajedno (v. withValidator)
 
         // Validacija za JMB (obavezno za fizička lica)
         if ($this->input('user_type') === 'Fizičko lice') {
@@ -73,6 +85,35 @@ class ProfileUpdateRequest extends FormRequest
         return $rules;
     }
 
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if (!$this->requiresKotorAddress()) {
+                return;
+            }
+
+            if (!KotorAddress::isValidStreetLine($this->input('address'))) {
+                $validator->errors()->add('address', KotorAddress::streetLineValidationMessage());
+
+                return;
+            }
+
+            if (KotorAddress::isOnlyLocality($this->input('address'))) {
+                $validator->errors()->add('address', KotorAddress::streetValidationMessage());
+
+                return;
+            }
+
+            $fullAddress = KotorAddress::formatStreetAndCity(
+                $this->input('address'),
+                $this->input('city')
+            );
+            if (!KotorAddress::isInKotorMunicipality($fullAddress)) {
+                $validator->errors()->add('city', KotorAddress::cityValidationMessage());
+            }
+        });
+    }
+
     private function requiresKotorAddress(): bool
     {
         if ($this->input('residential_status') === 'resident') {
@@ -96,8 +137,10 @@ class ProfileUpdateRequest extends FormRequest
             'email.email' => 'Unijete validnu email adresu.',
             'email.unique' => 'Email adresa je već u upotrebi.',
             'phone.required' => 'Broj telefona je obavezan.',
-            'address.required' => 'Adresa je obavezna.',
+            'address.required' => 'Ulica i broj (ili bb) je obavezna.',
             'address.max' => 'Adresa ne može biti duža od 500 karaktera.',
+            'city.required' => 'Grad je obavezan.',
+            'city.max' => 'Naziv grada ne može biti duži od 255 karaktera.',
             'user_type.required' => 'Tip korisnika je obavezan.',
             'user_type.in' => 'Izaberite validan tip korisnika.',
             'residential_status.required' => 'Status rezidentnosti je obavezan.',

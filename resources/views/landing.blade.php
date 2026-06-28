@@ -127,7 +127,6 @@
         .hero-card section li { margin: 6px 0; }
     </style>
     
-    <link rel="icon" href="{{ asset('favicon.ico') }}">
     <meta name="theme-color" content="#0B3D91">
 </head>
 <body style="background:#f9fafb; margin:0; padding:0;">
@@ -209,9 +208,6 @@
                             <a href="{{ route('competitions.index') }}" style="color:#fff; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #0B3D91; background:#0B3D91; width:100%; max-width:200px;">Konkursi</a>
                             <a href="{{ route('tenders.index') }}" style="color:#fff; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #0B3D91; background:#0B3D91; width:100%; max-width:200px;">Tenderi</a>
                             <a href="{{ route('cultural-calendar.index') }}" style="color:#fff; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #0B3D91; background:#0B3D91; width:100%; max-width:200px;">Kalendar kulture</a>
-                            <div style="color:#9ca3af; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #d1d5db; background:#f3f4f6; width:100%; max-width:200px; cursor:not-allowed; opacity:0.6;">Pudi Kator</div>
-                            <div style="color:#9ca3af; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #d1d5db; background:#f3f4f6; width:100%; max-width:200px; cursor:not-allowed; opacity:0.6;">Vunjaš Aznavur</div>
-                            <div style="color:#9ca3af; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #d1d5db; background:#f3f4f6; width:100%; max-width:200px; cursor:not-allowed; opacity:0.6;">Dunja Svibor</div>
                         </div>
                     </div>
                 </div>

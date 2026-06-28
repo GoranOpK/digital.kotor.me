@@ -106,6 +106,80 @@ class BusinessPlan extends Model
     }
 
     /**
+     * Zbir projekcije rashoda (pitanje 25) za sve tri godine.
+     */
+    public function expenseProjectionGrandTotal(): float
+    {
+        $total = 0.0;
+
+        if (!is_array($this->expense_projection)) {
+            return $total;
+        }
+
+        foreach ($this->expense_projection as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $total += (float) ($row['year1'] ?? 0);
+            $total += (float) ($row['year2'] ?? 0);
+            $total += (float) ($row['year3'] ?? 0);
+        }
+
+        return round($total, 2);
+    }
+
+    /**
+     * Zbir stavki iz tabele traženih sredstava (pitanje 22).
+     */
+    public function fundingSourcesGrandTotal(): float
+    {
+        $total = 0.0;
+
+        if (!is_array($this->funding_sources_table)) {
+            return $total;
+        }
+
+        foreach ($this->funding_sources_table as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $total += (float) ($row['price'] ?? 0);
+        }
+
+        return round($total, 2);
+    }
+
+    /**
+     * Potrebna sredstva: pitanje 21 ili, ako nije popunjeno, zbir rashoda iz pitanja 25.
+     */
+    public function resolvedRequiredAmount(): ?float
+    {
+        if ($this->required_amount !== null && (float) $this->required_amount > 0) {
+            return (float) $this->required_amount;
+        }
+
+        $fromExpenses = $this->expenseProjectionGrandTotal();
+
+        return $fromExpenses > 0 ? $fromExpenses : null;
+    }
+
+    /**
+     * Traženi iznos podrške: pitanje 22 ili zbir tabele namjene sredstava.
+     */
+    public function resolvedRequestedAmount(): ?float
+    {
+        if ($this->requested_amount !== null && (float) $this->requested_amount > 0) {
+            return (float) $this->requested_amount;
+        }
+
+        $fromFunding = $this->fundingSourcesGrandTotal();
+
+        return $fromFunding > 0 ? $fromFunding : null;
+    }
+
+    /**
      * Provjerava da li je biznis plan kompletan (ima sva obavezna polja popunjena)
      * Obavezna polja su: business_idea_name, applicant_name, applicant_jmbg, applicant_address, applicant_phone, applicant_email, summary
      */
