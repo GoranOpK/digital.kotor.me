@@ -183,7 +183,7 @@
                     <input type="text" name="address" id="address" class="form-control" 
                            value="{{ old('address', $user->address) }}" required
                            autocomplete="address-line1"
-                           placeholder="Npr. Njegoševa 12 ili Maserikova bb">
+                           placeholder="Npr. Njegoševa 12 ili Njegoševa bb">
                     <p style="font-size: 12px; color: #6b7280; margin-top: 4px;">
                         Unesite ulicu i broj ili oznaku bb (bez broja). Grad unesite u polje ispod.
                     </p>

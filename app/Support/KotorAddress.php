@@ -40,12 +40,12 @@ final class KotorAddress
 
     public static function streetValidationMessage(): string
     {
-        return 'Unesite naziv ulice i broj ili oznaku bb (bez broja), npr. Njegoševa 12 ili Maserikova bb. Grad unesite u posebno polje ispod.';
+        return 'Unesite naziv ulice i broj ili oznaku bb (bez broja), npr. Njegoševa 12 ili Njegoševa bb. Grad unesite u posebno polje ispod.';
     }
 
     public static function streetLineValidationMessage(): string
     {
-        return 'Unesite naziv ulice i broj ili oznaku bb (bez broja), npr. Njegoševa 12 ili Maserikova bb.';
+        return 'Unesite naziv ulice i broj ili oznaku bb (bez broja), npr. Njegoševa 12 ili Njegoševa bb.';
     }
 
     /**

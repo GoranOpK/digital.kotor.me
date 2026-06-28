@@ -360,7 +360,7 @@
                 {{-- Adresa --}}
                 <div class="form-group">
                     <label for="address" class="form-label">Ulica i broj <span class="required">*</span></label>
-                    <input type="text" name="address" id="address" class="form-control" required autocomplete="address-line1" placeholder="Npr. Njegoševa 12 ili Maserikova bb" value="{{ old('address') }}">
+                    <input type="text" name="address" id="address" class="form-control" required autocomplete="address-line1" placeholder="Npr. Njegoševa 12 ili Njegoševa bb" value="{{ old('address') }}">
                     <div class="form-note">Unesite ulicu i broj ili oznaku bb (bez broja). Grad unosite u posebno polje ispod.</div>
                     <div class="form-error" id="address_error"></div>
                 </div>
