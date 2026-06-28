@@ -45,7 +45,6 @@
             .phone-flag-select { width:100%; }
         }
     </style>
-    <link rel="icon" href="{{ asset('favicon.ico') }}">
     <meta name="theme-color" content="#0B3D91">
 </head>
 <body>
@@ -156,8 +155,8 @@
                 {{-- PIB (za privredne subjekte osim Preduzetnika) --}}
                 <div class="form-group conditional-field" id="pib_group">
                     <label for="pib" class="form-label">Poreski identifikacioni broj (PIB) <span class="required">*</span></label>
-                    <input type="text" name="pib" id="pib" class="form-control" maxlength="8" pattern="[0-9]{8}" placeholder="8 cifara" value="{{ old('pib') }}">
-                    <div class="form-note">Format: 8 cifara</div>
+                    <input type="text" name="pib" id="pib" class="form-control" maxlength="9" pattern="[0-9]{9}" placeholder="9 cifara" value="{{ old('pib') }}">
+                    <div class="form-note">Format: 9 cifara</div>
                     <div class="form-error" id="pib_error"></div>
                 </div>
 
@@ -360,9 +359,17 @@
 
                 {{-- Adresa --}}
                 <div class="form-group">
-                    <label for="address" class="form-label">Adresa <span class="required">*</span></label>
-                    <input type="text" name="address" id="address" class="form-control" required autocomplete="street-address" placeholder="Ulica i broj, mjesto" value="{{ old('address') }}">
+                    <label for="address" class="form-label">Ulica i broj <span class="required">*</span></label>
+                    <input type="text" name="address" id="address" class="form-control" required autocomplete="address-line1" placeholder="Npr. Njegoševa 12 ili Maserikova bb" value="{{ old('address') }}">
+                    <div class="form-note">Unesite ulicu i broj ili oznaku bb (bez broja). Grad unosite u posebno polje ispod.</div>
                     <div class="form-error" id="address_error"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="city" class="form-label">Grad <span class="required">*</span></label>
+                    <input type="text" name="city" id="city" class="form-control" required autocomplete="address-level2" placeholder="Npr. Kotor" value="{{ old('city') }}">
+                    <div class="form-note">Za rezidente i pravna lica grad mora biti na teritoriji Opštine Kotor.</div>
+                    <div class="form-error" id="city_error"></div>
                 </div>
 
                 {{-- Greške --}}
@@ -526,10 +533,10 @@
 
             // Funkcija za validaciju PIB
             function validatePIB(pibValue) {
-                if (!pibValue || pibValue.length !== 8) {
-                    return { valid: false, message: 'PIB mora imati tačno 8 cifara' };
+                if (!pibValue || pibValue.length !== 9) {
+                    return { valid: false, message: 'PIB mora imati tačno 9 cifara' };
                 }
-                if (!/^[0-9]{8}$/.test(pibValue)) {
+                if (!/^[0-9]{9}$/.test(pibValue)) {
                     return { valid: false, message: 'PIB mora sadržati samo cifre' };
                 }
                 return { valid: true };
@@ -1013,7 +1020,13 @@
                 // Validacija adrese
                 const address = document.getElementById('address');
                 if (address && !address.value.trim()) {
-                    showError('address_error', 'Adresa je obavezna');
+                    showError('address_error', 'Ulica i broj su obavezni');
+                    isValid = false;
+                }
+
+                const city = document.getElementById('city');
+                if (city && !city.value.trim()) {
+                    showError('city_error', 'Grad je obavezan');
                     isValid = false;
                 }
 
