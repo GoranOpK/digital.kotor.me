@@ -14,13 +14,34 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $competitionsUrl = route('competitions.index');
+        return view('landing', [
+            'landingCategories' => $this->getLandingCategories(),
+        ]);
+    }
+
+    /**
+     * Kategorije na naslovnoj — administrator konkursa vidi samo Konkursi.
+     */
+    protected function getLandingCategories(): array
+    {
+        $defaultCategories = [
+            ['label' => 'Plaćanja', 'url' => route('payments.index')],
+            ['label' => 'Konkursi', 'url' => route('competitions.index')],
+            ['label' => 'Tenderi', 'url' => route('tenders.index')],
+            ['label' => 'Kalendar kulture', 'url' => route('cultural-calendar.index')],
+        ];
+
         $user = auth()->user();
-        if ($user && $user->role && $user->role->name === 'konkurs_admin') {
-            $competitionsUrl = route('admin.dashboard');
+        if (!$user || !$user->role) {
+            return $defaultCategories;
         }
 
-        return view('landing', compact('competitionsUrl'));
+        return match ($user->role->name) {
+            'konkurs_admin' => [
+                ['label' => 'Konkursi', 'url' => route('admin.dashboard')],
+            ],
+            default => $defaultCategories,
+        };
     }
 
     public function loginForm()

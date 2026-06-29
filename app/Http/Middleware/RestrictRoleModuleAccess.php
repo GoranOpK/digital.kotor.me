@@ -23,6 +23,7 @@ class RestrictRoleModuleAccess
         $routeName = $request->route()?->getName();
 
         $commonAllowed = [
+            'home',
             'dashboard',
             'logout',
             'profile.edit',

@@ -204,10 +204,9 @@
                         <h1 class="hero-title" style="font-weight:bold;">Kategorije</h1>
                         <div style="font-size:14px; color:#6b7280; margin-top:8px; margin-bottom:16px;">Siguran pristup • Transparentno • 24/7</div>
                         <div style="display:flex; flex-direction:column; gap:8px; align-items:center;">
-                            <a href="{{ route('payments.index') }}" style="color:#fff; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #0B3D91; background:#0B3D91; width:100%; max-width:200px;">Plaćanja</a>
-                            <a href="{{ $competitionsUrl ?? route('competitions.index') }}" style="color:#fff; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #0B3D91; background:#0B3D91; width:100%; max-width:200px;">Konkursi</a>
-                            <a href="{{ route('tenders.index') }}" style="color:#fff; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #0B3D91; background:#0B3D91; width:100%; max-width:200px;">Tenderi</a>
-                            <a href="{{ route('cultural-calendar.index') }}" style="color:#fff; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #0B3D91; background:#0B3D91; width:100%; max-width:200px;">Kalendar kulture</a>
+                            @foreach($landingCategories as $category)
+                            <a href="{{ $category['url'] }}" style="color:#fff; text-decoration:none; font-weight:600; font-size:16px; padding:8px 16px; border-radius:8px; border:1px solid #0B3D91; background:#0B3D91; width:100%; max-width:200px;">{{ $category['label'] }}</a>
+                            @endforeach
                         </div>
                     </div>
                 </div>
