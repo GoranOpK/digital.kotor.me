@@ -227,13 +227,6 @@
                             </a>
                         </p>
                     @endif
-                    @if($type === 'zensko')
-                        <p style="margin-top: 16px;">
-                            <a href="{{ route('competitions.guide.pdf') }}" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: 600;">
-                                Uputstvo za podnosioce (PDF)
-                            </a>
-                        </p>
-                    @endif
                 </div>
                 <div class="program-feature-card">
                     <h2>Opis konkursa</h2>
