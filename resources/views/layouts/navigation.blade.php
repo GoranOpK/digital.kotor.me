@@ -3,6 +3,7 @@
         $user = auth()->user();
         $isKkAdmin = $user && $user->role && $user->role->name === 'kk_admin';
         $isCompetitionAdmin = $user && $user->role && $user->role->name === 'konkurs_admin';
+        $isKomisija = $user && $user->role && $user->role->name === 'komisija';
     @endphp
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -34,7 +35,10 @@
                         <x-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
                             Arhiva konkursa
                         </x-nav-link>
-                    @elseif($user && $user->role && $user->role->name === 'komisija')
+                    @elseif($isKomisija)
+                        <x-nav-link :href="route('home')" :active="request()->routeIs('home')" aria-label="Početna stranica">
+                            <x-icon-home />
+                        </x-nav-link>
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                             Moj panel
                         </x-nav-link>
@@ -132,7 +136,11 @@
                 <x-responsive-nav-link :href="route('competitions.archive')" :active="request()->routeIs('competitions.archive')">
                     Arhiva konkursa
                 </x-responsive-nav-link>
-            @elseif($user && $user->role && $user->role->name === 'komisija')
+            @elseif($isKomisija)
+                <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
+                    <x-icon-home class="w-5 h-5 inline-block align-text-bottom" style="margin-right: 4px;" />
+                    Početna
+                </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                     Moj panel
                 </x-responsive-nav-link>

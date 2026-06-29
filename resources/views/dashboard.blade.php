@@ -287,7 +287,15 @@
     <div class="container mx-auto px-4">
         <!-- Header -->
         <div class="dashboard-header">
-            <h1>Moj Panel</h1>
+            <h1>
+                @if($isKomisija)
+                    <a href="{{ route('home') }}" aria-label="Početna stranica digital.kotor.me" style="color: #fff; display: inline-flex; align-items: center; text-decoration: none;">
+                        <x-icon-home class="w-9 h-9" />
+                    </a>
+                @else
+                    Moj Panel
+                @endif
+            </h1>
             <p class="welcome-text">Dobrodošli, @if($isCompetitionAdmin) Administrator konkursa @else {{ $user->name ?? 'Korisnik' }} @endif</p>
             <span class="user-type-badge">{{ $userTypeLabel }}</span>
         </div>
