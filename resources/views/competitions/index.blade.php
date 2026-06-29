@@ -145,7 +145,7 @@
 <div class="competitions-page">
     <div class="container mx-auto px-4">
         @php
-            $competitionGuidePdf = 'documents/uputstvo-zensko-preduzetnistvo.pdf';
+            $competitionGuidePdf = 'pdf/uputstvo-zensko-preduzetnistvo.pdf';
         @endphp
         <div class="page-header">
             <div class="page-header-main">
