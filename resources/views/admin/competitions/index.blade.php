@@ -162,7 +162,7 @@
     <div class="container mx-auto px-4">
         @if(!empty($typeLabel))
             <div class="program-context">
-                <a href="{{ !empty($isKomisija) ? route('dashboard') : route('admin.dashboard') }}">← {{ !empty($isKomisija) ? 'Moj panel' : 'Konkursi' }}</a>
+                <a href="{{ route('admin.dashboard') }}">← Konkursi</a>
             </div>
         @endif
 
@@ -222,13 +222,9 @@
                     @endif
                     @if($fc->commission)
                         <p><strong>Komisija:</strong>
-                            @if(!empty($isKomisija))
+                            <a href="{{ route('admin.commissions.show', $fc->commission) }}" style="color: var(--primary);">
                                 {{ $fc->commission->name }} ({{ $fc->commission->year }})
-                            @else
-                                <a href="{{ route('admin.commissions.show', $fc->commission) }}" style="color: var(--primary);">
-                                    {{ $fc->commission->name }} ({{ $fc->commission->year }})
-                                </a>
-                            @endif
+                            </a>
                         </p>
                     @endif
                 </div>

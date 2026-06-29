@@ -177,18 +177,13 @@ class AdminController extends Controller
     /**
      * Trenutno aktivni objavljeni konkurs za program (za prikaz opisa i osnovnih podataka).
      */
-    protected function getFeaturedCompetitionForProgram(string $type, ?int $commissionId = null): ?Competition
+    protected function getFeaturedCompetitionForProgram(string $type): ?Competition
     {
-        $candidatesQuery = Competition::where('type', $type)
+        $candidates = Competition::where('type', $type)
             ->where('status', 'published')
             ->with(['commission', 'upNumber'])
-            ->orderByDesc('published_at');
-
-        if ($commissionId) {
-            $candidatesQuery->where('commission_id', $commissionId);
-        }
-
-        $candidates = $candidatesQuery->get();
+            ->orderByDesc('published_at')
+            ->get();
 
         if ($candidates->isEmpty()) {
             return null;
@@ -212,28 +207,6 @@ class AdminController extends Controller
         }
 
         return $candidates->first();
-    }
-
-    /**
-     * Tip programa za konkurs dodijeljen komisiji (prioritet: otvoren → uskoro → objavljen).
-     */
-    protected function getPrimaryTypeForCommission(int $commissionId): ?string
-    {
-        $competitions = Competition::where('commission_id', $commissionId)
-            ->whereIn('status', ['published', 'closed', 'completed'])
-            ->orderByDesc('published_at')
-            ->get();
-
-        if ($competitions->isEmpty()) {
-            return null;
-        }
-
-        $primary = $competitions->first(fn (Competition $competition) => $competition->is_open)
-            ?? $competitions->first(fn (Competition $competition) => $competition->is_upcoming)
-            ?? $competitions->first(fn (Competition $competition) => $competition->status === 'published')
-            ?? $competitions->first();
-
-        return $primary->type;
     }
 
     /**
@@ -412,7 +385,6 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
-        $isKomisija = $user->role && $user->role->name === 'komisija';
         $commissionId = null;
         
         // Ako je član komisije, prikaži samo konkurse dodijeljene njegovoj komisiji
@@ -429,14 +401,6 @@ class AdminController extends Controller
         if ($type && !in_array($type, $allowedTypes, true)) {
             $type = null;
         }
-
-        if ($isKomisija && !$type && $commissionId) {
-            $type = $this->getPrimaryTypeForCommission($commissionId);
-            if ($type && !in_array($type, $allowedTypes, true)) {
-                $type = null;
-            }
-        }
-
         $typeLabel = $this->getCompetitionTypeLabel($type);
 
         $applyTypeFilter = function ($query) use ($type) {
@@ -503,10 +467,9 @@ class AdminController extends Controller
                 ->appends(['tab' => $tab, 'type' => $type]);
         }
         
-        $featuredCommissionId = (!$isAdmin && $commissionId) ? $commissionId : null;
-        $featuredCompetition = $type ? $this->getFeaturedCompetitionForProgram($type, $featuredCommissionId) : null;
+        $featuredCompetition = $type ? $this->getFeaturedCompetitionForProgram($type) : null;
 
-        return view('admin.competitions.index', compact('competitions', 'tab', 'isAdmin', 'isKomisija', 'type', 'typeLabel', 'featuredCompetition'));
+        return view('admin.competitions.index', compact('competitions', 'tab', 'isAdmin', 'type', 'typeLabel', 'featuredCompetition'));
     }
 
     /**

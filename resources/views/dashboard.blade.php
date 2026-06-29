@@ -666,7 +666,7 @@
                         @foreach($activeCompetitions as $competition)
                             <div class="commission-competition-item">
                                 <h3 class="commission-competition-title">
-                                    <a href="{{ route('admin.competitions.index', ['type' => $competition->type, 'tab' => 'active']) }}">
+                                    <a href="{{ route('admin.competitions.show', $competition) }}">
                                         {{ $competition->title }}
                                     </a>
                                 </h3>
@@ -713,7 +713,7 @@
                                     </div>
                                 </div>
                                 <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
-                                    <a href="{{ route('admin.competitions.index', ['type' => $competition->type, 'tab' => 'active']) }}" class="btn-edit" style="font-size: 12px; padding: 6px 12px; display: inline-block;">
+                                    <a href="{{ route('admin.competitions.show', $competition) }}" class="btn-edit" style="font-size: 12px; padding: 6px 12px; display: inline-block;">
                                         Pregled konkursa
                                     </a>
                                     @if($competition->isRankingFormed())

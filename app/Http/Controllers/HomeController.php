@@ -73,10 +73,7 @@ class HomeController extends Controller
             ?? $competitions->first(fn (Competition $competition) => $competition->status === 'published')
             ?? $competitions->first();
 
-        return route('admin.competitions.index', [
-            'type' => $primary->type,
-            'tab' => 'active',
-        ]);
+        return route('admin.competitions.show', $primary);
     }
 
     public function loginForm()
