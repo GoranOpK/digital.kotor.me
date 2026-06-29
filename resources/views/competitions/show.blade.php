@@ -280,8 +280,10 @@
 
             @php
                 $isCommissionMemberForThisCompetition = false;
+                $isCompetitionAdmin = false;
                 if (auth()->check()) {
                     $userRole = auth()->user()->role ? auth()->user()->role->name : null;
+                    $isCompetitionAdmin = $userRole === 'konkurs_admin';
                     if ($userRole === 'komisija' && $competition->commission_id) {
                         $commissionMember = \App\Models\CommissionMember::activeForCommission(
                             auth()->id(),
@@ -292,8 +294,9 @@
                         }
                     }
                 }
+                $showApplicantDocumentation = !$isCommissionMemberForThisCompetition && !$isCompetitionAdmin;
             @endphp
-            @if(!$isCommissionMemberForThisCompetition)
+            @if($showApplicantDocumentation)
                 <!-- Obavezna dokumentacija -->
                 <div class="info-card">
                     <h2>Obavezna dokumentacija</h2>
@@ -340,7 +343,7 @@
                     </ul>
                 </div>
             @else
-                <!-- Za članove komisije: Opis konkursa u istom redu kao Osnovne informacije -->
+                <!-- Za članove komisije i administratora konkursa: Opis konkursa u istom redu kao Osnovne informacije -->
                 @if($competition->description)
                 <div class="info-card">
                     <h2>Opis konkursa</h2>
@@ -352,8 +355,8 @@
             @endif
         </div>
 
-        <!-- Opis konkursa (ispod grida samo kada nisu članovi komisije tog konkursa) -->
-        @if(!$isCommissionMemberForThisCompetition && $competition->description)
+        <!-- Opis konkursa (ispod grida samo za prijavitelje) -->
+        @if($showApplicantDocumentation && $competition->description)
         <div class="info-card">
             <h2>Opis konkursa</h2>
             <div style="color: #374151; line-height: 1.8; white-space: pre-wrap;">
@@ -365,16 +368,20 @@
 
         <!-- Akcije -->
         @php
-            $userRole = auth()->check() ? (auth()->user()->role ? auth()->user()->role->name : null) : null;
-            $isCompetitionAdmin = $userRole === 'konkurs_admin';
-            $isCommissionMemberForThisCompetition = false;
-            if (auth()->check() && $userRole === 'komisija' && $competition->commission_id) {
-                $commissionMember = \App\Models\CommissionMember::activeForCommission(
-                    auth()->id(),
-                    $competition->commission_id
-                );
-                if ($commissionMember) {
-                    $isCommissionMemberForThisCompetition = true;
+            if (!isset($isCompetitionAdmin)) {
+                $userRole = auth()->check() ? (auth()->user()->role ? auth()->user()->role->name : null) : null;
+                $isCompetitionAdmin = $userRole === 'konkurs_admin';
+            }
+            if (!isset($isCommissionMemberForThisCompetition)) {
+                $isCommissionMemberForThisCompetition = false;
+                if (auth()->check() && ($userRole ?? null) === 'komisija' && $competition->commission_id) {
+                    $commissionMember = \App\Models\CommissionMember::activeForCommission(
+                        auth()->id(),
+                        $competition->commission_id
+                    );
+                    if ($commissionMember) {
+                        $isCommissionMemberForThisCompetition = true;
+                    }
                 }
             }
         @endphp
