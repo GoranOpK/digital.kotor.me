@@ -676,7 +676,7 @@
                         @csrf
                         <div class="form-group" style="margin-bottom: 12px;">
                             <label class="form-label" style="font-size: 13px;">Tip dokumenta</label>
-                            <select name="document_type" class="form-control" style="font-size: 13px; padding: 8px;" required>
+                            <select name="document_type" id="document-type-select-{{ $application->id }}" class="form-control" style="font-size: 13px; padding: 8px;" required onchange="updateMergedDocumentNameField({{ $application->id }})">
                                 <option value="">Izaberite tip</option>
                                 @php
                                     $requiredDocs = $application->getRequiredDocuments();
@@ -786,6 +786,7 @@
                                     @endif
                                 @endforeach
                             </select>
+                            <script type="application/json" id="document-labels-json-{{ $application->id }}">@json($documentLabels)</script>
                         </div>
                         <div class="form-group" style="margin-bottom: 12px;">
                             <label class="form-label" style="font-size: 13px;">Fajl</label>
@@ -801,6 +802,25 @@
                                     Možete promeniti redosled fajlova pomoću dugmadi "Gore" i "Dole" pre upload-a.
                                 </span>
                             </div>
+                        </div>
+                        <div class="form-group" id="merged-document-name-wrap-{{ $application->id }}" style="display: none; margin-bottom: 12px;">
+                            <label class="form-label" style="font-size: 13px;">Naziv spojenog dokumenta <span style="color: #ef4444;">*</span></label>
+                            <input
+                                type="text"
+                                name="document_name"
+                                id="document-name-{{ $application->id }}"
+                                class="form-control @error('document_name') error @enderror"
+                                value="{{ old('document_name') }}"
+                                maxlength="255"
+                                placeholder="Unesite naziv pod kojim će biti sačuvan spojeni PDF"
+                                style="font-size: 13px; padding: 8px;"
+                            >
+                            <div style="font-size: 12px; color: #6b7280; margin-top: 6px;">
+                                Ovaj naziv će biti prikazan u listi priložene dokumentacije. Ekstenzija .pdf se dodaje automatski.
+                            </div>
+                            @error('document_name')
+                                <div style="color: #ef4444; font-size: 12px; margin-top: 6px;">{{ $message }}</div>
+                            @enderror
                         </div>
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label class="form-label" style="font-weight: 400; font-size: 12px;">Ili iz biblioteke</label>
@@ -1226,6 +1246,39 @@
         return form ? form.dataset.appId : null;
     }
 
+    function getDocumentLabelsForApp(appId) {
+        const jsonEl = document.getElementById('document-labels-json-' + appId);
+        if (!jsonEl) return {};
+        try {
+            return JSON.parse(jsonEl.textContent || '{}');
+        } catch (e) {
+            return {};
+        }
+    }
+
+    window.updateMergedDocumentNameField = function(appId) {
+        const wrap = document.getElementById('merged-document-name-wrap-' + appId);
+        const nameInput = document.getElementById('document-name-' + appId);
+        const typeSelect = document.getElementById('document-type-select-' + appId);
+        if (!wrap || !nameInput) return;
+
+        const showNameField = selectedFilesApp.length > 1;
+        wrap.style.display = showNameField ? 'block' : 'none';
+        if (!showNameField) {
+            return;
+        }
+
+        if (nameInput.value.trim() || !typeSelect || !typeSelect.value) {
+            return;
+        }
+
+        const labels = getDocumentLabelsForApp(appId);
+        const suggested = labels[typeSelect.value];
+        if (suggested) {
+            nameInput.value = suggested;
+        }
+    };
+
     window.updateFileDisplayApp = function(input) {
         const appId = getAppIdFromInput(input);
         if (!appId) return;
@@ -1273,6 +1326,8 @@
             fileNamesDiv.style.display = 'none';
             fileLabel.textContent = 'Izaberi fajlove (možete izabrati više)';
         }
+
+        updateMergedDocumentNameField(appId);
     };
 
     function removeFileApp(index, input) {
@@ -1332,10 +1387,32 @@
         const dataTransfer = new DataTransfer();
         selectedFilesApp.forEach(function(f) { dataTransfer.items.add(f); });
         input.files = dataTransfer.files;
+
+        if (selectedFilesApp.length > 1) {
+            const nameInput = document.getElementById('document-name-' + appId);
+            if (!nameInput || !nameInput.value.trim()) {
+                event.preventDefault();
+                alert('Unesite naziv spojenog dokumenta.');
+                if (nameInput) {
+                    nameInput.focus();
+                    nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                return false;
+            }
+        }
+
         return true;
     };
 
     document.addEventListener('DOMContentLoaded', function() {
+        const appId = {{ $application->id }};
+        @if(old('document_name'))
+        const mergedNameWrap = document.getElementById('merged-document-name-wrap-' + appId);
+        if (mergedNameWrap) {
+            mergedNameWrap.style.display = 'block';
+        }
+        @endif
+
         document.addEventListener('mousedown', function(e) {
             const btn = e.target.closest('.file-action-btn-app');
             if (!btn) return;

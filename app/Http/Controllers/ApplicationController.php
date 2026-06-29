@@ -624,11 +624,14 @@ class ApplicationController extends Controller
             'files' => 'required_without:user_document_id|array|min:1',
             'files.*' => 'file|mimes:pdf,jpg,jpeg,png|max:20480', // 20MB max po fajlu
             'user_document_id' => 'nullable|required_without:files',
+            'document_name' => 'nullable|string|max:255',
         ], [
             'document_type.required' => 'Tip dokumenta je obavezan.',
             'files.required_without' => 'Morate priložiti fajl ili izabrati dokument iz biblioteke.',
             'user_document_id.required_without' => 'Morate priložiti fajl ili izabrati dokument iz biblioteke.',
             'files.*.max' => 'Fajl ne može biti veći od 20MB.',
+            'document_name.required' => 'Unesite naziv spojenog dokumenta.',
+            'document_name.max' => 'Naziv dokumenta može imati najviše 255 karaktera.',
         ]);
 
         // Proveri da li je dokument već priložen
@@ -671,6 +674,15 @@ class ApplicationController extends Controller
         if ($request->hasFile('files')) {
             $files = $request->file('files');
             $documentProcessor = app(\App\Services\DocumentProcessor::class);
+
+            if (count($files) > 1) {
+                $request->validate([
+                    'document_name' => 'required|string|max:255',
+                ], [
+                    'document_name.required' => 'Unesite naziv spojenog dokumenta.',
+                    'document_name.max' => 'Naziv dokumenta može imati najviše 255 karaktera.',
+                ]);
+            }
 
             if (count($files) > 1) {
                 $result = $documentProcessor->mergeDocuments($files, Auth::id());
@@ -720,7 +732,7 @@ class ApplicationController extends Controller
 
             $documentName = count($files) === 1
                 ? $files[0]->getClientOriginalName()
-                : 'Spojeni dokument (' . count($files) . ' fajlova).pdf';
+                : $this->normalizeDocumentDisplayName($request->input('document_name'));
 
             $fileSize = $result['file_size'] ?? (file_exists(Storage::disk('local')->path($filePath)) ? filesize(Storage::disk('local')->path($filePath)) : 0);
             $userDocumentId = null;
@@ -933,6 +945,23 @@ class ApplicationController extends Controller
         }
 
         return null;
+    }
+
+    protected function normalizeDocumentDisplayName(string $name): string
+    {
+        $name = trim($name);
+        $name = preg_replace('/[\\\\\/:*?"<>|]+/u', '-', $name) ?? $name;
+        $name = preg_replace('/\s+/u', ' ', $name) ?? $name;
+
+        if ($name === '') {
+            return 'Dokument.pdf';
+        }
+
+        if (!str_ends_with(strtolower($name), '.pdf')) {
+            $name .= '.pdf';
+        }
+
+        return $name;
     }
 
     /**
