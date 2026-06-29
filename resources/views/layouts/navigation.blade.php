@@ -25,8 +25,10 @@
                             Događaji
                         </x-nav-link>
                     @elseif($isCompetitionAdmin)
-                        <x-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                            Konkursi
+                        <x-nav-link :href="route('home')" :active="request()->routeIs('home')" aria-label="Početna stranica">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125h9.75a1.125 1.125 0 0 0 1.125-1.125V9.75M8.25 21h8.25" />
+                            </svg>
                         </x-nav-link>
                         <x-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
                             Komisije
@@ -124,8 +126,11 @@
                     Događaji
                 </x-responsive-nav-link>
             @elseif($isCompetitionAdmin)
-                <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->routeIs('admin.dashboard')">
-                    Konkursi
+                <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 inline-block align-text-bottom" style="margin-right: 4px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125h9.75a1.125 1.125 0 0 0 1.125-1.125V9.75M8.25 21h8.25" />
+                    </svg>
+                    Početna
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.commissions.index')" :active="request()->routeIs('admin.commissions.*')">
                     Komisije
