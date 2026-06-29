@@ -425,6 +425,7 @@ class ApplicationController extends Controller
                     'website' => $request->filled('website') ? $request->website : null,
                     'bank_account' => $request->filled('bank_account') ? $request->bank_account : null,
                     'vat_number' => $request->filled('vat_number') ? $request->vat_number : null,
+                    'pib' => $request->filled('pib') ? $request->pib : null,
                     'crps_number' => $request->filled('crps_number') ? $request->crps_number : null,
                     'registration_form' => $request->filled('registration_form') ? $request->registration_form : null,
                     // Automatsko postavljanje is_registered na osnovu tipa

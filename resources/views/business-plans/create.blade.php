@@ -715,7 +715,10 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">PIB:</label>
-                                    <input type="text" name="pib" class="form-control @error('pib') error @enderror" value="{{ old('pib', $businessPlan->pib ?? ($defaultData['pib'] ?? '')) }}" maxlength="9" pattern="[0-9]{9}" inputmode="numeric" placeholder="9 cifara">
+                                    <input type="text" name="pib" id="pib" class="form-control @error('pib') error @enderror" value="{{ old('pib', filled($businessPlan->pib ?? null) ? $businessPlan->pib : ($resolvedPib ?? ($defaultData['pib'] ?? ''))) }}" maxlength="9" pattern="[0-9]{9}" inputmode="numeric" placeholder="9 cifara" data-application-pib="{{ $resolvedPib ?? ($application->pib ?? '') }}">
+                                    @if(!empty($resolvedPib))
+                                        <div class="form-text">Preuzeto iz Obrasca 1a/1b.</div>
+                                    @endif
                                     @error('pib')
                                         <div class="error-message">{{ $message }}</div>
                                     @enderror
@@ -2334,6 +2337,16 @@ document.addEventListener('DOMContentLoaded', function() {
             registrationFormInput.addEventListener('input', updateCompanyNameLabel);
             registrationFormInput.addEventListener('change', updateCompanyNameLabel);
         }
+
+        const pibField = document.getElementById('pib');
+        if (pibField) {
+            const applicationPib = (pibField.dataset.applicationPib || '').trim();
+            if (applicationPib && !pibField.value.trim()) {
+                pibField.value = applicationPib;
+            }
+        }
+
+        toggleRegisteredBusinessFields();
     }
 });
 </script>

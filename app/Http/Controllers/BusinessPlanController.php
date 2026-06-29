@@ -13,6 +13,22 @@ use Illuminate\View\View;
 class BusinessPlanController extends Controller
 {
     /**
+     * PIB iz Obrasca 1a/1b (prijava) ili korisničkog profila.
+     */
+    protected function resolvePibFromApplication(Application $application, $user): ?string
+    {
+        if (filled($application->pib)) {
+            return $application->pib;
+        }
+
+        if ($user && filled($user->pib)) {
+            return $user->pib;
+        }
+
+        return null;
+    }
+
+    /**
      * Prikaz forme za popunjavanje biznis plana (Obrazac 2)
      */
     public function create(Application $application): View
@@ -115,10 +131,11 @@ class BusinessPlanController extends Controller
             $defaultData['applicant_address'] = $user->formattedAddress();
         }
 
-        // Podaci o registrovanom biznisu - uzmi iz prijave
+        // Podaci o registrovanom biznisu - uzmi iz prijave (Obrazac 1a/1b)
         $defaultData['has_registered_business'] = $application->is_registered ?? false;
         $defaultData['registration_form'] = $application->registration_form ?? '';
-        $defaultData['pib'] = $application->pib ?? $user->pib ?? '';
+        $resolvedPib = $this->resolvePibFromApplication($application, $user);
+        $defaultData['pib'] = $resolvedPib ?? '';
         $defaultData['vat_number'] = $application->vat_number ?? '';
         $defaultData['bank_account'] = $application->bank_account ?? '';
         $defaultData['company_website'] = $application->website ?? '';
@@ -138,7 +155,7 @@ class BusinessPlanController extends Controller
                 'applicant_address' => $businessPlan->applicant_address ?? $defaultData['applicant_address'],
                 'has_registered_business' => $businessPlan->has_registered_business ?? $defaultData['has_registered_business'],
                 'registration_form' => $businessPlan->registration_form ?? $defaultData['registration_form'],
-                'pib' => $businessPlan->pib ?? $defaultData['pib'],
+                'pib' => filled($businessPlan->pib) ? $businessPlan->pib : $defaultData['pib'],
                 'vat_number' => $businessPlan->vat_number ?? $defaultData['vat_number'],
                 'bank_account' => $businessPlan->bank_account ?? $defaultData['bank_account'],
                 'company_website' => $businessPlan->company_website ?? $defaultData['company_website'],
@@ -156,7 +173,7 @@ class BusinessPlanController extends Controller
             abort(403, 'Članovi komisije mogu samo pregledati biznis planove u read-only modu.');
         }
 
-        return view('business-plans.create', compact('application', 'businessPlan', 'defaultData', 'readOnly'));
+        return view('business-plans.create', compact('application', 'businessPlan', 'defaultData', 'readOnly', 'resolvedPib'));
     }
 
     /**
@@ -270,6 +287,14 @@ class BusinessPlanController extends Controller
         ];
 
         $cleanedData = $validated;
+
+        if (empty($cleanedData['pib'])) {
+            $applicationPib = $this->resolvePibFromApplication($application, $user);
+            if ($applicationPib) {
+                $cleanedData['pib'] = $applicationPib;
+            }
+        }
+
         foreach ($tableFields as $field) {
             // Koristi podatke direktno iz request-a, ne iz validated
             if ($request->has($field) && is_array($request->input($field))) {
