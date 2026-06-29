@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Application;
+use App\Models\CommissionMember;
+use App\Models\Competition;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +22,7 @@ class HomeController extends Controller
     }
 
     /**
-     * Kategorije na naslovnoj — administrator konkursa vidi samo Konkursi.
+     * Kategorije na naslovnoj — administrator konkursa i član komisije vide samo Konkursi.
      */
     protected function getLandingCategories(): array
     {
@@ -40,8 +42,38 @@ class HomeController extends Controller
             'konkurs_admin' => [
                 ['label' => 'Konkursi', 'url' => route('admin.dashboard')],
             ],
+            'komisija' => [
+                ['label' => 'Konkursi', 'url' => $this->getCommissionMemberCompetitionUrl($user)],
+            ],
             default => $defaultCategories,
         };
+    }
+
+    /**
+     * Link na konkurs dodijeljen komisiji člana (ili panel ako nema konkursa).
+     */
+    protected function getCommissionMemberCompetitionUrl(User $user): string
+    {
+        $membership = CommissionMember::activeMembershipForUser($user->id);
+        if (!$membership) {
+            return route('dashboard');
+        }
+
+        $competitions = Competition::where('commission_id', $membership->commission_id)
+            ->whereIn('status', ['published', 'closed', 'completed'])
+            ->orderByDesc('published_at')
+            ->get();
+
+        if ($competitions->isEmpty()) {
+            return route('dashboard');
+        }
+
+        $primary = $competitions->first(fn (Competition $competition) => $competition->is_open)
+            ?? $competitions->first(fn (Competition $competition) => $competition->is_upcoming)
+            ?? $competitions->first(fn (Competition $competition) => $competition->status === 'published')
+            ?? $competitions->first();
+
+        return route('admin.competitions.show', $primary);
     }
 
     public function loginForm()
