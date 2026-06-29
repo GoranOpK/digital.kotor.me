@@ -144,16 +144,13 @@
 
 <div class="competitions-page">
     <div class="container mx-auto px-4">
-        @php
-            $competitionGuidePdf = 'pdf/uputstvo-zensko-preduzetnistvo.pdf';
-        @endphp
         <div class="page-header">
             <div class="page-header-main">
                 <h1>Konkursi za podršku ženskom preduzetništvu</h1>
                 <p style="color: rgba(255,255,255,0.9); margin: 0;">Pregled aktivnih konkursa za podršku ženskom preduzetništvu iz budžeta Opštine Kotor</p>
             </div>
             <a
-                href="{{ asset($competitionGuidePdf) }}"
+                href="{{ route('competitions.guide.pdf') }}"
                 class="page-header-guide-btn"
                 target="_blank"
                 rel="noopener noreferrer"
