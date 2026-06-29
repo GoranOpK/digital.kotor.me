@@ -631,7 +631,10 @@ class AdminController extends Controller
         $isCommissionMember = $this->isCommissionMemberForCompetition($competition);
         
         $competition->loadCount('applications');
-        $competition->load('commission');
+        $competition->load(['commission', 'upNumber']);
+        
+        $typeLabel = $this->getCompetitionTypeLabel($competition->type);
+        $isKomisijaView = $isCommissionMember && !$isAdmin && !$isCompetitionAdmin;
         
         // Članovi komisije ne mogu vidjeti draft prijave; prijave su im vidljive tek nakon isteka roka za prijavljivanje
         $applicationsQuery = $competition->applications()
@@ -658,7 +661,7 @@ class AdminController extends Controller
             ? ($isSuperAdmin || $isChairman || $isCommissionMember || $isCompetitionAdmin)
             : (($isSuperAdmin || $isChairman || $isCommissionMember) && $competition->isRankingFormed());
         
-        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink'));
+        return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink', 'typeLabel', 'isKomisijaView'));
     }
 
     /**

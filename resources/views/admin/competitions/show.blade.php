@@ -79,10 +79,94 @@
         display: inline-block;
         border: 1px solid #fee2e2;
     }
+    .program-context {
+        margin-bottom: 16px;
+    }
+    .program-context a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 14px;
+    }
+    .program-context a:hover {
+        text-decoration: underline;
+    }
+    .page-header-text h1 {
+        margin: 0 0 4px;
+    }
+    .page-header-text p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 14px;
+    }
+    .program-feature-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    @media (min-width: 992px) {
+        .program-feature-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    .program-feature-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        height: 100%;
+    }
+    .program-feature-card h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    .program-feature-card p {
+        margin: 0 0 10px;
+        color: #374151;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .program-feature-card .featured-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 12px;
+    }
+    .program-description {
+        color: #374151;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        font-size: 14px;
+    }
 </style>
 
 <div class="admin-page">
     <div class="container mx-auto px-4">
+        @if(!empty($isKomisijaView))
+            <div class="program-context">
+                <a href="{{ route('dashboard') }}">← Moj panel</a>
+            </div>
+
+            <div class="page-header">
+                <div class="page-header-text">
+                    <h1>{{ $typeLabel ?? $competition->title }}</h1>
+                    <p>Pregled konkursa dodijeljenog vašoj komisiji</p>
+                </div>
+                <div>
+                    @if(isset($showRankingLink) && $showRankingLink)
+                        <a href="{{ route('admin.competitions.ranking', $competition) }}" class="btn" style="background: #8b5cf6; color: #fff;">Rang lista</a>
+                    @endif
+                    @if(in_array($competition->status, ['closed', 'completed']))
+                        <a href="{{ route('admin.competitions.decision', $competition) }}" class="btn" style="background: #0b3d91; color: #fff;">Pregled odluke</a>
+                    @endif
+                </div>
+            </div>
+        @else
         <div class="page-header">
             <h1>{{ $competition->title }}</h1>
             <div>
@@ -112,6 +196,7 @@
                 @endif
             </div>
         </div>
+        @endif
 
         @if(session('success'))
             <div style="background: #d1fae5; border: 1px solid #10b981; color: #065f46; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
@@ -135,6 +220,58 @@
                 || in_array($competition->status, ['closed', 'completed']);
         @endphp
 
+        @if(!empty($isKomisijaView))
+            @php
+                $fc = $competition;
+                $fcStatusLabels = ['draft' => 'Nacrt', 'published' => 'Objavljen', 'closed' => 'Zatvoren', 'completed' => 'Završen'];
+                if ($fc->is_open) {
+                    $fcStatusText = 'Otvoren za prijave';
+                    $fcStatusColor = '#065f46';
+                } elseif ($fc->is_upcoming) {
+                    $fcStatusText = 'Uskoro počinje';
+                    $fcStatusColor = '#1e40af';
+                } elseif ($fc->isApplicationDeadlinePassed()) {
+                    $fcStatusText = 'Zatvoren za prijave';
+                    $fcStatusColor = '#92400e';
+                } else {
+                    $fcStatusText = $fcStatusLabels[$fc->status] ?? $fc->status;
+                    $fcStatusColor = '#374151';
+                }
+                $fcDaysLeft = $fc->getDaysUntilApplicationDeadline();
+            @endphp
+            <div class="program-feature-grid">
+                <div class="program-feature-card">
+                    <h2>Osnovne informacije</h2>
+                    <p class="featured-title">{{ $fc->title }}</p>
+                    <p><strong>Status:</strong> <span style="color: {{ $fcStatusColor }}; font-weight: 600;">{{ $fcStatusText }}</span></p>
+                    <p><strong>Broj konkursa:</strong> {{ $fc->upNumber?->number ?? 'N/A' }}</p>
+                    <p><strong>Budžet:</strong> {{ number_format($fc->budget ?? 0, 2, ',', '.') }} €</p>
+                    @if($fc->published_at)
+                        <p><strong>Datum objave:</strong> {{ $fc->published_at->format('d.m.Y H:i') }}</p>
+                    @endif
+                    @if($fc->start_date)
+                        <p><strong>Datum početka:</strong> {{ $fc->start_date->format('d.m.Y') }}</p>
+                    @endif
+                    @if($fc->deadline)
+                        <p><strong>Rok za prijave:</strong> {{ $fc->deadline->format('d.m.Y H:i') }}</p>
+                    @endif
+                    @if($fcDaysLeft !== null && !$fc->isApplicationDeadlinePassed())
+                        <p><strong>Preostalo za prijave:</strong> {{ $fcDaysLeft }} {{ $fcDaysLeft == 1 ? 'dan' : 'dana' }}</p>
+                    @endif
+                    @if($fc->commission)
+                        <p><strong>Komisija:</strong> {{ $fc->commission->name }} ({{ $fc->commission->year }})</p>
+                    @endif
+                </div>
+                <div class="program-feature-card">
+                    <h2>Opis konkursa</h2>
+                    @if($fc->description)
+                        <div class="program-description">{{ $fc->description }}</div>
+                    @else
+                        <p style="color: #6b7280; margin: 0;">Opis nije unesen za ovaj konkurs.</p>
+                    @endif
+                </div>
+            </div>
+        @else
         <div class="info-card">
             <h2 style="font-size: 20px; margin-bottom: 16px;">Osnovne informacije</h2>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
@@ -194,6 +331,7 @@
             </div>
         </div>
         @endif
+        @endif
 
         @php
             $daysUntilApplicationDeadline = $competition->getDaysUntilApplicationDeadline();
@@ -202,7 +340,7 @@
             $isEvaluationDeadlinePassed = $competition->isEvaluationDeadlinePassed();
         @endphp
 
-        @if($competition->status === 'published' && $daysUntilApplicationDeadline !== null && !$isApplicationDeadlinePassed)
+        @if(empty($isKomisijaView) && $competition->status === 'published' && $daysUntilApplicationDeadline !== null && !$isApplicationDeadlinePassed)
             <div class="info-card" style="border-left: 4px solid {{ $daysUntilApplicationDeadline <= 3 ? '#ef4444' : ($daysUntilApplicationDeadline <= 7 ? '#f59e0b' : '#10b981') }};">
                 <h3 style="margin-top: 0; display: flex; align-items: center; gap: 8px;">
                     <span>📅</span>
