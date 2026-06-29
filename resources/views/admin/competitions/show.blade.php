@@ -186,6 +186,15 @@
             </div>
         </div>
 
+        @if($competition->description)
+        <div class="info-card">
+            <h2 style="font-size: 20px; margin-bottom: 16px;">Opis konkursa</h2>
+            <div style="color: #374151; line-height: 1.8; white-space: pre-wrap;">
+                {{ $competition->description }}
+            </div>
+        </div>
+        @endif
+
         @php
             $daysUntilApplicationDeadline = $competition->getDaysUntilApplicationDeadline();
             $daysUntilEvaluationDeadline = $competition->getDaysUntilEvaluationDeadline();

@@ -108,6 +108,50 @@
         opacity: 0.9;
         font-size: 14px;
     }
+    .program-feature-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+    @media (min-width: 992px) {
+        .program-feature-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    .program-feature-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        height: 100%;
+    }
+    .program-feature-card h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0 0 16px;
+        padding-bottom: 12px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    .program-feature-card p {
+        margin: 0 0 10px;
+        color: #374151;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+    .program-feature-card .featured-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 12px;
+    }
+    .program-description {
+        color: #374151;
+        line-height: 1.8;
+        white-space: pre-wrap;
+        font-size: 14px;
+    }
 </style>
 
 @php
@@ -133,6 +177,78 @@
                 <a href="{{ route('admin.competitions.create', $type ? ['type' => $type] : []) }}" class="btn-primary">+ Novi konkurs</a>
             @endif
         </div>
+
+        @if(!empty($type) && isset($featuredCompetition) && $featuredCompetition)
+            @php
+                $fc = $featuredCompetition;
+                $fcStatusLabels = ['draft' => 'Nacrt', 'published' => 'Objavljen', 'closed' => 'Zatvoren', 'completed' => 'Završen'];
+                if ($fc->is_open) {
+                    $fcStatusText = 'Otvoren za prijave';
+                    $fcStatusColor = '#065f46';
+                } elseif ($fc->is_upcoming) {
+                    $fcStatusText = 'Uskoro počinje';
+                    $fcStatusColor = '#1e40af';
+                } elseif ($fc->isApplicationDeadlinePassed()) {
+                    $fcStatusText = 'Zatvoren za prijave';
+                    $fcStatusColor = '#92400e';
+                } else {
+                    $fcStatusText = $fcStatusLabels[$fc->status] ?? $fc->status;
+                    $fcStatusColor = '#374151';
+                }
+                $fcDaysLeft = $fc->getDaysUntilApplicationDeadline();
+            @endphp
+            <div class="program-feature-grid">
+                <div class="program-feature-card">
+                    <h2>Osnovne informacije</h2>
+                    <p class="featured-title">
+                        <a href="{{ route('admin.competitions.show', $fc) }}" style="color: var(--primary); text-decoration: none;">
+                            {{ $fc->title }}
+                        </a>
+                    </p>
+                    <p><strong>Status:</strong> <span style="color: {{ $fcStatusColor }}; font-weight: 600;">{{ $fcStatusText }}</span></p>
+                    <p><strong>Broj konkursa:</strong> {{ $fc->upNumber?->number ?? 'N/A' }}</p>
+                    <p><strong>Budžet:</strong> {{ number_format($fc->budget ?? 0, 2, ',', '.') }} €</p>
+                    @if($fc->published_at)
+                        <p><strong>Datum objave:</strong> {{ $fc->published_at->format('d.m.Y H:i') }}</p>
+                    @endif
+                    @if($fc->start_date)
+                        <p><strong>Datum početka:</strong> {{ $fc->start_date->format('d.m.Y') }}</p>
+                    @endif
+                    @if($fc->deadline)
+                        <p><strong>Rok za prijave:</strong> {{ $fc->deadline->format('d.m.Y H:i') }}</p>
+                    @endif
+                    @if($fcDaysLeft !== null && !$fc->isApplicationDeadlinePassed())
+                        <p><strong>Preostalo za prijave:</strong> {{ $fcDaysLeft }} {{ $fcDaysLeft == 1 ? 'dan' : 'dana' }}</p>
+                    @endif
+                    @if($fc->commission)
+                        <p><strong>Komisija:</strong>
+                            <a href="{{ route('admin.commissions.show', $fc->commission) }}" style="color: var(--primary);">
+                                {{ $fc->commission->name }} ({{ $fc->commission->year }})
+                            </a>
+                        </p>
+                    @endif
+                    @if($type === 'zensko')
+                        <p style="margin-top: 16px;">
+                            <a href="{{ route('competitions.guide.pdf') }}" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: 600;">
+                                Uputstvo za podnosioce (PDF)
+                            </a>
+                        </p>
+                    @endif
+                </div>
+                <div class="program-feature-card">
+                    <h2>Opis konkursa</h2>
+                    @if($fc->description)
+                        <div class="program-description">{{ $fc->description }}</div>
+                    @else
+                        <p style="color: #6b7280; margin: 0;">Opis nije unesen za trenutno aktivni konkurs.</p>
+                    @endif
+                </div>
+            </div>
+        @elseif(!empty($type))
+            <div class="program-feature-card" style="margin-bottom: 24px;">
+                <p style="color: #6b7280; margin: 0;">Trenutno nema objavljenog aktivnog konkursa za ovaj program.</p>
+            </div>
+        @endif
 
         <!-- Tabovi za aktivne i arhivirane konkursi -->
         <div style="background: #fff; border-radius: 16px; padding: 0; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">

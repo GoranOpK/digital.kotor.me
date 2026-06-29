@@ -175,6 +175,41 @@ class AdminController extends Controller
     }
 
     /**
+     * Trenutno aktivni objavljeni konkurs za program (za prikaz opisa i osnovnih podataka).
+     */
+    protected function getFeaturedCompetitionForProgram(string $type): ?Competition
+    {
+        $candidates = Competition::where('type', $type)
+            ->where('status', 'published')
+            ->with(['commission', 'upNumber'])
+            ->orderByDesc('published_at')
+            ->get();
+
+        if ($candidates->isEmpty()) {
+            return null;
+        }
+
+        $open = $candidates->first(fn (Competition $competition) => $competition->is_open);
+        if ($open) {
+            return $open;
+        }
+
+        $upcoming = $candidates->first(fn (Competition $competition) => $competition->is_upcoming);
+        if ($upcoming) {
+            return $upcoming;
+        }
+
+        $inEvaluation = $candidates->first(
+            fn (Competition $competition) => $competition->isApplicationDeadlinePassed()
+        );
+        if ($inEvaluation) {
+            return $inEvaluation;
+        }
+
+        return $candidates->first();
+    }
+
+    /**
      * Prikaz admin dashboard-a
      */
     public function dashboard()
@@ -432,7 +467,9 @@ class AdminController extends Controller
                 ->appends(['tab' => $tab, 'type' => $type]);
         }
         
-        return view('admin.competitions.index', compact('competitions', 'tab', 'isAdmin', 'type', 'typeLabel'));
+        $featuredCompetition = $type ? $this->getFeaturedCompetitionForProgram($type) : null;
+
+        return view('admin.competitions.index', compact('competitions', 'tab', 'isAdmin', 'type', 'typeLabel', 'featuredCompetition'));
     }
 
     /**

@@ -14,7 +14,13 @@ class HomeController extends Controller
 {
     public function index()
     {
-        return view('landing');
+        $competitionsUrl = route('competitions.index');
+        $user = auth()->user();
+        if ($user && $user->role && $user->role->name === 'konkurs_admin') {
+            $competitionsUrl = route('admin.dashboard');
+        }
+
+        return view('landing', compact('competitionsUrl'));
     }
 
     public function loginForm()
