@@ -63,7 +63,6 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
         $filename = 'uputstvo-zensko-preduzetnistvo.pdf';
         $candidatePaths = [
             public_path('pdf/'.$filename),
-            public_path('documents/'.$filename),
             storage_path('app/public/pdf/'.$filename),
             storage_path('app/public/documents/'.$filename),
         ];

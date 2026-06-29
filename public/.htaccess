@@ -5,6 +5,9 @@
 
     RewriteEngine On
 
+    # Biblioteka dokumenata — /documents mora ići kroz Laravel (ne fizički folder public/documents)
+    RewriteRule ^documents(/.*)?$ index.php [L,QSA]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
