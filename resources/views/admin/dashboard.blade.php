@@ -274,10 +274,7 @@
             <h1>
                 @if($isCompetitionAdmin)
                     <a href="{{ route('home') }}" aria-label="Početna stranica digital.kotor.me" style="color: #fff; display: inline-flex; align-items: center; text-decoration: none;">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" width="36" height="36">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 10.2 12 4.5l7.5 5.7V19a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-8.8Z" />
-                        </svg>
+                        <x-icon-home class="w-9 h-9" />
                     </a>
                 @else
                     Administratorski Dashboard
