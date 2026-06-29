@@ -59,6 +59,26 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
 
     // Modul za konkurse (žensko/omladinsko preduzetništvo)
     Route::get('/competitions', [CompetitionsController::class, 'index'])->name('competitions.index'); // Lista konkursa
+    Route::get('/competitions/guide/pdf', function () {
+        $filename = 'uputstvo-zensko-preduzetnistvo.pdf';
+        $candidatePaths = [
+            public_path('pdf/'.$filename),
+            public_path('documents/'.$filename),
+            storage_path('app/public/pdf/'.$filename),
+            storage_path('app/public/documents/'.$filename),
+        ];
+
+        foreach ($candidatePaths as $path) {
+            if (is_file($path)) {
+                return response()->file($path, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="'.$filename.'"',
+                ]);
+            }
+        }
+
+        abort(404, 'PDF uputstvo nije pronađeno.');
+    })->name('competitions.guide.pdf');
     // Arhiva konkursa (mora biti pre rute sa parametrom)
     Route::middleware('role:admin,konkurs_admin,komisija')->group(function () {
         Route::get('/competitions/archive', [AdminController::class, 'competitionsArchive'])->name('competitions.archive');

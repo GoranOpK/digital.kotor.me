@@ -18,12 +18,47 @@
         padding: 24px;
         border-radius: 16px;
         margin-bottom: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+    .page-header-main {
+        flex: 1;
+        min-width: 220px;
     }
     .page-header h1 {
         color: #fff;
         font-size: 32px;
         font-weight: 700;
         margin: 0 0 8px;
+    }
+    .page-header-guide-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border-radius: 10px;
+        background: #fff;
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 15px;
+        text-decoration: none;
+        border: 2px solid #fff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        white-space: nowrap;
+        transition: background 0.2s, color 0.2s;
+    }
+    .page-header-guide-btn:hover {
+        background: #eff6ff;
+        color: var(--primary-dark);
+    }
+    @media (max-width: 640px) {
+        .page-header-guide-btn {
+            width: 100%;
+            justify-content: center;
+        }
     }
     .competitions-grid {
         display: grid;
@@ -110,8 +145,19 @@
 <div class="competitions-page">
     <div class="container mx-auto px-4">
         <div class="page-header">
-            <h1>Konkursi za podršku ženskom preduzetništvu</h1>
-            <p style="color: rgba(255,255,255,0.9); margin: 0;">Pregled aktivnih konkursa za podršku ženskom preduzetništvu iz budžeta Opštine Kotor</p>
+            <div class="page-header-main">
+                <h1>Konkursi za podršku ženskom preduzetništvu</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 0;">Pregled aktivnih konkursa za podršku ženskom preduzetništvu iz budžeta Opštine Kotor</p>
+            </div>
+            <a
+                href="{{ route('competitions.guide.pdf') }}"
+                class="page-header-guide-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                <span aria-hidden="true">📄</span>
+                Uputstvo za podnosioce (PDF)
+            </a>
         </div>
 
         @if($competitions->count() > 0)
