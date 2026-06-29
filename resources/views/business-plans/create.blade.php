@@ -715,7 +715,10 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">PIB:</label>
-                                    <input type="text" name="pib" class="form-control" value="{{ old('pib', $businessPlan->pib ?? ($defaultData['pib'] ?? '')) }}">
+                                    <input type="text" name="pib" class="form-control @error('pib') error @enderror" value="{{ old('pib', $businessPlan->pib ?? ($defaultData['pib'] ?? '')) }}" maxlength="9" pattern="[0-9]{9}" inputmode="numeric" placeholder="9 cifara">
+                                    @error('pib')
+                                        <div class="error-message">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Broj PDV registracije (ukoliko ste PDV obveznik):</label>
@@ -2125,6 +2128,25 @@ document.addEventListener('DOMContentLoaded', function() {
         'summary'
     ];
 
+    function isValidPib(value) {
+        return /^[0-9]{9}$/.test((value || '').trim());
+    }
+
+    function validatePibField() {
+        const hasBusiness = document.querySelector('input[name="has_registered_business"]:checked')?.value === '1';
+        const pibField = bpForm ? bpForm.querySelector('input[name="pib"]') : null;
+        if (!pibField || !hasBusiness) {
+            return true;
+        }
+
+        const pibValue = pibField.value.trim();
+        if (!pibValue) {
+            return true;
+        }
+
+        return isValidPib(pibValue);
+    }
+
     // Funkcija za provjeru da li su sva obavezna polja popunjena
     function checkRequiredFields() {
         let allFilled = true;
@@ -2226,6 +2248,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     financesNoticeConfirmWrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
                 alert('Potrebno je potvrditi da ste pročitala napomenu prije unosa iznosa podrške (pitanje 22 i dalje).');
+                return;
+            }
+
+            if (!validatePibField()) {
+                const pibField = bpForm.querySelector('input[name="pib"]');
+                if (pibField) {
+                    pibField.classList.add('error');
+                    pibField.focus();
+                    pibField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                alert('PIB mora imati tačno 9 cifara.');
                 return;
             }
 
