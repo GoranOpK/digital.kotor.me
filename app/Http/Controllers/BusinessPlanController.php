@@ -59,6 +59,17 @@ class BusinessPlanController extends Controller
             abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
+        if ($isCommissionMemberForThisCompetition) {
+            if ($application->status === 'draft') {
+                abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
+            }
+
+            $competition = $application->competition;
+            if ($competition && !in_array($competition->status, ['closed', 'completed']) && !$competition->isApplicationDeadlinePassed()) {
+                abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs.');
+            }
+        }
+
         // Proveri da li je Obrazac 1a/1b kompletno popunjen
         if (!$application->isObrazacComplete()) {
             $url = route('applications.create', $application->competition_id) . '?application_id=' . $application->id;
@@ -104,37 +115,38 @@ class BusinessPlanController extends Controller
         }
 
         // Pripremi podatke za automatsko popunjavanje iz prijave
-        $user = Auth::user();
+        $application->loadMissing('user');
+        $applicantUser = $application->user ?? Auth::user();
         $defaultData = [];
         
-        // Podaci o podnosiocu - uzmi iz prijave ili korisničkog profila
+        // Podaci o podnosiocu - uzmi iz prijave ili korisničkog profila podnosioca
         if ($application->applicant_type === 'fizicko_lice') {
             // Za fizičko lice, podaci su u prijavi
-            $defaultData['applicant_name'] = $application->physical_person_name ?? $user->name ?? '';
-            $defaultData['applicant_jmbg'] = $application->physical_person_jmbg ?? $user->jmb ?? '';
-            $defaultData['applicant_phone'] = $application->physical_person_phone ?? $user->phone ?? '';
-            $defaultData['applicant_email'] = $application->physical_person_email ?? $user->email ?? '';
-            $defaultData['applicant_address'] = $user->formattedAddress();
+            $defaultData['applicant_name'] = $application->physical_person_name ?? $applicantUser->name ?? '';
+            $defaultData['applicant_jmbg'] = $application->physical_person_jmbg ?? $applicantUser->jmb ?? '';
+            $defaultData['applicant_phone'] = $application->physical_person_phone ?? $applicantUser->phone ?? '';
+            $defaultData['applicant_email'] = $application->physical_person_email ?? $applicantUser->email ?? '';
+            $defaultData['applicant_address'] = $applicantUser->formattedAddress();
         } elseif ($application->applicant_type === 'preduzetnica') {
             // Za preduzetnicu, podaci su u korisničkom profilu
-            $defaultData['applicant_name'] = $user->name ?? '';
-            $defaultData['applicant_jmbg'] = $user->jmb ?? '';
-            $defaultData['applicant_phone'] = $user->phone ?? '';
-            $defaultData['applicant_email'] = $user->email ?? '';
-            $defaultData['applicant_address'] = $user->formattedAddress();
+            $defaultData['applicant_name'] = $applicantUser->name ?? '';
+            $defaultData['applicant_jmbg'] = $applicantUser->jmb ?? '';
+            $defaultData['applicant_phone'] = $applicantUser->phone ?? '';
+            $defaultData['applicant_email'] = $applicantUser->email ?? '';
+            $defaultData['applicant_address'] = $applicantUser->formattedAddress();
         } elseif ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') {
             // Za DOO/Ostalo, podaci su u korisničkom profilu
-            $defaultData['applicant_name'] = $user->name ?? '';
-            $defaultData['applicant_jmbg'] = $user->jmb ?? '';
-            $defaultData['applicant_phone'] = $user->phone ?? '';
-            $defaultData['applicant_email'] = $user->email ?? '';
-            $defaultData['applicant_address'] = $user->formattedAddress();
+            $defaultData['applicant_name'] = $applicantUser->name ?? '';
+            $defaultData['applicant_jmbg'] = $applicantUser->jmb ?? '';
+            $defaultData['applicant_phone'] = $applicantUser->phone ?? '';
+            $defaultData['applicant_email'] = $applicantUser->email ?? '';
+            $defaultData['applicant_address'] = $applicantUser->formattedAddress();
         }
 
         // Podaci o registrovanom biznisu - uzmi iz prijave (Obrazac 1a/1b)
         $defaultData['has_registered_business'] = $application->is_registered ?? false;
         $defaultData['registration_form'] = $application->registration_form ?? '';
-        $resolvedPib = $this->resolvePibFromApplication($application, $user);
+        $resolvedPib = $this->resolvePibFromApplication($application, $applicantUser);
         $defaultData['pib'] = $resolvedPib ?? '';
         $defaultData['vat_number'] = $application->vat_number ?? '';
         $defaultData['bank_account'] = $application->bank_account ?? '';

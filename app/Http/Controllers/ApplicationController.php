@@ -33,7 +33,7 @@ class ApplicationController extends Controller
         
         if ($request->has('application_id')) {
             // Ako je proslijeđen application_id, provjeri da li je član komisije
-            $existingApplication = Application::with('user')->find($request->application_id);
+            $existingApplication = Application::with(['user', 'competition'])->find($request->application_id);
             
             if ($existingApplication && $roleName === 'komisija') {
                 // Provjeri da li je član komisije za ovu prijavu
@@ -53,6 +53,14 @@ class ApplicationController extends Controller
                 
                 if (!$isCommissionMemberForThisCompetition) {
                     abort(403, 'Nemate pristup ovoj prijavi.');
+                }
+
+                if ($existingApplication->status === 'draft') {
+                    abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
+                }
+
+                if ($appCompetition && !in_array($appCompetition->status, ['closed', 'completed']) && !$appCompetition->isApplicationDeadlinePassed()) {
+                    abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs.');
                 }
             }
         }
@@ -166,6 +174,11 @@ class ApplicationController extends Controller
         if ($preselectedBusinessStage && !in_array($preselectedBusinessStage, ['započinjanje', 'razvoj'])) {
             $preselectedBusinessStage = null;
         }
+
+        if ($readOnly && $existingApplication?->user) {
+            $user = $existingApplication->user;
+        }
+
         return view('applications.create', compact('competition', 'user', 'userDocuments', 'existingApplication', 'readOnly', 'preselectedBusinessStage', 'preferredApplicantType'));
     }
 

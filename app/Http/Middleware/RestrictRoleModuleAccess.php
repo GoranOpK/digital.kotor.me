@@ -115,6 +115,10 @@ class RestrictRoleModuleAccess
                 'admin.competitions.show',
                 'admin.competitions.ranking',
                 'admin.competitions.decision',
+                'applications.create',
+                'applications.business-plan.create',
+                'applications.document.view',
+                'applications.document.download',
             ];
 
             if ($routeName && in_array($routeName, $allowedRouteNames, true)) {
@@ -126,6 +130,9 @@ class RestrictRoleModuleAccess
                 || $request->is('admin/applications/*')
                 || $request->is('admin/competitions*')
                 || $request->is('competitions/archive')
+                || $request->is('competitions/*/apply')
+                || $request->is('applications/*/business-plan')
+                || $request->is('applications/*/documents/*')
                 || $request->is('profile*')
             ) {
                 return $next($request);
