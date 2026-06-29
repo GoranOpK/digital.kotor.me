@@ -146,24 +146,21 @@
     <div class="container mx-auto px-4">
         @php
             $competitionGuidePdf = 'documents/uputstvo-zensko-preduzetnistvo.pdf';
-            $competitionGuideExists = file_exists(public_path($competitionGuidePdf));
         @endphp
         <div class="page-header">
             <div class="page-header-main">
                 <h1>Konkursi za podršku ženskom preduzetništvu</h1>
                 <p style="color: rgba(255,255,255,0.9); margin: 0;">Pregled aktivnih konkursa za podršku ženskom preduzetništvu iz budžeta Opštine Kotor</p>
             </div>
-            @if($competitionGuideExists)
-                <a
-                    href="{{ asset($competitionGuidePdf) }}"
-                    class="page-header-guide-btn"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <span aria-hidden="true">📄</span>
-                    Uputstvo za podnosioce (PDF)
-                </a>
-            @endif
+            <a
+                href="{{ asset($competitionGuidePdf) }}"
+                class="page-header-guide-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                <span aria-hidden="true">📄</span>
+                Uputstvo za podnosioce (PDF)
+            </a>
         </div>
 
         @if($competitions->count() > 0)
