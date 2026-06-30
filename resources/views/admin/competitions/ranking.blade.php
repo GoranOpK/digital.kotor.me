@@ -801,18 +801,29 @@
         </div>
 
         <!-- Sekcije 4 i 5: Zaključak komisije i Obrazloženje -->
-        @if((isset($isSuperAdmin) && $isSuperAdmin) || (isset($isChairman) && $isChairman))
-            @if(!in_array($competition->status, ['closed', 'completed']))
+        @if(
+            (isset($isSuperAdmin) && $isSuperAdmin)
+            || (isset($isChairman) && $isChairman)
+            || (
+                in_array($competition->status, ['closed', 'completed'])
+                && (
+                    (isset($isCompetitionAdmin) && $isCompetitionAdmin)
+                    || (isset($isCommissionMember) && $isCommissionMember)
+                )
+            )
+        )
                 @if($applications->count() > 0)
                     <div class="info-card commission-decision-section">
                         <h2>Zaključak komisije i obrazloženje</h2>
-                        <p class="no-print" style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">
-                            Za svaku prijavu u rang listi unesite zaključak komisije i obrazloženje.
-                        </p>
+                        @if(!in_array($competition->status, ['closed', 'completed']))
+                            <p class="no-print" style="color: #6b7280; margin-bottom: 24px; font-size: 14px;">
+                                Za svaku prijavu u rang listi unesite zaključak komisije i obrazloženje.
+                            </p>
+                        @endif
 
                         @foreach($applications as $application)
                             <div class="commission-decision-block{{ $application->signed_by_chairman ? ' commission-decision-block-saved' : '' }}" style="background: #f9fafb; padding: 24px; border-radius: 12px; margin-bottom: 24px; border: 1px solid #e5e7eb;">
-                                @if(!$application->signed_by_chairman)
+                                @if(!$application->signed_by_chairman && !in_array($competition->status, ['closed', 'completed']))
                                 <div class="commission-decision-header no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb;">
                                     <div>
                                         <h3 style="font-size: 18px; font-weight: 700; color: var(--primary); margin: 0 0 4px 0;">
@@ -901,7 +912,7 @@
                                     </form>
                                 @endif
 
-                                <table class="commission-decision-table{{ !$application->signed_by_chairman ? ' print-only' : '' }}">
+                                <table class="commission-decision-table{{ (!$application->signed_by_chairman && !in_array($competition->status, ['closed', 'completed'])) ? ' print-only' : '' }}">
                                     <tbody>
                                         <tr class="commission-decision-name">
                                             <th colspan="2">{{ $application->business_plan_name }}</th>
@@ -918,7 +929,7 @@
                                             <th>Ocjena</th>
                                             <td>{{ number_format($application->getDisplayScore(), 2) }} / 56</td>
                                         </tr>
-                                        @if($application->signed_by_chairman)
+                                        @if($application->signed_by_chairman || in_array($competition->status, ['closed', 'completed']))
                                         <tr>
                                             <th>Zaključak</th>
                                             <td>
@@ -970,7 +981,6 @@
                         <p style="margin-bottom: 12px; font-size: 14px; color: #6b7280;">Sve prijave su ispod minimuma od 30 bodova. Možete generisati odluku i zatvoriti konkurs.</p>
                     </div>
                 @endif
-            @endif
         @endif
         </div>
 

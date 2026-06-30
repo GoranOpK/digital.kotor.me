@@ -905,6 +905,49 @@ class AdminController extends Controller
                 ]);
             }
         }
+
+        // Zamrzni rang pozicije u trenutku zatvaranja konkursa,
+        // da arhiva uvijek prikaže isti poredak kao zaključena rang lista.
+        $competition->load('commission');
+        $chairmanMember = $competition->commission
+            ? $competition->commission->activeMembers()->where('position', 'predsjednik')->first()
+            : null;
+
+        $rankableApplications = $competition->applications()
+            ->with('evaluationScores')
+            ->get()
+            ->filter(function ($application) use ($chairmanMember) {
+                if ($application->evaluationScores->count() === 0) {
+                    return false;
+                }
+
+                if ($chairmanMember) {
+                    $chairmanScore = $application->evaluationScores
+                        ->firstWhere('commission_member_id', $chairmanMember->id);
+
+                    if ($chairmanScore && $chairmanScore->documents_complete === false) {
+                        return false;
+                    }
+                }
+
+                return $application->meetsMinimumScore();
+            })
+            ->sort(function ($a, $b) {
+                $aScore = (float) ($a->final_score ?? 0);
+                $bScore = (float) ($b->final_score ?? 0);
+
+                if ($aScore !== $bScore) {
+                    return $bScore <=> $aScore;
+                }
+
+                return $a->id <=> $b->id;
+            })
+            ->values();
+
+        foreach ($rankableApplications as $index => $application) {
+            $application->ranking_position = $index + 1;
+            $application->save();
+        }
         
         $competition->update([
             'status' => 'completed',
