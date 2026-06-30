@@ -1,5 +1,7 @@
 # MEGA upload za dokumente prijave na konkurs
 
+> **Ažurirano:** 2026-06-30. Za cjelokupan pregled biblioteke i MEGA integracije v. [document-library-and-mega.md](document-library-and-mega.md).
+
 Dokumenti upload-ovani za prijavu na konkurs (direct upload, ne iz biblioteke) se sada automatski podižu na MEGA.
 
 ## Tok

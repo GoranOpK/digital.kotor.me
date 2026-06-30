@@ -99,7 +99,8 @@ Na panelu kliknite **Izmijeni** u kartici *Informacije o korisniku*, ili idite n
 
 1. Sa panela ili iz menija idite na **Konkursi**.
 2. Prikazuje se lista aktivnih konkursa za podršku ženskom preduzetništvu.
-3. Za svaki konkurs vidite:
+3. U zaglavlju stranice, desno, dostupno je dugme **Uputstvo za podnosioce (PDF)** za preuzimanje ovog uputstva u PDF formatu.
+4. Za svaki konkurs vidite:
    - Naziv i opis
    - Ukupan budžet
    - Datum objave

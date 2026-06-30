@@ -1,5 +1,15 @@
 # digital.kotor.me
 
+Portal Opštine Kotor — Laravel aplikacija: **platforma** (auth, biblioteka dokumenata) + poslovne **cjeline** (kalendar kulture, Podrška ženskom preduzetništvu). V. [docs/tehnicka-dokumentacija/architecture-overview.md](docs/tehnicka-dokumentacija/architecture-overview.md#konceptualni-model-projekta-važeće).
+
+## Dokumentacija projekta
+
+- [docs/tehnicka-dokumentacija/README.md](docs/tehnicka-dokumentacija/README.md) — tehnička dokumentacija (ulaz)
+- [docs/tehnicka-dokumentacija/project-conventions.md](docs/tehnicka-dokumentacija/project-conventions.md) — konvencije i pravila
+- [docs/tehnicka-dokumentacija/handoff-new-chat.md](docs/tehnicka-dokumentacija/handoff-new-chat.md) — uputstvo za novog agenta
+- [docs/tehnicka-dokumentacija/project-status-next-steps.md](docs/tehnicka-dokumentacija/project-status-next-steps.md) — indeks i status modula
+- [docs/UPUTSTVO_ZENSKO_PREDUZETNISTVO.md](docs/UPUTSTVO_ZENSKO_PREDUZETNISTVO.md) — korisničko uputstvo
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">
