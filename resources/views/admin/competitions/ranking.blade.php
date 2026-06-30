@@ -955,7 +955,7 @@
                                             <td>
                                                 {{ $decisionEnteredBy ?? 'Predsjednik komisije' }}
                                                 @if($application->commission_decision_date)
-                                                    | {{ \Carbon\Carbon::parse($application->commission_decision_date)->format('d.m.Y H:i') }}
+                                                    | {{ \Carbon\Carbon::parse($application->commission_decision_date)->format('d.m.Y') }}
                                                 @endif
                                             </td>
                                         </tr>
