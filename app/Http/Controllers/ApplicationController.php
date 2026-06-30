@@ -63,6 +63,16 @@ class ApplicationController extends Controller
                     abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs.');
                 }
             }
+
+            // Administrator konkursa: read-only pristup obrascu samo u arhivi (closed/completed)
+            if ($existingApplication && $roleName === 'konkurs_admin') {
+                $appCompetition = $existingApplication->competition;
+                if ($appCompetition && in_array($appCompetition->status, ['closed', 'completed'], true)) {
+                    $readOnly = true;
+                } else {
+                    abort(403, 'Administrator konkursa može pregledati obrasce samo za arhivirane konkurse.');
+                }
+            }
         }
         
         // Blokiraj članove komisije od prijavljivanja NA KONKURSE za koje su imenovani kao članovi,
@@ -807,9 +817,11 @@ class ApplicationController extends Controller
 
         // Samo:
         // - vlasnik prijave, ili
-        // - član komisije (role: komisija) za konkurs dodijeljen njegovoj komisiji
+        // - član komisije (role: komisija) za konkurs dodijeljen njegovoj komisiji, ili
+        // - administrator konkursa za arhivirane konkurse
         // može da pregleda dokument
         $isCommissionMemberForThisCompetition = false;
+        $isCompetitionAdminArchiveAccess = false;
 
         if ($roleName === 'komisija') {
             // Učitaj konkurs povezano sa prijavom
@@ -827,7 +839,14 @@ class ApplicationController extends Controller
             }
         }
 
-        if (!$isOwner && !$isCommissionMemberForThisCompetition) {
+        if ($roleName === 'konkurs_admin') {
+            $competition = $application->competition;
+            if ($competition && in_array($competition->status, ['closed', 'completed'], true)) {
+                $isCompetitionAdminArchiveAccess = true;
+            }
+        }
+
+        if (!$isOwner && !$isCommissionMemberForThisCompetition && !$isCompetitionAdminArchiveAccess) {
             abort(403, 'Nemate pravo pristupa ovom dokumentu.');
         }
 

@@ -42,6 +42,7 @@ class BusinessPlanController extends Controller
         $roleName = $user->role ? $user->role->name : null;
 
         $isCommissionMemberForThisCompetition = false;
+        $isCompetitionAdminArchiveAccess = false;
         if ($roleName === 'komisija') {
             $competition = $application->competition;
             if ($competition && $competition->commission_id) {
@@ -56,7 +57,14 @@ class BusinessPlanController extends Controller
             }
         }
 
-        if (!$isOwner && !$isCommissionMemberForThisCompetition) {
+        if ($roleName === 'konkurs_admin') {
+            $competition = $application->competition;
+            if ($competition && in_array($competition->status, ['closed', 'completed'], true)) {
+                $isCompetitionAdminArchiveAccess = true;
+            }
+        }
+
+        if (!$isOwner && !$isCommissionMemberForThisCompetition && !$isCompetitionAdminArchiveAccess) {
             abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
@@ -178,7 +186,7 @@ class BusinessPlanController extends Controller
             ]);
         }
 
-        // Član komisije može samo da pregleda (read-only), bez izmjena
+        // Član komisije i administrator konkursa (arhiva) mogu samo da pregledaju (read-only), bez izmjena
         $readOnly = !$isOwner;
         
         // Ako je član komisije, osiguraj da je readOnly = true
