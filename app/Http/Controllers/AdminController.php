@@ -1872,8 +1872,9 @@ class AdminController extends Controller
             ->with(['user', 'businessPlan', 'evaluationScores'])
             ->get()
             ->map(function ($application) {
-                // Izračunaj konačnu ocjenu ako nije izračunata
-                if (!$application->final_score) {
+                // Izračunaj konačnu ocjenu samo ako nije nikad snimljena
+                // (0 je validna vrijednost i ne treba ponovo računati).
+                if ($application->final_score === null) {
                     $application->final_score = $application->calculateFinalScore();
                     $application->save();
                 }
@@ -1910,26 +1911,65 @@ class AdminController extends Controller
                 return true;
             });
         
-        // Iznad crte: 30+ bodova, sortirano po ocjeni
-        $applications = $visibleApplications
-            ->filter(fn ($app) => $app->meetsMinimumScore())
-            ->sortByDesc('final_score')
-            ->values();
-        
-        // Ispod crte: ispod 30 bodova, sortirano po ocjeni
-        $belowLineApplications = $visibleApplications
-            ->filter(fn ($app) => !$app->meetsMinimumScore())
-            ->sortByDesc('final_score')
-            ->values();
+        $isArchivedCompetition = in_array($competition->status, ['closed', 'completed']);
 
-        // Dodaj poziciju na rang listi samo za prijave iznad crte (30+ bodova)
-        $position = 1;
-        foreach ($applications as $application) {
-            DB::table('applications')
-                ->where('id', $application->id)
-                ->update(['ranking_position' => $position]);
-            $application->ranking_position = $position;
-            $position++;
+        // Aktivan konkurs: rangiranje po ocjeni i upis pozicija.
+        // Arhiva: čuva se isti poredak koji je već zaključen (ranking_position).
+        if ($isArchivedCompetition) {
+            $applications = $visibleApplications
+                ->filter(fn ($app) => $app->meetsMinimumScore())
+                ->sort(function ($a, $b) {
+                    $aPos = $a->ranking_position ?? PHP_INT_MAX;
+                    $bPos = $b->ranking_position ?? PHP_INT_MAX;
+
+                    if ($aPos !== $bPos) {
+                        return $aPos <=> $bPos;
+                    }
+
+                    // Fallback za stare zapise bez ranking_position.
+                    $aScore = (float) ($a->final_score ?? 0);
+                    $bScore = (float) ($b->final_score ?? 0);
+                    if ($aScore !== $bScore) {
+                        return $bScore <=> $aScore;
+                    }
+
+                    return $a->id <=> $b->id;
+                })
+                ->values();
+
+            $belowLineApplications = $visibleApplications
+                ->filter(fn ($app) => !$app->meetsMinimumScore())
+                ->sort(function ($a, $b) {
+                    $aScore = (float) ($a->final_score ?? 0);
+                    $bScore = (float) ($b->final_score ?? 0);
+                    if ($aScore !== $bScore) {
+                        return $bScore <=> $aScore;
+                    }
+                    return $a->id <=> $b->id;
+                })
+                ->values();
+        } else {
+            // Iznad crte: 30+ bodova, sortirano po ocjeni
+            $applications = $visibleApplications
+                ->filter(fn ($app) => $app->meetsMinimumScore())
+                ->sortByDesc('final_score')
+                ->values();
+
+            // Ispod crte: ispod 30 bodova, sortirano po ocjeni
+            $belowLineApplications = $visibleApplications
+                ->filter(fn ($app) => !$app->meetsMinimumScore())
+                ->sortByDesc('final_score')
+                ->values();
+
+            // Dodaj poziciju na rang listi samo za prijave iznad crte (30+ bodova)
+            $position = 1;
+            foreach ($applications as $application) {
+                DB::table('applications')
+                    ->where('id', $application->id)
+                    ->update(['ranking_position' => $position]);
+                $application->ranking_position = $position;
+                $position++;
+            }
         }
 
         // Izračunaj ukupan budžet i preostali budžet
