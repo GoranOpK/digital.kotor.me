@@ -469,7 +469,7 @@
                                 </td>
                                 <td style="padding: 12px; vertical-align: top;">
                                     @if($obrazacLabel && $obrazacUrl)
-                                        <a href="{{ $obrazacUrl }}" class="status-badge {{ $obrazacClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;">
+                                        <a href="{{ $obrazacUrl }}" class="status-badge {{ $obrazacClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;" @if(!empty($isKomisijaView)) target="_blank" rel="noopener noreferrer" @endif>
                                             {{ $obrazacLabel }}
                                         </a>
                                     @else
@@ -478,7 +478,7 @@
                                 </td>
                                 <td style="padding: 12px; vertical-align: top;">
                                     @if($bizPlanLabel && $bizPlanUrl)
-                                        <a href="{{ $bizPlanUrl }}" class="status-badge {{ $bizPlanClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;">
+                                        <a href="{{ $bizPlanUrl }}" class="status-badge {{ $bizPlanClass }}" style="font-size: 11px; padding: 3px 10px; text-decoration: none; cursor: pointer; display: inline-block;" @if(!empty($isKomisijaView)) target="_blank" rel="noopener noreferrer" @endif>
                                             {{ $bizPlanLabel }}
                                         </a>
                                     @else

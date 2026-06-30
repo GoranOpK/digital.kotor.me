@@ -191,7 +191,7 @@
                                         }
                                     @endphp
                                     @if($obrazacLabel)
-                                        <a href="{{ route('applications.create', $application->competition_id) }}?application_id={{ $application->id }}" class="status-badge {{ $obrazacClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                        <a href="{{ route('applications.create', $application->competition_id) }}?application_id={{ $application->id }}" class="status-badge {{ $obrazacClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;" @if($isCommissionMember) target="_blank" rel="noopener noreferrer" @endif>
                                             {{ $obrazacLabel }}
                                         </a>
                                     @else
@@ -222,7 +222,7 @@
                                         }
                                     @endphp
                                     @if($bizPlanLabel)
-                                        <a href="{{ route('applications.business-plan.create', $application) }}" class="status-badge {{ $bizPlanClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;">
+                                        <a href="{{ route('applications.business-plan.create', $application) }}" class="status-badge {{ $bizPlanClass }}" style="font-size: 12px; padding: 4px 12px; text-decoration: none; cursor: pointer;" @if($isCommissionMember) target="_blank" rel="noopener noreferrer" @endif>
                                             {{ $bizPlanLabel }}
                                         </a>
                                     @else
