@@ -19,7 +19,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Auth\Events\Registered;
 
 class AdminController extends Controller
 {
@@ -1253,10 +1252,9 @@ class AdminController extends Controller
                     'user_type' => 'Fizičko lice',
                     'residential_status' => 'resident',
                 ]);
-
-                // Pošalji email za verifikaciju samo za novi nalog
-                event(new Registered($user));
             }
+
+            $this->sendEmailVerificationToCommissionMember($user);
 
             // Kreiraj člana komisije i poveži sa User nalogom
             $member = CommissionMember::create([
@@ -1587,8 +1585,7 @@ class AdminController extends Controller
                 'residential_status' => 'resident',
             ]);
             
-            // Pošalji email za verifikaciju
-            event(new Registered($user));
+            $this->sendEmailVerificationToCommissionMember($user);
             
             $userId = $user->id;
         }
@@ -1615,6 +1612,8 @@ class AdminController extends Controller
         // Pošalji e-mail o imenovanju u komisiju
         $targetUser = $member->user;
         if ($targetUser && $targetUser->email) {
+            $this->sendEmailVerificationToCommissionMember($targetUser);
+
             try {
                 $replacedForMail = null;
                 if ($isSubstitute && $replacedMember) {
@@ -1825,6 +1824,22 @@ class AdminController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Pošalji mail za verifikaciju email adrese članu komisije ako još nije verifikovana.
+     */
+    protected function sendEmailVerificationToCommissionMember(User $user): void
+    {
+        if ($user->hasVerifiedEmail()) {
+            return;
+        }
+
+        try {
+            $user->sendEmailVerificationNotification();
+        } catch (\Throwable $e) {
+            // Ne prekidaj tok zbog mail greške
+        }
     }
 
     /**
