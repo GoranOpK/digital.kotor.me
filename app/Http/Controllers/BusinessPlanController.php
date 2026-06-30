@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Application;
 use App\Models\BusinessPlan;
 use App\Rules\KotorMunicipalityAddress;
+use App\Support\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -124,21 +125,21 @@ class BusinessPlanController extends Controller
             // Za fizičko lice, podaci su u prijavi
             $defaultData['applicant_name'] = $application->physical_person_name ?? $applicantUser->name ?? '';
             $defaultData['applicant_jmbg'] = $application->physical_person_jmbg ?? $applicantUser->jmb ?? '';
-            $defaultData['applicant_phone'] = $application->physical_person_phone ?? $applicantUser->phone ?? '';
+            $defaultData['applicant_phone'] = PhoneNumber::normalize($application->physical_person_phone ?? $applicantUser->phone ?? '');
             $defaultData['applicant_email'] = $application->physical_person_email ?? $applicantUser->email ?? '';
             $defaultData['applicant_address'] = $applicantUser->formattedAddress();
         } elseif ($application->applicant_type === 'preduzetnica') {
             // Za preduzetnicu, podaci su u korisničkom profilu
             $defaultData['applicant_name'] = $applicantUser->name ?? '';
             $defaultData['applicant_jmbg'] = $applicantUser->jmb ?? '';
-            $defaultData['applicant_phone'] = $applicantUser->phone ?? '';
+            $defaultData['applicant_phone'] = PhoneNumber::normalize($applicantUser->phone ?? '');
             $defaultData['applicant_email'] = $applicantUser->email ?? '';
             $defaultData['applicant_address'] = $applicantUser->formattedAddress();
         } elseif ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') {
             // Za DOO/Ostalo, podaci su u korisničkom profilu
             $defaultData['applicant_name'] = $applicantUser->name ?? '';
             $defaultData['applicant_jmbg'] = $applicantUser->jmb ?? '';
-            $defaultData['applicant_phone'] = $applicantUser->phone ?? '';
+            $defaultData['applicant_phone'] = PhoneNumber::normalize($applicantUser->phone ?? '');
             $defaultData['applicant_email'] = $applicantUser->email ?? '';
             $defaultData['applicant_address'] = $applicantUser->formattedAddress();
         }
@@ -299,6 +300,13 @@ class BusinessPlanController extends Controller
         ];
 
         $cleanedData = $validated;
+
+        if (array_key_exists('applicant_phone', $cleanedData)) {
+            $cleanedData['applicant_phone'] = PhoneNumber::normalize($cleanedData['applicant_phone']);
+        }
+        if (array_key_exists('company_phone', $cleanedData)) {
+            $cleanedData['company_phone'] = PhoneNumber::normalize($cleanedData['company_phone']);
+        }
 
         if (empty($cleanedData['pib'])) {
             $applicationPib = $this->resolvePibFromApplication($application, $user);
