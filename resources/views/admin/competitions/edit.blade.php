@@ -108,6 +108,10 @@
                 <div class="form-group">
                     <label class="form-label">Opis</label>
                     <textarea name="description" class="form-control @error('description') error @enderror" rows="4">{{ old('description', $competition->description) }}</textarea>
+                    <p class="form-hint" style="margin-top: 8px; font-size: 13px; color: #6b7280;">
+                        Za link na riječ koristite HTML, npr.:
+                        Informacije o konkursu možete naći &lt;a href="https://www.kotor.me/..."&gt;OVDJE&lt;/a&gt;
+                    </p>
                     @error('description')
                         <div class="error-message">{{ $message }}</div>
                     @enderror

@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Support\RichText;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Competition extends Model
 {
@@ -38,6 +40,16 @@ class Competition extends Model
         'year' => 'integer',
         'deadline_days' => 'integer',
     ];
+
+    public function descriptionHtml(): string
+    {
+        return RichText::formatLinks($this->description);
+    }
+
+    public function descriptionExcerpt(int $limit = 150): string
+    {
+        return Str::limit(strip_tags($this->description ?? ''), $limit);
+    }
 
     // Veza: jedan konkurs ima više prijava
     public function applications()

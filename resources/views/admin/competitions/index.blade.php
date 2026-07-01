@@ -231,7 +231,7 @@
                 <div class="program-feature-card">
                     <h2>Opis konkursa</h2>
                     @if($fc->description)
-                        <div class="program-description">{{ $fc->description }}</div>
+                        <div class="program-description">{{ $fc->descriptionExcerpt(150) }}</div>
                     @else
                         <p style="color: #6b7280; margin: 0;">Opis nije unesen za trenutno aktivni konkurs.</p>
                     @endif

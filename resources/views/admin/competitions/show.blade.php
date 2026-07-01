@@ -143,6 +143,11 @@
         white-space: pre-wrap;
         font-size: 14px;
     }
+    .competition-description a {
+        color: var(--primary);
+        text-decoration: underline;
+        font-weight: 600;
+    }
 </style>
 
 <div class="admin-page">
@@ -265,7 +270,7 @@
                 <div class="program-feature-card">
                     <h2>Opis konkursa</h2>
                     @if($fc->description)
-                        <div class="program-description">{{ $fc->description }}</div>
+                        <div class="program-description competition-description">{!! $fc->descriptionHtml() !!}</div>
                     @else
                         <p style="color: #6b7280; margin: 0;">Opis nije unesen za ovaj konkurs.</p>
                     @endif
@@ -326,8 +331,8 @@
         @if($competition->description)
         <div class="info-card">
             <h2 style="font-size: 20px; margin-bottom: 16px;">Opis konkursa</h2>
-            <div style="color: #374151; line-height: 1.8; white-space: pre-wrap;">
-                {{ $competition->description }}
+            <div style="color: #374151; line-height: 1.8; white-space: pre-wrap;" class="competition-description">
+                {!! $competition->descriptionHtml() !!}
             </div>
         </div>
         @endif

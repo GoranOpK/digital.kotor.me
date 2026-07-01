@@ -32,6 +32,11 @@
         margin-bottom: 24px;
         box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
+    .competition-description a {
+        color: var(--primary);
+        text-decoration: underline;
+        font-weight: 600;
+    }
     .main-content-grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -347,8 +352,8 @@
                 @if($competition->description)
                 <div class="info-card">
                     <h2>Opis konkursa</h2>
-                    <div style="color: #374151; line-height: 1.8; white-space: pre-wrap;">
-                        {{ $competition->description }}
+                    <div style="color: #374151; line-height: 1.8; white-space: pre-wrap;" class="competition-description">
+                        {!! $competition->descriptionHtml() !!}
                     </div>
                 </div>
                 @endif
@@ -359,8 +364,8 @@
         @if($showApplicantDocumentation && $competition->description)
         <div class="info-card">
             <h2>Opis konkursa</h2>
-            <div style="color: #374151; line-height: 1.8; white-space: pre-wrap;">
-                {{ $competition->description }}
+            <div style="color: #374151; line-height: 1.8; white-space: pre-wrap;" class="competition-description">
+                {!! $competition->descriptionHtml() !!}
             </div>
         </div>
         @endif

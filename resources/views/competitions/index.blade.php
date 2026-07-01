@@ -193,7 +193,7 @@
 
                         @if($competition->description)
                             <p style="color: #374151; margin: 0 0 16px; line-height: 1.6;">
-                                {{ Str::limit($competition->description, 150) }}
+                                {{ $competition->descriptionExcerpt(150) }}
                             </p>
                         @endif
 
