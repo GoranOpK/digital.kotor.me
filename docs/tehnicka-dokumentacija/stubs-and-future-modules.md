@@ -1,9 +1,11 @@
 # Stub moduli i budući razvoj
 
-**Poslednje ažuriranje:** 2026-06-30  
+**Poslednje ažuriranje:** 2026-06-30 (dopuna: prioriteti, evaluator, stubovi)  
 **Izvor u kodu:** kontroleri, rute, migracije
 
-Ovi moduli imaju **rute, view-ove i/ili tabele**, ali **nisu funkcionalno implementirani** i **nisu objavljene cjeline** — korisnicima ne služe kao gotova usluga. Ne tretirati ih kao produkciju.
+Ovi moduli imaju **rute, view-ove i/ili tabele**, ali **nisu funkcionalno implementirani** i **nisu objavljene cjeline** — korisnicima ne služe kao gotova usluga.
+
+**Namjerno vidljivi u UI:** stub moduli (plaćanja, tenderi, obavještenja) **ostaju dostupni** na portalu da korisnici vide da se radi na projektu — to nije greška.
 
 **Napomena:** pojedine stub rute mogu još postojati u kodu ili na landing stranici; poslovno pravilo je da **cjeline u razvoju nisu dostupne korisnicima** dok se eksplicitno ne objave (v. [deployment-and-cron.md](deployment-and-cron.md#objavljivanje-cjeline-razvoj--produkcija-za-korisnike)).
 
@@ -13,8 +15,16 @@ Ovi moduli imaju **rute, view-ove i/ili tabele**, ali **nisu funkcionalno implem
 
 **digital.kotor.me** je zamišljen kao platforma (auth + biblioteka dokumenata) na kojoj stoje poslovne **cjeline**. Trenutno u produkciji:
 
-- Kalendar kulturnih događaja
-- Podrška ženskom preduzetništvu (konkurs, `type=zensko`)
+- Kalendar kulturnih događaja — **završeno**
+- Podrška ženskom preduzetništvu (konkurs, `type=zensko`) — **završeno**
+
+**Sljedeće (redoslijed tima):**
+
+1. Konkurs za mlade u preduzetništvu (`omladinsko`)
+2. Online plaćanja
+3. Tenderi
+
+Planirano je **nekoliko vrsta konkursa** na zajedničkom modulu konkursa.
 
 **Pravilo:** nove cjeline se dodaju na platformu tek kad vlasnik projekta **eksplicitno obavijesti**. Dok su u razvoju na serveru — **nisu dostupne korisnicima**; po završetku se **objave**.
 
@@ -70,15 +80,15 @@ Pregled koncepta: [architecture-overview.md](architecture-overview.md#konceptual
 | Uloga | **Nije** u `RoleSeeder` |
 | Zamjena | `EvaluationController` + uloga `komisija` |
 
-**Status:** vjerovatno mrtav kod — ne koristiti bez revizije.
+**Status:** stari kod **namjerno zadržan** dok ne prođe tekući konkurs; čišćenje planirano **nakon** završetka konkursa. Ne uklanjati bez eksplicitnog zahtjeva tima.
 
 ---
 
 ## Konkurs tip `omladinsko`
 
-Baza i model podržavaju `competition.type = omladinsko`, ali javna lista (`CompetitionsController@index`) filtrira samo `zensko`.
+Baza i model podržavaju `competition.type = omladinsko`, ali javna lista (`CompetitionsController@index`) trenutno filtrira samo `zensko`.
 
-**Status:** pripremljeno za proširenje, nije aktivno u UI.
+**Status:** **sljedeći konkretni produkt** — aktivacija u UI i poslovna logika po Odluci (katalog propisa / Službeni list). V. [business-rules.md](business-rules.md#tipovi-i-prioritet-važeće--odluka-tima).
 
 ---
 

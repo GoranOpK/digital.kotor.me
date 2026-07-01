@@ -1,6 +1,6 @@
 # Poslovna pravila
 
-**Poslednje ažuriranje:** 2026-06-30  
+**Poslednje ažuriranje:** 2026-06-30 (dopuna: izvor Odluke, prioriteti konkursa)  
 **Izvor u kodu:** `KotorAddress`, `HomeController`, `ProfileUpdateRequest`, `ApplicationController`, `Application` model
 
 ---
@@ -85,7 +85,29 @@ Odbijanje zbog nedostatka dokumenata: prikaz ocjene **0** (`getDisplayScore()`).
 
 ## Konkurs
 
-- Tip u produkciji: `zensko` (lista na `competitions.index`)
+### Zvaničan izvor pravila
+
+**Odluka o konkursu** i pravilnici — zvaničan izvor je **katalog propisa** ili **Službeni list** Opštine Kotor (ne repozitorijum). U aplikaciji i korisničkom uputstvu sve je rađeno po toj Odluci; **nema posebnih pravila mimo Odluke** osim tehničkih ograničenja forme (validacija adrese, upload, rokovi u sistemu).
+
+**Korisničko uputstvo (PDF):** `public/pdf/uputstvo-zensko-preduzetnistvo.pdf` — potvrđena putanja na produkciji; ruta `competitions.guide.pdf`.
+
+### Tipovi i prioritet (važeće — odluka tima)
+
+Planirano je **nekoliko vrsta konkursa** na istom modulu (`Competition.type`). Redoslijed razvoja cjelina:
+
+| Redoslijed | Cjelina | Status |
+|------------|---------|--------|
+| — | Kalendar kulture | **Završeno** (produkcija) |
+| — | Konkurs — žensko preduzetništvo (`zensko`) | **Završeno** (produkcija) |
+| 1 | Konkurs — mladi u preduzetništvu (`omladinsko`) | **Sljedeći** — baza/UI pripremljeni djelimično |
+| 2 | Online plaćanja | Nakon mladih konkursa |
+| 3 | Tenderi | Nakon plaćanja |
+
+V. [project-operations.md](project-operations.md#prioritet-budućih-cjelina), [stubs-and-future-modules.md](stubs-and-future-modules.md).
+
+### Pravila u sistemu
+
+- Tip u produkciji (javna lista): `zensko` — filter na `competitions.index`
 - Statusi: `draft`, `published`, `closed`, `completed`
 - Rok prijave: `deadline_days` (default 20) od `start_date` ili `published_at`
 - Jedna prijava po korisniku po konkursu

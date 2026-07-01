@@ -1,6 +1,6 @@
 # Operativa tima i projekta
 
-**Poslednje ažuriranje:** 2026-06-30  
+**Poslednje ažuriranje:** 2026-06-30 (dopuna: Odluka, prioriteti, MEGA, evaluator)  
 **Namjena:** dogovoreni način rada koji nije uvijek vidljiv iz koda — za developere i AI agente.
 
 Povezano: [deployment-and-cron.md](deployment-and-cron.md), [project-conventions.md](project-conventions.md).
@@ -14,7 +14,8 @@ Povezano: [deployment-and-cron.md](deployment-and-cron.md), [project-conventions
 | Razvoj | Dva administratora na projektu (vlasnik + kolega) |
 | Deploy na server | **Kolega ili vlasnik** pokreće Plesk pull/deploy **kad se ukaže potreba** |
 | Objava cjeline | Kad su **zadovoljni** da je cjelina gotova — zajednička odluka |
-| Poslovna pravila (Odluka o konkursu, službeni PDF) | **Kolega** — izvor za pitanja kad kod i pravilnik nisu usklađeni; dokumentovati kad bude dostupno |
+| Poslovna pravila (Odluka o konkursu) | Zvaničan izvor: **katalog propisa** ili **Službeni list**; sve u aplikaciji po Odluci — nema pravila mimo nje |
+| Korisničko uputstvo (PDF) | `public/pdf/uputstvo-zensko-preduzetnistvo.pdf` — potvrđena putanja |
 
 ---
 
@@ -32,7 +33,7 @@ digital.kotor.me
 |---------|--------|
 | **Na server ide samo `main`** | Produkcijski deploy uvijek sa `main` |
 | Prije pusha | **Obavezno** `git status`, razriješiti stanje, zatim push |
-| Feature branch-evi | Mogu postojati u istoriji repoa; **ne mijenjati** branch strategiju dok se vlasnik ne posavjetuje sa kolegom; merge rade sami kad se dogovore |
+| Feature branch-evi | Tim želi **bolju organizaciju** (samo `main` će postati prevelik za ogroman projekat) — **čeka dogovor** sa drugim administratorom; do tada ne mijenjati strategiju u repou bez dogovora |
 | AI agent | **Ne brisati/merge-ovati** feature branch-eve bez eksplicitnog zahtjeva |
 
 ---
@@ -68,7 +69,12 @@ U kodu i postojećim tekstovima pratiti uspostavljeni stil; pri novim stringovim
 | **MEGA.nz** | Opština Kotor | Administratori projekta — pun pristup |
 | **Mail (SMTP)** | Opština Kotor | Administratori projekta — pun pristup |
 
-**Rezervni plan** ako MEGA ili mail padnu — nije definisan; v. [project-todo.md](project-todo.md).
+**Rezervni plan** ako MEGA ili mail padnu:
+
+- **MEGA:** u slučaju pada — konsultacija unutar tima; u najgorem slučaju **ručno** rješavanje (nema automatizovanog fallback-a u dokumentaciji).
+- **Mail:** isti princip — ručna intervencija po potrebi.
+
+Formalna procedura nije zapisana u detalj; v. [project-todo.md](project-todo.md) ako treba proširiti.
 
 ---
 
@@ -80,9 +86,31 @@ Plesk automatski radi **dnevni backup baze i cijelog sajta** — bez ručne inte
 
 ## Prioritet budućih cjelina
 
-Planirano na platformi (među ostalim): plaćanja, tenderi, dodatni konkursi — **redoslijed nije određen**. Ne pretpostavljati prioritet u implementaciji dok tim eksplicitno ne kaže.
+**Odluka tima (važeće):** prioritet cjelina na platformi:
 
-V. [stubs-and-future-modules.md](stubs-and-future-modules.md), [project-status-next-steps.md](project-status-next-steps.md).
+| Prioritet | Cjelina | Status |
+|-----------|---------|--------|
+| — | **Kalendar kulture** | Završeno |
+| — | **Konkursi** — žensko preduzetništvo (`zensko`) | Završeno |
+| 1 | **Konkursi** — mladi u preduzetništvu (`omladinsko`) | Sljedeći konkretni zadatak |
+| 2 | **Online plaćanja** | Nakon mladih konkursa |
+| 3 | **Tenderi** | Nakon plaćanja |
+
+Planirano je **nekoliko vrsta konkursa** na zajedničkom modulu; `omladinsko` je sljedeći tip koji se aktivira u UI.
+
+Stub moduli (plaćanja, tenderi, obavještenja) **ostaju vidljivi** u portalu — namjerno, da korisnici vide da se radi na projektu.
+
+V. [stubs-and-future-modules.md](stubs-and-future-modules.md), [project-status-next-steps.md](project-status-next-steps.md), [business-rules.md](business-rules.md#tipovi-i-prioritet-važeće--odluka-tima).
+
+---
+
+## Tehnički dug — namjerno zadržano (privremeno)
+
+| Tema | Status |
+|------|--------|
+| Uloga `evaluator` i rute `/evaluations` | Namjerno zadržan stari kod dok ne prođe tekući konkurs; čišćenje **nakon** završetka konkursa |
+| Stub moduli u UI | Ostaju vidljivi — nije greška |
+| `APP_ENV` / `APP_DEBUG` na produkciji | **Prilagođeno** na serveru (2026-06-30) |
 
 ---
 
@@ -90,6 +118,6 @@ V. [stubs-and-future-modules.md](stubs-and-future-modules.md), [project-status-n
 
 | Tema | Status |
 |------|--------|
-| Zvanična Odluka o konkursu / PDF pravilnika | Čeka kolegu |
-| Feature branch strategija | Čeka dogovor tima |
-| Rezervni plan MEGA / mail | U [project-todo.md](project-todo.md) |
+| Feature branch strategija | Čeka dogovor sa **drugim administratorom** — želja za bolju organizaciju grana |
+| Uputstva za Predsjednika i članove komisije | Predloženo; manje razlike u odnosu na podnosioca — v. [project-todo.md](project-todo.md) |
+| Formalni security / contingency doc (MEGA) | Sažetak u `document-library-and-mega.md`; detaljna procedura po potrebi |
