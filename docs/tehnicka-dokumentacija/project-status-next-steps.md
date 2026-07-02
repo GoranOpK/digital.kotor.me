@@ -19,9 +19,10 @@ Pregled po **cjelinama** (v. [architecture-overview.md](architecture-overview.md
 | **Podrška ženskom preduzetništvu** | Evaluacija i komisija | **Produkcija** | [application-lifecycle.md](application-lifecycle.md) |
 | **Podrška ženskom preduzetništvu** | Ugovori i izvještaji | **Produkcija** (osnovni tok) | [application-lifecycle.md](application-lifecycle.md) |
 | **Podrška ženskom preduzetništvu** | Admin (konkursi, komisije) | **Produkcija** | [roles-and-permissions.md](roles-and-permissions.md) |
-| Platforma (stub) | Online plaćanja | **Stub** | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
-| Platforma (stub) | Tenderi | **Stub** | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
-| Platforma (stub) | Obavještenja | **Stub** | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
+| **Konkursi** | Mladi u preduzetništvu (`omladinsko`) | **Sljedeći** | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
+| Platforma (stub) | Online plaćanja | **Stub** (vidljiv u UI) | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
+| Platforma (stub) | Tenderi | **Stub** (vidljiv u UI) | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
+| Platforma (stub) | Obavještenja | **Stub** (vidljiv u UI) | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
 
 *Nove cjeline na platformu dokumentovati tek nakon eksplicitne najave.*
 
@@ -86,8 +87,12 @@ Indeks: [README.md](README.md) — Plesk, MEGA setup, cleanup, code review izvje
 
 ## Sljedeći koraci (prioritet)
 
-Vidi [project-todo.md](project-todo.md) za detaljan spisak. Sažetak:
+Vidi [project-todo.md](project-todo.md) za detaljan spisak. **Redoslijed tima:**
 
-1. Dopuniti `.env.example` sa `MEGA_*` i `NODE_BINARY` (samo doc referenca dok se ne traži izmjena koda).
-2. Riješiti duplikat auth ruta (`web.php` vs `auth.php`) — dokumentovano kao poznati rizik.
-3. Nadgradnje: plaćanja, tenderi, obavještenja — v. stubs doc.
+1. **Konkurs za mlade u preduzetništvu** (`omladinsko`) — sljedeća cjelina
+2. **Online plaćanja** — implementacija
+3. **Tenderi** — implementacija
+4. Uputstva za Predsjednika i članove komisije (dokumentacija)
+5. Dogovor sa drugim administratorom o **feature branch** strategiji
+6. Čišćenje `evaluator` / `/evaluations` **nakon** završetka tekućeg konkursa
+7. Dopuniti `.env.example` sa `MEGA_*` i `NODE_BINARY` (kad se traži izmjena koda)

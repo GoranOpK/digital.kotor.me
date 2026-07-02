@@ -6,6 +6,15 @@ Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili
 
 ---
 
+## 2026-06-30 — Odgovori tima (dokumentacija)
+
+- Zvaničan izvor Odluke: **katalog propisa** / **Službeni list**
+- PDF uputstvo: potvrđena putanja `public/pdf/uputstvo-zensko-preduzetnistvo.pdf`
+- Prioritet cjelina: mladi konkurs → plaćanja → tenderi
+- `APP_ENV` / `APP_DEBUG` na produkciji prilagođeno
+- `evaluator` / stare rute — zadržano do kraja tekućeg konkursa
+- Stub moduli — namjerno vidljivi u UI
+
 ## 2026-06-30 — Dokumentacioni sistem
 
 - Kreiran `docs/tehnicka-dokumentacija/project-conventions.md` sa pravilima održavanja dokumentacije.

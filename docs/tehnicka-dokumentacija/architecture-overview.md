@@ -71,9 +71,17 @@ flowchart TB
 
 ### Buduće cjeline na platformi
 
-Na platformu će se dodavati nove cjeline (npr. drugi konkursi, servisi). **Pravilo:** nova cjelina se unosi u dokumentaciju i razvoj tek kad je eksplicitno najavljena. Do tada: ne nagađati scope.
+Planirano je **nekoliko vrsta konkursa** i dodatne cjeline. **Redoslijed (odluka tima):**
 
-Stubovi na platformi (plaćanja, tenderi, obavještenja) nisu objavljene cjeline — v. [stubs-and-future-modules.md](stubs-and-future-modules.md).
+| # | Cjelina | Status |
+|---|---------|--------|
+| — | Kalendar kulture | Završeno |
+| — | Konkurs žensko preduzetništvo | Završeno |
+| 1 | Konkurs mladi u preduzetništvu (`omladinsko`) | Sljedeći |
+| 2 | Online plaćanja | Planirano |
+| 3 | Tenderi | Planirano |
+
+Nova cjelina se unosi u dokumentaciju i razvoj tek kad je eksplicitno najavljena. Stub moduli (plaćanja, tenderi, obavještenja) **namjerno su vidljivi** u UI — v. [stubs-and-future-modules.md](stubs-and-future-modules.md).
 
 ### Razvoj i objava na jednom serveru (važeće)
 
@@ -92,7 +100,7 @@ Tok, Git, tim: [project-operations.md](project-operations.md). Cron i Toolkit: [
 |---------|------------------|
 | Platforma | Horizontalni sloj: auth, `UserDocument`, zajednički middleware |
 | Kalendar | Odvojene rute, kontroleri, `kk_admin` |
-| Žensko preduzetništvo | Modul konkursa + filter `type=zensko`; baza podržava i `omladinsko`, ali to nije aktivna cjelina dok se ne obavijesti |
+| Žensko preduzetništvo | Modul konkursa + filter `type=zensko`; baza podržava i `omladinsko` — **sljedeći tip** za aktivaciju |
 
 ---
 
@@ -156,8 +164,9 @@ Detalji: [stubs-and-future-modules.md](stubs-and-future-modules.md).
 ## Poznati arhitektonski rizici
 
 1. **Duplikat auth ruta** — `routes/web.php` i `routes/auth.php` oba definišu `login`/`register`. Pri izmjenama auth-a provjeriti koja ruta je aktivna.
-2. **MEGA kredencijali** — sesija za browser upload dobija credentials sa servera; v. [document-library-and-mega.md](document-library-and-mega.md).
-3. **Cron** — većina održavanja dokumenata ide preko Plesk PHP skripti u root-u, ne preko Laravel schedulera (osim newslettera).
+2. **Legacy `evaluator`** — stari kod namjerno zadržan do kraja tekućeg konkursa; čišćenje nakon završetka.
+3. **MEGA kredencijali** — sesija za browser upload dobija credentials sa servera; v. [document-library-and-mega.md](document-library-and-mega.md).
+4. **Cron** — većina održavanja dokumenata ide preko Plesk PHP skripti u root-u, ne preko Laravel schedulera (osim newslettera).
 
 ---
 

@@ -16,7 +16,11 @@ Laravel 12 (PHP 8.2+) portal Opštine Kotor. **Konceptualni model** (v. [archite
 
 **Nove cjeline** na platformu dodaju se samo uz eksplicitno obavještenje — ne pretpostavljati ih u radu.
 
-**Stubovi (ne implementirati kao gotovo):** plaćanja, tenderi, modul obavještenja.
+**Stubovi (vidljivi u UI, nisu gotovi):** plaćanja, tenderi, obavještenja — namjerno ostaju da se vidi da se radi na projektu.
+
+**Prioritet cjelina:** mladi konkurs (`omladinsko`) → plaćanja → tenderi. Kalendar i žensko preduzetništvo su završeni.
+
+**Odluka o konkursu:** zvaničan izvor je katalog propisa / Službeni list; nema pravila mimo Odluke.
 
 ---
 
