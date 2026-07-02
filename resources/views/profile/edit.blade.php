@@ -269,14 +269,14 @@
                         <label for="pib" class="form-label">PIB <span class="required">*</span></label>
                         <input type="text" name="pib" id="pib" class="form-control" 
                                value="{{ old('pib', $user->pib) }}" 
-                               maxlength="9"
-                               pattern="[0-9]{9}"
-                               placeholder="9 cifara">
+                               maxlength="8"
+                               pattern="[0-9]{8}"
+                               placeholder="8 cifara">
                         @error('pib')
                             <div class="form-error">{{ $message }}</div>
                         @enderror
                         <div style="font-size: 12px; color: #6b7280; margin-top: 4px;">
-                            Poreski identifikacioni broj (9 cifara)
+                            Poreski identifikacioni broj (8 cifara)
                         </div>
                     </div>
                 </div>

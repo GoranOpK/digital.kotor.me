@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Application;
 use App\Models\CommissionMember;
 use App\Models\Competition;
+use App\Support\Pib;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
@@ -241,9 +242,9 @@ class HomeController extends Controller
             if ($request->business_type && $request->business_type !== 'Preduzetnik') {
                 $rules['company_name'] = ['required', 'string', 'max:255'];
                 $messages['company_name.required'] = 'Naziv privrednog subjekta je obavezan.';
-                $rules['pib'] = ['required', 'string', 'regex:/^[0-9]{9}$/', 'unique:users,pib'];
+                $rules['pib'] = ['required', 'string', 'regex:'.Pib::REGEX, 'unique:users,pib'];
                 $messages['pib.required'] = 'PIB je obavezan.';
-                $messages['pib.regex'] = 'PIB mora imati tačno 9 cifara.';
+                $messages['pib.regex'] = Pib::VALIDATION_MESSAGE;
                 $messages['pib.unique'] = 'PIB je već registrovan.';
             }
 

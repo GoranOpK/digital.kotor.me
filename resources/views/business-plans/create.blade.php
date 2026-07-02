@@ -715,7 +715,7 @@
                             <div class="form-row">
                                 <div class="form-group">
                                     <label class="form-label">PIB:</label>
-                                    <input type="text" name="pib" id="pib" class="form-control @error('pib') error @enderror" value="{{ old('pib', filled($businessPlan->pib ?? null) ? $businessPlan->pib : ($resolvedPib ?? ($defaultData['pib'] ?? ''))) }}" maxlength="9" pattern="[0-9]{9}" inputmode="numeric" placeholder="9 cifara" data-application-pib="{{ $resolvedPib ?? ($application->pib ?? '') }}">
+                                    <input type="text" name="pib" id="pib" class="form-control @error('pib') error @enderror" value="{{ old('pib', filled($businessPlan->pib ?? null) ? $businessPlan->pib : ($resolvedPib ?? ($defaultData['pib'] ?? ''))) }}" maxlength="8" pattern="[0-9]{8}" inputmode="numeric" placeholder="8 cifara" data-application-pib="{{ $resolvedPib ?? ($application->pib ?? '') }}">
                                     @if(!empty($resolvedPib))
                                         <div class="form-text">Preuzeto iz Obrasca 1a/1b.</div>
                                     @endif
@@ -2132,7 +2132,7 @@ document.addEventListener('DOMContentLoaded', function() {
     ];
 
     function isValidPib(value) {
-        return /^[0-9]{9}$/.test((value || '').trim());
+        return /^[0-9]{8}$/.test((value || '').trim());
     }
 
     function validatePibField() {
@@ -2261,7 +2261,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     pibField.focus();
                     pibField.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
-                alert('PIB mora imati tačno 9 cifara.');
+                alert('PIB mora imati tačno 8 cifara.');
                 return;
             }
 

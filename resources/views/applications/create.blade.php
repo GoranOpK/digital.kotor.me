@@ -792,9 +792,9 @@
                                 name="pib" 
                                 class="form-control @error('pib') error @enderror"
                                 value="{{ old('pib', isset($existingApplication) && $existingApplication ? $existingApplication->pib : auth()->user()->pib) }}"
-                                maxlength="9"
-                                pattern="[0-9]{9}"
-                                placeholder="9 cifara"
+                                maxlength="8"
+                                pattern="[0-9]{8}"
+                                placeholder="8 cifara"
                             >
                             @error('pib')
                                 <div class="error-message">{{ $message }}</div>
@@ -1105,9 +1105,9 @@
                             name="pib" 
                             class="form-control @error('pib') error @enderror"
                             value="{{ old('pib', isset($existingApplication) && $existingApplication ? $existingApplication->pib : auth()->user()->pib) }}"
-                            maxlength="9"
-                            pattern="[0-9]{9}"
-                            placeholder="9 cifara"
+                            maxlength="8"
+                            pattern="[0-9]{8}"
+                            placeholder="8 cifara"
                         >
                         @error('pib')
                             <div class="error-message">{{ $message }}</div>

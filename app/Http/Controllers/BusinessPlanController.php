@@ -6,6 +6,7 @@ use App\Models\Application;
 use App\Models\BusinessPlan;
 use App\Rules\KotorMunicipalityAddress;
 use App\Support\PhoneNumber;
+use App\Support\Pib;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -229,7 +230,7 @@ class BusinessPlanController extends Controller
             'has_registered_business' => 'nullable|boolean',
             'registration_form' => 'nullable|string|max:255',
             'company_name' => 'nullable|string|max:255',
-            'pib' => $isDraft ? 'nullable|string|max:50' : ['nullable', 'string', 'regex:/^[0-9]{9}$/'],
+            'pib' => $isDraft ? 'nullable|string|max:50' : ['nullable', 'string', 'regex:'.Pib::REGEX],
             'vat_number' => 'nullable|string|max:50',
             'company_address' => ['nullable', 'string', new KotorMunicipalityAddress()],
             'company_phone' => 'nullable|string|max:50',
@@ -285,7 +286,7 @@ class BusinessPlanController extends Controller
             'applicant_phone.required' => 'Kontakt telefon je obavezan.',
             'applicant_email.required' => 'E-mail je obavezan.',
             'summary.required' => 'Rezime je obavezno.',
-            'pib.regex' => 'PIB mora imati tačno 9 cifara.',
+            'pib.regex' => Pib::VALIDATION_MESSAGE,
             'finances_notice_confirmed.accepted' => 'Potrebno je potvrditi da ste pročitali napomenu u dijelu IV. Finansije.',
         ]);
 

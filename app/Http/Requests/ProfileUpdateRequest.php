@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\User;
 use App\Support\KotorAddress;
+use App\Support\Pib;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -63,8 +64,8 @@ class ProfileUpdateRequest extends FormRequest
             $rules['pib'] = [
                 'required',
                 'string',
-                'size:9',
-                'regex:/^[0-9]{9}$/',
+                'size:'.Pib::LENGTH,
+                'regex:'.Pib::REGEX,
                 Rule::unique(User::class)->ignore($user->id),
             ];
             $rules['jmb'] = ['nullable'];
@@ -150,7 +151,7 @@ class ProfileUpdateRequest extends FormRequest
             'jmb.regex' => 'JMB mora sadržati samo cifre.',
             'jmb.unique' => 'JMB je već u upotrebi.',
             'pib.required' => 'PIB je obavezan za pravna lica.',
-            'pib.size' => 'PIB mora imati tačno 9 cifara.',
+            'pib.size' => Pib::VALIDATION_MESSAGE,
             'pib.regex' => 'PIB mora sadržati samo cifre.',
             'pib.unique' => 'PIB je već u upotrebi.',
             'passport_number.unique' => 'Broj pasoša je već u upotrebi.',
