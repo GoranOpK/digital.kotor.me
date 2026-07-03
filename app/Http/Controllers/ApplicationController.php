@@ -245,10 +245,6 @@ class ApplicationController extends Controller
             }
         }
 
-        if (!$isDraft && $request->applicant_type === 'preduzetnica' && !$request->filled('business_stage')) {
-            $request->merge(['business_stage' => 'započinjanje']);
-        }
-
         if (!$isDraft && $request->applicant_type === 'preduzetnica' && !$request->filled('registration_form')) {
             $request->merge(['registration_form' => 'Preduzetnik']);
         }

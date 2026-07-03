@@ -855,7 +855,7 @@
                                     id="business_stage_zapocinjanje_1a" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_zapocinjanje_1a">Započinjanje poslovne djelatnosti</label>
@@ -866,7 +866,7 @@
                                     id="business_stage_razvoj_1a" 
                                     name="business_stage" 
                                     value="razvoj"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? 'započinjanje') === 'razvoj' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'razvoj' ? 'checked' : '' }}
                                     data-required="true"
                                 >
                                 <label for="business_stage_razvoj_1a">Razvoj postojeće poslovne djelatnosti</label>
@@ -1167,7 +1167,7 @@
                                     id="business_stage_zapocinjanje_1b" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_zapocinjanje_1b">Započinjanje poslovne djelatnosti</label>
@@ -1178,7 +1178,7 @@
                                     id="business_stage_razvoj_1b" 
                                     name="business_stage" 
                                     value="razvoj"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? 'započinjanje') === 'razvoj' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'razvoj' ? 'checked' : '' }}
                                     data-required="true"
                                 >
                                 <label for="business_stage_razvoj_1b">Razvoj postojeće poslovne djelatnosti</label>
@@ -1293,7 +1293,7 @@
                                     id="business_stage_zapocinjanje_fizicko_old" 
                                     name="business_stage" 
                                     value="započinjanje"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? 'započinjanje') === 'započinjanje' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'započinjanje' ? 'checked' : '' }}
                                     required
                                 >
                                 <label for="business_stage_zapocinjanje_fizicko_old">Započinjanje poslovne djelatnosti</label>
@@ -1304,7 +1304,7 @@
                                     id="business_stage_razvoj_fizicko_old" 
                                     name="business_stage" 
                                     value="razvoj"
-                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null) ?? 'započinjanje') === 'razvoj' ? 'checked' : '' }}
+                                    {{ old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)) === 'razvoj' ? 'checked' : '' }}
                                     data-required="true"
                                 >
                                 <label for="business_stage_razvoj_fizicko_old">Razvoj postojeće poslovne djelatnosti</label>
@@ -1513,6 +1513,55 @@
         const fizickoLiceRequiredFields = fizickoLiceFields ? fizickoLiceFields.querySelectorAll('input[required], input[name="physical_person_name"], input[name="physical_person_jmbg"], input[name="physical_person_phone"], input[name="physical_person_email"], input[name="accuracy_declaration"]') : [];
         const fizickoLiceNotice = document.getElementById('fizickoLiceNotice');
         const additionalDataSection = document.getElementById('additional-data-section');
+        const savedBusinessStageValue = @json(old('business_stage', (isset($existingApplication) && $existingApplication ? $existingApplication->business_stage : null) ?? ($preselectedBusinessStage ?? null)));
+
+        function syncBusinessStageRadiosInSection(section, stage) {
+            if (!section || !stage) {
+                return;
+            }
+
+            section.querySelectorAll('input[name="business_stage"][type="radio"]').forEach((radio) => {
+                radio.checked = radio.value === stage;
+            });
+        }
+
+        function prepareBusinessStageForSubmit(form) {
+            const hiddenFizicko = document.getElementById('fizickoLiceBusinessStageHidden');
+            const activeSection = document.querySelector('.conditional-field.show');
+            let value = '';
+
+            if (hiddenFizicko && !hiddenFizicko.disabled) {
+                value = hiddenFizicko.value;
+            } else if (activeSection) {
+                const checkedInActive = activeSection.querySelector('input[name="business_stage"]:checked');
+                if (checkedInActive) {
+                    value = checkedInActive.value;
+                }
+            }
+
+            if (!value) {
+                const enabledChecked = form.querySelector('input[name="business_stage"][type="radio"]:checked:not([disabled])');
+                if (enabledChecked) {
+                    value = enabledChecked.value;
+                }
+            }
+
+            form.querySelectorAll('input[name="business_stage"]').forEach((el) => {
+                el.setAttribute('disabled', 'disabled');
+            });
+
+            let hidden = form.querySelector('#business_stage_submitted');
+            if (!hidden) {
+                hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'business_stage';
+                hidden.id = 'business_stage_submitted';
+                form.appendChild(hidden);
+            }
+
+            hidden.value = value;
+            hidden.removeAttribute('disabled');
+        }
 
         function toggleFieldsByApplicantType() {
             const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
@@ -1589,6 +1638,10 @@
                 });
             }
 
+            form.querySelectorAll('input[name="business_stage"][type="radio"]').forEach((radio) => {
+                radio.checked = false;
+            });
+
             // Prikaži/sakrij obrazce na osnovu tipa
             if (selectedType === 'preduzetnica') {
                 // Preduzetnica - prikaži Obrazac 1a
@@ -1610,6 +1663,7 @@
                         radio.removeAttribute('disabled');
                         radio.setAttribute('required', 'required');
                     });
+                    syncBusinessStageRadiosInSection(obrazac1a, savedBusinessStageValue);
                 }
             } else if (selectedType === 'doo' || selectedType === 'ostalo') {
                 // DOO ili Ostalo - prikaži Obrazac 1b
@@ -1636,6 +1690,7 @@
                         radio.removeAttribute('disabled');
                         radio.setAttribute('required', 'required');
                     });
+                    syncBusinessStageRadiosInSection(obrazac1b, savedBusinessStageValue);
                 }
             } else if (selectedType === 'fizicko_lice') {
                 // Fizičko lice BEZ registrovane djelatnosti
@@ -1746,13 +1801,12 @@
                     activeFields.forEach(field => {
                         field.removeAttribute('disabled');
                     });
-                    const existingBusinessStage = '{{ (isset($existingApplication) && $existingApplication && $existingApplication->business_stage ? addslashes($existingApplication->business_stage) : addslashes($preselectedBusinessStage ?? '')) }}';
+                    const existingBusinessStage = savedBusinessStageValue;
                     if (existingBusinessStage) {
-                        const businessStageRadio = activeSection.querySelector(`input[name="business_stage"][value="${existingBusinessStage}"]`);
-                        if (businessStageRadio) {
-                            businessStageRadio.checked = true;
-                            businessStageRadio.removeAttribute('disabled');
-                        }
+                        syncBusinessStageRadiosInSection(activeSection, existingBusinessStage);
+                        activeSection.querySelectorAll('input[name="business_stage"][type="radio"]').forEach((radio) => {
+                            radio.removeAttribute('disabled');
+                        });
                     }
                     const existingPib = '{{ isset($existingApplication) && $existingApplication && $existingApplication->pib ? addslashes($existingApplication->pib) : '' }}';
                     if (existingPib) {
@@ -1848,8 +1902,9 @@
             // Osnovna obavezna polja - traži samo u aktivnoj sekciji
             const activeSection = document.querySelector('.conditional-field.show');
             const businessPlanName = activeSection ? activeSection.querySelector('input[name="business_plan_name"]') : form.querySelector('input[name="business_plan_name"]:not([disabled])');
-            // Proveri business_stage u svim sekcijama (može biti u obrazac1a, obrazac1b ili fizickoLiceFields)
-            const businessStage = form.querySelector('input[name="business_stage"]:checked');
+            const businessStage = activeSection
+                ? activeSection.querySelector('input[name="business_stage"][type="radio"]:checked')
+                : form.querySelector('input[name="business_stage"][type="radio"]:checked:not([disabled])');
             const businessArea = activeSection ? activeSection.querySelector('input[name="business_area"]') : form.querySelector('input[name="business_area"]:not([disabled])');
 
             // Proveri osnovna polja
@@ -1978,22 +2033,14 @@
                         }
                     }
                     
-                    // 2. PRVO proveri checked status za business_stage u aktivnoj sekciji PRE uklanjanja disabled
+                    // 2. Ukloni disabled sa svih polja u aktivnoj sekciji (osim business_stage – šalje se posebno)
                     const activeSection = document.querySelector('.conditional-field.show');
-                    let checkedBusinessStageValue = null;
-                    if (activeSection) {
-                        const checkedBusinessStageInActive = activeSection.querySelector('input[name="business_stage"][type="radio"]:checked');
-                        if (checkedBusinessStageInActive) {
-                            checkedBusinessStageValue = checkedBusinessStageInActive.value;
-                            console.log('Found checked business_stage in active section:', checkedBusinessStageValue);
-                        }
-                    }
-                    
-                    // 3. Ukloni disabled sa svih polja u aktivnoj sekciji
                     if (activeSection) {
                         const activeFields = activeSection.querySelectorAll('input, select, textarea');
                         activeFields.forEach(field => {
-                            field.removeAttribute('disabled');
+                            if (field.name !== 'business_stage') {
+                                field.removeAttribute('disabled');
+                            }
                         });
                     }
                     
@@ -2084,44 +2131,8 @@
                         });
                     });
                     
-                    // 5. Osiguraj da se business_stage šalje - ukloni disabled sa svih radio button-a u aktivnoj sekciji
-                    // Browser će poslati samo one koji nisu disabled
-                    if (activeSection) {
-                        const businessStageRadiosInActive = activeSection.querySelectorAll('input[name="business_stage"][type="radio"]');
-                        businessStageRadiosInActive.forEach(radio => {
-                            radio.removeAttribute('disabled');
-                        });
-                    }
-                    
-                    // 6. Postavi checked status na prvi business_stage radio button u formi sa sačuvanom vrednošću
-                    if (checkedBusinessStageValue) {
-                        console.log('Setting business_stage to:', checkedBusinessStageValue);
-                        const allBusinessStageRadios = applicationForm.querySelectorAll('input[name="business_stage"][type="radio"]');
-                        allBusinessStageRadios.forEach(radio => {
-                            if (radio.value === checkedBusinessStageValue) {
-                                radio.checked = true;
-                                radio.removeAttribute('disabled');
-                            } else {
-                                radio.checked = false;
-                            }
-                        });
-                    } else {
-                        // Ako nije bilo checked u aktivnoj sekciji, proveri da li postoji checked negde
-                        const checkedBusinessStageRadio = applicationForm.querySelector('input[name="business_stage"][type="radio"]:checked');
-                        if (!checkedBusinessStageRadio) {
-                            // Ako nijedan nije checked, postavi prvi (default "započinjanje")
-                            const firstBusinessStageRadio = applicationForm.querySelector('input[name="business_stage"][type="radio"]');
-                            if (firstBusinessStageRadio) {
-                                firstBusinessStageRadio.checked = true;
-                                firstBusinessStageRadio.removeAttribute('disabled');
-                                console.log('No checked business_stage found, setting default to započinjanje');
-                            }
-                        } else {
-                            // Ako postoji checked, osiguraj da nije disabled
-                            checkedBusinessStageRadio.removeAttribute('disabled');
-                        }
-                    }
-                    
+                    prepareBusinessStageForSubmit(applicationForm);
+
                     // Submit-uj formu
                     applicationForm.submit();
                 });
@@ -2140,12 +2151,6 @@
                 // VAŽNO: Ukloni disabled sa radio button-a za applicant_type
                 const allApplicantTypeRadios = applicationForm.querySelectorAll('input[name="applicant_type"]');
                 allApplicantTypeRadios.forEach(radio => {
-                    radio.removeAttribute('disabled');
-                });
-                
-                // VAŽNO: Ukloni disabled sa radio button-a za business_stage u svim sekcijama PRVO
-                const allBusinessStageRadios = applicationForm.querySelectorAll('input[name="business_stage"]');
-                allBusinessStageRadios.forEach(radio => {
                     radio.removeAttribute('disabled');
                 });
                 
@@ -2261,7 +2266,7 @@
                     const allFields = section.querySelectorAll('input, select, textarea');
                     allFields.forEach(field => {
                         // Ne uklanjaj disabled sa polja koja se šalju samo iz aktivne sekcije
-                        const fieldsToKeepDisabled = ['registration_form', 'business_plan_name', 'business_area', 'founder_name', 'director_name', 'company_seat'];
+                        const fieldsToKeepDisabled = ['registration_form', 'business_plan_name', 'business_area', 'founder_name', 'director_name', 'company_seat', 'business_stage'];
                         if (fieldsToKeepDisabled.includes(field.name)) {
                             return; // Već postavljen na disabled
                         }
@@ -2269,6 +2274,8 @@
                         field.removeAttribute('disabled');
                     });
                 });
+
+                prepareBusinessStageForSubmit(applicationForm);
             });
         }
         @endif
