@@ -237,6 +237,7 @@ class ApplicationController extends Controller
         $isDraft = $request->has('save_as_draft') && $request->save_as_draft === '1';
 
         $this->mergeProfileAddressIntoRequest($request);
+        $this->mergeApplicantJmbgIntoRequest($request);
 
         if (!$isDraft && in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo', 'fizicko_lice'], true)) {
             $profileAddressError = $this->profileAddressErrorForUser($request->user());
@@ -286,6 +287,12 @@ class ApplicationController extends Controller
             $rules['founder_name'] = 'nullable|string|max:255';
             $rules['director_name'] = 'nullable|string|max:255';
             $rules['company_seat'] = ['nullable', 'string', 'max:255', new KotorMunicipalityAddress()];
+        }
+
+        if (in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true)) {
+            $rules['applicant_jmbg'] = $isDraft
+                ? 'nullable|string|regex:/^[0-9]{13}$/'
+                : 'required|string|regex:/^[0-9]{13}$/';
         }
 
         if ($request->applicant_type === 'preduzetnica' && !$isDraft) {
@@ -344,6 +351,8 @@ class ApplicationController extends Controller
             'physical_person_name.required' => 'Ime i prezime je obavezno za fizičko lice.',
             'physical_person_jmbg.required' => 'JMBG je obavezan za fizičko lice.',
             'physical_person_jmbg.regex' => 'JMBG mora imati tačno 13 cifara.',
+            'applicant_jmbg.required' => 'JMBG je obavezan.',
+            'applicant_jmbg.regex' => 'JMBG mora imati tačno 13 cifara.',
             'physical_person_phone.required' => 'Kontakt telefon je obavezan za fizičko lice.',
             'physical_person_email.required' => 'E-mail je obavezan za fizičko lice.',
             'physical_person_email.email' => 'E-mail mora biti validan.',
@@ -396,6 +405,9 @@ class ApplicationController extends Controller
                 'founder_name' => $request->filled('founder_name') ? $request->founder_name : $existingApplication->founder_name,
                 'director_name' => $request->filled('director_name') ? $request->director_name : $existingApplication->director_name,
                 'company_seat' => $request->filled('company_seat') ? $request->company_seat : $existingApplication->company_seat,
+                'applicant_jmbg' => in_array($request->filled('applicant_type') ? $request->applicant_type : $existingApplication->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true)
+                    ? ($request->filled('applicant_jmbg') ? $request->applicant_jmbg : $existingApplication->applicant_jmbg)
+                    : $existingApplication->applicant_jmbg,
                 'physical_person_name' => $request->filled('physical_person_name') ? $request->physical_person_name : $existingApplication->physical_person_name,
                 'physical_person_jmbg' => $request->filled('physical_person_jmbg') ? $request->physical_person_jmbg : $existingApplication->physical_person_jmbg,
                 'physical_person_phone' => $request->filled('physical_person_phone') ? $request->physical_person_phone : $existingApplication->physical_person_phone,
@@ -434,6 +446,9 @@ class ApplicationController extends Controller
                     'founder_name' => $request->filled('founder_name') ? $request->founder_name : null,
                     'director_name' => $request->filled('director_name') ? $request->director_name : null,
                     'company_seat' => $request->filled('company_seat') ? $request->company_seat : null,
+                    'applicant_jmbg' => (in_array($request->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true) && $request->filled('applicant_jmbg'))
+                        ? $request->applicant_jmbg
+                        : null,
                     // Polja za fizičko lice BEZ registrovane djelatnosti (samo za 'fizicko_lice' tip)
                     'physical_person_name' => $request->filled('physical_person_name') ? $request->physical_person_name : null,
                     'physical_person_jmbg' => $request->filled('physical_person_jmbg') ? $request->physical_person_jmbg : null,
@@ -993,9 +1008,6 @@ class ApplicationController extends Controller
         return $name;
     }
 
-    /**
-     * Adresa u Obrascu 1a/1b uvijek se povlači iz profila korisnika (registracija).
-     */
     protected function mergeProfileAddressIntoRequest(Request $request): void
     {
         $applicantType = $request->input('applicant_type');
@@ -1017,6 +1029,44 @@ class ApplicationController extends Controller
                 'doo_address' => $profileAddress,
                 'company_seat' => $profileAddress,
             ]);
+        }
+    }
+
+    /**
+     * JMBG u Obrascu 1a/1b: iz polja forme, ranije sačuvane prijave ili profila korisnika.
+     */
+    protected function mergeApplicantJmbgIntoRequest(Request $request): void
+    {
+        $applicantType = $request->input('applicant_type');
+        if (!in_array($applicantType, ['preduzetnica', 'doo', 'ostalo'], true)) {
+            return;
+        }
+
+        $fromForm = $applicantType === 'preduzetnica'
+            ? $request->input('preduzetnik_jmbg')
+            : $request->input('doo_jmbg');
+
+        if (filled($fromForm)) {
+            $request->merge(['applicant_jmbg' => trim((string) $fromForm)]);
+
+            return;
+        }
+
+        if ($request->filled('application_id')) {
+            $existingApplication = Application::where('id', $request->application_id)
+                ->where('user_id', $request->user()->id)
+                ->first();
+
+            if ($existingApplication && filled($existingApplication->applicant_jmbg)) {
+                $request->merge(['applicant_jmbg' => $existingApplication->applicant_jmbg]);
+
+                return;
+            }
+        }
+
+        $userJmb = $request->user()->jmb;
+        if (filled($userJmb)) {
+            $request->merge(['applicant_jmbg' => trim((string) $userJmb)]);
         }
     }
 

@@ -651,17 +651,21 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">JMBG:</label>
+                            <label class="form-label">JMBG: <span class="required">*</span></label>
                             <input 
                                 type="text" 
                                 name="preduzetnik_jmbg" 
-                                class="form-control @error('preduzetnik_jmbg') error @enderror"
-                                value="{{ old('preduzetnik_jmbg', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->jmb : auth()->user()->jmb) }}"
+                                class="form-control @error('preduzetnik_jmbg') error @enderror @error('applicant_jmbg') error @enderror"
+                                value="{{ old('preduzetnik_jmbg', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_jmbg : null) ?? auth()->user()->jmb) }}"
                                 maxlength="13"
                                 pattern="[0-9]{13}"
                                 placeholder="13 cifara"
+                                inputmode="numeric"
                             >
                             @error('preduzetnik_jmbg')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                            @error('applicant_jmbg')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
                         </div>
@@ -915,17 +919,21 @@
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">JMBG:</label>
+                            <label class="form-label">JMBG: <span class="required">*</span></label>
                             <input 
                                 type="text" 
                                 name="doo_jmbg" 
-                                class="form-control @error('doo_jmbg') error @enderror"
-                                value="{{ old('doo_jmbg', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->jmb : auth()->user()->jmb) }}"
+                                class="form-control @error('doo_jmbg') error @enderror @error('applicant_jmbg') error @enderror"
+                                value="{{ old('doo_jmbg', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_jmbg : null) ?? auth()->user()->jmb) }}"
                                 maxlength="13"
                                 pattern="[0-9]{13}"
                                 placeholder="13 cifara"
+                                inputmode="numeric"
                             >
                             @error('doo_jmbg')
+                                <div class="error-message">{{ $message }}</div>
+                            @enderror
+                            @error('applicant_jmbg')
                                 <div class="error-message">{{ $message }}</div>
                             @enderror
                         </div>
@@ -1824,6 +1832,14 @@
                             });
                         }
                     }
+                    const existingApplicantJmbg = '{{ isset($existingApplication) && $existingApplication && $existingApplication->applicant_jmbg ? addslashes($existingApplication->applicant_jmbg) : '' }}';
+                    if (existingApplicantJmbg) {
+                        const jmbgField = activeSection.querySelector('input[name="preduzetnik_jmbg"], input[name="doo_jmbg"]');
+                        if (jmbgField) {
+                            jmbgField.value = existingApplicantJmbg;
+                            jmbgField.removeAttribute('disabled');
+                        }
+                    }
                 }
             }, 100);
         }
@@ -1932,21 +1948,25 @@
                 const directorName = activeSection ? activeSection.querySelector('input[name="director_name"]') : form.querySelector('input[name="director_name"]:not([disabled])');
                 const companySeat = activeSection ? activeSection.querySelector('input[name="company_seat"]') : form.querySelector('input[name="company_seat"]:not([disabled])');
                 const registrationForm = activeSection ? activeSection.querySelector('select[name="registration_form"]') : form.querySelector('select[name="registration_form"]:not([disabled])');
+                const applicantJmbg = activeSection ? activeSection.querySelector('input[name="doo_jmbg"]') : form.querySelector('input[name="doo_jmbg"]:not([disabled])');
 
                 if (!founderName || !founderName.value.trim()) return false;
                 if (!directorName || !directorName.value.trim()) return false;
                 if (!companySeat || !companySeat.value.trim()) return false;
                 if (!registrationForm || !registrationForm.value) return false;
+                if (!applicantJmbg || !/^[0-9]{13}$/.test(applicantJmbg.value.trim())) return false;
                 const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
                 if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
             } else if (applicantTypeValue === 'preduzetnica') {
                 const registrationForm = activeSection ? activeSection.querySelector('select[name="registration_form"]') : form.querySelector('select[name="registration_form"]:not([disabled])');
                 const accuracyDeclaration = activeSection ? activeSection.querySelector('input[name="accuracy_declaration"]') : form.querySelector('input[name="accuracy_declaration"]:not([disabled])');
+                const applicantJmbg = activeSection ? activeSection.querySelector('input[name="preduzetnik_jmbg"]') : form.querySelector('input[name="preduzetnik_jmbg"]:not([disabled])');
                 const profileAddress = @json($userProfileAddress);
 
                 if (!registrationForm || !registrationForm.value) return false;
                 if (!accuracyDeclaration || !accuracyDeclaration.checked) return false;
                 if (!profileAddress || !profileAddress.trim()) return false;
+                if (!applicantJmbg || !/^[0-9]{13}$/.test(applicantJmbg.value.trim())) return false;
             }
 
             return true;

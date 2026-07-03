@@ -140,14 +140,14 @@ class BusinessPlanController extends Controller
         } elseif ($application->applicant_type === 'preduzetnica') {
             // Za preduzetnicu, podaci su u korisničkom profilu
             $defaultData['applicant_name'] = $applicantUser->name ?? '';
-            $defaultData['applicant_jmbg'] = $applicantUser->jmb ?? '';
+            $defaultData['applicant_jmbg'] = $application->resolvedApplicantJmbg() ?? '';
             $defaultData['applicant_phone'] = PhoneNumber::normalize($applicantUser->phone ?? '');
             $defaultData['applicant_email'] = $applicantUser->email ?? '';
             $defaultData['applicant_address'] = $applicantUser->formattedAddress();
         } elseif ($application->applicant_type === 'doo' || $application->applicant_type === 'ostalo') {
             // Za DOO/Ostalo, podaci su u korisničkom profilu
             $defaultData['applicant_name'] = $applicantUser->name ?? '';
-            $defaultData['applicant_jmbg'] = $applicantUser->jmb ?? '';
+            $defaultData['applicant_jmbg'] = $application->resolvedApplicantJmbg() ?? '';
             $defaultData['applicant_phone'] = PhoneNumber::normalize($applicantUser->phone ?? '');
             $defaultData['applicant_email'] = $applicantUser->email ?? '';
             $defaultData['applicant_address'] = $applicantUser->formattedAddress();
@@ -171,7 +171,7 @@ class BusinessPlanController extends Controller
             // Ako biznis plan već ima podatke, koristi ih
             $defaultData = array_merge($defaultData, [
                 'applicant_name' => $businessPlan->applicant_name ?? $defaultData['applicant_name'],
-                'applicant_jmbg' => $businessPlan->applicant_jmbg ?? $defaultData['applicant_jmbg'],
+                'applicant_jmbg' => filled($businessPlan->applicant_jmbg) ? $businessPlan->applicant_jmbg : $defaultData['applicant_jmbg'],
                 'applicant_phone' => $businessPlan->applicant_phone ?? $defaultData['applicant_phone'],
                 'applicant_email' => $businessPlan->applicant_email ?? $defaultData['applicant_email'],
                 'applicant_address' => $businessPlan->applicant_address ?? $defaultData['applicant_address'],

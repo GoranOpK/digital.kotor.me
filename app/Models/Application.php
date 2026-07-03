@@ -20,6 +20,7 @@ class Application extends Model
         'founder_name',
         'director_name',
         'company_seat',
+        'applicant_jmbg',
         'physical_person_name',
         'physical_person_jmbg',
         'physical_person_phone',
@@ -283,6 +284,28 @@ class Application extends Model
     }
 
     /**
+     * JMBG nosioca prijave za Obrazac 1a/1b (preduzetnica, DOO, ostalo): iz prijave ili profila.
+     */
+    public function resolvedApplicantJmbg(): ?string
+    {
+        if ($this->applicant_type === 'fizicko_lice') {
+            return filled($this->physical_person_jmbg) ? $this->physical_person_jmbg : null;
+        }
+
+        if (!in_array($this->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true)) {
+            return null;
+        }
+
+        if (filled($this->applicant_jmbg)) {
+            return $this->applicant_jmbg;
+        }
+
+        $user = $this->relationLoaded('user') ? $this->user : $this->user()->first();
+
+        return filled($user?->jmb) ? $user->jmb : null;
+    }
+
+    /**
      * Proverava da li je Obrazac 1a/1b kompletno popunjen
      * (sva obavezna polja + svi obavezni checkbox-ovi)
      */
@@ -308,6 +331,13 @@ class Application extends Model
             if (!$this->founder_name || 
                 !$this->director_name || 
                 !$this->company_seat) {
+                return false;
+            }
+        }
+
+        if (in_array($this->applicant_type, ['preduzetnica', 'doo', 'ostalo'], true)) {
+            $jmbg = $this->resolvedApplicantJmbg();
+            if (!$jmbg || !preg_match('/^[0-9]{13}$/', (string) $jmbg)) {
                 return false;
             }
         }
