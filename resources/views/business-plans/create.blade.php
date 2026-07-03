@@ -1234,8 +1234,10 @@
                     </div>
 
                     @php
-                        $financesNoticeConfirmed = (bool) old('finances_notice_confirmed')
-                            || (!empty($businessPlan?->requested_amount) && (float) $businessPlan->requested_amount > 0);
+                        $financesNoticeConfirmed = (bool) old(
+                            'finances_notice_confirmed',
+                            $businessPlan?->finances_notice_confirmed ?? false
+                        );
                     @endphp
                     <div class="finances-notice-box" id="financesNoticeBox">
                         <h3>Napomena:</h3>

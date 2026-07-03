@@ -309,6 +309,7 @@ class BusinessPlanController extends Controller
         ];
 
         $cleanedData = $validated;
+        unset($cleanedData['finances_notice_confirmed']);
 
         if (array_key_exists('applicant_phone', $cleanedData)) {
             $cleanedData['applicant_phone'] = PhoneNumber::normalize($cleanedData['applicant_phone']);
@@ -414,6 +415,7 @@ class BusinessPlanController extends Controller
                 [
                     'has_registered_business' => $request->has('has_registered_business') ? (bool)$request->has_registered_business : null,
                     'has_seasonal_workers' => $request->has('has_seasonal_workers') ? (bool)$request->has_seasonal_workers : null,
+                    'finances_notice_confirmed' => $request->boolean('finances_notice_confirmed'),
                 ]
             )
         );
