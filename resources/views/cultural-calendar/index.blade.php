@@ -415,6 +415,7 @@
                     <div class="kk-upcoming-list">
                         @forelse($upcomingEvents as $event)
                             <div class="kk-upcoming-item">
+                                <a href="{{ route('cultural-calendar.show', $event) }}" style="display:block; color:inherit; text-decoration:none;">
                                 <img
                                     src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
                                     alt="{{ $event->naslov }}"
@@ -430,6 +431,7 @@
                                     @endif
                                 </div>
                                 <div class="kk-upcoming-name">{{ $event->naslov }}</div>
+                                </a>
                             </div>
                         @empty
                             <div class="kk-upcoming-item">
