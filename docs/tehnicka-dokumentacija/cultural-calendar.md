@@ -1,6 +1,6 @@
 # Kalendar kulturnih događaja
 
-**Poslednje ažuriranje:** 2026-06-30  
+**Poslednje ažuriranje:** 2026-07-08  
 **Izvor u kodu:** `CulturalCalendarController`, `CulturalEventController`, `CulturalEvent` model, `SendCulturalCalendarWeeklyNewsletter`
 
 ---
@@ -40,7 +40,7 @@ Kontroler: `CulturalEventController` (bez `show` akcije).
 
 ### Kategorije (`CATEGORIES`)
 
-Puni spisak u `app/Models/CulturalEvent.php` (Koncerti, Predstave, Izložbe, …). Za test prije objave v. [cultural-calendar-test-checklist.md](cultural-calendar-test-checklist.md).
+Puni spisak u `app/Models/CulturalEvent.php` (uključujući i stavku `Nešto drugo`). Za test prije objave v. [cultural-calendar-test-checklist.md](cultural-calendar-test-checklist.md).
 
 ### Polja (sažetak)
 

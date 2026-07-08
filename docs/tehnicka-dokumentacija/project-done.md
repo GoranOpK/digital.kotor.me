@@ -9,6 +9,7 @@ Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili
 ## 2026-07-08 — Kalendar kulture: vidljivost input polja
 
 - U formi `Kalendar kulture → Novi događaj` i `Uredi događaj` dodati diskretni stilovi za polja (`border`, blagi `bg`, focus ring) da inputi budu jasno vidljivi korisniku.
+- U kategorije događaja dodata stavka `Nešto drugo`.
 - Dodata checklista testiranja prije objave: `cultural-calendar-test-checklist.md`.
 - Ažurirani indeksi dokumentacije (`README.md`, `project-status-next-steps.md`, `cultural-calendar.md`) sa referencom na checklistu.
 

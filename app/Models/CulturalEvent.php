@@ -25,6 +25,7 @@ class CulturalEvent extends Model
         'Paneli o kulturi',
         'Manifestacije u organizaciji Mjesnih zajednica',
         'Manifestacije u organizaciji NVU',
+        'Nešto drugo',
     ];
 
     public const STATUSES = [

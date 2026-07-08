@@ -1,6 +1,6 @@
 # Kalendar kulture — checklista za testiranje prije objave
 
-**Poslednje ažuriranje:** 2026-07-03  
+**Poslednje ažuriranje:** 2026-07-08  
 **Namjena:** ručno testiranje prije objave cjeline korisnicima. Za tehnički pregled modula v. [cultural-calendar.md](cultural-calendar.md).
 
 **Okruženje:** `https://digital.kotor.me` (ili lokalno sa istim rutama).
@@ -157,7 +157,7 @@
 
 **Statusi:** `draft`, `published`, `archived`, `cancelled` — u javnom UI samo **`published`**.
 
-**Kategorije** (iz `CulturalEvent::CATEGORIES`): Koncerti, Predstave, Izložbe, Sportski događaji, Književne večeri, Filmske projekcije, Radionice, Promocije publikacija, Performansi, Filmski festivali, Likovne manifestacije, Prezentacije, Paneli o kulturi, Manifestacije u organizaciji Mjesnih zajednica, Manifestacije u organizaciji NVU.
+**Kategorije** (iz `CulturalEvent::CATEGORIES`): Koncerti, Predstave, Izložbe, Sportski događaji, Književne večeri, Filmske projekcije, Radionice, Promocije publikacija, Performansi, Filmski festivali, Likovne manifestacije, Prezentacije, Paneli o kulturi, Manifestacije u organizaciji Mjesnih zajednica, Manifestacije u organizaciji NVU, Nešto drugo.
 
 ---
 
