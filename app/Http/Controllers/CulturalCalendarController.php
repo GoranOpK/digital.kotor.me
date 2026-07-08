@@ -313,4 +313,13 @@ class CulturalCalendarController extends Controller
 
         return view('cultural-calendar.archive', compact('events'));
     }
+
+    public function show(CulturalEvent $event)
+    {
+        if ($event->status !== 'published') {
+            abort(404);
+        }
+
+        return view('cultural-calendar.show', compact('event'));
+    }
 }

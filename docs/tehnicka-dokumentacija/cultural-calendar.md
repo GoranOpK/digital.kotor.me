@@ -1,6 +1,6 @@
 # Kalendar kulturnih događaja
 
-**Poslednje ažuriranje:** 2026-07-08 (vrijeme od-do)  
+**Poslednje ažuriranje:** 2026-07-08 (vrijeme od-do + detalj događaja)  
 **Izvor u kodu:** `CulturalCalendarController`, `CulturalEventController`, `CulturalEvent` model, `SendCulturalCalendarWeeklyNewsletter`
 
 ---
@@ -18,8 +18,11 @@ Javni pregled kulturnih događaja Opštine Kotor: kalendar, lista događaja, arh
 | `/kalendar-kulture` | `cultural-calendar.index` | Početna kalendara |
 | `/kalendar-kulture/pregled-dogadjaja` | `cultural-calendar.events` | Lista događaja |
 | `/kalendar-kulture/arhiva-dogadjaja` | `cultural-calendar.archive` | Arhiva |
+| `/kalendar-kulture/dogadjaj/{event}` | `cultural-calendar.show` | Detalj događaja |
 | `/kalendar-kulture/dan/{date}` | `cultural-calendar.day` | Događaji za datum |
 | POST `/kalendar-kulture/newsletter` | `cultural-calendar.newsletter.store` | Pretplata |
+
+**UI ponašanje (važeće):** u sekcijama **Pregled događaja**, **Arhiva događaja** i **Istaknuti događaji** kartice su klikabilne i otvaraju stranicu detalja događaja.
 
 ---
 

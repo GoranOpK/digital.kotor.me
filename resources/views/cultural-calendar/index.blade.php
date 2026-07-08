@@ -447,6 +447,7 @@
                 @if($featuredEvents->isNotEmpty())
                     @foreach($featuredEvents as $event)
                         <article class="kk-feature-card">
+                            <a href="{{ route('cultural-calendar.show', $event) }}" style="display:block; color:inherit; text-decoration:none;">
                             <img
                                 src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
                                 alt="{{ $event->naslov }}"
@@ -465,6 +466,7 @@
                                 <div class="kk-feature-title">{{ $event->naslov }}</div>
                                 <p class="kk-feature-desc">{{ \Illuminate\Support\Str::limit($event->opis ?? '', 120) }}</p>
                             </div>
+                            </a>
                         </article>
                     @endforeach
                 @else

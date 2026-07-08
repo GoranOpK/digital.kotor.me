@@ -104,6 +104,7 @@ Breeze rute iz `auth.php` takođe učitavaju login/register — **duplikat imena
 | `/kalendar-kulture` | `cultural-calendar.index` | `CulturalCalendarController` |
 | `/kalendar-kulture/pregled-dogadjaja` | `cultural-calendar.events` | |
 | `/kalendar-kulture/arhiva-dogadjaja` | `cultural-calendar.archive` | |
+| `/kalendar-kulture/dogadjaj/{event}` | `cultural-calendar.show` | |
 | `/kalendar-kulture/dan/{date}` | `cultural-calendar.day` | |
 | POST `/kalendar-kulture/newsletter` | `cultural-calendar.newsletter.store` | |
 | resource `/kalendar-kulture/dogadjaji` | `cultural-events.*` | `CulturalEventController`, `role:kk_admin` |
