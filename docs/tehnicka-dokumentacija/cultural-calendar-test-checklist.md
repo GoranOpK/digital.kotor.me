@@ -1,6 +1,6 @@
 # Kalendar kulture — checklista za testiranje prije objave
 
-**Poslednje ažuriranje:** 2026-07-08  
+**Poslednje ažuriranje:** 2026-07-08 (kategorija + vrijeme od-do)  
 **Namjena:** ručno testiranje prije objave cjeline korisnicima. Za tehnički pregled modula v. [cultural-calendar.md](cultural-calendar.md).
 
 **Okruženje:** `https://digital.kotor.me` (ili lokalno sa istim rutama).
@@ -63,6 +63,7 @@
 | A13 | Klik na dan u kalendaru kao `kk_admin` → create sa datumom | ☐ | |
 | A14 | Validacija — datum max +1 godina od danas | ☐ | |
 | A15 | Validacija — `datum_do` ≥ `datum_od` | ☐ | |
+| A16 | Validacija — `Sa početkom u:` < `Do:` (kada je `Do:` popunjeno) | ☐ | |
 
 ---
 

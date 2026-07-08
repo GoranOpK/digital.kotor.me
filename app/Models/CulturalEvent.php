@@ -41,6 +41,7 @@ class CulturalEvent extends Model
         'datum_od',
         'datum_do',
         'vrijeme',
+        'vrijeme_do',
         'lokacija',
         'kategorija',
         'slika',

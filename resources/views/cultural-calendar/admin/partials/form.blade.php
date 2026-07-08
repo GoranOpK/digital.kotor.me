@@ -8,6 +8,10 @@
     if ($timeValue === null && $isEdit && $event->vrijeme) {
         $timeValue = substr((string) $event->vrijeme, 0, 5);
     }
+    $timeEndValue = old('vrijeme_do');
+    if ($timeEndValue === null && $isEdit && isset($event->vrijeme_do) && $event->vrijeme_do) {
+        $timeEndValue = substr((string) $event->vrijeme_do, 0, 5);
+    }
     $fieldClass = 'w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 shadow-sm focus:border-red-300 focus:ring-2 focus:ring-red-100 focus:outline-none';
     $fileFieldClass = 'w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-red-300 focus:ring-2 focus:ring-red-100 focus:outline-none';
 @endphp
@@ -63,8 +67,13 @@
     </div>
 
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Vrijeme</label>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Sa početkom u:</label>
         <input type="time" name="vrijeme" value="{{ $timeValue }}" class="{{ $fieldClass }}">
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Do:</label>
+        <input type="time" name="vrijeme_do" value="{{ $timeEndValue }}" class="{{ $fieldClass }}">
     </div>
 
     <div>

@@ -1,6 +1,6 @@
 # Kalendar kulturnih događaja
 
-**Poslednje ažuriranje:** 2026-07-08  
+**Poslednje ažuriranje:** 2026-07-08 (vrijeme od-do)  
 **Izvor u kodu:** `CulturalCalendarController`, `CulturalEventController`, `CulturalEvent` model, `SendCulturalCalendarWeeklyNewsletter`
 
 ---
@@ -44,7 +44,7 @@ Puni spisak u `app/Models/CulturalEvent.php` (uključujući i stavku `Nešto dru
 
 ### Polja (sažetak)
 
-Naslov, opis, datum/vrijeme, lokacija, kategorija, status, `created_by` (user).
+Naslov, opis, datum/vrijeme (`vrijeme` + opciono `vrijeme_do`), lokacija, kategorija, status, `created_by` (user).
 
 ---
 
