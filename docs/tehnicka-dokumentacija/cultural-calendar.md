@@ -22,7 +22,7 @@ Javni pregled kulturnih događaja Opštine Kotor: kalendar, lista događaja, arh
 | `/kalendar-kulture/dan/{date}` | `cultural-calendar.day` | Događaji za datum |
 | POST `/kalendar-kulture/newsletter` | `cultural-calendar.newsletter.store` | Pretplata |
 
-**UI ponašanje (važeće):** u sekcijama **Pregled događaja**, **Arhiva događaja** i **Istaknuti događaji** kartice su klikabilne i otvaraju stranicu detalja događaja.
+**UI ponašanje (važeće):** u sekcijama **Pregled događaja**, **Arhiva događaja**, **Istaknuti događaji** i **Naredni događaji** kartice su klikabilne i otvaraju stranicu detalja događaja.
 
 ---
 

@@ -11,7 +11,7 @@ Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili
 - U formi `Kalendar kulture → Novi događaj` i `Uredi događaj` dodati diskretni stilovi za polja (`border`, blagi `bg`, focus ring) da inputi budu jasno vidljivi korisniku.
 - U kategorije događaja dodata stavka `Nešto drugo`.
 - Polje vremena preimenovano u `Sa početkom u:` i dodato opciono polje `Do:` uz validaciju da je početak prije završetka.
-- U Kalendaru kulture kartice događaja u **Pregledu**, **Arhivi** i **Istaknutim događajima** otvaraju novu stranicu detalja (`cultural-calendar.show`).
+- U Kalendaru kulture kartice događaja u **Pregledu**, **Arhivi**, **Istaknutim događajima** i **Narednim događajima** otvaraju novu stranicu detalja (`cultural-calendar.show`).
 - Dodata checklista testiranja prije objave: `cultural-calendar-test-checklist.md`.
 - Ažurirani indeksi dokumentacije (`README.md`, `project-status-next-steps.md`, `cultural-calendar.md`) sa referencom na checklistu.
 
