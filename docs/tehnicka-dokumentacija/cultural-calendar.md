@@ -40,7 +40,7 @@ Kontroler: `CulturalEventController` (bez `show` akcije).
 
 ### Kategorije (`CATEGORIES`)
 
-Koncerti, Predstave, Sportski događaji, Izložbe, Festivali, Edukativni događaji, Ostalo (tačan spisak u modelu).
+Puni spisak u `app/Models/CulturalEvent.php` (Koncerti, Predstave, Izložbe, …). Za test prije objave v. [cultural-calendar-test-checklist.md](cultural-calendar-test-checklist.md).
 
 ### Polja (sažetak)
 
@@ -64,5 +64,6 @@ Model pretplatnika: `NewsletterSubscriber`.
 
 ## Povezani dokumenti
 
+- [cultural-calendar-test-checklist.md](cultural-calendar-test-checklist.md) — checklista za testiranje prije objave
 - [roles-and-permissions.md](roles-and-permissions.md)
 - [deployment-and-cron.md](deployment-and-cron.md)

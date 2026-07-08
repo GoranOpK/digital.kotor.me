@@ -53,6 +53,7 @@ Pregled po **cjelinama** (v. [architecture-overview.md](architecture-overview.md
 | [application-lifecycle.md](application-lifecycle.md) | Cijeli tok prijave na konkurs |
 | [document-library-and-mega.md](document-library-and-mega.md) | Upload, MEGA, kvota, istek |
 | [cultural-calendar.md](cultural-calendar.md) | Događaji, newsletter, kk_admin |
+| [cultural-calendar-test-checklist.md](cultural-calendar-test-checklist.md) | Checklista prije objave |
 
 ### Operativa
 

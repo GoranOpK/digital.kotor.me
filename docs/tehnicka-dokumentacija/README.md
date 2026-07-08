@@ -41,6 +41,7 @@ Centralni folder za svu tehničku dokumentaciju projekta: konvencije, indeks, ar
 | [business-rules.md](business-rules.md) | Adresa, JMB/PIB, bodovi, dokumenti |
 | [document-library-and-mega.md](document-library-and-mega.md) | Biblioteka, MEGA, kvota |
 | [cultural-calendar.md](cultural-calendar.md) | Kalendar kulture |
+| [cultural-calendar-test-checklist.md](cultural-calendar-test-checklist.md) | Testiranje kalendara prije objave |
 | [database-entities.md](database-entities.md) | Modeli, relacije, statusi |
 | [environment-variables.md](environment-variables.md) | Env varijable |
 | [deployment-and-cron.md](deployment-and-cron.md) | Plesk, Git deploy, Toolkit, cron, backup |

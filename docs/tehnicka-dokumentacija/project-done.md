@@ -1,10 +1,16 @@
 # Project done — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-06-30
+**Poslednje ažuriranje:** 2026-07-08
 
 Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili git istoriji.
 
 ---
+
+## 2026-07-08 — Kalendar kulture: vidljivost input polja
+
+- U formi `Kalendar kulture → Novi događaj` i `Uredi događaj` dodati diskretni stilovi za polja (`border`, blagi `bg`, focus ring) da inputi budu jasno vidljivi korisniku.
+- Dodata checklista testiranja prije objave: `cultural-calendar-test-checklist.md`.
+- Ažurirani indeksi dokumentacije (`README.md`, `project-status-next-steps.md`, `cultural-calendar.md`) sa referencom na checklistu.
 
 ## 2026-06-30 — Odgovori tima (dokumentacija)
 

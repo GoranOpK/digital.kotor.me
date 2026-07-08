@@ -8,6 +8,8 @@
     if ($timeValue === null && $isEdit && $event->vrijeme) {
         $timeValue = substr((string) $event->vrijeme, 0, 5);
     }
+    $fieldClass = 'w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900 shadow-sm focus:border-red-300 focus:ring-2 focus:ring-red-100 focus:outline-none';
+    $fileFieldClass = 'w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-red-300 focus:ring-2 focus:ring-red-100 focus:outline-none';
 @endphp
 
 @if ($errors->any())
@@ -23,12 +25,12 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
     <div class="md:col-span-2">
         <label class="block text-sm font-medium text-gray-700 mb-1">Naslov *</label>
-        <input type="text" name="naslov" value="{{ old('naslov', $event->naslov ?? '') }}" class="w-full border-gray-300 rounded-md" required>
+        <input type="text" name="naslov" value="{{ old('naslov', $event->naslov ?? '') }}" class="{{ $fieldClass }}" required>
     </div>
 
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Kategorija *</label>
-        <select name="kategorija" class="w-full border-gray-300 rounded-md" required>
+        <select name="kategorija" class="{{ $fieldClass }}" required>
             <option value="">Odaberi kategoriju</option>
             @foreach($categories as $category)
                 <option value="{{ $category }}" @selected(old('kategorija', $event->kategorija ?? '') === $category)>{{ $category }}</option>
@@ -38,7 +40,7 @@
 
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Status *</label>
-        <select name="status" class="w-full border-gray-300 rounded-md" required>
+        <select name="status" class="{{ $fieldClass }}" required>
             @foreach($statuses as $status)
                 <option value="{{ $status }}" @selected(old('status', $event->status ?? 'draft') === $status)>
                     {{ ucfirst($status) }}
@@ -49,12 +51,12 @@
 
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Datum od *</label>
-        <input type="date" name="datum_od" value="{{ old('datum_od', $defaultStartDate) }}" max="{{ $maxEventDate ?? '' }}" class="w-full border-gray-300 rounded-md" required>
+        <input type="date" name="datum_od" value="{{ old('datum_od', $defaultStartDate) }}" max="{{ $maxEventDate ?? '' }}" class="{{ $fieldClass }}" required>
     </div>
 
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Datum do</label>
-        <input type="date" name="datum_do" value="{{ old('datum_do', isset($event->datum_do) ? $event->datum_do->format('Y-m-d') : '') }}" max="{{ $maxEventDate ?? '' }}" class="w-full border-gray-300 rounded-md">
+        <input type="date" name="datum_do" value="{{ old('datum_do', isset($event->datum_do) ? $event->datum_do->format('Y-m-d') : '') }}" max="{{ $maxEventDate ?? '' }}" class="{{ $fieldClass }}">
         @if(isset($maxEventDate))
             <div style="font-size:12px; color:#6b7280; margin-top:6px;">Maksimalni dozvoljeni datum: {{ \Carbon\Carbon::parse($maxEventDate)->format('d.m.Y') }}</div>
         @endif
@@ -62,7 +64,7 @@
 
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Vrijeme</label>
-        <input type="time" name="vrijeme" value="{{ $timeValue }}" class="w-full border-gray-300 rounded-md">
+        <input type="time" name="vrijeme" value="{{ $timeValue }}" class="{{ $fieldClass }}">
     </div>
 
     <div>
@@ -72,18 +74,18 @@
             name="lokacija"
             value="{{ old('lokacija', $event->lokacija ?? '') }}"
             placeholder="Npr. Kulturni centar Kotor"
-            style="width:100%; border:1px solid #d1d5db; border-radius:6px; padding:9px 10px;"
+            class="{{ $fieldClass }}"
         >
     </div>
 
     <div class="md:col-span-2">
         <label class="block text-sm font-medium text-gray-700 mb-1">Opis</label>
-        <textarea name="opis" rows="5" class="w-full border-gray-300 rounded-md">{{ old('opis', $event->opis ?? '') }}</textarea>
+        <textarea name="opis" rows="5" class="{{ $fieldClass }}">{{ old('opis', $event->opis ?? '') }}</textarea>
     </div>
 
     <div class="md:col-span-2">
         <label class="block text-sm font-medium text-gray-700 mb-1">Slika</label>
-        <input type="file" name="slika" accept="image/*" class="w-full border-gray-300 rounded-md">
+        <input type="file" name="slika" accept="image/*" class="{{ $fileFieldClass }}">
         @if($isEdit && $event->slika)
             <div class="mt-3">
                 <div class="text-xs text-gray-500 mb-2">Trenutna slika:</div>
