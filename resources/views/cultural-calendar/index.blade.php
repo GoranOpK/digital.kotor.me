@@ -388,6 +388,7 @@
                     <div class="kk-upcoming-list">
                         @forelse($selectedDateEvents as $event)
                             <div class="kk-upcoming-item">
+                                <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" style="display:block; color:inherit; text-decoration:none;">
                                 <img
                                     src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
                                     alt="{{ $event->naslov }}"
@@ -403,6 +404,7 @@
                                     @endif
                                 </div>
                                 <div class="kk-upcoming-name">{{ $event->naslov }}</div>
+                                </a>
                             </div>
                         @empty
                             <div class="kk-upcoming-item">
@@ -415,7 +417,7 @@
                     <div class="kk-upcoming-list">
                         @forelse($upcomingEvents as $event)
                             <div class="kk-upcoming-item">
-                                <a href="{{ route('cultural-calendar.show', $event) }}" style="display:block; color:inherit; text-decoration:none;">
+                                <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" style="display:block; color:inherit; text-decoration:none;">
                                 <img
                                     src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
                                     alt="{{ $event->naslov }}"
@@ -449,7 +451,7 @@
                 @if($featuredEvents->isNotEmpty())
                     @foreach($featuredEvents as $event)
                         <article class="kk-feature-card">
-                            <a href="{{ route('cultural-calendar.show', $event) }}" style="display:block; color:inherit; text-decoration:none;">
+                            <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" style="display:block; color:inherit; text-decoration:none;">
                             <img
                                 src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
                                 alt="{{ $event->naslov }}"

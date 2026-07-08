@@ -4,8 +4,8 @@
 <div class="max-w-4xl mx-auto p-6">
     <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <h1 class="text-2xl font-bold text-gray-900">{{ $event->naslov }}</h1>
-        <a href="{{ route('cultural-calendar.events') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-            Nazad na pregled događaja
+        <a href="{{ $backUrl }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+            Nazad
         </a>
     </div>
 

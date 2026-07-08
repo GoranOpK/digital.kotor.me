@@ -48,7 +48,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($events as $event)
                 <article class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    <a href="{{ route('cultural-calendar.show', $event) }}" class="block hover:bg-gray-50 transition-colors duration-150">
+                    <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" class="block hover:bg-gray-50 transition-colors duration-150">
                     <img
                         src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
                         alt="{{ $event->naslov }}"

@@ -314,12 +314,17 @@ class CulturalCalendarController extends Controller
         return view('cultural-calendar.archive', compact('events'));
     }
 
-    public function show(CulturalEvent $event)
+    public function show(Request $request, CulturalEvent $event)
     {
         if ($event->status !== 'published') {
             abort(404);
         }
 
-        return view('cultural-calendar.show', compact('event'));
+        $backUrl = (string) $request->query('back', '');
+        if (!str_starts_with($backUrl, '/kalendar-kulture')) {
+            $backUrl = route('cultural-calendar.events');
+        }
+
+        return view('cultural-calendar.show', compact('event', 'backUrl'));
     }
 }
