@@ -60,6 +60,7 @@ Naslov, opis, datum/vrijeme (`vrijeme` + opciono `vrijeme_do`), lokacija, katego
 
 - poruka o statusu newsletter prijave prikazuje se na vrhu stranice kalendara (odmah ispod tabova),
 - uneseni e-mail u polju za newsletter je jasno vidljiv (tamna boja teksta i čitljiv placeholder),
+- polje za unos newsletter e-maila je prazno nakon osvježavanja stranice (ne popunjava se automatski prijavljenim nalogom),
 - welcome mail se šalje samo pri prvoj prijavi adrese (ne i pri ponovnoj prijavi iste već aktivne adrese).
 
 Mail klase:

@@ -516,7 +516,7 @@
                 <input
                     type="email"
                     name="email"
-                    value="{{ old('email', auth()->user()->email ?? '') }}"
+                    value="{{ old('email', '') }}"
                     placeholder="email@email.com"
                     required
                 >
