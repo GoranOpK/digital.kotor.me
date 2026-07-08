@@ -266,9 +266,13 @@
         width: min(213px, 100%);
         border: 1px solid rgba(255, 255, 255, 0.4);
         background: rgba(255, 255, 255, 0.95);
+        color: #111827;
         border-radius: 6px;
         padding: 9px 10px;
         font-size: 0.9rem;
+    }
+    .kk-news-form input[type="email"]::placeholder {
+        color: #6b7280;
     }
     .kk-news-check {
         display: inline-flex;
@@ -318,6 +322,18 @@
         <a href="{{ route('cultural-calendar.events') }}" class="kk-top-tab active">Pregled događaja</a>
         <a href="{{ route('cultural-calendar.archive') }}" class="kk-top-tab">Arhiva događaja</a>
     </div>
+
+    @if(session('newsletter_status'))
+        <div style="margin: 0 0 18px; padding: 12px 14px; border-radius: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 14px;">
+            {{ session('newsletter_status') }}
+        </div>
+    @endif
+
+    @error('email')
+        <div style="margin: 0 0 18px; padding: 12px 14px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; font-size: 14px;">
+            {{ $message }}
+        </div>
+    @enderror
 
     <section class="kk-grid-3">
         <article class="kk-stat-card">
@@ -495,11 +511,6 @@
         <div class="kk-newsletter">
             <h3>Pratite <span>kalendar kulture</span></h3>
             <p>Informišite se o kulturnim dešavanjima u Kotoru putem e-mail obavještenja.</p>
-            @if(session('newsletter_status'))
-                <div style="margin: 0 auto 12px; max-width: 620px; padding: 10px 12px; border-radius: 8px; background: rgba(255,255,255,0.15); color: #fff; font-size: 13px;">
-                    {{ session('newsletter_status') }}
-                </div>
-            @endif
             <form method="POST" action="{{ route('cultural-calendar.newsletter.store') }}" class="kk-news-form">
                 @csrf
                 <input
@@ -515,9 +526,6 @@
                 </label>
                 <button type="submit" class="kk-news-btn">Pošalji</button>
             </form>
-            @error('email')
-                <p style="margin-top: 8px; color: #fecaca; font-size: 12px;">{{ $message }}</p>
-            @enderror
         </div>
 
         <div class="kk-contact">

@@ -40,6 +40,7 @@ class CulturalCalendarNewsletterController extends Controller
                 ->with('newsletter_status', 'Ova e-mail adresa nije aktivno prijavljena na newsletter.');
         }
 
+        $wasExistingSubscriber = $subscriber->exists;
         $wasSubscribedBefore = $subscriber->exists && $subscriber->is_subscribed;
 
         $subscriber->forceFill([
@@ -49,11 +50,13 @@ class CulturalCalendarNewsletterController extends Controller
             'unsubscribe_token' => $subscriber->unsubscribe_token ?: Str::random(64),
         ])->save();
 
-        // Welcome poruku šaljemo nakon uspješne prijave/ponovne aktivacije.
-        Mail::to($subscriber->email)->send(new CulturalCalendarNewsletterWelcomeMail($subscriber));
+        // Welcome poruku šaljemo samo pri prvoj prijavi, ne i kod ponovne prijave.
+        if (!$wasExistingSubscriber) {
+            Mail::to($subscriber->email)->send(new CulturalCalendarNewsletterWelcomeMail($subscriber));
+        }
 
         $statusMessage = $wasSubscribedBefore
-            ? 'Vaša e-mail adresa je već prijavljena. Poslali smo vam potvrdu newsletter prijave.'
+            ? 'Vaša e-mail adresa je već prijavljena na newsletter.'
             : 'Uspješno ste prijavljeni na newsletter Kalendara kulture.';
 
         return redirect()

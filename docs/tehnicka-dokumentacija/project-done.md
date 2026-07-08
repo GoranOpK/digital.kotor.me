@@ -12,6 +12,8 @@ Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili
 - U kategorije događaja dodata stavka `Nešto drugo`.
 - Polje vremena preimenovano u `Sa početkom u:` i dodato opciono polje `Do:` uz validaciju da je početak prije završetka.
 - U Kalendaru kulture kartice događaja u **Pregledu**, **Arhivi**, **Istaknutim događajima** i **Narednim događajima** otvaraju novu stranicu detalja (`cultural-calendar.show`).
+- U detalju događaja dugme `Nazad` vraća korisnika na prethodnu sekciju (`back` parametar), umjesto uvijek na pregled.
+- Newsletter: status poruke pomjerene na vrh stranice; e-mail polje učinjeno čitljivim; welcome mail se više ne šalje pri ponovnoj prijavi već aktivne adrese.
 - Dodata checklista testiranja prije objave: `cultural-calendar-test-checklist.md`.
 - Ažurirani indeksi dokumentacije (`README.md`, `project-status-next-steps.md`, `cultural-calendar.md`) sa referencom na checklistu.
 

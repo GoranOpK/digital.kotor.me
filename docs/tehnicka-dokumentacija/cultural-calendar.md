@@ -1,6 +1,6 @@
 # Kalendar kulturnih događaja
 
-**Poslednje ažuriranje:** 2026-07-08 (vrijeme od-do + detalj događaja)  
+**Poslednje ažuriranje:** 2026-07-08 (detalj + newsletter UX)  
 **Izvor u kodu:** `CulturalCalendarController`, `CulturalEventController`, `CulturalEvent` model, `SendCulturalCalendarWeeklyNewsletter`
 
 ---
@@ -55,6 +55,12 @@ Naslov, opis, datum/vrijeme (`vrijeme` + opciono `vrijeme_do`), lokacija, katego
 
 **Komanda:** `cultural-calendar:send-weekly-newsletter`  
 **Scheduler:** ponedjeljak 09:00, timezone `Europe/Podgorica` (`routes/console.php`)
+
+**UX i ponašanje prijave:**
+
+- poruka o statusu newsletter prijave prikazuje se na vrhu stranice kalendara (odmah ispod tabova),
+- uneseni e-mail u polju za newsletter je jasno vidljiv (tamna boja teksta i čitljiv placeholder),
+- welcome mail se šalje samo pri prvoj prijavi adrese (ne i pri ponovnoj prijavi iste već aktivne adrese).
 
 Mail klase:
 
