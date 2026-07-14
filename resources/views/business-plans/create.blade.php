@@ -611,6 +611,23 @@
             </div>
         @endif
 
+        @if(session('error'))
+            <div class="alert alert-danger no-print" style="margin-bottom: 24px; padding: 16px; background: #fee2e2; border: 1px solid #f87171; border-radius: 8px; color: #991b1b;">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger no-print" id="bpErrorSummary" style="margin-bottom: 24px; padding: 16px; background: #fee2e2; border: 1px solid #f87171; border-radius: 8px; color: #991b1b;">
+                <strong>Biznis plan nije sačuvan. Ispravite sljedeće greške:</strong>
+                <ul style="margin: 8px 0 0; padding-left: 20px;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         @php
             $readOnly = $readOnly ?? false;
         @endphp
@@ -656,25 +673,40 @@
                         <div class="form-row" style="grid-template-columns: repeat(3, 1fr);">
                             <div class="form-group">
                                 <label class="form-label">Ime i prezime:</label>
-                                <input type="text" name="applicant_name" class="form-control" value="{{ old('applicant_name', $businessPlan->applicant_name ?? ($defaultData['applicant_name'] ?? '')) }}" required>
+                                <input type="text" name="applicant_name" class="form-control @error('applicant_name') error @enderror" value="{{ old('applicant_name', $businessPlan->applicant_name ?? ($defaultData['applicant_name'] ?? '')) }}" required>
+                                @error('applicant_name')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="form-group">
                                 <label class="form-label">JMBG:</label>
-                                <input type="text" name="applicant_jmbg" class="form-control" value="{{ old('applicant_jmbg', $businessPlan->applicant_jmbg ?? ($defaultData['applicant_jmbg'] ?? '')) }}" required>
+                                <input type="text" name="applicant_jmbg" class="form-control @error('applicant_jmbg') error @enderror" value="{{ old('applicant_jmbg', $businessPlan->applicant_jmbg ?? ($defaultData['applicant_jmbg'] ?? '')) }}" required>
+                                @error('applicant_jmbg')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Adresa:</label>
-                                <input type="text" name="applicant_address" class="form-control" value="{{ old('applicant_address', $businessPlan->applicant_address ?? ($defaultData['applicant_address'] ?? '')) }}" required>
+                                <input type="text" name="applicant_address" class="form-control @error('applicant_address') error @enderror" value="{{ old('applicant_address', $businessPlan->applicant_address ?? ($defaultData['applicant_address'] ?? '')) }}" required>
+                                @error('applicant_address')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
                                 <label class="form-label">Kontakt telefon:</label>
-                                <input type="text" name="applicant_phone" class="form-control" value="{{ old('applicant_phone', $businessPlan->applicant_phone ?? ($defaultData['applicant_phone'] ?? '')) }}" required>
+                                <input type="text" name="applicant_phone" class="form-control @error('applicant_phone') error @enderror" value="{{ old('applicant_phone', $businessPlan->applicant_phone ?? ($defaultData['applicant_phone'] ?? '')) }}" required>
+                                @error('applicant_phone')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="form-group">
                                 <label class="form-label">E-mail:</label>
-                                <input type="email" name="applicant_email" class="form-control" value="{{ old('applicant_email', $businessPlan->applicant_email ?? ($defaultData['applicant_email'] ?? '')) }}" required>
+                                <input type="email" name="applicant_email" class="form-control @error('applicant_email') error @enderror" value="{{ old('applicant_email', $businessPlan->applicant_email ?? ($defaultData['applicant_email'] ?? '')) }}" required>
+                                @error('applicant_email')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                     </div>
@@ -730,7 +762,10 @@
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Adresa/sjedište:</label>
-                                <textarea name="company_address" class="form-control" rows="1" style="min-height: 40px;">{{ old('company_address', $businessPlan->company_address ?? '') }}</textarea>
+                                <textarea name="company_address" class="form-control @error('company_address') error @enderror" rows="1" style="min-height: 40px;">{{ old('company_address', $businessPlan->company_address ?? '') }}</textarea>
+                                @error('company_address')
+                                    <div class="error-message">{{ $message }}</div>
+                                @enderror
                             </div>
                             <div class="form-row">
                                 <div class="form-group">
@@ -2350,6 +2385,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         toggleRegisteredBusinessFields();
     }
+
+    // Ako čuvanje nije uspjelo zbog validacije, odmah pokaži spisak grešaka
+    const bpErrorSummary = document.getElementById('bpErrorSummary');
+    if (bpErrorSummary) {
+        bpErrorSummary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
 });
 </script>
 @endsection
