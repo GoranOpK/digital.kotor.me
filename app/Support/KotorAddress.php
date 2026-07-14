@@ -30,7 +30,7 @@ final class KotorAddress
 
     public static function validationMessage(): string
     {
-        return 'Adresa mora biti na teritoriji Opštine Kotor (npr. Kotor, Dobrota, Prčanj, Risan, Perast ili poštanski broj 85310/85330).';
+        return 'Adresa mora biti na teritoriji Opštine Kotor.';
     }
 
     public static function cityValidationMessage(): string
