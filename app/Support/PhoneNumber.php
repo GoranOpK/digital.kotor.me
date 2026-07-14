@@ -26,19 +26,19 @@ class PhoneNumber
         }
 
         if (str_starts_with($value, '+382382')) {
-            return '+382' . substr($value, 7);
+            return '+382' . ltrim(substr($value, 7), '0');
         }
 
         if (str_starts_with($value, '382382')) {
-            return '+382' . substr($value, 6);
+            return '+382' . ltrim(substr($value, 6), '0');
         }
 
         if (str_starts_with($value, '+382')) {
-            return '+382' . substr($value, 4);
+            return '+382' . ltrim(substr($value, 4), '0');
         }
 
         if (str_starts_with($value, '382')) {
-            return '+382' . substr($value, 3);
+            return '+382' . ltrim(substr($value, 3), '0');
         }
 
         if (str_starts_with($value, '0')) {

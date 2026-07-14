@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Application;
 use App\Models\CommissionMember;
 use App\Models\Competition;
+use App\Support\PhoneNumber;
 use App\Support\Pib;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -363,7 +364,7 @@ class HomeController extends Controller
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'email' => strtolower($validated['email']),
-            'phone' => $validated['phone_full'],
+            'phone' => PhoneNumber::normalize($validated['phone_full']),
             'address' => $validated['address'],
             'city' => $validated['city'],
             'password' => Hash::make($validated['password']),
