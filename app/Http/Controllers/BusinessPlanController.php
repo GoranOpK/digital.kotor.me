@@ -148,6 +148,9 @@ class BusinessPlanController extends Controller
                 'promotion_len' => is_string($businessPlan->promotion) ? strlen($businessPlan->promotion) : null,
                 'business_analysis_len' => is_string($businessPlan->business_analysis) ? strlen($businessPlan->business_analysis) : null,
                 'work_experience_len' => is_string($businessPlan->work_experience) ? strlen($businessPlan->work_experience) : null,
+                'competition_analysis_len' => is_string($businessPlan->competition_analysis) ? strlen($businessPlan->competition_analysis) : null,
+                'required_resources_len' => is_string($businessPlan->required_resources) ? strlen($businessPlan->required_resources) : null,
+                'personal_strengths_weaknesses_len' => is_string($businessPlan->personal_strengths_weaknesses) ? strlen($businessPlan->personal_strengths_weaknesses) : null,
             ] : null,
             'db_table_counts' => $businessPlan ? [
                 'products_services_table' => is_array($businessPlan->products_services_table) ? count($businessPlan->products_services_table) : null,
@@ -334,6 +337,14 @@ class BusinessPlanController extends Controller
                 'requested_amount' => $request->input('requested_amount'),
                 'finances_notice_confirmed' => $request->input('finances_notice_confirmed'),
             ],
+            'text_lengths' => collect([
+                'promotion', 'competition_analysis', 'competition_analysis_part1', 'competition_analysis_part2',
+                'business_analysis', 'required_resources', 'work_experience',
+                'personal_strengths_weaknesses', 'biggest_support', 'realization_type',
+            ])->mapWithKeys(function ($field) use ($request) {
+                $value = $request->input($field);
+                return [$field => is_string($value) ? strlen($value) : ($value === null ? null : gettype($value))];
+            })->all(),
             'table_counts' => [
                 'products_services_table' => is_array($request->input('products_services_table')) ? count($request->input('products_services_table')) : null,
                 'target_customers' => is_array($request->input('target_customers')) ? count($request->input('target_customers')) : null,
@@ -473,7 +484,11 @@ class BusinessPlanController extends Controller
         $competitionPart2 = trim((string) $request->input('competition_analysis_part2', ''));
         unset($cleanedData['competition_analysis_part1'], $cleanedData['competition_analysis_part2']);
         if ($competitionPart1 !== '' || $competitionPart2 !== '') {
-            $cleanedData['competition_analysis'] = trim($competitionPart1 . ($competitionPart1 !== '' && $competitionPart2 !== '' ? "\n\n---\n\n" : '') . $competitionPart2);
+            // Razdvajač se upisuje uvijek kada drugi dio ima sadržaj (i kada je prvi prazan),
+            // da se pri ponovnom otvaranju tekst ne bi prelio u pogrešno polje
+            $cleanedData['competition_analysis'] = $competitionPart2 !== ''
+                ? $competitionPart1 . "\n\n---\n\n" . $competitionPart2
+                : $competitionPart1;
         } elseif ($request->has('competition_analysis_part1') || $request->has('competition_analysis_part2')) {
             // Eksplicitno prazna oba dijela – sačuvaj prazan tekst umjesto da ostavimo staro
             $cleanedData['competition_analysis'] = null;
@@ -635,6 +650,14 @@ class BusinessPlanController extends Controller
                 'required_amount' => $businessPlan->required_amount,
                 'requested_amount' => $businessPlan->requested_amount,
                 'finances_notice_confirmed' => $businessPlan->finances_notice_confirmed,
+            ],
+            'db_text_lengths' => [
+                'promotion' => is_string($businessPlan->promotion) ? strlen($businessPlan->promotion) : null,
+                'competition_analysis' => is_string($businessPlan->competition_analysis) ? strlen($businessPlan->competition_analysis) : null,
+                'business_analysis' => is_string($businessPlan->business_analysis) ? strlen($businessPlan->business_analysis) : null,
+                'required_resources' => is_string($businessPlan->required_resources) ? strlen($businessPlan->required_resources) : null,
+                'work_experience' => is_string($businessPlan->work_experience) ? strlen($businessPlan->work_experience) : null,
+                'personal_strengths_weaknesses' => is_string($businessPlan->personal_strengths_weaknesses) ? strlen($businessPlan->personal_strengths_weaknesses) : null,
             ],
             'db_table_counts' => [
                 'products_services_table' => is_array($businessPlan->products_services_table) ? count($businessPlan->products_services_table) : null,
