@@ -10,6 +10,7 @@ use App\Support\Pib;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class BusinessPlanController extends Controller
@@ -91,6 +92,46 @@ class BusinessPlanController extends Controller
 
         // Proveri da li već postoji biznis plan
         $businessPlan = $application->businessPlan;
+
+        Log::info('BP_CREATE: open form', [
+            'application_id' => $application->id,
+            'user_id' => $user->id,
+            'is_owner' => $isOwner,
+            'read_only_role' => $roleName,
+            'has_business_plan' => (bool) $businessPlan,
+            'business_plan_id' => $businessPlan?->id,
+            'bp_updated_at' => optional($businessPlan?->updated_at)?->toDateTimeString(),
+            'db_scalars' => $businessPlan ? [
+                'business_idea_name' => $businessPlan->business_idea_name,
+                'applicant_name' => $businessPlan->applicant_name,
+                'applicant_jmbg' => $businessPlan->applicant_jmbg,
+                'applicant_address' => $businessPlan->applicant_address,
+                'applicant_phone' => $businessPlan->applicant_phone,
+                'applicant_email' => $businessPlan->applicant_email,
+                'summary_len' => is_string($businessPlan->summary) ? strlen($businessPlan->summary) : null,
+                'required_amount' => $businessPlan->required_amount,
+                'requested_amount' => $businessPlan->requested_amount,
+                'promotion_len' => is_string($businessPlan->promotion) ? strlen($businessPlan->promotion) : null,
+                'business_analysis_len' => is_string($businessPlan->business_analysis) ? strlen($businessPlan->business_analysis) : null,
+                'work_experience_len' => is_string($businessPlan->work_experience) ? strlen($businessPlan->work_experience) : null,
+            ] : null,
+            'db_table_counts' => $businessPlan ? [
+                'products_services_table' => is_array($businessPlan->products_services_table) ? count($businessPlan->products_services_table) : null,
+                'target_customers' => is_array($businessPlan->target_customers) ? count($businessPlan->target_customers) : null,
+                'sales_locations' => is_array($businessPlan->sales_locations) ? count($businessPlan->sales_locations) : null,
+                'pricing_table' => is_array($businessPlan->pricing_table) ? count($businessPlan->pricing_table) : null,
+                'revenue_share_table' => is_array($businessPlan->revenue_share_table) ? count($businessPlan->revenue_share_table) : null,
+                'employment_structure' => is_array($businessPlan->employment_structure) ? count($businessPlan->employment_structure) : null,
+                'business_history' => is_array($businessPlan->business_history) ? count($businessPlan->business_history) : null,
+                'suppliers_table' => is_array($businessPlan->suppliers_table) ? count($businessPlan->suppliers_table) : null,
+                'funding_sources_table' => is_array($businessPlan->funding_sources_table) ? count($businessPlan->funding_sources_table) : null,
+                'revenue_projection' => is_array($businessPlan->revenue_projection) ? count($businessPlan->revenue_projection) : null,
+                'expense_projection' => is_array($businessPlan->expense_projection) ? count($businessPlan->expense_projection) : null,
+                'job_schedule' => is_array($businessPlan->job_schedule) ? count($businessPlan->job_schedule) : null,
+                'risk_matrix' => is_array($businessPlan->risk_matrix) ? count($businessPlan->risk_matrix) : null,
+            ] : null,
+            'is_complete' => $businessPlan?->isComplete(),
+        ]);
         
         if ($businessPlan) {
             // Razdvoji expense_projection na investment_expenses i operating_expenses
@@ -120,8 +161,17 @@ class BusinessPlanController extends Controller
             
             $businessPlan->setAttribute('investment_expenses', $investmentExpenses);
             $businessPlan->setAttribute('operating_expenses', $operatingExpenses);
+
+            Log::info('BP_CREATE: expense split for view', [
+                'application_id' => $application->id,
+                'business_plan_id' => $businessPlan->id,
+                'investment_count' => count($investmentExpenses),
+                'operating_count' => count($operatingExpenses),
+            ]);
         } else {
-            \Log::info("No business plan found for application ID: " . $application->id);
+            Log::info('BP_CREATE: no business plan found', [
+                'application_id' => $application->id,
+            ]);
         }
 
         // Pripremi podatke za automatsko popunjavanje iz prijave
@@ -203,23 +253,74 @@ class BusinessPlanController extends Controller
      */
     public function store(Request $request, Application $application): RedirectResponse
     {
+        Log::info('BP_STORE: start', [
+            'application_id' => $application->id,
+            'user_id' => Auth::id(),
+            'method' => $request->method(),
+            'content_length' => $request->header('Content-Length'),
+            'save_as_draft_raw' => $request->input('save_as_draft'),
+            'request_keys' => array_keys($request->except(['_token'])),
+        ]);
+
         // Blokiraj članove komisije od čuvanja izmjena
         $user = Auth::user();
         $roleName = $user->role ? $user->role->name : null;
         if ($roleName === 'komisija') {
+            Log::warning('BP_STORE: blocked commission member', [
+                'application_id' => $application->id,
+                'user_id' => $user->id,
+            ]);
             abort(403, 'Članovi komisije mogu samo pregledati biznis planove, ne mogu ih mijenjati.');
         }
         
         // Proveri da li prijava pripada korisniku
         if ($application->user_id !== Auth::id()) {
+            Log::warning('BP_STORE: ownership mismatch', [
+                'application_id' => $application->id,
+                'application_user_id' => $application->user_id,
+                'auth_user_id' => Auth::id(),
+            ]);
             abort(403, 'Nemate pristup ovoj prijavi.');
         }
 
         // Proveri da li se čuva kao nacrt
         $isDraft = $request->has('save_as_draft') && $request->save_as_draft === '1';
 
+        Log::info('BP_STORE: before validate', [
+            'application_id' => $application->id,
+            'is_draft' => $isDraft,
+            'scalar_preview' => [
+                'business_idea_name' => $request->input('business_idea_name'),
+                'applicant_name' => $request->input('applicant_name'),
+                'applicant_jmbg' => $request->input('applicant_jmbg'),
+                'applicant_phone' => $request->input('applicant_phone'),
+                'applicant_email' => $request->input('applicant_email'),
+                'summary_len' => is_string($request->input('summary')) ? strlen($request->input('summary')) : null,
+                'required_amount' => $request->input('required_amount'),
+                'requested_amount' => $request->input('requested_amount'),
+                'finances_notice_confirmed' => $request->input('finances_notice_confirmed'),
+            ],
+            'table_counts' => [
+                'products_services_table' => is_array($request->input('products_services_table')) ? count($request->input('products_services_table')) : null,
+                'target_customers' => is_array($request->input('target_customers')) ? count($request->input('target_customers')) : null,
+                'sales_locations' => is_array($request->input('sales_locations')) ? count($request->input('sales_locations')) : null,
+                'pricing_table' => is_array($request->input('pricing_table')) ? count($request->input('pricing_table')) : null,
+                'revenue_share_table' => is_array($request->input('revenue_share_table')) ? count($request->input('revenue_share_table')) : null,
+                'employment_structure' => is_array($request->input('employment_structure')) ? count($request->input('employment_structure')) : null,
+                'business_history' => is_array($request->input('business_history')) ? count($request->input('business_history')) : null,
+                'suppliers_table' => is_array($request->input('suppliers_table')) ? count($request->input('suppliers_table')) : null,
+                'funding_sources_table' => is_array($request->input('funding_sources_table')) ? count($request->input('funding_sources_table')) : null,
+                'revenue_projection' => is_array($request->input('revenue_projection')) ? count($request->input('revenue_projection')) : null,
+                'investment_expenses' => is_array($request->input('investment_expenses')) ? count($request->input('investment_expenses')) : null,
+                'operating_expenses' => is_array($request->input('operating_expenses')) ? count($request->input('operating_expenses')) : null,
+                'job_schedule' => is_array($request->input('job_schedule')) ? count($request->input('job_schedule')) : null,
+                'risk_matrix' => is_array($request->input('risk_matrix')) ? count($request->input('risk_matrix')) : null,
+            ],
+        ]);
+
         // Validacija
-        $validated = $request->validate([
+        try {
+            $validated = $request->validate([
             // I. OSNOVNI PODACI
             'business_idea_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
             'applicant_name' => $isDraft ? 'nullable|string|max:255' : 'required|string|max:255',
@@ -288,6 +389,26 @@ class BusinessPlanController extends Controller
             'summary.required' => 'Rezime je obavezno.',
             'pib.regex' => Pib::VALIDATION_MESSAGE,
             'finances_notice_confirmed.accepted' => 'Potrebno je potvrditi da ste pročitali napomenu u dijelu IV. Finansije.',
+        ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::warning('BP_STORE: validation failed', [
+                'application_id' => $application->id,
+                'is_draft' => $isDraft,
+                'errors' => $e->errors(),
+            ]);
+            throw $e;
+        }
+
+        Log::info('BP_STORE: validation ok', [
+            'application_id' => $application->id,
+            'validated_keys' => array_keys($validated),
+            'validated_scalars' => [
+                'business_idea_name' => $validated['business_idea_name'] ?? null,
+                'applicant_name' => $validated['applicant_name'] ?? null,
+                'summary_len' => isset($validated['summary']) && is_string($validated['summary']) ? strlen($validated['summary']) : null,
+                'required_amount' => $validated['required_amount'] ?? null,
+                'requested_amount' => $validated['requested_amount'] ?? null,
+            ],
         ]);
 
         // Očisti i pripremi podatke iz tabela - osiguraj da se čuvaju svi redovi
@@ -402,25 +523,89 @@ class BusinessPlanController extends Controller
             
             if (!empty($expenseProjection)) {
                 $cleanedData['expense_projection'] = $expenseProjection;
-                \Log::info("Expense projection combined count: " . count($expenseProjection));
-                \Log::info("Expense projection: " . json_encode($expenseProjection));
+                Log::info('BP_STORE: expense_projection combined', [
+                    'application_id' => $application->id,
+                    'count' => count($expenseProjection),
+                    'data' => $expenseProjection,
+                ]);
             }
         }
+
+        $payloadForSave = array_merge(
+            $cleanedData,
+            [
+                'has_registered_business' => $request->has('has_registered_business') ? (bool)$request->has_registered_business : null,
+                'has_seasonal_workers' => $request->has('has_seasonal_workers') ? (bool)$request->has_seasonal_workers : null,
+                'finances_notice_confirmed' => $request->boolean('finances_notice_confirmed'),
+            ]
+        );
+
+        $existingBefore = BusinessPlan::where('application_id', $application->id)->first();
+
+        Log::info('BP_STORE: before updateOrCreate', [
+            'application_id' => $application->id,
+            'existing_bp_id' => $existingBefore?->id,
+            'payload_keys' => array_keys($payloadForSave),
+            'payload_scalars' => [
+                'business_idea_name' => $payloadForSave['business_idea_name'] ?? null,
+                'applicant_name' => $payloadForSave['applicant_name'] ?? null,
+                'applicant_jmbg' => $payloadForSave['applicant_jmbg'] ?? null,
+                'applicant_address' => $payloadForSave['applicant_address'] ?? null,
+                'applicant_phone' => $payloadForSave['applicant_phone'] ?? null,
+                'applicant_email' => $payloadForSave['applicant_email'] ?? null,
+                'summary_len' => isset($payloadForSave['summary']) && is_string($payloadForSave['summary']) ? strlen($payloadForSave['summary']) : null,
+                'required_amount' => $payloadForSave['required_amount'] ?? null,
+                'requested_amount' => $payloadForSave['requested_amount'] ?? null,
+                'finances_notice_confirmed' => $payloadForSave['finances_notice_confirmed'] ?? null,
+            ],
+            'payload_table_counts' => collect($tableFields)->mapWithKeys(function ($field) use ($payloadForSave) {
+                $value = $payloadForSave[$field] ?? null;
+                return [$field => is_array($value) ? count($value) : ($value === null ? 'null' : gettype($value))];
+            })->all(),
+            'fillable_diff' => array_values(array_diff(array_keys($payloadForSave), (new BusinessPlan())->getFillable())),
+        ]);
 
         // Kreiraj ili ažuriraj biznis plan
         $businessPlan = BusinessPlan::updateOrCreate(
             ['application_id' => $application->id],
-            array_merge(
-                $cleanedData,
-                [
-                    'has_registered_business' => $request->has('has_registered_business') ? (bool)$request->has_registered_business : null,
-                    'has_seasonal_workers' => $request->has('has_seasonal_workers') ? (bool)$request->has_seasonal_workers : null,
-                    'finances_notice_confirmed' => $request->boolean('finances_notice_confirmed'),
-                ]
-            )
+            $payloadForSave
         );
 
         $businessPlan->refresh();
+
+        Log::info('BP_STORE: after updateOrCreate', [
+            'application_id' => $application->id,
+            'business_plan_id' => $businessPlan->id,
+            'was_recently_created' => $businessPlan->wasRecentlyCreated,
+            'db_scalars' => [
+                'business_idea_name' => $businessPlan->business_idea_name,
+                'applicant_name' => $businessPlan->applicant_name,
+                'applicant_jmbg' => $businessPlan->applicant_jmbg,
+                'applicant_address' => $businessPlan->applicant_address,
+                'applicant_phone' => $businessPlan->applicant_phone,
+                'applicant_email' => $businessPlan->applicant_email,
+                'summary_len' => is_string($businessPlan->summary) ? strlen($businessPlan->summary) : null,
+                'required_amount' => $businessPlan->required_amount,
+                'requested_amount' => $businessPlan->requested_amount,
+                'finances_notice_confirmed' => $businessPlan->finances_notice_confirmed,
+            ],
+            'db_table_counts' => [
+                'products_services_table' => is_array($businessPlan->products_services_table) ? count($businessPlan->products_services_table) : null,
+                'target_customers' => is_array($businessPlan->target_customers) ? count($businessPlan->target_customers) : null,
+                'sales_locations' => is_array($businessPlan->sales_locations) ? count($businessPlan->sales_locations) : null,
+                'pricing_table' => is_array($businessPlan->pricing_table) ? count($businessPlan->pricing_table) : null,
+                'revenue_share_table' => is_array($businessPlan->revenue_share_table) ? count($businessPlan->revenue_share_table) : null,
+                'employment_structure' => is_array($businessPlan->employment_structure) ? count($businessPlan->employment_structure) : null,
+                'business_history' => is_array($businessPlan->business_history) ? count($businessPlan->business_history) : null,
+                'suppliers_table' => is_array($businessPlan->suppliers_table) ? count($businessPlan->suppliers_table) : null,
+                'funding_sources_table' => is_array($businessPlan->funding_sources_table) ? count($businessPlan->funding_sources_table) : null,
+                'revenue_projection' => is_array($businessPlan->revenue_projection) ? count($businessPlan->revenue_projection) : null,
+                'expense_projection' => is_array($businessPlan->expense_projection) ? count($businessPlan->expense_projection) : null,
+                'job_schedule' => is_array($businessPlan->job_schedule) ? count($businessPlan->job_schedule) : null,
+                'risk_matrix' => is_array($businessPlan->risk_matrix) ? count($businessPlan->risk_matrix) : null,
+            ],
+            'dirty_after_refresh' => $businessPlan->getDirty(),
+        ]);
 
         $resolvedRequired = $businessPlan->resolvedRequiredAmount();
         $resolvedRequested = $businessPlan->resolvedRequestedAmount();
@@ -433,6 +618,11 @@ class BusinessPlanController extends Controller
             $businessPlanUpdates['requested_amount'] = $resolvedRequested;
         }
         if (!empty($businessPlanUpdates)) {
+            Log::info('BP_STORE: syncing resolved amounts on BP', [
+                'application_id' => $application->id,
+                'business_plan_id' => $businessPlan->id,
+                'updates' => $businessPlanUpdates,
+            ]);
             $businessPlan->update($businessPlanUpdates);
             $businessPlan->refresh();
         }
@@ -446,8 +636,20 @@ class BusinessPlanController extends Controller
             $applicationUpdate['requested_amount'] = $resolvedRequested;
         }
         if (!empty($applicationUpdate)) {
+            Log::info('BP_STORE: syncing amounts to application', [
+                'application_id' => $application->id,
+                'updates' => $applicationUpdate,
+            ]);
             $application->update($applicationUpdate);
         }
+
+        Log::info('BP_STORE: done', [
+            'application_id' => $application->id,
+            'business_plan_id' => $businessPlan->id,
+            'is_draft' => $isDraft,
+            'is_complete' => $businessPlan->isComplete(),
+            'redirect' => $isDraft ? 'dashboard' : 'applications.show',
+        ]);
 
         // Ako je sačuvano kao nacrt, vrati korisnika na Moj Panel
         if ($isDraft) {
