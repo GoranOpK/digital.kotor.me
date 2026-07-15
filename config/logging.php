@@ -65,6 +65,13 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'business_plan' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/business-plan.log'),
+            'level' => 'debug',
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

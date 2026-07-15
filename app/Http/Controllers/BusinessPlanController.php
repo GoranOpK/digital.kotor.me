@@ -16,6 +16,34 @@ use Illuminate\View\View;
 class BusinessPlanController extends Controller
 {
     /**
+     * Pouzdano logovanje za debug čuvanja biznis plana.
+     * Piše u laravel.log, channel business_plan i direktno u fajl (fallback).
+     */
+    protected function bpLog(string $message, array $context = [], string $level = 'info'): void
+    {
+        try {
+            Log::channel('business_plan')->{$level}($message, $context);
+        } catch (\Throwable $e) {
+            // ignore channel errors
+        }
+
+        try {
+            Log::{$level}($message, $context);
+        } catch (\Throwable $e) {
+            // ignore facade errors
+        }
+
+        try {
+            $line = '[' . now()->toDateTimeString() . "] {$level}: {$message} "
+                . json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                . PHP_EOL;
+            @file_put_contents(storage_path('logs/business-plan.log'), $line, FILE_APPEND | LOCK_EX);
+        } catch (\Throwable $e) {
+            // ignore filesystem errors
+        }
+    }
+
+    /**
      * PIB iz Obrasca 1a/1b (prijava) ili korisničkog profila.
      */
     protected function resolvePibFromApplication(Application $application, $user): ?string
@@ -36,6 +64,12 @@ class BusinessPlanController extends Controller
      */
     public function create(Application $application): View
     {
+        $this->bpLog('BP_CREATE: entered create()', [
+            'application_id' => $application->id,
+            'auth_user_id' => Auth::id(),
+            'url' => request()->fullUrl(),
+        ]);
+
         // Prikaz biznis plana:
         // - vlasnik prijave uvijek može da vidi/uređuje
         // - član komisije može da vidi samo biznis plan za konkurse dodijeljene njegovoj komisiji (read-only)
@@ -93,7 +127,7 @@ class BusinessPlanController extends Controller
         // Proveri da li već postoji biznis plan
         $businessPlan = $application->businessPlan;
 
-        Log::info('BP_CREATE: open form', [
+        $this->bpLog('BP_CREATE: open form', [
             'application_id' => $application->id,
             'user_id' => $user->id,
             'is_owner' => $isOwner,
@@ -162,14 +196,14 @@ class BusinessPlanController extends Controller
             $businessPlan->setAttribute('investment_expenses', $investmentExpenses);
             $businessPlan->setAttribute('operating_expenses', $operatingExpenses);
 
-            Log::info('BP_CREATE: expense split for view', [
+            $this->bpLog('BP_CREATE: expense split for view', [
                 'application_id' => $application->id,
                 'business_plan_id' => $businessPlan->id,
                 'investment_count' => count($investmentExpenses),
                 'operating_count' => count($operatingExpenses),
             ]);
         } else {
-            Log::info('BP_CREATE: no business plan found', [
+            $this->bpLog('BP_CREATE: no business plan found', [
                 'application_id' => $application->id,
             ]);
         }
@@ -253,7 +287,7 @@ class BusinessPlanController extends Controller
      */
     public function store(Request $request, Application $application): RedirectResponse
     {
-        Log::info('BP_STORE: start', [
+        $this->bpLog('BP_STORE: start', [
             'application_id' => $application->id,
             'user_id' => Auth::id(),
             'method' => $request->method(),
@@ -266,7 +300,7 @@ class BusinessPlanController extends Controller
         $user = Auth::user();
         $roleName = $user->role ? $user->role->name : null;
         if ($roleName === 'komisija') {
-            Log::warning('BP_STORE: blocked commission member', [
+            $this->bpLog('BP_STORE: blocked commission member', [
                 'application_id' => $application->id,
                 'user_id' => $user->id,
             ]);
@@ -275,7 +309,7 @@ class BusinessPlanController extends Controller
         
         // Proveri da li prijava pripada korisniku
         if ($application->user_id !== Auth::id()) {
-            Log::warning('BP_STORE: ownership mismatch', [
+            $this->bpLog('BP_STORE: ownership mismatch', [
                 'application_id' => $application->id,
                 'application_user_id' => $application->user_id,
                 'auth_user_id' => Auth::id(),
@@ -286,7 +320,7 @@ class BusinessPlanController extends Controller
         // Proveri da li se čuva kao nacrt
         $isDraft = $request->has('save_as_draft') && $request->save_as_draft === '1';
 
-        Log::info('BP_STORE: before validate', [
+        $this->bpLog('BP_STORE: before validate', [
             'application_id' => $application->id,
             'is_draft' => $isDraft,
             'scalar_preview' => [
@@ -391,7 +425,7 @@ class BusinessPlanController extends Controller
             'finances_notice_confirmed.accepted' => 'Potrebno je potvrditi da ste pročitali napomenu u dijelu IV. Finansije.',
         ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
-            Log::warning('BP_STORE: validation failed', [
+            $this->bpLog('BP_STORE: validation failed', [
                 'application_id' => $application->id,
                 'is_draft' => $isDraft,
                 'errors' => $e->errors(),
@@ -399,7 +433,7 @@ class BusinessPlanController extends Controller
             throw $e;
         }
 
-        Log::info('BP_STORE: validation ok', [
+        $this->bpLog('BP_STORE: validation ok', [
             'application_id' => $application->id,
             'validated_keys' => array_keys($validated),
             'validated_scalars' => [
@@ -523,7 +557,7 @@ class BusinessPlanController extends Controller
             
             if (!empty($expenseProjection)) {
                 $cleanedData['expense_projection'] = $expenseProjection;
-                Log::info('BP_STORE: expense_projection combined', [
+                $this->bpLog('BP_STORE: expense_projection combined', [
                     'application_id' => $application->id,
                     'count' => count($expenseProjection),
                     'data' => $expenseProjection,
@@ -542,7 +576,7 @@ class BusinessPlanController extends Controller
 
         $existingBefore = BusinessPlan::where('application_id', $application->id)->first();
 
-        Log::info('BP_STORE: before updateOrCreate', [
+        $this->bpLog('BP_STORE: before updateOrCreate', [
             'application_id' => $application->id,
             'existing_bp_id' => $existingBefore?->id,
             'payload_keys' => array_keys($payloadForSave),
@@ -573,7 +607,7 @@ class BusinessPlanController extends Controller
 
         $businessPlan->refresh();
 
-        Log::info('BP_STORE: after updateOrCreate', [
+        $this->bpLog('BP_STORE: after updateOrCreate', [
             'application_id' => $application->id,
             'business_plan_id' => $businessPlan->id,
             'was_recently_created' => $businessPlan->wasRecentlyCreated,
@@ -618,7 +652,7 @@ class BusinessPlanController extends Controller
             $businessPlanUpdates['requested_amount'] = $resolvedRequested;
         }
         if (!empty($businessPlanUpdates)) {
-            Log::info('BP_STORE: syncing resolved amounts on BP', [
+            $this->bpLog('BP_STORE: syncing resolved amounts on BP', [
                 'application_id' => $application->id,
                 'business_plan_id' => $businessPlan->id,
                 'updates' => $businessPlanUpdates,
@@ -636,14 +670,14 @@ class BusinessPlanController extends Controller
             $applicationUpdate['requested_amount'] = $resolvedRequested;
         }
         if (!empty($applicationUpdate)) {
-            Log::info('BP_STORE: syncing amounts to application', [
+            $this->bpLog('BP_STORE: syncing amounts to application', [
                 'application_id' => $application->id,
                 'updates' => $applicationUpdate,
             ]);
             $application->update($applicationUpdate);
         }
 
-        Log::info('BP_STORE: done', [
+        $this->bpLog('BP_STORE: done', [
             'application_id' => $application->id,
             'business_plan_id' => $businessPlan->id,
             'is_draft' => $isDraft,
