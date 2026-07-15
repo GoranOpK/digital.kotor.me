@@ -410,7 +410,7 @@ class ApplicationController extends Controller
                     : $existingApplication->applicant_jmbg,
                 'physical_person_name' => $request->filled('physical_person_name') ? $request->physical_person_name : $existingApplication->physical_person_name,
                 'physical_person_jmbg' => $request->filled('physical_person_jmbg') ? $request->physical_person_jmbg : $existingApplication->physical_person_jmbg,
-                'physical_person_phone' => $request->filled('physical_person_phone') ? $request->physical_person_phone : $existingApplication->physical_person_phone,
+                'physical_person_phone' => $request->filled('physical_person_phone') ? \App\Support\PhoneNumber::normalize($request->physical_person_phone) : $existingApplication->physical_person_phone,
                 'physical_person_email' => $request->filled('physical_person_email') ? $request->physical_person_email : $existingApplication->physical_person_email,
                 'requested_amount' => $request->filled('requested_amount') ? $request->requested_amount : $existingApplication->requested_amount,
                 'total_budget_needed' => $request->filled('total_budget_needed') ? $request->total_budget_needed : $existingApplication->total_budget_needed,
@@ -452,7 +452,7 @@ class ApplicationController extends Controller
                     // Polja za fizičko lice BEZ registrovane djelatnosti (samo za 'fizicko_lice' tip)
                     'physical_person_name' => $request->filled('physical_person_name') ? $request->physical_person_name : null,
                     'physical_person_jmbg' => $request->filled('physical_person_jmbg') ? $request->physical_person_jmbg : null,
-                    'physical_person_phone' => $request->filled('physical_person_phone') ? $request->physical_person_phone : null,
+                    'physical_person_phone' => $request->filled('physical_person_phone') ? \App\Support\PhoneNumber::normalize($request->physical_person_phone) : null,
                     'physical_person_email' => $request->filled('physical_person_email') ? $request->physical_person_email : null,
                     'requested_amount' => $request->filled('requested_amount') ? $request->requested_amount : null,
                     'total_budget_needed' => $request->filled('total_budget_needed') ? $request->total_budget_needed : null,
