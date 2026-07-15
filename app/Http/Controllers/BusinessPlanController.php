@@ -387,6 +387,8 @@ class BusinessPlanController extends Controller
             'employment_structure' => 'nullable|array',
             'has_seasonal_workers' => 'nullable|boolean',
             'competition_analysis' => 'nullable|string',
+            'competition_analysis_part1' => 'nullable|string',
+            'competition_analysis_part2' => 'nullable|string',
             
             // III. POSLOVANJE
             'business_analysis' => 'nullable|string',
@@ -466,6 +468,17 @@ class BusinessPlanController extends Controller
         $cleanedData = $validated;
         unset($cleanedData['finances_notice_confirmed']);
 
+        // Spoji dva textarea polja analize konkurencije u jedno DB polje
+        $competitionPart1 = trim((string) $request->input('competition_analysis_part1', ''));
+        $competitionPart2 = trim((string) $request->input('competition_analysis_part2', ''));
+        unset($cleanedData['competition_analysis_part1'], $cleanedData['competition_analysis_part2']);
+        if ($competitionPart1 !== '' || $competitionPart2 !== '') {
+            $cleanedData['competition_analysis'] = trim($competitionPart1 . ($competitionPart1 !== '' && $competitionPart2 !== '' ? "\n\n---\n\n" : '') . $competitionPart2);
+        } elseif ($request->has('competition_analysis_part1') || $request->has('competition_analysis_part2')) {
+            // Eksplicitno prazna oba dijela – sačuvaj prazan tekst umjesto da ostavimo staro
+            $cleanedData['competition_analysis'] = null;
+        }
+
         if (array_key_exists('applicant_phone', $cleanedData)) {
             $cleanedData['applicant_phone'] = PhoneNumber::normalize($cleanedData['applicant_phone']);
         }
@@ -480,42 +493,52 @@ class BusinessPlanController extends Controller
             }
         }
 
+        $rowHasValue = static function ($row): bool {
+            if (!is_array($row)) {
+                return false;
+            }
+            foreach ($row as $value) {
+                if (is_array($value)) {
+                    continue;
+                }
+                if ($value !== null && $value !== '' && trim((string) $value) !== '') {
+                    return true;
+                }
+            }
+            return false;
+        };
+
         foreach ($tableFields as $field) {
             // Koristi podatke direktno iz request-a, ne iz validated
             if ($request->has($field) && is_array($request->input($field))) {
                 $tableData = $request->input($field);
-                
+
+                $this->bpLog('BP_STORE: raw table sample', [
+                    'application_id' => $application->id,
+                    'field' => $field,
+                    'raw_count' => count($tableData),
+                    'first_row' => $tableData[0] ?? ($tableData[array_key_first($tableData)] ?? null),
+                ]);
+
                 // Filtriraj prazne redove - zadrži samo redove gdje je barem jedno polje popunjeno
-                $cleanedData[$field] = array_filter($tableData, function($row) {
-                    if (!is_array($row)) return false;
-                    // Provjeri da li je barem jedno polje u redu popunjeno
-                    foreach ($row as $key => $value) {
-                        // Preskoči null vrijednosti i prazne stringove
-                        if ($value !== null && $value !== '' && trim($value) !== '') {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-                // Resetuj array ključeve da budu sekvencijalni (0, 1, 2, ...)
-                $cleanedData[$field] = array_values($cleanedData[$field]);
-                
-                // Ako je niz prazan nakon filtriranja, postavi na null da se ne čuva prazan niz
+                $cleanedData[$field] = array_values(array_filter($tableData, $rowHasValue));
+
+                // VAŽNO: ako su svi redovi prazni, NE briši postojeće podatke iz baze
+                // (prazni placeholder redovi bi inače pregazili ranije sačuvane tabele)
                 if (empty($cleanedData[$field])) {
-                    $cleanedData[$field] = null;
+                    unset($cleanedData[$field]);
+                    $this->bpLog('BP_STORE: table empty in request – preserving existing DB value', [
+                        'application_id' => $application->id,
+                        'field' => $field,
+                    ]);
                 }
             } elseif (isset($cleanedData[$field]) && is_array($cleanedData[$field])) {
-                // Ako nema u request-u, ali ima u validated, koristi validated
-                $cleanedData[$field] = array_filter($cleanedData[$field], function($row) {
-                    if (!is_array($row)) return false;
-                    foreach ($row as $value) {
-                        if (!empty($value) && trim($value) !== '') {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-                $cleanedData[$field] = array_values($cleanedData[$field]);
+                $cleanedData[$field] = array_values(array_filter($cleanedData[$field], $rowHasValue));
+                if (empty($cleanedData[$field])) {
+                    unset($cleanedData[$field]);
+                }
+            } else {
+                unset($cleanedData[$field]);
             }
         }
         
@@ -524,32 +547,16 @@ class BusinessPlanController extends Controller
             $expenseProjection = [];
             
             if ($request->has('investment_expenses') && is_array($request->input('investment_expenses'))) {
-                $investmentExpenses = array_filter($request->input('investment_expenses'), function($row) {
-                    if (!is_array($row)) return false;
-                    foreach ($row as $value) {
-                        if (!empty($value) && trim($value) !== '') {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-                foreach (array_values($investmentExpenses) as $expense) {
+                $investmentExpenses = array_values(array_filter($request->input('investment_expenses'), $rowHasValue));
+                foreach ($investmentExpenses as $expense) {
                     $expense['category'] = 'investment';
                     $expenseProjection[] = $expense;
                 }
             }
             
             if ($request->has('operating_expenses') && is_array($request->input('operating_expenses'))) {
-                $operatingExpenses = array_filter($request->input('operating_expenses'), function($row) {
-                    if (!is_array($row)) return false;
-                    foreach ($row as $value) {
-                        if (!empty($value) && trim($value) !== '') {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-                foreach (array_values($operatingExpenses) as $expense) {
+                $operatingExpenses = array_values(array_filter($request->input('operating_expenses'), $rowHasValue));
+                foreach ($operatingExpenses as $expense) {
                     $expense['category'] = 'operating';
                     $expenseProjection[] = $expense;
                 }
@@ -561,6 +568,12 @@ class BusinessPlanController extends Controller
                     'application_id' => $application->id,
                     'count' => count($expenseProjection),
                     'data' => $expenseProjection,
+                ]);
+            } else {
+                // Nemoj pregaziti postojeći expense_projection praznim placeholderima
+                unset($cleanedData['expense_projection']);
+                $this->bpLog('BP_STORE: expense_projection empty – preserving existing', [
+                    'application_id' => $application->id,
                 ]);
             }
         }

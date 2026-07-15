@@ -1130,13 +1130,25 @@
                             <label class="form-label">
                                 17. Analiza konkurencije
                             </label>
+                            @php
+                                $competitionAnalysisValue = old('competition_analysis', $businessPlan->competition_analysis ?? '');
+                                $competitionPart1 = old('competition_analysis_part1');
+                                $competitionPart2 = old('competition_analysis_part2');
+                                if ($competitionPart1 === null && $competitionPart2 === null && is_string($competitionAnalysisValue) && $competitionAnalysisValue !== '') {
+                                    $parts = preg_split("/\n\n---\n\n/", $competitionAnalysisValue, 2);
+                                    $competitionPart1 = $parts[0] ?? '';
+                                    $competitionPart2 = $parts[1] ?? '';
+                                }
+                                $competitionPart1 = $competitionPart1 ?? '';
+                                $competitionPart2 = $competitionPart2 ?? '';
+                            @endphp
                             <div class="form-group">
                                 <label class="form-label">Da li isti ili slični proizvodi već postoje na lokalnom nivou? (Izbjegavajte odgovore kojima se negira postojanje konkurencije.)</label>
-                                <textarea name="competition_analysis" class="form-control" rows="6">{{ old('competition_analysis', $businessPlan->competition_analysis ?? '') }}</textarea>
+                                <textarea name="competition_analysis_part1" class="form-control" rows="6">{{ $competitionPart1 }}</textarea>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">Navedite jake i slabe strane konkurencije. (Proširite tabelu koliko je potrebno)</label>
-                                <textarea name="competition_analysis" class="form-control" rows="6">{{ old('competition_analysis', $businessPlan->competition_analysis ?? '') }}</textarea>
+                                <textarea name="competition_analysis_part2" class="form-control" rows="6">{{ $competitionPart2 }}</textarea>
                             </div>
                         </div>
                     </div>

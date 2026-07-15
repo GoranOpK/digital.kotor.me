@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -88,9 +89,8 @@ class BusinessPlan extends Model
         'pricing_table' => 'array',
         'revenue_share_table' => 'array',
         'employment_structure' => 'array',
-        'competition_analysis' => 'array',
+        // competition_analysis i required_resources su tekstualna polja (textarea), ne JSON nizovi
         'business_history' => 'array',
-        'required_resources' => 'array',
         'suppliers_table' => 'array',
         'funding_sources_table' => 'array',
         'revenue_projection' => 'array',
@@ -105,6 +105,38 @@ class BusinessPlan extends Model
     public function application(): BelongsTo
     {
         return $this->belongsTo(Application::class);
+    }
+
+    /**
+     * Ranije su ova polja pogrešno bila cast-ovana kao array, pa u bazi mogu biti
+     * JSON stringovi ("tekst"). Accessor vraća čist tekst za formu.
+     */
+    protected function competitionAnalysis(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $this->normalizeStoredText($value),
+        );
+    }
+
+    protected function requiredResources(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $this->normalizeStoredText($value),
+        );
+    }
+
+    protected function normalizeStoredText(?string $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return $value;
+        }
+
+        $decoded = json_decode($value, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_string($decoded)) {
+            return $decoded;
+        }
+
+        return $value;
     }
 
     /**
