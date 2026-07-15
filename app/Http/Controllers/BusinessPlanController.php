@@ -297,6 +297,7 @@ class BusinessPlanController extends Controller
             'content_length' => $request->header('Content-Length'),
             'save_as_draft_raw' => $request->input('save_as_draft'),
             'request_keys' => array_keys($request->except(['_token'])),
+            'rendered_tables' => $request->input('rendered_tables', []),
         ]);
 
         // Blokiraj članove komisije od čuvanja izmjena
@@ -478,6 +479,10 @@ class BusinessPlanController extends Controller
 
         $cleanedData = $validated;
         unset($cleanedData['finances_notice_confirmed']);
+        $renderedTables = array_values(array_filter(
+            (array) $request->input('rendered_tables', []),
+            static fn ($field) => is_string($field) && $field !== ''
+        ));
 
         // Spoji dva textarea polja analize konkurencije u jedno DB polje
         $competitionPart1 = trim((string) $request->input('competition_analysis_part1', ''));
@@ -541,19 +546,43 @@ class BusinessPlanController extends Controller
                 // VAŽNO: ako su svi redovi prazni, NE briši postojeće podatke iz baze
                 // (prazni placeholder redovi bi inače pregazili ranije sačuvane tabele)
                 if (empty($cleanedData[$field])) {
-                    unset($cleanedData[$field]);
-                    $this->bpLog('BP_STORE: table empty in request – preserving existing DB value', [
-                        'application_id' => $application->id,
-                        'field' => $field,
-                    ]);
+                    if (in_array($field, $renderedTables, true)) {
+                        $cleanedData[$field] = [];
+                        $this->bpLog('BP_STORE: table intentionally cleared', [
+                            'application_id' => $application->id,
+                            'field' => $field,
+                        ]);
+                    } else {
+                        unset($cleanedData[$field]);
+                        $this->bpLog('BP_STORE: table empty in request – preserving existing DB value', [
+                            'application_id' => $application->id,
+                            'field' => $field,
+                        ]);
+                    }
                 }
             } elseif (isset($cleanedData[$field]) && is_array($cleanedData[$field])) {
                 $cleanedData[$field] = array_values(array_filter($cleanedData[$field], $rowHasValue));
                 if (empty($cleanedData[$field])) {
-                    unset($cleanedData[$field]);
+                    if (in_array($field, $renderedTables, true)) {
+                        $cleanedData[$field] = [];
+                        $this->bpLog('BP_STORE: table intentionally cleared', [
+                            'application_id' => $application->id,
+                            'field' => $field,
+                        ]);
+                    } else {
+                        unset($cleanedData[$field]);
+                    }
                 }
             } else {
-                unset($cleanedData[$field]);
+                if (in_array($field, $renderedTables, true)) {
+                    $cleanedData[$field] = [];
+                    $this->bpLog('BP_STORE: rendered table missing from request – clearing', [
+                        'application_id' => $application->id,
+                        'field' => $field,
+                    ]);
+                } else {
+                    unset($cleanedData[$field]);
+                }
             }
         }
         
@@ -585,11 +614,18 @@ class BusinessPlanController extends Controller
                     'data' => $expenseProjection,
                 ]);
             } else {
-                // Nemoj pregaziti postojeći expense_projection praznim placeholderima
-                unset($cleanedData['expense_projection']);
-                $this->bpLog('BP_STORE: expense_projection empty – preserving existing', [
-                    'application_id' => $application->id,
-                ]);
+                if (in_array('expense_projection', $renderedTables, true)) {
+                    $cleanedData['expense_projection'] = [];
+                    $this->bpLog('BP_STORE: expense_projection intentionally cleared', [
+                        'application_id' => $application->id,
+                    ]);
+                } else {
+                    // Nemoj pregaziti postojeći expense_projection praznim placeholderima
+                    unset($cleanedData['expense_projection']);
+                    $this->bpLog('BP_STORE: expense_projection empty – preserving existing', [
+                        'application_id' => $application->id,
+                    ]);
+                }
             }
         }
 

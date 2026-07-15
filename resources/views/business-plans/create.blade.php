@@ -630,6 +630,30 @@
 
         @php
             $readOnly = $readOnly ?? false;
+            $businessPlanTableFields = [
+                'products_services_table',
+                'target_customers',
+                'sales_locations',
+                'pricing_table',
+                'revenue_share_table',
+                'employment_structure',
+                'business_history',
+                'suppliers_table',
+                'funding_sources_table',
+                'revenue_projection',
+                'expense_projection',
+                'job_schedule',
+                'risk_matrix',
+            ];
+            $renderedTableFields = [];
+            if ($businessPlan) {
+                foreach ($businessPlanTableFields as $tableField) {
+                    $tableValue = $businessPlan->{$tableField};
+                    if (is_array($tableValue) && count($tableValue) > 0) {
+                        $renderedTableFields[] = $tableField;
+                    }
+                }
+            }
         @endphp
 
         @if($readOnly)
@@ -640,6 +664,9 @@
 
         <form method="POST" action="{{ $readOnly ? '#' : route('applications.business-plan.store', $application) }}" id="businessPlanForm" @if($readOnly) onsubmit="event.preventDefault(); return false;" @endif>
             @csrf
+            @foreach($renderedTableFields as $renderedTableField)
+                <input type="hidden" name="rendered_tables[]" value="{{ $renderedTableField }}">
+            @endforeach
 
             <!-- I. OSNOVNI PODACI -->
             <div class="form-card">
