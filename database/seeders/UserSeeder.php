@@ -2,14 +2,16 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\User; // Uvozimo User model
+use App\Models\User;
+use Illuminate\Database\Seeder; // Uvozimo User model
 use Illuminate\Support\Facades\Hash; // Za hešovanje lozinke
 
 class UserSeeder extends Seeder
 {
     /**
      * Popunjava tabelu 'users' sa test korisnicima.
+     *
+     * Superadmin se ne kreira ovdje — v. SuperAdminSeeder.
      */
     public function run(): void
     {
@@ -20,19 +22,6 @@ class UserSeeder extends Seeder
             'password' => Hash::make('password'), // Lozinka je 'password'
             'role_id' => 1, // admin
         ]);
-
-        // Super administrator (podatke čitamo iz .env ako su postavljeni)
-        $superAdminEmail = env('SUPERADMIN_EMAIL', 'superadmin@example.com');
-        $superAdminPass = env('SUPERADMIN_PASSWORD', 'password');
-
-        User::updateOrCreate(
-            ['email' => $superAdminEmail],
-            [
-                'name' => 'Super Admin',
-                'password' => Hash::make($superAdminPass),
-                'role_id' => 4, // superadmin
-            ]
-        );
 
         // Član komisije
         User::create([
@@ -47,7 +36,7 @@ class UserSeeder extends Seeder
             'name' => 'Prijavitelj',
             'email' => 'prijavitelj@example.com',
             'password' => Hash::make('password'), // Lozinka je 'password'
-            'role_id' => 3, // prijavitelj
+            'role_id' => 3, // prijavitelj / korisnik
         ]);
     }
 }

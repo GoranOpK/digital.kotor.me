@@ -8,6 +8,10 @@ class DatabaseSeeder extends Seeder
 {
     /**
      * Seed the application's database.
+     *
+     * Napomena: SuperAdminSeeder se namjerno NE poziva ovdje.
+     * Na produkciji pokrenuti isključivo:
+     * php artisan db:seed --class=SuperAdminSeeder
      */
     public function run(): void
     {
