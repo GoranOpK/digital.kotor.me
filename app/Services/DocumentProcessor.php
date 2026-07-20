@@ -587,19 +587,15 @@ class DocumentProcessor
             // Postavi DPI na 300 (bolji kvalitet za dokumente)
             $imagick->setResolution(300, 300);
             
-            if ($mime === 'application/pdf') {
-                // Za PDF: učitaj prvu stranicu
-                $imagick->readImage($filePath . '[0]');
-            } else {
-                // Za slike: učitaj direktno
-                $imagick->readImage($filePath);
+            // Za PDF: učitaj sve stranice; za slike: učitaj direktno
+            $imagick->readImage($filePath);
+            
+            // Konvertuj sve stranice u greyscale
+            foreach ($imagick as $page) {
+                $page->transformImageColorspace(\Imagick::COLORSPACE_GRAY);
+                $page->stripImage();
+                $page->setImageResolution(300, 300);
             }
-            
-            // Konvertuj u greyscale
-            $imagick->transformImageColorspace(\Imagick::COLORSPACE_GRAY);
-            
-            // Ukloni ICC profile i metapodatke
-            $imagick->stripImage();
             
             // Postavi format na PDF
             $imagick->setImageFormat('pdf');
@@ -612,14 +608,31 @@ class DocumentProcessor
             // Optimizuj PDF za manju veličinu
             $imagick->setOption('pdf:use-trimbox', 'true');
             
-            // Kreiraj PDF
-            $pdfData = $imagick->getImageBlob();
+            $pagesCount = $imagick->getNumberImages();
+
+            // Kreiraj PDF (writeImages za multi-page, getImageBlob za jednu sliku)
+            if ($mime === 'application/pdf') {
+                $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('processed_', true) . '.pdf';
+                $writeResult = $imagick->writeImages($tempPdfPath, true);
+
+                if (!$writeResult || !file_exists($tempPdfPath)) {
+                    $imagick->clear();
+                    $imagick->destroy();
+                    return false;
+                }
+
+                $pdfData = file_get_contents($tempPdfPath);
+                @unlink($tempPdfPath);
+            } else {
+                $pdfData = $imagick->getImageBlob();
+            }
             
             $imagick->clear();
             $imagick->destroy();
             
             Log::info('PHP Imagick conversion completed', [
-                'pdf_size' => strlen($pdfData)
+                'pdf_size' => strlen($pdfData),
+                'pages' => $mime === 'application/pdf' ? $pagesCount : 1,
             ]);
             
             // Proveri da li je PDF validan
@@ -672,10 +685,10 @@ class DocumentProcessor
             ]);
             
             if ($mime === 'application/pdf') {
-                // Za PDF: konvertuj prvu stranicu direktno u greyscale PDF sa 300 DPI
+                // Za PDF: konvertuj sve stranice u greyscale PDF sa 300 DPI
                 // Koristimo -colorspace Gray i -compress JPEG sa quality 70 za kompresiju
                 $command = sprintf(
-                    '%s -density 300 "%s[0]" -colorspace Gray -compress JPEG -quality 70 "%s" 2>&1',
+                    '%s -density 300 "%s" -colorspace Gray -compress JPEG -quality 70 "%s" 2>&1',
                     escapeshellarg($convertPath),
                     escapeshellarg($filePath),
                     escapeshellarg($tempPdfPath)
