@@ -14,8 +14,18 @@ class DocumentProcessor
     const MAX_STORAGE_PER_USER = 20 * 1024 * 1024; // 20 MB u bajtovima
 
     /**
+     * DPI za rasterizaciju PDF stranica (150 drži peak memoriju ispod tipičnog 128MB limita).
+     */
+    const PROCESS_DPI = 150;
+
+    /**
+     * Maksimalna veličina obrađenog PDF-a na disku (prije snimanja u storage).
+     */
+    const MAX_PROCESSED_PDF_BYTES = 10 * 1024 * 1024; // 10 MB
+
+    /**
      * Procesira upload-ovani dokument i kreira optimizovanu verziju fajla.
-     * Konvertuje u greyscale, 300 DPI i PDF format.
+     * Konvertuje u greyscale, PROCESS_DPI i PDF format.
      *
      * @param \Illuminate\Http\UploadedFile $file
      * @param int $userId
@@ -24,6 +34,9 @@ class DocumentProcessor
      */
     public function processDocument($file, int $userId, ?string $baseFilename = null): array
     {
+        $previousMemoryLimit = ini_get('memory_limit');
+        @ini_set('memory_limit', '256M');
+
         try {
             // Dozvoljeni tipovi – slike (JPEG/PNG) i PDF
             $mime = $file->getMimeType();
@@ -52,39 +65,55 @@ class DocumentProcessor
                 $outputFilename = "{$baseFilename}.pdf";
             }
             $outputPath = "{$directory}/{$outputFilename}";
+            $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('processed_doc_', true) . '.pdf';
+            $ok = false;
 
-            // Pokušaj da koristiš PHP Imagick ekstenziju direktno (najbrže i najpouzdanije)
-            $pdfData = false;
-            
-            if (extension_loaded('imagick')) {
-                $pdfData = $this->processWithPhpImagick($file->getRealPath(), $mime);
-            }
-            
-            // Ako PHP Imagick nije dostupan, pokušaj sa convert komandom
-            if ($pdfData === false) {
+            // Za PDF: preferiraj CLI convert (zaseban proces = manje PHP memorije)
+            if ($mime === 'application/pdf') {
                 $convertPath = $this->findImageMagickConvert();
                 if ($convertPath) {
-                    $pdfData = $this->processWithImageMagick($file->getRealPath(), $mime, $convertPath);
+                    $ok = $this->processWithImageMagick($file->getRealPath(), $mime, $convertPath, $tempPdfPath);
+                }
+                if (!$ok && extension_loaded('imagick')) {
+                    $ok = $this->processWithPhpImagick($file->getRealPath(), $mime, $tempPdfPath);
+                }
+            } else {
+                if (extension_loaded('imagick')) {
+                    $ok = $this->processWithPhpImagick($file->getRealPath(), $mime, $tempPdfPath);
+                }
+                if (!$ok) {
+                    $convertPath = $this->findImageMagickConvert();
+                    if ($convertPath) {
+                        $ok = $this->processWithImageMagick($file->getRealPath(), $mime, $convertPath, $tempPdfPath);
+                    }
+                }
+                // GD fallback (male slike) – upiši blob u temp fajl
+                if (!$ok) {
+                    $pdfData = $this->processWithGd($file, $mime);
+                    if ($pdfData !== false) {
+                        $ok = file_put_contents($tempPdfPath, $pdfData) !== false;
+                        unset($pdfData);
+                    }
                 }
             }
-            
-            // Ako ImageMagick nije dostupan ili nije uspeo, koristi GD metodu
-            if ($pdfData === false) {
-                $pdfData = $this->processWithGd($file, $mime);
-            }
 
-            if ($pdfData === false) {
+            if (!$ok || !is_file($tempPdfPath)) {
+                if (is_file($tempPdfPath)) {
+                    @unlink($tempPdfPath);
+                }
                 return [
                     'success' => false,
                     'error' => 'Greška pri obradi dokumenta. Proverite da li je ImageMagick instaliran ili da li je fajl validan.',
                 ];
             }
 
-            // Snimi PDF fajl privremeno u lokalni storage (pre upload-a na cloud)
-            $tempLocalPath = $outputPath;
-            Storage::disk('local')->put($tempLocalPath, $pdfData);
-
-            $fileSize = strlen($pdfData);
+            $stored = $this->storeProcessedPdfFromTemp($tempPdfPath, $outputPath);
+            if (!$stored['success']) {
+                return [
+                    'success' => false,
+                    'error' => $stored['error'] ?? 'Greška pri snimanju obrađenog PDF-a.',
+                ];
+            }
 
             // Napomena: Upload na MEGA se sada vrši direktno iz browser-a preko megajs
             // Ova metoda samo procesira i čuva fajl lokalno
@@ -92,9 +121,9 @@ class DocumentProcessor
 
             return [
                 'success' => true,
-                'file_path' => $tempLocalPath,
+                'file_path' => $outputPath,
                 'cloud_path' => null, // Postavlja se kada frontend uploaduje na MEGA
-                'file_size' => $fileSize,
+                'file_size' => $stored['file_size'],
                 'error' => null,
             ];
 
@@ -108,6 +137,10 @@ class DocumentProcessor
                 'success' => false,
                 'error' => 'Greška pri obradi dokumenta: ' . $e->getMessage(),
             ];
+        } finally {
+            if ($previousMemoryLimit !== false) {
+                @ini_set('memory_limit', $previousMemoryLimit);
+            }
         }
     }
 
@@ -251,6 +284,9 @@ class DocumentProcessor
      */
     public function mergeDocuments(array $files, int $userId, ?string $baseFilename = null): array
     {
+        $previousMemoryLimit = ini_get('memory_limit');
+        @ini_set('memory_limit', '256M');
+
         try {
             if (empty($files)) {
                 return [
@@ -303,12 +339,12 @@ class DocumentProcessor
 
             // Kreiraj Imagick objekat za spajanje
             $mergedPdf = new \Imagick();
-            $mergedPdf->setResolution(300, 300);
+            $mergedPdf->setResolution(self::PROCESS_DPI, self::PROCESS_DPI);
 
             $tempFiles = [];
 
             try {
-                // Procesiraj svaki fajl i dodaj u merged PDF
+                // Procesiraj svaki fajl page-by-page (ne drži sve rastere ulaznog PDF-a odjednom)
                 foreach ($files as $index => $file) {
                     $mime = $file->getMimeType();
                     $allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
@@ -332,38 +368,34 @@ class DocumentProcessor
                         $tempFilePath = $file;
                     }
 
-                    // Učitaj fajl u Imagick
-                    $imagick = new \Imagick();
-                    $imagick->setResolution(300, 300);
+                    $pageCount = $mime === 'application/pdf'
+                        ? $this->getPdfPageCount($tempFilePath)
+                        : 1;
 
-                    if ($mime === 'application/pdf') {
-                        // Za PDF: učitaj sve stranice
-                        $imagick->readImage($tempFilePath);
-                    } else {
-                        // Za slike: učitaj direktno
-                        $imagick->readImage($tempFilePath);
+                    if ($pageCount < 1) {
+                        Log::warning('Could not determine page count, skipping file', [
+                            'path' => $tempFilePath,
+                            'mime' => $mime,
+                        ]);
+                        continue;
                     }
 
-                    // Konvertuj u greyscale
-                    $imagick->transformImageColorspace(\Imagick::COLORSPACE_GRAY);
-                    $imagick->stripImage();
-                    
-                    // Postavi rezoluciju za svaku sliku (300 DPI)
-                    $imagick->setImageResolution(300, 300);
+                    for ($pageIndex = 0; $pageIndex < $pageCount; $pageIndex++) {
+                        $page = new \Imagick();
+                        $page->setResolution(self::PROCESS_DPI, self::PROCESS_DPI);
 
-                    // Dodaj sve stranice u merged PDF
-                    // Za slike: svaka slika je jedna stranica
-                    // Za PDF: sve stranice iz PDF-a se dodaju
-                    foreach ($imagick as $page) {
-                        // Postavi rezoluciju za svaku stranicu
-                        $page->setImageResolution(300, 300);
-                        
-                        // Dodaj stranicu u merged PDF
+                        if ($mime === 'application/pdf') {
+                            $page->readImage($tempFilePath . '[' . $pageIndex . ']');
+                        } else {
+                            $page->readImage($tempFilePath);
+                        }
+
+                        $this->prepareImagickPageForPdf($page);
                         $mergedPdf->addImage($page);
+                        $page->clear();
+                        $page->destroy();
+                        unset($page);
                     }
-
-                    $imagick->clear();
-                    $imagick->destroy();
                 }
 
                 if ($mergedPdf->getNumberImages() === 0) {
@@ -380,26 +412,26 @@ class DocumentProcessor
                     'files_count' => count($files)
                 ]);
 
-                // Postavi format i kompresiju za sve stranice u merged PDF-u
-                $mergedPdf->setImageFormat('pdf');
-                $mergedPdf->setImageCompression(\Imagick::COMPRESSION_JPEG);
-                $mergedPdf->setImageCompressionQuality(70);
-                $mergedPdf->setOption('pdf:use-trimbox', 'true');
+                // Kompresija mora na SVAKI frame (setImage* inače dira samo trenutni)
+                foreach ($mergedPdf as $frame) {
+                    $this->prepareImagickPageForPdf($frame);
+                }
                 
-                // Generiši PDF sa svim stranicama koristeći writeImages
-                // true = append sve stranice u jedan multi-page PDF
-                // Svaka slika je jedna stranica u finalnom PDF-u
                 $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('merged_pdf_', true) . '.pdf';
                 $writeResult = $mergedPdf->writeImages($tempPdfPath, true);
+                $imagesCount = $mergedPdf->getNumberImages();
+
+                // Oslobodi Imagick PRIJE bilo kakvog čitanja fajla u PHP
+                $mergedPdf->clear();
+                $mergedPdf->destroy();
+                unset($mergedPdf);
                 
                 if (!$writeResult || !file_exists($tempPdfPath)) {
                     Log::error('writeImages failed', [
-                        'images_count' => $mergedPdf->getNumberImages(),
+                        'images_count' => $imagesCount,
                         'write_result' => $writeResult,
                         'temp_path' => $tempPdfPath
                     ]);
-                    $mergedPdf->clear();
-                    $mergedPdf->destroy();
                     return [
                         'success' => false,
                         'error' => 'Greška pri kreiranju PDF-a sa stranicama.',
@@ -407,61 +439,18 @@ class DocumentProcessor
                 }
                 
                 Log::info('writeImages successful', [
-                    'images_count' => $mergedPdf->getNumberImages(),
+                    'images_count' => $imagesCount,
                     'temp_path' => $tempPdfPath,
                     'file_size' => filesize($tempPdfPath)
                 ]);
-                
-                // Pročitaj kreirani PDF
-                $pdfData = file_get_contents($tempPdfPath);
-                @unlink($tempPdfPath);
-                
-                if ($pdfData === false || empty($pdfData)) {
-                    Log::error('Failed to read PDF file', [
-                        'temp_path' => $tempPdfPath
-                    ]);
-                    $mergedPdf->clear();
-                    $mergedPdf->destroy();
+
+                $stored = $this->storeProcessedPdfFromTemp($tempPdfPath, $outputPath);
+                if (!$stored['success']) {
                     return [
                         'success' => false,
-                        'error' => 'Greška pri čitanju kreiranog PDF-a.',
+                        'error' => $stored['error'] ?? 'Greška pri snimanju spojenog PDF-a.',
                     ];
                 }
-
-                // Očisti memoriju
-                $mergedPdf->clear();
-                $mergedPdf->destroy();
-
-                // Proveri da li je PDF validan
-                if ($pdfData === false || empty($pdfData) || strlen($pdfData) < 100) {
-                    Log::error('Merged PDF data is invalid or too small', [
-                        'data_length' => $pdfData ? strlen($pdfData) : 0,
-                        'files_count' => count($files)
-                    ]);
-                    return [
-                        'success' => false,
-                        'error' => 'Greška pri spajanju fajlova u PDF.',
-                    ];
-                }
-
-                // Proveri da li PDF počinje sa validnim PDF header-om
-                $pdfHeader = substr($pdfData, 0, 8);
-                if (strpos($pdfData, '%PDF') !== 0) {
-                    Log::error('Merged PDF does not start with valid PDF header', [
-                        'header' => $pdfHeader,
-                        'data_length' => strlen($pdfData),
-                        'files_count' => count($files)
-                    ]);
-                    return [
-                        'success' => false,
-                        'error' => 'Spojeni PDF nije validan. Header: ' . $pdfHeader,
-                    ];
-                }
-
-                // Snimi merged PDF lokalno
-                $tempLocalPath = $outputPath;
-                Storage::disk('local')->put($tempLocalPath, $pdfData);
-                $fileSize = strlen($pdfData);
 
                 // Napomena: Upload na MEGA se sada vrši direktno iz browser-a preko megajs
                 // Ova metoda samo procesira i čuva fajl lokalno
@@ -469,9 +458,9 @@ class DocumentProcessor
 
                 return [
                     'success' => true,
-                    'file_path' => $tempLocalPath,
+                    'file_path' => $outputPath,
                     'cloud_path' => null, // Postavlja se kada frontend uploaduje na MEGA
-                    'file_size' => $fileSize,
+                    'file_size' => $stored['file_size'],
                     'error' => null,
                 ];
 
@@ -495,6 +484,10 @@ class DocumentProcessor
                 'success' => false,
                 'error' => 'Greška pri spajanju dokumenata: ' . $e->getMessage(),
             ];
+        } finally {
+            if ($previousMemoryLimit !== false) {
+                @ini_set('memory_limit', $previousMemoryLimit);
+            }
         }
     }
 
@@ -568,13 +561,15 @@ class DocumentProcessor
     }
 
     /**
-     * Obrađuje dokument koristeći PHP Imagick ekstenziju direktno
+     * Obrađuje dokument koristeći PHP Imagick ekstenziju direktno.
+     * Piše rezultat na $outputTempPath (ne učitava cijeli PDF u PHP string).
      *
      * @param string $filePath
      * @param string $mime
-     * @return string|false PDF data
+     * @param string $outputTempPath
+     * @return bool
      */
-    protected function processWithPhpImagick(string $filePath, string $mime)
+    protected function processWithPhpImagick(string $filePath, string $mime, string $outputTempPath): bool
     {
         try {
             Log::info('Starting PHP Imagick conversion', [
@@ -582,126 +577,111 @@ class DocumentProcessor
                 'file_path' => $filePath
             ]);
 
-            $imagick = new \Imagick();
-            
-            // Postavi DPI na 300 (bolji kvalitet za dokumente)
-            $imagick->setResolution(300, 300);
-            
-            // Za PDF: učitaj sve stranice; za slike: učitaj direktno
-            $imagick->readImage($filePath);
-            
-            // Konvertuj sve stranice u greyscale
-            foreach ($imagick as $page) {
-                $page->transformImageColorspace(\Imagick::COLORSPACE_GRAY);
-                $page->stripImage();
-                $page->setImageResolution(300, 300);
-            }
-            
-            // Postavi format na PDF
-            $imagick->setImageFormat('pdf');
-            
-            // Postavi kompresiju za manji PDF
-            // Koristimo JPEG kompresiju sa kvalitetom 70 za veću kompresiju
-            $imagick->setImageCompression(\Imagick::COMPRESSION_JPEG);
-            $imagick->setImageCompressionQuality(70);
-            
-            // Optimizuj PDF za manju veličinu
-            $imagick->setOption('pdf:use-trimbox', 'true');
-            
-            $pagesCount = $imagick->getNumberImages();
+            $output = new \Imagick();
+            $output->setResolution(self::PROCESS_DPI, self::PROCESS_DPI);
 
-            // Kreiraj PDF (writeImages za multi-page, getImageBlob za jednu sliku)
             if ($mime === 'application/pdf') {
-                $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('processed_', true) . '.pdf';
-                $writeResult = $imagick->writeImages($tempPdfPath, true);
-
-                if (!$writeResult || !file_exists($tempPdfPath)) {
-                    $imagick->clear();
-                    $imagick->destroy();
+                $pageCount = $this->getPdfPageCount($filePath);
+                if ($pageCount < 1) {
                     return false;
                 }
 
-                $pdfData = file_get_contents($tempPdfPath);
-                @unlink($tempPdfPath);
+                for ($i = 0; $i < $pageCount; $i++) {
+                    $page = new \Imagick();
+                    $page->setResolution(self::PROCESS_DPI, self::PROCESS_DPI);
+                    $page->readImage($filePath . '[' . $i . ']');
+                    $this->prepareImagickPageForPdf($page);
+                    $output->addImage($page);
+                    $page->clear();
+                    $page->destroy();
+                    unset($page);
+                }
             } else {
-                $pdfData = $imagick->getImageBlob();
+                $page = new \Imagick();
+                $page->setResolution(self::PROCESS_DPI, self::PROCESS_DPI);
+                $page->readImage($filePath);
+                $this->prepareImagickPageForPdf($page);
+                $output->addImage($page);
+                $page->clear();
+                $page->destroy();
             }
-            
-            $imagick->clear();
-            $imagick->destroy();
-            
+
+            $pagesCount = $output->getNumberImages();
+            if ($pagesCount < 1) {
+                $output->clear();
+                $output->destroy();
+                return false;
+            }
+
+            foreach ($output as $frame) {
+                $this->prepareImagickPageForPdf($frame);
+            }
+
+            $writeResult = $output->writeImages($outputTempPath, true);
+            $output->clear();
+            $output->destroy();
+            unset($output);
+
+            if (!$writeResult || !is_file($outputTempPath)) {
+                return false;
+            }
+
             Log::info('PHP Imagick conversion completed', [
-                'pdf_size' => strlen($pdfData),
-                'pages' => $mime === 'application/pdf' ? $pagesCount : 1,
+                'pdf_size' => filesize($outputTempPath),
+                'pages' => $pagesCount,
             ]);
-            
-            // Proveri da li je PDF validan
-            if ($pdfData === false || empty($pdfData) || strlen($pdfData) < 100) {
-                Log::error('PHP Imagick PDF data is invalid or too small', [
-                    'data_length' => $pdfData ? strlen($pdfData) : 0
-                ]);
-                return false;
-            }
-            
-            // Proveri da li PDF počinje sa validnim PDF header-om
-            if (strpos($pdfData, '%PDF') !== 0) {
-                Log::error('PHP Imagick PDF data does not start with valid PDF header', [
-                    'header' => substr($pdfData, 0, 8),
-                    'data_length' => strlen($pdfData)
-                ]);
-                return false;
-            }
-            
-            return $pdfData;
+
+            return $this->isValidPdfFile($outputTempPath);
             
         } catch (\Exception $e) {
             Log::error('PHP Imagick processing exception', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
+            if (is_file($outputTempPath)) {
+                @unlink($outputTempPath);
+            }
             return false;
         }
     }
 
     /**
-     * Obrađuje dokument koristeći ImageMagick convert komandu (fallback)
+     * Obrađuje dokument koristeći ImageMagick convert komandu (fallback).
+     * Piše rezultat na $outputTempPath.
      *
      * @param string $filePath
      * @param string $mime
      * @param string $convertPath
-     * @return string|false PDF data
+     * @param string $outputTempPath
+     * @return bool
      */
-    protected function processWithImageMagick(string $filePath, string $mime, string $convertPath)
+    protected function processWithImageMagick(string $filePath, string $mime, string $convertPath, string $outputTempPath): bool
     {
         try {
-            $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('processed_', true) . '.pdf';
-
-            // Direktna konverzija u greyscale PDF sa 300 DPI
-            // Koristimo jednostavnije opcije za bolju kompatibilnost
             Log::info('Starting ImageMagick conversion', [
                 'mime' => $mime,
                 'file_path' => $filePath,
-                'temp_pdf_path' => $tempPdfPath
+                'temp_pdf_path' => $outputTempPath
             ]);
+
+            $dpi = self::PROCESS_DPI;
             
             if ($mime === 'application/pdf') {
-                // Za PDF: konvertuj sve stranice u greyscale PDF sa 300 DPI
-                // Koristimo -colorspace Gray i -compress JPEG sa quality 70 za kompresiju
+                // Sve stranice, greyscale, JPEG kompresija
                 $command = sprintf(
-                    '%s -density 300 "%s" -colorspace Gray -compress JPEG -quality 70 "%s" 2>&1',
+                    '%s -density %d "%s" -colorspace Gray -compress JPEG -quality 70 "%s" 2>&1',
                     escapeshellarg($convertPath),
+                    $dpi,
                     escapeshellarg($filePath),
-                    escapeshellarg($tempPdfPath)
+                    escapeshellarg($outputTempPath)
                 );
             } else {
-                // Za slike: konvertuj direktno u greyscale PDF sa 300 DPI
-                // -colorspace Gray konvertuje u greyscale
-                // -compress JPEG -quality 70 za kompresiju
                 $command = sprintf(
-                    '%s -density 300 "%s" -colorspace Gray -compress JPEG -quality 70 "%s" 2>&1',
+                    '%s -density %d "%s" -colorspace Gray -compress JPEG -quality 70 "%s" 2>&1',
                     escapeshellarg($convertPath),
+                    $dpi,
                     escapeshellarg($filePath),
-                    escapeshellarg($tempPdfPath)
+                    escapeshellarg($outputTempPath)
                 );
             }
             
@@ -715,10 +695,10 @@ class DocumentProcessor
                 'execution_time' => round($executionTime, 2) . ' seconds',
                 'return_code' => $returnCode,
                 'output_lines' => count($output),
-                'file_exists' => file_exists($tempPdfPath)
+                'file_exists' => file_exists($outputTempPath)
             ]);
 
-            if ($returnCode !== 0 || !file_exists($tempPdfPath)) {
+            if ($returnCode !== 0 || !file_exists($outputTempPath)) {
                 Log::error('ImageMagick PDF conversion failed', [
                     'command' => $command,
                     'output' => implode("\n", $output),
@@ -728,57 +708,19 @@ class DocumentProcessor
                 return false;
             }
 
-            // Proveri da li je PDF validan (ima minimalnu veličinu)
-            $fileSize = filesize($tempPdfPath);
-            if ($fileSize < 100) {
-                Log::error('Generated PDF is too small, likely corrupted', [
-                    'file_size' => $fileSize,
-                    'temp_path' => $tempPdfPath
-                ]);
-                if (file_exists($tempPdfPath)) {
-                    unlink($tempPdfPath);
-                }
+            if (!$this->isValidPdfFile($outputTempPath)) {
+                @unlink($outputTempPath);
                 return false;
             }
 
-            // Pročitaj PDF data
-            $pdfData = file_get_contents($tempPdfPath);
-            
-            // Obriši privremeni fajl odmah nakon čitanja
-            if (file_exists($tempPdfPath)) {
-                unlink($tempPdfPath);
-            }
-
-            // Proveri da li je PDF data validan
-            if ($pdfData === false || empty($pdfData) || strlen($pdfData) < 100) {
-                Log::error('PDF data is invalid or too small', [
-                    'data_length' => $pdfData ? strlen($pdfData) : 0
-                ]);
-                return false;
-            }
-
-            // Proveri da li PDF počinje sa validnim PDF header-om
-            if (strpos($pdfData, '%PDF') !== 0) {
-                Log::error('PDF data does not start with valid PDF header', [
-                    'header' => substr($pdfData, 0, 8),
-                    'data_length' => strlen($pdfData)
-                ]);
-                return false;
-            }
-
-            // Proveri da li PDF ima validan footer (%%EOF)
-            if (strpos($pdfData, '%%EOF') === false) {
-                Log::warning('PDF may be incomplete - EOF marker not found', [
-                    'data_length' => strlen($pdfData),
-                    'last_100_chars' => substr($pdfData, -100)
-                ]);
-            }
-
-            return $pdfData;
+            return true;
         } catch (Exception $e) {
             Log::error('ImageMagick processing exception', [
                 'error' => $e->getMessage()
             ]);
+            if (is_file($outputTempPath)) {
+                @unlink($outputTempPath);
+            }
             return false;
         }
     }
@@ -1193,6 +1135,136 @@ class DocumentProcessor
             ]);
             return false;
         }
+    }
+
+    /**
+     * Greyscale + JPEG kompresija za jednu Imagick stranicu (mora se pozvati po frame-u).
+     */
+    protected function prepareImagickPageForPdf(\Imagick $page): void
+    {
+        $page->transformImageColorspace(\Imagick::COLORSPACE_GRAY);
+        $page->stripImage();
+
+        // Ograniči dimenzije na ~A4 @ PROCESS_DPI da peak memorija ostane pod kontrolom
+        $maxWidth = (int) round(8.27 * self::PROCESS_DPI);
+        $maxHeight = (int) round(11.69 * self::PROCESS_DPI);
+        if ($page->getImageWidth() > $maxWidth || $page->getImageHeight() > $maxHeight) {
+            $page->thumbnailImage($maxWidth, $maxHeight, true);
+        }
+
+        $page->setImageResolution(self::PROCESS_DPI, self::PROCESS_DPI);
+        $page->setImageFormat('pdf');
+        $page->setImageCompression(\Imagick::COMPRESSION_JPEG);
+        $page->setImageCompressionQuality(70);
+        $page->setOption('pdf:use-trimbox', 'true');
+    }
+
+    /**
+     * Broj stranica PDF-a bez učitavanja piksela u memoriju.
+     */
+    protected function getPdfPageCount(string $filePath): int
+    {
+        try {
+            $imagick = new \Imagick();
+            $imagick->pingImage($filePath);
+            $count = $imagick->getNumberImages();
+            $imagick->clear();
+            $imagick->destroy();
+            return max(0, (int) $count);
+        } catch (\Exception $e) {
+            Log::warning('getPdfPageCount failed', [
+                'path' => $filePath,
+                'error' => $e->getMessage(),
+            ]);
+            return 0;
+        }
+    }
+
+    /**
+     * Brza validacija PDF header-a bez učitavanja cijelog fajla.
+     */
+    protected function isValidPdfFile(string $path): bool
+    {
+        if (!is_file($path)) {
+            return false;
+        }
+
+        $size = filesize($path);
+        if ($size === false || $size < 100) {
+            Log::error('Generated PDF is too small, likely corrupted', [
+                'file_size' => $size,
+                'temp_path' => $path,
+            ]);
+            return false;
+        }
+
+        $fh = fopen($path, 'rb');
+        if ($fh === false) {
+            return false;
+        }
+        $header = fread($fh, 5);
+        fclose($fh);
+
+        if ($header === false || strpos($header, '%PDF') !== 0) {
+            Log::error('PDF data does not start with valid PDF header', [
+                'header' => $header,
+                'file_size' => $size,
+            ]);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Premjesti obrađeni PDF u local storage bez file_get_contents (stream/rename).
+     *
+     * @return array{success: bool, file_size?: int, error?: string}
+     */
+    protected function storeProcessedPdfFromTemp(string $tempPdfPath, string $storagePath): array
+    {
+        if (!$this->isValidPdfFile($tempPdfPath)) {
+            if (is_file($tempPdfPath)) {
+                @unlink($tempPdfPath);
+            }
+            return [
+                'success' => false,
+                'error' => 'Obrađeni PDF nije validan.',
+            ];
+        }
+
+        $fileSize = filesize($tempPdfPath);
+        if ($fileSize > self::MAX_PROCESSED_PDF_BYTES) {
+            @unlink($tempPdfPath);
+            Log::error('Processed PDF exceeds size limit', [
+                'file_size' => $fileSize,
+                'limit' => self::MAX_PROCESSED_PDF_BYTES,
+            ]);
+            return [
+                'success' => false,
+                'error' => 'Obrađeni PDF je prevelik (' . round($fileSize / 1024 / 1024, 1) . ' MB). Maksimalno: '
+                    . round(self::MAX_PROCESSED_PDF_BYTES / 1024 / 1024) . ' MB. Smanjite broj stranica ili kvalitet ulaznog fajla.',
+            ];
+        }
+
+        Storage::disk('local')->makeDirectory(dirname($storagePath));
+        $destination = Storage::disk('local')->path($storagePath);
+
+        if (!@rename($tempPdfPath, $destination)) {
+            if (!@copy($tempPdfPath, $destination)) {
+                @unlink($tempPdfPath);
+                return [
+                    'success' => false,
+                    'error' => 'Greška pri snimanju obrađenog PDF-a.',
+                ];
+            }
+            @unlink($tempPdfPath);
+        }
+
+        return [
+            'success' => true,
+            'file_size' => $fileSize,
+        ];
     }
 
     /**
