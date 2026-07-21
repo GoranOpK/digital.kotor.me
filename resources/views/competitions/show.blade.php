@@ -172,6 +172,16 @@
             <p style="color: rgba(255,255,255,0.9); margin: 0;">Detalji konkursa za podršku ženskom preduzetništvu</p>
         </div>
 
+        @if ($errors->any())
+            <div class="alert alert-error" style="background: #fef2f2; border: 1px solid #ef4444; color: #991b1b; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+                <ul style="margin: 0; padding-left: 18px;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         @if($isUpcoming)
             <div class="alert alert-info" style="background: #eff6ff; border-color: #3b82f6; color: #1e40af;">
                 <strong>🔜 Konkurs uskoro počinje!</strong><br>

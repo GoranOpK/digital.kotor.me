@@ -110,16 +110,14 @@ class ApplicationController extends Controller
             abort(404, 'Konkurs nije pronađen ili nije objavljen.');
         }
 
-        // Proveri da li je konkurs još otvoren (samo ako nije read-only)
-        if (!$readOnly) {
-            $deadline = $competition->published_at 
-                ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 20)
-                : null;
-            
-            if ($deadline && $deadline->isPast()) {
-                return redirect()->route('competitions.show', $competition)
-                    ->withErrors(['error' => 'Rok za prijave je istekao.']);
-            }
+        // Isti kriterijum kao na stranici konkursa (start_date + deadline_days, ne published_at)
+        if (!$readOnly && !$competition->is_open) {
+            $message = $competition->is_upcoming
+                ? 'Konkurs još nije počeo. Prijave će biti moguće od datuma početka konkursa.'
+                : 'Rok za prijave je istekao.';
+
+            return redirect()->route('competitions.show', $competition)
+                ->withErrors(['error' => $message]);
         }
 
         // Ako nije read-only, provjeri da li korisnik već ima prijavu
@@ -217,13 +215,9 @@ class ApplicationController extends Controller
             }
         }
         
-        // Proveri da li je konkurs otvoren
-        $deadline = $competition->published_at 
-            ? $competition->published_at->copy()->addDays($competition->deadline_days ?? 20)
-            : null;
-        
-        if ($deadline && $deadline->isPast()) {
-            return back()->withErrors(['error' => 'Rok za prijave je istekao.'])->withInput();
+        // Proveri da li je konkurs otvoren (isti kriterijum kao Competition::is_open)
+        if (!$competition->is_open) {
+            return back()->withErrors(['error' => 'Rok za prijave je istekao ili konkurs nije otvoren za prijave.'])->withInput();
         }
 
         // Validacija osnovnih podataka
