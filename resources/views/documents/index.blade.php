@@ -111,6 +111,61 @@
         margin: 0 0 20px;
         color: var(--primary);
     }
+    /* Informativni panel — isti vizuelni jezik kao „Važno“ blok ispod */
+    .pdf-split-help {
+        background: #eff6ff;
+        border-left: 4px solid #3b82f6;
+        padding: 12px;
+        margin-top: 12px;
+        border-radius: 4px;
+        color: #1e3a8a;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+    .pdf-split-help > strong {
+        color: #1e40af;
+        display: block;
+        margin-bottom: 4px;
+    }
+    .pdf-split-help > p {
+        margin: 0 0 10px;
+    }
+    .pdf-split-help summary {
+        color: #1e40af;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+    .pdf-split-help summary:focus-visible {
+        outline: 2px solid #3b82f6;
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+    .pdf-split-help-panel {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #bfdbfe;
+    }
+    .pdf-split-help-panel h3 {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e40af;
+        margin: 0 0 8px;
+    }
+    .pdf-split-help-panel p {
+        margin: 0 0 8px;
+    }
+    .pdf-split-help-panel ul,
+    .pdf-split-help-panel ol {
+        margin: 6px 0 10px;
+        padding-left: 1.25rem;
+    }
+    .pdf-split-help-panel a {
+        color: #1e40af;
+        font-weight: 600;
+        text-decoration: underline;
+        word-break: break-word;
+    }
     .form-group {
         margin-bottom: 20px;
     }
@@ -413,6 +468,42 @@
                     <small style="color: #6b7280; display: block; margin-top: 4px;">
                         Dozvoljeni formati: JPEG, PNG (max 2 MB po slici) i PDF (max 20 MB po dokumentu). Slike se pretvaraju u greyscale PDF. Mali PDF se čuva bez ponovne obrade; veći PDF se optimizuje (Imagick, ~200 DPI).
                     </small>
+                    <div class="pdf-split-help">
+                        <strong>💡 Veliki PDF? Nema problema.</strong>
+                        <p>
+                            Ako je vaš PDF prevelik za direktan upload, podijelite ga na pojedinačne stranice (PDF ili slike), uploadujte ih zajedno i Digital Kotor će ih automatski spojiti u jedan PDF dokument.
+                        </p>
+                        <details>
+                            <summary>Kako PDF podijeliti na stranice?</summary>
+                            <div class="pdf-split-help-panel">
+                                <h3>Kako podijeliti PDF na stranice?</h3>
+                                <p>
+                                    Ako je vaš PDF prevelik za direktan upload, možete ga jednostavno podijeliti na pojedinačne stranice.
+                                </p>
+                                <p>Najčešće opcije na besplatnim servisima nazivaju se:</p>
+                                <ul>
+                                    <li>Split PDF</li>
+                                    <li>Extract pages</li>
+                                    <li>PDF to JPG</li>
+                                </ul>
+                                <p>Preporučeni besplatni servisi:</p>
+                                <ul>
+                                    <li><a href="https://tools.pdf24.org/" target="_blank" rel="noopener noreferrer">PDF24 Tools</a></li>
+                                    <li><a href="https://www.ilovepdf.com/" target="_blank" rel="noopener noreferrer">iLovePDF</a></li>
+                                    <li><a href="https://smallpdf.com/" target="_blank" rel="noopener noreferrer">Smallpdf</a></li>
+                                    <li><a href="https://www.sejda.com/" target="_blank" rel="noopener noreferrer">Sejda PDF</a></li>
+                                </ul>
+                                <p>Prije korišćenja eksternog servisa provjerite da dokument ne sadrži povjerljive ili osjetljive podatke.</p>
+                                <p>Nakon toga:</p>
+                                <ol>
+                                    <li>izaberite i uploadujte sve stranice zajedno</li>
+                                    <li>po potrebi promijenite njihov redoslijed pomoću dugmadi „Gore“ i „Dolje“</li>
+                                    <li>svaki pojedinačni fajl mora biti unutar dozvoljenih veličina navedenih iznad</li>
+                                    <li>Digital Kotor će automatski spojiti fajlove u jedan PDF dokument</li>
+                                </ol>
+                            </div>
+                        </details>
+                    </div>
                     <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 12px; border-radius: 4px;">
                         <strong style="color: #1e40af; display: block; margin-bottom: 4px;">ℹ️ Važno:</strong>
                         <span style="color: #1e3a8a; font-size: 13px;">
