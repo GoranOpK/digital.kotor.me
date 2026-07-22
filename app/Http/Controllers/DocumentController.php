@@ -89,23 +89,28 @@ class DocumentController extends Controller
         
         if ($totalSize > $maxTotalSize) {
             $totalSizeMB = round($totalSize / 1024 / 1024, 2);
-            return back()->withErrors([
-                'files' => "Ukupna veličina svih fajlova ({$totalSizeMB} MB) prelazi dozvoljeno ograničenje. Maksimalna ukupna veličina je 7 MB. Molimo smanjite broj ili veličinu fajlova."
-            ])->withInput();
+
+            return $this->documentStoreErrorResponse(
+                $request,
+                'files',
+                "Ukupna veličina svih fajlova ({$totalSizeMB} MB) prelazi dozvoljeno ograničenje. Maksimalna ukupna veličina je 7 MB. Molimo smanjite broj ili veličinu fajlova."
+            );
         }
         
         // Proveri broj fajlova - previše fajlova može uzrokovati probleme sa memorijom
         if ($fileCount > 10) {
-            return back()->withErrors([
-                'files' => "Previše fajlova odabrano ({$fileCount}). Maksimalno dozvoljeno je 10 fajlova odjednom. Molimo smanjite broj fajlova."
-            ])->withInput();
+            return $this->documentStoreErrorResponse(
+                $request,
+                'files',
+                "Previše fajlova odabrano ({$fileCount}). Maksimalno dozvoljeno je 10 fajlova odjednom. Molimo smanjite broj fajlova."
+            );
         }
 
         $user = Auth::user();
         $files = $request->file('files');
         
         if (empty($files)) {
-            return back()->withErrors(['files' => 'Molimo izaberite barem jedan fajl.'])->withInput();
+            return $this->documentStoreErrorResponse($request, 'files', 'Molimo izaberite barem jedan fajl.');
         }
 
         // Direktorijum za korisnika
@@ -137,10 +142,12 @@ class DocumentController extends Controller
             
             // Proveri da li korisnik ima dovoljno prostora za izvorni fajl
             if (!$this->documentProcessor->hasEnoughStorage($user->id, $originalFileSize)) {
-                return back()->withErrors([
-                    'file' => 'Nemate dovoljno prostora. Maksimalno dozvoljeno: 20 MB. Trenutno korišćeno: ' . 
-                             round(($user->used_storage_bytes ?? 0) / 1024 / 1024, 2) . ' MB'
-                ])->withInput();
+                return $this->documentStoreErrorResponse(
+                    $request,
+                    'file',
+                    'Nemate dovoljno prostora. Maksimalno dozvoljeno: 20 MB. Trenutno korišćeno: '.
+                    round(($user->used_storage_bytes ?? 0) / 1024 / 1024, 2).' MB'
+                );
             }
 
                 Storage::disk('local')->putFileAs($directory, $file, $originalFilename);
@@ -219,7 +226,12 @@ class DocumentController extends Controller
 
                         if (!$result['success']) {
                             $document->update(['status' => 'failed']);
-                            return back()->withErrors(['file' => $result['error'] ?? 'Greška pri obradi dokumenta.'])->withInput();
+
+                            return $this->documentStoreErrorResponse(
+                                $request,
+                                'file',
+                                $result['error'] ?? 'Greška pri obradi dokumenta.'
+                            );
                         }
 
                         // Proveri da li korisnik ima dovoljno prostora (samo ako fajl nije na cloud-u)
@@ -228,10 +240,12 @@ class DocumentController extends Controller
                                 Storage::disk('local')->delete($result['file_path']);
                             }
                             $document->update(['status' => 'failed']);
-                            
-                            return back()->withErrors([
-                                'file' => 'Nemate dovoljno prostora. Maksimalno dozvoljeno: 20 MB.'
-                            ])->withInput();
+
+                            return $this->documentStoreErrorResponse(
+                                $request,
+                                'file',
+                                'Nemate dovoljno prostora. Maksimalno dozvoljeno: 20 MB.'
+                            );
                         }
 
                         // Ažuriraj dokument sa putanjom do obrađenog fajla i cloud_path-om ako postoji
@@ -287,15 +301,24 @@ class DocumentController extends Controller
                 'filename' => $file->getClientOriginalName(),
                 'error' => $e->getMessage()
             ]);
-            
-            return back()->withErrors(['file' => 'Greška pri upload-u dokumenta: ' . $e->getMessage()])->withInput();
+
+            if ($request->expectsJson()) {
+                return $this->documentStoreErrorResponse(
+                    $request,
+                    'file',
+                    'Greška pri upload-u dokumenta.',
+                    500
+                );
+            }
+
+            return back()->withErrors(['file' => 'Greška pri upload-u dokumenta: '.$e->getMessage()])->withInput();
         }
     }
 
     /**
      * Obrađuje više fajlova i spaja ih u jedan PDF
      */
-    private function handleMultipleFilesMerge(array $files, $user, Request $request, string $directory, string $date): RedirectResponse
+    private function handleMultipleFilesMerge(array $files, $user, Request $request, string $directory, string $date): RedirectResponse|JsonResponse
     {
         try {
             // Proveri ukupnu veličinu svih fajlova
@@ -308,10 +331,12 @@ class DocumentController extends Controller
             // Dodajemo buffer od 20% jer finalni PDF može biti veći od originalnih fajlova
             $estimatedFinalSize = $totalSize * 1.2; // 20% buffer za finalni PDF
             if (!$this->documentProcessor->hasEnoughStorage($user->id, $estimatedFinalSize)) {
-                return back()->withErrors([
-                    'files' => 'Nemate dovoljno prostora za sve fajlove. Maksimalno dozvoljeno: 20 MB. Trenutno korišćeno: ' . 
-                             round(($user->used_storage_bytes ?? 0) / 1024 / 1024, 2) . ' MB'
-                ])->withInput();
+                return $this->documentStoreErrorResponse(
+                    $request,
+                    'files',
+                    'Nemate dovoljno prostora za sve fajlove. Maksimalno dozvoljeno: 20 MB. Trenutno korišćeno: '.
+                    round(($user->used_storage_bytes ?? 0) / 1024 / 1024, 2).' MB'
+                );
             }
 
             // Sačuvaj sve originalne fajlove privremeno
@@ -365,7 +390,7 @@ class DocumentController extends Controller
             ]);
 
             // Direktna obrada (za sada, queue može biti dodato kasnije)
-            return $this->processMergeDirectly($document, $tempFiles, $user, $baseFilename, $originalFilePaths);
+            return $this->processMergeDirectly($document, $tempFiles, $user, $baseFilename, $originalFilePaths, $request);
 
         } catch (\Exception $e) {
             Log::error('Multiple files merge failed', [
@@ -374,18 +399,29 @@ class DocumentController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
 
-            return back()->withErrors(['files' => 'Greška pri spajanju fajlova: ' . $e->getMessage()])->withInput();
+            if ($request->expectsJson()) {
+                return $this->documentStoreErrorResponse(
+                    $request,
+                    'files',
+                    'Greška pri spajanju fajlova.',
+                    500
+                );
+            }
+
+            return back()->withErrors(['files' => 'Greška pri spajanju fajlova: '.$e->getMessage()])->withInput();
         }
     }
 
     /**
      * Direktno procesira spajanje fajlova
      */
-    private function processMergeDirectly($document, array $tempFiles, $user, string $baseFilename, array $originalFilePaths): RedirectResponse
+    private function processMergeDirectly($document, array $tempFiles, $user, string $baseFilename, array $originalFilePaths, Request $request): RedirectResponse|JsonResponse
     {
         try {
             // Mala pauza da bi JavaScript stigao da pročita "processing" status
-            usleep(500000); // 0.5 sekunde pauza
+            if (! app()->environment('testing')) {
+                usleep(500000); // 0.5 sekunde pauza
+            }
 
             // Spoji fajlove u jedan PDF
             $result = $this->documentProcessor->mergeDocuments($tempFiles, $user->id, $baseFilename);
@@ -399,7 +435,12 @@ class DocumentController extends Controller
 
             if (!$result['success']) {
                 $document->update(['status' => 'failed']);
-                return back()->withErrors(['files' => $result['error'] ?? 'Greška pri spajanju fajlova.'])->withInput();
+
+                return $this->documentStoreErrorResponse(
+                    $request,
+                    'files',
+                    $result['error'] ?? 'Greška pri spajanju fajlova.'
+                );
             }
 
             // Proveri da li korisnik ima dovoljno prostora za spojeni PDF (samo ako nije na cloud-u)
@@ -408,10 +449,12 @@ class DocumentController extends Controller
                     Storage::disk('local')->delete($result['file_path']);
                 }
                 $document->update(['status' => 'failed']);
-                
-                return back()->withErrors([
-                    'files' => 'Nemate dovoljno prostora za spojeni PDF. Maksimalno dozvoljeno: 20 MB.'
-                ])->withInput();
+
+                return $this->documentStoreErrorResponse(
+                    $request,
+                    'files',
+                    'Nemate dovoljno prostora za spojeni PDF. Maksimalno dozvoljeno: 20 MB.'
+                );
             }
 
             // Ažuriraj dokument sa putanjom do spojenog PDF-a i cloud_path-om ako postoji
@@ -430,8 +473,10 @@ class DocumentController extends Controller
             $document->update($updateData);
 
             // Paket 2A: queue MEGA archive after local merge (never sync in HTTP)
+            $queuedArchive = false;
             if ((bool) config('external_archive.library_upload', false) && ! empty($result['file_path'])) {
                 ProcessDocumentJob::dispatch($document, (string) $result['file_path'], true);
+                $queuedArchive = true;
             }
 
             // Ažuriraj korišćen prostor
@@ -470,6 +515,14 @@ class DocumentController extends Controller
                 }
             }
 
+            if ($request->expectsJson()) {
+                if ($queuedArchive) {
+                    return $this->documentStoreQueuedResponse($request, $document);
+                }
+
+                return $this->documentStoreProcessedResponse($request, $document);
+            }
+
             return redirect()->route('documents.index')
                 ->with('success', 'Fajlovi su uspješno spojeni u jedan PDF dokument i obrađeni.');
 
@@ -480,7 +533,17 @@ class DocumentController extends Controller
             ]);
 
             $document->update(['status' => 'failed']);
-            return back()->withErrors(['files' => 'Greška pri spajanju fajlova: ' . $e->getMessage()])->withInput();
+
+            if ($request->expectsJson()) {
+                return $this->documentStoreErrorResponse(
+                    $request,
+                    'files',
+                    'Greška pri spajanju fajlova.',
+                    500
+                );
+            }
+
+            return back()->withErrors(['files' => 'Greška pri spajanju fajlova: '.$e->getMessage()])->withInput();
         }
     }
 
@@ -962,6 +1025,24 @@ class DocumentController extends Controller
         }
 
         return redirect()->route('documents.index')->with('success', $message);
+    }
+
+    private function documentStoreErrorResponse(
+        Request $request,
+        string $field,
+        string $message,
+        int $status = 422
+    ): JsonResponse|RedirectResponse {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => $message,
+                'errors' => [
+                    $field => [$message],
+                ],
+            ], $status);
+        }
+
+        return back()->withErrors([$field => $message])->withInput();
     }
 }
 

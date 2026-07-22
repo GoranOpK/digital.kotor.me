@@ -199,4 +199,189 @@ class DocumentLibraryStoreTest extends TestCase
             'status' => 'processed',
         ]);
     }
+
+    public function test_multi_file_json_flag_on_returns_queued_contract_not_redirect(): void
+    {
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $mergedPath = 'documents/user_'.$this->user->id.'/merged.pdf';
+        Storage::disk('local')->put($mergedPath, 'merged');
+
+        $this->mock(DocumentProcessor::class, function ($mock) use ($mergedPath) {
+            $mock->shouldReceive('hasEnoughStorage')->andReturn(true);
+            $mock->shouldReceive('updateUserStorage');
+            $mock->shouldReceive('mergeDocuments')->andReturn([
+                'success' => true,
+                'file_path' => $mergedPath,
+                'file_size' => 200,
+                'cloud_path' => null,
+                'error' => null,
+            ]);
+        });
+
+        $files = [
+            UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
+            UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+        ];
+
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => $files,
+            'category' => 'Ostali dokumenti',
+            'name' => 'Merged JSON',
+        ]);
+
+        $response->assertOk()
+            ->assertHeader('content-type', 'application/json')
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('queued', true)
+            ->assertJsonStructure(['document_id', 'status', 'message'])
+            ->assertJsonMissing(['redirect']);
+
+        $this->assertFalse($response->isRedirect());
+        Bus::assertDispatched(function (ProcessDocumentJob $job) {
+            return $job->archiveOnly === true;
+        });
+        $this->assertDatabaseHas('user_documents', [
+            'user_id' => $this->user->id,
+            'name' => 'Merged JSON',
+            'status' => 'processed',
+        ]);
+        $this->assertSame(
+            UserDocument::where('user_id', $this->user->id)->value('id'),
+            $response->json('document_id')
+        );
+        $this->assertSame('processed', $response->json('status'));
+    }
+
+    public function test_multi_file_html_keeps_existing_success_flash(): void
+    {
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $mergedPath = 'documents/user_'.$this->user->id.'/merged.pdf';
+        Storage::disk('local')->put($mergedPath, 'merged');
+
+        $this->mock(DocumentProcessor::class, function ($mock) use ($mergedPath) {
+            $mock->shouldReceive('hasEnoughStorage')->andReturn(true);
+            $mock->shouldReceive('updateUserStorage');
+            $mock->shouldReceive('mergeDocuments')->andReturn([
+                'success' => true,
+                'file_path' => $mergedPath,
+                'file_size' => 200,
+                'cloud_path' => null,
+                'error' => null,
+            ]);
+        });
+
+        $response = $this->actingAs($this->user)->post(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
+                UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Merged HTML',
+        ]);
+
+        $response->assertRedirect(route('documents.index'));
+        $response->assertSessionHas(
+            'success',
+            'Fajlovi su uspješno spojeni u jedan PDF dokument i obrađeni.'
+        );
+    }
+
+    public function test_multi_file_json_storage_error_returns_422_not_redirect(): void
+    {
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $this->mock(DocumentProcessor::class, function ($mock) {
+            $mock->shouldReceive('hasEnoughStorage')->andReturn(false);
+        });
+
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
+                UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'No space JSON',
+        ]);
+
+        $response->assertStatus(422)
+            ->assertHeader('content-type', 'application/json')
+            ->assertJsonStructure(['message', 'errors']);
+
+        $this->assertFalse($response->isRedirect());
+        $this->assertStringContainsString('Nemate dovoljno prostora', (string) $response->json('message'));
+        $this->assertStringContainsString('Nemate dovoljno prostora', (string) data_get($response->json(), 'errors.files.0'));
+        Bus::assertNotDispatched(ProcessDocumentJob::class);
+        $this->assertDatabaseCount('user_documents', 0);
+    }
+
+    public function test_multi_file_html_storage_error_keeps_session_errors(): void
+    {
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $this->mock(DocumentProcessor::class, function ($mock) {
+            $mock->shouldReceive('hasEnoughStorage')->andReturn(false);
+        });
+
+        $response = $this->actingAs($this->user)->from(route('documents.index'))->post(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
+                UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'No space HTML',
+        ]);
+
+        $response->assertRedirect(route('documents.index'));
+        $response->assertSessionHasErrors('files');
+        Bus::assertNotDispatched(ProcessDocumentJob::class);
+    }
+
+    public function test_multi_file_json_flag_off_returns_processed_contract(): void
+    {
+        config(['external_archive.library_upload' => false]);
+        Bus::fake();
+
+        $mergedPath = 'documents/user_'.$this->user->id.'/merged.pdf';
+        Storage::disk('local')->put($mergedPath, 'merged');
+
+        $this->mock(DocumentProcessor::class, function ($mock) use ($mergedPath) {
+            $mock->shouldReceive('hasEnoughStorage')->andReturn(true);
+            $mock->shouldReceive('updateUserStorage');
+            $mock->shouldReceive('mergeDocuments')->andReturn([
+                'success' => true,
+                'file_path' => $mergedPath,
+                'file_size' => 200,
+                'cloud_path' => null,
+                'error' => null,
+            ]);
+        });
+
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
+                UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Merged flag off',
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('status', 'processed')
+            ->assertJsonStructure(['document_id', 'status', 'message'])
+            ->assertJsonMissing(['queued']);
+
+        Bus::assertNotDispatched(ProcessDocumentJob::class);
+        $this->assertDatabaseHas('user_documents', [
+            'user_id' => $this->user->id,
+            'name' => 'Merged flag off',
+            'status' => 'processed',
+        ]);
+    }
 }
