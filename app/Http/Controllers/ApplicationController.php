@@ -856,6 +856,18 @@ class ApplicationController extends Controller
             abort(403, 'Nemate pravo pristupa ovom dokumentu.');
         }
 
+        // Iste vidljivosti kao ApplicationController::show — PRIJE lokalnog fajla / MEGA
+        if ($isCommissionMemberForThisCompetition && $application->status === 'draft') {
+            abort(403, 'Prijava još nije podnesena. Članovi komisije mogu vidjeti prijavu tek nakon što korisnik klikne na "Podnesi prijavu".');
+        }
+
+        if ($isCommissionMemberForThisCompetition) {
+            $competition = $application->competition;
+            if ($competition && !in_array($competition->status, ['closed', 'completed']) && !$competition->isApplicationDeadlinePassed()) {
+                abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (20 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
+            }
+        }
+
         // Ako lokalni fajl ne postoji, a ima MEGA link – preuzmi sa MEGA-e
         if (!$document->file_path || !Storage::disk('local')->exists($document->file_path)) {
             if ($document->cloud_path && str_contains((string) $document->cloud_path, 'mega.nz')) {
