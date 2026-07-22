@@ -411,7 +411,7 @@
                     </div>
                     <div id="file-names" class="file-name-display" style="display: none; margin-top: 8px;"></div>
                     <small style="color: #6b7280; display: block; margin-top: 4px;">
-                        Dozvoljeni formati: JPEG, PNG, PDF (max 2MB po fajlu, max 7MB ukupno za sve fajlove). Dokumenti će biti automatski konvertovani u greyscale PDF format sa 300 DPI rezolucijom.
+                        Dozvoljeni formati: JPEG, PNG (max 2 MB po slici) i PDF (max 20 MB po dokumentu). Slike se pretvaraju u greyscale PDF. Mali PDF se čuva bez ponovne obrade; veći PDF se optimizuje (Imagick, ~200 DPI).
                     </small>
                     <div style="background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px; margin-top: 12px; border-radius: 4px;">
                         <strong style="color: #1e40af; display: block; margin-bottom: 4px;">ℹ️ Važno:</strong>
@@ -744,28 +744,35 @@ function prepareFormSubmit(event) {
         return false;
     }
     
-    // Provjeri veličinu svake datoteke (max 2 MB po datoteci)
-    const maxFileSize = 2 * 1024 * 1024; // 2MB u bajtovima
+    // Provjeri veličinu po tipu: slike 2 MB, PDF 20 MB (backend je autoritativan)
+    const maxImageSize = 2 * 1024 * 1024;
+    const maxPdfSize = 20 * 1024 * 1024;
     for (let i = 0; i < selectedFiles.length; i++) {
-        if (selectedFiles[i].size > maxFileSize) {
+        const f = selectedFiles[i];
+        const isPdf = (f.type === 'application/pdf') || /\.pdf$/i.test(f.name || '');
+        const limit = isPdf ? maxPdfSize : maxImageSize;
+        if (f.size > limit) {
             event.preventDefault();
-            const fileSizeMB = (selectedFiles[i].size / 1024 / 1024).toFixed(2);
-            alert(`Datoteka "${selectedFiles[i].name}" je prevelika (${fileSizeMB} MB).\nSvaki pojedinačni fajl može imati najviše 2 MB.`);
+            const fileSizeMB = (f.size / 1024 / 1024).toFixed(2);
+            const msg = isPdf
+                ? `PDF dokument može imati najviše 20 MB.`
+                : `Svaka pojedinačna slika može imati najviše 2 MB.`;
+            alert(`Datoteka "${f.name}" je prevelika (${fileSizeMB} MB).\n${msg}`);
             return false;
         }
     }
-    
-    // Provjeri ukupnu veličinu svih datoteka (max 7 MB zbog post_max_size ograničenja)
-    const maxTotalSize = 7 * 1024 * 1024; // 7MB u bajtovima (ostavljamo marginu od 1MB)
+
+    // Ukupna veličina (poslovni max = kvota 20 MB; PHP post_max mora biti veći na produkciji)
+    const maxTotalSize = 20 * 1024 * 1024;
     let totalSize = 0;
     for (let i = 0; i < selectedFiles.length; i++) {
         totalSize += selectedFiles[i].size;
     }
-    
+
     if (totalSize > maxTotalSize) {
         event.preventDefault();
         const totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
-        alert(`Ukupna veličina svih datoteka (${totalSizeMB} MB) prelazi dozvoljeno ograničenje.\nMaksimalna ukupna veličina je 7 MB.\nMolimo smanjite broj ili veličinu datoteka.`);
+        alert(`Ukupna veličina svih datoteka (${totalSizeMB} MB) prelazi dozvoljeno ograničenje.\nMaksimalna ukupna veličina je 20 MB.\nMolimo smanjite broj ili veličinu datoteka.`);
         return false;
     }
     

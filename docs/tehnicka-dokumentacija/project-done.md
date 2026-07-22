@@ -6,6 +6,16 @@ Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili
 
 ---
 
+## 2026-07-22 — Biblioteka dokumenata (Paket 2D — Smart PDF)
+
+- Limiti: slike 2 MB; PDF **aplikaciono** 20 MB; kvota 20 MB
+- Shared hosting: efektivni PHP upload trenutno **2M** (Default) — 20 MB proradi nakon povećanja limita kod provajdera
+- `PdfOptimizer` (PHP Imagick): mali PDF pass-through; veliki PDF ~200 DPI grayscale; ako veći → original
+- Config: `config/document_library.php` + `.env.example` (`DOCUMENT_LIBRARY_*`)
+- Produkcijski `pdf:check` READY; CLI ImageMagick nije potreban za novi PDF tok
+- Produkcijski `.env` / DELETE_LOCAL nedirani u ovom paketu
+- Dokumentacija: [document-library-and-mega.md](document-library-and-mega.md), [environment-variables.md](environment-variables.md), [deployment-and-cron.md](deployment-and-cron.md)
+
 ## 2026-07-22 — Biblioteka dokumenata (Paket 2C)
 
 Commit (lokalno; u trenutku pisanja bez push/deploy): `b3972de` — `fix: improve document upload processing and storage limits`

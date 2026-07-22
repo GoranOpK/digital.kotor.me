@@ -9,19 +9,37 @@ use Exception;
 class DocumentProcessor
 {
     /**
-     * Maksimalna veličina prostora po korisniku (20 MB)
+     * Maksimalna veličina prostora po korisniku (20 MB) — fallback ako config nije učitan.
      */
     const MAX_STORAGE_PER_USER = 20 * 1024 * 1024; // 20 MB u bajtovima
 
     /**
-     * DPI za rasterizaciju PDF stranica (150 drži peak memoriju ispod tipičnog 128MB limita).
+     * DPI za rasterizaciju slika / legacy image→PDF putanje.
      */
     const PROCESS_DPI = 150;
 
     /**
-     * Maksimalna veličina obrađenog PDF-a na disku (prije snimanja u storage).
+     * Fallback cap za obrađeni PDF (Paket 2D: preferira user_quota_bytes).
      */
-    const MAX_PROCESSED_PDF_BYTES = 10 * 1024 * 1024; // 10 MB
+    const MAX_PROCESSED_PDF_BYTES = 20 * 1024 * 1024; // 20 MB
+
+    public function __construct(
+        protected PdfOptimizer $pdfOptimizer,
+    ) {}
+
+    public static function maxStorageBytes(): int
+    {
+        return (int) config('document_library.user_quota_bytes', self::MAX_STORAGE_PER_USER);
+    }
+
+    public static function maxProcessedPdfBytes(): int
+    {
+        return max(
+            self::MAX_PROCESSED_PDF_BYTES,
+            (int) config('document_library.user_quota_bytes', self::MAX_STORAGE_PER_USER),
+            (int) config('document_library.pdf_max_kb', 20480) * 1024,
+        );
+    }
 
     /**
      * Procesira upload-ovani dokument i kreira optimizovanu verziju fajla.
@@ -68,14 +86,27 @@ class DocumentProcessor
             $tempPdfPath = sys_get_temp_dir() . '/' . uniqid('processed_doc_', true) . '.pdf';
             $ok = false;
 
-            // Za PDF: preferiraj CLI convert (zaseban proces = manje PHP memorije)
+            // Paket 2D: PDF — Imagick smart path (pass-through / optimize). Bez CLI convert zavisnosti.
             if ($mime === 'application/pdf') {
-                $convertPath = $this->findImageMagickConvert();
-                if ($convertPath) {
-                    $ok = $this->processWithImageMagick($file->getRealPath(), $mime, $convertPath, $tempPdfPath);
-                }
-                if (!$ok && extension_loaded('imagick')) {
-                    $ok = $this->processWithPhpImagick($file->getRealPath(), $mime, $tempPdfPath);
+                $opt = $this->pdfOptimizer->optimize($file->getRealPath(), $tempPdfPath);
+                $ok = $opt->ok() && is_file($tempPdfPath) && filesize($tempPdfPath) > 0;
+                if (! $ok) {
+                    Log::warning('Smart PDF optimize failed', [
+                        'error' => $opt->error,
+                        'tool' => $opt->tool,
+                    ]);
+                    if (is_file($tempPdfPath)) {
+                        @unlink($tempPdfPath);
+                    }
+                } else {
+                    Log::info('Smart PDF optimize result', [
+                        'optimized' => $opt->optimized,
+                        'tool' => $opt->tool,
+                        'original_size' => $opt->originalSize,
+                        'final_size' => $opt->finalSize,
+                        'pages' => $opt->pageCount,
+                        'duration_ms' => $opt->durationMs,
+                    ]);
                 }
             } else {
                 if (extension_loaded('imagick')) {
@@ -161,7 +192,7 @@ class DocumentProcessor
         $currentUsage = $user->used_storage_bytes ?? 0;
         $totalNeeded = $currentUsage + $additionalBytes;
 
-        return $totalNeeded <= self::MAX_STORAGE_PER_USER;
+        return $totalNeeded <= self::maxStorageBytes();
     }
 
     /**
@@ -309,12 +340,16 @@ class DocumentProcessor
                 }
             }
             
-            // Proveri da li ukupna veličina prelazi razumnu granicu (15MB za procesiranje)
-            $maxProcessingSize = 15 * 1024 * 1024; // 15MB
+            // Proveri da li ukupna veličina prelazi razumnu granicu (kvota / max PDF)
+            $maxProcessingSize = max(
+                DocumentProcessor::maxStorageBytes(),
+                (int) config('document_library.pdf_max_kb', 20480) * 1024
+            );
             if ($totalSize > $maxProcessingSize) {
                 return [
                     'success' => false,
-                    'error' => 'Ukupna veličina fajlova (' . round($totalSize / 1024 / 1024, 2) . ' MB) je prevelika za procesiranje. Maksimalno dozvoljeno: 15 MB.',
+                    'error' => 'Ukupna veličina fajlova (' . round($totalSize / 1024 / 1024, 2) . ' MB) je prevelika za procesiranje. Maksimalno dozvoljeno: '
+                        . round($maxProcessingSize / 1024 / 1024) . ' MB.',
                 ];
             }
 
@@ -1230,16 +1265,17 @@ class DocumentProcessor
         }
 
         $fileSize = filesize($tempPdfPath);
-        if ($fileSize > self::MAX_PROCESSED_PDF_BYTES) {
+        $maxProcessed = self::maxProcessedPdfBytes();
+        if ($fileSize > $maxProcessed) {
             @unlink($tempPdfPath);
             Log::error('Processed PDF exceeds size limit', [
                 'file_size' => $fileSize,
-                'limit' => self::MAX_PROCESSED_PDF_BYTES,
+                'limit' => $maxProcessed,
             ]);
             return [
                 'success' => false,
                 'error' => 'Obrađeni PDF je prevelik (' . round($fileSize / 1024 / 1024, 1) . ' MB). Maksimalno: '
-                    . round(self::MAX_PROCESSED_PDF_BYTES / 1024 / 1024) . ' MB. Smanjite broj stranica ili kvalitet ulaznog fajla.',
+                    . round($maxProcessed / 1024 / 1024) . ' MB. Smanjite broj stranica ili kvalitet ulaznog fajla.',
             ];
         }
 

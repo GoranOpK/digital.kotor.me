@@ -239,6 +239,21 @@ Napomena: ako `gs` nije na PATH-u, a PDF testovi ipak PASS, komanda upozorava da
 
 Lokalni BLOCKED (npr. bez Imagick na razvojnom PHP-u) **nije** dokaz da je produkcija blokirana — uvijek ponovo pokrenuti `pdf:check` u Toolkit-u nakon deploya.
 
+### PHP upload limiti za PDF do 20 MB (Paket 2D) — shared hosting
+
+Produkcija je na **shared hostingu**. U Plesk PHP Settings vrijednosti su **Default** i **nisu izmjenjive** korisnikom (mogu se mijenjati samo PHP verzija i FastCGI/PHP-FPM).
+
+| Setting | Trenutno (Default) | Zatražiti od hosting provajdera |
+|---------|-------------------|----------------------------------|
+| `upload_max_filesize` | **2M** | **25M** |
+| `post_max_size` | **8M** | **32M** (> upload_max) |
+| `memory_limit` | **128M** | ostaje; 256M samo ako OOM nakon smoke testa |
+| `max_execution_time` | 30 | po potrebi nakon testa |
+
+**Aplikacija** podržava PDF do **20 MB**. **Trenutna produkcija** efektivno prima samo do **2 MB** (PHP odbija veći request prije Laravela). To **nije** ograničenje Laravel aplikacije.
+
+Ako provajder ne može povećati limite, efektivni produkcijski upload limit ostaje **2 MB**. Funkcionalnost od 20 MB postaje dostupna tek nakon što hosting poveća PHP limite. Produkcijski `.env` se zbog ovoga **ne** mijenja.
+
 ---
 
 ## npm skripte

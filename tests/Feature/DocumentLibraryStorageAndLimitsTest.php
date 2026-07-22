@@ -173,25 +173,74 @@ class DocumentLibraryStorageAndLimitsTest extends TestCase
         ]);
     }
 
-    public function test_single_file_over_2mb_is_rejected_with_clear_message(): void
+    public function test_single_image_over_2mb_is_rejected_with_clear_message(): void
     {
         config(['external_archive.library_upload' => true]);
         Bus::fake();
 
-        $file = UploadedFile::fake()->create('big.pdf', 2049, 'application/pdf');
+        $file = UploadedFile::fake()->create('big.jpg', 2049, 'image/jpeg');
 
         $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
             'files' => [$file],
             'category' => 'Ostali dokumenti',
-            'name' => 'Too big',
+            'name' => 'Too big image',
         ]);
 
         $response->assertStatus(422);
         $errors = $response->json('errors');
         $flat = collect($errors)->flatten()->implode(' ');
-        $this->assertStringContainsString('Svaki pojedinačni fajl može imati najviše 2 MB.', $flat);
+        $this->assertStringContainsString('Svaka pojedinačna slika može imati najviše 2 MB.', $flat);
         Bus::assertNotDispatched(ProcessDocumentJob::class);
         $this->assertDatabaseCount('user_documents', 0);
+    }
+
+    public function test_pdf_over_2mb_under_20mb_is_accepted(): void
+    {
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $file = UploadedFile::fake()->create('mid.pdf', 3000, 'application/pdf');
+
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [$file],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Mid PDF',
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('success', true);
+        Bus::assertDispatched(ProcessDocumentJob::class);
+        $this->assertDatabaseCount('user_documents', 1);
+    }
+
+    public function test_pdf_over_20mb_is_rejected(): void
+    {
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $file = UploadedFile::fake()->create('huge.pdf', 20481, 'application/pdf');
+
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [$file],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Huge PDF',
+        ]);
+
+        $response->assertStatus(422);
+        $flat = collect($response->json('errors'))->flatten()->implode(' ');
+        $this->assertStringContainsString('PDF dokument može imati najviše 20 MB.', $flat);
+        Bus::assertNotDispatched(ProcessDocumentJob::class);
+        $this->assertDatabaseCount('user_documents', 0);
+    }
+
+    public function test_frontend_help_text_distinguishes_image_and_pdf_limits(): void
+    {
+        $response = $this->actingAs($this->user)->get(route('documents.index'));
+        $response->assertOk();
+        $response->assertSee('max 2 MB po slici', false);
+        $response->assertSee('max 20 MB po dokumentu', false);
+        $response->assertSee('PDF dokument može imati najviše 20 MB.', false);
+        $response->assertSee('Svaka pojedinačna slika može imati najviše 2 MB.', false);
     }
 
     public function test_multi_file_quota_overflow_cleans_up_without_archive_job(): void

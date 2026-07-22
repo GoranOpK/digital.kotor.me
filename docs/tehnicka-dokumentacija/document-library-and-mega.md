@@ -41,8 +41,8 @@ U `.env.example` default za `EXTERNAL_ARCHIVE_LIBRARY_UPLOAD` je `false` (sigura
 4. Dispatch ProcessDocumentJob
 5. queue-worker.php preuzima job (database queue)
 6. status → processing
-7. PDF obrada; status → processed (dokument spreman u Biblioteci / download)
-8. U istom ProcessDocumentJob: ExternalFileArchiveService → eksterni provider (MEGA); zapis u `external_file_archives`
+7. Smart PDF (Imagick): mali PDF pass-through / veliki PDF optimizacija; zatim status → processed
+8. ExternalFileArchiveService → eksterni provider (MEGA); zapis u `external_file_archives`
 9. Frontend polling (documents.status) ažurira listu
 10. Dugme Preuzmi dostupno kad je status processed
 ```
@@ -86,7 +86,8 @@ Isti MEGA pattern i za **dokumente prijava** (`ApplicationController`) — van B
 |-----------|--------|
 | Pending / processing | Dokument je uspješno otpremljen. Obrada je u toku. |
 | Processed | Dokument je uspješno sačuvan. |
-| Fajl > 2 MB | Svaki pojedinačni fajl može imati najviše 2 MB. |
+| Slika > 2 MB | Svaka pojedinačna slika može imati najviše 2 MB. |
+| PDF > 20 MB | PDF dokument može imati najviše 20 MB. |
 | Prekoračena kvota | Dokument nije moguće sačuvati jer bi bila prekoračena ukupna kvota od 20 MB. |
 
 Processing poruka potvrđuje da je **HTTP upload završen**; asinhrona obrada/arhiva može još trajati. Korisničke poruke **ne spominju MEGA**.
@@ -95,28 +96,55 @@ Legacy MEGA poruke (flag OFF) ostaju nepromijenjene.
 
 ---
 
-## Ograničenja veličine
+## Ograničenja veličine (Paket 2D)
 
-### Pojedinačni ulazni fajl
+### Slike (JPEG/PNG)
 
-- Maksimalno **2 MB** po fajlu (`max:2048` u Laravel validaciji; JS UX pomoć)
-- Višestranični PDF = **jedan** fajl; broj stranica nije kriterijum
+- Maksimalno **2 MB** po ulaznoj slici (`DOCUMENT_LIBRARY_IMAGE_MAX_KB`)
+- Više slika → merge u jedan PDF; finalni PDF smije biti > 2 MB ako staje u kvotu
 
-### Multi-file
+### PDF
 
-- Svaki ulazni fajl ≤ 2 MB
-- Finalni spojeni PDF **smije** biti > 2 MB
-- Mora stati u preostalu korisničku kvotu (izvor: veličina **finalnog** PDF-a)
+- Maksimalno **20 MB** po ulaznom PDF-u (`DOCUMENT_LIBRARY_PDF_MAX_KB`)
+- Višestranični PDF = **jedan** fajl
+- **Smart tok (PHP Imagick, bez CLI convert):**
+  - **&lt; threshold** (default 3 MB): pass-through, `optimized=false`, tool `pass-through`
+  - **≥ threshold**: Imagick ~200 DPI, grayscale, JPEG quality ~82
+  - ako optimizovani fajl **≥** original: zadržava se original (`optimized=false`, tool `imagick-reverted` — Imagick je pokušao, rezultat odbačen)
 
 ### Korisnička kvota
 
-- Ukupno **20 MB** (`DocumentProcessor::MAX_STORAGE_PER_USER`)
-- Provjera u **bajtovima**
-- Pri prekoračenju na merge-u: brišu se finalni i privremeni fajlovi, DB red se uklanja, archive job se **ne** dispatchuje
+- Ukupno **20 MB** (`DOCUMENT_LIBRARY_USER_QUOTA_BYTES`)
+- Provjera u **bajtovima** prema **finalnom** PDF-u
+- Pri prekoračenju: brišu se finalni i privremeni fajlovi, DB red se uklanja, archive job se **ne** dispatchuje
 
-### Infrastrukturno ograničenje
+### Infrastrukturno (Plesk/PHP) — shared hosting, provjereno stanje
 
-Produkcijski PHP `post_max_size=8M` može ograničiti **jedan HTTP zahtjev** prije Laravel validacije. Poslovna kvota 20 MB **nije** isto što i max veličina jednog requesta.
+Produkcija `digital.kotor.me` je na **shared hostingu** (Plesk). PHP Settings prikazuju (Default, **neizmjenjivo** iz Plesk panela korisnika — mijenja se samo PHP verzija / FastCGI vs PHP-FPM):
+
+| Parametar | Trenutno | Napomena |
+|-----------|----------|----------|
+| PHP | **8.3.31** | FastCGI / PHP-FPM |
+| `memory_limit` | **128M** (Default) | smoke test velikog skena |
+| `max_execution_time` | **30** (Default) | |
+| `max_input_time` | **60** (Default) | |
+| `upload_max_filesize` | **2M** (Default) | **efektivni max jednog fajla na produkciji** |
+| `post_max_size` | **8M** (Default) | **efektivni max HTTP POST-a** |
+| `file_uploads` | on | |
+
+**Razlika limita (važno):**
+
+| Sloj | Vrijednost | Značenje |
+|------|------------|----------|
+| Aplikacija (Laravel / Biblioteka) | PDF do **20 MB** | konfiguracija u kodu — **ne** smanjivati |
+| Trenutna produkcija (PHP) | upload **2M**, post **8M** | shared hosting Default |
+| Cilj nakon intervencije provajdera | upload **25M**, post **32M** | tada proradi aplikacioni 20 MB |
+
+Zbog `upload_max_filesize=2M` PHP **odbija** upload prije Laravel validacije. Aplikacija **podržava** PDF do 20 MB, ali na trenutnoj produkciji **efektivni** limit ostaje **2 MB** dok hosting provajder ne poveća PHP limite. To **nije** ograničenje Laravel aplikacije.
+
+**Memory (`memory_limit=128M`):** `PdfOptimizer` čita stranice jednu po jednu, ali drži obrađene stranice u Imagick output objektu do `writeImages`. Za 10–15 skeniranih stranica @ 200 DPI postoji rizik OOM — nije dokazano da je 128M dovoljno. Smoke test nakon povećanja upload limita; 256M samo ako OOM.
+
+ImageMagick CLI nije potreban za novi PDF tok (`pdf:check` READY).
 
 ---
 
@@ -192,31 +220,28 @@ Legacy MEGA sesija za browser upload koristi credentials sa servera (`getMegaSes
 
 ---
 
-## PDF podrška (dijagnostika prije Paketa 2D)
+## PDF podrška (`pdf:check` + Paket 2D)
 
-Obrada dokumenata koristi **PHP Imagick** / **ImageMagick CLI** (Ghostscript obično kao PDF delegate). Nema SSH na Plesku — provjera:
+Produkcijski `pdf:check` je **READY FOR PDF OPTIMIZATION** (Imagick + Ghostscript PASS; ImageMagick CLI WARN nije blokacija).
 
-**Plesk → Laravel Toolkit → Artisan → `pdf:check`**
+Novi PDF tok koristi **PHP Imagick** (`PdfOptimizer`) — ne zavisi od CLI `convert`/`magick`.
 
-| Rezultat | Značenje |
-|----------|----------|
-| `READY FOR PDF OPTIMIZATION` | PDF read, write, PDF → PDF i multi-page PASS |
-| `PDF OPTIMIZATION BLOCKED` | Paket 2D **ne** implementirati dok **produkcija** ne prođe |
+**Plesk → Laravel Toolkit → Artisan → `pdf:check`** za ponovnu dijagnostiku nakon PHP/Imagick promjena.
 
-**Lokal vs produkcija:** lokalni `pdf:check` može biti BLOCKED jer na razvojnom PHP-u nedostaju Imagick/CLI/Ghostscript. To **ne** znači da je produkcija blokirana — odluka za Paket 2D ide isključivo po rezultatu na Plesku (Laravel Toolkit → Artisan).
+**Lokal vs produkcija:** lokalni BLOCKED **ne** znači da je produkcija blokirana.
 
-Privremeni probe fajlovi: `storage/app/pdf-diagnostics/` (komanda briše nakon rada). Ne koristi korisničke dokumente. Detalji: [deployment-and-cron.md](deployment-and-cron.md).
+Privremeni probe fajlovi: `storage/app/pdf-diagnostics/` (komanda briše nakon rada).
 
 ---
 
-## Poznata ograničenja (Biblioteka / Paket 2C)
+## Poznata ograničenja (Biblioteka)
 
-1. Stari cloud dokumenti sa `file_size` null/0 — zaseban backfill
-2. `post_max_size=8M` ograničava jedan HTTP zahtjev
-3. Paralelni upload race na kvotu nije riješen
-4. Plesk cron + 55s worker nije zamjena za Supervisor
-5. Provjeriti da je document root `public/` (zaštita root PHP skripti)
-6. Paket 2D (PDF optimizacija) blokiran dok `pdf:check` na produkciji ne bude READY
+1. Stari cloud dokumenti sa `file_size` null/0 — zaseban backfill (novi uploadi imaju ispravan `file_size`; recalculate može podcijeniti kvotu za stare redove)
+2. Shared hosting: PHP Default `upload_max_filesize=2M` / `post_max_size=8M` (**neizmjenjivo** iz Plesk panela) — efektivni produkcijski upload ostaje 2 MB dok provajder ne poveća limite; aplikacioni PDF limit ostaje 20 MB
+3. `memory_limit=128M` — smoke test velikog skeniranog PDF-a @ 200 DPI nakon povećanja upload limita; ne podizati na 256M bez OOM dokaza
+4. Paralelni upload race na kvotu nije riješen
+5. Plesk cron + 55s worker nije zamjena za Supervisor
+6. Provjeriti da je document root `public/` (zaštita root PHP skripti)
 
 ---
 

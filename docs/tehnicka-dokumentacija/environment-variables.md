@@ -131,6 +131,24 @@ Stvarne MEGA lozinke i produkcijski `.env` se ne commit-uju.
 
 ---
 
+## Document Library limits / smart PDF (Paket 2D)
+
+Izvor: `.env.example`, `config/document_library.php`. Detalji: [document-library-and-mega.md](document-library-and-mega.md).
+
+| Varijabla | Default | Namjena |
+|-----------|---------|---------|
+| `DOCUMENT_LIBRARY_IMAGE_MAX_KB` | `2048` | Max po slici (KB) |
+| `DOCUMENT_LIBRARY_PDF_MAX_KB` | `20480` | Max po PDF-u (KB) |
+| `DOCUMENT_LIBRARY_USER_QUOTA_BYTES` | `20971520` | Korisnička kvota (20 MB) |
+| `DOCUMENT_LIBRARY_PDF_OPTIMIZATION_THRESHOLD_BYTES` | `3145728` | Ispod: pass-through; iznad: Imagick optimize |
+| `DOCUMENT_LIBRARY_PDF_TARGET_DPI` | `200` | DPI za velike PDF-ove |
+| `DOCUMENT_LIBRARY_PDF_GRAYSCALE` | `true` | Greyscale pri optimizaciji |
+| `DOCUMENT_LIBRARY_PDF_JPEG_QUALITY` | `82` | JPEG quality u PDF-u |
+
+Produkcijski `.env` se ne mijenja zbog PHP upload limita. Shared hosting (provjereno): `upload_max_filesize=2M`, `post_max_size=8M` — **Default, neizmjenjivo iz Pleska**. Aplikacioni PDF limit ostaje 20 MB; efektivno na produkciji 2 MB dok hosting provajder ne postavi ~25M/~32M (v. [deployment-and-cron.md](deployment-and-cron.md)).
+
+---
+
 ## Vite
 
 | Varijabla | Namjena |
