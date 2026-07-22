@@ -336,7 +336,7 @@
                 @elseif($libraryUploadSuccess && $libraryUploadProcessed)
                     Dokument je uspješno sačuvan.
                 @elseif($libraryUploadSuccess && $libraryUploadProcessing)
-                    Dokument je uspješno otpremljen. Obrada je u toku.
+                    Dokument je uspješno otpremljen i poslat na obradu. Status možete pratiti u listi dokumenata.
                 @elseif($libraryUploadSuccess)
                     Dokument je uspješno sačuvan.
                 @else

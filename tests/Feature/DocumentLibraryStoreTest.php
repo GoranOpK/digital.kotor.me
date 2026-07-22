@@ -149,7 +149,7 @@ class DocumentLibraryStoreTest extends TestCase
         ]);
 
         $response->assertRedirect(route('documents.index'));
-        $response->assertSessionHas('success', 'Dokument je uspješno upload-ovan. Obrada je u toku.');
+        $response->assertSessionHas('success', 'Dokument je uspješno otpremljen i poslat na obradu. Status možete pratiti u listi dokumenata.');
     }
 
     public function test_multi_file_merge_with_flag_on_dispatches_archive_only_job_not_sync_mega(): void

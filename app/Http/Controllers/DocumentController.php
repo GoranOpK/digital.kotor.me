@@ -1022,7 +1022,7 @@ class DocumentController extends Controller
 
     private function documentStoreQueuedResponse(Request $request, UserDocument $document): RedirectResponse|JsonResponse
     {
-        $message = 'Dokument je uspješno upload-ovan. Obrada je u toku.';
+        $message = 'Dokument je uspješno otpremljen i poslat na obradu. Status možete pratiti u listi dokumenata.';
 
         if ($request->expectsJson()) {
             return response()->json([

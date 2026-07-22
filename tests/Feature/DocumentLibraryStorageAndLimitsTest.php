@@ -306,8 +306,8 @@ class DocumentLibraryStorageAndLimitsTest extends TestCase
         );
 
         $response->assertOk();
-        $response->assertSee('Dokument je uspješno otpremljen. Obrada je u toku.', false);
-        $response->assertDontSee('Dokument je poslat na obradu.', false);
+        $response->assertSee('Dokument je uspješno otpremljen i poslat na obradu. Status možete pratiti u listi dokumenata.', false);
+        $response->assertDontSee('Obrada je u toku.', false);
     }
 
     public function test_processed_banner_message_after_reload(): void
