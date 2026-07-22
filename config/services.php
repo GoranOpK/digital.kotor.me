@@ -35,10 +35,21 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | MEGA (external private file archive â€” server-side only)
+    |--------------------------------------------------------------------------
+    |
+    | Credentials are passed to Node via process environment, never CLI args.
+    | Browser Document Library session endpoints are separate and unchanged.
+    |
+    */
     'mega' => [
         'email' => env('MEGA_EMAIL'),
         'password' => env('MEGA_PASSWORD'),
         'base_folder' => env('MEGA_BASE_FOLDER', 'digital.kotor'),
+        'node_binary' => env('MEGA_NODE_BINARY'),
+        'user_agent' => env('MEGA_USER_AGENT', 'DigitalKotorArchive/1.0'),
     ],
 
 ];

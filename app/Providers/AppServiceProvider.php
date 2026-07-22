@@ -11,7 +11,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(\App\Contracts\MegaArchiveClient::class, \App\Services\ExternalArchive\MegaArchiveService::class);
+        $this->app->singleton(\App\Services\ExternalArchive\ExternalFileArchiveService::class);
     }
 
     /**
