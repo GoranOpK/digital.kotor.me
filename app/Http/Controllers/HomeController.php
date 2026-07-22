@@ -476,15 +476,6 @@ class HomeController extends Controller
                         ->exists();
                 });
                 
-                // Najnovije prijave na konkurse (samo za konkurse dodijeljene ovoj komisiji)
-                // Članovi komisije ne mogu vidjeti draft prijave
-                $recent_applications = Application::whereIn('competition_id', $competitionIds)
-                    ->where('status', '!=', 'draft')
-                    ->with('user', 'competition')
-                    ->latest()
-                    ->take(10)
-                    ->get();
-                
                 // Moje prijave - samo prijave koje je korisnik lično podneo
                 $myApplications = Application::where('user_id', $user->id)
                     ->whereIn('competition_id', $competitionIds)
@@ -497,7 +488,7 @@ class HomeController extends Controller
                     ->whereIn('status', ['published', 'closed', 'completed'])
                     ->get();
                 
-                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'recent_applications', 'myApplications', 'competitions', 'showEvaluationSection'));
+                return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'myApplications', 'competitions', 'showEvaluationSection'));
             }
 
             return view('dashboard', compact('isKomisija', 'isSuperAdmin'));
