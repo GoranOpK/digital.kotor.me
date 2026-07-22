@@ -324,9 +324,24 @@
 
 <div class="documents-page">
     <div class="container mx-auto px-4">
-        @if(session('success') || (isset($megaUploadSuccess) && $megaUploadSuccess))
+        @php
+            $libraryUploadSuccess = request()->boolean('library_upload_success');
+            $libraryUploadProcessed = request()->boolean('processed');
+            $libraryUploadProcessing = request()->boolean('processing') || request()->boolean('queued');
+        @endphp
+        @if(session('success') || (isset($megaUploadSuccess) && $megaUploadSuccess) || $libraryUploadSuccess)
             <div class="alert alert-success" style="background: #d1fae5; border: 1px solid #10b981; color: #065f46; padding: 12px 16px; border-radius: 8px; margin-bottom: 24px;">
-                {{ session('success') ?? 'Dokument uspješno učitan na MEGA!' }}
+                @if(session('success'))
+                    {{ session('success') }}
+                @elseif($libraryUploadSuccess && $libraryUploadProcessed)
+                    Dokument je uspješno sačuvan.
+                @elseif($libraryUploadSuccess && $libraryUploadProcessing)
+                    Dokument je poslat na obradu.
+                @elseif($libraryUploadSuccess)
+                    Dokument je uspješno sačuvan.
+                @else
+                    Dokument uspješno učitan na MEGA!
+                @endif
             </div>
         @endif
         <div class="page-header">
@@ -1012,34 +1027,56 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Funkcija za MEGA upload direktno iz browser-a
-async function handleMegaUpload(event) {
-    event.preventDefault();
-    
-    const form = event.target;
-    
-    // Validacija - koristi postojeću prepareFormSubmit logiku
-    if (!prepareFormSubmit(event)) {
+// Paket 2B: server-side Document Library upload (config-driven)
+const libraryUploadEnabled = @json((bool) config('external_archive.library_upload'));
+const documentsIndexUrl = @json(route('documents.index'));
+
+function firstDocumentUploadValidationError(data) {
+    if (!data || typeof data !== 'object') {
+        return null;
+    }
+
+    if (data.errors && typeof data.errors === 'object') {
+        for (const key of Object.keys(data.errors)) {
+            const value = data.errors[key];
+            if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string' && value[0]) {
+                return value[0];
+            }
+            if (typeof value === 'string' && value) {
+                return value;
+            }
+        }
+    }
+
+    if (typeof data.message === 'string' && data.message) {
+        return data.message;
+    }
+
+    return null;
+}
+
+function isSafeUserFacingServerMessage(message) {
+    if (typeof message !== 'string' || !message.trim()) {
         return false;
     }
-    
-    // Preuzmi vrijednosti iz forme
-    const name = document.getElementById('name').value;
-    const category = document.getElementById('category').value;
-    const files = document.getElementById('file').files;
-    const expiresAt = document.getElementById('expires_at').value;
-    
-    if (!name || !category || !files || files.length === 0) {
-        alert('Molimo popunite sva obavezna polja.');
+
+    if (message.length > 300) {
         return false;
     }
-    
-    // Prikaži loading
+
+    if (/[<>]|stack trace|exception|\\vendor\\|\\app\\|\/vendor\/|\/app\//i.test(message)) {
+        return false;
+    }
+
+    return true;
+}
+
+async function handleLegacyMegaUpload(form, files, name, category, expiresAt) {
     const submitBtn = form.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     submitBtn.disabled = true;
     submitBtn.textContent = 'Učitavanje na MEGA...';
-    
+
     try {
         // Provjeri je li MEGA upload modul dostupan
         if (!window.megaUpload || !window.megaUpload.uploadFilesToMegaAndSave) {
@@ -1048,36 +1085,151 @@ async function handleMegaUpload(event) {
             form.submit();
             return false;
         }
-        
+
         // Učitavanje datoteka direktno na MEGA
         console.log('Calling uploadFilesToMegaAndSave with files:', files);
         console.log('Files length:', files.length);
         console.log('Files is FileList?', files instanceof FileList);
-        
+
         const result = await window.megaUpload.uploadFilesToMegaAndSave(
             files,
             name,
             category,
             expiresAt || null
         );
-        
+
         if (result.success) {
             // Redirect na listu dokumenata sa success porukom
-            window.location.href = '{{ route("documents.index") }}?mega_upload_success=1';
+            window.location.href = documentsIndexUrl + '?mega_upload_success=1';
         } else {
             alert('Greška pri učitavanju na MEGA: ' + (result.error || 'Nepoznata greška'));
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
         }
-        
+
     } catch (error) {
         console.error('MEGA upload error:', error);
         alert('Greška pri učitavanju na MEGA: ' + error.message);
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
     }
-    
+
     return false;
+}
+
+async function handleServerSideDocumentUpload(form) {
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn ? submitBtn.textContent : '';
+    let navigatedAway = false;
+
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Dokument se šalje...';
+    }
+
+    try {
+        const formData = new FormData(form);
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+        const response = await fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+            credentials: 'same-origin',
+            body: formData,
+        });
+
+        let data = null;
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                console.error('Document upload JSON parse error:', parseError);
+                data = null;
+            }
+        }
+
+        if (response.status === 422) {
+            alert(firstDocumentUploadValidationError(data) || 'Molimo ispravite greške u formi.');
+            return false;
+        }
+
+        if (response.status >= 500) {
+            const serverMessage = data && isSafeUserFacingServerMessage(data.message)
+                ? data.message
+                : 'Došlo je do greške na serveru. Molimo pokušajte ponovo.';
+            alert(serverMessage);
+            return false;
+        }
+
+        if (!response.ok || !data || data.success !== true || !data.document_id) {
+            alert('Došlo je do greške. Molimo pokušajte ponovo.');
+            return false;
+        }
+
+        const documentIsProcessing =
+            data.status === 'pending' || data.status === 'processing';
+        const documentIsProcessed = data.status === 'processed';
+
+        if (!documentIsProcessing && !documentIsProcessed) {
+            alert('Došlo je do greške. Molimo pokušajte ponovo.');
+            return false;
+        }
+
+        const params = new URLSearchParams();
+        params.set('library_upload_success', '1');
+        if (documentIsProcessing) {
+            params.set('processing', '1');
+        } else {
+            params.set('processed', '1');
+        }
+
+        navigatedAway = true;
+        window.location.href = documentsIndexUrl + '?' + params.toString();
+        return false;
+    } catch (error) {
+        console.error('Server-side document upload error:', error);
+        alert('Greška mreže. Provjerite vezu i pokušajte ponovo.');
+        return false;
+    } finally {
+        if (!navigatedAway && submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    }
+}
+
+// Funkcija za upload dokumenta (legacy MEGA ili server-side, zavisno od feature flaga)
+async function handleMegaUpload(event) {
+    event.preventDefault();
+
+    const form = event.target;
+
+    // Validacija - koristi postojeću prepareFormSubmit logiku
+    if (!prepareFormSubmit(event)) {
+        return false;
+    }
+
+    // Preuzmi vrijednosti iz forme
+    const name = document.getElementById('name').value;
+    const category = document.getElementById('category').value;
+    const files = document.getElementById('file').files;
+    const expiresAt = document.getElementById('expires_at').value;
+
+    if (!name || !category || !files || files.length === 0) {
+        alert('Molimo popunite sva obavezna polja.');
+        return false;
+    }
+
+    if (!libraryUploadEnabled) {
+        return handleLegacyMegaUpload(form, files, name, category, expiresAt);
+    }
+
+    return handleServerSideDocumentUpload(form);
 }
 </script>
 @endsection
