@@ -38,6 +38,7 @@ Otvoreni zadaci (dokumentacija i proizvod). Završeno → [project-done.md](proj
 - [ ] **Paralelni upload race** na korisničku kvotu (nije riješen u `b3972de`)
 - [ ] **`post_max_size=8M`** na produkciji ograničava jedan HTTP upload ispod poslovne kvote 20 MB (hosting/PHP, ne aplikacioni commit)
 - [ ] Provjeriti da je **document root** `public/` (zaštita root skripti npr. `queue-worker.php` — v. [deployment-and-cron.md](deployment-and-cron.md))
+- [ ] **Paket 2D (PDF optimizacija)** — **blokiran** dok produkcijski `pdf:check` (Laravel Toolkit → Artisan) ne vrati `READY FOR PDF OPTIMIZATION` (v. [document-library-and-mega.md](document-library-and-mega.md), [deployment-and-cron.md](deployment-and-cron.md))
 
 ## Testiranje
 

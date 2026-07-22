@@ -192,6 +192,23 @@ Legacy MEGA sesija za browser upload koristi credentials sa servera (`getMegaSes
 
 ---
 
+## PDF podrška (dijagnostika prije Paketa 2D)
+
+Obrada dokumenata koristi **PHP Imagick** / **ImageMagick CLI** (Ghostscript obično kao PDF delegate). Nema SSH na Plesku — provjera:
+
+**Plesk → Laravel Toolkit → Artisan → `pdf:check`**
+
+| Rezultat | Značenje |
+|----------|----------|
+| `READY FOR PDF OPTIMIZATION` | PDF read, write, PDF → PDF i multi-page PASS |
+| `PDF OPTIMIZATION BLOCKED` | Paket 2D **ne** implementirati dok **produkcija** ne prođe |
+
+**Lokal vs produkcija:** lokalni `pdf:check` može biti BLOCKED jer na razvojnom PHP-u nedostaju Imagick/CLI/Ghostscript. To **ne** znači da je produkcija blokirana — odluka za Paket 2D ide isključivo po rezultatu na Plesku (Laravel Toolkit → Artisan).
+
+Privremeni probe fajlovi: `storage/app/pdf-diagnostics/` (komanda briše nakon rada). Ne koristi korisničke dokumente. Detalji: [deployment-and-cron.md](deployment-and-cron.md).
+
+---
+
 ## Poznata ograničenja (Biblioteka / Paket 2C)
 
 1. Stari cloud dokumenti sa `file_size` null/0 — zaseban backfill
@@ -199,6 +216,7 @@ Legacy MEGA sesija za browser upload koristi credentials sa servera (`getMegaSes
 3. Paralelni upload race na kvotu nije riješen
 4. Plesk cron + 55s worker nije zamjena za Supervisor
 5. Provjeriti da je document root `public/` (zaštita root PHP skripti)
+6. Paket 2D (PDF optimizacija) blokiran dok `pdf:check` na produkciji ne bude READY
 
 ---
 

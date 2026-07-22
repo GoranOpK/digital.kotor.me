@@ -220,8 +220,24 @@ U `routes/console.php` definisan je `cultural-calendar:send-weekly-newsletter` (
 | `cultural-calendar:send-weekly-newsletter` | Sedmični newsletter |
 | `competitions:send-candidates-list` | Email lista kandidata |
 | `upload:check-settings` | Dijagnostika uploada |
-| `imagemagick:check` | Provjera ImageMagick |
+| `imagemagick:check` | Provjera ImageMagick (Imagick + convert; PNG → PDF) |
+| `pdf:check` | PDF podrška: Imagick, CLI, Ghostscript, PDF read/write, PDF → PDF, multi-page |
 | `path:show` | Ispis `base_path()` |
+
+### PDF dijagnostika na Plesku (bez SSH)
+
+Korisnik **nema** SSH / klasičan CLI. Pokretanje:
+
+1. Plesk → **Laravel Toolkit** → **Artisan**
+2. Unijeti: `pdf:check` (bez prefiksa `php artisan`)
+3. Tumačenje:
+   - `READY FOR PDF OPTIMIZATION` — ključni testovi prošli (PDF read, write, PDF → PDF, multi-page); exit `0`
+   - `PDF OPTIMIZATION BLOCKED` — Paket 2D ostaje blokiran **na osnovu produkcijskog** rezultata; exit `1`
+4. `imagemagick:check` ostaje za brzi Imagick/convert pregled; **ne** zamjenjuje `pdf:check`
+
+Napomena: ako `gs` nije na PATH-u, a PDF testovi ipak PASS, komanda upozorava da delegate funkcionalno radi.
+
+Lokalni BLOCKED (npr. bez Imagick na razvojnom PHP-u) **nije** dokaz da je produkcija blokirana — uvijek ponovo pokrenuti `pdf:check` u Toolkit-u nakon deploya.
 
 ---
 

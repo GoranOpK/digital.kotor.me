@@ -1,6 +1,6 @@
 # Handoff — novi chat / novi agent
 
-**Poslednje ažuriranje:** 2026-06-30
+**Poslednje ažuriranje:** 2026-07-22
 
 Kratko uputstvo da nastaviš rad na **digital.kotor.me** bez čitanja cijelog repoa.
 
@@ -69,7 +69,7 @@ Detalji: [roles-and-permissions.md](roles-and-permissions.md).
 
 ## 6. Deploy / cron
 
-**Tok:** lokalno → GitHub (`main`) → Plesk deploy (ti ili kolega, po potrebi). **Laravel Toolkit** na serveru. **Queue:** `queue-worker.php` u Scheduled Tasks (`--sleep=1 --max-time=55`, flock) — v. [deployment-and-cron.md](deployment-and-cron.md).
+**Tok:** lokalno → GitHub (`main`) → Plesk deploy (ti ili kolega, po potrebi). **Laravel Toolkit** na serveru (nema SSH). **Queue:** `queue-worker.php` u Scheduled Tasks (`--sleep=1 --max-time=55`, flock). **PDF podrška:** Artisan `pdf:check` prije Paketa 2D — v. [deployment-and-cron.md](deployment-and-cron.md), [document-library-and-mega.md](document-library-and-mega.md).
 
 **Objava cjeline:** zadovoljstvo tima → link/polje na **Dashboard-u** (+ po slučaju admin status).
 
