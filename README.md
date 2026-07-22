@@ -8,7 +8,10 @@ Portal Opštine Kotor — Laravel aplikacija: **platforma** (auth, biblioteka do
 - [docs/tehnicka-dokumentacija/project-conventions.md](docs/tehnicka-dokumentacija/project-conventions.md) — konvencije i pravila
 - [docs/tehnicka-dokumentacija/handoff-new-chat.md](docs/tehnicka-dokumentacija/handoff-new-chat.md) — uputstvo za novog agenta
 - [docs/tehnicka-dokumentacija/project-status-next-steps.md](docs/tehnicka-dokumentacija/project-status-next-steps.md) — indeks i status modula
+- [docs/tehnicka-dokumentacija/document-library-and-mega.md](docs/tehnicka-dokumentacija/document-library-and-mega.md) — Biblioteka dokumenata (upload, kvota, server-side arhiva)
 - [docs/UPUTSTVO_ZENSKO_PREDUZETNISTVO.md](docs/UPUTSTVO_ZENSKO_PREDUZETNISTVO.md) — korisničko uputstvo
+
+Biblioteka dokumenata podržava asinhrono eksterno arhiviranje i korisničku kvotu (20 MB). Detalji: [document-library-and-mega.md](docs/tehnicka-dokumentacija/document-library-and-mega.md).
 
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 

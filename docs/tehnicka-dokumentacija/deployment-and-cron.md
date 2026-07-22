@@ -1,9 +1,10 @@
 # Deploy, cron i Artisan komande
 
-**Poslednje ažuriranje:** 2026-06-30  
-**Izvor u kodu:** root PHP skripte, `routes/console.php`, `app/Console/Commands/`
+**Poslednje ažuriranje:** 2026-07-22
+**Izvor u kodu:** root PHP skripte, `routes/console.php`, `app/Console/Commands/`, `queue-worker.php`
 
 Detaljni Plesk vodiči: [PLESK_FINAL_INSTRUCTIONS.md](PLESK_FINAL_INSTRUCTIONS.md), [PLESK_DELETE_EXPIRED_CRON.md](PLESK_DELETE_EXPIRED_CRON.md).
+Biblioteka dokumenata / queue tok: [document-library-and-mega.md](document-library-and-mega.md).
 
 ---
 
@@ -124,6 +125,8 @@ Komentar u `routes/console.php`:
 
 > Schedule nije korišćen za delete-expired jer Plesk Scheduled Tasks ne pokreće pouzdano `schedule:run`.
 
+**Provjera:** document root treba biti `public/`, da root skripte (npr. `queue-worker.php`) ne budu javno dostupne kao obične URL stranice.
+
 ---
 
 ## Backup (Plesk)
@@ -135,7 +138,7 @@ Komentar u `routes/console.php`:
 
 ## Zakazani zadaci na produkciji (važeće)
 
-Izvor: Plesk **Scheduled Tasks** + Laravel Toolkit (jun 2026).
+Izvor: Plesk **Scheduled Tasks** + Laravel Toolkit (jun 2026; worker args ažurirani jul 2026 — `b3972de`).
 
 ### Laravel Toolkit → Scheduled Tasks (Artisan)
 
@@ -148,12 +151,44 @@ Izvor: Plesk **Scheduled Tasks** + Laravel Toolkit (jun 2026).
 | Zadatak | Namjena |
 |---------|---------|
 | `digital.kotor.me/cleanup-temp-downloads.php` | Temp fajlovi MEGA downloada |
-| `digital.kotor.me/queue-worker.php` | Queue worker (`queue:work --stop-when-empty`) — obrada jobova npr. `ProcessDocumentJob` |
+| `digital.kotor.me/queue-worker.php` | Queue worker — v. sekciju ispod |
 | `digital.kotor.me/delete-expired-documents.php` | Istekli dokumenti (`documents:delete-expired`) |
 | `digital.kotor.me/find-node-path.php` | Dijagnostika/putanja (na serveru; možda nije u repou) |
 | `php artisan competitions:send-candidates-list` | Email lista kandidata |
 
-**Queue:** `QUEUE_CONNECTION=database` — worker se pokreće kroz `queue-worker.php` u cron-u, ne kao trajni daemon (v. `--stop-when-empty` u skripti).
+**Queue connection:** `QUEUE_CONNECTION=database`.
+
+---
+
+## Queue worker (`queue-worker.php`)
+
+Plesk Scheduled Task pokreće skriptu **jednom u minuti**. Ovo je **praktično rješenje za Plesk**, ne stalni Supervisor/systemd daemon. Dugoročno se Supervisor može razmotriti ako hosting to omogući — **nije** trenutna produkcijska konfiguracija.
+
+### Argumenti (važeće)
+
+```text
+php artisan queue:work
+  --sleep=1
+  --tries=3
+  --timeout=300
+  --max-time=55
+```
+
+- `--stop-when-empty` se **više ne koristi** (worker više ne izlazi odmah kad je red prazan)
+- Worker ostaje aktivan do ~55 s; bez poslova provjerava red približno svake sekunde (`--sleep=1`)
+- Nakon `max-time` uredno se gasi; sljedeći cron ciklus ga ponovo pokreće
+
+### Lock (sprečavanje preklapanja)
+
+| Stavka | Vrijednost |
+|--------|------------|
+| Lock fajl | `storage/framework/queue-worker.lock` |
+| Mehanizam | `flock(LOCK_EX \| LOCK_NB)` |
+| Druga instanca (lock zauzet) | mirno `exit 0` |
+| Greška otvaranja lock fajla / lock dir | `exit 1` |
+| Oslobađanje | u `finally` |
+
+Samo jedna instanca smije obrađivati red.
 
 ---
 
@@ -163,7 +198,7 @@ Izvor: Plesk **Scheduled Tasks** + Laravel Toolkit (jun 2026).
 |------|--------|----------|
 | `delete-expired-documents.php` | `documents:delete-expired` | U Plesk Scheduled Tasks |
 | `cleanup-temp-downloads.php` | `documents:cleanup-temp-downloads --minutes=5` | U Plesk Scheduled Tasks |
-| `queue-worker.php` | `queue:work --tries=3 --timeout=300 --stop-when-empty` | U Plesk Scheduled Tasks |
+| `queue-worker.php` | `queue:work --sleep=1 --tries=3 --timeout=300 --max-time=55` | U Plesk Scheduled Tasks + flock |
 | `recalculate-storage.php` | `storage:recalculate` | Po potrebi |
 
 ---
@@ -206,7 +241,7 @@ MEGA upload/delete zahtijeva `node` u PATH-u ili `NODE_BINARY` u `.env`. Cron ok
 
 ---
 
-## Deploy checklist
+## Deploy checklist (opšti)
 
 V. [PRE_DEPLOY_CHECKLIST_MEGA_DELETE.md](PRE_DEPLOY_CHECKLIST_MEGA_DELETE.md).
 
@@ -218,6 +253,35 @@ Sažetak (na **produkciji** kroz Laravel Toolkit, nakon Plesk Git deploy-a):
 4. Artisan: `about` (provjera)
 5. Scheduled Tasks / root PHP skripte za cron (v. ispod)
 6. Provjeriti `MEGA_*` i mail u `.env` na serveru (ne u git-u)
+
+---
+
+## Deploy checklist — Biblioteka / Paket 2C (`b3972de` i povezano)
+
+1. Push commitova na `origin/main`
+2. Plesk Git deploy
+3. Provjera `.env` (ne commitovati):
+   - `EXTERNAL_ARCHIVE_PROVIDER=mega`
+   - `EXTERNAL_ARCHIVE_LIBRARY_UPLOAD=true`
+   - `EXTERNAL_ARCHIVE_DELETE_LOCAL_AFTER_UPLOAD=false`
+4. Artisan:
+   - `optimize:clear`
+   - `view:clear`
+   - `view:cache`
+5. Potvrditi da Scheduled Task i dalje poziva isti `queue-worker.php`
+6. Test single-file upload
+7. Test multi-file upload
+8. Statusi: `pending` → `processing` → `processed`
+9. Potvrditi da worker reaguje unutar ~1 s–55 s prozora (ne čeka puni minut na prazan red)
+10. Provjera iskorišćenog prostora u UI
+11. Provjera dugmeta Preuzmi
+12. Provjera tabela / logova: `jobs`, `failed_jobs`, `external_file_archives`, `storage/logs/laravel.log`
+
+### Rollback
+
+- Kod: vratiti prethodni commit na `main` + Plesk deploy
+- Feature: privremeno `EXTERNAL_ARCHIVE_LIBRARY_UPLOAD=false`, zatim `php artisan optimize:clear`
+- **Ne** uključivati `EXTERNAL_ARCHIVE_DELETE_LOCAL_AFTER_UPLOAD=true` u ovom deployu
 
 ---
 

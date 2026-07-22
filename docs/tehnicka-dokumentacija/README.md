@@ -1,6 +1,6 @@
 # Tehnička dokumentacija — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-06-30
+**Poslednje ažuriranje:** 2026-07-22
 
 Centralni folder za svu tehničku dokumentaciju projekta: konvencije, indeks, arhitektura, moduli, deploy i operativni zapisi.
 
@@ -39,7 +39,7 @@ Centralni folder za svu tehničku dokumentaciju projekta: konvencije, indeks, ar
 | [authentication-and-registration.md](authentication-and-registration.md) | Login, registracija, profil |
 | [application-lifecycle.md](application-lifecycle.md) | Tok prijave na konkurs |
 | [business-rules.md](business-rules.md) | Adresa, JMB/PIB, bodovi, dokumenti |
-| [document-library-and-mega.md](document-library-and-mega.md) | Biblioteka, MEGA, kvota |
+| [document-library-and-mega.md](document-library-and-mega.md) | Biblioteka, MEGA / server-side arhiva, kvota, limiti |
 | [cultural-calendar.md](cultural-calendar.md) | Kalendar kulture |
 | [cultural-calendar-test-checklist.md](cultural-calendar-test-checklist.md) | Testiranje kalendara prije objave |
 | [database-entities.md](database-entities.md) | Modeli, relacije, statusi |

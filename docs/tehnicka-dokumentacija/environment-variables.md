@@ -1,6 +1,6 @@
 # Environment varijable
 
-**Posljednje ažuriranje:** 2026-07-17
+**Posljednje ažuriranje:** 2026-07-22
 **Izvor u kodu:** `.env.example`, `config/*.php`, direktni `env()` pozivi
 
 ---
@@ -114,6 +114,20 @@ Guard u `tests/TestCase.php` prekida testove ako `APP_ENV` nije `testing`, ako d
 | `NODE_BINARY` | `node` | `DocumentController`, `ApplicationController`, `DeleteExpiredDocuments` |
 
 **TODO:** dopuniti `.env.example` kad se odobri izmjena koda ([project-todo.md](project-todo.md)).
+
+---
+
+## External archive (Biblioteka dokumenata)
+
+Izvor: `.env.example`, `config/external_archive.php`. Detalji toka: [document-library-and-mega.md](document-library-and-mega.md).
+
+| Varijabla | Default (example) | Namjena |
+|-----------|-------------------|---------|
+| `EXTERNAL_ARCHIVE_PROVIDER` | `mega` | Provider arhive |
+| `EXTERNAL_ARCHIVE_LIBRARY_UPLOAD` | `false` | `true` = server-side upload Biblioteke (produkcija može biti `true`) |
+| `EXTERNAL_ARCHIVE_DELETE_LOCAL_AFTER_UPLOAD` | `false` | Brisanje lokalnog fajla nakon uspješne arhive — **ostaviti `false`** |
+
+Stvarne MEGA lozinke i produkcijski `.env` se ne commit-uju.
 
 ---
 

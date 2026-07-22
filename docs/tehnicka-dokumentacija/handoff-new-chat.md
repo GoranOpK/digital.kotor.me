@@ -69,7 +69,7 @@ Detalji: [roles-and-permissions.md](roles-and-permissions.md).
 
 ## 6. Deploy / cron
 
-**Tok:** lokalno → GitHub (`main`) → Plesk deploy (ti ili kolega, po potrebi). **Laravel Toolkit** na serveru. **Queue:** `queue-worker.php` u Scheduled Tasks.
+**Tok:** lokalno → GitHub (`main`) → Plesk deploy (ti ili kolega, po potrebi). **Laravel Toolkit** na serveru. **Queue:** `queue-worker.php` u Scheduled Tasks (`--sleep=1 --max-time=55`, flock) — v. [deployment-and-cron.md](deployment-and-cron.md).
 
 **Objava cjeline:** zadovoljstvo tima → link/polje na **Dashboard-u** (+ po slučaju admin status).
 

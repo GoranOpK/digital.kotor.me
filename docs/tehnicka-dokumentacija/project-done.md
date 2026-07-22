@@ -1,10 +1,20 @@
 # Project done — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-07-08
+**Poslednje ažuriranje:** 2026-07-22
 
 Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili git istoriji.
 
 ---
+
+## 2026-07-22 — Biblioteka dokumenata (Paket 2C)
+
+Commit (lokalno; u trenutku pisanja bez push/deploy): `b3972de` — `fix: improve document upload processing and storage limits`
+
+- Queue worker: `--sleep=1 --tries=3 --timeout=300 --max-time=55`, bez `--stop-when-empty`; flock lock u `storage/framework/queue-worker.lock`
+- UX: „Dokument je uspješno otpremljen. Obrada je u toku.“ / „Dokument je uspješno sačuvan.“
+- Kvota: izvor `user_documents.file_size`; cloud dokumenti više se ne preskaču; archive tabela se ne sabira
+- Limiti: 2 MB po ulaznom fajlu; finalni merge smije > 2 MB; cleanup pri prekoračenju kvote
+- Dokumentacija: [document-library-and-mega.md](document-library-and-mega.md), [deployment-and-cron.md](deployment-and-cron.md), [environment-variables.md](environment-variables.md)
 
 ## 2026-07-08 — Kalendar kulture: vidljivost input polja
 
