@@ -336,7 +336,7 @@
                 @elseif($libraryUploadSuccess && $libraryUploadProcessed)
                     Dokument je uspješno sačuvan.
                 @elseif($libraryUploadSuccess && $libraryUploadProcessing)
-                    Dokument je poslat na obradu.
+                    Dokument je uspješno otpremljen. Obrada je u toku.
                 @elseif($libraryUploadSuccess)
                     Dokument je uspješno sačuvan.
                 @else
@@ -750,7 +750,7 @@ function prepareFormSubmit(event) {
         if (selectedFiles[i].size > maxFileSize) {
             event.preventDefault();
             const fileSizeMB = (selectedFiles[i].size / 1024 / 1024).toFixed(2);
-            alert(`Datoteka "${selectedFiles[i].name}" je prevelika (${fileSizeMB} MB).\nMaksimalna dozvoljena veličina po datoteci je 2 MB.`);
+            alert(`Datoteka "${selectedFiles[i].name}" je prevelika (${fileSizeMB} MB).\nSvaki pojedinačni fajl može imati najviše 2 MB.`);
             return false;
         }
     }

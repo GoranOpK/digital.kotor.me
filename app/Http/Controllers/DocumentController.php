@@ -75,7 +75,7 @@ class DocumentController extends Controller
             'name' => 'required|string|max:255',
             'expires_at' => 'nullable|date|after:today',
         ], [
-            'files.*.max' => 'Fajl ne može biti veći od 2 MB.',
+            'files.*.max' => 'Svaki pojedinačni fajl može imati najviše 2 MB.',
         ]);
         
         // Proveri ukupnu veličinu svih fajlova (max 7MB zbog post_max_size = 8M)
@@ -443,18 +443,34 @@ class DocumentController extends Controller
                 );
             }
 
-            // Proveri da li korisnik ima dovoljno prostora za spojeni PDF (samo ako nije na cloud-u)
-            if (!$result['cloud_path'] && !$this->documentProcessor->hasEnoughStorage($user->id, $result['file_size'])) {
-                if ($result['file_path']) {
-                    Storage::disk('local')->delete($result['file_path']);
+            // Kvota: originals su već uračunati u used_storage — provjeri finalnu veličinu kao delta.
+            $originalTotalSizeForQuota = 0;
+            foreach ($originalFilePaths as $path) {
+                if (Storage::disk('local')->exists($path)) {
+                    $originalTotalSizeForQuota += Storage::disk('local')->size($path);
                 }
-                $document->update(['status' => 'failed']);
+            }
 
-                return $this->documentStoreErrorResponse(
-                    $request,
-                    'files',
-                    'Nemate dovoljno prostora za spojeni PDF. Maksimalno dozvoljeno: 20 MB.'
-                );
+            if (! $result['cloud_path']) {
+                $quotaDelta = (int) $result['file_size'] - $originalTotalSizeForQuota;
+                if ($quotaDelta > 0 && ! $this->documentProcessor->hasEnoughStorage($user->id, $quotaDelta)) {
+                    if ($result['file_path']) {
+                        Storage::disk('local')->delete($result['file_path']);
+                    }
+                    foreach ($originalFilePaths as $path) {
+                        if (Storage::disk('local')->exists($path)) {
+                            Storage::disk('local')->delete($path);
+                        }
+                    }
+                    $this->documentProcessor->updateUserStorage($user->id, -$originalTotalSizeForQuota);
+                    $document->delete();
+
+                    return $this->documentStoreErrorResponse(
+                        $request,
+                        'files',
+                        'Dokument nije moguće sačuvati jer bi bila prekoračena ukupna kvota od 20 MB.'
+                    );
+                }
             }
 
             // Ažuriraj dokument sa putanjom do spojenog PDF-a i cloud_path-om ako postoji
@@ -481,12 +497,7 @@ class DocumentController extends Controller
 
             // Ažuriraj korišćen prostor
             // Prvo izračunaj ukupnu veličinu originalnih fajlova PRE brisanja
-            $originalTotalSize = 0;
-            foreach ($originalFilePaths as $path) {
-                if (Storage::disk('local')->exists($path)) {
-                    $originalTotalSize += Storage::disk('local')->size($path);
-                }
-            }
+            $originalTotalSize = $originalTotalSizeForQuota;
             
             Log::info('Updating storage for merged PDF', [
                 'original_total_size' => $originalTotalSize,
@@ -675,6 +686,9 @@ class DocumentController extends Controller
         
         // Obriši zapis iz baze
         $document->delete();
+
+        // Uskladi kvotu (uključujući MEGA/cloud dokumente koji nemaju lokalni fajl)
+        $this->documentProcessor->recalculateUserStorage($user->id);
         
         return redirect()->route('documents.index')
             ->with('success', 'Dokument je uspješno obrisan.');

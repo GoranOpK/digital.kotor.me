@@ -181,16 +181,18 @@ class DocumentProcessor
     }
 
     /**
-     * Proverava i ažurira stvarno iskorišćen prostor za korisnika
-     * Računa samo obrađene PDF fajlove (file_path), ne računa originalne fajlove
+     * Proverava i ažurira iskorišćen prostor korisnika (kvota Document Library).
      *
-     * @param int $userId
-     * @return array ['actual_size' => int, 'stored_size' => int, 'updated' => bool]
+     * Izvor istine: user_documents.file_size (bajtovi) za aktivne dokumente.
+     * Failed dokumenti se ne računaju. ExternalFileArchive se ne sabira dodatno.
+     * Cloud/MEGA dokumenti ulaze preko file_size, bez duplog brojanja lokalnog fajla.
+     *
+     * @return array{actual_size: int, stored_size: int, updated: bool}
      */
     public function recalculateUserStorage(int $userId): array
     {
         $user = \App\Models\User::find($userId);
-        if (!$user) {
+        if (! $user) {
             return [
                 'actual_size' => 0,
                 'stored_size' => 0,
@@ -199,43 +201,37 @@ class DocumentProcessor
         }
 
         $actualSize = 0;
-        $documents = \App\Models\UserDocument::where('user_id', $userId)->get();
+        $documents = \App\Models\UserDocument::where('user_id', $userId)
+            ->where('status', '!=', 'failed')
+            ->get();
 
         Log::info('Recalculating storage for user', [
             'user_id' => $userId,
-            'documents_count' => $documents->count()
+            'documents_count' => $documents->count(),
         ]);
 
         foreach ($documents as $document) {
-            // Ako dokument ima cloud_path, preskači ga jer nije lokalno
-            if ($document->cloud_path) {
-                Log::debug('Document is on cloud, skipping from local storage calculation', [
-                    'document_id' => $document->id,
-                    'cloud_path' => $document->cloud_path,
-                    'status' => $document->status
-                ]);
+            $recordedSize = (int) ($document->file_size ?? 0);
+            if ($recordedSize > 0) {
+                $actualSize += $recordedSize;
+
                 continue;
             }
-            
-            // Računaj samo obrađene PDF fajlove (file_path) koji su lokalno
-            // Ne računaj originalne fajlove jer se oni brišu nakon obrade
+
+            // Fallback za legacy redove bez file_size: lokalni obrađeni PDF ili originali.
             if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
-                $fileSize = Storage::disk('local')->size($document->file_path);
-                $actualSize += $fileSize;
-                
-                Log::debug('Document file found (local)', [
-                    'document_id' => $document->id,
-                    'file_path' => $document->file_path,
-                    'file_size' => $fileSize,
-                    'status' => $document->status
-                ]);
-            } else {
-                Log::debug('Document file not found or missing', [
-                    'document_id' => $document->id,
-                    'file_path' => $document->file_path,
-                    'file_exists' => $document->file_path ? Storage::disk('local')->exists($document->file_path) : false,
-                    'status' => $document->status
-                ]);
+                $actualSize += Storage::disk('local')->size($document->file_path);
+
+                continue;
+            }
+
+            if (! empty($document->original_file_path)) {
+                foreach (explode('|', (string) $document->original_file_path) as $path) {
+                    $path = trim($path);
+                    if ($path !== '' && Storage::disk('local')->exists($path)) {
+                        $actualSize += Storage::disk('local')->size($path);
+                    }
+                }
             }
         }
 
@@ -246,7 +242,7 @@ class DocumentProcessor
             'user_id' => $userId,
             'actual_size' => $actualSize,
             'stored_size' => $storedSize,
-            'difference' => $actualSize - $storedSize
+            'difference' => $actualSize - $storedSize,
         ]);
 
         if ($actualSize != $storedSize) {
@@ -263,7 +259,7 @@ class DocumentProcessor
         } else {
             Log::info('Storage already correct, no update needed', [
                 'user_id' => $userId,
-                'size' => $actualSize
+                'size' => $actualSize,
             ]);
         }
 
