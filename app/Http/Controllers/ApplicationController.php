@@ -614,6 +614,12 @@ class ApplicationController extends Controller
         // Napomena: Provjera dokumenata je uklonjena - korisnici mogu podnijeti prijavu i bez svih dokumenata.
         // Predsjednik komisije će odbiti prijavu ako nedostaju dokumenti kroz formu za ocjenjivanje.
 
+        // Isti kriterijum kao create/store: podnošenje dozvoljeno samo dok je konkurs otvoren za prijave
+        $competition = $application->competition;
+        if (!$competition || !$competition->is_open) {
+            return back()->withErrors(['error' => 'Rok za prijave je istekao ili konkurs nije otvoren za prijave.']);
+        }
+
         // Dodeli redni broj prijave (1, 2, 3, ...) po konkursu
         $maxRedni = Application::where('competition_id', $application->competition_id)->max('redni_broj');
         $application->update([

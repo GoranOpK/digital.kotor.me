@@ -615,7 +615,7 @@
                     @endif
                     @if($application->status === 'draft' && $canManage)
                         <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e5e7eb;">
-                            @if($isReadyToSubmit)
+                            @if($isReadyToSubmit && $competition?->is_open)
                                 <form method="POST" action="{{ route('applications.final-submit', $application) }}" onsubmit="return confirm('Podnijeti prijavu?');">
                                     @csrf
                                     <button type="submit" class="btn btn-primary" style="background: #10b981; width: 100%; font-size: 13px;">
@@ -656,6 +656,11 @@
                                         </p>
                                     </div>
                                 @endif
+                            @elseif($isReadyToSubmit)
+                                <button class="btn btn-secondary" disabled style="width: 100%; font-size: 13px; background: #9ca3af;">
+                                    Podnesi prijavu
+                                </button>
+                                <p style="font-size: 10px; color: #ef4444; margin-top: 6px; text-align: center;">Rok za podnošenje prijava je istekao.</p>
                             @else
                                 <button class="btn btn-secondary" disabled style="width: 100%; font-size: 13px; background: #9ca3af;">
                                     Podnesi prijavu
