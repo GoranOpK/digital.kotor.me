@@ -16,6 +16,26 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Document Library server-side MEGA archive (Paket 2A)
+    |--------------------------------------------------------------------------
+    |
+    | When false (default), DocumentController::store and ProcessDocumentJob
+    | behave as before (no ExternalFileArchiveService). Browser MEGA upload
+    | remains the primary UI path until a later package switches the frontend.
+    |
+    | When true, store() queues ProcessDocumentJob which archives the processed
+    | PDF via ExternalFileArchiveService after local PDF processing.
+    |
+    | Status note: "processed" = local PDF ready for download
+    | (see DocumentController::download). Archive runs after that.
+    | Archive failure is recorded on external_file_archives; UserDocument
+    | stays "processed" when the local PDF remains usable.
+    |
+    */
+    'library_upload' => (bool) env('EXTERNAL_ARCHIVE_LIBRARY_UPLOAD', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Node process timeouts (seconds)
     |--------------------------------------------------------------------------
     */

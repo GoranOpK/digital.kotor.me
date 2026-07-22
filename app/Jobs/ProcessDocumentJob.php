@@ -2,16 +2,20 @@
 
 namespace App\Jobs;
 
+use App\Models\ExternalFileArchive;
 use App\Models\UserDocument;
 use App\Services\DocumentProcessor;
+use App\Services\ExternalArchive\ExternalFileArchiveService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class ProcessDocumentJob implements ShouldQueue
 {
@@ -22,20 +26,69 @@ class ProcessDocumentJob implements ShouldQueue
 
     /**
      * Create a new job instance.
+     *
+     * @param  bool  $archiveOnly  When true, skip PDF processing and only run MEGA archive
+     *                             (e.g. after sync multi-file merge). Requires document.file_path.
      */
     public function __construct(
         public UserDocument $document,
-        public string $originalFilePath
+        public string $originalFilePath,
+        public bool $archiveOnly = false,
     ) {
         //
     }
 
     /**
-     * Execute the job.
+     * @return list<object>
      */
-    public function handle(DocumentProcessor $documentProcessor): void
+    public function middleware(): array
+    {
+        // Lock per UserDocument; expireAfter > $timeout so a long MEGA upload is not double-run.
+        return [
+            (new WithoutOverlapping('process-document:'.$this->document->id))
+                ->expireAfter(max(900, (int) $this->timeout + 120))
+                ->dontRelease(),
+        ];
+    }
+
+    /**
+     * Execute the job.
+     *
+     * "processed" = local PDF ready for download (unchanged).
+     * When external_archive.library_upload is true, archive runs after PDF success.
+     * Archive failure keeps UserDocument as processed if the local PDF exists;
+     * failure is recorded on external_file_archives only.
+     */
+    public function handle(DocumentProcessor $documentProcessor, ExternalFileArchiveService $archiveService): void
     {
         try {
+            $this->document->refresh();
+            if (! $this->document->exists) {
+                return;
+            }
+
+            $libraryUpload = (bool) config('external_archive.library_upload', false);
+
+            if ($libraryUpload && $this->hasUploadedArchive()) {
+                Log::info('ProcessDocumentJob skipped: archive already uploaded', [
+                    'document_id' => $this->document->id,
+                ]);
+                return;
+            }
+
+            // Archive-only (merge path) or retry when PDF already exists.
+            if ($libraryUpload && ($this->archiveOnly || $this->hasLocalProcessedPdf())) {
+                $this->archiveProcessedDocument($archiveService);
+                return;
+            }
+
+            if (! $libraryUpload
+                && $this->document->status === 'processed'
+                && $this->hasLocalProcessedPdf()
+            ) {
+                return;
+            }
+
             Log::info('Starting document processing job', [
                 'document_id' => $this->document->id,
                 'attempt' => $this->attempts(),
@@ -67,7 +120,9 @@ class ProcessDocumentJob implements ShouldQueue
             
             // Mala pauza da bi JavaScript stigao da pročita "processing" status
             // (obrada je vrlo brza - 0.39 sekundi, pa treba da status bude vidljiv)
-            usleep(500000); // 0.5 sekunde pauza
+            if (! app()->environment('testing')) {
+                usleep(500000); // 0.5 sekunde pauza
+            }
             
             Log::info('Status postavljen na processing', [
                 'document_id' => $this->document->id,
@@ -173,6 +228,11 @@ class ProcessDocumentJob implements ShouldQueue
                 'processed_file_path' => $result['file_path']
             ]);
 
+            if ($libraryUpload) {
+                $this->document->refresh();
+                $this->archiveProcessedDocument($archiveService);
+            }
+
         } catch (\Exception $e) {
             Log::error('Document processing job exception', [
                 'document_id' => $this->document->id,
@@ -182,8 +242,11 @@ class ProcessDocumentJob implements ShouldQueue
                 'max_tries' => $this->tries
             ]);
             
-            // Ažuriraj status na failed
-            $this->document->update(['status' => 'failed']);
+            // Do not demote a usable local PDF (e.g. archive-only / post-PDF failures).
+            $this->document->refresh();
+            if (! ($this->hasLocalProcessedPdf() && in_array($this->document->status, ['processed', 'active'], true))) {
+                $this->document->update(['status' => 'failed']);
+            }
             
             // Ne bacaj exception ako smo već probali maksimalan broj puta
             // ili ako je greška vezana za fajl koji ne postoji
@@ -200,6 +263,88 @@ class ProcessDocumentJob implements ShouldQueue
     }
 
     /**
+     * Archive processed PDF via Paket 1 API. Does not demote UserDocument from
+     * processed→failed when a local PDF remains usable.
+     */
+    private function archiveProcessedDocument(ExternalFileArchiveService $archiveService): void
+    {
+        $this->document->refresh();
+        if (! $this->document->exists) {
+            return;
+        }
+
+        if ($this->hasUploadedArchive()) {
+            return;
+        }
+
+        $localPath = (string) ($this->document->file_path ?? '');
+        if ($localPath === '' || ! Storage::disk('local')->exists($localPath)) {
+            Log::error('ProcessDocumentJob archive skipped: processed PDF missing', [
+                'document_id' => $this->document->id,
+                'file_path' => $localPath,
+                'archive_only' => $this->archiveOnly,
+            ]);
+            // archiveOnly: leave document status untouched (merge already produced processed PDF or nothing usable).
+            if ($this->archiveOnly) {
+                return;
+            }
+            $this->document->update(['status' => 'failed']);
+
+            return;
+        }
+
+        try {
+            $archive = $archiveService->archiveLocalPrivateFile(
+                'user_documents',
+                (int) $this->document->id,
+                'file_path',
+                $localPath,
+                'document_library',
+            );
+        } catch (Throwable $e) {
+            Log::error('ProcessDocumentJob archive exception', [
+                'document_id' => $this->document->id,
+                'error' => $e->getMessage(),
+            ]);
+            // Keep processed: local PDF is still downloadable.
+            return;
+        }
+
+        if ($archive->status === ExternalFileArchive::STATUS_UPLOADED) {
+            Log::info('ProcessDocumentJob archive succeeded', [
+                'document_id' => $this->document->id,
+                'external_file_archive_id' => $archive->id,
+            ]);
+
+            return;
+        }
+
+        Log::warning('ProcessDocumentJob archive failed; keeping UserDocument processed', [
+            'document_id' => $this->document->id,
+            'external_file_archive_id' => $archive->id,
+            'archive_status' => $archive->status,
+        ]);
+    }
+
+    private function hasUploadedArchive(): bool
+    {
+        return ExternalFileArchive::query()
+            ->where('source_table', 'user_documents')
+            ->where('source_id', $this->document->id)
+            ->where('source_column', 'file_path')
+            ->where('archive_provider', ExternalFileArchive::PROVIDER_MEGA)
+            ->where('status', ExternalFileArchive::STATUS_UPLOADED)
+            ->exists();
+    }
+
+    private function hasLocalProcessedPdf(): bool
+    {
+        $path = (string) ($this->document->file_path ?? '');
+
+        return $path !== '' && Storage::disk('local')->exists($path);
+    }
+
+    /**
      * Handle a job failure.
      */
     public function failed(\Throwable $exception): void
@@ -208,6 +353,12 @@ class ProcessDocumentJob implements ShouldQueue
             'document_id' => $this->document->id,
             'error' => $exception->getMessage()
         ]);
+
+        // Do not overwrite a usable local PDF with failed.
+        $this->document->refresh();
+        if ($this->hasLocalProcessedPdf() && in_array($this->document->status, ['processed', 'active'], true)) {
+            return;
+        }
 
         $this->document->update(['status' => 'failed']);
     }

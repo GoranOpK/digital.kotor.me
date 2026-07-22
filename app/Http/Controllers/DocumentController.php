@@ -66,7 +66,7 @@ class DocumentController extends Controller
     /**
      * Upload novog dokumenta (podržava više fajlova odjednom)
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'files' => 'required|array|min:1',
@@ -160,6 +160,13 @@ class DocumentController extends Controller
                 // Ažuriraj korišćen prostor za izvorni fajl
                 $this->documentProcessor->updateUserStorage($user->id, $originalFileSize);
 
+                // Paket 2A: server-side archive path (feature flag)
+                if ((bool) config('external_archive.library_upload', false)) {
+                    ProcessDocumentJob::dispatch($document, $originalFilePath);
+
+                    return $this->documentStoreQueuedResponse($request, $document);
+                }
+
                 // Odluči da li da obrađujemo direktno ili preko queue-a
                 $fileSizeMB = $originalFileSize / 1024 / 1024;
                 $useQueue = $fileSizeMB > 5; // 5MB threshold
@@ -168,6 +175,8 @@ class DocumentController extends Controller
                     // Pokreni job za asinhronu obradu (veliki fajlovi)
                     ProcessDocumentJob::dispatch($document, $originalFilePath);
                     $queuedCount++;
+
+                    return $this->documentStoreQueuedResponse($request, $document);
                 } else {
                     // Direktna obrada za male fajlove (brže iskustvo)
                     try {
@@ -258,8 +267,7 @@ class DocumentController extends Controller
                             ]);
                         }
 
-                        return redirect()->route('documents.index')
-                            ->with('success', 'Dokument je uspješno upload-ovan i obrađen.');
+                        return $this->documentStoreProcessedResponse($request, $document);
                             
                     } catch (\Exception $e) {
                         // Ako direktna obrada ne uspe, prebaci na queue
@@ -271,8 +279,7 @@ class DocumentController extends Controller
                         $document->update(['status' => 'pending']);
                         ProcessDocumentJob::dispatch($document, $originalFilePath);
                         
-                        return redirect()->route('documents.index')
-                            ->with('success', 'Dokument je uspješno upload-ovan. Obrada je u toku.');
+                        return $this->documentStoreQueuedResponse($request, $document);
                     }
                 }
         } catch (\Exception $e) {
@@ -421,6 +428,11 @@ class DocumentController extends Controller
             }
             
             $document->update($updateData);
+
+            // Paket 2A: queue MEGA archive after local merge (never sync in HTTP)
+            if ((bool) config('external_archive.library_upload', false) && ! empty($result['file_path'])) {
+                ProcessDocumentJob::dispatch($document, (string) $result['file_path'], true);
+            }
 
             // Ažuriraj korišćen prostor
             // Prvo izračunaj ukupnu veličinu originalnih fajlova PRE brisanja
@@ -917,6 +929,39 @@ class DocumentController extends Controller
                 'error' => 'Greška pri čuvanju metadata: ' . $e->getMessage()
             ])->withInput();
         }
+    }
+
+    private function documentStoreQueuedResponse(Request $request, UserDocument $document): RedirectResponse|JsonResponse
+    {
+        $message = 'Dokument je uspješno upload-ovan. Obrada je u toku.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'document_id' => $document->id,
+                'status' => $document->fresh()->status ?? 'pending',
+                'queued' => true,
+                'message' => $message,
+            ]);
+        }
+
+        return redirect()->route('documents.index')->with('success', $message);
+    }
+
+    private function documentStoreProcessedResponse(Request $request, UserDocument $document): RedirectResponse|JsonResponse
+    {
+        $message = 'Dokument je uspješno upload-ovan i obrađen.';
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'document_id' => $document->id,
+                'status' => $document->status,
+                'message' => $message,
+            ]);
+        }
+
+        return redirect()->route('documents.index')->with('success', $message);
     }
 }
 
