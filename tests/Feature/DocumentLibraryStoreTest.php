@@ -509,7 +509,7 @@ class DocumentLibraryStoreTest extends TestCase
         $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
             'files' => [
                 UploadedFile::fake()->createWithContent('page1.pdf', "%PDF-1.4\npage-1"),
-                UploadedFile::fake()->createWithContent('page2.jpg', 'jpeg-bytes-page-2'),
+                UploadedFile::fake()->createWithContent('page2.pdf', "%PDF-1.4\npage-2-unique"),
                 UploadedFile::fake()->createWithContent('page3.pdf', "%PDF-1.4\npage-3"),
             ],
             'category' => 'Ostali dokumenti',
@@ -522,5 +522,220 @@ class DocumentLibraryStoreTest extends TestCase
             'name' => 'Three distinct',
             'status' => 'processed',
         ]);
+    }
+
+    public function test_image_same_pixels_different_metadata_is_rejected(): void
+    {
+        if (! extension_loaded('imagick')) {
+            $this->markTestSkipped('Imagick required for normalized image duplicate tests');
+        }
+
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $this->mock(DocumentProcessor::class, function ($mock) {
+            $mock->shouldNotReceive('hasEnoughStorage');
+            $mock->shouldNotReceive('updateUserStorage');
+            $mock->shouldNotReceive('mergeDocuments');
+        });
+
+        $pngA = $this->fixturePngRed1x1();
+        $pngB = $this->pngWithTextChunk($pngA, 'Comment', 'capture-metadata-b');
+        $this->assertNotSame($pngA, $pngB);
+        $this->assertNotSame(hash('sha256', $pngA), hash('sha256', $pngB));
+
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->createWithContent('capture01.png', $pngA),
+                UploadedFile::fake()->createWithContent('capture05.png', $pngB),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Same pixels meta',
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString(
+            'Isti fajl je dodat više puta. Uklonite duplikate i pokušajte ponovo.',
+            (string) $response->json('message')
+        );
+        Bus::assertNotDispatched(ProcessDocumentJob::class);
+        $this->assertDatabaseCount('user_documents', 0);
+        $this->user->refresh();
+        $this->assertSame(0, (int) $this->user->used_storage_bytes);
+        $this->assertSame([], Storage::disk('local')->allFiles('documents/user_'.$this->user->id));
+    }
+
+    public function test_image_same_dimensions_different_pixels_is_allowed(): void
+    {
+        if (! extension_loaded('imagick')) {
+            $this->markTestSkipped('Imagick required for normalized image duplicate tests');
+        }
+
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $mergedPath = 'documents/user_'.$this->user->id.'/merged.pdf';
+        Storage::disk('local')->put($mergedPath, 'merged');
+
+        $this->mock(DocumentProcessor::class, function ($mock) use ($mergedPath) {
+            $mock->shouldReceive('hasEnoughStorage')->andReturn(true);
+            $mock->shouldReceive('updateUserStorage');
+            $mock->shouldReceive('mergeDocuments')->once()->andReturn([
+                'success' => true,
+                'file_path' => $mergedPath,
+                'file_size' => 200,
+                'cloud_path' => null,
+                'error' => null,
+            ]);
+        });
+
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->createWithContent('a.png', $this->fixturePngRed1x1()),
+                UploadedFile::fake()->createWithContent('b.png', $this->fixturePngBlue1x1()),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Different pixels',
+        ]);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $this->assertDatabaseCount('user_documents', 1);
+    }
+
+    public function test_identical_binary_images_still_rejected_by_sha256(): void
+    {
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $this->mock(DocumentProcessor::class, function ($mock) {
+            $mock->shouldNotReceive('hasEnoughStorage');
+            $mock->shouldNotReceive('updateUserStorage');
+            $mock->shouldNotReceive('mergeDocuments');
+        });
+
+        $png = $this->fixturePngRed1x1();
+
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->createWithContent('same.png', $png),
+                UploadedFile::fake()->createWithContent('same-copy.png', $png),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Binary identical images',
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('Isti fajl je dodat više puta', (string) $response->json('message'));
+        Bus::assertNotDispatched(ProcessDocumentJob::class);
+        $this->assertDatabaseCount('user_documents', 0);
+    }
+
+    public function test_corrupt_image_duplicate_check_returns_controlled_validation_error(): void
+    {
+        if (! extension_loaded('imagick')) {
+            $this->markTestSkipped('Imagick required');
+        }
+
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $this->mock(DocumentProcessor::class, function ($mock) {
+            $mock->shouldNotReceive('hasEnoughStorage');
+            $mock->shouldNotReceive('updateUserStorage');
+            $mock->shouldNotReceive('mergeDocuments');
+        });
+
+        $valid = $this->fixturePngRed1x1();
+        $corrupt = "\x89PNG\r\n\x1a\n".str_repeat('x', 64);
+
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->createWithContent('ok.png', $valid),
+                UploadedFile::fake()->createWithContent('bad.png', $corrupt),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Corrupt image',
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString(
+            'Jedna od slika nije validna ili se ne može pročitati.',
+            (string) $response->json('message')
+        );
+        Bus::assertNotDispatched(ProcessDocumentJob::class);
+        $this->assertDatabaseCount('user_documents', 0);
+        $this->user->refresh();
+        $this->assertSame(0, (int) $this->user->used_storage_bytes);
+    }
+
+    public function test_oversized_image_dimensions_are_rejected_without_side_effects(): void
+    {
+        if (! extension_loaded('imagick')) {
+            $this->markTestSkipped('Imagick required');
+        }
+
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $this->mock(DocumentProcessor::class, function ($mock) {
+            $mock->shouldNotReceive('hasEnoughStorage');
+            $mock->shouldNotReceive('updateUserStorage');
+            $mock->shouldNotReceive('mergeDocuments');
+        });
+
+        $img = new \Imagick();
+        $img->newImage(\App\Services\DocumentImageFingerprint::MAX_SIDE + 1, 8, new \ImagickPixel('red'));
+        $img->setImageFormat('png');
+        $blob = $img->getImageBlob();
+        $img->clear();
+        $img->destroy();
+
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->createWithContent('small.png', $this->fixturePngRed1x1()),
+                UploadedFile::fake()->createWithContent('huge.png', $blob),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Huge image',
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString('nedozvoljene dimenzije', (string) $response->json('message'));
+        Bus::assertNotDispatched(ProcessDocumentJob::class);
+        $this->assertDatabaseCount('user_documents', 0);
+        $this->user->refresh();
+        $this->assertSame(0, (int) $this->user->used_storage_bytes);
+    }
+
+    /** Deterministic 1×1 red PNG (no random metadata). */
+    private function fixturePngRed1x1(): string
+    {
+        return (string) base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+            true
+        );
+    }
+
+    /** Deterministic 1×1 blue PNG — same size, different pixels. */
+    private function fixturePngBlue1x1(): string
+    {
+        return (string) base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPj/HwADBwIAMCbHYQAAAABJRU5ErkJggg==',
+            true
+        );
+    }
+
+    /**
+     * Insert a PNG tEXt chunk before IEND — changes binary hash, not pixels.
+     */
+    private function pngWithTextChunk(string $pngBytes, string $keyword, string $text): string
+    {
+        $iend = strpos($pngBytes, 'IEND');
+        $this->assertNotFalse($iend);
+        $insertAt = $iend - 4;
+        $data = $keyword."\0".$text;
+        $chunk = pack('N', strlen($data)).'tEXt'.$data.pack('N', crc32('tEXt'.$data));
+
+        return substr($pngBytes, 0, $insertAt).$chunk.substr($pngBytes, $insertAt);
     }
 }

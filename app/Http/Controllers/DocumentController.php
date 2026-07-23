@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Jobs\ProcessDocumentJob;
 use App\Models\UserDocument;
+use App\Services\DocumentImageFingerprint;
+use App\Services\DocumentImageFingerprintException;
 use App\Services\DocumentProcessor;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -19,9 +21,12 @@ class DocumentController extends Controller
 {
     protected DocumentProcessor $documentProcessor;
 
-    public function __construct(DocumentProcessor $documentProcessor)
+    protected DocumentImageFingerprint $imageFingerprint;
+
+    public function __construct(DocumentProcessor $documentProcessor, DocumentImageFingerprint $imageFingerprint)
     {
         $this->documentProcessor = $documentProcessor;
+        $this->imageFingerprint = $imageFingerprint;
     }
 
     /**
@@ -1111,7 +1116,9 @@ class DocumentController extends Controller
     }
 
     /**
-     * Reject identical file content within the same request (SHA-256).
+     * Reject identical file content within the same request.
+     * Pass 1: SHA-256 of the raw upload (all types)
+     * Pass 2: For images only — normalized pixel fingerprint (width|height|sha256 of RGB)
      * Runs before any local storage, DB row, quota change, or job dispatch.
      *
      * @param  array<int, \Illuminate\Http\UploadedFile>|null  $files
@@ -1122,7 +1129,9 @@ class DocumentController extends Controller
             return null;
         }
 
-        $seenHashes = [];
+        $duplicateMessage = 'Isti fajl je dodat više puta. Uklonite duplikate i pokušajte ponovo.';
+        $seenBinaryHashes = [];
+        $imagePaths = [];
 
         foreach ($files as $file) {
             if ($file === null) {
@@ -1134,19 +1143,53 @@ class DocumentController extends Controller
                 return 'Jedan od fajlova nije dostupan za validaciju.';
             }
 
-            $hash = hash_file('sha256', $path);
-            if ($hash === false) {
+            $binaryHash = hash_file('sha256', $path);
+            if ($binaryHash === false) {
                 return 'Jedan od fajlova nije dostupan za validaciju.';
             }
 
-            if (isset($seenHashes[$hash])) {
-                return 'Isti fajl je dodat više puta. Uklonite duplikate i pokušajte ponovo.';
+            if (isset($seenBinaryHashes[$binaryHash])) {
+                return $duplicateMessage;
+            }
+            $seenBinaryHashes[$binaryHash] = true;
+
+            if ($this->isDocumentLibraryImageUpload($file)) {
+                $imagePaths[] = $path;
+            }
+        }
+
+        if (count($imagePaths) < 2) {
+            return null;
+        }
+
+        $seenImageFingerprints = [];
+        foreach ($imagePaths as $path) {
+            try {
+                $key = $this->imageFingerprint->fingerprint($path);
+            } catch (DocumentImageFingerprintException $e) {
+                return $e->getMessage();
             }
 
-            $seenHashes[$hash] = true;
+            if (isset($seenImageFingerprints[$key])) {
+                return $duplicateMessage;
+            }
+            $seenImageFingerprints[$key] = true;
         }
 
         return null;
+    }
+
+    private function isDocumentLibraryImageUpload(\Illuminate\Http\UploadedFile $file): bool
+    {
+        $mime = strtolower((string) $file->getMimeType());
+        $ext = strtolower((string) $file->getClientOriginalExtension());
+
+        if (in_array($mime, ['image/jpeg', 'image/jpg', 'image/png'], true)) {
+            return true;
+        }
+
+        return in_array($ext, ['jpeg', 'jpg', 'png'], true)
+            && $mime !== 'application/pdf';
     }
 
     private function validatePdfContents(?string $path): ?string

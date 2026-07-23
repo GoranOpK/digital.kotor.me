@@ -19,6 +19,9 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/app/document-fingerprint-input/*
+!/storage/app/document-fingerprint-input/.gitignore
+/storage/app/document-fingerprint-diagnostics/
 /vendor
 Homestead.json
 Homestead.yaml
