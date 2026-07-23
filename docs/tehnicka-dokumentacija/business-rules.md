@@ -116,9 +116,10 @@ V. [project-operations.md](project-operations.md#prioritet-budućih-cjelina), [s
 
 ## Biblioteka dokumenata
 
-- Kvota: **20 MB** po korisniku (`DocumentProcessor::MAX_STORAGE_PER_USER`)
+- Kvota: **20 MB** po korisniku (`DocumentProcessor::MAX_STORAGE_PER_USER` / `DOCUMENT_LIBRARY_USER_QUOTA_BYTES`)
 - Formati: PDF, JPG, PNG
 - Opcioni `expires_at` — mora biti u budućnosti pri uploadu
+- U **jednom** upload zahtjevu: zabranjeni binarni duplikati (SHA-256) i, za slike, pixel-identični duplikati nakon Imagick normalizacije — v. [document-library-and-mega.md](document-library-and-mega.md#zaštita-od-duplikata-u-istom-uploadu)
 
 ---
 

@@ -69,7 +69,7 @@ Detalji: [roles-and-permissions.md](roles-and-permissions.md).
 
 ## 6. Deploy / cron
 
-**Tok:** lokalno → GitHub (`main`) → Plesk deploy (ti ili kolega, po potrebi). **Laravel Toolkit** na serveru (nema SSH). **Queue:** `queue-worker.php` u Scheduled Tasks. **PDF:** aplikacija do 20 MB; shared hosting trenutno efektivno **2 MB** PHP Default — v. [deployment-and-cron.md](deployment-and-cron.md).
+**Tok:** lokalno → GitHub (`main`) → Plesk deploy (ti ili kolega, po potrebi). **Laravel Toolkit** na serveru (nema SSH). **Queue:** `queue-worker.php` u Scheduled Tasks. **PDF:** aplikacija do 20 MB; shared hosting trenutno efektivno **2 MB** PHP Default — v. [deployment-and-cron.md](deployment-and-cron.md). Dijagnostika: `pdf:check`, `document:fingerprint-check` (Toolkit Artisan).
 
 **Objava cjeline:** zadovoljstvo tima → link/polje na **Dashboard-u** (+ po slučaju admin status).
 

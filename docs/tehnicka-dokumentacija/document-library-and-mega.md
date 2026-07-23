@@ -2,7 +2,7 @@
 
 **Poslednje ažuriranje:** 2026-07-22
 **Izvor u kodu:** `DocumentController`, `DocumentProcessor`, `ProcessDocumentJob`, `ExternalFileArchiveService`, `queue-worker.php`, `resources/views/documents/index.blade.php`, `scripts/*.js`
-**Relevantni commit (još bez push/deploy u trenutku pisanja):** `b3972de` — `fix: improve document upload processing and storage limits`
+**Relevantni commiti (duplikati / fingerprint):** `22e1116`, `ad85fce` (+ docs commit). Stariji paket 2C/2D: v. [project-done.md](project-done.md).
 
 Operativni setup (legacy browser MEGA): [MEGA_BROWSER_UPLOAD_SETUP.md](MEGA_BROWSER_UPLOAD_SETUP.md), [MEGAJS_SETUP_COMPLETE.md](MEGAJS_SETUP_COMPLETE.md), [APPLICATION_DOCUMENTS_MEGA.md](APPLICATION_DOCUMENTS_MEGA.md).
 Queue / cron: [deployment-and-cron.md](deployment-and-cron.md). Env: [environment-variables.md](environment-variables.md).
@@ -93,6 +93,43 @@ Isti MEGA pattern i za **dokumente prijava** (`ApplicationController`) — van B
 Processing poruka potvrđuje da je **HTTP upload završen**; asinhrona obrada/arhiva može još trajati. Korisničke poruke **ne spominju MEGA**.
 
 Legacy MEGA poruke (flag OFF) ostaju nepromijenjene.
+
+---
+
+## Zaštita od duplikata u istom uploadu
+
+Cilj: spriječiti da se isti fajl (ili ista slika sa različitim metapodacima) više puta spoji u završni PDF.
+
+### Frontend (UX)
+
+U `resources/views/documents/index.blade.php`, pri izboru fajlova:
+
+- ključ: `name` + `size` + `lastModified`
+- duplikat se **ne** dodaje ponovo; korisnik vidi poruku tipa „Fajl … je već dodat…“
+- različiti fajlovi sa istim nazivom ostaju dozvoljeni ako se razlikuju size ili lastModified
+- ovo je samo brza UX zaštita; **backend je autoritet**
+
+### Backend (konačna zaštita)
+
+`DocumentController::validateDuplicateUploadedFiles()` — **prije** lokalnog storage-a, DB reda, kvote i queue joba:
+
+1. **Prolaz 1 — binarni SHA-256** (svi tipovi: PDF i slike)  
+   - isti bajtovi fajla → odbijanje  
+   - poruka: „Isti fajl je dodat više puta. Uklonite duplikate i pokušajte ponovo.“
+
+2. **Prolaz 2 — normalizovani pixel fingerprint** (samo ako ima ≥ 2 slike JPEG/PNG u zahtjevu)  
+   - servis: `App\Services\DocumentImageFingerprint`  
+   - Imagick: ping → read → autoOrient → strip → sRGB → flatten alpha na **bijelo** → RGB u trakama (default 8 redova) → SHA-256  
+   - ključ: `{width}x{height}:{sha256}` (dimenzije **nakon** autoOrient)  
+   - limiti: max stranica **8192**, max **8 MP** (zaštita od decompression bomb-a)  
+   - multi-frame slike → kontrolisano odbijanje  
+   - PDF se **ne** rasterizuje u ovom prolazu (samo SHA-256)
+
+**Namjerno pravilo za transparentnost:** alpha se flatten-uje na bijelu pozadinu (isti konačni izgled na bijelom = isti fingerprint).
+
+**Nije fuzzy / perceptual:** JPEG rekompresija koja mijenja piksele **nije** blokirana.
+
+Pri odbijanju: nema DB reda, storage zapisa, izmjene kvote ni archive joba.
 
 ---
 
@@ -231,6 +268,43 @@ Novi PDF tok koristi **PHP Imagick** (`PdfOptimizer`) — ne zavisi od CLI `conv
 **Lokal vs produkcija:** lokalni BLOCKED **ne** znači da je produkcija blokirana.
 
 Privremeni probe fajlovi: `storage/app/pdf-diagnostics/` (komanda briše nakon rada).
+
+---
+
+## Fingerprint dijagnostika (`document:fingerprint-check`)
+
+Artisan komanda (isti Toolkit obrazac kao `pdf:check`) za produkcijsku verifikaciju `DocumentImageFingerprint` **bez** korisničkih dokumenata:
+
+| Komanda | Namjena |
+|---------|---------|
+| `document:fingerprint-check` | Automatski suite (Imagick, metadata, kompresija, pikseli, alpha flatten, corrupt, limiti, multi-frame, determinizam, chunk) |
+| `document:fingerprint-check --compare` | Poređenje ručno postavljenih `capture01.png` / `capture05.png` |
+
+**Plesk → Laravel Toolkit → Artisan** (bez `php artisan` prefiksa):
+
+- `document:fingerprint-check`
+- `document:fingerprint-check --compare`
+
+**Temp dijagnostika:** `storage/app/document-fingerprint-diagnostics/{random}` — briše se u `finally`.
+
+**Ručni compare input** (ne briše ih komanda; ne ide u Git):
+
+- `storage/app/document-fingerprint-input/capture01.png`
+- `storage/app/document-fingerprint-input/capture05.png`
+
+Izlaz: `[PASS]` / `[FAIL]` / `[UNSUPPORTED]`; exit `0` ako nema FAIL, inače `1`. Hash vrijednosti i apsolutne putanje se ne ispisuju.
+
+### Produkcijska verifikacija (Plesk, 2026-07-23)
+
+| Stavka | Rezultat |
+|--------|----------|
+| PHP | **8.3** (produkcijski Imagick dostupan) |
+| Peak memory (dijagnostika) | **~26 MB** (ispod `memory_limit=128M`) |
+| Automatski testovi A–J | **PASS** |
+| Multi-frame (H) | **UNSUPPORTED** — očekivano (TIFF multi-frame nije upload format Biblioteke) |
+| Cleanup | OK |
+
+Detalji pokretanja: [deployment-and-cron.md](deployment-and-cron.md#fingerprint-dijagnostika-na-plesku-documentfingerprint-check).
 
 ---
 

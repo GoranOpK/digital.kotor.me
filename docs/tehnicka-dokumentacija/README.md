@@ -39,7 +39,7 @@ Centralni folder za svu tehničku dokumentaciju projekta: konvencije, indeks, ar
 | [authentication-and-registration.md](authentication-and-registration.md) | Login, registracija, profil |
 | [application-lifecycle.md](application-lifecycle.md) | Tok prijave na konkurs |
 | [business-rules.md](business-rules.md) | Adresa, JMB/PIB, bodovi, dokumenti |
-| [document-library-and-mega.md](document-library-and-mega.md) | Biblioteka, MEGA / server-side arhiva, kvota, limiti |
+| [document-library-and-mega.md](document-library-and-mega.md) | Biblioteka, MEGA / server-side arhiva, kvota, limiti, duplikati, fingerprint dijagnostika |
 | [cultural-calendar.md](cultural-calendar.md) | Kalendar kulture |
 | [cultural-calendar-test-checklist.md](cultural-calendar-test-checklist.md) | Testiranje kalendara prije objave |
 | [database-entities.md](database-entities.md) | Modeli, relacije, statusi |

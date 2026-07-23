@@ -11,7 +11,7 @@ Portal Opštine Kotor — Laravel aplikacija: **platforma** (auth, biblioteka do
 - [docs/tehnicka-dokumentacija/document-library-and-mega.md](docs/tehnicka-dokumentacija/document-library-and-mega.md) — Biblioteka dokumenata (upload, kvota, server-side arhiva)
 - [docs/UPUTSTVO_ZENSKO_PREDUZETNISTVO.md](docs/UPUTSTVO_ZENSKO_PREDUZETNISTVO.md) — korisničko uputstvo
 
-Biblioteka dokumenata podržava asinhrono eksterno arhiviranje, korisničku kvotu (20 MB), slike do 2 MB i PDF do 20 MB sa smart Imagick optimizacijom. Detalji: [document-library-and-mega.md](docs/tehnicka-dokumentacija/document-library-and-mega.md).
+Biblioteka dokumenata podržava asinhrono eksterno arhiviranje, korisničku kvotu (20 MB), slike do 2 MB i PDF do 20 MB sa smart Imagick optimizacijom. Pri više fajlova u jednom uploadu blokiraju se binarni i (za slike) pixel-identični duplikati. Detalji: [document-library-and-mega.md](docs/tehnicka-dokumentacija/document-library-and-mega.md).
 
 Na shared hostingu maksimalna veličina upload-a zavisi od PHP konfiguracije. Ako su `upload_max_filesize=2M` i `post_max_size=8M` (trenutna produkcija), aplikacija neće moći primiti PDF od 20 MB iako ga podržava — PHP odbija zahtjev prije Laravela.
 

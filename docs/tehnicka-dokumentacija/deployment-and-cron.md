@@ -222,6 +222,8 @@ U `routes/console.php` definisan je `cultural-calendar:send-weekly-newsletter` (
 | `upload:check-settings` | Dijagnostika uploada |
 | `imagemagick:check` | Provjera ImageMagick (Imagick + convert; PNG → PDF) |
 | `pdf:check` | PDF podrška: Imagick, CLI, Ghostscript, PDF read/write, PDF → PDF, multi-page |
+| `document:fingerprint-check` | Pixel/binarni fingerprint duplikata (`DocumentImageFingerprint`); izolovani probe |
+| `document:fingerprint-check --compare` | Poredi `storage/app/document-fingerprint-input/capture01.png` i `capture05.png` |
 | `path:show` | Ispis `base_path()` |
 
 ### PDF dijagnostika na Plesku (bez SSH)
@@ -238,6 +240,21 @@ Korisnik **nema** SSH / klasičan CLI. Pokretanje:
 Napomena: ako `gs` nije na PATH-u, a PDF testovi ipak PASS, komanda upozorava da delegate funkcionalno radi.
 
 Lokalni BLOCKED (npr. bez Imagick na razvojnom PHP-u) **nije** dokaz da je produkcija blokirana — uvijek ponovo pokrenuti `pdf:check` u Toolkit-u nakon deploya.
+
+### Fingerprint dijagnostika na Plesku (`document:fingerprint-check`)
+
+Isti Toolkit tok kao `pdf:check` (bez SSH):
+
+1. Plesk → **Laravel Toolkit** → **Artisan**
+2. Unijeti: `document:fingerprint-check` ili `document:fingerprint-check --compare`
+3. Tumačenje:
+   - `DOCUMENT FINGERPRINT CHECK READY` — nema FAIL; exit `0`
+   - `DOCUMENT FINGERPRINT CHECK FAILED` — postoji FAIL; exit `1`
+   - `UNSUPPORTED` (npr. multi-frame TIFF) **ne** mora biti FAIL; prikazuje se odvojeno
+4. Temp probe: `storage/app/document-fingerprint-diagnostics/` (briše se nakon rada)
+5. `--compare` čita (ne briše) fajlove iz `storage/app/document-fingerprint-input/`
+
+**Produkcijska verifikacija (2026-07-23):** PHP 8.3 + Imagick; peak memory ~**26 MB**; automatski testovi PASS; multi-frame **UNSUPPORTED** (očekivano). Detalji: [document-library-and-mega.md](document-library-and-mega.md#fingerprint-dijagnostika-documentfingerprint-check).
 
 ### PHP upload limiti za PDF do 20 MB (Paket 2D) — shared hosting
 

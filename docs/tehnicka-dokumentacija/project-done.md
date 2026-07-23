@@ -1,10 +1,18 @@
 # Project done — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-07-22
+**Poslednje ažuriranje:** 2026-07-23
 
 Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili git istoriji.
 
 ---
+
+## 2026-07-23 — Zaštita od duplikata + fingerprint dijagnostika
+
+- Backend: binarni SHA-256 + (za ≥2 slike) normalizovani Imagick pixel fingerprint (`DocumentImageFingerprint`)
+- Frontend: `name` + `size` + `lastModified` (UX)
+- Artisan: `document:fingerprint-check` / `--compare` (Toolkit, bez SSH)
+- Produkcijska verifikacija: PHP 8.3, Imagick, peak ~26 MB; PASS (multi-frame UNSUPPORTED očekivano)
+- Commiti: `22e1116` (binarni duplikati), `ad85fce` (dijagnostika); v. [document-library-and-mega.md](document-library-and-mega.md)
 
 ## 2026-07-22 — Biblioteka dokumenata (Paket 2D — Smart PDF)
 
