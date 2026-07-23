@@ -82,6 +82,11 @@ class DocumentController extends Controller
             return $this->documentStoreErrorResponse($request, 'files', $sizeError);
         }
 
+        $duplicateError = $this->validateDuplicateUploadedFiles($files);
+        if ($duplicateError !== null) {
+            return $this->documentStoreErrorResponse($request, 'files', $duplicateError);
+        }
+
         // Ukupna veličina zahtjeva — poslovni max je korisnička kvota (PHP post_max/upload_max mora podržati PDF do 20 MB).
         $maxTotalSize = DocumentProcessor::maxStorageBytes();
         $totalSize = 0;
@@ -724,6 +729,13 @@ class DocumentController extends Controller
                     'error' => $sizeError,
                 ], 422);
             }
+            $duplicateError = $this->validateDuplicateUploadedFiles($files);
+            if ($duplicateError !== null) {
+                return response()->json([
+                    'success' => false,
+                    'error' => $duplicateError,
+                ], 422);
+            }
             $processedPdfs = [];
             
             // Ako ima više fajlova, spoji ih u jedan PDF
@@ -1093,6 +1105,45 @@ class DocumentController extends Controller
                     return 'Svaka pojedinačna slika može imati najviše 2 MB.';
                 }
             }
+        }
+
+        return null;
+    }
+
+    /**
+     * Reject identical file content within the same request (SHA-256).
+     * Runs before any local storage, DB row, quota change, or job dispatch.
+     *
+     * @param  array<int, \Illuminate\Http\UploadedFile>|null  $files
+     */
+    private function validateDuplicateUploadedFiles(?array $files): ?string
+    {
+        if ($files === null || count($files) < 2) {
+            return null;
+        }
+
+        $seenHashes = [];
+
+        foreach ($files as $file) {
+            if ($file === null) {
+                continue;
+            }
+
+            $path = $file->getRealPath();
+            if ($path === false || $path === '' || ! is_file($path)) {
+                return 'Jedan od fajlova nije dostupan za validaciju.';
+            }
+
+            $hash = hash_file('sha256', $path);
+            if ($hash === false) {
+                return 'Jedan od fajlova nije dostupan za validaciju.';
+            }
+
+            if (isset($seenHashes[$hash])) {
+                return 'Isti fajl je dodat više puta. Uklonite duplikate i pokušajte ponovo.';
+            }
+
+            $seenHashes[$hash] = true;
         }
 
         return null;

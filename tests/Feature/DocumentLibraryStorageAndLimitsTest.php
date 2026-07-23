@@ -159,8 +159,8 @@ class DocumentLibraryStorageAndLimitsTest extends TestCase
 
         $this->actingAs($this->user)->post(route('documents.store'), [
             'files' => [
-                UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
-                UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+                UploadedFile::fake()->createWithContent('a.pdf', "%PDF-1.4\nmerged-size-a"),
+                UploadedFile::fake()->createWithContent('b.pdf', "%PDF-1.4\nmerged-size-b"),
             ],
             'category' => 'Ostali dokumenti',
             'name' => 'Merged size',
@@ -279,8 +279,8 @@ class DocumentLibraryStorageAndLimitsTest extends TestCase
 
         $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
             'files' => [
-                UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
-                UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+                UploadedFile::fake()->createWithContent('a.pdf', "%PDF-1.4\nover-quota-a"),
+                UploadedFile::fake()->createWithContent('b.pdf', "%PDF-1.4\nover-quota-b"),
             ],
             'category' => 'Ostali dokumenti',
             'name' => 'Over quota',

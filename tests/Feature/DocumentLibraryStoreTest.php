@@ -176,8 +176,8 @@ class DocumentLibraryStoreTest extends TestCase
         });
 
         $files = [
-            UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
-            UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+            UploadedFile::fake()->createWithContent('a.pdf', "%PDF-1.4\ncontent-a"),
+            UploadedFile::fake()->createWithContent('b.pdf', "%PDF-1.4\ncontent-b"),
         ];
 
         $response = $this->actingAs($this->user)->post(route('documents.store'), [
@@ -221,8 +221,8 @@ class DocumentLibraryStoreTest extends TestCase
         });
 
         $files = [
-            UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
-            UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+            UploadedFile::fake()->createWithContent('a.pdf', "%PDF-1.4\ncontent-a-json"),
+            UploadedFile::fake()->createWithContent('b.pdf', "%PDF-1.4\ncontent-b-json"),
         ];
 
         $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
@@ -276,8 +276,8 @@ class DocumentLibraryStoreTest extends TestCase
 
         $response = $this->actingAs($this->user)->post(route('documents.store'), [
             'files' => [
-                UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
-                UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+                UploadedFile::fake()->createWithContent('a.pdf', "%PDF-1.4\nhtml-a"),
+                UploadedFile::fake()->createWithContent('b.pdf', "%PDF-1.4\nhtml-b"),
             ],
             'category' => 'Ostali dokumenti',
             'name' => 'Merged HTML',
@@ -301,8 +301,8 @@ class DocumentLibraryStoreTest extends TestCase
 
         $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
             'files' => [
-                UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
-                UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+                UploadedFile::fake()->createWithContent('a.pdf', "%PDF-1.4\nspace-a"),
+                UploadedFile::fake()->createWithContent('b.pdf', "%PDF-1.4\nspace-b"),
             ],
             'category' => 'Ostali dokumenti',
             'name' => 'No space JSON',
@@ -330,8 +330,8 @@ class DocumentLibraryStoreTest extends TestCase
 
         $response = $this->actingAs($this->user)->from(route('documents.index'))->post(route('documents.store'), [
             'files' => [
-                UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
-                UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+                UploadedFile::fake()->createWithContent('a.pdf', "%PDF-1.4\nspace-html-a"),
+                UploadedFile::fake()->createWithContent('b.pdf', "%PDF-1.4\nspace-html-b"),
             ],
             'category' => 'Ostali dokumenti',
             'name' => 'No space HTML',
@@ -364,8 +364,8 @@ class DocumentLibraryStoreTest extends TestCase
 
         $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
             'files' => [
-                UploadedFile::fake()->create('a.pdf', 50, 'application/pdf'),
-                UploadedFile::fake()->create('b.pdf', 50, 'application/pdf'),
+                UploadedFile::fake()->createWithContent('a.pdf', "%PDF-1.4\nflag-off-a"),
+                UploadedFile::fake()->createWithContent('b.pdf', "%PDF-1.4\nflag-off-b"),
             ],
             'category' => 'Ostali dokumenti',
             'name' => 'Merged flag off',
@@ -381,6 +381,145 @@ class DocumentLibraryStoreTest extends TestCase
         $this->assertDatabaseHas('user_documents', [
             'user_id' => $this->user->id,
             'name' => 'Merged flag off',
+            'status' => 'processed',
+        ]);
+    }
+
+    public function test_duplicate_same_filename_and_content_is_rejected(): void
+    {
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $this->mock(DocumentProcessor::class, function ($mock) {
+            $mock->shouldNotReceive('hasEnoughStorage');
+            $mock->shouldNotReceive('updateUserStorage');
+            $mock->shouldNotReceive('mergeDocuments');
+            $mock->shouldNotReceive('processDocument');
+        });
+
+        $body = "%PDF-1.4\nsame-bytes";
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->createWithContent('dup.pdf', $body),
+                UploadedFile::fake()->createWithContent('dup.pdf', $body),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Dup same name',
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString(
+            'Isti fajl je dodat više puta. Uklonite duplikate i pokušajte ponovo.',
+            (string) $response->json('message')
+        );
+        Bus::assertNotDispatched(ProcessDocumentJob::class);
+        $this->assertDatabaseCount('user_documents', 0);
+        $this->user->refresh();
+        $this->assertSame(0, (int) $this->user->used_storage_bytes);
+        $this->assertSame([], Storage::disk('local')->allFiles('documents/user_'.$this->user->id));
+    }
+
+    public function test_duplicate_same_content_different_filenames_is_rejected(): void
+    {
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $this->mock(DocumentProcessor::class, function ($mock) {
+            $mock->shouldNotReceive('hasEnoughStorage');
+            $mock->shouldNotReceive('updateUserStorage');
+            $mock->shouldNotReceive('mergeDocuments');
+        });
+
+        $body = "%PDF-1.4\nidentical-payload";
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->createWithContent('one.pdf', $body),
+                UploadedFile::fake()->createWithContent('two.pdf', $body),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Dup different names',
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertStringContainsString(
+            'Isti fajl je dodat više puta',
+            (string) $response->json('message')
+        );
+        Bus::assertNotDispatched(ProcessDocumentJob::class);
+        $this->assertDatabaseCount('user_documents', 0);
+        $this->user->refresh();
+        $this->assertSame(0, (int) $this->user->used_storage_bytes);
+        $this->assertSame([], Storage::disk('local')->allFiles('documents/user_'.$this->user->id));
+    }
+
+    public function test_same_filename_different_content_is_allowed(): void
+    {
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $mergedPath = 'documents/user_'.$this->user->id.'/merged.pdf';
+        Storage::disk('local')->put($mergedPath, 'merged');
+
+        $this->mock(DocumentProcessor::class, function ($mock) use ($mergedPath) {
+            $mock->shouldReceive('hasEnoughStorage')->andReturn(true);
+            $mock->shouldReceive('updateUserStorage');
+            $mock->shouldReceive('mergeDocuments')->once()->andReturn([
+                'success' => true,
+                'file_path' => $mergedPath,
+                'file_size' => 200,
+                'cloud_path' => null,
+                'error' => null,
+            ]);
+        });
+
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->createWithContent('same-name.pdf', "%PDF-1.4\nversion-one"),
+                UploadedFile::fake()->createWithContent('same-name.pdf', "%PDF-1.4\nversion-two"),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Same name ok',
+        ]);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        Bus::assertDispatched(ProcessDocumentJob::class);
+        $this->assertDatabaseCount('user_documents', 1);
+    }
+
+    public function test_distinct_files_multi_upload_still_works(): void
+    {
+        config(['external_archive.library_upload' => true]);
+        Bus::fake();
+
+        $mergedPath = 'documents/user_'.$this->user->id.'/merged.pdf';
+        Storage::disk('local')->put($mergedPath, 'merged');
+
+        $this->mock(DocumentProcessor::class, function ($mock) use ($mergedPath) {
+            $mock->shouldReceive('hasEnoughStorage')->andReturn(true);
+            $mock->shouldReceive('updateUserStorage');
+            $mock->shouldReceive('mergeDocuments')->once()->andReturn([
+                'success' => true,
+                'file_path' => $mergedPath,
+                'file_size' => 300,
+                'cloud_path' => null,
+                'error' => null,
+            ]);
+        });
+
+        $response = $this->actingAs($this->user)->postJson(route('documents.store'), [
+            'files' => [
+                UploadedFile::fake()->createWithContent('page1.pdf', "%PDF-1.4\npage-1"),
+                UploadedFile::fake()->createWithContent('page2.jpg', 'jpeg-bytes-page-2'),
+                UploadedFile::fake()->createWithContent('page3.pdf', "%PDF-1.4\npage-3"),
+            ],
+            'category' => 'Ostali dokumenti',
+            'name' => 'Three distinct',
+        ]);
+
+        $response->assertOk()->assertJsonPath('success', true);
+        $this->assertDatabaseHas('user_documents', [
+            'user_id' => $this->user->id,
+            'name' => 'Three distinct',
             'status' => 'processed',
         ]);
     }

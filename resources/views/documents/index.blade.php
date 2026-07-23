@@ -669,32 +669,39 @@ document.addEventListener('click', function(e) {
 // Čuva prethodno izabrane datoteke
 let selectedFiles = [];
 
+function isSameSelectedFile(a, b) {
+    return a.name === b.name
+        && a.size === b.size
+        && a.lastModified === b.lastModified;
+}
+
 // Funkcija za prikaz izabranih datoteka
-function updateFileDisplay(input) {
+// addFromInput=true: onchange / novi izbor; false: samo osvježi UI (remove/move)
+function updateFileDisplay(input, addFromInput = true) {
     const fileNamesDiv = document.getElementById('file-names');
     const fileLabel = document.getElementById('file-label');
     
-    // Dodaj nove datoteke u listu (izbjegni duplikate)
-    if (input.files && input.files.length > 0) {
+    // Dodaj nove datoteke u listu (izbjegni duplikate po name + size + lastModified)
+    if (addFromInput && input.files && input.files.length > 0) {
         const newFiles = Array.from(input.files);
         
-        // Provjeri postoji li datoteka već (po imenu i veličini)
         newFiles.forEach(newFile => {
-            const exists = selectedFiles.some(existingFile => 
-                existingFile.name === newFile.name && existingFile.size === newFile.size
-            );
-            
-            if (!exists) {
-                selectedFiles.push(newFile);
+            const exists = selectedFiles.some(existingFile => isSameSelectedFile(existingFile, newFile));
+
+            if (exists) {
+                alert('Fajl „' + newFile.name + '“ je već dodat. Isti fajl nije moguće dodati više puta.');
+                return;
             }
+
+            selectedFiles.push(newFile);
         });
-        
+
         // Kreiraj novi DataTransfer objekat sa svim datotekama
         const dataTransfer = new DataTransfer();
         selectedFiles.forEach(file => {
             dataTransfer.items.add(file);
         });
-        
+
         // Postavi novi FileList na input
         input.files = dataTransfer.files;
     }
@@ -762,8 +769,8 @@ function removeFile(index, event) {
     });
     input.files = dataTransfer.files;
     
-    // Ažuriraj prikaz
-    updateFileDisplay(input);
+    // Ažuriraj prikaz (bez ponovnog dodavanja — fajlovi su već u selectedFiles)
+    updateFileDisplay(input, false);
     
     return false;
 }
@@ -790,7 +797,7 @@ function moveFileUp(index, event) {
         input.files = dataTransfer.files;
         
         // Ažuriraj prikaz
-        updateFileDisplay(input);
+        updateFileDisplay(input, false);
     }
     
     return false;
@@ -818,7 +825,7 @@ function moveFileDown(index, event) {
         input.files = dataTransfer.files;
         
         // Ažuriraj prikaz
-        updateFileDisplay(input);
+        updateFileDisplay(input, false);
     }
     
     return false;
