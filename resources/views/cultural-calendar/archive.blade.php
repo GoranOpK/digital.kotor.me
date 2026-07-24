@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto p-6">
+<div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <style>
         .kk-top-tabs {
             display: flex;

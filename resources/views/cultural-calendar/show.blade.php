@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-4xl mx-auto p-6">
+<div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <h1 class="text-2xl font-bold text-gray-900">{{ $event->naslov }}</h1>
         <a href="{{ $backUrl }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
@@ -11,7 +11,7 @@
 
     <article class="bg-white border border-gray-200 rounded-lg overflow-hidden">
         <img
-            src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
+            src="{{ $event->imageUrl() }}"
             alt="{{ $event->naslov }}"
             class="w-full"
             style="max-height:420px; object-fit:contain; background:#f3f4f6;"

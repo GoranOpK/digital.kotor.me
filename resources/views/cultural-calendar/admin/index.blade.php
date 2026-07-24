@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto p-6">
+<div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
         <h1 style="font-size:28px; font-weight:700; margin:0; color:#111827;">Kalendar kulture - Događaji</h1>
         <a href="{{ route('cultural-events.create') }}" style="display:inline-block; background:#b91c1c; color:#fff; text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600;">

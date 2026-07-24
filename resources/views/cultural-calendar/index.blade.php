@@ -7,8 +7,6 @@
         --kk-muted: #6b7280;
         --kk-border: #e5e7eb;
         --kk-bg-soft: #f8f9fb;
-        max-width: 1120px;
-        margin: 0 auto;
     }
     .kk-hero {
         border-radius: 16px;
@@ -313,7 +311,7 @@
     }
 </style>
 
-<div class="container py-4 kk-page">
+<div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-4 kk-page">
     <section class="kk-hero" aria-label="Kalendar kulture">
         <img src="{{ asset('img/KKLOGOC.png') }}" alt="Logo Kalendara kulture" class="kk-logo">
     </section>
