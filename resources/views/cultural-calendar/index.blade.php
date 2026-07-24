@@ -76,7 +76,8 @@
     .kk-feature-image {
         width: 100%;
         height: 150px;
-        object-fit: contain;
+        object-fit: cover;
+        object-position: center;
         background: #f3f4f6;
         display: block;
     }
