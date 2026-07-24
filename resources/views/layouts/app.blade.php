@@ -38,6 +38,7 @@
                 .kk-section-wrap {
                     position: relative;
                     isolation: isolate;
+                    background-color: #f3f4f6;
                 }
                 .kk-scroll-bg {
                     display: block;
@@ -46,10 +47,9 @@
                     right: 0;
                     bottom: 0;
                     width: 100%;
-                    height: min(55vh, 620px);
+                    height: auto;
                     z-index: 0;
                     pointer-events: none;
-                    background: url('{{ asset('img/KKBG.jpg') }}') center bottom / cover no-repeat;
                     opacity: 0.3;
                 }
                 .kk-section-wrap > nav,
@@ -60,9 +60,6 @@
                 }
                 .kk-section-wrap > main {
                     background: transparent;
-                }
-                .kk-section-wrap {
-                    background-color: #f3f4f6;
                 }
             }
             @endif
@@ -75,7 +72,12 @@
             'kk-section-wrap' => $isKkSection,
         ])>
             @if($isKkSection)
-                <div class="kk-scroll-bg" aria-hidden="true"></div>
+                <img
+                    class="kk-scroll-bg"
+                    src="{{ asset('img/KKBG.jpg') }}?v={{ @filemtime(public_path('img/KKBG.jpg')) ?: time() }}"
+                    alt=""
+                    aria-hidden="true"
+                >
             @endif
             @include('layouts.navigation')
 

@@ -28,7 +28,7 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex sm:items-center">
+                <div class="hidden sm:ms-8 sm:flex sm:items-center sm:justify-start sm:gap-x-8">
                     @if($isKkAdmin || $isKkSection)
                         <x-nav-link :href="route('cultural-calendar.index')" :active="request()->routeIs('cultural-calendar.index')">
                             Kalendar kulture
@@ -42,11 +42,18 @@
                         @if($isKkAdmin)
                             <a
                                 href="{{ route('cultural-events.index') }}"
-                                @class([
-                                    'inline-flex items-center px-3 py-1.5 rounded-md text-sm font-semibold text-white transition duration-150 ease-in-out',
-                                    'bg-[#7a0f17] hover:bg-[#5f0c12]' => ! request()->routeIs('cultural-events.*'),
-                                    'bg-[#5f0c12] ring-2 ring-offset-1 ring-[#7a0f17]' => request()->routeIs('cultural-events.*'),
-                                ])
+                                style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    padding: 8px 14px;
+                                    border-radius: 8px;
+                                    background: {{ request()->routeIs('cultural-events.*') ? '#5f0c12' : '#7a0f17' }};
+                                    color: #ffffff;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    text-decoration: none;
+                                    white-space: nowrap;
+                                "
                             >
                                 Događaji
                             </a>
@@ -163,11 +170,16 @@
                 @if($isKkAdmin)
                     <a
                         href="{{ route('cultural-events.index') }}"
-                        @class([
-                            'block w-full ps-3 pe-4 py-2 text-start text-base font-semibold text-white',
-                            'bg-[#7a0f17]' => ! request()->routeIs('cultural-events.*'),
-                            'bg-[#5f0c12]' => request()->routeIs('cultural-events.*'),
-                        ])
+                        style="
+                            display: block;
+                            width: 100%;
+                            padding: 10px 16px;
+                            background: {{ request()->routeIs('cultural-events.*') ? '#5f0c12' : '#7a0f17' }};
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: 600;
+                            text-decoration: none;
+                        "
                     >
                         Događaji
                     </a>
