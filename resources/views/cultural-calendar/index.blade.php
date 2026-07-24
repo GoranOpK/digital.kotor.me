@@ -126,28 +126,70 @@
     .kk-upcoming-item {
         border: 1px solid #e5e7eb;
         border-radius: 8px;
-        padding: 8px 10px;
         background: #fff;
+        overflow: hidden;
+        height: 96px;
     }
+    .kk-upcoming-item-empty {
+        display: flex;
+        align-items: center;
+        padding: 8px 10px;
+        height: auto;
+        min-height: 48px;
+    }
+    .kk-upcoming-link {
+        display: flex;
+        flex-direction: row;
+        align-items: stretch;
+        height: 100%;
+        color: inherit;
+        text-decoration: none;
+    }
+    .kk-upcoming-link:hover {
+        background: #f9fafb;
+    }
+    .kk-upcoming-photo {
+        flex: 0 0 96px;
+        width: 96px;
+        height: 96px;
+        background: #f3f4f6;
+        overflow: hidden;
+    }
+    .kk-upcoming-photo img,
     .kk-upcoming-image {
         width: 100%;
-        height: 70px;
-        object-fit: contain;
-        background: #f3f4f6;
-        border-radius: 6px;
+        height: 100%;
+        object-fit: cover;
         display: block;
-        margin-bottom: 8px;
+        margin: 0;
+        border-radius: 0;
+    }
+    .kk-upcoming-body {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        overflow: hidden;
     }
     .kk-upcoming-meta {
         font-size: 12px;
         color: #6b7280;
         margin-bottom: 3px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .kk-upcoming-name {
         font-size: 13px;
         color: #111827;
         font-weight: 700;
         line-height: 1.3;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
     .kk-weekdays {
         display: grid;
@@ -402,26 +444,26 @@
                     <div class="kk-upcoming-list">
                         @forelse($selectedDateEvents as $event)
                             <div class="kk-upcoming-item">
-                                <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" style="display:block; color:inherit; text-decoration:none;">
-                                <img
-                                    src="{{ $event->imageUrl() }}"
-                                    alt="{{ $event->naslov }}"
-                                    class="kk-upcoming-image"
-                                >
-                                <div class="kk-upcoming-meta">
-                                    {{ optional($event->datum_od)->format('d.m.Y') }}
-                                    @if($event->vrijeme)
-                                        • {{ substr((string) $event->vrijeme, 0, 5) }}
-                                    @endif
-                                    @if($event->lokacija)
-                                        • {{ $event->lokacija }}
-                                    @endif
-                                </div>
-                                <div class="kk-upcoming-name">{{ $event->naslov }}</div>
+                                <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" class="kk-upcoming-link">
+                                    <div class="kk-upcoming-photo">
+                                        <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}">
+                                    </div>
+                                    <div class="kk-upcoming-body">
+                                        <div class="kk-upcoming-meta">
+                                            {{ optional($event->datum_od)->format('d.m.Y') }}
+                                            @if($event->vrijeme)
+                                                • {{ substr((string) $event->vrijeme, 0, 5) }}
+                                            @endif
+                                            @if($event->lokacija)
+                                                • {{ $event->lokacija }}
+                                            @endif
+                                        </div>
+                                        <div class="kk-upcoming-name">{{ $event->naslov }}</div>
+                                    </div>
                                 </a>
                             </div>
                         @empty
-                            <div class="kk-upcoming-item">
+                            <div class="kk-upcoming-item kk-upcoming-item-empty">
                                 <div class="kk-upcoming-name" style="font-weight:500; color:#6b7280;">Nema događaja za odabrani datum.</div>
                             </div>
                         @endforelse
@@ -431,26 +473,26 @@
                     <div class="kk-upcoming-list">
                         @forelse($upcomingEvents as $event)
                             <div class="kk-upcoming-item">
-                                <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" style="display:block; color:inherit; text-decoration:none;">
-                                <img
-                                    src="{{ $event->imageUrl() }}"
-                                    alt="{{ $event->naslov }}"
-                                    class="kk-upcoming-image"
-                                >
-                                <div class="kk-upcoming-meta">
-                                    {{ optional($event->datum_od)->format('d.m.Y') }}
-                                    @if($event->vrijeme)
-                                        • {{ substr((string) $event->vrijeme, 0, 5) }}
-                                    @endif
-                                    @if($event->lokacija)
-                                        • {{ $event->lokacija }}
-                                    @endif
-                                </div>
-                                <div class="kk-upcoming-name">{{ $event->naslov }}</div>
+                                <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" class="kk-upcoming-link">
+                                    <div class="kk-upcoming-photo">
+                                        <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}">
+                                    </div>
+                                    <div class="kk-upcoming-body">
+                                        <div class="kk-upcoming-meta">
+                                            {{ optional($event->datum_od)->format('d.m.Y') }}
+                                            @if($event->vrijeme)
+                                                • {{ substr((string) $event->vrijeme, 0, 5) }}
+                                            @endif
+                                            @if($event->lokacija)
+                                                • {{ $event->lokacija }}
+                                            @endif
+                                        </div>
+                                        <div class="kk-upcoming-name">{{ $event->naslov }}</div>
+                                    </div>
                                 </a>
                             </div>
                         @empty
-                            <div class="kk-upcoming-item">
+                            <div class="kk-upcoming-item kk-upcoming-item-empty">
                                 <div class="kk-upcoming-name" style="font-weight:500; color:#6b7280;">Nema narednih događaja.</div>
                             </div>
                         @endforelse
