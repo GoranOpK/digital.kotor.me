@@ -1,4 +1,4 @@
-@php
+﻿@php
     $isEdit = isset($event) && $event;
     $defaultStartDate = request('datum_od');
     if ($defaultStartDate === null && isset($event->datum_od)) {
@@ -95,14 +95,23 @@
     <div class="md:col-span-2">
         <label class="block text-sm font-medium text-gray-700 mb-1">Slika</label>
         <input type="file" name="slika" accept="image/*" class="{{ $fileFieldClass }}">
+        <p class="text-xs text-gray-500 mt-2">
+            Ako ne učitate sliku, koristi se podrazumijevana slika za odabranu kategoriju.
+        </p>
+
         @if($isEdit && $event->slika)
             <div class="mt-3">
                 <div class="text-xs text-gray-500 mb-2">Trenutna slika:</div>
                 <img src="{{ asset('storage/' . $event->slika) }}" alt="Slika događaja" class="h-28 rounded-md border border-gray-200">
                 <label class="inline-flex items-center gap-2 text-sm text-gray-700 mt-3">
                     <input type="checkbox" name="remove_image" value="1" class="rounded border-gray-300" @checked(old('remove_image'))>
-                    Ukloni postojeću sliku
+                    Ukloni postojeću sliku (vrati se na sliku kategorije)
                 </label>
+            </div>
+        @elseif($isEdit)
+            <div class="mt-3">
+                <div class="text-xs text-gray-500 mb-2">Podrazumijevana slika kategorije:</div>
+                <img src="{{ $event->imageUrl() }}" alt="Podrazumijevana slika kategorije" class="h-28 rounded-md border border-gray-200">
             </div>
         @endif
     </div>

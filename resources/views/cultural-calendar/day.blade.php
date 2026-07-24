@@ -20,9 +20,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($events as $event)
                 <article class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    @if($event->slika)
-                        <img src="{{ asset('storage/' . $event->slika) }}" alt="{{ $event->naslov }}" class="w-full h-44 object-cover">
-                    @endif
+                    <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}" class="w-full h-44 object-cover">
                     <div class="p-4">
                         <div class="text-xs text-gray-500 mb-1">
                             {{ optional($event->datum_od)->format('d.m.Y') }}

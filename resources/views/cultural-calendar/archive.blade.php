@@ -50,7 +50,7 @@
                 <article class="bg-white border border-gray-200 rounded-lg overflow-hidden">
                     <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" class="block hover:bg-gray-50 transition-colors duration-150">
                     <img
-                        src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
+                        src="{{ $event->imageUrl() }}"
                         alt="{{ $event->naslov }}"
                         class="w-full"
                         style="height:106px; object-fit:contain; background:#f3f4f6;"

@@ -406,7 +406,7 @@
                             <div class="kk-upcoming-item">
                                 <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" style="display:block; color:inherit; text-decoration:none;">
                                 <img
-                                    src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
+                                    src="{{ $event->imageUrl() }}"
                                     alt="{{ $event->naslov }}"
                                     class="kk-upcoming-image"
                                 >
@@ -435,7 +435,7 @@
                             <div class="kk-upcoming-item">
                                 <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" style="display:block; color:inherit; text-decoration:none;">
                                 <img
-                                    src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
+                                    src="{{ $event->imageUrl() }}"
                                     alt="{{ $event->naslov }}"
                                     class="kk-upcoming-image"
                                 >
@@ -469,7 +469,7 @@
                         <article class="kk-feature-card">
                             <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" style="display:block; color:inherit; text-decoration:none;">
                             <img
-                                src="{{ $event->slika ? asset('storage/' . $event->slika) : asset('img/kalendar-kulture-default-event.png') }}"
+                                src="{{ $event->imageUrl() }}"
                                 alt="{{ $event->naslov }}"
                                 class="kk-feature-image"
                             >
