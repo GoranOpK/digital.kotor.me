@@ -34,9 +34,6 @@
         @media (min-width: 768px) {
             .kk-archive-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
-        @media (min-width: 1024px) {
-            .kk-archive-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        }
         .kk-archive-card {
             background: #fff;
             border: 1px solid #e5e7eb;
