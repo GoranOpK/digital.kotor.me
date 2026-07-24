@@ -18,8 +18,8 @@
         'kk-shell' => $isKkSection,
         'max-w-7xl' => ! $isKkSection,
     ])>
-        <div class="flex justify-between h-16">
-            <div class="flex">
+        <div class="flex justify-between h-16 items-center">
+            <div class="flex items-center justify-start min-w-0 flex-1">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ $isKkAdmin ? route('cultural-calendar.index') : ($isCompetitionAdmin ? route('admin.dashboard') : route('dashboard')) }}">
@@ -28,17 +28,47 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden sm:ms-8 sm:flex sm:items-center sm:justify-start sm:gap-x-8">
-                    @if($isKkAdmin || $isKkSection)
-                        <x-nav-link :href="route('cultural-calendar.index')" :active="request()->routeIs('cultural-calendar.index')">
-                            Kalendar kulture
-                        </x-nav-link>
-                        <x-nav-link :href="route('cultural-calendar.events')" :active="request()->routeIs('cultural-calendar.events')">
-                            Pregled događaja
-                        </x-nav-link>
-                        <x-nav-link :href="route('cultural-calendar.archive')" :active="request()->routeIs('cultural-calendar.archive')">
-                            Arhiva događaja
-                        </x-nav-link>
+                @if($isKkAdmin || $isKkSection)
+                    <div
+                        class="hidden sm:flex sm:items-center sm:justify-start"
+                        style="margin-left: 28px; gap: 36px;"
+                    >
+                        <a
+                            href="{{ route('cultural-calendar.index') }}"
+                            style="
+                                color: {{ request()->routeIs('cultural-calendar.index') ? '#111827' : '#4b5563' }};
+                                font-size: 14px;
+                                font-weight: {{ request()->routeIs('cultural-calendar.index') ? '700' : '600' }};
+                                text-decoration: none;
+                                white-space: nowrap;
+                                border-bottom: 2px solid {{ request()->routeIs('cultural-calendar.index') ? '#7a0f17' : 'transparent' }};
+                                padding-bottom: 2px;
+                            "
+                        >Kalendar kulture</a>
+                        <a
+                            href="{{ route('cultural-calendar.events') }}"
+                            style="
+                                color: {{ request()->routeIs('cultural-calendar.events') ? '#111827' : '#4b5563' }};
+                                font-size: 14px;
+                                font-weight: {{ request()->routeIs('cultural-calendar.events') ? '700' : '600' }};
+                                text-decoration: none;
+                                white-space: nowrap;
+                                border-bottom: 2px solid {{ request()->routeIs('cultural-calendar.events') ? '#7a0f17' : 'transparent' }};
+                                padding-bottom: 2px;
+                            "
+                        >Pregled događaja</a>
+                        <a
+                            href="{{ route('cultural-calendar.archive') }}"
+                            style="
+                                color: {{ request()->routeIs('cultural-calendar.archive') ? '#111827' : '#4b5563' }};
+                                font-size: 14px;
+                                font-weight: {{ request()->routeIs('cultural-calendar.archive') ? '700' : '600' }};
+                                text-decoration: none;
+                                white-space: nowrap;
+                                border-bottom: 2px solid {{ request()->routeIs('cultural-calendar.archive') ? '#7a0f17' : 'transparent' }};
+                                padding-bottom: 2px;
+                            "
+                        >Arhiva događaja</a>
                         @if($isKkAdmin)
                             <a
                                 href="{{ route('cultural-events.index') }}"
@@ -54,11 +84,12 @@
                                     text-decoration: none;
                                     white-space: nowrap;
                                 "
-                            >
-                                Događaji
-                            </a>
+                            >Događaji</a>
                         @endif
-                    @elseif($isCompetitionAdmin)
+                    </div>
+                @else
+                <div class="hidden sm:ms-8 sm:flex sm:items-center sm:justify-start sm:gap-x-8">
+                    @if($isCompetitionAdmin)
                         <x-nav-link :href="route('home')" :active="request()->routeIs('home')" aria-label="Početna stranica">
                             <x-icon-home />
                         </x-nav-link>
@@ -98,6 +129,7 @@
                         @endauth
                     @endif
                 </div>
+                @endif
             </div>
 
             <!-- User info + Logout -->
