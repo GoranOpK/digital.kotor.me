@@ -38,29 +38,6 @@
         object-fit: contain;
     }
     .kk-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 30px; }
-    .kk-top-tabs {
-        display: flex;
-        justify-content: center;
-        gap: 10px;
-        margin: 0 0 20px;
-        flex-wrap: wrap;
-    }
-    .kk-top-tab {
-        display: inline-block;
-        padding: 9px 14px;
-        border-radius: 8px;
-        border: 1px solid #d1d5db;
-        background: #fff;
-        color: #374151;
-        text-decoration: none;
-        font-weight: 600;
-        font-size: 14px;
-    }
-    .kk-top-tab.active {
-        background: #7a0f17;
-        border-color: #7a0f17;
-        color: #fff;
-    }
     .kk-stat-card, .kk-card { border: 1px solid var(--kk-border); border-radius: 12px; background: #fff; }
     .kk-stat-card { padding: 18px; min-height: 110px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
     .kk-stat-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 6px; }
@@ -75,7 +52,8 @@
     }
     .kk-feature-image {
         width: 100%;
-        height: 150px;
+        aspect-ratio: 1 / 1;
+        height: auto;
         object-fit: cover;
         object-position: center;
         background: #f3f4f6;
@@ -358,11 +336,6 @@
     <section class="kk-hero" aria-label="Kalendar kulture">
         <img src="{{ asset('img/KKLOGOC.png') }}" alt="Logo Kalendara kulture" class="kk-logo">
     </section>
-
-    <div class="kk-top-tabs">
-        <a href="{{ route('cultural-calendar.events') }}" class="kk-top-tab active">Pregled događaja</a>
-        <a href="{{ route('cultural-calendar.archive') }}" class="kk-top-tab">Arhiva događaja</a>
-    </div>
 
     @if(session('newsletter_status'))
         <div style="margin: 0 0 18px; padding: 12px 14px; border-radius: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 14px;">

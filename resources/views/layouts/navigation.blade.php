@@ -28,14 +28,29 @@
                 </div>
 
                 <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    @if($isKkAdmin)
+                <div class="hidden space-x-6 sm:-my-px sm:ms-10 sm:flex sm:items-center">
+                    @if($isKkAdmin || $isKkSection)
                         <x-nav-link :href="route('cultural-calendar.index')" :active="request()->routeIs('cultural-calendar.index')">
                             Kalendar kulture
                         </x-nav-link>
-                        <x-nav-link :href="route('cultural-events.index')" :active="request()->routeIs('cultural-events.*')">
-                            Događaji
+                        <x-nav-link :href="route('cultural-calendar.events')" :active="request()->routeIs('cultural-calendar.events')">
+                            Pregled događaja
                         </x-nav-link>
+                        <x-nav-link :href="route('cultural-calendar.archive')" :active="request()->routeIs('cultural-calendar.archive')">
+                            Arhiva događaja
+                        </x-nav-link>
+                        @if($isKkAdmin)
+                            <a
+                                href="{{ route('cultural-events.index') }}"
+                                @class([
+                                    'inline-flex items-center px-3 py-1.5 rounded-md text-sm font-semibold text-white transition duration-150 ease-in-out',
+                                    'bg-[#7a0f17] hover:bg-[#5f0c12]' => ! request()->routeIs('cultural-events.*'),
+                                    'bg-[#5f0c12] ring-2 ring-offset-1 ring-[#7a0f17]' => request()->routeIs('cultural-events.*'),
+                                ])
+                            >
+                                Događaji
+                            </a>
+                        @endif
                     @elseif($isCompetitionAdmin)
                         <x-nav-link :href="route('home')" :active="request()->routeIs('home')" aria-label="Početna stranica">
                             <x-icon-home />
@@ -135,13 +150,28 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            @if($isKkAdmin)
+            @if($isKkAdmin || $isKkSection)
                 <x-responsive-nav-link :href="route('cultural-calendar.index')" :active="request()->routeIs('cultural-calendar.index')">
                     Kalendar kulture
                 </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('cultural-events.index')" :active="request()->routeIs('cultural-events.*')">
-                    Događaji
+                <x-responsive-nav-link :href="route('cultural-calendar.events')" :active="request()->routeIs('cultural-calendar.events')">
+                    Pregled događaja
                 </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('cultural-calendar.archive')" :active="request()->routeIs('cultural-calendar.archive')">
+                    Arhiva događaja
+                </x-responsive-nav-link>
+                @if($isKkAdmin)
+                    <a
+                        href="{{ route('cultural-events.index') }}"
+                        @class([
+                            'block w-full ps-3 pe-4 py-2 text-start text-base font-semibold text-white',
+                            'bg-[#7a0f17]' => ! request()->routeIs('cultural-events.*'),
+                            'bg-[#5f0c12]' => request()->routeIs('cultural-events.*'),
+                        ])
+                    >
+                        Događaji
+                    </a>
+                @endif
             @elseif($isCompetitionAdmin)
                 <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
                     <x-icon-home class="w-5 h-5 inline-block align-text-bottom" style="margin-right: 4px;" />

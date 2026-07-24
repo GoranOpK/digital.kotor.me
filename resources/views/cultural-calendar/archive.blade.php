@@ -3,29 +3,6 @@
 @section('content')
 <div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <style>
-        .kk-top-tabs {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin: 0 0 20px;
-            flex-wrap: wrap;
-        }
-        .kk-top-tab {
-            display: inline-block;
-            padding: 9px 14px;
-            border-radius: 8px;
-            border: 1px solid #d1d5db;
-            background: #fff;
-            color: #374151;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-        }
-        .kk-top-tab.active {
-            background: #7a0f17;
-            border-color: #7a0f17;
-            color: #fff;
-        }
         .kk-archive-grid {
             display: grid;
             grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -112,11 +89,6 @@
             overflow: hidden;
         }
     </style>
-
-    <div class="kk-top-tabs">
-        <a href="{{ route('cultural-calendar.events') }}" class="kk-top-tab">Pregled događaja</a>
-        <a href="{{ route('cultural-calendar.archive') }}" class="kk-top-tab active">Arhiva događaja</a>
-    </div>
 
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Arhiva događaja</h1>
