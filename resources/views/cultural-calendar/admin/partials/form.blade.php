@@ -1,4 +1,4 @@
-﻿@php
+@php
     $isEdit = isset($event) && $event;
     $defaultStartDate = request('datum_od');
     if ($defaultStartDate === null && isset($event->datum_od)) {
