@@ -28,25 +28,22 @@
                 <li>{{ $label }}</li>
             @endforeach
         </ol>
-    @else
-        <p>
-            Komisija je utvrdila nepotpunost dokumentacije. Molimo Vas da provjerite priloženu dokumentaciju
-            u skladu sa uslovima konkursa.
-        </p>
     @endif
 
     @if($chairmanNotes)
         <p><strong>Napomena komisije:</strong></p>
+        <p style="margin-top: 0; margin-bottom: 0;">Komisija je konstatovala da nedostaju sledeći akti:</p>
         <p style="margin-top: 0;">{{ $chairmanNotes }}</p>
     @endif
 
     <p>
-        Vaša prijava <strong>neće biti uzeta u dalje razmatranje i ocjenjivanje</strong> po kriterijumima za raspodjelu sredstava.
+        U skladu sa članom 17, stav 3 Odluke o podršci ženskom preduzetništvu (“Sl.list CG - Opštinski propisi” br.027/26 od 22. 06.2026. god.), Vašu prijavu Komisija neće dalje razmatrati.
     </p>
 
     <p>
-        Ukoliko imate prigovor možete ga podnijeti na e-mail adresu
-        <a href="mailto:privreda@kotor.me">privreda@kotor.me</a>.
+        Imate pravo na Prigovor Komisiji putem e-mail-a:
+        <a href="mailto:privreda@kotor.me">privreda@kotor.me</a>
+        u roku od tri dana od dana slanja ovoga obavještenja.
     </p>
 
     <p>
