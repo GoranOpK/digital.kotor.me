@@ -29,6 +29,7 @@
 | PATCH-015 | 2026-07-25 | BM-13 Newsletter — USVOJENO (BM-NL-01–BM-NL-09); uklonjene ranije rezervacije BM-13 Poslovna obavještenja i BM-13.1 Newsletter. |
 | PATCH-016 | 2026-07-26 | BM-15 Opšta poslovna pravila — USVOJENO (BM-GR-01–BM-GR-07). |
 | PATCH-017 | 2026-07-26 | BM-16 Rječnik poslovnih pojmova — USVOJENO (BM-GL-01–BM-GL-21). |
+| PATCH-018 | 2026-07-26 | BM-17 Arhitektura poslovnih cjelina — USVOJENO (BM-AR-01–BM-AR-08). |
 
 Napomena:
 
@@ -75,7 +76,7 @@ Dokument predstavlja referentni poslovni model za planiranje, razvoj, testiranje
 | BM-14 Evidencija aktivnosti (Audit log) | USVOJENO |
 | BM-15 Opšta poslovna pravila | USVOJENO |
 | BM-16 Rječnik poslovnih pojmova | USVOJENO |
-| BM-17 Arhitektura poslovnih cjelina | NIJE ZAPOČETO |
+| BM-17 Arhitektura poslovnih cjelina | USVOJENO |
 
 ---
 
@@ -1011,3 +1012,69 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 > Pojmovi definisani ovim poglavljem imaju isto značenje u svim dijelovima Business Modela, osim ako je za pojedinu poslovnu cjelinu izričito drugačije određeno.
 >
 > Dosljedna primjena ovih definicija obezbjeđuje jedinstveno tumačenje poslovnih pravila i terminologije kroz cjelokupnu dokumentaciju modula Kalendar kulture.
+
+---
+
+# BM-17 Arhitektura poslovnih cjelina
+
+**Status poglavlja:** USVOJENO
+
+## Svrha
+
+Ovim poglavljem definiše se poslovna arhitektura modula Kalendar kulture i međusobni odnos njegovih poslovnih cjelina.
+
+Arhitektura poslovnih cjelina određuje odgovornosti, granice i međusobnu saradnju pojedinih dijelova sistema u skladu sa ovim Business Modelom.
+
+## Poslovna arhitektura
+
+### BM-AR-01 — Poslovne cjeline sistema
+
+> Poslovnu arhitekturu modula Kalendar kulture čine sljedeće poslovne cjeline:
+>
+> * Portal Kalendara kulture
+> * Urednički portal
+> * Sistemska administracija
+>
+> Sve poslovne cjeline predstavljaju sastavne djelove jedinstvenog poslovnog sistema.
+
+### BM-AR-02 — Portal Kalendara kulture
+
+> Portal Kalendara kulture predstavlja javni dio sistema namijenjen pregledanju objavljenih kulturnih događaja i korišćenju javno dostupnih funkcionalnosti.
+>
+> Portal prikazuje isključivo javno objavljen sadržaj.
+
+### BM-AR-03 — Urednički portal
+
+> Urednički portal predstavlja poslovnu cjelinu namijenjenu Organizatorima, Moderatorima i Urednicima za upravljanje kulturnim sadržajem i uredničkim procesom.
+>
+> Poslovna pravila rada Uredničkog portala definisana su odgovarajućim poglavljima ovog Business Modela.
+
+### BM-AR-04 — Sistemska administracija
+
+> Sistemska administracija predstavlja poslovnu cjelinu namijenjenu Administratoru platforme za upravljanje korisnicima, sistemskim podešavanjima, administrativnim funkcijama i tehničkim održavanjem sistema.
+>
+> Administrator platforme ne učestvuje u uredničkom procesu, osim kada je to ovim Business Modelom izričito definisano.
+
+### BM-AR-05 — Poslovna nezavisnost
+
+> Svaka poslovna cjelina ima jasno definisanu poslovnu odgovornost.
+>
+> Poslovne cjeline međusobno sarađuju kroz poslovne procese definisane ovim Business Modelom, pri čemu zadržavaju svoju poslovnu nezavisnost.
+
+### BM-AR-06 — Jedinstveni poslovni model
+
+> Sve poslovne cjeline koriste zajedničke poslovne entitete, poslovna pravila i definicije utvrđene ovim Business Modelom.
+>
+> Poslovni podaci predstavljaju jedinstven izvor podataka bez obzira na poslovnu cjelinu kroz koju se koriste.
+
+### BM-AR-07 — Razdvajanje odgovornosti
+
+> Poslovne odgovornosti pojedinih poslovnih cjelina ne smiju se preklapati, osim kada je to izričito definisano ovim Business Modelom.
+>
+> Prava pristupa, ovlašćenja i poslovne odgovornosti određuju se u skladu sa ulogom korisnika i poslovnom cjelinom kojoj pripadaju.
+
+### BM-AR-08 — Završna odredba
+
+> Arhitektura poslovnih cjelina predstavlja osnov za organizaciju svih poslovnih procesa modula Kalendar kulture.
+>
+> Sve poslovne cjeline primjenjuju jedinstvena poslovna pravila i međusobno funkcionišu kao sastavni djelovi jedinstvenog informacionog sistema.
