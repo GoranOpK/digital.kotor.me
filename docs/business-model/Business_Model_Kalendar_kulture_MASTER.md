@@ -25,6 +25,7 @@
 | PATCH-011 | 2026-07-25 | Korekcija numeracije poglavlja Korisnički portal i usklađivanje internih referenci nakon uvođenja BM-10 Statusi i životni ciklus događaja. |
 | PATCH-012 | 2026-07-25 | Preimenovanje poglavlja BM-11 u „Portal Kalendara kulture“ i uklanjanje poslovnih pravila koja pripadaju platformi Digital Kotor. |
 | PATCH-013 | 2026-07-25 | BM-11 Portal Kalendara kulture — USVOJENO (BM-PK-01–BM-PK-14). |
+| PATCH-014 | 2026-07-25 | BM-14 Evidencija aktivnosti (Audit log) — USVOJENO (BM-AL-01–BM-AL-08). |
 
 Napomena:
 
@@ -69,7 +70,7 @@ Dokument predstavlja referentni poslovni model za planiranje, razvoj, testiranje
 | BM-12 Urednički portal | NIJE ZAPOČETO |
 | BM-13 Poslovna obavještenja | NIJE ZAPOČETO |
 | BM-13.1 Newsletter | NIJE ZAPOČETO |
-| BM-14 Evidencija aktivnosti | NIJE ZAPOČETO |
+| BM-14 Evidencija aktivnosti (Audit log) | USVOJENO |
 | BM-15 Opšta poslovna pravila | NIJE ZAPOČETO |
 | BM-16 Rječnik poslovnih pojmova | NIJE ZAPOČETO |
 | BM-17 Arhitektura poslovnih cjelina | NIJE ZAPOČETO |
@@ -120,7 +121,7 @@ Svaka izmjena Business Modela mora biti rezultat usvojene poslovne odluke i evid
    - BM-12 Urednički portal
    - BM-13 Poslovna obavještenja
    - BM-13.1 Newsletter
-   - BM-14 Evidencija aktivnosti
+   - BM-14 Evidencija aktivnosti (Audit log)
    - BM-15 Opšta poslovna pravila
    - BM-16 Rječnik poslovnih pojmova
    - BM-17 Arhitektura poslovnih cjelina
@@ -755,3 +756,43 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 ### BM-PK-14 — Povezani sadržaj
 
 > Portal Kalendara kulture može prikazivati međusobno povezane događaje i manifestacije u skladu sa njihovim poslovnim vezama definisanim u modulu Kalendara kulture.
+
+---
+
+# BM-14 Evidencija aktivnosti (Audit log)
+
+**Status poglavlja:** USVOJENO
+
+## Poslovna pravila
+
+### BM-AL-01 — Definicija evidencije aktivnosti
+
+> Evidencija aktivnosti predstavlja poslovni zapis o poslovno značajnim radnjama izvršenim u modulu Kalendara kulture. Njena svrha je dokumentovanje izvršenih poslovnih radnji, utvrđivanje odgovornosti korisnika i omogućavanje njihove naknadne provjere.
+
+### BM-AL-02 — Odnos prema tehničkim logovima
+
+> Evidencija aktivnosti predstavlja poslovnu evidenciju izvršenih radnji i ne predstavlja zamjenu za tehničke sistemske logove niti druge tehničke mehanizme evidencije.
+
+### BM-AL-03 — Poslovno značajne aktivnosti
+
+> Evidencija aktivnosti obuhvata isključivo poslovno značajne aktivnosti koje utiču na poslovne podatke ili poslovne procese definisane ovim Business Modelom. Aktivnosti koje nemaju poslovni značaj ne evidentiraju se u evidenciji aktivnosti.
+
+### BM-AL-04 — Nepromjenjivost evidencije aktivnosti
+
+> Jednom evidentirana aktivnost postaje trajni dio evidencije aktivnosti. Evidentirane aktivnosti ne mogu se naknadno mijenjati niti brisati kroz redovno korišćenje sistema.
+
+### BM-AL-05 — Nezavisnost evidencije aktivnosti
+
+> Evidencija aktivnosti služi isključivo dokumentovanju izvršenih poslovnih radnji. Njeno postojanje niti sadržaj ne utiču na tok poslovnih procesa, poslovna pravila niti prava korisnika definisana ovim Business Modelom.
+
+### BM-AL-06 — Pristup evidenciji aktivnosti
+
+> Pristup evidenciji aktivnosti ima isključivo Administrator platforme. Ostali korisnici sistema nemaju direktan pristup evidenciji aktivnosti.
+
+### BM-AL-07 — Oblasti evidencije aktivnosti
+
+> Evidencija aktivnosti obuhvata poslovno značajne aktivnosti koje se odnose na poslovne objekte i administrativne funkcije definisane ovim Business Modelom. Poslovne aktivnosti koje se evidentiraju za pojedine oblasti definišu se funkcionalnom i tehničkom specifikacijom u skladu sa ovim Business Modelom.
+
+### BM-AL-08 — Namjena evidencije aktivnosti
+
+> Evidencija aktivnosti služi reviziji, kontroli i naknadnoj provjeri izvršenih poslovnih radnji. Evidencija aktivnosti nije sredstvo komunikacije niti predstavlja poslovno obavještenje.
