@@ -26,6 +26,7 @@
 | PATCH-012 | 2026-07-25 | Preimenovanje poglavlja BM-11 u „Portal Kalendara kulture“ i uklanjanje poslovnih pravila koja pripadaju platformi Digital Kotor. |
 | PATCH-013 | 2026-07-25 | BM-11 Portal Kalendara kulture — USVOJENO (BM-PK-01–BM-PK-14). |
 | PATCH-014 | 2026-07-25 | BM-14 Evidencija aktivnosti (Audit log) — USVOJENO (BM-AL-01–BM-AL-08). |
+| PATCH-015 | 2026-07-25 | BM-13 Newsletter — USVOJENO (BM-NL-01–BM-NL-09); uklonjene ranije rezervacije BM-13 Poslovna obavještenja i BM-13.1 Newsletter. |
 
 Napomena:
 
@@ -68,8 +69,7 @@ Dokument predstavlja referentni poslovni model za planiranje, razvoj, testiranje
 | BM-10 Statusi i životni ciklus događaja | USVOJENO |
 | BM-11 Portal Kalendara kulture | USVOJENO |
 | BM-12 Urednički portal | NIJE ZAPOČETO |
-| BM-13 Poslovna obavještenja | NIJE ZAPOČETO |
-| BM-13.1 Newsletter | NIJE ZAPOČETO |
+| BM-13 Newsletter | USVOJENO |
 | BM-14 Evidencija aktivnosti (Audit log) | USVOJENO |
 | BM-15 Opšta poslovna pravila | NIJE ZAPOČETO |
 | BM-16 Rječnik poslovnih pojmova | NIJE ZAPOČETO |
@@ -119,8 +119,7 @@ Svaka izmjena Business Modela mora biti rezultat usvojene poslovne odluke i evid
    - BM-10 Statusi i životni ciklus događaja
    - BM-11 Portal Kalendara kulture
    - BM-12 Urednički portal
-   - BM-13 Poslovna obavještenja
-   - BM-13.1 Newsletter
+   - BM-13 Newsletter
    - BM-14 Evidencija aktivnosti (Audit log)
    - BM-15 Opšta poslovna pravila
    - BM-16 Rječnik poslovnih pojmova
@@ -756,6 +755,50 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 ### BM-PK-14 — Povezani sadržaj
 
 > Portal Kalendara kulture može prikazivati međusobno povezane događaje i manifestacije u skladu sa njihovim poslovnim vezama definisanim u modulu Kalendara kulture.
+
+---
+
+# BM-13 Newsletter
+
+**Status poglavlja:** USVOJENO
+
+## Poslovna pravila
+
+### BM-NL-01 — Definicija
+
+> Newsletter predstavlja funkcionalnost modula Kalendara kulture namijenjenu periodičnom informisanju zainteresovanih korisnika o javno objavljenim kulturnim događajima.
+
+### BM-NL-02 — Svrha
+
+> Newsletter služi isključivo informisanju korisnika o kulturnim događajima objavljenim u Kalendaru kulture.
+
+### BM-NL-03 — Odnos prema uredničkom procesu
+
+> Newsletter nije dio uredničkog procesa i ne koristi se za poslovnu komunikaciju između Organizatora, Moderatora, Urednika i Administratora platforme.
+
+### BM-NL-04 — Pretplata
+
+> Svaki korisnik može se dobrovoljno prijaviti na newsletter Kalendara kulture. Prijava na newsletter nije uslov za korišćenje Kalendara kulture.
+
+### BM-NL-05 — Odjava
+
+> Korisnik može u svakom trenutku odjaviti prijem newslettera.
+
+### BM-NL-06 — Sadržaj newslettera
+
+> Newsletter sadrži pregled kulturnih događaja odabranih u skladu sa poslovnim pravilima sistema. Način izbora i prikaza sadržaja newslettera definiše se funkcionalnom i tehničkom specifikacijom i nije predmet ovog Business Modela.
+
+### BM-NL-07 — Periodično slanje
+
+> Sistem može periodično slati newsletter svim aktivnim pretplatnicima. Učestalost i način slanja definišu se funkcionalnom i tehničkom specifikacijom i sistemskim podešavanjima.
+
+### BM-NL-08 — Nezavisnost od poslovnih procesa
+
+> Pretplata na newsletter nema uticaja na prava korisnika niti na poslovne procese definisane ovim Business Modelom. Poslovni procesi funkcionišu nezavisno od prijave ili odjave korisnika na newsletter.
+
+### BM-NL-09 — Objavljeni sadržaj
+
+> Newsletter može sadržati isključivo događaje koji su javno objavljeni u Kalendaru kulture. Događaji koji nijesu objavljeni ne mogu biti uključeni u newsletter.
 
 ---
 
