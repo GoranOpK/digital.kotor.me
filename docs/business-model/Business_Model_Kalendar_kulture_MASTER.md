@@ -27,6 +27,7 @@
 | PATCH-013 | 2026-07-25 | BM-11 Portal Kalendara kulture — USVOJENO (BM-PK-01–BM-PK-14). |
 | PATCH-014 | 2026-07-25 | BM-14 Evidencija aktivnosti (Audit log) — USVOJENO (BM-AL-01–BM-AL-08). |
 | PATCH-015 | 2026-07-25 | BM-13 Newsletter — USVOJENO (BM-NL-01–BM-NL-09); uklonjene ranije rezervacije BM-13 Poslovna obavještenja i BM-13.1 Newsletter. |
+| PATCH-016 | 2026-07-26 | BM-15 Opšta poslovna pravila — USVOJENO (BM-GR-01–BM-GR-07). |
 
 Napomena:
 
@@ -71,7 +72,7 @@ Dokument predstavlja referentni poslovni model za planiranje, razvoj, testiranje
 | BM-12 Urednički portal | NIJE ZAPOČETO |
 | BM-13 Newsletter | USVOJENO |
 | BM-14 Evidencija aktivnosti (Audit log) | USVOJENO |
-| BM-15 Opšta poslovna pravila | NIJE ZAPOČETO |
+| BM-15 Opšta poslovna pravila | USVOJENO |
 | BM-16 Rječnik poslovnih pojmova | NIJE ZAPOČETO |
 | BM-17 Arhitektura poslovnih cjelina | NIJE ZAPOČETO |
 
@@ -839,3 +840,61 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 ### BM-AL-08 — Namjena evidencije aktivnosti
 
 > Evidencija aktivnosti služi reviziji, kontroli i naknadnoj provjeri izvršenih poslovnih radnji. Evidencija aktivnosti nije sredstvo komunikacije niti predstavlja poslovno obavještenje.
+
+---
+
+# BM-15 Opšta poslovna pravila
+
+**Status poglavlja:** USVOJENO
+
+## Svrha
+
+Ovim poglavljem definišu se opšta poslovna pravila koja važe za sve poslovne cjeline Kalendara kulture, osim kada je pojedinim poglavljem ovog Business Modela izričito drugačije određeno.
+
+Ova pravila predstavljaju osnov za dosljedno tumačenje i primjenu svih poslovnih procesa definisanih ovim Business Modelom.
+
+## Poslovna pravila
+
+### BM-GR-01 — Dosljednost poslovnih podataka
+
+> Sistem mora obezbijediti da poslovni podaci ostanu međusobno usklađeni tokom cijelog životnog ciklusa entiteta.
+>
+> Poslovna radnja koja bi narušila dosljednost poslovnih podataka nije dozvoljena.
+
+### BM-GR-02 — Jedinstveni izvor podataka
+
+> Svaki poslovni podatak održava se na jednom mjestu u sistemu.
+>
+> Zajednički podaci koriste se kroz cijeli sistem kako bi se izbjeglo dupliranje podataka i obezbijedila njihova dosljednost.
+
+### BM-GR-03 — Životni ciklus entiteta
+
+> Svaki entitet prolazi kroz životni ciklus definisan ovim Business Modelom.
+>
+> Status predstavlja trenutno poslovno stanje entiteta.
+>
+> Promjena statusa predstavlja dio poslovnog procesa i može se izvršiti isključivo u skladu sa pravilima definisanim ovim Business Modelom.
+
+### BM-GR-04 — Očuvanje poslovne istorije
+
+> Poslovna istorija predstavlja sastavni dio sistema.
+>
+> Kada je potrebno onemogućiti dalje korišćenje entiteta, primjenjuju se poslovna pravila aktivacije, deaktivacije ili arhiviranja, u skladu sa prirodom pojedinog entiteta.
+>
+> Brisanje poslovnih podataka primjenjuje se isključivo kada je to izričito predviđeno ovim Business Modelom.
+
+### BM-GR-05 — Automatske poslovne radnje
+
+> Sistem može automatski izvršavati poslovne radnje kada je njihovo izvršavanje definisano poslovnim pravilima.
+>
+> Automatski izvršene radnje imaju isti poslovni značaj kao radnje koje izvršava korisnik.
+
+### BM-GR-06 — Predvidivost poslovnog ponašanja
+
+> Sistem primjenjuje poslovna pravila na dosljedan i predvidiv način.
+>
+> Jednaki poslovni uslovi uvijek proizvode isti poslovni rezultat, osim kada je ovim Business Modelom izričito definisano drugačije.
+
+### BM-GR-07 — Primjena posebnih poslovnih pravila
+
+> Kada je za pojedini poslovni proces ili entitet ovim Business Modelom propisano posebno pravilo, ono ima prednost u odnosu na opšta poslovna pravila iz ovog poglavlja.
