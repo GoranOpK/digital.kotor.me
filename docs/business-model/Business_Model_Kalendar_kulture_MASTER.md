@@ -28,6 +28,7 @@
 | PATCH-014 | 2026-07-25 | BM-14 Evidencija aktivnosti (Audit log) — USVOJENO (BM-AL-01–BM-AL-08). |
 | PATCH-015 | 2026-07-25 | BM-13 Newsletter — USVOJENO (BM-NL-01–BM-NL-09); uklonjene ranije rezervacije BM-13 Poslovna obavještenja i BM-13.1 Newsletter. |
 | PATCH-016 | 2026-07-26 | BM-15 Opšta poslovna pravila — USVOJENO (BM-GR-01–BM-GR-07). |
+| PATCH-017 | 2026-07-26 | BM-16 Rječnik poslovnih pojmova — USVOJENO (BM-GL-01–BM-GL-21). |
 
 Napomena:
 
@@ -73,7 +74,7 @@ Dokument predstavlja referentni poslovni model za planiranje, razvoj, testiranje
 | BM-13 Newsletter | USVOJENO |
 | BM-14 Evidencija aktivnosti (Audit log) | USVOJENO |
 | BM-15 Opšta poslovna pravila | USVOJENO |
-| BM-16 Rječnik poslovnih pojmova | NIJE ZAPOČETO |
+| BM-16 Rječnik poslovnih pojmova | USVOJENO |
 | BM-17 Arhitektura poslovnih cjelina | NIJE ZAPOČETO |
 
 ---
@@ -898,3 +899,115 @@ Ova pravila predstavljaju osnov za dosljedno tumačenje i primjenu svih poslovni
 ### BM-GR-07 — Primjena posebnih poslovnih pravila
 
 > Kada je za pojedini poslovni proces ili entitet ovim Business Modelom propisano posebno pravilo, ono ima prednost u odnosu na opšta poslovna pravila iz ovog poglavlja.
+
+---
+
+# BM-16 Rječnik poslovnih pojmova
+
+**Status poglavlja:** USVOJENO
+
+## Svrha
+
+Ovim poglavljem definišu se osnovni poslovni pojmovi koji se koriste u Business Modelu modula Kalendar kulture.
+
+Definicije predstavljaju zajednički referentni okvir za sve učesnike u planiranju, razvoju, održavanju i korišćenju sistema, sa ciljem obezbjeđivanja jedinstvenog razumijevanja poslovnih pravila i terminologije.
+
+## Poslovni pojmovi
+
+### BM-GL-01 — Entitet
+
+> Poslovna cjelina kojom sistem upravlja i o kojoj vodi podatke.
+>
+> Primjeri entiteta su Organizator, Moderator, Manifestacija, Događaj, Termin, Lokacija i Kategorija.
+
+### BM-GL-02 — Životni ciklus
+
+> Niz poslovnih stanja kroz koja entitet prolazi od svog nastanka do završetka ili arhiviranja, u skladu sa poslovnim pravilima.
+
+### BM-GL-03 — Status
+
+> Trenutno poslovno stanje entiteta.
+>
+> Status određuje koje su poslovne radnje nad entitetom dozvoljene u skladu sa ovim Business Modelom.
+
+### BM-GL-04 — Poslovni proces
+
+> Skup međusobno povezanih poslovnih radnji kojima se upravlja životnim ciklusom jednog ili više entiteta.
+
+### BM-GL-05 — Poslovna radnja
+
+> Pojedinačna aktivnost koja predstavlja dio poslovnog procesa i proizvodi poslovni rezultat ili mijenja stanje entiteta.
+
+### BM-GL-06 — Organizator
+
+> Pravno ili fizičko lice koje organizuje kulturne događaje i koristi Kalendar kulture za njihovu prijavu i upravljanje.
+
+### BM-GL-07 — Moderator
+
+> Ovlašćeni predstavnik Organizatora koji u ime Organizatora koristi Kalendar kulture.
+>
+> Moderator upravlja podacima Organizatora, Manifestacijama i Događajima u skladu sa dodijeljenim ovlašćenjima.
+
+### BM-GL-08 — Urednik
+
+> Korisnik odgovoran za pregled, uređivanje, odobravanje i objavljivanje sadržaja u Kalendaru kulture.
+
+### BM-GL-09 — Administrator platforme
+
+> Korisnik odgovoran za administraciju platforme, upravljanje korisnicima, sistemskim podešavanjima i evidencijom aktivnosti.
+>
+> Administrator platforme ne učestvuje u uredničkom procesu.
+
+### BM-GL-10 — Događaj
+
+> Osnovna poslovna cjelina Kalendara kulture koja predstavlja pojedinačni kulturni sadržaj namijenjen objavljivanju.
+>
+> Događaj može imati jedan ili više Termina.
+
+### BM-GL-11 — Manifestacija
+
+> Poslovna cjelina koja povezuje više međusobno povezanih Događaja u okviru jedinstvenog programa.
+
+### BM-GL-12 — Termin
+
+> Pojedinačno održavanje Događaja koje definiše vrijeme i mjesto njegovog održavanja.
+
+### BM-GL-13 — Lokacija
+
+> Mjesto na kojem se održava jedan ili više Termina različitih Događaja.
+
+### BM-GL-14 — Kategorija
+
+> Poslovna klasifikacija Događaja koja omogućava njegovo grupisanje i pretragu.
+
+### BM-GL-15 — Mediji
+
+> Fotografije, dokumenti i drugi digitalni prilozi povezani sa Organizatorom, Manifestacijom ili Događajem.
+
+### BM-GL-16 — Korisnički portal
+
+> Dio Kalendara kulture namijenjen korisnicima za pregled kulturnih događaja i korišćenje funkcionalnosti dostupnih u skladu sa njihovim ovlašćenjima.
+
+### BM-GL-17 — Urednički portal
+
+> Dio sistema namijenjen Urednicima za upravljanje poslovnim procesom pregleda, uređivanja, odobravanja i objavljivanja sadržaja.
+
+### BM-GL-18 — Sistemska administracija
+
+> Dio sistema namijenjen Administratoru platforme za upravljanje korisnicima, sistemskim podešavanjima i administrativnim funkcijama.
+
+### BM-GL-19 — Newsletter
+
+> Funkcionalnost namijenjena periodičnom informisanju korisnika o kulturnim događajima.
+>
+> Newsletter nije dio uredničkog procesa niti predstavlja poslovno obavještenje.
+
+### BM-GL-20 — Evidencija aktivnosti
+
+> Evidencija aktivnosti predstavlja skup poslovno značajnih zapisa koji omogućavaju reviziju, kontrolu, odgovornost korisnika i naknadnu provjeru izvršenih radnji.
+
+### BM-GL-21 — Završna odredba
+
+> Pojmovi definisani ovim poglavljem imaju isto značenje u svim dijelovima Business Modela, osim ako je za pojedinu poslovnu cjelinu izričito drugačije određeno.
+>
+> Dosljedna primjena ovih definicija obezbjeđuje jedinstveno tumačenje poslovnih pravila i terminologije kroz cjelokupnu dokumentaciju modula Kalendar kulture.
