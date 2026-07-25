@@ -30,6 +30,7 @@
 | PATCH-016 | 2026-07-26 | BM-15 Opšta poslovna pravila — USVOJENO (BM-GR-01–BM-GR-07). |
 | PATCH-017 | 2026-07-26 | BM-16 Rječnik poslovnih pojmova — USVOJENO (BM-GL-01–BM-GL-21). |
 | PATCH-018 | 2026-07-26 | BM-17 Arhitektura poslovnih cjelina — USVOJENO (BM-AR-01–BM-AR-08). |
+| PATCH-019 | 2026-07-26 | BM-12 Urednički portal — USVOJENO (BM-EP-01–BM-EP-10). |
 
 Napomena:
 
@@ -71,7 +72,7 @@ Dokument predstavlja referentni poslovni model za planiranje, razvoj, testiranje
 | BM-09 Mediji | USVOJENO |
 | BM-10 Statusi i životni ciklus događaja | USVOJENO |
 | BM-11 Portal Kalendara kulture | USVOJENO |
-| BM-12 Urednički portal | NIJE ZAPOČETO |
+| BM-12 Urednički portal | USVOJENO |
 | BM-13 Newsletter | USVOJENO |
 | BM-14 Evidencija aktivnosti (Audit log) | USVOJENO |
 | BM-15 Opšta poslovna pravila | USVOJENO |
@@ -758,6 +759,87 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 ### BM-PK-14 — Povezani sadržaj
 
 > Portal Kalendara kulture može prikazivati međusobno povezane događaje i manifestacije u skladu sa njihovim poslovnim vezama definisanim u modulu Kalendara kulture.
+
+---
+
+# BM-12 Urednički portal
+
+**Status poglavlja:** USVOJENO
+
+## Svrha
+
+Ovim poglavljem definišu se poslovna pravila rada Uredničkog portala modula Kalendar kulture.
+
+Urednički portal predstavlja poslovnu cjelinu kroz koju Organizatori, Moderatori i Urednici izvršavaju poslovne radnje definisane ovim Business Modelom.
+
+Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovarajućim poglavljima ovog Business Modela.
+
+## Poslovna pravila
+
+### BM-EP-01 — Namjena
+
+> Urednički portal namijenjen je upravljanju kulturnim sadržajem i sprovođenju uredničkog procesa od kreiranja događaja do njegovog objavljivanja.
+
+### BM-EP-02 — Poslovne uloge
+
+> Urednički portal koriste:
+>
+> * Organizatori;
+> * Moderatori;
+> * Urednici.
+>
+> Svaka poslovna uloga koristi funkcionalnosti Uredničkog portala u skladu sa ovlašćenjima definisanim ovim Business Modelom.
+
+### BM-EP-03 — Poslovne funkcionalnosti
+
+> Urednički portal omogućava:
+>
+> * upravljanje podacima Organizatora;
+> * upravljanje Događajima;
+> * upravljanje Manifestacijama;
+> * upravljanje Terminima;
+> * upravljanje Medijima;
+> * pregled statusa poslovnih objekata;
+> * sprovođenje uredničkog procesa;
+> * pregled poslovnih obavještenja i sistemskih informacija namijenjenih Organizatorima, Moderatorima i Urednicima.
+
+### BM-EP-04 — Poslovni procesi
+
+> Svi poslovni procesi koji se izvršavaju kroz Urednički portal sprovode se u skladu sa poslovnim pravilima definisanim ovim Business Modelom.
+>
+> Urednički portal ne mijenja poslovna pravila već omogućava njihovu primjenu.
+
+### BM-EP-05 — Poslovna odgovornost
+
+> Svaka poslovna uloga odgovorna je za poslovne radnje koje izvrši koristeći Urednički portal.
+>
+> Odgovornost se određuje u skladu sa poslovnom ulogom.
+
+### BM-EP-06 — Poslovna vidljivost
+
+> Organizatorima, Moderatorima i Urednicima dostupni su isključivo podaci i funkcionalnosti za koje imaju odgovarajuća poslovna ovlašćenja.
+>
+> Pristup poslovnim podacima određuje se poslovnim pravilima definisanim ovim Business Modelom.
+
+### BM-EP-07 — Saradnja poslovnih uloga
+
+> Organizatori, Moderatori i Urednici međusobno sarađuju kroz poslovne procese definisane ovim Business Modelom.
+>
+> Svaka poslovna uloga izvršava isključivo poslovne radnje koje su joj dodijeljene.
+
+### BM-EP-08 — Jedinstven poslovni sistem
+
+> Urednički portal predstavlja sastavni dio modula Kalendar kulture i koristi zajedničke poslovne entitete, poslovna pravila i definicije utvrđene ovim Business Modelom.
+
+### BM-EP-09 — Evidencija aktivnosti
+
+> Poslovno značajne radnje izvršene kroz Urednički portal evidentiraju se u Evidenciji aktivnosti u skladu sa pravilima definisanim ovim Business Modelom.
+
+### BM-EP-10 — Završna odredba
+
+> Urednički portal predstavlja poslovnu cjelinu kroz koju se izvršava urednički proces modula Kalendar kulture.
+>
+> Sve poslovne radnje izvršene kroz Urednički portal podliježu poslovnim pravilima definisanim ovim Business Modelom.
 
 ---
 
