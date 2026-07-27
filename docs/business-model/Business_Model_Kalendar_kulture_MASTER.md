@@ -35,6 +35,16 @@
 | PATCH-021 | 2026-07-26 | Usklađivanje sa izuzetkom za događaje bez registrovanog Organizatora (javni interes): dopuna BM-01/BM-03/BM-04; usklađeni BM-ORG-04 napomena, BM-UR-06, BM-UR-07 i BM-DG-08. |
 | PATCH-022 | 2026-07-26 | Konačni model upravljanja Moderatorima: podnosilac zahtjeva postaje prvi Moderator; naredne Moderatore predlažu postojeći Moderatori; ovlašćenja dodjeljuje isključivo Urednik; trajni audit zahtjeva. |
 | PATCH-023 | 2026-07-26 | Terminološka migracija: postojeći poslovni koncept „Termin“, koji je predstavljao pojedinačno održavanje događaja, preimenovan je u „Održavanje događaja“. Pojam „Termin“ sužen je na datum i vrijeme održavanja. Poslovna logika nije promijenjena. Zahvaćeni: BM-04, BM-05, BM-06, BM-07, BM-10, BM-11, BM-12, BM-16 (uključujući BM-GL-22). Oznake BM-TR-* zadržane kao istorijske oznake pravila. |
+| PATCH-024 | 2026-07-26 | Usvojeno: Datum održavanja je obavezan, a vrijeme može biti definisano. Za cjelodnevni događaj definiše se samo datum održavanja. Usklađeni BM-TR-01, BM-TR-03, BM-TR-05, BM-GL-12, BM-GL-22, BM-PK-09, BM-16, dijagrami i formulacije termina u BM-04/BM-06. |
+| PATCH-025 | 2026-07-26 | BM-11 Portal: obavezna registracija za korišćenje portala uz zadržavanje domena identiteta na platformi (BM-PK-02); uklonjeno sortiranje iz BM-PK-07; dodato BM-PK-15 Istaknuti događaj. BM-AR-02 zadržan bez izmjene. |
+| PATCH-026 | 2026-07-26 | BM-06: definisan kompletan poslovni workflow statusa „Odgođen“ za održavanje događaja (BM-TR-10 usklađen; dodati BM-TR-12–BM-TR-15). |
+| PATCH-027 | 2026-07-27 | Definisana poslovna ovlašćenja za upravljanje statusima održavanja (Planiran, Odgođen, Otkazan) u skladu sa modelom uloga. Dodati BM-TR-16–BM-TR-18; usklađen BM-TR-08. |
+| PATCH-028 | 2026-07-27 | Terminološko usklađivanje: u BM-EP-03 i BM-AL-07 usvojen termin „entitet“ umjesto ranijeg neusklađenog naziva. Poslovna logika nije mijenjana. |
+| PATCH-029 | 2026-07-27 | Model korisnika: Organizator = poslovni entitet (nije uloga/korisnik); zahtjev za kreiranje Organizatora sa predloženim početnim Moderatorom; Urednik isključiva uloga; BM-MOD-03/04 usklađeni (aktivni kontekst Organizatora). |
+| PATCH-030 | 2026-07-27 | Ulaznice i cijena van poslovnog opsega V1: BM-TR-11 — upravljanje informacijama o ulaznicama i cijeni nije dio opsega V1; uklonjene reference u BM-06 konceptu i BM-16 terminološkim pravilima. |
+| PATCH-031 | 2026-07-27 | BM-13 Newsletter: model zasnovan na novoobjavljenim događajima (objavljivanje = okidač; periodična provjera; objedinjavanje; bez fiksnog sedmičnog perioda). Usklađeni BM-NL-01, BM-NL-06, BM-NL-07, BM-NL-09; dodati BM-NL-10–BM-NL-16. |
+| PATCH-032 | 2026-07-27 | BM-13 Newsletter: poslovno značajne promjene kao dodatni okidači (otkazivanje, odlaganje, promjena datuma/vremena/lokacije); prioritetna obavještenja; publika = pretplatnici kojima je događaj već poslat. Usklađeni BM-NL-01, BM-NL-06, BM-NL-07, BM-NL-14, BM-NL-16; dodati BM-NL-17–BM-NL-21. |
+| PATCH-033 | 2026-07-27 | BM-13 Newsletter: višestruke poslovno značajne promjene → jedinstveno obavještenje sa posljednjim važećim stanjem; objedinjavanje prioritetnih obavještenja uz blagovremenost; zabrana kontradiktornih poruka u istom ciklusu. Usklađeni BM-NL-06, BM-NL-20; dodati BM-NL-22–BM-NL-25. |
 
 Napomena:
 
@@ -180,53 +190,73 @@ Poglavlje još nije definisano.
 
 ## 1. Svrha poslovne cjeline
 
-Poslovna cjelina Organizator definiše ko može biti nosilac sadržaja u modulu Kalendar kulture, na koji način stiče taj status, koja su njegova ovlašćenja nad sadržajem i kakav je njegov odnos prema ostalim poslovnim cjelinama.
+Poslovna cjelina Organizator definiše poslovni entitet koji je nosilac sadržaja u modulu Kalendar kulture, način njegovog kreiranja kroz zahtjev registrovanog korisnika, odnos prema Moderatorima i Uredniku, te pravila da Organizator nije korisnik sistema niti korisnička uloga.
 
 ## 2. Poslovni opis
 
-Organizator je poslovna uloga na platformi Digital Kotor. Organizator može biti fizičko ili pravno lice registrovano na platformi. Organizator je nosilac sadržaja u modulu Kalendar kulture.
+Organizator je poslovni entitet u okviru Kalendara kulture i nosilac sadržaja.
+
+Organizator nije korisnik sistema i nije korisnička uloga. Organizator nema korisnički nalog na osnovu statusa Organizatora, ne prijavljuje se u sistem, ne pristupa portalu kao Organizator, ne izvršava neposredno radnje u sistemu i nema sopstvenu korisničku sesiju.
+
+Organizator može predstavljati, između ostalog: ustanovu, preduzeće, udruženje, nevladinu organizaciju, neformalnu grupu, fizičko lice koje organizuje događaje ili drugi subjekt koji se pojavljuje kao organizator događaja.
+
+Radnje u ime Organizatora izvršava jedan ili više registrovanih korisnika koji imaju ovlašćenje Moderatora za tog Organizatora.
 
 ## 3. Poslovni koncept
 
-Registrovani korisnik Digital Kotor može u modulu Kalendar kulture podnijeti zahtjev kroz funkciju „Postani organizator“.
+Registrovani korisnik Digital Kotor može u modulu Kalendar kulture podnijeti zahtjev za kreiranje Organizatora.
+
+Podnošenjem zahtjeva korisnik ne postaje Organizator, ne dobija automatski novu korisničku ulogu, ne postaje automatski Moderator i ne postaje vlasnik Organizatora. Korisnik samo inicira postupak kreiranja novog entiteta Organizatora.
 
 Tok procesa:
 
-1. Registrovani korisnik pokreće funkciju „Postani organizator“ (iniciranje zahtjeva).
-2. Otvara se obrazac.
-3. U obrascu korisnik unosi podatke Organizatora.
-4. Zahtjev se šalje Uredniku.
-5. Urednik pregleda i odobrava ili odbija zahtjev (odobravanje zahtjeva).
-6. Nakon odobrenja Urednika:
+1. Registrovani korisnik pokreće zahtjev za kreiranje Organizatora (iniciranje zahtjeva).
+2. Zahtjev sadrži podatke o predloženom Organizatoru kao poslovnom entitetu, podatke potrebne za identifikovanje predloženog početnog Moderatora i podatak da li je predloženi Moderator sam podnosilac ili drugi registrovani korisnik.
+3. Zahtjev se šalje Uredniku.
+4. Urednik pregleda i odobrava ili odbija zahtjev.
+5. Ako Urednik odobri zahtjev:
 
-   * kreira se Organizator;
-   * podnosilac zahtjeva automatski postaje prvi Moderator tog Organizatora (dodjela ovlašćenja);
-   * podnosilac stiče status Organizatora.
+   * kreira se, odnosno odobrava se novi entitet Organizatora;
+   * predloženi korisnik dobija ovlašćenje Moderatora za tog konkretnog Organizatora;
+   * uspostavlja se poslovna veza između Moderatora i Organizatora.
+6. Ako Urednik odbije zahtjev:
 
-Operativno upravljanje sadržajem u ime Organizatora obavljaju Moderatori. Organizator je nosilac sadržaja i ne pristupa uredničkom portalu direktno. Moderatori ne mogu samostalno objaviti sadržaj.
+   * Organizator se ne odobrava kao aktivan poslovni entitet;
+   * predloženi korisnik ne dobija moderatorska ovlašćenja;
+   * podnosilac zahtjeva ne dobija novu ulogu niti druga posebna prava.
+
+Podnosilac zahtjeva i predloženi Moderator mogu biti ista osoba ili dvije različite osobe. Podnosilac može sebe predložiti za Moderatora, ali to nije obavezno. Samo podnošenje zahtjeva ne daje moderatorska ovlašćenja ni podnosiocu ni predloženom korisniku.
+
+Jedan registrovani korisnik može podnijeti zahtjev za kreiranje neograničenog broja Organizatora. Svaki zahtjev predstavlja poseban postupak i Urednik ga razmatra nezavisno.
+
+Operativno upravljanje sadržajem u ime Organizatora obavljaju Moderatori. Organizator ne pristupa uredničkom portalu. Moderatori ne mogu samostalno objaviti sadržaj.
 
 Svaki naredni Moderator može biti predložen isključivo od strane postojećeg aktivnog Moderatora povezanog sa tim Organizatorom. Moderator ne dodjeljuje ovlašćenja; samo podnosi zahtjev. Pristup i ovlašćenja novom Moderatoru dodjeljuje isključivo Urednik nakon odobrenja.
 
-**Napomena o implementaciji:** Funkcionalnost „Postani organizator“ i upravljanje Moderatorima usvojeni su kao dio poslovnog modela, ali trenutno još nisu implementirani u aplikaciji.
+**Napomena o implementaciji:** Zahtjev za kreiranje Organizatora i upravljanje Moderatorima usvojeni su kao dio poslovnog modela, ali trenutno još nisu implementirani u aplikaciji.
+
+**Napomena o nazivu:** Raniji naziv funkcionalnosti „Postani organizator“ zamijenjen je poslovno preciznijim nazivom „zahtjev za kreiranje Organizatora“.
 
 ## 4. Poslovna pravila
 
 | Oznaka | Pravilo |
 |--------|---------|
-| BM-ORG-01 | Organizator može biti fizičko ili pravno lice registrovano na platformi Digital Kotor. |
-| BM-ORG-02 | Korisnik podnosi zahtjev za sticanje statusa Organizatora kroz funkcionalnost „Postani organizator“. |
-| BM-ORG-03 | Korisnik stiče status Organizatora nakon odobrenja Urednika. |
+| BM-ORG-01 | Organizator je poslovni entitet i nosilac sadržaja u Kalendaru kulture. Organizator nije korisnik sistema i nije korisnička uloga. |
+| BM-ORG-02 | Registrovani korisnik podnosi zahtjev za kreiranje Organizatora. Podnošenjem zahtjeva korisnik ne postaje Organizator, ne postaje Moderator i ne dobija novu korisničku ulogu. |
+| BM-ORG-03 | Nakon odobrenja Urednika kreira se, odnosno odobrava se novi entitet Organizatora. Odobrenje ne dodjeljuje podnosiocu status korisničke uloge Organizatora. |
 | BM-ORG-04 | Organizator je nosilac sadržaja. Operativno kreiranje, uređivanje i čuvanje nacrta sadržaja, kao i slanje sadržaja Uredniku na odobravanje, obavljaju Moderatori u ime Organizatora. Ovo pravilo ne isključuje izuzetak da Urednik može kreirati i objaviti događaj bez registrovanog Organizatora radi javnog interesa i pravovremenog informisanja građana, u skladu sa BM-UR-06 i BM-DG-08. |
-| BM-ORG-05 | Organizator i Moderator ne mogu samostalno objaviti sadržaj. |
+| BM-ORG-05 | Moderator ne može samostalno objaviti sadržaj. |
 | BM-ORG-06 | Organizator ima jednog ili više Moderatora koji upravljaju sadržajem u njegovo ime. Organizator ne dodjeljuje ovlašćenja Moderatorima. |
-| BM-ORG-07 | Obrazac „Postani organizator“ obuhvata podatke Organizatora. Podnosilac zahtjeva, nakon odobrenja Urednika, automatski postaje prvi Moderator tog Organizatora. |
-| BM-ORG-08 | Prvi Moderator postaje aktivan nakon odobrenja zahtjeva „Postani organizator“ od strane Urednika. |
-| BM-ORG-09 | Sistem trajno evidentira za zahtjev „Postani organizator“: podnosioca zahtjeva, datum i vrijeme podnošenja, Urednika koji je odobrio i datum i vrijeme odobrenja. |
+| BM-ORG-07 | Zahtjev za kreiranje Organizatora sadrži podatke o predloženom Organizatoru, podatke potrebne za identifikovanje predloženog početnog Moderatora i podatak da li je predloženi Moderator sam podnosilac ili drugi registrovani korisnik. Podnosilac i predloženi Moderator mogu biti ista ili različite osobe. |
+| BM-ORG-08 | Nakon odobrenja zahtjeva za kreiranje Organizatora, predloženi korisnik dobija ovlašćenje početnog Moderatora za tog Organizatora. Moderatorska ovlašćenja nastaju tek nakon odobrenja Urednika. |
+| BM-ORG-09 | Sistem trajno evidentira za zahtjev za kreiranje Organizatora: podnosioca zahtjeva, predloženog Moderatora, datum i vrijeme podnošenja, Urednika koji je odlučio i datum i vrijeme odluke. |
+| BM-ORG-10 | Jedan registrovani korisnik može podnijeti zahtjev za kreiranje neograničenog broja Organizatora. Svaki zahtjev predstavlja poseban postupak. |
+| BM-ORG-11 | Ako Urednik odbije zahtjev, Organizator se ne odobrava kao aktivan poslovni entitet, predloženi korisnik ne dobija moderatorska ovlašćenja, a podnosilac ne dobija novu ulogu. Odbijanje ne sprečava podnošenje novog zahtjeva. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
-- **Moderator organizatora** — Moderatori upravljaju sadržajem u ime Organizatora. Obaveza da Organizator ima najmanje jednog aktivnog Moderatora definisana je u BM-02. Isti korisnik može istovremeno imati ulogu Organizatora i prvog Moderatora.
-- **Urednik** — odobrava zahtjev za sticanje statusa Organizatora i dodjeljuje ovlašćenja Moderatorima; odobrava i objavljuje sadržaj.
+- **Moderator organizatora** — Moderatori upravljaju sadržajem u ime Organizatora. Obaveza da Organizator ima najmanje jednog aktivnog Moderatora definisana je u BM-02.
+- **Urednik** — odobrava ili odbija zahtjev za kreiranje Organizatora i dodjeljuje ovlašćenja Moderatorima; odobrava i objavljuje sadržaj.
 - **Događaj** — događaj se vodi u ime Organizatora. Izuzetno, Urednik može kreirati i objaviti događaj bez registrovanog Organizatora radi javnog interesa; naknadno povezivanje sa registrovanim Organizatorom uređeno je u BM-03 i BM-04.
 - **Manifestacija** — Organizator može biti povezan sa Manifestacijama u skladu sa poslovnim pravilima Manifestacije.
 
@@ -242,13 +272,13 @@ Nema otvorenih pitanja.
 
 ## 1. Svrha poslovne cjeline
 
-Poslovna cjelina Moderator organizatora definiše ulogu ovlašćenog korisnika koji upravlja sadržajem u ime Organizatora, obim njegovih ovlašćenja, pravila o broju Moderatora organizatora, postupak predlaganja i odobravanja novih Moderatora te postupak njihovog uklanjanja.
+Poslovna cjelina Moderator organizatora definiše korisničku ulogu, odnosno poslovno ovlašćenje registrovanog korisnika da postupa u ime konkretnog Organizatora, obim njegovih ovlašćenja, pravila o broju Moderatora, postupak predlaganja i odobravanja novih Moderatora te postupak njihovog uklanjanja.
 
 ## 2. Poslovni opis
 
-Moderator organizatora je poslovna uloga koja upravlja sadržajem u modulu Kalendar kulture u ime Organizatora.
+Moderator organizatora je poslovna uloga registrovanog korisnika koja upravlja sadržajem u modulu Kalendar kulture u ime konkretnog Organizatora.
 
-Moderator organizatora **nije** Urednik i **nije** nosilac sadržaja. Moderator je operativni korisnik Organizatora.
+Moderator organizatora **nije** Urednik i **nije** nosilac sadržaja. Moderator nije Organizator. Moderator je operativni korisnik ovlašćen da izvršava radnje u ime Organizatora.
 
 ## 3. Poslovni koncept
 
@@ -256,11 +286,11 @@ Moderator organizatora ne postaje nosilac sadržaja. Sadržaj koji Moderator org
 
 Moderator organizatora može obavljati operativne radnje nad sadržajem u ime Organizatora, osim samostalne objave sadržaja. To obuhvata kreiranje događaja, uređivanje događaja, brisanje događaja u skladu sa dodijeljenim ovlašćenjima, upravljanje manifestacijama, čuvanje nacrta i slanje sadržaja Uredniku na odobravanje. Sadržaj koji Moderator organizatora kreira ili uređuje mora biti poslat Uredniku na odobravanje prije objave.
 
-Jedan korisnik može biti Moderator organizatora za jednog ili više Organizatora. Isti korisnik može istovremeno imati ulogu Organizatora i Moderatora organizatora (npr. kao prvi Moderator), a sistem u tom slučaju primjenjuje ovlašćenja u skladu sa ulogom koju korisnik trenutno koristi.
+Jedan korisnik može biti Moderator organizatora za jednog ili više Organizatora. Pri svakoj radnji Moderator postupa u kontekstu konkretnog Organizatora (aktivni kontekst Organizatora).
 
 Organizator može imati jednog ili više Moderatora organizatora i mora imati najmanje jednog aktivnog Moderatora organizatora.
 
-**Prvi Moderator:** Korisnik koji podnese zahtjev „Postani organizator“, nakon odobrenja Urednika, automatski postaje prvi Moderator tog Organizatora.
+**Početni Moderator:** Predloženi korisnik iz odobrenog zahtjeva za kreiranje Organizatora, nakon odobrenja Urednika, dobija ovlašćenje početnog Moderatora tog Organizatora. Predloženi Moderator može biti podnosilac zahtjeva ili drugi registrovani korisnik.
 
 **Naredni Moderatori:** Svaki naredni Moderator može biti predložen isključivo od strane postojećeg aktivnog Moderatora povezanog sa tim Organizatorom (iniciranje zahtjeva). Moderator ne dodjeljuje ovlašćenja; samo podnosi zahtjev. Pristup i ovlašćenja novom Moderatoru dodjeljuje isključivo Urednik nakon pregleda i odobrenja (odobravanje zahtjeva i dodjela ovlašćenja). Tek nakon odobrenja Urednika novi Moderator postaje aktivan.
 
@@ -274,23 +304,23 @@ Za zahtjeve vezane za Moderatore sistem trajno evidentira: podnosioca zahtjeva, 
 |--------|---------|
 | BM-MOD-01 | Moderator organizatora upravlja sadržajem u ime Organizatora. |
 | BM-MOD-02 | Jedan korisnik može biti Moderator organizatora za jednog ili više Organizatora. |
-| BM-MOD-03 | Jedan korisnik može istovremeno imati ulogu Organizatora i Moderatora organizatora. |
-| BM-MOD-04 | Kada korisnik ima više uloga, sistem primjenjuje ovlašćenja u skladu sa ulogom koju korisnik trenutno koristi. |
+| BM-MOD-03 | Podnosilac zahtjeva za kreiranje Organizatora može, ali ne mora, biti predložen kao početni Moderator. Podnosilac i predloženi Moderator mogu biti ista ili različite osobe. |
+| BM-MOD-04 | Kada je Moderator povezan sa više Organizatora, pri svakoj radnji postupa u kontekstu konkretnog Organizatora. Sistem primjenjuje ovlašćenja i pripadnost sadržaja u skladu sa tim aktivnim kontekstom Organizatora. |
 | BM-MOD-05 | Moderator organizatora može obavljati operativne radnje nad sadržajem u ime Organizatora, osim samostalne objave sadržaja. |
 | BM-MOD-06 | Sadržaj koji kreira ili uređuje Moderator organizatora mora biti poslat Uredniku na odobravanje prije objave. |
 | BM-MOD-07 | Organizator mora imati najmanje jednog aktivnog Moderatora organizatora. |
 | BM-MOD-08 | Moderator organizatora može pokrenuti postupak uklanjanja drugog Moderatora organizatora istog Organizatora. |
 | BM-MOD-09 | Moderator organizatora smatra se uklonjenim tek nakon odobrenja Urednika. |
 | BM-MOD-10 | Sistem neće dozvoliti uklanjanje posljednjeg aktivnog Moderatora organizatora. |
-| BM-MOD-11 | Moderator organizatora nije Urednik; urednička ovlašćenja se ne prenose ulozi Moderatora. |
-| BM-MOD-12 | Podnosilac zahtjeva „Postani organizator“, nakon odobrenja Urednika, automatski postaje prvi Moderator tog Organizatora. |
+| BM-MOD-11 | Moderator organizatora nije Urednik; urednička ovlašćenja se ne prenose ulozi Moderatora. Moderator nije Organizator. |
+| BM-MOD-12 | Početni Moderator je predloženi korisnik iz odobrenog zahtjeva za kreiranje Organizatora. Ovlašćenja dobija tek nakon odobrenja Urednika. |
 | BM-MOD-13 | Svaki naredni Moderator može biti predložen isključivo od strane postojećeg aktivnog Moderatora povezanog sa tim Organizatorom. Moderator ne dodjeljuje ovlašćenja; samo podnosi zahtjev. |
 | BM-MOD-14 | Pristup i ovlašćenja novom Moderatoru dodjeljuje isključivo Urednik nakon pregleda i odobrenja zahtjeva. Tek nakon odobrenja Moderator postaje aktivan. |
 | BM-MOD-15 | Sistem trajno evidentira za zahtjeve vezane za Moderatore: podnosioca zahtjeva, datum i vrijeme podnošenja, Urednika koji je odobrio i datum i vrijeme odobrenja. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
-- **Organizator** — ostaje nosilac sadržaja; Moderatori upravljaju sadržajem u njegovo ime.
+- **Organizator** — ostaje nosilac sadržaja kao poslovni entitet; Moderatori upravljaju sadržajem u njegovo ime.
 - **Urednik** — pregleda i odobrava sadržaj koji Moderator pošalje na odobravanje; odobrava zahtjeve za dodjelu i uklanjanje Moderatora te dodjeljuje ovlašćenja.
 - **Događaj** — Moderator organizatora kreira i uređuje događaj u ime Organizatora.
 - **Lokacija** — Moderator organizatora može predlagati nove lokacije u skladu sa poslovnim pravilima Lokacije.
@@ -307,17 +337,23 @@ Nema otvorenih pitanja.
 
 ## 1. Svrha poslovne cjeline
 
-Poslovna cjelina Urednik definiše ulogu koja odobrava sticanje statusa Organizatora, dodjeljuje ovlašćenja Moderatorima, obavlja urednički pregled, odobravanje i objavu sadržaja u modulu Kalendar kulture, te odobrava uklanjanje Moderatora organizatora.
+Poslovna cjelina Urednik definiše isključivu administrativnu ulogu Uredničkog portala Kalendara kulture: odobravanje ili odbijanje zahtjeva za kreiranje Organizatora, dodjelu ovlašćenja Moderatorima, urednički pregled, odobravanje i objavu sadržaja, te odobravanje uklanjanja Moderatora organizatora.
 
 ## 2. Poslovni opis
 
-Urednik je poslovna uloga koja odobrava zahtjeve za sticanje statusa Organizatora, odobrava zahtjeve za dodjelu ovlašćenja novim Moderatorima, pregleda, uređuje, odobrava i objavljuje događaje, vraća ih na doradu kada su potrebne suštinske izmjene i odobrava uklanjanje Moderatora organizatora.
+Urednik je administrator Uredničkog portala Kalendara kulture. Urednik nije običan registrovani korisnik javnog portala i ne koristi funkcionalnosti namijenjene običnim registrovanim korisnicima.
+
+Urednik nije Organizator i nije Moderator Organizatora. Uloga Urednika je isključiva unutar poslovnog modela Kalendara kulture: Urednik nema kombinaciju uloge Urednika sa ulogom Moderatora niti sa statusom običnog registrovanog korisnika, ne mijenja aktivnu poslovnu ulogu i uvijek postupa u svojstvu Urednika.
+
+Urednik odobrava ili odbija zahtjeve za kreiranje Organizatora, odobrava zahtjeve za dodjelu ovlašćenja novim Moderatorima, pregleda, uređuje, odobrava i objavljuje događaje, vraća ih na doradu kada su potrebne suštinske izmjene i odobrava uklanjanje Moderatora organizatora.
 
 ## 3. Poslovni koncept
 
 Urednik obezbjeđuje kvalitet i dosljednost javno objavljenog sadržaja kroz pregled, uređivanje, vraćanje na doradu, odobravanje i objavljivanje događaja. Sadržaj koji pošalju Moderatori Urednik pregleda i odobrava prije objave. Objavu sadržaja vrši isključivo Urednik.
 
-Urednik je isključivo ovlašćen da dodijeli pristup i ovlašćenja novom Moderatoru nakon pregleda i odobrenja zahtjeva koji je podnio postojeći Moderator.
+Urednik koristi isključivo Urednički portal u okviru svojih poslovnih ovlašćenja i ne podnosi zahtjeve kao običan registrovani korisnik.
+
+Urednik je isključivo ovlašćen da dodijeli pristup i ovlašćenja novom Moderatoru nakon pregleda i odobrenja zahtjeva.
 
 Urednik može kreirati događaj bez registrovanog Organizatora kada je to potrebno radi pravovremenog informisanja građana i ostvarivanja javnog interesa. Po registraciji Organizatora događaj se može naknadno povezati sa Organizatorom. Naknadno povezivanje predstavlja administrativnu dopunu podataka i ne smije mijenjati audit, istoriju događaja niti javno objavljene verzije.
 
@@ -325,7 +361,7 @@ Urednik može kreirati događaj bez registrovanog Organizatora kada je to potreb
 
 | Oznaka | Pravilo |
 |--------|---------|
-| BM-UR-01 | Urednik odobrava zahtjev za sticanje statusa Organizatora. |
+| BM-UR-01 | Urednik odobrava ili odbija zahtjev za kreiranje Organizatora. |
 | BM-UR-02 | Urednik pregleda, uređuje, odobrava i objavljuje događaje. |
 | BM-UR-03 | Urednik vraća događaje na doradu kada su potrebne suštinske izmjene. |
 | BM-UR-04 | Urednik pregleda i odobrava sadržaj koji šalju Moderatori. |
@@ -333,10 +369,11 @@ Urednik može kreirati događaj bez registrovanog Organizatora kada je to potreb
 | BM-UR-06 | Urednik može kreirati događaj bez registrovanog Organizatora kada je to potrebno radi pravovremenog informisanja građana i ostvarivanja javnog interesa. |
 | BM-UR-07 | Po registraciji Organizatora, događaj kreiran bez registrovanog Organizatora može se naknadno povezati sa tim Organizatorom. Naknadno povezivanje ne smije mijenjati audit, istoriju događaja niti javno objavljene verzije i predstavlja administrativnu dopunu podataka. |
 | BM-UR-08 | Urednik odobrava zahtjeve za dodjelu ovlašćenja novim Moderatorima i isključivo on dodjeljuje pristup novom Moderatoru. |
+| BM-UR-09 | Urednik je isključiva uloga Uredničkog portala. Urednik nije Organizator, nije Moderator Organizatora, ne kombinuje ulogu Urednika sa statusom običnog registrovanog korisnika u poslovnom modelu Kalendara kulture, ne mijenja aktivnu poslovnu ulogu i uvijek postupa kao Urednik. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
-- **Organizator** — Urednik odobrava zahtjev za sticanje statusa Organizatora i može naknadno povezati događaj kreiran bez registrovanog Organizatora sa tim Organizatorom, u skladu sa BM-UR-07.
+- **Organizator** — Urednik odobrava ili odbija zahtjev za kreiranje Organizatora i može naknadno povezati događaj kreiran bez registrovanog Organizatora sa tim Organizatorom, u skladu sa BM-UR-07.
 - **Moderator organizatora** — Urednik pregleda i odobrava sadržaj koji Moderator pošalje na odobravanje; odobrava zahtjeve za dodjelu i uklanjanje Moderatora te dodjeljuje ovlašćenja.
 - **Događaj** — Urednik pregleda, uređuje, odobrava, objavljuje i vraća na doradu događaje, a u propisanim slučajevima može i kreirati događaj.
 - **Lokacija** — Urednik odobrava ili odbija nove lokacije predložene za zajednički katalog lokacija.
@@ -365,7 +402,7 @@ Događaj predstavlja osnovnu programsku cjelinu Kalendara kulture koja opisuje k
 Događaj
     │
     └── ima jedno ili više održavanja
-            ├── ima termin (datum i vrijeme)
+            ├── ima termin (Datum održavanja je obavezan, a vrijeme može biti definisano.)
             ├── može imati lokaciju
             └── može imati status i druga svojstva
 ```
@@ -462,11 +499,11 @@ Nema otvorenih pitanja.
 
 **Status poglavlja:** USVOJENO
 
-Napomena o oznakama pravila: identifikatori `BM-TR-*` zadržani su kao istorijske tehničke oznake radi stabilnosti referenci. Tekst pravila više ne definiše Termin kao poslovni entitet; opisuju **održavanje događaja**. Pojam **Termin** u ovom poglavlju označava isključivo datum i vrijeme održavanja.
+Napomena o oznakama pravila: identifikatori `BM-TR-*` zadržani su kao istorijske tehničke oznake radi stabilnosti referenci. Tekst pravila više ne definiše Termin kao poslovni entitet; opisuju **održavanje događaja**. Pojam **Termin** u ovom poglavlju označava: Datum održavanja je obavezan, a vrijeme može biti definisano.
 
 ## 1. Svrha
 
-Svrha ovog poglavlja je definisanje poslovnog koncepta održavanja događaja kao jednog konkretnog održavanja jednog događaja, uključujući njegov termin (datum i vrijeme), lokaciju, ponavljanje, status i druga osnovna poslovna svojstva.
+Svrha ovog poglavlja je definisanje poslovnog koncepta održavanja događaja kao jednog konkretnog održavanja jednog događaja, uključujući njegov termin (Datum održavanja je obavezan, a vrijeme može biti definisano.), lokaciju, ponavljanje, status i druga osnovna poslovna svojstva.
 
 ## 2. Poslovni opis
 
@@ -474,33 +511,33 @@ Održavanje događaja predstavlja jedno konkretno održavanje jednog događaja. 
 
 Održavanje se ne posmatra kao samostalan programski sadržaj, već uvijek pripada jednom događaju.
 
-Svako održavanje ima termin, odnosno datum i vrijeme. Termin nije samostalan poslovni entitet.
+Svako održavanje ima termin. Datum održavanja je obavezan, a vrijeme može biti definisano. Termin nije samostalan poslovni entitet.
 
 ## 3. Poslovni koncept
 
 ```text
 Događaj 1 ───── 1..N Održavanja događaja
-                      ├── Termin (datum i vrijeme)
+                      ├── Termin (Datum održavanja je obavezan, a vrijeme može biti definisano.)
                       └── Lokacija (opciono)
 ```
 
 Održavanje omogućava da se za jedan događaj evidentira jedno ili više konkretnih održavanja, uključujući cjelodnevna, ponavljajuća, izmijenjena, odgođena ili otkazana održavanja.
 
-Svako održavanje ima sopstveni termin i status, dok lokacija i informacije o ulaznicama mogu biti opcione.
+Svako održavanje ima sopstveni termin i status, dok lokacija može biti opciona.
 
 ## 4. Poslovna pravila
 
 ### BM-TR-01 — Definicija održavanja događaja
 
-> Održavanje događaja predstavlja jedno konkretno održavanje jednog događaja, sa sopstvenim terminom (datumom i vremenom) i, po potrebi, lokacijom. Jedan događaj može imati jedno ili više održavanja.
+> Održavanje događaja predstavlja jedno konkretno održavanje jednog događaja, sa sopstvenim terminom (Datum održavanja je obavezan, a vrijeme može biti definisano.) i, po potrebi, lokacijom. Jedan događaj može imati jedno ili više održavanja.
 
 ### BM-TR-02 — Veza održavanja i događaja
 
 > Održavanje uvijek pripada jednom događaju. Održavanje ne može postojati samostalno niti može biti povezano sa više događaja.
 
-### BM-TR-03 — Termin održavanja (obavezni vremenski podaci)
+### BM-TR-03 — Termin održavanja
 
-> Svako održavanje mora imati definisan termin: datum i vrijeme početka, kao i datum i vrijeme završetka. Termin predstavlja isključivo datum i vrijeme i nije samostalan poslovni entitet. Ostali podaci održavanja uređuju se posebnim poslovnim pravilima i mogu biti opcioni.
+> Datum održavanja je obavezan, a vrijeme može biti definisano. Termin nije samostalan poslovni entitet. Ostali podaci održavanja uređuju se posebnim poslovnim pravilima i mogu biti opcioni.
 
 ### BM-TR-04 — Lokacija održavanja
 
@@ -508,7 +545,7 @@ Svako održavanje ima sopstveni termin i status, dok lokacija i informacije o ul
 
 ### BM-TR-05 — Cjelodnevno održavanje
 
-> Održavanje može biti označeno kao cjelodnevno. Za cjelodnevno održavanje nije obavezno definisati vrijeme početka i završetka, dok datum početka i završetka u terminu ostaju obavezni.
+> Održavanje može biti označeno kao cjelodnevno. Za cjelodnevni događaj definiše se samo datum održavanja.
 
 ### BM-TR-06 — Ponavljanje i više održavanja
 
@@ -520,26 +557,67 @@ Svako održavanje ima sopstveni termin i status, dok lokacija i informacije o ul
 
 ### BM-TR-08 — Izmjena objavljenog održavanja
 
-> Održavanje objavljenog događaja može se izmijeniti (uključujući promjenu termina, lokacije ili drugih podataka održavanja). Sve izmjene podliježu istim pravilima uređivanja i odobravanja koja važe za događaj, u skladu sa poslovnim pravilima definisanim u BM-03 Urednik.
+> Održavanje objavljenog događaja može se izmijeniti (uključujući promjenu termina, lokacije ili drugih podataka održavanja). Izmjene podataka održavanja, osim postavljanja statusa **Planiran**, **Odgođen** i **Otkazan** uređenih pravilima BM-TR-16 i BM-TR-17, podliježu istim pravilima uređivanja i odobravanja koja važe za događaj, u skladu sa poslovnim pravilima definisanim u BM-03 Urednik.
 
 ### BM-TR-09 — Status održavanja
 
-> Svako održavanje ima vlastiti status, nezavisno od ostalih održavanja istog događaja. Status održavanja određuje njegovo trenutno stanje i može biti različit od statusa drugih održavanja događaja.
+> Svako održavanje ima vlastiti status, nezavisno od ostalih održavanja istog događaja. Status održavanja određuje njegovo trenutno stanje i može biti različit od statusa drugih održavanja događaja. Status održavanja nije status događaja.
 
 ### BM-TR-10 — Dozvoljeni statusi održavanja
 
 > Održavanje može imati jedan od sljedećih statusa:
 >
 > * **Planiran** — održavanje je aktivno i biće održano prema objavljenim podacima.
+> * **Odgođen** — održavanje neće biti održano u planiranom terminu i očekuje se određivanje novog termina.
 > * **Otkazan** — održavanje neće biti održano.
-> * **Odgođen** — održavanje neće biti održano u planiranom terminu i očekuje se novi termin (datum ili vrijeme).
 > * **Završen** — održavanje je održano ili je prošao njegov termin.
 >
 > Status **Završen** sistem dodjeljuje automatski nakon što prođe termin održavanja.
 
 ### BM-TR-11 — Ulaznice i cijena
 
-> Održavanje može sadržati informacije o ulaznicama i cijeni. Podaci o ulaznicama su opcioni i definišu se za svako održavanje pojedinačno.
+> Upravljanje informacijama o ulaznicama i cijeni nije dio poslovnog opsega verzije V1.
+
+### BM-TR-12 — Odgođen pripada održavanju
+
+> Status **Odgođen** odnosi se isključivo na održavanje događaja. Status **Odgođen** nije status događaja.
+
+### BM-TR-13 — Tranzicije iz statusa Planiran
+
+> Iz statusa **Planiran** održavanje može preći u status:
+>
+> * **Odgođen**;
+> * **Otkazan**;
+> * **Završen**.
+
+### BM-TR-14 — Tranzicije iz statusa Odgođen
+
+> Iz statusa **Odgođen** održavanje može preći u status:
+>
+> * **Planiran**, nakon određivanja novog termina;
+> * **Otkazan**.
+>
+> Druge tranzicije iz statusa **Odgođen** nisu dozvoljene.
+
+### BM-TR-15 — Povratak iz statusa Odgođen u Planiran
+
+> Prilikom prelaska iz statusa **Odgođen** u status **Planiran** radi se o istom održavanju događaja. Novo održavanje se ne kreira. Istorija održavanja ostaje sačuvana.
+
+### BM-TR-16 — Ovlašćenja za status održavanja sa registrovanim Organizatorom
+
+> Kada održavanje pripada događaju sa registrovanim Organizatorom:
+>
+> * Moderator može u ime Organizatora zatražiti odgađanje ili promjenu termina.
+> * Organizator ne mijenja direktno status objavljenog održavanja (Organizator nije korisnik i ne izvršava radnje u sistemu).
+> * Moderator postavlja status **Odgođen**, **Planiran** (nakon određivanja novog termina) i **Otkazan**, u skladu sa poslovnim pravilima tranzicija statusa održavanja.
+
+### BM-TR-17 — Ovlašćenja za status održavanja bez registrovanog Organizatora
+
+> Kada održavanje pripada događaju bez registrovanog Organizatora, ista ovlašćenja za postavljanje statusa **Odgođen**, **Planiran** (nakon određivanja novog termina) i **Otkazan** ima Urednik.
+
+### BM-TR-18 — Obuhvat ovlašćenja za status održavanja
+
+> Pravila BM-TR-16 i BM-TR-17 odnose se isključivo na status održavanja. Ne mijenjaju status događaja niti postojeći urednički workflow događaja.
 
 ## 5. Otvorena pitanja
 
@@ -773,7 +851,11 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 ### BM-PK-02 — Odnos sa platformom Digital Kotor
 
-> Portal Kalendara kulture predstavlja funkcionalni dio platforme Digital Kotor. Upravljanje korisničkim identitetom, registracijom, prijavom i korisničkim profilom nije dio poslovnog domena Portala Kalendara kulture, već platforme Digital Kotor.
+> Portal Kalendara kulture predstavlja funkcionalni dio platforme Digital Kotor.
+>
+> Za korišćenje Portala Kalendara kulture zahtijeva se registracija korisnika.
+>
+> Upravljanje korisničkim identitetom, registracijom, prijavom i korisničkim profilom nije dio poslovnog domena Portala Kalendara kulture, već platforme Digital Kotor.
 
 ### BM-PK-03 — Pregled događaja
 
@@ -791,9 +873,9 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 > Portal Kalendara kulture omogućava pretragu objavljenih događaja i manifestacija korišćenjem kriterijuma definisanih poslovnim pravilima modula Kalendara kulture.
 
-### BM-PK-07 — Filtriranje i sortiranje
+### BM-PK-07 — Filtriranje
 
-> Portal Kalendara kulture omogućava filtriranje i sortiranje objavljenih događaja i manifestacija korišćenjem kriterijuma definisanih poslovnim pravilima modula Kalendara kulture.
+> Portal Kalendara kulture omogućava filtriranje objavljenih događaja i manifestacija korišćenjem kriterijuma definisanih poslovnim pravilima modula Kalendara kulture.
 
 ### BM-PK-08 — Načini prikaza
 
@@ -801,7 +883,7 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 ### BM-PK-09 — Prikaz održavanja i termina
 
-> Portal Kalendara kulture omogućava pregled svih javno objavljenih održavanja događaja, uključujući termin (datum i vrijeme) svakog održavanja. Kada događaj ima više održavanja, portal prikazuje sva održavanja sa njihovim terminima i lokacijama, u skladu sa poslovnim pravilima modula Kalendara kulture.
+> Portal Kalendara kulture omogućava pregled svih javno objavljenih održavanja događaja, uključujući termin svakog održavanja (Datum održavanja je obavezan, a vrijeme može biti definisano.). Kada događaj ima više održavanja, portal prikazuje sva održavanja sa njihovim terminima i lokacijama, u skladu sa poslovnim pravilima modula Kalendara kulture.
 
 ### BM-PK-10 — Prikaz lokacija
 
@@ -822,6 +904,20 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 ### BM-PK-14 — Povezani sadržaj
 
 > Portal Kalendara kulture može prikazivati međusobno povezane događaje i manifestacije u skladu sa njihovim poslovnim vezama definisanim u modulu Kalendara kulture.
+
+### BM-PK-15 — Istaknuti događaj
+
+> Portal Kalendara kulture može imati istaknuti događaj.
+>
+> Istaknuti događaj mora biti javno objavljen događaj.
+>
+> Urednik odlučuje koji događaj je istaknut.
+>
+> U istom trenutku može biti istaknut najviše jedan događaj.
+>
+> Isticanje događaja ne mijenja njegov osnovni status.
+>
+> Događaj prestaje biti istaknut kada Urednik ukloni isticanje ili kada događaj više ne ispunjava uslove za javni prikaz.
 
 ---
 
@@ -850,7 +946,7 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 > * Moderatori;
 > * Urednici.
 >
-> Organizator ne pristupa uredničkom portalu direktno. Svaka poslovna uloga koristi funkcionalnosti Uredničkog portala u skladu sa ovlašćenjima definisanim ovim Business Modelom.
+> Organizator ne pristupa uredničkom portalu. Moderatori i Urednici koriste funkcionalnosti Uredničkog portala u skladu sa ovlašćenjima definisanim ovim Business Modelom.
 
 ### BM-EP-03 — Poslovne funkcionalnosti
 
@@ -861,7 +957,7 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 > * upravljanje Manifestacijama;
 > * upravljanje održavanjima događaja;
 > * upravljanje Medijima;
-> * pregled statusa poslovnih objekata;
+> * pregled statusa entiteta;
 > * sprovođenje uredničkog procesa;
 > * pregled poslovnih obavještenja i sistemskih informacija namijenjenih Moderatorima i Urednicima.
 
@@ -913,39 +1009,103 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 
 ### BM-NL-01 — Definicija
 
-> Newsletter predstavlja funkcionalnost modula Kalendara kulture namijenjenu periodičnom informisanju zainteresovanih korisnika o javno objavljenim kulturnim događajima.
+> Newsletter predstavlja funkcionalnost modula Kalendara kulture namijenjenu informisanju zainteresovanih korisnika o novoobjavljenim javno dostupnim kulturnim događajima i o poslovno značajnim promjenama događaja koje utiču na odluku o prisustvu (otkazivanje, odlaganje, promjena datuma, vremena ili lokacije održavanja).
 
 ### BM-NL-02 — Svrha
 
-> Newsletter služi isključivo informisanju korisnika o kulturnim događajima objavljenim u Kalendaru kulture.
+> Newsletter služi isključivo informisanju korisnika o kulturnim događajima i o njihovim poslovno značajnim promjenama u Kalendaru kulture.
 
 ### BM-NL-03 — Odnos prema uredničkom procesu
 
-> Newsletter nije dio uredničkog procesa i ne koristi se za poslovnu komunikaciju između Organizatora, Moderatora, Urednika i Administratora platforme.
+> Newsletter nije dio uredničkog procesa i ne koristi se za poslovnu komunikaciju između Organizatora, Moderatora, Urednika i Administratora platforme. Organizator, Moderator i Urednik ne upravljaju pretplatnicima, ne pokreću ručno slanje Newslettera i ne biraju ručno događaje za Newsletter.
 
 ### BM-NL-04 — Pretplata
 
-> Svaki korisnik može se dobrovoljno prijaviti na newsletter Kalendara kulture. Prijava na newsletter nije uslov za korišćenje Kalendara kulture.
+> Svaki registrovani i verifikovani korisnik može se dobrovoljno prijaviti na newsletter Kalendara kulture. Prijava na newsletter nije uslov za korišćenje Kalendara kulture. Pretplatnik može izabrati sve Organizatore ili jednog ili više konkretnih Organizatora. Ako korisnik ne izabere nijednog konkretnog Organizatora, sistem smatra da je izabrao sve Organizatore. Izbor Organizatora je isključivo filter sadržaja i ne daje prava nad Organizatorom niti događajima.
 
 ### BM-NL-05 — Odjava
 
-> Korisnik može u svakom trenutku odjaviti prijem newslettera.
+> Korisnik može u svakom trenutku odjaviti prijem newslettera. Odjava ne briše korisnički nalog niti utiče na pristup drugim modulima platforme.
 
 ### BM-NL-06 — Sadržaj newslettera
 
-> Newsletter sadrži pregled kulturnih događaja odabranih u skladu sa poslovnim pravilima sistema. Način izbora i prikaza sadržaja newslettera definiše se funkcionalnom i tehničkom specifikacijom i nije predmet ovog Business Modela.
+> Newsletter sadrži kratak pregled novoobjavljenih događaja i/ili poslovno značajnih promjena događaja koji odgovaraju aktivnoj pretplati i pravilima slanja. Za svaki događaj prikazuju se osnovne informacije i veza ka detaljima događaja, u skladu sa posljednjim poslovno važećim stanjem događaja u trenutku pripreme poruke. Događaji se grupišu po Organizatoru. Za svakog Organizatora Newsletter sadrži vezu ka objavljenom pregledu događaja tog Organizatora na portalu Kalendara kulture. Više novoobjavljenih događaja može biti objedinjeno u jednu Newsletter poruku. Isti događaj se ne prikazuje više puta zbog više termina; relevantni budući termini mogu biti prikazani unutar jedne stavke događaja.
 
-### BM-NL-07 — Periodično slanje
+### BM-NL-07 — Periodična provjera i prioritetna obavještenja
 
-> Sistem može periodično slati newsletter svim aktivnim pretplatnicima. Učestalost i način slanja definišu se funkcionalnom i tehničkom specifikacijom i sistemskim podešavanjima.
+> Sistem periodično provjerava da li postoje novoobjavljeni događaji koji odgovaraju aktivnim pretplatama i, kada postoje, šalje objedinjeni Newsletter odgovarajućim pretplatnicima. Newsletter nije vezan za fiksni dan u sedmici niti za unaprijed definisanu kalendarsku sedmicu. Obavještenja o otkazivanju, odlaganju ili promjeni datuma, vremena ili lokacije predstavljaju prioritetna obavještenja i šalju se bez nepotrebnog odlaganja kako bi pretplatnici blagovremeno bili informisani. Tačan interval periodične provjere, način prioritetnog slanja i tehnička realizacija nisu predmet ovog Business Modela.
 
 ### BM-NL-08 — Nezavisnost od poslovnih procesa
 
 > Pretplata na newsletter nema uticaja na prava korisnika niti na poslovne procese definisane ovim Business Modelom. Poslovni procesi funkcionišu nezavisno od prijave ili odjave korisnika na newsletter.
 
-### BM-NL-09 — Objavljeni sadržaj
+### BM-NL-09 — Objavljeni sadržaj i okidač prvog uključivanja
 
-> Newsletter može sadržati isključivo događaje koji su javno objavljeni u Kalendaru kulture. Događaji koji nijesu objavljeni ne mogu biti uključeni u newsletter.
+> Prvo uključivanje događaja u Newsletter kao novoobjavljenog sadržaja moguće je isključivo za događaje u statusu Objavljen. Javno objavljivanje događaja predstavlja poslovni okidač za to prvo uključivanje. Događaj ne mora biti poslat istog trenutka kada je objavljen; postaje kandidat za naredni odgovarajući Newsletter. Događaji koji nijesu objavljeni ne mogu biti uključeni kao novoobjavljeni sadržaj.
+
+### BM-NL-10 — Relevantnost budućeg termina
+
+> Događaj može biti uključen u Newsletter kao novoobjavljeni sadržaj samo ako u trenutku pripreme ima najmanje jedno buduće održavanje. Događaj bez budućeg održavanja ne ulazi kao novoobjavljeni sadržaj. Ovo pravilo ne sprečava prioritetno obavještenje o otkazivanju događaja ili termina koji je pretplatniku prethodno bio poslat.
+
+### BM-NL-11 — Zaštita od ponovnog slanja prvog uključivanja
+
+> Isti događaj se istom pretplatniku ne šalje ponovo kao novoobjavljeni sadržaj samo zato što sistem ponovo izvršava periodičnu provjeru. Događaj objavljen nakon prethodnog Newsletter slanja može biti uključen u naredno slanje ako je i dalje relevantan i odgovara aktivnoj pretplati.
+
+### BM-NL-12 — Aktivni pretplatnik
+
+> Aktivni pretplatnik je registrovani i verifikovani korisnik sa aktivnom Newsletter pretplatom koji nije izvršio odjavu. Postojanje odgovarajućih događaja nije dio definicije aktivnog pretplatnika.
+
+### BM-NL-13 — Ne-slati prazan Newsletter
+
+> Ako za konkretnog aktivnog pretplatnika u trenutku pripreme nema nijednog odgovarajućeg novoobjavljenog događaja niti prioritetnog obavještenja prema pravilima slanja, Newsletter mu se ne šalje. Sistem ne dodaje događaje drugih Organizatora samo da bi poruka imala sadržaj.
+
+### BM-NL-14 — Uređivačke izmjene nisu okidač
+
+> Ispravka pravopisnih grešaka, izmjena opisa, izmjena ili dodavanje fotografija, izmjena dodatnih informacija koje ne utiču na održavanje događaja i druge uređivačke izmjene koje ne mijenjaju način održavanja događaja ne predstavljaju Newsletter okidač.
+
+### BM-NL-15 — Potvrda prve aktivacije
+
+> Nakon prve uspješne aktivacije Newsletter pretplate sistem šalje potvrdu o aktiviranoj pretplati. Double opt-in nije obavezan u V1.
+
+### BM-NL-16 — Granice V1
+
+> U V1 opsegu Newslettera nisu: izbor kategorija događaja, personalizacija prema ponašanju, automatske preporuke, profilisanje, ručni izbor događaja od strane Urednika, Newsletter kampanje Organizatora, ručno slanje Newslettera, različiti Newsletteri po ulozi, te definisanje tačnog tehničkog intervala periodične ili prioritetne isporuke.
+
+### BM-NL-17 — Poslovno značajne promjene kao okidač
+
+> Otkazivanje događaja, odlaganje događaja, promjena datuma održavanja, promjena vremena održavanja i promjena lokacije održavanja predstavljaju poslovno značajne promjene i Newsletter okidače.
+
+### BM-NL-18 — Publika obavještenja o promjeni
+
+> Obavještenje o poslovno značajnoj promjeni događaja šalje se isključivo aktivnim pretplatnicima kojima je isti događaj prethodno bio uključen u Newsletter. Pretplatnici koji nisu dobili prvobitnu informaciju o događaju ne dobijaju obavještenje o njegovom otkazivanju ili izmjeni.
+
+### BM-NL-19 — Promjene kod događaja sa više termina
+
+> Ako je promijenjen ili otkazan samo jedan termin događaja sa više termina, obavještenje se odnosi samo na taj termin i ne tretira se kao otkazivanje cijelog događaja. Ako promjena utiče na kompletan događaj, obavještenje se odnosi na cijeli događaj.
+
+### BM-NL-20 — Prioritetna obavještenja
+
+> Obavještenja o otkazivanju, odlaganju ili promjeni datuma, vremena ili lokacije šalju se bez nepotrebnog odlaganja kako bi pretplatnici blagovremeno bili informisani. Prioritetna obavještenja mogu biti objedinjena ako time nije ugrožena njihova blagovremenost. Objedinjavanje više novoobjavljenih događaja u jednu poruku ostaje dozvoljeno za tip sadržaja prvog uključivanja.
+
+### BM-NL-21 — Zaštita od ponovnog slanja iste promjene
+
+> Ista poslovno značajna promjena istog događaja (ili istog termina) ne smije biti više puta poslata istom pretplatniku. Ovo pravilo je odvojeno od zaštite od ponovnog slanja prvog uključivanja događaja (BM-NL-11).
+
+### BM-NL-22 — Višestruke poslovno značajne promjene prije slanja
+
+> Ako prije slanja Newslettera nad istim događajem nastane više uzastopnih poslovno značajnih promjena, pretplatniku se dostavlja jedinstveno obavještenje koje odražava posljednje važeće stanje događaja. Ne šalje se istorija svih promjena niti međukoraci.
+
+### BM-NL-23 — Posljednje važeće stanje
+
+> Newsletter i prioritetna obavještenja prikazuju posljednje poslovno važeće stanje događaja u trenutku pripreme poruke.
+
+### BM-NL-24 — Objedinjavanje prioritetnih promjena
+
+> Prioritetna obavještenja mogu biti objedinjena ako time nije ugrožena njihova blagovremenost. Više gotovo istovremenih poslovno značajnih promjena može biti predstavljeno jednom porukom, uz zadržavanje zahtjeva za blagovremenim informisanjem pretplatnika.
+
+### BM-NL-25 — Zabranjena kontradiktorna obavještenja
+
+> Pretplatniku se ne šalju međusobno kontradiktorna obavještenja za isti događaj u okviru istog ciklusa pripreme Newslettera. Korisnik dobija jedno konačno poslovno stanje događaja.
 
 ---
 
@@ -981,7 +1141,7 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 
 ### BM-AL-07 — Oblasti evidencije aktivnosti
 
-> Evidencija aktivnosti obuhvata poslovno značajne aktivnosti koje se odnose na poslovne objekte i administrativne funkcije definisane ovim Business Modelom, uključujući zahtjeve za sticanje statusa Organizatora i zahtjeve za dodjelu ili uklanjanje Moderatora (podnosilac, datum i vrijeme podnošenja, Urednik koji je odobrio, datum i vrijeme odobrenja). Poslovne aktivnosti koje se evidentiraju za pojedine oblasti definišu se funkcionalnom i tehničkom specifikacijom u skladu sa ovim Business Modelom.
+> Evidencija aktivnosti obuhvata poslovno značajne aktivnosti koje se odnose na entitete i administrativne funkcije definisane ovim Business Modelom, uključujući zahtjeve za kreiranje Organizatora i zahtjeve za dodjelu ili uklanjanje Moderatora (podnosilac, predloženi Moderator gdje je primjenjivo, datum i vrijeme podnošenja, Urednik koji je odlučio, datum i vrijeme odluke). Poslovne aktivnosti koje se evidentiraju za pojedine oblasti definišu se funkcionalnom i tehničkom specifikacijom u skladu sa ovim Business Modelom.
 
 ### BM-AL-08 — Namjena evidencije aktivnosti
 
@@ -1057,7 +1217,7 @@ Ovim poglavljem definišu se osnovni poslovni pojmovi koji se koriste u Business
 
 Definicije predstavljaju zajednički referentni okvir za sve učesnike u planiranju, razvoju, održavanju i korišćenju sistema, sa ciljem obezbjeđivanja jedinstvenog razumijevanja poslovnih pravila i terminologije.
 
-**Terminološko pravilo:** Pojam „Termin“ koristi se isključivo za datum i vrijeme održavanja događaja. Nije dozvoljeno koristiti riječ „termin“ kao naziv ili sinonim za pojedinačno održavanje događaja ili za poslovni entitet koji ima lokaciju, status, ulaznice, audit ili sopstveni životni ciklus.
+**Terminološko pravilo:** Pojam „Termin“ koristi se isključivo u značenju: Datum održavanja je obavezan, a vrijeme može biti definisano. Nije dozvoljeno koristiti riječ „termin“ kao naziv ili sinonim za pojedinačno održavanje događaja ili za poslovni entitet koji ima lokaciju, status, audit ili sopstveni životni ciklus.
 
 ## Poslovni pojmovi
 
@@ -1065,7 +1225,7 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 > Poslovna cjelina kojom sistem upravlja i o kojoj vodi podatke.
 >
-> Primjeri entiteta su Organizator, Moderator, Manifestacija, Događaj, Održavanje događaja, Lokacija i Kategorija.
+> Primjeri entiteta su Organizator, Manifestacija, Događaj, Održavanje događaja, Lokacija i Kategorija.
 
 ### BM-GL-02 — Životni ciklus
 
@@ -1087,7 +1247,7 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 ### BM-GL-06 — Organizator
 
-> Pravno ili fizičko lice koje je nosilac sadržaja u Kalendaru kulture. Operativno upravljanje sadržajem u ime Organizatora obavljaju Moderatori.
+> Poslovni entitet i nosilac sadržaja u Kalendaru kulture. Organizator nije korisnik sistema i nije korisnička uloga. Operativno upravljanje sadržajem u ime Organizatora obavljaju Moderatori.
 
 ### BM-GL-07 — Moderator
 
@@ -1099,7 +1259,9 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 ### BM-GL-08 — Urednik
 
-> Korisnik odgovoran za pregled, uređivanje, odobravanje i objavljivanje sadržaja u Kalendaru kulture.
+> Administrator Uredničkog portala Kalendara kulture, odgovoran za pregled, uređivanje, odobravanje i objavljivanje sadržaja.
+>
+> Uloga Urednika je isključiva unutar poslovnog modela Kalendara kulture. Urednik nije Organizator i nije Moderator Organizatora.
 
 ### BM-GL-09 — Administrator platforme
 
@@ -1117,7 +1279,7 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 > Jedno konkretno održavanje jednog događaja, sa sopstvenim terminom i, kada je primjenjivo, lokacijom, statusom i drugim poslovnim svojstvima.
 >
-> Jedan događaj može imati jedno ili više održavanja. Održavanje nije isto što i Termin; Termin je isključivo datum i vrijeme tog održavanja.
+> Jedan događaj može imati jedno ili više održavanja. Održavanje nije isto što i Termin. Datum održavanja je obavezan, a vrijeme može biti definisano.
 
 ### BM-GL-11 — Manifestacija
 
@@ -1125,9 +1287,9 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 ### BM-GL-12 — Termin
 
-> Datum i vrijeme održavanja događaja. Termin nije samostalan poslovni entitet.
+> Datum održavanja je obavezan, a vrijeme može biti definisano. Termin nije samostalan poslovni entitet.
 >
-> Termin uvijek postoji u kontekstu održavanja događaja i ne smije se koristiti kao sinonim za održavanje događaja niti za entitet koji ima lokaciju, status, ulaznice, audit ili sopstveni životni ciklus.
+> Termin uvijek postoji u kontekstu održavanja događaja i ne smije se koristiti kao sinonim za održavanje događaja niti za entitet koji ima lokaciju, status, audit ili sopstveni životni ciklus.
 
 ### BM-GL-13 — Lokacija
 
@@ -1155,9 +1317,9 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 ### BM-GL-19 — Newsletter
 
-> Funkcionalnost namijenjena periodičnom informisanju korisnika o kulturnim događajima.
+> Funkcionalnost namijenjena informisanju korisnika o novoobjavljenim kulturnim događajima i o poslovno značajnim promjenama događaja koje utiču na odluku o prisustvu.
 >
-> Newsletter nije dio uredničkog procesa niti predstavlja poslovno obavještenje.
+> Newsletter nije dio uredničkog procesa niti predstavlja poslovno obavještenje. Javno objavljivanje događaja predstavlja poslovni okidač za prvo uključivanje; otkazivanje, odlaganje i promjena datuma, vremena ili lokacije takođe predstavljaju Newsletter okidače.
 
 ### BM-GL-20 — Evidencija aktivnosti
 

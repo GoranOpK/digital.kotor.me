@@ -39,6 +39,7 @@ Feature Registry predstavlja polaznu tačku za sljedivost kroz cijeli projekat.
 | ---------- | ---------------- | ------- | --------------------------------------------- |
 | FT-001     | Kalendar kulture | Active  | Prva funkcionalnost u razvoju                 |
 | FT-002     | Plaćanja         | Planned | Nova funkcionalnost; dokumentacija u pripremi |
+| FT-003     | Evidencija aktivnosti (Kalendar kulture) | Planned | FS §5.16; BM-14; van opsega: TS, pregled/filteri, retention, izvoz |
 
 Dozvoljeni statusi:
 
@@ -99,6 +100,13 @@ Active
 Napomena:
 
 Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja referentni model za razvoj metodologije Digital Kotor.
+
+**Newsletter (u okviru FT-001):** model zasnovan na novoobjavljenim događajima i poslovno značajnim promjenama — javno objavljivanje je okidač za prvo uključivanje; otkazivanje, odlaganje i promjena datuma/vremena/lokacije su prioritetni okidači (samo pretplatnicima kojima je događaj već poslat). Višestruke promjene prije slanja daju jedinstveno obavještenje sa posljednjim važećim stanjem. Bez fiksnog sedmičnog rasporeda.
+
+Povezana dokumentacija (Newsletter):
+
+* Business Model — BM-13 (BM-NL-01–BM-NL-25), PATCH-031–PATCH-033
+* Functional Specification — §5.15 (BR-138–BR-169), PATCH-FS-032–PATCH-FS-034
 
 ---
 
@@ -174,6 +182,38 @@ Veze BP-09: BP-06, BP-08, UR-01.
 
 ---
 
+## FT-003
+
+Naziv:
+
+Evidencija aktivnosti (Kalendar kulture)
+
+Status:
+
+Planned
+
+Napomena:
+
+Centralna Evidencija aktivnosti modula Kalendar kulture — dokumentovanje poslovno značajnih radnji radi odgovornosti, kontrole i revizije. Direktan pristup: Administrator platforme. Razlikuje se od lokalnih audit tragova na entitetima.
+
+V1 katalog (FS): Moderator ovlašćenja; Organizatori; događaji; Newsletter. Van opsega ovog feature zapisa do posebnog PATCH-a: autentikacija/platformski nalozi i uloge, detaljni Admin pregled/filteri, struktura polja zapisa, retention, izvoz, Technical Specification.
+
+Povezana dokumentacija:
+
+* Business Model — BM-14 (BM-AL-01–BM-AL-08), BM-EP-09, BM-GL-09, BM-GL-20
+* Functional Specification — §5.16 (BR-170–BR-188), PATCH-FS-035
+* Technical Specification — nije dio ovog PATCH-a
+
+Matrica sljedivosti (sažetak):
+
+| BM | FS | FT | TS |
+|----|----|----|-----|
+| BM-AL-01–BM-AL-08 | BR-170–BR-188 / §5.16 | FT-003 | TBD (van ovog PATCH-a) |
+| BM-EP-09 | §5.16 | FT-003 | TBD |
+| BM-GL-09, BM-GL-20 | BR-170, BR-174 | FT-003 | TBD |
+
+---
+
 # Change Log
 
 | Datum | Izmjena |
@@ -190,3 +230,5 @@ Veze BP-09: BP-06, BP-08, UR-01.
 | 2026-07-27 | FT-002 – PATCH-008B: evidencija bilježi trenutni status transakcije (bez nove poslovne odluke). |
 | 2026-07-27 | FT-002 – Dodata usvojena odluka BP-09 i ažurirana matrica sljedivosti. |
 | 2026-07-27 | FT-002 – PATCH-009A: redakcijsko usklađivanje BP-06↔BP-09 i terminologija identifikatora (bez nove poslovne odluke). |
+| 2026-07-27 | FT-001 – Newsletter: usklađeno sa BM PATCH-031 / FS PATCH-FS-032 (novoobjavljeni događaji; bez fiksnog sedmičnog modela). |
+| 2026-07-27 | Registrovana funkcionalnost FT-003 – Evidencija aktivnosti (Kalendar kulture). Status: Planned. Povezano sa BM-14 i FS §5.16 (PATCH-FS-035). |
