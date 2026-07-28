@@ -47,6 +47,9 @@
 | PATCH-FS-033 | 2026-07-27 | Newsletter: poslovno značajne promjene kao okidači (usklađeno sa BM PATCH-032); prioritetna obavještenja; publika = pretplatnici kojima je događaj već poslat; BR-138, BR-147–BR-150, BR-157–BR-159 usklađeni; dodati BR-160–BR-165. |
 | PATCH-FS-034 | 2026-07-27 | Newsletter: višestruke poslovno značajne promjene → posljednje važeće stanje; objedinjavanje prioritetnih obavještenja uz blagovremenost; zabrana kontradiktornih poruka (usklađeno sa BM PATCH-033). Usklađeni BR-151, BR-163; dodati BR-166–BR-169. |
 | PATCH-FS-035 | 2026-07-27 | Novo poglavlje 5.16 Evidencija aktivnosti (BM-14 / BM-AL-01–BM-AL-08): razgraničenje centralne evidencije i lokalnih tragova; kriterijum; V1 katalog (Organizatori, Moderator, događaji, Newsletter); granice V1. BR-170–BR-188. |
+| PATCH-FS-036 | 2026-07-28 | Usklađivanje sa novom poslovnom odlukom deaktivacije Organizatora: Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora. Usklađeni tok §5.6 i BR-049. |
+| PATCH-FS-037 | 2026-07-28 | Ovlašćenja za otkazivanje i ponovnu objavu događaja (usklađeno sa BM PATCH-035 / N-DG-01): usklađeni BR-007, BR-063 i BR-064; dopunjen dijagram §5.5.6a. |
+| PATCH-FS-038 | 2026-07-28 | Korekcija otkazivanja nakon deaktivacije Organizatora (usklađeno sa BM PATCH-036): usklađeni BR-007, BR-049, BR-050, BR-063 i napomene dijagrama §5.5.6a. |
 
 Napomena:
 
@@ -690,6 +693,12 @@ Objavljen događaj uvijek prikazuje posljednju odobrenu verziju.
 
 Moderator može uređivati isključivo događaje svog Organizatora.
 
+Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje, u skladu sa BR-063.
+
+Deaktivacijom Organizatora prestaje moderatorski kontekst za tog Organizatora. Moderator tada više nema pravo otkazivanja niti drugih poslovnih radnji nad događajima tog Organizatora.
+
+Moderator ne može samostalno objaviti sadržaj niti ponovo objaviti otkazani događaj.
+
 ---
 
 ##### BR-008 – Odobravanje izmjena prije objave
@@ -1204,7 +1213,8 @@ stateDiagram-v2
     Nacrt_prijedloga_izmjene --> Na_odobrenju : Pošalji na odobrenje
 
     Objavljen --> Arhiviran : Istek događaja
-    Objavljen --> Otkazan : Otkaži događaj
+    Objavljen --> Otkazan : Otkaži događaj (Moderator / Urednik)
+    Otkazan --> Objavljen : Ponovna objava (isključivo Urednik)
 
     state "Na odobrenju" as Na_odobrenju
     state "Pregled Urednika" as Pregled_Urednika
@@ -1213,9 +1223,12 @@ stateDiagram-v2
 
 Objašnjenje:
 
-* Dijagram predstavlja objedinjeni vizuelni prikaz već usvojenih poslovnih pravila iz poglavlja 5.5.1–5.5.6 (BR-006 do BR-044) i izuzetka BR-018.
+* Dijagram predstavlja objedinjeni vizuelni prikaz već usvojenih poslovnih pravila iz poglavlja 5.5.1–5.5.6 (BR-006 do BR-044), izuzetka BR-018 te BR-063 i BR-064.
 * Ne definiše nova poslovna pravila i ne mijenja postojeća.
 * Služi lakšem razumijevanju kompletnog uredničkog workflow-a.
+* Otkazivanje: Moderator samo dok je Organizator aktivan i u aktivnom kontekstu; Urednik za bilo koji objavljeni događaj, uključujući događaje deaktiviranog Organizatora (BR-063, BR-050).
+* Ponovna objava: isključivo Urednik; nije automatska (BR-064).
+* Deaktivacijom Organizatora prestaje moderatorski kontekst; Moderator više ne izvršava poslovne radnje nad događajima tog Organizatora (BR-049, BR-050).
 * Može predstavljati osnovu za buduću implementaciju state machine modela.
 
 Napomena:
@@ -1279,6 +1292,12 @@ Tok procesa dodavanja narednog Moderatora:
 3. Urednik pregleda i odobrava ili odbija zahtjev (odobravanje zahtjeva).
 4. Tek nakon odobrenja Urednik dodjeljuje pristup i ovlašćenja; novi Moderator postaje aktivan (dodjela ovlašćenja).
 
+Tok procesa deaktivacije Organizatora:
+
+1. Urednik pokreće deaktivaciju Organizatora.
+2. Za deaktivaciju nije potreban prethodni zahtjev Organizatora niti Moderatora.
+3. Sistem primjenjuje status Deaktiviran i posljedice definisane pravilima BR-049 i BR-050.
+
 Napomena:
 
 Ovo poglavlje opisuje ciljni poslovni model, a ne trenutnu implementaciju.
@@ -1323,6 +1342,10 @@ Pristup uredničkom portalu ostvaruju isključivo Moderatori i Urednici.
 
 Brisanje Organizatora nije dozvoljeno ako postoje povezani događaji.
 
+Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora.
+
+Deaktivacijom Organizatora prestaje moderatorski kontekst za tog Organizatora.
+
 Organizator može biti deaktiviran, ali istorijski podaci i veze sa događajima moraju ostati sačuvani.
 
 ---
@@ -1331,9 +1354,13 @@ Organizator može biti deaktiviran, ali istorijski podaci i veze sa događajima 
 
 Dok je Organizator deaktiviran:
 
+* moderatorski kontekst za tog Organizatora ne postoji;
+* Moderatori više nemaju pravo izvršavanja poslovnih radnji nad događajima tog Organizatora;
 * Moderatori ne mogu u njegovo ime kreirati nove događaje;
 * Moderatori ne mogu u njegovo ime slati nove prijedloge niti izmjene;
-* postojeći objavljeni događaji ostaju dostupni u skladu sa pravilima otkazivanja i arhiviranja.
+* Moderatori ne mogu otkazati događaje tog Organizatora;
+* ako je potrebno otkazati događaj deaktiviranog Organizatora, tu radnju izvršava isključivo Urednik;
+* postojeći objavljeni događaji ostaju dostupni u skladu sa pravilima arhiviranja i prikaza.
 
 ---
 
@@ -1506,13 +1533,29 @@ Događaj može imati jedan od sljedećih statusa:
 
 Objavljen događaj može biti otkazan.
 
+Dok Organizator ima status Aktivan, Moderator može samostalno otkazati objavljeni događaj isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje.
+
+Deaktivacijom Organizatora prestaje moderatorski kontekst za tog Organizatora. Moderator tada više nema pravo otkazivanja događaja tog Organizatora. Ako je potrebno otkazati događaj deaktiviranog Organizatora, tu radnju izvršava isključivo Urednik.
+
+Urednik može otkazati bilo koji objavljeni događaj.
+
+Otkazivanjem status događaja se mijenja u **Otkazan**.
+
 Otkazan događaj ostaje dostupan u skladu sa pravilima prikaza definisanim za javni portal.
 
 ---
 
 #### BR-064 – Ponovna objava događaja
 
-Otkazan događaj može biti ponovo objavljen.
+Ponovno objavljivanje otkazanog događaja predstavlja uredničku radnju.
+
+Isključivo Urednik može ponovo objaviti otkazani događaj.
+
+Moderator ne može ponovo objaviti otkazani događaj.
+
+Prije ponovne objave Urednik provjerava i, po potrebi, ažurira podatke događaja i povezanih održavanja koristeći postojeća ovlašćenja.
+
+Ponovna objava nije automatska.
 
 Ponovna objava mijenja status događaja u **Objavljen**.
 
@@ -2922,3 +2965,6 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-27 | FS-001 / 5.15 (PATCH-FS-033): Newsletter — poslovno značajne promjene kao okidači (usklađeno sa BM PATCH-032). Usklađeni BR-138, BR-147–BR-150, BR-157–BR-159; dodati BR-160–BR-165. |
 | 2026-07-27 | FS-001 / 5.15 (PATCH-FS-034): Newsletter — višestruke poslovno značajne promjene → posljednje važeće stanje; objedinjavanje prioritetnih obavještenja; zabrana kontradiktornih poruka (usklađeno sa BM PATCH-033). Usklađeni BR-151, BR-163; dodati BR-166–BR-169. |
 | 2026-07-27 | FS-001 / 5.16 (PATCH-FS-035): Evidencija aktivnosti — razgraničenje centralne evidencije i lokalnih tragova; kriterijum; V1 katalog; BR-170–BR-188. Feature ID FT-003. |
+| 2026-07-28 | FS-001 (PATCH-FS-036): Usklađivanje sa odlukom deaktivacije Organizatora — tok §5.6 i BR-049. |
+| 2026-07-28 | FS-001 / 5.7.2 i §5.5.6a (PATCH-FS-037): Ovlašćenja za otkazivanje i ponovnu objavu događaja (BM PATCH-035). Usklađeni BR-007, BR-063, BR-064 i dijagram workflow-a. |
+| 2026-07-28 | FS-001 (PATCH-FS-038): Korekcija otkazivanja nakon deaktivacije Organizatora (BM PATCH-036). Usklađeni BR-007, BR-049, BR-050, BR-063 i napomene §5.5.6a. |

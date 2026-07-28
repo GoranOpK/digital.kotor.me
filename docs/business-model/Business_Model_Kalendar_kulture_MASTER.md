@@ -45,6 +45,9 @@
 | PATCH-031 | 2026-07-27 | BM-13 Newsletter: model zasnovan na novoobjavljenim događajima (objavljivanje = okidač; periodična provjera; objedinjavanje; bez fiksnog sedmičnog perioda). Usklađeni BM-NL-01, BM-NL-06, BM-NL-07, BM-NL-09; dodati BM-NL-10–BM-NL-16. |
 | PATCH-032 | 2026-07-27 | BM-13 Newsletter: poslovno značajne promjene kao dodatni okidači (otkazivanje, odlaganje, promjena datuma/vremena/lokacije); prioritetna obavještenja; publika = pretplatnici kojima je događaj već poslat. Usklađeni BM-NL-01, BM-NL-06, BM-NL-07, BM-NL-14, BM-NL-16; dodati BM-NL-17–BM-NL-21. |
 | PATCH-033 | 2026-07-27 | BM-13 Newsletter: višestruke poslovno značajne promjene → jedinstveno obavještenje sa posljednjim važećim stanjem; objedinjavanje prioritetnih obavještenja uz blagovremenost; zabrana kontradiktornih poruka u istom ciklusu. Usklađeni BM-NL-06, BM-NL-20; dodati BM-NL-22–BM-NL-25. |
+| PATCH-034 | 2026-07-28 | Nova poslovna odluka za deaktivaciju Organizatora: Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora. Usklađeni BM-ORG-12 i BM-UR-10. |
+| PATCH-035 | 2026-07-28 | Ovlašćenja za otkazivanje i ponovnu objavu događaja (N-DG-01): Moderator može otkazati objavljeni događaj svog Organizatora; Urednik može otkazati bilo koji objavljeni događaj; isključivo Urednik može ponovo objaviti otkazani događaj (nije automatski; može ažurirati podatke prije objave). Usklađeni BM-DG-05, BM-DG-09, BM-ST-07, BM-MOD-16, BM-UR-11. |
+| PATCH-036 | 2026-07-28 | Korekcija otkazivanja nakon deaktivacije Organizatora: deaktivacijom prestaje moderatorski kontekst; Moderator više ne izvršava poslovne radnje nad događajima tog Organizatora; otkazivanje događaja deaktiviranog Organizatora isključivo Urednik. Usklađeni BM-ORG-12, BM-DG-05, BM-ST-07, BM-MOD-16. |
 
 Napomena:
 
@@ -233,6 +236,8 @@ Operativno upravljanje sadržajem u ime Organizatora obavljaju Moderatori. Organ
 
 Svaki naredni Moderator može biti predložen isključivo od strane postojećeg aktivnog Moderatora povezanog sa tim Organizatorom. Moderator ne dodjeljuje ovlašćenja; samo podnosi zahtjev. Pristup i ovlašćenja novom Moderatoru dodjeljuje isključivo Urednik nakon odobrenja.
 
+Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora. Deaktivacijom Organizatora prestaje moderatorski kontekst za tog Organizatora; Moderatori više ne izvršavaju poslovne radnje nad njegovim događajima.
+
 **Napomena o implementaciji:** Zahtjev za kreiranje Organizatora i upravljanje Moderatorima usvojeni su kao dio poslovnog modela, ali trenutno još nisu implementirani u aplikaciji.
 
 **Napomena o nazivu:** Raniji naziv funkcionalnosti „Postani organizator“ zamijenjen je poslovno preciznijim nazivom „zahtjev za kreiranje Organizatora“.
@@ -252,6 +257,7 @@ Svaki naredni Moderator može biti predložen isključivo od strane postojećeg 
 | BM-ORG-09 | Sistem trajno evidentira za zahtjev za kreiranje Organizatora: podnosioca zahtjeva, predloženog Moderatora, datum i vrijeme podnošenja, Urednika koji je odlučio i datum i vrijeme odluke. |
 | BM-ORG-10 | Jedan registrovani korisnik može podnijeti zahtjev za kreiranje neograničenog broja Organizatora. Svaki zahtjev predstavlja poseban postupak. |
 | BM-ORG-11 | Ako Urednik odbije zahtjev, Organizator se ne odobrava kao aktivan poslovni entitet, predloženi korisnik ne dobija moderatorska ovlašćenja, a podnosilac ne dobija novu ulogu. Odbijanje ne sprečava podnošenje novog zahtjeva. |
+| BM-ORG-12 | Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora. Deaktivacijom Organizatora prestaje moderatorski kontekst za tog Organizatora. Nakon deaktivacije Moderatori više nemaju pravo izvršavanja poslovnih radnji nad događajima tog Organizatora. Ako je potrebno otkazati događaj deaktiviranog Organizatora, tu radnju izvršava isključivo Urednik. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
@@ -284,7 +290,7 @@ Moderator organizatora **nije** Urednik i **nije** nosilac sadržaja. Moderator 
 
 Moderator organizatora ne postaje nosilac sadržaja. Sadržaj koji Moderator organizatora kreira ili uređuje vodi se u ime Organizatora.
 
-Moderator organizatora može obavljati operativne radnje nad sadržajem u ime Organizatora, osim samostalne objave sadržaja. To obuhvata kreiranje događaja, uređivanje događaja, brisanje događaja u skladu sa dodijeljenim ovlašćenjima, upravljanje manifestacijama, čuvanje nacrta i slanje sadržaja Uredniku na odobravanje. Sadržaj koji Moderator organizatora kreira ili uređuje mora biti poslat Uredniku na odobravanje prije objave.
+Moderator organizatora može obavljati operativne radnje nad sadržajem u ime Organizatora, osim samostalne objave sadržaja i osim ponovne objave otkazanog događaja. To obuhvata kreiranje događaja, uređivanje događaja, otkazivanje objavljenog događaja dok je Organizator aktivan i dok postoji aktivni moderatorski kontekst, upravljanje manifestacijama, čuvanje nacrta i slanje sadržaja Uredniku na odobravanje. Deaktivacijom Organizatora moderatorski kontekst prestaje. Sadržaj koji Moderator organizatora kreira ili uređuje mora biti poslat Uredniku na odobravanje prije objave.
 
 Jedan korisnik može biti Moderator organizatora za jednog ili više Organizatora. Pri svakoj radnji Moderator postupa u kontekstu konkretnog Organizatora (aktivni kontekst Organizatora).
 
@@ -317,12 +323,13 @@ Za zahtjeve vezane za Moderatore sistem trajno evidentira: podnosioca zahtjeva, 
 | BM-MOD-13 | Svaki naredni Moderator može biti predložen isključivo od strane postojećeg aktivnog Moderatora povezanog sa tim Organizatorom. Moderator ne dodjeljuje ovlašćenja; samo podnosi zahtjev. |
 | BM-MOD-14 | Pristup i ovlašćenja novom Moderatoru dodjeljuje isključivo Urednik nakon pregleda i odobrenja zahtjeva. Tek nakon odobrenja Moderator postaje aktivan. |
 | BM-MOD-15 | Sistem trajno evidentira za zahtjeve vezane za Moderatore: podnosioca zahtjeva, datum i vrijeme podnošenja, Urednika koji je odobrio i datum i vrijeme odobrenja. |
+| BM-MOD-16 | Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više nema pravo otkazivanja događaja tog Organizatora. Moderator ne može ponovo objaviti otkazani događaj. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
 - **Organizator** — ostaje nosilac sadržaja kao poslovni entitet; Moderatori upravljaju sadržajem u njegovo ime.
 - **Urednik** — pregleda i odobrava sadržaj koji Moderator pošalje na odobravanje; odobrava zahtjeve za dodjelu i uklanjanje Moderatora te dodjeljuje ovlašćenja.
-- **Događaj** — Moderator organizatora kreira i uređuje događaj u ime Organizatora.
+- **Događaj** — Moderator organizatora kreira, uređuje i može otkazati objavljeni događaj u ime aktivnog Organizatora u aktivnom kontekstu; nakon deaktivacije Organizatora nema pravo poslovnih radnji nad njegovim događajima; ne može samostalno objaviti niti ponovo objaviti otkazani događaj.
 - **Lokacija** — Moderator organizatora može predlagati nove lokacije u skladu sa poslovnim pravilima Lokacije.
 
 ## 6. Otvorena pitanja
@@ -337,7 +344,7 @@ Nema otvorenih pitanja.
 
 ## 1. Svrha poslovne cjeline
 
-Poslovna cjelina Urednik definiše isključivu administrativnu ulogu Uredničkog portala Kalendara kulture: odobravanje ili odbijanje zahtjeva za kreiranje Organizatora, dodjelu ovlašćenja Moderatorima, urednički pregled, odobravanje i objavu sadržaja, te odobravanje uklanjanja Moderatora organizatora.
+Poslovna cjelina Urednik definiše isključivu administrativnu ulogu Uredničkog portala Kalendara kulture: odobravanje ili odbijanje zahtjeva za kreiranje Organizatora, dodjelu ovlašćenja Moderatorima, urednički pregled, odobravanje i objavu sadržaja, otkazivanje bilo kojeg objavljenog događaja, ponovnu objavu otkazanog događaja, te odobravanje uklanjanja Moderatora organizatora.
 
 ## 2. Poslovni opis
 
@@ -345,7 +352,9 @@ Urednik je administrator Uredničkog portala Kalendara kulture. Urednik nije obi
 
 Urednik nije Organizator i nije Moderator Organizatora. Uloga Urednika je isključiva unutar poslovnog modela Kalendara kulture: Urednik nema kombinaciju uloge Urednika sa ulogom Moderatora niti sa statusom običnog registrovanog korisnika, ne mijenja aktivnu poslovnu ulogu i uvijek postupa u svojstvu Urednika.
 
-Urednik odobrava ili odbija zahtjeve za kreiranje Organizatora, odobrava zahtjeve za dodjelu ovlašćenja novim Moderatorima, pregleda, uređuje, odobrava i objavljuje događaje, vraća ih na doradu kada su potrebne suštinske izmjene i odobrava uklanjanje Moderatora organizatora.
+Urednik odobrava ili odbija zahtjeve za kreiranje Organizatora, odobrava zahtjeve za dodjelu ovlašćenja novim Moderatorima, pregleda, uređuje, odobrava i objavljuje događaje, vraća ih na doradu kada su potrebne suštinske izmjene, može otkazati bilo koji objavljeni događaj, isključivo on može ponovo objaviti otkazani događaj i odobrava uklanjanje Moderatora organizatora.
+
+Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora.
 
 ## 3. Poslovni koncept
 
@@ -370,12 +379,14 @@ Urednik može kreirati događaj bez registrovanog Organizatora kada je to potreb
 | BM-UR-07 | Po registraciji Organizatora, događaj kreiran bez registrovanog Organizatora može se naknadno povezati sa tim Organizatorom. Naknadno povezivanje ne smije mijenjati audit, istoriju događaja niti javno objavljene verzije i predstavlja administrativnu dopunu podataka. |
 | BM-UR-08 | Urednik odobrava zahtjeve za dodjelu ovlašćenja novim Moderatorima i isključivo on dodjeljuje pristup novom Moderatoru. |
 | BM-UR-09 | Urednik je isključiva uloga Uredničkog portala. Urednik nije Organizator, nije Moderator Organizatora, ne kombinuje ulogu Urednika sa statusom običnog registrovanog korisnika u poslovnom modelu Kalendara kulture, ne mijenja aktivnu poslovnu ulogu i uvijek postupa kao Urednik. |
+| BM-UR-10 | Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora. |
+| BM-UR-11 | Urednik može otkazati bilo koji objavljeni događaj. Isključivo Urednik može ponovo objaviti otkazani događaj. Prije ponovne objave Urednik provjerava i, po potrebi, ažurira podatke događaja i povezanih održavanja koristeći postojeća ovlašćenja. Ponovna objava nije automatska. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
-- **Organizator** — Urednik odobrava ili odbija zahtjev za kreiranje Organizatora i može naknadno povezati događaj kreiran bez registrovanog Organizatora sa tim Organizatorom, u skladu sa BM-UR-07.
+- **Organizator** — Urednik odobrava ili odbija zahtjev za kreiranje Organizatora, može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora i može naknadno povezati događaj kreiran bez registrovanog Organizatora sa tim Organizatorom, u skladu sa BM-UR-07.
 - **Moderator organizatora** — Urednik pregleda i odobrava sadržaj koji Moderator pošalje na odobravanje; odobrava zahtjeve za dodjelu i uklanjanje Moderatora te dodjeljuje ovlašćenja.
-- **Događaj** — Urednik pregleda, uređuje, odobrava, objavljuje i vraća na doradu događaje, a u propisanim slučajevima može i kreirati događaj.
+- **Događaj** — Urednik pregleda, uređuje, odobrava, objavljuje i vraća na doradu događaje, može otkazati bilo koji objavljeni događaj, isključivo on ponovo objavljuje otkazani događaj, a u propisanim slučajevima može i kreirati događaj.
 - **Lokacija** — Urednik odobrava ili odbija nove lokacije predložene za zajednički katalog lokacija.
 
 ## 6. Otvorena pitanja
@@ -421,6 +432,10 @@ Nakon završetka posljednjeg održavanja sistem automatski arhivira događaj. Ar
 
 Događaj može biti otkazan. Otkazani događaj ostaje evidentiran u sistemu i dobija status „Otkazan“.
 
+Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje; Moderator tada više nema pravo otkazivanja događaja tog Organizatora. Urednik može otkazati bilo koji objavljeni događaj, uključujući događaje deaktiviranog Organizatora.
+
+Ponovno objavljivanje otkazanog događaja predstavlja uredničku radnju. Isključivo Urednik može ponovo objaviti otkazani događaj. Prije ponovne objave Urednik može provjeriti i ažurirati podatke događaja i povezanih održavanja. Ponovna objava nije automatska.
+
 Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja.
 
 ## 4. Poslovna pravila
@@ -431,10 +446,11 @@ Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala odr
 | BM-DG-02 | Događaj može biti samostalan ili biti dio jedne manifestacije. Pripadnost manifestaciji nije obavezna. Detaljna pravila definišu se u BM-05 Manifestacija. |
 | BM-DG-03 | Lokacija nije svojstvo događaja već svojstvo održavanja događaja. Svako održavanje može imati svoju lokaciju. Detaljna pravila definišu se u BM-07 Lokacija. |
 | BM-DG-04 | Nakon završetka posljednjeg održavanja sistem automatski arhivira događaj. Arhiviranje se ne izvršava ručno. Detaljna pravila prikaza arhive definišu se u BM-11 Portal Kalendara kulture. |
-| BM-DG-05 | Događaj može biti otkazan. Otkazani događaj ostaje evidentiran u sistemu i dobija status „Otkazan“. Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja. Detaljna pravila za održavanja definišu se u BM-06 Održavanje događaja. |
+| BM-DG-05 | Događaj može biti otkazan. Otkazani događaj ostaje evidentiran u sistemu i dobija status „Otkazan“. Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više nema pravo otkazivanja događaja tog Organizatora; otkazivanje događaja deaktiviranog Organizatora izvršava isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj. Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja. Detaljna pravila za održavanja definišu se u BM-06 Održavanje događaja. |
 | BM-DG-06 | Događaj pripada jednoj primarnoj kategoriji. Dodatna klasifikacija događaja može se vršiti korišćenjem oznaka (tagova). Detaljna pravila o kategorijama i oznakama (tagovima) definišu se u BM-08 Kategorija. |
 | BM-DG-07 | Događaj može biti sačuvan kao nacrt bez izabrane primarne kategorije. Za slanje događaja na odobrenje mora biti izabrana jedna primarna kategorija. Svaki objavljeni događaj mora imati jednu primarnu kategoriju. |
 | BM-DG-08 | Svaki događaj mora biti povezan sa tačno jednim Organizatorom. Izuzetno, ako Organizator nije registrovan u sistemu, Urednik može kreirati i objaviti događaj bez registrovanog Organizatora radi javnog interesa i pravovremenog informisanja građana, u skladu sa BM-UR-06. Po registraciji Organizatora događaj se može naknadno povezati sa Organizatorom u skladu sa BM-UR-07, bez izmjene audita, istorije događaja i javno objavljenih verzija. |
+| BM-DG-09 | Ponovno objavljivanje otkazanog događaja predstavlja uredničku radnju. Isključivo Urednik može ponovo objaviti otkazani događaj. Prije ponovne objave Urednik provjerava i, po potrebi, ažurira podatke događaja i povezanih održavanja koristeći postojeća ovlašćenja. Ponovna objava nije automatska. Moderator ne može ponovo objaviti otkazani događaj. |
 
 ## 5. Otvorena pitanja
 
@@ -823,7 +839,15 @@ Promjena statusa predstavlja posljedicu dozvoljene poslovne radnje koju izvršav
 
 ### BM-ST-07 — Otkazivanje događaja
 
-> Objavljen događaj može biti otkazan u skladu sa poslovnim pravilima sistema. Otkazivanjem status događaja se mijenja u Otkazan, pri čemu događaj ostaje dostupan radi očuvanja istorijskih podataka i informisanja javnosti. Otkazan događaj može se ponovo objaviti ukoliko prestanu razlozi zbog kojih je otkazan.
+> Objavljen događaj može biti otkazan. Otkazivanjem status događaja se mijenja u Otkazan, pri čemu događaj ostaje dostupan radi očuvanja istorijskih podataka i informisanja javnosti.
+>
+> Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje.
+>
+> Deaktivacijom Organizatora prestaje moderatorski kontekst za tog Organizatora. Moderator tada više nema pravo otkazivanja događaja tog Organizatora. Ako je potrebno otkazati događaj deaktiviranog Organizatora, tu radnju izvršava isključivo Urednik.
+>
+> Urednik može otkazati bilo koji objavljeni događaj.
+>
+> Otkazan događaj može se ponovo objaviti ukoliko prestanu razlozi zbog kojih je otkazan. Ponovno objavljivanje je urednička radnja: isključivo Urednik može ponovo objaviti otkazani događaj. Prije ponovne objave Urednik provjerava i, po potrebi, ažurira podatke događaja i povezanih održavanja koristeći postojeća ovlašćenja. Ponovna objava nije automatska. Moderator ne može ponovo objaviti otkazani događaj.
 
 ### BM-ST-08 — Automatsko arhiviranje
 
