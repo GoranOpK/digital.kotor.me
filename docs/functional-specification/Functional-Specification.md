@@ -50,6 +50,7 @@
 | PATCH-FS-036 | 2026-07-28 | Usklađivanje sa novom poslovnom odlukom deaktivacije Organizatora: Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora. Usklađeni tok §5.6 i BR-049. |
 | PATCH-FS-037 | 2026-07-28 | Ovlašćenja za otkazivanje i ponovnu objavu događaja (usklađeno sa BM PATCH-035 / N-DG-01): usklađeni BR-007, BR-063 i BR-064; dopunjen dijagram §5.5.6a. |
 | PATCH-FS-038 | 2026-07-28 | Korekcija otkazivanja nakon deaktivacije Organizatora (usklađeno sa BM PATCH-036): usklađeni BR-007, BR-049, BR-050, BR-063 i napomene dijagrama §5.5.6a. |
+| PATCH-FS-039 | 2026-07-29 | PO-DG-05: direktna objava Urednika isključivo bez Organizatora (usklađeni BR-018, BR-028; napomene §5.5.6a). PO-DG-06: Otkazan → Arhiviran nakon završetka svih održavanja (usklađeni BR-064, BR-065; dijagram §5.5.6a). Zatvoreni N-DG-05 i N-DG-06. |
 
 Napomena:
 
@@ -818,7 +819,11 @@ Jedan događaj pripada tačno jednom Organizatoru.
 
 Događaj nije moguće povezati sa više Organizatora.
 
-Izuzetno, ako Organizator nije registrovan u sistemu, Urednik može kreirati događaj bez registrovanog Organizatora, u skladu sa BR-045 i BR-052. Takav događaj nastaje u statusu Nacrt i može biti direktno objavljen, bez postupka odobravanja. Ovo je jedini poslovni izuzetak od standardnog procesa odobravanja.
+Izuzetno, ako Organizator nije registrovan u sistemu, Urednik može kreirati događaj bez registrovanog Organizatora, u skladu sa BR-045 i BR-052. Takav događaj nastaje u statusu Nacrt i može biti direktno objavljen, bez postupka odobravanja.
+
+Urednik može direktno objaviti događaj isključivo kada događaj nema Organizatora. Događaj koji pripada Organizatoru ne može biti direktno objavljen; za njega je obavezan standardni tok Nacrt → Na odobrenju → Objavljen. Moderator ne može biti zaobiđen za događaje koji pripadaju Organizatoru.
+
+Ovo je jedini poslovni izuzetak od standardnog procesa odobravanja.
 
 ---
 
@@ -989,6 +994,8 @@ Ovo poglavlje opisuje ciljni poslovni model, a ne trenutnu implementaciju.
 Moderator može poslati događaj na odobrenje samo ako su ispunjeni svi obavezni uslovi.
 
 Događaj koji je kreirao Moderator u ime registrovanog Organizatora ne može biti direktno objavljen; objavljivanje slijedi nakon postupka odobravanja.
+
+Događaj koji pripada Organizatoru ne može biti direktno objavljen ni od strane Urednika. Direktna objava Urednika dozvoljena je isključivo za događaj bez Organizatora, u skladu sa BR-018.
 
 ---
 
@@ -1212,9 +1219,10 @@ stateDiagram-v2
     Objavljen --> Nacrt_prijedloga_izmjene : Izmjene
     Nacrt_prijedloga_izmjene --> Na_odobrenju : Pošalji na odobrenje
 
-    Objavljen --> Arhiviran : Istek događaja
+    Objavljen --> Arhiviran : Istek svih održavanja (Sistem)
     Objavljen --> Otkazan : Otkaži događaj (Moderator / Urednik)
     Otkazan --> Objavljen : Ponovna objava (isključivo Urednik)
+    Otkazan --> Arhiviran : Istek svih održavanja (Sistem)
 
     state "Na odobrenju" as Na_odobrenju
     state "Pregled Urednika" as Pregled_Urednika
@@ -1223,12 +1231,13 @@ stateDiagram-v2
 
 Objašnjenje:
 
-* Dijagram predstavlja objedinjeni vizuelni prikaz već usvojenih poslovnih pravila iz poglavlja 5.5.1–5.5.6 (BR-006 do BR-044), izuzetka BR-018 te BR-063 i BR-064.
+* Dijagram predstavlja objedinjeni vizuelni prikaz već usvojenih poslovnih pravila iz poglavlja 5.5.1–5.5.6 (BR-006 do BR-044), izuzetka BR-018 te BR-063–BR-065.
 * Ne definiše nova poslovna pravila i ne mijenja postojeća.
 * Služi lakšem razumijevanju kompletnog uredničkog workflow-a.
 * Otkazivanje: Moderator samo dok je Organizator aktivan i u aktivnom kontekstu; Urednik za bilo koji objavljeni događaj, uključujući događaje deaktiviranog Organizatora (BR-063, BR-050).
-* Ponovna objava: isključivo Urednik; nije automatska (BR-064).
+* Ponovna objava: isključivo Urednik; nije automatska; samo dok je status Otkazan (BR-064).
 * Deaktivacijom Organizatora prestaje moderatorski kontekst; Moderator više ne izvršava poslovne radnje nad događajima tog Organizatora (BR-049, BR-050).
+* Automatsko arhiviranje: Sistem nakon završetka svih održavanja — iz statusa Objavljen i iz statusa Otkazan (BR-065).
 * Može predstavljati osnovu za buduću implementaciju state machine modela.
 
 Napomena:
@@ -1237,7 +1246,7 @@ Napomena:
 * Stanje **„Nacrt prijedloga izmjene“** vizuelno prikazuje radni prijedlog izmjene objavljenog događaja (BR-025); javni portal tokom procesa zadržava posljednju odobrenu verziju (BR-006, BR-011).
 * Prelaz **Odobri** → **Objavljen** za prijedlog izmjene znači da nova odobrena verzija postaje javna (BR-010, BR-039).
 * Prelaz **Vrati na doradu** → **Nacrt** usklađen je sa BR-042 i BM-ST-05.
-* Prelaz **Nacrt → Objavljen** (direktna objava Urednika bez registrovanog Organizatora) usklađen je sa BR-018 i BM-ST-04; u tom slučaju ne provodi se postupak odobravanja.
+* Prelaz **Nacrt → Objavljen** (direktna objava Urednika) dozvoljen je isključivo bez registrovanog Organizatora (BR-018, BM-ST-04); događaj sa Organizatorom ne može biti direktno objavljen.
 
 **Status:** Approved
 
@@ -1553,6 +1562,8 @@ Isključivo Urednik može ponovo objaviti otkazani događaj.
 
 Moderator ne može ponovo objaviti otkazani događaj.
 
+Ponovna objava je dozvoljena samo dok je događaj u statusu **Otkazan**.
+
 Prije ponovne objave Urednik provjerava i, po potrebi, ažurira podatke događaja i povezanih održavanja koristeći postojeća ovlašćenja.
 
 Ponovna objava nije automatska.
@@ -1563,7 +1574,13 @@ Ponovna objava mijenja status događaja u **Objavljen**.
 
 #### BR-065 – Automatsko arhiviranje
 
-Događaj se automatski arhivira nakon završetka svih njegovih održavanja, u skladu sa poslovnim pravilima.
+Događaj se automatski arhivira nakon završetka svih njegovih održavanja, bez ručne intervencije.
+
+Automatsko arhiviranje primjenjuje se na događaj u statusu **Objavljen** i na događaj u statusu **Otkazan**.
+
+Otkazani događaj nakon završetka svih održavanja prelazi u status **Arhiviran**.
+
+Izvršilac prelaza je **Sistem**.
 
 ---
 
@@ -2968,3 +2985,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-28 | FS-001 (PATCH-FS-036): Usklađivanje sa odlukom deaktivacije Organizatora — tok §5.6 i BR-049. |
 | 2026-07-28 | FS-001 / 5.7.2 i §5.5.6a (PATCH-FS-037): Ovlašćenja za otkazivanje i ponovnu objavu događaja (BM PATCH-035). Usklađeni BR-007, BR-063, BR-064 i dijagram workflow-a. |
 | 2026-07-28 | FS-001 (PATCH-FS-038): Korekcija otkazivanja nakon deaktivacije Organizatora (BM PATCH-036). Usklađeni BR-007, BR-049, BR-050, BR-063 i napomene §5.5.6a. |
+| 2026-07-29 | FS-001 (PATCH-FS-039): PO-DG-05 direktna objava samo bez Organizatora; PO-DG-06 Otkazan → Arhiviran nakon isteka održavanja. Usklađeni BR-018, BR-028, BR-064, BR-065 i §5.5.6a. Zatvoreni N-DG-05 i N-DG-06. |
