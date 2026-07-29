@@ -51,6 +51,8 @@
 | PATCH-FS-037 | 2026-07-28 | Ovlašćenja za otkazivanje i ponovnu objavu događaja (usklađeno sa BM PATCH-035 / N-DG-01): usklađeni BR-007, BR-063 i BR-064; dopunjen dijagram §5.5.6a. |
 | PATCH-FS-038 | 2026-07-28 | Korekcija otkazivanja nakon deaktivacije Organizatora (usklađeno sa BM PATCH-036): usklađeni BR-007, BR-049, BR-050, BR-063 i napomene dijagrama §5.5.6a. |
 | PATCH-FS-039 | 2026-07-29 | PO-DG-05: direktna objava Urednika isključivo bez Organizatora (usklađeni BR-018, BR-028; napomene §5.5.6a). PO-DG-06: Otkazan → Arhiviran nakon završetka svih održavanja (usklađeni BR-064, BR-065; dijagram §5.5.6a). Zatvoreni N-DG-05 i N-DG-06. |
+| PATCH-FS-040 | 2026-07-29 | PO-MF-01–PO-MF-08: usklađivanje §5.12 (BR-092–BR-101) i dodavanje BR-189–BR-201; usklađeni BR-111 i BR-112 (izvedene kategorije/lokacije). |
+| PATCH-FS-041 | 2026-07-29 | PO-MF-09–PO-MF-12: usklađeni BR-096–BR-098, BR-193, BR-201; dodati BR-202–BR-205; katalog Manifestacije u §5.16. Zatvoreni N-MF-01–N-MF-04; N-MF-05 evidentiran kao napomena. |
 
 Napomena:
 
@@ -133,14 +135,14 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.9 Upravljanje lokacijama (BR-074–BR-080)
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085)
    - 5.11 Upravljanje medijima (BR-086–BR-091)
-   - 5.12 Upravljanje manifestacijama (BR-092–BR-101)
+   - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
    - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117)
    - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137)
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
    - 5.14.3 Funkcionalni obuhvat Uredničkog portala (BR-126–BR-128)
    - 5.15 Newsletter (BR-138–BR-169)
-   - 5.16 Evidencija aktivnosti (BR-170–BR-188)
+   - 5.16 Evidencija aktivnosti (BR-170–BR-188, katalog Manifestacije)
 
 ---
 
@@ -1878,6 +1880,8 @@ Ako naslovna fotografija nije određena, koristi se podrazumijevana fotografija 
 
 Manifestacija predstavlja programsku cjelinu koja objedinjuje povezane događaje pod zajedničkim identitetom.
 
+Manifestacija, Događaj i Održavanje imaju nezavisne životne cikluse.
+
 ---
 
 #### BR-093 – Događaji u manifestaciji
@@ -1896,6 +1900,10 @@ Događaj može pripadati najviše jednoj manifestaciji.
 
 Pripadnost događaja manifestaciji nije obavezna.
 
+Istovremeno povezivanje jednog događaja sa više manifestacija nije dozvoljeno.
+
+Promjena pripadnosti vrši se premještanjem događaja iz jedne manifestacije u drugu.
+
 ---
 
 #### BR-095 – Održavanja i manifestacija
@@ -1908,15 +1916,27 @@ Održavanja pripadaju isključivo događajima koji čine manifestaciju.
 
 #### BR-096 – Trajanje manifestacije
 
-Početak, završetak i trajanje manifestacije određuju se automatski na osnovu termina održavanja svih događaja koji joj pripadaju.
+Početak, završetak i trajanje manifestacije određuju se automatski. Ručni unos nije dozvoljen.
+
+U izračun ulaze samo održavanja koja pripadaju Objavljenim događajima manifestacije, nijesu Otkazana, nijesu Odgođena bez potvrđenog novog termina i imaju definisan datum (vrijeme kada je uneseno; cjelodnevna po datumu).
+
+Početak određuje najranije važeće održavanje. Završetak određuje najkasnije važeće održavanje.
+
+Nakon potvrde novog termina odgođenog održavanja, to održavanje ponovo ulazi u izračun.
 
 ---
 
 #### BR-097 – Automatsko arhiviranje manifestacije
 
-Manifestacija se automatski arhivira nakon završetka posljednjeg održavanja posljednjeg događaja koji joj pripada.
+Objavljena manifestacija se automatski arhivira nakon isteka planiranog trajanja.
+
+Otkazana manifestacija ostaje u statusu **Otkazana** do isteka planiranog trajanja, nakon čega je Sistem automatski arhivira.
 
 Manifestacija se ne arhivira ručno.
+
+Arhiviranje manifestacije ne arhivira automatski događaje niti održavanja.
+
+Manifestacija ostaje dostupna kroz arhivu i evidenciju aktivnosti.
 
 ---
 
@@ -1924,17 +1944,25 @@ Manifestacija se ne arhivira ručno.
 
 Manifestacija može biti otkazana.
 
+Moderator u aktivnom kontekstu Organizatora može otkazati manifestaciju kojom taj Organizator upravlja.
+
+Urednik može otkazati bilo koju manifestaciju.
+
+Administrator platforme nema redovnu poslovnu ulogu u otkazivanju manifestacija.
+
 Otkazana manifestacija ostaje evidentirana u sistemu.
 
-Otkazivanje manifestacije ne utiče na događaje koji joj pripadaju.
+Otkazivanje manifestacije ne briše događaje koji joj pripadaju i ne mijenja njihove statuse niti statuse njihovih održavanja.
 
 ---
 
 #### BR-099 – Podaci manifestacije
 
-Manifestacija ima sopstvene podatke.
+Manifestacija ima sopstvene podatke, uključujući naziv, opis, opcionu naslovnu fotografiju i opciono polje Web stranica / Više informacije.
 
 Podaci manifestacije ne nasljeđuju se od događaja.
+
+SEO slug nije poslovni zahtjev V1.
 
 ---
 
@@ -1944,13 +1972,201 @@ Moderator može kreirati manifestaciju u ime svog Organizatora.
 
 Urednik može kreirati manifestaciju u ime bilo kojeg Organizatora ili bez registrovanog Organizatora.
 
+Organizator manifestacije je opcioni podatak.
+
 ---
 
 #### BR-101 – Nacrt i slanje manifestacije na odobrenje
 
 Manifestacija u statusu nacrta može se uređivati.
 
-Prije slanja na odobrenje moraju biti ispunjena poslovna pravila definisana za manifestaciju.
+Prije slanja na odobrenje moraju biti ispunjena poslovna pravila definisana za manifestaciju, uključujući najmanje jedan povezani događaj.
+
+---
+
+#### BR-189 – Statusi manifestacije
+
+Manifestacija može imati jedan od sljedećih statusa:
+
+* **Nacrt**
+* **Na odobrenju**
+* **Vraćena na doradu**
+* **Objavljena**
+* **Otkazana**
+* **Arhivirana**
+
+Manifestacija nema status **Odgođena**. Odgađanje pripada isključivo održavanju.
+
+Manifestacija može ostati u statusu **Objavljena** i kada su pojedina održavanja njenih događaja odgođena.
+
+---
+
+#### BR-190 – Organizator manifestacije
+
+Organizator manifestacije je opcioni.
+
+Kada Organizator postoji, predstavlja nosioca ili partnera manifestacije.
+
+Kada Organizator nije definisan, manifestacija se smatra uredničkom odnosno platformskom manifestacijom kojom upravlja Urednik.
+
+Manifestacija može objedinjavati događaje različitih Organizatora i događaje bez Organizatora.
+
+Organizator manifestacije ne mora biti isti kao Organizator svih pripadajućih događaja.
+
+Nepostojanje Organizatora ne sprečava kreiranje, slanje na odobrenje, objavu, otkazivanje ili arhiviranje manifestacije.
+
+---
+
+#### BR-191 – Uslovi za objavu manifestacije
+
+Manifestacija može biti objavljena samo kada su ispunjena oba uslova:
+
+1. Manifestacija ima najmanje jedan događaj.
+2. Najmanje jedan pripadajući događaj ima status **Objavljen**.
+
+---
+
+#### BR-192 – Javni prikaz događaja u manifestaciji
+
+Manifestacija može sadržati događaje u različitim statusima.
+
+Na javnom portalu prikazuju se isključivo događaji u statusu **Objavljen**.
+
+Događaji u statusima Nacrt, Na odobrenju ili Vraćen na doradu nisu javno vidljivi u okviru manifestacije.
+
+Neobjavljeni događaji mogu biti povezani sa manifestacijom u uredničkom portalu.
+
+Program manifestacije može se postepeno dopunjavati.
+
+---
+
+#### BR-193 – Dodavanje i uklanjanje događaja na objavljenoj manifestaciji
+
+Objavljenoj manifestaciji može se dodati novi događaj i može se ukloniti postojeći događaj.
+
+Dodavanje ili uklanjanje događaja ne mijenja status manifestacije; manifestacija ostaje **Objavljena**.
+
+Dodavanje ili uklanjanje događaja ne pokreće ponovno odobravanje manifestacije.
+
+Svaki događaj zadržava sopstveni životni ciklus.
+
+Novi događaj mora proći svoj redovni urednički proces prije javne objave.
+
+Uklanjanje događaja iz manifestacije ne briše događaj i ne mijenja njegov status.
+
+Nije dozvoljeno ukloniti posljednji Objavljeni događaj iz Objavljene manifestacije. Sistem odbija radnju uz validacionu poruku.
+
+---
+
+#### BR-194 – Nezavisnost statusa
+
+Promjena statusa manifestacije ne mijenja automatski status događaja niti status održavanja.
+
+Sve statusne promjene događaja i održavanja izvršavaju se kroz njihove postojeće poslovne procese.
+
+---
+
+#### BR-195 – Vraćanje manifestacije na doradu
+
+Urednik može vratiti manifestaciju sa statusa **Na odobrenju** u status **Vraćena na doradu**.
+
+Manifestacija u statusu **Vraćena na doradu** može se uređivati i ponovo poslati na odobrenje kada ispunjava uslove.
+
+---
+
+#### BR-196 – Objava i odobravanje manifestacije
+
+Urednik odobrava i objavljuje manifestaciju kada su ispunjeni uslovi BR-191.
+
+Objavljena manifestacija može se uređivati u skladu sa ovlašćenjima uloga, uključujući podatke manifestacije i povezivanje događaja prema BR-193.
+
+---
+
+#### BR-197 – Naslovna fotografija manifestacije
+
+Manifestacija može imati najviše jednu naslovnu fotografiju.
+
+Fotografija je opciona i nezavisna od fotografija događaja.
+
+Promjena ili uklanjanje fotografije događaja ne utiče na fotografiju manifestacije.
+
+Sistem ne preuzima automatski fotografiju događaja.
+
+Kada fotografija nije postavljena, javni portal koristi podrazumijevanu ilustraciju ili placeholder.
+
+---
+
+#### BR-198 – Web stranica / Više informacija
+
+Manifestacija ima opciono polje Web stranica / Više informacije koje može sadržati eksterni URL.
+
+Eksterni URL ne zamjenjuje podatke o terminima i lokacijama u sistemu.
+
+---
+
+#### BR-199 – Kategorije i lokacije
+
+Manifestacija nema sopstvene kategorije.
+
+Kategorije pripadaju događaju.
+
+Manifestacija nema sopstvenu lokaciju.
+
+Lokacija pripada održavanju.
+
+---
+
+#### BR-200 – Validacija eksternog URL-a
+
+Ako je polje Web stranica / Više informacije popunjeno, vrijednost mora biti validan URL.
+
+---
+
+#### BR-201 – Premještanje događaja između manifestacija
+
+Događaj koji pripada jednoj manifestaciji može biti premješten u drugu manifestaciju.
+
+Premještanjem događaj prestaje pripadati prethodnoj manifestaciji i pripada novoj, uz poštovanje pravila da događaj pripada najviše jednoj manifestaciji.
+
+Nije dozvoljeno premjestiti posljednji Objavljeni događaj iz Objavljene manifestacije ako bi ta manifestacija ostala bez javno dostupnog programa. Sistem odbija radnju uz validacionu poruku.
+
+---
+
+#### BR-202 – Trajni uslov Objavljene manifestacije
+
+Objavljena manifestacija mora u svakom trenutku imati najmanje jedan Objavljeni događaj.
+
+Prije uklanjanja ili premještanja događaja Sistem provjerava da li Objavljena manifestacija i dalje ima najmanje jedan Objavljeni događaj.
+
+Ako uslov nije ispunjen, radnja se odbija.
+
+Ovo pravilo ne mijenja nezavisni životni ciklus događaja.
+
+---
+
+#### BR-203 – Važeća održavanja za trajanje
+
+Za izračun trajanja manifestacije važeća su održavanja Objavljenih događaja koja nijesu Otkazana i nijesu Odgođena bez potvrđenog novog termina.
+
+Otkazana održavanja ne ulaze u izračun.
+
+Odgođena održavanja bez potvrđenog novog termina ne ulaze; nakon potvrde novog termina ponovo ulaze.
+
+---
+
+#### BR-204 – Arhiviranje otkazane manifestacije
+
+Otkazana manifestacija automatski prelazi u status **Arhivirana** nakon isteka planiranog trajanja manifestacije.
+
+Izvršilac prelaza je **Sistem**.
+
+---
+
+#### BR-205 – Centralna evidencija Manifestacija
+
+Manifestacija je ravnopravan poslovni entitet.
+
+Poslovno značajne aktivnosti nad manifestacijom vode se u centralnoj Evidenciji aktivnosti, u katalogu Manifestacije (§5.16), u skladu sa BM-14.
 
 **Status:** Approved
 
@@ -2026,13 +2242,17 @@ Kada događaj ima više održavanja, portal prikazuje sva održavanja sa njihovi
 
 #### BR-111 – Prikaz lokacija
 
-Javni portal omogućava pregled lokacija povezanih sa objavljenim događajima i manifestacijama, kada su one definisane u skladu sa poslovnim pravilima modula Kalendara kulture.
+Javni portal omogućava pregled lokacija povezanih sa održavanjima objavljenih događaja, uključujući događaje koji pripadaju objavljenim manifestacijama, kada su lokacije definisane u skladu sa poslovnim pravilima.
+
+Lokacija nije atribut manifestacije.
 
 ---
 
 #### BR-112 – Prikaz kategorija i oznaka
 
-Javni portal omogućava prikaz primarnih kategorija i oznaka povezanih sa objavljenim događajima i manifestacijama, u skladu sa poslovnim pravilima modula Kalendara kulture.
+Javni portal omogućava prikaz primarnih kategorija i oznaka povezanih sa objavljenim događajima.
+
+Za objavljenu manifestaciju portal može prikazati kategorije i oznake samo kao izvedene iz njenih Objavljenih događaja; one nisu samostalno sačuvan atribut manifestacije.
 
 ---
 
@@ -2725,6 +2945,30 @@ Pri odobrenju zahtjeva za kreiranje Organizatora nastaju **dva zapisa**:
 
 Ne smije postojati treći duplirani zapis iste dodjele Moderatora.
 
+##### Katalog — Manifestacije
+
+U centralnu Evidenciju ulaze:
+
+* kreiranje manifestacije;
+* slanje manifestacije na odobrenje;
+* vraćanje manifestacije na doradu;
+* odobravanje / objava manifestacije;
+* otkazivanje manifestacije;
+* automatsko arhiviranje manifestacije (izvršilac: **Sistem**);
+* dodavanje događaja Manifestaciji;
+* uklanjanje događaja iz Manifestacije;
+* premještanje događaja između Manifestacija;
+* promjena Organizatora Manifestacije;
+* promjena naslovne fotografije Manifestacije;
+* promjena polja Web stranica / Više informacije.
+
+Ne ulaze u centralnu Evidenciju:
+
+* sitne tekstualne ili redakcijske izmjene nacrta;
+* pregled bez izmjena.
+
+Napomena (N-MF-05): katalog Manifestacije nije Product Owner odluka već funkcionalna razrada ravnopravnog entiteta u skladu sa BM-14 / BM-MF-20.
+
 ##### Katalog — Događaji
 
 U centralnu Evidenciju ulaze:
@@ -2986,3 +3230,5 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-28 | FS-001 / 5.7.2 i §5.5.6a (PATCH-FS-037): Ovlašćenja za otkazivanje i ponovnu objavu događaja (BM PATCH-035). Usklađeni BR-007, BR-063, BR-064 i dijagram workflow-a. |
 | 2026-07-28 | FS-001 (PATCH-FS-038): Korekcija otkazivanja nakon deaktivacije Organizatora (BM PATCH-036). Usklađeni BR-007, BR-049, BR-050, BR-063 i napomene §5.5.6a. |
 | 2026-07-29 | FS-001 (PATCH-FS-039): PO-DG-05 direktna objava samo bez Organizatora; PO-DG-06 Otkazan → Arhiviran nakon isteka održavanja. Usklađeni BR-018, BR-028, BR-064, BR-065 i §5.5.6a. Zatvoreni N-DG-05 i N-DG-06. |
+| 2026-07-29 | FS-001 / 5.12 (PATCH-FS-040): PO-MF-01–PO-MF-08 — usklađeni BR-092–BR-101; dodati BR-189–BR-201; usklađeni BR-111 i BR-112. |
+| 2026-07-29 | FS-001 / 5.12 i §5.16 (PATCH-FS-041): PO-MF-09–PO-MF-12 — BR-096–098, BR-193, BR-201–BR-205; katalog Manifestacije. |

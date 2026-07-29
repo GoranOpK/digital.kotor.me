@@ -123,6 +123,12 @@ Povezana dokumentacija (Održavanje):
 
 * Technical Specification — `docs/technical-specification/Technical-Specification_Odrzavanje.md` (TS-004; verzija 0.1.1; Usvojen)
 
+Povezana dokumentacija (Manifestacija):
+
+* Business Model — BM-05 (BM-MF-01–BM-MF-20), PATCH-038–PATCH-039; PO-MF-01–PO-MF-12
+* Functional Specification — §5.12 (BR-092–BR-101, BR-189–BR-205), §5.16 katalog Manifestacije, PATCH-FS-040–PATCH-FS-041
+* Technical Specification — `docs/technical-specification/Technical-Specification_Manifestacija.md` (TS-005; verzija 0.1.1; Usvojen)
+
 Povezana dokumentacija (Newsletter):
 
 * Business Model — BM-13 (BM-NL-01–BM-NL-25), PATCH-031–PATCH-033
@@ -137,7 +143,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | U izradi (postoji dokument) |
 | TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
-| TS-005 | Manifestacija | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
@@ -277,3 +283,5 @@ Matrica sljedivosti (sažetak):
 | 2026-07-29 | FT-001 — PO-DG-05 i PO-DG-06: direktna objava samo bez Organizatora; Otkazan → Arhiviran nakon isteka održavanja (BM PATCH-037 / FS PATCH-FS-039); N-DG-05 i N-DG-06 zatvoreni. |
 | 2026-07-29 | FT-001 — TS-004 Održavanje događaja usvojen (v0.1.1); Termin nije poslovni/konceptualni entitet V1. |
 | 2026-07-29 | FT-001 — TS-003 Događaj usvojen (v0.1.1); putanja `docs/technical-specification/Technical-Specification_Dogadjaj.md`. |
+| 2026-07-29 | FT-001 — PO-MF-01–PO-MF-08 i TS-005 Manifestacija Draft v0.1; BM PATCH-038 / FS PATCH-FS-040; putanja `docs/technical-specification/Technical-Specification_Manifestacija.md`. |
+| 2026-07-29 | FT-001 — TS-005 Manifestacija usvojen (v0.1.1); PO-MF-09–PO-MF-12; N-MF-01–N-MF-04 zatvoreni; N-MF-05 napomena (evidencija). |
