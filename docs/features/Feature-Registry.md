@@ -107,13 +107,17 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 
 **Newsletter (u okviru FT-001):** model zasnovan na novoobjavljenim događajima i poslovno značajnim promjenama — javno objavljivanje je okidač za prvo uključivanje; otkazivanje, odlaganje i promjena datuma/vremena/lokacije su prioritetni okidači (samo pretplatnicima kojima je događaj već poslat). Višestruke promjene prije slanja daju jedinstveno obavještenje sa posljednjim važećim stanjem. Bez fiksnog sedmičnog rasporeda.
 
-**Usvojene poslovne odluke (Događaj — otkazivanje / ponovna objava):** Dok je Organizator aktivan, Moderator može otkazati objavljeni događaj u aktivnom kontekstu; deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više ne izvršava poslovne radnje nad njegovim događajima — otkazivanje tada isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj; isključivo Urednik može ponovo objaviti otkazani događaj dok je status Otkazan (BM PATCH-035/036: BM-ORG-12, BM-DG-05, BM-DG-09, BM-ST-07, BM-MOD-16, BM-UR-11; FS PATCH-FS-037/038: BR-007, BR-049, BR-050, BR-063, BR-064). Relevantno za budući TS-003.
+**Usvojene poslovne odluke (Događaj — otkazivanje / ponovna objava):** Dok je Organizator aktivan, Moderator može otkazati objavljeni događaj u aktivnom kontekstu; deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više ne izvršava poslovne radnje nad njegovim događajima — otkazivanje tada isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj; isključivo Urednik može ponovo objaviti otkazani događaj dok je status Otkazan (BM PATCH-035/036: BM-ORG-12, BM-DG-05, BM-DG-09, BM-ST-07, BM-MOD-16, BM-UR-11; FS PATCH-FS-037/038: BR-007, BR-049, BR-050, BR-063, BR-064). Relevantno za TS-003.
 
 **Usvojene poslovne odluke (Događaj — direktna objava / arhiviranje):** Direktna objava Urednika dozvoljena je isključivo za događaj bez Organizatora; događaj sa Organizatorom ide isključivo Nacrt → Na odobrenju → Objavljen (PO-DG-05 / N-DG-05 zatvoren; BM PATCH-037 BM-ST-04; FS PATCH-FS-039 BR-018, BR-028). Otkazan događaj automatski prelazi u Arhiviran nakon završetka svih održavanja, isto kao Objavljen (PO-DG-06 / N-DG-06 zatvoren; BM-DG-04, BM-ST-08; BR-065).
 
 Povezana dokumentacija (Organizator):
 
 * Technical Specification — `docs/technical-specification/Technical-Specification_Organizator.md` (TS-001; funkcionalna cjelina Organizator / Moderator / Zahtjev za kreiranje Organizatora u okviru FT-001)
+
+Povezana dokumentacija (Događaj):
+
+* Technical Specification — `docs/technical-specification/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija 0.1.1; Usvojen)
 
 Povezana dokumentacija (Održavanje):
 
@@ -131,7 +135,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS | Naziv | Feature | Modul | Status |
 | -- | ----- | ------- | ----- | ------ |
 | TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | U izradi (postoji dokument) |
-| TS-003 | Događaj | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-005 | Manifestacija | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
@@ -272,3 +276,4 @@ Matrica sljedivosti (sažetak):
 | 2026-07-28 | FT-001 — Korekcija odluke: nakon deaktivacije Organizatora Moderator nema pravo otkazivanja (BM PATCH-036 / FS PATCH-FS-038); nalaz B4 zatvoren. |
 | 2026-07-29 | FT-001 — PO-DG-05 i PO-DG-06: direktna objava samo bez Organizatora; Otkazan → Arhiviran nakon isteka održavanja (BM PATCH-037 / FS PATCH-FS-039); N-DG-05 i N-DG-06 zatvoreni. |
 | 2026-07-29 | FT-001 — TS-004 Održavanje događaja usvojen (v0.1.1); Termin nije poslovni/konceptualni entitet V1. |
+| 2026-07-29 | FT-001 — TS-003 Događaj usvojen (v0.1.1); putanja `docs/technical-specification/Technical-Specification_Dogadjaj.md`. |
