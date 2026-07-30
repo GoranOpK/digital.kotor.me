@@ -56,7 +56,7 @@ Svaka funkcionalnost može biti povezana sa:
 
 * Business Model dokumentacijom
 * Functional Specification
-* Technical Specification
+* jednim ili više Technical Specification dokumenata
 * Change Request Register
 * Test Case dokumentacijom
 * Implementacijom
@@ -81,6 +81,10 @@ Svaki Change Request mora sadržati referencu na Feature ID kojem pripada.
 
 Technical Specification mora biti vezana za odgovarajući Feature ID.
 
+Jedan Feature može biti povezan sa jednim ili više TS dokumenata.
+
+TS dokumenti koriste jedinstvenu globalnu numeraciju (TS-001, TS-002, TS-003...), nezavisno od Feature ID-a.
+
 Na ovaj način svaka funkcionalnost može biti praćena od poslovne ideje do produkcije.
 
 ---
@@ -103,10 +107,50 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 
 **Newsletter (u okviru FT-001):** model zasnovan na novoobjavljenim događajima i poslovno značajnim promjenama — javno objavljivanje je okidač za prvo uključivanje; otkazivanje, odlaganje i promjena datuma/vremena/lokacije su prioritetni okidači (samo pretplatnicima kojima je događaj već poslat). Višestruke promjene prije slanja daju jedinstveno obavještenje sa posljednjim važećim stanjem. Bez fiksnog sedmičnog rasporeda.
 
+**Usvojene poslovne odluke (Događaj — otkazivanje / ponovna objava):** Dok je Organizator aktivan, Moderator može otkazati objavljeni događaj u aktivnom kontekstu; deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više ne izvršava poslovne radnje nad njegovim događajima — otkazivanje tada isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj; isključivo Urednik može ponovo objaviti otkazani događaj dok je status Otkazan (BM PATCH-035/036: BM-ORG-12, BM-DG-05, BM-DG-09, BM-ST-07, BM-MOD-16, BM-UR-11; FS PATCH-FS-037/038: BR-007, BR-049, BR-050, BR-063, BR-064). Relevantno za TS-003.
+
+**Usvojene poslovne odluke (Događaj — direktna objava / arhiviranje):** Direktna objava Urednika dozvoljena je isključivo za događaj bez Organizatora; događaj sa Organizatorom ide isključivo Nacrt → Na odobrenju → Objavljen (PO-DG-05 / N-DG-05 zatvoren; BM PATCH-037 BM-ST-04; FS PATCH-FS-039 BR-018, BR-028). Otkazan događaj automatski prelazi u Arhiviran nakon završetka svih održavanja, isto kao Objavljen (PO-DG-06 / N-DG-06 zatvoren; BM-DG-04, BM-ST-08; BR-065).
+
+Povezana dokumentacija (Organizator):
+
+* Technical Specification — `docs/technical-specification/Technical-Specification_Organizator.md` (TS-001; funkcionalna cjelina Organizator / Moderator / Zahtjev za kreiranje Organizatora u okviru FT-001)
+
+Povezana dokumentacija (Događaj):
+
+* Technical Specification — `docs/technical-specification/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija 0.1.1; Usvojen)
+
+Povezana dokumentacija (Održavanje):
+
+* Technical Specification — `docs/technical-specification/Technical-Specification_Odrzavanje.md` (TS-004; verzija 0.1.1; Usvojen)
+
+Povezana dokumentacija (Manifestacija):
+
+* Business Model — BM-05 (BM-MF-01–BM-MF-20), PATCH-038–PATCH-039; PO-MF-01–PO-MF-12
+* Functional Specification — §5.12 (BR-092–BR-101, BR-189–BR-205), §5.16 katalog Manifestacije, PATCH-FS-040–PATCH-FS-041
+* Technical Specification — `docs/technical-specification/Technical-Specification_Manifestacija.md` (TS-005; verzija 0.1.1; Usvojen)
+
 Povezana dokumentacija (Newsletter):
 
 * Business Model — BM-13 (BM-NL-01–BM-NL-25), PATCH-031–PATCH-033
 * Functional Specification — §5.15 (BR-138–BR-169), PATCH-FS-032–PATCH-FS-034
+
+**Planirani Technical Specification dokumenti (modul Kalendar kulture):**
+
+Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaćanja (FT-002) i nije dio ovog plana.
+
+| TS | Naziv | Feature | Modul | Status |
+| -- | ----- | ------- | ----- | ------ |
+| TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | U izradi (postoji dokument) |
+| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
+| TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
+| TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
+| TS-006 | Lokacije | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-008 | Mediji | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-009 | Javni portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
 
 ---
 
@@ -202,15 +246,15 @@ Povezana dokumentacija:
 
 * Business Model — BM-14 (BM-AL-01–BM-AL-08), BM-EP-09, BM-GL-09, BM-GL-20
 * Functional Specification — §5.16 (BR-170–BR-188), PATCH-FS-035
-* Technical Specification — nije dio ovog PATCH-a
+* Technical Specification — TS-012 Evidencija aktivnosti (planiran — nacrt nije započet; modul Kalendar kulture)
 
 Matrica sljedivosti (sažetak):
 
 | BM | FS | FT | TS |
 |----|----|----|-----|
-| BM-AL-01–BM-AL-08 | BR-170–BR-188 / §5.16 | FT-003 | TBD (van ovog PATCH-a) |
-| BM-EP-09 | §5.16 | FT-003 | TBD |
-| BM-GL-09, BM-GL-20 | BR-170, BR-174 | FT-003 | TBD |
+| BM-AL-01–BM-AL-08 | BR-170–BR-188 / §5.16 | FT-003 | TS-012 (planiran) |
+| BM-EP-09 | §5.16 | FT-003 | TS-012 (planiran) |
+| BM-GL-09, BM-GL-20 | BR-170, BR-174 | FT-003 | TS-012 (planiran) |
 
 ---
 
@@ -232,3 +276,12 @@ Matrica sljedivosti (sažetak):
 | 2026-07-27 | FT-002 – PATCH-009A: redakcijsko usklađivanje BP-06↔BP-09 i terminologija identifikatora (bez nove poslovne odluke). |
 | 2026-07-27 | FT-001 – Newsletter: usklađeno sa BM PATCH-031 / FS PATCH-FS-032 (novoobjavljeni događaji; bez fiksnog sedmičnog modela). |
 | 2026-07-27 | Registrovana funkcionalnost FT-003 – Evidencija aktivnosti (Kalendar kulture). Status: Planned. Povezano sa BM-14 i FS §5.16 (PATCH-FS-035). |
+| 2026-07-28 | Usklađivanje pravila sljedivosti: Feature može imati jedan ili više TS dokumenata; TS dokumenti koriste globalnu numeraciju. Za FT-001 evidentiran postojeći TS-001 za funkcionalnu cjelinu Organizator / Moderator / Zahtjev za kreiranje Organizatora. |
+| 2026-07-28 | Evidentiran planski raspored TS dokumenata za modul Kalendar kulture (TS-001, TS-003–TS-012); TS-002 ostaje rezervisan za Plaćanja (FT-002). TS-012 rezervisan za FT-003. Status planiranih: nacrt nije započet. |
+| 2026-07-28 | FT-001 — Evidentirana usvojena odluka o ovlašćenjima za otkazivanje i ponovnu objavu događaja (BM PATCH-035 / FS PATCH-FS-037); relevantno za TS-003. |
+| 2026-07-28 | FT-001 — Korekcija odluke: nakon deaktivacije Organizatora Moderator nema pravo otkazivanja (BM PATCH-036 / FS PATCH-FS-038); nalaz B4 zatvoren. |
+| 2026-07-29 | FT-001 — PO-DG-05 i PO-DG-06: direktna objava samo bez Organizatora; Otkazan → Arhiviran nakon isteka održavanja (BM PATCH-037 / FS PATCH-FS-039); N-DG-05 i N-DG-06 zatvoreni. |
+| 2026-07-29 | FT-001 — TS-004 Održavanje događaja usvojen (v0.1.1); Termin nije poslovni/konceptualni entitet V1. |
+| 2026-07-29 | FT-001 — TS-003 Događaj usvojen (v0.1.1); putanja `docs/technical-specification/Technical-Specification_Dogadjaj.md`. |
+| 2026-07-29 | FT-001 — PO-MF-01–PO-MF-08 i TS-005 Manifestacija Draft v0.1; BM PATCH-038 / FS PATCH-FS-040; putanja `docs/technical-specification/Technical-Specification_Manifestacija.md`. |
+| 2026-07-29 | FT-001 — TS-005 Manifestacija usvojen (v0.1.1); PO-MF-09–PO-MF-12; N-MF-01–N-MF-04 zatvoreni; N-MF-05 napomena (evidencija). |
