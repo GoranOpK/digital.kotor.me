@@ -6,9 +6,9 @@
 **Oznaka dokumenta:** TS-001  
 **Funkcionalna cjelina:** Organizator, Moderator i zahtjev za kreiranje Organizatora  
 **Modul:** Kalendar kulture  
-**Status dokumenta:** U IZRADI  
-**Verzija:** 0.2  
-**Datum:** 2026-07-28
+**Status dokumenta:** Usvojen  
+**Verzija:** 0.2.1  
+**Datum:** 2026-07-30
 
 ---
 
@@ -18,6 +18,7 @@
 |---------|--------|------|
 | 0.1 | 2026-07-28 | Prva verzija Technical Specification za funkcionalnu cjelinu Organizator / Moderator / Zahtjev za kreiranje Organizatora. Dokument usklađen sa usvojenim BM-01, BM-02, BM-03 (relevantni dijelovi), FS §5.6, §5.8 i Platformskim pravilom. Bez implementacionog dizajna baze, API-ja i koda. |
 | 0.2 | 2026-07-28 | Redakcijsko usklađivanje strukture dokumenta sa M-TS-005 (standardna struktura TS). Bez izmjene poslovnih i funkcionalnih pravila. |
+| 0.2.1 | 2026-07-30 | Documentation Consistency Patch (CR-001): usklađene statusne oznake dokumenta i status razvoja poglavlja sa stvarnim stanjem finalizovanog TS sadržaja. Bez izmjene poslovnih i funkcionalnih pravila. |
 
 Napomena:
 
@@ -54,20 +55,20 @@ Izvori istine za poslovna pravila:
 
 | Poglavlje | Status |
 |-----------|--------|
-| 1. Pregled funkcionalne cjeline | U IZRADI |
-| 2. Arhitektonski principi | U IZRADI |
-| 3. Tehnički model | U IZRADI |
-| 4. Tokovi | U IZRADI |
-| 5. Autorizacija i ovlašćenja | U IZRADI |
-| 6. Model podataka | U IZRADI |
-| 7. Validacije | U IZRADI |
-| 8. Evidencija aktivnosti (Audit) | U IZRADI |
-| 9. Integracije | U IZRADI |
-| 10. Nefunkcionalni zahtjevi | U IZRADI |
-| 11. Granice V1 (Out of Scope) | U IZRADI |
-| 12. Otvorena pitanja | U IZRADI |
-| 13. Matrica sljedivosti | U IZRADI |
-| 14. Napomene za implementaciju | U IZRADI |
+| 1. Pregled funkcionalne cjeline | Usvojeno |
+| 2. Arhitektonski principi | Usvojeno |
+| 3. Tehnički model | Usvojeno |
+| 4. Tokovi | Usvojeno |
+| 5. Autorizacija i ovlašćenja | Usvojeno |
+| 6. Model podataka | Usvojeno |
+| 7. Validacije | Usvojeno |
+| 8. Evidencija aktivnosti (Audit) | Usvojeno |
+| 9. Integracije | Usvojeno |
+| 10. Nefunkcionalni zahtjevi | Usvojeno |
+| 11. Granice V1 (Out of Scope) | Usvojeno |
+| 12. Otvorena pitanja | Usvojeno |
+| 13. Matrica sljedivosti | Usvojeno |
+| 14. Napomene za implementaciju | Usvojeno |
 
 ---
 

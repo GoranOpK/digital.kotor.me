@@ -53,6 +53,10 @@
 | PATCH-FS-039 | 2026-07-29 | PO-DG-05: direktna objava Urednika isključivo bez Organizatora (usklađeni BR-018, BR-028; napomene §5.5.6a). PO-DG-06: Otkazan → Arhiviran nakon završetka svih održavanja (usklađeni BR-064, BR-065; dijagram §5.5.6a). Zatvoreni N-DG-05 i N-DG-06. |
 | PATCH-FS-040 | 2026-07-29 | PO-MF-01–PO-MF-08: usklađivanje §5.12 (BR-092–BR-101) i dodavanje BR-189–BR-201; usklađeni BR-111 i BR-112 (izvedene kategorije/lokacije). |
 | PATCH-FS-041 | 2026-07-29 | PO-MF-09–PO-MF-12: usklađeni BR-096–BR-098, BR-193, BR-201; dodati BR-202–BR-205; katalog Manifestacije u §5.16. Zatvoreni N-MF-01–N-MF-04; N-MF-05 evidentiran kao napomena. |
+| PATCH-FS-042 | 2026-07-30 | PO-LOC-01–PO-LOC-07: potpuno usklađen §5.9 Upravljanje lokacijama (BR-074–BR-080) i dodata nova pravila BR-206–BR-223: centralni katalog kao jedini izvor istine, jedinstvenost i duplikati, ovlašćenja Moderator/Urednik/Admin platforme, lifecycle Aktivna/Deaktivirana, referencijalni integritet, atomski merge, audit i V1 granica (samo fizičke Lokacije). |
+| PATCH-FS-043 | 2026-07-30 | Korekcija PO-LOC-01 i PO-LOC-05: centralni katalog Lokacija je opcioni katalog za ponovno korišćenje (nije obavezan i nije jedini izvor svih Lokacija); dozvoljen ručni unos naziva Lokacije; kataloška referenca opciona; merge i referencijalni integritet primjenjuju se kada postoji veza sa katalogom; potvrđeni BR-077 i opcionost Lokacije na Održavanju. Usklađeni BR-074, BR-075, BR-077, BR-078, BR-216, BR-217, BR-218, BR-219. |
+| PATCH-FS-044 | 2026-07-30 | Documentation Consistency Patch (CR-003): terminološko pojašnjenje u §5.16 (BR-182) da ne postoji zaseban katalog Održavanja; aktivnosti nad Održavanjem evidentiraju se kroz katalog Događaji. Bez izmjene poslovnih pravila. |
+| PATCH-FS-045 | 2026-07-30 | TS7-PO-01–TS7-PO-06: potpuno usklađen §5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085) i dodata nova pravila BR-224–BR-236: poslovni katalog (ne ENUM), oznake u V1, lifecycle Aktivna/Neaktivna, bez migracije test podataka, bez kategorije „Nešto drugo“, ovlašćenja Urednik/Moderator/Organizator/Admin platforme. |
 
 Napomena:
 
@@ -132,8 +136,8 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.7.2 Upravljanje statusom događaja (BR-062–BR-066)
    - 5.7.3 Upravljanje statusom održavanja (BR-067–BR-069, BR-129–BR-134)
    - 5.8 Upravljanje moderatorima (BR-070–BR-073)
-   - 5.9 Upravljanje lokacijama (BR-074–BR-080)
-   - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085)
+   - 5.9 Upravljanje lokacijama (BR-074–BR-080, BR-206–BR-223)
+   - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236)
    - 5.11 Upravljanje medijima (BR-086–BR-091)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
    - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117)
@@ -1726,15 +1730,21 @@ Sistem vodi evidenciju svih zahtjeva za uklanjanje Moderatora, uključujući nji
 
 Lokacija predstavlja mjesto na kojem se održava događaj.
 
-Lokacija se čuva u katalogu lokacija.
+Kataloška Lokacija je samostalan poslovni entitet centralnog kataloga Lokacija.
+
+Centralni katalog Lokacija predstavlja opcioni katalog za ponovno korišćenje često korišćenih Lokacija.
+
+Moderator može odabrati postojeću Lokaciju iz kataloga ili ručno unijeti naziv Lokacije.
+
+Korišćenje kataloga nije obavezno za kreiranje ili uređivanje Događaja i Održavanja.
 
 ---
 
 #### BR-075 – Korišćenje lokacije
 
-Ista lokacija može biti korišćena za više događaja.
+Ista kataloška Lokacija može biti korišćena u više Događaja i Održavanja.
 
-Postojeća lokacija bira se iz kataloga lokacija i ne kreira se ponovo.
+Postojeća Lokacija može se birati iz kataloga lokacija i ne kreira se ponovo.
 
 ---
 
@@ -1752,21 +1762,27 @@ Lokacija može biti određena ili promijenjena naknadno.
 
 Događaj može biti kreiran i bez određene lokacije.
 
+Kada je Lokacija definisana, može biti odabrana iz kataloga ili unesena ručno.
+
 ---
 
 #### BR-078 – Aktivnost lokacije
 
-Lokacija može biti aktivna ili neaktivna.
+Kataloška Lokacija može imati status **Aktivna** ili **Deaktivirana**.
 
-Samo aktivna lokacija može biti izabrana za novi događaj.
+Samo kataloška Lokacija sa statusom Aktivna može biti izabrana za novu vezu iz događaja i održavanja.
 
-Deaktiviranje lokacije ne utiče na događaje kojima je ta lokacija ranije dodijeljena.
+Deaktiviranje kataloške Lokacije ne utiče na događaje i održavanja kojima je ta lokacija ranije dodijeljena.
 
 ---
 
 #### BR-079 – Predlaganje nove lokacije
 
-Moderator može predložiti dodavanje nove lokacije u katalog lokacija.
+Moderator može predložiti dodavanje nove lokacije u katalog lokacija i radi u ime Organizatora.
+
+Moderator nije obavezan da svaku ručno unesenu lokaciju prethodno doda u katalog.
+
+Ručno unesena lokacija može naknadno biti predložena za unos u katalog radi buduće ponovne upotrebe.
 
 Predložena lokacija nije dostupna za korišćenje dok ne bude odobrena.
 
@@ -1778,6 +1794,164 @@ Urednik pregleda prijedlog nove lokacije i može ga odobriti ili odbiti.
 
 Odobrena lokacija postaje dostupna za korišćenje u katalogu lokacija.
 
+---
+
+#### BR-206 – Jedinstvenost lokacija
+
+Identične lokacije nijesu dozvoljene u centralnom katalogu.
+
+Sistem provjerava postojeće lokacije pri kreiranju i izmjeni.
+
+---
+
+#### BR-207 – Mogući duplikati lokacija
+
+Mogući duplikati lokacija prijavljuju se Uredniku.
+
+Konačnu odluku o postupanju donosi Urednik.
+
+---
+
+#### BR-208 – Uloga Organizatora u upravljanju lokacijama
+
+Organizator je poslovni entitet i nije operativna uloga.
+
+Organizator ne kreira, ne predlaže, ne uređuje, ne odobrava i ne odbija lokacije.
+
+---
+
+#### BR-209 – Uloga Moderatora u upravljanju lokacijama
+
+Moderator predlaže lokacije i radi u ime Organizatora.
+
+Moderator nema pravo odobravanja, odbijanja, deaktivacije, ponovne aktivacije niti rješavanja duplikata.
+
+---
+
+#### BR-210 – Uloga Urednika u upravljanju lokacijama
+
+Urednik odobrava, odbija i vraća na doradu prijedloge lokacija.
+
+Urednik uređuje katalog lokacija, rješava moguće duplikate, deaktivira i ponovo aktivira lokacije.
+
+---
+
+#### BR-211 – Uloga Administratora platforme u upravljanju lokacijama
+
+Administrator platforme nema redovnu poslovnu ulogu u upravljanju lokacijama.
+
+Administrator platforme obavlja isključivo sistemsku administraciju.
+
+---
+
+#### BR-212 – Statusi lokacije
+
+Lokacija može imati jedan od sljedećih statusa:
+
+* Aktivna
+* Deaktivirana
+
+---
+
+#### BR-213 – Posljedice statusa Aktivna
+
+Samo lokacija sa statusom Aktivna može se koristiti za nove događaje i nova održavanja.
+
+---
+
+#### BR-214 – Posljedice statusa Deaktivirana
+
+Deaktivirana lokacija ne može se koristiti za nove događaje i nova održavanja.
+
+Deaktivirana lokacija ostaje povezana sa svim postojećim zapisima.
+
+Istorijski podaci se ne mijenjaju.
+
+---
+
+#### BR-215 – Fizičko brisanje lokacije
+
+Fizičko brisanje lokacije nije dio redovnog poslovnog procesa.
+
+---
+
+#### BR-216 – Stabilni identifikator lokacije
+
+Referenca na centralni katalog lokacija je opciona.
+
+Kada događaj ili održavanje koriste lokaciju iz kataloga, veza se čuva putem stabilnog identifikatora.
+
+Kada je lokacija unesena ručno, referenca na katalog nije obavezna.
+
+Odsustvo kataloške reference nije povreda referencijalnog integriteta.
+
+---
+
+#### BR-217 – Vidljivost izmjena lokacije
+
+Izmjene podataka kataloške lokacije automatski su vidljive svim zapisima koji referenciraju tu katalošku lokaciju.
+
+---
+
+#### BR-218 – Spajanje lokacija (merge)
+
+Merge pravila primjenjuju se samo na lokacije koje postoje u katalogu.
+
+Spajanje lokacija automatski preusmjerava sve postojeće kataloške reference sa izvorne na ciljnu katalošku lokaciju.
+
+Ručno uneseni tekst lokacije ne mijenja se automatski kroz merge kataloga.
+
+---
+
+#### BR-219 – Atomski merge lokacija
+
+Spajanje lokacija mora biti atomska operacija.
+
+Sistem ne smije ostaviti djelimično preusmjerene reference.
+
+---
+
+#### BR-220 – Audit događaji za lokacije
+
+Sistem vodi istoriju za najmanje:
+
+* kreiranje;
+* izmjene;
+* odobrenja;
+* odbijanja;
+* vraćanja na doradu;
+* deaktivacije;
+* aktivacije;
+* merge.
+
+---
+
+#### BR-221 – Obavezni sadržaj audit zapisa lokacije
+
+Audit zapis lokacije sadrži najmanje:
+
+* datum i vrijeme;
+* korisnika;
+* vrstu radnje;
+* staru vrijednost;
+* novu vrijednost.
+
+---
+
+#### BR-222 – Nepromjenjivost audita lokacije
+
+Audit zapise lokacija nije moguće mijenjati niti brisati kroz redovno korišćenje sistema.
+
+Audit lokacija nije rollback mehanizam.
+
+---
+
+#### BR-223 – Opseg V1 za lokacije
+
+V1 podržava isključivo fizičke lokacije.
+
+Online i hibridne lokacije nijesu dio V1 i zahtijevaju novu Product Owner odluku.
+
 **Status:** Approved
 
 ---
@@ -1788,39 +1962,179 @@ Odobrena lokacija postaje dostupna za korišćenje u katalogu lokacija.
 
 Kategorije i oznake koriste se za klasifikaciju događaja.
 
+Kategorije se vode kao zapisi poslovnog kataloga.
+
+Kategorije ne predstavljaju tehničku ENUM listu.
+
+Katalog kategorija i katalog oznaka su proširivi.
+
 ---
 
 #### BR-082 – Primarna kategorija događaja
 
 Događaj može biti kreiran bez određene kategorije dok je u statusu nacrta.
 
-Prije slanja na odobrenje događaj mora imati jednu primarnu kategoriju.
+Prije slanja na odobrenje događaj mora imati jednu primarnu kategoriju iz kataloga kategorija.
 
-Objavljen događaj mora imati jednu primarnu kategoriju.
+Objavljen događaj mora imati jednu primarnu kategoriju iz kataloga kategorija.
 
 ---
 
 #### BR-083 – Oznake događaja
 
-Događaju može biti dodijeljena jedna ili više oznaka.
+Oznake ulaze u V1.
+
+Događaju može biti dodijeljena jedna ili više oznaka iz kataloga oznaka.
 
 Dodjela oznaka nije obavezna.
+
+Oznake nisu zamjena za primarnu kategoriju.
 
 ---
 
 #### BR-084 – Upravljanje katalogom kategorija i oznaka
 
-Katalogom kategorija i oznaka upravlja Urednik.
+Katalogom kategorija upravlja isključivo Urednik.
+
+Katalogom oznaka upravlja isključivo Urednik.
+
+Moderator koristi postojeće kategorije i oznake prilikom uređivanja događaja.
+
+Moderator ne upravlja katalogom kategorija ni katalogom oznaka.
+
+Ne uvodi se workflow za predlaganje kategorija.
+
+Ne uvodi se workflow za predlaganje oznaka.
+
+Ne uvode se dodatni statusi odobravanja ni dodatna ovlašćenja za upravljanje katalogom.
 
 ---
 
 #### BR-085 – Aktivnost kategorija i oznaka
 
-Kategorija ili oznaka može biti aktivna ili neaktivna.
+Kategorija ili oznaka može imati status **Aktivna** ili **Neaktivna**.
+
+Nova kategorija i nova oznaka kreiraju se sa statusom Aktivna.
+
+Dozvoljena je ponovna aktivacija (reaktivacija).
 
 Neaktivna kategorija ili oznaka ne može biti dodijeljena novom događaju.
 
-Deaktiviranje ne utiče na događaje kojima je kategorija ili oznaka ranije dodijeljena.
+Deaktiviranje ne mijenja istorijske podatke.
+
+Postojeći događaji zadržavaju referencu na kategoriju ili oznaku koja je kasnije deaktivirana.
+
+Fizičko brisanje kategorije ili oznake nije dio redovnog poslovnog procesa.
+
+---
+
+#### BR-224 – Poslovni katalog umjesto ENUM modela
+
+Kategorije i oznake definišu se kao novi poslovni katalog.
+
+Ne radi se migracija postojećih test podataka.
+
+Ne uvodi se kompatibilnost sa starim ENUM/string modelom.
+
+Ne pravi se tranzicioni model.
+
+Postojeće test kategorije nisu referentni poslovni podaci.
+
+---
+
+#### BR-225 – Zabrana kategorije „Nešto drugo“
+
+Kategorija „Nešto drugo“ ne postoji u poslovnom modelu ni u funkcionalnoj specifikaciji.
+
+Ako nijedna postojeća kategorija nije odgovarajuća, Urednik proširuje katalog novom kategorijom.
+
+Oznake ne predstavljaju zamjenu za kategoriju.
+
+---
+
+#### BR-226 – Uloga Organizatora u upravljanju kategorijama i oznakama
+
+Organizator je poslovni entitet i nije operativna uloga.
+
+Organizator ne kreira, ne uređuje, ne deaktivira i ne upravlja katalogom kategorija ni katalogom oznaka.
+
+---
+
+#### BR-227 – Uloga Moderatora u korišćenju kategorija i oznaka
+
+Moderator je poslovno ovlašćenje registrovanog korisnika.
+
+Moderator pri uređivanju događaja bira postojeće Aktivne kategorije i Aktivne oznake iz kataloga.
+
+Moderator ne upravlja katalogom.
+
+---
+
+#### BR-228 – Uloga Urednika u upravljanju kategorijama i oznakama
+
+Urednik kreira, uređuje, deaktivira i ponovo aktivira zapise u katalogu kategorija.
+
+Urednik kreira, uređuje, deaktivira i ponovo aktivira zapise u katalogu oznaka.
+
+---
+
+#### BR-229 – Uloga Administratora platforme u upravljanju kategorijama i oznakama
+
+Administrator platforme nema redovnu poslovnu ulogu u upravljanju katalogom kategorija ni katalogom oznaka.
+
+Administrator platforme obavlja isključivo sistemsku administraciju.
+
+---
+
+#### BR-230 – Izbor kategorije za nove veze
+
+Za nove veze Događaja dostupne su isključivo kategorije sa statusom Aktivna.
+
+---
+
+#### BR-231 – Izbor oznaka za nove veze
+
+Za nove veze Događaja dostupne su isključivo oznake sa statusom Aktivna.
+
+---
+
+#### BR-232 – Referenca Događaja na kategoriju
+
+Događaj referencira kategoriju iz poslovnog kataloga.
+
+Referenca se čuva tako da postojeći događaji zadrže vezu i nakon deaktivacije kategorije.
+
+---
+
+#### BR-233 – Reference Događaja na oznake
+
+Događaj može referencirati nula ili više oznaka iz poslovnog kataloga oznaka.
+
+Postojeće veze ostaju sačuvane i nakon deaktivacije oznake.
+
+---
+
+#### BR-234 – Kardinalnost primarne kategorije
+
+Jedan događaj ima najviše jednu primarnu kategoriju.
+
+Događaj ne može imati više primarnih kategorija.
+
+---
+
+#### BR-235 – Proširivost kataloga
+
+Urednik može dodati novu kategoriju u katalog kategorija.
+
+Urednik može dodati novu oznaku u katalog oznaka.
+
+Proširenje kataloga ne zahtijeva izmjenu poslovnog modela uloga niti uvođenje ENUM liste.
+
+---
+
+#### BR-236 – Opseg V1 za oznake
+
+Oznake su dio V1 opsega modula Kalendar kulture.
 
 **Status:** Approved
 
@@ -3119,6 +3433,8 @@ Kada je primjenjivo, aktivni kontekst Organizatora bilježi se kao atribut drugi
 
 Sistem evidentira u centralnoj Evidenciji aktivnosti aktivnosti navedene u katalogu Događaji ovog poglavlja, uključujući urednički tok, isticanje, otkazivanje, odlaganje održavanja, promjenu termina i lokacije, prijedloge izmjena i automatsko arhiviranje.
 
+Ne postoji zaseban katalog Održavanja u okviru centralne Evidencije aktivnosti; aktivnosti nad Održavanjem evidentiraju se kroz katalog Događaji.
+
 ---
 
 ##### BR-183 – Događaji — aktivnosti van centralne evidencije
@@ -3232,3 +3548,7 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-29 | FS-001 (PATCH-FS-039): PO-DG-05 direktna objava samo bez Organizatora; PO-DG-06 Otkazan → Arhiviran nakon isteka održavanja. Usklađeni BR-018, BR-028, BR-064, BR-065 i §5.5.6a. Zatvoreni N-DG-05 i N-DG-06. |
 | 2026-07-29 | FS-001 / 5.12 (PATCH-FS-040): PO-MF-01–PO-MF-08 — usklađeni BR-092–BR-101; dodati BR-189–BR-201; usklađeni BR-111 i BR-112. |
 | 2026-07-29 | FS-001 / 5.12 i §5.16 (PATCH-FS-041): PO-MF-09–PO-MF-12 — BR-096–098, BR-193, BR-201–BR-205; katalog Manifestacije. |
+| 2026-07-30 | FS-001 / 5.9 (PATCH-FS-042): PO-LOC-01–PO-LOC-07 — centralni katalog Lokacija (jedini izvor istine), jedinstvenost i duplikati, ovlašćenja Moderator/Urednik/Admin platforme, lifecycle Aktivna/Deaktivirana, referencijalni integritet, atomski merge, audit i V1 granica (samo fizičke Lokacije). Dodati BR-206–BR-223. |
+| 2026-07-30 | FS-001 / 5.9 (PATCH-FS-043): korekcija PO-LOC-01 i PO-LOC-05 — katalog Lokacija je opcioni za ponovno korišćenje; ručni unos Lokacije dozvoljen; kataloška referenca opciona; merge i referencijalni integritet primjenjuju se samo za postojeće kataloške veze. Usklađeni BR-074, BR-075, BR-077, BR-078, BR-216, BR-217, BR-218, BR-219. |
+| 2026-07-30 | FS-001 / 5.16 (PATCH-FS-044): terminološko pojašnjenje da ne postoji zaseban katalog Održavanja; aktivnosti nad Održavanjem evidentiraju se kroz katalog Događaji. Bez izmjene poslovnih pravila. |
+| 2026-07-30 | FS-001 / 5.10 (PATCH-FS-045): TS7-PO-01–TS7-PO-06 — poslovni katalog kategorija i oznaka (ne ENUM), oznake u V1, lifecycle Aktivna/Neaktivna, bez migracije test podataka, bez „Nešto drugo“, ovlašćenja Urednik/Moderator. Usklađeni BR-081–BR-085; dodati BR-224–BR-236. |

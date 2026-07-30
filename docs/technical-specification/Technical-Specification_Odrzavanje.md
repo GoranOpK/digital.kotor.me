@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Održavanje događaja  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.1  
-**Datum:** 2026-07-29
+**Verzija:** 0.1.2  
+**Datum:** 2026-07-30
 
 ---
 
@@ -18,6 +18,7 @@
 |---------|--------|------|
 | 0.1 | 2026-07-29 | Initial draft. Prvi nacrt Technical Specification za funkcionalnu cjelinu Održavanje događaja. Usklađen sa BM-06 (BM-TR-01–BM-TR-18), BM-DG-01/03/04, BM-07 (referenca), FS §5.7.1 / §5.7.3 (BR-056–BR-061, BR-067–BR-069, BR-129–BR-134), FS §5.4.3 (prikaz), §5.16 (relevantne emisije), Feature Registry (FT-001 / plan TS-004), METHODOLOGY (M-TS-001–M-TS-005), TS-001 i TS-003 (granice). Bez SQL, API, Laravel koda i bez novih poslovnih odluka. |
 | 0.1.1 | 2026-07-29 | Zatvoreno N-TR-03 (uslov arhiviranja). Potvrđeno: Termin nije poslovni ni konceptualni entitet V1 — samo skup vremenskih atributa Održavanja. Usklađeni dijagrami i §6. Status dokumenta: Usvojen. |
+| 0.1.2 | 2026-07-30 | Terminološko usklađivanje sa TS-006 (korekcije PO-LOC-01/05): jasno razdvojeni pojmovi kataloška Lokacija i ručno uneseni naziv Lokacije; precizirane formulacije referenci i validacija bez promjene poslovnih pravila. |
 
 Napomena:
 
@@ -124,7 +125,7 @@ Obuhvat TS-004:
 * životni ciklus statusa održavanja (Planiran, Odgođen, Otkazan, Završen);
 * veza prema Događaju (kardinalnost, preduslovi objave/arhive);
 * termin i cjelodnevnost;
-* opciona lokacija (referenca; model lokacije = TS-006);
+* opciona lokacija: kataloška Lokacija ili ručno uneseni naziv Lokacije (model = TS-006);
 * ponavljanje i izuzeci;
 * autorizacija statusnih prelaza;
 * konceptualni model podataka;
@@ -145,7 +146,7 @@ Van obuhvata:
 |-----------|---------------------------|
 | TS-003 Događaj | Roditeljski agregat; preduslov ≥1 održavanje za slanje/objavu; signal završetka svih održavanja za arhivu |
 | TS-001 Organizator / Moderator | Kontekst i ovlašćenja za statusne radnje kada događaj ima Organizatora |
-| TS-006 Lokacije | Katalog / entitet Lokacija; TS-004 samo referencira |
+| TS-006 Lokacije | Model kataloške Lokacije i pravila za ručni unos naziva Lokacije; TS-004 koristi taj model bez redefinisanja |
 | TS-005 Manifestacija | Posredno: trajanje Manifestacije iz termina održavanja događaja |
 | TS-009 / TS-010 | Prikaz i operativni prostor |
 | TS-011 Newsletter | Potrošač odlaganja / promjene termina / lokacije / otkaza održavanja |
@@ -194,8 +195,8 @@ Ne mijenjaju urednički workflow događaja iz TS-003.
 ## 2.4 Lokacija je opciona i pripada održavanju
 
 Lokacija nije atribut Događaja (BM-DG-03).  
-Održavanje može biti bez lokacije (BM-TR-04, BR-058).  
-Pun model lokacije je TS-006.
+Održavanje može imati katalošku Lokaciju, ručno uneseni naziv Lokacije ili biti bez definisane Lokacije (BM-TR-04, BR-058).  
+Pun model kataloške Lokacije i pravila razdvajanja od ručnog unosa su u TS-006.
 
 ## 2.5 Izuzeci su lokalni
 
@@ -231,7 +232,7 @@ Tehnički model je logički. Ne definiše tabele, ORM ni fizičko skladištenje.
 
 **Odgovornost**
 
-Poslovni entitet koji predstavlja jedno konkretno održavanje jednog Događaja, sa sopstvenim terminom, opcionom lokacijom i sopstvenim statusom.
+Poslovni entitet koji predstavlja jedno konkretno održavanje jednog Događaja, sa sopstvenim terminom, opcionom lokacijom (kataloška Lokacija ili ručno uneseni naziv Lokacije) i sopstvenim statusom.
 
 **Životni ciklus (statusi)** — potvrđeni u BM/FS:
 
@@ -250,7 +251,7 @@ Detaljni prelazi: §4.
 | Veza | Kardinalnost | Napomena |
 |------|--------------|----------|
 | Događaj | N : 1 | Obavezno; ne samostalno (BM-TR-02) |
-| Lokacija | 0..1 | Opciono (BM-TR-04); model = TS-006 |
+| Kataloška Lokacija | 0..1 | Opciono (BM-TR-04); kada postoji, važi model TS-006 |
 | Manifestacija | — | Posredno preko Događaja (TS-005) |
 
 **Ograničenja**
@@ -266,7 +267,7 @@ Detaljni prelazi: §4.
 flowchart TD
   DG[Događaj]
   OD["Održavanje<br/>datum · vrijeme · cjelodnevni · status"]
-  LOK[Lokacija]
+  LOK[Kataloška Lokacija]
   MF[Manifestacija]
 
   DG -->|1:N| OD
@@ -275,7 +276,8 @@ flowchart TD
 ```
 
 * **Događaj (TS-003)** — roditelj.
-* **Lokacija (TS-006)** — opciona referenca.
+* **Kataloška Lokacija (TS-006)** — opciona referenca kada se koristi katalog.
+* **Ručno uneseni naziv Lokacije** — tekst na nivou Održavanja, bez obavezne kataloške reference.
 * **Manifestacija (TS-005)** — posredno; početak/završetak Manifestacije iz vremenskih atributa održavanja (BM-MF-05).
 
 ## 3.3 Vremenski atributi održavanja
@@ -517,14 +519,16 @@ Atributi / svojstva potvrđeni usvojenim BM/FS (konceptualno):
 | Datum | Obavezan vremenski atribut | BM-TR-03, BR-057 |
 | Vrijeme (opciono) | Može biti definisano | BM-TR-03, BR-057 |
 | Oznaka cjelodnevno | Ako da — samo datum | BM-TR-05, BR-059 |
-| Referenca na Lokaciju | 0..1 | BM-TR-04, BR-058 |
+| Referenca na katalošku Lokaciju | 0..1 | BM-TR-04, BR-058 |
+| Ručno uneseni naziv Lokacije | 0..1 | BM-TR-04, BR-058 |
 | Status | Planiran / Odgođen / Otkazan / Završen | BM-TR-10, BR-067 |
 
 ## 6.3 Referencirani atributi
 
 | Referenca | Vlasnik | Napomena |
 |-----------|---------|----------|
-| Lokacija (naziv, aktivnost, ostali podaci) | TS-006 | V1 prikaz: tekstualni podatak; bez obaveznog GPS/mape (§5.4.3) |
+| Kataloška Lokacija (naziv, status Aktivna/Deaktivirana, ostali podaci) | TS-006 | V1 prikaz: tekstualni podatak; bez obaveznog GPS/mape (§5.4.3) |
+| Ručno uneseni naziv Lokacije | TS-004 (u skladu sa TS-006 razdvajanjem modela) | Tekst na nivou konkretnog Održavanja; bez obavezne kataloške veze |
 | Događaj / status događaja | TS-003 | Preduslovi i arhiva |
 | Prikaz datuma/vremena početka i završetka | FS §5.4.3 | Ponašanje prikaza nad atributima Održavanja; formalni katalog = N-TR-01 |
 
@@ -532,7 +536,7 @@ Atributi / svojstva potvrđeni usvojenim BM/FS (konceptualno):
 
 * Formalni raspored vremenskih polja (jedan datum vs početak/završetak; jedno vrijeme vs početak/završetak) — **N-TR-01**.
 * Parametri pravila ponavljanja (kraj serije, broj) — **N-TR-02**.
-* GPS koordinate nisu usvojen atribut održavanja; prikaz mape/GPS van V1 (§5.4.3 / §5.4.9). Eventualni GPS na Lokaciji = TS-006, ne TS-004.
+* GPS koordinate nisu usvojen atribut održavanja; prikaz mape/GPS van V1 (§5.4.3 / §5.4.9). Eventualni GPS na kataloškoj Lokaciji = TS-006, ne TS-004.
 * Soft-delete / hard-delete održavanja — nije usvojeno.
 
 ## 6.5 Integritet
@@ -540,7 +544,7 @@ Atributi / svojstva potvrđeni usvojenim BM/FS (konceptualno):
 * Svako održavanje ima tačno jedan Događaj.
 * Status samo iz dozvoljenog skupa.
 * Cjelodnevno ⇒ bez vremena (ili vrijeme se ne koristi).
-* Neaktivna lokacija ne smije se birati za **nova** održavanja (BM-LK-05); postojeće veze ostaju.
+* Deaktivirana kataloška Lokacija ne smije se birati za **nove kataloške veze** iz održavanja (BM-LK-05); postojeće istorijske veze ostaju.
 
 ---
 
@@ -566,7 +570,7 @@ Functional Specification:
 | BM-TR-01 / BR-056 | Kreirati samo kao dijete Događaja |
 | BM-TR-02 | Zabraniti orphan i multi-parent |
 | BM-TR-03 / BR-057 | Validirati obavezan datum; vrijeme opciono |
-| BM-TR-04 / BR-058 | Dozvoliti null lokaciju |
+| BM-TR-04 / BR-058 | Dozvoliti: katalošku Lokaciju, ručno uneseni naziv Lokacije ili bez lokacije |
 | BM-TR-05 / BR-059 | Cjelodnevno ⇒ samo datum |
 | BM-TR-06 / BR-060 | Generator: dnevno/sedmično/mjesečno + ručno |
 | BM-TR-07 / BR-061 | Mutacije samo na odabranom ID-u |
@@ -587,7 +591,7 @@ Functional Specification:
 | Događaj postoji | Kreiranje | Sistem | Odbijanje orphan |
 | Datum obavezan | Kreiranje / izmjena termina | Sistem | Blokada |
 | Cjelodnevno bez vremena | Kreiranje / izmjena | Sistem | Odbijanje vremena ili ignorisanje po pravilu |
-| Lokacija aktivna (ako nova veza) | Dodjela lokacije | Sistem | Odbijanje neaktivne |
+| Kataloška Lokacija Aktivna (ako nova kataloška veza) | Dodjela kataloške Lokacije | Sistem | Odbijanje Deaktivirane kataloške Lokacije |
 | Tip ponavljanja ∈ {dnevno, sedmično, mjesečno} | Generisanje | Sistem | Odbijanje ostalog |
 | ≥1 održavanje | Slanje/objava događaja | TS-003 + TS-004 | Blokada događaja |
 | Nedozvoljen statusni prelaz | Promjena statusa | Sistem | Odbijanje |
@@ -601,7 +605,9 @@ Functional Specification:
 
 ## 7.3 Tehničke validacije
 
-* Referenca na Događaj i (opciono) Lokaciju mora postojati.
+* Referenca na Događaj mora postojati.
+* Ako se koristi kataloška Lokacija, referenca na kataloški zapis mora postojati i biti validna.
+* Ručno uneseni naziv Lokacije ne zahtijeva katalošku referencu.
 * Statusni prelazi samo iz §4.2.
 * Automatski Završen ne smije dirati Otkazan (nema usvojene tranzicije Otkazan→Završen).
 
@@ -623,7 +629,7 @@ TS-004 ne projektuje TS-012.
 |---------|----|------|----------------|
 | Kreiranje / generisanje održavanja | Moderator / Urednik / Sistem | Pri upisu | izvršilac, vrijeme, događaj |
 | Promjena termina (pomjeranje) | Moderator / Urednik | Pri izmjeni | stari/novi termin, izvršilac |
-| Promjena lokacije | Moderator / Urednik | Pri izmjeni | stara/nova ref, izvršilac |
+| Promjena lokacije | Moderator / Urednik | Pri izmjeni | stara/nova kataloška referenca i/ili stari/novi ručno uneseni naziv, izvršilac |
 | Status Odgođen / Planiran / Otkazan | Moderator / Urednik | Pri prelazu | stari/novi status, izvršilac |
 | Automatski Završen | Sistem | Pri isteku | vrijeme, izvršilac Sistem |
 
@@ -661,7 +667,7 @@ Samo granice.
 | **TS-003** | Roditelj Događaj; ≥1 za objavu; signal za arhivu; approval tok za podatke na objavljenom |
 | **TS-001** | Kontekst Moderatora / status Organizatora za autorizaciju |
 | **TS-005** | Posredno: traženje min/max termina održavanja događaja Manifestacije |
-| **TS-006** | Entitet Lokacija; aktivnost; izbor iz kataloga |
+| **TS-006** | Entitet kataloška Lokacija; status Aktivna/Deaktivirana; izbor iz kataloga ili ručni unos naziva Lokacije |
 | **TS-007** | Nema direktne veze (kategorija na događaju) |
 | **TS-008** | Nema direktne veze (mediji na događaju/lokaciji) |
 | **TS-009** | Prikaz termina i lokacije (§5.4.3) |

@@ -51,6 +51,10 @@
 | PATCH-037 | 2026-07-29 | PO-DG-05: direktna objava Urednika isključivo za događaj bez Organizatora (usklađen BM-ST-04). PO-DG-06: otkazani događaj automatski prelazi u Arhiviran nakon završetka svih održavanja (usklađeni BM-DG-04, BM-ST-08). Zatvoreni N-DG-05 i N-DG-06. |
 | PATCH-038 | 2026-07-29 | PO-MF-01–PO-MF-08: životni ciklus Manifestacije; opcioni Organizator; dodavanje/uklanjanje Događaja na objavljenoj; uslovi objave; kardinalnost; nezavisni lifecycle; naslovna fotografija; Web stranica / Više informacija; bez sopstvenih kategorija i lokacija. Usklađeni BM-05, BM-GL-11, BM-PK-10/11. |
 | PATCH-039 | 2026-07-29 | PO-MF-09–PO-MF-12: trajni uslov ≥1 Objavljen Događaj; izračun trajanja iz važećih održavanja; Otkazana→Arhivirana nakon isteka trajanja; ovlašćenja otkaza. Zatvoreni N-MF-01–N-MF-04. Evidentiran N-MF-05 kao napomena (centralna evidencija Manifestacija). |
+| PATCH-040 | 2026-07-30 | PO-LOC-01–PO-LOC-07: Lokacija kao samostalan entitet centralnog kataloga; jedinstvenost i obrada duplikata; ovlašćenja Moderator/Urednik; lifecycle Aktivna/Deaktivirana; referencijalni integritet i atomski merge; audit istorija nad Lokacijom; V1 = isključivo fizičke Lokacije. Usklađeni BM-07 i BM-GL-13. |
+| PATCH-041 | 2026-07-30 | Korekcija PO-LOC-01 i PO-LOC-05: centralni katalog Lokacija je opcioni katalog za ponovno korišćenje (nije obavezan i nije jedini izvor svih Lokacija); dozvoljen ručni unos naziva Lokacije bez obavezne kataloške reference; referencijalni integritet i merge primjenjuju se samo kada postoji veza sa katalogom. Usklađeni BM-07 i BM-GL-13. |
+| PATCH-042 | 2026-07-30 | Documentation Consistency Patch (CR-003): terminološko pojašnjenje BM-AL-07 — uklonjena dvosmislena formulacija „Održavanje (gdje je u katalogu)“ i zamijenjena jednoznačnim opisom aktivnosti nad Održavanjem u okviru kataloga Događaji iz FS §5.16. Bez izmjene poslovnih pravila. |
+| PATCH-043 | 2026-07-30 | TS7-PO-01–TS7-PO-06: BM-08 Kategorije i oznake — poslovni katalog (ne ENUM); oznake u V1; lifecycle Aktivna/Neaktivna; bez migracije test podataka; bez kategorije „Nešto drugo“; katalogom upravlja isključivo Urednik; Moderator samo koristi; usklađeni BM-GL-14 i BM-GL-23. |
 
 Napomena:
 
@@ -391,6 +395,7 @@ Urednik može kreirati događaj bez registrovanog Organizatora kada je to potreb
 - **Moderator organizatora** — Urednik pregleda i odobrava sadržaj koji Moderator pošalje na odobravanje; odobrava zahtjeve za dodjelu i uklanjanje Moderatora te dodjeljuje ovlašćenja.
 - **Događaj** — Urednik pregleda, uređuje, odobrava, objavljuje i vraća na doradu događaje, može otkazati bilo koji objavljeni događaj, isključivo on ponovo objavljuje otkazani događaj, a u propisanim slučajevima može i kreirati događaj.
 - **Lokacija** — Urednik odobrava ili odbija nove lokacije predložene za zajednički katalog lokacija.
+- **Kategorije i oznake** — Urednik isključivo upravlja katalogom kategorija i katalogom oznaka, u skladu sa BM-08.
 
 ## 6. Otvorena pitanja
 
@@ -450,7 +455,7 @@ Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala odr
 | BM-DG-03 | Lokacija nije svojstvo događaja već svojstvo održavanja događaja. Svako održavanje može imati svoju lokaciju. Detaljna pravila definišu se u BM-07 Lokacija. |
 | BM-DG-04 | Nakon završetka svih održavanja sistem automatski arhivira događaj. Automatsko arhiviranje primjenjuje se na događaj u statusu Objavljen i na događaj u statusu Otkazan. Arhiviranje se ne izvršava ručno. Detaljna pravila prikaza arhive definišu se u BM-11 Portal Kalendara kulture. |
 | BM-DG-05 | Događaj može biti otkazan. Otkazani događaj ostaje evidentiran u sistemu i dobija status „Otkazan“. Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više nema pravo otkazivanja događaja tog Organizatora; otkazivanje događaja deaktiviranog Organizatora izvršava isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj. Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja. Detaljna pravila za održavanja definišu se u BM-06 Održavanje događaja. |
-| BM-DG-06 | Događaj pripada jednoj primarnoj kategoriji. Dodatna klasifikacija događaja može se vršiti korišćenjem oznaka (tagova). Detaljna pravila o kategorijama i oznakama (tagovima) definišu se u BM-08 Kategorija. |
+| BM-DG-06 | Događaj pripada jednoj primarnoj kategoriji. Dodatna klasifikacija događaja može se vršiti korišćenjem oznaka (tagova). Detaljna pravila o kategorijama i oznakama (tagovima) definišu se u BM-08 Kategorije i oznake. |
 | BM-DG-07 | Događaj može biti sačuvan kao nacrt bez izabrane primarne kategorije. Za slanje događaja na odobrenje mora biti izabrana jedna primarna kategorija. Svaki objavljeni događaj mora imati jednu primarnu kategoriju. |
 | BM-DG-08 | Svaki događaj mora biti povezan sa tačno jednim Organizatorom. Izuzetno, ako Organizator nije registrovan u sistemu, Urednik može kreirati i objaviti događaj bez registrovanog Organizatora radi javnog interesa i pravovremenog informisanja građana, u skladu sa BM-UR-06. Po registraciji Organizatora događaj se može naknadno povezati sa Organizatorom u skladu sa BM-UR-07, bez izmjene audita, istorije događaja i javno objavljenih verzija. |
 | BM-DG-09 | Ponovno objavljivanje otkazanog događaja predstavlja uredničku radnju. Isključivo Urednik može ponovo objaviti otkazani događaj, dok je događaj još u statusu Otkazan. Prije ponovne objave Urednik provjerava i, po potrebi, ažurira podatke događaja i povezanih održavanja koristeći postojeća ovlašćenja. Ponovna objava nije automatska. Moderator ne može ponovo objaviti otkazani događaj. |
@@ -731,39 +736,73 @@ Teme koje nijesu obuhvaćene ovim poglavljem ne treba dodavati bez nove, izriči
 
 ## 1. Svrha
 
-Definisanje poslovnog koncepta lokacije kao mjesta održavanja događaja i pravila njenog korišćenja u sistemu.
+Definisanje poslovnog koncepta Lokacije kao samostalnog poslovnog entiteta opcionog centralnog kataloga za ponovno korišćenje Lokacija, pravila njenog korišćenja kroz Događaje i Održavanja, poslovnih ovlašćenja, životnog ciklusa, jedinstvenosti, referencijalnog integriteta i audita.
 
 ## 2. Poslovni opis
 
-Lokacija predstavlja mjesto na kojem se događaj konkretno održava.
+Lokacija predstavlja mjesto na kojem se događaj konkretno održava. Kataloška Lokacija vodi se kao samostalan entitet opcionog centralnog kataloga Lokacija.
 
-Lokacija pripada održavanju događaja, a ne terminu, u skladu sa usvojenim poslovnim pravilima.
+Lokacija pripada održavanju događaja, a ne terminu, u skladu sa usvojenim poslovnim pravilima. Događaj ili Održavanje mogu koristiti katalošku Lokaciju putem stabilnog identifikatora ili ručno unijeti naziv Lokacije bez obavezne veze sa katalogom.
+
+Organizator je poslovni entitet i nosilac sadržaja, ali nije korisnik sistema i ne izvršava operativne radnje. Operativne radnje nad Lokacijama izvršavaju Moderatori i Urednici u skladu sa ovlašćenjima.
 
 ## 3. Poslovni koncept
 
-Lokacije predstavljaju zajednički poslovni resurs koji može koristiti više događaja kroz njihova održavanja.
+Centralni katalog Lokacija predstavlja opcioni katalog za ponovno korišćenje često korišćenih Lokacija.
+
+Jedna Lokacija može biti korišćena kroz više Događaja i više Održavanja.
+
+Moderator može odabrati postojeću Lokaciju iz kataloga ili ručno unijeti naziv Lokacije kada odgovarajuća Lokacija ne postoji u katalogu. Korišćenje kataloga nije obavezno za kreiranje ili uređivanje Događaja i Održavanja.
 
 ## 4. Poslovna pravila
 
 ### BM-LK-01 — Definicija lokacije
 
-> Lokacija je mjesto održavanja događaja. Jedna lokacija može biti mjesto jednog ili više održavanja. Lokacija može biti unaprijed definisana ili određena naknadno, u skladu sa poslovnim pravilima sistema.
+> Kataloška Lokacija je samostalan poslovni entitet opcionog centralnog kataloga Lokacija i predstavlja mjesto održavanja događaja. Moderator može odabrati postojeću Lokaciju iz kataloga ili ručno unijeti naziv Lokacije. Korišćenje kataloga nije obavezno za kreiranje ili uređivanje Događaja i Održavanja.
 
 ### BM-LK-02 — Ponovna upotreba lokacije
 
-> Jedna lokacija može biti povezana sa jednim ili više održavanja različitih događaja. Lokacija se koristi kao zajednički poslovni entitet i ne kreira se ponovo za svako održavanje.
+> Jedna Lokacija može biti povezana sa jednim ili više održavanja različitih događaja i koristiti se kroz više događaja. Lokacija se koristi kao zajednički poslovni entitet i ne kreira se ponovo za svako održavanje.
 
 ### BM-LK-03 — Naziv lokacije
 
-> Lokacija mora imati naziv. Ostali podaci o lokaciji uređuju se posebnim poslovnim pravilima i mogu biti opcioni.
+> Lokacija mora imati naziv. Ostali podaci o Lokaciji uređuju se posebnim poslovnim pravilima i mogu biti opcioni.
 
 ### BM-LK-04 — Naknadno određivanje lokacije
 
-> Lokacija može biti definisana ili određena naknadno, u skladu sa potrebama organizacije događaja.
+> Lokacija može biti definisana ili određena naknadno, u skladu sa potrebama organizacije događaja. Ručno uneseni naziv Lokacije može naknadno biti predložen za unos u katalog radi buduće ponovne upotrebe.
 
 ### BM-LK-05 — Aktivnost lokacije
 
-> Lokacija može biti aktivna ili neaktivna. Neaktivna lokacija ne može se koristiti za nova održavanja događaja, ali ostaje povezana sa postojećim održavanjima radi očuvanja istorijskih podataka.
+> Kataloška Lokacija ima status **Aktivna** ili **Deaktivirana**. Samo Aktivna kataloška Lokacija može se birati za nove veze iz Događaja i Održavanja. Deaktivirana kataloška Lokacija ostaje povezana sa postojećim istorijskim vezama.
+
+### BM-LK-06 — Jedinstvenost lokacije
+
+> Identične Lokacije nijesu dozvoljene u centralnom katalogu. Sistem provjerava postojeće Lokacije. Mogući duplikati prijavljuju se Uredniku, a konačnu odluku o postupanju donosi Urednik.
+
+### BM-LK-07 — Ovlašćenja nad lokacijama
+
+> Organizator nije operativna uloga i ne kreira, ne predlaže, ne uređuje niti odobrava Lokacije. Moderator predlaže Lokacije u ime Organizatora. Urednik odobrava, odbija, vraća na doradu, uređuje katalog Lokacija, rješava moguće duplikate, deaktivira i ponovo aktivira Lokacije. Administrator platforme nema redovnu poslovnu ulogu u upravljanju Lokacijama.
+
+### BM-LK-08 — Fizičko brisanje lokacije
+
+> Fizičko brisanje Lokacije nije dio redovnog poslovnog procesa.
+
+### BM-LK-09 — Referencijalni integritet
+
+> Referenca na centralni katalog Lokacija je opciona. Kada Događaj ili Održavanje koriste katalošku Lokaciju, veza se čuva putem stabilnog identifikatora i sistem čuva referencijalni integritet te veze. Kada je Lokacija unesena ručno, referenca na katalog nije obavezna i odsustvo kataloške reference nije povreda referencijalnog integriteta.
+
+### BM-LK-10 — Spajanje (merge) lokacija
+
+> Spajanje (merge) primjenjuje se samo na Lokacije koje postoje u katalogu. Merge automatski preusmjerava postojeće kataloške reference sa izvorne na ciljnu Lokaciju i mora biti atomska operacija bez djelimično preusmjerenih referenci. Ručno uneseni tekst Lokacije ne mijenja se automatski kroz merge kataloga.
+
+### BM-LK-11 — Audit lokacija
+
+> Sistem vodi istoriju nad Lokacijama za najmanje: kreiranje, izmjenu, odobrenje, odbijanje, vraćanje na doradu, deaktivaciju, aktivaciju i spajanje. Evidencija sadrži najmanje datum i vrijeme, korisnika, vrstu radnje, staru vrijednost i novu vrijednost. Jednom evidentirani audit zapis nije moguće mijenjati niti brisati kroz redovno korišćenje sistema i ne predstavlja rollback mehanizam.
+
+### BM-LK-12 — Opseg V1
+
+> U V1 opsegu Lokacija podržane su isključivo fizičke Lokacije. Online i hibridne Lokacije nijesu dio V1 i zahtijevaju novu Product Owner odluku.
 
 ## 5. Otvorena pitanja
 
@@ -777,41 +816,69 @@ Za poglavlje BM-07 trenutno nema otvorenih poslovnih pitanja.
 
 ## 1. Svrha
 
-Definisanje poslovnih pravila za klasifikaciju događaja kroz kategorije i oznake.
+Definisanje poslovnih pravila za klasifikaciju događaja kroz Kategorije i Oznake kao proširive poslovne kataloge, njihova ovlašćenja, životni ciklus i odnos prema Događaju.
 
 ## 2. Poslovni opis
 
-Kategorije predstavljaju osnovnu poslovnu klasifikaciju događaja.
+Kategorije predstavljaju osnovnu poslovnu klasifikaciju događaja i vode se kao zapisi **poslovnog kataloga**. Kategorije ne predstavljaju tehničku ENUM listu. Katalog kategorija je proširiv.
 
-Oznake predstavljaju dodatnu klasifikaciju koja omogućava detaljniju organizaciju i pretragu sadržaja.
+Oznake predstavljaju dodatnu klasifikaciju događaja. Oznake ulaze u V1. Oznake nisu zamjena za primarnu kategoriju. Jedan događaj može imati više oznaka.
+
+Kategorije i oznake definišu se kao novi poslovni katalog. Ne radi se migracija postojećih test podataka; postojeće test kategorije nisu referentni poslovni podaci. Ne uvodi se kompatibilnost sa starim ENUM/string modelom niti tranzicioni model.
+
+Kategorija „Nešto drugo“ više ne postoji u poslovnom modelu. Ako nijedna postojeća kategorija nije odgovarajuća, Urednik proširuje katalog novom kategorijom.
 
 ## 3. Poslovni koncept
 
-Svaki događaj pripada jednoj primarnoj kategoriji, dok može imati jednu ili više oznaka.
+Događaj može biti sačuvan kao nacrt bez primarne kategorije. Za slanje na odobrenje i za objavu mora imati tačno jednu primarnu kategoriju iz kataloga. Događaj može imati nula ili više oznaka iz kataloga oznaka.
+
+Organizator je poslovni entitet i nije operativna uloga. Moderator je poslovno ovlašćenje koje pri uređivanju događaja bira postojeće Aktivne kategorije i oznake. Katalogom kategorija i katalogom oznaka upravlja isključivo Urednik. Administrator platforme nema redovnu poslovnu ulogu u upravljanju ovim katalozima.
+
+Ne uvodi se workflow za predlaganje kategorija ili oznaka, dodatni statusi odobravanja ni dodatna ovlašćenja.
 
 ## 4. Poslovna pravila
 
-### BM-KO-01 — Definicija
+### BM-KO-01 — Poslovni katalog
 
-> Kategorije i oznake predstavljaju poslovnu klasifikaciju sadržaja koja omogućava organizaciju, pretragu, filtriranje i prikaz događaja na javnom portalu.
+> Kategorije i oznake predstavljaju poslovnu klasifikaciju sadržaja koja omogućava organizaciju, pretragu, filtriranje i prikaz događaja na javnom portalu. Kategorije se vode kao zapisi poslovnog kataloga. Kategorije ne predstavljaju tehničku ENUM listu. Katalog kategorija i katalog oznaka su proširivi.
 
 ### BM-KO-02 — Primarna kategorija
 
-> Događaj može biti povezan sa jednom primarnom kategorijom. Primarna kategorija je obavezna prije odobravanja i objavljivanja događaja.
+> Događaj može biti povezan sa tačno jednom primarnom kategorijom iz kataloga. Primarna kategorija je obavezna prije slanja na odobrenje i prije objavljivanja događaja. U statusu Nacrt događaj može biti sačuvan bez primarne kategorije.
 
 ### BM-KO-03 — Oznake
 
-> Događaj može biti povezan sa jednom ili više oznaka. Oznake su opcione i služe za dodatnu klasifikaciju i pretragu sadržaja.
+> Oznake ulaze u V1. Događaj može biti povezan sa jednom ili više oznaka iz kataloga oznaka. Oznake su opcione i služe za dodatnu klasifikaciju i pretragu sadržaja. Oznake nisu zamjena za primarnu kategoriju.
 
-### BM-KO-04 — Upravljanje
+### BM-KO-04 — Upravljanje katalogom
 
-> Kategorijama i oznakama upravlja urednik, u skladu sa poslovnim pravilima sistema.
+> Katalogom kategorija upravlja isključivo Urednik. Katalogom oznaka upravlja isključivo Urednik. Moderator koristi postojeće kategorije i oznake prilikom uređivanja događaja i ne upravlja katalogom. Organizator nije operativna uloga i ne upravlja katalogom. Administrator platforme nema redovnu poslovnu ulogu u upravljanju katalogom kategorija ni oznaka. Ne uvodi se workflow za predlaganje kategorija ili oznaka, dodatni statusi odobravanja ni dodatna ovlašćenja.
 
-### BM-KO-05 — Aktivnost
+### BM-KO-05 — Životni ciklus
 
-> Kategorija ili oznaka može biti aktivna ili neaktivna. Neaktivne kategorije i oznake ne mogu se koristiti za nove događaje, ali ostaju povezane sa postojećim događajima radi očuvanja istorijskih podataka.
+> Kategorija ili oznaka ima status **Aktivna** ili **Neaktivna**. Nova kategorija i nova oznaka kreiraju se sa statusom Aktivna. Dozvoljena je ponovna aktivacija (reaktivacija). Fizičko brisanje nije dio redovnog poslovnog procesa.
 
-## 5. Otvorena pitanja
+### BM-KO-06 — Deaktivacija i istorija
+
+> Neaktivna kategorija ili oznaka ne može se dodijeliti novom događaju niti koristiti za nove veze. Deaktivacija ne mijenja istorijske podatke. Postojeći događaji zadržavaju referencu na kategoriju ili oznaku koja je kasnije deaktivirana.
+
+### BM-KO-07 — Proširenje kataloga umjesto „Nešto drugo“
+
+> Kategorija „Nešto drugo“ ne postoji u poslovnom modelu. Ako nijedna postojeća kategorija nije odgovarajuća, Urednik proširuje katalog novom kategorijom. Oznake ne predstavljaju zamjenu za kategoriju.
+
+### BM-KO-08 — Novi katalog bez migracije test podataka
+
+> Kategorije i oznake definišu se kao novi poslovni katalog. Ne radi se migracija postojećih test podataka. Ne uvodi se kompatibilnost sa starim ENUM/string modelom. Ne pravi se tranzicioni model. Postojeće test kategorije nisu referentni poslovni podaci.
+
+## 5. Odnosi sa drugim poslovnim cjelinama
+
+- **Događaj** — referencira jednu primarnu kategoriju (obavezno za slanje/objavu) i opciono više oznaka.
+- **Urednik** — isključivo upravlja katalogom kategorija i katalogom oznaka.
+- **Moderator** — bira postojeće Aktivne kategorije i oznake pri uređivanju događaja; ne upravlja katalogom.
+- **Organizator** — poslovni entitet; nije operativna uloga nad katalogom.
+- **Administrator platforme** — nema redovnu poslovnu ulogu nad katalogom; sistemska administracija.
+
+## 6. Otvorena pitanja
 
 Za poglavlje BM-08 trenutno nema otvorenih poslovnih pitanja.
 
@@ -1255,7 +1322,7 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 
 ### BM-AL-07 — Oblasti evidencije aktivnosti
 
-> Evidencija aktivnosti obuhvata poslovno značajne aktivnosti koje se odnose na entitete i administrativne funkcije definisane ovim Business Modelom, uključujući Organizatora, Moderatora, Događaj, Manifestaciju, Održavanje (gdje je u katalogu) i Newsletter, te zahtjeve za kreiranje Organizatora i zahtjeve za dodjelu ili uklanjanje Moderatora (podnosilac, predloženi Moderator gdje je primjenjivo, datum i vrijeme podnošenja, Urednik koji je odlučio, datum i vrijeme odluke). Poslovne aktivnosti koje se evidentiraju za pojedine oblasti definišu se funkcionalnom i tehničkom specifikacijom u skladu sa ovim Business Modelom. Manifestacija je ravnopravan poslovni entitet u centralnoj evidenciji.
+> Evidencija aktivnosti obuhvata poslovno značajne aktivnosti koje se odnose na entitete i administrativne funkcije definisane ovim Business Modelom, uključujući Organizatora, Moderatora, Događaj, Manifestaciju, aktivnosti nad Održavanjem događaja (u okviru kataloga Događaji definisanog u FS §5.16) i Newsletter, te zahtjeve za kreiranje Organizatora i zahtjeve za dodjelu ili uklanjanje Moderatora (podnosilac, predloženi Moderator gdje je primjenjivo, datum i vrijeme podnošenja, Urednik koji je odlučio, datum i vrijeme odluke). Poslovne aktivnosti koje se evidentiraju za pojedine oblasti definišu se funkcionalnom i tehničkom specifikacijom u skladu sa ovim Business Modelom. Manifestacija je ravnopravan poslovni entitet u centralnoj evidenciji.
 
 ### BM-AL-08 — Namjena evidencije aktivnosti
 
@@ -1407,11 +1474,11 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 ### BM-GL-13 — Lokacija
 
-> Mjesto na kojem se događaj konkretno održava. Lokacija pripada održavanju događaja.
+> Samostalan poslovni entitet opcionog centralnog kataloga Lokacija koji predstavlja mjesto na kojem se događaj konkretno održava. Korišćenje kataloške Lokacije je opciono; kada se koristi, referencira se stabilnim identifikatorom. Ručno uneseni naziv Lokacije je dozvoljen bez obavezne kataloške veze. U V1 obuhvata isključivo fizičke Lokacije.
 
 ### BM-GL-14 — Kategorija
 
-> Poslovna klasifikacija Događaja koja omogućava njegovo grupisanje i pretragu.
+> Zapis poslovnog kataloga koji predstavlja osnovnu klasifikaciju Događaja. Kategorija nije tehnička ENUM vrijednost. Katalog kategorija je proširiv. Događaj ima najviše jednu primarnu kategoriju; primarna kategorija je obavezna prije slanja na odobrenje i objave.
 
 ### BM-GL-15 — Mediji
 
@@ -1438,6 +1505,10 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 ### BM-GL-20 — Evidencija aktivnosti
 
 > Evidencija aktivnosti predstavlja skup poslovno značajnih zapisa koji omogućavaju reviziju, kontrolu, odgovornost korisnika i naknadnu provjeru izvršenih radnji.
+
+### BM-GL-23 — Oznaka
+
+> Zapis poslovnog kataloga koji predstavlja dodatnu klasifikaciju Događaja. Oznake ulaze u V1. Jedan događaj može imati više oznaka. Oznaka nije zamjena za primarnu kategoriju. Katalogom oznaka upravlja isključivo Urednik.
 
 ### BM-GL-21 — Završna odredba
 

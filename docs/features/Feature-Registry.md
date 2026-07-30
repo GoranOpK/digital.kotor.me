@@ -38,7 +38,7 @@ Feature Registry predstavlja polaznu tačku za sljedivost kroz cijeli projekat.
 | Feature ID | Naziv            | Status  | Napomena                                      |
 | ---------- | ---------------- | ------- | --------------------------------------------- |
 | FT-001     | Kalendar kulture | Active  | Prva funkcionalnost u razvoju                 |
-| FT-002     | Plaćanja         | Planned | Nova funkcionalnost; dokumentacija u pripremi |
+| FT-002     | Plaćanja         | Planned | Dokumentacija razvijena (BM-002/FS-002 usvojeni BP-01–BP-09; TS-002 djelimično usvojen, dokument u izradi) |
 | FT-003     | Evidencija aktivnosti (Kalendar kulture) | Planned | FS §5.16; BM-14; van opsega: TS, pregled/filteri, retention, izvoz |
 
 Dozvoljeni statusi:
@@ -111,6 +111,23 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 
 **Usvojene poslovne odluke (Događaj — direktna objava / arhiviranje):** Direktna objava Urednika dozvoljena je isključivo za događaj bez Organizatora; događaj sa Organizatorom ide isključivo Nacrt → Na odobrenju → Objavljen (PO-DG-05 / N-DG-05 zatvoren; BM PATCH-037 BM-ST-04; FS PATCH-FS-039 BR-018, BR-028). Otkazan događaj automatski prelazi u Arhiviran nakon završetka svih održavanja, isto kao Objavljen (PO-DG-06 / N-DG-06 zatvoren; BM-DG-04, BM-ST-08; BR-065).
 
+**Usvojene poslovne odluke (Lokacije):**
+- **PO-LOC-01 (korekcija):** Lokacija iz kataloga je samostalan poslovni entitet, a centralni katalog predstavlja opcioni katalog za ponovno korišćenje Lokacija (nije obavezan i nije jedini izvor svih Lokacija). Moderator može odabrati katalošku Lokaciju ili ručno unijeti naziv Lokacije.
+- **PO-LOC-02:** identične Lokacije nijesu dozvoljene; sistem prijavljuje moguće duplikate; konačnu odluku donosi Urednik.
+- **PO-LOC-03:** Organizator nije operativna uloga; Moderator predlaže u ime Organizatora; Urednik odobrava/odbija/vraća na doradu, uređuje katalog, rješava duplikate, deaktivira i ponovo aktivira; Administrator platforme nema redovnu poslovnu ulogu.
+- **PO-LOC-04:** lifecycle Lokacije = Aktivna/Deaktivirana; samo Aktivne za nove zapise; istorija ostaje; bez redovnog fizičkog brisanja.
+- **PO-LOC-05 (korekcija):** kataloška referenca je opciona; kada postoji, čuva se stabilnim identifikatorom i podliježe referencijalnom integritetu; merge važi za kataloške Lokacije i atomski preusmjerava postojeće kataloške reference; ručno uneseni tekst Lokacije ne mijenja se automatski merge operacijom.
+- **PO-LOC-06:** audit za kreiranje/izmjene/odobrenje/odbijanje/vraćanje/deaktivaciju/aktivaciju/merge sa starom/novom vrijednošću; audit nepromjenjiv i nije rollback.
+- **PO-LOC-07:** V1 podržava isključivo fizičke Lokacije; online/hibridne van V1.
+
+**Usvojene poslovne odluke (Kategorije i oznake):**
+- **TS7-PO-01:** Kategorije predstavljaju poslovni katalog (ne tehničku ENUM listu); katalog je proširiv.
+- **TS7-PO-02:** Oznake ulaze u V1; dodatna klasifikacija; više oznaka po događaju; nisu zamjena za primarnu kategoriju.
+- **TS7-PO-03:** Lifecycle Aktivna/Neaktivna; nova = Aktivna; reaktivacija dozvoljena; bez redovnog fizičkog brisanja; deaktivacija ne mijenja istoriju; postojeći događaji zadržavaju reference.
+- **TS7-PO-04:** Bez migracije test podataka; bez kompatibilnosti/tranzicije sa starim modelom; novi poslovni katalog; test kategorije nisu referentni poslovni podaci.
+- **TS7-PO-05:** Kategorija „Nešto drugo“ ne postoji; Urednik proširuje katalog; oznake nisu zamjena za kategoriju.
+- **TS7-PO-06:** Katalogom kategorija i oznaka upravlja isključivo Urednik; Moderator samo koristi pri uređivanju događaja; bez workflow-a predlaganja, dodatnih statusa i ovlašćenja.
+
 Povezana dokumentacija (Organizator):
 
 * Technical Specification — `docs/technical-specification/Technical-Specification_Organizator.md` (TS-001; funkcionalna cjelina Organizator / Moderator / Zahtjev za kreiranje Organizatora u okviru FT-001)
@@ -121,13 +138,25 @@ Povezana dokumentacija (Događaj):
 
 Povezana dokumentacija (Održavanje):
 
-* Technical Specification — `docs/technical-specification/Technical-Specification_Odrzavanje.md` (TS-004; verzija 0.1.1; Usvojen)
+* Technical Specification — `docs/technical-specification/Technical-Specification_Odrzavanje.md` (TS-004; verzija 0.1.2; Usvojen)
 
 Povezana dokumentacija (Manifestacija):
 
 * Business Model — BM-05 (BM-MF-01–BM-MF-20), PATCH-038–PATCH-039; PO-MF-01–PO-MF-12
 * Functional Specification — §5.12 (BR-092–BR-101, BR-189–BR-205), §5.16 katalog Manifestacije, PATCH-FS-040–PATCH-FS-041
 * Technical Specification — `docs/technical-specification/Technical-Specification_Manifestacija.md` (TS-005; verzija 0.1.1; Usvojen)
+
+Povezana dokumentacija (Lokacije):
+
+* Business Model — BM-07 (BM-LK-01–BM-LK-12), BM-GL-13, PATCH-040, PATCH-041; PO-LOC-01–PO-LOC-07
+* Functional Specification — §5.9 (BR-074–BR-080, BR-206–BR-223), PATCH-FS-042, PATCH-FS-043
+* Technical Specification — `docs/technical-specification/Technical-Specification_Lokacije.md` (TS-006; verzija 0.1.1; Usvojen)
+
+Povezana dokumentacija (Kategorije i oznake):
+
+* Business Model — BM-08 (BM-KO-01–BM-KO-08), BM-GL-14, BM-GL-23, PATCH-043; TS7-PO-01–TS7-PO-06
+* Functional Specification — §5.10 (BR-081–BR-085, BR-224–BR-236), PATCH-FS-045
+* Technical Specification — `docs/technical-specification/Technical-Specification_Kategorije_i_oznake.md` (TS-007; verzija 0.1.0; Usvojen)
 
 Povezana dokumentacija (Newsletter):
 
@@ -142,10 +171,10 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | -- | ----- | ------- | ----- | ------ |
 | TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | U izradi (postoji dokument) |
 | TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
-| TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
+| TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
 | TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
-| TS-006 | Lokacije | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
-| TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
+| TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
@@ -166,7 +195,7 @@ Planned
 
 Napomena:
 
-Modul za elektronsko plaćanje finansijskih obaveza prema Opštini Kotor. U ovoj fazi u toku je priprema dokumentacije. Implementacija nije započeta.
+Modul za elektronsko plaćanje finansijskih obaveza prema Opštini Kotor. Poslovna i funkcionalna dokumentacija su usklađene i usvojene za BP-01 do BP-09 (BM-002/FS-002), dok je TS-002 u statusu dokumenta u izradi sa djelimično usvojenim tehničkim poglavljima. Implementacija nije započeta.
 
 Povezana dokumentacija:
 
@@ -285,3 +314,8 @@ Matrica sljedivosti (sažetak):
 | 2026-07-29 | FT-001 — TS-003 Događaj usvojen (v0.1.1); putanja `docs/technical-specification/Technical-Specification_Dogadjaj.md`. |
 | 2026-07-29 | FT-001 — PO-MF-01–PO-MF-08 i TS-005 Manifestacija Draft v0.1; BM PATCH-038 / FS PATCH-FS-040; putanja `docs/technical-specification/Technical-Specification_Manifestacija.md`. |
 | 2026-07-29 | FT-001 — TS-005 Manifestacija usvojen (v0.1.1); PO-MF-09–PO-MF-12; N-MF-01–N-MF-04 zatvoreni; N-MF-05 napomena (evidencija). |
+| 2026-07-30 | FT-001 — Lokacije: ugrađene usvojene odluke PO-LOC-01–PO-LOC-07 u BM PATCH-040 i FS PATCH-FS-042; kreiran i usvojen TS-006 (v0.1.0), putanja `docs/technical-specification/Technical-Specification_Lokacije.md`. |
+| 2026-07-30 | FT-001 — Lokacije: korekcija PO-LOC-01 i PO-LOC-05 (razrješenje KON-LOC-01 i KON-LOC-02): katalog opcioni, ručni unos dozvoljen, kataloška referenca opciona, merge samo za kataloške reference. Usklađeni BM PATCH-041, FS PATCH-FS-043 i TS-006 v0.1.1. |
+| 2026-07-30 | FT-001 — TS-004 Održavanje događaja v0.1.2: terminološko usklađivanje sa TS-006 (kataloška Lokacija / ručno uneseni naziv); usklađene reference verzije u Feature Registry. |
+| 2026-07-30 | Documentation Consistency Patch (CR-002): usklađen statusni opis FT-002 sa stvarnim stanjem dokumentacije (BM-002/FS-002 usvojeni BP-01–BP-09; TS-002 djelimično usvojen i u izradi). Bez izmjene poslovnih pravila. |
+| 2026-07-30 | FT-001 — Kategorije i oznake: ugrađene usvojene odluke TS7-PO-01–TS7-PO-06 u BM PATCH-043 i FS PATCH-FS-045; kreiran i usvojen TS-007 (v0.1.0), putanja `docs/technical-specification/Technical-Specification_Kategorije_i_oznake.md`. |
