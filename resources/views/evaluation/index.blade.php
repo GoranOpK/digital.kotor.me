@@ -280,9 +280,9 @@
                                         : false;
                                 @endphp
                                 @if($application->status === 'rejected')
-                                    {{ number_format($application->getDisplayScore(), 2) }} / 56
+                                    {{ number_format($application->getDisplayScore(), 2) }} / 58
                                 @elseif($canViewFinalScores && $allEvaluated && $application->final_score)
-                                    {{ number_format($application->final_score, 2) }} / 56
+                                    {{ number_format($application->final_score, 2) }} / 58
                                 @else
                                     Ocjenjivanje u toku
                                 @endif

@@ -606,7 +606,7 @@
                                             $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
                                         @endphp
                                         <span class="score-badge {{ $scoreClass }}">
-                                            {{ number_format($score, 2) }} / 56
+                                            {{ number_format($score, 2) }} / 58
                                         </span>
                                     </td>
                                     <td style="text-align: right;">
@@ -665,7 +665,7 @@
                                             $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
                                         @endphp
                                         <span class="score-badge {{ $scoreClass }}">
-                                            {{ number_format($score, 2) }} / 56
+                                            {{ number_format($score, 2) }} / 58
                                         </span>
                                     </td>
                                     <td style="text-align: right;">
@@ -725,7 +725,7 @@
                                         $scoreClass = $score >= 40 ? 'score-high' : ($score >= 30 ? 'score-medium' : 'score-low');
                                     @endphp
                                     <span class="score-badge {{ $scoreClass }}">
-                                        {{ number_format($score, 2) }} / 56
+                                        {{ number_format($score, 2) }} / 58
                                     </span>
                                 </td>
                                 <td style="text-align: right;">
@@ -780,7 +780,7 @@
                                     </td>
                                     <td style="text-align: center;">
                                         <span class="score-badge score-low">
-                                            {{ number_format($application->getDisplayScore(), 2) }} / 56
+                                            {{ number_format($application->getDisplayScore(), 2) }} / 58
                                         </span>
                                     </td>
                                     <td style="text-align: right;">
@@ -832,7 +832,7 @@
                                         <p style="font-size: 14px; color: #6b7280; margin: 0;">
                                             Podnosilac: {{ $application->user->name ?? 'N/A' }} |
                                             Pozicija: <strong>#{{ $application->ranking_position ?? $loop->iteration }}</strong> |
-                                            Ocjena: <strong>{{ number_format($application->getDisplayScore(), 2) }} / 56</strong>
+                                            Ocjena: <strong>{{ number_format($application->getDisplayScore(), 2) }} / 58</strong>
                                         </p>
                                     </div>
                                     @if($application->commission_decision)
@@ -927,7 +927,7 @@
                                         </tr>
                                         <tr>
                                             <th>Ocjena</th>
-                                            <td>{{ number_format($application->getDisplayScore(), 2) }} / 56</td>
+                                            <td>{{ number_format($application->getDisplayScore(), 2) }} / 58</td>
                                         </tr>
                                         @if($application->signed_by_chairman || in_array($competition->status, ['closed', 'completed']))
                                         <tr>
