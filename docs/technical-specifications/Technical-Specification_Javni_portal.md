@@ -6,8 +6,8 @@
 **Oznaka dokumenta:** TS-009  
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
-**Status dokumenta:** Final Review  
-**Verzija:** 0.5.0  
+**Status dokumenta:** Stable  
+**Verzija:** 1.0.0  
 **Datum:** 2026-07-31
 
 ---
@@ -20,6 +20,7 @@
 | 0.2.0 | 2026-07-31 | Faza 2: dokumentovane usvojene odluke PO-TS9-06A–PO-TS9-06D (Hero, istaknuti, statistike, lista ispod kalendara). Usklađeno sa BM PATCH-046 i FS PATCH-FS-048. Faza 1 odluke neizmijenjene. Bez izmjene implementacije. |
 | 0.3.0 | 2026-07-31 | Faza 3: dokumentovane usvojene odluke PO-TS9-07A–PO-TS9-07E (Manifestacije na javnom portalu). Usklađeno sa BM PATCH-047 i FS PATCH-FS-049. Faze 1–2 neizmijenjene. Bez izmjene implementacije. |
 | 0.5.0 | 2026-07-31 | Final Review: završna dokumentaciona revizija (sljedivost, terminologija, granice TS-003/004/005, baseline sekcije Detalji događaja i Arhiva događaja bez novih PO). Faze 1–3 neizmijenjene. Nije v1.0.0. Bez izmjene implementacije. |
+| 1.0.0 | 2026-07-31 | Stable release. Objavljena stabilna verzija TS-009. Bez izmjene poslovnih, funkcionalnih ili tehničkih pravila. Bez izmjene implementacije. |
 
 ---
 
@@ -69,14 +70,14 @@ Izvori istine:
 
 | Poglavlje | Status |
 |-----------|--------|
-| 1. Pregled funkcionalne cjeline | Usvojeno (faza 1–3) + Final Review |
-| 2. Informaciona arhitektura i prikazi | Usvojeno (faza 1; dopuna faza 3 — Manifestacije u IA) |
-| 3. Pretraga i pregled — filteri | Usvojeno (faza 1) |
-| 4. Tehnička napomena: ruta `cultural-calendar.day` | Usvojeno (faza 1) |
-| 5. Početna stranica — Hero, istaknuti, statistike, lista | Usvojeno (faza 2) |
-| 6. Manifestacije (javni portal) | Usvojeno (faza 3) |
-| 7. Detalji događaja (baseline) | Usvojeno (Final Review — bez novih PO; BM/FS) |
-| 8. Arhiva događaja (baseline) | Usvojeno (Final Review — bez novih PO; BM/FS) |
+| 1. Pregled funkcionalne cjeline | Usvojeno |
+| 2. Informaciona arhitektura i prikazi | Usvojeno |
+| 3. Pretraga i pregled — filteri | Usvojeno |
+| 4. Tehnička napomena: ruta `cultural-calendar.day` | Usvojeno |
+| 5. Početna stranica — Hero, istaknuti, statistike, lista | Usvojeno |
+| 6. Manifestacije (javni portal) | Usvojeno |
+| 7. Detalji događaja (baseline) | Usvojeno |
+| 8. Arhiva događaja (baseline) | Usvojeno |
 | 9. Arhitektonski principi (šire) | Planirano — naredne faze |
 | 10. Tokovi i URL ugovor (detalj) | Planirano — naredne faze |
 | 11. Integracije sa TS-003…TS-008 (detalj) | Planirano — naredne faze |
@@ -84,8 +85,8 @@ Izvori istine:
 | 13. Nefunkcionalni zahtjevi | Planirano — naredne faze |
 | 14. Granice V1 (Out of Scope) | Planirano — naredne faze |
 | 15. Otvorena pitanja | Planirano — naredne faze |
-| 16. Matrica sljedivosti | Usvojeno (Final Review) |
-| 17. Napomene za implementaciju | Usvojeno (Final Review — ograničeno) |
+| 16. Matrica sljedivosti | Usvojeno |
+| 17. Napomene za implementaciju | Usvojeno (ograničeno) |
 
 ---
 
@@ -96,9 +97,9 @@ Izvori istine:
 3. Nova poslovna pravila se ne uvode kroz TS-009.
 4. Princip **IA-01**: evolucija postojećeg javnog portala; bez redizajna i bez nove strukture stranica van usvojenih odluka.
 5. Izmjene usvojenog sadržaja evidentiraju se novom verzijom dokumenta i odgovarajućim PATCH-om BM/FS, gdje je primjenjivo.
-6. Odluke faza 1–3 ostaju važeće i ne mijenjaju se Final Review-om (v0.5.0).
+6. Odluke faza 1–3 ostaju važeće.
 7. TS-009 opisuje **isključivo javni portal**; poslovni model entiteta Manifestacija ostaje u BM-05 / TS-005; Događaj u TS-003; Održavanje u TS-004.
-8. Final Review ne uvodi nove PO odluke. Detalji događaja i Arhiva događaja pokriveni su postojećim BM/FS pravilima (§7–§8).
+8. Detalji događaja i Arhiva događaja pokriveni su postojećim BM/FS pravilima (§7–§8); bez zasebnih PO-TS9-* za te stranice.
 
 ---
 
@@ -436,7 +437,7 @@ Dodatno:
 
 ---
 
-# 7. Detalji događaja (baseline — Final Review)
+# 7. Detalji događaja (baseline)
 
 > **Bez novih PO.** Stranica „Detalji događaja“ pokrivena je usvojenim BM/FS pravilima. TS-009 ne duplicira lifecycle Događaja (TS-003), Održavanja (TS-004) ni Manifestacije (TS-005).
 
@@ -458,7 +459,7 @@ Portalni obuhvat (referenca, ne nova pravila):
 
 ---
 
-# 8. Arhiva događaja (baseline — Final Review)
+# 8. Arhiva događaja (baseline)
 
 > **Bez novih PO.** Stranica „Arhiva događaja“ pokrivena je usvojenim BM/FS. Pravila **kada** Događaj prelazi u status Arhiviran ostaju u BM-04 / TS-003 (BM-DG-04); TS-009 definiše samo portalni prikaz.
 
@@ -489,7 +490,7 @@ Sljedeća poglavlja ostaju za naredne faze TS-009 (tehnička dubina, ne nova pos
 
 ---
 
-# 16. Matrica sljedivosti (Final Review)
+# 16. Matrica sljedivosti
 
 | Odluka / tema | BM | FS | TS-009 |
 |---------------|----|----|--------|
@@ -517,9 +518,9 @@ Granice (bez dupliciranja u TS-009): lifecycle Događaja → TS-003; Održavanje
 
 ---
 
-# 17. Napomene za implementaciju (Final Review)
+# 17. Napomene za implementaciju
 
-* Faze 1–3 i Final Review (v0.5.0) su **dokumentacione**; ne mijenja se kod u okviru ovih verzija.
+* Verzije do v1.0.0 (uključujući) su **dokumentacione**; ne mijenja se kod u okviru ovih verzija.
 * Pri budućoj implementaciji: poštovati IA-01 (minimalne izmjene postojećeg portala).
 * Rename navigacionog labela „Pregled događaja“ → „Pretraga i pregled“ (PO-TS9-03A).
 * Filteri (PO-TS9-04A) pripadaju stranici Pretraga i pregled.

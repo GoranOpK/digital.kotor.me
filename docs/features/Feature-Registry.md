@@ -161,7 +161,7 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **PO-TS9-07D:** Program — grupisan po datumima; sort datum → vrijeme → naziv; po Održavanju; završeni ostaju; otkazani uz statusnu oznaku „Otkazano“; „Vrijeme nije definisano“; poruka ako nema programa.
 - **PO-TS9-07E:** 1 MF → N događaja; događaj ≤1 MF; događaj može bez MF; dvosmjerna navigacija; događaji ostaju u Pretrazi i pregledu/kalendaru/statistikama/Arhivi događaja; uklanjanje/arhiva MF ne briše događaje.
 
-**Napomena (TS-009 Final Review v0.5.0):** Detalji događaja i Arhiva događaja nemaju zasebne PO-TS9-* odluke; pokriveni su BM-PK-05 / BM-PK-13 i BR-106 / BR-114 (baseline u TS-009 §7–§8). Nove PO odluke nijesu uvedene Final Review-om.
+**Napomena (TS-009 v1.0.0 Stable):** Detalji događaja i Arhiva događaja nemaju zasebne PO-TS9-* odluke; pokriveni su BM-PK-05 / BM-PK-13 i BR-106 / BR-114 (baseline u TS-009 §7–§8).
 
 Povezana dokumentacija (Organizator):
 
@@ -203,7 +203,7 @@ Povezana dokumentacija (Javni portal):
 
 * Business Model — BM-11 (BM-PK-01–BM-PK-28), BM-AR-02, PATCH-045–PATCH-048; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E
 * Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-269), PATCH-FS-047–PATCH-FS-049
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 0.5.0; Final Review; TD-TS9-01)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 1.0.0; Stable; TD-TS9-01)
 
 Povezana dokumentacija (Newsletter):
 
@@ -223,7 +223,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
-| TS-009 | Javni portal | FT-001 | Kalendar kulture | Final Review (v0.5.0 — faza 1–3 usvojene; baseline Detalji/Arhiva) |
+| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.0) |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
@@ -426,3 +426,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-07-31 | FT-001 — TS-009 faza 2 (PO-TS9-06A–06D): usklađeni BM PATCH-046, FS PATCH-FS-048 i TS-009 v0.2.0 (Hero, istaknuti max 3, klikabilne statistike, lista ispod kalendara). Bez izmjene implementacije. |
 | 2026-07-31 | FT-001 — TS-009 faza 3 (PO-TS9-07A–07E): usklađeni BM PATCH-047, FS PATCH-FS-049 i TS-009 v0.3.0 (Manifestacije na javnom portalu). TS-005 v0.1.2 usklađen za javni program (Otkazani). Bez izmjene implementacije. |
 | 2026-07-31 | FT-001 — TS-009 Final Review v0.5.0: završna dokumentaciona revizija (sljedivost, terminologija, granice TS-003/004/005, baseline §7 Detalji događaja / §8 Arhiva događaja bez novih PO). BM PATCH-048 (Oznake ≠ Tagovi u BM-DG-06). Nije v1.0.0. Bez izmjene implementacije. |
+| 2026-07-31 | FT-001 — TS-009 Stable v1.0.0: objavljena stabilna verzija specifikacije javnog portala. Bez izmjene poslovnih/funkcionalnih/tehničkih pravila. Bez izmjene implementacije. |
