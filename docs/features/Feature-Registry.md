@@ -154,6 +154,13 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **PO-TS9-06C:** Statistike — 3 klikabilne kartice (Danas, Ove sedmice, Izabrani mjesec = naziv izabranog mjeseca); klik → Pretraga i pregled sa datumskim filterom; 0 ostaje klikabilno; samo objavljeni.
 - **PO-TS9-06D:** Lista ispod kalendara — bez datuma: „Naredni događaji“ max 3; sa datumom: svi za dan; dugme „Prikaži sve događaje“ → Pretraga i pregled (sa/bez datumskog filtera); postojeće prazno stanje.
 
+**Usvojene product odluke (Javni portal — TS-009 faza 3 — Manifestacije):**
+- **PO-TS9-07A:** Manifestacije = zasebna cjelina portala; stavka navigacije „Manifestacije“; lista + detalj + program; ne kroz kategorije događaja; bez redizajna.
+- **PO-TS9-07B:** Lista — samo javno objavljene; sort datum početka → naziv; 12/stranica; kartica (foto, naziv, period, opis, broj objavljenih događaja, „Detalji manifestacije“); V1 bez pretrage/filtera; neutralno prazno.
+- **PO-TS9-07C:** Detalj — foto, naziv, period, organizator, lokacija (ako dostupna), web, opis, program ispod; V1 bez galerija/video/dijeljenja/rezervacija/komentara.
+- **PO-TS9-07D:** Program — grupisan po datumima; sort datum → vrijeme → naziv; po održavanju; završeni ostaju; otkazani uz „Otkazano“; „Vrijeme nije definisano“; poruka ako nema programa.
+- **PO-TS9-07E:** 1 MF → N događaja; događaj ≤1 MF; događaj može bez MF; dvosmjerna navigacija; događaji ostaju u pretrazi/kalendaru/statistikama/arhivi; uklanjanje/arhiva MF ne briše događaje.
+
 Povezana dokumentacija (Organizator):
 
 * Technical Specification — `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001; funkcionalna cjelina Organizator / Moderator / Zahtjev za kreiranje Organizatora u okviru FT-001)
@@ -170,7 +177,7 @@ Povezana dokumentacija (Manifestacija):
 
 * Business Model — BM-05 (BM-MF-01–BM-MF-20), PATCH-038–PATCH-039; PO-MF-01–PO-MF-12
 * Functional Specification — §5.12 (BR-092–BR-101, BR-189–BR-205), §5.16 katalog Manifestacije, PATCH-FS-040–PATCH-FS-041
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Manifestacija.md` (TS-005; verzija 0.1.1; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Manifestacija.md` (TS-005; verzija 0.1.2; Usvojen)
 
 Povezana dokumentacija (Lokacije):
 
@@ -192,9 +199,9 @@ Povezana dokumentacija (Mediji):
 
 Povezana dokumentacija (Javni portal):
 
-* Business Model — BM-11 (BM-PK-01–BM-PK-23), BM-AR-02, PATCH-045–PATCH-046; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D
-* Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-264), PATCH-FS-047–PATCH-FS-048
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 0.2.0; U izradi — faza 1 i faza 2 usvojene; TD-TS9-01)
+* Business Model — BM-11 (BM-PK-01–BM-PK-28), BM-AR-02, PATCH-045–PATCH-047; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E
+* Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-269), PATCH-FS-047–PATCH-FS-049
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 0.3.0; U izradi — faza 1–3 usvojene; TD-TS9-01)
 
 Povezana dokumentacija (Newsletter):
 
@@ -210,11 +217,11 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.2.1) |
 | TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
-| TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
+| TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
-| TS-009 | Javni portal | FT-001 | Kalendar kulture | U izradi (v0.2.0 — faza 1–2: usvojene IA/PO/TD odluke) |
+| TS-009 | Javni portal | FT-001 | Kalendar kulture | U izradi (v0.3.0 — faza 1–3: usvojene IA/PO/TD odluke) |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
@@ -415,3 +422,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-07-31 | FT-004 — Stabilizacija: uklonjena dvostruka registracija listenera (discovery XOR explicit); status korigovan sa Active na Planned (testovi nisu verifikovani; OFD-OB-006). |
 | 2026-07-31 | FT-004 — Verifikacija na MySQL test bazi: `ObavjestenjaFeatureTest` 21/21 PASSED; smoke PASS; status Active. E2E okidač iz konkursa i dalje OFD-OB-006. |
 | 2026-07-31 | FT-001 — TS-009 faza 2 (PO-TS9-06A–06D): usklađeni BM PATCH-046, FS PATCH-FS-048 i TS-009 v0.2.0 (Hero, istaknuti max 3, klikabilne statistike, lista ispod kalendara). Bez izmjene implementacije. |
+| 2026-07-31 | FT-001 — TS-009 faza 3 (PO-TS9-07A–07E): usklađeni BM PATCH-047, FS PATCH-FS-049 i TS-009 v0.3.0 (Manifestacije na javnom portalu). TS-005 v0.1.2 usklađen za javni program (Otkazani). Bez izmjene implementacije. |

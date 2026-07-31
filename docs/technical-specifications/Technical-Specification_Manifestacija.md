@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Manifestacija  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.1  
-**Datum:** 2026-07-29
+**Verzija:** 0.1.2  
+**Datum:** 2026-07-31
 
 ---
 
@@ -18,6 +18,7 @@
 |---------|--------|------|
 | 0.1 | 2026-07-29 | Initial draft. Prvi nacrt Technical Specification za funkcionalnu cjelinu Manifestacija. Usklađen sa BM-05 (BM-MF-01–BM-MF-18), FS §5.12 (BR-092–BR-101, BR-189–BR-201), BR-105/111/112, PO-MF-01–PO-MF-08, Feature Registry (FT-001 / plan TS-005), METHODOLOGY (M-TS-001–M-TS-005), TS-001, TS-003 i TS-004 (granice). Bez SQL, API, Laravel koda i bez novih poslovnih odluka van usvojenih PO-MF. |
 | 0.1.1 | 2026-07-29 | PO-MF-09–PO-MF-12; zatvoreni N-MF-01–N-MF-04; N-MF-05 evidentiran kao napomena (centralna evidencija). Status dokumenta: Usvojen. |
+| 0.1.2 | 2026-07-31 | Usklađenje javnog programa sa BM-MF-13 / BR-192 / PO-TS9-07D: Objavljeni + Otkazani (oznaka „Otkazano“); završeni ostaju. Detalj UI-ja na TS-009. Bez novih poslovnih odluka van usvojenih. |
 
 Napomena:
 
@@ -146,7 +147,7 @@ Van obuhvata:
 | TS-006 Lokacija | Samo posredno preko Održavanja |
 | TS-007 Kategorije | Samo izvedeno iz Objavljenih Događaja |
 | TS-008 Mediji | Opciona naslovna fotografija |
-| TS-009 Javni portal | Prikaz Objavljene MF i Objavljenih Događaja |
+| TS-009 Javni portal | Prikaz Objavljene MF; program: Objavljeni + Otkazani (oznaka); detalj UI → TS-009 |
 | TS-010 Urednički portal | Operativni prostor |
 | TS-012 Evidencija | Prima poslovno značajne događaje (katalog — otvoreno ako nije u FS) |
 
@@ -189,9 +190,9 @@ Organizator nije obavezan. Platformska Manifestacija (bez Org.) upravlja Urednik
 
 Kategorije → Događaj. Lokacija → Održavanje. Održavanje → Događaj (PO-MF / BM-MF-16).
 
-## 2.5 Javna vidljivost samo Objavljenih Događaja
+## 2.5 Javna vidljivost događaja u programu
 
-Program na javnom portalu prikazuje isključivo Objavljene Događaje (PO-MF-04, BR-192).
+Program na javnom portalu prikazuje Objavljene Događaje; Otkazani Događaji ostaju prikazani uz oznaku „Otkazano“; završeni Objavljeni ostaju prikazani (PO-MF-04, BM-MF-13, BR-192, PO-TS9-07D). Nacrti i događaji na odobrenju / vraćeni na doradu nisu javno vidljivi. Detalj rasporeda i UI: TS-009.
 
 ## 2.6 Bez statusa Odgođena
 
@@ -442,7 +443,7 @@ Implementacija mora spriječiti da Događaj pripada više od jedne Manifestacije
 
 * Status samo iz dozvoljenog skupa.
 * Objava samo uz BR-191.
-* Javni prikaz programa samo Objavljeni Događaji.
+* Javni prikaz programa: Objavljeni Događaji; Otkazani uz oznaku „Otkazano“ (BM-MF-13 / BR-192).
 * URL ako postoji — validan (BR-200).
 
 ---
@@ -508,15 +509,15 @@ Centralna Evidencija: Manifestacija je ravnopravan entitet; emisija prema katalo
 | **TS-006** | Lokacije samo preko Održavanja Objavljenih Događaja |
 | **TS-007** | Izvedene kategorije iz Objavljenih Događaja |
 | **TS-008** | Naslovna fotografija MF |
-| **TS-009** | Javni prikaz: naziv, opis, foto/placeholder, Org. ako postoji, URL, izvedeno trajanje, samo Objavljeni Događaji + javna održavanja/lokacije |
+| **TS-009** | Javni prikaz: naziv, opis, foto/placeholder, Org. ako postoji, URL, izvedeno trajanje; program: Objavljeni + Otkazani (oznaka „Otkazano“) + javna održavanja/lokacije; UI detalj → TS-009 |
 | **TS-010** | Uredničke radnje §4–§5 |
 | **TS-012** | Audit emisije (nakon kataloga) |
 
 ### 9.1 Javni prikaz (sažetak)
 
-Prikazuje se: naziv; opis; naslovna fotografija ili placeholder; Organizator kada postoji; Web stranica / Više informacije kada postoji; izvedeno trajanje kada je utvrdivo; isključivo Objavljeni Događaji sa javnim terminima i lokacijama.
+Prikazuje se: naziv; opis; naslovna fotografija ili placeholder; Organizator kada postoji; Web stranica / Više informacije kada postoji; izvedeno trajanje kada je utvrdivo; u programu Objavljeni Događaji (završeni ostaju) i Otkazani Događaji uz oznaku „Otkazano“, sa javnim terminima i lokacijama. Detalj UI: TS-009.
 
-Ne prikazuje se: neobjavljeni Događaji; interni urednički statusi i podaci.
+Ne prikazuje se: Nacrti; događaji Na odobrenju / Vraćeni na doradu; interni urednički statusi i podaci.
 
 ### 9.2 Urednički portal (sažetak)
 
@@ -600,7 +601,7 @@ Napomena (**N-MF-05**, nije Product Owner odluka): Manifestacija se vodi u centr
 
 1. Događaj: jedna opciona referenca na Manifestaciju (unique constraint po Događaju).
 2. Objava MF: provjera ≥1 Objavljen Događaj u trenutku odobrenja.
-3. Javni API/view: filter `status_dogadjaja = Objavljen`.
+3. Javni API/view programa: `status_dogadjaja IN (Objavljen, Otkazan)`; Otkazani sa oznakom „Otkazano“ (detalj UI: TS-009).
 4. Trajanje: izračun u upitu/servisu, ne kao ručna polja za unos.
 5. Placeholder fotografije: postojeći dizajn sistema.
 6. Ne uvoditi slug polje u V1 šemu zbog poslovnog zahtjeva.

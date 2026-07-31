@@ -60,6 +60,7 @@
 | PATCH-FS-046 | 2026-07-31 | TS8-01–TS8-09: potpuno usklađen §5.11 Upravljanje medijima (BR-086–BR-091) i dodata BR-237–BR-254; usklađeni §5.4.4 i BR-113 sa hijerarhijom prikaza i opsegom V1. |
 | PATCH-FS-047 | 2026-07-31 | TS-009 faza 1 (IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B; TD-TS9-01 u TS): evolutivni razvoj javnog portala; „Pretraga i pregled“; filteri; zadržavanje prikaza; lista vs kalendar. Usklađeni BR-104, BR-107–BR-109, §5.3, §5.4.1; dodati BR-255–BR-260. |
 | PATCH-FS-048 | 2026-07-31 | TS-009 faza 2 (PO-TS9-06A–PO-TS9-06D): Hero statički identitet; istaknuti max 3; statistike 3 klikabilne kartice (treća = naziv izabranog mjeseca); lista ispod kalendara (naredni max 3 / dan; „Prikaži sve događaje“). Usklađeni §5.1–§5.3, BR-117; dodati BR-261–BR-264. |
+| PATCH-FS-049 | 2026-07-31 | TS-009 faza 3 (PO-TS9-07A–PO-TS9-07E): Manifestacije na javnom portalu — navigacija, lista, detalj, program, veza ↔ Događaji. Usklađeni BR-105, BR-109, BR-192, §5.4; dodati BR-265–BR-269. |
 
 Napomena:
 
@@ -143,7 +144,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236)
    - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
-   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-264)
+   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-269)
    - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137)
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
@@ -521,7 +522,8 @@ Korisnik otvara detalj događaja izborom događaja sa:
 
 * početne stranice Kalendara kulture;
 * stranice „Pretraga i pregled“ (raniji naziv u navigaciji: „Pregled događaja“ — PO-TS9-03A);
-* arhive događaja.
+* arhive događaja;
+* programa Manifestacije (BR-268 / PO-TS9-07D).
 
 Sistem prikazuje detalj isključivo za objavljeni događaj.
 
@@ -551,6 +553,8 @@ Opcione informacije, koje se prikazuju samo kada su unesene:
 * oznake.
 
 Ako opcioni podatak nije unesen, sistem ne prikazuje odgovarajući red ili prikazuje jasno prazno stanje, u skladu sa pravilima ovog poglavlja.
+
+Ako događaj pripada Manifestaciji, detalj prikazuje informativni blok „Ovaj događaj je dio manifestacije“ sa nazivom Manifestacije, periodom održavanja i dugmetom „Detalji manifestacije“ (BR-269 / PO-TS9-07E).
 
 ---
 
@@ -2545,13 +2549,19 @@ Manifestacija može biti objavljena samo kada su ispunjena oba uslova:
 
 Manifestacija može sadržati događaje u različitim statusima.
 
-Na javnom portalu prikazuju se isključivo događaji u statusu **Objavljen**.
+U programu Objavljene Manifestacije na javnom portalu prikazuju se događaji u statusu **Objavljen**.
+
+Otkazani događaji ostaju prikazani u programu uz oznaku **Otkazano**.
+
+Završeni objavljeni događaji ostaju prikazani.
 
 Događaji u statusima Nacrt, Na odobrenju ili Vraćen na doradu nisu javno vidljivi u okviru manifestacije.
 
 Neobjavljeni događaji mogu biti povezani sa manifestacijom u uredničkom portalu.
 
 Program manifestacije može se postepeno dopunjavati.
+
+Detaljna pravila rasporeda i prikaza programa na javnom portalu: BR-268 (PO-TS9-07D).
 
 ---
 
@@ -2719,7 +2729,9 @@ Centralno mjesto za pretragu i pregled događaja je stranica „Pretraga i pregl
 
 Javni portal omogućava pregled manifestacija objavljenih u skladu sa poslovnim pravilima modula Kalendara kulture.
 
-Pregled manifestacije obuhvata informacije o javno objavljenoj manifestaciji i događajima povezanim sa tom manifestacijom.
+Manifestacije predstavljaju zasebnu sadržajnu cjelinu javnog portala i ne predstavljaju se kroz kategorije događaja (BR-265).
+
+Pregled obuhvata listu, detalj i program Manifestacije (BR-265–BR-269).
 
 ---
 
@@ -2754,6 +2766,8 @@ Javni portal omogućava prikaz objavljenih događaja i manifestacija kroz način
 Zadržavaju se postojeći prikazi javnog portala; ne uvode se novi ekrani radi redizajna (BR-255, BR-258).
 
 Stranica „Pretraga i pregled“ koristi isključivo prikaz liste. Mjesečni kalendar ostaje isključivo na početnoj stranici (BR-259).
+
+Stranice liste i detalja Manifestacija predstavljaju usvojenu novu funkcionalnu cjelinu za već usvojeni poslovni entitet Manifestacija, a ne redizajn portala (BR-265).
 
 ---
 
@@ -2947,6 +2961,76 @@ Kartice zadržavaju postojeći izgled.
 Na kraju liste postoji dugme „Prikaži sve događaje“ koje otvara „Pretragu i pregled“ bez datumskog filtera (ako datum nije izabran) ili sa istim datumskim filterom (ako je datum izabran).
 
 Ako nema događaja, prikazuje se postojeća poruka o praznom stanju.
+
+---
+
+#### BR-265 – Manifestacije kao zasebna cjelina portala (PO-TS9-07A)
+
+Manifestacije predstavljaju zasebnu sadržajnu cjelinu javnog portala.
+
+Manifestacije se ne predstavljaju kroz kategorije događaja.
+
+Glavna navigacija sadrži stavku „Manifestacije“.
+
+Portal obezbjeđuje listu javno objavljenih Manifestacija, detalj Manifestacije i program Manifestacije.
+
+Ne radi se redizajn portala; uvodi se samo nova funkcionalna cjelina za već usvojeni poslovni entitet Manifestacija.
+
+---
+
+#### BR-266 – Lista Manifestacija (PO-TS9-07B)
+
+Stranica „Manifestacije“ prikazuje listu javno objavljenih i javno dostupnih Manifestacija.
+
+Sortiranje: (1) datum početka, (2) naziv.
+
+Paginacija: 12 Manifestacija po stranici, standardna paginacija.
+
+Kartica prikazuje: naslovnu fotografiju; naziv; period održavanja; kratak opis; broj objavljenih događaja u programu; link „Detalji manifestacije“.
+
+U V1 lista nema pretragu ni filtere.
+
+Ako nema Manifestacija, prikazuje se neutralna poruka.
+
+---
+
+#### BR-267 – Detalj Manifestacije (PO-TS9-07C)
+
+Detalj Manifestacije prikazuje: naslovnu fotografiju; naziv; period održavanja; Organizatora (kada postoji); lokaciju kada je dostupna kao javna informacija (Manifestacija nema sopstvenu lokaciju — BR-199 / BM-MF-16; lokacije događaja u programu); zvaničnu web stranicu kada postoji; opis; program.
+
+Program se prikazuje ispod osnovnih informacija. Ako program nije javno dostupan, prikazuje se odgovarajuća poruka.
+
+U V1 se ne uvode: galerije; video; dijeljenje; rezervacije; komentari; dodatne multimedijalne funkcionalnosti.
+
+---
+
+#### BR-268 – Program Manifestacije (PO-TS9-07D)
+
+Program je grupisan po datumima i hronološki sortiran: (1) datum, (2) vrijeme, (3) naziv.
+
+Svako održavanje je zaseban unos sa: vremenom; nazivom događaja; lokacijom (ako postoji); linkom „Detalji događaja“.
+
+Završeni događaji ostaju prikazani. Otkazani događaji ostaju prikazani uz oznaku „Otkazano“.
+
+Ako vrijeme nije definisano, prikazuje se „Vrijeme nije definisano“.
+
+Ako nema javnog programa, prikazuje se odgovarajuća poruka.
+
+Pravila vidljivosti statusa događaja u programu: BR-192.
+
+---
+
+#### BR-269 – Veza Manifestacija ↔ Događaji na portalu (PO-TS9-07E)
+
+Jedna Manifestacija može sadržati više događaja. Jedan događaj pripada najviše jednoj Manifestaciji. Događaj može postojati bez Manifestacije. Manifestacija je programski okvir; događaj ostaje osnovni poslovni entitet (BR-093, BR-094).
+
+Na detalju događaja koji pripada Manifestaciji prikazuje se blok „Ovaj događaj je dio manifestacije“ sa nazivom, periodom i dugmetom „Detalji manifestacije“.
+
+Program na detalju Manifestacije vodi na detalj događaja. Obezbijeđena je dvosmjerna navigacija.
+
+Događaji ostaju vidljivi u Pretrazi i pregledu, kalendaru, statistikama i arhivi bez obzira na pripadnost Manifestaciji.
+
+Uklanjanje ili arhiviranje Manifestacije ne briše događaje.
 
 **Status:** Approved
 
@@ -3893,3 +3977,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-31 | FS-001 / 5.11 (PATCH-FS-046): TS8-01–TS8-09 — Mediji kao samostalan entitet; zatvoreni katalog namjena; kardinalnosti i fallback; tip Fotografija; lifecycle; ovlašćenja; pretraga; metapodaci. Usklađeni BR-086–BR-091, §5.4.4, BR-113; dodati BR-237–BR-254. |
 | 2026-07-31 | FS-001 / 5.13 (PATCH-FS-047): TS-009 faza 1 — IA-01, PO-TS9-03A/04A/05A/05B; TD-TS9-01 referenca. Usklađeni BR-104, BR-107–BR-109, §5.3, §5.4.1; dodati BR-255–BR-260. |
 | 2026-07-31 | FS-001 / 5.1–5.3 i 5.13 (PATCH-FS-048): TS-009 faza 2 — PO-TS9-06A–06D. Usklađeni Hero, statistike (3 klikabilne kartice), istaknuti (max 3), lista ispod kalendara; BR-117; dodati BR-261–BR-264. |
+| 2026-07-31 | FS-001 / 5.4 i 5.13 (PATCH-FS-049): TS-009 faza 3 — PO-TS9-07A–07E. Manifestacije na javnom portalu; usklađeni BR-105, BR-109, BR-192, §5.4; dodati BR-265–BR-269. |

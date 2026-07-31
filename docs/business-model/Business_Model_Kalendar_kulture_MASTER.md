@@ -58,6 +58,7 @@
 | PATCH-044 | 2026-07-31 | TS8-01–TS8-09: BM-09 Mediji — samostalan entitet bez poslovnog vlasnika; zatvoreni katalog namjena (naslovna događaja, naslovna manifestacije, podrazumijevana fotografija kategorije); kardinalnosti i fallback; tip Fotografija (JPEG/PNG/WebP, 5 MB); lifecycle Aktivan/Neaktivan; ovlašćenja Moderator/Urednik; pretraga i metapodaci; usklađeni BM-GL-15 i BM-PK-12. |
 | PATCH-045 | 2026-07-31 | TS-009 faza 1 (IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B): evolutivni razvoj Portala; stranica „Pretraga i pregled“; filteri; zadržavanje postojećih prikaza; lista na Pretrazi i pregledu; mjesečni kalendar samo na početnoj. Dodati BM-PK-16–BM-PK-20; usklađeni BM-PK-06–BM-PK-08 i BM-AR-02. |
 | PATCH-046 | 2026-07-31 | TS-009 faza 2 (PO-TS9-06A–PO-TS9-06D): Hero (statički identitet); istaknuti događaji (max 3, Urednik, aktuelni); statistike (3 klikabilne kartice; treća = naziv izabranog mjeseca); lista ispod kalendara (naredni max 3 / dan; dugme „Prikaži sve događaje“). Usklađen BM-PK-15; dodati BM-PK-21–BM-PK-23. |
+| PATCH-047 | 2026-07-31 | TS-009 faza 3 (PO-TS9-07A–PO-TS9-07E): Manifestacije kao zasebna cjelina javnog portala (navigacija, lista, detalj, program, veza ↔ Događaji). Usklađeni BM-PK-04, BM-PK-08, BM-MF-13; dodati BM-PK-24–BM-PK-28. |
 
 Napomena:
 
@@ -550,7 +551,7 @@ Manifestacija može biti objavljena samo kada ima najmanje jedan Događaj i najm
 
 Objavljena Manifestacija mora u svakom trenutku imati najmanje jedan Objavljeni Događaj. Nije dozvoljeno ukloniti niti premjestiti posljednji Objavljeni Događaj ako bi Manifestacija ostala bez javno dostupnog programa. Sistem odbija takvu radnju uz validacionu poruku. Ovo ne mijenja nezavisni životni ciklus Događaja.
 
-Manifestacija može sadržati Događaje u različitim statusima. Na javnom portalu prikazuju se isključivo Objavljeni Događaji. Neobjavljeni Događaji mogu biti povezani sa Manifestacijom u uredničkom portalu. Program Manifestacije može se postepeno dopunjavati.
+Manifestacija može sadržati Događaje u različitim statusima. U programu Objavljene Manifestacije na javnom portalu prikazuju se Objavljeni Događaji; Otkazani Događaji ostaju prikazani uz oznaku „Otkazano“; završeni Objavljeni Događaji ostaju prikazani. Nacrti i događaji na odobrenju / vraćeni na doradu nisu javno vidljivi. Neobjavljeni Događaji mogu biti povezani sa Manifestacijom u uredničkom portalu. Program Manifestacije može se postepeno dopunjavati.
 
 Objavljenoj Manifestaciji dozvoljeno je dodavanje i uklanjanje Događaja bez promjene statusa Manifestacije i bez ponovnog odobravanja Manifestacije, uz poštovanje uslova da ostane najmanje jedan Objavljeni Događaj. Svaki Događaj zadržava sopstveni životni ciklus. Novi Događaj mora proći svoj redovni urednički proces prije javne objave. Uklanjanje Događaja iz Manifestacije ne briše Događaj i ne mijenja njegov status.
 
@@ -584,7 +585,7 @@ Manifestacija može biti otkazana. Otkazivanje izvršava Moderator u aktivnom ko
 | BM-MF-10 | Manifestacija može biti sačuvana kao Nacrt i uređivana. Za slanje na odobrenje mora ispunjavati BM-MF-02 i ostala pravila ovog poglavlja. |
 | BM-MF-11 | Statusi Manifestacije: Nacrt, Na odobrenju, Vraćena na doradu, Objavljena, Otkazana, Arhivirana. Nema statusa Odgođena. Odgađanje pripada Održavanju. |
 | BM-MF-12 | Organizator Manifestacije je opcioni. Manifestacija može objedinjavati Događaje različitih Organizatora i Događaje bez Organizatora. Organizator MF ne mora biti isti kao Organizator svih Događaja. |
-| BM-MF-13 | Objava Manifestacije zahtijeva najmanje jedan Događaj i najmanje jedan pripadajući Događaj u statusu Objavljen. Na javnom portalu prikazuju se isključivo Objavljeni Događaji. Program se može postepeno dopunjavati. |
+| BM-MF-13 | Objava Manifestacije zahtijeva najmanje jedan Događaj i najmanje jedan pripadajući Događaj u statusu Objavljen. U programu Objavljene Manifestacije na javnom portalu prikazuju se Objavljeni Događaji; Otkazani Događaji ostaju prikazani uz oznaku „Otkazano“; završeni Objavljeni Događaji ostaju prikazani. Nacrti i događaji na odobrenju / vraćeni na doradu nisu javno vidljivi. Program se može postepeno dopunjavati. |
 | BM-MF-14 | Objavljenoj Manifestaciji dozvoljeno je dodavanje i uklanjanje Događaja bez promjene statusa Manifestacije i bez ponovnog odobravanja, uz uslov da Manifestacija zadrži najmanje jedan Objavljeni Događaj. Uklanjanje ne briše Događaj niti mijenja njegov status. |
 | BM-MF-15 | Životni ciklusi Manifestacije, Događaja i Održavanja su nezavisni. Promjena statusa Manifestacije ne mijenja automatski statuse Događaja ni Održavanja. |
 | BM-MF-16 | Manifestacija nema sopstvene kategorije ni lokacije. Kategorije pripadaju Događaju; lokacija pripada Održavanju. Izvedeni prikaz kategorija na portalu nije sačuvan atribut Manifestacije. |
@@ -1109,7 +1110,11 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 ### BM-PK-04 — Pregled manifestacija
 
-> Portal Kalendara kulture omogućava pregled manifestacija objavljenih u skladu sa poslovnim pravilima modula Kalendara kulture. Pregled manifestacije obuhvata informacije o manifestaciji i sa njom povezanim događajima.
+> Portal Kalendara kulture omogućava pregled manifestacija objavljenih u skladu sa poslovnim pravilima modula Kalendara kulture.
+>
+> Manifestacije predstavljaju zasebnu sadržajnu cjelinu Portala i ne predstavljaju se kroz kategorije događaja (BM-PK-24).
+>
+> Pregled obuhvata listu, detalj i program Manifestacije, u skladu sa BM-PK-24–BM-PK-28.
 
 ### BM-PK-05 — Detaljan prikaz
 
@@ -1133,9 +1138,11 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 > Portal Kalendara kulture omogućava prikaz objavljenih događaja i manifestacija kroz načine prikaza definisane ovim Business Modelom.
 >
-> Zadržavaju se postojeći prikazi Portala; ne uvode se novi ekrani radi samog redizajna (BM-PK-16, BM-PK-19).
+> Zadržavaju se postojeći prikazi Portala; ne uvodi se redizajn Portala (BM-PK-16, BM-PK-19).
 >
 > Stranica „Pretraga i pregled“ koristi isključivo prikaz liste. Mjesečni kalendar ostaje isključivo na početnoj stranici (BM-PK-20).
+>
+> Stranice liste i detalja Manifestacija predstavljaju usvojenu novu funkcionalnu cjelinu za već usvojeni poslovni entitet Manifestacija (BM-05), a ne redizajn Portala (BM-PK-24).
 
 ### BM-PK-09 — Prikaz održavanja i termina
 
@@ -1257,6 +1264,64 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > Na kraju liste postoji dugme „Prikaži sve događaje“: bez izabranog datuma otvara „Pretragu i pregled“ bez datumskog filtera; sa izabranim datumom otvara „Pretragu i pregled“ sa istim datumskim filterom.
 >
 > Ako nema događaja, prikazuje se postojeća poruka o praznom stanju.
+
+### BM-PK-24 — Manifestacije kao zasebna cjelina Portala (PO-TS9-07A)
+
+> Manifestacije predstavljaju zasebnu sadržajnu cjelinu Portala Kalendara kulture.
+>
+> Manifestacije se ne predstavljaju kroz kategorije događaja.
+>
+> Glavna navigacija Portala sadrži stavku „Manifestacije“.
+>
+> Portal obezbjeđuje listu javno objavljenih Manifestacija, detalj Manifestacije i program Manifestacije.
+>
+> Ne radi se redizajn Portala; uvodi se samo nova funkcionalna cjelina za već usvojeni poslovni entitet Manifestacija (BM-05).
+
+### BM-PK-25 — Lista Manifestacija (PO-TS9-07B)
+
+> Stranica „Manifestacije“ prikazuje listu javno objavljenih i javno dostupnih Manifestacija.
+>
+> Sortiranje: (1) datum početka, (2) naziv.
+>
+> Paginacija: 12 Manifestacija po stranici, standardna paginacija.
+>
+> Kartica sadrži: naslovnu fotografiju; naziv; period održavanja; kratak opis; broj objavljenih događaja u programu; link „Detalji manifestacije“.
+>
+> U V1 lista Manifestacija nema pretragu ni filtere.
+>
+> Ako nema Manifestacija, prikazuje se neutralna poruka.
+
+### BM-PK-26 — Detalj Manifestacije (PO-TS9-07C)
+
+> Detalj Manifestacije prikazuje: naslovnu fotografiju; naziv; period održavanja; Organizatora (kada postoji); lokaciju kada je dostupna kao javna informacija (Manifestacija nema sopstvenu lokaciju kao atribut — BM-MF-16; lokacije događaja prikazuju se u programu); zvaničnu web stranicu kada postoji; opis; program Manifestacije.
+>
+> Program se prikazuje ispod osnovnih informacija. Ako program nije javno dostupan, prikazuje se odgovarajuća poruka.
+>
+> U V1 se ne uvode: galerije; video; dijeljenje; rezervacije; komentari; dodatne multimedijalne funkcionalnosti.
+
+### BM-PK-27 — Program Manifestacije na Portalu (PO-TS9-07D)
+
+> Program je grupisan po datumima i hronološki sortiran: (1) datum, (2) vrijeme, (3) naziv.
+>
+> Svako održavanje prikazuje se kao zaseban unos sa: vremenom; nazivom događaja; lokacijom (ako postoji); linkom „Detalji događaja“.
+>
+> Završeni događaji ostaju prikazani. Otkazani događaji ostaju prikazani uz oznaku „Otkazano“.
+>
+> Ako vrijeme nije definisano, prikazuje se oznaka „Vrijeme nije definisano“.
+>
+> Ako nema javnog programa, prikazuje se odgovarajuća poruka.
+
+### BM-PK-28 — Veza Manifestacija ↔ Događaji na Portalu (PO-TS9-07E)
+
+> Kardinalnost i pripadnost uređene su pravilima BM-MF-03 / BM-DG-02: jedna Manifestacija — više Događaja; Događaj pripada najviše jednoj Manifestaciji; Događaj može postojati bez Manifestacije; Manifestacija je programski okvir; Događaj ostaje osnovni poslovni entitet.
+>
+> Na detalju Događaja koji pripada Manifestaciji prikazuje se informativni blok „Ovaj događaj je dio manifestacije“ sa nazivom Manifestacije, periodom održavanja i dugmetom „Detalji manifestacije“.
+>
+> Program na detalju Manifestacije vodi na detalj Događaja. Obezbijeđena je dvosmjerna navigacija.
+>
+> Događaji ostaju vidljivi u Pretrazi i pregledu, kalendaru, statistikama i arhivi bez obzira na pripadnost Manifestaciji.
+>
+> Uklanjanje ili arhiviranje Manifestacije ne briše Događaje (BM-MF-14, BM-MF-15).
 
 ---
 

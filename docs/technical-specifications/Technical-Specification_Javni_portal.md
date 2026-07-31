@@ -6,8 +6,8 @@
 **Oznaka dokumenta:** TS-009  
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
-**Status dokumenta:** U izradi (faza 1 i faza 2 — usvojene product / IA odluke)  
-**Verzija:** 0.2.0  
+**Status dokumenta:** U izradi (faza 1–3 — usvojene product / IA odluke)  
+**Verzija:** 0.3.0  
 **Datum:** 2026-07-31
 
 ---
@@ -18,6 +18,7 @@
 |---------|--------|------|
 | 0.1.0 | 2026-07-31 | Faza 1: dokumentovane usvojene odluke IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B i TD-TS9-01. Usklađeno sa BM PATCH-045 i FS PATCH-FS-047. Bez SQL, API ugovora, Laravel koda i migracija. Bez izmjene implementacije. |
 | 0.2.0 | 2026-07-31 | Faza 2: dokumentovane usvojene odluke PO-TS9-06A–PO-TS9-06D (Hero, istaknuti, statistike, lista ispod kalendara). Usklađeno sa BM PATCH-046 i FS PATCH-FS-048. Faza 1 odluke neizmijenjene. Bez izmjene implementacije. |
+| 0.3.0 | 2026-07-31 | Faza 3: dokumentovane usvojene odluke PO-TS9-07A–PO-TS9-07E (Manifestacije na javnom portalu). Usklađeno sa BM PATCH-047 i FS PATCH-FS-049. Faze 1–2 neizmijenjene. Bez izmjene implementacije. |
 
 ---
 
@@ -34,10 +35,12 @@ TS-009:
 
 Izvori istine:
 
-* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-11 BM-PK-01–BM-PK-23, BM-AR-02; PATCH-045, PATCH-046)
-* `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13 BR-102–BR-117 i BR-255–BR-264; PATCH-FS-047, PATCH-FS-048)
+* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-11 BM-PK-01–BM-PK-28, BM-05, BM-AR-02; PATCH-045–PATCH-047)
+* `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13 BR-102–BR-117 i BR-255–BR-269; PATCH-FS-047–PATCH-FS-049)
 * usvojene odluke faze 1: IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B, TD-TS9-01
 * usvojene odluke faze 2: PO-TS9-06A, PO-TS9-06B, PO-TS9-06C, PO-TS9-06D
+* usvojene odluke faze 3: PO-TS9-07A, PO-TS9-07B, PO-TS9-07C, PO-TS9-07D, PO-TS9-07E
+* granice entiteta: TS-005 (Manifestacija), TS-003 (Događaj), TS-004 (Održavanje) — TS-009 ne duplicira njihova poslovna pravila
 * `docs/features/Feature-Registry.md`
 * `docs/METHODOLOGY.md`
 
@@ -47,20 +50,21 @@ Izvori istine:
 
 | Poglavlje | Status |
 |-----------|--------|
-| 1. Pregled funkcionalne cjeline | Usvojeno (faza 1–2) |
-| 2. Informaciona arhitektura i prikazi | Usvojeno (faza 1) |
+| 1. Pregled funkcionalne cjeline | Usvojeno (faza 1–3) |
+| 2. Informaciona arhitektura i prikazi | Usvojeno (faza 1; dopuna faza 3 — Manifestacije u IA) |
 | 3. Pretraga i pregled — filteri | Usvojeno (faza 1) |
 | 4. Tehnička napomena: ruta `cultural-calendar.day` | Usvojeno (faza 1) |
 | 5. Početna stranica — Hero, istaknuti, statistike, lista | Usvojeno (faza 2) |
-| 6. Arhitektonski principi (šire) | Planirano — naredne faze |
-| 7. Tokovi i URL ugovor (detalj) | Planirano — naredne faze |
-| 8. Integracije sa TS-003…TS-008 | Planirano — naredne faze |
-| 9. Model podataka / upiti | Planirano — naredne faze |
-| 10. Nefunkcionalni zahtjevi | Planirano — naredne faze |
-| 11. Granice V1 (Out of Scope) | Planirano — naredne faze |
-| 12. Otvorena pitanja | Planirano — naredne faze |
-| 13. Matrica sljedivosti | Usvojeno (faza 1–2) |
-| 14. Napomene za implementaciju | Usvojeno (faza 1–2 — ograničeno) |
+| 6. Manifestacije (javni portal) | Usvojeno (faza 3) |
+| 7. Arhitektonski principi (šire) | Planirano — naredne faze |
+| 8. Tokovi i URL ugovor (detalj) | Planirano — naredne faze |
+| 9. Integracije sa TS-003…TS-008 (detalj) | Planirano — naredne faze |
+| 10. Model podataka / upiti | Planirano — naredne faze |
+| 11. Nefunkcionalni zahtjevi | Planirano — naredne faze |
+| 12. Granice V1 (Out of Scope) | Planirano — naredne faze |
+| 13. Otvorena pitanja | Planirano — naredne faze |
+| 14. Matrica sljedivosti | Usvojeno (faza 1–3) |
+| 15. Napomene za implementaciju | Usvojeno (faza 1–3 — ograničeno) |
 
 ---
 
@@ -71,7 +75,8 @@ Izvori istine:
 3. Nova poslovna pravila se ne uvode kroz TS-009.
 4. Princip **IA-01**: evolucija postojećeg javnog portala; bez redizajna i bez nove strukture stranica van usvojenih odluka.
 5. Izmjene usvojenog sadržaja evidentiraju se novom verzijom dokumenta i odgovarajućim PATCH-om BM/FS, gdje je primjenjivo.
-6. Odluke faze 1 ostaju važeće i ne mijenjaju se fazom 2.
+6. Odluke faza 1 i 2 ostaju važeće i ne mijenjaju se fazom 3.
+7. TS-009 opisuje **isključivo javni portal**; poslovni model entiteta Manifestacija ostaje u BM-05 / TS-005.
 
 ---
 
@@ -101,28 +106,41 @@ Faza 2 obuhvata isključivo usvojene odluke za **početnu stranicu**:
 * Statistike (PO-TS9-06C);
 * Lista ispod kalendara (PO-TS9-06D).
 
-Ne obuhvata: pretragu/filtere (već faza 1), manifestacije, detalj događaja, arhivu, urednički portal.
+Ne obuhvata: pretragu/filtere (već faza 1), detalj događaja, arhivu, urednički portal. Manifestacije na portalu su faza 3.
 
-## 1.4 Van obuhvata faze 1–2 (dokumentacioni)
+## 1.4 Obuhvat faze 3
+
+Faza 3 obuhvata isključivo usvojene odluke za **Manifestacije na javnom portalu**:
+
+* Manifestacije kao zasebna cjelina i navigacija (PO-TS9-07A);
+* Lista Manifestacija (PO-TS9-07B);
+* Detalj Manifestacije (PO-TS9-07C);
+* Program Manifestacije (PO-TS9-07D);
+* Veza Manifestacija ↔ Događaji na portalu (PO-TS9-07E).
+
+Poslovni model entiteta Manifestacija (lifecycle, kardinalnost, uslovi objave) ostaje u BM-05 / TS-005. TS-009 definiše **isključivo javni prikaz i navigaciju**.
+
+## 1.5 Van obuhvata faze 1–3 (dokumentacioni)
 
 * detaljan URL ugovor filtera (imena parametara, format datuma) — naredna faza;
 * implementacija filtera, rename navigacije, klikabilnih statistika, dugmeta „Prikaži sve događaje“, praznog stanja istaknutih;
+* implementacija cjelina Manifestacije na portalu (lista, detalj, program, navigacija);
 * newsletter UI (TS-011);
 * urednički portal (TS-010);
 * potpuni model upita prema novom domenu (Održavanje, Manifestacija, Lokacija katalog, …).
 
-## 1.5 Zavisnosti
+## 1.6 Zavisnosti
 
 | Zavisnost | Uloga u odnosu na TS-009 |
 |-----------|---------------------------|
-| TS-003 Događaj | Izvor javne verzije događaja; isticanje |
-| TS-004 Održavanje | Termini i lokacije u prikazu |
-| TS-005 Manifestacija | Filter i prikaz povezanih MF |
+| TS-003 Događaj | Izvor javne verzije događaja; isticanje; detalj događaja + blok veze ka MF |
+| TS-004 Održavanje | Termini i lokacije u prikazu; unosi u programu MF |
+| TS-005 Manifestacija | Entitet MF; javni prikaz liste/detalja/programa (bez dupliciranja lifecycle pravila) |
 | TS-006 Lokacije | Filter i prikaz lokacija |
 | TS-007 Kategorije i oznake | Filter kategorije; prikaz |
 | TS-008 Mediji | Prikaz fotografija (naslovna / fallback) |
 | TS-010 Urednički portal | Nije dio javnog portala; Urednik označava istaknute |
-| TS-011 Newsletter | Povezano; van faze 1–2 TS-009 |
+| TS-011 Newsletter | Povezano; van faze 1–3 TS-009 |
 
 ---
 
@@ -152,8 +170,9 @@ Referentni javni prikazi (postojeća struktura):
 |--------|----------|
 | Početna (`cultural-calendar.index`) | Hero, statistike, mjesečni kalendar, lista ispod kalendara, istaknuti, newsletter UI, kontakt |
 | Pretraga i pregled (ranije „Pregled događaja“, `cultural-calendar.events`) | Centralna lista + filteri (PO-TS9-03A / 04A) |
+| Manifestacije (nova cjelina, PO-TS9-07A) | Lista + detalj + program |
 | Arhiva (`cultural-calendar.archive`) | Prošli / arhivski prikaz u skladu sa BM/FS |
-| Detalj događaja (`cultural-calendar.show`) | Puni prikaz jednog događaja |
+| Detalj događaja (`cultural-calendar.show`) | Puni prikaz jednog događaja; blok veze ka Manifestaciji (PO-TS9-07E) |
 
 ## 2.3 PO-TS9-03A — Pretraga i pregled
 
@@ -309,21 +328,107 @@ Dodatno:
 
 ---
 
-# 6–12. Planirano (naredne faze)
+# 6. Manifestacije (javni portal) — faza 3
+
+> **Granica:** Poslovna pravila entiteta Manifestacija (BM-05 / TS-005), Događaja (TS-003) i Održavanja (TS-004) se ovdje ne dupliciraju. Ova sekcija definiše isključivo javni prikaz i navigaciju (PO-TS9-07A–07E).
+
+## 6.1 PO-TS9-07A — Zasebna cjelina
+
+| Odluka | PO-TS9-07A |
+|--------|------------|
+| BM | BM-PK-24 (takođe BM-PK-04, BM-PK-08) |
+| FS | BR-265 (takođe BR-105, BR-109) |
+
+| Stavka | Vrijednost |
+|--------|------------|
+| Položaj | Zasebna sadržajna cjelina Portala |
+| Kategorije | Ne predstavljaju se kroz kategorije događaja |
+| Navigacija | Stavka „Manifestacije“ u glavnoj navigaciji |
+| Obuhvat | Lista + detalj + program |
+| Redizajn | Ne; samo nova funkcionalna cjelina za usvojeni entitet (BM-05) |
+
+## 6.2 PO-TS9-07B — Lista Manifestacija
+
+| Odluka | PO-TS9-07B |
+|--------|------------|
+| BM | BM-PK-25 |
+| FS | BR-266 |
+
+| Stavka | Vrijednost |
+|--------|------------|
+| Vidljivost | Samo javno objavljene i javno dostupne Manifestacije |
+| Sortiranje | (1) datum početka, (2) naziv |
+| Paginacija | 12 po stranici, standardna |
+| Kartica | Naslovna fotografija; naziv; period; kratak opis; broj objavljenih događaja u programu; link „Detalji manifestacije“ |
+| V1 | Bez pretrage; bez filtera |
+| Prazno | Neutralna poruka |
+
+## 6.3 PO-TS9-07C — Detalj Manifestacije
+
+| Odluka | PO-TS9-07C |
+|--------|------------|
+| BM | BM-PK-26 |
+| FS | BR-267 |
+
+| Polje / stavka | Vrijednost |
+|----------------|------------|
+| Osnovno | Naslovna fotografija; naziv; period; Organizator (ako postoji); web stranica (ako postoji); opis |
+| Lokacija | Prikaži ako je dostupna kao javna informacija; MF nema sopstvenu lokaciju (BM-MF-16 / TS-005); lokacije događaja u programu |
+| Program | Ispod osnovnih informacija; ako nije javno dostupan — odgovarajuća poruka |
+| V1 Out of Scope | Galerije; video; dijeljenje; rezervacije; komentari; dodatne multimedije |
+
+## 6.4 PO-TS9-07D — Program Manifestacije
+
+| Odluka | PO-TS9-07D |
+|--------|------------|
+| BM | BM-PK-27, BM-MF-13 |
+| FS | BR-268, BR-192 |
+
+| Stavka | Vrijednost |
+|--------|------------|
+| Grupisanje | Po datumima |
+| Sortiranje | (1) datum, (2) vrijeme, (3) naziv |
+| Unos | Svako održavanje zasebno: vrijeme; naziv; lokacija (ako postoji); link „Detalji događaja“ |
+| Završeni | Ostaju prikazani |
+| Otkazani | Ostaju prikazani uz oznaku „Otkazano“ |
+| Bez vremena | Oznaka „Vrijeme nije definisano“ |
+| Bez programa | Odgovarajuća poruka |
+| Nacrti / na odobrenju / vraćeni | Nisu javno vidljivi (BR-192) |
+
+## 6.5 PO-TS9-07E — Veza Manifestacija ↔ Događaji
+
+| Odluka | PO-TS9-07E |
+|--------|------------|
+| BM | BM-PK-28 (kardinalnost: BM-MF-03 / BM-DG-02; brisanje: BM-MF-14, BM-MF-15) |
+| FS | BR-269 (takođe BR-093, BR-094, §5.4.2) |
+
+| Stavka | Vrijednost |
+|--------|------------|
+| Kardinalnost | 1 MF → N događaja; događaj ≤ 1 MF; događaj može biti bez MF |
+| Uloga | MF = programski okvir; događaj = osnovni poslovni entitet |
+| Detalj događaja | Blok „Ovaj događaj je dio manifestacije“ + naziv + period + „Detalji manifestacije“ |
+| Detalj MF | Program → „Detalji događaja“ |
+| Navigacija | Dvosmjerna |
+| Ostala mjesta | Događaji ostaju u Pretrazi i pregledu, kalendaru, statistikama, arhivi |
+| Arhiva / uklanjanje MF | Ne briše događaje |
+
+---
+
+# 7–13. Planirano (naredne faze)
 
 Sljedeća poglavlja ostaju za naredne faze TS-009 nakon dodatnih usvojenih odluka:
 
 * širi arhitektonski principi (autorizacija pristupa, performans liste, paginacija);
-* detaljni tokovi i URL ugovor (uključujući parametre filtera za statistike i „Prikaži sve“);
-* integracije sa TS-003–TS-008;
+* detaljni tokovi i URL ugovor (uključujući parametre filtera za statistike i „Prikaži sve“; rute Manifestacija);
+* detaljne integracije sa TS-003–TS-008;
 * model podataka / upiti;
 * NFR;
-* Out of Scope V1;
+* Out of Scope V1 (dopuna);
 * otvorena pitanja.
 
 ---
 
-# 13. Matrica sljedivosti (faza 1–2)
+# 14. Matrica sljedivosti (faza 1–3)
 
 | Odluka | BM | FS | TS-009 |
 |--------|----|----|--------|
@@ -337,16 +442,23 @@ Sljedeća poglavlja ostaju za naredne faze TS-009 nakon dodatnih usvojenih odluk
 | PO-TS9-06B | BM-PK-15 | BR-117, BR-262 | §5.2 |
 | PO-TS9-06C | BM-PK-22 | BR-263, §5.2 | §5.3 |
 | PO-TS9-06D | BM-PK-23 | BR-264, §5.3 | §5.4 |
+| PO-TS9-07A | BM-PK-24 | BR-265 | §6.1 |
+| PO-TS9-07B | BM-PK-25 | BR-266 | §6.2 |
+| PO-TS9-07C | BM-PK-26 | BR-267 | §6.3 |
+| PO-TS9-07D | BM-PK-27, BM-MF-13 | BR-268, BR-192 | §6.4 |
+| PO-TS9-07E | BM-PK-28 | BR-269, §5.4.2 | §6.5 |
 | Pretraga / filteri (opšte) | BM-PK-06, BM-PK-07 | BR-107, BR-108 | §2–§3 |
-| Načini prikaza | BM-PK-08 | BR-109 | §2.4 |
+| Načini prikaza | BM-PK-08 | BR-109 | §2.4, §6 |
 
 ---
 
-# 14. Napomene za implementaciju (faza 1–2)
+# 15. Napomene za implementaciju (faza 1–3)
 
-* Faze 1 i 2 su **dokumentacione**; ne mijenja se kod u okviru ovih PATCH-eva.
+* Faze 1–3 su **dokumentacione**; ne mijenja se kod u okviru ovih PATCH-eva.
 * Pri budućoj implementaciji: poštovati IA-01 (minimalne izmjene postojećeg portala).
 * Rename navigacionog labela „Pregled događaja“ → „Pretraga i pregled“ pripada budućoj implementacionoj fazi (PO-TS9-03A).
 * Filteri (PO-TS9-04A) pripadaju stranici `cultural-calendar.events` (budući UI naziv „Pretraga i pregled“).
 * Rutu `cultural-calendar.day` ne tretirati kao javni ekran u IA dijagramima ni u korisničkoj dokumentaciji portala (TD-TS9-01).
-* Faza 2 — budući CR/impl paket (bez izmjene u ovom dokumentu): klikabilne statistike; label treće kartice = naziv mjeseca; naredni događaji max 3; dugme „Prikaži sve događaje“; neutralno prazno stanje istaknutih (bez admin teksta); usklađenje max istaknutih sa BM-PK-15 / BR-117 (3).
+* Faza 2 — budući CR/impl paket: klikabilne statistike; label treće kartice = naziv mjeseca; naredni događaji max 3; dugme „Prikaži sve događaje“; neutralno prazno stanje istaknutih; usklađenje max istaknutih sa BM-PK-15 / BR-117 (3).
+* Faza 3 — budući CR/impl paket: navigacija „Manifestacije“; lista (12/strana, sortiranje, kartice); detalj; program (grupisanje, Otkazano, Vrijeme nije definisano); blok veze na detalju događaja; bez pretrage/filtera liste MF u V1.
+* Ne duplicirati lifecycle / kardinalnost iz TS-005 / TS-003 / TS-004 u portalskom kodu kao paralelna pravila — koristiti usvojene BM/FS reference.
