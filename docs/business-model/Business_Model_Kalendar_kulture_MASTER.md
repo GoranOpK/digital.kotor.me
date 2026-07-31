@@ -2,8 +2,8 @@
 # Business Model
 ## Modul: Kalendar kulture
 
-**Status dokumenta:** U IZRADI
-**Verzija:** 0.1
+**Status dokumenta:** Final Review
+**Verzija:** 0.5.0
 
 ---
 
@@ -60,6 +60,9 @@
 | PATCH-046 | 2026-07-31 | TS-009 faza 2 (PO-TS9-06A–PO-TS9-06D): Hero (statički identitet); istaknuti događaji (max 3, Urednik, aktuelni); statistike (3 klikabilne kartice; treća = naziv izabranog mjeseca); lista ispod kalendara (naredni max 3 / dan; dugme „Prikaži sve događaje“). Usklađen BM-PK-15; dodati BM-PK-21–BM-PK-23. |
 | PATCH-047 | 2026-07-31 | TS-009 faza 3 (PO-TS9-07A–PO-TS9-07E): Manifestacije kao zasebna cjelina javnog portala (navigacija, lista, detalj, program, veza ↔ Događaji). Usklađeni BM-PK-04, BM-PK-08, BM-MF-13; dodati BM-PK-24–BM-PK-28. |
 | PATCH-048 | 2026-07-31 | TS-009 Final Review: terminološko razdvajanje Oznaka (BM-08) od Tagova medija (BM-09) u BM-DG-06 i pripadajućem tekstu BM-04. Bez izmjene poslovne logike. |
+| PATCH-049 | 2026-07-31 | §5 Poslovni principi — popunjeno sistematizacijom opštih principa izvedenih iz usvojenih BM-01…BM-17. Bez novih poslovnih pravila i bez proširenja obima. |
+| PATCH-050 | 2026-07-31 | §7 Završne odredbe — uvedeno završno poglavlje o ulozi i održavanju Business Model dokumenta. Bez novih poslovnih pravila sistema. |
+| 0.5.0 | 2026-07-31 | Final Review. Završna dokumentaciona revizija: §5 i §7 kompletirani (PATCH-049/050); BM-01…BM-17 USVOJENO; usvojene PO/IA odluke ugrađene; bez novih poslovnih pravila. Bez izmjene FS/TS/IS/Feature Registry/implementacije. |
 
 Napomena:
 
@@ -77,6 +80,8 @@ Svaki PATCH dobija:
 - kratak opis izmjene.
 
 Naziv PATCH-a predstavlja zvanični naziv izmjene i koristi se u istoriji verzija.
+
+**Terminološka napomena (važeći pojam):** Istorijski zapisi (npr. PATCH-007) mogu koristiti raniji naziv „Termin“ za poslovnu cjelinu koja danas nosi naziv **Održavanje događaja** (PATCH-023). Važeći poslovni termin za tu cjelinu je **Održavanje** / **Održavanje događaja**. Istorijski redovi se ne mijenjaju.
 
 ---
 
@@ -193,7 +198,27 @@ Dokument opisuje poslovna pravila i poslovne procese, bez definisanja tehničke 
 
 # 5. Poslovni principi
 
-Poglavlje još nije definisano.
+Poslovni principi sažimaju opšte orijentacije već usvojene u BM-01…BM-17. Ne zamjenjuju pojedinačna poslovna pravila.
+
+1. **Jedan izvor istine** — Posljednja usvojena verzija Business Modela predstavlja jedini izvor istine za poslovna pravila modula Kalendar kulture.
+
+2. **Business Model definiše poslovna pravila** — Poslovna pravila, entiteti, uloge i životni ciklusi utvrđuju se u ovom dokumentu; druga dokumentacija ih razrađuje, a ne zamjenjuje.
+
+3. **Odvojenost od implementacije** — Business Model opisuje poslovna pravila i procese bez definisanja tehničke implementacije.
+
+4. **Sljedivost dokumentacije** — Poslovna, funkcionalna, tehnička i implementaciona dokumentacija moraju ostati međusobno sljedive.
+
+5. **Događaj i Manifestacija** — Događaj može biti samostalan ili pripadati najviše jednoj Manifestaciji; pripadnost Manifestaciji nije obavezna.
+
+6. **Održavanja pripadaju Događaju** — Održavanja postoje isključivo u okviru Događaja; Manifestacija nema sopstvena održavanja.
+
+7. **Javni portal i javni sadržaj** — Portal Kalendara kulture prikazuje isključivo javno objavljen, odnosno javno dostupan sadržaj u skladu sa poslovnim pravilima.
+
+8. **Jedinstveni poslovni model** — Sve poslovne cjeline koriste zajedničke entitete, pravila i definicije utvrđene ovim Business Modelom.
+
+9. **Razdvajanje odgovornosti** — Poslovne odgovornosti i ovlašćenja određuju se ulogom korisnika i poslovnom cjelinom; ne preklapaju se osim kada je to izričito definisano.
+
+10. **Evidencija i odgovornost** — Poslovno značajne radnje evidentiraju se radi odgovornosti, kontrole i revizije, u skladu sa BM-14.
 
 ---
 
@@ -1807,3 +1832,23 @@ Arhitektura poslovnih cjelina određuje odgovornosti, granice i međusobnu sarad
 > Arhitektura poslovnih cjelina predstavlja osnov za organizaciju svih poslovnih procesa modula Kalendar kulture.
 >
 > Sve poslovne cjeline primjenjuju jedinstvena poslovna pravila i međusobno funkcionišu kao sastavni djelovi jedinstvenog informacionog sistema.
+
+---
+
+# 7. Završne odredbe
+
+1. Business Model predstavlja **referentni poslovni dokument** modula Kalendar kulture.
+
+2. Business Model je **izvor poslovnih pravila** za planiranje, razvoj, testiranje i održavanje sistema. Posljednja usvojena verzija predstavlja jedini izvor istine za poslovna pravila ovog modula.
+
+3. **Functional Specification** razrađuje usvojena poslovna pravila u funkcionalne zahtjeve i ponašanje sistema, bez zamjene ovog Business Modela.
+
+4. **Technical Specification** razrađuje tehničku realizaciju usvojenih poslovnih i funkcionalnih pravila.
+
+5. **Implementation Strategy** definiše redoslijed, faznost i način uvođenja usvojene tehničke specifikacije u implementaciju.
+
+6. Promjene Business Modela vrše se isključivo kroz **usvojenu metodologiju** upravljanja dokumentom i usvojene poslovne odluke.
+
+7. Istorija izmjena vodi se kroz **PATCH evidenciju** u ovom dokumentu. Postojeći redovi istorije se ne mijenjaju.
+
+8. Do sticanja statusa **Stable**, ovaj dokument je **živi dokument**: dopunjuje se i usklađuje kroz evidentirane PATCH-eve. Nakon Stable statusa, izmjene se i dalje vrše isključivo kroz usvojenu metodologiju i PATCH evidenciju.
