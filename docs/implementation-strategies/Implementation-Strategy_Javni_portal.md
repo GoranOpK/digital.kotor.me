@@ -7,8 +7,8 @@
 **Feature ID:** FT-001  
 **Modul:** Kalendar kulture  
 **Referentna specifikacija:** TS-009 v1.0.0 Stable  
-**Status dokumenta:** Final Review  
-**Verzija:** 0.5.0  
+**Status dokumenta:** Stable  
+**Verzija:** 1.0.0  
 **Datum:** 2026-07-31
 
 ---
@@ -50,7 +50,7 @@ IS-001:
 
 **Svrha:** omogućiti kontrolisanu, evolutivnu implementaciju javnog portala u skladu sa TS-009 v1.0.0, uz najmanji rizik za postojeću produkciju (princip IA-01).
 
-**Status:** Final Review (v0.5.0).
+**Status:** Stable (v1.0.0).
 
 **Van svrhe:** SQL, Laravel kod, konačni dizajn klasa/metoda, nove Product Owner odluke, zamjena TS-003…TS-008.
 
@@ -69,9 +69,8 @@ IS-001:
 | TS-007 Kategorije i oznake | Oznake događaja; zavisnost Faze 4/6 |
 | TS-008 Mediji | Mediji / fallback; zavisnost Faze 4/6 (po obuhvatu) |
 | `docs/features/Feature-Registry.md` | Registar FT-001 / plan TS |
-| Radna analiza implementacione strategije (chat, TS-009 v1.0.0) | Ulaz za faze, rizike, zavisnosti (usklađena sa IS-001-01…08) |
 
-**Napomena o putanji:** U repozitorijumu nije postojao usvojen folder za implementacione strategije. Dokument je smješten u `docs/implementation-strategies/` po predloženom standardu imenovanja, analogno `docs/technical-specifications/` i `docs/change-requests/`.
+**Napomena o putanji:** Dokument je smješten u `docs/implementation-strategies/`, analogno `docs/technical-specifications/` i `docs/change-requests/`.
 
 **Napomena o oznaci TS-010:** Feature Registry rezerviše **TS-010** za *Urednički portal*. IS-001 nije taj dokument i ne zamjenjuje ga.
 
@@ -129,7 +128,7 @@ U IS-001 se **ne** koristi riječ „Tagovi“ za klasifikaciju događaja.
 
 Implementacija **ne smije** uvoditi funkcionalnosti koje nijesu prethodno usvojene kroz dokumentaciju.
 
-**Hibridna strategija isporuke (iz radne analize, usklađena sa principima):**
+**Hibridna strategija isporuke (usklađena sa principima):**
 
 * Faze 1–3: tanke, portalne cjeline (jedna logička cjelina po isporuci).
 * Faza 4: domenski modul(i) — ne djeliti na „pola“ entiteta bez konzistentnog modela.
@@ -530,7 +529,8 @@ Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehni�
 |---------|--------|------|
 | 0.1.0 | 2026-07-31 | Nacrt. Formalizovane usvojene odluke IS-001-01 … IS-001-08. Ugrađeni relevantni zaključci radne implementacione analize TS-009 v1.0.0. Bez izmjene BM/FS/TS/implementacije. |
 | 0.5.0 | 2026-07-31 | Final Review. Terminologija Oznake ≠ Tagovi; razgraničenje Faze 3 / Faze 6; precizirana sljedivost BM/FS/TS; usklađeni test/deploy nazivi; smanjena otvorena pitanja. Bez novih PO odluka. Bez izmjene BM/FS/TS/implementacije. |
+| 1.0.0 | 2026-07-31 | Stable. Dokument je prošao Final Review i predstavlja referentnu implementacionu strategiju za implementaciju TS-009 v1.0.0. Bez izmjene sadržaja faza, rizika, deploy/rollback strategije, sljedivosti ili otvorenih pitanja. Bez izmjene BM/FS/TS/implementacije. |
 
 ---
 
-**Kraj dokumenta IS-001 v0.5.0 (Final Review)**
+**Kraj dokumenta IS-001 v1.0.0 (Stable)**
