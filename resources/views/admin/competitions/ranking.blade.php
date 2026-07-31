@@ -794,7 +794,7 @@
             @endif
             @else
                 <div style="text-align: center; padding: 40px; color: #6b7280;">
-                    <p style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Nema ocjenjenih prijava za ovaj konkurs.</p>
+                    <p style="margin-bottom: 16px; font-size: 16px; font-weight: 600;">Nema ocijenjenih prijava za ovaj konkurs.</p>
                     <p style="margin-bottom: 8px; font-size: 14px;">Prijave odbijene zbog nedostatka dokumenata ne prikazuju se u rang listi.</p>
                 </div>
             @endif

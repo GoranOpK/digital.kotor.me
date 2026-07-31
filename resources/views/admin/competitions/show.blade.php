@@ -412,7 +412,7 @@
                                 $statusLabels = [
                                     'draft' => 'Nacrt',
                                     'submitted' => 'U obradi',
-                                    'evaluated' => 'Ocjenjena',
+                                    'evaluated' => 'Ocijenjena',
                                     'approved' => 'Odobrena',
                                     'rejected' => 'Odbijena',
                                 ];

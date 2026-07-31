@@ -411,7 +411,7 @@
             <h1 class="obrazac-naslov-prijava">PRIJAVA</h1>
             <p class="obrazac-podnaslov" id="obrazacPodnaslovHeader">
                 na javni konkurs za raspodjelu bespovratnih sredstava<br>
-                namjenjenih za podršku ženskom preduzetništvu<br>
+                namijenjenih za podršku ženskom preduzetništvu<br>
                 <span id="obrazacRegistracijaHeader">(za oblik registracije PREDUZETNIK)</span>
             </p>
         </div>

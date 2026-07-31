@@ -136,7 +136,7 @@
                     <select name="filter" class="form-control" onchange="document.getElementById('filterForm').submit();">
                         <option value="" {{ request('filter') === null || request('filter') === '' ? 'selected' : '' }}>Sve prijave</option>
                         <option value="pending" {{ request('filter') === 'pending' ? 'selected' : '' }}>Čeka ocjenjivanje</option>
-                        <option value="evaluated" {{ request('filter') === 'evaluated' ? 'selected' : '' }}>Ocjenjene</option>
+                        <option value="evaluated" {{ request('filter') === 'evaluated' ? 'selected' : '' }}>Ocijenjene</option>
                         <option value="rejected" {{ request('filter') === 'rejected' ? 'selected' : '' }}>Odbijene prijave</option>
                     </select>
                 </div>
@@ -250,7 +250,7 @@
                                 $displayStatus = 'Odbijena prijava';
                                 $statusClass = 'status-rejected';
                             } elseif ($allEvaluated) {
-                                $displayStatus = 'Ocjenjena prijava';
+                                $displayStatus = 'Ocijenjena prijava';
                                 $statusClass = 'status-evaluated';
                             } else {
                                 $displayStatus = 'U ocjenjivanju';
@@ -301,7 +301,7 @@
                                     @elseif($allEvaluated)
                                         {{-- Kada su svi članovi ocjenili, svi članovi komisije vide "Ocjenjena prijava" --}}
                                         <a href="{{ route('evaluation.create', $application) }}" class="btn-sm evaluated" style="background: #10b981; color: #fff;">
-                                            Ocjenjena prijava
+                                            Ocijenjena prijava
                                         </a>
                                     @else
                                         {{-- Dok nisu svi ocjenili, normalni flow --}}

@@ -448,7 +448,7 @@
                                 <div style="font-weight: 600; color: #111827; font-size: 13px;">{{ Str::limit($app->business_plan_name ?? 'Bez naziva', 25) }}</div>
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
                                     @php
-                                        $statusLabels = ['draft' => 'Nacrt', 'submitted' => 'U obradi', 'evaluated' => 'Ocjenjena', 'approved' => 'Odobrena', 'rejected' => 'Odbijena'];
+                                        $statusLabels = ['draft' => 'Nacrt', 'submitted' => 'U obradi', 'evaluated' => 'Ocijenjena', 'approved' => 'Odobrena', 'rejected' => 'Odbijena'];
                                         $statusColors = ['draft' => 'background: #fef3c7; color: #92400e;', 'submitted' => 'background: #dbeafe; color: #1e40af;', 'evaluated' => 'background: #d1fae5; color: #065f46;', 'approved' => 'background: #d1fae5; color: #065f46;', 'rejected' => 'background: #fee2e2; color: #991b1b;'];
 
                                         // Badge stil
@@ -760,7 +760,7 @@
                                     $statusLabels = [
                                         'draft' => 'Nacrt',
                                         'submitted' => 'U obradi',
-                                        'evaluated' => 'Ocjenjena',
+                                        'evaluated' => 'Ocijenjena',
                                         'approved' => 'Odobrena',
                                         'rejected' => 'Odbijena',
                                     ];

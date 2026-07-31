@@ -138,7 +138,7 @@
                                         $statusLabels = [
                                             'draft' => 'Nacrt',
                                             'submitted' => 'U obradi',
-                                            'evaluated' => 'Ocjenjena',
+                                            'evaluated' => 'Ocijenjena',
                                             'approved' => 'Odobrena',
                                             'rejected' => 'Odbijena',
                                         ];
@@ -261,7 +261,7 @@
                                     <span class="status-badge status-{{ $application->status }}">
                                         @if($application->status === 'draft') Nacrt
                                         @elseif($application->status === 'submitted') Podnesena
-                                        @elseif($application->status === 'evaluated') Ocjenjena
+                                        @elseif($application->status === 'evaluated') Ocijenjena
                                         @elseif($application->status === 'approved') Odobrena
                                         @elseif($application->status === 'rejected') Odbijena
                                         @else {{ $application->status }}

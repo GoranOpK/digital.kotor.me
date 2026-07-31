@@ -119,7 +119,7 @@
                         <option value="">Svi statusi</option>
                         <option value="draft" {{ request('status') === 'draft' ? 'selected' : '' }}>Nacrt</option>
                         <option value="submitted" {{ request('status') === 'submitted' ? 'selected' : '' }}>Podnesena</option>
-                        <option value="evaluated" {{ request('status') === 'evaluated' ? 'selected' : '' }}>Ocjenjena</option>
+                        <option value="evaluated" {{ request('status') === 'evaluated' ? 'selected' : '' }}>Ocijenjena</option>
                         <option value="approved" {{ request('status') === 'approved' ? 'selected' : '' }}>Odobrena</option>
                         <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>Odbijena</option>
                     </select>
@@ -179,7 +179,7 @@
                                 <span class="status-badge status-{{ $application->status }}">
                                     @if($application->status === 'draft') Nacrt
                                     @elseif($application->status === 'submitted') Podnesena
-                                    @elseif($application->status === 'evaluated') Ocjenjena
+                                    @elseif($application->status === 'evaluated') Ocijenjena
                                     @elseif($application->status === 'approved') Odobrena
                                     @elseif($application->status === 'rejected') Odbijena
                                     @else {{ $application->status }}
