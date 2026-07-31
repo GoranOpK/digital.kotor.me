@@ -7,8 +7,8 @@
 **Feature ID:** FT-001  
 **Modul:** Kalendar kulture  
 **Referentna specifikacija:** TS-009 v1.0.0 Stable  
-**Status dokumenta:** Nacrt  
-**Verzija:** 0.1.0  
+**Status dokumenta:** Final Review  
+**Verzija:** 0.5.0  
 **Datum:** 2026-07-31
 
 ---
@@ -50,9 +50,9 @@ IS-001:
 
 **Svrha:** omogućiti kontrolisanu, evolutivnu implementaciju javnog portala u skladu sa TS-009 v1.0.0, uz najmanji rizik za postojeću produkciju (princip IA-01).
 
-**Status:** Nacrt (v0.1.0).
+**Status:** Final Review (v0.5.0).
 
-**Van svrhe:** SQL, Laravel kod, konačni dizajn klasa/metoda, nova Product Owner odluke, zamjena TS-003…TS-008.
+**Van svrhe:** SQL, Laravel kod, konačni dizajn klasa/metoda, nove Product Owner odluke, zamjena TS-003…TS-008.
 
 ---
 
@@ -91,11 +91,26 @@ IS-001 **ne smije**:
 
 IS-001 **smije** navoditi: pogođene tehničke slojeve, tip migracije, nivo rizika, zavisnosti, redoslijed, test/deploy/rollback obuhvat.
 
-### Terminologija (usklađeno sa TS-009)
+### Terminologija (usklađeno sa BM / FS / TS-009)
 
-Koriste se kanonski nazivi: Kalendar kulture, Početna, Pretraga i pregled, Detalji događaja, Manifestacije, Detalji manifestacije, Arhiva događaja, Održavanje, Termin (samo vremenski atributi), Kategorija, **Oznake** (klasifikacija događaja), **Tagovi** (metapodaci medija, BM-09), Statusne oznake.
+Kanonski nazivi:
 
-Gdje IS-001-03 u radnoj formulaciji faza koristi „Tagovi“ u kontekstu klasifikacije događaja, u ovom dokumentu koristi se kanonski pojam **Oznake** (BM-08 / TS-007), kako ne bi došlo do miješanja sa tagovima medija.
+| Pojam | Značenje |
+|-------|----------|
+| Kalendar kulture | Modul / portal |
+| Početna | Početna stranica |
+| Pretraga i pregled | Centralna lista + filteri |
+| Detalji događaja | Stranica jednog događaja |
+| Manifestacije / Detalji manifestacije | Zasebna cjelina / stranica Manifestacije |
+| Arhiva događaja | Stranica arhive |
+| Održavanje | Poslovni entitet (TS-004) |
+| Termin | Isključivo vremenski atributi Održavanja; nije entitet |
+| Kategorija | Primarna klasifikacija događaja |
+| **Oznake** | Dodatna klasifikacija događaja (BM-08 / TS-007). **Jedini** kanonski termin za tu klasifikaciju. |
+| **Tagovi** | Metapodaci medija (BM-09 / TS-008). **Nisu** sinonim za Oznake; nisu V1 UI (TS-009). |
+| Statusne oznake | Javni prikaz poslovnog statusa (npr. Otkazano). **Nisu** isto što i Oznake (BM-08). |
+
+U IS-001 se **ne** koristi riječ „Tagovi“ za klasifikaciju događaja.
 
 ---
 
@@ -130,8 +145,8 @@ Na osnovu analize postojeće implementacije (bez izmjene koda u okviru IS-001):
 |----------|------------------|
 | Početna | Hero statički; istaknuti / statistike / lista ispod kalendara postoje, djelimično odstupaju od TS-009 (npr. limiti, klikabilnost, dugme „Prikaži sve“) |
 | Pretraga i pregled | Stranica postoji (UI naziv još „Pregled događaja“); filteri nepotpuni u odnosu na PO-TS9-04A |
-| Detalji događaja | Postoje; flat datum/vrijeme/lokacija na događaju; bez bloka Manifestacije; statusne oznake ograničene |
-| Arhiva događaja | Postoji lista (`published` + završen period); bez punih statusnih oznaka po BM-PK-13 |
+| Detalji događaja | Postoje; datum/vrijeme/lokacija na događaju (bez zasebnog Održavanja); bez bloka Manifestacije; statusne oznake ograničene |
+| Arhiva događaja | Postoji lista (objavljeni + završen period po datumu); bez punih statusnih oznaka po BM-PK-13 |
 | Manifestacije (portal) | Nisu implementirane (nema entiteta / ruta / UI) |
 | Održavanja | Nisu zaseban model; podaci na događaju (TO odstupanje) |
 | Oznake / Mediji (domen) | Nisu u skladu sa punim TS-007/TS-008 modelom na portalu |
@@ -152,8 +167,10 @@ Detaljna matrica odstupanja: §7.
 | Istaknuti (max 3, prazno) | djelimično | da | ne | 1 |
 | Statistike (klik, naziv mjeseca) | djelimično | da | ne | 1 |
 | Lista ispod kalendara (max 3, „Prikaži sve“) | djelimično | da | ne | 1 |
-| Detalji događaja (baseline) | djelimično | da | djelimično | 3, zatim 6 |
-| Arhiva događaja (baseline) | da | da | ne | 3, zatim 6 |
+| Detalji događaja — baseline (postojeći model) | djelimično | da | ne | **3** |
+| Detalji događaja — puni domen (Održavanja, Oznake, …) | ne | da | djelimično | **6** (nakon 4) |
+| Arhiva događaja — baseline (postojeći model) | da | da | ne | **3** |
+| Arhiva događaja — puno usklađenje (status / domen) | djelimično | da | ne | **6** |
 | Manifestacije UI (lista/detalj/program/blok) | ne | — | da | 5 |
 | Domen MF / Održavanja / Oznake / Mediji | ne / djelimično | — | da | 4 |
 
@@ -170,22 +187,34 @@ Faza 2 (Pretraga i pregled)
     └─► preferira završenu Fazu 1
     └─► filter MF → tek nakon Faze 4 + 5
 
-Faza 3 (Detalji + Arhiva, postojeći model)
-    └─► može paralelno sa Fazom 2 ako nema dijeljenih konflikata
-    └─► puna usklađenost → Faza 6
+Faza 3 (Detalji + Arhiva — **samo postojeći model**)
+    └─► ne uključuje više Održavanja, Oznake (BM-08), niti pun BM-DG-04 kriterijum arhive
+    └─► puno usklađenje Detalja/Arhive sa domenom → **isključivo Faza 6**
 
 Faza 4 (Domenski model)
     └─► preduslov za Fazu 5
-    └─► preduslov za punu Fazu 6 (više Održavanja, Oznake)
+    └─► preduslov za Fazu 6 (više Održavanja, Oznake, mediji po obuhvatu)
 
 Faza 5 (Manifestacije na portalu)
     └─► zahtijeva Fazu 4 (Manifestacija + Održavanja za program)
+    └─► ne zatvara puno usklađenje Detalja/Arhive (to je Faza 6)
 
 Faza 6 (Završno usklađenje)
-    └─► zahtijeva Faze 4 i 5 (gdje je relevantno)
+    └─► zahtijeva Faze 4 i 5
+    └─► **ne ponavlja** obuhvat Faze 3; nadograđuje portal na domenski model
 ```
 
-**Obavezujući redoslijed** (IS-001-03): 1 → 2 → 3 → 4 → 5 → 6, osim ako posebna analiza i odobrenje potvrde da odstupanje ne narušava zavisnosti i IS-001-02.
+**Granica Faza 3 vs Faza 6 (obavezna):**
+
+| | Faza 3 | Faza 6 |
+|--|--------|--------|
+| Model podataka | Postojeći (bez novih tabela/relacija) | Nakon Faze 4 (Održavanja, Oznake, …) |
+| Detalji / Arhiva | UI i ponašanje u granicama trenutne šeme | Prikaz usklađen sa punim BM-PK-05/09–14 |
+| Više Održavanja | Zabranjeno uvoditi | Obavezno uskladiti prikaz |
+| Oznake (BM-08) | Van obuhvata | U obuhvatu |
+| Kriterijum Arhive | Bez izmjene ka BM-DG-04 osim ako poseban CR i PO odobre ranije | Usklađenje sa BM-PK-13 / BR-114 u punom smislu |
+
+**Obavezujući redoslijed** (IS-001-03): 1 → 2 → 3 → 4 → 5 → 6, osim ako posebna analiza i odobrenje potvrde da odstupanje ne narušava zavisnosti i IS-001-02. Ograničeni paralelizam Faze 2 i Faze 3 dozvoljen je samo uz odobrenje i bez dijeljenih konflikata; **ne** mijenja granicu Faza 3 / Faza 6.
 
 ---
 
@@ -197,15 +226,15 @@ Faza 6 (Završno usklađenje)
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Uskladiti postojeći javni UI sa TS-009 fazama 1–2 (terminologija, početna), bez novog domena |
-| **Obuhvat** | Terminologija (Pretraga i pregled); Početna; Hero (provjera usklađenosti); istaknuti (max 3, prazno stanje); statistike (klikabilnost, naziv mjeseca); lista ispod kalendara (max 3, „Prikaži sve“); očuvanje postojećih javnih tokova; TD-TS9-01 (ne reklamirati `day` kao javni ekran) |
+| **Cilj** | Uskladiti postojeći javni UI sa usvojenim TS-009 odlukama za početnu i terminologiju (PO-TS9-03A label; PO-TS9-06A–06D), bez novog domena |
+| **Obuhvat** | Terminologija (Pretraga i pregled); Početna; Hero (provjera usklađenosti); istaknuti (max 3, prazno stanje); statistike (klikabilnost, naziv mjeseca); lista ispod kalendara (max 3, „Prikaži sve“); očuvanje postojećih javnih tokova; TD-TS9-01 (interni dan-view nije javni ekran IA) |
 | **Zavisnosti** | Nema domenskih preduslova |
 | **Rizik** | **Nizak** |
-| **Uticaj na kod** | Controller (početna / query limiti); Model (eventualno validacija isticanja); Blade (index, navigacija); Route: ne; CSS: malo; JS: eventualno kalendar label; Baza: ne; Testovi: da |
+| **Uticaj na kod** | Sloj kontrolera (početna / limiti upita); model (eventualno validacija isticanja); prikazi (početna, navigacija); rute: bez novih; stilovi: malo; klijentska logika kalendara: eventualno label; baza: ne; testovi: da |
 | **Ulaz** | TS-009 usvojen; rizik/test/rollback plan; Faza 1 definisana |
 | **Izlaz** | UI usklađen sa PO-TS9-03A (label), 06A–06D, BM-PK-15/21–23; testovi OK; PO potvrda |
 | **Test** | Početna: Hero, ≤3 istaknuta, 3 statistike + navigacija na Pretragu i pregled, lista ≤3 / dan, dugme; navigacioni naziv |
-| **Deploy** | Bez migracije; bez maintenance window; backup preporučen kao uobičajena praksa; feature flag nije neophodan; smoke: početna + events + show + archive |
+| **Deploy** | Bez migracije; bez maintenance window; backup preporučen kao uobičajena praksa; feature flag nije neophodan; smoke: početna + Pretraga i pregled + Detalji događaja + Arhiva događaja |
 | **Rollback** | **Potpuni rollback** (revert isporuke) — jednostavan |
 
 **Minimalni skup izmjena:** proširenje postojeće početne i navigacije; bez novih ekrana.
@@ -220,11 +249,11 @@ Faza 6 (Završno usklađenje)
 | **Obuhvat** | Pretraga; filteri (datum, kategorija, lokacija — u granicama postojećeg modela); URL stanje; očuvanje konteksta; paginacija; sortiranje po usvojenim pravilima; „Poništi filtere“ |
 | **Zavisnosti** | Preferira Fazu 1 (rename). Filter Manifestacije **nije** u ovoj fazi |
 | **Rizik** | **Srednji** |
-| **Uticaj na kod** | Controller (lista/query); Blade (events); Route: ne (ista ruta); CSS: malo; JS: ne obavezno; Baza: ne; Testovi: da |
+| **Uticaj na kod** | Sloj kontrolera (lista/upiti); prikaz Pretrage i pregleda; rute: bez novih; stilovi: malo; baza: ne; testovi: da |
 | **Ulaz** | Faza 1 završena (ili odobren izuzetak); plan test/rollback |
 | **Izlaz** | Filteri + URL u skladu sa BM-PK-18 / BR-257; regresija liste OK; PO potvrda |
-| **Test** | Kombinovanje filtera; prazni rezultati; paginacija + query string; poništi; ulaz sa statistika / „Prikaži sve“ |
-| **Deploy** | Bez migracije; bez MW; feature flag opciono ako treba postepeno uključivanje filter UI; smoke: events + index linkovi |
+| **Test** | Kombinovanje filtera; prazni rezultati; paginacija + query string; poništi; ulaz sa statistika / „Prikaži sve događaje“ |
+| **Deploy** | Bez migracije; bez MW; feature flag opciono ako treba postepeno uključivanje filter UI; smoke: Pretraga i pregled + linkovi sa početne |
 | **Rollback** | **Potpuni** ili **djelimični** (UI filtera) — bez migracije |
 
 ---
@@ -233,18 +262,18 @@ Faza 6 (Završno usklađenje)
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Uskladiti Detalje događaja i Arhivu u **granicama postojećeg modela** (baseline TS-009 §7–§8), bez uvođenja punog domena Održavanja/MF |
-| **Obuhvat** | Postojeći detalj; statusne oznake gdje model dozvoljava; navigacija i povratak (`back`); Arhiva; kartice Arhive; bez lažnog prikaza „više Održavanja“ dok domen ne postoji |
-| **Zavisnosti** | Faze 1–2 nisu strogi preduslov; puna usklađenost sa BM-PK-09/13 → Faza 6 |
+| **Cilj** | Uskladiti Detalje događaja i Arhivu događaja **isključivo u granicama postojećeg modela** (baseline TS-009 §7–§8), bez uvođenja domena Održavanja, Oznaka ili Manifestacije |
+| **Obuhvat** | Postojeći detalj; statusne oznake gdje trenutni statusni model dozvoljava; navigacija i povratak; Arhiva; kartice Arhive. **Van obuhvata:** više Održavanja; Oznake (BM-08); blok Manifestacije; izmjena kriterijuma ulaska u Arhivu ka BM-DG-04 (to je Faza 6 ili zaseban odobreni CR) |
+| **Zavisnosti** | Faze 1–2 nisu strogi preduslov za početak; **ne zamjenjuje** Fazu 6 |
 | **Rizik** | **Srednji** |
-| **Uticaj na kod** | Controller (show/archive query samo uz jasno usklađenje); Blade (show, archive); Route: ne; Baza: ne |
-| **Ulaz** | Plan test/rollback; jasna granica „postojeći model“ dokumentovana u CR |
-| **Izlaz** | Prikaz i navigacija usklađeni u dogovorenom obimu; nema regresije 404/back; PO potvrda |
-| **Test** | Show za published; back na arhivu/pregled sa paginacijom; arhiva lista; statusne oznake (gdje primjenjivo) |
-| **Deploy** | Bez migracije; bez MW; feature flag nije neophodan; smoke: show + archive + events |
+| **Uticaj na kod** | Sloj kontrolera (prikaz detalja / arhive — bez novih tabela); prikazi Detalja i Arhive; rute: bez novih; baza: ne |
+| **Ulaz** | Plan test/rollback; granica „postojeći model“ dokumentovana u CR |
+| **Izlaz** | Prikaz i navigacija usklađeni u dogovorenom baseline obimu; nema regresije dostupnosti detalja / povratka; PO potvrda |
+| **Test** | Detalji za javno dostupne događaje; povratak na Arhivu / Pretragu i pregled sa kontekstom; lista Arhive; statusne oznake (gdje primjenjivo) |
+| **Deploy** | Bez migracije; bez MW; feature flag nije neophodan; smoke: Detalji + Arhiva + Pretraga i pregled |
 | **Rollback** | **Potpuni rollback** |
 
-**Ograničenje:** Ne uvoditi nova polja/tabele u ovoj fazi.
+**Ograničenje:** Ne uvoditi nova polja/tabele/relacije u ovoj fazi. Ne simulirati puni TS-004/TS-007/TS-005 prikaz.
 
 ---
 
@@ -256,7 +285,7 @@ Faza 6 (Završno usklađenje)
 | **Obuhvat** | Manifestacija; Održavanja; Oznake; Mediji (ako su dio potvrđenog implementacionog obuhvata CR-a); migracije; modeli i relacije; urednički tokovi kao **zavisnost** (planirani TS-010 / postojeći admin — van IS-001 detalja) |
 | **Zavisnosti** | Faze 1–3 završene ili odobren izuzetak. Zasebni CR za domen. |
 | **Rizik** | **Visok** |
-| **Uticaj na kod** | Novi/prošireni modeli; migracije; admin/urednički tokovi; javni portal u ovoj fazi **minimalno** (samo kompatibilnost čitanja); Testovi: obavezni domen + regresija portala |
+| **Uticaj na kod** | Novi/prošireni modeli; migracije; admin/urednički tokovi; javni portal u ovoj fazi **minimalno** (samo kompatibilnost čitanja); testovi: obavezni domen + regresija portala |
 | **Ulaz** | Usvojeni TS domena; migracioni plan; backup plan; test plan; rollback plan; procjena rizika potvrđena |
 | **Izlaz** | Domen konzistentan sa BM/FS/TS; migracije uspješne na staging; javni portal nije regresiran; PO potvrda |
 | **Test** | Integritet relacija; lifecycle; migracija podataka (dry-run); smoke javnog portala bez MF UI |
@@ -275,11 +304,11 @@ Faza 6 (Završno usklađenje)
 | **Obuhvat** | Navigacija „Manifestacije“; lista; Detalji manifestacije; program; blok Manifestacije na Detaljima događaja; filter po Manifestaciji na Pretrazi i pregledu |
 | **Zavisnosti** | **Faza 4** (Manifestacija + Održavanja za program) |
 | **Rizik** | **Srednji** (nakon stabilne Faze 4); **Visok** ako se radi prije Faze 4 |
-| **Uticaj na kod** | Nove rute/prikazi; proširenje navigacije i show; filter na events; CSS za nove stranice; Baza: već Faza 4 |
+| **Uticaj na kod** | Nove rute/prikazi; proširenje navigacije i Detalja događaja; filter na Pretrazi i pregledu; stilovi za nove stranice; baza: već Faza 4 |
 | **Ulaz** | Faza 4 izlazni kriterijumi ispunjeni |
 | **Izlaz** | Lista/detalj/program/blok/filter u skladu sa BM-PK-24–28 / BR-265–269; dvosmjerna navigacija; PO potvrda |
-| **Test** | Paginacija liste MF; prazna lista; program (Otkazano, Vrijeme nije definisano); blok na show; filter MF; regresija index/events/archive |
-| **Deploy** | Bez nove migracije ako je Faza 4 gotova; bez MW tipično; feature flag **preporučen** za navigaciju/rute MF dok se ne potvrdi stabilnost; smoke: MF lista/detalj + show + events filter |
+| **Test** | Paginacija liste MF; prazna lista; program (statusna oznaka Otkazano; Vrijeme nije definisano); blok na Detaljima događaja; filter MF; regresija Početne / Pretrage i pregleda / Arhive |
+| **Deploy** | Bez nove migracije ako je Faza 4 gotova; bez MW tipično; feature flag **preporučen** za navigaciju/rute MF dok se ne potvrdi stabilnost; smoke: MF lista/detalj + Detalji događaja + filter Pretrage i pregleda |
 | **Rollback** | **Djelimični** (sakrivanje nav/ruta) ili **potpuni** revert UI — bez undo Faze 4 |
 
 ---
@@ -288,14 +317,14 @@ Faza 6 (Završno usklađenje)
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Puna usklađenost javnog portala sa TS-009 nakon domena |
-| **Obuhvat** | Puna podrška za više Održavanja; puna podrška za Oznake; završno usklađenje Detalja događaja; završno usklađenje Arhive; regresija; optimizacija (u granicama usvojenog); potvrda usklađenosti sa TS-009 |
-| **Zavisnosti** | Faze 4 i 5 |
+| **Cilj** | Završiti usklađenost javnog portala sa TS-009 **nakon** uvođenja domena (Faza 4) i MF portala (Faza 5); ne ponavljati baseline rad Faze 3 |
+| **Obuhvat** | Prikaz više Održavanja na Detaljima događaja i relevantnim listama; prikaz Oznaka (BM-08 / TS-007); završno usklađenje Detalja događaja sa BM-PK-05/09–14; završno usklađenje Arhive sa BM-PK-13 / BR-114 (uključujući kriterijum/status po usvojenom BM); regresija; potvrda usklađenosti sa TS-009. **Van obuhvata:** nove poslovne funkcionalnosti; NFR van usvojenog; ponovni rad Faze 3 baseline-a |
+| **Zavisnosti** | Faze 4 i 5 završene |
 | **Rizik** | **Srednji do Visok** (široka regresija) |
-| **Uticaj na kod** | Controller/query/Blade na više javnih prikaza; eventualno performanse upita; Testovi: široka regresija |
+| **Uticaj na kod** | Sloj kontrolera/upita/prikaza na više javnih stranica; testovi: široka regresija |
 | **Ulaz** | Faze 4–5 završene; checklist usklađenosti sa TS-009 matricom |
-| **Izlaz** | Nema neprihvatljive regresije; dokumentovana potvrda usklađenosti; PO potvrda zatvaranja implementacije TS-009 obuhvata |
-| **Test** | End-to-end: početna → pretraga → detalj → MF → arhiva; statusne oznake; više Održavanja; oznake |
+| **Izlaz** | Nema neprihvatljive regresije; dokumentovana potvrda usklađenosti; PO potvrda zatvaranja implementacionog obuhvata TS-009 |
+| **Test** | End-to-end: Početna → Pretraga i pregled → Detalji događaja → Manifestacije → Arhiva; statusne oznake; više Održavanja; Oznake |
 | **Deploy** | Po obimu; backup; MW po potrebi; smoke puni portal |
 | **Rollback** | **Djelimični** po CR paketima; puni rollback teži zbjeći |
 
@@ -362,12 +391,12 @@ Faza 6 (Završno usklađenje)
 
 | Faza | Obavezno testirati | Ne smije biti narušeno |
 |------|--------------------|------------------------|
-| 1 | Početna (Hero, istaknuti, statistike, lista, dugme); navigacioni naziv | Arhiva, show, admin CRUD, ostali moduli platforme |
-| 2 | Filteri, URL, poništi, paginacija, ulazi sa početne | Početna (izuzev linkova), arhiva |
-| 3 | Show, back, arhiva kartice/paginacija, statusne oznake (obuhvat) | Admin, newsletter |
-| 4 | Migracije (staging), relacije, lifecycle; smoke portala | Produkcijski podaci (backup); javni UI bez namjene Faze 5 |
-| 5 | MF lista/detalj/program/blok/filter; regresija index/events/show/archive | Faza 4 podaci |
-| 6 | E2E portal + regresija | Stabilnost performansi lista |
+| 1 | Početna (Hero, istaknuti, statistike, lista, dugme); navigacioni naziv | Arhiva, Detalji događaja, admin CRUD, ostali moduli platforme |
+| 2 | Filteri, URL, poništi, paginacija, ulazi sa početne | Početna (izuzev linkova), Arhiva |
+| 3 | Detalji, povratak, Arhiva kartice/paginacija, statusne oznake (baseline obuhvat) | Admin, newsletter; **ne** očekivati Oznake / više Održavanja |
+| 4 | Migracije (staging), relacije, lifecycle; smoke portala | Produkcijski podaci (backup); javni MF UI (Faza 5) |
+| 5 | MF lista/detalj/program/blok/filter; regresija Početne / Pretrage / Detalja / Arhive | Podaci Faze 4 |
+| 6 | E2E portal + regresija (Održavanja, Oznake, Arhiva po BM) | Stabilnost lista |
 
 **Zajednički smoke nakon svake isporuke:** Početna, Pretraga i pregled, Detalji događaja, Arhiva događaja; nakon Faze 5 i Manifestacije.
 
@@ -389,11 +418,11 @@ Opšta pravila:
 
 | Faza | Bez MW? | Migracija? | Backup? | Feature flag? | Smoke odmah nakon deploy-a |
 |------|:-------:|:----------:|:-------:|:-------------:|----------------------------|
-| 1 | Da | Ne | Preporučen | Ne neophodan | Početna, events, show, archive |
-| 2 | Da | Ne | Preporučen | Opciono | Events + linkovi sa početne |
-| 3 | Da | Ne | Preporučen | Ne neophodan | Show, archive, back |
+| 1 | Da | Ne | Preporučen | Ne neophodan | Početna, Pretraga i pregled, Detalji, Arhiva |
+| 2 | Da | Ne | Preporučen | Opciono | Pretraga i pregled + linkovi sa početne |
+| 3 | Da | Ne | Preporučen | Ne neophodan | Detalji, Arhiva, povratak |
 | 4 | Ne (preporučen MW) | **Da** | **Obavezan** | Opciono (ekspozicija) | Domen + smoke portala |
-| 5 | Da (tipično) | Ne (ako 4 gotova) | Preporučen | **Preporučen** (MF nav/rute) | MF + show + events |
+| 5 | Da (tipično) | Ne (ako 4 gotova) | Preporučen | **Preporučen** (MF nav/rute) | MF + Detalji događaja + Pretraga i pregled |
 | 6 | Po obimu | Po obimu | Obavezan ako ima migracija | Po potrebi | Pun portal E2E |
 
 ---
@@ -452,14 +481,14 @@ Ne dozvoljavaju se nevidljive ili nedokumentovane izmjene stabilne specifikacije
 
 | IS-001 | TS-009 / odluke | BM / FS (referenca) |
 |--------|-----------------|---------------------|
-| Faza 1 | IA-01, PO-TS9-03A, 05A/05B, 06A–06D, TD-TS9-01 | BM-PK-15–23; BR-117, 255–264 |
-| Faza 2 | PO-TS9-03A, 04A | BM-PK-17–18; BR-256–257 |
-| Faza 3 | §7 Detalji, §8 Arhiva (baseline) | BM-PK-05, 13; BR-106, 114 |
-| Faza 4 | Granice TS-003/004/005/007/008 | BM-04/05/06/08/09 |
-| Faza 5 | PO-TS9-07A–07E, §6 | BM-PK-24–28; BR-265–269 |
-| Faza 6 | §7–§8 puni obuhvat + regresija | BM-PK-09–14; BR-110–115 |
+| Faza 1 | IA-01; PO-TS9-03A (label); PO-TS9-05A/05B (provjera); PO-TS9-06A–06D; TD-TS9-01 | BM-PK-15, BM-PK-16, BM-PK-19–23; BR-117, BR-255, BR-258–264; §5.1–§5.3 |
+| Faza 2 | PO-TS9-03A; PO-TS9-04A | BM-PK-17–18 (takođe BM-PK-06–07); BR-256–257 (takođe BR-107–108) |
+| Faza 3 | TS-009 §7–§8 **baseline** (postojeći model) | BM-PK-05 (djelimično), BM-PK-13 (djelimično — prikaz); BR-106, BR-114. **Ne:** BM-PK-09/11 (Održavanja/Oznake) |
+| Faza 4 | Granice domena (nije portal UI) | TS-003/004/005/007/008; BM-04/05/06/08/09; odgovarajući BR u FS §5.5–5.12 |
+| Faza 5 | PO-TS9-07A–07E; TS-009 §6 | BM-PK-24–28; BM-MF-13; BR-265–269, BR-192 |
+| Faza 6 | TS-009 §7–§8 **puni** obuhvat nakon domena | BM-PK-05, BM-PK-09–14; BR-106, BR-110–115; §5.4 |
 | IS-001-02 | IA-01 | BM-PK-16; BR-255 |
-| IS-001-08 | TS-009 Stable | — |
+| IS-001-08 | TS-009 v1.0.0 Stable | — |
 
 | Usvojena odluka | Primarne sekcije IS-001 |
 |-----------------|-------------------------|
@@ -484,10 +513,12 @@ Ne dozvoljavaju se nevidljive ili nedokumentovane izmjene stabilne specifikacije
 
 ### Otvorena pitanja (bez PO odluke u IS-001)
 
-1. Tačan CR raspored unutar Faze 4 (redoslijed Održavanja vs Manifestacija vs Oznake).
-2. Da li Faza 3 mijenja query kriterijum Arhive ka punom BM-DG-04/`archived` statusu, ili ostaje datumski kriterijum do Faze 6.
-3. Feature-flag infrastruktura — postoji li već u platformi ili se uvodi samo po potrebi Faze 5.
-4. Obim Medija u prvom CR-u Faze 4 (samo fallback vs pun TS-008).
+1. Tačan CR raspored unutar Faze 4 (redoslijed Održavanja vs Manifestacija vs Oznake vs Mediji).
+2. Kada se kriterijum Arhive usklađuje sa BM-DG-04 / statusom Arhiviran — **podrazumijevano Faza 6**; ranije samo uz zaseban CR i PO odobrenje (Faza 3 to ne radi).
+3. Feature-flag mehanizam — postoji li već na platformi ili se uvodi samo po potrebi Faze 5.
+4. Obim Medija (TS-008) u prvom CR-u Faze 4 (samo hijerarhija prikaza / fallback vs širi obuhvat).
+
+**Uklonjeno kao „otvoreno“:** miješanje pojmova Oznake/Tagovi — razriješeno kanonskom terminologijom (§4). Preklapanje Faze 3/6 — razriješeno eksplicitnom granicom (§8, §9.3, §9.6).
 
 Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehničko odobrenje prije pogođene faze.
 
@@ -498,7 +529,8 @@ Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehni�
 | Verzija | Datum | Opis |
 |---------|--------|------|
 | 0.1.0 | 2026-07-31 | Nacrt. Formalizovane usvojene odluke IS-001-01 … IS-001-08. Ugrađeni relevantni zaključci radne implementacione analize TS-009 v1.0.0. Bez izmjene BM/FS/TS/implementacije. |
+| 0.5.0 | 2026-07-31 | Final Review. Terminologija Oznake ≠ Tagovi; razgraničenje Faze 3 / Faze 6; precizirana sljedivost BM/FS/TS; usklađeni test/deploy nazivi; smanjena otvorena pitanja. Bez novih PO odluka. Bez izmjene BM/FS/TS/implementacije. |
 
 ---
 
-**Kraj dokumenta IS-001 v0.1.0 (Nacrt)**
+**Kraj dokumenta IS-001 v0.5.0 (Final Review)**
