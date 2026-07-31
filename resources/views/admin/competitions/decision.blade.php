@@ -382,9 +382,9 @@
             <div class="decision-footer">
                 <div class="decision-footer-row decision-footer-signature-row">
                     <div class="decision-signature">
-                        <div class="decision-signature-title">Predsjednik/ca Komisije</div>
+                        <div class="decision-signature-title">VD SEKRETARA</div>
                         <div class="decision-signature-line"></div>
-                        <div class="decision-signature-name">{{ $chairmanName ?? '_________________________' }}</div>
+                        <div class="decision-signature-name">Vladan Barović</div>
                     </div>
                 </div>
                 <div class="decision-footer-row decision-footer-distribution-row">
