@@ -2,8 +2,8 @@
 # Functional Specification
 ## Modul: Kalendar kulture
 
-**Status dokumenta:** Final Review
-**Verzija:** 0.5.0
+**Status dokumenta:** Stable
+**Verzija:** 1.0.0
 
 ---
 
@@ -63,6 +63,7 @@
 | PATCH-FS-049 | 2026-07-31 | TS-009 faza 3 (PO-TS9-07A–PO-TS9-07E): Manifestacije na javnom portalu — navigacija, lista, detalj, program, veza ↔ Događaji. Usklađeni BR-105, BR-109, BR-192, §5.4; dodati BR-265–BR-269. |
 | PATCH-FS-050 | 2026-07-31 | Formalno zatvaranje dokumenta: ažuriran Status razvoja (§1–§5.16 Approved); ispravljen Sadržaj/TOC; Platformsko pravilo — Status Approved; minimalno uklonjeno implementaciono curenje (`kk_admin`, ime rute, napomena o implementaciji). Bez novih BR i bez izmjene funkcionalnih/poslovnih pravila. Status dokumenta ostaje U IZRADI; verzija ostaje 0.1. |
 | 0.5.0 | 2026-07-31 | Final Review. Završna dokumentaciona revizija: §1–§5.16 Approved; TOC i Platformsko pravilo usklađeni (PATCH-FS-050); BR-001…BR-269 neizmijenjeni; usvojene PO/IA odluke ugrađene; bez novih funkcionalnih pravila. Bez izmjene BM/TS/IS/Feature Registry/RG-001/implementacije. |
+| 1.0.0 | 2026-08-01 | Stable. Functional Specification je uspješno prošao Final Review i predstavlja referentni funkcionalni dokument modula Kalendar kulture. Bez izmjene funkcionalnih pravila, numeracije, identifikatora ili sljedivosti. Bez izmjene BM/TS/IS/Feature Registry/RG-001/implementacije. |
 
 Napomena:
 
@@ -4018,3 +4019,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-31 | FS-001 / 5.4 i 5.13 (PATCH-FS-049): TS-009 faza 3 — PO-TS9-07A–07E. Manifestacije na javnom portalu; usklađeni BR-105, BR-109, BR-192, §5.4; dodati BR-265–BR-269. |
 | 2026-07-31 | FS-001 (PATCH-FS-050): Formalno zatvaranje — Status razvoja (§1–§5.16 Approved), ispravljen TOC, Platformsko pravilo Approved, minimalno uklonjeno implementaciono curenje. Bez novih BR. Status dokumenta ostaje U IZRADI; verzija 0.1. |
 | 2026-07-31 | FS-001 Final Review v0.5.0: završna dokumentaciona revizija; Status dokumenta Final Review; BR-001…BR-269 neizmijenjeni; bez novih funkcionalnih pravila. |
+| 2026-08-01 | FS-001 Stable v1.0.0: Functional Specification je uspješno prošao Final Review i predstavlja referentni funkcionalni dokument modula Kalendar kulture. Bez izmjene funkcionalnih pravila. |
