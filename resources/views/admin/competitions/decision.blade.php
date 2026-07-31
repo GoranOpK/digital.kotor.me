@@ -274,7 +274,7 @@
             </div>
 
             <div class="decision-preamble">
-                Na osnovu članova 22, 23 i 24 Odluke o podršci ženskom preduzetništvu ("Službeni list Crne Gore - opštinski propisi", br. ), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu donosi:
+                Na osnovu članova 22, 23 i 24 Odluke o podršci ženskom preduzetništvu ("Sl. list CG - opštinski propisi", br. 027/26 od 22.06.2026. g.), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu donosi:
             </div>
 
             <div class="decision-title-main">ODLUKU</div>
@@ -351,7 +351,7 @@
             <div class="decision-article decision-obrazlozenje">
                 <div class="decision-article-title">Obrazloženje</div>
                 <p class="decision-article-intro">
-                    Shodno Odluci o podršci ženskom preduzetništvu ("Službeni list Crne Gore - opštinski propisi", br. ) (u daljem tekstu: Odluka), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu raspisala je Javni konkurs za raspodjelu bespovratnih sredstava namijenjenih za podršku ženskom preduzetništvu u {{ $year }}. godini (u daljem tekstu: Konkurs). Konkurs je objavljen {{ $pubStart ? $fmtDate($pubStart) : '___' }}. godine i isti je trajao 20 dana, zaključno sa {{ $pubEnd ? $fmtDate($pubEnd) : '___' }}. godine, te je bio objavljen na vebsajtu Opštine Kotor, kao i putem lokalnog javnog emitera "Radio Kotor".
+                    Shodno Odluci o podršci ženskom preduzetništvu ("Sl. list CG - opštinski propisi", br. 027/26 od 22.06.2026. g.) (u daljem tekstu: Odluka), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu raspisala je Javni konkurs za raspodjelu bespovratnih sredstava namijenjenih za podršku ženskom preduzetništvu u {{ $year }}. godini (u daljem tekstu: Konkurs). Konkurs je objavljen {{ $pubStart ? $fmtDate($pubStart) : '___' }}. godine i isti je trajao 20 dana, zaključno sa {{ $pubEnd ? $fmtDate($pubEnd) : '___' }}. godine, te je bio objavljen na vebsajtu Opštine Kotor, kao i putem lokalnog javnog emitera "Radio Kotor".
                 </p>
                 <p class="decision-article-intro">
                     Podnošenje prijava odvijalo se isključivo elektronski putem digitalnog servisa Opštine Kotor (digital.kotor.me).
