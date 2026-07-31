@@ -55,6 +55,7 @@
 | PATCH-041 | 2026-07-30 | Korekcija PO-LOC-01 i PO-LOC-05: centralni katalog Lokacija je opcioni katalog za ponovno korišćenje (nije obavezan i nije jedini izvor svih Lokacija); dozvoljen ručni unos naziva Lokacije bez obavezne kataloške reference; referencijalni integritet i merge primjenjuju se samo kada postoji veza sa katalogom. Usklađeni BM-07 i BM-GL-13. |
 | PATCH-042 | 2026-07-30 | Documentation Consistency Patch (CR-003): terminološko pojašnjenje BM-AL-07 — uklonjena dvosmislena formulacija „Održavanje (gdje je u katalogu)“ i zamijenjena jednoznačnim opisom aktivnosti nad Održavanjem u okviru kataloga Događaji iz FS §5.16. Bez izmjene poslovnih pravila. |
 | PATCH-043 | 2026-07-30 | TS7-PO-01–TS7-PO-06: BM-08 Kategorije i oznake — poslovni katalog (ne ENUM); oznake u V1; lifecycle Aktivna/Neaktivna; bez migracije test podataka; bez kategorije „Nešto drugo“; katalogom upravlja isključivo Urednik; Moderator samo koristi; usklađeni BM-GL-14 i BM-GL-23. |
+| PATCH-044 | 2026-07-31 | TS8-01–TS8-09: BM-09 Mediji — samostalan entitet bez poslovnog vlasnika; zatvoreni katalog namjena (naslovna događaja, naslovna manifestacije, podrazumijevana fotografija kategorije); kardinalnosti i fallback; tip Fotografija (JPEG/PNG/WebP, 5 MB); lifecycle Aktivan/Neaktivan; ovlašćenja Moderator/Urednik; pretraga i metapodaci; usklađeni BM-GL-15 i BM-PK-12. |
 
 Napomena:
 
@@ -890,45 +891,107 @@ Za poglavlje BM-08 trenutno nema otvorenih poslovnih pitanja.
 
 ## 1. Svrha
 
-Definisanje poslovnog koncepta medija, njihove poslovne namjene, povezivanja sa poslovnim entitetima i upravljanja medijima u modulu Kalendara kulture.
+Definisanje poslovnog koncepta medija, zatvorenog kataloga namjena, povezivanja sa poslovnim entitetima, životnog ciklusa, ovlašćenja, metapodataka i prikaza u modulu Kalendara kulture.
 
 ## 2. Poslovni opis
 
-Mediji predstavljaju digitalni sadržaj koji se koristi za vizuelno ili dokumentaciono predstavljanje poslovnih entiteta u modulu Kalendara kulture.
+Medij je **samostalan poslovni entitet** i **zajednički platformski resurs**. Medij **nema poslovnog vlasnika**.
 
-Mediji predstavljaju zajednički poslovni resurs koji se može koristiti za predstavljanje više poslovnih entiteta.
+Jedini poslovni tip medija u V1 je **Fotografija**.
+
+Medij ima tačno jednu poslovnu namjenu iz zatvorenog kataloga namjena. Namjena nije isto što i tip medija, format datoteke, ekstenzija ili MIME tip.
 
 ## 3. Poslovni koncept
 
-Mediji omogućavaju vizuelno i dokumentaciono predstavljanje događaja, manifestacija i lokacija kroz jasno definisanu poslovnu namjenu, uz upravljanje njihovim životnim ciklusom i uređivačkim procesom.
+U V1 mediji služe vizuelnom predstavljanju događaja, manifestacija i kategorija kroz tri namjene:
+
+1. Naslovna fotografija događaja (cover događaja);
+2. Naslovna fotografija manifestacije (cover manifestacije);
+3. Podrazumijevana fotografija kategorije.
+
+Upload medija vrši se isključivo tokom uređivanja događaja, manifestacije ili kategorije. Ne postoji zaseban poslovni ekran isključivo za upload.
+
+Kreator (creator) medija služi isključivo auditu, istoriji i logovima — nije vlasništvo.
 
 ## 4. Poslovna pravila
 
 ### BM-MD-01 — Definicija medija
 
-> Medij predstavlja digitalni sadržaj koji se koristi za vizuelno ili dokumentaciono predstavljanje poslovnih entiteta u modulu Kalendara kulture.
+> Medij je samostalan poslovni entitet tipa Fotografija u modulu Kalendara kulture. Medij je zajednički platformski resurs i nema poslovnog vlasnika.
 
 ### BM-MD-02 — Povezivanje medija
 
-> Jedan medij može biti povezan sa jednim ili više događaja, manifestacija ili lokacija u modulu Kalendara kulture, u skladu sa poslovnim pravilima sistema.
+> Jedan medij može biti povezan sa jednim ili više poslovnih entiteta u skladu sa svojom namjenom: događaji (naslovna fotografija događaja), manifestacije (naslovna fotografija manifestacije) ili kategorije (podrazumijevana fotografija kategorije). U V1 ne postoje poslovne veze medija sa lokacijama niti organizatorima.
 
 ### BM-MD-03 — Namjena medija
 
-> Medij ima definisanu namjenu koja određuje njegovu poslovnu ulogu u predstavljanju poslovnog entiteta u modulu Kalendara kulture.
+> Medij ima tačno jednu poslovnu namjenu iz zatvorenog kataloga. Katalog namjena nije korisnički konfigurabilan i ne uređuje se kroz aplikaciju. Proširenje kataloga moguće je isključivo novom Product Owner odlukom i odgovarajućim PATCH-om dokumentacije. Namjene V1: Naslovna fotografija događaja; Naslovna fotografija manifestacije; Podrazumijevana fotografija kategorije. Isti medij-zapis ne može istovremeno imati dvije različite namjene.
 
 ### BM-MD-04 — Aktivnost medija
 
-> Medij može biti aktivan ili neaktivan. Neaktivan medij ne može se koristiti za nova povezivanja sa poslovnim entitetima, ali ostaje povezan sa postojećim poslovnim entitetima radi očuvanja istorijskih podataka.
+> Medij ima status **Aktivan** ili **Neaktivan**. Soft delete se ne koristi. Neaktivan medij ne može dobiti nova poslovna povezivanja, ali ostaje povezan sa postojećim entitetima i nastavlja da se prikazuje kroz postojeće veze dok se veza ne ukloni ili medij ne zamijeni. Dozvoljena je reaktivacija (Neaktivan → Aktivan). Trajno brisanje medija dozvoljeno je isključivo kada medij nema nijednu poslovnu vezu. Deaktivacija ne briše postojeće veze niti fizički fajl i ne mijenja automatski događaj, manifestaciju ili kategoriju.
 
-### BM-MD-05 — Upravljanje medijima
+### BM-MD-05 — Ovlašćenja nad medijima
 
-> Moderator može predlagati medije kroz uređivanje događaja u ime Organizatora, dok urednik upravlja medijima u postupku odobravanja i objavljivanja sadržaja.
+> Upload medija moguć je isključivo tokom uređivanja događaja, manifestacije ili kategorije. Moderator uploaduje, povezuje, zamjenjuje vezu i uklanja vezu isključivo u okviru svog organizacionog konteksta; Moderator ne mijenja medij-zapis (poslovne i tehničke atribute medija) niti aktivira, deaktivira, reaktivira ili trajno briše medij. Urednik uploaduje u okviru svojih ovlašćenja i upravlja medij-zapisom; isključivo Urednik aktivira, deaktivira, reaktivira i trajno briše medij. Organizator nije operativna uloga. Administrator platforme nema redovnu poslovnu ulogu u upravljanju medijima. Prije svake izmjene i prije trajnog brisanja sistem ponovo provjerava ovlašćenja i uslove; ako uslovi nisu ispunjeni, operacija se odbija.
 
-### BM-MD-06 — Naslovna fotografija događaja
+### BM-MD-06 — Naslovna fotografija događaja i hijerarhija prikaza
 
-> Sistem uvijek prikazuje jednu naslovnu fotografiju događaja. Ako Moderator ili Urednik ne postavi fotografiju događaja, sistem automatski prikazuje podrazumijevanu fotografiju povezanu sa kategorijom događaja. Korisnik nikada ne vidi događaj bez naslovne fotografije.
+> Događaj može imati najviše jednu direktno povezanu naslovnu fotografiju (kardinalnost 0..1). Direktna naslovna fotografija nije obavezna za objavu. Na javnom portalu događaj uvijek ima jednu prikazanu fotografiju po hijerarhiji: (1) direktno povezana naslovna fotografija događaja; (2) podrazumijevana fotografija primarne kategorije događaja; (3) globalni tehnički placeholder događaja. Fallback nije poslovna veza događaj–medij: sistem ne kreira vezu, ne kopira medij kategorije na događaj i ne smatra fallback naslovnom fotografijom događaja. Uklanjanje jedine naslovne fotografije događaja je dozvoljeno i aktivira istu hijerarhiju prikaza. Globalni tehnički placeholder nije poslovni medij, nema namjenu i nije zapis u katalogu medija.
 
-## 5. Otvorena pitanja
+### BM-MD-07 — Naslovna fotografija manifestacije
+
+> Manifestacija može imati najviše jednu naslovnu fotografiju (0..1). Ako nije povezana, koristi se placeholder manifestacije. Placeholder manifestacije nije poslovni medij, nije zapis u katalogu medija i nije povezan poslovnom vezom. Ne postoji automatsko preuzimanje fotografije sa događaja na manifestaciju niti obrnuto, niti automatsko povezivanje ili kopiranje medij-zapisa. Ako isti fizički fajl treba obje namjene, postoje dva odvojena medij-zapisa sa različitim namjenama.
+
+### BM-MD-08 — Podrazumijevana fotografija kategorije
+
+> Kategorija može imati najviše jednu podrazumijevanu fotografiju (0..1). Veza je opciona; Aktivna kategorija ne mora imati podrazumijevanu fotografiju. Jedan medij sa ovom namjenom može biti povezan sa jednom ili više kategorija. Podrazumijevana fotografija kategorije ne smatra se naslovnom fotografijom događaja.
+
+### BM-MD-09 — Kardinalnost medija prema entitetima
+
+> Medij sa namjenom „Naslovna fotografija događaja“ može biti povezan sa jednim ili više događaja (1..N). Medij sa namjenom „Naslovna fotografija manifestacije“ može biti povezan sa jednom ili više manifestacija (1..N). Medij sa namjenom „Podrazumijevana fotografija kategorije“ može biti povezan sa jednom ili više kategorija (1..N). Dijeljenje medija nije obavezno. Sistem ne smije automatski povezivati medij sa drugim entitetima niti automatski kreirati duplikate medij-zapisa.
+
+### BM-MD-10 — Uklanjanje veze
+
+> Uklanjanje medija sa jednog događaja, manifestacije ili kategorije uklanja samo tu vezu. Ne briše medij, ne briše fizički fajl i ne utiče na druge entitete povezane sa istim medijem.
+
+### BM-MD-11 — Tip i formati fotografije
+
+> Jedini poslovni tip medija u V1 je Fotografija. Dozvoljeni formati: JPEG, PNG, WebP. Dozvoljene ekstenzije: `.jpg`, `.jpeg`, `.png`, `.webp`. Dozvoljeni MIME tipovi: `image/jpeg`, `image/png`, `image/webp`. Maksimalna veličina jedne fotografije je 5 MB (5120 KB). Nisu dozvoljeni: SVG, GIF, BMP, TIFF, HEIC/HEIF, animirane slike i svi formati koji nisu izričito dozvoljeni. Sistem mora potvrditi međusobnu podudarnost sadržaja, MIME tipa i ekstenzije. Serverska validacija je mjerodavna. Minimalne dimenzije i obavezni odnos stranica nisu poslovni uslov prijema. V1 ne zahtijeva automatski resize, thumbnail, kompresiju ni konverziju formata.
+
+### BM-MD-12 — Vidljivost kataloga medija (nije vlasništvo)
+
+> Pri ponovnoj upotrebi medija Moderator vidi samo medije svog organizacionog konteksta. Urednik vidi kompletan katalog medija. Ovo je pravilo vidljivosti, ne vlasništva.
+
+### BM-MD-13 — Pretraga medija
+
+> Moderator pretražuje medije po nazivu i opisu u okviru svog organizatora. Urednik pretražuje kompletan katalog uz filtere: status, namjena, organizator, kreator. Prikaz rezultata je u vidu kartica (thumbnail, naziv, namjena, dimenzije, veličina, datum) uz navigaciju load more ili infinite scroll.
+
+### BM-MD-14 — Poslovni metapodaci medija
+
+> Obavezni poslovni metapodaci: naziv, ALT tekst. Opcioni: opis, autor, izvor, licenca, tagovi. Tagovi postoje u modelu podataka, ali nisu dio V1 korisničkog interfejsa.
+
+### BM-MD-15 — Tehnički metapodaci medija
+
+> Sistem automatski vodi najmanje: originalni naziv datoteke, interni naziv, MIME tip, format, dimenzije, veličinu, vrijeme uploada, kreatora, vrijeme posljednje izmjene i status.
+
+### BM-MD-16 — Dupli upload
+
+> Pri uploadu sistem provjerava identičnu datoteku. Ako postoji, prikazuje se upozorenje i korisnik bira nastavak uploada ili korišćenje postojećeg medija. Duplikati nisu zabranjeni. Provjera sličnih (neidentičnih) fotografija nije dio V1.
+
+### BM-MD-17 — Opseg V1
+
+> U V1 ne ulaze: galerije fotografija, dokumenti kao poslovni medij, video, audio, mediji lokacija, mediji organizatora, proizvoljne korisničke namjene, uređivi katalog namjena, soft delete, scenario sa dva Urednika kao poslovno pravilo. Tehnička zaštita od uređivanja istog zapisa u više browser tabova nije poslovno pravilo.
+
+## 5. Odnosi sa drugim cjelinama
+
+- **Događaj** — opciona veza 0..1 na naslovnu fotografiju; prikaz uvijek jedne fotografije po BM-MD-06.
+- **Manifestacija** — opciona veza 0..1 na naslovnu fotografiju; BM-MD-07.
+- **Kategorija** — opciona veza 0..1 na podrazumijevanu fotografiju; BM-MD-08.
+- **Moderator / Urednik** — ovlašćenja BM-MD-05, BM-MD-12, BM-MD-13.
+- **Portal** — prikaz medija u skladu sa BM-PK-12 i hijerarhijom BM-MD-06.
+
+## 6. Otvorena pitanja
 
 Za poglavlje BM-09 trenutno nema otvorenih poslovnih pitanja.
 
@@ -1076,7 +1139,7 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 ### BM-PK-12 — Prikaz medija
 
-> Portal Kalendara kulture omogućava prikaz medija povezanih sa objavljenim događajima, manifestacijama i lokacijama, u skladu sa poslovnim pravilima modula Kalendara kulture.
+> Portal Kalendara kulture omogućava prikaz medija povezanih sa objavljenim događajima i manifestacijama, te prikaz fotografije događaja u skladu sa hijerarhijom naslovne fotografije / podrazumijevane fotografije kategorije / tehničkog placeholdera (BM-09). U V1 portal ne prikazuje medije lokacija niti organizatora.
 
 ### BM-PK-13 — Prikaz otkazanih i arhiviranih događaja
 
@@ -1482,7 +1545,7 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 ### BM-GL-15 — Mediji
 
-> Fotografije, dokumenti i drugi digitalni prilozi povezani sa Organizatorom, Manifestacijom ili Događajem.
+> Samostalan poslovni entitet tipa Fotografija i zajednički platformski resurs bez poslovnog vlasnika. U V1 se povezuje sa Događajem (naslovna fotografija), Manifestacijom (naslovna fotografija) ili Kategorijom (podrazumijevana fotografija) u skladu sa zatvorenim katalogom namjena (BM-09).
 
 ### BM-GL-16 — Korisnički portal
 

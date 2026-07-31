@@ -128,6 +128,17 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **TS7-PO-05:** Kategorija „Nešto drugo“ ne postoji; Urednik proširuje katalog; oznake nisu zamjena za kategoriju.
 - **TS7-PO-06:** Katalogom kategorija i oznaka upravlja isključivo Urednik; Moderator samo koristi pri uređivanju događaja; bez workflow-a predlaganja, dodatnih statusa i ovlašćenja.
 
+**Usvojene poslovne odluke (Mediji):**
+- **TS8-01:** Medij je samostalan poslovni entitet i zajednički platformski resurs bez poslovnog vlasnika.
+- **TS8-02:** Zatvoreni katalog namjena: Naslovna fotografija događaja; Naslovna fotografija manifestacije; Podrazumijevana fotografija kategorije.
+- **TS8-03:** Kardinalnosti 0..1 po entitetu; medij → 1..N entiteta iste namjene; hijerarhija prikaza događaja (direktna → kategorija → tehnički placeholder); fallback nije veza.
+- **TS8-04:** Tip Fotografija; JPEG/PNG/WebP; max 5 MB; obavezna serverska validacija sadržaja/MIME/ekstenzije; bez SVG/GIF/BMP/TIFF/HEIC.
+- **TS8-05:** Status Aktivan/Neaktivan; reaktivacija; bez soft delete; trajno brisanje samo bez poslovnih veza.
+- **TS8-06.1–TS8-06.5:** Creator = audit; upload samo tokom uređivanja DG/MF/kategorije; vidljivost ≠ vlasništvo; Moderator samo veze; Urednik upravlja zapisom i lifecycle-om.
+- **TS8-07:** Pretraga (Moderator: naziv/opis u kontekstu; Urednik: katalog + filteri); prikaz kartice; load more / infinite scroll.
+- **TS8-08:** Poslovni i tehnički metapodaci; tagovi u modelu, bez V1 UI.
+- **TS8-09.1–TS8-09.6:** Prikaz neaktivnog na postojećim vezama; uklanjanje cover-a dozvoljeno uz fallback; dupli upload sa upozorenjem; ponovna provjera ovlašćenja/uslova; bez poslovnog scenarija dva Urednika.
+
 Povezana dokumentacija (Organizator):
 
 * Technical Specification — `docs/technical-specification/Technical-Specification_Organizator.md` (TS-001; funkcionalna cjelina Organizator / Moderator / Zahtjev za kreiranje Organizatora u okviru FT-001)
@@ -158,6 +169,12 @@ Povezana dokumentacija (Kategorije i oznake):
 * Functional Specification — §5.10 (BR-081–BR-085, BR-224–BR-236), PATCH-FS-045
 * Technical Specification — `docs/technical-specification/Technical-Specification_Kategorije_i_oznake.md` (TS-007; verzija 0.1.0; Usvojen)
 
+Povezana dokumentacija (Mediji):
+
+* Business Model — BM-09 (BM-MD-01–BM-MD-17), BM-GL-15, BM-PK-12, PATCH-044; TS8-01–TS8-09
+* Functional Specification — §5.11 (BR-086–BR-091, BR-237–BR-254), §5.4.4, BR-113, PATCH-FS-046
+* Technical Specification — `docs/technical-specification/Technical-Specification_Mediji.md` (TS-008; verzija 0.1.0; Usvojen)
+
 Povezana dokumentacija (Newsletter):
 
 * Business Model — BM-13 (BM-NL-01–BM-NL-25), PATCH-031–PATCH-033
@@ -169,13 +186,13 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 
 | TS | Naziv | Feature | Modul | Status |
 | -- | ----- | ------- | ----- | ------ |
-| TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | U izradi (postoji dokument) |
+| TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.2.1) |
 | TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
 | TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
-| TS-008 | Mediji | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
@@ -319,3 +336,4 @@ Matrica sljedivosti (sažetak):
 | 2026-07-30 | FT-001 — TS-004 Održavanje događaja v0.1.2: terminološko usklađivanje sa TS-006 (kataloška Lokacija / ručno uneseni naziv); usklađene reference verzije u Feature Registry. |
 | 2026-07-30 | Documentation Consistency Patch (CR-002): usklađen statusni opis FT-002 sa stvarnim stanjem dokumentacije (BM-002/FS-002 usvojeni BP-01–BP-09; TS-002 djelimično usvojen i u izradi). Bez izmjene poslovnih pravila. |
 | 2026-07-30 | FT-001 — Kategorije i oznake: ugrađene usvojene odluke TS7-PO-01–TS7-PO-06 u BM PATCH-043 i FS PATCH-FS-045; kreiran i usvojen TS-007 (v0.1.0), putanja `docs/technical-specification/Technical-Specification_Kategorije_i_oznake.md`. |
+| 2026-07-31 | FT-001 — Mediji: ugrađene usvojene odluke TS8-01–TS8-09 u BM PATCH-044 i FS PATCH-FS-046; kreiran i usvojen TS-008 (v0.1.0), putanja `docs/technical-specification/Technical-Specification_Mediji.md`. |

@@ -57,6 +57,7 @@
 | PATCH-FS-043 | 2026-07-30 | Korekcija PO-LOC-01 i PO-LOC-05: centralni katalog Lokacija je opcioni katalog za ponovno korišćenje (nije obavezan i nije jedini izvor svih Lokacija); dozvoljen ručni unos naziva Lokacije; kataloška referenca opciona; merge i referencijalni integritet primjenjuju se kada postoji veza sa katalogom; potvrđeni BR-077 i opcionost Lokacije na Održavanju. Usklađeni BR-074, BR-075, BR-077, BR-078, BR-216, BR-217, BR-218, BR-219. |
 | PATCH-FS-044 | 2026-07-30 | Documentation Consistency Patch (CR-003): terminološko pojašnjenje u §5.16 (BR-182) da ne postoji zaseban katalog Održavanja; aktivnosti nad Održavanjem evidentiraju se kroz katalog Događaji. Bez izmjene poslovnih pravila. |
 | PATCH-FS-045 | 2026-07-30 | TS7-PO-01–TS7-PO-06: potpuno usklađen §5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085) i dodata nova pravila BR-224–BR-236: poslovni katalog (ne ENUM), oznake u V1, lifecycle Aktivna/Neaktivna, bez migracije test podataka, bez kategorije „Nešto drugo“, ovlašćenja Urednik/Moderator/Organizator/Admin platforme. |
+| PATCH-FS-046 | 2026-07-31 | TS8-01–TS8-09: potpuno usklađen §5.11 Upravljanje medijima (BR-086–BR-091) i dodata BR-237–BR-254; usklađeni §5.4.4 i BR-113 sa hijerarhijom prikaza i opsegom V1. |
 
 Napomena:
 
@@ -138,7 +139,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.8 Upravljanje moderatorima (BR-070–BR-073)
    - 5.9 Upravljanje lokacijama (BR-074–BR-080, BR-206–BR-223)
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236)
-   - 5.11 Upravljanje medijima (BR-086–BR-091)
+   - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
    - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117)
    - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137)
@@ -569,11 +570,17 @@ Napomena: Trenutna implementacija može čuvati datum, vrijeme i lokaciju direkt
 
 #### 5.4.4 Fotografija događaja
 
-Sistem prikazuje jednu naslovnu fotografiju događaja.
+Sistem prikazuje jednu naslovnu fotografiju događaja po hijerarhiji:
 
-Ako Moderator ili Urednik ne postavi fotografiju događaja, sistem automatski prikazuje podrazumijevanu fotografiju povezanu sa kategorijom događaja.
+1. direktno povezana naslovna fotografija događaja;
+2. podrazumijevana fotografija primarne kategorije događaja;
+3. globalni tehnički placeholder događaja.
 
-Korisnik nikada ne vidi događaj bez naslovne fotografije.
+Ako Moderator ili Urednik ne postavi fotografiju događaja, sistem prikazuje podrazumijevanu fotografiju kategorije kada postoji; inače tehnički placeholder.
+
+Korisnik nikada ne vidi događaj bez prikazane fotografije.
+
+Fallback nije poslovna veza događaj–medij.
 
 Galerija fotografija nije dio V1 detalja događaja.
 
@@ -611,7 +618,7 @@ Događaj koji postoji, ali nema neki opcioni podatak:
 * ako opis nije unesen, sistem prikazuje jasno prazno stanje za opis;
 * ako lokacija nije unesena, sistem ne prikazuje lokaciju;
 * ako vrijeme nije uneseno u terminu, sistem ne prikazuje vrijeme;
-* ako fotografija nije unesena, sistem prikazuje podrazumijevanu fotografiju kategorije događaja.
+* ako fotografija nije unesena, sistem prikazuje podrazumijevanu fotografiju kategorije događaja kada postoji, inače globalni tehnički placeholder događaja.
 
 ---
 
@@ -2144,45 +2151,227 @@ Oznake su dio V1 opsega modula Kalendar kulture.
 
 #### BR-086 – Mediji
 
-Mediji se koriste za vizuelno ili dokumentaciono predstavljanje događaja, manifestacija i lokacija.
+Medij je samostalan poslovni entitet tipa Fotografija i zajednički platformski resurs bez poslovnog vlasnika.
+
+U V1 mediji služe vizuelnom predstavljanju događaja, manifestacija i kategorija.
 
 ---
 
 #### BR-087 – Povezivanje medija
 
-Jedan medij može biti povezan sa jednim ili više događaja, manifestacija ili lokacija.
+Jedan medij može biti povezan sa jednim ili više događaja, manifestacija ili kategorija, u skladu sa svojom namjenom.
+
+U V1 ne postoje poslovne veze medija sa lokacijama niti organizatorima.
 
 ---
 
 #### BR-088 – Namjena medija
 
-Svaki medij ima definisanu namjenu koja određuje njegovu poslovnu ulogu.
+Svaki medij ima tačno jednu poslovnu namjenu iz zatvorenog kataloga:
+
+1. Naslovna fotografija događaja;
+2. Naslovna fotografija manifestacije;
+3. Podrazumijevana fotografija kategorije.
+
+Katalog namjena nije korisnički konfigurabilan i ne uređuje se kroz aplikaciju.
 
 ---
 
 #### BR-089 – Aktivnost medija
 
-Medij može biti aktivan ili neaktivan.
+Medij ima status Aktivan ili Neaktivan. Soft delete se ne koristi.
 
-Neaktivan medij ne može biti povezan sa novim događajima, manifestacijama ili lokacijama.
+Neaktivan medij ne može dobiti nova poslovna povezivanja.
 
-Deaktiviranje medija ne utiče na postojeća povezivanja.
+Neaktivan medij ostaje povezan sa postojećim entitetima i nastavlja da se prikazuje kroz postojeće veze dok se veza ne ukloni ili medij ne zamijeni.
+
+Dozvoljena je reaktivacija.
+
+Trajno brisanje dozvoljeno je isključivo kada medij nema nijednu poslovnu vezu.
 
 ---
 
 #### BR-090 – Korišćenje medija
 
-Moderator dodaje medije prilikom uređivanja događaja.
+Upload medija moguć je isključivo tokom uređivanja događaja, manifestacije ili kategorije. Ne postoji poseban ekran isključivo za upload.
 
-Urednik odlučuje o njihovom korišćenju u postupku odobravanja i objavljivanja događaja.
+Moderator uploaduje, povezuje, zamjenjuje vezu i uklanja vezu isključivo u okviru svog organizacionog konteksta. Moderator ne mijenja medij-zapis niti aktivira, deaktivira, reaktivira ili trajno briše medij.
+
+Urednik uploaduje u okviru svojih ovlašćenja i upravlja medij-zapisom. Isključivo Urednik aktivira, deaktivira, reaktivira i trajno briše medij.
+
+Kreator medija služi isključivo auditu, istoriji i logovima i ne predstavlja vlasništvo.
 
 ---
 
 #### BR-091 – Naslovna fotografija događaja
 
-Svaki događaj ima naslovnu fotografiju.
+Događaj može imati najviše jednu direktno povezanu naslovnu fotografiju (0..1). Direktna naslovna nije obavezna za objavu.
 
-Ako naslovna fotografija nije određena, koristi se podrazumijevana fotografija kategorije događaja.
+Na javnom portalu događaj uvijek ima jednu prikazanu fotografiju:
+
+1. direktno povezana naslovna fotografija događaja;
+2. podrazumijevana fotografija primarne kategorije;
+3. globalni tehnički placeholder događaja.
+
+Fallback nije poslovna veza događaj–medij.
+
+Uklanjanje jedine naslovne fotografije događaja je dozvoljeno i aktivira istu hijerarhiju prikaza.
+
+---
+
+#### BR-237 – Naslovna fotografija manifestacije
+
+Manifestacija može imati najviše jednu naslovnu fotografiju (0..1).
+
+Ako nije povezana, koristi se placeholder manifestacije koji nije poslovni medij.
+
+Ne postoji automatsko preuzimanje fotografije sa događaja na manifestaciju niti obrnuto.
+
+---
+
+#### BR-238 – Podrazumijevana fotografija kategorije
+
+Kategorija može imati najviše jednu podrazumijevanu fotografiju (0..1). Veza je opciona.
+
+Podrazumijevana fotografija kategorije ne smatra se naslovnom fotografijom događaja.
+
+---
+
+#### BR-239 – Kardinalnost medija prema entitetima
+
+Medij sa namjenom naslovne fotografije događaja može biti povezan sa jednim ili više događaja.
+
+Medij sa namjenom naslovne fotografije manifestacije može biti povezan sa jednom ili više manifestacija.
+
+Medij sa namjenom podrazumijevane fotografije kategorije može biti povezan sa jednom ili više kategorija.
+
+Dijeljenje nije obavezno. Sistem ne smije automatski povezivati medij niti automatski kreirati duplikate medij-zapisa.
+
+---
+
+#### BR-240 – Uklanjanje veze
+
+Uklanjanje medija sa jednog entiteta uklanja samo tu vezu.
+
+Ne briše medij, ne briše fizički fajl i ne utiče na druge entitete povezane sa istim medijem.
+
+---
+
+#### BR-241 – Tip i formati
+
+Jedini poslovni tip medija u V1 je Fotografija.
+
+Dozvoljeni formati: JPEG, PNG, WebP.
+
+Dozvoljene ekstenzije: `.jpg`, `.jpeg`, `.png`, `.webp`.
+
+Dozvoljeni MIME tipovi: `image/jpeg`, `image/png`, `image/webp`.
+
+Maksimalna veličina: 5 MB (5120 KB).
+
+Nisu dozvoljeni: SVG, GIF, BMP, TIFF, HEIC/HEIF, animirane slike i svi formati koji nisu izričito dozvoljeni.
+
+---
+
+#### BR-242 – Validacija datoteke
+
+Sistem mora na serverskoj strani potvrditi da su sadržaj, MIME tip i ekstenzija međusobno podudarni i da datoteka nije veća od 5 MB, da je stvarna čitljiva slika dozvoljenog formata.
+
+HTML atribut `accept` nije dovoljna sigurnosna kontrola.
+
+---
+
+#### BR-243 – Dimenzije i obrada
+
+Minimalne dimenzije i obavezni odnos stranica nisu uslov prijema.
+
+V1 ne zahtijeva automatski resize, thumbnail, kompresiju, isijecanje niti konverziju formata.
+
+Prikaz različitih odnosa stranica rješava se kroz UI bez deformisanja originalne fotografije.
+
+---
+
+#### BR-244 – Vidljivost pri ponovnoj upotrebi
+
+Moderator vidi samo medije svog organizacionog konteksta.
+
+Urednik vidi kompletan katalog medija.
+
+Ovo je pravilo vidljivosti, ne vlasništva.
+
+---
+
+#### BR-245 – Pretraga medija
+
+Moderator pretražuje po nazivu i opisu u okviru svog organizatora.
+
+Urednik pretražuje kompletan katalog uz filtere: status, namjena, organizator, kreator.
+
+Prikaz: kartice (thumbnail, naziv, namjena, dimenzije, veličina, datum) uz load more ili infinite scroll.
+
+---
+
+#### BR-246 – Poslovni metapodaci
+
+Obavezni: naziv, ALT tekst.
+
+Opcioni: opis, autor, izvor, licenca, tagovi.
+
+Tagovi postoje u modelu podataka, ali nisu dio V1 korisničkog interfejsa.
+
+---
+
+#### BR-247 – Tehnički metapodaci
+
+Sistem automatski vodi: originalni naziv, interni naziv, MIME, format, dimenzije, veličinu, vrijeme uploada, kreatora, vrijeme posljednje izmjene i status.
+
+---
+
+#### BR-248 – Dupli upload
+
+Pri uploadu sistem provjerava identičnu datoteku.
+
+Ako postoji, prikazuje se upozorenje i korisnik bira nastavak uploada ili korišćenje postojećeg medija.
+
+Duplikati nisu zabranjeni. Provjera sličnih fotografija nije dio V1.
+
+---
+
+#### BR-249 – Ponovna provjera ovlašćenja
+
+Prije svake izmjene sistem ponovo provjerava ovlašćenja. Ako korisnik više nema pravo, operacija se odbija.
+
+---
+
+#### BR-250 – Ponovna provjera prije trajnog brisanja
+
+Prije trajnog brisanja sistem ponovo provjerava poslovne veze, status i ostale uslove. Ako uslovi nisu ispunjeni, brisanje se odbija.
+
+---
+
+#### BR-251 – Uloga Organizatora
+
+Organizator nije operativna uloga i ne upravlja medijima.
+
+---
+
+#### BR-252 – Uloga Administratora platforme
+
+Administrator platforme nema redovnu poslovnu ulogu u upravljanju medijima.
+
+---
+
+#### BR-253 – Placeholderi
+
+Globalni tehnički placeholder događaja i placeholder manifestacije nisu poslovni mediji, nisu predmet korisničkog uploada, nisu medij-zapisi i ne moraju poštovati katalog namjena.
+
+---
+
+#### BR-254 – Opseg V1 za medije
+
+U V1 ne ulaze: galerije, dokumenti kao poslovni medij, video, audio, mediji lokacija, mediji organizatora, proizvoljne namjene, uređivi katalog namjena, soft delete.
+
+Scenario sa dva Urednika nije poslovno pravilo. Eventualna zaštita od uređivanja istog zapisa u više browser tabova je isključivo tehnička implementacija.
 
 **Status:** Approved
 
@@ -2572,7 +2761,9 @@ Za objavljenu manifestaciju portal može prikazati kategorije i oznake samo kao 
 
 #### BR-113 – Prikaz medija
 
-Javni portal omogućava prikaz medija povezanih sa objavljenim događajima, manifestacijama i lokacijama, u skladu sa poslovnim pravilima modula Kalendara kulture.
+Javni portal omogućava prikaz medija povezanih sa objavljenim događajima i manifestacijama, te prikaz fotografije događaja u skladu sa hijerarhijom naslovne fotografije / podrazumijevane fotografije kategorije / tehničkog placeholdera.
+
+U V1 portal ne prikazuje medije lokacija niti organizatora.
 
 ---
 
@@ -3552,3 +3743,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-30 | FS-001 / 5.9 (PATCH-FS-043): korekcija PO-LOC-01 i PO-LOC-05 — katalog Lokacija je opcioni za ponovno korišćenje; ručni unos Lokacije dozvoljen; kataloška referenca opciona; merge i referencijalni integritet primjenjuju se samo za postojeće kataloške veze. Usklađeni BR-074, BR-075, BR-077, BR-078, BR-216, BR-217, BR-218, BR-219. |
 | 2026-07-30 | FS-001 / 5.16 (PATCH-FS-044): terminološko pojašnjenje da ne postoji zaseban katalog Održavanja; aktivnosti nad Održavanjem evidentiraju se kroz katalog Događaji. Bez izmjene poslovnih pravila. |
 | 2026-07-30 | FS-001 / 5.10 (PATCH-FS-045): TS7-PO-01–TS7-PO-06 — poslovni katalog kategorija i oznaka (ne ENUM), oznake u V1, lifecycle Aktivna/Neaktivna, bez migracije test podataka, bez „Nešto drugo“, ovlašćenja Urednik/Moderator. Usklađeni BR-081–BR-085; dodati BR-224–BR-236. |
+| 2026-07-31 | FS-001 / 5.11 (PATCH-FS-046): TS8-01–TS8-09 — Mediji kao samostalan entitet; zatvoreni katalog namjena; kardinalnosti i fallback; tip Fotografija; lifecycle; ovlašćenja; pretraga; metapodaci. Usklađeni BR-086–BR-091, §5.4.4, BR-113; dodati BR-237–BR-254. |
