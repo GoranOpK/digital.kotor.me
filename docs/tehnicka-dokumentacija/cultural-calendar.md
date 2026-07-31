@@ -145,7 +145,7 @@ U budućnosti sva nova odstupanja evidentirati isključivo u ovom poglavlju. Bus
 ## Povezani dokumenti
 
 - [Business Model](../business-model/Business_Model_Kalendar_kulture_MASTER.md) — BM-01 Organizator, BM-02 Moderator, BM-03 Urednik, BM-06 Održavanje događaja
-- [Functional Specification](../functional-specification/Functional-Specification.md)
+- [Functional Specification](../functional-specifications/Functional-Specification.md)
 - [cultural-calendar-test-checklist.md](cultural-calendar-test-checklist.md) — checklista za testiranje prije objave
 - [roles-and-permissions.md](roles-and-permissions.md)
 - [deployment-and-cron.md](deployment-and-cron.md)

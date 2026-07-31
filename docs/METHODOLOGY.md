@@ -383,10 +383,31 @@ jer se prvo evidentiraju donesene odluke o isključenjima, a zatim nedonesene od
 
 ---
 
+## Kanonski folderi Functional Specification i Technical Specification
+
+**PATCH-DOC-STRUCTURE-001** (2026-07-31)
+
+Kanonske lokacije dokumenata tipa Functional Specification i Technical Specification:
+
+```text
+Functional Specifications:
+docs/functional-specifications/
+
+Technical Specifications:
+docs/technical-specifications/
+```
+
+Singular folderi `docs/functional-specification/` i `docs/technical-specification/` više se ne koriste.
+
+Ova odredba ne uvodi širu politiku imenovanja ostalih dokumentacionih foldera.
+
+---
+
 ## Change Log
 
 | Datum | Izmjena |
 |-------|---------|
+| 2026-07-31 | PATCH-DOC-STRUCTURE-001 — kanonski folderi: `docs/functional-specifications/` i `docs/technical-specifications/`; singular folderi uklonjeni. |
 | 2026-07-26 | Definisan odnos između postojeće tehničke dokumentacije i nove metodologije. Uveden pojam Technical Overview dokumenta. Potvrđeno da se postojeća dokumentacija ne reorganizuje retroaktivno. |
 | 2026-07-26 | Usvojeno pravilo odnosa Business Model / Functional Specification / Technical Overview; registar odstupanja vodi se isključivo u Technical Overview dokumentu modula. |
 | 2026-07-28 | Dodata pravila M-TS-001 do M-TS-004 za Technical Specification dokumente (više TS po Feature-u, globalna numeracija, obavezno poglavlje „Granice V1 (Out of Scope)“, sekcijska i rule-level sljedivost). |

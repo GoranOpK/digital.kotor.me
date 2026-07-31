@@ -215,6 +215,7 @@
     </section>
 
     <main class="container">
+        @include('partials.obavjestenja-panel')
     </main>
 
     <footer class="container footer">

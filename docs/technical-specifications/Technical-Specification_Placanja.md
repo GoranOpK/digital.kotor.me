@@ -112,8 +112,8 @@ Tehnička specifikacija razvija se u okviru dokumentacije propisane odlukom P-06
 | 1 | Pravni okvir | `docs/pravni-okvir/Pravni_okvir_Placanja.md` |
 | 2 | Katalog finansijskih obaveza | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` |
 | 3 | Business Model | `docs/business-model/Business_Model_Placanja.md` |
-| 4 | Functional Specification | `docs/functional-specification/Functional-Specification_Placanja.md` |
-| 5 | Technical Specification | `docs/technical-specification/Technical-Specification_Placanja.md` |
+| 4 | Functional Specification | `docs/functional-specifications/Functional-Specification_Placanja.md` |
+| 5 | Technical Specification | `docs/technical-specifications/Technical-Specification_Placanja.md` |
 
 Sljedivost: FT-002 → BM-002 → FS-002 → TS-002
 

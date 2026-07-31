@@ -40,6 +40,7 @@ Feature Registry predstavlja polaznu tačku za sljedivost kroz cijeli projekat.
 | FT-001     | Kalendar kulture | Active  | Prva funkcionalnost u razvoju                 |
 | FT-002     | Plaćanja         | Planned | Dokumentacija razvijena (BM-002/FS-002 usvojeni BP-01–BP-09; TS-002 djelimično usvojen, dokument u izradi) |
 | FT-003     | Evidencija aktivnosti (Kalendar kulture) | Planned | FS §5.16; BM-14; van opsega: TS, pregled/filteri, retention, izvoz |
+| FT-004     | Obavještenja     | Active  | V1 infrastruktura verifikovana testovima; javni panel + `competition_decision_html`; E2E emitovanje iz konkursa i dalje OFD-OB-006 |
 
 Dozvoljeni statusi:
 
@@ -149,39 +150,39 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 
 Povezana dokumentacija (Organizator):
 
-* Technical Specification — `docs/technical-specification/Technical-Specification_Organizator.md` (TS-001; funkcionalna cjelina Organizator / Moderator / Zahtjev za kreiranje Organizatora u okviru FT-001)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001; funkcionalna cjelina Organizator / Moderator / Zahtjev za kreiranje Organizatora u okviru FT-001)
 
 Povezana dokumentacija (Događaj):
 
-* Technical Specification — `docs/technical-specification/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija 0.1.1; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija 0.1.1; Usvojen)
 
 Povezana dokumentacija (Održavanje):
 
-* Technical Specification — `docs/technical-specification/Technical-Specification_Odrzavanje.md` (TS-004; verzija 0.1.2; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004; verzija 0.1.2; Usvojen)
 
 Povezana dokumentacija (Manifestacija):
 
 * Business Model — BM-05 (BM-MF-01–BM-MF-20), PATCH-038–PATCH-039; PO-MF-01–PO-MF-12
 * Functional Specification — §5.12 (BR-092–BR-101, BR-189–BR-205), §5.16 katalog Manifestacije, PATCH-FS-040–PATCH-FS-041
-* Technical Specification — `docs/technical-specification/Technical-Specification_Manifestacija.md` (TS-005; verzija 0.1.1; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Manifestacija.md` (TS-005; verzija 0.1.1; Usvojen)
 
 Povezana dokumentacija (Lokacije):
 
 * Business Model — BM-07 (BM-LK-01–BM-LK-12), BM-GL-13, PATCH-040, PATCH-041; PO-LOC-01–PO-LOC-07
 * Functional Specification — §5.9 (BR-074–BR-080, BR-206–BR-223), PATCH-FS-042, PATCH-FS-043
-* Technical Specification — `docs/technical-specification/Technical-Specification_Lokacije.md` (TS-006; verzija 0.1.1; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Lokacije.md` (TS-006; verzija 0.1.1; Usvojen)
 
 Povezana dokumentacija (Kategorije i oznake):
 
 * Business Model — BM-08 (BM-KO-01–BM-KO-08), BM-GL-14, BM-GL-23, PATCH-043; TS7-PO-01–TS7-PO-06
 * Functional Specification — §5.10 (BR-081–BR-085, BR-224–BR-236), PATCH-FS-045
-* Technical Specification — `docs/technical-specification/Technical-Specification_Kategorije_i_oznake.md` (TS-007; verzija 0.1.0; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Kategorije_i_oznake.md` (TS-007; verzija 0.1.0; Usvojen)
 
 Povezana dokumentacija (Mediji):
 
 * Business Model — BM-09 (BM-MD-01–BM-MD-17), BM-GL-15, BM-PK-12, PATCH-044; TS8-01–TS8-09
 * Functional Specification — §5.11 (BR-086–BR-091, BR-237–BR-254), §5.4.4, BR-113, PATCH-FS-046
-* Technical Specification — `docs/technical-specification/Technical-Specification_Mediji.md` (TS-008; verzija 0.1.0; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Mediji.md` (TS-008; verzija 0.1.0; Usvojen)
 
 Povezana dokumentacija (Javni portal):
 
@@ -233,8 +234,8 @@ Povezana dokumentacija:
 * Pravni okvir: `docs/pravni-okvir/Pravni_okvir_Placanja.md`
 * Katalog finansijskih obaveza: `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md`
 * Business Model: `docs/business-model/Business_Model_Placanja.md`
-* Functional Specification: `docs/functional-specification/Functional-Specification_Placanja.md`
-* Technical Specification: `docs/technical-specification/Technical-Specification_Placanja.md`
+* Functional Specification: `docs/functional-specifications/Functional-Specification_Placanja.md`
+* Technical Specification: `docs/technical-specifications/Technical-Specification_Placanja.md`
 
 Sljedivost:
 
@@ -318,6 +319,55 @@ Matrica sljedivosti (sažetak):
 
 ---
 
+## FT-004
+
+Naziv:
+
+Obavještenja
+
+Status:
+
+Active
+
+Napomena:
+
+Unakrsna (cross-platform) funkcionalnost Digital Kotor za javno predstavljanje zvaničnog sadržaja nastalog u drugim funkcionalnostima platforme. Nije zaseban aplikativni modul, nije korisnički inbox, nije sistem privatnih poruka, nije konvencionalni centar notifikacija sa stanjem pročitano/nepročitano i nije urednički CMS za vijesti.
+
+V1 infrastruktura je implementirana i verifikovana (`ObavjestenjaFeatureTest` + smoke): `notices`, `NoticePublicationService`, događaj/listener (jednom registrovan), panel na `/`, javna ruta `notices.public-content`, `competition_decision_html`. End-to-end automatizam iz izvornog konkursa i dalje blokiran OFD-OB-006.
+
+Povezana dokumentacija:
+
+* Business Model: `docs/business-model/Business_Model_Obavjestenja.md`
+* Use Case Specification: `docs/use-cases/Use_Cases_Obavjestenja.md`
+* Functional Specification: `docs/functional-specifications/Functional_Specification_Obavjestenja.md`
+* Technical Specification: `docs/technical-specifications/Technical_Specification_Obavjestenja.md` (TS-013)
+
+Sljedivost:
+
+FT-004
+→ Business Model Obavještenja (v0.1 + PATCH-001, U IZRADI)
+→ Use Cases Obavještenja (v0.1, U IZRADI)
+→ Functional Specification Obavještenja (v0.1 + PATCH-FS-OB-001, U IZRADI)
+→ Technical Specification Obavještenja (TS-013 v0.1, U IZRADI)
+
+Usvojene Product Owner odluke (evidentirane u Business Modelu):
+
+* PO-OB-01 — Svrha
+* PO-OB-02 — Mjesto na platformi
+* PO-OB-03 — Javna dostupnost
+* PO-OB-04 — Struktura Obavještenja
+* PO-OB-05 — Vrste referenciranog sadržaja
+* PO-OB-06 — Automatsko nastajanje
+* PO-OB-07 — Odgovornost izvorne funkcionalnosti
+* PO-OB-08 — Početni izvori
+* PO-OB-09 — Trajanje vidljivosti
+* PO-OB-10 — Bez praćenja čitanja u usvojenom obuhvatu
+* PO-OB-11 — Bez ručnog uredničkog workflow-a u usvojenom scenariju
+* PO-OB-12 — Stabilna javna dostupnost
+* PO-OB-13 — Značenje zamjene
+
+---
+
 # Change Log
 
 | Datum | Izmjena |
@@ -342,12 +392,19 @@ Matrica sljedivosti (sažetak):
 | 2026-07-28 | FT-001 — Korekcija odluke: nakon deaktivacije Organizatora Moderator nema pravo otkazivanja (BM PATCH-036 / FS PATCH-FS-038); nalaz B4 zatvoren. |
 | 2026-07-29 | FT-001 — PO-DG-05 i PO-DG-06: direktna objava samo bez Organizatora; Otkazan → Arhiviran nakon isteka održavanja (BM PATCH-037 / FS PATCH-FS-039); N-DG-05 i N-DG-06 zatvoreni. |
 | 2026-07-29 | FT-001 — TS-004 Održavanje događaja usvojen (v0.1.1); Termin nije poslovni/konceptualni entitet V1. |
-| 2026-07-29 | FT-001 — TS-003 Događaj usvojen (v0.1.1); putanja `docs/technical-specification/Technical-Specification_Dogadjaj.md`. |
-| 2026-07-29 | FT-001 — PO-MF-01–PO-MF-08 i TS-005 Manifestacija Draft v0.1; BM PATCH-038 / FS PATCH-FS-040; putanja `docs/technical-specification/Technical-Specification_Manifestacija.md`. |
+| 2026-07-29 | FT-001 — TS-003 Događaj usvojen (v0.1.1); putanja `docs/technical-specifications/Technical-Specification_Dogadjaj.md`. |
+| 2026-07-29 | FT-001 — PO-MF-01–PO-MF-08 i TS-005 Manifestacija Draft v0.1; BM PATCH-038 / FS PATCH-FS-040; putanja `docs/technical-specifications/Technical-Specification_Manifestacija.md`. |
 | 2026-07-29 | FT-001 — TS-005 Manifestacija usvojen (v0.1.1); PO-MF-09–PO-MF-12; N-MF-01–N-MF-04 zatvoreni; N-MF-05 napomena (evidencija). |
-| 2026-07-30 | FT-001 — Lokacije: ugrađene usvojene odluke PO-LOC-01–PO-LOC-07 u BM PATCH-040 i FS PATCH-FS-042; kreiran i usvojen TS-006 (v0.1.0), putanja `docs/technical-specification/Technical-Specification_Lokacije.md`. |
+| 2026-07-30 | FT-001 — Lokacije: ugrađene usvojene odluke PO-LOC-01–PO-LOC-07 u BM PATCH-040 i FS PATCH-FS-042; kreiran i usvojen TS-006 (v0.1.0), putanja `docs/technical-specifications/Technical-Specification_Lokacije.md`. |
 | 2026-07-30 | FT-001 — Lokacije: korekcija PO-LOC-01 i PO-LOC-05 (razrješenje KON-LOC-01 i KON-LOC-02): katalog opcioni, ručni unos dozvoljen, kataloška referenca opciona, merge samo za kataloške reference. Usklađeni BM PATCH-041, FS PATCH-FS-043 i TS-006 v0.1.1. |
 | 2026-07-30 | FT-001 — TS-004 Održavanje događaja v0.1.2: terminološko usklađivanje sa TS-006 (kataloška Lokacija / ručno uneseni naziv); usklađene reference verzije u Feature Registry. |
 | 2026-07-30 | Documentation Consistency Patch (CR-002): usklađen statusni opis FT-002 sa stvarnim stanjem dokumentacije (BM-002/FS-002 usvojeni BP-01–BP-09; TS-002 djelimično usvojen i u izradi). Bez izmjene poslovnih pravila. |
-| 2026-07-30 | FT-001 — Kategorije i oznake: ugrađene usvojene odluke TS7-PO-01–TS7-PO-06 u BM PATCH-043 i FS PATCH-FS-045; kreiran i usvojen TS-007 (v0.1.0), putanja `docs/technical-specification/Technical-Specification_Kategorije_i_oznake.md`. |
-| 2026-07-31 | FT-001 — Mediji: ugrađene usvojene odluke TS8-01–TS8-09 u BM PATCH-044 i FS PATCH-FS-046; kreiran i usvojen TS-008 (v0.1.0), putanja `docs/technical-specification/Technical-Specification_Mediji.md`. |
+| 2026-07-30 | FT-001 — Kategorije i oznake: ugrađene usvojene odluke TS7-PO-01–TS7-PO-06 u BM PATCH-043 i FS PATCH-FS-045; kreiran i usvojen TS-007 (v0.1.0), putanja `docs/technical-specifications/Technical-Specification_Kategorije_i_oznake.md`. |
+| 2026-07-31 | FT-001 — Mediji: ugrađene usvojene odluke TS8-01–TS8-09 u BM PATCH-044 i FS PATCH-FS-046; kreiran i usvojen TS-008 (v0.1.0), putanja `docs/technical-specifications/Technical-Specification_Mediji.md`. |
+| 2026-07-31 | Registrovana funkcionalnost FT-004 – Obavještenja. Status: Planned. Povezan početni Business Model `docs/business-model/Business_Model_Obavjestenja.md` (v0.1, U IZRADI). |
+| 2026-07-31 | FT-004 — Evidentirana početna Functional Specification v0.1 (`docs/functional-specifications/Functional_Specification_Obavjestenja.md`); povezani Use Cases; dopunjene PO-OB-12 i PO-OB-13 u registru. |
+| 2026-07-31 | FT-004 — Evidentirana početna Technical Specification TS-013 v0.1 (`docs/technical-specifications/Technical_Specification_Obavjestenja.md`). |
+| 2026-07-31 | PATCH-DOC-STRUCTURE-001 — Normalizacija direktorijuma: kanonski `docs/functional-specifications/` i `docs/technical-specifications/`; uklonjeni singular folderi. |
+| 2026-07-31 | FT-004 — Implementirana V1 infrastruktura Obavještenja (TS-013): `notices`, servis objave, događaj/listener, panel na `/`, javna ruta `notices.public-content`, `competition_decision_html`. Status ostaje Planned do verifikacije testova; E2E okidač iz konkursa OFD-OB-006. |
+| 2026-07-31 | FT-004 — Stabilizacija: uklonjena dvostruka registracija listenera (discovery XOR explicit); status korigovan sa Active na Planned (testovi nisu verifikovani; OFD-OB-006). |
+| 2026-07-31 | FT-004 — Verifikacija na MySQL test bazi: `ObavjestenjaFeatureTest` 21/21 PASSED; smoke PASS; status Active. E2E okidač iz konkursa i dalje OFD-OB-006. |

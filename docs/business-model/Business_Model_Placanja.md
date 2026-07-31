@@ -1101,8 +1101,8 @@ U skladu sa P-06, razvoj modula zasniva se na:
 | 1 | Pravni okvir modula Plaćanja | `docs/pravni-okvir/Pravni_okvir_Placanja.md` |
 | 2 | Katalog finansijskih obaveza prema Opštini Kotor | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` |
 | 3 | Business Model | `docs/business-model/Business_Model_Placanja.md` |
-| 4 | Funkcionalna specifikacija | `docs/functional-specification/Functional-Specification_Placanja.md` |
-| 5 | Tehnička specifikacija | `docs/technical-specification/Technical-Specification_Placanja.md` |
+| 4 | Funkcionalna specifikacija | `docs/functional-specifications/Functional-Specification_Placanja.md` |
+| 5 | Tehnička specifikacija | `docs/technical-specifications/Technical-Specification_Placanja.md` |
 
 Feature Registry: FT-002 — `docs/features/Feature-Registry.md`
 

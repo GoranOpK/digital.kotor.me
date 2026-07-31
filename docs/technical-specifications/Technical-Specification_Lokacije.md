@@ -35,7 +35,7 @@ TS-006:
 Izvori istine:
 
 * `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-07, BM-GL-13, relevantni BM-02/BM-03/BM-06/BM-14)
-* `docs/functional-specification/Functional-Specification.md` (§5.9, BR-074–BR-080, BR-206–BR-223)
+* `docs/functional-specifications/Functional-Specification.md` (§5.9, BR-074–BR-080, BR-206–BR-223)
 * usvojene PO odluke: PO-LOC-01 .. PO-LOC-07
 * `docs/features/Feature-Registry.md`
 * `docs/METHODOLOGY.md`

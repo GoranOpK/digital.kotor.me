@@ -20,6 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Event/listener registration for FT-004 uses Laravel auto-discovery
+        // (App\Listeners\PublishOfficialContentNotice). Do not also Event::listen()
+        // here — that would register the listener twice and publish duplicate Notices.
     }
 }

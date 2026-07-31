@@ -34,7 +34,7 @@ TS-007:
 Izvori istine:
 
 * `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-08, BM-GL-14, BM-GL-23, relevantni BM-02/BM-03/BM-04)
-* `docs/functional-specification/Functional-Specification.md` (§5.10, BR-081–BR-085, BR-224–BR-236)
+* `docs/functional-specifications/Functional-Specification.md` (§5.10, BR-081–BR-085, BR-224–BR-236)
 * usvojene PO odluke: TS7-PO-01 .. TS7-PO-06
 * `docs/features/Feature-Registry.md`
 * `docs/METHODOLOGY.md`

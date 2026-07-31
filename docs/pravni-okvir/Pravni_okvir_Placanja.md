@@ -180,8 +180,8 @@ Napomena: Tabela je namjerno prazna. Popunjavanje slijedi u narednom koraku proj
 |----------|---------|-------|
 | Katalog finansijskih obaveza | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` | Poslovni referentni dokument vrsta uplata i uplatnih računa (nije šifrarnik) |
 | Business Model | `docs/business-model/Business_Model_Placanja.md` | Poslovna pravila i načela P-01–P-08 |
-| Functional Specification | `docs/functional-specification/Functional-Specification_Placanja.md` | Funkcionalni zahtjevi, uključujući F-01 |
-| Technical Specification | `docs/technical-specification/Technical-Specification_Placanja.md` | Tehnička specifikacija (nakon usvajanja tehničkih odluka) |
+| Functional Specification | `docs/functional-specifications/Functional-Specification_Placanja.md` | Funkcionalni zahtjevi, uključujući F-01 |
+| Technical Specification | `docs/technical-specifications/Technical-Specification_Placanja.md` | Tehnička specifikacija (nakon usvajanja tehničkih odluka) |
 
 U skladu sa F-01 i UR-01, brojevi uplatnih računa u Katalogu tretiraju se kao **referentni podaci** iz važeće Naredbe. Katalog nije šifrarnik. Aplikacija koristi konfiguracioni izvor (šifrarnik izveden iz Kataloga); računi se ne hardkodiraju u kodu.
 

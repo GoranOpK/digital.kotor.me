@@ -2,24 +2,32 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use App\Models\Application;
 use App\Models\CommissionMember;
 use App\Models\Competition;
+use App\Models\Notice;
+use App\Models\User;
 use App\Support\PhoneNumber;
 use App\Support\Pib;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 
 class HomeController extends Controller
 {
     public function index()
     {
+        $activeNotices = Notice::query()
+            ->where('visible_in_active_panel', true)
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->get();
+
         return view('landing', [
             'landingCategories' => $this->getLandingCategories(),
+            'activeNotices' => $activeNotices,
         ]);
     }
 
@@ -36,7 +44,7 @@ class HomeController extends Controller
         ];
 
         $user = auth()->user();
-        if (!$user || !$user->role) {
+        if (! $user || ! $user->role) {
             return $defaultCategories;
         }
 
@@ -57,7 +65,7 @@ class HomeController extends Controller
     protected function getCommissionMemberCompetitionUrl(User $user): string
     {
         $membership = CommissionMember::activeMembershipForUser($user->id);
-        if (!$membership) {
+        if (! $membership) {
             return route('dashboard');
         }
 
@@ -95,6 +103,7 @@ class HomeController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+
             return redirect()->intended(route('home'));
         }
 
@@ -113,18 +122,18 @@ class HomeController extends Controller
      */
     private function validateJMB($jmb)
     {
-        if (!preg_match('/^[0-9]{13}$/', $jmb)) {
+        if (! preg_match('/^[0-9]{13}$/', $jmb)) {
             return false;
         }
 
         // Izdvajanje delova JMB formata: DDMMGGGRRBBBK
         // Pozicije: 0-1 (DD), 2-3 (MM), 4-6 (GGG), 7-8 (RR), 9-11 (BBB), 12 (K)
-        $DD = (int)substr($jmb, 0, 2);      // Dan: pozicije 0-1
-        $MM = (int)substr($jmb, 2, 2);      // Mesec: pozicije 2-3
-        $GGG = (int)substr($jmb, 4, 3);     // Godina (3 cifre): pozicije 4-6
-        $RR = (int)substr($jmb, 7, 2);      // Region: pozicije 7-8
-        $BBB = (int)substr($jmb, 9, 3);     // Redni broj: pozicije 9-11
-        $K = (int)substr($jmb, 12, 1);      // Kontrolna cifra: pozicija 12
+        $DD = (int) substr($jmb, 0, 2);      // Dan: pozicije 0-1
+        $MM = (int) substr($jmb, 2, 2);      // Mesec: pozicije 2-3
+        $GGG = (int) substr($jmb, 4, 3);     // Godina (3 cifre): pozicije 4-6
+        $RR = (int) substr($jmb, 7, 2);      // Region: pozicije 7-8
+        $BBB = (int) substr($jmb, 9, 3);     // Redni broj: pozicije 9-11
+        $K = (int) substr($jmb, 12, 1);      // Kontrolna cifra: pozicija 12
 
         // Validacija dana (1-31)
         if ($DD < 1 || $DD > 31) {
@@ -137,12 +146,12 @@ class HomeController extends Controller
         }
 
         // Validacija godine u JMB-u
-        // Format: 
+        // Format:
         // - 900 <= GGG <= 999 → godina = 1900 + (GGG - 900) = 1000 + GGG (period 1900-1999)
         // - 000 <= GGG <= [trenutna godina - 2000] → godina = 2000 + GGG (period 2000-trenutna godina)
-        $currentYear = (int)date('Y');
+        $currentYear = (int) date('Y');
         $currentYearLastTwo = $currentYear - 2000; // npr. 2025 -> 25
-        
+
         if ($GGG >= 900 && $GGG <= 999) {
             // Period 1900-1999
             $yearFull = 1000 + $GGG;
@@ -176,10 +185,10 @@ class HomeController extends Controller
         $weights = [7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
         $sum = 0;
         for ($i = 0; $i < 12; $i++) {
-            $sum += (int)$jmb[$i] * $weights[$i];
+            $sum += (int) $jmb[$i] * $weights[$i];
         }
         $m = $sum % 11;
-        
+
         if ($m === 0) {
             $calculatedK = 0;
         } elseif ($m === 1) {
@@ -264,13 +273,13 @@ class HomeController extends Controller
 
         // Validacija JMB/PIB/Passport u zavisnosti od residential_status
         if ($request->residential_status === 'resident') {
-            if ($request->user_type === 'Fizičko lice' || 
+            if ($request->user_type === 'Fizičko lice' ||
                 ($request->user_type === 'Registrovan privredni subjekt' && $request->business_type === 'Preduzetnik')) {
                 $rules['jmb'] = ['required', 'string', 'regex:/^[0-9]{13}$/'];
                 $messages['jmb.required'] = 'JMB je obavezan za rezidente.';
                 $messages['jmb.regex'] = 'JMB mora imati tačno 13 cifara.';
             }
-        } else        if ($request->residential_status === 'non-resident') {
+        } elseif ($request->residential_status === 'non-resident') {
             $rules['non_resident_id_type'] = ['required', 'in:jmb,passport'];
             $messages['non_resident_id_type.required'] = 'Odaberite vrstu identifikacije.';
 
@@ -289,7 +298,7 @@ class HomeController extends Controller
         $validated = $request->validate($rules, $messages);
 
         if ($this->registrationRequiresKotorAddress($request)) {
-            if (!\App\Support\KotorAddress::isValidStreetLine($validated['address'])) {
+            if (! \App\Support\KotorAddress::isValidStreetLine($validated['address'])) {
                 return back()->withErrors(['address' => \App\Support\KotorAddress::streetLineValidationMessage()])->withInput();
             }
 
@@ -301,7 +310,7 @@ class HomeController extends Controller
                 $validated['address'],
                 $validated['city']
             );
-            if (!\App\Support\KotorAddress::isInKotorMunicipality($fullAddress)) {
+            if (! \App\Support\KotorAddress::isInKotorMunicipality($fullAddress)) {
                 return back()->withErrors(['city' => \App\Support\KotorAddress::cityValidationMessage()])->withInput();
             }
         }
@@ -314,7 +323,7 @@ class HomeController extends Controller
             $jmbToValidate = $validated['jmb_non_resident'];
         }
 
-        if ($jmbToValidate && !$this->validateJMB($jmbToValidate)) {
+        if ($jmbToValidate && ! $this->validateJMB($jmbToValidate)) {
             return back()->withErrors(['jmb' => 'JMB je neispravan (kontrolna cifra ne odgovara ili format nije validan).'])->withInput();
         }
 
@@ -326,7 +335,7 @@ class HomeController extends Controller
             if ($existingUser) {
                 return back()->withErrors(['jmb' => 'Nalog sa ovim JMB-om već postoji, ali je deaktiviran. Molimo aktivirajte postojeći nalog.'])->withInput();
             }
-            
+
             // Provera jedinstvenosti aktivnog JMB-a
             if (User::where('jmb', $jmbToValidate)->where('activation_status', 'active')->exists()) {
                 return back()->withErrors(['jmb' => 'JMB je već registrovan.'])->withInput();
@@ -358,7 +367,7 @@ class HomeController extends Controller
         // Priprema podataka za kreiranje korisnika
         // Podrazumevana rola je 3 (korisnik) - dodeljena će se kasnije ako treba
         $userData = [
-            'name' => $validated['first_name'] . ' ' . $validated['last_name'],
+            'name' => $validated['first_name'].' '.$validated['last_name'],
             'user_type' => $request->business_type ?? $validated['user_type'],
             'residential_status' => $validated['residential_status'] ?? 'resident',
             'first_name' => $validated['first_name'],
@@ -415,34 +424,34 @@ class HomeController extends Controller
         if ($isCompetitionAdmin) {
             return redirect()->route('admin.dashboard');
         }
-        
+
         // Ako je konkurs admin, pripremi podatke za admin dashboard
-        
+
         // Ako je član komisije, pripremi podatke za dashboard komisije
         if ($isKomisija) {
             // Pronađi člana komisije
             $commissionMember = \App\Models\CommissionMember::activeMembershipForUser($user->id);
-            
+
             if ($commissionMember) {
                 // Učitaj komisiju sa njenim konkursima
                 $commission = $commissionMember->commission;
                 $commission->load('competitions');
-                
+
                 $competitionIds = $commission->competitions->pluck('id');
-                
+
                 // Sekcija "Prijave za ocjenjivanje" vidljiva je komisiji tek nakon isteka roka za prijavljivanje
                 $competitionsWithDeadlinePassed = $commission->competitions->filter(function ($c) {
                     return in_array($c->status, ['closed', 'completed']) || $c->isApplicationDeadlinePassed();
                 });
                 $showEvaluationSection = $competitionsWithDeadlinePassed->isNotEmpty();
                 $competitionIdsForEvaluation = $competitionsWithDeadlinePassed->pluck('id');
-                
+
                 // Pronađi prijave za konkurse gdje je rok istekao – samo prijave koje član JOŠ NIJE ocjenio
                 $evaluatedApplicationIds = \App\Models\EvaluationScore::where('commission_member_id', $commissionMember->id)
                     ->whereNotNull('criterion_1')
                     ->pluck('application_id')
                     ->toArray();
-                
+
                 $applicationsQuery = Application::whereIn('competition_id', $competitionIdsForEvaluation)
                     ->where(function ($q) {
                         $q->whereIn('status', ['submitted', 'evaluated'])
@@ -452,8 +461,8 @@ class HomeController extends Controller
                             });
                     })
                     ->with(['competition', 'user', 'businessPlan', 'evaluationScores', 'evaluationScores.commissionMember']);
-                
-                if (!empty($evaluatedApplicationIds)) {
+
+                if (! empty($evaluatedApplicationIds)) {
                     $applicationsQuery->where(function ($q) use ($evaluatedApplicationIds) {
                         $q->whereNotIn('id', $evaluatedApplicationIds)
                             ->orWhere(function ($q2) {
@@ -462,7 +471,7 @@ class HomeController extends Controller
                             });
                     });
                 }
-                
+
                 $applications = $applicationsQuery->latest()->get();
                 $applications->each(function ($app) use ($commissionMember) {
                     if ($app->isRejectedForMissingDocuments()) {
@@ -475,31 +484,31 @@ class HomeController extends Controller
                         ->whereNotNull('criterion_1')
                         ->exists();
                 });
-                
+
                 // Moje prijave - samo prijave koje je korisnik lično podneo
                 $myApplications = Application::where('user_id', $user->id)
                     ->whereIn('competition_id', $competitionIds)
                     ->with('competition', 'businessPlan')
                     ->latest()
                     ->get();
-                
+
                 // Učitaj konkursi za prikaz preostalog vremena
                 $competitions = \App\Models\Competition::whereIn('id', $competitionIds->toArray())
                     ->whereIn('status', ['published', 'closed', 'completed'])
                     ->get();
-                
+
                 return view('dashboard', compact('applications', 'commissionMember', 'commission', 'isKomisija', 'myApplications', 'competitions', 'showEvaluationSection'));
             }
 
             return view('dashboard', compact('isKomisija', 'isSuperAdmin'));
         }
-        
+
         // Za običnog korisnika
         $applications = Application::where('user_id', $user->id)
             ->with('competition', 'businessPlan')
             ->latest()
             ->get();
-        
+
         // Podaci za skladište dokumenata
         $maxStorageMB = 20;
         $usedStorageMB = round($user->used_storage_bytes / (1024 * 1024), 2);

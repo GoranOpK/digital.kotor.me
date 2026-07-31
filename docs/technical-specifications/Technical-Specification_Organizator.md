@@ -45,7 +45,7 @@ Dokument:
 Izvori istine za poslovna pravila:
 
 * `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-01, BM-02, BM-03 i povezana pravila)
-* `docs/functional-specification/Functional-Specification.md` (Platformsko pravilo; §5.6; §5.8; relevantna pravila o događajima i auditu)
+* `docs/functional-specifications/Functional-Specification.md` (Platformsko pravilo; §5.6; §5.8; relevantna pravila o događajima i auditu)
 * `docs/features/Feature-Registry.md` (FT-001)
 * `docs/METHODOLOGY.md`
 

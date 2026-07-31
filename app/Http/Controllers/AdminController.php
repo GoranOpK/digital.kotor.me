@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Competition;
+use App\Mail\CommissionAssignedToCompetition;
+use App\Mail\CommissionMemberAdded;
 use App\Models\Application;
 use App\Models\Commission;
 use App\Models\CommissionMember;
+use App\Models\Competition;
+use App\Models\Contract;
 use App\Models\EvaluationScore;
+use App\Models\Report;
 use App\Models\Role;
 use App\Models\Tender;
-use App\Models\Contract;
-use App\Models\Report;
 use App\Models\UpNumber;
-use App\Mail\CommissionAssignedToCompetition;
-use App\Mail\CommissionMemberAdded;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
 class AdminController extends Controller
@@ -29,7 +29,7 @@ class AdminController extends Controller
     {
         $user = auth()->user();
 
-        if (!$competition->commission_id) {
+        if (! $competition->commission_id) {
             return false;
         }
 
@@ -37,7 +37,7 @@ class AdminController extends Controller
 
         return $commissionMember && $commissionMember->position === 'predsjednik';
     }
-    
+
     /**
      * Proverava da li je korisnik član komisije (bilo koji član) i da li je konkurs dodijeljen njegovoj komisiji
      */
@@ -45,13 +45,13 @@ class AdminController extends Controller
     {
         $user = auth()->user();
 
-        if (!$competition->commission_id) {
+        if (! $competition->commission_id) {
             return false;
         }
 
         return CommissionMember::activeForCommission($user->id, $competition->commission_id) !== null;
     }
-    
+
     /**
      * Proverava da li je korisnik predsjednik komisije
      */
@@ -63,7 +63,7 @@ class AdminController extends Controller
 
         return $member && $member->position === 'predsjednik';
     }
-    
+
     /**
      * Proverava da li je korisnik član komisije (bilo koji član)
      */
@@ -73,7 +73,7 @@ class AdminController extends Controller
 
         return CommissionMember::activeMembershipForUser($user->id) !== null;
     }
-    
+
     /**
      * Vraća ID komisije za člana komisije
      */
@@ -85,19 +85,19 @@ class AdminController extends Controller
 
         return $commissionMember?->commission_id;
     }
-    
+
     /**
      * Proverava da li korisnik može da pristupi upravljanju konkursima
      */
     protected function canAccessCompetitionsManagement(): bool
     {
         $user = auth()->user();
-        
+
         // Admin i konkurs_admin mogu pristupiti
         if ($user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin'])) {
             return true;
         }
-        
+
         // Proveri da li je član komisije (bilo koji član)
         return $this->isCommissionMember();
     }
@@ -166,7 +166,7 @@ class AdminController extends Controller
      */
     protected function getCompetitionTypeLabel(?string $type): ?string
     {
-        if (!$type) {
+        if (! $type) {
             return null;
         }
 
@@ -216,7 +216,7 @@ class AdminController extends Controller
         $user = auth()->user();
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
         $competitionPrograms = $isCompetitionAdmin ? $this->getCompetitionProgramsOverview() : null;
-        
+
         // Statistike za admin dashboard
         $stats = [
             'total_competitions' => Competition::count(),
@@ -224,9 +224,9 @@ class AdminController extends Controller
             'total_commissions' => Commission::count(),
             'active_commissions' => Commission::where('status', 'active')->count(),
         ];
-        
+
         // Dodatne statistike samo za superadmin i admin
-        if (!$isCompetitionAdmin) {
+        if (! $isCompetitionAdmin) {
             $stats['total_users'] = User::count();
             $stats['active_users'] = User::where('activation_status', 'active')->count();
             $stats['total_tenders'] = Tender::count();
@@ -236,7 +236,7 @@ class AdminController extends Controller
 
         // Najnoviji korisnici (samo za superadmin i admin)
         $recent_users = null;
-        if (!$isCompetitionAdmin) {
+        if (! $isCompetitionAdmin) {
             $recent_users = User::latest()->take(10)->get();
         }
 
@@ -271,8 +271,9 @@ class AdminController extends Controller
         if ($user->role && $user->role->name === 'konkurs_admin') {
             abort(403, 'Nemate pristup upravljanju korisnicima.');
         }
-        
+
         $users = User::with('role')->latest()->paginate(20);
+
         return view('admin.users.index', compact('users'));
     }
 
@@ -286,8 +287,9 @@ class AdminController extends Controller
         if ($currentUser->role && $currentUser->role->name === 'konkurs_admin') {
             abort(403, 'Nemate pristup upravljanju korisnicima.');
         }
-        
+
         $user->load('role');
+
         return view('admin.users.show', compact('user'));
     }
 
@@ -301,9 +303,10 @@ class AdminController extends Controller
         if ($currentUser->role && $currentUser->role->name === 'konkurs_admin') {
             abort(403, 'Nemate pristup upravljanju korisnicima.');
         }
-        
+
         $user->load('role');
         $roles = \App\Models\Role::all();
+
         return view('admin.users.edit', compact('user', 'roles'));
     }
 
@@ -320,7 +323,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $user->id,
+            'email' => 'required|email|unique:users,email,'.$user->id,
             'phone' => 'nullable|string|max:50',
             'role_id' => 'required|exists:roles,id',
             'activation_status' => 'required|in:active,deactivated',
@@ -329,13 +332,13 @@ class AdminController extends Controller
 
         $user->first_name = $validated['first_name'];
         $user->last_name = $validated['last_name'];
-        $user->name = $validated['first_name'] . ' ' . $validated['last_name'];
+        $user->name = $validated['first_name'].' '.$validated['last_name'];
         $user->email = $validated['email'];
         $user->phone = $validated['phone'] ?? null;
         $user->role_id = $validated['role_id'];
         $user->activation_status = $validated['activation_status'];
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
 
@@ -385,19 +388,19 @@ class AdminController extends Controller
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
         $commissionId = null;
-        
+
         // Ako je član komisije, prikaži samo konkurse dodijeljene njegovoj komisiji
-        if (!$isAdmin && $this->isCommissionMember()) {
+        if (! $isAdmin && $this->isCommissionMember()) {
             $commissionId = $this->getCommissionIdForMember();
-            if (!$commissionId) {
+            if (! $commissionId) {
                 abort(403, 'Nemate pristup upravljanju konkursima.');
             }
         }
-        
+
         $tab = $request->get('tab', 'active'); // 'active', 'archive' ili 'all'
         $type = $request->get('type');
         $allowedTypes = array_keys($this->getCompetitionProgramDefinitions());
-        if ($type && !in_array($type, $allowedTypes, true)) {
+        if ($type && ! in_array($type, $allowedTypes, true)) {
             $type = null;
         }
         $typeLabel = $this->getCompetitionTypeLabel($type);
@@ -407,9 +410,9 @@ class AdminController extends Controller
                 $query->where('type', $type);
             }
         };
-        
+
         if ($tab === 'archive') {
-            if (!$isAdmin) {
+            if (! $isAdmin) {
                 $commissionMember = CommissionMember::activeMembershipForUser($user->id);
                 $commissionMember?->loadMissing('commission');
 
@@ -418,7 +421,7 @@ class AdminController extends Controller
                     && $commission->status === 'active'
                     && now()->between($commission->start_date, $commission->end_date);
 
-                if (!$isMandateActive) {
+                if (! $isMandateActive) {
                     abort(403, 'Arhiva konkursa je dostupna članovima komisije samo tokom trajanja mandata.');
                 }
             }
@@ -427,12 +430,12 @@ class AdminController extends Controller
             $query = Competition::withCount('applications')
                 ->whereIn('status', ['closed', 'completed']);
 
-            if (!$isAdmin && $commissionId) {
+            if (! $isAdmin && $commissionId) {
                 $query->where('commission_id', $commissionId);
             }
 
             $applyTypeFilter($query);
-            
+
             $competitions = $query->orderByRaw('COALESCE(published_at, created_at) DESC')
                 ->orderBy('created_at', 'desc')
                 ->paginate(20)
@@ -440,13 +443,13 @@ class AdminController extends Controller
         } elseif ($tab === 'all') {
             // Svi konkursi (bez obzira na status)
             $query = Competition::withCount('applications');
-            
-            if (!$isAdmin && isset($commissionId)) {
+
+            if (! $isAdmin && isset($commissionId)) {
                 $query->where('commission_id', $commissionId);
             }
 
             $applyTypeFilter($query);
-            
+
             $competitions = $query->orderBy('created_at', 'desc')
                 ->paginate(20)
                 ->appends(['tab' => $tab, 'type' => $type]);
@@ -454,18 +457,18 @@ class AdminController extends Controller
             // Aktivni konkursi (draft, published)
             $query = Competition::withCount('applications')
                 ->whereIn('status', ['draft', 'published']);
-            
-            if (!$isAdmin && isset($commissionId)) {
+
+            if (! $isAdmin && isset($commissionId)) {
                 $query->where('commission_id', $commissionId);
             }
 
             $applyTypeFilter($query);
-            
+
             $competitions = $query->orderBy('created_at', 'desc')
                 ->paginate(20)
                 ->appends(['tab' => $tab, 'type' => $type]);
         }
-        
+
         $featuredCompetition = $type ? $this->getFeaturedCompetitionForProgram($type) : null;
 
         return view('admin.competitions.index', compact('competitions', 'tab', 'isAdmin', 'type', 'typeLabel', 'featuredCompetition'));
@@ -484,7 +487,7 @@ class AdminController extends Controller
             ->orderByRaw('COALESCE(published_at, created_at) DESC')
             ->orderBy('created_at', 'desc');
 
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             $commissionMember = CommissionMember::activeMembershipForUser($user->id);
             $commissionMember?->loadMissing('commission');
 
@@ -493,7 +496,7 @@ class AdminController extends Controller
                 && $commission->status === 'active'
                 && now()->between($commission->start_date, $commission->end_date);
 
-            if (!$isMandateActive) {
+            if (! $isMandateActive) {
                 abort(403, 'Arhiva konkursa je dostupna članovima komisije samo tokom trajanja mandata.');
             }
 
@@ -501,7 +504,7 @@ class AdminController extends Controller
         }
 
         $competitions = $query->paginate(20);
-        
+
         return view('competitions.archive', compact('competitions'));
     }
 
@@ -512,16 +515,16 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
-        
+
         // Predsjednik komisije ne može kreirati konkurse
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             abort(403, 'Nemate dozvolu za kreiranje konkursa.');
         }
-        
+
         $commissions = Commission::where('status', 'active')->orderBy('year', 'desc')->get();
         $presetType = request('type');
         $allowedTypes = array_keys($this->getCompetitionProgramDefinitions());
-        if (!$presetType || !in_array($presetType, $allowedTypes, true)) {
+        if (! $presetType || ! in_array($presetType, $allowedTypes, true)) {
             $presetType = null;
         }
 
@@ -535,12 +538,12 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
-        
+
         // Predsjednik komisije ne može kreirati konkurse
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             abort(403, 'Nemate dozvolu za kreiranje konkursa.');
         }
-        
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -570,7 +573,7 @@ class AdminController extends Controller
             'status' => 'draft',
         ];
 
-        if (!empty($validated['start_date'])) {
+        if (! empty($validated['start_date'])) {
             $start = \Carbon\Carbon::parse($validated['start_date']);
             $data['start_date'] = $start->toDateString();
             $data['end_date'] = $start->copy()->addDays(20)->toDateString();
@@ -591,11 +594,12 @@ class AdminController extends Controller
                     }
                 }
             }
-            $competition->update(['competition_number' => $datePart . ($maxN + 1)]);
+            $competition->update(['competition_number' => $datePart.($maxN + 1)]);
             UpNumber::create([
                 'competition_id' => $competition->id,
                 'number' => $validated['up_number'],
             ]);
+
             return $competition->fresh();
         });
 
@@ -617,49 +621,49 @@ class AdminController extends Controller
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
         $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
-        
+
         // Ako nije admin, proveri da li je član komisije i da li je konkurs dodijeljen njegovoj komisiji
-        if (!$isAdmin && !$this->isCommissionMemberForCompetition($competition)) {
+        if (! $isAdmin && ! $this->isCommissionMemberForCompetition($competition)) {
             abort(403, 'Nemate pristup ovom konkursu.');
         }
-        
+
         // Proveri da li je predsjednik komisije (za prikaz dodatnih opcija)
         $isChairman = $this->isCommissionChairmanForCompetition($competition);
-        
+
         // Proveri da li je član komisije
         $isCommissionMember = $this->isCommissionMemberForCompetition($competition);
-        
+
         $competition->loadCount('applications');
         $competition->load(['commission', 'upNumber']);
-        
+
         $typeLabel = $this->getCompetitionTypeLabel($competition->type);
-        $isKomisijaView = $isCommissionMember && !$isAdmin && !$isCompetitionAdmin;
-        
+        $isKomisijaView = $isCommissionMember && ! $isAdmin && ! $isCompetitionAdmin;
+
         // Članovi komisije ne mogu vidjeti draft prijave; prijave su im vidljive tek nakon isteka roka za prijavljivanje
         $applicationsQuery = $competition->applications()
             ->with(['user', 'businessPlan']);
-        
-        if ($isCommissionMember && !$isAdmin) {
+
+        if ($isCommissionMember && ! $isAdmin) {
             $applicationsQuery->where('status', '!=', 'draft');
             // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (20 dana)
-            if (!$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed'])) {
+            if (! $competition->isApplicationDeadlinePassed() && ! in_array($competition->status, ['closed', 'completed'])) {
                 $applicationsQuery->whereRaw('1 = 0'); // prazna lista
             }
         }
-        
+
         $applications = $applicationsQuery->latest()->paginate(20);
-        
+
         // Proveri da li je deadline prošao (za prikaz dugmeta "Zatvori konkurs")
         $deadline = $competition->deadline;
         $isDeadlinePassed = $deadline && now()->isAfter($deadline);
-        
+
         // Rang lista:
         // - za zaključene konkurse (closed/completed) dostupna je i konkurs_admin roli kao read-only
         // - za ostale statuse ostaje stara logika (kada je rang lista formirana)
         $showRankingLink = in_array($competition->status, ['closed', 'completed'])
             ? ($isSuperAdmin || $isChairman || $isCommissionMember || $isCompetitionAdmin)
             : (($isSuperAdmin || $isChairman || $isCommissionMember) && $competition->isRankingFormed());
-        
+
         return view('admin.competitions.show', compact('competition', 'applications', 'isAdmin', 'isSuperAdmin', 'isCompetitionAdmin', 'isChairman', 'isCommissionMember', 'isDeadlinePassed', 'showRankingLink', 'typeLabel', 'isKomisijaView'));
     }
 
@@ -670,18 +674,19 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
-        
+
         // Proveri da li je konkurs završen
         if (in_array($competition->status, ['closed', 'completed'])) {
             abort(403, 'Ne možete izmeniti završeni konkurs.');
         }
-        
+
         // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
-        if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
+        if (! $isAdmin && ! $this->isCommissionChairmanForCompetition($competition)) {
             abort(403, 'Nemate dozvolu za izmjenu ovog konkursa.');
         }
-        
+
         $commissions = Commission::where('status', 'active')->orderBy('year', 'desc')->get();
+
         return view('admin.competitions.edit', compact('competition', 'commissions', 'isAdmin'));
     }
 
@@ -692,17 +697,17 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
-        
+
         // Proveri da li je konkurs završen
         if (in_array($competition->status, ['closed', 'completed'])) {
             abort(403, 'Ne možete izmeniti završeni konkurs.');
         }
-        
+
         // Ako nije admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
-        if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
+        if (! $isAdmin && ! $this->isCommissionChairmanForCompetition($competition)) {
             abort(403, 'Nemate dozvolu za izmjenu ovog konkursa.');
         }
-        
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -738,7 +743,7 @@ class AdminController extends Controller
             $data['closed_at'] = null;
         }
 
-        if (!empty($validated['start_date'])) {
+        if (! empty($validated['start_date'])) {
             $start = \Carbon\Carbon::parse($validated['start_date']);
             $data['start_date'] = $start->toDateString();
             $data['end_date'] = $start->copy()->addDays(20)->toDateString();
@@ -773,12 +778,12 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
-        
+
         // Predsjednik komisije ne može objavljivati konkurse
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             abort(403, 'Nemate dozvolu za objavljivanje konkursa.');
         }
-        
+
         if ($competition->status !== 'draft') {
             return redirect()->back()->withErrors(['error' => 'Samo nacrti konkursa mogu biti objavljeni.']);
         }
@@ -791,11 +796,11 @@ class AdminController extends Controller
         ];
 
         // Ako nije postavljen start_date, postavi ga na danas
-        if (!$competition->start_date) {
+        if (! $competition->start_date) {
             $updateData['start_date'] = $now->toDateString();
             $updateData['end_date'] = $now->copy()->addDays(20)->toDateString();
         } else {
-            // Ako je start_date postavljen (bio to današnji ili budući), 
+            // Ako je start_date postavljen (bio to današnji ili budući),
             // end_date mora biti 20 dana od tog start_date
             $updateData['end_date'] = $competition->start_date->copy()->addDays(20)->toDateString();
         }
@@ -813,44 +818,44 @@ class AdminController extends Controller
         $user = auth()->user();
         $isSuperAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
-        
+
         // Administrator konkursa ne može zatvarati konkurse
         if ($isCompetitionAdmin) {
             abort(403, 'Nemate dozvolu za zatvaranje konkursa. Samo predsjednik komisije može zatvarati konkurse.');
         }
-        
+
         // Ako nije superadmin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
-        if (!$isSuperAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
+        if (! $isSuperAdmin && ! $this->isCommissionChairmanForCompetition($competition)) {
             abort(403, 'Nemate dozvolu za zatvaranje ovog konkursa.');
         }
-        
+
         // Proveri da li je deadline prošao - konkurs se ne može zatvoriti dok je još otvoren za prijave
         $deadline = $competition->deadline;
         $isDeadlinePassed = $deadline && now()->isAfter($deadline);
-        
-        if (!$isDeadlinePassed) {
+
+        if (! $isDeadlinePassed) {
             return redirect()->back()
                 ->withErrors(['error' => 'Ne možete zatvoriti konkurs dok je još otvoren za prijave. Rok za prijave mora prvo isteći.']);
         }
 
         // Konkurs se može zatvoriti tek nakon što predsjednik generiše odluku (donese zaključak za sve prijave)
-        if (!$competition->hasChairmanCompletedDecisions()) {
+        if (! $competition->hasChairmanCompletedDecisions()) {
             return redirect()->back()
                 ->withErrors(['error' => 'Ne možete zatvoriti konkurs prije nego što donesete zaključak za sve prijave i generišete odluku o dodjeli sredstava.']);
         }
-        
+
         // Proveri da li postoje prijave koje nisu ocijenjene
         $submittedApplications = $competition->applications()
             ->where('status', 'submitted')
             ->get();
-        
+
         if ($submittedApplications->count() > 0) {
             // Proveri da li sve prijave imaju ocjene od svih članova komisije
             $commission = $competition->commission;
             if ($commission) {
                 $activeMembers = $commission->activeMembers()->get();
                 $activeMemberIds = $activeMembers->pluck('id');
-                
+
                 foreach ($submittedApplications as $application) {
                     // Ako je deadline prošao, provjeri da li je prijava kompletna
                     $isIncomplete = false;
@@ -859,11 +864,11 @@ class AdminController extends Controller
                         // Napomena: Provjera dokumenata je uklonjena - predsjednik komisije će odbiti prijavu ako nedostaju dokumenti kroz formu za ocjenjivanje
                         $hasBusinessPlan = $application->businessPlan !== null;
                         $isObrazacComplete = $application->isObrazacComplete();
-                        
+
                         // Ako prijava nije kompletna (nema biznis plan ili obrazac nije kompletan), tretiraj je kao nepotpunu
-                        if (!$hasBusinessPlan || !$isObrazacComplete) {
+                        if (! $hasBusinessPlan || ! $isObrazacComplete) {
                             $isIncomplete = true;
-                            
+
                             // Automatski postavi status na 'rejected' za nepotpune prijave nakon isteka deadline-a
                             if ($application->status === 'submitted') {
                                 $application->update([
@@ -873,13 +878,13 @@ class AdminController extends Controller
                             }
                         }
                     }
-                    
+
                     // Ako prijava nije nepotpuna, provjeri da li je ocijenjena
-                    if (!$isIncomplete) {
+                    if (! $isIncomplete) {
                         $evaluatedByMemberIds = $application->evaluationScores()
                             ->whereIn('commission_member_id', $activeMemberIds)
                             ->pluck('commission_member_id');
-                        
+
                         // Ako neki član komisije nije ocijenio prijavu, preusmeri na formu za ocjenjivanje
                         $missingEvaluations = $activeMemberIds->diff($evaluatedByMemberIds);
                         if ($missingEvaluations->count() > 0) {
@@ -890,13 +895,13 @@ class AdminController extends Controller
                 }
             }
         }
-        
+
         // Ako je deadline prošao, automatski odbij sve draft prijave
         if ($isDeadlinePassed) {
             $draftApplications = $competition->applications()
                 ->where('status', 'draft')
                 ->get();
-            
+
             foreach ($draftApplications as $application) {
                 $application->update([
                     'status' => 'rejected',
@@ -947,7 +952,7 @@ class AdminController extends Controller
             $application->ranking_position = $index + 1;
             $application->save();
         }
-        
+
         $competition->update([
             'status' => 'completed',
             'closed_at' => now(),
@@ -964,20 +969,20 @@ class AdminController extends Controller
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
         $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
-        
+
         // Privremeno: Administrator konkursa može brisati sve konkurse
         // Ostali ne mogu brisati završene konkurse
-        if (in_array($competition->status, ['closed', 'completed']) && !$isCompetitionAdmin && !$isAdmin) {
+        if (in_array($competition->status, ['closed', 'completed']) && ! $isCompetitionAdmin && ! $isAdmin) {
             abort(403, 'Ne možete obrisati završeni konkurs.');
         }
-        
+
         // Ako nije admin i nije konkurs_admin, proveri da li je predsjednik komisije i da li je konkurs dodijeljen njegovoj komisiji
-        if (!$isAdmin && !$this->isCommissionChairmanForCompetition($competition)) {
+        if (! $isAdmin && ! $this->isCommissionChairmanForCompetition($competition)) {
             abort(403, 'Nemate dozvolu za brisanje ovog konkursa.');
         }
-        
+
         // Proveri da li ima prijava (samo za aktivne konkurse, ali ne blokiraj konkurs_admin)
-        if (!in_array($competition->status, ['closed', 'completed']) && $competition->applications()->count() > 0 && !$isCompetitionAdmin) {
+        if (! in_array($competition->status, ['closed', 'completed']) && $competition->applications()->count() > 0 && ! $isCompetitionAdmin) {
             return redirect()->back()->withErrors(['error' => 'Ne možete obrisati konkurs koji već ima prijave.']);
         }
 
@@ -997,10 +1002,10 @@ class AdminController extends Controller
         if ($user->role && $user->role->name === 'konkurs_admin') {
             abort(403, 'Nemate pristup upravljanju aplikacijama.');
         }
-        
+
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'superadmin']);
         $isKomisija = $user->role && $user->role->name === 'komisija';
-        
+
         $query = Application::with(['user', 'competition', 'evaluationScores']);
 
         // Filtriranje po statusu
@@ -1009,7 +1014,7 @@ class AdminController extends Controller
         }
 
         // Članovi komisije ne mogu vidjeti draft prijave; prijave su im vidljive tek nakon isteka roka za prijavljivanje
-        if ($isKomisija && !$isAdmin) {
+        if ($isKomisija && ! $isAdmin) {
             $query->where('status', '!=', 'draft');
             $commissionId = $this->getCommissionIdForMember();
             if ($commissionId) {
@@ -1029,7 +1034,7 @@ class AdminController extends Controller
 
         // Pretraga po nazivu biznis plana
         if ($request->has('search') && $request->search !== '') {
-            $query->where('business_plan_name', 'like', '%' . $request->search . '%');
+            $query->where('business_plan_name', 'like', '%'.$request->search.'%');
         }
 
         $applications = $query->latest()->paginate(20);
@@ -1045,14 +1050,14 @@ class AdminController extends Controller
     {
         $user = auth()->user();
         $isAdmin = $user->role && in_array($user->role->name, ['admin', 'konkurs_admin', 'superadmin']);
-        
+
         // Ako nije admin, proveri da li je član komisije i da li je prijava vezana za konkurs dodijeljen njegovoj komisiji
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             $competition = $application->competition;
-            if (!$competition || !$this->isCommissionMemberForCompetition($competition)) {
+            if (! $competition || ! $this->isCommissionMemberForCompetition($competition)) {
                 abort(403, 'Nemate pristup ovoj prijavi.');
             }
-            
+
             // Članovi komisije mogu vidjeti samo prijave koje su podnesene (status 'submitted' ili viši)
             // Ne mogu vidjeti draft prijave
             if ($application->status === 'draft') {
@@ -1060,15 +1065,15 @@ class AdminController extends Controller
             }
             // Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje (20 dana)
             $competition = $application->competition;
-            if ($competition && !in_array($competition->status, ['closed', 'completed']) && !$competition->isApplicationDeadlinePassed()) {
+            if ($competition && ! in_array($competition->status, ['closed', 'completed']) && ! $competition->isApplicationDeadlinePassed()) {
                 abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (20 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
             }
         }
-        
+
         $application->load(['user', 'competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember']);
-        
+
         $application->load(['competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember', 'contract', 'reports']);
-        
+
         return view('admin.applications.show', compact('application'));
     }
 
@@ -1082,7 +1087,7 @@ class AdminController extends Controller
             ->orderBy('year', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(20);
-        
+
         return view('admin.commissions.index', compact('commissions'));
     }
 
@@ -1096,6 +1101,7 @@ class AdminController extends Controller
             ->orderBy('year', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
+
         return view('admin.commissions.create', compact('competitions'));
     }
 
@@ -1111,32 +1117,32 @@ class AdminController extends Controller
             $start = \Carbon\Carbon::parse($startDate);
             $endDate = $start->copy()->addYears(1)->format('Y-m-d');
         }
-        
+
         // Proveri da li se email-ovi ponavljaju između članova
         $emails = [];
         $membersData = $request->input('members', []);
-        
+
         // Filtriraj samo popunjene članove (koji imaju email)
         $filledMembers = [];
         foreach ($membersData as $index => $member) {
-            if (!empty($member['email'])) {
+            if (! empty($member['email'])) {
                 $filledMembers[$index] = $member;
                 $email = strtolower($member['email']);
-                
+
                 // Proveri da li se email ponavlja između članova
                 if (in_array($email, $emails)) {
-                    return back()->withErrors(['members.' . $index . '.email' => 'E-mail se ne može ponavljati između članova komisije.'])->withInput();
+                    return back()->withErrors(['members.'.$index.'.email' => 'E-mail se ne može ponavljati između članova komisije.'])->withInput();
                 }
-                
+
                 $emails[] = $email;
             }
         }
-        
+
         // Proveri da li je dodato najmanje 1 član
         if (count($filledMembers) < 1) {
             return back()->withErrors(['members' => 'Morate dodati najmanje jednog člana komisije.'])->withInput();
         }
-        
+
         // Proveri da li je dodato više od 5 članova
         if (count($filledMembers) > 5) {
             return back()->withErrors(['members' => 'Komisija može imati najviše 5 članova.'])->withInput();
@@ -1152,18 +1158,18 @@ class AdminController extends Controller
             'competition_ids' => 'nullable|array',
             'competition_ids.*' => 'exists:competitions,id',
         ];
-        
+
         // Validacija za sve članove (0-4) - ako je bilo koje polje popunjeno, sva polja moraju biti popunjena
         for ($i = 0; $i <= 4; $i++) {
-            $rules["members.{$i}.name"] = 'nullable|required_with:members.' . $i . '.email|string|max:255';
-            $rules["members.{$i}.email"] = 'nullable|required_with:members.' . $i . '.name|email|max:255';
+            $rules["members.{$i}.name"] = 'nullable|required_with:members.'.$i.'.email|string|max:255';
+            $rules["members.{$i}.email"] = 'nullable|required_with:members.'.$i.'.name|email|max:255';
             // Password je obavezan samo za nove korisnike (email koji ne postoji u sistemu)
             $rules["members.{$i}.password"] = 'nullable|string|min:8';
-            $rules["members.{$i}.position"] = 'nullable|required_with:members.' . $i . '.email|in:predsjednik,clan';
-            $rules["members.{$i}.member_type"] = 'nullable|required_with:members.' . $i . '.email|in:opstina,udruzenje,zene_mreza';
+            $rules["members.{$i}.position"] = 'nullable|required_with:members.'.$i.'.email|in:predsjednik,clan';
+            $rules["members.{$i}.member_type"] = 'nullable|required_with:members.'.$i.'.email|in:opstina,udruzenje,zene_mreza';
             $rules["members.{$i}.organization"] = 'nullable|string|max:255';
         }
-        
+
         $messages = [
             'name.required' => 'Naziv komisije je obavezan.',
             'year.required' => 'Godina je obavezna.',
@@ -1174,32 +1180,31 @@ class AdminController extends Controller
             'members.min' => 'Morate dodati najmanje jednog člana komisije.',
             'members.max' => 'Komisija može imati najviše 5 članova.',
         ];
-        
+
         // Dodaj poruke za sve članove
         for ($i = 0; $i <= 4; $i++) {
-            $messages["members.{$i}.name.required_with"] = "Ime i prezime člana je obavezno ako dodajete člana.";
-            $messages["members.{$i}.email.required_with"] = "E-mail člana je obavezan ako dodajete člana.";
-            $messages["members.{$i}.email.email"] = "E-mail člana mora biti validan.";
-            $messages["members.{$i}.password.min"] = "Password člana mora imati minimum 8 karaktera.";
-            $messages["members.{$i}.position.required_with"] = "Pozicija člana je obavezna ako dodajete člana.";
-            $messages["members.{$i}.member_type.required_with"] = "Tip člana je obavezan ako dodajete člana.";
+            $messages["members.{$i}.name.required_with"] = 'Ime i prezime člana je obavezno ako dodajete člana.';
+            $messages["members.{$i}.email.required_with"] = 'E-mail člana je obavezan ako dodajete člana.';
+            $messages["members.{$i}.email.email"] = 'E-mail člana mora biti validan.';
+            $messages["members.{$i}.password.min"] = 'Password člana mora imati minimum 8 karaktera.';
+            $messages["members.{$i}.position.required_with"] = 'Pozicija člana je obavezna ako dodajete člana.';
+            $messages["members.{$i}.member_type.required_with"] = 'Tip člana je obavezan ako dodajete člana.';
         }
-        
+
         // Dodaj poruke za organizaciju
         for ($i = 0; $i <= 4; $i++) {
             $messages["members.{$i}.organization.required_if"] = 'Organizacija je obavezna za člana iz udruženja.';
         }
-        
+
         $validated = $request->validate($rules, $messages);
-        
+
         // Custom validacija: organizacija je obavezna za člana iz udruženja ako je član popunjen
-        if (!empty($validated['members'][3]['email']) && 
-            isset($validated['members'][3]['member_type']) && 
-            $validated['members'][3]['member_type'] === 'udruzenje' && 
+        if (! empty($validated['members'][3]['email']) &&
+            isset($validated['members'][3]['member_type']) &&
+            $validated['members'][3]['member_type'] === 'udruzenje' &&
             empty($validated['members'][3]['organization'])) {
             return back()->withErrors(['members.3.organization' => 'Organizacija je obavezna za člana iz udruženja.'])->withInput();
         }
-
 
         // Custom validacija: password je obavezan samo za nove email adrese
         foreach ($validated['members'] as $index => $memberData) {
@@ -1209,7 +1214,7 @@ class AdminController extends Controller
 
             $normalizedEmail = strtolower($memberData['email']);
             $userExists = User::where('email', $normalizedEmail)->exists();
-            if (!$userExists && empty($memberData['password'])) {
+            if (! $userExists && empty($memberData['password'])) {
                 return back()->withErrors([
                     "members.{$index}.password" => 'Password člana je obavezan za novi e-mail.',
                 ])->withInput();
@@ -1226,7 +1231,7 @@ class AdminController extends Controller
 
         // Pronađi rolu za komisiju
         $komisijaRole = Role::where('name', 'komisija')->first();
-        if (!$komisijaRole) {
+        if (! $komisijaRole) {
             return back()->withErrors(['error' => 'Rola "komisija" ne postoji u sistemu.'])->withInput();
         }
 
@@ -1237,12 +1242,12 @@ class AdminController extends Controller
             if (empty($memberData['name']) || empty($memberData['email'])) {
                 continue;
             }
-            
+
             $normalizedEmail = strtolower($memberData['email']);
             $user = User::where('email', $normalizedEmail)->first();
 
             // Ako korisnik sa tim e-mailom ne postoji, kreiraj novi nalog
-            if (!$user) {
+            if (! $user) {
                 $user = User::create([
                     'name' => $memberData['name'],
                     'email' => $normalizedEmail,
@@ -1273,12 +1278,12 @@ class AdminController extends Controller
             } catch (\Throwable $e) {
                 // Ne prekidaj tok zbog mail greške
             }
-            
+
             $createdMembers++;
         }
 
         // Dodijeli komisiju izabranim konkursima
-        if (!empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
+        if (! empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
             Competition::whereIn('id', $validated['competition_ids'])
                 ->update(['commission_id' => $commission->id]);
 
@@ -1297,10 +1302,10 @@ class AdminController extends Controller
             $message .= ' Možete dodati ostale članove komisije.';
         }
 
-        if (!empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
+        if (! empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
             $count = count($validated['competition_ids']);
-            $message .= $count == 1 
-                ? " Dodijeljen 1 konkurs ovoj komisiji." 
+            $message .= $count == 1
+                ? ' Dodijeljen 1 konkurs ovoj komisiji.'
                 : " Dodijeljeno {$count} konkursa ovoj komisiji.";
         }
 
@@ -1314,12 +1319,12 @@ class AdminController extends Controller
     public function showCommission(Commission $commission)
     {
         $commission->load(['members.user', 'competitions']);
-        $users = User::whereHas('role', function($query) {
+        $users = User::whereHas('role', function ($query) {
             $query->where('name', 'komisija');
         })->get();
 
         $compositionSlots = $this->buildCommissionCompositionSlots($commission);
-        
+
         return view('admin.commissions.show', compact('commission', 'users', 'compositionSlots'));
     }
 
@@ -1336,7 +1341,7 @@ class AdminController extends Controller
             5 => '5. Član — Predstavnica Ženske političke mreže',
         ];
 
-        $substitutes = $commission->members->filter(fn ($m) => !empty($m->is_substitute));
+        $substitutes = $commission->members->filter(fn ($m) => ! empty($m->is_substitute));
         $slots = [];
 
         foreach ($slotLabels as $slotNumber => $label) {
@@ -1368,7 +1373,7 @@ class AdminController extends Controller
             ->get();
 
         $commission->load(['members', 'competitions']);
-        
+
         return view('admin.commissions.edit', compact('commission', 'competitions'));
     }
 
@@ -1384,7 +1389,7 @@ class AdminController extends Controller
             $start = \Carbon\Carbon::parse($startDate);
             $endDate = $start->copy()->addYears(1)->format('Y-m-d');
         }
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'year' => 'required|integer|min:2020|max:2100',
@@ -1396,7 +1401,7 @@ class AdminController extends Controller
         ]);
 
         $validated['end_date'] = $endDate ?? $validated['end_date'];
-        
+
         $commission->update([
             'name' => $validated['name'],
             'year' => $validated['year'],
@@ -1409,9 +1414,9 @@ class AdminController extends Controller
         // Prvo ukloni dodjelu sa svih konkursa koji su bili dodijeljeni ovoj komisiji
         Competition::where('commission_id', $commission->id)
             ->update(['commission_id' => null]);
-        
+
         // Zatim dodijeli izabrane konkursa ovoj komisiji
-        if (!empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
+        if (! empty($validated['competition_ids']) && is_array($validated['competition_ids'])) {
             Competition::whereIn('id', $validated['competition_ids'])
                 ->update(['commission_id' => $commission->id]);
 
@@ -1434,7 +1439,7 @@ class AdminController extends Controller
         // Brisanje komisije će automatski obrisati sve članove komisije zbog cascade delete
         // Takođe, treba proveriti da li postoje ocjene povezane sa ovom komisijom
         $commissionName = $commission->name;
-        
+
         $commission->delete();
 
         return redirect()->route('admin.commissions.index')
@@ -1480,7 +1485,7 @@ class AdminController extends Controller
         // Pravila kapaciteta: najviše 5 redovnih članova + 1 zamjenski
         $commission->loadMissing(['members', 'competitions']);
         $hasSubstituteMember = $commission->hasActiveSubstitute();
-        $regularMembersCount = $commission->members->reject(fn ($m) => !empty($m->is_substitute))->count();
+        $regularMembersCount = $commission->members->reject(fn ($m) => ! empty($m->is_substitute))->count();
 
         if (($validated['member_type'] ?? null) === 'zamjenski') {
             if ($hasSubstituteMember) {
@@ -1509,14 +1514,14 @@ class AdminController extends Controller
                 4 => ['position' => 'clan', 'member_type' => 'udruzenje'],
                 5 => ['position' => 'clan', 'member_type' => 'zene_mreza'],
             ];
-            $replacesNumber = (int)($validated['replaces_member_number'] ?? 0);
-            if (!isset($replacementRoleMap[$replacesNumber])) {
+            $replacesNumber = (int) ($validated['replaces_member_number'] ?? 0);
+            if (! isset($replacementRoleMap[$replacesNumber])) {
                 return back()->withErrors(['replaces_member_number' => 'Neispravan izbor člana za zamjenu.'])->withInput();
             }
 
             // Zamjenski može preuzeti samo aktivnog redovnog člana koji je trenutno na toj poziciji
             $replacedMember = $this->resolveMemberByReplacementSlot($commission, $replacesNumber, true);
-            if (!$replacedMember) {
+            if (! $replacedMember) {
                 return back()->withErrors([
                     'replaces_member_number' => 'Izabrani član/predsjednik trenutno nije aktivan ili ne postoji.',
                 ])->withInput();
@@ -1539,9 +1544,9 @@ class AdminController extends Controller
         // Ako je izabran postojeći korisnik, koristi njegov ID
         $userId = $validated['user_id'] ?? null;
         $normalizedEmail = isset($validated['email']) && $validated['email'] !== '' ? strtolower($validated['email']) : null;
-        
+
         // Ako nije izabran postojeći korisnik, provjeri da li korisnik već postoji po e-mailu
-        if (!$userId) {
+        if (! $userId) {
             if ($normalizedEmail) {
                 $existingUser = User::where('email', $normalizedEmail)->first();
                 if ($existingUser) {
@@ -1561,10 +1566,10 @@ class AdminController extends Controller
         }
 
         // Ako korisnik i dalje ne postoji, kreiraj novog (ali tada mora postojati password)
-        if (!$userId) {
+        if (! $userId) {
             // Pronađi rolu za komisiju
             $komisijaRole = Role::where('name', 'komisija')->first();
-            if (!$komisijaRole) {
+            if (! $komisijaRole) {
                 return back()->withErrors(['error' => 'Rola "komisija" ne postoji u sistemu.'])->withInput();
             }
 
@@ -1584,9 +1589,9 @@ class AdminController extends Controller
                 'user_type' => 'Fizičko lice',
                 'residential_status' => 'resident',
             ]);
-            
+
             $this->sendEmailVerificationToCommissionMember($user);
-            
+
             $userId = $user->id;
         }
 
@@ -1604,7 +1609,7 @@ class AdminController extends Controller
                 'member_type' => $validated['member_type'],
                 'organization' => $validated['organization'] ?? null,
                 'is_substitute' => $isSubstitute,
-                'replaces_member_number' => $isSubstitute ? (int)$validated['replaces_member_number'] : null,
+                'replaces_member_number' => $isSubstitute ? (int) $validated['replaces_member_number'] : null,
                 'status' => 'active',
             ]);
         });
@@ -1640,7 +1645,7 @@ class AdminController extends Controller
         $commission->loadMissing(['activeMembers.user']);
 
         foreach ($commission->activeMembers as $member) {
-            if (!$member->user || !$member->user->email) {
+            if (! $member->user || ! $member->user->email) {
                 continue;
             }
 
@@ -1690,7 +1695,7 @@ class AdminController extends Controller
      */
     public function updateMemberStatus(Request $request, CommissionMember $member)
     {
-        if (!empty($member->is_substitute)) {
+        if (! empty($member->is_substitute)) {
             return back()->withErrors([
                 'error' => 'Status zamjenskog člana nije moguće mijenjati ručno. Uklonite zamjenskog člana da biste završili zamjenu.',
             ]);
@@ -1713,9 +1718,9 @@ class AdminController extends Controller
         $commission = $member->commission;
         $commission->loadMissing(['members', 'competitions']);
 
-        $isSubstitute = !empty($member->is_substitute);
+        $isSubstitute = ! empty($member->is_substitute);
 
-        if (!$isSubstitute) {
+        if (! $isSubstitute) {
             $memberSlot = $this->getMemberReplacementSlot($commission, $member);
             if ($memberSlot && $commission->hasActiveSubstituteForSlot($memberSlot)) {
                 return redirect()->route('admin.commissions.show', $commission)
@@ -1733,7 +1738,7 @@ class AdminController extends Controller
         }
 
         if ($isSubstitute) {
-            $replacementSlot = (int)($member->replaces_member_number ?? 0);
+            $replacementSlot = (int) ($member->replaces_member_number ?? 0);
             if ($replacementSlot === 1 && $commission->isDecisionMakingInProgressOnAnyCompetition()) {
                 return redirect()->route('admin.commissions.show', $commission)
                     ->withErrors([
@@ -1743,7 +1748,7 @@ class AdminController extends Controller
         }
 
         DB::transaction(function () use ($member, $commission, $isSubstitute) {
-            $replacementSlot = (int)($member->replaces_member_number ?? 0);
+            $replacementSlot = (int) ($member->replaces_member_number ?? 0);
 
             $member->delete();
 
@@ -1812,7 +1817,7 @@ class AdminController extends Controller
      */
     protected function getMemberReplacementSlot(Commission $commission, CommissionMember $member): ?int
     {
-        if (!empty($member->is_substitute)) {
+        if (! empty($member->is_substitute)) {
             return null;
         }
 
@@ -1865,7 +1870,7 @@ class AdminController extends Controller
                 return $message;
             }
 
-            if ($replacedMember && (int)$replacedMember->user_id === (int)$userId) {
+            if ($replacedMember && (int) $replacedMember->user_id === (int) $userId) {
                 return $message;
             }
         }
@@ -1882,7 +1887,7 @@ class AdminController extends Controller
                     return $message;
                 }
 
-                if ($replacedMember && (int)$replacedMember->user_id === (int)$existingUser->id) {
+                if ($replacedMember && (int) $replacedMember->user_id === (int) $existingUser->id) {
                     return $message;
                 }
             }
@@ -1904,15 +1909,15 @@ class AdminController extends Controller
         $isChairman = $this->isCommissionChairmanForCompetition($competition);
         $isCommissionMember = $this->isCommissionMemberForCompetition($competition);
         $isArchiveReadonlyAccess = $isCompetitionAdmin && in_array($competition->status, ['closed', 'completed']);
-        
+
         // Administrator konkursa može pristupiti rang listi samo za zaključene konkurse (read-only arhiva)
-        if ($isCompetitionAdmin && !$isArchiveReadonlyAccess) {
+        if ($isCompetitionAdmin && ! $isArchiveReadonlyAccess) {
             abort(403, 'Administrator konkursa nema pristup rang listi.');
         }
-        
+
         // Ako nije superadmin ili predsjednik komisije, proveri da li je član komisije
-        if (!$isSuperAdmin && !$isChairman && !$isArchiveReadonlyAccess) {
-            if (!$isCommissionMember) {
+        if (! $isSuperAdmin && ! $isChairman && ! $isArchiveReadonlyAccess) {
+            if (! $isCommissionMember) {
                 abort(403, 'Nemate pristup ovom konkursu.');
             }
             // Članovi komisije mogu vidjeti rang listu kada je formirana (svi su ocjenili sve prijave),
@@ -1920,11 +1925,11 @@ class AdminController extends Controller
             $canAccessRanking = $competition->isRankingFormed()
                 || in_array($competition->status, ['closed', 'completed'])
                 || ($competition->status === 'published' && $competition->isApplicationDeadlinePassed());
-            if (!$canAccessRanking) {
+            if (! $canAccessRanking) {
                 abort(403, 'Rang lista je dostupna članovima komisije kada svi članovi ocjene sve prijave, kada je konkurs zatvoren ili kada je rok za prijave istekao.');
             }
         }
-        
+
         // Učitaj sve prijave za ovaj konkurs
         $allApplications = Application::where('competition_id', $competition->id)
             ->with(['user', 'businessPlan', 'evaluationScores'])
@@ -1939,36 +1944,39 @@ class AdminController extends Controller
                 // Dodaj informacije o ocjenjivanju
                 $application->has_evaluations = $application->evaluationScores()->count() > 0;
                 $application->evaluation_count = $application->evaluationScores()->count();
+
                 return $application;
             });
 
         // Pronađi predsjednika komisije
         $commission = $competition->commission;
         $chairmanMember = $commission ? $commission->activeMembers()->where('position', 'predsjednik')->first() : null;
-        
+
         // Prijave odbijene zbog nedostatka dokumenata (documents_complete = false) - NE prikazuju se u rang listi
         $isRejectedForDocuments = function ($application) use ($chairmanMember) {
-            if (!$chairmanMember) {
+            if (! $chairmanMember) {
                 return false;
             }
             $chairmanScore = EvaluationScore::where('application_id', $application->id)
                 ->where('commission_member_id', $chairmanMember->id)
                 ->first();
+
             return $chairmanScore && $chairmanScore->documents_complete === false;
         };
-        
+
         // Prijave koje se prikazuju u rang listi: imaju ocjene, NISU odbijene zbog dokumenata
         $visibleApplications = $allApplications
             ->filter(function ($application) use ($isRejectedForDocuments) {
-                if (!$application->has_evaluations) {
+                if (! $application->has_evaluations) {
                     return false;
                 }
                 if ($isRejectedForDocuments($application)) {
                     return false;
                 }
+
                 return true;
             });
-        
+
         $isArchivedCompetition = in_array($competition->status, ['closed', 'completed']);
 
         // Aktivan konkurs: rangiranje po ocjeni i upis pozicija.
@@ -1996,13 +2004,14 @@ class AdminController extends Controller
                 ->values();
 
             $belowLineApplications = $visibleApplications
-                ->filter(fn ($app) => !$app->meetsMinimumScore())
+                ->filter(fn ($app) => ! $app->meetsMinimumScore())
                 ->sort(function ($a, $b) {
                     $aScore = (float) ($a->final_score ?? 0);
                     $bScore = (float) ($b->final_score ?? 0);
                     if ($aScore !== $bScore) {
                         return $bScore <=> $aScore;
                     }
+
                     return $a->id <=> $b->id;
                 })
                 ->values();
@@ -2015,7 +2024,7 @@ class AdminController extends Controller
 
             // Ispod crte: ispod 30 bodova, sortirano po ocjeni
             $belowLineApplications = $visibleApplications
-                ->filter(fn ($app) => !$app->meetsMinimumScore())
+                ->filter(fn ($app) => ! $app->meetsMinimumScore())
                 ->sortByDesc('final_score')
                 ->values();
 
@@ -2064,18 +2073,18 @@ class AdminController extends Controller
                 'error' => 'Rang lista je zaključena. Nakon završetka konkursa izmjene nijesu dozvoljene.',
             ]);
         }
-        
+
         // Samo superadmin i predsjednik komisije mogu odabirati dobitnike
-        if ($isCompetitionAdmin || (!$isSuperAdmin && !$isChairman)) {
+        if ($isCompetitionAdmin || (! $isSuperAdmin && ! $isChairman)) {
             abort(403, 'Nemate dozvolu za odabir dobitnika. Samo predsjednik komisije može odabirati dobitnike.');
         }
-        
+
         // Prikupi odabrane dobitnike iz forme
         $winnersData = [];
         foreach ($request->all() as $key => $value) {
             if (strpos($key, 'winners[') === 0 && strpos($key, '][selected]') !== false) {
                 preg_match('/winners\[(\d+)\]/', $key, $matches);
-                if (!empty($matches[1]) && $value == '1') {
+                if (! empty($matches[1]) && $value == '1') {
                     $appId = $matches[1];
                     $approvedAmount = $request->input("winners[{$appId}][approved_amount]");
                     if ($approvedAmount && $approvedAmount > 0) {
@@ -2099,8 +2108,8 @@ class AdminController extends Controller
 
         foreach ($winnersData as $winner) {
             $application = Application::find($winner['application_id']);
-            
-            if (!$application || $application->competition_id !== $competition->id) {
+
+            if (! $application || $application->competition_id !== $competition->id) {
                 continue;
             }
 
@@ -2144,72 +2153,19 @@ class AdminController extends Controller
         $isCommissionMember = $this->isCommissionMemberForCompetition($competition);
         $isArchivedCompetition = in_array($competition->status, ['closed', 'completed']);
         $isArchiveViewer = $isArchivedCompetition && ($isCompetitionAdmin || $isCommissionMember);
-        
+
         // Za aktivne konkurse: samo superadmin i predsjednik komisije.
         // Za arhivirane konkurse: read-only uvid imaju i konkurs_admin i članovi komisije.
-        if (!$isSuperAdmin && !$isChairman && !$isArchiveViewer) {
+        if (! $isSuperAdmin && ! $isChairman && ! $isArchiveViewer) {
             abort(403, 'Nemate dozvolu za generisanje odluke. Samo predsjednik komisije može generisati odluku.');
         }
-        
-        // Dobitnici sredstava su oni koji imaju approved_amount postavljen (veći od 0)
-        $winners = Application::where('competition_id', $competition->id)
-            ->whereNotNull('approved_amount')
-            ->where('approved_amount', '>', 0)
-            ->with(['user', 'businessPlan'])
-            ->orderBy('ranking_position')
-            ->orderBy('id')
-            ->get();
 
-        // Ime predsjednika komisije za potpis
-        $chairmanName = null;
-        $commissionMembersCount = 0;
-        $competition->load('commission');
-        if ($competition->commission_id && $competition->commission) {
-            $chairman = CommissionMember::where('commission_id', $competition->commission_id)
-                ->where('status', 'active')
-                ->where('position', 'predsjednik')
-                ->with('user')
-                ->first();
-            $chairmanName = $chairman?->name ?: $chairman?->user?->name;
-            $commissionMembersCount = $competition->commission->activeMembers()->count();
-        }
+        $documentData = app(\App\Services\Competitions\CompetitionDecisionDocumentBuilder::class)
+            ->build($competition);
 
-        // Podaci za Obrazloženje i tekst odluke
-        $allApplications = $competition->applications()->whereIn('status', ['submitted', 'evaluated', 'rejected', 'approved'])->get();
-        $totalApplications = $allApplications->count();
-        $incompleteCount = $allApplications->filter(fn ($a) => $a->rejection_reason && str_contains($a->rejection_reason, 'Nedostaju potrebna dokumenta'))->count();
-        $eligibleCount = $totalApplications - $incompleteCount;
-        $pubStart = $competition->start_date ?? $competition->published_at;
-        $pubEnd = $competition->deadline;
-        $deadlineDay = $competition->deadline ? $competition->deadline->copy()->addDay()->startOfDay() : null;
-        $oralDate = $allApplications->min('interview_scheduled_at')
-            ?? ($competition->deadline ? $competition->deadline->copy()->addDays(4) : null);
-        $rankingDate = $competition->closed_at ?? now();
-        $firstSessionDate = $pubEnd ? $pubEnd->copy()->addDay() : null;
-        $winnersCount = $winners->count();
-        $totalApprovedAmount = (float) $winners->sum('approved_amount');
-        $competitionYear = $competition->year ?? (int) date('Y');
-
-        // Hitno: aktuelni konkurs ženskog preduzetništva 2026 — isti datum zaglavlja i III sjednice.
-        $isCurrentWomenEntrepreneurshipCompetition =
-            $competition->type === 'zensko'
-            && (int) $competition->year === 2026;
-
-        if ($isCurrentWomenEntrepreneurshipCompetition) {
-            $decisionDate = \Carbon\Carbon::create(2026, 7, 31);
-            $rankingDate = $decisionDate->copy();
-        } else {
-            $decisionDate = $competition->closed_at ?? now();
-        }
-
-        return view('admin.competitions.decision', compact(
-            'competition', 'winners', 'isSuperAdmin', 'isChairman',
-            'chairmanName', 'commissionMembersCount',
-            'totalApplications', 'incompleteCount', 'eligibleCount',
-            'pubStart', 'pubEnd', 'deadlineDay', 'oralDate', 'rankingDate',
-            'firstSessionDate', 'winnersCount', 'totalApprovedAmount',
-            'competitionYear', 'decisionDate'
-        ));
+        return view('admin.competitions.decision', array_merge($documentData, [
+            'isSuperAdmin' => $isSuperAdmin,
+            'isChairman' => $isChairman,
+        ]));
     }
 }
-

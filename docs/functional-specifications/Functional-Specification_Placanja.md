@@ -1058,7 +1058,7 @@ Okvirni kriterijumi (prošireni za BP-01–BP-09; ostatak nakon detaljnih UI odl
 | Business Model (BM-002) | `docs/business-model/Business_Model_Placanja.md` |
 | Pravni okvir | `docs/pravni-okvir/Pravni_okvir_Placanja.md` |
 | Katalog | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` |
-| Technical Specification (TS-002) | `docs/technical-specification/Technical-Specification_Placanja.md` |
+| Technical Specification (TS-002) | `docs/technical-specifications/Technical-Specification_Placanja.md` |
 | Feature Registry | `docs/features/Feature-Registry.md` |
 
 ### Sljedivost BP

@@ -34,7 +34,7 @@ TS-008:
 Izvori istine:
 
 * `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-09 BM-MD-01–BM-MD-17, BM-GL-15, BM-PK-12)
-* `docs/functional-specification/Functional-Specification.md` (§5.11, BR-086–BR-091, BR-237–BR-254; §5.4.4; BR-113)
+* `docs/functional-specifications/Functional-Specification.md` (§5.11, BR-086–BR-091, BR-237–BR-254; §5.4.4; BR-113)
 * usvojene PO odluke: TS8-01 .. TS8-09
 * `docs/features/Feature-Registry.md`
 * `docs/METHODOLOGY.md`

@@ -45,12 +45,12 @@ Dokument:
 Izvori istine za poslovna pravila:
 
 * `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-05 BM-MF-01–BM-MF-20; BM-GL-11; BM-PK-04, BM-PK-10/11; BM-09 referenca; BM-14)
-* `docs/functional-specification/Functional-Specification.md` (§5.12 BR-092–BR-101, BR-189–BR-205; BR-105, BR-111, BR-112; §5.16 katalog Manifestacije)
+* `docs/functional-specifications/Functional-Specification.md` (§5.12 BR-092–BR-101, BR-189–BR-205; BR-105, BR-111, BR-112; §5.16 katalog Manifestacije)
 * `docs/features/Feature-Registry.md` (FT-001)
 * `docs/METHODOLOGY.md` (M-TS-001–M-TS-005)
-* `docs/technical-specification/Technical-Specification_Organizator.md` (TS-001)
-* `docs/technical-specification/Technical-Specification_Dogadjaj.md` (TS-003)
-* `docs/technical-specification/Technical-Specification_Odrzavanje.md` (TS-004)
+* `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001)
+* `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003)
+* `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004)
 
 Usvojene Product Owner odluke: **PO-MF-01**–**PO-MF-12** i odluka da Manifestacija nema sopstvene kategorije / lokacije.
 

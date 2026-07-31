@@ -1,4 +1,4 @@
-﻿# Digital Kotor
+# Digital Kotor
 # Functional Specification
 ## Modul: Kalendar kulture
 

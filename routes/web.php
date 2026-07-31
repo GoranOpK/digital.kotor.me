@@ -1,27 +1,32 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\PaymentsController;
-use App\Http\Controllers\CompetitionsController;
-use App\Http\Controllers\TendersController;
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\BusinessPlanController;
-use App\Http\Controllers\EvaluationController;
+use App\Http\Controllers\CompetitionsController;
 use App\Http\Controllers\ContractController;
-use App\Http\Controllers\ReportController;
-use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\AdminController;
-use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\CulturalCalendarController;
-use App\Http\Controllers\CulturalEventController;
 use App\Http\Controllers\CulturalCalendarNewsletterController;
+use App\Http\Controllers\CulturalEventController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\EvaluationController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\PaymentsController;
+use App\Http\Controllers\PublicNoticeContentController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\TendersController;
+use Illuminate\Support\Facades\Route;
 
 // Učitaj auth rute (za email verifikaciju i sl.)
 require __DIR__.'/auth.php';
 
 // Početna stranica (landing/home)
 Route::get('/', [HomeController::class, 'index'])->name('home'); // Prikaz početne strane
+
+// Javni sadržaj Obavještenja (FT-004) — bez auth / verified / role middleware
+Route::get('/obavjestenja/{notice}/sadrzaj', [PublicNoticeContentController::class, 'show'])
+    ->name('notices.public-content');
 
 // Rute za autentikaciju (login/register) - koristi Breeze, Fortify ili custom rješenje
 Route::get('/login', [HomeController::class, 'loginForm'])->name('login'); // Forma za login
@@ -49,7 +54,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::patch('/documents/{document}/category', [DocumentController::class, 'updateCategory'])->name('documents.update-category');
     Route::delete('/documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
     Route::get('/documents/status', [DocumentController::class, 'status'])->name('documents.status'); // API za proveru statusa
-    
+
     // MEGA API endpoints
     Route::post('/api/mega/session', [DocumentController::class, 'getMegaSession'])->name('mega.session');
 
@@ -133,10 +138,10 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::post('/applications/{application}/sign', [EvaluationController::class, 'signDecision'])->name('sign-decision');
         });
     });
-    
+
     // Ruta za pregled ocjenjivanja - dostupna i podnosiocu prijave kada je prijava odbijena
     Route::get('/evaluation/applications/{application}', [EvaluationController::class, 'create'])->name('evaluation.create');
-    
+
     // Stara ruta za evaluatore (ako postoji)
     Route::middleware('role:evaluator')->group(function () {
         Route::get('/evaluations', [EvaluationController::class, 'index'])->name('evaluations.index'); // Prikaz svih prijava za bodovanje
@@ -171,7 +176,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::get('/', [AdminController::class, 'dashboard'])->name('dashboard');
         });
     });
-    
+
     // Admin rute za pregled prijave (dostupne admin, konkurs_admin i komisija ulogama)
     Route::middleware('role:admin,konkurs_admin,komisija')->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
@@ -179,7 +184,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::get('/applications/{application}', [AdminController::class, 'showApplication'])->name('applications.show');
         });
     });
-    
+
     // Admin rute (dostupne samo superadmin i admin ulogama)
     Route::middleware('role:admin')->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
@@ -190,7 +195,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::put('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
             Route::post('/users/{user}/activate', [AdminController::class, 'activateUser'])->name('users.activate');
             Route::post('/users/{user}/deactivate', [AdminController::class, 'deactivateUser'])->name('users.deactivate');
-            
+
             // Pregled prijava (samo admin i superadmin)
             Route::get('/applications', [AdminController::class, 'applications'])->name('applications.index');
         });
@@ -208,24 +213,24 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::delete('/competitions/{competition}', [AdminController::class, 'destroyCompetition'])->name('competitions.destroy');
         });
     });
-    
+
     // Rute za upravljanje konkursima (dostupne superadmin, admin, konkurs_admin i komisija ulogama)
     Route::middleware('role:admin,konkurs_admin,komisija')->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
             // Upravljanje konkursima
             Route::get('/competitions', [AdminController::class, 'competitions'])->name('competitions.index');
             Route::get('/competitions/{competition}', [AdminController::class, 'showCompetition'])->name('competitions.show');
-            
+
             // Zatvaranje konkursa (dostupno i predsjedniku komisije)
             Route::post('/competitions/{competition}/close', [AdminController::class, 'closeCompetition'])->name('competitions.close');
-            
+
             // Rang lista
             Route::get('/competitions/{competition}/ranking', [AdminController::class, 'rankingList'])->name('competitions.ranking');
             Route::post('/competitions/{competition}/winners', [AdminController::class, 'selectWinners'])->name('competitions.select-winners');
             Route::get('/competitions/{competition}/decision', [AdminController::class, 'generateDecision'])->name('competitions.decision');
         });
     });
-    
+
     // Rute za upravljanje komisijom za konkurse (dostupno i konkurs_admin roli)
     Route::middleware('role:admin,konkurs_admin')->group(function () {
         Route::prefix('admin')->name('admin.')->group(function () {
