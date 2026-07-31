@@ -2,8 +2,8 @@
 # Business Model
 ## Modul: Kalendar kulture
 
-**Status dokumenta:** Final Review
-**Verzija:** 0.5.0
+**Status dokumenta:** Stable
+**Verzija:** 1.0.0
 
 ---
 
@@ -63,6 +63,7 @@
 | PATCH-049 | 2026-07-31 | §5 Poslovni principi — popunjeno sistematizacijom opštih principa izvedenih iz usvojenih BM-01…BM-17. Bez novih poslovnih pravila i bez proširenja obima. |
 | PATCH-050 | 2026-07-31 | §7 Završne odredbe — uvedeno završno poglavlje o ulozi i održavanju Business Model dokumenta. Bez novih poslovnih pravila sistema. |
 | 0.5.0 | 2026-07-31 | Final Review. Završna dokumentaciona revizija: §5 i §7 kompletirani (PATCH-049/050); BM-01…BM-17 USVOJENO; usvojene PO/IA odluke ugrađene; bez novih poslovnih pravila. Bez izmjene FS/TS/IS/Feature Registry/implementacije. |
+| 1.0.0 | 2026-07-31 | Stable. Business Model je uspješno prošao Final Review i predstavlja referentni poslovni dokument modula Kalendar kulture. Bez izmjene poslovnih pravila, numeracije, identifikatora ili sljedivosti. Bez izmjene FS/TS/IS/Feature Registry/implementacije. |
 
 Napomena:
 
