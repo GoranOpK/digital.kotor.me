@@ -56,7 +56,7 @@
                                 border-bottom: 2px solid {{ request()->routeIs('cultural-calendar.events') ? '#7a0f17' : 'transparent' }};
                                 padding-bottom: 2px;
                             "
-                        >Pregled događaja</a>
+                        >Pretraga i pregled</a>
                         <a
                             href="{{ route('cultural-calendar.archive') }}"
                             style="
@@ -194,7 +194,7 @@
                     Kalendar kulture
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('cultural-calendar.events')" :active="request()->routeIs('cultural-calendar.events')">
-                    Pregled događaja
+                    Pretraga i pregled
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('cultural-calendar.archive')" :active="request()->routeIs('cultural-calendar.archive')">
                     Arhiva događaja

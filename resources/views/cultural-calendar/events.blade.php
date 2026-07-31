@@ -10,7 +10,7 @@
                 @elseif($date)
                     Događaji za {{ \Carbon\Carbon::createFromFormat('Y-m-d', $date)->format('d.m.Y') }}
                 @else
-                    Pregled događaja
+                    Pretraga i pregled
                 @endif
             </h1>
             @if($weekStart && $weekEnd)

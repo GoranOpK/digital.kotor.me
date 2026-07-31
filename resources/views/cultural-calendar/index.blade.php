@@ -40,6 +40,8 @@
     .kk-grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 30px; }
     .kk-stat-card, .kk-card { border: 1px solid var(--kk-border); border-radius: 12px; background: #fff; }
     .kk-stat-card { padding: 18px; min-height: 110px; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+    a.kk-stat-card { text-decoration: none; color: inherit; transition: border-color .15s ease, box-shadow .15s ease; }
+    a.kk-stat-card:hover { border-color: #c4c9d2; box-shadow: 0 1px 4px rgba(17, 24, 39, 0.06); }
     .kk-stat-label { font-size: .88rem; color: var(--kk-muted); margin-bottom: 6px; }
     .kk-stat-value { font-size: 1.45rem; font-weight: 700; color: #111827; }
     .kk-section-title { font-size: 1.25rem; margin-bottom: 14px; font-weight: 700; color: #111827; text-align: center; }
@@ -126,6 +128,26 @@
     }
     .kk-upcoming-link:hover {
         background: #f9fafb;
+    }
+    .kk-show-all {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 12px;
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #fff;
+        color: #111827;
+        font-size: .95rem;
+        font-weight: 600;
+        text-decoration: none;
+        box-sizing: border-box;
+    }
+    .kk-show-all:hover {
+        background: #f9fafb;
+        border-color: #c4c9d2;
     }
     .kk-upcoming-photo {
         flex: 0 0 96px;
@@ -350,16 +372,22 @@
     @enderror
 
     <section class="kk-grid-3">
-        <article class="kk-stat-card">
+        <a
+            href="{{ route('cultural-calendar.events', ['date' => $today->toDateString()]) }}"
+            class="kk-stat-card"
+        >
             <div class="kk-stat-label">Danas</div>
             <div class="kk-stat-value">{{ $todayCount }} događaja</div>
-        </article>
-        <article class="kk-stat-card">
+        </a>
+        <a
+            href="{{ route('cultural-calendar.events', ['week_start' => $today->toDateString(), 'week_end' => $weekEnd->toDateString()]) }}"
+            class="kk-stat-card"
+        >
             <div class="kk-stat-label">Ove sedmice</div>
             <div class="kk-stat-value">{{ $weekCount }} događaja</div>
-        </article>
+        </a>
         <article class="kk-stat-card">
-            <div class="kk-stat-label">Ovog mjeseca</div>
+            <div class="kk-stat-label">{{ $calendarMonthLabel }}</div>
             <div class="kk-stat-value">{{ $monthCount }} događaja</div>
         </article>
     </section>
@@ -442,6 +470,10 @@
                             </div>
                         @endforelse
                     </div>
+                    <a
+                        href="{{ route('cultural-calendar.events', ['date' => $selectedDate->toDateString()]) }}"
+                        class="kk-show-all"
+                    >Prikaži sve događaje</a>
                 @else
                     <div class="kk-upcoming-title">Naredni događaji</div>
                     <div class="kk-upcoming-list">
@@ -471,6 +503,10 @@
                             </div>
                         @endforelse
                     </div>
+                    <a
+                        href="{{ route('cultural-calendar.events') }}"
+                        class="kk-show-all"
+                    >Prikaži sve događaje</a>
                 @endif
             </div>
         </article>
@@ -511,9 +547,7 @@
                             class="kk-feature-image"
                         >
                         <div class="kk-feature-content">
-                        <div class="kk-feature-meta">Nema istaknutih događaja</div>
-                        <div class="kk-feature-title">Dodajte istaknuti događaj iz administracije</div>
-                        <p class="kk-feature-desc">Kada označite događaj kao istaknuti, biće prikazan na ovoj početnoj stranici.</p>
+                            <div class="kk-feature-title">Trenutno nema istaknutih događaja.</div>
                         </div>
                     </article>
                 @endif

@@ -45,7 +45,7 @@ class CulturalCalendarController extends Controller
         $selectedDateParam = $request->query('date');
 
         // Samo za korisnički pregled: kad korisnik klikne datum, podvučemo događaje za taj datum ispod kalendara.
-        if ($selectedDateParam && !$isKkAdmin) {
+        if ($selectedDateParam && ! $isKkAdmin) {
             try {
                 $selectedDate = Carbon::createFromFormat('Y-m-d', $selectedDateParam)->startOfDay();
 
@@ -86,9 +86,9 @@ class CulturalCalendarController extends Controller
         $monthCount = CulturalEvent::query()
             ->where('status', 'published')
             ->whereDate('datum_od', '<=', $monthEnd)
-            ->where(function ($query) use ($today) {
+            ->where(function ($query) use ($monthStart) {
                 $query->whereNull('datum_do')
-                    ->orWhereDate('datum_do', '>=', $today);
+                    ->orWhereDate('datum_do', '>=', $monthStart);
             })
             ->count();
 
@@ -113,7 +113,7 @@ class CulturalCalendarController extends Controller
             ->whereDate('datum_od', '>=', $today)
             ->orderBy('datum_od')
             ->orderBy('vrijeme')
-            ->take(2)
+            ->take(3)
             ->get();
 
         $monthEvents = CulturalEvent::query()
@@ -177,6 +177,8 @@ class CulturalCalendarController extends Controller
         $selectedMonthValue = $monthStart->format('Y-m');
 
         return view('cultural-calendar.index', compact(
+            'today',
+            'weekEnd',
             'todayCount',
             'weekCount',
             'monthCount',
@@ -321,7 +323,7 @@ class CulturalCalendarController extends Controller
         }
 
         $backUrl = (string) $request->query('back', '');
-        if (!str_starts_with($backUrl, '/kalendar-kulture')) {
+        if (! str_starts_with($backUrl, '/kalendar-kulture')) {
             $backUrl = route('cultural-calendar.events');
         }
 
