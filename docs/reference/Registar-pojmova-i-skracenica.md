@@ -3,8 +3,8 @@
 
 **Oznaka dokumenta:** RG-001  
 **Naziv:** Registar pojmova i skraćenica Digital Kotor  
-**Status dokumenta:** Final Review  
-**Verzija:** 0.5.0  
+**Status dokumenta:** Stable  
+**Verzija:** 1.0.0  
 **Datum:** 2026-07-31
 
 ---
@@ -162,7 +162,8 @@ RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, katego
 |---------|--------|------|
 | 0.1.0 | 2026-07-31 | Nacrt. Usvojene odluke RG-001-01 … RG-001-04. Evidentirane skraćenice i tipovi dokumenata na osnovu postojeće dokumentacije. Bez izmjene BM/FS/TS/IS/implementacije. |
 | 0.5.0 | 2026-07-31 | Final Review. Pojašnjeno FR ≠ Feature Registry (FT); napomene o BR/OFD; skraćeni opisi tipova dokumenata; bez novih skraćenica i bez izmjene drugih dokumenata. |
+| 1.0.0 | 2026-07-31 | Stable. Dokument je prošao Final Review i predstavlja referentni vodič za skraćenice i dokumentacionu strukturu Digital Kotora. Bez izmjene sadržaja registra, tipova dokumenata ili pravila održavanja. Bez izmjene BM/FS/TS/IS/implementacije. |
 
 ---
 
-**Kraj dokumenta RG-001 v0.5.0 (Final Review)**
+**Kraj dokumenta RG-001 v1.0.0 (Stable)**
