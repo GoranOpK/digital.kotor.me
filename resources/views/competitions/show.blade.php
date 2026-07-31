@@ -454,7 +454,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 optional: ['potvrda_zavod_nezaposleni', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
             },
             'razvoj': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
                 optional: ['potvrda_zavod_nezaposleni', 'pdv_resenje']
             }
         },
@@ -464,7 +464,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 optional: ['potvrda_zavod_nezaposleni', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa']
             },
             'razvoj': {
-                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'izvjestaj_registar_kase', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
+                all: ['licna_karta', 'crps_resenje', 'pib_resenje', 'pdv_resenje', 'statut', 'karton_potpisa', 'godisnji_racuni', 'potvrda_neosudjivanost', 'uvjerenje_opstina_porezi', 'uvjerenje_opstina_nepokretnost', 'potvrda_upc_porezi', 'ioppd_obrazac', 'potvrda_zavod_nezaposleni', 'predracuni_nabavka'],
                 optional: ['potvrda_zavod_nezaposleni', 'pdv_resenje']
             }
         },
