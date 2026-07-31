@@ -2,8 +2,8 @@
 # Functional Specification
 ## Modul: Kalendar kulture
 
-**Status dokumenta:** U IZRADI
-**Verzija:** 0.1
+**Status dokumenta:** Final Review
+**Verzija:** 0.5.0
 
 ---
 
@@ -61,6 +61,8 @@
 | PATCH-FS-047 | 2026-07-31 | TS-009 faza 1 (IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B; TD-TS9-01 u TS): evolutivni razvoj javnog portala; „Pretraga i pregled“; filteri; zadržavanje prikaza; lista vs kalendar. Usklađeni BR-104, BR-107–BR-109, §5.3, §5.4.1; dodati BR-255–BR-260. |
 | PATCH-FS-048 | 2026-07-31 | TS-009 faza 2 (PO-TS9-06A–PO-TS9-06D): Hero statički identitet; istaknuti max 3; statistike 3 klikabilne kartice (treća = naziv izabranog mjeseca); lista ispod kalendara (naredni max 3 / dan; „Prikaži sve događaje“). Usklađeni §5.1–§5.3, BR-117; dodati BR-261–BR-264. |
 | PATCH-FS-049 | 2026-07-31 | TS-009 faza 3 (PO-TS9-07A–PO-TS9-07E): Manifestacije na javnom portalu — navigacija, lista, detalj, program, veza ↔ Događaji. Usklađeni BR-105, BR-109, BR-192, §5.4; dodati BR-265–BR-269. |
+| PATCH-FS-050 | 2026-07-31 | Formalno zatvaranje dokumenta: ažuriran Status razvoja (§1–§5.16 Approved); ispravljen Sadržaj/TOC; Platformsko pravilo — Status Approved; minimalno uklonjeno implementaciono curenje (`kk_admin`, ime rute, napomena o implementaciji). Bez novih BR i bez izmjene funkcionalnih/poslovnih pravila. Status dokumenta ostaje U IZRADI; verzija ostaje 0.1. |
+| 0.5.0 | 2026-07-31 | Final Review. Završna dokumentaciona revizija: §1–§5.16 Approved; TOC i Platformsko pravilo usklađeni (PATCH-FS-050); BR-001…BR-269 neizmijenjeni; usvojene PO/IA odluke ugrađene; bez novih funkcionalnih pravila. Bez izmjene BM/TS/IS/Feature Registry/RG-001/implementacije. |
 
 Napomena:
 
@@ -79,6 +81,8 @@ Svaki PATCH dobija:
 
 Naziv PATCH-a predstavlja zvanični naziv izmjene i koristi se u istoriji verzija.
 
+**Terminološka napomena (važeći pojam):** Istorijski zapisi (npr. PATCH-FS-003, Change Log) mogu koristiti raniji naziv „termini“ za upravljanje održavanjima. Važeći poslovni termin za tu cjelinu je **Održavanje** / **Održavanje događaja** (usklađeno sa Business Modelom). Istorijski redovi se ne mijenjaju.
+
 ---
 
 ## Svrha dokumenta
@@ -91,7 +95,27 @@ Dokument predstavlja referentnu funkcionalnu specifikaciju za planiranje, razvoj
 
 | Poglavlje | Status |
 |-----------|--------|
-| FS-001 – Javni portal – Početna stranica | U IZRADI |
+| FS-001 – §1 Svrha | Approved |
+| FS-001 – §2 Korisnici | Approved |
+| FS-001 – §3 Preduslovi | Approved |
+| FS-001 – Platformsko pravilo | Approved |
+| FS-001 – §4 Poslovna pravila | Approved |
+| FS-001 – §5.1 Hero sekcija | Approved |
+| FS-001 – §5.2 Statistički pokazatelji | Approved |
+| FS-001 – §5.3 Izbor perioda i pregled sadržaja | Approved |
+| FS-001 – §5.4 Detalj događaja | Approved |
+| FS-001 – §5.5 Kreiranje i upravljanje događajem | Approved |
+| FS-001 – §5.6 Upravljanje organizatorima | Approved |
+| FS-001 – §5.7 Upravljanje održavanjima i statusima | Approved |
+| FS-001 – §5.8 Upravljanje moderatorima | Approved |
+| FS-001 – §5.9 Upravljanje lokacijama | Approved |
+| FS-001 – §5.10 Upravljanje kategorijama i oznakama | Approved |
+| FS-001 – §5.11 Upravljanje medijima | Approved |
+| FS-001 – §5.12 Upravljanje manifestacijama | Approved |
+| FS-001 – §5.13 Javni portal — pregled, pretraga i prikaz | Approved |
+| FS-001 – §5.14 Urednički portal | Approved |
+| FS-001 – §5.15 Newsletter | Approved |
+| FS-001 – §5.16 Evidencija aktivnosti | Approved |
 
 ---
 
@@ -135,7 +159,18 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
 
 ## Sadržaj
 
-1. FS-001 – Javni portal – Početna stranica
+1. FS-001 – Functional Specification (Modul: Kalendar kulture)
+   - 1. Svrha
+   - 2. Korisnici
+   - 3. Preduslovi
+   - Platformsko pravilo
+   - 4. Poslovna pravila (BR-001–BR-005 i dalje po poglavljima)
+   - 5.1 Hero sekcija
+   - 5.2 Statistički pokazatelji
+   - 5.3 Izbor perioda i pregled sadržaja
+   - 5.4 Detalj događaja
+   - 5.5 Kreiranje i upravljanje događajem
+   - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137)
    - 5.7.1 Upravljanje održavanjima događaja (BR-056–BR-061)
    - 5.7.2 Upravljanje statusom događaja (BR-062–BR-066)
    - 5.7.3 Upravljanje statusom održavanja (BR-067–BR-069, BR-129–BR-134)
@@ -145,16 +180,17 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
    - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-269)
-   - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137)
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
    - 5.14.3 Funkcionalni obuhvat Uredničkog portala (BR-126–BR-128)
    - 5.15 Newsletter (BR-138–BR-169)
    - 5.16 Evidencija aktivnosti (BR-170–BR-188, katalog Manifestacije)
+2. Istorija verzija (zaglavlje dokumenta)
+3. Change Log
 
 ---
 
-# FS-001 – Javni portal – Početna stranica
+# FS-001 – Functional Specification (Modul: Kalendar kulture)
 
 ## 1. Svrha
 
@@ -223,11 +259,13 @@ Urednik je isključiva administrativna uloga Uredničkog portala. Urednik nije O
 
 Zahtjev za kreiranje Organizatora podnosi registrovani korisnik. Podnošenjem zahtjeva korisnik ne postaje Organizator niti Moderator. Nakon odobrenja Urednika, predloženi korisnik dobija ovlašćenje početnog Moderatora. Svakog narednog Moderatora predlaže postojeći Moderator; ovlašćenja dodjeljuje isključivo Urednik.
 
-Funkcionalnost zahtjeva za kreiranje Organizatora usvojena je u Business Modelu, ali trenutno još nije implementirana. (Raniji naziv „Postani organizator“ zamijenjen je poslovno preciznijim nazivom.)
+Funkcionalnost zahtjeva za kreiranje Organizatora usvojena je u Business Modelu i razrađena u ovoj specifikaciji. (Raniji naziv „Postani organizator“ zamijenjen je poslovno preciznijim nazivom.)
 
 Urednička i moderatorska ovlašćenja ograničena su na modul Kalendar kulture i ne daju korisniku prava u drugim modulima platforme.
 
 Administrator platforme pripada sistemskoj administraciji i nije običan registrovani korisnik, Organizator, Moderator ni Urednik.
+
+**Status:** Approved
 
 ---
 
@@ -447,12 +485,12 @@ Za običnog korisnika:
 * nakon izbora dana, ispod kalendara prikazuje se lista „Događaji za izabrani datum“ (svi događaji za taj dan);
 * ako za izabrani dan nema događaja, prikazuje se postojeća poruka o praznom stanju.
 
-Za Urednika (u trenutnoj implementaciji uloga `kk_admin`):
+Za Urednika:
 
 * klik na dan ne otvara listu događaja na početnoj stranici;
 * klik na dan vodi u tok kreiranja događaja sa unaprijed popunjenim datumom početka.
 
-Uloga `kk_admin` odgovara Uredniku Kalendara kulture i **nije** uloga Moderatora.
+Urednik Kalendara kulture **nije** Moderator; ove dvije uloge su poslovno razdvojene.
 
 Dok nije izabran dan, ispod kalendara prikazuje se sekcija „Naredni događaji“ — najviše tri (3) naredna događaja (BR-264).
 
@@ -2906,7 +2944,7 @@ Mjesečni kalendar ostaje isključivo na početnoj stranici.
 
 Referentna informaciona arhitektura javnog korisničkog toka obuhvata postojeće javne prikaze (uključujući početnu stranicu, „Pretragu i pregled“, arhivu i detalj događaja) u skladu sa BR-255 i BR-258.
 
-Zasebna stranica „Dan“ (ruta `cultural-calendar.day`) nije dio referentne informacione arhitekture javnog portala; njena tehnička uloga dokumentovana je u TS-009 (TD-TS9-01).
+Zasebna stranica „Dan“ nije dio referentne informacione arhitekture javnog portala; njena tehnička uloga dokumentovana je u TS-009 (TD-TS9-01).
 
 ---
 
@@ -3751,7 +3789,7 @@ U centralnu Evidenciju ulaze:
 
 Ne ulaze:
 
-* tehničke greške slanja, SMTP i infrastrukturne greške, retry pokušaji;
+* tehničke greške slanja i infrastrukturne greške, uključujući ponovne pokušaje isporuke;
 * potvrda aktivacije kao zaseban audit zapis;
 * pregled postavki bez izmjena;
 * urednička poslovna obavještenja (BR-128).
@@ -3879,7 +3917,7 @@ Sistem evidentira u centralnoj Evidenciji aktivnosti aktivaciju, odjavu i ponovn
 
 ##### BR-186 – Newsletter — aktivnosti van centralne evidencije
 
-Tehničke greške slanja, SMTP i infrastrukturne greške, retry pokušaji, potvrda aktivacije kao zaseban audit zapis, pregled postavki bez izmjena i urednička poslovna obavještenja (BR-128) ne ulaze u centralnu Evidenciju aktivnosti.
+Tehničke greške slanja i infrastrukturne greške, uključujući ponovne pokušaje isporuke, potvrda aktivacije kao zaseban audit zapis, pregled postavki bez izmjena i urednička poslovna obavještenja (BR-128) ne ulaze u centralnu Evidenciju aktivnosti.
 
 ---
 
@@ -3978,3 +4016,5 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-31 | FS-001 / 5.13 (PATCH-FS-047): TS-009 faza 1 — IA-01, PO-TS9-03A/04A/05A/05B; TD-TS9-01 referenca. Usklađeni BR-104, BR-107–BR-109, §5.3, §5.4.1; dodati BR-255–BR-260. |
 | 2026-07-31 | FS-001 / 5.1–5.3 i 5.13 (PATCH-FS-048): TS-009 faza 2 — PO-TS9-06A–06D. Usklađeni Hero, statistike (3 klikabilne kartice), istaknuti (max 3), lista ispod kalendara; BR-117; dodati BR-261–BR-264. |
 | 2026-07-31 | FS-001 / 5.4 i 5.13 (PATCH-FS-049): TS-009 faza 3 — PO-TS9-07A–07E. Manifestacije na javnom portalu; usklađeni BR-105, BR-109, BR-192, §5.4; dodati BR-265–BR-269. |
+| 2026-07-31 | FS-001 (PATCH-FS-050): Formalno zatvaranje — Status razvoja (§1–§5.16 Approved), ispravljen TOC, Platformsko pravilo Approved, minimalno uklonjeno implementaciono curenje. Bez novih BR. Status dokumenta ostaje U IZRADI; verzija 0.1. |
+| 2026-07-31 | FS-001 Final Review v0.5.0: završna dokumentaciona revizija; Status dokumenta Final Review; BR-001…BR-269 neizmijenjeni; bez novih funkcionalnih pravila. |
