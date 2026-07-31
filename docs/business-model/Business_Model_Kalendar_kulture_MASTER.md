@@ -57,6 +57,7 @@
 | PATCH-043 | 2026-07-30 | TS7-PO-01–TS7-PO-06: BM-08 Kategorije i oznake — poslovni katalog (ne ENUM); oznake u V1; lifecycle Aktivna/Neaktivna; bez migracije test podataka; bez kategorije „Nešto drugo“; katalogom upravlja isključivo Urednik; Moderator samo koristi; usklađeni BM-GL-14 i BM-GL-23. |
 | PATCH-044 | 2026-07-31 | TS8-01–TS8-09: BM-09 Mediji — samostalan entitet bez poslovnog vlasnika; zatvoreni katalog namjena (naslovna događaja, naslovna manifestacije, podrazumijevana fotografija kategorije); kardinalnosti i fallback; tip Fotografija (JPEG/PNG/WebP, 5 MB); lifecycle Aktivan/Neaktivan; ovlašćenja Moderator/Urednik; pretraga i metapodaci; usklađeni BM-GL-15 i BM-PK-12. |
 | PATCH-045 | 2026-07-31 | TS-009 faza 1 (IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B): evolutivni razvoj Portala; stranica „Pretraga i pregled“; filteri; zadržavanje postojećih prikaza; lista na Pretrazi i pregledu; mjesečni kalendar samo na početnoj. Dodati BM-PK-16–BM-PK-20; usklađeni BM-PK-06–BM-PK-08 i BM-AR-02. |
+| PATCH-046 | 2026-07-31 | TS-009 faza 2 (PO-TS9-06A–PO-TS9-06D): Hero (statički identitet); istaknuti događaji (max 3, Urednik, aktuelni); statistike (3 klikabilne kartice; treća = naziv izabranog mjeseca); lista ispod kalendara (naredni max 3 / dan; dugme „Prikaži sve događaje“). Usklađen BM-PK-15; dodati BM-PK-21–BM-PK-23. |
 
 Napomena:
 
@@ -1160,19 +1161,21 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 > Portal Kalendara kulture može prikazivati međusobno povezane događaje i manifestacije u skladu sa njihovim poslovnim vezama definisanim u modulu Kalendara kulture.
 
-### BM-PK-15 — Istaknuti događaj
+### BM-PK-15 — Istaknuti događaji
 
-> Portal Kalendara kulture može imati istaknuti događaj.
+> Portal Kalendara kulture može imati istaknute događaje na početnoj stranici.
 >
-> Istaknuti događaj mora biti javno objavljen događaj.
+> U jednom trenutku mogu biti istaknuta najviše tri (3) događaja.
 >
-> Urednik odlučuje koji događaj je istaknut.
+> Prikazuju se isključivo javno objavljeni i aktuelni događaji.
 >
-> U istom trenutku može biti istaknut najviše jedan događaj.
+> Istaknute događaje određuje Urednik. Sistem ih ne bira automatski.
 >
 > Isticanje događaja ne mijenja njegov osnovni status.
 >
-> Događaj prestaje biti istaknut kada Urednik ukloni isticanje ili kada događaj više ne ispunjava uslove za javni prikaz.
+> Događaj prestaje biti istaknut kada Urednik ukloni isticanje ili kada događaj više ne ispunjava uslove za javni prikaz (nije aktuelan).
+>
+> Ako nema nijednog istaknutog događaja, prikazuje se neutralno prazno stanje. Na javnom portalu ne prikazuju se administrativne poruke.
 
 ### BM-PK-16 — Evolutivni razvoj Portala (IA-01)
 
@@ -1218,6 +1221,42 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > Na stranici „Pretraga i pregled“ ne uvodi se dodatni kalendarski prikaz.
 >
 > Mjesečni kalendar ostaje isključivo na početnoj stranici Portala.
+
+### BM-PK-21 — Hero sekcija početne stranice (PO-TS9-06A)
+
+> Hero sekcija je sastavni dio početne stranice Portala Kalendara kulture.
+>
+> Hero zadržava postojeći vizuelni identitet i ostaje statički.
+>
+> Hero nije uređiv iz administracije, ne koristi podatke iz baze, nema CTA dugmadi, nema promotivnih poruka, nema rotacije sadržaja i nema video sadržaja.
+>
+> Hero služi isključivo kao identitet modula Kalendara kulture.
+
+### BM-PK-22 — Statistike na početnoj stranici (PO-TS9-06C)
+
+> Početna stranica prikazuje tri statističke kartice: Danas; Ove sedmice; Izabrani mjesec.
+>
+> Treća kartica prikazuje naziv trenutno izabranog mjeseca u kalendaru (ne fiksni naziv „Ovog mjeseca“).
+>
+> Sve tri kartice su klikabilne. Klik vodi na stranicu „Pretraga i pregled“ sa odgovarajućim aktivnim datumskim filterom.
+>
+> Ako statistika ima vrijednost 0, kartica ostaje klikabilna.
+>
+> Statistike prikazuju isključivo javno objavljene događaje.
+>
+> Statistike ostaju na postojećem mjestu na početnoj stranici.
+
+### BM-PK-23 — Lista ispod kalendara (PO-TS9-06D)
+
+> Lista ispod mjesečnog kalendara ostaje na postojećem mjestu na početnoj stranici.
+>
+> Ako datum nije izabran, lista prikazuje „Naredni događaji“ — najviše tri (3) naredna događaja.
+>
+> Ako je datum izabran, lista prikazuje „Događaji za izabrani datum“ — sve događaje za taj datum.
+>
+> Na kraju liste postoji dugme „Prikaži sve događaje“: bez izabranog datuma otvara „Pretragu i pregled“ bez datumskog filtera; sa izabranim datumom otvara „Pretragu i pregled“ sa istim datumskim filterom.
+>
+> Ako nema događaja, prikazuje se postojeća poruka o praznom stanju.
 
 ---
 

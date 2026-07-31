@@ -148,6 +148,12 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **PO-TS9-05B:** „Pretraga i pregled“ = samo lista; mjesečni kalendar samo na početnoj.
 - **TD-TS9-01:** Ruta `cultural-calendar.day` nije dio referentne IA javnog portala; interna tehnička podrška admin toku.
 
+**Usvojene product odluke (Javni portal — TS-009 faza 2 — početna stranica):**
+- **PO-TS9-06A:** Hero — sastavni dio; postojeći vizuelni identitet; statički; nije uređiv iz admina; bez baze, CTA, promo, rotacije, videa; isključivo identitet modula.
+- **PO-TS9-06B:** Istaknuti — postojeće mjesto/raspored; max 3; samo objavljeni i aktuelni; bira Urednik (ne sistem); kartice: foto, datum, vrijeme, lokacija, naslov, kratak opis, link na detalj; neutralno prazno stanje bez admin poruka.
+- **PO-TS9-06C:** Statistike — 3 klikabilne kartice (Danas, Ove sedmice, Izabrani mjesec = naziv izabranog mjeseca); klik → Pretraga i pregled sa datumskim filterom; 0 ostaje klikabilno; samo objavljeni.
+- **PO-TS9-06D:** Lista ispod kalendara — bez datuma: „Naredni događaji“ max 3; sa datumom: svi za dan; dugme „Prikaži sve događaje“ → Pretraga i pregled (sa/bez datumskog filtera); postojeće prazno stanje.
+
 Povezana dokumentacija (Organizator):
 
 * Technical Specification — `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001; funkcionalna cjelina Organizator / Moderator / Zahtjev za kreiranje Organizatora u okviru FT-001)
@@ -186,9 +192,9 @@ Povezana dokumentacija (Mediji):
 
 Povezana dokumentacija (Javni portal):
 
-* Business Model — BM-11 (BM-PK-01–BM-PK-20), BM-AR-02, PATCH-045; IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B
-* Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-260), PATCH-FS-047
-* Technical Specification — `docs/technical-specification/Technical-Specification_Javni_portal.md` (TS-009; verzija 0.1.0; U izradi — faza 1 usvojena; TD-TS9-01)
+* Business Model — BM-11 (BM-PK-01–BM-PK-23), BM-AR-02, PATCH-045–PATCH-046; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D
+* Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-264), PATCH-FS-047–PATCH-FS-048
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 0.2.0; U izradi — faza 1 i faza 2 usvojene; TD-TS9-01)
 
 Povezana dokumentacija (Newsletter):
 
@@ -208,7 +214,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
-| TS-009 | Javni portal | FT-001 | Kalendar kulture | U izradi (v0.1.0 — faza 1: usvojene IA/PO/TD odluke) |
+| TS-009 | Javni portal | FT-001 | Kalendar kulture | U izradi (v0.2.0 — faza 1–2: usvojene IA/PO/TD odluke) |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
@@ -408,3 +414,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-07-31 | FT-004 — Implementirana V1 infrastruktura Obavještenja (TS-013): `notices`, servis objave, događaj/listener, panel na `/`, javna ruta `notices.public-content`, `competition_decision_html`. Status ostaje Planned do verifikacije testova; E2E okidač iz konkursa OFD-OB-006. |
 | 2026-07-31 | FT-004 — Stabilizacija: uklonjena dvostruka registracija listenera (discovery XOR explicit); status korigovan sa Active na Planned (testovi nisu verifikovani; OFD-OB-006). |
 | 2026-07-31 | FT-004 — Verifikacija na MySQL test bazi: `ObavjestenjaFeatureTest` 21/21 PASSED; smoke PASS; status Active. E2E okidač iz konkursa i dalje OFD-OB-006. |
+| 2026-07-31 | FT-001 — TS-009 faza 2 (PO-TS9-06A–06D): usklađeni BM PATCH-046, FS PATCH-FS-048 i TS-009 v0.2.0 (Hero, istaknuti max 3, klikabilne statistike, lista ispod kalendara). Bez izmjene implementacije. |

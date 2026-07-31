@@ -59,6 +59,7 @@
 | PATCH-FS-045 | 2026-07-30 | TS7-PO-01–TS7-PO-06: potpuno usklađen §5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085) i dodata nova pravila BR-224–BR-236: poslovni katalog (ne ENUM), oznake u V1, lifecycle Aktivna/Neaktivna, bez migracije test podataka, bez kategorije „Nešto drugo“, ovlašćenja Urednik/Moderator/Organizator/Admin platforme. |
 | PATCH-FS-046 | 2026-07-31 | TS8-01–TS8-09: potpuno usklađen §5.11 Upravljanje medijima (BR-086–BR-091) i dodata BR-237–BR-254; usklađeni §5.4.4 i BR-113 sa hijerarhijom prikaza i opsegom V1. |
 | PATCH-FS-047 | 2026-07-31 | TS-009 faza 1 (IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B; TD-TS9-01 u TS): evolutivni razvoj javnog portala; „Pretraga i pregled“; filteri; zadržavanje prikaza; lista vs kalendar. Usklađeni BR-104, BR-107–BR-109, §5.3, §5.4.1; dodati BR-255–BR-260. |
+| PATCH-FS-048 | 2026-07-31 | TS-009 faza 2 (PO-TS9-06A–PO-TS9-06D): Hero statički identitet; istaknuti max 3; statistike 3 klikabilne kartice (treća = naziv izabranog mjeseca); lista ispod kalendara (naredni max 3 / dan; „Prikaži sve događaje“). Usklađeni §5.1–§5.3, BR-117; dodati BR-261–BR-264. |
 
 Napomena:
 
@@ -142,7 +143,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236)
    - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
-   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-260)
+   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-264)
    - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137)
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
@@ -156,7 +157,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
 
 ## 1. Svrha
 
-Početna stranica predstavlja osnovni pregled modula Kalendar kulture unutar platforme Digital Kotor. Korisnicima omogućava pregled objavljenih kulturnih događaja kroz statističke pokazatelje, mjesečni kalendar, naredne događaje i istaknuti događaj, kontaktne informacije, te pristup funkcionalnosti Newslettera u skladu sa poglavljem 5.15.
+Početna stranica predstavlja osnovni pregled modula Kalendar kulture unutar platforme Digital Kotor. Korisnicima omogućava pregled objavljenih kulturnih događaja kroz statističke pokazatelje, mjesečni kalendar, listu ispod kalendara (naredni događaji ili događaji za izabrani dan) i istaknute događaje, kontaktne informacije, te pristup funkcionalnosti Newslettera u skladu sa poglavljem 5.15.
 
 **Status:** Approved
 
@@ -281,13 +282,19 @@ Arhiviranje događaja obavlja sistem u skladu sa pravilima modula Kalendar kultu
 
 Početna stranica prikazuje Hero sekciju kao uvodni dio modula Kalendar kulture.
 
-Hero sekcija korisniku predstavlja naziv i osnovnu namjenu modula.
+Hero sekcija je sastavni dio početne stranice i služi isključivo kao identitet modula Kalendara kulture (PO-TS9-06A / BR-261).
 
 ---
 
 #### FR-002 – Statički sadržaj
 
-Naslov, opis i ostali tekstualni elementi Hero sekcije prikazuju se u skladu sa sadržajem definisanim u aplikaciji.
+Hero sekcija je statička.
+
+Hero zadržava postojeći vizuelni identitet.
+
+Hero nije uređiv iz administracije i ne koristi podatke iz baze.
+
+Hero nema promotivne poruke, rotaciju sadržaja ni video sadržaj.
 
 Sadržaj Hero sekcije nije zavisan od korisničke uloge.
 
@@ -301,9 +308,9 @@ Korisnička uloga ne utiče na sadržaj Hero sekcije.
 
 ---
 
-#### FR-004 – Navigacione akcije
+#### FR-004 – Bez navigacionih CTA
 
-Ako Hero sekcija sadrži dugmad ili druge navigacione akcije, njihove destinacije i dostupnost određuju se u skladu sa postojećom implementacijom i ovlašćenjima korisnika.
+Hero sekcija nema CTA dugmadi niti drugih navigacionih akcija.
 
 Hero sekcija sama po sebi ne dodjeljuje niti mijenja korisnička ovlašćenja.
 
@@ -321,17 +328,17 @@ Hero sekcija prikazuje se na početku sadržaja početne stranice, prije statist
 
 #### Poslovna odluka
 
-Statistički prikaz treba da razlikuje:
+Statistički prikaz na početnoj stranici obuhvata tri kartice (PO-TS9-06C / BR-263):
 
-* **Ukupan broj događaja** za posmatrani period (sedmica ili mjesec).
-* **Predstojeće događaje**, odnosno sve objavljene događaje koji još nisu završeni.
+* **Danas**
+* **Ove sedmice**
+* **Izabrani mjesec** — treća kartica prikazuje naziv trenutno izabranog mjeseca u kalendaru (ne fiksni naziv „Ovog mjeseca“).
 
-Predstojeći događaji obuhvataju:
+Statistike prikazuju isključivo javno objavljene događaje.
 
-* događaje koji su trenutno u toku;
-* događaje koji će se održati u budućnosti.
+Sve tri kartice su klikabilne. Klik vodi na stranicu „Pretraga i pregled“ sa odgovarajućim aktivnim datumskim filterom. Ako je vrijednost 0, kartica ostaje klikabilna.
 
-Završeni događaji ne ulaze u broj predstojećih događaja.
+Statistike ostaju na postojećem mjestu na početnoj stranici.
 
 Napomena:
 
@@ -343,44 +350,39 @@ Ova odluka predstavlja usvojeno poslovno pravilo. Ako trenutna implementacija ne
 
 #### Statistički pokazatelji
 
-Početna stranica Kalendara kulture prikazuje četiri statističke kartice:
+Početna stranica Kalendara kulture prikazuje tri statističke kartice:
 
 ##### 1. Danas
 
-Prikazuje ukupan broj objavljenih događaja koji se održavaju na današnji datum.
+Prikazuje broj javno objavljenih događaja koji se odnose na današnji datum, u skladu sa pravilima izračuna usvojenim za ovaj pokazatelj.
+
+Klik otvara „Pretragu i pregled“ sa datumskim filterom za današnji dan.
 
 ---
 
 ##### 2. Ove sedmice
 
-Prikazuje ukupan broj objavljenih događaja koji pripadaju tekućoj kalendarskoj sedmici (ponedjeljak–nedjelja), bez obzira da li su već održani ili tek slijede.
+Prikazuje broj javno objavljenih događaja koji pripadaju tekućoj kalendarskoj sedmici, u skladu sa pravilima izračuna usvojenim za ovaj pokazatelj.
+
+Klik otvara „Pretragu i pregled“ sa odgovarajućim datumskim filterom za tekuću sedmicu.
 
 ---
 
-##### 3. Ovog mjeseca
+##### 3. Izabrani mjesec
 
-Prikazuje ukupan broj objavljenih događaja koji pripadaju mjesecu koji je trenutno prikazan u kalendaru.
+Kartica prikazuje **naziv** mjeseca koji je trenutno izabran u kalendaru na početnoj stranici.
 
----
+Prikazuje broj javno objavljenih događaja koji pripadaju tom mjesecu, u skladu sa pravilima izračuna usvojenim za ovaj pokazatelj.
 
-##### 4. Predstojeći događaji
-
-Prikazuje ukupan broj objavljenih događaja koji još nisu završeni.
-
-Predstojeći događaji uključuju:
-
-* događaje koji su trenutno u toku;
-* događaje koji će se održati u budućnosti.
-
-Završeni događaji ne ulaze u ovaj pokazatelj.
+Klik otvara „Pretragu i pregled“ sa odgovarajućim datumskim filterom za taj mjesec.
 
 ---
 
 #### Napomena
 
-Trenutna implementacija nije u potpunosti usklađena sa ovim poslovnim pravilima.
+Trenutna implementacija nije u potpunosti usklađena sa ovim poslovnim pravilima (npr. klikabilnost, naziv treće kartice, navigacija ka „Pretrazi i pregledu“).
 
-Prije izmjene implementacije potrebno je otvoriti Change Request kojim će se uskladiti način izračunavanja statističkih pokazatelja sa usvojenom Functional Specification.
+Prije izmjene implementacije potrebno je otvoriti Change Request kojim će se uskladiti statistički pokazatelji sa usvojenom Functional Specification.
 
 **Status:** Approved
 
@@ -408,6 +410,8 @@ Centralno mjesto za pretragu i pregled događaja, uključujući filtere, je stra
 
 Mjesečni kalendar ostaje isključivo na početnoj stranici (BR-259).
 
+Lista ispod kalendara uređena je pravilom BR-264 (PO-TS9-06D).
+
 **Status:** Approved
 
 ---
@@ -425,9 +429,9 @@ Ako je vrijednost izbora mjeseca nevažeća ili van dozvoljenog opsega, sistem p
 Izbor mjeseca utiče na:
 
 * prikaz mjesečnog kalendara;
-* pokazatelj „Ovog mjeseca“.
+* treću statističku karticu (naziv i broj za izabrani mjesec).
 
-Izbor mjeseca ne utiče na pokazatelje „Danas“ i „Ove sedmice“, niti na sekciju istaknutog događaja.
+Izbor mjeseca ne utiče na pokazatelje „Danas“ i „Ove sedmice“, niti na sekciju istaknutih događaja.
 
 ---
 
@@ -439,8 +443,8 @@ Za običnog korisnika:
 
 * dan sa događajima je izaberiv;
 * dan bez događaja nije izaberiv;
-* nakon izbora dana, ispod kalendara prikazuje se lista događaja za taj dan;
-* ako za izabrani dan nema događaja, prikazuje se odgovarajuća poruka o praznom stanju.
+* nakon izbora dana, ispod kalendara prikazuje se lista „Događaji za izabrani datum“ (svi događaji za taj dan);
+* ako za izabrani dan nema događaja, prikazuje se postojeća poruka o praznom stanju.
 
 Za Urednika (u trenutnoj implementaciji uloga `kk_admin`):
 
@@ -449,7 +453,9 @@ Za Urednika (u trenutnoj implementaciji uloga `kk_admin`):
 
 Uloga `kk_admin` odgovara Uredniku Kalendara kulture i **nije** uloga Moderatora.
 
-Dok nije izabran dan, ispod kalendara prikazuje se sekcija narednih događaja.
+Dok nije izabran dan, ispod kalendara prikazuje se sekcija „Naredni događaji“ — najviše tri (3) naredna događaja (BR-264).
+
+Na kraju liste (u oba režima) prikazuje se dugme „Prikaži sve događaje“ (BR-264).
 
 ---
 
@@ -458,19 +464,20 @@ Dok nije izabran dan, ispod kalendara prikazuje se sekcija narednih događaja.
 Izbor mjeseca utiče na:
 
 * mjesečni kalendar;
-* pokazatelj „Ovog mjeseca“.
+* treću statističku karticu (izabrani mjesec).
 
 Izbor dana utiče na:
 
 * listu događaja ispod kalendara;
-* zamjenu prikaza narednih događaja listom događaja za izabrani dan.
+* zamjenu prikaza narednih događaja listom događaja za izabrani dan;
+* cilj dugmeta „Prikaži sve događaje“ (sa ili bez datumskog filtera).
 
 Izbor mjeseca i izbor dana ne utiču na:
 
 * Hero sekciju;
 * pokazatelj „Danas“;
 * pokazatelj „Ove sedmice“;
-* sekciju istaknutog događaja;
+* sekciju istaknutih događaja;
 * pristup podešavanjima Newslettera (poglavlje 5.15);
 * kontaktne informacije.
 
@@ -2804,19 +2811,25 @@ Javni portal prikazuje isključivo javno objavljen sadržaj.
 
 ---
 
-#### BR-117 – Istaknuti događaj
+#### BR-117 – Istaknuti događaji
 
-Javni portal može imati istaknuti događaj.
+Javni portal na početnoj stranici može imati istaknute događaje.
 
-Istaknuti događaj mora biti javno objavljen događaj.
+U jednom trenutku mogu biti istaknuta najviše tri (3) događaja.
 
-Urednik odlučuje koji događaj je istaknut.
+Prikazuju se isključivo javno objavljeni i aktuelni događaji.
 
-U istom trenutku može biti istaknut najviše jedan događaj.
+Urednik odlučuje koji događaji su istaknuti. Sistem ih ne bira automatski.
 
 Isticanje događaja ne mijenja njegov osnovni status.
 
-Događaj prestaje biti istaknut kada Urednik ukloni isticanje ili kada događaj više ne ispunjava uslove za javni prikaz.
+Događaj prestaje biti istaknut kada Urednik ukloni isticanje ili kada događaj više ne ispunjava uslove za javni prikaz (nije aktuelan).
+
+Kartice istaknutih događaja zadržavaju postojeći izgled i prikazuju: naslovnu fotografiju; datum; vrijeme; lokaciju (ako postoji); naslov; kratak opis; link na detalj događaja.
+
+Ako nema nijednog istaknutog događaja, prikazuje se neutralno prazno stanje. Na javnom portalu ne prikazuju se administrativne poruke.
+
+Sekcija ostaje na postojećem mjestu; zadržava se postojeći raspored početne stranice.
 
 ---
 
@@ -2880,6 +2893,60 @@ Mjesečni kalendar ostaje isključivo na početnoj stranici.
 Referentna informaciona arhitektura javnog korisničkog toka obuhvata postojeće javne prikaze (uključujući početnu stranicu, „Pretragu i pregled“, arhivu i detalj događaja) u skladu sa BR-255 i BR-258.
 
 Zasebna stranica „Dan“ (ruta `cultural-calendar.day`) nije dio referentne informacione arhitekture javnog portala; njena tehnička uloga dokumentovana je u TS-009 (TD-TS9-01).
+
+---
+
+#### BR-261 – Hero sekcija početne stranice (PO-TS9-06A)
+
+Hero sekcija je sastavni dio početne stranice.
+
+Hero zadržava postojeći vizuelni identitet i ostaje statički.
+
+Hero nije uređiv iz administracije, ne koristi podatke iz baze, nema CTA dugmadi, nema promotivnih poruka, nema rotacije sadržaja i nema video sadržaja.
+
+Hero služi isključivo kao identitet modula Kalendara kulture.
+
+---
+
+#### BR-262 – Istaknuti događaji na početnoj (PO-TS9-06B)
+
+Na početnoj stranici u jednom trenutku mogu biti istaknuta najviše tri (3) javno objavljena i aktuelna događaja.
+
+Istaknute događaje određuje Urednik; sistem ih ne bira automatski.
+
+Kartice zadržavaju postojeći izgled i sadrže: naslovnu fotografiju, datum, vrijeme, lokaciju (ako postoji), naslov, kratak opis i link na detalj.
+
+Ako nema istaknutih događaja, prikazuje se neutralno prazno stanje bez administrativnih poruka na javnom portalu.
+
+Detaljna pravila usklađena su sa BR-117 i BM-PK-15.
+
+---
+
+#### BR-263 – Statistike na početnoj (PO-TS9-06C)
+
+Početna stranica prikazuje tri klikabilne statističke kartice: Danas; Ove sedmice; Izabrani mjesec (treća kartica prikazuje naziv trenutno izabranog mjeseca u kalendaru).
+
+Klik na karticu vodi na „Pretragu i pregled“ sa odgovarajućim aktivnim datumskim filterom.
+
+Kartica sa vrijednošću 0 ostaje klikabilna.
+
+Statistike prikazuju isključivo javno objavljene događaje i ostaju na postojećem mjestu.
+
+---
+
+#### BR-264 – Lista ispod kalendara (PO-TS9-06D)
+
+Lista ispod mjesečnog kalendara ostaje na postojećem mjestu.
+
+Ako datum nije izabran: prikaz „Naredni događaji“ — najviše tri (3) naredna događaja.
+
+Ako je datum izabran: prikaz „Događaji za izabrani datum“ — svi događaji za taj datum.
+
+Kartice zadržavaju postojeći izgled.
+
+Na kraju liste postoji dugme „Prikaži sve događaje“ koje otvara „Pretragu i pregled“ bez datumskog filtera (ako datum nije izabran) ili sa istim datumskim filterom (ako je datum izabran).
+
+Ako nema događaja, prikazuje se postojeća poruka o praznom stanju.
 
 **Status:** Approved
 
@@ -3825,3 +3892,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-30 | FS-001 / 5.10 (PATCH-FS-045): TS7-PO-01–TS7-PO-06 — poslovni katalog kategorija i oznaka (ne ENUM), oznake u V1, lifecycle Aktivna/Neaktivna, bez migracije test podataka, bez „Nešto drugo“, ovlašćenja Urednik/Moderator. Usklađeni BR-081–BR-085; dodati BR-224–BR-236. |
 | 2026-07-31 | FS-001 / 5.11 (PATCH-FS-046): TS8-01–TS8-09 — Mediji kao samostalan entitet; zatvoreni katalog namjena; kardinalnosti i fallback; tip Fotografija; lifecycle; ovlašćenja; pretraga; metapodaci. Usklađeni BR-086–BR-091, §5.4.4, BR-113; dodati BR-237–BR-254. |
 | 2026-07-31 | FS-001 / 5.13 (PATCH-FS-047): TS-009 faza 1 — IA-01, PO-TS9-03A/04A/05A/05B; TD-TS9-01 referenca. Usklađeni BR-104, BR-107–BR-109, §5.3, §5.4.1; dodati BR-255–BR-260. |
+| 2026-07-31 | FS-001 / 5.1–5.3 i 5.13 (PATCH-FS-048): TS-009 faza 2 — PO-TS9-06A–06D. Usklađeni Hero, statistike (3 klikabilne kartice), istaknuti (max 3), lista ispod kalendara; BR-117; dodati BR-261–BR-264. |
