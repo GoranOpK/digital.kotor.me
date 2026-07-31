@@ -256,25 +256,27 @@
                     <div class="decision-org">
                         <div>Crna Gora</div>
                         <div>Opština Kotor</div>
-                        <div>Komisija za raspodjelu bespovratnih sredstava namijenjenih za podršku ženskom preduzetništvu</div>
+                        <div>Sekretarijat za razvoj preduzetništva, komunalne poslove i saobraćaj</div>
                     </div>
                 </div>
             </div>
 
             @php
                 $fmtDate = fn ($date) => $date ? \Carbon\Carbon::parse($date)->format('d.m.Y') : '___';
-                $decisionPlaceDate = isset($decisionDate) ? \Carbon\Carbon::parse($decisionDate) : (isset($rankingDate) && $rankingDate ? \Carbon\Carbon::parse($rankingDate) : now());
+                $decisionPlaceDate = isset($decisionDate) && $decisionDate
+                    ? \Carbon\Carbon::parse($decisionDate)
+                    : (isset($rankingDate) && $rankingDate ? \Carbon\Carbon::parse($rankingDate) : now());
                 $year = $competitionYear ?? ($competition->year ?? date('Y'));
                 $approvedWinnersCount = $winnersCount ?? $winners->count();
                 $approvedTotalEur = $totalApprovedAmount ?? (float) $winners->sum('approved_amount');
             @endphp
             <div class="decision-number-row">
                 <span class="decision-number-label">Broj:</span>
-                <span class="decision-number-date">Kotor, {{ $decisionPlaceDate->format('d.m.') }} {{ $year }}. godine</span>
+                <span class="decision-number-date">Kotor, {{ $decisionPlaceDate->format('d.m.') }}{{ $year }}. godine</span>
             </div>
 
             <div class="decision-preamble">
-                Na osnovu članova 22, 23 i 24 Odluke o podršci ženskom preduzetništvu ("Sl. list CG - opštinski propisi", br. 027/26 od 22.06.2026. g.), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu donosi:
+                Na osnovu članova 22, 23 i 24 Odluke o podršci ženskom preduzetništvu ("Sl. list CG - opštinski propisi", br. 027/26 od 22.06.2026. g.), Sekretarijat za razvoj preduzetništva, komunalne poslove i saobraćaj donosi:
             </div>
 
             <div class="decision-title-main">ODLUKU</div>
@@ -286,7 +288,7 @@
             <div class="decision-article">
                 <div class="decision-article-title">Član 1</div>
                 <div class="decision-article-intro">
-                    Na osnovu utvrđenih kriterijuma vrednovanja i ocjene biznis planova, odlučeno je da se finansiraju biznis planovi sledećih podnositeljki prijava na ime podrške ženskom preduzetništvu i to:
+                    Na osnovu utvrđenih kriterijuma vrednovanja i ocjene biznis planova, odlučeno je da se finansiraju biznis planovi sljedećih podnositeljki prijava na ime podrške ženskom preduzetništvu i to:
                 </div>
 
                 @if($winners->count() > 0)
@@ -343,7 +345,7 @@
             <div class="decision-article">
                 <div class="decision-article-title">Član 5</div>
                 <p class="decision-article-intro" style="margin-bottom: 0;">
-                    Odluka se dostavlja svim učesnicama Javnog konkursa, objavljuje na vebsajtu Opštine Kotor i lokalnom javnom emiteru "Radio Kotor".
+                    Odluka se dostavlja učesnicama Javnog konkursa, objavljuje na websajtu Opštine Kotor, digitalnoj platformi digital.kotor.me, oglasnoj tabli Opštine Kotor i lokalnom javnom emiteru "Radio Kotor".
                 </p>
             </div>
 
@@ -351,23 +353,23 @@
             <div class="decision-article decision-obrazlozenje">
                 <div class="decision-article-title">Obrazloženje</div>
                 <p class="decision-article-intro">
-                    Shodno Odluci o podršci ženskom preduzetništvu ("Sl. list CG - opštinski propisi", br. 027/26 od 22.06.2026. g.) (u daljem tekstu: Odluka), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu raspisala je Javni konkurs za raspodjelu bespovratnih sredstava namijenjenih za podršku ženskom preduzetništvu u {{ $year }}. godini (u daljem tekstu: Konkurs). Konkurs je objavljen {{ $pubStart ? $fmtDate($pubStart) : '___' }}. godine i isti je trajao 20 dana, zaključno sa {{ $pubEnd ? $fmtDate($pubEnd) : '___' }}. godine, te je bio objavljen na vebsajtu Opštine Kotor, kao i putem lokalnog javnog emitera "Radio Kotor".
+                    Shodno Odluci o podršci ženskom preduzetništvu ("Sl. list CG - opštinski propisi", br. 027/26 od 22.06.2026. g.) (u daljem tekstu: Odluka), Komisija za raspodjelu sredstava za podršku ženskom preduzetništvu raspisala je Javni konkurs za raspodjelu bespovratnih sredstava namijenjenih za podršku ženskom preduzetništvu u {{ $year }}. godini (u daljem tekstu: Konkurs). Konkurs je objavljen {{ $pubStart ? $fmtDate($pubStart) : '' }}. godine i isti je trajao 20 dana, zaključno sa {{ $pubEnd ? $fmtDate($pubEnd) : '' }}. godine, te je bio objavljen na web sajtu Opštine Kotor, digitalnoj platformi digital.kotor.me, oglasnoj tabli Opštine Kotor i lokalnom javnom emiteru "Radio Kotor".
                 </p>
                 <p class="decision-article-intro">
                     Podnošenje prijava odvijalo se isključivo elektronski putem digitalnog servisa Opštine Kotor (digital.kotor.me).
                 </p>
                 <p class="decision-article-intro">
-                    Nakon isteka roka za podnošenje prijava na Konkurs, Komisija je na prvoj sjednici održanoj dana {{ $firstSessionDate ? $fmtDate($firstSessionDate) : '___' }}. godine utvrdila da je pristiglo ukupno {{ $totalApplications }} blagovremenih prijava. Komisija je pregledala elektronski zaprimljene prijave, nakon čega je konstatovala da su {{ $incompleteCount }} prijave nepotpune u smislu priložene dokumentacije, te iste nije dalje razmatrala. Podnositeljke nepotpunih prijava imale su pravo prigovora Komisiji, nakon čega je Komisija donijela odluku o prihvatanju ili odbijanju prigovora. Komisija je konstatovala da {{ $eligibleCount }} prijave mogu biti uzete u dalje razmatranje i vrednovanje po kriterijumima utvrđenim Odlukom i Konkursom.
+                    Nakon isteka roka za podnošenje prijava na Konkurs, Komisija je na prvoj sjednici održanoj dana 23.07.2026. godine utvrdila da je pristiglo ukupno {{ $totalApplications }} prijava. Komisija je pregledala elektronski zaprimljene prijave, nakon čega je konstatovala da su {{ $incompleteCount }} prijave nepotpune u smislu priložene dokumentacije, te iste nije dalje razmatrala. Podnositeljke nepotpunih prijava imale su pravo prigovora Komisiji, nakon čega je Komisija donijela odluku o prihvatanju ili odbijanju prigovora. Komisija je konstatovala da {{ $eligibleCount }} prijave mogu biti uzete u dalje razmatranje i vrednovanje po kriterijumima utvrđenim Odlukom i Konkursom.
                 </p>
                 <p class="decision-article-intro">
-                    Radi potpunijeg uvida u sadržaj i izvodljivost biznis planova, kao i sagledavanja ličnih kompetencija njihovih podnositeljki za realizaciju istih, Komisija je na drugoj sjednici Komisije organizovala usmeno obrazloženje biznis planova koji su obavljeni dana {{ $oralDate ? $fmtDate($oralDate) : '___' }}. godine. Nakon sprovedenih usmenih obrazloženja biznis planova, svaki član Komisije elektronski putem digitalnog servisa Opštine Kotor dodjeljuje bodove za svaki od pozitivnih kriterijuma.
+                    Radi potpunijeg uvida u sadržaj i izvodljivost biznis planova, kao i sagledavanja ličnih kompetencija njihovih podnositeljki za realizaciju istih, Komisija je na drugoj sjednici Komisije organizovala usmeno obrazloženje biznis planova koji su obavljeni dana 30.07.2026. godine. Nakon sprovedenih usmenih obrazloženja biznis planova, svaki član Komisije elektronski putem digitalnog servisa Opštine Kotor je dodijelio bodove za svaki od pozitivnih kriterijuma.
                 </p>
                 <div class="decision-obrazlozenje-last-block">
                     <p class="decision-article-intro">
-                        Na osnovu pojedinačnih ocjena, prosječne ocjene i dodatnih bodova, te izvedene preliminarne rang liste sa konačnim ocjenama biznis planova, Komisija je dana na trećoj sjednici održanoj dana {{ $rankingDate ? $fmtDate($rankingDate) : '___' }}. godine konstatovala za svaki biznis plan na preliminarnoj rang listi da li se podržava ili odbija i iznos sredstava koji se dodjeljuje i na taj način utvrdila konačnu rang listu.
+                        Na osnovu pojedinačnih ocjena, prosječne ocjene i dodatnih bodova, te izvedene preliminarne rang liste sa konačnim ocjenama biznis planova, Komisija je na trećoj sjednici održanoj dana {{ $rankingDate ? $fmtDate($rankingDate) : '___' }}. godine konstatovala za svaki biznis plan na preliminarnoj rang listi da li se podržava ili odbija i iznos sredstava koji se dodjeljuje i na taj način utvrdila konačnu rang listu.
                     </p>
                     <p class="decision-article-intro">
-                        Na osnovu utvrđene rang liste, Komisija je donijela Odluku o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $year }} godinu, kojom se dodijeljuju sredstva za <strong>{{ $approvedWinnersCount }}</strong> biznis planova u ukupnom iznosu <strong>{{ number_format($approvedTotalEur, 2, ',', '.') }} eura</strong>.
+                        Na osnovu utvrđene rang liste, Komisija je putem digitalnog servisa Opštine kotor (digital.kotor.me) generisala predlog Odluku o raspodjeli sredstava za podršku ženskom preduzetništvu za {{ $year }} godinu, kojom se dodijeljuju sredstva za <strong>{{ $approvedWinnersCount }}</strong> biznis planova u ukupnom iznosu <strong>{{ number_format($approvedTotalEur, 2, ',', '.') }} eura</strong> i isti predložila Sekretarijatu za razvoj preduzetništva, komunalne poslove i saobraćaj, koji je prihvatio predlog i objavio Odluku u skladu sa članom 24 Odluke o podršci ženskom preduzetništvu ("Sl. list CG - opštinski propisi", br. 027/26 od 22.06.2026. g.).
                     </p>
                     <p class="decision-article-intro">
                         Dinamiku realizacije podržanih biznis planova i kontrolu utroška i namjenskog korišćenja sredstava vršiće nadležni Sekretarijat, u skladu sa Odlukom.
@@ -391,7 +393,7 @@
                     <div class="decision-distribution">
                         <strong>Dostaviti:</strong>
                         <ul>
-                            <li>- Podnosiocima prijave (x{{ $approvedWinnersCount }})</li>
+                            <li>- Podnositeljkama prijava (x{{ $approvedWinnersCount }})</li>
                             <li>- Članovima Komisije (x{{ $commissionMembersCount ?: 5 }})</li>
                             <li>- Sekretarijatu 16 (x2)</li>
                             <li>- Arhivi</li>

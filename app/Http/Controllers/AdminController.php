@@ -2189,7 +2189,18 @@ class AdminController extends Controller
         $winnersCount = $winners->count();
         $totalApprovedAmount = (float) $winners->sum('approved_amount');
         $competitionYear = $competition->year ?? (int) date('Y');
-        $decisionDate = $rankingDate ? \Carbon\Carbon::parse($rankingDate) : now();
+
+        // Hitno: aktuelni konkurs ženskog preduzetništva 2026 — isti datum zaglavlja i III sjednice.
+        $isCurrentWomenEntrepreneurshipCompetition =
+            $competition->type === 'zensko'
+            && (int) $competition->year === 2026;
+
+        if ($isCurrentWomenEntrepreneurshipCompetition) {
+            $decisionDate = \Carbon\Carbon::create(2026, 7, 31);
+            $rankingDate = $decisionDate->copy();
+        } else {
+            $decisionDate = $competition->closed_at ?? now();
+        }
 
         return view('admin.competitions.decision', compact(
             'competition', 'winners', 'isSuperAdmin', 'isChairman',
