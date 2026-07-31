@@ -58,6 +58,7 @@
 | PATCH-FS-044 | 2026-07-30 | Documentation Consistency Patch (CR-003): terminološko pojašnjenje u §5.16 (BR-182) da ne postoji zaseban katalog Održavanja; aktivnosti nad Održavanjem evidentiraju se kroz katalog Događaji. Bez izmjene poslovnih pravila. |
 | PATCH-FS-045 | 2026-07-30 | TS7-PO-01–TS7-PO-06: potpuno usklađen §5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085) i dodata nova pravila BR-224–BR-236: poslovni katalog (ne ENUM), oznake u V1, lifecycle Aktivna/Neaktivna, bez migracije test podataka, bez kategorije „Nešto drugo“, ovlašćenja Urednik/Moderator/Organizator/Admin platforme. |
 | PATCH-FS-046 | 2026-07-31 | TS8-01–TS8-09: potpuno usklađen §5.11 Upravljanje medijima (BR-086–BR-091) i dodata BR-237–BR-254; usklađeni §5.4.4 i BR-113 sa hijerarhijom prikaza i opsegom V1. |
+| PATCH-FS-047 | 2026-07-31 | TS-009 faza 1 (IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B; TD-TS9-01 u TS): evolutivni razvoj javnog portala; „Pretraga i pregled“; filteri; zadržavanje prikaza; lista vs kalendar. Usklađeni BR-104, BR-107–BR-109, §5.3, §5.4.1; dodati BR-255–BR-260. |
 
 Napomena:
 
@@ -141,7 +142,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236)
    - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
-   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117)
+   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-260)
    - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137)
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
@@ -403,6 +404,10 @@ Njena svrha je:
 
 Napredna pretraga i filtriranje nisu dio početne stranice.
 
+Centralno mjesto za pretragu i pregled događaja, uključujući filtere, je stranica „Pretraga i pregled“ (§5.13, BR-256–BR-257).
+
+Mjesečni kalendar ostaje isključivo na početnoj stranici (BR-259).
+
 **Status:** Approved
 
 ---
@@ -508,7 +513,7 @@ Stranica detalja događaja omogućava korisniku pregled pojedinačnog objavljeno
 Korisnik otvara detalj događaja izborom događaja sa:
 
 * početne stranice Kalendara kulture;
-* pregleda događaja;
+* stranice „Pretraga i pregled“ (raniji naziv u navigaciji: „Pregled događaja“ — PO-TS9-03A);
 * arhive događaja.
 
 Sistem prikazuje detalj isključivo za objavljeni događaj.
@@ -2699,6 +2704,8 @@ Javni portal omogućava pregled događaja objavljenih u skladu sa poslovnim prav
 
 Pregled događaja obuhvata informacije potrebne za informisanje korisnika o održavanju kulturnih sadržaja.
 
+Centralno mjesto za pretragu i pregled događaja je stranica „Pretraga i pregled“ (BR-256).
+
 ---
 
 #### BR-105 – Pregled manifestacija
@@ -2717,19 +2724,29 @@ Javni portal omogućava pregled detaljnih informacija o objavljenim događajima 
 
 #### BR-107 – Pretraga
 
-Javni portal omogućava pretragu objavljenih događaja i manifestacija korišćenjem kriterijuma definisanih poslovnim pravilima modula Kalendara kulture.
+Javni portal omogućava pretragu objavljenih događaja i manifestacija.
+
+Centralno mjesto za pretragu događaja je stranica „Pretraga i pregled“ (BR-256).
+
+Pretraga i filtriranje nisu dio početne stranice (§5.3).
 
 ---
 
 #### BR-108 – Filtriranje
 
-Javni portal omogućava filtriranje objavljenih događaja i manifestacija korišćenjem kriterijuma definisanih poslovnim pravilima modula Kalendara kulture.
+Javni portal omogućava filtriranje objavljenih događaja i manifestacija.
+
+Filteri su sastavni dio stranice „Pretraga i pregled“ i detaljno su definisani pravilom BR-257.
 
 ---
 
 #### BR-109 – Načini prikaza
 
-Javni portal omogućava prikaz objavljenih događaja i manifestacija kroz jedan ili više načina prikaza, u skladu sa poslovnim pravilima modula Kalendara kulture.
+Javni portal omogućava prikaz objavljenih događaja i manifestacija kroz načine prikaza definisane ovom specifikacijom.
+
+Zadržavaju se postojeći prikazi javnog portala; ne uvode se novi ekrani radi redizajna (BR-255, BR-258).
+
+Stranica „Pretraga i pregled“ koristi isključivo prikaz liste. Mjesečni kalendar ostaje isključivo na početnoj stranici (BR-259).
 
 ---
 
@@ -2800,6 +2817,69 @@ U istom trenutku može biti istaknut najviše jedan događaj.
 Isticanje događaja ne mijenja njegov osnovni status.
 
 Događaj prestaje biti istaknut kada Urednik ukloni isticanje ili kada događaj više ne ispunjava uslove za javni prikaz.
+
+---
+
+#### BR-255 – Evolutivni razvoj javnog portala (IA-01)
+
+Javni portal Kalendara kulture razvija se evolutivno.
+
+Cilj nije redizajn portala, već evolucija postojećeg rješenja kroz minimalne i strogo neophodne izmjene.
+
+Zadržavaju se postojeća struktura i korisnički tokovi, uz izmjene samo kada su neophodne za usklađivanje sa poslovnim i funkcionalnim pravilima.
+
+---
+
+#### BR-256 – Pretraga i pregled
+
+Stranica „Pretraga i pregled“ predstavlja centralno mjesto za pretragu i pregled događaja na javnom portalu.
+
+Raniji naziv iste funkcionalne stranice u navigaciji i implementaciji bio je „Pregled događaja“ (PO-TS9-03A).
+
+---
+
+#### BR-257 – Filteri na stranici Pretraga i pregled
+
+Filteri su sastavni dio stranice „Pretraga i pregled“ i uvijek su vidljivi.
+
+Podržani filteri su:
+
+* datum;
+* kategorija;
+* lokacija;
+* manifestacija.
+
+Filteri se mogu kombinovati.
+
+Postoji opcija „Poništi filtere“.
+
+Aktivni filteri čuvaju se u URL parametrima.
+
+---
+
+#### BR-258 – Zadržavanje postojećih prikaza
+
+Zadržavaju se postojeći prikazi javnog portala.
+
+Ne uvode se novi ekrani radi proširenja informacione arhitekture van usvojenih odluka.
+
+---
+
+#### BR-259 – Lista na Pretrazi i pregledu; kalendar na početnoj
+
+Stranica „Pretraga i pregled“ koristi isključivo prikaz liste.
+
+Na stranici „Pretraga i pregled“ ne uvodi se dodatni kalendarski prikaz.
+
+Mjesečni kalendar ostaje isključivo na početnoj stranici.
+
+---
+
+#### BR-260 – Referentna informaciona arhitektura javnog toka
+
+Referentna informaciona arhitektura javnog korisničkog toka obuhvata postojeće javne prikaze (uključujući početnu stranicu, „Pretragu i pregled“, arhivu i detalj događaja) u skladu sa BR-255 i BR-258.
+
+Zasebna stranica „Dan“ (ruta `cultural-calendar.day`) nije dio referentne informacione arhitekture javnog portala; njena tehnička uloga dokumentovana je u TS-009 (TD-TS9-01).
 
 **Status:** Approved
 
@@ -3744,3 +3824,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-30 | FS-001 / 5.16 (PATCH-FS-044): terminološko pojašnjenje da ne postoji zaseban katalog Održavanja; aktivnosti nad Održavanjem evidentiraju se kroz katalog Događaji. Bez izmjene poslovnih pravila. |
 | 2026-07-30 | FS-001 / 5.10 (PATCH-FS-045): TS7-PO-01–TS7-PO-06 — poslovni katalog kategorija i oznaka (ne ENUM), oznake u V1, lifecycle Aktivna/Neaktivna, bez migracije test podataka, bez „Nešto drugo“, ovlašćenja Urednik/Moderator. Usklađeni BR-081–BR-085; dodati BR-224–BR-236. |
 | 2026-07-31 | FS-001 / 5.11 (PATCH-FS-046): TS8-01–TS8-09 — Mediji kao samostalan entitet; zatvoreni katalog namjena; kardinalnosti i fallback; tip Fotografija; lifecycle; ovlašćenja; pretraga; metapodaci. Usklađeni BR-086–BR-091, §5.4.4, BR-113; dodati BR-237–BR-254. |
+| 2026-07-31 | FS-001 / 5.13 (PATCH-FS-047): TS-009 faza 1 — IA-01, PO-TS9-03A/04A/05A/05B; TD-TS9-01 referenca. Usklađeni BR-104, BR-107–BR-109, §5.3, §5.4.1; dodati BR-255–BR-260. |

@@ -56,6 +56,7 @@
 | PATCH-042 | 2026-07-30 | Documentation Consistency Patch (CR-003): terminološko pojašnjenje BM-AL-07 — uklonjena dvosmislena formulacija „Održavanje (gdje je u katalogu)“ i zamijenjena jednoznačnim opisom aktivnosti nad Održavanjem u okviru kataloga Događaji iz FS §5.16. Bez izmjene poslovnih pravila. |
 | PATCH-043 | 2026-07-30 | TS7-PO-01–TS7-PO-06: BM-08 Kategorije i oznake — poslovni katalog (ne ENUM); oznake u V1; lifecycle Aktivna/Neaktivna; bez migracije test podataka; bez kategorije „Nešto drugo“; katalogom upravlja isključivo Urednik; Moderator samo koristi; usklađeni BM-GL-14 i BM-GL-23. |
 | PATCH-044 | 2026-07-31 | TS8-01–TS8-09: BM-09 Mediji — samostalan entitet bez poslovnog vlasnika; zatvoreni katalog namjena (naslovna događaja, naslovna manifestacije, podrazumijevana fotografija kategorije); kardinalnosti i fallback; tip Fotografija (JPEG/PNG/WebP, 5 MB); lifecycle Aktivan/Neaktivan; ovlašćenja Moderator/Urednik; pretraga i metapodaci; usklađeni BM-GL-15 i BM-PK-12. |
+| PATCH-045 | 2026-07-31 | TS-009 faza 1 (IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B): evolutivni razvoj Portala; stranica „Pretraga i pregled“; filteri; zadržavanje postojećih prikaza; lista na Pretrazi i pregledu; mjesečni kalendar samo na početnoj. Dodati BM-PK-16–BM-PK-20; usklađeni BM-PK-06–BM-PK-08 i BM-AR-02. |
 
 Napomena:
 
@@ -1115,15 +1116,25 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 ### BM-PK-06 — Pretraga
 
-> Portal Kalendara kulture omogućava pretragu objavljenih događaja i manifestacija korišćenjem kriterijuma definisanih poslovnim pravilima modula Kalendara kulture.
+> Portal Kalendara kulture omogućava pretragu objavljenih događaja i manifestacija.
+>
+> Centralno mjesto za pretragu i pregled događaja je stranica „Pretraga i pregled“ (BM-PK-17).
+>
+> Pretraga na početnoj stranici nije dio poslovnog modela početne stranice; napredna pretraga i filtriranje pripadaju stranici „Pretraga i pregled“.
 
 ### BM-PK-07 — Filtriranje
 
-> Portal Kalendara kulture omogućava filtriranje objavljenih događaja i manifestacija korišćenjem kriterijuma definisanih poslovnim pravilima modula Kalendara kulture.
+> Portal Kalendara kulture omogućava filtriranje objavljenih događaja i manifestacija.
+>
+> Filteri su sastavni dio stranice „Pretraga i pregled“ i detaljno su definisani pravilom BM-PK-18.
 
 ### BM-PK-08 — Načini prikaza
 
-> Portal Kalendara kulture omogućava prikaz objavljenih događaja i manifestacija kroz jedan ili više načina prikaza, u skladu sa poslovnim pravilima modula Kalendara kulture.
+> Portal Kalendara kulture omogućava prikaz objavljenih događaja i manifestacija kroz načine prikaza definisane ovim Business Modelom.
+>
+> Zadržavaju se postojeći prikazi Portala; ne uvode se novi ekrani radi samog redizajna (BM-PK-16, BM-PK-19).
+>
+> Stranica „Pretraga i pregled“ koristi isključivo prikaz liste. Mjesečni kalendar ostaje isključivo na početnoj stranici (BM-PK-20).
 
 ### BM-PK-09 — Prikaz održavanja i termina
 
@@ -1162,6 +1173,51 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > Isticanje događaja ne mijenja njegov osnovni status.
 >
 > Događaj prestaje biti istaknut kada Urednik ukloni isticanje ili kada događaj više ne ispunjava uslove za javni prikaz.
+
+### BM-PK-16 — Evolutivni razvoj Portala (IA-01)
+
+> Portal Kalendara kulture razvija se evolutivno.
+>
+> Cilj nije redizajn Portala, već evolucija postojećeg rješenja kroz minimalne i strogo neophodne izmjene.
+>
+> Zadržavaju se postojeća struktura i korisnički tokovi, uz izmjene samo kada su neophodne za usklađivanje sa poslovnim pravilima.
+
+### BM-PK-17 — Pretraga i pregled
+
+> Stranica „Pretraga i pregled“ predstavlja centralno mjesto za pretragu i pregled događaja na Portalu Kalendara kulture.
+>
+> Raniji naziv iste funkcionalne stranice u implementaciji i navigaciji bio je „Pregled događaja“ (preimenovanje: PO-TS9-03A).
+
+### BM-PK-18 — Filteri na stranici Pretraga i pregled
+
+> Filteri su sastavni dio stranice „Pretraga i pregled“ i uvijek su vidljivi.
+>
+> Podržani filteri su:
+>
+> * datum;
+> * kategorija;
+> * lokacija;
+> * manifestacija.
+>
+> Filteri se mogu kombinovati.
+>
+> Postoji opcija „Poništi filtere“.
+>
+> Aktivni filteri čuvaju se u URL parametrima.
+
+### BM-PK-19 — Zadržavanje postojećih prikaza
+
+> Zadržavaju se postojeći prikazi Portala Kalendara kulture.
+>
+> Ne uvode se novi ekrani radi proširenja informacione arhitekture van usvojenih poslovnih odluka.
+
+### BM-PK-20 — Lista i mjesečni kalendar
+
+> Stranica „Pretraga i pregled“ koristi isključivo prikaz liste.
+>
+> Na stranici „Pretraga i pregled“ ne uvodi se dodatni kalendarski prikaz.
+>
+> Mjesečni kalendar ostaje isključivo na početnoj stranici Portala.
 
 ---
 
@@ -1608,6 +1664,8 @@ Arhitektura poslovnih cjelina određuje odgovornosti, granice i međusobnu sarad
 > Portal Kalendara kulture predstavlja javni dio sistema namijenjen pregledanju objavljenih kulturnih događaja i korišćenju javno dostupnih funkcionalnosti.
 >
 > Portal prikazuje isključivo javno objavljen sadržaj.
+>
+> Portal se razvija evolutivno u skladu sa BM-PK-16 (IA-01).
 
 ### BM-AR-03 — Urednički portal
 

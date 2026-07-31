@@ -139,6 +139,14 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **TS8-08:** Poslovni i tehnički metapodaci; tagovi u modelu, bez V1 UI.
 - **TS8-09.1–TS8-09.6:** Prikaz neaktivnog na postojećim vezama; uklanjanje cover-a dozvoljeno uz fallback; dupli upload sa upozorenjem; ponovna provjera ovlašćenja/uslova; bez poslovnog scenarija dva Urednika.
 
+**Usvojene product / IA odluke (Javni portal — TS-009 faza 1):**
+- **IA-01:** Evolutivni razvoj javnog portala; bez redizajna; zadržavanje postojeće strukture i tokova uz minimalne neophodne izmjene.
+- **PO-TS9-03A:** Stranica „Pregled događaja“ → „Pretraga i pregled“; centralno mjesto za pretragu i pregled.
+- **PO-TS9-04A:** Filteri (datum, kategorija, lokacija, manifestacija) sastavni dio „Pretrage i pregleda“; uvijek vidljivi; kombinovanje; „Poništi filtere“; stanje u URL-u.
+- **PO-TS9-05A:** Zadržavaju se postojeći prikazi; ne uvode se novi ekrani.
+- **PO-TS9-05B:** „Pretraga i pregled“ = samo lista; mjesečni kalendar samo na početnoj.
+- **TD-TS9-01:** Ruta `cultural-calendar.day` nije dio referentne IA javnog portala; interna tehnička podrška admin toku.
+
 Povezana dokumentacija (Organizator):
 
 * Technical Specification — `docs/technical-specification/Technical-Specification_Organizator.md` (TS-001; funkcionalna cjelina Organizator / Moderator / Zahtjev za kreiranje Organizatora u okviru FT-001)
@@ -175,6 +183,12 @@ Povezana dokumentacija (Mediji):
 * Functional Specification — §5.11 (BR-086–BR-091, BR-237–BR-254), §5.4.4, BR-113, PATCH-FS-046
 * Technical Specification — `docs/technical-specification/Technical-Specification_Mediji.md` (TS-008; verzija 0.1.0; Usvojen)
 
+Povezana dokumentacija (Javni portal):
+
+* Business Model — BM-11 (BM-PK-01–BM-PK-20), BM-AR-02, PATCH-045; IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B
+* Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-260), PATCH-FS-047
+* Technical Specification — `docs/technical-specification/Technical-Specification_Javni_portal.md` (TS-009; verzija 0.1.0; U izradi — faza 1 usvojena; TD-TS9-01)
+
 Povezana dokumentacija (Newsletter):
 
 * Business Model — BM-13 (BM-NL-01–BM-NL-25), PATCH-031–PATCH-033
@@ -193,7 +207,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
-| TS-009 | Javni portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-009 | Javni portal | FT-001 | Kalendar kulture | U izradi (v0.1.0 — faza 1: usvojene IA/PO/TD odluke) |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
