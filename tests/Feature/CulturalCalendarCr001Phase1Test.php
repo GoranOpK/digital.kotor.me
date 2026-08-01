@@ -168,26 +168,31 @@ class CulturalCalendarCr001Phase1Test extends TestCase
         Carbon::setTestNow();
     }
 
-    public function test_selected_month_stat_shows_month_and_year_and_is_not_a_link(): void
+    public function test_selected_month_stat_shows_month_and_year_and_is_a_link(): void
     {
         Carbon::setTestNow(Carbon::parse('2026-08-01 10:00:00', 'Europe/Belgrade'));
         Carbon::setLocale('sr');
 
         $monthLabel = ucfirst(Carbon::today()->startOfMonth()->translatedFormat('F Y'));
+        $monthValue = Carbon::today()->format('Y-m');
 
         $response = $this->asUser()->get(route('cultural-calendar.index'));
 
         $response->assertOk();
         $response->assertSee('>'.$monthLabel.'</div>', false);
         $response->assertDontSee('Ovog mjeseca', false);
+        $response->assertSee(
+            'href="'.e(route('cultural-calendar.events', ['month' => $monthValue])).'"',
+            false
+        );
 
         $html = $response->getContent();
         $this->assertMatchesRegularExpression(
-            '/<article class="kk-stat-card">\s*<div class="kk-stat-label">'.preg_quote($monthLabel, '/').'<\/div>/u',
+            '/<a\s[^>]*class="kk-stat-card"[^>]*>\s*<div class="kk-stat-label">'.preg_quote($monthLabel, '/').'<\/div>/u',
             $html
         );
         $this->assertDoesNotMatchRegularExpression(
-            '/<a\s[^>]*class="kk-stat-card"[^>]*>\s*<div class="kk-stat-label">'.preg_quote($monthLabel, '/').'<\/div>/u',
+            '/<article class="kk-stat-card">\s*<div class="kk-stat-label">'.preg_quote($monthLabel, '/').'<\/div>/u',
             $html
         );
 

@@ -13,7 +13,11 @@
                     Pretraga i pregled
                 @endif
             </h1>
-            @if($weekStart && $weekEnd)
+            @if(!empty($selectedMonthLabel))
+                <p class="text-sm text-gray-500 mt-1">
+                    Izabrani mjesec: {{ $selectedMonthLabel }}
+                </p>
+            @elseif($weekStart && $weekEnd)
                 <p class="text-sm text-gray-500 mt-1">
                     Period: {{ $weekStart->format('d.m.Y') }} - {{ $weekEnd->format('d.m.Y') }}.
                     Prije dolaska na događaj provjerite eventualne izmjene termina, otkazivanja ili nova dešavanja.

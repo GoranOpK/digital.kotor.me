@@ -85,10 +85,16 @@ class CulturalCalendarController extends Controller
 
         $monthCount = CulturalEvent::query()
             ->where('status', 'published')
-            ->whereDate('datum_od', '<=', $monthEnd)
-            ->where(function ($query) use ($monthStart) {
-                $query->whereNull('datum_do')
-                    ->orWhereDate('datum_do', '>=', $monthStart);
+            ->where(function ($query) use ($monthStart, $monthEnd) {
+                $query->where(function ($single) use ($monthStart, $monthEnd) {
+                    $single->whereNull('datum_do')
+                        ->whereDate('datum_od', '>=', $monthStart)
+                        ->whereDate('datum_od', '<=', $monthEnd);
+                })->orWhere(function ($range) use ($monthStart, $monthEnd) {
+                    $range->whereNotNull('datum_do')
+                        ->whereDate('datum_od', '<=', $monthEnd)
+                        ->whereDate('datum_do', '>=', $monthStart);
+                });
             })
             ->count();
 
@@ -196,14 +202,121 @@ class CulturalCalendarController extends Controller
 
     public function events(Request $request)
     {
-        $date = $request->query('date');
+        Carbon::setLocale('sr');
+
+        $today = Carbon::today();
+        $date = null;
         $weekStart = null;
         $weekEnd = null;
-        $today = Carbon::today();
+        $selectedMonthStart = null;
+        $selectedMonthLabel = null;
+
+        $dateParam = $request->query('date');
+        $weekStartParam = $request->query('week_start');
+        $weekEndParam = $request->query('week_end');
+        $monthParam = $request->query('month');
+
+        if (is_string($dateParam) && $dateParam !== '') {
+            try {
+                $parsedDate = Carbon::createFromFormat('Y-m-d', $dateParam)->startOfDay();
+                if ($parsedDate->format('Y-m-d') === $dateParam) {
+                    $date = $dateParam;
+                }
+            } catch (\Throwable $e) {
+                $date = null;
+            }
+        }
+
+        if ($date === null && $weekStartParam && $weekEndParam) {
+            try {
+                $parsedWeekStart = Carbon::createFromFormat('Y-m-d', $weekStartParam)->startOfDay();
+                $parsedWeekEnd = Carbon::createFromFormat('Y-m-d', $weekEndParam)->endOfDay();
+
+                if (
+                    $parsedWeekStart->format('Y-m-d') === $weekStartParam
+                    && $parsedWeekEnd->format('Y-m-d') === $weekEndParam
+                ) {
+                    $weekStart = $parsedWeekStart;
+                    $weekEnd = $parsedWeekEnd;
+
+                    if ($weekStart->gt($weekEnd)) {
+                        [$weekStart, $weekEnd] = [$weekEnd->copy()->startOfDay(), $weekStart->copy()->endOfDay()];
+                    }
+                }
+            } catch (\Throwable $e) {
+                $weekStart = null;
+                $weekEnd = null;
+            }
+        }
+
+        if ($date === null && $weekStart === null && is_string($monthParam) && $monthParam !== '') {
+            if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $monthParam) === 1) {
+                try {
+                    $parsedMonth = Carbon::createFromFormat('!Y-m', $monthParam)->startOfMonth();
+                    if ($parsedMonth->format('Y-m') === $monthParam) {
+                        $selectedMonthStart = $parsedMonth;
+                        $selectedMonthLabel = ucfirst($parsedMonth->translatedFormat('F Y'));
+                    }
+                } catch (\Throwable $e) {
+                    $selectedMonthStart = null;
+                    $selectedMonthLabel = null;
+                }
+            }
+        }
 
         $eventsQuery = CulturalEvent::query()
-            ->where('status', 'published')
-            ->where(function ($query) use ($today) {
+            ->where('status', 'published');
+
+        if ($date !== null) {
+            $selectedDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
+
+            $eventsQuery
+                ->where(function ($query) use ($today) {
+                    $query->where(function ($q) use ($today) {
+                        $q->whereNotNull('datum_do')
+                            ->whereDate('datum_do', '>=', $today);
+                    })->orWhere(function ($q) use ($today) {
+                        $q->whereNull('datum_do')
+                            ->whereDate('datum_od', '>=', $today);
+                    });
+                })
+                ->whereDate('datum_od', '<=', $selectedDate)
+                ->where(function ($query) use ($selectedDate) {
+                    $query->whereNull('datum_do')
+                        ->orWhereDate('datum_do', '>=', $selectedDate);
+                });
+        } elseif ($weekStart !== null && $weekEnd !== null) {
+            $eventsQuery
+                ->where(function ($query) use ($today) {
+                    $query->where(function ($q) use ($today) {
+                        $q->whereNotNull('datum_do')
+                            ->whereDate('datum_do', '>=', $today);
+                    })->orWhere(function ($q) use ($today) {
+                        $q->whereNull('datum_do')
+                            ->whereDate('datum_od', '>=', $today);
+                    });
+                })
+                ->whereDate('datum_od', '<=', $weekEnd->toDateString())
+                ->where(function ($query) use ($weekStart) {
+                    $query->whereNull('datum_do')
+                        ->orWhereDate('datum_do', '>=', $weekStart->toDateString());
+                });
+        } elseif ($selectedMonthStart !== null) {
+            $monthEnd = $selectedMonthStart->copy()->endOfMonth();
+
+            $eventsQuery->where(function ($query) use ($selectedMonthStart, $monthEnd) {
+                $query->where(function ($single) use ($selectedMonthStart, $monthEnd) {
+                    $single->whereNull('datum_do')
+                        ->whereDate('datum_od', '>=', $selectedMonthStart)
+                        ->whereDate('datum_od', '<=', $monthEnd);
+                })->orWhere(function ($range) use ($selectedMonthStart, $monthEnd) {
+                    $range->whereNotNull('datum_do')
+                        ->whereDate('datum_od', '<=', $monthEnd)
+                        ->whereDate('datum_do', '>=', $selectedMonthStart);
+                });
+            });
+        } else {
+            $eventsQuery->where(function ($query) use ($today) {
                 $query->where(function ($q) use ($today) {
                     $q->whereNotNull('datum_do')
                         ->whereDate('datum_do', '>=', $today);
@@ -211,50 +324,21 @@ class CulturalCalendarController extends Controller
                     $q->whereNull('datum_do')
                         ->whereDate('datum_od', '>=', $today);
                 });
-            })
-            ->orderBy('datum_od');
-
-        $weekStartParam = $request->query('week_start');
-        $weekEndParam = $request->query('week_end');
-
-        if ($weekStartParam && $weekEndParam) {
-            try {
-                $weekStart = Carbon::createFromFormat('Y-m-d', $weekStartParam)->startOfDay();
-                $weekEnd = Carbon::createFromFormat('Y-m-d', $weekEndParam)->endOfDay();
-
-                if ($weekStart->gt($weekEnd)) {
-                    [$weekStart, $weekEnd] = [$weekEnd->copy()->startOfDay(), $weekStart->copy()->endOfDay()];
-                }
-
-                $eventsQuery
-                    ->whereDate('datum_od', '<=', $weekEnd->toDateString())
-                    ->where(function ($query) use ($weekStart) {
-                        $query->whereNull('datum_do')
-                            ->orWhereDate('datum_do', '>=', $weekStart->toDateString());
-                    });
-            } catch (\Throwable $e) {
-                $weekStart = null;
-                $weekEnd = null;
-            }
+            });
         }
 
-        if ($date) {
-            try {
-                $selectedDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
-                $eventsQuery
-                    ->whereDate('datum_od', '<=', $selectedDate)
-                    ->where(function ($query) use ($selectedDate) {
-                        $query->whereNull('datum_do')
-                            ->orWhereDate('datum_do', '>=', $selectedDate);
-                    });
-            } catch (\Throwable $e) {
-                // Ignoriši nevalidan datum i prikaži regularnu listu.
-            }
-        }
+        $events = $eventsQuery
+            ->orderBy('datum_od')
+            ->paginate(12)
+            ->withQueryString();
 
-        $events = $eventsQuery->paginate(12)->withQueryString();
-
-        return view('cultural-calendar.events', compact('events', 'date', 'weekStart', 'weekEnd'));
+        return view('cultural-calendar.events', compact(
+            'events',
+            'date',
+            'weekStart',
+            'weekEnd',
+            'selectedMonthLabel'
+        ));
     }
 
     public function day(string $date)

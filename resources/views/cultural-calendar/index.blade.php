@@ -386,10 +386,13 @@
             <div class="kk-stat-label">Ove sedmice</div>
             <div class="kk-stat-value">{{ $weekCount }} događaja</div>
         </a>
-        <article class="kk-stat-card">
+        <a
+            href="{{ route('cultural-calendar.events', ['month' => $selectedMonthValue]) }}"
+            class="kk-stat-card"
+        >
             <div class="kk-stat-label">{{ $calendarMonthLabel }}</div>
             <div class="kk-stat-value">{{ $monthCount }} događaja</div>
-        </article>
+        </a>
     </section>
 
     <section class="kk-bottom">
