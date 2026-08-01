@@ -210,6 +210,7 @@ class CulturalCalendarController extends Controller
         $weekEnd = null;
         $selectedMonthStart = null;
         $selectedMonthLabel = null;
+        $selectedMonthValue = null;
 
         $dateParam = $request->query('date');
         $weekStartParam = $request->query('week_start');
@@ -256,12 +257,45 @@ class CulturalCalendarController extends Controller
                     if ($parsedMonth->format('Y-m') === $monthParam) {
                         $selectedMonthStart = $parsedMonth;
                         $selectedMonthLabel = ucfirst($parsedMonth->translatedFormat('F Y'));
+                        $selectedMonthValue = $monthParam;
                     }
                 } catch (\Throwable $e) {
                     $selectedMonthStart = null;
                     $selectedMonthLabel = null;
+                    $selectedMonthValue = null;
                 }
             }
+        }
+
+        $q = null;
+        $qParam = $request->query('q');
+        if (is_string($qParam)) {
+            $trimmedQ = trim($qParam);
+            if ($trimmedQ !== '') {
+                $q = $trimmedQ;
+            }
+        }
+
+        $category = null;
+        $categoryParam = $request->query('category');
+        if (is_string($categoryParam) && $categoryParam !== '' && in_array($categoryParam, CulturalEvent::CATEGORIES, true)) {
+            $category = $categoryParam;
+        }
+
+        $locationOptions = CulturalEvent::query()
+            ->where('status', 'published')
+            ->whereNotNull('lokacija')
+            ->where('lokacija', '!=', '')
+            ->distinct()
+            ->orderBy('lokacija')
+            ->pluck('lokacija')
+            ->values()
+            ->all();
+
+        $location = null;
+        $locationParam = $request->query('location');
+        if (is_string($locationParam) && $locationParam !== '' && in_array($locationParam, $locationOptions, true)) {
+            $location = $locationParam;
         }
 
         $eventsQuery = CulturalEvent::query()
@@ -272,11 +306,11 @@ class CulturalCalendarController extends Controller
 
             $eventsQuery
                 ->where(function ($query) use ($today) {
-                    $query->where(function ($q) use ($today) {
-                        $q->whereNotNull('datum_do')
+                    $query->where(function ($inner) use ($today) {
+                        $inner->whereNotNull('datum_do')
                             ->whereDate('datum_do', '>=', $today);
-                    })->orWhere(function ($q) use ($today) {
-                        $q->whereNull('datum_do')
+                    })->orWhere(function ($inner) use ($today) {
+                        $inner->whereNull('datum_do')
                             ->whereDate('datum_od', '>=', $today);
                     });
                 })
@@ -288,11 +322,11 @@ class CulturalCalendarController extends Controller
         } elseif ($weekStart !== null && $weekEnd !== null) {
             $eventsQuery
                 ->where(function ($query) use ($today) {
-                    $query->where(function ($q) use ($today) {
-                        $q->whereNotNull('datum_do')
+                    $query->where(function ($inner) use ($today) {
+                        $inner->whereNotNull('datum_do')
                             ->whereDate('datum_do', '>=', $today);
-                    })->orWhere(function ($q) use ($today) {
-                        $q->whereNull('datum_do')
+                    })->orWhere(function ($inner) use ($today) {
+                        $inner->whereNull('datum_do')
                             ->whereDate('datum_od', '>=', $today);
                     });
                 })
@@ -317,14 +351,31 @@ class CulturalCalendarController extends Controller
             });
         } else {
             $eventsQuery->where(function ($query) use ($today) {
-                $query->where(function ($q) use ($today) {
-                    $q->whereNotNull('datum_do')
+                $query->where(function ($inner) use ($today) {
+                    $inner->whereNotNull('datum_do')
                         ->whereDate('datum_do', '>=', $today);
-                })->orWhere(function ($q) use ($today) {
-                    $q->whereNull('datum_do')
+                })->orWhere(function ($inner) use ($today) {
+                    $inner->whereNull('datum_do')
                         ->whereDate('datum_od', '>=', $today);
                 });
             });
+        }
+
+        if ($q !== null) {
+            $like = '%'.addcslashes($q, '%_\\').'%';
+            $eventsQuery->where(function ($query) use ($like) {
+                $query->where('naslov', 'like', $like)
+                    ->orWhere('opis', 'like', $like)
+                    ->orWhere('lokacija', 'like', $like);
+            });
+        }
+
+        if ($category !== null) {
+            $eventsQuery->where('kategorija', $category);
+        }
+
+        if ($location !== null) {
+            $eventsQuery->where('lokacija', $location);
         }
 
         $events = $eventsQuery
@@ -332,12 +383,20 @@ class CulturalCalendarController extends Controller
             ->paginate(12)
             ->withQueryString();
 
+        $categoryOptions = CulturalEvent::CATEGORIES;
+
         return view('cultural-calendar.events', compact(
             'events',
             'date',
             'weekStart',
             'weekEnd',
-            'selectedMonthLabel'
+            'selectedMonthLabel',
+            'selectedMonthValue',
+            'q',
+            'category',
+            'location',
+            'categoryOptions',
+            'locationOptions'
         ));
     }
 
