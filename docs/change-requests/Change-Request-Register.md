@@ -3,7 +3,7 @@
 ## Modul: Kalendar kulture
 
 **Status dokumenta:** AKTIVAN
-**Verzija:** 0.4
+**Verzija:** 0.5
 
 ---
 
@@ -55,7 +55,7 @@ Svaki odobreni poslovni zahtjev koji zahtijeva izmjenu implementacije mora biti 
 | -- | ----- | ------------ | --------- | ---------------- | ------ |
 | CR-001 | IS-001 Faza 1 — Usklađenje postojećeg javnog UI | FS-001 → §5.1–§5.3, BR-261–BR-264 | Medium | UI, Backend | Implemented |
 | CR-002 | IS-001 Faza 2 — Mjesečni filter i klik treće statistike | FS-001 → §5.2 / BR-263; TS-009 §3.2 | Medium | UI, Backend | Implemented |
-| CR-003 | IS-001 Faza 2 — Filteri Pretrage i pregleda (`q` / `category` / `location`) | FS-001 → BR-257 / BR-107–108; TS-009 §3.3 | Medium | UI, Backend | Planned |
+| CR-003 | IS-001 Faza 2 — Filteri Pretrage i pregleda (`q` / `category` / `location`) | FS-001 → BR-257 / BR-107–108; TS-009 §3.3 | Medium | UI, Backend | Implemented |
 
 ---
 
@@ -186,7 +186,23 @@ Medium
 
 ### Status
 
-**Planned** (dokumentacija usvojena; implementacija nije započeta).
+**Implemented** (2026-08-01).
+
+### Implementacija
+
+* Dokumentacioni commit: `fc35132` (`docs: prepare CR-003 filter documentation`; TS-009 / IS-001 v1.0.2; PO-CR3-01…08).
+* Implementacioni commit: `595045a` (`feat(cultural-calendar): implement CR-003 event filters`).
+* Isporuka:
+  * tekstualna pretraga `q` (naslov, opis, lokacija);
+  * filter `category` (dropdown `CulturalEvent::CATEGORIES`);
+  * filter `location` (dropdown jedinstvenih objavljenih lokacija);
+  * AND logika ne-datumskih filtera;
+  * kombinovanje sa jednim aktivnim datumskim mehanizmom (`date` → `week_*` → `month` → default);
+  * GET filter forma (Pretraži; bez AJAX/auto-submit);
+  * aktivni filteri; uklanjanje pojedinačnog filtera (×); „Poništi sve filtere“;
+  * očuvanje URL stanja, paginacije (`withQueryString`) i `back` konteksta.
+* Testiranje: `41 passed (194 assertions)` (`CulturalCalendarCr001Phase1Test` + `CulturalCalendarCr002MonthFilterTest` + `CulturalCalendarCr003FiltersTest`).
+* Bez migracija; bez novih ruta; bez izmjena modela.
 
 ---
 
@@ -232,3 +248,4 @@ Ovaj model omogućava da se za svaku funkcionalnost može utvrditi:
 | 2026-08-01 | CR-001 status → Implemented (IS-001 Faza 1). Evidentiran CR-002 (mjesečni filter / treća kartica; IS-001 Faza 2). Verzija registra 0.2. |
 | 2026-08-01 | CR-002 status → Implemented (commit `c5d396f`; dokumentacija `d01c6d0`). Mjesečni filter `month=YYYY-MM`; prioritet date → week → month; testovi 29/121. Bez migracija/ruta/modela. Verzija registra 0.3. |
 | 2026-08-01 | Evidentiran CR-003 (Planned): filteri `q`/`category`/`location` na Pretrazi i pregledu; PO-CR3-01…08; TS-009 §3.3; IS-001 §9.2.1. Verzija registra 0.4. |
+| 2026-08-01 | CR-003 status → Implemented (dokumentacija `fc35132`; implementacija `595045a`). Testovi 41/194. Bez migracija/ruta/modela. Verzija registra 0.5. |
