@@ -148,6 +148,12 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 **Usvojene product odluke (CR-003 — filteri Pretrage i pregleda):**
 - **PO-CR3-01…08:** URL `q`/`category`/`location`; pretraga naslov/opis/lokacija; dropdown kategorije (`CATEGORIES`) i lokacije (distinct objavljenih); AND sa jednim datumskim mehanizmom; aktivni filteri (×); „Poništi sve filtere“; GET filter zona; state persistence. Referenca: TS-009 §3.3.
 
+**Usvojene product odluke (CR-004A — javni status badge):**
+- **PO-CR4A-01:** Javna stanja Predstoji / U toku / Završen / Otkazan; interni statusi se ne prikazuju; `cancelled` → Otkazan (prioritet); Odgođen nije status Događaja.
+- **PO-CR4A-02:** Badge na Početnoj, Pretrazi i pregledu, Arhivi i Detaljima; isti tekst/badge/logika.
+- **PO-CR4A-03:** Pravila određivanja (Otkazan; zatim vremenska stanja po `datum_od`/`datum_do`/`vrijeme`/`vrijeme_do`); izračunata stanja, ne statusi baze; vremenska zona aplikacije.
+- **PO-CR4A-04:** Kartice — gornji desni ugao fotografije; Detalji — ispod naslova; jedinstven vizuelni izgled. Referenca: TS-009 §7.1.
+
 **Usvojene product / IA odluke (nastavak):**
 - **PO-TS9-05A:** Zadržavaju se postojeći prikazi; ne uvode se novi ekrani.
 - **PO-TS9-05B:** „Pretraga i pregled“ = samo lista; mjesečni kalendar samo na početnoj.
@@ -166,7 +172,7 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **PO-TS9-07D:** Program — grupisan po datumima; sort datum → vrijeme → naziv; po Održavanju; završeni ostaju; otkazani uz statusnu oznaku „Otkazano“; „Vrijeme nije definisano“; poruka ako nema programa.
 - **PO-TS9-07E:** 1 MF → N događaja; događaj ≤1 MF; događaj može bez MF; dvosmjerna navigacija; događaji ostaju u Pretrazi i pregledu/kalendaru/statistikama/Arhivi događaja; uklanjanje/arhiva MF ne briše događaje.
 
-**Napomena (TS-009 v1.0.0 Stable):** Detalji događaja i Arhiva događaja nemaju zasebne PO-TS9-* odluke; pokriveni su BM-PK-05 / BM-PK-13 i BR-106 / BR-114 (baseline u TS-009 §7–§8).
+**Napomena (TS-009 v1.0.0 Stable):** Detalji događaja i Arhiva događaja nemaju zasebne PO-TS9-* odluke; pokriveni su BM-PK-05 / BM-PK-13 i BR-106 / BR-114 (baseline u TS-009 §7–§8). **CR-004A / PO-CR4A-01…04** dopunjavaju javni status badge (TS-009 §7.1).
 
 Povezana dokumentacija (Organizator):
 
@@ -208,9 +214,9 @@ Povezana dokumentacija (Javni portal):
 
 * Business Model — BM-11 (BM-PK-01–BM-PK-28), BM-AR-02, PATCH-045–PATCH-048; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E
 * Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-269), PATCH-FS-047–PATCH-FS-049
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 1.0.2; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3)
-* Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija 1.0.2; Stable)
-* Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Implemented, IS-001 Faza 2 — `month=YYYY-MM`; commit `c5d396f`); CR-003 (Implemented, IS-001 Faza 2 — `q`/`category`/`location`; dokumentacija `fc35132`; implementacija `595045a`; TS-009 v1.0.2; IS-001 v1.0.2)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 1.0.3; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1)
+* Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija 1.0.4; Stable)
+* Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Implemented, IS-001 Faza 2 — `month=YYYY-MM`; commit `c5d396f`); CR-003 (Implemented, IS-001 Faza 2 — `q`/`category`/`location`; dokumentacija `fc35132`; implementacija `595045a`; TS-009 v1.0.2; IS-001 v1.0.2); CR-004A (Planned, IS-001 Faza 3 — javni status badge; PO-CR4A-01…04; TS-009 v1.0.3 §7.1; IS-001 v1.0.4 §9.3.1)
 
 Povezana dokumentacija (Newsletter):
 
@@ -438,3 +444,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-01 | FT-001 — CR-002 Implemented (IS-001 Faza 2 mjesečni filter). Commit `c5d396f`. Referenca: TS-009 v1.0.1, IS-001 v1.0.1. Bez izmjene FT identifikatora / funkcionalnog obuhvata. |
 | 2026-08-01 | FT-001 — CR-003 Planned (IS-001 Faza 2: `q`/`category`/`location`; PO-CR3-01…08). TS-009 v1.0.2 + IS-001 v1.0.2 usklađeni dokumentaciono. Bez izmjene implementacije. |
 | 2026-08-01 | FT-001 — CR-003 Implemented (IS-001 Faza 2 filteri). Dokumentacija `fc35132`; implementacija `595045a`. Referenca: TS-009 v1.0.2, IS-001 v1.0.2. Bez izmjene FT identifikatora / funkcionalnog obuhvata. |
+| 2026-08-01 | FT-001 — CR-004A Planned (IS-001 Faza 3: javni status badge Predstoji / U toku / Završen / Otkazan; PO-CR4A-01…04). TS-009 v1.0.3 + IS-001 v1.0.4 usklađeni dokumentaciono. Bez izmjene implementacije. |

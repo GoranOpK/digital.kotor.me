@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.2
+**Verzija:** 1.0.3
 **Datum:** 2026-08-01
 
 ---
@@ -23,6 +23,7 @@
 | 1.0.0 | 2026-07-31 | Stable release. Objavljena stabilna verzija TS-009. Bez izmjene poslovnih, funkcionalnih ili tehničkih pravila. Bez izmjene implementacije. |
 | 1.0.1 | 2026-08-01 | CR-002 / IS-001 Faza 2: URL ugovor `month=YYYY-MM`; klik treće statističke kartice; prioritet filtera date → week → month; isti skup podataka kartica/lista; nevalidan `month` se ignoriše. Bez izmjene implementacije. |
 | 1.0.2 | 2026-08-01 | CR-003 / IS-001 Faza 2: URL ugovor `q`, `category`, `location` (PO-CR3-01…08); filter zona; AND sa datumskim mehanizmom; aktivni filteri i reset. Bez izmjene implementacije. |
+| 1.0.3 | 2026-08-01 | CR-004A / IS-001 Faza 3: javni statusi događaja (Predstoji / U toku / Završen / Otkazan); izračunata stanja; badge na karticama i Detaljima; PO-CR4A-01…04. Bez novih statusa baze. Bez izmjene implementacije. |
 
 ---
 
@@ -45,6 +46,7 @@ Izvori istine:
 * usvojene odluke faze 2: PO-TS9-06A, PO-TS9-06B, PO-TS9-06C, PO-TS9-06D
 * usvojene odluke faze 3: PO-TS9-07A, PO-TS9-07B, PO-TS9-07C, PO-TS9-07D, PO-TS9-07E
 * usvojene odluke CR-003: PO-CR3-01 … PO-CR3-08 (filteri Pretrage i pregleda: `q`, `category`, `location`)
+* usvojene odluke CR-004A: PO-CR4A-01 … PO-CR4A-04 (javni statusi / status badge)
 * granice entiteta: TS-005 (Manifestacija), TS-003 (Događaj), TS-004 (Održavanje) — TS-009 ne duplicira njihova poslovna pravila
 * `docs/features/Feature-Registry.md`
 * `docs/METHODOLOGY.md`
@@ -65,7 +67,7 @@ Izvori istine:
 | Kategorija | Primarna klasifikacija događaja |
 | Oznake | Dodatna klasifikacija događaja (BM-08 / TS-007) |
 | Tagovi | Metapodaci medija (BM-09); nisu sinonim za Oznake; nisu V1 UI |
-| Statusne oznake | Javni prikaz statusa (npr. Otkazano) |
+| Statusne oznake / status badge | Javni prikaz **izračunatog** javnog stanja događaja: Predstoji, U toku, Završen, Otkazan (CR-004A / §7.1). Nisu statusi baze. **Odgođen** nije javni status Događaja. |
 
 ---
 
@@ -80,6 +82,7 @@ Izvori istine:
 | 5. Početna stranica — Hero, istaknuti, statistike, lista | Usvojeno |
 | 6. Manifestacije (javni portal) | Usvojeno |
 | 7. Detalji događaja (baseline) | Usvojeno |
+| 7.1 Javni statusi događaja — badge (CR-004A) | Usvojeno |
 | 8. Arhiva događaja (baseline) | Usvojeno |
 | 9. Arhitektonski principi (šire) | Planirano — naredne faze |
 | 10. Tokovi i URL ugovor (detalj) | Planirano — naredne faze |
@@ -599,13 +602,13 @@ Dodatno:
 
 # 7. Detalji događaja (baseline)
 
-> **Bez novih PO.** Stranica „Detalji događaja“ pokrivena je usvojenim BM/FS pravilima. TS-009 ne duplicira lifecycle Događaja (TS-003), Održavanja (TS-004) ni Manifestacije (TS-005).
+> Stranica „Detalji događaja“ pokrivena je usvojenim BM/FS pravilima. TS-009 ne duplicira lifecycle Događaja (TS-003), Održavanja (TS-004) ni Manifestacije (TS-005). **Javni status badge:** §7.1 (CR-004A / PO-CR4A-01…04).
 
 | Referenca | Sadržaj |
 |-----------|---------|
 | BM | BM-PK-05, BM-PK-09–BM-PK-14, BM-PK-28 |
 | FS | §5.4, BR-106, BR-110–BR-115, BR-269 |
-| PO (portal) | PO-TS9-07E (blok veze ka Manifestaciji) |
+| PO (portal) | PO-TS9-07E (blok veze ka Manifestaciji); PO-CR4A-01…04 (javni status badge) |
 
 Portalni obuhvat (referenca, ne nova pravila):
 
@@ -613,29 +616,140 @@ Portalni obuhvat (referenca, ne nova pravila):
 * fotografija / fallback (BM-PK-12 / BR-113 / TS-008);
 * Održavanja sa terminima i lokacijama (BM-PK-09–10 / BR-110–111 / TS-004);
 * Kategorija i Oznake (BM-PK-11 / BR-112 / TS-007) — **Oznake ≠ Tagovi**;
-* statusne oznake gdje BM/FS zahtijevaju jasan prikaz (BM-PK-13 / BR-114);
+* statusne oznake / status badge prema §7.1 (BM-PK-13 / BR-114; CR-004A);
 * opis i javno objavljeni podaci (BM-PK-05 / BR-106);
 * informativni blok Manifestacije kada postoji veza (BM-PK-28 / BR-269).
 
 ---
 
+## 7.1 Javni statusi događaja — status badge (CR-004A)
+
+| Stavka | Vrijednost |
+|--------|------------|
+| CR | CR-004A (IS-001 Faza 3) |
+| Odluke | PO-CR4A-01 … PO-CR4A-04 |
+| BM | BM-PK-13 (prikaz; bez novih BM pravila) |
+| FS | BR-114 (prikaz; bez novih BR) |
+| Status | Dokumentaciono usvojeno; implementacija Planned |
+
+### 7.1.1 Javna stanja (PO-CR4A-01)
+
+Na javnom portalu građanima se prikazuju **isključivo** javna stanja događaja:
+
+| Javno stanje | Tip |
+|--------------|-----|
+| Predstoji | Izračunato |
+| U toku | Izračunato |
+| Završen | Izračunato |
+| Otkazan | Mapirano sa internog `cancelled` |
+
+Interni statusi sistema **ne prikazuju se** građanima kao labela:
+
+* Draft / Nacrt
+* Na odobrenju
+* Published / Objavljen
+* Archived / Arhiviran
+
+**Otkazan** prikazuje se kada je interni status događaja `cancelled` i ima **apsolutni prioritet** nad svim ostalim javnim stanjima.
+
+**Odgođen** nije status Događaja. Ostaje isključivo status Održavanja (BM-TR / FS §5.7.3 / TS-004) i **ne prikazuje se** kao javni status Događaja.
+
+Predstoji, U toku i Završen **nisu** statusi baze podataka — isključivo izračunata javna stanja. CR-004A ne uvodi nove statuse baze niti mijenja životni ciklus Događaja ili Održavanja.
+
+### 7.1.2 Mjesto prikaza (PO-CR4A-02)
+
+Javni status događaja prikazuje se na **svim** javnim prikazima događaja:
+
+* Početna stranica (kartice: istaknuti, lista ispod kalendara, i drugi prikazi kartica događaja);
+* Pretraga i pregled;
+* Arhiva događaja;
+* Detalji događaja.
+
+Na svim prikazima koristi se **isti tekst**, **isti badge** i **ista logika** određivanja statusa.
+
+### 7.1.3 Pravila određivanja (PO-CR4A-03)
+
+Prioritet određivanja:
+
+1. Otkazan
+2. Predstoji
+3. U toku
+4. Završen
+
+**Korak 1 — Otkazan**
+
+Ako je interni status događaja `cancelled`, javni status je uvijek **Otkazan**, bez obzira na datum i vrijeme.
+
+**Korak 2 — vremenska stanja** (samo ako događaj nije otkazan)
+
+Proračun koristi vremensku zonu aplikacije Digital Kotor. Polja postojećeg modela: `datum_od`, `datum_do`, `vrijeme`, `vrijeme_do`.
+
+#### A) Višednevni događaj (`datum_do` postoji)
+
+* prije početka → **Predstoji**
+* od početka do kraja perioda → **U toku**
+* nakon završetka → **Završen**
+
+Ako postoje `vrijeme` i `vrijeme_do`, ona preciziraju početak prvog i završetak posljednjeg dana.
+
+Za višednevni događaj **bez** vremena (cjelodnevni):
+
+* prije `datum_od` → **Predstoji**
+* `datum_od`–`datum_do` uključivo → **U toku**
+* nakon `datum_do` → **Završen**
+
+#### B) Jednodnevni događaj sa vremenom završetka (`vrijeme_do` postoji)
+
+* prije vremena početka → **Predstoji**
+* od početka do završetka → **U toku**
+* nakon završetka → **Završen**
+
+#### C) Jednodnevni događaj bez vremena završetka
+
+* prije početka → **Predstoji**
+* od početka do kraja kalendarskog dana → **U toku**
+* od narednog dana → **Završen**
+
+#### D) Događaj bez definisanog vremena
+
+Datum se tretira kao cjelodnevni događaj (vidi A / C prema tome da li postoji `datum_do`).
+
+### 7.1.4 Vizuelni prikaz (PO-CR4A-04)
+
+| Prikaz | Pozicija badge-a |
+|--------|------------------|
+| Kartice događaja | Gornji desni ugao fotografije (ili fallback slike) |
+| Detalji događaja | Neposredno ispod naslova događaja, prije osnovnih informacija o datumu, vremenu i lokaciji |
+
+Na svim javnim prikazima koristi se **jedinstven** vizuelni izgled badge-a (isti položaj u okviru odgovarajućeg tipa prikaza, isti tekst i ista logika).
+
+### 7.1.5 Van obuhvata CR-004A
+
+* novi statusi baze / migracije / izmjene lifecycle Događaja ili Održavanja;
+* uvođenje **Odgođen** kao statusa Događaja ili javnog badge-a događaja;
+* domen Održavanja / Oznaka / Manifestacije (Faza 4+);
+* izmjena kriterijuma ulaska u Arhivu (BM-DG-04 → Faza 6 ili zaseban CR);
+* redizajn portala van badge pozicija iz PO-CR4A-04.
+
+---
+
 # 8. Arhiva događaja (baseline)
 
-> **Bez novih PO.** Stranica „Arhiva događaja“ pokrivena je usvojenim BM/FS. Pravila **kada** Događaj prelazi u status Arhiviran ostaju u BM-04 / TS-003 (BM-DG-04); TS-009 definiše samo portalni prikaz.
+> Stranica „Arhiva događaja“ pokrivena je usvojenim BM/FS. Pravila **kada** Događaj prelazi u status Arhiviran ostaju u BM-04 / TS-003 (BM-DG-04); TS-009 definiše samo portalni prikaz. **Javni status badge:** §7.1 (isti kao na ostalim stranicama).
 
 | Referenca | Sadržaj |
 |-----------|---------|
 | BM | BM-PK-13 (takođe BM-DG-04 za arhiviranje entiteta) |
 | FS | BR-114 (takođe BR-065 za sistemsko arhiviranje) |
+| PO (portal) | PO-CR4A-01…04 (javni status badge) |
 
 Portalni obuhvat (referenca):
 
 * prikaz otkazanih i arhiviranih događaja u skladu sa BM-PK-13 / BR-114;
-* status otkazanog ili arhiviranog događaja mora biti jasno prikazan korisniku (statusne oznake);
+* status mora biti jasno prikazan korisniku putem javnog status badge-a (§7.1): **Otkazan** za `cancelled`; za ostale javno dostupne događaje izračunata stanja Predstoji / U toku / Završen (interni `archived` se ne prikazuje kao labela);
 * navigacija ka Detaljima događaja u skladu sa BM-PK-05 / BR-106.
 
 ---
-
 # 9–15. Planirano (naredne faze)
 
 Sljedeća poglavlja ostaju za naredne faze TS-009 (tehnička dubina, ne nova poslovna pravila):
@@ -666,6 +780,8 @@ Sljedeća poglavlja ostaju za naredne faze TS-009 (tehnička dubina, ne nova pos
 | CR-002 (`month`) | BM-PK-22 | BR-263 | §3.2, §5.3 |
 | CR-003 (`q` / `category` / `location`) | BM-PK-06, BM-PK-07, BM-PK-18 | BR-107, BR-108, BR-257 | §3.3 |
 | PO-CR3-01 … PO-CR3-08 | BM-PK-18 (granice postojećeg modela) | BR-257 | §3.3 |
+| CR-004A (javni status badge) | BM-PK-13 | BR-114 | §7.1 |
+| PO-CR4A-01 … PO-CR4A-04 | BM-PK-13 | BR-114 | §7.1 |
 | PO-TS9-06D | BM-PK-23 | BR-264, §5.3 | §5.4 |
 | PO-TS9-07A | BM-PK-24 | BR-265 | §6.1 |
 | PO-TS9-07B | BM-PK-25 | BR-266 | §6.2 |
@@ -691,6 +807,7 @@ Granice (bez dupliciranja u TS-009): lifecycle Događaja → TS-003; Održavanje
 * CR-001 (IS-001 Faza 1): terminologija; Hero; istaknuti max 3 + neutralno prazno; Danas/Ove sedmice klikabilne; label mjeseca; naredni max 3; „Prikaži sve događaje“.
 * CR-002 (IS-001 Faza 2): treća kartica klikabilna sa `month`; isti skup kartica/lista; prioritet filtera; podnaslov „Izabrani mjesec: …“.
 * CR-003 (IS-001 Faza 2): filter zona `q` / `category` / `location`; AND sa datumskim mehanizmom; aktivni filteri (×); „Poništi sve filtere“; GET forma; state persistence (PO-CR3-01…08).
-* Faza 3 CR/impl: navigacija Manifestacije; lista; Detalji manifestacije; program; blok veze na Detaljima događaja.
-* Detalji događaja / Arhiva događaja: uskladiti prikaz sa BM-PK-05/13 i BR-106/114; ne uvoditi paralelna lifecycle pravila.
+* CR-004A (IS-001 Faza 3): javni status badge Predstoji / U toku / Završen / Otkazan na Početnoj, Pretrazi i pregledu, Arhivi i Detaljima; izračunata stanja; `cancelled` → Otkazan (prioritet); Odgođen nije status Događaja (PO-CR4A-01…04 / §7.1).
+* Faza 3 CR/impl (šire): navigacija Manifestacije; lista; Detalji manifestacije; program; blok veze na Detaljima događaja — **van** CR-004A (Faza 5 / domen).
+* Detalji događaja / Arhiva događaja: uskladiti prikaz sa BM-PK-05/13 i BR-106/114; status badge prema §7.1; ne uvoditi paralelna lifecycle pravila.
 * Ne duplicirati TS-003 / TS-004 / TS-005 u portalskom sloju.

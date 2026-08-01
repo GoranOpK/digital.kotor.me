@@ -3,7 +3,7 @@
 ## Modul: Kalendar kulture
 
 **Status dokumenta:** AKTIVAN
-**Verzija:** 0.5
+**Verzija:** 0.6
 
 ---
 
@@ -56,6 +56,7 @@ Svaki odobreni poslovni zahtjev koji zahtijeva izmjenu implementacije mora biti 
 | CR-001 | IS-001 Faza 1 — Usklađenje postojećeg javnog UI | FS-001 → §5.1–§5.3, BR-261–BR-264 | Medium | UI, Backend | Implemented |
 | CR-002 | IS-001 Faza 2 — Mjesečni filter i klik treće statistike | FS-001 → §5.2 / BR-263; TS-009 §3.2 | Medium | UI, Backend | Implemented |
 | CR-003 | IS-001 Faza 2 — Filteri Pretrage i pregleda (`q` / `category` / `location`) | FS-001 → BR-257 / BR-107–108; TS-009 §3.3 | Medium | UI, Backend | Implemented |
+| CR-004A | IS-001 Faza 3 — Javni status badge (Predstoji / U toku / Završen / Otkazan) | FS-001 → BR-114; TS-009 §7.1; PO-CR4A-01…04 | Medium | UI, Backend | Planned |
 
 ---
 
@@ -206,6 +207,50 @@ Medium
 
 ---
 
+# CR-004A
+
+### Naziv
+
+IS-001 Faza 3 — Javni status badge (Predstoji / U toku / Završen / Otkazan).
+
+### Referenca
+
+FS-001 → BR-114; BM-PK-13; TS-009 §7.1; IS-001 §9.3 / §9.3.1; PO-CR4A-01 … PO-CR4A-04.
+
+### Opis
+
+Na javnom portalu uvesti jedinstveni status badge događaja:
+
+* javna stanja: **Predstoji**, **U toku**, **Završen**, **Otkazan** (PO-CR4A-01);
+* interni statusi (`draft` / Na odobrenju / `published` / `archived`) ne prikazuju se građanima;
+* `cancelled` → **Otkazan** (apsolutni prioritet);
+* **Odgođen** ostaje isključivo status Održavanja — nije javni status Događaja;
+* Predstoji / U toku / Završen = izračunata stanja (ne statusi baze), prema pravilima PO-CR4A-03 (`datum_od` / `datum_do` / `vrijeme` / `vrijeme_do`; vremenska zona aplikacije);
+* prikaz na: Početna, Pretraga i pregled, Arhiva događaja, Detalji događaja (PO-CR4A-02);
+* kartice: badge u gornjem desnom uglu fotografije; Detalji: ispod naslova (PO-CR4A-04);
+* jedinstven tekst, badge i logika na svim prikazima.
+
+**Van obuhvata:** novi statusi baze; migracije; Odgođen kao status Događaja; Održavanja / Oznake / Manifestacije UI; izmjena kriterijuma Arhive (BM-DG-04); redizajn van PO-CR4A-04.
+
+### Razlog
+
+BM-PK-13 / BR-114 zahtijevaju jasan prikaz statusa na javnom portalu. CR-004A formalizuje izračunata javna stanja i jedinstveni badge u okviru IS-001 Faze 3, bez izmjene lifecycle Događaja.
+
+### Prioritet
+
+Medium
+
+### Procjena uticaja
+
+* UI
+* Backend
+
+### Status
+
+**Planned**
+
+---
+
 # Sljedivost (Traceability)
 
 Za svaki Change Request treba biti moguće pratiti njegov životni ciklus kroz projektnu dokumentaciju.
@@ -249,3 +294,4 @@ Ovaj model omogućava da se za svaku funkcionalnost može utvrditi:
 | 2026-08-01 | CR-002 status → Implemented (commit `c5d396f`; dokumentacija `d01c6d0`). Mjesečni filter `month=YYYY-MM`; prioritet date → week → month; testovi 29/121. Bez migracija/ruta/modela. Verzija registra 0.3. |
 | 2026-08-01 | Evidentiran CR-003 (Planned): filteri `q`/`category`/`location` na Pretrazi i pregledu; PO-CR3-01…08; TS-009 §3.3; IS-001 §9.2.1. Verzija registra 0.4. |
 | 2026-08-01 | CR-003 status → Implemented (dokumentacija `fc35132`; implementacija `595045a`). Testovi 41/194. Bez migracija/ruta/modela. Verzija registra 0.5. |
+| 2026-08-01 | Evidentiran CR-004A (Planned): javni status badge Predstoji / U toku / Završen / Otkazan; PO-CR4A-01…04; TS-009 §7.1; IS-001 §9.3.1. Verzija registra 0.6. |
