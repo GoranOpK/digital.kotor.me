@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable  
-**Verzija:** 1.0.0  
-**Datum:** 2026-07-31
+**Verzija:** 1.0.1  
+**Datum:** 2026-08-01
 
 ---
 
@@ -21,6 +21,7 @@
 | 0.3.0 | 2026-07-31 | Faza 3: dokumentovane usvojene odluke PO-TS9-07A–PO-TS9-07E (Manifestacije na javnom portalu). Usklađeno sa BM PATCH-047 i FS PATCH-FS-049. Faze 1–2 neizmijenjene. Bez izmjene implementacije. |
 | 0.5.0 | 2026-07-31 | Final Review: završna dokumentaciona revizija (sljedivost, terminologija, granice TS-003/004/005, baseline sekcije Detalji događaja i Arhiva događaja bez novih PO). Faze 1–3 neizmijenjene. Nije v1.0.0. Bez izmjene implementacije. |
 | 1.0.0 | 2026-07-31 | Stable release. Objavljena stabilna verzija TS-009. Bez izmjene poslovnih, funkcionalnih ili tehničkih pravila. Bez izmjene implementacije. |
+| 1.0.1 | 2026-08-01 | CR-002 / IS-001 Faza 2: URL ugovor `month=YYYY-MM`; klik treće statističke kartice; prioritet filtera date → week → month; isti skup podataka kartica/lista; nevalidan `month` se ignoriše. Bez izmjene implementacije. |
 
 ---
 
@@ -239,7 +240,49 @@ Predstavlja **centralno mjesto** za pretragu i pregled događaja.
 | Reset | Opcija „Poništi filtere“ |
 | Stanje | Aktivni filteri u URL parametrima |
 
-Detaljan ugovor imena URL parametara i ponašanja praznih/nevažećih vrijednosti definiše se u narednoj fazi TS-009, u skladu sa postojećim obrascem URL stanja na početnoj (§5.3.4 FS). Klikovi sa statistika i dugmeta „Prikaži sve događaje“ (faza 2) koriste isti datumski filter mehanizam.
+## 3.2 URL ugovor — datumski filteri sa statistika (CR-002)
+
+Ulazi sa početne (statistike, „Prikaži sve događaje“) koriste postojeću rutu `cultural-calendar.events` (`GET /kalendar-kulture/pregled-dogadjaja`) sa query parametrima:
+
+| Parametar | Format | Izvor | Semantika skupa |
+|-----------|--------|-------|-----------------|
+| `date` | `YYYY-MM-DD` | Kartica Danas; „Prikaži sve“ sa izabranim danom | Objavljeni događaji koji se preklapaju sa tim danom |
+| `week_start` + `week_end` | `YYYY-MM-DD` (oba) | Kartica Ove sedmice | Objavljeni događaji koji se preklapaju sa periodom |
+| `month` | `YYYY-MM` | Kartica Izabrani mjesec | Objavljeni događaji koji se preklapaju sa cijelim mjesecom |
+
+Primjer mjesečnog filtera:
+
+`/kalendar-kulture/pregled-dogadjaja?month=2026-08`
+
+### Prioritet (filteri se ne kombinuju)
+
+Ako je prisutno više od jednog datumskog mehanizma, primjenjuje se **isključivo** prvi po prioritetu:
+
+1. `date`
+2. `week_start` + `week_end` (oba moraju biti validna)
+3. `month`
+
+### Nevalidan `month`
+
+* Prihvata se svaki validan `YYYY-MM`.
+* Nevalidna vrijednost **ne** izaziva HTTP grešku; parametar se **ignoriše**; prikazuje se standardna stranica „Pretraga i pregled“ (bez mjesečnog filtera).
+
+### Usklađenost broja kartice i liste (CR-002)
+
+Za filter `month`:
+
+* broj na trećoj statističkoj kartici i lista na „Pretrazi i pregledu“ predstavljaju **isti skup**: sve **objavljene** događaje koji se **preklapaju** sa izabranim mjesecom;
+* **ne** primjenjuje se ograničenje „samo od danas“ / samo budući događaji na tom ulazu.
+
+### Naslov stranice
+
+Glavni naslov ostaje **„Pretraga i pregled“**.
+
+Mjesečni kontekst prikazuje se kao aktivni filter ili podnaslov, npr.:
+
+**Izabrani mjesec: Avgust 2026**
+
+(lokalizovani naziv mjeseca + godina).
 
 ---
 
@@ -319,15 +362,16 @@ Raspored sekcija (postojeći, zadržava se): Hero → statistike → (kalendar +
 
 | Kartica | Ponašanje |
 |---------|-----------|
-| Danas | Klik → „Pretraga i pregled“ sa datumskim filterom za danas |
-| Ove sedmice | Klik → „Pretraga i pregled“ sa datumskim filterom za tekuću sedmicu |
-| Izabrani mjesec | Label = **naziv** trenutno izabranog mjeseca u kalendaru (ne „Ovog mjeseca“); klik → „Pretraga i pregled“ sa datumskim filterom za taj mjesec |
+| Danas | Klik → „Pretraga i pregled“ sa `date` = današnji datum |
+| Ove sedmice | Klik → „Pretraga i pregled“ sa `week_start` / `week_end` za tekuću sedmicu |
+| Izabrani mjesec | Label = **naziv** trenutno izabranog mjeseca u kalendaru (ne „Ovog mjeseca“); klik → „Pretraga i pregled“ sa `month=YYYY-MM` za taj mjesec (CR-002; vidi §3.2) |
 
 Dodatno:
 
 * vrijednost 0 ne ukida klikabilnost;
 * isključivo javno objavljeni događaji;
-* postojeće mjesto na početnoj.
+* postojeće mjesto na početnoj;
+* za `month`: broj na kartici i rezultati liste moraju biti isti skup (preklapanje sa mjesecom; bez ograničenja „samo od danas“) — CR-002 / §3.2.
 
 ## 5.4 PO-TS9-06D — Lista ispod kalendara
 
@@ -496,13 +540,14 @@ Sljedeća poglavlja ostaju za naredne faze TS-009 (tehnička dubina, ne nova pos
 |---------------|----|----|--------|
 | IA-01 | BM-PK-16, BM-AR-02 | BR-255 | §2.1 |
 | PO-TS9-03A | BM-PK-17 | BR-256 | §2.3 |
-| PO-TS9-04A | BM-PK-18 | BR-257 | §3 |
+| PO-TS9-04A | BM-PK-18 | BR-257 | §3, §3.2 |
 | PO-TS9-05A | BM-PK-19 | BR-258 | §2.2 |
 | PO-TS9-05B | BM-PK-20 | BR-259 | §2.4 |
 | TD-TS9-01 | — (tehnička) | BR-260 | §4 |
 | PO-TS9-06A | BM-PK-21 | BR-261, §5.1 FR-001–FR-005 | §5.1 |
 | PO-TS9-06B | BM-PK-15 | BR-117, BR-262 | §5.2 |
-| PO-TS9-06C | BM-PK-22 | BR-263, §5.2 | §5.3 |
+| PO-TS9-06C | BM-PK-22 | BR-263, §5.2 | §5.3, §3.2 |
+| CR-002 (`month`) | BM-PK-22 | BR-263 | §3.2, §5.3 |
 | PO-TS9-06D | BM-PK-23 | BR-264, §5.3 | §5.4 |
 | PO-TS9-07A | BM-PK-24 | BR-265 | §6.1 |
 | PO-TS9-07B | BM-PK-25 | BR-266 | §6.2 |
@@ -520,12 +565,13 @@ Granice (bez dupliciranja u TS-009): lifecycle Događaja → TS-003; Održavanje
 
 # 17. Napomene za implementaciju
 
-* Verzije do v1.0.0 (uključujući) su **dokumentacione**; ne mijenja se kod u okviru ovih verzija.
+* Verzije do v1.0.0 (uključujući) su **dokumentacione**; ne mijenja se kod u okviru tih verzija. Od v1.0.1 CR-002 dokumentuje ugovor za implementaciju (IS-001 Faza 2); kod se ne mijenja u dokumentacionom koraku.
 * Pri budućoj implementaciji: poštovati IA-01 (minimalne izmjene postojećeg portala).
-* Rename navigacionog labela „Pregled događaja“ → „Pretraga i pregled“ (PO-TS9-03A).
-* Filteri (PO-TS9-04A) pripadaju stranici Pretraga i pregled.
+* Rename navigacionog labela „Pregled događaja“ → „Pretraga i pregled“ (PO-TS9-03A) — isporučeno u CR-001.
+* Filteri (PO-TS9-04A) pripadaju stranici Pretraga i pregled; datumski ulazi sa statistika: §3.2 / CR-002 (`month=YYYY-MM`).
 * Internu podršku dan-view toka ne tretirati kao javni ekran u IA (TD-TS9-01).
-* Faza 2 CR/impl: klikabilne statistike; label treće kartice = naziv mjeseca; naredni max 3; „Prikaži sve događaje“; neutralno prazno istaknutih; max istaknutih = 3 (BM-PK-15 / BR-117).
+* CR-001 (IS-001 Faza 1): terminologija; Hero; istaknuti max 3 + neutralno prazno; Danas/Ove sedmice klikabilne; label mjeseca; naredni max 3; „Prikaži sve događaje“.
+* CR-002 (IS-001 Faza 2): treća kartica klikabilna sa `month`; isti skup kartica/lista; prioritet filtera; podnaslov „Izabrani mjesec: …“.
 * Faza 3 CR/impl: navigacija Manifestacije; lista; Detalji manifestacije; program; blok veze na Detaljima događaja.
 * Detalji događaja / Arhiva događaja: uskladiti prikaz sa BM-PK-05/13 i BR-106/114; ne uvoditi paralelna lifecycle pravila.
 * Ne duplicirati TS-003 / TS-004 / TS-005 u portalskom sloju.

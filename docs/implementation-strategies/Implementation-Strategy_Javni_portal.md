@@ -6,10 +6,10 @@
 **Naziv:** Implementaciona strategija javnog portala  
 **Feature ID:** FT-001  
 **Modul:** Kalendar kulture  
-**Referentna specifikacija:** TS-009 v1.0.0 Stable  
+**Referentna specifikacija:** TS-009 v1.0.1 Stable  
 **Status dokumenta:** Stable  
-**Verzija:** 1.0.0  
-**Datum:** 2026-07-31
+**Verzija:** 1.0.1  
+**Datum:** 2026-08-01
 
 ---
 
@@ -20,7 +20,7 @@
 | Oznaka | IS-001 |
 | Naziv | Implementaciona strategija javnog portala |
 | Tip | Operativni planski dokument |
-| Referenca | TS-009 v1.0.0 Stable |
+| Referenca | TS-009 v1.0.1 Stable |
 | Usvojene odluke | IS-001-01 … IS-001-08 |
 
 ### IS-001-01 — Identitet dokumenta
@@ -35,7 +35,7 @@ IS-001 je operativni planski dokument koji definiše:
 * strategiju deploy-a;
 * strategiju rollback-a;
 
-za implementaciju **TS-009 v1.0.0**, bez mijenjanja usvojenih poslovnih, funkcionalnih i tehničkih pravila.
+za implementaciju **TS-009 v1.0.1**, bez mijenjanja usvojenih poslovnih, funkcionalnih i tehničkih pravila.
 
 IS-001:
 
@@ -48,7 +48,7 @@ IS-001:
 
 # 2. Svrha i status
 
-**Svrha:** omogućiti kontrolisanu, evolutivnu implementaciju javnog portala u skladu sa TS-009 v1.0.0, uz najmanji rizik za postojeću produkciju (princip IA-01).
+**Svrha:** omogućiti kontrolisanu, evolutivnu implementaciju javnog portala u skladu sa TS-009 v1.0.1, uz najmanji rizik za postojeću produkciju (princip IA-01).
 
 **Status:** Stable (v1.0.0).
 
@@ -60,7 +60,7 @@ IS-001:
 
 | Dokument | Uloga |
 |----------|--------|
-| `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009 v1.0.0) | Referentna specifikacija javnog portala |
+| `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009 v1.0.1) | Referentna specifikacija javnog portala |
 | `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-11, BM-05, …) | Poslovna pravila (ne mijenjaju se ovim dokumentom) |
 | `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13) | Funkcionalni zahtjevi |
 | TS-003 Događaj | Domen Događaja; zavisnost Faze 4/6 |
@@ -161,11 +161,13 @@ Detaljna matrica odstupanja: §7.
 | IA-01 evolutivni okvir | djelimično | — | — | sve |
 | Rename → Pretraga i pregled | ne (UI) | da | ne | 1 |
 | Filteri (datum, kategorija, lokacija) | djelimično | da | djelimično | 2 |
+| Mjesečni filter `month` + klik treće statistike (CR-002) | ne | da | ne | **2** |
 | Filter Manifestacija | ne | — | da | 5 (nakon 4) |
 | Hero | da | provjera | ne | 1 |
-| Istaknuti (max 3, prazno) | djelimično | da | ne | 1 |
-| Statistike (klik, naziv mjeseca) | djelimično | da | ne | 1 |
-| Lista ispod kalendara (max 3, „Prikaži sve“) | djelimično | da | ne | 1 |
+| Istaknuti (max 3, prazno) | da (CR-001) | — | ne | 1 |
+| Statistike Danas / Ove sedmice (klik) | da (CR-001) | — | ne | 1 |
+| Statistike Izabrani mjesec (klik + `month`) | ne | da | ne | **2** |
+| Lista ispod kalendara (max 3, „Prikaži sve“) | da (CR-001) | — | ne | 1 |
 | Detalji događaja — baseline (postojeći model) | djelimično | da | ne | **3** |
 | Detalji događaja — puni domen (Održavanja, Oznake, …) | ne | da | djelimično | **6** (nakon 4) |
 | Arhiva događaja — baseline (postojeći model) | da | da | ne | **3** |
@@ -244,16 +246,16 @@ Faza 6 (Završno usklađenje)
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Centralna Pretraga i pregled sa filterima i URL stanjem (PO-TS9-04A), bez filtera Manifestacije |
-| **Obuhvat** | Pretraga; filteri (datum, kategorija, lokacija — u granicama postojećeg modela); URL stanje; očuvanje konteksta; paginacija; sortiranje po usvojenim pravilima; „Poništi filtere“ |
-| **Zavisnosti** | Preferira Fazu 1 (rename). Filter Manifestacije **nije** u ovoj fazi |
+| **Cilj** | Centralna Pretraga i pregled sa filterima i URL stanjem (PO-TS9-04A), uključujući CR-002 mjesečni filter sa statistika; bez filtera Manifestacije |
+| **Obuhvat** | Pretraga; filteri (datum, kategorija, lokacija — u granicama postojećeg modela); URL stanje; očuvanje konteksta; paginacija; sortiranje po usvojenim pravilima; „Poništi filtere“; **CR-002:** klik treće statističke kartice → `month=YYYY-MM`; prioritet filtera `date` → `week_*` → `month` (bez kombinovanja); isti skup broja kartice i liste (preklapanje sa mjesecom, bez „samo od danas“); podnaslov „Izabrani mjesec: …“; nevalidan `month` se ignoriše |
+| **Zavisnosti** | Preferira Fazu 1 (CR-001 završen). Filter Manifestacije **nije** u ovoj fazi |
 | **Rizik** | **Srednji** |
-| **Uticaj na kod** | Sloj kontrolera (lista/upiti); prikaz Pretrage i pregleda; rute: bez novih; stilovi: malo; baza: ne; testovi: da |
-| **Ulaz** | Faza 1 završena (ili odobren izuzetak); plan test/rollback |
-| **Izlaz** | Filteri + URL u skladu sa BM-PK-18 / BR-257; regresija liste OK; PO potvrda |
-| **Test** | Kombinovanje filtera; prazni rezultati; paginacija + query string; poništi; ulaz sa statistika / „Prikaži sve događaje“ |
-| **Deploy** | Bez migracije; bez MW; feature flag opciono ako treba postepeno uključivanje filter UI; smoke: Pretraga i pregled + linkovi sa početne |
-| **Rollback** | **Potpuni** ili **djelimični** (UI filtera) — bez migracije |
+| **Uticaj na kod** | Sloj kontrolera (`events` upiti + `month`); prikaz Pretrage i pregleda (podnaslov/aktivni filter); početna (link treće kartice); rute: bez novih; stilovi: malo; baza: ne; testovi: da |
+| **Ulaz** | Faza 1 završena; TS-009 v1.0.1 (§3.2); CR-002 usvojen; plan test/rollback |
+| **Izlaz** | Filteri + URL u skladu sa BM-PK-18 / BR-257 / TS-009 §3.2; treća kartica klikabilna; regresija liste OK; PO potvrda |
+| **Test** | Kombinovanje/prioritet `date` / `week_*` / `month` (ne istovremeno); prazni rezultati; paginacija + query string; poništi; ulaz sa statistika / „Prikaži sve događaje“; **CR-002:** `month` link sa treće kartice; broj kartice = broj rezultata liste; nevalidan `month` → standardna stranica; naslov „Pretraga i pregled“ + podnaslov mjeseca |
+| **Deploy** | Bez migracije; bez MW; feature flag opciono ako treba postepeno uključivanje filter UI; smoke: Pretraga i pregled + linkovi sa početne (uključujući treću karticu) |
+| **Rollback** | **Potpuni** ili **djelimični** (UI filtera / `month`) — bez migracije |
 
 ---
 
@@ -456,7 +458,7 @@ Plan rollback-a mora postojati **prije** isporuke.
 
 ### IS-001-08 — Upravljanje promjenama specifikacije
 
-**TS-009 v1.0.0** je referentna specifikacija.
+**TS-009 v1.0.1** je referentna specifikacija.
 
 Proces promjene:
 
@@ -481,13 +483,13 @@ Ne dozvoljavaju se nevidljive ili nedokumentovane izmjene stabilne specifikacije
 | IS-001 | TS-009 / odluke | BM / FS (referenca) |
 |--------|-----------------|---------------------|
 | Faza 1 | IA-01; PO-TS9-03A (label); PO-TS9-05A/05B (provjera); PO-TS9-06A–06D; TD-TS9-01 | BM-PK-15, BM-PK-16, BM-PK-19–23; BR-117, BR-255, BR-258–264; §5.1–§5.3 |
-| Faza 2 | PO-TS9-03A; PO-TS9-04A | BM-PK-17–18 (takođe BM-PK-06–07); BR-256–257 (takođe BR-107–108) |
+| Faza 2 | PO-TS9-03A; PO-TS9-04A; **CR-002** (`month`, treća kartica) | BM-PK-17–18, BM-PK-22 (takođe BM-PK-06–07); BR-256–257, BR-263 (takođe BR-107–108); TS-009 §3.2 |
 | Faza 3 | TS-009 §7–§8 **baseline** (postojeći model) | BM-PK-05 (djelimično), BM-PK-13 (djelimično — prikaz); BR-106, BR-114. **Ne:** BM-PK-09/11 (Održavanja/Oznake) |
 | Faza 4 | Granice domena (nije portal UI) | TS-003/004/005/007/008; BM-04/05/06/08/09; odgovarajući BR u FS §5.5–5.12 |
 | Faza 5 | PO-TS9-07A–07E; TS-009 §6 | BM-PK-24–28; BM-MF-13; BR-265–269, BR-192 |
 | Faza 6 | TS-009 §7–§8 **puni** obuhvat nakon domena | BM-PK-05, BM-PK-09–14; BR-106, BR-110–115; §5.4 |
 | IS-001-02 | IA-01 | BM-PK-16; BR-255 |
-| IS-001-08 | TS-009 v1.0.0 Stable | — |
+| IS-001-08 | TS-009 v1.0.1 Stable | — |
 
 | Usvojena odluka | Primarne sekcije IS-001 |
 |-----------------|-------------------------|
@@ -530,7 +532,8 @@ Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehni�
 | 0.1.0 | 2026-07-31 | Nacrt. Formalizovane usvojene odluke IS-001-01 … IS-001-08. Ugrađeni relevantni zaključci radne implementacione analize TS-009 v1.0.0. Bez izmjene BM/FS/TS/implementacije. |
 | 0.5.0 | 2026-07-31 | Final Review. Terminologija Oznake ≠ Tagovi; razgraničenje Faze 3 / Faze 6; precizirana sljedivost BM/FS/TS; usklađeni test/deploy nazivi; smanjena otvorena pitanja. Bez novih PO odluka. Bez izmjene BM/FS/TS/implementacije. |
 | 1.0.0 | 2026-07-31 | Stable. Dokument je prošao Final Review i predstavlja referentnu implementacionu strategiju za implementaciju TS-009 v1.0.0. Bez izmjene sadržaja faza, rizika, deploy/rollback strategije, sljedivosti ili otvorenih pitanja. Bez izmjene BM/FS/TS/implementacije. |
+| 1.0.1 | 2026-08-01 | CR-002: Faza 2 dopunjena mjesečnim filterom (`month=YYYY-MM`), klikom treće statističke kartice, prioritetom filtera, usklađenošću broja/liste i testovima. Referenca TS-009 v1.0.1. Faza 1 neizmijenjena. Bez izmjene implementacije. |
 
 ---
 
-**Kraj dokumenta IS-001 v1.0.0 (Stable)**
+**Kraj dokumenta IS-001 v1.0.1 (Stable)**

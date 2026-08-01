@@ -64,6 +64,7 @@
 | PATCH-FS-050 | 2026-07-31 | Formalno zatvaranje dokumenta: ažuriran Status razvoja (§1–§5.16 Approved); ispravljen Sadržaj/TOC; Platformsko pravilo — Status Approved; minimalno uklonjeno implementaciono curenje (`kk_admin`, ime rute, napomena o implementaciji). Bez novih BR i bez izmjene funkcionalnih/poslovnih pravila. Status dokumenta ostaje U IZRADI; verzija ostaje 0.1. |
 | 0.5.0 | 2026-07-31 | Final Review. Završna dokumentaciona revizija: §1–§5.16 Approved; TOC i Platformsko pravilo usklađeni (PATCH-FS-050); BR-001…BR-269 neizmijenjeni; usvojene PO/IA odluke ugrađene; bez novih funkcionalnih pravila. Bez izmjene BM/TS/IS/Feature Registry/RG-001/implementacije. |
 | 1.0.0 | 2026-08-01 | Stable. Functional Specification je uspješno prošao Final Review i predstavlja referentni funkcionalni dokument modula Kalendar kulture. Bez izmjene funkcionalnih pravila, numeracije, identifikatora ili sljedivosti. Bez izmjene BM/TS/IS/Feature Registry/RG-001/implementacije. |
+| doc-CR-002 | 2026-08-01 | Dokumentaciona napomena §5.2: CR-001 Implemented; preostala klikabilnost treće kartice / `month` → CR-002 (IS-001 Faza 2). Bez novih BR. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -420,9 +421,9 @@ Klik otvara „Pretragu i pregled“ sa odgovarajućim datumskim filterom za taj
 
 #### Napomena
 
-Trenutna implementacija nije u potpunosti usklađena sa ovim poslovnim pravilima (npr. klikabilnost, naziv treće kartice, navigacija ka „Pretrazi i pregledu“).
+CR-001 (IS-001 Faza 1) uskladio je terminologiju, Hero, istaknute, kartice Danas/Ove sedmice, label treće kartice, listu ispod kalendara i „Prikaži sve događaje“.
 
-Prije izmjene implementacije potrebno je otvoriti Change Request kojim će se uskladiti statistički pokazatelji sa usvojenom Functional Specification.
+Preostalo usklađivanje treće kartice (klik → `month=YYYY-MM`; isti skup broja i liste) evidentirano je kao **CR-002** i pripada **IS-001 Fazi 2** (TS-009 §3.2).
 
 **Status:** Approved
 
@@ -4020,3 +4021,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-31 | FS-001 (PATCH-FS-050): Formalno zatvaranje — Status razvoja (§1–§5.16 Approved), ispravljen TOC, Platformsko pravilo Approved, minimalno uklonjeno implementaciono curenje. Bez novih BR. Status dokumenta ostaje U IZRADI; verzija 0.1. |
 | 2026-07-31 | FS-001 Final Review v0.5.0: završna dokumentaciona revizija; Status dokumenta Final Review; BR-001…BR-269 neizmijenjeni; bez novih funkcionalnih pravila. |
 | 2026-08-01 | FS-001 Stable v1.0.0: Functional Specification je uspješno prošao Final Review i predstavlja referentni funkcionalni dokument modula Kalendar kulture. Bez izmjene funkcionalnih pravila. |
+| 2026-08-01 | FS-001 §5.2 napomena (doc-CR-002): CR-001 Implemented; preostalo usklađenje treće kartice → CR-002 / IS-001 Faza 2. Bez novih BR. |

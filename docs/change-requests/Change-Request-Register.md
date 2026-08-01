@@ -3,7 +3,7 @@
 ## Modul: Kalendar kulture
 
 **Status dokumenta:** AKTIVAN
-**Verzija:** 0.1
+**Verzija:** 0.2
 
 ---
 
@@ -13,9 +13,7 @@ Change Request Register predstavlja centralni registar svih odobrenih poslovnih 
 
 Functional Specification definiše željeno ponašanje sistema.
 
-Change Request Register evidentira razlike između trenutne implementacije i usvojene Functional Specification.
-
-Implementacija se ne mijenja direktno na osnovu Functional Specification, već isključivo kroz odobreni Change Request.
+Change Request Register evidentira odobrene zahtjeve za usklađivanje implementacije sa usvojenom specifikacijom.
 
 ---
 
@@ -25,38 +23,24 @@ Svaki Change Request dobija jedinstveni identifikator:
 
 * CR-001
 * CR-002
-* CR-003
-* ...
+* …
 
-Svaki zapis sadrži najmanje:
+Identifikator se ne mijenja i ne ponovo koristi.
 
-* ID
-* Naziv
-* Referencu na Functional Specification
-* Opis poslovnog zahtjeva
-* Razlog izmjene
-* Prioritet
-* Procjena uticaja
-* Status
-
-Dozvoljeni statusi:
+Statusi:
 
 * Planned
-* Approved
 * In Progress
 * Implemented
-* Rejected
+* Verified
+* Closed
 * Cancelled
 
-Procjena uticaja (Impact) predstavlja pregled sistema koje Change Request zahvata.
-
-Dozvoljene vrijednosti su jedna ili više od sljedećih oznaka:
+Procjena uticaja može uključivati:
 
 * UI
 * Backend
 * Database
-* API
-* Security
 * Permissions
 * Documentation
 * Performance
@@ -69,7 +53,8 @@ Svaki odobreni poslovni zahtjev koji zahtijeva izmjenu implementacije mora biti 
 
 | ID | Naziv | FS Referenca | Prioritet | Procjena uticaja | Status |
 | -- | ----- | ------------ | --------- | ---------------- | ------ |
-| CR-001 | Usklađivanje statističkih pokazatelja sa Functional Specification. | FS-001 → 5.2 Statistički pokazatelji. | Medium | UI, Backend | Planned |
+| CR-001 | IS-001 Faza 1 — Usklađenje postojećeg javnog UI | FS-001 → §5.1–§5.3, BR-261–BR-264 | Medium | UI, Backend | Implemented |
+| CR-002 | IS-001 Faza 2 — Mjesečni filter i klik treće statistike | FS-001 → §5.2 / BR-263; TS-009 §3.2 | Medium | UI, Backend | Planned |
 
 ---
 
@@ -77,26 +62,21 @@ Svaki odobreni poslovni zahtjev koji zahtijeva izmjenu implementacije mora biti 
 
 ### Naziv
 
-Usklađivanje statističkih pokazatelja sa Functional Specification.
+IS-001 Faza 1 — Usklađenje postojećeg javnog korisničkog interfejsa.
 
 ### Referenca
 
-FS-001 → 5.2 Statistički pokazatelji.
+FS-001 → §5.1–§5.3, BR-261–BR-264; TS-009; IS-001 Faza 1.
 
 ### Opis
 
-Postojeću implementaciju statističkih pokazatelja potrebno je uskladiti sa usvojenom Functional Specification.
+Usklađivanje postojećeg javnog UI sa usvojenim odlukama (terminologija „Pretraga i pregled“, Hero, istaknuti max 3 + neutralno prazno stanje, klikabilne kartice Danas/Ove sedmice, label izabranog mjeseca, lista ispod kalendara max 3, „Prikaži sve događaje“).
 
-Potrebno je implementirati:
-
-* četiri statističke kartice;
-* ispravan obračun pokazatelja "Ove sedmice";
-* ispravan obračun pokazatelja "Ovog mjeseca";
-* novu karticu "Predstojeći događaji".
+**Van obuhvata CR-001 (Scope Freeze):** mjesečni filter i klik treće kartice — prebačeno na CR-002.
 
 ### Razlog
 
-Trenutna implementacija nije u potpunosti usklađena sa usvojenim poslovnim pravilima.
+Implementacija nije bila u potpunosti usklađena sa usvojenim BM/FS/TS-009 za početnu stranicu.
 
 ### Prioritet
 
@@ -109,7 +89,51 @@ Medium
 
 ### Status
 
-Planned
+**Implemented** (commit `613dc00`, 2026-08-01).
+
+---
+
+# CR-002
+
+### Naziv
+
+IS-001 Faza 2 — Mjesečni filter i klik treće statističke kartice.
+
+### Referenca
+
+FS-001 → §5.2 / BR-263; BM-PK-22; TS-009 §3.2 / §5.3; IS-001 Faza 2.
+
+### Opis
+
+Treća statistička kartica (Izabrani mjesec) postaje klikabilna i otvara „Pretragu i pregled“ sa query parametrom:
+
+`month=YYYY-MM`
+
+(npr. `/kalendar-kulture/pregled-dogadjaja?month=2026-08`).
+
+Usvojena pravila:
+
+* broj na kartici i lista = **isti skup** (objavljeni događaji koji se preklapaju sa mjesecom; **bez** ograničenja „samo od danas“);
+* prioritet filtera (bez kombinovanja): `date` → `week_start`+`week_end` → `month`;
+* naslov stranice ostaje „Pretraga i pregled“; podnaslov/aktivni filter: „Izabrani mjesec: …“;
+* nevalidan `month` se ignoriše (bez greške; standardna stranica).
+
+### Razlog
+
+CR-001 je namjerno odgodio mjesečni filter. BM-PK-22 / BR-263 / TS-009 zahtijevaju klikabilnost treće kartice; CR-002 zatvara taj jaz u okviru IS-001 Faze 2.
+
+### Prioritet
+
+Medium
+
+### Procjena uticaja
+
+* UI
+* Backend
+
+### Status
+
+**Planned** (dokumentacija usvojena; implementacija nije započeta).
 
 ---
 
@@ -126,6 +150,8 @@ Functional Specification
 Change Request
 ↓
 Technical Specification
+↓
+Implementation Strategy
 ↓
 Implementacija
 ↓
@@ -150,3 +176,4 @@ Ovaj model omogućava da se za svaku funkcionalnost može utvrditi:
 |-------|---------|
 | 2026-07-26 | Kreiran Change Request Register. Evidentiran CR-001. |
 | 2026-07-26 | Proširen Change Request Register novim kolonama. Dodata procjena uticaja (Impact). Uvedeno pravilo obavezne registracije Change Request-ova prije razvoja. Dodato poglavlje Sljedivost (Traceability). |
+| 2026-08-01 | CR-001 status → Implemented (IS-001 Faza 1). Evidentiran CR-002 (mjesečni filter / treća kartica; IS-001 Faza 2). Verzija registra 0.2. |
