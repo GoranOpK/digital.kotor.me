@@ -197,11 +197,14 @@
             @foreach($events as $event)
                 <article class="bg-white border border-gray-200 rounded-lg overflow-hidden">
                     <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" class="block hover:bg-gray-50 transition-colors duration-150">
-                    <img
-                        src="{{ $event->imageUrl() }}"
-                        alt="{{ $event->naslov }}"
-                        class="w-full h-44 object-cover"
-                    >
+                    <div class="kk-public-status-photo">
+                        <img
+                            src="{{ $event->imageUrl() }}"
+                            alt="{{ $event->naslov }}"
+                            class="w-full h-44 object-cover"
+                        >
+                        @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'card'])
+                    </div>
                     <div class="p-4">
                         <div class="text-xs text-gray-500 mb-1">
                             {{ optional($event->datum_od)->format('d.m.Y') }}

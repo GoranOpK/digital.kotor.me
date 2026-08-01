@@ -106,8 +106,9 @@
             @foreach($events as $event)
                 <article class="kk-archive-card">
                     <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" class="kk-archive-card-link">
-                        <div class="kk-archive-photo">
+                        <div class="kk-archive-photo kk-public-status-photo">
                             <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}">
+                            @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'card'])
                         </div>
                         <div class="kk-archive-body">
                             <div class="kk-archive-meta">

@@ -450,8 +450,9 @@
                         @forelse($selectedDateEvents as $event)
                             <div class="kk-upcoming-item">
                                 <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" class="kk-upcoming-link">
-                                    <div class="kk-upcoming-photo">
+                                    <div class="kk-upcoming-photo kk-public-status-photo">
                                         <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}">
+                                        @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'card'])
                                     </div>
                                     <div class="kk-upcoming-body">
                                         <div class="kk-upcoming-meta">
@@ -483,8 +484,9 @@
                         @forelse($upcomingEvents as $event)
                             <div class="kk-upcoming-item">
                                 <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" class="kk-upcoming-link">
-                                    <div class="kk-upcoming-photo">
+                                    <div class="kk-upcoming-photo kk-public-status-photo">
                                         <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}">
+                                        @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'card'])
                                     </div>
                                     <div class="kk-upcoming-body">
                                         <div class="kk-upcoming-meta">
@@ -521,11 +523,14 @@
                     @foreach($featuredEvents as $event)
                         <article class="kk-feature-card">
                             <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" style="display:block; color:inherit; text-decoration:none;">
-                            <img
-                                src="{{ $event->imageUrl() }}"
-                                alt="{{ $event->naslov }}"
-                                class="kk-feature-image"
-                            >
+                            <div class="kk-public-status-photo">
+                                <img
+                                    src="{{ $event->imageUrl() }}"
+                                    alt="{{ $event->naslov }}"
+                                    class="kk-feature-image"
+                                >
+                                @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'card'])
+                            </div>
                             <div class="kk-feature-content">
                                 <div class="kk-feature-meta">
                                     {{ optional($event->datum_od)->format('d.m.Y') }}

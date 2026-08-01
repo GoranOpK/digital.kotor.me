@@ -86,6 +86,8 @@
                 <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}">
             </div>
             <div class="kk-show-body">
+                @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'detail'])
+
                 <div class="kk-show-meta">
                     <strong>Datum:</strong>
                     {{ optional($event->datum_od)->format('d.m.Y') }}
