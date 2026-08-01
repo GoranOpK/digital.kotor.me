@@ -6,9 +6,9 @@
 **Naziv:** Implementaciona strategija javnog portala  
 **Feature ID:** FT-001  
 **Modul:** Kalendar kulture  
-**Referentna specifikacija:** TS-009 v1.0.3 Stable
+**Referentna specifikacija:** TS-009 v1.0.4 Stable
 **Status dokumenta:** Stable
-**Verzija:** 1.0.4
+**Verzija:** 1.0.5
 **Datum:** 2026-08-01
 
 ---
@@ -20,7 +20,7 @@
 | Oznaka | IS-001 |
 | Naziv | Implementaciona strategija javnog portala |
 | Tip | Operativni planski dokument |
-| Referenca | TS-009 v1.0.3 Stable |
+| Referenca | TS-009 v1.0.4 Stable |
 | Usvojene odluke | IS-001-01 … IS-001-08 |
 
 ### IS-001-01 — Identitet dokumenta
@@ -35,7 +35,7 @@ IS-001 je operativni planski dokument koji definiše:
 * strategiju deploy-a;
 * strategiju rollback-a;
 
-za implementaciju **TS-009 v1.0.3**, bez mijenjanja usvojenih poslovnih, funkcionalnih i tehničkih pravila.
+za implementaciju **TS-009 v1.0.4**, bez mijenjanja usvojenih poslovnih, funkcionalnih i tehničkih pravila.
 
 IS-001:
 
@@ -284,7 +284,7 @@ Faza 6 (Završno usklađenje)
 | Stavka | Opis |
 |--------|------|
 | **Cilj** | Uskladiti Detalje događaja i Arhivu događaja **isključivo u granicama postojećeg modela** (baseline TS-009 §7–§8), bez uvođenja domena Održavanja, Oznaka ili Manifestacije |
-| **Obuhvat** | Postojeći detalj; **CR-004A (Planned):** javni status badge (Predstoji / U toku / Završen / Otkazan) na Početnoj, Pretrazi i pregledu, Arhivi i Detaljima (TS-009 §7.1; PO-CR4A-01…04); navigacija i povratak; Arhiva; kartice Arhive. **Van obuhvata:** više Održavanja; Oznake (BM-08); blok Manifestacije; izmjena kriterijuma ulaska u Arhivu ka BM-DG-04 (to je Faza 6 ili zaseban odobreni CR); novi statusi baze; Odgođen kao status Događaja |
+| **Obuhvat** | Postojeći detalj; **CR-004A (Implemented):** javni status badge (Predstoji / U toku / Završen / Otkazan) na Početnoj, Pretrazi i pregledu, Arhivi i Detaljima (TS-009 §7.1; PO-CR4A-01…05); navigacija i povratak; Arhiva; kartice Arhive. **Van obuhvata:** više Održavanja; Oznake (BM-08); blok Manifestacije; izmjena kriterijuma ulaska u Arhivu ka BM-DG-04 (to je Faza 6 ili zaseban odobreni CR); novi statusi baze; Odgođen kao status Događaja |
 | **Zavisnosti** | Faze 1–2 nisu strogi preduslov za početak; **ne zamjenjuje** Fazu 6 |
 | **Rizik** | **Srednji** |
 | **Uticaj na kod** | Sloj kontrolera / helper za izračun javnog stanja (bez novih tabela); prikazi kartica i Detalja; rute: bez novih; baza: ne |
@@ -300,15 +300,17 @@ Faza 6 (Završno usklađenje)
 
 | Stavka | Opis |
 |--------|------|
-| **Status** | **Planned** |
-| **Dokumentacija** | TS-009 v1.0.3 §7.1; IS-001 v1.0.4 §9.3 / §9.3.1; PO-CR4A-01…04 |
+| **Status** | **Implemented** |
+| **Dokumentacija** | `614706c` (`docs: prepare CR-004A public event status badges`); TS-009 v1.0.4 §7.1; IS-001 v1.0.5 §9.3 / §9.3.1; PO-CR4A-01…05 |
+| **Implementacija** | `0f73240` (`feat(cultural-calendar): implement CR-004A public status badges`) |
+| **Testiranje** | `65 passed (266 assertions)` (`CulturalEventPublicStatusTest` + `CulturalCalendarCr004APublicStatusTest` + regresija CR-001/CR-002/CR-003) |
 | **Cilj** | Jedinstveni javni status badge na svim javnim prikazima događaja |
-| **Obuhvat** | Izračunata stanja Predstoji / U toku / Završen; `cancelled` → Otkazan (apsolutni prioritet); badge na karticama (gornji desni ugao fotografije) i Detaljima (ispod naslova); isti tekst/logika/izgled; vremenska zona aplikacije; polja `datum_od` / `datum_do` / `vrijeme` / `vrijeme_do` |
-| **Van obuhvata** | Novi statusi baze; migracije; Odgođen kao status Događaja; Održavanja / Oznake / Manifestacije UI; izmjena kriterijuma Arhive (BM-DG-04); redizajn van PO-CR4A-04 |
-| **Controller / View** | Prikazni sloj javnog portala (kartice + show); bez novih ruta; bez izmjene modela/migracija |
-| **Test** | Otkazan prioritet; višednevni / jednodnevni / bez vremena; konzistentnost Početna / Pretraga / Arhiva / Detalji; regresija CR-001…CR-003 |
+| **Obuhvat** | Izračunata stanja Predstoji / U toku / Završen; `cancelled` → Otkazan (apsolutni prioritet); badge na karticama (gornji desni ugao fotografije) i Detaljima (ispod naslova); isti tekst/logika/izgled; vremenska zona aplikacije; polja `datum_od` / `datum_do` / `vrijeme` / `vrijeme_do`; bez badge-a kada status nije pouzdan (PO-CR4A-05) |
+| **Van obuhvata** | Novi statusi baze; migracije; Odgođen kao status Događaja; Održavanja / Oznake / Manifestacije UI; izmjena kriterijuma Arhive (BM-DG-04); redizajn van PO-CR4A-04; proširenje javne dostupnosti `cancelled` / `archived` |
+| **Model / View** | Bez migracije i bez izmjene šeme baze; implementacija uključuje metodu `publicStatus()` na postojećem modelu `CulturalEvent`; zajednički Blade partial; prikazi index / events / archive / show; bez novih ruta; bez izmjene javnih query-ja dostupnosti |
+| **Test** | Otkazan prioritet; višednevni / jednodnevni / bez vremena; PO-CR4A-05; konzistentnost Početna / Pretraga / Arhiva / Detalji; regresija CR-001…CR-003 |
 | **Rizik** | **Srednji** |
-| **Deploy / Rollback** | Bez migracije; potpuni revert UI/helper — bez undo baze |
+| **Deploy / Rollback** | Bez migracije; potpuni revert UI/metode — bez undo baze |
 
 ---
 
@@ -518,12 +520,12 @@ Ne dozvoljavaju se nevidljive ili nedokumentovane izmjene stabilne specifikacije
 |--------|-----------------|---------------------|
 | Faza 1 | IA-01; PO-TS9-03A (label); PO-TS9-05A/05B (provjera); PO-TS9-06A–06D; TD-TS9-01 | BM-PK-15, BM-PK-16, BM-PK-19–23; BR-117, BR-255, BR-258–264; §5.1–§5.3 |
 | Faza 2 | PO-TS9-03A; PO-TS9-04A; **CR-002** (`month`); **CR-003** (`q`/`category`/`location`, PO-CR3-01…08) | BM-PK-17–18, BM-PK-22 (takođe BM-PK-06–07); BR-256–257, BR-263 (takođe BR-107–108); TS-009 §3.2–§3.3 |
-| Faza 3 | TS-009 §7–§8 **baseline**; **CR-004A** §7.1 (PO-CR4A-01…04) | BM-PK-05 (djelimično), BM-PK-13 (djelimično — prikaz); BR-106, BR-114. **Ne:** BM-PK-09/11 (Održavanja/Oznake) |
+| Faza 3 | TS-009 §7–§8 **baseline**; **CR-004A** §7.1 (PO-CR4A-01…05) | BM-PK-05 (djelimično), BM-PK-13 (djelimično — prikaz); BR-106, BR-114. **Ne:** BM-PK-09/11 (Održavanja/Oznake) |
 | Faza 4 | Granice domena (nije portal UI) | TS-003/004/005/007/008; BM-04/05/06/08/09; odgovarajući BR u FS §5.5–5.12 |
 | Faza 5 | PO-TS9-07A–07E; TS-009 §6 | BM-PK-24–28; BM-MF-13; BR-265–269, BR-192 |
 | Faza 6 | TS-009 §7–§8 **puni** obuhvat nakon domena | BM-PK-05, BM-PK-09–14; BR-106, BR-110–115; §5.4 |
 | IS-001-02 | IA-01 | BM-PK-16; BR-255 |
-| IS-001-08 | TS-009 v1.0.3 Stable | — |
+| IS-001-08 | TS-009 v1.0.4 Stable | — |
 
 | Usvojena odluka | Primarne sekcije IS-001 |
 |-----------------|-------------------------|
@@ -570,7 +572,8 @@ Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehni�
 | 1.0.2 | 2026-08-01 | CR-003: Faza 2 dopunjena implementacionim paketom §9.2.1 (`q`/`category`/`location`, filter zona, AND, aktivni filteri, reset; PO-CR3-01…08). Referenca TS-009 v1.0.2. Bez izmjene implementacije. |
 | 1.0.3 | 2026-08-01 | Statusno usklađenje nakon CR-003 implementacije: CR-003 = Implemented (`fc35132` / `595045a`; testovi 41/194). Faza 2 završena u granicama postojećeg modela; MF → Faza 5; Oznake → Faza 4/6. Bez izmjene obuhvata Faze 2. Bez izmjene BM/FS/TS/implementacije. |
 | 1.0.4 | 2026-08-01 | CR-004A Planned (IS-001 Faza 3): javni status badge; §9.3 / §9.3.1; referenca TS-009 v1.0.3 §7.1; PO-CR4A-01…04. Bez izmjene implementacije. Bez širenja Faze 3 van badge obuhvata. |
+| 1.0.5 | 2026-08-01 | CR-004A Implemented (dokumentacija `614706c`; implementacija `0f73240`; testovi 65/266). §9.3 / §9.3.1; referenca TS-009 v1.0.4. Precizirano: bez migracije/izmjene šeme; metoda na postojećem modelu CulturalEvent. Bez širenja Faze 3; Faza 3 nije označena kao završena. |
 
 ---
 
-**Kraj dokumenta IS-001 v1.0.4 (Stable)**
+**Kraj dokumenta IS-001 v1.0.5 (Stable)**

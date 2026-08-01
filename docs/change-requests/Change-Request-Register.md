@@ -3,7 +3,7 @@
 ## Modul: Kalendar kulture
 
 **Status dokumenta:** AKTIVAN
-**Verzija:** 0.6
+**Verzija:** 0.7
 
 ---
 
@@ -56,7 +56,7 @@ Svaki odobreni poslovni zahtjev koji zahtijeva izmjenu implementacije mora biti 
 | CR-001 | IS-001 Faza 1 — Usklađenje postojećeg javnog UI | FS-001 → §5.1–§5.3, BR-261–BR-264 | Medium | UI, Backend | Implemented |
 | CR-002 | IS-001 Faza 2 — Mjesečni filter i klik treće statistike | FS-001 → §5.2 / BR-263; TS-009 §3.2 | Medium | UI, Backend | Implemented |
 | CR-003 | IS-001 Faza 2 — Filteri Pretrage i pregleda (`q` / `category` / `location`) | FS-001 → BR-257 / BR-107–108; TS-009 §3.3 | Medium | UI, Backend | Implemented |
-| CR-004A | IS-001 Faza 3 — Javni status badge (Predstoji / U toku / Završen / Otkazan) | FS-001 → BR-114; TS-009 §7.1; PO-CR4A-01…04 | Medium | UI, Backend | Planned |
+| CR-004A | IS-001 Faza 3 — Javni status badge (Predstoji / U toku / Završen / Otkazan) | FS-001 → BR-114; TS-009 §7.1; PO-CR4A-01…05 | Medium | UI, Backend | Implemented |
 
 ---
 
@@ -215,7 +215,7 @@ IS-001 Faza 3 — Javni status badge (Predstoji / U toku / Završen / Otkazan).
 
 ### Referenca
 
-FS-001 → BR-114; BM-PK-13; TS-009 §7.1; IS-001 §9.3 / §9.3.1; PO-CR4A-01 … PO-CR4A-04.
+FS-001 → BR-114; BM-PK-13; TS-009 §7.1; IS-001 §9.3 / §9.3.1; PO-CR4A-01 … PO-CR4A-05.
 
 ### Opis
 
@@ -228,9 +228,10 @@ Na javnom portalu uvesti jedinstveni status badge događaja:
 * Predstoji / U toku / Završen = izračunata stanja (ne statusi baze), prema pravilima PO-CR4A-03 (`datum_od` / `datum_do` / `vrijeme` / `vrijeme_do`; vremenska zona aplikacije);
 * prikaz na: Početna, Pretraga i pregled, Arhiva događaja, Detalji događaja (PO-CR4A-02);
 * kartice: badge u gornjem desnom uglu fotografije; Detalji: ispod naslova (PO-CR4A-04);
-* jedinstven tekst, badge i logika na svim prikazima.
+* jedinstven tekst, badge i logika na svim prikazima;
+* ako se status ne može pouzdano odrediti, badge se ne prikazuje (PO-CR4A-05).
 
-**Van obuhvata:** novi statusi baze; migracije; Odgođen kao status Događaja; Održavanja / Oznake / Manifestacije UI; izmjena kriterijuma Arhive (BM-DG-04); redizajn van PO-CR4A-04.
+**Van obuhvata:** novi statusi baze; migracije; Odgođen kao status Događaja; Održavanja / Oznake / Manifestacije UI; izmjena kriterijuma Arhive (BM-DG-04); redizajn van PO-CR4A-04; proširenje javne dostupnosti `cancelled` / `archived` (nije dio CR-004A).
 
 ### Razlog
 
@@ -247,7 +248,21 @@ Medium
 
 ### Status
 
-**Planned**
+**Implemented** (2026-08-01).
+
+### Implementacija
+
+* Dokumentaciona priprema: `614706c` (`docs: prepare CR-004A public event status badges`).
+* Implementacija: `0f73240` (`feat(cultural-calendar): implement CR-004A public status badges`).
+* Testovi: `65 passed (266 assertions)` (`CulturalEventPublicStatusTest` + `CulturalCalendarCr004APublicStatusTest` + regresija CR-001/CR-002/CR-003).
+* Datum statusnog usklađenja: 2026-08-01.
+* Isporuka:
+  * metoda `CulturalEvent::publicStatus()` (ključ / labela / CSS klasa; `null` kada status nije pouzdan — PO-CR4A-05);
+  * zajednički Blade partial `cultural-calendar/partials/public-status-badge.blade.php`;
+  * badge na Početnoj (istaknuti / naredni / događaji dana), Pretrazi i pregledu, Arhivi i Detaljima;
+  * Unit i Feature testovi;
+  * bez migracija i bez izmjene šeme baze;
+  * bez izmjene javne dostupnosti statusa kroz query-je i rute (`published` ostaje ulazni skup).
 
 ---
 
@@ -295,3 +310,4 @@ Ovaj model omogućava da se za svaku funkcionalnost može utvrditi:
 | 2026-08-01 | Evidentiran CR-003 (Planned): filteri `q`/`category`/`location` na Pretrazi i pregledu; PO-CR3-01…08; TS-009 §3.3; IS-001 §9.2.1. Verzija registra 0.4. |
 | 2026-08-01 | CR-003 status → Implemented (dokumentacija `fc35132`; implementacija `595045a`). Testovi 41/194. Bez migracija/ruta/modela. Verzija registra 0.5. |
 | 2026-08-01 | Evidentiran CR-004A (Planned): javni status badge Predstoji / U toku / Završen / Otkazan; PO-CR4A-01…04; TS-009 §7.1; IS-001 §9.3.1. Verzija registra 0.6. |
+| 2026-08-01 | CR-004A status → Implemented (dokumentacija `614706c`; implementacija `0f73240`). Testovi 65/266. Bez migracija/ruta/izmjene šeme. Verzija registra 0.7. |

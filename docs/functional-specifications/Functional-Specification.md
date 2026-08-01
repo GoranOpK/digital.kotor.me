@@ -69,6 +69,7 @@
 | doc-CR-003 | 2026-08-01 | Dokumentaciona napomena uz BR-257: CR-003 Planned (filteri `q`/`category`/`location`; TS-009 §3.3; IS-001 §9.2.1; PO-CR3-01…08). Bez novih BR. Bez izmjene funkcionalnih pravila. Verzija ostaje 1.0.0. |
 | doc-CR-003-impl | 2026-08-01 | Statusno usklađenje napomene uz BR-257: CR-003 Implemented (`595045a`; dokumentacija `fc35132`). Bez novih BR. Bez izmjene funkcionalnih pravila. Verzija ostaje 1.0.0. |
 | doc-CR-004A | 2026-08-01 | Dokumentaciona napomena uz BR-114: CR-004A Planned (javni status badge; TS-009 §7.1; IS-001 §9.3.1; PO-CR4A-01…04). Bez novih BR. Bez izmjene funkcionalnih pravila. Verzija ostaje 1.0.0. |
+| doc-CR-004A-impl | 2026-08-01 | Statusno usklađenje napomene uz BR-114: CR-004A Implemented (implementacija `0f73240`; dokumentaciona priprema `614706c`). Bez novih BR. Bez izmjene funkcionalnih pravila. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -2855,7 +2856,7 @@ Javni portal omogućava prikaz otkazanih i arhiviranih događaja u skladu sa pos
 
 Status otkazanog ili arhiviranog događaja mora biti jasno prikazan korisniku.
 
-> **Napomena (doc-CR-004A):** CR-004A (IS-001 Faza 3; Planned) dokumentuje javni status badge (Predstoji / U toku / Završen / Otkazan) u **TS-009 §7.1** i **IS-001 §9.3.1** (PO-CR4A-01…04). Interni statusi (`draft` / Na odobrenju / `published` / `archived`) ne prikazuju se građanima kao labela; `cancelled` → **Otkazan** (prioritet). Predstoji / U toku / Završen su izračunata javna stanja, ne statusi baze. **Odgođen** ostaje status Održavanja, ne Događaja. Bez izmjene teksta BR-114 i bez novih BR identifikatora.
+> **Napomena (doc-CR-004A-impl):** CR-004A (IS-001 Faza 3; Implemented — implementacija `0f73240`; dokumentaciona priprema `614706c`) dokumentuje javni status badge (Predstoji / U toku / Završen / Otkazan) u **TS-009 §7.1** i **IS-001 §9.3.1** (PO-CR4A-01…05). Interni statusi (`draft` / Na odobrenju / `published` / `archived`) ne prikazuju se građanima kao labela; `cancelled` → **Otkazan** (prioritet). Predstoji / U toku / Završen su izračunata javna stanja, ne statusi baze. **Odgođen** ostaje status Održavanja, ne Događaja. Bez izmjene teksta BR-114 i bez novih BR identifikatora.
 
 ---
 
@@ -4036,3 +4037,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-01 | FS-001 BR-257 napomena (doc-CR-003): CR-003 Planned (`q`/`category`/`location`; TS-009 §3.3). Bez novih BR. Verzija ostaje 1.0.0. |
 | 2026-08-01 | FS-001 BR-257 napomena (doc-CR-003-impl): CR-003 Implemented (`595045a`). Statusno usklađenje bez izmjene BR/funkcionalnih pravila. Verzija ostaje 1.0.0. |
 | 2026-08-01 | FS-001 BR-114 napomena (doc-CR-004A): CR-004A Planned (javni status badge; TS-009 §7.1; PO-CR4A-01…04). Bez novih BR. Verzija ostaje 1.0.0. |
+| 2026-08-01 | FS-001 BR-114 napomena (doc-CR-004A-impl): CR-004A Implemented (`0f73240`; dokumentacija `614706c`). Statusno usklađenje bez izmjene BR/funkcionalnih pravila. Verzija ostaje 1.0.0. |
