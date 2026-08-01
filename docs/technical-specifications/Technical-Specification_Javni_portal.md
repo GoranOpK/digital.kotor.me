@@ -6,8 +6,8 @@
 **Oznaka dokumenta:** TS-009  
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
-**Status dokumenta:** Stable  
-**Verzija:** 1.0.1  
+**Status dokumenta:** Stable
+**Verzija:** 1.0.2
 **Datum:** 2026-08-01
 
 ---
@@ -22,6 +22,7 @@
 | 0.5.0 | 2026-07-31 | Final Review: završna dokumentaciona revizija (sljedivost, terminologija, granice TS-003/004/005, baseline sekcije Detalji događaja i Arhiva događaja bez novih PO). Faze 1–3 neizmijenjene. Nije v1.0.0. Bez izmjene implementacije. |
 | 1.0.0 | 2026-07-31 | Stable release. Objavljena stabilna verzija TS-009. Bez izmjene poslovnih, funkcionalnih ili tehničkih pravila. Bez izmjene implementacije. |
 | 1.0.1 | 2026-08-01 | CR-002 / IS-001 Faza 2: URL ugovor `month=YYYY-MM`; klik treće statističke kartice; prioritet filtera date → week → month; isti skup podataka kartica/lista; nevalidan `month` se ignoriše. Bez izmjene implementacije. |
+| 1.0.2 | 2026-08-01 | CR-003 / IS-001 Faza 2: URL ugovor `q`, `category`, `location` (PO-CR3-01…08); filter zona; AND sa datumskim mehanizmom; aktivni filteri i reset. Bez izmjene implementacije. |
 
 ---
 
@@ -43,6 +44,7 @@ Izvori istine:
 * usvojene odluke faze 1: IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B, TD-TS9-01
 * usvojene odluke faze 2: PO-TS9-06A, PO-TS9-06B, PO-TS9-06C, PO-TS9-06D
 * usvojene odluke faze 3: PO-TS9-07A, PO-TS9-07B, PO-TS9-07C, PO-TS9-07D, PO-TS9-07E
+* usvojene odluke CR-003: PO-CR3-01 … PO-CR3-08 (filteri Pretrage i pregleda: `q`, `category`, `location`)
 * granice entiteta: TS-005 (Manifestacija), TS-003 (Događaj), TS-004 (Održavanje) — TS-009 ne duplicira njihova poslovna pravila
 * `docs/features/Feature-Registry.md`
 * `docs/METHODOLOGY.md`
@@ -283,6 +285,120 @@ Mjesečni kontekst prikazuje se kao aktivni filter ili podnaslov, npr.:
 **Izabrani mjesec: Avgust 2026**
 
 (lokalizovani naziv mjeseca + godina).
+
+---
+
+## 3.3 URL ugovor i filter zona — ne-datumski filteri (CR-003)
+
+| Odluke | PO-CR3-01 … PO-CR3-08 |
+|--------|------------------------|
+| BM | BM-PK-06, BM-PK-07, BM-PK-18 |
+| FS | BR-107, BR-108, BR-257 |
+| IS | IS-001 Faza 2 / CR-003 |
+
+Dokumentuje implementacioni ugovor za tekstualnu pretragu, kategoriju i lokaciju na stranici „Pretraga i pregled“, u granicama **postojećeg** modela događaja. **Bez** filtera Manifestacije (Faza 5) i **bez** Oznaka (Faza 4+).
+
+### 3.3.1 Query parametri (PO-CR3-01)
+
+Ruta ostaje `cultural-calendar.events` (`GET /kalendar-kulture/pregled-dogadjaja`).
+
+| Parametar | Format | Obavezan | Semantika |
+|-----------|--------|----------|-----------|
+| `q` | string (tekst) | ne | Tekstualna pretraga |
+| `category` | tačna vrijednost iz `CulturalEvent::CATEGORIES` | ne | Filter po kategoriji |
+| `location` | tačna nenull/neprazna lokacija iz objavljenih događaja | ne | Filter po lokaciji |
+
+Postojeći datumski parametri (`date`, `week_start`, `week_end`, `month`) ostaju kako u §3.2.
+
+### 3.3.2 Tekstualna pretraga `q` (PO-CR3-02)
+
+Pretražuje (case-insensitive, djelimično poklapanje u granicama implementacije):
+
+* `naslov`
+* `opis`
+* `lokacija`
+
+**Ne** pretražuje: `kategorija`, `status`, datume, vrijeme, `featured`, Manifestacije, Oznake, medijske tagove, interne identifikatore.
+
+Prazan ili nedostajući `q` ne primjenjuje tekstualni filter.
+
+### 3.3.3 Kategorija `category` (PO-CR3-03)
+
+* UI: **dropdown** (nema slobodnog unosa).
+* Izvor opcija: `CulturalEvent::CATEGORIES`.
+* Vrijednost u URL-u mora odgovarati jednoj od dozvoljenih kategorija; nevalidna vrijednost se **ignoriše** (bez HTTP greške; bez aktivnog filtera kategorije).
+
+### 3.3.4 Lokacija `location` (PO-CR3-04)
+
+* UI: **dropdown** (nema slobodnog unosa).
+* Izvor opcija: **jedinstvene** vrijednosti `lokacija` među **objavljenim** događajima.
+* Sortiranje opcija: A–Z.
+* Isključuju se `NULL` i prazne vrijednosti.
+* Nevalidna / nepostojeća vrijednost se **ignoriše** (bez HTTP greške).
+
+### 3.3.5 Filter logika i kombinovanje (PO-CR3-05)
+
+**Datumski mehanizmi** (isti prioritet kao §3.2; istovremeno aktivan **samo jedan**):
+
+1. `date`
+2. `week_start` + `week_end`
+3. `month`
+4. default (standardni prikaz bez aktivnog datumskog filtera)
+
+**Ne-datumski filteri** `q`, `category`, `location`:
+
+* kombinuju se međusobno **AND** logikom;
+* kombinuju se **AND** sa aktivnim datumskim mehanizmom (ili default skupom).
+
+Datumski mehanizmi se **međusobno ne kombinuju** (§3.2).
+
+### 3.3.6 Filter zona UI (PO-CR3-07)
+
+Na stranici „Pretraga i pregled“ filter zona sadrži:
+
+* polje teksta (`q`);
+* dropdown kategorije (`category`);
+* dropdown lokacije (`location`);
+* dugme **Pretraži**.
+
+Pravila:
+
+* **GET** forma;
+* bez AJAX-a;
+* bez automatskog submit-a pri promjeni polja;
+* Enter u tekstualnom polju = Pretraži;
+* **datumski filteri ne ulaze** u filter zonu (ostaju ulazi sa početne / URL, §3.2).
+
+Filter zona je uvijek vidljiva (PO-TS9-04A / BM-PK-18).
+
+### 3.3.7 Aktivni filteri i reset (PO-CR3-06)
+
+* Prikazuju se aktivni filteri (uključujući ne-datumske; datumski kontekst ostaje kako je već usvojeno — npr. podnaslov mjeseca / naslov za dan/sedmicu).
+* Svaki aktivni filter ima kontrolu **×** koja uklanja **samo taj** filter (ostali query parametri ostaju).
+* Postoji akcija **„Poništi sve filtere“** koja vodi na:
+
+`/kalendar-kulture/pregled-dogadjaja`
+
+(bez query parametara).
+
+### 3.3.8 State persistence (PO-CR3-08)
+
+* Forma **uvijek** prikazuje trenutno stanje URL-a (popunjena polja = aktivni query).
+* Filteri ostaju popunjeni nakon: pretrage, paginacije (`withQueryString`), povratka (`back`) sa Detalja događaja, i ponovnog otvaranja liste sa sačuvanim URI-jem.
+
+### 3.3.9 Responsive i pristupačnost
+
+* Filter zona mora biti upotrebljiva na mobilnom i desktop prikazu unutar postojećeg `kk-shell` layouta.
+* Kontrole moraju imati odgovarajuće labele; tipkovnički tok: fokus polja → Enter / Pretraži; × i „Poništi sve filtere“ dostupni bez miša.
+* Bez uvođenja novog ekrana ili redizajna portala (IA-01).
+
+### 3.3.10 Van obuhvata CR-003
+
+* Filter Manifestacije;
+* Oznake;
+* nove rute, migracije, izmjene modela / ENUM-a;
+* AJAX / live search;
+* slobodni unos kategorije ili lokacije.
 
 ---
 
@@ -540,7 +656,7 @@ Sljedeća poglavlja ostaju za naredne faze TS-009 (tehnička dubina, ne nova pos
 |---------------|----|----|--------|
 | IA-01 | BM-PK-16, BM-AR-02 | BR-255 | §2.1 |
 | PO-TS9-03A | BM-PK-17 | BR-256 | §2.3 |
-| PO-TS9-04A | BM-PK-18 | BR-257 | §3, §3.2 |
+| PO-TS9-04A | BM-PK-18 | BR-257 | §3, §3.2, §3.3 |
 | PO-TS9-05A | BM-PK-19 | BR-258 | §2.2 |
 | PO-TS9-05B | BM-PK-20 | BR-259 | §2.4 |
 | TD-TS9-01 | — (tehnička) | BR-260 | §4 |
@@ -548,6 +664,8 @@ Sljedeća poglavlja ostaju za naredne faze TS-009 (tehnička dubina, ne nova pos
 | PO-TS9-06B | BM-PK-15 | BR-117, BR-262 | §5.2 |
 | PO-TS9-06C | BM-PK-22 | BR-263, §5.2 | §5.3, §3.2 |
 | CR-002 (`month`) | BM-PK-22 | BR-263 | §3.2, §5.3 |
+| CR-003 (`q` / `category` / `location`) | BM-PK-06, BM-PK-07, BM-PK-18 | BR-107, BR-108, BR-257 | §3.3 |
+| PO-CR3-01 … PO-CR3-08 | BM-PK-18 (granice postojećeg modela) | BR-257 | §3.3 |
 | PO-TS9-06D | BM-PK-23 | BR-264, §5.3 | §5.4 |
 | PO-TS9-07A | BM-PK-24 | BR-265 | §6.1 |
 | PO-TS9-07B | BM-PK-25 | BR-266 | §6.2 |
@@ -568,10 +686,11 @@ Granice (bez dupliciranja u TS-009): lifecycle Događaja → TS-003; Održavanje
 * Verzije do v1.0.0 (uključujući) su **dokumentacione**; ne mijenja se kod u okviru tih verzija. Od v1.0.1 CR-002 dokumentuje ugovor za implementaciju (IS-001 Faza 2); kod se ne mijenja u dokumentacionom koraku.
 * Pri budućoj implementaciji: poštovati IA-01 (minimalne izmjene postojećeg portala).
 * Rename navigacionog labela „Pregled događaja“ → „Pretraga i pregled“ (PO-TS9-03A) — isporučeno u CR-001.
-* Filteri (PO-TS9-04A) pripadaju stranici Pretraga i pregled; datumski ulazi sa statistika: §3.2 / CR-002 (`month=YYYY-MM`).
+* Filteri (PO-TS9-04A) pripadaju stranici Pretraga i pregled; datumski ulazi sa statistika: §3.2 / CR-002 (`month=YYYY-MM`); ne-datumski filteri: §3.3 / CR-003 (`q`, `category`, `location`).
 * Internu podršku dan-view toka ne tretirati kao javni ekran u IA (TD-TS9-01).
 * CR-001 (IS-001 Faza 1): terminologija; Hero; istaknuti max 3 + neutralno prazno; Danas/Ove sedmice klikabilne; label mjeseca; naredni max 3; „Prikaži sve događaje“.
 * CR-002 (IS-001 Faza 2): treća kartica klikabilna sa `month`; isti skup kartica/lista; prioritet filtera; podnaslov „Izabrani mjesec: …“.
+* CR-003 (IS-001 Faza 2): filter zona `q` / `category` / `location`; AND sa datumskim mehanizmom; aktivni filteri (×); „Poništi sve filtere“; GET forma; state persistence (PO-CR3-01…08).
 * Faza 3 CR/impl: navigacija Manifestacije; lista; Detalji manifestacije; program; blok veze na Detaljima događaja.
 * Detalji događaja / Arhiva događaja: uskladiti prikaz sa BM-PK-05/13 i BR-106/114; ne uvoditi paralelna lifecycle pravila.
 * Ne duplicirati TS-003 / TS-004 / TS-005 u portalskom sloju.

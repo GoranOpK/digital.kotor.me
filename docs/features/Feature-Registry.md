@@ -144,6 +144,11 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **IA-01:** Evolutivni razvoj javnog portala; bez redizajna; zadržavanje postojeće strukture i tokova uz minimalne neophodne izmjene.
 - **PO-TS9-03A:** Stranica „Pregled događaja“ → „Pretraga i pregled“; centralno mjesto za pretragu i pregled.
 - **PO-TS9-04A:** Filteri (datum, kategorija, lokacija, manifestacija) sastavni dio „Pretrage i pregleda“; uvijek vidljivi; kombinovanje; „Poništi filtere“; stanje u URL-u.
+
+**Usvojene product odluke (CR-003 — filteri Pretrage i pregleda):**
+- **PO-CR3-01…08:** URL `q`/`category`/`location`; pretraga naslov/opis/lokacija; dropdown kategorije (`CATEGORIES`) i lokacije (distinct objavljenih); AND sa jednim datumskim mehanizmom; aktivni filteri (×); „Poništi sve filtere“; GET filter zona; state persistence. Referenca: TS-009 §3.3.
+
+**Usvojene product / IA odluke (nastavak):**
 - **PO-TS9-05A:** Zadržavaju se postojeći prikazi; ne uvode se novi ekrani.
 - **PO-TS9-05B:** „Pretraga i pregled“ = samo lista; mjesečni kalendar samo na početnoj.
 - **TD-TS9-01:** Ruta `cultural-calendar.day` nije dio referentne IA javnog portala; interna tehnička podrška admin toku.
@@ -203,9 +208,9 @@ Povezana dokumentacija (Javni portal):
 
 * Business Model — BM-11 (BM-PK-01–BM-PK-28), BM-AR-02, PATCH-045–PATCH-048; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E
 * Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-269), PATCH-FS-047–PATCH-FS-049
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 1.0.1; Stable; TD-TS9-01; CR-002 §3.2)
-* Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija 1.0.1; Stable)
-* Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Implemented, IS-001 Faza 2 — `month=YYYY-MM`, klik treće statistike; commit `c5d396f`; TS-009 v1.0.1; IS-001 v1.0.1)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 1.0.2; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3)
+* Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija 1.0.2; Stable)
+* Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Implemented, IS-001 Faza 2 — `month=YYYY-MM`; commit `c5d396f`); CR-003 (Planned, IS-001 Faza 2 — `q`/`category`/`location`; PO-CR3-01…08; TS-009 v1.0.2; IS-001 v1.0.2)
 
 Povezana dokumentacija (Newsletter):
 
@@ -225,7 +230,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
-| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.1) |
+| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.2) |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
@@ -431,3 +436,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-07-31 | FT-001 — TS-009 Stable v1.0.0: objavljena stabilna verzija specifikacije javnog portala. Bez izmjene poslovnih/funkcionalnih/tehničkih pravila. Bez izmjene implementacije. |
 | 2026-08-01 | FT-001 — CR-001 Implemented (IS-001 Faza 1 UI). CR-002 Planned (IS-001 Faza 2: `month=YYYY-MM`, klik treće statistike). TS-009 v1.0.1 + IS-001 v1.0.1 usklađeni dokumentaciono. Bez izmjene implementacije. |
 | 2026-08-01 | FT-001 — CR-002 Implemented (IS-001 Faza 2 mjesečni filter). Commit `c5d396f`. Referenca: TS-009 v1.0.1, IS-001 v1.0.1. Bez izmjene FT identifikatora / funkcionalnog obuhvata. |
+| 2026-08-01 | FT-001 — CR-003 Planned (IS-001 Faza 2: `q`/`category`/`location`; PO-CR3-01…08). TS-009 v1.0.2 + IS-001 v1.0.2 usklađeni dokumentaciono. Bez izmjene implementacije. |

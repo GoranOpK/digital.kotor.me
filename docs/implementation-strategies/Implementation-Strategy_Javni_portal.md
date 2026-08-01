@@ -6,9 +6,9 @@
 **Naziv:** Implementaciona strategija javnog portala  
 **Feature ID:** FT-001  
 **Modul:** Kalendar kulture  
-**Referentna specifikacija:** TS-009 v1.0.1 Stable  
-**Status dokumenta:** Stable  
-**Verzija:** 1.0.1  
+**Referentna specifikacija:** TS-009 v1.0.2 Stable
+**Status dokumenta:** Stable
+**Verzija:** 1.0.2
 **Datum:** 2026-08-01
 
 ---
@@ -20,7 +20,7 @@
 | Oznaka | IS-001 |
 | Naziv | Implementaciona strategija javnog portala |
 | Tip | Operativni planski dokument |
-| Referenca | TS-009 v1.0.1 Stable |
+| Referenca | TS-009 v1.0.2 Stable |
 | Usvojene odluke | IS-001-01 … IS-001-08 |
 
 ### IS-001-01 — Identitet dokumenta
@@ -35,7 +35,7 @@ IS-001 je operativni planski dokument koji definiše:
 * strategiju deploy-a;
 * strategiju rollback-a;
 
-za implementaciju **TS-009 v1.0.1**, bez mijenjanja usvojenih poslovnih, funkcionalnih i tehničkih pravila.
+za implementaciju **TS-009 v1.0.2**, bez mijenjanja usvojenih poslovnih, funkcionalnih i tehničkih pravila.
 
 IS-001:
 
@@ -161,12 +161,13 @@ Detaljna matrica odstupanja: §7.
 | IA-01 evolutivni okvir | djelimično | — | — | sve |
 | Rename → Pretraga i pregled | ne (UI) | da | ne | 1 |
 | Filteri (datum, kategorija, lokacija) | djelimično | da | djelimično | 2 |
-| Mjesečni filter `month` + klik treće statistike (CR-002) | ne | da | ne | **2** |
+| Mjesečni filter `month` + klik treće statistike (CR-002) | da (CR-002) | — | ne | **2** |
+| Filteri `q` / `category` / `location` + filter UI (CR-003) | ne | da | djelimično | **2** |
 | Filter Manifestacija | ne | — | da | 5 (nakon 4) |
 | Hero | da | provjera | ne | 1 |
 | Istaknuti (max 3, prazno) | da (CR-001) | — | ne | 1 |
 | Statistike Danas / Ove sedmice (klik) | da (CR-001) | — | ne | 1 |
-| Statistike Izabrani mjesec (klik + `month`) | ne | da | ne | **2** |
+| Statistike Izabrani mjesec (klik + `month`) | da (CR-002) | — | ne | **2** |
 | Lista ispod kalendara (max 3, „Prikaži sve“) | da (CR-001) | — | ne | 1 |
 | Detalji događaja — baseline (postojeći model) | djelimično | da | ne | **3** |
 | Detalji događaja — puni domen (Održavanja, Oznake, …) | ne | da | djelimično | **6** (nakon 4) |
@@ -246,16 +247,31 @@ Faza 6 (Završno usklađenje)
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Centralna Pretraga i pregled sa filterima i URL stanjem (PO-TS9-04A), uključujući CR-002 mjesečni filter sa statistika; bez filtera Manifestacije |
-| **Obuhvat** | Pretraga; filteri (datum, kategorija, lokacija — u granicama postojećeg modela); URL stanje; očuvanje konteksta; paginacija; sortiranje po usvojenim pravilima; „Poništi filtere“; **CR-002:** klik treće statističke kartice → `month=YYYY-MM`; prioritet filtera `date` → `week_*` → `month` (bez kombinovanja); isti skup broja kartice i liste (preklapanje sa mjesecom, bez „samo od danas“); podnaslov „Izabrani mjesec: …“; nevalidan `month` se ignoriše |
-| **Zavisnosti** | Preferira Fazu 1 (CR-001 završen). Filter Manifestacije **nije** u ovoj fazi |
+| **Cilj** | Centralna Pretraga i pregled sa filterima i URL stanjem (PO-TS9-04A), uključujući CR-002 mjesečni filter i CR-003 ne-datumske filtere; bez filtera Manifestacije |
+| **Obuhvat** | Pretraga; filteri (datum, kategorija, lokacija — u granicama postojećeg modela); URL stanje; očuvanje konteksta; paginacija; sortiranje po usvojenim pravilima; „Poništi filtere“; **CR-002 (Implemented):** `month` + treća kartica; **CR-003 (Planned):** `q` / `category` / `location`, filter zona, aktivni filteri, reset (PO-CR3-01…08 / TS-009 §3.3) |
+| **Zavisnosti** | Preferira Fazu 1 (CR-001 završen). CR-002 završen. Filter Manifestacije **nije** u ovoj fazi |
 | **Rizik** | **Srednji** |
-| **Uticaj na kod** | Sloj kontrolera (`events` upiti + `month`); prikaz Pretrage i pregleda (podnaslov/aktivni filter); početna (link treće kartice); rute: bez novih; stilovi: malo; baza: ne; testovi: da |
-| **Ulaz** | Faza 1 završena; TS-009 v1.0.1 (§3.2); CR-002 usvojen; plan test/rollback |
-| **Izlaz** | Filteri + URL u skladu sa BM-PK-18 / BR-257 / TS-009 §3.2; treća kartica klikabilna; regresija liste OK; PO potvrda |
-| **Test** | Kombinovanje/prioritet `date` / `week_*` / `month` (ne istovremeno); prazni rezultati; paginacija + query string; poništi; ulaz sa statistika / „Prikaži sve događaje“; **CR-002:** `month` link sa treće kartice; broj kartice = broj rezultata liste; nevalidan `month` → standardna stranica; naslov „Pretraga i pregled“ + podnaslov mjeseca |
-| **Deploy** | Bez migracije; bez MW; feature flag opciono ako treba postepeno uključivanje filter UI; smoke: Pretraga i pregled + linkovi sa početne (uključujući treću karticu) |
-| **Rollback** | **Potpuni** ili **djelimični** (UI filtera / `month`) — bez migracije |
+| **Uticaj na kod** | Sloj kontrolera (`events` upiti); prikaz Pretrage i pregleda (filter zona / aktivni filteri); početna (linkovi statistika — CR-002); rute: bez novih; stilovi: malo; baza: ne; testovi: da |
+| **Ulaz** | Faza 1 i CR-002 završeni; TS-009 v1.0.2 (§3.2–§3.3); CR-003 usvojen dokumentaciono; plan test/rollback |
+| **Izlaz** | Filteri + URL u skladu sa BM-PK-18 / BR-257 / TS-009 §3.2–§3.3; regresija CR-001/CR-002 OK; PO potvrda |
+| **Test** | Prioritet `date` / `week_*` / `month`; AND `q`/`category`/`location`; prazni rezultati; paginacija + query string; aktivni filteri (×); „Poništi sve filtere“; ulazi sa statistika; state persistence / `back` |
+| **Deploy** | Bez migracije; bez MW; feature flag opciono; smoke: Pretraga i pregled + linkovi sa početne |
+| **Rollback** | **Potpuni** ili **djelimični** (UI filtera) — bez migracije |
+
+### 9.2.1 CR-003 — Filteri `q` / `category` / `location` (implementacioni paket)
+
+| Stavka | Opis |
+|--------|------|
+| **Cilj** | Isporuka ne-datumskih filtera na „Pretrazi i pregledu“ prema TS-009 §3.3 i PO-CR3-01…08 |
+| **Obuhvat** | GET filter zona (tekst, dropdown kategorije, dropdown lokacije, Pretraži); query `q`/`category`/`location`; AND sa aktivnim datumskim mehanizmom; aktivni filteri sa ×; „Poništi sve filtere“ → čist URL; state persistence kroz paginaciju i `back` |
+| **Controller** | Proširiti `CulturalCalendarController::events` — parsiranje/validacija `q`/`category`/`location`; primjena AND filtera na postojeći query; izvor dropdown lokacija = distinct objavljenih `lokacija`; kategorije = `CulturalEvent::CATEGORIES`; bez novih ruta |
+| **View** | `resources/views/cultural-calendar/events.blade.php` — filter zona ispod headera; prikaz aktivnih filtera; zadržati postojeći list/paginaciju/prazno stanje; datumski filteri **ne** u filter zoni |
+| **URL** | Postojeća ruta `cultural-calendar.events`; parametri §3.3; paginacija `withQueryString()` |
+| **Van obuhvata** | Manifestacija; Oznake; migracije; izmjene modela; nove rute; AJAX |
+| **Test** | `q` po naslov/opis/lokacija (ne po kategoriji/statusu/…); category dropdown + validacija; location distinct A–Z; AND kombinacije sa `date`/`week_*`/`month`; × uklanja jedan parametar; Poništi sve; paginacija čuva parametre; `back` čuva URI; regresija CR-001/CR-002 |
+| **Regresija** | Ulazi sa početne (Danas / Ove sedmice / mjesec / Prikaži sve); prioritet datumskih mehanizama; naslov/podnaslov; Arhiva i Detalji neregresirani |
+| **Rizik** | **Srednji** |
+| **Deploy / Rollback** | Bez migracije; potpuni ili djelimični revert UI/query — bez undo baze |
 
 ---
 
@@ -483,13 +499,13 @@ Ne dozvoljavaju se nevidljive ili nedokumentovane izmjene stabilne specifikacije
 | IS-001 | TS-009 / odluke | BM / FS (referenca) |
 |--------|-----------------|---------------------|
 | Faza 1 | IA-01; PO-TS9-03A (label); PO-TS9-05A/05B (provjera); PO-TS9-06A–06D; TD-TS9-01 | BM-PK-15, BM-PK-16, BM-PK-19–23; BR-117, BR-255, BR-258–264; §5.1–§5.3 |
-| Faza 2 | PO-TS9-03A; PO-TS9-04A; **CR-002** (`month`, treća kartica) | BM-PK-17–18, BM-PK-22 (takođe BM-PK-06–07); BR-256–257, BR-263 (takođe BR-107–108); TS-009 §3.2 |
+| Faza 2 | PO-TS9-03A; PO-TS9-04A; **CR-002** (`month`); **CR-003** (`q`/`category`/`location`, PO-CR3-01…08) | BM-PK-17–18, BM-PK-22 (takođe BM-PK-06–07); BR-256–257, BR-263 (takođe BR-107–108); TS-009 §3.2–§3.3 |
 | Faza 3 | TS-009 §7–§8 **baseline** (postojeći model) | BM-PK-05 (djelimično), BM-PK-13 (djelimično — prikaz); BR-106, BR-114. **Ne:** BM-PK-09/11 (Održavanja/Oznake) |
 | Faza 4 | Granice domena (nije portal UI) | TS-003/004/005/007/008; BM-04/05/06/08/09; odgovarajući BR u FS §5.5–5.12 |
 | Faza 5 | PO-TS9-07A–07E; TS-009 §6 | BM-PK-24–28; BM-MF-13; BR-265–269, BR-192 |
 | Faza 6 | TS-009 §7–§8 **puni** obuhvat nakon domena | BM-PK-05, BM-PK-09–14; BR-106, BR-110–115; §5.4 |
 | IS-001-02 | IA-01 | BM-PK-16; BR-255 |
-| IS-001-08 | TS-009 v1.0.1 Stable | — |
+| IS-001-08 | TS-009 v1.0.2 Stable | — |
 
 | Usvojena odluka | Primarne sekcije IS-001 |
 |-----------------|-------------------------|
@@ -533,7 +549,8 @@ Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehni�
 | 0.5.0 | 2026-07-31 | Final Review. Terminologija Oznake ≠ Tagovi; razgraničenje Faze 3 / Faze 6; precizirana sljedivost BM/FS/TS; usklađeni test/deploy nazivi; smanjena otvorena pitanja. Bez novih PO odluka. Bez izmjene BM/FS/TS/implementacije. |
 | 1.0.0 | 2026-07-31 | Stable. Dokument je prošao Final Review i predstavlja referentnu implementacionu strategiju za implementaciju TS-009 v1.0.0. Bez izmjene sadržaja faza, rizika, deploy/rollback strategije, sljedivosti ili otvorenih pitanja. Bez izmjene BM/FS/TS/implementacije. |
 | 1.0.1 | 2026-08-01 | CR-002: Faza 2 dopunjena mjesečnim filterom (`month=YYYY-MM`), klikom treće statističke kartice, prioritetom filtera, usklađenošću broja/liste i testovima. Referenca TS-009 v1.0.1. Faza 1 neizmijenjena. Bez izmjene implementacije. |
+| 1.0.2 | 2026-08-01 | CR-003: Faza 2 dopunjena implementacionim paketom §9.2.1 (`q`/`category`/`location`, filter zona, AND, aktivni filteri, reset; PO-CR3-01…08). Referenca TS-009 v1.0.2. Bez izmjene implementacije. |
 
 ---
 
-**Kraj dokumenta IS-001 v1.0.1 (Stable)**
+**Kraj dokumenta IS-001 v1.0.2 (Stable)**

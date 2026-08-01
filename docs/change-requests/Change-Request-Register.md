@@ -3,7 +3,7 @@
 ## Modul: Kalendar kulture
 
 **Status dokumenta:** AKTIVAN
-**Verzija:** 0.3
+**Verzija:** 0.4
 
 ---
 
@@ -55,6 +55,7 @@ Svaki odobreni poslovni zahtjev koji zahtijeva izmjenu implementacije mora biti 
 | -- | ----- | ------------ | --------- | ---------------- | ------ |
 | CR-001 | IS-001 Faza 1 — Usklađenje postojećeg javnog UI | FS-001 → §5.1–§5.3, BR-261–BR-264 | Medium | UI, Backend | Implemented |
 | CR-002 | IS-001 Faza 2 — Mjesečni filter i klik treće statistike | FS-001 → §5.2 / BR-263; TS-009 §3.2 | Medium | UI, Backend | Implemented |
+| CR-003 | IS-001 Faza 2 — Filteri Pretrage i pregleda (`q` / `category` / `location`) | FS-001 → BR-257 / BR-107–108; TS-009 §3.3 | Medium | UI, Backend | Planned |
 
 ---
 
@@ -145,6 +146,50 @@ Medium
 
 ---
 
+# CR-003
+
+### Naziv
+
+IS-001 Faza 2 — Filteri na stranici „Pretraga i pregled“ (`q` / `category` / `location`).
+
+### Referenca
+
+FS-001 → BR-257, BR-107, BR-108; BM-PK-06, BM-PK-07, BM-PK-18; TS-009 §3.3; IS-001 §9.2.1; PO-CR3-01 … PO-CR3-08.
+
+### Opis
+
+Na postojećoj stranici „Pretraga i pregled“ (`cultural-calendar.events`) uvesti ne-datumske filtere u granicama postojećeg modela:
+
+* URL parametri: `q`, `category`, `location` (PO-CR3-01);
+* tekstualna pretraga `q` po `naslov`, `opis`, `lokacija` — ne po kategoriji/statusu/datumima/… (PO-CR3-02);
+* kategorija: dropdown iz `CulturalEvent::CATEGORIES` (PO-CR3-03);
+* lokacija: dropdown jedinstvenih objavljenih lokacija, A–Z, bez praznih (PO-CR3-04);
+* datumski prioritet neizmijenjen (`date` → `week_*` → `month` → default); ne-datumski AND sa aktivnim datumskim mehanizmom (PO-CR3-05);
+* aktivni filteri sa ×; „Poništi sve filtere“ → `/kalendar-kulture/pregled-dogadjaja` (PO-CR3-06);
+* filter zona: tekst, kategorija, lokacija, Pretraži — GET forma, bez AJAX/auto-submit; datumski filteri van zone (PO-CR3-07);
+* forma odražava URL; persistence kroz pretragu, paginaciju i `back` (PO-CR3-08).
+
+**Van obuhvata:** Manifestacija; Oznake; migracije; izmjene modela; nove rute; AJAX.
+
+### Razlog
+
+CR-002 zatvorio je mjesečni datumski ulaz. Preostali dio IS-001 Faze 2 / PO-TS9-04A (pretraga, kategorija, lokacija, filter UI, reset) zahtijeva usklađivanje implementacije sa usvojenim BM/FS/TS.
+
+### Prioritet
+
+Medium
+
+### Procjena uticaja
+
+* UI
+* Backend
+
+### Status
+
+**Planned** (dokumentacija usvojena; implementacija nije započeta).
+
+---
+
 # Sljedivost (Traceability)
 
 Za svaki Change Request treba biti moguće pratiti njegov životni ciklus kroz projektnu dokumentaciju.
@@ -186,3 +231,4 @@ Ovaj model omogućava da se za svaku funkcionalnost može utvrditi:
 | 2026-07-26 | Proširen Change Request Register novim kolonama. Dodata procjena uticaja (Impact). Uvedeno pravilo obavezne registracije Change Request-ova prije razvoja. Dodato poglavlje Sljedivost (Traceability). |
 | 2026-08-01 | CR-001 status → Implemented (IS-001 Faza 1). Evidentiran CR-002 (mjesečni filter / treća kartica; IS-001 Faza 2). Verzija registra 0.2. |
 | 2026-08-01 | CR-002 status → Implemented (commit `c5d396f`; dokumentacija `d01c6d0`). Mjesečni filter `month=YYYY-MM`; prioritet date → week → month; testovi 29/121. Bez migracija/ruta/modela. Verzija registra 0.3. |
+| 2026-08-01 | Evidentiran CR-003 (Planned): filteri `q`/`category`/`location` na Pretrazi i pregledu; PO-CR3-01…08; TS-009 §3.3; IS-001 §9.2.1. Verzija registra 0.4. |

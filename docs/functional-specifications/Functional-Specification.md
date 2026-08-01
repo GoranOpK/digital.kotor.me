@@ -66,6 +66,7 @@
 | 1.0.0 | 2026-08-01 | Stable. Functional Specification je uspješno prošao Final Review i predstavlja referentni funkcionalni dokument modula Kalendar kulture. Bez izmjene funkcionalnih pravila, numeracije, identifikatora ili sljedivosti. Bez izmjene BM/TS/IS/Feature Registry/RG-001/implementacije. |
 | doc-CR-002 | 2026-08-01 | Dokumentaciona napomena §5.2: CR-001 Implemented; preostala klikabilnost treće kartice / `month` → CR-002 (IS-001 Faza 2). Bez novih BR. Bez izmjene implementacije. |
 | doc-CR-002-impl | 2026-08-01 | Statusno usklađenje napomene §5.2: CR-002 Implemented (`c5d396f`; `month=YYYY-MM`). Bez novih BR. Bez izmjene funkcionalnih pravila. Verzija ostaje 1.0.0. |
+| doc-CR-003 | 2026-08-01 | Dokumentaciona napomena uz BR-257: CR-003 Planned (filteri `q`/`category`/`location`; TS-009 §3.3; IS-001 §9.2.1; PO-CR3-01…08). Bez novih BR. Bez izmjene funkcionalnih pravila. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -2923,6 +2924,10 @@ Postoji opcija „Poništi filtere“.
 
 Aktivni filteri čuvaju se u URL parametrima.
 
+#### Napomena (CR-003)
+
+Implementacioni ugovor za ne-datumske filtere na „Pretrazi i pregledu“ (`q`, `category`, `location`; filter zona; AND sa datumskim mehanizmom; aktivni filteri; „Poništi sve filtere“) dokumentovan je u **TS-009 §3.3** i **IS-001 §9.2.1** kao **CR-003** (Planned; PO-CR3-01…08). Bez izmjene BR-257 i bez novih BR identifikatora.
+
 ---
 
 #### BR-258 – Zadržavanje postojećih prikaza
@@ -4024,3 +4029,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-01 | FS-001 Stable v1.0.0: Functional Specification je uspješno prošao Final Review i predstavlja referentni funkcionalni dokument modula Kalendar kulture. Bez izmjene funkcionalnih pravila. |
 | 2026-08-01 | FS-001 §5.2 napomena (doc-CR-002): CR-001 Implemented; preostalo usklađenje treće kartice → CR-002 / IS-001 Faza 2. Bez novih BR. |
 | 2026-08-01 | FS-001 §5.2 napomena (doc-CR-002-impl): CR-002 Implemented (`c5d396f`; `month=YYYY-MM`). Statusno usklađenje bez izmjene BR/funkcionalnih pravila. Verzija ostaje 1.0.0. |
+| 2026-08-01 | FS-001 BR-257 napomena (doc-CR-003): CR-003 Planned (`q`/`category`/`location`; TS-009 §3.3). Bez novih BR. Verzija ostaje 1.0.0. |
