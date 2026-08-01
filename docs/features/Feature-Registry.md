@@ -205,7 +205,7 @@ Povezana dokumentacija (Javni portal):
 * Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-269), PATCH-FS-047–PATCH-FS-049
 * Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 1.0.1; Stable; TD-TS9-01; CR-002 §3.2)
 * Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija 1.0.1; Stable)
-* Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Planned, IS-001 Faza 2 — `month=YYYY-MM`, klik treće statistike)
+* Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Implemented, IS-001 Faza 2 — `month=YYYY-MM`, klik treće statistike; commit `c5d396f`; TS-009 v1.0.1; IS-001 v1.0.1)
 
 Povezana dokumentacija (Newsletter):
 
@@ -430,3 +430,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-07-31 | FT-001 — TS-009 Final Review v0.5.0: završna dokumentaciona revizija (sljedivost, terminologija, granice TS-003/004/005, baseline §7 Detalji događaja / §8 Arhiva događaja bez novih PO). BM PATCH-048 (Oznake ≠ Tagovi u BM-DG-06). Nije v1.0.0. Bez izmjene implementacije. |
 | 2026-07-31 | FT-001 — TS-009 Stable v1.0.0: objavljena stabilna verzija specifikacije javnog portala. Bez izmjene poslovnih/funkcionalnih/tehničkih pravila. Bez izmjene implementacije. |
 | 2026-08-01 | FT-001 — CR-001 Implemented (IS-001 Faza 1 UI). CR-002 Planned (IS-001 Faza 2: `month=YYYY-MM`, klik treće statistike). TS-009 v1.0.1 + IS-001 v1.0.1 usklađeni dokumentaciono. Bez izmjene implementacije. |
+| 2026-08-01 | FT-001 — CR-002 Implemented (IS-001 Faza 2 mjesečni filter). Commit `c5d396f`. Referenca: TS-009 v1.0.1, IS-001 v1.0.1. Bez izmjene FT identifikatora / funkcionalnog obuhvata. |

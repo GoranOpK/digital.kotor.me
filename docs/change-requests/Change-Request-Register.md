@@ -3,7 +3,7 @@
 ## Modul: Kalendar kulture
 
 **Status dokumenta:** AKTIVAN
-**Verzija:** 0.2
+**Verzija:** 0.3
 
 ---
 
@@ -54,7 +54,7 @@ Svaki odobreni poslovni zahtjev koji zahtijeva izmjenu implementacije mora biti 
 | ID | Naziv | FS Referenca | Prioritet | Procjena uticaja | Status |
 | -- | ----- | ------------ | --------- | ---------------- | ------ |
 | CR-001 | IS-001 Faza 1 — Usklađenje postojećeg javnog UI | FS-001 → §5.1–§5.3, BR-261–BR-264 | Medium | UI, Backend | Implemented |
-| CR-002 | IS-001 Faza 2 — Mjesečni filter i klik treće statistike | FS-001 → §5.2 / BR-263; TS-009 §3.2 | Medium | UI, Backend | Planned |
+| CR-002 | IS-001 Faza 2 — Mjesečni filter i klik treće statistike | FS-001 → §5.2 / BR-263; TS-009 §3.2 | Medium | UI, Backend | Implemented |
 
 ---
 
@@ -133,7 +133,15 @@ Medium
 
 ### Status
 
-**Planned** (dokumentacija usvojena; implementacija nije započeta).
+**Implemented** (2026-08-01).
+
+### Implementacija
+
+* Dokumentacioni commit: `d01c6d0` (TS-009 / IS-001 v1.0.1; ugovor za `month`).
+* Implementacioni commit: `c5d396f` (`feat(cultural-calendar): implement CR-002 month filter`).
+* Isporuka: klik treće statističke kartice → `month=YYYY-MM`; mjesečni overlap filter; prioritet `date` → `week_start`/`week_end` → `month` (bez kombinovanja); nevalidan `month` se bezbjedno ignoriše; broj na kartici i lista koriste isti skup događaja; podnaslov „Izabrani mjesec: …“.
+* Testiranje: `29 passed (121 assertions)` (`CulturalCalendarCr001Phase1Test` + `CulturalCalendarCr002MonthFilterTest`).
+* Bez migracija; bez novih ruta; bez izmjena modela.
 
 ---
 
@@ -177,3 +185,4 @@ Ovaj model omogućava da se za svaku funkcionalnost može utvrditi:
 | 2026-07-26 | Kreiran Change Request Register. Evidentiran CR-001. |
 | 2026-07-26 | Proširen Change Request Register novim kolonama. Dodata procjena uticaja (Impact). Uvedeno pravilo obavezne registracije Change Request-ova prije razvoja. Dodato poglavlje Sljedivost (Traceability). |
 | 2026-08-01 | CR-001 status → Implemented (IS-001 Faza 1). Evidentiran CR-002 (mjesečni filter / treća kartica; IS-001 Faza 2). Verzija registra 0.2. |
+| 2026-08-01 | CR-002 status → Implemented (commit `c5d396f`; dokumentacija `d01c6d0`). Mjesečni filter `month=YYYY-MM`; prioritet date → week → month; testovi 29/121. Bez migracija/ruta/modela. Verzija registra 0.3. |
