@@ -6,8 +6,8 @@
 **Oznaka dokumenta:** TS-010
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
-**Status dokumenta:** U IZRADI
-**Verzija:** 0.8.0
+**Status dokumenta:** USVOJEN
+**Verzija:** 1.0.0
 **Datum:** 2026-08-06
 
 ---
@@ -28,6 +28,7 @@
 | 0.6.0 | 2026-08-06 | TS-010.6 — Dashboard uredničkog portala: radna tabla (PO-DASH-01–05); radne kategorije sa brojačem i filterom ka CRUD; bez BI/listi/Activity Feed; sljedivost §8.6. Bez novih BM/BR. Bez izmjene implementacije. |
 | 0.7.0 | 2026-08-06 | TS-010.7 — Evidencija aktivnosti uredničkog portala: obaveza evidentiranja prema FT-003 (PO-AL-01–04); lokalni audit ≠ centralna evidencija; bez UI centralne evidencije; sljedivost §8.7. Bez novih BM/BR. Bez izmjene implementacije. |
 | 0.8.0 | 2026-08-06 | TS-010.8 — Business Test Matrix (QA-TS0108-01): poslovni test scenariji za FT-001 urednički portal; sljedivost BM→FS→TS→matrica; bez QA plana, implementacije testova, CI/coverage. Bez novih BM/BR. Bez izmjene implementacije. |
+| 1.0.0 | 2026-08-06 | Formalno usvajanje kompletne tehničke specifikacije TS-010.1–TS-010.8. Status: USVOJEN. Bez funkcionalnih izmjena. |
 
 Napomena:
 
@@ -53,6 +54,7 @@ Ne mijenjaju se postojeći redovi.
 | 0.6.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.6 (Dashboard uredničkog portala; PO-DASH-01–05). TS-010.7–TS-010.8 ostaju Planned. |
 | 0.7.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.7 (Evidencija aktivnosti uredničkog portala; PO-AL-01–04). TS-010.8 ostaje Planned. |
 | 0.8.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.8 (Business Test Matrix; QA-TS0108-01). TS-010.1–TS-010.8 Dokumentaciono pripremljeno. |
+| 1.0.0 | 2026-08-06 | Formalno usvojen kompletan dokument TS-010. Status promijenjen iz U IZRADI u USVOJEN. Nema funkcionalnih izmjena. |
 
 ---
 
@@ -68,7 +70,7 @@ TS-010:
 * ne zamjenjuje Business Model niti Functional Specification;
 * ne predstavlja implementaciju;
 * ne definiše SQL, migracije, Laravel kod ni konkretne API ugovore;
-* dokumentuje usvojene arhitektonske i tehničke osnove kao referentni okvir za naredne podcjeline TS-010.2–TS-010.8.
+* dokumentuje usvojene arhitektonske i tehničke osnove kao referentni okvir za podcjeline TS-010.1–TS-010.8.
 
 Izvori istine:
 
@@ -218,14 +220,14 @@ Entiteti i domen van uredničkog portala ostaju u postojećim TS dokumentima (TS
 
 | Poglavlje / cjelina | Status |
 |---------------------|--------|
-| TS-010.1 Osnove uredničkog portala | Dokumentaciono pripremljeno |
-| TS-010.2 Organizatori | Dokumentaciono pripremljeno |
-| TS-010.3 Moderator Organizatora | Dokumentaciono pripremljeno |
-| TS-010.4 Workflow događaja | Dokumentaciono pripremljeno |
-| TS-010.5 CRUD događaja i validacije | Dokumentaciono pripremljeno |
-| TS-010.6 Dashboard uredničkog portala | Dokumentaciono pripremljeno |
-| TS-010.7 Evidencija aktivnosti uredničkog portala | Dokumentaciono pripremljeno |
-| TS-010.8 Business Test Matrix | Dokumentaciono pripremljeno |
+| TS-010.1 Osnove uredničkog portala | Usvojeno |
+| TS-010.2 Organizatori | Usvojeno |
+| TS-010.3 Moderator Organizatora | Usvojeno |
+| TS-010.4 Workflow događaja | Usvojeno |
+| TS-010.5 CRUD događaja i validacije | Usvojeno |
+| TS-010.6 Dashboard uredničkog portala | Usvojeno |
+| TS-010.7 Evidencija aktivnosti uredničkog portala | Usvojeno |
+| TS-010.8 Business Test Matrix | Usvojeno |
 
 ---
 
@@ -235,7 +237,7 @@ Entiteti i domen van uredničkog portala ostaju u postojećim TS dokumentima (TS
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
 3. Nova poslovna pravila se ne uvode kroz TS-010.
 4. TS-010 opisuje **urednički portal**; ne zamjenjuje TS-009 (javni portal) niti TS-001 / TS-003 / TS-004 / TS-008 (entiteti); ne zamjenjuje FT-003 / TS-012 (centralna Evidencija aktivnosti).
-5. Detaljna razrada cjelina van TS-010.1–TS-010.7 ostaje u planiranim podcjelinama.
+5. Podcjeline TS-010.1–TS-010.8 su usvojene; detaljna razrada ostaje unutar tih cjelina bez planiranih dodatnih podcjelina TS-010.
 6. Izmjene usvojenog sadržaja evidentiraju se novom verzijom dokumenta.
 
 ---
@@ -589,7 +591,7 @@ Za Moderatora u TS-010.3 važi:
 
 Nasljeđuje **TS-010.2 Pravila 1–2**:
 
-* Organizator → 1..N Moderatora Organizatora (BM-ORG-06; BR-047);
+* **Aktivan** Organizator → najmanje jedan aktivan Moderator Organizatora (1..N nakon odobrenja; BM-ORG-06; BR-047; usklađeno sa §6.5 / TS-010.2 Pravilo 3);
 * Moderator → 1..N Organizatora (BM-MOD-02; BR-051).
 
 ## 6.5 Invarianti
@@ -960,7 +962,7 @@ Nije novi status (TS-003 §4.7; BR-006–BR-012):
 
 * javni prikaz ostaje posljednja odobrena verzija do odobrenja;
 * najviše jedan aktivni prijedlog;
-* odobrenje / vraćanje — iste akcije Urednika (§7.4.5–§7.4.6A);
+* odobrenje / vraćanje — iste akcije Urednika (§7.4.5–§7.4.6);
 * detalj uređivanja polja — TS-010.5.
 
 ## 7.7 Arhiviranje
@@ -2116,9 +2118,9 @@ TS-010.8 **ne** obuhvata:
 
 ---
 
-# 14. Napomene za zatvaranje TS-010 / naredne cjeline
+# 14. Napomene za zatvaranje TS-010
 
-* TS-010.1–TS-010.8 dokumentaciono pripremljeni (v0.8.0).
+* TS-010.1–TS-010.8 usvojeni (v1.0.0).
 * TS-010.8 = Business Test Matrix (QA-TS0108-01); nije implementacija testova.
 * TS-009 ostaje referentni dokument javnog portala; CR-004B ostaje Planned za implementaciju.
 * FT-003 / TS-012 ostaju Planned (centralna Evidencija).
@@ -2129,4 +2131,4 @@ TS-010.8 **ne** obuhvata:
 
 ---
 
-**Kraj dokumenta TS-010 v0.8.0 (TS-010.1–TS-010.8 Dokumentaciono pripremljeno)**
+**Kraj dokumenta TS-010 v1.0.0 (USVOJEN; TS-010.1–TS-010.8)**
