@@ -2,12 +2,12 @@
 # Technical Specification
 ## Urednički portal
 
-**Feature ID:** FT-001  
-**Oznaka dokumenta:** TS-010  
-**Funkcionalna cjelina:** Urednički portal Kalendara kulture  
-**Modul:** Kalendar kulture  
-**Status dokumenta:** U IZRADI  
-**Verzija:** 0.1.1  
+**Feature ID:** FT-001
+**Oznaka dokumenta:** TS-010
+**Funkcionalna cjelina:** Urednički portal Kalendara kulture
+**Modul:** Kalendar kulture
+**Status dokumenta:** U IZRADI
+**Verzija:** 0.2.1
 **Datum:** 2026-08-06
 
 ---
@@ -18,11 +18,13 @@
 |---------|--------|------|
 | 0.1.0 | 2026-08-06 | TS-010.1 — Osnove uredničkog portala: korisnici, aktivni kontekst Organizatora, četvoroslojni autorizacioni model, arhitektura Platforma / Urednički portal / Javni portal. Bez razrade Organizatora, Moderatora, workflow-a, CRUD-a, dashboarda, evidencije i test matrice. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 0.1.1 | 2026-08-06 | QA korektivni prolaz TS-010.1: eksplicitna norma o tehničkoj operacionalizaciji BM/FS; poglavlje Terminologija; eksplicitna norma da javni portal nikada ne mijenja poslovne podatke. Bez proširenja obuhvata. Bez izmjene BM/FS. Bez izmjene implementacije. |
+| 0.2.0 | 2026-08-06 | TS-010.2 — Organizatori: poslovno-tehnički model entiteta, veza sa Moderatorima (pravila 1–6), statusi Na odobrenju / Aktivan / Deaktiviran, invariant najmanje jednog aktivnog Moderatora. Bez razrade registracije, zahtjeva, CRUD-a, UI, autorizacije i workflow-a. Bez izmjene BM/FS. Bez izmjene implementacije. |
+| 0.2.1 | 2026-08-06 | QA korektivni prolaz TS-010.2: uklonjen trailing whitespace; precizirana Pravila 3 i 5 (invariant i zabrana prolaznog stanja bez aktivnog Moderatora). Bez proširenja obuhvata. Bez izmjene BM/FS. Bez izmjene implementacije. |
 
 Napomena:
 
-Ovo poglavlje služi isključivo za evidenciju razvoja dokumenta.  
-Kod svake naredne verzije dodaje se novi red u tabeli.  
+Ovo poglavlje služi isključivo za evidenciju razvoja dokumenta.
+Kod svake naredne verzije dodaje se novi red u tabeli.
 Ne mijenjaju se postojeći redovi.
 
 ---
@@ -33,6 +35,8 @@ Ne mijenjaju se postojeći redovi.
 |---------|--------|---------|
 | 0.1.0 | 2026-08-06 | Kreiran TS-010. Dokumentaciono pripremljen TS-010.1 (Osnove). Planirane cjeline TS-010.2–TS-010.8 evidentirane bez razrade. |
 | 0.1.1 | 2026-08-06 | QA korektivni prolaz TS-010.1 (terminologija; normativne rečenice BM/FS i javnog portala). Bez proširenja obuhvata. |
+| 0.2.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.2 (Organizatori). TS-010.3–TS-010.8 ostaju Planned. |
+| 0.2.1 | 2026-08-06 | QA korektivni prolaz TS-010.2 (Pravila 3 i 5; trailing whitespace). Bez proširenja obuhvata. |
 
 ---
 
@@ -71,13 +75,19 @@ TS-010.1 — Osnove uredničkog portala obuhvata isključivo:
 3. četvoroslojni autorizacioni model;
 4. arhitekturu sistema (Platforma / Urednički portal / Javni portal) i arhitektonski tok.
 
+TS-010.2 — Organizatori obuhvata isključivo:
+
+1. Organizatora kao poslovni entitet;
+2. vezu Organizatora sa Moderatorima Organizatora (pravila 1–6);
+3. statuse Organizatora: Na odobrenju, Aktivan, Deaktiviran.
+
 ---
 
 # Van obuhvata
 
 TS-010.1 **ne razrađuje**:
 
-* Organizatore (detalj entiteta i tokova);
+* Organizatore (detalj entiteta i tokova — vidi TS-010.2);
 * Moderatore (detalj ovlašćenja i tokova);
 * workflow događaja;
 * CRUD događaja;
@@ -94,7 +104,20 @@ TS-010.1 **ne razrađuje**:
 * validacije;
 * test matricu.
 
-Te cjeline ostaju u planiranim podcjelinama TS-010.2–TS-010.8, odnosno u postojećim TS dokumentima entiteta (TS-001, TS-003–TS-008), bez dupliciranja njihovih pravila.
+TS-010.2 **ne razrađuje**:
+
+* proces registracije;
+* zahtjeve;
+* odobravanja;
+* CRUD;
+* dashboard;
+* korisnički interfejs;
+* autorizaciju;
+* aktivni kontekst;
+* workflow događaja;
+* detalj Moderatora Organizatora (TS-010.3).
+
+Te cjeline ostaju u planiranim podcjelinama TS-010.3–TS-010.8, odnosno u postojećim TS dokumentima entiteta (TS-001, TS-003–TS-008), bez dupliciranja njihovih pravila.
 
 ---
 
@@ -116,7 +139,7 @@ Te cjeline ostaju u planiranim podcjelinama TS-010.2–TS-010.8, odnosno u posto
 | Poglavlje / cjelina | Status |
 |---------------------|--------|
 | TS-010.1 Osnove uredničkog portala | Dokumentaciono pripremljeno |
-| TS-010.2 Organizatori | Planned |
+| TS-010.2 Organizatori | Dokumentaciono pripremljeno |
 | TS-010.3 Moderator Organizatora | Planned |
 | TS-010.4 Workflow događaja | Planned |
 | TS-010.5 CRUD događaja | Planned |
@@ -132,7 +155,7 @@ Te cjeline ostaju u planiranim podcjelinama TS-010.2–TS-010.8, odnosno u posto
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
 3. Nova poslovna pravila se ne uvode kroz TS-010.
 4. TS-010 opisuje **urednički portal**; ne zamjenjuje TS-009 (javni portal) niti TS-001 / TS-003 (entiteti).
-5. Detaljna razrada cjelina van TS-010.1 ostaje u planiranim podcjelinama.
+5. Detaljna razrada cjelina van TS-010.1 i TS-010.2 ostaje u planiranim podcjelinama.
 6. Izmjene usvojenog sadržaja evidentiraju se novom verzijom dokumenta.
 
 ---
@@ -322,13 +345,113 @@ Usklađenost sa BM-EP-08 / BR-120 / BR-121: Urednički portal primjenjuje ista p
 
 ---
 
-# 5. Planirane cjeline TS-010
+# 5. TS-010.2 — Organizatori
+
+Izvori: BM-ORG-01, BM-ORG-06, BM-ORG-12, BM-MOD-02, BM-MOD-07, BM-MOD-10, BM-MOD-11; BR-047, BR-048, BR-049, BR-050, BR-072; TS-001 (granica entiteta).
+
+## 5.1 Poslovno-tehnički model
+
+Organizator je poslovni entitet.
+
+Organizator:
+
+* nije korisnički nalog;
+* nije Moderator Organizatora;
+* ne predstavlja korisnika platforme.
+
+## 5.2 Veza sa Moderatorima Organizatora
+
+### Pravilo 1
+
+Jedan Organizator može imati jednog ili više Moderatora Organizatora.
+
+### Pravilo 2
+
+Jedan Moderator Organizatora može biti ovlašćen za jednog ili više Organizatora.
+
+### Pravilo 3
+
+Aktivan Organizator mora u svakom trenutku imati najmanje jednog aktivnog Moderatora Organizatora.
+
+Ovo predstavlja trajni poslovni invariant.
+
+Sistem ne smije dozvoliti stanje koje narušava ovo pravilo.
+
+### Pravilo 4
+
+Sistem mora spriječiti svaku radnju koja bi dovela do toga da Organizator ostane bez ijednog aktivnog Moderatora Organizatora.
+
+Primjeri:
+
+* uklanjanje posljednjeg Moderatora;
+* deaktivacija posljednjeg Moderatora;
+* ukidanje posljednjeg ovlašćenja.
+
+Implementacija se ne razrađuje u ovoj cjelini.
+
+### Pravilo 5
+
+Posljednji Moderator Organizatora može biti uklonjen ili deaktiviran isključivo:
+
+* nakon prethodne dodjele drugog Moderatora,
+
+ili
+
+* istovremeno sa deaktivacijom Organizatora.
+
+Ne smije postojati prolazno stanje:
+
+```text
+Aktivan Organizator
+        │
+        ▼
+0 aktivnih Moderatora
+```
+
+### Pravilo 6
+
+Moderator nije vlasnik Organizatora.
+
+Promjena Moderatora ne utiče na:
+
+* identitet Organizatora;
+* događaje;
+* manifestacije;
+* istoriju;
+* ostale poslovne podatke.
+
+## 5.3 Statusi Organizatora
+
+Statusi Organizatora u V1:
+
+* Na odobrenju
+* Aktivan
+* Deaktiviran
+
+Novi statusi se ne uvode kroz TS-010.2.
+
+## 5.4 Van obuhvata TS-010.2
+
+U ovoj cjelini se ne dokumentuju:
+
+* proces registracije;
+* zahtjevi;
+* odobravanja;
+* CRUD;
+* dashboard;
+* korisnički interfejs;
+* autorizacija;
+* aktivni kontekst;
+* workflow događaja.
+
+---
+
+# 6. Planirane cjeline TS-010
 
 Sljedeće podcjeline su planirane i **nisu razrađene** u ovoj verziji:
 
 | Cjelina | Naziv | Status |
 |---------|-------|--------|
-| TS-010.2 | Organizatori | Planned |
 | TS-010.3 | Moderator Organizatora | Planned |
 | TS-010.4 | Workflow događaja | Planned |
 | TS-010.5 | CRUD događaja | Planned |
@@ -338,7 +461,9 @@ Sljedeće podcjeline su planirane i **nisu razrađene** u ovoj verziji:
 
 ---
 
-# 6. Matrica sljedivosti
+# 7. Matrica sljedivosti
+
+## 7.1 TS-010.1
 
 | TS-010.1 tema | Business Model | Functional Specification | TS-001 | TS-003 | TS-009 | Feature Registry |
 |---------------|----------------|--------------------------|--------|--------|--------|------------------|
@@ -352,17 +477,30 @@ Sljedeće podcjeline su planirane i **nisu razrađene** u ovoj verziji:
 | Javni portal kao potrošač | BM-PK / BM-11 | BR-102+; §5.13 | — | — | §1–§8 | FT-001 |
 | Jedinstvena poslovna pravila | BM-EP-04, BM-EP-08 | BR-120, BR-121, BR-127 | bez dupliranja | bez dupliranja | bez dupliranja | FT-001 |
 
+## 7.2 TS-010.2
+
+| TS-010.2 tema | Business Model | Functional Specification | TS-001 | Feature Registry |
+|---------------|----------------|--------------------------|--------|------------------|
+| Organizator kao poslovni entitet | BM-ORG-01, BM-GL-06 | Platformsko pravilo; BR-048 | §1, §3 | FT-001 |
+| Kardinalnost Organizator ↔ Moderator | BM-ORG-06, BM-MOD-02 | BR-047 | §3, §5 | FT-001 |
+| Invariant najmanje jednog aktivnog Moderatora | BM-MOD-07, BM-MOD-10 | BR-072 | §5 | FT-001 |
+| Sprječavanje ostanka bez aktivnog Moderatora | BM-MOD-07, BM-MOD-10 | BR-072 | §5 | FT-001 |
+| Uklanjanje posljednjeg Moderatora (uslov) | BM-MOD-07, BM-MOD-10, BM-ORG-12 | BR-049, BR-050, BR-072 | §4, §5 | FT-001 |
+| Moderator nije vlasnik Organizatora | BM-ORG-01, BM-MOD-11 | BR-045, BR-048 | §1, §3 | FT-001 |
+| Statusi Organizatora | BM-ORG-12 | BR-049, BR-050 | §6 | FT-001 |
+
 Napomena: matrica ne uvodi nove BM ili BR identifikatore.
 
 ---
 
-# 7. Napomene za naredne podcjeline
+# 8. Napomene za naredne podcjeline
 
-* TS-010.2–TS-010.3 oslanjaju se na TS-001 bez ponovnog definisanja entiteta Organizator/Moderator.
+* TS-010.2 oslanja se na TS-001 bez ponovnog definisanja entiteta Organizator; detalj Moderatora ostaje u TS-010.3.
+* TS-010.3 razrađuje Moderatora Organizatora bez ponovnog definisanja modela Organizatora iz TS-010.2.
 * TS-010.4–TS-010.5 oslanjaju se na TS-003 i FS §5.5 / §5.7 bez ponovnog definisanja lifecycle pravila događaja.
 * TS-010.7 ostaje usklađen sa BM-14 / FS §5.16 / planiranim TS-012; ne zamjenjuje centralnu Evidenciju aktivnosti.
-* TS-009 ostaje referentni dokument javnog portala; CR-004B ostaje Planned van obuhvata TS-010.1.
+* TS-009 ostaje referentni dokument javnog portala; CR-004B ostaje Planned van obuhvata TS-010.1–TS-010.2.
 
 ---
 
-**Kraj dokumenta TS-010 v0.1.1 (TS-010.1)**
+**Kraj dokumenta TS-010 v0.2.1 (TS-010.1 + TS-010.2)**
