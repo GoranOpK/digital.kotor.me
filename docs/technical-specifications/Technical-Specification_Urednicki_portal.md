@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.0
-**Datum:** 2026-08-06
+**Verzija:** 1.0.1
+**Datum:** 2026-08-07
 
 ---
 
@@ -29,6 +29,7 @@
 | 0.7.0 | 2026-08-06 | TS-010.7 — Evidencija aktivnosti uredničkog portala: obaveza evidentiranja prema FT-003 (PO-AL-01–04); lokalni audit ≠ centralna evidencija; bez UI centralne evidencije; sljedivost §8.7. Bez novih BM/BR. Bez izmjene implementacije. |
 | 0.8.0 | 2026-08-06 | TS-010.8 — Business Test Matrix (QA-TS0108-01): poslovni test scenariji za FT-001 urednički portal; sljedivost BM→FS→TS→matrica; bez QA plana, implementacije testova, CI/coverage. Bez novih BM/BR. Bez izmjene implementacije. |
 | 1.0.0 | 2026-08-06 | Formalno usvajanje kompletne tehničke specifikacije TS-010.1–TS-010.8. Status: USVOJEN. Bez funkcionalnih izmjena. |
+| 1.0.1 | 2026-08-07 | Usklađivanje sa BM PATCH-053 / PO-DG-07, FS PATCH-FS-053 i TS-003 v0.1.2: Otkazan terminalan (nema Otkazan → Objavljen); forma Otkazan read-only (izuzetak: razlog otkazivanja / napomena urednika); novi program = novi događaj; Odgođen = jedini mehanizam promjene termina (granica TS-004); uklonjena ponovna objava / reaktivacija iz workflow, CRUD, Dashboard, audita i test matrice. Bez izmjene BM/FS/TS-003/implementacije. |
 
 Napomena:
 
@@ -55,6 +56,7 @@ Ne mijenjaju se postojeći redovi.
 | 0.7.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.7 (Evidencija aktivnosti uredničkog portala; PO-AL-01–04). TS-010.8 ostaje Planned. |
 | 0.8.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.8 (Business Test Matrix; QA-TS0108-01). TS-010.1–TS-010.8 Dokumentaciono pripremljeno. |
 | 1.0.0 | 2026-08-06 | Formalno usvojen kompletan dokument TS-010. Status promijenjen iz U IZRADI u USVOJEN. Nema funkcionalnih izmjena. |
+| 1.0.1 | 2026-08-07 | PATCH: usklađivanje lifecycle događaja sa BM PATCH-053, FS PATCH-FS-053 i TS-003 v0.1.2 (terminalnost Otkazan; read-only; razlog otkazivanja; uklonjena ponovna objava). |
 
 ---
 
@@ -74,10 +76,10 @@ TS-010:
 
 Izvori istine:
 
-* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-01, BM-02, BM-03, BM-10 BM-ST, BM-04 BM-DG, BM-12 BM-EP-01–BM-EP-10, BM-GL-06–BM-GL-09, BM-MOD-01–BM-MOD-16, BM-UR-09)
-* `docs/functional-specifications/Functional-Specification.md` (Platformsko pravilo; BR-006–BR-044; BR-062–BR-066; BR-007; BR-047–BR-055; BR-070–BR-073; BR-048; BR-051; §5.14 BR-118–BR-128; BR-270–BR-274)
+* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-01, BM-02, BM-03, BM-10 BM-ST, BM-04 BM-DG uključujući BM-DG-09/BM-DG-10, BM-12 BM-EP-01–BM-EP-10, BM-GL-06–BM-GL-09, BM-MOD-01–BM-MOD-16, BM-UR-09, BM-TR-12; BM PATCH-053 / PO-DG-07)
+* `docs/functional-specifications/Functional-Specification.md` (Platformsko pravilo; BR-006–BR-044; BR-062–BR-066; BR-007; BR-047–BR-055; BR-070–BR-073; BR-048; BR-051; BR-131; §5.14 BR-118–BR-128; §5.16; BR-270–BR-274; PATCH-FS-053)
 * `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001)
-* `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003)
+* `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 v0.1.2)
 * `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004)
 * `docs/technical-specifications/Technical-Specification_Mediji.md` (TS-008)
 * `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009)
@@ -699,7 +701,7 @@ Detaljna lista polja i UI forma ostaju van obuhvata TS-010.3. Ne uvode se Katalo
 | Zahtjev za uklanjanje sopstvenog ovlašćenja | Da (**G-11**; odluka Urednika) | §6.6.2; BM-MOD-09; BR-071 |
 | Upravljanje podacima Organizatora (javno / operativno) | Da (**G-14**; §6.8.1) | BM-GL-07; TS-001 §5 |
 | Objava događaja | Ne | BM-ORG-05, BM-MOD-05; BR-007 |
-| Ponovna objava otkazanog | Ne | BM-MOD-16, BM-DG-09; BR-064 |
+| Vratiti Otkazan → Objavljen / reaktivacija | Ne | BM-MOD-16, BM-DG-09; BR-064 |
 | Dodjela ovlašćenja Moderatoru | Ne (samo Urednik) | BM-MOD-14; BR-054 |
 
 ## 6.9 Zabrane
@@ -707,7 +709,7 @@ Detaljna lista polja i UI forma ostaju van obuhvata TS-010.3. Ne uvode se Katalo
 | Zabrana | Izvor |
 |---------|-------|
 | Nema samostalne objave | BM-ORG-05, BM-MOD-05; BR-007 |
-| Nema ponovne objave otkazanog događaja | BM-MOD-16; BR-064 |
+| Nema povratka iz Otkazan u Objavljen niti reaktivacije otkazanog događaja | BM-MOD-16; BM-DG-09; BR-064 |
 | Nema uredničkih odluka (odobrenje/objava/dodjela ovlašćenja) | BM-MOD-11, BM-MOD-14; BR-054, BR-122 |
 | Nema rada van aktivnog konteksta | BM-MOD-04; BR-051; TS-010.1 |
 | Nema rada nad deaktiviranim Organizatorom | BM-ORG-12, BM-MOD-16; BR-049–BR-050 |
@@ -766,9 +768,9 @@ TS-010.3 ne obrađuje:
 
 # 7. TS-010.4 — Workflow događaja
 
-Izvori: BM-ST-01–BM-ST-09, BM-DG-01, BM-DG-04, BM-DG-05, BM-DG-09, BM-ORG-04–BM-ORG-05, BM-ORG-12, BM-MOD-04–BM-MOD-06, BM-MOD-16, BM-UR-02–BM-UR-03, BM-UR-11; BR-006–BR-044, BR-062–BR-066, BR-007, BR-013–BR-034, BR-063–BR-064, BR-270–BR-274; TS-001; TS-003; TS-004; TS-009; TS-010.1–TS-010.3.
+Izvori: BM-ST-01–BM-ST-09, BM-DG-01, BM-DG-04, BM-DG-05, BM-DG-09, BM-DG-10, BM-ORG-04–BM-ORG-05, BM-ORG-12, BM-MOD-04–BM-MOD-06, BM-MOD-16, BM-UR-02–BM-UR-03, BM-UR-11, BM-TR-12; BR-006–BR-044, BR-062–BR-066, BR-007, BR-013–BR-034, BR-063–BR-064, BR-131, BR-270–BR-274; TS-001; TS-003 v0.1.2; TS-004; TS-009; TS-010.1–TS-010.3.
 
-TS-010.4 ne uvodi nova poslovna pravila, nove statuse niti nove workflow grane. Tehnički operacionalizuje usvojene BM/FS u uredničkom portalu i veže se na TS-003 (domen prelaza), TS-004 (predikat arhive) i TS-009 (javni efekti CR-004B) bez redefinisanja tih dokumenata.
+TS-010.4 ne uvodi nova poslovna pravila, nove statuse niti nove workflow grane. Tehnički operacionalizuje usvojene BM/FS u uredničkom portalu i veže se na TS-003 (domen prelaza), TS-004 (predikat arhive; Odgođen) i TS-009 (javni efekti CR-004B) bez redefinisanja tih dokumenata.
 
 ## 7.1 Obuhvat i granice
 
@@ -796,8 +798,9 @@ Dodatni dozvoljeni prelazi iz BM/FS (nisu novi statusi):
 
 * Nacrt → Objavljen — direktna objava Urednika **isključivo bez Organizatora** (BM-ST-04, BR-018);
 * Na odobrenju → Nacrt — vraćanje na doradu ili povlačenje prije pregleda;
-* Objavljen → Arhiviran i Otkazan → Arhiviran — automatski Sistem (BM-DG-04, BR-065);
-* Otkazan → Objavljen — ponovna objava Urednika (BM-DG-09, BR-064).
+* Objavljen → Arhiviran i Otkazan → Arhiviran — automatski Sistem (BM-DG-04, BR-065).
+
+**Zabranjeno:** Otkazan → Objavljen (ponovna objava / reaktivacija). Status **Otkazan** je terminalan za povratak u **Objavljen** (BM-DG-09, BR-064; TS-003 §4.9). Ako se isti kulturni program kasnije ponovo organizuje, kreira se **novi** događaj (§7.4.1). Promjena termina postojećeg (neotkazanog) događaja vrši se isključivo kroz status **Odgođen** na održavanju (granica TS-004; BM-TR-12, BR-131).
 
 **Nisu statusi događaja** (BM-ST-05 / PATCH-010; TS-003 §4):
 
@@ -917,25 +920,27 @@ Moderator **nikada** ne vidi / ne izvršava Objavi (BM-ORG-05, BM-MOD-05; BR-007
 |--|--|
 | **Ko vidi** | Moderator (uslovno); Urednik (svaki objavljeni). |
 | **Guard** | Ulaz isključivo **Objavljen** (BM-ST-07, BR-063). Moderator: Org **Aktivan** + aktivni kontekst + ovlašćenje. Nakon deaktivacije Org — samo Urednik (BM-ORG-12, BM-MOD-16). |
-| **Rezultat** | Status **Otkazan**; zapis ostaje; javni efekti po TS-009 / CR-004B (vidi §7.9). |
+| **Rezultat** | Status **Otkazan**; istorijski zapis; forma read-only osim razloga otkazivanja (§7.4.8); javni efekti po TS-009 / CR-004B (vidi §7.9). |
 | **Naredno stanje** | **Otkazan**. |
 
 **Aktivni prijedlog izmjene pri otkazivanju (usvojena tehnička operacionalizacija):**
 
-> Ako u trenutku otkazivanja postoji aktivni prijedlog izmjene, sistem ga automatski čini neoperativnim. Prijedlog ostaje evidentiran u auditu, ne može biti odobren niti vraćen na doradu i ne dobija novi poslovni status. Nakon eventualne ponovne objave događaja, nove izmjene pokreću se kroz novi prijedlog izmjene.
+> Ako u trenutku otkazivanja postoji aktivni prijedlog izmjene, sistem ga automatski čini neoperativnim. Prijedlog ostaje evidentiran u auditu, ne može biti odobren niti vraćen na doradu i ne dobija novi poslovni status. Otkazani događaj se ne vraća u Objavljen; nove izmjene nad istim kulturnim programom zahtijevaju **novi** događaj (novi zapis), ne reaktivaciju postojećeg.
 
 Ne uvodi se status „Odbijen“, automatsko odbijanje ni automatsko odobrenje prijedloga.
 
-### 7.4.8 Ponovna objava
+### 7.4.8 Terminalnost statusa Otkazan (istorijski zapis)
 
 | | |
 |--|--|
-| **Ko vidi** | Urednik. |
-| **Guard** | Status **Otkazan** (ne Arhiviran); urednička nadležnost (BM-DG-09, BR-064, BM-UR-11). Nije automatska. |
-| **Rezultat** | Događaj ponovo **Objavljen**; Urednik može prethodno ažurirati podatke / održavanja po postojećim ovlašćenjima. |
-| **Naredno stanje** | **Objavljen**. |
+| **Ko vidi** | Urednik (unos/dopuna razloga otkazivanja); Moderator (pregled u kontekstu, bez uređivanja sadržaja). |
+| **Guard** | Status **Otkazan**. Prelaz **Otkazan → Objavljen** nije dozvoljen (BM-DG-09, BM-ST-07, BM-ST-09, BR-064; TS-003 §4.9). Jedini usvojeni statusni izlaz: **Otkazan → Arhiviran** (Sistem; §7.7). |
+| **Rezultat** | Forma događaja je **read-only**. Jedina dozvoljena izmjena: **razlog otkazivanja (napomena urednika)** — samo Urednik (BM-DG-10, BM-UR-11, BR-063, BR-064). Pokušaj izmjene bilo kog drugog polja ili pokušaj Otkazan → Objavljen mora biti serverski odbijen. |
+| **Naredno stanje** | Ostaje **Otkazan** (do automatskog arhiviranja). |
 
-Moderator **ne može** ponovnu objavu (BM-MOD-16; TS-010.3).
+Moderator **ne može** vratiti otkazani događaj u Objavljen niti uređivati razlog otkazivanja (BM-MOD-16; TS-010.3). Urednik takođe **ne može** vratiti Otkazan → Objavljen.
+
+UI: akcija „Ponovo objavi“ / „Vratiti u Objavljen“ **ne postoji**. Za isti kulturni program kasnije koristi se **Kreiraj** (§7.4.1).
 
 ## 7.5 Matrica prelaza
 
@@ -950,11 +955,11 @@ Moderator **ne može** ponovnu objavu (BM-MOD-16; TS-010.3).
 | Objavi (odobri) | Na odobrenju | Objavljen | Urednik | Urednička odluka (BR-039) |
 | Objavi (direktno) | Nacrt | Objavljen | Urednik | Bez Organizatora (BR-018) |
 | Otkazivanje | Objavljen | Otkazan | Mod / Urednik | BR-063; Mod: Org Aktivan + kontekst |
-| Ponovna objava | Otkazan | Objavljen | Urednik | BR-064; nije Arhiviran |
+| Unos / dopuna razloga otkazivanja | Otkazan | Otkazan | Urednik | BM-DG-10; BR-064; samo polje razloga |
 | Automatsko arhiviranje | Objavljen | Arhiviran | Sistem | TS-004 predikat; BR-065 |
 | Automatsko arhiviranje | Otkazan | Arhiviran | Sistem | TS-004 predikat; BR-065 |
 
-Zabranjeni prelazi (sažetak; BM-ST-09 / TS-003): Nacrt → Objavljen sa Org; Moderator → Objavljen / ponovna objava; otkaz iz Nacrta / Na odobrenju; ručna arhiva; izlaz iz Arhiviran u V1.
+Zabranjeni prelazi (sažetak; BM-ST-09 / TS-003): Nacrt → Objavljen sa Org; Moderator → Objavljen; **Otkazan → Objavljen** (ponovna objava / reaktivacija); otkaz iz Nacrta / Na odobrenju; ručna arhiva; izlaz iz Arhiviran u V1.
 
 ## 7.6 Prijedlog izmjene nakon objave
 
@@ -981,6 +986,7 @@ Referenca: **TS-004 §4.9** i **TS-003 §4.10**; BM-DG-04; BR-065.
 * Serverska provjera je obavezna (TS-010.1 §3.5); klijent ne odlučuje o statusu.
 * Tokovi za Moderatora uvijek u aktivnom kontekstu Organizatora.
 * Poruke o vraćanju na doradu prikazuju razlog Moderatoru (BR-041).
+* Dok je status **Otkazan**, forma je **read-only**; jedino uređivo polje za Urednika je razlog otkazivanja (§7.4.8; TS-010.5 §10.5).
 * Vizuelni dizajn UI-a nije dio TS-010.4.
 
 ## 7.9 CR-004B i javni portal
@@ -996,8 +1002,10 @@ Referenca: **TS-009 §7.2**; BR-270–BR-274; BM-PK-13.
 | Akcija | Moderator | Urednik | Sistem |
 |--------|-----------|---------|--------|
 | Kreiraj / Sačuvaj / Pošalji / Povuci | Da (granice §7.4) | Ograničeno (bez Org / pregled) | Ne |
-| Vrati / Objavi / Ponovna objava | Ne | Da | Ne |
+| Vrati / Objavi | Ne | Da | Ne |
 | Otkazivanje | Da (uslovno) | Da | Ne |
+| Unos / dopuna razloga otkazivanja | Ne | Da (dok je Otkazan) | Ne |
+| Vratiti Otkazan → Objavljen | Ne | Ne | Ne |
 | Arhiviranje | Ne | Ne | Da |
 
 Organizator nije korisnik. Administrator platforme nije učesnik uredničkog workflow-a događaja.
@@ -1083,8 +1091,8 @@ Napomena: matrica ne uvodi nove BM ili BR identifikatore.
 | Pošalji / Povuci | BM-ST-04; BM-MOD-06 | BR-028–BR-034 | §4.4 | — | — | §6.8 |
 | Vrati na doradu | BM-ST-05; BM-UR-03 | BR-040–BR-044 | §4.5 | — | — | — |
 | Objavi (odobri / direktno) | BM-ST-04, BM-ST-06; BM-UR-02 | BR-018, BR-039; BR-007 | §4.5–§4.6 | — | granica | §6.9 |
-| Otkazivanje + neoperativan prijedlog | BM-DG-05, BM-ST-07; BM-MOD-16 | BR-063; BR-006–BR-012 | §4.8 | — | §7.2 ref. | §6.8–§6.9 |
-| Ponovna objava | BM-DG-09; BM-UR-11 | BR-064 | §4.9 | — | — | §6.9 |
+| Otkazivanje + neoperativan prijedlog | BM-DG-05, BM-DG-10, BM-ST-07; BM-MOD-16 | BR-063; BR-006–BR-012; BR-064 | §4.8–§4.9 | — | §7.2 ref. | §6.8–§6.9 |
+| Terminalnost Otkazan / razlog otkazivanja | BM-DG-09, BM-DG-10; BM-ST-07/09; BM-UR-11; BM-TR-12 | BR-064; BR-131 | §4.9 | Odgođen | — | §6.9 |
 | Arhiviranje | BM-DG-04; BM-ST-08 | BR-065 | §4.10 | §4.9 | portal ≠ archived | — |
 | CR-004B (workflow ne mijenja) | BM-PK-13 | BR-270–BR-274 | — | — | §7.2 | — |
 | Matrica prelaza / UX | BM-ST-09 | §5.5.6a | §4, §5 | — | — | §3.5 |
@@ -1104,9 +1112,9 @@ Napomena: matrica ne uvodi nove BM ili BR identifikatore.
 | V1 katalog sadržajnih polja | BM-DG | §5.4; BR-015–BR-017 | §6.2 | — | BM-MD | — | §9; N-DG-02 |
 | Create (Moderator / Urednik) | BM-ORG-04; BM-ST-03; BM-MOD-05 | BR-013–BR-020 | §4.3 | — | — | — | §6.8; §7 |
 | Read opseg | BM-MOD-05–06; BM-UR; BM-ORG-12 | BR-013+; BR-122–125 | — | — | — | — | §1; §6 |
-| Update po statusu/fazi | BM-ST; BM-DG-05–09 | BR-006–044; BR-062–066 | §4–§5 | N-TR-04 | — | — | §7; §10.5 |
+| Update po statusu/fazi | BM-ST; BM-DG-05–10 | BR-006–044; BR-062–066; BR-064 | §4–§5; §4.9 | N-TR-04 | — | — | §7; §10.5 |
 | Prijedlog izmjene / N-DG-04 | BM-DG; BM-ST-05 | BR-006–012; G-W02 | §4.7 | — | — | javna verzija | §7; §10.6 |
-| Validacije / gate-ovi | BM-DG-01, BM-DG-07–08 | BR-015–020; BR-028–039; BR-064 | §6 | §3–§4 | — | naslov prikaz | §9.5; §10.7 |
+| Validacije / gate-ovi | BM-DG-01, BM-DG-07–10 | BR-015–020; BR-028–039; BR-064; BR-131 | §6–§7 | §3–§4 | — | naslov prikaz | §9.5; §10.7 |
 | Nested Održavanja | BM-TR | BR-056–061; BR-082–091 | — | v0.1.5; N-TR-01/02/04 | — | — | §10.9 |
 | Organizator / Manifestacija | BM-DG; BM-MF; BM-ORG | BR-129–134 | — | — | — | — | §10.10–§10.11 |
 | Naslovna fotografija | BM-MD-06 | BR-117 | — | — | TS-008 | fallback | §10.12 |
@@ -1277,7 +1285,7 @@ TS-003 §6.2 / §6.4 dokumentuje potvrđeni konceptualni skup i ranije otvoreno 
 
 # 10. TS-010.5 — CRUD događaja i validacije
 
-Izvori: BM-ST, BM-DG, BM-TR, BM-MD, BM-MF, BM-MOD, BM-UR; BR-006–BR-044, BR-052, BR-056–BR-069, BR-082–BR-091, BR-117, BR-129–BR-134; TS-003; TS-004 v0.1.5; TS-008; TS-009; TS-010.1–TS-010.4; §9 (N-DG-02); N-DG-04; N-TR-01; N-TR-02; N-TR-04; G-W02.
+Izvori: BM-ST, BM-DG (uključujući BM-DG-09/BM-DG-10), BM-TR (BM-TR-12), BM-MD, BM-MF, BM-MOD, BM-UR; BR-006–BR-044, BR-052, BR-056–BR-069, BR-082–BR-091, BR-117, BR-129–BR-134, BR-064, BR-131; TS-003 v0.1.2; TS-004 v0.1.5; TS-008; TS-009; TS-010.1–TS-010.4; §9 (N-DG-02); N-DG-04; N-TR-01; N-TR-02; N-TR-04; G-W02.
 
 TS-010.5 ne uvodi nova poslovna pravila, nove BM/BR identifikatore, nova sadržajna polja, nove statuse, nove workflow grane, novu poslovnu ulogu niti entitet Serija. Tehnički operacionalizuje usvojene BM/FS i zatvoreni katalog §9.
 
@@ -1348,7 +1356,7 @@ Deaktivacija Organizatora **ne briše** događaje niti istoriju.
 | Na odobrenju — prije početka pregleda | Može uređivati ili povući (postojeća pravila) | Prema pravilima | Direktno; bez projektovanja konkretnog lock mehanizma |
 | Na odobrenju — tokom pregleda | **Ne** uređuje | Može uređivati tokom pregleda | Direktno; serverska autorizacija obavezna |
 | Objavljen | Uređuje **prijedlog**, ne javnu verziju | Pregleda / uređuje / odobrava / vraća prijedlog | Prijedlog izmjene; javna verzija = posljednja odobrena |
-| Otkazan | **Ne** može ponovo objaviti; ne uređuje za republiku | Može urediti sadržaj prije ponovne objave | Direktno (Urednik); puni gate-ovi prije ponovne objave |
+| Otkazan | **Ne** uređuje sadržaj; **ne** vraća u Objavljen | Samo **razlog otkazivanja (napomena urednika)**; ostalo read-only | Forma read-only (BM-DG-10, BR-064); Otkazan → Objavljen odbijen |
 | Arhiviran | Read-only | Read-only | **Nema** uređivanja; **nema** izlaznog workflow prelaza; **nema** ručnog vraćanja u drugi status (V1) |
 
 ## 10.6 Prijedlog izmjene i N-DG-04
@@ -1362,7 +1370,7 @@ Poslovno / funkcionalno ponašanje (bez modela baze):
 * odobrenjem prijedlog postaje nova javna verzija;
 * vraćanjem na doradu prijedlog ostaje odvojen od javne verzije;
 * otkazivanje događaja čini aktivni prijedlog **neoperativnim** prema **G-W02** (TS-010.4);
-* nakon ponovne objave eventualne izmjene počinju **novim** prijedlogom.
+* na statusu **Otkazan** nema novog prijedloga izmjene niti reaktivacije; isti kulturni program kasnije = **novi** događaj (BM-DG-09).
 
 **N-DG-04:** Način fizičkog skladištenja verzija i prijedloga predstavlja **implementacioni izbor**. TS-010.5 **ne** propisuje: posebnu tabelu; snapshot; JSON model; verzijski broj; tehnički status prijedloga; naziv kolone; event sourcing.
 
@@ -1410,9 +1418,15 @@ Puni sadržajni i statusni gate-ovi (kao za slanje/objavu sadržaja).
 
 Ponovo: autorizacija; status; sadržajni gate-ovi; Održavanja; validnost veza; odsustvo neoperativnog ishoda **G-W02**.
 
-### 10.7.7 Ponovna objava Otkazanog
+### 10.7.7 Otkazan — read-only i razlog otkazivanja
 
-Puni objavni gate: naslov; kategorija; Organizator ako postoji; ≥1 validno Održavanje; sve relevantne veze i validacije.
+| Provjera | Obavezno |
+|----------|----------|
+| Status = **Otkazan** | Da |
+| Prelaz Otkazan → Objavljen | **Odbijeno** (BR-064, BM-ST-09) |
+| Izmjena sadržajnih polja (naziv, opis, Org, kategorija, termini, lokacija, fotografije, održavanja, …) | **Odbijeno** (BM-DG-10) |
+| Unos / dopuna razloga otkazivanja | Samo **Urednik**; ostale uloge odbijene |
+| Pokretanje prijedloga izmjene nad Otkazanim | **Odbijeno** |
 
 ## 10.8 Naslov, opis i tehnička ograničenja
 
@@ -1448,7 +1462,9 @@ Datum; opciono vrijeme početka/završetka; cjelodnevnost; lokacija; druga usvoj
 
 Na **Objavljenom** događaju izmjena podataka Održavanja ide kroz **prijedlog izmjene**.
 
-Statusne promjene Održavanja — prema TS-004 i TS-010.4.
+Statusne promjene Održavanja — prema TS-004 i TS-010.4. Status **Odgođen** (uz povratak u **Planiran** nakon novog termina) predstavlja **jedini** poslovni mehanizam promjene termina postojećeg (neotkazanog) događaja; ne mijenja se status događaja radi novog termina (BM-TR-12, BR-131; TS-003 §4.9).
+
+Dok je događaj **Otkazan**, Održavanja su **read-only** (BM-DG-10); nema promjene termina preko Otkazanog događaja.
 
 ### 10.9.4 Delete (Održavanje)
 
@@ -1555,9 +1571,10 @@ Podaci potrebni za poslovni integritet CRUD-a:
 * vrijeme kreiranja;
 * posljednji korisnik koji je mijenjao;
 * vrijeme posljednje izmjene;
-* istorija workflow odluka prema postojećim pravilima.
+* istorija workflow odluka prema postojećim pravilima;
+* unos / dopuna razloga otkazivanja (dok je Otkazan) — lokalni trag i emisija po TS-003 §8 / FS §5.16.
 
-**Ne** projektuje se centralna Evidencija aktivnosti FT-003 / TS-012. **Ne** uvodi se novi audit entitet.
+**Ne** projektuje se centralna Evidencija aktivnosti FT-003 / TS-012. **Ne** uvodi se novi audit entitet. **Ne** emituje se „Ponovna objava događaja“.
 
 ## 10.18 Napomena — FS §5.4.3
 
@@ -1664,7 +1681,7 @@ Opseg: događaji **aktivnog** Organizatora. Ne uvode se novi statusi; „vraćen
 **Nijesu** kategorije Moderatora (nema operativne akcije / van PO-DASH-03):
 
 * Objavljen **bez** aktivnog prijedloga;
-* Otkazan (Moderator ne ponovo objavljuje);
+* Otkazan (istorijski zapis; Moderator ne uređuje niti vraća u Objavljen);
 * Arhiviran (read-only V1);
 * događaji drugih Organizatora;
 * neoperativni prijedlog nakon otkazivanja (**G-W02**).
@@ -1685,7 +1702,7 @@ Opseg: globalni, prema uredničkim ovlašćenjima.
 
 * svi Objavljeni;
 * svi Arhivirani;
-* kompletna evidencija Otkazanih kao statistika (ponovna objava ostaje dostupna kroz CRUD/workflow, ne kao Dashboard inventar);
+* kompletna evidencija Otkazanih kao statistika (Otkazan je istorijski zapis; unos razloga otkazivanja ostaje kroz CRUD formu, ne kao Dashboard inventar; nema ponovne objave);
 * FT-003 Activity Feed;
 * javne statistike TS-009.
 
@@ -1817,7 +1834,10 @@ TS-010.7 **ne proširuje** katalog. Kanonski V1 katalog ostaje u **FS §5.16** (
 * pregled bez izmjena;
 * promjena aktivnog konteksta Organizatora (bilježi se samo kao atribut drugih zapisa kada je primjenjivo);
 * otvaranje forme, klik, filter, pretraga kao zasebne aktivnosti;
+* pokušaj ponovne objave / Otkazan → Objavljen (nije dozvoljena poslovna radnja; BR-064);
 * tehnički logovi i aktivnosti van poslovnog značaja.
+
+U katalogu Događaji (FS §5.16 / TS-003 §8.2) **ulaze** otkazivanje, unos/dopuna razloga otkazivanja i automatsko arhiviranje. Emisija **„Ponovna objava događaja“** nije dio kataloga.
 
 ## 12.7 Odnos prema Dashboardu i ostalim cjelinama
 
@@ -1903,7 +1923,7 @@ Prioritet i Level **nisu** obavezni i **nijesu** poslovna pravila.
 | TM-DASH | Dashboard |
 | TM-AUD | Lokalni audit / obaveza evidencije |
 | TM-CON | Concurrency |
-| TM-PUB | Objava / direktna objava / ponovna objava |
+| TM-PUB | Objava / direktna objava / otkazivanje / terminalnost Otkazan |
 | TM-ARCH | Arhiviranje |
 
 ### 13.3.3 Preduslovi (poslovni, ne tehnički)
@@ -1970,10 +1990,12 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | TM-PUB-01 | Objava | Zabrana objave Mod | Na odobrenju / Nacrt | Mod objavljuje | Odbijeno | Negativan | BM-ORG-05; BM-MOD-05; BR-007; TS-010.3 |
 | TM-PUB-02 | Direktna objava | Bez Organizatora | Urednik; događaj bez Org; gate OK | Direktna objava | Nacrt → Objavljen | Pozitivan | BM-ST-04; BR-018; PO-DG-05; TS-010.4 |
 | TM-PUB-03 | Direktna objava | Sa Organizatorom | Događaj sa Org | Direktna objava | Odbijeno | Negativan | PO-DG-05; TS-010.4 |
-| TM-PUB-04 | Objava | Otkazivanje Objavljenog | Objavljen; ovlašćeni | Otkaži | Otkazan | Pozitivan | BR-063; TS-010.4 |
+| TM-PUB-04 | Objava | Otkazivanje Objavljenog | Objavljen; ovlašćeni | Otkaži | Otkazan; forma read-only | Pozitivan | BR-063; BR-064; TS-010.4 |
 | TM-PUB-05 | Objava | G-W02 | Objavljen + aktivni prijedlog | Otkaži | Prijedlog neoperativan | Pozitivan | G-W02; TS-010.4 §7.12; TS-010.5 §10.6 |
-| TM-PUB-06 | Ponovna objava | Urednik | Otkazan; gate OK | Ponovo objavi | Objavljen | Pozitivan | BM-DG-09; BR-064; TS-010.4 |
-| TM-PUB-07 | Ponovna objava | Moderator | Otkazan | Ponovo objavi | Odbijeno | Negativan | BM-MOD-16; BR-064; TS-010.3 |
+| TM-PUB-06 | Terminalnost | Otkazan → Objavljen (Urednik) | Otkazan | Pokušaj ponovne objave / vraćanja | Odbijeno | Negativan | BM-DG-09; BR-064; TS-003 §4.9; TS-010.4 §7.4.8 |
+| TM-PUB-07 | Terminalnost | Otkazan → Objavljen (Moderator) | Otkazan | Pokušaj vraćanja u Objavljen | Odbijeno | Negativan | BM-MOD-16; BR-064; TS-010.3 |
+| TM-PUB-08 | Terminalnost | Razlog otkazivanja | Otkazan; Urednik | Unesi / dopuni razlog | Dozvoljeno; ostala polja zaključana | Pozitivan | BM-DG-10; BR-064; TS-010.5 §10.5 / §10.7.7 |
+| TM-PUB-09 | Terminalnost | Izmjena sadržaja Otkazan | Otkazan; Urednik | Izmijeni naziv / termin / fotografiju | Odbijeno | Negativan | BM-DG-10; TS-010.5 §10.7.7 |
 | TM-ARCH-01 | Arhiviranje | Automatsko | Predikat arhive ispunjen | Sistem arhivira | Arhiviran | Pozitivan | BM-DG-04; BR-065; TS-004; TS-010.4 |
 | TM-ARCH-02 | Arhiviranje | Ručno | Bilo koji status | Ručno arhiviraj | Odbijeno | Negativan | TS-010.4 |
 | TM-ARCH-03 | Read-only | Arhiviran | Status Arhiviran | Izmjena / workflow izlaz | Odbijeno; read-only | Negativan | TS-010.4; TS-010.5 §10.5 |
@@ -1991,7 +2013,7 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | TM-CRUD-07 | CRUD | Update vraćeni Nacrt | Vraćeni Nacrt | Update | Dozvoljeno u granicama | Pozitivan | TS-010.5 §10.5 |
 | TM-CRUD-08 | CRUD | Update Na odobrenju prije pregleda | Prije pregleda; podnosilac | Update | Dozvoljeno po pravilima | Pozitivan | TS-010.5 §10.5 |
 | TM-CRUD-09 | CRUD | Update Objavljen direktno | Objavljen; bez prijedloga | Direktni Update sadržaja | Odbijeno | Negativan | BM-DG; TS-010.5 §10.6 |
-| TM-CRUD-10 | CRUD | Update Otkazan (Mod) | Otkazan; Mod | Sadržajna izmjena | Odbijeno (ponovna objava samo Urednik) | Negativan | TS-010.5; BR-064 |
+| TM-CRUD-10 | CRUD | Update Otkazan (Mod) | Otkazan; Mod | Sadržajna izmjena / razlog | Odbijeno | Negativan | TS-010.5; BM-DG-10; BR-064 |
 | TM-CRUD-11 | CRUD | Veza Org 0..1 | Događaj | Promjena veze Org | Urednik može povezati/odspojiti u granicama; Mod ne mijenja Org događaja | Granični | TS-010.5; TS-001 |
 | TM-CRUD-12 | CRUD | Promjena veze Org — gubitak prava | Događaj prebačen na drugi Org | Prethodni Mod pristupa | Operativno pravo ukinuto | Negativan | TS-010.5 |
 | TM-READ-01 | Read | Mod vidi samo aktivni Org | Dva Org | Lista događaja | Samo aktivni kontekst | Pozitivan | TS-010.5 §10.4; BR-016; BR-124 |
@@ -2012,8 +2034,9 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | TM-PROP-03 | Prijedlog | Privremeno nepotpun | Objavljen | Sačuvaj prijedlog nepotpun | Dozvoljeno | Pozitivan | TS-010.5 §10.6 |
 | TM-PROP-04 | Prijedlog | Odobrenje zamjenjuje javnu | Prijedlog na pregledu; gate OK | Odobri | Javna verzija zamijenjena | Pozitivan | TS-010.5 §10.6 |
 | TM-PROP-05 | Prijedlog | Vraćanje ne mijenja javnu | Prijedlog na pregledu | Vrati | Javna verzija nepromijenjena | Pozitivan | TS-010.5 §10.6 |
-| TM-PROP-06 | Prijedlog | Novi nakon ponovne objave | Otkazan → Objavljen | Novi prijedlog | Dozvoljeno (nema neoperativnog ishoda) | Pozitivan | G-W02; TS-010.5 |
-| TM-PROP-07 | Prijedlog | N-DG-04 granica | Aktivni prijedlog | Provjera ponašanja | Bez zahtjeva za tabelu/snapshot/JSON/verzijski broj | Granični | N-DG-04; TS-010.5 §10.6 |
+| TM-PROP-06 | Prijedlog | Prijedlog na Otkazanom | Otkazan | Pokreni novi prijedlog | Odbijeno | Negativan | BM-DG-09/10; G-W02; TS-010.5 |
+| TM-PROP-07 | Prijedlog | Novi događaj za isti program | Postojeći Otkazan | Kreiraj novi događaj | Novi Nacrt (novi lifecycle) | Pozitivan | BM-DG-09; TS-010.4 §7.2; TS-010.5 |
+| TM-PROP-08 | Prijedlog | N-DG-04 granica | Aktivni prijedlog | Provjera ponašanja | Bez zahtjeva za tabelu/snapshot/JSON/verzijski broj | Granični | N-DG-04; TS-010.5 §10.6 |
 | TM-CON-01 | Concurrency | Stale update | Dvije sesije; novija sačuvana | Sačuvaj zastarjele podatke | Ne smije tiho prepisati noviju izmjenu | Negativan | TS-010.5 §10.14 |
 
 ## 13.8 Matrica — Održavanja, generator, Manifestacija, Mediji
@@ -2036,6 +2059,7 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | TM-OCC-14 | Održavanja | Delete u vraćenom Nacrtu | Vraćeni Nacrt | Fizičko brisanje | Odbijeno | Negativan | N-TR-04 |
 | TM-OCC-15 | Održavanja | Delete u prijedlogu / Objavljen | Prijedlog ili Objavljen | Fizičko brisanje | Odbijeno | Negativan | N-TR-04 |
 | TM-OCC-16 | Održavanja | Uklanjanje svih u početnom Nacrtu | Početni Nacrt; više Održavanja | Ukloni sva | Dozvoljeno (0 Održavanja) | Granični | N-TR-04; TS-010.5 |
+| TM-OCC-17 | Održavanja | Odgođen = promjena termina | Objavljen; održavanje | Postavi Odgođen / novi termin → Planiran | Dozvoljeno; status događaja ne postaje Otkazan→Objavljen | Pozitivan | BM-TR-12; BR-131; TS-004; TS-010.5 §10.9.3 |
 | TM-GEN-01 | Generator | Dnevni / sedmični / mjesečni | Nacrt; generator | Generiši | Kreira Održavanja; nema entiteta Serija | Pozitivan | N-TR-02; PO-N-TR-02; TS-004 |
 | TM-GEN-02 | Generator | Završetak brojem / krajnjim datumom | Generator | Generiši | Dozvoljeno | Pozitivan | N-TR-02 |
 | TM-GEN-03 | Generator | Max 100 | Generator > 100 | Generiši | Odbijeno / ograničeno na max 100 | Granični | N-TR-02 |

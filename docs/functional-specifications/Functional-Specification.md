@@ -72,6 +72,7 @@
 | doc-CR-004A-impl | 2026-08-01 | Statusno usklađenje napomene uz BR-114: CR-004A Implemented (implementacija `0f73240`; dokumentaciona priprema `614706c`). Bez novih BR. Bez izmjene funkcionalnih pravila. Verzija ostaje 1.0.0. |
 | PATCH-FS-051 | 2026-08-06 | CR-004B (javni prikaz otkazanih): usklađeni BR-001, BR-002, BR-004, BR-114, BR-116, BR-263; dodati/precizirani BR-270–BR-274 (portalna Arhiva ≠ archived; status ostaje cancelled); napomena doc-CR-004B. Bez izmjene BR-063 / BR-065. Bez javne dostupnosti archived. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-052 | 2026-08-06 | PO-N-TR-02-01–03 / BM PATCH-052: zatvaranje N-TR-02 — usklađeni BR-060 i BR-061 (generator dnevno/sedmično/mjesečno; završetak brojem ili krajnjim datumom; max 100; serija nije trajni objekat; ručna = generisana nakon generisanja). Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-053 | 2026-08-06 | Usklađivanje sa BM PATCH-053 / PO-DG-07: Otkazan terminalan (nema Otkazan → Objavljen); novi program = novi događaj; Odgođen = jedini mehanizam promjene termina; Otkazan = istorijski zapis (forma zaključana; izuzetak: razlog otkazivanja / napomena urednika). Usklađeni BR-007, BR-063, BR-064, BR-131, BR-182, BR-183; dijagram §5.5.6a; katalog §5.16. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -776,7 +777,7 @@ Moderator može samostalno otkazati objavljeni događaj isključivo dok Organiza
 
 Deaktivacijom Organizatora prestaje moderatorski kontekst za tog Organizatora. Moderator tada više nema pravo otkazivanja niti drugih poslovnih radnji nad događajima tog Organizatora.
 
-Moderator ne može samostalno objaviti sadržaj niti ponovo objaviti otkazani događaj.
+Moderator ne može samostalno objaviti sadržaj. Iz statusa **Otkazan** nije dozvoljen povratak u **Objavljen**. Moderator ne mijenja sadržaj otkazanog događaja.
 
 ---
 
@@ -1299,7 +1300,6 @@ stateDiagram-v2
 
     Objavljen --> Arhiviran : Istek svih održavanja (Sistem)
     Objavljen --> Otkazan : Otkaži događaj (Moderator / Urednik)
-    Otkazan --> Objavljen : Ponovna objava (isključivo Urednik)
     Otkazan --> Arhiviran : Istek svih održavanja (Sistem)
 
     state "Na odobrenju" as Na_odobrenju
@@ -1313,7 +1313,7 @@ Objašnjenje:
 * Ne definiše nova poslovna pravila i ne mijenja postojeća.
 * Služi lakšem razumijevanju kompletnog uredničkog workflow-a.
 * Otkazivanje: Moderator samo dok je Organizator aktivan i u aktivnom kontekstu; Urednik za bilo koji objavljeni događaj, uključujući događaje deaktiviranog Organizatora (BR-063, BR-050).
-* Ponovna objava: isključivo Urednik; nije automatska; samo dok je status Otkazan (BR-064).
+* Status **Otkazan** je terminalan za povratak u **Objavljen**: prelaz Otkazan → Objavljen nije dozvoljen (BR-064).
 * Deaktivacijom Organizatora prestaje moderatorski kontekst; Moderator više ne izvršava poslovne radnje nad događajima tog Organizatora (BR-049, BR-050).
 * Automatsko arhiviranje: Sistem nakon završetka svih održavanja — iz statusa Objavljen i iz statusa Otkazan (BR-065).
 * Može predstavljati osnovu za buduću implementaciju state machine modela.
@@ -1612,7 +1612,7 @@ Izmjene podataka održavanja objavljenog događaja, osim postavljanja statusa **
 
 Životni ciklus događaja predstavlja skup poslovnih statusa kroz koje događaj prolazi od kreiranja do automatskog arhiviranja u modulu Kalendara kulture.
 
-Promjena statusa događaja može se izvršiti isključivo u skladu sa poslovnim pravilima modula Kalendara kulture i ovlašćenjima korisničkih uloga. Sistem ne dozvoljava promjenu statusa koja nije definisana poslovnim pravilima.
+Promjena statusa događaja može se izvršiti isključivo u skladu sa poslovnim pravilima modula Kalendara kulture i ovlašćenjima korisničkih uloga. Sistem ne dozvoljava promjenu statusa koja nije definisana poslovnim pravilima. Sistem ne dozvoljava prelaz iz statusa **Otkazan** u status **Objavljen**.
 
 #### BR-062 – Status događaja
 
@@ -1638,25 +1638,25 @@ Urednik može otkazati bilo koji objavljeni događaj.
 
 Otkazivanjem status događaja se mijenja u **Otkazan**.
 
-Otkazan događaj ostaje dostupan u skladu sa pravilima prikaza definisanim za javni portal.
+Otkazan događaj ostaje dostupan u skladu sa pravilima prikaza definisanim za javni portal i tretira se kao istorijski zapis.
+
+Nakon otkazivanja Urednik može unijeti ili dopuniti razlog otkazivanja (napomenu urednika) radi tačnog informisanja javnosti, u skladu sa BR-064.
 
 ---
 
-#### BR-064 – Ponovna objava događaja
+#### BR-064 – Terminalnost statusa Otkazan
 
-Ponovno objavljivanje otkazanog događaja predstavlja uredničku radnju.
+Status **Otkazan** predstavlja terminalno stanje događaja u smislu povratka u **Objavljen**.
 
-Isključivo Urednik može ponovo objaviti otkazani događaj.
+Iz statusa **Otkazan** nije dozvoljen povratak u status **Objavljen**.
 
-Moderator ne može ponovo objaviti otkazani događaj.
+Ako se isti kulturni program kasnije ponovo organizuje, ne reaktivira se postojeći događaj; kreira se novi događaj kao novi zapis sa novim životnim ciklusom.
 
-Ponovna objava je dozvoljena samo dok je događaj u statusu **Otkazan**.
+Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kroz status **Odgođen** na održavanju, u skladu sa BR-067, BR-130 i BR-131.
 
-Prije ponovne objave Urednik provjerava i, po potrebi, ažurira podatke događaja i povezanih održavanja koristeći postojeća ovlašćenja.
+Događaj u statusu **Otkazan** tretira se kao istorijski zapis. Forma događaja je funkcionalno zaključana: nije dozvoljena izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja.
 
-Ponovna objava nije automatska.
-
-Ponovna objava mijenja status događaja u **Objavljen**.
+Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti radi tačnog informisanja javnosti.
 
 ---
 
@@ -1745,6 +1745,8 @@ Prilikom prelaska iz statusa **Odgođen** u status **Planiran** radi se o istom 
 Novo održavanje se ne kreira.
 
 Istorija održavanja ostaje sačuvana.
+
+Status **Odgođen**, uz povratak u **Planiran** nakon određivanja novog termina, predstavlja jedini poslovni mehanizam za promjenu termina postojećeg događaja. Otkazani događaj se ne vraća u status **Objavljen** radi novog termina niti radi ponovne organizacije istog programa (BR-064).
 
 ---
 
@@ -3859,7 +3861,7 @@ U centralnu Evidenciju ulaze:
 * isticanje događaja;
 * uklanjanje isticanja događaja;
 * otkazivanje događaja;
-* ponovna objava događaja (u skladu sa BM-ST-07 / BR-064);
+* unos ili dopuna razloga otkazivanja (napomene urednika) na otkazanom događaju;
 * odlaganje održavanja (status **Odgođen** na održavanju, u skladu sa BM-TR);
 * otkazivanje pojedinačnog održavanja;
 * promjena termina održavanja;
@@ -3875,6 +3877,7 @@ Ne ulaze u centralnu Evidenciju:
 * sitne uređivačke izmjene i tekstualne korekcije;
 * zaključavanje i otključavanje prijedloga;
 * pregled događaja bez izmjena;
+* pokušaj ponovne objave otkazanog događaja (nije dozvoljena poslovna radnja; BR-064);
 * druge operativne radnje bez poslovnog značaja.
 
 Napomena za kasniju razradu (van ovog PATCH-a kao novi tip aktivnosti): izmjene objavljenog događaja koje mijenjaju poslovno značajne karakteristike (npr. kategorija) mogu se tretirati kao poslovno značajne; precizan obuhvat nije dio ovog PATCH-a.
@@ -3994,7 +3997,7 @@ Kada je primjenjivo, aktivni kontekst Organizatora bilježi se kao atribut drugi
 
 ##### BR-182 – Katalog — Događaji
 
-Sistem evidentira u centralnoj Evidenciji aktivnosti aktivnosti navedene u katalogu Događaji ovog poglavlja, uključujući urednički tok, isticanje, otkazivanje, odlaganje održavanja, promjenu termina i lokacije, prijedloge izmjena i automatsko arhiviranje.
+Sistem evidentira u centralnoj Evidenciji aktivnosti aktivnosti navedene u katalogu Događaji ovog poglavlja, uključujući urednički tok, isticanje, otkazivanje, unos ili dopunu razloga otkazivanja (napomene urednika), odlaganje održavanja, promjenu termina i lokacije, prijedloge izmjena i automatsko arhiviranje.
 
 Ne postoji zaseban katalog Održavanja u okviru centralne Evidencije aktivnosti; aktivnosti nad Održavanjem evidentiraju se kroz katalog Događaji.
 
@@ -4002,7 +4005,7 @@ Ne postoji zaseban katalog Održavanja u okviru centralne Evidencije aktivnosti;
 
 ##### BR-183 – Događaji — aktivnosti van centralne evidencije
 
-Uređivanje nacrta, sitne uređivačke izmjene, tekstualne korekcije, zaključavanje i otključavanje prijedloga te pregled bez izmjena ne ulaze u centralnu Evidenciju aktivnosti.
+Uređivanje nacrta, sitne uređivačke izmjene, tekstualne korekcije, zaključavanje i otključavanje prijedloga, pregled bez izmjena te pokušaj ponovne objave otkazanog događaja (nije dozvoljena poslovna radnja; BR-064) ne ulaze u centralnu Evidenciju aktivnosti.
 
 ---
 
@@ -4130,3 +4133,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-01 | FS-001 BR-114 napomena (doc-CR-004A-impl): CR-004A Implemented (`0f73240`; dokumentacija `614706c`). Statusno usklađenje bez izmjene BR/funkcionalnih pravila. Verzija ostaje 1.0.0. |
 | 2026-08-06 | FS-001 (PATCH-FS-051 / doc-CR-004B): CR-004B Planned — korektivni prolaz; usklađeni BR-001/002/004/114/116/263; BR-270–BR-274 (cancelled ostaje; portalna Arhiva vremenska); PO-CR4B-01…10. Bez izmjene BR-063 / BR-065. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-06 | FS-001 (PATCH-FS-052): PO-N-TR-02-01–03 — zatvoren N-TR-02; usklađeni BR-060 / BR-061 (generator; max 100; serija nije trajni objekat). Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| 2026-08-06 | FS-001 (PATCH-FS-053): Usklađivanje sa BM PATCH-053 / PO-DG-07 — Otkazan terminalan; BR-007, BR-063, BR-064 (prepisan), BR-131, BR-182, BR-183; §5.5.6a; katalog §5.16. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |

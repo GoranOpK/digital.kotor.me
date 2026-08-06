@@ -108,7 +108,7 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 
 **Newsletter (u okviru FT-001):** model zasnovan na novoobjavljenim događajima i poslovno značajnim promjenama — javno objavljivanje je okidač za prvo uključivanje; otkazivanje, odlaganje i promjena datuma/vremena/lokacije su prioritetni okidači (samo pretplatnicima kojima je događaj već poslat). Višestruke promjene prije slanja daju jedinstveno obavještenje sa posljednjim važećim stanjem. Bez fiksnog sedmičnog rasporeda.
 
-**Usvojene poslovne odluke (Događaj — otkazivanje / ponovna objava):** Dok je Organizator aktivan, Moderator može otkazati objavljeni događaj u aktivnom kontekstu; deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više ne izvršava poslovne radnje nad njegovim događajima — otkazivanje tada isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj; isključivo Urednik može ponovo objaviti otkazani događaj dok je status Otkazan (BM PATCH-035/036: BM-ORG-12, BM-DG-05, BM-DG-09, BM-ST-07, BM-MOD-16, BM-UR-11; FS PATCH-FS-037/038: BR-007, BR-049, BR-050, BR-063, BR-064). Relevantno za TS-003.
+**Usvojene poslovne odluke (Događaj — otkazivanje / terminalnost Otkazan):** Dok je Organizator aktivan, Moderator može otkazati objavljeni događaj u aktivnom kontekstu; deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više ne izvršava poslovne radnje nad njegovim događajima — otkazivanje tada isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj (BM PATCH-035/036: BM-ORG-12, BM-DG-05, BM-ST-07, BM-MOD-16, BM-UR-11; FS PATCH-FS-037/038: BR-007, BR-049, BR-050, BR-063). **PO-DG-07 / BM PATCH-053 / FS PATCH-FS-053** (superseduje isključivo dio PATCH-035 / N-DG-01 koji je dozvoljavao Otkazan → Objavljen): status **Otkazan** je terminalan za povratak u **Objavljen**; prelaz Otkazan → Objavljen nije dozvoljen; isti kulturni program kasnije = **novi** događaj (novi zapis); **Odgođen** na održavanju = jedini mehanizam promjene termina postojećeg (neotkazanog) događaja (BM-TR-12, BR-131); Otkazan = istorijski zapis / forma **read-only**; jedina dozvoljena izmjena = razlog otkazivanja (napomena urednika) — Urednik (BM-DG-09, BM-DG-10, BM-ST-07, BM-ST-09, BM-UR-11; BR-064). Jedini usvojeni statusni izlaz iz Otkazan ostaje Otkazan → Arhiviran (Sistem; BR-065). Relevantno za TS-003 v0.1.2 i TS-010 v1.0.1.
 
 **Usvojene poslovne odluke (Događaj — direktna objava / arhiviranje):** Direktna objava Urednika dozvoljena je isključivo za događaj bez Organizatora; događaj sa Organizatorom ide isključivo Nacrt → Na odobrenju → Objavljen (PO-DG-05 / N-DG-05 zatvoren; BM PATCH-037 BM-ST-04; FS PATCH-FS-039 BR-018, BR-028). Otkazan događaj automatski prelazi u Arhiviran nakon završetka svih održavanja, isto kao Objavljen (PO-DG-06 / N-DG-06 zatvoren; BM-DG-04, BM-ST-08; BR-065).
 
@@ -193,7 +193,9 @@ Povezana dokumentacija (Organizator):
 
 Povezana dokumentacija (Događaj):
 
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija 0.1.1; Usvojen)
+* Business Model — BM-04 (BM-DG-01–BM-DG-10), BM-10 (BM-ST-01–BM-ST-09), BM-TR-12; PATCH-035/036 (otkazivanje), PATCH-037 (direktna objava / arhiva), **PATCH-053 / PO-DG-07** (terminalnost Otkazan)
+* Functional Specification — §5.4–§5.5, §5.7.1–§5.7.2 (BR-006–BR-044, BR-062–BR-066, BR-131), §5.16 katalog Događaji (BR-182/BR-183); PATCH-FS-037/038/039; **PATCH-FS-053**
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija **0.1.2**; Usvojen)
 
 Povezana dokumentacija (Održavanje):
 
@@ -238,8 +240,8 @@ Povezana dokumentacija (Newsletter):
 
 Povezana dokumentacija (Urednički portal):
 
-* Business Model — BM-12 (BM-EP-01–BM-EP-10), BM-01–BM-03 (uloge), BM-MOD-04, BM-UR-09, BM-GL-09
-* Functional Specification — Platformsko pravilo; §5.14 (BR-118–BR-128); BR-007; BR-048; BR-051
+* Business Model — BM-12 (BM-EP-01–BM-EP-10), BM-01–BM-03 (uloge), BM-MOD-04, BM-UR-09, BM-GL-09; BM-DG-09/BM-DG-10 / **PATCH-053** (terminalnost Otkazan u workflow/CRUD)
+* Functional Specification — Platformsko pravilo; §5.14 (BR-118–BR-128); BR-007; BR-048; BR-051; BR-063–BR-065; BR-131; **PATCH-FS-053**
 * Usvojene product odluke (Dashboard — TS-010.6):
   * **PO-DASH-01:** Radna tabla prijavljenog korisnika; sadržaj po ulozi/ovlašćenjima/aktivnom kontekstu; svrha = brz nastavak rada; statistika pomoćna.
   * **PO-DASH-02:** Informacije za nastavak rada; nije izvještavanje ni poslovna analitika.
@@ -253,12 +255,12 @@ Povezana dokumentacija (Urednički portal):
   * **PO-AL-04:** Bez novih aktivnosti; samo BM/FS katalog.
 * Usvojena QA odluka (Business Test Matrix — TS-010.8):
   * **QA-TS0108-01:** TS-010.8 = Business Test Matrix; nije QA Plan / Test Strategy / Test Implementation / CI / coverage.
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija 1.0.0; USVOJEN)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija **1.0.1**; USVOJEN — usklađen sa PATCH-053 / TS-003 v0.1.2)
   * TS-010.1 Osnove uredničkog portala — Usvojeno
   * TS-010.2 Organizatori — Usvojeno
   * TS-010.3 Moderator Organizatora — Usvojeno
-  * TS-010.4 Workflow događaja — Usvojeno
-  * TS-010.5 CRUD događaja i validacije — Usvojeno
+  * TS-010.4 Workflow događaja — Usvojeno (terminalnost Otkazan; bez Otkazan → Objavljen)
+  * TS-010.5 CRUD događaja i validacije — Usvojeno (Otkazan read-only; razlog otkazivanja)
   * TS-010.6 Dashboard uredničkog portala — Usvojeno
   * TS-010.7 Evidencija aktivnosti uredničkog portala — Usvojeno
   * TS-010.8 Business Test Matrix — Usvojeno
@@ -270,14 +272,14 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS | Naziv | Feature | Modul | Status |
 | -- | ----- | ------- | ----- | ------ |
 | TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.2.1) |
-| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
+| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
 | TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.5); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni |
 | TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.5) |
-| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.0) — TS-010.1–TS-010.8 |
+| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.1) — TS-010.1–TS-010.8 |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
 
@@ -502,3 +504,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-06 | FT-001 — TS-010.7 Evidencija aktivnosti uredničkog portala dokumentaciono pripremljen (v0.7.0, U IZRADI). PO-AL-01–04; obaveza evidentiranja prema FT-003; lokalni ≠ centralni; bez UI centralne evidencije; ne zamjenjuje TS-012. TS-010.8 Planned. FT-001 ostaje Active; FT-003 ostaje Planned. Bez izmjene BM/FS. Bez izmjene TS-001/TS-003/TS-004/TS-008/TS-009. Bez izmjene implementacije. |
 | 2026-08-06 | FT-001 — TS-010.8 Business Test Matrix dokumentaciono pripremljen (v0.8.0, U IZRADI). QA-TS0108-01; poslovni test scenariji sa sljedivošću BM→FS→TS→matrica; bez QA plana / implementacije testova / CI. TS-010.1–TS-010.8 Dokumentaciono pripremljeno. FT-001 ostaje Active. Bez izmjene BM/FS. Bez izmjene TS-001/TS-003/TS-004/TS-008/TS-009. Bez izmjene implementacije. |
 | 2026-08-06 | FT-001 — TS-010 formalno usvojen (v1.0.0, USVOJEN). Kompletne podcjeline TS-010.1–TS-010.8. Bez funkcionalnih izmjena. FT-001 ostaje Active. Bez izmjene BM/FS. Bez izmjene TS-001/TS-003/TS-004/TS-008/TS-009. Bez izmjene implementacije. |
+| 2026-08-07 | FT-001 — Evidentirana usvojena odluka PO-DG-07 / BM PATCH-053 / FS PATCH-FS-053: Otkazan terminalan (nema Otkazan → Objavljen); novi program = novi događaj; Odgođen = jedini mehanizam promjene termina; Otkazan = istorijski zapis / read-only (izuzetak: razlog otkazivanja). Usklađeni TS-003 v0.1.2 i TS-010 v1.0.1. Superseduje isključivo republish dio PATCH-035 / N-DG-01. FT-001 ostaje Active. Bez izmjene implementacije. |
