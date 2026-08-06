@@ -240,10 +240,10 @@ Povezana dokumentacija (Urednički portal):
 
 * Business Model — BM-12 (BM-EP-01–BM-EP-10), BM-01–BM-03 (uloge), BM-MOD-04, BM-UR-09, BM-GL-09
 * Functional Specification — Platformsko pravilo; §5.14 (BR-118–BR-128); BR-007; BR-048; BR-051
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija 0.2.1; U IZRADI)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija 0.3.1; U IZRADI)
   * TS-010.1 Osnove uredničkog portala — Dokumentaciono pripremljeno
   * TS-010.2 Organizatori — Dokumentaciono pripremljeno
-  * TS-010.3 Moderator Organizatora — Planned
+  * TS-010.3 Moderator Organizatora — Dokumentaciono pripremljeno
   * TS-010.4 Workflow događaja — Planned
   * TS-010.5 CRUD događaja — Planned
   * TS-010.6 Dashboard — Planned
@@ -264,7 +264,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.5) |
-| TS-010 | Urednički portal | FT-001 | Kalendar kulture | U IZRADI (v0.2.1) — TS-010.1–TS-010.2 Dokumentaciono pripremljeno; TS-010.3–TS-010.8 Planned |
+| TS-010 | Urednički portal | FT-001 | Kalendar kulture | U IZRADI (v0.3.1) — TS-010.1–TS-010.3 Dokumentaciono pripremljeno; TS-010.4–TS-010.8 Planned |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
 
@@ -477,3 +477,5 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-06 | FT-001 — TS-010 Urednički portal započet (v0.1.0, U IZRADI). TS-010.1 Osnove dokumentaciono pripremljene; TS-010.2–TS-010.8 Planned. Putanja `docs/technical-specifications/Technical-Specification_Urednicki_portal.md`. Bez izmjene FT-001 statusa. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 2026-08-06 | FT-001 — TS-010.2 Organizatori dokumentaciono pripremljen (v0.2.0, U IZRADI). Pravila veze Organizator↔Moderator, invariant najmanje jednog aktivnog Moderatora, statusi Na odobrenju/Aktivan/Deaktiviran. TS-010.3–TS-010.8 Planned. Bez izmjene FT-001 statusa. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 2026-08-06 | FT-001 — TS-010.2 QA korektivni prolaz (v0.2.1): precizirana Pravila 3 i 5; uklonjen trailing whitespace. Bez izmjene FT-001 statusa. Bez izmjene BM/FS. Bez izmjene implementacije. |
+| 2026-08-06 | FT-001 — TS-010.3 Moderator Organizatora dokumentaciono pripremljen (v0.3.0, U IZRADI). Nastanak/uklanjanje ovlašćenja; kontekst; invarianti; ovlašćenja/zabrane; G-11/G-12/G-13/G-16/G-17; G-14 van obuhvata. TS-010.4–TS-010.8 Planned. Bez izmjene FT-001 statusa. Bez izmjene BM/FS. Bez izmjene implementacije. |
+| 2026-08-06 | FT-001 — TS-010.3 QA korektivni prolaz (v0.3.1): G-11 zahtjev za sopstveno uklanjanje; G-12 terminologija; G-14 granica podataka Organizatora; G-17 sloj platformske role; povlačenje; G-13; sljedivost. Bez izmjene FT-001 statusa. Bez izmjene BM/FS. Bez izmjene implementacije. |
