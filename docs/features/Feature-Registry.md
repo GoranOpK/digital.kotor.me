@@ -235,8 +235,9 @@ Povezana dokumentacija (Javni portal):
 
 Povezana dokumentacija (Newsletter):
 
-* Business Model — BM-13 (BM-NL-01–BM-NL-25), PATCH-031–PATCH-033
-* Functional Specification — §5.15 (BR-138–BR-169), PATCH-FS-032–PATCH-FS-034
+* Business Model — BM-13 (BM-NL-01–BM-NL-25), PATCH-031–PATCH-033; usklađenost sa PATCH-053 / PO-DG-07 (G-NL-08 zatvoren)
+* Functional Specification — §5.15 (BR-138–BR-169), PATCH-FS-032–PATCH-FS-034; §5.16 katalog Newsletter (BR-184–BR-186)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Newsletter.md` (TS-011; verzija **1.0.1**; USVOJEN)
 
 Povezana dokumentacija (Urednički portal):
 
@@ -280,7 +281,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.5) |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.1) — TS-010.1–TS-010.8 |
-| TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.1) |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
 
 ---
@@ -505,3 +506,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-06 | FT-001 — TS-010.8 Business Test Matrix dokumentaciono pripremljen (v0.8.0, U IZRADI). QA-TS0108-01; poslovni test scenariji sa sljedivošću BM→FS→TS→matrica; bez QA plana / implementacije testova / CI. TS-010.1–TS-010.8 Dokumentaciono pripremljeno. FT-001 ostaje Active. Bez izmjene BM/FS. Bez izmjene TS-001/TS-003/TS-004/TS-008/TS-009. Bez izmjene implementacije. |
 | 2026-08-06 | FT-001 — TS-010 formalno usvojen (v1.0.0, USVOJEN). Kompletne podcjeline TS-010.1–TS-010.8. Bez funkcionalnih izmjena. FT-001 ostaje Active. Bez izmjene BM/FS. Bez izmjene TS-001/TS-003/TS-004/TS-008/TS-009. Bez izmjene implementacije. |
 | 2026-08-07 | FT-001 — Evidentirana usvojena odluka PO-DG-07 / BM PATCH-053 / FS PATCH-FS-053: Otkazan terminalan (nema Otkazan → Objavljen); novi program = novi događaj; Odgođen = jedini mehanizam promjene termina; Otkazan = istorijski zapis / read-only (izuzetak: razlog otkazivanja). Usklađeni TS-003 v0.1.2 i TS-010 v1.0.1. Superseduje isključivo republish dio PATCH-035 / N-DG-01. FT-001 ostaje Active. Bez izmjene implementacije. |
+| 2026-08-07 | FT-001 — TS-011 Newsletter formalno usvojen (v1.0.1). Putanja `docs/technical-specifications/Technical-Specification_Newsletter.md`. Administrativno usklađen status u registru (više nije „Planiran — nacrt nije započet”). Bez izmjene poslovnog sadržaja Feature Registry-ja. Bez izmjene BM/FS. Bez izmjene TS-003/TS-004/TS-009/TS-010. Bez izmjene implementacije. |
