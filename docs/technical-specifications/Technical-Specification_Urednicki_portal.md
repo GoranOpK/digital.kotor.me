@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.7.0
+**Verzija:** 0.8.0
 **Datum:** 2026-08-06
 
 ---
@@ -27,6 +27,7 @@
 | 0.5.0 | 2026-08-06 | TS-010.5 — CRUD događaja i validacije: Create/Read/Update; prijedlog izmjene (N-DG-04 = implementacioni izbor); nested Održavanja (TS-004); editabilnost; gate-ovi; Delete događaja nije podržan; sljedivost §8.5. Bez novih BM/BR. Bez izmjene implementacije. |
 | 0.6.0 | 2026-08-06 | TS-010.6 — Dashboard uredničkog portala: radna tabla (PO-DASH-01–05); radne kategorije sa brojačem i filterom ka CRUD; bez BI/listi/Activity Feed; sljedivost §8.6. Bez novih BM/BR. Bez izmjene implementacije. |
 | 0.7.0 | 2026-08-06 | TS-010.7 — Evidencija aktivnosti uredničkog portala: obaveza evidentiranja prema FT-003 (PO-AL-01–04); lokalni audit ≠ centralna evidencija; bez UI centralne evidencije; sljedivost §8.7. Bez novih BM/BR. Bez izmjene implementacije. |
+| 0.8.0 | 2026-08-06 | TS-010.8 — Business Test Matrix (QA-TS0108-01): poslovni test scenariji za FT-001 urednički portal; sljedivost BM→FS→TS→matrica; bez QA plana, implementacije testova, CI/coverage. Bez novih BM/BR. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -51,6 +52,7 @@ Ne mijenjaju se postojeći redovi.
 | 0.5.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.5 (CRUD događaja i validacije). TS-010.6–TS-010.8 ostaju Planned. |
 | 0.6.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.6 (Dashboard uredničkog portala; PO-DASH-01–05). TS-010.7–TS-010.8 ostaju Planned. |
 | 0.7.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.7 (Evidencija aktivnosti uredničkog portala; PO-AL-01–04). TS-010.8 ostaje Planned. |
+| 0.8.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.8 (Business Test Matrix; QA-TS0108-01). TS-010.1–TS-010.8 Dokumentaciono pripremljeno. |
 
 ---
 
@@ -138,6 +140,12 @@ TS-010.7 — Evidencija aktivnosti uredničkog portala obuhvata isključivo:
 3. referencu na V1 katalog aktivnosti bez proširenja (PO-AL-04);
 4. granice pristupa (Moderator / Urednik / Administrator) i odnos prema FT-003 / TS-012.
 
+TS-010.8 — Business Test Matrix obuhvata isključivo:
+
+1. poslovne test scenarije za Urednički portal (FT-001) sa sljedivošću prema BM/FS/TS/PO;
+2. pozitivne, negativne i granične scenarije nad usvojenim pravilima TS-010.1–TS-010.7 i referentnim TS;
+3. matricu koja **ne** uvodi nova poslovna pravila, funkcionalnosti ni GAP zatvaranja (QA-TS0108-01).
+
 ---
 
 # Van obuhvata
@@ -184,7 +192,9 @@ TS-010.6 **ne razrađuje**: vidi §11.10 Van obuhvata TS-010.6.
 
 TS-010.7 **ne razrađuje**: vidi §12.8 Van obuhvata TS-010.7.
 
-Te cjeline ostaju u planiranim podcjelinama TS-010.8, odnosno u postojećim TS dokumentima entiteta (TS-001, TS-003–TS-008) i FT-003 / TS-012, bez dupliciranja njihovih pravila.
+TS-010.8 **ne razrađuje**: vidi §13.11 Van obuhvata TS-010.8.
+
+Entiteti i domen van uredničkog portala ostaju u postojećim TS dokumentima (TS-001, TS-003–TS-008) i FT-003 / TS-012, bez dupliciranja njihovih pravila.
 
 ---
 
@@ -215,7 +225,7 @@ Te cjeline ostaju u planiranim podcjelinama TS-010.8, odnosno u postojećim TS d
 | TS-010.5 CRUD događaja i validacije | Dokumentaciono pripremljeno |
 | TS-010.6 Dashboard uredničkog portala | Dokumentaciono pripremljeno |
 | TS-010.7 Evidencija aktivnosti uredničkog portala | Dokumentaciono pripremljeno |
-| TS-010.8 Test matrica | Planned |
+| TS-010.8 Business Test Matrix | Dokumentaciono pripremljeno |
 
 ---
 
@@ -1153,6 +1163,28 @@ BM-14 / BM-EP-09 → FS §5.16 → FT-003 / TS-012
 
 Napomena: matrica ne uvodi nove BM ili BR identifikatore. PO-AL-01–PO-AL-04 su usvojene product odluke za TS-010.7; ne zamjenjuju BM/FS niti FT-003.
 
+## 8.8 TS-010.8
+
+| TS-010.8 tema | BM | FS | TS | PO / QA |
+|---------------|----|----|----|---------|
+| Business Test Matrix (poslovni scenariji) | BM-EP; BM-ST; BM-DG; BM-ORG; BM-MOD; BM-UR; BM-TR; BM-AL | BR-006–BR-073; BR-118–BR-128; BR-170–BR-188; §5.16 | TS-001; TS-003; TS-004; TS-008; TS-009; TS-010.1–TS-010.7 | PO-DASH; PO-AL; QA-TS0108-01 |
+| Lanac sljedivosti BM→FS→TS→matrica | — | — | §13.10 | QA-TS0108-01 |
+| Van: QA plan / implementacija testova / CI | — | — | §13.11 | QA-TS0108-01 |
+
+Lanac sljedivosti:
+
+```text
+Business Model
+        ↓
+Functional Specification
+        ↓
+Technical Specifications (TS-001 / TS-003 / TS-004 / TS-008 / TS-009 / TS-010.1–TS-010.7)
+        ↓
+Business Test Matrix (TS-010.8)
+```
+
+Napomena: matrica ne uvodi nove BM ili BR identifikatore. QA-TS0108-01 je usvojena QA odluka o namjeni TS-010.8; ne zamjenjuje BM/FS.
+
 ---
 
 # 9. Katalog sadržajnih polja događaja (N-DG-02)
@@ -1813,28 +1845,288 @@ TS-010.7 je cjelina **FT-001**. Centralna Evidencija aktivnosti je cjelina **FT-
 
 ---
 
-# 13. Planirane cjeline TS-010
+# 13. TS-010.8 — Business Test Matrix
 
-Sljedeće podcjeline su planirane i **nisu razrađene** u ovoj verziji:
+Izvori: BM (BM-EP, BM-ST, BM-DG, BM-ORG, BM-MOD, BM-UR, BM-TR, BM-AL, BM-GL); FS (Platformsko pravilo; BR-006–BR-073; BR-118–BR-128; BR-170–BR-188; §5.16); TS-001; TS-003; TS-004 v0.1.5; TS-008; TS-009; TS-010.1–TS-010.7; **PO-DASH-01–05**; **PO-AL-01–04**; **QA-TS0108-01**.
 
-| Cjelina | Naziv | Status |
-|---------|-------|--------|
-| TS-010.8 | Test matrica | Planned |
+TS-010.8 ne uvodi nova poslovna pravila, nove statuse, nove entitete ni nova ovlašćenja. Provjerava isključivo već usvojena pravila.
+
+## 13.1 Usvojena QA odluka
+
+| Odluka | Sažetak |
+|--------|---------|
+| **QA-TS0108-01** | TS-010.8 = **Business Test Matrix**. Nije QA Plan, Test Strategy, Test Implementation, CI/CD, coverage ni release plan. Ne propisuje alat, fajlove, klase niti automatizaciju. |
+
+## 13.2 Obuhvat i granice
+
+**Obuhvat:** poslovni test scenariji za Urednički portal (FT-001) koji proizlaze iz TS-010.1–TS-010.7 i referentnih TS/BM/FS/PO.
+
+**Van obuhvata:** vidi §13.11.
+
+## 13.3 Konvencije
+
+### 13.3.1 Obavezna polja scenarija
+
+| Polje | Značenje |
+|-------|----------|
+| Test ID | Jedinstvena oznaka `TM-<OBLAST>-<nn>` |
+| Oblast | Poslovna oblast |
+| Scenario | Kratki naziv |
+| Preduslov | Poslovni preduslov (ne fixture sadržaj) |
+| Akcija | Poslovna radnja |
+| Očekivani rezultat | Poslovni ishod |
+| Tip | Pozitivan / Negativan / Granični |
+| Traceability | BM / FS / TS / PO |
+
+Prioritet i Level **nisu** obavezni i **nijesu** poslovna pravila.
+
+### 13.3.2 Prefiksi Test ID
+
+| Prefiks | Oblast |
+|---------|--------|
+| TM-AUTH | Autorizacija / autentikacija |
+| TM-CTX | Aktivni kontekst |
+| TM-ORG | Organizatori |
+| TM-MOD | Moderatori |
+| TM-WF | Workflow / statusne tranzicije |
+| TM-CRUD | CRUD događaja |
+| TM-PROP | Prijedlog izmjene |
+| TM-OCC | Održavanja |
+| TM-GEN | Generator održavanja |
+| TM-DEL | Delete pravila |
+| TM-READ | Read prava / read-only |
+| TM-VAL | Validacije / gate-ovi |
+| TM-MF | Manifestacija |
+| TM-MD | Naslovna fotografija / Mediji |
+| TM-DASH | Dashboard |
+| TM-AUD | Lokalni audit / obaveza evidencije |
+| TM-CON | Concurrency |
+| TM-PUB | Objava / direktna objava / ponovna objava |
+| TM-ARCH | Arhiviranje |
+
+### 13.3.3 Preduslovi (poslovni, ne tehnički)
+
+Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik bez prava; Moderator A/B; Organizator A/B aktivan; Organizator deaktiviran; događaj bez Organizatora; početni/vraćeni Nacrt; Na odobrenju prije/tokom pregleda; Objavljen; Otkazan; Arhiviran; aktivni/neoperativni prijedlog; Održavanja; Medij; Manifestacija; otvoreni zahtjevi.
+
+## 13.4 Matrica — Autorizacija i kontekst
+
+| Test ID | Oblast | Scenario | Preduslov | Akcija | Očekivani rezultat | Tip | Traceability |
+|---------|--------|----------|-----------|--------|-------------------|-----|---------------|
+| TM-AUTH-01 | Autorizacija | Neprijavljen pristup | Nema sesije | Pokušaj pristupa uredničkom prostoru | Pristup odbijen | Negativan | BM-GL; Platformsko pravilo; TS-010.1 §3.1 |
+| TM-AUTH-02 | Autorizacija | Neaktivan nalog | Nalog postoji, nije aktivan | Prijava / pristup | Pristup odbijen | Negativan | Platformsko pravilo; TS-010.1 §3.1 |
+| TM-AUTH-03 | Autorizacija | Bez uredničkih prava | Prijavljen korisnik bez Mod/Urednik | Pristup uredničkim radnjama | Pristup odbijen | Negativan | BM-EP; TS-010.1 §1; §3 |
+| TM-AUTH-04 | Autorizacija | Urednik — platformski pristup | Aktivan Urednik | Ulaz u urednički portal | Pristup dozvoljen | Pozitivan | BM-UR; TS-010.1 §1.2 |
+| TM-AUTH-05 | Autorizacija | Administrator — nije redovna CRUD uloga | Aktivan Administrator | Redovni CRUD događaja | Nije redovna poslovna CRUD uloga | Granični | BM-GL-09; TS-010.1 §1.4 |
+| TM-AUTH-06 | Autorizacija | Moderator nije platformska rola | Korisnik sa aktivnim Mod ovlašćenjem | Provjera platformske role „Moderator“ | Nema posebne platformske role Moderator | Granični | G-17; TS-010.1 §3.2; TS-010.3 §6.1 |
+| TM-AUTH-07 | Autorizacija | Guard redoslijed | Prijavljen Mod | Bilo koja poslovna radnja | Red: auth → platforma → kontekst → ovlašćenje → resurs | Pozitivan | TS-010.1 §3; TS-010.4 §7.3; TS-010.5 §10.15 |
+| TM-AUTH-08 | Autorizacija | UI sakriven, serverski poziv | Sakrivena kontrola; direktan serverski pokušaj | Zabranjena radnja | Serverski odbijeno | Negativan | TS-010.1 §3.5; TS-010.4 §7.3 |
+| TM-CTX-01 | Kontekst | Jedan Mod / jedan Org | Jedno aktivno ovlašćenje | Rad u kontekstu | Rad dozvoljen samo nad tim Org | Pozitivan | BM-MOD-04; BR-051; TS-010.1 §2 |
+| TM-CTX-02 | Kontekst | Jedan Mod / više Org | Više aktivnih ovlašćenja | Izbor aktivnog konteksta | Aktivni kontekst = jedan Org | Pozitivan | BM-MOD-02; TS-010.1 §2; TS-010.3 |
+| TM-CTX-03 | Kontekst | Promjena konteksta | Dva Org | Promjena aktivnog konteksta | Naredne radnje samo u novom kontekstu | Pozitivan | TS-010.1 §2; TS-010.6 |
+| TM-CTX-04 | Kontekst | Tuđi Organizator | Aktivni kontekst = Org A | Pristup događaju Org B | Odbijeno | Negativan | BM-MOD-04; BR-051; TS-010.5 §10.4 |
+| TM-CTX-05 | Kontekst | Deaktiviran Org | Org deaktiviran | Operativne radnje Mod | Odbijeno; nema operativnog konteksta | Negativan | BM-ORG-12; BM-MOD-16; BR-049–050; TS-010.2; TS-010.3 §6.7 |
+| TM-CTX-06 | Kontekst | Uklonjeno ovlašćenje | Ovlašćenje uklonjeno odlukom Urednika | Radnja nad Org | Odbijeno | Negativan | BM-MOD-08–09; TS-010.3 §6.6 |
+
+## 13.5 Matrica — Organizatori i Moderatori
+
+| Test ID | Oblast | Scenario | Preduslov | Akcija | Očekivani rezultat | Tip | Traceability |
+|---------|--------|----------|-----------|--------|-------------------|-----|---------------|
+| TM-ORG-01 | Organizatori | Org prije odobrenja — Na odobrenju | Validan zahtjev za kreiranje Org podnesen; Urednik još nije odlučio | Učitaj status predloženog Org u dozvoljenom toku | Status Na odobrenju; nije operativan kao Aktivan; nema aktivnog moderatorskog konteksta za redovan rad | Pozitivan | BM-ORG; TS-001; TS-010.2 |
+| TM-ORG-02 | Organizatori | Status Aktivan | Org odobren; ≥1 aktivan Mod | Operativni rad | Aktivan; Mod može raditi u kontekstu | Pozitivan | BM-ORG; TS-010.2 |
+| TM-ORG-03 | Organizatori | Status Deaktiviran | Aktivan Org | Deaktivacija Urednikom | Deaktiviran; Mod gubi operativna prava | Pozitivan | BM-ORG-12; BR-049–050; TS-010.2 |
+| TM-ORG-04 | Organizatori | Invariant ≥1 Mod | Aktivan Org; jedan Mod | Pokušaj ostaviti 0 aktivnih Mod | Zabranjeno prolazno stanje | Negativan | TS-010.2 Pravila 3–5; TS-010.3 |
+| TM-ORG-05 | Organizatori | Uklanjanje posljednjeg uz drugog | Dva aktivna Mod | Uklanjanje jednog | Org ostaje Aktivan; ≥1 Mod | Pozitivan | TS-010.2; TS-010.3 §6.6 |
+| TM-ORG-06 | Organizatori | Uklanjanje posljednjeg + deaktivacija | Jedan aktivni Mod | Uklanjanje uz istovremenu deaktivaciju Org | Dozvoljeno po usvojenim pravilima | Pozitivan | TS-010.2; TS-010.3 |
+| TM-ORG-07 | Organizatori | Promjena Mod ne mijenja identitet Org | Istorija događaja postoji | Dodjela/uklanjanje Mod | Identitet Org, događaji i istorija nepromijenjeni | Granični | TS-010.2; TS-010.3 |
+| TM-ORG-08 | Organizatori | N:M veza | Više Mod / više Org | Pregled veza | Jedan Org više Mod; jedan Mod više Org | Pozitivan | BM-ORG-06; BM-MOD-02; TS-010.2 |
+| TM-MOD-01 | Moderatori | Početni Moderator | Odobrenje Org | Dodjela početnog Mod | Aktivno ovlašćenje; Urednik odlučuje | Pozitivan | BM-MOD; TS-001; TS-010.3 |
+| TM-MOD-02 | Moderatori | Predlaganje narednog | Aktivan Mod | Predloži narednog Mod | Zahtjev kreiran; nije samostalna dodjela | Pozitivan | BM-MOD-13; BR-053; TS-010.3 |
+| TM-MOD-03 | Moderatori | Zabrana samostalne dodjele | Aktivan Mod | Pokušaj neposredne dodjele | Odbijeno; samo Urednik | Negativan | BM-MOD-14; BR-054; TS-010.3 §6.9 |
+| TM-MOD-04 | Moderatori | G-16 jedno ovlašćenje | Već aktivno ovlašćenje par korisnik–Org | Drugo aktivno isto | Zabranjeno | Negativan | G-16; TS-010.3 §6.9–§6.10 |
+| TM-MOD-05 | Moderatori | Zahtjev uklanjanja drugog | ≥2 Mod | Zahtjev uklanjanja | Ovlašćenje aktivno do odluke Urednika | Pozitivan | BM-MOD-08; BR-070; TS-010.3 §6.6 |
+| TM-MOD-06 | Moderatori | Sopstveno uklanjanje (G-11) | Aktivan Mod | Zahtjev za sopstveno uklanjanje | Dozvoljen zahtjev; nije neposredno samouklanjanje; odluka Urednika | Pozitivan | G-11; BR-071; TS-010.3 §6.6.2 |
+| TM-MOD-07 | Moderatori | Neposredno samouklanjanje | Aktivan Mod | Pokušaj neposrednog uklanjanja sebe | Odbijeno | Negativan | G-11; TS-010.3 §6.9 |
+| TM-MOD-08 | Moderatori | Granice uloge | Aktivan Mod | Objava / urednička odluka / rad van konteksta | Zabranjeno | Negativan | BM-MOD-05/11/14; TS-010.3 §6.8–§6.9 |
+| TM-MOD-09 | Moderatori | G-13 otvoreni zahtjev | Otvoren zahtjev Mod; Org deaktiviran | Dalja obrada zahtjeva | Bez operativnog ovlašćenja/konteksta; zapis očuvan; bez novog poslovnog statusa | Granični | G-13; TS-010.3 §6.7.1 |
+| TM-MOD-10 | Moderatori | G-14 granica podataka | Aktivan Mod | Upravljanje javnim/operativnim podacima Org | Dozvoljeno u granici G-14; status/odobrenje ostaje Urednik | Pozitivan | G-14; TS-010.3 §6.8.1 |
+
+## 13.6 Matrica — Workflow, objava, arhiviranje
+
+| Test ID | Oblast | Scenario | Preduslov | Akcija | Očekivani rezultat | Tip | Traceability |
+|---------|--------|----------|-----------|--------|-------------------|-----|---------------|
+| TM-WF-01 | Workflow | Kreiranje Nacrta | Mod + aktivan Org / kontekst | Kreiraj događaj | Status Nacrt | Pozitivan | BM-ST; TS-010.4 §7.4.1; TS-010.5 |
+| TM-WF-02 | Workflow | Slanje na odobrenje | Validan Nacrt | Pošalji na odobrenje | Na odobrenju | Pozitivan | BR-028; TS-010.4 |
+| TM-WF-03 | Workflow | Povlačenje prije pregleda | Na odobrenju; pregled nije počeo | Povuci | Nacrt | Pozitivan | TS-010.4 |
+| TM-WF-04 | Workflow | Početak pregleda | Na odobrenju | Urednik počinje pregled | Faza pregleda; Mod zaključan | Pozitivan | BM-ST-05; TS-010.4; TS-003 |
+| TM-WF-05 | Workflow | Mod uređuje tokom pregleda | Faza pregleda | Izmjena od strane Mod | Odbijeno | Negativan | TS-010.4; TS-010.5 §10.5 |
+| TM-WF-06 | Workflow | Urednik uređuje tokom pregleda | Faza pregleda | Izmjena Urednik | Dozvoljeno; ostaje u pregledu | Pozitivan | TS-010.4; TS-010.5 |
+| TM-WF-07 | Workflow | Vraćanje na doradu | Na odobrenju | Vrati | Nacrt (vraćeni); nije novi status | Pozitivan | BM-ST-05; TS-010.4 §7.2 |
+| TM-WF-08 | Workflow | Ponovno slanje | Vraćeni Nacrt | Pošalji | Na odobrenju | Pozitivan | TS-010.4 |
+| TM-WF-09 | Workflow | Odobravanje / objava | Na odobrenju; gate OK | Odobri / Objavi (Urednik) | Objavljen | Pozitivan | BM-ST; BR-018; TS-010.4 |
+| TM-WF-10 | Workflow | Faza nije status | Objavljen + prijedlog | Pregled statusa | Status ostaje Objavljen; prijedlog = faza | Granični | BM-ST-05; TS-010.4 §7.2 |
+| TM-WF-11 | Workflow | Zabranjen prelaz | Arhiviran | Pokušaj izlaza | Odbijeno | Negativan | BM-ST-09; TS-010.4 |
+| TM-PUB-01 | Objava | Zabrana objave Mod | Na odobrenju / Nacrt | Mod objavljuje | Odbijeno | Negativan | BM-ORG-05; BM-MOD-05; BR-007; TS-010.3 |
+| TM-PUB-02 | Direktna objava | Bez Organizatora | Urednik; događaj bez Org; gate OK | Direktna objava | Nacrt → Objavljen | Pozitivan | BM-ST-04; BR-018; PO-DG-05; TS-010.4 |
+| TM-PUB-03 | Direktna objava | Sa Organizatorom | Događaj sa Org | Direktna objava | Odbijeno | Negativan | PO-DG-05; TS-010.4 |
+| TM-PUB-04 | Objava | Otkazivanje Objavljenog | Objavljen; ovlašćeni | Otkaži | Otkazan | Pozitivan | BR-063; TS-010.4 |
+| TM-PUB-05 | Objava | G-W02 | Objavljen + aktivni prijedlog | Otkaži | Prijedlog neoperativan | Pozitivan | G-W02; TS-010.4 §7.12; TS-010.5 §10.6 |
+| TM-PUB-06 | Ponovna objava | Urednik | Otkazan; gate OK | Ponovo objavi | Objavljen | Pozitivan | BM-DG-09; BR-064; TS-010.4 |
+| TM-PUB-07 | Ponovna objava | Moderator | Otkazan | Ponovo objavi | Odbijeno | Negativan | BM-MOD-16; BR-064; TS-010.3 |
+| TM-ARCH-01 | Arhiviranje | Automatsko | Predikat arhive ispunjen | Sistem arhivira | Arhiviran | Pozitivan | BM-DG-04; BR-065; TS-004; TS-010.4 |
+| TM-ARCH-02 | Arhiviranje | Ručno | Bilo koji status | Ručno arhiviraj | Odbijeno | Negativan | TS-010.4 |
+| TM-ARCH-03 | Read-only | Arhiviran | Status Arhiviran | Izmjena / workflow izlaz | Odbijeno; read-only | Negativan | TS-010.4; TS-010.5 §10.5 |
+
+## 13.7 Matrica — CRUD, validacije, prijedlog, Delete, Read
+
+| Test ID | Oblast | Scenario | Preduslov | Akcija | Očekivani rezultat | Tip | Traceability |
+|---------|--------|----------|-----------|--------|-------------------|-----|---------------|
+| TM-CRUD-01 | CRUD | Mod kreira za aktivnog Org | Aktivan Org + kontekst | Create | Nacrt vezan za Org | Pozitivan | BR-013; TS-010.5 |
+| TM-CRUD-02 | CRUD | Mod kreira bez Org | Aktivan Mod | Create bez Org | Odbijeno | Negativan | TS-010.5 |
+| TM-CRUD-03 | CRUD | Urednik kreira bez Org | Urednik | Create bez Org | Nacrt bez Org | Pozitivan | TS-010.5; TS-010.4 |
+| TM-CRUD-04 | CRUD | Nepotpun Nacrt | Mod/Urednik | Sačuvaj Nacrt bez svih gate polja | Sačuvano kao Nacrt | Pozitivan | TS-010.5; BR-017 operacionalizacija |
+| TM-CRUD-05 | CRUD | Nacrt bez Održavanja | Nacrt | Sačuvaj | Dozvoljeno (0 Održavanja) | Granični | TS-010.5; TS-004 |
+| TM-CRUD-06 | CRUD | Update početni Nacrt | Početni Nacrt; ovlašćen | Update | Dozvoljeno | Pozitivan | TS-010.5 §10.5 |
+| TM-CRUD-07 | CRUD | Update vraćeni Nacrt | Vraćeni Nacrt | Update | Dozvoljeno u granicama | Pozitivan | TS-010.5 §10.5 |
+| TM-CRUD-08 | CRUD | Update Na odobrenju prije pregleda | Prije pregleda; podnosilac | Update | Dozvoljeno po pravilima | Pozitivan | TS-010.5 §10.5 |
+| TM-CRUD-09 | CRUD | Update Objavljen direktno | Objavljen; bez prijedloga | Direktni Update sadržaja | Odbijeno | Negativan | BM-DG; TS-010.5 §10.6 |
+| TM-CRUD-10 | CRUD | Update Otkazan (Mod) | Otkazan; Mod | Sadržajna izmjena | Odbijeno (ponovna objava samo Urednik) | Negativan | TS-010.5; BR-064 |
+| TM-CRUD-11 | CRUD | Veza Org 0..1 | Događaj | Promjena veze Org | Urednik može povezati/odspojiti u granicama; Mod ne mijenja Org događaja | Granični | TS-010.5; TS-001 |
+| TM-CRUD-12 | CRUD | Promjena veze Org — gubitak prava | Događaj prebačen na drugi Org | Prethodni Mod pristupa | Operativno pravo ukinuto | Negativan | TS-010.5 |
+| TM-READ-01 | Read | Mod vidi samo aktivni Org | Dva Org | Lista događaja | Samo aktivni kontekst | Pozitivan | TS-010.5 §10.4; BR-016; BR-124 |
+| TM-READ-02 | Read | Urednik globalno | Urednik | Lista | Globalni Read opseg | Pozitivan | TS-010.5 §10.4 |
+| TM-READ-03 | Read | Deaktivacija ne briše | Org deaktiviran; događaji postoje | Pregled podataka (ovlašćeni) | Podaci nijesu obrisani | Granični | BM-ORG-12; TS-010.2; TS-010.5 |
+| TM-READ-04 | Read-only | Arhiviran | Arhiviran | Pokušaj Update | Odbijeno | Negativan | TS-010.5 |
+| TM-DEL-01 | Delete | Fizičko brisanje događaja | Bilo koji | Delete događaja | Nije podržano | Negativan | TS-010.5 §10.13 |
+| TM-DEL-02 | Delete | Soft delete događaja | Bilo koji | Soft delete | Nije podržano | Negativan | TS-010.5 §10.13 |
+| TM-DEL-03 | Delete | Brisanje Nacrta | Početni Nacrt | Delete | Nije podržano | Negativan | TS-010.5 §10.13 |
+| TM-DEL-04 | Delete | Admin Delete događaja | Administrator | Delete | Nije podržano u V1 | Negativan | TS-010.5 §10.13 |
+| TM-VAL-01 | Validacije | Gate — Pošalji na odobrenje | Nacrt bez naslova / kategorije / Održavanja | Pošalji | Odbijeno (gate) | Negativan | BM-DG-01; TS-010.5; §9 |
+| TM-VAL-02 | Validacije | Gate — Direktna objava | Bez Org; nepotpun | Direktno objavi | Odbijeno | Negativan | TS-010.5 |
+| TM-VAL-03 | Validacije | Gate — Pošalji prijedlog | Aktivni prijedlog nepotpun | Pošalji prijedlog | Odbijeno | Negativan | TS-010.5 §10.6 |
+| TM-VAL-04 | Validacije | Opciona polja | Nacrt | Sačuvaj bez opisa/naslovne/MF/oznaka/lokacije | Dozvoljeno | Granični | N-DG-02; §9; TS-010.5 |
+| TM-VAL-05 | Validacije | Org obavezan za Mod | Mod; Org deaktiviran | Create/Update operativno | Odbijeno | Negativan | TS-010.5; BR-049–050 |
+| TM-PROP-01 | Prijedlog | Najviše jedan aktivni | Objavljen; već aktivan prijedlog | Novi aktivni prijedlog | Odbijeno | Negativan | TS-010.5 §10.6 |
+| TM-PROP-02 | Prijedlog | Javna verzija nepromijenjena | Aktivni prijedlog | Pregled javne verzije | Ostaje posljednja odobrena | Pozitivan | TS-010.5 §10.6 |
+| TM-PROP-03 | Prijedlog | Privremeno nepotpun | Objavljen | Sačuvaj prijedlog nepotpun | Dozvoljeno | Pozitivan | TS-010.5 §10.6 |
+| TM-PROP-04 | Prijedlog | Odobrenje zamjenjuje javnu | Prijedlog na pregledu; gate OK | Odobri | Javna verzija zamijenjena | Pozitivan | TS-010.5 §10.6 |
+| TM-PROP-05 | Prijedlog | Vraćanje ne mijenja javnu | Prijedlog na pregledu | Vrati | Javna verzija nepromijenjena | Pozitivan | TS-010.5 §10.6 |
+| TM-PROP-06 | Prijedlog | Novi nakon ponovne objave | Otkazan → Objavljen | Novi prijedlog | Dozvoljeno (nema neoperativnog ishoda) | Pozitivan | G-W02; TS-010.5 |
+| TM-PROP-07 | Prijedlog | N-DG-04 granica | Aktivni prijedlog | Provjera ponašanja | Bez zahtjeva za tabelu/snapshot/JSON/verzijski broj | Granični | N-DG-04; TS-010.5 §10.6 |
+| TM-CON-01 | Concurrency | Stale update | Dvije sesije; novija sačuvana | Sačuvaj zastarjele podatke | Ne smije tiho prepisati noviju izmjenu | Negativan | TS-010.5 §10.14 |
+
+## 13.8 Matrica — Održavanja, generator, Manifestacija, Mediji
+
+| Test ID | Oblast | Scenario | Preduslov | Akcija | Očekivani rezultat | Tip | Traceability |
+|---------|--------|----------|-----------|--------|-------------------|-----|---------------|
+| TM-OCC-01 | Održavanja | Datum obavezan | Nacrt | Održavanje bez datuma | Odbijeno | Negativan | N-TR-01; TS-004 |
+| TM-OCC-02 | Održavanja | Samo datum | Nacrt | Sačuvaj Održavanje | Dozvoljeno (cjelodnevno / bez vremena) | Pozitivan | N-TR-01; TS-004 |
+| TM-OCC-03 | Održavanja | Datum + početak | Nacrt | Sačuvaj | Dozvoljeno | Pozitivan | N-TR-01 |
+| TM-OCC-04 | Održavanja | Datum + početak + završetak | Nacrt; završetak > početak | Sačuvaj | Dozvoljeno | Pozitivan | N-TR-01 |
+| TM-OCC-05 | Održavanja | Završetak bez početka | Nacrt | Sačuvaj | Odbijeno | Negativan | N-TR-01 |
+| TM-OCC-06 | Održavanja | Završetak prije početka | Nacrt | Sačuvaj | Odbijeno | Negativan | N-TR-01 |
+| TM-OCC-07 | Održavanja | Prelazak ponoći | Isto Održavanje | Vrijeme preko ponoći | Odbijeno | Negativan | N-TR-01 |
+| TM-OCC-08 | Održavanja | Datum od–do | Nacrt | Raspon datuma u jednom Održavanju | Odbijeno | Negativan | N-TR-01 |
+| TM-OCC-09 | Održavanja | Višednevni | Nacrt | Više Održavanja (po dan) | Dozvoljeno | Pozitivan | N-TR-01; TS-004 |
+| TM-OCC-10 | Održavanja | Status jednog | Više Održavanja | Promijeni status jednog | Ostala nepromijenjena | Granični | TS-004; TS-010.5 |
+| TM-OCC-11 | Održavanja | Završen — Sistem | Predikat završetka | Sistem postavlja Završen | Status Završen | Pozitivan | TS-004 |
+| TM-OCC-12 | Održavanja | Delete ≠ Otkazan događaj | Početni Nacrt | Fizičko uklanjanje Održavanja | Dozvoljeno u N-TR-04; događaj nije Otkazan | Granični | N-TR-04; TS-010.5 §10.13 |
+| TM-OCC-13 | Održavanja | Delete nakon prvog slanja | Poslato na odobrenje | Fizičko brisanje Održavanja | Odbijeno | Negativan | N-TR-04 |
+| TM-OCC-14 | Održavanja | Delete u vraćenom Nacrtu | Vraćeni Nacrt | Fizičko brisanje | Odbijeno | Negativan | N-TR-04 |
+| TM-OCC-15 | Održavanja | Delete u prijedlogu / Objavljen | Prijedlog ili Objavljen | Fizičko brisanje | Odbijeno | Negativan | N-TR-04 |
+| TM-OCC-16 | Održavanja | Uklanjanje svih u početnom Nacrtu | Početni Nacrt; više Održavanja | Ukloni sva | Dozvoljeno (0 Održavanja) | Granični | N-TR-04; TS-010.5 |
+| TM-GEN-01 | Generator | Dnevni / sedmični / mjesečni | Nacrt; generator | Generiši | Kreira Održavanja; nema entiteta Serija | Pozitivan | N-TR-02; PO-N-TR-02; TS-004 |
+| TM-GEN-02 | Generator | Završetak brojem / krajnjim datumom | Generator | Generiši | Dozvoljeno | Pozitivan | N-TR-02 |
+| TM-GEN-03 | Generator | Max 100 | Generator > 100 | Generiši | Odbijeno / ograničeno na max 100 | Granični | N-TR-02 |
+| TM-GEN-04 | Generator | Beskonačno / interval > 1 / RRULE | Generator | Pokušaj | Odbijeno | Negativan | N-TR-02 |
+| TM-GEN-05 | Generator | Ručna = generisana | Mješovita Održavanja | Izmijeni jedno | Ostala nepromijenjena; nema edit-all / regenerate | Granični | N-TR-02 |
+| TM-MF-01 | Manifestacija | Veza 0..1 | Nacrt | Link / unlink MF | Dozvoljeno | Pozitivan | TS-005; TS-010.5 |
+| TM-MF-02 | Manifestacija | Na Objavljenom | Objavljen | Link/unlink kroz prijedlog | Direktno ne; kroz prijedlog da | Granični | TS-010.5 |
+| TM-MF-03 | Manifestacija | Nezavisan lifecycle | Promjena MF | Događaj se ne mijenja automatski | Bez automatske promjene Događaja | Granični | TS-005; TS-010.5 |
+| TM-MD-01 | Naslovna | Opciona 0..1 | Nacrt | Bez naslovne | Dozvoljeno; fallback | Pozitivan | TS-008; TS-010.5 §10.12 |
+| TM-MD-02 | Naslovna | Izbor postojeće Medije | Medij postoji | Poveži | Veza uspostavljena | Pozitivan | TS-008; TS-010.5 |
+| TM-MD-03 | Naslovna | Uklanjanje veze | Naslovna povezana | Ukloni vezu | Medij nije obrisan | Pozitivan | TS-008; TS-010.5 |
+| TM-MD-04 | Naslovna | Na Objavljenom | Objavljen | Promjena kroz prijedlog | Direktno ne; kroz prijedlog da | Granični | TS-010.5 §10.12 |
+| TM-MD-05 | Naslovna | Feature ≠ sadržajni prijedlog | Objavljen | Istaknutost | Nije dio sadržajnog prijedloga | Granični | TS-010.5 §10.12 |
+
+## 13.9 Matrica — Dashboard, audit, boundary
+
+| Test ID | Oblast | Scenario | Preduslov | Akcija | Očekivani rezultat | Tip | Traceability |
+|---------|--------|----------|-----------|--------|-------------------|-----|---------------|
+| TM-DASH-01 | Dashboard | Moderator kategorije | Aktivan kontekst | Pregled Dashboarda | DM-01 Nacrti; DM-02 Na odobrenju; DM-03 Aktivni prijedlozi | Pozitivan | PO-DASH-01–04; TS-010.6 §11.7 |
+| TM-DASH-02 | Dashboard | Urednik kategorije | Urednik | Pregled | DU-01…DU-05 | Pozitivan | PO-DASH; TS-010.6 §11.8 |
+| TM-DASH-03 | Dashboard | Brojač = filter | Stavke u opsegu | Uporedi brojač i listu | Brojač odgovara filteru | Pozitivan | PO-DASH-04; TS-010.6 §11.6; §11.12 |
+| TM-DASH-04 | Dashboard | Klik → lista | Kategorija | Klik | Otvara postojeću listu sa filterom; nema liste na Dashboardu | Pozitivan | PO-DASH-04 |
+| TM-DASH-05 | Dashboard | Brojač 0 | Nema stavki | Pregled | Kategorija vidljiva; brojač 0 | Granični | PO-DASH-05; TS-010.6 §11.6 |
+| TM-DASH-06 | Dashboard | Promjena konteksta | Mod; dva Org | Promijeni kontekst | Brojači i ciljni filteri za novi Org | Pozitivan | TS-010.6; TS-010.1 §2 |
+| TM-DASH-07 | Dashboard | Bez globalnog zbira Mod | Mod | Pregled | Nema podataka drugih Org | Negativan | TS-010.6 §11.4.1 |
+| TM-DASH-08 | Dashboard | Deaktiviran Org | Org deaktiviran | Operativni Dashboard za taj Org | Nema operativnog Dashboarda | Negativan | BM-MOD-16; TS-010.6 §11.4.1 |
+| TM-DASH-09 | Dashboard | Nije BI / Feed / Quick Actions | Urednik/Mod | Pregled | Bez BI, Activity Feed, Quick Actions, personalizacije | Negativan | PO-DASH-02/05; TS-010.6 §11.9 |
+| TM-DASH-10 | Dashboard | Auth ≠ vidljivost kartice | Vidljiva kategorija | Zabranjena radnja na listi | Serverski odbijeno | Negativan | TS-010.6 §11.5 |
+| TM-DASH-11 | Dashboard | Isti raspored uloge | Dva korisnika iste uloge | Pregled | Isti sadržaj kategorija | Pozitivan | PO-DASH-05 |
+| TM-DASH-12 | Dashboard | Neoperativni prijedlog | G-W02 | Dashboard Mod | Ne ulazi u DM-03 | Granični | G-W02; TS-010.6 §11.7 |
+| TM-AUD-01 | Lokalni audit | Mod opseg | Aktivan Org | Pregled lokalnog audita entiteta | Samo entiteti aktivnog Org | Pozitivan | PO-AL-02; TS-010.7 §12.3; TS-010.3 §6.11 |
+| TM-AUD-02 | Lokalni audit | Urednik opseg | Urednik | Pregled lokalnog audita | U okviru uredničkog Read | Pozitivan | TS-010.7 §12.5 |
+| TM-AUD-03 | Lokalni audit | Nije globalna pretraga / Feed | Mod/Urednik | Traži globalni audit feed | Nije dostupno kao Feed | Negativan | PO-AL-02; TS-010.7 |
+| TM-AUD-04 | Lokalni audit | Ne proširuje Read | Bez Read prava na entitet | Pristup auditu | Odbijeno | Negativan | TS-010.7 §12.3 |
+| TM-AUD-05 | Evidencija | Mod bez centralne | Mod | Direktan pristup centralnoj Evidenciji | Odbijeno | Negativan | PO-AL-01; BR-174–175; TS-010.7 §12.5 |
+| TM-AUD-06 | Evidencija | Urednik bez centralne | Urednik | Direktan pristup | Odbijeno | Negativan | PO-AL-01; TS-010.7 §12.5 |
+| TM-AUD-07 | Evidencija | Obaveza emitovanja | Radnja iz FS §5.16 kataloga | Izvrši radnju | Obaveza nastanka zapisa centralne Evidencije ispunjena (bez propisivanja transporta) | Pozitivan | PO-AL-01/03; BM-EP-09; FS §5.16; TS-010.7 §12.4 |
+| TM-AUD-08 | Evidencija | Isključene aktivnosti | Otvaranje forme / filter / promjena konteksta | Izvrši | Ne emitovati kao nove poslovne aktivnosti | Negativan | PO-AL-04; FS §5.16; TS-010.7 §12.6 |
+| TM-AUD-09 | Evidencija | Admin pristup granica | Administrator | Centralna Evidencija | Pristup prema BM/FS; UI centralne nije predmet TS-010 | Granični | BM-AL-06; PO-AL-01; FT-003/TS-012 |
+
+## 13.10 Lanac sljedivosti
+
+```text
+Business Model
+        ↓
+Functional Specification
+        ↓
+Technical Specifications
+  (TS-001 · TS-003 · TS-004 · TS-008 · TS-009 · TS-010.1–TS-010.7)
+        ↓
+Business Test Matrix (TS-010.8)
+```
+
+Detaljna mapa tema → izvori: §8.8.
+
+Svaki Test ID u §13.4–§13.9 mora biti mapiran na postojeći BM/FS/TS/PO izvor. Matrica **ne** uvodi nove BM ili BR identifikatore.
+
+## 13.11 Van obuhvata TS-010.8
+
+TS-010.8 **ne** obuhvata:
+
+* QA Plan, Test Strategy, Test Implementation;
+* nazive test fajlova, klase, alate (PHPUnit, Pest i slično);
+* CI/CD, automation politiku, coverage %, release gate;
+* SQL, API, rute, kontrolere, servise, migracije, seedere, queue, event, job, scheduler;
+* propisivanje HTTP status koda / mehanizma concurrency;
+* N-DG-04 skladišni model;
+* UI centralne Evidencije (FT-003 / TS-012);
+* implementaciju CR-004B (javni portal — TS-009);
+* N-DG-03 kanal obavještavanja;
+* terminološki cleanup FS §5.4.3;
+* loading/error/refresh UX Dashboarda kao poslovna pravila;
+* javni portal scenarije van uredničke granice.
+
+## 13.12 Napomene
+
+* Scenariji provjeravaju usvojena pravila; ne zatvaraju nove GAP-ove.
+* Tehnički status zapisa (npr. G-13) ostaje implementacioni izbor; testira se poslovni ishod.
+* FT-003 / TS-012 Planned ne blokira TM-AUD-07 (obaveza emitovanja).
 
 ---
 
-# 14. Napomene za naredne podcjeline
+# 14. Napomene za zatvaranje TS-010 / naredne cjeline
 
-* TS-010.4 operacionalizuje workflow akcije; ne zamjenjuje TS-003 / TS-004 / TS-009.
-* TS-010.5 operacionalizuje CRUD i validacije uz katalog §9 i TS-004 v0.1.5; N-DG-04 ostaje implementacioni izbor.
-* TS-010.6 operacionalizuje Dashboard (PO-DASH-01–05); ne uvodi BI ni Activity Feed.
-* TS-010.7 (PO-AL-01–04) definiše obaveze portala prema centralnoj Evidenciji; ne zamjenjuje FT-003 / TS-012 i ne uvodi UI centralne evidencije.
-* TS-010.8 ostaje planirana test matrica.
+* TS-010.1–TS-010.8 dokumentaciono pripremljeni (v0.8.0).
+* TS-010.8 = Business Test Matrix (QA-TS0108-01); nije implementacija testova.
 * TS-009 ostaje referentni dokument javnog portala; CR-004B ostaje Planned za implementaciju.
-* Detaljna lista / katalog polja Organizatora ostaje van TS-010.3; usvojena granica ovlašćenja G-14 je u §6.8.1.
-* Terminološki cleanup FS §5.4.3 ↔ N-TR-01 ostaje zaseban, van ove verzije.
+* FT-003 / TS-012 ostaju Planned (centralna Evidencija).
+* Detaljna lista / katalog polja Organizatora ostaje van TS-010.3; usvojena granica G-14 je u §6.8.1.
+* Terminološki cleanup FS §5.4.3 ↔ N-TR-01 ostaje zaseban.
 * N-DG-03 (kanal obavještavanja Urednika) ostaje otvoren.
+* N-DG-04 ostaje implementacioni izbor skladištenja prijedloga.
 
 ---
 
-**Kraj dokumenta TS-010 v0.7.0 (TS-010.1–TS-010.7; TS-010.8 Planned)**
+**Kraj dokumenta TS-010 v0.8.0 (TS-010.1–TS-010.8 Dokumentaciono pripremljeno)**

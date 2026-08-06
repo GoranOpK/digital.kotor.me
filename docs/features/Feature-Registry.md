@@ -251,7 +251,9 @@ Povezana dokumentacija (Urednički portal):
   * **PO-AL-02:** Lokalni audit ≠ centralna Evidencija (FT-003).
   * **PO-AL-03:** Samo obaveza evidentiranja; bez API/SQL/strukture/prikaza (FT-003/TS-012).
   * **PO-AL-04:** Bez novih aktivnosti; samo BM/FS katalog.
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija 0.7.0; U IZRADI)
+* Usvojena QA odluka (Business Test Matrix — TS-010.8):
+  * **QA-TS0108-01:** TS-010.8 = Business Test Matrix; nije QA Plan / Test Strategy / Test Implementation / CI / coverage.
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija 0.8.0; U IZRADI)
   * TS-010.1 Osnove uredničkog portala — Dokumentaciono pripremljeno
   * TS-010.2 Organizatori — Dokumentaciono pripremljeno
   * TS-010.3 Moderator Organizatora — Dokumentaciono pripremljeno
@@ -259,7 +261,7 @@ Povezana dokumentacija (Urednički portal):
   * TS-010.5 CRUD događaja i validacije — Dokumentaciono pripremljeno
   * TS-010.6 Dashboard uredničkog portala — Dokumentaciono pripremljeno
   * TS-010.7 Evidencija aktivnosti uredničkog portala — Dokumentaciono pripremljeno
-  * TS-010.8 Test matrica — Planned
+  * TS-010.8 Business Test Matrix — Dokumentaciono pripremljeno
 
 **Planirani Technical Specification dokumenti (modul Kalendar kulture):**
 
@@ -275,7 +277,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.5) |
-| TS-010 | Urednički portal | FT-001 | Kalendar kulture | U IZRADI (v0.7.0) — TS-010.1–TS-010.7 Dokumentaciono pripremljeno; TS-010.8 Planned |
+| TS-010 | Urednički portal | FT-001 | Kalendar kulture | U IZRADI (v0.8.0) — TS-010.1–TS-010.8 Dokumentaciono pripremljeno |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
 
@@ -498,3 +500,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-06 | FT-001 — TS-010.5 CRUD događaja i validacije dokumentaciono pripremljen (v0.5.0, U IZRADI). Create/Read/Update; prijedlog izmjene (N-DG-04 implementacioni izbor); nested Održavanja (TS-004); gate-ovi; Delete događaja nije V1; §8.5. TS-010.6–TS-010.8 Planned. FT-001 ostaje Active. Bez izmjene BM/FS. Bez izmjene TS-003/TS-004/TS-008/TS-009. Bez izmjene implementacije. |
 | 2026-08-06 | FT-001 — TS-010.6 Dashboard uredničkog portala dokumentaciono pripremljen (v0.6.0, U IZRADI). PO-DASH-01–05; radne kategorije + brojač + filter ka CRUD; bez BI/Activity Feed/FT-003. TS-010.7–TS-010.8 Planned. FT-001 ostaje Active. Bez izmjene BM/FS. Bez izmjene TS-001/TS-003/TS-004/TS-008/TS-009. Bez izmjene implementacije. |
 | 2026-08-06 | FT-001 — TS-010.7 Evidencija aktivnosti uredničkog portala dokumentaciono pripremljen (v0.7.0, U IZRADI). PO-AL-01–04; obaveza evidentiranja prema FT-003; lokalni ≠ centralni; bez UI centralne evidencije; ne zamjenjuje TS-012. TS-010.8 Planned. FT-001 ostaje Active; FT-003 ostaje Planned. Bez izmjene BM/FS. Bez izmjene TS-001/TS-003/TS-004/TS-008/TS-009. Bez izmjene implementacije. |
+| 2026-08-06 | FT-001 — TS-010.8 Business Test Matrix dokumentaciono pripremljen (v0.8.0, U IZRADI). QA-TS0108-01; poslovni test scenariji sa sljedivošću BM→FS→TS→matrica; bez QA plana / implementacije testova / CI. TS-010.1–TS-010.8 Dokumentaciono pripremljeno. FT-001 ostaje Active. Bez izmjene BM/FS. Bez izmjene TS-001/TS-003/TS-004/TS-008/TS-009. Bez izmjene implementacije. |
