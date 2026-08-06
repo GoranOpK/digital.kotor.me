@@ -71,6 +71,7 @@
 | doc-CR-004A | 2026-08-01 | Dokumentaciona napomena uz BR-114: CR-004A Planned (javni status badge; TS-009 §7.1; IS-001 §9.3.1; PO-CR4A-01…04). Bez novih BR. Bez izmjene funkcionalnih pravila. Verzija ostaje 1.0.0. |
 | doc-CR-004A-impl | 2026-08-01 | Statusno usklađenje napomene uz BR-114: CR-004A Implemented (implementacija `0f73240`; dokumentaciona priprema `614706c`). Bez novih BR. Bez izmjene funkcionalnih pravila. Verzija ostaje 1.0.0. |
 | PATCH-FS-051 | 2026-08-06 | CR-004B (javni prikaz otkazanih): usklađeni BR-001, BR-002, BR-004, BR-114, BR-116, BR-263; dodati/precizirani BR-270–BR-274 (portalna Arhiva ≠ archived; status ostaje cancelled); napomena doc-CR-004B. Bez izmjene BR-063 / BR-065. Bez javne dostupnosti archived. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-052 | 2026-08-06 | PO-N-TR-02-01–03 / BM PATCH-052: zatvaranje N-TR-02 — usklađeni BR-060 i BR-061 (generator dnevno/sedmično/mjesečno; završetak brojem ili krajnjim datumom; max 100; serija nije trajni objekat; ručna = generisana nakon generisanja). Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -1577,11 +1578,19 @@ Za cjelodnevno održavanje definiše se samo datum održavanja.
 
 #### BR-060 – Ponavljanje održavanja
 
-Održavanja događaja mogu se dodavati pojedinačno ili kreirati korišćenjem dnevnog, sedmičnog ili mjesečnog ponavljanja.
+Održavanja događaja mogu se dodavati pojedinačno (ručno) ili kreirati korišćenjem jednokratnog generatora dnevnog, sedmičnog ili mjesečnog ponavljanja.
+
+Serija / pravilo ponavljanja nije trajni poslovni objekat: generator završava rad odmah nakon kreiranja održavanja.
+
+Generator završava nakon definisanog broja održavanja ili na definisani krajnji datum. Po jednom generisanju može se kreirati najviše 100 održavanja.
 
 Svako generisano ili ručno dodato održavanje ima svoj termin.
 
+Nakon generisanja sistem više ne razlikuje ručno dodato od generisanog; sva održavanja čine jedinstvenu listu održavanja događaja.
+
 Održavanja se mogu dodavati i ručno.
+
+Van V1: RRULE, beskonačne serije, intervali (npr. svake dvije sedmice), napredna kalendarska pravila, trajna pravila ponavljanja, Edit entire series i Regenerate.
 
 ---
 
@@ -1590,6 +1599,8 @@ Održavanja se mogu dodavati i ručno.
 Pojedinačno održavanje događaja može biti izmijenjeno ili otkazano bez uticaja na ostala održavanja istog događaja.
 
 Pomjeranje održavanja predstavlja promjenu njegovog termina.
+
+Ne postoji izmjena cijele serije, regeneracija niti ponovno pokretanje generatora nad postojećim održavanjima.
 
 Izmjene podataka održavanja objavljenog događaja, osim postavljanja statusa **Planiran**, **Odgođen** i **Otkazan** uređenih pravilima BR-132 i BR-133, podliježu istim pravilima uređivanja i odobravanja koja važe za događaj.
 
@@ -4118,3 +4129,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-01 | FS-001 BR-114 napomena (doc-CR-004A): CR-004A Planned (javni status badge; TS-009 §7.1; PO-CR4A-01…04). Bez novih BR. Verzija ostaje 1.0.0. |
 | 2026-08-01 | FS-001 BR-114 napomena (doc-CR-004A-impl): CR-004A Implemented (`0f73240`; dokumentacija `614706c`). Statusno usklađenje bez izmjene BR/funkcionalnih pravila. Verzija ostaje 1.0.0. |
 | 2026-08-06 | FS-001 (PATCH-FS-051 / doc-CR-004B): CR-004B Planned — korektivni prolaz; usklađeni BR-001/002/004/114/116/263; BR-270–BR-274 (cancelled ostaje; portalna Arhiva vremenska); PO-CR4B-01…10. Bez izmjene BR-063 / BR-065. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| 2026-08-06 | FS-001 (PATCH-FS-052): PO-N-TR-02-01–03 — zatvoren N-TR-02; usklađeni BR-060 / BR-061 (generator; max 100; serija nije trajni objekat). Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |

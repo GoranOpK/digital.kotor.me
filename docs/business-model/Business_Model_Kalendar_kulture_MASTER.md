@@ -65,6 +65,7 @@
 | 0.5.0 | 2026-07-31 | Final Review. Završna dokumentaciona revizija: §5 i §7 kompletirani (PATCH-049/050); BM-01…BM-17 USVOJENO; usvojene PO/IA odluke ugrađene; bez novih poslovnih pravila. Bez izmjene FS/TS/IS/Feature Registry/implementacije. |
 | 1.0.0 | 2026-07-31 | Stable. Business Model je uspješno prošao Final Review i predstavlja referentni poslovni dokument modula Kalendar kulture. Bez izmjene poslovnih pravila, numeracije, identifikatora ili sljedivosti. Bez izmjene FS/TS/IS/Feature Registry/implementacije. |
 | PATCH-051 | 2026-08-06 | CR-004B (javni prikaz otkazanih): usklađen BM-PK-13 (cancelled ostaje; portalna Arhiva = vremenska površina ≠ interni archived; bez javne dostupnosti archived); usklađen BM-AR-02 i BM-PK-15 (otkazani nisu u Istaknutim — bez izmjene flaga); usklađen BM-PK-22 (statistike = javno dostupni published|cancelled). Bez izmjene BM-DG-04 / BM-DG-05 / BM-ST-07. Bez izmjene implementacije. |
+| PATCH-052 | 2026-08-06 | PO-N-TR-02-01–03: zatvaranje N-TR-02 — serija nije poslovni entitet; generator dnevno/sedmično/mjesečno završava brojem ili krajnjim datumom (max 100); ručna i generisana održavanja ravnopravna nakon generisanja. Usklađeni BM-TR-06, BM-TR-07. Bez novog entiteta / lifecycle / statusa. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -684,11 +685,19 @@ Svako održavanje ima sopstveni termin i status, dok lokacija može biti opciona
 
 ### BM-TR-06 — Ponavljanje i više održavanja
 
-> Održavanja događaja mogu biti kreirana kao pojedinačna ili kroz pravilo ponavljanja. Pravilo ponavljanja definiše ili generiše više održavanja jednog događaja. Svako održavanje dobija svoj termin. Sistem podržava dnevno, sedmično i mjesečno ponavljanje, kao i ručno dodavanje pojedinačnih održavanja.
+> Održavanja događaja mogu biti kreirana kao pojedinačna (ručno) ili kroz jednokratno pravilo ponavljanja koje **generiše** više održavanja jednog događaja. Serija / pravilo ponavljanja **nije** poslovni entitet, nema lifecycle ni status i ne ostaje kao trajni objekat nakon generisanja.
+>
+> Sistem u V1 podržava isključivo **dnevno**, **sedmično** i **mjesečno** generisanje, kao i ručno dodavanje pojedinačnih održavanja. Generator završava nakon **definisanog broja** održavanja **ili** na **definisani krajnji datum**. Po jednom generisanju može se kreirati najviše **100** održavanja.
+>
+> Van V1: RRULE, beskonačne serije, intervali (npr. svake dvije sedmice), napredna kalendarska pravila, trajna pravila ponavljanja, Edit entire series i Regenerate.
+>
+> Svako generisano ili ručno dodato održavanje dobija sopstveni termin. Nakon generisanja nastaju **nezavisna** održavanja; sistem **ne** razlikuje ručno dodato od generisanog — sva čine jedinstvenu listu održavanja događaja.
 
-### BM-TR-07 — Izuzeci u ponavljajućoj seriji
+### BM-TR-07 — Izuzeci nad pojedinačnim održavanjem
 
-> Pojedinačno održavanje u okviru ponavljajuće serije može biti izmijenjeno ili otkazano bez uticaja na ostala održavanja iste serije. Izmjene i otkazivanja primjenjuju se isključivo na odabrano održavanje. Pomjeranje znači promjenu termina (datuma i/ili vremena) jednog održavanja.
+> Pojedinačno održavanje (bez obzira na način nastanka) može biti izmijenjeno ili otkazano bez uticaja na ostala održavanja istog događaja. Izmjene i otkazivanja primjenjuju se isključivo na odabrano održavanje. Pomjeranje znači promjenu termina (datuma i/ili vremena) jednog održavanja.
+>
+> Ne postoji izmjena „cijele serije“, regeneracija niti ponovno pokretanje generatora nad postojećim održavanjima.
 
 ### BM-TR-08 — Izmjena objavljenog održavanja
 

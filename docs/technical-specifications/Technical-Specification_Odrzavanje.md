@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Održavanje događaja  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.4
+**Verzija:** 0.1.5
 **Datum:** 2026-08-06
 
 ---
@@ -21,6 +21,7 @@
 | 0.1.2 | 2026-07-30 | Terminološko usklađivanje sa TS-006 (korekcije PO-LOC-01/05): jasno razdvojeni pojmovi kataloška Lokacija i ručno uneseni naziv Lokacije; precizirane formulacije referenci i validacija bez promjene poslovnih pravila. |
 | 0.1.3 | 2026-08-06 | Zatvoreno N-TR-01: model jednog održavanja (jedan kalendarski datum; vrijeme početka/završetka; cjelodnevno; bez raspona datuma). Usklađeni §3.3, §6, §7. Bez novih BM/FS pravila. Bez izmjene implementacije. |
 | 0.1.4 | 2026-08-06 | Zatvoreno N-TR-04: fizičko uklanjanje održavanja samo iz Nacrta prije prvog uredničkog postupka; nakon prvog slanja na odobrenje — isključivo izmjena/statusi. Bez soft delete, novog statusa ili audita. Bez izmjene BM/FS. Bez izmjene implementacije. |
+| 0.1.5 | 2026-08-06 | Zatvoreno N-TR-02 (PO-N-TR-02-01–03 / BM PATCH-052 / FS PATCH-FS-052): generator nije entitet; dnevno/sedmično/mjesečno; završetak brojem ili krajnjim datumom; max 100; ručna = generisana. Usklađeni §3.5, §4.4, §6, §7, §12. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -202,7 +203,7 @@ Pun model kataloške Lokacije i pravila razdvajanja od ručnog unosa su u TS-006
 
 ## 2.5 Izuzeci su lokalni
 
-Izmjena, pomjeranje ili otkaz jednog održavanja ne smije mijenjati ostala održavanja istog događaja / serije (BM-TR-07, BR-061).
+Izmjena, pomjeranje ili otkaz jednog održavanja ne smije mijenjati ostala održavanja istog događaja (BM-TR-07, BR-061).
 
 ## 2.6 Usklađenost sa TS-003
 
@@ -354,16 +355,39 @@ TS-010 (urednički portal) koristi ovaj model održavanja **bez redefinisanja**.
 | Komponenta (logička) | Odgovornost |
 |----------------------|-------------|
 | Entitet Održavanje | Vremenski atributi, lokacija-ref, status, veza na Događaj |
-| Generator ponavljanja | Kreira N održavanja iz dnevnog/sedmičnog/mjesečnog pravila |
+| Generator ponavljanja | Jednokratno kreira N održavanja (dnevno/sedmično/mjesečno); nije entitet (§3.5) |
 | Usluga statusnih prelaza | Dozvoljene tranzicije Planiran/Odgođen/Otkazan/Završen |
 | Signal završetka | Obavještava TS-003 kada više nema održavanja u statusu Planiran ili Odgođen |
 
-## 3.5 Serija ponavljanja
+## 3.5 Generator ponavljanja (N-TR-02 — zatvoreno)
 
-Pravilo ponavljanja (BM-TR-06, BR-060) **generiše** više održavanja.  
-Svako dobija sopstveni termin i može kasnije biti izuzetak (BM-TR-07).
+**Odluka (PO-N-TR-02-01–03):** Generator / „serija“ **nije** poslovni entitet niti dio modela održavanja kao trajni objekat. Generator je **jednokratno** pravilo koje kreira više nezavisnih Održavanja, zatim **završava rad**.
 
-Napredni RRULE nije u V1 (§11).
+### Šta generator nije
+
+Ne postoji:
+
+* trajni objekat Serija;
+* lifecycle Serije;
+* status Serije;
+* Edit entire series;
+* Regenerate;
+* ponovno pokretanje generatora nad postojećim održavanjima.
+
+### Šta generator radi
+
+1. Ulaz: tip ∈ {dnevno, sedmično, mjesečno} i uslov završetka (**broj** održavanja **ili** **krajnji datum**).
+2. Kreira N održavanja (N ≤ **100** po jednom generisanju), svako sa sopstvenim identitetom, terminom (§3.3), opcionom lokacijom i početnim statusom **Planiran**.
+3. Odmah nakon kreiranja generator **prestaje**; ostaje samo lista održavanja događaja.
+
+### Nakon generisanja
+
+* nastaju **nezavisna** Održavanja;
+* ručno dodata i generisana održavanja **više se ne razlikuju** — jedinstvena lista;
+* izmjena / otkaz / pomjeranje jednog ne utiče na ostala (BM-TR-07, BR-061);
+* svako ima sopstvenu istoriju.
+
+Van V1: RRULE, beskonačne serije, intervali (npr. svake 2 sedmice), napredna kalendarska pravila, trajna pravila ponavljanja.
 
 ---
 
@@ -463,32 +487,34 @@ Zabrana fizičkog uklanjanja nakon prvog slanja / uredničkog postupka služi:
 * konzistentnosti workflow-a;
 * nepromjenjivosti poslovnih zapisa.
 
-## 4.4 Ponavljanje
+## 4.4 Generisanje održavanja (ponavljanje)
 
 ```mermaid
 flowchart TD
-  A[Događaj + pravilo ponavljanja] --> B{Tip}
+  A[Događaj + jednokratni generator] --> B{Tip}
   B -->|Dnevno| C[Generiši N održavanja]
   B -->|Sedmično| C
   B -->|Mjesečno| C
   B -->|Ručno| D[Dodaj jedno održavanje]
   C --> E[Svako: sopstveni termin + status Planiran]
+  C --> F[Generator završava]
   D --> E
 ```
 
 **Tehnički tok**
 
-1. Ulaz: dnevno / sedmično / mjesečno ili ručno (BM-TR-06, BR-060).
-2. Svako generisano održavanje dobija sopstveni termin.
-3. Nakon generisanja, održavanja su nezavisna za izuzetke.
-
-Parametri opsega serije (datum kraja, broj ponavljanja) nisu eksplicitno katalogizovani u BM/FS — **Otvoreno pitanje N-TR-02** (§12).
+1. Ulaz: tip ∈ {dnevno, sedmično, mjesečno} **ili** ručno dodavanje (BM-TR-06, BR-060; §3.5).
+2. Za generator: obavezan završetak — **broj** održavanja **ili** **krajnji datum**; N ≤ 100.
+3. Svako kreirano održavanje dobija sopstveni termin (§3.3) i status **Planiran**.
+4. Generator **odmah završava**; ne ostaje trajno pravilo / objekat Serija.
+5. Nakon toga održavanja su nezavisna; ručno = generisano (jedinstvena lista).
+6. Nema Edit entire series / Regenerate.
 
 ## 4.5 Izuzeci: pomjeranje i otkaz jednog održavanja
 
 ```mermaid
 flowchart LR
-  S[Serija / skup održavanja] --> X[Odabrano održavanje]
+  S[Lista održavanja događaja] --> X[Odabrano održavanje]
   X -->|Pomjeri| Y[Novi termin istog zapisa]
   X -->|Otkaži| Z[Status Otkazan]
   S --> R[Ostala održavanja nepromijenjena]
@@ -499,6 +525,7 @@ flowchart LR
 1. Pomjeranje = promjena termina (datum i/ili vrijeme početka/završetka) odabranog održavanja (BM-TR-07, BR-061; §3.3).
 2. Otkaz = status **Otkazan** (BR-069); ne utiče na ostala; **nije** fizičko uklanjanje (§4.3a).
 3. Ostala održavanja ostaju nepromijenjena.
+4. Nema izmjene „cijele serije“ niti regeneracije (§3.5).
 
 ## 4.6 Izmjene podataka na objavljenom događaju
 
@@ -638,7 +665,6 @@ Atributi / svojstva potvrđeni usvojenim BM/FS i zatvorenim N-TR-01 (konceptualn
 
 ## 6.4 Otvoreni atributi
 
-* Parametri pravila ponavljanja (kraj serije, broj) — **N-TR-02**.
 * GPS koordinate nisu usvojen atribut održavanja; prikaz mape/GPS van V1 (§5.4.3 / §5.4.9). Eventualni GPS na kataloškoj Lokaciji = TS-006, ne TS-004.
 
 ## 6.5 Integritet
@@ -677,7 +703,7 @@ Functional Specification:
 | BM-TR-03 / BR-057 | Validirati obavezan datum; vremena opciona (§3.3) |
 | BM-TR-04 / BR-058 | Dozvoliti: katalošku Lokaciju, ručno uneseni naziv Lokacije ili bez lokacije |
 | BM-TR-05 / BR-059 | Cjelodnevno ⇒ samo datum; vremena se ne unose |
-| BM-TR-06 / BR-060 | Generator: dnevno/sedmično/mjesečno + ručno |
+| BM-TR-06 / BR-060 | Generator: dnevno/sedmično/mjesečno; završetak brojem ili krajnjim datumom; max 100; nije entitet (§3.5) |
 | BM-TR-07 / BR-061 | Mutacije samo na odabranom ID-u |
 | BM-TR-08 / BR-061 | Podaci na objavljenom → approval tok događaja (izuzev statusa BR-132/133) |
 | BM-TR-10 / BR-067 | Enforce četiri statusa |
@@ -700,6 +726,8 @@ Functional Specification:
 | Cjelodnevno bez vremena | Kreiranje / izmjena | Sistem | Odbijanje vremena |
 | Kataloška Lokacija Aktivna (ako nova kataloška veza) | Dodjela kataloške Lokacije | Sistem | Odbijanje Deaktivirane kataloške Lokacije |
 | Tip ponavljanja ∈ {dnevno, sedmično, mjesečno} | Generisanje | Sistem | Odbijanje ostalog |
+| Završetak generatora: broj XOR krajnji datum | Generisanje | Sistem | Blokada bez uslova |
+| Max 100 održavanja po generisanju | Generisanje | Sistem | Odbijanje preko limita |
 | ≥1 održavanje | Slanje/objava događaja | TS-003 + TS-004 | Blokada događaja |
 | Nedozvoljen statusni prelaz | Promjena statusa | Sistem | Odbijanje |
 | Novi termin pri Odgođen→Planiran | Povratak | Sistem | Blokada bez novog termina |
@@ -722,6 +750,7 @@ Functional Specification:
 * Vremenska polja: §3.3.3 (datum obavezan; završetak samo uz početak; završetak > početak; cjelodnevno bez vremena).
 * Jedno održavanje = jedan kalendarski datum; bez `datum od` / `datum do`.
 * Fizičko uklanjanje: §4.3a (N-TR-04); brisanje ≠ otkazivanje.
+* Generator: §3.5 / §4.4 (N-TR-02); nije entitet; max 100; nema Regenerate.
 
 ---
 
@@ -824,7 +853,7 @@ Functional Specification:
 ## 10.5 Proširivost
 
 * Katalog vremenskih polja termina zatvoren u §3.3 (N-TR-01); proširenja van V1 zahtijevaju BM/FS PATCH.
-* Bez ugradnje RRULE u V1.
+* Bez ugradnje RRULE u V1; generator = §3.5 (N-TR-02 zatvoren).
 
 ## 10.6 Održavanje
 
@@ -843,19 +872,20 @@ Business Model:
 
 Functional Specification:
 - §5.4.3 / §5.4.9 (GPS/mapa)
-- BR-060 (samo dnevno/sedmično/mjesečno + ručno)
+- BR-060 (generator: dnevno/sedmično/mjesečno; max 100; van V1: RRULE / beskonačno / intervali)
 
 Usvojene granice V1 za TS-004:
 
 1. Nema implementacionog dizajna (SQL, API, Laravel, migracije).
 2. Ulaznice i cijena nisu dio V1 (BM-TR-11).
-3. Napredni RRULE / iCalendar / proizvoljni recurrence izrazi nisu dio V1.
+3. Napredni RRULE / iCalendar / proizvoljni recurrence izrazi, beskonačne serije, intervali i trajna pravila ponavljanja nisu dio V1 (N-TR-02 zatvoren — §3.5).
 4. Obavezni GPS / mapa prikaza lokacije nisu dio V1 (§5.4.3 / §5.4.9).
 5. Puni model Lokacije nije dio TS-004 (TS-006).
 6. Puni model Događaja nije dio TS-004 (TS-003).
 7. Ručno postavljanje statusa Završen nije usvojeno — samo Sistem (BR-068).
 8. Fizičko uklanjanje održavanja dozvoljeno je **samo** po §4.3a (Nacrt prije prvog uredničkog postupka). Soft delete, hard delete kao opšti mehanizam, recycle bin i lifecycle Delete **nisu** dio V1. Nakon prvog slanja — isključivo izmjena / statusi (N-TR-04 zatvoren).
 9. Status **Odgođen** nije status događaja i ne uvodi se na nivo Događaja.
+10. Edit entire series i Regenerate nisu dio V1.
 
 ---
 
@@ -863,9 +893,9 @@ Usvojene granice V1 za TS-004:
 
 Pitanja koja ostaju nakon analize BM/FS. Bez predloženih odgovora.
 
-Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedmičnom/mjesečnom ponavljanju, lokalnim izuzecima, statusima Planiran/Odgođen/Otkazan/Završen, ovlašćenjima Mod/Urednik, vezi ≥1 održavanje / arhiva događaja, uslovu automatskog arhiviranja (N-TR-03 zatvoren), modelu jednog održavanja / katalogu vremenskih polja (N-TR-01 zatvoren — §3.3), fizičkom uklanjanju iz nacrta prije prvog uredničkog postupka (N-TR-04 **ZATVORENO** — §4.3a).
+Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedmičnom/mjesečnom generisanju (N-TR-02 **ZATVORENO** — §3.5 / PO-N-TR-02-01–03), lokalnim izuzecima, statusima Planiran/Odgođen/Otkazan/Završen, ovlašćenjima Mod/Urednik, vezi ≥1 održavanje / arhiva događaja, uslovu automatskog arhiviranja (N-TR-03 zatvoren), modelu jednog održavanja / katalogu vremenskih polja (N-TR-01 zatvoren — §3.3), fizičkom uklanjanju iz nacrta prije prvog uredničkog postupka (N-TR-04 **ZATVORENO** — §4.3a).
 
-1. **N-TR-02** — Koji su obavezni parametri pravila ponavljanja (npr. datum kraja serije, maksimalan broj generisanih održavanja, ograničenja opsega)?
+Za TS-004 trenutno **nema** otvorenih pitanja.
 
 ---
 
@@ -879,7 +909,7 @@ Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedm
 | §4.1–4.2 Lifecycle | BM-TR-10, BM-TR-13–15 | BR-067–BR-069, BR-129–131 | FT-001 | — |
 | §4.3 Kreiranje | BM-TR-02–05 | BR-056–BR-059 | FT-001 | TS-003 |
 | §4.3a Uklanjanje iz nacrta | BM-DG-01 | BR-056; §5.16 (istorija/audit); N-TR-04 ZATVORENO | FT-001 | TS-003 |
-| §4.4 Ponavljanje | BM-TR-06 | BR-060 | FT-001 | — |
+| §4.4 Generisanje | BM-TR-06 | BR-060; N-TR-02 ZATVORENO | FT-001 | — |
 | §4.5 Izuzeci | BM-TR-07 | BR-061, BR-069 | FT-001 | — |
 | §4.6 Izmjene objavljenog | BM-TR-08 | BR-061 | FT-001 | TS-003 |
 | §4.7 Odgađanje | BM-TR-14/15 | BR-130/131 | FT-001 | — |
@@ -892,7 +922,7 @@ Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedm
 | §9 Integracije | BM-TR-*, BM-MF-05 | BR-056+, BR-065 | FT-001 | TS-001, TS-003, TS-005–TS-012 |
 | §10 NFR | BM-DG-04 | BR-068 | FT-001 | — |
 | §11 Granice V1 | BM-TR-11 | §5.4.3/§5.4.9 | FT-001 | — |
-| §12 Otvorena | — | N-TR-02 | FT-001 | — |
+| §12 Otvorena | — | — (nema otvorenih) | FT-001 | — |
 
 ---
 
