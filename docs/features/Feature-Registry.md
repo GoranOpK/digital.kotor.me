@@ -240,13 +240,19 @@ Povezana dokumentacija (Urednički portal):
 
 * Business Model — BM-12 (BM-EP-01–BM-EP-10), BM-01–BM-03 (uloge), BM-MOD-04, BM-UR-09, BM-GL-09
 * Functional Specification — Platformsko pravilo; §5.14 (BR-118–BR-128); BR-007; BR-048; BR-051
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija 0.5.0; U IZRADI)
+* Usvojene product odluke (Dashboard — TS-010.6):
+  * **PO-DASH-01:** Radna tabla prijavljenog korisnika; sadržaj po ulozi/ovlašćenjima/aktivnom kontekstu; svrha = brz nastavak rada; statistika pomoćna.
+  * **PO-DASH-02:** Informacije za nastavak rada; nije izvještavanje ni poslovna analitika.
+  * **PO-DASH-03:** Samo stavke koje zahtijevaju akciju ili predstavljaju aktivni rad; bez informacija bez operativnog značaja.
+  * **PO-DASH-04:** Sažete kategorije sa brojačem; klik → lista sa filterom; nema liste događaja na Dashboardu; ne duplira CRUD.
+  * **PO-DASH-05:** Jedinstven raspored po ulozi; bez personalizacije, drag&drop, skrivanja kartica, korisničkih layout-a.
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija 0.6.0; U IZRADI)
   * TS-010.1 Osnove uredničkog portala — Dokumentaciono pripremljeno
   * TS-010.2 Organizatori — Dokumentaciono pripremljeno
   * TS-010.3 Moderator Organizatora — Dokumentaciono pripremljeno
   * TS-010.4 Workflow događaja — Dokumentaciono pripremljeno
   * TS-010.5 CRUD događaja i validacije — Dokumentaciono pripremljeno
-  * TS-010.6 Dashboard — Planned
+  * TS-010.6 Dashboard uredničkog portala — Dokumentaciono pripremljeno
   * TS-010.7 Evidencija aktivnosti — Planned
   * TS-010.8 Test matrica — Planned
 
@@ -264,7 +270,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.5) |
-| TS-010 | Urednički portal | FT-001 | Kalendar kulture | U IZRADI (v0.5.0) — TS-010.1–TS-010.5 Dokumentaciono pripremljeno; TS-010.6–TS-010.8 Planned |
+| TS-010 | Urednički portal | FT-001 | Kalendar kulture | U IZRADI (v0.6.0) — TS-010.1–TS-010.6 Dokumentaciono pripremljeno; TS-010.7–TS-010.8 Planned |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
 
@@ -485,3 +491,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-06 | FT-001 — TS-004 v0.1.4: zatvoren N-TR-04 (fizičko uklanjanje održavanja samo iz Nacrta prije prvog uredničkog postupka; nakon prvog slanja — izmjena/statusi). N-TR-02 ostaje otvoren. FT-001 ostaje Active. Bez izmjene BM/FS. Bez izmjene TS-010. Bez izmjene implementacije. |
 | 2026-08-06 | FT-001 — TS-004 v0.1.5 + BM PATCH-052 + FS PATCH-FS-052: zatvoren N-TR-02 (PO-N-TR-02-01–03; generator; max 100; serija nije entitet). FT-001 ostaje Active. Bez izmjene TS-010. Bez izmjene implementacije. |
 | 2026-08-06 | FT-001 — TS-010.5 CRUD događaja i validacije dokumentaciono pripremljen (v0.5.0, U IZRADI). Create/Read/Update; prijedlog izmjene (N-DG-04 implementacioni izbor); nested Održavanja (TS-004); gate-ovi; Delete događaja nije V1; §8.5. TS-010.6–TS-010.8 Planned. FT-001 ostaje Active. Bez izmjene BM/FS. Bez izmjene TS-003/TS-004/TS-008/TS-009. Bez izmjene implementacije. |
+| 2026-08-06 | FT-001 — TS-010.6 Dashboard uredničkog portala dokumentaciono pripremljen (v0.6.0, U IZRADI). PO-DASH-01–05; radne kategorije + brojač + filter ka CRUD; bez BI/Activity Feed/FT-003. TS-010.7–TS-010.8 Planned. FT-001 ostaje Active. Bez izmjene BM/FS. Bez izmjene TS-001/TS-003/TS-004/TS-008/TS-009. Bez izmjene implementacije. |

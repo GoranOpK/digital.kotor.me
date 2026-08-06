@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.5.0
+**Verzija:** 0.6.0
 **Datum:** 2026-08-06
 
 ---
@@ -25,6 +25,7 @@
 | 0.4.0 | 2026-08-06 | TS-010.4 — Workflow događaja: akcije, guard redoslijed, matrica prelaza, otkazivanje (aktivni prijedlog izmjene neoperativan), arhiviranje (ref. TS-004), CR-004B (ref. TS-009); sljedivost §8.4. Bez novih statusa/BM/BR. Bez izmjene implementacije. |
 | 0.4.1 | 2026-08-06 | Zatvoren N-DG-02: V1 katalog sadržajnih polja događaja (priprema za TS-010.5). Bez novih BM polja; bez izmjene BM/FS/TS-003. Bez izmjene implementacije. |
 | 0.5.0 | 2026-08-06 | TS-010.5 — CRUD događaja i validacije: Create/Read/Update; prijedlog izmjene (N-DG-04 = implementacioni izbor); nested Održavanja (TS-004); editabilnost; gate-ovi; Delete događaja nije podržan; sljedivost §8.5. Bez novih BM/BR. Bez izmjene implementacije. |
+| 0.6.0 | 2026-08-06 | TS-010.6 — Dashboard uredničkog portala: radna tabla (PO-DASH-01–05); radne kategorije sa brojačem i filterom ka CRUD; bez BI/listi/Activity Feed; sljedivost §8.6. Bez novih BM/BR. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -47,6 +48,7 @@ Ne mijenjaju se postojeći redovi.
 | 0.4.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.4 (Workflow događaja). TS-010.5–TS-010.8 ostaju Planned. |
 | 0.4.1 | 2026-08-06 | Zatvoren N-DG-02 (katalog sadržajnih polja događaja). TS-010.5–TS-010.8 ostaju Planned. |
 | 0.5.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.5 (CRUD događaja i validacije). TS-010.6–TS-010.8 ostaju Planned. |
+| 0.6.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.6 (Dashboard uredničkog portala; PO-DASH-01–05). TS-010.7–TS-010.8 ostaju Planned. |
 
 ---
 
@@ -119,6 +121,14 @@ TS-010.5 — CRUD događaja i validacije obuhvata isključivo:
 5. naslovnu fotografiju (veza TS-008) i veze Organizator / Manifestacija;
 6. Delete događaja kao nepodržanu operaciju V1.
 
+TS-010.6 — Dashboard uredničkog portala obuhvata isključivo:
+
+1. svrhu i namjenu Dashboarda (PO-DASH-01–PO-DASH-05);
+2. radne kategorije sa brojačem po ulozi;
+3. navigaciju klikom na CRUD/listu sa unaprijed primijenjenim filterom;
+4. poštovanje aktivnog konteksta, ovlašćenja i Read pravila (TS-010.1 / TS-010.3 / TS-010.5);
+5. granice: što Dashboard nije (BI, Activity Feed, FT-003 / TS-012, javni portal).
+
 ---
 
 # Van obuhvata
@@ -161,7 +171,9 @@ TS-010.4 **ne razrađuje**: vidi §7.11 Van obuhvata TS-010.4.
 
 TS-010.5 **ne razrađuje**: vidi §10.16 Van obuhvata TS-010.5.
 
-Te cjeline ostaju u planiranim podcjelinama TS-010.6–TS-010.8, odnosno u postojećim TS dokumentima entiteta (TS-001, TS-003–TS-008), bez dupliciranja njihovih pravila.
+TS-010.6 **ne razrađuje**: vidi §11.10 Van obuhvata TS-010.6.
+
+Te cjeline ostaju u planiranim podcjelinama TS-010.7–TS-010.8, odnosno u postojećim TS dokumentima entiteta (TS-001, TS-003–TS-008), bez dupliciranja njihovih pravila.
 
 ---
 
@@ -189,7 +201,7 @@ Te cjeline ostaju u planiranim podcjelinama TS-010.6–TS-010.8, odnosno u posto
 | TS-010.3 Moderator Organizatora | Dokumentaciono pripremljeno |
 | TS-010.4 Workflow događaja | Dokumentaciono pripremljeno |
 | TS-010.5 CRUD događaja i validacije | Dokumentaciono pripremljeno |
-| TS-010.6 Dashboard | Planned |
+| TS-010.6 Dashboard uredničkog portala | Dokumentaciono pripremljeno |
 | TS-010.7 Evidencija aktivnosti | Planned |
 | TS-010.8 Test matrica | Planned |
 
@@ -201,7 +213,7 @@ Te cjeline ostaju u planiranim podcjelinama TS-010.6–TS-010.8, odnosno u posto
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
 3. Nova poslovna pravila se ne uvode kroz TS-010.
 4. TS-010 opisuje **urednički portal**; ne zamjenjuje TS-009 (javni portal) niti TS-001 / TS-003 / TS-004 / TS-008 (entiteti).
-5. Detaljna razrada cjelina van TS-010.1–TS-010.5 ostaje u planiranim podcjelinama.
+5. Detaljna razrada cjelina van TS-010.1–TS-010.6 ostaje u planiranim podcjelinama.
 6. Izmjene usvojenog sadržaja evidentiraju se novom verzijom dokumenta.
 
 ---
@@ -1087,6 +1099,28 @@ BM → FS → TS-001 → TS-003 → TS-004 → TS-008 → TS-009 → TS-010.1 �
 
 Napomena: matrica ne uvodi nove BM ili BR identifikatore. N-DG-04 ostaje implementaciona granica skladištenja.
 
+## 8.6 TS-010.6
+
+| TS-010.6 tema | BM | FS | TS-001 | TS-003 | TS-010 | PO |
+|---------------|----|----|--------|--------|--------|-----|
+| Svrha / radna tabla | BM-EP-01; BM-EP-03 | BR-118; BR-126 | — | — | §1; §11.3 | PO-DASH-01–02 |
+| Uloge / vidljivost | BM-EP-02; BM-EP-06; BM-MOD-04; BM-UR | BR-122–BR-125; BR-051 | §3–§5 | — | §1; §2; §3; §6; §10.4 | PO-DASH-01 |
+| Operativne kategorije (ne BI) | BM-ST; BM-DG | BR-013–BR-044; BR-062–BR-066 | — | §3–§5 | §7; §10.5 | PO-DASH-03–04 |
+| Brojač + klik → filter lista | BM-EP-03 (pregled statusa) | BR-126 | — | — | §10; §11.6 | PO-DASH-04 |
+| Jedinstven raspored po ulozi | — | — | — | — | §11.5 | PO-DASH-05 |
+| Nije FT-003 / TS-012 / Activity Feed | BM-EP-09; BM-14; BM-AL | §5.16; BR-128 ≠ feed | — | — | §10.17; §11.9 | — |
+| Nije javni portal / TS-009 statistike | BM-PK-22 | BR-263; §5.2 | — | — | granica §4; §11.9 | — |
+| Nije Newsletter | BM-NL | BR-128; §5.15 | — | — | §11.9 | — |
+| Zahtjevi Org./Moderator (Urednik) | BM-ORG; BM-MOD | BR-047–BR-055; BR-070–073 | §4 | — | §6 | — |
+
+Lanac sljedivosti:
+
+```text
+BM → FS → TS-001 → TS-003 → TS-010.1 → … → TS-010.5 → TS-010.6
+```
+
+Napomena: matrica ne uvodi nove BM ili BR identifikatore. PO-DASH-01–PO-DASH-05 su usvojene product odluke za Dashboard; ne zamjenjuju BM/FS.
+
 ---
 
 # 9. Katalog sadržajnih polja događaja (N-DG-02)
@@ -1467,27 +1501,202 @@ FS se **ne mijenja** u ovoj verziji. Doslovno terminološko usklađenje FS §5.4
 
 ---
 
-# 11. Planirane cjeline TS-010
+# 11. TS-010.6 — Dashboard uredničkog portala
+
+Izvori: BM-EP-01–BM-EP-06, BM-EP-09; BM-ST; BM-DG; BM-MOD; BM-UR; BM-ORG; BR-118–BR-128; BR-013–BR-044; BR-047–BR-055; BR-062–BR-066; BR-070–BR-073; BR-051; TS-001; TS-003; TS-010.1–TS-010.5; **PO-DASH-01–PO-DASH-05**.
+
+TS-010.6 ne uvodi nova poslovna pravila, nove statuse, nove entitete, nove KPI niti BI. Tehnički operacionalizuje usvojene BM/FS i product odluke PO-DASH-01–05 nad već usvojenim lifecycle-om i Read/CRUD pravilima.
+
+## 11.1 Obuhvat i granice
+
+**Obuhvat:** radna tabla uredničkog portala; radne kategorije sa brojačem; navigacija na CRUD/listu sa filterom; uloge Moderator i Urednik; poštovanje konteksta i ovlašćenja.
+
+**Van obuhvata:** vidi §11.10.
+
+## 11.2 Usvojene product odluke
+
+| Odluka | Sažetak |
+|--------|---------|
+| **PO-DASH-01** | Dashboard je radna tabla prijavljenog korisnika; sadržaj po ulozi, ovlašćenjima i aktivnom kontekstu; osnovna svrha = brz nastavak rada; statistika je pomoćna. |
+| **PO-DASH-02** | Prikazuje informacije za nastavak rada; analitika/statistika pomoćna; **nije** izvještavanje niti poslovna analitika. |
+| **PO-DASH-03** | Samo stavke koje zahtijevaju akciju korisnika ili predstavljaju aktivni rad; svaka kategorija ima poslovno opravdanje; bez informacija bez operativnog značaja. |
+| **PO-DASH-04** | Sažete radne kategorije sa brojačem; klik → lista sa unaprijed primijenjenim filterom; **nema** liste događaja na Dashboardu; **ne** duplira CRUD pregled. |
+| **PO-DASH-05** | Jedinstven raspored za sve korisnike iste uloge; bez personalizacije, drag&drop, skrivanja kartica i korisničkih layout-a. |
+
+## 11.3 Svrha
+
+Dashboard omogućava **brz nastavak operativnog rada** u Uredničkom portalu (PO-DASH-01, PO-DASH-02).
+
+Brojači na kategorijama služe orijentaciji u radu; **nijesu** KPI, trendovi ni izvještaji.
+
+## 11.4 Namjena po ulogama
+
+### 11.4.1 Moderator Organizatora
+
+Vidi Dashboard isključivo u okviru:
+
+* aktivnog ovlašćenja;
+* **aktivnog konteksta** Organizatora;
+* Read opsega iz TS-010.5 §10.4.
+
+Nakon deaktivacije Organizatora — **nema** operativnog Dashboarda za taj Organizator (BM-MOD-16).
+
+**Ne vidi** podatke drugih Organizatora niti globalni urednički skup.
+
+### 11.4.2 Urednik
+
+Vidi Dashboard sa **globalnim** operativnim kategorijama u skladu sa uredničkim ovlašćenjima (TS-010.1 §1.2; TS-010.5 §10.4).
+
+**Nema** aktivni kontekst Organizatora.
+
+### 11.4.3 Administrator platforme
+
+Dashboard uredničkog portala **nije** namijenjen Administratoru platforme kao redovnoj poslovnoj CRUD ulozi (TS-010.1 §1.4). Centralna Evidencija aktivnosti ostaje FT-003 / TS-012 / TS-010.7.
+
+## 11.5 Autorizacija i kontekst
+
+Svaki prikaz i svaki klik-navigacija poštuju:
+
+```text
+autentikacija
+→ platformski pristup
+→ aktivni kontekst (Moderator)
+→ poslovno ovlašćenje
+→ Read opseg
+→ filter kategorije
+→ otvaranje CRUD/liste
+```
+
+Vidljivost kategorije **nije** dovoljna autorizacija za radnje na listi (TS-010.1 §3; TS-010.5 §10.15).
+
+## 11.6 Model prikaza
+
+Za svaku radnu kategoriju:
+
+1. **Naziv** kategorije (poslovno opravdan);
+2. **Brojač** (broj entiteta koji zadovoljavaju filter u opsegu korisnika);
+3. **Klik** otvara postojeću CRUD/listu sa **unaprijed primijenjenim** filterom (PO-DASH-04).
+
+Dashboard **ne** sadrži:
+
+* tabele događaja;
+* „posljednjih X“ događaja;
+* ugrađeni CRUD pregled.
+
+Brojač `0` ostaje dozvoljen; kategorija ostaje vidljiva u jedinstvenom rasporedu uloge (PO-DASH-05), osim ako korisnik uopšte nema pravo na tu kategoriju.
+
+## 11.7 Radne kategorije — Moderator
+
+Opseg: događaji **aktivnog** Organizatora. Ne uvode se novi statusi; „vraćen na doradu“ ostaje status **Nacrt** (TS-010.4).
+
+| ID | Kategorija | Filter (postojeći status / faza) | Poslovno opravdanje | Ciljna lista |
+|----|------------|----------------------------------|---------------------|--------------|
+| DM-01 | Nacrti | Status **Nacrt** | Aktivni rad / nastavak uređivanja / slanje | Lista događaja + filter Nacrt |
+| DM-02 | Na odobrenju | Status **Na odobrenju** | Aktivan tok; uređivanje/povlačenje prije pregleda ili praćenje do odluke | Lista događaja + filter Na odobrenju |
+| DM-03 | Aktivni prijedlozi izmjene | Status **Objavljen** + **operativan** aktivni prijedlog izmjene | Nastavak rada na prijedlogu (uređivanje / slanje na pregled) | Lista događaja + filter aktivni prijedlog |
+
+**Nijesu** kategorije Moderatora (nema operativne akcije / van PO-DASH-03):
+
+* Objavljen **bez** aktivnog prijedloga;
+* Otkazan (Moderator ne ponovo objavljuje);
+* Arhiviran (read-only V1);
+* događaji drugih Organizatora;
+* neoperativni prijedlog nakon otkazivanja (**G-W02**).
+
+## 11.8 Radne kategorije — Urednik
+
+Opseg: globalni, prema uredničkim ovlašćenjima.
+
+| ID | Kategorija | Filter (postojeći status / faza / zahtjev) | Poslovno opravdanje | Ciljna lista |
+|----|------------|-------------------------------------------|---------------------|--------------|
+| DU-01 | Čeka pregled (događaji) | Status **Na odobrenju** | Urednička odluka / pregled | Lista događaja + filter Na odobrenju |
+| DU-02 | Prijedlozi izmjene na pregledu | Status **Objavljen** + prijedlog u fazi pregleda / čeka odluku Urednika | Odobrenje / vraćanje / uređivanje prijedloga | Lista događaja + filter prijedlog na pregledu |
+| DU-03 | Nacrti bez Organizatora | Status **Nacrt** i događaj **bez** Organizatora | Aktivni rad Urednika po postojećem izuzetku | Lista događaja + filter Nacrt bez Org. |
+| DU-04 | Zahtjevi za Organizatora | Otvoreni zahtjevi za kreiranje Organizatora (TS-001) | Odobrenje / odbijanje zahtjeva | Lista zahtjeva + filter otvoreno |
+| DU-05 | Zahtjevi za Moderatore | Otvoreni zahtjevi za dodjelu / uklanjanje Moderatora (TS-001 / TS-010.3) | Odluka Urednika | Lista zahtjeva Moderatora + filter otvoreno |
+
+**Nijesu** kategorije Urednika na Dashboardu (bez inventisanja inventara / BI):
+
+* svi Objavljeni;
+* svi Arhivirani;
+* kompletna evidencija Otkazanih kao statistika (ponovna objava ostaje dostupna kroz CRUD/workflow, ne kao Dashboard inventar);
+* FT-003 Activity Feed;
+* javne statistike TS-009.
+
+## 11.9 Šta Dashboard nije
+
+Dashboard **nije**:
+
+* BI / poslovna analitika / izvještaj (PO-DASH-02);
+* Activity Feed;
+* centralna Evidencija aktivnosti (**FT-003** / **TS-012** / TS-010.7);
+* lokalni audit kao feed;
+* **javni portal** niti statistike **TS-009** (Danas / Ove sedmice / Izabrani mjesec);
+* Newsletter;
+* zamjena za CRUD listu događaja;
+* kanal isporuke BR-032 (**N-DG-03** ostaje otvoren; Dashboard ne zatvara taj kanal).
+
+BR-128 (pregled poslovnih obavještenja i sistemskih informacija) ostaje sposobnost portala; **nije** isto što i Dashboard radne kategorije ovog poglavlja. Detalj UI obavještenja nije dio TS-010.6 ako nije vezan za radne kategorije §11.7–§11.8.
+
+## 11.10 Van obuhvata TS-010.6
+
+* grafici; trendovi; KPI; Top liste;
+* Dashboard statistike van operativnih kategorija §11.7–§11.8;
+* prečice (Quick actions) koje nijesu usvojene;
+* personalizacija; widget konfiguracija; drag&drop; korisnički layout; skrivanje kartica (PO-DASH-05);
+* implementacija CRUD listi i filter-UI (već TS-010.5 / TS-001);
+* API; SQL; migracije; detaljan UI dizajn;
+* FT-003 / TS-012;
+* Newsletter; javni portal;
+* zatvaranje N-DG-03.
+
+## 11.11 Raspored
+
+Jedinstven raspored kategorija za sve korisnike **iste uloge** (PO-DASH-05).
+
+Redoslijed kategorija unutar uloge je tehnički/UX izbor implementacije, uz uslov da sadržaj ostane isti za sve korisnike te uloge.
+
+## 11.12 Brojači
+
+* Brojač = broj entiteta u opsegu korisnika koji zadovoljavaju filter kategorije.
+* Računa se uz poštovanje Read pravila i aktivnog konteksta.
+* Nije trend, prosjek, udio ni vremenski niz.
+* Konkretna tehnologija agregacije ostaje implementaciji.
+
+## 11.13 Veza sa CRUD i workflow
+
+Dashboard **navigira** ka postojećim listama/formama; ne redefiniše:
+
+* statuse (TS-010.4 / TS-003);
+* editabilnost (TS-010.5 §10.5);
+* guard redoslijed;
+* prijedlog izmjene / N-DG-04;
+* Delete pravila.
+
+---
+
+# 12. Planirane cjeline TS-010
 
 Sljedeće podcjeline su planirane i **nisu razrađene** u ovoj verziji:
 
 | Cjelina | Naziv | Status |
 |---------|-------|--------|
-| TS-010.6 | Dashboard | Planned |
 | TS-010.7 | Evidencija aktivnosti | Planned |
 | TS-010.8 | Test matrica | Planned |
 
 ---
 
-# 12. Napomene za naredne podcjeline
+# 13. Napomene za naredne podcjeline
 
 * TS-010.4 operacionalizuje workflow akcije; ne zamjenjuje TS-003 / TS-004 / TS-009.
-* TS-010.5 operacionalizuje CRUD i validacije uz katalog §9 i TS-004 v0.1.5; N-DG-04 ostaje implementacioni izbor; ne redefiniše prelaze statusa.
+* TS-010.5 operacionalizuje CRUD i validacije uz katalog §9 i TS-004 v0.1.5; N-DG-04 ostaje implementacioni izbor.
+* TS-010.6 operacionalizuje Dashboard (PO-DASH-01–05) kao radnu tablu sa kategorijama i filter-navigacijom; ne uvodi BI ni Activity Feed.
 * TS-010.7 ostaje usklađen sa BM-14 / FS §5.16 / planiranim TS-012; ne zamjenjuje centralnu Evidenciju aktivnosti.
 * TS-009 ostaje referentni dokument javnog portala; CR-004B ostaje Planned za implementaciju.
 * Detaljna lista / katalog polja Organizatora ostaje van TS-010.3; usvojena granica ovlašćenja G-14 je u §6.8.1.
 * Terminološki cleanup FS §5.4.3 ↔ N-TR-01 ostaje zaseban, van ove verzije.
+* N-DG-03 (kanal obavještavanja Urednika) ostaje otvoren; nije zatvoren kroz TS-010.6.
 
 ---
 
-**Kraj dokumenta TS-010 v0.5.0 (TS-010.1–TS-010.5; N-DG-02 zatvoren; TS-010.6–TS-010.8 Planned)**
+**Kraj dokumenta TS-010 v0.6.0 (TS-010.1–TS-010.6; TS-010.7–TS-010.8 Planned)**
