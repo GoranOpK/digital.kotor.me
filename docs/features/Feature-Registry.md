@@ -236,6 +236,20 @@ Povezana dokumentacija (Newsletter):
 * Business Model — BM-13 (BM-NL-01–BM-NL-25), PATCH-031–PATCH-033
 * Functional Specification — §5.15 (BR-138–BR-169), PATCH-FS-032–PATCH-FS-034
 
+Povezana dokumentacija (Urednički portal):
+
+* Business Model — BM-12 (BM-EP-01–BM-EP-10), BM-01–BM-03 (uloge), BM-MOD-04, BM-UR-09, BM-GL-09
+* Functional Specification — Platformsko pravilo; §5.14 (BR-118–BR-128); BR-007; BR-048; BR-051
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija 0.1.0; U IZRADI)
+  * TS-010.1 Osnove uredničkog portala — Dokumentaciono pripremljeno
+  * TS-010.2 Organizatori — Planned
+  * TS-010.3 Moderator Organizatora — Planned
+  * TS-010.4 Workflow događaja — Planned
+  * TS-010.5 CRUD događaja — Planned
+  * TS-010.6 Dashboard — Planned
+  * TS-010.7 Evidencija aktivnosti — Planned
+  * TS-010.8 Test matrica — Planned
+
 **Planirani Technical Specification dokumenti (modul Kalendar kulture):**
 
 Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaćanja (FT-002) i nije dio ovog plana.
@@ -250,7 +264,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.5) |
-| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-010 | Urednički portal | FT-001 | Kalendar kulture | U IZRADI (v0.1.0) — TS-010.1 Dokumentaciono pripremljeno; TS-010.2–TS-010.8 Planned |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Planiran — nacrt nije započet |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
 
@@ -460,3 +474,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-01 | FT-001 — CR-004A Planned (IS-001 Faza 3: javni status badge Predstoji / U toku / Završen / Otkazan; PO-CR4A-01…04). TS-009 v1.0.3 + IS-001 v1.0.4 usklađeni dokumentaciono. Bez izmjene implementacije. |
 | 2026-08-01 | FT-001 — CR-004A Implemented (IS-001 Faza 3 status badge). Dokumentacija `614706c`; implementacija `0f73240`; testovi 65/266. Referenca: TS-009 v1.0.4, IS-001 v1.0.5. Bez izmjene FT identifikatora / funkcionalnog obuhvata. |
 | 2026-08-06 | FT-001 — CR-004B Planned (IS-001 Faza 3: korektivni prolaz dokumentacije; portalna Arhiva ≠ archived; cancelled ostaje; statistike/PO-TS9-06C; inventar TS-009 Stable v1.0.5). PO-CR4B-01…10; BR-270–BR-274. Bez izmjene BR-065 / BM-DG-04. Bez izmjene implementacije. |
+| 2026-08-06 | FT-001 — TS-010 Urednički portal započet (v0.1.0, U IZRADI). TS-010.1 Osnove dokumentaciono pripremljene; TS-010.2–TS-010.8 Planned. Putanja `docs/technical-specifications/Technical-Specification_Urednicki_portal.md`. Bez izmjene FT-001 statusa. Bez izmjene BM/FS. Bez izmjene implementacije. |
