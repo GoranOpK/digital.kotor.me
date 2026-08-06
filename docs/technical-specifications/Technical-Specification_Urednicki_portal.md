@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.4.1
+**Verzija:** 0.5.0
 **Datum:** 2026-08-06
 
 ---
@@ -24,6 +24,7 @@
 | 0.3.1 | 2026-08-06 | QA korektivni prolaz TS-010.3: G-11 (zahtjev za sopstveno uklanjanje); G-12 terminologija u TS-010.1–TS-010.2; G-14 granica podataka Organizatora; G-17 sloj platformske role; povlačenje; G-13 bez novog statusa; sljedivost. Bez novih BM/BR. Bez izmjene implementacije. |
 | 0.4.0 | 2026-08-06 | TS-010.4 — Workflow događaja: akcije, guard redoslijed, matrica prelaza, otkazivanje (aktivni prijedlog izmjene neoperativan), arhiviranje (ref. TS-004), CR-004B (ref. TS-009); sljedivost §8.4. Bez novih statusa/BM/BR. Bez izmjene implementacije. |
 | 0.4.1 | 2026-08-06 | Zatvoren N-DG-02: V1 katalog sadržajnih polja događaja (priprema za TS-010.5). Bez novih BM polja; bez izmjene BM/FS/TS-003. Bez izmjene implementacije. |
+| 0.5.0 | 2026-08-06 | TS-010.5 — CRUD događaja i validacije: Create/Read/Update; prijedlog izmjene (N-DG-04 = implementacioni izbor); nested Održavanja (TS-004); editabilnost; gate-ovi; Delete događaja nije podržan; sljedivost §8.5. Bez novih BM/BR. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -45,6 +46,7 @@ Ne mijenjaju se postojeći redovi.
 | 0.3.1 | 2026-08-06 | QA korektivni prolaz TS-010.3 (G-11, G-12, G-14, G-17; matrica; sljedivost). Bez proširenja obuhvata. |
 | 0.4.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.4 (Workflow događaja). TS-010.5–TS-010.8 ostaju Planned. |
 | 0.4.1 | 2026-08-06 | Zatvoren N-DG-02 (katalog sadržajnih polja događaja). TS-010.5–TS-010.8 ostaju Planned. |
+| 0.5.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.5 (CRUD događaja i validacije). TS-010.6–TS-010.8 ostaju Planned. |
 
 ---
 
@@ -69,6 +71,7 @@ Izvori istine:
 * `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001)
 * `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003)
 * `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004)
+* `docs/technical-specifications/Technical-Specification_Mediji.md` (TS-008)
 * `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009)
 * `docs/features/Feature-Registry.md` (FT-001)
 * `docs/METHODOLOGY.md`
@@ -106,6 +109,15 @@ TS-010.4 — Workflow događaja obuhvata isključivo:
 3. guard uslove i redoslijed autorizacionih / statusnih provjera;
 4. UX ponašanje akcija (ko vidi, kada, rezultat);
 5. vezu sa TS-003 / TS-004 / TS-009 bez redefinisanja domena.
+
+TS-010.5 — CRUD događaja i validacije obuhvata isključivo:
+
+1. Create / Read / Update događaja u uredničkom portalu;
+2. prijedlog izmjene Objavljenog (poslovno ponašanje; N-DG-04 = implementacioni izbor skladištenja);
+3. nested CRUD Održavanja prema TS-004;
+4. validacije po akcijama i editabilnost po statusu/fazi;
+5. naslovnu fotografiju (veza TS-008) i veze Organizator / Manifestacija;
+6. Delete događaja kao nepodržanu operaciju V1.
 
 ---
 
@@ -147,7 +159,9 @@ TS-010.3 **ne razrađuje**: vidi §6.12 Van obuhvata TS-010.3.
 
 TS-010.4 **ne razrađuje**: vidi §7.11 Van obuhvata TS-010.4.
 
-Te cjeline ostaju u planiranim podcjelinama TS-010.5–TS-010.8, odnosno u postojećim TS dokumentima entiteta (TS-001, TS-003–TS-008), bez dupliciranja njihovih pravila.
+TS-010.5 **ne razrađuje**: vidi §10.16 Van obuhvata TS-010.5.
+
+Te cjeline ostaju u planiranim podcjelinama TS-010.6–TS-010.8, odnosno u postojećim TS dokumentima entiteta (TS-001, TS-003–TS-008), bez dupliciranja njihovih pravila.
 
 ---
 
@@ -159,7 +173,8 @@ Te cjeline ostaju u planiranim podcjelinama TS-010.5–TS-010.8, odnosno u posto
 | Functional Specification — Kalendar kulture | Izvor funkcionalnih zahtjeva |
 | TS-001 — Organizator, Moderator i zahtjev | Granica entiteta i ovlašćenja Organizator/Moderator |
 | TS-003 — Događaj | Domenski lifecycle i prelazi statusa događaja |
-| TS-004 — Održavanje događaja | Predikat automatskog arhiviranja; održavanje ≠ status događaja |
+| TS-004 — Održavanje događaja | Predikat automatskog arhiviranja; model održavanja (N-TR-01/02/04); održavanje ≠ status događaja |
+| TS-008 — Mediji | Naslovna fotografija; MIME/veličina/ALT; lifecycle Medija |
 | TS-009 — Javni portal | Javni potrošač podataka; CR-004B vidljivost; van uredničkog upravljanja |
 | Feature Registry (FT-001) | Sljedivost Feature ↔ TS |
 
@@ -173,7 +188,7 @@ Te cjeline ostaju u planiranim podcjelinama TS-010.5–TS-010.8, odnosno u posto
 | TS-010.2 Organizatori | Dokumentaciono pripremljeno |
 | TS-010.3 Moderator Organizatora | Dokumentaciono pripremljeno |
 | TS-010.4 Workflow događaja | Dokumentaciono pripremljeno |
-| TS-010.5 CRUD događaja | Planned |
+| TS-010.5 CRUD događaja i validacije | Dokumentaciono pripremljeno |
 | TS-010.6 Dashboard | Planned |
 | TS-010.7 Evidencija aktivnosti | Planned |
 | TS-010.8 Test matrica | Planned |
@@ -185,8 +200,8 @@ Te cjeline ostaju u planiranim podcjelinama TS-010.5–TS-010.8, odnosno u posto
 1. TS-010 pripada FT-001 – Kalendar kulture.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
 3. Nova poslovna pravila se ne uvode kroz TS-010.
-4. TS-010 opisuje **urednički portal**; ne zamjenjuje TS-009 (javni portal) niti TS-001 / TS-003 / TS-004 (entiteti).
-5. Detaljna razrada cjelina van TS-010.1–TS-010.4 ostaje u planiranim podcjelinama.
+4. TS-010 opisuje **urednički portal**; ne zamjenjuje TS-009 (javni portal) niti TS-001 / TS-003 / TS-004 / TS-008 (entiteti).
+5. Detaljna razrada cjelina van TS-010.1–TS-010.5 ostaje u planiranim podcjelinama.
 6. Izmjene usvojenog sadržaja evidentiraju se novom verzijom dokumenta.
 
 ---
@@ -1046,13 +1061,39 @@ BM → FS → TS-001 → TS-003 → TS-004 → TS-009 → TS-010.1 → TS-010.2 
 
 Napomena: matrica ne uvodi nove BM ili BR identifikatore.
 
+## 8.5 TS-010.5
+
+| TS-010.5 tema | BM | FS | TS-003 | TS-004 | TS-008 | TS-009 | TS-010 |
+|---------------|----|----|--------|--------|--------|--------|--------|
+| V1 katalog sadržajnih polja | BM-DG | §5.4; BR-015–BR-017 | §6.2 | — | BM-MD | — | §9; N-DG-02 |
+| Create (Moderator / Urednik) | BM-ORG-04; BM-ST-03; BM-MOD-05 | BR-013–BR-020 | §4.3 | — | — | — | §6.8; §7 |
+| Read opseg | BM-MOD-05–06; BM-UR; BM-ORG-12 | BR-013+; BR-122–125 | — | — | — | — | §1; §6 |
+| Update po statusu/fazi | BM-ST; BM-DG-05–09 | BR-006–044; BR-062–066 | §4–§5 | N-TR-04 | — | — | §7; §10.5 |
+| Prijedlog izmjene / N-DG-04 | BM-DG; BM-ST-05 | BR-006–012; G-W02 | §4.7 | — | — | javna verzija | §7; §10.6 |
+| Validacije / gate-ovi | BM-DG-01, BM-DG-07–08 | BR-015–020; BR-028–039; BR-064 | §6 | §3–§4 | — | naslov prikaz | §9.5; §10.7 |
+| Nested Održavanja | BM-TR | BR-056–061; BR-082–091 | — | v0.1.5; N-TR-01/02/04 | — | — | §10.9 |
+| Organizator / Manifestacija | BM-DG; BM-MF; BM-ORG | BR-129–134 | — | — | — | — | §10.10–§10.11 |
+| Naslovna fotografija | BM-MD-06 | BR-117 | — | — | TS-008 | fallback | §10.12 |
+| Delete događaja nije V1 | BM-DG-04; BM-ST-08 | BR-065 | §4.10 | — | — | — | §10.13 |
+| Konflikt verzije | — | — | §5 (pregled) | — | — | — | §10.14 |
+| Guard CRUD | BM-EP; BM-MOD-04 | Platformsko; BR-051 | — | — | — | — | §7.3; §10.15 |
+| Lokalni audit CRUD | — | — | — | — | — | — | §10.17 (≠ FT-003) |
+
+Lanac sljedivosti:
+
+```text
+BM → FS → TS-001 → TS-003 → TS-004 → TS-008 → TS-009 → TS-010.1 → … → TS-010.5
+```
+
+Napomena: matrica ne uvodi nove BM ili BR identifikatore. N-DG-04 ostaje implementaciona granica skladištenja.
+
 ---
 
-# 9. Priprema za TS-010.5 — Katalog sadržajnih polja događaja (N-DG-02)
+# 9. Katalog sadržajnih polja događaja (N-DG-02)
 
 **Odluka:** V1 uvodi **zatvoreni** katalog sadržajnih polja događaja. Ne uvode se nova poslovna polja niti se proširuje scope Business Modela. N-DG-02 više **nije** otvoreno pitanje u okviru TS-010.
 
-TS-010.5 (CRUD događaja i forme) ostaje **Planned**; ova sekcija fiksira kanonski sadržajni katalog na koji se TS-010.5 oslanja. Ne redefiniše lifecycle (TS-010.4 / TS-003) niti model održavanja (TS-004).
+TS-010.5 (CRUD događaja i validacije) **operacionalizuje** ovaj katalog; ne redefiniše lifecycle (TS-010.4 / TS-003) niti model održavanja (TS-004).
 
 ## 9.1 V1 katalog sadržajnih polja
 
@@ -1126,7 +1167,7 @@ Usklađeno sa BM/FS / TS-003 (bez novih pravila). Detalj forme i poruka validaci
 | Naslovna fotografija | Opciono | Opciono (fallback prikaza; BM-MD-06) |
 | Održavanja | 0..N | ≥1 (BM-DG-01) |
 
-Naslov i opis su sadržajna polja kataloga (§9.1). TS-010.5 operacionalizuje njihov unos na formi u skladu sa FS §5.4 / §5.5.4 i TS-003 §6.2; ova sekcija ne uvodi nova obavezna pravila van usvojenih BM/FS.
+Naslov i opis su sadržajna polja kataloga (§9.1). **Naslov** može nedostajati u nepotpunom Nacrtu (BR-015); obavezan je za slanje na odobrenje i objavu kao operacionalizacija BR-017 i zahtjeva javnog prikaza (FS §5.4.2 / TS-009), ne kao novo polje. Detalj validacija po akcijama = §10.7.
 
 ## 9.6 Veza sa TS-003
 
@@ -1134,27 +1175,319 @@ TS-003 §6.2 / §6.4 dokumentuje potvrđeni konceptualni skup i ranije otvoreno 
 
 ---
 
-# 10. Planirane cjeline TS-010
+# 10. TS-010.5 — CRUD događaja i validacije
+
+Izvori: BM-ST, BM-DG, BM-TR, BM-MD, BM-MF, BM-MOD, BM-UR; BR-006–BR-044, BR-052, BR-056–BR-069, BR-082–BR-091, BR-117, BR-129–BR-134; TS-003; TS-004 v0.1.5; TS-008; TS-009; TS-010.1–TS-010.4; §9 (N-DG-02); N-DG-04; N-TR-01; N-TR-02; N-TR-04; G-W02.
+
+TS-010.5 ne uvodi nova poslovna pravila, nove BM/BR identifikatore, nova sadržajna polja, nove statuse, nove workflow grane, novu poslovnu ulogu niti entitet Serija. Tehnički operacionalizuje usvojene BM/FS i zatvoreni katalog §9.
+
+## 10.1 Obuhvat i granice
+
+**Obuhvat:** Create / Read / Update događaja; prijedlog izmjene Objavljenog; nested CRUD Održavanja; validacije po akcijama; editabilnost po statusu i fazi; naslovna fotografija; veze Organizator / Manifestacija; statusna i sadržajna granica; Delete događaja kao nepodržana operacija; tehnička granica N-DG-04; osnovni zahtjev zaštite od konflikta izmjena; lokalni audit za poslovni integritet.
+
+**Van obuhvata:** vidi §10.16.
+
+## 10.2 Kanonski V1 katalog (referenca §9)
+
+Sadržajna polja (bez proširenja):
+
+| Grupa | Polja |
+|-------|-------|
+| Osnovni podaci | naslov; opis |
+| Organizacija | Organizator `0..1`; Manifestacija `0..1` |
+| Klasifikacija | primarna kategorija; oznake `0..N` |
+| Mediji | naslovna fotografija `0..1` |
+| Održavanja | lista prema TS-004 |
+
+**Nijesu sadržajna polja** (FS §5.4.9 / §9.3): status; lifecycle; istaknutost (Feature); aktivni prijedlog izmjene; audit; kreator; timestamps; posljednji korisnik koji je mijenjao.
+
+**Van V1 sadržaja:** kontakt; web linkovi; društvene mreže; GPS; galerija; dokumenti; cijena; rezervacije; SEO.
+
+## 10.3 Create događaja
+
+### 10.3.1 Moderator Organizatora
+
+Može kreirati događaj:
+
+* samo za Organizatora za kojeg ima aktivno ovlašćenje;
+* samo u aktivnom kontekstu;
+* samo ako je Organizator **Aktivan**.
+
+Početni status: **Nacrt**.
+
+Moderator **ne** kreira događaj bez Organizatora.
+
+### 10.3.2 Urednik
+
+Može kreirati događaj **bez Organizatora** prema postojećem izuzetku (BM-ST-04 / BR-018 i srodna).
+
+### 10.3.3 Početni Nacrt
+
+Može biti nepotpun (BR-015).
+
+Može imati `0..N` Održavanja.
+
+Fizičko uklanjanje Održavanja dozvoljeno je prema **N-TR-04** samo dok je riječ o **početnom Nacrtu** koji nikada nije bio poslat, pregledan niti objavljen. Nakon prvog slanja / pregleda / objave — nema fizičkog Delete Održavanja.
+
+## 10.4 Read prava
+
+| Uloga | Opseg pregleda |
+|-------|----------------|
+| Moderator Organizatora | Događaji njegovog **aktivnog** Organizatora; svi relevantni interni statusi u tom kontekstu. Nakon deaktivacije Organizatora — **nema** operativnih prava (BM-MOD-16). |
+| Urednik | Svi događaji; svi Organizatori; svi statusi; prijedlozi izmjena; Arhivirani događaji za pregled. |
+| Administrator platforme | Nema redovnu poslovnu CRUD ulogu u Uredničkom portalu. |
+
+Deaktivacija Organizatora **ne briše** događaje niti istoriju.
+
+## 10.5 Update po statusu i fazi
+
+| Status / faza | Moderator | Urednik | Način izmjene |
+|---------------|-----------|---------|---------------|
+| Početni Nacrt (nikad poslat/pregledan/objavljen) | Uređuje u svom kontekstu | Prema svojim pravilima | Direktno; fizičko uklanjanje Održavanja po N-TR-04 |
+| Nacrt nakon vraćanja na doradu | Može uređivati | Može uređivati | Direktno; **nema** fizičkog Delete Održavanja; istorija se čuva |
+| Na odobrenju — prije početka pregleda | Može uređivati ili povući (postojeća pravila) | Prema pravilima | Direktno; bez projektovanja konkretnog lock mehanizma |
+| Na odobrenju — tokom pregleda | **Ne** uređuje | Može uređivati tokom pregleda | Direktno; serverska autorizacija obavezna |
+| Objavljen | Uređuje **prijedlog**, ne javnu verziju | Pregleda / uređuje / odobrava / vraća prijedlog | Prijedlog izmjene; javna verzija = posljednja odobrena |
+| Otkazan | **Ne** može ponovo objaviti; ne uređuje za republiku | Može urediti sadržaj prije ponovne objave | Direktno (Urednik); puni gate-ovi prije ponovne objave |
+| Arhiviran | Read-only | Read-only | **Nema** uređivanja; **nema** izlaznog workflow prelaza; **nema** ručnog vraćanja u drugi status (V1) |
+
+## 10.6 Prijedlog izmjene i N-DG-04
+
+Poslovno / funkcionalno ponašanje (bez modela baze):
+
+* najviše **jedan** aktivni prijedlog izmjene;
+* Moderator uređuje **prijedlog**, ne direktno Objavljeni događaj;
+* javnost vidi posljednju **odobrenu** verziju;
+* Urednik pregleda, uređuje, odobrava ili vraća prijedlog;
+* odobrenjem prijedlog postaje nova javna verzija;
+* vraćanjem na doradu prijedlog ostaje odvojen od javne verzije;
+* otkazivanje događaja čini aktivni prijedlog **neoperativnim** prema **G-W02** (TS-010.4);
+* nakon ponovne objave eventualne izmjene počinju **novim** prijedlogom.
+
+**N-DG-04:** Način fizičkog skladištenja verzija i prijedloga predstavlja **implementacioni izbor**. TS-010.5 **ne** propisuje: posebnu tabelu; snapshot; JSON model; verzijski broj; tehnički status prijedloga; naziv kolone; event sourcing.
+
+TS-010.5 propisuje UX ponašanje, validacije i integritet bez projektovanja baze.
+
+## 10.7 Validacije po akcijama
+
+Sve ključne provjere izvršavaju se **serverski**. Vidljivost UI kontrole nije dovoljna autorizacija.
+
+### 10.7.1 Sačuvaj Nacrt
+
+| Provjera | Obavezno |
+|----------|----------|
+| Tehnički integritet unesenih vrijednosti i veza | Da |
+| Naslov (postoji / nije prazan) | **Ne** (nepotpun Nacrt dozvoljen) |
+| Pun sadržajni gate slanja/objave | Ne |
+
+### 10.7.2 Pošalji na odobrenje
+
+| Provjera | Obavezno |
+|----------|----------|
+| Naslov postoji i nije prazan nakon normalizacije | Da |
+| Primarna kategorija postoji | Da |
+| Organizator postoji (događaj Organizatora) | Da |
+| Organizator je Aktivan | Da |
+| Moderator: aktivno ovlašćenje + kontekst | Da |
+| ≥1 validno Održavanje; sva po TS-004 | Da |
+| Ostale obavezne veze i poslovni gate-ovi | Da |
+
+Naslov kao gate slanja/objave = operacionalizacija **BR-017** i zahtjeva javnog prikaza; nije novo polje.
+
+### 10.7.3 Direktna objava događaja bez Organizatora (Urednik)
+
+Isti sadržajni gate-ovi koji važe za objavu (uključujući naslov, kategoriju, ≥1 Održavanje, itd.).
+
+### 10.7.4 Sačuvaj prijedlog izmjene
+
+Može biti privremeno nepotpun u fazi izrade; unesene vrijednosti moraju biti tehnički validne.
+
+### 10.7.5 Pošalji prijedlog na pregled
+
+Puni sadržajni i statusni gate-ovi (kao za slanje/objavu sadržaja).
+
+### 10.7.6 Odobri prijedlog
+
+Ponovo: autorizacija; status; sadržajni gate-ovi; Održavanja; validnost veza; odsustvo neoperativnog ishoda **G-W02**.
+
+### 10.7.7 Ponovna objava Otkazanog
+
+Puni objavni gate: naslov; kategorija; Organizator ako postoji; ≥1 validno Održavanje; sve relevantne veze i validacije.
+
+## 10.8 Naslov, opis i tehnička ograničenja
+
+* Naslov je sadržajno polje; može nedostajati u nepotpunom Nacrtu; **obavezan** za slanje i objavu.
+* Opis je opcion.
+
+Konkretne maksimalne dužine, tip skladištenja i tehničke poruke validacije ostaju implementaciji.
+
+**Zahtjev:** Ograničenja u bazi, serverskoj validaciji i korisničkom interfejsu moraju biti međusobno usklađena.
+
+Ne uvode se proizvoljni brojčani limiti u ovom dokumentu. Ne uvodi se rich-text / HTML podrška ako nije definisana drugim usvojenim izvorom.
+
+## 10.9 Održavanja — nested CRUD
+
+Koristi se **TS-004 v0.1.5** bez redefinisanja. Model: **jedno Održavanje = jedan kalendarski datum** (N-TR-01).
+
+### 10.9.1 Create
+
+* ručno dodavanje;
+* generator dnevno / sedmično / mjesečno (N-TR-02);
+* kraj: broj **ili** krajnji datum;
+* najviše **100** po jednom generisanju;
+* sva generisana Održavanja postaju **nezavisna**;
+* entitet **Serija ne postoji**; nema regenerate / edit-all / brisanje cijele grupe.
+
+### 10.9.2 Read
+
+Prikaz liste Održavanja unutar forme Događaja.
+
+### 10.9.3 Update
+
+Datum; opciono vrijeme početka/završetka; cjelodnevnost; lokacija; druga usvojena polja TS-004.
+
+Na **Objavljenom** događaju izmjena podataka Održavanja ide kroz **prijedlog izmjene**.
+
+Statusne promjene Održavanja — prema TS-004 i TS-010.4.
+
+### 10.9.4 Delete (Održavanje)
+
+Fizičko uklanjanje dozvoljeno **samo**:
+
+* u početnom Nacrtu;
+* prije prvog slanja;
+* prije uredničkog pregleda;
+* prije objave.
+
+Nakon toga **nema** Delete Održavanja. Otkazivanje ≠ Delete (N-TR-04).
+
+**Nije** Delete Događaja (§10.13).
+
+## 10.10 Organizator
+
+* Veza `0..1`.
+* Događaj bez Organizatora kreira samo Urednik (postojeći izuzetak).
+* Moderator **ne može** mijenjati Organizatora događaja.
+* Urednik može naknadno povezati događaj sa Organizatorom (postojeće pravilo).
+* Promjena veze ne smije zaobići autorizaciona i kontekstna pravila.
+* Deaktiviran Organizator prekida operativna prava Moderatora.
+* Podaci Organizatora se **ne kopiraju** u događaj kao zasebna sadržajna polja.
+
+## 10.11 Manifestacija
+
+* Veza `0..1`.
+* Događaj ima **nezavisan** lifecycle.
+* Događaj **ne nasljeđuje** sadržaj Manifestacije.
+* Link / unlink = sadržajna izmjena Događaja.
+* Na Objavljenom — promjena veze kroz prijedlog izmjene.
+* Manifestacija **ne određuje** CRUD polja događaja.
+
+## 10.12 Naslovna fotografija (TS-008)
+
+* Opciona veza `0..1` prema Mediju.
+* Moderator može izabrati ili dodati Medij prema dozvoljenim tokovima.
+* Urednik — prava prema TS-008.
+* Uklanjanje veze naslovne **nije** brisanje Medija.
+* Fallback prikaza — postojeća pravila (BM-MD-06).
+* MIME, veličina, naziv, ALT, lifecycle Medija — **TS-008**.
+* Na Objavljenom — promjena naslovne kroz **prijedlog izmjene**.
+* **Feature (istaknutost)** nije sadržajno polje i **ne ide** kroz sadržajni prijedlog.
+
+Kompletan CRUD Medija nije dio TS-010.5.
+
+## 10.13 Delete događaja
+
+```text
+Delete Događaja nije podržan u V1.
+```
+
+Nema: fizičkog brisanja; soft delete; recycle bin; brisanja početnog Nacrta; administratorskog Delete toka.
+
+Događaj koristi postojeći lifecycle i automatsko arhiviranje (BM-DG-04 / BR-065 / TS-004).
+
+Ovo pravilo **nije** isto što i fizičko uklanjanje Održavanja iz početnog Nacrta (N-TR-04 / §10.9.4).
+
+## 10.14 Konflikti istovremenog uređivanja
+
+**Minimalni zahtjev:** Sistem ne smije tiho prepisati noviju sačuvanu izmjenu zastarjelim podacima drugog korisnika ili druge sesije.
+
+Tehnologija zaključavanja / optimistic concurrency **nije** propisana ovim dokumentom. Dozvoljeni su različiti implementacioni izbori; nijedan se ne navodi kao jedino normativno rješenje.
+
+Početak uredničkog pregleda i postojeća pravila zaključavanja ostaju prema TS-003 i TS-010.4.
+
+Konkurentno uređivanje dva Moderatora ili više tabova **ne uvodi** novu poslovnu odluku.
+
+## 10.15 Guard redoslijed (CRUD)
+
+Nasljeđuje TS-010.4 §7.3, prošireno za CRUD:
+
+```text
+autentikacija
+→ platformski pristup
+→ aktivni kontekst
+→ poslovno ovlašćenje
+→ status/faza
+→ dozvoljena CRUD operacija
+→ funkcionalne validacije
+→ provjera konflikta verzije
+→ izvršenje
+```
+
+Moderator **nema** posebnu platformsku rolu (TS-010.1 / G-17).
+
+## 10.16 Van obuhvata TS-010.5
+
+* Dashboard (TS-010.6);
+* kompletan workflow osim referenci na TS-010.4;
+* centralna Evidencija aktivnosti (FT-003 / TS-012 / TS-010.7);
+* Newsletter; Obavještenja;
+* javni portal (TS-009);
+* kompletan CRUD Medija;
+* API; rute; modeli baze; migracije;
+* detaljan UI dizajn;
+* implementaciona tehnologija zaključavanja / skladištenja verzija (N-DG-04).
+
+## 10.17 Audit granica
+
+Podaci potrebni za poslovni integritet CRUD-a:
+
+* kreator;
+* vrijeme kreiranja;
+* posljednji korisnik koji je mijenjao;
+* vrijeme posljednje izmjene;
+* istorija workflow odluka prema postojećim pravilima.
+
+**Ne** projektuje se centralna Evidencija aktivnosti FT-003 / TS-012. **Ne** uvodi se novi audit entitet.
+
+## 10.18 Napomena — FS §5.4.3
+
+U TS-010.5 koristi se usvojeni TS-004 model: **jedno Održavanje = jedan kalendarski datum** (N-TR-01).
+
+FS se **ne mijenja** u ovoj verziji. Doslovno terminološko usklađenje FS §5.4.3 sa N-TR-01 ostaje **zaseban dokumentacioni cleanup** prije finalnog zatvaranja TS-010. To **nije** blokator TS-010.5.
+
+---
+
+# 11. Planirane cjeline TS-010
 
 Sljedeće podcjeline su planirane i **nisu razrađene** u ovoj verziji:
 
 | Cjelina | Naziv | Status |
 |---------|-------|--------|
-| TS-010.5 | CRUD događaja | Planned |
 | TS-010.6 | Dashboard | Planned |
 | TS-010.7 | Evidencija aktivnosti | Planned |
 | TS-010.8 | Test matrica | Planned |
 
 ---
 
-# 11. Napomene za naredne podcjeline
+# 12. Napomene za naredne podcjeline
 
-* TS-010.4 operacionalizuje workflow akcije u uredničkom portalu; ne zamjenjuje TS-003 / TS-004 / TS-009.
-* TS-010.5 razrađuje CRUD forme i validacije forme uz matricu akcija iz TS-010.4 i **zatvoreni sadržajni katalog §9** (N-DG-02); ne redefiniše prelaze statusa niti TS-004.
+* TS-010.4 operacionalizuje workflow akcije; ne zamjenjuje TS-003 / TS-004 / TS-009.
+* TS-010.5 operacionalizuje CRUD i validacije uz katalog §9 i TS-004 v0.1.5; N-DG-04 ostaje implementacioni izbor; ne redefiniše prelaze statusa.
 * TS-010.7 ostaje usklađen sa BM-14 / FS §5.16 / planiranim TS-012; ne zamjenjuje centralnu Evidenciju aktivnosti.
-* TS-009 ostaje referentni dokument javnog portala; CR-004B ostaje Planned za implementaciju; workflow prelazi u TS-010.4 ne zavise od završetka CR-004B implementacije.
+* TS-009 ostaje referentni dokument javnog portala; CR-004B ostaje Planned za implementaciju.
 * Detaljna lista / katalog polja Organizatora ostaje van TS-010.3; usvojena granica ovlašćenja G-14 je u §6.8.1.
+* Terminološki cleanup FS §5.4.3 ↔ N-TR-01 ostaje zaseban, van ove verzije.
 
 ---
 
-**Kraj dokumenta TS-010 v0.4.1 (TS-010.1 + TS-010.2 + TS-010.3 + TS-010.4; N-DG-02 priprema za TS-010.5)**
+**Kraj dokumenta TS-010 v0.5.0 (TS-010.1–TS-010.5; N-DG-02 zatvoren; TS-010.6–TS-010.8 Planned)**
