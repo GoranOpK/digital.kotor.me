@@ -70,6 +70,7 @@
 | doc-CR-003-impl | 2026-08-01 | Statusno usklađenje napomene uz BR-257: CR-003 Implemented (`595045a`; dokumentacija `fc35132`). Bez novih BR. Bez izmjene funkcionalnih pravila. Verzija ostaje 1.0.0. |
 | doc-CR-004A | 2026-08-01 | Dokumentaciona napomena uz BR-114: CR-004A Planned (javni status badge; TS-009 §7.1; IS-001 §9.3.1; PO-CR4A-01…04). Bez novih BR. Bez izmjene funkcionalnih pravila. Verzija ostaje 1.0.0. |
 | doc-CR-004A-impl | 2026-08-01 | Statusno usklađenje napomene uz BR-114: CR-004A Implemented (implementacija `0f73240`; dokumentaciona priprema `614706c`). Bez novih BR. Bez izmjene funkcionalnih pravila. Verzija ostaje 1.0.0. |
+| PATCH-FS-051 | 2026-08-06 | CR-004B (javni prikaz otkazanih): usklađeni BR-001, BR-002, BR-004, BR-114, BR-116, BR-263; dodati/precizirani BR-270–BR-274 (portalna Arhiva ≠ archived; status ostaje cancelled); napomena doc-CR-004B. Bez izmjene BR-063 / BR-065. Bez javne dostupnosti archived. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -278,17 +279,19 @@ Administrator platforme pripada sistemskoj administraciji i nije običan registr
 
 ## 4. Poslovna pravila
 
-### BR-001 – Prikaz samo objavljenih događaja
+### BR-001 – Prikaz javno dostupnih događaja na početnoj
 
-Na početnoj stranici prikazuju se isključivo događaji sa statusom **Objavljen (Published)**.
+Na početnoj stranici prikazuju se javno dostupni događaji u skladu sa BR-270: objavljeni (`published`) i otkazani (`cancelled`).
 
-Događaji u statusima **Nacrt**, **Na odobrenju**, **Otkazan**, **Arhiviran** ili drugim internim statusima nisu vidljivi korisnicima na početnoj stranici.
+Događaji u statusima **Nacrt**, **Na odobrenju** i drugim statusima koji nisu dio javnog skupa dostupnosti nisu vidljivi korisnicima na početnoj stranici.
+
+Sekcija Istaknutih događaja isključuje otkazane događaje iz javnog prikaza (BR-271), bez izmjene flaga isticanja.
 
 ---
 
 ### BR-002 – Jedinstven prikaz sadržaja
 
-Svi korisnici kojima je dozvoljen pristup početnoj stranici vide isti skup objavljenih događaja.
+Svi korisnici kojima je dozvoljen pristup početnoj stranici vide isti skup javno dostupnih događaja, u skladu sa BR-001 i BR-270.
 
 Korisnička uloga ne utiče na sadržaj početne stranice, već isključivo na dostupne navigacione i upravljačke funkcije unutar sistema.
 
@@ -304,9 +307,9 @@ Prilikom prikaza koriste se termini (datumi i vremena) održavanja događaja, be
 
 ### BR-004 – Automatska ažurnost
 
-Početna stranica automatski odražava trenutno stanje objavljenih događaja.
+Početna stranica automatski odražava trenutno stanje javno dostupnih događaja (BR-001 / BR-270).
 
-Nakon objave, izmjene ili isteka događaja, sadržaj početne stranice mora biti usklađen sa trenutnim stanjem podataka u sistemu.
+Nakon objave, izmjene, otkazivanja ili isteka događaja, sadržaj početne stranice mora biti usklađen sa trenutnim stanjem podataka u sistemu.
 
 ---
 
@@ -380,7 +383,7 @@ Statistički prikaz na početnoj stranici obuhvata tri kartice (PO-TS9-06C / BR-
 * **Ove sedmice**
 * **Izabrani mjesec** — treća kartica prikazuje naziv trenutno izabranog mjeseca u kalendaru (ne fiksni naziv „Ovog mjeseca“).
 
-Statistike prikazuju isključivo javno objavljene događaje.
+Statistike prikazuju javno dostupne događaje (`published` | `cancelled`) u odgovarajućem vremenskom skupu, u skladu sa BR-270 i CR-004B.
 
 Sve tri kartice su klikabilne. Klik vodi na stranicu „Pretraga i pregled“ sa odgovarajućim aktivnim datumskim filterom. Ako je vrijednost 0, kartica ostaje klikabilna.
 
@@ -400,7 +403,7 @@ Početna stranica Kalendara kulture prikazuje tri statističke kartice:
 
 ##### 1. Danas
 
-Prikazuje broj javno objavljenih događaja koji se odnose na današnji datum, u skladu sa pravilima izračuna usvojenim za ovaj pokazatelj.
+Prikazuje broj javno dostupnih događaja (`published` | `cancelled`) koji se odnose na današnji datum, u skladu sa pravilima izračuna usvojenim za ovaj pokazatelj.
 
 Klik otvara „Pretragu i pregled“ sa datumskim filterom za današnji dan.
 
@@ -408,7 +411,7 @@ Klik otvara „Pretragu i pregled“ sa datumskim filterom za današnji dan.
 
 ##### 2. Ove sedmice
 
-Prikazuje broj javno objavljenih događaja koji pripadaju tekućoj kalendarskoj sedmici, u skladu sa pravilima izračuna usvojenim za ovaj pokazatelj.
+Prikazuje broj javno dostupnih događaja (`published` | `cancelled`) koji pripadaju tekućoj kalendarskoj sedmici, u skladu sa pravilima izračuna usvojenim za ovaj pokazatelj.
 
 Klik otvara „Pretragu i pregled“ sa odgovarajućim datumskim filterom za tekuću sedmicu.
 
@@ -418,7 +421,7 @@ Klik otvara „Pretragu i pregled“ sa odgovarajućim datumskim filterom za tek
 
 Kartica prikazuje **naziv** mjeseca koji je trenutno izabran u kalendaru na početnoj stranici.
 
-Prikazuje broj javno objavljenih događaja koji pripadaju tom mjesecu, u skladu sa pravilima izračuna usvojenim za ovaj pokazatelj.
+Prikazuje broj javno dostupnih događaja (`published` | `cancelled`) koji pripadaju tom mjesecu, u skladu sa pravilima izračuna usvojenim za ovaj pokazatelj.
 
 Klik otvara „Pretragu i pregled“ sa odgovarajućim datumskim filterom za taj mjesec.
 
@@ -2856,7 +2859,13 @@ Javni portal omogućava prikaz otkazanih i arhiviranih događaja u skladu sa pos
 
 Status otkazanog ili arhiviranog događaja mora biti jasno prikazan korisniku.
 
-> **Napomena (doc-CR-004A-impl):** CR-004A (IS-001 Faza 3; Implemented — implementacija `0f73240`; dokumentaciona priprema `614706c`) dokumentuje javni status badge (Predstoji / U toku / Završen / Otkazan) u **TS-009 §7.1** i **IS-001 §9.3.1** (PO-CR4A-01…05). Interni statusi (`draft` / Na odobrenju / `published` / `archived`) ne prikazuju se građanima kao labela; `cancelled` → **Otkazan** (prioritet). Predstoji / U toku / Završen su izračunata javna stanja, ne statusi baze. **Odgođen** ostaje status Održavanja, ne Događaja. Bez izmjene teksta BR-114 i bez novih BR identifikatora.
+Za **javni prikaz otkazanih događaja** važe BR-270–BR-274 (CR-004B). Javni status badge uređuje CR-004A (TS-009 §7.1).
+
+Interni lifecycle status i javni status nisu isto. Korisnik na portalu za otkazani događaj uvijek vidi javni status **Otkazan**. Otkazani zadržava interni status `cancelled`; portalna Arhiva je vremenska površina (≠ interni `archived`). BR-065 se ne mijenja ovim pravilom.
+
+> **Napomena (doc-CR-004A-impl):** CR-004A (Implemented — `0f73240` / `614706c`) dokumentuje javni status badge u **TS-009 §7.1** (PO-CR4A-01…05). Interni statusi se ne prikazuju kao labela; `cancelled` → **Otkazan** (prioritet). Predstoji / U toku / Završen su izračunata stanja.
+
+> **Napomena (doc-CR-004B):** CR-004B (IS-001 Faza 3; Planned) dokumentuje javnu dostupnost i portalni prikaz otkazanih u **TS-009 §7.2** i **IS-001 §9.3.2** (PO-CR4B-01…10; BR-270–BR-274). Otkazani zadržava `cancelled`; portalna Arhiva je vremenska (≠ interni `archived`). Prava otkazivanja ostaju BR-063 / BM-DG-05. Bez izmjene BR-065. Bez javne dostupnosti `archived`. Bez novih filtera / URL parametara.
 
 ---
 
@@ -2866,9 +2875,13 @@ Javni portal može prikazivati međusobno povezane događaje i manifestacije u s
 
 ---
 
-#### BR-116 – Javno objavljen sadržaj
+#### BR-116 – Javno objavljen / javno dostupan sadržaj
 
-Javni portal prikazuje isključivo javno objavljen sadržaj.
+Javni portal prikazuje isključivo javno dostupan sadržaj.
+
+Javno dostupni događaji uključuju objavljene (`published`) i otkazane (`cancelled`) događaje u skladu sa BR-270–BR-274.
+
+Interni lifecycle status nije isto što i javni status prikaza. Korisnik za otkazani događaj uvijek vidi javni status **Otkazan**.
 
 ---
 
@@ -2995,7 +3008,7 @@ Klik na karticu vodi na „Pretragu i pregled“ sa odgovarajućim aktivnim datu
 
 Kartica sa vrijednošću 0 ostaje klikabilna.
 
-Statistike prikazuju isključivo javno objavljene događaje i ostaju na postojećem mjestu.
+Statistike prikazuju javno dostupne događaje (`published` | `cancelled`) u odgovarajućem vremenskom skupu (CR-004B / BR-270) i ostaju na postojećem mjestu. Nema novih filtera ni URL parametara.
 
 ---
 
@@ -3084,6 +3097,72 @@ Događaji ostaju vidljivi u Pretrazi i pregledu, kalendaru, statistikama i arhiv
 Uklanjanje ili arhiviranje Manifestacije ne briše događaje.
 
 **Status:** Approved
+
+---
+
+#### BR-270 – Javna dostupnost otkazanih događaja (CR-004B)
+
+Otkazani događaj ostaje javno dostupan na portalu. Interni status ostaje `cancelled` i prije i nakon planiranog termina.
+
+**Portalna Arhiva ≠ interni status `archived`.**
+
+Do planiranog termina otkazani događaj prikazuje se na **aktivnim javnim površinama**:
+
+* početnoj stranici;
+* kalendaru;
+* listi događaja za odabrani dan;
+* listi narednih događaja;
+* Pretrazi i pregledu;
+* Detaljima događaja;
+* direktnom URL-u detalja.
+
+Za te površine, uz postojeće vremenske uslove, javno dostupni događaji uključuju `published` ili `cancelled`.
+
+Nakon isteka planiranog termina otkazani se više ne prikazuje među narednim događajima; prikazuje se u **portalnoj Arhivi** na osnovu datuma, uz javni status „Otkazan“ (BR-274).
+
+Istaknuti isključuju otkazane događaje (BR-271), bez izmjene flaga isticanja.
+
+Interni status `archived` se ovim pravilom ne otvara javnosti. BR-065 / BM-DG-04 se ne mijenjaju.
+
+---
+
+#### BR-271 – Otkazani događaji i Istaknuti (CR-004B)
+
+Otkazani događaji se ne prikazuju među Istaknutim događajima na početnoj stranici.
+
+Flag isticanja se **ne mijenja** otkazivanjem. Portal samo isključuje otkazane događaje iz javnog prikaza sekcije Istaknutih.
+
+---
+
+#### BR-272 – Sistemsko obavještenje o otkazivanju na Detaljima (CR-004B)
+
+Na stranici Detalja otkazanog događaja sistem prikazuje fiksno sistemsko obavještenje:
+
+> Ovaj događaj je otkazan i neće biti održan u planiranom terminu.
+
+Tekst obavještenja nije uređiv i nije dio opisa događaja.
+
+Javni status badge (CR-004A) ostaje prikazan.
+
+---
+
+#### BR-273 – Otkazani događaji u Pretrazi bez posebnog moda (CR-004B)
+
+Otkazani događaji učestvuju u Pretrazi i pregledu kao i ostali javno dostupni događaji.
+
+Ne uvode se novi filteri, novi URL parametri ni novi search modovi za otkazane događaje.
+
+Razlikuju se isključivo javnim status badge-om i sistemskim obavještenjem na Detaljima.
+
+---
+
+#### BR-274 – Otkazani događaji u portalnoj Arhivi (CR-004B)
+
+Nakon isteka planiranog termina otkazani događaj zadržava interni status `cancelled`, prestaje da se prikazuje među narednim događajima i prikazuje se u portalnoj Arhivi na osnovu datuma, uz javni status „Otkazan“.
+
+Portalna Arhiva je javna vremenska površina i ne podrazumijeva promjenu internog statusa događaja u `archived`.
+
+BR-065 / BM-DG-04 ostaju neizmijenjeni. CR-004B ne dokumentuje ni implementira prelaz `cancelled → archived`.
 
 ---
 
@@ -4038,3 +4117,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-01 | FS-001 BR-257 napomena (doc-CR-003-impl): CR-003 Implemented (`595045a`). Statusno usklađenje bez izmjene BR/funkcionalnih pravila. Verzija ostaje 1.0.0. |
 | 2026-08-01 | FS-001 BR-114 napomena (doc-CR-004A): CR-004A Planned (javni status badge; TS-009 §7.1; PO-CR4A-01…04). Bez novih BR. Verzija ostaje 1.0.0. |
 | 2026-08-01 | FS-001 BR-114 napomena (doc-CR-004A-impl): CR-004A Implemented (`0f73240`; dokumentacija `614706c`). Statusno usklađenje bez izmjene BR/funkcionalnih pravila. Verzija ostaje 1.0.0. |
+| 2026-08-06 | FS-001 (PATCH-FS-051 / doc-CR-004B): CR-004B Planned — korektivni prolaz; usklađeni BR-001/002/004/114/116/263; BR-270–BR-274 (cancelled ostaje; portalna Arhiva vremenska); PO-CR4B-01…10. Bez izmjene BR-063 / BR-065. Bez izmjene implementacije. Verzija ostaje 1.0.0. |

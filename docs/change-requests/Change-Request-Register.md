@@ -3,7 +3,7 @@
 ## Modul: Kalendar kulture
 
 **Status dokumenta:** AKTIVAN
-**Verzija:** 0.7
+**Verzija:** 0.8
 
 ---
 
@@ -57,6 +57,7 @@ Svaki odobreni poslovni zahtjev koji zahtijeva izmjenu implementacije mora biti 
 | CR-002 | IS-001 Faza 2 — Mjesečni filter i klik treće statistike | FS-001 → §5.2 / BR-263; TS-009 §3.2 | Medium | UI, Backend | Implemented |
 | CR-003 | IS-001 Faza 2 — Filteri Pretrage i pregleda (`q` / `category` / `location`) | FS-001 → BR-257 / BR-107–108; TS-009 §3.3 | Medium | UI, Backend | Implemented |
 | CR-004A | IS-001 Faza 3 — Javni status badge (Predstoji / U toku / Završen / Otkazan) | FS-001 → BR-114; TS-009 §7.1; PO-CR4A-01…05 | Medium | UI, Backend | Implemented |
+| CR-004B | IS-001 Faza 3 — Javni prikaz otkazanih događaja | FS-001 → BR-270–BR-274; BR-001/114/116; TS-009 §7.2; PO-CR4B-01…10 | Medium | UI, Backend | Planned |
 
 ---
 
@@ -231,7 +232,7 @@ Na javnom portalu uvesti jedinstveni status badge događaja:
 * jedinstven tekst, badge i logika na svim prikazima;
 * ako se status ne može pouzdano odrediti, badge se ne prikazuje (PO-CR4A-05).
 
-**Van obuhvata:** novi statusi baze; migracije; Odgođen kao status Događaja; Održavanja / Oznake / Manifestacije UI; izmjena kriterijuma Arhive (BM-DG-04); redizajn van PO-CR4A-04; proširenje javne dostupnosti `cancelled` / `archived` (nije dio CR-004A).
+**Van obuhvata:** novi statusi baze; migracije; Odgođen kao status Događaja; Održavanja / Oznake / Manifestacije UI; izmjena kriterijuma Arhive (BM-DG-04); redizajn van PO-CR4A-04; proširenje javne dostupnosti statusa `cancelled` (to je CR-004B); javna dostupnost internog statusa `archived` nije dio CR-004A ni CR-004B.
 
 ### Razlog
 
@@ -263,6 +264,52 @@ Medium
   * Unit i Feature testovi;
   * bez migracija i bez izmjene šeme baze;
   * bez izmjene javne dostupnosti statusa kroz query-je i rute (`published` ostaje ulazni skup).
+
+---
+
+# CR-004B
+
+### Naziv
+
+IS-001 Faza 3 — Javni prikaz otkazanih događaja.
+
+### Referenca
+
+FS-001 → BR-270–BR-274; BR-001, BR-114, BR-116; BM-PK-13; BM-DG-05 / BR-063 (prava — bez izmjene); TS-009 §7.2 / §8; IS-001 §9.3 / §9.3.2; PO-CR4B-01 … PO-CR4B-10.
+
+### Opis
+
+Proširiti javnu dostupnost otkazanih događaja na portalu (CR-004A je uveo badge, ali nije mijenjao query dostupnosti):
+
+* otkazani događaj ostaje javno dostupan; interni status ostaje `cancelled` (PO-CR4B-01);
+* do planiranog termina prikaz na aktivnim javnim površinama: početnoj, kalendaru, događajima dana, narednim događajima, Pretrazi i pregledu, Detaljima i direktnom URL-u (PO-CR4B-02);
+* ne prikazuje se među Istaknutim; flag „Istaknut“ se ne mijenja — samo isključenje iz javnog prikaza (PO-CR4B-03);
+* nakon isteka planiranog termina otkazani događaj zadržava interni status `cancelled`, prikazuje se u portalnoj Arhivi na osnovu datuma i u javnom prikazu ostaje označen statusom „Otkazan“ (PO-CR4B-04);
+* portalna Arhiva je javna vremenska površina i ne podrazumijeva promjenu internog statusa u `archived`;
+* na Detaljima fiksno sistemsko obavještenje (PO-CR4B-05); badge ostaje (CR-004A);
+* bez novih filtera, URL parametara ili search moda (PO-CR4B-06);
+* **Odgođen** nije dio CR-004B (PO-CR4B-07);
+* prava otkazivanja: postojeća BR-063 / BM-DG-05 — bez novih pravila (PO-CR4B-08);
+* CR-004B ne mijenja BR-065 ni BM-DG-04 i ne uvodi javnu dostupnost internog statusa `archived`. Buduća implementacija lifecycle prelaza `cancelled → archived` zahtijeva zasebno rješenje za trajno očuvanje informacije o otkazivanju (PO-CR4B-09).
+
+**Van obuhvata:** Odgođen; promjena termina; održavanja; manifestacije; novi modeli/migracije/tabele; Faza 4 / Faza 5; izmjena BR-065 / BM-DG-04; javna dostupnost internog statusa `archived`; prelaz `cancelled → archived`; izmjena flaga Istaknut; novi filteri / URL parametri.
+
+### Razlog
+
+BM-PK-13 / BR-114 zahtijevaju prikaz otkazanih na portalu. CR-004A isporučuje badge; CR-004B usklađuje javni skup dostupnosti i portalni prikaz, bez izmjene internog lifecycle-a.
+
+### Prioritet
+
+Medium
+
+### Procjena uticaja
+
+* UI
+* Backend
+
+### Status
+
+**Planned**
 
 ---
 
@@ -311,3 +358,4 @@ Ovaj model omogućava da se za svaku funkcionalnost može utvrditi:
 | 2026-08-01 | CR-003 status → Implemented (dokumentacija `fc35132`; implementacija `595045a`). Testovi 41/194. Bez migracija/ruta/modela. Verzija registra 0.5. |
 | 2026-08-01 | Evidentiran CR-004A (Planned): javni status badge Predstoji / U toku / Završen / Otkazan; PO-CR4A-01…04; TS-009 §7.1; IS-001 §9.3.1. Verzija registra 0.6. |
 | 2026-08-01 | CR-004A status → Implemented (dokumentacija `614706c`; implementacija `0f73240`). Testovi 65/266. Bez migracija/ruta/izmjene šeme. Verzija registra 0.7. |
+| 2026-08-06 | Evidentiran CR-004B (Planned): javni prikaz otkazanih; korektivni prolaz (portalna Arhiva ≠ archived; status ostaje cancelled); PO-CR4B-01…10; BR-270–BR-274; TS-009 §7.2; IS-001 §9.3.2. Bez izmjene BR-065 / BM-DG-04. Verzija registra 0.8. |

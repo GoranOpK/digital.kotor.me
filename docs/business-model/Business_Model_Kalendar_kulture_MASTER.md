@@ -64,6 +64,7 @@
 | PATCH-050 | 2026-07-31 | §7 Završne odredbe — uvedeno završno poglavlje o ulozi i održavanju Business Model dokumenta. Bez novih poslovnih pravila sistema. |
 | 0.5.0 | 2026-07-31 | Final Review. Završna dokumentaciona revizija: §5 i §7 kompletirani (PATCH-049/050); BM-01…BM-17 USVOJENO; usvojene PO/IA odluke ugrađene; bez novih poslovnih pravila. Bez izmjene FS/TS/IS/Feature Registry/implementacije. |
 | 1.0.0 | 2026-07-31 | Stable. Business Model je uspješno prošao Final Review i predstavlja referentni poslovni dokument modula Kalendar kulture. Bez izmjene poslovnih pravila, numeracije, identifikatora ili sljedivosti. Bez izmjene FS/TS/IS/Feature Registry/implementacije. |
+| PATCH-051 | 2026-08-06 | CR-004B (javni prikaz otkazanih): usklađen BM-PK-13 (cancelled ostaje; portalna Arhiva = vremenska površina ≠ interni archived; bez javne dostupnosti archived); usklađen BM-AR-02 i BM-PK-15 (otkazani nisu u Istaknutim — bez izmjene flaga); usklađen BM-PK-22 (statistike = javno dostupni published|cancelled). Bez izmjene BM-DG-04 / BM-DG-05 / BM-ST-07. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -1189,7 +1190,22 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 ### BM-PK-13 — Prikaz otkazanih i arhiviranih događaja
 
-> Portal Kalendara kulture omogućava prikaz otkazanih i arhiviranih događaja u skladu sa poslovnim pravilima modula Kalendara kulture. Status otkazanog ili arhiviranog događaja mora biti jasno prikazan korisniku.
+> Portal Kalendara kulture omogućava prikaz otkazanih i arhiviranih događaja u skladu sa poslovnim pravilima modula Kalendara kulture.
+>
+> **Javni prikaz otkazanih (CR-004B / PO-CR4B-01…10):**
+>
+> * Otkazani događaj ostaje javno dostupan. Interni status ostaje `cancelled` i prije i nakon planiranog termina.
+> * **Portalna Arhiva ≠ interni status `archived`.**
+> * Do planiranog termina prikazuje se na aktivnim javnim površinama: početnoj stranici (uključujući kalendar, događaje dana i naredne događaje), na Pretrazi i pregledu, na Detaljima i putem direktnog URL-a.
+> * Ne prikazuje se među Istaknutim događajima. Flag isticanja se ne mijenja — otkazani se samo isključuju iz javnog prikaza Istaknutih.
+> * Nakon isteka planiranog termina događaj zadržava interni status `cancelled`, prestaje da se prikazuje među narednim događajima i prikazuje se u **portalnoj** Arhivi na osnovu datuma, uz javni status **Otkazan**.
+> * Na Detaljima se prikazuje fiksno sistemsko obavještenje da je događaj otkazan; tekst nije uređiv i nije dio opisa događaja. Javni status badge ostaje.
+> * Ne uvode se novi filteri, URL parametri ni search modovi za otkazane.
+> * Interni status `archived` se kroz CR-004B ne otvara javnosti. CR-004B ne dokumentuje ni implementira prelaz `cancelled → archived`.
+>
+> **Interni lifecycle i javni status:** BM-DG-04 / BR-065 ostaju neizmijenjeni. Buduća implementacija lifecycle prelaza `cancelled → archived` zahtijeva zasebno rješenje za trajno očuvanje informacije o otkazivanju — to nije dio CR-004B. Korisnik na portalu za otkazani događaj uvijek vidi javni status **Otkazan**.
+>
+> Status otkazanog ili arhiviranog događaja mora biti jasno prikazan korisniku (javni status badge).
 
 ### BM-PK-14 — Povezani sadržaj
 
@@ -1202,6 +1218,8 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > U jednom trenutku mogu biti istaknuta najviše tri (3) događaja.
 >
 > Prikazuju se isključivo javno objavljeni i aktuelni događaji.
+>
+> Otkazani događaji se ne prikazuju među Istaknutim. Flag isticanja se ne mijenja otkazivanjem — portal samo isključuje otkazane iz javnog prikaza Istaknutih (BM-PK-13 / CR-004B).
 >
 > Istaknute događaje određuje Urednik. Sistem ih ne bira automatski.
 >
@@ -1276,7 +1294,7 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 >
 > Ako statistika ima vrijednost 0, kartica ostaje klikabilna.
 >
-> Statistike prikazuju isključivo javno objavljene događaje.
+> Statistike prikazuju javno dostupne događaje (`published` | `cancelled`) u odgovarajućem vremenskom skupu (CR-004B / BM-PK-13). Nema novih filtera ni URL parametara.
 >
 > Statistike ostaju na postojećem mjestu na početnoj stranici.
 
@@ -1792,9 +1810,9 @@ Arhitektura poslovnih cjelina određuje odgovornosti, granice i međusobnu sarad
 
 ### BM-AR-02 — Portal Kalendara kulture
 
-> Portal Kalendara kulture predstavlja javni dio sistema namijenjen pregledanju objavljenih kulturnih događaja i korišćenju javno dostupnih funkcionalnosti.
+> Portal Kalendara kulture predstavlja javni dio sistema namijenjen pregledanju javno dostupnih kulturnih događaja i korišćenju javno dostupnih funkcionalnosti.
 >
-> Portal prikazuje isključivo javno objavljen sadržaj.
+> Portal prikazuje javno dostupan sadržaj u skladu sa BM-PK-13 i ostalim pravilima Portala. Javno dostupni događaji uključuju `published` i `cancelled` u skladu sa pravilima prikaza (aktivne površine i portalna Arhiva po datumu). Interni status `archived` nije javno otvoren kroz CR-004B. Interni lifecycle status nije isto što i javni status prikaza.
 >
 > Portal se razvija evolutivno u skladu sa BM-PK-16 (IA-01).
 
