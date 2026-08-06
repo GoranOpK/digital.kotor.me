@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Održavanje događaja  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.3
+**Verzija:** 0.1.4
 **Datum:** 2026-08-06
 
 ---
@@ -20,6 +20,7 @@
 | 0.1.1 | 2026-07-29 | Zatvoreno N-TR-03 (uslov arhiviranja). Potvrđeno: Termin nije poslovni ni konceptualni entitet V1 — samo skup vremenskih atributa Održavanja. Usklađeni dijagrami i §6. Status dokumenta: Usvojen. |
 | 0.1.2 | 2026-07-30 | Terminološko usklađivanje sa TS-006 (korekcije PO-LOC-01/05): jasno razdvojeni pojmovi kataloška Lokacija i ručno uneseni naziv Lokacije; precizirane formulacije referenci i validacija bez promjene poslovnih pravila. |
 | 0.1.3 | 2026-08-06 | Zatvoreno N-TR-01: model jednog održavanja (jedan kalendarski datum; vrijeme početka/završetka; cjelodnevno; bez raspona datuma). Usklađeni §3.3, §6, §7. Bez novih BM/FS pravila. Bez izmjene implementacije. |
+| 0.1.4 | 2026-08-06 | Zatvoreno N-TR-04: fizičko uklanjanje održavanja samo iz Nacrta prije prvog uredničkog postupka; nakon prvog slanja na odobrenje — isključivo izmjena/statusi. Bez soft delete, novog statusa ili audita. Bez izmjene BM/FS. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -260,7 +261,7 @@ Detaljni prelazi: §4.
 * nije korisnik niti uloga;
 * nije Događaj;
 * status nezavisan od statusa drugih održavanja;
-* brisanje kao zasebna poslovna radnja nije usvojeno — vidi §11 / §12.
+* fizičko uklanjanje dozvoljeno isključivo po §4.3a (N-TR-04 zatvoren); nije isto što otkazivanje.
 
 ## 3.2 Poslovni kontekst — odnosi
 
@@ -414,6 +415,54 @@ Napomena: iz **Otkazan** i **Završen** nema usvojenih povratnih tranzicija u BM
 5. Početni status: **Planiran** (iz definicije BM-TR-10 / uobičajeni ulaz kreiranja).
 6. Validacije vremenskih polja: §3.3.3 / §7.
 
+## 4.3a Fizičko uklanjanje održavanja iz nacrta (N-TR-04 — zatvoreno)
+
+**Odluka (V1, kanonski):** Fizičko uklanjanje održavanja dozvoljeno je isključivo dok događaj postoji kao **Nacrt** i još nikada nije bio predmet uredničkog postupka. Nakon prvog slanja na odobrenje održavanje više nije moguće ukloniti; njegove promjene evidentiraju se kroz postojeći model statusa, prijedloga izmjena i odobravanja.
+
+### Dozvoljeno fizičko uklanjanje
+
+Fizičko uklanjanje održavanja dozvoljeno je samo kada je status Događaja **Nacrt** i istovremeno važe svi uslovi:
+
+* događaj **nikada** nije bio poslat Uredniku;
+* događaj **nije** bio predmet uredničkog pregleda;
+* događaj **nije** bio objavljen.
+
+U tom slučaju uklanjanje briše zapis održavanja iz nacrta (npr. pogrešno dodato održavanje prije prvog slanja). Događaj u Nacrtu može ostati sa 0 održavanja (BM-DG-01).
+
+### Nakon prvog slanja na odobrenje
+
+Nakon što je događaj **bar jednom** poslat na odobrenje, fizičko uklanjanje održavanja **nije dozvoljeno**.
+
+Umjesto toga koriste se isključivo:
+
+* izmjena podataka održavanja;
+* status **Planiran**;
+* status **Odgođen**;
+* status **Otkazan**;
+* status **Završen**;
+
+u skladu sa postojećim BM/FS (BM-TR-07–BM-TR-10, BM-TR-13–BM-TR-17; BR-061, BR-067–BR-069, BR-129–BR-133).
+
+Ne uvodi se novi status. Ne uvodi se soft delete, hard delete kao opšti mehanizam, recycle bin ni lifecycle Delete.
+
+### Brisanje iz nacrta ≠ otkazivanje
+
+| Radnja | Smisao |
+|--------|--------|
+| **Fizičko uklanjanje iz nacrta** (§4.3a) | Zapis održavanja nestaje iz nacrta; samo prije prvog uredničkog postupka |
+| **Otkazivanje** (BR-069) | Zapis ostaje; status postaje **Otkazan**; „neće biti održano“ |
+
+Ove radnje nisu iste i ne smiju se miješati.
+
+### Obrazloženje zabrane nakon uredničkog postupka
+
+Zabrana fizičkog uklanjanja nakon prvog slanja / uredničkog postupka služi:
+
+* očuvanju istorije;
+* auditu (postojeći tragovi i katalog Događaji — FS §5.16; bez novih audit mehanizama);
+* konzistentnosti workflow-a;
+* nepromjenjivosti poslovnih zapisa.
+
 ## 4.4 Ponavljanje
 
 ```mermaid
@@ -448,7 +497,7 @@ flowchart LR
 **Tehnički tok**
 
 1. Pomjeranje = promjena termina (datum i/ili vrijeme početka/završetka) odabranog održavanja (BM-TR-07, BR-061; §3.3).
-2. Otkaz = status **Otkazan** (BR-069); ne utiče na ostala.
+2. Otkaz = status **Otkazan** (BR-069); ne utiče na ostala; **nije** fizičko uklanjanje (§4.3a).
 3. Ostala održavanja ostaju nepromijenjena.
 
 ## 4.6 Izmjene podataka na objavljenom događaju
@@ -591,7 +640,6 @@ Atributi / svojstva potvrđeni usvojenim BM/FS i zatvorenim N-TR-01 (konceptualn
 
 * Parametri pravila ponavljanja (kraj serije, broj) — **N-TR-02**.
 * GPS koordinate nisu usvojen atribut održavanja; prikaz mape/GPS van V1 (§5.4.3 / §5.4.9). Eventualni GPS na kataloškoj Lokaciji = TS-006, ne TS-004.
-* Soft-delete / hard-delete održavanja — nije usvojeno (**N-TR-04**).
 
 ## 6.5 Integritet
 
@@ -600,6 +648,7 @@ Atributi / svojstva potvrđeni usvojenim BM/FS i zatvorenim N-TR-01 (konceptualn
 * Jedno održavanje = jedan kalendarski datum (bez `datum od` / `datum do`).
 * Cjelodnevno ⇒ vremena se ne unose.
 * Vrijeme završetka ⇒ mora postojati vrijeme početka; završetak > početak.
+* Fizičko uklanjanje samo po §4.3a; nakon prvog slanja na odobrenje zapis ostaje (izmjena / statusi).
 * Deaktivirana kataloška Lokacija ne smije se birati za **nove kataloške veze** iz održavanja (BM-LK-05); postojeće istorijske veze ostaju.
 
 ---
@@ -660,6 +709,8 @@ Functional Specification:
 | Podaci na objavljenom kroz approval | Izmjena podataka | TS-003 tok | Blokada direktnog bypass-a |
 | Istek termina | Završetak | Sistem | Planiran→Završen |
 | Nema održavanja u statusu Planiran ili Odgođen | Arhiva događaja | Sistem | Emituje signal ka TS-003 za automatsko arhiviranje |
+| Fizičko uklanjanje — samo Nacrt bez uredničkog postupka | Uklanjanje (§4.3a) | Sistem | Odbijanje inače |
+| Fizičko uklanjanje nakon prvog slanja | Uklanjanje | Sistem | Odbijanje; koristiti izmjenu/status |
 
 ## 7.3 Tehničke validacije
 
@@ -670,6 +721,7 @@ Functional Specification:
 * Automatski Završen ne smije dirati Otkazan (nema usvojene tranzicije Otkazan→Završen).
 * Vremenska polja: §3.3.3 (datum obavezan; završetak samo uz početak; završetak > početak; cjelodnevno bez vremena).
 * Jedno održavanje = jedan kalendarski datum; bez `datum od` / `datum do`.
+* Fizičko uklanjanje: §4.3a (N-TR-04); brisanje ≠ otkazivanje.
 
 ---
 
@@ -802,7 +854,7 @@ Usvojene granice V1 za TS-004:
 5. Puni model Lokacije nije dio TS-004 (TS-006).
 6. Puni model Događaja nije dio TS-004 (TS-003).
 7. Ručno postavljanje statusa Završen nije usvojeno — samo Sistem (BR-068).
-8. Zasebna radnja „brisanje održavanja“ nije usvojena u BM/FS (koristi se otkaz / uređivanje u okviru događaja).
+8. Fizičko uklanjanje održavanja dozvoljeno je **samo** po §4.3a (Nacrt prije prvog uredničkog postupka). Soft delete, hard delete kao opšti mehanizam, recycle bin i lifecycle Delete **nisu** dio V1. Nakon prvog slanja — isključivo izmjena / statusi (N-TR-04 zatvoren).
 9. Status **Odgođen** nije status događaja i ne uvodi se na nivo Događaja.
 
 ---
@@ -811,10 +863,9 @@ Usvojene granice V1 za TS-004:
 
 Pitanja koja ostaju nakon analize BM/FS. Bez predloženih odgovora.
 
-Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedmičnom/mjesečnom ponavljanju, lokalnim izuzecima, statusima Planiran/Odgođen/Otkazan/Završen, ovlašćenjima Mod/Urednik, vezi ≥1 održavanje / arhiva događaja, uslovu automatskog arhiviranja (N-TR-03 zatvoren), modelu jednog održavanja / katalogu vremenskih polja (N-TR-01 zatvoren — §3.3).
+Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedmičnom/mjesečnom ponavljanju, lokalnim izuzecima, statusima Planiran/Odgođen/Otkazan/Završen, ovlašćenjima Mod/Urednik, vezi ≥1 održavanje / arhiva događaja, uslovu automatskog arhiviranja (N-TR-03 zatvoren), modelu jednog održavanja / katalogu vremenskih polja (N-TR-01 zatvoren — §3.3), fizičkom uklanjanju iz nacrta prije prvog uredničkog postupka (N-TR-04 **ZATVORENO** — §4.3a).
 
 1. **N-TR-02** — Koji su obavezni parametri pravila ponavljanja (npr. datum kraja serije, maksimalan broj generisanih održavanja, ograničenja opsega)?
-2. **N-TR-04** — Da li V1 dozvoljava uklanjanje (brisanje) održavanja iz Nacrta događaja kao zasebnu radnju, ili se upravlja isključivo izmjenom/otkazom?
 
 ---
 
@@ -827,6 +878,7 @@ Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedm
 | §3 Tehnički model | BM-TR-01–BM-TR-10 | BR-056–BR-060, BR-067; §5.4.3 | FT-001 | TS-003, TS-006, TS-010 |
 | §4.1–4.2 Lifecycle | BM-TR-10, BM-TR-13–15 | BR-067–BR-069, BR-129–131 | FT-001 | — |
 | §4.3 Kreiranje | BM-TR-02–05 | BR-056–BR-059 | FT-001 | TS-003 |
+| §4.3a Uklanjanje iz nacrta | BM-DG-01 | BR-056; §5.16 (istorija/audit); N-TR-04 ZATVORENO | FT-001 | TS-003 |
 | §4.4 Ponavljanje | BM-TR-06 | BR-060 | FT-001 | — |
 | §4.5 Izuzeci | BM-TR-07 | BR-061, BR-069 | FT-001 | — |
 | §4.6 Izmjene objavljenog | BM-TR-08 | BR-061 | FT-001 | TS-003 |
@@ -840,7 +892,7 @@ Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedm
 | §9 Integracije | BM-TR-*, BM-MF-05 | BR-056+, BR-065 | FT-001 | TS-001, TS-003, TS-005–TS-012 |
 | §10 NFR | BM-DG-04 | BR-068 | FT-001 | — |
 | §11 Granice V1 | BM-TR-11 | §5.4.3/§5.4.9 | FT-001 | — |
-| §12 Otvorena | — | N-TR-02, N-TR-04 | FT-001 | — |
+| §12 Otvorena | — | N-TR-02 | FT-001 | — |
 
 ---
 
