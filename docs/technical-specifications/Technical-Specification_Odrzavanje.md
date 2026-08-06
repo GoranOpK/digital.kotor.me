@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Održavanje događaja  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.2  
-**Datum:** 2026-07-30
+**Verzija:** 0.1.3
+**Datum:** 2026-08-06
 
 ---
 
@@ -19,6 +19,7 @@
 | 0.1 | 2026-07-29 | Initial draft. Prvi nacrt Technical Specification za funkcionalnu cjelinu Održavanje događaja. Usklađen sa BM-06 (BM-TR-01–BM-TR-18), BM-DG-01/03/04, BM-07 (referenca), FS §5.7.1 / §5.7.3 (BR-056–BR-061, BR-067–BR-069, BR-129–BR-134), FS §5.4.3 (prikaz), §5.16 (relevantne emisije), Feature Registry (FT-001 / plan TS-004), METHODOLOGY (M-TS-001–M-TS-005), TS-001 i TS-003 (granice). Bez SQL, API, Laravel koda i bez novih poslovnih odluka. |
 | 0.1.1 | 2026-07-29 | Zatvoreno N-TR-03 (uslov arhiviranja). Potvrđeno: Termin nije poslovni ni konceptualni entitet V1 — samo skup vremenskih atributa Održavanja. Usklađeni dijagrami i §6. Status dokumenta: Usvojen. |
 | 0.1.2 | 2026-07-30 | Terminološko usklađivanje sa TS-006 (korekcije PO-LOC-01/05): jasno razdvojeni pojmovi kataloška Lokacija i ručno uneseni naziv Lokacije; precizirane formulacije referenci i validacija bez promjene poslovnih pravila. |
+| 0.1.3 | 2026-08-06 | Zatvoreno N-TR-01: model jednog održavanja (jedan kalendarski datum; vrijeme početka/završetka; cjelodnevno; bez raspona datuma). Usklađeni §3.3, §6, §7. Bez novih BM/FS pravila. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -112,7 +113,7 @@ Održavanje:
 
 * nije samostalan programski sadržaj;
 * uvijek pripada tačno jednom Događaju;
-* nosi termin (datum obavezan; vrijeme opciono);
+* nosi termin (jedan kalendarski datum obavezan; vrijeme početka/završetka opciono — §3.3);
 * može biti cjelodnevno;
 * može nastati ručno ili kroz pravilo ponavljanja (dnevno / sedmično / mjesečno);
 * može biti izmijenjeno, odgođeno ili otkazano bez uticaja na ostala održavanja istog događaja.
@@ -185,7 +186,7 @@ Održavanje ne postoji bez Događaja. Tehnički model ne smije dozvoliti „siro
 
 Termin predstavlja skup vremenskih atributa entiteta Održavanje i nije zaseban poslovni entitet niti zaseban konceptualni entitet.
 
-U V1 se ne uvodi Termin kao domeni objekat. Vremenska svojstva (datum, opciono vrijeme, cjelodnevnost) pripadaju isključivo Održavanju (BM-06 napomena, BM-16).
+U V1 se ne uvodi Termin kao domeni objekat. Vremenska svojstva (jedan kalendarski datum; opciono vrijeme početka i završetka; cjelodnevnost) pripadaju isključivo Održavanju (BM-06 napomena, BM-16; §3.3).
 
 ## 2.3 Status održavanja ≠ status događaja
 
@@ -266,7 +267,7 @@ Detaljni prelazi: §4.
 ```mermaid
 flowchart TD
   DG[Događaj]
-  OD["Održavanje<br/>datum · vrijeme · cjelodnevni · status"]
+  OD["Održavanje<br/>datum · vrijeme početka/završetka · cjelodnevni · status"]
   LOK[Kataloška Lokacija]
   MF[Manifestacija]
 
@@ -280,22 +281,72 @@ flowchart TD
 * **Ručno uneseni naziv Lokacije** — tekst na nivou Održavanja, bez obavezne kataloške reference.
 * **Manifestacija (TS-005)** — posredno; početak/završetak Manifestacije iz vremenskih atributa održavanja (BM-MF-05).
 
-## 3.3 Vremenski atributi održavanja
+## 3.3 Model jednog održavanja (N-TR-01 — zatvoreno)
+
+**Odluka:** V1 zatvara formalni katalog vremenskih polja jednog održavanja. Ne uvodi se raspon datuma (`datum od` / `datum do`). Ne uvode se nova poslovna pravila ni novi statusi. Usklađeno sa BM-TR-03 / BR-057 / BM-TR-05 / BR-059 i ponašanjem prikaza FS §5.4.3.
+
+Jedno održavanje predstavlja **jedan konkretan termin događaja na jednom kalendarskom datumu**.
+
+Svako održavanje pripada tačno jednom događaju (BM-TR-02, BR-056).
 
 Termin predstavlja skup vremenskih atributa entiteta Održavanje i nije zaseban poslovni entitet niti zaseban konceptualni entitet.
 
-Potvrđeno (BM-TR-03, BR-057, BM-TR-05, BR-059):
+### 3.3.1 Polja
 
-* **Datum** — obavezan.
-* **Vrijeme** — može biti definisano (opciono).
-* **Cjelodnevno** — oznaka; tada se definiše samo datum.
+**Obavezno**
 
-FS §5.4.3 opisuje prikaz:
+* datum održavanja
 
-* mogućnost datuma početka i datuma završetka kada se razlikuju;
-* mogućnost vremena početka i vremena završetka kada su unesena.
+**Opciono**
 
-Formalni katalog vremenskih polja (jedan datum vs raspon; jedno vrijeme vs početak/završetak) nije u potpunosti sveden u BM-TR-03 — **Otvoreno pitanje N-TR-01** (§12).
+* vrijeme početka
+* vrijeme završetka
+* oznaka cjelodnevnog održavanja
+* lokacija prema postojećem modelu TS-004 (§2.4 / §6.2; BM-TR-04, BR-058)
+
+### 3.3.2 Dozvoljene kombinacije
+
+**Samo datum**
+
+* Datum postoji.
+* Vrijeme nije definisano.
+
+**Datum + vrijeme početka**
+
+* Vrijeme završetka nije obavezno.
+
+**Datum + početak + završetak**
+
+* Predstavlja vremenski interval **unutar istog datuma**.
+
+**Cjelodnevno**
+
+* Samo datum.
+* Vrijeme početka i završetka se ne unose.
+
+### 3.3.3 Validaciona pravila (vremenska polja)
+
+* Datum je obavezan.
+* Vrijeme završetka ne može postojati bez vremena početka.
+* Ako postoje oba vremena, završetak mora biti nakon početka.
+* Kod cjelodnevnog održavanja vremena se ne unose.
+
+Ne uvode se druga vremenska validaciona pravila u ovoj odluci.
+
+### 3.3.4 Višednevni događaj
+
+Višednevni događaj modeluje se pomoću **više održavanja**.
+
+Jedno održavanje **ne** koristi:
+
+* datum od;
+* datum do.
+
+Ne uvodi se raspon datuma.
+
+### 3.3.5 Veza sa TS-010
+
+TS-010 (urednički portal) koristi ovaj model održavanja **bez redefinisanja**. Sadržajni katalog događaja (TS-010 §9 / N-DG-02) sadrži relaciju prema održavanjima; vremenska polja ostaju u TS-004.
 
 ## 3.4 Agregat i odgovornosti
 
@@ -357,10 +408,11 @@ Napomena: iz **Otkazan** i **Završen** nema usvojenih povratnih tranzicija u BM
 ## 4.3 Kreiranje pojedinačnog održavanja
 
 1. Održavanje se kreira isključivo u kontekstu postojećeg Događaja (BM-TR-02).
-2. Datum je obavezan; vrijeme opciono (BR-057).
-3. Cjelodnevno → samo datum (BR-059).
+2. Datum je obavezan; vrijeme početka/završetka opciono (BR-057; §3.3).
+3. Cjelodnevno → samo datum; vremena se ne unose (BR-059; §3.3).
 4. Lokacija opciona (BR-058); ako se bira, mora biti aktivna (BM-LK-05 — granica TS-006).
 5. Početni status: **Planiran** (iz definicije BM-TR-10 / uobičajeni ulaz kreiranja).
+6. Validacije vremenskih polja: §3.3.3 / §7.
 
 ## 4.4 Ponavljanje
 
@@ -395,7 +447,7 @@ flowchart LR
 
 **Tehnički tok**
 
-1. Pomjeranje = promjena termina (datum i/ili vrijeme) odabranog održavanja (BM-TR-07, BR-061).
+1. Pomjeranje = promjena termina (datum i/ili vrijeme početka/završetka) odabranog održavanja (BM-TR-07, BR-061; §3.3).
 2. Otkaz = status **Otkazan** (BR-069); ne utiče na ostala.
 3. Ostala održavanja ostaju nepromijenjena.
 
@@ -500,7 +552,8 @@ erDiagram
   ODRZAVANJE }o--o| LOKACIJA : "0..1"
   ODRZAVANJE {
     date datum
-    string vrijeme
+    string vrijeme_pocetka
+    string vrijeme_zavrsetka
     bool cjelodnevni
     string status
   }
@@ -510,15 +563,16 @@ erDiagram
 
 Termin predstavlja skup vremenskih atributa entiteta Održavanje i nije zaseban poslovni entitet niti zaseban konceptualni entitet.
 
-Atributi / svojstva potvrđeni usvojenim BM/FS (konceptualno):
+Atributi / svojstva potvrđeni usvojenim BM/FS i zatvorenim N-TR-01 (konceptualno):
 
 | Atribut / svojstvo | Obrazloženje | Izvor |
 |--------------------|--------------|-------|
 | Identitet održavanja | Jedinstvena identifikacija | tehnička nužnost |
 | Referenca na Događaj | Obavezna N:1 | BM-TR-02, BR-056 |
-| Datum | Obavezan vremenski atribut | BM-TR-03, BR-057 |
-| Vrijeme (opciono) | Može biti definisano | BM-TR-03, BR-057 |
-| Oznaka cjelodnevno | Ako da — samo datum | BM-TR-05, BR-059 |
+| Datum | Obavezan; jedan kalendarski datum | BM-TR-03, BR-057; §3.3 |
+| Vrijeme početka | Opciono | BM-TR-03, BR-057; §3.3 (N-TR-01) |
+| Vrijeme završetka | Opciono; samo uz vrijeme početka; isti datum | §3.3 (N-TR-01); FS §5.4.3 prikaz |
+| Oznaka cjelodnevno | Ako da — samo datum; bez vremena | BM-TR-05, BR-059; §3.3 |
 | Referenca na katalošku Lokaciju | 0..1 | BM-TR-04, BR-058 |
 | Ručno uneseni naziv Lokacije | 0..1 | BM-TR-04, BR-058 |
 | Status | Planiran / Odgođen / Otkazan / Završen | BM-TR-10, BR-067 |
@@ -530,20 +584,22 @@ Atributi / svojstva potvrđeni usvojenim BM/FS (konceptualno):
 | Kataloška Lokacija (naziv, status Aktivna/Deaktivirana, ostali podaci) | TS-006 | V1 prikaz: tekstualni podatak; bez obaveznog GPS/mape (§5.4.3) |
 | Ručno uneseni naziv Lokacije | TS-004 (u skladu sa TS-006 razdvajanjem modela) | Tekst na nivou konkretnog Održavanja; bez obavezne kataloške veze |
 | Događaj / status događaja | TS-003 | Preduslovi i arhiva |
-| Prikaz datuma/vremena početka i završetka | FS §5.4.3 | Ponašanje prikaza nad atributima Održavanja; formalni katalog = N-TR-01 |
+| Prikaz datuma i vremena početka/završetka | FS §5.4.3 | Prikaz nad atributima §3.3 / §6.2; višednevni program = više održavanja |
+| Urednički portal | TS-010 | Koristi model §3.3 bez redefinisanja |
 
 ## 6.4 Otvoreni atributi
 
-* Formalni raspored vremenskih polja (jedan datum vs početak/završetak; jedno vrijeme vs početak/završetak) — **N-TR-01**.
 * Parametri pravila ponavljanja (kraj serije, broj) — **N-TR-02**.
 * GPS koordinate nisu usvojen atribut održavanja; prikaz mape/GPS van V1 (§5.4.3 / §5.4.9). Eventualni GPS na kataloškoj Lokaciji = TS-006, ne TS-004.
-* Soft-delete / hard-delete održavanja — nije usvojeno.
+* Soft-delete / hard-delete održavanja — nije usvojeno (**N-TR-04**).
 
 ## 6.5 Integritet
 
 * Svako održavanje ima tačno jedan Događaj.
 * Status samo iz dozvoljenog skupa.
-* Cjelodnevno ⇒ bez vremena (ili vrijeme se ne koristi).
+* Jedno održavanje = jedan kalendarski datum (bez `datum od` / `datum do`).
+* Cjelodnevno ⇒ vremena se ne unose.
+* Vrijeme završetka ⇒ mora postojati vrijeme početka; završetak > početak.
 * Deaktivirana kataloška Lokacija ne smije se birati za **nove kataloške veze** iz održavanja (BM-LK-05); postojeće istorijske veze ostaju.
 
 ---
@@ -569,9 +625,9 @@ Functional Specification:
 |--------|-------------------------|
 | BM-TR-01 / BR-056 | Kreirati samo kao dijete Događaja |
 | BM-TR-02 | Zabraniti orphan i multi-parent |
-| BM-TR-03 / BR-057 | Validirati obavezan datum; vrijeme opciono |
+| BM-TR-03 / BR-057 | Validirati obavezan datum; vremena opciona (§3.3) |
 | BM-TR-04 / BR-058 | Dozvoliti: katalošku Lokaciju, ručno uneseni naziv Lokacije ili bez lokacije |
-| BM-TR-05 / BR-059 | Cjelodnevno ⇒ samo datum |
+| BM-TR-05 / BR-059 | Cjelodnevno ⇒ samo datum; vremena se ne unose |
 | BM-TR-06 / BR-060 | Generator: dnevno/sedmično/mjesečno + ručno |
 | BM-TR-07 / BR-061 | Mutacije samo na odabranom ID-u |
 | BM-TR-08 / BR-061 | Podaci na objavljenom → approval tok događaja (izuzev statusa BR-132/133) |
@@ -590,7 +646,9 @@ Functional Specification:
 |------------|------|----------|------------|
 | Događaj postoji | Kreiranje | Sistem | Odbijanje orphan |
 | Datum obavezan | Kreiranje / izmjena termina | Sistem | Blokada |
-| Cjelodnevno bez vremena | Kreiranje / izmjena | Sistem | Odbijanje vremena ili ignorisanje po pravilu |
+| Vrijeme završetka bez početka | Kreiranje / izmjena | Sistem | Odbijanje |
+| Završetak nakon početka | Kreiranje / izmjena (oba vremena) | Sistem | Odbijanje ako nije |
+| Cjelodnevno bez vremena | Kreiranje / izmjena | Sistem | Odbijanje vremena |
 | Kataloška Lokacija Aktivna (ako nova kataloška veza) | Dodjela kataloške Lokacije | Sistem | Odbijanje Deaktivirane kataloške Lokacije |
 | Tip ponavljanja ∈ {dnevno, sedmično, mjesečno} | Generisanje | Sistem | Odbijanje ostalog |
 | ≥1 održavanje | Slanje/objava događaja | TS-003 + TS-004 | Blokada događaja |
@@ -610,6 +668,8 @@ Functional Specification:
 * Ručno uneseni naziv Lokacije ne zahtijeva katalošku referencu.
 * Statusni prelazi samo iz §4.2.
 * Automatski Završen ne smije dirati Otkazan (nema usvojene tranzicije Otkazan→Završen).
+* Vremenska polja: §3.3.3 (datum obavezan; završetak samo uz početak; završetak > početak; cjelodnevno bez vremena).
+* Jedno održavanje = jedan kalendarski datum; bez `datum od` / `datum do`.
 
 ---
 
@@ -711,7 +771,7 @@ Functional Specification:
 
 ## 10.5 Proširivost
 
-* Model mora dozvoliti dopunu kataloga polja termina (N-TR-01) bez lomljenja statusa.
+* Katalog vremenskih polja termina zatvoren u §3.3 (N-TR-01); proširenja van V1 zahtijevaju BM/FS PATCH.
 * Bez ugradnje RRULE u V1.
 
 ## 10.6 Održavanje
@@ -751,11 +811,10 @@ Usvojene granice V1 za TS-004:
 
 Pitanja koja ostaju nakon analize BM/FS. Bez predloženih odgovora.
 
-Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedmičnom/mjesečnom ponavljanju, lokalnim izuzecima, statusima Planiran/Odgođen/Otkazan/Završen, ovlašćenjima Mod/Urednik, vezi ≥1 održavanje / arhiva događaja, uslovu automatskog arhiviranja (N-TR-03 zatvoren).
+Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedmičnom/mjesečnom ponavljanju, lokalnim izuzecima, statusima Planiran/Odgođen/Otkazan/Završen, ovlašćenjima Mod/Urednik, vezi ≥1 održavanje / arhiva događaja, uslovu automatskog arhiviranja (N-TR-03 zatvoren), modelu jednog održavanja / katalogu vremenskih polja (N-TR-01 zatvoren — §3.3).
 
-1. **N-TR-01** — Koji je tačan katalog polja termina za V1: jedan datum ili datum početka/završetka; jedno vrijeme ili vrijeme početka/završetka — kako uskladiti BM-TR-03/BR-057 sa ponašanjem prikaza u FS §5.4.3?
-2. **N-TR-02** — Koji su obavezni parametri pravila ponavljanja (npr. datum kraja serije, maksimalan broj generisanih održavanja, ograničenja opsega)?
-3. **N-TR-04** — Da li V1 dozvoljava uklanjanje (brisanje) održavanja iz Nacrta događaja kao zasebnu radnju, ili se upravlja isključivo izmjenom/otkazom?
+1. **N-TR-02** — Koji su obavezni parametri pravila ponavljanja (npr. datum kraja serije, maksimalan broj generisanih održavanja, ograničenja opsega)?
+2. **N-TR-04** — Da li V1 dozvoljava uklanjanje (brisanje) održavanja iz Nacrta događaja kao zasebnu radnju, ili se upravlja isključivo izmjenom/otkazom?
 
 ---
 
@@ -765,7 +824,7 @@ Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedm
 |------------|----|---------|----|-----------|
 | §1 Pregled | BM-06, BM-DG-01/03/04 | §5.7.1, §5.7.3 | FT-001 | TS-003 |
 | §2 Principi | BM-TR-01/02/09/12/18, BM-DG-03 | BR-056, BR-067, BR-134 | FT-001 | TS-003 |
-| §3 Tehnički model | BM-TR-01–BM-TR-10 | BR-056–BR-060, BR-067 | FT-001 | TS-003, TS-006 |
+| §3 Tehnički model | BM-TR-01–BM-TR-10 | BR-056–BR-060, BR-067; §5.4.3 | FT-001 | TS-003, TS-006, TS-010 |
 | §4.1–4.2 Lifecycle | BM-TR-10, BM-TR-13–15 | BR-067–BR-069, BR-129–131 | FT-001 | — |
 | §4.3 Kreiranje | BM-TR-02–05 | BR-056–BR-059 | FT-001 | TS-003 |
 | §4.4 Ponavljanje | BM-TR-06 | BR-060 | FT-001 | — |
@@ -781,7 +840,7 @@ Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedm
 | §9 Integracije | BM-TR-*, BM-MF-05 | BR-056+, BR-065 | FT-001 | TS-001, TS-003, TS-005–TS-012 |
 | §10 NFR | BM-DG-04 | BR-068 | FT-001 | — |
 | §11 Granice V1 | BM-TR-11 | §5.4.3/§5.4.9 | FT-001 | — |
-| §12 Otvorena | — | §5.4.3 vs BR-057; N-TR-01, N-TR-02, N-TR-04 | FT-001 | — |
+| §12 Otvorena | — | N-TR-02, N-TR-04 | FT-001 | — |
 
 ---
 

@@ -197,7 +197,7 @@ Povezana dokumentacija (Događaj):
 
 Povezana dokumentacija (Održavanje):
 
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004; verzija 0.1.2; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004; verzija 0.1.3; Usvojen; N-TR-01 zatvoren)
 
 Povezana dokumentacija (Manifestacija):
 
@@ -258,7 +258,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | -- | ----- | ------- | ----- | ------ |
 | TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.2.1) |
 | TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
-| TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
+| TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.3); N-TR-01 zatvoren; N-TR-02 / N-TR-04 otvoreni |
 | TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
@@ -481,3 +481,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-06 | FT-001 — TS-010.3 QA korektivni prolaz (v0.3.1): G-11 zahtjev za sopstveno uklanjanje; G-12 terminologija; G-14 granica podataka Organizatora; G-17 sloj platformske role; povlačenje; G-13; sljedivost. Bez izmjene FT-001 statusa. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 2026-08-06 | FT-001 — TS-010.4 Workflow događaja dokumentaciono pripremljen (v0.4.0, U IZRADI). Akcije/guard/matrica prelaza; otkazivanje (neoperativan aktivni prijedlog); arhiviranje ref. TS-004; CR-004B ref. TS-009; §8.4. TS-010.5–TS-010.8 Planned. Bez izmjene FT-001 statusa. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 2026-08-06 | FT-001 — TS-010 v0.4.1: zatvoren N-DG-02 (V1 katalog sadržajnih polja događaja u TS-010 §9). TS-010.5–TS-010.8 Planned. Bez izmjene FT-001 statusa. Bez izmjene BM/FS. Bez izmjene TS-003. Bez izmjene implementacije. |
+| 2026-08-06 | FT-001 — TS-004 v0.1.3: zatvoren N-TR-01 (model jednog održavanja; jedan kalendarski datum; vrijeme početka/završetka; cjelodnevno; bez raspona datuma). N-TR-02 / N-TR-04 ostaju otvoreni. FT-001 ostaje Active. Bez izmjene BM/FS. Bez izmjene TS-010. Bez izmjene implementacije. |
