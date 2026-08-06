@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.6.0
+**Verzija:** 0.7.0
 **Datum:** 2026-08-06
 
 ---
@@ -26,6 +26,7 @@
 | 0.4.1 | 2026-08-06 | Zatvoren N-DG-02: V1 katalog sadržajnih polja događaja (priprema za TS-010.5). Bez novih BM polja; bez izmjene BM/FS/TS-003. Bez izmjene implementacije. |
 | 0.5.0 | 2026-08-06 | TS-010.5 — CRUD događaja i validacije: Create/Read/Update; prijedlog izmjene (N-DG-04 = implementacioni izbor); nested Održavanja (TS-004); editabilnost; gate-ovi; Delete događaja nije podržan; sljedivost §8.5. Bez novih BM/BR. Bez izmjene implementacije. |
 | 0.6.0 | 2026-08-06 | TS-010.6 — Dashboard uredničkog portala: radna tabla (PO-DASH-01–05); radne kategorije sa brojačem i filterom ka CRUD; bez BI/listi/Activity Feed; sljedivost §8.6. Bez novih BM/BR. Bez izmjene implementacije. |
+| 0.7.0 | 2026-08-06 | TS-010.7 — Evidencija aktivnosti uredničkog portala: obaveza evidentiranja prema FT-003 (PO-AL-01–04); lokalni audit ≠ centralna evidencija; bez UI centralne evidencije; sljedivost §8.7. Bez novih BM/BR. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -49,6 +50,7 @@ Ne mijenjaju se postojeći redovi.
 | 0.4.1 | 2026-08-06 | Zatvoren N-DG-02 (katalog sadržajnih polja događaja). TS-010.5–TS-010.8 ostaju Planned. |
 | 0.5.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.5 (CRUD događaja i validacije). TS-010.6–TS-010.8 ostaju Planned. |
 | 0.6.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.6 (Dashboard uredničkog portala; PO-DASH-01–05). TS-010.7–TS-010.8 ostaju Planned. |
+| 0.7.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.7 (Evidencija aktivnosti uredničkog portala; PO-AL-01–04). TS-010.8 ostaje Planned. |
 
 ---
 
@@ -129,6 +131,13 @@ TS-010.6 — Dashboard uredničkog portala obuhvata isključivo:
 4. poštovanje aktivnog konteksta, ovlašćenja i Read pravila (TS-010.1 / TS-010.3 / TS-010.5);
 5. granice: što Dashboard nije (BI, Activity Feed, FT-003 / TS-012, javni portal).
 
+TS-010.7 — Evidencija aktivnosti uredničkog portala obuhvata isključivo:
+
+1. razgraničenje lokalnog audita i centralne Evidencije aktivnosti (PO-AL-02);
+2. obavezu uredničkog portala da evidentira poslovno značajne radnje prema BM-14 / FS §5.16 (PO-AL-01, PO-AL-03);
+3. referencu na V1 katalog aktivnosti bez proširenja (PO-AL-04);
+4. granice pristupa (Moderator / Urednik / Administrator) i odnos prema FT-003 / TS-012.
+
 ---
 
 # Van obuhvata
@@ -173,7 +182,9 @@ TS-010.5 **ne razrađuje**: vidi §10.16 Van obuhvata TS-010.5.
 
 TS-010.6 **ne razrađuje**: vidi §11.10 Van obuhvata TS-010.6.
 
-Te cjeline ostaju u planiranim podcjelinama TS-010.7–TS-010.8, odnosno u postojećim TS dokumentima entiteta (TS-001, TS-003–TS-008), bez dupliciranja njihovih pravila.
+TS-010.7 **ne razrađuje**: vidi §12.8 Van obuhvata TS-010.7.
+
+Te cjeline ostaju u planiranim podcjelinama TS-010.8, odnosno u postojećim TS dokumentima entiteta (TS-001, TS-003–TS-008) i FT-003 / TS-012, bez dupliciranja njihovih pravila.
 
 ---
 
@@ -188,6 +199,7 @@ Te cjeline ostaju u planiranim podcjelinama TS-010.7–TS-010.8, odnosno u posto
 | TS-004 — Održavanje događaja | Predikat automatskog arhiviranja; model održavanja (N-TR-01/02/04); održavanje ≠ status događaja |
 | TS-008 — Mediji | Naslovna fotografija; MIME/veličina/ALT; lifecycle Medija |
 | TS-009 — Javni portal | Javni potrošač podataka; CR-004B vidljivost; van uredničkog upravljanja |
+| BM-14 / FS §5.16 / FT-003 / TS-012 | Centralna Evidencija aktivnosti (granica za TS-010.7) |
 | Feature Registry (FT-001) | Sljedivost Feature ↔ TS |
 
 ---
@@ -202,7 +214,7 @@ Te cjeline ostaju u planiranim podcjelinama TS-010.7–TS-010.8, odnosno u posto
 | TS-010.4 Workflow događaja | Dokumentaciono pripremljeno |
 | TS-010.5 CRUD događaja i validacije | Dokumentaciono pripremljeno |
 | TS-010.6 Dashboard uredničkog portala | Dokumentaciono pripremljeno |
-| TS-010.7 Evidencija aktivnosti | Planned |
+| TS-010.7 Evidencija aktivnosti uredničkog portala | Dokumentaciono pripremljeno |
 | TS-010.8 Test matrica | Planned |
 
 ---
@@ -212,8 +224,8 @@ Te cjeline ostaju u planiranim podcjelinama TS-010.7–TS-010.8, odnosno u posto
 1. TS-010 pripada FT-001 – Kalendar kulture.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
 3. Nova poslovna pravila se ne uvode kroz TS-010.
-4. TS-010 opisuje **urednički portal**; ne zamjenjuje TS-009 (javni portal) niti TS-001 / TS-003 / TS-004 / TS-008 (entiteti).
-5. Detaljna razrada cjelina van TS-010.1–TS-010.6 ostaje u planiranim podcjelinama.
+4. TS-010 opisuje **urednički portal**; ne zamjenjuje TS-009 (javni portal) niti TS-001 / TS-003 / TS-004 / TS-008 (entiteti); ne zamjenjuje FT-003 / TS-012 (centralna Evidencija aktivnosti).
+5. Detaljna razrada cjelina van TS-010.1–TS-010.7 ostaje u planiranim podcjelinama.
 6. Izmjene usvojenog sadržaja evidentiraju se novom verzijom dokumenta.
 
 ---
@@ -750,7 +762,7 @@ TS-010.4 ne uvodi nova poslovna pravila, nove statuse niti nove workflow grane. 
 
 **Obuhvat:** akcije workflow-a događaja u uredničkom portalu; dozvoljeni prelazi; guard uslovi; autorizacija; UX ponašanje (ko vidi akciju, kada, rezultat).
 
-**Van obuhvata:** CRUD forme i UI detalj (TS-010.5); Dashboard (TS-010.6); centralna Evidencija aktivnosti (TS-010.7 / FT-003 / TS-012); API; SQL; migracije; newsletter; UI dizajn. Katalog sadržajnih polja događaja: vidi §9 (N-DG-02 zatvoren).
+**Van obuhvata:** CRUD forme i UI detalj (TS-010.5); Dashboard (TS-010.6); centralna Evidencija aktivnosti (FT-003 / TS-012; obaveze portala — TS-010.7); API; SQL; migracije; newsletter; UI dizajn. Katalog sadržajnih polja događaja: vidi §9 (N-DG-02 zatvoren).
 
 ## 7.2 Kanonski lifecycle
 
@@ -982,7 +994,7 @@ Organizator nije korisnik. Administrator platforme nije učesnik uredničkog wor
 
 * CRUD forme, mediji/kategorije UI (TS-010.5); sadržajni katalog polja = §9 (N-DG-02 zatvoren);
 * Dashboard (TS-010.6);
-* centralna Evidencija / TS-012 (TS-010.7);
+* centralna Evidencija / TS-012 (FT-003; obaveze portala — TS-010.7);
 * mehanizam zaključavanja pregleda (implementacioni izbor — TS-003 §7.3);
 * kanal obavještenja Uredniku (N-DG-03);
 * model skladištenja verzija (N-DG-04);
@@ -1120,6 +1132,26 @@ BM → FS → TS-001 → TS-003 → TS-010.1 → … → TS-010.5 → TS-010.6
 ```
 
 Napomena: matrica ne uvodi nove BM ili BR identifikatore. PO-DASH-01–PO-DASH-05 su usvojene product odluke za Dashboard; ne zamjenjuju BM/FS.
+
+## 8.7 TS-010.7
+
+| TS-010.7 tema | BM | FS | TS-001 / TS-003 | FT-003 / TS-012 | TS-010 | PO |
+|---------------|----|----|-----------------|-----------------|--------|-----|
+| Obaveza evidentiranja (bez UI centralne) | BM-EP-09; BM-AL-01–05, BM-AL-07–08 | BR-170–173; §5.16 tok | §8 (emisija) | Prima zapise | §12 | PO-AL-01, PO-AL-03 |
+| Pristup: samo Administrator | BM-AL-06; BM-GL-09 | BR-174–175 | — | Direktan pristup | §1.4; §12.5 | PO-AL-01 |
+| Lokalni audit ≠ centralna | BM-AL-02 | BR-171; razgraničenje §5.16 | §8 lokalni | ≠ lokalni | §6.11; §10.17; §12.3 | PO-AL-02 |
+| V1 katalog (bez proširenja) | BM-AL-07 | BR-177–185; katalog §5.16 | — | Katalog | §12.6 | PO-AL-04 |
+| Van: API/SQL/struktura/prikaz | — | Granice V1 FT-003 | — | TS-012 | §12.8 | PO-AL-03 |
+| Dashboard ≠ Activity Feed / FT-003 | — | — | — | — | §11.9 | PO-DASH |
+
+Lanac sljedivosti:
+
+```text
+BM-14 / BM-EP-09 → FS §5.16 → FT-003 / TS-012
+                ↘ TS-001 / TS-003 (§8) → TS-010.7 (obaveza portala)
+```
+
+Napomena: matrica ne uvodi nove BM ili BR identifikatore. PO-AL-01–PO-AL-04 su usvojene product odluke za TS-010.7; ne zamjenjuju BM/FS niti FT-003.
 
 ---
 
@@ -1473,7 +1505,7 @@ Moderator **nema** posebnu platformsku rolu (TS-010.1 / G-17).
 
 * Dashboard (TS-010.6);
 * kompletan workflow osim referenci na TS-010.4;
-* centralna Evidencija aktivnosti (FT-003 / TS-012 / TS-010.7);
+* centralna Evidencija aktivnosti (FT-003 / TS-012; obaveze portala — TS-010.7);
 * Newsletter; Obavještenja;
 * javni portal (TS-009);
 * kompletan CRUD Medija;
@@ -1551,7 +1583,7 @@ Vidi Dashboard sa **globalnim** operativnim kategorijama u skladu sa uredničkim
 
 ### 11.4.3 Administrator platforme
 
-Dashboard uredničkog portala **nije** namijenjen Administratoru platforme kao redovnoj poslovnoj CRUD ulozi (TS-010.1 §1.4). Centralna Evidencija aktivnosti ostaje FT-003 / TS-012 / TS-010.7.
+Dashboard uredničkog portala **nije** namijenjen Administratoru platforme kao redovnoj poslovnoj CRUD ulozi (TS-010.1 §1.4). Centralna Evidencija aktivnosti ostaje **FT-003 / TS-012**. Obaveze uredničkog portala prema toj evidenciji: **TS-010.7** (PO-AL-01).
 
 ## 11.5 Autorizacija i kontekst
 
@@ -1629,7 +1661,7 @@ Dashboard **nije**:
 
 * BI / poslovna analitika / izvještaj (PO-DASH-02);
 * Activity Feed;
-* centralna Evidencija aktivnosti (**FT-003** / **TS-012** / TS-010.7);
+* centralna Evidencija aktivnosti (**FT-003** / **TS-012**);
 * lokalni audit kao feed;
 * **javni portal** niti statistike **TS-009** (Danas / Ove sedmice / Izabrani mjesec);
 * Newsletter;
@@ -1646,7 +1678,7 @@ BR-128 (pregled poslovnih obavještenja i sistemskih informacija) ostaje sposobn
 * personalizacija; widget konfiguracija; drag&drop; korisnički layout; skrivanje kartica (PO-DASH-05);
 * implementacija CRUD listi i filter-UI (već TS-010.5 / TS-001);
 * API; SQL; migracije; detaljan UI dizajn;
-* FT-003 / TS-012;
+* FT-003 / TS-012 (centralna Evidencija; vidi TS-010.7 za obaveze portala);
 * Newsletter; javni portal;
 * zatvaranje N-DG-03.
 
@@ -1675,28 +1707,134 @@ Dashboard **navigira** ka postojećim listama/formama; ne redefiniše:
 
 ---
 
-# 12. Planirane cjeline TS-010
+# 12. TS-010.7 — Evidencija aktivnosti uredničkog portala
+
+Izvori: BM-EP-09; BM-14 (BM-AL-01–BM-AL-08); BM-GL-09; BM-GL-20; FS §5.16 (BR-170–BR-188); TS-001 §8; TS-003 §8; TS-010.1–TS-010.6; Feature Registry FT-003 / TS-012; **PO-AL-01–PO-AL-04**.
+
+TS-010.7 ne uvodi nova poslovna pravila, nove aktivnosti, novi audit entitet niti UI centralne Evidencije. Tehnički operacionalizuje obaveze Uredničkog portala prema usvojenom BM-14 / FS §5.16.
+
+## 12.1 Obuhvat i granice
+
+**Obuhvat:** razgraničenje lokalnog audita i centralne Evidencije; obaveza evidentiranja radnji nastalih u Uredničkom portalu; pristupna pravila; referenca na V1 katalog bez proširenja; odnos prema FT-003 / TS-012.
+
+**Van obuhvata:** vidi §12.8.
+
+## 12.2 Usvojene product odluke
+
+| Odluka | Sažetak |
+|--------|---------|
+| **PO-AL-01** | TS-010.7 = obaveze portala prema centralnoj Evidenciji; **ne** uvodi zaseban pregled centralne evidencije; **ne** zamjenjuje FT-003 ni TS-012; Moderator i Urednik **nemaju** direktan pristup; pristup ima isključivo Administrator platforme. |
+| **PO-AL-02** | Lokalni audit i centralna Evidencija su **dva različita** koncepta. |
+| **PO-AL-03** | TS-010.7 definiše samo obavezu evidentiranja; **ne** opisuje API, queue, event bus, SQL, tabelu, strukturu zapisa, skladištenje ni prikaz centralne evidencije (to je FT-003 / TS-012). |
+| **PO-AL-04** | Ne uvodi nove poslovne aktivnosti; koristi isključivo BM/FS katalog; ne dodaje otvaranje forme, klik, filter, pretragu, promjenu konteksta, lock/unlock, pregled bez izmjene ni druge nove aktivnosti. |
+
+## 12.3 Dva koncepta (PO-AL-02)
+
+### 12.3.1 Lokalni audit
+
+* postoji na entitetu / zahtjevu;
+* prikazuje istoriju **tog** entiteta ovlašćenim ulogama u okviru rada nad entitetom;
+* **nije** centralni audit;
+* **nije** FT-003;
+* primjeri i norme: TS-001 §8; TS-003 §8; TS-010.3 §6.11; TS-010.5 §10.17; BR-014, BR-026, BR-031, BR-043, BR-055, BR-073 i srodna.
+
+Prikaz lokalnih audit informacija **ne smatra se** direktnim pristupom centralnoj Evidenciji (BM-AL-06; BR-175).
+
+### 12.3.2 Centralna Evidencija aktivnosti
+
+* poslovni audit log radnji modula Kalendar kulture;
+* opisana BM-14 / FS §5.16;
+* Feature / TS: **FT-003** / **TS-012**;
+* nije sredstvo komunikacije niti poslovno obavještenje (BM-AL-08; BR-170);
+* ne zamjenjuje tehničke sistemske logove (BM-AL-02; BR-172).
+
+## 12.4 Obaveza uredničkog portala (PO-AL-01, PO-AL-03)
+
+Kada se kroz Urednički portal izvrši radnja koja pripada V1 katalogu poslovno značajnih aktivnosti (FS §5.16), sistem **mora** omogućiti nastanak odgovarajućeg zapisa centralne Evidencije aktivnosti, u skladu sa BM-EP-09 i BM-AL-03.
+
+TS-010.7:
+
+* **ne** projektuje mehanizam isporuke (API, queue, event bus);
+* **ne** projektuje skladištenje ni strukturu zapisa;
+* **ne** projektuje Admin UI pregled.
+
+Ti elementi ostaju **FT-003 / TS-012**.
+
+Emisija / lokalni tragovi na nivou domena ostaju usklađeni sa TS-001 §8 i TS-003 §8; TS-010.7 ih ne redefiniše.
+
+## 12.5 Pristup
+
+| Uloga | Centralna Evidencija (direktno) | Lokalni audit na entitetu |
+|-------|----------------------------------|---------------------------|
+| Moderator Organizatora | **Ne** | Da, u okviru ovlašćenja i aktivnog konteksta |
+| Urednik | **Ne** | Da, u okviru uredničkih ovlašćenja |
+| Administrator platforme | **Da** (BM-AL-06; BR-174) | Nije redovna urednička CRUD uloga (TS-010.1 §1.4) |
+
+Organizator kao poslovni entitet **ne pristupa** Uredničkom portalu niti centralnoj Evidenciji.
+
+## 12.6 Katalog aktivnosti (PO-AL-04)
+
+TS-010.7 **ne proširuje** katalog. Kanonski V1 katalog ostaje u **FS §5.16** (Moderator; Organizatori; Manifestacije; Događaji uključujući relevantne aktivnosti nad Održavanjem; Newsletter), uz BM-AL-07.
+
+**Ne ulaze** u centralnu Evidenciju (već usvojeno u FS §5.16 / PO-AL-04), između ostalog:
+
+* uređivanje nacrta i sitne korekcije;
+* zaključavanje / otključavanje prijedloga;
+* pregled bez izmjena;
+* promjena aktivnog konteksta Organizatora (bilježi se samo kao atribut drugih zapisa kada je primjenjivo);
+* otvaranje forme, klik, filter, pretraga kao zasebne aktivnosti;
+* tehnički logovi i aktivnosti van poslovnog značaja.
+
+## 12.7 Odnos prema Dashboardu i ostalim cjelinama
+
+* Dashboard (**TS-010.6**) **ne** prikazuje Activity Feed niti centralnu Evidenciju.
+* Newsletter i BR-128 **nijesu** kanali Evidencije aktivnosti.
+* Javni portal (**TS-009**) ne upravlja Evidencijom aktivnosti.
+
+## 12.8 Van obuhvata TS-010.7
+
+* zaseban UI / pregled centralne Evidencije u Uredničkom portalu;
+* filteri, pretraga, sortiranje, izvoz, retention politika, struktura polja zapisa (FT-003 / TS-012; van V1 opsega FT-003 do posebnog PATCH-a gdje je tako evidentirano);
+* API; queue; event bus; SQL; tabele; migracije;
+* nove poslovne aktivnosti van FS §5.16;
+* redefinisanje lokalnih audit pravila TS-001 / TS-003;
+* zamjena FT-003 ili TS-012.
+
+## 12.9 Veza sa FT-003 / TS-012
+
+```text
+Urednički portal (FT-001 / TS-010)
+        → izvršava radnje
+        → obaveza evidentiranja (TS-010.7)
+        → centralna Evidencija (FT-003 / TS-012)
+```
+
+TS-010.7 je cjelina **FT-001**. Centralna Evidencija aktivnosti je cjelina **FT-003**.
+
+---
+
+# 13. Planirane cjeline TS-010
 
 Sljedeće podcjeline su planirane i **nisu razrađene** u ovoj verziji:
 
 | Cjelina | Naziv | Status |
 |---------|-------|--------|
-| TS-010.7 | Evidencija aktivnosti | Planned |
 | TS-010.8 | Test matrica | Planned |
 
 ---
 
-# 13. Napomene za naredne podcjeline
+# 14. Napomene za naredne podcjeline
 
 * TS-010.4 operacionalizuje workflow akcije; ne zamjenjuje TS-003 / TS-004 / TS-009.
 * TS-010.5 operacionalizuje CRUD i validacije uz katalog §9 i TS-004 v0.1.5; N-DG-04 ostaje implementacioni izbor.
-* TS-010.6 operacionalizuje Dashboard (PO-DASH-01–05) kao radnu tablu sa kategorijama i filter-navigacijom; ne uvodi BI ni Activity Feed.
-* TS-010.7 ostaje usklađen sa BM-14 / FS §5.16 / planiranim TS-012; ne zamjenjuje centralnu Evidenciju aktivnosti.
+* TS-010.6 operacionalizuje Dashboard (PO-DASH-01–05); ne uvodi BI ni Activity Feed.
+* TS-010.7 (PO-AL-01–04) definiše obaveze portala prema centralnoj Evidenciji; ne zamjenjuje FT-003 / TS-012 i ne uvodi UI centralne evidencije.
+* TS-010.8 ostaje planirana test matrica.
 * TS-009 ostaje referentni dokument javnog portala; CR-004B ostaje Planned za implementaciju.
 * Detaljna lista / katalog polja Organizatora ostaje van TS-010.3; usvojena granica ovlašćenja G-14 je u §6.8.1.
 * Terminološki cleanup FS §5.4.3 ↔ N-TR-01 ostaje zaseban, van ove verzije.
-* N-DG-03 (kanal obavještavanja Urednika) ostaje otvoren; nije zatvoren kroz TS-010.6.
+* N-DG-03 (kanal obavještavanja Urednika) ostaje otvoren.
 
 ---
 
-**Kraj dokumenta TS-010 v0.6.0 (TS-010.1–TS-010.6; TS-010.7–TS-010.8 Planned)**
+**Kraj dokumenta TS-010 v0.7.0 (TS-010.1–TS-010.7; TS-010.8 Planned)**
