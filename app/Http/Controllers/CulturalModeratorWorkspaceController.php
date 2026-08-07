@@ -3,12 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\CulturalModeratorAuthorization;
+use App\Support\CulturalModeratorEventAccess;
+use App\Support\CulturalOrganizerContext;
 use App\Support\CulturalPortalAccess;
 use Illuminate\View\View;
 
 /**
- * Minimalni workspace za aktivnog Moderatora (PO-ORG-04 portal pristup).
- * Pun TS-010 UX ostaje van Koraka 1.
+ * Minimalni workspace za aktivnog Moderatora (PO-ORG-04 + TS-010.1 ulaz).
  */
 class CulturalModeratorWorkspaceController extends Controller
 {
@@ -27,9 +28,18 @@ class CulturalModeratorWorkspaceController extends Controller
             })
             ->get();
 
+        $activeOrganizer = CulturalModeratorEventAccess::isActiveModerator($user)
+            ? CulturalOrganizerContext::get($user)
+            : null;
+
         return view('cultural-calendar.moderator-workspace.index', [
             'authorizations' => $authorizations,
             'isEditor' => CulturalPortalAccess::isKkEditor($user),
+            'isActiveModerator' => CulturalModeratorEventAccess::isActiveModerator($user),
+            'activeOrganizer' => $activeOrganizer,
+            'availableOrganizers' => CulturalModeratorEventAccess::isActiveModerator($user)
+                ? CulturalOrganizerContext::availableOrganizers($user)
+                : collect(),
         ]);
     }
 }

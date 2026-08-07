@@ -13,6 +13,9 @@ use App\Http\Controllers\CulturalEventEntryOccurrenceController;
 use App\Http\Controllers\CulturalLocationController;
 use App\Http\Controllers\CulturalCategoryController;
 use App\Http\Controllers\CulturalMediaController;
+use App\Http\Controllers\CulturalModeratorEventEntryController;
+use App\Http\Controllers\CulturalModeratorEventEntryOccurrenceController;
+use App\Http\Controllers\CulturalModeratorOrganizerContextController;
 use App\Http\Controllers\CulturalModeratorRequestController;
 use App\Http\Controllers\CulturalModeratorWorkspaceController;
 use App\Http\Controllers\CulturalOrganizerController;
@@ -126,6 +129,32 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-moderator-requests.create');
         Route::post('/kalendar-kulture/organizatori/{organizatori}/zahtjev-moderator', [CulturalModeratorRequestController::class, 'store'])
             ->name('cultural-moderator-requests.store');
+    });
+
+    // TS-010.1 — Moderator Draft tok + aktivni Organizator kontekst
+    Route::middleware(['cultural.portal', 'cultural.moderator'])->group(function () {
+        Route::post('/kalendar-kulture/moderatorski-rad/kontekst', [CulturalModeratorOrganizerContextController::class, 'update'])
+            ->name('cultural-moderator-context.update');
+
+        Route::get('/kalendar-kulture/moderatorski-dogadjaji', [CulturalModeratorEventEntryController::class, 'index'])
+            ->name('cultural-moderator-events.index');
+        Route::get('/kalendar-kulture/moderatorski-dogadjaji/create', [CulturalModeratorEventEntryController::class, 'create'])
+            ->name('cultural-moderator-events.create');
+        Route::post('/kalendar-kulture/moderatorski-dogadjaji', [CulturalModeratorEventEntryController::class, 'store'])
+            ->name('cultural-moderator-events.store');
+        Route::get('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/edit', [CulturalModeratorEventEntryController::class, 'edit'])
+            ->name('cultural-moderator-events.edit');
+        Route::put('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}', [CulturalModeratorEventEntryController::class, 'update'])
+            ->name('cultural-moderator-events.update');
+        Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/submit', [CulturalModeratorEventEntryController::class, 'submit'])
+            ->name('cultural-moderator-events.submit');
+
+        Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja', [CulturalModeratorEventEntryOccurrenceController::class, 'store'])
+            ->name('cultural-moderator-events.occurrences.store');
+        Route::put('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalModeratorEventEntryOccurrenceController::class, 'update'])
+            ->name('cultural-moderator-events.occurrences.update');
+        Route::delete('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalModeratorEventEntryOccurrenceController::class, 'destroy'])
+            ->name('cultural-moderator-events.occurrences.destroy');
     });
 
     // Administracija događaja i kataloga lokacija (samo KK administrator / Urednik)

@@ -74,6 +74,8 @@ class RestrictRoleModuleAccess
                 || str_starts_with($routeName, 'cultural-organizer-creation-requests.')
                 || str_starts_with($routeName, 'cultural-moderator-requests.')
                 || str_starts_with($routeName, 'cultural-moderator-workspace.')
+                || str_starts_with($routeName, 'cultural-moderator-events.')
+                || str_starts_with($routeName, 'cultural-moderator-context.')
             )) {
                 return $next($request);
             }
