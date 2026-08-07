@@ -2,7 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\CulturalCategory;
+use App\Models\CulturalEventEntry;
 use App\Models\CulturalMedia;
+use App\Models\CulturalOrganizer;
+use App\Models\CulturalOrganizerCreationRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\CulturalMedia\CulturalMediaLinkInspector;
@@ -234,6 +238,68 @@ class CulturalMediaCatalogTest extends TestCase
 
         $this->assertDatabaseHas('cultural_media', ['id' => $media->id]);
         Storage::disk('public')->assertExists($path);
+    }
+
+    /**
+     * End-to-end: stvarni CulturalEventEntry.cover_media_id blokira hard-delete
+     * bez mockovanja CulturalMediaLinkInspector (TS-003 / TS-008).
+     */
+    public function test_cover_media_used_by_canonical_event_cannot_be_hard_deleted(): void
+    {
+        $media = $this->createStoredMedia();
+        $path = $media->storage_path;
+        $this->assertTrue($media->isActive());
+        $this->assertSame(CulturalMedia::PURPOSE_EVENT_COVER, $media->namjena);
+        Storage::disk('public')->assertExists($path);
+
+        $request = CulturalOrganizerCreationRequest::create([
+            'submitter_user_id' => $this->editor->id,
+            'proposed_moderator_user_id' => $this->editor->id,
+            'proposed_moderator_is_submitter' => true,
+            'proposed_naziv' => 'Org za medij',
+            'status' => CulturalOrganizerCreationRequest::STATUS_APPROVED,
+            'decision_user_id' => $this->editor->id,
+            'decision_at' => now(),
+        ]);
+
+        $organizer = CulturalOrganizer::create([
+            'naziv' => 'Org za medij',
+            'status' => CulturalOrganizer::STATUS_ACTIVE,
+            'approved_creation_request_id' => $request->id,
+        ]);
+
+        $category = CulturalCategory::create([
+            'naziv' => 'Koncerti',
+            'status' => CulturalCategory::STATUS_ACTIVE,
+        ]);
+
+        $entry = CulturalEventEntry::create([
+            'naslov' => 'Kanonski događaj sa naslovnom',
+            'status' => CulturalEventEntry::STATUS_DRAFT,
+            'organizer_id' => $organizer->id,
+            'category_id' => $category->id,
+            'cover_media_id' => $media->id,
+            'created_by' => $this->editor->id,
+            'last_modified_by' => $this->editor->id,
+        ]);
+
+        $this->assertSame(1, $media->fresh()->businessLinkCount());
+        $this->assertSame($media->id, $entry->cover_media_id);
+
+        $this->actingAs($this->editor)
+            ->from(route('cultural-media.index'))
+            ->delete(route('cultural-media.destroy', $media))
+            ->assertRedirect(route('cultural-media.index'))
+            ->assertSessionHasErrors('medij');
+
+        $this->assertDatabaseHas('cultural_media', ['id' => $media->id]);
+        $this->assertDatabaseHas('cultural_event_entries', [
+            'id' => $entry->id,
+            'cover_media_id' => $media->id,
+        ]);
+        Storage::disk('public')->assertExists($path);
+        $this->assertSame(1, CulturalMedia::query()->whereKey($media->id)->count());
+        $this->assertSame(1, $media->fresh()->businessLinkCount());
     }
 
     public function test_regular_user_cannot_access_catalog(): void

@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Kataloški Medij — Fotografija (TS-008 Korak 1).
- * Bez veza ka Događaju / Manifestaciji / Kategoriji u ovom koraku.
+ * Kataloški Medij — Fotografija (TS-008).
+ * Poslovne veze: naslovna na CulturalEventEntry (TS-003 Korak 1).
  */
 class CulturalMedia extends Model
 {
@@ -119,11 +119,17 @@ class CulturalMedia extends Model
     }
 
     /**
-     * Broj poslovnih veza. Proširiti kada se uvedu relacije — bez prepisivanja delete toka.
+     * Broj poslovnih veza (naslovna na kanonskom Događaju — TS-003 Korak 1).
      */
     public function businessLinkCount(): int
     {
-        return 0;
+        if ($this->id === null) {
+            return 0;
+        }
+
+        return CulturalEventEntry::query()
+            ->where('cover_media_id', $this->id)
+            ->count();
     }
 
     public function canBePermanentlyDeleted(): bool

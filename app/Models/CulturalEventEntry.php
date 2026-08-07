@@ -1,0 +1,176 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+/**
+ * Kanonski Događaj (TS-003 Korak 1 / PO-EV-01).
+ * Paralelno sa legacy CulturalEvent — bez cutover-a u ovom koraku.
+ */
+class CulturalEventEntry extends Model
+{
+    use HasFactory;
+
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_PENDING_APPROVAL = 'pending_approval';
+
+    public const STATUS_PUBLISHED = 'published';
+
+    public const STATUS_CANCELLED = 'cancelled';
+
+    public const STATUS_ARCHIVED = 'archived';
+
+    public const STATUSES = [
+        self::STATUS_DRAFT,
+        self::STATUS_PENDING_APPROVAL,
+        self::STATUS_PUBLISHED,
+        self::STATUS_CANCELLED,
+        self::STATUS_ARCHIVED,
+    ];
+
+    public const STATUS_LABELS = [
+        self::STATUS_DRAFT => 'Nacrt',
+        self::STATUS_PENDING_APPROVAL => 'Na odobrenju',
+        self::STATUS_PUBLISHED => 'Objavljen',
+        self::STATUS_CANCELLED => 'Otkazan',
+        self::STATUS_ARCHIVED => 'Arhiviran',
+    ];
+
+    /**
+     * Dozvoljeni prelazi statusa (TS-003 §4).
+     * Ključ = od; vrijednost = lista ciljeva.
+     *
+     * @var array<string, list<string>>
+     */
+    public const ALLOWED_TRANSITIONS = [
+        self::STATUS_DRAFT => [
+            self::STATUS_PENDING_APPROVAL,
+            self::STATUS_PUBLISHED, // direktna objava — samo bez Organizatora (servis)
+        ],
+        self::STATUS_PENDING_APPROVAL => [
+            self::STATUS_PUBLISHED,
+            self::STATUS_DRAFT, // vraćanje na doradu
+        ],
+        self::STATUS_PUBLISHED => [
+            self::STATUS_CANCELLED,
+            self::STATUS_ARCHIVED, // Sistem
+        ],
+        self::STATUS_CANCELLED => [
+            self::STATUS_ARCHIVED, // Sistem — nema republish
+        ],
+        self::STATUS_ARCHIVED => [],
+    ];
+
+    protected $fillable = [
+        'naslov',
+        'opis',
+        'status',
+        'organizer_id',
+        'category_id',
+        'cover_media_id',
+        'featured',
+        'cancellation_reason',
+        'created_by',
+        'last_modified_by',
+        'first_submitted_at',
+    ];
+
+    protected $casts = [
+        'featured' => 'boolean',
+        'organizer_id' => 'integer',
+        'category_id' => 'integer',
+        'cover_media_id' => 'integer',
+        'created_by' => 'integer',
+        'last_modified_by' => 'integer',
+        'first_submitted_at' => 'datetime',
+    ];
+
+    public function isDraft(): bool
+    {
+        return $this->status === self::STATUS_DRAFT;
+    }
+
+    public function isCancelled(): bool
+    {
+        return $this->status === self::STATUS_CANCELLED;
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status === self::STATUS_PUBLISHED;
+    }
+
+    public function hasEnteredEditorialFlow(): bool
+    {
+        return $this->first_submitted_at !== null;
+    }
+
+    public function statusLabel(): string
+    {
+        return self::STATUS_LABELS[$this->status] ?? $this->status;
+    }
+
+    public function canTransitionTo(string $target): bool
+    {
+        $allowed = self::ALLOWED_TRANSITIONS[$this->status] ?? [];
+
+        return in_array($target, $allowed, true);
+    }
+
+    public function organizer(): BelongsTo
+    {
+        return $this->belongsTo(CulturalOrganizer::class, 'organizer_id');
+    }
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(CulturalCategory::class, 'category_id');
+    }
+
+    public function coverMedia(): BelongsTo
+    {
+        return $this->belongsTo(CulturalMedia::class, 'cover_media_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function lastModifier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'last_modified_by');
+    }
+
+    public function occurrences(): HasMany
+    {
+        return $this->hasMany(CulturalOccurrence::class, 'event_entry_id');
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            CulturalTag::class,
+            'cultural_event_entry_tag',
+            'cultural_event_entry_id',
+            'cultural_tag_id'
+        )->withTimestamps();
+    }
+
+    public function scopeDraft(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_DRAFT);
+    }
+
+    public function scopeFeatured(Builder $query): Builder
+    {
+        return $query->where('featured', true);
+    }
+}
