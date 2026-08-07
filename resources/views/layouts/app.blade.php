@@ -1,5 +1,5 @@
 @php
-    $isKkSection = request()->routeIs('cultural-calendar.*', 'cultural-events.*');
+    $isKkSection = request()->routeIs('cultural-calendar.*', 'cultural-events.*', 'cultural-locations.*');
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['kk-section' => $isKkSection]) @if($isKkSection) style="color-scheme: light;" @endif>

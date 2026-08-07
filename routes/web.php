@@ -8,6 +8,7 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\CulturalCalendarController;
 use App\Http\Controllers\CulturalCalendarNewsletterController;
 use App\Http\Controllers\CulturalEventController;
+use App\Http\Controllers\CulturalLocationController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\HomeController;
@@ -102,11 +103,20 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::get('/kalendar-kulture/dan/{date}', [CulturalCalendarController::class, 'day'])->name('cultural-calendar.day');
     Route::post('/kalendar-kulture/newsletter', [CulturalCalendarNewsletterController::class, 'store'])->name('cultural-calendar.newsletter.store');
 
-    // Administracija događaja (samo KK administrator)
+    // Administracija događaja i kataloga lokacija (samo KK administrator / Urednik)
     Route::middleware('role:kk_admin')->group(function () {
         Route::resource('/kalendar-kulture/dogadjaji', CulturalEventController::class)
             ->except(['show'])
             ->names('cultural-events');
+
+        Route::resource('/kalendar-kulture/lokacije', CulturalLocationController::class)
+            ->except(['show', 'destroy'])
+            ->parameters(['lokacije' => 'lokacije'])
+            ->names('cultural-locations');
+        Route::post('/kalendar-kulture/lokacije/{lokacije}/deactivate', [CulturalLocationController::class, 'deactivate'])
+            ->name('cultural-locations.deactivate');
+        Route::post('/kalendar-kulture/lokacije/{lokacije}/activate', [CulturalLocationController::class, 'activate'])
+            ->name('cultural-locations.activate');
     });
 
     // --- DOPUNA: RUTE ZA PORTAL ŽENSKOG PREDUZETNIŠTVA ---

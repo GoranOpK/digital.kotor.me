@@ -3,7 +3,7 @@
     $isKkAdmin = $user && $user->role && $user->role->name === 'kk_admin';
     $isCompetitionAdmin = $user && $user->role && $user->role->name === 'konkurs_admin';
     $isKomisija = $user && $user->role && $user->role->name === 'komisija';
-    $isKkSection = request()->routeIs('cultural-calendar.*', 'cultural-events.*');
+    $isKkSection = request()->routeIs('cultural-calendar.*', 'cultural-events.*', 'cultural-locations.*');
 @endphp
 <nav
     x-data="{ open: false }"
@@ -85,6 +85,21 @@
                                     white-space: nowrap;
                                 "
                             >Događaji</a>
+                            <a
+                                href="{{ route('cultural-locations.index') }}"
+                                style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    padding: 8px 14px;
+                                    border-radius: 8px;
+                                    background: {{ request()->routeIs('cultural-locations.*') ? '#5f0c12' : '#7a0f17' }};
+                                    color: #ffffff;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    text-decoration: none;
+                                    white-space: nowrap;
+                                "
+                            >Lokacije</a>
                         @endif
                     </div>
                 @else
@@ -199,7 +214,7 @@
                 <x-responsive-nav-link :href="route('cultural-calendar.archive')" :active="request()->routeIs('cultural-calendar.archive')">
                     Arhiva događaja
                 </x-responsive-nav-link>
-                @if($isKkAdmin)
+                    @if($isKkAdmin)
                     <a
                         href="{{ route('cultural-events.index') }}"
                         style="
@@ -214,6 +229,21 @@
                         "
                     >
                         Događaji
+                    </a>
+                    <a
+                        href="{{ route('cultural-locations.index') }}"
+                        style="
+                            display: block;
+                            width: 100%;
+                            padding: 10px 16px;
+                            background: {{ request()->routeIs('cultural-locations.*') ? '#5f0c12' : '#7a0f17' }};
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: 600;
+                            text-decoration: none;
+                        "
+                    >
+                        Lokacije
                     </a>
                 @endif
             @elseif($isCompetitionAdmin)
