@@ -61,6 +61,10 @@ class RestrictRoleModuleAccess
                 return $next($request);
             }
 
+            if ($routeName && str_starts_with($routeName, 'cultural-media.')) {
+                return $next($request);
+            }
+
             if ($request->is('kalendar-kulture*') || $request->is('profile*')) {
                 return $next($request);
             }

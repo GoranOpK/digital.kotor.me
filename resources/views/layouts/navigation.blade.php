@@ -3,7 +3,7 @@
     $isKkAdmin = $user && $user->role && $user->role->name === 'kk_admin';
     $isCompetitionAdmin = $user && $user->role && $user->role->name === 'konkurs_admin';
     $isKomisija = $user && $user->role && $user->role->name === 'komisija';
-    $isKkSection = request()->routeIs('cultural-calendar.*', 'cultural-events.*', 'cultural-locations.*', 'cultural-categories.*', 'cultural-tags.*');
+    $isKkSection = request()->routeIs('cultural-calendar.*', 'cultural-events.*', 'cultural-locations.*', 'cultural-categories.*', 'cultural-tags.*', 'cultural-media.*');
 @endphp
 <nav
     x-data="{ open: false }"
@@ -130,6 +130,21 @@
                                     white-space: nowrap;
                                 "
                             >Oznake</a>
+                            <a
+                                href="{{ route('cultural-media.index') }}"
+                                style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    padding: 8px 14px;
+                                    border-radius: 8px;
+                                    background: {{ request()->routeIs('cultural-media.*') ? '#5f0c12' : '#7a0f17' }};
+                                    color: #ffffff;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    text-decoration: none;
+                                    white-space: nowrap;
+                                "
+                            >Mediji</a>
                         @endif
                     </div>
                 @else
@@ -304,6 +319,21 @@
                         "
                     >
                         Oznake
+                    </a>
+                    <a
+                        href="{{ route('cultural-media.index') }}"
+                        style="
+                            display: block;
+                            width: 100%;
+                            padding: 10px 16px;
+                            background: {{ request()->routeIs('cultural-media.*') ? '#5f0c12' : '#7a0f17' }};
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: 600;
+                            text-decoration: none;
+                        "
+                    >
+                        Mediji
                     </a>
                 @endif
             @elseif($isCompetitionAdmin)
