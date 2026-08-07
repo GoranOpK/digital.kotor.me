@@ -7,7 +7,7 @@
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active  
-**Verzija:** 1.0.1  
+**Verzija:** 1.0.2  
 **Datum:** 2026-08-07
 
 ---
@@ -18,6 +18,7 @@
 |---------|-------|------|
 | 1.0.0 | 2026-08-07 | Početni implementacioni roadmap na osnovu usvojene dokumentacije (BM, FS, Feature Registry, IS-001, TS-001 / TS-003–TS-012) i stanja produkcije. |
 | 1.0.1 | 2026-08-07 | **PATCH-001 (FINAL):** TS-012 isključivo kao završna integraciona faza (bez audit skeleta u Fazi 1); obavezne stabilizacione faze; princip jedne velike migracije domena po deploymentu; implementaciona disciplina (jedna logička cjelina po zadatku); usklađen konačni redoslijed Faza 0–8. |
+| 1.0.2 | 2026-08-07 | Dokumentaciona napomena: Faza 1 (TS-006/007/008) završena u kodu; Faza 2 (TS-001) spremna za Korak 1 nakon PO-ORG-01–04. Bez izmjene redoslijeda faza. |
 
 ---
 

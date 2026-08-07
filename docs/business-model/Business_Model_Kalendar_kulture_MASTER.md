@@ -67,6 +67,7 @@
 | PATCH-051 | 2026-08-06 | CR-004B (javni prikaz otkazanih): usklađen BM-PK-13 (cancelled ostaje; portalna Arhiva = vremenska površina ≠ interni archived; bez javne dostupnosti archived); usklađen BM-AR-02 i BM-PK-15 (otkazani nisu u Istaknutim — bez izmjene flaga); usklađen BM-PK-22 (statistike = javno dostupni published|cancelled). Bez izmjene BM-DG-04 / BM-DG-05 / BM-ST-07. Bez izmjene implementacije. |
 | PATCH-052 | 2026-08-06 | PO-N-TR-02-01–03: zatvaranje N-TR-02 — serija nije poslovni entitet; generator dnevno/sedmično/mjesečno završava brojem ili krajnjim datumom (max 100); ručna i generisana održavanja ravnopravna nakon generisanja. Usklađeni BM-TR-06, BM-TR-07. Bez novog entiteta / lifecycle / statusa. Bez izmjene implementacije. |
 | PATCH-053 | 2026-08-06 | PO-DG-07: status Otkazan je terminalan za povratak u Objavljen (superseduje isključivo dio PATCH-035 / N-DG-01 koji je dozvoljavao Otkazan → Objavljen). Novi program = novi zapis; Odgođen ostaje jedini mehanizam promjene termina postojećeg događaja; Otkazan = istorijski zapis (izmjena sadržaja zabranjena; izuzetak: razlog otkazivanja / napomena urednika). Usklađeni BM-DG-09, BM-ST-07, BM-UR-11, BM-MOD-16, BM-TR-12, BM-ST-09; dodati BM-DG-10. Bez izmjene FS/TS/Feature Registry/implementacije. |
+| PATCH-054 | 2026-08-07 | PO-ORG-01–PO-ORG-04: katalog polja Organizatora V1 (BM-ORG-13); Moderator isključivo preko postojećeg aktivnog `user_id` (BM-MOD-17); Organizator nastaje tek pri odobrenju (pojašnjen BM-ORG-03); pristup uredničkom portalu iz aktivnog moderatorskog ovlašćenja bez nove platformske uloge (BM-MOD-18). Usklađen BM-ORG-07. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -260,7 +261,7 @@ Tok procesa:
 4. Urednik pregleda i odobrava ili odbija zahtjev.
 5. Ako Urednik odobri zahtjev:
 
-   * kreira se, odnosno odobrava se novi entitet Organizatora;
+   * kreira se novi entitet Organizatora (zapis ne postoji prije odobrenja);
    * predloženi korisnik dobija ovlašćenje Moderatora za tog konkretnog Organizatora;
    * uspostavlja se poslovna veza između Moderatora i Organizatora.
 6. Ako Urednik odbije zahtjev:
@@ -289,16 +290,17 @@ Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zah
 |--------|---------|
 | BM-ORG-01 | Organizator je poslovni entitet i nosilac sadržaja u Kalendaru kulture. Organizator nije korisnik sistema i nije korisnička uloga. |
 | BM-ORG-02 | Registrovani korisnik podnosi zahtjev za kreiranje Organizatora. Podnošenjem zahtjeva korisnik ne postaje Organizator, ne postaje Moderator i ne dobija novu korisničku ulogu. |
-| BM-ORG-03 | Nakon odobrenja Urednika kreira se, odnosno odobrava se novi entitet Organizatora. Odobrenje ne dodjeljuje podnosiocu status korisničke uloge Organizatora. |
+| BM-ORG-03 | Nakon odobrenja Urednika **kreira se** novi entitet Organizatora (zapis ne postoji prije odobrenja). Odobrenje ne dodjeljuje podnosiocu status korisničke uloge Organizatora. |
 | BM-ORG-04 | Organizator je nosilac sadržaja. Operativno kreiranje, uređivanje i čuvanje nacrta sadržaja, kao i slanje sadržaja Uredniku na odobravanje, obavljaju Moderatori u ime Organizatora. Ovo pravilo ne isključuje izuzetak da Urednik može kreirati i objaviti događaj bez registrovanog Organizatora radi javnog interesa i pravovremenog informisanja građana, u skladu sa BM-UR-06 i BM-DG-08. |
 | BM-ORG-05 | Moderator ne može samostalno objaviti sadržaj. |
 | BM-ORG-06 | Organizator ima jednog ili više Moderatora koji upravljaju sadržajem u njegovo ime. Organizator ne dodjeljuje ovlašćenja Moderatorima. |
-| BM-ORG-07 | Zahtjev za kreiranje Organizatora sadrži podatke o predloženom Organizatoru, podatke potrebne za identifikovanje predloženog početnog Moderatora i podatak da li je predloženi Moderator sam podnosilac ili drugi registrovani korisnik. Podnosilac i predloženi Moderator mogu biti ista ili različite osobe. |
+| BM-ORG-07 | Zahtjev za kreiranje Organizatora sadrži podatke Organizatora prema BM-ORG-13, identifikaciju predloženog početnog Moderatora preko postojećeg aktivnog korisničkog naloga (`user_id`) i podatak da li je predloženi Moderator sam podnosilac ili drugi registrovani korisnik. Podnosilac i predloženi Moderator mogu biti ista ili različite osobe. |
 | BM-ORG-08 | Nakon odobrenja zahtjeva za kreiranje Organizatora, predloženi korisnik dobija ovlašćenje početnog Moderatora za tog Organizatora. Moderatorska ovlašćenja nastaju tek nakon odobrenja Urednika. |
 | BM-ORG-09 | Sistem trajno evidentira za zahtjev za kreiranje Organizatora: podnosioca zahtjeva, predloženog Moderatora, datum i vrijeme podnošenja, Urednika koji je odlučio i datum i vrijeme odluke. |
 | BM-ORG-10 | Jedan registrovani korisnik može podnijeti zahtjev za kreiranje neograničenog broja Organizatora. Svaki zahtjev predstavlja poseban postupak. |
 | BM-ORG-11 | Ako Urednik odbije zahtjev, Organizator se ne odobrava kao aktivan poslovni entitet, predloženi korisnik ne dobija moderatorska ovlašćenja, a podnosilac ne dobija novu ulogu. Odbijanje ne sprečava podnošenje novog zahtjeva. |
 | BM-ORG-12 | Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora. Deaktivacijom Organizatora prestaje moderatorski kontekst za tog Organizatora. Nakon deaktivacije Moderatori više nemaju pravo izvršavanja poslovnih radnji nad događajima tog Organizatora. Ako je potrebno otkazati događaj deaktiviranog Organizatora, tu radnju izvršava isključivo Urednik. |
+| BM-ORG-13 | Poslovni podaci Organizatora u V1: naziv (obavezno); opis, kontakt e-mail, kontakt telefon, web sajt (opciono); status Aktivan/Deaktiviran; sistemski datumi. Van V1: PIB, matični broj, adresa, GPS, društvene mreže, logo i ostali pravni podaci. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
@@ -365,6 +367,8 @@ Za zahtjeve vezane za Moderatore sistem trajno evidentira: podnosioca zahtjeva, 
 | BM-MOD-14 | Pristup i ovlašćenja novom Moderatoru dodjeljuje isključivo Urednik nakon pregleda i odobrenja zahtjeva. Tek nakon odobrenja Moderator postaje aktivan. |
 | BM-MOD-15 | Sistem trajno evidentira za zahtjeve vezane za Moderatore: podnosioca zahtjeva, datum i vrijeme podnošenja, Urednika koji je odobrio i datum i vrijeme odobrenja. |
 | BM-MOD-16 | Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više nema pravo otkazivanja događaja tog Organizatora. Iz statusa Otkazan nije dozvoljen povratak u Objavljen. Moderator ne mijenja sadržaj otkazanog događaja. |
+| BM-MOD-17 | Moderator Organizatora može biti isključivo korisnik sa postojećim registrovanim i aktivnim nalogom Digital Kotor. Identifikacija je preko `user_id`. Nije dozvoljeno predlaganje ili kreiranje Moderatora unosom slobodnog imena ili e-mail adrese. |
+| BM-MOD-18 | Moderator ima pristup uredničkom portalu Kalendara kulture na osnovu aktivnog moderatorskog ovlašćenja nad najmanje jednim aktivnim Organizatorom. Moderator nije nova platformska uloga. Platformska uloga Urednika ostaje isključivo `kk_admin`. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 

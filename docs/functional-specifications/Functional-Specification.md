@@ -73,6 +73,7 @@
 | PATCH-FS-051 | 2026-08-06 | CR-004B (javni prikaz otkazanih): usklađeni BR-001, BR-002, BR-004, BR-114, BR-116, BR-263; dodati/precizirani BR-270–BR-274 (portalna Arhiva ≠ archived; status ostaje cancelled); napomena doc-CR-004B. Bez izmjene BR-063 / BR-065. Bez javne dostupnosti archived. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-052 | 2026-08-06 | PO-N-TR-02-01–03 / BM PATCH-052: zatvaranje N-TR-02 — usklađeni BR-060 i BR-061 (generator dnevno/sedmično/mjesečno; završetak brojem ili krajnjim datumom; max 100; serija nije trajni objekat; ručna = generisana nakon generisanja). Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-053 | 2026-08-06 | Usklađivanje sa BM PATCH-053 / PO-DG-07: Otkazan terminalan (nema Otkazan → Objavljen); novi program = novi događaj; Odgođen = jedini mehanizam promjene termina; Otkazan = istorijski zapis (forma zaključana; izuzetak: razlog otkazivanja / napomena urednika). Usklađeni BR-007, BR-063, BR-064, BR-131, BR-182, BR-183; dijagram §5.5.6a; katalog §5.16. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-054 | 2026-08-07 | PO-ORG-01–PO-ORG-04 / BM PATCH-054: katalog polja Organizatora V1 (BR-135); Moderator preko `user_id` (BR-275); kreiranje Org tek pri odobrenju; pristup portalu iz ovlašćenja bez nove platformske uloge (BR-276). ID-jevi BR-275/276 (ne BR-138/139 — ti su Newsletter). Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -180,7 +181,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.3 Izbor perioda i pregled sadržaja
    - 5.4 Detalj događaja
    - 5.5 Kreiranje i upravljanje događajem
-   - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137)
+   - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137, BR-275–BR-276)
    - 5.7.1 Upravljanje održavanjima događaja (BR-056–BR-061)
    - 5.7.2 Upravljanje statusom događaja (BR-062–BR-066)
    - 5.7.3 Upravljanje statusom održavanja (BR-067–BR-069, BR-129–BR-134)
@@ -1512,11 +1513,13 @@ Ovi podaci predstavljaju dio trajnog audita i nisu ručno izmjenjivi.
 
 Zahtjev za kreiranje Organizatora sadrži:
 
-* podatke o predloženom Organizatoru kao poslovnom entitetu;
-* podatke potrebne za identifikovanje predloženog početnog Moderatora;
+* podatke o predloženom Organizatoru (V1): naziv (obavezno); opis, kontakt e-mail, kontakt telefon, web sajt (opciono);
+* identifikaciju predloženog početnog Moderatora isključivo preko `user_id` postojećeg registrovanog i aktivnog naloga;
 * podatak da li je predloženi Moderator sam podnosilac zahtjeva ili drugi registrovani korisnik.
 
-Podnosilac može sebe predložiti za Moderatora, ali to nije obavezno. Samo podnošenje zahtjeva ne daje moderatorska ovlašćenja ni podnosiocu ni predloženom korisniku.
+Van V1 sadržaja zahtjeva / entiteta: PIB, matični broj, adresa, GPS, društvene mreže, logo i ostali pravni podaci.
+
+Podnosilac može sebe predložiti za Moderatora, ali to nije obavezno. Samo podnošenje zahtjeva ne daje moderatorska ovlašćenja ni podnosiocu ni predloženom korisniku i **ne kreira** entitet Organizatora.
 
 ---
 
@@ -1532,11 +1535,23 @@ Svaki zahtjev predstavlja poseban postupak i razmatra se nezavisno od drugih zah
 
 Ako Urednik odbije zahtjev za kreiranje Organizatora:
 
-* Organizator se ne odobrava kao aktivan poslovni entitet;
+* Organizator se ne kreira kao poslovni entitet;
 * predloženi korisnik ne dobija moderatorska ovlašćenja;
 * podnosilac zahtjeva ne dobija novu ulogu niti druga posebna prava.
 
 Odbijanje ne sprečava podnošenje novog zahtjeva.
+
+---
+
+##### BR-275 – Identifikacija Moderatora
+
+Moderator Organizatora može biti isključivo korisnik sa postojećim registrovanim i aktivnim nalogom Digital Kotor. Identifikacija je preko `user_id`. Nije dozvoljeno predlaganje ili kreiranje Moderatora unosom slobodnog imena ili e-mail adrese.
+
+---
+
+##### BR-276 – Pristup uredničkom portalu za Moderatora
+
+Moderator ima pristup uredničkom portalu Kalendara kulture na osnovu aktivnog moderatorskog ovlašćenja nad najmanje jednim aktivnim Organizatorom. Moderator nije nova platformska uloga. Platformska uloga Urednika ostaje isključivo `kk_admin`.
 
 **Status:** Approved
 
@@ -4134,3 +4149,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-06 | FS-001 (PATCH-FS-051 / doc-CR-004B): CR-004B Planned — korektivni prolaz; usklađeni BR-001/002/004/114/116/263; BR-270–BR-274 (cancelled ostaje; portalna Arhiva vremenska); PO-CR4B-01…10. Bez izmjene BR-063 / BR-065. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-06 | FS-001 (PATCH-FS-052): PO-N-TR-02-01–03 — zatvoren N-TR-02; usklađeni BR-060 / BR-061 (generator; max 100; serija nije trajni objekat). Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-06 | FS-001 (PATCH-FS-053): Usklađivanje sa BM PATCH-053 / PO-DG-07 — Otkazan terminalan; BR-007, BR-063, BR-064 (prepisan), BR-131, BR-182, BR-183; §5.5.6a; katalog §5.16. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
+| 2026-08-07 | FS-001 (PATCH-FS-054): PO-ORG-01–PO-ORG-04 / BM PATCH-054 — BR-135 katalog polja; BR-275 `user_id`; BR-276 portal pristup bez nove platformske uloge; Org tek pri odobrenju. Bez izmjene implementacije. Verzija ostaje 1.0.0. |

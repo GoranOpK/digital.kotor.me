@@ -129,6 +129,12 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **TS7-PO-05:** Kategorija „Nešto drugo“ ne postoji; Urednik proširuje katalog; oznake nisu zamjena za kategoriju.
 - **TS7-PO-06:** Katalogom kategorija i oznaka upravlja isključivo Urednik; Moderator samo koristi pri uređivanju događaja; bez workflow-a predlaganja, dodatnih statusa i ovlašćenja.
 
+**Usvojene poslovne odluke (Organizator / Moderator — PO-ORG):**
+- **PO-ORG-01:** Katalog polja Organizatora V1 — naziv (obavezno); opis, kontakt e-mail, telefon, web (opciono); status Aktivan/Deaktiviran; sistemski datumi. Van V1: PIB, MB, adresa, GPS, društvene mreže, logo, ostali pravni podaci.
+- **PO-ORG-02:** Moderator isključivo postojeći aktivan nalog (`user_id`); bez slobodnog imena/e-maila.
+- **PO-ORG-03:** Organizator se kreira tek nakon odobrenja Urednika (atomično sa početnim Moderatorom); podnošenje zahtjeva ne kreira entitet.
+- **PO-ORG-04:** Moderator pristupa uredničkom portalu iz aktivnog ovlašćenja; nije nova platformska uloga; `kk_admin` = jedina platformska uloga Urednika.
+
 **Usvojene poslovne odluke (Mediji):**
 - **TS8-01:** Medij je samostalan poslovni entitet i zajednički platformski resurs bez poslovnog vlasnika.
 - **TS8-02:** Zatvoreni katalog namjena: Naslovna fotografija događaja; Naslovna fotografija manifestacije; Podrazumijevana fotografija kategorije.
@@ -272,7 +278,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 
 | TS | Naziv | Feature | Modul | Status |
 | -- | ----- | ------- | ----- | ------ |
-| TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.2.1) |
+| TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.3.0) |
 | TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
 | TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.5); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni |
 | TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
@@ -509,3 +515,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-07 | FT-001 — Evidentirana usvojena odluka PO-DG-07 / BM PATCH-053 / FS PATCH-FS-053: Otkazan terminalan (nema Otkazan → Objavljen); novi program = novi događaj; Odgođen = jedini mehanizam promjene termina; Otkazan = istorijski zapis / read-only (izuzetak: razlog otkazivanja). Usklađeni TS-003 v0.1.2 i TS-010 v1.0.1. Superseduje isključivo republish dio PATCH-035 / N-DG-01. FT-001 ostaje Active. Bez izmjene implementacije. |
 | 2026-08-07 | FT-001 — TS-011 Newsletter formalno usvojen (v1.0.1). Putanja `docs/technical-specifications/Technical-Specification_Newsletter.md`. Administrativno usklađen status u registru (više nije „Planiran — nacrt nije započet”). Bez izmjene poslovnog sadržaja Feature Registry-ja. Bez izmjene BM/FS. Bez izmjene TS-003/TS-004/TS-009/TS-010. Bez izmjene implementacije. |
 | 2026-08-07 | FT-003 — TS-012 Evidencija aktivnosti formalno usvojen (v1.0.1). Putanja `docs/technical-specifications/Technical-Specification_Evidencija_aktivnosti.md`. Status: Usvojen (TS-012 v1.0.1). U sažetku V1 kataloga dodate Manifestacije (usklađenje sa BM-AL-07, BM-MF-20, FS §5.16). Bez izmjene sadržaja TS-012. Bez izmjene BM/FS. Bez izmjene ostalih TS. Bez izmjene implementacije. |
+| 2026-08-07 | FT-001 — PO-ORG-01–PO-ORG-04 usvojene i ugrađene: BM PATCH-054, FS PATCH-FS-054 (BR-275/BR-276), TS-001 v0.3.0. Zatvorena TS-001 otvorena pitanja 1, 2, 3, 15. Priprema Faze 2 / Korak 1. Bez izmjene implementacije. |

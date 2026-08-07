@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Organizator, Moderator i zahtjev za kreiranje Organizatora  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.2.1  
-**Datum:** 2026-07-30
+**Verzija:** 0.3.0  
+**Datum:** 2026-08-07
 
 ---
 
@@ -19,6 +19,7 @@
 | 0.1 | 2026-07-28 | Prva verzija Technical Specification za funkcionalnu cjelinu Organizator / Moderator / Zahtjev za kreiranje Organizatora. Dokument usklađen sa usvojenim BM-01, BM-02, BM-03 (relevantni dijelovi), FS §5.6, §5.8 i Platformskim pravilom. Bez implementacionog dizajna baze, API-ja i koda. |
 | 0.2 | 2026-07-28 | Redakcijsko usklađivanje strukture dokumenta sa M-TS-005 (standardna struktura TS). Bez izmjene poslovnih i funkcionalnih pravila. |
 | 0.2.1 | 2026-07-30 | Documentation Consistency Patch (CR-001): usklađene statusne oznake dokumenta i status razvoja poglavlja sa stvarnim stanjem finalizovanog TS sadržaja. Bez izmjene poslovnih i funkcionalnih pravila. |
+| 0.3.0 | 2026-08-07 | Ugrađene usvojene Product Owner odluke PO-ORG-01–PO-ORG-04: katalog polja Organizatora V1; identifikacija Moderatora preko `user_id`; kreiranje entiteta tek pri odobrenju; pristup uredničkom portalu iz aktivnog moderatorskog ovlašćenja bez nove platformske uloge. Zatvorena otvorena pitanja 1, 2, 3 i 15. Usklađeno sa BM PATCH-054 / FS PATCH-FS-054. Bez implementacije. |
 
 Napomena:
 
@@ -95,7 +96,7 @@ Business Model:
 
 Functional Specification:
 - Platformsko pravilo
-- §5.6 (BR-045–BR-055, BR-135–BR-137)
+- §5.6 (BR-045–BR-055, BR-135–BR-137, BR-275–BR-276)
 - §5.8 (BR-070–BR-073)
 - §5.16 (BR-178–BR-181)
 
@@ -154,7 +155,7 @@ FT-001 Kalendar kulture
   → BM-02 Moderator organizatora
   → BM-03 Urednik (relevantni dijelovi)
   → FS Platformsko pravilo
-  → FS §5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137)
+  → FS §5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137, BR-275–BR-276)
   → FS §5.8 Upravljanje moderatorima (BR-070–BR-073)
   → FS §5.16 Evidencija aktivnosti (katalog Organizatori / Moderator; bez projektovanja FT-003)
   → TS-001 (ovaj dokument)
@@ -282,9 +283,9 @@ Istorijski podaci i veze sa događajima moraju ostati sačuvani pri deaktivaciji
 * ne dodjeljuje ovlašćenja Moderatorima;
 * ne objavljuje sadržaj.
 
-**Otvoreno u odnosu na nastanak entiteta**
+**Nastanak entiteta (PO-ORG-03)**
 
-BM/FS kažu da se nakon odobrenja „kreira, odnosno odobrava“ entitet. Da li tehnički zapis Organizatora nastaje tek pri odobrenju ili ranije u stanju koje nije aktivno — **Otvoreno pitanje** (vidi §12).
+Organizator **ne nastaje** podnošenjem zahtjeva. Tehnički zapis Organizatora kreira se **tek nakon odobrenja** zahtjeva od strane Urednika. Pri odobrenju sistem atomično: kreira Organizatora (status Aktivan), dodjeljuje početnog Moderatora i označava zahtjev kao odobren. Odbijeni zahtjev ne kreira entitet Organizatora.
 
 ## 3.2 Moderator (ovlašćenje)
 
@@ -309,10 +310,19 @@ Predložen (zahtjev) → Na odobrenju → Aktivan → Uklonjen
 * Početni Moderator nastaje iz odobrenog zahtjeva za kreiranje Organizatora.
 * Naredni Moderatori nastaju iz zahtjeva koje podnosi postojeći aktivni Moderator istog Organizatora.
 
+**Identifikacija (PO-ORG-02)**
+
+Predloženi i aktivni Moderator mora biti korisnik sa **postojećim registrovanim i aktivnim** korisničkim nalogom Digital Kotor. Identifikacija je isključivo preko stabilnog `user_id`. Nije dozvoljeno kreiranje / predlaganje Moderatora unosom slobodnog imena ili e-mail adrese bez veze na postojeći nalog.
+
+**Pristup uredničkom portalu (PO-ORG-04)**
+
+Moderator ima pristup uredničkom portalu Kalendara kulture. To **nije** nova platformska uloga. Pravo pristupa proizlazi iz **aktivnog moderatorskog ovlašćenja** nad najmanje jednim **aktivnim** Organizatorom. Platformska uloga Urednika ostaje isključivo `kk_admin`.
+
 **Ograničenja**
 
 * nije Urednik;
 * nije Organizator;
+* nije nova platformska uloga;
 * ne dodjeljuje ovlašćenja — samo predlaže;
 * ne može samostalno objaviti sadržaj;
 * pri radnji postupa isključivo u aktivnom kontekstu jednog Organizatora.
@@ -334,10 +344,10 @@ Podnesen → Odobren
 * **Odobren** — nastaje/aktivira se Organizator; predloženi korisnik dobija početno moderatorsko ovlašćenje.
 * **Odbijen** — Organizator se ne odobrava kao aktivan; predloženi korisnik ne dobija ovlašćenja; podnosilac ne dobija novu ulogu. Odbijanje ne sprečava novi zahtjev (BR-137, BM-ORG-11).
 
-**Sadržaj zahtjeva (BR-135 / BM-ORG-07)**
+**Sadržaj zahtjeva (BR-135 / BM-ORG-07 / PO-ORG-01 / PO-ORG-02)**
 
-* podaci o predloženom Organizatoru kao poslovnom entitetu;
-* podaci potrebni za identifikovanje predloženog početnog Moderatora;
+* podaci o predloženom Organizatoru (katalog V1 — vidi §6.2): naziv (obavezno); opis, kontakt e-mail, kontakt telefon, web sajt (opciono);
+* identifikacija predloženog početnog Moderatora isključivo preko `user_id` postojećeg aktivnog naloga;
 * podatak da li je predloženi Moderator sam podnosilac ili drugi registrovani korisnik.
 
 **Odnosi**
@@ -387,13 +397,14 @@ Tehnički mehanizam izbora / čuvanja konteksta nije propisan u FS — **Otvoren
 
 Urednik je isključiva administrativna uloga Uredničkog portala (BM-UR-09).
 
-U okviru TS-001 Urednik:
+U okviru TS-001 Urednik (platformska uloga `kk_admin`):
 
 * odobrava / odbija zahtjeve za kreiranje Organizatora;
 * odobrava / odbija dodjelu i uklanjanje Moderatora;
-* dodjeljuje pristup novom Moderatoru;
+* dodjeljuje pristup novom Moderatoru (ovlašćenje, ne platformska uloga);
 * ne postaje Moderator niti Organizator kroz ove tokove;
-* ne mijenja aktivnu poslovnu ulogu.
+* ne mijenja aktivnu poslovnu ulogu;
+* ostaje jedina platformska uloga Urednika (PO-ORG-04).
 
 ---
 
@@ -633,15 +644,21 @@ erDiagram
 
 **Svrha:** nosilac sadržaja.
 
-**Ključni atributi (konceptualno, izvedeni iz BM/FS)**
+**Ključni atributi (konceptualno; PO-ORG-01 / BM-ORG-13)**
 
-| Atribut / svojstvo | Obrazloženje |
-|--------------------|--------------|
-| Identitet entiteta | Jedinstvena identifikacija Organizatora u modulu |
-| Poslovni podaci entiteta | „Podaci o predloženom Organizatoru“ — tačan katalog polja nije usvojen (**Otvoreno pitanje**) |
-| Status | Aktivan / Deaktiviran (BM-ORG-12, BM-UR-10, BR-049, BR-050) |
-| Vrijeme nastanka aktivnog entiteta | Potrebno za sljedivost |
-| Veza na odobravajući zahtjev | Sljedivost prema zahtjevu |
+| Atribut / svojstvo | Obavezno | Obrazloženje |
+|--------------------|----------|--------------|
+| Identitet entiteta | Da | Jedinstvena identifikacija Organizatora u modulu |
+| Naziv | Da | Poslovni naziv Organizatora |
+| Opis | Ne | Kratki opis |
+| Kontakt e-mail | Ne | Kontakt Organizatora |
+| Kontakt telefon | Ne | Kontakt Organizatora |
+| Web sajt | Ne | URL |
+| Status | Da | Aktivan / Deaktiviran (BM-ORG-12) |
+| Sistemski datumi | Da | created_at / updated_at (i vrijeme nastanka aktivnog entiteta) |
+| Veza na odobravajući zahtjev | Da | Sljedivost prema zahtjevu |
+
+**Van V1 kataloga polja (PO-ORG-01):** PIB, matični broj, adresa, GPS, društvene mreže, logo i ostali pravni podaci — ne uvode se.
 
 **Veze / kardinalnosti**
 
@@ -663,7 +680,7 @@ erDiagram
 
 | Atribut / svojstvo | Obrazloženje |
 |--------------------|--------------|
-| Referenca na korisnika | Registrovani korisnik platforme |
+| Referenca na korisnika | Registrovani korisnik platforme — isključivo `user_id` (PO-ORG-02) |
 | Referenca na Organizatora | Konkretni Organizator |
 | Status | Aktivan / Uklonjen (i prelazna stanja kroz zahtjev) |
 | Tip nastanka | Početni (iz zahtjeva za kreiranje) / Naredni (iz zahtjeva za dodjelu) |
@@ -761,13 +778,15 @@ Functional Specification:
 
 ## 7.1 Obavezna polja / sadržaj
 
-Za **zahtjev za kreiranje Organizatora** (BR-135):
+Za **zahtjev za kreiranje Organizatora** (BR-135 / PO-ORG-01 / PO-ORG-02):
 
-* podaci o predloženom Organizatoru;
-* identifikacija predloženog početnog Moderatora;
+* naziv Organizatora (obavezno);
+* opis, kontakt e-mail, kontakt telefon, web sajt (opciono);
+* `user_id` predloženog početnog Moderatora (postojeći aktivan nalog);
 * podatak da li je predloženi Moderator podnosilac ili drugi registrovani korisnik.
 
-Tačan spisak polja podataka Organizatora (npr. naziv, opis, kontakt, pravni oblik) **nije usvojen u BM/FS** — Otvoreno pitanje.
+Zabranjeno: predlaganje Moderatora slobodnim imenom ili e-mailom bez `user_id`.
+Zabranjeno u V1: PIB, matični broj, adresa, GPS, društvene mreže, logo i ostali pravni podaci.
 
 Za **zahtjev za dodjelu Moderatora**:
 
@@ -997,35 +1016,41 @@ Ovo poglavlje navodi usvojene granice obuhvata TS-001 za V1.
 
 # 12. Otvorena pitanja
 
-Pitanja za odluku Product Ownera. Bez predloženih odgovora.
+## 12.1 Zatvoreno usvojenim PO odlukama (2026-08-07)
 
-1. Koji tačan katalog poslovnih podataka čini „podatke o predloženom Organizatoru“ u zahtjevu i na entitetu Organizatora (obavezna i opciona polja)?
-2. Na koji način se identifikuje predloženi Moderator (npr. izbor postojećeg korisnika, identifikator naloga, drugi način)?
-3. Da li zapis entiteta Organizatora nastaje tek u trenutku odobrenja, ili ranije u neaktivnom / predloženom stanju uz zahtjev?
+| # | Pitanje | Odluka |
+|---|---------|--------|
+| 1 | Katalog polja Organizatora | **PO-ORG-01** — naziv (obavezno); opis, e-mail, telefon, web (opciono); status; sistemski datumi. Bez PIB/MB/adrese/GPS/mreža/loga/pravnih podataka. |
+| 2 | Identifikacija predloženog Moderatora | **PO-ORG-02** — isključivo postojeći aktivan nalog preko `user_id`. |
+| 3 | Kada nastaje zapis Organizatora | **PO-ORG-03** — tek nakon odobrenja Urednika (atomično sa početnim Moderatorom). |
+| 15 | Platformska uloga za Moderatora | **PO-ORG-04** — nije nova platformska uloga; pristup portalu iz aktivnog ovlašćenja; `kk_admin` = jedina platformska uloga Urednika. |
+
+## 12.2 Ostaje otvoreno (nije blokator Koraka 1)
+
+Pitanja za kasnije PO odluke ili implementacioni izbor u okviru usvojenih granica. **Ne blokiraju** additive Korak 1 (zahtjev → odobrenje → Org + prvi Mod; Urednik deaktivacija; lokalni tragovi).
+
 4. Da li V1 uključuje ponovnu aktivaciju deaktiviranog Organizatora?
 5. Da li V1 uključuje arhivski status Organizatora odvojen od deaktivacije?
-6. Ko smije mijenjati koje podatke Organizatora nakon odobrenja (obim Moderatora vs Urednika; šta je „poslovno značajna izmjena“)?
+6. Ko smije mijenjati koje podatke Organizatora nakon odobrenja (obim Moderatora vs Urednika)?
 7. Da li Urednik može kreirati Organizatora bez zahtjeva registrovanog korisnika?
-8. Da li podnosilac može povući zahtjev za kreiranje Organizatora prije odluke Urednika?
+8. Da li podnosilac može povući zahtjev prije odluke Urednika?
 9. Da li Moderator može pokrenuti uklanjanje samog sebe?
-10. Šta se dešava sa otvorenim zahtjevima za Moderatore i sa aktivnim ovlašćenjima kada se Organizator deaktivira?
-11. Kako korisnik bira i mijenja aktivni kontekst Organizatora (poslovno/UX pravilo), s obzirom da FS ne propisuje tehnički mehanizam?
-12. Da li postoje tipovi / vrste Organizatora u V1, ili je jedan jedinstveni tip entiteta?
-13. Da li je dozvoljeno da isti korisnik bude predloženi početni Moderator na više istovremenih neodobrenih zahtjeva?
-14. Da li odbijeni zahtjev ostaje trajno vidljiv podnosiocu / Uredniku i u kom obimu, ili je dovoljna audit evidencija?
-15. Da li Moderatoru treba posebna platformska uloga za pristup Uredničkom portalu, ili je dovoljno samo poslovno ovlašćenje unutar Kalendara kulture?
-16. Da li treba potvrditi kao poslovno pravilo zabranu više istovremenih aktivnih ovlašćenja istog korisnika za istog Organizatora?
-17. Koji nefunkcionalni pragovi (odgovori sistema, kapacitet, retention lokalnih tragova) važe za prihvatanje V1 ove cjeline?
+10. Šta se dešava sa otvorenim zahtjevima za Moderatore i aktivnim ovlašćenjima pri deaktivaciji Organizatora?
+11. Kako korisnik bira i mijenja aktivni kontekst Organizatora (UX) — tipično uz TS-010?
+12. Tipovi / vrste Organizatora u V1?
+13. Isti korisnik kao predloženi Moderator na više istovremenih neodobrenih zahtjeva?
+14. Vidljivost odbijenog zahtjeva podnosiocu / Uredniku?
+16. Poslovna potvrda zabrane više istovremenih aktivnih ovlašćenja istog para User–Org (tehnički invariant već predviđen)?
+17. Nefunkcionalni pragovi prihvatanja V1?
 
 ---
-
 # 13. Matrica sljedivosti
 
 | Oblast | BM | FS / BR | TS |
 |--------|----|---------|-----|
-| Organizator kao poslovni entitet | BM-ORG-01–BM-ORG-12, BM-GL-06 | Platformsko pravilo; §5.6; BR-045–BR-052; BR-135–BR-137 | §1, §3, §6 |
-| Moderator ovlašćenje | BM-MOD-01–BM-MOD-15, BM-GL-07 | Platformsko pravilo; BR-047; BR-051; BR-053–BR-055; §5.8 BR-070–BR-073 | §3, §5, §6 |
-| Zahtjev za kreiranje Organizatora | BM-ORG-02, BM-ORG-07–BM-ORG-11 | BR-135–BR-137; §5.6 tok | §3, §4, §6, §7 |
+| Organizator kao poslovni entitet | BM-ORG-01–BM-ORG-13, BM-GL-06 | Platformsko pravilo; §5.6; BR-045–BR-052; BR-135–BR-137; BR-275–BR-276 | §1, §3, §6 |
+| Moderator ovlašćenje | BM-MOD-01–BM-MOD-15, BM-MOD-17–BM-MOD-18, BM-GL-07 | Platformsko pravilo; BR-047; BR-051; BR-053–BR-055; BR-275–BR-276; §5.8 BR-070–BR-073 | §3, §5, §6 |
+| Zahtjev za kreiranje Organizatora | BM-ORG-02, BM-ORG-07–BM-ORG-11 | BR-135–BR-137; BR-275; §5.6 tok | §3, §4, §6, §7 |
 | Uredničke odluke | BM-UR-01, BM-UR-05, BM-UR-08, BM-UR-09, BM-UR-10 | BR-049, BR-054, BR-071, BR-137 | §4, §5 |
 | Deaktivacija | BM-ORG-12, BM-UR-10 | BR-049, BR-050 | §3, §4, §5, §7, §8 |
 | Aktivni kontekst | BM-MOD-04 | BR-051 | §3, §5, §6 |
@@ -1036,6 +1061,10 @@ Pitanja za odluku Product Ownera. Bez predloženih odgovora.
 
 # 14. Napomene za implementaciju
 
-Funkcionalnost zahtjeva za kreiranje Organizatora i upravljanja Moderatorima usvojena je u BM/FS, ali trenutno nije implementirana.  
-TS-001 opisuje ciljni tehnički model.  
-Trenutna implementacija i odstupanja ostaju u `docs/tehnicka-dokumentacija/cultural-calendar.md` (Technical Overview).
+1. Funkcionalnost nije implementirana u kodu; TS-001 + PO-ORG-01–04 čine osnov za Fazu 2 / Korak 1.
+2. Ne uvoditi novu platformsku ulogu za Moderatora; `kk_admin` ostaje Urednik (PO-ORG-04).
+3. Ne kreirati Organizatora pri podnošenju zahtjeva (PO-ORG-03).
+4. Moderator isključivo preko `user_id` aktivnog naloga (PO-ORG-02).
+5. Katalog polja V1: PO-ORG-01 — ne širiti pravnim/geo podacima.
+6. FK Događaj → Organizator: TS-003. Pun UI Moderatorskog rada: TS-010. Centralni audit: TS-012.
+7. Trenutna implementacija i odstupanja: `docs/tehnicka-dokumentacija/cultural-calendar.md` (Technical Overview).
