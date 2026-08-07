@@ -114,6 +114,7 @@ class CulturalEventEntry extends Model
     public function isContentLocked(): bool
     {
         return $this->isPendingApproval()
+            || $this->isPublished()
             || $this->isCancelled()
             || $this->status === self::STATUS_ARCHIVED;
     }

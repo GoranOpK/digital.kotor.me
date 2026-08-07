@@ -105,6 +105,18 @@ final class EventWriter
             throw new CulturalEventDomainException('Arhiviran Događaj se ne može uređivati.');
         }
 
+        // G2 / BR-025: Objavljen = sadržajno read-only do Prijedloga izmjene.
+        // Izuzetak: isticanje (featured) ostaje urednička radnja van sadržajnog prijedloga.
+        if ($entry->isPublished()) {
+            if (array_key_exists('featured', $data) && count($data) === 1) {
+                return $this->applyFeaturedOnly($entry, $actor, (bool) $data['featured']);
+            }
+
+            throw new CulturalEventDomainException(
+                'Objavljen Događaj je sadržajno read-only; direktna izmjena nije dozvoljena.'
+            );
+        }
+
         $organizerChanging = array_key_exists('organizer_id', $data)
             && (int) $data['organizer_id'] !== (int) $entry->organizer_id;
         $categoryChanging = array_key_exists('category_id', $data)
@@ -157,6 +169,28 @@ final class EventWriter
             if (array_key_exists('tag_ids', $data) && is_array($data['tag_ids'])) {
                 $entry->tags()->sync(array_values(array_unique(array_map('intval', $data['tag_ids']))));
             }
+
+            return $entry->fresh(['organizer', 'category', 'coverMedia', 'tags', 'occurrences']);
+        });
+    }
+
+    /**
+     * Uredničko isticanje na Objavljenom (BR-117) — nije sadržajna izmjena.
+     */
+    private function applyFeaturedOnly(CulturalEventEntry $entry, User $actor, bool $featured): CulturalEventEntry
+    {
+        if ($featured && ! $entry->featured) {
+            $this->assertCanSetFeatured(
+                $entry->status,
+                $entry->id,
+                hasAktuelnoOccurrence: $entry->isAktuelan()
+            );
+        }
+
+        return DB::transaction(function () use ($entry, $actor, $featured) {
+            $entry->featured = $featured;
+            $entry->last_modified_by = $actor->id;
+            $entry->save();
 
             return $entry->fresh(['organizer', 'category', 'coverMedia', 'tags', 'occurrences']);
         });
