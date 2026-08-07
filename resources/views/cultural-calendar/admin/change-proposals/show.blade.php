@@ -80,6 +80,44 @@
         </dl>
     </div>
 
+    <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-4xl mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3">Održavanja — predložene operacije</h2>
+        @if($proposal->occurrenceOps->isEmpty())
+            <p class="text-sm text-gray-500 mb-3">Nema predloženih operacija. Kanonska održavanja ostaju nepromijenjena.</p>
+        @else
+            <ul class="text-sm space-y-2 mb-4">
+                @foreach($proposal->occurrenceOps->sortBy('id') as $op)
+                    <li>
+                        <strong>{{ $op->isAdd() ? 'Dodavanje' : 'Izmjena' }}</strong>
+                        · {{ $op->proposed_datum?->format('d.m.Y') }}
+                        @if(! $op->proposed_cjelodnevno)
+                            · {{ $op->proposed_vrijeme_od ? \Illuminate\Support\Str::substr($op->proposed_vrijeme_od, 0, 5) : '—' }}
+                            – {{ $op->proposed_vrijeme_do ? \Illuminate\Support\Str::substr($op->proposed_vrijeme_do, 0, 5) : '—' }}
+                        @else
+                            · cjelodnevno
+                        @endif
+                        · {{ $op->proposedLocation?->naziv ?? $op->proposed_location_manual_name ?? 'bez lokacije' }}
+                        @if($op->isUpdate())
+                            <span class="text-gray-500">(izvor #{{ $op->source_occurrence_id }})</span>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+        <h3 class="text-sm font-semibold text-gray-800 mb-2">Kanonska (trenutna)</h3>
+        <ul class="text-sm space-y-1 mb-0">
+            @forelse($entry->occurrences ?? [] as $occurrence)
+                <li>
+                    #{{ $occurrence->id }} · {{ $occurrence->datum?->format('d.m.Y') }}
+                    · {{ $occurrence->location?->naziv ?? $occurrence->location_manual_name ?? 'bez lokacije' }}
+                    · {{ $occurrence->statusLabel() }}
+                </li>
+            @empty
+                <li class="text-gray-500">Nema održavanja.</li>
+            @endforelse
+        </ul>
+    </div>
+
     @if($proposal->isPendingReview())
         <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-4xl space-y-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-0">Uredničke akcije</h2>

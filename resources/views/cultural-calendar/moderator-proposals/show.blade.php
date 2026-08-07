@@ -64,6 +64,26 @@
         </dl>
     </div>
 
+    <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-3">Predložene izmjene održavanja</h2>
+        @if($proposal->occurrenceOps->isEmpty())
+            <p class="text-sm text-gray-500 mb-0">Nema predloženih operacija nad održavanjima.</p>
+        @else
+            <ul class="text-sm space-y-2 mb-0">
+                @foreach($proposal->occurrenceOps->sortBy('id') as $op)
+                    <li>
+                        <strong>{{ $op->isAdd() ? 'Dodavanje' : 'Izmjena' }}</strong>
+                        · {{ $op->proposed_datum?->format('d.m.Y') }}
+                        · {{ $op->proposedLocation?->naziv ?? $op->proposed_location_manual_name ?? 'bez lokacije' }}
+                        @if($op->isUpdate() && $op->sourceOccurrence)
+                            <span class="text-gray-500">(kanonski #{{ $op->source_occurrence_id }})</span>
+                        @endif
+                    </li>
+                @endforeach
+            </ul>
+        @endif
+    </div>
+
     @if($proposal->canBeWithdrawn())
         <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl">
             <h2 class="text-lg font-semibold text-gray-900 mb-3">Akcije</h2>

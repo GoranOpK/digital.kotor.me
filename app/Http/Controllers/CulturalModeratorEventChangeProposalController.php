@@ -3,11 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Http\Requests\CulturalEventChangeProposalOccurrenceRequest;
 use App\Http\Requests\CulturalEventChangeProposalUpdateRequest;
 use App\Models\CulturalCategory;
 use App\Models\CulturalEventChangeProposal;
+use App\Models\CulturalEventChangeProposalOccurrence;
 use App\Models\CulturalEventEntry;
+use App\Models\CulturalLocation;
 use App\Models\CulturalMedia;
+use App\Models\CulturalOccurrence;
 use App\Models\CulturalTag;
 use App\Models\User;
 use App\Services\CulturalEventDomain\EventChangeProposalLifecycle;
@@ -17,7 +21,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 /**
- * TS-010.3a — Moderator tok prijedloga izmjene objavljenog Događaja.
+ * TS-010.3a/3b — Moderator tok prijedloga izmjene objavljenog Događaja.
  */
 class CulturalModeratorEventChangeProposalController extends Controller
 {
@@ -53,10 +57,13 @@ class CulturalModeratorEventChangeProposalController extends Controller
             'eventEntry.category',
             'eventEntry.coverMedia',
             'eventEntry.tags',
+            'eventEntry.occurrences.location',
             'proposedCategory',
             'proposedCoverMedia',
             'tags',
             'organizer',
+            'occurrenceOps.proposedLocation',
+            'occurrenceOps.sourceOccurrence.location',
         ]);
 
         if ($prijedlog->isDraft()) {
@@ -105,6 +112,94 @@ class CulturalModeratorEventChangeProposalController extends Controller
             ->with('status', 'Prijedlog je ažuriran.');
     }
 
+    public function storeOccurrence(
+        CulturalEventChangeProposalOccurrenceRequest $request,
+        CulturalEventChangeProposal $prijedlog,
+    ): RedirectResponse {
+        $this->assertModeratorCanAccessProposal($request->user(), $prijedlog);
+
+        try {
+            $this->writer->addOccurrenceOp($prijedlog, $request->user(), $request->domainPayload());
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['occurrence' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-moderator-proposals.edit', $prijedlog)
+            ->with('status', 'Predloženo dodavanje Održavanja je sačuvano.');
+    }
+
+    public function updateCanonicalOccurrence(
+        CulturalEventChangeProposalOccurrenceRequest $request,
+        CulturalEventChangeProposal $prijedlog,
+        CulturalOccurrence $odrzavanje,
+    ): RedirectResponse {
+        $this->assertModeratorCanAccessProposal($request->user(), $prijedlog);
+
+        try {
+            $this->writer->upsertOccurrenceUpdateOp(
+                $prijedlog,
+                $request->user(),
+                $odrzavanje,
+                $request->domainPayload()
+            );
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['occurrence' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-moderator-proposals.edit', $prijedlog)
+            ->with('status', 'Predložena izmjena Održavanja je sačuvana.');
+    }
+
+    public function updateOccurrenceOp(
+        CulturalEventChangeProposalOccurrenceRequest $request,
+        CulturalEventChangeProposal $prijedlog,
+        CulturalEventChangeProposalOccurrence $operacija,
+    ): RedirectResponse {
+        $this->assertModeratorCanAccessProposal($request->user(), $prijedlog);
+        $this->assertOccurrenceOpBelongs($prijedlog, $operacija);
+
+        try {
+            $this->writer->updateOccurrenceOp($operacija, $request->user(), $request->domainPayload());
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['occurrence' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-moderator-proposals.edit', $prijedlog)
+            ->with('status', 'Operacija Održavanja je ažurirana.');
+    }
+
+    public function destroyOccurrenceOp(
+        CulturalEventChangeProposal $prijedlog,
+        CulturalEventChangeProposalOccurrence $operacija,
+    ): RedirectResponse {
+        $this->assertModeratorCanAccessProposal(auth()->user(), $prijedlog);
+        $this->assertOccurrenceOpBelongs($prijedlog, $operacija);
+
+        try {
+            $this->writer->removeOccurrenceOp($operacija, auth()->user());
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['occurrence' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-moderator-proposals.edit', $prijedlog)
+            ->with('status', 'Operacija Održavanja je uklonjena iz prijedloga.');
+    }
+
     public function submit(CulturalEventChangeProposal $prijedlog): RedirectResponse
     {
         $this->assertModeratorCanAccessProposal(auth()->user(), $prijedlog);
@@ -151,6 +246,13 @@ class CulturalModeratorEventChangeProposalController extends Controller
         CulturalModeratorEventAccess::assertCanAccessEntry($user, $proposal->eventEntry);
     }
 
+    private function assertOccurrenceOpBelongs(
+        CulturalEventChangeProposal $proposal,
+        CulturalEventChangeProposalOccurrence $op,
+    ): void {
+        abort_unless((int) $op->proposal_id === (int) $proposal->id, 404);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -171,6 +273,11 @@ class CulturalModeratorEventChangeProposalController extends Controller
             ->orderBy('naziv')
             ->orderBy('id')
             ->get();
+        $locations = CulturalLocation::query()
+            ->active()
+            ->orderBy('naziv')
+            ->orderBy('id')
+            ->get();
 
         if ($proposal->proposedCategory && ! $categories->contains('id', $proposal->proposed_category_id)) {
             $categories = $categories->prepend($proposal->proposedCategory)->unique('id')->values();
@@ -183,7 +290,12 @@ class CulturalModeratorEventChangeProposalController extends Controller
                 $tags = $tags->prepend($tag)->unique('id')->values();
             }
         }
+        foreach ($proposal->occurrenceOps as $op) {
+            if ($op->proposedLocation && ! $locations->contains('id', $op->proposed_location_id)) {
+                $locations = $locations->prepend($op->proposedLocation)->unique('id')->values();
+            }
+        }
 
-        return compact('categories', 'mediaItems', 'tags');
+        return compact('categories', 'mediaItems', 'tags', 'locations');
     }
 }

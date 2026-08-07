@@ -11,12 +11,13 @@ use App\Support\CulturalPortalAccess;
 use Illuminate\Support\Facades\DB;
 
 /**
- * TS-010.3a — lifecycle prijedloga izmjene (submit / withdraw / review / return / G-W02).
+ * TS-010.3a/3b — lifecycle prijedloga izmjene (submit / withdraw / review / return / G-W02).
  */
 final class EventChangeProposalLifecycle
 {
     public function __construct(
         private readonly EventCatalogGuard $catalogGuard,
+        private readonly OccurrenceWriter $occurrenceWriter,
     ) {}
 
     public function submit(CulturalEventChangeProposal $proposal, User $actor): CulturalEventChangeProposal
@@ -252,6 +253,7 @@ final class EventChangeProposalLifecycle
     public function assertReadyForSubmitOrApprove(
         CulturalEventChangeProposal $proposal,
         CulturalEventEntry $entry,
+        bool $withOccurrenceOps = true,
     ): void {
         $naslov = trim((string) $proposal->proposed_naslov);
         if ($naslov === '') {
@@ -274,8 +276,50 @@ final class EventChangeProposalLifecycle
             $this->catalogGuard->assertOrganizerAllowedForNewLink((int) $entry->organizer_id);
         }
 
-        // TS-010.3a: Održavanja ostaju kanonska — gate na ≥1 kanonsko održavanje.
-        if ($entry->occurrences()->count() < 1) {
+        if ($withOccurrenceOps) {
+            $this->assertOccurrenceOpsReady($proposal, $entry);
+        }
+    }
+
+    public function assertOccurrenceOpsReady(
+        CulturalEventChangeProposal $proposal,
+        CulturalEventEntry $entry,
+    ): void {
+        $proposal->loadMissing('occurrenceOps.sourceOccurrence');
+
+        $canonicalCount = $entry->occurrences()->count();
+        $addCount = 0;
+
+        foreach ($proposal->occurrenceOps as $op) {
+            if ($op->isAdd()) {
+                $this->occurrenceWriter->normalizeAndValidate($op->toOccurrencePayload());
+                $addCount++;
+
+                continue;
+            }
+
+            if ($op->isUpdate()) {
+                $source = $op->sourceOccurrence;
+                if ($source === null || (int) $source->event_entry_id !== (int) $entry->id) {
+                    throw new CulturalEventDomainException(
+                        'Predložena izmjena Održavanja ne pripada Događaju.'
+                    );
+                }
+
+                $payload = $op->toOccurrencePayload();
+                $locationChanging = (int) ($payload['location_id'] ?? 0) !== (int) $source->location_id;
+                $this->occurrenceWriter->normalizeAndValidate(
+                    $payload,
+                    validateNewLocation: $locationChanging
+                );
+
+                continue;
+            }
+
+            throw new CulturalEventDomainException('Nepoznata operacija Održavanja u prijedlogu.');
+        }
+
+        if (($canonicalCount + $addCount) < 1) {
             throw new CulturalEventDomainException(
                 'Za slanje/odobrenje prijedloga Događaj mora imati najmanje jedno Održavanje.'
             );

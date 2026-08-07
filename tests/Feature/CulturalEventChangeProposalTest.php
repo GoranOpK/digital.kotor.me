@@ -28,7 +28,8 @@ use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
- * TS-010.3a — Prijedlog izmjene objavljenog Događaja (sadržaj + workflow; bez Održavanja).
+ * TS-010.3a — Prijedlog izmjene objavljenog Događaja (sadržaj + workflow).
+ * Occurrence ops: CulturalEventChangeProposalOccurrenceTest (TS-010.3b).
  */
 class CulturalEventChangeProposalTest extends TestCase
 {

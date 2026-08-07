@@ -6,9 +6,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * TS-010.3a — Prijedlog izmjene objavljenog Događaja (N-DG-04).
+ * TS-010.3a/3b — Prijedlog izmjene objavljenog Događaja (+ Održavanja podaci).
  */
 class CulturalEventChangeProposal extends Model
 {
@@ -166,6 +167,11 @@ class CulturalEventChangeProposal extends Model
             'proposal_id',
             'cultural_tag_id'
         )->withTimestamps();
+    }
+
+    public function occurrenceOps(): HasMany
+    {
+        return $this->hasMany(CulturalEventChangeProposalOccurrence::class, 'proposal_id');
     }
 
     public function scopeActive(Builder $query): Builder

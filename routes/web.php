@@ -170,6 +170,16 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-moderator-proposals.submit');
         Route::post('/kalendar-kulture/moderatorski-prijedlozi/{prijedlog}/withdraw', [CulturalModeratorEventChangeProposalController::class, 'withdraw'])
             ->name('cultural-moderator-proposals.withdraw');
+
+        // TS-010.3b — Occurrence ops na prijedlogu (Moderator)
+        Route::post('/kalendar-kulture/moderatorski-prijedlozi/{prijedlog}/odrzavanja', [CulturalModeratorEventChangeProposalController::class, 'storeOccurrence'])
+            ->name('cultural-moderator-proposals.occurrences.store');
+        Route::put('/kalendar-kulture/moderatorski-prijedlozi/{prijedlog}/odrzavanja-kanonski/{odrzavanje}', [CulturalModeratorEventChangeProposalController::class, 'updateCanonicalOccurrence'])
+            ->name('cultural-moderator-proposals.occurrences.update-canonical');
+        Route::put('/kalendar-kulture/moderatorski-prijedlozi/{prijedlog}/odrzavanja/{operacija}', [CulturalModeratorEventChangeProposalController::class, 'updateOccurrenceOp'])
+            ->name('cultural-moderator-proposals.occurrences.update');
+        Route::delete('/kalendar-kulture/moderatorski-prijedlozi/{prijedlog}/odrzavanja/{operacija}', [CulturalModeratorEventChangeProposalController::class, 'destroyOccurrenceOp'])
+            ->name('cultural-moderator-proposals.occurrences.destroy');
     });
 
     // Administracija događaja i kataloga lokacija (samo KK administrator / Urednik)
@@ -193,6 +203,16 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-event-change-proposals.approve');
         Route::post('/kalendar-kulture/prijedlozi-izmjene/{prijedlog}/return', [CulturalEventChangeProposalController::class, 'returnToDraft'])
             ->name('cultural-event-change-proposals.return');
+
+        // TS-010.3b — Occurrence ops na prijedlogu (Urednik)
+        Route::post('/kalendar-kulture/prijedlozi-izmjene/{prijedlog}/odrzavanja', [CulturalEventChangeProposalController::class, 'storeOccurrence'])
+            ->name('cultural-event-change-proposals.occurrences.store');
+        Route::put('/kalendar-kulture/prijedlozi-izmjene/{prijedlog}/odrzavanja-kanonski/{odrzavanje}', [CulturalEventChangeProposalController::class, 'updateCanonicalOccurrence'])
+            ->name('cultural-event-change-proposals.occurrences.update-canonical');
+        Route::put('/kalendar-kulture/prijedlozi-izmjene/{prijedlog}/odrzavanja/{operacija}', [CulturalEventChangeProposalController::class, 'updateOccurrenceOp'])
+            ->name('cultural-event-change-proposals.occurrences.update');
+        Route::delete('/kalendar-kulture/prijedlozi-izmjene/{prijedlog}/odrzavanja/{operacija}', [CulturalEventChangeProposalController::class, 'destroyOccurrenceOp'])
+            ->name('cultural-event-change-proposals.occurrences.destroy');
 
         Route::resource('/kalendar-kulture/dogadjaji', CulturalEventController::class)
             ->except(['show'])

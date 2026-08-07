@@ -4,19 +4,22 @@ namespace App\Services\CulturalEventDomain;
 
 use App\Exceptions\CulturalEventDomainException;
 use App\Models\CulturalEventChangeProposal;
+use App\Models\CulturalEventChangeProposalOccurrence;
 use App\Models\CulturalEventEntry;
+use App\Models\CulturalOccurrence;
 use App\Models\User;
 use App\Support\CulturalModeratorEventAccess;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 /**
- * TS-010.3a — kreiranje / ažuriranje sadržaja prijedloga izmjene.
+ * TS-010.3a/3b — kreiranje / ažuriranje sadržaja prijedloga (+ occurrence ops).
  */
 final class EventChangeProposalWriter
 {
     public function __construct(
         private readonly EventCatalogGuard $catalogGuard,
+        private readonly OccurrenceWriter $occurrenceWriter,
     ) {}
 
     public function createFromPublished(CulturalEventEntry $entry, User $actor): CulturalEventChangeProposal
@@ -90,7 +93,7 @@ final class EventChangeProposalWriter
                     $proposal->tags()->sync($tagIds);
                 }
 
-                return $proposal->fresh(['tags', 'proposedCategory', 'proposedCoverMedia', 'eventEntry']);
+                return $proposal->fresh(['tags', 'proposedCategory', 'proposedCoverMedia', 'eventEntry', 'occurrenceOps']);
             });
         } catch (QueryException $e) {
             if ($this->isUniqueActiveViolation($e)) {
@@ -176,8 +179,272 @@ final class EventChangeProposalWriter
                 $proposal->tags()->sync(array_values(array_unique(array_map('intval', $data['tag_ids']))));
             }
 
-            return $proposal->fresh(['tags', 'proposedCategory', 'proposedCoverMedia', 'eventEntry']);
+            return $proposal->fresh(['tags', 'proposedCategory', 'proposedCoverMedia', 'eventEntry', 'occurrenceOps']);
         });
+    }
+
+    /**
+     * @param  array{
+     *     datum: string|\DateTimeInterface,
+     *     vrijeme_od?: ?string,
+     *     vrijeme_do?: ?string,
+     *     cjelodnevno?: bool,
+     *     location_id?: ?int,
+     *     location_manual_name?: ?string
+     * }  $data
+     */
+    public function addOccurrenceOp(
+        CulturalEventChangeProposal $proposal,
+        User $actor,
+        array $data,
+        bool $asEditor = false,
+    ): CulturalEventChangeProposalOccurrence {
+        $this->assertCanEditProposalContent($proposal, $actor, $asEditor);
+
+        $normalized = $this->occurrenceWriter->normalizeAndValidate($data);
+
+        return DB::transaction(function () use ($proposal, $actor, $normalized, $asEditor) {
+            /** @var CulturalEventChangeProposal $locked */
+            $locked = CulturalEventChangeProposal::query()
+                ->whereKey($proposal->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->assertCanEditProposalContent($locked, $actor, $asEditor);
+
+            $op = CulturalEventChangeProposalOccurrence::create([
+                'proposal_id' => $locked->id,
+                'operation' => CulturalEventChangeProposalOccurrence::OPERATION_ADD,
+                'source_occurrence_id' => null,
+                'proposed_datum' => $normalized['datum'],
+                'proposed_vrijeme_od' => $normalized['vrijeme_od'],
+                'proposed_vrijeme_do' => $normalized['vrijeme_do'],
+                'proposed_cjelodnevno' => $normalized['cjelodnevno'],
+                'proposed_location_id' => $normalized['location_id'],
+                'proposed_location_manual_name' => $normalized['location_manual_name'],
+            ]);
+
+            $locked->last_modified_by = $actor->id;
+            $locked->save();
+
+            return $op->fresh(['proposedLocation', 'sourceOccurrence']);
+        });
+    }
+
+    /**
+     * @param  array{
+     *     datum: string|\DateTimeInterface,
+     *     vrijeme_od?: ?string,
+     *     vrijeme_do?: ?string,
+     *     cjelodnevno?: bool,
+     *     location_id?: ?int,
+     *     location_manual_name?: ?string
+     * }  $data
+     */
+    public function upsertOccurrenceUpdateOp(
+        CulturalEventChangeProposal $proposal,
+        User $actor,
+        CulturalOccurrence $source,
+        array $data,
+        bool $asEditor = false,
+    ): CulturalEventChangeProposalOccurrence {
+        $this->assertCanEditProposalContent($proposal, $actor, $asEditor);
+
+        $entry = $proposal->eventEntry;
+        if ($entry === null || (int) $source->event_entry_id !== (int) $entry->id) {
+            throw new CulturalEventDomainException(
+                'Održavanje ne pripada Događaju ovog prijedloga.'
+            );
+        }
+
+        $locationChanging = array_key_exists('location_id', $data)
+            && (int) ($data['location_id'] ?? 0) !== (int) $source->location_id;
+        $normalized = $this->occurrenceWriter->normalizeAndValidate($data, validateNewLocation: $locationChanging);
+
+        return DB::transaction(function () use ($proposal, $actor, $source, $normalized, $asEditor) {
+            /** @var CulturalEventChangeProposal $locked */
+            $locked = CulturalEventChangeProposal::query()
+                ->whereKey($proposal->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->assertCanEditProposalContent($locked, $actor, $asEditor);
+
+            $entry = CulturalEventEntry::query()
+                ->whereKey($locked->event_entry_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ((int) $source->event_entry_id !== (int) $entry->id) {
+                throw new CulturalEventDomainException(
+                    'Održavanje ne pripada Događaju ovog prijedloga.'
+                );
+            }
+
+            /** @var CulturalEventChangeProposalOccurrence|null $existing */
+            $existing = CulturalEventChangeProposalOccurrence::query()
+                ->where('proposal_id', $locked->id)
+                ->where('source_occurrence_id', $source->id)
+                ->where('operation', CulturalEventChangeProposalOccurrence::OPERATION_UPDATE)
+                ->lockForUpdate()
+                ->first();
+
+            $attrs = [
+                'operation' => CulturalEventChangeProposalOccurrence::OPERATION_UPDATE,
+                'source_occurrence_id' => $source->id,
+                'proposed_datum' => $normalized['datum'],
+                'proposed_vrijeme_od' => $normalized['vrijeme_od'],
+                'proposed_vrijeme_do' => $normalized['vrijeme_do'],
+                'proposed_cjelodnevno' => $normalized['cjelodnevno'],
+                'proposed_location_id' => $normalized['location_id'],
+                'proposed_location_manual_name' => $normalized['location_manual_name'],
+            ];
+
+            if ($existing !== null) {
+                $existing->fill($attrs);
+                $existing->save();
+                $op = $existing;
+            } else {
+                $op = CulturalEventChangeProposalOccurrence::create(array_merge(
+                    ['proposal_id' => $locked->id],
+                    $attrs
+                ));
+            }
+
+            $locked->last_modified_by = $actor->id;
+            $locked->save();
+
+            return $op->fresh(['proposedLocation', 'sourceOccurrence']);
+        });
+    }
+
+    /**
+     * @param  array{
+     *     datum: string|\DateTimeInterface,
+     *     vrijeme_od?: ?string,
+     *     vrijeme_do?: ?string,
+     *     cjelodnevno?: bool,
+     *     location_id?: ?int,
+     *     location_manual_name?: ?string
+     * }  $data
+     */
+    public function updateOccurrenceOp(
+        CulturalEventChangeProposalOccurrence $op,
+        User $actor,
+        array $data,
+        bool $asEditor = false,
+    ): CulturalEventChangeProposalOccurrence {
+        $op->loadMissing('proposal.eventEntry', 'sourceOccurrence');
+        $proposal = $op->proposal;
+        if ($proposal === null) {
+            throw new CulturalEventDomainException('Operacija nema prijedlog.');
+        }
+
+        $this->assertCanEditProposalContent($proposal, $actor, $asEditor);
+
+        $source = $op->sourceOccurrence;
+        $validateNewLocation = true;
+        if ($op->isUpdate() && $source !== null) {
+            $validateNewLocation = array_key_exists('location_id', $data)
+                && (int) ($data['location_id'] ?? 0) !== (int) $source->location_id;
+        }
+
+        $normalized = $this->occurrenceWriter->normalizeAndValidate($data, validateNewLocation: $validateNewLocation);
+
+        return DB::transaction(function () use ($op, $actor, $normalized, $asEditor) {
+            /** @var CulturalEventChangeProposalOccurrence $lockedOp */
+            $lockedOp = CulturalEventChangeProposalOccurrence::query()
+                ->whereKey($op->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            /** @var CulturalEventChangeProposal $locked */
+            $locked = CulturalEventChangeProposal::query()
+                ->whereKey($lockedOp->proposal_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->assertCanEditProposalContent($locked, $actor, $asEditor);
+
+            $lockedOp->fill([
+                'proposed_datum' => $normalized['datum'],
+                'proposed_vrijeme_od' => $normalized['vrijeme_od'],
+                'proposed_vrijeme_do' => $normalized['vrijeme_do'],
+                'proposed_cjelodnevno' => $normalized['cjelodnevno'],
+                'proposed_location_id' => $normalized['location_id'],
+                'proposed_location_manual_name' => $normalized['location_manual_name'],
+            ]);
+            $lockedOp->save();
+
+            $locked->last_modified_by = $actor->id;
+            $locked->save();
+
+            return $lockedOp->fresh(['proposedLocation', 'sourceOccurrence']);
+        });
+    }
+
+    public function removeOccurrenceOp(
+        CulturalEventChangeProposalOccurrence $op,
+        User $actor,
+        bool $asEditor = false,
+    ): void {
+        $op->loadMissing('proposal.eventEntry');
+        $proposal = $op->proposal;
+        if ($proposal === null) {
+            throw new CulturalEventDomainException('Operacija nema prijedlog.');
+        }
+
+        $this->assertCanEditProposalContent($proposal, $actor, $asEditor);
+
+        DB::transaction(function () use ($op, $actor, $asEditor) {
+            /** @var CulturalEventChangeProposalOccurrence $lockedOp */
+            $lockedOp = CulturalEventChangeProposalOccurrence::query()
+                ->whereKey($op->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            /** @var CulturalEventChangeProposal $locked */
+            $locked = CulturalEventChangeProposal::query()
+                ->whereKey($lockedOp->proposal_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->assertCanEditProposalContent($locked, $actor, $asEditor);
+
+            $lockedOp->delete();
+
+            $locked->last_modified_by = $actor->id;
+            $locked->save();
+        });
+    }
+
+    private function assertCanEditProposalContent(
+        CulturalEventChangeProposal $proposal,
+        User $actor,
+        bool $asEditor,
+    ): void {
+        $proposal->refresh();
+
+        if ($proposal->isInoperable() || $proposal->isApproved()) {
+            throw new CulturalEventDomainException(
+                'Prijedlog više nije operativan za uređivanje.'
+            );
+        }
+
+        if ($asEditor) {
+            if (! $proposal->isPendingReview() || $proposal->review_started_at === null) {
+                throw new CulturalEventDomainException(
+                    'Urednik može uređivati prijedlog tek nakon početka pregleda.'
+                );
+            }
+        } else {
+            if (! $proposal->isDraft()) {
+                throw new CulturalEventDomainException(
+                    'Moderator može uređivati samo nacrt prijedloga.'
+                );
+            }
+            CulturalModeratorEventAccess::assertCanAccessEntry($actor, $proposal->eventEntry);
+        }
     }
 
     private function isUniqueActiveViolation(QueryException $e): bool

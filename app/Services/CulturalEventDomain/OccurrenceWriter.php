@@ -31,6 +31,12 @@ final class OccurrenceWriter
             );
         }
 
+        if ($entry->isPublished()) {
+            throw new CulturalEventDomainException(
+                'Na objavljenom Događaju Održavanje se dodaje isključivo kroz prijedlog izmjene.'
+            );
+        }
+
         if ($entry->isCancelled() || $entry->status === CulturalEventEntry::STATUS_ARCHIVED) {
             throw new CulturalEventDomainException(
                 'Održavanje se ne može dodati na otkazan ili arhiviran Događaj.'
@@ -67,6 +73,12 @@ final class OccurrenceWriter
         if ($entry !== null && $entry->isPendingApproval()) {
             throw new CulturalEventDomainException(
                 'Događaj na odobrenju je zaključan; Održavanje se ne može mijenjati.'
+            );
+        }
+
+        if ($entry !== null && $entry->isPublished()) {
+            throw new CulturalEventDomainException(
+                'Na objavljenom Događaju podaci Održavanja se mijenjaju isključivo kroz prijedlog izmjene.'
             );
         }
 
@@ -127,6 +139,83 @@ final class OccurrenceWriter
         }
 
         $occurrence->delete();
+    }
+
+    /**
+     * TS-010.3b — primjena add iz odobrenog prijedloga (Preskače Published lock).
+     *
+     * @param  array{
+     *     datum: string|\DateTimeInterface,
+     *     vrijeme_od?: ?string,
+     *     vrijeme_do?: ?string,
+     *     cjelodnevno?: bool,
+     *     location_id?: ?int,
+     *     location_manual_name?: ?string
+     * }  $data
+     */
+    public function applyCreateFromApprovedProposal(CulturalEventEntry $entry, array $data): CulturalOccurrence
+    {
+        if ($entry->isCancelled() || $entry->status === CulturalEventEntry::STATUS_ARCHIVED) {
+            throw new CulturalEventDomainException(
+                'Održavanje se ne može dodati na otkazan ili arhiviran Događaj.'
+            );
+        }
+
+        $normalized = $this->normalizeAndValidate($data);
+
+        return CulturalOccurrence::create([
+            'event_entry_id' => $entry->id,
+            'datum' => $normalized['datum'],
+            'vrijeme_od' => $normalized['vrijeme_od'],
+            'vrijeme_do' => $normalized['vrijeme_do'],
+            'cjelodnevno' => $normalized['cjelodnevno'],
+            'status' => CulturalOccurrence::STATUS_PLANNED,
+            'location_id' => $normalized['location_id'],
+            'location_manual_name' => $normalized['location_manual_name'],
+        ]);
+    }
+
+    /**
+     * TS-010.3b — primjena update podataka iz odobrenog prijedloga (status ostaje; Preskače Published lock).
+     *
+     * @param  array{
+     *     datum?: string|\DateTimeInterface,
+     *     vrijeme_od?: ?string,
+     *     vrijeme_do?: ?string,
+     *     cjelodnevno?: bool,
+     *     location_id?: ?int,
+     *     location_manual_name?: ?string
+     * }  $data
+     */
+    public function applyUpdateFromApprovedProposal(CulturalOccurrence $occurrence, array $data): CulturalOccurrence
+    {
+        $entry = $occurrence->eventEntry;
+        if ($entry !== null && $entry->isCancelled()) {
+            throw new CulturalEventDomainException(
+                'Otkazan Događaj je istorijski zapis; Održavanje se ne može mijenjati.'
+            );
+        }
+
+        $merged = [
+            'datum' => $data['datum'] ?? $occurrence->datum,
+            'vrijeme_od' => array_key_exists('vrijeme_od', $data) ? $data['vrijeme_od'] : $occurrence->vrijeme_od,
+            'vrijeme_do' => array_key_exists('vrijeme_do', $data) ? $data['vrijeme_do'] : $occurrence->vrijeme_do,
+            'cjelodnevno' => array_key_exists('cjelodnevno', $data) ? (bool) $data['cjelodnevno'] : $occurrence->cjelodnevno,
+            'location_id' => array_key_exists('location_id', $data) ? $data['location_id'] : $occurrence->location_id,
+            'location_manual_name' => array_key_exists('location_manual_name', $data)
+                ? $data['location_manual_name']
+                : $occurrence->location_manual_name,
+        ];
+
+        $locationChanging = array_key_exists('location_id', $data)
+            && (int) ($data['location_id'] ?? 0) !== (int) $occurrence->location_id;
+
+        $normalized = $this->normalizeAndValidate($merged, validateNewLocation: $locationChanging);
+
+        $occurrence->fill($normalized);
+        $occurrence->save();
+
+        return $occurrence->fresh(['location', 'eventEntry']);
     }
 
     /**

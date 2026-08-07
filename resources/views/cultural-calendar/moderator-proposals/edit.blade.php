@@ -104,5 +104,167 @@
             </div>
         </form>
     </div>
+
+    <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl mt-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-2">Održavanja (podaci)</h2>
+        <p class="text-sm text-gray-600 mb-4">
+            Izmjene datuma, vremena i lokacije idu kroz ovaj prijedlog. Status (Planiran / Odgođen / Otkazan) ostaje van prijedloga.
+        </p>
+
+        <h3 class="text-sm font-semibold text-gray-800 mb-2">Kanonska održavanja</h3>
+        <div class="space-y-4 mb-6">
+            @forelse($entry->occurrences as $occurrence)
+                @php
+                    $updateOp = $proposal->occurrenceOps->first(
+                        fn ($op) => $op->isUpdate() && (int) $op->source_occurrence_id === (int) $occurrence->id
+                    );
+                @endphp
+                <div class="border border-gray-200 rounded-md p-3">
+                    <p class="text-xs text-gray-500 mb-2">
+                        Kanonski: {{ $occurrence->datum?->format('d.m.Y') }}
+                        · {{ $occurrence->location?->naziv ?? $occurrence->location_manual_name ?? 'bez lokacije' }}
+                        · {{ $occurrence->statusLabel() }}
+                    </p>
+                    <form method="POST" action="{{ route('cultural-moderator-proposals.occurrences.update-canonical', [$proposal, $occurrence]) }}" class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        @csrf
+                        @method('PUT')
+                        @php
+                            $datum = old('datum', $updateOp?->proposed_datum?->format('Y-m-d') ?? $occurrence->datum?->format('Y-m-d'));
+                            $vrijemeOd = old('vrijeme_od', $updateOp ? ($updateOp->proposed_vrijeme_od ? \Illuminate\Support\Str::substr($updateOp->proposed_vrijeme_od, 0, 5) : '') : ($occurrence->vrijeme_od ? \Illuminate\Support\Str::substr($occurrence->vrijeme_od, 0, 5) : ''));
+                            $vrijemeDo = old('vrijeme_do', $updateOp ? ($updateOp->proposed_vrijeme_do ? \Illuminate\Support\Str::substr($updateOp->proposed_vrijeme_do, 0, 5) : '') : ($occurrence->vrijeme_do ? \Illuminate\Support\Str::substr($occurrence->vrijeme_do, 0, 5) : ''));
+                            $cjelodnevno = old('cjelodnevno', $updateOp?->proposed_cjelodnevno ?? $occurrence->cjelodnevno);
+                            $locationId = old('location_id', $updateOp?->proposed_location_id ?? $occurrence->location_id);
+                            $manual = old('location_manual_name', $updateOp?->proposed_location_manual_name ?? $occurrence->location_manual_name);
+                        @endphp
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Datum</label>
+                            <input type="date" name="datum" value="{{ $datum }}" required class="w-full rounded-md border-gray-300 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Vrijeme od</label>
+                            <input type="time" name="vrijeme_od" value="{{ $vrijemeOd }}" class="w-full rounded-md border-gray-300 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Vrijeme do</label>
+                            <input type="time" name="vrijeme_do" value="{{ $vrijemeDo }}" class="w-full rounded-md border-gray-300 text-sm">
+                        </div>
+                        <div class="md:col-span-3 flex items-center gap-2">
+                            <input type="checkbox" name="cjelodnevno" value="1" @checked($cjelodnevno) class="rounded border-gray-300">
+                            <span class="text-sm text-gray-700">Cjelodnevno</span>
+                            @if($updateOp)
+                                <span class="text-xs text-amber-700 ml-2">Predložena izmjena aktivna</span>
+                            @endif
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Lokacija</label>
+                            <select name="location_id" class="w-full rounded-md border-gray-300 text-sm">
+                                <option value="">—</option>
+                                @foreach($locations as $location)
+                                    <option value="{{ $location->id }}" @selected((string) $locationId === (string) $location->id)>{{ $location->naziv }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Ručni naziv lokacije</label>
+                            <input type="text" name="location_manual_name" value="{{ $manual }}" class="w-full rounded-md border-gray-300 text-sm">
+                        </div>
+                        <div class="flex items-end">
+                            <button type="submit" class="px-3 py-1.5 border border-gray-300 rounded-md text-sm">Sačuvaj predloženu izmjenu</button>
+                        </div>
+                    </form>
+                </div>
+            @empty
+                <p class="text-sm text-gray-500">Nema kanonskih održavanja.</p>
+            @endforelse
+        </div>
+
+        <h3 class="text-sm font-semibold text-gray-800 mb-2">Predložena nova održavanja</h3>
+        <div class="space-y-3 mb-6">
+            @forelse($proposal->occurrenceOps->where('operation', 'add') as $op)
+                <div class="border border-dashed border-gray-300 rounded-md p-3">
+                    <form method="POST" action="{{ route('cultural-moderator-proposals.occurrences.update', [$proposal, $op]) }}" class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        @csrf
+                        @method('PUT')
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Datum</label>
+                            <input type="date" name="datum" value="{{ old('datum', $op->proposed_datum?->format('Y-m-d')) }}" required class="w-full rounded-md border-gray-300 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Vrijeme od</label>
+                            <input type="time" name="vrijeme_od" value="{{ old('vrijeme_od', $op->proposed_vrijeme_od ? \Illuminate\Support\Str::substr($op->proposed_vrijeme_od, 0, 5) : '') }}" class="w-full rounded-md border-gray-300 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Vrijeme do</label>
+                            <input type="time" name="vrijeme_do" value="{{ old('vrijeme_do', $op->proposed_vrijeme_do ? \Illuminate\Support\Str::substr($op->proposed_vrijeme_do, 0, 5) : '') }}" class="w-full rounded-md border-gray-300 text-sm">
+                        </div>
+                        <div class="md:col-span-3 flex items-center gap-2">
+                            <input type="checkbox" name="cjelodnevno" value="1" @checked(old('cjelodnevno', $op->proposed_cjelodnevno)) class="rounded border-gray-300">
+                            <span class="text-sm text-gray-700">Cjelodnevno</span>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Lokacija</label>
+                            <select name="location_id" class="w-full rounded-md border-gray-300 text-sm">
+                                <option value="">—</option>
+                                @foreach($locations as $location)
+                                    <option value="{{ $location->id }}" @selected((string) old('location_id', $op->proposed_location_id) === (string) $location->id)>{{ $location->naziv }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">Ručni naziv lokacije</label>
+                            <input type="text" name="location_manual_name" value="{{ old('location_manual_name', $op->proposed_location_manual_name) }}" class="w-full rounded-md border-gray-300 text-sm">
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <button type="submit" class="px-3 py-1.5 border border-gray-300 rounded-md text-sm">Ažuriraj</button>
+                        </div>
+                    </form>
+                    <form method="POST" action="{{ route('cultural-moderator-proposals.occurrences.destroy', [$proposal, $op]) }}" class="mt-2" onsubmit="return confirm('Ukloniti predloženo dodavanje?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-sm text-red-700">Ukloni iz prijedloga</button>
+                    </form>
+                </div>
+            @empty
+                <p class="text-sm text-gray-500">Nema predloženih dodavanja.</p>
+            @endforelse
+        </div>
+
+        <h3 class="text-sm font-semibold text-gray-800 mb-2">Dodaj novo održavanje u prijedlog</h3>
+        <form method="POST" action="{{ route('cultural-moderator-proposals.occurrences.store', $proposal) }}" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            @csrf
+            <div>
+                <label class="block text-xs text-gray-600 mb-1">Datum</label>
+                <input type="date" name="datum" value="{{ old('datum') }}" required class="w-full rounded-md border-gray-300 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-600 mb-1">Vrijeme od</label>
+                <input type="time" name="vrijeme_od" value="{{ old('vrijeme_od') }}" class="w-full rounded-md border-gray-300 text-sm">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-600 mb-1">Vrijeme do</label>
+                <input type="time" name="vrijeme_do" value="{{ old('vrijeme_do') }}" class="w-full rounded-md border-gray-300 text-sm">
+            </div>
+            <div class="md:col-span-3 flex items-center gap-2">
+                <input type="checkbox" name="cjelodnevno" value="1" @checked(old('cjelodnevno')) class="rounded border-gray-300">
+                <span class="text-sm text-gray-700">Cjelodnevno</span>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-600 mb-1">Lokacija</label>
+                <select name="location_id" class="w-full rounded-md border-gray-300 text-sm">
+                    <option value="">—</option>
+                    @foreach($locations as $location)
+                        <option value="{{ $location->id }}" @selected((string) old('location_id') === (string) $location->id)>{{ $location->naziv }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs text-gray-600 mb-1">Ručni naziv lokacije</label>
+                <input type="text" name="location_manual_name" value="{{ old('location_manual_name') }}" class="w-full rounded-md border-gray-300 text-sm">
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 text-sm">Dodaj u prijedlog</button>
+            </div>
+        </form>
+    </div>
 </div>
 @endsection
