@@ -2,6 +2,7 @@
     $isKkSection = request()->routeIs(
         'cultural-calendar.*',
         'cultural-events.*',
+        'cultural-event-entries.*',
         'cultural-locations.*',
         'cultural-categories.*',
         'cultural-tags.*',

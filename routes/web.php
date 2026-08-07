@@ -8,6 +8,8 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\CulturalCalendarController;
 use App\Http\Controllers\CulturalCalendarNewsletterController;
 use App\Http\Controllers\CulturalEventController;
+use App\Http\Controllers\CulturalEventEntryController;
+use App\Http\Controllers\CulturalEventEntryOccurrenceController;
 use App\Http\Controllers\CulturalLocationController;
 use App\Http\Controllers\CulturalCategoryController;
 use App\Http\Controllers\CulturalMediaController;
@@ -131,6 +133,24 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
         Route::resource('/kalendar-kulture/dogadjaji', CulturalEventController::class)
             ->except(['show'])
             ->names('cultural-events');
+
+        // Sprint 3A.2 — kanonski Draft UI (CulturalEventEntry); nije TS-010 / nije legacy CRUD
+        Route::get('/kalendar-kulture/kanonski-dogadjaji', [CulturalEventEntryController::class, 'index'])
+            ->name('cultural-event-entries.index');
+        Route::get('/kalendar-kulture/kanonski-dogadjaji/create', [CulturalEventEntryController::class, 'create'])
+            ->name('cultural-event-entries.create');
+        Route::post('/kalendar-kulture/kanonski-dogadjaji', [CulturalEventEntryController::class, 'store'])
+            ->name('cultural-event-entries.store');
+        Route::get('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/edit', [CulturalEventEntryController::class, 'edit'])
+            ->name('cultural-event-entries.edit');
+        Route::put('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}', [CulturalEventEntryController::class, 'update'])
+            ->name('cultural-event-entries.update');
+        Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja', [CulturalEventEntryOccurrenceController::class, 'store'])
+            ->name('cultural-event-entries.occurrences.store');
+        Route::put('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalEventEntryOccurrenceController::class, 'update'])
+            ->name('cultural-event-entries.occurrences.update');
+        Route::delete('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalEventEntryOccurrenceController::class, 'destroy'])
+            ->name('cultural-event-entries.occurrences.destroy');
 
         Route::resource('/kalendar-kulture/lokacije', CulturalLocationController::class)
             ->except(['show', 'destroy'])

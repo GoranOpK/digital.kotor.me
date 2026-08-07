@@ -6,6 +6,7 @@
     $isKkSection = request()->routeIs(
         'cultural-calendar.*',
         'cultural-events.*',
+        'cultural-event-entries.*',
         'cultural-locations.*',
         'cultural-categories.*',
         'cultural-tags.*',
@@ -96,6 +97,21 @@
                                     white-space: nowrap;
                                 "
                             >Događaji</a>
+                            <a
+                                href="{{ route('cultural-event-entries.index') }}"
+                                style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    padding: 8px 14px;
+                                    border-radius: 8px;
+                                    background: {{ request()->routeIs('cultural-event-entries.*') ? '#5f0c12' : '#7a0f17' }};
+                                    color: #ffffff;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    text-decoration: none;
+                                    white-space: nowrap;
+                                "
+                            >Kanonski događaji</a>
                             <a
                                 href="{{ route('cultural-locations.index') }}"
                                 style="
@@ -349,6 +365,21 @@
                         "
                     >
                         Događaji
+                    </a>
+                    <a
+                        href="{{ route('cultural-event-entries.index') }}"
+                        style="
+                            display: block;
+                            width: 100%;
+                            padding: 10px 16px;
+                            background: {{ request()->routeIs('cultural-event-entries.*') ? '#5f0c12' : '#7a0f17' }};
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: 600;
+                            text-decoration: none;
+                        "
+                    >
+                        Kanonski događaji
                     </a>
                     <a
                         href="{{ route('cultural-locations.index') }}"
