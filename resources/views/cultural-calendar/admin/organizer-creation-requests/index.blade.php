@@ -3,6 +3,12 @@
 @section('content')
 <div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <h1 style="font-size:28px; font-weight:700; margin:0 0 16px; color:#111827;">Zahtjevi za kreiranje Organizatora</h1>
+    @if(!empty($activeStatusFilter))
+        <div class="mb-4 rounded-md bg-blue-50 border border-blue-200 text-blue-900 px-4 py-3 text-sm flex flex-wrap gap-3 items-center justify-between">
+            <div>Aktivni filter: status = <strong>{{ \App\Models\CulturalOrganizerCreationRequest::STATUS_LABELS[$activeStatusFilter] ?? $activeStatusFilter }}</strong></div>
+            <a href="{{ route('cultural-organizer-creation-requests.index') }}" class="underline">Ukloni filter</a>
+        </div>
+    @endif
     @if(session('status'))
         <div class="mb-4 rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3">{{ session('status') }}</div>
     @endif

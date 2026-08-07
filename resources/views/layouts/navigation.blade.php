@@ -7,6 +7,7 @@
         'cultural-calendar.*',
         'cultural-events.*',
         'cultural-event-entries.*',
+        'cultural-editorial-dashboard.*',
         'cultural-locations.*',
         'cultural-categories.*',
         'cultural-tags.*',
@@ -14,7 +15,9 @@
         'cultural-organizers.*',
         'cultural-organizer-creation-requests.*',
         'cultural-moderator-requests.*',
-        'cultural-moderator-workspace.*'
+        'cultural-moderator-workspace.*',
+        'cultural-moderator-events.*',
+        'cultural-moderator-context.*'
     );
 @endphp
 <nav
@@ -82,6 +85,21 @@
                             "
                         >Arhiva događaja</a>
                         @if($isKkAdmin)
+                            <a
+                                href="{{ route('cultural-editorial-dashboard.index') }}"
+                                style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    padding: 8px 14px;
+                                    border-radius: 8px;
+                                    background: {{ request()->routeIs('cultural-editorial-dashboard.*') ? '#5f0c12' : '#7a0f17' }};
+                                    color: #ffffff;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    text-decoration: none;
+                                    white-space: nowrap;
+                                "
+                            >Urednički rad</a>
                             <a
                                 href="{{ route('cultural-events.index') }}"
                                 style="
@@ -351,6 +369,21 @@
                     Arhiva događaja
                 </x-responsive-nav-link>
                     @if($isKkAdmin)
+                    <a
+                        href="{{ route('cultural-editorial-dashboard.index') }}"
+                        style="
+                            display: block;
+                            width: 100%;
+                            padding: 10px 16px;
+                            background: {{ request()->routeIs('cultural-editorial-dashboard.*') ? '#5f0c12' : '#7a0f17' }};
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: 600;
+                            text-decoration: none;
+                        "
+                    >
+                        Urednički rad
+                    </a>
                     <a
                         href="{{ route('cultural-events.index') }}"
                         style="

@@ -88,16 +88,29 @@ class CulturalModeratorRequestController extends Controller
             ->with('status', 'Zahtjev za Moderatora je podnesen.');
     }
 
-    public function index(): View
+    public function index(\Illuminate\Http\Request $request): View
     {
         abort_unless(CulturalPortalAccess::isKkEditor(auth()->user()), 403);
 
-        $requests = CulturalModeratorRequest::query()
-            ->with(['organizer', 'submitter', 'targetUser', 'decisionUser'])
-            ->latest('id')
-            ->paginate(20);
+        $query = CulturalModeratorRequest::query()
+            ->with(['organizer', 'submitter', 'targetUser', 'decisionUser']);
 
-        return view('cultural-calendar.admin.moderator-requests.index', compact('requests'));
+        $status = $request->query('status');
+        if (is_string($status) && in_array($status, CulturalModeratorRequest::STATUSES, true)) {
+            $query->where('status', $status);
+        }
+
+        $requests = $query
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('cultural-calendar.admin.moderator-requests.index', [
+            'requests' => $requests,
+            'activeStatusFilter' => is_string($status) && in_array($status, CulturalModeratorRequest::STATUSES, true)
+                ? $status
+                : null,
+        ]);
     }
 
     public function show(CulturalModeratorRequest $zahtjev): View

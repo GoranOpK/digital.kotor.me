@@ -53,16 +53,29 @@ class CulturalOrganizerCreationRequestController extends Controller
             ->with('status', 'Zahtjev za kreiranje Organizatora je podnesen. Organizator još nije kreiran.');
     }
 
-    public function index(): View
+    public function index(\Illuminate\Http\Request $request): View
     {
         abort_unless(CulturalPortalAccess::isKkEditor(auth()->user()), 403);
 
-        $requests = CulturalOrganizerCreationRequest::query()
-            ->with(['submitter', 'proposedModerator', 'decisionUser', 'organizer'])
-            ->latest('id')
-            ->paginate(20);
+        $query = CulturalOrganizerCreationRequest::query()
+            ->with(['submitter', 'proposedModerator', 'decisionUser', 'organizer']);
 
-        return view('cultural-calendar.admin.organizer-creation-requests.index', compact('requests'));
+        $status = $request->query('status');
+        if (is_string($status) && in_array($status, CulturalOrganizerCreationRequest::STATUSES, true)) {
+            $query->where('status', $status);
+        }
+
+        $requests = $query
+            ->latest('id')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('cultural-calendar.admin.organizer-creation-requests.index', [
+            'requests' => $requests,
+            'activeStatusFilter' => is_string($status) && in_array($status, CulturalOrganizerCreationRequest::STATUSES, true)
+                ? $status
+                : null,
+        ]);
     }
 
     public function show(CulturalOrganizerCreationRequest $zahtjev): View

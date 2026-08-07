@@ -12,6 +12,21 @@
         </a>
     </div>
 
+    @if(!empty($activeFilters['status']) || !empty($activeFilters['organizer']))
+        <div class="mb-4 rounded-md bg-blue-50 border border-blue-200 text-blue-900 px-4 py-3 text-sm flex flex-wrap gap-3 items-center justify-between">
+            <div>
+                Aktivni filter:
+                @if(!empty($activeFilters['status']))
+                    status = <strong>{{ \App\Models\CulturalEventEntry::STATUS_LABELS[$activeFilters['status']] ?? $activeFilters['status'] }}</strong>
+                @endif
+                @if(!empty($activeFilters['organizer']) && $activeFilters['organizer'] === 'none')
+                    · bez Organizatora
+                @endif
+            </div>
+            <a href="{{ route('cultural-event-entries.index') }}" class="underline">Ukloni filter</a>
+        </div>
+    @endif
+
     @if(session('status'))
         <div class="mb-4 rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3">
             {{ session('status') }}

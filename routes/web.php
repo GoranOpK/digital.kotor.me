@@ -7,6 +7,7 @@ use App\Http\Controllers\CompetitionsController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\CulturalCalendarController;
 use App\Http\Controllers\CulturalCalendarNewsletterController;
+use App\Http\Controllers\CulturalEditorialDashboardController;
 use App\Http\Controllers\CulturalEventController;
 use App\Http\Controllers\CulturalEventEntryController;
 use App\Http\Controllers\CulturalEventEntryOccurrenceController;
@@ -159,6 +160,10 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
 
     // Administracija događaja i kataloga lokacija (samo KK administrator / Urednik)
     Route::middleware('role:kk_admin')->group(function () {
+        // TS-010.2 — Urednik Dashboard / Inbox (DU-01/03/04/05; bez DU-02)
+        Route::get('/kalendar-kulture/urednicki-rad', [CulturalEditorialDashboardController::class, 'index'])
+            ->name('cultural-editorial-dashboard.index');
+
         Route::resource('/kalendar-kulture/dogadjaji', CulturalEventController::class)
             ->except(['show'])
             ->names('cultural-events');

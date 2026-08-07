@@ -29,16 +29,34 @@ class CulturalEventEntryController extends Controller
         private readonly EventLifecycle $eventLifecycle,
     ) {}
 
-    public function index(): View
+    public function index(\Illuminate\Http\Request $request): View
     {
-        $entries = CulturalEventEntry::query()
+        $query = CulturalEventEntry::query()
             ->with(['organizer', 'category'])
-            ->withCount('occurrences')
+            ->withCount('occurrences');
+
+        $status = $request->query('status');
+        if (is_string($status) && in_array($status, CulturalEventEntry::STATUSES, true)) {
+            $query->where('status', $status);
+        }
+
+        if ($request->query('organizer') === 'none') {
+            $query->whereNull('organizer_id');
+        }
+
+        $entries = $query
             ->orderByDesc('created_at')
             ->orderByDesc('id')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
-        return view('cultural-calendar.admin.event-entries.index', compact('entries'));
+        return view('cultural-calendar.admin.event-entries.index', [
+            'entries' => $entries,
+            'activeFilters' => [
+                'status' => is_string($status) && in_array($status, CulturalEventEntry::STATUSES, true) ? $status : null,
+                'organizer' => $request->query('organizer') === 'none' ? 'none' : null,
+            ],
+        ]);
     }
 
     public function create(): View
