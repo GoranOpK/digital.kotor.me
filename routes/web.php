@@ -11,6 +11,10 @@ use App\Http\Controllers\CulturalEventController;
 use App\Http\Controllers\CulturalLocationController;
 use App\Http\Controllers\CulturalCategoryController;
 use App\Http\Controllers\CulturalMediaController;
+use App\Http\Controllers\CulturalModeratorRequestController;
+use App\Http\Controllers\CulturalModeratorWorkspaceController;
+use App\Http\Controllers\CulturalOrganizerController;
+use App\Http\Controllers\CulturalOrganizerCreationRequestController;
 use App\Http\Controllers\CulturalTagController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EvaluationController;
@@ -106,6 +110,22 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::get('/kalendar-kulture/dan/{date}', [CulturalCalendarController::class, 'day'])->name('cultural-calendar.day');
     Route::post('/kalendar-kulture/newsletter', [CulturalCalendarNewsletterController::class, 'store'])->name('cultural-calendar.newsletter.store');
 
+    // TS-001 — zahtjev za kreiranje Organizatora (registrovani korisnik; ne kreira entitet)
+    Route::get('/kalendar-kulture/zahtjev-organizator', [CulturalOrganizerCreationRequestController::class, 'create'])
+        ->name('cultural-organizer-creation-requests.create');
+    Route::post('/kalendar-kulture/zahtjev-organizator', [CulturalOrganizerCreationRequestController::class, 'store'])
+        ->name('cultural-organizer-creation-requests.store');
+
+    // TS-001 — portal pristup (kk_admin ili aktivni Moderator aktivnog Org) — PO-ORG-04
+    Route::middleware('cultural.portal')->group(function () {
+        Route::get('/kalendar-kulture/moderatorski-rad', [CulturalModeratorWorkspaceController::class, 'index'])
+            ->name('cultural-moderator-workspace.index');
+        Route::get('/kalendar-kulture/organizatori/{organizatori}/zahtjev-moderator', [CulturalModeratorRequestController::class, 'create'])
+            ->name('cultural-moderator-requests.create');
+        Route::post('/kalendar-kulture/organizatori/{organizatori}/zahtjev-moderator', [CulturalModeratorRequestController::class, 'store'])
+            ->name('cultural-moderator-requests.store');
+    });
+
     // Administracija događaja i kataloga lokacija (samo KK administrator / Urednik)
     Route::middleware('role:kk_admin')->group(function () {
         Route::resource('/kalendar-kulture/dogadjaji', CulturalEventController::class)
@@ -147,6 +167,34 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-media.deactivate');
         Route::post('/kalendar-kulture/mediji/{mediji}/activate', [CulturalMediaController::class, 'activate'])
             ->name('cultural-media.activate');
+
+        // TS-001 — Organizatori i uredničke odluke
+        Route::get('/kalendar-kulture/organizatori', [CulturalOrganizerController::class, 'index'])
+            ->name('cultural-organizers.index');
+        Route::get('/kalendar-kulture/organizatori/{organizatori}/edit', [CulturalOrganizerController::class, 'edit'])
+            ->name('cultural-organizers.edit');
+        Route::put('/kalendar-kulture/organizatori/{organizatori}', [CulturalOrganizerController::class, 'update'])
+            ->name('cultural-organizers.update');
+        Route::post('/kalendar-kulture/organizatori/{organizatori}/deactivate', [CulturalOrganizerController::class, 'deactivate'])
+            ->name('cultural-organizers.deactivate');
+
+        Route::get('/kalendar-kulture/zahtjevi-organizator', [CulturalOrganizerCreationRequestController::class, 'index'])
+            ->name('cultural-organizer-creation-requests.index');
+        Route::get('/kalendar-kulture/zahtjevi-organizator/{zahtjev}', [CulturalOrganizerCreationRequestController::class, 'show'])
+            ->name('cultural-organizer-creation-requests.show');
+        Route::post('/kalendar-kulture/zahtjevi-organizator/{zahtjev}/approve', [CulturalOrganizerCreationRequestController::class, 'approve'])
+            ->name('cultural-organizer-creation-requests.approve');
+        Route::post('/kalendar-kulture/zahtjevi-organizator/{zahtjev}/reject', [CulturalOrganizerCreationRequestController::class, 'reject'])
+            ->name('cultural-organizer-creation-requests.reject');
+
+        Route::get('/kalendar-kulture/zahtjevi-moderator', [CulturalModeratorRequestController::class, 'index'])
+            ->name('cultural-moderator-requests.index');
+        Route::get('/kalendar-kulture/zahtjevi-moderator/{zahtjev}', [CulturalModeratorRequestController::class, 'show'])
+            ->name('cultural-moderator-requests.show');
+        Route::post('/kalendar-kulture/zahtjevi-moderator/{zahtjev}/approve', [CulturalModeratorRequestController::class, 'approve'])
+            ->name('cultural-moderator-requests.approve');
+        Route::post('/kalendar-kulture/zahtjevi-moderator/{zahtjev}/reject', [CulturalModeratorRequestController::class, 'reject'])
+            ->name('cultural-moderator-requests.reject');
     });
 
     // --- DOPUNA: RUTE ZA PORTAL ŽENSKOG PREDUZETNIŠTVA ---

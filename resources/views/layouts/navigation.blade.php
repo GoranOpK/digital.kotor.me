@@ -3,7 +3,18 @@
     $isKkAdmin = $user && $user->role && $user->role->name === 'kk_admin';
     $isCompetitionAdmin = $user && $user->role && $user->role->name === 'konkurs_admin';
     $isKomisija = $user && $user->role && $user->role->name === 'komisija';
-    $isKkSection = request()->routeIs('cultural-calendar.*', 'cultural-events.*', 'cultural-locations.*', 'cultural-categories.*', 'cultural-tags.*', 'cultural-media.*');
+    $isKkSection = request()->routeIs(
+        'cultural-calendar.*',
+        'cultural-events.*',
+        'cultural-locations.*',
+        'cultural-categories.*',
+        'cultural-tags.*',
+        'cultural-media.*',
+        'cultural-organizers.*',
+        'cultural-organizer-creation-requests.*',
+        'cultural-moderator-requests.*',
+        'cultural-moderator-workspace.*'
+    );
 @endphp
 <nav
     x-data="{ open: false }"
@@ -145,7 +156,71 @@
                                     white-space: nowrap;
                                 "
                             >Mediji</a>
+                            <a
+                                href="{{ route('cultural-organizers.index') }}"
+                                style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    padding: 8px 14px;
+                                    border-radius: 8px;
+                                    background: {{ request()->routeIs('cultural-organizers.*') ? '#5f0c12' : '#7a0f17' }};
+                                    color: #ffffff;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    text-decoration: none;
+                                    white-space: nowrap;
+                                "
+                            >Organizatori</a>
+                            <a
+                                href="{{ route('cultural-organizer-creation-requests.index') }}"
+                                style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    padding: 8px 14px;
+                                    border-radius: 8px;
+                                    background: {{ request()->routeIs('cultural-organizer-creation-requests.*') ? '#5f0c12' : '#7a0f17' }};
+                                    color: #ffffff;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    text-decoration: none;
+                                    white-space: nowrap;
+                                "
+                            >Zahtjevi Org</a>
+                            <a
+                                href="{{ route('cultural-moderator-requests.index') }}"
+                                style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    padding: 8px 14px;
+                                    border-radius: 8px;
+                                    background: {{ request()->routeIs('cultural-moderator-requests.index', 'cultural-moderator-requests.show') ? '#5f0c12' : '#7a0f17' }};
+                                    color: #ffffff;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    text-decoration: none;
+                                    white-space: nowrap;
+                                "
+                            >Zahtjevi Mod</a>
                         @endif
+                        @auth
+                            @if(\App\Support\CulturalPortalAccess::allows(auth()->user()))
+                                <a
+                                    href="{{ route('cultural-moderator-workspace.index') }}"
+                                    style="
+                                        display: inline-flex;
+                                        align-items: center;
+                                        padding: 8px 14px;
+                                        border-radius: 8px;
+                                        background: {{ request()->routeIs('cultural-moderator-workspace.*') ? '#5f0c12' : '#7a0f17' }};
+                                        color: #ffffff;
+                                        font-size: 14px;
+                                        font-weight: 600;
+                                        text-decoration: none;
+                                        white-space: nowrap;
+                                    "
+                                >Mod rad</a>
+                            @endif
+                        @endauth
                     </div>
                 @else
                 <div class="hidden sm:ms-8 sm:flex sm:items-center sm:justify-start sm:gap-x-8">
@@ -335,8 +410,72 @@
                     >
                         Mediji
                     </a>
-                @endif
-            @elseif($isCompetitionAdmin)
+                    <a
+                        href="{{ route('cultural-organizers.index') }}"
+                        style="
+                            display: block;
+                            width: 100%;
+                            padding: 10px 16px;
+                            background: {{ request()->routeIs('cultural-organizers.*') ? '#5f0c12' : '#7a0f17' }};
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: 600;
+                            text-decoration: none;
+                        "
+                    >
+                        Organizatori
+                    </a>
+                    <a
+                        href="{{ route('cultural-organizer-creation-requests.index') }}"
+                        style="
+                            display: block;
+                            width: 100%;
+                            padding: 10px 16px;
+                            background: {{ request()->routeIs('cultural-organizer-creation-requests.*') ? '#5f0c12' : '#7a0f17' }};
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: 600;
+                            text-decoration: none;
+                        "
+                    >
+                        Zahtjevi Org
+                    </a>
+                    <a
+                        href="{{ route('cultural-moderator-requests.index') }}"
+                        style="
+                            display: block;
+                            width: 100%;
+                            padding: 10px 16px;
+                            background: {{ request()->routeIs('cultural-moderator-requests.index', 'cultural-moderator-requests.show') ? '#5f0c12' : '#7a0f17' }};
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: 600;
+                            text-decoration: none;
+                        "
+                    >
+                        Zahtjevi Mod
+                    </a>
+                    @endif
+                    @auth
+                        @if(\App\Support\CulturalPortalAccess::allows(auth()->user()))
+                            <a
+                                href="{{ route('cultural-moderator-workspace.index') }}"
+                                style="
+                                    display: block;
+                                    width: 100%;
+                                    padding: 10px 16px;
+                                    background: {{ request()->routeIs('cultural-moderator-workspace.*') ? '#5f0c12' : '#7a0f17' }};
+                                    color: #ffffff;
+                                    font-size: 16px;
+                                    font-weight: 600;
+                                    text-decoration: none;
+                                "
+                            >
+                                Mod rad
+                            </a>
+                        @endif
+                    @endauth
+                @elseif($isCompetitionAdmin)
                 <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
                     <x-icon-home class="w-5 h-5 inline-block align-text-bottom" style="margin-right: 4px;" />
                     Početna

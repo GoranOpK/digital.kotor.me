@@ -135,4 +135,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(UserDocument::class);
     }
+
+    /**
+     * TS-001 — moderatorska ovlašćenja (nije platformska uloga).
+     */
+    public function culturalModeratorAuthorizations()
+    {
+        return $this->hasMany(CulturalModeratorAuthorization::class);
+    }
 }
