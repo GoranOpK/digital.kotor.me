@@ -39,7 +39,7 @@ Feature Registry predstavlja polaznu tačku za sljedivost kroz cijeli projekat.
 | ---------- | ---------------- | ------- | --------------------------------------------- |
 | FT-001     | Kalendar kulture | Active  | Prva funkcionalnost u razvoju                 |
 | FT-002     | Plaćanja         | Planned | Dokumentacija razvijena (BM-002/FS-002 usvojeni BP-01–BP-09; TS-002 djelimično usvojen, dokument u izradi) |
-| FT-003     | Evidencija aktivnosti (Kalendar kulture) | Planned | FS §5.16; BM-14; van opsega: TS, pregled/filteri, retention, izvoz |
+| FT-003     | Evidencija aktivnosti (Kalendar kulture) | Usvojen (TS-012 v1.0.1) | FS §5.16; BM-14; V1 katalog uključuje Manifestacije; van opsega: pregled/filteri, retention, izvoz (BR-188) |
 | FT-004     | Obavještenja     | Active  | V1 infrastruktura verifikovana testovima; javni panel + `competition_decision_html`; E2E emitovanje iz konkursa i dalje OFD-OB-006 |
 
 Dozvoljeni statusi:
@@ -282,7 +282,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.5) |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.1) — TS-010.1–TS-010.8 |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.1) |
-| TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Planiran — nacrt nije započet |
+| TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.1) |
 
 ---
 
@@ -366,27 +366,28 @@ Evidencija aktivnosti (Kalendar kulture)
 
 Status:
 
-Planned
+Usvojen (TS-012 v1.0.1)
 
 Napomena:
 
 Centralna Evidencija aktivnosti modula Kalendar kulture — dokumentovanje poslovno značajnih radnji radi odgovornosti, kontrole i revizije. Direktan pristup: Administrator platforme. Razlikuje se od lokalnih audit tragova na entitetima.
 
-V1 katalog (FS): Moderator ovlašćenja; Organizatori; događaji; Newsletter. Van opsega ovog feature zapisa do posebnog PATCH-a: autentikacija/platformski nalozi i uloge, detaljni Admin pregled/filteri, struktura polja zapisa, retention, izvoz, Technical Specification.
+V1 katalog (FS / BM-AL-07 / BM-MF-20 / TS-012): Moderator ovlašćenja; Organizatori; Manifestacije; događaji (uključujući aktivnosti nad Održavanjem); Newsletter. Van opsega (BR-188): autentikacija/platformski nalozi i uloge, detaljni Admin pregled/filteri, retention, izvoz.
 
 Povezana dokumentacija:
 
-* Business Model — BM-14 (BM-AL-01–BM-AL-08), BM-EP-09, BM-GL-09, BM-GL-20
-* Functional Specification — §5.16 (BR-170–BR-188), PATCH-FS-035
-* Technical Specification — TS-012 Evidencija aktivnosti (planiran — nacrt nije započet; modul Kalendar kulture)
+* Business Model — BM-14 (BM-AL-01–BM-AL-08), BM-EP-09, BM-GL-09, BM-GL-20, BM-MF-20
+* Functional Specification — §5.16 (BR-170–BR-188), PATCH-FS-035 (katalog Manifestacije: PATCH-FS-041)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Evidencija_aktivnosti.md` (TS-012; verzija 1.0.1; Usvojen)
 
 Matrica sljedivosti (sažetak):
 
 | BM | FS | FT | TS |
 |----|----|----|-----|
-| BM-AL-01–BM-AL-08 | BR-170–BR-188 / §5.16 | FT-003 | TS-012 (planiran) |
-| BM-EP-09 | §5.16 | FT-003 | TS-012 (planiran) |
-| BM-GL-09, BM-GL-20 | BR-170, BR-174 | FT-003 | TS-012 (planiran) |
+| BM-AL-01–BM-AL-08 | BR-170–BR-188 / §5.16 | FT-003 | TS-012 (usvojen v1.0.1) |
+| BM-EP-09 | §5.16 | FT-003 | TS-012 (usvojen v1.0.1) |
+| BM-GL-09, BM-GL-20 | BR-170, BR-174 | FT-003 | TS-012 (usvojen v1.0.1) |
+| BM-MF-20 | §5.16 katalog Manifestacije | FT-003 | TS-012 (usvojen v1.0.1) |
 
 ---
 
@@ -507,3 +508,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-06 | FT-001 — TS-010 formalno usvojen (v1.0.0, USVOJEN). Kompletne podcjeline TS-010.1–TS-010.8. Bez funkcionalnih izmjena. FT-001 ostaje Active. Bez izmjene BM/FS. Bez izmjene TS-001/TS-003/TS-004/TS-008/TS-009. Bez izmjene implementacije. |
 | 2026-08-07 | FT-001 — Evidentirana usvojena odluka PO-DG-07 / BM PATCH-053 / FS PATCH-FS-053: Otkazan terminalan (nema Otkazan → Objavljen); novi program = novi događaj; Odgođen = jedini mehanizam promjene termina; Otkazan = istorijski zapis / read-only (izuzetak: razlog otkazivanja). Usklađeni TS-003 v0.1.2 i TS-010 v1.0.1. Superseduje isključivo republish dio PATCH-035 / N-DG-01. FT-001 ostaje Active. Bez izmjene implementacije. |
 | 2026-08-07 | FT-001 — TS-011 Newsletter formalno usvojen (v1.0.1). Putanja `docs/technical-specifications/Technical-Specification_Newsletter.md`. Administrativno usklađen status u registru (više nije „Planiran — nacrt nije započet”). Bez izmjene poslovnog sadržaja Feature Registry-ja. Bez izmjene BM/FS. Bez izmjene TS-003/TS-004/TS-009/TS-010. Bez izmjene implementacije. |
+| 2026-08-07 | FT-003 — TS-012 Evidencija aktivnosti formalno usvojen (v1.0.1). Putanja `docs/technical-specifications/Technical-Specification_Evidencija_aktivnosti.md`. Status: Usvojen (TS-012 v1.0.1). U sažetku V1 kataloga dodate Manifestacije (usklađenje sa BM-AL-07, BM-MF-20, FS §5.16). Bez izmjene sadržaja TS-012. Bez izmjene BM/FS. Bez izmjene ostalih TS. Bez izmjene implementacije. |
