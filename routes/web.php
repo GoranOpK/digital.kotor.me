@@ -9,6 +9,8 @@ use App\Http\Controllers\CulturalCalendarController;
 use App\Http\Controllers\CulturalCalendarNewsletterController;
 use App\Http\Controllers\CulturalEventController;
 use App\Http\Controllers\CulturalLocationController;
+use App\Http\Controllers\CulturalCategoryController;
+use App\Http\Controllers\CulturalTagController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\HomeController;
@@ -117,6 +119,24 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-locations.deactivate');
         Route::post('/kalendar-kulture/lokacije/{lokacije}/activate', [CulturalLocationController::class, 'activate'])
             ->name('cultural-locations.activate');
+
+        Route::resource('/kalendar-kulture/kategorije', CulturalCategoryController::class)
+            ->except(['show', 'destroy'])
+            ->parameters(['kategorije' => 'kategorije'])
+            ->names('cultural-categories');
+        Route::post('/kalendar-kulture/kategorije/{kategorije}/deactivate', [CulturalCategoryController::class, 'deactivate'])
+            ->name('cultural-categories.deactivate');
+        Route::post('/kalendar-kulture/kategorije/{kategorije}/activate', [CulturalCategoryController::class, 'activate'])
+            ->name('cultural-categories.activate');
+
+        Route::resource('/kalendar-kulture/oznake', CulturalTagController::class)
+            ->except(['show', 'destroy'])
+            ->parameters(['oznake' => 'oznake'])
+            ->names('cultural-tags');
+        Route::post('/kalendar-kulture/oznake/{oznake}/deactivate', [CulturalTagController::class, 'deactivate'])
+            ->name('cultural-tags.deactivate');
+        Route::post('/kalendar-kulture/oznake/{oznake}/activate', [CulturalTagController::class, 'activate'])
+            ->name('cultural-tags.activate');
     });
 
     // --- DOPUNA: RUTE ZA PORTAL ŽENSKOG PREDUZETNIŠTVA ---

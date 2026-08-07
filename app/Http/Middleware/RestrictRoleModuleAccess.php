@@ -53,6 +53,14 @@ class RestrictRoleModuleAccess
                 return $next($request);
             }
 
+            if ($routeName && str_starts_with($routeName, 'cultural-categories.')) {
+                return $next($request);
+            }
+
+            if ($routeName && str_starts_with($routeName, 'cultural-tags.')) {
+                return $next($request);
+            }
+
             if ($request->is('kalendar-kulture*') || $request->is('profile*')) {
                 return $next($request);
             }

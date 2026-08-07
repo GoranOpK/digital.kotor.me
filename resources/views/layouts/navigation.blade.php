@@ -3,7 +3,7 @@
     $isKkAdmin = $user && $user->role && $user->role->name === 'kk_admin';
     $isCompetitionAdmin = $user && $user->role && $user->role->name === 'konkurs_admin';
     $isKomisija = $user && $user->role && $user->role->name === 'komisija';
-    $isKkSection = request()->routeIs('cultural-calendar.*', 'cultural-events.*', 'cultural-locations.*');
+    $isKkSection = request()->routeIs('cultural-calendar.*', 'cultural-events.*', 'cultural-locations.*', 'cultural-categories.*', 'cultural-tags.*');
 @endphp
 <nav
     x-data="{ open: false }"
@@ -100,6 +100,36 @@
                                     white-space: nowrap;
                                 "
                             >Lokacije</a>
+                            <a
+                                href="{{ route('cultural-categories.index') }}"
+                                style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    padding: 8px 14px;
+                                    border-radius: 8px;
+                                    background: {{ request()->routeIs('cultural-categories.*') ? '#5f0c12' : '#7a0f17' }};
+                                    color: #ffffff;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    text-decoration: none;
+                                    white-space: nowrap;
+                                "
+                            >Kategorije</a>
+                            <a
+                                href="{{ route('cultural-tags.index') }}"
+                                style="
+                                    display: inline-flex;
+                                    align-items: center;
+                                    padding: 8px 14px;
+                                    border-radius: 8px;
+                                    background: {{ request()->routeIs('cultural-tags.*') ? '#5f0c12' : '#7a0f17' }};
+                                    color: #ffffff;
+                                    font-size: 14px;
+                                    font-weight: 600;
+                                    text-decoration: none;
+                                    white-space: nowrap;
+                                "
+                            >Oznake</a>
                         @endif
                     </div>
                 @else
@@ -244,6 +274,36 @@
                         "
                     >
                         Lokacije
+                    </a>
+                    <a
+                        href="{{ route('cultural-categories.index') }}"
+                        style="
+                            display: block;
+                            width: 100%;
+                            padding: 10px 16px;
+                            background: {{ request()->routeIs('cultural-categories.*') ? '#5f0c12' : '#7a0f17' }};
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: 600;
+                            text-decoration: none;
+                        "
+                    >
+                        Kategorije
+                    </a>
+                    <a
+                        href="{{ route('cultural-tags.index') }}"
+                        style="
+                            display: block;
+                            width: 100%;
+                            padding: 10px 16px;
+                            background: {{ request()->routeIs('cultural-tags.*') ? '#5f0c12' : '#7a0f17' }};
+                            color: #ffffff;
+                            font-size: 16px;
+                            font-weight: 600;
+                            text-decoration: none;
+                        "
+                    >
+                        Oznake
                     </a>
                 @endif
             @elseif($isCompetitionAdmin)

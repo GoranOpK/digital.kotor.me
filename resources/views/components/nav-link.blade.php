@@ -1,7 +1,7 @@
 @props(['active'])
 
 @php
-$isKkSection = request()->routeIs('cultural-calendar.*', 'cultural-events.*', 'cultural-locations.*');
+$isKkSection = request()->routeIs('cultural-calendar.*', 'cultural-events.*', 'cultural-locations.*', 'cultural-categories.*', 'cultural-tags.*');
 $classes = ($active ?? false)
             ? (
                 $isKkSection
