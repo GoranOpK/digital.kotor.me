@@ -7,7 +7,7 @@
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active  
-**Verzija:** 1.0.2  
+**Verzija:** 1.0.3  
 **Datum:** 2026-08-07
 
 ---
@@ -19,6 +19,7 @@
 | 1.0.0 | 2026-08-07 | Početni implementacioni roadmap na osnovu usvojene dokumentacije (BM, FS, Feature Registry, IS-001, TS-001 / TS-003–TS-012) i stanja produkcije. |
 | 1.0.1 | 2026-08-07 | **PATCH-001 (FINAL):** TS-012 isključivo kao završna integraciona faza (bez audit skeleta u Fazi 1); obavezne stabilizacione faze; princip jedne velike migracije domena po deploymentu; implementaciona disciplina (jedna logička cjelina po zadatku); usklađen konačni redoslijed Faza 0–8. |
 | 1.0.2 | 2026-08-07 | Dokumentaciona napomena: Faza 1 (TS-006/007/008) završena u kodu; Faza 2 (TS-001) spremna za Korak 1 nakon PO-ORG-01–04. Bez izmjene redoslijeda faza. |
+| 1.0.3 | 2026-08-07 | **PO-EV-01:** Postojeći `cultural_events` su testni/prototipski podaci (ne referentni produkcijski sadržaj). Faza 3 bez migracije/backfill/dual-write legacy zapisa; rizik = novi domen + cutover portala + zamjena flat modela. Bez izmjene BM/FS. |
 
 ---
 
@@ -90,11 +91,13 @@ Trajanje (broj dana) **nije** propisano ovim dokumentom — ostaje operativna od
 
 **Princip:** Jedan deployment **ne smije** sadržati više od jedne velike migracije domena.
 
-Primjeri velikih migracija:
+Primjeri velikih migracija (schema / novi domen):
 
-* Održavanja 1..N (TS-003 / TS-004)
+* Uvođenje novog modela Događaj + Održavanja 1..N (TS-003 / TS-004) — **bez** migracije/backfill-a legacy `cultural_events` sadržaja (**PO-EV-01**)
 * Manifestacije (TS-005)
 * Newsletter model (TS-011)
+
+**PO-EV-01:** Postojeći zapisi u `cultural_events` smatraju se isključivo testnim/prototipskim podacima, ne referentnim produkcijskim sadržajem. Ne radi se migracija tih zapisa, backfill, dual-write ni adapteri radi očuvanja legacy sadržaja. Novi domen implementira se direktno prema BM/FS/TS; legacy flat model ostaje privremeno do cutover-a.
 
 Svaka velika migracija mora imati:
 
@@ -159,7 +162,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | Područje | Stanje | Akcija |
 |----------|--------|--------|
 | Javni portal | Postoji; CR-001–004A usklađeni | Faza 0: CR-004B; Faza 6: domen |
-| `CulturalEvent` flat | Postoji | Refaktor u Fazi 3 (TS-003/004) |
+| `CulturalEvent` flat | Postoji (testni/prototipski podaci — **PO-EV-01**) | Faza 3: novi domen TS-003/004; zamjena flat modela **bez** migracije/backfill legacy sadržaja |
 | Admin `kk_admin` | Postoji | Refaktor u Fazi 5 (TS-010) |
 | Organizator / Moderator | Nema | Faza 2 (TS-001) |
 | Održavanja 1..N | Nema | Faza 3 |
@@ -268,11 +271,11 @@ analiza → implementacija → test → review → merge → deploy
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Uskladiti model sa TS-003 / TS-004; migrirati flat zapise |
+| **Cilj** | Uskladiti model sa TS-003 / TS-004; uvesti Održavanja 1..N |
 | **Moduli** | TS-003, TS-004 |
-| **Migracija** | **Velika** — Održavanja 1..N; **jedina** velika migracija domena u tom deploymentu |
-| **Rizici** | Najveći tehnički rizik projekta — migracija datuma; lom javnog portala / badge-a |
-| **Rezultat** | 1..N održavanja; lifecycle konzistentan |
+| **Migracija** | **Velika** (schema / novi domen) — Održavanja 1..N; **jedina** velika migracija domena u tom deploymentu. **PO-EV-01:** bez migracije/backfill/dual-write postojećih `cultural_events` zapisa |
+| **Rizici** | Implementacija novog domena; cutover javnog portala; zamjena flat modela; regresija badge-a / filtera / CR-001…004B |
+| **Rezultat** | Kanonski Događaj + 1..N održavanja; lifecycle konzistentan; legacy flat model zamijenjen |
 | **Zatim** | Stabilizacija |
 
 ### FAZA 4 — Manifestacija
@@ -376,7 +379,7 @@ Naredna velika faza **ne počinje** dok stabilizacija nije potvrđena.
 
 # 11. Najveći tehnički rizik
 
-Migracija flat `CulturalEvent` datuma/lokacije → **Održavanja 1..N** (Faza 3 / TS-004), uz očuvanje javnog portala, badge-a i budućeg lifecycle-a otkazanih događaja.
+Faza 3 (TS-003 / TS-004): implementacija novog domena Događaj + Održavanja 1..N, cutover javnog portala i zamjena legacy flat `CulturalEvent` modela — **bez** migracije/backfill-a postojećih testnih zapisa (**PO-EV-01**). Regresioni rizik: badge, filteri, CR-001…004B, lifecycle otkazanih.
 
 ---
 

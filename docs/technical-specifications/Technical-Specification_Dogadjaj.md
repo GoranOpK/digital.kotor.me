@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Događaj  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.2  
+**Verzija:** 0.1.3  
 **Datum:** 2026-08-07
 
 ---
@@ -19,6 +19,7 @@
 | 0.1 | 2026-07-29 | Initial draft. Prvi nacrt Technical Specification za funkcionalnu cjelinu Događaj. Usklađen sa BM-04, BM-10, BM-03 (relevantni dijelovi), FS §5.4–§5.5, §5.7.2, §5.16 (katalog Događaji), Feature Registry (FT-001 / plan TS-003), METHODOLOGY (M-TS-001–M-TS-005) i referentnim obrascom TS-001. Bez SQL, API, Laravel koda i bez novih poslovnih odluka. |
 | 0.1.1 | 2026-07-29 | Administrativno: status dokumenta Usvojen (Product Owner). Bez promjene poslovnog, funkcionalnog niti tehničkog sadržaja. |
 | 0.1.2 | 2026-08-07 | Usklađivanje sa BM PATCH-053 / PO-DG-07 i FS PATCH-FS-053: Otkazan terminalan (nema Otkazan → Objavljen); novi program = novi zapis; Odgođen = jedini mehanizam promjene termina (granica TS-004); Otkazan = istorijski zapis / read-only (izuzetak: razlog otkazivanja); uklonjena ponovna objava iz lifecycle, autorizacije, validacija i audita. Bez izmjene implementacije. |
+| 0.1.3 | 2026-08-07 | **PO-EV-01** (implementaciona napomena §14): legacy `CulturalEvent` podaci su testni/prototipski; bez migracije/backfill/dual-write; novi model direktno prema TS. Bez izmjene BM/FS. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -998,3 +999,4 @@ Ovo poglavlje je strogo nenormativno.
 5. Verzijski model (N-DG-04) odabrati tako da javni portal nikada ne čita neodobrene prijedloge.
 6. Trenutna implementacija i odstupanja ostaju u `docs/tehnicka-dokumentacija/cultural-calendar.md` (Technical Overview), ne u TS-003.
 7. Emisije ka TS-012 držati usklađenim sa katalogom FS §5.16; ne proširivati katalog kroz TS; ne emitovati „Ponovna objava događaja“.
+8. **PO-EV-01:** Postojeći `CulturalEvent` / `cultural_events` podaci su isključivo testni/prototipski i nisu predmet migracije ni backfill-a u novi model. Implementacija uspostavlja kanonski model Događaj (+ Održavanja prema TS-004) direktno prema ovom TS-u, bez dual-write i bez adaptera radi očuvanja legacy zapisa. Privremeni flat model ostaje samo do cutover-a na novi domen.

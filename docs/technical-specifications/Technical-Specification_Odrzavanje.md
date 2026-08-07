@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Održavanje događaja  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.5
-**Datum:** 2026-08-06
+**Verzija:** 0.1.6  
+**Datum:** 2026-08-07
 
 ---
 
@@ -22,6 +22,7 @@
 | 0.1.3 | 2026-08-06 | Zatvoreno N-TR-01: model jednog održavanja (jedan kalendarski datum; vrijeme početka/završetka; cjelodnevno; bez raspona datuma). Usklađeni §3.3, §6, §7. Bez novih BM/FS pravila. Bez izmjene implementacije. |
 | 0.1.4 | 2026-08-06 | Zatvoreno N-TR-04: fizičko uklanjanje održavanja samo iz Nacrta prije prvog uredničkog postupka; nakon prvog slanja na odobrenje — isključivo izmjena/statusi. Bez soft delete, novog statusa ili audita. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 0.1.5 | 2026-08-06 | Zatvoreno N-TR-02 (PO-N-TR-02-01–03 / BM PATCH-052 / FS PATCH-FS-052): generator nije entitet; dnevno/sedmično/mjesečno; završetak brojem ili krajnjim datumom; max 100; ručna = generisana. Usklađeni §3.5, §4.4, §6, §7, §12. Bez izmjene implementacije. |
+| 0.1.6 | 2026-08-07 | **PO-EV-01** (implementaciona napomena §14): legacy flat termini na `CulturalEvent` nisu predmet migracije/backfill/dual-write; novi model Održavanja direktno prema TS. Bez izmjene BM/FS. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -936,3 +937,4 @@ Ovo poglavlje je strogo nenormativno.
 4. Ne implementirati RRULE u V1.
 5. Trenutna implementacija koja drži termin/lokaciju na događaju je odstupanje — Technical Overview, ne TS-004.
 6. GPS/mapu ne uvoditi kroz TS-004.
+7. **PO-EV-01:** Postojeći flat termini/lokacije na `CulturalEvent` nisu predmet migracije ni backfill-a u Održavanja. Implementacija uspostavlja kanonski model 1 Događaj — N Održavanja direktno prema ovom TS-u (uz TS-003), bez dual-write i bez adaptera radi očuvanja legacy zapisa. Privremeni flat model ostaje samo do cutover-a.

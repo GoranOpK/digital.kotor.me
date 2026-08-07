@@ -135,6 +135,9 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **PO-ORG-03:** Organizator se kreira tek nakon odobrenja Urednika (atomično sa početnim Moderatorom); podnošenje zahtjeva ne kreira entitet.
 - **PO-ORG-04:** Moderator pristupa uredničkom portalu iz aktivnog ovlašćenja; nije nova platformska uloga; `kk_admin` = jedina platformska uloga Urednika.
 
+**Usvojene implementacione odluke (Događaj / Održavanje — PO-EV):**
+- **PO-EV-01:** Postojeći podaci Kalendara kulture (`cultural_events`) su isključivo testni/prototipski; nisu referentni produkcijski sadržaj. Bez migracije/backfill-a/dual-write-a/adaptera radi legacy sadržaja. Novi domen Događaj + Održavanje (TS-003/TS-004) implementira se direktno prema BM/FS/TS. Legacy flat model privremen do cutover-a.
+
 **Usvojene poslovne odluke (Mediji):**
 - **TS8-01:** Medij je samostalan poslovni entitet i zajednički platformski resurs bez poslovnog vlasnika.
 - **TS8-02:** Zatvoreni katalog namjena: Naslovna fotografija događaja; Naslovna fotografija manifestacije; Podrazumijevana fotografija kategorije.
@@ -201,11 +204,11 @@ Povezana dokumentacija (Događaj):
 
 * Business Model — BM-04 (BM-DG-01–BM-DG-10), BM-10 (BM-ST-01–BM-ST-09), BM-TR-12; PATCH-035/036 (otkazivanje), PATCH-037 (direktna objava / arhiva), **PATCH-053 / PO-DG-07** (terminalnost Otkazan)
 * Functional Specification — §5.4–§5.5, §5.7.1–§5.7.2 (BR-006–BR-044, BR-062–BR-066, BR-131), §5.16 katalog Događaji (BR-182/BR-183); PATCH-FS-037/038/039; **PATCH-FS-053**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija **0.1.2**; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija **0.1.3**; Usvojen)
 
 Povezana dokumentacija (Održavanje):
 
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004; verzija 0.1.5; Usvojen; N-TR-01 / N-TR-02 / N-TR-04 zatvoreni)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004; verzija 0.1.6; Usvojen; N-TR-01 / N-TR-02 / N-TR-04 zatvoreni)
 
 Povezana dokumentacija (Manifestacija):
 
@@ -279,8 +282,8 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS | Naziv | Feature | Modul | Status |
 | -- | ----- | ------- | ----- | ------ |
 | TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.3.0) |
-| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
-| TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.5); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni |
+| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.3) |
+| TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.6); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni |
 | TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
@@ -516,3 +519,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-07 | FT-001 — TS-011 Newsletter formalno usvojen (v1.0.1). Putanja `docs/technical-specifications/Technical-Specification_Newsletter.md`. Administrativno usklađen status u registru (više nije „Planiran — nacrt nije započet”). Bez izmjene poslovnog sadržaja Feature Registry-ja. Bez izmjene BM/FS. Bez izmjene TS-003/TS-004/TS-009/TS-010. Bez izmjene implementacije. |
 | 2026-08-07 | FT-003 — TS-012 Evidencija aktivnosti formalno usvojen (v1.0.1). Putanja `docs/technical-specifications/Technical-Specification_Evidencija_aktivnosti.md`. Status: Usvojen (TS-012 v1.0.1). U sažetku V1 kataloga dodate Manifestacije (usklađenje sa BM-AL-07, BM-MF-20, FS §5.16). Bez izmjene sadržaja TS-012. Bez izmjene BM/FS. Bez izmjene ostalih TS. Bez izmjene implementacije. |
 | 2026-08-07 | FT-001 — PO-ORG-01–PO-ORG-04 usvojene i ugrađene: BM PATCH-054, FS PATCH-FS-054 (BR-275/BR-276), TS-001 v0.3.0. Zatvorena TS-001 otvorena pitanja 1, 2, 3, 15. Priprema Faze 2 / Korak 1. Bez izmjene implementacije. |
+| 2026-08-07 | FT-001 — **PO-EV-01** usvojena (implementaciona): legacy `cultural_events` = testni/prototipski podaci; bez migracije/backfill/dual-write. Usklađeni Implementation Roadmap v1.0.3, TS-003 v0.1.3, TS-004 v0.1.6. Bez izmjene BM/FS. Bez izmjene implementacije. |
