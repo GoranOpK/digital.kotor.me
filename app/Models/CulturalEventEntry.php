@@ -27,6 +27,9 @@ class CulturalEventEntry extends Model
 
     public const STATUS_ARCHIVED = 'archived';
 
+    /** Maksimum istaknutih objavljenih/aktuelnih događaja (BM-PK-15 / BR-117). */
+    public const MAX_FEATURED = 3;
+
     public const STATUSES = [
         self::STATUS_DRAFT,
         self::STATUS_PENDING_APPROVAL,
@@ -105,6 +108,46 @@ class CulturalEventEntry extends Model
     public function isPublished(): bool
     {
         return $this->status === self::STATUS_PUBLISHED;
+    }
+
+    /**
+     * Aktuelan = ima barem jedno Održavanje Planiran/Odgođen sa datumom ≥ danas (BM-PK-15).
+     */
+    public function isAktuelan(?\DateTimeInterface $today = null): bool
+    {
+        $date = \Illuminate\Support\Carbon::parse($today ?? now())->toDateString();
+
+        return $this->occurrences()
+            ->whereIn('status', [
+                CulturalOccurrence::STATUS_PLANNED,
+                CulturalOccurrence::STATUS_POSTPONED,
+            ])
+            ->whereDate('datum', '>=', $date)
+            ->exists();
+    }
+
+    /**
+     * Broj trenutno istaknutih slotova: published + featured + aktuelan.
+     */
+    public static function currentFeaturedAktuelniCount(?int $exceptId = null, ?\DateTimeInterface $today = null): int
+    {
+        $date = \Illuminate\Support\Carbon::parse($today ?? now())->toDateString();
+
+        $query = static::query()
+            ->where('status', self::STATUS_PUBLISHED)
+            ->where('featured', true)
+            ->whereHas('occurrences', function ($q) use ($date) {
+                $q->whereIn('status', [
+                    CulturalOccurrence::STATUS_PLANNED,
+                    CulturalOccurrence::STATUS_POSTPONED,
+                ])->whereDate('datum', '>=', $date);
+            });
+
+        if ($exceptId !== null) {
+            $query->where('id', '!=', $exceptId);
+        }
+
+        return $query->count();
     }
 
     public function hasEnteredEditorialFlow(): bool

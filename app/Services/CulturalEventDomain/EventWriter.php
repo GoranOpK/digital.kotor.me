@@ -8,7 +8,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Kreiranje / ažuriranje kanonskog Događaja (TS-003 Korak 1).
+ * Kreiranje / ažuriranje kanonskog Događaja (TS-003).
  * Bez fizičkog destroy (brisanje nije V1 tok).
  */
 final class EventWriter
@@ -42,14 +42,10 @@ final class EventWriter
         $this->catalogGuard->assertTagsAllowedForNewLinks($tagIds);
 
         if ($featured) {
-            $this->assertFeaturedEligibility(CulturalEventEntry::STATUS_DRAFT);
+            $this->assertCanSetFeatured(CulturalEventEntry::STATUS_DRAFT, null, hasAktuelnoOccurrence: false);
         }
 
         return DB::transaction(function () use ($creator, $data, $organizerId, $categoryId, $coverMediaId, $tagIds, $featured) {
-            if ($featured) {
-                $this->clearOtherFeatured(null);
-            }
-
             $entry = CulturalEventEntry::create([
                 'naslov' => $data['naslov'] ?? null,
                 'opis' => $data['opis'] ?? null,
@@ -131,14 +127,14 @@ final class EventWriter
 
         $featured = array_key_exists('featured', $data) ? (bool) $data['featured'] : $entry->featured;
         if ($featured && ! $entry->featured) {
-            $this->assertFeaturedEligibility($entry->status);
+            $this->assertCanSetFeatured(
+                $entry->status,
+                $entry->id,
+                hasAktuelnoOccurrence: $entry->isAktuelan()
+            );
         }
 
         return DB::transaction(function () use ($entry, $actor, $data, $featured) {
-            if ($featured && ! $entry->featured) {
-                $this->clearOtherFeatured($entry->id);
-            }
-
             foreach (['naslov', 'opis', 'organizer_id', 'category_id', 'cover_media_id'] as $field) {
                 if (array_key_exists($field, $data)) {
                     $entry->{$field} = $data[$field];
@@ -160,21 +156,31 @@ final class EventWriter
         });
     }
 
-    private function assertFeaturedEligibility(string $status): void
-    {
+    /**
+     * Isticanje: samo Objavljen + aktuelan; max 3; bez auto-clear drugih (BM-PK-15 / BR-117).
+     */
+    private function assertCanSetFeatured(
+        string $status,
+        ?int $exceptId,
+        bool $hasAktuelnoOccurrence,
+    ): void {
         if ($status !== CulturalEventEntry::STATUS_PUBLISHED) {
             throw new CulturalEventDomainException(
                 'Istaknut može biti samo javno objavljen Događaj.'
             );
         }
-    }
 
-    private function clearOtherFeatured(?int $exceptId): void
-    {
-        $query = CulturalEventEntry::query()->where('featured', true);
-        if ($exceptId !== null) {
-            $query->where('id', '!=', $exceptId);
+        if (! $hasAktuelnoOccurrence) {
+            throw new CulturalEventDomainException(
+                'Istaknut može biti samo aktuelan Događaj.'
+            );
         }
-        $query->update(['featured' => false]);
+
+        $current = CulturalEventEntry::currentFeaturedAktuelniCount($exceptId);
+        if ($current >= CulturalEventEntry::MAX_FEATURED) {
+            throw new CulturalEventDomainException(
+                'Najviše tri događaja mogu biti istaknuta istovremeno.'
+            );
+        }
     }
 }

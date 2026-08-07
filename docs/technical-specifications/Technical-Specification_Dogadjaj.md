@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Događaj  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.3  
+**Verzija:** 0.1.4  
 **Datum:** 2026-08-07
 
 ---
@@ -20,6 +20,7 @@
 | 0.1.1 | 2026-07-29 | Administrativno: status dokumenta Usvojen (Product Owner). Bez promjene poslovnog, funkcionalnog niti tehničkog sadržaja. |
 | 0.1.2 | 2026-08-07 | Usklađivanje sa BM PATCH-053 / PO-DG-07 i FS PATCH-FS-053: Otkazan terminalan (nema Otkazan → Objavljen); novi program = novi zapis; Odgođen = jedini mehanizam promjene termina (granica TS-004); Otkazan = istorijski zapis / read-only (izuzetak: razlog otkazivanja); uklonjena ponovna objava iz lifecycle, autorizacije, validacija i audita. Bez izmjene implementacije. |
 | 0.1.3 | 2026-08-07 | **PO-EV-01** (implementaciona napomena §14): legacy `CulturalEvent` podaci su testni/prototipski; bez migracije/backfill/dual-write; novi model direktno prema TS. Bez izmjene BM/FS. Bez izmjene implementacije. |
+| 0.1.4 | 2026-08-07 | Dokumentaciono usklađivanje isticanja sa BM-PK-15 / BR-117 / PO-TS9-06B: najviše **tri (3)** istaknuta događaja u jednom trenutku (umjesto zastarjelog „najviše jedan“ nakon PATCH-046 / PATCH-FS-048). Bez izmjene BM/FS/TS-009. |
 
 Napomena:
 
@@ -343,7 +344,7 @@ Dok prijedlog traje:
 
 Isticanje je urednička oznaka, ne status (BR-117):
 
-* najviše jedan istaknuti u jednom trenutku;
+* najviše tri istaknuta u jednom trenutku;
 * mora biti javno objavljen;
 * bira Urednik;
 * ne mijenja lifecycle status.
@@ -641,7 +642,7 @@ erDiagram
   DOGADJAJ }o--o{ OZNAKA : "0..N"
   DOGADJAJ }o--o{ MEDIJ : "naslovna / povezani"
   DOGADJAJ ||--o| PRIJEDLOG_IZMJENE : "0..1 aktivan"
-  DOGADJAJ ||--o| ISTICANJE : "0..1 globalno"
+  DOGADJAJ ||--o| ISTICANJE : "0..3 globalno"
 ```
 
 ## 6.2 Potvrđeni atributi
@@ -663,7 +664,7 @@ Atributi / svojstva potvrđeni usvojenim BM/FS (konceptualno):
 | Naslov | Potvrđen kao sadržaj prikaza / uređivanja | FS §5.4, §5.5.4 |
 | Opis | Opcioni u prikazu | FS §5.4 |
 | Naslovna fotografija / medij | Prikaz uvijek ima sliku (direktno ili fallback kategorije) | FS §5.4, BM-MD-06 |
-| Indikator istaknutosti | Najviše jedan istaknuti globalno | BR-117 |
+| Indikator istaknutosti | Najviše tri istaknuta globalno | BR-117 |
 | Postojanje ≥1 održavanja | Preduslov slanja/objave | BM-DG-01 |
 | Razlog otkazivanja (napomena urednika) | Jedino sadržajno polje izmjenjivo dok je status Otkazan; Urednik | BM-DG-10, BR-063, BR-064 |
 
@@ -696,7 +697,7 @@ Takođe otvoreno:
 * Kardinalnost Organizatora: 0 ili 1.
 * Kardinalnost Manifestacije: 0 ili 1.
 * Najviše jedan aktivan prijedlog izmjene.
-* Najviše jedan istaknuti događaj u sistemu u datom trenutku.
+* Najviše tri istaknuta događaja u sistemu u datom trenutku.
 * Lokacija se ne čuva kao atribut događaja.
 * Dok je status **Otkazan**, sadržajni atributi su neizmjenjivi osim razloga otkazivanja (BM-DG-10, BR-064).
 * Prelaz Otkazan → Objavljen nije dio dozvoljenog skupa prelaza (BM-DG-09, BM-ST-09, BR-064).
