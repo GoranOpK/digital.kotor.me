@@ -6,7 +6,7 @@
 **Oznaka dokumenta:** TS-012  
 **Funkcionalna cjelina:** Evidencija aktivnosti  
 **Modul:** Kalendar kulture  
-**Status dokumenta:** NACRT  
+**Status dokumenta:** USVOJEN  
 **Verzija:** 1.0.1 (DRAFT)  
 **Datum:** 2026-08-07
 

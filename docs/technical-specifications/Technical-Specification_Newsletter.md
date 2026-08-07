@@ -6,7 +6,7 @@
 **Oznaka dokumenta:** TS-011  
 **Funkcionalna cjelina:** Newsletter  
 **Modul:** Kalendar kulture  
-**Status dokumenta:** NACRT  
+**Status dokumenta:** USVOJEN  
 **Verzija:** 1.0.1 (DRAFT)  
 **Datum:** 2026-08-07
 
