@@ -8,6 +8,7 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\CulturalCalendarController;
 use App\Http\Controllers\CulturalCalendarNewsletterController;
 use App\Http\Controllers\CulturalEditorialDashboardController;
+use App\Http\Controllers\CulturalEventChangeProposalController;
 use App\Http\Controllers\CulturalEventController;
 use App\Http\Controllers\CulturalEventEntryController;
 use App\Http\Controllers\CulturalEventEntryOccurrenceController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\CulturalCategoryController;
 use App\Http\Controllers\CulturalMediaController;
 use App\Http\Controllers\CulturalModeratorEventEntryController;
 use App\Http\Controllers\CulturalModeratorEventEntryOccurrenceController;
+use App\Http\Controllers\CulturalModeratorEventChangeProposalController;
 use App\Http\Controllers\CulturalModeratorOrganizerContextController;
 use App\Http\Controllers\CulturalModeratorRequestController;
 use App\Http\Controllers\CulturalModeratorWorkspaceController;
@@ -156,13 +158,41 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-moderator-events.occurrences.update');
         Route::delete('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalModeratorEventEntryOccurrenceController::class, 'destroy'])
             ->name('cultural-moderator-events.occurrences.destroy');
+
+        // TS-010.3a — Prijedlog izmjene (Moderator)
+        Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/prijedlog-izmjene', [CulturalModeratorEventChangeProposalController::class, 'store'])
+            ->name('cultural-moderator-proposals.store');
+        Route::get('/kalendar-kulture/moderatorski-prijedlozi/{prijedlog}/edit', [CulturalModeratorEventChangeProposalController::class, 'edit'])
+            ->name('cultural-moderator-proposals.edit');
+        Route::put('/kalendar-kulture/moderatorski-prijedlozi/{prijedlog}', [CulturalModeratorEventChangeProposalController::class, 'update'])
+            ->name('cultural-moderator-proposals.update');
+        Route::post('/kalendar-kulture/moderatorski-prijedlozi/{prijedlog}/submit', [CulturalModeratorEventChangeProposalController::class, 'submit'])
+            ->name('cultural-moderator-proposals.submit');
+        Route::post('/kalendar-kulture/moderatorski-prijedlozi/{prijedlog}/withdraw', [CulturalModeratorEventChangeProposalController::class, 'withdraw'])
+            ->name('cultural-moderator-proposals.withdraw');
     });
 
     // Administracija događaja i kataloga lokacija (samo KK administrator / Urednik)
     Route::middleware('role:kk_admin')->group(function () {
-        // TS-010.2 — Urednik Dashboard / Inbox (DU-01/03/04/05; bez DU-02)
+        // TS-010.2 / TS-010.3a — Urednik Dashboard / Inbox (DU-01–DU-05)
         Route::get('/kalendar-kulture/urednicki-rad', [CulturalEditorialDashboardController::class, 'index'])
             ->name('cultural-editorial-dashboard.index');
+
+        // TS-010.3a — Prijedlozi izmjene (Urednik)
+        Route::get('/kalendar-kulture/prijedlozi-izmjene', [CulturalEventChangeProposalController::class, 'index'])
+            ->name('cultural-event-change-proposals.index');
+        Route::get('/kalendar-kulture/prijedlozi-izmjene/{prijedlog}', [CulturalEventChangeProposalController::class, 'show'])
+            ->name('cultural-event-change-proposals.show');
+        Route::get('/kalendar-kulture/prijedlozi-izmjene/{prijedlog}/edit', [CulturalEventChangeProposalController::class, 'edit'])
+            ->name('cultural-event-change-proposals.edit');
+        Route::put('/kalendar-kulture/prijedlozi-izmjene/{prijedlog}', [CulturalEventChangeProposalController::class, 'update'])
+            ->name('cultural-event-change-proposals.update');
+        Route::post('/kalendar-kulture/prijedlozi-izmjene/{prijedlog}/start-review', [CulturalEventChangeProposalController::class, 'startReview'])
+            ->name('cultural-event-change-proposals.start-review');
+        Route::post('/kalendar-kulture/prijedlozi-izmjene/{prijedlog}/approve', [CulturalEventChangeProposalController::class, 'approve'])
+            ->name('cultural-event-change-proposals.approve');
+        Route::post('/kalendar-kulture/prijedlozi-izmjene/{prijedlog}/return', [CulturalEventChangeProposalController::class, 'returnToDraft'])
+            ->name('cultural-event-change-proposals.return');
 
         Route::resource('/kalendar-kulture/dogadjaji', CulturalEventController::class)
             ->except(['show'])

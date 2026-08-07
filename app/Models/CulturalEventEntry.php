@@ -211,6 +211,11 @@ class CulturalEventEntry extends Model
         return $this->hasMany(CulturalOccurrence::class, 'event_entry_id');
     }
 
+    public function changeProposals(): HasMany
+    {
+        return $this->hasMany(CulturalEventChangeProposal::class, 'event_entry_id');
+    }
+
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(

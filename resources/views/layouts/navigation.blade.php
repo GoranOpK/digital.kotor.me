@@ -8,6 +8,7 @@
         'cultural-events.*',
         'cultural-event-entries.*',
         'cultural-editorial-dashboard.*',
+        'cultural-event-change-proposals.*',
         'cultural-locations.*',
         'cultural-categories.*',
         'cultural-tags.*',
@@ -17,6 +18,7 @@
         'cultural-moderator-requests.*',
         'cultural-moderator-workspace.*',
         'cultural-moderator-events.*',
+        'cultural-moderator-proposals.*',
         'cultural-moderator-context.*'
     );
 @endphp

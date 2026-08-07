@@ -2,14 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CulturalEventChangeProposal;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalModeratorRequest;
 use App\Models\CulturalOrganizerCreationRequest;
 use Illuminate\View\View;
 
 /**
- * TS-010.2 — Urednik Dashboard / Inbox (DU-01, DU-03, DU-04, DU-05).
- * Samo brojači + navigacija; bez DU-02; bez poslovnih akcija.
+ * TS-010.2 / TS-010.3a — Urednik Dashboard / Inbox (DU-01–DU-05).
+ * Samo brojači + navigacija; bez poslovnih akcija.
  */
 class CulturalEditorialDashboardController extends Controller
 {
@@ -25,6 +26,20 @@ class CulturalEditorialDashboardController extends Controller
                     ->count(),
                 'url' => route('cultural-event-entries.index', [
                     'status' => CulturalEventEntry::STATUS_PENDING_APPROVAL,
+                ]),
+            ],
+            [
+                'id' => 'DU-02',
+                'title' => 'Prijedlozi izmjena na pregledu',
+                'description' => 'Prijedlozi izmjene objavljenih događaja koji čekaju uredničku odluku.',
+                'count' => CulturalEventChangeProposal::query()
+                    ->where('status', CulturalEventChangeProposal::STATUS_PENDING_REVIEW)
+                    ->whereHas('eventEntry', function ($q) {
+                        $q->where('status', CulturalEventEntry::STATUS_PUBLISHED);
+                    })
+                    ->count(),
+                'url' => route('cultural-event-change-proposals.index', [
+                    'proposal_status' => CulturalEventChangeProposal::STATUS_PENDING_REVIEW,
                 ]),
             ],
             [

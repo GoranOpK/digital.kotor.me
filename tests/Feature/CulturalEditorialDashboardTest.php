@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\CulturalEventChangeProposal;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalModeratorAuthorization;
 use App\Models\CulturalModeratorRequest;
@@ -63,10 +64,11 @@ class CulturalEditorialDashboardTest extends TestCase
             ->assertOk()
             ->assertSee('Urednički radni prostor', false)
             ->assertSee('Čeka pregled', false)
+            ->assertSee('Prijedlozi izmjena na pregledu', false)
             ->assertSee('Nacrti bez Organizatora', false)
             ->assertSee('Zahtjevi za Organizatora', false)
             ->assertSee('Zahtjevi za Moderatore', false)
-            ->assertDontSee('DU-02', false);
+            ->assertSee('DU-02', false);
     }
 
     public function test_moderator_cannot_view_dashboard(): void
@@ -159,6 +161,9 @@ class CulturalEditorialDashboardTest extends TestCase
                 return $byId['DU-01']['url'] === route('cultural-event-entries.index', [
                     'status' => CulturalEventEntry::STATUS_PENDING_APPROVAL,
                 ])
+                    && $byId['DU-02']['url'] === route('cultural-event-change-proposals.index', [
+                        'proposal_status' => CulturalEventChangeProposal::STATUS_PENDING_REVIEW,
+                    ])
                     && $byId['DU-03']['url'] === route('cultural-event-entries.index', [
                         'status' => CulturalEventEntry::STATUS_DRAFT,
                         'organizer' => 'none',
@@ -168,8 +173,7 @@ class CulturalEditorialDashboardTest extends TestCase
                     ])
                     && $byId['DU-05']['url'] === route('cultural-moderator-requests.index', [
                         'status' => CulturalModeratorRequest::STATUS_SUBMITTED,
-                    ])
-                    && ! $byId->has('DU-02');
+                    ]);
             });
     }
 

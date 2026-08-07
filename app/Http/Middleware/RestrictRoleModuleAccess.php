@@ -57,6 +57,10 @@ class RestrictRoleModuleAccess
                 return $next($request);
             }
 
+            if ($routeName && str_starts_with($routeName, 'cultural-event-change-proposals.')) {
+                return $next($request);
+            }
+
             if ($routeName && str_starts_with($routeName, 'cultural-locations.')) {
                 return $next($request);
             }
@@ -79,6 +83,7 @@ class RestrictRoleModuleAccess
                 || str_starts_with($routeName, 'cultural-moderator-requests.')
                 || str_starts_with($routeName, 'cultural-moderator-workspace.')
                 || str_starts_with($routeName, 'cultural-moderator-events.')
+                || str_starts_with($routeName, 'cultural-moderator-proposals.')
                 || str_starts_with($routeName, 'cultural-moderator-context.')
             )) {
                 return $next($request);

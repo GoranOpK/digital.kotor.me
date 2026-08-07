@@ -4,6 +4,7 @@ namespace App\Services\CulturalEventDomain;
 
 use App\Exceptions\CulturalEventDomainException;
 use App\Models\CulturalCategory;
+use App\Models\CulturalEventChangeProposal;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
 use App\Models\CulturalOrganizer;
@@ -79,6 +80,7 @@ final class EventLifecycle
 
     /**
      * Objavljen → Otkazan (terminalan za republish). Razlog je obavezan (Sprint 3A.4 / BM-DG-10).
+     * Lock order (TS-010.3a concurrency): aktivni Proposal-i → Event.
      */
     public function cancel(CulturalEventEntry $entry, User $actor, string $reason): CulturalEventEntry
     {
@@ -90,13 +92,31 @@ final class EventLifecycle
         }
 
         return DB::transaction(function () use ($entry, $actor, $reason) {
-            $entry->status = CulturalEventEntry::STATUS_CANCELLED;
-            $entry->cancellation_reason = $reason;
-            $entry->last_modified_by = $actor->id;
-            $entry->featured = false;
-            $entry->save();
+            // BR-012 slot — isti predikat kao createFromPublished (UNIQUE active_for_event_id).
+            $lockedProposals = CulturalEventChangeProposal::query()
+                ->where('active_for_event_id', $entry->id)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
 
-            return $entry->fresh();
+            /** @var CulturalEventEntry $locked */
+            $locked = CulturalEventEntry::query()
+                ->whereKey($entry->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->assertTransition($locked, CulturalEventEntry::STATUS_CANCELLED);
+
+            $locked->status = CulturalEventEntry::STATUS_CANCELLED;
+            $locked->cancellation_reason = $reason;
+            $locked->last_modified_by = $actor->id;
+            $locked->featured = false;
+            $locked->save();
+
+            app(EventChangeProposalLifecycle::class)
+                ->markLockedProposalsInoperableForCancelledEvent($lockedProposals);
+
+            return $locked->fresh();
         });
     }
 

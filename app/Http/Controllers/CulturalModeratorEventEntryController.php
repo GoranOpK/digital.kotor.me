@@ -6,6 +6,7 @@ use App\Exceptions\CulturalEventDomainException;
 use App\Http\Requests\CulturalModeratorEventEntryStoreRequest;
 use App\Http\Requests\CulturalModeratorEventEntryUpdateRequest;
 use App\Models\CulturalCategory;
+use App\Models\CulturalEventChangeProposal;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalMedia;
 use App\Models\CulturalTag;
@@ -94,6 +95,18 @@ class CulturalModeratorEventEntryController extends Controller
             return view('cultural-calendar.moderator-events.show-pending', [
                 'entry' => $moderator_dogadjaj,
                 'activeOrganizer' => $moderator_dogadjaj->organizer,
+            ]);
+        }
+
+        if ($moderator_dogadjaj->isPublished()) {
+            $activeProposal = CulturalEventChangeProposal::query()
+                ->where('active_for_event_id', $moderator_dogadjaj->id)
+                ->first();
+
+            return view('cultural-calendar.moderator-events.show-published', [
+                'entry' => $moderator_dogadjaj,
+                'activeOrganizer' => $moderator_dogadjaj->organizer,
+                'activeProposal' => $activeProposal,
             ]);
         }
 
