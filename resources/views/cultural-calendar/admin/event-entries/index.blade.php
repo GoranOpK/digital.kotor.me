@@ -78,6 +78,14 @@
                                         <a href="{{ route('cultural-event-entries.edit', $entry) }}" class="px-3 py-1.5 border border-amber-300 rounded-md text-amber-800 hover:bg-amber-50">
                                             Vrati na doradu
                                         </a>
+                                    @elseif($entry->isPublished())
+                                        <a href="{{ route('cultural-event-entries.edit', $entry) }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                                            Upravljaj
+                                        </a>
+                                    @elseif($entry->isCancelled())
+                                        <a href="{{ route('cultural-event-entries.edit', $entry) }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                                            Razlog otkazivanja
+                                        </a>
                                     @else
                                         <span class="px-3 py-1.5 text-gray-400">{{ $entry->statusLabel() }}</span>
                                     @endif

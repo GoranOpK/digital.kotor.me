@@ -3,6 +3,7 @@
 namespace App\Services\CulturalEventDomain;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
 use Illuminate\Support\Facades\DB;
 
@@ -17,6 +18,7 @@ final class OccurrenceLifecycle
 
     public function postpone(CulturalOccurrence $occurrence): CulturalOccurrence
     {
+        $this->assertParentAllowsLifecycle($occurrence);
         $this->assertTransition($occurrence, CulturalOccurrence::STATUS_POSTPONED);
 
         $occurrence->status = CulturalOccurrence::STATUS_POSTPONED;
@@ -39,6 +41,7 @@ final class OccurrenceLifecycle
      */
     public function resumeWithNewTermin(CulturalOccurrence $occurrence, array $newTermin): CulturalOccurrence
     {
+        $this->assertParentAllowsLifecycle($occurrence);
         $this->assertTransition($occurrence, CulturalOccurrence::STATUS_PLANNED);
 
         return DB::transaction(function () use ($occurrence, $newTermin) {
@@ -53,6 +56,7 @@ final class OccurrenceLifecycle
 
     public function cancel(CulturalOccurrence $occurrence): CulturalOccurrence
     {
+        $this->assertParentAllowsLifecycle($occurrence);
         $this->assertTransition($occurrence, CulturalOccurrence::STATUS_CANCELLED);
 
         $occurrence->status = CulturalOccurrence::STATUS_CANCELLED;
@@ -66,6 +70,7 @@ final class OccurrenceLifecycle
      */
     public function markFinished(CulturalOccurrence $occurrence): CulturalOccurrence
     {
+        $this->assertParentAllowsLifecycle($occurrence);
         $this->assertTransition($occurrence, CulturalOccurrence::STATUS_FINISHED);
 
         if (! $occurrence->isPlanned()) {
@@ -114,6 +119,26 @@ final class OccurrenceLifecycle
             'event_status_before' => $eventStatusBefore,
             'event_status_after' => $entry?->status,
         ];
+    }
+
+    private function assertParentAllowsLifecycle(CulturalOccurrence $occurrence): void
+    {
+        $entry = $occurrence->eventEntry;
+        if ($entry === null) {
+            throw new CulturalEventDomainException('Održavanje nema Događaj.');
+        }
+
+        if ($entry->isCancelled()) {
+            throw new CulturalEventDomainException(
+                'Otkazan Događaj je istorijski zapis; status Održavanja se ne može mijenjati.'
+            );
+        }
+
+        if ($entry->status === CulturalEventEntry::STATUS_ARCHIVED) {
+            throw new CulturalEventDomainException(
+                'Arhiviran Događaj; status Održavanja se ne može mijenjati.'
+            );
+        }
     }
 
     private function assertTransition(CulturalOccurrence $occurrence, string $target): void

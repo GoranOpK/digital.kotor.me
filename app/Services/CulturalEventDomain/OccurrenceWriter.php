@@ -70,6 +70,12 @@ final class OccurrenceWriter
             );
         }
 
+        if ($entry !== null && $entry->isCancelled()) {
+            throw new CulturalEventDomainException(
+                'Otkazan Događaj je istorijski zapis; Održavanje se ne može mijenjati.'
+            );
+        }
+
         $merged = [
             'datum' => $data['datum'] ?? $occurrence->datum,
             'vrijeme_od' => array_key_exists('vrijeme_od', $data) ? $data['vrijeme_od'] : $occurrence->vrijeme_od,
@@ -105,6 +111,12 @@ final class OccurrenceWriter
         if ($entry->isPendingApproval()) {
             throw new CulturalEventDomainException(
                 'Događaj na odobrenju je zaključan; Održavanje se ne može ukloniti.'
+            );
+        }
+
+        if ($entry->isCancelled()) {
+            throw new CulturalEventDomainException(
+                'Otkazan Događaj je istorijski zapis; Održavanje se ne može ukloniti.'
             );
         }
 

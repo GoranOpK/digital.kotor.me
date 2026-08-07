@@ -78,11 +78,16 @@ final class EventLifecycle
     }
 
     /**
-     * Objavljen → Otkazan (terminalan za republish).
+     * Objavljen → Otkazan (terminalan za republish). Razlog je obavezan (Sprint 3A.4 / BM-DG-10).
      */
-    public function cancel(CulturalEventEntry $entry, User $actor, ?string $reason = null): CulturalEventEntry
+    public function cancel(CulturalEventEntry $entry, User $actor, string $reason): CulturalEventEntry
     {
         $this->assertTransition($entry, CulturalEventEntry::STATUS_CANCELLED);
+
+        $reason = trim($reason);
+        if ($reason === '') {
+            throw new CulturalEventDomainException('Razlog otkazivanja je obavezan.');
+        }
 
         return DB::transaction(function () use ($entry, $actor, $reason) {
             $entry->status = CulturalEventEntry::STATUS_CANCELLED;
@@ -177,7 +182,7 @@ final class EventLifecycle
         }
 
         if ($target === CulturalEventEntry::STATUS_CANCELLED) {
-            return $this->cancel($entry, $actor);
+            return $this->cancel($entry, $actor, (string) $returnReason);
         }
 
         if ($target === CulturalEventEntry::STATUS_ARCHIVED) {

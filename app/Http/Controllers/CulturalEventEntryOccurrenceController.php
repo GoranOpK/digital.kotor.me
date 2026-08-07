@@ -7,16 +7,18 @@ use App\Http\Requests\CulturalOccurrenceStoreRequest;
 use App\Http\Requests\CulturalOccurrenceUpdateRequest;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
+use App\Services\CulturalEventDomain\OccurrenceLifecycle;
 use App\Services\CulturalEventDomain\OccurrenceWriter;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * Sprint 3A.2 — Održavanja unutar Draft Event UI (N-TR-04 za delete).
+ * Sprint 3A.2 / 3A.4 — Održavanja: draft CRUD + published status actions.
  */
 class CulturalEventEntryOccurrenceController extends Controller
 {
     public function __construct(
         private readonly OccurrenceWriter $occurrenceWriter,
+        private readonly OccurrenceLifecycle $occurrenceLifecycle,
     ) {}
 
     public function store(
@@ -83,11 +85,56 @@ class CulturalEventEntryOccurrenceController extends Controller
             ->with('status', 'Održavanje je uklonjeno.');
     }
 
+    public function postpone(
+        CulturalEventEntry $kanonski_dogadjaj,
+        CulturalOccurrence $odrzavanje,
+    ): RedirectResponse {
+        $this->assertBelongsToEntry($kanonski_dogadjaj, $odrzavanje);
+
+        try {
+            $this->occurrenceLifecycle->postpone($odrzavanje);
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['occurrence' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
+            ->with('status', 'Održavanje je odgođeno.');
+    }
+
+    public function cancel(
+        CulturalEventEntry $kanonski_dogadjaj,
+        CulturalOccurrence $odrzavanje,
+    ): RedirectResponse {
+        $this->assertBelongsToEntry($kanonski_dogadjaj, $odrzavanje);
+
+        try {
+            $this->occurrenceLifecycle->cancel($odrzavanje);
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['occurrence' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
+            ->with('status', 'Održavanje je otkazano.');
+    }
+
     private function assertBelongsToDraft(
         CulturalEventEntry $entry,
         CulturalOccurrence $occurrence,
     ): void {
         abort_unless($occurrence->event_entry_id === $entry->id, 404);
         abort_unless($entry->isDraft(), 404);
+    }
+
+    private function assertBelongsToEntry(
+        CulturalEventEntry $entry,
+        CulturalOccurrence $occurrence,
+    ): void {
+        abort_unless($occurrence->event_entry_id === $entry->id, 404);
     }
 }

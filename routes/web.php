@@ -151,12 +151,22 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-event-entries.approve');
         Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/return', [CulturalEventEntryController::class, 'returnToDraft'])
             ->name('cultural-event-entries.return');
+        Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/cancel', [CulturalEventEntryController::class, 'cancel'])
+            ->name('cultural-event-entries.cancel');
+        Route::put('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/cancellation-reason', [CulturalEventEntryController::class, 'updateCancellationReason'])
+            ->name('cultural-event-entries.cancellation-reason');
+        Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/featured', [CulturalEventEntryController::class, 'updateFeatured'])
+            ->name('cultural-event-entries.featured');
         Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja', [CulturalEventEntryOccurrenceController::class, 'store'])
             ->name('cultural-event-entries.occurrences.store');
         Route::put('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalEventEntryOccurrenceController::class, 'update'])
             ->name('cultural-event-entries.occurrences.update');
         Route::delete('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalEventEntryOccurrenceController::class, 'destroy'])
             ->name('cultural-event-entries.occurrences.destroy');
+        Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/{odrzavanje}/postpone', [CulturalEventEntryOccurrenceController::class, 'postpone'])
+            ->name('cultural-event-entries.occurrences.postpone');
+        Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/{odrzavanje}/cancel', [CulturalEventEntryOccurrenceController::class, 'cancel'])
+            ->name('cultural-event-entries.occurrences.cancel');
 
         Route::resource('/kalendar-kulture/lokacije', CulturalLocationController::class)
             ->except(['show', 'destroy'])

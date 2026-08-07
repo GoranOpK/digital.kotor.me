@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Http\Requests\CulturalEventEntryCancelRequest;
+use App\Http\Requests\CulturalEventEntryCancellationReasonRequest;
+use App\Http\Requests\CulturalEventEntryFeaturedRequest;
 use App\Http\Requests\CulturalEventEntryReturnRequest;
 use App\Http\Requests\CulturalEventEntryStoreRequest;
 use App\Http\Requests\CulturalEventEntryUpdateRequest;
@@ -17,7 +20,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 /**
- * Sprint 3A.2/3A.3 — Draft UI + urednički lifecycle (nije TS-010).
+ * Sprint 3A.2–3A.4 — Draft / lifecycle / published-cancelled ops (nije TS-010).
  */
 class CulturalEventEntryController extends Controller
 {
@@ -61,10 +64,22 @@ class CulturalEventEntryController extends Controller
 
     public function edit(CulturalEventEntry $kanonski_dogadjaj): View|RedirectResponse
     {
-        if ($kanonski_dogadjaj->isPendingApproval()) {
-            $kanonski_dogadjaj->load(['organizer', 'category', 'coverMedia', 'tags', 'occurrences.location']);
+        $kanonski_dogadjaj->load(['organizer', 'category', 'coverMedia', 'tags', 'occurrences.location']);
 
+        if ($kanonski_dogadjaj->isPendingApproval()) {
             return view('cultural-calendar.admin.event-entries.show-pending', [
+                'entry' => $kanonski_dogadjaj,
+            ]);
+        }
+
+        if ($kanonski_dogadjaj->isPublished()) {
+            return view('cultural-calendar.admin.event-entries.show-published', [
+                'entry' => $kanonski_dogadjaj,
+            ]);
+        }
+
+        if ($kanonski_dogadjaj->isCancelled()) {
+            return view('cultural-calendar.admin.event-entries.show-cancelled', [
                 'entry' => $kanonski_dogadjaj,
             ]);
         }
@@ -74,8 +89,6 @@ class CulturalEventEntryController extends Controller
                 ->route('cultural-event-entries.index')
                 ->withErrors(['domain' => 'U ovom koraku mogu se uređivati samo nacrti.']);
         }
-
-        $kanonski_dogadjaj->load(['organizer', 'category', 'coverMedia', 'tags', 'occurrences.location']);
 
         return view('cultural-calendar.admin.event-entries.edit', array_merge(
             $this->formCatalogs($kanonski_dogadjaj),
@@ -163,6 +176,75 @@ class CulturalEventEntryController extends Controller
         return redirect()
             ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
             ->with('status', 'Događaj je vraćen na doradu.');
+    }
+
+    public function cancel(
+        CulturalEventEntryCancelRequest $request,
+        CulturalEventEntry $kanonski_dogadjaj,
+    ): RedirectResponse {
+        try {
+            $this->eventLifecycle->cancel(
+                $kanonski_dogadjaj,
+                $request->user(),
+                (string) $request->validated('cancellation_reason')
+            );
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['cancellation_reason' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
+            ->with('status', 'Događaj je otkazan.');
+    }
+
+    public function updateCancellationReason(
+        CulturalEventEntryCancellationReasonRequest $request,
+        CulturalEventEntry $kanonski_dogadjaj,
+    ): RedirectResponse {
+        if (! $kanonski_dogadjaj->isCancelled()) {
+            return redirect()
+                ->route('cultural-event-entries.index')
+                ->withErrors(['domain' => 'Razlog otkazivanja može se mijenjati samo za otkazan Događaj.']);
+        }
+
+        try {
+            $this->eventWriter->updateContent($kanonski_dogadjaj, $request->user(), [
+                'cancellation_reason' => $request->validated('cancellation_reason'),
+            ]);
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['cancellation_reason' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
+            ->with('status', 'Razlog otkazivanja je sačuvan.');
+    }
+
+    public function updateFeatured(
+        CulturalEventEntryFeaturedRequest $request,
+        CulturalEventEntry $kanonski_dogadjaj,
+    ): RedirectResponse {
+        try {
+            $this->eventWriter->updateContent($kanonski_dogadjaj, $request->user(), [
+                'featured' => (bool) $request->validated('featured'),
+            ]);
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['domain' => $e->getMessage()]);
+        }
+
+        $on = (bool) $request->validated('featured');
+
+        return redirect()
+            ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
+            ->with('status', $on ? 'Događaj je istaknut.' : 'Isticanje je uklonjeno.');
     }
 
     /**
