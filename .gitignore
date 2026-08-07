@@ -29,3 +29,6 @@ Thumbs.db
 /database/*.sqlite
 /.mysql-testing/
 /export.zip
+
+# Local working drafts
+docs/working/
