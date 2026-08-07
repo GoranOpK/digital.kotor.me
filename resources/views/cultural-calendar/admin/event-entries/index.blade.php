@@ -54,13 +54,32 @@
                             <td class="px-4 py-3 text-gray-700">{{ $entry->featured ? 'Da' : 'Ne' }}</td>
                             <td class="px-4 py-3 text-gray-700">{{ $entry->created_at?->format('d.m.Y H:i') }}</td>
                             <td class="px-4 py-3">
-                                <div class="flex justify-end gap-2 flex-wrap">
+                                <div class="flex justify-end gap-2 flex-wrap items-center">
                                     @if($entry->isDraft())
                                         <a href="{{ route('cultural-event-entries.edit', $entry) }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
                                             Uredi
                                         </a>
+                                        <form method="POST" action="{{ route('cultural-event-entries.submit', $entry) }}">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50">
+                                                Pošalji na odobrenje
+                                            </button>
+                                        </form>
+                                    @elseif($entry->isPendingApproval())
+                                        <a href="{{ route('cultural-event-entries.edit', $entry) }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                                            Pregled
+                                        </a>
+                                        <form method="POST" action="{{ route('cultural-event-entries.approve', $entry) }}">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1.5 border border-green-300 rounded-md text-green-800 hover:bg-green-50">
+                                                Odobri
+                                            </button>
+                                        </form>
+                                        <a href="{{ route('cultural-event-entries.edit', $entry) }}" class="px-3 py-1.5 border border-amber-300 rounded-md text-amber-800 hover:bg-amber-50">
+                                            Vrati na doradu
+                                        </a>
                                     @else
-                                        <span class="px-3 py-1.5 text-gray-400">Samo pregled (kasniji korak)</span>
+                                        <span class="px-3 py-1.5 text-gray-400">{{ $entry->statusLabel() }}</span>
                                     @endif
                                 </div>
                             </td>

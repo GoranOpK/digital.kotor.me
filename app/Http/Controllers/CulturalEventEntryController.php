@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Http\Requests\CulturalEventEntryReturnRequest;
 use App\Http\Requests\CulturalEventEntryStoreRequest;
 use App\Http\Requests\CulturalEventEntryUpdateRequest;
 use App\Models\CulturalCategory;
@@ -10,17 +11,19 @@ use App\Models\CulturalEventEntry;
 use App\Models\CulturalMedia;
 use App\Models\CulturalOrganizer;
 use App\Models\CulturalTag;
+use App\Services\CulturalEventDomain\EventLifecycle;
 use App\Services\CulturalEventDomain\EventWriter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 /**
- * Sprint 3A.2 — urednički Draft UI za kanonski Događaj (nije TS-010).
+ * Sprint 3A.2/3A.3 — Draft UI + urednički lifecycle (nije TS-010).
  */
 class CulturalEventEntryController extends Controller
 {
     public function __construct(
         private readonly EventWriter $eventWriter,
+        private readonly EventLifecycle $eventLifecycle,
     ) {}
 
     public function index(): View
@@ -58,6 +61,14 @@ class CulturalEventEntryController extends Controller
 
     public function edit(CulturalEventEntry $kanonski_dogadjaj): View|RedirectResponse
     {
+        if ($kanonski_dogadjaj->isPendingApproval()) {
+            $kanonski_dogadjaj->load(['organizer', 'category', 'coverMedia', 'tags', 'occurrences.location']);
+
+            return view('cultural-calendar.admin.event-entries.show-pending', [
+                'entry' => $kanonski_dogadjaj,
+            ]);
+        }
+
         if (! $kanonski_dogadjaj->isDraft()) {
             return redirect()
                 ->route('cultural-event-entries.index')
@@ -85,7 +96,7 @@ class CulturalEventEntryController extends Controller
         if (! $kanonski_dogadjaj->isDraft()) {
             return redirect()
                 ->route('cultural-event-entries.index')
-                ->withErrors(['domain' => 'U ovom koraku mogu se uređivati samo nacrti.']);
+                ->withErrors(['domain' => 'Događaj nije u statusu Nacrt; izmjena sadržaja nije dozvoljena.']);
         }
 
         try {
@@ -100,6 +111,58 @@ class CulturalEventEntryController extends Controller
         return redirect()
             ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
             ->with('status', 'Nacrt je ažuriran.');
+    }
+
+    public function submit(CulturalEventEntry $kanonski_dogadjaj): RedirectResponse
+    {
+        try {
+            $this->eventLifecycle->submitForApproval($kanonski_dogadjaj, request()->user());
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['domain' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-event-entries.index')
+            ->with('status', 'Događaj je poslat na odobrenje.');
+    }
+
+    public function approve(CulturalEventEntry $kanonski_dogadjaj): RedirectResponse
+    {
+        try {
+            $this->eventLifecycle->approve($kanonski_dogadjaj, request()->user());
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['domain' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-event-entries.index')
+            ->with('status', 'Događaj je odobren i objavljen.');
+    }
+
+    public function returnToDraft(
+        CulturalEventEntryReturnRequest $request,
+        CulturalEventEntry $kanonski_dogadjaj,
+    ): RedirectResponse {
+        try {
+            $this->eventLifecycle->returnToDraft(
+                $kanonski_dogadjaj,
+                $request->user(),
+                (string) $request->validated('return_reason')
+            );
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['return_reason' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
+            ->with('status', 'Događaj je vraćen na doradu.');
     }
 
     /**

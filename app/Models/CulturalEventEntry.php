@@ -80,6 +80,7 @@ class CulturalEventEntry extends Model
         'cover_media_id',
         'featured',
         'cancellation_reason',
+        'return_reason',
         'created_by',
         'last_modified_by',
         'first_submitted_at',
@@ -100,9 +101,21 @@ class CulturalEventEntry extends Model
         return $this->status === self::STATUS_DRAFT;
     }
 
+    public function isPendingApproval(): bool
+    {
+        return $this->status === self::STATUS_PENDING_APPROVAL;
+    }
+
     public function isCancelled(): bool
     {
         return $this->status === self::STATUS_CANCELLED;
+    }
+
+    public function isContentLocked(): bool
+    {
+        return $this->isPendingApproval()
+            || $this->isCancelled()
+            || $this->status === self::STATUS_ARCHIVED;
     }
 
     public function isPublished(): bool

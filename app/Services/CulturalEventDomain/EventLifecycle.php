@@ -3,8 +3,10 @@
 namespace App\Services\CulturalEventDomain;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Models\CulturalCategory;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
+use App\Models\CulturalOrganizer;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
@@ -36,17 +38,29 @@ final class EventLifecycle
     }
 
     /**
-     * Na odobrenju → Nacrt.
+     * Na odobrenju → Nacrt (BR-040: razlog obavezan).
      */
-    public function returnToDraft(CulturalEventEntry $entry, User $actor): CulturalEventEntry
+    public function returnToDraft(CulturalEventEntry $entry, User $actor, string $reason): CulturalEventEntry
     {
         $this->assertTransition($entry, CulturalEventEntry::STATUS_DRAFT);
 
-        return $this->apply($entry, CulturalEventEntry::STATUS_DRAFT, $actor);
+        $reason = trim($reason);
+        if ($reason === '') {
+            throw new CulturalEventDomainException('Razlog vraćanja na doradu je obavezan.');
+        }
+
+        return DB::transaction(function () use ($entry, $actor, $reason) {
+            $entry->status = CulturalEventEntry::STATUS_DRAFT;
+            $entry->return_reason = $reason;
+            $entry->last_modified_by = $actor->id;
+            $entry->save();
+
+            return $entry->fresh();
+        });
     }
 
     /**
-     * Nacrt → Objavljen (samo bez Organizatora).
+     * Nacrt → Objavljen (samo bez Organizatora). Domen API; nije dio Sprint 3A.3 UI.
      */
     public function publishDirectly(CulturalEventEntry $entry, User $actor): CulturalEventEntry
     {
@@ -128,8 +142,12 @@ final class EventLifecycle
     /**
      * Generički prelaz sa validacijom dozvoljenog skupa (za testove invalidnih vrijednosti).
      */
-    public function transitionTo(CulturalEventEntry $entry, string $target, User $actor): CulturalEventEntry
-    {
+    public function transitionTo(
+        CulturalEventEntry $entry,
+        string $target,
+        User $actor,
+        ?string $returnReason = null,
+    ): CulturalEventEntry {
         if (! in_array($target, CulturalEventEntry::STATUSES, true)) {
             throw new CulturalEventDomainException('Nepoznat status Događaja: '.$target);
         }
@@ -155,7 +173,7 @@ final class EventLifecycle
 
         if ($target === CulturalEventEntry::STATUS_DRAFT
             && $entry->status === CulturalEventEntry::STATUS_PENDING_APPROVAL) {
-            return $this->returnToDraft($entry, $actor);
+            return $this->returnToDraft($entry, $actor, (string) $returnReason);
         }
 
         if ($target === CulturalEventEntry::STATUS_CANCELLED) {
@@ -182,7 +200,10 @@ final class EventLifecycle
         }
     }
 
-    private function assertReadyForPublishGate(CulturalEventEntry $entry): void
+    /**
+     * Publish/submit gate (TS-003): naslov, aktivna kategorija, aktivan Org ako postoji, ≥1 održavanje.
+     */
+    public function assertReadyForPublishGate(CulturalEventEntry $entry): void
     {
         $naslov = trim((string) $entry->naslov);
         if ($naslov === '') {
@@ -191,6 +212,22 @@ final class EventLifecycle
 
         if ($entry->category_id === null) {
             throw new CulturalEventDomainException('Primarna kategorija je obavezna za slanje/objavu.');
+        }
+
+        $category = CulturalCategory::query()->find($entry->category_id);
+        if ($category === null || ! $category->isActive()) {
+            throw new CulturalEventDomainException(
+                'Za slanje/objavu je potrebna aktivna Kategorija.'
+            );
+        }
+
+        if ($entry->organizer_id !== null) {
+            $organizer = CulturalOrganizer::query()->find($entry->organizer_id);
+            if ($organizer === null || ! $organizer->isActive()) {
+                throw new CulturalEventDomainException(
+                    'Za slanje/objavu Organizator mora biti aktivan.'
+                );
+            }
         }
 
         if ($entry->occurrences()->count() < 1) {

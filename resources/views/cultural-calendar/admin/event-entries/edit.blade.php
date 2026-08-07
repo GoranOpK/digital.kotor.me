@@ -26,8 +26,23 @@
         </div>
     @endif
 
+    @if($entry->return_reason)
+        <div class="mb-4 rounded-md bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 max-w-3xl">
+            <p class="font-semibold mb-1">Razlog vraćanja na doradu</p>
+            <p class="mb-0 whitespace-pre-wrap">{{ $entry->return_reason }}</p>
+        </div>
+    @endif
+
     <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl mb-8">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">Podaci događaja</h2>
+        <div class="flex flex-wrap justify-between gap-3 items-start mb-4">
+            <h2 class="text-lg font-semibold text-gray-900 mb-0">Podaci događaja</h2>
+            <form method="POST" action="{{ route('cultural-event-entries.submit', $entry) }}">
+                @csrf
+                <button type="submit" class="px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50 font-semibold">
+                    Pošalji na odobrenje
+                </button>
+            </form>
+        </div>
         <form method="POST" action="{{ route('cultural-event-entries.update', $entry) }}">
             @csrf
             @method('PUT')

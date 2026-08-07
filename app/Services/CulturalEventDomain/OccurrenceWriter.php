@@ -25,6 +25,12 @@ final class OccurrenceWriter
      */
     public function create(CulturalEventEntry $entry, array $data): CulturalOccurrence
     {
+        if ($entry->isPendingApproval()) {
+            throw new CulturalEventDomainException(
+                'Događaj na odobrenju je zaključan; Održavanje se ne može dodati.'
+            );
+        }
+
         if ($entry->isCancelled() || $entry->status === CulturalEventEntry::STATUS_ARCHIVED) {
             throw new CulturalEventDomainException(
                 'Održavanje se ne može dodati na otkazan ili arhiviran Događaj.'
@@ -57,6 +63,13 @@ final class OccurrenceWriter
      */
     public function update(CulturalOccurrence $occurrence, array $data): CulturalOccurrence
     {
+        $entry = $occurrence->eventEntry;
+        if ($entry !== null && $entry->isPendingApproval()) {
+            throw new CulturalEventDomainException(
+                'Događaj na odobrenju je zaključan; Održavanje se ne može mijenjati.'
+            );
+        }
+
         $merged = [
             'datum' => $data['datum'] ?? $occurrence->datum,
             'vrijeme_od' => array_key_exists('vrijeme_od', $data) ? $data['vrijeme_od'] : $occurrence->vrijeme_od,
@@ -87,6 +100,12 @@ final class OccurrenceWriter
         $entry = $occurrence->eventEntry;
         if ($entry === null) {
             throw new CulturalEventDomainException('Održavanje nema Događaj.');
+        }
+
+        if ($entry->isPendingApproval()) {
+            throw new CulturalEventDomainException(
+                'Događaj na odobrenju je zaključan; Održavanje se ne može ukloniti.'
+            );
         }
 
         if (! $entry->isDraft() || $entry->hasEnteredEditorialFlow()) {

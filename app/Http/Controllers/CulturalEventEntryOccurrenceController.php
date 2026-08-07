@@ -26,7 +26,7 @@ class CulturalEventEntryOccurrenceController extends Controller
         if (! $kanonski_dogadjaj->isDraft()) {
             return redirect()
                 ->route('cultural-event-entries.index')
-                ->withErrors(['domain' => 'Održavanja se u ovom koraku dodaju samo na nacrte.']);
+                ->withErrors(['domain' => 'Održavanja se mogu mijenjati samo dok je Događaj Nacrt.']);
         }
 
         try {

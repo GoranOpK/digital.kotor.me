@@ -82,6 +82,12 @@ final class EventWriter
      */
     public function updateContent(CulturalEventEntry $entry, User $actor, array $data): CulturalEventEntry
     {
+        if ($entry->isPendingApproval()) {
+            throw new CulturalEventDomainException(
+                'Događaj na odobrenju je zaključan; sadržaj se ne može mijenjati.'
+            );
+        }
+
         if ($entry->isCancelled()) {
             if (array_key_exists('cancellation_reason', $data) && count($data) === 1) {
                 $entry->cancellation_reason = $data['cancellation_reason'];
