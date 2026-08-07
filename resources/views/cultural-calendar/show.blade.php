@@ -60,6 +60,16 @@
             color: #6b7280;
             margin-top: 0.5rem;
         }
+        .kk-show-cancelled-notice {
+            margin: 0 0 0.75rem;
+            padding: 0.75rem 1rem;
+            border: 1px solid #fca5a5;
+            border-radius: 0.375rem;
+            background: #fef2f2;
+            color: #991b1b;
+            font-size: 0.9375rem;
+            line-height: 1.5;
+        }
         @media (max-width: 768px) {
             .kk-show-layout {
                 grid-template-columns: 1fr;
@@ -87,6 +97,12 @@
             </div>
             <div class="kk-show-body">
                 @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'detail'])
+
+                @if($event->status === 'cancelled')
+                    <p class="kk-show-cancelled-notice" role="status">
+                        Ovaj događaj je otkazan i neće biti održan u planiranom terminu.
+                    </p>
+                @endif
 
                 <div class="kk-show-meta">
                     <strong>Datum:</strong>

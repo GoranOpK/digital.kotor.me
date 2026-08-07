@@ -60,6 +60,15 @@ class CulturalEvent extends Model
         'cancelled',
     ];
 
+    /**
+     * Javno dostupni interni statusi na portalu (CR-004B / PO-CR4B-01).
+     * Portalna Arhiva ≠ interni status archived — archived nije u ovom skupu.
+     */
+    public const PUBLICLY_VISIBLE_STATUSES = [
+        'published',
+        'cancelled',
+    ];
+
     protected $fillable = [
         'naslov',
         'opis',
@@ -85,6 +94,23 @@ class CulturalEvent extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Scope: događaji javno dostupni na portalu (CR-004B).
+     * published | cancelled — bez draft / archived.
+     */
+    public function scopePubliclyVisible($query)
+    {
+        return $query->whereIn('status', self::PUBLICLY_VISIBLE_STATUSES);
+    }
+
+    /**
+     * Da li je ovaj zapis javno dostupan na portalu (CR-004B / show).
+     */
+    public function isPubliclyVisible(): bool
+    {
+        return in_array($this->status, self::PUBLICLY_VISIBLE_STATUSES, true);
     }
 
     /**

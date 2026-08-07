@@ -50,7 +50,7 @@ class CulturalCalendarController extends Controller
                 $selectedDate = Carbon::createFromFormat('Y-m-d', $selectedDateParam)->startOfDay();
 
                 $selectedDateEvents = CulturalEvent::query()
-                    ->where('status', 'published')
+                    ->publiclyVisible()
                     ->whereDate('datum_od', '<=', $selectedDate)
                     ->where(function ($query) use ($selectedDate) {
                         $query->whereNull('datum_do')
@@ -66,7 +66,7 @@ class CulturalCalendarController extends Controller
         }
 
         $todayCount = CulturalEvent::query()
-            ->where('status', 'published')
+            ->publiclyVisible()
             ->whereDate('datum_od', '<=', $today)
             ->where(function ($query) use ($today) {
                 $query->whereNull('datum_do')
@@ -75,7 +75,7 @@ class CulturalCalendarController extends Controller
             ->count();
 
         $weekCount = CulturalEvent::query()
-            ->where('status', 'published')
+            ->publiclyVisible()
             ->whereDate('datum_od', '<=', $weekEnd)
             ->where(function ($query) use ($today) {
                 $query->whereNull('datum_do')
@@ -84,7 +84,7 @@ class CulturalCalendarController extends Controller
             ->count();
 
         $monthCount = CulturalEvent::query()
-            ->where('status', 'published')
+            ->publiclyVisible()
             ->where(function ($query) use ($monthStart, $monthEnd) {
                 $query->where(function ($single) use ($monthStart, $monthEnd) {
                     $single->whereNull('datum_do')
@@ -98,6 +98,7 @@ class CulturalCalendarController extends Controller
             })
             ->count();
 
+        // Istaknuti: samo published (PO-CR4B-03) — cancelled isključeni iz prikaza.
         $featuredEvents = CulturalEvent::query()
             ->where('status', 'published')
             ->where('featured', true)
@@ -115,7 +116,7 @@ class CulturalCalendarController extends Controller
             ->get();
 
         $upcomingEvents = CulturalEvent::query()
-            ->where('status', 'published')
+            ->publiclyVisible()
             ->whereDate('datum_od', '>=', $today)
             ->orderBy('datum_od')
             ->orderBy('vrijeme')
@@ -123,7 +124,7 @@ class CulturalCalendarController extends Controller
             ->get();
 
         $monthEvents = CulturalEvent::query()
-            ->where('status', 'published')
+            ->publiclyVisible()
             ->whereDate('datum_od', '<=', $monthEnd)
             ->where(function ($query) use ($monthStart) {
                 $query->whereNull('datum_do')
@@ -282,6 +283,7 @@ class CulturalCalendarController extends Controller
             $category = $categoryParam;
         }
 
+        // PO-CR3-04: dropdown lokacija ostaje iz published (CR-004B ne mijenja filter definiciju).
         $locationOptions = CulturalEvent::query()
             ->where('status', 'published')
             ->whereNotNull('lokacija')
@@ -299,7 +301,7 @@ class CulturalCalendarController extends Controller
         }
 
         $eventsQuery = CulturalEvent::query()
-            ->where('status', 'published');
+            ->publiclyVisible();
 
         if ($date !== null) {
             $selectedDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
@@ -421,7 +423,7 @@ class CulturalCalendarController extends Controller
         }
 
         $events = CulturalEvent::query()
-            ->where('status', 'published')
+            ->publiclyVisible()
             ->whereDate('datum_od', '<=', $selectedDate)
             ->where(function ($query) use ($selectedDate) {
                 $query->whereNull('datum_do')
@@ -441,7 +443,7 @@ class CulturalCalendarController extends Controller
     {
         $today = Carbon::today();
         $events = CulturalEvent::query()
-            ->where('status', 'published')
+            ->publiclyVisible()
             ->where(function ($query) use ($today) {
                 $query->where(function ($q) use ($today) {
                     $q->whereNotNull('datum_do')
@@ -461,7 +463,7 @@ class CulturalCalendarController extends Controller
 
     public function show(Request $request, CulturalEvent $event)
     {
-        if ($event->status !== 'published') {
+        if (! $event->isPubliclyVisible()) {
             abort(404);
         }
 
