@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Događaj  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.5  
+**Verzija:** 0.1.6  
 **Datum:** 2026-08-08
 
 ---
@@ -22,6 +22,7 @@
 | 0.1.3 | 2026-08-07 | **PO-EV-01** (implementaciona napomena §14): legacy `CulturalEvent` podaci su testni/prototipski; bez migracije/backfill/dual-write; novi model direktno prema TS. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 0.1.4 | 2026-08-07 | Dokumentaciono usklađivanje isticanja sa BM-PK-15 / BR-117 / PO-TS9-06B: najviše **tri (3)** istaknuta događaja u jednom trenutku (umjesto zastarjelog „najviše jedan“ nakon PATCH-046 / PATCH-FS-048). Bez izmjene BM/FS/TS-009. |
 | 0.1.5 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02** (BM PATCH-055 / FS PATCH-FS-055): otkazivanje Događaja atomski otkazuje Planirana/Odgođena Održavanja (§4.8); predikat arhive usklađen (§4.10). Bez izmjene implementacije. |
+| 0.1.6 | 2026-08-08 | **PO-DG-08 / PO-DG-09** (BM PATCH-056 / FS PATCH-FS-056): §4.11 BR-052 — samo Objavljen + bez Org; jednosmjerno NULL → Aktivan Org; konkurentnost; matrica §5.1 napomena. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -48,7 +49,7 @@ Dokument:
 Izvori istine za poslovna pravila:
 
 * `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-04, BM-10, BM-03 relevantni dijelovi, BM-UR-06/07/11, BM-MOD-16, BM-ORG-12; BM-DG-09/BM-DG-10/BM-DG-11 / BM PATCH-053 / BM PATCH-055)
-* `docs/functional-specifications/Functional-Specification.md` (§5.4–§5.5, §5.7.1–§5.7.2 relevantno, §5.16 katalog Događaji, BR-006–BR-044, BR-045, BR-052, BR-056–BR-066, BR-117, BR-131, BR-182/BR-183; PATCH-FS-053; PATCH-FS-055)
+* `docs/functional-specifications/Functional-Specification.md` (§5.4–§5.5, §5.7.1–§5.7.2 relevantno, §5.16 katalog Događaji, BR-006–BR-044, BR-045, BR-052, BR-056–BR-066, BR-117, BR-131, BR-182/BR-183; PATCH-FS-053; PATCH-FS-055; PATCH-FS-056)
 * `docs/features/Feature-Registry.md` (FT-001)
 * `docs/METHODOLOGY.md` (M-TS-001–M-TS-005)
 * `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001 — referentni obrazac i granice prema Organizatoru / Moderatoru)
@@ -530,12 +531,44 @@ flowchart TD
 7. Nakon otkazivanja Događaja (PO-AUTO-01) otvorena Održavanja su već Otkazana; Sistem ne koristi Planiran → Završen da bi zatvorio Održavanja Otkazanog Događaja.
 ## 4.11 Naknadno povezivanje sa Organizatorom
 
-Urednik može naknadno povezati događaj kreiran bez Organizatora sa registrovanim Organizatorom (BM-UR-07, BR-052).
+Posebna domenska operacija BR-052 (BM-UR-07, BM-DG-08, PO-DG-08, PO-DG-09). Nije opšte uređivanje Objavljenog sadržaja i ne otvara opšti update zaključanog Objavljenog događaja.
 
-Tehničke posljedice:
+**Akter:** samo Urednik.
 
-* administrativna dopuna podataka;
-* ne smije mijenjati audit, istoriju događaja niti javno objavljene verzije.
+**Ulaz (obavezno):**
+
+* status Događaja = Objavljen (`published`);
+* `organizer_id` nije postavljen (`null`);
+* izabrani Organizator postoji i ima status Aktivan (`active`).
+
+**Rezultat:**
+
+* `organizer_id` = izabrani Organizator;
+* status ostaje Objavljen;
+* `last_modified_by` = Urednik koji je izvršio povezivanje (uz postojeća polja vremena izmjene, gdje model već vodi `last_modified_*`).
+
+**Bez promjene:**
+
+* sadržaj događaja;
+* Održavanja;
+* istaknutost (`featured`);
+* `first_submitted_at`;
+* stanje Prijedloga izmjene (operacija ne kreira Prijedlog).
+
+**Jednokratnost i jednosmjernost (V1):**
+
+* dozvoljeno isključivo: `null` → Aktivan Organizator;
+* zabranjeno: Organizator → `null`;
+* zabranjeno: Organizator A → Organizator B;
+* nakon uspjeha operacija više nije dostupna za taj Događaj.
+
+**Statusi za koje BR-052 ne važi:** Nacrt, Na odobrenju, Otkazan, Arhiviran; te Objavljen kada Organizator već postoji. Dodjela Organizatora Nacrtu = redovni CRUD Nacrta, ne ova operacija.
+
+**Posljedice nakon povezivanja:** važe postojeća prava Moderatora Aktivnog Organizatora nad Objavljenim događajem (pregled, Prijedlog izmjene, statusne akcije Održavanja, otkazivanje Događaja) — bez novih moderatorskih prava. BR-012 i G-W02 ostaju neizmijenjeni.
+
+**Konkurentnost:** pri izvršenju ponovo se mora provjeriti aktuelni status Događaja, da je `organizer_id` i dalje `null`, i da je izabrani Organizator Aktivan. Sistem mora spriječiti da paralelni zahtjev pregazi već izvršeno povezivanje (drugi paralelni uspjeh na istom Događaju nije dozvoljen). Tehnologija zaključavanja nije propisana ovim dokumentom.
+
+**Audit:** operacija se kasnije evidentira kroz centralnu Evidenciju aktivnosti (FS §5.16 / TS-012). Ne uvodi se privremeni audit sistem.
 
 ---
 
@@ -580,7 +613,7 @@ Logički model (bez middleware / framework detalja).
 | Ručno arhivirati | Ne | Ne | Ne | Ne |
 | Automatsko arhiviranje | — | — | — | Sistem |
 | Istaknuti / ukloniti isticanje | Ne | Da (BR-117) | Ne | Ne |
-| Naknadno povezati sa Org. | Ne | Da (BR-052) | Ne | Ne |
+| Naknadno povezati sa Org. | Ne | Da — samo Objavljen + bez Org. (BR-052; PO-DG-08/09) | Ne | Ne |
 | Pristupiti kao Organizator | Ne | Ne | Ne | Ne — entitet nema prijavu |
 
 ## 5.2 Posebna pravila Moderatora
@@ -596,6 +629,7 @@ Logički model (bez middleware / framework detalja).
 
 * Pregled, odobravanje, vraćanje, objava.
 * Direktna objava samo bez Organizatora.
+* Jednokratno naknadno povezivanje Objavljenog događaja bez Organizatora sa Aktivnim Organizatorom (BR-052; PO-DG-08 / PO-DG-09).
 * Otkazivanje bilo kojeg objavljenog događaja.
 * Unos / dopuna razloga otkazivanja (napomene urednika) dok je status Otkazan.
 * Ne vraća otkazani događaj u Objavljen; ne uređuje sadržajne podatke otkazanog događaja osim razloga otkazivanja.
@@ -734,7 +768,7 @@ Za svako relevantno pravilo: implementaciona posljedica (bez kopiranja BM teksta
 | BM-DG-04 / BR-065 | Job/proces Sistema: ako sva održavanja završena i status ∈ {Objavljen, Otkazan} → Arhiviran |
 | BM-DG-05 / BR-063 | Autorizovati otkaz po matrici §5; ulaz samo Objavljen |
 | BM-DG-06/07 | Zahtijevati primarnu kategoriju pri slanju/objavi; dozvoliti odsustvo u Nacrtu |
-| BM-DG-08 / BR-018 / BR-045 | Enforce 0..1 Org.; direktna objava samo pri 0 |
+| BM-DG-08 / BR-018 / BR-045 / BR-052 | Enforce 0..1 Org.; direktna objava samo pri 0; naknadno povezivanje samo Objavljen + null → Aktivan Org (jednosmjerno) |
 | BM-DG-09 / BR-064 | Odbijati Otkazan → Objavljen; novi program = novi zapis; Odgođen (TS-004) = jedini mehanizam promjene termina |
 | BM-DG-10 / BR-064 | Dok je Otkazan: read-only sadržaj; dozvoliti samo izmjenu razloga otkazivanja (Urednik) |
 | BM-ST-04 / BR-028 | Zabraniti Nacrt→Objavljen ako Org. postoji |
@@ -746,7 +780,7 @@ Za svako relevantno pravilo: implementaciona posljedica (bez kopiranja BM teksta
 | BR-012 | Odbiti drugi aktivni prijedlog izmjene |
 | BR-019 | Bez autosave nacrta pri napuštanju |
 | BR-033/034 | Povlačenje samo prije početka pregleda |
-| BR-052 | Link-to-Org ne smije mutirati audit/istoriju/javne verzije |
+| BR-052 | Samo Objavljen + `organizer_id` null; Aktivan Org; jednosmjerno; ne mutira sadržaj/istoriju/javne verzije; ne kreira Prijedlog |
 
 ## 7.2 Tabela validacija po toku
 
@@ -765,6 +799,9 @@ Za svako relevantno pravilo: implementaciona posljedica (bez kopiranja BM teksta
 | Razlog vraćanja obavezan | Vraćanje na doradu | Sistem | Blokada bez razloga |
 | Max 1 aktivan prijedlog | Pokretanje izmjene | Sistem | Odbijanje drugog |
 | Status = Objavljen | Otkazivanje | Sistem | Odbijanje inače |
+| Status = Objavljen i Org. null | Naknadno povezivanje (BR-052) | Sistem | Odbijanje inače |
+| Org. Aktivan | Naknadno povezivanje (BR-052) | Sistem | Odbijanje ako nije Aktivan |
+| Org. još null pri upisu | Naknadno povezivanje (BR-052) | Sistem | Odbijanje ako je već povezan (konkurentnost) |
 | Mod: Aktivan Org. + kontekst | Otkazivanje Moderatorom | Sistem | Odbijanje inače |
 | Otkazan → Objavljen zabranjen | Pokušaj ponovne objave / reaktivacije | Sistem | Odbijanje (BR-064, BM-ST-09) |
 | Status = Otkazan → sadržaj read-only | Izmjena sadržajnih polja | Sistem | Odbijanje (BM-DG-10) |

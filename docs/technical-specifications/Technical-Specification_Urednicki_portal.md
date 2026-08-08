@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.2
+**Verzija:** 1.0.3
 **Datum:** 2026-08-08
 
 ---
@@ -31,6 +31,7 @@
 | 1.0.0 | 2026-08-06 | Formalno usvajanje kompletne tehničke specifikacije TS-010.1–TS-010.8. Status: USVOJEN. Bez funkcionalnih izmjena. |
 | 1.0.1 | 2026-08-07 | Usklađivanje sa BM PATCH-053 / PO-DG-07, FS PATCH-FS-053 i TS-003 v0.1.2: Otkazan terminalan (nema Otkazan → Objavljen); forma Otkazan read-only (izuzetak: razlog otkazivanja / napomena urednika); novi program = novi događaj; Odgođen = jedini mehanizam promjene termina (granica TS-004); uklonjena ponovna objava / reaktivacija iz workflow, CRUD, Dashboard, audita i test matrice. Bez izmjene BM/FS/TS-003/implementacije. |
 | 1.0.2 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02** (BM PATCH-055 / FS PATCH-FS-055): otkazivanje Događaja atomski otkazuje Planirana/Odgođena Održavanja (§7.4.7; TM-PUB-04); razlikovanje od automatskog Planiran → Završen (TM-OCC-11). Bez izmjene implementacije. |
+| 1.0.3 | 2026-08-08 | **PO-DG-08 / PO-DG-09** (BM PATCH-056 / FS PATCH-FS-056 / TS-003 v0.1.6): §10.10 akcija „Poveži sa Organizatorom“ samo Objavljen + bez Org; jednosmjerno; TM-CRUD-11/12 usklađeni. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -59,6 +60,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.0 | 2026-08-06 | Formalno usvojen kompletan dokument TS-010. Status promijenjen iz U IZRADI u USVOJEN. Nema funkcionalnih izmjena. |
 | 1.0.1 | 2026-08-07 | PATCH: usklađivanje lifecycle događaja sa BM PATCH-053, FS PATCH-FS-053 i TS-003 v0.1.2 (terminalnost Otkazan; read-only; razlog otkazivanja; uklonjena ponovna objava). |
 | 1.0.2 | 2026-08-08 | PATCH: PO-AUTO-01 / PO-AUTO-02 — cascade otkazivanja Održavanja pri otkazivanju Događaja; usklađenje TM-PUB-04 / TM-OCC-11. |
+| 1.0.3 | 2026-08-08 | PATCH: PO-DG-08 / PO-DG-09 — §10.10 BR-052 UI/ponašanje; TM-CRUD-11/12 bez uklanjanja/zamjene Organizatora. |
 
 ---
 
@@ -1485,11 +1487,15 @@ Nakon toga **nema** Delete Održavanja. Otkazivanje ≠ Delete (N-TR-04).
 
 * Veza `0..1`.
 * Događaj bez Organizatora kreira samo Urednik (postojeći izuzetak).
-* Moderator **ne može** mijenjati Organizatora događaja.
-* Urednik može naknadno povezati događaj sa Organizatorom (postojeće pravilo).
+* Moderator **ne može** mijenjati Organizatora događaja i **nema** akciju naknadnog povezivanja.
+* Urednik vidi akciju **Poveži sa Organizatorom** isključivo kada je Događaj **Objavljen** i **bez Organizatora** (BR-052 / PO-DG-08 / PO-DG-09; TS-003 §4.11).
+* Urednik bira samo **Aktivnog** Organizatora.
+* Nakon uspješnog povezivanja: akcija više nije dostupna; Organizator se ne može ukloniti; Organizator se ne može zamijeniti drugim kroz BR-052.
+* Dodjela Organizatora Nacrtu prije objave nije BR-052 — to je redovno uređivanje Nacrta.
 * Promjena veze ne smije zaobići autorizaciona i kontekstna pravila.
 * Deaktiviran Organizator prekida operativna prava Moderatora.
 * Podaci Organizatora se **ne kopiraju** u događaj kao zasebna sadržajna polja.
+* Nakon povezivanja važe postojeća prava aktivnih Moderatora tog Organizatora nad Objavljenim događajem (pregled, Prijedlog izmjene, statusne akcije Održavanja, otkazivanje); BR-012 i G-W02 ostaju.
 
 ## 10.11 Manifestacija
 
@@ -2016,8 +2022,8 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | TM-CRUD-08 | CRUD | Update Na odobrenju prije pregleda | Prije pregleda; podnosilac | Update | Dozvoljeno po pravilima | Pozitivan | TS-010.5 §10.5 |
 | TM-CRUD-09 | CRUD | Update Objavljen direktno | Objavljen; bez prijedloga | Direktni Update sadržaja | Odbijeno | Negativan | BM-DG; TS-010.5 §10.6 |
 | TM-CRUD-10 | CRUD | Update Otkazan (Mod) | Otkazan; Mod | Sadržajna izmjena / razlog | Odbijeno | Negativan | TS-010.5; BM-DG-10; BR-064 |
-| TM-CRUD-11 | CRUD | Veza Org 0..1 | Događaj | Promjena veze Org | Urednik može povezati/odspojiti u granicama; Mod ne mijenja Org događaja | Granični | TS-010.5; TS-001 |
-| TM-CRUD-12 | CRUD | Promjena veze Org — gubitak prava | Događaj prebačen na drugi Org | Prethodni Mod pristupa | Operativno pravo ukinuto | Negativan | TS-010.5 |
+| TM-CRUD-11 | CRUD | Veza Org 0..1 — BR-052 | Objavljen; bez Org; Urednik; Aktivan Org | Poveži sa Organizatorom | Org postavljen; status Objavljen; akcija nestaje | Pozitivan | BR-052; PO-DG-08/09; TS-003 §4.11; TS-010.5 §10.10 |
+| TM-CRUD-12 | CRUD | BR-052 — zabrane | Objavljen + Org postoji / Otkazan / Nacrt / uklanjanje Org / zamjena Org / Moderator | Pokušaj povezivanja, uklanjanja ili zamjene Org | Odbijeno | Negativan | BR-052; PO-DG-08/09; TS-010.5 §10.10 |
 | TM-READ-01 | Read | Mod vidi samo aktivni Org | Dva Org | Lista događaja | Samo aktivni kontekst | Pozitivan | TS-010.5 §10.4; BR-016; BR-124 |
 | TM-READ-02 | Read | Urednik globalno | Urednik | Lista | Globalni Read opseg | Pozitivan | TS-010.5 §10.4 |
 | TM-READ-03 | Read | Deaktivacija ne briše | Org deaktiviran; događaji postoje | Pregled podataka (ovlašćeni) | Podaci nijesu obrisani | Granični | BM-ORG-12; TS-010.2; TS-010.5 |

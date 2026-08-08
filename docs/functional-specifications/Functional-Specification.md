@@ -75,6 +75,7 @@
 | PATCH-FS-053 | 2026-08-06 | Usklađivanje sa BM PATCH-053 / PO-DG-07: Otkazan terminalan (nema Otkazan → Objavljen); novi program = novi događaj; Odgođen = jedini mehanizam promjene termina; Otkazan = istorijski zapis (forma zaključana; izuzetak: razlog otkazivanja / napomena urednika). Usklađeni BR-007, BR-063, BR-064, BR-131, BR-182, BR-183; dijagram §5.5.6a; katalog §5.16. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-054 | 2026-08-07 | PO-ORG-01–PO-ORG-04 / BM PATCH-054: katalog polja Organizatora V1 (BR-135); Moderator preko `user_id` (BR-275); kreiranje Org tek pri odobrenju; pristup portalu iz ovlašćenja bez nove platformske uloge (BR-276). ID-jevi BR-275/276 (ne BR-138/139 — ti su Newsletter). Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-055 | 2026-08-08 | PO-AUTO-01 / PO-AUTO-02 / BM PATCH-055: otkazivanje Događaja automatski otkazuje Planirana i Odgođena Održavanja (BR-063, BR-064, BR-065); preciziran trenutak Planiran → Završen (BR-068). Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-056 | 2026-08-08 | PO-DG-08 / PO-DG-09 / BM PATCH-056: preciziran BR-052 (samo Objavljen + bez Org; jednosmjerno NULL → Aktivan Org; bez unlink/reassign); usklađen BR-018 (razdvajanje BR-045 / BR-052); statusna matrica uz BR-052. Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -900,7 +901,7 @@ Jedan događaj pripada tačno jednom Organizatoru.
 
 Događaj nije moguće povezati sa više Organizatora.
 
-Izuzetno, ako Organizator nije registrovan u sistemu, Urednik može kreirati događaj bez registrovanog Organizatora, u skladu sa BR-045 i BR-052. Takav događaj nastaje u statusu Nacrt i može biti direktno objavljen, bez postupka odobravanja.
+Izuzetno, ako Organizator nije registrovan u sistemu, Urednik može kreirati događaj bez registrovanog Organizatora, u skladu sa BR-045. Takav događaj nastaje u statusu Nacrt i može biti direktno objavljen, bez postupka odobravanja. Naknadno povezivanje već Objavljenog događaja bez Organizatora sa Aktivnim Organizatorom uređuje BR-052 (PO-DG-08 / PO-DG-09) i nije dio kreiranja Nacrta.
 
 Urednik može direktno objaviti događaj isključivo kada događaj nema Organizatora. Događaj koji pripada Organizatoru ne može biti direktno objavljen; za njega je obavezan standardni tok Nacrt → Na odobrenju → Objavljen. Moderator ne može biti zaobiđen za događaje koji pripadaju Organizatoru.
 
@@ -1348,7 +1349,7 @@ Organizator:
 * posjeduje istoriju svojih događaja;
 * može biti aktivan ili deaktiviran.
 
-Svi događaji vode se u ime Organizatora, osim u izuzetku kada Urednik kreira i objavljuje događaj bez registrovanog Organizatora radi javnog interesa i pravovremenog informisanja građana (BR-045, BR-052).
+Svi događaji vode se u ime Organizatora, osim u izuzetku kada Urednik kreira i objavljuje događaj bez registrovanog Organizatora radi javnog interesa i pravovremenog informisanja građana (BR-045). Naknadno povezivanje takvog već Objavljenog događaja sa Organizatorom uređuje BR-052.
 
 Organizator ne pristupa uredničkom portalu.
 
@@ -1467,14 +1468,52 @@ Aktivni kontekst Organizatora nije isto što i izbor aktivne korisničke uloge. 
 
 ##### BR-052 – Naknadno povezivanje sa Organizatorom
 
-Ako je događaj kreiran bez registrovanog Organizatora, sistem mora omogućiti njegovo naknadno povezivanje sa Organizatorom kada isti bude registrovan.
+Posebna operacija naknadnog povezivanja (PO-DG-08 / PO-DG-09 / BM-UR-07) omogućava **isključivo Uredniku** da jednokratno poveže već **Objavljen** događaj bez Organizatora sa **Aktivnim** Organizatorom.
 
-Naknadno povezivanje:
+**Polazno stanje (obavezno):**
 
-* ne smije mijenjati audit;
-* ne smije mijenjati istoriju događaja;
-* ne smije uticati na javno objavljene verzije događaja;
-* predstavlja administrativnu dopunu podataka.
+* status događaja = Objavljen;
+* događaj nema Organizatora (`organizer_id` nije postavljen).
+
+**Cilj:**
+
+* događaj je povezan sa izabranim Aktivnim Organizatorom;
+* status ostaje Objavljen.
+
+**Jednosmjernost (V1):**
+
+* dozvoljeno isključivo: bez Organizatora → Aktivan Organizator;
+* zabranjeno: uklanjanje Organizatora;
+* zabranjeno: zamjena jednog Organizatora drugim;
+* nakon uspješnog povezivanja operacija više nije dostupna za taj događaj.
+
+**Organizator:**
+
+* mora postojati;
+* mora biti Aktivan.
+* Poseban zahtjev ili saglasnost Organizatora nije potreban.
+
+**Šta operacija ne mijenja:**
+
+* sadržaj događaja;
+* Održavanja;
+* istaknutost (`featured`);
+* `first_submitted_at`;
+* prethodne javne verzije / istoriju događaja;
+* ne kreira Prijedlog izmjene.
+
+**Evidentiranje:** naknadno povezivanje se kasnije evidentira kroz centralnu Evidenciju aktivnosti (katalog Organizatori / §5.16; TS-012).
+
+**Statusna matrica dostupnosti BR-052:**
+
+| Status događaja | BR-052 |
+| ----------------------- | -------------------------------- |
+| Nacrt | NE — dodjela Organizatora ide kroz redovni CRUD Nacrta |
+| Na odobrenju | NE |
+| Objavljen + bez Organizatora | DA |
+| Objavljen + Organizator postoji | NE |
+| Otkazan | NE |
+| Arhiviran | NE |
 
 ---
 
@@ -4166,3 +4205,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-06 | FS-001 (PATCH-FS-053): Usklađivanje sa BM PATCH-053 / PO-DG-07 — Otkazan terminalan; BR-007, BR-063, BR-064 (prepisan), BR-131, BR-182, BR-183; §5.5.6a; katalog §5.16. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-07 | FS-001 (PATCH-FS-054): PO-ORG-01–PO-ORG-04 / BM PATCH-054 — BR-135 katalog polja; BR-275 `user_id`; BR-276 portal pristup bez nove platformske uloge; Org tek pri odobrenju. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-08 | FS-001 (PATCH-FS-055): PO-AUTO-01 / PO-AUTO-02 / BM PATCH-055 — BR-063 cascade otkazivanja Održavanja; BR-064/065 predikat arhive; BR-068 trenutak Planiran → Završen; §5.5.6a napomena. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| 2026-08-08 | FS-001 (PATCH-FS-056): PO-DG-08 / PO-DG-09 / BM PATCH-056 — preciziran BR-052 (Objavljen + bez Org; jednosmjerno; bez unlink/reassign); usklađen BR-018; statusna matrica. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
