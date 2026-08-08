@@ -136,6 +136,7 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **TS7-PO-04:** Bez migracije test podataka; bez kompatibilnosti/tranzicije sa starim modelom; novi poslovni katalog; test kategorije nisu referentni poslovni podaci.
 - **TS7-PO-05:** Kategorija „Nešto drugo“ ne postoji; Urednik proširuje katalog; oznake nisu zamjena za kategoriju.
 - **TS7-PO-06:** Katalogom kategorija i oznaka upravlja isključivo Urednik; Moderator samo koristi pri uređivanju događaja; bez workflow-a predlaganja, dodatnih statusa i ovlašćenja.
+- **TS7-PO-07:** Konačni početni V1 katalog kategorija Događaja (14 naziva, usvojeni redoslijed); značenja; kategorija ≠ Manifestacija / ≠ tip Organizatora; odbačene legacy vrijednosti; semantičko mapiranje; tehnički cutover = TS-009. BM PATCH-059 / FS PATCH-FS-059 / TS-007 v0.1.1. **Nije** nova CRUD funkcionalnost (katalog CRUD već implementiran); **nije** implementacija cutover-a.
 
 **Usvojene poslovne odluke (Organizator / Moderator — PO-ORG):**
 - **PO-ORG-01:** Katalog polja Organizatora V1 — naziv (obavezno); opis, kontakt e-mail, telefon, web (opciono); status Aktivan/Deaktiviran; sistemski datumi. Van V1: PIB, MB, adresa, GPS, društvene mreže, logo, ostali pravni podaci.
@@ -232,9 +233,9 @@ Povezana dokumentacija (Lokacije):
 
 Povezana dokumentacija (Kategorije i oznake):
 
-* Business Model — BM-08 (BM-KO-01–BM-KO-08), BM-GL-14, BM-GL-23, PATCH-043; TS7-PO-01–TS7-PO-06
-* Functional Specification — §5.10 (BR-081–BR-085, BR-224–BR-236), PATCH-FS-045
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Kategorije_i_oznake.md` (TS-007; verzija 0.1.0; Usvojen)
+* Business Model — BM-08 (BM-KO-01–BM-KO-11), BM-GL-14, BM-GL-23, PATCH-043, **PATCH-059 / TS7-PO-07**
+* Functional Specification — §5.10 (BR-081–BR-085, BR-224–BR-236, **BR-277–BR-279**), PATCH-FS-045, **PATCH-FS-059**
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Kategorije_i_oznake.md` (TS-007; verzija **0.1.1**; Usvojen)
 
 Povezana dokumentacija (Mediji):
 
@@ -294,7 +295,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.8); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni |
 | TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
-| TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
+| TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.1); TS7-PO-07 početni V1 katalog |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.5) |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.6) — **V1 implementaciono završen**; TS-010.1–TS-010.8 |
@@ -533,3 +534,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-08 | FT-001 — **PO-DG-10** usvojena (BM PATCH-057 / FS PATCH-FS-057): V1 prvi Event review — Na odobrenju zaključan; Odobri / Vrati; bez Mod povlačenja, bez Počni pregled, bez Urednik edit na pending Eventu. Proposal tok neizmijenjen. Usklađeni TS-003 v0.1.7 i TS-010 v1.0.4 (TM-WF-03/04/06, TM-CRUD-08 VAN V1 za Event). Bez izmjene implementacije. |
 | 2026-08-08 | FT-001 — **PO-N-TR-02-04** usvojena (BM PATCH-058 / FS PATCH-FS-058): V1 generator Održavanja preciziran (samo Nacrt; algoritmi; XOR; max 100; duplikati; atomičnost). Usklađeni TS-004 v0.1.8 i TS-010 v1.0.5. T10-GEN-01 = spreman za implementaciju (nije zatvoren). Bez izmjene implementacije. |
 | 2026-08-08 | FT-001 — **TS-010 V1 implementacioni closeout** (TS-010 v1.0.6; IR-001 v1.0.4): Urednički portal V1 funkcionalno/implementaciono završen. **T10-GEN-01 = ZATVOREN**; **T10-WF-01** potvrđen; **GAP-RESUME-01** / **R-02** / **TM-OCC-17** zatvoreni (Urednik resume). Cultural: 420 passed / 1740 assertions. Dependency ostaju: TS-005 (Manifestacije), TS-009 (javni cutover / Faza 6), TS-012 (audit emit / Faza 8). Bez izmjene BM/FS/TS-003/TS-004. Bez novih poslovnih pravila. |
+| 2026-08-08 | FT-001 — **TS7-PO-07** usvojena (BM PATCH-059 / FS PATCH-FS-059 / TS-007 v0.1.1 / RG-001 v1.1.4): konačni početni V1 katalog kategorija Događaja (14 naziva, redoslijed); značenja; odbačene legacy vrijednosti; semantičko mapiranje; cutover = TS-009. Katalog CRUD neizmijenjen. Bez izmjene implementacije. |

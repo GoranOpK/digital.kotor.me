@@ -78,6 +78,7 @@
 | PATCH-FS-056 | 2026-08-08 | PO-DG-08 / PO-DG-09 / BM PATCH-056: preciziran BR-052 (samo Objavljen + bez Org; jednosmjerno NULL → Aktivan Org; bez unlink/reassign); usklađen BR-018 (razdvajanje BR-045 / BR-052); statusna matrica uz BR-052. Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-057 | 2026-08-08 | PO-DG-10 / BM PATCH-057: pojednostavljeni V1 prvi Event review — usklađeni BR-022, BR-023, BR-033, BR-034, BR-037, BR-038 i tokovi §5.5.5–§5.5.6; Proposal tok neizmijenjen. Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-058 | 2026-08-08 | PO-N-TR-02-04 / BM PATCH-058: preciziran V1 generator Održavanja — BR-060/BR-061 (samo Nacrt; algoritmi; XOR; max 100; šablon; duplikati; atomičnost; bez preview/Proposal generatora). Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-059 | 2026-08-08 | **TS7-PO-07** / BM PATCH-059: konačni početni V1 katalog kategorija Događaja — dodati BR-277–BR-279; usklađen §5.10. Tehnički cutover legacy podataka ostaje TS-009. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -191,7 +192,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.7.3 Upravljanje statusom održavanja (BR-067–BR-069, BR-129–BR-134)
    - 5.8 Upravljanje moderatorima (BR-070–BR-073)
    - 5.9 Upravljanje lokacijama (BR-074–BR-080, BR-206–BR-223)
-   - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236)
+   - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236, BR-277–BR-279)
    - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
    - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-269)
@@ -2294,6 +2295,80 @@ Oznake su dio V1 opsega modula Kalendar kulture.
 
 ---
 
+#### BR-277 – Konačni početni V1 katalog kategorija Događaja (TS7-PO-07)
+
+Product Owner je usvojio konačni početni V1 katalog kategorija Događaja. Redoslijed je usvojen za početni prikaz/inicijalni sadržaj kataloga.
+
+Usvojeni redoslijed (1–14):
+
+1. Koncerti
+2. Predstave
+3. Sportski događaji
+4. Izložbe
+5. Književni programi
+6. Filmske projekcije
+7. Dječiji programi
+8. Konferencije
+9. Radionice
+10. Publikacije
+11. Performansi
+12. Prezentacije i predavanja
+13. Paneli i tribine
+14. Sajmovi
+
+Ova lista **nije** tehnička ENUM lista. Kanonski izvor vrijednosti ostaje poslovni katalog (BR-081, BR-224). Urednik može kasnije dodati nove kategorije (BR-235). Poslovna značenja i razgraničenja: BM-KO-09 / BM-KO-10.
+
+---
+
+#### BR-278 – Kategorija nije Manifestacija niti tip Organizatora
+
+Kategorija klasifikuje vrstu Događaja.
+
+Manifestacija nije kategorija Događaja. Događaj unutar Manifestacije zadržava vlastitu kategoriju vrste.
+
+Tip ili naziv Organizatora nije kategorija Događaja.
+
+---
+
+#### BR-279 – Legacy kategorije koje nijesu kanonske V1 vrijednosti
+
+Sljedeće legacy string vrijednosti nijesu kanonske V1 kategorije Događaja:
+
+* Filmski festivali;
+* Likovne manifestacije;
+* Manifestacije u organizaciji Mjesnih zajednica;
+* Manifestacije u organizaciji NVU;
+* Nešto drugo (zabranjeno BR-225).
+
+Semantičko mapiranje (PO; ne implementacija cutover-a):
+
+| Legacy | Kanonski V1 | Tip |
+|--------|-------------|-----|
+| Koncerti | Koncerti | 1:1 |
+| Predstave | Predstave | 1:1 |
+| Sportski događaji | Sportski događaji | 1:1 |
+| Izložbe | Izložbe | 1:1 |
+| Književne večeri | Književni programi | rename |
+| Filmske projekcije | Filmske projekcije | 1:1 |
+| Radionice | Radionice | 1:1 |
+| Promocije publikacija | Publikacije | rename |
+| Performansi | Performansi | 1:1 |
+| Prezentacije | Prezentacije i predavanja | rename |
+| Paneli o kulturi | Paneli i tribine | rename |
+| Filmski festivali | — | ne prenosi se |
+| Likovne manifestacije | — | ne prenosi se |
+| Manifestacije u organizaciji Mjesnih zajednica | — | ne prenosi se |
+| Manifestacije u organizaciji NVU | — | ne prenosi se |
+| Nešto drugo | — | zabranjeno; bez automatskog fallback-a |
+
+Nove kategorije bez legacy ekvivalenta: Dječiji programi; Konferencije; Sajmovi — bez automatskog mapiranja.
+
+Tehnički cutover, migracija podataka i odluke za nemapirane legacy zapise pripadaju **TS-009**. Izbacivanje iz kanonskog kataloga ne briše automatski postojeće legacy događaje.
+
+**Status:** Approved
+
+---
+
 ### 5.11 Upravljanje medijima
 
 #### BR-086 – Mediji
@@ -4188,6 +4263,7 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-30 | FS-001 / 5.9 (PATCH-FS-043): korekcija PO-LOC-01 i PO-LOC-05 — katalog Lokacija je opcioni za ponovno korišćenje; ručni unos Lokacije dozvoljen; kataloška referenca opciona; merge i referencijalni integritet primjenjuju se samo za postojeće kataloške veze. Usklađeni BR-074, BR-075, BR-077, BR-078, BR-216, BR-217, BR-218, BR-219. |
 | 2026-07-30 | FS-001 / 5.16 (PATCH-FS-044): terminološko pojašnjenje da ne postoji zaseban katalog Održavanja; aktivnosti nad Održavanjem evidentiraju se kroz katalog Događaji. Bez izmjene poslovnih pravila. |
 | 2026-07-30 | FS-001 / 5.10 (PATCH-FS-045): TS7-PO-01–TS7-PO-06 — poslovni katalog kategorija i oznaka (ne ENUM), oznake u V1, lifecycle Aktivna/Neaktivna, bez migracije test podataka, bez „Nešto drugo“, ovlašćenja Urednik/Moderator. Usklađeni BR-081–BR-085; dodati BR-224–BR-236. |
+| 2026-08-08 | FS-001 / 5.10 (PATCH-FS-059): TS7-PO-07 / BM PATCH-059 — konačni početni V1 katalog kategorija (14); BR-277–BR-279; cutover = TS-009. Bez izmjene implementacije. |
 | 2026-07-31 | FS-001 / 5.11 (PATCH-FS-046): TS8-01–TS8-09 — Mediji kao samostalan entitet; zatvoreni katalog namjena; kardinalnosti i fallback; tip Fotografija; lifecycle; ovlašćenja; pretraga; metapodaci. Usklađeni BR-086–BR-091, §5.4.4, BR-113; dodati BR-237–BR-254. |
 | 2026-07-31 | FS-001 / 5.13 (PATCH-FS-047): TS-009 faza 1 — IA-01, PO-TS9-03A/04A/05A/05B; TD-TS9-01 referenca. Usklađeni BR-104, BR-107–BR-109, §5.3, §5.4.1; dodati BR-255–BR-260. |
 | 2026-07-31 | FS-001 / 5.1–5.3 i 5.13 (PATCH-FS-048): TS-009 faza 2 — PO-TS9-06A–06D. Usklađeni Hero, statistike (3 klikabilne kartice), istaknuti (max 3), lista ispod kalendara; BR-117; dodati BR-261–BR-264. |

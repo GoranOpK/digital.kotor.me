@@ -2,13 +2,13 @@
 # Technical Specification
 ## Kategorije i oznake
 
-**Feature ID:** FT-001  
-**Oznaka dokumenta:** TS-007  
-**Funkcionalna cjelina:** Kategorije i oznake  
-**Modul:** Kalendar kulture  
-**Status dokumenta:** Usvojen  
-**Verzija:** 0.1.0  
-**Datum:** 2026-07-30
+**Feature ID:** FT-001
+**Oznaka dokumenta:** TS-007
+**Funkcionalna cjelina:** Kategorije i oznake
+**Modul:** Kalendar kulture
+**Status dokumenta:** Usvojen
+**Verzija:** 0.1.1
+**Datum:** 2026-08-08
 
 ---
 
@@ -17,6 +17,7 @@
 | Verzija | Datum | Opis |
 |---------|--------|------|
 | 0.1.0 | 2026-07-30 | Prva kompletna tehnička specifikacija za Kategorije i oznake. Ugrađene usvojene Product Owner odluke TS7-PO-01–TS7-PO-06 i usklađene sa BM-08, FS §5.10 i TS pravilima projekta. Bez SQL, API ugovora, Laravel koda i migracija. |
+| 0.1.1 | 2026-08-08 | **TS7-PO-07** / BM PATCH-059 / FS PATCH-FS-059: konačni početni V1 katalog (14 kategorija); razdvajanje kanonskog DB kataloga od PO početnog sadržaja; semantičko mapiranje legacy→kanonski; cutover = TS-009. Bez implementacije seed/migracije. |
 
 ---
 
@@ -35,7 +36,7 @@ Izvori istine:
 
 * `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-08, BM-GL-14, BM-GL-23, relevantni BM-02/BM-03/BM-04)
 * `docs/functional-specifications/Functional-Specification.md` (§5.10, BR-081–BR-085, BR-224–BR-236)
-* usvojene PO odluke: TS7-PO-01 .. TS7-PO-06
+* usvojene PO odluke: TS7-PO-01 .. TS7-PO-07
 * `docs/features/Feature-Registry.md`
 * `docs/METHODOLOGY.md`
 
@@ -105,9 +106,9 @@ TS-007 obuhvata:
 ## 1.4 Veza sa BM / FS / PO
 
 ```
-TS7-PO-01..06
+TS7-PO-01..07
   -> BM-08 Kategorije i oznake, BM-GL-14, BM-GL-23
-  -> FS §5.10 (BR-081..085, BR-224..236)
+  -> FS §5.10 (BR-081..085, BR-224..236, BR-277..279)
   -> TS-007 (ovaj dokument)
 ```
 
@@ -123,12 +124,23 @@ Tehnički model ne tretira kategorije kao fiksnu ENUM listu ni kao PHP konstantu
 
 Katalog je proširiv dodavanjem novih zapisa od strane Urednika.
 
+### 2.1.1 Kanonski katalog vs početni V1 sadržaj (TS7-PO-07)
+
+| Pojam | Značenje |
+|-------|----------|
+| **Kanonski katalog** | Zapisi u poslovnom/tehničkom katalogu kategorija (npr. `cultural_categories`); SSOT za runtime izbor i validaciju |
+| **Početni V1 sadržaj (PO)** | Usvojeni skup od **14** naziva (BM-KO-09 / BR-277) sa kojim V1 ulazi u produkcijski/cutover režim |
+| **Legacy lista** | `CulturalEvent::CATEGORIES` / ENUM string — **nije** kanonski izvor istine |
+
+Početni V1 sadržaj **nije** ENUM. Urednik i dalje može proširiti katalog. Obezbjeđivanje početnog sadržaja u bazi prije cutover-a je preduslov za TS-009; **način** (seed, ručni unos, migracija) **nije** propisan ovim dokumentom i ne implementira se ovdje.
+
 ## 2.2 Razdvajanje pojmova i uloga
 
 * Organizator je poslovni entitet i nije operativna uloga.
 * Moderator je poslovno ovlašćenje koje bira postojeće Aktivne kategorije i oznake pri uređivanju Događaja.
 * Urednik isključivo upravlja katalogom kategorija i katalogom oznaka.
 * Administrator platforme nema redovnu poslovnu ulogu u ovom workflow-u.
+* Kategorija = vrsta Događaja; **nije** Manifestacija; **nije** tip Organizatora (BM-KO-10 / BR-278).
 
 ## 2.3 Oznake u V1
 
@@ -136,15 +148,25 @@ Oznake su dio V1. Nisu zamjena za primarnu kategoriju.
 
 ## 2.4 Bez migracije test podataka
 
-Ne radi se migracija postojećih test podataka. Ne uvodi se kompatibilnost sa starim modelom. Ne pravi se tranzicioni model. Postojeće test kategorije nisu referentni poslovni podaci. Katalog se definiše kao novi poslovni katalog.
+Ne radi se migracija postojećih test podataka kao referentni katalog. Ne uvodi se kompatibilnost sa starim modelom kao trajni dual model. Ne pravi se tranzicioni ENUM+FK model. Postojeće test kategorije nisu referentni poslovni podaci. Katalog se definiše kao novi poslovni katalog.
+
+**Napomena (TS-009):** tehnički cutover postojećih **produkcijskih/legacy** zapisa sa string kategorijom na kanonski `category_id` je predmet TS-009, ne ovog PATCH-a. Semantičko mapiranje: BM-KO-11 / BR-279.
 
 ## 2.5 Bez kategorije „Nešto drugo“
 
-Kategorija „Nešto drugo“ ne postoji. Ako nijedna postojeća kategorija nije odgovarajuća, Urednik proširuje katalog novom kategorijom. Oznake ne zamjenjuju kategoriju.
+Kategorija „Nešto drugo“ ne postoji. Ako nijedna postojeća kategorija nije odgovarajuća, Urednik proširuje katalog novom kategorijom. Oznake ne zamjenjuju kategoriju. Automatski fallback za legacy „Nešto drugo“ **nije** usvojen.
 
 ## 2.6 Bez workflow-a predlaganja
 
 Ne uvodi se workflow za predlaganje kategorija ili oznaka, dodatni statusi odobravanja ni dodatna ovlašćenja.
+
+## 2.7 Početni V1 katalog (TS7-PO-07)
+
+Usvojeni nazivi i redoslijed (1–14): Koncerti; Predstave; Sportski događaji; Izložbe; Književni programi; Filmske projekcije; Dječiji programi; Konferencije; Radionice; Publikacije; Performansi; Prezentacije i predavanja; Paneli i tribine; Sajmovi.
+
+Odbačene kao kanonske kategorije: Filmski festivali; Likovne manifestacije; Manifestacije u organizaciji Mjesnih zajednica; Manifestacije u organizaciji NVU; Nešto drugo.
+
+Detaljna značenja: BM-KO-09.
 
 ---
 
@@ -347,7 +369,7 @@ U V1: oznake jesu u opsegu.
 
 Za TS-007 trenutno nema otvorenih pitanja koja blokiraju usvajanje ovog dokumenta.
 
-Napomena: konkretan početni sadržaj kataloga (spisak početnih kategorija/oznaka koje Urednik unosi) nije predmet TS-007 kao fiksna ENUM lista; katalog je proširiv.
+Napomena: konkretan početni sadržaj kataloga usvojen je odlukom **TS7-PO-07** (BM-KO-09 / BR-277) kao **14** naziva sa redoslijedom. To **nije** fiksna ENUM lista; katalog ostaje proširiv. Tehnički cutover legacy string → kanonski katalog = **TS-009**.
 
 ---
 
@@ -361,6 +383,7 @@ Napomena: konkretan početni sadržaj kataloga (spisak početnih kategorija/ozna
 | TS7-PO-04 | BM-KO-08 | BR-224 | §2.4, §10.3, §11 |
 | TS7-PO-05 | BM-KO-07 | BR-225 | §2.5, §4.3, §7.3 |
 | TS7-PO-06 | BM-KO-04 | BR-084, BR-226–BR-229 | §2.2, §5 |
+| TS7-PO-07 | BM-KO-09–BM-KO-11, BM-GL-14 | BR-277–BR-279 | §2.1.1, §2.7, §14 |
 
 ---
 
@@ -369,6 +392,8 @@ Napomena: konkretan početni sadržaj kataloga (spisak početnih kategorija/ozna
 1. Ne koristiti `CulturalEvent::CATEGORIES` / DB ENUM kao trajni poslovni izvor istine.
 2. Ne zadržavati kategoriju „Nešto drugo“.
 3. Ne migrirati test podatke kao referentni katalog.
-4. Ne uvoditi dual-write / tranzicioni ENUM+FK model.
+4. Ne uvoditi dual-write / tranzicioni ENUM+FK model u ovom dokumentu.
 5. Implementacija mora ostati usklađena sa: Organizator = entitet; Moderator = ovlašćenje; Urednik = upravlja katalogom; Administrator platforme = sistemska administracija.
 6. Podrazumijevane fotografije po kategoriji (BM-MD-06) ostaju predmet medija / Događaja; mapiranje se veže na katalogski zapis, ne na ENUM string kao izvor istine.
+7. **TS7-PO-07:** početni V1 sadržaj = 14 usvojenih naziva (BM-KO-09). Obezbijediti ih u kanonskom katalogu prije TS-009 cutover-a; **način** (seed/ručno/…) nije propisan ovdje.
+8. Semantičko mapiranje legacy→kanonski: BM-KO-11 / BR-279. Tehnički cutover = **TS-009**. Nemapirani legacy zapisi i „Nešto drugo“: bez automatskog fallback-a dok TS-009 ne usvoji pravilo.

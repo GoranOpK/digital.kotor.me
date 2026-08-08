@@ -72,6 +72,7 @@
 | PATCH-056 | 2026-08-08 | **PO-DG-08 / PO-DG-09:** preciziran BR-052 / BM-UR-07 / BM-DG-08 — naknadno povezivanje isključivo za Objavljen + bez Organizatora; jednosmjerno NULL → Aktivan Organizator; bez unlink/reassign u V1; status ostaje Objavljen. BM-DG-10 (Organizator na Otkazanom) nepromijenjen. Bez izmjene implementacije. |
 | PATCH-057 | 2026-08-08 | **PO-DG-10:** pojednostavljeni V1 tok prvog odobravanja Događaja — Na odobrenju = sadržajno zaključan; Urednik samo Odobri ili Vrati na doradu (razlog obavezan); bez Moderator povlačenja; bez „Počni pregled“; bez direktnog uređivanja Urednika na Na odobrenju. Dodati BM-ST-10, BM-MOD-19; usklađeni BM-UR-02, BM-ST-04. Ne mijenja Prijedlog izmjene Objavljenog. Bez izmjene implementacije. |
 | PATCH-058 | 2026-08-08 | **PO-N-TR-02-04:** preciziran V1 generator Održavanja — samo Nacrt; dnevno +1 / sedmično +7 / mjesečno clamp; broj XOR krajnji datum; max 100; šablon vremena/lokacije; Planiran; duplikati → odbij cijelu operaciju; atomičnost; bez preview; bez Proposal/Objavljen generatora. Usklađeni BM-TR-06, BM-TR-07. Bez izmjene implementacije. |
+| PATCH-059 | 2026-08-08 | **TS7-PO-07:** konačni početni V1 katalog kategorija Događaja (14 naziva, usvojeni redoslijed); značenja; kategorija ≠ Manifestacija; kategorija ≠ tip Organizatora; odbačene legacy vrijednosti; semantičko mapiranje legacy→kanonski; tehnički cutover ostaje TS-009. Dodati BM-KO-09–BM-KO-11; usklađen BM-GL-14. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -896,6 +897,8 @@ Kategorije i oznake definišu se kao novi poslovni katalog. Ne radi se migracija
 
 Kategorija „Nešto drugo“ više ne postoji u poslovnom modelu. Ako nijedna postojeća kategorija nije odgovarajuća, Urednik proširuje katalog novom kategorijom.
 
+**TS7-PO-07:** Product Owner je usvojio **konačni početni V1 katalog** od 14 kategorija Događaja (sa redoslijedom). To je početni poslovni sadržaj kataloga za V1 / cutover režim — **nije** tehnička ENUM lista. Katalog ostaje proširiv (BM-KO-01, BM-KO-07). Tehnički cutover i mapiranje postojećih legacy podataka pripadaju **TS-009** / Roadmap Fazi 6.
+
 ## 3. Poslovni koncept
 
 Događaj može biti sačuvan kao nacrt bez primarne kategorije. Za slanje na odobrenje i za objavu mora imati tačno jednu primarnu kategoriju iz kataloga. Događaj može imati nula ili više oznaka iz kataloga oznaka.
@@ -903,6 +906,8 @@ Događaj može biti sačuvan kao nacrt bez primarne kategorije. Za slanje na odo
 Organizator je poslovni entitet i nije operativna uloga. Moderator je poslovno ovlašćenje koje pri uređivanju događaja bira postojeće Aktivne kategorije i oznake. Katalogom kategorija i katalogom oznaka upravlja isključivo Urednik. Administrator platforme nema redovnu poslovnu ulogu u upravljanju ovim katalozima.
 
 Ne uvodi se workflow za predlaganje kategorija ili oznaka, dodatni statusi odobravanja ni dodatna ovlašćenja.
+
+**Kategorija odgovara na pitanje „koja je vrsta ovog Događaja?“.** Manifestacija je šira programska cjelina; tip Organizatora nije kategorija Događaja (BM-KO-10).
 
 ## 4. Poslovna pravila
 
@@ -938,17 +943,71 @@ Ne uvodi se workflow za predlaganje kategorija ili oznaka, dodatni statusi odobr
 
 > Kategorije i oznake definišu se kao novi poslovni katalog. Ne radi se migracija postojećih test podataka. Ne uvodi se kompatibilnost sa starim ENUM/string modelom. Ne pravi se tranzicioni model. Postojeće test kategorije nisu referentni poslovni podaci.
 
+### BM-KO-09 — Konačni početni V1 katalog kategorija Događaja (TS7-PO-07)
+
+> Product Owner je usvojio konačni početni V1 katalog kategorija Događaja. Redoslijed je usvojen. Katalog ostaje proširiv zapisima koje kreira Urednik; ova lista nije tehnička ENUM lista niti zabranjuje kasnije dodavanje novih kategorija po BM-KO-01 / BM-KO-07.
+>
+> Usvojeni početni V1 redoslijed (1–14):
+>
+> 1. Koncerti
+> 2. Predstave
+> 3. Sportski događaji
+> 4. Izložbe
+> 5. Književni programi
+> 6. Filmske projekcije
+> 7. Dječiji programi
+> 8. Konferencije
+> 9. Radionice
+> 10. Publikacije
+> 11. Performansi
+> 12. Prezentacije i predavanja
+> 13. Paneli i tribine
+> 14. Sajmovi
+>
+> Poslovna značenja (sažeto):
+>
+> * **Koncerti** — dominantno muzička izvođenja pred publikom (solisti, bendovi, ansambli, horovi i srodno). Koncert unutar Manifestacije ostaje kategorija Koncerti.
+> * **Predstave** — strukturisana scenska izvođenja (pozorišna, dramska, komična, lutkarska, plesna i srodna). Performans je zasebna kategorija.
+> * **Sportski događaji** — dominantni sadržaj je sportska aktivnost, takmičenje, susret ili drugi sportski program.
+> * **Izložbe** — organizovano javno izlaganje (umjetničko, fotografsko, istorijsko, muzejsko, kulturno, multimedijalno i srodno). „Likovne manifestacije“ nijesu kategorija Događaja.
+> * **Književni programi** — književne večeri, razgovori sa piscima, čitanja, susreti autora i publike i srodni programi književnog stvaralaštva. Razlikovati od **Publikacije**.
+> * **Filmske projekcije** — projekcije filmova i odgovarajućih audiovizuelnih djela pred publikom. Filmski festival nije kategorija Događaja (Manifestacija); pojedinačne projekcije = Filmske projekcije.
+> * **Dječiji programi** — programi prvenstveno namijenjeni djeci kao poseban/mješovit format, samo ako nijesu prirodnije klasifikovani drugom kategorijom (npr. dječija predstava → Predstave; dječija radionica → Radionice; dječija projekcija → Filmske projekcije).
+> * **Konferencije** — konferencije, simpozijumi, stručni skupovi i srodni konferencijski programi. Razlikovati od pojedinačnih **Panela i tribina**. Šira višednevna cjelina može biti Manifestacija.
+> * **Radionice** — dominantno aktivno/praktično učešće (kreativne, umjetničke, edukativne, zanatske i srodne). Bez podkategorija u V1.
+> * **Publikacije** — dominantni sadržaj je predstavljanje konkretne publikacije (knjiga, monografija, časopis, zbornik, katalog, stručno izdanje i srodno). Zamjenjuje legacy naziv „Promocije publikacija“.
+> * **Performansi** — performativni umjetnički programi koji nijesu klasične strukturisane predstave. Razlikovati od **Predstava**.
+> * **Prezentacije i predavanja** — dominantan format je izlaganje/predstavljanje teme, projekta, istraživanja, znanja ili kulturnog/istorijskog sadržaja. Zamjenjuje legacy „Prezentacije“. Razlikovati od panela/tribina i radionica.
+> * **Paneli i tribine** — moderirana diskusija, razgovor, razmjena stavova, panel, tribina i srodni diskusioni formati (ne samo „o kulturi“). Zamjenjuje legacy „Paneli o kulturi“.
+> * **Sajmovi** — sajamski događaji (knjige, umjetnost, rukotvorine, tradicionalni proizvodi i srodno). Šira višednevna cjelina sa više Događaja može biti Manifestacija.
+
+### BM-KO-10 — Kategorija ≠ Manifestacija; kategorija ≠ tip Organizatora
+
+> Kategorija klasifikuje **vrstu Događaja**. Manifestacija je šira programska cjelina kojoj Događaj može pripadati; nije kategorija Događaja. Tip ili naziv Organizatora (npr. Mjesna zajednica, NVU) nije kategorija Događaja — pripada modelu Organizatora.
+>
+> Primjeri: projekcija unutar festivala → **Filmske projekcije**; izložba unutar manifestacije → **Izložbe**; koncert unutar manifestacije → **Koncerti**; radionica unutar manifestacije → **Radionice**.
+
+### BM-KO-11 — Legacy vrijednosti koje se ne prenose kao kanonske V1 kategorije
+
+> Sljedeće legacy string vrijednosti **nijesu** kanonske V1 kategorije Događaja: Filmski festivali; Likovne manifestacije; Manifestacije u organizaciji Mjesnih zajednica; Manifestacije u organizaciji NVU; Nešto drugo (već zabranjeno BM-KO-07).
+>
+> Semantičko mapiranje (PO, ne tehnička migracija): Koncerti→Koncerti; Predstave→Predstave; Sportski događaji→Sportski događaji; Izložbe→Izložbe; Književne večeri→Književni programi; Filmske projekcije→Filmske projekcije; Radionice→Radionice; Promocije publikacija→Publikacije; Performansi→Performansi; Prezentacije→Prezentacije i predavanja; Paneli o kulturi→Paneli i tribine. Nove kategorije bez legacy ekvivalenta: Dječiji programi; Konferencije; Sajmovi (bez automatskog mapiranja).
+>
+> Postojanje legacy događaja sa nemapiranim vrijednostima **ne briše** te događaje automatski. Tehnički cutover, mapiranje podataka i odluke za nemapirane zapise (uključujući „Nešto drugo“) pripadaju **TS-009**. Automatski fallback nije usvojen.
+
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
 - **Događaj** — referencira jednu primarnu kategoriju (obavezno za slanje/objavu) i opciono više oznaka.
 - **Urednik** — isključivo upravlja katalogom kategorija i katalogom oznaka.
 - **Moderator** — bira postojeće Aktivne kategorije i oznake pri uređivanju događaja; ne upravlja katalogom.
-- **Organizator** — poslovni entitet; nije operativna uloga nad katalogom.
+- **Organizator** — poslovni entitet; nije operativna uloga nad katalogom; tip Organizatora nije kategorija Događaja.
+- **Manifestacija** — nije kategorija Događaja; Događaji unutar Manifestacije zadržavaju vlastitu kategoriju vrste.
 - **Administrator platforme** — nema redovnu poslovnu ulogu nad katalogom; sistemska administracija.
+- **TS-009 / javni portal** — tehnički cutover legacy string → kanonski katalog.
 
 ## 6. Otvorena pitanja
 
-Za poglavlje BM-08 trenutno nema otvorenih poslovnih pitanja.
+Za poglavlje BM-08 trenutno nema otvorenih poslovnih pitanja (tehnički cutover legacy podataka = TS-009).
 
 ---
 
@@ -1801,7 +1860,7 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 ### BM-GL-14 — Kategorija
 
-> Zapis poslovnog kataloga koji predstavlja osnovnu klasifikaciju Događaja. Kategorija nije tehnička ENUM vrijednost. Katalog kategorija je proširiv. Događaj ima najviše jednu primarnu kategoriju; primarna kategorija je obavezna prije slanja na odobrenje i objave.
+> Zapis poslovnog kataloga koji predstavlja osnovnu klasifikaciju Događaja (**vrsta Događaja**). Kategorija nije tehnička ENUM vrijednost. Katalog kategorija je proširiv. Početni V1 sadržaj kataloga usvojen je odlukom TS7-PO-07 / BM-KO-09. Događaj ima najviše jednu primarnu kategoriju; primarna kategorija je obavezna prije slanja na odobrenje i objave. Kategorija nije Manifestacija niti tip Organizatora (BM-KO-10).
 
 ### BM-GL-15 — Mediji
 
