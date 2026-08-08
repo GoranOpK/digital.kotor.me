@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exceptions\CulturalEventDomainException;
 use App\Http\Requests\CulturalOccurrenceGenerateRequest;
+use App\Http\Requests\CulturalOccurrenceResumeRequest;
 use App\Http\Requests\CulturalOccurrenceStoreRequest;
 use App\Http\Requests\CulturalOccurrenceUpdateRequest;
 use App\Models\CulturalEventEntry;
@@ -149,6 +150,27 @@ class CulturalEventEntryOccurrenceController extends Controller
         return redirect()
             ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
             ->with('status', 'Održavanje je otkazano.');
+    }
+
+    public function resume(
+        CulturalOccurrenceResumeRequest $request,
+        CulturalEventEntry $kanonski_dogadjaj,
+        CulturalOccurrence $odrzavanje,
+    ): RedirectResponse {
+        $this->assertBelongsToEntry($kanonski_dogadjaj, $odrzavanje);
+
+        try {
+            $this->occurrenceLifecycle->resumeWithNewTermin($odrzavanje, $request->terminPayload());
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['occurrence' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
+            ->with('status', 'Održavanje je vraćeno u Planirano sa novim terminom.');
     }
 
     private function assertBelongsToDraft(

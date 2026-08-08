@@ -140,7 +140,7 @@
                         · {{ $occurrence->location?->naziv ?? $occurrence->location_manual_name ?? 'bez lokacije' }}
                         · <strong>{{ $occurrence->statusLabel() }}</strong>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 items-start">
                         @if($occurrence->isPlanned())
                             <form method="POST" action="{{ route('cultural-event-entries.occurrences.postpone', [$entry, $occurrence]) }}">
                                 @csrf
@@ -155,6 +155,41 @@
                                 </button>
                             </form>
                         @elseif($occurrence->isPostponed())
+                            <form method="POST" action="{{ route('cultural-event-entries.occurrences.resume', [$entry, $occurrence]) }}"
+                                  class="w-full border border-gray-200 rounded-md p-3 space-y-2 bg-gray-50">
+                                @csrf
+                                <p class="text-xs font-semibold text-gray-700 mb-1">Novi termin → Planirano</p>
+                                <div class="flex flex-wrap gap-2 items-end">
+                                    <div>
+                                        <label class="block text-xs text-gray-600" for="datum-{{ $occurrence->id }}">Datum</label>
+                                        <input id="datum-{{ $occurrence->id }}" type="date" name="datum" required
+                                               value="{{ old('datum', $occurrence->datum?->toDateString()) }}"
+                                               class="rounded-md border-gray-300 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="inline-flex items-center gap-1 text-xs text-gray-600 mt-5">
+                                            <input type="checkbox" name="cjelodnevno" value="1"
+                                                   @checked(old('cjelodnevno', $occurrence->cjelodnevno))>
+                                            Cjelodnevno
+                                        </label>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-600" for="vrijeme_od-{{ $occurrence->id }}">Od</label>
+                                        <input id="vrijeme_od-{{ $occurrence->id }}" type="time" name="vrijeme_od"
+                                               value="{{ old('vrijeme_od', $occurrence->vrijeme_od ? \Illuminate\Support\Str::substr($occurrence->vrijeme_od, 0, 5) : '') }}"
+                                               class="rounded-md border-gray-300 text-sm">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gray-600" for="vrijeme_do-{{ $occurrence->id }}">Do</label>
+                                        <input id="vrijeme_do-{{ $occurrence->id }}" type="time" name="vrijeme_do"
+                                               value="{{ old('vrijeme_do', $occurrence->vrijeme_do ? \Illuminate\Support\Str::substr($occurrence->vrijeme_do, 0, 5) : '') }}"
+                                               class="rounded-md border-gray-300 text-sm">
+                                    </div>
+                                    <button type="submit" class="px-3 py-1.5 border border-green-600 rounded-md text-green-800 hover:bg-green-50">
+                                        Vrati u Planirano
+                                    </button>
+                                </div>
+                            </form>
                             <form method="POST" action="{{ route('cultural-event-entries.occurrences.cancel', [$entry, $occurrence]) }}">
                                 @csrf
                                 <button type="submit" class="px-3 py-1.5 border border-red-300 rounded-md text-red-700 hover:bg-red-50">

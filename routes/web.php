@@ -273,6 +273,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-event-entries.occurrences.postpone');
         Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/{odrzavanje}/cancel', [CulturalEventEntryOccurrenceController::class, 'cancel'])
             ->name('cultural-event-entries.occurrences.cancel');
+        Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/{odrzavanje}/resume', [CulturalEventEntryOccurrenceController::class, 'resume'])
+            ->name('cultural-event-entries.occurrences.resume');
 
         Route::resource('/kalendar-kulture/lokacije', CulturalLocationController::class)
             ->except(['show', 'destroy'])
