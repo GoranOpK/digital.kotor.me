@@ -62,6 +62,32 @@
         </dl>
     </div>
 
+    @if($entry->organizer_id === null)
+        <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl mb-6">
+            <h2 class="text-lg font-semibold text-gray-900 mb-2">Poveži sa Organizatorom</h2>
+            <p class="text-sm text-gray-600 mb-4">
+                Povezivanje je jednokratno. Nakon uspjeha Organizator se ne može ukloniti niti zamijeniti kroz ovu akciju.
+            </p>
+            <form method="POST" action="{{ route('cultural-event-entries.link-organizer', $entry) }}" class="space-y-3">
+                @csrf
+                <div>
+                    <label for="organizer_id" class="block text-sm font-medium text-gray-700 mb-1">Organizator</label>
+                    <select id="organizer_id" name="organizer_id" required class="w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="">— izaberite Aktivnog Organizatora —</option>
+                        @foreach($activeOrganizers as $organizer)
+                            <option value="{{ $organizer->id }}" @selected((string) old('organizer_id') === (string) $organizer->id)>
+                                {{ $organizer->naziv }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="px-4 py-2 border border-indigo-400 rounded-md text-indigo-900 hover:bg-indigo-50 font-semibold">
+                    Poveži sa Organizatorom
+                </button>
+            </form>
+        </div>
+    @endif
+
     <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl mb-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">Akcije događaja</h2>
         <div class="flex flex-wrap gap-3 mb-6">

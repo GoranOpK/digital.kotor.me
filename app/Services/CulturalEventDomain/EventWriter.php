@@ -175,6 +175,52 @@ final class EventWriter
     }
 
     /**
+     * BR-052 / PO-DG-08 / PO-DG-09 — jednokratno naknadno povezivanje Objavljenog Događaja bez Organizatora.
+     * Lock order: Event only. Fail-fast van TX; konačne odluke unutar TX nad zaključanim redom.
+     * Ne otvara opšti update Objavljenog sadržaja.
+     */
+    public function linkOrganizer(CulturalEventEntry $entry, User $actor, int $organizerId): CulturalEventEntry
+    {
+        $this->assertEligibleForOrganizerLink($entry);
+        $this->catalogGuard->assertOrganizerAllowedForNewLink($organizerId);
+
+        return DB::transaction(function () use ($entry, $actor, $organizerId) {
+            /** @var CulturalEventEntry $locked */
+            $locked = CulturalEventEntry::query()
+                ->whereKey($entry->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->assertEligibleForOrganizerLink($locked);
+            $this->catalogGuard->assertOrganizerAllowedForNewLink($organizerId);
+
+            $locked->organizer_id = $organizerId;
+            $locked->last_modified_by = $actor->id;
+            $locked->save();
+
+            return $locked->fresh(['organizer', 'category', 'coverMedia', 'tags', 'occurrences']);
+        });
+    }
+
+    /**
+     * Polazno stanje BR-052: Objavljen + organizer_id null.
+     */
+    private function assertEligibleForOrganizerLink(CulturalEventEntry $entry): void
+    {
+        if (! $entry->isPublished()) {
+            throw new CulturalEventDomainException(
+                'Naknadno povezivanje dozvoljeno je samo Objavljenom Događaju bez Organizatora.'
+            );
+        }
+
+        if ($entry->organizer_id !== null) {
+            throw new CulturalEventDomainException(
+                'Događaj je već povezan sa Organizatorom; ponovno povezivanje nije dozvoljeno.'
+            );
+        }
+    }
+
+    /**
      * Uredničko isticanje na Objavljenom (BR-117) — nije sadržajna izmjena.
      */
     private function applyFeaturedOnly(CulturalEventEntry $entry, User $actor, bool $featured): CulturalEventEntry

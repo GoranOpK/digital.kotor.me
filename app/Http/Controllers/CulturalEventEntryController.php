@@ -6,6 +6,7 @@ use App\Exceptions\CulturalEventDomainException;
 use App\Http\Requests\CulturalEventEntryCancelRequest;
 use App\Http\Requests\CulturalEventEntryCancellationReasonRequest;
 use App\Http\Requests\CulturalEventEntryFeaturedRequest;
+use App\Http\Requests\CulturalEventEntryLinkOrganizerRequest;
 use App\Http\Requests\CulturalEventEntryReturnRequest;
 use App\Http\Requests\CulturalEventEntryStoreRequest;
 use App\Http\Requests\CulturalEventEntryUpdateRequest;
@@ -91,8 +92,13 @@ class CulturalEventEntryController extends Controller
         }
 
         if ($kanonski_dogadjaj->isPublished()) {
+            $activeOrganizers = $kanonski_dogadjaj->organizer_id === null
+                ? CulturalOrganizer::query()->active()->orderedByName()->get()
+                : collect();
+
             return view('cultural-calendar.admin.event-entries.show-published', [
                 'entry' => $kanonski_dogadjaj,
+                'activeOrganizers' => $activeOrganizers,
             ]);
         }
 
@@ -281,6 +287,31 @@ class CulturalEventEntryController extends Controller
         return redirect()
             ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
             ->with('status', $on ? 'Događaj je istaknut.' : 'Isticanje je uklonjeno.');
+    }
+
+    /**
+     * BR-052 — naknadno povezivanje Objavljenog Događaja bez Organizatora.
+     */
+    public function linkOrganizer(
+        CulturalEventEntryLinkOrganizerRequest $request,
+        CulturalEventEntry $kanonski_dogadjaj,
+    ): RedirectResponse {
+        try {
+            $this->eventWriter->linkOrganizer(
+                $kanonski_dogadjaj,
+                $request->user(),
+                (int) $request->validated('organizer_id')
+            );
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['domain' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
+            ->with('status', 'Događaj je povezan sa Organizatorom.');
     }
 
     /**

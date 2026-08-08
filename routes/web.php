@@ -257,6 +257,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-event-entries.cancellation-reason');
         Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/featured', [CulturalEventEntryController::class, 'updateFeatured'])
             ->name('cultural-event-entries.featured');
+        Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/link-organizer', [CulturalEventEntryController::class, 'linkOrganizer'])
+            ->name('cultural-event-entries.link-organizer');
         Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja', [CulturalEventEntryOccurrenceController::class, 'store'])
             ->name('cultural-event-entries.occurrences.store');
         Route::put('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalEventEntryOccurrenceController::class, 'update'])
