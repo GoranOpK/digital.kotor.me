@@ -61,11 +61,14 @@ final class EventLifecycle
     }
 
     /**
-     * Nacrt → Objavljen (samo bez Organizatora). Domen API; nije dio Sprint 3A.3 UI.
+     * Nacrt → Objavljen (samo bez Organizatora).
+     * Lock order: Event only (nema Proposal/Occurrence u ovom toku).
+     * Fail-fast van TX; konačne odluke unutar TX nad zaključanim redom.
+     * Ulaz mora biti Nacrt (ne Pending) — Pending → Objavljen ide preko approve.
      */
     public function publishDirectly(CulturalEventEntry $entry, User $actor): CulturalEventEntry
     {
-        $this->assertTransition($entry, CulturalEventEntry::STATUS_PUBLISHED);
+        $this->assertIsDraftForDirectPublish($entry);
 
         if ($entry->organizer_id !== null) {
             throw new CulturalEventDomainException(
@@ -75,7 +78,32 @@ final class EventLifecycle
 
         $this->assertReadyForPublishGate($entry);
 
-        return $this->apply($entry, CulturalEventEntry::STATUS_PUBLISHED, $actor, markSubmitted: true);
+        return DB::transaction(function () use ($entry, $actor) {
+            /** @var CulturalEventEntry $locked */
+            $locked = CulturalEventEntry::query()
+                ->whereKey($entry->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->assertIsDraftForDirectPublish($locked);
+
+            if ($locked->organizer_id !== null) {
+                throw new CulturalEventDomainException(
+                    'Direktna objava dozvoljena je samo Događaju bez Organizatora.'
+                );
+            }
+
+            $this->assertReadyForPublishGate($locked);
+
+            $locked->status = CulturalEventEntry::STATUS_PUBLISHED;
+            $locked->last_modified_by = $actor->id;
+            if ($locked->first_submitted_at === null) {
+                $locked->first_submitted_at = now();
+            }
+            $locked->save();
+
+            return $locked->fresh();
+        });
     }
 
     /**
@@ -223,6 +251,18 @@ final class EventLifecycle
                 CulturalEventEntry::STATUS_LABELS[$target] ?? $target
             ));
         }
+    }
+
+    private function assertIsDraftForDirectPublish(CulturalEventEntry $entry): void
+    {
+        if (! $entry->isDraft()) {
+            throw new CulturalEventDomainException(sprintf(
+                'Direktna objava je dozvoljena samo iz statusa Nacrt (trenutno: %s).',
+                $entry->statusLabel()
+            ));
+        }
+
+        $this->assertTransition($entry, CulturalEventEntry::STATUS_PUBLISHED);
     }
 
     /**

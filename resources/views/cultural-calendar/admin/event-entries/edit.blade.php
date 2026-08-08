@@ -36,12 +36,23 @@
     <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl mb-8">
         <div class="flex flex-wrap justify-between gap-3 items-start mb-4">
             <h2 class="text-lg font-semibold text-gray-900 mb-0">Podaci događaja</h2>
-            <form method="POST" action="{{ route('cultural-event-entries.submit', $entry) }}">
-                @csrf
-                <button type="submit" class="px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50 font-semibold">
-                    Pošalji na odobrenje
-                </button>
-            </form>
+            <div class="flex flex-wrap gap-2">
+                @if($entry->organizer_id === null)
+                    <form method="POST" action="{{ route('cultural-event-entries.publish', $entry) }}">
+                        @csrf
+                        <button type="submit" class="px-3 py-1.5 border border-green-600 rounded-md text-green-800 hover:bg-green-50 font-semibold">
+                            Objavi
+                        </button>
+                    </form>
+                @else
+                    <form method="POST" action="{{ route('cultural-event-entries.submit', $entry) }}">
+                        @csrf
+                        <button type="submit" class="px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50 font-semibold">
+                            Pošalji na odobrenje
+                        </button>
+                    </form>
+                @endif
+            </div>
         </div>
         <form method="POST" action="{{ route('cultural-event-entries.update', $entry) }}">
             @csrf

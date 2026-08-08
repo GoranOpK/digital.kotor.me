@@ -247,6 +247,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-event-entries.submit');
         Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/approve', [CulturalEventEntryController::class, 'approve'])
             ->name('cultural-event-entries.approve');
+        Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/publish', [CulturalEventEntryController::class, 'publish'])
+            ->name('cultural-event-entries.publish');
         Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/return', [CulturalEventEntryController::class, 'returnToDraft'])
             ->name('cultural-event-entries.return');
         Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/cancel', [CulturalEventEntryController::class, 'cancel'])

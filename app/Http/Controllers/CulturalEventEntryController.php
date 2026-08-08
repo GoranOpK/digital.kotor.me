@@ -174,6 +174,24 @@ class CulturalEventEntryController extends Controller
             ->with('status', 'Događaj je odobren i objavljen.');
     }
 
+    /**
+     * Nacrt bez Organizatora → Objavljen (PO-DG-05 / BR-018). Domen = EventLifecycle::publishDirectly.
+     */
+    public function publish(CulturalEventEntry $kanonski_dogadjaj): RedirectResponse
+    {
+        try {
+            $this->eventLifecycle->publishDirectly($kanonski_dogadjaj, request()->user());
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['domain' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
+            ->with('status', 'Događaj je direktno objavljen.');
+    }
+
     public function returnToDraft(
         CulturalEventEntryReturnRequest $request,
         CulturalEventEntry $kanonski_dogadjaj,

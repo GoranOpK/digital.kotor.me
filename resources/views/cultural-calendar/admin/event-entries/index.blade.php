@@ -74,12 +74,21 @@
                                         <a href="{{ route('cultural-event-entries.edit', $entry) }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
                                             Uredi
                                         </a>
-                                        <form method="POST" action="{{ route('cultural-event-entries.submit', $entry) }}">
-                                            @csrf
-                                            <button type="submit" class="px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50">
-                                                Pošalji na odobrenje
-                                            </button>
-                                        </form>
+                                        @if($entry->organizer_id === null)
+                                            <form method="POST" action="{{ route('cultural-event-entries.publish', $entry) }}">
+                                                @csrf
+                                                <button type="submit" class="px-3 py-1.5 border border-green-600 rounded-md text-green-800 hover:bg-green-50">
+                                                    Objavi
+                                                </button>
+                                            </form>
+                                        @else
+                                            <form method="POST" action="{{ route('cultural-event-entries.submit', $entry) }}">
+                                                @csrf
+                                                <button type="submit" class="px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50">
+                                                    Pošalji na odobrenje
+                                                </button>
+                                            </form>
+                                        @endif
                                     @elseif($entry->isPendingApproval())
                                         <a href="{{ route('cultural-event-entries.edit', $entry) }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
                                             Pregled
