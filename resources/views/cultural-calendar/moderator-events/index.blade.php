@@ -6,8 +6,14 @@
         <div>
             <h1 style="font-size:28px; font-weight:700; margin:0; color:#111827;">Događaji Organizatora</h1>
             <p class="text-sm text-gray-600 mt-1 mb-0">Kontekst: {{ $activeOrganizer->naziv }}</p>
+            @if(!empty($filterHasActiveProposal))
+                <p class="text-xs text-gray-500 mt-1 mb-0">Filter: Objavljeni sa aktivnim prijedlogom izmjene</p>
+            @elseif(!empty($filterStatus))
+                <p class="text-xs text-gray-500 mt-1 mb-0">Filter: {{ \App\Models\CulturalEventEntry::STATUS_LABELS[$filterStatus] ?? $filterStatus }}</p>
+            @endif
         </div>
         <div class="flex flex-wrap gap-2">
+            <a href="{{ route('cultural-moderator-dashboard.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Radna tabla</a>
             <a href="{{ route('cultural-moderator-workspace.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Workspace</a>
             <a href="{{ route('cultural-moderator-events.create') }}" style="display:inline-block; background:#b91c1c; color:#fff; text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600;">
                 + Novi događaj
@@ -58,6 +64,10 @@
                             @if($entry->isDraft() || $entry->isPendingApproval())
                                 <a href="{{ route('cultural-moderator-events.edit', $entry) }}" class="px-3 py-1.5 border border-gray-300 rounded-md">
                                     {{ $entry->isDraft() ? 'Uredi' : 'Pregled' }}
+                                </a>
+                            @elseif($entry->isPublished())
+                                <a href="{{ route('cultural-moderator-events.edit', $entry) }}" class="px-3 py-1.5 border border-gray-300 rounded-md">
+                                    Pregled
                                 </a>
                             @else
                                 <span class="text-gray-400">{{ $entry->statusLabel() }}</span>

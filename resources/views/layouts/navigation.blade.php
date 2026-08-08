@@ -17,6 +17,7 @@
         'cultural-organizer-creation-requests.*',
         'cultural-moderator-requests.*',
         'cultural-moderator-workspace.*',
+        'cultural-moderator-dashboard.*',
         'cultural-moderator-events.*',
         'cultural-moderator-proposals.*',
         'cultural-moderator-context.*'
@@ -239,6 +240,23 @@
                             >Zahtjevi Mod</a>
                         @endif
                         @auth
+                            @if(\App\Support\CulturalModeratorEventAccess::isActiveModerator(auth()->user()))
+                                <a
+                                    href="{{ route('cultural-moderator-dashboard.index') }}"
+                                    style="
+                                        display: inline-flex;
+                                        align-items: center;
+                                        padding: 8px 14px;
+                                        border-radius: 8px;
+                                        background: {{ request()->routeIs('cultural-moderator-dashboard.*') ? '#5f0c12' : '#7a0f17' }};
+                                        color: #ffffff;
+                                        font-size: 14px;
+                                        font-weight: 600;
+                                        text-decoration: none;
+                                        white-space: nowrap;
+                                    "
+                                >Radna tabla</a>
+                            @endif
                             @if(\App\Support\CulturalPortalAccess::allows(auth()->user()))
                                 <a
                                     href="{{ route('cultural-moderator-workspace.index') }}"
@@ -523,6 +541,23 @@
                     </a>
                     @endif
                     @auth
+                        @if(\App\Support\CulturalModeratorEventAccess::isActiveModerator(auth()->user()))
+                            <a
+                                href="{{ route('cultural-moderator-dashboard.index') }}"
+                                style="
+                                    display: block;
+                                    width: 100%;
+                                    padding: 10px 16px;
+                                    background: {{ request()->routeIs('cultural-moderator-dashboard.*') ? '#5f0c12' : '#7a0f17' }};
+                                    color: #ffffff;
+                                    font-size: 16px;
+                                    font-weight: 600;
+                                    text-decoration: none;
+                                "
+                            >
+                                Radna tabla
+                            </a>
+                        @endif
                         @if(\App\Support\CulturalPortalAccess::allows(auth()->user()))
                             <a
                                 href="{{ route('cultural-moderator-workspace.index') }}"

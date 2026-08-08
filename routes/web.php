@@ -15,6 +15,7 @@ use App\Http\Controllers\CulturalEventEntryOccurrenceController;
 use App\Http\Controllers\CulturalLocationController;
 use App\Http\Controllers\CulturalCategoryController;
 use App\Http\Controllers\CulturalMediaController;
+use App\Http\Controllers\CulturalModeratorDashboardController;
 use App\Http\Controllers\CulturalModeratorEventEntryController;
 use App\Http\Controllers\CulturalModeratorEventEntryOccurrenceController;
 use App\Http\Controllers\CulturalModeratorEventChangeProposalController;
@@ -135,9 +136,13 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     });
 
     // TS-010.1 — Moderator Draft tok + aktivni Organizator kontekst
+    // TS-010.6 — Moderator Dashboard (DM-01–DM-03)
     Route::middleware(['cultural.portal', 'cultural.moderator'])->group(function () {
         Route::post('/kalendar-kulture/moderatorski-rad/kontekst', [CulturalModeratorOrganizerContextController::class, 'update'])
             ->name('cultural-moderator-context.update');
+
+        Route::get('/kalendar-kulture/moderatorska-radna-tabla', [CulturalModeratorDashboardController::class, 'index'])
+            ->name('cultural-moderator-dashboard.index');
 
         Route::get('/kalendar-kulture/moderatorski-dogadjaji', [CulturalModeratorEventEntryController::class, 'index'])
             ->name('cultural-moderator-events.index');

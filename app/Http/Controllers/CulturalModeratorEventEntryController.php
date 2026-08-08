@@ -41,18 +41,37 @@ class CulturalModeratorEventEntryController extends Controller
             ]);
         }
 
-        $entries = CulturalEventEntry::query()
-            ->where('organizer_id', $active->id)
+        $entriesQuery = CulturalEventEntry::query()
+            ->where('organizer_id', $active->id);
+
+        $status = request()->query('status');
+        if (is_string($status) && in_array($status, CulturalEventEntry::STATUSES, true)) {
+            $entriesQuery->where('status', $status);
+        }
+
+        $hasActiveProposal = request()->query('has_active_proposal');
+        if ($hasActiveProposal === '1' || $hasActiveProposal === 1 || $hasActiveProposal === true) {
+            $entriesQuery
+                ->where('status', CulturalEventEntry::STATUS_PUBLISHED)
+                ->whereHas('changeProposals', function ($q) {
+                    $q->active()->whereNotNull('active_for_event_id');
+                });
+        }
+
+        $entries = $entriesQuery
             ->with(['category'])
             ->withCount('occurrences')
             ->orderByDesc('created_at')
             ->orderByDesc('id')
-            ->paginate(20);
+            ->paginate(20)
+            ->withQueryString();
 
         return view('cultural-calendar.moderator-events.index', [
             'entries' => $entries,
             'activeOrganizer' => $active,
             'availableOrganizers' => $available,
+            'filterStatus' => is_string($status) && in_array($status, CulturalEventEntry::STATUSES, true) ? $status : null,
+            'filterHasActiveProposal' => $hasActiveProposal === '1' || $hasActiveProposal === 1 || $hasActiveProposal === true,
         ]);
     }
 
