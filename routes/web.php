@@ -161,6 +161,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
 
         Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja', [CulturalModeratorEventEntryOccurrenceController::class, 'store'])
             ->name('cultural-moderator-events.occurrences.store');
+        Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja/generisi', [CulturalModeratorEventEntryOccurrenceController::class, 'generate'])
+            ->name('cultural-moderator-events.occurrences.generate');
         Route::put('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalModeratorEventEntryOccurrenceController::class, 'update'])
             ->name('cultural-moderator-events.occurrences.update');
         Route::delete('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalModeratorEventEntryOccurrenceController::class, 'destroy'])
@@ -261,6 +263,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-event-entries.link-organizer');
         Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja', [CulturalEventEntryOccurrenceController::class, 'store'])
             ->name('cultural-event-entries.occurrences.store');
+        Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/generisi', [CulturalEventEntryOccurrenceController::class, 'generate'])
+            ->name('cultural-event-entries.occurrences.generate');
         Route::put('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalEventEntryOccurrenceController::class, 'update'])
             ->name('cultural-event-entries.occurrences.update');
         Route::delete('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalEventEntryOccurrenceController::class, 'destroy'])

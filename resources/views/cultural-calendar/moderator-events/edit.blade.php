@@ -148,6 +148,12 @@
                 </button>
             </div>
         </form>
+
+        @include('cultural-calendar.partials.occurrence-generator-form', [
+            'entry' => $entry,
+            'locations' => $locations,
+            'generateRoute' => route('cultural-moderator-events.occurrences.generate', $entry),
+        ])
     </div>
 </div>
 @endsection

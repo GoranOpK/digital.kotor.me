@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Http\Requests\CulturalModeratorOccurrenceGenerateRequest;
 use App\Http\Requests\CulturalModeratorOccurrenceResumeRequest;
 use App\Http\Requests\CulturalModeratorOccurrenceStoreRequest;
 use App\Http\Requests\CulturalModeratorOccurrenceUpdateRequest;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
+use App\Services\CulturalEventDomain\OccurrenceGenerator;
 use App\Services\CulturalEventDomain\OccurrenceLifecycle;
 use App\Services\CulturalEventDomain\OccurrenceWriter;
 use App\Support\CulturalModeratorEventAccess;
@@ -16,12 +18,14 @@ use Illuminate\Http\RedirectResponse;
 /**
  * TS-010.1 — Moderator Održavanja na Draft Eventu.
  * Statusne akcije na Objavljenom — BR-132 / OccurrenceLifecycle.
+ * PO-N-TR-02-04 — generator na Nacrtu.
  */
 class CulturalModeratorEventEntryOccurrenceController extends Controller
 {
     public function __construct(
         private readonly OccurrenceWriter $occurrenceWriter,
         private readonly OccurrenceLifecycle $occurrenceLifecycle,
+        private readonly OccurrenceGenerator $occurrenceGenerator,
     ) {}
 
     public function store(
@@ -42,6 +46,26 @@ class CulturalModeratorEventEntryOccurrenceController extends Controller
         return redirect()
             ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
             ->with('status', 'Održavanje je dodato.');
+    }
+
+    public function generate(
+        CulturalModeratorOccurrenceGenerateRequest $request,
+        CulturalEventEntry $moderator_dogadjaj,
+    ): RedirectResponse {
+        CulturalModeratorEventAccess::assertCanEditDraft($request->user(), $moderator_dogadjaj);
+
+        try {
+            $created = $this->occurrenceGenerator->generate($moderator_dogadjaj, $request->domainPayload());
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['generator' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
+            ->with('status', 'Generisano Održavanja: '.$created->count().'.');
     }
 
     public function update(
