@@ -77,6 +77,7 @@
 | PATCH-FS-055 | 2026-08-08 | PO-AUTO-01 / PO-AUTO-02 / BM PATCH-055: otkazivanje Događaja automatski otkazuje Planirana i Odgođena Održavanja (BR-063, BR-064, BR-065); preciziran trenutak Planiran → Završen (BR-068). Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-056 | 2026-08-08 | PO-DG-08 / PO-DG-09 / BM PATCH-056: preciziran BR-052 (samo Objavljen + bez Org; jednosmjerno NULL → Aktivan Org; bez unlink/reassign); usklađen BR-018 (razdvajanje BR-045 / BR-052); statusna matrica uz BR-052. Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-057 | 2026-08-08 | PO-DG-10 / BM PATCH-057: pojednostavljeni V1 prvi Event review — usklađeni BR-022, BR-023, BR-033, BR-034, BR-037, BR-038 i tokovi §5.5.5–§5.5.6; Proposal tok neizmijenjen. Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-058 | 2026-08-08 | PO-N-TR-02-04 / BM PATCH-058: preciziran V1 generator Održavanja — BR-060/BR-061 (samo Nacrt; algoritmi; XOR; max 100; šablon; duplikati; atomičnost; bez preview/Proposal generatora). Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -1627,15 +1628,25 @@ Održavanja događaja mogu se dodavati pojedinačno (ručno) ili kreirati koriš
 
 Serija / pravilo ponavljanja nije trajni poslovni objekat: generator završava rad odmah nakon kreiranja održavanja.
 
-Generator završava nakon definisanog broja održavanja ili na definisani krajnji datum. Po jednom generisanju može se kreirati najviše 100 održavanja.
+**Obuhvat V1 (PO-N-TR-02-04 / BM-TR-06):** Generator je dostupan **samo** dok je Događaj **Nacrt** (uključujući Nacrt vraćen na doradu). Nije dostupan na Na odobrenju, Objavljen, Otkazan niti Arhiviran. U V1 generator se ne povezuje sa Prijedlogom izmjena Objavljenog. Pravo korišćenja generatora ima samo korisnik koji već smije ručno dodavati Održavanja na tom Nacrtu (Moderator u aktivnom kontekstu / Urednik po pravilima).
 
-Svako generisano ili ručno dodato održavanje ima svoj termin.
+**Tipovi:** dnevno (+1 kalendarski dan), sedmično (+7 dana, isti dan sedmice), mjesečno (izvorni broj dana; clamp na kraj kraćeg mjeseca bez trajne promjene izvornog ciljnog dana). Početni datum je obavezan i uvijek prvo Održavanje.
+
+**Završetak (XOR):** tačno jedan od — (A) broj Održavanja = tačno N termina uključujući početni, ili (B) krajnji datum (početni i krajnji inkluzivni; nema termina poslije krajnjeg). Oba ili nijedan — odbijeno. Ako je krajnji < početni — odbijeno. Ako je krajnji = početni — jedno Održavanje.
+
+**Max 100:** jedna operacija kreira najviše 100 Održavanja; prelazak odbija cijelu operaciju (bez djelimičnog rezultata).
+
+**Šablon:** ista `vrijeme_od` / `vrijeme_do` / `cjelodnevno` / Lokacija (kataloška ili ručni naziv) kopira se na sva generisana Održavanja; razlikuju se prvenstveno po datumu. Validacija vremena i Lokacije = postojeća SSOT pravila Održavanja (bez paralelne validacije). Status svakog novog = **Planiran**.
+
+**Duplikati:** potpuno identičan skup (datum, vrijeme_od, vrijeme_do, cjelodnevno, Lokacija) već postojeći na Događaju ili unutar batch-a → **odbij cijelu operaciju** (nema skip / djelimičnog rezultata). Dva Održavanja istog datuma sa različitim vremenom nisu automatski duplikati.
+
+**Atomičnost:** sva N ili nijedno. Bez preview faze u V1. Serverski ponovo provjeriti da je Događaj i dalje Nacrt prije kreiranja (usklađeno sa PO-DG-10).
+
+Van V1: RRULE, beskonačne serije, intervali (npr. svake dvije sedmice), napredna kalendarska pravila, trajna pravila ponavljanja, Edit entire series, Regenerate, generator na Objavljenom / Proposal toku.
 
 Nakon generisanja sistem više ne razlikuje ručno dodato od generisanog; sva održavanja čine jedinstvenu listu održavanja događaja.
 
-Održavanja se mogu dodavati i ručno.
-
-Van V1: RRULE, beskonačne serije, intervali (npr. svake dvije sedmice), napredna kalendarska pravila, trajna pravila ponavljanja, Edit entire series i Regenerate.
+**Status:** Approved
 
 ---
 
@@ -1645,7 +1656,7 @@ Pojedinačno održavanje događaja može biti izmijenjeno ili otkazano bez utica
 
 Pomjeranje održavanja predstavlja promjenu njegovog termina.
 
-Ne postoji izmjena cijele serije, regeneracija niti ponovno pokretanje generatora nad postojećim održavanjima.
+Ne postoji izmjena cijele serije, regeneracija niti ponovno pokretanje generatora nad postojećim održavanjima. Generisana Održavanja su nakon kreiranja potpuno nezavisna; nema trajne serijske veze (PO-N-TR-02-04).
 
 Izmjene podataka održavanja objavljenog događaja, osim postavljanja statusa **Planiran**, **Odgođen** i **Otkazan** uređenih pravilima BR-132 i BR-133, podliježu istim pravilima uređivanja i odobravanja koja važe za događaj.
 
@@ -4197,3 +4208,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-08 | FS-001 (PATCH-FS-055): PO-AUTO-01 / PO-AUTO-02 / BM PATCH-055 — BR-063 cascade otkazivanja Održavanja; BR-064/065 predikat arhive; BR-068 trenutak Planiran → Završen; §5.5.6a napomena. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-08 | FS-001 (PATCH-FS-056): PO-DG-08 / PO-DG-09 / BM PATCH-056 — preciziran BR-052 (Objavljen + bez Org; jednosmjerno; bez unlink/reassign); usklađen BR-018; statusna matrica. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-08 | FS-001 (PATCH-FS-057): PO-DG-10 / BM PATCH-057 — pojednostavljeni V1 prvi Event review; BR-022/023/027/033/034/037/038 i §5.5.5–§5.5.6; Proposal tok neizmijenjen. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| 2026-08-08 | FS-001 (PATCH-FS-058): PO-N-TR-02-04 / BM PATCH-058 — preciziran V1 generator Održavanja (BR-060/061); samo Nacrt; algoritmi; XOR; max 100; duplikati; atomičnost. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |

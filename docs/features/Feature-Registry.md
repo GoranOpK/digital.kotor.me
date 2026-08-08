@@ -116,6 +116,8 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 
 **Usvojene poslovne odluke (Događaj — V1 prvi Event review):** **PO-DG-10** (BM PATCH-057 / FS PATCH-FS-057): Na odobrenju = sadržajno zaključan do Odobri / Vrati na doradu; bez Moderator povlačenja Eventa; bez „Počni pregled“; bez direktnog uređivanja Urednika na pending Eventu. Ne mijenja tok Prijedloga izmjene Objavljenog. Relevantno za TS-003 v0.1.7 i TS-010 v1.0.4. TM-WF-03/04/06 i TM-CRUD-08 supersedovani za Event (VAN V1).
 
+**Usvojene poslovne odluke (Održavanje — V1 generator):** **PO-N-TR-02-04** (BM PATCH-058 / FS PATCH-FS-058): generator samo na Nacrtu; dnevno/sedmično/mjesečno algoritmi; broj XOR krajnji datum; max 100; šablon vremena/lokacije; Planiran; potpuni duplikati odbijaju cijelu operaciju; atomičnost; bez preview; bez Proposal/Objavljen generatora. T10-GEN-01 = **spreman za implementaciju** (nije zatvoren dok nema koda/testova). Relevantno za TS-004 v0.1.8 i TS-010 v1.0.5.
+
 **Usvojene poslovne odluke (Lokacije):**
 - **PO-LOC-01 (korekcija):** Lokacija iz kataloga je samostalan poslovni entitet, a centralni katalog predstavlja opcioni katalog za ponovno korišćenje Lokacija (nije obavezan i nije jedini izvor svih Lokacija). Moderator može odabrati katalošku Lokaciju ili ručno unijeti naziv Lokacije.
 - **PO-LOC-02:** identične Lokacije nijesu dozvoljene; sistem prijavljuje moguće duplikate; konačnu odluku donosi Urednik.
@@ -206,13 +208,13 @@ Povezana dokumentacija (Organizator):
 
 Povezana dokumentacija (Događaj):
 
-* Business Model — BM-04 (BM-DG-01–BM-DG-11), BM-10 (BM-ST-01–BM-ST-10), BM-MOD-19, BM-TR-12; PATCH-035/036 (otkazivanje), PATCH-037 (direktna objava / arhiva), **PATCH-053 / PO-DG-07** (terminalnost Otkazan), **PATCH-055 / PO-AUTO-01 / PO-AUTO-02** (cascade otkazivanja Održavanja; trenutak Planiran → Završen), **PATCH-056 / PO-DG-08 / PO-DG-09** (BR-052 naknadno povezivanje), **PATCH-057 / PO-DG-10** (V1 prvi Event review)
-* Functional Specification — §5.4–§5.5, §5.7.1–§5.7.2 (BR-006–BR-044, BR-062–BR-066, BR-131), §5.6 BR-052, §5.16 katalog Događaji (BR-182/BR-183); PATCH-FS-037/038/039; **PATCH-FS-053**; **PATCH-FS-056**; **PATCH-FS-057**
+* Business Model — BM-04 (BM-DG-01–BM-DG-11), BM-10 (BM-ST-01–BM-ST-10), BM-MOD-19, BM-TR-12; PATCH-035/036 (otkazivanje), PATCH-037 (direktna objava / arhiva), **PATCH-053 / PO-DG-07** (terminalnost Otkazan), **PATCH-055 / PO-AUTO-01 / PO-AUTO-02** (cascade otkazivanja Održavanja; trenutak Planiran → Završen), **PATCH-056 / PO-DG-08 / PO-DG-09** (BR-052 naknadno povezivanje), **PATCH-057 / PO-DG-10** (V1 prvi Event review), **PATCH-058 / PO-N-TR-02-04** (V1 generator Održavanja)
+* Functional Specification — §5.4–§5.5, §5.7.1–§5.7.2 (BR-006–BR-044, BR-062–BR-066, BR-131), §5.6 BR-052, §5.16 katalog Događaji (BR-182/BR-183); PATCH-FS-037/038/039; **PATCH-FS-053**; **PATCH-FS-056**; **PATCH-FS-057**; **PATCH-FS-058**
 * Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija **0.1.7**; Usvojen)
 
 Povezana dokumentacija (Održavanje):
 
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004; verzija 0.1.6; Usvojen; N-TR-01 / N-TR-02 / N-TR-04 zatvoreni)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004; verzija **0.1.8**; Usvojen; N-TR-01 / N-TR-02 / N-TR-04 zatvoreni; PO-N-TR-02-04)
 
 Povezana dokumentacija (Manifestacija):
 
@@ -269,7 +271,7 @@ Povezana dokumentacija (Urednički portal):
   * **PO-AL-04:** Bez novih aktivnosti; samo BM/FS katalog.
 * Usvojena QA odluka (Business Test Matrix — TS-010.8):
   * **QA-TS0108-01:** TS-010.8 = Business Test Matrix; nije QA Plan / Test Strategy / Test Implementation / CI / coverage.
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija **1.0.4**; USVOJEN — usklađen sa PATCH-057 / TS-003 v0.1.7)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija **1.0.5**; USVOJEN — usklađen sa PATCH-058 / TS-004 v0.1.8)
   * TS-010.1 Osnove uredničkog portala — Usvojeno
   * TS-010.2 Organizatori — Usvojeno
   * TS-010.3 Moderator Organizatora — Usvojeno
@@ -287,13 +289,13 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | -- | ----- | ------- | ----- | ------ |
 | TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.3.0) |
 | TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.7) |
-| TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.7); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni |
+| TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.8); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni |
 | TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.5) |
-| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.4) — TS-010.1–TS-010.8 |
+| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.5) — TS-010.1–TS-010.8 |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.1) |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.1) |
 
@@ -527,3 +529,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-08 | FT-001 — **PO-AUTO-01 / PO-AUTO-02** usvojene (BM PATCH-055 / FS PATCH-FS-055): cascade otkazivanja otvorenih Održavanja pri otkazivanju Događaja; preciziran trenutak Planiran → Završen. Usklađeni TS-003 v0.1.5, TS-004 v0.1.7, TS-010 v1.0.2, RG-001 v1.1.3. Bez izmjene implementacije. |
 | 2026-08-08 | FT-001 — **PO-DG-08 / PO-DG-09** usvojene (BM PATCH-056 / FS PATCH-FS-056): BR-052 samo Objavljen + bez Org; jednosmjerno bez Org → Aktivan Org; bez uklanjanja/zamjene. Usklađeni TS-003 v0.1.6 i TS-010 v1.0.3. Bez izmjene implementacije. |
 | 2026-08-08 | FT-001 — **PO-DG-10** usvojena (BM PATCH-057 / FS PATCH-FS-057): V1 prvi Event review — Na odobrenju zaključan; Odobri / Vrati; bez Mod povlačenja, bez Počni pregled, bez Urednik edit na pending Eventu. Proposal tok neizmijenjen. Usklađeni TS-003 v0.1.7 i TS-010 v1.0.4 (TM-WF-03/04/06, TM-CRUD-08 VAN V1 za Event). Bez izmjene implementacije. |
+| 2026-08-08 | FT-001 — **PO-N-TR-02-04** usvojena (BM PATCH-058 / FS PATCH-FS-058): V1 generator Održavanja preciziran (samo Nacrt; algoritmi; XOR; max 100; duplikati; atomičnost). Usklađeni TS-004 v0.1.8 i TS-010 v1.0.5. T10-GEN-01 = spreman za implementaciju (nije zatvoren). Bez izmjene implementacije. |

@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.4
+**Verzija:** 1.0.5
 **Datum:** 2026-08-08
 
 ---
@@ -33,6 +33,7 @@
 | 1.0.2 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02** (BM PATCH-055 / FS PATCH-FS-055): otkazivanje Događaja atomski otkazuje Planirana/Odgođena Održavanja (§7.4.7; TM-PUB-04); razlikovanje od automatskog Planiran → Završen (TM-OCC-11). Bez izmjene implementacije. |
 | 1.0.3 | 2026-08-08 | **PO-DG-08 / PO-DG-09** (BM PATCH-056 / FS PATCH-FS-056 / TS-003 v0.1.6): §10.10 akcija „Poveži sa Organizatorom“ samo Objavljen + bez Org; jednosmjerno; TM-CRUD-11/12 usklađeni. Bez izmjene implementacije. |
 | 1.0.4 | 2026-08-08 | **PO-DG-10** (BM PATCH-057 / FS PATCH-FS-057 / TS-003 v0.1.7): pojednostavljeni V1 prvi Event review — Na odobrenju zaključan; TM-WF-03/04/06 i TM-CRUD-08 VAN V1 za Event; Proposal tok neizmijenjen. Bez izmjene implementacije. |
+| 1.0.5 | 2026-08-08 | **PO-N-TR-02-04** (BM PATCH-058 / FS PATCH-FS-058 / TS-004 v0.1.8): §10.9.1 generator samo Nacrt; algoritmi/XOR/max 100/duplikati/atomičnost; TM-GEN-01…05 usklađeni. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -63,6 +64,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.2 | 2026-08-08 | PATCH: PO-AUTO-01 / PO-AUTO-02 — cascade otkazivanja Održavanja pri otkazivanju Događaja; usklađenje TM-PUB-04 / TM-OCC-11. |
 | 1.0.3 | 2026-08-08 | PATCH: PO-DG-08 / PO-DG-09 — §10.10 BR-052 UI/ponašanje; TM-CRUD-11/12 bez uklanjanja/zamjene Organizatora. |
 | 1.0.4 | 2026-08-08 | PATCH: PO-DG-10 — V1 Event review (zaključan pending; TM-WF-03/04/06, TM-CRUD-08 supersedovani za Event). |
+| 1.0.5 | 2026-08-08 | PATCH: PO-N-TR-02-04 — V1 generator Održavanja (samo Nacrt; TM-GEN-01…05). |
 
 ---
 
@@ -1449,14 +1451,22 @@ Ne uvode se proizvoljni brojčani limiti u ovom dokumentu. Ne uvodi se rich-text
 
 ## 10.9 Održavanja — nested CRUD
 
-Koristi se **TS-004 v0.1.5** bez redefinisanja. Model: **jedno Održavanje = jedan kalendarski datum** (N-TR-01).
+Koristi se **TS-004 v0.1.8** bez redefinisanja. Model: **jedno Održavanje = jedan kalendarski datum** (N-TR-01).
 
 ### 10.9.1 Create
 
 * ručno dodavanje;
-* generator dnevno / sedmično / mjesečno (N-TR-02);
-* kraj: broj **ili** krajnji datum;
-* najviše **100** po jednom generisanju;
+* **generator** (PO-N-TR-02-04 / N-TR-02):
+  * **samo Nacrt** (novi ili vraćeni); nije dostupan na Na odobrenju / Objavljen / Otkazan / Arhiviran;
+  * tipovi: dnevno (+1 dan), sedmično (+7), mjesečno (izvorni dan + clamp);
+  * završetak: **broj XOR krajnji datum**; početni i krajnji inkluzivni;
+  * najviše **100** po operaciji; prelazak → odbij cijelu operaciju;
+  * zajednički šablon vremena/lokacije; status **Planiran**;
+  * potpuni duplikati (postojeći ili batch) → odbij cijelu operaciju;
+  * **atomičnost** (sva ili nijedno); bez preview;
+  * pravo = isto kao ručno dodavanje Održavanja;
+  * serverski re-check Event = Nacrt; SSOT = `OccurrenceWriter` (bez bulk bypass);
+  * **nema** generatora na Objavljenom / Proposal toku u V1;
 * sva generisana Održavanja postaju **nezavisna**;
 * entitet **Serija ne postoji**; nema regenerate / edit-all / brisanje cijele grupe.
 
@@ -2075,11 +2085,11 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | TM-OCC-15 | Održavanja | Delete u prijedlogu / Objavljen | Prijedlog ili Objavljen | Fizičko brisanje | Odbijeno | Negativan | N-TR-04 |
 | TM-OCC-16 | Održavanja | Uklanjanje svih u početnom Nacrtu | Početni Nacrt; više Održavanja | Ukloni sva | Dozvoljeno (0 Održavanja) | Granični | N-TR-04; TS-010.5 |
 | TM-OCC-17 | Održavanja | Odgođen = promjena termina | Objavljen; održavanje | Postavi Odgođen / novi termin → Planiran | Dozvoljeno; status događaja ne postaje Otkazan→Objavljen | Pozitivan | BM-TR-12; BR-131; TS-004; TS-010.5 §10.9.3 |
-| TM-GEN-01 | Generator | Dnevni / sedmični / mjesečni | Nacrt; generator | Generiši | Kreira Održavanja; nema entiteta Serija | Pozitivan | N-TR-02; PO-N-TR-02; TS-004 |
-| TM-GEN-02 | Generator | Završetak brojem / krajnjim datumom | Generator | Generiši | Dozvoljeno | Pozitivan | N-TR-02 |
-| TM-GEN-03 | Generator | Max 100 | Generator > 100 | Generiši | Odbijeno / ograničeno na max 100 | Granični | N-TR-02 |
-| TM-GEN-04 | Generator | Beskonačno / interval > 1 / RRULE | Generator | Pokušaj | Odbijeno | Negativan | N-TR-02 |
-| TM-GEN-05 | Generator | Ručna = generisana | Mješovita Održavanja | Izmijeni jedno | Ostala nepromijenjena; nema edit-all / regenerate | Granični | N-TR-02 |
+| TM-GEN-01 | Generator | Dnevni / sedmični / mjesečni | **Nacrt**; ovlašćen | Generiši (3 tipa) | Više nezavisnih Održavanja Planiran; nema Serije | Pozitivan | PO-N-TR-02-04; BR-060; TS-004 §3.5 |
+| TM-GEN-02 | Generator | Završetak brojem XOR krajnjim datumom | Nacrt; generator | (A) broj / (B) krajnji; pokušaj oba | A/B OK; oba ili nijedan odbijeno | Pozitivan / Negativan | PO-N-TR-02-04; BR-060 |
+| TM-GEN-03 | Generator | Max 100 | Nacrt; rezultat > 100 | Generiši | Odbijeno; **0** novih zapisa | Granični | PO-N-TR-02-04; BR-060 |
+| TM-GEN-04 | Generator | Van V1: ∞ / interval>1 / RRULE | Nacrt | Pokušaj van enum tipa | Odbijeno / nije u ugovoru | Negativan | PO-N-TR-02-04; BR-060 |
+| TM-GEN-05 | Generator | Nezavisnost nakon generisanja | Generisano ≥2 | Izmijeni jedno | Ostala nepromijenjena; nema edit-all / regenerate | Granični | PO-N-TR-02-04; BR-061; TS-004 |
 | TM-MF-01 | Manifestacija | Veza 0..1 | Nacrt | Link / unlink MF | Dozvoljeno | Pozitivan | TS-005; TS-010.5 |
 | TM-MF-02 | Manifestacija | Na Objavljenom | Objavljen | Link/unlink kroz prijedlog | Direktno ne; kroz prijedlog da | Granični | TS-010.5 |
 | TM-MF-03 | Manifestacija | Nezavisan lifecycle | Promjena MF | Događaj se ne mijenja automatski | Bez automatske promjene Događaja | Granični | TS-005; TS-010.5 |

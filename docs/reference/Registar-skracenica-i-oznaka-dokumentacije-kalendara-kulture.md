@@ -160,7 +160,7 @@ Prefiksi se **ne** spajaju u jednu generičku oznaku. Svaki ima svoj namespace.
 | **PO-DASH** | Product Owner odluka | Dashboard | TS-010.6 | PO-DASH-01 |
 | **PO-TS9** | Product Owner odluka | U okviru TS-009 | TS-009 / Feature Registry | PO-TS9-03A |
 | **PO-CR3** / **PO-CR4A** / **PO-CR4B** | Product Owner odluka | Vezane za CR-003 / CR-004A / CR-004B | TS-009 / IS-001 | PO-CR4A-01 |
-| **PO-N-TR** | Product Owner odluka | Zatvara N-TR pitanje | TS-004 | PO-N-TR-02-01 |
+| **PO-N-TR** | Product Owner odluka | Zatvara / precizira N-TR pitanje | TS-004 | PO-N-TR-02-01; **PO-N-TR-02-04** |
 | **TS7-PO** | Product Owner odluka | Kategorije i oznake (TS-007) | TS-007 | TS7-PO-01 |
 | **TS8-** | Product / tehnička odluka | Mediji (TS-008) | TS-008 | TS8-01 |
 | **N-DG** | Otvoreno pitanje / napomena | Događaj | TS-003 / TS-010 | N-DG-02, N-DG-04 |

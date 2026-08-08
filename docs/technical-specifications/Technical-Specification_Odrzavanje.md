@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Održavanje događaja  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.7  
+**Verzija:** 0.1.8  
 **Datum:** 2026-08-08
 
 ---
@@ -24,6 +24,7 @@
 | 0.1.5 | 2026-08-06 | Zatvoreno N-TR-02 (PO-N-TR-02-01–03 / BM PATCH-052 / FS PATCH-FS-052): generator nije entitet; dnevno/sedmično/mjesečno; završetak brojem ili krajnjim datumom; max 100; ručna = generisana. Usklađeni §3.5, §4.4, §6, §7, §12. Bez izmjene implementacije. |
 | 0.1.6 | 2026-08-07 | **PO-EV-01** (implementaciona napomena §14): legacy flat termini na `CulturalEvent` nisu predmet migracije/backfill/dual-write; novi model Održavanja direktno prema TS. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 0.1.7 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02** (BM PATCH-055 / FS PATCH-FS-055): preciziran trenutak Planiran → Završen (§4.8); otkazivanje roditeljskog Događaja otkazuje Planirana/Odgođena Održavanja (§4.9); usklađene matrice i validacije. Bez izmjene implementacije. |
+| 0.1.8 | 2026-08-08 | **PO-N-TR-02-04** (BM PATCH-058 / FS PATCH-FS-058): preciziran V1 generator — samo Nacrt; algoritmi dnevno/sedmično/mjesečno; XOR; max 100; šablon; duplikati; atomičnost; bez preview/Proposal. Usklađeni §3.5, §4.4, §5.1, §7. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -361,35 +362,73 @@ TS-010 (urednički portal) koristi ovaj model održavanja **bez redefinisanja**.
 | Usluga statusnih prelaza | Dozvoljene tranzicije Planiran/Odgođen/Otkazan/Završen |
 | Signal završetka | Obavještava TS-003 kada više nema održavanja u statusu Planiran ili Odgođen |
 
-## 3.5 Generator ponavljanja (N-TR-02 — zatvoreno)
+## 3.5 Generator ponavljanja (N-TR-02 — zatvoreno; PO-N-TR-02-04)
 
-**Odluka (PO-N-TR-02-01–03):** Generator / „serija“ **nije** poslovni entitet niti dio modela održavanja kao trajni objekat. Generator je **jednokratno** pravilo koje kreira više nezavisnih Održavanja, zatim **završava rad**.
+**Odluka (PO-N-TR-02-01–03; preciziranje PO-N-TR-02-04):** Generator / „serija“ **nije** poslovni entitet niti dio modela održavanja kao trajni objekat. Generator je **jednokratno** pravilo koje kreira više nezavisnih Održavanja, zatim **završava rad**.
+
+### Obuhvat V1
+
+* Dostupan **samo** dok je Događaj **Nacrt** (novi ili vraćen na doradu).
+* **Nije** dostupan: Na odobrenju (PO-DG-10), Objavljen, Otkazan, Arhiviran.
+* U V1 **nema** generatora kroz Prijedlog izmjena Objavljenog.
+* Pravo = isto kao ručno dodavanje Održavanja na tom Nacrtu (Moderator u kontekstu / Urednik).
 
 ### Šta generator nije
 
 Ne postoji:
 
 * trajni objekat Serija;
-* lifecycle Serije;
-* status Serije;
+* lifecycle / status Serije;
 * Edit entire series;
 * Regenerate;
-* ponovno pokretanje generatora nad postojećim održavanjima.
+* ponovno pokretanje generatora nad postojećim održavanjima;
+* preview / privremeni skup termina;
+* interval > 1, RRULE, beskonačno ponavljanje, multi-day-of-week.
 
-### Šta generator radi
+### Ulaz (šablon)
 
-1. Ulaz: tip ∈ {dnevno, sedmično, mjesečno} i uslov završetka (**broj** održavanja **ili** **krajnji datum**).
-2. Kreira N održavanja (N ≤ **100** po jednom generisanju), svako sa sopstvenim identitetom, terminom (§3.3), opcionom lokacijom i početnim statusom **Planiran**.
-3. Odmah nakon kreiranja generator **prestaje**; ostaje samo lista održavanja događaja.
+Obavezno:
+
+* početni datum (uvijek prvo Održavanje);
+* tip ∈ {dnevno, sedmično, mjesečno};
+* završetak **XOR**: broj Održavanja **ili** krajnji datum.
+
+Opciono (kopira se na sva):
+
+* `vrijeme_od`, `vrijeme_do`, `cjelodnevno`;
+* `location_id` **ili** ručni naziv Lokacije (postojeća međusobna isključivost).
+
+### Algoritam datuma (kalendarska matematika; `config('app.timezone')`)
+
+**Dnevno:** `datum_i = početni + (i-1)` dana.
+
+**Sedmično:** `datum_i = početni + (i-1)×7` dana (isti dan sedmice).
+
+**Mjesečno:** čuva se **izvorni broj dana** (npr. 31). Za mjesec `M` cilj = taj broj; ako mjesec nema taj dan → **posljednji dan** mjeseca. Clamp **ne** mijenja izvorni cilj (31.1 → 28/29.2 → 31.3).
+
+**Broj N:** tačno N termina, uključujući početni.
+
+**Krajnji datum:** uključeni početni i krajnji (ako termin pada na krajnji); nema termina poslije krajnjeg. Krajnji < početni → odbij. Krajnji = početni → jedno Održavanje.
+
+**Max 100:** ako bi rezultat bio > 100 → odbij cijelu operaciju (bez prvih 100).
+
+### Duplikati i atomičnost
+
+* Potpuno identično Održavanje = isti `datum` + `vrijeme_od` + `vrijeme_do` + `cjelodnevno` + Lokacija (`location_id` ili normalizovani ručni naziv).
+* Duplikat sa postojećim na Događaju **ili** unutar batch-a → **odbij cijelu operaciju**.
+* Operacija je **atomska**: sva N ili nijedno.
+* Prije upisa: ponovo provjeriti da je Event i dalje **Nacrt**; lock order **Event → Occurrence**.
+* Svako Održavanje prolazi isti SSOT put kao ručno kreiranje (`OccurrenceWriter` / ekvivalent); **nema** bulk insert bypass-a.
+* Status svakog novog = **Planiran**.
 
 ### Nakon generisanja
 
 * nastaju **nezavisna** Održavanja;
-* ručno dodata i generisana održavanja **više se ne razlikuju** — jedinstvena lista;
+* ručno dodata i generisana **više se ne razlikuju**;
 * izmjena / otkaz / pomjeranje jednog ne utiče na ostala (BM-TR-07, BR-061);
-* svako ima sopstvenu istoriju.
+* nema trajne serijske veze.
 
-Van V1: RRULE, beskonačne serije, intervali (npr. svake 2 sedmice), napredna kalendarska pravila, trajna pravila ponavljanja.
+Van V1: RRULE, beskonačne serije, intervali (npr. svake 2 sedmice), napredna kalendarska pravila, trajna pravila, generator na Objavljenom/Proposal.
 
 ---
 
@@ -495,24 +534,29 @@ Zabrana fizičkog uklanjanja nakon prvog slanja / uredničkog postupka služi:
 
 ```mermaid
 flowchart TD
-  A[Događaj + jednokratni generator] --> B{Tip}
-  B -->|Dnevno| C[Generiši N održavanja]
-  B -->|Sedmično| C
-  B -->|Mjesečno| C
+  A[Događaj Nacrt + generator forma] --> B{Tip}
+  B -->|Dnevno +1 dan| C[Izračunaj datume]
+  B -->|Sedmično +7 dana| C
+  B -->|Mjesečno clamp| C
   B -->|Ručno| D[Dodaj jedno održavanje]
-  C --> E[Svako: sopstveni termin + status Planiran]
-  C --> F[Generator završava]
-  D --> E
+  C --> V{Validacije: XOR / max 100 / duplikati / Event=Nacrt}
+  V -->|Ne| X[Odbij cijelu operaciju]
+  V -->|Da| E[TX: OccurrenceWriter za svaki termin / Planiran]
+  E --> F[Generator završava; lista nezavisnih Održavanja]
+  D --> E2[Jedno Održavanje Planiran]
 ```
 
-**Tehnički tok**
+**Tehnički tok (PO-N-TR-02-04)**
 
-1. Ulaz: tip ∈ {dnevno, sedmično, mjesečno} **ili** ručno dodavanje (BM-TR-06, BR-060; §3.5).
-2. Za generator: obavezan završetak — **broj** održavanja **ili** **krajnji datum**; N ≤ 100.
-3. Svako kreirano održavanje dobija sopstveni termin (§3.3) i status **Planiran**.
-4. Generator **odmah završava**; ne ostaje trajno pravilo / objekat Serija.
-5. Nakon toga održavanja su nezavisna; ručno = generisano (jedinstvena lista).
-6. Nema Edit entire series / Regenerate.
+1. Guard: Event **Nacrt**; ovlašćenje = ručno dodavanje Održavanja; tip ∈ {dnevno, sedmično, mjesečno}.
+2. Ulaz: početni datum + šablon vremena/lokacije + **XOR** (broj **ili** krajnji datum).
+3. Izračun datuma po §3.5; N ≤ 100; inače odbij bez djelimičnog rezultata.
+4. Provjera duplikata (postojeći + unutar batch-a) → pri pogotku odbij cijelu operaciju.
+5. Jedna transakcija; lock **Event → Occurrence**; re-check Event = Nacrt.
+6. Za svaki termin: isti SSOT put kao ručno kreiranje; status **Planiran**.
+7. Pri prvoj grešci: rollback svih. Bez preview entiteta.
+8. Generator odmah završava; nema Serije / Regenerate / edit-all.
+9. Objavljen / Na odobrenju / Otkazan / Arhiviran / Proposal generator: **van V1 / zabranjeno**.
 
 ## 4.5 Izuzeci: pomjeranje i otkaz jednog održavanja
 
@@ -612,7 +656,7 @@ Logički model (bez middleware).
 | Radnja | Moderator (Org. događaj) | Urednik | Administrator platforme | Organizator (entitet) |
 |--------|--------------------------|---------|-------------------------|------------------------|
 | Dodati / uređivati održavanje u Nacrtu | Da — Aktivan Org. + kontekst | Da | Ne | Ne |
-| Generisati ponavljanje | Da — kontekst | Da | Ne | Ne |
+| Generisati ponavljanje | Da — kontekst; **samo Nacrt** | Da — **samo Nacrt** | Ne | Ne |
 | Pomjeriti termin (podaci) na objavljenom | Kroz prijedlog / odobrenje događaja (BR-061) | Da / odobrava | Ne | Ne |
 | Postaviti Odgođen | Da (BR-132) | Da (i za događaj bez Org. — BR-133) | Ne | Ne |
 | Vratiti Odgođen → Planiran (novi termin) | Da (BR-132) | Da (BR-133 bez Org.) | Ne | Ne |
@@ -734,7 +778,7 @@ Functional Specification:
 | BM-TR-03 / BR-057 | Validirati obavezan datum; vremena opciona (§3.3) |
 | BM-TR-04 / BR-058 | Dozvoliti: katalošku Lokaciju, ručno uneseni naziv Lokacije ili bez lokacije |
 | BM-TR-05 / BR-059 | Cjelodnevno ⇒ samo datum; vremena se ne unose |
-| BM-TR-06 / BR-060 | Generator: dnevno/sedmično/mjesečno; završetak brojem ili krajnjim datumom; max 100; nije entitet (§3.5) |
+| BM-TR-06 / BR-060 | Generator: samo Nacrt; dnevno/sedmično/mjesečno; XOR završetak; max 100; šablon; Planiran; duplikati odbijaju cijelu ops; atomičnost; nije entitet (§3.5 / PO-N-TR-02-04) |
 | BM-TR-07 / BR-061 | Mutacije samo na odabranom ID-u |
 | BM-TR-08 / BR-061 | Podaci na objavljenom → approval tok događaja (izuzev statusa BR-132/133) |
 | BM-TR-10 / BR-067 | Enforce četiri statusa |
@@ -758,8 +802,11 @@ Functional Specification:
 | Cjelodnevno bez vremena | Kreiranje / izmjena | Sistem | Odbijanje vremena |
 | Kataloška Lokacija Aktivna (ako nova kataloška veza) | Dodjela kataloške Lokacije | Sistem | Odbijanje Deaktivirane kataloške Lokacije |
 | Tip ponavljanja ∈ {dnevno, sedmično, mjesečno} | Generisanje | Sistem | Odbijanje ostalog |
-| Završetak generatora: broj XOR krajnji datum | Generisanje | Sistem | Blokada bez uslova |
-| Max 100 održavanja po generisanju | Generisanje | Sistem | Odbijanje preko limita |
+| Završetak generatora: broj XOR krajnji datum | Generisanje | Sistem | Blokada bez uslova / oba |
+| Max 100 održavanja po generisanju | Generisanje | Sistem | Odbijanje preko limita (bez djelimičnog) |
+| Event status = Nacrt (re-check) | Generisanje | Sistem | Odbijanje ako nije Nacrt |
+| Potpuni duplikat (postojeći ili batch) | Generisanje | Sistem | Odbijanje cijele operacije |
+| Krajnji < početni | Generisanje | Sistem | Odbijanje |
 | ≥1 održavanje | Slanje/objava događaja | TS-003 + TS-004 | Blokada događaja |
 | Nedozvoljen statusni prelaz | Promjena statusa | Sistem | Odbijanje |
 | Novi termin pri Odgođen→Planiran | Povratak | Sistem | Blokada bez novog termina |
@@ -784,7 +831,7 @@ Functional Specification:
 * Vremenska polja: §3.3.3 (datum obavezan; završetak samo uz početak; završetak > početak; cjelodnevno bez vremena).
 * Jedno održavanje = jedan kalendarski datum; bez `datum od` / `datum do`.
 * Fizičko uklanjanje: §4.3a (N-TR-04); brisanje ≠ otkazivanje.
-* Generator: §3.5 / §4.4 (N-TR-02); nije entitet; max 100; nema Regenerate.
+* Generator: §3.5 / §4.4 (N-TR-02; PO-N-TR-02-04); nije entitet; samo Nacrt; max 100; atomičnost; nema Regenerate / preview / Proposal generator.
 
 ---
 

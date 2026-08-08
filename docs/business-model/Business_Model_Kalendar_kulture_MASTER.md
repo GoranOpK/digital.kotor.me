@@ -71,6 +71,7 @@
 | PATCH-055 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02:** Otkazivanje Događaja (Objavljen → Otkazan) u istoj poslovnoj operaciji automatski postavlja sva Planirana i Odgođena Održavanja u Otkazan; Završen/Otkazan Održavanja ostaju nepromijenjena. Preciziran trenutak Sistemskog Planiran → Završen (vrijeme_do ako postoji; inače kraj kalendarskog dana `datum`; aplikaciona vremenska zona). Usklađeni BM-DG-05, BM-DG-10, BM-DG-11 (novo), BM-TR-10, BM-ST-08. **PO-AUTO-01 superseduje** prethodnu interpretaciju/pravilo po kojem otkazivanje Događaja ne mijenja statuse njegovih Održavanja. Bez izmjene implementacije. |
 | PATCH-056 | 2026-08-08 | **PO-DG-08 / PO-DG-09:** preciziran BR-052 / BM-UR-07 / BM-DG-08 — naknadno povezivanje isključivo za Objavljen + bez Organizatora; jednosmjerno NULL → Aktivan Organizator; bez unlink/reassign u V1; status ostaje Objavljen. BM-DG-10 (Organizator na Otkazanom) nepromijenjen. Bez izmjene implementacije. |
 | PATCH-057 | 2026-08-08 | **PO-DG-10:** pojednostavljeni V1 tok prvog odobravanja Događaja — Na odobrenju = sadržajno zaključan; Urednik samo Odobri ili Vrati na doradu (razlog obavezan); bez Moderator povlačenja; bez „Počni pregled“; bez direktnog uređivanja Urednika na Na odobrenju. Dodati BM-ST-10, BM-MOD-19; usklađeni BM-UR-02, BM-ST-04. Ne mijenja Prijedlog izmjene Objavljenog. Bez izmjene implementacije. |
+| PATCH-058 | 2026-08-08 | **PO-N-TR-02-04:** preciziran V1 generator Održavanja — samo Nacrt; dnevno +1 / sedmično +7 / mjesečno clamp; broj XOR krajnji datum; max 100; šablon vremena/lokacije; Planiran; duplikati → odbij cijelu operaciju; atomičnost; bez preview; bez Proposal/Objavljen generatora. Usklađeni BM-TR-06, BM-TR-07. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -702,9 +703,13 @@ Svako održavanje ima sopstveni termin i status, dok lokacija može biti opciona
 
 > Održavanja događaja mogu biti kreirana kao pojedinačna (ručno) ili kroz jednokratno pravilo ponavljanja koje **generiše** više održavanja jednog događaja. Serija / pravilo ponavljanja **nije** poslovni entitet, nema lifecycle ni status i ne ostaje kao trajni objekat nakon generisanja.
 >
-> Sistem u V1 podržava isključivo **dnevno**, **sedmično** i **mjesečno** generisanje, kao i ručno dodavanje pojedinačnih održavanja. Generator završava nakon **definisanog broja** održavanja **ili** na **definisani krajnji datum**. Po jednom generisanju može se kreirati najviše **100** održavanja.
+> **Obuhvat V1 (PO-N-TR-02-04):** Generator je dostupan **isključivo** dok je Događaj u statusu **Nacrt** (uključujući Nacrt vraćen na doradu). Nije dostupan na Na odobrenju, Objavljen, Otkazan niti Arhiviran. U V1 generator se **ne** povezuje sa Prijedlogom izmjena Objavljenog.
 >
-> Van V1: RRULE, beskonačne serije, intervali (npr. svake dvije sedmice), napredna kalendarska pravila, trajna pravila ponavljanja, Edit entire series i Regenerate.
+> Sistem u V1 podržava isključivo **dnevno** (+1 kalendarski dan), **sedmično** (+7 kalendarskih dana / isti dan sedmice) i **mjesečno** (izvorni broj dana u mjesecu; na kraćem mjesecu clamp na posljednji dan, bez trajne promjene izvornog ciljnog dana), kao i ručno dodavanje. Početni datum je obavezan i uvijek prvo Održavanje. Završetak: **tačno jedan** od uslova — **broj** Održavanja **ili** **krajnji datum** (XOR). Krajnji datum je inkluzivan. Po jednom generisanju najviše **100** Održavanja; prelazak limita odbija cijelu operaciju (bez djelimičnog rezultata).
+>
+> Generisanje je **atomska** operacija (sva ili nijedno). Potpuno identičan termin (isti datum, vremena, cjelodnevnost i Lokacija) na istom Događaju ili unutar iste operacije **odbija** cijelu operaciju. Sva generisana Održavanja dobijaju status **Planiran** i dijele zajednički šablon vremena/lokacije. Bez preview faze u V1.
+>
+> Van V1: RRULE, beskonačne serije, intervali (npr. svake dvije sedmice), napredna kalendarska pravila, trajna pravila ponavljanja, Edit entire series, Regenerate, generator na Objavljenom / Proposal toku.
 >
 > Svako generisano ili ručno dodato održavanje dobija sopstveni termin. Nakon generisanja nastaju **nezavisna** održavanja; sistem **ne** razlikuje ručno dodato od generisanog — sva čine jedinstvenu listu održavanja događaja.
 
@@ -712,7 +717,7 @@ Svako održavanje ima sopstveni termin i status, dok lokacija može biti opciona
 
 > Pojedinačno održavanje (bez obzira na način nastanka) može biti izmijenjeno ili otkazano bez uticaja na ostala održavanja istog događaja. Izmjene i otkazivanja primjenjuju se isključivo na odabrano održavanje. Pomjeranje znači promjenu termina (datuma i/ili vremena) jednog održavanja.
 >
-> Ne postoji izmjena „cijele serije“, regeneracija niti ponovno pokretanje generatora nad postojećim održavanjima.
+> Ne postoji izmjena „cijele serije“, regeneracija niti ponovno pokretanje generatora nad postojećim održavanjima. Nakon generisanja nema trajne „serijske“ veze koja upravlja budućim ponašanjem.
 
 ### BM-TR-08 — Izmjena objavljenog održavanja
 
