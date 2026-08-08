@@ -281,17 +281,29 @@ final class EventChangeProposalWriter
                 );
             }
 
+            /** @var CulturalOccurrence|null $lockedSource */
+            $lockedSource = CulturalOccurrence::query()
+                ->whereKey($source->id)
+                ->lockForUpdate()
+                ->first();
+
+            if ($lockedSource === null || (int) $lockedSource->event_entry_id !== (int) $entry->id) {
+                throw new CulturalEventDomainException(
+                    'Održavanje ne pripada Događaju ovog prijedloga.'
+                );
+            }
+
             /** @var CulturalEventChangeProposalOccurrence|null $existing */
             $existing = CulturalEventChangeProposalOccurrence::query()
                 ->where('proposal_id', $locked->id)
-                ->where('source_occurrence_id', $source->id)
+                ->where('source_occurrence_id', $lockedSource->id)
                 ->where('operation', CulturalEventChangeProposalOccurrence::OPERATION_UPDATE)
                 ->lockForUpdate()
                 ->first();
 
             $attrs = [
                 'operation' => CulturalEventChangeProposalOccurrence::OPERATION_UPDATE,
-                'source_occurrence_id' => $source->id,
+                'source_occurrence_id' => $lockedSource->id,
                 'proposed_datum' => $normalized['datum'],
                 'proposed_vrijeme_od' => $normalized['vrijeme_od'],
                 'proposed_vrijeme_do' => $normalized['vrijeme_do'],
@@ -301,13 +313,15 @@ final class EventChangeProposalWriter
             ];
 
             if ($existing !== null) {
+                // Baseline se ne mijenja pri naknadnom uređivanju prijedloga.
                 $existing->fill($attrs);
                 $existing->save();
                 $op = $existing;
             } else {
                 $op = CulturalEventChangeProposalOccurrence::create(array_merge(
                     ['proposal_id' => $locked->id],
-                    $attrs
+                    $attrs,
+                    CulturalEventChangeProposalOccurrence::baselineFromOccurrence($lockedSource)
                 ));
             }
 

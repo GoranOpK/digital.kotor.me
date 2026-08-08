@@ -99,4 +99,26 @@ final class CulturalModeratorEventAccess
         self::assertOccurrenceBelongsToEntry($entry, $occurrence);
         self::assertCanEditDraft($user, $entry);
     }
+
+    /**
+     * Statusne akcije nad Održavanjem Objavljenog Događaja (BR-132).
+     * Parent cancel/archive i dozvoljeni prelaz ostaju u OccurrenceLifecycle nakon lock-a.
+     */
+    public static function canMutatePublishedOccurrenceStatus(
+        User $user,
+        CulturalEventEntry $entry,
+        CulturalOccurrence $occurrence,
+    ): bool {
+        return (int) $occurrence->event_entry_id === (int) $entry->id
+            && self::canAccessEntry($user, $entry);
+    }
+
+    public static function assertCanMutatePublishedOccurrenceStatus(
+        User $user,
+        CulturalEventEntry $entry,
+        CulturalOccurrence $occurrence,
+    ): void {
+        self::assertOccurrenceBelongsToEntry($entry, $occurrence);
+        self::assertCanAccessEntry($user, $entry);
+    }
 }

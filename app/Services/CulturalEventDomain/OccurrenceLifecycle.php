@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Lifecycle Održavanja (TS-004). Ne mijenja status Događaja (BR-134).
+ * Lock order statusnih akcija: Event → Occurrence (bez Proposal).
  */
 final class OccurrenceLifecycle
 {
@@ -18,51 +19,56 @@ final class OccurrenceLifecycle
 
     public function postpone(CulturalOccurrence $occurrence): CulturalOccurrence
     {
-        $this->assertParentAllowsLifecycle($occurrence);
-        $this->assertTransition($occurrence, CulturalOccurrence::STATUS_POSTPONED);
+        return $this->withLockedOccurrence(
+            $occurrence,
+            CulturalOccurrence::STATUS_POSTPONED,
+            function (CulturalOccurrence $locked): CulturalOccurrence {
+                $locked->status = CulturalOccurrence::STATUS_POSTPONED;
+                $locked->save();
 
-        $occurrence->status = CulturalOccurrence::STATUS_POSTPONED;
-        $occurrence->save();
-
-        return $occurrence->fresh();
+                return $locked->fresh();
+            }
+        );
     }
 
     /**
-     * Odgođen → Planiran uz novi termin (isti zapis).
+     * Odgođen → Planiran uz novi termin (isti zapis). Bez Lokacije.
      *
      * @param  array{
      *     datum: string|\DateTimeInterface,
      *     vrijeme_od?: ?string,
      *     vrijeme_do?: ?string,
-     *     cjelodnevno?: bool,
-     *     location_id?: ?int,
-     *     location_manual_name?: ?string
+     *     cjelodnevno?: bool
      * }  $newTermin
      */
     public function resumeWithNewTermin(CulturalOccurrence $occurrence, array $newTermin): CulturalOccurrence
     {
-        $this->assertParentAllowsLifecycle($occurrence);
-        $this->assertTransition($occurrence, CulturalOccurrence::STATUS_PLANNED);
+        return $this->withLockedOccurrence(
+            $occurrence,
+            CulturalOccurrence::STATUS_PLANNED,
+            function (CulturalOccurrence $locked) use ($newTermin): CulturalOccurrence {
+                $this->writer->applyTerminFromLifecycle($locked, $newTermin);
+                $locked->refresh();
+                $locked->status = CulturalOccurrence::STATUS_PLANNED;
+                $locked->save();
 
-        return DB::transaction(function () use ($occurrence, $newTermin) {
-            $this->writer->update($occurrence, $newTermin);
-            $occurrence->refresh();
-            $occurrence->status = CulturalOccurrence::STATUS_PLANNED;
-            $occurrence->save();
-
-            return $occurrence->fresh();
-        });
+                return $locked->fresh();
+            }
+        );
     }
 
     public function cancel(CulturalOccurrence $occurrence): CulturalOccurrence
     {
-        $this->assertParentAllowsLifecycle($occurrence);
-        $this->assertTransition($occurrence, CulturalOccurrence::STATUS_CANCELLED);
+        return $this->withLockedOccurrence(
+            $occurrence,
+            CulturalOccurrence::STATUS_CANCELLED,
+            function (CulturalOccurrence $locked): CulturalOccurrence {
+                $locked->status = CulturalOccurrence::STATUS_CANCELLED;
+                $locked->save();
 
-        $occurrence->status = CulturalOccurrence::STATUS_CANCELLED;
-        $occurrence->save();
-
-        return $occurrence->fresh(['eventEntry']);
+                return $locked->fresh(['eventEntry']);
+            }
+        );
     }
 
     /**
@@ -70,19 +76,22 @@ final class OccurrenceLifecycle
      */
     public function markFinished(CulturalOccurrence $occurrence): CulturalOccurrence
     {
-        $this->assertParentAllowsLifecycle($occurrence);
-        $this->assertTransition($occurrence, CulturalOccurrence::STATUS_FINISHED);
+        return $this->withLockedOccurrence(
+            $occurrence,
+            CulturalOccurrence::STATUS_FINISHED,
+            function (CulturalOccurrence $locked): CulturalOccurrence {
+                if (! $locked->isPlanned()) {
+                    throw new CulturalEventDomainException(
+                        'Završen je dozvoljen samo iz statusa Planiran (Sistem).'
+                    );
+                }
 
-        if (! $occurrence->isPlanned()) {
-            throw new CulturalEventDomainException(
-                'Završen je dozvoljen samo iz statusa Planiran (Sistem).'
-            );
-        }
+                $locked->status = CulturalOccurrence::STATUS_FINISHED;
+                $locked->save();
 
-        $occurrence->status = CulturalOccurrence::STATUS_FINISHED;
-        $occurrence->save();
-
-        return $occurrence->fresh();
+                return $locked->fresh();
+            }
+        );
     }
 
     public function transitionTo(CulturalOccurrence $occurrence, string $target): CulturalOccurrence
@@ -121,13 +130,41 @@ final class OccurrenceLifecycle
         ];
     }
 
-    private function assertParentAllowsLifecycle(CulturalOccurrence $occurrence): void
-    {
-        $entry = $occurrence->eventEntry;
-        if ($entry === null) {
-            throw new CulturalEventDomainException('Održavanje nema Događaj.');
-        }
+    /**
+     * @param  callable(CulturalOccurrence): CulturalOccurrence  $mutator
+     */
+    private function withLockedOccurrence(
+        CulturalOccurrence $occurrence,
+        string $targetStatus,
+        callable $mutator,
+    ): CulturalOccurrence {
+        return DB::transaction(function () use ($occurrence, $targetStatus, $mutator) {
+            /** @var CulturalEventEntry $entry */
+            $entry = CulturalEventEntry::query()
+                ->whereKey($occurrence->event_entry_id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
+            $this->assertParentAllowsLifecycleFromEntry($entry);
+
+            /** @var CulturalOccurrence $locked */
+            $locked = CulturalOccurrence::query()
+                ->whereKey($occurrence->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ((int) $locked->event_entry_id !== (int) $entry->id) {
+                throw new CulturalEventDomainException('Održavanje ne pripada Događaju.');
+            }
+
+            $this->assertTransition($locked, $targetStatus);
+
+            return $mutator($locked);
+        });
+    }
+
+    private function assertParentAllowsLifecycleFromEntry(CulturalEventEntry $entry): void
+    {
         if ($entry->isCancelled()) {
             throw new CulturalEventDomainException(
                 'Otkazan Događaj je istorijski zapis; status Održavanja se ne može mijenjati.'

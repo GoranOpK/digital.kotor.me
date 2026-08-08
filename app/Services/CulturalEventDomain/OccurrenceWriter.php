@@ -176,6 +176,66 @@ final class OccurrenceWriter
     }
 
     /**
+     * Statusni tok Odgođen → Planiran: samo termin. Ne dira Lokaciju ni status.
+     * Preskače Published lock (izuzev BR-061 statusnog toka); generalni update() ostaje zaključan.
+     *
+     * @param  array{
+     *     datum: string|\DateTimeInterface,
+     *     vrijeme_od?: ?string,
+     *     vrijeme_do?: ?string,
+     *     cjelodnevno?: bool
+     * }  $termin
+     */
+    public function applyTerminFromLifecycle(CulturalOccurrence $occurrence, array $termin): CulturalOccurrence
+    {
+        $entry = $occurrence->eventEntry;
+        if ($entry !== null && $entry->isCancelled()) {
+            throw new CulturalEventDomainException(
+                'Otkazan Događaj je istorijski zapis; Održavanje se ne može mijenjati.'
+            );
+        }
+
+        if ($entry !== null && $entry->status === CulturalEventEntry::STATUS_ARCHIVED) {
+            throw new CulturalEventDomainException(
+                'Arhiviran Događaj; Održavanje se ne može mijenjati.'
+            );
+        }
+
+        if (array_key_exists('location_id', $termin) || array_key_exists('location_manual_name', $termin)) {
+            throw new CulturalEventDomainException(
+                'Lokacija se ne mijenja kroz statusni tok Održavanja.'
+            );
+        }
+
+        if (array_key_exists('status', $termin)) {
+            throw new CulturalEventDomainException(
+                'Status Održavanja se ne postavlja kroz upis termina.'
+            );
+        }
+
+        $merged = [
+            'datum' => $termin['datum'] ?? $occurrence->datum,
+            'vrijeme_od' => array_key_exists('vrijeme_od', $termin) ? $termin['vrijeme_od'] : $occurrence->vrijeme_od,
+            'vrijeme_do' => array_key_exists('vrijeme_do', $termin) ? $termin['vrijeme_do'] : $occurrence->vrijeme_do,
+            'cjelodnevno' => array_key_exists('cjelodnevno', $termin)
+                ? (bool) $termin['cjelodnevno']
+                : $occurrence->cjelodnevno,
+            'location_id' => $occurrence->location_id,
+            'location_manual_name' => $occurrence->location_manual_name,
+        ];
+
+        $normalized = $this->normalizeAndValidate($merged, validateNewLocation: false);
+
+        $occurrence->datum = $normalized['datum'];
+        $occurrence->vrijeme_od = $normalized['vrijeme_od'];
+        $occurrence->vrijeme_do = $normalized['vrijeme_do'];
+        $occurrence->cjelodnevno = $normalized['cjelodnevno'];
+        $occurrence->save();
+
+        return $occurrence->fresh(['location', 'eventEntry']);
+    }
+
+    /**
      * TS-010.3b — primjena update podataka iz odobrenog prijedloga (status ostaje; Preskače Published lock).
      *
      * @param  array{

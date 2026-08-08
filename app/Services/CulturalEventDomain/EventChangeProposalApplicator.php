@@ -126,6 +126,12 @@ final class EventChangeProposalApplicator
                     );
                 }
 
+                if ($op->terminConflictsWithCanonical($occurrence)) {
+                    throw new CulturalEventDomainException(
+                        'Održavanje je u međuvremenu promijenjeno (termin). Prijedlog mora biti usklađen prije odobravanja.'
+                    );
+                }
+
                 $this->occurrenceWriter->applyUpdateFromApprovedProposal(
                     $occurrence,
                     $op->toOccurrencePayload()

@@ -159,6 +159,13 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
         Route::delete('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja/{odrzavanje}', [CulturalModeratorEventEntryOccurrenceController::class, 'destroy'])
             ->name('cultural-moderator-events.occurrences.destroy');
 
+        Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja/{odrzavanje}/postpone', [CulturalModeratorEventEntryOccurrenceController::class, 'postpone'])
+            ->name('cultural-moderator-events.occurrences.postpone');
+        Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja/{odrzavanje}/cancel', [CulturalModeratorEventEntryOccurrenceController::class, 'cancel'])
+            ->name('cultural-moderator-events.occurrences.cancel');
+        Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja/{odrzavanje}/resume', [CulturalModeratorEventEntryOccurrenceController::class, 'resume'])
+            ->name('cultural-moderator-events.occurrences.resume');
+
         // TS-010.3a — Prijedlog izmjene (Moderator)
         Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/prijedlog-izmjene', [CulturalModeratorEventChangeProposalController::class, 'store'])
             ->name('cultural-moderator-proposals.store');

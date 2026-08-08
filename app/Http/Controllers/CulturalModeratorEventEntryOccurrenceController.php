@@ -3,21 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Http\Requests\CulturalModeratorOccurrenceResumeRequest;
 use App\Http\Requests\CulturalModeratorOccurrenceStoreRequest;
 use App\Http\Requests\CulturalModeratorOccurrenceUpdateRequest;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
+use App\Services\CulturalEventDomain\OccurrenceLifecycle;
 use App\Services\CulturalEventDomain\OccurrenceWriter;
 use App\Support\CulturalModeratorEventAccess;
 use Illuminate\Http\RedirectResponse;
 
 /**
  * TS-010.1 — Moderator Održavanja na Draft Eventu.
+ * Statusne akcije na Objavljenom — BR-132 / OccurrenceLifecycle.
  */
 class CulturalModeratorEventEntryOccurrenceController extends Controller
 {
     public function __construct(
         private readonly OccurrenceWriter $occurrenceWriter,
+        private readonly OccurrenceLifecycle $occurrenceLifecycle,
     ) {}
 
     public function store(
@@ -83,5 +87,76 @@ class CulturalModeratorEventEntryOccurrenceController extends Controller
         return redirect()
             ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
             ->with('status', 'Održavanje je uklonjeno.');
+    }
+
+    public function postpone(
+        CulturalEventEntry $moderator_dogadjaj,
+        CulturalOccurrence $odrzavanje,
+    ): RedirectResponse {
+        CulturalModeratorEventAccess::assertCanMutatePublishedOccurrenceStatus(
+            auth()->user(),
+            $moderator_dogadjaj,
+            $odrzavanje
+        );
+
+        try {
+            $this->occurrenceLifecycle->postpone($odrzavanje);
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
+                ->withErrors(['occurrence' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
+            ->with('status', 'Održavanje je odgođeno.');
+    }
+
+    public function cancel(
+        CulturalEventEntry $moderator_dogadjaj,
+        CulturalOccurrence $odrzavanje,
+    ): RedirectResponse {
+        CulturalModeratorEventAccess::assertCanMutatePublishedOccurrenceStatus(
+            auth()->user(),
+            $moderator_dogadjaj,
+            $odrzavanje
+        );
+
+        try {
+            $this->occurrenceLifecycle->cancel($odrzavanje);
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
+                ->withErrors(['occurrence' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
+            ->with('status', 'Održavanje je otkazano.');
+    }
+
+    public function resume(
+        CulturalModeratorOccurrenceResumeRequest $request,
+        CulturalEventEntry $moderator_dogadjaj,
+        CulturalOccurrence $odrzavanje,
+    ): RedirectResponse {
+        CulturalModeratorEventAccess::assertCanMutatePublishedOccurrenceStatus(
+            $request->user(),
+            $moderator_dogadjaj,
+            $odrzavanje
+        );
+
+        try {
+            $this->occurrenceLifecycle->resumeWithNewTermin($odrzavanje, $request->terminPayload());
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
+                ->withInput()
+                ->withErrors(['occurrence' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
+            ->with('status', 'Održavanje je vraćeno u Planirano sa novim terminom.');
     }
 }
