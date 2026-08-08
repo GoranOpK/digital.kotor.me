@@ -156,6 +156,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-moderator-events.update');
         Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/submit', [CulturalModeratorEventEntryController::class, 'submit'])
             ->name('cultural-moderator-events.submit');
+        Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/cancel', [CulturalModeratorEventEntryController::class, 'cancel'])
+            ->name('cultural-moderator-events.cancel');
 
         Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja', [CulturalModeratorEventEntryOccurrenceController::class, 'store'])
             ->name('cultural-moderator-events.occurrences.store');

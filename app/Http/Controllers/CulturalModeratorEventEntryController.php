@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Http\Requests\CulturalModeratorEventEntryCancelRequest;
 use App\Http\Requests\CulturalModeratorEventEntryStoreRequest;
 use App\Http\Requests\CulturalModeratorEventEntryUpdateRequest;
 use App\Models\CulturalCategory;
@@ -184,6 +185,33 @@ class CulturalModeratorEventEntryController extends Controller
         return redirect()
             ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
             ->with('status', 'Događaj je poslat na odobrenje.');
+    }
+
+    /**
+     * Objavljen → Otkazan (BM-MOD-16 / BR-063). Poslovna logika u EventLifecycle::cancel.
+     */
+    public function cancel(
+        CulturalModeratorEventEntryCancelRequest $request,
+        CulturalEventEntry $moderator_dogadjaj,
+    ): RedirectResponse {
+        CulturalModeratorEventAccess::assertCanAccessEntry($request->user(), $moderator_dogadjaj);
+
+        try {
+            $this->eventLifecycle->cancel(
+                $moderator_dogadjaj,
+                $request->user(),
+                (string) $request->validated('cancellation_reason')
+            );
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['cancellation_reason' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-moderator-events.index')
+            ->with('status', 'Događaj je otkazan.');
     }
 
     /**

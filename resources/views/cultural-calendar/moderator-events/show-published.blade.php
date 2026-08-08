@@ -76,6 +76,38 @@
         @endif
     </div>
 
+    <div class="bg-white rounded-lg border border-red-200 p-6 max-w-3xl mb-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-2">Otkaži Događaj</h2>
+        <p class="text-sm text-gray-600 mb-4">
+            Otkazivanje je nepovratno u smislu ponovne objave: status Otkazan ne može se vratiti u Objavljen.
+            Isti kulturni program kasnije zahtijeva novi događaj.
+        </p>
+        <form
+            method="POST"
+            action="{{ route('cultural-moderator-events.cancel', $entry) }}"
+            class="space-y-3"
+            onsubmit="return confirm('Otkazati ovaj događaj? Otkazan se ne može ponovo objaviti.');"
+        >
+            @csrf
+            <div>
+                <label for="cancellation_reason" class="block text-sm font-medium text-gray-700 mb-1">Razlog otkazivanja (obavezno)</label>
+                <textarea
+                    id="cancellation_reason"
+                    name="cancellation_reason"
+                    rows="3"
+                    required
+                    class="w-full rounded-md border-gray-300 shadow-sm"
+                >{{ old('cancellation_reason') }}</textarea>
+                @error('cancellation_reason')
+                    <p class="text-sm text-red-600 mt-1">{{ $message }}</p>
+                @enderror
+            </div>
+            <button type="submit" class="px-4 py-2 border border-red-600 rounded-md text-red-800 hover:bg-red-50 font-semibold">
+                Otkaži Događaj
+            </button>
+        </form>
+    </div>
+
     <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl">
         <h2 class="text-lg font-semibold mb-3">Održavanja</h2>
         <ul class="space-y-4 text-sm">
