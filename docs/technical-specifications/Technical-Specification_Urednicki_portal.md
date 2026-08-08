@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.3
+**Verzija:** 1.0.4
 **Datum:** 2026-08-08
 
 ---
@@ -32,6 +32,7 @@
 | 1.0.1 | 2026-08-07 | Usklađivanje sa BM PATCH-053 / PO-DG-07, FS PATCH-FS-053 i TS-003 v0.1.2: Otkazan terminalan (nema Otkazan → Objavljen); forma Otkazan read-only (izuzetak: razlog otkazivanja / napomena urednika); novi program = novi događaj; Odgođen = jedini mehanizam promjene termina (granica TS-004); uklonjena ponovna objava / reaktivacija iz workflow, CRUD, Dashboard, audita i test matrice. Bez izmjene BM/FS/TS-003/implementacije. |
 | 1.0.2 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02** (BM PATCH-055 / FS PATCH-FS-055): otkazivanje Događaja atomski otkazuje Planirana/Odgođena Održavanja (§7.4.7; TM-PUB-04); razlikovanje od automatskog Planiran → Završen (TM-OCC-11). Bez izmjene implementacije. |
 | 1.0.3 | 2026-08-08 | **PO-DG-08 / PO-DG-09** (BM PATCH-056 / FS PATCH-FS-056 / TS-003 v0.1.6): §10.10 akcija „Poveži sa Organizatorom“ samo Objavljen + bez Org; jednosmjerno; TM-CRUD-11/12 usklađeni. Bez izmjene implementacije. |
+| 1.0.4 | 2026-08-08 | **PO-DG-10** (BM PATCH-057 / FS PATCH-FS-057 / TS-003 v0.1.7): pojednostavljeni V1 prvi Event review — Na odobrenju zaključan; TM-WF-03/04/06 i TM-CRUD-08 VAN V1 za Event; Proposal tok neizmijenjen. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -61,6 +62,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.1 | 2026-08-07 | PATCH: usklađivanje lifecycle događaja sa BM PATCH-053, FS PATCH-FS-053 i TS-003 v0.1.2 (terminalnost Otkazan; read-only; razlog otkazivanja; uklonjena ponovna objava). |
 | 1.0.2 | 2026-08-08 | PATCH: PO-AUTO-01 / PO-AUTO-02 — cascade otkazivanja Održavanja pri otkazivanju Događaja; usklađenje TM-PUB-04 / TM-OCC-11. |
 | 1.0.3 | 2026-08-08 | PATCH: PO-DG-08 / PO-DG-09 — §10.10 BR-052 UI/ponašanje; TM-CRUD-11/12 bez uklanjanja/zamjene Organizatora. |
+| 1.0.4 | 2026-08-08 | PATCH: PO-DG-10 — V1 Event review (zaključan pending; TM-WF-03/04/06, TM-CRUD-08 supersedovani za Event). |
 
 ---
 
@@ -772,7 +774,7 @@ TS-010.3 ne obrađuje:
 
 # 7. TS-010.4 — Workflow događaja
 
-Izvori: BM-ST-01–BM-ST-09, BM-DG-01, BM-DG-04, BM-DG-05, BM-DG-09, BM-DG-10, BM-ORG-04–BM-ORG-05, BM-ORG-12, BM-MOD-04–BM-MOD-06, BM-MOD-16, BM-UR-02–BM-UR-03, BM-UR-11, BM-TR-12; BR-006–BR-044, BR-062–BR-066, BR-007, BR-013–BR-034, BR-063–BR-064, BR-131, BR-270–BR-274; TS-001; TS-003 v0.1.2; TS-004; TS-009; TS-010.1–TS-010.3.
+Izvori: BM-ST-01–BM-ST-10, BM-MOD-19, BM-DG-01, BM-DG-04, BM-DG-05, BM-DG-09, BM-DG-10, BM-ORG-04–BM-ORG-05, BM-ORG-12, BM-MOD-04–BM-MOD-06, BM-MOD-16, BM-UR-02–BM-UR-03, BM-UR-11, BM-TR-12; BR-006–BR-044, BR-062–BR-066, BR-007, BR-013–BR-034, BR-063–BR-064, BR-131, BR-270–BR-274; TS-001; TS-003 v0.1.7; TS-004; TS-009; TS-010.1–TS-010.3; PO-DG-10.
 
 TS-010.4 ne uvodi nova poslovna pravila, nove statuse niti nove workflow grane. Tehnički operacionalizuje usvojene BM/FS u uredničkom portalu i veže se na TS-003 (domen prelaza), TS-004 (predikat arhive; Odgođen) i TS-009 (javni efekti CR-004B) bez redefinisanja tih dokumenata.
 
@@ -801,7 +803,7 @@ Arhiviran
 Dodatni dozvoljeni prelazi iz BM/FS (nisu novi statusi):
 
 * Nacrt → Objavljen — direktna objava Urednika **isključivo bez Organizatora** (BM-ST-04, BR-018);
-* Na odobrenju → Nacrt — vraćanje na doradu ili povlačenje prije pregleda;
+* Na odobrenju → Nacrt — **vraćanje na doradu** (Urednik; obavezan razlog). Za **prvi Event review (V1 / PO-DG-10)** Moderator **ne** povlači Događaj. Za **Prijedlog izmjene Objavljenog** povlačenje Moderatora prije početka pregleda ostaje dozvoljeno (BR-033);
 * Objavljen → Arhiviran i Otkazan → Arhiviran — automatski Sistem (BM-DG-04, BR-065).
 
 **Zabranjeno:** Otkazan → Objavljen (ponovna objava / reaktivacija). Status **Otkazan** je terminalan za povratak u **Objavljen** (BM-DG-09, BR-064; TS-003 §4.9). Ako se isti kulturni program kasnije ponovo organizuje, kreira se **novi** događaj (§7.4.1). Promjena termina postojećeg (neotkazanog) događaja vrši se isključivo kroz status **Odgođen** na održavanju (granica TS-004; BM-TR-12, BR-131).
@@ -809,7 +811,7 @@ Dodatni dozvoljeni prelazi iz BM/FS (nisu novi statusi):
 **Nisu statusi događaja** (BM-ST-05 / PATCH-010; TS-003 §4):
 
 * „Vraćen na doradu“ — poslovna radnja (Na odobrenju → Nacrt);
-* „Pregled Urednika“ — faza toka;
+* „Pregled Urednika“ / „Počni pregled“ — **nije** V1 faza prvog Event review (PO-DG-10 / BM-ST-10); za Event status **Na odobrenju** već znači čekanje Odobri/Vrati. Poseban početak pregleda ostaje samo gdje je usvojen za **Prijedlog izmjene**;
 * „Prijedlog izmjene“ / „Nacrt prijedloga izmjene“ — faza toka nad događajem u statusu Objavljen (javna verzija ostaje odobrena do nove odluke).
 
 ## 7.3 Redoslijed guard provjera
@@ -863,7 +865,7 @@ Detalj CRUD polja ostaje u TS-010.5. Ovdje: vidljivost, guard, rezultat, naredno
 | | |
 |--|--|
 | **Ko vidi** | Moderator (svoj Org u kontekstu); Urednik (gdje uređuje nacrt po pravilima). |
-| **Guard** | Status **Nacrt**; ovlašćenje; kontekst gdje je primjenjivo; događaj nije zaključan pregledom. |
+| **Guard** | Status **Nacrt**; ovlašćenje; kontekst gdje je primjenjivo; događaj **nije** u statusu Na odobrenju (PO-DG-10 / BM-ST-10). |
 | **Rezultat** | Ažurirani nacrt; nije javno. |
 | **Naredno stanje** | Ostaje **Nacrt**. |
 
@@ -873,25 +875,27 @@ Detalj CRUD polja ostaje u TS-010.5. Ovdje: vidljivost, guard, rezultat, naredno
 |--|--|
 | **Ko vidi** | Aktivni Moderator Organizatora za događaj svog Org (BM-MOD-06; BR-028; TS-010.3). |
 | **Guard** | Status **Nacrt** (ili faza prijedloga izmjene nad Objavljenim — BR-025); validacije FS/TS-003; aktivni kontekst; Org Aktivan. |
-| **Rezultat** | Prijedlog na uredničkom pregledu; zaključavanje po BR-022–BR-024 kada pregled počne. |
-| **Naredno stanje** | **Na odobrenju** (BM-ST-04). |
+| **Rezultat** | **Event (prvi tok):** prelaz u **Na odobrenju**; sadržaj **zaključan** odmah (PO-DG-10 / BM-ST-10; BR-022/023). **Prijedlog izmjene:** prijedlog na uredničkom pregledu; zaključavanje po BR-022–BR-024 kada pregled počne (Proposal tok neizmijenjen). |
+| **Naredno stanje** | **Na odobrenju** (BM-ST-04) — za Event; za Prijedlog: faza Na odobrenju / čeka pregled po postojećim pravilima. |
 
 ### 7.4.4 Povuci prijedlog
 
+Odnosi se na **Prijedlog izmjene Objavljenog** (i slične zahtjeve gdje je BR-033 aktivan). **Ne** važi za prvi Event review u V1 (PO-DG-10 / BM-MOD-19; BR-033 VAN V1 za Event).
+
 | | |
 |--|--|
-| **Ko vidi** | Moderator koji je podnio prijedlog (BR-033). |
-| **Guard** | Status **Na odobrenju**; **prije** početka uredničkog pregleda; nakon početka pregleda — zabranjeno (BR-034). |
-| **Rezultat** | Prijedlog povučen; Moderator može ponovo uređivati. |
-| **Naredno stanje** | **Nacrt**. |
+| **Ko vidi** | Moderator koji je podnio **prijedlog izmjene** (BR-033 — Proposal). |
+| **Guard** | Prijedlog **Na odobrenju**; **prije** početka uredničkog pregleda; nakon početka pregleda — zabranjeno (BR-034). Za Događaj u statusu Na odobrenju (prvi tok): akcija **ne postoji** / serverski odbijena. |
+| **Rezultat** | Prijedlog povučen; Moderator može ponovo uređivati prijedlog. |
+| **Naredno stanje** | **Nacrt** (faza prijedloga). |
 
 ### 7.4.5 Vrati na doradu
 
 | | |
 |--|--|
 | **Ko vidi** | Urednik. |
-| **Guard** | Status **Na odobrenju**; obavezan razlog (BR-040–BR-041). |
-| **Rezultat** | Otključavanje za Moderatora; javna verzija nepromijenjena ako je događaj već bio Objavljen (BR-042). |
+| **Guard** | Status **Na odobrenju** (Event ili Prijedlog po pravilima); obavezan razlog (BR-040–BR-041). |
+| **Rezultat** | **Event:** status Nacrt; Moderator ponovo uređuje; `first_submitted_at` se ne briše. **Prijedlog:** otključavanje za Moderatora; javna verzija Objavljenog nepromijenjena (BR-042). |
 | **Naredno stanje** | **Nacrt**. Nije status „Vraćen na doradu“ niti „Odbijeno“ (BR-044). |
 
 ### 7.4.6 Objavi
@@ -903,8 +907,8 @@ Obuhvata dvije usvojene putanje (nije nova grana):
 | | |
 |--|--|
 | **Ko vidi** | Urednik. |
-| **Guard** | Status **Na odobrenju**; urednička nadležnost (BM-UR-02, BM-ST-06, BR-039). |
-| **Rezultat** | Javna verzija postaje odobrena; vidljivost po TS-009. |
+| **Guard** | Status **Na odobrenju**; urednička nadležnost (BM-UR-02, BM-ST-06, BR-039). Za Event V1: **bez** preduvjete „Počni pregled“ (PO-DG-10). Završni uslovi objave i dalje važe. |
+| **Rezultat** | Javna verzija postaje odobrena; vidljivost po TS-009. Urednik **ne** uređuje sadržaj Eventa na Na odobrenju prije Odobri (BM-UR-02 / BR-038 VAN V1 za Event). |
 | **Naredno stanje** | **Objavljen**. |
 
 **B — Direktna objava**
@@ -917,7 +921,6 @@ Obuhvata dvije usvojene putanje (nije nova grana):
 | **Naredno stanje** | **Objavljen**. |
 
 Moderator **nikada** ne vidi / ne izvršava Objavi (BM-ORG-05, BM-MOD-05; BR-007; TS-010.3 §6.9).
-
 ### 7.4.7 Otkazivanje
 
 | | |
@@ -951,10 +954,10 @@ UI: akcija „Ponovo objavi“ / „Vratiti u Objavljen“ **ne postoji**. Za is
 | Akcija | Iz statusa | U status | Ko | Guard |
 |--------|------------|----------|----|-------|
 | Kreiraj | — | Nacrt | Mod / Urednik | Kontekst / bez Org po pravilima |
-| Sačuvaj nacrt | Nacrt | Nacrt | Mod / Urednik | Ovlašćenje; nije zaključan |
+| Sačuvaj nacrt | Nacrt | Nacrt | Mod / Urednik | Ovlašćenje; nije Na odobrenju (PO-DG-10) |
 | Pošalji na odobrenje | Nacrt | Na odobrenju | Moderator | Validacije; Org Aktivan; kontekst |
 | Pošalji na odobrenje (prijedlog izmjene) | Objavljen (faza prijedloga) | Na odobrenju | Moderator | Jedan aktivni prijedlog (BR-012); validacije |
-| Povuci prijedlog | Na odobrenju | Nacrt | Moderator | Prije početka pregleda (BR-033) |
+| Povuci prijedlog (samo Prijedlog izmjene) | Na odobrenju (prijedlog) | Nacrt (faza) | Moderator | Prije početka pregleda (BR-033); **Event Na odobrenju: zabranjeno** (PO-DG-10) |
 | Vrati na doradu | Na odobrenju | Nacrt | Urednik | Obavezan razlog (BR-040) |
 | Objavi (odobri) | Na odobrenju | Objavljen | Urednik | Urednička odluka (BR-039) |
 | Objavi (direktno) | Nacrt | Objavljen | Urednik | Bez Organizatora (BR-018) |
@@ -963,7 +966,7 @@ UI: akcija „Ponovo objavi“ / „Vratiti u Objavljen“ **ne postoji**. Za is
 | Automatsko arhiviranje | Objavljen | Arhiviran | Sistem | TS-004 predikat; BR-065 |
 | Automatsko arhiviranje | Otkazan | Arhiviran | Sistem | TS-004 predikat; BR-065 |
 
-Zabranjeni prelazi (sažetak; BM-ST-09 / TS-003): Nacrt → Objavljen sa Org; Moderator → Objavljen; **Otkazan → Objavljen** (ponovna objava / reaktivacija); otkaz iz Nacrta / Na odobrenju; ručna arhiva; izlaz iz Arhiviran u V1.
+Zabranjeni prelazi (sažetak; BM-ST-09 / TS-003): Nacrt → Objavljen sa Org; Moderator → Objavljen; **Event Na odobrenju → Nacrt** na inicijativu Moderatora (PO-DG-10 / BM-MOD-19); **Otkazan → Objavljen** (ponovna objava / reaktivacija); otkaz iz Nacrta / Na odobrenju; ručna arhiva; izlaz iz Arhiviran u V1.
 
 ## 7.6 Prijedlog izmjene nakon objave
 
@@ -1072,7 +1075,7 @@ Pravilo o neoperativnom aktivnom prijedlogu pri otkazivanju (§7.4.7) je tehnič
 | Invarianti ≥1 | BM-MOD-07, BM-MOD-10 | BR-047, BR-072 | §5 | — | Pravila 3–5 | — |
 | Uklanjanje (drugi / sopstveni zahtjev) | BM-MOD-08–10 | BR-070–073 | §4, §5 | — | Pravila 4–5 | G-11, G-12 |
 | Prestanak (deaktivacija Org.) | BM-ORG-12, BM-MOD-16 | BR-049–050 | §4 | §2 | Statusi | G-13 |
-| Kreiranje / uređivanje / povlačenje / slanje na odobrenje | BM-MOD-05–06, BM-ORG-04 | BR-013–BR-034; BR-122–BR-125 | §5 | §3 | — | — |
+| Kreiranje / uređivanje / slanje; povlačenje samo Prijedloga | BM-MOD-05–06, BM-MOD-19, BM-ORG-04 | BR-013–BR-034; BR-122–BR-125; PO-DG-10 | §5 | §3 | — | — |
 | Ovlašćenja / zabrane / podaci Organizatora | BM-MOD-05–06, BM-MOD-16, BM-ORG-05, BM-GL-07 | BR-007, BR-013–BR-034, BR-063–064, BR-122–BR-125, BR-132 | §5 | §3.2 | — | G-14 |
 | Integritet (jedno aktivno ovlašćenje / par) | — | — | §6.3, §7 | — | — | G-16 |
 | Lokalni audit | BM-MOD-15 | BR-055, BR-073 | §8 | — | — | — |
@@ -1092,7 +1095,7 @@ Napomena: matrica ne uvodi nove BM ili BR identifikatore.
 | Kanonski lifecycle / nisu-statusi | BM-ST-01–02, BM-ST-05 | BR-062; BR-044 | §3.1, §4 | — | — | — |
 | Guard redoslijed | BM-MOD-04; BM-EP | Platformsko pravilo; BR-051 | §5, §7 | — | — | §3; §6.8–§6.9 |
 | Kreiraj / Sačuvaj nacrt | BM-ST-03; BM-ORG-04 | BR-013–BR-020 | §4.3 | — | — | §6.8 |
-| Pošalji / Povuci | BM-ST-04; BM-MOD-06 | BR-028–BR-034 | §4.4 | — | — | §6.8 |
+| Pošalji / Povuci (Prijedlog) | BM-ST-04; BM-ST-10; BM-MOD-06; BM-MOD-19 | BR-028–BR-034; PO-DG-10 | §4.4 | — | — | §6.8 |
 | Vrati na doradu | BM-ST-05; BM-UR-03 | BR-040–BR-044 | §4.5 | — | — | — |
 | Objavi (odobri / direktno) | BM-ST-04, BM-ST-06; BM-UR-02 | BR-018, BR-039; BR-007 | §4.5–§4.6 | — | granica | §6.9 |
 | Otkazivanje + neoperativan prijedlog | BM-DG-05, BM-DG-10, BM-ST-07; BM-MOD-16 | BR-063; BR-006–BR-012; BR-064 | §4.8–§4.9 | — | §7.2 ref. | §6.8–§6.9 |
@@ -1357,8 +1360,9 @@ Deaktivacija Organizatora **ne briše** događaje niti istoriju.
 |---------------|-----------|---------|---------------|
 | Početni Nacrt (nikad poslat/pregledan/objavljen) | Uređuje u svom kontekstu | Prema svojim pravilima | Direktno; fizičko uklanjanje Održavanja po N-TR-04 |
 | Nacrt nakon vraćanja na doradu | Može uređivati | Može uređivati | Direktno; **nema** fizičkog Delete Održavanja; istorija se čuva |
-| Na odobrenju — prije početka pregleda | Može uređivati ili povući (postojeća pravila) | Prema pravilima | Direktno; bez projektovanja konkretnog lock mehanizma |
-| Na odobrenju — tokom pregleda | **Ne** uređuje | Može uređivati tokom pregleda | Direktno; serverska autorizacija obavezna |
+| Na odobrenju — **Event** (prvi tok, V1 / PO-DG-10) | **Ne** uređuje; **ne** povlači | **Ne** uređuje sadržaj; samo Odobri / Vrati na doradu | Sadržaj zaključan od slanja; serverska autorizacija obavezna |
+| Na odobrenju — **Prijedlog izmjene** prije početka pregleda | Može uređivati ili povući (BR-033) | Prema pravilima | Direktno; bez projektovanja konkretnog lock mehanizma |
+| Na odobrenju — **Prijedlog izmjene** tokom pregleda | **Ne** uređuje | Može uređivati prijedlog tokom pregleda | Direktno; serverska autorizacija obavezna |
 | Objavljen | Uređuje **prijedlog**, ne javnu verziju | Pregleda / uređuje / odobrava / vraća prijedlog | Prijedlog izmjene; javna verzija = posljednja odobrena |
 | Otkazan | **Ne** uređuje sadržaj; **ne** vraća u Objavljen | Samo **razlog otkazivanja (napomena urednika)**; ostalo read-only | Forma read-only (BM-DG-10, BR-064); Otkazan → Objavljen odbijen |
 | Arhiviran | Read-only | Read-only | **Nema** uređivanja; **nema** izlaznog workflow prelaza; **nema** ručnog vraćanja u drugi status (V1) |
@@ -1683,7 +1687,7 @@ Opseg: događaji **aktivnog** Organizatora. Ne uvode se novi statusi; „vraćen
 | ID | Kategorija | Filter (postojeći status / faza) | Poslovno opravdanje | Ciljna lista |
 |----|------------|----------------------------------|---------------------|--------------|
 | DM-01 | Nacrti | Status **Nacrt** | Aktivni rad / nastavak uređivanja / slanje | Lista događaja + filter Nacrt |
-| DM-02 | Na odobrenju | Status **Na odobrenju** | Aktivan tok; uređivanje/povlačenje prije pregleda ili praćenje do odluke | Lista događaja + filter Na odobrenju |
+| DM-02 | Na odobrenju | Status **Na odobrenju** | Aktivan tok; **praćenje do odluke Urednika** (bez uređivanja/povlačenja Eventa u V1 / PO-DG-10) | Lista događaja + filter Na odobrenju |
 | DM-03 | Aktivni prijedlozi izmjene | Status **Objavljen** + **operativan** aktivni prijedlog izmjene | Nastavak rada na prijedlogu (uređivanje / slanje na pregled) | Lista događaja + filter aktivni prijedlog |
 
 **Nijesu** kategorije Moderatora (nema operativne akcije / van PO-DASH-03):
@@ -1936,7 +1940,7 @@ Prioritet i Level **nisu** obavezni i **nijesu** poslovna pravila.
 
 ### 13.3.3 Preduslovi (poslovni, ne tehnički)
 
-Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik bez prava; Moderator A/B; Organizator A/B aktivan; Organizator deaktiviran; događaj bez Organizatora; početni/vraćeni Nacrt; Na odobrenju prije/tokom pregleda; Objavljen; Otkazan; Arhiviran; aktivni/neoperativni prijedlog; Održavanja; Medij; Manifestacija; otvoreni zahtjevi.
+Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik bez prava; Moderator A/B; Organizator A/B aktivan; Organizator deaktiviran; događaj bez Organizatora; početni/vraćeni Nacrt; Na odobrenju (Event zaključan / Prijedlog prije ili tokom pregleda); Objavljen; Otkazan; Arhiviran; aktivni/neoperativni prijedlog; Održavanja; Medij; Manifestacija; otvoreni zahtjevi.
 
 ## 13.4 Matrica — Autorizacija i kontekst
 
@@ -1985,11 +1989,12 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | Test ID | Oblast | Scenario | Preduslov | Akcija | Očekivani rezultat | Tip | Traceability |
 |---------|--------|----------|-----------|--------|-------------------|-----|---------------|
 | TM-WF-01 | Workflow | Kreiranje Nacrta | Mod + aktivan Org / kontekst | Kreiraj događaj | Status Nacrt | Pozitivan | BM-ST; TS-010.4 §7.4.1; TS-010.5 |
-| TM-WF-02 | Workflow | Slanje na odobrenje | Validan Nacrt | Pošalji na odobrenje | Na odobrenju | Pozitivan | BR-028; TS-010.4 |
-| TM-WF-03 | Workflow | Povlačenje prije pregleda | Na odobrenju; pregled nije počeo | Povuci | Nacrt | Pozitivan | TS-010.4 |
-| TM-WF-04 | Workflow | Početak pregleda | Na odobrenju | Urednik počinje pregled | Faza pregleda; Mod zaključan | Pozitivan | BM-ST-05; TS-010.4; TS-003 |
-| TM-WF-05 | Workflow | Mod uređuje tokom pregleda | Faza pregleda | Izmjena od strane Mod | Odbijeno | Negativan | TS-010.4; TS-010.5 §10.5 |
-| TM-WF-06 | Workflow | Urednik uređuje tokom pregleda | Faza pregleda | Izmjena Urednik | Dozvoljeno; ostaje u pregledu | Pozitivan | TS-010.4; TS-010.5 |
+| TM-WF-02 | Workflow | Slanje na odobrenje | Validan Nacrt | Pošalji na odobrenje | Na odobrenju; sadržaj zaključan (Event) | Pozitivan | BR-028; PO-DG-10; TS-010.4 |
+| TM-WF-03 | Workflow | Povlačenje Eventa (V1) | Event Na odobrenju | Mod povuče | **Odbijeno** / akcija ne postoji | Negativan | **VAN V1 / SUPERSEDOVANO** (PO-DG-10); BR-033 Event; BM-MOD-19; TS-010.4 §7.4.4 |
+| TM-WF-04 | Workflow | Počni pregled Eventa (V1) | Event Na odobrenju | Urednik „Počni pregled“ | **Nije V1 akcija**; status već Na odobrenju = čeka Odobri/Vrati | Negativan / N/A | **VAN V1 / SUPERSEDOVANO** (PO-DG-10); BM-ST-10; TS-010.4; TS-003 |
+| TM-WF-05 | Workflow | Mod uređuje Na odobrenju (Event) | Event Na odobrenju | Izmjena od strane Mod | Odbijeno | Negativan | PO-DG-10; BM-ST-10; TS-010.4; TS-010.5 §10.5 |
+| TM-WF-06 | Workflow | Urednik uređuje Event Na odobrenju (V1) | Event Na odobrenju | Izmjena sadržaja Urednik | **Odbijeno**; samo Odobri / Vrati | Negativan | **VAN V1 / SUPERSEDOVANO** (PO-DG-10); BR-038 Event; BM-UR-02; TS-010.5 §10.5 |
+| TM-WF-06b | Workflow | Prijedlog — povlačenje / Počni pregled / Urednik edit | Prijedlog Na odobrenju | Po §7.4.4 / §10.5 Proposal | Ostaje aktivno po BR-033/034/038 (**nije** PO-DG-10) | Pozitivan / Negativan po pravilima | **Proposal tok neizmijenjen** |
 | TM-WF-07 | Workflow | Vraćanje na doradu | Na odobrenju | Vrati | Nacrt (vraćeni); nije novi status | Pozitivan | BM-ST-05; TS-010.4 §7.2 |
 | TM-WF-08 | Workflow | Ponovno slanje | Vraćeni Nacrt | Pošalji | Na odobrenju | Pozitivan | TS-010.4 |
 | TM-WF-09 | Workflow | Odobravanje / objava | Na odobrenju; gate OK | Odobri / Objavi (Urednik) | Objavljen | Pozitivan | BM-ST; BR-018; TS-010.4 |
@@ -2019,7 +2024,7 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | TM-CRUD-05 | CRUD | Nacrt bez Održavanja | Nacrt | Sačuvaj | Dozvoljeno (0 Održavanja) | Granični | TS-010.5; TS-004 |
 | TM-CRUD-06 | CRUD | Update početni Nacrt | Početni Nacrt; ovlašćen | Update | Dozvoljeno | Pozitivan | TS-010.5 §10.5 |
 | TM-CRUD-07 | CRUD | Update vraćeni Nacrt | Vraćeni Nacrt | Update | Dozvoljeno u granicama | Pozitivan | TS-010.5 §10.5 |
-| TM-CRUD-08 | CRUD | Update Na odobrenju prije pregleda | Prije pregleda; podnosilac | Update | Dozvoljeno po pravilima | Pozitivan | TS-010.5 §10.5 |
+| TM-CRUD-08 | CRUD | Update Event Na odobrenju (V1) | Event Na odobrenju; Mod ili Urednik | Update sadržaja | **Odbijeno** | Negativan | **VAN V1 / SUPERSEDOVANO** (PO-DG-10); TM-CRUD-08 stari pozitivni zahtjev; TS-010.5 §10.5 |
 | TM-CRUD-09 | CRUD | Update Objavljen direktno | Objavljen; bez prijedloga | Direktni Update sadržaja | Odbijeno | Negativan | BM-DG; TS-010.5 §10.6 |
 | TM-CRUD-10 | CRUD | Update Otkazan (Mod) | Otkazan; Mod | Sadržajna izmjena / razlog | Odbijeno | Negativan | TS-010.5; BM-DG-10; BR-064 |
 | TM-CRUD-11 | CRUD | Veza Org 0..1 — BR-052 | Objavljen; bez Org; Urednik; Aktivan Org | Poveži sa Organizatorom | Org postavljen; status Objavljen; akcija nestaje | Pozitivan | BR-052; PO-DG-08/09; TS-003 §4.11; TS-010.5 §10.10 |

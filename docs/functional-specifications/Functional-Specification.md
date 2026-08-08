@@ -76,6 +76,7 @@
 | PATCH-FS-054 | 2026-08-07 | PO-ORG-01–PO-ORG-04 / BM PATCH-054: katalog polja Organizatora V1 (BR-135); Moderator preko `user_id` (BR-275); kreiranje Org tek pri odobrenju; pristup portalu iz ovlašćenja bez nove platformske uloge (BR-276). ID-jevi BR-275/276 (ne BR-138/139 — ti su Newsletter). Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-055 | 2026-08-08 | PO-AUTO-01 / PO-AUTO-02 / BM PATCH-055: otkazivanje Događaja automatski otkazuje Planirana i Odgođena Održavanja (BR-063, BR-064, BR-065); preciziran trenutak Planiran → Završen (BR-068). Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-056 | 2026-08-08 | PO-DG-08 / PO-DG-09 / BM PATCH-056: preciziran BR-052 (samo Objavljen + bez Org; jednosmjerno NULL → Aktivan Org; bez unlink/reassign); usklađen BR-018 (razdvajanje BR-045 / BR-052); statusna matrica uz BR-052. Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-057 | 2026-08-08 | PO-DG-10 / BM PATCH-057: pojednostavljeni V1 prvi Event review — usklađeni BR-022, BR-023, BR-033, BR-034, BR-037, BR-038 i tokovi §5.5.5–§5.5.6; Proposal tok neizmijenjen. Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -996,15 +997,19 @@ Ako događaj nema registrovanog Organizatora, nacrt uređuje Urednik.
 
 ##### BR-022 – Uređivanje dok traje čekanje odobrenja
 
-Moderator može uređivati događaj koji čeka odobrenje sve dok Urednik ne započne postupak pregleda.
+**V1 / prvi tok Događaja (PO-DG-10 / BM-ST-10):** Dok je Događaj u statusu **Na odobrenju**, Moderator **ne** može uređivati sadržaj Događaja niti Održavanja. Slanjem na odobrenje Događaj postaje sadržajno zaključan do odluke Urednika (Odobri ili Vrati na doradu).
+
+**Supersedovano za V1 prvi Event review:** ranija formulacija koja je dozvoljavala Moderatoru uređivanje „dok Urednik ne započne postupak pregleda“.
+
+**Prijedlog izmjene Objavljenog:** uređivanje Prijedloga do početka uredničkog pregleda ostaje po postojećim pravilima toka Prijedloga (nije predmet ovog supersedovanja).
 
 ---
 
 ##### BR-023 – Zaključavanje prijedloga pri pokretanju pregleda
 
-Pokretanjem uredničkog pregleda sistem automatski zaključava prijedlog događaja za uređivanje.
+**Prvi tok Događaja (V1 / PO-DG-10):** Zaključavanje sadržaja Događaja nastupa **pri prelazu Nacrt → Na odobrenju**, bez posebne akcije „Počni pregled“. Zaključavanje traje do Odobri ili Vrati na doradu.
 
-Zaključavanje traje do donošenja uredničke odluke.
+**Prijedlog izmjene Objavljenog:** Pokretanjem uredničkog pregleda Prijedloga sistem zaključava Prijedlog za uređivanje Moderatorom. Zaključavanje traje do donošenja uredničke odluke. Poseban početak pregleda Prijedloga ostaje aktivan.
 
 ---
 
@@ -1035,9 +1040,9 @@ Ovi podaci služe za audit i nisu ručno izmjenjivi.
 
 ##### BR-027 – Odgovornost tokom uredničkog pregleda
 
-Otvaranjem postupka uredničkog pregleda odgovornost za prijedlog privremeno prelazi sa Moderatora na Urednika.
+**Prvi tok Događaja (V1 / PO-DG-10):** Od slanja na odobrenje Događaj je zaključan; Urednik donosi odluku bez paralelnog uređivanja sadržaja. Moderator ne uređuje dok je status Na odobrenju.
 
-Zaključavanje prijedloga sprečava paralelne izmjene tokom pregleda i obezbjeđuje da Urednik uvijek pregleda stabilnu verziju događaja.
+**Prijedlog izmjene Objavljenog:** Otvaranjem postupka uredničkog pregleda odgovornost za Prijedlog privremeno prelazi sa Moderatora na Urednika. Zaključavanje Prijedloga sprečava paralelne izmjene tokom pregleda.
 
 **Status:** Approved
 
@@ -1061,13 +1066,13 @@ Tok procesa:
 4. Ako je validacija uspješna:
 
    * događaj prelazi u status **„Na odobrenju“**;
-   * Moderator može nastaviti uređivanje događaja i po potrebi povući zahtjev za odobrenje sve dok Urednik ne započne postupak pregleda;
-   * pokretanjem uredničkog pregleda primjenjuju se pravila zaključavanja definisana u BR-023;
-   * Urednik dobija obavještenje da postoji novi prijedlog za pregled.
+   * Događaj je **sadržajno zaključan** (PO-DG-10 / BM-ST-10);
+   * Moderator **ne** uređuje sadržaj i **ne** povlači Događaj;
+   * Urednik dobija obavještenje da postoji novi Događaj koji čeka odluku (Odobri / Vrati na doradu).
 
 Napomena:
 
-Ovo poglavlje opisuje ciljni poslovni model, a ne trenutnu implementaciju.
+Ovo poglavlje opisuje prvi tok odobravanja Događaja. Tok Prijedloga izmjene Objavljenog Događaja ostaje zaseban.
 
 ---
 
@@ -1122,21 +1127,19 @@ Način isporuke obavještenja (e-mail, aplikacijska notifikacija, push i sl.) bi
 
 ##### BR-033 – Povlačenje zahtjeva prije početka pregleda
 
-Moderator može povući zahtjev za odobrenje isključivo dok Urednik nije započeo postupak pregleda.
+**V1 / prvi tok Događaja (PO-DG-10):** Moderator **ne** može povući Događaj iz statusa Na odobrenju u Nacrt. Odluku o narednom prelazu donosi Urednik (Odobri ili Vrati na doradu).
 
-Povlačenjem zahtjeva:
+**Status za prvi Event review:** VAN V1 / SUPERSEDOVANO (PO-DG-10).
 
-* događaj se vraća u status nacrta;
-* uklanja se zaključavanje uređivanja;
-* Moderator može nastaviti uređivanje.
+**Prijedlog izmjene Objavljenog:** Moderator može povući Prijedlog prije početka uredničkog pregleda Prijedloga; povlačenjem Prijedlog se vraća u fazu nacrta Prijedloga po postojećim pravilima toka Prijedloga.
 
 ---
 
 ##### BR-034 – Zabranjeno povlačenje nakon početka pregleda
 
-Ako je Urednik već započeo pregled, zahtjev za odobrenje više nije moguće povući.
+**V1 / prvi tok Događaja:** Nema posebnog „početka pregleda“ Događaja; povlačenje Događaja od strane Moderatora nije dozvoljeno uopšte dok je status Na odobrenju (vidi BR-033 / PO-DG-10).
 
-Dalji tok procesa određuje isključivo urednička odluka.
+**Prijedlog izmjene Objavljenog:** Ako je Urednik već započeo pregled Prijedloga, Prijedlog više nije moguće povući. Dalji tok određuje urednička odluka.
 
 ---
 
@@ -1157,65 +1160,53 @@ Interna napomena:
 
 #### 5.5.6 Pregled i odobravanje događaja
 
-Tok procesa:
+Tok procesa (**prvi tok Događaja — V1 / PO-DG-10**):
 
-1. Događaj se nalazi u statusu **„Na odobrenju“**.
-2. Urednik pokreće postupak pregleda.
-3. Pokretanjem pregleda:
+1. Događaj se nalazi u statusu **„Na odobrenju“** i sadržaj je zaključan.
+2. Urednik pregleda Događaj (bez posebne akcije „Počni pregled“ i bez podstatusa pregleda).
+3. Urednik **ne** uređuje sadržaj Događaja dok je Na odobrenju.
+4. Urednik može:
 
-   * Urednik preuzima odgovornost za prijedlog;
-   * sistem zaključava prijedlog u skladu sa BR-023;
-   * Moderator više ne može uređivati prijedlog niti povući zahtjev.
-4. Urednik pregleda sadržaj i može:
+   * **odobriti** Događaj → status **Objavljen**;
+   * **vratiti** Događaj na doradu → status **Nacrt**, uz obavezan razlog.
+5. Ako Urednik vrati na doradu:
 
-   * urediti prijedlog prije donošenja odluke;
-   * odobriti prijedlog;
-   * vratiti prijedlog na doradu.
-5. Ako Urednik odobri prijedlog:
+   * Moderator ponovo preuzima uređivanje Nacrta;
+   * `first_submitted_at` ostaje;
+   * Moderator može ponovo poslati na odobrenje.
+6. Sistem evidentira uredničke odluke u auditu (gdje je usvojeno).
 
-   * novi događaj postaje javno vidljiv;
-   * kod izmjene objavljenog događaja nova odobrena verzija zamjenjuje prethodnu javnu verziju.
-6. Ako Urednik vrati prijedlog na doradu:
+U V1 ne postoji trajno odbijanje Događaja. Dozvoljene završne uredničke odluke za prvi tok su isključivo **odobri** i **vrati na doradu**. Status i akcija **„Odbijeno“ / „Odbij“** nisu dio V1.
 
-   * obavezno unosi razlog vraćanja;
-   * prijedlog se otključava;
-   * Moderator ponovo preuzima odgovornost;
-   * Moderator može nastaviti uređivanje i ponovo poslati prijedlog na odobrenje.
-7. Sistem evidentira sve uredničke izmjene i odluke u auditu.
-
-U V1 ne postoji trajno odbijanje prijedloga. Dozvoljene završne uredničke odluke su isključivo **odobri** i **vrati na doradu**. Status i akcija **„Odbijeno“ / „Odbij“** nisu dio V1.
-
-Napomena:
-
-Ovo poglavlje opisuje ciljni poslovni model, a ne trenutnu implementaciju.
+**Napomena — Prijedlog izmjene Objavljenog:** zaseban tok (slanje Prijedloga, početak pregleda, uređivanje Prijedloga od Urednika, povlačenje prije pregleda) **nije** predmet PO-DG-10 i ostaje aktivan.
 
 ---
 
 ##### BR-036 – Pregled događaja na odobrenju
 
-Urednik može pregledati svaki događaj koji se nalazi u statusu **„Na odobrenju“**.
+Urednik može pregledati svaki događaj koji se nalazi u statusu **„Na odobrenju“**. Za prvi tok V1 nije potrebna posebna akcija „Počni pregled“ (PO-DG-10).
 
 ---
 
 ##### BR-037 – Preuzimanje odgovornosti i zaključavanje
 
-Pokretanjem postupka pregleda Urednik preuzima odgovornost za prijedlog, a sistem primjenjuje zaključavanje definisano u BR-023.
+**Prvi tok Događaja (V1 / PO-DG-10):** Od trenutka prelaza u Na odobrenju Događaj je zaključan; Moderator ne uređuje i ne povlači Događaj. Urednik ne preuzima uređivanje sadržaja — donosi Odobri / Vrati na doradu.
 
-Od tog trenutka Moderator ne može:
+**Status „Počni pregled“ za Event:** VAN V1 / SUPERSEDOVANO.
 
-* uređivati prijedlog;
-* povući zahtjev za odobrenje.
+**Prijedlog izmjene Objavljenog:** Pokretanjem postupka pregleda Prijedloga Urednik preuzima odgovornost za Prijedlog, a sistem primjenjuje zaključavanje definisano u BR-023. Od tog trenutka Moderator ne može uređivati Prijedlog niti ga povući.
 
 ---
 
 ##### BR-038 – Uređivanje prijedloga tokom pregleda
 
-Tokom pregleda Urednik može izmijeniti sadržaj prijedloga prije donošenja uredničke odluke.
+**Prvi tok Događaja (V1 / PO-DG-10):** Urednik **ne** uređuje sadržaj Događaja dok je status Na odobrenju. Ako je potrebna sadržajna korekcija, vraća Događaj na doradu.
 
-Sve uredničke izmjene automatski se evidentiraju u auditu.
+**Status za prvi Event review:** VAN V1 / SUPERSEDOVANO (PO-DG-10).
+
+**Prijedlog izmjene Objavljenog:** Tokom pregleda Urednik može izmijeniti sadržaj Prijedloga prije donošenja uredničke odluke. Sve uredničke izmjene automatski se evidentiraju u auditu.
 
 ---
-
 ##### BR-039 – Odobravanje prijedloga
 
 Urednik može odobriti prijedlog.
@@ -1294,9 +1285,8 @@ stateDiagram-v2
 
     Nacrt --> Na_odobrenju : Pošalji na odobrenje
     Nacrt --> Objavljen : Direktna objava Urednika (bez Organizatora)
-    Na_odobrenju --> Pregled_Urednika : Urednik započinje pregled
-    Pregled_Urednika --> Objavljen : Odobri
-    Pregled_Urednika --> Nacrt : Vrati na doradu
+    Na_odobrenju --> Objavljen : Odobri (Urednik)
+    Na_odobrenju --> Nacrt : Vrati na doradu (Urednik + razlog)
 
     Objavljen --> Nacrt_prijedloga_izmjene : Izmjene
     Nacrt_prijedloga_izmjene --> Na_odobrenju : Pošalji na odobrenje
@@ -1306,13 +1296,12 @@ stateDiagram-v2
     Otkazan --> Arhiviran : Istek svih održavanja (Sistem)
 
     state "Na odobrenju" as Na_odobrenju
-    state "Pregled Urednika" as Pregled_Urednika
     state "Nacrt prijedloga izmjene" as Nacrt_prijedloga_izmjene
 ```
 
 Objašnjenje:
 
-* Dijagram predstavlja objedinjeni vizuelni prikaz već usvojenih poslovnih pravila iz poglavlja 5.5.1–5.5.6 (BR-006 do BR-044), izuzetka BR-018 te BR-063–BR-065.
+* Dijagram predstavlja objedinjeni vizuelni prikaz već usvojenih poslovnih pravila iz poglavlja 5.5.1–5.5.6 (BR-006 do BR-044), izuzetka BR-018 te BR-063–BR-065; usklađen sa **PO-DG-10** za prvi Event review.
 * Ne definiše nova poslovna pravila i ne mijenja postojeća.
 * Služi lakšem razumijevanju kompletnog uredničkog workflow-a.
 * Otkazivanje: Moderator samo dok je Organizator aktivan i u aktivnom kontekstu; Urednik za bilo koji objavljeni događaj, uključujući događaje deaktiviranog Organizatora (BR-063, BR-050).
@@ -1323,7 +1312,8 @@ Objašnjenje:
 
 Napomena:
 
-* Stanje **„Pregled Urednika“** predstavlja fazu zaključanog pregleda (BR-023, BR-037), a ne zaseban status događaja iz BM-ST-02.
+* Za **prvi Event review (V1 / PO-DG-10)** status **Na odobrenju** je jedinstveno stanje čekanja odluke Urednika (Odobri / Vrati na doradu + razlog). Nema posebnog stanja, podstatusa niti koraka životnog ciklusa „Pregled Urednika“ / „Počni pregled“. Riječ „pregled“ u tekstu BR-ova opisuje radnju Urednika, ne zasebno stanje Eventa.
+* Poseban početak pregleda, zaključavanje tokom pregleda i uređivanje sadržaja tokom pregleda ostaju aktivni samo za **Prijedlog izmjene Objavljenog** (BR-023/037/038 gdje važe za Proposal; TM-WF-06b) — **ne** za prvi Event review.
 * Stanje **„Nacrt prijedloga izmjene“** vizuelno prikazuje radni prijedlog izmjene objavljenog događaja (BR-025); javni portal tokom procesa zadržava posljednju odobrenu verziju (BR-006, BR-011).
 * Prelaz **Odobri** → **Objavljen** za prijedlog izmjene znači da nova odobrena verzija postaje javna (BR-010, BR-039).
 * Prelaz **Vrati na doradu** → **Nacrt** usklađen je sa BR-042 i BM-ST-05.
@@ -4206,3 +4196,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-07 | FS-001 (PATCH-FS-054): PO-ORG-01–PO-ORG-04 / BM PATCH-054 — BR-135 katalog polja; BR-275 `user_id`; BR-276 portal pristup bez nove platformske uloge; Org tek pri odobrenju. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-08 | FS-001 (PATCH-FS-055): PO-AUTO-01 / PO-AUTO-02 / BM PATCH-055 — BR-063 cascade otkazivanja Održavanja; BR-064/065 predikat arhive; BR-068 trenutak Planiran → Završen; §5.5.6a napomena. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-08 | FS-001 (PATCH-FS-056): PO-DG-08 / PO-DG-09 / BM PATCH-056 — preciziran BR-052 (Objavljen + bez Org; jednosmjerno; bez unlink/reassign); usklađen BR-018; statusna matrica. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| 2026-08-08 | FS-001 (PATCH-FS-057): PO-DG-10 / BM PATCH-057 — pojednostavljeni V1 prvi Event review; BR-022/023/027/033/034/037/038 i §5.5.5–§5.5.6; Proposal tok neizmijenjen. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
