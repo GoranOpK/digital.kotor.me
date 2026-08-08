@@ -4,7 +4,7 @@
 **Oznaka dokumenta:** RG-001  
 **Naziv:** Registar skraćenica i oznaka dokumentacije Kalendara kulture  
 **Status dokumenta:** Stable  
-**Verzija:** 1.1.2  
+**Verzija:** 1.1.3  
 **Datum:** 2026-08-08
 
 ---
@@ -73,7 +73,7 @@ Uključene su samo **interne** skraćenice projekta koje se **stvarno koriste** 
 | **BR** | Poslovno/funkcionalno pravilo (Business Rule) | Identifikator pravila u FS (npr. BR-102); sljedivost ka BM. |
 | **FR** | Funkcionalni zahtjev (Functional Requirement) | Identifikator zahtjeva u nekim FS dokumentima (npr. FR-001, FR-OB-001). **Nije** Feature Registry. |
 | **FT** | Feature ID | Jedinstveni ID funkcionalnosti u Feature Registry-ju (npr. FT-001). |
-| **PO** | Product Owner | Uloga / prefiks product odluka (npr. PO-DG-07, PO-ORG-01, PO-TS9-03A). |
+| **PO** | Product Owner | Uloga / prefiks product odluka (npr. PO-DG-07, PO-ORG-01, PO-AUTO-01, PO-TS9-03A). |
 | **IA** | Informaciona arhitektura (Information Architecture) | Informaciono-arhitektonska odluka (npr. IA-01). |
 | **TD** | Tehnička odluka (Technical Decision) | Tehnička odluka evidentirana u TS (npr. TD-TS9-01). |
 | **TO** | Tehnički pregled (Technical Overview) | Pregled trenutne implementacije i odstupanja od BM/FS/TS. |
@@ -150,6 +150,7 @@ Prefiksi se **ne** spajaju u jednu generičku oznaku. Svaki ima svoj namespace.
 | Prefiks | Tip oznake | Značenje | Dokument / modul | Primjer |
 |---------|------------|----------|------------------|---------|
 | **PO-DG** | Product Owner odluka | Događaj | BM / FS / Feature Registry | PO-DG-07 |
+| **PO-AUTO** | Product Owner odluka | Automatske / sistemske poslovne posljedice Kalendara kulture (npr. cascade otkazivanja, automatski završetak) | BM / FS / TS-003 / TS-004 / TS-010 | PO-AUTO-01, PO-AUTO-02 |
 | **PO-ORG** | Product Owner odluka | Organizator / Moderator i model pristupa uredničkom portalu; konkretne odluke: **PO-ORG-01…** | TS-001, BM PATCH-054, FS PATCH-FS-054, Feature Registry | PO-ORG-01 |
 | **PO-EV** | Product Owner / implementaciona odluka | Kanonski Event domen (Događaj / Održavanje); postoji npr. **PO-EV-01** | TS-003, IR-001, Feature Registry | PO-EV-01 |
 | **PO-MF** | Product Owner odluka | Manifestacija | Feature Registry / TS-005 | PO-MF-01 |
@@ -324,7 +325,8 @@ RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, katego
 | 1.1.0 | 2026-08-07 | Završno usklađivanje sa usvojenim stanjem na `main` (uključujući TS-011 v1.0.1). Naziv usklađen sa „Dokument sa opisom skraćenica“; eksplicitno: nije pojmovnik. Dodati prefiksi i skraćenice u upotrebi. Bez izmjene BM/FS/TS/Feature Registry/CR. Bez izmjene implementacije. |
 | 1.1.1 | 2026-08-07 | Administrativni PATCH: uklonjene opšte tehničke/industrijske skraćenice (PDF, SQL, HTTP, JPEG, …); uvedeno Pravilo obuhvata; zadržane/dodate samo interne oznake projekta (uklj. C-UC-OB, TS7-PO, TS8-); RG-001-03 za dio B. Bez izmjene BM/FS/TS/Feature Registry/CR. Bez izmjene implementacije. |
 | 1.1.2 | 2026-08-08 | Coverage PATCH: naziv = Registar skraćenica i oznaka dokumentacije; dodati IR/IR-001 i razlika TS/IS/IR; mapa TS-001…TS-012; PO-ORG / PO-EV; G-W / G-W02; DU-01…05 i DM-01…03; BM-TR jasno AKTIVNO; referenca na BM-GL/BM-ST; razdvojeni G-/G-W/G-NL. Bez izmjene BM/FS/TS/Feature Registry/IR sadržaja. Bez izmjene implementacije. |
+| 1.1.3 | 2026-08-08 | Dodata familija **PO-AUTO** (Product Owner odluke o automatskim/sistemskim procesima Kalendara kulture); primjeri PO-AUTO-01, PO-AUTO-02. Bez poslovnih definicija statusa. Bez izmjene BM/FS/TS sadržaja u ovom dokumentu. Bez izmjene implementacije. |
 
 ---
 
-**Kraj dokumenta RG-001 v1.1.2 (Stable)**
+**Kraj dokumenta RG-001 v1.1.3 (Stable)**

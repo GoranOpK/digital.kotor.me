@@ -108,9 +108,9 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 
 **Newsletter (u okviru FT-001):** model zasnovan na novoobjavljenim događajima i poslovno značajnim promjenama — javno objavljivanje je okidač za prvo uključivanje; otkazivanje, odlaganje i promjena datuma/vremena/lokacije su prioritetni okidači (samo pretplatnicima kojima je događaj već poslat). Višestruke promjene prije slanja daju jedinstveno obavještenje sa posljednjim važećim stanjem. Bez fiksnog sedmičnog rasporeda.
 
-**Usvojene poslovne odluke (Događaj — otkazivanje / terminalnost Otkazan):** Dok je Organizator aktivan, Moderator može otkazati objavljeni događaj u aktivnom kontekstu; deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više ne izvršava poslovne radnje nad njegovim događajima — otkazivanje tada isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj (BM PATCH-035/036: BM-ORG-12, BM-DG-05, BM-ST-07, BM-MOD-16, BM-UR-11; FS PATCH-FS-037/038: BR-007, BR-049, BR-050, BR-063). **PO-DG-07 / BM PATCH-053 / FS PATCH-FS-053** (superseduje isključivo dio PATCH-035 / N-DG-01 koji je dozvoljavao Otkazan → Objavljen): status **Otkazan** je terminalan za povratak u **Objavljen**; prelaz Otkazan → Objavljen nije dozvoljen; isti kulturni program kasnije = **novi** događaj (novi zapis); **Odgođen** na održavanju = jedini mehanizam promjene termina postojećeg (neotkazanog) događaja (BM-TR-12, BR-131); Otkazan = istorijski zapis / forma **read-only**; jedina dozvoljena izmjena = razlog otkazivanja (napomena urednika) — Urednik (BM-DG-09, BM-DG-10, BM-ST-07, BM-ST-09, BM-UR-11; BR-064). Jedini usvojeni statusni izlaz iz Otkazan ostaje Otkazan → Arhiviran (Sistem; BR-065). Relevantno za TS-003 v0.1.2 i TS-010 v1.0.1.
+**Usvojene poslovne odluke (Događaj — otkazivanje / terminalnost Otkazan):** Dok je Organizator aktivan, Moderator može otkazati objavljeni događaj u aktivnom kontekstu; deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više ne izvršava poslovne radnje nad njegovim događajima — otkazivanje tada isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj (BM PATCH-035/036: BM-ORG-12, BM-DG-05, BM-ST-07, BM-MOD-16, BM-UR-11; FS PATCH-FS-037/038: BR-007, BR-049, BR-050, BR-063). **PO-DG-07 / BM PATCH-053 / FS PATCH-FS-053** (superseduje isključivo dio PATCH-035 / N-DG-01 koji je dozvoljavao Otkazan → Objavljen): status **Otkazan** je terminalan za povratak u **Objavljen**; prelaz Otkazan → Objavljen nije dozvoljen; isti kulturni program kasnije = **novi** događaj (novi zapis); **Odgođen** na održavanju = jedini mehanizam promjene termina postojećeg (neotkazanog) događaja (BM-TR-12, BR-131); Otkazan = istorijski zapis / forma **read-only**; jedina dozvoljena izmjena = razlog otkazivanja (napomena urednika) — Urednik (BM-DG-09, BM-DG-10, BM-ST-07, BM-ST-09, BM-UR-11; BR-064). Jedini usvojeni statusni izlaz iz Otkazan ostaje Otkazan → Arhiviran (Sistem; BR-065). **PO-AUTO-01 / BM PATCH-055 / FS PATCH-FS-055:** pri Objavljen → Otkazan, Planirana i Odgođena Održavanja automatski postaju Otkazana u istoj poslovnoj operaciji (BM-DG-11); Završen/Otkazan Održavanja nepromijenjena. Relevantno za TS-003 v0.1.5, TS-004 v0.1.7 i TS-010 v1.0.2.
 
-**Usvojene poslovne odluke (Događaj — direktna objava / arhiviranje):** Direktna objava Urednika dozvoljena je isključivo za događaj bez Organizatora; događaj sa Organizatorom ide isključivo Nacrt → Na odobrenju → Objavljen (PO-DG-05 / N-DG-05 zatvoren; BM PATCH-037 BM-ST-04; FS PATCH-FS-039 BR-018, BR-028). Otkazan događaj automatski prelazi u Arhiviran nakon završetka svih održavanja, isto kao Objavljen (PO-DG-06 / N-DG-06 zatvoren; BM-DG-04, BM-ST-08; BR-065).
+**Usvojene poslovne odluke (Događaj — direktna objava / arhiviranje):** Direktna objava Urednika dozvoljena je isključivo za događaj bez Organizatora; događaj sa Organizatorom ide isključivo Nacrt → Na odobrenju → Objavljen (PO-DG-05 / N-DG-05 zatvoren; BM PATCH-037 BM-ST-04; FS PATCH-FS-039 BR-018, BR-028). Otkazan događaj automatski prelazi u Arhiviran nakon završetka svih održavanja, isto kao Objavljen (PO-DG-06 / N-DG-06 zatvoren; BM-DG-04, BM-ST-08; BR-065). **PO-AUTO-02:** Sistemski Planiran → Završen nakon `vrijeme_do` ako postoji, inače nakon kraja kalendarskog dana `datum` (aplikaciona vremenska zona); Odgođen/Otkazan se ne završavaju automatski.
 
 **Usvojene poslovne odluke (Lokacije):**
 - **PO-LOC-01 (korekcija):** Lokacija iz kataloga je samostalan poslovni entitet, a centralni katalog predstavlja opcioni katalog za ponovno korišćenje Lokacija (nije obavezan i nije jedini izvor svih Lokacija). Moderator može odabrati katalošku Lokaciju ili ručno unijeti naziv Lokacije.
@@ -202,7 +202,7 @@ Povezana dokumentacija (Organizator):
 
 Povezana dokumentacija (Događaj):
 
-* Business Model — BM-04 (BM-DG-01–BM-DG-10), BM-10 (BM-ST-01–BM-ST-09), BM-TR-12; PATCH-035/036 (otkazivanje), PATCH-037 (direktna objava / arhiva), **PATCH-053 / PO-DG-07** (terminalnost Otkazan)
+* Business Model — BM-04 (BM-DG-01–BM-DG-11), BM-10 (BM-ST-01–BM-ST-09), BM-TR-12; PATCH-035/036 (otkazivanje), PATCH-037 (direktna objava / arhiva), **PATCH-053 / PO-DG-07** (terminalnost Otkazan), **PATCH-055 / PO-AUTO-01 / PO-AUTO-02** (cascade otkazivanja Održavanja; trenutak Planiran → Završen)
 * Functional Specification — §5.4–§5.5, §5.7.1–§5.7.2 (BR-006–BR-044, BR-062–BR-066, BR-131), §5.16 katalog Događaji (BR-182/BR-183); PATCH-FS-037/038/039; **PATCH-FS-053**
 * Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija **0.1.3**; Usvojen)
 
@@ -282,14 +282,14 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS | Naziv | Feature | Modul | Status |
 | -- | ----- | ------- | ----- | ------ |
 | TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.3.0) |
-| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.3) |
-| TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.6); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni |
+| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.5) |
+| TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.7); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni |
 | TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.5) |
-| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.1) — TS-010.1–TS-010.8 |
+| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.2) — TS-010.1–TS-010.8 |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.1) |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.1) |
 
@@ -520,3 +520,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-07 | FT-003 — TS-012 Evidencija aktivnosti formalno usvojen (v1.0.1). Putanja `docs/technical-specifications/Technical-Specification_Evidencija_aktivnosti.md`. Status: Usvojen (TS-012 v1.0.1). U sažetku V1 kataloga dodate Manifestacije (usklađenje sa BM-AL-07, BM-MF-20, FS §5.16). Bez izmjene sadržaja TS-012. Bez izmjene BM/FS. Bez izmjene ostalih TS. Bez izmjene implementacije. |
 | 2026-08-07 | FT-001 — PO-ORG-01–PO-ORG-04 usvojene i ugrađene: BM PATCH-054, FS PATCH-FS-054 (BR-275/BR-276), TS-001 v0.3.0. Zatvorena TS-001 otvorena pitanja 1, 2, 3, 15. Priprema Faze 2 / Korak 1. Bez izmjene implementacije. |
 | 2026-08-07 | FT-001 — **PO-EV-01** usvojena (implementaciona): legacy `cultural_events` = testni/prototipski podaci; bez migracije/backfill/dual-write. Usklađeni Implementation Roadmap v1.0.3, TS-003 v0.1.3, TS-004 v0.1.6. Bez izmjene BM/FS. Bez izmjene implementacije. |
+| 2026-08-08 | FT-001 — **PO-AUTO-01 / PO-AUTO-02** usvojene (BM PATCH-055 / FS PATCH-FS-055): cascade otkazivanja otvorenih Održavanja pri otkazivanju Događaja; preciziran trenutak Planiran → Završen. Usklađeni TS-003 v0.1.5, TS-004 v0.1.7, TS-010 v1.0.2, RG-001 v1.1.3. Bez izmjene implementacije. |

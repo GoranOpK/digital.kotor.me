@@ -74,6 +74,7 @@
 | PATCH-FS-052 | 2026-08-06 | PO-N-TR-02-01–03 / BM PATCH-052: zatvaranje N-TR-02 — usklađeni BR-060 i BR-061 (generator dnevno/sedmično/mjesečno; završetak brojem ili krajnjim datumom; max 100; serija nije trajni objekat; ručna = generisana nakon generisanja). Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-053 | 2026-08-06 | Usklađivanje sa BM PATCH-053 / PO-DG-07: Otkazan terminalan (nema Otkazan → Objavljen); novi program = novi događaj; Odgođen = jedini mehanizam promjene termina; Otkazan = istorijski zapis (forma zaključana; izuzetak: razlog otkazivanja / napomena urednika). Usklađeni BR-007, BR-063, BR-064, BR-131, BR-182, BR-183; dijagram §5.5.6a; katalog §5.16. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-054 | 2026-08-07 | PO-ORG-01–PO-ORG-04 / BM PATCH-054: katalog polja Organizatora V1 (BR-135); Moderator preko `user_id` (BR-275); kreiranje Org tek pri odobrenju; pristup portalu iz ovlašćenja bez nove platformske uloge (BR-276). ID-jevi BR-275/276 (ne BR-138/139 — ti su Newsletter). Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-055 | 2026-08-08 | PO-AUTO-01 / PO-AUTO-02 / BM PATCH-055: otkazivanje Događaja automatski otkazuje Planirana i Odgođena Održavanja (BR-063, BR-064, BR-065); preciziran trenutak Planiran → Završen (BR-068). Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -1316,7 +1317,7 @@ Objašnjenje:
 * Otkazivanje: Moderator samo dok je Organizator aktivan i u aktivnom kontekstu; Urednik za bilo koji objavljeni događaj, uključujući događaje deaktiviranog Organizatora (BR-063, BR-050).
 * Status **Otkazan** je terminalan za povratak u **Objavljen**: prelaz Otkazan → Objavljen nije dozvoljen (BR-064).
 * Deaktivacijom Organizatora prestaje moderatorski kontekst; Moderator više ne izvršava poslovne radnje nad događajima tog Organizatora (BR-049, BR-050).
-* Automatsko arhiviranje: Sistem nakon završetka svih održavanja — iz statusa Objavljen i iz statusa Otkazan (BR-065).
+* Automatsko arhiviranje: Sistem nakon što nijedno Održavanje nije Planiran/Odgođen — iz statusa Objavljen i iz statusa Otkazan (BR-065). Pri otkazivanju Događaja otvorena Održavanja (Planiran/Odgođen) prelaze u Otkazan (BR-063 / PO-AUTO-01).
 * Može predstavljati osnovu za buduću implementaciju state machine modela.
 
 Napomena:
@@ -1653,6 +1654,8 @@ Urednik može otkazati bilo koji objavljeni događaj.
 
 Otkazivanjem status događaja se mijenja u **Otkazan**.
 
+U okviru iste atomske poslovne operacije otkazivanja Događaja (Objavljen → Otkazan), sva Održavanja koja su u tom trenutku u statusu **Planiran** ili **Odgođen** automatski prelaze u status **Otkazan**. Održavanja koja su već u statusu **Završen** ili **Otkazan** ostaju nepromijenjena. Nakon operacije na Otkazanom Događaju ne smije ostati Planirano niti Odgođeno Održavanje. To nije prelaz Planiran → Završen; to je posljedica otkazivanja roditeljskog Događaja (PO-AUTO-01 / BM-DG-11).
+
 Otkazan događaj ostaje dostupan u skladu sa pravilima prikaza definisanim za javni portal i tretira se kao istorijski zapis.
 
 Nakon otkazivanja Urednik može unijeti ili dopuniti razlog otkazivanja (napomenu urednika) radi tačnog informisanja javnosti, u skladu sa BR-064.
@@ -1669,7 +1672,7 @@ Ako se isti kulturni program kasnije ponovo organizuje, ne reaktivira se postoje
 
 Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kroz status **Odgođen** na održavanju, u skladu sa BR-067, BR-130 i BR-131.
 
-Događaj u statusu **Otkazan** tretira se kao istorijski zapis. Forma događaja je funkcionalno zaključana: nije dozvoljena izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja.
+Događaj u statusu **Otkazan** tretira se kao istorijski zapis. Nakon završene operacije otkazivanja (uključujući automatsko otkazivanje otvorenih Održavanja iz BR-063) forma događaja je funkcionalno zaključana: nije dozvoljena naknadna izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja.
 
 Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti radi tačnog informisanja javnosti.
 
@@ -1679,9 +1682,11 @@ Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može un
 
 Događaj se automatski arhivira nakon završetka svih njegovih održavanja, bez ručne intervencije.
 
+„Završetak svih održavanja“ znači da nijedno Održavanje nije u statusu **Planiran** niti **Odgođen**. Održavanja u statusu **Završen** ili **Otkazan** ne sprečavaju arhiviranje.
+
 Automatsko arhiviranje primjenjuje se na događaj u statusu **Objavljen** i na događaj u statusu **Otkazan**.
 
-Otkazani događaj nakon završetka svih održavanja prelazi u status **Arhiviran**.
+Otkazani događaj, nakon što su otvorena Održavanja zatvorena prema BR-063 (PO-AUTO-01) i kada je predikat ispunjen, prelazi u status **Arhiviran**.
 
 Izvršilac prelaza je **Sistem**.
 
@@ -1716,9 +1721,17 @@ Održavanje može imati jedan od sljedećih statusa:
 
 #### BR-068 – Automatski završetak održavanja
 
-Održavanje automatski dobija status **Završen** nakon isteka datuma i vremena njegovog termina.
+Održavanje u statusu **Planiran** automatski dobija status **Završen** kada je termin istekao, prema aplikacionoj vremenskoj zoni sistema (PO-AUTO-02):
 
-Kada vrijeme nije definisano, održavanje dobija status **Završen** nakon isteka datuma održavanja.
+1. Ako je definisano **vrijeme završetka** (`vrijeme_do`) — Održavanje se smatra isteklim nakon trenutka **datum + vrijeme_do**.
+2. Ako `vrijeme_do` nije definisano — Održavanje se smatra isteklim nakon **završetka kalendarskog dana** polja `datum`. To uključuje:
+   * samo datum (bez vremena);
+   * datum uz samo vrijeme početka (`vrijeme_od` bez `vrijeme_do`);
+   * cjelodnevno Održavanje.
+
+Sistem ne završava automatski Održavanja u statusu **Odgođen**, **Otkazan** ili **Završen**. Odgođeno Održavanje mora prvo preći u Planiran (novi termin) ili Otkazan.
+
+Automatsko završavanje nije mehanizam zatvaranja Održavanja nakon otkazivanja Događaja; to uređuje BR-063 / PO-AUTO-01.
 
 ---
 
@@ -1729,6 +1742,8 @@ Otkazivanjem pojedinačnog održavanja njegov status se mijenja u **Otkazan**.
 Održavanje može biti otkazano iz statusa **Planiran** ili iz statusa **Odgođen**.
 
 Otkazivanje pojedinačnog održavanja ne utiče na statuse ostalih održavanja istog događaja.
+
+Napomena: automatsko otkazivanje svih otvorenih Održavanja pri otkazivanju cijelog Događaja uređeno je u BR-063 (PO-AUTO-01) i nije predmet ovog pravila.
 
 ---
 
@@ -4150,3 +4165,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-06 | FS-001 (PATCH-FS-052): PO-N-TR-02-01–03 — zatvoren N-TR-02; usklađeni BR-060 / BR-061 (generator; max 100; serija nije trajni objekat). Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-06 | FS-001 (PATCH-FS-053): Usklađivanje sa BM PATCH-053 / PO-DG-07 — Otkazan terminalan; BR-007, BR-063, BR-064 (prepisan), BR-131, BR-182, BR-183; §5.5.6a; katalog §5.16. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-07 | FS-001 (PATCH-FS-054): PO-ORG-01–PO-ORG-04 / BM PATCH-054 — BR-135 katalog polja; BR-275 `user_id`; BR-276 portal pristup bez nove platformske uloge; Org tek pri odobrenju. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| 2026-08-08 | FS-001 (PATCH-FS-055): PO-AUTO-01 / PO-AUTO-02 / BM PATCH-055 — BR-063 cascade otkazivanja Održavanja; BR-064/065 predikat arhive; BR-068 trenutak Planiran → Završen; §5.5.6a napomena. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |

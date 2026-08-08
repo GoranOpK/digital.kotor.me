@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Događaj  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.4  
-**Datum:** 2026-08-07
+**Verzija:** 0.1.5  
+**Datum:** 2026-08-08
 
 ---
 
@@ -21,6 +21,7 @@
 | 0.1.2 | 2026-08-07 | Usklađivanje sa BM PATCH-053 / PO-DG-07 i FS PATCH-FS-053: Otkazan terminalan (nema Otkazan → Objavljen); novi program = novi zapis; Odgođen = jedini mehanizam promjene termina (granica TS-004); Otkazan = istorijski zapis / read-only (izuzetak: razlog otkazivanja); uklonjena ponovna objava iz lifecycle, autorizacije, validacija i audita. Bez izmjene implementacije. |
 | 0.1.3 | 2026-08-07 | **PO-EV-01** (implementaciona napomena §14): legacy `CulturalEvent` podaci su testni/prototipski; bez migracije/backfill/dual-write; novi model direktno prema TS. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 0.1.4 | 2026-08-07 | Dokumentaciono usklađivanje isticanja sa BM-PK-15 / BR-117 / PO-TS9-06B: najviše **tri (3)** istaknuta događaja u jednom trenutku (umjesto zastarjelog „najviše jedan“ nakon PATCH-046 / PATCH-FS-048). Bez izmjene BM/FS/TS-009. |
+| 0.1.5 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02** (BM PATCH-055 / FS PATCH-FS-055): otkazivanje Događaja atomski otkazuje Planirana/Odgođena Održavanja (§4.8); predikat arhive usklađen (§4.10). Bez izmjene implementacije. |
 
 Napomena:
 
@@ -46,8 +47,8 @@ Dokument:
 
 Izvori istine za poslovna pravila:
 
-* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-04, BM-10, BM-03 relevantni dijelovi, BM-UR-06/07/11, BM-MOD-16, BM-ORG-12; BM-DG-09/BM-DG-10 / BM PATCH-053)
-* `docs/functional-specifications/Functional-Specification.md` (§5.4–§5.5, §5.7.1–§5.7.2 relevantno, §5.16 katalog Događaji, BR-006–BR-044, BR-045, BR-052, BR-056–BR-066, BR-117, BR-131, BR-182/BR-183; PATCH-FS-053)
+* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-04, BM-10, BM-03 relevantni dijelovi, BM-UR-06/07/11, BM-MOD-16, BM-ORG-12; BM-DG-09/BM-DG-10/BM-DG-11 / BM PATCH-053 / BM PATCH-055)
+* `docs/functional-specifications/Functional-Specification.md` (§5.4–§5.5, §5.7.1–§5.7.2 relevantno, §5.16 katalog Događaji, BR-006–BR-044, BR-045, BR-052, BR-056–BR-066, BR-117, BR-131, BR-182/BR-183; PATCH-FS-053; PATCH-FS-055)
 * `docs/features/Feature-Registry.md` (FT-001)
 * `docs/METHODOLOGY.md` (M-TS-001–M-TS-005)
 * `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001 — referentni obrazac i granice prema Organizatoru / Moderatoru)
@@ -490,20 +491,21 @@ Nacrt → Objavljen
    * radnja je u **aktivnom moderatorskom kontekstu** tog Organizatora (BM-DG-05, BM-MOD-16, BR-007, BR-063).
 4. Deaktivacijom Organizatora moderatorski kontekst prestaje; Moderator više ne otkazuje događaje tog Organizatora (BM-ORG-12).
 5. **Urednik** smije otkazati bilo koji objavljeni događaj, uključujući događaje deaktiviranog Organizatora (BM-UR-11, BR-063).
-6. Otkazani događaj ostaje evidentiran kao **istorijski zapis**; prikaz po pravilima portala (BM-DG-10, BR-063, BR-064).
-7. Nakon prelaska u Otkazan forma događaja je **read-only**, osim razloga otkazivanja / napomene urednika (§4.9).
+6. U okviru **iste atomske poslovne operacije** otkazivanja Događaja, sva Održavanja koja su u tom trenutku u statusu **Planiran** ili **Odgođen** prelaze u **Otkazan**. Održavanja u statusu **Završen** ili **Otkazan** ostaju nepromijenjena. Nakon operacije ne smije ostati Planirano niti Odgođeno Održavanje (PO-AUTO-01 / BM-DG-11 / BR-063). To **nije** Planiran → Završen.
+7. Otkazani događaj ostaje evidentiran kao **istorijski zapis**; prikaz po pravilima portala (BM-DG-10, BR-063, BR-064).
+8. Nakon završene operacije otkazivanja (uključujući korak 6) forma događaja je **read-only**, osim razloga otkazivanja / napomene urednika (§4.9).
 
 ## 4.9 Terminalnost statusa Otkazan (istorijski zapis)
 
 **Tehnički tok / guard uslovi**
 
 1. Ulaz: status **Otkazan**.
-2. Jedini usvojeni statusni izlaz: **Otkazan → Arhiviran** (Sistem), kada su sva održavanja završena (BM-DG-04, BM-ST-08, BR-065).
+2. Jedini usvojeni statusni izlaz: **Otkazan → Arhiviran** (Sistem), kada nijedno Održavanje nije u statusu Planiran niti Odgođen (BM-DG-04, BM-ST-08, BR-065; TS-004 §4.9). Nakon PO-AUTO-01 otvorena Održavanja su već Otkazana u okviru otkazivanja Događaja, pa predikat arhive može biti ispunjen odmah ili nakon što su preostala Održavanja već bila Završen/Otkazan.
 3. Prelaz **Otkazan → Objavljen** nije dozvoljen; mora biti odbijen validacijom (BM-DG-09, BM-ST-07, BM-ST-09, BR-064).
 4. Moderator ne može vratiti otkazani događaj u Objavljen; Urednik takođe ne može (BM-UR-11, BM-MOD-16).
 5. Reaktivacija postojećeg otkazanog događaja ne postoji. Ako se isti kulturni program kasnije ponovo organizuje, kreira se **novi** događaj (novi zapis, novi lifecycle) (BM-DG-09).
 6. Promjena termina postojećeg (neotkazanog) događaja nije radnja nad statusom događaja: vrši se isključivo kroz status **Odgođen** na održavanju (granica TS-004; BM-TR-12, BR-131).
-7. Dok je status Otkazan, forma je **read-only**. Nije dozvoljena izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja (BM-DG-10, BR-064).
+7. Dok je status Otkazan, forma je **read-only**. Nije dozvoljena **naknadna** izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja (BM-DG-10, BR-064). Automatsko otkazivanje otvorenih Održavanja iz §4.8 korak 6 dio je same operacije otkazivanja.
 8. Jedini izuzetak: **Urednik** smije unijeti ili dopuniti **razlog otkazivanja (napomenu urednika)** radi tačnog informisanja javnosti (BM-DG-10, BM-UR-11, BR-063, BR-064).
 9. Pokušaj izmjene bilo kog drugog polja dok je status Otkazan mora biti odbijen validacijom.
 
@@ -511,7 +513,7 @@ Nacrt → Objavljen
 
 ```mermaid
 flowchart TD
-  A[Objavljen ili Otkazan] --> B{Sva održavanja završena?}
+  A[Objavljen ili Otkazan] --> B{Nema Planiran ni Odgođen?}
   B -->|Ne| C[Bez promjene statusa]
   B -->|Da| D[Sistem: status Arhiviran]
   D --> E[Lokalni / centralni audit: izvršilac Sistem]
@@ -520,12 +522,12 @@ flowchart TD
 **Tehnički tok**
 
 1. Ulazi: **Objavljen** ili **Otkazan** (BM-DG-04, BM-ST-08, BR-065).
-2. Uslov: završetak **svih** održavanja događaja.
+2. Uslov: nijedno Održavanje nije u statusu **Planiran** niti **Odgođen** (TS-004 §4.9 / N-TR-03). Održavanja Završen i Otkazan ne blokiraju.
 3. Izvršilac: **Sistem**.
 4. Bez ručne intervencije.
 5. Bez novog statusa.
 6. Za događaj u statusu Otkazan ovo je jedini usvojeni izlaz iz terminalnog stanja (nema povratka u Objavljen).
-
+7. Nakon otkazivanja Događaja (PO-AUTO-01) otvorena Održavanja su već Otkazana; Sistem ne koristi Planiran → Završen da bi zatvorio Održavanja Otkazanog Događaja.
 ## 4.11 Naknadno povezivanje sa Organizatorom
 
 Urednik može naknadno povezati događaj kreiran bez Organizatora sa registrovanim Organizatorom (BM-UR-07, BR-052).

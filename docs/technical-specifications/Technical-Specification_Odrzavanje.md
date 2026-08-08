@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Održavanje događaja  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.6  
-**Datum:** 2026-08-07
+**Verzija:** 0.1.7  
+**Datum:** 2026-08-08
 
 ---
 
@@ -23,6 +23,7 @@
 | 0.1.4 | 2026-08-06 | Zatvoreno N-TR-04: fizičko uklanjanje održavanja samo iz Nacrta prije prvog uredničkog postupka; nakon prvog slanja na odobrenje — isključivo izmjena/statusi. Bez soft delete, novog statusa ili audita. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 0.1.5 | 2026-08-06 | Zatvoreno N-TR-02 (PO-N-TR-02-01–03 / BM PATCH-052 / FS PATCH-FS-052): generator nije entitet; dnevno/sedmično/mjesečno; završetak brojem ili krajnjim datumom; max 100; ručna = generisana. Usklađeni §3.5, §4.4, §6, §7, §12. Bez izmjene implementacije. |
 | 0.1.6 | 2026-08-07 | **PO-EV-01** (implementaciona napomena §14): legacy flat termini na `CulturalEvent` nisu predmet migracije/backfill/dual-write; novi model Održavanja direktno prema TS. Bez izmjene BM/FS. Bez izmjene implementacije. |
+| 0.1.7 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02** (BM PATCH-055 / FS PATCH-FS-055): preciziran trenutak Planiran → Završen (§4.8); otkazivanje roditeljskog Događaja otkazuje Planirana/Odgođena Održavanja (§4.9); usklađene matrice i validacije. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -49,8 +50,8 @@ Dokument:
 
 Izvori istine za poslovna pravila:
 
-* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-06 BM-TR-01–BM-TR-18; BM-DG-01, BM-DG-03, BM-DG-04; BM-07 referenca)
-* `docs/functional-specifications/Functional-Specification.md` (§5.7.1, §5.7.3; §5.4.3; §5.16 relevantno; BR-056–BR-061, BR-065, BR-067–BR-069, BR-129–BR-134)
+* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-06 BM-TR-01–BM-TR-18; BM-DG-01, BM-DG-03, BM-DG-04, BM-DG-11; BM PATCH-055; BM-07 referenca)
+* `docs/functional-specifications/Functional-Specification.md` (§5.7.1, §5.7.3; §5.4.3; §5.16 relevantno; BR-056–BR-061, BR-063, BR-065, BR-067–BR-069, BR-129–BR-134; PATCH-FS-055)
 * `docs/features/Feature-Registry.md` (FT-001)
 * `docs/METHODOLOGY.md` (M-TS-001–M-TS-005)
 * `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001 — kontekst / ovlašćenja)
@@ -413,20 +414,22 @@ stateDiagram-v2
   [*] --> Planiran : Kreiranje / generisanje
 
   Planiran --> Odgođen : Odgodi (Moderator / Urednik)
-  Planiran --> Otkazan : Otkaži (Moderator / Urednik)
+  Planiran --> Otkazan : Otkaži (Moderator / Urednik) ili otkazivanje Događaja (Sistem)
   Planiran --> Završen : Istek termina (Sistem)
 
   Odgođen --> Planiran : Novi termin (isti zapis)
-  Odgođen --> Otkazan : Otkaži (Moderator / Urednik)
+  Odgođen --> Otkazan : Otkaži (Moderator / Urednik) ili otkazivanje Događaja (Sistem)
 ```
+
+Napomena (PO-AUTO-01): prelaz Planiran/Odgođen → Otkazan može nastati i kao **posljedica otkazivanja roditeljskog Događaja** (Objavljen → Otkazan), u okviru iste atomske poslovne operacije. To **nije** Planiran → Završen.
 
 ## 4.2 Matrica statusa
 
 | Status | Svrha | Ulaz | Izlaz | Ko uvodi |
 |--------|-------|------|-------|----------|
-| **Planiran** | Aktivno, biće održano po objavljenim podacima | Kreiranje; povratak iz Odgođen | Odgođen; Otkazan; Završen | Moderator / Urednik; Sistem (Završen) |
-| **Odgođen** | Neće biti u starom terminu; očekuje se novi termin | Iz Planiran | Planiran (novi termin); Otkazan | Moderator / Urednik |
-| **Otkazan** | Neće biti održano | Iz Planiran ili Odgođen | Nema usvojenog izlaza | Moderator / Urednik |
+| **Planiran** | Aktivno, biće održano po objavljenim podacima | Kreiranje; povratak iz Odgođen | Odgođen; Otkazan; Završen | Moderator / Urednik; Sistem (Završen); Sistem pri otkazivanju Događaja (Otkazan) |
+| **Odgođen** | Neće biti u starom terminu; očekuje se novi termin | Iz Planiran | Planiran (novi termin); Otkazan | Moderator / Urednik; Sistem pri otkazivanju Događaja (Otkazan) |
+| **Otkazan** | Neće biti održano | Iz Planiran ili Odgođen | Nema usvojenog izlaza | Moderator / Urednik; Sistem (otkazivanje roditeljskog Događaja) |
 | **Završen** | Održano ili prošao termin | Iz Planiran (automatski) | Nema usvojenog izlaza | Sistem |
 
 Napomena: iz **Otkazan** i **Završen** nema usvojenih povratnih tranzicija u BM/FS.
@@ -542,15 +545,42 @@ Statusni prelazi Planiran ↔ Odgođen / Otkazan su zasebna ovlašćenja (§5).
 
 ## 4.8 Automatski završetak
 
-1. Sistem postavlja **Završen** nakon isteka datuma i vremena termina (BR-068).
-2. Ako vrijeme nije definisano — nakon isteka datuma (BR-068).
-3. Ulaz u Završen iz Planiran (BR-129).
+Sistem automatski izvršava **Planiran → Završen** isključivo za Održavanje u statusu **Planiran**, kada je termin istekao prema aplikacionoj vremenskoj zoni (`config('app.timezone')`) (PO-AUTO-02 / BM-TR-10 / BR-068).
 
-## 4.9 Signal ka TS-003 — arhiviranje događaja
+### Pravilo isteka
+
+1. **Definisano `vrijeme_do`:** ako Održavanje ima `datum` i `vrijeme_do`, smatra se isteklim nakon trenutka **datum + vrijeme_do**.
+2. **Bez `vrijeme_do`:** Održavanje se **ne** smatra završenim odmah nakon `vrijeme_od`. Smatra se isteklim tek nakon **završetka kalendarskog dana** polja `datum`. To uključuje:
+   * samo `datum` (bez vremena);
+   * `datum` + `vrijeme_od` (bez `vrijeme_do`);
+   * cjelodnevno Održavanje (`cjelodnevno = true`).
+
+### Šta Sistem ne obrađuje
+
+Sistem **ne** izvršava automatsko završavanje za Održavanja u statusu:
+
+* **Odgođen** (mora prvo Odgođen → Planiran sa novim terminom, ili Odgođen → Otkazan);
+* **Otkazan**;
+* **Završen**.
+
+Automatsko završavanje **nije** mehanizam zatvaranja Održavanja nakon otkazivanja Događaja; to uređuje §4.9 / PO-AUTO-01.
+
+## 4.9 Signal ka TS-003 — arhiviranje događaja i otkazivanje roditelja
 
 Događaj ispunjava uslov za automatsko arhiviranje kada više ne postoji nijedno održavanje u statusu **Planiran** ili **Odgođen**. Održavanja u statusima **Završen** i **Otkazan** smatraju se konačno obrađenim i ne sprečavaju automatsko arhiviranje događaja.
 
 Kada je uslov ispunjen, TS-004 omogućava Sistemu da izvrši arhiviranje Događaja iz statusa **Objavljen** ili **Otkazan**, u skladu sa BM-DG-04, BR-065 i TS-003 §4.10.
+
+### Otkazivanje roditeljskog Događaja (PO-AUTO-01)
+
+Kada roditeljski Događaj prelazi **Objavljen → Otkazan**, u okviru **iste atomske poslovne operacije** otkazivanja:
+
+* sva Održavanja u statusu **Planiran** prelaze u **Otkazan**;
+* sva Održavanja u statusu **Odgođen** prelaze u **Otkazan**;
+* Održavanja u statusu **Završen** ostaju **Završen**;
+* Održavanja u statusu **Otkazan** ostaju **Otkazan**.
+
+To **nije** automatski Planiran → Završen. Nakon operacije na Otkazanom Događaju ne smije ostati Planirano niti Odgođeno Održavanje (BM-DG-11 / BR-063; TS-003 §4.8).
 
 ## 4.10 Veza kardinalnosti sa Događajem
 
@@ -712,9 +742,10 @@ Functional Specification:
 | BM-TR-14 / BR-130 | Dozvoliti samo Odgođen→{Planiran,Otkazan}; Planiran zahtijeva novi termin |
 | BM-TR-15 / BR-131 | Povratak = update istog zapisa, ne insert |
 | BM-TR-16/17 / BR-132/133 | Autorizacija po postojanju Organizatora |
-| BR-068 | Sistemski job: Planiran→Završen po isteku |
+| BR-068 | Sistem: Planiran→Završen prema PO-AUTO-02 (vrijeme_do ako postoji; inače kraj dana `datum`; app timezone) |
 | BM-DG-01 | TS-003 validacija ≥1 pri slanju/objavi — TS-004 obezbjeđuje brojanje |
 | BM-DG-04 / BR-065 | Signal ka TS-003 kada nema održavanja u statusu Planiran ili Odgođen |
+| BM-DG-11 / BR-063 | Pri otkazivanju Događaja: Planiran/Odgođen → Otkazan (atomski sa Event cancel) |
 
 ## 7.2 Tabela validacija po toku
 
@@ -736,7 +767,8 @@ Functional Specification:
 | Izmjena samo odabranog | Pomjeranje / otkaz | Sistem | Ostala nepromijenjena |
 | Autorizacija Mod/Urednik | Statusne radnje | Sistem | Odbijanje |
 | Podaci na objavljenom kroz approval | Izmjena podataka | TS-003 tok | Blokada direktnog bypass-a |
-| Istek termina | Završetak | Sistem | Planiran→Završen |
+| Istek termina | Završetak | Sistem | Planiran→Završen (PO-AUTO-02) |
+| Otkazivanje Događaja | Event cancel | Sistem / TS-003 | Planiran/Odgođen→Otkazan (PO-AUTO-01) |
 | Nema održavanja u statusu Planiran ili Odgođen | Arhiva događaja | Sistem | Emituje signal ka TS-003 za automatsko arhiviranje |
 | Fizičko uklanjanje — samo Nacrt bez uredničkog postupka | Uklanjanje (§4.3a) | Sistem | Odbijanje inače |
 | Fizičko uklanjanje nakon prvog slanja | Uklanjanje | Sistem | Odbijanje; koristiti izmjenu/status |
@@ -747,7 +779,8 @@ Functional Specification:
 * Ako se koristi kataloška Lokacija, referenca na kataloški zapis mora postojati i biti validna.
 * Ručno uneseni naziv Lokacije ne zahtijeva katalošku referencu.
 * Statusni prelazi samo iz §4.2.
-* Automatski Završen ne smije dirati Otkazan (nema usvojene tranzicije Otkazan→Završen).
+* Automatski Završen ne smije dirati Otkazan ni Odgođen (nema usvojene tranzicije Otkazan→Završen / Odgođen→Završen).
+* Automatsko završavanje koristi aplikacionu vremensku zonu; predikat PO-AUTO-02.
 * Vremenska polja: §3.3.3 (datum obavezan; završetak samo uz početak; završetak > početak; cjelodnevno bez vremena).
 * Jedno održavanje = jedan kalendarski datum; bez `datum od` / `datum do`.
 * Fizičko uklanjanje: §4.3a (N-TR-04); brisanje ≠ otkazivanje.
@@ -914,8 +947,8 @@ Za TS-004 trenutno **nema** otvorenih pitanja.
 | §4.5 Izuzeci | BM-TR-07 | BR-061, BR-069 | FT-001 | — |
 | §4.6 Izmjene objavljenog | BM-TR-08 | BR-061 | FT-001 | TS-003 |
 | §4.7 Odgađanje | BM-TR-14/15 | BR-130/131 | FT-001 | — |
-| §4.8 Auto Završen | BM-TR-10, BM-TR-13 | BR-068, BR-129 | FT-001 | — |
-| §4.9 Signal arhive | BM-DG-04 (uslov: nema Planiran/Odgođen) | BR-065 | FT-001 | TS-003 |
+| §4.8 Auto Završen | BM-TR-10, BM-TR-13; PO-AUTO-02 | BR-068, BR-129 | FT-001 | — |
+| §4.9 Arhiva / cancel cascade | BM-DG-04, BM-DG-11; PO-AUTO-01 | BR-063, BR-065 | FT-001 | TS-003 |
 | §5 Autorizacija | BM-TR-16–18 | BR-132–134, BR-061 | FT-001 | TS-001, TS-003 |
 | §6 Model podataka | BM-TR-01–06, BM-LK-* | BR-056–060, §5.4.3 | FT-001 | TS-006 |
 | §7 Validacije | BM-TR-*, BM-DG-01/04 | BR-056–061, BR-068/069, BR-129–131 | FT-001 | TS-003 |

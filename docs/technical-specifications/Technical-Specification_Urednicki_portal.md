@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.1
-**Datum:** 2026-08-07
+**Verzija:** 1.0.2
+**Datum:** 2026-08-08
 
 ---
 
@@ -30,6 +30,7 @@
 | 0.8.0 | 2026-08-06 | TS-010.8 — Business Test Matrix (QA-TS0108-01): poslovni test scenariji za FT-001 urednički portal; sljedivost BM→FS→TS→matrica; bez QA plana, implementacije testova, CI/coverage. Bez novih BM/BR. Bez izmjene implementacije. |
 | 1.0.0 | 2026-08-06 | Formalno usvajanje kompletne tehničke specifikacije TS-010.1–TS-010.8. Status: USVOJEN. Bez funkcionalnih izmjena. |
 | 1.0.1 | 2026-08-07 | Usklađivanje sa BM PATCH-053 / PO-DG-07, FS PATCH-FS-053 i TS-003 v0.1.2: Otkazan terminalan (nema Otkazan → Objavljen); forma Otkazan read-only (izuzetak: razlog otkazivanja / napomena urednika); novi program = novi događaj; Odgođen = jedini mehanizam promjene termina (granica TS-004); uklonjena ponovna objava / reaktivacija iz workflow, CRUD, Dashboard, audita i test matrice. Bez izmjene BM/FS/TS-003/implementacije. |
+| 1.0.2 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02** (BM PATCH-055 / FS PATCH-FS-055): otkazivanje Događaja atomski otkazuje Planirana/Odgođena Održavanja (§7.4.7; TM-PUB-04); razlikovanje od automatskog Planiran → Završen (TM-OCC-11). Bez izmjene implementacije. |
 
 Napomena:
 
@@ -57,6 +58,7 @@ Ne mijenjaju se postojeći redovi.
 | 0.8.0 | 2026-08-06 | Dokumentaciono pripremljen TS-010.8 (Business Test Matrix; QA-TS0108-01). TS-010.1–TS-010.8 Dokumentaciono pripremljeno. |
 | 1.0.0 | 2026-08-06 | Formalno usvojen kompletan dokument TS-010. Status promijenjen iz U IZRADI u USVOJEN. Nema funkcionalnih izmjena. |
 | 1.0.1 | 2026-08-07 | PATCH: usklađivanje lifecycle događaja sa BM PATCH-053, FS PATCH-FS-053 i TS-003 v0.1.2 (terminalnost Otkazan; read-only; razlog otkazivanja; uklonjena ponovna objava). |
+| 1.0.2 | 2026-08-08 | PATCH: PO-AUTO-01 / PO-AUTO-02 — cascade otkazivanja Održavanja pri otkazivanju Događaja; usklađenje TM-PUB-04 / TM-OCC-11. |
 
 ---
 
@@ -920,7 +922,7 @@ Moderator **nikada** ne vidi / ne izvršava Objavi (BM-ORG-05, BM-MOD-05; BR-007
 |--|--|
 | **Ko vidi** | Moderator (uslovno); Urednik (svaki objavljeni). |
 | **Guard** | Ulaz isključivo **Objavljen** (BM-ST-07, BR-063). Moderator: Org **Aktivan** + aktivni kontekst + ovlašćenje. Nakon deaktivacije Org — samo Urednik (BM-ORG-12, BM-MOD-16). |
-| **Rezultat** | Status **Otkazan**; istorijski zapis; forma read-only osim razloga otkazivanja (§7.4.8); javni efekti po TS-009 / CR-004B (vidi §7.9). |
+| **Rezultat** | Status **Otkazan**; istorijski zapis; forma read-only osim razloga otkazivanja (§7.4.8); u istoj poslovnoj operaciji sva **Planirana** i **Odgođena** Održavanja prelaze u **Otkazan** (Završen/Otkazan Održavanja nepromijenjena) — PO-AUTO-01 / BM-DG-11 / BR-063; javni efekti po TS-009 / CR-004B (vidi §7.9). |
 | **Naredno stanje** | **Otkazan**. |
 
 **Aktivni prijedlog izmjene pri otkazivanju (usvojena tehnička operacionalizacija):**
@@ -1464,7 +1466,7 @@ Na **Objavljenom** događaju izmjena podataka Održavanja ide kroz **prijedlog i
 
 Statusne promjene Održavanja — prema TS-004 i TS-010.4. Status **Odgođen** (uz povratak u **Planiran** nakon novog termina) predstavlja **jedini** poslovni mehanizam promjene termina postojećeg (neotkazanog) događaja; ne mijenja se status događaja radi novog termina (BM-TR-12, BR-131; TS-003 §4.9).
 
-Dok je događaj **Otkazan**, Održavanja su **read-only** (BM-DG-10); nema promjene termina preko Otkazanog događaja.
+Dok je događaj **Otkazan**, Održavanja su **read-only** (BM-DG-10); nema promjene termina preko Otkazanog događaja. Automatsko otkazivanje otvorenih Održavanja (Planiran/Odgođen → Otkazan) dio je same operacije otkazivanja Događaja (PO-AUTO-01; §7.4.7) i nije naknadna uređivačka izmjena.
 
 ### 10.9.4 Delete (Održavanje)
 
@@ -1990,7 +1992,7 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | TM-PUB-01 | Objava | Zabrana objave Mod | Na odobrenju / Nacrt | Mod objavljuje | Odbijeno | Negativan | BM-ORG-05; BM-MOD-05; BR-007; TS-010.3 |
 | TM-PUB-02 | Direktna objava | Bez Organizatora | Urednik; događaj bez Org; gate OK | Direktna objava | Nacrt → Objavljen | Pozitivan | BM-ST-04; BR-018; PO-DG-05; TS-010.4 |
 | TM-PUB-03 | Direktna objava | Sa Organizatorom | Događaj sa Org | Direktna objava | Odbijeno | Negativan | PO-DG-05; TS-010.4 |
-| TM-PUB-04 | Objava | Otkazivanje Objavljenog | Objavljen; ovlašćeni | Otkaži | Otkazan; forma read-only | Pozitivan | BR-063; BR-064; TS-010.4 |
+| TM-PUB-04 | Objava | Otkazivanje Objavljenog | Objavljen; ovlašćeni; ima Planirana/Odgođena Održavanja | Otkaži | Otkazan; Planiran/Odgođen → Otkazan; Završen/Otkazan nepromijenjeni; forma read-only | Pozitivan | BR-063; BR-064; PO-AUTO-01; TS-010.4 |
 | TM-PUB-05 | Objava | G-W02 | Objavljen + aktivni prijedlog | Otkaži | Prijedlog neoperativan | Pozitivan | G-W02; TS-010.4 §7.12; TS-010.5 §10.6 |
 | TM-PUB-06 | Terminalnost | Otkazan → Objavljen (Urednik) | Otkazan | Pokušaj ponovne objave / vraćanja | Odbijeno | Negativan | BM-DG-09; BR-064; TS-003 §4.9; TS-010.4 §7.4.8 |
 | TM-PUB-07 | Terminalnost | Otkazan → Objavljen (Moderator) | Otkazan | Pokušaj vraćanja u Objavljen | Odbijeno | Negativan | BM-MOD-16; BR-064; TS-010.3 |
@@ -2053,7 +2055,9 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | TM-OCC-08 | Održavanja | Datum od–do | Nacrt | Raspon datuma u jednom Održavanju | Odbijeno | Negativan | N-TR-01 |
 | TM-OCC-09 | Održavanja | Višednevni | Nacrt | Više Održavanja (po dan) | Dozvoljeno | Pozitivan | N-TR-01; TS-004 |
 | TM-OCC-10 | Održavanja | Status jednog | Više Održavanja | Promijeni status jednog | Ostala nepromijenjena | Granični | TS-004; TS-010.5 |
-| TM-OCC-11 | Održavanja | Završen — Sistem | Predikat završetka | Sistem postavlja Završen | Status Završen | Pozitivan | TS-004 |
+| TM-OCC-11 | Održavanja | Završen — Sistem | Planiran; predikat PO-AUTO-02 (vrijeme_do ili kraj dana) | Sistem postavlja Završen | Status Završen | Pozitivan | BR-068; PO-AUTO-02; TS-004 §4.8 |
+| TM-OCC-11a | Održavanja | Cancel cascade | Objavljen; Planiran i Odgođen termini | Otkaži Događaj | Planiran/Odgođen → Otkazan; nije Planiran→Završen | Pozitivan | PO-AUTO-01; BR-063; TS-004 §4.9 |
+| TM-OCC-11b | Održavanja | Auto-finish ignoriše Odgođen | Odgođen; istekao stari termin | Sistemski završetak | Odgođen nepostaje Završen | Negativan | PO-AUTO-02; BR-068; TS-004 §4.8 |
 | TM-OCC-12 | Održavanja | Delete ≠ Otkazan događaj | Početni Nacrt | Fizičko uklanjanje Održavanja | Dozvoljeno u N-TR-04; događaj nije Otkazan | Granični | N-TR-04; TS-010.5 §10.13 |
 | TM-OCC-13 | Održavanja | Delete nakon prvog slanja | Poslato na odobrenje | Fizičko brisanje Održavanja | Odbijeno | Negativan | N-TR-04 |
 | TM-OCC-14 | Održavanja | Delete u vraćenom Nacrtu | Vraćeni Nacrt | Fizičko brisanje | Odbijeno | Negativan | N-TR-04 |

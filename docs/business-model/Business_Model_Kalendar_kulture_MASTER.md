@@ -68,6 +68,7 @@
 | PATCH-052 | 2026-08-06 | PO-N-TR-02-01–03: zatvaranje N-TR-02 — serija nije poslovni entitet; generator dnevno/sedmično/mjesečno završava brojem ili krajnjim datumom (max 100); ručna i generisana održavanja ravnopravna nakon generisanja. Usklađeni BM-TR-06, BM-TR-07. Bez novog entiteta / lifecycle / statusa. Bez izmjene implementacije. |
 | PATCH-053 | 2026-08-06 | PO-DG-07: status Otkazan je terminalan za povratak u Objavljen (superseduje isključivo dio PATCH-035 / N-DG-01 koji je dozvoljavao Otkazan → Objavljen). Novi program = novi zapis; Odgođen ostaje jedini mehanizam promjene termina postojećeg događaja; Otkazan = istorijski zapis (izmjena sadržaja zabranjena; izuzetak: razlog otkazivanja / napomena urednika). Usklađeni BM-DG-09, BM-ST-07, BM-UR-11, BM-MOD-16, BM-TR-12, BM-ST-09; dodati BM-DG-10. Bez izmjene FS/TS/Feature Registry/implementacije. |
 | PATCH-054 | 2026-08-07 | PO-ORG-01–PO-ORG-04: katalog polja Organizatora V1 (BM-ORG-13); Moderator isključivo preko postojećeg aktivnog `user_id` (BM-MOD-17); Organizator nastaje tek pri odobrenju (pojašnjen BM-ORG-03); pristup uredničkom portalu iz aktivnog moderatorskog ovlašćenja bez nove platformske uloge (BM-MOD-18). Usklađen BM-ORG-07. Bez izmjene implementacije. |
+| PATCH-055 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02:** Otkazivanje Događaja (Objavljen → Otkazan) u istoj poslovnoj operaciji automatski postavlja sva Planirana i Odgođena Održavanja u Otkazan; Završen/Otkazan Održavanja ostaju nepromijenjena. Preciziran trenutak Sistemskog Planiran → Završen (vrijeme_do ako postoji; inače kraj kalendarskog dana `datum`; aplikaciona vremenska zona). Usklađeni BM-DG-05, BM-DG-10, BM-DG-11 (novo), BM-TR-10, BM-ST-08. **PO-AUTO-01 superseduje** prethodnu interpretaciju/pravilo po kojem otkazivanje Događaja ne mijenja statuse njegovih Održavanja. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -480,11 +481,13 @@ Događaj može biti otkazan. Otkazani događaj ostaje evidentiran u sistemu, dob
 
 Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje; Moderator tada više nema pravo otkazivanja događaja tog Organizatora. Urednik može otkazati bilo koji objavljeni događaj, uključujući događaje deaktiviranog Organizatora.
 
+Pri prelazu Objavljen → Otkazan, u okviru iste poslovne operacije otkazivanja Događaja, sva Održavanja koja su u tom trenutku u statusu Planiran ili Odgođen automatski prelaze u status Otkazan. Održavanja koja su već u statusu Završen ili Otkazan ostaju nepromijenjena. Nakon te operacije na Otkazanom Događaju ne smije ostati Planirano niti Odgođeno Održavanje (PO-AUTO-01).
+
 Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Ako se isti kulturni program kasnije ponovo organizuje, ne reaktivira se postojeći događaj; kreira se novi događaj kao novi zapis sa novim životnim ciklusom. Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kroz status Odgođen na održavanju, u skladu sa BM-06.
 
-Nakon što događaj dobije status Otkazan, nije dozvoljena izmjena sadržajnih podataka događaja ni povezanih održavanja. Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti radi tačnog informisanja javnosti.
+Nakon što je operacija otkazivanja Događaja (uključujući automatsko otkazivanje otvorenih Održavanja) završena, nije dozvoljena naknadna izmjena sadržajnih podataka događaja ni povezanih održavanja. Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti radi tačnog informisanja javnosti.
 
-Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja.
+Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja. To pravilo ne isključuje automatsko otkazivanje svih otvorenih Održavanja pri otkazivanju cijelog Događaja (PO-AUTO-01).
 
 ## 4. Poslovna pravila
 
@@ -494,12 +497,13 @@ Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala odr
 | BM-DG-02 | Događaj može biti samostalan ili biti dio jedne manifestacije. Pripadnost manifestaciji nije obavezna. Detaljna pravila definišu se u BM-05 Manifestacija. |
 | BM-DG-03 | Lokacija nije svojstvo događaja već svojstvo održavanja događaja. Svako održavanje može imati svoju lokaciju. Detaljna pravila definišu se u BM-07 Lokacija. |
 | BM-DG-04 | Nakon završetka svih održavanja sistem automatski arhivira događaj. Automatsko arhiviranje primjenjuje se na događaj u statusu Objavljen i na događaj u statusu Otkazan. Arhiviranje se ne izvršava ručno. Detaljna pravila prikaza arhive definišu se u BM-11 Portal Kalendara kulture. |
-| BM-DG-05 | Događaj može biti otkazan. Otkazani događaj ostaje evidentiran u sistemu i dobija status „Otkazan“. Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više nema pravo otkazivanja događaja tog Organizatora; otkazivanje događaja deaktiviranog Organizatora izvršava isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj. Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja. Detaljna pravila za održavanja definišu se u BM-06 Održavanje događaja. |
+| BM-DG-05 | Događaj može biti otkazan. Otkazani događaj ostaje evidentiran u sistemu i dobija status „Otkazan“. Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više nema pravo otkazivanja događaja tog Organizatora; otkazivanje događaja deaktiviranog Organizatora izvršava isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj. Pri otkazivanju Događaja (Objavljen → Otkazan) primjenjuje se BM-DG-11. Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja; to ne isključuje BM-DG-11. Detaljna pravila za održavanja definišu se u BM-06 Održavanje događaja. |
 | BM-DG-06 | Događaj pripada jednoj primarnoj kategoriji. Dodatna klasifikacija događaja može se vršiti korišćenjem oznaka. Oznake nisu isto što i tagovi medija (BM-09). Detaljna pravila o kategorijama i oznakama definišu se u BM-08 Kategorije i oznake. |
 | BM-DG-07 | Događaj može biti sačuvan kao nacrt bez izabrane primarne kategorije. Za slanje događaja na odobrenje mora biti izabrana jedna primarna kategorija. Svaki objavljeni događaj mora imati jednu primarnu kategoriju. |
 | BM-DG-08 | Svaki događaj mora biti povezan sa tačno jednim Organizatorom. Izuzetno, ako Organizator nije registrovan u sistemu, Urednik može kreirati i objaviti događaj bez registrovanog Organizatora radi javnog interesa i pravovremenog informisanja građana, u skladu sa BM-UR-06. Po registraciji Organizatora događaj se može naknadno povezati sa Organizatorom u skladu sa BM-UR-07, bez izmjene audita, istorije događaja i javno objavljenih verzija. |
 | BM-DG-09 | Status Otkazan predstavlja terminalno stanje događaja u smislu povratka u Objavljen. Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Ako se isti kulturni program kasnije ponovo organizuje, ne reaktivira se postojeći događaj; kreira se novi događaj kao novi zapis sa novim životnim ciklusom. Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kroz status Odgođen na održavanju, u skladu sa BM-06. |
-| BM-DG-10 | Događaj u statusu Otkazan tretira se kao istorijski zapis. Nije dozvoljena izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja. Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti radi tačnog informisanja javnosti. |
+| BM-DG-10 | Događaj u statusu Otkazan tretira se kao istorijski zapis. Nakon završene operacije otkazivanja (uključujući BM-DG-11) nije dozvoljena naknadna izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja. Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti radi tačnog informisanja javnosti. Automatsko otkazivanje otvorenih Održavanja iz BM-DG-11 dio je same operacije otkazivanja Događaja i ne predstavlja zabranjenu naknadnu izmjenu. |
+| BM-DG-11 | Pri prelazu Događaja Objavljen → Otkazan, u okviru iste atomske poslovne operacije otkazivanja, sva Održavanja koja su u tom trenutku u statusu Planiran ili Odgođen automatski prelaze u status Otkazan. Održavanja u statusu Završen ili Otkazan ostaju nepromijenjena. Nakon operacije na Otkazanom Događaju ne smije ostati Planirano niti Odgođeno Održavanje. Ovo nije prelaz Planiran → Završen; to je posljedica otkazivanja roditeljskog Događaja (PO-AUTO-01). |
 
 ## 5. Otvorena pitanja
 
@@ -724,7 +728,12 @@ Svako održavanje ima sopstveni termin i status, dok lokacija može biti opciona
 > * **Otkazan** — održavanje neće biti održano.
 > * **Završen** — održavanje je održano ili je prošao njegov termin.
 >
-> Status **Završen** sistem dodjeljuje automatski nakon što prođe termin održavanja.
+> Status **Završen** Sistem dodjeljuje automatski isključivo iz statusa **Planiran**, nakon što je termin istekao (PO-AUTO-02):
+>
+> * ako je definisano vrijeme završetka (`vrijeme_do`) — nakon trenutka **datum + vrijeme_do** u aplikacionoj vremenskoj zoni;
+> * ako `vrijeme_do` nije definisano (uključujući samo datum, datum uz samo vrijeme početka, ili cjelodnevno održavanje) — nakon **završetka kalendarskog dana** polja `datum` u aplikacionoj vremenskoj zoni.
+>
+> Sistem ne dodjeljuje status Završen Održavanjima u statusu Odgođen ili Otkazan. Odgođeno Održavanje mora prvo preći u Planiran (novi termin) ili Otkazan.
 
 ### BM-TR-11 — Ulaznice i cijena
 
@@ -1117,13 +1126,15 @@ Promjena statusa predstavlja posljedicu dozvoljene poslovne radnje koju izvršav
 >
 > Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kroz status Odgođen na održavanju, u skladu sa BM-06.
 >
-> Nakon otkazivanja nije dozvoljena izmjena sadržajnih podataka događaja ni povezanih održavanja, osim razloga otkazivanja (napomene urednika), u skladu sa BM-DG-10.
+> Nakon otkazivanja nije dozvoljena naknadna izmjena sadržajnih podataka događaja ni povezanih održavanja, osim razloga otkazivanja (napomene urednika), u skladu sa BM-DG-10. Automatsko otkazivanje otvorenih Održavanja (BM-DG-11 / PO-AUTO-01) dio je same operacije otkazivanja Događaja.
 
 ### BM-ST-08 — Automatsko arhiviranje
 
 > Događaj se automatski arhivira nakon završetka svih njegovih održavanja, bez ručne intervencije.
 >
-> Automatsko arhiviranje primjenjuje se na događaj u statusu Objavljen i na događaj u statusu Otkazan. Otkazani događaj nakon završetka svih održavanja prelazi u status Arhiviran.
+> „Završetak svih održavanja“ znači da nijedno Održavanje nije u statusu Planiran niti Odgođen (Održavanja u statusu Završen ili Otkazan ne sprečavaju arhiviranje), u skladu sa BM-06 i predikatom arhiviranja.
+>
+> Automatsko arhiviranje primjenjuje se na događaj u statusu Objavljen i na događaj u statusu Otkazan. Otkazani događaj nakon što su otvorena Održavanja zatvorena prema BM-DG-11 (i eventualno ostala Održavanja već u Završen/Otkazan) prelazi u status Arhiviran kada je predikat ispunjen.
 >
 > Arhiviran događaj ostaje dostupan radi očuvanja istorijskih podataka.
 
