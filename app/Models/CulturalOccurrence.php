@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -139,5 +141,56 @@ class CulturalOccurrence extends Model
             self::STATUS_PLANNED,
             self::STATUS_POSTPONED,
         ]);
+    }
+
+    /**
+     * Trenutak isteka prema PO-AUTO-02 (aplikaciona vremenska zona).
+     * Sa `vrijeme_do`: datum + vrijeme_do. Bez njega: kraj kalendarskog dana `datum`.
+     */
+    public function expiresAt(): CarbonInterface
+    {
+        $tz = (string) config('app.timezone');
+        $date = $this->datum instanceof CarbonInterface
+            ? $this->datum->format('Y-m-d')
+            : Carbon::parse((string) $this->datum)->format('Y-m-d');
+
+        $vrijemeDo = $this->normalizedTimeString($this->vrijeme_do);
+        if ($vrijemeDo !== null) {
+            return Carbon::parse($date.' '.$vrijemeDo, $tz);
+        }
+
+        return Carbon::parse($date, $tz)->endOfDay();
+    }
+
+    /**
+     * Da li je termin istekao u datom trenutku (strogo nakon expiresAt).
+     */
+    public function isExpiredAt(CarbonInterface $now): bool
+    {
+        return $now->greaterThan($this->expiresAt());
+    }
+
+    private function normalizedTimeString(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $raw = trim((string) $value);
+        if ($raw === '') {
+            return null;
+        }
+
+        if (preg_match('/^\d{1,2}:\d{2}(:\d{2})?$/', $raw) === 1) {
+            $parts = explode(':', $raw);
+
+            return sprintf('%02d:%02d:%02d', (int) $parts[0], (int) $parts[1], (int) ($parts[2] ?? 0));
+        }
+
+        try {
+            return Carbon::parse($raw, (string) config('app.timezone'))->format('H:i:s');
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

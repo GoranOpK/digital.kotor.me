@@ -108,7 +108,8 @@ final class EventLifecycle
 
     /**
      * Objavljen → Otkazan (terminalan za republish). Razlog je obavezan (Sprint 3A.4 / BM-DG-10).
-     * Lock order (TS-010.3a concurrency): aktivni Proposal-i → Event.
+     * PO-AUTO-01: Planiran/Odgođen Održavanja → Otkazan u istoj atomskoj operaciji.
+     * Lock order: aktivni Proposal-i → Event → Occurrence-i (id ASC).
      */
     public function cancel(CulturalEventEntry $entry, User $actor, string $reason): CulturalEventEntry
     {
@@ -135,6 +136,13 @@ final class EventLifecycle
 
             $this->assertTransition($locked, CulturalEventEntry::STATUS_CANCELLED);
 
+            /** @var \Illuminate\Support\Collection<int, CulturalOccurrence> $lockedOccurrences */
+            $lockedOccurrences = CulturalOccurrence::query()
+                ->where('event_entry_id', $locked->id)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
             $locked->status = CulturalEventEntry::STATUS_CANCELLED;
             $locked->cancellation_reason = $reason;
             $locked->last_modified_by = $actor->id;
@@ -144,7 +152,19 @@ final class EventLifecycle
             app(EventChangeProposalLifecycle::class)
                 ->markLockedProposalsInoperableForCancelledEvent($lockedProposals);
 
-            return $locked->fresh();
+            foreach ($lockedOccurrences as $occurrence) {
+                if (! in_array($occurrence->status, [
+                    CulturalOccurrence::STATUS_PLANNED,
+                    CulturalOccurrence::STATUS_POSTPONED,
+                ], true)) {
+                    continue;
+                }
+
+                $occurrence->status = CulturalOccurrence::STATUS_CANCELLED;
+                $occurrence->save();
+            }
+
+            return $locked->fresh(['occurrences']);
         });
     }
 
@@ -160,36 +180,53 @@ final class EventLifecycle
 
     /**
      * Sistemsko arhiviranje: Objavljen|Otkazan → Arhiviran kada nema otvorenih održavanja.
+     * G2: transakcija + lockForUpdate + ponovna provjera predikata nad zaključanim stanjem.
+     * Lock order: Event → Occurrence-i (id ASC). Bez Proposal (arhiva ih ne dira).
+     * Sistemska tranzicija: `last_modified_by` se ne mijenja (nema sistemskog User naloga).
      */
     public function archiveIfEligible(CulturalEventEntry $entry): CulturalEventEntry
     {
-        if (! in_array($entry->status, [
-            CulturalEventEntry::STATUS_PUBLISHED,
-            CulturalEventEntry::STATUS_CANCELLED,
-        ], true)) {
-            throw new CulturalEventDomainException(
-                'Arhiviranje je dozvoljeno samo iz statusa Objavljen ili Otkazan.'
-            );
-        }
+        return DB::transaction(function () use ($entry) {
+            /** @var CulturalEventEntry $locked */
+            $locked = CulturalEventEntry::query()
+                ->whereKey($entry->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $hasOpen = $entry->occurrences()
-            ->whereIn('status', [
-                CulturalOccurrence::STATUS_PLANNED,
-                CulturalOccurrence::STATUS_POSTPONED,
-            ])
-            ->exists();
+            if (! in_array($locked->status, [
+                CulturalEventEntry::STATUS_PUBLISHED,
+                CulturalEventEntry::STATUS_CANCELLED,
+            ], true)) {
+                throw new CulturalEventDomainException(
+                    'Arhiviranje je dozvoljeno samo iz statusa Objavljen ili Otkazan.'
+                );
+            }
 
-        if ($hasOpen) {
-            throw new CulturalEventDomainException(
-                'Događaj se ne može arhivirati dok postoji Održavanje u statusu Planiran ili Odgođen.'
-            );
-        }
+            $lockedOccurrences = CulturalOccurrence::query()
+                ->where('event_entry_id', $locked->id)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
 
-        $entry->status = CulturalEventEntry::STATUS_ARCHIVED;
-        $entry->featured = false;
-        $entry->save();
+            $hasOpen = $lockedOccurrences->contains(function (CulturalOccurrence $occurrence): bool {
+                return in_array($occurrence->status, [
+                    CulturalOccurrence::STATUS_PLANNED,
+                    CulturalOccurrence::STATUS_POSTPONED,
+                ], true);
+            });
 
-        return $entry->fresh();
+            if ($hasOpen) {
+                throw new CulturalEventDomainException(
+                    'Događaj se ne može arhivirati dok postoji Održavanje u statusu Planiran ili Odgođen.'
+                );
+            }
+
+            $locked->status = CulturalEventEntry::STATUS_ARCHIVED;
+            $locked->featured = false;
+            $locked->save();
+
+            return $locked->fresh(['occurrences']);
+        });
     }
 
     /**

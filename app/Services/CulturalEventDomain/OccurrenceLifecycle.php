@@ -5,6 +5,7 @@ namespace App\Services\CulturalEventDomain;
 use App\Exceptions\CulturalEventDomainException;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -72,7 +73,8 @@ final class OccurrenceLifecycle
     }
 
     /**
-     * Sistem: Planiran → Završen.
+     * Sistem: Planiran → Završen (eksplicitni prelaz; testovi / interni pozivi).
+     * Lock order: Event → Occurrence.
      */
     public function markFinished(CulturalOccurrence $occurrence): CulturalOccurrence
     {
@@ -92,6 +94,53 @@ final class OccurrenceLifecycle
                 return $locked->fresh();
             }
         );
+    }
+
+    /**
+     * PO-AUTO-02: završi Planirano Održavanje samo ako je i dalje Planiran i isteklo u `$now`.
+     * Race-safe: ako je u međuvremenu Odgođen/Otkazan ili Event Otkazan/Arhiviran — bez promjene (null).
+     * Lock order: Event → Occurrence.
+     */
+    public function finishIfExpiredAt(
+        CulturalOccurrence $occurrence,
+        ?CarbonInterface $now = null,
+    ): ?CulturalOccurrence {
+        $now ??= now((string) config('app.timezone'));
+
+        return DB::transaction(function () use ($occurrence, $now) {
+            /** @var CulturalEventEntry $entry */
+            $entry = CulturalEventEntry::query()
+                ->whereKey($occurrence->event_entry_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($entry->isCancelled() || $entry->status === CulturalEventEntry::STATUS_ARCHIVED) {
+                return null;
+            }
+
+            /** @var CulturalOccurrence $locked */
+            $locked = CulturalOccurrence::query()
+                ->whereKey($occurrence->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ((int) $locked->event_entry_id !== (int) $entry->id) {
+                return null;
+            }
+
+            if (! $locked->isPlanned()) {
+                return null;
+            }
+
+            if (! $locked->isExpiredAt($now)) {
+                return null;
+            }
+
+            $locked->status = CulturalOccurrence::STATUS_FINISHED;
+            $locked->save();
+
+            return $locked->fresh();
+        });
     }
 
     public function transitionTo(CulturalOccurrence $occurrence, string $target): CulturalOccurrence

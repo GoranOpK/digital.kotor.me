@@ -91,7 +91,7 @@ class CulturalModeratorEventCancelTest extends TestCase
         $this->assertSame(CulturalEventEntry::STATUS_CANCELLED, $entry->status);
         $this->assertSame('Loše vrijeme', $entry->cancellation_reason);
         $this->assertSame($this->modA->id, $entry->last_modified_by);
-        $this->assertSame(CulturalOccurrence::STATUS_PLANNED, $occurrence->fresh()->status);
+        $this->assertSame(CulturalOccurrence::STATUS_CANCELLED, $occurrence->fresh()->status);
     }
 
     public function test_cancel_requires_reason_and_rejects_whitespace(): void
@@ -373,13 +373,13 @@ class CulturalModeratorEventCancelTest extends TestCase
             ])
             ->assertRedirect(route('cultural-moderator-events.index'));
 
-        $this->assertSame(CulturalOccurrence::STATUS_PLANNED, $occurrence->fresh()->status);
+        $this->assertSame(CulturalOccurrence::STATUS_CANCELLED, $occurrence->fresh()->status);
 
         $this->actingAs($this->modA)
             ->post(route('cultural-moderator-events.occurrences.postpone', [$entry, $occurrence]))
             ->assertSessionHasErrors('occurrence');
 
-        $this->assertSame(CulturalOccurrence::STATUS_PLANNED, $occurrence->fresh()->status);
+        $this->assertSame(CulturalOccurrence::STATUS_CANCELLED, $occurrence->fresh()->status);
     }
 
     public function test_published_show_includes_cancel_form(): void

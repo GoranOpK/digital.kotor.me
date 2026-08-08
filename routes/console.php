@@ -21,3 +21,8 @@ Schedule::command('cultural-calendar:send-weekly-newsletter')
     ->mondays()
     ->at('09:00')
     ->timezone(config('app.timezone', 'Europe/Podgorica'));
+
+// PO-AUTO-02 + automatsko arhiviranje: periodična provjera kandidata (poslovno vrijeme isteka ≠ interval).
+Schedule::command('cultural-calendar:process-event-lifecycle')
+    ->everyFifteenMinutes()
+    ->timezone(config('app.timezone', 'Europe/Belgrade'));
