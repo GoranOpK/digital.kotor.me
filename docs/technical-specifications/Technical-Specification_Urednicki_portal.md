@@ -7,7 +7,8 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.5
+**Implementacioni status V1:** ZAVRŠEN
+**Verzija:** 1.0.6
 **Datum:** 2026-08-08
 
 ---
@@ -34,6 +35,7 @@
 | 1.0.3 | 2026-08-08 | **PO-DG-08 / PO-DG-09** (BM PATCH-056 / FS PATCH-FS-056 / TS-003 v0.1.6): §10.10 akcija „Poveži sa Organizatorom“ samo Objavljen + bez Org; jednosmjerno; TM-CRUD-11/12 usklađeni. Bez izmjene implementacije. |
 | 1.0.4 | 2026-08-08 | **PO-DG-10** (BM PATCH-057 / FS PATCH-FS-057 / TS-003 v0.1.7): pojednostavljeni V1 prvi Event review — Na odobrenju zaključan; TM-WF-03/04/06 i TM-CRUD-08 VAN V1 za Event; Proposal tok neizmijenjen. Bez izmjene implementacije. |
 | 1.0.5 | 2026-08-08 | **PO-N-TR-02-04** (BM PATCH-058 / FS PATCH-FS-058 / TS-004 v0.1.8): §10.9.1 generator samo Nacrt; algoritmi/XOR/max 100/duplikati/atomičnost; TM-GEN-01…05 usklađeni. Bez izmjene implementacije. |
+| 1.0.6 | 2026-08-08 | **V1 implementacioni closeout:** Urednički portal V1 funkcionalno / implementaciono završen i verifikovan (Cultural: 420 passed / 1740 assertions). Obuhvat: PO-DG-10; direct publish; BR-052; Proposal workflow; occurrence lifecycle; Editor resume (TM-OCC-17); generator (T10-GEN-01); PO-AUTO-01/02; auto archive (G2); dashboards. TS-010.7 emit/storage = **TS-012 DEPENDENCY / DEFERRED BY DESIGN** (Faza 8). TS-005 / TS-009 van closeout-a. Bez novih BM/BR. |
 
 Napomena:
 
@@ -65,6 +67,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.3 | 2026-08-08 | PATCH: PO-DG-08 / PO-DG-09 — §10.10 BR-052 UI/ponašanje; TM-CRUD-11/12 bez uklanjanja/zamjene Organizatora. |
 | 1.0.4 | 2026-08-08 | PATCH: PO-DG-10 — V1 Event review (zaključan pending; TM-WF-03/04/06, TM-CRUD-08 supersedovani za Event). |
 | 1.0.5 | 2026-08-08 | PATCH: PO-N-TR-02-04 — V1 generator Održavanja (samo Nacrt; TM-GEN-01…05). |
+| 1.0.6 | 2026-08-08 | CLOSEOUT: V1 implementaciono završen (PO-DG-10; direct publish; BR-052; Proposal; occurrence lifecycle; Editor resume/TM-OCC-17; generator/T10-GEN-01; PO-AUTO-01/02; auto archive/G2; dashboards). TS-010.7 emit = TS-012 / Faza 8. |
 
 ---
 
@@ -2169,15 +2172,33 @@ TS-010.8 **ne** obuhvata:
 
 # 14. Napomene za zatvaranje TS-010
 
-* TS-010.1–TS-010.8 usvojeni (v1.0.0).
-* TS-010.8 = Business Test Matrix (QA-TS0108-01); nije implementacija testova.
-* TS-009 ostaje referentni dokument javnog portala; CR-004B ostaje Planned za implementaciju.
-* FT-003 / TS-012 ostaju Planned (centralna Evidencija).
+## 14.1 Formalni closeout V1
+
+TS-010 Urednički portal Kalendara kulture je **funkcionalno / implementaciono završen** u definisanom V1 obuhvatu (v1.0.6).
+
+* Dokumentovan = DA (USVOJEN; TS-010.1–TS-010.8)
+* Implementiran = DA
+* Testiran = DA (`php artisan test --filter=Cultural` — 420 passed / 1740 assertions)
+* Formalno zatvoren (V1) = DA
+
+Preostale zavisnosti **TS-005**, **TS-009** i **TS-012** nijesu dio TS-010 implementacionog closeout-a i realizuju se u svojim fazama (Roadmap IR-001).
+
+## 14.2 Granice i dependency
+
+* TS-010.8 = Business Test Matrix (QA-TS0108-01); Feature Cultural testovi pokrivaju V1 owned tokove.
+* **TS-010.7** = poslovna obaveza / ugovor evidencije gdje je relevantno; stvarni **audit emit / storage / integracija** = **TS-012 DEPENDENCY / DEFERRED BY DESIGN** (Roadmap **Faza 8**). Odsustvo emita danas **ne** znači da TS-010 V1 nije funkcionalno završen.
+* **TS-005** Manifestacije = dependency van TS-010 owned V1; ne tretira se kao TS-010 GAP.
+* **TS-009** / javni portal / legacy `CulturalEvent` cutover = Roadmap **Faza 6**; closeout TS-010 **ne** znači završen javni cutover.
+* CR-004B ostaje referentno za javni portal (TS-009).
 * Detaljna lista / katalog polja Organizatora ostaje van TS-010.3; usvojena granica G-14 je u §6.8.1.
 * Terminološki cleanup FS §5.4.3 ↔ N-TR-01 ostaje zaseban.
 * N-DG-03 (kanal obavještavanja Urednika) ostaje otvoren.
 * N-DG-04 ostaje implementacioni izbor skladištenja prijedloga.
 
+## 14.3 Non-blocking tehnički dug (nije TS-010 blocker)
+
+* L-05 / L-06 (npr. Event submit/approve putanje bez `lockForUpdate`) — težina MEDIUM; **TS-010 blocker = NE**. Ne rješava se u ovom closeout-u.
+
 ---
 
-**Kraj dokumenta TS-010 v1.0.0 (USVOJEN; TS-010.1–TS-010.8)**
+**Kraj dokumenta TS-010 v1.0.6 (USVOJEN; V1 implementaciono završen; TS-010.1–TS-010.8)**

@@ -7,8 +7,8 @@
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active  
-**Verzija:** 1.0.3  
-**Datum:** 2026-08-07
+**Verzija:** 1.0.4
+**Datum:** 2026-08-08
 
 ---
 
@@ -20,6 +20,7 @@
 | 1.0.1 | 2026-08-07 | **PATCH-001 (FINAL):** TS-012 isključivo kao završna integraciona faza (bez audit skeleta u Fazi 1); obavezne stabilizacione faze; princip jedne velike migracije domena po deploymentu; implementaciona disciplina (jedna logička cjelina po zadatku); usklađen konačni redoslijed Faza 0–8. |
 | 1.0.2 | 2026-08-07 | Dokumentaciona napomena: Faza 1 (TS-006/007/008) završena u kodu; Faza 2 (TS-001) spremna za Korak 1 nakon PO-ORG-01–04. Bez izmjene redoslijeda faza. |
 | 1.0.3 | 2026-08-07 | **PO-EV-01:** Postojeći `cultural_events` su testni/prototipski podaci (ne referentni produkcijski sadržaj). Faza 3 bez migracije/backfill/dual-write legacy zapisa; rizik = novi domen + cutover portala + zamjena flat modela. Bez izmjene BM/FS. |
+| 1.0.4 | 2026-08-08 | **TS-010 V1 closeout:** Faza 5 (TS-010 Urednički portal) V1 funkcionalno / implementaciono završena. Naredna velika faza ostaje **Faza 6 → TS-009** (javni portal / domen cutover). **Faza 8 → TS-012** ostaje buduća audit integracija. Bez izmjene redoslijeda faza. Bez izmjene BM/FS. |
 
 ---
 
@@ -144,7 +145,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | **TS-007** | Kategorije i oznake | Da | Da | Da | TS-003; bez migracije test ENUM-a | Da — u Fazi 1 | **Srednja** |
 | **TS-008** | Mediji | Da + storage | Da | Da | TS-003/005/007 | Da — u Fazi 1 | **Srednja–visoka** |
 | **TS-009** | Javni portal | Po fazi | Proširenje | Da | CR-004B (Faza 0); domen za Fazu 6 | CR-004B rano; domen kasnije | **Srednja** (preostalo) |
-| **TS-010** | Urednički portal | Koristi domen | Da | Da | TS-001, 003–008 | Nakon domena | **Vrlo visoka** |
+| **TS-010** | Urednički portal | Koristi domen | Da | Da | TS-001, 003–008; emit → TS-012 (Faza 8) | Nakon domena; **Faza 5 V1 završena** | **Vrlo visoka** |
 | **TS-011** | Newsletter | Da | Da + job | Da | TS-001, 003, 004, 009, 010 | Nakon stabilnog lifecycle-a | **Visoka** |
 | **TS-012** | Evidencija aktivnosti | Da | Da | Min. Admin | Svi emiteri stabilni | **Ne** — samo Faza 8 | **Srednja** |
 
@@ -293,11 +294,13 @@ analiza → implementacija → test → review → merge → deploy
 
 | Stavka | Opis |
 |--------|------|
+| **Status** | **V1 funkcionalno / implementaciono završen** (TS-010 v1.0.6; Cultural: 420 passed / 1740 assertions) |
 | **Cilj** | TS-010 umjesto direktnog `kk_admin` CRUD-a |
-| **Moduli** | TS-010 (cjeline 010.1–010.7 inkrementalno; 010.8 kao test matrica) |
+| **Moduli** | TS-010 (cjeline 010.1–010.7; 010.8 = Business Test Matrix) |
 | **Rizici** | Prijedlozi izmjena; zaključavanje; regresija admin tokova |
-| **Rezultat** | Moderator / Urednik operativni tokovi V1 |
-| **Zatim** | Stabilizacija |
+| **Rezultat** | Moderator / Urednik operativni tokovi V1 — **ostvareno** |
+| **Van obuhvata Faze 5** | TS-005 (Manifestacije); TS-009 javni cutover; TS-012 emit/storage (Faza 8); TS-010.7 ostaje obaveza / dependency ka TS-012 |
+| **Zatim** | Stabilizacija → **Faza 6 (TS-009)** |
 
 ### FAZA 6 — Javni portal (preostale domenske funkcionalnosti)
 
