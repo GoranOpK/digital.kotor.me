@@ -79,6 +79,7 @@
 | PATCH-FS-057 | 2026-08-08 | PO-DG-10 / BM PATCH-057: pojednostavljeni V1 prvi Event review — usklađeni BR-022, BR-023, BR-033, BR-034, BR-037, BR-038 i tokovi §5.5.5–§5.5.6; Proposal tok neizmijenjen. Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-058 | 2026-08-08 | PO-N-TR-02-04 / BM PATCH-058: preciziran V1 generator Održavanja — BR-060/BR-061 (samo Nacrt; algoritmi; XOR; max 100; šablon; duplikati; atomičnost; bez preview/Proposal generatora). Bez novih BR identifikatora. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-059 | 2026-08-08 | **TS7-PO-07** / BM PATCH-059: konačni početni V1 katalog kategorija Događaja — dodati BR-277–BR-279; usklađen §5.10. Tehnički cutover legacy podataka ostaje TS-009. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-060 | 2026-08-09 | **Faza 6A** / BM PATCH-060: kartica multi-Održavanje; sistemsko sortiranje Pretrage; Odgođen na portalu; CAT-CUTOVER; V1 bez javnog `cancellation_reason`; potvrda PO-EV-01. Usklađeni BR-064, BR-110, BR-112, BR-272, BR-279; dodati BR-280–BR-284. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -195,7 +196,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236, BR-277–BR-279)
    - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
-   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-269)
+   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-274, BR-280–BR-284)
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
    - 5.14.3 Funkcionalni obuhvat Uredničkog portala (BR-126–BR-128)
@@ -618,7 +619,9 @@ Ako događaj pripada Manifestaciji, detalj prikazuje informativni blok „Ovaj d
 
 Događaj ima jedno ili više održavanja. Svako održavanje ima termin. Datum održavanja je obavezan, a vrijeme može biti definisano. Termin nije samostalan poslovni entitet.
 
-Sistem na detalju događaja prikazuje sva javno objavljena održavanja sa njihovim terminima i, kada su unesene, lokacijama.
+Sistem na detalju događaja prikazuje sva javno relevantna održavanja sa njihovim terminima i, kada su unesene, lokacijama. Odgođeno Održavanje ostaje vidljivo na detalju uz oznaku „Odgođeno“ (BR-282).
+
+Na kartici Događaja u listama važi BR-280 (prvo naredno relevantno Održavanje; „+ još N termina“).
 
 Za održavanje sa istim datumom početka i završetka sistem prikazuje taj datum.
 
@@ -1699,7 +1702,7 @@ U okviru iste atomske poslovne operacije otkazivanja Događaja (Objavljen → Ot
 
 Otkazan događaj ostaje dostupan u skladu sa pravilima prikaza definisanim za javni portal i tretira se kao istorijski zapis.
 
-Nakon otkazivanja Urednik može unijeti ili dopuniti razlog otkazivanja (napomenu urednika) radi tačnog informisanja javnosti, u skladu sa BR-064.
+Nakon otkazivanja Urednik može unijeti ili dopuniti razlog otkazivanja (napomenu urednika), u skladu sa BR-064. U V1 javni portal ne prikazuje automatski taj razlog; prikazuje se standardizovano sistemsko obavještenje (BR-272 / BR-284).
 
 ---
 
@@ -1715,7 +1718,7 @@ Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kr
 
 Događaj u statusu **Otkazan** tretira se kao istorijski zapis. Nakon završene operacije otkazivanja (uključujući automatsko otkazivanje otvorenih Održavanja iz BR-063) forma događaja je funkcionalno zaključana: nije dozvoljena naknadna izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja.
 
-Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti radi tačnog informisanja javnosti.
+Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti. **V1 javni portal:** razlog otkazivanja (`cancellation_reason`) **ne** prikazuje se automatski javnosti; prikazuje se isključivo standardizovano sistemsko obavještenje (BR-272 / BR-284). Javni prikaz teksta razloga zahtijeva zasebnu Product Owner odluku. Terminalnost statusa Otkazan ostaje neizmijenjena.
 
 ---
 
@@ -2363,7 +2366,7 @@ Semantičko mapiranje (PO; ne implementacija cutover-a):
 
 Nove kategorije bez legacy ekvivalenta: Dječiji programi; Konferencije; Sajmovi — bez automatskog mapiranja.
 
-Tehnički cutover, migracija podataka i odluke za nemapirane legacy zapise pripadaju **TS-009**. Izbacivanje iz kanonskog kataloga ne briše automatski postojeće legacy događaje.
+Tehnički cutover javnog portala (Faza 6A / TS-009): legacy `CulturalEvent` sadržaj je testni (PO-EV-01); **ne** migrira se; **ne** uvodi se dual-read/dual-write; **ne** uvodi se URL/legacy alias mapa kategorija; javni portal koristi isključivo kanonski katalog (BR-283). Semantičko mapiranje iznad ostaje referentno za razumijevanje rename-a, ne kao runtime adapter. Izbacivanje iz kanonskog kataloga ne briše automatski postojeće testne legacy događaje.
 
 **Status:** Approved
 
@@ -2979,11 +2982,13 @@ Stranice liste i detalja Manifestacija predstavljaju usvojenu novu funkcionalnu 
 
 #### BR-110 – Prikaz održavanja na portalu
 
-Javni portal omogućava pregled svih javno objavljenih održavanja događaja, uključujući termin svakog održavanja.
+Javni portal omogućava pregled javno relevantnih održavanja događaja, uključujući termin svakog održavanja.
 
 Datum održavanja je obavezan, a vrijeme može biti definisano.
 
-Kada događaj ima više održavanja, portal prikazuje sva održavanja sa njihovim terminima i lokacijama, u skladu sa poslovnim pravilima modula Kalendara kulture.
+Na **Detalju Događaja** portal prikazuje sva javno relevantna Održavanja sa njihovim terminima i lokacijama.
+
+Na **kartici Događaja** portal ne prikazuje kompletnu listu Održavanja; važi BR-280.
 
 ---
 
@@ -3000,6 +3005,8 @@ Lokacija nije atribut manifestacije.
 Javni portal omogućava prikaz primarnih kategorija i oznaka povezanih sa objavljenim događajima.
 
 Za objavljenu manifestaciju portal može prikazati kategorije i oznake samo kao izvedene iz njenih Objavljenih događaja; one nisu samostalno sačuvan atribut manifestacije.
+
+Nakon cutover-a Faze 6A primarna kategorija i filter kategorija na javnom portalu dolaze isključivo iz kanonskog kataloga (BR-283).
 
 ---
 
@@ -3302,6 +3309,8 @@ Tekst obavještenja nije uređiv i nije dio opisa događaja.
 
 Javni status badge (CR-004A) ostaje prikazan.
 
+U V1 razlog otkazivanja / napomena urednika (`cancellation_reason`) **ne** prikazuje se automatski javnosti (BR-284).
+
 ---
 
 #### BR-273 – Otkazani događaji u Pretrazi bez posebnog moda (CR-004B)
@@ -3321,6 +3330,72 @@ Nakon isteka planiranog termina otkazani događaj zadržava interni status `canc
 Portalna Arhiva je javna vremenska površina i ne podrazumijeva promjenu internog statusa događaja u `archived`.
 
 BR-065 / BM-DG-04 ostaju neizmijenjeni. CR-004B ne dokumentuje ni implementira prelaz `cancelled → archived`.
+
+---
+
+#### BR-280 – Kartica Događaja sa više Održavanja
+
+Na kartici Događaja prikazuje se **prvo naredno relevantno Održavanje**.
+
+Ako Događaj ima dodatna relevantna Održavanja, kartica prikazuje oznaku **„+ još N termina“**, gdje je N broj dodatnih relevantnih Održavanja.
+
+Kartica ne prikazuje kompletnu listu Održavanja.
+
+Na Detalju Događaja prikazuju se sva javno relevantna Održavanja (BR-110).
+
+Rješenje se uklapa u postojeći dizajn kartice uz minimalne vizuelne izmjene (BR-255 / IA-01).
+
+**Status:** Approved
+
+---
+
+#### BR-281 – Sortiranje Pretrage po narednom Održavanju
+
+Događaji na stranici „Pretraga i pregled“ sortiraju se **rastuće** prema datumu (i vremenu, kada postoji) prvog narednog relevantnog Održavanja.
+
+Za Događaj sa više Održavanja: dok postoji naredno relevantno Održavanje, ono određuje poziciju; kada jedno prođe, sljedeće naredno relevantno postaje ključ sortiranja.
+
+Ovo je **sistemsko** sortiranje. Ne uvodi se korisnički izbor sortiranja (BR-108 ostaje bez korisničkog sortiranja).
+
+**Status:** Approved
+
+---
+
+#### BR-282 – Odgođeno Održavanje na javnom portalu
+
+Status **Odgođen** nije isto što i **Otkazan**. Odgođen ostaje status Održavanja.
+
+Na **Detalju Događaja** Odgođeno Održavanje ostaje vidljivo uz jasnu oznaku **„Odgođeno"**. Novi važeći termin prikazuje se kao Planirano Održavanje.
+
+Na **kartici Događaja** stari odgođeni termin **ne** prikazuje se kao glavni termin. Kartica prikazuje prvo naredno relevantno važeće Održavanje; za dodatna relevantna Održavanja važi BR-280.
+
+**Status:** Approved
+
+---
+
+#### BR-283 – Kanonske kategorije na javnom portalu (CAT-CUTOVER)
+
+Nakon prelaska Faze 6A javni portal koristi isključivo kanonski katalog kategorija.
+
+Filter kategorija puni se dinamički iz aktivnog kanonskog kataloga. URL filter koristi kanonski naziv kategorije.
+
+`CulturalEvent::CATEGORIES` nije izvor kategorija za kanonski javni portal. Ne uvodi se legacy alias mapa. Legacy kategorije se ne migriraju (PO-EV-01 / BR-279).
+
+Preduslov cutover-a: svih 14 usvojenih početnih kategorija (BR-277) mora postojati u kanonskom katalogu.
+
+**Status:** Approved
+
+---
+
+#### BR-284 – V1 bez javnog prikaza razloga otkazivanja
+
+Za V1 ostaje BR-272 (standardizovano sistemsko obavještenje).
+
+`cancellation_reason` / razlog otkazivanja / napomena urednika **ne prikazuje se automatski** javnosti u V1.
+
+Javni prikaz teksta razloga zahtijeva zasebnu Product Owner odluku i usklađenje BM/FS. Terminalnost statusa Otkazan (BR-064) ostaje neizmijenjena.
+
+**Status:** Approved
 
 ---
 
@@ -4264,6 +4339,7 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-07-30 | FS-001 / 5.16 (PATCH-FS-044): terminološko pojašnjenje da ne postoji zaseban katalog Održavanja; aktivnosti nad Održavanjem evidentiraju se kroz katalog Događaji. Bez izmjene poslovnih pravila. |
 | 2026-07-30 | FS-001 / 5.10 (PATCH-FS-045): TS7-PO-01–TS7-PO-06 — poslovni katalog kategorija i oznaka (ne ENUM), oznake u V1, lifecycle Aktivna/Neaktivna, bez migracije test podataka, bez „Nešto drugo“, ovlašćenja Urednik/Moderator. Usklađeni BR-081–BR-085; dodati BR-224–BR-236. |
 | 2026-08-08 | FS-001 / 5.10 (PATCH-FS-059): TS7-PO-07 / BM PATCH-059 — konačni početni V1 katalog kategorija (14); BR-277–BR-279; cutover = TS-009. Bez izmjene implementacije. |
+| 2026-08-09 | FS-001 (PATCH-FS-060): Faza 6A / BM PATCH-060 — BR-280–BR-284; usklađeni BR-064, BR-110, BR-112, BR-272, BR-279; V1 bez javnog `cancellation_reason`. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-07-31 | FS-001 / 5.11 (PATCH-FS-046): TS8-01–TS8-09 — Mediji kao samostalan entitet; zatvoreni katalog namjena; kardinalnosti i fallback; tip Fotografija; lifecycle; ovlašćenja; pretraga; metapodaci. Usklađeni BR-086–BR-091, §5.4.4, BR-113; dodati BR-237–BR-254. |
 | 2026-07-31 | FS-001 / 5.13 (PATCH-FS-047): TS-009 faza 1 — IA-01, PO-TS9-03A/04A/05A/05B; TD-TS9-01 referenca. Usklađeni BR-104, BR-107–BR-109, §5.3, §5.4.1; dodati BR-255–BR-260. |
 | 2026-07-31 | FS-001 / 5.1–5.3 i 5.13 (PATCH-FS-048): TS-009 faza 2 — PO-TS9-06A–06D. Usklađeni Hero, statistike (3 klikabilne kartice), istaknuti (max 3), lista ispod kalendara; BR-117; dodati BR-261–BR-264. |

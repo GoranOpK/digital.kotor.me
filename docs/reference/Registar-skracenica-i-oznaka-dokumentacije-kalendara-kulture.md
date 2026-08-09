@@ -4,8 +4,8 @@
 **Oznaka dokumenta:** RG-001
 **Naziv:** Registar skraćenica i oznaka dokumentacije Kalendara kulture
 **Status dokumenta:** Stable
-**Verzija:** 1.1.4
-**Datum:** 2026-08-08
+**Verzija:** 1.1.5
+**Datum:** 2026-08-09
 
 ---
 
@@ -171,7 +171,7 @@ Prefiksi se **ne** spajaju u jednu generičku oznaku. Svaki ima svoj namespace.
 | **G-NL** | GAP / nalaz | Newsletter | TS-011 | G-NL-08 |
 | **CR** | Change Request | Odobrena izmjena implementacije | Change Request Register / IS-001 | CR-001 |
 | **TD** / **TD-TS9** | Tehnička odluka | Technical Decision u TS | TS-009 | TD-TS9-01 |
-| **TM-** | Test | Test Matrix scenario | TS-010.8 | TM-PUB-06 |
+| **TM-** | Test | Test Matrix scenario | TS-010.8; TS-009 §18 | TM-PUB-06; TM-JP-01 |
 | **T10-** | Implementacioni marker | Implementacioni zadaci / markeri zatvaranja **TS-010** (Urednički portal); nije Feature ID niti TM scenario | Feature Registry / TS-010 | T10-WF-01, T10-GEN-01 |
 | **QA** / **QA-TS0108** | QA odluka | Quality Assurance prolaz | TS-010.8 | QA-TS0108-01 |
 | **AC-NL** | Acceptance Criteria | Newsletter | TS-011 | AC-NL-01 |
@@ -328,7 +328,8 @@ RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, katego
 | 1.1.2 | 2026-08-08 | Coverage PATCH: naziv = Registar skraćenica i oznaka dokumentacije; dodati IR/IR-001 i razlika TS/IS/IR; mapa TS-001…TS-012; PO-ORG / PO-EV; G-W / G-W02; DU-01…05 i DM-01…03; BM-TR jasno AKTIVNO; referenca na BM-GL/BM-ST; razdvojeni G-/G-W/G-NL. Bez izmjene BM/FS/TS/Feature Registry/IR sadržaja. Bez izmjene implementacije. |
 | 1.1.3 | 2026-08-08 | Dodata familija **PO-AUTO** (Product Owner odluke o automatskim/sistemskim procesima Kalendara kulture); primjeri PO-AUTO-01, PO-AUTO-02. Bez poslovnih definicija statusa. Bez izmjene BM/FS/TS sadržaja u ovom dokumentu. Bez izmjene implementacije. |
 | 1.1.4 | 2026-08-08 | Dodata familija **T10-** (implementacioni markeri TS-010; primjeri T10-WF-01, T10-GEN-01). Usklađeno sa Feature Registry closeout / TS7-PO-07 dokumentacionim PATCH-em. Bez izmjene BM/FS sadržaja u ovom dokumentu. Bez izmjene implementacije. |
+| 1.1.5 | 2026-08-09 | TM-* primjer dopunjen sa **TM-JP-*** (TS-009 §18 Faza 6A). Bez izmjene implementacije. |
 
 ---
 
-**Kraj dokumenta RG-001 v1.1.4 (Stable)**
+**Kraj dokumenta RG-001 v1.1.5 (Stable)**

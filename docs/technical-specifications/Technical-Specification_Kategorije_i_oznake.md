@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Kategorije i oznake
 **Modul:** Kalendar kulture
 **Status dokumenta:** Usvojen
-**Verzija:** 0.1.1
-**Datum:** 2026-08-08
+**Verzija:** 0.1.2
+**Datum:** 2026-08-09
 
 ---
 
@@ -18,6 +18,7 @@
 |---------|--------|------|
 | 0.1.0 | 2026-07-30 | Prva kompletna tehnička specifikacija za Kategorije i oznake. Ugrađene usvojene Product Owner odluke TS7-PO-01–TS7-PO-06 i usklađene sa BM-08, FS §5.10 i TS pravilima projekta. Bez SQL, API ugovora, Laravel koda i migracija. |
 | 0.1.1 | 2026-08-08 | **TS7-PO-07** / BM PATCH-059 / FS PATCH-FS-059: konačni početni V1 katalog (14 kategorija); razdvajanje kanonskog DB kataloga od PO početnog sadržaja; semantičko mapiranje legacy→kanonski; cutover = TS-009. Bez implementacije seed/migracije. |
+| 0.1.2 | 2026-08-09 | **Faza 6A / PO-TS9-08E:** javni CAT-CUTOVER bez migracije legacy sadržaja i bez alias mape (PO-EV-01); preduslov 14 kategorija u `cultural_categories`; tehnički ugovor u TS-009. Bez implementacije seed/migracije. |
 
 ---
 
@@ -150,7 +151,7 @@ Oznake su dio V1. Nisu zamjena za primarnu kategoriju.
 
 Ne radi se migracija postojećih test podataka kao referentni katalog. Ne uvodi se kompatibilnost sa starim modelom kao trajni dual model. Ne pravi se tranzicioni ENUM+FK model. Postojeće test kategorije nisu referentni poslovni podaci. Katalog se definiše kao novi poslovni katalog.
 
-**Napomena (TS-009):** tehnički cutover postojećih **produkcijskih/legacy** zapisa sa string kategorijom na kanonski `category_id` je predmet TS-009, ne ovog PATCH-a. Semantičko mapiranje: BM-KO-11 / BR-279.
+**Napomena (TS-009 Faza 6A):** javni portal nakon cutover-a koristi isključivo kanonski `CulturalCategory`. Legacy `CulturalEvent` sadržaj je testni (**PO-EV-01**): **ne** migrira se; **ne** uvodi se URL/legacy alias mapa. Semantičko mapiranje: BM-KO-11 / BR-279 (referentno, ne runtime adapter). Preduslov: 14 usvojenih kategorija u `cultural_categories` (TS-009 §9.4).
 
 ## 2.5 Bez kategorije „Nešto drugo“
 
@@ -369,7 +370,7 @@ U V1: oznake jesu u opsegu.
 
 Za TS-007 trenutno nema otvorenih pitanja koja blokiraju usvajanje ovog dokumenta.
 
-Napomena: konkretan početni sadržaj kataloga usvojen je odlukom **TS7-PO-07** (BM-KO-09 / BR-277) kao **14** naziva sa redoslijedom. To **nije** fiksna ENUM lista; katalog ostaje proširiv. Tehnički cutover legacy string → kanonski katalog = **TS-009**.
+Napomena: konkretan početni sadržaj kataloga usvojen je odlukom **TS7-PO-07** (BM-KO-09 / BR-277) kao **14** naziva sa redoslijedom. To **nije** fiksna ENUM lista; katalog ostaje proširiv. Javni CAT-CUTOVER = **TS-009 Faza 6A** (bez migracije legacy sadržaja).
 
 ---
 
@@ -395,5 +396,5 @@ Napomena: konkretan početni sadržaj kataloga usvojen je odlukom **TS7-PO-07** 
 4. Ne uvoditi dual-write / tranzicioni ENUM+FK model u ovom dokumentu.
 5. Implementacija mora ostati usklađena sa: Organizator = entitet; Moderator = ovlašćenje; Urednik = upravlja katalogom; Administrator platforme = sistemska administracija.
 6. Podrazumijevane fotografije po kategoriji (BM-MD-06) ostaju predmet medija / Događaja; mapiranje se veže na katalogski zapis, ne na ENUM string kao izvor istine.
-7. **TS7-PO-07:** početni V1 sadržaj = 14 usvojenih naziva (BM-KO-09). Obezbijediti ih u kanonskom katalogu prije TS-009 cutover-a; **način** (seed/ručno/…) nije propisan ovdje.
-8. Semantičko mapiranje legacy→kanonski: BM-KO-11 / BR-279. Tehnički cutover = **TS-009**. Nemapirani legacy zapisi i „Nešto drugo“: bez automatskog fallback-a dok TS-009 ne usvoji pravilo.
+7. **TS7-PO-07:** početni V1 sadržaj = 14 usvojenih naziva (BM-KO-09). Obezbijediti ih u kanonskom katalogu prije TS-009 Faza 6A cutover-a; **način** (seed/ručno/…) nije propisan ovdje.
+8. Semantičko mapiranje legacy→kanonski: BM-KO-11 / BR-279 (referentno). **Faza 6A:** bez migracije legacy sadržaja; bez alias mape; javni portal = `CulturalCategory` (PO-TS9-08E / PO-EV-01).

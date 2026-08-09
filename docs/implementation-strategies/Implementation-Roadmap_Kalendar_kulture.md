@@ -7,8 +7,8 @@
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active  
-**Verzija:** 1.0.4
-**Datum:** 2026-08-08
+**Verzija:** 1.0.5
+**Datum:** 2026-08-09
 
 ---
 
@@ -21,6 +21,7 @@
 | 1.0.2 | 2026-08-07 | Dokumentaciona napomena: Faza 1 (TS-006/007/008) završena u kodu; Faza 2 (TS-001) spremna za Korak 1 nakon PO-ORG-01–04. Bez izmjene redoslijeda faza. |
 | 1.0.3 | 2026-08-07 | **PO-EV-01:** Postojeći `cultural_events` su testni/prototipski podaci (ne referentni produkcijski sadržaj). Faza 3 bez migracije/backfill/dual-write legacy zapisa; rizik = novi domen + cutover portala + zamjena flat modela. Bez izmjene BM/FS. |
 | 1.0.4 | 2026-08-08 | **TS-010 V1 closeout:** Faza 5 (TS-010 Urednički portal) V1 funkcionalno / implementaciono završena. Naredna velika faza ostaje **Faza 6 → TS-009** (javni portal / domen cutover). **Faza 8 → TS-012** ostaje buduća audit integracija. Bez izmjene redoslijeda faza. Bez izmjene BM/FS. |
+| 1.0.5 | 2026-08-09 | **Faza 6A / 6B:** Faza 6 podijeljena — **6A** javni portal Događaja (kanonski cutover; TS-009); **6B** Manifestacije (TS-005 + TS-009 §6). TS-005 **ne blokira** 6A. Usklađeno sa BM PATCH-060 / FS PATCH-FS-060 / TS-009 v1.0.6. Bez izmjene implementacije. |
 
 ---
 
@@ -162,7 +163,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 
 | Područje | Stanje | Akcija |
 |----------|--------|--------|
-| Javni portal | Postoji; CR-001–004A usklađeni | Faza 0: CR-004B; Faza 6: domen |
+| Javni portal | Postoji; CR-001–004A usklađeni | Faza 0: CR-004B; **Faza 6A:** kanonski cutover Događaja; **Faza 6B:** Manifestacije |
 | `CulturalEvent` flat | Postoji (testni/prototipski podaci — **PO-EV-01**) | Faza 3: novi domen TS-003/004; zamjena flat modela **bez** migracije/backfill legacy sadržaja |
 | Admin `kk_admin` | Postoji | Refaktor u Fazi 5 (TS-010) |
 | Organizator / Moderator | Nema | Faza 2 (TS-001) |
@@ -300,17 +301,35 @@ analiza → implementacija → test → review → merge → deploy
 | **Rizici** | Prijedlozi izmjena; zaključavanje; regresija admin tokova |
 | **Rezultat** | Moderator / Urednik operativni tokovi V1 — **ostvareno** |
 | **Van obuhvata Faze 5** | TS-005 (Manifestacije); TS-009 javni cutover; TS-012 emit/storage (Faza 8); TS-010.7 ostaje obaveza / dependency ka TS-012 |
-| **Zatim** | Stabilizacija → **Faza 6 (TS-009)** |
+| **Zatim** | Stabilizacija → **Faza 6A (TS-009 javni portal Događaja)** |
 
-### FAZA 6 — Javni portal (preostale domenske funkcionalnosti)
+### FAZA 6A — Javni portal Događaja (kanonski cutover)
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Ostatak TS-009 / IS-001 Faze 5–6 na punom domenu |
-| **Moduli** | TS-009 (MF lista/detalj/program, više održavanja, oznake, filter MF) |
-| **Rizici** | Široka UI regresija |
-| **Rezultat** | Javni portal usklađen sa TS-009 na domenu |
+| **Cilj** | Prelazak javnog portala Događaja sa `CulturalEvent` na `CulturalEventEntry` + `CulturalOccurrence`; CAT-CUTOVER; očuvanje postojećeg UI-ja |
+| **Moduli** | TS-009 (§1.7, §3.4, §7.3, §9–§12, §18); kanonski katalozi TS-006/007/008 po potrebi |
+| **PO** | PO-EV-01; PO-TS9-08A–PO-TS9-08J |
+| **Rizici** | Regresija badge/filtera/CR-001…004B; pogrešan public query; feature-flag zloupotreba (dual-read) |
+| **Rezultat** | Kanonski javni read za Događaje; privremeni flag legacy\|canonical; bez Manifestacija |
+| **Ne blokira** | TS-005 / Manifestacije |
+| **Van obuhvata** | Manifestacije (6B); slug/SEO; migracija legacy sadržaja; dual-read/write; javni `cancellation_reason` |
+| **Zatim** | Stabilizacija → **Faza 6B** (ili paralelno planiranje 6B ako TS-005 spreman — bez blokiranja 6A) |
+
+### FAZA 6B — Manifestacije (javni portal)
+
+| Stavka | Opis |
+|--------|------|
+| **Cilj** | Javni portal Manifestacija (TS-009 §6 / PO-TS9-07A–07E) + filter MF na Pretrazi |
+| **Moduli** | TS-005; TS-009 §6 |
+| **Preduslov** | TS-005 spreman za implementaciju; Faza 6A stabilizovana ili eksplicitno odobren paralelizam bez dijeljenog konflikta |
+| **Rizici** | UI regresija; navigacija MF |
+| **Rezultat** | Lista / Detalji / program Manifestacija na portalu |
 | **Zatim** | Stabilizacija |
+
+### FAZA 6 — (istorijski naziv)
+
+> Raniji jedinstveni naziv „Faza 6 — Javni portal“ **supersedovan** je podjelom na **6A** i **6B** (v1.0.5). Referenca u starijim zapisima na „Fazu 6“ tumači se kao 6A+6B osim ako kontekst kaže drugačije.
 
 ### FAZA 7 — Newsletter
 
@@ -364,7 +383,8 @@ Naredna velika faza **ne počinje** dok stabilizacija nije potvrđena.
 | 3 | Migracija dry-run; ≥1 održavanje; Odgođen; Otkazan terminalan | Domain Feature + migracioni testovi | `publicStatus`, liste, admin |
 | 4 | Veze MF↔DG; program | Feature TS-005 | Događaji bez MF |
 | 5 | Matrica TS-010.8; gate-ovi | Feature po ulogama | Stari admin put |
-| 6 | MF portal; više termina; oznake | Proširenje CulturalCalendar* | CR-001…004B |
+| 6A | Kanonski cutover Događaja; kartica multi-OCC; sort; CAT; flag | Public query + CulturalCalendar* | CR-001…004B |
+| 6B | MF portal; filter MF | Proširenje CulturalCalendar* + TS-005 | 6A stabilan |
 | 7 | Okidači; objedinjavanje; odjava | Newsletter Feature | Mail / cron |
 | 8 | Katalog aktivnosti; nepromjenjivost; Admin | Audit Feature | Emiteri ne smiju mijenjati prava |
 
@@ -375,14 +395,14 @@ Naredna velika faza **ne počinje** dok stabilizacija nije potvrđena.
 1. Feature branch po logičkoj cjelini; staging prije produkcije.
 2. UI-only / additive faze (0, dijelovi 1–2, 5–6 bez velike migracije): deploy bez maintenance window gdje je moguće.
 3. Velike migracije (Faze 3, 4, 7 — i eventualno Faza 8 skladište): **jedna po deploymentu**; backup; rollback plan; staging dry-run; produkcioni smoke.
-4. Feature flag za MF navigaciju, novi urednički portal i novi newsletter dok se ne potvrdi stabilnost.
+4. Feature flag: privremeno za Fazu 6A (`legacy` XOR `canonical`); za MF navigaciju (6B), novi urednički portal i novi newsletter dok se ne potvrdi stabilnost.
 5. Stari `kk_admin` tok gasiti tek nakon što TS-010 pokrije potrebne tokove.
 
 ---
 
 # 11. Najveći tehnički rizik
 
-Faza 3 (TS-003 / TS-004): implementacija novog domena Događaj + Održavanja 1..N, cutover javnog portala i zamjena legacy flat `CulturalEvent` modela — **bez** migracije/backfill-a postojećih testnih zapisa (**PO-EV-01**). Regresioni rizik: badge, filteri, CR-001…004B, lifecycle otkazanih.
+Faza 6A (TS-009): javni cutover na `CulturalEventEntry` + `CulturalOccurrence` — **bez** migracije/backfill-a postojećih testnih zapisa (**PO-EV-01**); bez dual-read/dual-write. Regresioni rizik: badge, filteri, CR-001…004B, lifecycle otkazanih, kartica multi-Održavanje. TS-005 **ne blokira** 6A.
 
 ---
 

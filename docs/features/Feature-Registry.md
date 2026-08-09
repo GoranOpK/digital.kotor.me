@@ -145,7 +145,19 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **PO-ORG-04:** Moderator pristupa uredničkom portalu iz aktivnog ovlašćenja; nije nova platformska uloga; `kk_admin` = jedina platformska uloga Urednika.
 
 **Usvojene implementacione odluke (Događaj / Održavanje — PO-EV):**
-- **PO-EV-01:** Postojeći podaci Kalendara kulture (`cultural_events`) su isključivo testni/prototipski; nisu referentni produkcijski sadržaj. Bez migracije/backfill-a/dual-write-a/adaptera radi legacy sadržaja. Novi domen Događaj + Održavanje (TS-003/TS-004) implementira se direktno prema BM/FS/TS. Legacy flat model privremen do cutover-a.
+- **PO-EV-01:** Postojeći podaci Kalendara kulture (`cultural_events`) su isključivo testni/prototipski; nisu referentni produkcijski sadržaj. Bez migracije/backfill-a/dual-write-a/adaptera radi legacy sadržaja. Novi domen Događaj + Održavanje (TS-003/TS-004) implementira se direktno prema BM/FS/TS. Legacy flat model privremen do cutover-a. **Potvrđeno za Fazu 6A** javnog portala (TS-009 v1.0.6 / IR-001 v1.0.5).
+
+**Usvojene product odluke (Javni portal — Faza 6A / TS-009 v1.0.6):**
+- **PO-TS9-08A:** Očuvanje postojećeg izgleda javnog portala; bez redizajna; UI izmjene samo kad neophodne zbog kanonskog modela / usvojenih pravila.
+- **PO-TS9-08B:** Kartica = prvo naredno relevantno Održavanje; „+ još N termina“; detalj = sva javno relevantna Održavanja.
+- **PO-TS9-08C:** Pretraga sortira rastuće po prvom narednom relevantnom Održavanju (sistemsko; bez korisničkog sortiranja).
+- **PO-TS9-08D:** Odgođeno na detalju sa oznakom; kartica prikazuje naredno važeće Održavanje.
+- **PO-TS9-08E:** CAT-CUTOVER — isključivo `CulturalCategory` (14); bez legacy alias mape; preduslov 14 u bazi.
+- **PO-TS9-08F:** Faza 6A (Događaji) / 6B (Manifestacije); TS-005 ne blokira 6A.
+- **PO-TS9-08G:** V1 — BR-272 standardno obavještenje; `cancellation_reason` nije javan.
+- **PO-TS9-08H:** Legacy URL smije 404; bez redirect mape; bez slug-a u 6A.
+- **PO-TS9-08I:** Privremeni feature flag `legacy` XOR `canonical`; zatim uklanjanje flag-a i legacy public/CRUD.
+- **PO-TS9-08J:** Minimalni public query SSOT za index/Pretraga/Arhiva/detalj/featured.
 
 **Usvojene poslovne odluke (Mediji):**
 - **TS8-01:** Medij je samostalan poslovni entitet i zajednički platformski resurs bez poslovnog vlasnika.
@@ -213,7 +225,7 @@ Povezana dokumentacija (Događaj):
 
 * Business Model — BM-04 (BM-DG-01–BM-DG-11), BM-10 (BM-ST-01–BM-ST-10), BM-MOD-19, BM-TR-12; PATCH-035/036 (otkazivanje), PATCH-037 (direktna objava / arhiva), **PATCH-053 / PO-DG-07** (terminalnost Otkazan), **PATCH-055 / PO-AUTO-01 / PO-AUTO-02** (cascade otkazivanja Održavanja; trenutak Planiran → Završen), **PATCH-056 / PO-DG-08 / PO-DG-09** (BR-052 naknadno povezivanje), **PATCH-057 / PO-DG-10** (V1 prvi Event review), **PATCH-058 / PO-N-TR-02-04** (V1 generator Održavanja)
 * Functional Specification — §5.4–§5.5, §5.7.1–§5.7.2 (BR-006–BR-044, BR-062–BR-066, BR-131), §5.6 BR-052, §5.16 katalog Događaji (BR-182/BR-183); PATCH-FS-037/038/039; **PATCH-FS-053**; **PATCH-FS-056**; **PATCH-FS-057**; **PATCH-FS-058**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija **0.1.7**; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija **0.1.8**; Usvojen)
 
 Povezana dokumentacija (Održavanje):
 
@@ -245,10 +257,10 @@ Povezana dokumentacija (Mediji):
 
 Povezana dokumentacija (Javni portal):
 
-* Business Model — BM-11 (BM-PK-01–BM-PK-28), BM-AR-02, PATCH-045–PATCH-048, PATCH-051 (CR-004B); IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E
+* Business Model — BM-11 (BM-PK-01–BM-PK-33), BM-AR-02, PATCH-045–PATCH-048, PATCH-051 (CR-004B); IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E
 * Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-274), PATCH-FS-047–PATCH-FS-049, PATCH-FS-051
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 1.0.5; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2)
-* Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija 1.0.6; Stable)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 1.0.6; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A §1.7/§7.3/§9–§12/§18)
+* Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija 1.0.7; Stable)
 * Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Implemented, IS-001 Faza 2 — `month=YYYY-MM`; commit `c5d396f`); CR-003 (Implemented, IS-001 Faza 2 — `q`/`category`/`location`; dokumentacija `fc35132`; implementacija `595045a`; TS-009 v1.0.2; IS-001 v1.0.2); CR-004A (Implemented, IS-001 Faza 3 — javni status badge; PO-CR4A-01…05; dokumentacija `614706c`; implementacija `0f73240`; TS-009 v1.0.4; IS-001 v1.0.5); CR-004B (Planned, IS-001 Faza 3 — javni prikaz otkazanih; PO-CR4B-01…10; TS-009 v1.0.5 §7.2; IS-001 v1.0.6 §9.3.2)
 
 Povezana dokumentacija (Newsletter):
@@ -291,13 +303,13 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS | Naziv | Feature | Modul | Status |
 | -- | ----- | ------- | ----- | ------ |
 | TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.3.0) |
-| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.7) |
+| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.8) |
 | TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.8); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni |
 | TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.2) |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
-| TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.1); TS7-PO-07 početni V1 katalog |
+| TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.2); TS7-PO-07; Faza 6A CAT-CUTOVER ugovor |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
-| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.5) |
+| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.6); Faza 6A cutover dokumentovan |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.6) — **V1 implementaciono završen**; TS-010.1–TS-010.8 |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.1) |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.1) — implementacija emit/storage = Roadmap **Faza 8** |
@@ -535,3 +547,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-08 | FT-001 — **PO-N-TR-02-04** usvojena (BM PATCH-058 / FS PATCH-FS-058): V1 generator Održavanja preciziran (samo Nacrt; algoritmi; XOR; max 100; duplikati; atomičnost). Usklađeni TS-004 v0.1.8 i TS-010 v1.0.5. T10-GEN-01 = spreman za implementaciju (nije zatvoren). Bez izmjene implementacije. |
 | 2026-08-08 | FT-001 — **TS-010 V1 implementacioni closeout** (TS-010 v1.0.6; IR-001 v1.0.4): Urednički portal V1 funkcionalno/implementaciono završen. **T10-GEN-01 = ZATVOREN**; **T10-WF-01** potvrđen; **GAP-RESUME-01** / **R-02** / **TM-OCC-17** zatvoreni (Urednik resume). Cultural: 420 passed / 1740 assertions. Dependency ostaju: TS-005 (Manifestacije), TS-009 (javni cutover / Faza 6), TS-012 (audit emit / Faza 8). Bez izmjene BM/FS/TS-003/TS-004. Bez novih poslovnih pravila. |
 | 2026-08-08 | FT-001 — **TS7-PO-07** usvojena (BM PATCH-059 / FS PATCH-FS-059 / TS-007 v0.1.1 / RG-001 v1.1.4): konačni početni V1 katalog kategorija Događaja (14 naziva, redoslijed); značenja; odbačene legacy vrijednosti; semantičko mapiranje; cutover = TS-009. Katalog CRUD neizmijenjen. Bez izmjene implementacije. |
+| 2026-08-09 | FT-001 — **Faza 6A dokumentacioni PATCH** (BM PATCH-060 / FS PATCH-FS-060 / TS-009 v1.0.6 / IR-001 v1.0.5): PO-TS9-08A–08J; cutover kanonskog javnog portala Događaja; Faza 6A/6B; PO-EV-01 potvrđen; TM-JP matrica. Bez izmjene implementacije. |

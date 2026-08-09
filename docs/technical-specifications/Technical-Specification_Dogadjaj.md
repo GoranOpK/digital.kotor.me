@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Događaj  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.7  
-**Datum:** 2026-08-08
+**Verzija:** 0.1.8
+**Datum:** 2026-08-09
 
 ---
 
@@ -24,6 +24,7 @@
 | 0.1.5 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02** (BM PATCH-055 / FS PATCH-FS-055): otkazivanje Događaja atomski otkazuje Planirana/Odgođena Održavanja (§4.8); predikat arhive usklađen (§4.10). Bez izmjene implementacije. |
 | 0.1.6 | 2026-08-08 | **PO-DG-08 / PO-DG-09** (BM PATCH-056 / FS PATCH-FS-056): §4.11 BR-052 — samo Objavljen + bez Org; jednosmjerno NULL → Aktivan Org; konkurentnost; matrica §5.1 napomena. Bez izmjene implementacije. |
 | 0.1.7 | 2026-08-08 | **PO-DG-10** (BM PATCH-057 / FS PATCH-FS-057): pojednostavljeni V1 prvi Event review — Na odobrenju zaključan; bez povlačenja / Počni pregled / Urednik edit; §4.2–§4.5 usklađeni. Proposal tok neizmijenjen. Bez izmjene implementacije. |
+| 0.1.8 | 2026-08-09 | **Faza 6A / PO-TS9-08G:** §4.9 tačka 8 usklađena — V1 javni portal ne prikazuje automatski `cancellation_reason` (BR-272 / BR-284). Bez izmjene implementacije. |
 
 Napomena:
 
@@ -508,7 +509,7 @@ Nacrt → Objavljen
 5. Reaktivacija postojećeg otkazanog događaja ne postoji. Ako se isti kulturni program kasnije ponovo organizuje, kreira se **novi** događaj (novi zapis, novi lifecycle) (BM-DG-09).
 6. Promjena termina postojećeg (neotkazanog) događaja nije radnja nad statusom događaja: vrši se isključivo kroz status **Odgođen** na održavanju (granica TS-004; BM-TR-12, BR-131).
 7. Dok je status Otkazan, forma je **read-only**. Nije dozvoljena **naknadna** izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja (BM-DG-10, BR-064). Automatsko otkazivanje otvorenih Održavanja iz §4.8 korak 6 dio je same operacije otkazivanja.
-8. Jedini izuzetak: **Urednik** smije unijeti ili dopuniti **razlog otkazivanja (napomenu urednika)** radi tačnog informisanja javnosti (BM-DG-10, BM-UR-11, BR-063, BR-064).
+8. Jedini izuzetak: **Urednik** smije unijeti ili dopuniti **razlog otkazivanja (napomenu urednika)** (BM-DG-10, BM-UR-11, BR-064). **V1 javni portal:** razlog se **ne** prikazuje automatski javnosti; prikazuje se standardizovano sistemsko obavještenje (BM-PK-33 / BR-272 / BR-284; TS-009 §7.2.4). Javni prikaz teksta razloga zahtijeva zasebnu PO odluku.
 9. Pokušaj izmjene bilo kog drugog polja dok je status Otkazan mora biti odbijen validacijom.
 
 ## 4.10 Automatsko arhiviranje

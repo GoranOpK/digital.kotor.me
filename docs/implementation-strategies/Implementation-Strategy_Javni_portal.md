@@ -6,10 +6,10 @@
 **Naziv:** Implementaciona strategija javnog portala  
 **Feature ID:** FT-001  
 **Modul:** Kalendar kulture  
-**Referentna specifikacija:** TS-009 v1.0.5 Stable
+**Referentna specifikacija:** TS-009 v1.0.6 Stable
 **Status dokumenta:** Stable
-**Verzija:** 1.0.6
-**Datum:** 2026-08-06
+**Verzija:** 1.0.7
+**Datum:** 2026-08-09
 
 ---
 
@@ -20,7 +20,7 @@
 | Oznaka | IS-001 |
 | Naziv | Implementaciona strategija javnog portala |
 | Tip | Operativni planski dokument |
-| Referenca | TS-009 v1.0.5 Stable |
+| Referenca | TS-009 v1.0.6 Stable |
 | Usvojene odluke | IS-001-01 … IS-001-08 |
 
 ### IS-001-01 — Identitet dokumenta
@@ -201,22 +201,29 @@ Faza 5 (Manifestacije na portalu)
     └─► zahtijeva Fazu 4 (Manifestacija + Održavanja za program)
     └─► ne zatvara puno usklađenje Detalja/Arhive (to je Faza 6)
 
-Faza 6 (Završno usklađenje)
-    └─► zahtijeva Faze 4 i 5
-    └─► **ne ponavlja** obuhvat Faze 3; nadograđuje portal na domenski model
+Faza 6A (IR-001 — javni portal Događaja / kanonski cutover)
+    └─► **ne blokira** TS-005 / Manifestacije (PO-TS9-08F)
+    └─► više Održavanja, CAT-CUTOVER, public query SSOT (TS-009 §7.3 / §9–§12)
+
+Faza 6B (IR-001 — Manifestacije na portalu)
+    └─► zahtijeva TS-005 spreman; mapira se na IS-001 Fazu 5 + dio ranije „Faze 6“
+
+Faza 6 (IS-001 istorijski naziv — završno usklađenje)
+    └─► tumači se kao **6A + 6B** po IR-001 v1.0.5; 6A nije uslovljena MF portalom
 ```
 
 **Granica Faza 3 vs Faza 6 (obavezna):**
 
-| | Faza 3 | Faza 6 |
+| | Faza 3 | Faza 6A (IR) / završno usklađenje Događaja |
 |--|--------|--------|
-| Model podataka | Postojeći (bez novih tabela/relacija) | Nakon Faze 4 (Održavanja, Oznake, …) |
-| Detalji / Arhiva | UI i ponašanje u granicama trenutne šeme | Prikaz usklađen sa punim BM-PK-05/09–14 |
-| Više Održavanja | Zabranjeno uvoditi | Obavezno uskladiti prikaz |
-| Oznake (BM-08) | Van obuhvata | U obuhvatu |
+| Model podataka | Postojeći (bez novih tabela/relacija) | Kanonski `CulturalEventEntry` + `CulturalOccurrence` |
+| Detalji / Arhiva | UI i ponašanje u granicama trenutne šeme | Prikaz usklađen sa punim BM-PK-05/09–14 / BM-PK-29–33 |
+| Više Održavanja | Zabranjeno uvoditi | Obavezno uskladiti prikaz (kartica + detalj) |
+| Oznake (BM-08) | Van obuhvata | Po potrebi / naredni korak |
+| Manifestacije | Van | **Faza 6B** (ne blokira 6A) |
 | Kriterijum Arhive | Bez izmjene ka BM-DG-04 osim ako poseban CR i PO odobre ranije | Usklađenje sa BM-PK-13 / BR-114 u punom smislu |
 
-**Obavezujući redoslijed** (IS-001-03): 1 → 2 → 3 → 4 → 5 → 6, osim ako posebna analiza i odobrenje potvrde da odstupanje ne narušava zavisnosti i IS-001-02. Ograničeni paralelizam Faze 2 i Faze 3 dozvoljen je samo uz odobrenje i bez dijeljenih konflikata; **ne** mijenja granicu Faza 3 / Faza 6.
+**Obavezujući redoslijed** (IS-001-03): 1 → 2 → 3 → 4 → 5 → 6, uz izuzetak: **IR Faza 6A** (kanonski cutover Događaja) **nije** blokirana IS Fazom 5 / TS-005 (PO-TS9-08F / IR-001). Ograničeni paralelizam Faze 2 i Faze 3 dozvoljen je samo uz odobrenje i bez dijeljenih konflikata.
 
 ---
 
@@ -364,20 +371,21 @@ Faza 6 (Završno usklađenje)
 
 ---
 
-## 9.6 Faza 6 — Završno usklađenje
+## 9.6 Faza 6 — Završno usklađenje (mapiranje IR-001: 6A + 6B)
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Završiti usklađenost javnog portala sa TS-009 **nakon** uvođenja domena (Faza 4) i MF portala (Faza 5); ne ponavljati baseline rad Faze 3 |
-| **Obuhvat** | Prikaz više Održavanja na Detaljima događaja i relevantnim listama; prikaz Oznaka (BM-08 / TS-007); završno usklađenje Detalja događaja sa BM-PK-05/09–14; završno usklađenje Arhive sa BM-PK-13 / BR-114 (uključujući kriterijum/status po usvojenom BM); regresija; potvrda usklađenosti sa TS-009. **Van obuhvata:** nove poslovne funkcionalnosti; NFR van usvojenog; ponovni rad Faze 3 baseline-a |
-| **Zavisnosti** | Faze 4 i 5 završene |
+| **Cilj** | Završiti usklađenost javnog portala sa TS-009; **IR-001 Faza 6A** = kanonski cutover Događaja (bez MF); **IR-001 Faza 6B** = Manifestacije |
+| **Obuhvat 6A** | Cutover `CulturalEvent` → `CulturalEventEntry`+`CulturalOccurrence`; kartica multi-OCC; sortiranje; Odgođen; CAT-CUTOVER; public query SSOT; privremeni flag; očuvanje UI (TS-009 §1.7, §7.3, §9–§12). **Van:** Manifestacije; slug; migracija legacy; dual-read/write; javni `cancellation_reason` |
+| **Obuhvat 6B** | MF lista/detalj/program; filter MF (TS-009 §6) |
+| **Zavisnosti** | 6A: kanonski domen Događaj/Održavanje + katalozi; **TS-005 ne blokira 6A**. 6B: TS-005 spreman |
 | **Rizik** | **Srednji do Visok** (široka regresija) |
-| **Uticaj na kod** | Sloj kontrolera/upita/prikaza na više javnih stranica; testovi: široka regresija |
-| **Ulaz** | Faze 4–5 završene; checklist usklađenosti sa TS-009 matricom |
-| **Izlaz** | Nema neprihvatljive regresije; dokumentovana potvrda usklađenosti; PO potvrda zatvaranja implementacionog obuhvata TS-009 |
-| **Test** | End-to-end: Početna → Pretraga i pregled → Detalji događaja → Manifestacije → Arhiva; statusne oznake; više Održavanja; Oznake |
-| **Deploy** | Po obimu; backup; MW po potrebi; smoke puni portal |
-| **Rollback** | **Djelimični** po CR paketima; puni rollback teži zbjeći |
+| **Uticaj na kod** | Sloj kontrolera/upita/prikaza; testovi: TM-JP (TS-009 §18) + široka regresija |
+| **Ulaz** | TS-009 v1.0.6; IR-001 v1.0.5; checklist usklađenosti |
+| **Izlaz** | 6A: kanonski javni read stabilan; 6B: MF portal; PO potvrda |
+| **Test** | End-to-end: Početna → Pretraga → Detalji → (6B: Manifestacije) → Arhiva; TM-JP-* |
+| **Deploy** | Privremeni feature flag `legacy` XOR `canonical` (TS-009 §10.2); backup; smoke |
+| **Rollback** | Flag → `legacy`; zatim po CR paketima |
 
 ---
 
@@ -588,7 +596,8 @@ Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehni�
 | 1.0.4 | 2026-08-01 | CR-004A Planned (IS-001 Faza 3): javni status badge; §9.3 / §9.3.1; referenca TS-009 v1.0.3 §7.1; PO-CR4A-01…04. Bez izmjene implementacije. Bez širenja Faze 3 van badge obuhvata. |
 | 1.0.5 | 2026-08-01 | CR-004A Implemented (dokumentacija `614706c`; implementacija `0f73240`; testovi 65/266). §9.3 / §9.3.1; referenca TS-009 v1.0.4. Precizirano: bez migracije/izmjene šeme; metoda na postojećem modelu CulturalEvent. Bez širenja Faze 3; Faza 3 nije označena kao završena. |
 | 1.0.6 | 2026-08-06 | CR-004B Planned (IS-001 Faza 3): korektivni prolaz — bez migracija/šeme; cancelled ostaje; portalna Arhiva = date query; archived nije javno; §9.3.2; TS-009 v1.0.5 §7.2; PO-CR4B-01…10. Faza 3 nije zatvorena. Bez izmjene implementacije. |
+| 1.0.7 | 2026-08-09 | **Faza 6A/6B (IR-001):** usklađenje sa TS-009 v1.0.6 — 6A kanonski cutover Događaja nije blokiran TS-005; §8 dijagram / §9.6 ažurirani. Bez izmjene implementacije. |
 
 ---
 
-**Kraj dokumenta IS-001 v1.0.6 (Stable)**
+**Kraj dokumenta IS-001 v1.0.7 (Stable)**

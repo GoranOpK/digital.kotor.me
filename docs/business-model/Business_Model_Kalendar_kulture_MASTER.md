@@ -73,6 +73,7 @@
 | PATCH-057 | 2026-08-08 | **PO-DG-10:** pojednostavljeni V1 tok prvog odobravanja Događaja — Na odobrenju = sadržajno zaključan; Urednik samo Odobri ili Vrati na doradu (razlog obavezan); bez Moderator povlačenja; bez „Počni pregled“; bez direktnog uređivanja Urednika na Na odobrenju. Dodati BM-ST-10, BM-MOD-19; usklađeni BM-UR-02, BM-ST-04. Ne mijenja Prijedlog izmjene Objavljenog. Bez izmjene implementacije. |
 | PATCH-058 | 2026-08-08 | **PO-N-TR-02-04:** preciziran V1 generator Održavanja — samo Nacrt; dnevno +1 / sedmično +7 / mjesečno clamp; broj XOR krajnji datum; max 100; šablon vremena/lokacije; Planiran; duplikati → odbij cijelu operaciju; atomičnost; bez preview; bez Proposal/Objavljen generatora. Usklađeni BM-TR-06, BM-TR-07. Bez izmjene implementacije. |
 | PATCH-059 | 2026-08-08 | **TS7-PO-07:** konačni početni V1 katalog kategorija Događaja (14 naziva, usvojeni redoslijed); značenja; kategorija ≠ Manifestacija; kategorija ≠ tip Organizatora; odbačene legacy vrijednosti; semantičko mapiranje legacy→kanonski; tehnički cutover ostaje TS-009. Dodati BM-KO-09–BM-KO-11; usklađen BM-GL-14. Bez izmjene implementacije. |
+| PATCH-060 | 2026-08-09 | **Faza 6A (javni portal Događaja) — usvojene PO odluke:** potvrda PO-EV-01 (bez migracije/dual-read/dual-write legacy `CulturalEvent`); očuvanje postojećeg izgleda (IA-01); kartica = prvo naredno relevantno Održavanje + „+ još N termina“; sistemsko sortiranje Pretrage; Odgođen na detalju vs kartici; CAT-CUTOVER na `CulturalCategory`; Faza 6A ≠ 6B (Manifestacije); V1 bez javnog `cancellation_reason` (BR-272); legacy URL smije 404. Usklađeni BM-PK-09, BM-PK-11, BM-PK-13, BM-DG-10, BM-UR-11, BM-ST-07, BM-KO-11; dodati BM-PK-29–BM-PK-33. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -431,7 +432,7 @@ Urednik može kreirati događaj bez registrovanog Organizatora kada je to potreb
 | BM-UR-08 | Urednik odobrava zahtjeve za dodjelu ovlašćenja novim Moderatorima i isključivo on dodjeljuje pristup novom Moderatoru. |
 | BM-UR-09 | Urednik je isključiva uloga Uredničkog portala. Urednik nije Organizator, nije Moderator Organizatora, ne kombinuje ulogu Urednika sa statusom običnog registrovanog korisnika u poslovnom modelu Kalendara kulture, ne mijenja aktivnu poslovnu ulogu i uvijek postupa kao Urednik. |
 | BM-UR-10 | Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora. |
-| BM-UR-11 | Urednik može otkazati bilo koji objavljeni događaj. Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Nakon otkazivanja Urednik može unijeti ili dopuniti razlog otkazivanja (napomenu urednika) radi tačnog informisanja javnosti, u skladu sa BM-DG-10. |
+| BM-UR-11 | Urednik može otkazati bilo koji objavljeni događaj. Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Nakon otkazivanja Urednik može unijeti ili dopuniti razlog otkazivanja (napomenu urednika), u skladu sa BM-DG-10. U V1 javni portal ne prikazuje automatski taj razlog javnosti (BM-PK-13 / BM-PK-33); prikazuje se standardizovano sistemsko obavještenje. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
@@ -490,7 +491,7 @@ Pri prelazu Objavljen → Otkazan, u okviru iste poslovne operacije otkazivanja 
 
 Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Ako se isti kulturni program kasnije ponovo organizuje, ne reaktivira se postojeći događaj; kreira se novi događaj kao novi zapis sa novim životnim ciklusom. Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kroz status Odgođen na održavanju, u skladu sa BM-06.
 
-Nakon što je operacija otkazivanja Događaja (uključujući automatsko otkazivanje otvorenih Održavanja) završena, nije dozvoljena naknadna izmjena sadržajnih podataka događaja ni povezanih održavanja. Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti radi tačnog informisanja javnosti.
+Nakon što je operacija otkazivanja Događaja (uključujući automatsko otkazivanje otvorenih Održavanja) završena, nije dozvoljena naknadna izmjena sadržajnih podataka događaja ni povezanih održavanja. Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti. U V1 taj razlog **ne** prikazuje se automatski na javnom portalu; javnost vidi standardizovano sistemsko obavještenje o otkazivanju (BM-PK-13 / BM-PK-33).
 
 Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja. To pravilo ne isključuje automatsko otkazivanje svih otvorenih Održavanja pri otkazivanju cijelog Događaja (PO-AUTO-01).
 
@@ -507,7 +508,7 @@ Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala odr
 | BM-DG-07 | Događaj može biti sačuvan kao nacrt bez izabrane primarne kategorije. Za slanje događaja na odobrenje mora biti izabrana jedna primarna kategorija. Svaki objavljeni događaj mora imati jednu primarnu kategoriju. |
 | BM-DG-08 | Svaki događaj mora biti povezan sa tačno jednim Organizatorom (`0..1` u smislu privremenog izuzetka). **Privremeni izuzetak:** Objavljen događaj može postojati bez Organizatora ako ga je Urednik direktno objavio po BM-UR-06 / BM-ST-04. **Naknadna dopuna (BM-UR-07 / PO-DG-08 / PO-DG-09):** kada odgovarajući Organizator bude registrovan i Aktivan, Urednik može jednokratno i jednosmjerno povezati taj Objavljeni događaj (`NULL → Aktivan Organizator`). Ovo pravilo ne dozvoljava proizvoljnu kasniju promjenu Organizatora, uklanjanje veze niti prebacivanje na drugog Organizatora. |
 | BM-DG-09 | Status Otkazan predstavlja terminalno stanje događaja u smislu povratka u Objavljen. Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Ako se isti kulturni program kasnije ponovo organizuje, ne reaktivira se postojeći događaj; kreira se novi događaj kao novi zapis sa novim životnim ciklusom. Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kroz status Odgođen na održavanju, u skladu sa BM-06. |
-| BM-DG-10 | Događaj u statusu Otkazan tretira se kao istorijski zapis. Nakon završene operacije otkazivanja (uključujući BM-DG-11) nije dozvoljena naknadna izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja. Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti radi tačnog informisanja javnosti. Automatsko otkazivanje otvorenih Održavanja iz BM-DG-11 dio je same operacije otkazivanja Događaja i ne predstavlja zabranjenu naknadnu izmjenu. |
+| BM-DG-10 | Događaj u statusu Otkazan tretira se kao istorijski zapis. Nakon završene operacije otkazivanja (uključujući BM-DG-11) nije dozvoljena naknadna izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja. Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti. **V1 javni portal:** razlog otkazivanja (`cancellation_reason`) **ne** prikazuje se automatski javnosti; prikazuje se isključivo standardizovano sistemsko obavještenje (BM-PK-33). Javni prikaz teksta razloga zahtijeva zasebnu Product Owner odluku. Automatsko otkazivanje otvorenih Održavanja iz BM-DG-11 dio je same operacije otkazivanja Događaja i ne predstavlja zabranjenu naknadnu izmjenu. Terminalnost statusa Otkazan (BM-DG-09) ostaje neizmijenjena. |
 | BM-DG-11 | Pri prelazu Događaja Objavljen → Otkazan, u okviru iste atomske poslovne operacije otkazivanja, sva Održavanja koja su u tom trenutku u statusu Planiran ili Odgođen automatski prelaze u status Otkazan. Održavanja u statusu Završen ili Otkazan ostaju nepromijenjena. Nakon operacije na Otkazanom Događaju ne smije ostati Planirano niti Odgođeno Održavanje. Ovo nije prelaz Planiran → Završen; to je posljedica otkazivanja roditeljskog Događaja (PO-AUTO-01). |
 
 ## 5. Otvorena pitanja
@@ -991,9 +992,9 @@ Ne uvodi se workflow za predlaganje kategorija ili oznaka, dodatni statusi odobr
 
 > Sljedeće legacy string vrijednosti **nijesu** kanonske V1 kategorije Događaja: Filmski festivali; Likovne manifestacije; Manifestacije u organizaciji Mjesnih zajednica; Manifestacije u organizaciji NVU; Nešto drugo (već zabranjeno BM-KO-07).
 >
-> Semantičko mapiranje (PO, ne tehnička migracija): Koncerti→Koncerti; Predstave→Predstave; Sportski događaji→Sportski događaji; Izložbe→Izložbe; Književne večeri→Književni programi; Filmske projekcije→Filmske projekcije; Radionice→Radionice; Promocije publikacija→Publikacije; Performansi→Performansi; Prezentacije→Prezentacije i predavanja; Paneli o kulturi→Paneli i tribine. Nove kategorije bez legacy ekvivalenta: Dječiji programi; Konferencije; Sajmovi (bez automatskog mapiranja).
+> Semantičko mapiranje (PO, ne tehnička migracija / ne runtime adapter): Koncerti→Koncerti; Predstave→Predstave; Sportski događaji→Sportski događaji; Izložbe→Izložbe; Književne večeri→Književni programi; Filmske projekcije→Filmske projekcije; Radionice→Radionice; Promocije publikacija→Publikacije; Performansi→Performansi; Prezentacije→Prezentacije i predavanja; Paneli o kulturi→Paneli i tribine. Nove kategorije bez legacy ekvivalenta: Dječiji programi; Konferencije; Sajmovi (bez automatskog mapiranja).
 >
-> Postojanje legacy događaja sa nemapiranim vrijednostima **ne briše** te događaje automatski. Tehnički cutover, mapiranje podataka i odluke za nemapirane zapise (uključujući „Nešto drugo“) pripadaju **TS-009**. Automatski fallback nije usvojen.
+> **Faza 6A / javni cutover (PO-EV-01):** legacy `CulturalEvent` zapisi su isključivo testni. **Ne** migrira se legacy sadržaj; **ne** uvodi se dual-read/dual-write; **ne** uvodi se URL/legacy alias mapa kategorija; javni portal koristi isključivo kanonski katalog `CulturalCategory` (BM-PK-32). Semantičko mapiranje iznad ostaje referentno za razumijevanje rename-a, ne kao produkcijski adapter.
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
@@ -1003,11 +1004,11 @@ Ne uvodi se workflow za predlaganje kategorija ili oznaka, dodatni statusi odobr
 - **Organizator** — poslovni entitet; nije operativna uloga nad katalogom; tip Organizatora nije kategorija Događaja.
 - **Manifestacija** — nije kategorija Događaja; Događaji unutar Manifestacije zadržavaju vlastitu kategoriju vrste.
 - **Administrator platforme** — nema redovnu poslovnu ulogu nad katalogom; sistemska administracija.
-- **TS-009 / javni portal** — tehnički cutover legacy string → kanonski katalog.
+- **TS-009 / javni portal** — Faza 6A cutover: kanonski katalog `CulturalCategory` (BM-PK-32); bez migracije legacy sadržaja (PO-EV-01 / BM-KO-11).
 
 ## 6. Otvorena pitanja
 
-Za poglavlje BM-08 trenutno nema otvorenih poslovnih pitanja (tehnički cutover legacy podataka = TS-009).
+Za poglavlje BM-08 trenutno nema otvorenih poslovnih pitanja (javni CAT-CUTOVER = TS-009 Faza 6A).
 
 ---
 
@@ -1181,7 +1182,7 @@ Promjena statusa predstavlja posljedicu dozvoljene poslovne radnje koju izvršav
 
 ### BM-ST-07 — Otkazivanje događaja
 
-> Objavljen događaj može biti otkazan. Otkazivanjem status događaja se mijenja u Otkazan, pri čemu događaj ostaje dostupan radi očuvanja istorijskih podataka i informisanja javnosti i tretira se kao istorijski zapis.
+> Objavljen događaj može biti otkazan. Otkazivanjem status događaja se mijenja u Otkazan, pri čemu događaj ostaje dostupan radi očuvanja istorijskih podataka i informisanja javnosti o otkazivanju i tretira se kao istorijski zapis. U V1 informisanje javnosti o otkazivanju na portalu ostvaruje se standardizovanim sistemskim obavještenjem (BM-PK-33), ne automatskim prikazom razloga otkazivanja.
 >
 > Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje.
 >
@@ -1288,7 +1289,11 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 ### BM-PK-09 — Prikaz održavanja i termina
 
-> Portal Kalendara kulture omogućava pregled svih javno objavljenih održavanja događaja, uključujući termin svakog održavanja (Datum održavanja je obavezan, a vrijeme može biti definisano.). Kada događaj ima više održavanja, portal prikazuje sva održavanja sa njihovim terminima i lokacijama, u skladu sa poslovnim pravilima modula Kalendara kulture.
+> Portal Kalendara kulture omogućava pregled javno relevantnih održavanja događaja, uključujući termin svakog održavanja (Datum održavanja je obavezan, a vrijeme može biti definisano.).
+>
+> Na **Detalju Događaja** portal prikazuje **sva** javno relevantna Održavanja sa njihovim terminima i lokacijama, u skladu sa poslovnim pravilima modula Kalendara kulture.
+>
+> Na **kartici Događaja** (liste / Pretraga) portal ne prikazuje kompletnu listu Održavanja; važi BM-PK-29.
 
 ### BM-PK-10 — Prikaz lokacija
 
@@ -1297,6 +1302,8 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 ### BM-PK-11 — Prikaz kategorija i oznaka
 
 > Portal Kalendara kulture omogućava prikaz primarnih kategorija i oznaka povezanih sa objavljenim događajima. Za objavljenu Manifestaciju portal može prikazati kategorije i oznake samo kao izvedene iz njenih Objavljenih Događaja; one nisu samostalno sačuvan atribut Manifestacije.
+>
+> Nakon cutover-a Faze 6A primarna kategorija na javnom portalu dolazi isključivo iz kanonskog kataloga (BM-PK-32 / BM-08).
 
 ### BM-PK-12 — Prikaz medija
 
@@ -1313,7 +1320,7 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > * Do planiranog termina prikazuje se na aktivnim javnim površinama: početnoj stranici (uključujući kalendar, događaje dana i naredne događaje), na Pretrazi i pregledu, na Detaljima i putem direktnog URL-a.
 > * Ne prikazuje se među Istaknutim događajima. Flag isticanja se ne mijenja — otkazani se samo isključuju iz javnog prikaza Istaknutih.
 > * Nakon isteka planiranog termina događaj zadržava interni status `cancelled`, prestaje da se prikazuje među narednim događajima i prikazuje se u **portalnoj** Arhivi na osnovu datuma, uz javni status **Otkazan**.
-> * Na Detaljima se prikazuje fiksno sistemsko obavještenje da je događaj otkazan; tekst nije uređiv i nije dio opisa događaja. Javni status badge ostaje.
+> * Na Detaljima se prikazuje fiksno sistemsko obavještenje da je događaj otkazan; tekst nije uređiv i nije dio opisa događaja. Javni status badge ostaje. U V1 razlog otkazivanja (`cancellation_reason`) **ne** prikazuje se automatski javnosti (BM-PK-33).
 > * Ne uvode se novi filteri, URL parametri ni search modovi za otkazane.
 > * Interni status `archived` se kroz CR-004B ne otvara javnosti. CR-004B ne dokumentuje ni implementira prelaz `cancelled → archived`.
 >
@@ -1481,6 +1488,50 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > Događaji ostaju vidljivi u Pretrazi i pregledu, kalendaru, statistikama i arhivi bez obzira na pripadnost Manifestaciji.
 >
 > Uklanjanje ili arhiviranje Manifestacije ne briše Događaje (BM-MF-14, BM-MF-15).
+
+### BM-PK-29 — Kartica Događaja sa više Održavanja
+
+> Na kartici Događaja prikazuje se **prvo naredno relevantno Održavanje** (termin i pripadajuća lokacija tog Održavanja).
+>
+> Ako Događaj ima dodatna relevantna Održavanja, kartica prikazuje oznaku **„+ još N termina“**, gdje je N broj dodatnih relevantnih Održavanja.
+>
+> Kartica ne prikazuje kompletnu listu Održavanja. Rješenje se uklapa u postojeći dizajn kartice uz minimalne vizuelne izmjene (BM-PK-16 / IA-01).
+>
+> Na Detalju Događaja prikazuju se sva javno relevantna Održavanja (BM-PK-09).
+
+### BM-PK-30 — Sortiranje Pretrage po narednom Održavanju
+
+> Događaji na stranici „Pretraga i pregled“ sortiraju se **rastuće** prema datumu (i vremenu, kada postoji) **prvog narednog relevantnog Održavanja**.
+>
+> Za Događaj sa više Održavanja: dok postoji naredno relevantno Održavanje, ono određuje poziciju; kada jedno prođe, sljedeće naredno relevantno postaje ključ sortiranja.
+>
+> Ovo je **sistemsko** sortiranje. Ne uvodi se korisnički izbor sortiranja (BM-PK-07 ostaje bez korisničkog sortiranja).
+
+### BM-PK-31 — Odgođeno Održavanje na javnom portalu
+
+> Status **Odgođen** nije isto što i **Otkazan**. Odgođen ostaje status Održavanja, ne Događaja.
+>
+> Na **Detalju Događaja** Odgođeno Održavanje ostaje vidljivo uz jasnu oznaku **„Odgođeno“**. Novi važeći termin prikazuje se kao Planirano Održavanje.
+>
+> Na **kartici Događaja** stari odgođeni termin **ne** prikazuje se kao glavni termin kartice. Kartica prikazuje prvo naredno relevantno **važeće** Održavanje; za dodatna relevantna Održavanja važi BM-PK-29.
+
+### BM-PK-32 — Kanonske kategorije na javnom portalu (CAT-CUTOVER)
+
+> Nakon prelaska Faze 6A javni portal koristi isključivo kanonski katalog `CulturalCategory`.
+>
+> Filter kategorija puni se dinamički iz aktivnog kanonskog kataloga. URL filter koristi kanonski naziv kategorije.
+>
+> `CulturalEvent::CATEGORIES` **nije** izvor kategorija za kanonski javni portal. Ne uvodi se legacy alias mapa niti kompatibilnost sa starim nazivima kategorija. Legacy kategorije se ne migriraju (PO-EV-01 / BM-KO-11).
+>
+> Preduslov cutover-a: svih **14** usvojenih početnih kategorija (BM-KO-09) mora postojati u `cultural_categories`.
+
+### BM-PK-33 — V1 javno obavještenje o otkazivanju bez razloga
+
+> Za V1 ostaje pravilo fiksiranog sistemskog obavještenja o otkazivanju na Detaljima (BM-PK-13).
+>
+> Polje razloga otkazivanja / napomene urednika (`cancellation_reason`) **ne prikazuje se automatski** javnosti u V1.
+>
+> Ako se u budućnosti želi javni prikaz razloga, to mora biti predmet zasebne Product Owner odluke i usklađenja BM/FS. Terminalnost statusa Otkazan (BM-DG-09) ostaje neizmijenjena.
 
 ---
 
