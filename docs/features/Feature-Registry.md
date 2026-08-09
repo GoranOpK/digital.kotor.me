@@ -147,9 +147,9 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 **Usvojene implementacione odluke (Događaj / Održavanje — PO-EV):**
 - **PO-EV-01:** Postojeći podaci Kalendara kulture (`cultural_events`) su isključivo testni/prototipski; nisu referentni produkcijski sadržaj. Bez migracije/backfill-a/dual-write-a/adaptera radi legacy sadržaja. Novi domen Događaj + Održavanje (TS-003/TS-004) implementira se direktno prema BM/FS/TS. Legacy flat model privremen do cutover-a. **Potvrđeno za Fazu 6A** javnog portala (TS-009 v1.0.6 / IR-001 v1.0.5).
 
-**Usvojene product odluke (Javni portal — Faza 6A / TS-009 v1.0.7):**
+**Usvojene product odluke (Javni portal — Faza 6A / TS-009 v1.0.8):**
 - **PO-TS9-08A:** Očuvanje postojećeg izgleda javnog portala; bez redizajna; UI izmjene samo kad neophodne zbog kanonskog modela / usvojenih pravila.
-- **PO-TS9-08B:** Kartica = prvo naredno relevantno Održavanje; „+ još N termina“; detalj = sva javno relevantna Održavanja.
+- **PO-TS9-08B:** Kartica = prvo naredno relevantno Održavanje; „+ još N termina“'; detalj = sva javno relevantna Održavanja.
 - **PO-TS9-08C:** Pretraga sortira rastuće po prvom narednom relevantnom Održavanju (sistemsko; bez korisničkog sortiranja).
 - **PO-TS9-08D:** Odgođeno na detalju sa oznakom; kartica prikazuje naredno važeće Održavanje.
 - **PO-TS9-08E:** CAT-CUTOVER — isključivo `CulturalCategory` (14); bez legacy alias mape; preduslov 14 u bazi.
@@ -157,8 +157,15 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **PO-TS9-08G:** V1 — BR-272 standardno obavještenje; `cancellation_reason` nije javan.
 - **PO-TS9-08H:** Legacy URL smije 404; bez redirect mape; bez slug-a u 6A.
 - **PO-TS9-08I:** Privremeni feature flag `legacy` XOR `canonical`; zatim uklanjanje flag-a i legacy public/CRUD.
-- **PO-TS9-08J:** Minimalni public query SSOT za index/Pretraga/Arhiva/detalj/featured.
+- **PO-TS9-08J:** Minimalni public query SSOT — aktivni `base()` odvojen od archive-only query-ja (PO-6A09-01).
 - **PO-6A11-01:** Kanonski javni status Događaja (multi-OCC): Otkazan prioritet; agregat U toku → Predstoji → Završen; postponed-only / 0 OCC → bez badge-a; BM-PK-34 / BR-285 / TS-009 §7.1.6.
+- **PO-6A09-01:** Aktivni public skup ostaje `published`|`cancelled`; Javna Arhiva = poseban archive-only query; `archived` ne ulazi u `base()`.
+- **PO-6A09-02:** Pri arhiviranju sačuvati izvorni javni status (`published`|`cancelled`); radni naziv `archived_from_status`.
+- **PO-6A09-03:** Direct URL 200 za archive-public Entry; draft/pending → 404.
+- **PO-6A09-04:** Nema badge-a „Arhiviran"; iz cancelled → Otkazan; iz published → Završen.
+- **PO-6A09-05:** Arhiva kartica = posljednje istorijsko Održavanje (ne `nextRelevantOccurrence`).
+- **PO-6A09-06:** Arhiva sort = posljednje istorijsko Održavanje DESC (ne scheduler/`archived_at`).
+- **PO-CR4B-09 (revidiran):** Historijski CR-004B nije implementirao `cancelled → archived`. Lifecycle prelaz **jeste** na snazi (BR-065). Očuvanje Otkazan kroz arhiviranje je **obavezni** ugovor kanonske Javne Arhive (PO-6A09-02/04), ne buduća opciona zavisnost.
 
 **Usvojene poslovne odluke (Mediji):**
 - **TS8-01:** Medij je samostalan poslovni entitet i zajednički platformski resurs bez poslovnog vlasnika.
@@ -195,7 +202,7 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **PO-CR4B-06:** Bez novih filtera, URL parametara ili search moda; otkazani učestvuju u postojećoj pretrazi.
 - **PO-CR4B-07:** Odgođen nije dio CR-004B.
 - **PO-CR4B-08:** Prava otkazivanja = postojeća BR-063 / BM-DG-05 (Moderator Organizatora + Urednik); bez novih pravila prava.
-- **PO-CR4B-09:** CR-004B ne mijenja BR-065 ni BM-DG-04 i ne uvodi javnu dostupnost internog statusa `archived`. Buduća implementacija lifecycle prelaza `cancelled → archived` zahtijeva zasebno rješenje za trajno očuvanje informacije o otkazivanju.
+- **PO-CR4B-09:** Historijski: CR-004B nije mijenjao BR-065/BM-DG-04 niti otvarao interni `archived` javnosti; budući `cancelled → archived` zahtijevao je očuvanje informacije o otkazivanju. **Revidirano (PO-6A09):** lifecycle `cancelled → archived` je na snazi; očuvanje Otkazan kroz arhiviranje je obavezni ugovor Javne Arhive (vidi PO-6A09-02/04).
 - **PO-CR4B-10:** Regresija CR-001…CR-004A (badge, filteri, mjesečni filter, UI baseline). Referenca: TS-009 §7.2.
 
 **Usvojene product / IA odluke (nastavak):**
@@ -258,9 +265,9 @@ Povezana dokumentacija (Mediji):
 
 Povezana dokumentacija (Javni portal):
 
-* Business Model — BM-11 (BM-PK-01–BM-PK-34), BM-AR-02, PATCH-045–PATCH-048, PATCH-051 (CR-004B), PATCH-060–PATCH-061; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E, PO-6A11-01
-* Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-274), PATCH-FS-047–PATCH-FS-049, PATCH-FS-051
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 1.0.7; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A §1.7/§7.3/§9–§12/§18; PO-6A11-01 §7.1.6)
+* Business Model — BM-11 (BM-PK-01–BM-PK-35), BM-AR-02, PATCH-045–PATCH-048, PATCH-051 (CR-004B), PATCH-060–PATCH-062; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E, PO-6A11-01, PO-6A09-01…06
+* Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286), PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060–PATCH-FS-062
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija 1.0.8; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A §1.7/§7.3/§8–§12/§18; PO-6A11-01 §7.1.6; PO-6A09 §8/§11/§12)
 * Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija 1.0.7; Stable)
 * Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Implemented, IS-001 Faza 2 — `month=YYYY-MM`; commit `c5d396f`); CR-003 (Implemented, IS-001 Faza 2 — `q`/`category`/`location`; dokumentacija `fc35132`; implementacija `595045a`; TS-009 v1.0.2; IS-001 v1.0.2); CR-004A (Implemented, IS-001 Faza 3 — javni status badge; PO-CR4A-01…05; dokumentacija `614706c`; implementacija `0f73240`; TS-009 v1.0.4; IS-001 v1.0.5); CR-004B (Planned, IS-001 Faza 3 — javni prikaz otkazanih; PO-CR4B-01…10; TS-009 v1.0.5 §7.2; IS-001 v1.0.6 §9.3.2)
 
@@ -310,7 +317,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.2); TS7-PO-07; Faza 6A CAT-CUTOVER ugovor |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
-| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.7); Faza 6A cutover + PO-6A11-01 |
+| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.8); Faza 6A + PO-6A11-01 + PO-6A09 |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.6) — **V1 implementaciono završen**; TS-010.1–TS-010.8 |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.1) |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.1) — implementacija emit/storage = Roadmap **Faza 8** |
@@ -550,3 +557,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-08 | FT-001 — **TS7-PO-07** usvojena (BM PATCH-059 / FS PATCH-FS-059 / TS-007 v0.1.1 / RG-001 v1.1.4): konačni početni V1 katalog kategorija Događaja (14 naziva, redoslijed); značenja; odbačene legacy vrijednosti; semantičko mapiranje; cutover = TS-009. Katalog CRUD neizmijenjen. Bez izmjene implementacije. |
 | 2026-08-09 | FT-001 — **Faza 6A dokumentacioni PATCH** (BM PATCH-060 / FS PATCH-FS-060 / TS-009 v1.0.6 / IR-001 v1.0.5): PO-TS9-08A–08J; cutover kanonskog javnog portala Događaja; Faza 6A/6B; PO-EV-01 potvrđen; TM-JP matrica. Bez izmjene implementacije. |
 | 2026-08-09 | FT-001 — **PO-6A11-01** (BM PATCH-061 / FS PATCH-FS-061 / TS-009 v1.0.7): kanonski multi-OCC javni status Događaja (BM-PK-34 / BR-285 / §7.1.6). |
+| 2026-08-09 | FT-001 — **PO-6A09-01…06** (BM PATCH-062 / FS PATCH-FS-062 / TS-009 v1.0.8): Javna Arhiva vs interni Arhiviran (BM-PK-35 / BR-286); PO-CR4B-09 revidiran; bez izmjene implementacije. |

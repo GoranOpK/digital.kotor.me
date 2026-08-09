@@ -721,6 +721,20 @@ class CulturalCalendarController extends Controller
 
     public function archive(Request $request)
     {
+        if (CulturalPublicReadSource::usesCanonical()) {
+            $events = app(CulturalPublicEventQuery::class)
+                ->orderedByLastHistoricalOccurrence()
+                ->with([
+                    'category',
+                    'coverMedia',
+                    'occurrences.location',
+                ])
+                ->paginate(12)
+                ->withQueryString();
+
+            return view('cultural-calendar.archive', compact('events'));
+        }
+
         $today = Carbon::today();
         $events = CulturalEvent::query()
             ->publiclyVisible()

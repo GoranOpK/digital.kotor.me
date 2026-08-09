@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.7
+**Verzija:** 1.0.8
 **Datum:** 2026-08-09
 
 ---
@@ -28,6 +28,7 @@
 | 1.0.5 | 2026-08-06 | CR-004B / IS-001 Faza 3: javni prikaz otkazanih; portalna Arhiva ≠ interni `archived`; status ostaje `cancelled`; javni skupovi `published`\|`cancelled`; §7.2; §3.2/§5.3 statistike; PO-CR4B-01…10. Bez migracija. Bez izmjene BR-065 / BM-DG-04. Bez javne dostupnosti `archived`. Bez izmjene implementacije. |
 | 1.0.6 | 2026-08-09 | **Faza 6A dokumentacioni PATCH:** cutover `CulturalEvent` → `CulturalEventEntry`+`CulturalOccurrence`; PO-EV-01; očuvanje UI; kartica + sortiranje + Odgođen; CAT-CUTOVER; Faza 6A/6B; V1 bez javnog `cancellation_reason`; legacy URL 404; privremeni feature flag; public query SSOT; TM-JP test matrica. Usklađeno sa BM PATCH-060 / FS PATCH-FS-060. Bez izmjene implementacije. |
 | 1.0.7 | 2026-08-09 | **PO-6A11-01:** kanonski javni status Događaja (multi-OCC) — §7.1.6; razdvajanje legacy flat (§7.1.3) i canonical agregata; usklađeno sa BM-PK-34 / BR-285. Bez izmjene lifecycle / arhive. |
+| 1.0.8 | 2026-08-09 | **PO-6A09-01…06:** Javna Arhiva vs interni Arhiviran — §8 / §11 / §12 / §7.2 usklađeni; archive-only query; očuvanje izvornog statusa; istorijski badge Otkazan/Završen; TM-JP-11/04. Usklađeno sa BM PATCH-062 / FS PATCH-FS-062 / BM-PK-35 / BR-286. Bez izmjene implementacije. |
 
 ---
 
@@ -839,9 +840,9 @@ Granica „U toku“ kompatibilna je sa `isExpiredAt` (istek strogo nakon `expir
 |--------|------------|
 | CR | CR-004B (IS-001 Faza 3) |
 | Odluke | PO-CR4B-01 … PO-CR4B-10 |
-| BM | BM-PK-13 (prikaz); BM-PK-15 (Istaknuti); BM-DG-05 (prava — bez izmjene); BM-DG-04 (lifecycle — bez izmjene) |
-| FS | BR-270–BR-274; BR-001, BR-002, BR-004, BR-114, BR-116 (usklađeno); BR-063 / BR-065 (bez izmjene) |
-| Status | Dokumentaciono usvojeno; implementacija Planned |
+| BM | BM-PK-13 / BM-PK-35 (prikaz); BM-PK-15 (Istaknuti); BM-DG-05 (prava — bez izmjene); BM-DG-04 (lifecycle arhiviranje — na snazi) |
+| FS | BR-270–BR-274; BR-286; BR-001, BR-002, BR-004, BR-114, BR-116 (usklađeno); BR-063 / BR-065 (lifecycle na snazi) |
+| Status | Dokumentaciono usvojeno; kanonska Javna Arhiva = PO-6A09 / BR-286 (implementacija Planned u 6A-09) |
 
 ### 7.2.0 Planirani termin (flat model)
 
@@ -857,31 +858,33 @@ CR-004B ne uvodi minutnu preciznost za ulazak u portalnu Arhivu i ne uvodi model
 
 ### 7.2.1 Javni skupovi dostupnosti
 
-**Portalna Arhiva ≠ interni status `archived`.**
+**Historijski (CR-004B):** portalna Arhiva nije sinonim za interni `archived`.
 
 #### A) Aktivne javne površine
 
-Za početnu (kalendar, događaji dana, naredni), Pretragu i pregled, Detalje i direktni URL — uz postojeće vremenske uslove konkretne površine — javno dostupni događaji su:
+Za početnu (kalendar, događaji dana, naredni), Pretragu i pregled, aktivni Detalji i direktni URL aktivnog skupa — uz postojeće vremenske uslove konkretne površine — javno dostupni događaji su:
 
 * `published`, **ili**
 * `cancelled` (dok planirani termin **nije** prošao / dok događaj ulazi u aktivni vremenski skup te površine).
 
 Istaknuti isključuju `cancelled` (PO-CR4B-03 / §7.2.3).
 
-#### B) Portalna Arhiva
+Aktivne površine **ne** čitaju interni `archived` (PO-6A09-01).
 
-Portalna Arhiva uključuje:
+#### B) Portalna / Javna Arhiva (CR-004B + PO-6A09)
 
-* `published` + prošao planirani termin, **ili**
-* `cancelled` + prošao planirani termin.
+Dok je Događaj još u `published` | `cancelled` i prošao je planirani termin, Arhiva ga čita kao:
 
-Interni status `archived` se **ne otvara** javnosti kroz CR-004B.
+* `published` + prošao termin, **ili**
+* `cancelled` + prošao termin.
 
-Za otkazani događaj (`cancelled`): interni status **ostaje** `cancelled` i prije i nakon ulaska u portalnu Arhivu. CR-004B **ne** dokumentuje ni implementira prelaz `cancelled → archived`. BR-065 / BM-DG-04 ostaju neizmijenjeni (buduća zavisnost).
+**Aktivni kanonski ugovor (PO-6A09-01…06 / BM-PK-35 / BR-286 / §8):** Javna Arhiva je **poseban** archive-only query, odvojen od aktivnog `base()`. Može uključiti i `archived` zapise koji su ranije bili javni, uz **sačuvan izvorni status** (`published` ili `cancelled`). Nacrt / Na odobrenju nikada. Samo `status=archived` nije dokaz da je zapis ikada bio javni.
 
-Javni badge za `cancelled` je uvijek **Otkazan** (CR-004A / §7.1).
+Za otkazani događaj: dok je interni status `cancelled`, ostaje `cancelled` i prije i nakon ulaska u Arhivu. Lifecycle **jeste** `cancelled → archived` (BR-065 / BM-DG-04). Nakon arhiviranja javni badge **Otkazan** ostaje obavezan putem sačuvanog izvornog statusa (PO-6A09-02 / PO-6A09-04).
 
-Bez migracija, novih modela i novih tabela.
+Javni badge za `cancelled` (i arhiviran-iz-cancelled) je **Otkazan** (CR-004A / §7.1 / §8).
+
+Bez novih filtera / URL parametara u CR-004B.
 
 ### 7.2.2 Površine prikaza do planiranog termina (PO-CR4B-02)
 
@@ -918,25 +921,25 @@ Otkazani učestvuju u postojećoj Pretrazi i pregledu. Bez novih filtera, URL pa
 
 Nakon isteka planiranog termina otkazani događaj:
 
-* **zadržava** interni status `cancelled`;
+* dok je još `cancelled`, **zadržava** interni status `cancelled`;
 * prestaje da se prikazuje među narednim događajima;
-* prikazuje se u **portalnoj** Arhivi na osnovu datuma (§7.2.0 / §7.2.1 B);
+* prikazuje se u **portalnoj / Javnoj Arhivi** na osnovu datuma (§7.2.0 / §7.2.1 B / §8);
 * u javnom prikazu ostaje označen statusom **Otkazan**.
 
-Portalna Arhiva je javna vremenska površina i **ne** podrazumijeva promjenu internog statusa u `archived`. CR-004B ne implementira `cancelled → archived`. BR-065 / BM-DG-04 se ne mijenjaju.
+**Historijski (CR-004B):** portalna Arhiva nije podrazumijevala promjenu u `archived`; CR-004B nije implementirao `cancelled → archived`.
+
+**Aktivni ugovor:** BR-065 radi `cancelled → archived`. Očuvanje javnog ishoda **Otkazan** kroz arhiviranje je obavezno (PO-CR4B-09 revidiran / PO-6A09-02 / PO-6A09-04 / BR-286). Detalj archive-only query-ja: §8 / §11 / §12.
 
 ### 7.2.7 Van obuhvata CR-004B
 
 * Odgođen;
 * Faza 4 / Faza 5;
-* novi modeli / migracije / tabele;
-* izmjena BR-065 / BM-DG-04;
-* javna dostupnost internog statusa `archived`;
-* prelaz `cancelled → archived`;
 * izmjena prava otkazivanja (BR-063 / BM-DG-05);
 * izmjena flaga Istaknut;
 * novi filteri / URL parametri / search modovi;
 * javni prikaz `cancellation_reason` (V1 zabranjen — §7.2.4 / BM-PK-33).
+
+**Napomena:** globalno otvaranje svih `archived` zapisa na aktivnim površinama **nije** dio CR-004B ni PO-6A09. Kanonska Javna Arhiva (poseban query + očuvanje izvornog statusa) uređuje **§8 / PO-6A09**.
 
 ---
 
@@ -976,22 +979,27 @@ Prikazuju se **sva** javno relevantna Održavanja (BM-PK-09 / BR-110).
 
 ---
 
-# 8. Arhiva događaja (baseline)
+# 8. Arhiva događaja (baseline + kanonski ugovor PO-6A09)
 
 > Stranica „Arhiva događaja“ pokrivena je usvojenim BM/FS. Pravila **kada** Događaj prelazi u interni status Arhiviran ostaju u BM-04 / TS-003 (BM-DG-04); TS-009 definiše portalni prikaz. **Javni status badge:** §7.1. **Otkazani u portalnoj Arhivi:** §7.2 / CR-004B (javni status ostaje **Otkazan**).
 
 | Referenca | Sadržaj |
 |-----------|---------|
-| BM | BM-PK-13 (takođe BM-DG-04 za interno arhiviranje entiteta — bez izmjene u CR-004B) |
-| FS | BR-114, BR-274 (takođe BR-065 za sistemsko arhiviranje — bez izmjene) |
-| PO (portal) | PO-CR4A-01…05 (badge); PO-CR4B-01…10 (javni prikaz otkazanih) |
+| BM | BM-PK-13; **BM-PK-35** (PO-6A09-01…06); BM-DG-04; BM-ST-08 |
+| FS | BR-114; BR-274; **BR-286**; BR-065 / BR-066 |
+| PO (portal) | PO-CR4A-01…05; PO-CR4B-01…10 (historijski); **PO-6A09-01…06** |
 
 Portalni obuhvat (referenca):
 
-* prikaz otkazanih i arhiviranih događaja u skladu sa BM-PK-13 / BR-114 / BR-270–BR-274;
-* status mora biti jasno prikazan korisniku putem javnog status badge-a (§7.1): **Otkazan** za otkazane događaje (javni prikaz), bez obzira na interni lifecycle; za ostale javno dostupne događaje izračunata stanja Predstoji / U toku / Završen;
-* nakon isteka planiranog termina otkazani ulaze u portalnu Arhivu (CR-004B / §7.2.6);
-* navigacija ka Detaljima događaja u skladu sa BM-PK-05 / BR-106; `show` dozvoljava `cancelled`.
+* **Princip (PO-6A09):** Arhiviran = interni lifecycle; Javna Arhiva = istorijski pogled (BM-PK-35 / BR-286) — nije lista svih `archived`.
+* Aktivne površine: samo `published`|`cancelled` — `archived` se **ne** dodaje u `base()` / `PUBLICLY_VISIBLE_STATUSES`.
+* Javna Arhiva: **poseban** archive-only query; može uključiti `published`|`cancelled` (prošli) i `archived` sa sačuvanim izvornim statusom ∈ {published, cancelled}.
+* Ulazak u Javnu Arhivu zahtijeva **i** dokazano prethodno javno stanje **i** istorijski kriterijum Održavanja; samo `archived_from_status` nije dovoljan.
+* Očuvanje izvornog statusa pri arhiviranju (radni naziv: `archived_from_status`); zabranjen SSOT: `cancellation_reason`, OCC status, audit parsing.
+* Javni badge: nema „Arhiviran"; iz cancelled → **Otkazan**; iz published → **Završen**.
+* Direct URL: 200 za archive-public Entry; draft/pending/nejavni → 404; bez globalnog `archived` u `base()`.
+* Kartica: posljednje istorijsko Održavanje (ne `nextRelevantOccurrence`); sort DESC po tom Održavanju (ne `archived_at` / scheduler).
+* Nacrt / Na odobrenju nikada ne ulaze.
 
 ---
 # 9. Cutover kanonskog modela (Faza 6A)
@@ -1084,15 +1092,24 @@ Ovaj dokument **ne** implementira navedeno — samo propisuje redoslijed.
 
 Minimalni kanonski public query ugovor (bez velikog Repository refactora; preferirati Eloquent / postojeće obrasce):
 
-Površine koje **moraju** dijeliti ista pravila javne vidljivosti:
+### 11.1 Aktivni public query (`base()`)
+
+Površine koje **moraju** dijeliti ista pravila **aktivne** javne vidljivosti:
 
 * `index` (početna: liste, kalendar, statistike);
 * Pretraga i pregled;
-* Arhiva;
-* detalj (`show`);
-* featured (Istaknuti).
+* featured (Istaknuti);
+* aktivni dio detalja (`show` za aktivni skup).
 
-Ne smiju međusobno različito tumačiti javnu vidljivost statusa, skup `published|cancelled`, isključenje draft/pending/archived, niti pravila Istaknutih.
+Ne smiju međusobno različito tumačiti aktivni skup `published|cancelled`, isključenje draft/pending, niti pravila Istaknutih.
+
+**`archived` se ne dodaje u aktivni `base()`** (PO-6A09-01).
+
+### 11.2 Archive-only query (PO-6A09-01)
+
+**Javna Arhiva** koristi **poseban** ugovor (npr. `CulturalPublicEventQuery::archive()`), potpuno odvojen od `base()`.
+
+`show` za istorijski dozvoljen Entry koristi archive-public skup (ili uniju aktivni ∪ archive-public), **bez** proširenja globalnog `base()`.
 
 Tehnički oblik (scope / query object / shared builder) bira se u implementaciji uz poštovanje ovog ugovora.
 
@@ -1100,21 +1117,23 @@ Tehnički oblik (scope / query object / shared builder) bira se u implementaciji
 
 # 12. Javna vidljivost statusa (kanonski)
 
-Usklađeno sa BR-270–BR-274 / BM-PK-13 / CR-004A–B; operacionalizacija na kanonskom modelu:
+Usklađeno sa BR-270–BR-274 / BR-286 / BM-PK-13 / BM-PK-35 / CR-004A–B / PO-6A09; operacionalizacija na kanonskom modelu:
 
-| Status Događaja | Javna dostupnost |
-|-----------------|------------------|
-| Objavljen (`published`) | Da — aktivne površine / Arhiva prema vremenskim pravilima |
-| Otkazan (`cancelled`) | Da — po BR-270–BR-274; badge Otkazan; BR-272 obavještenje; bez `cancellation_reason` u V1 |
-| Nacrt | **Ne** — 404 / nije u listama |
-| Na odobrenju | **Ne** — 404 / nije u listama |
-| Arhiviran (`archived`) | **Ne** kao interni status otvoren javnosti (portalna Arhiva ≠ `archived`) |
+| Status Događaja | Aktivne površine (`base()`) | Javna Arhiva (archive-only) | Detalj URL |
+|-----------------|-----------------------------|-----------------------------|------------|
+| Objavljen (`published`) | Da — prema vremenskim pravilima | Da — ako je istorijski/prošao | 200 ako u aktivnom ili archive-public skupu |
+| Otkazan (`cancelled`) | Da — po BR-270–BR-274; badge Otkazan; bez `cancellation_reason` u V1 | Da — ako je prošao; badge Otkazan | 200 ako u dozvoljenom skupu |
+| Arhiviran (`archived`) | **Ne** | Da — **samo** ako ima sačuvan izvorni status (`published`\|`cancelled`) **i** istorijski OCC kriterijum; badge Otkazan ili Završen | 200 samo ako archive-public; inače 404 |
+| Nacrt | **Ne** | **Ne** | 404 |
+| Na odobrenju | **Ne** | **Ne** | 404 |
 
-Kanonski public query **ne smije** izložiti Nacrt, Na odobrenju ni Arhiviran.
+Kanonski aktivni public query **ne smije** izložiti Nacrt, Na odobrenju ni Arhiviran.
 
-**Istaknuti:** samo Objavljen + aktuelan; isključuju Otkazan (BR-271).
+Samo `status=archived` **nije** dovoljan dokaz da je zapis ikada bio javni — archive-only mora zahtijevati sačuvan izvorni status (ili ekvivalentni pouzdani SSOT). Samo `archived_from_status` takođe **nije** dovoljan bez istorijskog Održavanja.
 
-Odnos prema Održavanjima: kartica/sortiranje §7.3; detalj sva javno relevantna Održavanja.
+**Istaknuti:** samo Objavljen + aktuelan; isključuju Otkazan (BR-271); ne čitaju `archived`.
+
+Odnos prema Održavanjima: aktivna kartica/sort §7.3; Arhiva kartica/sort §8; detalj sva javno relevantna Održavanja.
 
 ---
 
@@ -1219,14 +1238,16 @@ Konvencija: `TM-JP-*` (Javni Portal), u skladu sa `TM-*` iz RG-001 / TS-010.8. *
 | TM-JP-01 | Vidljivost Objavljen | Objavljen + Planirano Održavanje | U listama / detalj 200 | Pozitivan | §12; BR-270 |
 | TM-JP-02 | Leakage Nacrt | Nacrt | Nije u listama; detalj 404 | Negativan | §12 |
 | TM-JP-03 | Leakage Na odobrenju | Na odobrenju | Nije u listama; detalj 404 | Negativan | §12 |
-| TM-JP-04 | Leakage Arhiviran | Arhiviran | Nije javno kao `archived` | Negativan | §12; BR-270 |
+| TM-JP-04 | Leakage Arhiviran na aktivne | `archived` Entry | Nije na naslovnoj / Pretrazi / featured / upcoming / aktivnim counts | Negativan | §11.1; §12; PO-6A09-01 |
 | TM-JP-05 | Kartica 1 Održavanje | 1 Planirano | Termin kartice = to Održavanje; bez „+ još N“ | Pozitivan | §7.3.2; BR-280 |
 | TM-JP-06 | Kartica više Održavanja | ≥2 Planirana naredna | Glavni = prvo naredno; „+ još N“ | Pozitivan | §7.3.2; BR-280 |
 | TM-JP-07 | Sortiranje Pretrage | Više Događaja | Rastuće po narednom relevantnom Održavanju | Pozitivan | §3.4; BR-281 |
 | TM-JP-08 | Odgođen detalj | Odgođeno + novo Planirano | Detalj: „Odgođeno“ + Planirano | Pozitivan | §7.3.4; BR-282 |
 | TM-JP-09 | Odgođen kartica | Isto | Kartica ≠ stari odgođeni kao glavni | Pozitivan | §7.3.4; BR-282 |
 | TM-JP-10 | Otkazan | Objavljen→Otkazan | Badge Otkazan; BR-272 tekst; bez `cancellation_reason` | Pozitivan | §7.2; BR-272; BR-284 |
-| TM-JP-11 | Portalna Arhiva | Prošao termin published/cancelled | U Arhivi; cancelled badge Otkazan | Pozitivan | §8; BR-274 |
+| TM-JP-11 | Javna Arhiva | Prošao termin published/cancelled; archived-from-published/cancelled | U Arhivi; badge Otkazan ili Završen; kartica = posljednje istorijsko OCC; sort DESC | Pozitivan | §8; BR-274; BR-286 |
+| TM-JP-11a | Archive detail | Archive-public Entry | Detalj 200 | Pozitivan | §8; PO-6A09-03 |
+| TM-JP-11b | Non-public archived | `archived` bez izvornog javnog statusa / nikad nije bio javni | Nije u Arhivi; detalj 404 | Negativan | §8; §12 |
 | TM-JP-12 | Featured | Featured + cancelled | Cancelled nije u Istaknutim | Pozitivan | §5.2; BR-271 |
 | TM-JP-13 | Kategorije | 14 u `cultural_categories` | Filter iz `CulturalCategory`; URL kanonski naziv | Pozitivan | §9.4; BR-283 |
 | TM-JP-14 | Detalj sva Održavanja | Više Održavanja | Sva javno relevantna na detalju | Pozitivan | §7.3.3; BR-110 |

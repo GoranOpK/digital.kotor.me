@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Događaj  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.8
+**Verzija:** 0.1.9
 **Datum:** 2026-08-09
 
 ---
@@ -25,6 +25,7 @@
 | 0.1.6 | 2026-08-08 | **PO-DG-08 / PO-DG-09** (BM PATCH-056 / FS PATCH-FS-056): §4.11 BR-052 — samo Objavljen + bez Org; jednosmjerno NULL → Aktivan Org; konkurentnost; matrica §5.1 napomena. Bez izmjene implementacije. |
 | 0.1.7 | 2026-08-08 | **PO-DG-10** (BM PATCH-057 / FS PATCH-FS-057): pojednostavljeni V1 prvi Event review — Na odobrenju zaključan; bez povlačenja / Počni pregled / Urednik edit; §4.2–§4.5 usklađeni. Proposal tok neizmijenjen. Bez izmjene implementacije. |
 | 0.1.8 | 2026-08-09 | **Faza 6A / PO-TS9-08G:** §4.9 tačka 8 usklađena — V1 javni portal ne prikazuje automatski `cancellation_reason` (BR-272 / BR-284). Bez izmjene implementacije. |
+| 0.1.9 | 2026-08-09 | **PO-6A09-02:** §4.10 tačka 8 — očuvanje izvornog javnog statusa pri arhiviranju (BM-PK-35 / BR-286). Bez izmjene implementacije. |
 
 Napomena:
 
@@ -531,6 +532,8 @@ flowchart TD
 5. Bez novog statusa.
 6. Za događaj u statusu Otkazan ovo je jedini usvojeni izlaz iz terminalnog stanja (nema povratka u Objavljen).
 7. Nakon otkazivanja Događaja (PO-AUTO-01) otvorena Održavanja su već Otkazana; Sistem ne koristi Planiran → Završen da bi zatvorio Održavanja Otkazanog Događaja.
+8. **Očuvanje izvornog javnog statusa (PO-6A09-02 / BM-PK-35 / BR-286):** Pri prelazu u Arhiviran Sistem mora pouzdano sačuvati da li je ulaz bio Objavljen ili Otkazan (radni naziv polja: `archived_from_status`). Interni status Arhiviran nije javni badge. Javni istorijski ishod: iz Otkazan → **Otkazan**; iz Objavljen → **Završen**. Detalj portalnog ugovora: TS-009 §8.
+
 ## 4.11 Naknadno povezivanje sa Organizatorom
 
 Posebna domenska operacija BR-052 (BM-UR-07, BM-DG-08, PO-DG-08, PO-DG-09). Nije opšte uređivanje Objavljenog sadržaja i ne otvara opšti update zaključanog Objavljenog događaja.

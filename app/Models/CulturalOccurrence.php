@@ -214,6 +214,23 @@ class CulturalOccurrence extends Model
     }
 
     /**
+     * Deterministički trenutak za sort istorijskih Održavanja (6A-09 / PO-6A09-05).
+     * finished → expiresAt(); cancelled → stvarni datum/vrijeme_od (all-day = početak dana).
+     */
+    public function historicalSortAt(): ?CarbonInterface
+    {
+        if ($this->status === self::STATUS_FINISHED) {
+            return $this->expiresAt();
+        }
+
+        if ($this->status === self::STATUS_CANCELLED) {
+            return $this->startsAt();
+        }
+
+        return null;
+    }
+
+    /**
      * Da li je termin istekao u datom trenutku (strogo nakon expiresAt).
      */
     public function isExpiredAt(CarbonInterface $now): bool

@@ -104,26 +104,49 @@
     @else
         <div class="kk-archive-grid">
             @foreach($events as $event)
+                @php
+                    $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
+                    if ($isCanonicalEntry) {
+                        $cardOcc = $event->lastHistoricalOccurrence();
+                        $cardDatumOd = $cardOcc?->datum;
+                        $cardDatumDo = null;
+                        $cardVrijeme = $cardOcc?->vrijeme_od;
+                        $cardLokacija = $cardOcc?->publicLocationDisplayName();
+                        $cardKategorija = $event->publicCategoryName();
+                    } else {
+                        $cardDatumOd = $event->datum_od;
+                        $cardDatumDo = $event->datum_do;
+                        $cardVrijeme = $event->vrijeme;
+                        $cardLokacija = $event->lokacija;
+                        $cardKategorija = $event->kategorija;
+                    }
+                    $cardHref = route('cultural-calendar.show', [
+                        'event' => $event,
+                        'back' => request()->getRequestUri(),
+                    ]);
+                @endphp
                 <article class="kk-archive-card">
-                    <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" class="kk-archive-card-link">
+                    <a href="{{ $cardHref }}" class="kk-archive-card-link">
                         <div class="kk-archive-photo kk-public-status-photo">
                             <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}">
                             @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'card'])
                         </div>
                         <div class="kk-archive-body">
                             <div class="kk-archive-meta">
-                                {{ optional($event->datum_od)->format('d.m.Y') }}
-                                @if($event->datum_do)
-                                    - {{ optional($event->datum_do)->format('d.m.Y') }}
+                                {{ optional($cardDatumOd)->format('d.m.Y') }}
+                                @if($cardDatumDo)
+                                    - {{ optional($cardDatumDo)->format('d.m.Y') }}
                                 @endif
-                                @if($event->vrijeme)
-                                    • {{ substr((string)$event->vrijeme, 0, 5) }}
+                                @if($cardVrijeme)
+                                    • {{ substr((string)$cardVrijeme, 0, 5) }}
                                 @endif
                             </div>
                             <h3 class="kk-archive-title">{{ $event->naslov }}</h3>
-                            <div class="kk-archive-category">{{ $event->kategorija }}</div>
-                            @if($event->lokacija)
-                                <div class="kk-archive-location">{{ $event->lokacija }}</div>
+                            @if($cardKategorija)
+                                <div class="kk-archive-category">{{ $cardKategorija }}</div>
+                            @endif
+                            @if($cardLokacija)
+                                <div class="kk-archive-location">{{ $cardLokacija }}</div>
                             @endif
                             @if($event->opis)
                                 <p class="kk-archive-desc">{{ \Illuminate\Support\Str::limit($event->opis, 120) }}</p>

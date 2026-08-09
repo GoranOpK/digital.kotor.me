@@ -118,7 +118,10 @@
             <div class="kk-show-body">
                 @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'detail'])
 
-                @if($event->status === 'cancelled')
+                @if($event->status === 'cancelled'
+                    || ($isCanonicalEntry
+                        && $event->status === \App\Models\CulturalEventEntry::STATUS_ARCHIVED
+                        && $event->archived_from_status === \App\Models\CulturalEventEntry::STATUS_CANCELLED))
                     <p class="kk-show-cancelled-notice" role="status">
                         Ovaj događaj je otkazan i neće biti održan u planiranom terminu.
                     </p>

@@ -75,6 +75,7 @@
 | PATCH-059 | 2026-08-08 | **TS7-PO-07:** konačni početni V1 katalog kategorija Događaja (14 naziva, usvojeni redoslijed); značenja; kategorija ≠ Manifestacija; kategorija ≠ tip Organizatora; odbačene legacy vrijednosti; semantičko mapiranje legacy→kanonski; tehnički cutover ostaje TS-009. Dodati BM-KO-09–BM-KO-11; usklađen BM-GL-14. Bez izmjene implementacije. |
 | PATCH-060 | 2026-08-09 | **Faza 6A (javni portal Događaja) — usvojene PO odluke:** potvrda PO-EV-01 (bez migracije/dual-read/dual-write legacy `CulturalEvent`); očuvanje postojećeg izgleda (IA-01); kartica = prvo naredno relevantno Održavanje + „+ još N termina“; sistemsko sortiranje Pretrage; Odgođen na detalju vs kartici; CAT-CUTOVER na `CulturalCategory`; Faza 6A ≠ 6B (Manifestacije); V1 bez javnog `cancellation_reason` (BR-272); legacy URL smije 404. Usklađeni BM-PK-09, BM-PK-11, BM-PK-13, BM-DG-10, BM-UR-11, BM-ST-07, BM-KO-11; dodati BM-PK-29–BM-PK-33. Bez izmjene implementacije. |
 | PATCH-061 | 2026-08-09 | **PO-6A11-01 — kanonski javni status Događaja (multi-OCC):** apsolutni prioritet Otkazan; za Objavljen agregat U toku → Predstoji → Završen; postponed-only i 0 Održavanja → bez vremenskog statusa; vremenski istek Planiranog (ne samo status Završen); Odgođen nije badge Događaja. Dodat BM-PK-34; usklađen BM-PK-13. Bez izmjene lifecycle / arhive. |
+| PATCH-062 | 2026-08-09 | **PO-6A09-01…06 — Javna Arhiva vs interni Arhiviran:** Arhiviran = interni lifecycle; Javna Arhiva = odvojeni istorijski pogled; aktivni public skup ostaje published\|cancelled; archive-only query; očuvanje statusa prije arhiviranja (published/cancelled); istorijski badge Otkazan/Završen; kartica = posljednje istorijsko OCC; sort DESC. Dodat BM-PK-35; usklađeni BM-PK-13, BM-ST-08, BM-DG-04. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -503,7 +504,7 @@ Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala odr
 | BM-DG-01 | Događaj može biti kreiran bez definisanog održavanja isključivo dok se nalazi u statusu Nacrt. Za slanje događaja na odobrenje mora biti definisano najmanje jedno održavanje. Objavljeni događaj uvijek mora imati najmanje jedno održavanje. |
 | BM-DG-02 | Događaj može biti samostalan ili biti dio jedne manifestacije. Pripadnost manifestaciji nije obavezna. Detaljna pravila definišu se u BM-05 Manifestacija. |
 | BM-DG-03 | Lokacija nije svojstvo događaja već svojstvo održavanja događaja. Svako održavanje može imati svoju lokaciju. Detaljna pravila definišu se u BM-07 Lokacija. |
-| BM-DG-04 | Nakon završetka svih održavanja sistem automatski arhivira događaj. Automatsko arhiviranje primjenjuje se na događaj u statusu Objavljen i na događaj u statusu Otkazan. Arhiviranje se ne izvršava ručno. Detaljna pravila prikaza arhive definišu se u BM-11 Portal Kalendara kulture. |
+| BM-DG-04 | Nakon završetka svih održavanja sistem automatski arhivira događaj. Automatsko arhiviranje primjenjuje se na događaj u statusu Objavljen i na događaj u statusu Otkazan. Arhiviranje se ne izvršava ručno. Pri prelazu u Arhiviran Sistem mora pouzdano sačuvati iz kojeg relevantnog javnog statusa (Objavljen ili Otkazan) je Događaj arhiviran, radi istorijskog javnog prikaza (BM-PK-35 / PO-6A09-02). Detaljna pravila prikaza Javne Arhive definišu se u BM-11 Portal Kalendara kulture (BM-PK-13 / BM-PK-35). |
 | BM-DG-05 | Događaj može biti otkazan. Otkazani događaj ostaje evidentiran u sistemu i dobija status „Otkazan“. Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više nema pravo otkazivanja događaja tog Organizatora; otkazivanje događaja deaktiviranog Organizatora izvršava isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj. Pri otkazivanju Događaja (Objavljen → Otkazan) primjenjuje se BM-DG-11. Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja; to ne isključuje BM-DG-11. Detaljna pravila za održavanja definišu se u BM-06 Održavanje događaja. |
 | BM-DG-06 | Događaj pripada jednoj primarnoj kategoriji. Dodatna klasifikacija događaja može se vršiti korišćenjem oznaka. Oznake nisu isto što i tagovi medija (BM-09). Detaljna pravila o kategorijama i oznakama definišu se u BM-08 Kategorije i oznake. |
 | BM-DG-07 | Događaj može biti sačuvan kao nacrt bez izabrane primarne kategorije. Za slanje događaja na odobrenje mora biti izabrana jedna primarna kategorija. Svaki objavljeni događaj mora imati jednu primarnu kategoriju. |
@@ -1206,6 +1207,8 @@ Promjena statusa predstavlja posljedicu dozvoljene poslovne radnje koju izvršav
 > Automatsko arhiviranje primjenjuje se na događaj u statusu Objavljen i na događaj u statusu Otkazan. Otkazani događaj nakon što su otvorena Održavanja zatvorena prema BM-DG-11 (i eventualno ostala Održavanja već u Završen/Otkazan) prelazi u status Arhiviran kada je predikat ispunjen.
 >
 > Arhiviran događaj ostaje dostupan radi očuvanja istorijskih podataka.
+>
+> **Očuvanje izvornog javnog statusa (PO-6A09-02):** Pri prelazu u Arhiviran Sistem mora pouzdano sačuvati da li je Događaj arhiviran iz statusa Objavljen ili Otkazan. Interni status Arhiviran sam po sebi nije javni badge. Javni istorijski ishod uređuje BM-PK-35.
 
 ### BM-ST-09 — Promjena statusa
 
@@ -1312,24 +1315,24 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 ### BM-PK-13 — Prikaz otkazanih i arhiviranih događaja
 
-> Portal Kalendara kulture omogućava prikaz otkazanih i arhiviranih događaja u skladu sa poslovnim pravilima modula Kalendara kulture.
+> Portal Kalendara kulture omogućava prikaz otkazanih i istorijskih događaja u skladu sa poslovnim pravilima modula Kalendara kulture.
 >
-> **Javni prikaz otkazanih (CR-004B / PO-CR4B-01…10):**
+> **Princip (PO-6A09-01):** **Arhiviran** je interni završni lifecycle status. **Javna Arhiva** je istorijski pogled na ranije javne Događaje, a ne lista svih zapisa čiji je interni status Arhiviran.
 >
-> * Otkazani događaj ostaje javno dostupan. Interni status ostaje `cancelled` i prije i nakon planiranog termina.
-> * **Portalna Arhiva ≠ interni status `archived`.**
-> * Do planiranog termina prikazuje se na aktivnim javnim površinama: početnoj stranici (uključujući kalendar, događaje dana i naredne događaje), na Pretrazi i pregledu, na Detaljima i putem direktnog URL-a.
+> **Javni prikaz otkazanih (CR-004B / PO-CR4B-01…10; usklađenje PO-6A09):**
+>
+> * Otkazani događaj ostaje javno dostupan dok je u statusu Otkazan. Do planiranog termina prikazuje se na aktivnim javnim površinama; nakon isteka ulazi u Javnu Arhivu uz badge **Otkazan**.
+> * Aktivni javni skup (naslovna, Pretraga, featured, upcoming, aktivni counts, aktivni detalj) ostaje **`published` | `cancelled`**. Interni status `archived` **ne** ulazi u taj skup.
+> * **Portalna / Javna Arhiva ≠ jednostavno „svi `archived`"**. Arhiva je poseban istorijski pogled (BM-PK-35).
 > * Ne prikazuje se među Istaknutim događajima. Flag isticanja se ne mijenja — otkazani se samo isključuju iz javnog prikaza Istaknutih.
-> * Nakon isteka planiranog termina događaj zadržava interni status `cancelled`, prestaje da se prikazuje među narednim događajima i prikazuje se u **portalnoj** Arhivi na osnovu datuma, uz javni status **Otkazan**.
-> * Na Detaljima se prikazuje fiksno sistemsko obavještenje da je događaj otkazan; tekst nije uređiv i nije dio opisa događaja. Javni status badge ostaje. U V1 razlog otkazivanja (`cancellation_reason`) **ne** prikazuje se automatski javnosti (BM-PK-33).
-> * Ne uvode se novi filteri, URL parametri ni search modovi za otkazane.
-> * Interni status `archived` se kroz CR-004B ne otvara javnosti. CR-004B ne dokumentuje ni implementira prelaz `cancelled → archived`.
+> * Na Detaljima otkazanog se prikazuje fiksno sistemsko obavještenje; V1 bez javnog `cancellation_reason` (BM-PK-33).
+> * Ne uvode se novi filteri, URL parametri ni search modovi za otkazane isključivo zbog CR-004B.
 >
-> **Interni lifecycle i javni status:** BM-DG-04 / BR-065 ostaju neizmijenjeni. Buduća implementacija lifecycle prelaza `cancelled → archived` zahtijeva zasebno rješenje za trajno očuvanje informacije o otkazivanju — to nije dio CR-004B. Korisnik na portalu za otkazani događaj uvijek vidi javni status **Otkazan**.
+> **Lifecycle `cancelled → archived` (BM-DG-04 / BR-065) i očuvanje Otkazan:** CR-004B historijski nije implementirao taj prelaz (PO-CR4B-09). Prelaz **jeste** usvojeni lifecycle. Za kanonsku Javnu Arhivu obavezno je trajno očuvanje informacije da je Događaj arhiviran iz Otkazan, tako da javni badge ostane **Otkazan** (BM-PK-35 / PO-6A09-02 / PO-6A09-04). Terminalnost Otkazan (BM-DG-09) ostaje neizmijenjena — nema republish ni povratka u Objavljen.
 >
-> Status otkazanog ili arhiviranog događaja mora biti jasno prikazan korisniku (javni status badge).
+> Status otkazanog ili istorijski završenog događaja mora biti jasno prikazan korisniku (javni status badge: **Otkazan** ili **Završen** — ne „Arhiviran").
 >
-> Kanonska agregatna pravila javnog statusa Događaja sa više Održavanja uređuje **BM-PK-34** (PO-6A11-01).
+> Kanonska agregatna pravila vremenskog statusa Objavljenog Događaja uređuje **BM-PK-34** (PO-6A11-01). Kanonska Javna Arhiva uređuje **BM-PK-35** (PO-6A09-01…06).
 
 ### BM-PK-14 — Povezani sadržaj
 
@@ -1550,6 +1553,36 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > 4. **Bez vremenskog statusa** — ako Objavljen Događaj nema nijedno Održavanje, ili ako su sva Održavanja samo **Odgođena** (postponed-only) bez Planiranog koje omogućava pouzdano vremensko određivanje. Ne prikazuje se Predstoji / U toku / Završen / Odgođen kao status Događaja; pojedinačno Odgođeno Održavanje i dalje ima oznaku na Detalju (BM-PK-31).
 >
 > Odgođeno Održavanje ne koristi se kao zamjenski termin za računanje javnog vremenskog statusa Događaja. Kartična relevantnost Održavanja (BM-PK-29) ostaje zasebno pravilo.
+>
+> Za **interni status Arhiviran** javni istorijski badge uređuje **BM-PK-35** (ne ovaj paragraf).
+
+### BM-PK-35 — Javna Arhiva Događaja (kanonski; PO-6A09-01…06)
+
+> **Arhiviran** je interni završni lifecycle status. **Javna Arhiva** je istorijski pogled na ranije javne Događaje, a ne lista svih zapisa sa statusom Arhiviran.
+>
+> **Aktivne javne površine** (naslovna, Pretraga, featured, upcoming, aktivni counts, aktivni detalj) koriste isključivo skup **`published` | `cancelled`**. Interni `archived` se **ne** dodaje u taj skup.
+>
+> **Javna Arhiva** koristi **poseban** istorijski ugovor / query (nije isti kao aktivni public query), koji može uključiti:
+>
+> * `published` ili `cancelled` koji po vremenskom kriterijumu pripadaju istoriji (prošli termini); i
+> * `archived` zapise koji su ranije bili javni (`published` ili `cancelled`) i za koje je sačuvan izvorni javni status pri arhiviranju.
+>
+> U oba slučaja Javna Arhiva zahtijeva **i** dokazano prethodno javno stanje **i** istorijski kriterijum Održavanja (pouzdano istorijsko Održavanje za kartični datum/redoslijed). Samo `archived_from_status` nije dovoljan.
+>
+> Nacrt i Na odobrenju **nikada** ne ulaze u Javnu Arhivu. Samo postojanje `archived` nije dovoljno ako zapis nije bio u relevantnom javnom statusu.
+>
+> **Očuvanje izvornog statusa (PO-6A09-02):** Pri arhiviranju Sistem čuva da li je izvor bio Objavljen ili Otkazan. Ne koristi se `cancellation_reason`, OCC status niti audit parsing kao SSOT za taj podatak.
+>
+> **Javni badge (PO-6A09-04):** Ne postoji javni badge „Arhiviran". Istorijski:
+>
+> * arhiviran iz Otkazan → **Otkazan**;
+> * arhiviran iz Objavljen → **Završen**.
+>
+> **Direct URL (PO-6A09-03):** Ako Događaj pripada dozvoljenom javnom istorijskom skupu (uključujući odgovarajući `archived`), detalj je dostupan (200). Draft/pending i ostali nejavni → 404. Ovo ne čini `archived` globalno javnim.
+>
+> **Kartica Arhive (PO-6A09-05):** prikazuje **posljednje relevantno istorijsko Održavanje** po datumu/vremenu. Ne koristi se pravilo „prvog narednog relevantnog" Održavanja za aktivne kartice (BM-PK-29).
+>
+> **Sortiranje Arhive (PO-6A09-06):** najnoviji istorijski Događaji prvi — po datumu (i vremenu) posljednjeg relevantnog istorijskog Održavanja opadajuće, uz deterministički tie-breaker. Vrijeme izvršenja sistemskog arhiviranja nije poslovni ključ sortiranja.
 
 ---
 

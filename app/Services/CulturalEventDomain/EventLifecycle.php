@@ -221,6 +221,8 @@ final class EventLifecycle
                 );
             }
 
+            // 6A-09 / PO-6A09-02: sačuvaj izvorni javni status prije promjene.
+            $locked->archived_from_status = $locked->status;
             $locked->status = CulturalEventEntry::STATUS_ARCHIVED;
             $locked->featured = false;
             $locked->save();

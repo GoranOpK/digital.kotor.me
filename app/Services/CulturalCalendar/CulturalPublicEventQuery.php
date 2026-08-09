@@ -22,11 +22,13 @@ use Illuminate\Support\Facades\DB;
  * 6A-05: q / date / week / month filteri Pretrage (bez controller cutover-a).
  * 6A-07: index helperi (featured / upcoming / day counts).
  * 6A-08: findPublicEntryForShow (detalj + eager load).
+ * 6A-09: archive() istorijski query; show aktivni ∪ archive-public.
  */
 final class CulturalPublicEventQuery
 {
     /**
      * Bazni kanonski public query — uvijek sa statusnom vidljivošću.
+     * Aktivne površine: published | cancelled. Ne uključuje archived (PO-6A09-01).
      *
      * @return Builder<CulturalEventEntry>
      */
@@ -36,23 +38,114 @@ final class CulturalPublicEventQuery
     }
 
     /**
-     * Javni detalj Entry-ja (6A-08): fail-closed visibility + eager load za show.
+     * Javna Arhiva — odvojen od base() (6A-09 / PO-6A09-01).
+     *
+     * Skup: (published|cancelled) istorijski ILI (archived + archived_from_status ∈ published|cancelled),
+     * uz barem jedno finished|cancelled OCC čiji je historicalSortAt prošao, bez open OCC.
+     *
+     * @return Builder<CulturalEventEntry>
+     */
+    public function archive(?CarbonInterface $now = null): Builder
+    {
+        $now = CulturalPublicHistoricalOccurrenceCriteria::now($now);
+        $nowStr = Carbon::parse($now)
+            ->timezone((string) config('app.timezone'))
+            ->format('Y-m-d H:i:s');
+        $sortSql = CulturalPublicHistoricalOccurrenceCriteria::historicalSortAtSql('cultural_occurrences');
+
+        return CulturalEventEntry::query()
+            ->where(function (Builder $statusQuery): void {
+                $statusQuery->whereIn('status', CulturalEventEntry::PUBLICLY_VISIBLE_STATUSES)
+                    ->orWhere(function (Builder $archivedQuery): void {
+                        $archivedQuery->where('status', CulturalEventEntry::STATUS_ARCHIVED)
+                            ->whereIn('archived_from_status', CulturalEventEntry::ARCHIVED_FROM_STATUSES);
+                    });
+            })
+            ->whereDoesntHave('occurrences', function (Builder $openQuery): void {
+                $openQuery->whereIn('status', [
+                    CulturalOccurrence::STATUS_PLANNED,
+                    CulturalOccurrence::STATUS_POSTPONED,
+                ]);
+            })
+            ->whereHas('occurrences', function (Builder $historicalQuery) use ($sortSql, $nowStr): void {
+                CulturalPublicHistoricalOccurrenceCriteria::constrain($historicalQuery)
+                    ->whereRaw("{$sortSql} < ?", [$nowStr]);
+            });
+    }
+
+    /**
+     * Sortiranje Javne Arhive po posljednjem istorijskom OCC DESC (PO-6A09-06).
+     *
+     * @param  Builder<CulturalEventEntry>|null  $query
+     * @return Builder<CulturalEventEntry>
+     */
+    public function orderedByLastHistoricalOccurrence(?Builder $query = null): Builder
+    {
+        $query ??= $this->archive();
+        $entryTable = (new CulturalEventEntry)->getTable();
+        $sortSql = CulturalPublicHistoricalOccurrenceCriteria::historicalSortAtSql('o');
+
+        $sortAtSub = CulturalOccurrence::query()
+            ->from((new CulturalOccurrence)->getTable().' as o')
+            ->whereColumn('o.event_entry_id', "{$entryTable}.id")
+            ->whereIn('o.status', CulturalPublicHistoricalOccurrenceCriteria::candidateStatuses())
+            ->orderByRaw("{$sortSql} DESC")
+            ->orderByDesc('o.id')
+            ->limit(1)
+            ->selectRaw($sortSql);
+
+        $idSub = CulturalOccurrence::query()
+            ->from((new CulturalOccurrence)->getTable().' as o')
+            ->whereColumn('o.event_entry_id', "{$entryTable}.id")
+            ->whereIn('o.status', CulturalPublicHistoricalOccurrenceCriteria::candidateStatuses())
+            ->orderByRaw("{$sortSql} DESC")
+            ->orderByDesc('o.id')
+            ->limit(1)
+            ->select('o.id');
+
+        return $query
+            ->orderByRaw('('.$sortAtSub->toSql().') IS NULL')
+            ->addBinding($sortAtSub->getBindings(), 'order')
+            ->orderByRaw('('.$sortAtSub->toSql().') DESC')
+            ->addBinding($sortAtSub->getBindings(), 'order')
+            ->orderByRaw('('.$idSub->toSql().') DESC')
+            ->addBinding($idSub->getBindings(), 'order')
+            ->orderByDesc("{$entryTable}.id");
+    }
+
+    /**
+     * Eager load zajednički za javni detalj.
+     *
+     * @return array<string, mixed>
+     */
+    private function publicShowEagerLoad(): array
+    {
+        return [
+            'category',
+            'coverMedia',
+            'occurrences' => function ($query): void {
+                $query->orderBy('datum')
+                    ->orderByRaw("COALESCE(NULLIF(TRIM(vrijeme_od), ''), '00:00:00')")
+                    ->orderBy('id');
+            },
+            'occurrences.location',
+        ];
+    }
+
+    /**
+     * Javni detalj Entry-ja (6A-08 + 6A-09): aktivni public ILI archive-public.
+     * Ne proširuje base().
      */
     public function findPublicEntryForShow(int|string $id): CulturalEventEntry
     {
-        return $this->base()
-            ->whereKey($id)
-            ->with([
-                'category',
-                'coverMedia',
-                'occurrences' => function ($query): void {
-                    $query->orderBy('datum')
-                        ->orderByRaw("COALESCE(NULLIF(TRIM(vrijeme_od), ''), '00:00:00')")
-                        ->orderBy('id');
-                },
-                'occurrences.location',
-            ])
-            ->firstOrFail();
+        $with = $this->publicShowEagerLoad();
+
+        $active = $this->base()->whereKey($id)->with($with)->first();
+        if ($active !== null) {
+            return $active;
+        }
+
+        return $this->archive()->whereKey($id)->with($with)->firstOrFail();
     }
 
     /**

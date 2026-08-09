@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\CulturalCalendar\CulturalPublicCardOccurrenceCriteria;
+use App\Services\CulturalCalendar\CulturalPublicHistoricalOccurrenceCriteria;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -63,6 +64,16 @@ class CulturalEventEntry extends Model
     ];
 
     /**
+     * Dozvoljeni izvorni statusi za archived_from_status (6A-09 / PO-6A09-02).
+     *
+     * @var list<string>
+     */
+    public const ARCHIVED_FROM_STATUSES = [
+        self::STATUS_PUBLISHED,
+        self::STATUS_CANCELLED,
+    ];
+
+    /**
      * Dozvoljeni prelazi statusa (TS-003 §4).
      * Ključ = od; vrijednost = lista ciljeva.
      *
@@ -91,6 +102,7 @@ class CulturalEventEntry extends Model
         'naslov',
         'opis',
         'status',
+        'archived_from_status',
         'organizer_id',
         'category_id',
         'cover_media_id',
@@ -296,6 +308,26 @@ class CulturalEventEntry extends Model
             ];
         }
 
+        if ($this->status === self::STATUS_ARCHIVED) {
+            if ($this->archived_from_status === self::STATUS_CANCELLED) {
+                return [
+                    'key' => 'cancelled',
+                    'label' => 'Otkazan',
+                    'class' => 'kk-status-cancelled',
+                ];
+            }
+
+            if ($this->archived_from_status === self::STATUS_PUBLISHED) {
+                return [
+                    'key' => 'finished',
+                    'label' => 'Završen',
+                    'class' => 'kk-status-finished',
+                ];
+            }
+
+            return null;
+        }
+
         if ($this->status !== self::STATUS_PUBLISHED) {
             return null;
         }
@@ -421,6 +453,25 @@ class CulturalEventEntry extends Model
             CulturalPublicCardOccurrenceCriteria::constrain(
                 $this->occurrences()->getQuery(),
                 $now
+            )
+        )->first();
+    }
+
+    /**
+     * Posljednje istorijsko Održavanje za Javnu Arhivu (6A-09 / PO-6A09-05).
+     * Kandidati: finished | cancelled. Ne koristi nextRelevantOccurrence().
+     */
+    public function lastHistoricalOccurrence(): ?CulturalOccurrence
+    {
+        if ($this->relationLoaded('occurrences')) {
+            return CulturalPublicHistoricalOccurrenceCriteria::filterAndSortCollection(
+                $this->occurrences
+            )->first();
+        }
+
+        return CulturalPublicHistoricalOccurrenceCriteria::orderForLast(
+            CulturalPublicHistoricalOccurrenceCriteria::constrain(
+                $this->occurrences()->getQuery()
             )
         )->first();
     }

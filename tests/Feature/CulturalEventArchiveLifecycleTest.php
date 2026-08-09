@@ -94,6 +94,7 @@ class CulturalEventArchiveLifecycleTest extends TestCase
 
         $archived = $this->lifecycle->archiveIfEligible($entry->fresh());
         $this->assertSame(CulturalEventEntry::STATUS_ARCHIVED, $archived->status);
+        $this->assertSame(CulturalEventEntry::STATUS_PUBLISHED, $archived->archived_from_status);
         $this->assertFalse($archived->featured);
     }
 
@@ -110,6 +111,7 @@ class CulturalEventArchiveLifecycleTest extends TestCase
 
         $archived = $this->lifecycle->archiveIfEligible($entry->fresh());
         $this->assertSame(CulturalEventEntry::STATUS_ARCHIVED, $archived->status);
+        $this->assertSame(CulturalEventEntry::STATUS_CANCELLED, $archived->archived_from_status);
     }
 
     public function test_already_archived_cannot_be_archived_again(): void
@@ -118,8 +120,23 @@ class CulturalEventArchiveLifecycleTest extends TestCase
         $this->occurrenceLifecycle->markFinished($entry->occurrences()->firstOrFail());
         $this->lifecycle->archiveIfEligible($entry->fresh());
 
-        $this->expectException(CulturalEventDomainException::class);
-        $this->lifecycle->archiveIfEligible($entry->fresh());
+        $this->assertSame(
+            CulturalEventEntry::STATUS_PUBLISHED,
+            $entry->fresh()->archived_from_status
+        );
+
+        try {
+            $this->lifecycle->archiveIfEligible($entry->fresh());
+            $this->fail('Expected CulturalEventDomainException was not thrown.');
+        } catch (CulturalEventDomainException) {
+            // expected
+        }
+
+        $this->assertSame(CulturalEventEntry::STATUS_ARCHIVED, $entry->fresh()->status);
+        $this->assertSame(
+            CulturalEventEntry::STATUS_PUBLISHED,
+            $entry->fresh()->archived_from_status
+        );
     }
 
     public function test_stale_eligible_state_does_not_archive_when_open_reappears_under_lock(): void
