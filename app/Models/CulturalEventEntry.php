@@ -47,6 +47,18 @@ class CulturalEventEntry extends Model
     ];
 
     /**
+     * Javno dostupni statusi na portalu (TS-009 §12 / CR-004B).
+     * Portalna Arhiva ≠ interni status archived — archived nije u ovom skupu.
+     * Samo statusna vidljivost; vremenska aktuelnost je odvojena (6A-03+).
+     *
+     * @var list<string>
+     */
+    public const PUBLICLY_VISIBLE_STATUSES = [
+        self::STATUS_PUBLISHED,
+        self::STATUS_CANCELLED,
+    ];
+
+    /**
      * Dozvoljeni prelazi statusa (TS-003 §4).
      * Ključ = od; vrijednost = lista ciljeva.
      *
@@ -234,5 +246,19 @@ class CulturalEventEntry extends Model
     public function scopeFeatured(Builder $query): Builder
     {
         return $query->where('featured', true);
+    }
+
+    /**
+     * Statusna javna vidljivost (TS-009 §12): published | cancelled.
+     * Bez vremenske logike (aktivno/arhiva/next OCC).
+     */
+    public function scopePubliclyVisible(Builder $query): Builder
+    {
+        return $query->whereIn('status', self::PUBLICLY_VISIBLE_STATUSES);
+    }
+
+    public function isPubliclyVisible(): bool
+    {
+        return in_array($this->status, self::PUBLICLY_VISIBLE_STATUSES, true);
     }
 }
