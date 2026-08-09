@@ -74,6 +74,7 @@
 | PATCH-058 | 2026-08-08 | **PO-N-TR-02-04:** preciziran V1 generator Održavanja — samo Nacrt; dnevno +1 / sedmično +7 / mjesečno clamp; broj XOR krajnji datum; max 100; šablon vremena/lokacije; Planiran; duplikati → odbij cijelu operaciju; atomičnost; bez preview; bez Proposal/Objavljen generatora. Usklađeni BM-TR-06, BM-TR-07. Bez izmjene implementacije. |
 | PATCH-059 | 2026-08-08 | **TS7-PO-07:** konačni početni V1 katalog kategorija Događaja (14 naziva, usvojeni redoslijed); značenja; kategorija ≠ Manifestacija; kategorija ≠ tip Organizatora; odbačene legacy vrijednosti; semantičko mapiranje legacy→kanonski; tehnički cutover ostaje TS-009. Dodati BM-KO-09–BM-KO-11; usklađen BM-GL-14. Bez izmjene implementacije. |
 | PATCH-060 | 2026-08-09 | **Faza 6A (javni portal Događaja) — usvojene PO odluke:** potvrda PO-EV-01 (bez migracije/dual-read/dual-write legacy `CulturalEvent`); očuvanje postojećeg izgleda (IA-01); kartica = prvo naredno relevantno Održavanje + „+ još N termina“; sistemsko sortiranje Pretrage; Odgođen na detalju vs kartici; CAT-CUTOVER na `CulturalCategory`; Faza 6A ≠ 6B (Manifestacije); V1 bez javnog `cancellation_reason` (BR-272); legacy URL smije 404. Usklađeni BM-PK-09, BM-PK-11, BM-PK-13, BM-DG-10, BM-UR-11, BM-ST-07, BM-KO-11; dodati BM-PK-29–BM-PK-33. Bez izmjene implementacije. |
+| PATCH-061 | 2026-08-09 | **PO-6A11-01 — kanonski javni status Događaja (multi-OCC):** apsolutni prioritet Otkazan; za Objavljen agregat U toku → Predstoji → Završen; postponed-only i 0 Održavanja → bez vremenskog statusa; vremenski istek Planiranog (ne samo status Završen); Odgođen nije badge Događaja. Dodat BM-PK-34; usklađen BM-PK-13. Bez izmjene lifecycle / arhive. |
 
 Napomena:
 
@@ -1327,6 +1328,8 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > **Interni lifecycle i javni status:** BM-DG-04 / BR-065 ostaju neizmijenjeni. Buduća implementacija lifecycle prelaza `cancelled → archived` zahtijeva zasebno rješenje za trajno očuvanje informacije o otkazivanju — to nije dio CR-004B. Korisnik na portalu za otkazani događaj uvijek vidi javni status **Otkazan**.
 >
 > Status otkazanog ili arhiviranog događaja mora biti jasno prikazan korisniku (javni status badge).
+>
+> Kanonska agregatna pravila javnog statusa Događaja sa više Održavanja uređuje **BM-PK-34** (PO-6A11-01).
 
 ### BM-PK-14 — Povezani sadržaj
 
@@ -1532,6 +1535,21 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > Polje razloga otkazivanja / napomene urednika (`cancellation_reason`) **ne prikazuje se automatski** javnosti u V1.
 >
 > Ako se u budućnosti želi javni prikaz razloga, to mora biti predmet zasebne Product Owner odluke i usklađenja BM/FS. Terminalnost statusa Otkazan (BM-DG-09) ostaje neizmijenjena.
+
+### BM-PK-34 — Javni status Događaja sa više Održavanja (PO-6A11-01)
+
+> Javni status Događaja (Predstoji / U toku / Završen / Otkazan) nije isto što i status pojedinačnog Održavanja. Oznake Održavanja (Odgođeno / Otkazano / Završeno) ne postaju automatski status cijelog Događaja. **Odgođen** nije javni status Događaja.
+>
+> **Otkazan (apsolutni prioritet):** Ako je status Događaja Otkazan, javni status je uvijek **Otkazan**, bez obzira na Održavanja, datume i termine. Razlog otkazivanja ne ulazi u određivanje statusa (BM-PK-33).
+>
+> **Objavljen Događaj — agregat (kanonski model):**
+>
+> 1. **U toku** — ako najmanje jedno **Planirano** Održavanje trenutno traje (u svom važećem vremenskom intervalu). Ima prioritet nad drugim budućim Planiranim Održavanjem.
+> 2. **Predstoji** — ako nijedno Planirano nije u toku i postoji najmanje jedno buduće Planirano Održavanje.
+> 3. **Završen** — ako Događaj ima najmanje jedno Održavanje, ali nema Planiranog koje je u toku ili buduće. U obzir se uzima i **vremenski istek** Planiranog Održavanja (ne samo status Završen na Održavanju). Pojedinačno Otkazano Održavanje ne čini Događaj Otkazanim.
+> 4. **Bez vremenskog statusa** — ako Objavljen Događaj nema nijedno Održavanje, ili ako su sva Održavanja samo **Odgođena** (postponed-only) bez Planiranog koje omogućava pouzdano vremensko određivanje. Ne prikazuje se Predstoji / U toku / Završen / Odgođen kao status Događaja; pojedinačno Odgođeno Održavanje i dalje ima oznaku na Detalju (BM-PK-31).
+>
+> Odgođeno Održavanje ne koristi se kao zamjenski termin za računanje javnog vremenskog statusa Događaja. Kartična relevantnost Održavanja (BM-PK-29) ostaje zasebno pravilo.
 
 ---
 

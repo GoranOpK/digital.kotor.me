@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.6
+**Verzija:** 1.0.7
 **Datum:** 2026-08-09
 
 ---
@@ -27,6 +27,7 @@
 | 1.0.4 | 2026-08-01 | Statusno usklađenje CR-004A nakon implementacije; bez izmjene tehničkih i poslovnih pravila. |
 | 1.0.5 | 2026-08-06 | CR-004B / IS-001 Faza 3: javni prikaz otkazanih; portalna Arhiva ≠ interni `archived`; status ostaje `cancelled`; javni skupovi `published`\|`cancelled`; §7.2; §3.2/§5.3 statistike; PO-CR4B-01…10. Bez migracija. Bez izmjene BR-065 / BM-DG-04. Bez javne dostupnosti `archived`. Bez izmjene implementacije. |
 | 1.0.6 | 2026-08-09 | **Faza 6A dokumentacioni PATCH:** cutover `CulturalEvent` → `CulturalEventEntry`+`CulturalOccurrence`; PO-EV-01; očuvanje UI; kartica + sortiranje + Odgođen; CAT-CUTOVER; Faza 6A/6B; V1 bez javnog `cancellation_reason`; legacy URL 404; privremeni feature flag; public query SSOT; TM-JP test matrica. Usklađeno sa BM PATCH-060 / FS PATCH-FS-060. Bez izmjene implementacije. |
+| 1.0.7 | 2026-08-09 | **PO-6A11-01:** kanonski javni status Događaja (multi-OCC) — §7.1.6; razdvajanje legacy flat (§7.1.3) i canonical agregata; usklađeno sa BM-PK-34 / BR-285. Bez izmjene lifecycle / arhive. |
 
 ---
 
@@ -43,8 +44,8 @@ TS-009:
 
 Izvori istine:
 
-* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-11 BM-PK-01–BM-PK-33, BM-05, BM-AR-02; PATCH-045–PATCH-048, PATCH-051, PATCH-060)
-* `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13 BR-102–BR-117, BR-255–BR-274, BR-280–BR-284; PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060)
+* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-11 BM-PK-01–BM-PK-34, BM-05, BM-AR-02; PATCH-045–PATCH-048, PATCH-051, PATCH-060, PATCH-061)
+* `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13 BR-102–BR-117, BR-255–BR-274, BR-280–BR-285; PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060, PATCH-FS-061)
 * usvojene odluke faze 1: IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B, TD-TS9-01
 * usvojene odluke faze 2: PO-TS9-06A, PO-TS9-06B, PO-TS9-06C, PO-TS9-06D
 * usvojene odluke faze 3: PO-TS9-07A, PO-TS9-07B, PO-TS9-07C, PO-TS9-07D, PO-TS9-07E
@@ -52,6 +53,7 @@ Izvori istine:
 * usvojene odluke CR-004A: PO-CR4A-01 … PO-CR4A-05 (javni statusi / status badge)
 * usvojene odluke CR-004B: PO-CR4B-01 … PO-CR4B-10 (javni prikaz otkazanih događaja)
 * usvojene odluke Faze 6A: PO-EV-01; PO-TS9-08A … PO-TS9-08J (cutover kanonskog modela; UI očuvanje; kartica/sortiranje/Odgođen; CAT-CUTOVER; 6A/6B; cancellation_reason V1; legacy URL; feature flag; public query SSOT)
+* usvojena odluka **PO-6A11-01** (kanonski javni status Događaja / multi-OCC badge)
 * granice entiteta: TS-005 (Manifestacija), TS-003 (Događaj), TS-004 (Održavanje) — TS-009 ne duplicira njihova poslovna pravila
 * `docs/features/Feature-Registry.md`
 * `docs/METHODOLOGY.md`
@@ -91,6 +93,7 @@ Izvori istine:
 | 6. Manifestacije (javni portal) | Usvojeno (implementacija = Faza 6B) |
 | 7. Detalji događaja (baseline) | Usvojeno |
 | 7.1 Javni statusi događaja — badge (CR-004A) | Usvojeno |
+| 7.1.6 Kanonski multi-OCC javni status (PO-6A11-01) | Usvojeno |
 | 7.2 Javni prikaz otkazanih (CR-004B) | Usvojeno |
 | 7.3 Više Održavanja i Odgođen (Faza 6A) | Usvojeno |
 | 8. Arhiva događaja (baseline) | Usvojeno |
@@ -732,22 +735,24 @@ Na svim prikazima koristi se **isti tekst**, **isti badge** i **ista logika** od
 
 ### 7.1.3 Pravila određivanja (PO-CR4A-03)
 
-Prioritet određivanja:
+**Zajednički prioritet (oba izvora):**
 
-1. Otkazan
-2. Predstoji
-3. U toku
-4. Završen
+1. Otkazan (apsolutni — interni `cancelled`)
+2. zatim vremenska stanja prema aktivnom izvoru čitanja (legacy flat **ili** canonical multi-OCC)
 
 **Korak 1 — Otkazan**
 
-Ako je interni status događaja `cancelled`, javni status je uvijek **Otkazan**, bez obzira na datum i vrijeme.
+Ako je interni status događaja `cancelled`, javni status je uvijek **Otkazan**, bez obzira na datum, vrijeme i Održavanja.
 
 **Korak 2 — vremenska stanja** (samo ako događaj nije otkazan)
 
-Proračun koristi vremensku zonu aplikacije Digital Kotor. Polja postojećeg modela: `datum_od`, `datum_do`, `vrijeme`, `vrijeme_do`.
+Proračun koristi vremensku zonu aplikacije Digital Kotor.
 
-#### A) Višednevni događaj (`datum_do` postoji)
+#### Legacy flat (`CulturalEvent` — CR-004A baseline)
+
+Polja: `datum_od`, `datum_do`, `vrijeme`, `vrijeme_do`.
+
+##### A) Višednevni događaj (`datum_do` postoji)
 
 * prije početka → **Predstoji**
 * od početka do kraja perioda → **U toku**
@@ -761,23 +766,27 @@ Za višednevni događaj **bez** vremena (cjelodnevni):
 * `datum_od`–`datum_do` uključivo → **U toku**
 * nakon `datum_do` → **Završen**
 
-#### B) Jednodnevni događaj sa vremenom završetka (`vrijeme_do` postoji)
+##### B) Jednodnevni događaj sa vremenom završetka (`vrijeme_do` postoji)
 
 * prije vremena početka → **Predstoji**
 * od početka do završetka → **U toku**
 * nakon završetka → **Završen**
 
-#### C) Jednodnevni događaj bez vremena završetka
+##### C) Jednodnevni događaj bez vremena završetka
 
 * prije početka → **Predstoji**
 * od početka do kraja kalendarskog dana → **U toku**
 * od narednog dana → **Završen**
 
-#### D) Događaj bez definisanog vremena
+##### D) Događaj bez definisanog vremena
 
 Datum se tretira kao cjelodnevni događaj (vidi A / C prema tome da li postoji `datum_do`).
 
 **PO-CR4A-05 (implementirano ponašanje):** Ako se javni status ne može pouzdano odrediti zbog nekonzistentnih podataka, badge se ne prikazuje (bez exceptiona / „Unknown“). Ne mijenja pravila A–D iznad.
+
+#### Canonical multi-OCC (`CulturalEventEntry` + `CulturalOccurrence`)
+
+Vidi **§7.1.6** (PO-6A11-01 / BM-PK-34 / BR-285). Legacy flat polja se **ne** koriste za kanonski Entry.
 
 ### 7.1.4 Vizuelni prikaz (PO-CR4A-04)
 
@@ -788,11 +797,35 @@ Datum se tretira kao cjelodnevni događaj (vidi A / C prema tome da li postoji `
 
 Na svim javnim prikazima koristi se **jedinstven** vizuelni izgled badge-a (isti položaj u okviru odgovarajućeg tipa prikaza, isti tekst i ista logika).
 
+### 7.1.6 Kanonski multi-OCC javni status (PO-6A11-01)
+
+| Stavka | Vrijednost |
+|--------|------------|
+| Odluka | PO-6A11-01 |
+| BM | BM-PK-34 |
+| FS | BR-285 |
+| Odnos | Proširuje CR-004A / §7.1 za `CulturalEventEntry` + `CulturalOccurrence`; ne mijenja legacy flat §7.1.3 A–D |
+
+Javni badge Događaja **nije** kopija statusa pojedinačnog Održavanja. Oznake Održavanja na Detalju (Odgođeno / Otkazano / Završeno — §7.3) ostaju na nivou Održavanja.
+
+**Otkazan:** `Entry.status = cancelled` → uvijek **Otkazan** (apsolutni prioritet).
+
+**Objavljen Entry — agregatni prioritet:**
+
+1. **U toku** — najmanje jedno **Planirano** Održavanje je u važećem intervalu `[početak, expiresAt]` (početak = `datum+vrijeme_od` ili `startOfDay(datum)` kada nema `vrijeme_od` / cjelodnevno; završetak = postojeći domenski `expiresAt`, uključujući kraj dana bez `vrijeme_do`).
+2. **Predstoji** — nijedno Planirano nije u toku i postoji najmanje jedno buduće Planirano (`now` strogo prije početka).
+3. **Završen** — Entry ima ≥1 Održavanje i nema Planiranog koje je u toku ili buduće. Uključuje vremenski istekla Planirana (čak i ako tehnički status još nije `finished`), te istorijska Završena/Otkazana Održavanja. Pojedinačno Otkazano Održavanje **ne** daje Entry badge Otkazan.
+4. **Bez badge-a (`null`)** — 0 Održavanja; ili postponed-only (samo Odgođena, bez Planiranog koje omogućava pouzdano vremensko određivanje).
+
+Odgođeno Održavanje ne ulazi u računanje vremenskog statusa Događaja. Kartična relevantnost (§7.3.1 / 6A-03) ostaje zaseban kriterijum (Planiran + nije istekao) i **ne** mijenja se ovim pravilom.
+
+Granica „U toku“ kompatibilna je sa `isExpiredAt` (istek strogo nakon `expiresAt`).
+
 ### 7.1.5 Van obuhvata CR-004A
 
 * novi statusi baze / migracije / izmjene lifecycle Događaja ili Održavanja;
 * uvođenje **Odgođen** kao statusa Događaja ili javnog badge-a događaja;
-* domen Održavanja / Oznaka / Manifestacije (Faza 4+);
+* domen Održavanja / Oznaka / Manifestacije (Faza 4+) — **izuzev** kanonskog javnog statusa Događaja u §7.1.6 (Faza 6A / PO-6A11-01);
 * izmjena kriterijuma ulaska u Arhivu (BM-DG-04 → Faza 6 ili zaseban CR);
 * redizajn portala van badge pozicija iz PO-CR4A-04;
 * proširenje javne dostupnosti statusa `cancelled` — to je **CR-004B** (§7.2).
@@ -1129,6 +1162,7 @@ Nema otvorenih pitanja koja blokiraju dokumentacioni ugovor Faze 6A. Implementac
 | PO-CR3-01 … PO-CR3-08 | BM-PK-18 (granice postojećeg modela) | BR-257 | §3.3 |
 | CR-004A (javni status badge) | BM-PK-13 | BR-114 | §7.1 |
 | PO-CR4A-01 … PO-CR4A-05 | BM-PK-13 | BR-114 | §7.1 |
+| PO-6A11-01 (kanonski multi-OCC status) | BM-PK-34 | BR-285 | §7.1.6 |
 | CR-004B (javni prikaz otkazanih) | BM-PK-13, BM-PK-15 | BR-270–BR-274; BR-001, BR-002, BR-004, BR-114, BR-116 | §7.2, §8 |
 | PO-CR4B-01 … PO-CR4B-10 | BM-PK-13, BM-PK-15 | BR-270–BR-274 | §7.2 |
 | PO-TS9-06C (CR-004B usklađenje skupa) | BM-PK-22 | BR-263 | §3.2, §5.3 |

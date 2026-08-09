@@ -279,8 +279,10 @@ class CulturalEventEntry extends Model
     }
 
     /**
-     * Minimalni javni badge za Pretragu (6A-06).
-     * Pun Predstoji/U toku/Završen → 6A-11; ovdje samo Otkazan.
+     * Javni status badge Događaja (PO-6A11-01 / TS-009 §7.1.6 / BM-PK-34 / BR-285).
+     *
+     * Otkazan = apsolutni prioritet. Za published: agregat Planiranih OCC
+     * (U toku → Predstoji → Završen); postponed-only / 0 OCC → null.
      *
      * @return array{key: string, label: string, class: string}|null
      */
@@ -294,7 +296,66 @@ class CulturalEventEntry extends Model
             ];
         }
 
-        return null;
+        if ($this->status !== self::STATUS_PUBLISHED) {
+            return null;
+        }
+
+        $now = ($now ?? \Carbon\Carbon::now(config('app.timezone')))->copy();
+
+        $occurrences = $this->relationLoaded('occurrences')
+            ? $this->occurrences
+            : $this->occurrences()->get();
+
+        if ($occurrences->isEmpty()) {
+            return null;
+        }
+
+        $onlyPostponed = $occurrences->every(
+            fn (CulturalOccurrence $occ): bool => $occ->status === CulturalOccurrence::STATUS_POSTPONED
+        );
+        if ($onlyPostponed) {
+            return null;
+        }
+
+        $hasOngoing = false;
+        $hasUpcoming = false;
+
+        foreach ($occurrences as $occurrence) {
+            if (! $occurrence->contributesToEntryPublicTimeStatus()) {
+                continue;
+            }
+
+            if ($occurrence->isInProgressAt($now)) {
+                $hasOngoing = true;
+                break;
+            }
+
+            if ($occurrence->isUpcomingAt($now)) {
+                $hasUpcoming = true;
+            }
+        }
+
+        if ($hasOngoing) {
+            return [
+                'key' => 'ongoing',
+                'label' => 'U toku',
+                'class' => 'kk-status-ongoing',
+            ];
+        }
+
+        if ($hasUpcoming) {
+            return [
+                'key' => 'upcoming',
+                'label' => 'Predstoji',
+                'class' => 'kk-status-upcoming',
+            ];
+        }
+
+        return [
+            'key' => 'finished',
+            'label' => 'Završen',
+            'class' => 'kk-status-finished',
+        ];
     }
 
     public function publicCategoryName(): ?string

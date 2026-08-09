@@ -221,6 +221,104 @@ class CulturalOccurrence extends Model
         return $now->greaterThan($this->expiresAt());
     }
 
+    /**
+     * Početak važećeg intervala Održavanja (PO-6A11-01 / TS-009 §7.1.6).
+     * Sa `vrijeme_od`: datum + vrijeme_od. Bez njega / cjelodnevno: početak kalendarskog dana.
+     * Neispravan `vrijeme_od` → null (PO-CR4A-05 stil).
+     */
+    public function startsAt(): ?CarbonInterface
+    {
+        $tz = (string) config('app.timezone');
+        $date = $this->datum instanceof CarbonInterface
+            ? $this->datum->format('Y-m-d')
+            : Carbon::parse((string) $this->datum)->format('Y-m-d');
+
+        if ($this->hasRawTimeValue($this->vrijeme_od)) {
+            $vrijemeOd = $this->normalizedTimeString($this->vrijeme_od);
+            if ($vrijemeOd === null) {
+                return null;
+            }
+
+            return Carbon::parse($date.' '.$vrijemeOd, $tz);
+        }
+
+        return Carbon::parse($date, $tz)->startOfDay();
+    }
+
+    /**
+     * Da li Održavanje traje u datom trenutku (PO-6A11-01).
+     * Granica završetka = !isExpiredAt (strogo nakon expiresAt → isteklo).
+     */
+    public function isInProgressAt(CarbonInterface $now): bool
+    {
+        $start = $this->startsAt();
+        if ($start === null) {
+            return false;
+        }
+
+        if ($this->hasRawTimeValue($this->vrijeme_do)
+            && ! $this->hasRawTimeValue($this->vrijeme_od)
+            && ! $this->cjelodnevno) {
+            return false;
+        }
+
+        if ($this->expiresAt()->lte($start)) {
+            return false;
+        }
+
+        if ($now->lt($start)) {
+            return false;
+        }
+
+        return ! $this->isExpiredAt($now);
+    }
+
+    /**
+     * Da li Planirano Održavanje pouzdano doprinosi javnom vremenskom statusu Entry-ja.
+     */
+    public function contributesToEntryPublicTimeStatus(): bool
+    {
+        if ($this->status !== self::STATUS_PLANNED) {
+            return false;
+        }
+
+        $start = $this->startsAt();
+        if ($start === null) {
+            return false;
+        }
+
+        if ($this->hasRawTimeValue($this->vrijeme_do)
+            && ! $this->hasRawTimeValue($this->vrijeme_od)
+            && ! $this->cjelodnevno) {
+            return false;
+        }
+
+        return $this->expiresAt()->gt($start);
+    }
+
+    /**
+     * Da li je Planirano Održavanje još buduće u datom trenutku.
+     */
+    public function isUpcomingAt(CarbonInterface $now): bool
+    {
+        if (! $this->contributesToEntryPublicTimeStatus()) {
+            return false;
+        }
+
+        $start = $this->startsAt();
+
+        return $start !== null && $now->lt($start);
+    }
+
+    private function hasRawTimeValue(mixed $value): bool
+    {
+        if ($value === null) {
+            return false;
+        }
+
+        return trim((string) $value) !== '';
+    }
+
     private function normalizedTimeString(mixed $value): ?string
     {
         if ($value === null) {
