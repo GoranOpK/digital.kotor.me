@@ -205,8 +205,10 @@
                         $cardLokacija = $cardOcc?->publicLocationDisplayName();
                         $cardKategorija = $event->publicCategoryName();
                         $additionalCount = $event->additionalRelevantOccurrencesCount();
-                        // Detalj cutover van 6A-06 — bez legacy CulturalEvent route binding.
-                        $cardHref = null;
+                        $cardHref = route('cultural-calendar.show', [
+                            'event' => $event,
+                            'back' => request()->getRequestUri(),
+                        ]);
                     } else {
                         $cardDatumOd = $event->datum_od;
                         $cardDatumDo = $event->datum_do;

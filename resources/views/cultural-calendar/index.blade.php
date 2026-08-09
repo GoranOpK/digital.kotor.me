@@ -457,7 +457,10 @@
                                     $cardDatum = $cardOcc?->datum;
                                     $cardVrijeme = $cardOcc?->vrijeme_od;
                                     $cardLokacija = $cardOcc?->publicLocationDisplayName();
-                                    $cardHref = null;
+                                    $cardHref = route('cultural-calendar.show', [
+                                        'event' => $event,
+                                        'back' => request()->getRequestUri(),
+                                    ]);
                                 } else {
                                     $cardDatum = $event->datum_od;
                                     $cardVrijeme = $event->vrijeme;
@@ -517,7 +520,10 @@
                                     $cardDatum = $cardOcc?->datum;
                                     $cardVrijeme = $cardOcc?->vrijeme_od;
                                     $cardLokacija = $cardOcc?->publicLocationDisplayName();
-                                    $cardHref = null;
+                                    $cardHref = route('cultural-calendar.show', [
+                                        'event' => $event,
+                                        'back' => request()->getRequestUri(),
+                                    ]);
                                 } else {
                                     $cardDatum = $event->datum_od;
                                     $cardVrijeme = $event->vrijeme;
@@ -582,7 +588,10 @@
                                 $cardDatum = $cardOcc?->datum;
                                 $cardVrijeme = $cardOcc?->vrijeme_od;
                                 $cardLokacija = $cardOcc?->publicLocationDisplayName();
-                                $cardHref = null;
+                                $cardHref = route('cultural-calendar.show', [
+                                    'event' => $event,
+                                    'back' => request()->getRequestUri(),
+                                ]);
                             } else {
                                 $cardDatum = $event->datum_od;
                                 $cardVrijeme = $event->vrijeme;
