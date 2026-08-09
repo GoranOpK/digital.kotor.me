@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
  * 6A-03: sort po prvom narednom kartično relevantnom Održavanju.
  * 6A-04: kategorije + lokacijski filter adapter (bez controller cutover-a).
  * 6A-05: q / date / week / month filteri Pretrage (bez controller cutover-a).
+ * 6A-07: index helperi (featured / upcoming / day counts).
  */
 final class CulturalPublicEventQuery
 {
@@ -285,6 +286,77 @@ final class CulturalPublicEventQuery
                 ->whereDate('datum', '>=', $start)
                 ->whereDate('datum', '<=', $end);
         });
+    }
+
+    /**
+     * Entry sa makar jednim kartično relevantnim OCC (Planiran + nije istekao).
+     *
+     * @param  Builder<CulturalEventEntry>|null  $query
+     * @return Builder<CulturalEventEntry>
+     */
+    public function withCardRelevantOccurrence(?Builder $query = null, ?CarbonInterface $now = null): Builder
+    {
+        $query ??= $this->base();
+
+        return $query->whereHas('occurrences', function (Builder $occurrenceQuery) use ($now): void {
+            CulturalPublicCardOccurrenceCriteria::constrain($occurrenceQuery, $now);
+        });
+    }
+
+    /**
+     * Istaknuti za naslovnu: published + featured + aktuelan (next relevant OCC).
+     *
+     * @return Builder<CulturalEventEntry>
+     */
+    public function featuredForPublicIndex(?CarbonInterface $now = null): Builder
+    {
+        $query = CulturalEventEntry::query()
+            ->where('status', CulturalEventEntry::STATUS_PUBLISHED)
+            ->where('featured', true);
+
+        $query = $this->withCardRelevantOccurrence($query, $now);
+
+        return $this->orderedByNextRelevantOccurrence($now, $query);
+    }
+
+    /**
+     * Naredni događaji: javno vidljivi sa next relevant OCC, sortirani.
+     *
+     * @return Builder<CulturalEventEntry>
+     */
+    public function upcomingForPublicIndex(?CarbonInterface $now = null): Builder
+    {
+        $query = $this->withCardRelevantOccurrence($this->base(), $now);
+
+        return $this->orderedByNextRelevantOccurrence($now, $query);
+    }
+
+    /**
+     * Broj jedinstvenih javno vidljivih Entry-ja po OCC.datum (kalendar mreža).
+     *
+     * @return array<string, int>  Y-m-d => count
+     */
+    public function distinctPublicEntryCountsByOccurrenceDate(string $fromYmd, string $toYmd): array
+    {
+        $entryTable = (new CulturalEventEntry)->getTable();
+        $occTable = (new CulturalOccurrence)->getTable();
+
+        $rows = DB::table("{$occTable} as o")
+            ->join("{$entryTable} as e", 'e.id', '=', 'o.event_entry_id')
+            ->whereIn('e.status', CulturalEventEntry::PUBLICLY_VISIBLE_STATUSES)
+            ->whereDate('o.datum', '>=', $fromYmd)
+            ->whereDate('o.datum', '<=', $toYmd)
+            ->groupByRaw('DATE(o.datum)')
+            ->orderByRaw('DATE(o.datum)')
+            ->selectRaw('DATE(o.datum) as day_key, COUNT(DISTINCT o.event_entry_id) as entry_count')
+            ->get();
+
+        $counts = [];
+        foreach ($rows as $row) {
+            $counts[(string) $row->day_key] = (int) $row->entry_count;
+        }
+
+        return $counts;
     }
 
     private function parseDateYmd(?string $value): ?string

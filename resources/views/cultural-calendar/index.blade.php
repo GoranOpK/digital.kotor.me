@@ -448,25 +448,53 @@
                     </div>
                     <div class="kk-upcoming-list">
                         @forelse($selectedDateEvents as $event)
+                            @php
+                                $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
+                                if ($isCanonicalEntry) {
+                                    $cardOcc = $selectedDate
+                                        ? $event->occurrenceOnDate($selectedDate->toDateString())
+                                        : $event->nextRelevantOccurrence();
+                                    $cardDatum = $cardOcc?->datum;
+                                    $cardVrijeme = $cardOcc?->vrijeme_od;
+                                    $cardLokacija = $cardOcc?->publicLocationDisplayName();
+                                    $cardHref = null;
+                                } else {
+                                    $cardDatum = $event->datum_od;
+                                    $cardVrijeme = $event->vrijeme;
+                                    $cardLokacija = $event->lokacija;
+                                    $cardHref = route('cultural-calendar.show', [
+                                        'event' => $event,
+                                        'back' => request()->getRequestUri(),
+                                    ]);
+                                }
+                            @endphp
                             <div class="kk-upcoming-item">
-                                <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" class="kk-upcoming-link">
+                                @if($cardHref)
+                                    <a href="{{ $cardHref }}" class="kk-upcoming-link">
+                                @else
+                                    <div class="kk-upcoming-link">
+                                @endif
                                     <div class="kk-upcoming-photo kk-public-status-photo">
                                         <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}">
                                         @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'card'])
                                     </div>
                                     <div class="kk-upcoming-body">
                                         <div class="kk-upcoming-meta">
-                                            {{ optional($event->datum_od)->format('d.m.Y') }}
-                                            @if($event->vrijeme)
-                                                • {{ substr((string) $event->vrijeme, 0, 5) }}
+                                            {{ optional($cardDatum)->format('d.m.Y') }}
+                                            @if($cardVrijeme)
+                                                • {{ substr((string) $cardVrijeme, 0, 5) }}
                                             @endif
-                                            @if($event->lokacija)
-                                                • {{ $event->lokacija }}
+                                            @if($cardLokacija)
+                                                • {{ $cardLokacija }}
                                             @endif
                                         </div>
                                         <div class="kk-upcoming-name">{{ $event->naslov }}</div>
                                     </div>
-                                </a>
+                                @if($cardHref)
+                                    </a>
+                                @else
+                                    </div>
+                                @endif
                             </div>
                         @empty
                             <div class="kk-upcoming-item kk-upcoming-item-empty">
@@ -482,25 +510,51 @@
                     <div class="kk-upcoming-title">Naredni događaji</div>
                     <div class="kk-upcoming-list">
                         @forelse($upcomingEvents as $event)
+                            @php
+                                $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
+                                if ($isCanonicalEntry) {
+                                    $cardOcc = $event->nextRelevantOccurrence();
+                                    $cardDatum = $cardOcc?->datum;
+                                    $cardVrijeme = $cardOcc?->vrijeme_od;
+                                    $cardLokacija = $cardOcc?->publicLocationDisplayName();
+                                    $cardHref = null;
+                                } else {
+                                    $cardDatum = $event->datum_od;
+                                    $cardVrijeme = $event->vrijeme;
+                                    $cardLokacija = $event->lokacija;
+                                    $cardHref = route('cultural-calendar.show', [
+                                        'event' => $event,
+                                        'back' => request()->getRequestUri(),
+                                    ]);
+                                }
+                            @endphp
                             <div class="kk-upcoming-item">
-                                <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" class="kk-upcoming-link">
+                                @if($cardHref)
+                                    <a href="{{ $cardHref }}" class="kk-upcoming-link">
+                                @else
+                                    <div class="kk-upcoming-link">
+                                @endif
                                     <div class="kk-upcoming-photo kk-public-status-photo">
                                         <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}">
                                         @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'card'])
                                     </div>
                                     <div class="kk-upcoming-body">
                                         <div class="kk-upcoming-meta">
-                                            {{ optional($event->datum_od)->format('d.m.Y') }}
-                                            @if($event->vrijeme)
-                                                • {{ substr((string) $event->vrijeme, 0, 5) }}
+                                            {{ optional($cardDatum)->format('d.m.Y') }}
+                                            @if($cardVrijeme)
+                                                • {{ substr((string) $cardVrijeme, 0, 5) }}
                                             @endif
-                                            @if($event->lokacija)
-                                                • {{ $event->lokacija }}
+                                            @if($cardLokacija)
+                                                • {{ $cardLokacija }}
                                             @endif
                                         </div>
                                         <div class="kk-upcoming-name">{{ $event->naslov }}</div>
                                     </div>
-                                </a>
+                                @if($cardHref)
+                                    </a>
+                                @else
+                                    </div>
+                                @endif
                             </div>
                         @empty
                             <div class="kk-upcoming-item kk-upcoming-item-empty">
@@ -521,8 +575,30 @@
             <div class="kk-featured">
                 @if($featuredEvents->isNotEmpty())
                     @foreach($featuredEvents as $event)
+                        @php
+                            $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
+                            if ($isCanonicalEntry) {
+                                $cardOcc = $event->nextRelevantOccurrence();
+                                $cardDatum = $cardOcc?->datum;
+                                $cardVrijeme = $cardOcc?->vrijeme_od;
+                                $cardLokacija = $cardOcc?->publicLocationDisplayName();
+                                $cardHref = null;
+                            } else {
+                                $cardDatum = $event->datum_od;
+                                $cardVrijeme = $event->vrijeme;
+                                $cardLokacija = $event->lokacija;
+                                $cardHref = route('cultural-calendar.show', [
+                                    'event' => $event,
+                                    'back' => request()->getRequestUri(),
+                                ]);
+                            }
+                        @endphp
                         <article class="kk-feature-card">
-                            <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" style="display:block; color:inherit; text-decoration:none;">
+                            @if($cardHref)
+                                <a href="{{ $cardHref }}" style="display:block; color:inherit; text-decoration:none;">
+                            @else
+                                <div style="display:block; color:inherit;">
+                            @endif
                             <div class="kk-public-status-photo">
                                 <img
                                     src="{{ $event->imageUrl() }}"
@@ -533,18 +609,22 @@
                             </div>
                             <div class="kk-feature-content">
                                 <div class="kk-feature-meta">
-                                    {{ optional($event->datum_od)->format('d.m.Y') }}
-                                    @if($event->vrijeme)
-                                        • {{ substr((string) $event->vrijeme, 0, 5) }}
+                                    {{ optional($cardDatum)->format('d.m.Y') }}
+                                    @if($cardVrijeme)
+                                        • {{ substr((string) $cardVrijeme, 0, 5) }}
                                     @endif
-                                    @if($event->lokacija)
-                                        • {{ $event->lokacija }}
+                                    @if($cardLokacija)
+                                        • {{ $cardLokacija }}
                                     @endif
                                 </div>
                                 <div class="kk-feature-title">{{ $event->naslov }}</div>
                                 <p class="kk-feature-desc">{{ \Illuminate\Support\Str::limit($event->opis ?? '', 120) }}</p>
                             </div>
-                            </a>
+                            @if($cardHref)
+                                </a>
+                            @else
+                                </div>
+                            @endif
                         </article>
                     @endforeach
                 @else

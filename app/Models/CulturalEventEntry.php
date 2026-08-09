@@ -309,6 +309,39 @@ class CulturalEventEntry extends Model
     }
 
     /**
+     * Održavanje na datom kalendarskom datumu (naslovna lista za izabrani dan).
+     */
+    public function occurrenceOnDate(string $dateYmd): ?CulturalOccurrence
+    {
+        if ($this->relationLoaded('occurrences')) {
+            return $this->occurrences
+                ->filter(function (CulturalOccurrence $occurrence) use ($dateYmd): bool {
+                    $datum = $occurrence->datum;
+
+                    $key = $datum instanceof CarbonInterface
+                        ? $datum->format('Y-m-d')
+                        : \Carbon\Carbon::parse((string) $datum)->format('Y-m-d');
+
+                    return $key === $dateYmd;
+                })
+                ->sort(function (CulturalOccurrence $a, CulturalOccurrence $b): int {
+                    $timeA = trim((string) ($a->vrijeme_od ?? '')) ?: '00:00:00';
+                    $timeB = trim((string) ($b->vrijeme_od ?? '')) ?: '00:00:00';
+                    $cmp = strcmp($timeA, $timeB);
+
+                    return $cmp !== 0 ? $cmp : ($a->id <=> $b->id);
+                })
+                ->first();
+        }
+
+        return $this->occurrences()
+            ->whereDate('datum', $dateYmd)
+            ->orderByRaw("COALESCE(NULLIF(TRIM(vrijeme_od), ''), '00:00:00')")
+            ->orderBy('id')
+            ->first();
+    }
+
+    /**
      * Prvo naredno kartično relevantno Održavanje (6A-03 / TS-009 §7.3.2).
      * Koristi eager-load `occurrences` ako je učitano (bez N+1).
      */

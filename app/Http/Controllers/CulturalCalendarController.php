@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CulturalEvent;
+use App\Models\CulturalEventEntry;
 use App\Services\CulturalCalendar\CulturalPublicEventQuery;
 use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
@@ -11,7 +12,7 @@ use Illuminate\View\View;
 
 class CulturalCalendarController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         Carbon::setLocale('sr');
 
@@ -42,10 +43,67 @@ class CulturalCalendarController extends Controller
         }
 
         $monthEnd = $monthStart->copy()->endOfMonth();
+        $selectedMonthValue = $monthStart->format('Y-m');
 
+        $calendarMonthLabel = ucfirst($monthStart->translatedFormat('F Y'));
+        $monthOptions = [];
+        for ($cursor = $minMonthStart->copy(); $cursor->lte($maxMonthStart); $cursor->addMonth()) {
+            $monthOptions[] = [
+                'value' => $cursor->format('Y-m'),
+                'label' => ucfirst($cursor->translatedFormat('F Y')),
+            ];
+        }
+
+        $selectedDateParam = $request->query('date');
+
+        if (CulturalPublicReadSource::usesCanonical()) {
+            return $this->indexCanonical(
+                $request,
+                $today,
+                $weekEnd,
+                $monthStart,
+                $monthEnd,
+                $selectedMonthValue,
+                $calendarMonthLabel,
+                $monthOptions,
+                $selectedDateParam,
+                $isKkAdmin
+            );
+        }
+
+        return $this->indexLegacy(
+            $request,
+            $today,
+            $weekEnd,
+            $monthStart,
+            $monthEnd,
+            $selectedMonthValue,
+            $calendarMonthLabel,
+            $monthOptions,
+            $selectedDateParam,
+            $isKkAdmin
+        );
+    }
+
+    /**
+     * Legacy naslovna — CulturalEvent (XOR; ponašanje prije 6A-07).
+     *
+     * @param  list<array{value: string, label: string}>  $monthOptions
+     */
+    private function indexLegacy(
+        Request $request,
+        Carbon $today,
+        Carbon $weekEnd,
+        Carbon $monthStart,
+        Carbon $monthEnd,
+        string $selectedMonthValue,
+        string $calendarMonthLabel,
+        array $monthOptions,
+        mixed $selectedDateParam,
+        bool $isKkAdmin
+    ): View {
         $selectedDate = null;
         $selectedDateEvents = null;
-        $selectedDateParam = $request->query('date');
 
         // Samo za korisnički pregled: kad korisnik klikne datum, podvučemo događaje za taj datum ispod kalendara.
         if ($selectedDateParam && ! $isKkAdmin) {
@@ -153,10 +211,128 @@ class CulturalCalendarController extends Controller
             }
         }
 
-        $calendarDays = [];
-        $firstWeekdayIso = $monthStart->dayOfWeekIso; // 1 = ponedjeljak, 7 = nedjelja
+        $calendarDays = $this->buildCalendarDays($monthStart, $monthEnd, $today, $eventDayCounts);
 
-        // Prazna mjesta prije prvog dana mjeseca radi pravilnog poravnanja kolona.
+        return view('cultural-calendar.index', compact(
+            'today',
+            'weekEnd',
+            'todayCount',
+            'weekCount',
+            'monthCount',
+            'featuredEvents',
+            'upcomingEvents',
+            'calendarDays',
+            'calendarMonthLabel',
+            'monthOptions',
+            'selectedMonthValue',
+            'selectedDate',
+            'selectedDateEvents',
+            'isKkAdmin'
+        ));
+    }
+
+    /**
+     * Canonical naslovna — CulturalEventEntry (6A-07).
+     *
+     * @param  list<array{value: string, label: string}>  $monthOptions
+     */
+    private function indexCanonical(
+        Request $request,
+        Carbon $today,
+        Carbon $weekEnd,
+        Carbon $monthStart,
+        Carbon $monthEnd,
+        string $selectedMonthValue,
+        string $calendarMonthLabel,
+        array $monthOptions,
+        mixed $selectedDateParam,
+        bool $isKkAdmin
+    ): View {
+        $publicQuery = app(CulturalPublicEventQuery::class);
+        $cardEager = ['category', 'coverMedia', 'occurrences.location'];
+
+        $todayCount = $publicQuery->filterByDate($today->toDateString())->count();
+        $weekCount = $publicQuery->filterByWeek(
+            $today->toDateString(),
+            $weekEnd->toDateString()
+        )->count();
+        $monthCount = $publicQuery->filterByMonth($selectedMonthValue)->count();
+
+        $featuredEvents = $publicQuery
+            ->featuredForPublicIndex()
+            ->with($cardEager)
+            ->take(CulturalEventEntry::MAX_FEATURED)
+            ->get();
+
+        $upcomingEvents = $publicQuery
+            ->upcomingForPublicIndex()
+            ->with($cardEager)
+            ->take(3)
+            ->get();
+
+        $selectedDate = null;
+        $selectedDateEvents = null;
+        if ($selectedDateParam && ! $isKkAdmin) {
+            try {
+                $parsedSelected = Carbon::createFromFormat('Y-m-d', $selectedDateParam)->startOfDay();
+                if ($parsedSelected->format('Y-m-d') === $selectedDateParam) {
+                    $selectedDate = $parsedSelected;
+                    $selectedDateEvents = $publicQuery
+                        ->filterByDate($selectedDateParam)
+                        ->with($cardEager)
+                        ->get()
+                        ->sortBy(function (CulturalEventEntry $entry) use ($selectedDateParam): string {
+                            $occ = $entry->occurrenceOnDate($selectedDateParam);
+                            $time = trim((string) ($occ?->vrijeme_od ?? ''));
+
+                            return ($time !== '' ? $time : '00:00:00').'|'.$entry->id;
+                        })
+                        ->values();
+                }
+            } catch (\Throwable $e) {
+                $selectedDate = null;
+                $selectedDateEvents = null;
+            }
+        }
+
+        $eventDayCounts = $publicQuery->distinctPublicEntryCountsByOccurrenceDate(
+            $monthStart->toDateString(),
+            $monthEnd->toDateString()
+        );
+
+        $calendarDays = $this->buildCalendarDays($monthStart, $monthEnd, $today, $eventDayCounts);
+
+        return view('cultural-calendar.index', compact(
+            'today',
+            'weekEnd',
+            'todayCount',
+            'weekCount',
+            'monthCount',
+            'featuredEvents',
+            'upcomingEvents',
+            'calendarDays',
+            'calendarMonthLabel',
+            'monthOptions',
+            'selectedMonthValue',
+            'selectedDate',
+            'selectedDateEvents',
+            'isKkAdmin'
+        ));
+    }
+
+    /**
+     * @param  array<string, int>  $eventDayCounts
+     * @return list<array<string, mixed>>
+     */
+    private function buildCalendarDays(
+        Carbon $monthStart,
+        Carbon $monthEnd,
+        Carbon $today,
+        array $eventDayCounts
+    ): array {
+        $calendarDays = [];
+        $firstWeekdayIso = $monthStart->dayOfWeekIso;
+
         for ($i = 1; $i < $firstWeekdayIso; $i++) {
             $calendarDays[] = [
                 'is_placeholder' => true,
@@ -176,32 +352,7 @@ class CulturalCalendarController extends Controller
             ];
         }
 
-        $calendarMonthLabel = ucfirst($monthStart->translatedFormat('F Y'));
-        $monthOptions = [];
-        for ($cursor = $minMonthStart->copy(); $cursor->lte($maxMonthStart); $cursor->addMonth()) {
-            $monthOptions[] = [
-                'value' => $cursor->format('Y-m'),
-                'label' => ucfirst($cursor->translatedFormat('F Y')),
-            ];
-        }
-        $selectedMonthValue = $monthStart->format('Y-m');
-
-        return view('cultural-calendar.index', compact(
-            'today',
-            'weekEnd',
-            'todayCount',
-            'weekCount',
-            'monthCount',
-            'featuredEvents',
-            'upcomingEvents',
-            'calendarDays',
-            'calendarMonthLabel',
-            'monthOptions',
-            'selectedMonthValue',
-            'selectedDate',
-            'selectedDateEvents',
-            'isKkAdmin'
-        ));
+        return $calendarDays;
     }
 
     public function events(Request $request): View
