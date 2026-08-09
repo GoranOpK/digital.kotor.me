@@ -144,6 +144,17 @@ class CulturalOccurrence extends Model
     }
 
     /**
+     * Kartično relevantna Održavanja (6A-03 / TS-009 §7.3.1): Planiran + nije istekao.
+     *
+     * @param  Builder<CulturalOccurrence>  $query
+     * @return Builder<CulturalOccurrence>
+     */
+    public function scopeCardRelevantForPublic(Builder $query, ?CarbonInterface $now = null): Builder
+    {
+        return \App\Services\CulturalCalendar\CulturalPublicCardOccurrenceCriteria::constrain($query, $now);
+    }
+
+    /**
      * Trenutak isteka prema PO-AUTO-02 (aplikaciona vremenska zona).
      * Sa `vrijeme_do`: datum + vrijeme_do. Bez njega: kraj kalendarskog dana `datum`.
      */

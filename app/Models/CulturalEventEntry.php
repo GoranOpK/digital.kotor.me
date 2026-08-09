@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\CulturalCalendar\CulturalPublicCardOccurrenceCriteria;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -260,5 +262,52 @@ class CulturalEventEntry extends Model
     public function isPubliclyVisible(): bool
     {
         return in_array($this->status, self::PUBLICLY_VISIBLE_STATUSES, true);
+    }
+
+    /**
+     * Prvo naredno kartično relevantno Održavanje (6A-03 / TS-009 §7.3.2).
+     * Koristi eager-load `occurrences` ako je učitano (bez N+1).
+     */
+    public function nextRelevantOccurrence(?CarbonInterface $now = null): ?CulturalOccurrence
+    {
+        if ($this->relationLoaded('occurrences')) {
+            return CulturalPublicCardOccurrenceCriteria::filterAndSortCollection(
+                $this->occurrences,
+                $now
+            )->first();
+        }
+
+        return CulturalPublicCardOccurrenceCriteria::orderForNext(
+            CulturalPublicCardOccurrenceCriteria::constrain(
+                $this->occurrences()->getQuery(),
+                $now
+            )
+        )->first();
+    }
+
+    /**
+     * Broj kartično relevantnih Održavanja (kandidati za next / +N).
+     */
+    public function cardRelevantOccurrencesCount(?CarbonInterface $now = null): int
+    {
+        if ($this->relationLoaded('occurrences')) {
+            return CulturalPublicCardOccurrenceCriteria::filterAndSortCollection(
+                $this->occurrences,
+                $now
+            )->count();
+        }
+
+        return CulturalPublicCardOccurrenceCriteria::constrain(
+            $this->occurrences()->getQuery(),
+            $now
+        )->count();
+    }
+
+    /**
+     * „+ još N termina“ = max(kandidati − 1, 0).
+     */
+    public function additionalRelevantOccurrencesCount(?CarbonInterface $now = null): int
+    {
+        return max($this->cardRelevantOccurrencesCount($now) - 1, 0);
     }
 }
