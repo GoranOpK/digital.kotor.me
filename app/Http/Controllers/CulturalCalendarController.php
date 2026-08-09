@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\CulturalEvent;
+use App\Services\CulturalCalendar\CulturalPublicEventQuery;
+use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class CulturalCalendarController extends Controller
 {
@@ -201,10 +204,38 @@ class CulturalCalendarController extends Controller
         ));
     }
 
-    public function events(Request $request)
+    public function events(Request $request): View
     {
         Carbon::setLocale('sr');
 
+        $parsed = $this->parseEventsListFilters($request);
+
+        if (CulturalPublicReadSource::usesCanonical()) {
+            return $this->eventsCanonical($request, $parsed);
+        }
+
+        return $this->eventsLegacy($request, $parsed);
+    }
+
+    /**
+     * Shared URL filter parsing for Pretraga (date/week/month/q).
+     * Category/location validation depends on read source.
+     *
+     * @return array{
+     *     today: Carbon,
+     *     date: ?string,
+     *     weekStart: ?Carbon,
+     *     weekEnd: ?Carbon,
+     *     selectedMonthStart: ?Carbon,
+     *     selectedMonthLabel: ?string,
+     *     selectedMonthValue: ?string,
+     *     q: ?string,
+     *     categoryParam: mixed,
+     *     locationParam: mixed
+     * }
+     */
+    private function parseEventsListFilters(Request $request): array
+    {
         $today = Carbon::today();
         $date = null;
         $weekStart = null;
@@ -277,8 +308,38 @@ class CulturalCalendarController extends Controller
             }
         }
 
+        return [
+            'today' => $today,
+            'date' => $date,
+            'weekStart' => $weekStart,
+            'weekEnd' => $weekEnd,
+            'selectedMonthStart' => $selectedMonthStart,
+            'selectedMonthLabel' => $selectedMonthLabel,
+            'selectedMonthValue' => $selectedMonthValue,
+            'q' => $q,
+            'categoryParam' => $request->query('category'),
+            'locationParam' => $request->query('location'),
+        ];
+    }
+
+    /**
+     * Legacy Pretraga — CulturalEvent (XOR; ponašanje prije 6A-06).
+     *
+     * @param  array<string, mixed>  $parsed
+     */
+    private function eventsLegacy(Request $request, array $parsed): View
+    {
+        $today = $parsed['today'];
+        $date = $parsed['date'];
+        $weekStart = $parsed['weekStart'];
+        $weekEnd = $parsed['weekEnd'];
+        $selectedMonthStart = $parsed['selectedMonthStart'];
+        $selectedMonthLabel = $parsed['selectedMonthLabel'];
+        $selectedMonthValue = $parsed['selectedMonthValue'];
+        $q = $parsed['q'];
+
         $category = null;
-        $categoryParam = $request->query('category');
+        $categoryParam = $parsed['categoryParam'];
         if (is_string($categoryParam) && $categoryParam !== '' && in_array($categoryParam, CulturalEvent::CATEGORIES, true)) {
             $category = $categoryParam;
         }
@@ -295,7 +356,7 @@ class CulturalCalendarController extends Controller
             ->all();
 
         $location = null;
-        $locationParam = $request->query('location');
+        $locationParam = $parsed['locationParam'];
         if (is_string($locationParam) && $locationParam !== '' && in_array($locationParam, $locationOptions, true)) {
             $location = $locationParam;
         }
@@ -386,6 +447,74 @@ class CulturalCalendarController extends Controller
             ->withQueryString();
 
         $categoryOptions = CulturalEvent::CATEGORIES;
+
+        return view('cultural-calendar.events', compact(
+            'events',
+            'date',
+            'weekStart',
+            'weekEnd',
+            'selectedMonthLabel',
+            'selectedMonthValue',
+            'q',
+            'category',
+            'location',
+            'categoryOptions',
+            'locationOptions'
+        ));
+    }
+
+    /**
+     * Canonical Pretraga — CulturalEventEntry via CulturalPublicEventQuery (6A-06).
+     *
+     * @param  array<string, mixed>  $parsed
+     */
+    private function eventsCanonical(Request $request, array $parsed): View
+    {
+        $date = $parsed['date'];
+        $weekStart = $parsed['weekStart'];
+        $weekEnd = $parsed['weekEnd'];
+        $selectedMonthLabel = $parsed['selectedMonthLabel'];
+        $selectedMonthValue = $parsed['selectedMonthValue'];
+        $q = $parsed['q'];
+
+        $publicQuery = app(CulturalPublicEventQuery::class);
+
+        $categoryOptions = $publicQuery->categoryOptions()->pluck('naziv')->values()->all();
+        $category = null;
+        $categoryParam = $parsed['categoryParam'];
+        if (is_string($categoryParam) && $categoryParam !== '' && in_array($categoryParam, $categoryOptions, true)) {
+            $category = $categoryParam;
+        }
+
+        $locationOptions = $publicQuery->locationDisplayOptions();
+        $location = null;
+        $locationParam = $parsed['locationParam'];
+        if (is_string($locationParam) && $locationParam !== '' && in_array($locationParam, $locationOptions, true)) {
+            $location = $locationParam;
+        }
+
+        $query = $publicQuery->base();
+        $query = $publicQuery->filterByQ($q, $query);
+        $query = $publicQuery->filterByCategoryName($category, $query);
+        $query = $publicQuery->filterByLocationDisplayName($location, $query);
+
+        if ($date !== null) {
+            $query = $publicQuery->filterByDate($date, $query);
+        } elseif ($weekStart !== null && $weekEnd !== null) {
+            $query = $publicQuery->filterByWeek(
+                $weekStart->toDateString(),
+                $weekEnd->toDateString(),
+                $query
+            );
+        } elseif ($selectedMonthValue !== null) {
+            $query = $publicQuery->filterByMonth($selectedMonthValue, $query);
+        }
+
+        $events = $publicQuery
+            ->orderedByNextRelevantOccurrence(null, $query)
+            ->with(['category', 'coverMedia', 'occurrences.location'])
+            ->paginate(12)
+            ->withQueryString();
 
         return view('cultural-calendar.events', compact(
             'events',

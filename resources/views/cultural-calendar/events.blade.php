@@ -195,8 +195,37 @@
     @else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($events as $event)
+                @php
+                    $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
+                    if ($isCanonicalEntry) {
+                        $cardOcc = $event->nextRelevantOccurrence();
+                        $cardDatumOd = $cardOcc?->datum;
+                        $cardDatumDo = null;
+                        $cardVrijeme = $cardOcc?->vrijeme_od;
+                        $cardLokacija = $cardOcc?->publicLocationDisplayName();
+                        $cardKategorija = $event->publicCategoryName();
+                        $additionalCount = $event->additionalRelevantOccurrencesCount();
+                        // Detalj cutover van 6A-06 — bez legacy CulturalEvent route binding.
+                        $cardHref = null;
+                    } else {
+                        $cardDatumOd = $event->datum_od;
+                        $cardDatumDo = $event->datum_do;
+                        $cardVrijeme = $event->vrijeme;
+                        $cardLokacija = $event->lokacija;
+                        $cardKategorija = $event->kategorija;
+                        $additionalCount = 0;
+                        $cardHref = route('cultural-calendar.show', [
+                            'event' => $event,
+                            'back' => request()->getRequestUri(),
+                        ]);
+                    }
+                @endphp
                 <article class="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    <a href="{{ route('cultural-calendar.show', ['event' => $event, 'back' => request()->getRequestUri()]) }}" class="block hover:bg-gray-50 transition-colors duration-150">
+                    @if($cardHref)
+                        <a href="{{ $cardHref }}" class="block hover:bg-gray-50 transition-colors duration-150">
+                    @else
+                        <div class="block">
+                    @endif
                     <div class="kk-public-status-photo">
                         <img
                             src="{{ $event->imageUrl() }}"
@@ -207,24 +236,33 @@
                     </div>
                     <div class="p-4">
                         <div class="text-xs text-gray-500 mb-1">
-                            {{ optional($event->datum_od)->format('d.m.Y') }}
-                            @if($event->datum_do)
-                                - {{ optional($event->datum_do)->format('d.m.Y') }}
+                            {{ optional($cardDatumOd)->format('d.m.Y') }}
+                            @if($cardDatumDo)
+                                - {{ optional($cardDatumDo)->format('d.m.Y') }}
                             @endif
-                            @if($event->vrijeme)
-                                • {{ substr((string)$event->vrijeme, 0, 5) }}
+                            @if($cardVrijeme)
+                                • {{ substr((string) $cardVrijeme, 0, 5) }}
                             @endif
                         </div>
                         <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $event->naslov }}</h3>
-                        <div class="text-sm text-gray-600 mb-2">{{ $event->kategorija }}</div>
-                        @if($event->lokacija)
-                            <div class="text-sm text-gray-600 mb-2">{{ $event->lokacija }}</div>
+                        @if($cardKategorija)
+                            <div class="text-sm text-gray-600 mb-2">{{ $cardKategorija }}</div>
+                        @endif
+                        @if($cardLokacija)
+                            <div class="text-sm text-gray-600 mb-2">{{ $cardLokacija }}</div>
+                        @endif
+                        @if($additionalCount > 0)
+                            <div class="text-sm text-gray-600 mb-2">+ još {{ $additionalCount }} {{ $additionalCount === 1 ? 'termin' : 'termina' }}</div>
                         @endif
                         @if($event->opis)
                             <p class="text-sm text-gray-700">{{ \Illuminate\Support\Str::limit($event->opis, 150) }}</p>
                         @endif
                     </div>
-                    </a>
+                    @if($cardHref)
+                        </a>
+                    @else
+                        </div>
+                    @endif
                 </article>
             @endforeach
         </div>

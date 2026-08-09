@@ -265,6 +265,50 @@ class CulturalEventEntry extends Model
     }
 
     /**
+     * Javni URL naslovne fotografije (6A-06): coverMedia ili category default / global fallback.
+     */
+    public function imageUrl(): string
+    {
+        if ($this->coverMedia && filled($this->coverMedia->storage_path)) {
+            return $this->coverMedia->publicUrl();
+        }
+
+        return CulturalEvent::defaultImageUrlForCategory($this->category?->naziv);
+    }
+
+    /**
+     * Minimalni javni badge za Pretragu (6A-06).
+     * Pun Predstoji/U toku/Završen → 6A-11; ovdje samo Otkazan.
+     *
+     * @return array{key: string, label: string, class: string}|null
+     */
+    public function publicStatus(?CarbonInterface $now = null): ?array
+    {
+        if ($this->status === self::STATUS_CANCELLED) {
+            return [
+                'key' => 'cancelled',
+                'label' => 'Otkazan',
+                'class' => 'kk-status-cancelled',
+            ];
+        }
+
+        return null;
+    }
+
+    public function publicCategoryName(): ?string
+    {
+        $naziv = $this->category?->naziv;
+
+        if ($naziv === null) {
+            return null;
+        }
+
+        $trimmed = trim((string) $naziv);
+
+        return $trimmed !== '' ? $trimmed : null;
+    }
+
+    /**
      * Prvo naredno kartično relevantno Održavanje (6A-03 / TS-009 §7.3.2).
      * Koristi eager-load `occurrences` ako je učitano (bez N+1).
      */
