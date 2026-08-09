@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Services\CulturalCalendar\CulturalPublicCardOccurrenceCriteria;
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 /**
  * Kanonski Događaj (TS-003 Korak 1 / PO-EV-01).
@@ -386,5 +388,45 @@ class CulturalEventEntry extends Model
     public function additionalRelevantOccurrencesCount(?CarbonInterface $now = null): int
     {
         return max($this->cardRelevantOccurrencesCount($now) - 1, 0);
+    }
+
+    /**
+     * Sva Održavanja za javni detalj (6A-08 / TS-009 §7.3.3).
+     * Nije cardRelevant — uključuje Planiran, Odgođen, Otkazan, Završen.
+     * Redoslijed: datum ASC, vrijeme_od ASC, id ASC.
+     *
+     * @return Collection<int, CulturalOccurrence>
+     */
+    public function publicDetailOccurrences(): Collection
+    {
+        if ($this->relationLoaded('occurrences')) {
+            return $this->occurrences
+                ->sort(function (CulturalOccurrence $a, CulturalOccurrence $b): int {
+                    $dateA = $a->datum instanceof CarbonInterface
+                        ? $a->datum->format('Y-m-d')
+                        : Carbon::parse((string) $a->datum)->format('Y-m-d');
+                    $dateB = $b->datum instanceof CarbonInterface
+                        ? $b->datum->format('Y-m-d')
+                        : Carbon::parse((string) $b->datum)->format('Y-m-d');
+
+                    $cmp = strcmp($dateA, $dateB);
+                    if ($cmp !== 0) {
+                        return $cmp;
+                    }
+
+                    $timeA = trim((string) ($a->vrijeme_od ?? '')) ?: '00:00:00';
+                    $timeB = trim((string) ($b->vrijeme_od ?? '')) ?: '00:00:00';
+                    $cmp = strcmp($timeA, $timeB);
+
+                    return $cmp !== 0 ? $cmp : ($a->id <=> $b->id);
+                })
+                ->values();
+        }
+
+        return $this->occurrences()
+            ->orderBy('datum')
+            ->orderByRaw("COALESCE(NULLIF(TRIM(vrijeme_od), ''), '00:00:00')")
+            ->orderBy('id')
+            ->get();
     }
 }

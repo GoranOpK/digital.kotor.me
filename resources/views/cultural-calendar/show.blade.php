@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
+@endphp
 <div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <style>
         .kk-show-header {
@@ -70,6 +73,23 @@
             font-size: 0.9375rem;
             line-height: 1.5;
         }
+        .kk-show-occurrence + .kk-show-occurrence {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        .kk-show-occ-status {
+            display: inline-block;
+            margin-left: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #7f1d1d;
+            background: #fde8e8;
+            border: 1px solid #f5b5b5;
+            border-radius: 0.25rem;
+            padding: 0.1rem 0.4rem;
+            vertical-align: middle;
+        }
         @media (max-width: 768px) {
             .kk-show-layout {
                 grid-template-columns: 1fr;
@@ -104,32 +124,44 @@
                     </p>
                 @endif
 
-                <div class="kk-show-meta">
-                    <strong>Datum:</strong>
-                    {{ optional($event->datum_od)->format('d.m.Y') }}
-                    @if($event->datum_do)
-                        - {{ optional($event->datum_do)->format('d.m.Y') }}
-                    @endif
-                </div>
+                @if($isCanonicalEntry)
+                    @include('cultural-calendar.partials.show-occurrences', [
+                        'occurrences' => $event->publicDetailOccurrences(),
+                    ])
 
-                @if($event->vrijeme)
+                    @if($event->publicCategoryName())
+                        <div class="kk-show-meta">
+                            <strong>Kategorija:</strong> {{ $event->publicCategoryName() }}
+                        </div>
+                    @endif
+                @else
                     <div class="kk-show-meta">
-                        <strong>Vrijeme:</strong>
-                        {{ substr((string) $event->vrijeme, 0, 5) }}
-                        @if($event->vrijeme_do)
-                            - {{ substr((string) $event->vrijeme_do, 0, 5) }}
+                        <strong>Datum:</strong>
+                        {{ optional($event->datum_od)->format('d.m.Y') }}
+                        @if($event->datum_do)
+                            - {{ optional($event->datum_do)->format('d.m.Y') }}
                         @endif
                     </div>
-                @endif
 
-                <div class="kk-show-meta">
-                    <strong>Kategorija:</strong> {{ $event->kategorija }}
-                </div>
+                    @if($event->vrijeme)
+                        <div class="kk-show-meta">
+                            <strong>Vrijeme:</strong>
+                            {{ substr((string) $event->vrijeme, 0, 5) }}
+                            @if($event->vrijeme_do)
+                                - {{ substr((string) $event->vrijeme_do, 0, 5) }}
+                            @endif
+                        </div>
+                    @endif
 
-                @if($event->lokacija)
                     <div class="kk-show-meta">
-                        <strong>Lokacija:</strong> {{ $event->lokacija }}
+                        <strong>Kategorija:</strong> {{ $event->kategorija }}
                     </div>
+
+                    @if($event->lokacija)
+                        <div class="kk-show-meta">
+                            <strong>Lokacija:</strong> {{ $event->lokacija }}
+                        </div>
+                    @endif
                 @endif
 
                 @if($event->opis)

@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
  * 6A-04: kategorije + lokacijski filter adapter (bez controller cutover-a).
  * 6A-05: q / date / week / month filteri Pretrage (bez controller cutover-a).
  * 6A-07: index helperi (featured / upcoming / day counts).
+ * 6A-08: findPublicEntryForShow (detalj + eager load).
  */
 final class CulturalPublicEventQuery
 {
@@ -32,6 +33,26 @@ final class CulturalPublicEventQuery
     public function base(): Builder
     {
         return CulturalEventEntry::query()->publiclyVisible();
+    }
+
+    /**
+     * Javni detalj Entry-ja (6A-08): fail-closed visibility + eager load za show.
+     */
+    public function findPublicEntryForShow(int|string $id): CulturalEventEntry
+    {
+        return $this->base()
+            ->whereKey($id)
+            ->with([
+                'category',
+                'coverMedia',
+                'occurrences' => function ($query): void {
+                    $query->orderBy('datum')
+                        ->orderByRaw("COALESCE(NULLIF(TRIM(vrijeme_od), ''), '00:00:00')")
+                        ->orderBy('id');
+                },
+                'occurrences.location',
+            ])
+            ->firstOrFail();
     }
 
     /**

@@ -741,10 +741,21 @@ class CulturalCalendarController extends Controller
         return view('cultural-calendar.archive', compact('events'));
     }
 
-    public function show(Request $request, CulturalEvent $event)
+    /**
+     * Detalj događaja (6A-08 DATA SWITCH).
+     *
+     * Parametar ostaje {event}; bez route cutover-a (6A-10).
+     * Legacy: CulturalEvent po ID; canonical: CulturalEventEntry preko public query SSOT.
+     */
+    public function show(Request $request, string $event)
     {
-        if (! $event->isPubliclyVisible()) {
-            abort(404);
+        if (CulturalPublicReadSource::usesCanonical()) {
+            $event = app(CulturalPublicEventQuery::class)->findPublicEntryForShow($event);
+        } else {
+            $event = CulturalEvent::query()->whereKey($event)->firstOrFail();
+            if (! $event->isPubliclyVisible()) {
+                abort(404);
+            }
         }
 
         $backUrl = (string) $request->query('back', '');

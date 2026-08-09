@@ -102,6 +102,20 @@ class CulturalOccurrence extends Model
         return self::STATUS_LABELS[$this->status] ?? $this->status;
     }
 
+    /**
+     * Javna oznaka statusa Održavanja na detalju (TS-009 §7.3.3–7.3.4).
+     * Planiran nema posebnu oznaku.
+     */
+    public function publicDetailStatusLabel(): ?string
+    {
+        return match ($this->status) {
+            self::STATUS_POSTPONED => 'Odgođeno',
+            self::STATUS_CANCELLED => 'Otkazano',
+            self::STATUS_FINISHED => 'Završeno',
+            default => null,
+        };
+    }
+
     public function canTransitionTo(string $target): bool
     {
         $allowed = self::ALLOWED_TRANSITIONS[$this->status] ?? [];
