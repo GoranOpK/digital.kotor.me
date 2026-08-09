@@ -2,18 +2,23 @@
 
 namespace App\Services\CulturalCalendar;
 
+use App\Models\CulturalCategory;
 use App\Models\CulturalEventEntry;
+use App\Models\CulturalLocation;
 use App\Models\CulturalOccurrence;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Kanonski SSOT ulaz za javne query-je Faze 6A (PO-TS9-08J / TS-009 §11–12).
  *
  * 6A-02: statusna javna vidljivost (fail-closed).
  * 6A-03: sort po prvom narednom kartično relevantnom Održavanju.
+ * 6A-04: kategorije + lokacijski filter adapter (bez controller cutover-a).
  */
 final class CulturalPublicEventQuery
 {
@@ -33,6 +38,118 @@ final class CulturalPublicEventQuery
     public function entries(): Builder
     {
         return $this->base();
+    }
+
+    /**
+     * Aktivne kanonske kategorije za javni dropdown (TS-009 §3.3.3 / PO-TS9-08E).
+     *
+     * @return Collection<int, CulturalCategory>
+     */
+    public function categoryOptions(): Collection
+    {
+        return CulturalCategory::query()
+            ->active()
+            ->orderedByName()
+            ->get();
+    }
+
+    /**
+     * Filter po tačnom kanonskom nazivu aktivne kategorije.
+     * Nevalidan / neaktivan / prazan naziv → ignoriše se (TS-009 §3.3.3).
+     *
+     * @param  Builder<CulturalEventEntry>|null  $query
+     * @return Builder<CulturalEventEntry>
+     */
+    public function filterByCategoryName(?string $canonicalName, ?Builder $query = null): Builder
+    {
+        $query ??= $this->base();
+
+        $name = is_string($canonicalName) ? trim($canonicalName) : '';
+        if ($name === '') {
+            return $query;
+        }
+
+        $categoryId = CulturalCategory::query()
+            ->active()
+            ->where('naziv', $name)
+            ->value('id');
+
+        if ($categoryId === null) {
+            return $query;
+        }
+
+        return $query->where('category_id', $categoryId);
+    }
+
+    /**
+     * Jedinstveni display nazivi lokacija iz Objavljenih Događaja (PO-CR3-04).
+     * Bez vremenske arhivske semantike (6A-09).
+     *
+     * @return list<string>
+     */
+    public function locationDisplayOptions(): array
+    {
+        $entryTable = (new CulturalEventEntry)->getTable();
+        $occTable = (new CulturalOccurrence)->getTable();
+        $locTable = (new CulturalLocation)->getTable();
+
+        $catalog = DB::table("{$occTable} as o")
+            ->join("{$entryTable} as e", 'e.id', '=', 'o.event_entry_id')
+            ->join("{$locTable} as l", 'l.id', '=', 'o.location_id')
+            ->where('e.status', CulturalEventEntry::STATUS_PUBLISHED)
+            ->whereNotNull('o.location_id')
+            ->whereNotNull('l.naziv')
+            ->whereRaw("TRIM(l.naziv) <> ''")
+            ->distinct()
+            ->orderBy('l.naziv')
+            ->pluck('l.naziv');
+
+        $manual = DB::table("{$occTable} as o")
+            ->join("{$entryTable} as e", 'e.id', '=', 'o.event_entry_id')
+            ->where('e.status', CulturalEventEntry::STATUS_PUBLISHED)
+            ->whereNotNull('o.location_manual_name')
+            ->whereRaw("TRIM(o.location_manual_name) <> ''")
+            ->distinct()
+            ->orderBy('o.location_manual_name')
+            ->pluck('o.location_manual_name');
+
+        return $catalog
+            ->merge($manual)
+            ->map(fn ($value) => trim((string) $value))
+            ->filter(fn (string $value) => $value !== '')
+            ->unique()
+            ->sort(SORT_STRING)
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Filter po tačnom display nazivu lokacije (katalog ili manual).
+     * Nevalidan / nepostojeći / prazan → ignoriše se (TS-009 §3.3.4).
+     *
+     * @param  Builder<CulturalEventEntry>|null  $query
+     * @return Builder<CulturalEventEntry>
+     */
+    public function filterByLocationDisplayName(?string $displayName, ?Builder $query = null): Builder
+    {
+        $query ??= $this->base();
+
+        $name = is_string($displayName) ? trim($displayName) : '';
+        if ($name === '') {
+            return $query;
+        }
+
+        if (! in_array($name, $this->locationDisplayOptions(), true)) {
+            return $query;
+        }
+
+        return $query->whereHas('occurrences', function (Builder $occurrenceQuery) use ($name): void {
+            $occurrenceQuery->where(function (Builder $inner) use ($name): void {
+                $inner->whereHas('location', function (Builder $locationQuery) use ($name): void {
+                    $locationQuery->where('naziv', $name);
+                })->orWhereRaw('TRIM(location_manual_name) = ?', [$name]);
+            });
+        });
     }
 
     /**

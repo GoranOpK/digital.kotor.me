@@ -135,6 +135,32 @@ class CulturalOccurrence extends Model
         return ! $this->hasCatalogLocation() && ! $this->hasManualLocation();
     }
 
+    /**
+     * Javni display naziv lokacije Održavanja (6A-04 / TS-009 §3.3.4).
+     *
+     * Domenski XOR (OccurrenceWriter): kataloška ILI ručna, nikad oboje.
+     * Deaktivirana kataloška lokacija i dalje daje naziv (istorijska referenca).
+     */
+    public function publicLocationDisplayName(): ?string
+    {
+        if ($this->hasCatalogLocation()) {
+            $naziv = $this->location?->naziv;
+            if ($naziv === null) {
+                return null;
+            }
+
+            $trimmed = trim((string) $naziv);
+
+            return $trimmed !== '' ? $trimmed : null;
+        }
+
+        if ($this->hasManualLocation()) {
+            return trim((string) $this->location_manual_name);
+        }
+
+        return null;
+    }
+
     public function scopeOpen(Builder $query): Builder
     {
         return $query->whereIn('status', [
