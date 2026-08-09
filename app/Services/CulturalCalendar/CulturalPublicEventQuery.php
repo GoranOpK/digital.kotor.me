@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\DB;
  * 6A-02: statusna javna vidljivost (fail-closed).
  * 6A-03: sort po prvom narednom kartično relevantnom Održavanju.
  * 6A-04: kategorije + lokacijski filter adapter (bez controller cutover-a).
+ * 6A-05: q / date / week / month filteri Pretrage (bez controller cutover-a).
  */
 final class CulturalPublicEventQuery
 {
@@ -154,10 +155,12 @@ final class CulturalPublicEventQuery
 
     /**
      * Sort: next relevant OCC ASC (NULL last), zatim Entry.id ASC.
+     * Opcioni $query omogućava chain nakon filtera (6A-05); default ostaje base().
      *
+     * @param  Builder<CulturalEventEntry>|null  $query
      * @return Builder<CulturalEventEntry>
      */
-    public function orderedByNextRelevantOccurrence(?CarbonInterface $now = null): Builder
+    public function orderedByNextRelevantOccurrence(?CarbonInterface $now = null, ?Builder $query = null): Builder
     {
         $now = CulturalPublicCardOccurrenceCriteria::now($now);
         $nowStr = Carbon::parse($now)
@@ -171,12 +174,163 @@ final class CulturalPublicEventQuery
             rawColumn: true
         );
 
-        return $this->base()
+        $query ??= $this->base();
+
+        return $query
             ->orderByRaw('('.$datumSub->toSql().') IS NULL')
             ->addBinding($datumSub->getBindings(), 'order')
             ->orderBy($datumSub)
             ->orderBy($timeSub)
             ->orderBy('cultural_event_entries.id');
+    }
+
+    /**
+     * Tekstualna pretraga q (TS-009 §3.3.2 / PO-CR3-02).
+     * Obuhvat: naslov, opis, javni display lokacije OCC (katalog naziv | TRIM manual).
+     * Prazan / whitespace → ignore.
+     *
+     * @param  Builder<CulturalEventEntry>|null  $query
+     * @return Builder<CulturalEventEntry>
+     */
+    public function filterByQ(?string $term, ?Builder $query = null): Builder
+    {
+        $query ??= $this->base();
+
+        $term = is_string($term) ? trim($term) : '';
+        if ($term === '') {
+            return $query;
+        }
+
+        $like = '%'.addcslashes($term, '%_\\').'%';
+
+        return $query->where(function (Builder $outer) use ($like): void {
+            $outer->where('naslov', 'like', $like)
+                ->orWhere('opis', 'like', $like)
+                ->orWhereHas('occurrences', function (Builder $occurrenceQuery) use ($like): void {
+                    $occurrenceQuery->where(function (Builder $inner) use ($like): void {
+                        $inner->whereHas('location', function (Builder $locationQuery) use ($like): void {
+                            $locationQuery->where('naziv', 'like', $like);
+                        })->orWhereRaw('TRIM(location_manual_name) LIKE ?', [$like]);
+                    });
+                });
+        });
+    }
+
+    /**
+     * Filter po kalendarskom datumu OCC (TS-009 §3.2): occurrences.datum = Y-m-d.
+     * Nevalidan / prazan → ignore. Sva OCC statusa (nije cardRelevant).
+     *
+     * @param  Builder<CulturalEventEntry>|null  $query
+     * @return Builder<CulturalEventEntry>
+     */
+    public function filterByDate(?string $dateYmd, ?Builder $query = null): Builder
+    {
+        $query ??= $this->base();
+        $date = $this->parseDateYmd($dateYmd);
+        if ($date === null) {
+            return $query;
+        }
+
+        return $query->whereHas('occurrences', function (Builder $occurrenceQuery) use ($date): void {
+            $occurrenceQuery->whereDate('datum', $date);
+        });
+    }
+
+    /**
+     * Filter po sedmici: OCC.datum u [week_start, week_end] uključivo (TS-009 §3.2).
+     * Oba parametra moraju biti validna; inače ignore. Ako start > end, zamijeni (legacy).
+     *
+     * @param  Builder<CulturalEventEntry>|null  $query
+     * @return Builder<CulturalEventEntry>
+     */
+    public function filterByWeek(?string $weekStartYmd, ?string $weekEndYmd, ?Builder $query = null): Builder
+    {
+        $query ??= $this->base();
+        $start = $this->parseDateYmd($weekStartYmd);
+        $end = $this->parseDateYmd($weekEndYmd);
+        if ($start === null || $end === null) {
+            return $query;
+        }
+
+        if ($start > $end) {
+            [$start, $end] = [$end, $start];
+        }
+
+        return $query->whereHas('occurrences', function (Builder $occurrenceQuery) use ($start, $end): void {
+            $occurrenceQuery
+                ->whereDate('datum', '>=', $start)
+                ->whereDate('datum', '<=', $end);
+        });
+    }
+
+    /**
+     * Filter po mjesecu YYYY-MM (TS-009 §3.2 / CR-002). Nevalidan → ignore.
+     * Bez ograničenja „samo od danas“.
+     *
+     * @param  Builder<CulturalEventEntry>|null  $query
+     * @return Builder<CulturalEventEntry>
+     */
+    public function filterByMonth(?string $monthYm, ?Builder $query = null): Builder
+    {
+        $query ??= $this->base();
+        $bounds = $this->parseMonthYm($monthYm);
+        if ($bounds === null) {
+            return $query;
+        }
+
+        [$start, $end] = $bounds;
+
+        return $query->whereHas('occurrences', function (Builder $occurrenceQuery) use ($start, $end): void {
+            $occurrenceQuery
+                ->whereDate('datum', '>=', $start)
+                ->whereDate('datum', '<=', $end);
+        });
+    }
+
+    private function parseDateYmd(?string $value): ?string
+    {
+        if (! is_string($value) || $value === '') {
+            return null;
+        }
+
+        try {
+            $parsed = Carbon::createFromFormat('Y-m-d', $value)->startOfDay();
+            if ($parsed->format('Y-m-d') !== $value) {
+                return null;
+            }
+
+            return $value;
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
+     * @return array{0: string, 1: string}|null  [startYmd, endYmd]
+     */
+    private function parseMonthYm(?string $value): ?array
+    {
+        if (! is_string($value) || $value === '') {
+            return null;
+        }
+
+        if (preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $value) !== 1) {
+            return null;
+        }
+
+        try {
+            $start = Carbon::createFromFormat('!Y-m', $value)->startOfMonth();
+            if ($start->format('Y-m') !== $value) {
+                return null;
+            }
+
+            return [
+                $start->toDateString(),
+                $start->copy()->endOfMonth()->toDateString(),
+            ];
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     private function nextRelevantOccurrenceColumnSubquery(
