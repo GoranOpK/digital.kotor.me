@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.8
-**Datum:** 2026-08-09
+**Verzija:** 1.0.9
+**Datum:** 2026-08-10
 
 ---
 
@@ -29,6 +29,7 @@
 | 1.0.6 | 2026-08-09 | **Faza 6A dokumentacioni PATCH:** cutover `CulturalEvent` → `CulturalEventEntry`+`CulturalOccurrence`; PO-EV-01; očuvanje UI; kartica + sortiranje + Odgođen; CAT-CUTOVER; Faza 6A/6B; V1 bez javnog `cancellation_reason`; legacy URL 404; privremeni feature flag; public query SSOT; TM-JP test matrica. Usklađeno sa BM PATCH-060 / FS PATCH-FS-060. Bez izmjene implementacije. |
 | 1.0.7 | 2026-08-09 | **PO-6A11-01:** kanonski javni status Događaja (multi-OCC) — §7.1.6; razdvajanje legacy flat (§7.1.3) i canonical agregata; usklađeno sa BM-PK-34 / BR-285. Bez izmjene lifecycle / arhive. |
 | 1.0.8 | 2026-08-09 | **PO-6A09-01…06:** Javna Arhiva vs interni Arhiviran — §8 / §11 / §12 / §7.2 usklađeni; archive-only query; očuvanje izvornog statusa; istorijski badge Otkazan/Završen; TM-JP-11/04. Usklađeno sa BM PATCH-062 / FS PATCH-FS-062 / BM-PK-35 / BR-286. Bez izmjene implementacije. |
+| 1.0.9 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** ručni Organizator; Odgođeno + Prvobitni termin + razlozi; OCC cancel prikaz; Entry cancel opcion razlog javno; supersede V1 zabrane javnog `cancellation_reason`. Bez izmjene implementacije. |
 
 ---
 
@@ -911,7 +912,7 @@ Na Detaljima otkazanog događaja prikazuje se fiksni tekst:
 
 Tekst nije uređiv i nije dio opisa. Status badge (§7.1) ostaje.
 
-**V1:** `cancellation_reason` / razlog otkazivanja / napomena urednika **ne** prikazuje se automatski javnosti (BM-PK-33 / BR-284). Javni prikaz teksta razloga zahtijeva zasebnu PO odluku.
+**PATCH-063 / BR-295 / BM-PK-36 (supersede V1 zabrane):** fiksni sistemski tekst ostaje. Ako Entry `cancellation_reason` postoji (opcion), **može se javno prikazati** kao napomena uz sistemsko obavještenje. Ako razlog nedostaje — samo sistemski tekst. Fail-closed archive pravila (PATCH-062) neizmijenjena.
 
 ### 7.2.5 Pretraga (PO-CR4B-06)
 
@@ -937,7 +938,7 @@ Nakon isteka planiranog termina otkazani događaj:
 * izmjena prava otkazivanja (BR-063 / BM-DG-05);
 * izmjena flaga Istaknut;
 * novi filteri / URL parametri / search modovi;
-* javni prikaz `cancellation_reason` (V1 zabranjen — §7.2.4 / BM-PK-33).
+* ~~javni prikaz `cancellation_reason` zabranjen~~ — **superseded** PATCH-063 / §7.2.4 / BR-295 (opcion prikaz ako postoji).
 
 **Napomena:** globalno otvaranje svih `archived` zapisa na aktivnim površinama **nije** dio CR-004B ni PO-6A09. Kanonska Javna Arhiva (poseban query + očuvanje izvornog statusa) uređuje **§8 / PO-6A09**.
 
@@ -972,10 +973,26 @@ Za **Detalj Događaja** — **javno relevantna** Održavanja uključuju Planiran
 
 Prikazuju se **sva** javno relevantna Održavanja (BM-PK-09 / BR-110).
 
-### 7.3.4 Odgođeno Održavanje (PO-TS9-08D)
+### 7.3.4 Odgođeno Održavanje (PO-TS9-08D / PATCH-063)
 
-* **Detalj:** Odgođeno Održavanje ostaje vidljivo uz oznaku **„Odgođeno“**. Novi važeći termin = Planirano Održavanje.
+* **Detalj — Odgođeno bez novog termina:** prikazati status **„Odgođeno“**; label **„Prvobitni termin“**; postojeći originalni datum; opcion `postponement_reason` ako postoji.
+* **Ne** prikazivati Odgođeno kao aktivno predstojeće Održavanje (§7.3.1).
+* **Kada novi datum unesen i status Planiran:** novi datum = aktivni termin; razlog/history ostaje po TS-004; glavni prikaz **ne** tvrdi da je trenutno Odgođeno.
 * **Kartica:** stari odgođeni termin **nije** glavni termin; kartica prikazuje prvo naredno relevantno važeće Održavanje (+ „+ još N termina“ po §7.3.2).
+
+### 7.3.5 Otkazano Održavanje (PATCH-063 / BR-294)
+
+* Prikaz: **„Otkazano“**; prvobitni datum; opcion OCC `cancellation_reason` ako postoji.
+* Ostala aktivna Održavanja i dalje normalno prikazana.
+* Entry **ne** dobija status Otkazan zbog jednog OCC cancel.
+* Otkazani OCC **ne** ulazi u predstojeće aktivne termine (§7.3.1).
+
+### 7.3.6 Prikaz Organizatora (PATCH-063 / BR-288)
+
+* Ako postoji registrovani Organizator (`organizer_id`): postojeći prikaz.
+* Inače ako postoji `organizer_manual_name`: prikazati taj naziv kao Organizator.
+* Ako oba nedostaju: bez Organizatora / ne prikazivati praznu sekciju (postojeće UI pravilo).
+* Fail-closed: ne smiju oba tipa biti istovremeno aktivna za isti poslovni tok (XOR — TS-003 §6.2).
 
 ---
 
@@ -1244,7 +1261,7 @@ Konvencija: `TM-JP-*` (Javni Portal), u skladu sa `TM-*` iz RG-001 / TS-010.8. *
 | TM-JP-07 | Sortiranje Pretrage | Više Događaja | Rastuće po narednom relevantnom Održavanju | Pozitivan | §3.4; BR-281 |
 | TM-JP-08 | Odgođen detalj | Odgođeno + novo Planirano | Detalj: „Odgođeno“ + Planirano | Pozitivan | §7.3.4; BR-282 |
 | TM-JP-09 | Odgođen kartica | Isto | Kartica ≠ stari odgođeni kao glavni | Pozitivan | §7.3.4; BR-282 |
-| TM-JP-10 | Otkazan | Objavljen→Otkazan | Badge Otkazan; BR-272 tekst; bez `cancellation_reason` | Pozitivan | §7.2; BR-272; BR-284 |
+| TM-JP-10 | Otkazan | Objavljen→Otkazan | Badge Otkazan; BR-272 tekst; opcion `cancellation_reason` ako postoji | Pozitivan | §7.2; BR-272; BR-295 |
 | TM-JP-11 | Javna Arhiva | Prošao termin published/cancelled; archived-from-published/cancelled | U Arhivi; badge Otkazan ili Završen; kartica = posljednje istorijsko OCC; sort DESC | Pozitivan | §8; BR-274; BR-286 |
 | TM-JP-11a | Archive detail | Archive-public Entry | Detalj 200 | Pozitivan | §8; PO-6A09-03 |
 | TM-JP-11b | Non-public archived | `archived` bez izvornog javnog statusa / nikad nije bio javni | Nije u Arhivi; detalj 404 | Negativan | §8; §12 |
@@ -1255,3 +1272,7 @@ Konvencija: `TM-JP-*` (Javni Portal), u skladu sa `TM-*` iz RG-001 / TS-010.8. *
 | TM-JP-16 | Feature flag | Flag legacy | Samo legacy read; bez merge | Pozitivan | §10.2 |
 | TM-JP-17 | Feature flag | Flag canonical | Samo canonical read; bez merge | Pozitivan | §10.2 |
 | TM-JP-18 | CAT preduslov | <14 kategorija | Cutover se ne smatra spremnim | Negativan | §9.4 |
+| TM-JP-19 | Ručni Org | Entry sa `organizer_manual_name` | Prikaz naziva; bez registrovanog Org | Pozitivan | §7.3.6; BR-288 |
+| TM-JP-20 | Bez Org | Oba null | Nema prazne Org sekcije | Pozitivan | §7.3.6 |
+| TM-JP-21 | Odgođeno Prvobitni | Odgođen bez novog termina | „Odgođeno“ + „Prvobitni termin“ + datum + opcion razlog | Pozitivan | §7.3.4; BR-293 |
+| TM-JP-22 | OCC cancel | Jedan OCC Otkazan | „Otkazano“ + datum + opcion razlog; Entry ostaje Objavljen ako uslovi dozvole | Pozitivan | §7.3.5; BR-294 |

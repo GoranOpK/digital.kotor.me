@@ -65,7 +65,7 @@ class CulturalEditorialDashboardTest extends TestCase
             ->assertSee('Urednički radni prostor', false)
             ->assertSee('Čeka pregled', false)
             ->assertSee('Prijedlozi izmjena na pregledu', false)
-            ->assertSee('Nacrti bez Organizatora', false)
+            ->assertSee('Događaji u pripremi', false)
             ->assertSee('Zahtjevi za Organizatora', false)
             ->assertSee('Zahtjevi za Moderatore', false)
             ->assertSee('DU-02', false);

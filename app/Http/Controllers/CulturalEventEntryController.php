@@ -78,7 +78,7 @@ class CulturalEventEntryController extends Controller
 
         return redirect()
             ->route('cultural-event-entries.edit', $entry)
-            ->with('status', 'Nacrt događaja je kreiran.');
+            ->with('status', 'Događaj je sačuvan.');
     }
 
     public function edit(CulturalEventEntry $kanonski_dogadjaj): View|RedirectResponse
@@ -92,13 +92,26 @@ class CulturalEventEntryController extends Controller
         }
 
         if ($kanonski_dogadjaj->isPublished()) {
-            $activeOrganizers = $kanonski_dogadjaj->organizer_id === null
-                ? CulturalOrganizer::query()->active()->orderedByName()->get()
-                : collect();
+            if ($kanonski_dogadjaj->isDirectFlowPublishedContentEditable()) {
+                $activeOrganizers = CulturalOrganizer::query()->active()->orderedByName()->get();
+
+                return view('cultural-calendar.admin.event-entries.edit', array_merge(
+                    $this->formCatalogs($kanonski_dogadjaj),
+                    [
+                        'entry' => $kanonski_dogadjaj,
+                        'publishedDirectEdit' => true,
+                        'activeOrganizers' => $activeOrganizers,
+                        'locations' => \App\Models\CulturalLocation::query()
+                            ->active()
+                            ->orderedByName()
+                            ->get(),
+                    ]
+                ));
+            }
 
             return view('cultural-calendar.admin.event-entries.show-published', [
                 'entry' => $kanonski_dogadjaj,
-                'activeOrganizers' => $activeOrganizers,
+                'activeOrganizers' => collect(),
             ]);
         }
 
@@ -118,6 +131,7 @@ class CulturalEventEntryController extends Controller
             $this->formCatalogs($kanonski_dogadjaj),
             [
                 'entry' => $kanonski_dogadjaj,
+                'publishedDirectEdit' => false,
                 'locations' => \App\Models\CulturalLocation::query()
                     ->active()
                     ->orderedByName()
@@ -130,11 +144,15 @@ class CulturalEventEntryController extends Controller
         CulturalEventEntryUpdateRequest $request,
         CulturalEventEntry $kanonski_dogadjaj,
     ): RedirectResponse {
-        if (! $kanonski_dogadjaj->isDraft()) {
+        if (! $kanonski_dogadjaj->isDraft() && ! $kanonski_dogadjaj->isDirectFlowPublishedContentEditable()) {
             return redirect()
                 ->route('cultural-event-entries.index')
-                ->withErrors(['domain' => 'Događaj nije u statusu Nacrt; izmjena sadržaja nije dozvoljena.']);
+                ->withErrors(['domain' => 'Izmjena sadržaja nije dozvoljena za ovaj događaj.']);
         }
+
+        $flash = $kanonski_dogadjaj->isPublished()
+            ? 'Izmjene događaja su sačuvane.'
+            : 'Događaj je sačuvan.';
 
         try {
             $this->eventWriter->updateContent($kanonski_dogadjaj, $request->user(), $request->domainPayload());
@@ -147,7 +165,25 @@ class CulturalEventEntryController extends Controller
 
         return redirect()
             ->route('cultural-event-entries.edit', $kanonski_dogadjaj)
-            ->with('status', 'Nacrt je ažuriran.');
+            ->with('status', $flash);
+    }
+
+    /**
+     * PATCH-063 — trajno brisanje Urednik direct-flow Događaja u pripremi.
+     */
+    public function destroy(CulturalEventEntry $kanonski_dogadjaj): RedirectResponse
+    {
+        try {
+            $this->eventWriter->destroyNeverPublishedDraft($kanonski_dogadjaj, request()->user());
+        } catch (CulturalEventDomainException $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['domain' => $e->getMessage()]);
+        }
+
+        return redirect()
+            ->route('cultural-event-entries.index')
+            ->with('status', 'Događaj je obrisan.');
     }
 
     public function submit(CulturalEventEntry $kanonski_dogadjaj): RedirectResponse
@@ -228,7 +264,7 @@ class CulturalEventEntryController extends Controller
             $this->eventLifecycle->cancel(
                 $kanonski_dogadjaj,
                 $request->user(),
-                (string) $request->validated('cancellation_reason')
+                $request->optionalReason()
             );
         } catch (CulturalEventDomainException $e) {
             return redirect()

@@ -8,8 +8,8 @@
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
 **Implementacioni status V1:** ZAVRŠEN
-**Verzija:** 1.0.6
-**Datum:** 2026-08-08
+**Verzija:** 1.0.7
+**Datum:** 2026-08-10
 
 ---
 
@@ -37,6 +37,7 @@
 | 1.0.5 | 2026-08-08 | **PO-N-TR-02-04** (BM PATCH-058 / FS PATCH-FS-058 / TS-004 v0.1.8): §10.9.1 generator samo Nacrt; algoritmi/XOR/max 100/duplikati/atomičnost; TM-GEN-01…05 usklađeni. Bez izmjene implementacije. |
 | 1.0.6 | 2026-08-08 | **V1 implementacioni closeout:** Urednički portal V1 funkcionalno / implementaciono završen i verifikovan (Cultural: 420 passed / 1740 assertions). Obuhvat: PO-DG-10; direct publish; BR-052; Proposal workflow; occurrence lifecycle; Editor resume (TM-OCC-17); generator (T10-GEN-01); PO-AUTO-01/02; auto archive (G2); dashboards. TS-010.7 emit/storage = **TS-012 DEPENDENCY / DEFERRED BY DESIGN** (Faza 8). TS-005 / TS-009 van closeout-a. Bez novih BM/BR. |
 
+| 1.0.7 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** U pripremi UI; Sačuvaj i nastavi; `organizer_manual_name`; delete draft; published direct edit; opcion cancel reasons; DU-03; security; test matrix PATCH-063. Bez izmjene implementacije. |
 Napomena:
 
 Ovo poglavlje služi isključivo za evidenciju razvoja dokumenta.
@@ -69,6 +70,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.5 | 2026-08-08 | PATCH: PO-N-TR-02-04 — V1 generator Održavanja (samo Nacrt; TM-GEN-01…05). |
 | 1.0.6 | 2026-08-08 | CLOSEOUT: V1 implementaciono završen (PO-DG-10; direct publish; BR-052; Proposal; occurrence lifecycle; Editor resume/TM-OCC-17; generator/T10-GEN-01; PO-AUTO-01/02; auto archive/G2; dashboards). TS-010.7 emit = TS-012 / Faza 8. |
 
+| 1.0.7 | 2026-08-10 | PATCH-063: U pripremi; delete draft; published direct edit; manual Org; test matrix. |
 ---
 
 # Svrha dokumenta
@@ -921,7 +923,7 @@ Obuhvata dvije usvojene putanje (nije nova grana):
 | | |
 |--|--|
 | **Ko vidi** | Urednik. |
-| **Guard** | Status **Nacrt**; događaj **bez** registrovanog Organizatora (BM-ST-04, BR-018); validacije objave. |
+| **Guard** | Status tehnički **draft** (UI Urednik: **U pripremi**); ``organizer_id`` null (BM-ST-04, BR-018); validacije objave; ručni Org ne blokira. |
 | **Rezultat** | Objava bez toka odobravanja. |
 | **Naredno stanje** | **Objavljen**. |
 
@@ -1368,8 +1370,8 @@ Deaktivacija Organizatora **ne briše** događaje niti istoriju.
 | Na odobrenju — **Event** (prvi tok, V1 / PO-DG-10) | **Ne** uređuje; **ne** povlači | **Ne** uređuje sadržaj; samo Odobri / Vrati na doradu | Sadržaj zaključan od slanja; serverska autorizacija obavezna |
 | Na odobrenju — **Prijedlog izmjene** prije početka pregleda | Može uređivati ili povući (BR-033) | Prema pravilima | Direktno; bez projektovanja konkretnog lock mehanizma |
 | Na odobrenju — **Prijedlog izmjene** tokom pregleda | **Ne** uređuje | Može uređivati prijedlog tokom pregleda | Direktno; serverska autorizacija obavezna |
-| Objavljen | Uređuje **prijedlog**, ne javnu verziju | Pregleda / uređuje / odobrava / vraća prijedlog | Prijedlog izmjene; javna verzija = posljednja odobrena |
-| Otkazan | **Ne** uređuje sadržaj; **ne** vraća u Objavljen | Samo **razlog otkazivanja (napomena urednika)**; ostalo read-only | Forma read-only (BM-DG-10, BR-064); Otkazan → Objavljen odbijen |
+| Objavljen | Uređuje **prijedlog**, ne javnu verziju | **Direct flow** (`organizer_id` null): direktan content update (naslov/opis/ručni Org/kategorija/cover/tagovi). **Moderatorov događaj:** pregleda / odobrava / vraća prijedlog | Urednik direct: EventWriter update (TS-003 §4.13). Mod: Prijedlog izmjene |
+| Otkazan | **Ne** uređuje sadržaj; **ne** vraća u Objavljen | Samo **opcion razlog otkazivanja**; ostalo read-only | Forma read-only (BM-DG-10, BR-064); Otkazan → Objavljen odbijen |
 | Arhiviran | Read-only | Read-only | **Nema** uređivanja; **nema** izlaznog workflow prelaza; **nema** ručnog vraćanja u drugi status (V1) |
 
 ## 10.6 Prijedlog izmjene i N-DG-04
@@ -1392,6 +1394,17 @@ TS-010.5 propisuje UX ponašanje, validacije i integritet bez projektovanja baze
 ## 10.7 Validacije po akcijama
 
 Sve ključne provjere izvršavaju se **serverski**. Vidljivost UI kontrole nije dovoljna autorizacija.
+
+### 10.7.0 Urednik create — Sačuvaj i nastavi (PATCH-063)
+
+| Stavka | Pravilo |
+|--------|---------|
+| UI akcija | **„Sačuvaj i nastavi“** |
+| Rezultat | Kreira `CulturalEventEntry`; status tehnički `draft`; UI label **„U pripremi“**; redirect na edit |
+| Organizator | `organizer_id = null`; opcion `organizer_manual_name`; **nema** Org dropdown; **ne** kreira `CulturalOrganizer` |
+| Fail-closed | Request sa `organizer_id` → odbijanje |
+| Publish | **Ne** auto-publish; Entry nije javan |
+| Moderator | Ne koristi ovu akciju; zadržava Nacrt → Pošalji |
 
 ### 10.7.1 Sačuvaj Nacrt
 
@@ -1531,23 +1544,50 @@ Nakon toga **nema** Delete Održavanja. Otkazivanje ≠ Delete (N-TR-04).
 * Uklanjanje veze naslovne **nije** brisanje Medija.
 * Fallback prikaza — postojeća pravila (BM-MD-06).
 * MIME, veličina, naziv, ALT, lifecycle Medija — **TS-008**.
-* Na Objavljenom — promjena naslovne kroz **prijedlog izmjene**.
+* Na Objavljenom — Moderator: promjena naslovne kroz **prijedlog izmjene**. Urednik direct (``organizer_id`` null): **direktan** content update (TS-003 §4.13 / PATCH-063).
 * **Feature (istaknutost)** nije sadržajno polje i **ne ide** kroz sadržajni prijedlog.
 
 Kompletan CRUD Medija nije dio TS-010.5.
 
-## 10.13 Delete događaja
+## 10.13 Delete događaja (PATCH-063 / BR-290 — supersede)
 
-```text
-Delete Događaja nije podržan u V1.
-```
+**Supersede:** ranije „Delete Događaja nije podržan u V1" važi **samo** za Moderatorov tok i za Entry koji nije nikad-objavljeni draft Urednika.
 
-Nema: fizičkog brisanja; soft delete; recycle bin; brisanja početnog Nacrta; administratorskog Delete toka.
+**Dozvoljeno trajno brisanje (Urednik):**
 
-Događaj koristi postojeći lifecycle i automatsko arhiviranje (BM-DG-04 / BR-065 / TS-004).
+* actor = Urednik;
+* `organizer_id === null` (direct / editorial tok);
+* `status = draft` (tehnički; UI: „U pripremi“);
+* lifecycle: `draft` ⇒ nikada nije bio objavljen (nema published/cancelled/archived → draft).
 
-Ovo pravilo **nije** isto što i fizičko uklanjanje Održavanja iz početnog Nacrta (N-TR-04 / §10.9.4).
+**Zabranjeno:**
 
+* `pending_approval` / `published` / `cancelled` / `archived`;
+* Moderator delete Entry;
+* soft delete / recycle bin kao zamjena za ovu operaciju.
+
+**Relaciona cleanup (atomska strategija; TS-003 §4.12):**
+
+1. transaction + `lockForUpdate` Entry;
+2. recheck status + authorization;
+3. obriši child OCC (FK restrict);
+4. detach tag/media pivots i proposals pripadajuće Entry-ju;
+5. obriši Entry;
+6. **ne** briši shared katalog (Category / Location / Media / Tag / Organizer).
+
+Ovo **nije** isto što i fizičko uklanjanje Održavanja iz početnog Nacrta (N-TR-04 / §10.9.4).
+
+## Fail-closed security (PATCH-063)
+
+Server-side (Request validation + domain/service invariant). Ne oslanjati se samo na Blade.
+
+* A Urednik create: ne može podmetnuti `organizer_id`
+* B Moderator: ne može podmetnuti `organizer_manual_name`
+* C Urednik delete: samo direct-flow draft
+* D Urednik published direct edit: samo direct-flow published
+* E Moderator published edit: proposal
+* F Cancelled/archived: nema ordinary edit/delete
+* G Moderator: nema direct publish
 ## 10.14 Konflikti istovremenog uređivanja
 
 **Minimalni zahtjev:** Sistem ne smije tiho prepisati noviju sačuvanu izmjenu zastarjelim podacima drugog korisnika ili druge sesije.
@@ -1719,7 +1759,7 @@ Opseg: globalni, prema uredničkim ovlašćenjima.
 |----|------------|-------------------------------------------|---------------------|--------------|
 | DU-01 | Čeka pregled (događaji) | Status **Na odobrenju** | Urednička odluka / pregled | Lista događaja + filter Na odobrenju |
 | DU-02 | Prijedlozi izmjene na pregledu | Status **Objavljen** + prijedlog u fazi pregleda / čeka odluku Urednika | Odobrenje / vraćanje / uređivanje prijedloga | Lista događaja + filter prijedlog na pregledu |
-| DU-03 | Nacrti bez Organizatora | Status **Nacrt** i događaj **bez** Organizatora | Aktivni rad Urednika po postojećem izuzetku | Lista događaja + filter Nacrt bez Org. |
+| DU-03 | Događaji u pripremi | Status tehnički **draft** (UI: **U pripremi**); ``organizer_id`` null | Aktivni rad Urednika (Sačuvaj i nastavi / Objavi) | Lista događaja + filter U pripremi / bez Org. |
 | DU-04 | Zahtjevi za Organizatora | Otvoreni zahtjevi za kreiranje Organizatora (TS-001) | Odobrenje / odbijanje zahtjeva | Lista zahtjeva + filter otvoreno |
 | DU-05 | Zahtjevi za Moderatore | Otvoreni zahtjevi za dodjelu / uklanjanje Moderatora (TS-001 / TS-010.3) | Odluka Urednika | Lista zahtjeva Moderatora + filter otvoreno |
 
@@ -2046,10 +2086,12 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | TM-READ-02 | Read | Urednik globalno | Urednik | Lista | Globalni Read opseg | Pozitivan | TS-010.5 §10.4 |
 | TM-READ-03 | Read | Deaktivacija ne briše | Org deaktiviran; događaji postoje | Pregled podataka (ovlašćeni) | Podaci nijesu obrisani | Granični | BM-ORG-12; TS-010.2; TS-010.5 |
 | TM-READ-04 | Read-only | Arhiviran | Arhiviran | Pokušaj Update | Odbijeno | Negativan | TS-010.5 |
-| TM-DEL-01 | Delete | Fizičko brisanje događaja | Bilo koji | Delete događaja | Nije podržano | Negativan | TS-010.5 §10.13 |
-| TM-DEL-02 | Delete | Soft delete događaja | Bilo koji | Soft delete | Nije podržano | Negativan | TS-010.5 §10.13 |
-| TM-DEL-03 | Delete | Brisanje Nacrta | Početni Nacrt | Delete | Nije podržano | Negativan | TS-010.5 §10.13 |
-| TM-DEL-04 | Delete | Admin Delete događaja | Administrator | Delete | Nije podržano u V1 | Negativan | TS-010.5 §10.13 |
+| TM-DEL-01 | Delete | Soft delete / recycle bin Entry | Bilo koji | Soft delete Entry | Nije podržano | Negativan | TS-010.5 §10.13 |
+| TM-DEL-02 | Delete | Urednik draft delete | Urednik; `organizer_id` null; `draft` | Delete | Trajno obrisan + OCC/pivot cleanup | Pozitivan | PATCH-063; BR-290; §10.13 |
+| TM-DEL-03 | Delete | OCC child cleanup | Draft sa OCC | Delete Entry | OCC uklonjeni; katalog netaknut | Pozitivan | §10.13; TS-003 §4.12 |
+| TM-DEL-04 | Delete | Published delete blocked | `published` | Delete | Odbijeno | Negativan | §10.13 |
+| TM-DEL-05 | Delete | Cancelled/archived/pending blocked | cancelled/archived/pending_approval | Delete | Odbijeno | Negativan | §10.13 |
+| TM-DEL-06 | Delete | Moderator / Admin Delete Entry | Mod / Admin | Delete | Nije podržano | Negativan | §10.13 |
 | TM-VAL-01 | Validacije | Gate — Pošalji na odobrenje | Nacrt bez naslova / kategorije / Održavanja | Pošalji | Odbijeno (gate) | Negativan | BM-DG-01; TS-010.5; §9 |
 | TM-VAL-02 | Validacije | Gate — Direktna objava | Bez Org; nepotpun | Direktno objavi | Odbijeno | Negativan | TS-010.5 |
 | TM-VAL-03 | Validacije | Gate — Pošalji prijedlog | Aktivni prijedlog nepotpun | Pošalji prijedlog | Odbijeno | Negativan | TS-010.5 §10.6 |
@@ -2195,7 +2237,44 @@ Preostale zavisnosti **TS-005**, **TS-009** i **TS-012** nijesu dio TS-010 imple
 * N-DG-03 (kanal obavještavanja Urednika) ostaje otvoren.
 * N-DG-04 ostaje implementacioni izbor skladištenja prijedloga.
 
-## 14.3 Non-blocking tehnički dug (nije TS-010 blocker)
+#
+## 13.x Test matrix — PATCH-063 (buduća implementacija)
+
+| # | Oblast | Scenario | Očekivano |
+|---|--------|----------|-----------|
+| 1 | EDITOR CREATE | Nema registered Org dropdown | UI bez izbora `CulturalOrganizer` |
+| 2 | EDITOR CREATE | Request sa `organizer_id` | Fail-closed odbijanje |
+| 3 | EDITOR CREATE | Manual name accepted | `organizer_manual_name` sačuvan |
+| 4 | EDITOR CREATE | Manual name optional | Oba null dozvoljeno |
+| 5 | EDITOR CREATE | Save ≠ public | `draft`; nije javan |
+| 6 | EDITOR CREATE | Label U pripremi | UI mapping draft → U pripremi |
+| 7 | EDITOR CREATE | Direct publish | Gate OK → published |
+| 8 | DELETE | Draft editor event delete | Uspjeh |
+| 9 | DELETE | OCC child cleanup | Child obrisan; katalog ostaje |
+| 10 | DELETE | Published delete blocked | Odbijeno |
+| 11 | DELETE | Cancelled delete blocked | Odbijeno |
+| 12 | DELETE | Archived delete blocked | Odbijeno |
+| 13 | PUBLISHED EDIT | Editor direct edit title/description/category/cover/tags/manual Org | Uspjeh |
+| 14 | PUBLISHED EDIT | Moderator direct edit blocked | Odbijeno |
+| 15 | PUBLISHED EDIT | Moderator proposal remains | Proposal tok OK |
+| 16 | PUBLISHED EDIT | Cancelled direct edit blocked | Odbijeno |
+| 17 | PUBLISHED EDIT | Archived direct edit blocked | Odbijeno |
+| 18 | POSTPONE | Without new date | Status Odgođen |
+| 19 | POSTPONE | Optional reason | `postponement_reason` |
+| 20 | POSTPONE | Public Prvobitni termin | TS-009 |
+| 21 | POSTPONE | Resume with new date | Planiran + novi termin |
+| 22 | OCC CANCEL | Optional reason | OCC `cancellation_reason` |
+| 23 | OCC CANCEL | Entry remains published | Ako ostali uslovi dozvole |
+| 24 | OCC CANCEL | Cancelled OCC not upcoming | Query exclude |
+| 25 | ENTRY CANCEL | No reason accepted | Opciono null |
+| 26 | ENTRY CANCEL | Reason accepted | Sačuvan |
+| 27 | ENTRY CANCEL | Public note if reason | TS-009 |
+| 28 | ENTRY CANCEL | Terminal no republish | Otkazan → Objavljen zabranjen |
+| 29 | MODERATOR | draft/submit | Nacrt → Pošalji |
+| 30 | MODERATOR | No direct publish | Odbijeno |
+| 31 | MODERATOR | Approval/return unchanged | PO-DG-10 OK |
+
+# 14.3 Non-blocking tehnički dug (nije TS-010 blocker)
 
 * L-05 / L-06 (npr. Event submit/approve putanje bez `lockForUpdate`) — težina MEDIUM; **TS-010 blocker = NE**. Ne rješava se u ovom closeout-u.
 

@@ -19,7 +19,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * G2 PATCH — Objavljen Event je sadržajno read-only (do Prijedloga izmjene).
+ * Published content lock — PATCH-063 §4.13 precizira uski izuzetak:
+ * Urednik + published + organizer_id null → direct ordinary edit.
+ * Registered Org / Moderator published → i dalje read-only (Prijedlog).
  */
 class CulturalEventEntryPublishedContentLockTest extends TestCase
 {
@@ -71,9 +73,40 @@ class CulturalEventEntryPublishedContentLockTest extends TestCase
         $this->grantModerator($this->moderator, $this->organizer);
     }
 
-    public function test_published_event_rejects_update_content(): void
+    public function test_published_direct_flow_allows_urednik_content_update(): void
     {
         $entry = $this->makePublishedWithoutOrganizer('Objavljen');
+
+        $updated = $this->writer->updateContent($entry, $this->editor, [
+            'naslov' => 'Izmijenjen naslov',
+            'opis' => 'Izmijenjen opis',
+            'category_id' => $this->category->id,
+        ]);
+
+        $this->assertSame('Izmijenjen naslov', $updated->naslov);
+        $this->assertSame('Izmijenjen opis', $updated->opis);
+        $this->assertSame(CulturalEventEntry::STATUS_PUBLISHED, $updated->status);
+        $this->assertNull($updated->organizer_id);
+    }
+
+    public function test_kk_admin_http_can_update_published_direct_flow(): void
+    {
+        $entry = $this->makePublishedWithoutOrganizer('Admin unlock');
+
+        $this->actingAs($this->editor)
+            ->put(route('cultural-event-entries.update', $entry), [
+                'naslov' => 'Smije',
+                'category_id' => $this->category->id,
+            ])
+            ->assertRedirect(route('cultural-event-entries.edit', $entry))
+            ->assertSessionHas('status', 'Izmjene događaja su sačuvane.');
+
+        $this->assertSame('Smije', $entry->fresh()->naslov);
+    }
+
+    public function test_published_with_registered_organizer_remains_content_locked(): void
+    {
+        $entry = $this->makePublishedForOrganizer('Sa Org lock');
 
         $this->expectException(CulturalEventDomainException::class);
         $this->expectExceptionMessage('Objavljen Događaj je sadržajno read-only');
@@ -82,24 +115,6 @@ class CulturalEventEntryPublishedContentLockTest extends TestCase
             'naslov' => 'Hakovan naslov',
             'opis' => 'Hakovan opis',
         ]);
-    }
-
-    public function test_kk_admin_gets_domain_error_on_published_content_update(): void
-    {
-        $entry = $this->makePublishedWithoutOrganizer('Admin lock');
-        $original = $entry->naslov;
-
-        try {
-            $this->writer->updateContent($entry, $this->editor, [
-                'naslov' => 'Ne smije',
-                'category_id' => $this->category->id,
-            ]);
-            $this->fail('Expected domain exception for kk_admin');
-        } catch (CulturalEventDomainException $e) {
-            $this->assertStringContainsString('read-only', mb_strtolower($e->getMessage()));
-        }
-
-        $this->assertSame($original, $entry->fresh()->naslov);
     }
 
     public function test_moderator_cannot_edit_published_event_content(): void

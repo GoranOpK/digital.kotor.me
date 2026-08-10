@@ -68,6 +68,8 @@ class CulturalOccurrence extends Model
         'status',
         'location_id',
         'location_manual_name',
+        'postponement_reason',
+        'cancellation_reason',
     ];
 
     protected $casts = [

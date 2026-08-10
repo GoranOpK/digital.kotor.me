@@ -94,7 +94,7 @@ class CulturalModeratorEventCancelTest extends TestCase
         $this->assertSame(CulturalOccurrence::STATUS_CANCELLED, $occurrence->fresh()->status);
     }
 
-    public function test_cancel_requires_reason_and_rejects_whitespace(): void
+    public function test_cancel_allows_empty_or_whitespace_reason(): void
     {
         CulturalOrganizerContext::set($this->modA, $this->orgA->id);
         [$entry] = $this->makePublishedWithOccurrence('Bez razloga');
@@ -102,18 +102,25 @@ class CulturalModeratorEventCancelTest extends TestCase
         $this->actingAs($this->modA)
             ->from(route('cultural-moderator-events.edit', $entry))
             ->post(route('cultural-moderator-events.cancel', $entry), [])
-            ->assertSessionHasErrors('cancellation_reason');
+            ->assertRedirect(route('cultural-moderator-events.index'));
 
-        $this->assertSame(CulturalEventEntry::STATUS_PUBLISHED, $entry->fresh()->status);
+        $entry->refresh();
+        $this->assertSame(CulturalEventEntry::STATUS_CANCELLED, $entry->status);
+        $this->assertNull($entry->cancellation_reason);
+
+        CulturalOrganizerContext::set($this->modA, $this->orgA->id);
+        [$entryWhitespace] = $this->makePublishedWithOccurrence('Whitespace razlog');
 
         $this->actingAs($this->modA)
-            ->from(route('cultural-moderator-events.edit', $entry))
-            ->post(route('cultural-moderator-events.cancel', $entry), [
+            ->from(route('cultural-moderator-events.edit', $entryWhitespace))
+            ->post(route('cultural-moderator-events.cancel', $entryWhitespace), [
                 'cancellation_reason' => '   ',
             ])
-            ->assertSessionHasErrors('cancellation_reason');
+            ->assertRedirect(route('cultural-moderator-events.index'));
 
-        $this->assertSame(CulturalEventEntry::STATUS_PUBLISHED, $entry->fresh()->status);
+        $entryWhitespace->refresh();
+        $this->assertSame(CulturalEventEntry::STATUS_CANCELLED, $entryWhitespace->status);
+        $this->assertNull($entryWhitespace->cancellation_reason);
     }
 
     public function test_cancel_clears_featured(): void

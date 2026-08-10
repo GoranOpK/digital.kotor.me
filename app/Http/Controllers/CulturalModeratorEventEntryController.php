@@ -200,7 +200,7 @@ class CulturalModeratorEventEntryController extends Controller
             $this->eventLifecycle->cancel(
                 $moderator_dogadjaj,
                 $request->user(),
-                (string) $request->validated('cancellation_reason')
+                $request->optionalReason()
             );
         } catch (CulturalEventDomainException $e) {
             return redirect()

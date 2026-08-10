@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Održavanje događaja  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.8  
-**Datum:** 2026-08-08
+**Verzija:** 0.1.9
+**Datum:** 2026-08-10
 
 ---
 
@@ -25,6 +25,7 @@
 | 0.1.6 | 2026-08-07 | **PO-EV-01** (implementaciona napomena §14): legacy flat termini na `CulturalEvent` nisu predmet migracije/backfill/dual-write; novi model Održavanja direktno prema TS. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 0.1.7 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02** (BM PATCH-055 / FS PATCH-FS-055): preciziran trenutak Planiran → Završen (§4.8); otkazivanje roditeljskog Događaja otkazuje Planirana/Odgođena Održavanja (§4.9); usklađene matrice i validacije. Bez izmjene implementacije. |
 | 0.1.8 | 2026-08-08 | **PO-N-TR-02-04** (BM PATCH-058 / FS PATCH-FS-058): preciziran V1 generator — samo Nacrt; algoritmi dnevno/sedmično/mjesečno; XOR; max 100; šablon; duplikati; atomičnost; bez preview/Proposal. Usklađeni §3.5, §4.4, §5.1, §7. Bez izmjene implementacije. |
+| 0.1.9 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** odgađanje bez novog termina; opcion `postponement_reason`; opcion OCC `cancellation_reason` (različito od Entry); javni „Prvobitni termin“; §4.5 / §4.7 / §6. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -467,8 +468,8 @@ Napomena (PO-AUTO-01): prelaz Planiran/Odgođen → Otkazan može nastati i kao 
 | Status | Svrha | Ulaz | Izlaz | Ko uvodi |
 |--------|-------|------|-------|----------|
 | **Planiran** | Aktivno, biće održano po objavljenim podacima | Kreiranje; povratak iz Odgođen | Odgođen; Otkazan; Završen | Moderator / Urednik; Sistem (Završen); Sistem pri otkazivanju Događaja (Otkazan) |
-| **Odgođen** | Neće biti u starom terminu; očekuje se novi termin | Iz Planiran | Planiran (novi termin); Otkazan | Moderator / Urednik; Sistem pri otkazivanju Događaja (Otkazan) |
-| **Otkazan** | Neće biti održano | Iz Planiran ili Odgođen | Nema usvojenog izlaza | Moderator / Urednik; Sistem (otkazivanje roditeljskog Događaja) |
+| **Odgođen** | Neće biti u starom terminu; novi termin **nije** obavezan odmah (PATCH-063). Opcion razlog. | Iz Planiran | Planiran (novi termin); Otkazan | Moderator / Urednik; Sistem pri otkazivanju Događaja (Otkazan) |
+| **Otkazan** | Neće biti održano; opcion OCC razlog; **ne** mijenja status Entry-ja samo zbog jednog OCC cancel | Iz Planiran ili Odgođen | Nema usvojenog izlaza | Moderator / Urednik; Sistem (otkazivanje roditeljskog Događaja) |
 | **Završen** | Održano ili prošao termin | Iz Planiran (automatski) | Nema usvojenog izlaza | Sistem |
 
 Napomena: iz **Otkazan** i **Završen** nema usvojenih povratnih tranzicija u BM/FS.
@@ -571,21 +572,25 @@ flowchart LR
 **Tehnički tok**
 
 1. Pomjeranje = promjena termina (datum i/ili vrijeme početka/završetka) odabranog održavanja (BM-TR-07, BR-061; §3.3).
-2. Otkaz = status **Otkazan** (BR-069); ne utiče na ostala; **nije** fizičko uklanjanje (§4.3a).
+2. Otkaz = status **Otkazan** (BR-069); ne utiče na ostala; **nije** fizičko uklanjanje (§4.3a); **ne** mijenja status Entry-ja.
 3. Ostala održavanja ostaju nepromijenjena.
 4. Nema izmjene „cijele serije“ niti regeneracije (§3.5).
+5. **Opcion razlog otkazivanja Održavanja (PATCH-063 / BR-294):** kolona na `cultural_occurrences` — `cancellation_reason` (`text` nullable). Semantički **različito** od Entry `cultural_event_entries.cancellation_reason`. Atomski: status + razlog u istoj transakciji. Razlog može biti javno prikazan (TS-009). Ne blokira cancel ako je null.
 
 ## 4.6 Izmjene podataka na objavljenom događaju
 
-Izmjene termina, lokacije ili drugih podataka održavanja objavljenog događaja, **osim** postavljanja statusa Planiran / Odgođen / Otkazan po BR-132/133, podliježu istom uredničkom toku odobravanja kao Događaj (BM-TR-08, BR-061, TS-003).
+Izmjene termina, lokacije ili drugih podataka održavanja objavljenog događaja, **osim** postavljanja statusa Planiran / Odgođen / Otkazan po BR-132/133 (uključujući opcione razloge), podliježu istom uredničkom toku odobravanja kao Događaj **za Moderatorov tok** (BM-TR-08, BR-061, TS-003). Za Urednikov direct published content update vidi TS-003 §4.13 — lifecycle postpone/cancel **nisu** ordinary content edit.
 
 Statusni prelazi Planiran ↔ Odgođen / Otkazan su zasebna ovlašćenja (§5).
 
 ## 4.7 Odgađanje i povratak
 
-1. Planiran → Odgođen (BR-129).
-2. Odgođen → Planiran tek nakon određivanja **novog termina**; isti zapis; istorija sačuvana; novo održavanje se ne kreira (BR-130, BR-131, BM-TR-15).
-3. Odgođen → Otkazan dozvoljeno; druge tranzicije iz Odgođen nisu dozvoljene (BR-130).
+1. Planiran → Odgođen (BR-129). Postojeći `postpone()` status tok **ostaje**.
+2. **Novi termin nije obavezan** u trenutku odgađanja (PATCH-063 / BR-293 / BM-TR-19). OCC ostaje Odgođen bez novog datuma dok se ne unese.
+3. **Opcion `postponement_reason`** (`text` nullable na `cultural_occurrences`): ne blokira postpone; može biti javno prikazan; ostaje kao istorijski podatak i nakon unosa novog termina (`resumeWithNewTermin`), osim ako kasnija PO odluka kaže drugačije. Atomski: status + razlog u istoj transakciji.
+4. Odgođen → Planiran tek nakon određivanja **novog termina**; isti zapis; istorija (uključujući prvobitni termin i razlog) sačuvana; novo održavanje se ne kreira (BR-130, BR-131, BM-TR-15). Implementaciono: `resumeWithNewTermin` — upis novog datuma/vremena + status Planiran; **ne** briše `postponement_reason` po defaultu.
+5. Odgođen → Otkazan dozvoljeno; druge tranzicije iz Odgođen nisu dozvoljene (BR-130).
+6. Javni prikaz Odgođenog bez novog termina: status „Odgođeno“, „Prvobitni termin“, originalni datum, opcion razlog — **TS-009**.
 
 ## 4.8 Automatski završetak
 
@@ -727,6 +732,8 @@ Atributi / svojstva potvrđeni usvojenim BM/FS i zatvorenim N-TR-01 (konceptualn
 | Referenca na katalošku Lokaciju | 0..1 | BM-TR-04, BR-058 |
 | Ručno uneseni naziv Lokacije | 0..1 | BM-TR-04, BR-058 |
 | Status | Planiran / Odgođen / Otkazan / Završen | BM-TR-10, BR-067 |
+| Razlog odgađanja (`postponement_reason`) | `text` nullable; opcion; ne blokira postpone; može javno; ostaje nakon resume | PATCH-063 / BR-293 |
+| Razlog otkazivanja OCC (`cancellation_reason`) | `text` nullable na `cultural_occurrences`; **ne** Entry `cancellation_reason`; opcion; može javno | PATCH-063 / BR-294 |
 
 ## 6.3 Referencirani atributi
 
@@ -753,6 +760,15 @@ Atributi / svojstva potvrđeni usvojenim BM/FS i zatvorenim N-TR-01 (konceptualn
 * Deaktivirana kataloška Lokacija ne smije se birati za **nove kataloške veze** iz održavanja (BM-LK-05); postojeće istorijske veze ostaju.
 
 ---
+
+## 6.6 Budući migration inventory (dokumentaciono; PATCH-063)
+
+**Ne kreirati migration fajlove u ovom TS patch-u.**
+
+| Tabela | Kolona | Tip | Nullable | Index | Backfill | Default | Rollback | Razlog |
+|--------|--------|-----|----------|-------|----------|---------|----------|--------|
+| `cultural_occurrences` | `postponement_reason` | `text` | DA | NE | NE | NE | drop column | Opcion razlog odgađanja |
+| `cultural_occurrences` | `cancellation_reason` | `text` | DA | NE | NE | NE | drop column | Opcion razlog otkazivanja Održavanja (≠ Entry) |
 
 # 7. Validacije
 
@@ -810,6 +826,9 @@ Functional Specification:
 | ≥1 održavanje | Slanje/objava događaja | TS-003 + TS-004 | Blokada događaja |
 | Nedozvoljen statusni prelaz | Promjena statusa | Sistem | Odbijanje |
 | Novi termin pri Odgođen→Planiran | Povratak | Sistem | Blokada bez novog termina |
+| `postponement_reason` opcion | postpone | Sistem | Dozvoljeno null; ako popunjen — text validacija |
+| OCC `cancellation_reason` opcion | OCC cancel | Sistem | Dozvoljeno null; Entry status ne mijenja se zbog jednog OCC cancel |
+| Novi termin **nije** obavezan pri Planiran→Odgođen | postpone | Sistem | Dozvoljeno Odgođen bez novog datuma |
 | Otkaz samo iz Planiran/Odgođen | Otkaz | Sistem | Odbijanje inače |
 | Izmjena samo odabranog | Pomjeranje / otkaz | Sistem | Ostala nepromijenjena |
 | Autorizacija Mod/Urednik | Statusne radnje | Sistem | Odbijanje |

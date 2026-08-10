@@ -53,6 +53,7 @@ class CulturalModeratorEventEntryStoreRequest extends FormRequest
         return [
             'naslov' => ['nullable', 'string', 'max:255'],
             'opis' => ['nullable', 'string', 'max:20000'],
+            'organizer_manual_name' => ['prohibited'],
             'category_id' => ['nullable', 'integer'],
             'cover_media_id' => ['nullable', 'integer'],
             'tag_ids' => ['nullable', 'array'],
@@ -85,6 +86,7 @@ class CulturalModeratorEventEntryStoreRequest extends FormRequest
      *     naslov: ?string,
      *     opis: ?string,
      *     organizer_id: int,
+     *     organizer_manual_name: null,
      *     category_id: ?int,
      *     cover_media_id: ?int,
      *     tag_ids: list<int>,
@@ -99,6 +101,7 @@ class CulturalModeratorEventEntryStoreRequest extends FormRequest
             'naslov' => $this->input('naslov'),
             'opis' => $this->input('opis'),
             'organizer_id' => $organizer->id,
+            'organizer_manual_name' => null,
             'category_id' => $this->input('category_id'),
             'cover_media_id' => $this->input('cover_media_id'),
             'tag_ids' => $this->input('tag_ids', []),

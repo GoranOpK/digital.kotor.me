@@ -150,7 +150,7 @@ class CulturalEventEntryLifecycleTest extends TestCase
             ->put(route('cultural-event-entries.update', $entry), [
                 'naslov' => 'Hakovan',
             ])
-            ->assertRedirect(route('cultural-event-entries.index'))
+            ->assertRedirect(route('cultural-event-entries.edit', $entry))
             ->assertSessionHasErrors('domain');
 
         $this->assertSame('Zaključan', $entry->fresh()->naslov);

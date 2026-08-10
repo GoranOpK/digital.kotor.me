@@ -20,10 +20,14 @@ class CulturalEventEntryUpdateRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $manual = $this->filled('organizer_manual_name')
+            ? trim((string) $this->input('organizer_manual_name'))
+            : null;
+
         $this->merge([
             'naslov' => $this->filled('naslov') ? trim((string) $this->input('naslov')) : null,
             'opis' => $this->filled('opis') ? trim((string) $this->input('opis')) : null,
-            'organizer_id' => $this->filled('organizer_id') ? (int) $this->input('organizer_id') : null,
+            'organizer_manual_name' => $manual === '' ? null : $manual,
             'category_id' => $this->filled('category_id') ? (int) $this->input('category_id') : null,
             'cover_media_id' => $this->filled('cover_media_id') ? (int) $this->input('cover_media_id') : null,
             'tag_ids' => array_values(array_filter(array_map('intval', (array) $this->input('tag_ids', [])))),
@@ -39,14 +43,27 @@ class CulturalEventEntryUpdateRequest extends FormRequest
 
     public function rules(): array
     {
+        /** @var CulturalEventEntry|null $entry */
+        $entry = $this->route('kanonski_dogadjaj');
+        $hasRegisteredOrganizer = $entry instanceof CulturalEventEntry && $entry->organizer_id !== null;
+
         return [
             'naslov' => ['nullable', 'string', 'max:255'],
             'opis' => ['nullable', 'string', 'max:20000'],
-            'organizer_id' => ['nullable', 'integer'],
+            'organizer_id' => ['prohibited'],
+            'organizer_manual_name' => $hasRegisteredOrganizer
+                ? ['prohibited']
+                : ['nullable', 'string', 'max:255'],
             'category_id' => ['nullable', 'integer'],
             'cover_media_id' => ['nullable', 'integer'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['integer'],
+            'status' => ['prohibited'],
+            'featured' => ['prohibited'],
+            'cancellation_reason' => ['prohibited'],
+            'return_reason' => ['prohibited'],
+            'archived_from_status' => ['prohibited'],
+            'first_submitted_at' => ['prohibited'],
         ];
     }
 
@@ -59,13 +76,20 @@ class CulturalEventEntryUpdateRequest extends FormRequest
 
             /** @var CulturalEventEntry $entry */
             $entry = $this->route('kanonski_dogadjaj');
+
+            if (! $entry->isDraft() && ! $entry->isDirectFlowPublishedContentEditable()) {
+                $validator->errors()->add(
+                    'domain',
+                    'Sadržaj se može mijenjati samo u pripremi ili na Objavljenom događaju bez registrovanog Organizatora.'
+                );
+
+                return;
+            }
+
             /** @var EventCatalogGuard $guard */
             $guard = app(EventCatalogGuard::class);
 
             try {
-                if ((int) $this->input('organizer_id') !== (int) $entry->organizer_id) {
-                    $guard->assertOrganizerAllowedForNewLink($this->input('organizer_id'));
-                }
                 if ((int) $this->input('category_id') !== (int) $entry->category_id) {
                     $guard->assertCategoryAllowedForNewLink($this->input('category_id'));
                 }
@@ -90,22 +114,35 @@ class CulturalEventEntryUpdateRequest extends FormRequest
      *     naslov: ?string,
      *     opis: ?string,
      *     organizer_id: ?int,
+     *     organizer_manual_name: ?string,
      *     category_id: ?int,
      *     cover_media_id: ?int,
      *     tag_ids: list<int>,
-     *     featured: bool
+     *     featured?: bool
      * }
      */
     public function domainPayload(): array
     {
-        return [
+        /** @var CulturalEventEntry $entry */
+        $entry = $this->route('kanonski_dogadjaj');
+
+        $payload = [
             'naslov' => $this->input('naslov'),
             'opis' => $this->input('opis'),
-            'organizer_id' => $this->input('organizer_id'),
+            'organizer_id' => $entry->organizer_id,
+            'organizer_manual_name' => $entry->organizer_id !== null
+                ? null
+                : $this->input('organizer_manual_name'),
             'category_id' => $this->input('category_id'),
             'cover_media_id' => $this->input('cover_media_id'),
             'tag_ids' => $this->input('tag_ids', []),
-            'featured' => false,
         ];
+
+        // Draft: featured nije dostupno kroz content formu. Published: isticanje ide zasebnom rutom.
+        if ($entry->isDraft()) {
+            $payload['featured'] = false;
+        }
+
+        return $payload;
     }
 }

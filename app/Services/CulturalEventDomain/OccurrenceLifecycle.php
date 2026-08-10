@@ -18,13 +18,16 @@ final class OccurrenceLifecycle
         private readonly OccurrenceWriter $writer,
     ) {}
 
-    public function postpone(CulturalOccurrence $occurrence): CulturalOccurrence
+    public function postpone(CulturalOccurrence $occurrence, ?string $reason = null): CulturalOccurrence
     {
+        $reason = $this->normalizeOptionalReason($reason);
+
         return $this->withLockedOccurrence(
             $occurrence,
             CulturalOccurrence::STATUS_POSTPONED,
-            function (CulturalOccurrence $locked): CulturalOccurrence {
+            function (CulturalOccurrence $locked) use ($reason): CulturalOccurrence {
                 $locked->status = CulturalOccurrence::STATUS_POSTPONED;
+                $locked->postponement_reason = $reason;
                 $locked->save();
 
                 return $locked->fresh();
@@ -58,13 +61,16 @@ final class OccurrenceLifecycle
         );
     }
 
-    public function cancel(CulturalOccurrence $occurrence): CulturalOccurrence
+    public function cancel(CulturalOccurrence $occurrence, ?string $reason = null): CulturalOccurrence
     {
+        $reason = $this->normalizeOptionalReason($reason);
+
         return $this->withLockedOccurrence(
             $occurrence,
             CulturalOccurrence::STATUS_CANCELLED,
-            function (CulturalOccurrence $locked): CulturalOccurrence {
+            function (CulturalOccurrence $locked) use ($reason): CulturalOccurrence {
                 $locked->status = CulturalOccurrence::STATUS_CANCELLED;
+                $locked->cancellation_reason = $reason;
                 $locked->save();
 
                 return $locked->fresh(['eventEntry']);
@@ -162,13 +168,17 @@ final class OccurrenceLifecycle
 
     /**
      * Potvrda: otkaz jednog Održavanja ne mijenja status Događaja.
+     *
+     * @return array{occurrence: CulturalOccurrence, event_status_before: ?string, event_status_after: ?string}
      */
-    public function cancelWithoutAffectingEvent(CulturalOccurrence $occurrence): array
-    {
+    public function cancelWithoutAffectingEvent(
+        CulturalOccurrence $occurrence,
+        ?string $reason = null,
+    ): array {
         $entry = $occurrence->eventEntry;
         $eventStatusBefore = $entry?->status;
 
-        $updated = $this->cancel($occurrence);
+        $updated = $this->cancel($occurrence, $reason);
 
         $entry?->refresh();
 
@@ -177,6 +187,17 @@ final class OccurrenceLifecycle
             'event_status_before' => $eventStatusBefore,
             'event_status_after' => $entry?->status,
         ];
+    }
+
+    private function normalizeOptionalReason(?string $reason): ?string
+    {
+        if ($reason === null) {
+            return null;
+        }
+
+        $trimmed = trim($reason);
+
+        return $trimmed === '' ? null : $trimmed;
     }
 
     /**

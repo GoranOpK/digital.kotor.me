@@ -32,19 +32,19 @@
     </div>
 
     <div>
-        <label for="organizer_id" class="block text-sm font-medium text-gray-700 mb-1">Organizator</label>
-        <select
-            id="organizer_id"
-            name="organizer_id"
+        <label for="organizer_manual_name" class="block text-sm font-medium text-gray-700 mb-1">Organizator</label>
+        <input
+            type="text"
+            id="organizer_manual_name"
+            name="organizer_manual_name"
+            value="{{ old('organizer_manual_name', $entry->organizer_manual_name ?? '') }}"
+            maxlength="255"
+            placeholder="Opciono — unesite naziv organizatora"
             class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-700 focus:ring-red-700"
         >
-            <option value="">— bez organizatora —</option>
-            @foreach($organizers as $organizer)
-                <option value="{{ $organizer->id }}" @selected((string) old('organizer_id', $entry->organizer_id ?? '') === (string) $organizer->id)>
-                    {{ $organizer->naziv }}
-                </option>
-            @endforeach
-        </select>
+        @error('organizer_manual_name')
+            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+        @enderror
         @error('organizer_id')
             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
         @enderror
@@ -114,8 +114,9 @@
         @enderror
     </div>
 
-    <div class="rounded-md bg-gray-50 border border-gray-200 px-3 py-2 text-sm text-gray-600">
-        <strong>Featured:</strong> nije dostupno u Nacrtu (samo objavljeni događaj, kasniji korak).
-        Status ovog zapisa: <strong>{{ $entry?->statusLabel() ?? 'Nacrt' }}</strong>
-    </div>
+    @unless($entry?->isPublished())
+        <div class="rounded-md bg-gray-50 border border-gray-200 px-3 py-2 text-sm text-gray-600">
+            Isticanje događaja biće dostupno nakon objave.
+        </div>
+    @endunless
 </div>

@@ -55,22 +55,30 @@ class CulturalEventEntryDraftUiTest extends TestCase
             ->get(route('cultural-event-entries.create'))
             ->assertOk()
             ->assertSee('Novi događaj', false)
+            ->assertSee('Sačuvaj i nastavi', false)
+            ->assertSee('name="organizer_manual_name"', false)
+            ->assertSee('Opciono — unesite naziv organizatora', false)
+            ->assertDontSee('naziv ako nije u katalogu', false)
+            ->assertSee('Isticanje događaja biće dostupno nakon objave.', false)
+            ->assertDontSee('Featured: nije dostupno u pripremi', false)
+            ->assertDontSee('name="organizer_id"', false)
             ->assertDontSee('Novi nacrt (kanonski)', false);
 
-        $organizer = $this->makeActiveOrganizer();
         $category = $this->makeActiveCategory();
 
         $response = $this->actingAs($this->editor)->post(route('cultural-event-entries.store'), [
             'naslov' => 'Kanonski nacrt',
             'opis' => 'Opis',
-            'organizer_id' => $organizer->id,
+            'organizer_manual_name' => 'Lokalni ansambl',
             'category_id' => $category->id,
         ]);
 
         $entry = CulturalEventEntry::query()->firstOrFail();
         $response->assertRedirect(route('cultural-event-entries.edit', $entry));
-        $response->assertSessionHas('status', 'Nacrt događaja je kreiran.');
+        $response->assertSessionHas('status', 'Događaj je sačuvan.');
         $this->assertSame(CulturalEventEntry::STATUS_DRAFT, $entry->status);
+        $this->assertNull($entry->organizer_id);
+        $this->assertSame('Lokalni ansambl', $entry->organizer_manual_name);
         $this->assertSame('Kanonski nacrt', $entry->naslov);
         $this->assertSame($this->editor->id, $entry->created_by);
         $this->assertDatabaseCount('cultural_events', 0);
@@ -225,7 +233,6 @@ class CulturalEventEntryDraftUiTest extends TestCase
     public function test_organizer_validation(): void
     {
         $organizer = $this->makeActiveOrganizer();
-        $organizer->update(['status' => CulturalOrganizer::STATUS_DEACTIVATED]);
 
         $this->actingAs($this->editor)
             ->from(route('cultural-event-entries.create'))
@@ -234,7 +241,7 @@ class CulturalEventEntryDraftUiTest extends TestCase
                 'organizer_id' => $organizer->id,
             ])
             ->assertRedirect(route('cultural-event-entries.create'))
-            ->assertSessionHasErrors('domain');
+            ->assertSessionHasErrors('organizer_id');
 
         $this->assertDatabaseCount('cultural_event_entries', 0);
     }

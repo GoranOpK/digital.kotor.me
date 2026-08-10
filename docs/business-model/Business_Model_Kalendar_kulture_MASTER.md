@@ -76,6 +76,7 @@
 | PATCH-060 | 2026-08-09 | **Faza 6A (javni portal Događaja) — usvojene PO odluke:** potvrda PO-EV-01 (bez migracije/dual-read/dual-write legacy `CulturalEvent`); očuvanje postojećeg izgleda (IA-01); kartica = prvo naredno relevantno Održavanje + „+ još N termina“; sistemsko sortiranje Pretrage; Odgođen na detalju vs kartici; CAT-CUTOVER na `CulturalCategory`; Faza 6A ≠ 6B (Manifestacije); V1 bez javnog `cancellation_reason` (BR-272); legacy URL smije 404. Usklađeni BM-PK-09, BM-PK-11, BM-PK-13, BM-DG-10, BM-UR-11, BM-ST-07, BM-KO-11; dodati BM-PK-29–BM-PK-33. Bez izmjene implementacije. |
 | PATCH-061 | 2026-08-09 | **PO-6A11-01 — kanonski javni status Događaja (multi-OCC):** apsolutni prioritet Otkazan; za Objavljen agregat U toku → Predstoji → Završen; postponed-only i 0 Održavanja → bez vremenskog statusa; vremenski istek Planiranog (ne samo status Završen); Odgođen nije badge Događaja. Dodat BM-PK-34; usklađen BM-PK-13. Bez izmjene lifecycle / arhive. |
 | PATCH-062 | 2026-08-09 | **PO-6A09-01…06 — Javna Arhiva vs interni Arhiviran:** Arhiviran = interni lifecycle; Javna Arhiva = odvojeni istorijski pogled; aktivni public skup ostaje published\|cancelled; archive-only query; očuvanje statusa prije arhiviranja (published/cancelled); istorijski badge Otkazan/Završen; kartica = posljednje istorijsko OCC; sort DESC. Dodat BM-PK-35; usklađeni BM-PK-13, BM-ST-08, BM-DG-04. Bez izmjene implementacije. |
+| PATCH-063 | 2026-08-10 | **Urednički tok kreiranja, pripreme i neposrednog upravljanja Događajem (PO-U-01…19):** Urednik u create toku ne bira registrovanog Organizatora; opcion ručni naziv neregistrovanog Organizatora (samo naziv); poslovno „U pripremi“ / „Sačuvaj i nastavi“ (bez novog statusa; Moderator zadržava „Nacrt“); zajednička lista Događaji; brisanje samo prije prve objave; direktna objava bez approval; direktno uređivanje dozvoljenog sadržaja Objavljenog u uredničkom toku (Prijedlog izmjene Moderatora ostaje); Odgođen bez poznatog novog termina; Prvobitni termin; razlozi odgađanja/otkazivanja Održavanja i Događaja opcioni i mogu biti javno prikazani; Otkazan ostaje terminalan. Usklađeni BM-UR-02/06/07/11, BM-DG-01/07/08/10, BM-ST-03/04/06/07, BM-TR-10/14/15, BM-PK-13/31/33, BM-ORG-04; dodati BM-UR-12–BM-UR-16, BM-DG-12–BM-DG-13, BM-ST-11, BM-TR-19–BM-TR-20, BM-PK-36, BM-EP-11, BM-GL-24–BM-GL-25. **Supersede:** dio BM-PK-33 / BM-DG-10 / BM-UR-11 / BM-ST-07 / BM-PK-13 koji zabranjuje javni prikaz opcionog razloga otkazivanja; pojašnjenje da „Nacrt“ nije poslovna faza Urednikovog direktnog toka. Bez izmjene FS/TS/Feature Registry/implementacije. |
 
 Napomena:
 
@@ -299,7 +300,7 @@ Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zah
 | BM-ORG-01 | Organizator je poslovni entitet i nosilac sadržaja u Kalendaru kulture. Organizator nije korisnik sistema i nije korisnička uloga. |
 | BM-ORG-02 | Registrovani korisnik podnosi zahtjev za kreiranje Organizatora. Podnošenjem zahtjeva korisnik ne postaje Organizator, ne postaje Moderator i ne dobija novu korisničku ulogu. |
 | BM-ORG-03 | Nakon odobrenja Urednika **kreira se** novi entitet Organizatora (zapis ne postoji prije odobrenja). Odobrenje ne dodjeljuje podnosiocu status korisničke uloge Organizatora. |
-| BM-ORG-04 | Organizator je nosilac sadržaja. Operativno kreiranje, uređivanje i čuvanje nacrta sadržaja, kao i slanje sadržaja Uredniku na odobravanje, obavljaju Moderatori u ime Organizatora. Ovo pravilo ne isključuje izuzetak da Urednik može kreirati i objaviti događaj bez registrovanog Organizatora radi javnog interesa i pravovremenog informisanja građana, u skladu sa BM-UR-06 i BM-DG-08. |
+| BM-ORG-04 | Organizator je nosilac sadržaja. Operativno kreiranje, uređivanje i čuvanje nacrta sadržaja, kao i slanje sadržaja Uredniku na odobravanje, obavljaju Moderatori u ime Organizatora. Događaje registrovanog Organizatora kreira Moderator tog Organizatora; Urednik u svom create toku ne bira registrovanog Organizatora (BM-UR-12). Ovo pravilo ne isključuje da Urednik samostalno kreira i objavi Događaj za neregistrovanog Organizatora, odnosno Događaj bez veze sa registrovanim Organizatorom, u skladu sa BM-UR-06, BM-UR-12, BM-UR-13 i BM-DG-08. |
 | BM-ORG-05 | Moderator ne može samostalno objaviti sadržaj. |
 | BM-ORG-06 | Organizator ima jednog ili više Moderatora koji upravljaju sadržajem u njegovo ime. Organizator ne dodjeljuje ovlašćenja Moderatorima. |
 | BM-ORG-07 | Zahtjev za kreiranje Organizatora sadrži podatke Organizatora prema BM-ORG-13, identifikaciju predloženog početnog Moderatora preko postojećeg aktivnog korisničkog naloga (`user_id`) i podatak da li je predloženi Moderator sam podnosilac ili drugi registrovani korisnik. Podnosilac i predloženi Moderator mogu biti ista ili različite osobe. |
@@ -398,7 +399,7 @@ Nema otvorenih pitanja.
 
 ## 1. Svrha poslovne cjeline
 
-Poslovna cjelina Urednik definiše isključivu administrativnu ulogu Uredničkog portala Kalendara kulture: odobravanje ili odbijanje zahtjeva za kreiranje Organizatora, dodjelu ovlašćenja Moderatorima, urednički pregled, odobravanje i objavu sadržaja, otkazivanje bilo kojeg objavljenog događaja, unos ili dopunu razloga otkazivanja (napomene urednika), te odobravanje uklanjanja Moderatora organizatora.
+Poslovna cjelina Urednik definiše isključivu administrativnu ulogu Uredničkog portala Kalendara kulture: odobravanje ili odbijanje zahtjeva za kreiranje Organizatora, dodjelu ovlašćenja Moderatorima, urednički pregled, odobravanje i objavu sadržaja Moderatorskog toka, samostalno kreiranje i neposredno upravljanje Događajima bez registrovanog Organizatora, otkazivanje bilo kojeg objavljenog događaja, unos ili dopunu opcionog razloga otkazivanja (napomene urednika), te odobravanje uklanjanja Moderatora organizatora.
 
 ## 2. Poslovni opis
 
@@ -406,41 +407,50 @@ Urednik je administrator Uredničkog portala Kalendara kulture. Urednik nije obi
 
 Urednik nije Organizator i nije Moderator Organizatora. Uloga Urednika je isključiva unutar poslovnog modela Kalendara kulture: Urednik nema kombinaciju uloge Urednika sa ulogom Moderatora niti sa statusom običnog registrovanog korisnika, ne mijenja aktivnu poslovnu ulogu i uvijek postupa u svojstvu Urednika.
 
-Urednik odobrava ili odbija zahtjeve za kreiranje Organizatora, odobrava zahtjeve za dodjelu ovlašćenja novim Moderatorima, pregleda, odobrava i objavljuje događaje, vraća ih na doradu kada su potrebne suštinske izmjene, može otkazati bilo koji objavljeni događaj, može unijeti ili dopuniti razlog otkazivanja (napomenu urednika) i odobrava uklanjanje Moderatora organizatora. Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Za prvi tok Na odobrenju Urednik u V1 ne uređuje sadržaj Događaja direktno (PO-DG-10).
+Urednik odobrava ili odbija zahtjeve za kreiranje Organizatora, odobrava zahtjeve za dodjelu ovlašćenja novim Moderatorima, pregleda, odobrava i objavljuje događaje koje Moderatori pošalju na odobrenje, vraća ih na doradu kada su potrebne suštinske izmjene, samostalno kreira i objavljuje Događaje bez registrovanog Organizatora, može otkazati bilo koji objavljeni događaj, može unijeti ili dopuniti opcion razlog otkazivanja (napomenu urednika) i odobrava uklanjanje Moderatora organizatora. Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Za prvi tok Na odobrenju Urednik u V1 ne uređuje sadržaj Događaja direktno (PO-DG-10).
 
 Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora.
 
 ## 3. Poslovni koncept
 
-Urednik obezbjeđuje kvalitet i dosljednost javno objavljenog sadržaja kroz pregled, vraćanje na doradu, odobravanje i objavljivanje događaja. Sadržaj koji pošalju Moderatori Urednik pregleda i odobrava prije objave; sadržajne korekcije na Na odobrenju u V1 idu isključivo preko vraćanja na doradu (PO-DG-10). Objavu sadržaja vrši isključivo Urednik.
+Urednik obezbjeđuje kvalitet i dosljednost javno objavljenog sadržaja kroz pregled, vraćanje na doradu, odobravanje i objavljivanje događaja Moderatorskog toka, te kroz samostalno kreiranje i neposredno upravljanje Događajima bez registrovanog Organizatora. Sadržaj koji pošalju Moderatori Urednik pregleda i odobrava prije objave; sadržajne korekcije na Na odobrenju u V1 idu isključivo preko vraćanja na doradu (PO-DG-10). Objavu sadržaja vrši isključivo Urednik.
 
 Urednik koristi isključivo Urednički portal u okviru svojih poslovnih ovlašćenja i ne podnosi zahtjeve kao običan registrovani korisnik.
 
 Urednik je isključivo ovlašćen da dodijeli pristup i ovlašćenja novom Moderatoru nakon pregleda i odobrenja zahtjeva.
 
-Urednik može kreirati događaj bez registrovanog Organizatora kada je to potrebno radi pravovremenog informisanja građana i ostvarivanja javnog interesa. Po registraciji Organizatora događaj se može naknadno povezati sa Organizatorom. Naknadno povezivanje predstavlja administrativnu dopunu podataka i ne smije mijenjati audit, istoriju događaja niti javno objavljene verzije.
+Urednik samostalno kreira Događaje za neregistrovane Organizatore, odnosno Događaje koji nijesu vezani za registrovanog Organizatora. U tom toku Urednik ne bira registrovanog Organizatora i ne šalje Događaj na odobrenje; kada su ispunjeni uslovi za objavu, Urednik ga direktno objavljuje. Može opciono unijeti ručno naziv neregistrovanog Organizatora (samo naziv). Po registraciji odgovarajućeg Organizatora već Objavljen događaj bez registrovanog Organizatora može se naknadno povezati sa Organizatorom (BM-UR-07). Naknadno povezivanje predstavlja administrativnu dopunu podataka i ne smije mijenjati audit, istoriju događaja niti javno objavljene verzije.
+
+Urednikov poslovni tok za takav Događaj je: Novi događaj → Sačuvaj i nastavi → U pripremi → dopuna Događaja i Održavanja → Objavi. „Nacrt“ nije poslovna faza Urednikovog direktnog toka; „U pripremi“ nije novi status životnog ciklusa Događaja.
 
 ## 4. Poslovna pravila
 
 | Oznaka | Pravilo |
 |--------|---------|
 | BM-UR-01 | Urednik odobrava ili odbija zahtjev za kreiranje Organizatora. |
-| BM-UR-02 | Urednik pregleda, odobrava i objavljuje događaje. Za Događaj u statusu **Na odobrenju** (prvi tok prije objave) Urednik u V1 **ne** uređuje sadržaj direktno; donosi odluku Odobri ili Vrati na doradu (PO-DG-10 / BM-ST-10). Uređivanje sadržaja nacrta bez Organizatora i uredničke radnje nad Prijedlogom izmjene Objavljenog ostaju po postojećim pravilima. |
+| BM-UR-02 | Urednik pregleda, odobrava i objavljuje događaje. Za Događaj u statusu **Na odobrenju** (prvi tok prije objave) Urednik u V1 **ne** uređuje sadržaj direktno; donosi odluku Odobri ili Vrati na doradu (PO-DG-10 / BM-ST-10). Uređivanje Događaja **U pripremi** bez registrovanog Organizatora (BM-UR-14), direktno uređivanje dozvoljenog sadržaja Objavljenog Događaja u uredničkom toku (BM-UR-16) i uredničke radnje nad Prijedlogom izmjene Objavljenog Događaja Moderatorskog toka ostaju po postojećim pravilima. |
 | BM-UR-03 | Urednik vraća događaje na doradu kada su potrebne suštinske izmjene. |
 | BM-UR-04 | Urednik pregleda i odobrava sadržaj koji šalju Moderatori. |
 | BM-UR-05 | Urednik odobrava uklanjanje Moderatora organizatora. |
-| BM-UR-06 | Urednik može kreirati događaj bez registrovanog Organizatora kada je to potrebno radi pravovremenog informisanja građana i ostvarivanja javnog interesa. |
-| BM-UR-07 | Urednik može jednokratno naknadno povezati već **Objavljen** događaj bez Organizatora (`organizer_id` nije postavljen) sa **Aktivnim** Organizatorom (PO-DG-08, PO-DG-09). Status događaja ostaje Objavljen. Operacija je administrativna dopuna: ne mijenja sadržaj događaja, istoriju događaja, prethodne javne verzije, ne kreira Prijedlog izmjene i ne mijenja `first_submitted_at`. Nakon uspješnog povezivanja BR-052 / ova radnja više nije dostupna za taj događaj. Uklanjanje Organizatora i zamjena jednog Organizatora drugim nijesu dozvoljeni kroz ovo pravilo. Dodjela Organizatora Nacrtu prije objave nije ova radnja — to je redovno uređivanje Nacrta. |
+| BM-UR-06 | Urednik samostalno kreira i objavljuje Događaj bez registrovanog Organizatora kada je to potrebno radi pravovremenog informisanja građana i ostvarivanja javnog interesa. Takav Događaj nije predmet postupka odobravanja; Urednik ga ne šalje na odobrenje. Kada su ispunjeni postojeći uslovi za objavu (najmanje jedno validno Održavanje sa datumom i ostala usvojena pravila), Urednik ga direktno objavljuje (BM-ST-04). |
+| BM-UR-07 | Urednik može jednokratno naknadno povezati već **Objavljen** događaj bez registrovanog Organizatora sa **Aktivnim** Organizatorom (PO-DG-08, PO-DG-09). Status događaja ostaje Objavljen. Operacija je administrativna dopuna: ne mijenja sadržaj događaja, istoriju događaja, prethodne javne verzije i ne kreira Prijedlog izmjene. Nakon uspješnog povezivanja ova radnja više nije dostupna za taj događaj. Uklanjanje Organizatora i zamjena jednog Organizatora drugim nijesu dozvoljeni kroz ovo pravilo. Ova radnja nije dodjela registrovanog Organizatora Moderatorskom Nacrtu prije objave — to je redovno uređivanje Nacrta Moderatora. Urednik u svom create toku ne dodjeljuje registrovanog Organizatora (BM-UR-12). |
 | BM-UR-08 | Urednik odobrava zahtjeve za dodjelu ovlašćenja novim Moderatorima i isključivo on dodjeljuje pristup novom Moderatoru. |
 | BM-UR-09 | Urednik je isključiva uloga Uredničkog portala. Urednik nije Organizator, nije Moderator Organizatora, ne kombinuje ulogu Urednika sa statusom običnog registrovanog korisnika u poslovnom modelu Kalendara kulture, ne mijenja aktivnu poslovnu ulogu i uvijek postupa kao Urednik. |
 | BM-UR-10 | Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora. |
-| BM-UR-11 | Urednik može otkazati bilo koji objavljeni događaj. Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Nakon otkazivanja Urednik može unijeti ili dopuniti razlog otkazivanja (napomenu urednika), u skladu sa BM-DG-10. U V1 javni portal ne prikazuje automatski taj razlog javnosti (BM-PK-13 / BM-PK-33); prikazuje se standardizovano sistemsko obavještenje. |
+| BM-UR-11 | Urednik može otkazati bilo koji objavljeni događaj. Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Razlog otkazivanja Događaja je **opcion**: akcija Otkaži događaj omogućava unos razloga, ali razlog nije uslov za otkazivanje. Ako je razlog unesen, može se javno prikazati kao napomena o otkazivanju, uz standardizovano sistemsko obavještenje (BM-DG-10, BM-PK-36). Terminalnost Otkazan ostaje neizmijenjena (BM-DG-09). |
+| BM-UR-12 | Urednik u svom create toku **ne** bira registrovanog Organizatora i **ne** kreira Događaj u ime registrovanog Organizatora. Događaje registrovanog Organizatora kreira Moderator tog Organizatora i šalje ih Uredniku na odobrenje. |
+| BM-UR-13 | Za Događaj koji Urednik kreira bez registrovanog Organizatora, podatak „Organizator“ unosi se isključivo ručno kao tekstualni naziv neregistrovanog Organizatora. Polje je **opciono**. Dozvoljen je samo naziv; ne uvode se e-mail, telefon, veb-sajt, adresa, kontakt osoba niti drugi podaci Organizatora u okviru ove funkcionalnosti. Ručni unos ne kreira zapis registrovanog Organizatora, ne dodjeljuje nalog, ne dodjeljuje Moderatora i ne pokreće postupak odobravanja. Događaj može biti objavljen i bez navedenog Organizatora. |
+| BM-UR-14 | Urednikov poslovni tok za Događaj bez registrovanog Organizatora je: Novi događaj → **Sačuvaj i nastavi** → **U pripremi** → dopuna → **Objavi**. Akcija „Sačuvaj i nastavi“ čuva započeti Događaj, ne objavljuje ga i ne šalje ga na odobrenje. „U pripremi“ označava Događaj koji je Urednik sačuvao, a koji još nikada nije bio objavljen; **nije** novi status životnog ciklusa i **nije** isto što i Moderatorski poslovni **Nacrt**. Takvi Događaji prikazuju se na zajedničkoj listi „Događaji“ (bez posebnog ekrana ili navigacije). Osnovne akcije za „U pripremi“ su Uredi i Obriši; Objavi se vrši iz samog Događaja. |
+| BM-UR-15 | Urednik može trajno obrisati Događaj **samo** ako taj Događaj nikada nije bio objavljen (stanje „U pripremi“). Nakon prve objave trajno brisanje nije dozvoljeno, bez obzira na kasnije stanje (Objavljen, Otkazan, Arhiviran). Otkazan Događaj se ne briše. |
+| BM-UR-16 | Urednik može **direktno** uređivati sadržajne podatke već Objavljenog Događaja koji pripada uredničkom toku (bez registrovanog Organizatora), radi ispravke ili dopune, bez Prijedloga izmjene i bez postupka odobravanja. Obuhvat, u granicama postojećeg modela, uključuje: naslov, opis, ručno uneseni naziv Organizatora, kategoriju, naslovni medij, oznake i druge obične sadržajne podatke za koje ne postoji posebno pravilo životnog ciklusa. Odgađanje Održavanja, otkazivanje Održavanja, otkazivanje Događaja i druge poslovno značajne radnje životnog ciklusa **ne** rade se kroz običan „Uredi“; koriste posebne akcije. Ovo pravilo **ne** ukida tok Prijedloga izmjene za Objavljeni Događaj Moderatorskog / registrovanog Organizatora. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
-- **Organizator** — Urednik odobrava ili odbija zahtjev za kreiranje Organizatora, može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora i može jednokratno naknadno povezati već Objavljen događaj bez Organizatora sa Aktivnim Organizatorom, u skladu sa BM-UR-07 (PO-DG-08 / PO-DG-09).
-- **Moderator organizatora** — Urednik pregleda i odobrava sadržaj koji Moderator pošalje na odobravanje; odobrava zahtjeve za dodjelu i uklanjanje Moderatora te dodjeljuje ovlašćenja.
-- **Događaj** — Urednik pregleda, odobrava, objavljuje i vraća na doradu događaje; u V1 ne uređuje sadržaj dok je status Na odobrenju (PO-DG-10); može otkazati bilo koji objavljeni događaj, može unijeti ili dopuniti razlog otkazivanja (napomenu urednika) i ne vraća otkazani događaj u Objavljen; u propisanim slučajevima može i kreirati događaj.
+- **Organizator** — Urednik odobrava ili odbija zahtjev za kreiranje Organizatora, može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora i može jednokratno naknadno povezati već Objavljen događaj bez registrovanog Organizatora sa Aktivnim Organizatorom, u skladu sa BM-UR-07 (PO-DG-08 / PO-DG-09). U create toku Urednik ne bira registrovanog Organizatora (BM-UR-12).
+- **Moderator organizatora** — Urednik pregleda i odobrava sadržaj koji Moderator pošalje na odobravanje; odobrava zahtjeve za dodjelu i uklanjanje Moderatora te dodjeljuje ovlašćenja. Moderatorski tok Nacrt → Pošalji na odobrenje ostaje netaknut.
+- **Događaj** — Urednik pregleda, odobrava, objavljuje i vraća na doradu događaje Moderatorskog toka; u V1 ne uređuje sadržaj dok je status Na odobrenju (PO-DG-10); samostalno kreira, priprema, objavljuje, uređuje i u propisanim slučajevima briše Događaje bez registrovanog Organizatora; može otkazati bilo koji objavljeni događaj, može unijeti ili dopuniti opcion razlog otkazivanja i ne vraća otkazani događaj u Objavljen.
+- **Lokacija** — Urednik odobrava ili odbija nove lokacije predložene za zajednički katalog lokacija.
+- **Kategorije i oznake** — Urednik isključivo upravlja katalogom kategorija i katalogom oznaka, u skladu sa BM-08.
 - **Lokacija** — Urednik odobrava ili odbija nove lokacije predložene za zajednički katalog lokacija.
 - **Kategorije i oznake** — Urednik isključivo upravlja katalogom kategorija i katalogom oznaka, u skladu sa BM-08.
 
@@ -473,15 +483,15 @@ Događaj
             └── može imati status i druga svojstva
 ```
 
-Događaj može biti kreiran bez definisanog održavanja isključivo dok se nalazi u statusu Nacrt. Za slanje događaja na odobrenje mora biti definisano najmanje jedno održavanje. Objavljeni događaj uvijek mora imati najmanje jedno održavanje.
+Događaj može biti kreiran bez definisanog održavanja isključivo dok još nije objavljen: u Moderatorskom toku dok je u statusu **Nacrt**, a u uredničkom toku dok je **U pripremi**. Za slanje događaja na odobrenje mora biti definisano najmanje jedno održavanje. Objavljeni događaj uvijek mora imati najmanje jedno održavanje.
 
 Događaj može biti samostalan ili biti dio jedne manifestacije. Pripadnost manifestaciji nije obavezna.
 
 Lokacija nije svojstvo događaja već svojstvo održavanja događaja. Svako održavanje može imati svoju lokaciju.
 
-Događaj pripada jednoj primarnoj kategoriji. Dodatna klasifikacija događaja može se vršiti korišćenjem oznaka. Oznake nisu isto što i tagovi medija (BM-09). Događaj može biti sačuvan kao nacrt bez izabrane primarne kategorije. Za slanje događaja na odobrenje mora biti izabrana jedna primarna kategorija. Svaki objavljeni događaj mora imati jednu primarnu kategoriju.
+Događaj pripada jednoj primarnoj kategoriji. Dodatna klasifikacija događaja može se vršiti korišćenjem oznaka. Oznake nisu isto što i tagovi medija (BM-09). Događaj može biti sačuvan kao Nacrt (Moderator) ili U pripremi (Urednik) bez izabrane primarne kategorije. Za slanje događaja na odobrenje mora biti izabrana jedna primarna kategorija. Svaki objavljeni događaj mora imati jednu primarnu kategoriju.
 
-Svaki događaj mora biti povezan sa tačno jednim Organizatorom. Izuzetno, ako Organizator nije registrovan u sistemu, Urednik može kreirati i objaviti događaj bez registrovanog Organizatora radi ostvarivanja javnog interesa i pravovremenog informisanja građana, u skladu sa BM-03 Urednik. Po registraciji Organizatora događaj se može naknadno povezati sa Organizatorom kao administrativna dopuna podataka, bez izmjene audita, istorije događaja i javno objavljenih verzija.
+Događaj registrovanog Organizatora povezan je sa tačno jednim registrovanim Organizatorom i kreira ga Moderator tog Organizatora. Urednik samostalno kreira Događaj bez veze sa registrovanim Organizatorom i može opciono unijeti ručno naziv neregistrovanog Organizatora (BM-UR-13 / BM-DG-12). Takav Događaj može biti objavljen i bez navedenog Organizatora. Po registraciji odgovarajućeg Organizatora već Objavljen događaj bez registrovanog Organizatora može se naknadno povezati sa Organizatorom kao administrativna dopuna podataka, bez izmjene audita, istorije događaja i javno objavljenih verzija.
 
 Nakon završetka svih održavanja sistem automatski arhivira događaj, bez obzira da li je događaj u statusu Objavljen ili Otkazan. Arhiviranje se ne izvršava ručno.
 
@@ -493,25 +503,27 @@ Pri prelazu Objavljen → Otkazan, u okviru iste poslovne operacije otkazivanja 
 
 Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Ako se isti kulturni program kasnije ponovo organizuje, ne reaktivira se postojeći događaj; kreira se novi događaj kao novi zapis sa novim životnim ciklusom. Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kroz status Odgođen na održavanju, u skladu sa BM-06.
 
-Nakon što je operacija otkazivanja Događaja (uključujući automatsko otkazivanje otvorenih Održavanja) završena, nije dozvoljena naknadna izmjena sadržajnih podataka događaja ni povezanih održavanja. Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti. U V1 taj razlog **ne** prikazuje se automatski na javnom portalu; javnost vidi standardizovano sistemsko obavještenje o otkazivanju (BM-PK-13 / BM-PK-33).
+Nakon što je operacija otkazivanja Događaja (uključujući automatsko otkazivanje otvorenih Održavanja) završena, nije dozvoljena naknadna izmjena sadržajnih podataka događaja ni povezanih održavanja. Jedini izuzetak je razlog otkazivanja (napomena urednika), koji je opcion i koji Urednik može unijeti ili dopuniti. Ako je razlog unesen, može se javno prikazati kao napomena o otkazivanju, uz standardizovano sistemsko obavještenje (BM-DG-10 / BM-PK-36).
 
-Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja. To pravilo ne isključuje automatsko otkazivanje svih otvorenih Održavanja pri otkazivanju cijelog Događaja (PO-AUTO-01).
+Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja i bez prelaska cijelog Događaja u Otkazan. To pravilo ne isključuje automatsko otkazivanje svih otvorenih Održavanja pri otkazivanju cijelog Događaja (PO-AUTO-01).
 
 ## 4. Poslovna pravila
 
 | Oznaka | Pravilo |
 |--------|---------|
-| BM-DG-01 | Događaj može biti kreiran bez definisanog održavanja isključivo dok se nalazi u statusu Nacrt. Za slanje događaja na odobrenje mora biti definisano najmanje jedno održavanje. Objavljeni događaj uvijek mora imati najmanje jedno održavanje. |
+| BM-DG-01 | Događaj može biti kreiran bez definisanog održavanja isključivo dok još nije objavljen: u Moderatorskom toku dok je u statusu **Nacrt**, a u uredničkom toku dok je **U pripremi**. Za slanje događaja na odobrenje mora biti definisano najmanje jedno održavanje. Objavljeni događaj uvijek mora imati najmanje jedno održavanje. |
 | BM-DG-02 | Događaj može biti samostalan ili biti dio jedne manifestacije. Pripadnost manifestaciji nije obavezna. Detaljna pravila definišu se u BM-05 Manifestacija. |
 | BM-DG-03 | Lokacija nije svojstvo događaja već svojstvo održavanja događaja. Svako održavanje može imati svoju lokaciju. Detaljna pravila definišu se u BM-07 Lokacija. |
 | BM-DG-04 | Nakon završetka svih održavanja sistem automatski arhivira događaj. Automatsko arhiviranje primjenjuje se na događaj u statusu Objavljen i na događaj u statusu Otkazan. Arhiviranje se ne izvršava ručno. Pri prelazu u Arhiviran Sistem mora pouzdano sačuvati iz kojeg relevantnog javnog statusa (Objavljen ili Otkazan) je Događaj arhiviran, radi istorijskog javnog prikaza (BM-PK-35 / PO-6A09-02). Detaljna pravila prikaza Javne Arhive definišu se u BM-11 Portal Kalendara kulture (BM-PK-13 / BM-PK-35). |
-| BM-DG-05 | Događaj može biti otkazan. Otkazani događaj ostaje evidentiran u sistemu i dobija status „Otkazan“. Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više nema pravo otkazivanja događaja tog Organizatora; otkazivanje događaja deaktiviranog Organizatora izvršava isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj. Pri otkazivanju Događaja (Objavljen → Otkazan) primjenjuje se BM-DG-11. Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja; to ne isključuje BM-DG-11. Detaljna pravila za održavanja definišu se u BM-06 Održavanje događaja. |
+| BM-DG-05 | Događaj može biti otkazan. Otkazani događaj ostaje evidentiran u sistemu i dobija status „Otkazan“. Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više nema pravo otkazivanja događaja tog Organizatora; otkazivanje događaja deaktiviranog Organizatora izvršava isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj. Pri otkazivanju Događaja (Objavljen → Otkazan) primjenjuje se BM-DG-11. Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja i bez prelaska cijelog Događaja u Otkazan; to ne isključuje BM-DG-11. Detaljna pravila za održavanja definišu se u BM-06 Održavanje događaja. |
 | BM-DG-06 | Događaj pripada jednoj primarnoj kategoriji. Dodatna klasifikacija događaja može se vršiti korišćenjem oznaka. Oznake nisu isto što i tagovi medija (BM-09). Detaljna pravila o kategorijama i oznakama definišu se u BM-08 Kategorije i oznake. |
-| BM-DG-07 | Događaj može biti sačuvan kao nacrt bez izabrane primarne kategorije. Za slanje događaja na odobrenje mora biti izabrana jedna primarna kategorija. Svaki objavljeni događaj mora imati jednu primarnu kategoriju. |
-| BM-DG-08 | Svaki događaj mora biti povezan sa tačno jednim Organizatorom (`0..1` u smislu privremenog izuzetka). **Privremeni izuzetak:** Objavljen događaj može postojati bez Organizatora ako ga je Urednik direktno objavio po BM-UR-06 / BM-ST-04. **Naknadna dopuna (BM-UR-07 / PO-DG-08 / PO-DG-09):** kada odgovarajući Organizator bude registrovan i Aktivan, Urednik može jednokratno i jednosmjerno povezati taj Objavljeni događaj (`NULL → Aktivan Organizator`). Ovo pravilo ne dozvoljava proizvoljnu kasniju promjenu Organizatora, uklanjanje veze niti prebacivanje na drugog Organizatora. |
+| BM-DG-07 | Događaj može biti sačuvan kao Nacrt (Moderator) ili U pripremi (Urednik) bez izabrane primarne kategorije. Za slanje događaja na odobrenje mora biti izabrana jedna primarna kategorija. Svaki objavljeni događaj mora imati jednu primarnu kategoriju. |
+| BM-DG-08 | Događaj registrovanog Organizatora povezan je sa tačno jednim registrovanim Organizatorom. **Urednički tok:** Događaj koji kreira Urednik nije povezan sa registrovanim Organizatorom; Urednik ne bira registrovanog Organizatora u create toku (BM-UR-12). Takav Događaj može imati opcion ručno uneseni naziv neregistrovanog Organizatora (BM-DG-12) i može biti objavljen i bez ikakvog navedenog Organizatora. **Naknadna dopuna (BM-UR-07 / PO-DG-08 / PO-DG-09):** kada odgovarajući Organizator bude registrovan i Aktivan, Urednik može jednokratno i jednosmjerno povezati taj Objavljeni događaj sa Aktivnim Organizatorom. Ovo pravilo ne dozvoljava proizvoljnu kasniju promjenu Organizatora, uklanjanje veze niti prebacivanje na drugog Organizatora. |
 | BM-DG-09 | Status Otkazan predstavlja terminalno stanje događaja u smislu povratka u Objavljen. Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Ako se isti kulturni program kasnije ponovo organizuje, ne reaktivira se postojeći događaj; kreira se novi događaj kao novi zapis sa novim životnim ciklusom. Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kroz status Odgođen na održavanju, u skladu sa BM-06. |
-| BM-DG-10 | Događaj u statusu Otkazan tretira se kao istorijski zapis. Nakon završene operacije otkazivanja (uključujući BM-DG-11) nije dozvoljena naknadna izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja. Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti. **V1 javni portal:** razlog otkazivanja (`cancellation_reason`) **ne** prikazuje se automatski javnosti; prikazuje se isključivo standardizovano sistemsko obavještenje (BM-PK-33). Javni prikaz teksta razloga zahtijeva zasebnu Product Owner odluku. Automatsko otkazivanje otvorenih Održavanja iz BM-DG-11 dio je same operacije otkazivanja Događaja i ne predstavlja zabranjenu naknadnu izmjenu. Terminalnost statusa Otkazan (BM-DG-09) ostaje neizmijenjena. |
+| BM-DG-10 | Događaj u statusu Otkazan tretira se kao istorijski zapis. Nakon završene operacije otkazivanja (uključujući BM-DG-11) nije dozvoljena naknadna izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja. Jedini izuzetak je razlog otkazivanja (napomena urednika). Razlog otkazivanja Događaja je **opcion**: nije uslov za otkazivanje; Urednik može unijeti ili dopuniti razlog. Ako je razlog unesen, **može se javno prikazati** kao napomena o otkazivanju, uz standardizovano sistemsko obavještenje (BM-PK-36). **PATCH-063 superseduje** ranije formulacije BM-DG-10 / BM-PK-33 / BM-UR-11 / BM-ST-07 / BM-PK-13 koje su zabranjivale javni prikaz teksta razloga ili zahtijevale zasebnu PO odluku za javni prikaz. Automatsko otkazivanje otvorenih Održavanja iz BM-DG-11 dio je same operacije otkazivanja Događaja i ne predstavlja zabranjenu naknadnu izmjenu. Terminalnost statusa Otkazan (BM-DG-09) ostaje neizmijenjena. Otkazan Događaj se ne briše (BM-UR-15 / BM-DG-13). |
 | BM-DG-11 | Pri prelazu Događaja Objavljen → Otkazan, u okviru iste atomske poslovne operacije otkazivanja, sva Održavanja koja su u tom trenutku u statusu Planiran ili Odgođen automatski prelaze u status Otkazan. Održavanja u statusu Završen ili Otkazan ostaju nepromijenjena. Nakon operacije na Otkazanom Događaju ne smije ostati Planirano niti Odgođeno Održavanje. Ovo nije prelaz Planiran → Završen; to je posljedica otkazivanja roditeljskog Događaja (PO-AUTO-01). |
+| BM-DG-12 | Ručno uneseni naziv neregistrovanog Organizatora je opcion tekstualni podatak Događaja u uredničkom toku. Nije registrovani Organizator, ne kreira zapis Organizatora, ne pokreće odobravanje i ne zamjenjuje vezu sa registrovanim Organizatorom. Kada postoji veza sa registrovanim Organizatorom, važi ta veza; ručni naziv nije alternativni način dodjele registrovanog Organizatora. |
+| BM-DG-13 | Trajno brisanje Događaja dozvoljeno je isključivo ako Događaj nikada nije bio objavljen. Nakon prve objave brisanje nije dozvoljeno (uključujući Objavljen, Otkazan i Arhiviran). |
 
 ## 5. Otvorena pitanja
 
@@ -736,7 +748,7 @@ Svako održavanje ima sopstveni termin i status, dok lokacija može biti opciona
 > Održavanje može imati jedan od sljedećih statusa:
 >
 > * **Planiran** — održavanje je aktivno i biće održano prema objavljenim podacima.
-> * **Odgođen** — održavanje neće biti održano u planiranom terminu i očekuje se određivanje novog termina.
+> * **Odgođen** — održavanje neće biti održano u prvobitnom terminu. Novi termin **nije** obavezan u trenutku odgađanja; može ostati nepoznat dok se ne odredi. Prvobitni termin ostaje istorijski podatak. Razlog odgađanja je opcion.
 > * **Otkazan** — održavanje neće biti održano.
 > * **Završen** — održavanje je održano ili je prošao njegov termin.
 >
@@ -772,11 +784,11 @@ Svako održavanje ima sopstveni termin i status, dok lokacija može biti opciona
 > * **Planiran**, nakon određivanja novog termina;
 > * **Otkazan**.
 >
-> Druge tranzicije iz statusa **Odgođen** nisu dozvoljene.
+> Prelaz u Odgođen **ne** zahtijeva unos novog datuma. Druge tranzicije iz statusa **Odgođen** nisu dozvoljene.
 
 ### BM-TR-15 — Povratak iz statusa Odgođen u Planiran
 
-> Prilikom prelaska iz statusa **Odgođen** u status **Planiran** radi se o istom održavanju događaja. Novo održavanje se ne kreira. Istorija održavanja ostaje sačuvana.
+> Prilikom prelaska iz statusa **Odgođen** u status **Planiran** radi se o istom održavanju događaja. Novo održavanje se ne kreira. Unosi se novi datum/vrijeme; ne kreira se novi Događaj samo zato što je termin pomjeren. Istorija održavanja ostaje sačuvana (uključujući evidenciju aktivnosti gdje je primjenjivo).
 
 ### BM-TR-16 — Ovlašćenja za status održavanja sa registrovanim Organizatorom
 
@@ -793,6 +805,23 @@ Svako održavanje ima sopstveni termin i status, dok lokacija može biti opciona
 ### BM-TR-18 — Obuhvat ovlašćenja za status održavanja
 
 > Pravila BM-TR-16 i BM-TR-17 odnose se isključivo na status održavanja. Ne mijenjaju status događaja niti postojeći urednički workflow događaja.
+
+### BM-TR-19 — Odgađanje bez poznatog novog termina
+
+> Održavanje može biti označeno kao **Odgođeno** i kada novi termin još nije poznat. Novi datum nije obavezan u trenutku odgađanja. Prvobitni termin ostaje istorijski podatak. Razlog odgađanja je **opcion**; ako je unesen, može se javno prikazati kao napomena (BM-PK-36).
+
+### BM-TR-20 — Otkazivanje pojedinačnog Održavanja
+
+> Ako se otkaže jedno Održavanje:
+>
+> * samo to Održavanje dobija status **Otkazan**;
+> * ostala aktivna Održavanja ostaju nepromijenjena;
+> * cijeli Događaj **ne** dobija status Otkazan samo zbog jednog otkazanog Održavanja;
+> * otkazano Održavanje više se ne tretira kao predstojeće aktivno Održavanje;
+> * prvobitni datum ostaje vidljiv;
+> * razlog otkazivanja Održavanja je **opcion**; ako je unesen, može se javno prikazati kao napomena (BM-PK-36).
+>
+> Ovo ne isključuje BM-DG-11 pri otkazivanju cijelog Događaja.
 
 ## 5. Otvorena pitanja
 
@@ -1161,38 +1190,48 @@ Promjena statusa predstavlja posljedicu dozvoljene poslovne radnje koju izvršav
 > * Objavljen
 > * Otkazan
 > * Arhiviran
+>
+> **„U pripremi“ nije status životnog ciklusa.** Predstavlja poslovni prikaz za Urednikov još neobjavljeni Događaj (BM-UR-14 / BM-ST-03). Moderatorski tok zadržava poslovni status **Nacrt**.
 
 ### BM-ST-03 — Kreiranje događaja
 
-> Svaki novi događaj nastaje u statusu Nacrt. Događaj u statusu Nacrt nije vidljiv na javnom portalu i može ga uređivati Moderator ili Urednik, u skladu sa poslovnim pravilima sistema. Ukoliko događaj nema registrovanog organizatora, uređivanje nacrta vrši urednik. Događaj u statusu Nacrt može biti sačuvan bez svih podataka potrebnih za njegovo objavljivanje.
+> Svaki novi događaj nastaje u početnom neobjavljenom stanju životnog ciklusa koje Moderatorski tok prikazuje i tretira kao **Nacrt**, a urednički tok kao **U pripremi**. Takav događaj nije vidljiv na javnom portalu.
+>
+> **Moderator:** kreira Nacrt u ime registrovanog Organizatora; može ga uređivati i kasnije poslati na odobrenje.
+>
+> **Urednik:** kreira Događaj bez registrovanog Organizatora akcijom **Sačuvaj i nastavi**; Događaj se prikazuje kao **U pripremi**; Urednik ga uređuje i direktno objavljuje kada su ispunjeni uslovi. „Nacrt“ nije poslovna faza Urednikovog direktnog toka.
+>
+> Događaj u tom početnom stanju može biti sačuvan bez svih podataka potrebnih za objavljivanje.
 
 ### BM-ST-04 — Slanje na odobrenje i objavljivanje
 
 > Događaj u statusu Nacrt koji je kreirao Moderator u ime Organizatora može biti poslat na odobrenje kada ispunjava poslovne uslove za pregled od strane urednika. Slanjem na odobrenje status događaja se mijenja u Na odobrenju. Od tog trenutka Događaj je sadržajno zaključan do uredničke odluke (BM-ST-10 / PO-DG-10).
 >
-> Događaj koji pripada Organizatoru ne može biti direktno objavljen. Za takav događaj obavezan je standardni tok: Nacrt → Na odobrenju → Objavljen. Moderator ne može biti zaobiđen u tom toku.
+> Događaj koji pripada registrovanom Organizatoru ne može biti direktno objavljen. Za takav događaj obavezan je standardni tok: Nacrt → Na odobrenju → Objavljen. Moderator ne može biti zaobiđen u tom toku.
 >
-> Urednik može direktno objaviti događaj iz statusa Nacrt, bez postupka odobravanja, isključivo kada događaj nema registrovanog Organizatora. To je jedini izuzetak od standardnog procesa odobravanja.
+> Urednik može direktno objaviti događaj iz stanja **U pripremi**, bez postupka odobravanja, isključivo kada događaj nema registrovanog Organizatora. To je jedini izuzetak od standardnog procesa odobravanja. Urednik u tom toku ne koristi akciju „Pošalji na odobrenje“.
 
 ### BM-ST-05 — Vraćanje na doradu
 
-> Urednik može vratiti događaj u status Nacrt radi dorade. Vraćanjem na doradu status događaja se mijenja iz Na odobrenju u Nacrt, uz obrazloženje razloga vraćanja. Nakon vraćanja Moderator ponovo uređuje Nacrt; `first_submitted_at` se ne briše.
+> Urednik može vratiti događaj u status Nacrt radi dorade. Vraćanjem na doradu status događaja se mijenja iz Na odobrenju u Nacrt, uz obrazloženje razloga vraćanja. Nakon vraćanja Moderator ponovo uređuje Nacrt; oznaka prvog slanja na odobrenje se ne briše.
 
 ### BM-ST-06 — Objavljivanje događaja
 
-> Objavljivanjem događaja njegov status se mijenja u Objavljen. Objavljen događaj postaje vidljiv na javnom portalu u skladu sa poslovnim pravilima sistema. Objavljen događaj može se naknadno uređivati u skladu sa poslovnim pravilima sistema.
+> Objavljivanjem događaja njegov status se mijenja u Objavljen. Objavljen događaj postaje vidljiv na javnom portalu u skladu sa poslovnim pravilima sistema.
+>
+> Objavljen događaj bez registrovanog Organizatora Urednik može naknadno direktno uređivati u skladu sa BM-UR-16. Objavljen događaj registrovanog Organizatora uređuje se kroz postojeći tok Prijedloga izmjene. Poslovno značajne radnje životnog ciklusa (odgađanje, otkazivanje Održavanja, otkazivanje Događaja) koriste posebne akcije.
 
 ### BM-ST-07 — Otkazivanje događaja
 
-> Objavljen događaj može biti otkazan. Otkazivanjem status događaja se mijenja u Otkazan, pri čemu događaj ostaje dostupan radi očuvanja istorijskih podataka i informisanja javnosti o otkazivanju i tretira se kao istorijski zapis. U V1 informisanje javnosti o otkazivanju na portalu ostvaruje se standardizovanim sistemskim obavještenjem (BM-PK-33), ne automatskim prikazom razloga otkazivanja.
+> Objavljen događaj može biti otkazan. Otkazivanjem status događaja se mijenja u Otkazan, pri čemu događaj ostaje dostupan radi očuvanja istorijskih podataka i informisanja javnosti o otkazivanju i tretira se kao istorijski zapis. Informisanje javnosti ostvaruje se standardizovanim sistemskim obavještenjem; ako je unesen opcion razlog otkazivanja, taj razlog može se javno prikazati kao napomena (BM-DG-10 / BM-PK-36).
 >
 > Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje.
 >
 > Deaktivacijom Organizatora prestaje moderatorski kontekst za tog Organizatora. Moderator tada više nema pravo otkazivanja događaja tog Organizatora. Ako je potrebno otkazati događaj deaktiviranog Organizatora, tu radnju izvršava isključivo Urednik.
 >
-> Urednik može otkazati bilo koji objavljeni događaj.
+> Urednik može otkazati bilo koji objavljeni događaj. Razlog otkazivanja je **opcion** i nije uslov za otkazivanje.
 >
-> Status Otkazan predstavlja terminalno stanje događaja u smislu povratka u Objavljen. Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Ako se isti kulturni program kasnije ponovo organizuje, ne reaktivira se postojeći događaj; kreira se novi događaj kao novi zapis sa novim životnim ciklusom.
+> Status Otkazan predstavlja terminalno stanje događaja u smislu povratka u Objavljen. Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Ako se isti kulturni program kasnije ponovo organizuje, ne reaktivira se postojeći događaj; kreira se novi događaj kao novi zapis sa novim životnim ciklusom. Otkazan Događaj se ne briše.
 >
 > Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kroz status Odgođen na održavanju, u skladu sa BM-06.
 >
@@ -1226,6 +1265,16 @@ Promjena statusa predstavlja posljedicu dozvoljene poslovne radnje koju izvršav
 > * Moderator **ne** povlači Događaj iz Na odobrenju u Nacrt.
 >
 > Ovo pravilo **ne** mijenja tok Prijedloga izmjene Objavljenog Događaja (gdje ostaju postojeća pravila slanja, početka pregleda, uređivanja Prijedloga, povlačenja prije pregleda i odluke Urednika).
+>
+> Ovo pravilo **ne** mijenja direktno uređivanje Objavljenog Događaja bez registrovanog Organizatora od strane Urednika (BM-UR-16 / BM-ST-11).
+
+### BM-ST-11 — Direktno uređivanje Objavljenog Događaja u uredničkom toku
+
+> Za Objavljen Događaj bez registrovanog Organizatora Urednik direktno čuva dozvoljene sadržajne izmjene bez Prijedloga izmjene i bez odobravanja (BM-UR-16).
+>
+> Za Objavljen Događaj registrovanog Organizatora ostaje postojeći tok Prijedloga izmjene; Moderatorski tok nije ukinut.
+>
+> Odgađanje Održavanja, otkazivanje Održavanja, otkazivanje Događaja i druge radnje životnog ciklusa ostaju posebne akcije.
 
 ## 5. Otvorena pitanja
 
@@ -1325,7 +1374,7 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > * Aktivni javni skup (naslovna, Pretraga, featured, upcoming, aktivni counts, aktivni detalj) ostaje **`published` | `cancelled`**. Interni status `archived` **ne** ulazi u taj skup.
 > * **Portalna / Javna Arhiva ≠ jednostavno „svi `archived`"**. Arhiva je poseban istorijski pogled (BM-PK-35).
 > * Ne prikazuje se među Istaknutim događajima. Flag isticanja se ne mijenja — otkazani se samo isključuju iz javnog prikaza Istaknutih.
-> * Na Detaljima otkazanog se prikazuje fiksno sistemsko obavještenje; V1 bez javnog `cancellation_reason` (BM-PK-33).
+> * Na Detaljima otkazanog se prikazuje fiksno sistemsko obavještenje; ako je unesen opcion razlog otkazivanja, može se javno prikazati kao napomena (BM-PK-36). **PATCH-063 superseduje** raniju zabranu javnog prikaza teksta razloga iz PATCH-060 / BM-PK-33.
 > * Ne uvode se novi filteri, URL parametri ni search modovi za otkazane isključivo zbog CR-004B.
 >
 > **Lifecycle `cancelled → archived` (BM-DG-04 / BR-065) i očuvanje Otkazan:** CR-004B historijski nije implementirao taj prelaz (PO-CR4B-09). Prelaz **jeste** usvojeni lifecycle. Za kanonsku Javnu Arhivu obavezno je trajno očuvanje informacije da je Događaj arhiviran iz Otkazan, tako da javni badge ostane **Otkazan** (BM-PK-35 / PO-6A09-02 / PO-6A09-04). Terminalnost Otkazan (BM-DG-09) ostaje neizmijenjena — nema republish ni povratka u Objavljen.
@@ -1517,7 +1566,7 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 > Status **Odgođen** nije isto što i **Otkazan**. Odgođen ostaje status Održavanja, ne Događaja.
 >
-> Na **Detalju Događaja** Odgođeno Održavanje ostaje vidljivo uz jasnu oznaku **„Odgođeno“**. Novi važeći termin prikazuje se kao Planirano Održavanje.
+> Na **Detalju Događaja**, dok je Održavanje Odgođeno a novi termin još nije poznat, portal prikazuje oznaku **„Odgođeno“** i prethodni datum kao **„Prvobitni termin“**. Ne prikazuje se izmišljeni novi datum niti oznaka „uskoro“. Ako postoji razlog odgađanja, može se javno prikazati kao napomena. Kada novi termin bude unesen i Održavanje ponovo postane Planiran, javno se prikazuje novi termin; prethodna promjena može ostati u istoriji/evidenciji aktivnosti bez obaveze da opterećuje glavni javni prikaz.
 >
 > Na **kartici Događaja** stari odgođeni termin **ne** prikazuje se kao glavni termin kartice. Kartica prikazuje prvo naredno relevantno **važeće** Održavanje; za dodatna relevantna Održavanja važi BM-PK-29.
 
@@ -1531,13 +1580,13 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 >
 > Preduslov cutover-a: svih **14** usvojenih početnih kategorija (BM-KO-09) mora postojati u `cultural_categories`.
 
-### BM-PK-33 — V1 javno obavještenje o otkazivanju bez razloga
+### BM-PK-33 — Sistemsko obavještenje o otkazivanju (izmijenjeno PATCH-063)
 
-> Za V1 ostaje pravilo fiksiranog sistemskog obavještenja o otkazivanju na Detaljima (BM-PK-13).
+> Za otkazani Događaj na Detaljima ostaje fiksno sistemsko obavještenje o otkazivanju (BM-PK-13).
 >
-> Polje razloga otkazivanja / napomene urednika (`cancellation_reason`) **ne prikazuje se automatski** javnosti u V1.
+> **PATCH-063 superseduje** ranije V1 pravilo koje je zabranjivalo javni prikaz teksta razloga otkazivanja i koje je zahtijevalo zasebnu Product Owner odluku za taj prikaz.
 >
-> Ako se u budućnosti želi javni prikaz razloga, to mora biti predmet zasebne Product Owner odluke i usklađenja BM/FS. Terminalnost statusa Otkazan (BM-DG-09) ostaje neizmijenjena.
+> Razlog otkazivanja Događaja je **opcion**. Ako je unesen, **može se javno prikazati** kao napomena o otkazivanju, uz sistemsko obavještenje (BM-DG-10 / BM-PK-36). Terminalnost statusa Otkazan (BM-DG-09) ostaje neizmijenjena.
 
 ### BM-PK-34 — Javni status Događaja sa više Održavanja (PO-6A11-01)
 
@@ -1584,6 +1633,16 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 >
 > **Sortiranje Arhive (PO-6A09-06):** najnoviji istorijski Događaji prvi — po datumu (i vremenu) posljednjeg relevantnog istorijskog Održavanja opadajuće, uz deterministički tie-breaker. Vrijeme izvršenja sistemskog arhiviranja nije poslovni ključ sortiranja.
 
+### BM-PK-36 — Javni prikaz opcionih napomena i Prvobitnog termina
+
+> Kada je Održavanje **Odgođeno** a novi termin još nije poznat, javni portal prikazuje oznaku Odgođeno i prethodni datum kao **Prvobitni termin**, u skladu sa BM-PK-31 / BM-TR-19.
+>
+> Opcioni razlozi odgađanja Održavanja, otkazivanja Održavanja i otkazivanja Događaja, ako su unijeti, **mogu se javno prikazati** kao napomene. Razlozi nisu obavezni za izvršenje tih radnji.
+>
+> Za otkazani Događaj ostaje i standardizovano sistemsko obavještenje (BM-PK-13 / BM-PK-33). Terminalnost Otkazan ostaje neizmijenjena.
+
+---
+
 ---
 
 # BM-12 Urednički portal
@@ -1618,7 +1677,7 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 > Urednički portal omogućava:
 >
 > * upravljanje podacima Organizatora;
-> * upravljanje Događajima;
+> * upravljanje Događajima (uključujući urednički tok U pripremi → Objavi i Moderatorski tok Nacrt → Pošalji na odobrenje);
 > * upravljanje Manifestacijama;
 > * upravljanje održavanjima događaja;
 > * upravljanje Medijima;
@@ -1663,6 +1722,14 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 > Urednički portal predstavlja poslovnu cjelinu kroz koju se izvršava urednički proces modula Kalendar kulture.
 >
 > Sve poslovne radnje izvršene kroz Urednički portal podliježu poslovnim pravilima definisanim ovim Business Modelom.
+
+### BM-EP-11 — Lista Događaji i urednički tok U pripremi
+
+> Događaji Urednika u stanju **U pripremi** prikazuju se na zajedničkoj listi **Događaji**. Ne uvodi se poseban ekran, navigaciona stavka niti modul za „U pripremi“.
+>
+> Na istoj listi mogu postojati Događaji različitih relevantnih stanja. Za „U pripremi“ osnovne akcije su **Uredi** i **Obriši**; objavljivanje se vrši iz samog Događaja (BM-UR-14 / BM-UR-15).
+>
+> Moderatorski tok zadržava poslovni **Nacrt** i akciju **Pošalji na odobrenje**.
 
 ---
 
@@ -1924,7 +1991,7 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 ### BM-GL-08 — Urednik
 
-> Administrator Uredničkog portala Kalendara kulture, odgovoran za pregled, uređivanje, odobravanje i objavljivanje sadržaja.
+> Administrator Uredničkog portala Kalendara kulture, odgovoran za pregled, odobravanje i objavljivanje sadržaja Moderatorskog toka, te za samostalno kreiranje, pripremu, objavu i neposredno upravljanje Događajima bez registrovanog Organizatora.
 >
 > Uloga Urednika je isključiva unutar poslovnog modela Kalendara kulture. Urednik nije Organizator i nije Moderator Organizatora.
 
@@ -1993,6 +2060,14 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 ### BM-GL-23 — Oznaka
 
 > Zapis poslovnog kataloga koji predstavlja dodatnu klasifikaciju Događaja. Oznake ulaze u V1. Jedan događaj može imati više oznaka. Oznaka nije zamjena za primarnu kategoriju. Katalogom oznaka upravlja isključivo Urednik.
+
+### BM-GL-24 — U pripremi
+
+> Poslovni prikaz Urednikovog Događaja koji je sačuvan, a još nikada nije bio objavljen. Nije novi status životnog ciklusa Događaja. Nije isto što i Moderatorski **Nacrt**.
+
+### BM-GL-25 — Ručno uneseni naziv Organizatora
+
+> Opcion tekstualni naziv neregistrovanog Organizatora na Događaju u uredničkom toku. Obuhvata samo naziv. Ne kreira registrovanog Organizatora i ne pokreće postupak odobravanja.
 
 ### BM-GL-21 — Završna odredba
 

@@ -3,13 +3,14 @@
 namespace App\Services\CulturalEventDomain;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Models\CulturalEventChangeProposal;
 use App\Models\CulturalEventEntry;
+use App\Models\CulturalOccurrence;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Kreiranje / ažuriranje kanonskog Događaja (TS-003).
- * Bez fizičkog destroy (brisanje nije V1 tok).
+ * Kreiranje / ažuriranje / trajno brisanje nikad objavljenog Događaja (TS-003 / PATCH-063 §4.12).
  */
 final class EventWriter
 {
@@ -22,6 +23,7 @@ final class EventWriter
      *     naslov?: ?string,
      *     opis?: ?string,
      *     organizer_id?: ?int,
+     *     organizer_manual_name?: ?string,
      *     category_id?: ?int,
      *     cover_media_id?: ?int,
      *     featured?: bool,
@@ -31,11 +33,13 @@ final class EventWriter
     public function createDraft(User $creator, array $data): CulturalEventEntry
     {
         $organizerId = $data['organizer_id'] ?? null;
+        $organizerManualName = $this->normalizeManualOrganizerName($data['organizer_manual_name'] ?? null);
         $categoryId = $data['category_id'] ?? null;
         $coverMediaId = $data['cover_media_id'] ?? null;
         $tagIds = $data['tag_ids'] ?? [];
         $featured = (bool) ($data['featured'] ?? false);
 
+        $this->assertOrganizerXor($organizerId, $organizerManualName);
         $this->catalogGuard->assertOrganizerAllowedForNewLink($organizerId);
         $this->catalogGuard->assertCategoryAllowedForNewLink($categoryId);
         $this->catalogGuard->assertCoverMediaAllowedForNewLink($coverMediaId);
@@ -45,12 +49,13 @@ final class EventWriter
             $this->assertCanSetFeatured(CulturalEventEntry::STATUS_DRAFT, null, hasAktuelnoOccurrence: false);
         }
 
-        return DB::transaction(function () use ($creator, $data, $organizerId, $categoryId, $coverMediaId, $tagIds, $featured) {
+        return DB::transaction(function () use ($creator, $data, $organizerId, $organizerManualName, $categoryId, $coverMediaId, $tagIds, $featured) {
             $entry = CulturalEventEntry::create([
                 'naslov' => $data['naslov'] ?? null,
                 'opis' => $data['opis'] ?? null,
                 'status' => CulturalEventEntry::STATUS_DRAFT,
                 'organizer_id' => $organizerId,
+                'organizer_manual_name' => $organizerManualName,
                 'category_id' => $categoryId,
                 'cover_media_id' => $coverMediaId,
                 'featured' => $featured,
@@ -73,6 +78,7 @@ final class EventWriter
      *     naslov?: ?string,
      *     opis?: ?string,
      *     organizer_id?: ?int,
+     *     organizer_manual_name?: ?string,
      *     category_id?: ?int,
      *     cover_media_id?: ?int,
      *     featured?: bool,
@@ -105,15 +111,25 @@ final class EventWriter
             throw new CulturalEventDomainException('Arhiviran Događaj se ne može uređivati.');
         }
 
-        // G2 / BR-025: Objavljen = sadržajno read-only do Prijedloga izmjene.
-        // Izuzetak: isticanje (featured) ostaje urednička radnja van sadržajnog prijedloga.
-        if ($entry->isPublished()) {
-            if (array_key_exists('featured', $data) && count($data) === 1) {
-                return $this->applyFeaturedOnly($entry, $actor, (bool) $data['featured']);
-            }
+        // Featured-only izuzetak ostaje za sve Objavljene (urednička radnja van sadržajnog toka).
+        if ($entry->isPublished()
+            && array_key_exists('featured', $data)
+            && count($data) === 1
+        ) {
+            return $this->applyFeaturedOnly($entry, $actor, (bool) $data['featured']);
+        }
 
+        // PATCH-063 §4.13: ordinary content edit samo za published + organizer_id null.
+        // Registered Org / Moderator published → i dalje read-only (Prijedlog izmjene).
+        if ($entry->isPublished() && $entry->organizer_id !== null) {
             throw new CulturalEventDomainException(
                 'Objavljen Događaj je sadržajno read-only; direktna izmjena nije dozvoljena.'
+            );
+        }
+
+        if (! $entry->isDraft() && ! $entry->isDirectFlowPublishedContentEditable()) {
+            throw new CulturalEventDomainException(
+                'Sadržaj se može mijenjati samo u pripremi ili na Objavljenom događaju bez registrovanog Organizatora.'
             );
         }
 
@@ -125,6 +141,12 @@ final class EventWriter
             && (int) $data['cover_media_id'] !== (int) $entry->cover_media_id;
 
         if ($organizerChanging) {
+            // PATCH-063: registered Org se ne postavlja kroz content update Objavljenog direct-flow Događaja.
+            if ($entry->isPublished() && $entry->organizer_id === null) {
+                throw new CulturalEventDomainException(
+                    'Registrovani Organizator se ne može postaviti kroz uređivanje sadržaja.'
+                );
+            }
             $this->catalogGuard->assertOrganizerAllowedForNewLink($data['organizer_id']);
         }
         if ($categoryChanging) {
@@ -143,6 +165,17 @@ final class EventWriter
             }
         }
 
+        $nextOrganizerId = array_key_exists('organizer_id', $data)
+            ? $data['organizer_id']
+            : $entry->organizer_id;
+        $nextManualName = array_key_exists('organizer_manual_name', $data)
+            ? $this->normalizeManualOrganizerName($data['organizer_manual_name'])
+            : $entry->organizer_manual_name;
+        $this->assertOrganizerXor(
+            $nextOrganizerId !== null ? (int) $nextOrganizerId : null,
+            $nextManualName
+        );
+
         $featured = array_key_exists('featured', $data) ? (bool) $data['featured'] : $entry->featured;
         if ($featured && ! $entry->featured) {
             $this->assertCanSetFeatured(
@@ -152,25 +185,70 @@ final class EventWriter
             );
         }
 
-        return DB::transaction(function () use ($entry, $actor, $data, $featured) {
-            foreach (['naslov', 'opis', 'organizer_id', 'category_id', 'cover_media_id'] as $field) {
+        return DB::transaction(function () use ($entry, $actor, $data, $featured, $nextManualName) {
+            /** @var CulturalEventEntry $locked */
+            $locked = CulturalEventEntry::query()
+                ->whereKey($entry->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($locked->isPendingApproval()) {
+                throw new CulturalEventDomainException(
+                    'Događaj na odobrenju je zaključan; sadržaj se ne može mijenjati.'
+                );
+            }
+
+            if ($locked->isCancelled() || $locked->status === CulturalEventEntry::STATUS_ARCHIVED) {
+                throw new CulturalEventDomainException(
+                    'Sadržaj se ne može mijenjati na otkazanom ili arhiviranom događaju.'
+                );
+            }
+
+            if ($locked->isPublished() && $locked->organizer_id !== null) {
+                throw new CulturalEventDomainException(
+                    'Objavljen Događaj je sadržajno read-only; direktna izmjena nije dozvoljena.'
+                );
+            }
+
+            if (! $locked->isDraft() && ! $locked->isDirectFlowPublishedContentEditable()) {
+                throw new CulturalEventDomainException(
+                    'Sadržaj se može mijenjati samo u pripremi ili na Objavljenom događaju bez registrovanog Organizatora.'
+                );
+            }
+
+            foreach (['naslov', 'opis', 'category_id', 'cover_media_id'] as $field) {
                 if (array_key_exists($field, $data)) {
-                    $entry->{$field} = $data[$field];
+                    $locked->{$field} = $data[$field];
                 }
             }
 
-            if (array_key_exists('featured', $data)) {
-                $entry->featured = $featured;
+            if (array_key_exists('organizer_id', $data)
+                && (int) $data['organizer_id'] !== (int) $locked->organizer_id
+            ) {
+                if ($locked->isPublished() && $locked->organizer_id === null) {
+                    throw new CulturalEventDomainException(
+                        'Registrovani Organizator se ne može postaviti kroz uređivanje sadržaja.'
+                    );
+                }
+                $locked->organizer_id = $data['organizer_id'];
             }
 
-            $entry->last_modified_by = $actor->id;
-            $entry->save();
+            if (array_key_exists('organizer_manual_name', $data)) {
+                $locked->organizer_manual_name = $nextManualName;
+            }
+
+            if (array_key_exists('featured', $data)) {
+                $locked->featured = $featured;
+            }
+
+            $locked->last_modified_by = $actor->id;
+            $locked->save();
 
             if (array_key_exists('tag_ids', $data) && is_array($data['tag_ids'])) {
-                $entry->tags()->sync(array_values(array_unique(array_map('intval', $data['tag_ids']))));
+                $locked->tags()->sync(array_values(array_unique(array_map('intval', $data['tag_ids']))));
             }
 
-            return $entry->fresh(['organizer', 'category', 'coverMedia', 'tags', 'occurrences']);
+            return $locked->fresh(['organizer', 'category', 'coverMedia', 'tags', 'occurrences']);
         });
     }
 
@@ -195,11 +273,82 @@ final class EventWriter
             $this->catalogGuard->assertOrganizerAllowedForNewLink($organizerId);
 
             $locked->organizer_id = $organizerId;
+            $locked->organizer_manual_name = null;
             $locked->last_modified_by = $actor->id;
             $locked->save();
 
             return $locked->fresh(['organizer', 'category', 'coverMedia', 'tags', 'occurrences']);
         });
+    }
+
+    /**
+     * PATCH-063 / BR-290 — trajno brisanje nikad objavljenog Urednik direct-flow Događaja.
+     * Gate: draft + organizer_id null. Shared katalog se ne briše.
+     */
+    public function destroyNeverPublishedDraft(CulturalEventEntry $entry, User $actor): void
+    {
+        DB::transaction(function () use ($entry, $actor) {
+            /** @var CulturalEventEntry $locked */
+            $locked = CulturalEventEntry::query()
+                ->whereKey($entry->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->assertEligibleForNeverPublishedDestroy($locked);
+
+            // TS-003 §4.12: proposals na draftu nijesu očekivani; ako postoje, ukloni prije OCC (restrict FK).
+            CulturalEventChangeProposal::query()
+                ->where('event_entry_id', $locked->id)
+                ->delete();
+
+            CulturalOccurrence::query()
+                ->where('event_entry_id', $locked->id)
+                ->delete();
+
+            $locked->tags()->detach();
+            $locked->delete();
+        });
+    }
+
+    /**
+     * PATCH-063 — registered organizer XOR manual name; both null allowed.
+     */
+    private function assertOrganizerXor(?int $organizerId, ?string $manualName): void
+    {
+        if ($organizerId !== null && $manualName !== null) {
+            throw new CulturalEventDomainException(
+                'Registrovani Organizator i ručni naziv Organizatora ne mogu biti istovremeno postavljeni.'
+            );
+        }
+    }
+
+    private function normalizeManualOrganizerName(mixed $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $trimmed = trim((string) $value);
+
+        return $trimmed === '' ? null : $trimmed;
+    }
+
+    /**
+     * Trajno brisanje: samo Urednik direct-flow draft (PATCH-063 §4.12).
+     */
+    private function assertEligibleForNeverPublishedDestroy(CulturalEventEntry $entry): void
+    {
+        if (! $entry->isDraft()) {
+            throw new CulturalEventDomainException(
+                'Trajno brisanje dozvoljeno je samo događaju u pripremi.'
+            );
+        }
+
+        if ($entry->organizer_id !== null) {
+            throw new CulturalEventDomainException(
+                'Trajno brisanje nije dozvoljeno za događaj sa registrovanim Organizatorom.'
+            );
+        }
     }
 
     /**

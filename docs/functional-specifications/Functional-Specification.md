@@ -82,6 +82,7 @@
 | PATCH-FS-060 | 2026-08-09 | **Faza 6A** / BM PATCH-060: kartica multi-Održavanje; sistemsko sortiranje Pretrage; Odgođen na portalu; CAT-CUTOVER; V1 bez javnog `cancellation_reason`; potvrda PO-EV-01. Usklađeni BR-064, BR-110, BR-112, BR-272, BR-279; dodati BR-280–BR-284. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-061 | 2026-08-09 | **PO-6A11-01** / BM PATCH-061: kanonski javni status Događaja (multi-OCC) — dodat BR-285; usklađen BR-114. Bez izmjene lifecycle / arhive. Verzija ostaje 1.0.0. |
 | PATCH-FS-062 | 2026-08-09 | **PO-6A09-01…06** / BM PATCH-062: Javna Arhiva vs interni Arhiviran — dodat BR-286; usklađeni BR-065, BR-066, BR-114, BR-274. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-063 | 2026-08-10 | **BM PATCH-063 / PO-U-01…19:** Urednički tok kreiranja, pripreme i neposrednog upravljanja Događajem. Usklađeni BR-013, BR-015, BR-016, BR-018, BR-021, BR-025, BR-028, BR-045, BR-063, BR-064, BR-067, BR-069, BR-130, BR-131, BR-272, BR-282, BR-284 i §5.5.3–§5.5.4 / §5.5.6a. Dodati BR-287–BR-295 (ručni Org; Sačuvaj i nastavi / U pripremi; brisanje prije objave; direktan edit Objavljenog; Odgođen bez novog termina; OCC/Entry razlozi opcion; Prvobitni termin; fail-closed). **Supersede:** dio BR-025 (samo Urednikov direktni tok); dio BR-284 / BR-064 / BR-063 / BR-272 (javni prikaz opcionog razloga). Moderator Nacrt/approval/Prijedlog ostaje. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -832,23 +833,27 @@ Dok postoji aktivan prijedlog izmjena koji čeka odluku Urednika, nije moguće o
 
 #### 5.5.3 Kreiranje događaja
 
-Tok procesa:
+Postoje **dva** funkcionalna toka kreiranja Događaja. Oni se ne spajaju.
 
-1. Moderator pokreće kreiranje novog događaja.
+**A) Moderator registrovanog Organizatora**
+
+1. Moderator pokreće kreiranje novog događaja u ime svog Organizatora.
 2. Sistem otvara obrazac za unos podataka.
-3. Moderator unosi podatke o događaju, uključujući najmanje jedno održavanje sa terminom (Datum održavanja je obavezan, a vrijeme može biti definisano.), u skladu sa pravilima za slanje na odobrenje.
+3. Moderator unosi podatke o događaju; za slanje na odobrenje mora postojati najmanje jedno održavanje sa terminom (Datum održavanja je obavezan, a vrijeme može biti definisano.).
 4. Moderator može:
+   * sačuvati događaj kao **Nacrt**;
+   * poslati događaj na odobrenje (**Pošalji na odobrenje**).
+5. Ako je događaj sačuvan kao Nacrt: nije javno vidljiv; dostupan je Moderatorima Organizatora i Uredniku.
+6. Ako je događaj poslat na odobrenje: ulazi u urednički proces; čeka Odobri / Vrati na doradu.
 
-   * sačuvati događaj kao nacrt;
-   * poslati događaj na odobrenje.
-5. Ako je događaj sačuvan kao nacrt:
+**B) Urednik (bez registrovanog Organizatora)**
 
-   * nije javno vidljiv;
-   * dostupan je Moderatorima Organizatora i Uredniku.
-6. Ako je događaj poslat na odobrenje:
-
-   * ulazi u urednički proces pregleda;
-   * čeka odluku Urednika.
+1. Urednik pokreće kreiranje novog događaja.
+2. Create forma **ne** prikazuje izbor registrovanog Organizatora (nema dropdown registrovanih Organizatora).
+3. Urednik može opciono unijeti ručno naziv neregistrovanog Organizatora (samo tekstualni naziv) — BR-287 / BR-288.
+4. Urednik koristi akciju **Sačuvaj i nastavi** (BR-289): Događaj se sačuva, nije javno objavljen, ne ide na odobravanje; prikazuje se kao **U pripremi**.
+5. Urednik dopunjava podatke i Održavanja.
+6. Kada su ispunjeni uslovi za objavu, Urednik koristi **Objavi** (direktna objava; bez Pošalji na odobrenje) — BR-018 / BR-291.
 
 Napomena:
 
@@ -858,9 +863,9 @@ Ovo poglavlje opisuje ciljni poslovni model, a ne trenutnu implementaciju.
 
 ##### BR-013 – Opseg kreiranja događaja
 
-Svaki novi događaj nastaje u statusu Nacrt.
+**Moderator:** Svaki novi događaj Moderatorskog toka nastaje u statusu **Nacrt**. Moderator može kreirati novi događaj isključivo za Organizatora kojem pripada.
 
-Moderator može kreirati novi događaj isključivo za Organizatora kojem pripada.
+**Urednik:** Urednik kreira Događaj bez veze sa registrovanim Organizatorom (BM-UR-12 / BR-287). Taj Događaj se Uredniku prikazuje kao **U pripremi** (BR-289); **Nacrt** nije poslovna faza Urednikovog direktnog toka. „U pripremi“ nije novi status životnog ciklusa.
 
 ---
 
@@ -870,28 +875,29 @@ Prilikom kreiranja događaja sistem automatski evidentira:
 
 * datum i vrijeme kreiranja;
 * korisnika koji je kreirao događaj;
-* Organizatora kojem događaj pripada.
+* Organizatora kojem događaj pripada, **kada** je Događaj Moderatorskog toka (registrovani Organizator).
 
-Navedene vrijednosti korisnik ne može ručno mijenjati.
+Za Urednikov tok bez registrovanog Organizatora veza sa registrovanim Organizatorom se ne postavlja; opcion ručni naziv uređuje BR-288.
 
----
-
-##### BR-015 – Čuvanje nacrta
-
-Sistem mora omogućiti čuvanje događaja kao nacrta u bilo kojem trenutku, bez slanja na odobrenje.
-
-Događaj u statusu Nacrt može biti sačuvan bez svih podataka potrebnih za njegovo objavljivanje.
+Navedene sistemske vrijednosti korisnik ne može ručno mijenjati.
 
 ---
 
-##### BR-016 – Vidljivost nacrta
+##### BR-015 – Čuvanje nacrta / Sačuvaj i nastavi
 
-Nacrt nije javno vidljiv.
+**Moderator:** Sistem mora omogućiti čuvanje događaja kao **Nacrta** u bilo kojem trenutku, bez slanja na odobrenje. Događaj u statusu Nacrt može biti sačuvan bez svih podataka potrebnih za objavljivanje.
 
-Nacrt mogu pregledati isključivo:
+**Urednik:** Akcija **Sačuvaj i nastavi** (BR-289) čuva započeti Događaj bez objave i bez slanja na odobrenje. Događaj **U pripremi** može biti sačuvan bez svih podataka potrebnih za objavljivanje (uključujući bez Održavanja).
 
-* Moderatori Organizatora;
-* Urednik.
+---
+
+##### BR-016 – Vidljivost nacrta / U pripremi
+
+**Nacrt** (Moderator) i **U pripremi** (Urednik) nisu javno vidljivi.
+
+Nacrt mogu pregledati isključivo Moderatori Organizatora i Urednik.
+
+Događaji **U pripremi** prikazuju se Uredniku na zajedničkoj listi **Događaji** (BR-289); nisu javno vidljivi.
 
 ---
 
@@ -901,17 +907,19 @@ Prije slanja događaja na odobrenje sistem mora provjeriti da li su popunjena sv
 
 Ako validacija nije uspješna, slanje na odobrenje nije dozvoljeno.
 
+Ovo pravilo važi za Moderatorski tok. Urednikov tok ne koristi slanje na odobrenje; uslovi direktne objave uređuju BR-291.
+
 ---
 
-##### BR-018 – Pripadnost događaja Organizatoru
+##### BR-018 – Pripadnost događaja Organizatoru i dva toka objave
 
-Jedan događaj pripada tačno jednom Organizatoru.
+Događaj registrovanog Organizatora povezan je sa tačno jednim registrovanim Organizatorom. Događaj nije moguće povezati sa više registrovanih Organizatora.
 
-Događaj nije moguće povezati sa više Organizatora.
+**Urednički tok:** Urednik kreira Događaj **bez** veze sa registrovanim Organizatorom (BR-287). U create toku Urednik **ne** bira registrovanog Organizatora. Može opciono unijeti ručni naziv neregistrovanog Organizatora (BR-288). Takav Događaj se ne šalje na odobrenje; Urednik ga direktno objavljuje kada su ispunjeni uslovi (BR-291). Događaj može biti objavljen i bez navedenog Organizatora.
 
-Izuzetno, ako Organizator nije registrovan u sistemu, Urednik može kreirati događaj bez registrovanog Organizatora, u skladu sa BR-045. Takav događaj nastaje u statusu Nacrt i može biti direktno objavljen, bez postupka odobravanja. Naknadno povezivanje već Objavljenog događaja bez Organizatora sa Aktivnim Organizatorom uređuje BR-052 (PO-DG-08 / PO-DG-09) i nije dio kreiranja Nacrta.
+**Moderatorski tok:** Događaj koji pripada registrovanom Organizatoru ne može biti direktno objavljen. Obavezan je standardni tok **Nacrt → Na odobrenju → Objavljen**. Moderator **ne** može direktno Objavi. Urednik **ne** zaobilazi Moderatora za događaje registrovanog Organizatora.
 
-Urednik može direktno objaviti događaj isključivo kada događaj nema Organizatora. Događaj koji pripada Organizatoru ne može biti direktno objavljen; za njega je obavezan standardni tok Nacrt → Na odobrenju → Objavljen. Moderator ne može biti zaobiđen za događaje koji pripadaju Organizatoru.
+Naknadno povezivanje već Objavljenog događaja bez registrovanog Organizatora sa Aktivnim Organizatorom uređuje BR-052 (PO-DG-08 / PO-DG-09) i nije dio Urednikovog create toka.
 
 Ovo je jedini poslovni izuzetak od standardnog procesa odobravanja.
 
@@ -945,22 +953,25 @@ Ovo poglavlje opisuje ciljni poslovni model, a ne trenutnu implementaciju.
 
 ---
 
-##### 5.5.4.1 Uređivanje nacrta
+##### 5.5.4.1 Uređivanje nacrta / U pripremi
 
-Ako događaj ima registrovanog Organizatora, Moderator tog Organizatora može neograničeno uređivati događaj koji se nalazi u statusu nacrta.
+Ako događaj ima registrovanog Organizatora, Moderator tog Organizatora može neograničeno uređivati događaj koji se nalazi u statusu **Nacrta**.
 
-Ako događaj nema registrovanog Organizatora, nacrt uređuje Urednik.
+Ako događaj nema registrovanog Organizatora (Urednikov tok), Urednik uređuje Događaj **U pripremi**.
 
 Može mijenjati sva polja događaja, uključujući:
 
 * naslov;
 * opis;
+* opcion ručno uneseni naziv Organizatora (Urednikov tok);
 * kategoriju;
 * održavanja događaja (termin, lokaciju i ostala svojstva održavanja);
 * fotografije;
 * ostale podatke definisane događajem.
 
-Nacrt nije javno vidljiv.
+Nacrt i U pripremi nisu javno vidljivi.
+
+Za Događaj **U pripremi** osnovne akcije na listi su **Uredi** i **Obriši** (BR-289 / BR-290). Objavljivanje se vrši iz samog Događaja akcijom **Objavi**.
 
 ---
 
@@ -984,21 +995,17 @@ Ako Urednik vrati događaj na doradu:
 
 ##### 5.5.4.3 Uređivanje objavljenog događaja
 
-Objavljen događaj se ne uređuje direktno.
+**Moderator / registrovani Organizator:** Objavljen događaj se ne uređuje direktno. Sve izmjene nastaju kao novi **Prijedlog izmjene**. Javni portal tokom procesa prikazuje posljednju odobrenu verziju. Nova verzija postaje javno vidljiva tek nakon odobrenja Urednika.
 
-Sve izmjene nastaju kao novi prijedlog izmjena.
-
-Javni portal tokom cijelog procesa prikazuje posljednju odobrenu verziju događaja.
-
-Nova verzija postaje javno vidljiva tek nakon odobrenja Urednika.
+**Urednik / Događaj bez registrovanog Organizatora:** Urednik može **direktno** uređivati dozvoljene sadržajne podatke Objavljenog Događaja (BR-292), bez Prijedloga izmjene i bez odobravanja. Odgađanje Održavanja, otkazivanje Održavanja, otkazivanje Događaja i druge radnje životnog ciklusa **ne** ulaze u običan „Uredi“ — ostaju posebne akcije.
 
 ---
 
-##### BR-021 – Uređivanje nacrta
+##### BR-021 – Uređivanje nacrta / U pripremi
 
 Ako događaj ima registrovanog Organizatora, Moderator tog Organizatora može neograničeno uređivati događaj koji se nalazi u statusu nacrta.
 
-Ako događaj nema registrovanog Organizatora, nacrt uređuje Urednik.
+Ako događaj nema registrovanog Organizatora, Urednik uređuje Događaj **U pripremi** (BR-289).
 
 ---
 
@@ -1028,9 +1035,9 @@ Ako Urednik vrati događaj na doradu, zaključavanje se automatski uklanja i Mod
 
 ##### BR-025 – Uređivanje objavljenog događaja
 
-Objavljen događaj se ne uređuje direktno.
+**Moderator / registrovani Organizator:** Objavljen događaj se ne uređuje direktno. Sve izmjene evidentiraju se kao novi prijedlog izmjena u skladu sa pravilima BR-006 do BR-012.
 
-Sve izmjene evidentiraju se kao novi prijedlog izmjena u skladu sa pravilima BR-006 do BR-012.
+**Urednik / Događaj bez registrovanog Organizatora (PATCH-FS-063 / BM-UR-16):** Urednik **može direktno** uređivati dozvoljene sadržajne podatke Objavljenog Događaja (BR-292). **PATCH-FS-063 superseduje** apsolutnu zabranu direktnog uređivanja iz ranijeg BR-025 **isključivo** za taj urednički tok. Moderatorski Prijedlog izmjene **nije** ukinut.
 
 ---
 
@@ -1087,9 +1094,9 @@ Ovo poglavlje opisuje prvi tok odobravanja Događaja. Tok Prijedloga izmjene Obj
 
 Moderator može poslati događaj na odobrenje samo ako su ispunjeni svi obavezni uslovi.
 
-Događaj koji je kreirao Moderator u ime registrovanog Organizatora ne može biti direktno objavljen; objavljivanje slijedi nakon postupka odobravanja.
+Događaj koji je kreirao Moderator u ime registrovanog Organizatora ne može biti direktno objavljen; objavljivanje slijedi nakon postupka odobravanja. **Fail-closed:** Moderator **nema** akciju direktnog **Objavi**.
 
-Događaj koji pripada Organizatoru ne može biti direktno objavljen ni od strane Urednika. Direktna objava Urednika dozvoljena je isključivo za događaj bez Organizatora, u skladu sa BR-018.
+Događaj koji pripada registrovanom Organizatoru ne može biti direktno objavljen ni od strane Urednika. Direktna objava Urednika dozvoljena je isključivo za događaj bez registrovanog Organizatora, u skladu sa BR-018 / BR-291. **Fail-closed:** Urednik u svom create toku **ne** može vezati registrovanog Organizatora.
 
 ---
 
@@ -1321,10 +1328,10 @@ Napomena:
 
 * Za **prvi Event review (V1 / PO-DG-10)** status **Na odobrenju** je jedinstveno stanje čekanja odluke Urednika (Odobri / Vrati na doradu + razlog). Nema posebnog stanja, podstatusa niti koraka životnog ciklusa „Pregled Urednika“ / „Počni pregled“. Riječ „pregled“ u tekstu BR-ova opisuje radnju Urednika, ne zasebno stanje Eventa.
 * Poseban početak pregleda, zaključavanje tokom pregleda i uređivanje sadržaja tokom pregleda ostaju aktivni samo za **Prijedlog izmjene Objavljenog** (BR-023/037/038 gdje važe za Proposal; TM-WF-06b) — **ne** za prvi Event review.
-* Stanje **„Nacrt prijedloga izmjene“** vizuelno prikazuje radni prijedlog izmjene objavljenog događaja (BR-025); javni portal tokom procesa zadržava posljednju odobrenu verziju (BR-006, BR-011).
+* Stanje **„Nacrt prijedloga izmjene“** vizuelno prikazuje radni prijedlog izmjene objavljenog događaja Moderatorskog toka (BR-025); javni portal tokom procesa zadržava posljednju odobrenu verziju (BR-006, BR-011). Direktan edit Objavljenog u uredničkom toku uređuje BR-292 i **nije** prikazan kao zasebno stanje na ovom dijagramu.
 * Prelaz **Odobri** → **Objavljen** za prijedlog izmjene znači da nova odobrena verzija postaje javna (BR-010, BR-039).
 * Prelaz **Vrati na doradu** → **Nacrt** usklađen je sa BR-042 i BM-ST-05.
-* Prelaz **Nacrt → Objavljen** (direktna objava Urednika) dozvoljen je isključivo bez registrovanog Organizatora (BR-018, BM-ST-04); događaj sa Organizatorom ne može biti direktno objavljen.
+* Prelaz **Nacrt → Objavljen** (direktna objava Urednika) na dijagramu predstavlja Urednikov tok **U pripremi → Objavi** bez registrovanog Organizatora (BR-018, BR-289, BR-291, BM-ST-04); događaj sa registrovanim Organizatorom ne može biti direktno objavljen. Urednik ne koristi „Pošalji na odobrenje“ u tom toku.
 
 **Status:** Approved
 
@@ -1346,7 +1353,7 @@ Organizator:
 * posjeduje istoriju svojih događaja;
 * može biti aktivan ili deaktiviran.
 
-Svi događaji vode se u ime Organizatora, osim u izuzetku kada Urednik kreira i objavljuje događaj bez registrovanog Organizatora radi javnog interesa i pravovremenog informisanja građana (BR-045). Naknadno povezivanje takvog već Objavljenog događaja sa Organizatorom uređuje BR-052.
+Svi događaji vode se u ime registrovanog Organizatora, osim kada Urednik kreira i objavljuje događaj bez registrovanog Organizatora (BR-045 / BR-287). Naknadno povezivanje takvog već Objavljenog događaja sa Organizatorom uređuje BR-052.
 
 Organizator ne pristupa uredničkom portalu.
 
@@ -1395,9 +1402,9 @@ Raniji naziv funkcionalnosti „Postani organizator“ zamijenjen je nazivom „
 
 ##### BR-045 – Pripadnost događaja Organizatoru
 
-Svaki događaj mora biti povezan sa tačno jednim Organizatorom.
+Događaj registrovanog Organizatora mora biti povezan sa tačno jednim registrovanim Organizatorom.
 
-Izuzetno, ako Organizator nije registrovan u sistemu, Urednik može kreirati događaj bez registrovanog Organizatora radi ostvarivanja javnog interesa i pravovremenog informisanja građana. Takav događaj nastaje u statusu Nacrt i može biti direktno objavljen, bez postupka odobravanja, u skladu sa BR-018.
+Urednik samostalno kreira Događaj bez veze sa registrovanim Organizatorom radi ostvarivanja javnog interesa i pravovremenog informisanja građana. Takav Događaj se prikazuje kao **U pripremi** i može biti direktno objavljen, bez postupka odobravanja, u skladu sa BR-018 / BR-289 / BR-291. Urednik u create toku ne bira registrovanog Organizatora (BR-287).
 
 ---
 
@@ -1702,9 +1709,9 @@ Otkazivanjem status događaja se mijenja u **Otkazan**.
 
 U okviru iste atomske poslovne operacije otkazivanja Događaja (Objavljen → Otkazan), sva Održavanja koja su u tom trenutku u statusu **Planiran** ili **Odgođen** automatski prelaze u status **Otkazan**. Održavanja koja su već u statusu **Završen** ili **Otkazan** ostaju nepromijenjena. Nakon operacije na Otkazanom Događaju ne smije ostati Planirano niti Odgođeno Održavanje. To nije prelaz Planiran → Završen; to je posljedica otkazivanja roditeljskog Događaja (PO-AUTO-01 / BM-DG-11).
 
-Otkazan događaj ostaje dostupan u skladu sa pravilima prikaza definisanim za javni portal i tretira se kao istorijski zapis.
+Otkazan događaj ostaje dostupan u skladu sa pravilima prikaza definisanim za javni portal i tretira se kao istorijski zapis. **Fail-closed:** Otkazan se ne briše (BR-290); Otkazan se ne može ponovo Objavi (BR-064).
 
-Nakon otkazivanja Urednik može unijeti ili dopuniti razlog otkazivanja (napomenu urednika), u skladu sa BR-064. U V1 javni portal ne prikazuje automatski taj razlog; prikazuje se standardizovano sistemsko obavještenje (BR-272 / BR-284).
+Razlog otkazivanja Događaja je **opcion**: akcija Otkaži događaj omogućava unos razloga, ali razlog **nije** uslov za otkazivanje. Ako je razlog unesen, može se javno prikazati kao napomena, uz standardizovano sistemsko obavještenje (BR-272 / BR-295). **PATCH-FS-063 superseduje** ranije formulacije koje su zabranjivale javni prikaz teksta razloga ili zahtijevale zasebnu PO odluku za taj prikaz.
 
 ---
 
@@ -1720,7 +1727,7 @@ Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kr
 
 Događaj u statusu **Otkazan** tretira se kao istorijski zapis. Nakon završene operacije otkazivanja (uključujući automatsko otkazivanje otvorenih Održavanja iz BR-063) forma događaja je funkcionalno zaključana: nije dozvoljena naknadna izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja.
 
-Jedini izuzetak je razlog otkazivanja (napomena urednika), koji Urednik može unijeti ili dopuniti. **V1 javni portal:** razlog otkazivanja (`cancellation_reason`) **ne** prikazuje se automatski javnosti; prikazuje se isključivo standardizovano sistemsko obavještenje (BR-272 / BR-284). Javni prikaz teksta razloga zahtijeva zasebnu Product Owner odluku. Terminalnost statusa Otkazan ostaje neizmijenjena.
+Jedini izuzetak je razlog otkazivanja (napomena urednika), koji je **opcion** i koji Urednik može unijeti ili dopuniti. Ako je razlog unesen, **može se javno prikazati** kao napomena o otkazivanju, uz standardizovano sistemsko obavještenje (BR-272 / BR-295). **PATCH-FS-063 superseduje** ranije V1 pravilo BR-064 / BR-284 koje je zabranjivalo javni prikaz teksta razloga ili zahtijevalo zasebnu PO odluku. Terminalnost statusa Otkazan ostaje neizmijenjena. Otkazan Događaj se ne briše (BR-290).
 
 ---
 
@@ -1761,7 +1768,7 @@ Status održavanja nije status događaja.
 Održavanje može imati jedan od sljedećih statusa:
 
 - **Planiran** — održavanje je aktivno i biće održano prema objavljenim podacima.
-- **Odgođen** — održavanje neće biti održano u planiranom terminu i očekuje se određivanje novog termina. Status **Odgođen** odnosi se isključivo na održavanje i nije status događaja.
+- **Odgođen** — održavanje neće biti održano u prvobitnom terminu. Novi termin **nije** obavezan u trenutku odgađanja; može ostati nepoznat dok se ne odredi (BR-293). Razlog odgađanja je opcion. Status **Odgođen** odnosi se isključivo na održavanje i nije status događaja.
 - **Otkazan** — održavanje neće biti održano.
 - **Završen** — održavanje je održano ili je prošao njegov termin.
 
@@ -1789,7 +1796,9 @@ Otkazivanjem pojedinačnog održavanja njegov status se mijenja u **Otkazan**.
 
 Održavanje može biti otkazano iz statusa **Planiran** ili iz statusa **Odgođen**.
 
-Otkazivanje pojedinačnog održavanja ne utiče na statuse ostalih održavanja istog događaja.
+Otkazivanje pojedinačnog održavanja **ne** mijenja status cijelog Događaja u Otkazan i ne utiče na statuse ostalih održavanja istog događaja (osim BR-063 pri otkazivanju cijelog Događaja).
+
+Prvobitni datum ostaje vidljiv. Otkazano Održavanje više se ne tretira kao predstojeće aktivno Održavanje. Razlog otkazivanja Održavanja je **opcion**; ako je unesen, može se javno prikazati kao napomena (BR-294 / BR-295).
 
 Napomena: automatsko otkazivanje svih otvorenih Održavanja pri otkazivanju cijelog Događaja uređeno je u BR-063 (PO-AUTO-01) i nije predmet ovog pravila.
 
@@ -1812,7 +1821,7 @@ Iz statusa **Odgođen** održavanje može preći u status:
 - **Planiran**, nakon određivanja novog termina
 - **Otkazan**
 
-Druge tranzicije iz statusa **Odgođen** nisu dozvoljene.
+Prelaz u **Odgođen** **ne** zahtijeva unos novog datuma (BR-293). Druge tranzicije iz statusa **Odgođen** nisu dozvoljene.
 
 ---
 
@@ -1820,7 +1829,7 @@ Druge tranzicije iz statusa **Odgođen** nisu dozvoljene.
 
 Prilikom prelaska iz statusa **Odgođen** u status **Planiran** radi se o istom održavanju događaja.
 
-Novo održavanje se ne kreira.
+Novo održavanje se ne kreira. Unosi se novi datum/vrijeme; ne kreira se novi Događaj samo zbog pomjeranja termina.
 
 Istorija održavanja ostaje sačuvana.
 
@@ -3315,7 +3324,7 @@ Tekst obavještenja nije uređiv i nije dio opisa događaja.
 
 Javni status badge (CR-004A) ostaje prikazan.
 
-U V1 razlog otkazivanja / napomena urednika (`cancellation_reason`) **ne** prikazuje se automatski javnosti (BR-284).
+Ako je unesen opcion razlog otkazivanja, može se javno prikazati kao napomena uz sistemsko obavještenje (BR-295). **PATCH-FS-063 superseduje** raniju zabranu javnog prikaza iz BR-284 / ranijeg BR-272.
 
 ---
 
@@ -3373,14 +3382,13 @@ Ovo je **sistemsko** sortiranje. Ne uvodi se korisnički izbor sortiranja (BR-10
 
 Status **Odgođen** nije isto što i **Otkazan**. Odgođen ostaje status Održavanja.
 
-Na **Detalju Događaja** Odgođeno Održavanje ostaje vidljivo uz jasnu oznaku **„Odgođeno"**. Novi važeći termin prikazuje se kao Planirano Održavanje.
+Na **Detalju Događaja**, dok je Održavanje Odgođeno a novi termin još nije poznat, portal prikazuje oznaku **„Odgođeno"** i prethodni datum kao **„Prvobitni termin"**. Ne prikazuje se izmišljeni novi datum niti oznaka „uskoro“. Ako postoji razlog odgađanja, može se javno prikazati kao napomena (BR-293 / BR-295). Kada novi termin bude unesen i Održavanje ponovo postane Planiran, javno se prikazuje novi termin.
 
 Na **kartici Događaja** stari odgođeni termin **ne** prikazuje se kao glavni termin. Kartica prikazuje prvo naredno relevantno važeće Održavanje; za dodatna relevantna Održavanja važi BR-280.
 
 **Status:** Approved
 
 ---
-
 #### BR-283 – Kanonske kategorije na javnom portalu (CAT-CUTOVER)
 
 Nakon prelaska Faze 6A javni portal koristi isključivo kanonski katalog kategorija.
@@ -3395,23 +3403,22 @@ Preduslov cutover-a: svih 14 usvojenih početnih kategorija (BR-277) mora postoj
 
 ---
 
-#### BR-284 – V1 bez javnog prikaza razloga otkazivanja
+#### BR-284 – Sistemsko obavještenje i opcion razlog otkazivanja (izmijenjeno PATCH-FS-063)
 
-Za V1 ostaje BR-272 (standardizovano sistemsko obavještenje).
+Za otkazani Događaj ostaje BR-272 (standardizovano sistemsko obavještenje).
 
-`cancellation_reason` / razlog otkazivanja / napomena urednika **ne prikazuje se automatski** javnosti u V1.
+**PATCH-FS-063 superseduje** ranije V1 pravilo koje je zabranjivalo javni prikaz teksta razloga otkazivanja i koje je zahtijevalo zasebnu Product Owner odluku za taj prikaz.
 
-Javni prikaz teksta razloga zahtijeva zasebnu Product Owner odluku i usklađenje BM/FS. Terminalnost statusa Otkazan (BR-064) ostaje neizmijenjena.
+Razlog otkazivanja Događaja je **opcion**. Ako je unesen, **može se javno prikazati** kao napomena (BR-295). Terminalnost statusa Otkazan (BR-064) ostaje neizmijenjena.
 
 **Status:** Approved
 
 ---
-
 #### BR-285 – Javni status Događaja sa više Održavanja (PO-6A11-01)
 
 Javni status Događaja (Predstoji / U toku / Završen / Otkazan) nije isto što i status pojedinačnog Održavanja. Oznake Održavanja (Odgođeno / Otkazano / Završeno) ne postaju automatski status cijelog Događaja. **Odgođen** nije javni status Događaja.
 
-**Otkazan (apsolutni prioritet):** Ako je interni status Događaja `cancelled`, javni status je uvijek **Otkazan**, bez obzira na Održavanja i datume. `cancellation_reason` ne ulazi u određivanje statusa (BR-284).
+**Otkazan (apsolutni prioritet):** Ako je interni status Događaja `cancelled`, javni status je uvijek **Otkazan**, bez obzira na Održavanja i datume. Razlog otkazivanja ne ulazi u određivanje statusa (BR-284 / BR-295).
 
 **Objavljen Događaj — kanonski agregat:**
 
@@ -3457,6 +3464,200 @@ Nacrt i Na odobrenju nikada ne ulaze. Draft/pending leakage je zabranjen.
 
 ---
 
+
+#### BR-287 – Urednik create forma bez registrovanog Organizatora
+
+Urednikova create forma **ne** prikazuje izbor (dropdown) registrovanih Organizatora.
+
+Urednik u create toku **ne** može vezati Događaj za registrovanog Organizatora.
+
+**Fail-closed:** pokušaj vezivanja registrovanog Organizatora iz Urednikovog create toka mora biti odbijen.
+
+**Acceptance:**
+1. Create forma Urednika nema dropdown registrovanih Organizatora.
+2. Urednik ne može kroz taj tok postaviti vezu sa registrovanim Organizatorom.
+
+**Veza:** BM-UR-12 / BM-DG-08. **Status:** Approved
+
+---
+
+#### BR-288 – Ručno uneseni naziv neregistrovanog Organizatora
+
+Urednik može opciono unijeti polje **Organizator** kao tekstualni naziv neregistrovanog Organizatora.
+
+* polje je **opciono**;
+* dozvoljen je **samo naziv** (tekst);
+* ne unose se e-mail, telefon, veb-sajt, adresa, kontakt osoba ni drugi podaci Organizatora;
+* ručni unos **ne** kreira zapis registrovanog Organizatora;
+* ručni unos **ne** pokreće postupak odobravanja;
+* Događaj može biti objavljen i bez navedenog Organizatora.
+
+**Acceptance:**
+1. Ručni naziv je opcion.
+2. Ručni naziv je samo tekst.
+3. Čuvanje sa ručnim nazivom ne kreira Organizatora.
+4. Ručni unos ne pokreće approval.
+
+**Veza:** BM-UR-13 / BM-DG-12. **Status:** Approved
+
+---
+
+#### BR-289 – Sačuvaj i nastavi / U pripremi
+
+Akcija **Sačuvaj i nastavi** (Urednik):
+
+* čuva započeti Događaj;
+* **ne** objavljuje ga javno;
+* **ne** šalje ga na odobrenje;
+* omogućava nastavak uređivanja i dodavanje Održavanja;
+* Događaj se Uredniku prikazuje kao **U pripremi**.
+
+**U pripremi:**
+
+* nije novi status životnog ciklusa;
+* nije javno vidljiv;
+* nalazi se na zajedničkoj listi **Događaji** (bez posebnog ekrana/navigacije);
+* osnovne akcije: **Uredi**, **Obriši**;
+* **Objavi** se vrši iz samog Događaja kada su ispunjeni uslovi (BR-291).
+
+Moderatorski tok zadržava poslovni **Nacrt** i akciju **Pošalji na odobrenje**.
+
+**Fail-closed:** Sačuvaj i nastavi nije javna objava.
+
+**Acceptance:**
+1. Sačuvaj i nastavi ne čini Događaj javnim.
+2. Urednikov neobjavljeni Događaj prikazuje se kao „U pripremi“.
+3. Moderator i dalje vidi/koristi „Nacrt“.
+
+**Veza:** BM-UR-14 / BM-ST-03 / BM-EP-11. **Status:** Approved
+
+---
+
+#### BR-290 – Brisanje Događaja prije prve objave
+
+Urednik može trajno obrisati Događaj **samo** ako taj Događaj **nikada nije bio objavljen** (stanje **U pripremi**).
+
+**Dozvoljeno:** U pripremi → Obriši.
+
+**Nije dozvoljeno (fail-closed):**
+
+* Objavljen → Obriši;
+* Otkazan → Obriši;
+* Arhiviran → Obriši.
+
+UI: akcija Obriši dostupna je Uredniku samo za Događaj U pripremi. Nakon uspješnog brisanja Događaj više nije na listi.
+
+Autorizacija: samo Urednik u uredničkom toku; pokušaj brisanja nakon prve objave mora biti odbijen.
+
+**Acceptance:**
+1. Urednik može obrisati samo nikad objavljeni Događaj.
+2. Objavljeni / Otkazani / Arhivirani se ne brišu.
+
+**Veza:** BM-UR-15 / BM-DG-13. **Status:** Approved
+
+---
+
+#### BR-291 – Direktna objava Urednika (publish gate)
+
+Urednik direktno objavljuje Događaj iz uredničkog toka akcijom **Objavi**.
+
+Nema: Pošalji na odobrenje, approval, self-approval.
+
+**Publish gate** (postojeća pravila ostaju):
+
+* naslov;
+* aktivna kategorija;
+* najmanje jedno validno Održavanje (datum obavezan; vrijeme opciono; lokacija opciona);
+* ostala usvojena validaciona pravila.
+
+**Fail-closed:** Objavi ne prolazi ako publish gate nije ispunjen. Moderator nema direktni Objavi (BR-028).
+
+**Acceptance:**
+1. Urednik direktno Objavi svoj Događaj bez approval toka.
+2. Moderator nema direct publish.
+3. Objavi bez validnog Održavanja/uslova je odbijen.
+
+**Veza:** BM-UR-06 / BM-ST-04. **Status:** Approved
+
+---
+
+#### BR-292 – Direktno uređivanje Objavljenog Događaja (Urednikov tok)
+
+Urednik može **direktno** uređivati dozvoljene sadržajne podatke već Objavljenog Događaja bez registrovanog Organizatora:
+
+* naslov, opis, ručno uneseni Organizator, kategorija, naslovni medij, oznake;
+* druge obične sadržajne podatke koji nijesu lifecycle akcije.
+
+Izmjena se neposredno primjenjuje: **ne** ide na odobrenje i **ne** zahtijeva Prijedlog izmjene.
+
+Običan **Uredi** **ne** obuhvata: Odgodi Održavanje, Otkaži Održavanje, Otkaži događaj i druge lifecycle akcije — one ostaju posebne.
+
+**Moderator:** Objavljen Događaj registrovanog Organizatora i dalje ide kroz **Prijedlog izmjene** (BR-006–BR-012 / BR-025). Direktan edit se **ne** proširuje na Moderatora.
+
+**Acceptance:**
+1. Urednik direktno uređuje dozvoljeni sadržaj Objavljenog.
+2. Moderatorov published-change tok ostaje proposal.
+
+**Veza:** BM-UR-16 / BM-ST-11. **Status:** Approved
+
+---
+
+#### BR-293 – Odgađanje Održavanja bez poznatog novog termina
+
+Održavanje može postati **Odgođeno** i kada novi termin još nije poznat.
+
+* novi datum **nije** obavezan pri odgađanju;
+* razlog odgađanja je **opcion**;
+* prvobitni termin ostaje evidentiran;
+* kada je novi termin poznat, isto Održavanje dobija novi termin i vraća se u **Planiran** (BR-131).
+
+Javni prikaz dok novi termin nije poznat: „Odgođeno“, „Prvobitni termin“, opcion razlog kao napomena (BR-282 / BR-295). Ne prikazivati izmišljeni datum niti „uskoro“.
+
+**Acceptance:**
+1. Odgođen može bez novog termina.
+2. Razlog odgađanja je opcion.
+3. Javna oznaka „Prvobitni termin“ kada novi termin nije poznat.
+
+**Veza:** BM-TR-19 / BM-PK-31. **Status:** Approved
+
+---
+
+#### BR-294 – Otkazivanje pojedinačnog Održavanja (razlog i javni prikaz)
+
+Otkazivanje jednog Održavanja **ne** otkazuje cijeli Događaj (BR-069).
+
+Dodatno:
+
+* razlog otkazivanja Održavanja je **opcion**;
+* prvobitni datum ostaje vidljiv;
+* javni status Održavanja = „Otkazano“;
+* opcion razlog može biti prikazan kao napomena;
+* otkazano Održavanje nije aktivno/predstojeće.
+
+**Acceptance:**
+1. OCC cancel razlog je opcion.
+2. OCC cancel ne mijenja Entry u Otkazan.
+
+**Veza:** BM-TR-20 / BM-DG-05. **Status:** Approved
+
+---
+
+#### BR-295 – Javni prikaz opcionih napomena i Prvobitnog termina
+
+Kada je Održavanje **Odgođeno** a novi termin još nije poznat, javni portal prikazuje **Prvobitni termin** (BR-282 / BR-293).
+
+Opcioni razlozi odgađanja Održavanja, otkazivanja Održavanja i otkazivanja Događaja, ako su unijeti, **mogu se javno prikazati** kao napomene. Razlozi nisu obavezni za izvršenje tih radnji.
+
+Za otkazani Događaj ostaje i sistemsko obavještenje (BR-272). Terminalnost Otkazan ostaje (BR-064).
+
+**Acceptance:**
+1. Entry cancel razlog je opcion.
+2. Nema aktivnog BR koji zabranjuje javnu opcionu napomenu.
+3. Otkazan ostaje terminalan.
+
+**Veza:** BM-PK-36 / BM-DG-10. **Status:** Approved
+
+---
 ### 5.14.1 Namjena i položaj Uredničkog portala
 
 #### BR-118 – Namjena Uredničkog portala
@@ -4400,6 +4601,7 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-09 | FS-001 (PATCH-FS-060): Faza 6A / BM PATCH-060 — BR-280–BR-284; usklađeni BR-064, BR-110, BR-112, BR-272, BR-279; V1 bez javnog `cancellation_reason`. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-09 | FS-001 (PATCH-FS-061): PO-6A11-01 / BM PATCH-061 — BR-285 (kanonski multi-OCC javni status Događaja); usklađen BR-114. Verzija ostaje 1.0.0. |
 | 2026-08-09 | FS-001 (PATCH-FS-062): PO-6A09-01…06 / BM PATCH-062 — BR-286 (Javna Arhiva vs interni Arhiviran); usklađeni BR-065, BR-066, BR-274. Verzija ostaje 1.0.0. |
+| 2026-08-10 | FS-001 (PATCH-FS-063): BM PATCH-063 / PO-U — Urednički tok; BR-287–BR-295; usklađeni BR-013/015/016/018/021/025/028/045/063/064/067/069/130/131/272/282/284. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-07-31 | FS-001 / 5.11 (PATCH-FS-046): TS8-01–TS8-09 — Mediji kao samostalan entitet; zatvoreni katalog namjena; kardinalnosti i fallback; tip Fotografija; lifecycle; ovlašćenja; pretraga; metapodaci. Usklađeni BR-086–BR-091, §5.4.4, BR-113; dodati BR-237–BR-254. |
 | 2026-07-31 | FS-001 / 5.13 (PATCH-FS-047): TS-009 faza 1 — IA-01, PO-TS9-03A/04A/05A/05B; TD-TS9-01 referenca. Usklađeni BR-104, BR-107–BR-109, §5.3, §5.4.1; dodati BR-255–BR-260. |
 | 2026-07-31 | FS-001 / 5.1–5.3 i 5.13 (PATCH-FS-048): TS-009 faza 2 — PO-TS9-06A–06D. Usklađeni Hero, statistike (3 klikabilne kartice), istaknuti (max 3), lista ispod kalendara; BR-117; dodati BR-261–BR-264. |

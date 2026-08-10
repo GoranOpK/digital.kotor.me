@@ -81,19 +81,23 @@ class CulturalEventEntryPublishedLifecycleTest extends TestCase
         $this->assertDatabaseCount('cultural_events', 0);
     }
 
-    public function test_cancel_without_reason_is_rejected(): void
+    public function test_cancel_without_reason_is_allowed(): void
     {
         $entry = $this->makePublished('Bez razloga');
 
         $this->actingAs($this->editor)
             ->from(route('cultural-event-entries.edit', $entry))
             ->post(route('cultural-event-entries.cancel', $entry), [])
-            ->assertSessionHasErrors('cancellation_reason');
+            ->assertRedirect(route('cultural-event-entries.edit', $entry));
 
-        $this->assertSame(CulturalEventEntry::STATUS_PUBLISHED, $entry->fresh()->status);
+        $entry->refresh();
+        $this->assertSame(CulturalEventEntry::STATUS_CANCELLED, $entry->status);
+        $this->assertNull($entry->cancellation_reason);
 
-        $this->expectException(CulturalEventDomainException::class);
-        $this->lifecycle->cancel($entry->fresh(), $this->editor, '   ');
+        $entryWhitespace = $this->makePublished('Whitespace razlog');
+        $this->lifecycle->cancel($entryWhitespace, $this->editor, '   ');
+        $this->assertSame(CulturalEventEntry::STATUS_CANCELLED, $entryWhitespace->fresh()->status);
+        $this->assertNull($entryWhitespace->fresh()->cancellation_reason);
     }
 
     public function test_cancelled_cannot_become_published_or_draft(): void

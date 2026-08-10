@@ -17,8 +17,9 @@ class CulturalEventEntryCancelRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         if ($this->has('cancellation_reason') && is_string($this->input('cancellation_reason'))) {
+            $trimmed = trim($this->input('cancellation_reason'));
             $this->merge([
-                'cancellation_reason' => trim($this->input('cancellation_reason')),
+                'cancellation_reason' => $trimmed === '' ? null : $trimmed,
             ]);
         }
     }
@@ -26,15 +27,14 @@ class CulturalEventEntryCancelRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'cancellation_reason' => ['required', 'string', 'min:3', 'max:5000'],
+            'cancellation_reason' => ['nullable', 'string', 'max:5000'],
         ];
     }
 
-    public function messages(): array
+    public function optionalReason(): ?string
     {
-        return [
-            'cancellation_reason.required' => 'Razlog otkazivanja je obavezan.',
-            'cancellation_reason.min' => 'Razlog otkazivanja je obavezan.',
-        ];
+        $reason = $this->validated('cancellation_reason');
+
+        return is_string($reason) ? $reason : null;
     }
 }

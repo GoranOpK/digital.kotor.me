@@ -394,7 +394,7 @@ class CulturalEventEntryLinkOrganizerTest extends TestCase
         [$entry] = $this->makePublishedWithoutOrganizer('Content lock');
 
         $this->expectException(CulturalEventDomainException::class);
-        $this->expectExceptionMessage('sadržajno read-only');
+        $this->expectExceptionMessage('Registrovani Organizator se ne može postaviti kroz uređivanje sadržaja');
         $this->writer->updateContent($entry, $this->editor, [
             'organizer_id' => $this->organizer->id,
         ]);

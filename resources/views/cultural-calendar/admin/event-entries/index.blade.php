@@ -16,9 +16,13 @@
             <div>
                 Aktivni filter:
                 @if(!empty($activeFilters['status']))
-                    status = <strong>{{ \App\Models\CulturalEventEntry::STATUS_LABELS[$activeFilters['status']] ?? $activeFilters['status'] }}</strong>
+                    @if($activeFilters['status'] === \App\Models\CulturalEventEntry::STATUS_DRAFT && ($activeFilters['organizer'] ?? null) === 'none')
+                        status = <strong>U pripremi</strong>
+                    @else
+                        status = <strong>{{ \App\Models\CulturalEventEntry::STATUS_LABELS[$activeFilters['status']] ?? $activeFilters['status'] }}</strong>
+                    @endif
                 @endif
-                @if(!empty($activeFilters['organizer']) && $activeFilters['organizer'] === 'none')
+                @if(!empty($activeFilters['organizer']) && $activeFilters['organizer'] === 'none' && ($activeFilters['status'] ?? null) !== \App\Models\CulturalEventEntry::STATUS_DRAFT)
                     · bez Organizatora
                 @endif
             </div>
@@ -61,8 +65,8 @@
                     @forelse($entries as $entry)
                         <tr>
                             <td class="px-4 py-3 font-medium text-gray-900">{{ $entry->naslov ?: '— bez naslova —' }}</td>
-                            <td class="px-4 py-3 text-gray-700">{{ $entry->statusLabel() }}</td>
-                            <td class="px-4 py-3 text-gray-700">{{ $entry->organizer?->naziv ?? '—' }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ $entry->editorialStatusLabel() }}</td>
+                            <td class="px-4 py-3 text-gray-700">{{ $entry->organizer?->naziv ?? ($entry->organizer_manual_name ?: '—') }}</td>
                             <td class="px-4 py-3 text-gray-700">{{ $entry->category?->naziv ?? '—' }}</td>
                             <td class="px-4 py-3 text-gray-700">{{ $entry->occurrences_count }}</td>
                             <td class="px-4 py-3 text-gray-700">{{ $entry->featured ? 'Da' : 'Ne' }}</td>
@@ -78,6 +82,13 @@
                                                 @csrf
                                                 <button type="submit" class="px-3 py-1.5 border border-green-600 rounded-md text-green-800 hover:bg-green-50">
                                                     Objavi
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ route('cultural-event-entries.destroy', $entry) }}" onsubmit="return confirm('Da li ste sigurni da želite trajno obrisati ovaj događaj? Ova radnja se ne može poništiti.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="px-3 py-1.5 border border-red-300 rounded-md text-red-700 hover:bg-red-50">
+                                                    Obriši
                                                 </button>
                                             </form>
                                         @else
@@ -103,7 +114,7 @@
                                         </a>
                                     @elseif($entry->isPublished())
                                         <a href="{{ route('cultural-event-entries.edit', $entry) }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-                                            Upravljaj
+                                            {{ $entry->organizer_id === null ? 'Uredi' : 'Upravljaj' }}
                                         </a>
                                     @elseif($entry->isCancelled())
                                         <a href="{{ route('cultural-event-entries.edit', $entry) }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">

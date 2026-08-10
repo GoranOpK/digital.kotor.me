@@ -90,12 +90,11 @@
         >
             @csrf
             <div>
-                <label for="cancellation_reason" class="block text-sm font-medium text-gray-700 mb-1">Razlog otkazivanja (obavezno)</label>
+                <label for="cancellation_reason" class="block text-sm font-medium text-gray-700 mb-1">Razlog otkazivanja (opciono)</label>
                 <textarea
                     id="cancellation_reason"
                     name="cancellation_reason"
                     rows="3"
-                    required
                     class="w-full rounded-md border-gray-300 shadow-sm"
                 >{{ old('cancellation_reason') }}</textarea>
                 @error('cancellation_reason')
@@ -103,7 +102,7 @@
                 @enderror
             </div>
             <button type="submit" class="px-4 py-2 border border-red-600 rounded-md text-red-800 hover:bg-red-50 font-semibold">
-                Otkaži Događaj
+                Otkaži događaj
             </button>
         </form>
     </div>
@@ -126,18 +125,34 @@
                         · {{ $occurrence->location?->naziv ?? $occurrence->location_manual_name ?? 'bez lokacije' }}
                         · <strong>{{ $occurrence->statusLabel() }}</strong>
                     </div>
-                    <div class="flex flex-wrap gap-2 items-start">
+                    <div class="flex flex-wrap gap-3 items-start">
                         @if($occurrence->isPlanned())
-                            <form method="POST" action="{{ route('cultural-moderator-events.occurrences.postpone', [$entry, $occurrence]) }}">
+                            <form method="POST" action="{{ route('cultural-moderator-events.occurrences.postpone', [$entry, $occurrence]) }}"
+                                  class="space-y-2 border border-amber-100 rounded-md p-2 bg-amber-50/40 min-w-[14rem]">
                                 @csrf
+                                <div>
+                                    <label for="mod-postponement_reason-{{ $occurrence->id }}" class="block text-xs font-medium text-gray-700 mb-1">
+                                        Razlog odgađanja (opciono)
+                                    </label>
+                                    <textarea id="mod-postponement_reason-{{ $occurrence->id }}" name="postponement_reason" rows="2"
+                                              class="w-full rounded-md border-gray-300 shadow-sm text-sm">{{ old('postponement_reason') }}</textarea>
+                                </div>
                                 <button type="submit" class="px-3 py-1.5 border border-amber-300 rounded-md text-amber-800 hover:bg-amber-50">
                                     Odgodi
                                 </button>
                             </form>
-                            <form method="POST" action="{{ route('cultural-moderator-events.occurrences.cancel', [$entry, $occurrence]) }}">
+                            <form method="POST" action="{{ route('cultural-moderator-events.occurrences.cancel', [$entry, $occurrence]) }}"
+                                  class="space-y-2 border border-red-100 rounded-md p-2 bg-red-50/40 min-w-[14rem]">
                                 @csrf
+                                <div>
+                                    <label for="mod-occ-cancellation_reason-{{ $occurrence->id }}" class="block text-xs font-medium text-gray-700 mb-1">
+                                        Razlog otkazivanja (opciono)
+                                    </label>
+                                    <textarea id="mod-occ-cancellation_reason-{{ $occurrence->id }}" name="cancellation_reason" rows="2"
+                                              class="w-full rounded-md border-gray-300 shadow-sm text-sm">{{ old('cancellation_reason') }}</textarea>
+                                </div>
                                 <button type="submit" class="px-3 py-1.5 border border-red-300 rounded-md text-red-700 hover:bg-red-50">
-                                    Otkaži
+                                    Otkaži održavanje
                                 </button>
                             </form>
                         @elseif($occurrence->isPostponed())
@@ -176,10 +191,18 @@
                                     </button>
                                 </div>
                             </form>
-                            <form method="POST" action="{{ route('cultural-moderator-events.occurrences.cancel', [$entry, $occurrence]) }}">
+                            <form method="POST" action="{{ route('cultural-moderator-events.occurrences.cancel', [$entry, $occurrence]) }}"
+                                  class="space-y-2 border border-red-100 rounded-md p-2 bg-red-50/40 min-w-[14rem]">
                                 @csrf
+                                <div>
+                                    <label for="mod-occ-cancellation_reason-postponed-{{ $occurrence->id }}" class="block text-xs font-medium text-gray-700 mb-1">
+                                        Razlog otkazivanja (opciono)
+                                    </label>
+                                    <textarea id="mod-occ-cancellation_reason-postponed-{{ $occurrence->id }}" name="cancellation_reason" rows="2"
+                                              class="w-full rounded-md border-gray-300 shadow-sm text-sm">{{ old('cancellation_reason') }}</textarea>
+                                </div>
                                 <button type="submit" class="px-3 py-1.5 border border-red-300 rounded-md text-red-700 hover:bg-red-50">
-                                    Otkaži
+                                    Otkaži održavanje
                                 </button>
                             </form>
                         @endif

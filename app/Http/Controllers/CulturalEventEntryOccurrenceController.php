@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Http\Requests\CulturalOccurrenceCancelRequest;
 use App\Http\Requests\CulturalOccurrenceGenerateRequest;
+use App\Http\Requests\CulturalOccurrencePostponeRequest;
 use App\Http\Requests\CulturalOccurrenceResumeRequest;
 use App\Http\Requests\CulturalOccurrenceStoreRequest;
 use App\Http\Requests\CulturalOccurrenceUpdateRequest;
@@ -115,16 +117,18 @@ class CulturalEventEntryOccurrenceController extends Controller
     }
 
     public function postpone(
+        CulturalOccurrencePostponeRequest $request,
         CulturalEventEntry $kanonski_dogadjaj,
         CulturalOccurrence $odrzavanje,
     ): RedirectResponse {
         $this->assertBelongsToEntry($kanonski_dogadjaj, $odrzavanje);
 
         try {
-            $this->occurrenceLifecycle->postpone($odrzavanje);
+            $this->occurrenceLifecycle->postpone($odrzavanje, $request->optionalReason());
         } catch (CulturalEventDomainException $e) {
             return redirect()
                 ->back()
+                ->withInput()
                 ->withErrors(['occurrence' => $e->getMessage()]);
         }
 
@@ -134,16 +138,18 @@ class CulturalEventEntryOccurrenceController extends Controller
     }
 
     public function cancel(
+        CulturalOccurrenceCancelRequest $request,
         CulturalEventEntry $kanonski_dogadjaj,
         CulturalOccurrence $odrzavanje,
     ): RedirectResponse {
         $this->assertBelongsToEntry($kanonski_dogadjaj, $odrzavanje);
 
         try {
-            $this->occurrenceLifecycle->cancel($odrzavanje);
+            $this->occurrenceLifecycle->cancel($odrzavanje, $request->optionalReason());
         } catch (CulturalEventDomainException $e) {
             return redirect()
                 ->back()
+                ->withInput()
                 ->withErrors(['occurrence' => $e->getMessage()]);
         }
 

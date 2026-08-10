@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Http\Requests\CulturalModeratorOccurrenceCancelRequest;
 use App\Http\Requests\CulturalModeratorOccurrenceGenerateRequest;
+use App\Http\Requests\CulturalModeratorOccurrencePostponeRequest;
 use App\Http\Requests\CulturalModeratorOccurrenceResumeRequest;
 use App\Http\Requests\CulturalModeratorOccurrenceStoreRequest;
 use App\Http\Requests\CulturalModeratorOccurrenceUpdateRequest;
@@ -114,20 +116,22 @@ class CulturalModeratorEventEntryOccurrenceController extends Controller
     }
 
     public function postpone(
+        CulturalModeratorOccurrencePostponeRequest $request,
         CulturalEventEntry $moderator_dogadjaj,
         CulturalOccurrence $odrzavanje,
     ): RedirectResponse {
         CulturalModeratorEventAccess::assertCanMutatePublishedOccurrenceStatus(
-            auth()->user(),
+            $request->user(),
             $moderator_dogadjaj,
             $odrzavanje
         );
 
         try {
-            $this->occurrenceLifecycle->postpone($odrzavanje);
+            $this->occurrenceLifecycle->postpone($odrzavanje, $request->optionalReason());
         } catch (CulturalEventDomainException $e) {
             return redirect()
                 ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
+                ->withInput()
                 ->withErrors(['occurrence' => $e->getMessage()]);
         }
 
@@ -137,20 +141,22 @@ class CulturalModeratorEventEntryOccurrenceController extends Controller
     }
 
     public function cancel(
+        CulturalModeratorOccurrenceCancelRequest $request,
         CulturalEventEntry $moderator_dogadjaj,
         CulturalOccurrence $odrzavanje,
     ): RedirectResponse {
         CulturalModeratorEventAccess::assertCanMutatePublishedOccurrenceStatus(
-            auth()->user(),
+            $request->user(),
             $moderator_dogadjaj,
             $odrzavanje
         );
 
         try {
-            $this->occurrenceLifecycle->cancel($odrzavanje);
+            $this->occurrenceLifecycle->cancel($odrzavanje, $request->optionalReason());
         } catch (CulturalEventDomainException $e) {
             return redirect()
                 ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
+                ->withInput()
                 ->withErrors(['occurrence' => $e->getMessage()]);
         }
 

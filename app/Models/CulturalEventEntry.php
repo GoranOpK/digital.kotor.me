@@ -104,6 +104,7 @@ class CulturalEventEntry extends Model
         'status',
         'archived_from_status',
         'organizer_id',
+        'organizer_manual_name',
         'category_id',
         'cover_media_id',
         'featured',
@@ -200,6 +201,35 @@ class CulturalEventEntry extends Model
     public function statusLabel(): string
     {
         return self::STATUS_LABELS[$this->status] ?? $this->status;
+    }
+
+    /**
+     * UI label za urednički portal (PATCH-063).
+     * Direct-flow draft (bez registrovanog Org) = „U pripremi“; Moderator draft = „Nacrt“.
+     */
+    public function editorialStatusLabel(): string
+    {
+        if ($this->status === self::STATUS_DRAFT && $this->organizer_id === null) {
+            return 'U pripremi';
+        }
+
+        return $this->statusLabel();
+    }
+
+    /**
+     * PATCH-063 — Urednik može trajno obrisati samo direct-flow draft.
+     */
+    public function isEditorialPreparationDeletable(): bool
+    {
+        return $this->isDraft() && $this->organizer_id === null;
+    }
+
+    /**
+     * PATCH-063 §4.13 — Urednik može direktno uređivati ordinary content Objavljenog direct-flow Događaja.
+     */
+    public function isDirectFlowPublishedContentEditable(): bool
+    {
+        return $this->isPublished() && $this->organizer_id === null;
     }
 
     public function canTransitionTo(string $target): bool

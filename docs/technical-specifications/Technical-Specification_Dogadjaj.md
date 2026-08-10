@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Događaj  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.9
-**Datum:** 2026-08-09
+**Verzija:** 0.1.10
+**Datum:** 2026-08-10
 
 ---
 
@@ -26,6 +26,7 @@
 | 0.1.7 | 2026-08-08 | **PO-DG-10** (BM PATCH-057 / FS PATCH-FS-057): pojednostavljeni V1 prvi Event review — Na odobrenju zaključan; bez povlačenja / Počni pregled / Urednik edit; §4.2–§4.5 usklađeni. Proposal tok neizmijenjen. Bez izmjene implementacije. |
 | 0.1.8 | 2026-08-09 | **Faza 6A / PO-TS9-08G:** §4.9 tačka 8 usklađena — V1 javni portal ne prikazuje automatski `cancellation_reason` (BR-272 / BR-284). Bez izmjene implementacije. |
 | 0.1.9 | 2026-08-09 | **PO-6A09-02:** §4.10 tačka 8 — očuvanje izvornog javnog statusa pri arhiviranju (BM-PK-35 / BR-286). Bez izmjene implementacije. |
+| 0.1.10 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** `organizer_manual_name`; XOR sa `organizer_id`; Urednik create/publish/delete draft; direktan published edit (Urednik); opcion `cancellation_reason` + javna napomena; §4.6–§4.9 / §4.12–§4.13 / §6. **Supersede:** apsolutni content lock Objavljenog za urednički tok; zabrana javnog razloga otkazivanja. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -405,22 +406,23 @@ Napomena: **„Nacrt prijedloga izmjene“** je faza toka (ne status BM-ST-02). 
 
 | Status | Svrha | Ulaz | Izlaz | Ko uvodi |
 |--------|-------|------|-------|----------|
-| **Nacrt** | Radna verzija; nije javna | Kreiranje; vraćanje na doradu (Urednik) | Slanje na odobrenje; direktna objava (samo bez Org.) | Moderator / Urednik (kreiranje); Urednik (vraćanje) |
-| **Na odobrenju** | Čeka uredničku odluku; sadržaj zaključan (V1) | Uspješno slanje | Odobrenje → Objavljen; vraćanje → Nacrt | Moderator (slanje); Urednik (odluka) |
-| **Objavljen** | Javno vidljiv | Odobrenje; direktna objava | Otkazivanje; arhiviranje; pokretanje prijedloga izmjene | Urednik; Sistem (arhiviranje) |
+| **draft** (tehnički; UI: **U pripremi** za Urednik direct tok; **Nacrt** za Moderator) | Radna verzija; nije javna. **Ne** uvodi se status `preparation`. | Kreiranje; vraćanje na doradu (Urednik) | Slanje na odobrenje (Mod); direktna objava (Urednik, `organizer_id` null); trajno brisanje (Urednik, draft + null Org.) | Moderator / Urednik (kreiranje); Urednik (vraćanje / delete) |
+| **Na odobrenju** | Čeka uredničku odluku; sadržaj zaključan (V1) | Uspješno slanje | Odobrenje → Objavljen; vraćanje → draft | Moderator (slanje); Urednik (odluka) |
+| **Objavljen** | Javno vidljiv | Odobrenje; direktna objava | Otkazivanje; arhiviranje; prijedlog (Mod) / direktan content edit (Urednik, null Org.) | Urednik; Sistem (arhiviranje) |
 | **Otkazan** | Otkazan, istorijski zapis (read-only) | Otkazivanje iz Objavljen | Samo arhiviranje (Sistem) | Moderator (uslovno) / Urednik; Sistem (arhiviranje) |
-| **Arhiviran** | Završen lifecycle | Automatski nakon završetka svih održavanja | Nema usvojenog izlaza u V1 | Sistem |
+| **Arhiviran** | Završen lifecycle / istorijski read-only | Automatski nakon završetka svih održavanja | Nema usvojenog izlaza u V1 | Sistem |
 
-## 4.3 Nacrt — kreiranje i uređivanje
+## 4.3 Nacrt / U pripremi — kreiranje i uređivanje
 
 **Tehnički tok**
 
-1. Novi događaj nastaje u statusu **Nacrt** (BM-ST-03, BR-013).
-2. Sistem automatski bilježi vrijeme kreiranja, kreatora i Organizatora (kada postoji) — nije ručno (BR-014).
-3. Nacrt se može čuvati nepotpun (BR-015); nije javan (BR-016).
-4. Moderator kreira/uređuje samo u aktivnom kontekstu svog aktivnog Organizatora (BR-007, BR-021).
-5. Događaj bez Organizatora kreira i uređuje Urednik (BR-021, BM-UR-06).
+1. Novi događaj nastaje u tehničkom statusu **draft** (BM-ST-03, BR-013). Tehnički `draft` **ostaje**; UI label: Urednik direct → **„U pripremi“**; Moderator → **„Nacrt“**.
+2. Sistem automatski bilježi vrijeme kreiranja i kreatora (BR-014). Registrovani Organizator se bilježi samo u Moderator toku.
+3. Draft se može čuvati nepotpun (BR-015); nije javan (BR-016).
+4. **Urednik create (PATCH-063 / BR-287–289):** ne bira registrovanog Organizatora; `organizer_id = null` (fail-closed — Request ne smije prihvatiti podmetnuti `organizer_id`); opcion `organizer_manual_name` (samo string; dužina ≤ kolona `string`; **ne** kreira `CulturalOrganizer`); UI **„Sačuvaj i nastavi“** → kreira Entry → redirect na edit → dodavanje Održavanja; **nije** auto-publish.
+5. **Moderator create:** aktivni kontekst Aktivnog Organizatora; `organizer_id` set; `organizer_manual_name` mora biti null; submit → approval; bez direct publish.
 6. Napuštanje obrasca bez čuvanja ne kreira zapis; nema automatske izrade nacrta (BR-019).
+7. XOR Organizatora — §6.2 / §6.5.
 
 ## 4.4 Slanje na odobrenje
 
@@ -462,27 +464,33 @@ flowchart TD
 ## 4.6 Direktna objava (izuzetak)
 
 ```
-Nacrt → Objavljen
+draft (UI: U pripremi) → published
 ```
 
 **Uslovi (svi obavezni):**
 
 * izvršilac = **Urednik**;
-* događaj **nema** registrovanog Organizatora;
-* ispunjeni uslovi za objavu (najmanje jedno održavanje, primarna kategorija, ostali uslovi validacije).
+* `organizer_id` = `null` (urednički / direct tok; BM-UR-12 / BR-018);
+* opcion `organizer_manual_name` **ne** utiče na approval i **nije** blokirajući publish kriterijum (osim validacije stringa ako je popunjen);
+* publish gate ispunjen: naslov; aktivna kategorija; ≥1 validno Održavanje (datum obavezan; vrijeme/lokacija opciono); ostala usvojena pravila.
 
-**Zabrane:**
+**KEEP:** postojeći uslov `organizer_id === null` za `publishDirectly` usklađen je sa PO-U modelom. Ne uvodi se creator-based branching.
+
+**Zabrane (fail-closed):**
 
 * Moderator ne može direktno objaviti;
-* Urednik ne može direktno objaviti događaj koji pripada Organizatoru;
-* Moderator ne smije biti zaobiđen za događaje Organizatora (BM-ST-04, BR-018, BR-028).
+* Urednik ne može direktno objaviti događaj sa `organizer_id != null`;
+* Urednik create/update **ne** smije podmetnuti `organizer_id` kroz HTTP request (Request validation + domain invariant).
 
 ## 4.7 Izmjene objavljenog događaja
 
-1. Objavljeni događaj se ne uređuje direktno u javnom stanju (BR-025).
-2. Nastaje prijedlog izmjene; max jedan aktivan (BR-012).
-3. Izmjene Moderatora nisu javne dok Urednik ne odobri (BR-008).
-4. Tok odobravanja prijedloga slijedi ista pravila odobravanja / vraćanja (BR-009–BR-011, BR-039–BR-042).
+**Moderator / `organizer_id != null`:** Objavljeni događaj se ne uređuje direktno (BR-025). Nastaje **Prijedlog izmjene**; max jedan aktivan (BR-012). Izmjene nisu javne dok Urednik ne odobri (BR-008–BR-011).
+
+**Urednik / `organizer_id === null` (PATCH-063 / BR-292):** Urednik **može direktno** ažurirati dozvoljena sadržajna polja Objavljenog Događaja bez Prijedloga (vidi §4.13). **Supersede** apsolutnog content lock-a samo za taj slučaj.
+
+**Ne** kao ordinary content edit: postpone OCC, OCC cancel, Event cancel i druge lifecycle akcije.
+
+**Cancelled / archived:** sadržaj ostaje read-only (osim opcionog razloga otkazivanja na Otkazanom — §4.9). Nova published-edit odluka **ne** otvara edit cancelled/archived.
 
 ## 4.8 Otkazivanje
 
@@ -498,6 +506,7 @@ Nacrt → Objavljen
 6. U okviru **iste atomske poslovne operacije** otkazivanja Događaja, sva Održavanja koja su u tom trenutku u statusu **Planiran** ili **Odgođen** prelaze u **Otkazan**. Održavanja u statusu **Završen** ili **Otkazan** ostaju nepromijenjena. Nakon operacije ne smije ostati Planirano niti Odgođeno Održavanje (PO-AUTO-01 / BM-DG-11 / BR-063). To **nije** Planiran → Završen.
 7. Otkazani događaj ostaje evidentiran kao **istorijski zapis**; prikaz po pravilima portala (BM-DG-10, BR-063, BR-064).
 8. Nakon završene operacije otkazivanja (uključujući korak 6) forma događaja je **read-only**, osim razloga otkazivanja / napomene urednika (§4.9).
+9. Polje `cancellation_reason` (postojeće, `text` nullable): **opcion** pri otkazivanju. Request validation i `EventLifecycle::cancel` **ne** smiju zahtijevati razlog. Ako je unesen, može se javno prikazati (TS-009; BR-295). Atomski zapis: status + razlog u istoj transakciji.
 
 ## 4.9 Terminalnost statusa Otkazan (istorijski zapis)
 
@@ -510,8 +519,9 @@ Nacrt → Objavljen
 5. Reaktivacija postojećeg otkazanog događaja ne postoji. Ako se isti kulturni program kasnije ponovo organizuje, kreira se **novi** događaj (novi zapis, novi lifecycle) (BM-DG-09).
 6. Promjena termina postojećeg (neotkazanog) događaja nije radnja nad statusom događaja: vrši se isključivo kroz status **Odgođen** na održavanju (granica TS-004; BM-TR-12, BR-131).
 7. Dok je status Otkazan, forma je **read-only**. Nije dozvoljena **naknadna** izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja (BM-DG-10, BR-064). Automatsko otkazivanje otvorenih Održavanja iz §4.8 korak 6 dio je same operacije otkazivanja.
-8. Jedini izuzetak: **Urednik** smije unijeti ili dopuniti **razlog otkazivanja (napomenu urednika)** (BM-DG-10, BM-UR-11, BR-064). **V1 javni portal:** razlog se **ne** prikazuje automatski javnosti; prikazuje se standardizovano sistemsko obavještenje (BM-PK-33 / BR-272 / BR-284; TS-009 §7.2.4). Javni prikaz teksta razloga zahtijeva zasebnu PO odluku.
+8. Jedini izuzetak: **Urednik** smije unijeti ili dopuniti **razlog otkazivanja (napomenu urednika)** — polje `cancellation_reason` je **opcion** (BM-DG-10, BM-UR-11, BR-064). Ako je unesen, **može se javno prikazati** kao napomena uz sistemsko obavještenje (BM-PK-36 / BR-295; TS-009). **PATCH-063 superseduje** raniju V1 zabranu javnog prikaza (TS-003 v0.1.8 / BR-284).
 9. Pokušaj izmjene bilo kog drugog polja dok je status Otkazan mora biti odbijen validacijom.
+10. **Fail-closed:** Otkazan se ne briše; nema republish (Otkazan → Objavljen zabranjen).
 
 ## 4.10 Automatsko arhiviranje
 
@@ -575,6 +585,55 @@ Posebna domenska operacija BR-052 (BM-UR-07, BM-DG-08, PO-DG-08, PO-DG-09). Nije
 
 **Audit:** operacija se kasnije evidentira kroz centralnu Evidenciju aktivnosti (FS §5.16 / TS-012). Ne uvodi se privremeni audit sistem.
 
+## 4.12 Trajno brisanje nikad objavljenog Događaja (PATCH-063 / BR-290)
+
+**Poslovno:** Urednik smije trajno obrisati Događaj koji **nikada nije bio objavljen**.
+
+**Tehnički lifecycle gate (cross-validacija):** Transition graf **nema** prelaz `published` / `cancelled` / `archived` → `draft`. Stoga `status === draft` pouzdano znači da Entry **nikada nije bio objavljen**.
+
+**Dozvoljeno DELETE samo ako (svi uslovi, fail-closed):**
+
+* actor = **Urednik**;
+* Entry pripada uredničkom / direct toku (`organizer_id === null`);
+* `status = draft`.
+
+**Zabranjeno DELETE za:**
+
+* `pending_approval`;
+* `published`;
+* `cancelled`;
+* `archived`;
+* bilo koji Entry sa `organizer_id != null` (Moderatorov tok) — **ne** uvoditi Moderator delete osim ako kasnije usvojeno zasebno pravilo.
+
+**Relacioni podaci (FK `restrictOnDelete` na OCC → Entry):** soft delete Entry-ja **nije** usvojen; poslovno je **trajno** brisanje. Minimalna atomska strategija:
+
+1. DB transaction;
+2. `lockForUpdate` na Entry;
+3. ponovna validacija statusa + authorization;
+4. obriši zavisne child / pivot podatke koji blokiraju FK (OCC pripadaju Entry-ju; tag pivot; media **reference**/veza; proposals / proposal OCC ako postoje; lokalni audit/log ako je vezan na Entry);
+5. detach pivota;
+6. obriši Entry.
+
+**Ne briši shared katalog:** `CulturalCategory`, `CulturalLocation`, `CulturalMedia`, `CulturalTag`, `CulturalOrganizer` — samo veze / child podatke Entry-ja.
+
+## 4.13 Direktan content update Objavljenog (Urednik / PATCH-063 / BR-292)
+
+**Authorization invariant (svi uslovi):**
+
+* actor = **Urednik**;
+* `organizer_id === null` (direct / editorial tok);
+* `status = published`.
+
+**Dozvoljena polja (običan sadržaj):** naslov; opis; `organizer_manual_name` (opcion); kategorija; cover / naslovna veza; tagovi; druga usvojena sadržajna polja prema modelu.
+
+**Ne** tretirati kao ordinary edit: postpone; OCC cancel; Event cancel; ostale lifecycle akcije.
+
+**PublishedContentLock:** supersede **samo** za ovaj slučaj. Moderatorov Objavljeni sadržaj i dalje ide kroz **Prijedlog izmjene**.
+
+**Cancelled / archived:** **nema** ordinary content edit/delete (izuzetak: opcion dopuna Entry `cancellation_reason` dok je Otkazan — §4.9).
+
+**Konkurentnost:** koristiti postojeći EventWriter transaction model; recheck status + authorization prije upisa.
+
 ---
 
 # 5. Autorizacija i ovlašćenja
@@ -610,8 +669,10 @@ Logički model (bez middleware / framework detalja).
 | Povući Prijedlog prije pregleda | Da | — | Ne | Ne |
 | Pregledati Na odobrenju | Ne (osim sopstvenih nacrta/prijedloga po pravilima) | Da | Ne | Ne |
 | Odobriti / vratiti na doradu | Ne | Da | Ne | Ne |
-| Direktna objava Nacrt→Objavljen | Ne | Da — **samo bez Org.** | Ne | Ne |
-| Pokrenuti prijedlog izmjene objavljenog | Da — svoj Org. | Da | Ne | Ne |
+| Direktna objava draft→published | Ne | Da — **samo `organizer_id` null** | Ne | Ne |
+| Direktan edit Objavljenog sadržaja | Ne — **Prijedlog** | Da — samo `organizer_id` null + published | Ne | Ne |
+| Trajno brisanje draft Entry | Ne | Da — samo `organizer_id` null + draft | Ne | Ne |
+| Pokrenuti prijedlog izmjene objavljenog | Da — svoj Org. | Da (gdje model već dozvoljava) | Ne | Ne |
 | Otkazati objavljeni | Da — Aktivan Org. + kontekst | Da — bilo koji | Ne | Ne |
 | Urediti sadržaj otkazanog | Ne | Ne | Ne | Ne |
 | Unijeti / dopuniti razlog otkazivanja | Ne | Da — dok je Otkazan | Ne | Ne |
@@ -628,25 +689,45 @@ Logički model (bez middleware / framework detalja).
 * Samo dok je Organizator **Aktivan**.
 * Samo u **aktivnom moderatorskom kontekstu**.
 * Ne objavljuje, ne direktno objavljuje, ne vraća otkazani događaj u Objavljen.
+* Create/update: `organizer_id` mora biti postavljen na Org. konteksta; `organizer_manual_name` **mora biti null** (fail-closed — Request validation + domain invariant; Moderator ne smije podmetnuti ručni naziv).
+* Objavljeni sadržaj: samo kroz **Prijedlog izmjene** (nema direct published content update).
+* Delete Entry: **nije** podržan u V1 za Moderatorov tok.
 * Ne mijenja sadržaj otkazanog događaja niti razlog otkazivanja.
 * Nakon deaktivacije Organizatora ne izvršava poslovne radnje nad događajima tog Organizatora (BR-007, BR-049/BR-050 veza preko TS-001).
 
 ## 5.3 Posebna pravila Urednika
 
 * Pregled, odobravanje, vraćanje, objava.
-* Direktna objava samo bez Organizatora.
-* Jednokratno naknadno povezivanje Objavljenog događaja bez Organizatora sa Aktivnim Organizatorom (BR-052; PO-DG-08 / PO-DG-09).
-* Otkazivanje bilo kojeg objavljenog događaja.
-* Unos / dopuna razloga otkazivanja (napomene urednika) dok je status Otkazan.
-* Ne vraća otkazani događaj u Objavljen; ne uređuje sadržajne podatke otkazanog događaja osim razloga otkazivanja.
+* Create/update direct toka: `organizer_id` **uvijek null** (fail-closed — ne prihvata izbor registrovanog Org. kroz formu ni HTTP); opcion `organizer_manual_name`.
+* Direktna objava samo kada `organizer_id === null` i publish gate ispunjen.
+* Direktan content edit Objavljenog samo kada `organizer_id === null` i `status = published` (§4.13).
+* Trajno brisanje samo `draft` + `organizer_id === null` (§4.12).
+* Jednokratno naknadno povezivanje Objavljenog događaja bez Organizatora sa Aktivnim Organizatorom (BR-052; PO-DG-08 / PO-DG-09). Nakon BR-052 Entry prelazi u Moderator/proposal režim za sadržaj.
+* Otkazivanje bilo kojeg objavljenog događaja; `cancellation_reason` **opcion**.
+* Unos / dopuna razloga otkazivanja dok je status Otkazan.
+* Ne vraća otkazani događaj u Objavljen; ne uređuje sadržajne podatke otkazanog/arhiviranog osim razloga otkazivanja (Otkazan).
 * Ne kombinuje ulogu sa Moderatorom / običnim korisnikom u poslovnom modelu Kalendara (BM-UR-09).
 
-## 5.4 Administrator platforme
+## 5.4 Fail-closed security (PATCH-063)
+
+Server-side (Request validation + service/domain invariant). **Ne** oslanjati se samo na Blade skrivanje dugmeta.
+
+| # | Pravilo |
+|---|---------|
+| A | Urednik create/update: ne može podmetnuti registered `organizer_id` |
+| B | Moderator create/update: ne može podmetnuti `organizer_manual_name` |
+| C | Urednik delete: samo direct-flow `draft` |
+| D | Urednik published direct edit: samo direct-flow `published` |
+| E | Moderator published edit: i dalje proposal |
+| F | Cancelled/archived: nema ordinary edit/delete |
+| G | Moderator: nema direct publish |
+
+## 5.5 Administrator platforme
 
 Nije učesnik uredničkog toka događaja.  
 Relevantan je isključivo kroz centralnu Evidenciju aktivnosti (TS-012 / FT-003) — van normativnog toka TS-003.
 
-## 5.5 Organizator kao poslovni entitet
+## 5.6 Organizator kao poslovni entitet
 
 Organizator ne izvršava radnje.  
 Ne prijavljuje se.  
@@ -694,8 +775,9 @@ Atributi / svojstva potvrđeni usvojenim BM/FS (konceptualno):
 | Atribut / svojstvo | Obrazloženje | Izvor |
 |--------------------|--------------|-------|
 | Identitet događaja | Jedinstvena identifikacija | tehnička nužnost agregata |
-| Status | Nacrt / Na odobrenju / Objavljen / Otkazan / Arhiviran | BM-ST-02, BR-062 |
-| Organizator (referenca) | 0..1 | BM-DG-08, BR-018, BR-045 |
+| Status | Tehnički: draft / pending_approval / published / cancelled / archived. UI draft: „U pripremi“ (Urednik) / „Nacrt“ (Moderator) | BM-ST-02, BR-062, PATCH-063 |
+| Organizator (referenca `organizer_id`) | 0..1 registrovani `CulturalOrganizer` | BM-DG-08, BR-018, BR-045 |
+| Ručni naziv Organizatora (`organizer_manual_name`) | Nullable `string` na `cultural_event_entries`; analogija `location_manual_name`; bez indexa / backfill-a / defaulta; **ne** kreira Org. entitet | PATCH-063 / BR-288 |
 | Primarna kategorija | 0..1; obavezna za slanje/objavu | BM-DG-06/07, BR |
 | Oznake | 0..N, opcione | BM-DG-06 |
 | Manifestacija | 0..1, opciono | BM-DG-02 |
@@ -708,7 +790,19 @@ Atributi / svojstva potvrđeni usvojenim BM/FS (konceptualno):
 | Naslovna fotografija / medij | Prikaz uvijek ima sliku (direktno ili fallback kategorije) | FS §5.4, BM-MD-06 |
 | Indikator istaknutosti | Najviše tri istaknuta globalno | BR-117 |
 | Postojanje ≥1 održavanja | Preduslov slanja/objave | BM-DG-01 |
-| Razlog otkazivanja (napomena urednika) | Jedino sadržajno polje izmjenjivo dok je status Otkazan; Urednik | BM-DG-10, BR-063, BR-064 |
+| Razlog otkazivanja Entry (`cancellation_reason`) | Postojeći `text` nullable; **opcion** pri cancel; može javno; jedino sadržajno polje izmjenjivo dok je Otkazan | BM-DG-10, BR-063, BR-064, BR-295 |
+
+**XOR Organizator (domain invariant):**
+
+```text
+(organizer_id != null AND organizer_manual_name IS NULL)   -- Moderator / registrovani
+XOR
+(organizer_id IS NULL AND organizer_manual_name IS NOT NULL) -- Urednik sa ručnim nazivom
+XOR
+(organizer_id IS NULL AND organizer_manual_name IS NULL)     -- Urednik bez navedenog Org. (dozvoljeno)
+```
+
+Zabranjeno: `organizer_id != null` **i** non-null `organizer_manual_name` istovremeno.
 
 ## 6.3 Referencirani atributi
 
@@ -736,13 +830,27 @@ Takođe otvoreno:
 ## 6.5 Integritet
 
 * Status samo iz dozvoljenog skupa.
-* Kardinalnost Organizatora: 0 ili 1.
+* Kardinalnost registrovanog Organizatora: 0 ili 1.
+* **XOR** `organizer_id` / `organizer_manual_name` (§6.2); oba null dozvoljena za Urednikov Entry.
 * Kardinalnost Manifestacije: 0 ili 1.
 * Najviše jedan aktivan prijedlog izmjene.
 * Najviše tri istaknuta događaja u sistemu u datom trenutku.
 * Lokacija se ne čuva kao atribut događaja.
 * Dok je status **Otkazan**, sadržajni atributi su neizmjenjivi osim razloga otkazivanja (BM-DG-10, BR-064).
 * Prelaz Otkazan → Objavljen nije dio dozvoljenog skupa prelaza (BM-DG-09, BM-ST-09, BR-064).
+* `draft` nema ulaz iz published/cancelled/archived → osnova za delete gate (§4.12).
+
+## 6.6 Budući migration inventory (dokumentaciono; PATCH-063)
+
+**Ne kreirati migration fajlove u ovom TS patch-u.** Buduća implementacija:
+
+| Tabela | Kolona | Tip | Nullable | Index | Backfill | Default | Rollback | Razlog |
+|--------|--------|-----|----------|-------|----------|---------|----------|--------|
+| `cultural_event_entries` | `organizer_manual_name` | `string` (isto kao `location_manual_name`) | DA | NE | NE | NE | drop column | Ručni naziv neregistrovanog Org. |
+
+Entry `cancellation_reason` **već postoji** — ne dodavati novu kolonu; samo promijeniti validation (required → optional).
+
+OCC razlozi (`postponement_reason`, OCC `cancellation_reason`) — **TS-004**.
 
 ---
 
@@ -805,6 +913,12 @@ Za svako relevantno pravilo: implementaciona posljedica (bez kopiranja BM teksta
 | Razlog vraćanja obavezan | Vraćanje na doradu | Sistem | Blokada bez razloga |
 | Max 1 aktivan prijedlog | Pokretanje izmjene | Sistem | Odbijanje drugog |
 | Status = Objavljen | Otkazivanje | Sistem | Odbijanje inače |
+| `cancellation_reason` opcion | Otkazivanje Entry | Sistem | Dozvoljeno null; ako popunjen — dužina/text validacija |
+| Status = draft + organizer_id null + Urednik | Trajno brisanje Entry | Sistem | Inače odbijanje |
+| Status = published + organizer_id null + Urednik | Direktan content update | Sistem | Inače odbijanje / proposal path |
+| XOR organizer_id / organizer_manual_name | Create/update | Sistem | Odbijanje ako oba non-null |
+| Urednik: organizer_id zabranjen u requestu | Create/update direct | Sistem | Odbijanje / strip fail-closed |
+| Moderator: organizer_manual_name zabranjen | Create/update | Sistem | Odbijanje |
 | Status = Objavljen i Org. null | Naknadno povezivanje (BR-052) | Sistem | Odbijanje inače |
 | Org. Aktivan | Naknadno povezivanje (BR-052) | Sistem | Odbijanje ako nije Aktivan |
 | Org. još null pri upisu | Naknadno povezivanje (BR-052) | Sistem | Odbijanje ako je već povezan (konkurentnost) |

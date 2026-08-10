@@ -107,17 +107,17 @@ final class EventLifecycle
     }
 
     /**
-     * Objavljen → Otkazan (terminalan za republish). Razlog je obavezan (Sprint 3A.4 / BM-DG-10).
+     * Objavljen → Otkazan (terminalan za republish). Razlog je opcion (PATCH-063 / BR-295).
      * PO-AUTO-01: Planiran/Odgođen Održavanja → Otkazan u istoj atomskoj operaciji.
      * Lock order: aktivni Proposal-i → Event → Occurrence-i (id ASC).
      */
-    public function cancel(CulturalEventEntry $entry, User $actor, string $reason): CulturalEventEntry
+    public function cancel(CulturalEventEntry $entry, User $actor, ?string $reason = null): CulturalEventEntry
     {
         $this->assertTransition($entry, CulturalEventEntry::STATUS_CANCELLED);
 
-        $reason = trim($reason);
+        $reason = $reason !== null ? trim($reason) : null;
         if ($reason === '') {
-            throw new CulturalEventDomainException('Razlog otkazivanja je obavezan.');
+            $reason = null;
         }
 
         return DB::transaction(function () use ($entry, $actor, $reason) {

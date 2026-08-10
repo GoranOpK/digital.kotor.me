@@ -3,24 +3,27 @@
 namespace App\Http\Requests;
 
 use App\Models\CulturalEventEntry;
+use App\Models\CulturalOccurrence;
 use App\Support\CulturalModeratorEventAccess;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * TS-010.4 — Moderator Otkaži Objavljeni Događaj (HTTP sloj; domen = EventLifecycle::cancel).
- * PATCH-063 — razlog otkazivanja je opcion.
+ * PATCH-063 — Moderator: Otkaži Održavanje (opcion razlog).
  */
-class CulturalModeratorEventEntryCancelRequest extends FormRequest
+class CulturalModeratorOccurrenceCancelRequest extends FormRequest
 {
     public function authorize(): bool
     {
         $user = $this->user();
         /** @var CulturalEventEntry|null $entry */
         $entry = $this->route('moderator_dogadjaj');
+        /** @var CulturalOccurrence|null $occurrence */
+        $occurrence = $this->route('odrzavanje');
 
         return $user !== null
             && $entry instanceof CulturalEventEntry
-            && CulturalModeratorEventAccess::canAccessEntry($user, $entry);
+            && $occurrence instanceof CulturalOccurrence
+            && CulturalModeratorEventAccess::canMutatePublishedOccurrenceStatus($user, $entry, $occurrence);
     }
 
     protected function prepareForValidation(): void
@@ -37,6 +40,14 @@ class CulturalModeratorEventEntryCancelRequest extends FormRequest
     {
         return [
             'cancellation_reason' => ['nullable', 'string', 'max:5000'],
+            'status' => ['prohibited'],
+            'postponement_reason' => ['prohibited'],
+            'organizer_id' => ['prohibited'],
+            'organizer_manual_name' => ['prohibited'],
+            'datum' => ['prohibited'],
+            'vrijeme_od' => ['prohibited'],
+            'vrijeme_do' => ['prohibited'],
+            'cjelodnevno' => ['prohibited'],
         ];
     }
 

@@ -23,7 +23,7 @@
             @include('cultural-calendar.admin.event-entries.partials.form')
             <div class="mt-6 flex gap-3">
                 <button type="submit" style="background:#b91c1c; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0;">
-                    Sačuvaj nacrt
+                    Sačuvaj i nastavi
                 </button>
                 <a href="{{ route('cultural-event-entries.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Otkaži</a>
             </div>

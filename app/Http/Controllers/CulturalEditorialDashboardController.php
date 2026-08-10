@@ -44,8 +44,8 @@ class CulturalEditorialDashboardController extends Controller
             ],
             [
                 'id' => 'DU-03',
-                'title' => 'Nacrti bez Organizatora',
-                'description' => 'Nacrti koje Urednik vodi bez Organizatora.',
+                'title' => 'Događaji u pripremi',
+                'description' => 'Događaji koje Urednik vodi prije objave.',
                 'count' => CulturalEventEntry::query()
                     ->where('status', CulturalEventEntry::STATUS_DRAFT)
                     ->whereNull('organizer_id')
