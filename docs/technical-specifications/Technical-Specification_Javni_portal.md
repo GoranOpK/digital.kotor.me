@@ -1227,6 +1227,8 @@ Flag služi isključivo kao rollback zaštita — **nije** trajna arhitektura.
 3. legacy public read se uklanja;
 4. legacy `CulturalEvent` CRUD se uklanja.
 
+**Intermediate status (PHASE 6A-CLOSE-02):** prije koraka 4, legacy admin CRUD surface (`cultural-events.*`) je **HTTP-disabled** (403; dedicated middleware). Kod, model, tabela i views ostaju; javni rollback read preko feature flag-a ostaje. Hard removal / flag cleanup = kasniji Phase B (koraci 1–4 iznad).
+
 Ovaj dokument **ne** implementira navedeno — samo propisuje redoslijed.
 
 ---

@@ -230,9 +230,11 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
         Route::delete('/kalendar-kulture/prijedlozi-izmjene/{prijedlog}/odrzavanja/{operacija}', [CulturalEventChangeProposalController::class, 'destroyOccurrenceOp'])
             ->name('cultural-event-change-proposals.occurrences.destroy');
 
+        // 6A-CLOSE-02 — legacy admin CRUD kill-switch (rute zadržane; HTTP 403).
         Route::resource('/kalendar-kulture/dogadjaji', CulturalEventController::class)
             ->except(['show'])
-            ->names('cultural-events');
+            ->names('cultural-events')
+            ->middleware('legacy_cultural_events_disabled');
 
         // Sprint 3A.2 — kanonski Draft UI (CulturalEventEntry); nije TS-010 / nije legacy CRUD
         Route::get('/kalendar-kulture/kanonski-dogadjaji', [CulturalEventEntryController::class, 'index'])

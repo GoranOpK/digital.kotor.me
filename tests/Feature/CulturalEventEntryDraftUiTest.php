@@ -315,11 +315,11 @@ class CulturalEventEntryDraftUiTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_legacy_cultural_events_routes_untouched(): void
+    public function test_legacy_cultural_events_admin_crud_is_forbidden(): void
     {
         $this->actingAs($this->editor)
             ->get(route('cultural-events.index'))
-            ->assertOk();
+            ->assertForbidden();
 
         $this->assertDatabaseCount('cultural_event_entries', 0);
     }
