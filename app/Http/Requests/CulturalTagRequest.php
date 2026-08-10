@@ -26,7 +26,6 @@ class CulturalTagRequest extends FormRequest
     {
         return [
             'naziv' => ['required', 'string', 'max:255'],
-            'opis' => ['nullable', 'string', 'max:5000'],
             'status' => ['required', Rule::in(CulturalTag::STATUSES)],
         ];
     }

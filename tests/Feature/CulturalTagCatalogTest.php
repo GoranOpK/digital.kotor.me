@@ -40,7 +40,6 @@ class CulturalTagCatalogTest extends TestCase
     {
         $response = $this->actingAs($this->editor)->post(route('cultural-tags.store'), [
             'naziv' => '  Besplatno  ',
-            'opis' => 'Ulaz besplatan',
             'status' => CulturalTag::STATUS_ACTIVE,
         ]);
 
@@ -48,6 +47,7 @@ class CulturalTagCatalogTest extends TestCase
         $tag = CulturalTag::query()->first();
         $this->assertNotNull($tag);
         $this->assertSame('Besplatno', $tag->naziv);
+        $this->assertNull($tag->opis);
         $this->assertTrue($tag->isActive());
     }
 
@@ -60,12 +60,58 @@ class CulturalTagCatalogTest extends TestCase
 
         $response = $this->actingAs($this->editor)->put(route('cultural-tags.update', $tag), [
             'naziv' => 'Za porodicu',
-            'opis' => null,
             'status' => CulturalTag::STATUS_ACTIVE,
         ]);
 
         $response->assertRedirect(route('cultural-tags.index'));
         $this->assertSame('Za porodicu', $tag->fresh()->naziv);
+    }
+
+    public function test_create_and_edit_forms_omit_opis_field(): void
+    {
+        $tag = CulturalTag::create([
+            'naziv' => 'Za uređivanje',
+            'status' => CulturalTag::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($this->editor)
+            ->get(route('cultural-tags.create'))
+            ->assertOk()
+            ->assertSee('Naziv', false)
+            ->assertSee('Status', false)
+            ->assertDontSee('name="opis"', false)
+            ->assertDontSee('Opis (opciono)', false);
+
+        $this->actingAs($this->editor)
+            ->get(route('cultural-tags.edit', $tag))
+            ->assertOk()
+            ->assertSee('Naziv', false)
+            ->assertSee('Status', false)
+            ->assertDontSee('name="opis"', false)
+            ->assertDontSee('Opis (opciono)', false);
+    }
+
+    public function test_update_preserves_existing_opis_in_database(): void
+    {
+        $tag = CulturalTag::create([
+            'naziv' => 'Stara',
+            'opis' => 'Historijski opis',
+            'status' => CulturalTag::STATUS_ACTIVE,
+        ]);
+
+        $this->actingAs($this->editor)
+            ->put(route('cultural-tags.update', $tag), [
+                'naziv' => 'Nova',
+                'status' => CulturalTag::STATUS_INACTIVE,
+                // Legacy/malicious payload must not overwrite DB opis.
+                'opis' => 'Pokušaj brisanja',
+            ])
+            ->assertRedirect(route('cultural-tags.index'));
+
+        $fresh = $tag->fresh();
+        $this->assertSame('Nova', $fresh->naziv);
+        $this->assertTrue($fresh->isInactive());
+        $this->assertSame('Historijski opis', $fresh->opis);
     }
 
     public function test_editor_can_deactivate_and_reactivate_tag(): void
