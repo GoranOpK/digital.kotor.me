@@ -129,13 +129,9 @@
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-editorial-dashboard.*')) }}"
                             >Urednički rad</a>
                             <a
-                                href="{{ route('cultural-events.index') }}"
-                                style="{{ $kkNavBtn(request()->routeIs('cultural-events.*')) }}"
-                            >Događaji</a>
-                            <a
                                 href="{{ route('cultural-event-entries.index') }}"
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-event-entries.*')) }}"
-                            >Kanonski događaji</a>
+                            >Događaji</a>
                             <a
                                 href="{{ route('cultural-locations.index') }}"
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-locations.*')) }}"
@@ -320,13 +316,9 @@
                         style="{{ $kkNavBtnMobile(request()->routeIs('cultural-editorial-dashboard.*')) }}"
                     >Urednički rad</a>
                     <a
-                        href="{{ route('cultural-events.index') }}"
-                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-events.*')) }}"
-                    >Događaji</a>
-                    <a
                         href="{{ route('cultural-event-entries.index') }}"
                         style="{{ $kkNavBtnMobile(request()->routeIs('cultural-event-entries.*')) }}"
-                    >Kanonski događaji</a>
+                    >Događaji</a>
                     <a
                         href="{{ route('cultural-locations.index') }}"
                         style="{{ $kkNavBtnMobile(request()->routeIs('cultural-locations.*')) }}"

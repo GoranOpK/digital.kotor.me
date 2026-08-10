@@ -78,7 +78,7 @@ class CulturalEventEntryController extends Controller
 
         return redirect()
             ->route('cultural-event-entries.edit', $entry)
-            ->with('status', 'Nacrt kanonskog događaja je kreiran.');
+            ->with('status', 'Nacrt događaja je kreiran.');
     }
 
     public function edit(CulturalEventEntry $kanonski_dogadjaj): View|RedirectResponse

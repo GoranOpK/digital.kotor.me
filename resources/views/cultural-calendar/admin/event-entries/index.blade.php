@@ -4,11 +4,10 @@
 <div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
         <div>
-            <h1 style="font-size:28px; font-weight:700; margin:0; color:#111827;">Kanonski događaji</h1>
-            <p class="text-sm text-gray-600 mt-1 mb-0">Draft UI za novi domen (TS-003/004). Legacy „Događaji“ ostaju odvojeni.</p>
+            <h1 style="font-size:28px; font-weight:700; margin:0; color:#111827;">Događaji</h1>
         </div>
         <a href="{{ route('cultural-event-entries.create') }}" style="display:inline-block; background:#b91c1c; color:#fff; text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600;">
-            + Novi nacrt
+            + Novi događaj
         </a>
     </div>
 
@@ -119,7 +118,7 @@
                     @empty
                         <tr>
                             <td colspan="8" class="px-4 py-8 text-center text-gray-500">
-                                Nema kanonskih događaja.
+                                Nema događaja.
                             </td>
                         </tr>
                     @endforelse

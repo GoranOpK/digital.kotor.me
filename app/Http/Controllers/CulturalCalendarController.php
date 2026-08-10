@@ -697,9 +697,8 @@ class CulturalCalendarController extends Controller
         $user = auth()->user();
 
         if ($user && $user->role && $user->role->name === 'kk_admin') {
-            return redirect()->route('cultural-events.create', [
-                'datum_od' => $selectedDate->format('Y-m-d'),
-            ]);
+            // Entry create ne prima unaprijed datum (OCC se dodaje ručno na edit nacrta).
+            return redirect()->route('cultural-event-entries.create');
         }
 
         $events = CulturalEvent::query()

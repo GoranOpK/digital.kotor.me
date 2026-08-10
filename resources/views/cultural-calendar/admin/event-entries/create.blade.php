@@ -3,7 +3,7 @@
 @section('content')
 <div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
-        <h1 style="font-size:28px; font-weight:700; margin:0; color:#111827;">Novi nacrt (kanonski)</h1>
+        <h1 style="font-size:28px; font-weight:700; margin:0; color:#111827;">Novi događaj</h1>
         <a href="{{ route('cultural-event-entries.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Nazad</a>
     </div>
 

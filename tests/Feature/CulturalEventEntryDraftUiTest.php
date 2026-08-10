@@ -51,6 +51,12 @@ class CulturalEventEntryDraftUiTest extends TestCase
 
     public function test_create_draft(): void
     {
+        $this->actingAs($this->editor)
+            ->get(route('cultural-event-entries.create'))
+            ->assertOk()
+            ->assertSee('Novi događaj', false)
+            ->assertDontSee('Novi nacrt (kanonski)', false);
+
         $organizer = $this->makeActiveOrganizer();
         $category = $this->makeActiveCategory();
 
@@ -63,6 +69,7 @@ class CulturalEventEntryDraftUiTest extends TestCase
 
         $entry = CulturalEventEntry::query()->firstOrFail();
         $response->assertRedirect(route('cultural-event-entries.edit', $entry));
+        $response->assertSessionHas('status', 'Nacrt događaja je kreiran.');
         $this->assertSame(CulturalEventEntry::STATUS_DRAFT, $entry->status);
         $this->assertSame('Kanonski nacrt', $entry->naslov);
         $this->assertSame($this->editor->id, $entry->created_by);
@@ -292,8 +299,9 @@ class CulturalEventEntryDraftUiTest extends TestCase
         $this->actingAs($this->editor)
             ->get(route('cultural-event-entries.index'))
             ->assertOk()
-            ->assertSee('Kanonski događaji', false)
-            ->assertSee('Vidljiv', false);
+            ->assertSee('Događaji', false)
+            ->assertSee('Vidljiv', false)
+            ->assertDontSee('Kanonski događaji', false);
 
         $this->actingAs($this->regularUser)
             ->get(route('cultural-event-entries.index'))
@@ -307,6 +315,20 @@ class CulturalEventEntryDraftUiTest extends TestCase
             ->assertOk();
 
         $this->assertDatabaseCount('cultural_event_entries', 0);
+    }
+
+    public function test_kk_admin_day_click_opens_entry_create_not_legacy(): void
+    {
+        $date = '2026-08-15';
+
+        $this->actingAs($this->editor)
+            ->get(route('cultural-calendar.day', ['date' => $date]))
+            ->assertRedirect(route('cultural-event-entries.create'));
+
+        $this->actingAs($this->regularUser)
+            ->get(route('cultural-calendar.day', ['date' => $date]))
+            ->assertOk()
+            ->assertViewIs('cultural-calendar.day');
     }
 
     /**
