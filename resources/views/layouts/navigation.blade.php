@@ -43,12 +43,43 @@
         .'background:#0d6efd;color:#ffffff;border:1px solid #0d6efd;font-size:16px;font-weight:600;'
         .'text-decoration:none;text-align:center;cursor:pointer;';
 @endphp
+@if($isKkAdmin)
+{{-- Inline CSS: Tailwind purge often omits sm:flex-col, which collapsed both rows into one horizontal flex. --}}
+<style>
+    .kk-admin-nav-desktop { display: none; }
+    .kk-admin-nav-row {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    @media (min-width: 640px) {
+        .kk-admin-nav-desktop {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+            margin-left: 16px;
+            flex: 1 1 auto;
+            min-width: 0;
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+    }
+</style>
+@endif
 <nav
     x-data="{ open: false }"
     @class([
         'bg-white border-b border-gray-100 print:hidden',
         'dark:bg-gray-800 dark:border-gray-700' => ! $isKkSection,
     ])
+    @if($isKkAdmin) style="overflow-x: hidden;" @endif
 >
     <!-- Primary Navigation Menu -->
     <div @class([
@@ -56,34 +87,43 @@
         'kk-shell' => $isKkSection,
         'max-w-7xl' => ! $isKkSection,
     ])>
-        <div class="flex justify-between min-h-16 items-center flex-wrap gap-y-2 py-2">
-            <div class="flex items-center justify-start min-w-0 flex-1 flex-wrap gap-y-2">
+        <div @class([
+            'flex justify-between min-h-16 py-2',
+            'items-start' => $isKkAdmin,
+            'items-center flex-wrap gap-y-2' => ! $isKkAdmin,
+        ]) style="{{ $isKkAdmin ? 'width:100%;max-width:100%;box-sizing:border-box;' : '' }}">
+            <div @class([
+                'flex justify-start min-w-0 flex-1',
+                'items-start' => $isKkAdmin,
+                'items-center flex-wrap gap-y-2' => ! $isKkAdmin,
+            ]) style="{{ $isKkAdmin ? 'width:100%;max-width:100%;box-sizing:border-box;' : '' }}">
                 <!-- Logo -->
-                <div class="shrink-0 flex items-center">
+                <div class="shrink-0 flex items-center" style="{{ $isKkAdmin ? 'min-height: 38px;' : '' }}">
                     <a href="{{ $isKkAdmin ? route('cultural-calendar.index') : ($isCompetitionAdmin ? route('admin.dashboard') : route('dashboard')) }}">
                         <img src="{{ asset('img/logo.png') }}" alt="Digital Kotor" class="block h-10 w-auto">
                     </a>
                 </div>
 
                 <!-- Navigation Links -->
-                @if($isKkAdmin || $isKkSection)
+                @if($isKkAdmin)
+                    {{-- Explicit two-row desktop layout (column via scoped CSS, not Tailwind flex-col). --}}
                     <div
-                        class="hidden sm:flex sm:items-center sm:justify-start sm:flex-wrap"
-                        style="margin-left: 16px; gap: 8px; flex: 1 1 auto; min-width: 0;"
+                        class="kk-admin-nav-desktop"
+                        data-kk-nav-layout="two-row"
                     >
-                        <a
-                            href="{{ route('cultural-calendar.index') }}"
-                            style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.index')) }}"
-                        >Kalendar kulture</a>
-                        <a
-                            href="{{ route('cultural-calendar.events') }}"
-                            style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.events')) }}"
-                        >Pretraga i pregled</a>
-                        <a
-                            href="{{ route('cultural-calendar.archive') }}"
-                            style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.archive')) }}"
-                        >Arhiva događaja</a>
-                        @if($isKkAdmin)
+                        <div class="kk-admin-nav-row" data-kk-nav-row="1">
+                            <a
+                                href="{{ route('cultural-calendar.index') }}"
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.index')) }}"
+                            >Kalendar kulture</a>
+                            <a
+                                href="{{ route('cultural-calendar.events') }}"
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.events')) }}"
+                            >Pretraga i pregled</a>
+                            <a
+                                href="{{ route('cultural-calendar.archive') }}"
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.archive')) }}"
+                            >Arhiva događaja</a>
                             <a
                                 href="{{ route('cultural-editorial-dashboard.index') }}"
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-editorial-dashboard.*')) }}"
@@ -100,6 +140,8 @@
                                 href="{{ route('cultural-locations.index') }}"
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-locations.*')) }}"
                             >Lokacije</a>
+                        </div>
+                        <div class="kk-admin-nav-row" data-kk-nav-row="2">
                             <a
                                 href="{{ route('cultural-categories.index') }}"
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-categories.*')) }}"
@@ -124,7 +166,35 @@
                                 href="{{ route('cultural-moderator-requests.index') }}"
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-moderator-requests.index', 'cultural-moderator-requests.show')) }}"
                             >Zahtjevi Mod</a>
-                        @endif
+                            <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                                @csrf
+                                <button
+                                    type="submit"
+                                    class="inline-flex items-center justify-center text-sm font-semibold"
+                                    style="{{ $kkLogoutBtn }}"
+                                >
+                                    Odjava
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @elseif($isKkSection)
+                    <div
+                        class="hidden sm:flex sm:items-center sm:justify-start sm:flex-wrap"
+                        style="margin-left: 16px; gap: 8px; flex: 1 1 auto; min-width: 0;"
+                    >
+                        <a
+                            href="{{ route('cultural-calendar.index') }}"
+                            style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.index')) }}"
+                        >Kalendar kulture</a>
+                        <a
+                            href="{{ route('cultural-calendar.events') }}"
+                            style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.events')) }}"
+                        >Pretraga i pregled</a>
+                        <a
+                            href="{{ route('cultural-calendar.archive') }}"
+                            style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.archive')) }}"
+                        >Arhiva događaja</a>
                         @auth
                             @if(\App\Support\CulturalModeratorEventAccess::isActiveModerator(auth()->user()))
                                 <a
@@ -185,7 +255,8 @@
                 @endif
             </div>
 
-            <!-- User info + Logout -->
+            <!-- User info + Logout (non-kk_admin only; kk_admin must not place name among nav buttons) -->
+            @unless($isKkAdmin)
             <div class="hidden sm:flex sm:items-center sm:ms-6 shrink-0" style="align-items:center; gap:12px;">
                 @auth
                     <span @class(['text-sm text-gray-700', 'dark:text-gray-200' => ! $isKkSection]) style="margin-right: 8px;">
@@ -207,6 +278,7 @@
                     </form>
                 @endauth
             </div>
+            @endunless
 
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
