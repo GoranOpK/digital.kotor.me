@@ -299,7 +299,8 @@ class CulturalPublicArchiveDataSwitchTest extends TestCase
         $response->assertOk();
         $response->assertSee('SHOW_ARCH_CANC', false);
         $response->assertSee('Otkazan', false);
-        $response->assertDontSee(self::SECRET_REASON, false);
+        $response->assertSee(self::SECRET_REASON, false);
+        $response->assertSee('Napomena:', false);
     }
 
     public function test_show_archived_null_history_returns_404(): void

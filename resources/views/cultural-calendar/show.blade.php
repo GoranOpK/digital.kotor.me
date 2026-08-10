@@ -125,9 +125,20 @@
                     <p class="kk-show-cancelled-notice" role="status">
                         Ovaj događaj je otkazan i neće biti održan u planiranom terminu.
                     </p>
+                    @if($isCanonicalEntry && ($cancelNotice = $event->publicCancellationNotice()))
+                        <p class="kk-show-cancelled-notice" role="note">
+                            <strong>Napomena:</strong> {{ $cancelNotice }}
+                        </p>
+                    @endif
                 @endif
 
                 @if($isCanonicalEntry)
+                    @if($organizerName = $event->publicOrganizerDisplayName())
+                        <div class="kk-show-meta">
+                            <strong>Organizator:</strong> {{ $organizerName }}
+                        </div>
+                    @endif
+
                     @include('cultural-calendar.partials.show-occurrences', [
                         'occurrences' => $event->publicDetailOccurrences(),
                     ])

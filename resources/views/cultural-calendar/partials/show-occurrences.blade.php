@@ -1,5 +1,6 @@
 {{--
   6A-08 — lista Održavanja na javnom detalju (TS-009 §7.3.3).
+  PATCH-063 Phase 6 — Prvobitni termin / opcione napomene.
   @var \Illuminate\Support\Collection<int, \App\Models\CulturalOccurrence> $occurrences
 --}}
 @if($occurrences->isNotEmpty())
@@ -8,10 +9,13 @@
             @php
                 $occLabel = $occurrence->publicDetailStatusLabel();
                 $occLocation = $occurrence->publicLocationDisplayName();
+                $occNotice = $occurrence->publicDetailNotice();
+                $isPostponed = $occurrence->isPostponed();
+                $dateLabel = $isPostponed ? 'Prvobitni termin' : 'Datum';
             @endphp
             <div class="kk-show-occurrence" role="listitem">
                 <div class="kk-show-meta">
-                    <strong>Datum:</strong>
+                    <strong>{{ $dateLabel }}:</strong>
                     {{ optional($occurrence->datum)->format('d.m.Y') }}
                     @if($occLabel)
                         <span class="kk-show-occ-status">{{ $occLabel }}</span>
@@ -35,6 +39,12 @@
                 @if($occLocation)
                     <div class="kk-show-meta">
                         <strong>Lokacija:</strong> {{ $occLocation }}
+                    </div>
+                @endif
+
+                @if($occNotice)
+                    <div class="kk-show-meta kk-show-occ-notice">
+                        <strong>Napomena:</strong> {{ $occNotice }}
                     </div>
                 @endif
             </div>

@@ -118,6 +118,26 @@ class CulturalOccurrence extends Model
         };
     }
 
+    /**
+     * Opciona javna napomena za Odgođeno / Otkazano Održavanje (PATCH-063).
+     */
+    public function publicDetailNotice(): ?string
+    {
+        $raw = match ($this->status) {
+            self::STATUS_POSTPONED => $this->postponement_reason,
+            self::STATUS_CANCELLED => $this->cancellation_reason,
+            default => null,
+        };
+
+        if ($raw === null) {
+            return null;
+        }
+
+        $trimmed = trim((string) $raw);
+
+        return $trimmed !== '' ? $trimmed : null;
+    }
+
     public function canTransitionTo(string $target): bool
     {
         $allowed = self::ALLOWED_TRANSITIONS[$this->status] ?? [];

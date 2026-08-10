@@ -121,6 +121,7 @@ final class CulturalPublicEventQuery
     private function publicShowEagerLoad(): array
     {
         return [
+            'organizer',
             'category',
             'coverMedia',
             'occurrences' => function ($query): void {
@@ -333,7 +334,8 @@ final class CulturalPublicEventQuery
 
     /**
      * Filter po kalendarskom datumu OCC (TS-009 §3.2): occurrences.datum = Y-m-d.
-     * Nevalidan / prazan → ignore. Sva OCC statusa (nije cardRelevant).
+     * Nevalidan / prazan → ignore.
+     * PATCH-063: Odgođeno i Otkazano OCC (na neotkazanom Entry-ju) nisu aktivni datum.
      *
      * @param  Builder<CulturalEventEntry>|null  $query
      * @return Builder<CulturalEventEntry>
@@ -348,6 +350,7 @@ final class CulturalPublicEventQuery
 
         return $query->whereHas('occurrences', function (Builder $occurrenceQuery) use ($date): void {
             $occurrenceQuery->whereDate('datum', $date);
+            $this->constrainCalendarActiveOccurrence($occurrenceQuery);
         });
     }
 
@@ -375,6 +378,7 @@ final class CulturalPublicEventQuery
             $occurrenceQuery
                 ->whereDate('datum', '>=', $start)
                 ->whereDate('datum', '<=', $end);
+            $this->constrainCalendarActiveOccurrence($occurrenceQuery);
         });
     }
 
@@ -399,6 +403,7 @@ final class CulturalPublicEventQuery
             $occurrenceQuery
                 ->whereDate('datum', '>=', $start)
                 ->whereDate('datum', '<=', $end);
+            $this->constrainCalendarActiveOccurrence($occurrenceQuery);
         });
     }
 
@@ -447,6 +452,7 @@ final class CulturalPublicEventQuery
 
     /**
      * Broj jedinstvenih javno vidljivih Entry-ja po OCC.datum (kalendar mreža).
+     * PATCH-063: Odgođeno / Otkazano OCC (na neotkazanom Entry-ju) ne broje se kao aktivni dan.
      *
      * @return array<string, int>  Y-m-d => count
      */
@@ -460,6 +466,11 @@ final class CulturalPublicEventQuery
             ->whereIn('e.status', CulturalEventEntry::PUBLICLY_VISIBLE_STATUSES)
             ->whereDate('o.datum', '>=', $fromYmd)
             ->whereDate('o.datum', '<=', $toYmd)
+            ->where('o.status', '!=', CulturalOccurrence::STATUS_POSTPONED)
+            ->where(function ($query): void {
+                $query->where('o.status', '!=', CulturalOccurrence::STATUS_CANCELLED)
+                    ->orWhere('e.status', CulturalEventEntry::STATUS_CANCELLED);
+            })
             ->groupByRaw('DATE(o.datum)')
             ->orderByRaw('DATE(o.datum)')
             ->selectRaw('DATE(o.datum) as day_key, COUNT(DISTINCT o.event_entry_id) as entry_count')
@@ -471,6 +482,25 @@ final class CulturalPublicEventQuery
         }
 
         return $counts;
+    }
+
+    /**
+     * OCC koji ulaze u kalendarski / datumski filter (PATCH-063 Phase 6).
+     * Planiran i Završen: da. Odgođeno: ne. Otkazano OCC: samo ako je Entry otkazan.
+     *
+     * @param  Builder<CulturalOccurrence>  $occurrenceQuery
+     */
+    private function constrainCalendarActiveOccurrence(Builder $occurrenceQuery): void
+    {
+        $occurrenceQuery
+            ->where('status', '!=', CulturalOccurrence::STATUS_POSTPONED)
+            ->where(function (Builder $statusQuery): void {
+                $statusQuery
+                    ->where('status', '!=', CulturalOccurrence::STATUS_CANCELLED)
+                    ->orWhereHas('eventEntry', function (Builder $entryQuery): void {
+                        $entryQuery->where('status', CulturalEventEntry::STATUS_CANCELLED);
+                    });
+            });
     }
 
     private function parseDateYmd(?string $value): ?string

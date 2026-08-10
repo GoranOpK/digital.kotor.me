@@ -434,12 +434,53 @@ class CulturalEventEntry extends Model
     }
 
     /**
+     * Javni prikaz Organizatora (PATCH-063 / TS-009 §7.3.6).
+     * Prioritet: registered Org → manual name → null (bez prazne sekcije).
+     */
+    public function publicOrganizerDisplayName(): ?string
+    {
+        if ($this->organizer_id !== null) {
+            $naziv = $this->organizer?->naziv;
+            if ($naziv !== null) {
+                $trimmed = trim((string) $naziv);
+                if ($trimmed !== '') {
+                    return $trimmed;
+                }
+            }
+        }
+
+        $manual = $this->organizer_manual_name;
+        if ($manual === null) {
+            return null;
+        }
+
+        $trimmed = trim((string) $manual);
+
+        return $trimmed !== '' ? $trimmed : null;
+    }
+
+    /**
+     * Opciona javna napomena pri Entry otkazivanju (PATCH-063 / BR-295).
+     */
+    public function publicCancellationNotice(): ?string
+    {
+        if ($this->cancellation_reason === null) {
+            return null;
+        }
+
+        $trimmed = trim((string) $this->cancellation_reason);
+
+        return $trimmed !== '' ? $trimmed : null;
+    }
+
+    /**
      * Održavanje na datom kalendarskom datumu (naslovna lista za izabrani dan).
+     * Preferira Planirano nad Odgođenim/Otkazanim (PATCH-063 Phase 6).
      */
     public function occurrenceOnDate(string $dateYmd): ?CulturalOccurrence
     {
         if ($this->relationLoaded('occurrences')) {
-            return $this->occurrences
+            $onDate = $this->occurrences
                 ->filter(function (CulturalOccurrence $occurrence) use ($dateYmd): bool {
                     $datum = $occurrence->datum;
 
@@ -450,17 +491,35 @@ class CulturalEventEntry extends Model
                     return $key === $dateYmd;
                 })
                 ->sort(function (CulturalOccurrence $a, CulturalOccurrence $b): int {
+                    $rank = static fn (CulturalOccurrence $o): int => match ($o->status) {
+                        CulturalOccurrence::STATUS_PLANNED => 0,
+                        CulturalOccurrence::STATUS_FINISHED => 1,
+                        CulturalOccurrence::STATUS_CANCELLED => 2,
+                        default => 3,
+                    };
+                    $rankCmp = $rank($a) <=> $rank($b);
+                    if ($rankCmp !== 0) {
+                        return $rankCmp;
+                    }
+
                     $timeA = trim((string) ($a->vrijeme_od ?? '')) ?: '00:00:00';
                     $timeB = trim((string) ($b->vrijeme_od ?? '')) ?: '00:00:00';
                     $cmp = strcmp($timeA, $timeB);
 
                     return $cmp !== 0 ? $cmp : ($a->id <=> $b->id);
                 })
-                ->first();
+                ->values();
+
+            return $onDate->first();
         }
 
         return $this->occurrences()
             ->whereDate('datum', $dateYmd)
+            ->orderByRaw("CASE status
+                WHEN '".CulturalOccurrence::STATUS_PLANNED."' THEN 0
+                WHEN '".CulturalOccurrence::STATUS_FINISHED."' THEN 1
+                WHEN '".CulturalOccurrence::STATUS_CANCELLED."' THEN 2
+                ELSE 3 END")
             ->orderByRaw("COALESCE(NULLIF(TRIM(vrijeme_od), ''), '00:00:00')")
             ->orderBy('id')
             ->first();

@@ -164,7 +164,8 @@ class CulturalPublicShowDataSwitchTest extends TestCase
         $response->assertSee('Cancelled Show', false);
         $response->assertSee(self::CANCELLED_NOTICE, false);
         $response->assertSee('Otkazan', false);
-        $response->assertDontSee(self::SECRET_REASON, false);
+        $response->assertSee(self::SECRET_REASON, false);
+        $response->assertSee('Napomena:', false);
     }
 
     public function test_canonical_draft_returns_404(): void
