@@ -124,6 +124,9 @@ final class CulturalPublicEventQuery
             'organizer',
             'category',
             'coverMedia',
+            'tags' => function ($query): void {
+                $query->orderBy('naziv')->orderBy('id');
+            },
             'occurrences' => function ($query): void {
                 $query->orderBy('datum')
                     ->orderByRaw("COALESCE(NULLIF(TRIM(vrijeme_od), ''), '00:00:00')")

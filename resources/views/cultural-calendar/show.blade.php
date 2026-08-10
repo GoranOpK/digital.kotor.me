@@ -90,6 +90,31 @@
             padding: 0.1rem 0.4rem;
             vertical-align: middle;
         }
+        .kk-show-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem 0.5rem;
+            margin-top: 0.35rem;
+        }
+        .kk-show-tag {
+            display: inline-block;
+            max-width: 100%;
+            box-sizing: border-box;
+            font-size: 0.75rem;
+            font-weight: 500;
+            line-height: 1.25;
+            color: #4b5563;
+            background: #f3f4f6;
+            border: 1px solid #e5e7eb;
+            border-radius: 9999px;
+            padding: 0.2rem 0.65rem;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            cursor: default;
+            pointer-events: none;
+            user-select: text;
+        }
         @media (max-width: 768px) {
             .kk-show-layout {
                 grid-template-columns: 1fr;
@@ -146,6 +171,17 @@
                     @if($event->publicCategoryName())
                         <div class="kk-show-meta">
                             <strong>Kategorija:</strong> {{ $event->publicCategoryName() }}
+                        </div>
+                    @endif
+
+                    @if($event->tags->isNotEmpty())
+                        <div class="kk-show-meta">
+                            <strong>Oznake:</strong>
+                            <div class="kk-show-tags">
+                                @foreach($event->tags as $tag)
+                                    <span class="kk-show-tag">{{ $tag->naziv }}</span>
+                                @endforeach
+                            </div>
                         </div>
                     @endif
                 @else
