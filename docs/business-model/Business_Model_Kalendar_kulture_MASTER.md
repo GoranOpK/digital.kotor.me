@@ -77,6 +77,7 @@
 | PATCH-061 | 2026-08-09 | **PO-6A11-01 — kanonski javni status Događaja (multi-OCC):** apsolutni prioritet Otkazan; za Objavljen agregat U toku → Predstoji → Završen; postponed-only i 0 Održavanja → bez vremenskog statusa; vremenski istek Planiranog (ne samo status Završen); Odgođen nije badge Događaja. Dodat BM-PK-34; usklađen BM-PK-13. Bez izmjene lifecycle / arhive. |
 | PATCH-062 | 2026-08-09 | **PO-6A09-01…06 — Javna Arhiva vs interni Arhiviran:** Arhiviran = interni lifecycle; Javna Arhiva = odvojeni istorijski pogled; aktivni public skup ostaje published\|cancelled; archive-only query; očuvanje statusa prije arhiviranja (published/cancelled); istorijski badge Otkazan/Završen; kartica = posljednje istorijsko OCC; sort DESC. Dodat BM-PK-35; usklađeni BM-PK-13, BM-ST-08, BM-DG-04. Bez izmjene implementacije. |
 | PATCH-063 | 2026-08-10 | **Urednički tok kreiranja, pripreme i neposrednog upravljanja Događajem (PO-U-01…19):** Urednik u create toku ne bira registrovanog Organizatora; opcion ručni naziv neregistrovanog Organizatora (samo naziv); poslovno „U pripremi“ / „Sačuvaj i nastavi“ (bez novog statusa; Moderator zadržava „Nacrt“); zajednička lista Događaji; brisanje samo prije prve objave; direktna objava bez approval; direktno uređivanje dozvoljenog sadržaja Objavljenog u uredničkom toku (Prijedlog izmjene Moderatora ostaje); Odgođen bez poznatog novog termina; Prvobitni termin; razlozi odgađanja/otkazivanja Održavanja i Događaja opcioni i mogu biti javno prikazani; Otkazan ostaje terminalan. Usklađeni BM-UR-02/06/07/11, BM-DG-01/07/08/10, BM-ST-03/04/06/07, BM-TR-10/14/15, BM-PK-13/31/33, BM-ORG-04; dodati BM-UR-12–BM-UR-16, BM-DG-12–BM-DG-13, BM-ST-11, BM-TR-19–BM-TR-20, BM-PK-36, BM-EP-11, BM-GL-24–BM-GL-25. **Supersede:** dio BM-PK-33 / BM-DG-10 / BM-UR-11 / BM-ST-07 / BM-PK-13 koji zabranjuje javni prikaz opcionog razloga otkazivanja; pojašnjenje da „Nacrt“ nije poslovna faza Urednikovog direktnog toka. Bez izmjene FS/TS/Feature Registry/implementacije. |
+| PATCH-064 | 2026-08-10 | **Informativna naslovna vidljivost Odgođenog Događaja (PO-064-01…14):** Objavljen Događaj bez narednog Planiranog Održavanja, ali sa Odgođenim Održavanjem bez poznatog novog termina, ostaje informativno vidljiv na naslovnoj do isteka prvobitnog datuma uključivo; kartica prikazuje „Odgođeno“ i „Prvobitni termin“ (prvobitni datum nije važeći termin; Odgođeno ≠ Planirano/upcoming). Više Odgođenih: informativnu karticu određuje najbliže Odgođeno čiji prvobitni datum još nije istekao; nakon isteka prelaz na sljedeće takvo. Planirano ima apsolutni prioritet za standardni termin kartice. Novi Planirani termin vraća standardno ponašanje. Nakon isteka posljednjeg — bez naslovne vidljivosti po ovom osnovu; Pretraga i detalj ostaju. Usklađeni BM-PK-23/29/31/34/36; dodati BM-PK-37, BM-GL-26. Bez izmjene lifecycle / Otkazano / arhive / newsletter / Urednik–Moderator tokova. Bez izmjene FS/TS/Feature Registry/implementacije. |
 
 Napomena:
 
@@ -1478,13 +1479,15 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 > Lista ispod mjesečnog kalendara ostaje na postojećem mjestu na početnoj stranici.
 >
-> Ako datum nije izabran, lista prikazuje „Naredni događaji“ — najviše tri (3) naredna događaja.
+> Ako datum nije izabran, lista prikazuje „Naredni događaji" — najviše tri (3) naredna događaja.
 >
 > Ako je datum izabran, lista prikazuje „Događaji za izabrani datum“ — sve događaje za taj datum.
 >
-> Na kraju liste postoji dugme „Prikaži sve događaje“: bez izabranog datuma otvara „Pretragu i pregled“ bez datumskog filtera; sa izabranim datumom otvara „Pretragu i pregled“ sa istim datumskim filterom.
+> Na kraju liste postoji dugme „Prikaži sve događaje": bez izabranog datuma otvara „Pretragu i pregled" bez datumskog filtera; sa izabranim datumom otvara „Pretragu i pregled" sa istim datumskim filterom.
 >
 > Ako nema događaja, prikazuje se postojeća poruka o praznom stanju.
+>
+> **PATCH-064:** Lista na naslovnoj može uključiti Objavljeni Događaj koji nema naredno Planirano Održavanje, ali ispunjava uslove **informativne naslovne vidljivosti** Odgođenog (BM-PK-37 / BM-GL-26). Takva kartica nije „naredni“ događaj po važećem Planiranom terminu; komunikacija je informativna („Odgođeno" / „Prvobitni termin").
 
 ### BM-PK-24 — Manifestacije kao zasebna cjelina Portala (PO-TS9-07A)
 
@@ -1546,13 +1549,15 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 ### BM-PK-29 — Kartica Događaja sa više Održavanja
 
-> Na kartici Događaja prikazuje se **prvo naredno relevantno Održavanje** (termin i pripadajuća lokacija tog Održavanja).
+> Na kartici Događaja, u **standardnom režimu**, prikazuje se **prvo naredno relevantno Planirano Održavanje** (termin i pripadajuća lokacija tog Održavanja). Planirano Održavanje ima **apsolutni prioritet** za izbor glavnog (važećeg) termina kartice nad Odgođenim Održavanjem.
 >
-> Ako Događaj ima dodatna relevantna Održavanja, kartica prikazuje oznaku **„+ još N termina“**, gdje je N broj dodatnih relevantnih Održavanja.
+> Ako Događaj ima dodatna relevantna **Planirana** Održavanja, kartica prikazuje oznaku **„+ još N termina"**, gdje je N broj dodatnih relevantnih Planiranih Održavanja.
 >
 > Kartica ne prikazuje kompletnu listu Održavanja. Rješenje se uklapa u postojeći dizajn kartice uz minimalne vizuelne izmjene (BM-PK-16 / IA-01).
 >
 > Na Detalju Događaja prikazuju se sva javno relevantna Održavanja (BM-PK-09).
+>
+> **PATCH-064:** Pojam „naredno relevantno Održavanje" za **standardni termin kartice** ne uključuje Odgođeno Održavanje i ne čini Odgođeno Planiranim niti „upcoming". Kada nema narednog Planiranog Održavanja, a postoje uslovi za posebnu **informativnu naslovnu vidljivost**, važi BM-PK-37 (zaseban mehanizam; nije redefinicija ovog pravila).
 
 ### BM-PK-30 — Sortiranje Pretrage po narednom Održavanju
 
@@ -1568,7 +1573,9 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 >
 > Na **Detalju Događaja**, dok je Održavanje Odgođeno a novi termin još nije poznat, portal prikazuje oznaku **„Odgođeno“** i prethodni datum kao **„Prvobitni termin“**. Ne prikazuje se izmišljeni novi datum niti oznaka „uskoro“. Ako postoji razlog odgađanja, može se javno prikazati kao napomena. Kada novi termin bude unesen i Održavanje ponovo postane Planiran, javno se prikazuje novi termin; prethodna promjena može ostati u istoriji/evidenciji aktivnosti bez obaveze da opterećuje glavni javni prikaz.
 >
-> Na **kartici Događaja** stari odgođeni termin **ne** prikazuje se kao glavni termin kartice. Kartica prikazuje prvo naredno relevantno **važeće** Održavanje; za dodatna relevantna Održavanja važi BM-PK-29.
+> Na **kartici Događaja** u **standardnom režimu** (kada postoji naredno Planirano Održavanje): stari odgođeni termin **ne** prikazuje se kao važeći glavni termin kartice. Kartica prikazuje prvo naredno relevantno **Planirano** Održavanje; za dodatna relevantna Planirana Održavanja važi BM-PK-29.
+>
+> **PATCH-064:** Kada **nema** narednog Planiranog Održavanja, a ispunjeni su uslovi informativne naslovne vidljivosti, kartica na naslovnoj **može** prikazati Odgođeno Održavanje isključivo kao **informativni** sadržaj („Odgođeno" / „Prvobitni termin"), prema BM-PK-37. Prvobitni datum **nije** važeći termin održavanja; Odgođeno **ne** postaje Planirano niti „upcoming“.
 
 ### BM-PK-32 — Kanonske kategorije na javnom portalu (CAT-CUTOVER)
 
@@ -1601,7 +1608,7 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > 3. **Završen** — ako Događaj ima najmanje jedno Održavanje, ali nema Planiranog koje je u toku ili buduće. U obzir se uzima i **vremenski istek** Planiranog Održavanja (ne samo status Završen na Održavanju). Pojedinačno Otkazano Održavanje ne čini Događaj Otkazanim.
 > 4. **Bez vremenskog statusa** — ako Objavljen Događaj nema nijedno Održavanje, ili ako su sva Održavanja samo **Odgođena** (postponed-only) bez Planiranog koje omogućava pouzdano vremensko određivanje. Ne prikazuje se Predstoji / U toku / Završen / Odgođen kao status Događaja; pojedinačno Odgođeno Održavanje i dalje ima oznaku na Detalju (BM-PK-31).
 >
-> Odgođeno Održavanje ne koristi se kao zamjenski termin za računanje javnog vremenskog statusa Događaja. Kartična relevantnost Održavanja (BM-PK-29) ostaje zasebno pravilo.
+> Odgođeno Održavanje ne koristi se kao zamjenski termin za računanje javnog vremenskog statusa Događaja. Kartična relevantnost Planiranog Održavanja (BM-PK-29) i informativna naslovna vidljivost Odgođenog (BM-PK-37) ostaju **zasebna** pravila; BM-PK-37 ne mijenja agregatni vremenski status iz ovog paragrafa.
 >
 > Za **interni status Arhiviran** javni istorijski badge uređuje **BM-PK-35** (ne ovaj paragraf).
 
@@ -1640,6 +1647,40 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > Opcioni razlozi odgađanja Održavanja, otkazivanja Održavanja i otkazivanja Događaja, ako su unijeti, **mogu se javno prikazati** kao napomene. Razlozi nisu obavezni za izvršenje tih radnji.
 >
 > Za otkazani Događaj ostaje i standardizovano sistemsko obavještenje (BM-PK-13 / BM-PK-33). Terminalnost Otkazan ostaje neizmijenjena.
+>
+> **PATCH-064:** Isti pojmovi **Odgođeno** i **Prvobitni termin** koriste se i na informativnoj naslovnoj kartici kada važi BM-PK-37. Prvobitni termin i tada ostaje istorijski / informativni podatak, ne važeći termin održavanja. Pravila Pretrage i detalja iz PATCH-063 ostaju na snazi.
+
+### BM-PK-37 — Informativna naslovna vidljivost Odgođenog (PATCH-064)
+
+> **Svrha:** Poseban mehanizam **informativne naslovne vidljivosti** kojim se građanima saopštava važna promjena Objavljenog Događaja koji je prethodno imao termin, a trenutno nema naredno Planirano Održavanje. Ovo **nije** standardni režim kartice iz BM-PK-29 i **ne** redefiniše Odgođeno u Planirano ili „upcoming".
+>
+> **Uslov primjene (PO-064-02):** Mehanizam se primjenjuje isključivo kada Objavljeni Događaj:
+>
+> * **nema** naredno Planirano Održavanje; i
+> * ima najmanje jedno **Odgođeno** Održavanje za koje novi termin još **nije** poznat.
+>
+> **Prioritet Planiranog (PO-064-01):** Ako postoji makar jedno naredno relevantno Planirano Održavanje, kartica koristi to Održavanje po BM-PK-29. Posebna informativna logika Odgođenog **ne** određuje glavni termin kartice.
+>
+> **Prikaz kartice (PO-064-03…07):** Dok važi informativna naslovna vidljivost, kartica jasno prikazuje:
+>
+> * **„Odgođeno"**;
+> * **„Prvobitni termin: [datum]"** (prvobitni datum relevantnog Odgođenog Održavanja).
+>
+> Prvobitni datum **nije** važeći termin održavanja. Status Održavanja ostaje Odgođeno; Održavanje **ne** postaje Planirano i **ne** tretira se kao upcoming.
+>
+> **Granica datuma (PO-064-03):** Događaj ostaje informativno vidljiv na naslovnoj **do isteka prvobitnog datuma relevantnog Odgođenog Održavanja, uključujući taj dan**. Primjer: prvobitni datum 17.08.2026. — 17.08. je još podoban; 18.08. taj prvobitni datum je istekao za potrebe naslovne vidljivosti. Tehnička implementacija granice (vremenska zona, upit) uređuje se u TS-u, ne u BM-u.
+>
+> **Jedno Odgođeno:** Važi gornje pravilo za to jedno Održavanje.
+>
+> **Više Odgođenih bez Planiranog (PO-064-08…10):** Informativnu karticu određuje **najbliže Odgođeno Održavanje čiji prvobitni datum još nije istekao**. Događaj ostaje informativno vidljiv na naslovnoj dok postoji najmanje jedno takvo Odgođeno Održavanje. Kada prvobitni datum trenutno prikazanog Odgođenog istekne, kartica prelazi na **sljedeće najbliže** Odgođeno čiji prvobitni datum još nije istekao (PO-064-09).
+>
+> **Nakon isteka posljednjeg (PO-064-11):** Kada više ne postoji naredno Planirano Održavanje niti Odgođeno Održavanje čiji prvobitni datum još nije istekao, Događaj se **više ne prikazuje** na naslovnoj po ovom posebnom informativnom osnovu.
+>
+> **Šta se ne mijenja (PO-064-12, PO-064-14):** Događaj se ne briše; status Događaja se ne mijenja zbog isteka informativne vidljivosti; ostaje dostupan kroz „Pretraga i pregled" i na javnom detalju; detalj nastavlja BM-PK-31 / BM-PK-36. Ne mijenjaju se lifecycle, statusni modeli, Otkazano, automatsko arhiviranje, Urednik/Moderator tokovi, approval, Change Proposal, newsletter, brisanje, niti PATCH-063 pravila o opcionim razlozima.
+>
+> **Novi termin / povratak u Planirano (PO-064-13):** Ako se Odgođenom Održavanju odredi novi važeći termin i Održavanje se vrati u Planirano (BM-TR-14 / BM-TR-15): prestaje informativna naslovna vidljivost **tog** Održavanja po prvobitnom terminu; novi Planirani termin učestvuje u standardnom izboru po BM-PK-29; kartica prikazuje novi važeći termin; prvobitni datum se **ne** koristi kao aktivni termin kartice. Istorijski prikaz na detalju ostaje po postojećim pravilima BM-PK-31 / BM-PK-36.
+>
+> **Pojam:** „Informativno relevantno Odgođeno Održavanje" = Odgođeno Održavanje bez poznatog novog termina čiji prvobitni datum još nije istekao za potrebe naslovne vidljivosti (BM-GL-26). Odvojeno je od narednog relevantnog Planiranog Održavanja (BM-PK-29).
 
 ---
 
@@ -2068,6 +2109,10 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 ### BM-GL-25 — Ručno uneseni naziv Organizatora
 
 > Opcion tekstualni naziv neregistrovanog Organizatora na Događaju u uredničkom toku. Obuhvata samo naziv. Ne kreira registrovanog Organizatora i ne pokreće postupak odobravanja.
+
+### BM-GL-26 — Informativna naslovna vidljivost Odgođenog
+
+> Poseban javni mehanizam na naslovnoj strani kojim Objavljeni Događaj, bez narednog Planiranog Održavanja, ostaje vidljiv zbog Odgođenog Održavanja bez poznatog novog termina, do isteka prvobitnog datuma uključivo (BM-PK-37). **Nije** isto što i Planirano Održavanje, naredno relevantno Planirano Održavanje (BM-PK-29), niti „upcoming" termin. Kartica u tom režimu komunicira „Odgođeno" i „Prvobitni termin"; prvobitni datum nije važeći termin održavanja.
 
 ### BM-GL-21 — Završna odredba
 

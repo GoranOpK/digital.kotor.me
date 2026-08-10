@@ -439,7 +439,8 @@ final class CulturalPublicEventQuery
     }
 
     /**
-     * Naredni događaji: javno vidljivi sa next relevant OCC, sortirani.
+     * Naredni događaji (planned-only helper): javno vidljivi sa next relevant OCC, sortirani.
+     * Ne uključuje informativne postponed kandidate — za naslovnu listu koristi homepageUpcomingCards().
      *
      * @return Builder<CulturalEventEntry>
      */
@@ -448,6 +449,142 @@ final class CulturalPublicEventQuery
         $query = $this->withCardRelevantOccurrence($this->base(), $now);
 
         return $this->orderedByNextRelevantOccurrence($now, $query);
+    }
+
+    /**
+     * PATCH-064 — SSOT za naslovnu „Naredni događaji":
+     * planned + postponed_info u zajedničkom hronološkom bazenu; sort ranking_date ASC, entry.id ASC; take($limit).
+     *
+     * Svaki Entry u rezultatu ima transient:
+     * - homepage_card_mode: planned|postponed_info
+     * - homepage_ranking_date: Y-m-d
+     * - relation homepageSelectedOccurrence
+     *
+     * @param  list<string>|null  $with
+     * @return Collection<int, CulturalEventEntry>
+     */
+    public function homepageUpcomingCards(
+        ?CarbonInterface $now = null,
+        int $limit = 3,
+        ?array $with = null
+    ): Collection {
+        $now = CulturalPublicCardOccurrenceCriteria::now($now);
+        $todayLocal = Carbon::parse($now)
+            ->timezone((string) config('app.timezone'))
+            ->toDateString();
+        $with ??= ['category', 'coverMedia', 'occurrences.location'];
+        $limit = max(0, $limit);
+
+        $plannedEntries = $this->upcomingForPublicIndex($now)
+            ->with($with)
+            ->get();
+
+        $plannedIds = $plannedEntries->modelKeys();
+        $candidates = collect();
+
+        foreach ($plannedEntries as $entry) {
+            $selected = $entry->nextRelevantOccurrence($now);
+            if ($selected === null) {
+                continue;
+            }
+
+            $this->attachHomepageCard($entry, 'planned', $selected);
+            $candidates->put($entry->id, $entry);
+        }
+
+        $postponedEntries = CulturalEventEntry::query()
+            ->where('status', CulturalEventEntry::STATUS_PUBLISHED)
+            ->when($plannedIds !== [], function (Builder $query) use ($plannedIds): void {
+                $query->whereNotIn('id', $plannedIds);
+            })
+            ->whereDoesntHave('occurrences', function (Builder $occurrenceQuery) use ($now): void {
+                CulturalPublicCardOccurrenceCriteria::constrain($occurrenceQuery, $now);
+            })
+            ->whereHas('occurrences', function (Builder $occurrenceQuery) use ($todayLocal): void {
+                $occurrenceQuery
+                    ->where('status', CulturalOccurrence::STATUS_POSTPONED)
+                    ->whereDate('datum', '>=', $todayLocal);
+            })
+            ->with($with)
+            ->get();
+
+        foreach ($postponedEntries as $entry) {
+            if ($candidates->has($entry->id)) {
+                continue;
+            }
+
+            $selected = $this->selectInformativePostponedOccurrence($entry, $todayLocal);
+            if ($selected === null) {
+                continue;
+            }
+
+            $this->attachHomepageCard($entry, 'postponed_info', $selected);
+            $candidates->put($entry->id, $entry);
+        }
+
+        return $candidates
+            ->sort(function (CulturalEventEntry $a, CulturalEventEntry $b): int {
+                $dateCmp = strcmp(
+                    (string) $a->getAttribute('homepage_ranking_date'),
+                    (string) $b->getAttribute('homepage_ranking_date')
+                );
+                if ($dateCmp !== 0) {
+                    return $dateCmp;
+                }
+
+                return $a->id <=> $b->id;
+            })
+            ->values()
+            ->take($limit)
+            ->values();
+    }
+
+    private function selectInformativePostponedOccurrence(
+        CulturalEventEntry $entry,
+        string $todayLocal
+    ): ?CulturalOccurrence {
+        $occurrences = $entry->relationLoaded('occurrences')
+            ? $entry->occurrences
+            : $entry->occurrences()->get();
+
+        return $occurrences
+            ->filter(function (CulturalOccurrence $occurrence) use ($todayLocal): bool {
+                if ($occurrence->status !== CulturalOccurrence::STATUS_POSTPONED) {
+                    return false;
+                }
+
+                return strcmp($this->occurrenceDateYmd($occurrence), $todayLocal) >= 0;
+            })
+            ->sort(function (CulturalOccurrence $a, CulturalOccurrence $b): int {
+                $dateCmp = strcmp($this->occurrenceDateYmd($a), $this->occurrenceDateYmd($b));
+                if ($dateCmp !== 0) {
+                    return $dateCmp;
+                }
+
+                return $a->id <=> $b->id;
+            })
+            ->values()
+            ->first();
+    }
+
+    private function attachHomepageCard(
+        CulturalEventEntry $entry,
+        string $mode,
+        CulturalOccurrence $selected
+    ): void {
+        $rankingDate = $this->occurrenceDateYmd($selected);
+        $entry->setAttribute('homepage_card_mode', $mode);
+        $entry->setAttribute('homepage_ranking_date', $rankingDate);
+        $entry->setRelation('homepageSelectedOccurrence', $selected);
+    }
+
+    private function occurrenceDateYmd(CulturalOccurrence $occurrence): string
+    {
+        $datum = $occurrence->datum;
+
+        return $datum instanceof CarbonInterface
+            ? $datum->format('Y-m-d')
+            : Carbon::parse((string) $datum)->format('Y-m-d');
     }
 
     /**

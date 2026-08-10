@@ -264,11 +264,11 @@ class CulturalCalendarController extends Controller
             ->take(CulturalEventEntry::MAX_FEATURED)
             ->get();
 
-        $upcomingEvents = $publicQuery
-            ->upcomingForPublicIndex()
-            ->with($cardEager)
-            ->take(3)
-            ->get();
+        $upcomingEvents = $publicQuery->homepageUpcomingCards(
+            null,
+            3,
+            $cardEager
+        );
 
         $selectedDate = null;
         $selectedDateEvents = null;

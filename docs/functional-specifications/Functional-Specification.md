@@ -83,6 +83,7 @@
 | PATCH-FS-061 | 2026-08-09 | **PO-6A11-01** / BM PATCH-061: kanonski javni status Događaja (multi-OCC) — dodat BR-285; usklađen BR-114. Bez izmjene lifecycle / arhive. Verzija ostaje 1.0.0. |
 | PATCH-FS-062 | 2026-08-09 | **PO-6A09-01…06** / BM PATCH-062: Javna Arhiva vs interni Arhiviran — dodat BR-286; usklađeni BR-065, BR-066, BR-114, BR-274. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-063 | 2026-08-10 | **BM PATCH-063 / PO-U-01…19:** Urednički tok kreiranja, pripreme i neposrednog upravljanja Događajem. Usklađeni BR-013, BR-015, BR-016, BR-018, BR-021, BR-025, BR-028, BR-045, BR-063, BR-064, BR-067, BR-069, BR-130, BR-131, BR-272, BR-282, BR-284 i §5.5.3–§5.5.4 / §5.5.6a. Dodati BR-287–BR-295 (ručni Org; Sačuvaj i nastavi / U pripremi; brisanje prije objave; direktan edit Objavljenog; Odgođen bez novog termina; OCC/Entry razlozi opcion; Prvobitni termin; fail-closed). **Supersede:** dio BR-025 (samo Urednikov direktni tok); dio BR-284 / BR-064 / BR-063 / BR-272 (javni prikaz opcionog razloga). Moderator Nacrt/approval/Prijedlog ostaje. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-064 | 2026-08-10 | **BM PATCH-064 / BM-PK-37 / PO-064:** Informativna naslovna vidljivost Odgođenog Događaja. Usklađeni BR-264, BR-280, BR-282, BR-285, BR-295; dodati BR-296–BR-297 (informativni režim; zajednički hronološki bazen „Naredni događaji“ max 3; ranking datum; jedan Događaj = jedan slot). Odgođeno ≠ Planirano/upcoming. Pretraga i detalj PATCH-063 neizmijenjeni. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -199,7 +200,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236, BR-277–BR-279)
    - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
-   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286)
+   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, BR-296–BR-297)
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
    - 5.14.3 Funkcionalni obuhvat Uredničkog portala (BR-126–BR-128)
@@ -514,7 +515,7 @@ Za Urednika:
 
 Urednik Kalendara kulture **nije** Moderator; ove dvije uloge su poslovno razdvojene.
 
-Dok nije izabran dan, ispod kalendara prikazuje se sekcija „Naredni događaji“ — najviše tri (3) naredna događaja (BR-264).
+Dok nije izabran dan, ispod kalendara prikazuje se sekcija „Naredni događaji" — najviše tri (3) Događaja iz zajedničkog hronološkog bazena Planiranih i informativno Odgođenih kandidata (BR-264 / BR-297).
 
 Na kraju liste (u oba režima) prikazuje se dugme „Prikaži sve događaje“ (BR-264).
 
@@ -624,7 +625,7 @@ Događaj ima jedno ili više održavanja. Svako održavanje ima termin. Datum od
 
 Sistem na detalju događaja prikazuje sva javno relevantna održavanja sa njihovim terminima i, kada su unesene, lokacijama. Odgođeno Održavanje ostaje vidljivo na detalju uz oznaku „Odgođeno“ (BR-282).
 
-Na kartici Događaja u listama važi BR-280 (prvo naredno relevantno Održavanje; „+ još N termina“).
+Na kartici Događaja u listama važi BR-280 (prvo naredno relevantno Planirano Održavanje; „+ još N termina"). Informativna naslovna vidljivost Odgođenog uređuje BR-296 / BR-297.
 
 Za održavanje sa istim datumom početka i završetka sistem prikazuje taj datum.
 
@@ -3198,13 +3199,15 @@ Statistike prikazuju javno dostupne događaje (`published` | `cancelled`) u odgo
 
 Lista ispod mjesečnog kalendara ostaje na postojećem mjestu.
 
-Ako datum nije izabran: prikaz „Naredni događaji“ — najviše tri (3) naredna događaja.
+Ako datum nije izabran: prikaz „Naredni događaji" — najviše tri (3) Događaja.
 
-Ako je datum izabran: prikaz „Događaji za izabrani datum“ — svi događaji za taj datum.
+**PATCH-FS-064 / BM-PK-23 / BM-PK-37:** Kandidati za „Naredni događaji" ulaze u **zajednički hronološki bazen** (BR-297): Objavljeni sa narednim Planiranim Održavanjem **i** Objavljeni podobni za informativnu naslovnu vidljivost Odgođenog (BR-296). Limit max 3 **ostaje**. Tip kartice (Planirano vs informativno Odgođeno) **nema** automatski prioritet za slotove; redoslijed određuje ranking datum (BR-297).
 
-Kartice zadržavaju postojeći izgled.
+Ako je datum izabran: prikaz „Događaji za izabrani datum" — svi događaji za taj datum.
 
-Na kraju liste postoji dugme „Prikaži sve događaje“ koje otvara „Pretragu i pregled“ bez datumskog filtera (ako datum nije izabran) ili sa istim datumskim filterom (ako je datum izabran).
+Kartice zadržavaju postojeći izgled; informativna kartica Odgođenog jasno prikazuje „Odgođeno" i „Prvobitni termin" (BR-296), a ne važeći termin održavanja.
+
+Na kraju liste postoji dugme „Prikaži sve događaje" koje otvara „Pretragu i pregled" bez datumskog filtera (ako datum nije izabran) ili sa istim datumskim filterom (ako je datum izabran).
 
 Ako nema događaja, prikazuje se postojeća poruka o praznom stanju.
 
@@ -3352,15 +3355,17 @@ BR-065 / BM-DG-04 ostaju na snazi. CR-004B historijski nije implementirao `cance
 
 #### BR-280 – Kartica Događaja sa više Održavanja
 
-Na kartici Događaja prikazuje se **prvo naredno relevantno Održavanje**.
+Na kartici Događaja, u **standardnom režimu**, prikazuje se **prvo naredno relevantno Planirano Održavanje**.
 
-Ako Događaj ima dodatna relevantna Održavanja, kartica prikazuje oznaku **„+ još N termina“**, gdje je N broj dodatnih relevantnih Održavanja.
+Ako Događaj ima dodatna relevantna **Planirana** Održavanja, kartica prikazuje oznaku **„+ još N termina"**, gdje je N broj dodatnih relevantnih Planiranih Održavanja.
 
 Kartica ne prikazuje kompletnu listu Održavanja.
 
 Na Detalju Događaja prikazuju se sva javno relevantna Održavanja (BR-110).
 
 Rješenje se uklapa u postojeći dizajn kartice uz minimalne vizuelne izmjene (BR-255 / IA-01).
+
+**PATCH-FS-064:** „Naredno relevantno Održavanje" za **standardni termin kartice** odnosi se na **Planirano** Održavanje. Odgođeno **ne** ulazi u taj pojam i **ne** postaje Planirano niti upcoming. Kada nema narednog Planiranog, a ispunjeni su uslovi informativne naslovne vidljivosti, važi BR-296 / BR-297 (zaseban mehanizam).
 
 **Status:** Approved
 
@@ -3384,7 +3389,9 @@ Status **Odgođen** nije isto što i **Otkazan**. Odgođen ostaje status Održav
 
 Na **Detalju Događaja**, dok je Održavanje Odgođeno a novi termin još nije poznat, portal prikazuje oznaku **„Odgođeno"** i prethodni datum kao **„Prvobitni termin"**. Ne prikazuje se izmišljeni novi datum niti oznaka „uskoro“. Ako postoji razlog odgađanja, može se javno prikazati kao napomena (BR-293 / BR-295). Kada novi termin bude unesen i Održavanje ponovo postane Planiran, javno se prikazuje novi termin.
 
-Na **kartici Događaja** stari odgođeni termin **ne** prikazuje se kao glavni termin. Kartica prikazuje prvo naredno relevantno važeće Održavanje; za dodatna relevantna Održavanja važi BR-280.
+Na **kartici Događaja** u **standardnom režimu** (kada postoji naredno Planirano Održavanje): stari odgođeni termin **ne** prikazuje se kao važeći glavni termin. Kartica prikazuje prvo naredno relevantno **Planirano** Održavanje; za dodatna relevantna Planirana Održavanja važi BR-280.
+
+**PATCH-FS-064:** Kada **nema** narednog Planiranog Održavanja, a ispunjeni su uslovi informativne naslovne vidljivosti, kartica na naslovnoj **može** prikazati Odgođeno isključivo kao **informativni** sadržaj („Odgođeno" / „Prvobitni termin"), prema BR-296. Prvobitni datum **nije** važeći termin održavanja; Odgođeno **ne** postaje Planirano niti upcoming.
 
 **Status:** Approved
 
@@ -3427,7 +3434,7 @@ Javni status Događaja (Predstoji / U toku / Završen / Otkazan) nije isto što 
 3. **Završen** — Događaj ima najmanje jedno Održavanje, ali nema Planiranog koje je u toku ili buduće. U obzir se uzima i vremenski istek Planiranog Održavanja (ne samo status `finished` na Održavanju). Pojedinačno Otkazano Održavanje ne čini Događaj Otkazanim.
 4. **Bez vremenskog statusa (bez badge-a)** — Objavljen Događaj bez Održavanja, ili postponed-only (samo Odgođena Održavanja bez Planiranog koje omogućava pouzdano vremensko određivanje). Ne prikazuje se Predstoji / U toku / Završen / Odgođen kao status Događaja.
 
-Odgođeno Održavanje ne koristi se kao zamjenski termin za javni vremenski status Događaja. Na Detalju i dalje važi BR-282. Kartična relevantnost (BR-280) ostaje zasebno pravilo.
+Odgođeno Održavanje ne koristi se kao zamjenski termin za javni vremenski status Događaja. Na Detalju i dalje važi BR-282. Kartična relevantnost Planiranog (BR-280) i informativna naslovna vidljivost Odgođenog (BR-296) ostaju **zasebna** pravila; BR-296 **ne** mijenja agregatni vremenski status iz ovog paragrafa.
 
 Legacy flat status (postojeći model bez Održavanja) ostaje prema CR-004A / TS-009 §7.1.3 A–D i ne mijenja se ovim pravilom.
 
@@ -3650,6 +3657,8 @@ Opcioni razlozi odgađanja Održavanja, otkazivanja Održavanja i otkazivanja Do
 
 Za otkazani Događaj ostaje i sistemsko obavještenje (BR-272). Terminalnost Otkazan ostaje (BR-064).
 
+**PATCH-FS-064:** Isti pojmovi **Odgođeno** i **Prvobitni termin** koriste se i na informativnoj naslovnoj kartici (BR-296). Prvobitni termin i tada nije važeći termin održavanja. Pravila Pretrage i detalja iz PATCH-FS-063 ostaju.
+
 **Acceptance:**
 1. Entry cancel razlog je opcion.
 2. Nema aktivnog BR koji zabranjuje javnu opcionu napomenu.
@@ -3658,6 +3667,82 @@ Za otkazani Događaj ostaje i sistemsko obavještenje (BR-272). Terminalnost Otk
 **Veza:** BM-PK-36 / BM-DG-10. **Status:** Approved
 
 ---
+
+#### BR-296 – Informativna naslovna vidljivost Odgođenog (PATCH-FS-064)
+
+Poseban mehanizam **informativne naslovne vidljivosti** za Objavljeni Događaj koji nema naredno Planirano Održavanje, a ima Odgođeno Održavanje bez poznatog novog termina. Ovo **nije** standardni režim kartice (BR-280) i **ne** čini Odgođeno Planiranim niti upcoming.
+
+**Uslov:** Objavljen; **nema** naredno Planirano Održavanje; ima najmanje jedno Odgođeno bez poznatog novog termina čiji prvobitni datum još nije istekao (prema lokalnom poslovnom datumu Kalendara kulture / postojećoj aplikacionoj vremenskoj zoni).
+
+**Prikaz kartice:** jasno **„Odgođeno"** i **„Prvobitni termin: [datum]"**. Prvobitni datum **nije** važeći termin održavanja.
+
+**Granica datuma:** do prvobitnog datuma **uključujući taj dan**. Primjer: prvobitni 17.08.2026. — 17.08. podoban; 18.08. taj prvobitni datum više nije podoban za informativnu naslovnu vidljivost.
+
+**Jedno Odgođeno:** važi gornje pravilo za to Održavanje.
+
+**Više Odgođenih bez Planiranog:** informativno relevantno je **najbliže Odgođeno** čiji prvobitni datum još nije istekao. Nakon isteka trenutnog, kartica prelazi na sljedeće takvo. Događaj ostaje informativno vidljiv dok postoji makar jedno takvo Održavanje.
+
+**Novi termin:** povratak Odgođenog u Planirano (BR-131 / BR-293) prestaje informativni režim **tog** Održavanja; novi Planirani termin ulazi u standardni režim (BR-280); prvobitni datum se ne koristi kao aktivni termin kartice.
+
+**Nakon posljednjeg:** nema naslovne vidljivosti po ovom osnovu; Događaj ostaje u „Pretraga i pregled" i na javnom detalju (PATCH-FS-063 / BR-282 / BR-295). Status Događaja se ne mijenja zbog isteka informativne vidljivosti.
+
+**Ne mijenja:** lifecycle, Otkazano, arhivu, newsletter, Urednik/Moderator tokove, approval, Change Proposal, featured, Pretragu (osim potvrde dostupnosti), semantiku detalja PATCH-FS-063.
+
+**Acceptance:**
+1. Objavljen + jedno Planirano → standardna kartica (BR-280).
+2. Isti Događaj Planirano + Odgođeno → samo Planirani režim; ulazi jednom (BR-297).
+3. Jedno Odgođeno bez Planiranog, prvobitni = danas → informativna kartica vidljiva.
+4. Isto, dan poslije prvobitnog → nema informativne kartice po tom osnovu.
+5. Kartica prikazuje „Odgođeno".
+6. Kartica prikazuje „Prvobitni termin".
+7. Prvobitni se ne predstavlja kao važeći termin.
+8. Više Odgođenih → najbliže neisteklo.
+9. Nakon isteka prvog → sljedeće.
+10. Nakon isteka posljednjeg → nema informativne naslovne kartice.
+11. Novi Planirani termin → standardni režim.
+12. Pretraga i detalj ostaju dostupni.
+13. Odgođeno nije upcoming / nije uključeno u upcoming semantiku.
+14. Otkazano ponašanje nije promijenjeno.
+
+**Veza:** BM-PK-37 / BM-GL-26 / BM-PK-31 / BM-TR-19 / PO-064-01…14. **Status:** Approved
+
+---
+
+#### BR-297 – Zajednički hronološki bazen „Naredni događaji" (PATCH-FS-064)
+
+Za listu „Naredni događaji" (BR-264) koristi se **zajednički hronološki bazen** kandidata:
+
+* **A — Planirani kandidat:** Objavljeni Događaj sa narednim Planiranim Održavanjem; režim kartice = BR-280; **ranking datum** = datum prvog narednog relevantnog Planiranog Održavanja.
+* **B — Informativno Odgođeni kandidat:** Objavljeni Događaj koji **nema** naredno Planirano Održavanje, ali ispunjava BR-296; režim kartice = informativni; **ranking datum** = prvobitni datum informativno relevantnog Odgođenog Održavanja (kod više Odgođenih: najbliže neisteklo).
+
+Svi kandidati ulaze u **isti** bazen. Bazen se sortira **rastuće** po ranking datumu. Prikazuje se najviše **prva 3** Događaja. Limit max 3 **nije** povećan.
+
+**Nema apsolutnog prioriteta tipa kartice:** Planirani nema automatski prioritet za slot; informativno Odgođeni nema automatski prioritet za slot. Redoslijed određuje isključivo ranking datum.
+
+**Jedan Događaj = najviše jedan slot:** Ako Događaj ima naredno Planirano Održavanje, ulazi **samo** kao Planirani kandidat (ranking = Planirani datum). **Ne** ulazi dodatno kao informativno Odgođeni.
+
+**Semantika ranking datuma:** Za informativno Odgođeni, ranking datum je funkcionalni ključ redoslijeda naslovne liste; **nije** važeći termin održavanja i **ne** tretira Odgođeno kao Planirano/upcoming.
+
+**Primjer:** B Odgođeno/Prvobitni 13.08.; C Planirano 14.08.; A Planirano 15.08.; D Planirano 20.08. → naslovna: B, C, A (D ispod limita).
+
+**Tie-breaker:** Postojeći FS **ne** definiše poslovni prioritet tipa kartice pri istom ranking datumu. Tip kartice (Planirano vs informativno Odgođeno) **ne** smije se koristiti kao poslovni tie-breaker. Stabilan tehnički tie-breaker (bez nove poslovne semantike) uređuje se u TS-u.
+
+**Pretraga:** BR-281 i sortiranje Pretrage **nisu** izmijenjeni ovim pravilom. Naslovni ranking je posebna funkcija.
+
+**Acceptance:**
+1. Max 3 ostaje.
+2. 3 Planirana + ranije informativno Odgođeni → zajedničko hronološko rangiranje može uvesti Odgođeni u top 3.
+3. Informativno Odgođeni nema automatski prioritet.
+4. Planirani nema automatski prioritet za naslovne slotove.
+5. Redoslijed određuje ranking datum.
+6. Isti Događaj se ne pojavljuje dva puta.
+7. 4+ kandidata → prikazuju se prva tri nakon zajedničkog sortiranja.
+8. Planirani + Odgođeni na istom Događaju → jedan ulaz, Planirani režim.
+
+**Veza:** BM-PK-23 / BM-PK-37 / BM-PK-29 / PO odluka zajednički hronološki bazen. **Status:** Approved
+
+---
+
 ### 5.14.1 Namjena i položaj Uredničkog portala
 
 #### BR-118 – Namjena Uredničkog portala
@@ -4602,6 +4687,7 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-09 | FS-001 (PATCH-FS-061): PO-6A11-01 / BM PATCH-061 — BR-285 (kanonski multi-OCC javni status Događaja); usklađen BR-114. Verzija ostaje 1.0.0. |
 | 2026-08-09 | FS-001 (PATCH-FS-062): PO-6A09-01…06 / BM PATCH-062 — BR-286 (Javna Arhiva vs interni Arhiviran); usklađeni BR-065, BR-066, BR-274. Verzija ostaje 1.0.0. |
 | 2026-08-10 | FS-001 (PATCH-FS-063): BM PATCH-063 / PO-U — Urednički tok; BR-287–BR-295; usklađeni BR-013/015/016/018/021/025/028/045/063/064/067/069/130/131/272/282/284. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| 2026-08-10 | FS-001 (PATCH-FS-064): BM PATCH-064 / BM-PK-37 — informativna naslovna vidljivost Odgođenog; BR-296–BR-297; usklađeni BR-264/280/282/285/295; zajednički hronološki bazen max 3. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-07-31 | FS-001 / 5.11 (PATCH-FS-046): TS8-01–TS8-09 — Mediji kao samostalan entitet; zatvoreni katalog namjena; kardinalnosti i fallback; tip Fotografija; lifecycle; ovlašćenja; pretraga; metapodaci. Usklađeni BR-086–BR-091, §5.4.4, BR-113; dodati BR-237–BR-254. |
 | 2026-07-31 | FS-001 / 5.13 (PATCH-FS-047): TS-009 faza 1 — IA-01, PO-TS9-03A/04A/05A/05B; TD-TS9-01 referenca. Usklađeni BR-104, BR-107–BR-109, §5.3, §5.4.1; dodati BR-255–BR-260. |
 | 2026-07-31 | FS-001 / 5.1–5.3 i 5.13 (PATCH-FS-048): TS-009 faza 2 — PO-TS9-06A–06D. Usklađeni Hero, statistike (3 klikabilne kartice), istaknuti (max 3), lista ispod kalendara; BR-117; dodati BR-261–BR-264. |

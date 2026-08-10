@@ -116,7 +116,7 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 
 **Usvojene poslovne odluke (Događaj — V1 prvi Event review):** **PO-DG-10** (BM PATCH-057 / FS PATCH-FS-057): Na odobrenju = sadržajno zaključan do Odobri / Vrati na doradu; bez Moderator povlačenja Eventa; bez „Počni pregled“; bez direktnog uređivanja Urednika na pending Eventu. Ne mijenja tok Prijedloga izmjene Objavljenog. Relevantno za TS-003 v0.1.7 i TS-010 v1.0.4. TM-WF-03/04/06 i TM-CRUD-08 supersedovani za Event (VAN V1). **PATCH-063 ne zamjenjuje ovaj Moderatorski approval tok.**
 
-**Usvojene poslovne odluke (Događaj / Održavanje / javni portal — PATCH-063 / PO-U-01…19):** **BM PATCH-063 / FS PATCH-FS-063** usvajaju urednički tok kreiranja, pripreme i neposrednog upravljanja Događajem. **Status:** dokumentacija **usvojena** (BM/FS/TS); **implementacija PATCH-063 još nije izvršena** (ne tretira se kao implementirano / testirano). Ne uvodi novi FT ID — proširuje FT-001 / postojeće Događaj–Održavanje–portal feature-e.
+**Usvojene poslovne odluke (Događaj / Održavanje / javni portal — PATCH-063 / PO-U-01…19):** **BM PATCH-063 / FS PATCH-FS-063** usvajaju urednički tok kreiranja, pripreme i neposrednog upravljanja Događajem. **Status:** dokumentacija **usvojena** (BM/FS/TS); **implementacija PATCH-063 završena** (produkcija; HEAD `9825fec`). Ne uvodi novi FT ID — proširuje FT-001 / postojeće Događaj–Održavanje–portal feature-e.
 
 | ID (paket) | Suština | BM | FS | TS |
 |------------|---------|----|----|-----|
@@ -130,11 +130,26 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 | PO-U / razlozi | Opcion `postponement_reason`; OCC `cancellation_reason`; Entry `cancellation_reason` opcion + javna napomena | BM-TR-20, BM-DG-10, BM-PK-36 | BR-063/064/069/272/284/294/295 | TS-003; TS-004 §4.5/§4.7/§6.6; TS-009 §7.2.4/§7.3.5 |
 | PO-U / PO-DG-07 KEEP | Otkazan terminalan; nema republish; nema delete nakon objave; historical; novi program = novi DG | BM-DG-09/10, BM-ST-07/09 | BR-064 | TS-003 §4.9; TS-009 archive (PATCH-062) |
 
-**Tehnička napomena (buduća implementacija, nije TS):** `cultural_event_entries.organizer_manual_name`; `cultural_occurrences.postponement_reason` + `cancellation_reason`; Entry `cancellation_reason` već postoji (validation: required → optional).
+**Tehnička napomena (PATCH-063 — implementirano):** `cultural_event_entries.organizer_manual_name`; `cultural_occurrences.postponement_reason` + `cancellation_reason`; Entry `cancellation_reason` opcion.
 
 **Moderator regression (PATCH-063 KEEP):** Nacrt → Pošalji na odobrenje → zaključavanje → Odobri/Vrati; published izmjene preko Prijedloga; **nema** direct publish Moderatora (PO-DG-10 / PO-DG-05).
 
-**Implementacioni closeout (TS-010 V1):** Urednički portal V1 je **implementaciono završen** za prethodni obuhvat (TS-010 v1.0.6). Zatvoreni implementacioni markeri: **T10-WF-01** (PO-DG-10), **T10-GEN-01**, **GAP-RESUME-01** / **R-02** / **TM-OCC-17**. Verifikacija tada: `php artisan test --filter=Cultural` — 420 passed / 1740 assertions. **PATCH-063** (TS-010 v1.0.7 i povezani TS) je **dokumentaciono usvojen**; kod/testovi/migracije za PATCH-063 **nisu** dio tog closeout-a i **još slijede**. **Ne** uključuje: TS-005 Manifestacije; TS-012 emit/storage (Roadmap Faza 8).
+**Implementacioni closeout (TS-010 V1):** Urednički portal V1 je **implementaciono završen** za prethodni obuhvat (TS-010 v1.0.6). Zatvoreni implementacioni markeri: **T10-WF-01** (PO-DG-10), **T10-GEN-01**, **GAP-RESUME-01** / **R-02** / **TM-OCC-17**. Verifikacija tada: `php artisan test --filter=Cultural` — 420 passed / 1740 assertions. **PATCH-063** (TS-010 v1.0.7 i povezani TS) je **dokumentaciono usvojen i implementiran** (produkcija). **PATCH-064** je **nova** portalna delta — vidi donji blok (docs usvojene; implementacija pending). **Ne** uključuje: TS-005 Manifestacije; TS-012 emit/storage (Roadmap Faza 8).
+
+**Usvojene poslovne odluke (Javni portal — PATCH-064 / PO-064 — informativna naslovna vidljivost Odgođenog):** **BM PATCH-064 / FS PATCH-FS-064 / TS-009 v1.0.10.** Ne uvodi novi FT ID — proširuje FT-001 / postojeće naslovne / kartične / Odgođeno portal feature-e (PO-TS9-06D, PO-TS9-08B/08D). **Status:** dokumentacija **usvojena** (BM/FS/TS); **implementacija PATCH-064 još nije izvršena** (ne tretira se kao implementirano / testirano).
+
+| ID (paket) | Suština | BM | FS | TS |
+|------------|---------|----|----|-----|
+| PO-064 / planned mode | Standardna kartica = prvo naredno relevantno **Planirano** OCC; ranking = taj datum | BM-PK-29, BM-PK-37 | BR-280, BR-297 | TS-009 §5.5 / §7.3.2 (`mode=planned`) |
+| PO-064 / postponed_info | Bez narednog Planiranog + Odgođeno bez novog termina + prvobitni ≥ today → informativna naslovna kartica („Odgođeno“ / „Prvobitni termin"); prvobitni ≠ važeći termin; Odgođeno ≠ Planirano/upcoming | BM-PK-37, BM-GL-26, BM-PK-31, BM-TR-19 | BR-296, BR-282, BR-295 | TS-009 §5.5 (`mode=postponed_info`); prvobitni = `OCC.datum` |
+| PO-064 / multi postponed | Najbliže neisteklo Odgođeno; prelaz nakon isteka; nakon posljednjeg nema naslovne po tom osnovu | BM-PK-37 | BR-296 | TS-009 §5.5.2 |
+| PO-064 / shared pool | Planirani + informativno Odgođeni u **jednom** hronološkom bazenu; sort po ranking datumu; **nema** tip-prioriteta za slotove; max **3** | BM-PK-23, BM-PK-37 | BR-264, BR-297 | TS-009 §5.4 / §5.5.5 / §11.3 |
+| PO-064 / one Entry one slot | Ako postoji naredno Planirano → samo planned mode; Entry ne ulazi dvaput | BM-PK-29/37 | BR-297 | TS-009 §5.5.2 |
+| PO-064 / tie-breaker | Stabilan tehnički `entry.id ASC`; mode **nije** poslovni tie-breaker | (FS ostavio TS-u) | BR-297 | TS-009 §5.5.5 |
+| PO-064 / + još N | U `postponed_info` **ne** prikazivati standardni „+ još N" (broji samo Planirana card-relevant OCC) | — | BR-280 (planned) | TS-009 §5.5.6 / §7.3.2 |
+| PO-064 / KEEP | Pretraga sort, detalj PATCH-063, calendar counts, selected-day, Otkazano, arhiva, newsletter, lifecycle, Urednik/Moderator — **NO CHANGE** | BM-PK-37 granice | BR-281 / BR-296 KEEP | TS-009 §5.5.1 / §5.5.9 |
+
+**Buduća implementacija / test (nije kod):** TS-009 TM-JP-23…38; scope tipično `CulturalPublicEventQuery` homepage SSOT, controller `take(3)`, `index` upcoming Blade; **ne** dirati `CulturalPublicCardOccurrenceCriteria` / Pretragu / calendar.
 
 **Usvojene poslovne odluke (Održavanje — V1 generator):** **PO-N-TR-02-04** (BM PATCH-058 / FS PATCH-FS-058): generator samo na Nacrtu; dnevno/sedmično/mjesečno algoritmi; broj XOR krajnji datum; max 100; šablon vremena/lokacije; Planiran; potpuni duplikati odbijaju cijelu operaciju; atomičnost; bez preview; bez Proposal/Objavljen generatora. **T10-GEN-01 = ZATVOREN** (implementiran i testiran: `OccurrenceGenerator`, Urednik/Moderator HTTP/UI, `CulturalOccurrenceGeneratorTest`). Relevantno za TS-004 v0.1.8 i TS-010 v1.0.6. PATCH-063 ne mijenja generator.
 
@@ -167,9 +182,9 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 
 **Usvojene product odluke (Javni portal — Faza 6A / TS-009 v1.0.8):**
 - **PO-TS9-08A:** Očuvanje postojećeg izgleda javnog portala; bez redizajna; UI izmjene samo kad neophodne zbog kanonskog modela / usvojenih pravila.
-- **PO-TS9-08B:** Kartica = prvo naredno relevantno Održavanje; „+ još N termina“'; detalj = sva javno relevantna Održavanja.
-- **PO-TS9-08C:** Pretraga sortira rastuće po prvom narednom relevantnom Održavanju (sistemsko; bez korisničkog sortiranja).
-- **PO-TS9-08D:** Odgođeno na detalju sa oznakom; kartica prikazuje naredno važeće Održavanje.
+- **PO-TS9-08B:** Kartica = prvo naredno relevantno **Planirano** Održavanje; „+ još N termina“ (Planirana); detalj = sva javno relevantna Održavanja. **PATCH-064:** standardni režim ostaje; informativni `postponed_info` je zaseban naslovni mode (bez „+ još N“).
+- **PO-TS9-08C:** Pretraga sortira rastuće po prvom narednom relevantnom Održavanju (sistemsko; bez korisničkog sortiranja). **PATCH-064 KEEP** — naslovni ranking ≠ Pretraga.
+- **PO-TS9-08D:** Odgođeno na detalju sa oznakom / Prvobitni termin (PATCH-063); kartica u standardnom režimu prikazuje naredno **Planirano**. **PATCH-064:** kada nema Planiranog, naslovna može koristiti informativni Odgođeno režim (BM-PK-37 / BR-296).
 - **PO-TS9-08E:** CAT-CUTOVER — isključivo `CulturalCategory` (14); bez legacy alias mape; preduslov 14 u bazi.
 - **PO-TS9-08F:** Faza 6A (Događaji) / 6B (Manifestacije); TS-005 ne blokira 6A.
 - **PO-TS9-08G:** V1 — BR-272 standardno obavještenje. **PATCH-063 / BM-PK-36 / BR-295 superseduje** raniju zabranu javnog `cancellation_reason`: ako je opcion razlog unesen, **može** se javno prikazati kao napomena.
@@ -232,7 +247,7 @@ Funkcionalnost je u fazi detaljne funkcionalne specifikacije i predstavlja refer
 - **PO-TS9-06A:** Hero — sastavni dio; postojeći vizuelni identitet; statički; nije uređiv iz admina; bez baze, CTA, promo, rotacije, videa; isključivo identitet modula.
 - **PO-TS9-06B:** Istaknuti — postojeće mjesto/raspored; max 3; samo objavljeni i aktuelni; bira Urednik (ne sistem); kartice: foto, datum, vrijeme, lokacija, naslov, kratak opis, link na detalj; neutralno prazno stanje bez admin poruka.
 - **PO-TS9-06C:** Statistike — 3 klikabilne kartice (Danas, Ove sedmice, Izabrani mjesec = naziv izabranog mjeseca); klik → Pretraga i pregled sa datumskim filterom; 0 ostaje klikabilno; brojači i `date`/`week`/`month` pregledi uključuju javno dostupne događaje (`published` | `cancelled`) u odgovarajućem vremenskom skupu (CR-004B); bez novih filtera/URL parametara.
-- **PO-TS9-06D:** Lista ispod kalendara — bez datuma: „Naredni događaji“ max 3; sa datumom: svi za dan; dugme „Prikaži sve događaje“ → Pretraga i pregled (sa/bez datumskog filtera); postojeće prazno stanje.
+- **PO-TS9-06D:** Lista ispod kalendara — bez datuma: „Naredni događaji“ max 3; sa datumom: svi za dan (aktivni OCC filter); dugme „Prikaži sve događaje“ → Pretraga i pregled (sa/bez datumskog filtera); postojeće prazno stanje. **PATCH-064 / PO-064:** „Naredni“ = zajednički hronološki bazen Planiranih + informativno Odgođenih (BR-264/297; TS-009 §5.4–§5.5); max 3 KEEP; selected-day / calendar counts KEEP (postponed nije aktivni dan).
 
 **Usvojene product odluke (Javni portal — TS-009 faza 3 — Manifestacije):**
 - **PO-TS9-07A:** Manifestacije = zasebna cjelina portala; stavka navigacije „Manifestacije“; lista + Detalji manifestacije + program; ne kroz kategorije događaja; bez redizajna.
@@ -283,9 +298,9 @@ Povezana dokumentacija (Mediji):
 
 Povezana dokumentacija (Javni portal):
 
-* Business Model — BM-11 (BM-PK-01–BM-PK-36), BM-AR-02, PATCH-045–PATCH-048, PATCH-051 (CR-004B), PATCH-060–PATCH-063; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E, PO-TS9-08A–08J, PO-6A11-01, PO-6A09-01…06, **PO-U / PATCH-063** (ručni Org; Prvobitni termin; javne napomene)
-* Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, **BR-287–BR-295**), PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060–**PATCH-FS-063**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija **1.0.9**; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A; PO-6A11-01; PO-6A09; **PATCH-063** §7.2.4 / §7.3.4–§7.3.6)
+* Business Model — BM-11 (BM-PK-01–BM-PK-37, BM-GL-26), BM-AR-02, PATCH-045–PATCH-048, PATCH-051 (CR-004B), PATCH-060–**PATCH-064**; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E, PO-TS9-08A–08J, PO-6A11-01, PO-6A09-01…06, **PO-U / PATCH-063**, **PO-064 / PATCH-064** (informativna naslovna vidljivost Odgođenog)
+* Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, **BR-287–BR-297**), PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060–**PATCH-FS-064**
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija **1.0.10**; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A; PO-6A11-01; PO-6A09; **PATCH-063** §7.2.4 / §7.3.4–§7.3.6; **PATCH-064** §5.4–§5.5 / §11.3 / TM-JP-23…38)
 * Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija 1.0.7; Stable)
 * Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Implemented, IS-001 Faza 2 — `month=YYYY-MM`; commit `c5d396f`); CR-003 (Implemented, IS-001 Faza 2 — `q`/`category`/`location`; dokumentacija `fc35132`; implementacija `595045a`; TS-009 v1.0.2; IS-001 v1.0.2); CR-004A (Implemented, IS-001 Faza 3 — javni status badge; PO-CR4A-01…05; dokumentacija `614706c`; implementacija `0f73240`; TS-009 v1.0.4; IS-001 v1.0.5); CR-004B (Planned, IS-001 Faza 3 — javni prikaz otkazanih; PO-CR4B-01…10; TS-009 v1.0.5 §7.2; IS-001 v1.0.6 §9.3.2)
 
@@ -312,13 +327,13 @@ Povezana dokumentacija (Urednički portal):
   * **PO-AL-04:** Bez novih aktivnosti; samo BM/FS katalog.
 * Usvojena QA odluka (Business Test Matrix — TS-010.8):
   * **QA-TS0108-01:** TS-010.8 = Business Test Matrix; nije QA Plan / Test Strategy / Test Implementation / CI / coverage.
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija **1.0.7**; USVOJEN — V1 implementaciono završen za prethodni obuhvat; **PATCH-063 dokumentaciono usvojen, implementacija još slijedi**; usklađen sa TS-003 v0.1.10 / TS-004 v0.1.9)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija **1.0.7**; USVOJEN — V1 implementaciono završen za prethodni obuhvat; **PATCH-063 dokumentaciono usvojen i implementiran**; **PATCH-064** = portalna delta docs-only / implementacija pending; usklađen sa TS-003 v0.1.10 / TS-004 v0.1.9)
   * TS-010.1 Osnove uredničkog portala — Usvojeno / implementirano
   * TS-010.2 Organizatori — Usvojeno / implementirano
   * TS-010.3 Moderator Organizatora — Usvojeno / implementirano
-  * TS-010.4 Workflow događaja — Usvojeno / implementirano (terminalnost Otkazan; bez Otkazan → Objavljen; PO-DG-10); **PATCH-063 docs usvojene**
-  * TS-010.5 CRUD događaja i validacije — Usvojeno / implementirano (prethodni obuhvat); **PATCH-063** (ručni Org, U pripremi, delete draft, published direct edit) — **dokumentaciono usvojeno, implementacija još slijedi**
-  * TS-010.6 Dashboard uredničkog portala — Usvojeno / implementirano; DU-03 → „Događaji u pripremi“ (PATCH-063 docs)
+  * TS-010.4 Workflow događaja — Usvojeno / implementirano (terminalnost Otkazan; bez Otkazan → Objavljen; PO-DG-10); **PATCH-063 usvojeno i implementirano**
+  * TS-010.5 CRUD događaja i validacije — Usvojeno / implementirano (prethodni obuhvat); **PATCH-063** (ručni Org, U pripremi, delete draft, published direct edit) — **dokumentaciono usvojeno i implementirano**
+  * TS-010.6 Dashboard uredničkog portala — Usvojeno / implementirano; DU-03 → „Događaji u pripremi“ (PATCH-063 implementirano)
   * TS-010.7 Evidencija aktivnosti uredničkog portala — Usvojeno (obaveza); emit/storage = **TS-012 / Faza 8**
   * TS-010.8 Business Test Matrix — Usvojeno (poslovna matrica; §13.x PATCH-063 matrica za buduću implementaciju)
 
@@ -335,8 +350,8 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.2); TS7-PO-07; Faza 6A CAT-CUTOVER ugovor |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
-| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.9); Faza 6A + PO-6A11-01 + PO-6A09 + PATCH-063 docs |
-| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.7) — V1 implementaciono završen (prethodni obuhvat); PATCH-063 docs usvojene / implementacija slijedi |
+| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.10); Faza 6A + PO-6A11-01 + PO-6A09 + PATCH-063 implemented + **PATCH-064 docs usvojene / implementacija pending** |
+| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.7) — V1 + PATCH-063 implementirani; PATCH-064 nije TS-010 scope (portal = TS-009) |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.1) |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.1) — implementacija emit/storage = Roadmap **Faza 8** |
 
@@ -576,4 +591,5 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-09 | FT-001 — **Faza 6A dokumentacioni PATCH** (BM PATCH-060 / FS PATCH-FS-060 / TS-009 v1.0.6 / IR-001 v1.0.5): PO-TS9-08A–08J; cutover kanonskog javnog portala Događaja; Faza 6A/6B; PO-EV-01 potvrđen; TM-JP matrica. Bez izmjene implementacije. |
 | 2026-08-09 | FT-001 — **PO-6A11-01** (BM PATCH-061 / FS PATCH-FS-061 / TS-009 v1.0.7): kanonski multi-OCC javni status Događaja (BM-PK-34 / BR-285 / §7.1.6). |
 | 2026-08-09 | FT-001 — **PO-6A09-01…06** (BM PATCH-062 / FS PATCH-FS-062 / TS-009 v1.0.8): Javna Arhiva vs interni Arhiviran (BM-PK-35 / BR-286); PO-CR4B-09 revidiran; bez izmjene implementacije. |
-| 2026-08-10 | FT-001 — **PATCH-063 / PO-U-01…19** (BM PATCH-063 / FS PATCH-FS-063 / TS-003 v0.1.10 / TS-004 v0.1.9 / TS-009 v1.0.9 / TS-010 v1.0.7): preciziran PO-DG-05 (bez registrovanog Org ≠ bez ručnog naziva); U pripremi / Sačuvaj i nastavi; delete pre-publish; published direct edit; postpone/OCC/Entry razlozi; Prvobitni termin; PO-DG-07 terminalnost KEEP; Moderator approval KEEP. **Docs usvojene; implementacija PATCH-063 još nije izvršena.** Bez novog FT ID. |
+| 2026-08-10 | FT-001 — **PATCH-063 / PO-U-01…19** (BM PATCH-063 / FS PATCH-FS-063 / TS-003 v0.1.10 / TS-004 v0.1.9 / TS-009 v1.0.9 / TS-010 v1.0.7): preciziran PO-DG-05 (bez registrovanog Org ≠ bez ručnog naziva); U pripremi / Sačuvaj i nastavi; delete pre-publish; published direct edit; postpone/OCC/Entry razlozi; Prvobitni termin; PO-DG-07 terminalnost KEEP; Moderator approval KEEP. **Docs usvojene; implementacija PATCH-063 završena** (produkcija `9825fec`). Bez novog FT ID. |
+| 2026-08-10 | FT-001 — **PATCH-064 / PO-064** (BM PATCH-064 / FS PATCH-FS-064 / TS-009 v1.0.10): informativna naslovna vidljivost Odgođenog; zajednički hronološki bazen max 3; `planned` / `postponed_info`; one Entry one slot; Odgođeno ≠ upcoming; Pretraga/detalj/kalendar/arhiva/newsletter KEEP. Proširuje PO-TS9-06D / 08B / 08D. **Docs usvojene; implementacija PATCH-064 pending.** Bez novog FT ID. |

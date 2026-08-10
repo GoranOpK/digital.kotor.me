@@ -214,6 +214,12 @@ class CulturalPublicIndexDataSwitchTest extends TestCase
             'status' => CulturalOccurrence::STATUS_POSTPONED,
         ]);
 
+        $postponedExpired = $this->makePublishedEntry('Postponed Expired');
+        $this->makeOccurrence($postponedExpired, [
+            'datum' => '2026-08-01',
+            'status' => CulturalOccurrence::STATUS_POSTPONED,
+        ]);
+
         $multi = $this->makePublishedEntry('Multi Occ');
         $this->makeOccurrence($multi, [
             'datum' => '2026-08-01',
@@ -227,9 +233,14 @@ class CulturalPublicIndexDataSwitchTest extends TestCase
 
         $this->assertContains('Upcoming Earlier', $titles);
         $this->assertNotContains('Expired Only', $titles);
-        $this->assertNotContains('Postponed Only', $titles);
+        // PATCH-064: neisteklo Odgođeno ulazi u naslovni bazen; isteklo ne.
+        $this->assertContains('Postponed Only', $titles);
+        $this->assertNotContains('Postponed Expired', $titles);
+        $this->assertSame('postponed_info', $upcoming->firstWhere('naslov', 'Postponed Only')?->homepage_card_mode);
         $this->assertLessThan(
-            array_search('Upcoming Later', $titles, true),
+            array_search('Upcoming Later', $titles, true) !== false
+                ? array_search('Upcoming Later', $titles, true)
+                : PHP_INT_MAX,
             array_search('Upcoming Earlier', $titles, true)
         );
 
@@ -242,7 +253,8 @@ class CulturalPublicIndexDataSwitchTest extends TestCase
         }
 
         $this->assertLessThanOrEqual(3, $upcoming->count());
-    }
+        // Shared pool top3: Earlier (11), Postponed (15), Multi (16); Later (22) van limita.
+        $this->assertSame(['Upcoming Earlier', 'Postponed Only', 'Multi Occ'], $titles);    }
 
     public function test_canonical_empty_index_keeps_hero_and_sections(): void
     {

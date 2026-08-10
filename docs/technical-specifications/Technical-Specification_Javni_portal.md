@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.9
+**Verzija:** 1.0.10
 **Datum:** 2026-08-10
 
 ---
@@ -30,6 +30,7 @@
 | 1.0.7 | 2026-08-09 | **PO-6A11-01:** kanonski javni status Događaja (multi-OCC) — §7.1.6; razdvajanje legacy flat (§7.1.3) i canonical agregata; usklađeno sa BM-PK-34 / BR-285. Bez izmjene lifecycle / arhive. |
 | 1.0.8 | 2026-08-09 | **PO-6A09-01…06:** Javna Arhiva vs interni Arhiviran — §8 / §11 / §12 / §7.2 usklađeni; archive-only query; očuvanje izvornog statusa; istorijski badge Otkazan/Završen; TM-JP-11/04. Usklađeno sa BM PATCH-062 / FS PATCH-FS-062 / BM-PK-35 / BR-286. Bez izmjene implementacije. |
 | 1.0.9 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** ručni Organizator; Odgođeno + Prvobitni termin + razlozi; OCC cancel prikaz; Entry cancel opcion razlog javno; supersede V1 zabrane javnog `cancellation_reason`. Bez izmjene implementacije. |
+| 1.0.10 | 2026-08-10 | **BM PATCH-064 / FS PATCH-FS-064:** Informativna naslovna vidljivost Odgođenog; zajednički hronološki bazen „Naredni događaji“ max 3; ranking datum; mode `planned` / `postponed_info`; tehnički tie-breaker `entry.id ASC`; bez mijenjanja calendar counts / selected-day / Pretrage / detalja / lifecycle. Bez izmjene implementacije. |
 
 ---
 
@@ -560,27 +561,141 @@ Dodatno:
 
 ## 5.4 PO-TS9-06D — Lista ispod kalendara
 
-| Odluka | PO-TS9-06D |
+| Odluka | PO-TS9-06D (+ PATCH-064) |
 |--------|------------|
-| BM | BM-PK-23 |
-| FS | BR-264, §5.3 |
+| BM | BM-PK-23, BM-PK-37 |
+| FS | BR-264, BR-296, BR-297 |
 
 | Režim | Naslov | Sadržaj |
 |-------|--------|---------|
-| Datum nije izabran | „Naredni događaji“ | Najviše **3** naredna događaja |
-| Datum izabran | „Događaji za izabrani datum“ | Svi događaji za taj datum |
+| Datum nije izabran | „Naredni događaji" | Najviše **3** Događaja iz **zajedničkog hronološkog bazena** (§5.5) |
+| Datum izabran | „Događaji za izabrani datum“ | Svi događaji za taj datum po **aktivnom** OCC filteru (PATCH-063); Odgođeno OCC **ne** ulazi |
 
 | Stavka | Vrijednost |
 |--------|------------|
-| Kartice | Postojeći izgled |
-| Dugme | „Prikaži sve događaje“ na kraju liste |
+| Kartice | Postojeći izgled; `postponed_info` mode prikazuje „Odgođeno“ / „Prvobitni termin" (§5.5 / §7.3.4) |
+| Dugme | „Prikaži sve događaje" na kraju liste |
 | Dugme bez datuma | → „Pretraga i pregled“ **bez** datumskog filtera |
-| Dugme sa datumom | → „Pretraga i pregled“ **sa** istim datumskim filterom |
+| Dugme sa datumom | → „Pretraga i pregled" **sa** istim datumskim filterom |
 | Prazno | Postojeća poruka o praznom stanju |
+| Limit | Max **3** nepromijenjen |
 
 ---
 
-# 6. Manifestacije (javni portal) — dokumentaciona faza 3 / implementacija Faza 6B
+## 5.5 PATCH-064 — Informativna naslovna vidljivost Odgođenog (tehnički)
+
+| Referenca | Sadržaj |
+|-----------|---------|
+| BM | BM-PK-37, BM-GL-26, BM-PK-23, BM-PK-29, BM-PK-31 |
+| FS | BR-296, BR-297, BR-264, BR-280, BR-282 |
+| Kod (trenutno) | `CulturalPublicEventQuery::upcomingForPublicIndex` + `withCardRelevantOccurrence` (samo planned); `CulturalPublicCardOccurrenceCriteria`; `CulturalCalendarController` `take(3)`; `OccurrenceLifecycle::postpone` (ne mijenja `datum`) |
+
+### 5.5.1 Semantička granica
+
+* Odgođeno **≠** Planirano.
+* Odgođeno **≠** upcoming / card-relevant (`CulturalPublicCardOccurrenceCriteria`).
+* Informativna naslovna vidljivost je **poseban** homepage selection/display mehanizam.
+* **Ne** proširivati `nextRelevantOccurrence()` / `CulturalPublicCardOccurrenceCriteria` da uključuju postponed.
+* **Ne** mijenjati Pretragu (`orderedByNextRelevantOccurrence`), calendar counts, selected-day aktivni filter, detalj, featured, lifecycle, arhivu, newsletter.
+
+### 5.5.2 Tipovi kandidata (jedan Entry → jedan kandidat)
+
+**A. `mode = planned` (standardni Planirani kandidat)**
+
+* Entry `status = published` (ili postojeći javno vidljivi skup koji već ulazi u „Naredni“ — kanonski: published sa next planned; cancelled u narednima ostaje po postojećim CR-004B pravilima ako već važi).
+* Postoji najmanje jedno kartično relevantno **Planirano** OCC (`CulturalPublicCardOccurrenceCriteria`).
+* `selected_occurrence` = prvo naredno relevantno Planirano OCC (`nextRelevantOccurrence`).
+* `ranking_date` = `selected_occurrence.datum` (Y-m-d).
+* Display = standardna kartica (§7.3.2).
+
+**B. `mode = postponed_info` (informativno Odgođeni kandidat)**
+
+* Entry `status = published`.
+* **Nema** naredno kartično relevantno Planirano OCC.
+* Postoji OCC `status = postponed` čiji je **prvobitni datum** (`cultural_occurrences.datum`) `>=` lokalni današnji datum (`config('app.timezone')`).
+* `selected_occurrence` = najbliže takvo postponed OCC po `datum ASC`, zatim stabilni OCC tie-breaker `id ASC`.
+* `ranking_date` = `selected_occurrence.datum` (Y-m-d) — **samo ranking/display ključ**, ne važeći termin.
+* Display = informativna kartica (§5.5.6).
+
+**Invariant unutar Entry-ja:** ako postoji planned kandidat, Entry **ne** formira `postponed_info` kandidata.
+
+### 5.5.3 Izvor prvobitnog datuma
+
+| Stanje | Izvor | Napomena |
+|--------|-------|----------|
+| Odgođeno bez novog termina | `cultural_occurrences.datum` | `OccurrenceLifecycle::postpone()` mijenja samo `status` (+ opcion `postponement_reason`); **ne** mijenja `datum` |
+| Odgođeno → Planiran (`resumeWithNewTermin`) | Novi `datum` | Prestaje `postponed_info` za taj OCC; ulazi u planned selection |
+
+**Ne** uvoditi novu kolonu za original date u PATCH-064.
+
+### 5.5.4 Granica dana / timezone
+
+* Lokalni poslovni datum = `Carbon::now(config('app.timezone'))->toDateString()` (postojeći pattern; default `Europe/Belgrade`).
+* Podobnost postponed OCC: `DATE(datum) >= today_local` (uključujući danas).
+* Sutra (`today + 1 day`) taj OCC više nije kandidat za `postponed_info`.
+
+### 5.5.5 Zajednički hronološki bazen / sort / limit
+
+Algoritam (obavezan redoslijed):
+
+1. Formirati planned kandidate (query A).
+2. Formirati postponed_info kandidate (query B) — samo Entry-ji **bez** planned kandidata.
+3. Merge u jednu listu kandidata (`entry`, `mode`, `ranking_date`, `selected_occurrence`).
+4. Sort:
+   1. `ranking_date ASC`
+   2. tehnički tie-breaker: `entry.id ASC` (**bez** poslovnog prioriteta `mode`)
+5. `take(3)`.
+
+**Zabranjeno:** odvojeno `take(3)` planned + `take(3)` postponed pa merge.
+
+**Tie-breaker:** nema poslovnog značenja; samo determinističnost. Ne koristiti `mode` kao prioritet.
+
+### 5.5.6 Display — `postponed_info` kartica
+
+Meta zona kartice mora jasno prikazati:
+
+* oznaku **„Odgođeno"**;
+* **„Prvobitni termin: [d.m.Y]"** iz `selected_occurrence.datum`.
+
+**Ne** prikazivati taj datum kroz isti UI kao važeći „next" termin (bez vremena lokacije kao „predstojećeg" termina osim ako UI već prikazuje lokaciju OCC-a informativno — preferirati fokus na Odgođeno + Prvobitni termin).
+
+**„+ još N termina":** standardni indikator broji samo kartično relevantna **Planirana** OCC (`additionalRelevantOccurrencesCount`). BM/FS **ne** definišu brojanje Odgođenih kao „+ još N" u informativnom režimu. U `postponed_info` mode-u indikator **ne prikazivati** (izostaviti). To nije nova poslovna semantika broja, već izbjegavanje zbunjujućeg / nula prikaza.
+
+### 5.5.7 Query strategija (preporuka implementacije)
+
+**Preferirano: B — dva prefiltrirana query-ja + Collection merge/sort.**
+
+* **Query A:** postojeći planned path (`withCardRelevantOccurrence` + sort po next planned) — bez `take(3)` dok se ne merge-uje, ili dovoljno velik candidate window.
+* **Query B:** `published` Entry **without** card-relevant planned OCC; **with** postponed OCC gdje `datum >= today`; eager `occurrences` (+ category/cover/location po postojećem `$cardEager`).
+* PHP merge/sort/take(3) — čitljivo, deterministično, bez miješanja sa Pretragom.
+
+**Performance:** kandidatski set je ograničen published Entry-jima sa open planned/postponed OCC; homepage prikazuje 3. Prefilter po `whereHas`/`whereDoesntHave` je obavezan — **ne** učitavati sve published Entry-je bez OCC filtera.
+
+Alternativa A (jedan SQL sa computed ranking) dozvoljena ako ostane čitljiva i ne dira search/calendar; nije obavezna.
+
+### 5.5.8 View model
+
+Controller/helper mora view-u proslijediti jednoznačan rezultat po kartici, npr. semantički:
+
+* `mode`: `planned` | `postponed_info`
+* `selected_occurrence`
+* `ranking_date`
+
+Zabranjen hack: „ako `nextRelevantOccurrence()` null, nađi bilo koji postponed".
+
+Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidata ili Entry + attach mode) u `CulturalPublicEventQuery` (ili mali value object) — **odvojeno** od `upcomingForPublicIndex` ako taj ostaje planned-only helper; ili zamijeniti homepage call site da koristi novi ugovor. Featured i Pretraga **ne** koriste `postponed_info`.
+
+### 5.5.9 Kalendar / selected day / Pretraga / detalj
+
+| Površina | PATCH-064 |
+|----------|-----------|
+| Calendar day counts | **NO CHANGE** — postponed i dalje isključeni |
+| Selected-day lista | **NO CHANGE** — `constrainCalendarActiveOccurrence` isključuje postponed |
+| Pretraga sort (BR-281) | **NO CHANGE** |
+| Javni detalj PATCH-063 | **NO CHANGE** (Odgođeno / Prvobitni / Napomena) |
+| Featured | **NO CHANGE** (i dalje planned/aktuelni) |
+
+---# 6. Manifestacije (javni portal) — dokumentaciona faza 3 / implementacija Faza 6B
 
 > **Granica:** Poslovna pravila entiteta Manifestacija (BM-05 / TS-005), Događaja (TS-003) i Održavanja (TS-004) se ovdje ne dupliciraju. Ova sekcija definiše isključivo javni prikaz i navigaciju (PO-TS9-07A–07E).
 >
@@ -962,13 +1077,23 @@ Za kartični glavni termin i sortiranje Pretrage (**naredno relevantno važeće*
 
 Za **Detalj Događaja** — **javno relevantna** Održavanja uključuju Planirana, Odgođena, Otkazana i Završena Održavanja javno vidljivog Događaja (BM-PK-09), uz odgovarajuće oznake statusa Održavanja gdje je usvojeno (npr. „Odgođeno“, „Otkazano“ u kontekstu MF programa / detalja).
 
-### 7.3.2 Kartica Događaja (PO-TS9-08B)
+### 7.3.2 Kartica Događaja (PO-TS9-08B / PATCH-064)
 
-* Prikazuje se **prvo naredno relevantno** Održavanje (datum/vrijeme/lokacija tog Održavanja).
-* Ako postoje dodatna relevantna Održavanja: oznaka **„+ još N termina“**.
+**Standardni režim (`mode = planned`):**
+
+* Prikazuje se **prvo naredno relevantno Planirano** Održavanje (datum/vrijeme/lokacija tog Održavanja).
+* Ako postoje dodatna kartično relevantna **Planirana** Održavanja: oznaka **„+ još N termina"**.
 * Kartica **ne** prikazuje kompletnu listu Održavanja.
 * Minimalne vizuelne izmjene; bez redizajna kartice (IA-01 / PO-TS9-08A).
 
+**Informativni režim (`mode = postponed_info`) — samo naslovna „Naredni događaji" (§5.5):**
+
+* Prikaz: **„Odgođeno"** + **„Prvobitni termin: [datum]"**.
+* Prvobitni datum **nije** važeći termin održavanja.
+* **Ne** prikazivati standardni „+ još N termina" indikator.
+* Ne redefinisati `CulturalPublicCardOccurrenceCriteria` / `nextRelevantOccurrence()`.
+
+---
 ### 7.3.3 Detalj Događaja
 
 Prikazuju se **sva** javno relevantna Održavanja (BM-PK-09 / BR-110).
@@ -978,7 +1103,8 @@ Prikazuju se **sva** javno relevantna Održavanja (BM-PK-09 / BR-110).
 * **Detalj — Odgođeno bez novog termina:** prikazati status **„Odgođeno“**; label **„Prvobitni termin“**; postojeći originalni datum; opcion `postponement_reason` ako postoji.
 * **Ne** prikazivati Odgođeno kao aktivno predstojeće Održavanje (§7.3.1).
 * **Kada novi datum unesen i status Planiran:** novi datum = aktivni termin; razlog/history ostaje po TS-004; glavni prikaz **ne** tvrdi da je trenutno Odgođeno.
-* **Kartica:** stari odgođeni termin **nije** glavni termin; kartica prikazuje prvo naredno relevantno važeće Održavanje (+ „+ još N termina“ po §7.3.2).
+* * **Kartica — standardni režim:** stari odgođeni termin **nije** važeći glavni termin; kartica prikazuje prvo naredno relevantno **Planirano** Održavanje (+ „+ još N" po §7.3.2 planned).
+* **Kartica — `postponed_info` (naslovna, PATCH-064):** kada nema narednog Planiranog, kartica **može** prikazati Odgođeno informativno (§5.5 / BR-296); prvobitni datum nije upcoming termin.
 
 ### 7.3.5 Otkazano Održavanje (PATCH-063 / BR-294)
 
@@ -1132,6 +1258,20 @@ Tehnički oblik (scope / query object / shared builder) bira se u implementaciji
 
 ---
 
+
+### 11.3 Homepage „Naredni događaji" — PATCH-064 selection SSOT
+
+`CulturalPublicEventQuery` (ili ekvivalent) mora izložiti **poseban** homepage ugovor za zajednički bazen (§5.5), odvojen od:
+
+* `orderedByNextRelevantOccurrence` / Pretraga;
+* `withCardRelevantOccurrence` kao **jedini** filter za homepage (taj filter ostaje planned-only i **ne** smije samostalno biti cijeli homepage SSOT nakon PATCH-064);
+* calendar `distinctPublicEntryCountsByOccurrenceDate` / `constrainCalendarActiveOccurrence`.
+
+Implementacioni redoslijed: candidate selection → merge → sort (`ranking_date ASC`, `entry.id ASC`) → `take(3)`.
+
+Eager load za kartice: postojeći pattern (`category`, `coverMedia`, `occurrences.location`) — bez N+1; ručni Organizator bez relation query-ja.
+
+---
 # 12. Javna vidljivost statusa (kanonski)
 
 Usklađeno sa BR-270–BR-274 / BR-286 / BM-PK-13 / BM-PK-35 / CR-004A–B / PO-6A09; operacionalizacija na kanonskom modelu:
@@ -1203,6 +1343,8 @@ Nema otvorenih pitanja koja blokiraju dokumentacioni ugovor Faze 6A. Implementac
 | PO-CR4B-01 … PO-CR4B-10 | BM-PK-13, BM-PK-15 | BR-270–BR-274 | §7.2 |
 | PO-TS9-06C (CR-004B usklađenje skupa) | BM-PK-22 | BR-263 | §3.2, §5.3 |
 | PO-TS9-06D | BM-PK-23 | BR-264, §5.3 | §5.4 |
+| PATCH-064 / BM-PK-37 | BM-PK-37 / BM-GL-26 | BR-296 | §5.5, §7.3.2, §7.3.4 |
+| PATCH-064 / zajednički bazen | BM-PK-23 | BR-264 / BR-297 | §5.4, §5.5, §11.3 |
 | PO-TS9-07A | BM-PK-24 | BR-265 | §6.1 |
 | PO-TS9-07B | BM-PK-25 | BR-266 | §6.2 |
 | PO-TS9-07C | BM-PK-26 | BR-267 | §6.3 |
@@ -1246,6 +1388,8 @@ Granice (bez dupliciranja u TS-009): lifecycle Događaja → TS-003; Održavanje
 
 ---
 
+
+* **PATCH-064 homepage:** implementirati §5.5 / §11.3 bez diranja Pretrage, calendar counts, selected-day, featured, lifecycle. Ne proširivati `CulturalPublicCardOccurrenceCriteria` na postponed. Tie-breaker = `entry.id ASC`.
 # 18. Test matrica Faze 6A (TM-JP) — dokumentaciono
 
 Konvencija: `TM-JP-*` (Javni Portal), u skladu sa `TM-*` iz RG-001 / TS-010.8. **Bez test koda** u ovom PATCH-u.
@@ -1276,3 +1420,19 @@ Konvencija: `TM-JP-*` (Javni Portal), u skladu sa `TM-*` iz RG-001 / TS-010.8. *
 | TM-JP-20 | Bez Org | Oba null | Nema prazne Org sekcije | Pozitivan | §7.3.6 |
 | TM-JP-21 | Odgođeno Prvobitni | Odgođen bez novog termina | „Odgođeno“ + „Prvobitni termin“ + datum + opcion razlog | Pozitivan | §7.3.4; BR-293 |
 | TM-JP-22 | OCC cancel | Jedan OCC Otkazan | „Otkazano“ + datum + opcion razlog; Entry ostaje Objavljen ako uslovi dozvole | Pozitivan | §7.3.5; BR-294 |
+| TM-JP-23 | Homepage planned only | 1+ planned | Standard card; mode planned | Pozitivan | §5.5; BR-280 |
+| TM-JP-24 | Planned + postponed same Entry | Oba OCC | Jedan kandidat; mode planned; ranking = planned datum | Pozitivan | §5.5; BR-297 |
+| TM-JP-25 | Info postponed today | published; no planned; postponed datum=today | Info card; Odgođeno + Prvobitni | Pozitivan | §5.5; BR-296 |
+| TM-JP-26 | Info postponed tomorrow | postponed datum=tomorrow | Info card vidljiva | Pozitivan | §5.5 |
+| TM-JP-27 | Info postponed yesterday | postponed datum=yesterday | Nije homepage kandidat po tom OCC | Negativan | §5.5 |
+| TM-JP-28 | Multi postponed | 2+ postponed bez planned | Najbliže neisteklo; prelaz nakon isteka | Pozitivan | §5.5; BR-296 |
+| TM-JP-29 | All postponed expired | svi datum < today | Nema postponed_info kandidata | Negativan | §5.5 |
+| TM-JP-30 | Shared pool rank | earlier postponed_info + later planned | Sort po ranking_date; max 3; mode nije priority | Pozitivan | §5.5; BR-297 |
+| TM-JP-31 | Max 3 | ≥4 kandidata | Prikaz prva 3 nakon sort | Pozitivan | §5.4; BR-264 |
+| TM-JP-32 | Tie same ranking_date | 2 Entry isti datum | Stabilan `entry.id ASC`; mode nije tie | Pozitivan | §5.5.5 |
+| TM-JP-33 | Resume new termin | postponed→planned | Standard mode; novi datum ranking | Pozitivan | §5.5; BR-293 |
+| TM-JP-34 | Calendar count regression | postponed OCC na danu | Ne ulazi u day count | Negativan | §5.5.9; PATCH-063 |
+| TM-JP-35 | Selected-day regression | postponed na izabranom danu | Ne u aktivnoj day listi | Negativan | §5.5.9 |
+| TM-JP-36 | Search sort unchanged | Pretraga | BR-281 / orderedByNextRelevant neizmijenjen | Pozitivan | §3.4; §5.5.9 |
+| TM-JP-37 | Detail unchanged | postponed Entry | PATCH-063 detalj neizmijenjen | Pozitivan | §7.3.4 |
+| TM-JP-38 | Cancel/archive/newsletter | — | Lifecycle/arhiva/newsletter neizmijenjeni | Pozitivan | §5.5.1 |

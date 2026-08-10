@@ -515,11 +515,21 @@
                         @forelse($upcomingEvents as $event)
                             @php
                                 $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
+                                $homepageMode = $isCanonicalEntry
+                                    ? (string) ($event->homepage_card_mode ?? 'planned')
+                                    : 'planned';
+                                $isPostponedInfo = $isCanonicalEntry && $homepageMode === 'postponed_info';
                                 if ($isCanonicalEntry) {
-                                    $cardOcc = $event->nextRelevantOccurrence();
+                                    $cardOcc = $isPostponedInfo
+                                        ? ($event->relationLoaded('homepageSelectedOccurrence')
+                                            ? $event->getRelation('homepageSelectedOccurrence')
+                                            : null)
+                                        : ($event->relationLoaded('homepageSelectedOccurrence')
+                                            ? $event->getRelation('homepageSelectedOccurrence')
+                                            : $event->nextRelevantOccurrence());
                                     $cardDatum = $cardOcc?->datum;
-                                    $cardVrijeme = $cardOcc?->vrijeme_od;
-                                    $cardLokacija = $cardOcc?->publicLocationDisplayName();
+                                    $cardVrijeme = $isPostponedInfo ? null : $cardOcc?->vrijeme_od;
+                                    $cardLokacija = $isPostponedInfo ? null : $cardOcc?->publicLocationDisplayName();
                                     $cardHref = route('cultural-calendar.show', [
                                         'event' => $event,
                                         'back' => request()->getRequestUri(),
@@ -542,16 +552,23 @@
                                 @endif
                                     <div class="kk-upcoming-photo kk-public-status-photo">
                                         <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}">
-                                        @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'card'])
+                                        @if(! $isPostponedInfo)
+                                            @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'card'])
+                                        @endif
                                     </div>
                                     <div class="kk-upcoming-body">
                                         <div class="kk-upcoming-meta">
-                                            {{ optional($cardDatum)->format('d.m.Y') }}
-                                            @if($cardVrijeme)
-                                                • {{ substr((string) $cardVrijeme, 0, 5) }}
-                                            @endif
-                                            @if($cardLokacija)
-                                                • {{ $cardLokacija }}
+                                            @if($isPostponedInfo)
+                                                <span>Odgođeno</span>
+                                                <span>• Prvobitni termin: {{ optional($cardDatum)->format('d.m.Y') }}</span>
+                                            @else
+                                                {{ optional($cardDatum)->format('d.m.Y') }}
+                                                @if($cardVrijeme)
+                                                    • {{ substr((string) $cardVrijeme, 0, 5) }}
+                                                @endif
+                                                @if($cardLokacija)
+                                                    • {{ $cardLokacija }}
+                                                @endif
                                             @endif
                                         </div>
                                         <div class="kk-upcoming-name">{{ $event->naslov }}</div>
