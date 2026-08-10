@@ -22,6 +22,26 @@
         'cultural-moderator-proposals.*',
         'cultural-moderator-context.*'
     );
+
+    // Shared KK nav button styles (existing red palette).
+    $kkNavBtn = static function (bool $active): string {
+        $bg = $active ? '#5f0c12' : '#7a0f17';
+
+        return 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:8px;'
+            ."background:{$bg};color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;";
+    };
+    $kkNavBtnMobile = static function (bool $active): string {
+        $bg = $active ? '#5f0c12' : '#7a0f17';
+
+        return 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:8px;'
+            ."background:{$bg};color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;";
+    };
+    $kkLogoutBtn = 'min-width:100px;background:#0d6efd;color:#ffffff;border:1px solid #0d6efd;border-radius:8px;'
+        .'padding:8px 14px;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;'
+        .'text-decoration:none;font-size:14px;font-weight:600;';
+    $kkLogoutBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:8px;'
+        .'background:#0d6efd;color:#ffffff;border:1px solid #0d6efd;font-size:16px;font-weight:600;'
+        .'text-decoration:none;text-align:center;cursor:pointer;';
 @endphp
 <nav
     x-data="{ open: false }"
@@ -36,8 +56,8 @@
         'kk-shell' => $isKkSection,
         'max-w-7xl' => ! $isKkSection,
     ])>
-        <div class="flex justify-between h-16 items-center">
-            <div class="flex items-center justify-start min-w-0 flex-1">
+        <div class="flex justify-between min-h-16 items-center flex-wrap gap-y-2 py-2">
+            <div class="flex items-center justify-start min-w-0 flex-1 flex-wrap gap-y-2">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center">
                     <a href="{{ $isKkAdmin ? route('cultural-calendar.index') : ($isCompetitionAdmin ? route('admin.dashboard') : route('dashboard')) }}">
@@ -48,230 +68,74 @@
                 <!-- Navigation Links -->
                 @if($isKkAdmin || $isKkSection)
                     <div
-                        class="hidden sm:flex sm:items-center sm:justify-start"
-                        style="margin-left: 28px; gap: 36px;"
+                        class="hidden sm:flex sm:items-center sm:justify-start sm:flex-wrap"
+                        style="margin-left: 16px; gap: 8px; flex: 1 1 auto; min-width: 0;"
                     >
                         <a
                             href="{{ route('cultural-calendar.index') }}"
-                            style="
-                                color: {{ request()->routeIs('cultural-calendar.index') ? '#111827' : '#4b5563' }};
-                                font-size: 14px;
-                                font-weight: {{ request()->routeIs('cultural-calendar.index') ? '700' : '600' }};
-                                text-decoration: none;
-                                white-space: nowrap;
-                                border-bottom: 2px solid {{ request()->routeIs('cultural-calendar.index') ? '#7a0f17' : 'transparent' }};
-                                padding-bottom: 2px;
-                            "
+                            style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.index')) }}"
                         >Kalendar kulture</a>
                         <a
                             href="{{ route('cultural-calendar.events') }}"
-                            style="
-                                color: {{ request()->routeIs('cultural-calendar.events') ? '#111827' : '#4b5563' }};
-                                font-size: 14px;
-                                font-weight: {{ request()->routeIs('cultural-calendar.events') ? '700' : '600' }};
-                                text-decoration: none;
-                                white-space: nowrap;
-                                border-bottom: 2px solid {{ request()->routeIs('cultural-calendar.events') ? '#7a0f17' : 'transparent' }};
-                                padding-bottom: 2px;
-                            "
+                            style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.events')) }}"
                         >Pretraga i pregled</a>
                         <a
                             href="{{ route('cultural-calendar.archive') }}"
-                            style="
-                                color: {{ request()->routeIs('cultural-calendar.archive') ? '#111827' : '#4b5563' }};
-                                font-size: 14px;
-                                font-weight: {{ request()->routeIs('cultural-calendar.archive') ? '700' : '600' }};
-                                text-decoration: none;
-                                white-space: nowrap;
-                                border-bottom: 2px solid {{ request()->routeIs('cultural-calendar.archive') ? '#7a0f17' : 'transparent' }};
-                                padding-bottom: 2px;
-                            "
+                            style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.archive')) }}"
                         >Arhiva događaja</a>
                         @if($isKkAdmin)
                             <a
                                 href="{{ route('cultural-editorial-dashboard.index') }}"
-                                style="
-                                    display: inline-flex;
-                                    align-items: center;
-                                    padding: 8px 14px;
-                                    border-radius: 8px;
-                                    background: {{ request()->routeIs('cultural-editorial-dashboard.*') ? '#5f0c12' : '#7a0f17' }};
-                                    color: #ffffff;
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    text-decoration: none;
-                                    white-space: nowrap;
-                                "
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-editorial-dashboard.*')) }}"
                             >Urednički rad</a>
                             <a
                                 href="{{ route('cultural-events.index') }}"
-                                style="
-                                    display: inline-flex;
-                                    align-items: center;
-                                    padding: 8px 14px;
-                                    border-radius: 8px;
-                                    background: {{ request()->routeIs('cultural-events.*') ? '#5f0c12' : '#7a0f17' }};
-                                    color: #ffffff;
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    text-decoration: none;
-                                    white-space: nowrap;
-                                "
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-events.*')) }}"
                             >Događaji</a>
                             <a
                                 href="{{ route('cultural-event-entries.index') }}"
-                                style="
-                                    display: inline-flex;
-                                    align-items: center;
-                                    padding: 8px 14px;
-                                    border-radius: 8px;
-                                    background: {{ request()->routeIs('cultural-event-entries.*') ? '#5f0c12' : '#7a0f17' }};
-                                    color: #ffffff;
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    text-decoration: none;
-                                    white-space: nowrap;
-                                "
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-event-entries.*')) }}"
                             >Kanonski događaji</a>
                             <a
                                 href="{{ route('cultural-locations.index') }}"
-                                style="
-                                    display: inline-flex;
-                                    align-items: center;
-                                    padding: 8px 14px;
-                                    border-radius: 8px;
-                                    background: {{ request()->routeIs('cultural-locations.*') ? '#5f0c12' : '#7a0f17' }};
-                                    color: #ffffff;
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    text-decoration: none;
-                                    white-space: nowrap;
-                                "
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-locations.*')) }}"
                             >Lokacije</a>
                             <a
                                 href="{{ route('cultural-categories.index') }}"
-                                style="
-                                    display: inline-flex;
-                                    align-items: center;
-                                    padding: 8px 14px;
-                                    border-radius: 8px;
-                                    background: {{ request()->routeIs('cultural-categories.*') ? '#5f0c12' : '#7a0f17' }};
-                                    color: #ffffff;
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    text-decoration: none;
-                                    white-space: nowrap;
-                                "
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-categories.*')) }}"
                             >Kategorije</a>
                             <a
                                 href="{{ route('cultural-tags.index') }}"
-                                style="
-                                    display: inline-flex;
-                                    align-items: center;
-                                    padding: 8px 14px;
-                                    border-radius: 8px;
-                                    background: {{ request()->routeIs('cultural-tags.*') ? '#5f0c12' : '#7a0f17' }};
-                                    color: #ffffff;
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    text-decoration: none;
-                                    white-space: nowrap;
-                                "
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-tags.*')) }}"
                             >Oznake</a>
                             <a
                                 href="{{ route('cultural-media.index') }}"
-                                style="
-                                    display: inline-flex;
-                                    align-items: center;
-                                    padding: 8px 14px;
-                                    border-radius: 8px;
-                                    background: {{ request()->routeIs('cultural-media.*') ? '#5f0c12' : '#7a0f17' }};
-                                    color: #ffffff;
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    text-decoration: none;
-                                    white-space: nowrap;
-                                "
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-media.*')) }}"
                             >Mediji</a>
                             <a
                                 href="{{ route('cultural-organizers.index') }}"
-                                style="
-                                    display: inline-flex;
-                                    align-items: center;
-                                    padding: 8px 14px;
-                                    border-radius: 8px;
-                                    background: {{ request()->routeIs('cultural-organizers.*') ? '#5f0c12' : '#7a0f17' }};
-                                    color: #ffffff;
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    text-decoration: none;
-                                    white-space: nowrap;
-                                "
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-organizers.*')) }}"
                             >Organizatori</a>
                             <a
                                 href="{{ route('cultural-organizer-creation-requests.index') }}"
-                                style="
-                                    display: inline-flex;
-                                    align-items: center;
-                                    padding: 8px 14px;
-                                    border-radius: 8px;
-                                    background: {{ request()->routeIs('cultural-organizer-creation-requests.*') ? '#5f0c12' : '#7a0f17' }};
-                                    color: #ffffff;
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    text-decoration: none;
-                                    white-space: nowrap;
-                                "
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-organizer-creation-requests.*')) }}"
                             >Zahtjevi Org</a>
                             <a
                                 href="{{ route('cultural-moderator-requests.index') }}"
-                                style="
-                                    display: inline-flex;
-                                    align-items: center;
-                                    padding: 8px 14px;
-                                    border-radius: 8px;
-                                    background: {{ request()->routeIs('cultural-moderator-requests.index', 'cultural-moderator-requests.show') ? '#5f0c12' : '#7a0f17' }};
-                                    color: #ffffff;
-                                    font-size: 14px;
-                                    font-weight: 600;
-                                    text-decoration: none;
-                                    white-space: nowrap;
-                                "
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-moderator-requests.index', 'cultural-moderator-requests.show')) }}"
                             >Zahtjevi Mod</a>
                         @endif
                         @auth
                             @if(\App\Support\CulturalModeratorEventAccess::isActiveModerator(auth()->user()))
                                 <a
                                     href="{{ route('cultural-moderator-dashboard.index') }}"
-                                    style="
-                                        display: inline-flex;
-                                        align-items: center;
-                                        padding: 8px 14px;
-                                        border-radius: 8px;
-                                        background: {{ request()->routeIs('cultural-moderator-dashboard.*') ? '#5f0c12' : '#7a0f17' }};
-                                        color: #ffffff;
-                                        font-size: 14px;
-                                        font-weight: 600;
-                                        text-decoration: none;
-                                        white-space: nowrap;
-                                    "
+                                    style="{{ $kkNavBtn(request()->routeIs('cultural-moderator-dashboard.*')) }}"
                                 >Radna tabla</a>
                             @endif
                             @if(\App\Support\CulturalPortalAccess::allows(auth()->user()))
                                 <a
                                     href="{{ route('cultural-moderator-workspace.index') }}"
-                                    style="
-                                        display: inline-flex;
-                                        align-items: center;
-                                        padding: 8px 14px;
-                                        border-radius: 8px;
-                                        background: {{ request()->routeIs('cultural-moderator-workspace.*') ? '#5f0c12' : '#7a0f17' }};
-                                        color: #ffffff;
-                                        font-size: 14px;
-                                        font-weight: 600;
-                                        text-decoration: none;
-                                        white-space: nowrap;
-                                    "
+                                    style="{{ $kkNavBtn(request()->routeIs('cultural-moderator-workspace.*')) }}"
                                 >Mod rad</a>
                             @endif
                         @endauth
@@ -322,9 +186,9 @@
             </div>
 
             <!-- User info + Logout -->
-            <div class="sm:flex sm:items-center sm:ms-6" style="display:flex; align-items:center; gap:12px;">
+            <div class="hidden sm:flex sm:items-center sm:ms-6 shrink-0" style="align-items:center; gap:12px;">
                 @auth
-                    <span @class(['text-sm text-gray-700', 'dark:text-gray-200' => ! $isKkSection]) style="margin-right: 16px;">
+                    <span @class(['text-sm text-gray-700', 'dark:text-gray-200' => ! $isKkSection]) style="margin-right: 8px;">
                         @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
                             Administrator konkursa
                         @else
@@ -335,21 +199,8 @@
                         @csrf
                         <button
                             type="submit"
-                            class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold"
-                            style="
-                                min-width: 100px;
-                                background: #0d6efd;
-                                color: #ffffff;
-                                border: 1px solid #0d6efd;
-                                border-radius: 8px;
-                                padding: 8px 14px;
-                                display: inline-flex;
-                                align-items: center;
-                                justify-content: center;
-                                gap: 6px;
-                                cursor: pointer;
-                                text-decoration: none;
-                            "
+                            class="inline-flex items-center justify-center text-sm font-semibold"
+                            style="{{ $kkLogoutBtn }}"
                         >
                             Odjava
                         </button>
@@ -377,203 +228,74 @@
 
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
-        <div class="pt-2 pb-3 space-y-1">
+        <div class="pt-2 pb-3 px-2 space-y-2">
             @if($isKkAdmin || $isKkSection)
-                <x-responsive-nav-link :href="route('cultural-calendar.index')" :active="request()->routeIs('cultural-calendar.index')">
-                    Kalendar kulture
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('cultural-calendar.events')" :active="request()->routeIs('cultural-calendar.events')">
-                    Pretraga i pregled
-                </x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('cultural-calendar.archive')" :active="request()->routeIs('cultural-calendar.archive')">
-                    Arhiva događaja
-                </x-responsive-nav-link>
+                <a
+                    href="{{ route('cultural-calendar.index') }}"
+                    style="{{ $kkNavBtnMobile(request()->routeIs('cultural-calendar.index')) }}"
+                >Kalendar kulture</a>
+                <a
+                    href="{{ route('cultural-calendar.events') }}"
+                    style="{{ $kkNavBtnMobile(request()->routeIs('cultural-calendar.events')) }}"
+                >Pretraga i pregled</a>
+                <a
+                    href="{{ route('cultural-calendar.archive') }}"
+                    style="{{ $kkNavBtnMobile(request()->routeIs('cultural-calendar.archive')) }}"
+                >Arhiva događaja</a>
                     @if($isKkAdmin)
                     <a
                         href="{{ route('cultural-editorial-dashboard.index') }}"
-                        style="
-                            display: block;
-                            width: 100%;
-                            padding: 10px 16px;
-                            background: {{ request()->routeIs('cultural-editorial-dashboard.*') ? '#5f0c12' : '#7a0f17' }};
-                            color: #ffffff;
-                            font-size: 16px;
-                            font-weight: 600;
-                            text-decoration: none;
-                        "
-                    >
-                        Urednički rad
-                    </a>
+                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-editorial-dashboard.*')) }}"
+                    >Urednički rad</a>
                     <a
                         href="{{ route('cultural-events.index') }}"
-                        style="
-                            display: block;
-                            width: 100%;
-                            padding: 10px 16px;
-                            background: {{ request()->routeIs('cultural-events.*') ? '#5f0c12' : '#7a0f17' }};
-                            color: #ffffff;
-                            font-size: 16px;
-                            font-weight: 600;
-                            text-decoration: none;
-                        "
-                    >
-                        Događaji
-                    </a>
+                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-events.*')) }}"
+                    >Događaji</a>
                     <a
                         href="{{ route('cultural-event-entries.index') }}"
-                        style="
-                            display: block;
-                            width: 100%;
-                            padding: 10px 16px;
-                            background: {{ request()->routeIs('cultural-event-entries.*') ? '#5f0c12' : '#7a0f17' }};
-                            color: #ffffff;
-                            font-size: 16px;
-                            font-weight: 600;
-                            text-decoration: none;
-                        "
-                    >
-                        Kanonski događaji
-                    </a>
+                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-event-entries.*')) }}"
+                    >Kanonski događaji</a>
                     <a
                         href="{{ route('cultural-locations.index') }}"
-                        style="
-                            display: block;
-                            width: 100%;
-                            padding: 10px 16px;
-                            background: {{ request()->routeIs('cultural-locations.*') ? '#5f0c12' : '#7a0f17' }};
-                            color: #ffffff;
-                            font-size: 16px;
-                            font-weight: 600;
-                            text-decoration: none;
-                        "
-                    >
-                        Lokacije
-                    </a>
+                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-locations.*')) }}"
+                    >Lokacije</a>
                     <a
                         href="{{ route('cultural-categories.index') }}"
-                        style="
-                            display: block;
-                            width: 100%;
-                            padding: 10px 16px;
-                            background: {{ request()->routeIs('cultural-categories.*') ? '#5f0c12' : '#7a0f17' }};
-                            color: #ffffff;
-                            font-size: 16px;
-                            font-weight: 600;
-                            text-decoration: none;
-                        "
-                    >
-                        Kategorije
-                    </a>
+                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-categories.*')) }}"
+                    >Kategorije</a>
                     <a
                         href="{{ route('cultural-tags.index') }}"
-                        style="
-                            display: block;
-                            width: 100%;
-                            padding: 10px 16px;
-                            background: {{ request()->routeIs('cultural-tags.*') ? '#5f0c12' : '#7a0f17' }};
-                            color: #ffffff;
-                            font-size: 16px;
-                            font-weight: 600;
-                            text-decoration: none;
-                        "
-                    >
-                        Oznake
-                    </a>
+                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-tags.*')) }}"
+                    >Oznake</a>
                     <a
                         href="{{ route('cultural-media.index') }}"
-                        style="
-                            display: block;
-                            width: 100%;
-                            padding: 10px 16px;
-                            background: {{ request()->routeIs('cultural-media.*') ? '#5f0c12' : '#7a0f17' }};
-                            color: #ffffff;
-                            font-size: 16px;
-                            font-weight: 600;
-                            text-decoration: none;
-                        "
-                    >
-                        Mediji
-                    </a>
+                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-media.*')) }}"
+                    >Mediji</a>
                     <a
                         href="{{ route('cultural-organizers.index') }}"
-                        style="
-                            display: block;
-                            width: 100%;
-                            padding: 10px 16px;
-                            background: {{ request()->routeIs('cultural-organizers.*') ? '#5f0c12' : '#7a0f17' }};
-                            color: #ffffff;
-                            font-size: 16px;
-                            font-weight: 600;
-                            text-decoration: none;
-                        "
-                    >
-                        Organizatori
-                    </a>
+                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-organizers.*')) }}"
+                    >Organizatori</a>
                     <a
                         href="{{ route('cultural-organizer-creation-requests.index') }}"
-                        style="
-                            display: block;
-                            width: 100%;
-                            padding: 10px 16px;
-                            background: {{ request()->routeIs('cultural-organizer-creation-requests.*') ? '#5f0c12' : '#7a0f17' }};
-                            color: #ffffff;
-                            font-size: 16px;
-                            font-weight: 600;
-                            text-decoration: none;
-                        "
-                    >
-                        Zahtjevi Org
-                    </a>
+                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-organizer-creation-requests.*')) }}"
+                    >Zahtjevi Org</a>
                     <a
                         href="{{ route('cultural-moderator-requests.index') }}"
-                        style="
-                            display: block;
-                            width: 100%;
-                            padding: 10px 16px;
-                            background: {{ request()->routeIs('cultural-moderator-requests.index', 'cultural-moderator-requests.show') ? '#5f0c12' : '#7a0f17' }};
-                            color: #ffffff;
-                            font-size: 16px;
-                            font-weight: 600;
-                            text-decoration: none;
-                        "
-                    >
-                        Zahtjevi Mod
-                    </a>
+                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-moderator-requests.index', 'cultural-moderator-requests.show')) }}"
+                    >Zahtjevi Mod</a>
                     @endif
                     @auth
                         @if(\App\Support\CulturalModeratorEventAccess::isActiveModerator(auth()->user()))
                             <a
                                 href="{{ route('cultural-moderator-dashboard.index') }}"
-                                style="
-                                    display: block;
-                                    width: 100%;
-                                    padding: 10px 16px;
-                                    background: {{ request()->routeIs('cultural-moderator-dashboard.*') ? '#5f0c12' : '#7a0f17' }};
-                                    color: #ffffff;
-                                    font-size: 16px;
-                                    font-weight: 600;
-                                    text-decoration: none;
-                                "
-                            >
-                                Radna tabla
-                            </a>
+                                style="{{ $kkNavBtnMobile(request()->routeIs('cultural-moderator-dashboard.*')) }}"
+                            >Radna tabla</a>
                         @endif
                         @if(\App\Support\CulturalPortalAccess::allows(auth()->user()))
                             <a
                                 href="{{ route('cultural-moderator-workspace.index') }}"
-                                style="
-                                    display: block;
-                                    width: 100%;
-                                    padding: 10px 16px;
-                                    background: {{ request()->routeIs('cultural-moderator-workspace.*') ? '#5f0c12' : '#7a0f17' }};
-                                    color: #ffffff;
-                                    font-size: 16px;
-                                    font-weight: 600;
-                                    text-decoration: none;
-                                "
-                            >
-                                Mod rad
-                            </a>
+                                style="{{ $kkNavBtnMobile(request()->routeIs('cultural-moderator-workspace.*')) }}"
+                            >Mod rad</a>
                         @endif
                     @endauth
                 @elseif($isCompetitionAdmin)
@@ -633,16 +355,12 @@
                     <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
                 </div>
 
-                <div class="mt-3 space-y-1">
-                    <!-- Authentication -->
+                <div class="mt-3 px-2 space-y-2">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-
-                        <x-responsive-nav-link :href="route('logout')"
-                                onclick="event.preventDefault();
-                                            this.closest('form').submit();">
-                            {{ __('Log Out') }}
-                        </x-responsive-nav-link>
+                        <button type="submit" style="{{ $kkLogoutBtnMobile }}">
+                            Odjava
+                        </button>
                     </form>
                 </div>
             @endauth
