@@ -250,6 +250,70 @@ class CulturalManifestationDomainTest extends TestCase
         $this->assertNotNull($manifestation2->fresh());
     }
 
+    public function test_move_event_between_manifestations_is_atomic(): void
+    {
+        $event = $this->makeDraftEvent('Move me');
+        $source = $this->manifestationWriter->createDraft($this->editor, [
+            'naziv' => 'Source',
+            'event_entry_ids' => [$event->id],
+        ]);
+        $target = $this->manifestationWriter->createDraft($this->editor, ['naziv' => 'Target']);
+
+        $this->manifestationWriter->moveEvent($target, $event->id, $this->editor);
+
+        $this->assertSame($target->id, $event->fresh()->manifestation_id);
+        $this->assertSame(0, $source->fresh()->events()->count());
+        $this->assertSame(1, $target->fresh()->events()->count());
+    }
+
+    public function test_move_blocked_when_source_published_would_lose_last_published_event(): void
+    {
+        $published = $this->makePublishedEvent('Only published');
+        $source = $this->manifestationWriter->createDraft($this->editor, [
+            'naziv' => 'Source published',
+            'event_entry_ids' => [$published->id],
+        ]);
+        $lifecycle = app(\App\Services\CulturalManifestationDomain\ManifestationLifecycle::class);
+        $lifecycle->submitForApproval($source, $this->editor);
+        $lifecycle->publish($source->fresh(), $this->editor);
+
+        $target = $this->manifestationWriter->createDraft($this->editor, ['naziv' => 'Target']);
+
+        $this->expectException(CulturalEventDomainException::class);
+        $this->manifestationWriter->moveEvent($target, $published->id, $this->editor);
+    }
+
+    public function test_cancelled_and_archived_events_cannot_be_newly_linked(): void
+    {
+        $published = $this->makePublishedEvent('To cancel');
+        $this->eventLifecycle->cancel($published->fresh(), $this->editor, 'Razlog');
+        $mf = $this->manifestationWriter->createDraft($this->editor, ['naziv' => 'MF']);
+
+        try {
+            $this->manifestationWriter->linkEvent($mf, $published->id, $this->editor);
+            $this->fail('Expected cancelled Event link to fail');
+        } catch (CulturalEventDomainException $e) {
+            $this->assertStringContainsString('ne može biti novo povezan', $e->getMessage());
+        }
+
+        $archived = $this->makePublishedEvent('To archive', '2020-01-01');
+        $archived->update(['status' => CulturalEventEntry::STATUS_ARCHIVED]);
+        $this->expectException(CulturalEventDomainException::class);
+        $this->manifestationWriter->linkEvent($mf->fresh(), $archived->id, $this->editor);
+    }
+
+    public function test_cancelled_event_already_linked_remains_linked(): void
+    {
+        $published = $this->makePublishedEvent('Linked then cancel');
+        $mf = $this->manifestationWriter->createDraft($this->editor, [
+            'naziv' => 'MF',
+            'event_entry_ids' => [$published->id],
+        ]);
+        $this->eventLifecycle->cancel($published->fresh(), $this->editor, 'Razlog');
+
+        $this->assertSame($mf->id, $published->fresh()->manifestation_id);
+    }
+
     private function makeDraftEvent(string $title): CulturalEventEntry
     {
         return $this->eventWriter->createDraft($this->editor, [

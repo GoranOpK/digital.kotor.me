@@ -7,6 +7,7 @@
         'cultural-calendar.*',
         'cultural-events.*',
         'cultural-event-entries.*',
+        'cultural-manifestations.*',
         'cultural-editorial-dashboard.*',
         'cultural-event-change-proposals.*',
         'cultural-locations.*',
@@ -19,6 +20,7 @@
         'cultural-moderator-workspace.*',
         'cultural-moderator-dashboard.*',
         'cultural-moderator-events.*',
+        'cultural-moderator-manifestations.*',
         'cultural-moderator-proposals.*',
         'cultural-moderator-context.*'
     );
@@ -132,6 +134,10 @@
                                 href="{{ route('cultural-event-entries.index') }}"
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-event-entries.*')) }}"
                             >Događaji</a>
+                            <a
+                                href="{{ route('cultural-manifestations.index') }}"
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-manifestations.*')) }}"
+                            >Manifestacije</a>
                             <a
                                 href="{{ route('cultural-locations.index') }}"
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-locations.*')) }}"
@@ -319,6 +325,10 @@
                         href="{{ route('cultural-event-entries.index') }}"
                         style="{{ $kkNavBtnMobile(request()->routeIs('cultural-event-entries.*')) }}"
                     >Događaji</a>
+                    <a
+                        href="{{ route('cultural-manifestations.index') }}"
+                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-manifestations.*')) }}"
+                    >Manifestacije</a>
                     <a
                         href="{{ route('cultural-locations.index') }}"
                         style="{{ $kkNavBtnMobile(request()->routeIs('cultural-locations.*')) }}"

@@ -17,6 +17,9 @@
                 <a href="{{ route('cultural-moderator-events.index') }}" class="inline-block px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50 font-semibold">
                     Događaji Organizatora
                 </a>
+                <a href="{{ route('cultural-moderator-manifestations.index') }}" class="inline-block px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50 font-semibold ml-2">
+                    Manifestacije
+                </a>
             @else
                 <p class="text-sm text-gray-600 mb-3">Izaberite Organizator za rad (obavezno kada ih imate više).</p>
             @endif

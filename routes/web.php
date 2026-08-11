@@ -14,9 +14,11 @@ use App\Http\Controllers\CulturalEventEntryController;
 use App\Http\Controllers\CulturalEventEntryOccurrenceController;
 use App\Http\Controllers\CulturalLocationController;
 use App\Http\Controllers\CulturalCategoryController;
+use App\Http\Controllers\CulturalManifestationController;
 use App\Http\Controllers\CulturalMediaController;
 use App\Http\Controllers\CulturalModeratorDashboardController;
 use App\Http\Controllers\CulturalModeratorEventEntryController;
+use App\Http\Controllers\CulturalModeratorManifestationController;
 use App\Http\Controllers\CulturalModeratorEventEntryOccurrenceController;
 use App\Http\Controllers\CulturalModeratorEventChangeProposalController;
 use App\Http\Controllers\CulturalModeratorOrganizerContextController;
@@ -159,6 +161,28 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
         Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/cancel', [CulturalModeratorEventEntryController::class, 'cancel'])
             ->name('cultural-moderator-events.cancel');
 
+        // 6B-02 — Moderator Manifestacije
+        Route::get('/kalendar-kulture/moderatorske-manifestacije', [CulturalModeratorManifestationController::class, 'index'])
+            ->name('cultural-moderator-manifestations.index');
+        Route::get('/kalendar-kulture/moderatorske-manifestacije/create', [CulturalModeratorManifestationController::class, 'create'])
+            ->name('cultural-moderator-manifestations.create');
+        Route::post('/kalendar-kulture/moderatorske-manifestacije', [CulturalModeratorManifestationController::class, 'store'])
+            ->name('cultural-moderator-manifestations.store');
+        Route::get('/kalendar-kulture/moderatorske-manifestacije/{moderator_manifestacija}/edit', [CulturalModeratorManifestationController::class, 'edit'])
+            ->name('cultural-moderator-manifestations.edit');
+        Route::put('/kalendar-kulture/moderatorske-manifestacije/{moderator_manifestacija}', [CulturalModeratorManifestationController::class, 'update'])
+            ->name('cultural-moderator-manifestations.update');
+        Route::post('/kalendar-kulture/moderatorske-manifestacije/{moderator_manifestacija}/submit', [CulturalModeratorManifestationController::class, 'submit'])
+            ->name('cultural-moderator-manifestations.submit');
+        Route::post('/kalendar-kulture/moderatorske-manifestacije/{moderator_manifestacija}/cancel', [CulturalModeratorManifestationController::class, 'cancel'])
+            ->name('cultural-moderator-manifestations.cancel');
+        Route::post('/kalendar-kulture/moderatorske-manifestacije/{moderator_manifestacija}/dogadjaji/link', [CulturalModeratorManifestationController::class, 'linkEvent'])
+            ->name('cultural-moderator-manifestations.events.link');
+        Route::post('/kalendar-kulture/moderatorske-manifestacije/{moderator_manifestacija}/dogadjaji/unlink', [CulturalModeratorManifestationController::class, 'unlinkEvent'])
+            ->name('cultural-moderator-manifestations.events.unlink');
+        Route::post('/kalendar-kulture/moderatorske-manifestacije/{moderator_manifestacija}/dogadjaji/move', [CulturalModeratorManifestationController::class, 'moveEvent'])
+            ->name('cultural-moderator-manifestations.events.move');
+
         Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja', [CulturalModeratorEventEntryOccurrenceController::class, 'store'])
             ->name('cultural-moderator-events.occurrences.store');
         Route::post('/kalendar-kulture/moderatorski-dogadjaji/{moderator_dogadjaj}/odrzavanja/generisi', [CulturalModeratorEventEntryOccurrenceController::class, 'generate'])
@@ -279,6 +303,32 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-event-entries.occurrences.cancel');
         Route::post('/kalendar-kulture/kanonski-dogadjaji/{kanonski_dogadjaj}/odrzavanja/{odrzavanje}/resume', [CulturalEventEntryOccurrenceController::class, 'resume'])
             ->name('cultural-event-entries.occurrences.resume');
+
+        // 6B-02 — Urednik Manifestacije
+        Route::get('/kalendar-kulture/kanonske-manifestacije', [CulturalManifestationController::class, 'index'])
+            ->name('cultural-manifestations.index');
+        Route::get('/kalendar-kulture/kanonske-manifestacije/create', [CulturalManifestationController::class, 'create'])
+            ->name('cultural-manifestations.create');
+        Route::post('/kalendar-kulture/kanonske-manifestacije', [CulturalManifestationController::class, 'store'])
+            ->name('cultural-manifestations.store');
+        Route::get('/kalendar-kulture/kanonske-manifestacije/{kanonska_manifestacija}/edit', [CulturalManifestationController::class, 'edit'])
+            ->name('cultural-manifestations.edit');
+        Route::put('/kalendar-kulture/kanonske-manifestacije/{kanonska_manifestacija}', [CulturalManifestationController::class, 'update'])
+            ->name('cultural-manifestations.update');
+        Route::post('/kalendar-kulture/kanonske-manifestacije/{kanonska_manifestacija}/submit', [CulturalManifestationController::class, 'submit'])
+            ->name('cultural-manifestations.submit');
+        Route::post('/kalendar-kulture/kanonske-manifestacije/{kanonska_manifestacija}/return', [CulturalManifestationController::class, 'returnToRevision'])
+            ->name('cultural-manifestations.return');
+        Route::post('/kalendar-kulture/kanonske-manifestacije/{kanonska_manifestacija}/publish', [CulturalManifestationController::class, 'publish'])
+            ->name('cultural-manifestations.publish');
+        Route::post('/kalendar-kulture/kanonske-manifestacije/{kanonska_manifestacija}/cancel', [CulturalManifestationController::class, 'cancel'])
+            ->name('cultural-manifestations.cancel');
+        Route::post('/kalendar-kulture/kanonske-manifestacije/{kanonska_manifestacija}/dogadjaji/link', [CulturalManifestationController::class, 'linkEvent'])
+            ->name('cultural-manifestations.events.link');
+        Route::post('/kalendar-kulture/kanonske-manifestacije/{kanonska_manifestacija}/dogadjaji/unlink', [CulturalManifestationController::class, 'unlinkEvent'])
+            ->name('cultural-manifestations.events.unlink');
+        Route::post('/kalendar-kulture/kanonske-manifestacije/{kanonska_manifestacija}/dogadjaji/move', [CulturalManifestationController::class, 'moveEvent'])
+            ->name('cultural-manifestations.events.move');
 
         Route::resource('/kalendar-kulture/lokacije', CulturalLocationController::class)
             ->except(['show', 'destroy'])

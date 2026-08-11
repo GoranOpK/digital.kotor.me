@@ -36,16 +36,13 @@ final class ManifestationLifecycle
         });
     }
 
+    /**
+     * PO-6B-06 — razlog vraćanja nije obavezan i ne persistira se.
+     */
     public function returnToRevision(
         CulturalManifestation $manifestation,
         User $actor,
-        string $reason
     ): CulturalManifestation {
-        $reason = trim($reason);
-        if ($reason === '') {
-            throw new CulturalEventDomainException('Razlog vraćanja na doradu je obavezan.');
-        }
-
         $this->assertTransition($manifestation, CulturalManifestation::STATUS_RETURNED_FOR_REVISION);
 
         return DB::transaction(function () use ($manifestation, $actor) {

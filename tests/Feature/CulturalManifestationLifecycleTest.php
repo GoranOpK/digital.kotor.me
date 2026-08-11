@@ -75,12 +75,26 @@ class CulturalManifestationLifecycleTest extends TestCase
         $this->assertNotNull($submitted->first_submitted_at);
         $firstTs = $submitted->first_submitted_at;
 
-        $returned = $this->manifestationLifecycle->returnToRevision($submitted, $this->editor, 'Doraditi');
+        $returned = $this->manifestationLifecycle->returnToRevision($submitted, $this->editor);
         $this->assertSame(CulturalManifestation::STATUS_RETURNED_FOR_REVISION, $returned->status);
 
         $resubmitted = $this->manifestationLifecycle->submitForApproval($returned, $this->editor);
         $this->assertSame(CulturalManifestation::STATUS_PENDING_APPROVAL, $resubmitted->status);
         $this->assertTrue($firstTs->equalTo($resubmitted->first_submitted_at));
+    }
+
+    public function test_return_to_revision_does_not_require_reason(): void
+    {
+        $event = $this->makeDraftEvent();
+        $manifestation = $this->manifestationWriter->createDraft($this->editor, [
+            'naziv' => 'MF',
+            'event_entry_ids' => [$event->id],
+        ]);
+        $submitted = $this->manifestationLifecycle->submitForApproval($manifestation, $this->editor);
+
+        $returned = $this->manifestationLifecycle->returnToRevision($submitted, $this->editor);
+
+        $this->assertSame(CulturalManifestation::STATUS_RETURNED_FOR_REVISION, $returned->status);
     }
 
     public function test_publish_requires_at_least_one_published_event_and_sets_published_at(): void
@@ -154,7 +168,7 @@ class CulturalManifestationLifecycleTest extends TestCase
             'event_entry_ids' => [$this->makeDraftEvent('Pending event')->id],
         ]);
         $pendingMf = $this->manifestationLifecycle->submitForApproval($pendingMf, $this->editor);
-        $reworkMf = $this->manifestationLifecycle->returnToRevision($pendingMf, $this->editor, 'Dorada');
+        $reworkMf = $this->manifestationLifecycle->returnToRevision($pendingMf, $this->editor);
 
         $result = $this->maintenance->archiveEligibleManifestations();
 
