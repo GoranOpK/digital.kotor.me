@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Organizator, Moderator i zahtjev za kreiranje Organizatora  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.3.0  
-**Datum:** 2026-08-07
+**Verzija:** 0.3.1
+**Datum:** 2026-08-11
 
 ---
 
@@ -20,6 +20,7 @@
 | 0.2 | 2026-07-28 | Redakcijsko usklađivanje strukture dokumenta sa M-TS-005 (standardna struktura TS). Bez izmjene poslovnih i funkcionalnih pravila. |
 | 0.2.1 | 2026-07-30 | Documentation Consistency Patch (CR-001): usklađene statusne oznake dokumenta i status razvoja poglavlja sa stvarnim stanjem finalizovanog TS sadržaja. Bez izmjene poslovnih i funkcionalnih pravila. |
 | 0.3.0 | 2026-08-07 | Ugrađene usvojene Product Owner odluke PO-ORG-01–PO-ORG-04: katalog polja Organizatora V1; identifikacija Moderatora preko `user_id`; kreiranje entiteta tek pri odobrenju; pristup uredničkom portalu iz aktivnog moderatorskog ovlašćenja bez nove platformske uloge. Zatvorena otvorena pitanja 1, 2, 3 i 15. Usklađeno sa BM PATCH-054 / FS PATCH-FS-054. Bez implementacije. |
+| 0.3.1 | 2026-08-11 | **PO-ORG-05:** napomena Urednika — approve opciono; reject obavezno; storage `decision_note` (nullable u DB); server-side validacija; fail-closed. Usklađeno sa BM PATCH-067 / FS PATCH-FS-068 / BR-307. |
 
 Napomena:
 
@@ -361,7 +362,11 @@ Podnesen → Odobren
 
 * podnošenje ne mijenja platformske uloge;
 * Urednik odobrava ili odbija (BM-UR-01);
-* trajni audit obavezan (BR-055, BM-ORG-09).
+* napomena Urednika: **opciona** pri odobrenju; **obavezna** (ne-prazna) pri odbijanju (PO-ORG-05 / BR-307 / BM-ORG-14);
+* storage: `decision_note` (nullable u bazi — obaveznost je server-side validacija, ne DB NOT NULL);
+* fail-closed: odbijanje bez napomene ne mijenja status (ostaje submitted) i ne kreira Organizator/grant;
+* validaciona poruka: „Napomena je obavezna prilikom odbijanja zahtjeva.“;
+* trajni audit obavezan (BR-055, BM-ORG-09), uključujući sačuvanu napomenu kada postoji.
 
 ## 3.4 Zahtjev za dodjelu / uklanjanje Moderatora
 
@@ -856,7 +861,7 @@ Ovo poglavlje definiše **logičke događaje** koje ova cjelina mora evidentirat
 | Događaj | Ko pokreće | Kada nastaje | Šta se bilježi |
 |---------|------------|--------------|----------------|
 | Podnošenje zahtjeva za kreiranje Organizatora | Registrovani korisnik | Pri uspješnom podnošenju | Podnosilac; predloženi Moderator; datum/vrijeme podnošenja |
-| Odluka o zahtjevu za kreiranje Organizatora | Urednik | Pri odobrenju ili odbijanju | Urednik; datum/vrijeme odluke; ishod |
+| Odluka o zahtjevu za kreiranje Organizatora | Urednik | Pri odobrenju ili odbijanju | Urednik; datum/vrijeme odluke; ishod; napomena (`decision_note`) kada je unesena (obavezna pri odbijanju — BR-307) |
 | Podnošenje zahtjeva za dodjelu Moderatora | Aktivni Moderator | Pri podnošenju | Podnosilac; predloženi Moderator; Organizator; vrijeme |
 | Odluka o dodjeli Moderatora | Urednik | Pri odobrenju/odbijanju | Urednik; vrijeme; ishod |
 | Podnošenje zahtjeva za uklanjanje Moderatora | Aktivni Moderator | Pri podnošenju | Podnosilac; ciljni Moderator; Organizator; vrijeme |
@@ -1061,10 +1066,11 @@ Pitanja za kasnije PO odluke ili implementacioni izbor u okviru usvojenih granic
 
 # 14. Napomene za implementaciju
 
-1. Funkcionalnost nije implementirana u kodu; TS-001 + PO-ORG-01–04 čine osnov za Fazu 2 / Korak 1.
+1. Funkcionalnost zahtjeva za kreiranje Organizatora / Moderatore je implementirana (Faza 2 / TS-001); PO-ORG-01–05 ostaju SSOT za V1 ugovor.
 2. Ne uvoditi novu platformsku ulogu za Moderatora; `kk_admin` ostaje Urednik (PO-ORG-04).
 3. Ne kreirati Organizatora pri podnošenju zahtjeva (PO-ORG-03).
 4. Moderator isključivo preko `user_id` aktivnog naloga (PO-ORG-02).
 5. Katalog polja V1: PO-ORG-01 — ne širiti pravnim/geo podacima.
-6. FK Događaj → Organizator: TS-003. Pun UI Moderatorskog rada: TS-010. Centralni audit: TS-012.
-7. Trenutna implementacija i odstupanja: `docs/tehnicka-dokumentacija/cultural-calendar.md` (Technical Overview).
+6. Napomena Urednika na Org creation request: approve opciono / reject obavezno (PO-ORG-05); ne proširivati automatski na Moderator request bez zasebne PO odluke.
+7. FK Događaj → Organizator: TS-003. Pun UI Moderatorskog rada: TS-010. Centralni audit: TS-012.
+8. Trenutna implementacija i odstupanja: `docs/tehnicka-dokumentacija/cultural-calendar.md` (Technical Overview).

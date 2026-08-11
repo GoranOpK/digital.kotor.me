@@ -22,8 +22,23 @@ class CulturalRequestDecisionRequest extends FormRequest
 
     public function rules(): array
     {
+        // PO-ORG-05: reject Organizer creation request requires a non-empty decision_note.
+        // Approve (and Moderator decisions) keep optional note.
+        if ($this->routeIs('cultural-organizer-creation-requests.reject')) {
+            return [
+                'decision_note' => ['required', 'string', 'max:5000'],
+            ];
+        }
+
         return [
             'decision_note' => ['nullable', 'string', 'max:5000'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'decision_note.required' => 'Napomena je obavezna prilikom odbijanja zahtjeva.',
         ];
     }
 }

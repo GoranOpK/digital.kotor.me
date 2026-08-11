@@ -26,27 +26,32 @@
     </div>
 
     @if($requestItem->isSubmitted())
-        <div class="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-            <div>
-                <label class="block text-sm font-medium mb-1">Napomena odluke (opciono)</label>
-                <textarea form="approve-form" name="decision_note" rows="2" class="w-full border-gray-300 rounded-md">{{ old('decision_note') }}</textarea>
-            </div>
-            <div class="flex gap-3 flex-wrap">
-                <form id="approve-form" method="POST" action="{{ route('cultural-organizer-creation-requests.approve', $requestItem) }}">
-                    @csrf
-                    {{-- Inline styles: same visibility guarantee as Event / Manifestation / Org submit CTAs (Tailwind utility CSS). --}}
-                    <button type="submit" style="background:#15803d; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;">
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            {{-- One form + formaction: decision_note reaches both approve and reject (PO-ORG-05). --}}
+            <form method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-sm font-medium mb-1">Napomena Urednika</label>
+                    <p class="text-xs text-gray-500 mb-1">Obavezna pri odbijanju; opciona pri odobravanju.</p>
+                    <textarea name="decision_note" rows="2" class="w-full border-gray-300 rounded-md">{{ old('decision_note') }}</textarea>
+                </div>
+                <div class="flex gap-3 flex-wrap">
+                    <button
+                        type="submit"
+                        formaction="{{ route('cultural-organizer-creation-requests.approve', $requestItem) }}"
+                        style="background:#15803d; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;"
+                    >
                         Odobri
                     </button>
-                </form>
-                <form method="POST" action="{{ route('cultural-organizer-creation-requests.reject', $requestItem) }}">
-                    @csrf
-                    <input type="hidden" name="decision_note" value="{{ old('decision_note') }}">
-                    <button type="submit" style="background:#b45309; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;">
+                    <button
+                        type="submit"
+                        formaction="{{ route('cultural-organizer-creation-requests.reject', $requestItem) }}"
+                        style="background:#b45309; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;"
+                    >
                         Odbij
                     </button>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     @endif
 

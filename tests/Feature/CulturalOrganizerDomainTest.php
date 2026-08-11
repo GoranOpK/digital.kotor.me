@@ -123,8 +123,9 @@ class CulturalOrganizerDomainTest extends TestCase
         $response->assertOk();
         $response->assertSee('Odobri', false);
         $response->assertSee('Odbij', false);
-        $response->assertSee('action="'.route('cultural-organizer-creation-requests.approve', $request).'"', false);
-        $response->assertSee('action="'.route('cultural-organizer-creation-requests.reject', $request).'"', false);
+        $response->assertSee('Napomena Urednika', false);
+        $response->assertSee('formaction="'.route('cultural-organizer-creation-requests.approve', $request).'"', false);
+        $response->assertSee('formaction="'.route('cultural-organizer-creation-requests.reject', $request).'"', false);
         $response->assertSee('background:#15803d', false);
         $response->assertSee('background:#b45309', false);
         $response->assertDontSee('bg-green-700 text-white', false);
@@ -148,8 +149,8 @@ class CulturalOrganizerDomainTest extends TestCase
         $this->actingAs($this->editor)
             ->get(route('cultural-organizer-creation-requests.show', $approved))
             ->assertOk()
-            ->assertDontSee('action="'.route('cultural-organizer-creation-requests.approve', $approved).'"', false)
-            ->assertDontSee('action="'.route('cultural-organizer-creation-requests.reject', $approved).'"', false)
+            ->assertDontSee('formaction="'.route('cultural-organizer-creation-requests.approve', $approved).'"', false)
+            ->assertDontSee('formaction="'.route('cultural-organizer-creation-requests.reject', $approved).'"', false)
             ->assertDontSee('background:#15803d', false)
             ->assertDontSee('background:#b45309', false);
 
@@ -159,15 +160,17 @@ class CulturalOrganizerDomainTest extends TestCase
             'status' => CulturalOrganizerCreationRequest::STATUS_REJECTED,
             'decision_user_id' => $this->editor->id,
             'decision_at' => now(),
+            'decision_note' => 'Razlog odbijanja',
         ]);
 
         $this->actingAs($this->editor)
             ->get(route('cultural-organizer-creation-requests.show', $rejected))
             ->assertOk()
-            ->assertDontSee('action="'.route('cultural-organizer-creation-requests.approve', $rejected).'"', false)
-            ->assertDontSee('action="'.route('cultural-organizer-creation-requests.reject', $rejected).'"', false)
+            ->assertDontSee('formaction="'.route('cultural-organizer-creation-requests.approve', $rejected).'"', false)
+            ->assertDontSee('formaction="'.route('cultural-organizer-creation-requests.reject', $rejected).'"', false)
             ->assertDontSee('background:#15803d', false)
-            ->assertDontSee('background:#b45309', false);
+            ->assertDontSee('background:#b45309', false)
+            ->assertSee('Razlog odbijanja', false);
     }
 
     public function test_editor_approve_creates_organizer_and_initial_moderator_atomically(): void
@@ -226,6 +229,21 @@ class CulturalOrganizerDomainTest extends TestCase
         );
     }
 
+    public function test_editor_approve_without_note_still_succeeds(): void
+    {
+        $request = $this->makeSubmittedCreationRequest();
+
+        $this->actingAs($this->editor)
+            ->post(route('cultural-organizer-creation-requests.approve', $request))
+            ->assertRedirect(route('cultural-organizers.index'));
+
+        $request->refresh();
+        $this->assertSame(CulturalOrganizerCreationRequest::STATUS_APPROVED, $request->status);
+        $this->assertNull($request->decision_note);
+        $this->assertDatabaseCount('cultural_organizers', 1);
+        $this->assertDatabaseCount('cultural_moderator_authorizations', 1);
+    }
+
     public function test_reject_does_not_create_organizer(): void
     {
         $request = $this->makeSubmittedCreationRequest();
@@ -240,6 +258,47 @@ class CulturalOrganizerDomainTest extends TestCase
         $request->refresh();
         $this->assertSame(CulturalOrganizerCreationRequest::STATUS_REJECTED, $request->status);
         $this->assertSame($this->editor->id, $request->decision_user_id);
+        $this->assertSame('Nedovoljno', $request->decision_note);
+    }
+
+    public function test_reject_without_note_is_rejected_and_leaves_request_submitted(): void
+    {
+        $request = $this->makeSubmittedCreationRequest();
+
+        $this->actingAs($this->editor)
+            ->from(route('cultural-organizer-creation-requests.show', $request))
+            ->post(route('cultural-organizer-creation-requests.reject', $request))
+            ->assertRedirect(route('cultural-organizer-creation-requests.show', $request))
+            ->assertSessionHasErrors([
+                'decision_note' => 'Napomena je obavezna prilikom odbijanja zahtjeva.',
+            ]);
+
+        $request->refresh();
+        $this->assertSame(CulturalOrganizerCreationRequest::STATUS_SUBMITTED, $request->status);
+        $this->assertNull($request->decision_note);
+        $this->assertNull($request->decision_at);
+        $this->assertDatabaseCount('cultural_organizers', 0);
+        $this->assertDatabaseCount('cultural_moderator_authorizations', 0);
+    }
+
+    public function test_reject_whitespace_only_note_is_rejected(): void
+    {
+        $request = $this->makeSubmittedCreationRequest();
+
+        $this->actingAs($this->editor)
+            ->from(route('cultural-organizer-creation-requests.show', $request))
+            ->post(route('cultural-organizer-creation-requests.reject', $request), [
+                'decision_note' => "  \t\n  ",
+            ])
+            ->assertRedirect(route('cultural-organizer-creation-requests.show', $request))
+            ->assertSessionHasErrors([
+                'decision_note' => 'Napomena je obavezna prilikom odbijanja zahtjeva.',
+            ]);
+
+        $request->refresh();
+        $this->assertSame(CulturalOrganizerCreationRequest::STATUS_SUBMITTED, $request->status);
+        $this->assertDatabaseCount('cultural_organizers', 0);
+        $this->assertDatabaseCount('cultural_moderator_authorizations', 0);
     }
 
     public function test_ordinary_user_cannot_approve_or_reject(): void
@@ -251,10 +310,16 @@ class CulturalOrganizerDomainTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($this->regularUser)
-            ->post(route('cultural-organizer-creation-requests.reject', $request))
+            ->post(route('cultural-organizer-creation-requests.reject', $request), [
+                'decision_note' => 'Pokušaj',
+            ])
             ->assertForbidden();
 
         $this->assertDatabaseCount('cultural_organizers', 0);
+        $this->assertSame(
+            CulturalOrganizerCreationRequest::STATUS_SUBMITTED,
+            $request->fresh()->status
+        );
     }
 
     public function test_editor_can_list_update_and_deactivate_organizer(): void

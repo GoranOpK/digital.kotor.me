@@ -87,6 +87,7 @@
 | PATCH-FS-065 | 2026-08-11 | **PO-6B-01…05 / 6B-DOC-01B:** dodat ugovor `tip` filtera (`Sve`/`Događaji`/`Manifestacije`) na „Pretrazi i pregledu“ sa fail-safe pravilom za nevalidan `tip`; korigovana semantika filtera po tipu sadržaja (PO-6B-04: event filteri dostupni samo za `tip=dogadjaji`); formalizovana MF `q` semantika (PO-6B-05: samo Naziv + Opis, partial/case-insensitive, bez derived pretrage kroz program); potvrđeno da MF nema sopstvenu/agregiranu lokaciju; definisana V1 javna vidljivost Arhivirane MF (van aktivne liste, dostupna preko direktnog URL-a) i potvrđeno da posebna lista „Arhiva Manifestacija“ nije V1 scope. Dodati BR-298–BR-303. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-066 | 2026-08-11 | **PO-6B-08 / PO-6B-09:** javna vidljivost Otkazane Manifestacije do isteka izvedenog perioda; Event→MF prikaz samo za javno dostupne MF (anti-leak); bez statusa MF na detalju Događaja; nezavisnost lifecycle-a. Usklađeni BR-266, BR-269; dodati BR-304–BR-305. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-067 | 2026-08-11 | **PO-6B-10:** globalno sortiranje Pretrage kada je Tip sadržaja = Sve — zajednički hronološki poredak Događaja i Manifestacija; NULL last; tie Naziv → tip (tehnički) → ID. Tip=Događaji zadržava BR-281; Tip=Manifestacije zadržava poredak aktivne MF liste. Dodat BR-306; usklađen BR-281. Bez izmjene PO-6B-01/04/05 semantike. Bez izmjene implementacije u ovom docs paketu. Verzija ostaje 1.0.0. |
+| PATCH-FS-068 | 2026-08-11 | **PO-ORG-05 / BM PATCH-067:** napomena Urednika na zahtjevu za kreiranje Organizatora — approve opciono; reject obavezno (ne-prazno); fail-closed bez parcijalnog write-a. Usklađen BR-137; dodat BR-307. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -194,7 +195,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.3 Izbor perioda i pregled sadržaja
    - 5.4 Detalj događaja
    - 5.5 Kreiranje i upravljanje događajem
-   - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137, BR-275–BR-276)
+   - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137, BR-275–BR-276, BR-307)
    - 5.7.1 Upravljanje održavanjima događaja (BR-056–BR-061)
    - 5.7.2 Upravljanje statusom događaja (BR-062–BR-066)
    - 5.7.3 Upravljanje statusom održavanja (BR-067–BR-069, BR-129–BR-134)
@@ -1585,9 +1586,24 @@ Ako Urednik odbije zahtjev za kreiranje Organizatora:
 
 * Organizator se ne kreira kao poslovni entitet;
 * predloženi korisnik ne dobija moderatorska ovlašćenja;
-* podnosilac zahtjeva ne dobija novu ulogu niti druga posebna prava.
+* podnosilac zahtjeva ne dobija novu ulogu niti druga posebna prava;
+* Urednik **mora** unijeti napomenu odluke (BR-307 / PO-ORG-05).
 
 Odbijanje ne sprečava podnošenje novog zahtjeva.
+
+---
+
+##### BR-307 – Napomena Urednika na zahtjevu za kreiranje Organizatora (PO-ORG-05)
+
+Na ekranu odluke Urednika za zahtjev za kreiranje Organizatora:
+
+1. **Odobrenje:** napomena Urednika je **opciona**; prazna vrijednost je dozvoljena; odobrenje teče atomski (Organizator + početni Moderator).
+2. **Odbijanje:** napomena Urednika je **obavezna** i mora biti ne-prazna nakon trimovanja bjelina.
+3. Ako Urednik pokuša odbijanje bez validne napomene: Sistem **ne** izvršava odbijanje; status zahtjeva ostaje **Podnesen**; ne kreira se Organizator; ne kreira se Moderator grant; nema parcijalnog upisa odluke; prikazuje se poruka: „Napomena je obavezna prilikom odbijanja zahtjeva.“
+4. Unesena napomena trajno se čuva uz odluku (istorijski trag).
+5. Odobreni/odbijeni zahtjev ostaje terminalan: bez ponovnog odlučivanja, bez editovanja napomene nakon odluke, bez reopen/resubmit u V1.
+
+Ovo pravilo **ne** mijenja tok Zahtjeva za Moderatora (CulturalModeratorRequest) osim ako PO usvoji zasebnu odluku.
 
 ---
 
@@ -4890,3 +4906,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-11 | FS-001 (PATCH-FS-065): PO-6B-01…05 / 6B-DOC-01B — tip filter; MF q; Arhivirana MF; BR-298–BR-303. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-11 | FS-001 (PATCH-FS-066): PO-6B-08 / PO-6B-09 — Otkazana MF javna vidljivost; Event→MF anti-leak; BR-304–BR-305; usklađeni BR-266/BR-269. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-11 | FS-001 (PATCH-FS-067): PO-6B-10 — globalno Tip=Sve sortiranje; BR-306; usklađen BR-281. Bez izmjene implementacije u ovom docs paketu. Verzija ostaje 1.0.0. |
+| 2026-08-11 | FS-001 (PATCH-FS-068): PO-ORG-05 / BM PATCH-067 — napomena Urednika na Org creation request; usklađen BR-137; dodat BR-307. Verzija ostaje 1.0.0. |
