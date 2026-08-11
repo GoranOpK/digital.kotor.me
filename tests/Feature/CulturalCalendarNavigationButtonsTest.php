@@ -2,6 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\CulturalModeratorAuthorization;
+use App\Models\CulturalOrganizer;
+use App\Models\CulturalOrganizerCreationRequest;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\RoleSeeder;
@@ -128,6 +131,25 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertStringContainsString('action="'.e(route('logout')).'"', $html);
     }
 
+    public function test_kk_admin_keeps_zahtjevi_org_and_does_not_see_ordinary_organizer_request_cta(): void
+    {
+        $html = $this->actingAs($this->kkAdmin)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('>Zahtjevi Org<', $html);
+        $this->assertStringContainsString(
+            'href="'.e(route('cultural-organizer-creation-requests.index')).'"',
+            $html
+        );
+        $this->assertStringNotContainsString('>Zahtjev za Organizatora<', $html);
+        $this->assertStringNotContainsString(
+            'href="'.e(route('cultural-organizer-creation-requests.create')).'"',
+            $html
+        );
+    }
+
     public function test_regular_user_calendar_nav_uses_red_buttons_and_blue_logout(): void
     {
         $html = $this->actingAs($this->regularUser)
@@ -135,7 +157,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        foreach (['Kalendar kulture', 'Pretraga i pregled', 'Arhiva događaja'] as $label) {
+        foreach (['Kalendar kulture', 'Pretraga i pregled', 'Arhiva događaja', 'Zahtjev za Organizatora'] as $label) {
             $this->assertMatchesRegularExpression(
                 '/background:#(?:7a0f17|5f0c12)[^>]*>'.preg_quote($label, '/').'</',
                 $html,
@@ -146,5 +168,116 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $html);
         $this->assertStringNotContainsString('>Urednički rad<', $html);
         $this->assertStringNotContainsString('data-kk-nav-layout="two-row"', $html);
+    }
+
+    public function test_ordinary_user_sees_organizer_request_cta_to_create_route(): void
+    {
+        $html = $this->actingAs($this->regularUser)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('>Zahtjev za Organizatora<', $html);
+        $this->assertStringContainsString(
+            'href="'.e(route('cultural-organizer-creation-requests.create')).'"',
+            $html
+        );
+        $this->assertGreaterThanOrEqual(
+            2,
+            substr_count($html, 'href="'.e(route('cultural-organizer-creation-requests.create')).'"'),
+            'Expected create CTA in both desktop and mobile nav branches'
+        );
+
+        $this->actingAs($this->regularUser)
+            ->get(route('cultural-organizer-creation-requests.create'))
+            ->assertOk()
+            ->assertSee('Zahtjev za kreiranje Organizatora', false);
+    }
+
+    public function test_ordinary_user_with_rejected_organizer_request_still_sees_create_cta(): void
+    {
+        $moderator = User::factory()->create([
+            'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
+            'activation_status' => 'active',
+        ]);
+
+        CulturalOrganizerCreationRequest::query()->create([
+            'submitter_user_id' => $this->regularUser->id,
+            'proposed_moderator_user_id' => $moderator->id,
+            'proposed_moderator_name' => $moderator->name,
+            'proposed_moderator_email' => $moderator->email,
+            'proposed_naziv' => 'Smoke Org Rejected',
+            'proposed_moderator_is_submitter' => false,
+            'status' => CulturalOrganizerCreationRequest::STATUS_REJECTED,
+            'decision_user_id' => $this->kkAdmin->id,
+            'decision_at' => now(),
+            'decision_note' => 'Odbijeno u produkcionom testu',
+        ]);
+
+        $html = $this->actingAs($this->regularUser)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('>Zahtjev za Organizatora<', $html);
+        $this->assertStringContainsString(
+            'href="'.e(route('cultural-organizer-creation-requests.create')).'"',
+            $html
+        );
+        $this->assertSame(1, CulturalOrganizerCreationRequest::query()->count());
+        $this->assertSame(
+            CulturalOrganizerCreationRequest::STATUS_REJECTED,
+            CulturalOrganizerCreationRequest::query()->first()->status
+        );
+    }
+
+    public function test_active_moderator_still_sees_moderator_links_with_organizer_request_cta(): void
+    {
+        $request = CulturalOrganizerCreationRequest::query()->create([
+            'submitter_user_id' => $this->regularUser->id,
+            'proposed_moderator_user_id' => $this->regularUser->id,
+            'proposed_moderator_name' => $this->regularUser->name,
+            'proposed_moderator_email' => $this->regularUser->email,
+            'proposed_naziv' => 'Nav Mod Org',
+            'proposed_moderator_is_submitter' => true,
+            'status' => CulturalOrganizerCreationRequest::STATUS_APPROVED,
+            'decision_user_id' => $this->kkAdmin->id,
+            'decision_at' => now(),
+        ]);
+
+        $organizer = CulturalOrganizer::query()->create([
+            'naziv' => 'Nav Mod Org',
+            'status' => CulturalOrganizer::STATUS_ACTIVE,
+            'approved_creation_request_id' => $request->id,
+        ]);
+
+        CulturalModeratorAuthorization::query()->create([
+            'user_id' => $this->regularUser->id,
+            'organizer_id' => $organizer->id,
+            'status' => CulturalModeratorAuthorization::STATUS_ACTIVE,
+            'source' => CulturalModeratorAuthorization::SOURCE_INITIAL,
+            'activated_at' => now(),
+        ]);
+
+        $html = $this->actingAs($this->regularUser)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('>Zahtjev za Organizatora<', $html);
+        $this->assertStringContainsString(
+            'href="'.e(route('cultural-organizer-creation-requests.create')).'"',
+            $html
+        );
+        $this->assertStringContainsString('>Radna tabla<', $html);
+        $this->assertStringContainsString('>Mod rad<', $html);
+        $this->assertStringContainsString(
+            'href="'.e(route('cultural-moderator-dashboard.index')).'"',
+            $html
+        );
+        $this->assertStringContainsString(
+            'href="'.e(route('cultural-moderator-workspace.index')).'"',
+            $html
+        );
     }
 }

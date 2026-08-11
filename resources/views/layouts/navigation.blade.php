@@ -218,6 +218,12 @@
                             style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.manifestations', 'cultural-calendar.manifestation')) }}"
                         >Manifestacije</a>
                         @auth
+                            @if(\App\Support\CulturalPortalAccess::isPlatformUserActive(auth()->user()))
+                                <a
+                                    href="{{ route('cultural-organizer-creation-requests.create') }}"
+                                    style="{{ $kkNavBtn(request()->routeIs('cultural-organizer-creation-requests.create', 'cultural-organizer-creation-requests.store')) }}"
+                                >Zahtjev za Organizatora</a>
+                            @endif
                             @if(\App\Support\CulturalModeratorEventAccess::isActiveModerator(auth()->user()))
                                 <a
                                     href="{{ route('cultural-moderator-dashboard.index') }}"
@@ -343,6 +349,16 @@
                         style="{{ $kkNavBtnMobile(request()->routeIs('cultural-calendar.manifestations', 'cultural-calendar.manifestation')) }}"
                     >Manifestacije</a>
                 @endif
+                    @if(! $isKkAdmin)
+                        @auth
+                            @if(\App\Support\CulturalPortalAccess::isPlatformUserActive(auth()->user()))
+                                <a
+                                    href="{{ route('cultural-organizer-creation-requests.create') }}"
+                                    style="{{ $kkNavBtnMobile(request()->routeIs('cultural-organizer-creation-requests.create', 'cultural-organizer-creation-requests.store')) }}"
+                                >Zahtjev za Organizatora</a>
+                            @endif
+                        @endauth
+                    @endif
                     @if($isKkAdmin)
                     <a
                         href="{{ route('cultural-editorial-dashboard.index') }}"
