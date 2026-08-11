@@ -8,6 +8,7 @@ use App\Models\CulturalOrganizer;
 use App\Models\CulturalOrganizerCreationRequest;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\CulturalOrganizer\ModeratorRequestDecisionService;
 use App\Services\CulturalOrganizer\OrganizerCreationDecisionService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -110,6 +111,63 @@ class CulturalOrganizerDomainTest extends TestCase
             ->assertSessionHasErrors('proposed_moderator_user_id');
 
         $this->assertDatabaseCount('cultural_organizers', 0);
+    }
+
+    public function test_editor_sees_visible_decision_ctas_on_submitted_organizer_request_show(): void
+    {
+        $request = $this->makeSubmittedCreationRequest();
+
+        $response = $this->actingAs($this->editor)
+            ->get(route('cultural-organizer-creation-requests.show', $request));
+
+        $response->assertOk();
+        $response->assertSee('Odobri', false);
+        $response->assertSee('Odbij', false);
+        $response->assertSee('action="'.route('cultural-organizer-creation-requests.approve', $request).'"', false);
+        $response->assertSee('action="'.route('cultural-organizer-creation-requests.reject', $request).'"', false);
+        $response->assertSee('background:#15803d', false);
+        $response->assertSee('background:#b45309', false);
+        $response->assertDontSee('bg-green-700 text-white', false);
+        $response->assertDontSee('bg-amber-700 text-white', false);
+    }
+
+    public function test_ordinary_user_cannot_view_organizer_request_show(): void
+    {
+        $request = $this->makeSubmittedCreationRequest();
+
+        $this->actingAs($this->regularUser)
+            ->get(route('cultural-organizer-creation-requests.show', $request))
+            ->assertForbidden();
+    }
+
+    public function test_decided_organizer_request_show_hides_decision_actions(): void
+    {
+        $approved = $this->makeSubmittedCreationRequest();
+        app(OrganizerCreationDecisionService::class)->approve($approved, $this->editor);
+
+        $this->actingAs($this->editor)
+            ->get(route('cultural-organizer-creation-requests.show', $approved))
+            ->assertOk()
+            ->assertDontSee('action="'.route('cultural-organizer-creation-requests.approve', $approved).'"', false)
+            ->assertDontSee('action="'.route('cultural-organizer-creation-requests.reject', $approved).'"', false)
+            ->assertDontSee('background:#15803d', false)
+            ->assertDontSee('background:#b45309', false);
+
+        $rejected = $this->makeSubmittedCreationRequest();
+        $rejected->update([
+            'proposed_naziv' => 'Odbijeni Org',
+            'status' => CulturalOrganizerCreationRequest::STATUS_REJECTED,
+            'decision_user_id' => $this->editor->id,
+            'decision_at' => now(),
+        ]);
+
+        $this->actingAs($this->editor)
+            ->get(route('cultural-organizer-creation-requests.show', $rejected))
+            ->assertOk()
+            ->assertDontSee('action="'.route('cultural-organizer-creation-requests.approve', $rejected).'"', false)
+            ->assertDontSee('action="'.route('cultural-organizer-creation-requests.reject', $rejected).'"', false)
+            ->assertDontSee('background:#15803d', false)
+            ->assertDontSee('background:#b45309', false);
     }
 
     public function test_editor_approve_creates_organizer_and_initial_moderator_atomically(): void
@@ -240,6 +298,96 @@ class CulturalOrganizerDomainTest extends TestCase
         $this->actingAs($this->proposedModerator)
             ->get(route('cultural-moderator-workspace.index'))
             ->assertForbidden();
+    }
+
+    public function test_editor_sees_visible_decision_ctas_on_submitted_moderator_request_show(): void
+    {
+        $organizer = $this->approveOrganizer();
+        $target = User::factory()->create([
+            'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
+            'activation_status' => 'active',
+        ]);
+
+        $request = CulturalModeratorRequest::create([
+            'organizer_id' => $organizer->id,
+            'submitter_user_id' => $this->proposedModerator->id,
+            'target_user_id' => $target->id,
+            'type' => CulturalModeratorRequest::TYPE_ADD,
+            'status' => CulturalModeratorRequest::STATUS_SUBMITTED,
+        ]);
+
+        $response = $this->actingAs($this->editor)
+            ->get(route('cultural-moderator-requests.show', $request));
+
+        $response->assertOk();
+        $response->assertSee('Odobri', false);
+        $response->assertSee('Odbij', false);
+        $response->assertSee('action="'.route('cultural-moderator-requests.approve', $request).'"', false);
+        $response->assertSee('action="'.route('cultural-moderator-requests.reject', $request).'"', false);
+        $response->assertSee('background:#15803d', false);
+        $response->assertSee('background:#b45309', false);
+        $response->assertDontSee('bg-green-700 text-white', false);
+        $response->assertDontSee('bg-amber-700 text-white', false);
+    }
+
+    public function test_ordinary_user_cannot_view_moderator_request_show(): void
+    {
+        $organizer = $this->approveOrganizer();
+        $request = CulturalModeratorRequest::create([
+            'organizer_id' => $organizer->id,
+            'submitter_user_id' => $this->proposedModerator->id,
+            'target_user_id' => $this->regularUser->id,
+            'type' => CulturalModeratorRequest::TYPE_ADD,
+            'status' => CulturalModeratorRequest::STATUS_SUBMITTED,
+        ]);
+
+        $this->actingAs($this->regularUser)
+            ->get(route('cultural-moderator-requests.show', $request))
+            ->assertForbidden();
+    }
+
+    public function test_decided_moderator_request_show_hides_decision_actions(): void
+    {
+        $organizer = $this->approveOrganizer();
+        $target = User::factory()->create([
+            'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
+            'activation_status' => 'active',
+        ]);
+
+        $approved = CulturalModeratorRequest::create([
+            'organizer_id' => $organizer->id,
+            'submitter_user_id' => $this->proposedModerator->id,
+            'target_user_id' => $target->id,
+            'type' => CulturalModeratorRequest::TYPE_ADD,
+            'status' => CulturalModeratorRequest::STATUS_SUBMITTED,
+        ]);
+        app(ModeratorRequestDecisionService::class)->approve($approved, $this->editor);
+
+        $this->actingAs($this->editor)
+            ->get(route('cultural-moderator-requests.show', $approved))
+            ->assertOk()
+            ->assertDontSee('action="'.route('cultural-moderator-requests.approve', $approved).'"', false)
+            ->assertDontSee('action="'.route('cultural-moderator-requests.reject', $approved).'"', false)
+            ->assertDontSee('background:#15803d', false)
+            ->assertDontSee('background:#b45309', false);
+
+        $rejected = CulturalModeratorRequest::create([
+            'organizer_id' => $organizer->id,
+            'submitter_user_id' => $this->proposedModerator->id,
+            'target_user_id' => $this->regularUser->id,
+            'type' => CulturalModeratorRequest::TYPE_ADD,
+            'status' => CulturalModeratorRequest::STATUS_REJECTED,
+            'decision_user_id' => $this->editor->id,
+            'decision_at' => now(),
+        ]);
+
+        $this->actingAs($this->editor)
+            ->get(route('cultural-moderator-requests.show', $rejected))
+            ->assertOk()
+            ->assertDontSee('action="'.route('cultural-moderator-requests.approve', $rejected).'"', false)
+            ->assertDontSee('action="'.route('cultural-moderator-requests.reject', $rejected).'"', false)
+            ->assertDontSee('background:#15803d', false)
+            ->assertDontSee('background:#b45309', false);
     }
 
     public function test_active_moderator_can_submit_add_and_remove_requests(): void

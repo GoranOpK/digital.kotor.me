@@ -31,11 +31,16 @@
             <div class="flex gap-3 flex-wrap">
                 <form id="approve-mod-form" method="POST" action="{{ route('cultural-moderator-requests.approve', $requestItem) }}">
                     @csrf
-                    <button type="submit" class="px-4 py-2 bg-green-700 text-white rounded-md font-semibold">Odobri</button>
+                    {{-- Inline styles: same visibility guarantee as Organizer decision CTAs (Tailwind utility CSS). --}}
+                    <button type="submit" style="background:#15803d; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;">
+                        Odobri
+                    </button>
                 </form>
                 <form method="POST" action="{{ route('cultural-moderator-requests.reject', $requestItem) }}">
                     @csrf
-                    <button type="submit" class="px-4 py-2 bg-amber-700 text-white rounded-md font-semibold">Odbij</button>
+                    <button type="submit" style="background:#b45309; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;">
+                        Odbij
+                    </button>
                 </form>
             </div>
         </div>
