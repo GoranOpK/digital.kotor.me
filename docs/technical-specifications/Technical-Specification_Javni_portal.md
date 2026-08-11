@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.14
+**Verzija:** 1.0.15
 **Datum:** 2026-08-11
 
 ---
@@ -35,6 +35,7 @@
 | 1.0.12 | 2026-08-11 | **6B-DOC-01 / PO-6B-01…05:** formalizovan V1 ugovor za `tip` filter na „Pretrazi i pregledu“ (`sve`/`dogadjaji`/`manifestacije`) i korekcija semantike filtera po tipu sadržaja (PO-6B-04), uz preciziranu MF `q` semantiku (PO-6B-05: Naziv+Opis, partial/case-insensitive, bez derived pretrage kroz program), bez agregirane lokacije Manifestacije, te razdvajanje aktivne MF liste od public detalja Arhivirane MF (bez zasebne MF Arhive u V1). Bez izmjene implementacije. |
 | 1.0.13 | 2026-08-11 | **PO-6B-08 / PO-6B-09:** javna vidljivost Otkazane Manifestacije do isteka izvedenog perioda (§6.7); Event→MF prikaz samo za javno dostupne MF uz anti-leak (§6.8); bez statusa MF na detalju Događaja. Usklađeno sa BM PATCH-065 / FS PATCH-FS-066. Bez izmjene implementacije. |
 | 1.0.14 | 2026-08-11 | **PO-6B-10:** globalno sortiranje Pretrage kada je Tip sadržaja = Sve (§3.4.1); Tip=Događaji zadržava §3.4 / 6A ordering; Tip=Manifestacije zadržava MF list ordering. Usklađeno sa BM PATCH-066 / FS PATCH-FS-067 / BR-306. Bez izmjene filter matrice / MF q. Bez izmjene implementacije u ovom docs paketu. |
+| 1.0.15 | 2026-08-11 | **6B-05A functional documentation closeout (status only):** §6 / Tip sadržaja / PO-6B-10 označeni kao **FUNCTIONAL IMPLEMENTATION COMPLETE** (TESTED / COMMITTED / PUSHED); **PRODUCTION DEPLOY / SMOKE: NOT DONE**. Bez izmjene ugovora filtera, q, ordering, vidljivosti ili homepage. |
 
 ---
 
@@ -100,7 +101,7 @@ Izvori istine:
 | 3.4 Sortiranje Pretrage (Faza 6A) | Usvojeno |
 | 4. Tehnička napomena: ruta `cultural-calendar.day` | Usvojeno |
 | 5. Početna stranica — Hero, istaknuti, statistike, lista | Usvojeno |
-| 6. Manifestacije (javni portal) | Usvojeno (implementacija = Faza 6B) |
+| 6. Manifestacije (javni portal) | Usvojeno (**FUNCTIONAL IMPLEMENTATION COMPLETE**; production deploy pending) |
 | 7. Detalji događaja (baseline) | Usvojeno |
 | 7.1 Javni statusi događaja — badge (CR-004A) | Usvojeno |
 | 7.1.6 Kanonski multi-OCC javni status (PO-6A11-01) | Usvojeno |
@@ -212,13 +213,15 @@ Faza 6A realizuje se uz **maksimalno očuvanje postojećeg izgleda** javnog port
 
 ### Faza 6B — Manifestacije
 
-Manifestacije na javnom portalu (TS-009 §6 / PO-TS9-07A–07E; filter Manifestacije na Pretrazi) realizuju se **naknadno** kada TS-005 bude spreman za implementaciju.
+Manifestacije na javnom portalu (TS-009 §6 / PO-TS9-07A–07E; Tip sadržaja / MF `q` / PO-6B-10 na Pretrazi) su **FUNCTIONAL IMPLEMENTATION COMPLETE** (paketi 6B-01…6B-04; TESTED / COMMITTED / PUSHED).
 
-Ne implementirati Manifestacije u okviru Faze 6A.
+**PRODUCTION DEPLOYMENT / SMOKE: NOT DONE** — **PHASE 6B PRODUCTION CLOSEOUT PENDING**.
+
+Ne miješati sa Faza 6A Out of Scope listom (§14): ta lista ostaje istorijska granica Faze 6A.
 
 ### Van Faze 6A
 
-* implementacija Manifestacija (lista / detalj / program / navigacija / filter MF);
+* implementacija Manifestacija (lista / detalj / program / navigacija / Tip sadržaja) — **functional complete nakon 6B** (production pending);
 * slug / nova SEO URL arhitektura;
 * široki frontend refactor / vizuelni redizajn;
 * trajni dual-read / dual-write / sinhronizacija legacy↔kanonski;
@@ -809,11 +812,11 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 | Javni detalj PATCH-063 | **NO CHANGE** (Odgođeno / Prvobitni / Napomena) |
 | Featured | **NO CHANGE** (i dalje planned/aktuelni) |
 
----# 6. Manifestacije (javni portal) — dokumentaciona faza 3 / implementacija Faza 6B
+---# 6. Manifestacije (javni portal) — dokumentaciona faza 3 / Faza 6B
 
-> **Granica:** Poslovna pravila entiteta Manifestacija (BM-05 / TS-005), Događaja (TS-003) i Održavanja (TS-004) se ovdje ne dupliciraju. Ova sekcija definiše isključivo javni prikaz i navigaciju (PO-TS9-07A–07E).
+> **Granica:** Poslovna pravila entiteta Manifestacija (BM-05 / TS-005), Događaja (TS-003) i Održavanja (TS-004) se ovdje ne dupliciraju. Ova sekcija definiše isključivo javni prikaz i navigaciju (PO-TS9-07A–07E; Tip sadržaja / PO-6B-10 u §3.3–§3.4.1).
 >
-> **Implementacija:** §6 pripada **Fazi 6B**. Faza 6A **ne** implementira Manifestacije. TS-005 **ne blokira** Fazu 6A (PO-TS9-08F).
+> **Status:** **FUNCTIONAL IMPLEMENTATION COMPLETE** (6B-01…6B-04; TESTED / COMMITTED / PUSHED). **PRODUCTION DEPLOY / SMOKE: NOT DONE.** Faza 6A **nije** uključivala Manifestacije. TS-005 **nije** blokirao Fazu 6A (PO-TS9-08F).
 
 ## 6.1 PO-TS9-07A — Zasebna cjelina
 
