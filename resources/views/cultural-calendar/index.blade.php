@@ -519,6 +519,9 @@
                                     ? (string) ($event->homepage_card_mode ?? 'planned')
                                     : 'planned';
                                 $isPostponedInfo = $isCanonicalEntry && $homepageMode === 'postponed_info';
+                                $additionalCount = ($isCanonicalEntry && ! $isPostponedInfo)
+                                    ? $event->additionalRelevantOccurrencesCount()
+                                    : 0;
                                 if ($isCanonicalEntry) {
                                     $cardOcc = $isPostponedInfo
                                         ? ($event->relationLoaded('homepageSelectedOccurrence')
@@ -572,6 +575,9 @@
                                             @endif
                                         </div>
                                         <div class="kk-upcoming-name">{{ $event->naslov }}</div>
+                                        @if($additionalCount > 0)
+                                            <div class="kk-upcoming-meta">+ još {{ $additionalCount }} {{ $additionalCount === 1 ? 'termin' : 'termina' }}</div>
+                                        @endif
                                     </div>
                                 @if($cardHref)
                                     </a>

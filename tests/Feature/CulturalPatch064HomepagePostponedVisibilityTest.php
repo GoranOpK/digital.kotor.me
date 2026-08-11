@@ -114,6 +114,100 @@ class CulturalPatch064HomepagePostponedVisibilityTest extends TestCase
         $this->assertCount(1, $cards->where('id', $entry->id));
     }
 
+    public function test_planned_card_shows_plus_one_when_two_relevant_occurrences_exist(): void
+    {
+        $this->makePublished('Planned +1', ['2026-08-20', '2026-08-21']);
+
+        $html = $this->actingAs($this->user)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->assertSee('Planned +1', false)
+            ->getContent();
+
+        $this->assertStringContainsString('+ još 1 termin', $html);
+    }
+
+    public function test_planned_card_shows_plus_two_when_three_relevant_occurrences_exist(): void
+    {
+        $this->makePublished('Planned +2', ['2026-08-20', '2026-08-21', '2026-08-22']);
+
+        $html = $this->actingAs($this->user)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->assertSee('Planned +2', false)
+            ->getContent();
+
+        $this->assertStringContainsString('+ još 2 termina', $html);
+    }
+
+    public function test_postponed_sibling_does_not_increase_planned_additional_count(): void
+    {
+        $entry = $this->makePublished('Planned + postponed sibling', ['2026-08-20', '2026-08-21']);
+        $this->occurrenceLifecycle->postpone(
+            $entry->occurrences()->whereDate('datum', '2026-08-21')->firstOrFail()
+        );
+
+        $html = $this->actingAs($this->user)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->assertSee('Planned + postponed sibling', false)
+            ->getContent();
+
+        $this->assertStringNotContainsString('+ još 1 termin', $html);
+    }
+
+    public function test_cancelled_sibling_does_not_increase_planned_additional_count(): void
+    {
+        $entry = $this->makePublished('Planned + cancelled sibling', ['2026-08-20', '2026-08-21']);
+        $this->occurrenceLifecycle->cancel(
+            $entry->occurrences()->whereDate('datum', '2026-08-21')->firstOrFail()
+        );
+
+        $html = $this->actingAs($this->user)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->assertSee('Planned + cancelled sibling', false)
+            ->getContent();
+
+        $this->assertStringNotContainsString('+ još 1 termin', $html);
+    }
+
+    public function test_expired_planned_sibling_does_not_increase_additional_count(): void
+    {
+        $this->makePublished('Expired planned sibling', ['2026-08-09', '2026-08-20']);
+
+        $html = $this->actingAs($this->user)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->assertSee('Expired planned sibling', false)
+            ->getContent();
+
+        $this->assertStringNotContainsString('+ još 1 termin', $html);
+    }
+
+    public function test_postponed_info_card_with_multiple_postponed_occurrences_has_no_plus_n(): void
+    {
+        $entry = $this->makePublished('Postponed info no plus n', ['2026-08-10', '2026-08-11', '2026-08-12']);
+        foreach ($entry->occurrences as $occurrence) {
+            $this->occurrenceLifecycle->postpone($occurrence);
+        }
+
+        $cards = $this->publicQuery->homepageUpcomingCards();
+        $match = $cards->firstWhere('id', $entry->id);
+        $this->assertNotNull($match);
+        $this->assertSame('postponed_info', $match->homepage_card_mode);
+
+        $html = $this->actingAs($this->user)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->assertSee('Postponed info no plus n', false)
+            ->assertSee('Odgođeno', false)
+            ->assertSee('Prvobitni termin:', false)
+            ->getContent();
+
+        $this->assertStringNotContainsString('+ još', $html);
+    }
+
     public function test_postponed_today_and_tomorrow_visible_yesterday_not(): void
     {
         $today = $this->makePublished('Info Today', ['2026-08-10']);
