@@ -373,21 +373,21 @@
 
     <section class="kk-grid-3">
         <a
-            href="{{ route('cultural-calendar.events', ['date' => $today->toDateString()]) }}"
+            href="{{ route('cultural-calendar.events', ['tip' => 'dogadjaji', 'date' => $today->toDateString()]) }}"
             class="kk-stat-card"
         >
             <div class="kk-stat-label">Danas</div>
             <div class="kk-stat-value">{{ $todayCount }} događaja</div>
         </a>
         <a
-            href="{{ route('cultural-calendar.events', ['week_start' => $today->toDateString(), 'week_end' => $weekEnd->toDateString()]) }}"
+            href="{{ route('cultural-calendar.events', ['tip' => 'dogadjaji', 'week_start' => $today->toDateString(), 'week_end' => $weekEnd->toDateString()]) }}"
             class="kk-stat-card"
         >
             <div class="kk-stat-label">Ove sedmice</div>
             <div class="kk-stat-value">{{ $weekCount }} događaja</div>
         </a>
         <a
-            href="{{ route('cultural-calendar.events', ['month' => $selectedMonthValue]) }}"
+            href="{{ route('cultural-calendar.events', ['tip' => 'dogadjaji', 'month' => $selectedMonthValue]) }}"
             class="kk-stat-card"
         >
             <div class="kk-stat-label">{{ $calendarMonthLabel }}</div>
@@ -506,7 +506,7 @@
                         @endforelse
                     </div>
                     <a
-                        href="{{ route('cultural-calendar.events', ['date' => $selectedDate->toDateString()]) }}"
+                        href="{{ route('cultural-calendar.events', ['tip' => 'dogadjaji', 'date' => $selectedDate->toDateString()]) }}"
                         class="kk-show-all"
                     >Prikaži sve događaje</a>
                 @else

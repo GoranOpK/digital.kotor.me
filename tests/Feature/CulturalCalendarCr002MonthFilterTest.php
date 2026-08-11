@@ -57,7 +57,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
 
         $response->assertOk();
         $response->assertSee(
-            'href="'.e(route('cultural-calendar.events', ['month' => '2026-08'])).'"',
+            'href="'.e(route('cultural-calendar.events', ['tip' => 'dogadjaji', 'month' => '2026-08'])).'"',
             false
         );
 
@@ -73,7 +73,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         $response->assertOk();
         $response->assertSee('0 događaja', false);
         $response->assertSee(
-            'href="'.e(route('cultural-calendar.events', ['month' => '2026-08'])).'"',
+            'href="'.e(route('cultural-calendar.events', ['tip' => 'dogadjaji', 'month' => '2026-08'])).'"',
             false
         );
 
@@ -85,6 +85,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         Carbon::setLocale('sr');
 
         $response = $this->asUser()->get(route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'month' => '2026-08',
         ]));
 
@@ -103,6 +104,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         ]);
 
         $response = $this->asUser()->get(route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'month' => '2026-08',
         ]));
 
@@ -119,6 +121,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         ]);
 
         $response = $this->asUser()->get(route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'month' => '2026-08',
         ]));
 
@@ -135,6 +138,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         ]);
 
         $response = $this->asUser()->get(route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'month' => '2026-08',
         ]));
 
@@ -151,6 +155,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         ]);
 
         $response = $this->asUser()->get(route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'month' => '2026-08',
         ]));
 
@@ -169,6 +174,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         ]);
 
         $response = $this->asUser()->get(route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'month' => '2026-08',
         ]));
 
@@ -196,6 +202,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         $index->assertSee('3 događaja', false);
 
         $events = $this->asUser()->get(route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'month' => '2026-08',
         ]));
         $events->assertOk();
@@ -216,6 +223,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
 
         foreach (['2026-13', '2026-00', '08-2026', '2026-8', 'abc'] as $invalid) {
             $response = $this->asUser()->get(route('cultural-calendar.events', [
+                'tip' => 'dogadjaji',
                 'month' => $invalid,
             ]));
 
@@ -241,6 +249,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-08-01 10:00:00', 'Europe/Belgrade'));
 
         $response = $this->asUser()->get(route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'date' => '2026-08-15',
             'week_start' => '2026-08-01',
             'week_end' => '2026-08-07',
@@ -270,6 +279,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         ]);
 
         $response = $this->asUser()->get(route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'week_start' => '2026-08-03',
             'week_end' => '2026-08-09',
             'month' => '2026-08',
@@ -294,6 +304,7 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         }
 
         $response = $this->asUser()->get(route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'month' => '2026-08',
             'page' => 2,
         ]));

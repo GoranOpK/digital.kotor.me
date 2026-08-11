@@ -305,6 +305,56 @@ final class CulturalPublicEventQuery
     }
 
     /**
+     * Lightweight projection for combined search (PO-6B-10).
+     * temporal_key = datum prvog narednog relevantnog OCC (Y-m-d) ili null.
+     *
+     * @param  Builder<CulturalEventEntry>|null  $query
+     * @return Collection<int, object{id: int, title: string, temporal_key: ?string}>
+     */
+    public function combinedSortProjections(?Builder $query = null, ?CarbonInterface $now = null): Collection
+    {
+        $now = CulturalPublicCardOccurrenceCriteria::now($now);
+        $nowStr = Carbon::parse($now)
+            ->timezone((string) config('app.timezone'))
+            ->format('Y-m-d H:i:s');
+
+        $datumSub = $this->nextRelevantOccurrenceColumnSubquery('datum', $nowStr);
+        $query ??= $this->base();
+
+        return $query
+            ->select([
+                'cultural_event_entries.id',
+                'cultural_event_entries.naslov',
+            ])
+            ->selectRaw('('.$datumSub->toSql().') as temporal_key', $datumSub->getBindings())
+            ->get()
+            ->map(function (CulturalEventEntry $entry): object {
+                $key = $entry->getAttribute('temporal_key');
+
+                return (object) [
+                    'id' => (int) $entry->id,
+                    'title' => (string) $entry->naslov,
+                    'temporal_key' => $this->normalizeTemporalDateKey($key),
+                ];
+            });
+    }
+
+    private function normalizeTemporalDateKey(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse((string) $value)
+                ->timezone((string) config('app.timezone'))
+                ->toDateString();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
      * Tekstualna pretraga q (TS-009 §3.3.2 / PO-CR3-02).
      * Obuhvat: naslov, opis, javni display lokacije OCC (katalog naziv | TRIM manual).
      * Prazan / whitespace → ignore.

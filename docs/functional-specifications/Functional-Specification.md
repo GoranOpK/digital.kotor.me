@@ -86,6 +86,7 @@
 | PATCH-FS-064 | 2026-08-10 | **BM PATCH-064 / BM-PK-37 / PO-064:** Informativna naslovna vidljivost Odgođenog Događaja. Usklađeni BR-264, BR-280, BR-282, BR-285, BR-295; dodati BR-296–BR-297 (informativni režim; zajednički hronološki bazen „Naredni događaji“ max 3; ranking datum; jedan Događaj = jedan slot). Odgođeno ≠ Planirano/upcoming. Pretraga i detalj PATCH-063 neizmijenjeni. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-065 | 2026-08-11 | **PO-6B-01…05 / 6B-DOC-01B:** dodat ugovor `tip` filtera (`Sve`/`Događaji`/`Manifestacije`) na „Pretrazi i pregledu“ sa fail-safe pravilom za nevalidan `tip`; korigovana semantika filtera po tipu sadržaja (PO-6B-04: event filteri dostupni samo za `tip=dogadjaji`); formalizovana MF `q` semantika (PO-6B-05: samo Naziv + Opis, partial/case-insensitive, bez derived pretrage kroz program); potvrđeno da MF nema sopstvenu/agregiranu lokaciju; definisana V1 javna vidljivost Arhivirane MF (van aktivne liste, dostupna preko direktnog URL-a) i potvrđeno da posebna lista „Arhiva Manifestacija“ nije V1 scope. Dodati BR-298–BR-303. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-066 | 2026-08-11 | **PO-6B-08 / PO-6B-09:** javna vidljivost Otkazane Manifestacije do isteka izvedenog perioda; Event→MF prikaz samo za javno dostupne MF (anti-leak); bez statusa MF na detalju Događaja; nezavisnost lifecycle-a. Usklađeni BR-266, BR-269; dodati BR-304–BR-305. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-067 | 2026-08-11 | **PO-6B-10:** globalno sortiranje Pretrage kada je Tip sadržaja = Sve — zajednički hronološki poredak Događaja i Manifestacija; NULL last; tie Naziv → tip (tehnički) → ID. Tip=Događaji zadržava BR-281; Tip=Manifestacije zadržava poredak aktivne MF liste. Dodat BR-306; usklađen BR-281. Bez izmjene PO-6B-01/04/05 semantike. Bez izmjene implementacije u ovom docs paketu. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -202,7 +203,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236, BR-277–BR-279)
    - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
-   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, BR-296–BR-305)
+   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, BR-296–BR-306)
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
    - 5.14.3 Funkcionalni obuhvat Uredničkog portala (BR-126–BR-128)
@@ -3263,6 +3264,45 @@ Za Nacrt / Na odobrenju / Vraćena na doradu ne smije procuriti naziv, link, sta
 
 Životni ciklusi Manifestacije i Događaja ostaju nezavisni (BR-194): otkazivanje/arhiviranje/objavljivanje Manifestacije ne mijenja automatski status Događaja, i obrnuto, osim već definisanih derived period / maintenance pravila.
 
+**Status:** Approved
+
+---
+
+#### BR-306 – Globalno sortiranje Pretrage kada je Tip sadržaja = Sve (PO-6B-10)
+
+Kada je na stranici „Pretraga i pregled“ izabran Tip sadržaja **Sve**, rezultat sadrži Događaje i Manifestacije u **jednom** miješanom skupu i sortira se **zajedno** prema zajedničkom vremenskom ključu.
+
+Vremenski ključ:
+
+| Tip zapisa | Ključ sortiranja |
+|------------|------------------|
+| Događaj | prvo naredno relevantno Održavanje (ista semantika kao BR-281 / Faza 6A) |
+| Manifestacija | početak izvedenog perioda Manifestacije (ista semantika perioda kao za aktivnu listu Manifestacija) |
+
+Redoslijed:
+
+1. zapisi sa definisanim vremenskim ključem prije zapisa bez ključa;
+2. vremenski ključ rastuće (ASC);
+3. Naziv rastuće (ASC);
+4. Tip sadržaja isključivo kao **stabilni tehnički** tie-breaker (nije poslovni prioritet);
+5. identifikator rastuće (ASC).
+
+Zapisi bez vremenskog ključa (NULL) dolaze **na kraj**.
+
+**Zabranjeno:** grupisanje rezultata kao „prvo svi Događaji, zatim sve Manifestacije“ ili obrnuto. Tip sadržaja nije poslovni prioritet za raspored slotova.
+
+Obuhvat:
+
+| Tip sadržaja | Sortiranje |
+|--------------|------------|
+| Sve | ovo pravilo (BR-306 / PO-6B-10) |
+| Događaji | BR-281 nepromijenjen |
+| Manifestacije | postojeći poredak aktivne liste Manifestacija (datum početka → naziv) nepromijenjen |
+
+Filter matrica (PO-6B-04 / BR-298–BR-299), MF `q` polja (PO-6B-05 / BR-303) i tip URL ugovor (PO-6B-01 / BR-298–BR-299) ostaju neizmijenjeni ovim pravilom.
+
+**Status:** Approved
+
 ---
 
 #### BR-258 – Zadržavanje postojećih prikaza
@@ -3514,6 +3554,8 @@ Događaji na stranici „Pretraga i pregled“ sortiraju se **rastuće** prema d
 Za Događaj sa više Održavanja: dok postoji naredno relevantno Održavanje, ono određuje poziciju; kada jedno prođe, sljedeće naredno relevantno postaje ključ sortiranja.
 
 Ovo je **sistemsko** sortiranje. Ne uvodi se korisnički izbor sortiranja (BR-108 ostaje bez korisničkog sortiranja).
+
+**PATCH-FS-067 / PO-6B-10:** Ovo pravilo ostaje SSOT za rezultat **samo Događaja** (Tip sadržaja = Događaji). Kada je Tip sadržaja = Sve, važi BR-306.
 
 **Status:** Approved
 
@@ -4847,3 +4889,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-08 | FS-001 (PATCH-FS-058): PO-N-TR-02-04 / BM PATCH-058 — preciziran V1 generator Održavanja (BR-060/061); samo Nacrt; algoritmi; XOR; max 100; duplikati; atomičnost. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-11 | FS-001 (PATCH-FS-065): PO-6B-01…05 / 6B-DOC-01B — tip filter; MF q; Arhivirana MF; BR-298–BR-303. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-11 | FS-001 (PATCH-FS-066): PO-6B-08 / PO-6B-09 — Otkazana MF javna vidljivost; Event→MF anti-leak; BR-304–BR-305; usklađeni BR-266/BR-269. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| 2026-08-11 | FS-001 (PATCH-FS-067): PO-6B-10 — globalno Tip=Sve sortiranje; BR-306; usklađen BR-281. Bez izmjene implementacije u ovom docs paketu. Verzija ostaje 1.0.0. |

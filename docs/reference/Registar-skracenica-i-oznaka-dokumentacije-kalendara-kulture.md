@@ -4,7 +4,7 @@
 **Oznaka dokumenta:** RG-001
 **Naziv:** Registar skraćenica i oznaka dokumentacije Kalendara kulture
 **Status dokumenta:** Stable
-**Verzija:** 1.1.6
+**Verzija:** 1.1.7
 **Datum:** 2026-08-11
 
 ---
@@ -166,7 +166,7 @@ Prefiksi se **ne** spajaju u jednu generičku oznaku. Svaki ima svoj namespace.
 | **PO-DASH** | Product Owner odluka | Dashboard | TS-010.6 | PO-DASH-01 |
 | **PO-TS9** | Product Owner odluka | U okviru TS-009 | TS-009 / Feature Registry | PO-TS9-03A |
 | **PO-6A** | Product Owner odluka | Faza 6A — javni portal Događaja | TS-009 / Feature Registry | PO-6A09-01, PO-6A11-01 |
-| **PO-6B** | Product Owner odluka | Faza 6B — Manifestacije (domen / portal / Pretraga) | BM / FS / TS-005 / TS-009 / Feature Registry | PO-6B-01…05, PO-6B-08, PO-6B-09 |
+| **PO-6B** | Product Owner odluka | Faza 6B — Manifestacije (domen / portal / Pretraga) | BM / FS / TS-005 / TS-009 / Feature Registry | PO-6B-01…05, PO-6B-08, PO-6B-09, PO-6B-10 |
 | **PO-CR3** / **PO-CR4A** / **PO-CR4B** | Product Owner odluka | Vezane za CR-003 / CR-004A / CR-004B | TS-009 / IS-001 | PO-CR4A-01 |
 | **PO-N-TR** | Product Owner odluka | Zatvara / precizira N-TR pitanje | TS-004 | PO-N-TR-02-01; **PO-N-TR-02-04** |
 | **TS7-PO** | Product Owner odluka | Kategorije i oznake (TS-007) | TS-007 | TS7-PO-01 |
@@ -341,7 +341,8 @@ RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, katego
 | 1.1.4 | 2026-08-08 | Dodata familija **T10-** (implementacioni markeri TS-010; primjeri T10-WF-01, T10-GEN-01). Usklađeno sa Feature Registry closeout / TS7-PO-07 dokumentacionim PATCH-em. Bez izmjene BM/FS sadržaja u ovom dokumentu. Bez izmjene implementacije. |
 | 1.1.5 | 2026-08-09 | TM-* primjer dopunjen sa **TM-JP-*** (TS-009 §18 Faza 6A). Bez izmjene implementacije. |
 | 1.1.6 | 2026-08-11 | Coverage + maintenance: dodati **MF**, **OCC**, **SSOT**, **CTA**, **KK**, **CAT-CUTOVER**, familije **PO-6A** / **PO-6B**; formalizovano pravilo da se RG-001 ažurira u istom dokumentacionom paketu kad se uvede nova projektna skraćenica. Usklađeno sa PO-6B-08/09 pre-impl docs. Bez izmjene implementacije. |
+| 1.1.7 | 2026-08-11 | **PO-6B-10:** primjer familije **PO-6B** dopunjen sa PO-6B-10 (već pokriveno familijom; bez novog abbreviation row-a). Usklađeno sa 6B-04 pre-commit docs sync. Bez izmjene implementacije. |
 
 ---
 
-**Kraj dokumenta RG-001 v1.1.6 (Stable)**
+**Kraj dokumenta RG-001 v1.1.7 (Stable)**

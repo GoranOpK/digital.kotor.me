@@ -6,6 +6,7 @@ use App\Models\CulturalEvent;
 use App\Models\CulturalEventEntry;
 use App\Services\CulturalCalendar\CulturalPublicEventQuery;
 use App\Services\CulturalCalendar\CulturalPublicManifestationQuery;
+use App\Services\CulturalCalendar\CulturalPublicSearchQuery;
 use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -600,23 +601,28 @@ class CulturalCalendarController extends Controller
 
         $categoryOptions = CulturalEvent::CATEGORIES;
 
-        return view('cultural-calendar.events', compact(
-            'events',
-            'date',
-            'weekStart',
-            'weekEnd',
-            'selectedMonthLabel',
-            'selectedMonthValue',
-            'q',
-            'category',
-            'location',
-            'categoryOptions',
-            'locationOptions'
-        ));
+        return view('cultural-calendar.events', [
+            'results' => $events,
+            'events' => $events,
+            'tip' => CulturalPublicSearchQuery::TIP_DOGADJAJI,
+            'eventFiltersApplicable' => true,
+            'manifestationQuery' => app(CulturalPublicManifestationQuery::class),
+            'date' => $date,
+            'weekStart' => $weekStart,
+            'weekEnd' => $weekEnd,
+            'selectedMonthLabel' => $selectedMonthLabel,
+            'selectedMonthValue' => $selectedMonthValue,
+            'q' => $q,
+            'category' => $category,
+            'location' => $location,
+            'categoryOptions' => $categoryOptions,
+            'locationOptions' => $locationOptions,
+        ]);
     }
 
     /**
      * Canonical Pretraga — CulturalEventEntry via CulturalPublicEventQuery (6A-06).
+     * PHASE 6B-04: Tip sadržaja + combined Event/MF search (PO-6B-01/04/05/10).
      *
      * @param  array<string, mixed>  $parsed
      */
@@ -630,57 +636,89 @@ class CulturalCalendarController extends Controller
         $q = $parsed['q'];
 
         $publicQuery = app(CulturalPublicEventQuery::class);
+        $searchQuery = app(CulturalPublicSearchQuery::class);
+        $manifestationQuery = app(CulturalPublicManifestationQuery::class);
+
+        $tip = $searchQuery->normalizeTip($request->query('tip'));
+        $eventFiltersApplicable = $searchQuery->eventFiltersApplicable($tip);
 
         $categoryOptions = $publicQuery->categoryOptions()->pluck('naziv')->values()->all();
-        $category = null;
-        $categoryParam = $parsed['categoryParam'];
-        if (is_string($categoryParam) && $categoryParam !== '' && in_array($categoryParam, $categoryOptions, true)) {
-            $category = $categoryParam;
-        }
-
         $locationOptions = $publicQuery->locationDisplayOptions();
+
+        $category = null;
         $location = null;
-        $locationParam = $parsed['locationParam'];
-        if (is_string($locationParam) && $locationParam !== '' && in_array($locationParam, $locationOptions, true)) {
-            $location = $locationParam;
+        if ($eventFiltersApplicable) {
+            $categoryParam = $parsed['categoryParam'];
+            if (is_string($categoryParam) && $categoryParam !== '' && in_array($categoryParam, $categoryOptions, true)) {
+                $category = $categoryParam;
+            }
+
+            $locationParam = $parsed['locationParam'];
+            if (is_string($locationParam) && $locationParam !== '' && in_array($locationParam, $locationOptions, true)) {
+                $location = $locationParam;
+            }
+        } else {
+            // PO-6B-04: non-applicable Event filters ignored for Sve / Manifestacije.
+            $date = null;
+            $weekStart = null;
+            $weekEnd = null;
+            $selectedMonthLabel = null;
+            $selectedMonthValue = null;
         }
 
-        $query = $publicQuery->base();
-        $query = $publicQuery->filterByQ($q, $query);
-        $query = $publicQuery->filterByCategoryName($category, $query);
-        $query = $publicQuery->filterByLocationDisplayName($location, $query);
+        if ($tip === CulturalPublicSearchQuery::TIP_DOGADJAJI) {
+            $query = $publicQuery->base();
+            $query = $publicQuery->filterByQ($q, $query);
+            $query = $publicQuery->filterByCategoryName($category, $query);
+            $query = $publicQuery->filterByLocationDisplayName($location, $query);
 
-        if ($date !== null) {
-            $query = $publicQuery->filterByDate($date, $query);
-        } elseif ($weekStart !== null && $weekEnd !== null) {
-            $query = $publicQuery->filterByWeek(
-                $weekStart->toDateString(),
-                $weekEnd->toDateString(),
-                $query
+            if ($date !== null) {
+                $query = $publicQuery->filterByDate($date, $query);
+            } elseif ($weekStart !== null && $weekEnd !== null) {
+                $query = $publicQuery->filterByWeek(
+                    $weekStart->toDateString(),
+                    $weekEnd->toDateString(),
+                    $query
+                );
+            } elseif ($selectedMonthValue !== null) {
+                $query = $publicQuery->filterByMonth($selectedMonthValue, $query);
+            }
+
+            $results = $publicQuery
+                ->orderedByNextRelevantOccurrence(null, $query)
+                ->with(['category', 'coverMedia', 'occurrences.location'])
+                ->paginate(12)
+                ->withQueryString();
+        } elseif ($tip === CulturalPublicSearchQuery::TIP_MANIFESTACIJE) {
+            $results = $searchQuery->paginateManifestations($q, 12);
+        } else {
+            $queryParams = $request->query();
+            unset($queryParams['page']);
+            $results = $searchQuery->paginateCombined(
+                q: $q,
+                perPage: 12,
+                page: max(1, (int) $request->query('page', 1)),
+                queryParams: is_array($queryParams) ? $queryParams : [],
             );
-        } elseif ($selectedMonthValue !== null) {
-            $query = $publicQuery->filterByMonth($selectedMonthValue, $query);
         }
 
-        $events = $publicQuery
-            ->orderedByNextRelevantOccurrence(null, $query)
-            ->with(['category', 'coverMedia', 'occurrences.location'])
-            ->paginate(12)
-            ->withQueryString();
-
-        return view('cultural-calendar.events', compact(
-            'events',
-            'date',
-            'weekStart',
-            'weekEnd',
-            'selectedMonthLabel',
-            'selectedMonthValue',
-            'q',
-            'category',
-            'location',
-            'categoryOptions',
-            'locationOptions'
-        ));
+        return view('cultural-calendar.events', [
+            'results' => $results,
+            'events' => $results,
+            'tip' => $tip,
+            'eventFiltersApplicable' => $eventFiltersApplicable,
+            'manifestationQuery' => $manifestationQuery,
+            'date' => $date,
+            'weekStart' => $weekStart,
+            'weekEnd' => $weekEnd,
+            'selectedMonthLabel' => $selectedMonthLabel,
+            'selectedMonthValue' => $selectedMonthValue,
+            'q' => $q,
+            'category' => $category,
+            'location' => $location,
+            'categoryOptions' => $categoryOptions,
+            'locationOptions' => $locationOptions,
+        ]);
     }
 
     public function day(string $date)

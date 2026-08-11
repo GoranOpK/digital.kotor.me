@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
 /**
  * Javni read SSOT za Manifestacije (PHASE 6B-03 / PO-6B-08 / PO-6B-09).
  *
- * Odvojeno od CulturalPublicEventQuery — bez combined search (6B-04).
+ * Odvojeno od CulturalPublicEventQuery — Event+MF combined search je CulturalPublicSearchQuery (6B-04).
  */
 final class CulturalPublicManifestationQuery
 {
@@ -71,13 +71,7 @@ final class CulturalPublicManifestationQuery
         $query ??= $this->base();
         $mfTable = (new CulturalManifestation)->getTable();
 
-        [$periodStartSql, $periodStartBindings] = $this->derivedPeriodAggregateSql('MIN');
-        [$periodEndSql, $periodEndBindings] = $this->derivedPeriodAggregateSql('MAX');
-
-        return $query
-            ->select("{$mfTable}.*")
-            ->selectRaw("{$periodStartSql} as derived_period_start", $periodStartBindings)
-            ->selectRaw("{$periodEndSql} as derived_period_end", $periodEndBindings)
+        return $this->withDerivedPeriodSelect($query)
             ->withCount([
                 'events as published_events_count' => function (Builder $events): void {
                     $events->where('status', CulturalEventEntry::STATUS_PUBLISHED);
@@ -88,6 +82,93 @@ final class CulturalPublicManifestationQuery
             ->orderBy('derived_period_start')
             ->orderBy("{$mfTable}.naziv")
             ->orderBy("{$mfTable}.id");
+    }
+
+    /**
+     * PO-6B-05: tekstualna pretraga MF — samo naziv + opis (partial, case-insensitive).
+     * Prazan / whitespace → ignore. NULL opis ne eliminiše red.
+     *
+     * @param  Builder<CulturalManifestation>|null  $query
+     * @return Builder<CulturalManifestation>
+     */
+    public function filterByQ(?string $term, ?Builder $query = null): Builder
+    {
+        $query ??= $this->base();
+
+        $term = is_string($term) ? trim($term) : '';
+        if ($term === '') {
+            return $query;
+        }
+
+        $like = '%'.addcslashes($term, '%_\\').'%';
+        $mfTable = (new CulturalManifestation)->getTable();
+
+        return $query->where(function (Builder $outer) use ($like, $mfTable): void {
+            $outer->where("{$mfTable}.naziv", 'like', $like)
+                ->orWhere("{$mfTable}.opis", 'like', $like);
+        });
+    }
+
+    /**
+     * Lightweight projection for combined search (PO-6B-10).
+     *
+     * @param  Builder<CulturalManifestation>|null  $query
+     * @return Collection<int, object{id: int, title: string, temporal_key: ?string}>
+     */
+    public function combinedSortProjections(?Builder $query = null): Collection
+    {
+        $mfTable = (new CulturalManifestation)->getTable();
+        $query ??= $this->base();
+        [$periodStartSql, $periodStartBindings] = $this->derivedPeriodAggregateSql('MIN');
+
+        return $query
+            ->select([
+                "{$mfTable}.id",
+                "{$mfTable}.naziv",
+            ])
+            ->selectRaw("{$periodStartSql} as derived_period_start", $periodStartBindings)
+            ->get()
+            ->map(function (CulturalManifestation $manifestation): object {
+                $start = $manifestation->getAttribute('derived_period_start');
+
+                return (object) [
+                    'id' => (int) $manifestation->id,
+                    'title' => (string) $manifestation->naziv,
+                    'temporal_key' => $this->normalizeTemporalDateKey($start),
+                ];
+            });
+    }
+
+    /**
+     * @param  Builder<CulturalManifestation>  $query
+     * @return Builder<CulturalManifestation>
+     */
+    public function withDerivedPeriodSelect(Builder $query): Builder
+    {
+        $mfTable = (new CulturalManifestation)->getTable();
+
+        [$periodStartSql, $periodStartBindings] = $this->derivedPeriodAggregateSql('MIN');
+        [$periodEndSql, $periodEndBindings] = $this->derivedPeriodAggregateSql('MAX');
+
+        return $query
+            ->select("{$mfTable}.*")
+            ->selectRaw("{$periodStartSql} as derived_period_start", $periodStartBindings)
+            ->selectRaw("{$periodEndSql} as derived_period_end", $periodEndBindings);
+    }
+
+    private function normalizeTemporalDateKey(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        try {
+            return Carbon::parse((string) $value)
+                ->timezone((string) config('app.timezone'))
+                ->toDateString();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 
     /**

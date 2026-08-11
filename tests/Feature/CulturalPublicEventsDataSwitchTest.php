@@ -53,7 +53,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $legacy = $this->makeLegacyEvent(['naslov' => 'LEGACY_ONLY_TITLE']);
         $this->makePublishedEntry('CANONICAL_ONLY_TITLE');
 
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events'));
+        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']));
 
         $response->assertOk();
         $response->assertSee('LEGACY_ONLY_TITLE', false);
@@ -68,7 +68,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $this->makeLegacyEvent(['naslov' => 'LEGACY_ONLY_TITLE']);
         $this->makePublishedEntry('CANONICAL_ONLY_TITLE');
 
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events'));
+        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']));
 
         $response->assertOk();
         $response->assertSee('CANONICAL_ONLY_TITLE', false);
@@ -81,7 +81,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $this->makePublishedEntry('ENTRY_HIDDEN_IN_LEGACY');
 
         $this->actingAs($this->user)
-            ->get(route('cultural-calendar.events'))
+            ->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']))
             ->assertOk()
             ->assertDontSee('ENTRY_HIDDEN_IN_LEGACY', false);
     }
@@ -92,7 +92,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $this->makeLegacyEvent(['naslov' => 'EVENT_HIDDEN_IN_CANONICAL']);
 
         $this->actingAs($this->user)
-            ->get(route('cultural-calendar.events'))
+            ->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']))
             ->assertOk()
             ->assertDontSee('EVENT_HIDDEN_IN_CANONICAL', false);
     }
@@ -104,7 +104,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $this->makeLegacyEvent(['naslov' => 'FAILSAFE_LEGACY']);
         $this->makePublishedEntry('FAILSAFE_CANONICAL');
 
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events'));
+        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']));
 
         $response->assertOk();
         $response->assertSee('FAILSAFE_LEGACY', false);
@@ -121,7 +121,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $this->makeOccurrence($published, ['datum' => '2026-08-20']);
         $this->makeOccurrence($cancelled, ['datum' => '2026-08-21']);
 
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events'));
+        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']));
 
         $response->assertOk();
         $response->assertSee('Pub Entry', false);
@@ -138,7 +138,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $this->makeEntry(CulturalEventEntry::STATUS_ARCHIVED, 'Archived Hidden');
         $this->makePublishedEntry('Visible Pub');
 
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events'));
+        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']));
 
         $response->assertOk();
         $response->assertSee('Visible Pub', false);
@@ -155,7 +155,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $this->makePublishedEntry('Beta Night');
 
         $this->actingAs($this->user)
-            ->get(route('cultural-calendar.events', ['q' => 'Festival']))
+            ->get(route('cultural-calendar.events', ['tip' => 'dogadjaji', 'q' => 'Festival']))
             ->assertOk()
             ->assertSee('Alpha Festival', false)
             ->assertDontSee('Beta Night', false);
@@ -180,6 +180,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
 
         $this->actingAs($this->user)
             ->get(route('cultural-calendar.events', [
+                'tip' => 'dogadjaji',
                 'category' => 'Koncert',
                 'location' => 'Palata',
             ]))
@@ -203,13 +204,14 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $this->makeOccurrence($outside, ['datum' => '2026-09-02']);
 
         $this->actingAs($this->user)
-            ->get(route('cultural-calendar.events', ['date' => '2026-08-15']))
+            ->get(route('cultural-calendar.events', ['tip' => 'dogadjaji', 'date' => '2026-08-15']))
             ->assertOk()
             ->assertSee('On Day', false)
             ->assertDontSee('Outside', false);
 
         $this->actingAs($this->user)
             ->get(route('cultural-calendar.events', [
+                'tip' => 'dogadjaji',
                 'week_start' => '2026-08-10',
                 'week_end' => '2026-08-16',
             ]))
@@ -219,7 +221,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
             ->assertDontSee('Outside', false);
 
         $this->actingAs($this->user)
-            ->get(route('cultural-calendar.events', ['month' => '2026-08']))
+            ->get(route('cultural-calendar.events', ['tip' => 'dogadjaji', 'month' => '2026-08']))
             ->assertOk()
             ->assertSee('In Month', false)
             ->assertDontSee('Outside', false);
@@ -235,7 +237,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $this->makeOccurrence($earlier, ['datum' => '2026-08-12']);
 
         $html = $this->actingAs($this->user)
-            ->get(route('cultural-calendar.events'))
+            ->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']))
             ->assertOk()
             ->getContent();
 
@@ -256,7 +258,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
             $this->makeOccurrence($entry, ['datum' => sprintf('2026-08-%02d', min(28, $i + 10))]);
         }
 
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events'));
+        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']));
         $response->assertOk();
         $events = $response->viewData('events');
 
@@ -270,7 +272,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $this->actingAs($this->user)
-            ->get(route('cultural-calendar.events'))
+            ->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']))
             ->assertOk()
             ->assertSee('Trenutno nema objavljenih događaja.', false);
     }
@@ -300,6 +302,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $this->makeOccurrence($three, ['datum' => '2026-08-14', 'location_manual_name' => 'Forum']);
 
         $response = $this->actingAs($this->user)->get(route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'q' => 'One Term',
         ]));
         $response->assertOk();
@@ -311,6 +314,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $response->assertDontSee('+ još', false);
 
         $responseThree = $this->actingAs($this->user)->get(route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'q' => 'Three Terms',
         ]));
         $responseThree->assertOk();
@@ -330,7 +334,7 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
             'status' => CulturalCategory::STATUS_INACTIVE,
         ]);
 
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events'));
+        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']));
         $options = $response->viewData('categoryOptions');
 
         $this->assertContains('Aktivna Kat', $options);

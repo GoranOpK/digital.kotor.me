@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.13
+**Verzija:** 1.0.14
 **Datum:** 2026-08-11
 
 ---
@@ -34,6 +34,7 @@
 | 1.0.11 | 2026-08-11 | **PHASE 6A closeout status sync (dokumentacioni):** potvrđeno implementirano/testirano/deployovano stanje za PATCH-063, PATCH-064 i CLOSE-02/03/03A/04; planned kartica uključuje „+ još N termina“ za dodatna relevantna Planirana Održavanja; `postponed_info` bez `+N`; legacy admin CRUD surface ostaje HTTP-disabled (403) uz zadržan rollback feature-flag mehanizam. Bez izmjene poslovnih pravila. |
 | 1.0.12 | 2026-08-11 | **6B-DOC-01 / PO-6B-01…05:** formalizovan V1 ugovor za `tip` filter na „Pretrazi i pregledu“ (`sve`/`dogadjaji`/`manifestacije`) i korekcija semantike filtera po tipu sadržaja (PO-6B-04), uz preciziranu MF `q` semantiku (PO-6B-05: Naziv+Opis, partial/case-insensitive, bez derived pretrage kroz program), bez agregirane lokacije Manifestacije, te razdvajanje aktivne MF liste od public detalja Arhivirane MF (bez zasebne MF Arhive u V1). Bez izmjene implementacije. |
 | 1.0.13 | 2026-08-11 | **PO-6B-08 / PO-6B-09:** javna vidljivost Otkazane Manifestacije do isteka izvedenog perioda (§6.7); Event→MF prikaz samo za javno dostupne MF uz anti-leak (§6.8); bez statusa MF na detalju Događaja. Usklađeno sa BM PATCH-065 / FS PATCH-FS-066. Bez izmjene implementacije. |
+| 1.0.14 | 2026-08-11 | **PO-6B-10:** globalno sortiranje Pretrage kada je Tip sadržaja = Sve (§3.4.1); Tip=Događaji zadržava §3.4 / 6A ordering; Tip=Manifestacije zadržava MF list ordering. Usklađeno sa BM PATCH-066 / FS PATCH-FS-067 / BR-306. Bez izmjene filter matrice / MF q. Bez izmjene implementacije u ovom docs paketu. |
 
 ---
 
@@ -62,6 +63,7 @@ Izvori istine:
 * usvojena odluka **PO-6A11-01** (kanonski javni status Događaja / multi-OCC badge)
 * usvojene odluke **PO-6B-01…05** (Tip sadržaja na Pretrazi + semantika filtera po tipu; MF `q` = Naziv+Opis; MF bez agregirane lokacije; Arhivirana MF = direct detail dostupan, bez posebne MF Arhive u V1)
 * usvojene odluke **PO-6B-08 / PO-6B-09** (Otkazana MF javno vidljiva do isteka perioda; Event→MF anti-leak matrica)
+* usvojena odluka **PO-6B-10** (globalno Tip=Sve sortiranje Pretrage — miješani hronološki poredak Događaja i Manifestacija)
 * granice entiteta: TS-005 (Manifestacija), TS-003 (Događaj), TS-004 (Održavanje) — TS-009 ne duplicira njihova poslovna pravila
 * `docs/features/Feature-Registry.md`
 * `docs/METHODOLOGY.md`
@@ -542,6 +544,44 @@ Događaji na „Pretrazi i pregledu“ sortiraju se **rastuće** prema datumu (i
 Za Događaj sa više Održavanja: dok postoji naredno relevantno Održavanje, ono određuje poziciju; kada jedno prođe, sljedeće naredno relevantno postaje ključ sortiranja.
 
 **Ne** uvodi se korisnički izbor sortiranja (BM-PK-07 / BR-108).
+
+**Obuhvat po tipu sadržaja:**
+
+| Tip sadržaja | Sortiranje |
+|--------------|------------|
+| Događaji (`tip=dogadjaji`) | ovo pravilo (§3.4 / Faza 6A) — **KEEP** |
+| Manifestacije (`tip=manifestacije`) | postojeći poredak aktivne liste Manifestacija (datum početka → naziv; §6 / PO-TS9-07B) — **KEEP** |
+| Sve (bez `tip` / default) | §3.4.1 / PO-6B-10 |
+
+### 3.4.1 Globalno sortiranje kada je Tip sadržaja = Sve (PO-6B-10)
+
+| Odluka | PO-6B-10 |
+|--------|----------|
+| BM | BM-PK-40 |
+| FS | BR-306 |
+
+Kada je Tip sadržaja **Sve**, Događaji i Manifestacije čine **jedan** miješani rezultat i sortiraju se **zajedno** prema zajedničkom vremenskom ključu.
+
+Vremenski ključ:
+
+| Tip zapisa | Ključ |
+|------------|-------|
+| Događaj | prvo naredno relevantno Održavanje (§3.4 / §7.3.1) |
+| Manifestacija | početak izvedenog perioda Manifestacije |
+
+Deterministički redoslijed:
+
+1. zapisi sa definisanim vremenskim ključem prije zapisa bez ključa;
+2. vremenski ključ ASC;
+3. Naziv ASC;
+4. Tip sadržaja isključivo kao **stabilni tehnički** tie-breaker (nije poslovni prioritet);
+5. ID ASC.
+
+Zapisi bez vremenskog ključa (NULL) dolaze **na kraj**.
+
+**Zabranjeno:** grupisanje kao „prvo svi Događaji, zatim sve Manifestacije“ ili obrnuto.
+
+Filter matrica (§3.3.11 / PO-6B-04) i MF `q` polja (§3.3.12 / PO-6B-05) ostaju neizmijenjeni ovim pravilom.
 
 ---
 
@@ -1492,6 +1532,7 @@ Nema otvorenih pitanja koja blokiraju dokumentacioni ugovor Faze 6A. Implementac
 | PO-TS9-08A UI očuvanje | BM-PK-16, BM-PK-19 | BR-255, BR-258 | §9.3 |
 | PO-TS9-08B kartica + N termina | BM-PK-29 | BR-280 | §7.3.2 |
 | PO-TS9-08C sortiranje | BM-PK-30 | BR-281 | §3.4 |
+| PO-6B-10 Tip=Sve sortiranje | BM-PK-40 | BR-306 | §3.4.1 |
 | PO-TS9-08D Odgođen | BM-PK-31 | BR-282 | §7.3.4 |
 | PO-TS9-08E CAT-CUTOVER | BM-PK-32, BM-KO-09–11 | BR-277–BR-279, BR-283 | §3.3.3, §9.4 |
 | PO-TS9-08F Faza 6A/6B | — | — | §1.7; IR-001 |

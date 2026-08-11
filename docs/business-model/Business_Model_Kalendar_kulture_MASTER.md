@@ -79,6 +79,7 @@
 | PATCH-063 | 2026-08-10 | **Urednički tok kreiranja, pripreme i neposrednog upravljanja Događajem (PO-U-01…19):** Urednik u create toku ne bira registrovanog Organizatora; opcion ručni naziv neregistrovanog Organizatora (samo naziv); poslovno „U pripremi“ / „Sačuvaj i nastavi“ (bez novog statusa; Moderator zadržava „Nacrt“); zajednička lista Događaji; brisanje samo prije prve objave; direktna objava bez approval; direktno uređivanje dozvoljenog sadržaja Objavljenog u uredničkom toku (Prijedlog izmjene Moderatora ostaje); Odgođen bez poznatog novog termina; Prvobitni termin; razlozi odgađanja/otkazivanja Održavanja i Događaja opcioni i mogu biti javno prikazani; Otkazan ostaje terminalan. Usklađeni BM-UR-02/06/07/11, BM-DG-01/07/08/10, BM-ST-03/04/06/07, BM-TR-10/14/15, BM-PK-13/31/33, BM-ORG-04; dodati BM-UR-12–BM-UR-16, BM-DG-12–BM-DG-13, BM-ST-11, BM-TR-19–BM-TR-20, BM-PK-36, BM-EP-11, BM-GL-24–BM-GL-25. **Supersede:** dio BM-PK-33 / BM-DG-10 / BM-UR-11 / BM-ST-07 / BM-PK-13 koji zabranjuje javni prikaz opcionog razloga otkazivanja; pojašnjenje da „Nacrt“ nije poslovna faza Urednikovog direktnog toka. Bez izmjene FS/TS/Feature Registry/implementacije. |
 | PATCH-064 | 2026-08-10 | **Informativna naslovna vidljivost Odgođenog Događaja (PO-064-01…14):** Objavljen Događaj bez narednog Planiranog Održavanja, ali sa Odgođenim Održavanjem bez poznatog novog termina, ostaje informativno vidljiv na naslovnoj do isteka prvobitnog datuma uključivo; kartica prikazuje „Odgođeno“ i „Prvobitni termin“ (prvobitni datum nije važeći termin; Odgođeno ≠ Planirano/upcoming). Više Odgođenih: informativnu karticu određuje najbliže Odgođeno čiji prvobitni datum još nije istekao; nakon isteka prelaz na sljedeće takvo. Planirano ima apsolutni prioritet za standardni termin kartice. Novi Planirani termin vraća standardno ponašanje. Nakon isteka posljednjeg — bez naslovne vidljivosti po ovom osnovu; Pretraga i detalj ostaju. Usklađeni BM-PK-23/29/31/34/36; dodati BM-PK-37, BM-GL-26. Bez izmjene lifecycle / Otkazano / arhive / newsletter / Urednik–Moderator tokova. Bez izmjene FS/TS/Feature Registry/implementacije. |
 | PATCH-065 | 2026-08-11 | **PO-6B-08 / PO-6B-09:** Javna vidljivost Otkazane Manifestacije do isteka izvedenog perioda (aktivna lista + oznaka „Otkazana“ + detalj + program; zatim automatska Arhivirana); javni prikaz veze Događaj→Manifestacija samo kada je MF javno dostupna (Objavljena / Otkazana / Arhivirana); anti-leak za Nacrt / Na odobrenju / Vraćena; bez statusa MF na detalju Događaja. Usklađeni BM-PK-25, BM-PK-28; dodati BM-PK-38, BM-PK-39. Potvrđeno: MF nema status Odgođena (BM-MF-11); MF/Event lifecycle nezavisni (BM-MF-15). Bez izmjene implementacije. |
+| PATCH-066 | 2026-08-11 | **PO-6B-10:** Globalno sortiranje rezultata Pretrage kada je Tip sadržaja = Sve — Događaji i Manifestacije u jednom hronološkom poretku po vremenskom ključu (Event: prvo naredno relevantno Održavanje; MF: početak izvedenog perioda); NULL last; tie: Naziv → tip kao tehnički tie-breaker → ID. Tip sadržaja nije poslovni prioritet. Tip=Događaji zadržava BM-PK-30; Tip=Manifestacije zadržava poredak liste Manifestacija. Dodat BM-PK-40; usklađen BM-PK-30. Bez izmjene implementacije u ovom docs paketu. |
 
 Napomena:
 
@@ -1569,6 +1570,8 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > Za Događaj sa više Održavanja: dok postoji naredno relevantno Održavanje, ono određuje poziciju; kada jedno prođe, sljedeće naredno relevantno postaje ključ sortiranja.
 >
 > Ovo je **sistemsko** sortiranje. Ne uvodi se korisnički izbor sortiranja (BM-PK-07 ostaje bez korisničkog sortiranja).
+>
+> **PATCH-066 / PO-6B-10:** Ovo pravilo ostaje SSOT za rezultat **samo Događaja** (Tip sadržaja = Događaji). Kada je Tip sadržaja = Sve, važi BM-PK-40 (zajednički poredak Događaja i Manifestacija).
 
 ### BM-PK-31 — Odgođeno Održavanje na javnom portalu
 
@@ -1710,6 +1713,32 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > Za neobjavljenu Manifestaciju ne smije procuriti naziv, link, status, identifikator ni drugi javni trag pripadnosti. Pravilo je serversko (poslovna vidljivost), ne samo vizuelno skrivanje.
 >
 > Na detalju Događaja ne prikazuje se status Manifestacije uz naziv. Status Manifestacije vidi se na njenom javnom detalju.
+
+### BM-PK-40 — Globalno sortiranje Pretrage kada je Tip sadržaja = Sve (PO-6B-10)
+
+> Kada je na stranici „Pretraga i pregled“ izabran Tip sadržaja **Sve**, Događaji i Manifestacije prikazuju se u **jednom** zajedničkom rezultatu i sortiraju se **zajedno** prema zajedničkom vremenskom ključu.
+>
+> Vremenski ključ:
+>
+> * za **Događaj** — prvo naredno relevantno Održavanje (ista semantika kao BM-PK-30);
+> * za **Manifestaciju** — početak izvedenog perioda Manifestacije (isti izvor kao za javnu listu Manifestacija).
+>
+> Redoslijed:
+>
+> 1. zapisi sa definisanim vremenskim ključem prije zapisa bez ključa;
+> 2. vremenski ključ rastuće;
+> 3. Naziv rastuće;
+> 4. Tip sadržaja samo kao **stabilni tehnički** tie-breaker (nije poslovni prioritet);
+> 5. identifikator rastuće.
+>
+> Zapisi bez vremenskog ključa dolaze na kraj.
+>
+> **Ne** smije se grupisati rezultat kao „prvo svi Događaji, zatim sve Manifestacije“ niti obrnuto. Tip sadržaja nije poslovni prioritet za raspored slotova.
+>
+> Ovo pravilo važi **samo** za Tip = Sve.
+>
+> * Tip = Događaji → BM-PK-30 (nepromijenjen).
+> * Tip = Manifestacije → postojeći poredak aktivne liste Manifestacija (datum početka → naziv; nepromijenjen).
 
 ---
 

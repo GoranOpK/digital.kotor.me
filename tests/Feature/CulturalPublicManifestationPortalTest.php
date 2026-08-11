@@ -352,7 +352,9 @@ class CulturalPublicManifestationPortalTest extends TestCase
             ->get(route('cultural-calendar.events', ['tip' => 'manifestacije']));
 
         $response->assertOk();
-        $response->assertDontSee('name="tip"', false);
+        $response->assertSee('name="tip"', false);
+        $response->assertDontSee('kk-filter-category', false);
+        $response->assertDontSee('kk-filter-location', false);
 
         $home = $this->actingAs($this->user)
             ->get(route('cultural-calendar.index'));

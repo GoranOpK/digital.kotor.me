@@ -115,7 +115,7 @@ class CulturalCalendarCr001Phase1Test extends TestCase
 
         $response->assertOk();
         $today = Carbon::today()->toDateString();
-        $expectedUrl = route('cultural-calendar.events', ['date' => $today]);
+        $expectedUrl = route('cultural-calendar.events', ['tip' => 'dogadjaji', 'date' => $today]);
         $response->assertSee('href="'.e($expectedUrl).'"', false);
         $response->assertSee('>Danas</div>', false);
 
@@ -132,6 +132,7 @@ class CulturalCalendarCr001Phase1Test extends TestCase
         $today = Carbon::today();
         $weekEnd = Carbon::today()->endOfWeek();
         $expectedUrl = route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'week_start' => $today->toDateString(),
             'week_end' => $weekEnd->toDateString(),
         ]);
@@ -154,11 +155,12 @@ class CulturalCalendarCr001Phase1Test extends TestCase
         $weekEnd = Carbon::today()->endOfWeek()->toDateString();
 
         $response->assertSee(
-            'href="'.e(route('cultural-calendar.events', ['date' => $today])).'"',
+            'href="'.e(route('cultural-calendar.events', ['tip' => 'dogadjaji', 'date' => $today])).'"',
             false
         );
         $response->assertSee(
             'href="'.e(route('cultural-calendar.events', [
+                'tip' => 'dogadjaji',
                 'week_start' => $today,
                 'week_end' => $weekEnd,
             ])).'"',
@@ -182,7 +184,7 @@ class CulturalCalendarCr001Phase1Test extends TestCase
         $response->assertSee('>'.$monthLabel.'</div>', false);
         $response->assertDontSee('Ovog mjeseca', false);
         $response->assertSee(
-            'href="'.e(route('cultural-calendar.events', ['month' => $monthValue])).'"',
+            'href="'.e(route('cultural-calendar.events', ['tip' => 'dogadjaji', 'month' => $monthValue])).'"',
             false
         );
 
@@ -266,7 +268,7 @@ class CulturalCalendarCr001Phase1Test extends TestCase
         ]));
 
         $response->assertOk();
-        $expectedUrl = route('cultural-calendar.events', ['date' => $date]);
+        $expectedUrl = route('cultural-calendar.events', ['tip' => 'dogadjaji', 'date' => $date]);
         $response->assertSee('href="'.e($expectedUrl).'"', false);
         $response->assertSee('>Prikaži sve događaje</a>', false);
     }
