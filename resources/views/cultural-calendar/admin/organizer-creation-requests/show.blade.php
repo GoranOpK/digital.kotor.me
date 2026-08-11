@@ -18,7 +18,19 @@
         <p><strong>Telefon:</strong> {{ $requestItem->proposed_contact_phone ?: '—' }}</p>
         <p><strong>Web:</strong> {{ $requestItem->proposed_website ?: '—' }}</p>
         <p><strong>Podnosilac:</strong> {{ $requestItem->submitter?->name }}</p>
-        <p><strong>Predloženi Moderator:</strong> {{ $requestItem->proposedModerator?->name }} (ID {{ $requestItem->proposed_moderator_user_id }})</p>
+        <p><strong>Predloženi Moderator:</strong>
+            @if($requestItem->proposedModerator)
+                {{ $requestItem->proposedModerator->name }}
+                ({{ $requestItem->proposedModerator->email }})
+            @elseif($requestItem->proposed_moderator_name || $requestItem->proposed_moderator_email)
+                {{ $requestItem->proposed_moderator_name ?: '—' }}
+                @if($requestItem->proposed_moderator_email)
+                    — {{ $requestItem->proposed_moderator_email }}
+                @endif
+            @else
+                —
+            @endif
+        </p>
         @if($requestItem->decision_at)
             <p><strong>Odluka:</strong> {{ $requestItem->decisionUser?->name }} — {{ $requestItem->decision_at }}</p>
             <p><strong>Napomena:</strong> {{ $requestItem->decision_note ?: '—' }}</p>
@@ -32,7 +44,7 @@
                 @csrf
                 <div>
                     <label class="block text-sm font-medium mb-1">Napomena Urednika</label>
-                    <p class="text-xs text-gray-500 mb-1">Obavezna pri odbijanju; opciona pri odobravanju.</p>
+                    <p class="text-xs text-gray-500 mb-1">Obavezna pri odbijanju; opciona pri odobravanju. Pri odbijanju napomena se šalje predloženom Moderatoru e-mailom.</p>
                     <textarea name="decision_note" rows="2" class="w-full border-gray-300 rounded-md">{{ old('decision_note') }}</textarea>
                 </div>
                 <div class="flex gap-3 flex-wrap">
