@@ -15,6 +15,7 @@ use App\Models\Role;
 use App\Models\Tender;
 use App\Models\UpNumber;
 use App\Models\User;
+use App\Services\CulturalOrganizer\ModeratorEligibilityResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -344,6 +345,11 @@ class AdminController extends Controller
 
         $user->save();
 
+        if ($user->activation_status === 'active') {
+            app(ModeratorEligibilityResolver::class)
+                ->resolveForUser($user);
+        }
+
         return redirect()->route('admin.users.show', $user)
             ->with('success', 'Korisnik je uspješno ažuriran.');
     }
@@ -376,6 +382,9 @@ class AdminController extends Controller
         }
         $user->activation_status = 'active';
         $user->save();
+
+        app(ModeratorEligibilityResolver::class)
+            ->resolveForUser($user);
 
         return redirect()->back()->with('success', 'Korisnik je aktiviran.');
     }
