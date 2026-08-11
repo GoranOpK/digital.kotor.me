@@ -232,13 +232,48 @@ class CulturalManifestationEditorUiTest extends TestCase
             ->assertStatus(405);
     }
 
-    public function test_navigation_shows_manifestacije_for_editor(): void
+    public function test_navigation_separates_public_and_editorial_manifestation_contexts(): void
     {
-        $this->actingAs($this->editor)
+        // Public portal context: public MF nav only (same label, no editorial competitor).
+        // Desktop + mobile each render one marker → count 2.
+        $public = $this->actingAs($this->editor)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk();
+        $publicHtml = $public->getContent();
+        $this->assertSame(2, substr_count($publicHtml, 'data-kk-nav="mf-public"'));
+        $this->assertSame(0, substr_count($publicHtml, 'data-kk-nav="mf-editorial"'));
+        $this->assertMatchesRegularExpression(
+            '/data-kk-nav="mf-public"[^>]*>\s*Manifestacije\s*</u',
+            $publicHtml
+        );
+        $this->assertStringContainsString(route('cultural-calendar.manifestations'), $publicHtml);
+        $this->assertStringNotContainsString(route('cultural-manifestations.index'), $publicHtml);
+        $public->assertDontSee('Upravljanje manifestacijama');
+
+        // Editorial context: editorial MF nav only; bridge via Urednički rad / Događaji remains.
+        $editorial = $this->actingAs($this->editor)
             ->get(route('cultural-manifestations.index'))
+            ->assertOk();
+        $editorialHtml = $editorial->getContent();
+        $this->assertSame(0, substr_count($editorialHtml, 'data-kk-nav="mf-public"'));
+        $this->assertSame(2, substr_count($editorialHtml, 'data-kk-nav="mf-editorial"'));
+        $this->assertMatchesRegularExpression(
+            '/data-kk-nav="mf-editorial"[^>]*>\s*Manifestacije\s*</u',
+            $editorialHtml
+        );
+        $this->assertStringContainsString(route('cultural-manifestations.index'), $editorialHtml);
+        $this->assertStringContainsString(route('cultural-editorial-dashboard.index'), $editorialHtml);
+        $this->assertStringContainsString(route('cultural-event-entries.index'), $editorialHtml);
+        $editorial->assertDontSee('Upravljanje manifestacijama');
+
+        // Ordinary users: public MF only; never editorial.
+        $this->actingAs($this->ordinary)
+            ->get(route('cultural-calendar.index'))
             ->assertOk()
-            ->assertSee('Manifestacije')
-            ->assertSee(route('cultural-manifestations.index'), false);
+            ->assertSee(route('cultural-calendar.manifestations'), false)
+            ->assertDontSee('data-kk-nav="mf-editorial"', false)
+            ->assertDontSee(route('cultural-manifestations.index'), false)
+            ->assertDontSee('Upravljanje manifestacijama');
     }
 
     public function test_wrong_purpose_media_rejected_on_store(): void

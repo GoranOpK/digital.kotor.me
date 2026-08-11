@@ -344,6 +344,15 @@ class CulturalPublicManifestationPortalTest extends TestCase
         $response->assertOk();
         $response->assertSee('Manifestacije', false);
         $response->assertSee(route('cultural-calendar.manifestations'), false);
+        $response->assertDontSee('data-kk-nav="mf-editorial"', false);
+        $response->assertDontSee(route('cultural-manifestations.index'), false);
+        $response->assertDontSee('Upravljanje manifestacijama', false);
+
+        $guest = $this->get(route('cultural-calendar.index'));
+        $guest->assertOk();
+        $guest->assertSee(route('cultural-calendar.manifestations'), false);
+        $guest->assertDontSee('data-kk-nav="mf-editorial"', false);
+        $guest->assertDontSee('Upravljanje manifestacijama', false);
     }
 
     public function test_search_tip_and_homepage_mf_remain_out_of_scope(): void

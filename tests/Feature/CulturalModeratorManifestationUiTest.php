@@ -80,6 +80,22 @@ class CulturalModeratorManifestationUiTest extends TestCase
             ->assertOk()
             ->assertSee('Izaberite aktivni Organizator');
 
+        // Moderator KK nav keeps public Manifestacije and must not show kk_admin editorial MF entry.
+        $kkHome = $this->actingAs($this->modA)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk();
+        $kkHome->assertSee(route('cultural-calendar.manifestations'), false);
+        $kkHome->assertDontSee('data-kk-nav="mf-editorial"', false);
+        $kkHome->assertDontSee(route('cultural-manifestations.index'), false);
+        $kkHome->assertDontSee('Upravljanje manifestacijama');
+
+        // Moderator workspace MF entry remains available (separate workspace context).
+        $this->setContext($this->modA, $this->orgA);
+        $this->actingAs($this->modA)
+            ->get(route('cultural-moderator-workspace.index'))
+            ->assertOk()
+            ->assertSee(route('cultural-moderator-manifestations.index'), false);
+
         $own = $this->mfWriter->createDraft($this->editor, [
             'naziv' => 'Own MF',
             'organizer_id' => $this->orgA->id,
@@ -88,8 +104,6 @@ class CulturalModeratorManifestationUiTest extends TestCase
             'naziv' => 'Foreign MF',
             'organizer_id' => $this->orgB->id,
         ]);
-
-        $this->setContext($this->modA, $this->orgA);
 
         $this->actingAs($this->modA)
             ->get(route('cultural-moderator-manifestations.index'))
