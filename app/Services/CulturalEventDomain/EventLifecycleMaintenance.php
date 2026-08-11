@@ -2,6 +2,7 @@
 
 namespace App\Services\CulturalEventDomain;
 
+use App\Services\CulturalManifestationDomain\ManifestationLifecycleMaintenance;
 use App\Exceptions\CulturalEventDomainException;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
@@ -16,10 +17,18 @@ final class EventLifecycleMaintenance
     public function __construct(
         private readonly OccurrenceLifecycle $occurrenceLifecycle,
         private readonly EventLifecycle $eventLifecycle,
+        private readonly ManifestationLifecycleMaintenance $manifestationMaintenance,
     ) {}
 
     /**
-     * @return array{finished: int, archived: int, skipped_finish: int, skipped_archive: int}
+     * @return array{
+     *   finished: int,
+     *   archived: int,
+     *   skipped_finish: int,
+     *   skipped_archive: int,
+     *   manifestation_archived: int,
+     *   skipped_manifestation_archive: int
+     * }
      */
     public function process(?CarbonInterface $now = null, int $chunkSize = 100): array
     {
@@ -27,12 +36,15 @@ final class EventLifecycleMaintenance
 
         $finished = $this->finishExpiredOccurrences($now, $chunkSize);
         $archived = $this->archiveEligibleEvents($chunkSize);
+        $manifestation = $this->manifestationMaintenance->archiveEligibleManifestations($chunkSize);
 
         return [
             'finished' => $finished['done'],
             'archived' => $archived['done'],
             'skipped_finish' => $finished['skipped'],
             'skipped_archive' => $archived['skipped'],
+            'manifestation_archived' => $manifestation['archived'],
+            'skipped_manifestation_archive' => $manifestation['skipped'],
         ];
     }
 

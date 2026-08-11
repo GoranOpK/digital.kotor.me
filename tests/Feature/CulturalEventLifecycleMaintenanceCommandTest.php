@@ -134,6 +134,8 @@ class CulturalEventLifecycleMaintenanceCommandTest extends TestCase
 
         $this->assertSame(1, $result['finished']);
         $this->assertSame(1, $result['archived']);
+        $this->assertArrayHasKey('manifestation_archived', $result);
+        $this->assertArrayHasKey('skipped_manifestation_archive', $result);
         $this->assertSame(CulturalEventEntry::STATUS_ARCHIVED, $entry->fresh()->status);
     }
 

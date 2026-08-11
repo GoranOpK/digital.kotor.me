@@ -104,6 +104,7 @@ class CulturalEventEntry extends Model
         'status',
         'archived_from_status',
         'organizer_id',
+        'manifestation_id',
         'organizer_manual_name',
         'category_id',
         'cover_media_id',
@@ -118,6 +119,7 @@ class CulturalEventEntry extends Model
     protected $casts = [
         'featured' => 'boolean',
         'organizer_id' => 'integer',
+        'manifestation_id' => 'integer',
         'category_id' => 'integer',
         'cover_media_id' => 'integer',
         'created_by' => 'integer',
@@ -242,6 +244,11 @@ class CulturalEventEntry extends Model
     public function organizer(): BelongsTo
     {
         return $this->belongsTo(CulturalOrganizer::class, 'organizer_id');
+    }
+
+    public function manifestation(): BelongsTo
+    {
+        return $this->belongsTo(CulturalManifestation::class, 'manifestation_id');
     }
 
     public function category(): BelongsTo
