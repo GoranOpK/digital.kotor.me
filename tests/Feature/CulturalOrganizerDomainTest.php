@@ -52,6 +52,19 @@ class CulturalOrganizerDomainTest extends TestCase
         ]);
     }
 
+    public function test_eligible_user_sees_visible_submit_on_organizer_creation_form(): void
+    {
+        $response = $this->actingAs($this->regularUser)
+            ->get(route('cultural-organizer-creation-requests.create'));
+
+        $response->assertOk();
+        $response->assertSee('action="'.route('cultural-organizer-creation-requests.store').'"', false);
+        $response->assertSee('Podnesi zahtjev', false);
+        $response->assertSee('type="submit"', false);
+        $response->assertSee('background:#b91c1c', false);
+        $response->assertDontSee('bg-red-800 text-white', false);
+    }
+
     public function test_user_can_submit_creation_request_without_creating_organizer(): void
     {
         $response = $this->actingAs($this->regularUser)->post(route('cultural-organizer-creation-requests.store'), [

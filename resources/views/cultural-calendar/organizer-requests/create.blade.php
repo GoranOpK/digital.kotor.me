@@ -47,7 +47,10 @@
                 @endforeach
             </select>
         </div>
-        <button type="submit" class="px-4 py-2 bg-red-800 text-white rounded-md font-semibold">Podnesi zahtjev</button>
+        {{-- Inline styles: same visibility guarantee as Event / Manifestation create (Tailwind preflight + utility CSS). --}}
+        <button type="submit" style="background:#b91c1c; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;">
+            Podnesi zahtjev
+        </button>
     </form>
 </div>
 @endsection
