@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Manifestacija  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.2  
-**Datum:** 2026-07-31
+**Verzija:** 0.1.3
+**Datum:** 2026-08-11
 
 ---
 
@@ -19,6 +19,7 @@
 | 0.1 | 2026-07-29 | Initial draft. Prvi nacrt Technical Specification za funkcionalnu cjelinu Manifestacija. Usklađen sa BM-05 (BM-MF-01–BM-MF-18), FS §5.12 (BR-092–BR-101, BR-189–BR-201), BR-105/111/112, PO-MF-01–PO-MF-08, Feature Registry (FT-001 / plan TS-005), METHODOLOGY (M-TS-001–M-TS-005), TS-001, TS-003 i TS-004 (granice). Bez SQL, API, Laravel koda i bez novih poslovnih odluka van usvojenih PO-MF. |
 | 0.1.1 | 2026-07-29 | PO-MF-09–PO-MF-12; zatvoreni N-MF-01–N-MF-04; N-MF-05 evidentiran kao napomena (centralna evidencija). Status dokumenta: Usvojen. |
 | 0.1.2 | 2026-07-31 | Usklađenje javnog programa sa BM-MF-13 / BR-192 / PO-TS9-07D: Objavljeni + Otkazani (oznaka „Otkazano“); završeni ostaju. Detalj UI-ja na TS-009. Bez novih poslovnih odluka van usvojenih. |
+| 0.1.3 | 2026-08-11 | 6B-DOC-01 status sync (PO-6B-01…03): potvrđene granice TS-005 prema TS-009 — Manifestacija nema sopstvenu ni agregiranu lokaciju; javni detalj Arhivirane MF ostaje portalni ugovor TS-009; bez posebne MF Arhive u V1. Bez SQL/API/Laravel detalja i bez izmjene poslovnih pravila. |
 
 Napomena:
 
@@ -515,9 +516,9 @@ Centralna Evidencija: Manifestacija je ravnopravan entitet; emisija prema katalo
 
 ### 9.1 Javni prikaz (sažetak)
 
-Prikazuje se: naziv; opis; naslovna fotografija ili placeholder; Organizator kada postoji; Web stranica / Više informacije kada postoji; izvedeno trajanje kada je utvrdivo; u programu Objavljeni Događaji (završeni ostaju) i Otkazani Događaji uz oznaku „Otkazano“, sa javnim terminima i lokacijama. Detalj UI: TS-009.
+Prikazuje se: naziv; opis; naslovna fotografija ili placeholder; Organizator kada postoji; Web stranica / Više informacije kada postoji; izvedeno trajanje kada je utvrdivo; u programu Objavljeni Događaji (završeni ostaju) i Otkazani Događaji uz oznaku „Otkazano“, sa javnim terminima i lokacijama. Manifestacija nema sopstvenu ni agregiranu lokaciju na kartici/osnovnom detalju. Detalj UI: TS-009.
 
-Ne prikazuje se: Nacrti; događaji Na odobrenju / Vraćeni na doradu; interni urednički statusi i podaci.
+Ne prikazuje se: Nacrti; događaji Na odobrenju / Vraćeni na doradu; interni urednički statusi i podaci; zbirna/agregirana lokacija Manifestacije.
 
 ### 9.2 Urednički portal (sažetak)
 

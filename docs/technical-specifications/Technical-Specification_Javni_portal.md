@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.10
-**Datum:** 2026-08-10
+**Verzija:** 1.0.12
+**Datum:** 2026-08-11
 
 ---
 
@@ -32,6 +32,7 @@
 | 1.0.9 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** ručni Organizator; Odgođeno + Prvobitni termin + razlozi; OCC cancel prikaz; Entry cancel opcion razlog javno; supersede V1 zabrane javnog `cancellation_reason`. Bez izmjene implementacije. |
 | 1.0.10 | 2026-08-10 | **BM PATCH-064 / FS PATCH-FS-064:** Informativna naslovna vidljivost Odgođenog; zajednički hronološki bazen „Naredni događaji“ max 3; ranking datum; mode `planned` / `postponed_info`; tehnički tie-breaker `entry.id ASC`; bez mijenjanja calendar counts / selected-day / Pretrage / detalja / lifecycle. Bez izmjene implementacije. |
 | 1.0.11 | 2026-08-11 | **PHASE 6A closeout status sync (dokumentacioni):** potvrđeno implementirano/testirano/deployovano stanje za PATCH-063, PATCH-064 i CLOSE-02/03/03A/04; planned kartica uključuje „+ još N termina“ za dodatna relevantna Planirana Održavanja; `postponed_info` bez `+N`; legacy admin CRUD surface ostaje HTTP-disabled (403) uz zadržan rollback feature-flag mehanizam. Bez izmjene poslovnih pravila. |
+| 1.0.12 | 2026-08-11 | **6B-DOC-01 / PO-6B-01…05:** formalizovan V1 ugovor za `tip` filter na „Pretrazi i pregledu“ (`sve`/`dogadjaji`/`manifestacije`) i korekcija semantike filtera po tipu sadržaja (PO-6B-04), uz preciziranu MF `q` semantiku (PO-6B-05: Naziv+Opis, partial/case-insensitive, bez derived pretrage kroz program), bez agregirane lokacije Manifestacije, te razdvajanje aktivne MF liste od public detalja Arhivirane MF (bez zasebne MF Arhive u V1). Bez izmjene implementacije. |
 
 ---
 
@@ -49,7 +50,7 @@ TS-009:
 Izvori istine:
 
 * `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-11 BM-PK-01–BM-PK-34, BM-05, BM-AR-02; PATCH-045–PATCH-048, PATCH-051, PATCH-060, PATCH-061)
-* `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13 BR-102–BR-117, BR-255–BR-274, BR-280–BR-285; PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060, PATCH-FS-061)
+* `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13 BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, BR-296–BR-302; PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060, PATCH-FS-061, PATCH-FS-065)
 * usvojene odluke faze 1: IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B, TD-TS9-01
 * usvojene odluke faze 2: PO-TS9-06A, PO-TS9-06B, PO-TS9-06C, PO-TS9-06D
 * usvojene odluke faze 3: PO-TS9-07A, PO-TS9-07B, PO-TS9-07C, PO-TS9-07D, PO-TS9-07E
@@ -58,6 +59,7 @@ Izvori istine:
 * usvojene odluke CR-004B: PO-CR4B-01 … PO-CR4B-10 (javni prikaz otkazanih događaja)
 * usvojene odluke Faze 6A: PO-EV-01; PO-TS9-08A … PO-TS9-08J (cutover kanonskog modela; UI očuvanje; kartica/sortiranje/Odgođen; CAT-CUTOVER; 6A/6B; cancellation_reason V1; legacy URL; feature flag; public query SSOT)
 * usvojena odluka **PO-6A11-01** (kanonski javni status Događaja / multi-OCC badge)
+* usvojene odluke **PO-6B-01…05** (Tip sadržaja na Pretrazi + semantika filtera po tipu; MF `q` = Naziv+Opis; MF bez agregirane lokacije; Arhivirana MF = direct detail dostupan, bez posebne MF Arhive u V1)
 * granice entiteta: TS-005 (Manifestacija), TS-003 (Događaj), TS-004 (Održavanje) — TS-009 ne duplicira njihova poslovna pravila
 * `docs/features/Feature-Registry.md`
 * `docs/METHODOLOGY.md`
@@ -169,7 +171,7 @@ Poslovni model entiteta Manifestacija (lifecycle, kardinalnost, uslovi objave) o
 
 ## 1.5 Van obuhvata faze 1–3 (dokumentacioni)
 
-* detaljan URL ugovor filtera (imena parametara, format datuma) — naredna faza;
+* dodatni URL ugovori filtera izvan usvojenih §3.2 / §3.3 (npr. napredni facet filteri);
 * implementacija filtera, rename navigacije, klikabilnih statistika, dugmeta „Prikaži sve događaje“, praznog stanja istaknutih;
 * implementacija cjelina Manifestacije na portalu (lista, Detalji manifestacije, program, navigacija);
 * newsletter UI (TS-011);
@@ -288,7 +290,7 @@ Predstavlja **centralno mjesto** za pretragu i pregled događaja.
 |---------|------------|
 | Položaj | Sastavni dio stranice „Pretraga i pregled“ |
 | Vidljivost | Uvijek vidljivi |
-| Filteri | datum; kategorija; lokacija; manifestacija |
+| Filteri | datum; kategorija; lokacija; tip sadržaja |
 | Kombinovanje | Dozvoljeno |
 | Reset | Opcija „Poništi filtere“ |
 | Stanje | Aktivni filteri u URL parametrima |
@@ -349,7 +351,7 @@ Mjesečni kontekst prikazuje se kao aktivni filter ili podnaslov, npr.:
 | FS | BR-107, BR-108, BR-257 |
 | IS | IS-001 Faza 2 / CR-003 |
 
-Dokumentuje implementacioni ugovor za tekstualnu pretragu, kategoriju i lokaciju na stranici „Pretraga i pregled“, u granicama **postojećeg** modela događaja. **Bez** filtera Manifestacije (Faza 5) i **bez** Oznaka (Faza 4+).
+Dokumentuje implementacioni ugovor za ne-datumske filtere na stranici „Pretraga i pregled“: tekstualnu pretragu, kategoriju, lokaciju i tip sadržaja.
 
 ### 3.3.1 Query parametri (PO-CR3-01)
 
@@ -358,8 +360,9 @@ Ruta ostaje `cultural-calendar.events` (`GET /kalendar-kulture/pregled-dogadjaja
 | Parametar | Format | Obavezan | Semantika |
 |-----------|--------|----------|-----------|
 | `q` | string (tekst) | ne | Tekstualna pretraga |
-| `category` | tačna vrijednost iz kataloga kategorija: do cutover-a `CulturalEvent::CATEGORIES` (legacy read); nakon Faze 6A **kanonski naziv** aktivnog `CulturalCategory` (§3.3.3) | ne | Filter po kategoriji |
-| `location` | tačna nenull/neprazna lokacija iz objavljenih događaja | ne | Filter po lokaciji |
+| `category` | tačna vrijednost iz kataloga kategorija: do cutover-a `CulturalEvent::CATEGORIES` (legacy read); nakon Faze 6A **kanonski naziv** aktivnog `CulturalCategory` (§3.3.3) | ne | Filter po kategoriji (Događaji) |
+| `location` | tačna nenull/neprazna lokacija iz objavljenih događaja | ne | Filter po lokaciji (Događaji) |
+| `tip` | `dogadjaji` \| `manifestacije` | ne | Tip sadržaja; bez parametra = `Sve` |
 
 Postojeći datumski parametri (`date`, `week_start`, `week_end`, `month`) ostaju kako u §3.2.
 
@@ -371,7 +374,7 @@ Pretražuje (case-insensitive, djelimično poklapanje u granicama implementacije
 * `opis`
 * `lokacija`
 
-**Ne** pretražuje: `kategorija`, `status`, datume, vrijeme, `featured`, Manifestacije, Oznake, medijske tagove, interne identifikatore.
+**U mode-u Događaji** ne pretražuje: `kategorija`, `status`, datume, vrijeme, `featured`, Oznake, medijske tagove, interne identifikatore.
 
 Prazan ili nedostajući `q` ne primjenjuje tekstualni filter.
 
@@ -447,9 +450,77 @@ Filter zona je uvijek vidljiva (PO-TS9-04A / BM-PK-18).
 * Kontrole moraju imati odgovarajuće labele; tipkovnički tok: fokus polja → Enter / Pretraži; × i „Poništi sve filtere“ dostupni bez miša.
 * Bez uvođenja novog ekrana ili redizajna portala (IA-01).
 
-### 3.3.10 Van obuhvata CR-003
+### 3.3.10 Tip sadržaja `tip` (PO-6B-01)
 
-* Filter Manifestacije (**Faza 6B**);
+`tip` je ne-datumski filter za „Pretragu i pregled“:
+
+| URL | Semantika |
+|-----|-----------|
+| bez `tip` parametra | `Sve` (Događaji + Manifestacije) |
+| `tip=dogadjaji` | samo Događaji |
+| `tip=manifestacije` | samo Manifestacije |
+
+Nevalidan `tip` se **ignoriše** (fail-safe, bez HTTP greške) i tretira kao podrazumijevano `Sve`.
+
+Manifestacija se ne tretira kao vrsta Događaja; to su odvojeni poslovni entiteti (BM-05 / BM-04).
+
+### 3.3.11 PO-6B-04 — semantika filtera po tipu sadržaja
+
+Matrica dostupnih filtera na stranici „Pretraga i pregled“:
+
+| Tip sadržaja | `q` | `category` | `location` | `date` | `week` | `month` |
+|-------------|-----|------------|------------|--------|--------|---------|
+| Sve | DA | NE | NE | NE | NE | NE |
+| Događaji | DA | DA | DA | DA | DA | DA |
+| Manifestacije | DA | NE | NE | NE | NE | NE |
+
+Dodatna pravila:
+
+* `tip=dogadjaji`: zadržava se postojeća 6A semantika (`q`, `category`, `location`, `date`, `week_start/week_end`, `month`, sortiranje i vidljivost).
+* `tip` bez parametra (Sve): prikazuju se javno relevantni Događaji i Manifestacije; event-specifični filter controls nijesu dostupni; `q` se primjenjuje na oba podskupa prema njihovim pravilima (`Događaji` = §3.3.2; `Manifestacije` = §3.3.12).
+* `tip=manifestacije`: prikazuju se Manifestacije; event-specifični filter controls nijesu dostupni; `q` semantika = §3.3.12.
+* MF u V1 nema izvedeno filtriranje preko kategorija/lokacija/datumskih skupova povezanih Događaja/Održavanja.
+
+### 3.3.12 PO-6B-05 — MF `q` searchable fields
+
+Za `tip=manifestacije`, `q` pretražuje isključivo sopstvena tekstualna polja Manifestacije:
+
+* `naziv`
+* `opis`
+
+Semantika:
+
+* djelimično poklapanje;
+* case-insensitive.
+
+Isključenja (nije dio MF `q` pretrage):
+
+* Organizator;
+* povezani Događaji i njihovi nazivi;
+* Održavanja;
+* lokacije Događaja/Održavanja;
+* kategorije Događaja;
+* Oznake Događaja;
+* izvedeni period Manifestacije;
+* drugi izvedeni/agregirani podaci iz programa Manifestacije.
+
+Ako je Opis NULL/prazan, Manifestacija i dalje učestvuje kroz pretragu po Nazivu; NULL/prazan Opis ne izaziva grešku.
+
+Prazan/nedostajući/whitespace-only `q` ne aktivira tekstualni filter (reuse postojećeg fail-safe search patterna).
+
+### 3.3.13 Non-applicable URL parametri (fail-safe)
+
+Ako URL sadrži validan `tip`, ali i parametre koji nijesu primjenjivi za taj tip (`category`, `location`, `date`, `week_start`, `week_end`, `month` van `tip=dogadjaji`):
+
+* parametri ne utiču na rezultat;
+* ne izazivaju HTTP grešku;
+* ne uvode implicitno derived MF filtriranje.
+
+Pri promjeni tipa sadržaja event-specifični controls se skrivaju van `tip=dogadjaji`; eventualni preostali URL parametri tretiraju se kao non-applicable (fail-safe).
+
+### 3.3.14 Van obuhvata CR-003
+
+* dodatni MF-specifični filteri izvan `tip` ugovora (npr. lifecycle, period, organizator);
 * Oznake;
 * nove rute, migracije, izmjene modela / ENUM-a (osim cutover ugovora Faze 6A u §9);
 * AJAX / live search;
@@ -726,7 +797,7 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 
 | Stavka | Vrijednost |
 |--------|------------|
-| Vidljivost | Samo javno objavljene i javno dostupne Manifestacije |
+| Vidljivost | Aktivna lista prikazuje samo javno dostupne Manifestacije koje nijesu Arhivirane |
 | Sortiranje | (1) datum početka, (2) naziv |
 | Paginacija | 12 po stranici, standardna |
 | Kartica | Naslovna fotografija; naziv; period; kratak opis; broj objavljenih događaja u programu; link „Detalji manifestacije“ |
@@ -743,7 +814,7 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 | Polje / stavka | Vrijednost |
 |----------------|------------|
 | Osnovno | Naslovna fotografija; naziv; period; Organizator (ako postoji); web stranica (ako postoji); opis |
-| Lokacija | Prikaži ako je dostupna kao javna informacija; MF nema sopstvenu lokaciju (BM-MF-16 / TS-005); lokacije događaja u programu |
+| Lokacija | Manifestacija nema sopstvenu ni agregiranu lokaciju; na headeru/kartici se ne prikazuje MF lokacija. Lokacija se prikazuje samo po pojedinačnoj programskoj stavci kada postoji |
 | Program | Ispod osnovnih informacija; ako nije javno dostupan — odgovarajuća poruka |
 | V1 Out of Scope | Galerije; video; dijeljenje; rezervacije; komentari; dodatne multimedije |
 
@@ -781,6 +852,20 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 | Navigacija | Dvosmjerna |
 | Ostala mjesta | Događaji ostaju u Pretrazi i pregledu, kalendaru, statistikama, Arhivi događaja |
 | Uklanjanje / arhiviranje MF | Ne briše događaje (BM-MF-14 / BM-MF-15) |
+
+## 6.6 PO-6B-03 — Arhivirana Manifestacija (V1)
+
+| Odluka | PO-6B-03 |
+|--------|----------|
+| BM | BM-MF-06, BM-MF-15 |
+| FS | BR-300, BR-301, BR-302 |
+
+| Površina | V1 ugovor |
+|----------|-----------|
+| Aktivna javna lista Manifestacija | Arhivirane Manifestacije se ne prikazuju |
+| Direktni canonical URL detalja Manifestacije | Arhivirana Manifestacija ostaje javno dostupna (istorijski programski zapis) |
+| Posebna javna lista/ruta „Arhiva Manifestacija“ | Ne uvodi se u V1 |
+| Povezani Događaji | Zadržavaju sopstvenu javnu vidljivost i lifecycle semantiku; arhiva MF ih ne mijenja |
 
 ---
 

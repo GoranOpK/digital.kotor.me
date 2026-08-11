@@ -84,6 +84,7 @@
 | PATCH-FS-062 | 2026-08-09 | **PO-6A09-01…06** / BM PATCH-062: Javna Arhiva vs interni Arhiviran — dodat BR-286; usklađeni BR-065, BR-066, BR-114, BR-274. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-063 | 2026-08-10 | **BM PATCH-063 / PO-U-01…19:** Urednički tok kreiranja, pripreme i neposrednog upravljanja Događajem. Usklađeni BR-013, BR-015, BR-016, BR-018, BR-021, BR-025, BR-028, BR-045, BR-063, BR-064, BR-067, BR-069, BR-130, BR-131, BR-272, BR-282, BR-284 i §5.5.3–§5.5.4 / §5.5.6a. Dodati BR-287–BR-295 (ručni Org; Sačuvaj i nastavi / U pripremi; brisanje prije objave; direktan edit Objavljenog; Odgođen bez novog termina; OCC/Entry razlozi opcion; Prvobitni termin; fail-closed). **Supersede:** dio BR-025 (samo Urednikov direktni tok); dio BR-284 / BR-064 / BR-063 / BR-272 (javni prikaz opcionog razloga). Moderator Nacrt/approval/Prijedlog ostaje. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-064 | 2026-08-10 | **BM PATCH-064 / BM-PK-37 / PO-064:** Informativna naslovna vidljivost Odgođenog Događaja. Usklađeni BR-264, BR-280, BR-282, BR-285, BR-295; dodati BR-296–BR-297 (informativni režim; zajednički hronološki bazen „Naredni događaji“ max 3; ranking datum; jedan Događaj = jedan slot). Odgođeno ≠ Planirano/upcoming. Pretraga i detalj PATCH-063 neizmijenjeni. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-065 | 2026-08-11 | **PO-6B-01…05 / 6B-DOC-01B:** dodat ugovor `tip` filtera (`Sve`/`Događaji`/`Manifestacije`) na „Pretrazi i pregledu“ sa fail-safe pravilom za nevalidan `tip`; korigovana semantika filtera po tipu sadržaja (PO-6B-04: event filteri dostupni samo za `tip=dogadjaji`); formalizovana MF `q` semantika (PO-6B-05: samo Naziv + Opis, partial/case-insensitive, bez derived pretrage kroz program); potvrđeno da MF nema sopstvenu/agregiranu lokaciju; definisana V1 javna vidljivost Arhivirane MF (van aktivne liste, dostupna preko direktnog URL-a) i potvrđeno da posebna lista „Arhiva Manifestacija“ nije V1 scope. Dodati BR-298–BR-303. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -200,7 +201,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236, BR-277–BR-279)
    - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
-   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, BR-296–BR-297)
+   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, BR-296–BR-303)
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
    - 5.14.3 Funkcionalni obuhvat Uredničkog portala (BR-126–BR-128)
@@ -3117,7 +3118,7 @@ Podržani filteri su:
 * datum;
 * kategorija;
 * lokacija;
-* manifestacija.
+* tip sadržaja.
 
 Filteri se mogu kombinovati.
 
@@ -3125,9 +3126,101 @@ Postoji opcija „Poništi filtere“.
 
 Aktivni filteri čuvaju se u URL parametrima.
 
+Podržane vrijednosti filtera **tip sadržaja** su:
+
+* Sve (podrazumijevano — bez `tip` parametra);
+* Događaji (`tip=dogadjaji`);
+* Manifestacije (`tip=manifestacije`).
+
+Nevalidna vrijednost `tip` ne izaziva HTTP grešku i ignoriše se (fail-safe) — primjenjuje se podrazumijevano „Sve“.
+
+Event-specifični filteri (`category`, `location`, `date`, `week_start`, `week_end`, `month`) dostupni su samo kada je `tip=dogadjaji`.
+
 #### Napomena (CR-003)
 
 CR-003 (IS-001 Faza 2; Implemented, commit `595045a`) isporučio je ne-datumske filtere na „Pretrazi i pregledu“ (`q`, `category`, `location`; filter zona; AND sa datumskim mehanizmom; aktivni filteri; „Poništi sve filtere“) u skladu sa **TS-009 §3.3**, **IS-001 §9.2.1** i PO-CR3-01…08. Dokumentacioni ugovor: `fc35132`. Bez izmjene BR-257 i bez novih BR identifikatora.
+
+#### BR-298 – Tip sadržaja na Pretrazi i pregledu
+
+Na stranici „Pretraga i pregled“ postoji filter „Tip sadržaja“ sa opcijama:
+
+* Sve;
+* Događaji;
+* Manifestacije.
+
+Podrazumijevana vrijednost je „Sve“.
+
+Za `tip` vrijedi matrica dostupnih filtera:
+
+* `Sve`: dostupan samo `q`;
+* `Događaji`: dostupni `q`, `category`, `location`, `date`, `week_start`, `week_end`, `month`;
+* `Manifestacije`: dostupan samo `q`.
+
+#### BR-299 – URL ugovor filtera `tip`
+
+URL ugovor V1:
+
+* bez `tip` parametra → Sve;
+* `tip=dogadjaji` → samo Događaji;
+* `tip=manifestacije` → samo Manifestacije.
+
+Nevalidna vrijednost `tip` se ignoriše bez HTTP greške i tretira kao podrazumijevano „Sve“.
+
+Kada `tip` nije `dogadjaji`, event-specifični parametri (`category`, `location`, `date`, `week_start`, `week_end`, `month`) su non-applicable i ne utiču na rezultat.
+
+Kada je `tip` = `Sve` i prisutan je `q`, isti tekstualni unos se primjenjuje po pravilima oba podskupa rezultata:
+
+* podskup Događaja: postojeća 6A/CR-003 `q` semantika;
+* podskup Manifestacija: BR-303.
+
+#### BR-300 – Aktivna lista i detalj Arhivirane Manifestacije
+
+Arhivirana Manifestacija ne prikazuje se u aktivnoj javnoj listi Manifestacija.
+
+Javni detalj Arhivirane Manifestacije ostaje dostupan preko direktnog URL-a kao istorijski programski zapis.
+
+#### BR-301 – Lokacija Manifestacije na javnom portalu
+
+Manifestacija nema sopstvenu ni agregiranu lokaciju.
+
+Na kartici i osnovnom dijelu detalja Manifestacije ne prikazuje se zbirna/podrazumijevana/dominantna lokacija Manifestacije.
+
+Lokacija se prikazuje samo uz konkretnu programsku stavku (Događaj/Održavanje), kada je za tu stavku lokacija definisana.
+
+Manifestacije se u V1 ne filtriraju izvedeno/agregirano preko lokacija, kategorija ili datumskih skupova povezanih Događaja/Održavanja.
+
+#### BR-302 – V1 granica za Arhivu Manifestacija
+
+V1 ne uvodi posebnu javnu listu/rutu „Arhiva Manifestacija“.
+
+Lifecycle stanje Arhivirana ostaje važeće za Manifestaciju, uz pravila BR-300.
+
+#### BR-303 – MF `q` searchable fields (PO-6B-05)
+
+Kada je `tip=manifestacije`, tekstualni filter `q` pretražuje isključivo sopstvena tekstualna polja Manifestacije:
+
+* `naziv`
+* `opis`
+
+Semantika pretrage:
+
+* djelimično poklapanje;
+* bez razlikovanja velikih i malih slova.
+
+`q` za Manifestacije ne pretražuje:
+
+* Organizatora;
+* povezane Događaje i njihove nazive;
+* Održavanja;
+* lokacije Događaja/Održavanja;
+* kategorije Događaja;
+* Oznake Događaja;
+* izvedeni period Manifestacije;
+* druge izvedene/agregirane podatke iz povezanih Događaja/Održavanja.
+
+Ako Opis nije unesen (NULL/prazan), Manifestacija normalno učestvuje u pretrazi preko polja Naziv; odsutan/prazan Opis ne predstavlja grešku.
+
+Prazan/nedostajući/whitespace-only `q` ne predstavlja aktivni tekstualni filter.
 
 ---
 
