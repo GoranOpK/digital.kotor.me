@@ -127,6 +127,10 @@
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.archive')) }}"
                             >Arhiva događaja</a>
                             <a
+                                href="{{ route('cultural-calendar.manifestations') }}"
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.manifestations', 'cultural-calendar.manifestation')) }}"
+                            >Manifestacije</a>
+                            <a
                                 href="{{ route('cultural-editorial-dashboard.index') }}"
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-editorial-dashboard.*')) }}"
                             >Urednički rad</a>
@@ -197,6 +201,10 @@
                             href="{{ route('cultural-calendar.archive') }}"
                             style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.archive')) }}"
                         >Arhiva događaja</a>
+                        <a
+                            href="{{ route('cultural-calendar.manifestations') }}"
+                            style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.manifestations', 'cultural-calendar.manifestation')) }}"
+                        >Manifestacije</a>
                         @auth
                             @if(\App\Support\CulturalModeratorEventAccess::isActiveModerator(auth()->user()))
                                 <a
@@ -316,6 +324,10 @@
                     href="{{ route('cultural-calendar.archive') }}"
                     style="{{ $kkNavBtnMobile(request()->routeIs('cultural-calendar.archive')) }}"
                 >Arhiva događaja</a>
+                <a
+                    href="{{ route('cultural-calendar.manifestations') }}"
+                    style="{{ $kkNavBtnMobile(request()->routeIs('cultural-calendar.manifestations', 'cultural-calendar.manifestation')) }}"
+                >Manifestacije</a>
                     @if($isKkAdmin)
                     <a
                         href="{{ route('cultural-editorial-dashboard.index') }}"

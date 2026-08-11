@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CulturalEvent;
 use App\Models\CulturalEventEntry;
 use App\Services\CulturalCalendar\CulturalPublicEventQuery;
+use App\Services\CulturalCalendar\CulturalPublicManifestationQuery;
 use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -759,11 +760,18 @@ class CulturalCalendarController extends Controller
      *
      * Parametar ostaje {event}; bez route cutover-a (6A-10).
      * Legacy: CulturalEvent po ID; canonical: CulturalEventEntry preko public query SSOT.
+     * PO-6B-09: javna veza ka Manifestaciji samo kada je MF public-linkable.
      */
     public function show(Request $request, string $event)
     {
+        $publicManifestation = null;
+        $manifestationQuery = app(CulturalPublicManifestationQuery::class);
+
         if (CulturalPublicReadSource::usesCanonical()) {
             $event = app(CulturalPublicEventQuery::class)->findPublicEntryForShow($event);
+            if ($manifestationQuery->isPubliclyLinkable($event->manifestation)) {
+                $publicManifestation = $event->manifestation;
+            }
         } else {
             $event = CulturalEvent::query()->whereKey($event)->firstOrFail();
             if (! $event->isPubliclyVisible()) {
@@ -776,6 +784,47 @@ class CulturalCalendarController extends Controller
             $backUrl = route('cultural-calendar.events');
         }
 
-        return view('cultural-calendar.show', compact('event', 'backUrl'));
+        return view('cultural-calendar.show', compact('event', 'backUrl', 'publicManifestation'));
+    }
+
+    /**
+     * Javna aktivna lista Manifestacija (PHASE 6B-03 / PO-TS9-07B / PO-6B-08).
+     */
+    public function manifestations(Request $request): View
+    {
+        $query = app(CulturalPublicManifestationQuery::class);
+        $manifestations = $query
+            ->orderedForActiveList()
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('cultural-calendar.manifestations.index', [
+            'manifestations' => $manifestations,
+            'manifestationQuery' => $query,
+        ]);
+    }
+
+    /**
+     * Canonical javni detalj Manifestacije (PHASE 6B-03 / PO-TS9-07C/D / PO-6B-08).
+     */
+    public function manifestationShow(Request $request, string $manifestacija): View
+    {
+        $query = app(CulturalPublicManifestationQuery::class);
+        $manifestation = $query->findPublicForShow($manifestacija);
+        $period = $query->period($manifestation);
+        $periodLabel = $query->formatPeriodLabel($period);
+        $programByDate = $query->programGroupedByDate($manifestation);
+
+        $backUrl = (string) $request->query('back', '');
+        if (! str_starts_with($backUrl, '/kalendar-kulture')) {
+            $backUrl = route('cultural-calendar.manifestations');
+        }
+
+        return view('cultural-calendar.manifestations.show', [
+            'manifestation' => $manifestation,
+            'periodLabel' => $periodLabel,
+            'programByDate' => $programByDate,
+            'backUrl' => $backUrl,
+        ]);
     }
 }

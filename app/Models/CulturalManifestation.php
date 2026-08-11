@@ -152,5 +152,18 @@ class CulturalManifestation extends Model
     {
         return $this->belongsTo(User::class, 'last_modified_by');
     }
+
+    /**
+     * Javni cover URL — cover media ili generički placeholder.
+     * Ne fallback-uje na medije povezanih Događaja (BM-MF-17).
+     */
+    public function imageUrl(): string
+    {
+        if ($this->coverMedia && filled($this->coverMedia->storage_path)) {
+            return $this->coverMedia->publicUrl();
+        }
+
+        return asset(CulturalEvent::FALLBACK_DEFAULT_IMAGE);
+    }
 }
 

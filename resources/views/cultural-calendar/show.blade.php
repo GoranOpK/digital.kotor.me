@@ -164,6 +164,16 @@
                         </div>
                     @endif
 
+                    @if(!empty($publicManifestation))
+                        <div class="kk-show-meta" data-kk-public-manifestation-link="1">
+                            <strong>Manifestacija:</strong>
+                            <a
+                                href="{{ route('cultural-calendar.manifestation', ['manifestacija' => $publicManifestation]) }}"
+                                class="text-blue-700 underline"
+                            >{{ $publicManifestation->naziv }}</a>
+                        </div>
+                    @endif
+
                     @include('cultural-calendar.partials.show-occurrences', [
                         'occurrences' => $event->publicDetailOccurrences(),
                     ])

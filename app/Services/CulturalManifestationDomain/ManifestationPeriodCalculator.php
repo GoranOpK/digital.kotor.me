@@ -16,7 +16,17 @@ final class ManifestationPeriodCalculator
      */
     public function calculate(CulturalManifestation $manifestation): ?array
     {
-        $occurrences = $this->relevantOccurrences($manifestation);
+        return $this->periodFromOccurrences($this->relevantOccurrences($manifestation));
+    }
+
+    /**
+     * Read-side helper: period from already-loaded relevant OCC (no DB query).
+     *
+     * @param  Collection<int, CulturalOccurrence>  $occurrences
+     * @return array{start: CarbonInterface, end: CarbonInterface}|null
+     */
+    public function periodFromOccurrences(Collection $occurrences): ?array
+    {
         if ($occurrences->isEmpty()) {
             return null;
         }
@@ -51,7 +61,14 @@ final class ManifestationPeriodCalculator
 
     public function hasExpired(CulturalManifestation $manifestation, ?CarbonInterface $now = null): bool
     {
-        $period = $this->calculate($manifestation);
+        return $this->hasExpiredPeriod($this->calculate($manifestation), $now);
+    }
+
+    /**
+     * @param  array{start: CarbonInterface, end: CarbonInterface}|null  $period
+     */
+    public function hasExpiredPeriod(?array $period, ?CarbonInterface $now = null): bool
+    {
         if ($period === null) {
             return false;
         }
@@ -62,17 +79,25 @@ final class ManifestationPeriodCalculator
     }
 
     /**
-     * @return Collection<int, CulturalOccurrence>
+     * Batch load relevant OCC for many MF IDs (same filters as relevantOccurrences).
+     *
+     * @param  list<int|string>  $manifestationIds
+     * @return Collection<int, Collection<int, CulturalOccurrence>>
      */
-    private function relevantOccurrences(CulturalManifestation $manifestation): Collection
+    public function relevantOccurrencesGroupedByManifestation(array $manifestationIds): Collection
     {
+        $ids = array_values(array_unique(array_map('intval', $manifestationIds)));
+        if ($ids === []) {
+            return collect();
+        }
+
         $entryTable = (new CulturalEventEntry)->getTable();
         $occTable = (new CulturalOccurrence)->getTable();
 
-        return CulturalOccurrence::query()
+        $rows = CulturalOccurrence::query()
             ->from($occTable)
             ->join($entryTable, "{$entryTable}.id", '=', "{$occTable}.event_entry_id")
-            ->where("{$entryTable}.manifestation_id", $manifestation->id)
+            ->whereIn("{$entryTable}.manifestation_id", $ids)
             ->where("{$entryTable}.status", CulturalEventEntry::STATUS_PUBLISHED)
             ->whereNotIn("{$occTable}.status", [
                 CulturalOccurrence::STATUS_CANCELLED,
@@ -81,8 +106,24 @@ final class ManifestationPeriodCalculator
             ->orderBy("{$occTable}.datum")
             ->orderByRaw("COALESCE(NULLIF(TRIM({$occTable}.vrijeme_od), ''), '00:00:00')")
             ->orderBy("{$occTable}.id")
-            ->select("{$occTable}.*")
+            ->select([
+                "{$occTable}.*",
+                "{$entryTable}.manifestation_id as period_manifestation_id",
+            ])
             ->get();
+
+        return $rows
+            ->groupBy(fn (CulturalOccurrence $occurrence): int => (int) $occurrence->getAttribute('period_manifestation_id'))
+            ->map(fn (Collection $group): Collection => $group->values());
+    }
+
+    /**
+     * @return Collection<int, CulturalOccurrence>
+     */
+    private function relevantOccurrences(CulturalManifestation $manifestation): Collection
+    {
+        return $this->relevantOccurrencesGroupedByManifestation([(int) $manifestation->id])
+            ->get((int) $manifestation->id, collect());
     }
 
     private function dateKey(CulturalOccurrence $occurrence): string
@@ -143,4 +184,3 @@ final class ManifestationPeriodCalculator
         return sprintf('%02d:%02d:%02d', $h, $m, $s);
     }
 }
-

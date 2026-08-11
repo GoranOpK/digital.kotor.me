@@ -133,6 +133,7 @@ final class CulturalPublicEventQuery
                     ->orderBy('id');
             },
             'occurrences.location',
+            'manifestation',
         ];
     }
 
