@@ -85,6 +85,7 @@
 | PATCH-FS-063 | 2026-08-10 | **BM PATCH-063 / PO-U-01…19:** Urednički tok kreiranja, pripreme i neposrednog upravljanja Događajem. Usklađeni BR-013, BR-015, BR-016, BR-018, BR-021, BR-025, BR-028, BR-045, BR-063, BR-064, BR-067, BR-069, BR-130, BR-131, BR-272, BR-282, BR-284 i §5.5.3–§5.5.4 / §5.5.6a. Dodati BR-287–BR-295 (ručni Org; Sačuvaj i nastavi / U pripremi; brisanje prije objave; direktan edit Objavljenog; Odgođen bez novog termina; OCC/Entry razlozi opcion; Prvobitni termin; fail-closed). **Supersede:** dio BR-025 (samo Urednikov direktni tok); dio BR-284 / BR-064 / BR-063 / BR-272 (javni prikaz opcionog razloga). Moderator Nacrt/approval/Prijedlog ostaje. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-064 | 2026-08-10 | **BM PATCH-064 / BM-PK-37 / PO-064:** Informativna naslovna vidljivost Odgođenog Događaja. Usklađeni BR-264, BR-280, BR-282, BR-285, BR-295; dodati BR-296–BR-297 (informativni režim; zajednički hronološki bazen „Naredni događaji“ max 3; ranking datum; jedan Događaj = jedan slot). Odgođeno ≠ Planirano/upcoming. Pretraga i detalj PATCH-063 neizmijenjeni. Bez izmjene BM/TS/Feature Registry/implementacije. Verzija ostaje 1.0.0. |
 | PATCH-FS-065 | 2026-08-11 | **PO-6B-01…05 / 6B-DOC-01B:** dodat ugovor `tip` filtera (`Sve`/`Događaji`/`Manifestacije`) na „Pretrazi i pregledu“ sa fail-safe pravilom za nevalidan `tip`; korigovana semantika filtera po tipu sadržaja (PO-6B-04: event filteri dostupni samo za `tip=dogadjaji`); formalizovana MF `q` semantika (PO-6B-05: samo Naziv + Opis, partial/case-insensitive, bez derived pretrage kroz program); potvrđeno da MF nema sopstvenu/agregiranu lokaciju; definisana V1 javna vidljivost Arhivirane MF (van aktivne liste, dostupna preko direktnog URL-a) i potvrđeno da posebna lista „Arhiva Manifestacija“ nije V1 scope. Dodati BR-298–BR-303. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| PATCH-FS-066 | 2026-08-11 | **PO-6B-08 / PO-6B-09:** javna vidljivost Otkazane Manifestacije do isteka izvedenog perioda; Event→MF prikaz samo za javno dostupne MF (anti-leak); bez statusa MF na detalju Događaja; nezavisnost lifecycle-a. Usklađeni BR-266, BR-269; dodati BR-304–BR-305. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -201,7 +202,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236, BR-277–BR-279)
    - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
-   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, BR-296–BR-303)
+   - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, BR-296–BR-305)
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
    - 5.14.3 Funkcionalni obuhvat Uredničkog portala (BR-126–BR-128)
@@ -3222,6 +3223,46 @@ Ako Opis nije unesen (NULL/prazan), Manifestacija normalno učestvuje u pretrazi
 
 Prazan/nedostajući/whitespace-only `q` ne predstavlja aktivni tekstualni filter.
 
+#### BR-304 – Javna vidljivost Otkazane Manifestacije (PO-6B-08)
+
+Manifestacija sa statusom Otkazana ostaje javno vidljiva do isteka njenog izvedenog perioda.
+
+1. Otkazana Manifestacija ostaje na aktivnoj javnoj listi Manifestacija do isteka izvedenog perioda.
+2. Kartica jasno prikazuje oznaku **Otkazana**.
+3. Javni detalj Otkazane Manifestacije ostaje dostupan.
+4. Na javnom detalju mora biti jasno označeno da je Manifestacija Otkazana.
+5. Program Manifestacije ostaje vidljiv.
+6. Otkazivanje Manifestacije **ne** mijenja automatski statuse povezanih Događaja ni Održavanja.
+7. Nakon isteka izvedenog perioda, postojeći lifecycle mehanizam automatski prevodi Manifestaciju u status Arhivirana (BR-097 / BR-204 / BR-300).
+8. Arhivirana Manifestacija više nije dio aktivne javne liste; njen direktni canonical javni detalj ostaje dostupan kao istorijski zapis (BR-300).
+
+Otkazana nije obavezna međufaza: Objavljena → Arhivirana i Objavljena → Otkazana → Arhivirana su različiti legitimni tokovi.
+
+Manifestacija u V1 nema status **Odgođena**. Odgađanje pripada Održavanju (BR-189 / BM-MF-11).
+
+#### BR-305 – Javni prikaz veze Događaj → Manifestacija (PO-6B-09)
+
+Ako Događaj pripada Manifestaciji, na javnom detalju Događaja informacija o pripadnosti Manifestaciji prikazuje se **samo** kada je povezana Manifestacija javno dostupna.
+
+Matrica:
+
+| Status Manifestacije | Prikaz | Link |
+|----------------------|--------|------|
+| Nacrt | Ne | Ne |
+| Na odobrenju / Čeka odobrenje | Ne | Ne |
+| Vraćena na doradu | Ne | Ne |
+| Objavljena | Da | Da |
+| Otkazana | Da | Da |
+| Arhivirana | Da | Da |
+
+Za javno dostupnu Manifestaciju prikazuje se semantički: oznaka pripadnosti + naziv Manifestacije koji vodi na canonical javni detalj Manifestacije.
+
+Na detalju Događaja **ne** prikazuje se status Manifestacije uz naziv. Status Manifestacije vidi se na njenom javnom detalju. Otkazana Manifestacija **ne** znači Otkazan Događaj.
+
+Za Nacrt / Na odobrenju / Vraćena na doradu ne smije procuriti naziv, link, status, identifikator ni drugi javni trag pripadnosti. Pravilo je serversko (poslovna vidljivost), ne samo CSS/UI skrivanje.
+
+Životni ciklusi Manifestacije i Događaja ostaju nezavisni (BR-194): otkazivanje/arhiviranje/objavljivanje Manifestacije ne mijenja automatski status Događaja, i obrnuto, osim već definisanih derived period / maintenance pravila.
+
 ---
 
 #### BR-258 – Zadržavanje postojećih prikaza
@@ -3322,13 +3363,15 @@ Ne radi se redizajn portala; uvodi se samo nova funkcionalna cjelina za već usv
 
 #### BR-266 – Lista Manifestacija (PO-TS9-07B)
 
-Stranica „Manifestacije“ prikazuje listu javno objavljenih i javno dostupnih Manifestacija.
+Stranica „Manifestacije“ prikazuje listu javno dostupnih Manifestacija koje nijesu Arhivirane.
+
+U aktivnu listu ulaze Objavljene Manifestacije. Otkazane Manifestacije ostaju u aktivnoj listi do isteka izvedenog perioda, uz oznaku „Otkazana“ (BR-304 / PO-6B-08). Arhivirane Manifestacije ne ulaze u aktivnu listu (BR-300).
 
 Sortiranje: (1) datum početka, (2) naziv.
 
 Paginacija: 12 Manifestacija po stranici, standardna paginacija.
 
-Kartica prikazuje: naslovnu fotografiju; naziv; period održavanja; kratak opis; broj objavljenih događaja u programu; link „Detalji manifestacije“.
+Kartica prikazuje: naslovnu fotografiju; naziv; period održavanja; kratak opis; broj objavljenih događaja u programu; link „Detalji manifestacije“. Za Otkazanu Manifestaciju kartica mora jasno prikazivati oznaku „Otkazana“.
 
 U V1 lista nema pretragu ni filtere.
 
@@ -3366,13 +3409,13 @@ Pravila vidljivosti statusa događaja u programu: BR-192.
 
 Jedna Manifestacija može sadržati više događaja. Jedan događaj pripada najviše jednoj Manifestaciji. Događaj može postojati bez Manifestacije. Manifestacija je programski okvir; događaj ostaje osnovni poslovni entitet (BR-093, BR-094).
 
-Na detalju događaja koji pripada Manifestaciji prikazuje se blok „Ovaj događaj je dio manifestacije“ sa nazivom, periodom i dugmetom „Detalji manifestacije“.
+Na detalju događaja koji pripada Manifestaciji prikazuje se informacija o pripadnosti **samo kada je povezana Manifestacija javno dostupna** (BR-305 / PO-6B-09): oznaka pripadnosti + naziv Manifestacije sa linkom na canonical javni detalj. Status Manifestacije se ne prikazuje na detalju Događaja.
 
-Program na detalju Manifestacije vodi na detalj događaja. Obezbijeđena je dvosmjerna navigacija.
+Program na detalju Manifestacije vodi na detalj događaja. Obezbijeđena je dvosmjerna navigacija kada su oba entiteta javno dostupna prema svojim pravilima.
 
 Događaji ostaju vidljivi u Pretrazi i pregledu, kalendaru, statistikama i arhivi bez obzira na pripadnost Manifestaciji.
 
-Uklanjanje ili arhiviranje Manifestacije ne briše događaje.
+Uklanjanje ili arhiviranje Manifestacije ne briše događaje. Otkazivanje Manifestacije ne mijenja statuse Događaja ni Održavanja (BR-194 / BR-304).
 
 **Status:** Approved
 
@@ -4802,3 +4845,5 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-08 | FS-001 (PATCH-FS-056): PO-DG-08 / PO-DG-09 / BM PATCH-056 — preciziran BR-052 (Objavljen + bez Org; jednosmjerno; bez unlink/reassign); usklađen BR-018; statusna matrica. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-08 | FS-001 (PATCH-FS-057): PO-DG-10 / BM PATCH-057 — pojednostavljeni V1 prvi Event review; BR-022/023/027/033/034/037/038 i §5.5.5–§5.5.6; Proposal tok neizmijenjen. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-08 | FS-001 (PATCH-FS-058): PO-N-TR-02-04 / BM PATCH-058 — preciziran V1 generator Održavanja (BR-060/061); samo Nacrt; algoritmi; XOR; max 100; duplikati; atomičnost. Bez novih BR ID. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| 2026-08-11 | FS-001 (PATCH-FS-065): PO-6B-01…05 / 6B-DOC-01B — tip filter; MF q; Arhivirana MF; BR-298–BR-303. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| 2026-08-11 | FS-001 (PATCH-FS-066): PO-6B-08 / PO-6B-09 — Otkazana MF javna vidljivost; Event→MF anti-leak; BR-304–BR-305; usklađeni BR-266/BR-269. Bez izmjene implementacije. Verzija ostaje 1.0.0. |

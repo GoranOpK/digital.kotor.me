@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.12
+**Verzija:** 1.0.13
 **Datum:** 2026-08-11
 
 ---
@@ -33,6 +33,7 @@
 | 1.0.10 | 2026-08-10 | **BM PATCH-064 / FS PATCH-FS-064:** Informativna naslovna vidljivost Odgođenog; zajednički hronološki bazen „Naredni događaji“ max 3; ranking datum; mode `planned` / `postponed_info`; tehnički tie-breaker `entry.id ASC`; bez mijenjanja calendar counts / selected-day / Pretrage / detalja / lifecycle. Bez izmjene implementacije. |
 | 1.0.11 | 2026-08-11 | **PHASE 6A closeout status sync (dokumentacioni):** potvrđeno implementirano/testirano/deployovano stanje za PATCH-063, PATCH-064 i CLOSE-02/03/03A/04; planned kartica uključuje „+ još N termina“ za dodatna relevantna Planirana Održavanja; `postponed_info` bez `+N`; legacy admin CRUD surface ostaje HTTP-disabled (403) uz zadržan rollback feature-flag mehanizam. Bez izmjene poslovnih pravila. |
 | 1.0.12 | 2026-08-11 | **6B-DOC-01 / PO-6B-01…05:** formalizovan V1 ugovor za `tip` filter na „Pretrazi i pregledu“ (`sve`/`dogadjaji`/`manifestacije`) i korekcija semantike filtera po tipu sadržaja (PO-6B-04), uz preciziranu MF `q` semantiku (PO-6B-05: Naziv+Opis, partial/case-insensitive, bez derived pretrage kroz program), bez agregirane lokacije Manifestacije, te razdvajanje aktivne MF liste od public detalja Arhivirane MF (bez zasebne MF Arhive u V1). Bez izmjene implementacije. |
+| 1.0.13 | 2026-08-11 | **PO-6B-08 / PO-6B-09:** javna vidljivost Otkazane Manifestacije do isteka izvedenog perioda (§6.7); Event→MF prikaz samo za javno dostupne MF uz anti-leak (§6.8); bez statusa MF na detalju Događaja. Usklađeno sa BM PATCH-065 / FS PATCH-FS-066. Bez izmjene implementacije. |
 
 ---
 
@@ -50,7 +51,7 @@ TS-009:
 Izvori istine:
 
 * `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-11 BM-PK-01–BM-PK-34, BM-05, BM-AR-02; PATCH-045–PATCH-048, PATCH-051, PATCH-060, PATCH-061)
-* `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13 BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, BR-296–BR-302; PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060, PATCH-FS-061, PATCH-FS-065)
+* `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13 BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, BR-296–BR-305; PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060, PATCH-FS-061, PATCH-FS-065, PATCH-FS-066)
 * usvojene odluke faze 1: IA-01, PO-TS9-03A, PO-TS9-04A, PO-TS9-05A, PO-TS9-05B, TD-TS9-01
 * usvojene odluke faze 2: PO-TS9-06A, PO-TS9-06B, PO-TS9-06C, PO-TS9-06D
 * usvojene odluke faze 3: PO-TS9-07A, PO-TS9-07B, PO-TS9-07C, PO-TS9-07D, PO-TS9-07E
@@ -60,6 +61,7 @@ Izvori istine:
 * usvojene odluke Faze 6A: PO-EV-01; PO-TS9-08A … PO-TS9-08J (cutover kanonskog modela; UI očuvanje; kartica/sortiranje/Odgođen; CAT-CUTOVER; 6A/6B; cancellation_reason V1; legacy URL; feature flag; public query SSOT)
 * usvojena odluka **PO-6A11-01** (kanonski javni status Događaja / multi-OCC badge)
 * usvojene odluke **PO-6B-01…05** (Tip sadržaja na Pretrazi + semantika filtera po tipu; MF `q` = Naziv+Opis; MF bez agregirane lokacije; Arhivirana MF = direct detail dostupan, bez posebne MF Arhive u V1)
+* usvojene odluke **PO-6B-08 / PO-6B-09** (Otkazana MF javno vidljiva do isteka perioda; Event→MF anti-leak matrica)
 * granice entiteta: TS-005 (Manifestacija), TS-003 (Događaj), TS-004 (Održavanje) — TS-009 ne duplicira njihova poslovna pravila
 * `docs/features/Feature-Registry.md`
 * `docs/METHODOLOGY.md`
@@ -797,10 +799,10 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 
 | Stavka | Vrijednost |
 |--------|------------|
-| Vidljivost | Aktivna lista prikazuje samo javno dostupne Manifestacije koje nijesu Arhivirane |
+| Vidljivost | Aktivna lista prikazuje javno dostupne Manifestacije koje nijesu Arhivirane: Objavljene, te Otkazane do isteka izvedenog perioda (PO-6B-08 / §6.7) |
 | Sortiranje | (1) datum početka, (2) naziv |
 | Paginacija | 12 po stranici, standardna |
-| Kartica | Naslovna fotografija; naziv; period; kratak opis; broj objavljenih događaja u programu; link „Detalji manifestacije“ |
+| Kartica | Naslovna fotografija; naziv; period; kratak opis; broj objavljenih događaja u programu; link „Detalji manifestacije“; za Otkazanu — jasna oznaka „Otkazana“ |
 | V1 | Bez pretrage; bez filtera |
 | Prazno | Neutralna poruka |
 
@@ -847,9 +849,9 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 |--------|------------|
 | Kardinalnost | 1 MF → N događaja; događaj ≤ 1 MF; događaj može biti bez MF — **pravila entiteta:** BM-05 / TS-005, BM-04 / TS-003 (ovdje samo portalna navigacija) |
 | Uloga | MF = programski okvir; događaj = osnovni poslovni entitet |
-| Detalji događaja | Blok „Ovaj događaj je dio manifestacije“ + naziv + period + „Detalji manifestacije“ |
+| Detalji događaja | Blok pripadnosti Manifestaciji **samo** kada je MF javno dostupna (PO-6B-09 / §6.8): oznaka + naziv + link; **bez** statusa MF na detalju Događaja |
 | Detalji manifestacije | Program → „Detalji događaja“ |
-| Navigacija | Dvosmjerna |
+| Navigacija | Dvosmjerna (kada su oba entiteta javno dostupna prema svojim pravilima) |
 | Ostala mjesta | Događaji ostaju u Pretrazi i pregledu, kalendaru, statistikama, Arhivi događaja |
 | Uklanjanje / arhiviranje MF | Ne briše događaje (BM-MF-14 / BM-MF-15) |
 
@@ -867,6 +869,47 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 | Posebna javna lista/ruta „Arhiva Manifestacija“ | Ne uvodi se u V1 |
 | Povezani Događaji | Zadržavaju sopstvenu javnu vidljivost i lifecycle semantiku; arhiva MF ih ne mijenja |
 
+## 6.7 PO-6B-08 — Javna vidljivost Otkazane Manifestacije
+
+| Odluka | PO-6B-08 |
+|--------|---------|
+| BM | BM-PK-38, BM-PK-25, BM-MF-06, BM-MF-07, BM-MF-11, BM-MF-15 |
+| FS | BR-304, BR-266, BR-194 |
+
+| Stavka | Vrijednost |
+|--------|------------|
+| Aktivna lista | Otkazana MF ostaje do isteka izvedenog perioda |
+| Kartica | Jasna oznaka **Otkazana** |
+| Detalj | Ostaje javno dostupan; jasno označeno da je MF Otkazana |
+| Program | Ostaje vidljiv |
+| Event/OCC | Otkazivanje MF **ne** mijenja statuse povezanih Događaja ni Održavanja |
+| Nakon isteka | Automatski → Arhivirana (postojeći lifecycle); aktivna lista više ne uključuje; direct detail ostaje (PO-6B-03) |
+| Tokovi | Objavljena → Arhivirana **i** Objavljena → Otkazana → Arhivirana su legitimni; Otkazana nije obavezna međufaza |
+| Terminologija | MF **nema** status Odgođena; Odgođeno = Održavanje |
+
+## 6.8 PO-6B-09 — Javni prikaz veze Događaj → Manifestacija
+
+| Odluka | PO-6B-09 |
+|--------|---------|
+| BM | BM-PK-39, BM-PK-28 |
+| FS | BR-305, BR-269 |
+
+| MF status | Prikaz na Event detail | Link |
+|-----------|------------------------|------|
+| Nacrt | Ne | Ne |
+| Čeka odobrenje / Na odobrenju | Ne | Ne |
+| Vraćena na doradu | Ne | Ne |
+| Objavljena | Da | Da |
+| Otkazana | Da | Da |
+| Arhivirana | Da | Da |
+
+| Stavka | Vrijednost |
+|--------|------------|
+| Semantika | Oznaka pripadnosti + naziv MF (link na canonical javni detalj) |
+| Status MF na Event detail | **Ne** prikazivati (Otkazana MF ≠ Otkazan Događaj) |
+| Anti-leak | Za Nacrt / Na odobrenju / Vraćena: bez naziva, linka, statusa, ID-a ni drugog javnog traga; serversko pravilo |
+| Arhivirana | Link ostaje (istorijski canonical detalj dostupan) |
+
 ---
 
 # 7. Detalji događaja (baseline)
@@ -877,7 +920,7 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 |-----------|---------|
 | BM | BM-PK-05, BM-PK-09–BM-PK-14, BM-PK-28 |
 | FS | §5.4, BR-106, BR-110–BR-115, BR-269, BR-270–BR-274 |
-| PO (portal) | PO-TS9-07E (blok veze ka Manifestaciji); PO-CR4A-01…05 (badge); PO-CR4B-01…10 (otkazani) |
+| PO (portal) | PO-TS9-07E (blok veze ka Manifestaciji); PO-6B-09 (vidljivost / anti-leak); PO-CR4A-01…05 (badge); PO-CR4B-01…10 (otkazani) |
 
 Portalni obuhvat (referenca, ne nova pravila):
 
@@ -887,7 +930,7 @@ Portalni obuhvat (referenca, ne nova pravila):
 * Kategorija i Oznake (BM-PK-11 / BR-112 / TS-007) — **Oznake ≠ Tagovi**;
 * statusne oznake / status badge prema §7.1 (BM-PK-13 / BR-114; CR-004A);
 * opis i javno objavljeni podaci (BM-PK-05 / BR-106);
-* informativni blok Manifestacije kada postoji veza (BM-PK-28 / BR-269).
+* informativni blok Manifestacije kada postoji veza **i** MF je javno dostupna (BM-PK-28 / BM-PK-39 / BR-269 / BR-305 / PO-6B-09).
 
 ---
 
@@ -1438,7 +1481,10 @@ Nema otvorenih pitanja koja blokiraju dokumentacioni ugovor Faze 6A. Implementac
 | PO-TS9-07C | BM-PK-26 | BR-267 | §6.3 |
 | PO-TS9-07D | BM-PK-27, BM-MF-13 | BR-268, BR-192 | §6.4 |
 | PO-TS9-07E | BM-PK-28 | BR-269, §5.4.2 | §6.5 |
-| Detalji događaja (baseline) | BM-PK-05, BM-PK-09–14, BM-PK-28 | §5.4, BR-106, BR-110–115, BR-269 | §7 |
+| PO-6B-03 | BM-MF-06, BM-MF-15 | BR-300–BR-302 | §6.6 |
+| PO-6B-08 | BM-PK-38, BM-PK-25 | BR-304, BR-266 | §6.7 |
+| PO-6B-09 | BM-PK-39, BM-PK-28 | BR-305, BR-269 | §6.8 |
+| Detalji događaja (baseline) | BM-PK-05, BM-PK-09–14, BM-PK-28, BM-PK-39 | §5.4, BR-106, BR-110–115, BR-269, BR-305 | §7 |
 | Arhiva događaja (baseline) | BM-PK-13 | BR-114 | §8 |
 | Pretraga / filteri (opšte) | BM-PK-06, BM-PK-07 | BR-107, BR-108 | §2–§3 |
 | Načini prikaza | BM-PK-08 | BR-109 | §2.4, §6 |

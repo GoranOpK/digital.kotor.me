@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Manifestacija  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.3
+**Verzija:** 0.1.4
 **Datum:** 2026-08-11
 
 ---
@@ -20,6 +20,7 @@
 | 0.1.1 | 2026-07-29 | PO-MF-09–PO-MF-12; zatvoreni N-MF-01–N-MF-04; N-MF-05 evidentiran kao napomena (centralna evidencija). Status dokumenta: Usvojen. |
 | 0.1.2 | 2026-07-31 | Usklađenje javnog programa sa BM-MF-13 / BR-192 / PO-TS9-07D: Objavljeni + Otkazani (oznaka „Otkazano“); završeni ostaju. Detalj UI-ja na TS-009. Bez novih poslovnih odluka van usvojenih. |
 | 0.1.3 | 2026-08-11 | 6B-DOC-01 status sync (PO-6B-01…03): potvrđene granice TS-005 prema TS-009 — Manifestacija nema sopstvenu ni agregiranu lokaciju; javni detalj Arhivirane MF ostaje portalni ugovor TS-009; bez posebne MF Arhive u V1. Bez SQL/API/Laravel detalja i bez izmjene poslovnih pravila. |
+| 0.1.4 | 2026-08-11 | PO-6B-08/09 status sync: potvrđeno da javna vidljivost Otkazane MF i Event→MF anti-leak pripadaju TS-009 §6.7–§6.8; domain lifecycle ostaje — Otkazana do isteka perioda → Arhivirana; Objavljena→Arhivirana bez obavezne Otkazane međufaze; MF nema status Odgođena; MF/Event lifecycle nezavisni. Bez izmjene SQL/API/Laravel i bez novih portalnih UI pravila u TS-005. |
 
 Napomena:
 
@@ -354,7 +355,7 @@ Status → **Otkazana**. Moderator u aktivnom kontekstu Organizatora MF može ot
 
 ## 4.8 Automatsko arhiviranje
 
-Sistem postavlja **Arhivirana** nakon isteka planiranog trajanja — iz **Objavljena** i iz **Otkazana** (PO-MF-11, BM-MF-06, BR-097, BR-204). Ne arhivira Događaje ni Održavanja.
+Sistem postavlja **Arhivirana** nakon isteka planiranog trajanja — iz **Objavljena** i iz **Otkazana** (PO-MF-11, BM-MF-06, BR-097, BR-204). Ne arhivira Događaje ni Održavanja. Otkazana nije obavezna međufaza za svaku Manifestaciju. Javni portalni prikaz Otkazane / Arhivirane MF: TS-009 §6.6–§6.7 (PO-6B-03 / PO-6B-08).
 
 ---
 

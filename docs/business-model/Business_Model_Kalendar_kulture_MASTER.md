@@ -78,6 +78,7 @@
 | PATCH-062 | 2026-08-09 | **PO-6A09-01…06 — Javna Arhiva vs interni Arhiviran:** Arhiviran = interni lifecycle; Javna Arhiva = odvojeni istorijski pogled; aktivni public skup ostaje published\|cancelled; archive-only query; očuvanje statusa prije arhiviranja (published/cancelled); istorijski badge Otkazan/Završen; kartica = posljednje istorijsko OCC; sort DESC. Dodat BM-PK-35; usklađeni BM-PK-13, BM-ST-08, BM-DG-04. Bez izmjene implementacije. |
 | PATCH-063 | 2026-08-10 | **Urednički tok kreiranja, pripreme i neposrednog upravljanja Događajem (PO-U-01…19):** Urednik u create toku ne bira registrovanog Organizatora; opcion ručni naziv neregistrovanog Organizatora (samo naziv); poslovno „U pripremi“ / „Sačuvaj i nastavi“ (bez novog statusa; Moderator zadržava „Nacrt“); zajednička lista Događaji; brisanje samo prije prve objave; direktna objava bez approval; direktno uređivanje dozvoljenog sadržaja Objavljenog u uredničkom toku (Prijedlog izmjene Moderatora ostaje); Odgođen bez poznatog novog termina; Prvobitni termin; razlozi odgađanja/otkazivanja Održavanja i Događaja opcioni i mogu biti javno prikazani; Otkazan ostaje terminalan. Usklađeni BM-UR-02/06/07/11, BM-DG-01/07/08/10, BM-ST-03/04/06/07, BM-TR-10/14/15, BM-PK-13/31/33, BM-ORG-04; dodati BM-UR-12–BM-UR-16, BM-DG-12–BM-DG-13, BM-ST-11, BM-TR-19–BM-TR-20, BM-PK-36, BM-EP-11, BM-GL-24–BM-GL-25. **Supersede:** dio BM-PK-33 / BM-DG-10 / BM-UR-11 / BM-ST-07 / BM-PK-13 koji zabranjuje javni prikaz opcionog razloga otkazivanja; pojašnjenje da „Nacrt“ nije poslovna faza Urednikovog direktnog toka. Bez izmjene FS/TS/Feature Registry/implementacije. |
 | PATCH-064 | 2026-08-10 | **Informativna naslovna vidljivost Odgođenog Događaja (PO-064-01…14):** Objavljen Događaj bez narednog Planiranog Održavanja, ali sa Odgođenim Održavanjem bez poznatog novog termina, ostaje informativno vidljiv na naslovnoj do isteka prvobitnog datuma uključivo; kartica prikazuje „Odgođeno“ i „Prvobitni termin“ (prvobitni datum nije važeći termin; Odgođeno ≠ Planirano/upcoming). Više Odgođenih: informativnu karticu određuje najbliže Odgođeno čiji prvobitni datum još nije istekao; nakon isteka prelaz na sljedeće takvo. Planirano ima apsolutni prioritet za standardni termin kartice. Novi Planirani termin vraća standardno ponašanje. Nakon isteka posljednjeg — bez naslovne vidljivosti po ovom osnovu; Pretraga i detalj ostaju. Usklađeni BM-PK-23/29/31/34/36; dodati BM-PK-37, BM-GL-26. Bez izmjene lifecycle / Otkazano / arhive / newsletter / Urednik–Moderator tokova. Bez izmjene FS/TS/Feature Registry/implementacije. |
+| PATCH-065 | 2026-08-11 | **PO-6B-08 / PO-6B-09:** Javna vidljivost Otkazane Manifestacije do isteka izvedenog perioda (aktivna lista + oznaka „Otkazana“ + detalj + program; zatim automatska Arhivirana); javni prikaz veze Događaj→Manifestacija samo kada je MF javno dostupna (Objavljena / Otkazana / Arhivirana); anti-leak za Nacrt / Na odobrenju / Vraćena; bez statusa MF na detalju Događaja. Usklađeni BM-PK-25, BM-PK-28; dodati BM-PK-38, BM-PK-39. Potvrđeno: MF nema status Odgođena (BM-MF-11); MF/Event lifecycle nezavisni (BM-MF-15). Bez izmjene implementacije. |
 
 Napomena:
 
@@ -1503,13 +1504,15 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 ### BM-PK-25 — Lista Manifestacija (PO-TS9-07B)
 
-> Stranica „Manifestacije“ prikazuje listu javno objavljenih i javno dostupnih Manifestacija.
+> Stranica „Manifestacije“ prikazuje listu javno dostupnih Manifestacija koje nijesu Arhivirane.
+>
+> U aktivnu listu ulaze Objavljene Manifestacije. Otkazane Manifestacije ostaju u aktivnoj listi do isteka izvedenog perioda, uz jasnu oznaku „Otkazana“ (BM-PK-38 / PO-6B-08). Arhivirane Manifestacije ne ulaze u aktivnu listu (BM-PK-38; portalni detalj Arhivirane: BM-11 / PO-6B-03).
 >
 > Sortiranje: (1) datum početka, (2) naziv.
 >
 > Paginacija: 12 Manifestacija po stranici, standardna paginacija.
 >
-> Kartica sadrži: naslovnu fotografiju; naziv; period održavanja; kratak opis; broj objavljenih događaja u programu; link „Detalji manifestacije“.
+> Kartica sadrži: naslovnu fotografiju; naziv; period održavanja; kratak opis; broj objavljenih događaja u programu; link „Detalji manifestacije“. Za Otkazanu Manifestaciju kartica mora jasno prikazivati oznaku „Otkazana“.
 >
 > U V1 lista Manifestacija nema pretragu ni filtere.
 >
@@ -1539,13 +1542,13 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 > Kardinalnost i pripadnost uređene su pravilima BM-MF-03 / BM-DG-02: jedna Manifestacija — više Događaja; Događaj pripada najviše jednoj Manifestaciji; Događaj može postojati bez Manifestacije; Manifestacija je programski okvir; Događaj ostaje osnovni poslovni entitet.
 >
-> Na detalju Događaja koji pripada Manifestaciji prikazuje se informativni blok „Ovaj događaj je dio manifestacije“ sa nazivom Manifestacije, periodom održavanja i dugmetom „Detalji manifestacije“.
+> Na detalju Događaja koji pripada Manifestaciji prikazuje se informacija o pripadnosti Manifestaciji **samo kada je povezana Manifestacija javno dostupna** (BM-PK-39 / PO-6B-09). Semantika: oznaka pripadnosti + naziv Manifestacije koji vodi na njen canonical javni detalj. Status Manifestacije se **ne** prikazuje na detalju Događaja (Otkazana Manifestacija ≠ Otkazan Događaj).
 >
-> Program na detalju Manifestacije vodi na detalj Događaja. Obezbijeđena je dvosmjerna navigacija.
+> Program na detalju Manifestacije vodi na detalj Događaja. Obezbijeđena je dvosmjerna navigacija kada su oba entiteta javno dostupna prema svojim pravilima.
 >
 > Događaji ostaju vidljivi u Pretrazi i pregledu, kalendaru, statistikama i arhivi bez obzira na pripadnost Manifestaciji.
 >
-> Uklanjanje ili arhiviranje Manifestacije ne briše Događaje (BM-MF-14, BM-MF-15).
+> Uklanjanje ili arhiviranje Manifestacije ne briše Događaje (BM-MF-14, BM-MF-15). Otkazivanje Manifestacije ne mijenja statuse Događaja ni Održavanja (BM-MF-07, BM-MF-15).
 
 ### BM-PK-29 — Kartica Događaja sa više Održavanja
 
@@ -1681,6 +1684,32 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 > **Novi termin / povratak u Planirano (PO-064-13):** Ako se Odgođenom Održavanju odredi novi važeći termin i Održavanje se vrati u Planirano (BM-TR-14 / BM-TR-15): prestaje informativna naslovna vidljivost **tog** Održavanja po prvobitnom terminu; novi Planirani termin učestvuje u standardnom izboru po BM-PK-29; kartica prikazuje novi važeći termin; prvobitni datum se **ne** koristi kao aktivni termin kartice. Istorijski prikaz na detalju ostaje po postojećim pravilima BM-PK-31 / BM-PK-36.
 >
 > **Pojam:** „Informativno relevantno Odgođeno Održavanje" = Odgođeno Održavanje bez poznatog novog termina čiji prvobitni datum još nije istekao za potrebe naslovne vidljivosti (BM-GL-26). Odvojeno je od narednog relevantnog Planiranog Održavanja (BM-PK-29).
+
+### BM-PK-38 — Javna vidljivost Otkazane Manifestacije (PO-6B-08)
+
+> Manifestacija sa statusom Otkazana ostaje javno vidljiva do isteka njenog izvedenog perioda.
+>
+> Otkazana Manifestacija ostaje na aktivnoj javnoj listi Manifestacija do isteka izvedenog perioda; kartica i detalj jasno prikazuju oznaku „Otkazana“; program ostaje vidljiv.
+>
+> Otkazivanje Manifestacije ne mijenja automatski statuse povezanih Događaja ni Održavanja (BM-MF-07, BM-MF-15).
+>
+> Nakon isteka izvedenog perioda, postojeći lifecycle mehanizam automatski prevodi Otkazanu Manifestaciju u Arhiviranu (BM-MF-06).
+>
+> Arhivirana Manifestacija više nije dio aktivne javne liste; njen direktni canonical javni detalj ostaje dostupan kao istorijski zapis.
+>
+> Otkazana nije obavezna međufaza: Objavljena → Arhivirana i Objavljena → Otkazana → Arhivirana su različiti legitimni tokovi.
+>
+> Manifestacija u V1 nema status Odgođena; odgađanje pripada Održavanju (BM-MF-11).
+
+### BM-PK-39 — Javni prikaz veze Događaj → Manifestacija (PO-6B-09)
+
+> Ako Događaj pripada Manifestaciji, na javnom detalju Događaja informacija o pripadnosti prikazuje se samo kada je povezana Manifestacija javno dostupna.
+>
+> Matrica: Nacrt / Na odobrenju / Vraćena na doradu — bez prikaza i bez linka (anti-leak); Objavljena / Otkazana / Arhivirana — prikaz i link na canonical javni detalj Manifestacije.
+>
+> Za neobjavljenu Manifestaciju ne smije procuriti naziv, link, status, identifikator ni drugi javni trag pripadnosti. Pravilo je serversko (poslovna vidljivost), ne samo vizuelno skrivanje.
+>
+> Na detalju Događaja ne prikazuje se status Manifestacije uz naziv. Status Manifestacije vidi se na njenom javnom detalju.
 
 ---
 

@@ -4,8 +4,8 @@
 **Oznaka dokumenta:** RG-001
 **Naziv:** Registar skraćenica i oznaka dokumentacije Kalendara kulture
 **Status dokumenta:** Stable
-**Verzija:** 1.1.5
-**Datum:** 2026-08-09
+**Verzija:** 1.1.6
+**Datum:** 2026-08-11
 
 ---
 
@@ -93,6 +93,12 @@ Uključene su samo **interne** skraćenice projekta koje se **stvarno koriste** 
 | **BP** | Poslovni proces — Plaćanja (Business Process) | Poslovna odluka / proces u BM/FS Plaćanja (npr. BP-01 … BP-09). |
 | **AC** | Acceptance Criteria | Identifikator acceptance kriterijuma u TS (npr. AC-NL-01). |
 | **GAP** | Gap | Dokumentacioni ili implementacioni jaz; vidi i `G-*`, `G-W*`, `G-NL-*` (§2.4). |
+| **MF** | Manifestacija | Dokumentaciona skraćenica za poslovni entitet Manifestacija (BM-05 / TS-005). Prefiks pravila: **BM-MF-***. |
+| **OCC** | Occurrence / Održavanje | Tehnička skraćenica za kanonski entitet `CulturalOccurrence`, koji u poslovnoj terminologiji predstavlja **Održavanje**. Ne prevoditi naziv klase. |
+| **SSOT** | Single Source of Truth | Jedini mjerodavni izvor podataka/istine za dati domen (npr. public query SSOT). |
+| **CTA** | Call to Action | Poziv na akciju u UI/portalskom kontekstu (npr. Hero bez CTA dugmadi). |
+| **KK** | Kalendar kulture | Skraćenica naziva modula Kalendar kulture. |
+| **CAT-CUTOVER** | Category cutover | Dokumentaciona/implementaciona oznaka cutover-a kategorija na kanonski katalog (PO-TS9-08E). |
 
 **Razlika TS / IS / IR**
 
@@ -159,6 +165,8 @@ Prefiksi se **ne** spajaju u jednu generičku oznaku. Svaki ima svoj namespace.
 | **PO-AL** | Product Owner odluka | Evidencija aktivnosti | TS-010.7 / TS-012 | PO-AL-01 |
 | **PO-DASH** | Product Owner odluka | Dashboard | TS-010.6 | PO-DASH-01 |
 | **PO-TS9** | Product Owner odluka | U okviru TS-009 | TS-009 / Feature Registry | PO-TS9-03A |
+| **PO-6A** | Product Owner odluka | Faza 6A — javni portal Događaja | TS-009 / Feature Registry | PO-6A09-01, PO-6A11-01 |
+| **PO-6B** | Product Owner odluka | Faza 6B — Manifestacije (domen / portal / Pretraga) | BM / FS / TS-005 / TS-009 / Feature Registry | PO-6B-01…05, PO-6B-08, PO-6B-09 |
 | **PO-CR3** / **PO-CR4A** / **PO-CR4B** | Product Owner odluka | Vezane za CR-003 / CR-004A / CR-004B | TS-009 / IS-001 | PO-CR4A-01 |
 | **PO-N-TR** | Product Owner odluka | Zatvara / precizira N-TR pitanje | TS-004 | PO-N-TR-02-01; **PO-N-TR-02-04** |
 | **TS7-PO** | Product Owner odluka | Kategorije i oznake (TS-007) | TS-007 | TS7-PO-01 |
@@ -199,7 +207,7 @@ Prefiksi se **ne** spajaju u jednu generičku oznaku. Svaki ima svoj namespace.
 | **UR-** vs **BM-UR** | **UR-01** = uplatni računi (Plaćanja). **BM-UR-*** = pravila Urednika u Kalendaru kulture. Nisu ista stvar. |
 | **G-** vs **G-W** vs **G-NL** | **G-nn** = gap u TS-010; **G-Wnn** = workflow gap u TS-010; **G-NL-*** = gap Newsletter. |
 | **PO** | Označava Product Owner ulogu i prefiks product odluka (`PO-*`). |
-| **BM, FS, TS, IS, IR, CR, TO, FT, IA, TD, UC, UI, API, URL, V1, NFR, FK, CRUD, M-TS, RG, PATCH, QA, BP, AC, GAP** | Nema drugog dokumentacionog značenja u pregledanom korpusu. |
+| **BM, FS, TS, IS, IR, CR, TO, FT, IA, TD, UC, UI, API, URL, V1, NFR, FK, CRUD, M-TS, RG, PATCH, QA, BP, AC, GAP, MF, OCC, SSOT, CTA, KK, CAT-CUTOVER** | Nema drugog dokumentacionog značenja u pregledanom korpusu. |
 
 Nema drugih skraćenica u ovom dokumentu sa dva **konkurentna** kanonska značenja pored navedenih napomena.
 
@@ -299,9 +307,11 @@ Samo orijentacija — **ne** prepisuje sadržaj BM/FS/TS/IS/IR.
 * RG-001 **nije** izvor istine za poslovna ili tehnička pravila.
 * Prednost imaju vlasnički dokumenti: BM, FS, TS, IS, IR, Feature Registry, CR, TO.
 * Nova skraćenica se dodaje tek kada se **stvarno koristi** u usvojenoj dokumentaciji **i** kada je specifična za projekat (vidi Pravilo obuhvata u §1).
+* **Kada se u dokumentaciji Kalendara kulture uvede nova projektna skraćenica ili akronim, Katalog skraćenica (RG-001) mora se ažurirati u istom dokumentacionom paketu.**
 * Skraćenice se ne mijenjaju samostalno u RG-001; prvo se usklađuje referentni dokument.
 * Zastarjela skraćenica se ne briše bez traga — označava se kao **ZASTARJELO** i upućuje na važeći naziv.
 * U RG-001 se **ne** unose: poslovni pojmovnik; opšte tehničke/industrijske skraćenice; poslovni termini koji nisu skraćenice.
+* Ako paket eksplicitno zabranjuje izmjene dokumentacije, a uvede novu skraćenicu: prijavi `ABBREVIATION CATALOG UPDATE REQUIRED` i ne krši scope.
 
 ### RG-001-05 — Održavanje
 
@@ -310,7 +320,8 @@ RG-001 se ažurira samo kada:
 * nastane nova **interna** standardna skraćenica projekta;
 * nastane novi tip referentnog dokumenta;
 * promijeni se zvanični naziv ili skraćenica;
-* skraćenica postane zastarjela.
+* skraćenica postane zastarjela;
+* dokumentacioni paket uvodi novu projektnu skraćenicu (vidi RG-001-04).
 
 RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, kategorija, statusa, uloga ili pojedinačnih modula — osim ako uvedu **novu internu skraćenicu**.
 
@@ -329,7 +340,8 @@ RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, katego
 | 1.1.3 | 2026-08-08 | Dodata familija **PO-AUTO** (Product Owner odluke o automatskim/sistemskim procesima Kalendara kulture); primjeri PO-AUTO-01, PO-AUTO-02. Bez poslovnih definicija statusa. Bez izmjene BM/FS/TS sadržaja u ovom dokumentu. Bez izmjene implementacije. |
 | 1.1.4 | 2026-08-08 | Dodata familija **T10-** (implementacioni markeri TS-010; primjeri T10-WF-01, T10-GEN-01). Usklađeno sa Feature Registry closeout / TS7-PO-07 dokumentacionim PATCH-em. Bez izmjene BM/FS sadržaja u ovom dokumentu. Bez izmjene implementacije. |
 | 1.1.5 | 2026-08-09 | TM-* primjer dopunjen sa **TM-JP-*** (TS-009 §18 Faza 6A). Bez izmjene implementacije. |
+| 1.1.6 | 2026-08-11 | Coverage + maintenance: dodati **MF**, **OCC**, **SSOT**, **CTA**, **KK**, **CAT-CUTOVER**, familije **PO-6A** / **PO-6B**; formalizovano pravilo da se RG-001 ažurira u istom dokumentacionom paketu kad se uvede nova projektna skraćenica. Usklađeno sa PO-6B-08/09 pre-impl docs. Bez izmjene implementacije. |
 
 ---
 
-**Kraj dokumenta RG-001 v1.1.5 (Stable)**
+**Kraj dokumenta RG-001 v1.1.6 (Stable)**
