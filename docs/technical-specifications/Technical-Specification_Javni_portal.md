@@ -31,6 +31,7 @@
 | 1.0.8 | 2026-08-09 | **PO-6A09-01…06:** Javna Arhiva vs interni Arhiviran — §8 / §11 / §12 / §7.2 usklađeni; archive-only query; očuvanje izvornog statusa; istorijski badge Otkazan/Završen; TM-JP-11/04. Usklađeno sa BM PATCH-062 / FS PATCH-FS-062 / BM-PK-35 / BR-286. Bez izmjene implementacije. |
 | 1.0.9 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** ručni Organizator; Odgođeno + Prvobitni termin + razlozi; OCC cancel prikaz; Entry cancel opcion razlog javno; supersede V1 zabrane javnog `cancellation_reason`. Bez izmjene implementacije. |
 | 1.0.10 | 2026-08-10 | **BM PATCH-064 / FS PATCH-FS-064:** Informativna naslovna vidljivost Odgođenog; zajednički hronološki bazen „Naredni događaji“ max 3; ranking datum; mode `planned` / `postponed_info`; tehnički tie-breaker `entry.id ASC`; bez mijenjanja calendar counts / selected-day / Pretrage / detalja / lifecycle. Bez izmjene implementacije. |
+| 1.0.11 | 2026-08-11 | **PHASE 6A closeout status sync (dokumentacioni):** potvrđeno implementirano/testirano/deployovano stanje za PATCH-063, PATCH-064 i CLOSE-02/03/03A/04; planned kartica uključuje „+ još N termina“ za dodatna relevantna Planirana Održavanja; `postponed_info` bez `+N`; legacy admin CRUD surface ostaje HTTP-disabled (403) uz zadržan rollback feature-flag mehanizam. Bez izmjene poslovnih pravila. |
 
 ---
 
@@ -588,7 +589,7 @@ Dodatno:
 |-----------|---------|
 | BM | BM-PK-37, BM-GL-26, BM-PK-23, BM-PK-29, BM-PK-31 |
 | FS | BR-296, BR-297, BR-264, BR-280, BR-282 |
-| Kod (trenutno) | `CulturalPublicEventQuery::upcomingForPublicIndex` + `withCardRelevantOccurrence` (samo planned); `CulturalPublicCardOccurrenceCriteria`; `CulturalCalendarController` `take(3)`; `OccurrenceLifecycle::postpone` (ne mijenja `datum`) |
+| Kod (trenutno) | `CulturalPublicEventQuery::homepageUpcomingCards` (shared pool `planned` + `postponed_info`); `CulturalPublicCardOccurrenceCriteria` ostaje planned-only za card-relevant semantiku; `CulturalCalendarController` koristi taj SSOT za naslovnu listu; `OccurrenceLifecycle::postpone` (ne mijenja `datum`) |
 
 ### 5.5.1 Semantička granica
 
@@ -1309,7 +1310,7 @@ Planirano za naredne faze (nije blocker dokumentacije Faze 6A).
 * dual-read / dual-write / merge / sync;
 * migracija legacy sadržaja;
 * legacy alias mapa kategorija;
-* javni prikaz `cancellation_reason`;
+* nove semantike javnog prikaza `cancellation_reason` van već usvojenog PATCH-063 ugovora (§7.2.4);
 * korisnički izbor sortiranja;
 * široki UI redizajn;
 * gašenje legacy CRUD-a prije završetka stabilizacije (§10.2 korak 4).
@@ -1383,7 +1384,7 @@ Granice (bez dupliciranja u TS-009): lifecycle Događaja → TS-003; Održavanje
 * CR-002 (IS-001 Faza 2): treća kartica klikabilna sa `month`; isti skup kartica/lista; prioritet filtera; podnaslov „Izabrani mjesec: …“.
 * CR-003 (IS-001 Faza 2): filter zona `q` / `category` / `location`; AND sa datumskim mehanizmom; aktivni filteri (×); „Poništi sve filtere“; GET forma; state persistence (PO-CR3-01…08).
 * CR-004A (IS-001 Faza 3): javni status badge Predstoji / U toku / Završen / Otkazan na Početnoj, Pretrazi i pregledu, Arhivi i Detaljima; izračunata stanja; `cancelled` → Otkazan (prioritet); Odgođen nije status Događaja (PO-CR4A-01…05 / §7.1). Dokumentacija `614706c`; implementacija `0f73240`.
-* CR-004B (IS-001 Faza 3; Planned): javni prikaz otkazanih — aktivne površine i portalna Arhiva (vremenska; ≠ interni `archived`); status ostaje `cancelled`; Istaknuti isključuju cancelled; show dozvoljava cancelled; sistemsko obavještenje; statistike/datumski skupovi uključuju cancelled; javni status uvijek Otkazan (PO-CR4B-01…10 / §7.2). Bez migracija; bez javne dostupnosti `archived`; bez izmjene BR-065 / BM-DG-04. V1 bez javnog `cancellation_reason` (§7.2.4).
+* CR-004B (IS-001 Faza 3; Implemented): javni prikaz otkazanih — aktivne površine i portalna Arhiva (vremenska; ≠ interni `archived`); status ostaje `cancelled`; Istaknuti isključuju cancelled; show dozvoljava cancelled; sistemsko obavještenje; statistike/datumski skupovi uključuju cancelled; javni status uvijek Otkazan (PO-CR4B-01…10 / §7.2). Bez migracija; bez javne dostupnosti `archived`; bez izmjene BR-065 / BM-DG-04. PATCH-063 dopušta opcion javni `cancellation_reason` kada postoji (§7.2.4 / BR-295).
 * **Faza 6A:** kanonski cutover (§9–§12); kartica/sortiranje/Odgođen (§7.3 / §3.4); CAT-CUTOVER; privremeni flag (§10.2); public query SSOT (§11); test matrica §18. **Bez** Manifestacija (Faza 6B / §6).
 * Detalji događaja / Arhiva događaja: uskladiti prikaz sa BM-PK-05/13 i BR-106/114/270–274; status badge prema §7.1; dostupnost otkazanih prema §7.2; ne uvoditi paralelna lifecycle pravila.
 * Ne duplicirati TS-003 / TS-004 / TS-005 u portalskom sloju.
@@ -1391,7 +1392,7 @@ Granice (bez dupliciranja u TS-009): lifecycle Događaja → TS-003; Održavanje
 ---
 
 
-* **PATCH-064 homepage:** implementirati §5.5 / §11.3 bez diranja Pretrage, calendar counts, selected-day, featured, lifecycle. Ne proširivati `CulturalPublicCardOccurrenceCriteria` na postponed. Tie-breaker = `entry.id ASC`.
+* **PATCH-064 homepage (implemented):** §5.5 / §11.3 isporučeno bez diranja Pretrage, calendar counts, selected-day, featured, lifecycle. `CulturalPublicCardOccurrenceCriteria` ostaje planned-only. Tie-breaker ostaje `entry.id ASC`.
 # 18. Test matrica Faze 6A (TM-JP) — dokumentaciono
 
 Konvencija: `TM-JP-*` (Javni Portal), u skladu sa `TM-*` iz RG-001 / TS-010.8. **Bez test koda** u ovom PATCH-u.
