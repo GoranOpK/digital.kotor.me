@@ -15,6 +15,8 @@ class CulturalOrganizerCreationRequest extends Model
 {
     use HasFactory;
 
+    public const STATUS_AWAITING_MODERATOR_ELIGIBILITY = 'awaiting_moderator_eligibility';
+
     public const STATUS_SUBMITTED = 'submitted';
 
     public const STATUS_APPROVED = 'approved';
@@ -22,12 +24,14 @@ class CulturalOrganizerCreationRequest extends Model
     public const STATUS_REJECTED = 'rejected';
 
     public const STATUSES = [
+        self::STATUS_AWAITING_MODERATOR_ELIGIBILITY,
         self::STATUS_SUBMITTED,
         self::STATUS_APPROVED,
         self::STATUS_REJECTED,
     ];
 
     public const STATUS_LABELS = [
+        self::STATUS_AWAITING_MODERATOR_ELIGIBILITY => 'Čeka registraciju Moderatora',
         self::STATUS_SUBMITTED => 'Podnesen',
         self::STATUS_APPROVED => 'Odobren',
         self::STATUS_REJECTED => 'Odbijen',
@@ -36,6 +40,8 @@ class CulturalOrganizerCreationRequest extends Model
     protected $fillable = [
         'submitter_user_id',
         'proposed_moderator_user_id',
+        'proposed_moderator_name',
+        'proposed_moderator_email',
         'proposed_moderator_is_submitter',
         'proposed_naziv',
         'proposed_opis',
@@ -54,6 +60,11 @@ class CulturalOrganizerCreationRequest extends Model
             'proposed_moderator_is_submitter' => 'boolean',
             'decision_at' => 'datetime',
         ];
+    }
+
+    public function isAwaitingModeratorEligibility(): bool
+    {
+        return $this->status === self::STATUS_AWAITING_MODERATOR_ELIGIBILITY;
     }
 
     public function isSubmitted(): bool
