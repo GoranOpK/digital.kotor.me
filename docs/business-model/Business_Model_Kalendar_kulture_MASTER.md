@@ -81,6 +81,7 @@
 | PATCH-065 | 2026-08-11 | **PO-6B-08 / PO-6B-09:** Javna vidljivost Otkazane Manifestacije do isteka izvedenog perioda (aktivna lista + oznaka „Otkazana“ + detalj + program; zatim automatska Arhivirana); javni prikaz veze Događaj→Manifestacija samo kada je MF javno dostupna (Objavljena / Otkazana / Arhivirana); anti-leak za Nacrt / Na odobrenju / Vraćena; bez statusa MF na detalju Događaja. Usklađeni BM-PK-25, BM-PK-28; dodati BM-PK-38, BM-PK-39. Potvrđeno: MF nema status Odgođena (BM-MF-11); MF/Event lifecycle nezavisni (BM-MF-15). Bez izmjene implementacije. |
 | PATCH-066 | 2026-08-11 | **PO-6B-10:** Globalno sortiranje rezultata Pretrage kada je Tip sadržaja = Sve — Događaji i Manifestacije u jednom hronološkom poretku po vremenskom ključu (Event: prvo naredno relevantno Održavanje; MF: početak izvedenog perioda); NULL last; tie: Naziv → tip kao tehnički tie-breaker → ID. Tip sadržaja nije poslovni prioritet. Tip=Događaji zadržava BM-PK-30; Tip=Manifestacije zadržava poredak liste Manifestacija. Dodat BM-PK-40; usklađen BM-PK-30. Bez izmjene implementacije u ovom docs paketu. |
 | PATCH-067 | 2026-08-11 | **PO-ORG-05:** Napomena Urednika na zahtjevu za kreiranje Organizatora — pri odobravanju opciona; pri odbijanju obavezna (ne-prazna); bez napomene odbijanje nije dozvoljeno; zahtjev ostaje Podnesen; napomena se trajno čuva uz odluku. Usklađeni BM-ORG-09, BM-ORG-11; dodat BM-ORG-14. Ispravljena zastarjela napomena o implementaciji u BM-01 (zahtjevi su implementirani). Usklađeno sa FS PATCH-FS-068 / TS-001 v0.3.1. |
+| PATCH-068 | 2026-08-11 | **PO-ORG-06:** Privacy-safe invitation model za početnog i narednog Moderatora — unos ime+e-mail (bez users kataloga); eksplicitno stanje „Čeka registraciju Moderatora“; automatski prelaz u „Podnesen“ kada predloženi Moderator postane eligible (verified+active); Urednik odlučuje samo nad Podnesen; neutralna poruka podnosiocu; invitation / outcome / REMOVE-approved email ugovori; supersede starog „samo postojeći user_id“ modela (PO-ORG-02 selection assumption). Usklađeni BM-ORG-07/09/11, BM-MOD-12/13/15/17; dodati BM-ORG-15–BM-ORG-19, BM-MOD-20–BM-MOD-26. PO-ORG-05 KEEP. Usklađeno sa FS PATCH-FS-069 / TS-001 v0.4.0. **Bez izmjene implementacije** u ovom docs paketu (TARGET vs CURRENT). |
 
 Napomena:
 
@@ -266,24 +267,29 @@ Registrovani korisnik Digital Kotor može u modulu Kalendar kulture podnijeti za
 
 Podnošenjem zahtjeva korisnik ne postaje Organizator, ne dobija automatski novu korisničku ulogu, ne postaje automatski Moderator i ne postaje vlasnik Organizatora. Korisnik samo inicira postupak kreiranja novog entiteta Organizatora.
 
-Tok procesa:
+Tok procesa (PO-ORG-06 — privacy-safe invitation):
 
-1. Registrovani korisnik pokreće zahtjev za kreiranje Organizatora (iniciranje zahtjeva).
-2. Zahtjev sadrži podatke o predloženom Organizatoru kao poslovnom entitetu, podatke potrebne za identifikovanje predloženog početnog Moderatora i podatak da li je predloženi Moderator sam podnosilac ili drugi registrovani korisnik.
-3. Zahtjev se šalje Uredniku.
-4. Urednik pregleda i odobrava ili odbija zahtjev.
-5. Ako Urednik odobri zahtjev:
+1. Registrovani / aktivan / verifikovan korisnik pokreće zahtjev za kreiranje Organizatora (iniciranje zahtjeva).
+2. Zahtjev sadrži podatke o predloženom Organizatoru kao poslovnom entitetu i **obavezna poslovna polja** predloženog početnog Moderatora: **ime i prezime** te **e-mail**. Podnosilac **ne** bira Moderatora iz kataloga korisnika; klijent **ne** šalje trusted `user_id` Moderatora.
+3. Sistem normalizuje e-mail (trim + lowercase) i interno pokušava povezati nalog. Matching radi **isključivo** preko normalizovanog e-maila; ime se **ne** koristi za account matching.
+4. Ako predloženi Moderator **nije** eligible (nema nalog, ili nalog nije verifikovan, ili nije aktivan): zahtjev se čuva u stanju **„Čeka registraciju Moderatora“**; šalje se invitation e-mail; Urednik **ne** vidi zahtjev kao spreman za odluku; nema Organizatora; nema Moderator granta.
+5. Kada predloženi Moderator postane eligible, sistem automatski povezuje nalog i prelazi zahtjev u **„Podnesen“**. Nema posebnog intermediate e-maila Moderatoru o tome da je zahtjev kod Urednika.
+6. Tek u stanju **„Podnesen“**: Urednik pregleda i odobrava ili odbija zahtjev.
+7. Ako Urednik odobri zahtjev:
 
    * kreira se novi entitet Organizatora (zapis ne postoji prije odobrenja);
-   * predloženi korisnik dobija ovlašćenje Moderatora za tog konkretnog Organizatora;
-   * uspostavlja se poslovna veza između Moderatora i Organizatora.
-6. Ako Urednik odbije zahtjev:
+   * povezani korisnik dobija ovlašćenje Moderatora za tog konkretnog Organizatora;
+   * uspostavlja se poslovna veza između Moderatora i Organizatora;
+   * šalje se approval outcome e-mail predloženom Moderatoru.
+8. Ako Urednik odbije zahtjev:
 
    * Organizator se ne odobrava kao aktivan poslovni entitet;
    * predloženi korisnik ne dobija moderatorska ovlašćenja;
-   * podnosilac zahtjeva ne dobija novu ulogu niti druga posebna prava.
+   * podnosilac zahtjeva ne dobija novu ulogu niti druga posebna prava;
+   * obavezna je Napomena Urednika (PO-ORG-05 / BM-ORG-14);
+   * šalje se rejection outcome e-mail predloženom Moderatoru **sa Napomenom Urednika**.
 
-Podnosilac zahtjeva i predloženi Moderator mogu biti ista osoba ili dvije različite osobe. Podnosilac može sebe predložiti za Moderatora, ali to nije obavezno. Samo podnošenje zahtjeva ne daje moderatorska ovlašćenja ni podnosiocu ni predloženom korisniku.
+Podnosilac zahtjeva i predloženi Moderator mogu biti ista osoba ili dvije različite osobe. Podnosilac može sebe predložiti za Moderatora (unosom svog imena i e-maila), ali to nije obavezno. Samo podnošenje zahtjeva ne daje moderatorska ovlašćenja ni podnosiocu ni predloženom korisniku.
 
 Jedan registrovani korisnik može podnijeti zahtjev za kreiranje neograničenog broja Organizatora. Svaki zahtjev predstavlja poseban postupak i Urednik ga razmatra nezavisno.
 
@@ -293,7 +299,7 @@ Svaki naredni Moderator može biti predložen isključivo od strane postojećeg 
 
 Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora. Deaktivacijom Organizatora prestaje moderatorski kontekst za tog Organizatora; Moderatori više ne izvršavaju poslovne radnje nad njegovim događajima.
 
-**Napomena o implementaciji:** Zahtjev za kreiranje Organizatora i upravljanje Moderatorima usvojeni su kao dio poslovnog modela i implementirani su u aplikaciji (TS-001 / Faza 2). **PATCH-067** uklanja raniju zastarjelu formulaciju „još nisu implementirani“.
+**Napomena o implementaciji:** Osnovni tok zahtjeva za kreiranje Organizatora i upravljanje Moderatorima **postoji** u aplikaciji (TS-001 / Faza 2). **PO-ORG-06 / PATCH-068** usvajaju **TARGET** privacy-safe invitation ugovor; **CURRENT** produkcija i dalje koristi izbor postojećeg korisnika (`user_id` / users dropdown). Implementacija PO-ORG-06 **nije** započeta u ovom docs paketu.
 
 **Napomena o nazivu:** Raniji naziv funkcionalnosti „Postani organizator“ zamijenjen je poslovno preciznijim nazivom „zahtjev za kreiranje Organizatora“.
 
@@ -307,14 +313,19 @@ Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zah
 | BM-ORG-04 | Organizator je nosilac sadržaja. Operativno kreiranje, uređivanje i čuvanje nacrta sadržaja, kao i slanje sadržaja Uredniku na odobravanje, obavljaju Moderatori u ime Organizatora. Događaje registrovanog Organizatora kreira Moderator tog Organizatora; Urednik u svom create toku ne bira registrovanog Organizatora (BM-UR-12). Ovo pravilo ne isključuje da Urednik samostalno kreira i objavi Događaj za neregistrovanog Organizatora, odnosno Događaj bez veze sa registrovanim Organizatorom, u skladu sa BM-UR-06, BM-UR-12, BM-UR-13 i BM-DG-08. |
 | BM-ORG-05 | Moderator ne može samostalno objaviti sadržaj. |
 | BM-ORG-06 | Organizator ima jednog ili više Moderatora koji upravljaju sadržajem u njegovo ime. Organizator ne dodjeljuje ovlašćenja Moderatorima. |
-| BM-ORG-07 | Zahtjev za kreiranje Organizatora sadrži podatke Organizatora prema BM-ORG-13, identifikaciju predloženog početnog Moderatora preko postojećeg aktivnog korisničkog naloga (`user_id`) i podatak da li je predloženi Moderator sam podnosilac ili drugi registrovani korisnik. Podnosilac i predloženi Moderator mogu biti ista ili različite osobe. |
-| BM-ORG-08 | Nakon odobrenja zahtjeva za kreiranje Organizatora, predloženi korisnik dobija ovlašćenje početnog Moderatora za tog Organizatora. Moderatorska ovlašćenja nastaju tek nakon odobrenja Urednika. |
-| BM-ORG-09 | Sistem trajno evidentira za zahtjev za kreiranje Organizatora: podnosioca zahtjeva, predloženog Moderatora, datum i vrijeme podnošenja, Urednika koji je odlučio, datum i vrijeme odluke, ishod odluke (odobreno/odbijeno) i napomenu Urednika kada je unesena (obavezna pri odbijanju — BM-ORG-14). |
+| BM-ORG-07 | Zahtjev za kreiranje Organizatora sadrži podatke Organizatora prema BM-ORG-13 i **obavezna** poslovna polja predloženog početnog Moderatora: **ime i prezime** te **e-mail**. Podnosilac **ne** bira Moderatora iz kataloga korisnika. Sistem interno resolve-uje korisnički nalog preko normalizovanog e-maila (BM-ORG-16). Ranija pretpostavka da je unos isključivo preko postojećeg `user_id` **superseded** je odlukom PO-ORG-06 (vidi BM-ORG-15). Podnosilac i predloženi Moderator mogu biti ista ili različite osobe. |
+| BM-ORG-08 | Nakon odobrenja zahtjeva za kreiranje Organizatora, povezani eligible korisnik dobija ovlašćenje početnog Moderatora za tog Organizatora. Moderatorska ovlašćenja nastaju tek nakon odobrenja Urednika. |
+| BM-ORG-09 | Sistem trajno evidentira za zahtjev za kreiranje Organizatora: podnosioca; predloženo ime i e-mail Moderatora; povezani korisnički nalog kada je resolve-ovan; datum i vrijeme podnošenja; status toka (uključujući „Čeka registraciju Moderatora“ / „Podnesen" / terminalne); Urednika koji je odlučio; datum i vrijeme odluke; ishod (odobreno/odbijeno); napomenu Urednika kada je unesena (obavezna pri odbijanju — BM-ORG-14). |
 | BM-ORG-10 | Jedan registrovani korisnik može podnijeti zahtjev za kreiranje neograničenog broja Organizatora. Svaki zahtjev predstavlja poseban postupak. |
-| BM-ORG-11 | Ako Urednik odbije zahtjev, Organizator se ne odobrava kao aktivan poslovni entitet, predloženi korisnik ne dobija moderatorska ovlašćenja, a podnosilac ne dobija novu ulogu. Odbijanje ne sprečava podnošenje novog zahtjeva. Odbijanje zahtijeva obaveznu napomenu Urednika (BM-ORG-14). |
+| BM-ORG-11 | Ako Urednik odbije zahtjev koji je u stanju **Podnesen**, Organizator se ne odobrava kao aktivan poslovni entitet, predloženi korisnik ne dobija moderatorska ovlašćenja, a podnosilac ne dobija novu ulogu. Odbijanje ne sprečava podnošenje novog zahtjeva. Odbijanje zahtijeva obaveznu napomenu Urednika (BM-ORG-14) i outcome e-mail predloženom Moderatoru sa tom napomenom (BM-ORG-18). Urednik **ne** odlučuje o zahtjevu u stanju „Čeka registraciju Moderatora“ (BM-ORG-15). |
 | BM-ORG-12 | Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora. Deaktivacijom Organizatora prestaje moderatorski kontekst za tog Organizatora. Nakon deaktivacije Moderatori više nemaju pravo izvršavanja poslovnih radnji nad događajima tog Organizatora. Ako je potrebno otkazati događaj deaktiviranog Organizatora, tu radnju izvršava isključivo Urednik. |
 | BM-ORG-13 | Poslovni podaci Organizatora u V1: naziv (obavezno); opis, kontakt e-mail, kontakt telefon, web sajt (opciono); status Aktivan/Deaktiviran; sistemski datumi. Van V1: PIB, matični broj, adresa, GPS, društvene mreže, logo i ostali pravni podaci. |
-| BM-ORG-14 | Napomena Urednika na zahtjevu za kreiranje Organizatora (PO-ORG-05): pri **odobrenju** je **opciona** (može biti prazna); pri **odbijanju** je **obavezna** (ne-prazna nakon trimovanja). Bez validne napomene Sistem ne izvršava odbijanje: status zahtjeva ostaje Podnesen; Organizator i početni Moderator grant se ne kreiraju; nema parcijalnog upisa odluke. Validaciona poruka: „Napomena je obavezna prilikom odbijanja zahtjeva.“ Unesena napomena trajno se čuva uz odluku. |
+| BM-ORG-14 | Napomena Urednika na zahtjevu za kreiranje Organizatora (PO-ORG-05): pri **odobrenju** je **opciona** (može biti prazna); pri **odbijanju** je **obavezna** (ne-prazna nakon trimovanja). Bez validne napomene Sistem ne izvršava odbijanje: status zahtjeva ostaje Podnesen; Organizator i početni Moderator grant se ne kreiraju; nema parcijalnog upisa odluke. Validaciona poruka: „Napomena je obavezna prilikom odbijanja zahtjeva.“ Unesena napomena trajno se čuva uz odluku i ulazi u rejection outcome e-mail (BM-ORG-18). |
+| BM-ORG-15 | **Stanje „Čeka registraciju Moderatora“ (PO-ORG-06-A):** zahtjev je sačuvan; **nije** spreman za Urednika; Urednik ga **ne** može odobriti/odbiti; nema Organizatora; nema Moderator granta. Kada predloženi Moderator postane eligible (BM-ORG-16), zahtjev automatski prelazi u **„Podnesen"** i tek tada ulazi u standardni urednički tok odluke. Poslovni label ostaje „Čeka registraciju Moderatora" i kada postojeći nalog čeka verifikaciju ili aktivaciju. |
+| BM-ORG-16 | **Eligibility i matching (PO-ORG-06):** eligible za povezivanje / odluku = postoji korisnički nalog za normalizovani e-mail **i** e-mail je verifikovan **i** nalog je aktivan. Samo postojanje naloga nije dovoljno. Matching radi isključivo preko normalizovanog e-maila (trim + lowercase). Razlika imena na zahtjevu i na nalogu **ne** blokira povezivanje. Nakon bind-a, `user_id` je kanonska veza; promjena e-maila na nalogu ne radi silent rebind na drugi nalog. Pri odobravanju Urednik / Sistem **ponovo** provjerava eligibility; ako nalog više nije eligible, odobrenje se odbija dok se uslovi ne ispune. |
+| BM-ORG-17 | **Neutralna poruka podnosiocu (PO-ORG-06-G):** Sistem **ne** otkriva podnosiocu da li e-mail/nalog postoji, da li je verifikovan ili aktivan, niti bilo koji status korisničkog registra. Ista finalna poruka važi bez obzira na interni lookup: „Zahtjev je uspješno podnesen. Predloženi Moderator mora imati aktivan i verifikovan korisnički nalog na platformi Digital Kotor prije nego što zahtjev može biti dostavljen Uredniku na odlučivanje.“ |
+| BM-ORG-18 | **E-mail ishodi — kreiranje Organizatora / početni Moderator (PO-ORG-06):** (1) Ako pri submit-u Moderator nije eligible → invitation e-mail predloženom Moderatoru (naziv Organizatora; potreban aktivan/verifikovan nalog; link na registraciju; privacy-safe formulacija). (2) Prelaz Čeka→Podnesen → **bez** dodatnog e-maila. (3) Odobrenje → approval e-mail Moderatoru. (4) Odbijanje → rejection e-mail Moderatoru **sa Napomenom Urednika**. Neuspjeh slanja e-maila **ne** rollbackuje sačuvani poslovni zahtjev (BM-ORG-19). |
+| BM-ORG-19 | **Mail failure (PO-ORG-06):** Persistencija zahtjeva je primarna poslovna radnja. E-mail ide nakon uspješnog poslovnog zapisa. Transport failure: log; omogućiti idempotent resend/retry; **ne** mijenjati status zahtjeva u pogrešno stanje; **ne** kreirati duplicate invitation. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
@@ -353,13 +364,13 @@ Jedan korisnik može biti Moderator organizatora za jednog ili više Organizator
 
 Organizator može imati jednog ili više Moderatora organizatora i mora imati najmanje jednog aktivnog Moderatora organizatora.
 
-**Početni Moderator:** Predloženi korisnik iz odobrenog zahtjeva za kreiranje Organizatora, nakon odobrenja Urednika, dobija ovlašćenje početnog Moderatora tog Organizatora. Predloženi Moderator može biti podnosilac zahtjeva ili drugi registrovani korisnik.
+**Početni Moderator:** Predloženi Moderator iz odobrenog zahtjeva za kreiranje Organizatora (privacy-safe invitation — ime + e-mail; nalog resolve-ovan prije odluke) dobija ovlašćenje početnog Moderatora tek nakon odobrenja Urednika. Predloženi Moderator može biti podnosilac zahtjeva ili druga osoba.
 
-**Naredni Moderatori:** Svaki naredni Moderator može biti predložen isključivo od strane postojećeg aktivnog Moderatora povezanog sa tim Organizatorom (iniciranje zahtjeva). Moderator ne dodjeljuje ovlašćenja; samo podnosi zahtjev. Pristup i ovlašćenja novom Moderatoru dodjeljuje isključivo Urednik nakon pregleda i odobrenja (odobravanje zahtjeva i dodjela ovlašćenja). Tek nakon odobrenja Urednika novi Moderator postaje aktivan.
+**Naredni Moderatori (ADD):** Svaki naredni Moderator može biti predložen isključivo od strane postojećeg aktivnog Moderatora povezanog sa tim Organizatorom. Unos je **ime i prezime + e-mail** (bez kataloga korisnika). Isti waiting / eligibility / Podnesen model kao za početnog Moderatora. Moderator ne dodjeljuje ovlašćenja; samo podnosi zahtjev. Pristup i ovlašćenja novom Moderatoru dodjeljuje isključivo Urednik nakon pregleda i odobrenja. Tek nakon odobrenja Urednika novi Moderator postaje aktivan.
 
-Moderator organizatora može pokrenuti postupak uklanjanja drugog Moderatora organizatora istog Organizatora, a uklanjanje odobrava Urednik.
+**Uklanjanje (REMOVE):** radi nad **postojećim aktivnim** Moderatorom konkretnog Organizatora; **ne** koristi invitation / name+email matching; **ne** koristi platformski users listing. Moderator može pokrenuti postupak uklanjanja drugog Moderatora istog Organizatora; uklanjanje odobrava Urednik. Zaštita posljednjeg aktivnog Moderatora ostaje. Nakon odobrenog uklanjanja uklonjeni Moderator dobija e-mail obavještenje. Odbijanje REMOVE → bez outcome e-maila (silence).
 
-Za zahtjeve vezane za Moderatore sistem trajno evidentira: podnosioca zahtjeva, datum i vrijeme podnošenja, Urednika koji je odobrio i datum i vrijeme odobrenja.
+Za zahtjeve vezane za Moderatore sistem trajno evidentira: podnosioca; predloženo ime/e-mail (ADD); povezani nalog kada postoji; datum i vrijeme podnošenja; Urednika i ishod odluke; napomenu kada je unesena.
 
 ## 4. Poslovna pravila
 
@@ -376,14 +387,21 @@ Za zahtjeve vezane za Moderatore sistem trajno evidentira: podnosioca zahtjeva, 
 | BM-MOD-09 | Moderator organizatora smatra se uklonjenim tek nakon odobrenja Urednika. |
 | BM-MOD-10 | Sistem neće dozvoliti uklanjanje posljednjeg aktivnog Moderatora organizatora. |
 | BM-MOD-11 | Moderator organizatora nije Urednik; urednička ovlašćenja se ne prenose ulozi Moderatora. Moderator nije Organizator. |
-| BM-MOD-12 | Početni Moderator je predloženi korisnik iz odobrenog zahtjeva za kreiranje Organizatora. Ovlašćenja dobija tek nakon odobrenja Urednika. |
-| BM-MOD-13 | Svaki naredni Moderator može biti predložen isključivo od strane postojećeg aktivnog Moderatora povezanog sa tim Organizatorom. Moderator ne dodjeljuje ovlašćenja; samo podnosi zahtjev. |
-| BM-MOD-14 | Pristup i ovlašćenja novom Moderatoru dodjeljuje isključivo Urednik nakon pregleda i odobrenja zahtjeva. Tek nakon odobrenja Moderator postaje aktivan. |
-| BM-MOD-15 | Sistem trajno evidentira za zahtjeve vezane za Moderatore: podnosioca zahtjeva, datum i vrijeme podnošenja, Urednika koji je odobrio i datum i vrijeme odobrenja. |
+| BM-MOD-12 | Početni Moderator je korisnik povezan sa odobrenim zahtjevom za kreiranje Organizatora (nakon eligibility resolve-a). Ovlašćenja dobija tek nakon odobrenja Urednika. |
+| BM-MOD-13 | Svaki naredni Moderator može biti predložen isključivo od strane postojećeg aktivnog Moderatora povezanog sa tim Organizatorom, unosom **imena i prezimena** te **e-maila** (bez users kataloga). Moderator ne dodjeljuje ovlašćenja; samo podnosi zahtjev. Važe BM-ORG-15–BM-ORG-17 (waiting / eligibility / neutralna poruka). |
+| BM-MOD-14 | Pristup i ovlašćenja novom Moderatoru dodjeljuje isključivo Urednik nakon pregleda i odobrenja zahtjeva koji je u stanju **Podnesen**. Tek nakon odobrenja Moderator postaje aktivan. |
+| BM-MOD-15 | Sistem trajno evidentira za zahtjeve vezane za Moderatore: podnosioca; predloženo ime/e-mail (ADD); povezani nalog kada je resolve-ovan; datum i vrijeme podnošenja; Urednika; datum i vrijeme odluke; ishod; napomenu kada je unesena. |
 | BM-MOD-16 | Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više nema pravo otkazivanja događaja tog Organizatora. Iz statusa Otkazan nije dozvoljen povratak u Objavljen. Moderator ne mijenja sadržaj otkazanog događaja. |
-| BM-MOD-17 | Moderator Organizatora može biti isključivo korisnik sa postojećim registrovanim i aktivnim nalogom Digital Kotor. Identifikacija je preko `user_id`. Nije dozvoljeno predlaganje ili kreiranje Moderatora unosom slobodnog imena ili e-mail adrese. |
+| BM-MOD-17 | **Aktivni** Moderator Organizatora mora biti korisnik sa registrovanim, **verifikovanim** i **aktivnim** nalogom Digital Kotor. Predlaganje (početni ili naredni) radi se privacy-safe unosom **imena + e-maila**; server resolve-uje nalog (PO-ORG-06). Ranija zabrana unosa imena/e-maila i zahtjev da podnosilac bira isključivo iz postojećeg `user_id` kataloga **superseded** su odlukom PO-ORG-06. Grant i dalje nastaje **samo** nakon odobrenja Urednika i vezuje se na resolve-ovani `user_id`. |
 | BM-MOD-18 | Moderator ima pristup uredničkom portalu Kalendara kulture na osnovu aktivnog moderatorskog ovlašćenja nad najmanje jednim aktivnim Organizatorom. Moderator nije nova platformska uloga. Platformska uloga Urednika ostaje isključivo `kk_admin`. |
 | BM-MOD-19 | Nakon što Moderator pošalje Događaj na odobrenje (Nacrt → Na odobrenju), u V1 **ne** može povući Događaj nazad u Nacrt niti uređivati njegov sadržaj dok je status Na odobrenju (PO-DG-10). Ponovno uređivanje moguće je tek nakon što Urednik vrati Događaj na doradu. Ovo pravilo **ne** mijenja tok Prijedloga izmjene Objavljenog Događaja. |
+| BM-MOD-20 | **Duplicate ADD (PO-ORG-06-F):** Za istog Organizatora i isti normalizovani e-mail ne smije postojati više paralelnih **nezavršenih** ADD/invitation zahtjeva. Nezavršeni: „Čeka registraciju Moderatora“, „Podnesen“. Terminalni (Odobren / Odbijen) ne blokiraju nužno istorijski zapis. Isti e-mail za **različite** Organizatore je dozvoljen. Za početnog Moderatora (Org creation, bez Org ID): ekvivalentna zaštita vezuje se za **identitet nezavršenog zahtjeva za kreiranje Organizatora** + normalizovani e-mail (bez inventisanja BM unique constraint-a; TS definiše implementacionu zaštitu). |
+| BM-MOD-21 | **ADD outcome e-mail i napomena (PO-ORG-06-B):** Pri odobrenju ADD → approval e-mail novom Moderatoru. Pri odbijanju ADD → rejection e-mail predloženom Moderatoru; napomena Urednika je **obavezna** (isti outcome-mail model kao Org creation; storage `decision_note` postoji) i ulazi u e-mail. Fail-closed bez napomene: status ostaje Podnesen; grant se ne kreira. REMOVE **ne** koristi ovaj invitation/outcome model osim REMOVE-approved notifikacije (BM-MOD-23). |
+| BM-MOD-22 | **Resolver (PO-ORG-06):** Kada korisnik postane eligible, Sistem automatski bind-uje `user_id` na sve odgovarajuće nezavršene waiting zahtjeve (Org creation i ADD) za taj normalizovani e-mail i prelazi ih u **Podnesen**. Resolver je idempotentan; **ne** kreira grant; dozvoljava više pending zahtjeva istog e-maila za različite Organizatore. |
+| BM-MOD-23 | **REMOVE odobreno (PO-ORG-06-D):** Nakon odobrenog uklanjanja, uklonjeni Moderator dobija e-mail da više nema moderatorsko ovlašćenje za datog Organizatora. Invitation model se **ne** koristi. Zaštita posljednjeg aktivnog Moderatora (BM-MOD-10) KEEP. Odbijeno REMOVE → **silence** (nema outcome e-maila). |
+| BM-MOD-24 | **No ready e-mail (PO-ORG-06-C):** Prelaz iz „Čeka registraciju Moderatora“ u „Podnesen" **ne** šalje poseban e-mail Moderatoru. Moderator dobija najviše: invitation (ako nije bio eligible pri submit-u) i final outcome nakon odluke Urednika. |
+| BM-MOD-25 | **Sigurnost / privacy (PO-ORG-06):** Klijent ne šalje trusted moderator `user_id`; nema user enumeration / existence-specific poruka; nema grant-a prije odobrenja Urednika; nema uredničke odluke prije eligibility; arbitrary e-mail ne eskalira privilegije; foreign Organizer access guards i CSRF/auth ostaju. |
+| BM-MOD-26 | **UI predlaganja (PO-ORG-06):** Forme za početnog i narednog Moderatora **ne** prikazuju listu korisnika, e-mail katalog, status naloga, verification ili activation state. Nema e-mail confirmation polja i nema consent checkbox-a u V1. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
@@ -432,7 +450,7 @@ Urednikov poslovni tok za takav Događaj je: Novi događaj → Sačuvaj i nastav
 
 | Oznaka | Pravilo |
 |--------|---------|
-| BM-UR-01 | Urednik odobrava ili odbija zahtjev za kreiranje Organizatora. |
+| BM-UR-01 | Urednik odobrava ili odbija zahtjev za kreiranje Organizatora **samo** kada je u stanju **Podnesen**. Zahtjev u stanju „Čeka registraciju Moderatora“ nije decision-ready (BM-ORG-15 / PO-ORG-06). |
 | BM-UR-02 | Urednik pregleda, odobrava i objavljuje događaje. Za Događaj u statusu **Na odobrenju** (prvi tok prije objave) Urednik u V1 **ne** uređuje sadržaj direktno; donosi odluku Odobri ili Vrati na doradu (PO-DG-10 / BM-ST-10). Uređivanje Događaja **U pripremi** bez registrovanog Organizatora (BM-UR-14), direktno uređivanje dozvoljenog sadržaja Objavljenog Događaja u uredničkom toku (BM-UR-16) i uredničke radnje nad Prijedlogom izmjene Objavljenog Događaja Moderatorskog toka ostaju po postojećim pravilima. |
 | BM-UR-03 | Urednik vraća događaje na doradu kada su potrebne suštinske izmjene. |
 | BM-UR-04 | Urednik pregleda i odobrava sadržaj koji šalju Moderatori. |

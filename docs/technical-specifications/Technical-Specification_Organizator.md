@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Organizator, Moderator i zahtjev za kreiranje Organizatora  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.3.1
+**Verzija:** 0.4.0
 **Datum:** 2026-08-11
 
 ---
@@ -21,6 +21,7 @@
 | 0.2.1 | 2026-07-30 | Documentation Consistency Patch (CR-001): usklađene statusne oznake dokumenta i status razvoja poglavlja sa stvarnim stanjem finalizovanog TS sadržaja. Bez izmjene poslovnih i funkcionalnih pravila. |
 | 0.3.0 | 2026-08-07 | Ugrađene usvojene Product Owner odluke PO-ORG-01–PO-ORG-04: katalog polja Organizatora V1; identifikacija Moderatora preko `user_id`; kreiranje entiteta tek pri odobrenju; pristup uredničkom portalu iz aktivnog moderatorskog ovlašćenja bez nove platformske uloge. Zatvorena otvorena pitanja 1, 2, 3 i 15. Usklađeno sa BM PATCH-054 / FS PATCH-FS-054. Bez implementacije. |
 | 0.3.1 | 2026-08-11 | **PO-ORG-05:** napomena Urednika — approve opciono; reject obavezno; storage `decision_note` (nullable u DB); server-side validacija; fail-closed. Usklađeno sa BM PATCH-067 / FS PATCH-FS-068 / BR-307. |
+| 0.4.0 | 2026-08-11 | **PO-ORG-06:** privacy-safe Moderator invitation — schema delta; waiting status; resolver (Verified + catch-up); mailables; editor gating; duplicates; outcome/REMOVE emails; supersede PO-ORG-02 selection model. Usklađeno sa BM PATCH-068 / FS PATCH-FS-069 / BR-308–BR-320. **TARGET contract; CURRENT production još koristi users dropdown.** Bez implementacije u ovom docs paketu. |
 
 Napomena:
 
@@ -71,6 +72,7 @@ Izvori istine za poslovna pravila:
 | 12. Otvorena pitanja | Usvojeno |
 | 13. Matrica sljedivosti | Usvojeno |
 | 14. Napomene za implementaciju | Usvojeno |
+| 15. PO-ORG-06 privacy-safe invitation | Usvojeno (TARGET; implementacija nije započeta) |
 
 ---
 
@@ -90,14 +92,14 @@ Izvori istine za poslovna pravila:
 Izvori
 
 Business Model:
-- BM-ORG-01–BM-ORG-12
-- BM-MOD-01–BM-MOD-15
+- BM-ORG-01–BM-ORG-19
+- BM-MOD-01–BM-MOD-26
 - BM-UR-01, BM-UR-05, BM-UR-08, BM-UR-09, BM-UR-10
 - BM-EP-02, BM-EP-03, BM-EP-06
 
 Functional Specification:
 - Platformsko pravilo
-- §5.6 (BR-045–BR-055, BR-135–BR-137, BR-275–BR-276)
+- §5.6 (BR-045–BR-055, BR-135–BR-137, BR-275–BR-276, BR-307–BR-320)
 - §5.8 (BR-070–BR-073)
 - §5.16 (BR-178–BR-181)
 
@@ -311,9 +313,13 @@ Predložen (zahtjev) → Na odobrenju → Aktivan → Uklonjen
 * Početni Moderator nastaje iz odobrenog zahtjeva za kreiranje Organizatora.
 * Naredni Moderatori nastaju iz zahtjeva koje podnosi postojeći aktivni Moderator istog Organizatora.
 
-**Identifikacija (PO-ORG-02)**
+**Identifikacija i predlaganje (PO-ORG-06 supersede PO-ORG-02 selection)**
 
-Predloženi i aktivni Moderator mora biti korisnik sa **postojećim registrovanim i aktivnim** korisničkim nalogom Digital Kotor. Identifikacija je isključivo preko stabilnog `user_id`. Nije dozvoljeno kreiranje / predlaganje Moderatora unosom slobodnog imena ili e-mail adrese bez veze na postojeći nalog.
+**Aktivan** Moderator mora biti korisnik sa registrovanim, **verifikovanim** i **aktivnim** nalogom; grant se vezuje na stabilni `user_id` **nakon** odobrenja Urednika.
+
+**Predlaganje** (početni / naredni ADD): privacy-safe unos **imena i prezimena** + **e-maila**. Server resolve-uje nalog preko normalizovanog e-maila. Klijent **ne** šalje trusted moderator `user_id`. Zahtjev **može** postojati prije `user_id` binding-a (status waiting).
+
+Raniji PO-ORG-02 model „biraj samo iz postojećeg users kataloga pri submit-u“ je **superseded** za input UX; grant i dalje koristi `user_id` nakon resolve + approve.
 
 **Pristup uredničkom portalu (PO-ORG-04)**
 
@@ -337,36 +343,39 @@ Poslovni postupak kojim registrovani korisnik predlaže novi entitet Organizator
 **Životni ciklus**
 
 ```
-Podnesen → Odobren
-         ↘ Odbijen
+Čeka registraciju Moderatora → Podnesen → Odobren
+                                      ↘ Odbijen
 ```
 
-* **Podnesen** — zahtjev je iniciran i čeka odluku Urednika.
-* **Odobren** — nastaje/aktivira se Organizator; predloženi korisnik dobija početno moderatorsko ovlašćenje.
-* **Odbijen** — Organizator se ne odobrava kao aktivan; predloženi korisnik ne dobija ovlašćenja; podnosilac ne dobija novu ulogu. Odbijanje ne sprečava novi zahtjev (BR-137, BM-ORG-11).
+* **Čeka registraciju Moderatora** (tehnički predlog statusa: `awaiting_moderator_eligibility`) — zahtjev sačuvan; nije decision-ready; nema Org; nema grant; invitation mail ako nije eligible.
+* **Podnesen** (`submitted`) — eligible + bound `user_id`; Urednik može odlučivati.
+* **Odobren** — nastaje Organizator; početni Moderator grant; approval email.
+* **Odbijen** — bez Org/grant; rejection email + Napomena Urednika (PO-ORG-05).
 
-**Sadržaj zahtjeva (BR-135 / BM-ORG-07 / PO-ORG-01 / PO-ORG-02)**
+**Sadržaj zahtjeva (BR-135 / BM-ORG-07 / PO-ORG-01 / PO-ORG-06)**
 
 * podaci o predloženom Organizatoru (katalog V1 — vidi §6.2): naziv (obavezno); opis, kontakt e-mail, kontakt telefon, web sajt (opciono);
-* identifikacija predloženog početnog Moderatora isključivo preko `user_id` postojećeg aktivnog naloga;
-* podatak da li je predloženi Moderator sam podnosilac ili drugi registrovani korisnik.
+* `proposed_moderator_name` (obavezno);
+* `proposed_moderator_email` (obavezno; store normalized);
+* `proposed_moderator_user_id` (nullable FK; bind kada eligible).
 
 **Odnosi**
 
 * 1 zahtjev : 1 podnosilac (registrovani korisnik);
-* 1 zahtjev : 1 predloženi početni Moderator (korisnik);
+* 1 zahtjev : 1 predloženi Moderator (ime+email; 0..1 bound user);
 * 1 zahtjev : 0..1 aktivni Organizator (nastaje pri odobrenju);
 * 1 korisnik : N zahtjeva (BR-136).
 
 **Ograničenja**
 
 * podnošenje ne mijenja platformske uloge;
-* Urednik odobrava ili odbija (BM-UR-01);
+* Urednik odobrava ili odbija **samo** Podnesen (BM-UR-01 / BR-309);
 * napomena Urednika: **opciona** pri odobrenju; **obavezna** (ne-prazna) pri odbijanju (PO-ORG-05 / BR-307 / BM-ORG-14);
 * storage: `decision_note` (nullable u bazi — obaveznost je server-side validacija, ne DB NOT NULL);
 * fail-closed: odbijanje bez napomene ne mijenja status (ostaje submitted) i ne kreira Organizator/grant;
 * validaciona poruka: „Napomena je obavezna prilikom odbijanja zahtjeva.“;
-* trajni audit obavezan (BR-055, BM-ORG-09), uključujući sačuvanu napomenu kada postoji.
+* trajni audit obavezan (BR-055, BM-ORG-09), uključujući sačuvanu napomenu kada postoji;
+* neutral flash podnosiocu (BR-312).
 
 ## 3.4 Zahtjev za dodjelu / uklanjanje Moderatora
 
@@ -375,14 +384,19 @@ Iako naziv dokumenta ističe zahtjev za kreiranje Organizatora, BM/FS zahtijevaj
 **Zahtjev za dodjelu ovlašćenja Moderatora**
 
 * pokreće postojeći aktivni Moderator Organizatora (BR-053);
-* odobrava / odbija isključivo Urednik (BR-054, BM-UR-08);
-* tek nakon odobrenja novo ovlašćenje postaje aktivno.
+* UI: ime + e-mail (bez users dropdown) — BR-308;
+* isti waiting / Podnesen / eligibility model kao Org creation;
+* odobrava / odbija isključivo Urednik nad **Podnesen** (BR-054, BM-UR-08);
+* reject note **obavezna** (PO-ORG-06 / BR-317; `decision_note` postoji);
+* tek nakon odobrenja novo ovlašćenje postaje aktivno (`source=subsequent`).
 
 **Zahtjev za uklanjanje Moderatora**
 
-* pokreće Moderator za drugog Moderatora istog Organizatora (BR-070);
+* pokreće Moderator za drugog **postojećeg aktivnog** Moderatora istog Organizatora (BR-070);
+* **ne** koristi invitation / name+email matching;
 * odobrava / odbija Urednik (BR-071);
-* uklanjanje važi tek nakon odobrenja;
+* uklanjanje važi tek nakon odobrenja → REMOVE-approved email (BR-318);
+* reject REMOVE → silence;
 * zabranjeno ako bi ostao bez aktivnog Moderatora (BR-072);
 * trajna evidencija (BR-073).
 
@@ -435,22 +449,28 @@ Functional Specification:
 sequenceDiagram
   participant K as Registrovani korisnik
   participant S as Sistem (Kalendar kulture)
-  participant U as Urednik
+  participant M as Predloženi Moderator
 
-  K->>S: Podnosi zahtjev (podaci Organizatora + predloženi Moderator)
-  S->>S: Validacija preduslova i sadržaja zahtjeva
-  S->>S: Evidentira podnosioca, predloženog Moderatora, vrijeme
-  S-->>U: Zahtjev dostupan za pregled
-  Note over K,S: Korisnik nije Organizator ni Moderator
+  K->>S: Podnosi zahtjev (Org podaci + ime + e-mail Moderatora)
+  S->>S: Normalize email; internal lookup; eligibility
+  alt Eligible
+    S->>S: Bind user_id; status Podnesen
+  else Not eligible
+    S->>S: status Čeka registraciju Moderatora
+    S-->>M: Invitation email (+ /register)
+  end
+  S-->>K: Neutral flash (BR-312)
+  Note over K,S: Nema Org; nema grant; Urednik vidi samo Podnesen
 ```
 
 **Tehnički tok**
 
-1. Sistem potvrđuje da je podnosilac registrovan i aktivan na platformi.
-2. Sistem prima sadržaj zahtjeva u skladu sa BR-135.
-3. Sistem ne dodjeljuje platformske uloge niti moderatorska ovlašćenja.
-4. Sistem trajno bilježi podnosioca, predloženog Moderatora, datum/vrijeme podnošenja.
-5. Zahtjev ulazi u stanje čekanja uredničke odluke.
+1. Sistem potvrđuje da je podnosilac registrovan, aktivan i verifikovan.
+2. Sistem prima sadržaj zahtjeva u skladu sa BR-135 (name+email; **ne** trusted user_id).
+3. Normalize email (trim+lowercase); lookup; ako eligible → bind + `submitted`; inače → `awaiting_moderator_eligibility` + invitation mail.
+4. Sistem ne dodjeljuje platformske uloge niti moderatorska ovlašćenja.
+5. Neutral flash (BR-312) — bez enumeration.
+6. Mail failure ne rollbackuje request (BR-319).
 
 ## 4.2 Odobravanje zahtjeva, kreiranje Organizatora i dodjela početnog Moderatora
 
@@ -685,7 +705,7 @@ erDiagram
 
 | Atribut / svojstvo | Obrazloženje |
 |--------------------|--------------|
-| Referenca na korisnika | Registrovani korisnik platforme — isključivo `user_id` (PO-ORG-02) |
+| Referenca na korisnika | Registrovani korisnik platforme — `user_id` na **grantu** (nakon approve) |
 | Referenca na Organizatora | Konkretni Organizator |
 | Status | Aktivan / Uklonjen (i prelazna stanja kroz zahtjev) |
 | Tip nastanka | Početni (iz zahtjeva za kreiranje) / Naredni (iz zahtjeva za dodjelu) |
@@ -713,11 +733,13 @@ erDiagram
 | Atribut / svojstvo | Obrazloženje |
 |--------------------|--------------|
 | Podnosilac | Registrovani korisnik |
-| Predloženi Moderator | Registrovani korisnik |
-| Indikator „predloženi = podnosilac“ | BR-135 |
-| Predloženi podaci Organizatora | Sadržaj zahtjeva |
-| Status | Podnesen / Odobren / Odbijen |
+| proposed_moderator_name | Obavezno poslovno polje (ne za matching) |
+| proposed_moderator_email | Obavezno; store normalized (trim+lowercase) |
+| proposed_moderator_user_id | Nullable FK; bind kada eligible |
+| Predloženi podaci Organizatora | Sadržaj zahtjeva (katalog V1) |
+| Status | `awaiting_moderator_eligibility` / `submitted` / `approved` / `rejected` |
 | Urednik odluke | Popunjava se pri odluci |
+| decision_note | Nullable; required on reject (PO-ORG-05) |
 | Datum/vrijeme podnošenja | BM-ORG-09, BR-055 |
 | Datum/vrijeme odluke | BM-ORG-09, BR-055 |
 
@@ -738,8 +760,10 @@ erDiagram
 | Vrsta | Dodjela / Uklanjanje |
 | Organizator | Kontekst zahtjeva |
 | Podnosilac | Aktivni Moderator |
-| Ciljni korisnik / Moderator | Predloženi ili Moderator koji se uklanja |
-| Status | Podnesen / Odobren / Odbijen |
+| proposed_moderator_name / email | ADD only; obavezno; email normalized |
+| target_user_id | ADD: nullable do eligibility bind; REMOVE: postojeći aktivni Moderator (bound) |
+| Status | `awaiting_moderator_eligibility` (ADD) / `submitted` / `approved` / `rejected` |
+| decision_note | Nullable; **required on ADD reject** (PO-ORG-06 / BR-317); Org-create rule PO-ORG-05 KEEP |
 | Urednik odluke | Pri odluci |
 | Datum/vrijeme podnošenja i odluke | BM-MOD-15, BR-055, BR-073 |
 
@@ -783,41 +807,44 @@ Functional Specification:
 
 ## 7.1 Obavezna polja / sadržaj
 
-Za **zahtjev za kreiranje Organizatora** (BR-135 / PO-ORG-01 / PO-ORG-02):
+Za **zahtjev za kreiranje Organizatora** (BR-135 / PO-ORG-01 / PO-ORG-06):
 
 * naziv Organizatora (obavezno);
 * opis, kontakt e-mail, kontakt telefon, web sajt (opciono);
-* `user_id` predloženog početnog Moderatora (postojeći aktivan nalog);
-* podatak da li je predloženi Moderator podnosilac ili drugi registrovani korisnik.
+* `proposed_moderator_name` (obavezno);
+* `proposed_moderator_email` (obavezno; valid email format; normalize);
+* **zabranjeno** trusted `proposed_moderator_user_id` sa klijenta.
 
-Zabranjeno: predlaganje Moderatora slobodnim imenom ili e-mailom bez `user_id`.
 Zabranjeno u V1: PIB, matični broj, adresa, GPS, društvene mreže, logo i ostali pravni podaci.
 
-Za **zahtjev za dodjelu Moderatora**:
+Za **zahtjev za dodjelu Moderatora (ADD)**:
 
 * Organizator (kontekst);
 * podnosilac (aktivni Moderator);
-* predloženi registrovani korisnik.
+* `proposed_moderator_name` + `proposed_moderator_email`;
+* duplicate guard (BR-313).
 
-Za **zahtjev za uklanjanje Moderatora**:
+Za **zahtjev za uklanjanje Moderatora (REMOVE)**:
 
 * Organizator;
 * podnosilac;
-* ciljni aktivni Moderator;
+* ciljni aktivni Moderator (`target_user_id` bound);
 * provjera da ciljni nije posljednji aktivni Moderator.
 
 ## 7.2 Poslovne validacije
 
-* Podnosilac zahtjeva za kreiranje mora biti registrovan i aktivan (Platformsko pravilo, BM-ORG-02).
-* Predloženi Moderator mora biti registrovan korisnik platforme (BM-ORG-07, BR-135).
+* Podnosilac zahtjeva za kreiranje mora biti registrovan, aktivan i verifikovan (Platformsko pravilo, BM-ORG-02).
+* Predloženi Moderator se predlaže imenom+e-mailom; eligibility = verified AND active (BM-ORG-16, BR-310).
 * Podnošenje zahtjeva ne smije automatski aktivirati Organizatora ni Moderatora (BM-ORG-02, BM-ORG-08, BR-137).
-* Odobrenje mora atomično (logički nedjeljivo) uspostaviti aktivnog Organizatora i početno ovlašćenje, ili u potpunosti odbiti ishod (BM-ORG-03, BM-ORG-08, BR-047, BR-137).
+* Odobrenje mora atomično (logički nedjeljivo) uspostaviti aktivnog Organizatora i početno ovlašćenje, ili u potpunosti odbiti ishod (BM-ORG-03, BM-ORG-08, BR-047, BR-137); **re-check eligibility** pri approve.
 * Dodatnog Moderatora smije predložiti samo aktivni Moderator istog Organizatora (BM-MOD-13, BR-053).
 * Deaktivaciju Organizatora pokreće Urednik i za nju nije potreban prethodni zahtjev Organizatora niti Moderatora (BM-ORG-12, BM-UR-10, BR-049, BR-050).
 * Uklanjanje posljednjeg aktivnog Moderatora mora biti odbijeno (BM-MOD-10, BR-072).
 * Radnje Moderatora nad sadržajem dozvoljene su samo za Organizatora iz aktivnog konteksta (BM-MOD-04, BR-051).
 * Za deaktiviranog Organizatora zabranjeno je kreiranje novih događaja i slanje novih prijedloga/izmjena (BM-ORG-12, BM-UR-10, BR-049, BR-050).
 * Brisanje Organizatora sa povezanim događajima nije dozvoljeno (BM-ORG-12, BM-UR-10, BR-049).
+* Editor query: exclude `awaiting_moderator_eligibility` from decision-ready lists (BR-309).
+* Duplicate ADD: same organizer + same normalized email + unfinished statuses (BR-313).
 
 ## 7.3 Tehničke validacije
 
@@ -1026,9 +1053,11 @@ Ovo poglavlje navodi usvojene granice obuhvata TS-001 za V1.
 | # | Pitanje | Odluka |
 |---|---------|--------|
 | 1 | Katalog polja Organizatora | **PO-ORG-01** — naziv (obavezno); opis, e-mail, telefon, web (opciono); status; sistemski datumi. Bez PIB/MB/adrese/GPS/mreža/loga/pravnih podataka. |
-| 2 | Identifikacija predloženog Moderatora | **PO-ORG-02** — isključivo postojeći aktivan nalog preko `user_id`. |
+| 2 | Identifikacija predloženog Moderatora | **PO-ORG-02** (istorijski): postojeći `user_id` pri submit-u. **PO-ORG-06 supersede** selection model → ime+e-mail invitation; bind `user_id` kada eligible; grant i dalje na `user_id` nakon approve. |
 | 3 | Kada nastaje zapis Organizatora | **PO-ORG-03** — tek nakon odobrenja Urednika (atomično sa početnim Moderatorom). |
 | 15 | Platformska uloga za Moderatora | **PO-ORG-04** — nije nova platformska uloga; pristup portalu iz aktivnog ovlašćenja; `kk_admin` = jedina platformska uloga Urednika. |
+| 18 | Privacy-safe invitation / waiting / emails | **PO-ORG-06** — BM PATCH-068 / FS PATCH-FS-069 / ovaj TS v0.4.0. |
+| 13 | Isti e-mail na više istovremenih pending | **PO-ORG-06-F:** isti e-mail / različiti Org = ALLOWED; isti Org + isti e-mail + unfinished ADD = NOT ALLOWED. |
 
 ## 12.2 Ostaje otvoreno (nije blokator Koraka 1)
 
@@ -1043,20 +1072,23 @@ Pitanja za kasnije PO odluke ili implementacioni izbor u okviru usvojenih granic
 10. Šta se dešava sa otvorenim zahtjevima za Moderatore i aktivnim ovlašćenjima pri deaktivaciji Organizatora?
 11. Kako korisnik bira i mijenja aktivni kontekst Organizatora (UX) — tipično uz TS-010?
 12. Tipovi / vrste Organizatora u V1?
-13. Isti korisnik kao predloženi Moderator na više istovremenih neodobrenih zahtjeva?
 14. Vidljivost odbijenog zahtjeva podnosiocu / Uredniku?
 16. Poslovna potvrda zabrane više istovremenih aktivnih ovlašćenja istog para User–Org (tehnički invariant već predviđen)?
 17. Nefunkcionalni pragovi prihvatanja V1?
+19. Consent / legal notice pri predlaganju treće osobe e-mailom (van current SSOT — gap ako zakonski zahtjev nastane)?
+
+Napomena: pitanje **13** zatvoreno u §12.1 odlukom PO-ORG-06-F.
 
 ---
 # 13. Matrica sljedivosti
 
 | Oblast | BM | FS / BR | TS |
 |--------|----|---------|-----|
-| Organizator kao poslovni entitet | BM-ORG-01–BM-ORG-13, BM-GL-06 | Platformsko pravilo; §5.6; BR-045–BR-052; BR-135–BR-137; BR-275–BR-276 | §1, §3, §6 |
-| Moderator ovlašćenje | BM-MOD-01–BM-MOD-15, BM-MOD-17–BM-MOD-18, BM-GL-07 | Platformsko pravilo; BR-047; BR-051; BR-053–BR-055; BR-275–BR-276; §5.8 BR-070–BR-073 | §3, §5, §6 |
-| Zahtjev za kreiranje Organizatora | BM-ORG-02, BM-ORG-07–BM-ORG-11 | BR-135–BR-137; BR-275; §5.6 tok | §3, §4, §6, §7 |
-| Uredničke odluke | BM-UR-01, BM-UR-05, BM-UR-08, BM-UR-09, BM-UR-10 | BR-049, BR-054, BR-071, BR-137 | §4, §5 |
+| Organizator kao poslovni entitet | BM-ORG-01–BM-ORG-19, BM-GL-06 | Platformsko pravilo; §5.6; BR-045–BR-052; BR-135–BR-137; BR-275–BR-276; BR-307–BR-320 | §1, §3, §6, §15 |
+| Moderator ovlašćenje | BM-MOD-01–BM-MOD-26, BM-GL-07 | Platformsko pravilo; BR-047; BR-051; BR-053–BR-055; BR-275–BR-276; BR-308–BR-320; §5.8 BR-070–BR-073 | §3, §5, §6, §15 |
+| Zahtjev za kreiranje Organizatora | BM-ORG-02, BM-ORG-07–BM-ORG-19 | BR-135–BR-137; BR-275; BR-307–BR-320; §5.6 tok | §3, §4, §6, §7, §15 |
+| Privacy-safe invitation | BM-ORG-15–19, BM-MOD-17, BM-MOD-20–26 | BR-308–BR-320 | §15 |
+| Uredničke odluke | BM-UR-01, BM-UR-05, BM-UR-08, BM-UR-09, BM-UR-10 | BR-049, BR-054, BR-071, BR-137, BR-309 | §4, §5, §15 |
 | Deaktivacija | BM-ORG-12, BM-UR-10 | BR-049, BR-050 | §3, §4, §5, §7, §8 |
 | Aktivni kontekst | BM-MOD-04 | BR-051 | §3, §5, §6 |
 | Audit zahtjeva | BM-ORG-09, BM-MOD-15, BM-AL-07 | BR-055, BR-073; §5.16 katalog | §8, §9 |
@@ -1066,11 +1098,132 @@ Pitanja za kasnije PO odluke ili implementacioni izbor u okviru usvojenih granic
 
 # 14. Napomene za implementaciju
 
-1. Funkcionalnost zahtjeva za kreiranje Organizatora / Moderatore je implementirana (Faza 2 / TS-001); PO-ORG-01–05 ostaju SSOT za V1 ugovor.
+1. Osnovni tok Org/Mod zahtjeva **postoji** u produkciji; **PO-ORG-06** je **TARGET** ugovor — **CURRENT** i dalje koristi users dropdown / NOT NULL `user_id`.
 2. Ne uvoditi novu platformsku ulogu za Moderatora; `kk_admin` ostaje Urednik (PO-ORG-04).
 3. Ne kreirati Organizatora pri podnošenju zahtjeva (PO-ORG-03).
-4. Moderator isključivo preko `user_id` aktivnog naloga (PO-ORG-02).
+4. Predlaganje = ime+e-mail; grant = `user_id` nakon resolve + approve (PO-ORG-06 supersede PO-ORG-02 selection).
 5. Katalog polja V1: PO-ORG-01 — ne širiti pravnim/geo podacima.
-6. Napomena Urednika na Org creation request: approve opciono / reject obavezno (PO-ORG-05); ne proširivati automatski na Moderator request bez zasebne PO odluke.
+6. Napomena: Org creation reject REQUIRED (PO-ORG-05); ADD reject REQUIRED (PO-ORG-06 / BR-317) — `decision_note` storage postoji na oba modela.
 7. FK Događaj → Organizator: TS-003. Pun UI Moderatorskog rada: TS-010. Centralni audit: TS-012.
 8. Trenutna implementacija i odstupanja: `docs/tehnicka-dokumentacija/cultural-calendar.md` (Technical Overview).
+9. Detaljni implementacioni ugovor PO-ORG-06: **§15**.
+
+---
+
+# 15. PO-ORG-06 — Privacy-safe invitation (implementacioni ugovor)
+
+**Status:** TARGET — dokumentovano; **IMPLEMENTATION NOT STARTED**.
+
+## 15.1 CURRENT vs TARGET
+
+| Aspekt | CURRENT (produkcija) | TARGET (PO-ORG-06) |
+|--------|----------------------|--------------------|
+| Org create UI | `<select>` do 200 users (name+email) | ime + e-mail fields |
+| Mod ADD UI | isti users listing | ime + e-mail fields |
+| user FK | NOT NULL | nullable do eligibility |
+| Statusi | submitted/approved/rejected | + `awaiting_moderator_eligibility` |
+| Editor | svi submitted decision-ready | samo Podnesen |
+| Mail | nema invitation/outcome matrice | §15.6 |
+
+## 15.2 Schema delta (prijedlog — ne pisati migraciju sada)
+
+**`cultural_organizer_creation_requests`:**
+
+* `proposed_moderator_user_id` → **nullable** FK;
+* dodati `proposed_moderator_name` (string, required);
+* dodati `proposed_moderator_email` (string, required; store **normalized**);
+* status enum/string proširiti: `awaiting_moderator_eligibility` | `submitted` | `approved` | `rejected`;
+* index preporuka: `(proposed_moderator_email, status)` za resolver; app-level duplicate/idempotency po request identity + email.
+
+**`cultural_moderator_requests` (ADD):**
+
+* `target_user_id` → **nullable** za ADD waiting (REMOVE ostaje bound na postojećeg aktivnog Moderatora);
+* dodati `proposed_moderator_name`, `proposed_moderator_email` (normalized) za `type=add`;
+* isti status waiting;
+* unique/app guard: unfinished ADD per `(organizer_id, normalized_email)`.
+
+**Existing rows:** već imaju user IDs → tretirati kao resolved / editor-ready (`submitted`); **bez** destructive backfill; name/email mogu se backfill-ovati iz `users` opciono (non-blocking).
+
+**REMOVE:** ostaje kompatibilan sa bound `target_user_id`; ne koristi name/email invitation kolone kao input.
+
+## 15.3 Status transition
+
+| From | To | Trigger |
+|------|-----|---------|
+| (new) | awaiting_moderator_eligibility | submit + not eligible |
+| (new) | submitted | submit + eligible (bind) |
+| awaiting_moderator_eligibility | submitted | resolver (Verified / catch-up) |
+| submitted | approved / rejected | Editor decision |
+| awaiting_* | approved/rejected | **FORBIDDEN** |
+
+## 15.4 Eligibility / normalization
+
+* normalize: `Str::lower(trim($email))`;
+* eligible: user exists AND `email_verified_at !== null` AND `activation_status === 'active'` (reuse `CulturalPortalAccess::isPlatformUserActive` semantika);
+* name mismatch: ignore for match.
+
+## 15.5 Resolver
+
+* **Primary:** Laravel `Illuminate\Auth\Events\Verified` listener;
+* **Secondary/catch-up:** safe re-check when user becomes `active` (npr. activation service hook / scheduled catch-up / explicit admin activation path);
+* actions: find unfinished requests matching normalized email → bind user_id → set `submitted`;
+* idempotent; no grant; no duplicate invitation; multi-org same email OK;
+* no custom invitation token in V1.
+
+## 15.6 Mail
+
+* Sender: reuse project pattern `noreply@kotor.me` (npr. postojeći Mailable `from`);
+* sync `Mail::send` / Mailable ok; queue **nije** poslovni zahtjev;
+* failure: log + idempotent retry/resend marker; **no** DB rollback of request;
+* types: Invitation (not eligible); Approval; Rejection (+ note); REMOVE-approved;
+* **no** „ready for editor“ mail (PO-ORG-06-C).
+
+## 15.7 Editor gating
+
+* decision index/show: `status = submitted` only for Org creation and ADD;
+* waiting: no Odobri/Odbij;
+* approve: re-check eligibility; refuse if not eligible;
+* reject Org: note required (PO-ORG-05); reject ADD: note required (PO-ORG-06); inform UI that reject note is emailed to proposed Moderator.
+
+## 15.8 Duplicate / idempotency (TS preporuka)
+
+* ADD: app validation (+ optional partial unique index) on `(organizer_id, proposed_moderator_email)` where status in (`awaiting_moderator_eligibility`,`submitted`) and type=add;
+* Org creation: one email per request row; allow same email on **different** unfinished Org-creation requests (different future orgs); prevent double-processing of the **same** request (idempotent store/resolver); optional soft guard against identical spam resubmit (same submitter + same org name + same email) — implementer’s choice within BM-MOD-20;
+* mail: store `invitation_sent_at` (or equivalent) to avoid duplicate invitation on retry.
+
+## 15.9 Security
+
+* ignore/strip client-provided moderator user_id;
+* no existence-specific validation errors;
+* authorize organizer context for ADD/REMOVE;
+* CSRF + auth middleware KEEP.
+
+## 15.10 Tests (obavezni scenariji — budući paket)
+
+* submit eligible → submitted + no invitation;
+* submit not eligible → waiting + invitation;
+* Verified → bind + submitted + no ready mail;
+* editor cannot decide waiting;
+* approve/reject emails; reject includes note;
+* ADD duplicate unfinished blocked; cross-org allowed;
+* name mismatch still binds;
+* REMOVE approved email; reject REMOVE silence;
+* mail failure does not rollback;
+* existing NOT NULL rows remain decision-ready after migration.
+
+## 15.11 Deployment implications
+
+* migration must be additive/safe on production data;
+* deploy order: migration → code (forms/resolver/mail/gating) → tests;
+* feature flag optional (not required by PO);
+* after deploy: confirm no users listing PII leak on create forms.
+
+## 15.12 Implementation package sequence (predlog)
+
+1. Schema migration + model fillable/casts + status enum;
+2. Org create privacy-safe submit + neutral flash + invitation mail;
+3. Verified listener + activation catch-up resolver;
+4. Editor query gating + approve re-check + outcome mails (Org);
+5. Subsequent ADD parity + reject note required + mails;
+6. REMOVE-approved mail;
+7. Regression suite + PII leak tests.

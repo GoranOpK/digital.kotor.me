@@ -173,10 +173,11 @@ FT-001 je aktivan modul sa završenom i produkcijski potvrđenom **Fazom 6A — 
 
 **Usvojene poslovne odluke (Organizator / Moderator — PO-ORG):**
 - **PO-ORG-01:** Katalog polja Organizatora V1 — naziv (obavezno); opis, kontakt e-mail, telefon, web (opciono); status Aktivan/Deaktiviran; sistemski datumi. Van V1: PIB, MB, adresa, GPS, društvene mreže, logo, ostali pravni podaci.
-- **PO-ORG-02:** Moderator isključivo postojeći aktivan nalog (`user_id`); bez slobodnog imena/e-maila.
+- **PO-ORG-02:** *(istorijski / djelimično superseded)* Moderator grant vezan na postojeći aktivan nalog (`user_id`). **Selection pretpostavka** „biraj samo iz users kataloga / zabrana imena+e-maila pri submit-u“ **superseded** odlukom **PO-ORG-06**. Grant i dalje nastaje tek nakon Editor approval na resolve-ovani `user_id`.
 - **PO-ORG-03:** Organizator se kreira tek nakon odobrenja Urednika (atomično sa početnim Moderatorom); podnošenje zahtjeva ne kreira entitet.
 - **PO-ORG-04:** Moderator pristupa uredničkom portalu iz aktivnog ovlašćenja; nije nova platformska uloga; `kk_admin` = jedina platformska uloga Urednika.
-- **PO-ORG-05:** Napomena Urednika na zahtjevu za kreiranje Organizatora — pri odobrenju opciona; pri odbijanju obavezna (ne-prazna); fail-closed bez napomene; napomena se trajno čuva. BM PATCH-067 / FS PATCH-FS-068 (BR-307) / TS-001 v0.3.1. **Ne** proširuje automatski Moderator request tok.
+- **PO-ORG-05:** Napomena Urednika na zahtjevu za kreiranje Organizatora — pri odobrenju opciona; pri odbijanju obavezna (ne-prazna); fail-closed bez napomene; napomena se trajno čuva. BM PATCH-067 / FS PATCH-FS-068 (BR-307) / TS-001 v0.3.1. **KEEP.** PO-ORG-06 proširuje obaveznu reject napomenu i na subsequent ADD (BR-317).
+- **PO-ORG-06:** Privacy-safe Moderator invitation (first + subsequent ADD) — ime+e-mail; stanje „Čeka registraciju Moderatora“; auto → Podnesen kad eligible; neutral flash; invitation/outcome/REMOVE-approved emails; supersede PO-ORG-02 selection model. BM PATCH-068 / FS PATCH-FS-069 (BR-308–BR-320) / TS-001 v0.4.0. **Status: ADOPTED / DOCUMENTED / IMPLEMENTATION NOT STARTED.** CURRENT produkcija i dalje koristi users dropdown.
 
 **Usvojene implementacione odluke (Događaj / Održavanje — PO-EV):**
 - **PO-EV-01:** Postojeći podaci Kalendara kulture (`cultural_events`) su isključivo testni/prototipski; nisu referentni produkcijski sadržaj. Bez migracije/backfill-a/dual-write-a/adaptera radi legacy sadržaja. Novi domen Događaj + Održavanje (TS-003/TS-004) implementira se direktno prema BM/FS/TS. Legacy flat model privremen do cutover-a. **Potvrđeno za Fazu 6A** javnog portala (TS-009 v1.0.6 / IR-001 v1.0.5).
@@ -373,7 +374,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 
 | TS | Naziv | Feature | Modul | Status |
 | -- | ----- | ------- | ----- | ------ |
-| TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.3.0) |
+| TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.4.0) — PO-ORG-06 TARGET documented; CURRENT implementation još users dropdown |
 | TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.10); PATCH-063 docs |
 | TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.9); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni; PATCH-063 docs |
 | TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.4) |
@@ -632,4 +633,5 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-11 | FT-001 — **6B-04 IMPLEMENTATION CLOSEOUT (status sync):** Tip sadržaja + combined Pretraga (PO-6B-01/04/05/10) **IMPLEMENTED / TESTED / COMMITTED / PUSHED** — `0c99241` (`feat(calendar): add content type search`); final gate 244 passed / 992 assertions. **PO-6B-10 ADOPTED / DOCUMENTED / IMPLEMENTED / TESTED / COMMITTED / PUSHED.** **NOT DEPLOYED.** Stale „NOT COMMITTED / NOT PUSHED“ supersedovan. |
 | 2026-08-11 | FT-001 — **6B-05A FUNCTIONAL DOCUMENTATION CLOSEOUT:** **PHASE 6B FUNCTIONAL IMPLEMENTATION COMPLETE** (6B-01…6B-04; commits `26217f6` / `0e8f7c3` / `7875e99` / `0c99241`). Gate 244/992. **PRODUCTION DEPLOYMENT / SMOKE: NOT DONE** — **PHASE 6B PRODUCTION CLOSEOUT PENDING**. Usklađeni Feature Registry, IR-001 v1.0.6, TS-009 v1.0.15 (status only). Homepage MF / Arhiva MF list / Delete MF = OUT OF V1. Bez novih PO/BR. Bez izmjene implementacije. |
 | 2026-08-11 | FT-001 — **PO-ORG-05** usvojena: napomena Urednika na zahtjevu za kreiranje Organizatora — approve opciono / reject obavezno; fail-closed; `decision_note` reuse. BM PATCH-067 (BM-ORG-14), FS PATCH-FS-068 (BR-307), TS-001 v0.3.1. Moderator request note rule = unchanged (PO decision required separately). |
+| 2026-08-11 | FT-001 — **PO-ORG-06** usvojena / dokumentovana: privacy-safe Moderator invitation (first + subsequent ADD); waiting status; resolver; emails; REMOVE-approved notify; supersede PO-ORG-02 selection. BM PATCH-068 (BM-ORG-15–19, BM-MOD-20–26), FS PATCH-FS-069 (BR-308–BR-320), TS-001 v0.4.0. **ADOPTED / DOCUMENTED / IMPLEMENTATION NOT STARTED.** CURRENT = users dropdown. RG-001 KEEP. IR/IS KEEP. |
 | 2026-08-10 | FT-001 — **PHASE 6A-CLOSE-02:** legacy admin CRUD `cultural-events.*` disabled (middleware `legacy_cultural_events_disabled` → 403 all methods). Legacy code/table/views retained; `CULTURAL_PUBLIC_READ_SOURCE` + public legacy read rollback retained; canonical routes unchanged. **Nije** hard remove / flag cleanup (Phase B). |
