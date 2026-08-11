@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Organizator, Moderator i zahtjev za kreiranje Organizatora  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.4.0
-**Datum:** 2026-08-11
+**Verzija:** 0.4.1
+**Datum:** 2026-08-12
 
 ---
 
@@ -22,6 +22,7 @@
 | 0.3.0 | 2026-08-07 | Ugrađene usvojene Product Owner odluke PO-ORG-01–PO-ORG-04: katalog polja Organizatora V1; identifikacija Moderatora preko `user_id`; kreiranje entiteta tek pri odobrenju; pristup uredničkom portalu iz aktivnog moderatorskog ovlašćenja bez nove platformske uloge. Zatvorena otvorena pitanja 1, 2, 3 i 15. Usklađeno sa BM PATCH-054 / FS PATCH-FS-054. Bez implementacije. |
 | 0.3.1 | 2026-08-11 | **PO-ORG-05:** napomena Urednika — approve opciono; reject obavezno; storage `decision_note` (nullable u DB); server-side validacija; fail-closed. Usklađeno sa BM PATCH-067 / FS PATCH-FS-068 / BR-307. |
 | 0.4.0 | 2026-08-11 | **PO-ORG-06:** privacy-safe Moderator invitation — schema delta; waiting status; resolver (Verified + catch-up); mailables; editor gating; duplicates; outcome/REMOVE emails; supersede PO-ORG-02 selection model. Usklađeno sa BM PATCH-068 / FS PATCH-FS-069 / BR-308–BR-320. **TARGET contract; CURRENT production još koristi users dropdown.** Bez implementacije u ovom docs paketu. |
+| 0.4.1 | 2026-08-12 | **PO-ORG-06 PRODUCTION CLOSEOUT (status sync):** Packages 1–5 implementirani i produkciono potvrđeni; schema migracija RAN; discoverable CTA „Zahtjev za Organizatora“ (`814ff96`). Normativni ugovor §15 neizmijenjen. Optional durable mail retry / `invitation_sent_at` ostaje non-blocking OUT OF SCOPE. |
 
 Napomena:
 
@@ -72,7 +73,7 @@ Izvori istine za poslovna pravila:
 | 12. Otvorena pitanja | Usvojeno |
 | 13. Matrica sljedivosti | Usvojeno |
 | 14. Napomene za implementaciju | Usvojeno |
-| 15. PO-ORG-06 privacy-safe invitation | Usvojeno (TARGET; implementacija nije započeta) |
+| 15. PO-ORG-06 privacy-safe invitation | Usvojeno (IMPLEMENTED / PRODUCTION VERIFIED) |
 
 ---
 
@@ -1098,7 +1099,7 @@ Napomena: pitanje **13** zatvoreno u §12.1 odlukom PO-ORG-06-F.
 
 # 14. Napomene za implementaciju
 
-1. Osnovni tok Org/Mod zahtjeva **postoji** u produkciji; **PO-ORG-06** je **TARGET** ugovor — **CURRENT** i dalje koristi users dropdown / NOT NULL `user_id`.
+1. Osnovni tok Org/Mod zahtjeva **postoji** u produkciji; **PO-ORG-06** privacy-safe invitation ugovor je **IMPLEMENTED / PRODUCTION VERIFIED** (Packages 1–5; schema migracija RAN; smoke PO-confirmed; CTA discoverability `814ff96`).
 2. Ne uvoditi novu platformsku ulogu za Moderatora; `kk_admin` ostaje Urednik (PO-ORG-04).
 3. Ne kreirati Organizatora pri podnošenju zahtjeva (PO-ORG-03).
 4. Predlaganje = ime+e-mail; grant = `user_id` nakon resolve + approve (PO-ORG-06 supersede PO-ORG-02 selection).
@@ -1107,25 +1108,26 @@ Napomena: pitanje **13** zatvoreno u §12.1 odlukom PO-ORG-06-F.
 7. FK Događaj → Organizator: TS-003. Pun UI Moderatorskog rada: TS-010. Centralni audit: TS-012.
 8. Trenutna implementacija i odstupanja: `docs/tehnicka-dokumentacija/cultural-calendar.md` (Technical Overview).
 9. Detaljni implementacioni ugovor PO-ORG-06: **§15**.
+10. Optional polish (non-blocking): durable mail retry / outbox / `invitation_sent_at` — **nije** V1 blocker; **nije** lažno označen kao implementiran.
 
 ---
 
 # 15. PO-ORG-06 — Privacy-safe invitation (implementacioni ugovor)
 
-**Status:** TARGET — dokumentovano; **IMPLEMENTATION NOT STARTED**.
+**Status:** **IMPLEMENTED / PRODUCTION VERIFIED** (Packages 1–5; produkciona migracija RAN; produkcioni smoke PO-confirmed; ordinary-user CTA „Zahtjev za Organizatora“ discoverable — `814ff96`). Normativni ugovor ispod ostaje važeći. Optional durable mail retry / `invitation_sent_at` = OUT OF SCOPE (non-blocking).
 
 ## 15.1 CURRENT vs TARGET
 
-| Aspekt | CURRENT (produkcija) | TARGET (PO-ORG-06) |
-|--------|----------------------|--------------------|
-| Org create UI | `<select>` do 200 users (name+email) | ime + e-mail fields |
+| Aspekt | Pre-PO-ORG-06 (istorijski) | CURRENT produkcija (PO-ORG-06) |
+|--------|----------------------------|--------------------------------|
+| Org create UI | `<select>` do 200 users (name+email) | ime + e-mail fields; discoverable CTA „Zahtjev za Organizatora“ |
 | Mod ADD UI | isti users listing | ime + e-mail fields |
 | user FK | NOT NULL | nullable do eligibility |
 | Statusi | submitted/approved/rejected | + `awaiting_moderator_eligibility` |
-| Editor | svi submitted decision-ready | samo Podnesen |
+| Editor | svi submitted decision-ready | samo Podnesen (waiting bez Odobri/Odbij) |
 | Mail | nema invitation/outcome matrice | §15.6 |
 
-## 15.2 Schema delta (prijedlog — ne pisati migraciju sada)
+## 15.2 Schema delta (IMPLEMENTED — Package 1 produkciona migracija RAN)
 
 **`cultural_organizer_creation_requests`:**
 
@@ -1189,7 +1191,7 @@ Napomena: pitanje **13** zatvoreno u §12.1 odlukom PO-ORG-06-F.
 
 * ADD: app validation (+ optional partial unique index) on `(organizer_id, proposed_moderator_email)` where status in (`awaiting_moderator_eligibility`,`submitted`) and type=add;
 * Org creation: one email per request row; allow same email on **different** unfinished Org-creation requests (different future orgs); prevent double-processing of the **same** request (idempotent store/resolver); optional soft guard against identical spam resubmit (same submitter + same org name + same email) — implementer’s choice within BM-MOD-20;
-* mail: store `invitation_sent_at` (or equivalent) to avoid duplicate invitation on retry.
+* mail: store `invitation_sent_at` (or equivalent) to avoid duplicate invitation on retry — **optional polish / OUT OF SCOPE** for V1 closeout (non-blocking; not falsely marked implemented).
 
 ## 15.9 Security
 
@@ -1198,7 +1200,7 @@ Napomena: pitanje **13** zatvoreno u §12.1 odlukom PO-ORG-06-F.
 * authorize organizer context for ADD/REMOVE;
 * CSRF + auth middleware KEEP.
 
-## 15.10 Tests (obavezni scenariji — budući paket)
+## 15.10 Tests (obavezni scenariji — IMPLEMENTED)
 
 * submit eligible → submitted + no invitation;
 * submit not eligible → waiting + invitation;
@@ -1210,20 +1212,24 @@ Napomena: pitanje **13** zatvoreno u §12.1 odlukom PO-ORG-06-F.
 * REMOVE approved email; reject REMOVE silence;
 * mail failure does not rollback;
 * existing NOT NULL rows remain decision-ready after migration.
+* ordinary-user nav CTA „Zahtjev za Organizatora“ → create route (discoverability corrective).
 
 ## 15.11 Deployment implications
 
-* migration must be additive/safe on production data;
-* deploy order: migration → code (forms/resolver/mail/gating) → tests;
-* feature flag optional (not required by PO);
-* after deploy: confirm no users listing PII leak on create forms.
+* Package 1 migration additive/safe — **produkciono RAN**;
+* controlled deploy (maintenance → code → migrate → caches → up) — **COMPLETED**;
+* after deploy: confirm no users listing PII leak on create forms — **PO smoke PASS**;
+* ordinary-user create CTA discoverability corrective — **PRODUCTION VERIFIED** (`814ff96`).
 
-## 15.12 Implementation package sequence (predlog)
+## 15.12 Implementation package sequence (COMPLETED)
 
-1. Schema migration + model fillable/casts + status enum;
-2. Org create privacy-safe submit + neutral flash + invitation mail;
-3. Verified listener + activation catch-up resolver;
-4. Editor query gating + approve re-check + outcome mails (Org);
-5. Subsequent ADD parity + reject note required + mails;
-6. REMOVE-approved mail;
-7. Regression suite + PII leak tests.
+1. Schema migration + model fillable/casts + status enum — **Package 1** (`c6cd96e`);
+2. Org create privacy-safe submit + neutral flash + invitation mail — **Package 2** (`28ee67f`);
+3. Verified listener + activation catch-up resolver — **Package 3** (`cab1edb`);
+4. Editor query gating + approve re-check + outcome mails (Org) — **Package 4** (`28d02ff`);
+5. Subsequent ADD parity + reject note required + mails — **Package 5** (`ce51ee9`);
+6. REMOVE-approved mail — **Package 5**;
+7. Regression suite + PII leak tests — Packages 1–5;
+8. Discoverable ordinary-user CTA — corrective (`814ff96`).
+
+**PO-ORG-06 core V1 = CLOSED.** Optional durable mail retry / `invitation_sent_at` ostaje future/non-blocking.
