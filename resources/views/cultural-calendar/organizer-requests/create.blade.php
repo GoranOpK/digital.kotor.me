@@ -37,15 +37,12 @@
             <input type="text" name="website" value="{{ old('website') }}" class="w-full border-gray-300 rounded-md">
         </div>
         <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Predloženi Moderator (postojeći nalog) *</label>
-            <select name="proposed_moderator_user_id" required class="w-full border-gray-300 rounded-md">
-                <option value="">— izaberite korisnika —</option>
-                @foreach($candidateModerators as $candidate)
-                    <option value="{{ $candidate->id }}" @selected((string) old('proposed_moderator_user_id') === (string) $candidate->id)>
-                        {{ $candidate->name }} ({{ $candidate->email }})
-                    </option>
-                @endforeach
-            </select>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Ime i prezime predloženog Moderatora *</label>
+            <input type="text" name="proposed_moderator_name" value="{{ old('proposed_moderator_name') }}" required class="w-full border-gray-300 rounded-md" autocomplete="name">
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">E-mail predloženog Moderatora *</label>
+            <input type="email" name="proposed_moderator_email" value="{{ old('proposed_moderator_email') }}" required class="w-full border-gray-300 rounded-md" autocomplete="email">
         </div>
         {{-- Inline styles: same visibility guarantee as Event / Manifestation create (Tailwind preflight + utility CSS). --}}
         <button type="submit" style="background:#b91c1c; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;">

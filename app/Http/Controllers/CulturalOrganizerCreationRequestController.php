@@ -6,8 +6,8 @@ use App\Http\Requests\CulturalOrganizerCreationRequestStoreRequest;
 use App\Http\Requests\CulturalRequestDecisionRequest;
 use App\Models\CulturalOrganizer;
 use App\Models\CulturalOrganizerCreationRequest;
-use App\Models\User;
 use App\Services\CulturalOrganizer\OrganizerCreationDecisionService;
+use App\Services\CulturalOrganizer\OrganizerCreationRequestSubmissionService;
 use App\Support\CulturalPortalAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -20,37 +20,18 @@ class CulturalOrganizerCreationRequestController extends Controller
     {
         abort_unless(CulturalPortalAccess::isPlatformUserActive(auth()->user()), 403);
 
-        $candidateModerators = User::query()
-            ->where('activation_status', 'active')
-            ->whereNotNull('email_verified_at')
-            ->orderBy('name')
-            ->limit(200)
-            ->get(['id', 'name', 'email']);
-
-        return view('cultural-calendar.organizer-requests.create', compact('candidateModerators'));
+        return view('cultural-calendar.organizer-requests.create');
     }
 
-    public function store(CulturalOrganizerCreationRequestStoreRequest $request): RedirectResponse
-    {
-        $user = $request->user();
-        $data = $request->validated();
-        $proposedId = (int) $data['proposed_moderator_user_id'];
-
-        CulturalOrganizerCreationRequest::create([
-            'submitter_user_id' => $user->id,
-            'proposed_moderator_user_id' => $proposedId,
-            'proposed_moderator_is_submitter' => $proposedId === (int) $user->id,
-            'proposed_naziv' => $data['naziv'],
-            'proposed_opis' => $data['opis'] ?? null,
-            'proposed_contact_email' => $data['contact_email'] ?? null,
-            'proposed_contact_phone' => $data['contact_phone'] ?? null,
-            'proposed_website' => $data['website'] ?? null,
-            'status' => CulturalOrganizerCreationRequest::STATUS_SUBMITTED,
-        ]);
+    public function store(
+        CulturalOrganizerCreationRequestStoreRequest $request,
+        OrganizerCreationRequestSubmissionService $submissionService
+    ): RedirectResponse {
+        $submissionService->submit($request->user(), $request->validated());
 
         return redirect()
             ->route('cultural-organizer-creation-requests.create')
-            ->with('status', 'Zahtjev za kreiranje Organizatora je podnesen. Organizator još nije kreiran.');
+            ->with('status', OrganizerCreationRequestSubmissionService::NEUTRAL_SUBMIT_STATUS_MESSAGE);
     }
 
     public function index(\Illuminate\Http\Request $request): View
@@ -63,6 +44,13 @@ class CulturalOrganizerCreationRequestController extends Controller
         $status = $request->query('status');
         if (is_string($status) && in_array($status, CulturalOrganizerCreationRequest::STATUSES, true)) {
             $query->where('status', $status);
+        } else {
+            // Default list: awaiting is not decision-ready (PO-ORG-06 / TS §15.7).
+            $query->where(
+                'status',
+                '!=',
+                CulturalOrganizerCreationRequest::STATUS_AWAITING_MODERATOR_ELIGIBILITY
+            );
         }
 
         $requests = $query

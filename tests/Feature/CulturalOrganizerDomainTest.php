@@ -74,43 +74,38 @@ class CulturalOrganizerDomainTest extends TestCase
             'contact_email' => 'info@example.com',
             'contact_phone' => '067000000',
             'website' => 'https://example.com',
-            'proposed_moderator_user_id' => $this->proposedModerator->id,
+            'proposed_moderator_name' => $this->proposedModerator->name,
+            'proposed_moderator_email' => $this->proposedModerator->email,
         ]);
 
         $response->assertRedirect(route('cultural-organizer-creation-requests.create'));
+        $response->assertSessionHas(
+            'status',
+            \App\Services\CulturalOrganizer\OrganizerCreationRequestSubmissionService::NEUTRAL_SUBMIT_STATUS_MESSAGE
+        );
         $this->assertDatabaseCount('cultural_organizer_creation_requests', 1);
         $this->assertDatabaseCount('cultural_organizers', 0);
         $this->assertDatabaseCount('cultural_moderator_authorizations', 0);
 
         $request = CulturalOrganizerCreationRequest::query()->first();
         $this->assertSame(CulturalOrganizerCreationRequest::STATUS_SUBMITTED, $request->status);
+        $this->assertSame($this->proposedModerator->id, $request->proposed_moderator_user_id);
         $this->assertFalse($request->proposed_moderator_is_submitter);
     }
 
-    public function test_proposed_moderator_must_be_active_existing_user(): void
+    public function test_client_cannot_force_proposed_moderator_user_id_on_submit(): void
     {
-        $inactive = User::factory()->create([
-            'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
-            'activation_status' => 'deactivated',
-        ]);
-
         $this->actingAs($this->regularUser)
             ->from(route('cultural-organizer-creation-requests.create'))
             ->post(route('cultural-organizer-creation-requests.store'), [
                 'naziv' => 'Org',
-                'proposed_moderator_user_id' => $inactive->id,
+                'proposed_moderator_name' => $this->proposedModerator->name,
+                'proposed_moderator_email' => $this->proposedModerator->email,
+                'proposed_moderator_user_id' => $this->proposedModerator->id,
             ])
             ->assertSessionHasErrors('proposed_moderator_user_id');
 
-        $this->actingAs($this->regularUser)
-            ->from(route('cultural-organizer-creation-requests.create'))
-            ->post(route('cultural-organizer-creation-requests.store'), [
-                'naziv' => 'Org',
-                'proposed_moderator_user_id' => 999999,
-            ])
-            ->assertSessionHasErrors('proposed_moderator_user_id');
-
-        $this->assertDatabaseCount('cultural_organizers', 0);
+        $this->assertDatabaseCount('cultural_organizer_creation_requests', 0);
     }
 
     public function test_editor_sees_visible_decision_ctas_on_submitted_organizer_request_show(): void
