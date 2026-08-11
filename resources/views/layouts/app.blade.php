@@ -3,6 +3,9 @@
         'cultural-calendar.*',
         'cultural-events.*',
         'cultural-event-entries.*',
+        'cultural-manifestations.*',
+        'cultural-editorial-dashboard.*',
+        'cultural-event-change-proposals.*',
         'cultural-locations.*',
         'cultural-categories.*',
         'cultural-tags.*',
@@ -10,7 +13,12 @@
         'cultural-organizers.*',
         'cultural-organizer-creation-requests.*',
         'cultural-moderator-requests.*',
-        'cultural-moderator-workspace.*'
+        'cultural-moderator-workspace.*',
+        'cultural-moderator-dashboard.*',
+        'cultural-moderator-events.*',
+        'cultural-moderator-manifestations.*',
+        'cultural-moderator-proposals.*',
+        'cultural-moderator-context.*'
     );
 @endphp
 <!DOCTYPE html>

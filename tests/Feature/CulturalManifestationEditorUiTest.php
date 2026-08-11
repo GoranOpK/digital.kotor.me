@@ -68,7 +68,15 @@ class CulturalManifestationEditorUiTest extends TestCase
 
         $this->actingAs($this->editor)
             ->get(route('cultural-manifestations.create'))
-            ->assertOk();
+            ->assertOk()
+            ->assertSee('Nova Manifestacija')
+            ->assertSee('Sačuvaj nacrt')
+            ->assertSee('Odustani')
+            ->assertSee('background:#b91c1c', false)
+            ->assertSee('action="'.route('cultural-manifestations.store').'"', false)
+            ->assertSee('method="POST"', false)
+            ->assertSee('type="submit"', false)
+            ->assertSee('name="naziv"', false);
     }
 
     public function test_ordinary_user_forbidden_and_guest_redirected(): void
@@ -97,8 +105,12 @@ class CulturalManifestationEditorUiTest extends TestCase
 
         $mf = CulturalManifestation::query()->firstOrFail();
         $this->assertSame(CulturalManifestation::STATUS_DRAFT, $mf->status);
+        $this->assertSame('Kotor Art', $mf->naziv);
         $this->assertSame($organizer->id, $mf->organizer_id);
         $this->assertNull($mf->first_submitted_at);
+        $this->assertNull($mf->published_at);
+        $this->assertNull($mf->cancelled_at);
+        $this->assertNull($mf->archived_at);
     }
 
     public function test_store_platform_mf_without_organizer(): void

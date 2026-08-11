@@ -50,7 +50,9 @@
         ])
         @if($contentEditable)
             <div class="mt-6">
-                <button type="submit" class="px-4 py-2 bg-red-700 text-white rounded-md font-semibold">Sačuvaj</button>
+                <button type="submit" style="background:#b91c1c; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;">
+                    Sačuvaj
+                </button>
             </div>
         @endif
     </form>

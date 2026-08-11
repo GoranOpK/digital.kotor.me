@@ -109,6 +109,16 @@ class CulturalModeratorManifestationUiTest extends TestCase
         $this->setContext($this->modA, $this->orgA);
 
         $this->actingAs($this->modA)
+            ->get(route('cultural-moderator-manifestations.create'))
+            ->assertOk()
+            ->assertSee('Nova Manifestacija')
+            ->assertSee('Sačuvaj nacrt')
+            ->assertSee('Odustani')
+            ->assertSee('background:#b91c1c', false)
+            ->assertSee('action="'.route('cultural-moderator-manifestations.store').'"', false)
+            ->assertSee('type="submit"', false);
+
+        $this->actingAs($this->modA)
             ->post(route('cultural-moderator-manifestations.store'), [
                 'naziv' => 'Mod MF',
                 'organizer_id' => $this->orgB->id,

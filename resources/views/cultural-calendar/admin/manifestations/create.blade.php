@@ -19,7 +19,10 @@
             'mediaItems' => $mediaItems,
         ])
         <div class="mt-6 flex gap-2">
-            <button type="submit" class="px-4 py-2 bg-red-700 text-white rounded-md font-semibold">Sačuvaj nacrt</button>
+            {{-- Inline styles: Tailwind preflight leaves submit buttons transparent; missing utility CSS → white-on-white. Match Event create CTA pattern. --}}
+            <button type="submit" style="background:#b91c1c; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;">
+                Sačuvaj nacrt
+            </button>
             <a href="{{ route('cultural-manifestations.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700">Odustani</a>
         </div>
     </form>
