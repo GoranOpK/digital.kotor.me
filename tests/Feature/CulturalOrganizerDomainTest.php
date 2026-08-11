@@ -461,7 +461,8 @@ class CulturalOrganizerDomainTest extends TestCase
         $this->actingAs($this->proposedModerator)
             ->post(route('cultural-moderator-requests.store', $organizer), [
                 'type' => CulturalModeratorRequest::TYPE_ADD,
-                'target_user_id' => $newMod->id,
+                'proposed_moderator_name' => $newMod->name,
+                'proposed_moderator_email' => $newMod->email,
             ])
             ->assertRedirect(route('cultural-moderator-workspace.index'));
 

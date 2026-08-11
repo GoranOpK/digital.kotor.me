@@ -2,17 +2,23 @@
 
 namespace App\Services\CulturalOrganizer;
 
+use App\Mail\CulturalModeratorAddApprovedMail;
+use App\Mail\CulturalModeratorAddRejectedMail;
+use App\Mail\CulturalModeratorRemoveApprovedMail;
 use App\Models\CulturalModeratorAuthorization;
 use App\Models\CulturalModeratorRequest;
 use App\Models\CulturalOrganizer;
 use App\Models\User;
 use App\Support\CulturalPortalAccess;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 use RuntimeException;
+use Throwable;
 
 /**
- * Odluke o zahtjevima za dodjelu / uklanjanje Moderatora + invariant ≥1.
+ * Odluke o zahtjevima za dodjelu / uklanjanje Moderatora + PO-ORG-06 Package 5 outcome emails.
  */
 final class ModeratorRequestDecisionService
 {
@@ -22,7 +28,7 @@ final class ModeratorRequestDecisionService
             throw new RuntimeException('Samo Urednik može odobriti zahtjev.');
         }
 
-        return DB::transaction(function () use ($request, $editor, $decisionNote) {
+        $approved = DB::transaction(function () use ($request, $editor, $decisionNote) {
             /** @var CulturalModeratorRequest $locked */
             $locked = CulturalModeratorRequest::query()
                 ->whereKey($request->id)
@@ -53,8 +59,12 @@ final class ModeratorRequestDecisionService
                 'decision_note' => $decisionNote,
             ]);
 
-            return $locked->fresh();
+            return $locked->fresh(['organizer', 'targetUser']);
         });
+
+        $this->sendApprovalOutcome($approved);
+
+        return $approved;
     }
 
     public function reject(CulturalModeratorRequest $request, User $editor, ?string $decisionNote = null): CulturalModeratorRequest
@@ -63,7 +73,7 @@ final class ModeratorRequestDecisionService
             throw new RuntimeException('Samo Urednik može odbiti zahtjev.');
         }
 
-        return DB::transaction(function () use ($request, $editor, $decisionNote) {
+        $rejected = DB::transaction(function () use ($request, $editor, $decisionNote) {
             /** @var CulturalModeratorRequest $locked */
             $locked = CulturalModeratorRequest::query()
                 ->whereKey($request->id)
@@ -81,8 +91,14 @@ final class ModeratorRequestDecisionService
                 'decision_note' => $decisionNote,
             ]);
 
-            return $locked->fresh();
+            return $locked->fresh(['organizer', 'targetUser']);
         });
+
+        if ($rejected->type === CulturalModeratorRequest::TYPE_ADD) {
+            $this->sendAddRejectionOutcome($rejected);
+        }
+
+        return $rejected;
     }
 
     private function approveAdd(CulturalModeratorRequest $request, CulturalOrganizer $organizer): void
@@ -150,5 +166,70 @@ final class ModeratorRequestDecisionService
             'status' => CulturalModeratorAuthorization::STATUS_REMOVED,
             'removed_at' => now(),
         ]);
+    }
+
+    private function sendApprovalOutcome(CulturalModeratorRequest $request): void
+    {
+        $organizer = $request->organizer ?? CulturalOrganizer::query()->find($request->organizer_id);
+        $recipient = $this->boundTargetRecipient($request);
+
+        if (! $organizer instanceof CulturalOrganizer || $recipient === null) {
+            Log::error('PO-ORG-06 Moderator approval outcome mail skipped: missing organizer/recipient.', [
+                'moderator_request_id' => $request->id,
+            ]);
+
+            return;
+        }
+
+        try {
+            if ($request->type === CulturalModeratorRequest::TYPE_ADD) {
+                Mail::to($recipient)->send(new CulturalModeratorAddApprovedMail($request, $organizer));
+            } elseif ($request->type === CulturalModeratorRequest::TYPE_REMOVE) {
+                Mail::to($recipient)->send(new CulturalModeratorRemoveApprovedMail($request, $organizer));
+            }
+        } catch (Throwable $e) {
+            Log::error('PO-ORG-06 Moderator approval outcome mail failed after successful decision.', [
+                'moderator_request_id' => $request->id,
+                'type' => $request->type,
+                'recipient' => $recipient,
+                'exception' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function sendAddRejectionOutcome(CulturalModeratorRequest $request): void
+    {
+        $organizer = $request->organizer ?? CulturalOrganizer::query()->find($request->organizer_id);
+        $recipient = $this->boundTargetRecipient($request);
+
+        if (! $organizer instanceof CulturalOrganizer || $recipient === null) {
+            Log::error('PO-ORG-06 ADD rejection outcome mail skipped: missing organizer/recipient.', [
+                'moderator_request_id' => $request->id,
+            ]);
+
+            return;
+        }
+
+        try {
+            Mail::to($recipient)->send(new CulturalModeratorAddRejectedMail($request, $organizer));
+        } catch (Throwable $e) {
+            Log::error('PO-ORG-06 ADD rejection outcome mail failed after successful decision.', [
+                'moderator_request_id' => $request->id,
+                'recipient' => $recipient,
+                'exception' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function boundTargetRecipient(CulturalModeratorRequest $request): ?string
+    {
+        $user = User::query()->find($request->target_user_id);
+        if (! $user instanceof User) {
+            return null;
+        }
+
+        $email = trim((string) $user->email);
+
+        return $email !== '' ? $email : null;
     }
 }

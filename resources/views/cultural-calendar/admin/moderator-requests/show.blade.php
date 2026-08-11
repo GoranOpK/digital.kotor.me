@@ -14,7 +14,18 @@
         <p><strong>Organizator:</strong> {{ $requestItem->organizer?->naziv }}</p>
         <p><strong>Tip:</strong> {{ $requestItem->typeLabel() }}</p>
         <p><strong>Podnosilac:</strong> {{ $requestItem->submitter?->name }}</p>
-        <p><strong>Ciljni korisnik:</strong> {{ $requestItem->targetUser?->name }} (ID {{ $requestItem->target_user_id }})</p>
+        <p><strong>Predloženi / ciljni Moderator:</strong>
+            @if($requestItem->targetUser)
+                {{ $requestItem->targetUser->name }} ({{ $requestItem->targetUser->email }})
+            @elseif($requestItem->proposed_moderator_name || $requestItem->proposed_moderator_email)
+                {{ $requestItem->proposed_moderator_name ?: '—' }}
+                @if($requestItem->proposed_moderator_email)
+                    — {{ $requestItem->proposed_moderator_email }}
+                @endif
+            @else
+                —
+            @endif
+        </p>
         <p><strong>Status:</strong> {{ $requestItem->statusLabel() }}</p>
         @if($requestItem->decision_at)
             <p><strong>Odluka:</strong> {{ $requestItem->decisionUser?->name }} — {{ $requestItem->decision_at }}</p>
@@ -23,26 +34,35 @@
     </div>
 
     @if($requestItem->isSubmitted())
-        <div class="bg-white rounded-lg border border-gray-200 p-6 space-y-4">
-            <div>
-                <label class="block text-sm font-medium mb-1">Napomena odluke (opciono)</label>
-                <textarea form="approve-mod-form" name="decision_note" rows="2" class="w-full border-gray-300 rounded-md">{{ old('decision_note') }}</textarea>
-            </div>
-            <div class="flex gap-3 flex-wrap">
-                <form id="approve-mod-form" method="POST" action="{{ route('cultural-moderator-requests.approve', $requestItem) }}">
-                    @csrf
-                    {{-- Inline styles: same visibility guarantee as Organizer decision CTAs (Tailwind utility CSS). --}}
-                    <button type="submit" style="background:#15803d; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;">
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <form method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label class="block text-sm font-medium mb-1">Napomena Urednika</label>
+                    @if($requestItem->type === \App\Models\CulturalModeratorRequest::TYPE_ADD)
+                        <p class="text-xs text-gray-500 mb-1">Obavezna pri odbijanju; opciona pri odobravanju. Pri odbijanju napomena se šalje predloženom Moderatoru e-mailom.</p>
+                    @else
+                        <p class="text-xs text-gray-500 mb-1">Opciona. Odbijanje zahtjeva za uklanjanje ne šalje e-mail ciljnom Moderatoru.</p>
+                    @endif
+                    <textarea name="decision_note" rows="2" class="w-full border-gray-300 rounded-md">{{ old('decision_note') }}</textarea>
+                </div>
+                <div class="flex gap-3 flex-wrap">
+                    <button
+                        type="submit"
+                        formaction="{{ route('cultural-moderator-requests.approve', $requestItem) }}"
+                        style="background:#15803d; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;"
+                    >
                         Odobri
                     </button>
-                </form>
-                <form method="POST" action="{{ route('cultural-moderator-requests.reject', $requestItem) }}">
-                    @csrf
-                    <button type="submit" style="background:#b45309; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;">
+                    <button
+                        type="submit"
+                        formaction="{{ route('cultural-moderator-requests.reject', $requestItem) }}"
+                        style="background:#b45309; color:#fff; padding:10px 16px; border-radius:8px; font-weight:600; border:0; cursor:pointer;"
+                    >
                         Odbij
                     </button>
-                </form>
-            </div>
+                </div>
+            </form>
         </div>
     @endif
 

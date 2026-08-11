@@ -7,8 +7,9 @@ use App\Http\Requests\CulturalRequestDecisionRequest;
 use App\Models\CulturalModeratorAuthorization;
 use App\Models\CulturalModeratorRequest;
 use App\Models\CulturalOrganizer;
-use App\Models\User;
 use App\Services\CulturalOrganizer\ModeratorRequestDecisionService;
+use App\Services\CulturalOrganizer\ModeratorRequestSubmissionService;
+use App\Services\CulturalOrganizer\OrganizerCreationRequestSubmissionService;
 use App\Support\CulturalPortalAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -21,13 +22,6 @@ class CulturalModeratorRequestController extends Controller
     {
         abort_unless(CulturalPortalAccess::canModerateOrganizer(auth()->user(), $organizatori), 403);
 
-        $candidateUsers = User::query()
-            ->where('activation_status', 'active')
-            ->whereNotNull('email_verified_at')
-            ->orderBy('name')
-            ->limit(200)
-            ->get(['id', 'name', 'email']);
-
         $activeModerators = CulturalModeratorAuthorization::query()
             ->with('user')
             ->where('organizer_id', $organizatori->id)
@@ -36,56 +30,36 @@ class CulturalModeratorRequestController extends Controller
 
         return view('cultural-calendar.moderator-requests.create', [
             'organizer' => $organizatori,
-            'candidateUsers' => $candidateUsers,
             'activeModerators' => $activeModerators,
         ]);
     }
 
-    public function store(CulturalModeratorRequestStoreRequest $request, CulturalOrganizer $organizatori): RedirectResponse
-    {
-        $data = $request->validated();
+    public function store(
+        CulturalModeratorRequestStoreRequest $request,
+        CulturalOrganizer $organizatori,
+        ModeratorRequestSubmissionService $submissionService
+    ): RedirectResponse {
+        try {
+            $moderatorRequest = $submissionService->submit(
+                $request->user(),
+                $organizatori,
+                $request->validated()
+            );
+        } catch (InvalidArgumentException $e) {
+            $field = ($request->input('type') === CulturalModeratorRequest::TYPE_REMOVE)
+                ? 'target_user_id'
+                : 'proposed_moderator_email';
 
-        if ($data['type'] === CulturalModeratorRequest::TYPE_REMOVE) {
-            $activeCount = CulturalPortalAccess::activeModeratorCount($organizatori);
-            $isTargetActive = CulturalModeratorAuthorization::query()
-                ->where('organizer_id', $organizatori->id)
-                ->where('user_id', $data['target_user_id'])
-                ->where('status', CulturalModeratorAuthorization::STATUS_ACTIVE)
-                ->exists();
-
-            if (! $isTargetActive) {
-                return back()->withErrors(['target_user_id' => 'Ciljni korisnik nije aktivan Moderator ovog Organizatora.']);
-            }
-
-            if ($activeCount <= 1) {
-                return back()->withErrors(['target_user_id' => 'Nije dozvoljeno podnijeti uklanjanje posljednjeg aktivnog Moderatora.']);
-            }
+            return back()->withErrors([$field => $e->getMessage()])->withInput();
         }
 
-        if ($data['type'] === CulturalModeratorRequest::TYPE_ADD) {
-            $alreadyActive = CulturalModeratorAuthorization::query()
-                ->where('organizer_id', $organizatori->id)
-                ->where('user_id', $data['target_user_id'])
-                ->where('status', CulturalModeratorAuthorization::STATUS_ACTIVE)
-                ->exists();
-
-            if ($alreadyActive) {
-                return back()->withErrors(['target_user_id' => 'Korisnik već ima aktivno ovlašćenje za ovog Organizatora.']);
-            }
-        }
-
-        CulturalModeratorRequest::create([
-            'organizer_id' => $organizatori->id,
-            'submitter_user_id' => $request->user()->id,
-            'target_user_id' => $data['target_user_id'],
-            'type' => $data['type'],
-            'status' => CulturalModeratorRequest::STATUS_SUBMITTED,
-            'decision_note' => null,
-        ]);
+        $flash = $moderatorRequest->type === CulturalModeratorRequest::TYPE_ADD
+            ? OrganizerCreationRequestSubmissionService::NEUTRAL_SUBMIT_STATUS_MESSAGE
+            : 'Zahtjev za uklanjanje Moderatora je podnesen.';
 
         return redirect()
             ->route('cultural-moderator-workspace.index')
-            ->with('status', 'Zahtjev za Moderatora je podnesen.');
+            ->with('status', $flash);
     }
 
     public function index(\Illuminate\Http\Request $request): View
@@ -98,6 +72,12 @@ class CulturalModeratorRequestController extends Controller
         $status = $request->query('status');
         if (is_string($status) && in_array($status, CulturalModeratorRequest::STATUSES, true)) {
             $query->where('status', $status);
+        } else {
+            $query->where(
+                'status',
+                '!=',
+                CulturalModeratorRequest::STATUS_AWAITING_MODERATOR_ELIGIBILITY
+            );
         }
 
         $requests = $query
