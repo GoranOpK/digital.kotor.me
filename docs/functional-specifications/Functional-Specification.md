@@ -89,6 +89,7 @@
 | PATCH-FS-067 | 2026-08-11 | **PO-6B-10:** globalno sortiranje Pretrage kada je Tip sadržaja = Sve — zajednički hronološki poredak Događaja i Manifestacija; NULL last; tie Naziv → tip (tehnički) → ID. Tip=Događaji zadržava BR-281; Tip=Manifestacije zadržava poredak aktivne MF liste. Dodat BR-306; usklađen BR-281. Bez izmjene PO-6B-01/04/05 semantike. Bez izmjene implementacije u ovom docs paketu. Verzija ostaje 1.0.0. |
 | PATCH-FS-068 | 2026-08-11 | **PO-ORG-05 / BM PATCH-067:** napomena Urednika na zahtjevu za kreiranje Organizatora — approve opciono; reject obavezno (ne-prazno); fail-closed bez parcijalnog write-a. Usklađen BR-137; dodat BR-307. Verzija ostaje 1.0.0. |
 | PATCH-FS-069 | 2026-08-11 | **PO-ORG-06 / BM PATCH-068:** privacy-safe Moderator invitation (ime+e-mail; waiting status; eligibility; resolver; neutral flash; emails; duplicates; REMOVE boundary). Usklađeni BR-053, BR-054, BR-135, BR-137, BR-275, BR-307; dodati BR-308–BR-320. Verzija ostaje 1.0.0. **Bez izmjene implementacije** (TARGET vs CURRENT). |
+| PATCH-FS-070 | 2026-08-12 | **PO-MF-WF-01–04 / PO-EV-WF-01 / BM PATCH-070:** dva MF toka po porijeklu kreiranja. Usklađeni BR-100, BR-101, BR-190, BR-195, BR-196; dodati BR-321–BR-325. Event: potvrđen backend guard da Entry bez Organizatora ne koristi submit/approval (BR-018 KEEP). Bez novog DB statusa. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -204,7 +205,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.9 Upravljanje lokacijama (BR-074–BR-080, BR-206–BR-223)
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236, BR-277–BR-279)
    - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
-   - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205)
+   - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205, BR-321–BR-325)
    - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, BR-296–BR-306)
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
@@ -2876,13 +2877,17 @@ Urednik može kreirati manifestaciju u ime bilo kojeg Organizatora ili bez regis
 
 Organizator manifestacije je opcioni podatak.
 
+Porijeklo lifecycle toka određuje akter kreiranja (BR-321), ne samo prisustvo Organizatora.
+
 ---
 
 #### BR-101 – Nacrt i slanje manifestacije na odobrenje
 
 Manifestacija u statusu nacrta može se uređivati.
 
-Prije slanja na odobrenje moraju biti ispunjena poslovna pravila definisana za manifestaciju, uključujući najmanje jedan povezani događaj.
+**Moderator-kreirana:** prije slanja na odobrenje moraju biti ispunjena poslovna pravila definisana za manifestaciju, uključujući najmanje jedan povezani događaj.
+
+**Urednik-kreirana:** ne šalje se na odobrenje; Urednik čuva Nacrt / U pripremi i direktno objavljuje kada su ispunjeni uslovi objave (BR-191 / BR-322).
 
 ---
 
@@ -2901,6 +2906,8 @@ Manifestacija nema status **Odgođena**. Odgađanje pripada isključivo održava
 
 Manifestacija može ostati u statusu **Objavljena** i kada su pojedina održavanja njenih događaja odgođena.
 
+Statusi **Na odobrenju** i **Vraćena na doradu** pripadaju Moderator-kreiranom toku odobravanja; Urednik-kreirana Manifestacija ih ne koristi u redovnom toku (BR-322).
+
 ---
 
 #### BR-190 – Organizator manifestacije
@@ -2915,7 +2922,9 @@ Manifestacija može objedinjavati događaje različitih Organizatora i događaje
 
 Organizator manifestacije ne mora biti isti kao Organizator svih pripadajućih događaja.
 
-Nepostojanje Organizatora ne sprečava kreiranje, slanje na odobrenje, objavu, otkazivanje ili arhiviranje manifestacije.
+Nepostojanje Organizatora ne sprečava kreiranje, objavu, otkazivanje ili arhiviranje manifestacije.
+
+Dodjela Organizatora Urednik-kreiranoj manifestaciji ne pretvara je u Moderator-kreiranu ni ne uvodi approval tok (BR-321).
 
 ---
 
@@ -2976,15 +2985,19 @@ Sve statusne promjene događaja i održavanja izvršavaju se kroz njihove postoj
 
 #### BR-195 – Vraćanje manifestacije na doradu
 
-Urednik može vratiti manifestaciju sa statusa **Na odobrenju** u status **Vraćena na doradu**.
+Urednik može vratiti **Moderator-kreiranu** manifestaciju sa statusa **Na odobrenju** u status **Vraćena na doradu**.
 
 Manifestacija u statusu **Vraćena na doradu** može se uređivati i ponovo poslati na odobrenje kada ispunjava uslove.
+
+Urednik **ne** vraća sopstvenu (Urednik-kreiranu) Manifestaciju na doradu (BR-323).
 
 ---
 
 #### BR-196 – Objava i odobravanje manifestacije
 
-Urednik odobrava i objavljuje manifestaciju kada su ispunjeni uslovi BR-191.
+**Moderator-kreirana (Na odobrenju):** Urednik odobrava i objavljuje kada su ispunjeni uslovi BR-191.
+
+**Urednik-kreirana (Nacrt):** Urednik direktno objavljuje kada su ispunjeni uslovi BR-191 (BR-322); bez prolaska kroz Na odobrenju.
 
 Objavljena manifestacija može se uređivati u skladu sa ovlašćenjima uloga, uključujući podatke manifestacije i povezivanje događaja prema BR-193.
 
@@ -3077,6 +3090,50 @@ Manifestacija je ravnopravan poslovni entitet.
 Poslovno značajne aktivnosti nad manifestacijom vode se u centralnoj Evidenciji aktivnosti, u katalogu Manifestacije (§5.16), u skladu sa BM-14.
 
 **Status:** Approved
+
+---
+
+#### BR-321 – Porijeklo toka Manifestacije (PO-MF-WF-03)
+
+Lifecycle tok Manifestacije određuje akter kreiranja (pouzdani zapis kreatora / uloga Urednik vs Moderator).
+
+**Ne** koristi se isključivo odsustvo Organizatora kao kriterijum.
+
+Dodjela Organizatora Urednik-kreiranoj Manifestaciji ne mijenja porijeklo toka.
+
+---
+
+#### BR-322 – Urednik-kreirana Manifestacija — direktna objava (PO-MF-WF-01)
+
+Tok: create → sačuvaj Nacrt / U pripremi → direktna Objava (BR-191).
+
+Zabranjene poslovne akcije nad Urednik-kreiranom Manifestacijom: Pošalji na odobrenje; ulazak u Na odobrenju kao redovan tok; Vrati na doradu (samoodobravanje / self-return).
+
+UI i backend moraju biti usklađeni (sakrivanje akcije nije dovoljno).
+
+---
+
+#### BR-323 – Moderator-kreirana Manifestacija — odobravanje (PO-MF-WF-02)
+
+Tok: create → Nacrt → Pošalji na odobrenje → Na odobrenju → Urednik Objavi **ili** Vrati na doradu → (ako vraćena) dorada → ponovo pošalji.
+
+Organizer scope Moderatorskog konteksta ostaje neizmijenjen.
+
+---
+
+#### BR-324 – Zabranjeni backend self-submit / self-return (Manifestacija)
+
+Direktni poziv submit / return nad Urednik-kreiranom Manifestacijom mora biti odbijen na domenskom / service sloju.
+
+Urednik-kreirana Manifestacija ne smije legitimno završiti u statusu Na odobrenju kroz redovan tok.
+
+---
+
+#### BR-325 – Event bez Organizatora — bez submit/approval (PO-EV-WF-01)
+
+Postojeći Event model ostaje: Urednik-kreirani Događaj bez registrovanog Organizatora → direktna Objava; Moderator / Događaj sa Organizatorom → approval tok.
+
+Backend mora odbiti submit (Nacrt → Na odobrenju) za Događaj bez Organizatora; UI KEEP ako je već ispravan.
 
 ---
 
@@ -5049,3 +5106,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-11 | FS-001 (PATCH-FS-067): PO-6B-10 — globalno Tip=Sve sortiranje; BR-306; usklađen BR-281. Bez izmjene implementacije u ovom docs paketu. Verzija ostaje 1.0.0. |
 | 2026-08-11 | FS-001 (PATCH-FS-068): PO-ORG-05 / BM PATCH-067 — napomena Urednika na Org creation request; usklađen BR-137; dodat BR-307. Verzija ostaje 1.0.0. |
 | 2026-08-11 | FS-001 (PATCH-FS-069): PO-ORG-06 / BM PATCH-068 — privacy-safe Moderator invitation; usklađeni BR-053/054/055/135/137/275/307; dodati BR-308–BR-320. TARGET vs CURRENT. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
+| 2026-08-12 | FS-001 (PATCH-FS-070): PO-MF-WF-01–04 / BM PATCH-070 — dual MF lifecycle by creator origin; usklađeni BR-100/101/190/195/196; dodati BR-321–BR-325; Event submit guard (BR-325 / BR-018). Verzija ostaje 1.0.0. |

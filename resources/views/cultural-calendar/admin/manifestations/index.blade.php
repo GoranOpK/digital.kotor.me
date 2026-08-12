@@ -72,7 +72,12 @@
                                     <a href="{{ route('cultural-manifestations.edit', $manifestation) }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
                                         {{ $manifestation->isPendingApproval() ? 'Pregled' : (($manifestation->isCancelled() || $manifestation->isArchived()) ? 'Pregled' : 'Uredi') }}
                                     </a>
-                                    @if($manifestation->isDraft() || $manifestation->isReturnedForRevision())
+                                    @if($manifestation->isDraft() && $manifestation->isEditorCreated())
+                                        <form method="POST" action="{{ route('cultural-manifestations.publish', $manifestation) }}">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1.5 border border-green-300 rounded-md text-green-800 hover:bg-green-50">Objavi</button>
+                                        </form>
+                                    @elseif(($manifestation->isDraft() || $manifestation->isReturnedForRevision()) && $manifestation->isModeratorCreated())
                                         <form method="POST" action="{{ route('cultural-manifestations.submit', $manifestation) }}">
                                             @csrf
                                             <button type="submit" class="px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50">Pošalji na odobrenje</button>
@@ -82,10 +87,12 @@
                                             @csrf
                                             <button type="submit" class="px-3 py-1.5 border border-green-300 rounded-md text-green-800 hover:bg-green-50">Objavi</button>
                                         </form>
-                                        <form method="POST" action="{{ route('cultural-manifestations.return', $manifestation) }}">
-                                            @csrf
-                                            <button type="submit" class="px-3 py-1.5 border border-amber-300 rounded-md text-amber-800 hover:bg-amber-50">Vrati na doradu</button>
-                                        </form>
+                                        @if($manifestation->isModeratorCreated())
+                                            <form method="POST" action="{{ route('cultural-manifestations.return', $manifestation) }}">
+                                                @csrf
+                                                <button type="submit" class="px-3 py-1.5 border border-amber-300 rounded-md text-amber-800 hover:bg-amber-50">Vrati na doradu</button>
+                                            </form>
+                                        @endif
                                     @elseif($manifestation->isPublished())
                                         <form method="POST" action="{{ route('cultural-manifestations.cancel', $manifestation) }}">
                                             @csrf

@@ -102,12 +102,40 @@ class CulturalManifestation extends Model
         return self::STATUS_LABELS[$this->status] ?? $this->status;
     }
 
+    /**
+     * PO-MF-WF-03 — porijeklo toka = akter kreiranja (`created_by` → uloga), ne `organizer_id`.
+     */
+    public function isEditorCreated(): bool
+    {
+        $this->loadMissing('creator.role');
+
+        return $this->creator
+            && $this->creator->role
+            && $this->creator->role->name === 'kk_admin';
+    }
+
+    public function isModeratorCreated(): bool
+    {
+        return ! $this->isEditorCreated();
+    }
+
+    /**
+     * PO-MF-WF-01 / PO-MF-WF-02 — draft→published samo Urednik-kreirana; draft→pending samo Moderator-kreirana.
+     */
     public function canTransitionTo(string $target): bool
     {
+        if ($this->status === self::STATUS_DRAFT) {
+            if ($target === self::STATUS_PUBLISHED) {
+                return $this->isEditorCreated();
+            }
+            if ($target === self::STATUS_PENDING_APPROVAL) {
+                return $this->isModeratorCreated();
+            }
+
+            return false;
+        }
+
         $allowed = [
-            self::STATUS_DRAFT => [
-                self::STATUS_PENDING_APPROVAL,
-            ],
             self::STATUS_PENDING_APPROVAL => [
                 self::STATUS_PUBLISHED,
                 self::STATUS_RETURNED_FOR_REVISION,
@@ -124,6 +152,12 @@ class CulturalManifestation extends Model
             ],
             self::STATUS_ARCHIVED => [],
         ][$this->status] ?? [];
+
+        if ($this->status === self::STATUS_PENDING_APPROVAL
+            && $target === self::STATUS_RETURNED_FOR_REVISION
+            && $this->isEditorCreated()) {
+            return false;
+        }
 
         return in_array($target, $allowed, true);
     }

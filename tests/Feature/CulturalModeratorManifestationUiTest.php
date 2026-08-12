@@ -179,7 +179,7 @@ class CulturalModeratorManifestationUiTest extends TestCase
             'naslov' => 'E',
             'organizer_id' => $this->orgA->id,
         ]);
-        $mf = $this->mfWriter->createDraft($this->editor, [
+        $mf = $this->mfWriter->createDraft($this->modA, [
             'naziv' => 'MF',
             'organizer_id' => $this->orgA->id,
             'event_entry_ids' => [$event->id],
@@ -226,8 +226,7 @@ class CulturalModeratorManifestationUiTest extends TestCase
             'organizer_id' => $this->orgA->id,
             'event_entry_ids' => [$published->id, $extra->id],
         ]);
-        $this->mfLifecycle->submitForApproval($mf, $this->editor);
-        $this->mfLifecycle->publish($mf->fresh(), $this->editor);
+        $this->mfLifecycle->publishDirectly($mf, $this->editor);
 
         $this->actingAs($this->modA)
             ->put(route('cultural-moderator-manifestations.update', $mf->fresh()), ['naziv' => 'Hack'])
@@ -249,8 +248,7 @@ class CulturalModeratorManifestationUiTest extends TestCase
             'naziv' => 'Platform',
             'event_entry_ids' => [$this->makePublishedEvent('P2')->id],
         ]);
-        $this->mfLifecycle->submitForApproval($platform, $this->editor);
-        $this->mfLifecycle->publish($platform->fresh(), $this->editor);
+        $this->mfLifecycle->publishDirectly($platform, $this->editor);
 
         $this->actingAs($this->modA)
             ->post(route('cultural-moderator-manifestations.cancel', $platform->fresh()))

@@ -25,14 +25,18 @@
     </div>
 
     <div class="flex flex-wrap gap-2">
-        <form method="POST" action="{{ route('cultural-manifestations.publish', $manifestation) }}">
-            @csrf
-            <button type="submit" class="px-4 py-2 border border-green-600 rounded-md text-green-800 hover:bg-green-50 font-semibold">Objavi</button>
-        </form>
-        <form method="POST" action="{{ route('cultural-manifestations.return', $manifestation) }}">
-            @csrf
-            <button type="submit" class="px-4 py-2 border border-amber-400 rounded-md text-amber-900 hover:bg-amber-50 font-semibold">Vrati na doradu</button>
-        </form>
+        @if($canPublish ?? true)
+            <form method="POST" action="{{ route('cultural-manifestations.publish', $manifestation) }}">
+                @csrf
+                <button type="submit" class="px-4 py-2 border border-green-600 rounded-md text-green-800 hover:bg-green-50 font-semibold">Objavi</button>
+            </form>
+        @endif
+        @if($canReturn ?? false)
+            <form method="POST" action="{{ route('cultural-manifestations.return', $manifestation) }}">
+                @csrf
+                <button type="submit" class="px-4 py-2 border border-amber-400 rounded-md text-amber-900 hover:bg-amber-50 font-semibold">Vrati na doradu</button>
+            </form>
+        @endif
         <a href="{{ route('cultural-manifestations.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700">Nazad</a>
     </div>
 </div>

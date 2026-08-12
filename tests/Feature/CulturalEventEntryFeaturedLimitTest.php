@@ -6,6 +6,8 @@ use App\Exceptions\CulturalEventDomainException;
 use App\Models\CulturalCategory;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
+use App\Models\CulturalOrganizer;
+use App\Models\CulturalOrganizerCreationRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\CulturalEventDomain\EventLifecycle;
@@ -32,6 +34,8 @@ class CulturalEventEntryFeaturedLimitTest extends TestCase
 
     private CulturalCategory $category;
 
+    private CulturalOrganizer $organizer;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -50,6 +54,22 @@ class CulturalEventEntryFeaturedLimitTest extends TestCase
         $this->category = CulturalCategory::create([
             'naziv' => 'Koncerti',
             'status' => CulturalCategory::STATUS_ACTIVE,
+        ]);
+
+        $request = CulturalOrganizerCreationRequest::create([
+            'submitter_user_id' => $this->editor->id,
+            'proposed_moderator_user_id' => $this->editor->id,
+            'proposed_moderator_is_submitter' => true,
+            'proposed_naziv' => 'Org Featured',
+            'status' => CulturalOrganizerCreationRequest::STATUS_APPROVED,
+            'decision_user_id' => $this->editor->id,
+            'decision_at' => now(),
+        ]);
+
+        $this->organizer = CulturalOrganizer::create([
+            'naziv' => 'Org Featured',
+            'status' => CulturalOrganizer::STATUS_ACTIVE,
+            'approved_creation_request_id' => $request->id,
         ]);
     }
 
@@ -136,7 +156,9 @@ class CulturalEventEntryFeaturedLimitTest extends TestCase
     public function test_pending_cannot_be_featured(): void
     {
         $entry = $this->makeReadyDraft('Pending');
-        $this->lifecycle->submitForApproval($entry, $this->editor);
+        $entry->organizer_id = $this->organizer->id;
+        $entry->save();
+        $this->lifecycle->submitForApproval($entry->fresh(), $this->editor);
         $entry->refresh();
         $this->assertSame(CulturalEventEntry::STATUS_PENDING_APPROVAL, $entry->status);
 

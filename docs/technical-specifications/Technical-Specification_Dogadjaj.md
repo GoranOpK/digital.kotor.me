@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Događaj  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.10
-**Datum:** 2026-08-10
+**Verzija:** 0.1.11
+**Datum:** 2026-08-12
 
 ---
 
@@ -27,6 +27,7 @@
 | 0.1.8 | 2026-08-09 | **Faza 6A / PO-TS9-08G:** §4.9 tačka 8 usklađena — V1 javni portal ne prikazuje automatski `cancellation_reason` (BR-272 / BR-284). Bez izmjene implementacije. |
 | 0.1.9 | 2026-08-09 | **PO-6A09-02:** §4.10 tačka 8 — očuvanje izvornog javnog statusa pri arhiviranju (BM-PK-35 / BR-286). Bez izmjene implementacije. |
 | 0.1.10 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** `organizer_manual_name`; XOR sa `organizer_id`; Urednik create/publish/delete draft; direktan published edit (Urednik); opcion `cancellation_reason` + javna napomena; §4.6–§4.9 / §4.12–§4.13 / §6. **Supersede:** apsolutni content lock Objavljenog za urednički tok; zabrana javnog razloga otkazivanja. Bez izmjene implementacije. |
+| 0.1.11 | 2026-08-12 | **PO-EV-WF-01 hardening:** §4.4 — `submitForApproval` / Nacrt→Na odobrenju **odbija** `organizer_id === null` (direktna objava je jedini put); usklađeno sa BR-018 / BR-325. Bez izmjene UI-ja ni ostalih Event lifecycle akcija. |
 
 Napomena:
 
@@ -445,6 +446,8 @@ flowchart TD
 6. Opciona interna napomena Moderator → Urednik nije javna (BR-035).
 
 **Zabrana:** događaj sa Organizatorom ne smije biti direktno objavljen umjesto ovog toka (BR-018, BR-028, BM-ST-04).
+
+**Zabrana (PO-EV-WF-01):** Događaj **bez** Organizatora (`organizer_id === null`) **ne** smije ući u ovaj tok. Domain/`submitForApproval` mora odbiti; jedini put je direktna objava (BR-018 / BR-325). Sakrivanje UI akcije nije dovoljno.
 
 ## 4.5 Urednički pregled, odobrenje i vraćanje
 

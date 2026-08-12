@@ -156,8 +156,7 @@ class CulturalManifestationDomainTest extends TestCase
         ]);
 
         $lifecycle = app(\App\Services\CulturalManifestationDomain\ManifestationLifecycle::class);
-        $lifecycle->submitForApproval($manifestation, $this->editor);
-        $lifecycle->publish($manifestation->fresh(), $this->editor);
+        $lifecycle->publishDirectly($manifestation, $this->editor);
 
         $this->expectException(CulturalEventDomainException::class);
         $this->manifestationWriter->unlinkEvent($manifestation->fresh(), $publishedEvent->id, $this->editor);
@@ -274,8 +273,7 @@ class CulturalManifestationDomainTest extends TestCase
             'event_entry_ids' => [$published->id],
         ]);
         $lifecycle = app(\App\Services\CulturalManifestationDomain\ManifestationLifecycle::class);
-        $lifecycle->submitForApproval($source, $this->editor);
-        $lifecycle->publish($source->fresh(), $this->editor);
+        $lifecycle->publishDirectly($source, $this->editor);
 
         $target = $this->manifestationWriter->createDraft($this->editor, ['naziv' => 'Target']);
 

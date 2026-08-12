@@ -24,6 +24,12 @@
     @endif
 
     <div class="mb-4 flex flex-wrap gap-2">
+        @if($canPublishDirectly ?? false)
+            <form method="POST" action="{{ route('cultural-manifestations.publish', $manifestation) }}">
+                @csrf
+                <button type="submit" class="px-3 py-1.5 border border-green-300 rounded-md text-green-800 hover:bg-green-50">Objavi</button>
+            </form>
+        @endif
         @if($canSubmit)
             <form method="POST" action="{{ route('cultural-manifestations.submit', $manifestation) }}">
                 @csrf

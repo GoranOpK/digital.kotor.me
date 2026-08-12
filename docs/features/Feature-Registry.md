@@ -297,7 +297,7 @@ Povezana dokumentacija (Događaj):
 
 * Business Model — BM-04 (BM-DG-01–BM-DG-13), BM-10 (BM-ST-01–BM-ST-11), BM-UR-12–BM-UR-16, BM-MOD-19, BM-TR-12/19/20, BM-PK-36; PATCH-035/036 (otkazivanje), PATCH-037 (direktna objava / arhiva), **PATCH-053 / PO-DG-07** (terminalnost Otkazan), **PATCH-055 / PO-AUTO-01 / PO-AUTO-02**, **PATCH-056 / PO-DG-08 / PO-DG-09**, **PATCH-057 / PO-DG-10**, **PATCH-058 / PO-N-TR-02-04**, **PATCH-063 / PO-U-01…19** (urednički tok; ručni Org; U pripremi; delete; published edit; razlozi)
 * Functional Specification — §5.4–§5.5, §5.7.1–§5.7.2 (BR-006–BR-044, BR-062–BR-066, BR-131, **BR-287–BR-295**), §5.6 BR-052, §5.16 katalog Događaji; PATCH-FS-037/038/039; **PATCH-FS-053**; **PATCH-FS-056**; **PATCH-FS-057**; **PATCH-FS-058**; **PATCH-FS-063**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija **0.1.10**; Usvojen; PATCH-063 dokumentaciono)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija **0.1.11**; Usvojen; PATCH-063 + PO-EV-WF-01 hardening)
 
 Povezana dokumentacija (Održavanje):
 
@@ -305,9 +305,9 @@ Povezana dokumentacija (Održavanje):
 
 Povezana dokumentacija (Manifestacija):
 
-* Business Model — BM-05 (BM-MF-01–BM-MF-20), PATCH-038–PATCH-039; PO-MF-01–PO-MF-12
+* Business Model — BM-05 (BM-MF-01–BM-MF-23), PATCH-038–PATCH-039, PATCH-070; PO-MF-01–PO-MF-12, PO-MF-WF-01–04
 * Functional Specification — §5.12 (BR-092–BR-101, BR-189–BR-205), §5.16 katalog Manifestacije, PATCH-FS-040–PATCH-FS-041
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Manifestacija.md` (TS-005; verzija **0.1.4**; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Manifestacija.md` (TS-005; verzija **0.1.5**; Usvojen)
 
 Povezana dokumentacija (Lokacije):
 
@@ -375,9 +375,9 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS | Naziv | Feature | Modul | Status |
 | -- | ----- | ------- | ----- | ------ |
 | TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.4.1) — PO-ORG-06 IMPLEMENTED / PRODUCTION VERIFIED |
-| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.10); PATCH-063 docs |
+| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.11); PO-EV-WF-01 hardening |
 | TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.9); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni; PATCH-063 docs |
-| TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.4) |
+| TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.5) |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.2); TS7-PO-07; Faza 6A CAT-CUTOVER ugovor |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
@@ -635,4 +635,5 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-11 | FT-001 — **PO-ORG-05** usvojena: napomena Urednika na zahtjevu za kreiranje Organizatora — approve opciono / reject obavezno; fail-closed; `decision_note` reuse. BM PATCH-067 (BM-ORG-14), FS PATCH-FS-068 (BR-307), TS-001 v0.3.1. Moderator request note rule = unchanged (PO decision required separately). |
 | 2026-08-11 | FT-001 — **PO-ORG-06** usvojena / dokumentovana: privacy-safe Moderator invitation (first + subsequent ADD); waiting status; resolver; emails; REMOVE-approved notify; supersede PO-ORG-02 selection. BM PATCH-068 (BM-ORG-15–19, BM-MOD-20–26), FS PATCH-FS-069 (BR-308–BR-320), TS-001 v0.4.0. **ADOPTED / DOCUMENTED / IMPLEMENTATION NOT STARTED.** CURRENT = users dropdown. RG-001 KEEP. IR/IS KEEP. |
 | 2026-08-12 | FT-001 — **PO-ORG-06 PRODUCTION CLOSEOUT (status sync):** core Packages 1–5 IMPLEMENTED / COMMITTED / PUSHED / PRODUCTION DEPLOYED; Package 1 produkciona migracija RAN; produkcioni smoke PO-confirmed PASS; ordinary-user CTA discoverability corrective `814ff96` (`fix(calendar): expose organizer request action`) PRODUCTION VERIFIED. TS-001 → v0.4.1 (status only). BM PATCH-069 (status napomena). FS KEEP (PATCH-FS-069 historical). **ADOPTED / DOCUMENTED / IMPLEMENTED / PRODUCTION VERIFIED.** Optional durable mail retry / `invitation_sent_at` ostaje non-blocking OUT OF SCOPE. Bez novih poslovnih pravila. RG-001 KEEP. |
+| 2026-08-12 | FT-001 — **PO-MF-WF-01–04 / PO-EV-WF-01** (BM PATCH-070 / FS PATCH-FS-070 / TS-005 v0.1.5): Manifestation editor vs moderator lifecycle corrective by creator origin (`created_by` / `kk_admin`); editor direct publish; backend self-submit/self-return guards; Event no-org submit hardening. **ADOPTED / DOCUMENTED / IMPLEMENTED / TESTED (local).** **NOT COMMITTED / NOT PUSHED / NOT DEPLOYED / NOT PRODUCTION VERIFIED.** Bez migracije/backfill. RG-001 KEEP (PO-MF familija). |
 | 2026-08-10 | FT-001 — **PHASE 6A-CLOSE-02:** legacy admin CRUD `cultural-events.*` disabled (middleware `legacy_cultural_events_disabled` → 403 all methods). Legacy code/table/views retained; `CULTURAL_PUBLIC_READ_SOURCE` + public legacy read rollback retained; canonical routes unchanged. **Nije** hard remove / flag cleanup (Phase B). |

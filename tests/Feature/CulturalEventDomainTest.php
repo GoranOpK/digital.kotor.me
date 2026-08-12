@@ -236,9 +236,12 @@ class CulturalEventDomainTest extends TestCase
 
     public function test_valid_status_transitions_submit_and_approve(): void
     {
+        $organizer = $this->makeActiveOrganizer();
         $entry = $this->makeReadyDraftWithoutOrganizer();
+        $entry->organizer_id = $organizer->id;
+        $entry->save();
 
-        $this->lifecycle->submitForApproval($entry, $this->editor);
+        $this->lifecycle->submitForApproval($entry->fresh(), $this->editor);
         $entry->refresh();
         $this->assertSame(CulturalEventEntry::STATUS_PENDING_APPROVAL, $entry->status);
         $this->assertNotNull($entry->first_submitted_at);

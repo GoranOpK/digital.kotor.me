@@ -159,8 +159,16 @@ class CulturalEventEntryPublishedContentLockTest extends TestCase
 
     public function test_pending_remains_content_locked(): void
     {
-        $entry = $this->makeReadyDraftWithoutOrganizer('Pending');
-        $this->lifecycle->submitForApproval($entry, $this->editor);
+        $entry = $this->writer->createDraft($this->editor, [
+            'naslov' => 'Pending',
+            'category_id' => $this->category->id,
+            'organizer_id' => $this->organizer->id,
+        ]);
+        $this->occurrenceWriter->create($entry, [
+            'datum' => now()->addDays(10)->toDateString(),
+            'cjelodnevno' => true,
+        ]);
+        $this->lifecycle->submitForApproval($entry->fresh(), $this->editor);
         $entry->refresh();
         $this->assertSame(CulturalEventEntry::STATUS_PENDING_APPROVAL, $entry->status);
 

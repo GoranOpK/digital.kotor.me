@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Manifestacija  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.4
+**Verzija:** 0.1.5
 **Datum:** 2026-08-11
 
 ---
@@ -21,6 +21,7 @@
 | 0.1.2 | 2026-07-31 | Usklađenje javnog programa sa BM-MF-13 / BR-192 / PO-TS9-07D: Objavljeni + Otkazani (oznaka „Otkazano“); završeni ostaju. Detalj UI-ja na TS-009. Bez novih poslovnih odluka van usvojenih. |
 | 0.1.3 | 2026-08-11 | 6B-DOC-01 status sync (PO-6B-01…03): potvrđene granice TS-005 prema TS-009 — Manifestacija nema sopstvenu ni agregiranu lokaciju; javni detalj Arhivirane MF ostaje portalni ugovor TS-009; bez posebne MF Arhive u V1. Bez SQL/API/Laravel detalja i bez izmjene poslovnih pravila. |
 | 0.1.4 | 2026-08-11 | PO-6B-08/09 status sync: potvrđeno da javna vidljivost Otkazane MF i Event→MF anti-leak pripadaju TS-009 §6.7–§6.8; domain lifecycle ostaje — Otkazana do isteka perioda → Arhivirana; Objavljena→Arhivirana bez obavezne Otkazane međufaze; MF nema status Odgođena; MF/Event lifecycle nezavisni. Bez izmjene SQL/API/Laravel i bez novih portalnih UI pravila u TS-005. |
+| 0.1.5 | 2026-08-12 | **PO-MF-WF-01–04 / BM PATCH-070 / FS PATCH-FS-070:** razdvojeni EDITOR-CREATED vs MODERATOR-CREATED lifecycle; porijeklo = `created_by` → uloga `kk_admin` (ne `organizer_id`); tehnički statusi KEEP (`draft`, `pending_approval`, `returned_for_revision`, `published`, …); §4 tokovi/matrica/autorizacija usklađeni. Bez nove kolone/migracije. |
 
 Napomena:
 
@@ -289,58 +290,85 @@ Početak = najranije važeće. Završetak = najkasnije važeće. Nakon potvrde n
 Izvori
 
 Business Model:
-- BM-MF-02, BM-MF-06–BM-MF-07, BM-MF-10–BM-MF-15
+- BM-MF-02, BM-MF-06–BM-MF-07, BM-MF-09–BM-MF-15, BM-MF-21–BM-MF-22
 
 Functional Specification:
-- BR-093, BR-097–BR-098, BR-101, BR-189–BR-196, BR-201
+- BR-093, BR-097–BR-098, BR-100–BR-101, BR-189–BR-196, BR-201, BR-321–BR-324
 
-## 4.1 Lifecycle dijagram
+## 4.0 Porijeklo toka (PO-MF-WF-03)
+
+Tehnički kriterijum: `created_by` → korisnik → uloga.
+
+| Porijeklo | Uslov | Lifecycle |
+|-----------|-------|-----------|
+| **EDITOR-CREATED** | creator.role = `kk_admin` | `draft` → `published` (direktna objava) |
+| **MODERATOR-CREATED** | nije EDITOR-CREATED | `draft` → `pending_approval` → `published` **ili** `returned_for_revision` → (edit) → `pending_approval` → … |
+
+**Ne** koristiti `organizer_id === null` kao jedini kriterijum. Dodjela Organizatora EDITOR-CREATED zapisu ne mijenja porijeklo.
+
+Tehnički statusi (DB) ostaju: `draft`, `pending_approval`, `returned_for_revision`, `published`, `cancelled`, `archived`. UI oznaka „U pripremi“ može mapirati na `draft` za urednički tok; **ne** uvodi se novi DB status.
+
+## 4.1 Lifecycle dijagrami
+
+### 4.1.1 EDITOR-CREATED
 
 ```mermaid
 stateDiagram-v2
-  [*] --> Nacrt : Kreiranje
+  [*] --> draft : Kreiranje (kk_admin)
+  draft --> published : Direktna objava (Urednik; BR-191)
+  published --> cancelled : Otkaži
+  published --> archived : Istek trajanja (Sistem)
+  cancelled --> archived : Istek trajanja (Sistem)
+```
 
-  Nacrt --> Na_odobrenju : Pošalji na odobrenje
-  Na_odobrenju --> Objavljena : Odobri / Objavi (Urednik)
-  Na_odobrenju --> Vracena_na_doradu : Vrati na doradu (Urednik)
-  Vracena_na_doradu --> Na_odobrenju : Ponovo pošalji
+Zabranjeno u redovnom toku: `draft` → `pending_approval`; self-return.
 
-  Objavljena --> Otkazana : Otkaži
-  Objavljena --> Arhivirana : Istek trajanja (Sistem)
-  Otkazana --> Arhivirana : Istek trajanja (Sistem)
+### 4.1.2 MODERATOR-CREATED
 
-  state "Na odobrenju" as Na_odobrenju
-  state "Vraćena na doradu" as Vracena_na_doradu
+```mermaid
+stateDiagram-v2
+  [*] --> draft : Kreiranje (Moderator)
+  draft --> pending_approval : Pošalji na odobrenje
+  pending_approval --> published : Objavi (Urednik)
+  pending_approval --> returned_for_revision : Vrati na doradu (Urednik)
+  returned_for_revision --> pending_approval : Ponovo pošalji
+  published --> cancelled : Otkaži
+  published --> archived : Istek trajanja (Sistem)
+  cancelled --> archived : Istek trajanja (Sistem)
 ```
 
 Napomena: Otkazana → Arhivirana usklađeno sa PO-MF-11 / BR-204.
 
 ## 4.2 Matrica statusa
 
-| Status | Svrha | Ulaz | Izlaz | Ko |
-|--------|-------|------|-------|-----|
-| **Nacrt** | Radna verzija | Kreiranje | Na odobrenju | Moderator / Urednik |
-| **Na odobrenju** | Čeka odluku | Slanje | Objavljena; Vraćena na doradu | Moderator (slanje); Urednik (odluka) |
-| **Vraćena na doradu** | Potrebne izmjene | Vraćanje | Na odobrenju | Urednik (vraćanje); Moderator / Urednik (ponovno slanje) |
-| **Objavljena** | Javna; ≥1 Objavljen DG | Odobrenje | Otkazana; Arhivirana | Urednik (otkaz); Sistem (arhiva) |
-| **Otkazana** | Otkazana do isteka trajanja | Otkaz | Arhivirana | Moderator (Org. MF) / Urednik; Sistem (arhiva) |
-| **Arhivirana** | Istorija | Sistem | — | Sistem |
+| Status (tehnički) | UI | Svrha | Ulaz | Izlaz | Ko / napomena |
+|-------------------|----|-------|------|-------|---------------|
+| **draft** | Nacrt / U pripremi | Radna verzija | Kreiranje; (Editor: samo create/save) | EDITOR: `published`; MOD: `pending_approval` | Kreator po porijeklu |
+| **pending_approval** | Na odobrenju | Čeka odluku | MOD submit / resubmit | `published`; `returned_for_revision` | Samo MODERATOR-CREATED |
+| **returned_for_revision** | Vraćena na doradu | Potrebne izmjene | Urednik return | `pending_approval` | Samo MODERATOR-CREATED |
+| **published** | Objavljena | Javna; ≥1 Objavljen DG | Direct publish (Editor) ili approve (Mod pending) | `cancelled`; `archived` | Urednik / Sistem |
+| **cancelled** | Otkazana | Otkazana do isteka | Otkaz | `archived` | Mod (Org.) / Urednik; Sistem |
+| **archived** | Arhivirana | Istorija | Sistem | — | Sistem |
 
 ## 4.3 Kreiranje i Nacrt
 
 1. Moderator kreira u kontekstu svog Organizatora, ili Urednik kreira sa Org. ili bez Org. (BR-100).
 2. Nacrt može biti bez Događaja (BR-093).
 3. Uređivanje nacrta: naziv, opis, Org. (opciono), fotografija, URL, povezivanje Događaja.
+4. `created_by` se postavlja pri create i određuje porijeklo (BR-321).
 
-## 4.4 Slanje na odobrenje
+## 4.4 Slanje na odobrenje (samo MODERATOR-CREATED)
 
-1. Validacija: ≥1 Događaj (BM-MF-02, BR-101).
-2. Status → **Na odobrenju**.
+1. Validacija: ≥1 Događaj (BM-MF-02, BR-101); porijeklo ≠ EDITOR-CREATED (BR-324).
+2. Status → **pending_approval**.
+3. EDITOR-CREATED: domain odbija submit.
 
 ## 4.5 Vraćanje na doradu i objava
 
-1. Urednik vraća → **Vraćena na doradu** (BR-195).
-2. Urednik odobrava/objavljuje samo ako BR-191: ≥1 Događaj **i** ≥1 Objavljen Događaj → **Objavljena**.
+1. Urednik vraća **samo** MODERATOR-CREATED `pending_approval` → **returned_for_revision** (BR-195 / BR-323).
+2. Urednik objavljuje MODERATOR-CREATED pending samo ako BR-191 → **published**.
+3. Urednik direktno objavljuje EDITOR-CREATED `draft` ako BR-191 → **published** (BR-322); isti publish gate.
+4. EDITOR-CREATED self-return zabranjen.
 
 ## 4.6 Uređivanje objavljene i program
 
@@ -364,11 +392,11 @@ Sistem postavlja **Arhivirana** nakon isteka planiranog trajanja — iz **Objavl
 Izvori
 
 Business Model:
-- BM-MF-09, BM-MF-12
+- BM-MF-09, BM-MF-12, BM-MF-21–BM-MF-22
 - BM-02 / BM-03 (uloge)
 
 Functional Specification:
-- BR-100, BR-190, BR-195–BR-196
+- BR-100, BR-190, BR-195–BR-196, BR-321–BR-324
 
 Organizator (entitet) ne izvršava radnje.
 
@@ -376,9 +404,10 @@ Organizator (entitet) ne izvršava radnje.
 |--------|-----------------------------------|---------|-------------------------|
 | Kreirati MF sa Org. | Da — svoj Org. | Da | Ne |
 | Kreirati MF bez Org. | Ne | Da | Ne |
-| Uređivati Nacrt / Vraćena na doradu | Da — MF svog Org. | Da | Ne |
-| Slanje na odobrenje | Da — MF svog Org. | Da | Ne |
-| Vraćanje / odobrenje / objava | Ne | Da | Ne |
+| Uređivati Nacrt / Vraćena na doradu | Da — MF svog Org. (MOD-CREATED) | Da | Ne |
+| Slanje na odobrenje | Da — MOD-CREATED MF svog Org. | Ne — EDITOR-CREATED; ne self-submit | Ne |
+| Direktna objava draft→published | Ne | Da — samo EDITOR-CREATED + BR-191 | Ne |
+| Vraćanje / odobrenje pending | Ne | Da — samo MOD-CREATED pending | Ne |
 | Dodati / ukloniti Događaj (Objavljena) | Da — MF svog Org. | Da | Ne |
 | Otkaži | Da — MF svog Org. (aktivan kontekst) | Da — bilo koja | Ne — nema redovnu poslovnu ulogu |
 | Automatska arhiva | Ne | Ne | Ne — Sistem |

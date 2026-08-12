@@ -63,9 +63,10 @@ class CulturalEventEntryLifecycleTest extends TestCase
         $this->occurrenceWriter = app(OccurrenceWriter::class);
     }
 
-    public function test_valid_draft_can_be_submitted(): void
+    public function test_valid_draft_with_organizer_can_be_submitted(): void
     {
-        $entry = $this->makeReadyDraft('Za odobrenje');
+        $organizer = $this->makeActiveOrganizer();
+        $entry = $this->makeReadyDraft('Za odobrenje', ['organizer_id' => $organizer->id]);
 
         $this->actingAs($this->editor)
             ->post(route('cultural-event-entries.submit', $entry))
@@ -78,9 +79,24 @@ class CulturalEventEntryLifecycleTest extends TestCase
         $this->assertDatabaseCount('cultural_events', 0);
     }
 
+    public function test_editor_created_without_organizer_cannot_submit(): void
+    {
+        $entry = $this->makeReadyDraft('No Org Submit');
+
+        $this->actingAs($this->editor)
+            ->from(route('cultural-event-entries.edit', $entry))
+            ->post(route('cultural-event-entries.submit', $entry))
+            ->assertRedirect(route('cultural-event-entries.edit', $entry))
+            ->assertSessionHasErrors('domain');
+
+        $this->assertSame(CulturalEventEntry::STATUS_DRAFT, $entry->fresh()->status);
+        $this->assertNull($entry->fresh()->first_submitted_at);
+    }
+
     public function test_resubmit_after_return_keeps_first_submitted_at(): void
     {
-        $entry = $this->makeReadyDraft('Ponovo');
+        $organizer = $this->makeActiveOrganizer();
+        $entry = $this->makeReadyDraft('Ponovo', ['organizer_id' => $organizer->id]);
         $this->lifecycle->submitForApproval($entry, $this->editor);
         $entry->refresh();
         $first = $entry->first_submitted_at->copy();
@@ -285,7 +301,8 @@ class CulturalEventEntryLifecycleTest extends TestCase
 
     public function test_ordinary_user_cannot_lifecycle_actions(): void
     {
-        $entry = $this->makeReadyDraft('Zabranjeno');
+        $organizer = $this->makeActiveOrganizer();
+        $entry = $this->makeReadyDraft('Zabranjeno', ['organizer_id' => $organizer->id]);
 
         $this->actingAs($this->regularUser)
             ->post(route('cultural-event-entries.submit', $entry))
@@ -345,7 +362,8 @@ class CulturalEventEntryLifecycleTest extends TestCase
 
     private function makePending(string $naslov): CulturalEventEntry
     {
-        $entry = $this->makeReadyDraft($naslov);
+        $organizer = $this->makeActiveOrganizer();
+        $entry = $this->makeReadyDraft($naslov, ['organizer_id' => $organizer->id]);
         $this->lifecycle->submitForApproval($entry, $this->editor);
 
         return $entry->fresh();

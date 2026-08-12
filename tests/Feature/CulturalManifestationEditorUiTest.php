@@ -166,45 +166,32 @@ class CulturalManifestationEditorUiTest extends TestCase
         $this->assertNull($draft->fresh()->manifestation_id);
     }
 
-    public function test_editorial_lifecycle_submit_return_publish_cancel_without_reason(): void
+    public function test_editor_created_draft_shows_publish_hides_submit_and_direct_publishes(): void
     {
         $publishedEvent = $this->makePublishedEvent('Pub');
         $mf = $this->mfWriter->createDraft($this->editor, [
-            'naziv' => 'Lifecycle MF',
+            'naziv' => 'Editor Direct MF',
             'event_entry_ids' => [$publishedEvent->id],
         ]);
 
         $this->actingAs($this->editor)
-            ->post(route('cultural-manifestations.submit', $mf))
-            ->assertRedirect();
-        $this->assertSame(CulturalManifestation::STATUS_PENDING_APPROVAL, $mf->fresh()->status);
+            ->get(route('cultural-manifestations.edit', $mf))
+            ->assertOk()
+            ->assertSee('Objavi', false)
+            ->assertDontSee('Pošalji na odobrenje', false)
+            ->assertDontSee('Vrati na doradu', false);
 
         $this->actingAs($this->editor)
-            ->put(route('cultural-manifestations.update', $mf), ['naziv' => 'Hacked'])
-            ->assertSessionHasErrors('domain');
+            ->get(route('cultural-manifestations.index'))
+            ->assertOk()
+            ->assertSee('Objavi', false)
+            ->assertDontSee('Pošalji na odobrenje', false);
 
         $this->actingAs($this->editor)
-            ->post(route('cultural-manifestations.return', $mf))
-            ->assertRedirect();
-        $this->assertSame(CulturalManifestation::STATUS_RETURNED_FOR_REVISION, $mf->fresh()->status);
-
-        $this->actingAs($this->editor)
-            ->post(route('cultural-manifestations.submit', $mf->fresh()))
-            ->assertRedirect();
-
-        $this->actingAs($this->editor)
-            ->post(route('cultural-manifestations.publish', $mf->fresh()))
+            ->post(route('cultural-manifestations.publish', $mf))
             ->assertRedirect();
         $this->assertSame(CulturalManifestation::STATUS_PUBLISHED, $mf->fresh()->status);
         $this->assertNotNull($mf->fresh()->published_at);
-
-        $this->actingAs($this->editor)
-            ->put(route('cultural-manifestations.update', $mf->fresh()), [
-                'naziv' => 'Published rename',
-                'opis' => 'Updated',
-            ])
-            ->assertRedirect();
-        $this->assertSame('Published rename', $mf->fresh()->naziv);
 
         $eventStatusBefore = $publishedEvent->fresh()->status;
         $this->actingAs($this->editor)
@@ -214,6 +201,48 @@ class CulturalManifestationEditorUiTest extends TestCase
         $this->assertSame($eventStatusBefore, $publishedEvent->fresh()->status);
     }
 
+    public function test_editor_created_backend_rejects_self_submit_and_self_return(): void
+    {
+        $publishedEvent = $this->makePublishedEvent('Pub');
+        $mf = $this->mfWriter->createDraft($this->editor, [
+            'naziv' => 'No Self Approve',
+            'event_entry_ids' => [$publishedEvent->id],
+        ]);
+
+        $this->actingAs($this->editor)
+            ->post(route('cultural-manifestations.submit', $mf))
+            ->assertSessionHasErrors('domain');
+        $this->assertSame(CulturalManifestation::STATUS_DRAFT, $mf->fresh()->status);
+
+        $this->expectException(\App\Exceptions\CulturalEventDomainException::class);
+        $this->mfLifecycle->returnToRevision($mf->fresh(), $this->editor);
+    }
+
+    public function test_editor_created_with_organizer_still_uses_direct_publish(): void
+    {
+        $organizer = $this->makeOrganizer();
+        $publishedEvent = $this->makePublishedEvent('Pub Org');
+        $mf = $this->mfWriter->createDraft($this->editor, [
+            'naziv' => 'Editor with Org',
+            'organizer_id' => $organizer->id,
+            'event_entry_ids' => [$publishedEvent->id],
+        ]);
+
+        $this->assertTrue($mf->isEditorCreated());
+        $this->assertNotNull($mf->organizer_id);
+
+        $this->actingAs($this->editor)
+            ->get(route('cultural-manifestations.edit', $mf))
+            ->assertOk()
+            ->assertSee('Objavi', false)
+            ->assertDontSee('Pošalji na odobrenje', false);
+
+        $this->actingAs($this->editor)
+            ->post(route('cultural-manifestations.publish', $mf))
+            ->assertRedirect();
+        $this->assertSame(CulturalManifestation::STATUS_PUBLISHED, $mf->fresh()->status);
+    }
+
     public function test_publish_gate_and_no_delete_route(): void
     {
         $draftEvent = $this->makeDraftEvent('Only draft');
@@ -221,11 +250,11 @@ class CulturalManifestationEditorUiTest extends TestCase
             'naziv' => 'Gate MF',
             'event_entry_ids' => [$draftEvent->id],
         ]);
-        $this->mfLifecycle->submitForApproval($mf, $this->editor);
 
         $this->actingAs($this->editor)
             ->post(route('cultural-manifestations.publish', $mf->fresh()))
             ->assertSessionHasErrors('domain');
+        $this->assertSame(CulturalManifestation::STATUS_DRAFT, $mf->fresh()->status);
 
         $this->actingAs($this->editor)
             ->delete('/kalendar-kulture/kanonske-manifestacije/'.$mf->id)

@@ -83,6 +83,7 @@
 | PATCH-067 | 2026-08-11 | **PO-ORG-05:** Napomena Urednika na zahtjevu za kreiranje Organizatora — pri odobravanju opciona; pri odbijanju obavezna (ne-prazna); bez napomene odbijanje nije dozvoljeno; zahtjev ostaje Podnesen; napomena se trajno čuva uz odluku. Usklađeni BM-ORG-09, BM-ORG-11; dodat BM-ORG-14. Ispravljena zastarjela napomena o implementaciji u BM-01 (zahtjevi su implementirani). Usklađeno sa FS PATCH-FS-068 / TS-001 v0.3.1. |
 | PATCH-068 | 2026-08-11 | **PO-ORG-06:** Privacy-safe invitation model za početnog i narednog Moderatora — unos ime+e-mail (bez users kataloga); eksplicitno stanje „Čeka registraciju Moderatora“; automatski prelaz u „Podnesen“ kada predloženi Moderator postane eligible (verified+active); Urednik odlučuje samo nad Podnesen; neutralna poruka podnosiocu; invitation / outcome / REMOVE-approved email ugovori; supersede starog „samo postojeći user_id“ modela (PO-ORG-02 selection assumption). Usklađeni BM-ORG-07/09/11, BM-MOD-12/13/15/17; dodati BM-ORG-15–BM-ORG-19, BM-MOD-20–BM-MOD-26. PO-ORG-05 KEEP. Usklađeno sa FS PATCH-FS-069 / TS-001 v0.4.0. **Bez izmjene implementacije** u ovom docs paketu (TARGET vs CURRENT). |
 | PATCH-069 | 2026-08-12 | **PO-ORG-06 PRODUCTION CLOSEOUT (status sync):** ažurirana samo napomena o implementaciji u BM-01 — privacy-safe invitation ugovor je **IMPLEMENTED / PRODUCTION VERIFIED** (Packages 1–5; produkciona migracija; smoke PO-confirmed; CTA discoverability). **Bez izmjene poslovnih pravila** BM-ORG-*/BM-MOD-*. Usklađeno sa TS-001 v0.4.1 / Feature Registry status sync. FS PATCH-FS-069 historical KEEP. |
+| PATCH-070 | 2026-08-12 | **PO-MF-WF-01–PO-MF-WF-04 / PO-EV-WF-01:** razdvojeni lifecycle tokovi Manifestacije po **porijeklu kreiranja** (akter kreiranja / `created_by` uloga), ne po `organizer_id`. Urednik-kreirana MF: Nacrt/U pripremi → direktna Objava (bez Pošalji na odobrenje / Na odobrenju / Vrati na doradu). Moderator-kreirana MF: Nacrt → odobravanje → Objava ili Vrati na doradu → resubmit. Usklađeni BM-MF-02/09/10; dodati BM-MF-21–BM-MF-23. Event model KEEP; potvrđen backend guard da Događaj bez Organizatora ne ulazi u submit/approval. Bez novog statusa; bez migracije/backfill/brisanja produkcijskih MF. |
 
 Napomena:
 
@@ -650,7 +651,11 @@ SEO slug nije poslovni zahtjev V1. Sistem može koristiti interni identifikator 
 
 Manifestaciju može kreirati Moderator organizatora u ime svog Organizatora. Urednik može kreirati Manifestaciju u ime bilo kojeg Organizatora ili bez registrovanog Organizatora, u skladu sa BM-03.
 
-Manifestacija može biti sačuvana u statusu Nacrt i slobodno uređivana. Za slanje na odobrenje mora ispunjavati BM-MF-02 i ostala pravila ovog poglavlja.
+**Porijeklo toka (PO-MF-WF-03):** koji lifecycle tok važi određuje **akter kreiranja** Manifestacije, ne prisustvo Organizatora. Manifestacija koju je kreirao Urednik ostaje Urednik-kreirana i kada joj Urednik naknadno dodijeli Organizatora.
+
+**Urednik-kreirana Manifestacija (PO-MF-WF-01):** čuva se kao Nacrt / U pripremi i, kada su ispunjeni uslovi objave, Urednik je **neposredno objavljuje**. Ne prolazi postupak odobravanja; ne postoje poslovne akcije Pošalji na odobrenje, Na odobrenju ni Vrati na doradu za tu Manifestaciju.
+
+**Moderator-kreirana Manifestacija (PO-MF-WF-02):** Nacrt → Pošalji na odobrenje → Na odobrenju → Urednik Objavi ili Vrati na doradu → (ako vraćena) Moderator dorada → ponovo pošalji. Za slanje na odobrenje mora ispunjavati BM-MF-02 i ostala pravila ovog poglavlja.
 
 Manifestacija može biti otkazana. Otkazivanje izvršava Moderator u aktivnom kontekstu Organizatora kojim upravlja Manifestacija (u ime tog Organizatora), isključivo za Manifestacije tog Organizatora. Urednik može otkazati bilo koju Manifestaciju. Administrator platforme nema redovnu poslovnu ulogu u otkazivanju. Otkazivanje ne briše Događaje i ne mijenja njihove statuse niti statuse Održavanja.
 
@@ -659,16 +664,16 @@ Manifestacija može biti otkazana. Otkazivanje izvršava Moderator u aktivnom ko
 | Oznaka | Pravilo |
 |--------|---------|
 | BM-MF-01 | Manifestacija predstavlja zasebnu programsku cjelinu Kalendara kulture koja pod zajedničkim nazivom, identitetom i programskim okvirom objedinjuje jedan ili više povezanih Događaja. |
-| BM-MF-02 | Manifestacija može biti kreirana bez Događaja isključivo dok se nalazi u statusu Nacrt. Za slanje Manifestacije na odobrenje mora sadržati najmanje jedan Događaj. |
+| BM-MF-02 | Manifestacija može biti kreirana bez Događaja isključivo dok se nalazi u statusu Nacrt. Za slanje **Moderator-kreirane** Manifestacije na odobrenje mora sadržati najmanje jedan Događaj. Urednik-kreirana Manifestacija ne šalje se na odobrenje (BM-MF-21 / BM-MF-22). |
 | BM-MF-03 | Manifestacija može sadržati jedan ili više Događaja. Jedan Događaj može pripadati najviše jednoj Manifestaciji. Pripadnost nije obavezna. Promjena pripadnosti vrši se premještanjem. Detaljna pravila za Događaje: BM-04. |
 | BM-MF-04 | Manifestacija nema sopstvena održavanja. Održavanja imaju isključivo Događaji. Detaljna pravila: BM-06. |
 | BM-MF-05 | Početak i završetak Manifestacije sistem određuje automatski iz važećih održavanja Objavljenih Događaja (isključujući Otkazana i Odgođena bez potvrđenog novog termina). Ručni unos trajanja nije poslovni zahtjev. |
 | BM-MF-06 | Objavljena Manifestacija se automatski arhivira nakon isteka planiranog trajanja. Otkazana Manifestacija ostaje Otkazana do isteka planiranog trajanja, zatim je Sistem automatski arhivira. Arhiviranje se ne izvršava ručno. Arhiviranje Manifestacije ne arhivira automatski Događaje niti Održavanja. Prikaz arhive: BM-11. |
 | BM-MF-07 | Manifestacija može biti otkazana i dobija status Otkazana. Moderator u aktivnom kontekstu Organizatora može otkazati Manifestaciju kojom taj Organizator upravlja. Urednik može otkazati bilo koju Manifestaciju. Administrator platforme nema redovnu poslovnu ulogu u otkazivanju. Otkazivanje ne briše Događaje i ne mijenja njihove statuse niti statuse Održavanja. |
 | BM-MF-08 | Manifestacija ima sopstvene podatke (naziv, opis, opciona naslovna fotografija, opciono polje Web stranica / Više informacije). Ne nasljeđuje podatke od Događaja. Bez SEO slug-a kao poslovnog zahtjeva V1. Mediji: BM-09. |
-| BM-MF-09 | Manifestaciju može kreirati Moderator u ime svog Organizatora. Urednik može kreirati Manifestaciju u ime bilo kojeg Organizatora ili bez Organizatora (BM-03). |
-| BM-MF-10 | Manifestacija može biti sačuvana kao Nacrt i uređivana. Za slanje na odobrenje mora ispunjavati BM-MF-02 i ostala pravila ovog poglavlja. |
-| BM-MF-11 | Statusi Manifestacije: Nacrt, Na odobrenju, Vraćena na doradu, Objavljena, Otkazana, Arhivirana. Nema statusa Odgođena. Odgađanje pripada Održavanju. |
+| BM-MF-09 | Manifestaciju može kreirati Moderator u ime svog Organizatora. Urednik može kreirati Manifestaciju u ime bilo kojeg Organizatora ili bez Organizatora (BM-03). Porijeklo toka = akter kreiranja (BM-MF-21), ne samo prisustvo Organizatora. |
+| BM-MF-10 | Manifestacija može biti sačuvana kao Nacrt i uređivana. **Moderator-kreirana:** za slanje na odobrenje mora ispunjavati BM-MF-02 i ostala pravila ovog poglavlja. **Urednik-kreirana:** Urednik čuva Nacrt / U pripremi i direktno objavljuje kada su ispunjeni uslovi objave (BM-MF-13 / BM-MF-22); bez samoodobravanja. |
+| BM-MF-11 | Statusi Manifestacije: Nacrt, Na odobrenju, Vraćena na doradu, Objavljena, Otkazana, Arhivirana. Nema statusa Odgođena. Odgađanje pripada Održavanju. Statusi Na odobrenju i Vraćena na doradu pripadaju **Moderator-kreiranom** toku odobravanja; Urednik-kreirana Manifestacija ne prolazi te statuse u redovnom toku (BM-MF-22). |
 | BM-MF-12 | Organizator Manifestacije je opcioni. Manifestacija može objedinjavati Događaje različitih Organizatora i Događaje bez Organizatora. Organizator MF ne mora biti isti kao Organizator svih Događaja. |
 | BM-MF-13 | Objava Manifestacije zahtijeva najmanje jedan Događaj i najmanje jedan pripadajući Događaj u statusu Objavljen. U programu Objavljene Manifestacije na javnom portalu prikazuju se Objavljeni Događaji; Otkazani Događaji ostaju prikazani uz oznaku „Otkazano“; završeni Objavljeni Događaji ostaju prikazani. Nacrti i događaji na odobrenju / vraćeni na doradu nisu javno vidljivi. Program se može postepeno dopunjavati. |
 | BM-MF-14 | Objavljenoj Manifestaciji dozvoljeno je dodavanje i uklanjanje Događaja bez promjene statusa Manifestacije i bez ponovnog odobravanja, uz uslov da Manifestacija zadrži najmanje jedan Objavljeni Događaj. Uklanjanje ne briše Događaj niti mijenja njegov status. |
@@ -678,6 +683,9 @@ Manifestacija može biti otkazana. Otkazivanje izvršava Moderator u aktivnom ko
 | BM-MF-18 | Polje Web stranica / Više informacije je opciono i može sadržati eksterni URL. Ne zamjenjuje termine ni lokacije u sistemu. |
 | BM-MF-19 | Objavljena Manifestacija mora u svakom trenutku imati najmanje jedan Objavljeni Događaj. Uklanjanje ili premještanje posljednjeg Objavljenog Događaja nije dozvoljeno; Sistem odbija radnju. |
 | BM-MF-20 | Manifestacija je ravnopravan poslovni entitet. Poslovno značajne aktivnosti nad Manifestacijom vode se u centralnoj Evidenciji aktivnosti (BM-14), u skladu sa katalogom u Functional Specification. |
+| BM-MF-21 | Porijeklo lifecycle toka Manifestacije određuje akter kreiranja (pouzdani zapis kreatora / uloga Urednik vs Moderator). **Ne** koristi se isključivo `organizer_id === null` kao kriterijum. Dodjela Organizatora Urednik-kreiranoj Manifestaciji ne mijenja porijeklo toka. |
+| BM-MF-22 | **Urednik-kreirana Manifestacija:** Nacrt / U pripremi → direktna Objava (kada su ispunjeni uslovi BM-MF-13). Zabranjene poslovne akcije nad tom Manifestacijom: Pošalji na odobrenje, Vrati na doradu, te ulazak u status Na odobrenju kao dio redovnog toka. **Moderator-kreirana Manifestacija:** Nacrt → Pošalji na odobrenje → Na odobrenju → Urednik Objavi ili Vrati na doradu → (ako vraćena) dorada i ponovno slanje. |
+| BM-MF-23 | Postojeći produkcijski zapisi Manifestacija iz perioda testiranja smiju se kasnije kontrolisano obrisati posebnim PO-kontrolisanim produkcijskim korakom. Brisanje i data backfill radi očuvanja testnih zapisa **nisu** dio redovnog lifecycle paketa. |
 
 ## 5. Otvorena pitanja
 

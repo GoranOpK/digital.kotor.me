@@ -24,6 +24,8 @@ class CulturalManifestationLifecycleTest extends TestCase
 
     private User $editor;
 
+    private User $moderator;
+
     private EventWriter $eventWriter;
 
     private EventLifecycle $eventLifecycle;
@@ -45,6 +47,10 @@ class CulturalManifestationLifecycleTest extends TestCase
             'role_id' => Role::where('name', 'kk_admin')->firstOrFail()->id,
             'activation_status' => 'active',
         ]);
+        $this->moderator = User::factory()->create([
+            'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
+            'activation_status' => 'active',
+        ]);
 
         $this->eventWriter = app(EventWriter::class);
         $this->eventLifecycle = app(EventLifecycle::class);
@@ -54,23 +60,36 @@ class CulturalManifestationLifecycleTest extends TestCase
         $this->maintenance = app(ManifestationLifecycleMaintenance::class);
     }
 
-    public function test_submit_requires_at_least_one_linked_event_and_sets_first_submitted_only_once(): void
-    {
-        $manifestation = $this->manifestationWriter->createDraft($this->editor, ['naziv' => 'MF']);
-
-        $this->expectException(CulturalEventDomainException::class);
-        $this->manifestationLifecycle->submitForApproval($manifestation, $this->editor);
-    }
-
-    public function test_submit_return_resubmit_flow_preserves_first_submitted_at(): void
+    public function test_editor_created_cannot_submit_for_approval(): void
     {
         $event = $this->makeDraftEvent();
         $manifestation = $this->manifestationWriter->createDraft($this->editor, [
+            'naziv' => 'Editor MF',
+            'event_entry_ids' => [$event->id],
+        ]);
+
+        $this->expectException(CulturalEventDomainException::class);
+        $this->expectExceptionMessage('ne prolazi postupak odobravanja');
+        $this->manifestationLifecycle->submitForApproval($manifestation, $this->editor);
+    }
+
+    public function test_moderator_submit_requires_at_least_one_linked_event(): void
+    {
+        $manifestation = $this->manifestationWriter->createDraft($this->moderator, ['naziv' => 'MF']);
+
+        $this->expectException(CulturalEventDomainException::class);
+        $this->manifestationLifecycle->submitForApproval($manifestation, $this->moderator);
+    }
+
+    public function test_moderator_submit_return_resubmit_flow_preserves_first_submitted_at(): void
+    {
+        $event = $this->makeDraftEvent();
+        $manifestation = $this->manifestationWriter->createDraft($this->moderator, [
             'naziv' => 'MF',
             'event_entry_ids' => [$event->id],
         ]);
 
-        $submitted = $this->manifestationLifecycle->submitForApproval($manifestation, $this->editor);
+        $submitted = $this->manifestationLifecycle->submitForApproval($manifestation, $this->moderator);
         $this->assertSame(CulturalManifestation::STATUS_PENDING_APPROVAL, $submitted->status);
         $this->assertNotNull($submitted->first_submitted_at);
         $firstTs = $submitted->first_submitted_at;
@@ -78,7 +97,7 @@ class CulturalManifestationLifecycleTest extends TestCase
         $returned = $this->manifestationLifecycle->returnToRevision($submitted, $this->editor);
         $this->assertSame(CulturalManifestation::STATUS_RETURNED_FOR_REVISION, $returned->status);
 
-        $resubmitted = $this->manifestationLifecycle->submitForApproval($returned, $this->editor);
+        $resubmitted = $this->manifestationLifecycle->submitForApproval($returned, $this->moderator);
         $this->assertSame(CulturalManifestation::STATUS_PENDING_APPROVAL, $resubmitted->status);
         $this->assertTrue($firstTs->equalTo($resubmitted->first_submitted_at));
     }
@@ -86,39 +105,37 @@ class CulturalManifestationLifecycleTest extends TestCase
     public function test_return_to_revision_does_not_require_reason(): void
     {
         $event = $this->makeDraftEvent();
-        $manifestation = $this->manifestationWriter->createDraft($this->editor, [
+        $manifestation = $this->manifestationWriter->createDraft($this->moderator, [
             'naziv' => 'MF',
             'event_entry_ids' => [$event->id],
         ]);
-        $submitted = $this->manifestationLifecycle->submitForApproval($manifestation, $this->editor);
+        $submitted = $this->manifestationLifecycle->submitForApproval($manifestation, $this->moderator);
 
         $returned = $this->manifestationLifecycle->returnToRevision($submitted, $this->editor);
 
         $this->assertSame(CulturalManifestation::STATUS_RETURNED_FOR_REVISION, $returned->status);
     }
 
-    public function test_publish_requires_at_least_one_published_event_and_sets_published_at(): void
+    public function test_editor_direct_publish_requires_published_event(): void
     {
         $draftEvent = $this->makeDraftEvent();
         $manifestation = $this->manifestationWriter->createDraft($this->editor, [
             'naziv' => 'MF',
             'event_entry_ids' => [$draftEvent->id],
         ]);
-        $manifestation = $this->manifestationLifecycle->submitForApproval($manifestation, $this->editor);
 
         $this->expectException(CulturalEventDomainException::class);
-        $this->manifestationLifecycle->publish($manifestation, $this->editor);
+        $this->manifestationLifecycle->publishDirectly($manifestation, $this->editor);
     }
 
-    public function test_publish_cancel_archive_and_terminal_rules(): void
+    public function test_editor_direct_publish_cancel_archive_and_terminal_rules(): void
     {
         $publishedEvent = $this->makePublishedEvent('2024-01-10');
         $manifestation = $this->manifestationWriter->createDraft($this->editor, [
             'naziv' => 'MF',
             'event_entry_ids' => [$publishedEvent->id],
         ]);
-        $manifestation = $this->manifestationLifecycle->submitForApproval($manifestation, $this->editor);
-        $manifestation = $this->manifestationLifecycle->publish($manifestation, $this->editor);
+        $manifestation = $this->manifestationLifecycle->publishDirectly($manifestation, $this->editor);
 
         $this->assertSame(CulturalManifestation::STATUS_PUBLISHED, $manifestation->status);
         $this->assertNotNull($manifestation->published_at);
@@ -133,6 +150,19 @@ class CulturalManifestationLifecycleTest extends TestCase
         $this->manifestationLifecycle->publish($manifestation, $this->editor);
     }
 
+    public function test_moderator_pending_publish_requires_published_event(): void
+    {
+        $draftEvent = $this->makeDraftEvent();
+        $manifestation = $this->manifestationWriter->createDraft($this->moderator, [
+            'naziv' => 'MF',
+            'event_entry_ids' => [$draftEvent->id],
+        ]);
+        $manifestation = $this->manifestationLifecycle->submitForApproval($manifestation, $this->moderator);
+
+        $this->expectException(CulturalEventDomainException::class);
+        $this->manifestationLifecycle->publish($manifestation, $this->editor);
+    }
+
     public function test_archived_is_terminal(): void
     {
         $publishedEvent = $this->makePublishedEvent('2024-01-10');
@@ -140,8 +170,7 @@ class CulturalManifestationLifecycleTest extends TestCase
             'naziv' => 'MF',
             'event_entry_ids' => [$publishedEvent->id],
         ]);
-        $manifestation = $this->manifestationLifecycle->submitForApproval($manifestation, $this->editor);
-        $manifestation = $this->manifestationLifecycle->publish($manifestation, $this->editor);
+        $manifestation = $this->manifestationLifecycle->publishDirectly($manifestation, $this->editor);
         $manifestation = $this->manifestationLifecycle->archiveIfEligible($manifestation);
 
         $this->assertSame(CulturalManifestation::STATUS_ARCHIVED, $manifestation->status);
@@ -157,17 +186,17 @@ class CulturalManifestationLifecycleTest extends TestCase
         $futureEvent = $this->makePublishedEvent(now()->addDays(5)->format('Y-m-d'), 'Future');
         $cancelExpiredEvent = $this->makePublishedEvent('2020-01-05', 'CancelExpired');
 
-        $publishedExpired = $this->publishManifestationWithEvent($expiredEvent, 'MF expired');
-        $publishedFuture = $this->publishManifestationWithEvent($futureEvent, 'MF future');
-        $cancelledExpired = $this->publishManifestationWithEvent($cancelExpiredEvent, 'MF cancel exp');
+        $publishedExpired = $this->publishEditorManifestationWithEvent($expiredEvent, 'MF expired');
+        $publishedFuture = $this->publishEditorManifestationWithEvent($futureEvent, 'MF future');
+        $cancelledExpired = $this->publishEditorManifestationWithEvent($cancelExpiredEvent, 'MF cancel exp');
         $cancelledExpired = $this->manifestationLifecycle->cancel($cancelledExpired, $this->editor);
 
         $draftMf = $this->manifestationWriter->createDraft($this->editor, ['naziv' => 'Draft']);
-        $pendingMf = $this->manifestationWriter->createDraft($this->editor, [
+        $pendingMf = $this->manifestationWriter->createDraft($this->moderator, [
             'naziv' => 'Pending',
             'event_entry_ids' => [$this->makeDraftEvent('Pending event')->id],
         ]);
-        $pendingMf = $this->manifestationLifecycle->submitForApproval($pendingMf, $this->editor);
+        $pendingMf = $this->manifestationLifecycle->submitForApproval($pendingMf, $this->moderator);
         $reworkMf = $this->manifestationLifecycle->returnToRevision($pendingMf, $this->editor);
 
         $result = $this->maintenance->archiveEligibleManifestations();
@@ -193,15 +222,14 @@ class CulturalManifestationLifecycleTest extends TestCase
         ]);
     }
 
-    private function publishManifestationWithEvent(CulturalEventEntry $event, string $name): CulturalManifestation
+    private function publishEditorManifestationWithEvent(CulturalEventEntry $event, string $name): CulturalManifestation
     {
         $mf = $this->manifestationWriter->createDraft($this->editor, [
             'naziv' => $name,
             'event_entry_ids' => [$event->id],
         ]);
-        $mf = $this->manifestationLifecycle->submitForApproval($mf, $this->editor);
 
-        return $this->manifestationLifecycle->publish($mf, $this->editor);
+        return $this->manifestationLifecycle->publishDirectly($mf, $this->editor);
     }
 
     private function makeDraftEvent(string $title = 'DG'): CulturalEventEntry
@@ -231,4 +259,3 @@ class CulturalManifestationLifecycleTest extends TestCase
         return $entry->fresh();
     }
 }
-

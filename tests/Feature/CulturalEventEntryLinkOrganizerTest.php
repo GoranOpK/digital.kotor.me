@@ -128,8 +128,10 @@ class CulturalEventEntryLinkOrganizerTest extends TestCase
         $this->assertDomainRejects(fn () => $this->writer->linkOrganizer($draft, $this->editor, $this->organizer->id));
 
         [$ready] = $this->makeReadyDraftWithoutOrganizer('Pending');
-        $pending = $this->lifecycle->submitForApproval($ready, $this->editor);
-        $this->assertDomainRejects(fn () => $this->writer->linkOrganizer($pending, $this->editor, $this->organizer->id));
+        $ready->organizer_id = $this->organizer->id;
+        $ready->save();
+        $pending = $this->lifecycle->submitForApproval($ready->fresh(), $this->editor);
+        $this->assertDomainRejects(fn () => $this->writer->linkOrganizer($pending, $this->editor, $this->organizerB->id));
 
         [$published] = $this->makePublishedWithoutOrganizer('Za otkaz');
         $cancelled = $this->lifecycle->cancel($published, $this->editor, 'Otkaz za BR-052');

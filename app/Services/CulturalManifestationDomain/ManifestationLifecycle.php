@@ -10,8 +10,13 @@ use Illuminate\Support\Facades\DB;
 
 final class ManifestationLifecycle
 {
+    /**
+     * PO-MF-WF-02 — Moderator-kreirana MF: Nacrt / Vraćena → Na odobrenju.
+     * PO-MF-WF-01 — Urednik-kreirana MF ne smije ući u approval tok.
+     */
     public function submitForApproval(CulturalManifestation $manifestation, User $actor): CulturalManifestation
     {
+        $this->assertNotEditorCreatedForApprovalFlow($manifestation);
         $this->assertTransition($manifestation, CulturalManifestation::STATUS_PENDING_APPROVAL);
         $this->assertReadyForSubmit($manifestation);
 
@@ -22,6 +27,7 @@ final class ManifestationLifecycle
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            $this->assertNotEditorCreatedForApprovalFlow($locked);
             $this->assertTransition($locked, CulturalManifestation::STATUS_PENDING_APPROVAL);
             $this->assertReadyForSubmit($locked);
 
@@ -38,11 +44,13 @@ final class ManifestationLifecycle
 
     /**
      * PO-6B-06 — razlog vraćanja nije obavezan i ne persistira se.
+     * PO-MF-WF-01 / PO-MF-WF-02 — samo Moderator-kreirana pending MF.
      */
     public function returnToRevision(
         CulturalManifestation $manifestation,
         User $actor,
     ): CulturalManifestation {
+        $this->assertNotEditorCreatedForApprovalFlow($manifestation);
         $this->assertTransition($manifestation, CulturalManifestation::STATUS_RETURNED_FOR_REVISION);
 
         return DB::transaction(function () use ($manifestation, $actor) {
@@ -52,6 +60,7 @@ final class ManifestationLifecycle
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            $this->assertNotEditorCreatedForApprovalFlow($locked);
             $this->assertTransition($locked, CulturalManifestation::STATUS_RETURNED_FOR_REVISION);
 
             $locked->status = CulturalManifestation::STATUS_RETURNED_FOR_REVISION;
@@ -62,6 +71,59 @@ final class ManifestationLifecycle
         });
     }
 
+    /**
+     * PO-MF-WF-01 — Urednik-kreirana MF: Nacrt → Objavljena (isti publish gate BR-191).
+     */
+    public function publishDirectly(CulturalManifestation $manifestation, User $actor): CulturalManifestation
+    {
+        if (! $manifestation->isDraft()) {
+            throw new CulturalEventDomainException(
+                'Direktna objava dozvoljena je samo Manifestaciji u statusu Nacrt.'
+            );
+        }
+        if (! $manifestation->isEditorCreated()) {
+            throw new CulturalEventDomainException(
+                'Direktna objava dozvoljena je samo Manifestaciji koju je kreirao Urednik.'
+            );
+        }
+        $this->assertTransition($manifestation, CulturalManifestation::STATUS_PUBLISHED);
+        $this->assertReadyForPublish($manifestation);
+
+        return DB::transaction(function () use ($manifestation, $actor) {
+            /** @var CulturalManifestation $locked */
+            $locked = CulturalManifestation::query()
+                ->whereKey($manifestation->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! $locked->isDraft()) {
+                throw new CulturalEventDomainException(
+                    'Direktna objava dozvoljena je samo Manifestaciji u statusu Nacrt.'
+                );
+            }
+            if (! $locked->isEditorCreated()) {
+                throw new CulturalEventDomainException(
+                    'Direktna objava dozvoljena je samo Manifestaciji koju je kreirao Urednik.'
+                );
+            }
+            $this->assertTransition($locked, CulturalManifestation::STATUS_PUBLISHED);
+            $this->assertReadyForPublish($locked);
+
+            $locked->status = CulturalManifestation::STATUS_PUBLISHED;
+            $locked->published_at = now();
+            $locked->last_modified_by = $actor->id;
+            if ($locked->first_submitted_at === null) {
+                $locked->first_submitted_at = now();
+            }
+            $locked->save();
+
+            return $locked->fresh();
+        });
+    }
+
+    /**
+     * PO-MF-WF-02 — Moderator pending → Objavljena (Urednik odobrava).
+     */
     public function publish(CulturalManifestation $manifestation, User $actor): CulturalManifestation
     {
         $this->assertTransition($manifestation, CulturalManifestation::STATUS_PUBLISHED);
@@ -84,6 +146,15 @@ final class ManifestationLifecycle
 
             return $locked->fresh();
         });
+    }
+
+    private function assertNotEditorCreatedForApprovalFlow(CulturalManifestation $manifestation): void
+    {
+        if ($manifestation->isEditorCreated()) {
+            throw new CulturalEventDomainException(
+                'Manifestacija koju je kreirao Urednik ne prolazi postupak odobravanja; koristite direktnu objavu.'
+            );
+        }
     }
 
     public function cancel(CulturalManifestation $manifestation, User $actor): CulturalManifestation

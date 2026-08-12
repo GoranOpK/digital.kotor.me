@@ -113,6 +113,8 @@ class CulturalEventEntryPublishDirectlyTest extends TestCase
     public function test_publish_directly_rejects_non_draft_status(): void
     {
         [$entry] = $this->makeReadyDraftWithoutOrganizer('Pending path');
+        $entry->organizer_id = $this->organizer->id;
+        $entry->save();
         $this->lifecycle->submitForApproval($entry->fresh(), $this->editor);
 
         $this->expectException(CulturalEventDomainException::class);

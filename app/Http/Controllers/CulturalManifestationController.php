@@ -28,7 +28,7 @@ class CulturalManifestationController extends Controller
     public function index(Request $request): View
     {
         $query = CulturalManifestation::query()
-            ->with(['organizer'])
+            ->with(['organizer', 'creator.role'])
             ->withCount('events');
 
         $status = $request->query('status');
@@ -76,15 +76,18 @@ class CulturalManifestationController extends Controller
 
     public function edit(CulturalManifestation $kanonska_manifestacija): View
     {
-        $kanonska_manifestacija->load(['organizer', 'coverMedia', 'events.organizer']);
+        $kanonska_manifestacija->load(['organizer', 'coverMedia', 'events.organizer', 'creator.role']);
 
         $period = $this->periodCalculator->calculate($kanonska_manifestacija);
         $catalogs = $this->formCatalogs($kanonska_manifestacija);
+        $editorCreated = $kanonska_manifestacija->isEditorCreated();
 
         if ($kanonska_manifestacija->isPendingApproval()) {
             return view('cultural-calendar.admin.manifestations.show-pending', [
                 'manifestation' => $kanonska_manifestacija,
                 'period' => $period,
+                'canReturn' => ! $editorCreated,
+                'canPublish' => true,
             ]);
         }
 
@@ -104,13 +107,17 @@ class CulturalManifestationController extends Controller
             ]);
         }
 
+        $isDraftOrReturned = $kanonska_manifestacija->isDraft()
+            || $kanonska_manifestacija->isReturnedForRevision();
+
         return view('cultural-calendar.admin.manifestations.edit', array_merge($catalogs, [
             'manifestation' => $kanonska_manifestacija,
             'period' => $period,
             'contentEditable' => true,
             'linksEditable' => true,
             'canCancel' => $kanonska_manifestacija->isPublished(),
-            'canSubmit' => $kanonska_manifestacija->isDraft() || $kanonska_manifestacija->isReturnedForRevision(),
+            'canSubmit' => ! $editorCreated && $isDraftOrReturned,
+            'canPublishDirectly' => $editorCreated && $kanonska_manifestacija->isDraft(),
         ]));
     }
 
@@ -158,7 +165,12 @@ class CulturalManifestationController extends Controller
     public function publish(CulturalManifestation $kanonska_manifestacija): RedirectResponse
     {
         try {
-            $this->lifecycle->publish($kanonska_manifestacija, request()->user());
+            $kanonska_manifestacija->loadMissing('creator.role');
+            if ($kanonska_manifestacija->isDraft() && $kanonska_manifestacija->isEditorCreated()) {
+                $this->lifecycle->publishDirectly($kanonska_manifestacija, request()->user());
+            } else {
+                $this->lifecycle->publish($kanonska_manifestacija, request()->user());
+            }
         } catch (CulturalEventDomainException $e) {
             return redirect()->back()->withErrors(['domain' => $e->getMessage()]);
         }

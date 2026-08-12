@@ -18,9 +18,17 @@ final class EventLifecycle
 {
     /**
      * Nacrt → Na odobrenju.
+     * PO-EV-WF-01 / BM-ST-04 — Događaj bez registrovanog Organizatora ne šalje se na odobrenje
+     * (urednički tok = direktna objava).
      */
     public function submitForApproval(CulturalEventEntry $entry, User $actor): CulturalEventEntry
     {
+        if ($entry->organizer_id === null) {
+            throw new CulturalEventDomainException(
+                'Događaj bez Organizatora ne šalje se na odobrenje; koristite direktnu objavu.'
+            );
+        }
+
         $this->assertTransition($entry, CulturalEventEntry::STATUS_PENDING_APPROVAL);
         $this->assertReadyForPublishGate($entry);
 
