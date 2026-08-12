@@ -25,9 +25,11 @@
         'cultural-moderator-context.*'
     );
 
-    // Public portal (`cultural-calendar.*`) vs editorial management: both MF entries keep
-    // the business label "Manifestacije", but must not render together in one nav context.
+    // Public portal (`cultural-calendar.*`) vs editorial management: public and editorial
+    // entrypoints use distinct labels and must not render together in one nav context.
     $isKkPublicPortalContext = request()->routeIs('cultural-calendar.*');
+    $showPublicEventsNav = ! $isKkAdmin || $isKkPublicPortalContext;
+    $showEditorialEventsNav = $isKkAdmin && ! $isKkPublicPortalContext;
     $showPublicManifestationsNav = ! $isKkAdmin || $isKkPublicPortalContext;
     $showEditorialManifestationsNav = $isKkAdmin && ! $isKkPublicPortalContext;
 
@@ -124,10 +126,13 @@
                                 href="{{ route('cultural-calendar.index') }}"
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.index')) }}"
                             >Kalendar kulture</a>
-                            <a
-                                href="{{ route('cultural-calendar.events') }}"
-                                style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.events')) }}"
-                            >Pretraga i pregled</a>
+                            @if($showPublicEventsNav)
+                                <a
+                                    href="{{ route('cultural-calendar.events') }}"
+                                    data-kk-nav="events-public"
+                                    style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.events')) }}"
+                                >Događaji</a>
+                            @endif
                             <a
                                 href="{{ route('cultural-calendar.archive') }}"
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.archive')) }}"
@@ -143,16 +148,19 @@
                                 href="{{ route('cultural-editorial-dashboard.index') }}"
                                 style="{{ $kkNavBtn(request()->routeIs('cultural-editorial-dashboard.*')) }}"
                             >Urednički rad</a>
-                            <a
-                                href="{{ route('cultural-event-entries.index') }}"
-                                style="{{ $kkNavBtn(request()->routeIs('cultural-event-entries.*')) }}"
-                            >Događaji</a>
+                            @if($showEditorialEventsNav)
+                                <a
+                                    href="{{ route('cultural-event-entries.index') }}"
+                                    data-kk-nav="events-editorial"
+                                    style="{{ $kkNavBtn(request()->routeIs('cultural-event-entries.*')) }}"
+                                >Upravljanje događajima</a>
+                            @endif
                             @if($showEditorialManifestationsNav)
                                 <a
                                     href="{{ route('cultural-manifestations.index') }}"
                                     data-kk-nav="mf-editorial"
                                     style="{{ $kkNavBtn(request()->routeIs('cultural-manifestations.*')) }}"
-                                >Manifestacije</a>
+                                >Upravljanje manifestacijama</a>
                             @endif
                             <a
                                 href="{{ route('cultural-locations.index') }}"
@@ -208,7 +216,7 @@
                         <a
                             href="{{ route('cultural-calendar.events') }}"
                             style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.events')) }}"
-                        >Pretraga i pregled</a>
+                        >Događaji</a>
                         <a
                             href="{{ route('cultural-calendar.archive') }}"
                             style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.archive')) }}"
@@ -334,10 +342,13 @@
                     href="{{ route('cultural-calendar.index') }}"
                     style="{{ $kkNavBtnMobile(request()->routeIs('cultural-calendar.index')) }}"
                 >Kalendar kulture</a>
-                <a
-                    href="{{ route('cultural-calendar.events') }}"
-                    style="{{ $kkNavBtnMobile(request()->routeIs('cultural-calendar.events')) }}"
-                >Pretraga i pregled</a>
+                @if($showPublicEventsNav)
+                    <a
+                        href="{{ route('cultural-calendar.events') }}"
+                        data-kk-nav="events-public"
+                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-calendar.events')) }}"
+                    >Događaji</a>
+                @endif
                 <a
                     href="{{ route('cultural-calendar.archive') }}"
                     style="{{ $kkNavBtnMobile(request()->routeIs('cultural-calendar.archive')) }}"
@@ -364,16 +375,19 @@
                         href="{{ route('cultural-editorial-dashboard.index') }}"
                         style="{{ $kkNavBtnMobile(request()->routeIs('cultural-editorial-dashboard.*')) }}"
                     >Urednički rad</a>
-                    <a
-                        href="{{ route('cultural-event-entries.index') }}"
-                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-event-entries.*')) }}"
-                    >Događaji</a>
+                    @if($showEditorialEventsNav)
+                        <a
+                            href="{{ route('cultural-event-entries.index') }}"
+                            data-kk-nav="events-editorial"
+                            style="{{ $kkNavBtnMobile(request()->routeIs('cultural-event-entries.*')) }}"
+                        >Upravljanje događajima</a>
+                    @endif
                     @if($showEditorialManifestationsNav)
                         <a
                             href="{{ route('cultural-manifestations.index') }}"
                             data-kk-nav="mf-editorial"
                             style="{{ $kkNavBtnMobile(request()->routeIs('cultural-manifestations.*')) }}"
-                        >Manifestacije</a>
+                        >Upravljanje manifestacijama</a>
                     @endif
                     <a
                         href="{{ route('cultural-locations.index') }}"

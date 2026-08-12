@@ -31,9 +31,13 @@
         || $q !== null
         || $category !== null
         || $location !== null;
+
+    $user = auth()->user();
+    $isKkAdmin = $user && $user->role && $user->role->name === 'kk_admin';
+    $kkEditorialCtaStyle = 'display:inline-block; background:#b91c1c; color:#fff; text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600;';
 @endphp
 <div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">
                 @if($eventFiltersApplicable && $weekStart && $weekEnd)
@@ -55,9 +59,18 @@
                 </p>
             @endif
         </div>
-        <a href="{{ route('cultural-calendar.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
-            Nazad na Kalendar kulture
-        </a>
+        <div class="flex items-center gap-2 flex-wrap justify-end">
+            @if($isKkAdmin)
+                <a
+                    href="{{ route('cultural-event-entries.index') }}"
+                    data-kk-bridge="events-editorial"
+                    style="{{ $kkEditorialCtaStyle }}"
+                >Upravljanje događajima</a>
+            @endif
+            <a href="{{ route('cultural-calendar.index') }}" class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                Nazad na Kalendar kulture
+            </a>
+        </div>
     </div>
 
     <form

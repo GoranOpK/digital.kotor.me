@@ -240,14 +240,20 @@ class CulturalManifestationEditorUiTest extends TestCase
             ->get(route('cultural-calendar.index'))
             ->assertOk();
         $publicHtml = $public->getContent();
+        $this->assertSame(2, substr_count($publicHtml, 'data-kk-nav="events-public"'));
         $this->assertSame(2, substr_count($publicHtml, 'data-kk-nav="mf-public"'));
+        $this->assertSame(0, substr_count($publicHtml, 'data-kk-nav="events-editorial"'));
         $this->assertSame(0, substr_count($publicHtml, 'data-kk-nav="mf-editorial"'));
+        $this->assertMatchesRegularExpression(
+            '/data-kk-nav="events-public"[^>]*>\s*Događaji\s*</u',
+            $publicHtml
+        );
         $this->assertMatchesRegularExpression(
             '/data-kk-nav="mf-public"[^>]*>\s*Manifestacije\s*</u',
             $publicHtml
         );
-        $this->assertStringContainsString(route('cultural-calendar.manifestations'), $publicHtml);
-        $this->assertStringNotContainsString(route('cultural-manifestations.index'), $publicHtml);
+        $this->assertStringContainsString(route('cultural-calendar.events'), $publicHtml);
+        $this->assertStringNotContainsString(route('cultural-event-entries.index'), $publicHtml);
         $public->assertDontSee('Upravljanje manifestacijama');
 
         // Editorial context: editorial MF nav only; bridge via Urednički rad / Događaji remains.
@@ -255,16 +261,22 @@ class CulturalManifestationEditorUiTest extends TestCase
             ->get(route('cultural-manifestations.index'))
             ->assertOk();
         $editorialHtml = $editorial->getContent();
+        $this->assertSame(0, substr_count($editorialHtml, 'data-kk-nav="events-public"'));
         $this->assertSame(0, substr_count($editorialHtml, 'data-kk-nav="mf-public"'));
+        $this->assertSame(2, substr_count($editorialHtml, 'data-kk-nav="events-editorial"'));
         $this->assertSame(2, substr_count($editorialHtml, 'data-kk-nav="mf-editorial"'));
         $this->assertMatchesRegularExpression(
-            '/data-kk-nav="mf-editorial"[^>]*>\s*Manifestacije\s*</u',
+            '/data-kk-nav="events-editorial"[^>]*>\s*Upravljanje događajima\s*</u',
+            $editorialHtml
+        );
+        $this->assertMatchesRegularExpression(
+            '/data-kk-nav="mf-editorial"[^>]*>\s*Upravljanje manifestacijama\s*</u',
             $editorialHtml
         );
         $this->assertStringContainsString(route('cultural-manifestations.index'), $editorialHtml);
-        $this->assertStringContainsString(route('cultural-editorial-dashboard.index'), $editorialHtml);
         $this->assertStringContainsString(route('cultural-event-entries.index'), $editorialHtml);
-        $editorial->assertDontSee('Upravljanje manifestacijama');
+        $this->assertStringContainsString(route('cultural-editorial-dashboard.index'), $editorialHtml);
+        $editorial->assertSee('Upravljanje manifestacijama', false);
 
         // Ordinary users: public MF only; never editorial.
         $this->actingAs($this->ordinary)
