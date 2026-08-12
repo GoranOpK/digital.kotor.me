@@ -81,6 +81,17 @@
             max-width: 100%;
             box-sizing: border-box;
         }
+        .kk-admin-nav-desktop[data-kk-nav-context="public"] {
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .kk-admin-nav-desktop[data-kk-nav-context="public"] .kk-admin-nav-row {
+            width: auto;
+            max-width: none;
+            flex-wrap: nowrap;
+        }
     }
 </style>
 @endif
