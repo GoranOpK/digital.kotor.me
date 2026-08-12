@@ -51,11 +51,8 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
             'Kalendar kulture',
             'Događaji',
             'Arhiva događaja',
-            'Urednički rad',
-            'Lokacije',
-            'Kategorije',
-            'Oznake',
-            'Mediji',
+            'Manifestacije',
+            'Urednički portal',
         ] as $label) {
             $this->assertMatchesRegularExpression(
                 '/background:#(?:7a0f17|5f0c12)[^>]*>'.preg_quote($label, '/').'</',
@@ -66,6 +63,9 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
 
         $this->assertStringNotContainsString('>Kanonski događaji<', $html);
         $this->assertStringNotContainsString('href="'.e(route('cultural-events.index')).'"', $html);
+        $this->assertStringNotContainsString('>Urednički rad<', $html);
+        $this->assertStringNotContainsString('>Lokacije<', $html);
+        $this->assertStringNotContainsString('>Kategorije<', $html);
 
         $this->assertStringContainsString('background:#0d6efd', $html);
         $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $html);
@@ -99,20 +99,23 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $row1Html = substr($desktopNav, $row1Start, $row2Start - $row1Start);
         $row2Html = substr($desktopNav, $row2Start);
 
-        foreach (['Kalendar kulture', 'Događaji', 'Arhiva događaja', 'Urednički rad', 'Lokacije'] as $label) {
+        foreach (['Kalendar kulture', 'Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal'] as $label) {
             $this->assertStringContainsString('>'.$label.'<', $row1Html);
             $this->assertStringNotContainsString('>'.$label.'<', $row2Html);
         }
 
         $this->assertStringNotContainsString('>Upravljanje događajima<', $row1Html);
         $this->assertStringNotContainsString('>Upravljanje manifestacijama<', $row1Html);
+        $this->assertStringNotContainsString('>Urednički rad<', $row1Html);
+        $this->assertStringNotContainsString('>Lokacije<', $row1Html);
         $this->assertStringContainsString('data-kk-nav="events-public"', $row1Html);
         $this->assertStringContainsString('data-kk-nav="mf-public"', $row1Html);
+        $this->assertStringContainsString('data-kk-nav="bridge-editorial"', $row1Html);
         $this->assertStringNotContainsString('data-kk-nav="events-editorial"', $row1Html);
         $this->assertStringNotContainsString('data-kk-nav="mf-editorial"', $row1Html);
 
-        foreach (['Kategorije', 'Oznake', 'Mediji', 'Organizatori', 'Zahtjevi Org', 'Zahtjevi Mod'] as $label) {
-            $this->assertStringContainsString('>'.$label.'<', $row2Html);
+        foreach (['Kategorije', 'Oznake', 'Mediji', 'Organizatori', 'Zahtjevi Org', 'Zahtjevi Mod', 'Javni portal'] as $label) {
+            $this->assertStringNotContainsString('>'.$label.'<', $row2Html);
         }
         $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $row2Html);
 
@@ -124,32 +127,81 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.index')).'"', $html);
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.events')).'"', $html);
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.archive')).'"', $html);
+        $this->assertStringContainsString('href="'.e(route('cultural-calendar.manifestations')).'"', $html);
         $this->assertStringContainsString('href="'.e(route('cultural-editorial-dashboard.index')).'"', $html);
         $this->assertStringNotContainsString('href="'.e(route('cultural-event-entries.index')).'"', $html);
         $this->assertStringNotContainsString('href="'.e(route('cultural-events.index')).'"', $html);
-        $this->assertStringContainsString('href="'.e(route('cultural-locations.index')).'"', $html);
-        $this->assertStringContainsString('href="'.e(route('cultural-categories.index')).'"', $html);
-        $this->assertStringContainsString('href="'.e(route('cultural-tags.index')).'"', $html);
-        $this->assertStringContainsString('href="'.e(route('cultural-media.index')).'"', $html);
+        $this->assertStringNotContainsString('href="'.e(route('cultural-locations.index')).'"', $html);
+        $this->assertStringNotContainsString('href="'.e(route('cultural-categories.index')).'"', $html);
+        $this->assertStringNotContainsString('href="'.e(route('cultural-tags.index')).'"', $html);
+        $this->assertStringNotContainsString('href="'.e(route('cultural-media.index')).'"', $html);
         $this->assertStringContainsString('action="'.e(route('logout')).'"', $html);
     }
 
-    public function test_kk_admin_keeps_zahtjevi_org_and_does_not_see_ordinary_organizer_request_cta(): void
+    public function test_kk_admin_editorial_nav_contains_only_editorial_items_and_public_bridge(): void
     {
         $html = $this->actingAs($this->kkAdmin)
+            ->get(route('cultural-event-entries.index'))
+            ->assertOk()
+            ->getContent();
+
+        $layoutStart = strpos($html, 'data-kk-nav-layout="two-row"');
+        $hamburgerStart = strpos($html, '<!-- Hamburger -->');
+        $this->assertNotFalse($layoutStart);
+        $this->assertNotFalse($hamburgerStart);
+        $desktopNav = substr($html, $layoutStart, $hamburgerStart - $layoutStart);
+
+        foreach ([
+            'Upravljanje događajima',
+            'Upravljanje manifestacijama',
+            'Urednički rad',
+            'Lokacije',
+            'Kategorije',
+            'Oznake',
+            'Mediji',
+            'Organizatori',
+            'Zahtjevi Org',
+            'Zahtjevi Mod',
+            'Javni portal',
+        ] as $label) {
+            $this->assertStringContainsString('>'.$label.'<', $desktopNav);
+        }
+
+        foreach (['Kalendar kulture', 'Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal'] as $label) {
+            $this->assertStringNotContainsString('>'.$label.'<', $desktopNav);
+        }
+
+        $this->assertStringContainsString('href="'.e(route('cultural-calendar.index')).'"', $desktopNav);
+        $this->assertStringContainsString('data-kk-nav="bridge-public"', $desktopNav);
+    }
+
+    public function test_kk_admin_sees_zahtjevi_org_only_in_editorial_context_and_never_ordinary_request_cta(): void
+    {
+        $publicHtml = $this->actingAs($this->kkAdmin)
             ->get(route('cultural-calendar.index'))
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('>Zahtjevi Org<', $html);
-        $this->assertStringContainsString(
+        $this->assertStringNotContainsString('>Zahtjevi Org<', $publicHtml);
+        $this->assertStringNotContainsString(
             'href="'.e(route('cultural-organizer-creation-requests.index')).'"',
-            $html
+            $publicHtml
         );
-        $this->assertStringNotContainsString('>Zahtjev za Organizatora<', $html);
+        $this->assertStringNotContainsString('>Zahtjev za Organizatora<', $publicHtml);
         $this->assertStringNotContainsString(
             'href="'.e(route('cultural-organizer-creation-requests.create')).'"',
-            $html
+            $publicHtml
+        );
+
+        $editorialHtml = $this->actingAs($this->kkAdmin)
+            ->get(route('cultural-event-entries.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('>Zahtjevi Org<', $editorialHtml);
+        $this->assertStringContainsString(
+            'href="'.e(route('cultural-organizer-creation-requests.index')).'"',
+            $editorialHtml
         );
     }
 

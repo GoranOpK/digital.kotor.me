@@ -174,6 +174,8 @@ class CulturalEditorialDiscoverabilityTest extends TestCase
 
         $this->assertSame(2, substr_count($html, 'data-kk-nav="events-public"'));
         $this->assertSame(2, substr_count($html, 'data-kk-nav="mf-public"'));
+        $this->assertSame(2, substr_count($html, 'data-kk-nav="bridge-editorial"'));
+        $this->assertSame(0, substr_count($html, 'data-kk-nav="bridge-public"'));
         $this->assertSame(0, substr_count($html, 'data-kk-nav="events-editorial"'));
         $this->assertSame(0, substr_count($html, 'data-kk-nav="mf-editorial"'));
         $this->assertMatchesRegularExpression(
@@ -186,6 +188,7 @@ class CulturalEditorialDiscoverabilityTest extends TestCase
         );
         $this->assertStringNotContainsString('>Upravljanje događajima<', $html);
         $this->assertStringNotContainsString('>Upravljanje manifestacijama<', $html);
+        $this->assertStringContainsString('>Urednički portal<', $html);
     }
 
     public function test_kk_admin_editorial_nav_uses_editorial_labels_only(): void
@@ -197,6 +200,8 @@ class CulturalEditorialDiscoverabilityTest extends TestCase
 
         $this->assertSame(0, substr_count($html, 'data-kk-nav="events-public"'));
         $this->assertSame(0, substr_count($html, 'data-kk-nav="mf-public"'));
+        $this->assertSame(0, substr_count($html, 'data-kk-nav="bridge-editorial"'));
+        $this->assertSame(2, substr_count($html, 'data-kk-nav="bridge-public"'));
         $this->assertSame(2, substr_count($html, 'data-kk-nav="events-editorial"'));
         $this->assertSame(2, substr_count($html, 'data-kk-nav="mf-editorial"'));
         $this->assertMatchesRegularExpression(
@@ -209,6 +214,73 @@ class CulturalEditorialDiscoverabilityTest extends TestCase
         );
         $this->assertStringNotContainsString('data-kk-nav="events-public"', $html);
         $this->assertStringNotContainsString('data-kk-nav="mf-public"', $html);
+        $this->assertStringContainsString('>Javni portal<', $html);
+    }
+
+    public function test_kk_admin_mobile_public_nav_is_public_only_with_editorial_bridge(): void
+    {
+        $html = $this->actingAs($this->kkAdmin)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+
+        $mobileStart = strpos($html, '<!-- Responsive Navigation Menu -->');
+        $mobileEnd = strpos($html, '<!-- Responsive Settings Options -->');
+        $this->assertNotFalse($mobileStart);
+        $this->assertNotFalse($mobileEnd);
+        $mobileNav = substr($html, $mobileStart, $mobileEnd - $mobileStart);
+
+        foreach (['Kalendar kulture', 'Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal'] as $label) {
+            $this->assertStringContainsString('>'.$label.'<', $mobileNav);
+        }
+        foreach ([
+            'Upravljanje događajima',
+            'Upravljanje manifestacijama',
+            'Urednički rad',
+            'Lokacije',
+            'Kategorije',
+            'Oznake',
+            'Mediji',
+            'Organizatori',
+            'Zahtjevi Org',
+            'Zahtjevi Mod',
+            'Javni portal',
+        ] as $label) {
+            $this->assertStringNotContainsString('>'.$label.'<', $mobileNav);
+        }
+    }
+
+    public function test_kk_admin_mobile_editorial_nav_is_editorial_only_with_public_bridge(): void
+    {
+        $html = $this->actingAs($this->kkAdmin)
+            ->get(route('cultural-event-entries.index'))
+            ->assertOk()
+            ->getContent();
+
+        $mobileStart = strpos($html, '<!-- Responsive Navigation Menu -->');
+        $mobileEnd = strpos($html, '<!-- Responsive Settings Options -->');
+        $this->assertNotFalse($mobileStart);
+        $this->assertNotFalse($mobileEnd);
+        $mobileNav = substr($html, $mobileStart, $mobileEnd - $mobileStart);
+
+        foreach ([
+            'Upravljanje događajima',
+            'Upravljanje manifestacijama',
+            'Urednički rad',
+            'Lokacije',
+            'Kategorije',
+            'Oznake',
+            'Mediji',
+            'Organizatori',
+            'Zahtjevi Org',
+            'Zahtjevi Mod',
+            'Javni portal',
+        ] as $label) {
+            $this->assertStringContainsString('>'.$label.'<', $mobileNav);
+        }
+        foreach (['Kalendar kulture', 'Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal'] as $label) {
+            $this->assertStringNotContainsString('>'.$label.'<', $mobileNav);
+        }
     }
 
     public function test_ordinary_user_nav_keeps_public_labels_without_editorial_management(): void
