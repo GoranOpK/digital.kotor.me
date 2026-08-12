@@ -19,22 +19,39 @@
     @else
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($events as $event)
+                @php
+                    $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
+                    if ($isCanonicalEntry) {
+                        $cardOcc = $event->occurrenceOnDate($selectedDate->toDateString());
+                        $cardDatum = $cardOcc?->datum;
+                        $cardVrijeme = $cardOcc?->vrijeme_od;
+                        $cardKategorija = $event->category?->naziv;
+                        $cardLokacija = $cardOcc?->publicLocationDisplayName();
+                    } else {
+                        $cardDatum = $event->datum_od;
+                        $cardVrijeme = $event->vrijeme;
+                        $cardKategorija = $event->kategorija;
+                        $cardLokacija = $event->lokacija;
+                    }
+                @endphp
                 <article class="bg-white border border-gray-200 rounded-lg overflow-hidden">
                     <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}" class="w-full h-44 object-cover">
                     <div class="p-4">
                         <div class="text-xs text-gray-500 mb-1">
-                            {{ optional($event->datum_od)->format('d.m.Y') }}
-                            @if($event->datum_do)
+                            {{ optional($cardDatum)->format('d.m.Y') }}
+                            @if(! $isCanonicalEntry && $event->datum_do)
                                 - {{ optional($event->datum_do)->format('d.m.Y') }}
                             @endif
-                            @if($event->vrijeme)
-                                • {{ substr((string)$event->vrijeme, 0, 5) }}
+                            @if($cardVrijeme)
+                                • {{ substr((string) $cardVrijeme, 0, 5) }}
                             @endif
                         </div>
                         <h3 class="text-lg font-semibold text-gray-900 mb-2">{{ $event->naslov }}</h3>
-                        <div class="text-sm text-gray-600 mb-2">{{ $event->kategorija }}</div>
-                        @if($event->lokacija)
-                            <div class="text-sm text-gray-600 mb-2">{{ $event->lokacija }}</div>
+                        @if($cardKategorija)
+                            <div class="text-sm text-gray-600 mb-2">{{ $cardKategorija }}</div>
+                        @endif
+                        @if($cardLokacija)
+                            <div class="text-sm text-gray-600 mb-2">{{ $cardLokacija }}</div>
                         @endif
                         @if($event->opis)
                             <p class="text-sm text-gray-700">{{ \Illuminate\Support\Str::limit($event->opis, 170) }}</p>

@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.16
+**Verzija:** 1.0.17
 **Datum:** 2026-08-12
 
 ---
@@ -37,6 +37,7 @@
 | 1.0.14 | 2026-08-11 | **PO-6B-10:** globalno sortiranje Pretrage kada je Tip sadržaja = Sve (§3.4.1); Tip=Događaji zadržava §3.4 / 6A ordering; Tip=Manifestacije zadržava MF list ordering. Usklađeno sa BM PATCH-066 / FS PATCH-FS-067 / BR-306. Bez izmjene filter matrice / MF q. Bez izmjene implementacije u ovom docs paketu. |
 | 1.0.15 | 2026-08-11 | **6B-05A functional documentation closeout (status only):** §6 / Tip sadržaja / PO-6B-10 označeni kao **FUNCTIONAL IMPLEMENTATION COMPLETE** (TESTED / COMMITTED / PUSHED); **PRODUCTION DEPLOY / SMOKE: NOT DONE**. Bez izmjene ugovora filtera, q, ordering, vidljivosti ili homepage. |
 | 1.0.16 | 2026-08-12 | **PHASE 6B PRODUCTION CLOSEOUT (status only):** 6B public portal + search **DEPLOYED**; 6B migracije RAN; `cultural_manifestations` postoji (trenutno 0 redova); PO **PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE; **Phase 6B formally closed**. NON-BLOCKING PRODUCTION SMOKE DEBT: public detail/program/Event→MF/search-with-hit (nije tvrđeno da su produkcijski smoke-testirani). Bez izmjene ugovora filtera, q, ordering, vidljivosti ili homepage. |
+| 1.0.17 | 2026-08-12 | **6A residual Package A status sync:** `cultural-calendar.day` — kada je `CULTURAL_PUBLIC_READ_SOURCE=canonical`, handler koristi `CulturalPublicEventQuery::filterByDate` + `occurrenceOnDate` (isti SSOT kao selected-day na indexu); legacy branch KEEP; kk_admin redirect KEEP; bez badge/detail-link. **IMPLEMENTED / TESTED (local).** Phase B hard-remove / flag cleanup **ne** zatvoren. Bez izmjene BM/FS. |
 
 ---
 
@@ -100,7 +101,7 @@ Izvori istine:
 | 2. Informaciona arhitektura i prikazi | Usvojeno |
 | 3. Pretraga i pregled — filteri | Usvojeno |
 | 3.4 Sortiranje Pretrage (Faza 6A) | Usvojeno |
-| 4. Tehnička napomena: ruta `cultural-calendar.day` | Usvojeno |
+| 4. Tehnička napomena: ruta `cultural-calendar.day` | Usvojeno (**Package A** canonical cutover IMPLEMENTED/TESTED local; Phase B OPEN) |
 | 5. Početna stranica — Hero, istaknuti, statistike, lista | Usvojeno |
 | 6. Manifestacije (javni portal) | Usvojeno (**FORMALLY CLOSED / PRODUCTION ACCEPTED**; limited content-smoke coverage) |
 | 7. Detalji događaja (baseline) | Usvojeno |
@@ -614,9 +615,13 @@ Ruta `cultural-calendar.day` (`GET /kalendar-kulture/dan/{date}`):
 | Handler | `CulturalCalendarController@day` |
 | View | `resources/views/cultural-calendar/day.blade.php` |
 | Javni tok | Građanin sa kalendara ide na `cultural-calendar.index?date=…`, ne na `.day` |
-| Admin tok | Link sa kalendara na `.day` → redirect `cultural-events.create` |
+| Admin tok | Link sa kalendara na `.day` → redirect `cultural-event-entries.create` (`kk_admin`) |
+| Canonical read (`CULTURAL_PUBLIC_READ_SOURCE=canonical`) | `CulturalPublicEventQuery::filterByDate` + `CulturalEventEntry::occurrenceOnDate`; jedan Entry po danu; bez badge / bez detail link |
+| Legacy read (rollback) | `CulturalEvent` flat query (KEEP) |
+| Package A status | **IMPLEMENTED / TESTED (local)**; **NOT PRODUCTION VERIFIED** |
+| Phase B | Legacy hard-remove / flag cleanup — **OPEN** (van Package A) |
 
-Ova napomena ne nalaže izmjenu koda u okviru faze 1–2 dokumentovanja.
+Ova napomena ne nalaže Phase B hard-remove niti redesign `day` UI-ja.
 
 ---
 

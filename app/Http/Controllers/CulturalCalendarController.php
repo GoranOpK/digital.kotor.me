@@ -740,6 +740,26 @@ class CulturalCalendarController extends Controller
             return redirect()->route('cultural-event-entries.create');
         }
 
+        if (CulturalPublicReadSource::usesCanonical()) {
+            $dateYmd = $selectedDate->toDateString();
+            $events = app(CulturalPublicEventQuery::class)
+                ->filterByDate($dateYmd)
+                ->with(['category', 'coverMedia', 'occurrences.location'])
+                ->get()
+                ->sortBy(function (CulturalEventEntry $entry) use ($dateYmd): string {
+                    $occ = $entry->occurrenceOnDate($dateYmd);
+                    $time = trim((string) ($occ?->vrijeme_od ?? ''));
+
+                    return ($time !== '' ? $time : '00:00:00').'|'.$entry->id;
+                })
+                ->values();
+
+            return view('cultural-calendar.day', [
+                'events' => $events,
+                'selectedDate' => $selectedDate,
+            ]);
+        }
+
         $events = CulturalEvent::query()
             ->publiclyVisible()
             ->whereDate('datum_od', '<=', $selectedDate)

@@ -7,7 +7,7 @@
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active  
-**Verzija:** 1.0.7
+**Verzija:** 1.0.8
 **Datum:** 2026-08-12
 
 ---
@@ -24,6 +24,7 @@
 | 1.0.5 | 2026-08-09 | **Faza 6A / 6B:** Faza 6 podijeljena — **6A** javni portal Događaja (kanonski cutover; TS-009); **6B** Manifestacije (TS-005 + TS-009 §6). TS-005 **ne blokira** 6A. Usklađeno sa BM PATCH-060 / FS PATCH-FS-060 / TS-009 v1.0.6. Bez izmjene implementacije. |
 | 1.0.6 | 2026-08-11 | **6B-05A status sync:** FAZA 4 realizovana kroz **6B-01**; FAZA 6B (portal + Pretraga tip) kroz **6B-03/03A/04**; editorial MF kroz **6B-02**. **PHASE 6B FUNCTIONAL IMPLEMENTATION COMPLETE** (TESTED / COMMITTED / PUSHED). **PRODUCTION DEPLOY / SMOKE: NOT DONE.** Bez izmjene redoslijeda Faza 7–8. Bez izmjene BM/FS. |
 | 1.0.7 | 2026-08-12 | **PHASE 6B PRODUCTION CLOSEOUT (status only):** 6B deployed; dvije 6B migracije RAN; editorial lifecycle + kk_admin nav **PRODUCTION VERIFIED**; PO **PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE; **Phase 6B formally closed**. NON-BLOCKING PRODUCTION SMOKE DEBT evidentiran (nije defect). Bez izmjene redoslijeda Faza 7–8. Bez izmjene BM/FS pravila. |
+| 1.0.8 | 2026-08-12 | **6A residual Package A status sync:** `cultural-calendar.day` canonical cutover **IMPLEMENTED / TESTED (local)** (`CulturalPublicEventQuery::filterByDate` + `occurrenceOnDate`; legacy rollback KEEP). **NOT PRODUCTION VERIFIED.** Phase B hard-remove / flag cleanup ostaje. Bez izmjene redoslijeda Faza 7–8. Bez izmjene BM/FS. |
 
 ---
 
@@ -292,7 +293,7 @@ analiza → implementacija → test → review → merge → deploy
 | **Migracija** | Velika (nove tabele / FK) — **produkcijski RAN** (`2026_08_11_121000`, `2026_08_11_121100`) |
 | **Rizici** | Kardinalnost; arhiva MF ne briše događaje |
 | **Rezultat** | Domen + editorial lifecycle **DEPLOYED / PRODUCTION VERIFIED** |
-| **Zatim** | FAZA 7 (Newsletter) po redoslijedu; 6A residual `day()` cutover je zaseban paket |
+| **Zatim** | FAZA 7 (Newsletter) po redoslijedu; 6A residual `day()` Package A = **IMPLEMENTED / TESTED (local)**; Phase B legacy hard-remove ostaje zaseban paket |
 
 ### FAZA 5 — Urednički portal
 
@@ -317,6 +318,8 @@ analiza → implementacija → test → review → merge → deploy
 | **Rezultat** | Kanonski javni read za Događaje; privremeni flag legacy\|canonical; bez Manifestacija |
 | **Ne blokira** | TS-005 / Manifestacije |
 | **Van obuhvata** | Manifestacije (6B); slug/SEO; migracija legacy sadržaja; dual-read/write; javni `cancellation_reason` |
+| **Residual Package A** | `cultural-calendar.day` canonical cutover — **IMPLEMENTED / TESTED (local)**; flag rollback KEEP; **NOT PRODUCTION VERIFIED** |
+| **Phase B** | Legacy hard-remove / `CULTURAL_PUBLIC_READ_SOURCE` cleanup — **OPEN** (nije dio Package A) |
 | **Zatim** | Stabilizacija → **Faza 6B** (ili paralelno planiranje 6B ako TS-005 spreman — bez blokiranja 6A) |
 
 ### FAZA 6B — Manifestacije (javni portal)
