@@ -7,8 +7,8 @@
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active  
-**Verzija:** 1.0.6
-**Datum:** 2026-08-11
+**Verzija:** 1.0.7
+**Datum:** 2026-08-12
 
 ---
 
@@ -23,6 +23,7 @@
 | 1.0.4 | 2026-08-08 | **TS-010 V1 closeout:** Faza 5 (TS-010 Urednički portal) V1 funkcionalno / implementaciono završena. Naredna velika faza ostaje **Faza 6 → TS-009** (javni portal / domen cutover). **Faza 8 → TS-012** ostaje buduća audit integracija. Bez izmjene redoslijeda faza. Bez izmjene BM/FS. |
 | 1.0.5 | 2026-08-09 | **Faza 6A / 6B:** Faza 6 podijeljena — **6A** javni portal Događaja (kanonski cutover; TS-009); **6B** Manifestacije (TS-005 + TS-009 §6). TS-005 **ne blokira** 6A. Usklađeno sa BM PATCH-060 / FS PATCH-FS-060 / TS-009 v1.0.6. Bez izmjene implementacije. |
 | 1.0.6 | 2026-08-11 | **6B-05A status sync:** FAZA 4 realizovana kroz **6B-01**; FAZA 6B (portal + Pretraga tip) kroz **6B-03/03A/04**; editorial MF kroz **6B-02**. **PHASE 6B FUNCTIONAL IMPLEMENTATION COMPLETE** (TESTED / COMMITTED / PUSHED). **PRODUCTION DEPLOY / SMOKE: NOT DONE.** Bez izmjene redoslijeda Faza 7–8. Bez izmjene BM/FS. |
+| 1.0.7 | 2026-08-12 | **PHASE 6B PRODUCTION CLOSEOUT (status only):** 6B deployed; dvije 6B migracije RAN; editorial lifecycle + kk_admin nav **PRODUCTION VERIFIED**; PO **PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE; **Phase 6B formally closed**. NON-BLOCKING PRODUCTION SMOKE DEBT evidentiran (nije defect). Bez izmjene redoslijeda Faza 7–8. Bez izmjene BM/FS pravila. |
 
 ---
 
@@ -164,12 +165,12 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 
 | Područje | Stanje | Akcija |
 |----------|--------|--------|
-| Javni portal | Postoji; CR-001–004A usklađeni | Faza 0: CR-004B; **Faza 6A:** kanonski cutover Događaja (**završena**); **Faza 6B:** Manifestacije (**functional complete**; **production deploy pending**) |
+| Javni portal | Postoji; CR-001–004A usklađeni | Faza 0: CR-004B; **Faza 6A:** kanonski cutover Događaja (**završena**); **Faza 6B:** Manifestacije (**FORMALLY CLOSED** / **PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE) |
 | `CulturalEvent` flat | Postoji (testni/prototipski podaci — **PO-EV-01**) | Faza 3: novi domen TS-003/004; zamjena flat modela **bez** migracije/backfill legacy sadržaja |
 | Admin `kk_admin` | Postoji | Refaktor u Fazi 5 (TS-010) |
 | Organizator / Moderator | Nema | Faza 2 (TS-001) |
 | Održavanja 1..N | Nema | Faza 3 |
-| Manifestacije | **Functional implementirano** (6B-01…6B-04; committed/pushed) | **FAZA 4 / 6B complete u kodu**; **produkcijski deploy/migracije/smoke NOT DONE** |
+| Manifestacije | **PRODUCTION ACCEPTED** (6B-01…6B-04 + PO-MF-WF; deployed) | **FAZA 4 / 6B FORMALLY CLOSED**; migracije RAN; `cultural_manifestations` = 0 redova; cleanup N/A |
 | Katalozi lokacija / kategorija / medija | Nema / ENUM | Faza 1 |
 | Newsletter (sedmični cron) | Postoji | Refaktor u Fazi 7 (TS-011) |
 | Centralni audit (FT-003) | Nema | **Faza 8** (TS-012) — ne ranije |
@@ -285,13 +286,13 @@ analiza → implementacija → test → review → merge → deploy
 
 | Stavka | Opis |
 |--------|------|
-| **Status** | **FUNCTIONAL IMPLEMENTATION COMPLETE** — realizovano kroz paket **6B-01** (`26217f6`, `feat(calendar): add manifestation core domain`) |
+| **Status** | **FORMALLY CLOSED / PRODUCTION ACCEPTED** — domen **6B-01** (`26217f6`); editorial **6B-02** (`0e8f7c3`); PO-MF-WF (`d3c7a96`) |
 | **Cilj** | Entitet Manifestacija + veze |
 | **Moduli** | TS-005 |
-| **Migracija** | Velika (nove tabele / FK) — **produkcijski deployment još nije izvršen** |
+| **Migracija** | Velika (nove tabele / FK) — **produkcijski RAN** (`2026_08_11_121000`, `2026_08_11_121100`) |
 | **Rizici** | Kardinalnost; arhiva MF ne briše događaje |
-| **Rezultat** | Domen spreman za portale — **ostvareno u kodu** (TESTED / COMMITTED / PUSHED) |
-| **Zatim** | Urednički MF tok (**6B-02**) + javni portal / Pretraga (**6B-03/04**); zatim **produkcijski deploy** |
+| **Rezultat** | Domen + editorial lifecycle **DEPLOYED / PRODUCTION VERIFIED** |
+| **Zatim** | FAZA 7 (Newsletter) po redoslijedu; 6A residual `day()` cutover je zaseban paket |
 
 ### FAZA 5 — Urednički portal
 
@@ -322,14 +323,15 @@ analiza → implementacija → test → review → merge → deploy
 
 | Stavka | Opis |
 |--------|------|
-| **Status** | **FUNCTIONAL IMPLEMENTATION COMPLETE** — javni portal + Tip sadržaja/Pretraga: **6B-03 / 6B-03A / 6B-04**; editorial MF: **6B-02**; domen: **6B-01** |
+| **Status** | **FORMALLY CLOSED / PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE — javni portal + Tip sadržaja/Pretraga: **6B-03 / 6B-03A / 6B-04**; editorial MF: **6B-02**; domen: **6B-01**; lifecycle corrective: PO-MF-WF (`d3c7a96`) |
 | **Cilj** | Javni portal Manifestacija (TS-009 §6 / PO-TS9-07A–07E) + Tip sadržaja / MF `q` / PO-6B-10 na Pretrazi |
 | **Moduli** | TS-005; TS-009 §3.3–§3.4.1 / §6 |
-| **Dokaz** | `7875e99` (portal); `0c99241` (search/tip); editorial `0e8f7c3`; domain `26217f6` |
-| **Test gate** | 244 passed / 992 assertions / 0 failed / 0 errors |
-| **Rezultat** | Lista / Detalji / program / navigacija / Tip sadržaja — **ostvareno u kodu** (TESTED / COMMITTED / PUSHED) |
-| **Production** | **NOT DEPLOYED** — migracije + smoke pending (**PHASE 6B PRODUCTION CLOSEOUT PENDING**) |
-| **Zatim** | Produkcijski deploy + smoke; zatim FAZA 7 (Newsletter) po redoslijedu |
+| **Dokaz** | `7875e99` (portal); `0c99241` (search/tip); editorial `0e8f7c3`; domain `26217f6`; lifecycle `d3c7a96` |
+| **Test gate** | Functional 244/992; closeout 88 passed / 639 assertions / 0 failed / 0 errors |
+| **Rezultat** | Lista / Detalji / program / navigacija / Tip sadržaja — **DEPLOYED**; editorial + moderator osnovni lifecycle + kk_admin nav **PRODUCTION VERIFIED** |
+| **Production** | **DEPLOYED** — migracije RAN; tabela postoji; 0 MF redova; cleanup N/A; **PHASE 6B FORMALLY CLOSED** |
+| **Limited content-smoke** | **NON-BLOCKING PRODUCTION SMOKE DEBT** (nije defect): public detail/program/Event→MF/search-with-hit; moderator resubmit; organizer-scope extra smoke. PO ne zahtijeva vještačke produkcijske MF. |
+| **Zatim** | FAZA 7 (Newsletter) po redoslijedu |
 
 ### FAZA 6 — (istorijski naziv)
 
@@ -388,7 +390,7 @@ Naredna velika faza **ne počinje** dok stabilizacija nije potvrđena.
 | 4 | Veze MF↔DG; program | Feature TS-005 | Događaji bez MF |
 | 5 | Matrica TS-010.8; gate-ovi | Feature po ulogama | Stari admin put |
 | 6A | Kanonski cutover Događaja; kartica multi-OCC; sort; CAT; flag | Public query + CulturalCalendar* | CR-001…004B |
-| 6B | MF portal + Tip sadržaja | **FUNCTIONAL COMPLETE** (6B-01…04); prod deploy pending | 6A stabilan |
+| 6B | MF portal + Tip sadržaja | **FORMALLY CLOSED / PRODUCTION ACCEPTED** (limited content-smoke) | 6A stabilan |
 | 7 | Okidači; objedinjavanje; odjava | Newsletter Feature | Mail / cron |
 | 8 | Katalog aktivnosti; nepromjenjivost; Admin | Audit Feature | Emiteri ne smiju mijenjati prava |
 

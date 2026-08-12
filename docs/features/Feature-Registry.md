@@ -104,7 +104,7 @@ Active
 
 Napomena:
 
-FT-001 je aktivan modul sa završenom i produkcijski potvrđenom **Fazom 6A — Javni portal Događaja** (implementirano i testirano). **Faza 6B — Manifestacije:** **FUNCTIONAL IMPLEMENTATION COMPLETE** (6B-01…6B-04; TESTED / COMMITTED / PUSHED). **PHASE 6B PRODUCTION CLOSEOUT PENDING** (deploy / migracije / production smoke **NOT DONE**).
+FT-001 je aktivan modul sa završenom i produkcijski potvrđenom **Fazom 6A — Javni portal Događaja** (implementirano i testirano). **Faza 6B — Manifestacije:** **FORMALLY CLOSED** — **ADOPTED / DOCUMENTED / IMPLEMENTED / TESTED / DEPLOYED / PRODUCTION ACCEPTED** (WITH LIMITED CONTENT-SMOKE COVERAGE). PO-MF-WF / PO-EV-WF corrective: **PRODUCTION VERIFIED** (`d3c7a96`).
 
 **Newsletter (u okviru FT-001):** model zasnovan na novoobjavljenim događajima i poslovno značajnim promjenama — javno objavljivanje je okidač za prvo uključivanje; otkazivanje, odlaganje i promjena datuma/vremena/lokacije su prioritetni okidači (samo pretplatnicima kojima je događaj već poslat). Višestruke promjene prije slanja daju jedinstveno obavještenje sa posljednjim važećim stanjem. Bez fiksnog sedmičnog rasporeda.
 
@@ -265,21 +265,24 @@ FT-001 je aktivan modul sa završenom i produkcijski potvrđenom **Fazom 6A — 
 - **PO-6B-05:** MF `q` searchable fields: pretraga Manifestacija koristi samo sopstvena polja `naziv` i `opis` (partial, case-insensitive); bez pretrage Organizatora, povezanih Događaja/Održavanja, lokacija, kategorija, Oznaka i drugih izvedenih/agregiranih podataka programa.
 - **PO-6B-08:** Otkazana Manifestacija ostaje javno vidljiva do isteka izvedenog perioda (aktivna lista + oznaka „Otkazana" + detalj + program); otkazivanje MF ne mijenja Event/OCC statuse; nakon isteka → Arhivirana (postojeći lifecycle); Arhivirana van aktivne liste, direct detail ostaje. **ADOPTED / DOCUMENTED.**
 - **PO-6B-09:** Na javnom detalju Događaja veza ka MF prikazuje se samo ako je MF javno dostupna (Objavljena / Otkazana / Arhivirana); anti-leak za Nacrt / Na odobrenju / Vraćena; bez statusa MF na Event detail; semantika: oznaka + naziv + link. **ADOPTED / DOCUMENTED.**
-- **PO-6B-10:** Kada je Tip sadržaja = Sve, Događaji i Manifestacije sortiraju se **zajedno** po vremenskom ključu (Event: prvo naredno relevantno Održavanje; MF: početak izvedenog perioda); NULL last; tie Naziv → tip (tehnički) → ID; bez grupisanja po tipu. Tip=Događaji zadržava 6A ordering; Tip=Manifestacije zadržava MF list ordering. **ADOPTED / DOCUMENTED / IMPLEMENTED / TESTED / COMMITTED / PUSHED.**
+- **PO-6B-10:** Kada je Tip sadržaja = Sve, Događaji i Manifestacije sortiraju se **zajedno** po vremenskom ključu (Event: prvo naredno relevantno Održavanje; MF: početak izvedenog perioda); NULL last; tie Naziv → tip (tehnički) → ID; bez grupisanja po tipu. Tip=Događaji zadržava 6A ordering; Tip=Manifestacije zadržava MF list ordering. **ADOPTED / DOCUMENTED / IMPLEMENTED / TESTED / COMMITTED / PUSHED / DEPLOYED / PRODUCTION ACCEPTED.**
 
-**PHASE 6B — FUNCTIONAL IMPLEMENTATION COMPLETE** (dokumentacioni closeout 6B-05A). Acceptance coverage: automated Feature tests (nema zasebnog TM-MF dokumenta).
+**PHASE 6B — FORMALLY CLOSED** (production closeout 2026-08-12). **ADOPTED / DOCUMENTED / IMPLEMENTED / TESTED / DEPLOYED / PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE. Acceptance coverage: automated Feature tests (nema zasebnog TM-MF dokumenta) + PO-accepted production smoke (editorial lifecycle, moderator osnovni lifecycle, kk_admin nav split; 6B migracije RAN).
 
 | Paket | Status | Commit |
 |-------|--------|--------|
-| **6B-01** Core Domain | IMPLEMENTED / TESTED / COMMITTED / PUSHED | `26217f6` — `feat(calendar): add manifestation core domain` |
-| **6B-02** Editorial Flow | IMPLEMENTED / TESTED / COMMITTED / PUSHED | `0e8f7c3` — `feat(calendar): add manifestation editorial flow` |
-| **6B-03** Public Portal | IMPLEMENTED / TESTED / COMMITTED / PUSHED | `7875e99` — `feat(calendar): add public manifestation portal` |
-| **6B-03A** List performance | IMPLEMENTED / TESTED / COMMITTED / PUSHED | (isti `7875e99`) |
-| **6B-04** Search + Tip sadržaja | IMPLEMENTED / TESTED / COMMITTED / PUSHED | `0c99241` — `feat(calendar): add content type search` (+ status sync `8a30754`) |
+| **6B-01** Core Domain | IMPLEMENTED / TESTED / COMMITTED / PUSHED / DEPLOYED | `26217f6` — `feat(calendar): add manifestation core domain` |
+| **6B-02** Editorial Flow | IMPLEMENTED / TESTED / COMMITTED / PUSHED / DEPLOYED | `0e8f7c3` — `feat(calendar): add manifestation editorial flow` |
+| **6B-03** Public Portal | IMPLEMENTED / TESTED / COMMITTED / PUSHED / DEPLOYED | `7875e99` — `feat(calendar): add public manifestation portal` |
+| **6B-03A** List performance | IMPLEMENTED / TESTED / COMMITTED / PUSHED / DEPLOYED | (isti `7875e99`) |
+| **6B-04** Search + Tip sadržaja | IMPLEMENTED / TESTED / COMMITTED / PUSHED / DEPLOYED | `0c99241` — `feat(calendar): add content type search` (+ status sync `8a30754`) |
+| **PO-MF-WF** Editor/Moderator lifecycle | IMPLEMENTED / TESTED / COMMITTED / PUSHED / DEPLOYED / PRODUCTION VERIFIED | `d3c7a96` — `fix(calendar): separate editor and moderator manifestation workflows` |
 
-**Final regression gate:** 244 passed / 992 assertions / 0 failed / 0 errors.
+**Final regression gate (functional):** 244 passed / 992 assertions. **Closeout regression (2026-08-12):** 88 passed / 639 assertions / 0 failed / 0 errors.
 
-**PRODUCTION DEPLOYMENT: NOT DONE.** **PRODUCTION SMOKE: NOT DONE.** Produkcijske 6B migracije nijesu pokrenute. **PHASE 6B PRODUCTION CLOSEOUT PENDING.**
+**PRODUCTION DEPLOYMENT: DONE.** 6B migracije RAN (`2026_08_11_121000`, `2026_08_11_121100`). `cultural_manifestations` postoji; trenutno **0 redova**. Cleanup testnih MF = **N/A**. **PHASE 6B FORMALLY CLOSED.**
+
+**Limited content-smoke (NON-BLOCKING PRODUCTION SMOKE DEBT — ne defect, ne blocker, ne incomplete implementation):** public MF detail / program / Event→MF link / Pretraga Tip=Manifestacije ili Sve sa stvarnim MF rezultatom; Moderator resubmit nakon return; dodatna produkcijska potvrda Organizer scope. Nije izvršeno jer PO ne zahtijeva vještačke produkcijske Manifestacije samo radi closeout-a. **Ne** tvrdi se da su ti scenariji produkcijski smoke-testirani.
 
 **V1 boundaries (ne gapovi):** Homepage MF **NOT REQUIRED**; posebna „Arhiva Manifestacija“ **OUT OF V1**; Delete MF / manual archive MF **OUT OF V1**.
 
@@ -305,7 +308,7 @@ Povezana dokumentacija (Održavanje):
 
 Povezana dokumentacija (Manifestacija):
 
-* Business Model — BM-05 (BM-MF-01–BM-MF-23), PATCH-038–PATCH-039, PATCH-070; PO-MF-01–PO-MF-12, PO-MF-WF-01–04
+* Business Model — BM-05 (BM-MF-01–BM-MF-23), PATCH-038–PATCH-039, PATCH-070, **PATCH-071** (6B production closeout status only); PO-MF-01–PO-MF-12, PO-MF-WF-01–04
 * Functional Specification — §5.12 (BR-092–BR-101, BR-189–BR-205), §5.16 katalog Manifestacije, PATCH-FS-040–PATCH-FS-041
 * Technical Specification — `docs/technical-specifications/Technical-Specification_Manifestacija.md` (TS-005; verzija **0.1.5**; Usvojen)
 
@@ -331,7 +334,7 @@ Povezana dokumentacija (Javni portal):
 
 * Business Model — BM-11 (BM-PK-01–BM-PK-40, BM-GL-26), BM-AR-02, PATCH-045–PATCH-048, PATCH-051 (CR-004B), PATCH-060–**PATCH-066**; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E, PO-TS9-08A–08J, PO-6A11-01, PO-6A09-01…06, **PO-U / PATCH-063**, **PO-064 / PATCH-064**, **PO-6B-08/09 / PATCH-065**, **PO-6B-10 / PATCH-066**
 * Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, **BR-287–BR-306**), PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060–**PATCH-FS-067**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija **1.0.15**; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A; PO-6A11-01; PO-6A09; **PATCH-063** §7.2.4 / §7.3.4–§7.3.6; **PATCH-064** §5.4–§5.5 / §11.3 / TM-JP-23…38; **PO-6B-01…05**; **PO-6B-08/09** §6.7–§6.8; **PO-6B-10** §3.4.1)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija **1.0.16**; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A; PO-6A11-01; PO-6A09; **PATCH-063** §7.2.4 / §7.3.4–§7.3.6; **PATCH-064** §5.4–§5.5 / §11.3 / TM-JP-23…38; **PO-6B-01…05**; **PO-6B-08/09** §6.7–§6.8; **PO-6B-10** §3.4.1; **PHASE 6B FORMALLY CLOSED** / limited content-smoke)
 * Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija 1.0.7; Stable)
 * Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Implemented, IS-001 Faza 2 — `month=YYYY-MM`; commit `c5d396f`); CR-003 (Implemented, IS-001 Faza 2 — `q`/`category`/`location`; dokumentacija `fc35132`; implementacija `595045a`; TS-009 v1.0.2; IS-001 v1.0.2); CR-004A (Implemented, IS-001 Faza 3 — javni status badge; PO-CR4A-01…05; dokumentacija `614706c`; implementacija `0f73240`; TS-009 v1.0.4; IS-001 v1.0.5); CR-004B (Planned, IS-001 Faza 3 — javni prikaz otkazanih; PO-CR4B-01…10; TS-009 v1.0.5 §7.2; IS-001 v1.0.6 §9.3.2)
 
@@ -381,7 +384,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
 | TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.2); TS7-PO-07; Faza 6A CAT-CUTOVER ugovor |
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
-| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.15); Faza 6A + Faza 6B functional implementirani i testirani; **6B production deploy pending** |
+| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.16); Faza 6A + Faza 6B **PRODUCTION ACCEPTED** (limited content-smoke coverage) |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.7) — V1 + PATCH-063 implementirani; PATCH-064 nije TS-010 scope (portal = TS-009) |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.1) |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.1) — implementacija emit/storage = Roadmap **Faza 8** |
@@ -636,4 +639,5 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-11 | FT-001 — **PO-ORG-06** usvojena / dokumentovana: privacy-safe Moderator invitation (first + subsequent ADD); waiting status; resolver; emails; REMOVE-approved notify; supersede PO-ORG-02 selection. BM PATCH-068 (BM-ORG-15–19, BM-MOD-20–26), FS PATCH-FS-069 (BR-308–BR-320), TS-001 v0.4.0. **ADOPTED / DOCUMENTED / IMPLEMENTATION NOT STARTED.** CURRENT = users dropdown. RG-001 KEEP. IR/IS KEEP. |
 | 2026-08-12 | FT-001 — **PO-ORG-06 PRODUCTION CLOSEOUT (status sync):** core Packages 1–5 IMPLEMENTED / COMMITTED / PUSHED / PRODUCTION DEPLOYED; Package 1 produkciona migracija RAN; produkcioni smoke PO-confirmed PASS; ordinary-user CTA discoverability corrective `814ff96` (`fix(calendar): expose organizer request action`) PRODUCTION VERIFIED. TS-001 → v0.4.1 (status only). BM PATCH-069 (status napomena). FS KEEP (PATCH-FS-069 historical). **ADOPTED / DOCUMENTED / IMPLEMENTED / PRODUCTION VERIFIED.** Optional durable mail retry / `invitation_sent_at` ostaje non-blocking OUT OF SCOPE. Bez novih poslovnih pravila. RG-001 KEEP. |
 | 2026-08-12 | FT-001 — **PO-MF-WF-01–04 / PO-EV-WF-01** (BM PATCH-070 / FS PATCH-FS-070 / TS-005 v0.1.5): Manifestation editor vs moderator lifecycle corrective by creator origin (`created_by` / `kk_admin`); editor direct publish; backend self-submit/self-return guards; Event no-org submit hardening. **ADOPTED / DOCUMENTED / IMPLEMENTED / TESTED (local).** **NOT COMMITTED / NOT PUSHED / NOT DEPLOYED / NOT PRODUCTION VERIFIED.** Bez migracije/backfill. RG-001 KEEP (PO-MF familija). |
+| 2026-08-12 | FT-001 — **PHASE 6B PRODUCTION CLOSEOUT (status sync):** PO usvojio **FUNCTIONALLY COMPLETE / PRODUCTION ACCEPTED WITH LIMITED CONTENT-SMOKE COVERAGE**. 6B migracije RAN; `cultural_manifestations` = 0 redova; cleanup N/A; editorial + moderator osnovni lifecycle + kk_admin nav **PRODUCTION VERIFIED**; PO-MF-WF / PO-EV-WF (`d3c7a96`) **COMMITTED / PUSHED / DEPLOYED / PRODUCTION VERIFIED**. **PHASE 6B FORMALLY CLOSED.** NON-BLOCKING PRODUCTION SMOKE DEBT: public detail/program/Event→MF/search-with-hit; moderator resubmit; organizer-scope extra smoke. Homepage MF / Arhiva MF / Delete MF ostaju OUT OF V1. BM PATCH-071 (status only). IR-001 → v1.0.7. TS-009 → v1.0.16. TS-005 / FS / RG-001 KEEP. |
 | 2026-08-10 | FT-001 — **PHASE 6A-CLOSE-02:** legacy admin CRUD `cultural-events.*` disabled (middleware `legacy_cultural_events_disabled` → 403 all methods). Legacy code/table/views retained; `CULTURAL_PUBLIC_READ_SOURCE` + public legacy read rollback retained; canonical routes unchanged. **Nije** hard remove / flag cleanup (Phase B). |

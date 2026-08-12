@@ -84,6 +84,7 @@
 | PATCH-068 | 2026-08-11 | **PO-ORG-06:** Privacy-safe invitation model za početnog i narednog Moderatora — unos ime+e-mail (bez users kataloga); eksplicitno stanje „Čeka registraciju Moderatora“; automatski prelaz u „Podnesen“ kada predloženi Moderator postane eligible (verified+active); Urednik odlučuje samo nad Podnesen; neutralna poruka podnosiocu; invitation / outcome / REMOVE-approved email ugovori; supersede starog „samo postojeći user_id“ modela (PO-ORG-02 selection assumption). Usklađeni BM-ORG-07/09/11, BM-MOD-12/13/15/17; dodati BM-ORG-15–BM-ORG-19, BM-MOD-20–BM-MOD-26. PO-ORG-05 KEEP. Usklađeno sa FS PATCH-FS-069 / TS-001 v0.4.0. **Bez izmjene implementacije** u ovom docs paketu (TARGET vs CURRENT). |
 | PATCH-069 | 2026-08-12 | **PO-ORG-06 PRODUCTION CLOSEOUT (status sync):** ažurirana samo napomena o implementaciji u BM-01 — privacy-safe invitation ugovor je **IMPLEMENTED / PRODUCTION VERIFIED** (Packages 1–5; produkciona migracija; smoke PO-confirmed; CTA discoverability). **Bez izmjene poslovnih pravila** BM-ORG-*/BM-MOD-*. Usklađeno sa TS-001 v0.4.1 / Feature Registry status sync. FS PATCH-FS-069 historical KEEP. |
 | PATCH-070 | 2026-08-12 | **PO-MF-WF-01–PO-MF-WF-04 / PO-EV-WF-01:** razdvojeni lifecycle tokovi Manifestacije po **porijeklu kreiranja** (akter kreiranja / `created_by` uloga), ne po `organizer_id`. Urednik-kreirana MF: Nacrt/U pripremi → direktna Objava (bez Pošalji na odobrenje / Na odobrenju / Vrati na doradu). Moderator-kreirana MF: Nacrt → odobravanje → Objava ili Vrati na doradu → resubmit. Usklađeni BM-MF-02/09/10; dodati BM-MF-21–BM-MF-23. Event model KEEP; potvrđen backend guard da Događaj bez Organizatora ne ulazi u submit/approval. Bez novog statusa; bez migracije/backfill/brisanja produkcijskih MF. |
+| PATCH-071 | 2026-08-12 | **PHASE 6B PRODUCTION CLOSEOUT (status sync):** Faza 6B i PO-MF-WF su **IMPLEMENTED / DEPLOYED / PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE (6B migracije RAN; `cultural_manifestations` = 0 redova; cleanup N/A; editorial + moderator osnovni lifecycle + kk_admin nav production verified). **Bez izmjene poslovnih pravila** BM-MF-*. Usklađeno sa Feature Registry / IR-001 v1.0.7 / TS-009 v1.0.16. FS PATCH-FS-070 historical KEEP. TS-005 KEEP. |
 
 Napomena:
 
@@ -559,6 +560,8 @@ Nema otvorenih pitanja.
 # BM-05 Manifestacija
 
 **Status poglavlja:** USVOJENO
+
+> **Napomena o implementaciji (PATCH-071 / status only):** Faza 6B (Manifestacije) i PO-MF-WF lifecycle su **IMPLEMENTED / DEPLOYED / PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE. Produkcijske 6B migracije RAN; `cultural_manifestations` trenutno 0 redova; cleanup N/A. **Bez izmjene poslovnih pravila** BM-MF-*.
 
 ## 1. Svrha poslovne cjeline
 
