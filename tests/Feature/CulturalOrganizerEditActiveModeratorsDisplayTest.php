@@ -79,13 +79,18 @@ class CulturalOrganizerEditActiveModeratorsDisplayTest extends TestCase
         $html = $this->actingAs($this->kkAdmin)
             ->get(route('cultural-organizers.edit', $organizer))
             ->assertOk()
+            ->assertSee('Osnovni podaci', false)
             ->assertSee('Moderatori Organizatora', false)
             ->assertSee('Ana Moderator', false)
             ->assertSee('ana.moderator@example.com', false)
             ->assertSee('Aktivan', false)
+            ->assertSee('Status Organizatora', false)
             ->getContent();
 
         $this->assertStringContainsString('data-section="moderatori-organizatora"', $html);
+        $this->assertStringContainsString('data-moderator-name', $html);
+        $this->assertStringContainsString('data-moderator-email', $html);
+        $this->assertStringContainsString('data-moderator-status', $html);
         $this->assertStringNotContainsString('Dodaj Moderatora', $html);
         $this->assertStringNotContainsString('Ukloni Moderatora', $html);
         $this->assertStringNotContainsString(route('cultural-moderator-requests.store', $organizer), $html);
