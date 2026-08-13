@@ -5,7 +5,7 @@
     <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
         <div>
             <h1 style="font-size:28px; font-weight:700; margin:0; color:#111827;">Događaji Organizatora</h1>
-            <p class="text-sm text-gray-600 mt-1 mb-0">Kontekst: {{ $activeOrganizer->naziv }}</p>
+            <p class="text-sm text-gray-600 mt-1 mb-0">Organizator: {{ $activeOrganizer->naziv }}</p>
             @if(!empty($filterHasActiveProposal))
                 <p class="text-xs text-gray-500 mt-1 mb-0">Filter: Objavljeni sa aktivnim prijedlogom izmjene</p>
             @elseif(!empty($filterStatus))
@@ -13,8 +13,8 @@
             @endif
         </div>
         <div class="flex flex-wrap gap-2">
-            <a href="{{ route('cultural-moderator-dashboard.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Radna tabla</a>
-            <a href="{{ route('cultural-moderator-workspace.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Workspace</a>
+            <a href="{{ route('cultural-moderator-dashboard.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Kontrolna tabla</a>
+            <a href="{{ route('cultural-moderator-workspace.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Izbor organizatora</a>
             <a href="{{ route('cultural-moderator-events.create') }}" style="display:inline-block; background:#b91c1c; color:#fff; text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600;">
                 + Novi događaj
             </a>
@@ -29,7 +29,7 @@
         <form method="POST" action="{{ route('cultural-moderator-context.update') }}" class="mb-4 flex flex-wrap gap-2 items-end">
             @csrf
             <div>
-                <label for="switch_org" class="block text-xs text-gray-500 mb-1">Promijeni kontekst</label>
+                <label for="switch_org" class="block text-xs text-gray-500 mb-1">Promijeni organizatora</label>
                 <select id="switch_org" name="organizer_id" class="rounded-md border-gray-300 text-sm">
                     @foreach($availableOrganizers as $organizer)
                         <option value="{{ $organizer->id }}" @selected((int) $activeOrganizer->id === (int) $organizer->id)>

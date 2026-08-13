@@ -27,8 +27,8 @@
                                 Sada ste Moderator tog Organizatora i možete koristiti Kalendar kulture kroz Digital Kotor.
                             </p>
                             <p style="margin:0 0 14px; font-size:15px; line-height:1.6;">
-                                Moderatorski radni prostor:
-                                <a href="{{ $workspaceUrl }}" style="color:#7a0f17;">{{ $workspaceUrl }}</a>
+                                Kontrolna tabla:
+                                <a href="{{ $kontrolnaTablaUrl }}" style="color:#7a0f17;">{{ $kontrolnaTablaUrl }}</a>
                             </p>
                             <p style="margin:20px 0 0; font-size:14px; color:#6b7280;">Srdačan pozdrav,<br>Opština Kotor</p>
                         </td>

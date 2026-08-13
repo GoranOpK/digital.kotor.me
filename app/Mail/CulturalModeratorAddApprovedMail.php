@@ -34,7 +34,7 @@ class CulturalModeratorAddApprovedMail extends Mailable
             view: 'emails.cultural-moderator-add-approved',
             with: [
                 'organizerName' => $this->organizer->naziv,
-                'workspaceUrl' => route('cultural-moderator-workspace.index'),
+                'kontrolnaTablaUrl' => route('cultural-moderator-dashboard.index'),
             ],
         );
     }

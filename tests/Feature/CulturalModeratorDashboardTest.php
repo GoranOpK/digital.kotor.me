@@ -21,7 +21,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * TS-010.6 — Moderator Dashboard / Radna tabla (DM-01–DM-03).
+ * TS-010.6 — Moderator Dashboard / Kontrolna tabla (DM-01–DM-03).
  */
 class CulturalModeratorDashboardTest extends TestCase
 {
@@ -90,7 +90,10 @@ class CulturalModeratorDashboardTest extends TestCase
         $this->actingAs($this->moderator)
             ->get(route('cultural-moderator-dashboard.index'))
             ->assertOk()
-            ->assertSee('Radna tabla', false)
+            ->assertSee('Kontrolna tabla', false)
+            ->assertSee('Organizator:', false)
+            ->assertDontSee('Radna tabla', false)
+            ->assertDontSee('Workspace', false)
             ->assertSee('DM-01', false)
             ->assertSee('DM-02', false)
             ->assertSee('DM-03', false)
@@ -135,7 +138,7 @@ class CulturalModeratorDashboardTest extends TestCase
         $this->actingAs($this->moderator)
             ->get(route('cultural-moderator-dashboard.index'))
             ->assertOk()
-            ->assertSee('Izaberite Organizator', false)
+            ->assertSee('Izbor organizatora', false)
             ->assertDontSee('DM-01', false);
     }
 

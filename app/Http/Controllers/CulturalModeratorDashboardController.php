@@ -9,7 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 /**
- * TS-010.6 — Moderator Dashboard / Radna tabla (DM-01–DM-03).
+ * TS-010.6 — Moderator Dashboard / Kontrolna tabla (DM-01–DM-03).
  * Samo brojači + navigacija; bez poslovnih akcija.
  * Opseg: isključivo aktivni Organizator kontekst.
  */

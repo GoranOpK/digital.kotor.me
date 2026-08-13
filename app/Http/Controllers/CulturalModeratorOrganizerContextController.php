@@ -24,7 +24,7 @@ class CulturalModeratorOrganizerContextController extends Controller
         CulturalOrganizerContext::set($user, (int) $validated['organizer_id']);
 
         return redirect()
-            ->route('cultural-moderator-events.index')
+            ->route('cultural-moderator-dashboard.index')
             ->with('status', 'Aktivni Organizator je postavljen.');
     }
 }

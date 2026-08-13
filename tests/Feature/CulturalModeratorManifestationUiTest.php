@@ -78,7 +78,7 @@ class CulturalModeratorManifestationUiTest extends TestCase
         $this->actingAs($this->modA)
             ->get(route('cultural-moderator-manifestations.index'))
             ->assertOk()
-            ->assertSee('Izaberite aktivni Organizator');
+            ->assertSee('Izbor organizatora');
 
         // Moderator KK nav keeps public Manifestacije and must not show kk_admin editorial MF entry.
         $kkHome = $this->actingAs($this->modA)

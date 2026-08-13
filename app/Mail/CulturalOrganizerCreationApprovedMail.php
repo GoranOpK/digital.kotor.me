@@ -37,7 +37,7 @@ class CulturalOrganizerCreationApprovedMail extends Mailable
             view: 'emails.cultural-organizer-creation-approved',
             with: [
                 'organizerName' => $this->organizer->naziv,
-                'workspaceUrl' => route('cultural-moderator-workspace.index'),
+                'kontrolnaTablaUrl' => route('cultural-moderator-dashboard.index'),
             ],
         );
     }

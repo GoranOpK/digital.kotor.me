@@ -53,6 +53,20 @@
     $kkLogoutBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:8px;'
         .'background:#0d6efd;color:#ffffff;border:1px solid #0d6efd;font-size:16px;font-weight:600;'
         .'text-decoration:none;text-align:center;cursor:pointer;';
+
+    // Moderator UX block (grant-based; not a platform role). Labels only — access stays in middleware.
+    $isActiveModeratorUser = $user && \App\Support\CulturalModeratorEventAccess::isActiveModerator($user);
+    $moderatorActiveOrganizer = null;
+    $moderatorAvailableOrganizerCount = 0;
+    if ($isActiveModeratorUser) {
+        $moderatorActiveOrganizer = \App\Support\CulturalOrganizerContext::get($user);
+        $moderatorAvailableOrganizerCount = \App\Support\CulturalOrganizerContext::availableOrganizers($user)->count();
+    }
+    $isModeratorContentNav = request()->routeIs(
+        'cultural-moderator-events.*',
+        'cultural-moderator-manifestations.*',
+        'cultural-moderator-proposals.*'
+    );
 @endphp
 @if($isKkAdmin)
 {{-- Inline CSS: Tailwind purge often omits sm:flex-col, which collapsed both rows into one horizontal flex. --}}
@@ -250,17 +264,58 @@
                                     style="{{ $kkNavBtn(request()->routeIs('cultural-organizer-creation-requests.create', 'cultural-organizer-creation-requests.store')) }}"
                                 >Zahtjev za Organizatora</a>
                             @endif
-                            @if(\App\Support\CulturalModeratorEventAccess::isActiveModerator(auth()->user()))
-                                <a
-                                    href="{{ route('cultural-moderator-dashboard.index') }}"
-                                    style="{{ $kkNavBtn(request()->routeIs('cultural-moderator-dashboard.*')) }}"
-                                >Radna tabla</a>
-                            @endif
-                            @if(\App\Support\CulturalPortalAccess::allows(auth()->user()))
-                                <a
-                                    href="{{ route('cultural-moderator-workspace.index') }}"
-                                    style="{{ $kkNavBtn(request()->routeIs('cultural-moderator-workspace.*')) }}"
-                                >Mod rad</a>
+                            @if($isActiveModeratorUser)
+                                <span
+                                    data-kk-nav-moderator-block="1"
+                                    style="display:inline-flex;align-items:center;flex-wrap:wrap;gap:8px;margin-left:4px;padding-left:8px;border-left:2px solid #e5e7eb;"
+                                >
+                                    <a
+                                        href="{{ route('cultural-moderator-dashboard.index') }}"
+                                        data-kk-nav="kontrolna-tabla-moderator"
+                                        style="{{ $kkNavBtn(request()->routeIs('cultural-moderator-dashboard.*')) }}"
+                                    >Kontrolna tabla</a>
+                                    <div
+                                        class="relative"
+                                        x-data="{ open: false }"
+                                        @click.outside="open = false"
+                                        data-kk-nav="moderiranje"
+                                    >
+                                        <button
+                                            type="button"
+                                            @click="open = ! open"
+                                            style="{{ $kkNavBtn($isModeratorContentNav) }} border:0;cursor:pointer;"
+                                        >Moderiranje</button>
+                                        <div
+                                            x-show="open"
+                                            x-cloak
+                                            style="display:none;position:absolute;z-index:50;margin-top:6px;min-width:200px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.08);padding:6px;"
+                                        >
+                                            <a
+                                                href="{{ route('cultural-moderator-events.index') }}"
+                                                data-kk-nav="mod-events"
+                                                style="display:block;padding:8px 12px;border-radius:6px;color:#111827;text-decoration:none;font-size:14px;font-weight:600;"
+                                            >Događaji</a>
+                                            <a
+                                                href="{{ route('cultural-moderator-manifestations.index') }}"
+                                                data-kk-nav="mod-manifestations"
+                                                style="display:block;padding:8px 12px;border-radius:6px;color:#111827;text-decoration:none;font-size:14px;font-weight:600;"
+                                            >Manifestacije</a>
+                                        </div>
+                                    </div>
+                                    @if($moderatorActiveOrganizer)
+                                        <span
+                                            data-kk-nav="active-organizer"
+                                            style="display:inline-flex;align-items:center;padding:8px 12px;border-radius:8px;background:#f3f4f6;color:#111827;font-size:13px;font-weight:600;white-space:nowrap;"
+                                        >Organizator: {{ $moderatorActiveOrganizer->naziv }}</span>
+                                    @endif
+                                    @if($moderatorAvailableOrganizerCount > 1)
+                                        <a
+                                            href="{{ route('cultural-moderator-workspace.index') }}"
+                                            data-kk-nav="promijeni-organizatora"
+                                            style="{{ $kkNavBtn(request()->routeIs('cultural-moderator-workspace.*')) }}"
+                                        >Promijeni organizatora</a>
+                                    @endif
+                                </span>
                             @endif
                         @endauth
                     </div>
@@ -447,17 +502,41 @@
                         >Zahtjevi</a>
                     @endif
                     @auth
-                        @if(\App\Support\CulturalModeratorEventAccess::isActiveModerator(auth()->user()))
-                            <a
-                                href="{{ route('cultural-moderator-dashboard.index') }}"
-                                style="{{ $kkNavBtnMobile(request()->routeIs('cultural-moderator-dashboard.*')) }}"
-                            >Radna tabla</a>
-                        @endif
-                        @if(\App\Support\CulturalPortalAccess::allows(auth()->user()))
-                            <a
-                                href="{{ route('cultural-moderator-workspace.index') }}"
-                                style="{{ $kkNavBtnMobile(request()->routeIs('cultural-moderator-workspace.*')) }}"
-                            >Mod rad</a>
+                        @if($isActiveModeratorUser)
+                            <div data-kk-nav-moderator-block="1" class="space-y-2">
+                                <a
+                                    href="{{ route('cultural-moderator-dashboard.index') }}"
+                                    data-kk-nav="kontrolna-tabla-moderator"
+                                    style="{{ $kkNavBtnMobile(request()->routeIs('cultural-moderator-dashboard.*')) }}"
+                                >Kontrolna tabla</a>
+                                <p
+                                    data-kk-nav="moderiranje"
+                                    style="margin:8px 0 0;padding:0 4px;font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#6b7280;"
+                                >Moderiranje</p>
+                                <a
+                                    href="{{ route('cultural-moderator-events.index') }}"
+                                    data-kk-nav="mod-events"
+                                    style="{{ $kkNavBtnMobile(request()->routeIs('cultural-moderator-events.*')) }}"
+                                >Događaji</a>
+                                <a
+                                    href="{{ route('cultural-moderator-manifestations.index') }}"
+                                    data-kk-nav="mod-manifestations"
+                                    style="{{ $kkNavBtnMobile(request()->routeIs('cultural-moderator-manifestations.*')) }}"
+                                >Manifestacije</a>
+                                @if($moderatorActiveOrganizer)
+                                    <span
+                                        data-kk-nav="active-organizer"
+                                        style="display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:8px;background:#f3f4f6;color:#111827;font-size:14px;font-weight:600;"
+                                    >Organizator: {{ $moderatorActiveOrganizer->naziv }}</span>
+                                @endif
+                                @if($moderatorAvailableOrganizerCount > 1)
+                                    <a
+                                        href="{{ route('cultural-moderator-workspace.index') }}"
+                                        data-kk-nav="promijeni-organizatora"
+                                        style="{{ $kkNavBtnMobile(request()->routeIs('cultural-moderator-workspace.*')) }}"
+                                    >Promijeni organizatora</a>
+                                @endif
+                            </div>
                         @endif
                     @endauth
                 @elseif($isCompetitionAdmin)

@@ -4,8 +4,8 @@
 **Oznaka dokumenta:** RG-001
 **Naziv:** Registar skraćenica i oznaka dokumentacije Kalendara kulture
 **Status dokumenta:** Stable
-**Verzija:** 1.1.7
-**Datum:** 2026-08-11
+**Verzija:** 1.1.8
+**Datum:** 2026-08-13
 
 ---
 
@@ -98,6 +98,9 @@ Uključene su samo **interne** skraćenice projekta koje se **stvarno koriste** 
 | **SSOT** | Single Source of Truth | Jedini mjerodavni izvor podataka/istine za dati domen (npr. public query SSOT). |
 | **CTA** | Call to Action | Poziv na akciju u UI/portalskom kontekstu (npr. Hero bez CTA dugmadi). |
 | **KK** | Kalendar kulture | Skraćenica naziva modula Kalendar kulture. |
+| **MOD** | Moderator | Dokumentaciona skraćenica za **Moderator Organizatora** u paketnim oznakama (npr. **MOD-UX-01**). Poslovna definicija ostaje u BM-MOD / TS-001 / TS-010.3 — RG-001 ne definiše ulogu. |
+| **ORG** | Organizator | Dokumentaciona skraćenica za **Organizatora** u paketnim / PO oznakama (npr. **PO-ORG-***). Poslovna definicija ostaje u BM-ORG / TS-001 / TS-010.2. |
+| **UX** | Korisničko iskustvo (User Experience) | Dokumentaciona skraćenica / prefiks UX korektiva i navigacionih paketa (npr. **MOD-UX-01**). |
 | **CAT-CUTOVER** | Category cutover | Dokumentaciona/implementaciona oznaka cutover-a kategorija na kanonski katalog (PO-TS9-08E). |
 
 **Razlika TS / IS / IR**
@@ -342,7 +345,8 @@ RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, katego
 | 1.1.5 | 2026-08-09 | TM-* primjer dopunjen sa **TM-JP-*** (TS-009 §18 Faza 6A). Bez izmjene implementacije. |
 | 1.1.6 | 2026-08-11 | Coverage + maintenance: dodati **MF**, **OCC**, **SSOT**, **CTA**, **KK**, **CAT-CUTOVER**, familije **PO-6A** / **PO-6B**; formalizovano pravilo da se RG-001 ažurira u istom dokumentacionom paketu kad se uvede nova projektna skraćenica. Usklađeno sa PO-6B-08/09 pre-impl docs. Bez izmjene implementacije. |
 | 1.1.7 | 2026-08-11 | **PO-6B-10:** primjer familije **PO-6B** dopunjen sa PO-6B-10 (već pokriveno familijom; bez novog abbreviation row-a). Usklađeno sa 6B-04 pre-commit docs sync. Bez izmjene implementacije. |
+| 1.1.8 | 2026-08-13 | **MOD-UX-01:** dodate skraćenice **UX**, **MOD**, **ORG** (dokumentacione / paketne; bez poslovnih definicija uloga). Usklađeno sa TS-010 v1.0.10 / Feature Registry status sync. Bez izmjene BM/FS. Bez izmjene implementacije. |
 
 ---
 
-**Kraj dokumenta RG-001 v1.1.7 (Stable)**
+**Kraj dokumenta RG-001 v1.1.8 (Stable)**

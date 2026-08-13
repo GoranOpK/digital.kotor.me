@@ -2,8 +2,8 @@
 
 @section('content')
 <div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <h1 style="font-size:28px; font-weight:700; margin:0 0 8px; color:#111827;">Moderatorski workspace</h1>
-    <p class="text-sm text-gray-600 mb-4">Pristup na osnovu aktivnog moderatorskog ovlašćenja (PO-ORG-04 / TS-010.1).</p>
+    <h1 style="font-size:28px; font-weight:700; margin:0 0 8px; color:#111827;">Izbor organizatora</h1>
+    <p class="text-sm text-gray-600 mb-4">Izaberite ili promijenite Organizatora za koji radite kao Moderator.</p>
 
     @if(session('status'))
         <div class="mb-4 rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3">{{ session('status') }}</div>
@@ -13,9 +13,9 @@
         <div class="bg-white rounded-lg border border-gray-200 p-4 mb-6 max-w-3xl">
             <h2 class="text-base font-semibold text-gray-900 mb-2">Aktivni Organizator</h2>
             @if($activeOrganizer)
-                <p class="text-sm text-gray-700 mb-3">Trenutni kontekst: <strong>{{ $activeOrganizer->naziv }}</strong></p>
+                <p class="text-sm text-gray-700 mb-3">Organizator: <strong>{{ $activeOrganizer->naziv }}</strong></p>
                 <a href="{{ route('cultural-moderator-events.index') }}" class="inline-block px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50 font-semibold">
-                    Događaji Organizatora
+                    Događaji
                 </a>
                 <a href="{{ route('cultural-moderator-manifestations.index') }}" class="inline-block px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50 font-semibold ml-2">
                     Manifestacije
@@ -39,7 +39,7 @@
                         </select>
                     </div>
                     <button type="submit" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-800 hover:bg-gray-50">
-                        Postavi kontekst
+                        Promijeni organizatora
                     </button>
                 </form>
             @endif

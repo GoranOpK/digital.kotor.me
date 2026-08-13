@@ -76,7 +76,7 @@ class CulturalModeratorEventDraftTest extends TestCase
     {
         $this->actingAs($this->modA)
             ->post(route('cultural-moderator-context.update'), ['organizer_id' => $this->orgA->id])
-            ->assertRedirect(route('cultural-moderator-events.index'));
+            ->assertRedirect(route('cultural-moderator-dashboard.index'));
 
         $response = $this->actingAs($this->modA)->post(route('cultural-moderator-events.store'), [
             'naslov' => 'Mod nacrt',
@@ -357,11 +357,11 @@ class CulturalModeratorEventDraftTest extends TestCase
         $this->actingAs($this->modA)
             ->get(route('cultural-moderator-events.index'))
             ->assertOk()
-            ->assertSee('Izaberite Organizator', false);
+            ->assertSee('Izbor organizatora', false);
 
         $this->actingAs($this->modA)
             ->post(route('cultural-moderator-context.update'), ['organizer_id' => $this->orgB->id])
-            ->assertRedirect(route('cultural-moderator-events.index'));
+            ->assertRedirect(route('cultural-moderator-dashboard.index'));
 
         $this->assertSame($this->orgB->id, CulturalOrganizerContext::get($this->modA)->id);
 

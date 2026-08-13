@@ -116,7 +116,7 @@ class CulturalPoOrg06Package4DecisionOutcomeMailTest extends TestCase
             $html = $mail->render();
             $this->assertStringContainsString('Approve No Note Org', $html);
             $this->assertStringContainsString('odobren', mb_strtolower($html));
-            $this->assertStringContainsString(route('cultural-moderator-workspace.index'), $html);
+            $this->assertStringContainsString(route('cultural-moderator-dashboard.index'), $html);
 
             return true;
         });

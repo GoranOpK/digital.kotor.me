@@ -8,7 +8,7 @@
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
 **Implementacioni status V1:** ZAVRŠEN
-**Verzija:** 1.0.9
+**Verzija:** 1.0.10
 **Datum:** 2026-08-13
 
 ---
@@ -40,6 +40,7 @@
 | 1.0.7 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** U pripremi UI; Sačuvaj i nastavi; `organizer_manual_name`; delete draft; published direct edit; opcion cancel reasons; DU-03; security; test matrix PATCH-063. Bez izmjene implementacije. |
 | 1.0.8 | 2026-08-13 | **kk_admin UX / navigation consolidation (status only):** nav label `Urednički rad` → `Kontrolna tabla` (prva editorial stavka); objedinjeni nav entrypoint `Zahtjevi` (`cultural-editorial-requests.index`) sa sekcijama Org/Mod (decision tokovi KEEP); `kk_admin` post-login fallback → `cultural-calendar.index` uz safe intended. **IMPLEMENTED / TESTED (local).** Bez BM/FS izmjene. |
 | 1.0.9 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup:** `Ukloni` na odbijenom Org/Mod zahtjevu = workspace dismiss (`editor_dismissed_at`); **ne** hard delete; §6.7.1 retention KEEP; unified `Zahtjevi` default filter. Usklađeno sa BM PATCH-072 / FS PATCH-FS-071 / TS-001 v0.4.2. |
+| 1.0.10 | 2026-08-13 | **MOD-UX-01 — Moderator UX / navigation corrective (status sync):** korisnički UI termini — primarni entrypoint **Kontrolna tabla** (`cultural-moderator-dashboard.index`); sadržajni entrypoint **Moderiranje** (grane Događaji / Manifestacije); `Organizator: <naziv>`; **Promijeni organizatora**; pomoćni ekran **Izbor organizatora**. Uklonjeni korisnički termini: Radna tabla / Mod rad / Moderatorski workspace / Workspace (u ovom značenju). Context switch redirect → Kontrolna tabla; approval email CTA → Kontrolna tabla. Auth / lifecycle / `CulturalOrganizerContext` KEEP. Bez BM/FS izmjene. |
 Napomena:
 
 Ovo poglavlje služi isključivo za evidenciju razvoja dokumenta.
@@ -73,7 +74,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.6 | 2026-08-08 | CLOSEOUT: V1 implementaciono završen (PO-DG-10; direct publish; BR-052; Proposal; occurrence lifecycle; Editor resume/TM-OCC-17; generator/T10-GEN-01; PO-AUTO-01/02; auto archive/G2; dashboards). TS-010.7 emit = TS-012 / Faza 8. |
 
 | 1.0.7 | 2026-08-10 | PATCH-063: U pripremi; delete draft; published direct edit; manual Org; test matrix. |
----
+| 1.0.10 | 2026-08-13 | STATUS SYNC: MOD-UX-01 — Moderator UI navigacija/terminologija (Kontrolna tabla / Moderiranje / Izbor organizatora); auth/lifecycle/context KEEP. |
 
 # Svrha dokumenta
 
@@ -1823,6 +1824,56 @@ Dashboard **navigira** ka postojećim listama/formama; ne redefiniše:
 * guard redoslijed;
 * prijedlog izmjene / N-DG-04;
 * Delete pravila.
+
+## 11.14 Korisnički UI termini — Moderator (MOD-UX-01)
+
+**Status sync (v1.0.10).** Ne mijenja PO-DASH-01–05, DM-01–03, autorizaciju, `CulturalOrganizerContext`, session key `cultural_active_organizer_id`, niti lifecycle.
+
+### Primarni moderatorski entrypoint
+
+Korisnički label: **Kontrolna tabla**
+
+Route: `cultural-moderator-dashboard.index`
+
+(Tehnički: Moderator Dashboard / DM-01–DM-03; stariji korisnički naziv „Radna tabla“ je **supersedovan** u UI.)
+
+Urednički (`kk_admin`) dashboard takođe koristi korisnički label **Kontrolna tabla** (`cultural-editorial-dashboard.index`).
+
+### Sadržajni entrypoint
+
+Korisnički label: **Moderiranje**
+
+Grane (postojeće rute; bez novog portala):
+
+* **Događaji** → `cultural-moderator-events.*`
+* **Manifestacije** → `cultural-moderator-manifestations.*`
+
+Desktop: Alpine dropdown. Mobile: grupisana sekcija „Moderiranje“ sa istim granama. Javni KK entrypoint-i (Kalendar kulture / Događaji / Arhiva / Manifestacije) ostaju dostupni Moderatoru.
+
+### Aktivni kontekst
+
+Prikaz: `Organizator: <naziv>` (iz postojećeg aktivnog konteksta).
+
+Kada Moderator ima **više** dostupnih Organizatora: akcija **Promijeni organizatora**.
+
+### Pomoćni ekran
+
+Korisnički label: **Izbor organizatora**
+
+(Tehnički: `cultural-moderator-workspace.index` i/ili select-context view; interni nazivi klasa/ruta KEEP.)
+
+Nakon uspješne promjene konteksta (`cultural-moderator-context.update`) korisnik se vraća na **Kontrolnu tablu**.
+
+Approval email CTA za novog/odobrenog Moderatora vodi na **Kontrolnu tablu** (`cultural-moderator-dashboard.index`).
+
+### Uklonjeni korisnički termini (isti koncept)
+
+Ne koristiti u UI-ju za Moderatorski entrypoint:
+
+* Radna tabla
+* Mod rad
+* Moderatorski rad / Moderatorski workspace
+* Workspace / „radni prostor“ (u ovom značenju)
 
 ---
 
