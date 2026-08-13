@@ -62,7 +62,7 @@ class CulturalEditorialDashboardTest extends TestCase
         $this->actingAs($this->editor)
             ->get(route('cultural-editorial-dashboard.index'))
             ->assertOk()
-            ->assertSee('Urednički radni prostor', false)
+            ->assertSee('Kontrolna tabla', false)
             ->assertSee('Čeka pregled', false)
             ->assertSee('Prijedlozi izmjena na pregledu', false)
             ->assertSee('Događaji u pripremi', false)

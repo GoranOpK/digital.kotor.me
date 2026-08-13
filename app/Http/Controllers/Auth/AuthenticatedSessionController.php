@@ -28,7 +28,35 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('home', absolute: false));
+        $default = route('home', absolute: false);
+        $user = Auth::user();
+        if ($user && $user->role && $user->role->name === 'kk_admin') {
+            $default = route('cultural-calendar.index', absolute: false);
+        }
+
+        return $this->redirectAfterLogin($request, $default);
+    }
+
+    /**
+     * Preserve intended only for safe same-app URLs (no open redirect).
+     */
+    private function redirectAfterLogin(Request $request, string $default): RedirectResponse
+    {
+        $intended = $request->session()->pull('url.intended');
+        if (! is_string($intended) || $intended === '') {
+            return redirect()->to($default);
+        }
+
+        if (str_starts_with($intended, '/') && ! str_starts_with($intended, '//')) {
+            return redirect()->to($intended);
+        }
+
+        $appUrl = rtrim((string) config('app.url'), '/');
+        if ($appUrl !== '' && (str_starts_with($intended, $appUrl.'/') || $intended === $appUrl)) {
+            return redirect()->to($intended);
+        }
+
+        return redirect()->to($default);
     }
 
     /**

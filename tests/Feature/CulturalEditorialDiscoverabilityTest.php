@@ -236,14 +236,13 @@ class CulturalEditorialDiscoverabilityTest extends TestCase
         foreach ([
             'Upravljanje događajima',
             'Upravljanje manifestacijama',
-            'Urednički rad',
+            'Kontrolna tabla',
             'Lokacije',
             'Kategorije',
             'Oznake',
             'Mediji',
             'Organizatori',
-            'Zahtjevi Org',
-            'Zahtjevi Mod',
+            'Zahtjevi',
             'Javni portal',
         ] as $label) {
             $this->assertStringNotContainsString('>'.$label.'<', $mobileNav);
@@ -264,21 +263,20 @@ class CulturalEditorialDiscoverabilityTest extends TestCase
         $mobileNav = substr($html, $mobileStart, $mobileEnd - $mobileStart);
 
         foreach ([
+            'Kontrolna tabla',
             'Upravljanje događajima',
             'Upravljanje manifestacijama',
-            'Urednički rad',
             'Lokacije',
             'Kategorije',
             'Oznake',
             'Mediji',
             'Organizatori',
-            'Zahtjevi Org',
-            'Zahtjevi Mod',
+            'Zahtjevi',
             'Javni portal',
         ] as $label) {
             $this->assertStringContainsString('>'.$label.'<', $mobileNav);
         }
-        foreach (['Kalendar kulture', 'Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal'] as $label) {
+        foreach (['Kalendar kulture', 'Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal', 'Urednički rad', 'Zahtjevi Org', 'Zahtjevi Mod'] as $label) {
             $this->assertStringNotContainsString('>'.$label.'<', $mobileNav);
         }
     }

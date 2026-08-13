@@ -8,8 +8,8 @@
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
 **Implementacioni status V1:** ZAVRŠEN
-**Verzija:** 1.0.7
-**Datum:** 2026-08-10
+**Verzija:** 1.0.8
+**Datum:** 2026-08-13
 
 ---
 
@@ -38,6 +38,7 @@
 | 1.0.6 | 2026-08-08 | **V1 implementacioni closeout:** Urednički portal V1 funkcionalno / implementaciono završen i verifikovan (Cultural: 420 passed / 1740 assertions). Obuhvat: PO-DG-10; direct publish; BR-052; Proposal workflow; occurrence lifecycle; Editor resume (TM-OCC-17); generator (T10-GEN-01); PO-AUTO-01/02; auto archive (G2); dashboards. TS-010.7 emit/storage = **TS-012 DEPENDENCY / DEFERRED BY DESIGN** (Faza 8). TS-005 / TS-009 van closeout-a. Bez novih BM/BR. |
 
 | 1.0.7 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** U pripremi UI; Sačuvaj i nastavi; `organizer_manual_name`; delete draft; published direct edit; opcion cancel reasons; DU-03; security; test matrix PATCH-063. Bez izmjene implementacije. |
+| 1.0.8 | 2026-08-13 | **kk_admin UX / navigation consolidation (status only):** nav label `Urednički rad` → `Kontrolna tabla` (prva editorial stavka); objedinjeni nav entrypoint `Zahtjevi` (`cultural-editorial-requests.index`) sa sekcijama Org/Mod (decision tokovi KEEP); `kk_admin` post-login fallback → `cultural-calendar.index` uz safe intended. **IMPLEMENTED / TESTED (local).** Bez BM/FS izmjene. |
 Napomena:
 
 Ovo poglavlje služi isključivo za evidenciju razvoja dokumenta.

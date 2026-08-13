@@ -4,6 +4,7 @@
         'cultural-event-entries.*',
         'cultural-manifestations.*',
         'cultural-editorial-dashboard.*',
+        'cultural-editorial-requests.*',
         'cultural-event-change-proposals.*',
         'cultural-locations.*',
         'cultural-categories.*',

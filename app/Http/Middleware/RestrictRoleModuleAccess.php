@@ -53,6 +53,10 @@ class RestrictRoleModuleAccess
                 return $next($request);
             }
 
+            if ($routeName && str_starts_with($routeName, 'cultural-editorial-requests.')) {
+                return $next($request);
+            }
+
             if ($routeName && str_starts_with($routeName, 'cultural-event-change-proposals.')) {
                 return $next($request);
             }

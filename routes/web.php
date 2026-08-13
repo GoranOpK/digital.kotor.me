@@ -8,6 +8,7 @@ use App\Http\Controllers\ContractController;
 use App\Http\Controllers\CulturalCalendarController;
 use App\Http\Controllers\CulturalCalendarNewsletterController;
 use App\Http\Controllers\CulturalEditorialDashboardController;
+use App\Http\Controllers\CulturalEditorialRequestsController;
 use App\Http\Controllers\CulturalEventChangeProposalController;
 use App\Http\Controllers\CulturalEventEntryController;
 use App\Http\Controllers\CulturalEventEntryOccurrenceController;
@@ -228,6 +229,10 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
         // TS-010.2 / TS-010.3a — Urednik Dashboard / Inbox (DU-01–DU-05)
         Route::get('/kalendar-kulture/urednicki-rad', [CulturalEditorialDashboardController::class, 'index'])
             ->name('cultural-editorial-dashboard.index');
+
+        // UX: objedinjeni entrypoint Zahtjevi (Org + Mod liste; decision routes KEEP)
+        Route::get('/kalendar-kulture/zahtjevi', [CulturalEditorialRequestsController::class, 'index'])
+            ->name('cultural-editorial-requests.index');
 
         // TS-010.3a — Prijedlozi izmjene (Urednik)
         Route::get('/kalendar-kulture/prijedlozi-izmjene', [CulturalEventChangeProposalController::class, 'index'])

@@ -104,12 +104,40 @@ class HomeController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('home'));
+            $default = route('home');
+            $user = Auth::user();
+            if ($user && $user->role && $user->role->name === 'kk_admin') {
+                $default = route('cultural-calendar.index');
+            }
+
+            return $this->redirectAfterLogin($request, $default);
         }
 
         return back()->withErrors([
             'email' => 'Pogrešan email ili lozinka, ili nalog nije aktivan.',
         ])->onlyInput('email');
+    }
+
+    /**
+     * Preserve intended only for safe same-app URLs (no open redirect).
+     */
+    private function redirectAfterLogin(Request $request, string $default): \Illuminate\Http\RedirectResponse
+    {
+        $intended = $request->session()->pull('url.intended');
+        if (! is_string($intended) || $intended === '') {
+            return redirect()->to($default);
+        }
+
+        if (str_starts_with($intended, '/') && ! str_starts_with($intended, '//')) {
+            return redirect()->to($intended);
+        }
+
+        $appUrl = rtrim((string) config('app.url'), '/');
+        if ($appUrl !== '' && (str_starts_with($intended, $appUrl.'/') || $intended === $appUrl)) {
+            return redirect()->to($intended);
+        }
+
+        return redirect()->to($default);
     }
 
     public function registerForm()
