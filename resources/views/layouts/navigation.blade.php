@@ -41,6 +41,11 @@
         return 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:8px;'
             ."background:{$bg};color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;";
     };
+    // Shared desktop sizing for moderator entrypoints (Kontrolna tabla <a> + Moderiranje <summary>).
+    $kkModeratorEntryBtn = static function (bool $active) use ($kkNavBtn): string {
+        return $kkNavBtn($active)
+            .'box-sizing:border-box;line-height:1.25;min-height:38px;height:38px;';
+    };
     $kkNavBtnMobile = static function (bool $active): string {
         $bg = $active ? '#5f0c12' : '#7a0f17';
 
@@ -265,6 +270,11 @@
                                 >Zahtjev za Organizatora</a>
                             @endif
                             @if($isActiveModeratorUser)
+                                <style>
+                                    details.kk-moderation-menu > summary { list-style: none; }
+                                    details.kk-moderation-menu > summary::-webkit-details-marker { display: none; }
+                                    details.kk-moderation-menu > summary::marker { content: ''; }
+                                </style>
                                 <span
                                     data-kk-nav-moderator-block="1"
                                     style="display:inline-flex;align-items:center;flex-wrap:wrap;gap:8px;margin-left:4px;padding-left:8px;border-left:2px solid #e5e7eb;"
@@ -272,23 +282,18 @@
                                     <a
                                         href="{{ route('cultural-moderator-dashboard.index') }}"
                                         data-kk-nav="kontrolna-tabla-moderator"
-                                        style="{{ $kkNavBtn(request()->routeIs('cultural-moderator-dashboard.*')) }}"
+                                        style="{{ $kkModeratorEntryBtn(request()->routeIs('cultural-moderator-dashboard.*')) }}"
                                     >Kontrolna tabla</a>
-                                    <div
-                                        class="relative"
-                                        x-data="{ open: false }"
-                                        @click.outside="open = false"
+                                    <details
+                                        class="kk-moderation-menu relative"
                                         data-kk-nav="moderiranje"
+                                        style="display:inline-block;position:relative;"
                                     >
-                                        <button
-                                            type="button"
-                                            @click="open = ! open"
-                                            style="{{ $kkNavBtn($isModeratorContentNav) }} border:0;cursor:pointer;"
-                                        >Moderiranje</button>
+                                        <summary
+                                            style="{{ $kkModeratorEntryBtn($isModeratorContentNav) }}list-style:none;cursor:pointer;border:0;outline:none;"
+                                        >Moderiranje</summary>
                                         <div
-                                            x-show="open"
-                                            x-cloak
-                                            style="display:none;position:absolute;z-index:50;margin-top:6px;min-width:200px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.08);padding:6px;"
+                                            style="position:absolute;z-index:50;margin-top:6px;min-width:200px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.08);padding:6px;"
                                         >
                                             <a
                                                 href="{{ route('cultural-moderator-events.index') }}"
@@ -301,7 +306,7 @@
                                                 style="display:block;padding:8px 12px;border-radius:6px;color:#111827;text-decoration:none;font-size:14px;font-weight:600;"
                                             >Manifestacije</a>
                                         </div>
-                                    </div>
+                                    </details>
                                     @if($moderatorActiveOrganizer)
                                         <span
                                             data-kk-nav="active-organizer"

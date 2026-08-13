@@ -107,6 +107,69 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.manifestations')).'"', $html);
     }
 
+    public function test_desktop_moderiranje_uses_native_details_without_js(): void
+    {
+        CulturalOrganizerContext::set($this->moderator, $this->orgA->id);
+
+        $html = $this->actingAs($this->moderator)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+
+        $layoutStart = strpos($html, 'data-kk-nav-moderator-block="1"');
+        $hamburgerStart = strpos($html, '<!-- Hamburger -->');
+        $this->assertNotFalse($layoutStart);
+        $this->assertNotFalse($hamburgerStart);
+        $desktopNav = substr($html, $layoutStart, $hamburgerStart - $layoutStart);
+
+        $this->assertStringContainsString('<details', $desktopNav);
+        $this->assertStringContainsString('<summary', $desktopNav);
+        $this->assertStringContainsString('>Moderiranje</summary>', $desktopNav);
+        $this->assertStringContainsString('data-kk-nav="moderiranje"', $desktopNav);
+        $this->assertStringContainsString('data-kk-nav="mod-events"', $desktopNav);
+        $this->assertStringContainsString('data-kk-nav="mod-manifestations"', $desktopNav);
+        $this->assertStringContainsString(
+            'href="'.e(route('cultural-moderator-events.index')).'"',
+            $desktopNav
+        );
+        $this->assertStringContainsString(
+            'href="'.e(route('cultural-moderator-manifestations.index')).'"',
+            $desktopNav
+        );
+
+        // No Alpine / JS toggle dependency for Moderiranje.
+        $this->assertStringNotContainsString('x-data=', $desktopNav);
+        $this->assertStringNotContainsString('x-show=', $desktopNav);
+        $this->assertStringNotContainsString('@click', $desktopNav);
+        $this->assertStringNotContainsString('x-cloak', $desktopNav);
+        $this->assertStringNotContainsString('data-kk-moderation-toggle', $desktopNav);
+        $this->assertStringNotContainsString('data-kk-moderation-root', $desktopNav);
+        $this->assertStringNotContainsString('data-kk-moderation-menu', $desktopNav);
+
+        // Shared sizing contract for Kontrolna tabla and Moderiranje.
+        $this->assertMatchesRegularExpression(
+            '/data-kk-nav="kontrolna-tabla-moderator"[^>]*padding:8px 14px[^>]*min-height:38px;height:38px/u',
+            $desktopNav
+        );
+        $this->assertMatchesRegularExpression(
+            '/<summary[^>]*padding:8px 14px[^>]*min-height:38px;height:38px/u',
+            $desktopNav
+        );
+        $this->assertMatchesRegularExpression(
+            '/<summary[^>]*font-size:14px;font-weight:600/u',
+            $desktopNav
+        );
+
+        // Mobile moderator branches remain direct links (not details).
+        $menuStart = strpos($html, '<!-- Responsive Navigation Menu -->');
+        $this->assertNotFalse($menuStart);
+        $mobileNav = substr($html, $menuStart);
+        $this->assertStringContainsString('data-kk-nav="moderiranje"', $mobileNav);
+        $this->assertStringContainsString('data-kk-nav="mod-events"', $mobileNav);
+        $this->assertStringContainsString('data-kk-nav="mod-manifestations"', $mobileNav);
+        $this->assertStringNotContainsString('<details', $mobileNav);
+    }
+
     public function test_multi_org_moderator_sees_promijeni_organizatora_action(): void
     {
         $this->grant($this->moderator, $this->orgB);
