@@ -42,9 +42,10 @@
             ."background:{$bg};color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;";
     };
     // Shared desktop sizing for moderator entrypoints (Kontrolna tabla + Moderiranje) — both <a>.
+    // Explicit equal width+height (content-width alone would make Moderiranje narrower).
     $kkModeratorEntryBtn = static function (bool $active) use ($kkNavBtn): string {
         return $kkNavBtn($active)
-            .'box-sizing:border-box;line-height:1.25;min-height:38px;height:38px;';
+            .'box-sizing:border-box;line-height:1.25;min-height:38px;height:38px;width:170px;';
     };
     $kkNavBtnMobile = static function (bool $active): string {
         $bg = $active ? '#5f0c12' : '#7a0f17';

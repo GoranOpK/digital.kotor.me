@@ -156,12 +156,26 @@ class CulturalModeratorUxNavigationTest extends TestCase
             'Kontrolna tabla and Moderiranje must share an identical style attribute on the public calendar (both inactive).'
         );
         $this->assertStringContainsString('display:inline-flex', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('align-items:center', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('justify-content:center', $kontrolnaStyle[1]);
         $this->assertStringContainsString('padding:8px 14px', $kontrolnaStyle[1]);
         $this->assertStringContainsString('min-height:38px', $kontrolnaStyle[1]);
         $this->assertStringContainsString('height:38px', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('width:170px', $kontrolnaStyle[1]);
         $this->assertStringContainsString('line-height:1.25', $kontrolnaStyle[1]);
         $this->assertStringContainsString('box-sizing:border-box', $kontrolnaStyle[1]);
         $this->assertStringContainsString('font-size:14px;font-weight:600', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('white-space:nowrap', $kontrolnaStyle[1]);
+        $this->assertSame(
+            1,
+            preg_match('/(?:^|;)width:170px(?:;|$)/u', $kontrolnaStyle[1]),
+            'Shared explicit width constraint required for equal Moderiranje/Kontrolna tabla width.'
+        );
+        $this->assertSame(
+            1,
+            preg_match('/(?:^|;)width:170px(?:;|$)/u', $moderiranjeStyle[1]),
+            'Moderiranje must use the same explicit width as Kontrolna tabla.'
+        );
 
         $menuStart = strpos($html, '<!-- Responsive Navigation Menu -->');
         $this->assertNotFalse($menuStart);
@@ -202,9 +216,27 @@ class CulturalModeratorUxNavigationTest extends TestCase
             ->assertOk()
             ->assertSee('Kontrolna tabla', false)
             ->assertSee('Organizator: UX Org A', false)
-            ->assertSee('Moderiranje', false)
+            ->assertSee('DM-01', false)
             ->assertDontSee('Radna tabla', false)
             ->assertDontSee('Workspace', false);
+
+        // Page-level redundant Moderiranje|Događaji|Manifestacije block removed (global nav KEEP).
+        $dashboardHtml = $this->actingAs($this->moderator)
+            ->get(route('cultural-moderator-dashboard.index'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString(
+            'hover:bg-gray-50">Moderiranje</a>',
+            $dashboardHtml
+        );
+        $this->assertStringNotContainsString(
+            'hover:bg-gray-50">Događaji</a>',
+            $dashboardHtml
+        );
+        $this->assertStringNotContainsString(
+            'hover:bg-gray-50">Manifestacije</a>',
+            $dashboardHtml
+        );
 
         $page = $this->actingAs($this->moderator)
             ->get(route('cultural-moderator-workspace.index'))

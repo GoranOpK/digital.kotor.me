@@ -87,7 +87,7 @@ class CulturalModeratorDashboardTest extends TestCase
     {
         CulturalOrganizerContext::set($this->moderator, $this->orgA->id);
 
-        $this->actingAs($this->moderator)
+        $html = $this->actingAs($this->moderator)
             ->get(route('cultural-moderator-dashboard.index'))
             ->assertOk()
             ->assertSee('Kontrolna tabla', false)
@@ -99,7 +99,13 @@ class CulturalModeratorDashboardTest extends TestCase
             ->assertSee('DM-03', false)
             ->assertSee('Nacrti', false)
             ->assertSee('Na odobrenju', false)
-            ->assertSee('Aktivni prijedlozi izmjena', false);
+            ->assertSee('Aktivni prijedlozi izmjena', false)
+            ->getContent();
+
+        // Redundant page-level Moderiranje|Događaji|Manifestacije nav removed (HF4).
+        $this->assertStringNotContainsString('hover:bg-gray-50">Moderiranje</a>', $html);
+        $this->assertStringNotContainsString('hover:bg-gray-50">Događaji</a>', $html);
+        $this->assertStringNotContainsString('hover:bg-gray-50">Manifestacije</a>', $html);
     }
 
     public function test_regular_user_cannot_view_dashboard(): void
