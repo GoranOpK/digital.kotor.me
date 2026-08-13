@@ -8,7 +8,7 @@
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
 **Implementacioni status V1:** ZAVRŠEN
-**Verzija:** 1.0.10
+**Verzija:** 1.0.11
 **Datum:** 2026-08-13
 
 ---
@@ -41,6 +41,7 @@
 | 1.0.8 | 2026-08-13 | **kk_admin UX / navigation consolidation (status only):** nav label `Urednički rad` → `Kontrolna tabla` (prva editorial stavka); objedinjeni nav entrypoint `Zahtjevi` (`cultural-editorial-requests.index`) sa sekcijama Org/Mod (decision tokovi KEEP); `kk_admin` post-login fallback → `cultural-calendar.index` uz safe intended. **IMPLEMENTED / TESTED (local).** Bez BM/FS izmjene. |
 | 1.0.9 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup:** `Ukloni` na odbijenom Org/Mod zahtjevu = workspace dismiss (`editor_dismissed_at`); **ne** hard delete; §6.7.1 retention KEEP; unified `Zahtjevi` default filter. Usklađeno sa BM PATCH-072 / FS PATCH-FS-071 / TS-001 v0.4.2. |
 | 1.0.10 | 2026-08-13 | **MOD-UX-01 — Moderator UX / navigation corrective (status sync):** korisnički UI termini — primarni entrypoint **Kontrolna tabla** (`cultural-moderator-dashboard.index`); sadržajni entrypoint **Moderiranje** (grane Događaji / Manifestacije); `Organizator: <naziv>`; **Promijeni organizatora**; pomoćni ekran **Izbor organizatora**. Uklonjeni korisnički termini: Radna tabla / Mod rad / Moderatorski workspace / Workspace (u ovom značenju). Context switch redirect → Kontrolna tabla; approval email CTA → Kontrolna tabla. Auth / lifecycle / `CulturalOrganizerContext` KEEP. Bez BM/FS izmjene. |
+| 1.0.11 | 2026-08-13 | **DOC-SYNC / MOD-UX-01-HF* + UI-CLEANUP:** CURRENT STATE — **Moderiranje** = običan `<a>` ka `cultural-moderator-workspace.index` (hub: **Događaji organizatora** / **Manifestacije organizatora**); desktop **Kontrolna tabla** i **Moderiranje** isti sizing `128×38`; Kontrolna tabla bez page-level Moderiranje/Događaji/Manifestacije bloka; mobile hamburger = minimalni inline vanilla JS (**bez Alpine**); runtime view bez Alpine dependency-ja. Auth / lifecycle / context KEEP. Bez BM/FS izmjene. Bez izmjene implementacije u ovom dokumentu. |
 Napomena:
 
 Ovo poglavlje služi isključivo za evidenciju razvoja dokumenta.
@@ -75,6 +76,7 @@ Ne mijenjaju se postojeći redovi.
 
 | 1.0.7 | 2026-08-10 | PATCH-063: U pripremi; delete draft; published direct edit; manual Org; test matrix. |
 | 1.0.10 | 2026-08-13 | STATUS SYNC: MOD-UX-01 — Moderator UI navigacija/terminologija (Kontrolna tabla / Moderiranje / Izbor organizatora); auth/lifecycle/context KEEP. |
+| 1.0.11 | 2026-08-13 | STATUS SYNC: Alpine-free Moderator navigation CURRENT STATE (Moderiranje hub link; 128×38; hamburger inline JS; bez Alpine runtime). |
 
 # Svrha dokumenta
 
@@ -1827,7 +1829,7 @@ Dashboard **navigira** ka postojećim listama/formama; ne redefiniše:
 
 ## 11.14 Korisnički UI termini — Moderator (MOD-UX-01)
 
-**Status sync (v1.0.10).** Ne mijenja PO-DASH-01–05, DM-01–03, autorizaciju, `CulturalOrganizerContext`, session key `cultural_active_organizer_id`, niti lifecycle.
+**Status sync (v1.0.11).** Ne mijenja PO-DASH-01–05, DM-01–03, autorizaciju, `CulturalOrganizerContext`, session key `cultural_active_organizer_id`, niti lifecycle. Alpine **nije** runtime dependency projekta.
 
 ### Primarni moderatorski entrypoint
 
@@ -1839,16 +1841,39 @@ Route: `cultural-moderator-dashboard.index`
 
 Urednički (`kk_admin`) dashboard takođe koristi korisnički label **Kontrolna tabla** (`cultural-editorial-dashboard.index`).
 
+Na ekranu **Kontrolna tabla** (Moderator): zadržavaju se DM-01 / DM-02 / DM-03. Page-level navigacioni blok tipa Moderiranje / Događaji / Manifestacije **nije** dio CURRENT STATE (uklonjen; ulaz u sadržaj je globalni entrypoint **Moderiranje**).
+
 ### Sadržajni entrypoint
 
 Korisnički label: **Moderiranje**
 
-Grane (postojeće rute; bez novog portala):
+Route: `cultural-moderator-workspace.index` (korisnički hub **Moderiranje**; interni nazivi klasa/ruta KEEP).
 
-* **Događaji** → `cultural-moderator-events.*`
-* **Manifestacije** → `cultural-moderator-manifestations.*`
+**Nije** dropdown i **ne** zavisi od Alpine-a. Globalni entrypoint je običan server-rendered `<a>` link.
 
-Desktop: Alpine dropdown. Mobile: grupisana sekcija „Moderiranje“ sa istim granama. Javni KK entrypoint-i (Kalendar kulture / Događaji / Arhiva / Manifestacije) ostaju dostupni Moderatoru.
+Na hub ekranu (kada postoji aktivni Organizator):
+
+* **Događaji organizatora** → `cultural-moderator-events.*`
+* **Manifestacije organizatora** → `cultural-moderator-manifestations.*`
+* prikaz `Organizator: <naziv>`
+* **Promijeni organizatora** kada Moderator ima više dostupnih Organizatora
+
+Bez aktivnog konteksta: korisnički label **Izbor organizatora** (select-context / isti workspace route).
+
+### Desktop navigacija (sizing)
+
+Globalni moderatorski entrypoint-i **Kontrolna tabla** i **Moderiranje** koriste isti shared sizing pattern:
+
+* širina `128px`
+* visina `38px`
+
+(oba `<a>`; content-width nije dovoljan za jednakost).
+
+### Mobile navigacija
+
+Poslovni model isti kao desktop: **Kontrolna tabla** + **Moderiranje** (bez posebnih globalnih grana Događaji/Manifestacije u top nav-u).
+
+Mobile hamburger: minimalni **inline vanilla JS** u navigation Blade-u (**bez Alpine**); ne zahtijeva `npm` / Vite rebuild. Javni KK entrypoint-i (Kalendar kulture / Događaji / Arhiva / Manifestacije) ostaju dostupni Moderatoru.
 
 ### Aktivni kontekst
 
@@ -2334,4 +2359,4 @@ Preostale zavisnosti **TS-005**, **TS-009** i **TS-012** nijesu dio TS-010 imple
 
 ---
 
-**Kraj dokumenta TS-010 v1.0.6 (USVOJEN; V1 implementaciono završen; TS-010.1–TS-010.8)**
+**Kraj dokumenta TS-010 v1.0.11 (USVOJEN; V1 implementaciono završen; TS-010.1–TS-010.8)**
