@@ -45,7 +45,7 @@
     // Explicit equal width+height (content-width alone would make Moderiranje narrower).
     $kkModeratorEntryBtn = static function (bool $active) use ($kkNavBtn): string {
         return $kkNavBtn($active)
-            .'box-sizing:border-box;line-height:1.25;min-height:38px;height:38px;width:170px;';
+            .'box-sizing:border-box;line-height:1.25;min-height:38px;height:38px;width:128px;min-width:128px;';
     };
     $kkNavBtnMobile = static function (bool $active): string {
         $bg = $active ? '#5f0c12' : '#7a0f17';

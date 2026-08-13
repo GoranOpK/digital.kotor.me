@@ -161,20 +161,29 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertStringContainsString('padding:8px 14px', $kontrolnaStyle[1]);
         $this->assertStringContainsString('min-height:38px', $kontrolnaStyle[1]);
         $this->assertStringContainsString('height:38px', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('width:170px', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('width:128px', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('min-width:128px', $kontrolnaStyle[1]);
         $this->assertStringContainsString('line-height:1.25', $kontrolnaStyle[1]);
         $this->assertStringContainsString('box-sizing:border-box', $kontrolnaStyle[1]);
         $this->assertStringContainsString('font-size:14px;font-weight:600', $kontrolnaStyle[1]);
         $this->assertStringContainsString('white-space:nowrap', $kontrolnaStyle[1]);
         $this->assertSame(
             1,
-            preg_match('/(?:^|;)width:170px(?:;|$)/u', $kontrolnaStyle[1]),
+            preg_match('/(?:^|;)width:128px(?:;|$)/u', $kontrolnaStyle[1]),
             'Shared explicit width constraint required for equal Moderiranje/Kontrolna tabla width.'
         );
         $this->assertSame(
             1,
-            preg_match('/(?:^|;)width:170px(?:;|$)/u', $moderiranjeStyle[1]),
+            preg_match('/(?:^|;)width:128px(?:;|$)/u', $moderiranjeStyle[1]),
             'Moderiranje must use the same explicit width as Kontrolna tabla.'
+        );
+        $this->assertSame(
+            1,
+            preg_match('/(?:^|;)min-width:128px(?:;|$)/u', $kontrolnaStyle[1])
+        );
+        $this->assertSame(
+            1,
+            preg_match('/(?:^|;)min-width:128px(?:;|$)/u', $moderiranjeStyle[1])
         );
 
         $menuStart = strpos($html, '<!-- Responsive Navigation Menu -->');
