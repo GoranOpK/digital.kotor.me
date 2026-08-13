@@ -71,7 +71,7 @@ class CulturalModeratorUxNavigationTest extends TestCase
         );
     }
 
-    public function test_active_moderator_sees_kontrolna_tabla_and_moderiranje_branches(): void
+    public function test_active_moderator_sees_kontrolna_tabla_and_moderiranje_links(): void
     {
         CulturalOrganizerContext::set($this->moderator, $this->orgA->id);
 
@@ -83,19 +83,20 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertSame(2, substr_count($html, 'data-kk-nav-moderator-block="1"'));
         $this->assertSame(2, substr_count($html, 'data-kk-nav="kontrolna-tabla-moderator"'));
         $this->assertSame(2, substr_count($html, 'data-kk-nav="moderiranje"'));
-        $this->assertSame(2, substr_count($html, 'data-kk-nav="mod-events"'));
-        $this->assertSame(2, substr_count($html, 'data-kk-nav="mod-manifestations"'));
         $this->assertStringContainsString('>Kontrolna tabla<', $html);
         $this->assertStringContainsString('>Moderiranje<', $html);
         $this->assertStringContainsString('Organizator: UX Org A', $html);
         $this->assertStringContainsString(
-            'href="'.e(route('cultural-moderator-events.index')).'"',
+            'href="'.e(route('cultural-moderator-dashboard.index')).'"',
             $html
         );
         $this->assertStringContainsString(
-            'href="'.e(route('cultural-moderator-manifestations.index')).'"',
+            'href="'.e(route('cultural-moderator-workspace.index')).'"',
             $html
         );
+        // Content CTAs live on Moderiranje page, not as nav dropdown branches.
+        $this->assertStringNotContainsString('data-kk-nav="mod-events"', $html);
+        $this->assertStringNotContainsString('data-kk-nav="mod-manifestations"', $html);
         $this->assertStringNotContainsString('>Radna tabla<', $html);
         $this->assertStringNotContainsString('>Mod rad<', $html);
         $this->assertStringNotContainsString('>Workspace<', $html);
@@ -107,7 +108,7 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.manifestations')).'"', $html);
     }
 
-    public function test_desktop_moderiranje_uses_native_details_without_js(): void
+    public function test_desktop_and_mobile_moderiranje_are_plain_links_with_identical_sizing(): void
     {
         CulturalOrganizerContext::set($this->moderator, $this->orgA->id);
 
@@ -122,51 +123,55 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertNotFalse($hamburgerStart);
         $desktopNav = substr($html, $layoutStart, $hamburgerStart - $layoutStart);
 
-        $this->assertStringContainsString('<details', $desktopNav);
-        $this->assertStringContainsString('<summary', $desktopNav);
-        $this->assertStringContainsString('>Moderiranje</summary>', $desktopNav);
-        $this->assertStringContainsString('data-kk-nav="moderiranje"', $desktopNav);
-        $this->assertStringContainsString('data-kk-nav="mod-events"', $desktopNav);
-        $this->assertStringContainsString('data-kk-nav="mod-manifestations"', $desktopNav);
-        $this->assertStringContainsString(
-            'href="'.e(route('cultural-moderator-events.index')).'"',
+        $this->assertMatchesRegularExpression(
+            '/<a[^>]*data-kk-nav="kontrolna-tabla-moderator"[^>]*>Kontrolna tabla<\/a>/u',
             $desktopNav
         );
-        $this->assertStringContainsString(
-            'href="'.e(route('cultural-moderator-manifestations.index')).'"',
+        $this->assertMatchesRegularExpression(
+            '/<a[^>]*href="'.preg_quote(e(route('cultural-moderator-workspace.index')), '/').'"[^>]*data-kk-nav="moderiranje"[^>]*>Moderiranje<\/a>/u',
             $desktopNav
         );
-
-        // No Alpine / JS toggle dependency for Moderiranje.
+        $this->assertStringNotContainsString('<details', $desktopNav);
+        $this->assertStringNotContainsString('<summary', $desktopNav);
+        $this->assertStringNotContainsString('data-kk-moderation-toggle', $desktopNav);
         $this->assertStringNotContainsString('x-data=', $desktopNav);
         $this->assertStringNotContainsString('x-show=', $desktopNav);
         $this->assertStringNotContainsString('@click', $desktopNav);
-        $this->assertStringNotContainsString('x-cloak', $desktopNav);
-        $this->assertStringNotContainsString('data-kk-moderation-toggle', $desktopNav);
-        $this->assertStringNotContainsString('data-kk-moderation-root', $desktopNav);
-        $this->assertStringNotContainsString('data-kk-moderation-menu', $desktopNav);
 
-        // Shared sizing contract for Kontrolna tabla and Moderiranje.
-        $this->assertMatchesRegularExpression(
-            '/data-kk-nav="kontrolna-tabla-moderator"[^>]*padding:8px 14px[^>]*min-height:38px;height:38px/u',
-            $desktopNav
+        preg_match(
+            '/data-kk-nav="kontrolna-tabla-moderator"[^>]*style="([^"]*)"/u',
+            $desktopNav,
+            $kontrolnaStyle
         );
-        $this->assertMatchesRegularExpression(
-            '/<summary[^>]*padding:8px 14px[^>]*min-height:38px;height:38px/u',
-            $desktopNav
+        preg_match(
+            '/data-kk-nav="moderiranje"[^>]*style="([^"]*)"/u',
+            $desktopNav,
+            $moderiranjeStyle
         );
-        $this->assertMatchesRegularExpression(
-            '/<summary[^>]*font-size:14px;font-weight:600/u',
-            $desktopNav
+        $this->assertNotEmpty($kontrolnaStyle[1] ?? null);
+        $this->assertNotEmpty($moderiranjeStyle[1] ?? null);
+        $this->assertSame(
+            $kontrolnaStyle[1],
+            $moderiranjeStyle[1],
+            'Kontrolna tabla and Moderiranje must share an identical style attribute on the public calendar (both inactive).'
         );
+        $this->assertStringContainsString('display:inline-flex', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('padding:8px 14px', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('min-height:38px', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('height:38px', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('line-height:1.25', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('box-sizing:border-box', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('font-size:14px;font-weight:600', $kontrolnaStyle[1]);
 
-        // Mobile moderator branches remain direct links (not details).
         $menuStart = strpos($html, '<!-- Responsive Navigation Menu -->');
         $this->assertNotFalse($menuStart);
         $mobileNav = substr($html, $menuStart);
-        $this->assertStringContainsString('data-kk-nav="moderiranje"', $mobileNav);
-        $this->assertStringContainsString('data-kk-nav="mod-events"', $mobileNav);
-        $this->assertStringContainsString('data-kk-nav="mod-manifestations"', $mobileNav);
+        $this->assertMatchesRegularExpression(
+            '/<a[^>]*href="'.preg_quote(e(route('cultural-moderator-workspace.index')), '/').'"[^>]*data-kk-nav="moderiranje"[^>]*>Moderiranje<\/a>/u',
+            $mobileNav
+        );
+        $this->assertStringNotContainsString('data-kk-nav="mod-events"', $mobileNav);
+        $this->assertStringNotContainsString('data-kk-nav="mod-manifestations"', $mobileNav);
         $this->assertStringNotContainsString('<details', $mobileNav);
     }
 
@@ -188,7 +193,7 @@ class CulturalModeratorUxNavigationTest extends TestCase
         );
     }
 
-    public function test_dashboard_and_workspace_use_new_user_facing_labels(): void
+    public function test_dashboard_and_moderiranje_page_use_new_user_facing_labels(): void
     {
         CulturalOrganizerContext::set($this->moderator, $this->orgA->id);
 
@@ -197,18 +202,42 @@ class CulturalModeratorUxNavigationTest extends TestCase
             ->assertOk()
             ->assertSee('Kontrolna tabla', false)
             ->assertSee('Organizator: UX Org A', false)
-            ->assertSee('Izbor organizatora', false)
+            ->assertSee('Moderiranje', false)
             ->assertDontSee('Radna tabla', false)
             ->assertDontSee('Workspace', false);
+
+        $page = $this->actingAs($this->moderator)
+            ->get(route('cultural-moderator-workspace.index'))
+            ->assertOk();
+
+        $page->assertSee('Moderiranje', false)
+            ->assertSee('Organizator: UX Org A', false)
+            ->assertSee('Događaji organizatora', false)
+            ->assertSee('Manifestacije organizatora', false)
+            ->assertSee(route('cultural-moderator-events.index'), false)
+            ->assertSee(route('cultural-moderator-manifestations.index'), false)
+            ->assertDontSee('Moderatorski workspace', false)
+            ->assertDontSee('>Workspace<', false);
+
+        $html = $page->getContent();
+        $this->assertMatchesRegularExpression('/<h1[^>]*>\s*Moderiranje\s*<\/h1>/u', $html);
+    }
+
+    public function test_select_context_label_remains_izbor_organizatora_without_context(): void
+    {
+        $this->grant($this->moderator, $this->orgB);
+        CulturalOrganizerContext::clear();
 
         $this->actingAs($this->moderator)
             ->get(route('cultural-moderator-workspace.index'))
             ->assertOk()
             ->assertSee('Izbor organizatora', false)
-            ->assertSee('Događaji', false)
-            ->assertSee('Manifestacije', false)
-            ->assertDontSee('Moderatorski workspace', false)
-            ->assertDontSee('>Workspace<', false);
+            ->assertDontSee('Događaji organizatora', false);
+
+        $this->actingAs($this->moderator)
+            ->get(route('cultural-moderator-events.index'))
+            ->assertOk()
+            ->assertSee('Izbor organizatora', false);
     }
 
     public function test_context_switch_uses_session_and_lands_on_kontrolna_tabla(): void

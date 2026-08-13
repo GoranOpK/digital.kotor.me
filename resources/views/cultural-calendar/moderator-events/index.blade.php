@@ -14,7 +14,7 @@
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('cultural-moderator-dashboard.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Kontrolna tabla</a>
-            <a href="{{ route('cultural-moderator-workspace.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Izbor organizatora</a>
+            <a href="{{ route('cultural-moderator-workspace.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Moderiranje</a>
             <a href="{{ route('cultural-moderator-events.create') }}" style="display:inline-block; background:#b91c1c; color:#fff; text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600;">
                 + Novi događaj
             </a>

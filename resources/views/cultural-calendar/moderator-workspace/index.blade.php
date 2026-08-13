@@ -2,48 +2,94 @@
 
 @section('content')
 <div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
-    <h1 style="font-size:28px; font-weight:700; margin:0 0 8px; color:#111827;">Izbor organizatora</h1>
-    <p class="text-sm text-gray-600 mb-4">Izaberite ili promijenite Organizatora za koji radite kao Moderator.</p>
-
-    @if(session('status'))
-        <div class="mb-4 rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3">{{ session('status') }}</div>
-    @endif
-
-    @if($isActiveModerator)
-        <div class="bg-white rounded-lg border border-gray-200 p-4 mb-6 max-w-3xl">
-            <h2 class="text-base font-semibold text-gray-900 mb-2">Aktivni Organizator</h2>
-            @if($activeOrganizer)
-                <p class="text-sm text-gray-700 mb-3">Organizator: <strong>{{ $activeOrganizer->naziv }}</strong></p>
-                <a href="{{ route('cultural-moderator-events.index') }}" class="inline-block px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50 font-semibold">
-                    Događaji
-                </a>
-                <a href="{{ route('cultural-moderator-manifestations.index') }}" class="inline-block px-3 py-1.5 border border-blue-300 rounded-md text-blue-800 hover:bg-blue-50 font-semibold ml-2">
-                    Manifestacije
-                </a>
-            @else
-                <p class="text-sm text-gray-600 mb-3">Izaberite Organizator za rad (obavezno kada ih imate više).</p>
+    @if($isActiveModerator && $activeOrganizer)
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+            <div>
+                <h1 style="font-size:28px; font-weight:700; margin:0; color:#111827;">Moderiranje</h1>
+                <p class="text-sm text-gray-600 mt-1 mb-0" data-kk-nav="active-organizer">
+                    Organizator: {{ $activeOrganizer->naziv }}
+                </p>
+            </div>
+            @if($availableOrganizers->count() > 1)
+                <a
+                    href="#promijeni-organizatora"
+                    data-kk-nav="promijeni-organizatora"
+                    class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >Promijeni organizatora</a>
             @endif
+        </div>
 
-            @if($availableOrganizers->count() > 1 || $activeOrganizer === null)
-                <form method="POST" action="{{ route('cultural-moderator-context.update') }}" class="mt-3 flex flex-wrap gap-2 items-end">
+        @if(session('status'))
+            <div class="mb-4 rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3">{{ session('status') }}</div>
+        @endif
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-5xl mb-8">
+            <a
+                href="{{ route('cultural-moderator-events.index') }}"
+                data-kk-nav="mod-events"
+                class="block bg-white rounded-lg border border-gray-200 p-5 hover:border-red-300 hover:shadow-sm transition"
+            >
+                <h2 class="text-lg font-semibold text-gray-900 mb-1">Događaji organizatora</h2>
+                <p class="text-sm text-gray-600 mb-0">Pregled i rad sa događajima aktivnog Organizatora.</p>
+            </a>
+            <a
+                href="{{ route('cultural-moderator-manifestations.index') }}"
+                data-kk-nav="mod-manifestations"
+                class="block bg-white rounded-lg border border-gray-200 p-5 hover:border-red-300 hover:shadow-sm transition"
+            >
+                <h2 class="text-lg font-semibold text-gray-900 mb-1">Manifestacije organizatora</h2>
+                <p class="text-sm text-gray-600 mb-0">Pregled i rad sa manifestacijama aktivnog Organizatora.</p>
+            </a>
+        </div>
+
+        @if($availableOrganizers->count() > 1)
+            <div id="promijeni-organizatora" class="bg-white rounded-lg border border-gray-200 p-4 mb-6 max-w-3xl">
+                <h2 class="text-base font-semibold text-gray-900 mb-2">Promijeni organizatora</h2>
+                <form method="POST" action="{{ route('cultural-moderator-context.update') }}" class="mt-1 flex flex-wrap gap-2 items-end">
                     @csrf
                     <div>
                         <label for="organizer_id" class="block text-xs text-gray-500 mb-1">Organizator</label>
                         <select id="organizer_id" name="organizer_id" required class="rounded-md border-gray-300 text-sm">
-                            <option value="">— izaberi —</option>
                             @foreach($availableOrganizers as $organizer)
-                                <option value="{{ $organizer->id }}" @selected($activeOrganizer && (int) $activeOrganizer->id === (int) $organizer->id)>
+                                <option value="{{ $organizer->id }}" @selected((int) $activeOrganizer->id === (int) $organizer->id)>
                                     {{ $organizer->naziv }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
                     <button type="submit" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-800 hover:bg-gray-50">
-                        Promijeni organizatora
+                        Primijeni
                     </button>
                 </form>
-            @endif
-        </div>
+            </div>
+        @endif
+    @else
+        <h1 style="font-size:28px; font-weight:700; margin:0 0 8px; color:#111827;">Izbor organizatora</h1>
+        <p class="text-sm text-gray-600 mb-4">Izaberite Organizatora za koji radite kao Moderator.</p>
+
+        @if(session('status'))
+            <div class="mb-4 rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3">{{ session('status') }}</div>
+        @endif
+
+        @if($isActiveModerator)
+            <div class="bg-white rounded-lg border border-gray-200 p-4 mb-6 max-w-3xl">
+                <form method="POST" action="{{ route('cultural-moderator-context.update') }}" class="flex flex-wrap gap-2 items-end">
+                    @csrf
+                    <div>
+                        <label for="organizer_id" class="block text-xs text-gray-500 mb-1">Organizator</label>
+                        <select id="organizer_id" name="organizer_id" required class="rounded-md border-gray-300 text-sm">
+                            <option value="">— izaberi —</option>
+                            @foreach($availableOrganizers as $organizer)
+                                <option value="{{ $organizer->id }}">{{ $organizer->naziv }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <button type="submit" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-800 hover:bg-gray-50">
+                        Nastavi
+                    </button>
+                </form>
+            </div>
+        @endif
     @endif
 
     <div class="bg-white rounded-lg border border-gray-200 overflow-hidden">

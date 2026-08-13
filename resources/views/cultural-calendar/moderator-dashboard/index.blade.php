@@ -11,7 +11,7 @@
             </p>
         </div>
         <div class="flex flex-wrap gap-2">
-            <a href="{{ route('cultural-moderator-workspace.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Izbor organizatora</a>
+            <a href="{{ route('cultural-moderator-workspace.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Moderiranje</a>
             <a href="{{ route('cultural-moderator-events.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Događaji</a>
             <a href="{{ route('cultural-moderator-manifestations.index') }}" class="px-3 py-1.5 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">Manifestacije</a>
         </div>

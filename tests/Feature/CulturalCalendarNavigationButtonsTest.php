@@ -364,21 +364,17 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         );
         $this->assertStringContainsString('>Kontrolna tabla<', $html);
         $this->assertStringContainsString('data-kk-nav="moderiranje"', $html);
-        $this->assertStringContainsString('data-kk-nav="mod-events"', $html);
-        $this->assertStringContainsString('data-kk-nav="mod-manifestations"', $html);
+        $this->assertStringContainsString(
+            'href="'.e(route('cultural-moderator-workspace.index')).'"',
+            $html
+        );
+        $this->assertStringNotContainsString('data-kk-nav="mod-events"', $html);
+        $this->assertStringNotContainsString('data-kk-nav="mod-manifestations"', $html);
         $this->assertStringContainsString('Organizator: Nav Mod Org', $html);
         $this->assertStringNotContainsString('>Radna tabla<', $html);
         $this->assertStringNotContainsString('>Mod rad<', $html);
         $this->assertStringContainsString(
             'href="'.e(route('cultural-moderator-dashboard.index')).'"',
-            $html
-        );
-        $this->assertStringContainsString(
-            'href="'.e(route('cultural-moderator-events.index')).'"',
-            $html
-        );
-        $this->assertStringContainsString(
-            'href="'.e(route('cultural-moderator-manifestations.index')).'"',
             $html
         );
     }
