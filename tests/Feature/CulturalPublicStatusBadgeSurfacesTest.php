@@ -6,7 +6,6 @@ use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
 use App\Models\Role;
 use App\Models\User;
-use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,7 +32,6 @@ class CulturalPublicStatusBadgeSurfacesTest extends TestCase
         ]);
 
         Carbon::setTestNow(Carbon::parse('2026-08-10 12:00:00', config('app.timezone')));
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
     }
 
     protected function tearDown(): void

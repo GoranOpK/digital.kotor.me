@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\CulturalEvent;
+use App\Models\CulturalCategory;
+use App\Models\CulturalEventEntry;
+use App\Models\CulturalOccurrence;
 use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
@@ -16,6 +18,8 @@ class CulturalCalendarCr004APublicStatusTest extends TestCase
 
     private User $user;
 
+    private CulturalCategory $category;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -25,6 +29,11 @@ class CulturalCalendarCr004APublicStatusTest extends TestCase
 
         $this->user = User::factory()->create([
             'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
+        ]);
+
+        $this->category = CulturalCategory::create([
+            'naziv' => 'Koncerti',
+            'status' => CulturalCategory::STATUS_ACTIVE,
         ]);
 
         Carbon::setTestNow(Carbon::parse('2026-08-10 12:00:00', 'Europe/Belgrade'));
@@ -41,20 +50,60 @@ class CulturalCalendarCr004APublicStatusTest extends TestCase
         return $this->actingAs($this->user);
     }
 
-    private function makeEvent(array $overrides = []): CulturalEvent
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function makeEvent(array $overrides = []): CulturalEventEntry
     {
-        return CulturalEvent::create(array_merge([
+        $datum = $overrides['datum_od'] ?? '2026-08-10';
+        $vrijeme = array_key_exists('vrijeme', $overrides) ? $overrides['vrijeme'] : null;
+        $vrijemeDo = array_key_exists('vrijeme_do', $overrides) ? $overrides['vrijeme_do'] : null;
+        $unsafeNoBadge = ($vrijeme === null && $vrijemeDo !== null);
+        unset(
+            $overrides['datum_od'],
+            $overrides['datum_do'],
+            $overrides['vrijeme'],
+            $overrides['vrijeme_do'],
+            $overrides['lokacija'],
+            $overrides['kategorija']
+        );
+
+        $status = $overrides['status'] ?? CulturalEventEntry::STATUS_PUBLISHED;
+        unset($overrides['status']);
+
+        $entry = CulturalEventEntry::create(array_merge([
             'naslov' => 'Badge događaj',
             'opis' => 'Opis',
-            'datum_od' => '2026-08-10',
-            'datum_do' => null,
-            'vrijeme' => null,
-            'vrijeme_do' => null,
-            'lokacija' => 'Kotor',
-            'kategorija' => 'Koncerti',
-            'status' => 'published',
+            'status' => $status,
+            'category_id' => $this->category->id,
+            'created_by' => $this->user->id,
             'featured' => false,
         ], $overrides));
+
+        if ($unsafeNoBadge) {
+            CulturalOccurrence::create([
+                'event_entry_id' => $entry->id,
+                'datum' => $datum,
+                'cjelodnevno' => true,
+                'status' => CulturalOccurrence::STATUS_POSTPONED,
+                'location_manual_name' => 'Kotor',
+            ]);
+
+            return $entry;
+        }
+
+        $cjelodnevno = $vrijeme === null;
+        CulturalOccurrence::create([
+            'event_entry_id' => $entry->id,
+            'datum' => $datum,
+            'cjelodnevno' => $cjelodnevno,
+            'vrijeme_od' => $cjelodnevno ? null : $vrijeme,
+            'vrijeme_do' => $cjelodnevno ? null : $vrijemeDo,
+            'status' => CulturalOccurrence::STATUS_PLANNED,
+            'location_manual_name' => 'Kotor',
+        ]);
+
+        return $entry;
     }
 
     public function test_badge_on_home_featured_upcoming_and_selected_day(): void
@@ -94,9 +143,22 @@ class CulturalCalendarCr004APublicStatusTest extends TestCase
             'naslov' => 'Lista badge',
             'datum_od' => '2026-08-20',
         ]);
-        $this->makeEvent([
+
+        $archived = CulturalEventEntry::create([
             'naslov' => 'Arhiva badge',
-            'datum_od' => '2026-08-01',
+            'opis' => 'Opis',
+            'status' => CulturalEventEntry::STATUS_ARCHIVED,
+            'archived_from_status' => CulturalEventEntry::STATUS_PUBLISHED,
+            'category_id' => $this->category->id,
+            'created_by' => $this->user->id,
+            'featured' => false,
+        ]);
+        CulturalOccurrence::create([
+            'event_entry_id' => $archived->id,
+            'datum' => '2026-08-01',
+            'cjelodnevno' => true,
+            'status' => CulturalOccurrence::STATUS_FINISHED,
+            'location_manual_name' => 'Kotor',
         ]);
 
         $events = $this->asUser()->get(route('cultural-calendar.events'));
@@ -142,11 +204,14 @@ class CulturalCalendarCr004APublicStatusTest extends TestCase
 
     public function test_unsafe_event_has_no_badge_on_public_list(): void
     {
-        $this->makeEvent([
+        // published without contributing OCC → publicStatus() null (no badge)
+        CulturalEventEntry::create([
             'naslov' => 'Nesiguran badge',
-            'datum_od' => '2026-08-20',
-            'vrijeme' => null,
-            'vrijeme_do' => '18:00:00',
+            'opis' => 'Opis',
+            'status' => CulturalEventEntry::STATUS_PUBLISHED,
+            'category_id' => $this->category->id,
+            'created_by' => $this->user->id,
+            'featured' => false,
         ]);
 
         $response = $this->asUser()->get(route('cultural-calendar.events'));

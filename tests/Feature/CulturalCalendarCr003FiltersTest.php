@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\CulturalEvent;
+use App\Models\CulturalCategory;
+use App\Models\CulturalEventEntry;
+use App\Models\CulturalOccurrence;
 use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
@@ -15,6 +17,9 @@ class CulturalCalendarCr003FiltersTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+
+    /** @var array<string, CulturalCategory> */
+    private array $categories = [];
 
     protected function setUp(): void
     {
@@ -41,24 +46,77 @@ class CulturalCalendarCr003FiltersTest extends TestCase
         return $this->actingAs($this->user);
     }
 
-    private function makeEvent(array $overrides = []): CulturalEvent
+    private function category(string $naziv): CulturalCategory
     {
-        return CulturalEvent::create(array_merge([
+        if (! isset($this->categories[$naziv])) {
+            $this->categories[$naziv] = CulturalCategory::create([
+                'naziv' => $naziv,
+                'status' => CulturalCategory::STATUS_ACTIVE,
+            ]);
+        }
+
+        return $this->categories[$naziv];
+    }
+
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function makeEvent(array $overrides = []): CulturalEventEntry
+    {
+        $datum = $overrides['datum_od'] ?? '2026-08-15';
+        $lokacija = array_key_exists('lokacija', $overrides) ? $overrides['lokacija'] : 'Kotor';
+        $kategorija = $overrides['kategorija'] ?? 'Koncerti';
+        $status = $overrides['status'] ?? CulturalEventEntry::STATUS_PUBLISHED;
+        $opis = $overrides['opis'] ?? 'Opis događaja';
+        unset(
+            $overrides['datum_od'],
+            $overrides['datum_do'],
+            $overrides['vrijeme'],
+            $overrides['lokacija'],
+            $overrides['kategorija'],
+            $overrides['status'],
+            $overrides['opis']
+        );
+
+        $entryStatus = match ($status) {
+            'draft' => CulturalEventEntry::STATUS_DRAFT,
+            'cancelled' => CulturalEventEntry::STATUS_CANCELLED,
+            'archived' => CulturalEventEntry::STATUS_ARCHIVED,
+            default => CulturalEventEntry::STATUS_PUBLISHED,
+        };
+
+        $entry = CulturalEventEntry::create(array_merge([
             'naslov' => 'Test događaj',
-            'opis' => 'Opis događaja',
-            'datum_od' => '2026-08-15',
-            'datum_do' => null,
-            'vrijeme' => '18:00:00',
-            'lokacija' => 'Kotor',
-            'kategorija' => 'Koncerti',
-            'status' => 'published',
+            'opis' => $opis,
+            'status' => $entryStatus,
+            'category_id' => $this->category($kategorija)->id,
+            'created_by' => $this->user->id,
             'featured' => false,
         ], $overrides));
+
+        $occAttrs = [
+            'event_entry_id' => $entry->id,
+            'datum' => $datum,
+            'cjelodnevno' => true,
+            'status' => CulturalOccurrence::STATUS_PLANNED,
+        ];
+        if ($lokacija !== null && $lokacija !== '') {
+            $occAttrs['location_manual_name'] = $lokacija;
+        }
+
+        CulturalOccurrence::create($occAttrs);
+
+        return $entry;
+    }
+
+    private function eventsUrl(array $params = []): string
+    {
+        return route('cultural-calendar.events', array_merge(['tip' => 'dogadjaji'], $params));
     }
 
     public function test_filter_zone_is_always_visible_with_get_form(): void
     {
-        $response = $this->asUser()->get(route('cultural-calendar.events'));
+        $response = $this->asUser()->get($this->eventsUrl());
 
         $response->assertOk();
         $response->assertSee('name="q"', false);
@@ -96,16 +154,16 @@ class CulturalCalendarCr003FiltersTest extends TestCase
             'datum_od' => '2026-08-23',
         ]);
 
-        $byTitle = $this->asUser()->get(route('cultural-calendar.events', ['q' => 'festival']));
+        $byTitle = $this->asUser()->get($this->eventsUrl(['q' => 'festival']));
         $byTitle->assertOk();
         $byTitle->assertSee('Ljetnji Festival', false);
         $byTitle->assertDontSee('Van opsega', false);
 
-        $byOpis = $this->asUser()->get(route('cultural-calendar.events', ['q' => 'opis koncerta']));
+        $byOpis = $this->asUser()->get($this->eventsUrl(['q' => 'opis koncerta']));
         $byOpis->assertOk();
         $byOpis->assertSee('Drugo', false);
 
-        $byLokacija = $this->asUser()->get(route('cultural-calendar.events', ['q' => 'stari grad']));
+        $byLokacija = $this->asUser()->get($this->eventsUrl(['q' => 'stari grad']));
         $byLokacija->assertOk();
         $byLokacija->assertSee('Treće', false);
     }
@@ -120,7 +178,7 @@ class CulturalCalendarCr003FiltersTest extends TestCase
             'datum_od' => '2026-08-18',
         ]);
 
-        $response = $this->asUser()->get(route('cultural-calendar.events', [
+        $response = $this->asUser()->get($this->eventsUrl([
             'q' => 'Koncerti',
         ]));
 
@@ -141,7 +199,7 @@ class CulturalCalendarCr003FiltersTest extends TestCase
             'datum_od' => '2026-08-17',
         ]);
 
-        $response = $this->asUser()->get(route('cultural-calendar.events', [
+        $response = $this->asUser()->get($this->eventsUrl([
             'category' => 'Koncerti',
         ]));
 
@@ -158,7 +216,7 @@ class CulturalCalendarCr003FiltersTest extends TestCase
             'datum_od' => '2026-08-16',
         ]);
 
-        $response = $this->asUser()->get(route('cultural-calendar.events', [
+        $response = $this->asUser()->get($this->eventsUrl([
             'category' => 'Nepostojeca',
         ]));
 
@@ -181,7 +239,7 @@ class CulturalCalendarCr003FiltersTest extends TestCase
             'datum_od' => '2026-08-21',
         ]);
 
-        $response = $this->asUser()->get(route('cultural-calendar.events'));
+        $response = $this->asUser()->get($this->eventsUrl());
         $html = $response->getContent();
 
         $response->assertOk();
@@ -198,14 +256,14 @@ class CulturalCalendarCr003FiltersTest extends TestCase
         $this->makeEvent(['naslov' => 'U Kotoru', 'lokacija' => 'Kotor', 'datum_od' => '2026-08-16']);
         $this->makeEvent(['naslov' => 'U Tivtu', 'lokacija' => 'Tivat', 'datum_od' => '2026-08-17']);
 
-        $filtered = $this->asUser()->get(route('cultural-calendar.events', [
+        $filtered = $this->asUser()->get($this->eventsUrl([
             'location' => 'Kotor',
         ]));
         $filtered->assertOk();
         $filtered->assertSee('U Kotoru', false);
         $filtered->assertDontSee('U Tivtu', false);
 
-        $invalid = $this->asUser()->get(route('cultural-calendar.events', [
+        $invalid = $this->asUser()->get($this->eventsUrl([
             'location' => 'Nepostojeca',
         ]));
         $invalid->assertOk();
@@ -245,7 +303,7 @@ class CulturalCalendarCr003FiltersTest extends TestCase
             'datum_od' => '2026-09-05',
         ]);
 
-        $response = $this->asUser()->get(route('cultural-calendar.events', [
+        $response = $this->asUser()->get($this->eventsUrl([
             'month' => '2026-08',
             'q' => 'jazz',
             'category' => 'Koncerti',
@@ -272,7 +330,7 @@ class CulturalCalendarCr003FiltersTest extends TestCase
             'datum_od' => '2026-08-16',
         ]);
 
-        $response = $this->asUser()->get(route('cultural-calendar.events', [
+        $response = $this->asUser()->get($this->eventsUrl([
             'month' => '2026-08',
             'q' => 'Aktivni',
             'category' => 'Koncerti',
@@ -290,7 +348,7 @@ class CulturalCalendarCr003FiltersTest extends TestCase
             false
         );
 
-        $withoutQ = route('cultural-calendar.events', [
+        $withoutQ = $this->eventsUrl([
             'month' => '2026-08',
             'category' => 'Koncerti',
             'location' => 'Kotor',
@@ -309,7 +367,7 @@ class CulturalCalendarCr003FiltersTest extends TestCase
             ]);
         }
 
-        $response = $this->asUser()->get(route('cultural-calendar.events', [
+        $response = $this->asUser()->get($this->eventsUrl([
             'q' => 'Filter page',
             'category' => 'Koncerti',
             'location' => 'Kotor',
@@ -332,7 +390,7 @@ class CulturalCalendarCr003FiltersTest extends TestCase
             'datum_od' => '2026-08-16',
         ]);
 
-        $list = $this->asUser()->get(route('cultural-calendar.events', [
+        $list = $this->asUser()->get($this->eventsUrl([
             'q' => 'Back',
             'category' => 'Koncerti',
             'location' => 'Kotor',
@@ -341,7 +399,7 @@ class CulturalCalendarCr003FiltersTest extends TestCase
         $list->assertSee('back=', false);
         $list->assertSee(urlencode('/kalendar-kulture/pregled-dogadjaja'), false);
 
-        $back = '/kalendar-kulture/pregled-dogadjaja?q=Back&category=Koncerti&location=Kotor';
+        $back = '/kalendar-kulture/pregled-dogadjaja?tip=dogadjaji&q=Back&category=Koncerti&location=Kotor';
         $show = $this->asUser()->get(route('cultural-calendar.show', [
             'event' => $event,
             'back' => $back,
@@ -361,7 +419,7 @@ class CulturalCalendarCr003FiltersTest extends TestCase
             'datum_od' => '2026-08-05',
         ]);
 
-        $date = $this->asUser()->get(route('cultural-calendar.events', [
+        $date = $this->asUser()->get($this->eventsUrl([
             'date' => '2026-08-10',
         ]));
         $date->assertOk();
@@ -370,7 +428,7 @@ class CulturalCalendarCr003FiltersTest extends TestCase
         $date->assertSee('name="date"', false);
         $date->assertSee('value="2026-08-10"', false);
 
-        $month = $this->asUser()->get(route('cultural-calendar.events', [
+        $month = $this->asUser()->get($this->eventsUrl([
             'month' => '2026-08',
         ]));
         $month->assertOk();

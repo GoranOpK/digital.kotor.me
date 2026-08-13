@@ -15,7 +15,6 @@ use App\Services\CulturalEventDomain\EventLifecycle;
 use App\Services\CulturalEventDomain\EventWriter;
 use App\Services\CulturalEventDomain\OccurrenceWriter;
 use App\Support\CulturalOrganizerContext;
-use App\Support\CulturalPublicReadSource;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -287,7 +286,6 @@ class CulturalPatch063Phase4PublishedDirectEditTest extends TestCase
 
     public function test_public_canonical_show_sees_updated_title(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makePublishedDirect('Javni stari');
 

@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\CulturalEvent;
+use App\Models\CulturalCategory;
+use App\Models\CulturalEventEntry;
+use App\Models\CulturalOccurrence;
 use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
@@ -16,6 +18,8 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
 
     private User $user;
 
+    private CulturalCategory $category;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -26,6 +30,11 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         $this->user = User::factory()->create([
             'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
         ]);
+
+        $this->category = CulturalCategory::create([
+            'naziv' => 'Koncerti',
+            'status' => CulturalCategory::STATUS_ACTIVE,
+        ]);
     }
 
     private function asUser()
@@ -33,19 +42,43 @@ class CulturalCalendarCr002MonthFilterTest extends TestCase
         return $this->actingAs($this->user);
     }
 
-    private function makeEvent(array $overrides = []): CulturalEvent
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function makeEvent(array $overrides = []): CulturalEventEntry
     {
-        return CulturalEvent::create(array_merge([
+        $datumOd = $overrides['datum_od'] ?? '2026-08-15';
+        $datumDo = $overrides['datum_do'] ?? null;
+        unset($overrides['datum_od'], $overrides['datum_do'], $overrides['vrijeme'], $overrides['lokacija'], $overrides['kategorija']);
+
+        $status = $overrides['status'] ?? CulturalEventEntry::STATUS_PUBLISHED;
+        unset($overrides['status']);
+
+        $entry = CulturalEventEntry::create(array_merge([
             'naslov' => 'Test događaj',
             'opis' => 'Opis događaja',
-            'datum_od' => '2026-08-15',
-            'datum_do' => null,
-            'vrijeme' => '18:00:00',
-            'lokacija' => 'Kotor',
-            'kategorija' => 'Koncerti',
-            'status' => 'published',
+            'status' => $status,
+            'category_id' => $this->category->id,
+            'created_by' => $this->user->id,
             'featured' => false,
         ], $overrides));
+
+        $dates = [$datumOd];
+        if ($datumDo !== null && $datumDo !== $datumOd) {
+            $dates[] = $datumDo;
+        }
+
+        foreach ($dates as $datum) {
+            CulturalOccurrence::create([
+                'event_entry_id' => $entry->id,
+                'datum' => $datum,
+                'cjelodnevno' => true,
+                'status' => CulturalOccurrence::STATUS_PLANNED,
+                'location_manual_name' => 'Kotor',
+            ]);
+        }
+
+        return $entry;
     }
 
     public function test_selected_month_card_is_link_with_month_parameter(): void

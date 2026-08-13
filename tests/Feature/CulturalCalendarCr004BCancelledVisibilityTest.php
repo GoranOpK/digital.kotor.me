@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\CulturalEvent;
+use App\Models\CulturalCategory;
+use App\Models\CulturalEventEntry;
+use App\Models\CulturalOccurrence;
 use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
@@ -11,7 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * CR-004B / PO-CR4B-01…10 — javni prikaz otkazanih događaja.
+ * CR-004B / PO-CR4B-01…10 — javni prikaz otkazanih događaja (canonical).
  */
 class CulturalCalendarCr004BCancelledVisibilityTest extends TestCase
 {
@@ -20,6 +22,8 @@ class CulturalCalendarCr004BCancelledVisibilityTest extends TestCase
     private const CANCELLED_NOTICE = 'Ovaj događaj je otkazan i neće biti održan u planiranom terminu.';
 
     private User $user;
+
+    private CulturalCategory $category;
 
     protected function setUp(): void
     {
@@ -30,6 +34,11 @@ class CulturalCalendarCr004BCancelledVisibilityTest extends TestCase
 
         $this->user = User::factory()->create([
             'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
+        ]);
+
+        $this->category = CulturalCategory::create([
+            'naziv' => 'Koncerti',
+            'status' => CulturalCategory::STATUS_ACTIVE,
         ]);
 
         Carbon::setTestNow(Carbon::parse('2026-08-10 12:00:00', 'Europe/Belgrade'));
@@ -46,20 +55,72 @@ class CulturalCalendarCr004BCancelledVisibilityTest extends TestCase
         return $this->actingAs($this->user);
     }
 
-    private function makeEvent(array $overrides = []): CulturalEvent
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function makeEvent(array $overrides = []): CulturalEventEntry
     {
-        return CulturalEvent::create(array_merge([
+        $datum = $overrides['datum_od'] ?? '2026-08-15';
+        $legacyStatus = $overrides['status'] ?? 'published';
+        $lokacija = $overrides['lokacija'] ?? 'Kotor';
+        $kategorija = $overrides['kategorija'] ?? null;
+        unset(
+            $overrides['datum_od'],
+            $overrides['datum_do'],
+            $overrides['vrijeme'],
+            $overrides['vrijeme_do'],
+            $overrides['lokacija'],
+            $overrides['kategorija'],
+            $overrides['status']
+        );
+
+        $entryStatus = match ($legacyStatus) {
+            'cancelled' => CulturalEventEntry::STATUS_CANCELLED,
+            'draft' => CulturalEventEntry::STATUS_DRAFT,
+            'archived' => CulturalEventEntry::STATUS_ARCHIVED,
+            default => CulturalEventEntry::STATUS_PUBLISHED,
+        };
+
+        $extra = $overrides;
+        if (
+            $entryStatus === CulturalEventEntry::STATUS_ARCHIVED
+            && ! array_key_exists('archived_from_status', $extra)
+        ) {
+            $extra['archived_from_status'] = CulturalEventEntry::STATUS_PUBLISHED;
+        }
+
+        $categoryId = $this->category->id;
+        if (is_string($kategorija) && $kategorija !== '' && $kategorija !== $this->category->naziv) {
+            $categoryId = CulturalCategory::query()->firstOrCreate(
+                ['naziv' => $kategorija],
+                ['status' => CulturalCategory::STATUS_ACTIVE]
+            )->id;
+        }
+
+        $entry = CulturalEventEntry::create(array_merge([
             'naslov' => 'CR-004B događaj',
             'opis' => 'Opis',
-            'datum_od' => '2026-08-15',
-            'datum_do' => null,
-            'vrijeme' => null,
-            'vrijeme_do' => null,
-            'lokacija' => 'Kotor',
-            'kategorija' => 'Koncerti',
-            'status' => 'published',
+            'status' => $entryStatus,
+            'category_id' => $categoryId,
+            'created_by' => $this->user->id,
             'featured' => false,
-        ], $overrides));
+        ], $extra));
+
+        $occStatus = match ($entryStatus) {
+            CulturalEventEntry::STATUS_CANCELLED => CulturalOccurrence::STATUS_CANCELLED,
+            CulturalEventEntry::STATUS_ARCHIVED => CulturalOccurrence::STATUS_FINISHED,
+            default => CulturalOccurrence::STATUS_PLANNED,
+        };
+
+        CulturalOccurrence::create([
+            'event_entry_id' => $entry->id,
+            'datum' => $datum,
+            'cjelodnevno' => true,
+            'status' => $occStatus,
+            'location_manual_name' => $lokacija,
+        ]);
+
+        return $entry;
     }
 
     public function test_cancelled_event_is_publicly_visible_on_home_events_and_day(): void
@@ -70,11 +131,14 @@ class CulturalCalendarCr004BCancelledVisibilityTest extends TestCase
             'datum_od' => '2026-08-15',
         ]);
 
-        $home = $this->asUser()->get(route('cultural-calendar.index'));
-        $home->assertOk();
-        $home->assertSee('Otkazan naredni', false);
+        $homeDay = $this->asUser()->get(route('cultural-calendar.index', [
+            'month' => '2026-08',
+            'date' => '2026-08-15',
+        ]));
+        $homeDay->assertOk();
+        $homeDay->assertSee('Otkazan naredni', false);
 
-        $events = $this->asUser()->get(route('cultural-calendar.events'));
+        $events = $this->asUser()->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']));
         $events->assertOk();
         $events->assertSee('Otkazan naredni', false);
         $events->assertSee('Otkazan', false);
@@ -112,6 +176,7 @@ class CulturalCalendarCr004BCancelledVisibilityTest extends TestCase
         $archived = $this->makeEvent([
             'naslov' => 'Arhiviran događaj',
             'status' => 'archived',
+            'archived_from_status' => null,
             'datum_od' => '2026-08-01',
         ]);
 
@@ -154,21 +219,27 @@ class CulturalCalendarCr004BCancelledVisibilityTest extends TestCase
             $featuredHtml,
             'Cancelled featured ne smije biti u sekciji Istaknuti (PO-CR4B-03).'
         );
-        // Dozvoljeno na ostalim aktivnim površinama (npr. Naredni događaji).
-        $this->assertStringContainsString('Istaknuti otkazani', $html);
 
-        $event = CulturalEvent::where('naslov', 'Istaknuti otkazani')->firstOrFail();
+        $events = $this->asUser()->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']));
+        $events->assertOk();
+        $events->assertSee('Istaknuti otkazani', false);
+
+        $event = CulturalEventEntry::where('naslov', 'Istaknuti otkazani')->firstOrFail();
         $this->assertTrue($event->featured);
-        $this->assertSame('cancelled', $event->status);
+        $this->assertSame(CulturalEventEntry::STATUS_CANCELLED, $event->status);
     }
 
     public function test_archive_shows_past_cancelled_with_otkazan_badge(): void
     {
         $this->makeEvent([
             'naslov' => 'Prošli otkazani',
-            'status' => 'cancelled',
+            'status' => 'archived',
+            'archived_from_status' => CulturalEventEntry::STATUS_CANCELLED,
             'datum_od' => '2026-08-01',
         ]);
+
+        CulturalEventEntry::where('naslov', 'Prošli otkazani')->firstOrFail()
+            ->occurrences()->update(['status' => CulturalOccurrence::STATUS_CANCELLED]);
 
         $archive = $this->asUser()->get(route('cultural-calendar.archive'));
         $archive->assertOk();
@@ -216,6 +287,7 @@ class CulturalCalendarCr004BCancelledVisibilityTest extends TestCase
         ]);
 
         $url = route('cultural-calendar.events', [
+            'tip' => 'dogadjaji',
             'q' => 'pretrage',
             'category' => 'Koncerti',
         ]);

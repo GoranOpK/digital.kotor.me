@@ -21,8 +21,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'module_access_restrict' => \App\Http\Middleware\RestrictRoleModuleAccess::class,
             'cultural.portal' => \App\Http\Middleware\EnsureCulturalEditorialPortalAccess::class,
             'cultural.moderator' => \App\Http\Middleware\EnsureActiveCulturalModerator::class,
-            // 6A-CLOSE-02 — legacy admin CRUD kill-switch (cultural-events.*)
-            'legacy_cultural_events_disabled' => \App\Http\Middleware\DenyLegacyCulturalEventCrud::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

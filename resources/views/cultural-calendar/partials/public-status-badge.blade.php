@@ -1,6 +1,6 @@
 {{--
   CR-004A / PO-CR4A-01…05 / PO-6A11-01 — zajednički javni status badge.
-  @var \App\Models\CulturalEvent|\App\Models\CulturalEventEntry $event
+  @var \App\Models\CulturalEventEntry $event
   @var string $variant  card|detail
 --}}
 @php

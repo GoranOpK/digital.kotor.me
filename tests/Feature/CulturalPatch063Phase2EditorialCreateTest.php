@@ -190,7 +190,6 @@ class CulturalPatch063Phase2EditorialCreateTest extends TestCase
 
     public function test_save_is_not_public(): void
     {
-        config(['cultural_calendar.public_read_source' => \App\Support\CulturalPublicReadSource::CANONICAL]);
 
         $response = $this->actingAs($this->editor)->post(route('cultural-event-entries.store'), [
             'naslov' => 'Ne javno',

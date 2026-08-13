@@ -5,7 +5,6 @@
     $isKomisija = $user && $user->role && $user->role->name === 'komisija';
     $isKkSection = request()->routeIs(
         'cultural-calendar.*',
-        'cultural-events.*',
         'cultural-event-entries.*',
         'cultural-manifestations.*',
         'cultural-editorial-dashboard.*',

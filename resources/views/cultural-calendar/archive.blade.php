@@ -105,21 +105,11 @@
         <div class="kk-archive-grid">
             @foreach($events as $event)
                 @php
-                    $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
-                    if ($isCanonicalEntry) {
-                        $cardOcc = $event->lastHistoricalOccurrence();
-                        $cardDatumOd = $cardOcc?->datum;
-                        $cardDatumDo = null;
-                        $cardVrijeme = $cardOcc?->vrijeme_od;
-                        $cardLokacija = $cardOcc?->publicLocationDisplayName();
-                        $cardKategorija = $event->publicCategoryName();
-                    } else {
-                        $cardDatumOd = $event->datum_od;
-                        $cardDatumDo = $event->datum_do;
-                        $cardVrijeme = $event->vrijeme;
-                        $cardLokacija = $event->lokacija;
-                        $cardKategorija = $event->kategorija;
-                    }
+                    $cardOcc = $event->lastHistoricalOccurrence();
+                    $cardDatumOd = $cardOcc?->datum;
+                    $cardVrijeme = $cardOcc?->vrijeme_od;
+                    $cardLokacija = $cardOcc?->publicLocationDisplayName();
+                    $cardKategorija = $event->publicCategoryName();
                     $cardHref = route('cultural-calendar.show', [
                         'event' => $event,
                         'back' => request()->getRequestUri(),
@@ -134,9 +124,6 @@
                         <div class="kk-archive-body">
                             <div class="kk-archive-meta">
                                 {{ optional($cardDatumOd)->format('d.m.Y') }}
-                                @if($cardDatumDo)
-                                    - {{ optional($cardDatumDo)->format('d.m.Y') }}
-                                @endif
                                 @if($cardVrijeme)
                                     • {{ substr((string)$cardVrijeme, 0, 5) }}
                                 @endif

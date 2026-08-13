@@ -8,14 +8,13 @@ use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
 use App\Models\Role;
 use App\Models\User;
-use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * 6A-06 — DATA SWITCH Pretrage (legacy XOR canonical).
+ * 6A-06 — canonical Pretraga (Phase B1: flag removed).
  */
 class CulturalPublicEventsDataSwitchTest extends TestCase
 {
@@ -46,25 +45,8 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_legacy_flag_uses_legacy_cultural_event(): void
+    public function test_events_list_uses_canonical_and_excludes_legacy_rows(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
-
-        $legacy = $this->makeLegacyEvent(['naslov' => 'LEGACY_ONLY_TITLE']);
-        $this->makePublishedEntry('CANONICAL_ONLY_TITLE');
-
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']));
-
-        $response->assertOk();
-        $response->assertSee('LEGACY_ONLY_TITLE', false);
-        $response->assertDontSee('CANONICAL_ONLY_TITLE', false);
-        $this->assertTrue($legacy->exists);
-    }
-
-    public function test_canonical_flag_uses_cultural_event_entry(): void
-    {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
-
         $this->makeLegacyEvent(['naslov' => 'LEGACY_ONLY_TITLE']);
         $this->makePublishedEntry('CANONICAL_ONLY_TITLE');
 
@@ -75,20 +57,8 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $response->assertDontSee('LEGACY_ONLY_TITLE', false);
     }
 
-    public function test_canonical_entry_not_shown_in_legacy_branch(): void
+    public function test_legacy_event_not_shown_on_events_list(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
-        $this->makePublishedEntry('ENTRY_HIDDEN_IN_LEGACY');
-
-        $this->actingAs($this->user)
-            ->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']))
-            ->assertOk()
-            ->assertDontSee('ENTRY_HIDDEN_IN_LEGACY', false);
-    }
-
-    public function test_legacy_event_not_shown_in_canonical_branch(): void
-    {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
         $this->makeLegacyEvent(['naslov' => 'EVENT_HIDDEN_IN_CANONICAL']);
 
         $this->actingAs($this->user)
@@ -97,24 +67,8 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
             ->assertDontSee('EVENT_HIDDEN_IN_CANONICAL', false);
     }
 
-    public function test_invalid_config_fail_safe_stays_legacy(): void
-    {
-        config(['cultural_calendar.public_read_source' => 'not-a-valid-source']);
-
-        $this->makeLegacyEvent(['naslov' => 'FAILSAFE_LEGACY']);
-        $this->makePublishedEntry('FAILSAFE_CANONICAL');
-
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']));
-
-        $response->assertOk();
-        $response->assertSee('FAILSAFE_LEGACY', false);
-        $response->assertDontSee('FAILSAFE_CANONICAL', false);
-        $this->assertTrue(CulturalPublicReadSource::usesLegacy());
-    }
-
     public function test_canonical_shows_published_and_cancelled_entries(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $published = $this->makePublishedEntry('Pub Entry');
         $cancelled = $this->makeEntry(CulturalEventEntry::STATUS_CANCELLED, 'Can Entry');
@@ -131,7 +85,6 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
 
     public function test_canonical_hides_draft_pending_and_archived(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $this->makeEntry(CulturalEventEntry::STATUS_DRAFT, 'Draft Hidden');
         $this->makeEntry(CulturalEventEntry::STATUS_PENDING_APPROVAL, 'Pending Hidden');
@@ -149,7 +102,6 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
 
     public function test_canonical_q_filter_works(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $this->makePublishedEntry('Alpha Festival');
         $this->makePublishedEntry('Beta Night');
@@ -163,7 +115,6 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
 
     public function test_canonical_category_and_location_filters_work(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $catA = $this->makeCategory('Koncert');
         $catB = $this->makeCategory('Izložba');
@@ -191,7 +142,6 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
 
     public function test_canonical_date_week_month_filters_work(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $onDay = $this->makePublishedEntry('On Day');
         $inWeek = $this->makePublishedEntry('In Week');
@@ -229,7 +179,6 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
 
     public function test_canonical_sort_follows_next_relevant_occurrence(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $later = $this->makePublishedEntry('Later Event');
         $earlier = $this->makePublishedEntry('Earlier Event');
@@ -251,7 +200,6 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
 
     public function test_canonical_pagination_is_twelve(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         for ($i = 1; $i <= 13; $i++) {
             $entry = $this->makePublishedEntry('Page Item '.$i);
@@ -269,7 +217,6 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
 
     public function test_canonical_empty_dataset_does_not_crash(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $this->actingAs($this->user)
             ->get(route('cultural-calendar.events', ['tip' => 'dogadjaji']))
@@ -279,7 +226,6 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
 
     public function test_canonical_card_shows_next_occurrence_and_additional_count(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $cat = $this->makeCategory('Teatar');
         $one = $this->makePublishedEntry('One Term', ['category_id' => $cat->id]);
@@ -326,7 +272,6 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
 
     public function test_canonical_category_options_come_from_active_catalog(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $this->makeCategory('Aktivna Kat');
         CulturalCategory::create([

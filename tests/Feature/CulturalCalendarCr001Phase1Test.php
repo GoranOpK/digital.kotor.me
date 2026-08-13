@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\CulturalEvent;
+use App\Models\CulturalCategory;
+use App\Models\CulturalEventEntry;
+use App\Models\CulturalOccurrence;
 use App\Models\Role;
 use App\Models\User;
 use Carbon\Carbon;
@@ -16,6 +18,8 @@ class CulturalCalendarCr001Phase1Test extends TestCase
 
     private User $user;
 
+    private CulturalCategory $category;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,6 +31,11 @@ class CulturalCalendarCr001Phase1Test extends TestCase
         $this->user = User::factory()->create([
             'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
         ]);
+
+        $this->category = CulturalCategory::create([
+            'naziv' => 'Koncerti',
+            'status' => CulturalCategory::STATUS_ACTIVE,
+        ]);
     }
 
     private function asUser()
@@ -34,28 +43,45 @@ class CulturalCalendarCr001Phase1Test extends TestCase
         return $this->actingAs($this->user);
     }
 
-    private function makeEvent(array $overrides = []): CulturalEvent
+    /**
+     * @param  array<string, mixed>  $overrides
+     */
+    private function makeEvent(array $overrides = []): CulturalEventEntry
     {
-        return CulturalEvent::create(array_merge([
+        $datum = $overrides['datum_od'] ?? Carbon::today()->toDateString();
+        unset($overrides['datum_od'], $overrides['datum_do'], $overrides['vrijeme'], $overrides['vrijeme_do'], $overrides['lokacija'], $overrides['kategorija']);
+
+        $status = $overrides['status'] ?? CulturalEventEntry::STATUS_PUBLISHED;
+        unset($overrides['status']);
+
+        $entry = CulturalEventEntry::create(array_merge([
             'naslov' => 'Test događaj',
             'opis' => 'Opis događaja',
-            'datum_od' => Carbon::today()->toDateString(),
-            'datum_do' => null,
-            'vrijeme' => '18:00:00',
-            'lokacija' => 'Kotor',
-            'kategorija' => 'Koncerti',
-            'status' => 'published',
+            'status' => $status,
+            'category_id' => $this->category->id,
+            'created_by' => $this->user->id,
             'featured' => false,
         ], $overrides));
+
+        CulturalOccurrence::create([
+            'event_entry_id' => $entry->id,
+            'datum' => $datum,
+            'cjelodnevno' => true,
+            'status' => CulturalOccurrence::STATUS_PLANNED,
+            'location_manual_name' => 'Kotor',
+        ]);
+
+        return $entry;
     }
 
-    public function test_navigation_shows_pretraga_i_pregled(): void
+    public function test_navigation_shows_dogadjaji_not_old_pregled_label(): void
     {
         $response = $this->asUser()->get(route('cultural-calendar.index'));
 
         $response->assertOk();
-        $response->assertSee('Pretraga i pregled', false);
-        $response->assertDontSee('Pregled događaja', false);
+        $response->assertSee('>Događaji</a>', false);
+        $response->assertSee('href="'.e(route('cultural-calendar.events')).'"', false);
+        $response->assertDontSee('>Pregled događaja<', false);
     }
 
     public function test_events_page_title_is_pretraga_i_pregled(): void

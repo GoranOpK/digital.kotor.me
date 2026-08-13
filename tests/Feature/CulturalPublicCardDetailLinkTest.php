@@ -8,14 +8,13 @@ use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
 use App\Models\Role;
 use App\Models\User;
-use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * 6A-10 — canonical kartica → detail link + URL/404 ID-space XOR regresija.
+ * 6A-10 — canonical kartica → detail link + URL/404 ID-space (Phase B1: flag removed).
  */
 class CulturalPublicCardDetailLinkTest extends TestCase
 {
@@ -52,7 +51,6 @@ class CulturalPublicCardDetailLinkTest extends TestCase
 
     public function test_canonical_events_card_has_detail_link_and_opens_200(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makePublishedEntry('CANONICAL_EVENTS_LINK');
         $this->makeOccurrence($entry, ['datum' => '2026-08-20']);
@@ -70,7 +68,6 @@ class CulturalPublicCardDetailLinkTest extends TestCase
 
     public function test_canonical_index_featured_card_has_detail_link_and_opens_200(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makePublishedEntry('CANONICAL_FEATURED_LINK', ['featured' => true]);
         $this->makeOccurrence($entry, ['datum' => '2026-08-20']);
@@ -86,44 +83,8 @@ class CulturalPublicCardDetailLinkTest extends TestCase
         $detail->assertSee('CANONICAL_FEATURED_LINK', false);
     }
 
-    public function test_legacy_events_card_keeps_legacy_detail_link(): void
+    public function test_legacy_id_without_matching_entry_is_404(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
-
-        $legacy = $this->makeLegacyEvent(['naslov' => 'LEGACY_EVENTS_LINK']);
-        $entry = $this->makePublishedEntry('CANONICAL_SHOULD_NOT_LINK');
-        $this->makeOccurrence($entry, ['datum' => '2026-08-20']);
-
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.events'));
-        $response->assertOk();
-        $response->assertSee(route('cultural-calendar.show', $legacy->id), false);
-        $response->assertSee('LEGACY_EVENTS_LINK', false);
-        $response->assertDontSee('CANONICAL_SHOULD_NOT_LINK', false);
-    }
-
-    public function test_legacy_index_featured_card_keeps_legacy_detail_link(): void
-    {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
-
-        $legacy = $this->makeLegacyEvent([
-            'naslov' => 'LEGACY_FEATURED_LINK',
-            'featured' => true,
-            'datum_od' => '2026-08-20',
-        ]);
-        $entry = $this->makePublishedEntry('CANONICAL_FEATURED_HIDDEN', ['featured' => true]);
-        $this->makeOccurrence($entry, ['datum' => '2026-08-20']);
-
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.index'));
-        $response->assertOk();
-        $response->assertSee(route('cultural-calendar.show', $legacy->id), false);
-        $response->assertSee('LEGACY_FEATURED_LINK', false);
-        $response->assertDontSee('CANONICAL_FEATURED_HIDDEN', false);
-    }
-
-    public function test_legacy_id_in_canonical_mode_without_matching_entry_is_404(): void
-    {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
-
         $legacy = $this->makeLegacyEvent(['naslov' => 'LEGACY_ONLY_ID']);
 
         $this->actingAs($this->user)
@@ -131,40 +92,8 @@ class CulturalPublicCardDetailLinkTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_canonical_id_in_legacy_mode_without_matching_legacy_is_404(): void
+    public function test_colliding_id_resolves_canonical_entry(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
-
-        $entry = $this->makePublishedEntry('CANONICAL_ONLY_ID');
-        $this->makeOccurrence($entry, ['datum' => '2026-08-20']);
-
-        $this->actingAs($this->user)
-            ->get(route('cultural-calendar.show', $entry->id))
-            ->assertNotFound();
-    }
-
-    public function test_colliding_id_legacy_mode_resolves_legacy_event(): void
-    {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
-
-        $legacy = $this->makeLegacyEvent(['naslov' => 'COLLIDE_LEGACY_TITLE']);
-        $entry = $this->makeEntryWithId($legacy->id, CulturalEventEntry::STATUS_PUBLISHED, 'COLLIDE_CANONICAL_TITLE');
-        $this->makeOccurrence($entry, ['datum' => '2026-08-20']);
-
-        $this->assertSame($legacy->id, $entry->id);
-
-        $response = $this->actingAs($this->user)
-            ->get(route('cultural-calendar.show', $legacy->id));
-
-        $response->assertOk();
-        $response->assertSee('COLLIDE_LEGACY_TITLE', false);
-        $response->assertDontSee('COLLIDE_CANONICAL_TITLE', false);
-    }
-
-    public function test_colliding_id_canonical_mode_resolves_canonical_entry(): void
-    {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
-
         $legacy = $this->makeLegacyEvent(['naslov' => 'COLLIDE_LEGACY_TITLE']);
         $entry = $this->makeEntryWithId($legacy->id, CulturalEventEntry::STATUS_PUBLISHED, 'COLLIDE_CANONICAL_TITLE');
         $this->makeOccurrence($entry, ['datum' => '2026-08-20']);
@@ -181,7 +110,6 @@ class CulturalPublicCardDetailLinkTest extends TestCase
 
     public function test_canonical_draft_and_pending_direct_url_are_404(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $draft = $this->makeEntry(CulturalEventEntry::STATUS_DRAFT, 'DRAFT_LINK');
         $pending = $this->makeEntry(CulturalEventEntry::STATUS_PENDING_APPROVAL, 'PENDING_LINK');
@@ -196,7 +124,6 @@ class CulturalPublicCardDetailLinkTest extends TestCase
 
     public function test_archive_public_detail_200_and_null_history_404(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $public = $this->makeEntry(CulturalEventEntry::STATUS_ARCHIVED, 'ARCH_PUBLIC_LINK', [
             'archived_from_status' => CulturalEventEntry::STATUS_PUBLISHED,
@@ -224,14 +151,8 @@ class CulturalPublicCardDetailLinkTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_nonexistent_id_is_404_in_both_modes(): void
+    public function test_nonexistent_id_is_404(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
-        $this->actingAs($this->user)
-            ->get(route('cultural-calendar.show', 999999))
-            ->assertNotFound();
-
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
         $this->actingAs($this->user)
             ->get(route('cultural-calendar.show', 999999))
             ->assertNotFound();
@@ -239,12 +160,6 @@ class CulturalPublicCardDetailLinkTest extends TestCase
 
     public function test_invalid_id_format_is_fail_closed_404(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
-        $this->actingAs($this->user)
-            ->get('/kalendar-kulture/dogadjaj/abc')
-            ->assertNotFound();
-
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
         $this->actingAs($this->user)
             ->get('/kalendar-kulture/dogadjaj/abc')
             ->assertNotFound();
@@ -252,7 +167,6 @@ class CulturalPublicCardDetailLinkTest extends TestCase
 
     public function test_canonical_archive_card_link_opens_archive_public_show(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makeEntry(CulturalEventEntry::STATUS_ARCHIVED, 'ARCHIVE_CARD_TO_SHOW', [
             'archived_from_status' => CulturalEventEntry::STATUS_CANCELLED,
@@ -276,7 +190,6 @@ class CulturalPublicCardDetailLinkTest extends TestCase
 
     public function test_archived_null_history_not_on_archive_page(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makeEntry(CulturalEventEntry::STATUS_ARCHIVED, 'ARCH_NULL_NO_CARD', [
             'archived_from_status' => null,

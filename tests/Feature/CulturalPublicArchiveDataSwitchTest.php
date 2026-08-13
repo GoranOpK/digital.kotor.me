@@ -8,14 +8,13 @@ use App\Models\CulturalOccurrence;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\CulturalCalendar\CulturalPublicEventQuery;
-use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * 6A-09 — archive-only query, badge, show, UI DATA SWITCH.
+ * 6A-09 — archive-only query, badge, show, UI (Phase B1: flag removed).
  */
 class CulturalPublicArchiveDataSwitchTest extends TestCase
 {
@@ -212,7 +211,6 @@ class CulturalPublicArchiveDataSwitchTest extends TestCase
 
     public function test_show_archived_with_history_but_zero_historical_occ_returns_404(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makeEntry('SHOW_ARCH_ZERO_OCC', CulturalEventEntry::STATUS_ARCHIVED, [
             'archived_from_status' => CulturalEventEntry::STATUS_PUBLISHED,
@@ -260,7 +258,6 @@ class CulturalPublicArchiveDataSwitchTest extends TestCase
 
     public function test_show_archived_from_published_returns_200(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makeEntry('SHOW_ARCH_PUB', CulturalEventEntry::STATUS_ARCHIVED, [
             'archived_from_status' => CulturalEventEntry::STATUS_PUBLISHED,
@@ -281,7 +278,6 @@ class CulturalPublicArchiveDataSwitchTest extends TestCase
 
     public function test_show_archived_from_cancelled_returns_200_with_otkazan(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makeEntry('SHOW_ARCH_CANC', CulturalEventEntry::STATUS_ARCHIVED, [
             'archived_from_status' => CulturalEventEntry::STATUS_CANCELLED,
@@ -305,7 +301,6 @@ class CulturalPublicArchiveDataSwitchTest extends TestCase
 
     public function test_show_archived_null_history_returns_404(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makeEntry('SHOW_ARCH_NULL', CulturalEventEntry::STATUS_ARCHIVED, [
             'archived_from_status' => null,
@@ -323,7 +318,6 @@ class CulturalPublicArchiveDataSwitchTest extends TestCase
 
     public function test_show_draft_and_pending_return_404(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $draft = $this->makeEntry('SHOW_DRAFT', CulturalEventEntry::STATUS_DRAFT);
         $pending = $this->makeEntry('SHOW_PENDING', CulturalEventEntry::STATUS_PENDING_APPROVAL);
@@ -336,39 +330,8 @@ class CulturalPublicArchiveDataSwitchTest extends TestCase
             ->assertNotFound();
     }
 
-    public function test_legacy_archive_unchanged_ignores_canonical_entries(): void
-    {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
-
-        $legacy = \App\Models\CulturalEvent::create([
-            'naslov' => 'LEGACY_ARCHIVE_ONLY',
-            'opis' => 'x',
-            'kategorija' => 'Koncerti',
-            'lokacija' => 'Stari grad',
-            'datum_od' => '2026-08-01',
-            'status' => 'published',
-            'created_by' => $this->user->id,
-        ]);
-
-        $canonical = $this->makeEntry('CANONICAL_ARCHIVE_ONLY', CulturalEventEntry::STATUS_ARCHIVED, [
-            'archived_from_status' => CulturalEventEntry::STATUS_PUBLISHED,
-        ]);
-        $this->makeOcc($canonical, [
-            'datum' => '2026-08-01',
-            'cjelodnevno' => true,
-            'status' => CulturalOccurrence::STATUS_FINISHED,
-        ]);
-
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.archive'));
-        $response->assertOk();
-        $response->assertSee('LEGACY_ARCHIVE_ONLY', false);
-        $response->assertDontSee('CANONICAL_ARCHIVE_ONLY', false);
-        $this->assertTrue($legacy->exists);
-    }
-
     public function test_canonical_archive_uses_archive_only_data_sorted_desc(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         \App\Models\CulturalEvent::create([
             'naslov' => 'LEGACY_MUST_NOT_APPEAR',
@@ -415,7 +378,6 @@ class CulturalPublicArchiveDataSwitchTest extends TestCase
 
     public function test_canonical_archive_empty_does_not_crash(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $response = $this->actingAs($this->user)->get(route('cultural-calendar.archive'));
         $response->assertOk();
@@ -424,7 +386,6 @@ class CulturalPublicArchiveDataSwitchTest extends TestCase
 
     public function test_canonical_archive_paginates_twelve(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         for ($i = 1; $i <= 13; $i++) {
             $entry = $this->makeEntry("PAGE_ITEM_{$i}", CulturalEventEntry::STATUS_ARCHIVED, [

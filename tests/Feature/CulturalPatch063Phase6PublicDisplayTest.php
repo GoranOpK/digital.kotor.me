@@ -14,7 +14,6 @@ use App\Services\CulturalEventDomain\EventLifecycle;
 use App\Services\CulturalEventDomain\EventWriter;
 use App\Services\CulturalEventDomain\OccurrenceLifecycle;
 use App\Services\CulturalEventDomain\OccurrenceWriter;
-use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -51,8 +50,6 @@ class CulturalPatch063Phase6PublicDisplayTest extends TestCase
 
         $this->withoutVite();
         $this->seed(RoleSeeder::class);
-
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $this->user = User::factory()->create([
             'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,

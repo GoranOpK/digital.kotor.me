@@ -324,7 +324,7 @@ class CulturalEventEntry extends Model
             return $this->coverMedia->publicUrl();
         }
 
-        return CulturalEvent::defaultImageUrlForCategory($this->category?->naziv);
+        return \App\Support\CulturalCalendarDefaultImages::urlForCategory($this->category?->naziv);
     }
 
     /**

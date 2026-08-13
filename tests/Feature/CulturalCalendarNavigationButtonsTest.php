@@ -62,7 +62,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         }
 
         $this->assertStringNotContainsString('>Kanonski događaji<', $html);
-        $this->assertStringNotContainsString('href="'.e(route('cultural-events.index')).'"', $html);
+        $this->assertStringNotContainsString('/kalendar-kulture/dogadjaji', $html);
         $this->assertStringNotContainsString('>Urednički rad<', $html);
         $this->assertStringNotContainsString('>Lokacije<', $html);
         $this->assertStringNotContainsString('>Kategorije<', $html);
@@ -130,7 +130,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.manifestations')).'"', $html);
         $this->assertStringContainsString('href="'.e(route('cultural-editorial-dashboard.index')).'"', $html);
         $this->assertStringNotContainsString('href="'.e(route('cultural-event-entries.index')).'"', $html);
-        $this->assertStringNotContainsString('href="'.e(route('cultural-events.index')).'"', $html);
+        $this->assertStringNotContainsString('/kalendar-kulture/dogadjaji', $html);
         $this->assertStringNotContainsString('href="'.e(route('cultural-locations.index')).'"', $html);
         $this->assertStringNotContainsString('href="'.e(route('cultural-categories.index')).'"', $html);
         $this->assertStringNotContainsString('href="'.e(route('cultural-tags.index')).'"', $html);

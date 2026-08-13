@@ -258,34 +258,19 @@
                         'manifestation' => $item,
                         'manifestationQuery' => $manifestationQuery,
                     ])
-                @elseif($item instanceof CulturalEventEntry || $item instanceof \App\Models\CulturalEvent)
+                @elseif($item instanceof CulturalEventEntry)
                     @php
                         $event = $item;
-                        $isCanonicalEntry = $event instanceof CulturalEventEntry;
-                        if ($isCanonicalEntry) {
-                            $cardOcc = $event->nextRelevantOccurrence();
-                            $cardDatumOd = $cardOcc?->datum;
-                            $cardDatumDo = null;
-                            $cardVrijeme = $cardOcc?->vrijeme_od;
-                            $cardLokacija = $cardOcc?->publicLocationDisplayName();
-                            $cardKategorija = $event->publicCategoryName();
-                            $additionalCount = $event->additionalRelevantOccurrencesCount();
-                            $cardHref = route('cultural-calendar.show', [
-                                'event' => $event,
-                                'back' => request()->getRequestUri(),
-                            ]);
-                        } else {
-                            $cardDatumOd = $event->datum_od;
-                            $cardDatumDo = $event->datum_do;
-                            $cardVrijeme = $event->vrijeme;
-                            $cardLokacija = $event->lokacija;
-                            $cardKategorija = $event->kategorija;
-                            $additionalCount = 0;
-                            $cardHref = route('cultural-calendar.show', [
-                                'event' => $event,
-                                'back' => request()->getRequestUri(),
-                            ]);
-                        }
+                        $cardOcc = $event->nextRelevantOccurrence();
+                        $cardDatumOd = $cardOcc?->datum;
+                        $cardVrijeme = $cardOcc?->vrijeme_od;
+                        $cardLokacija = $cardOcc?->publicLocationDisplayName();
+                        $cardKategorija = $event->publicCategoryName();
+                        $additionalCount = $event->additionalRelevantOccurrencesCount();
+                        $cardHref = route('cultural-calendar.show', [
+                            'event' => $event,
+                            'back' => request()->getRequestUri(),
+                        ]);
                     @endphp
                     <article class="bg-white border border-gray-200 rounded-lg overflow-hidden">
                         @if($cardHref)
@@ -304,9 +289,6 @@
                         <div class="p-4">
                             <div class="text-xs text-gray-500 mb-1">
                                 {{ optional($cardDatumOd)->format('d.m.Y') }}
-                                @if($cardDatumDo)
-                                    - {{ optional($cardDatumDo)->format('d.m.Y') }}
-                                @endif
                                 @if($cardVrijeme)
                                     • {{ substr((string) $cardVrijeme, 0, 5) }}
                                 @endif

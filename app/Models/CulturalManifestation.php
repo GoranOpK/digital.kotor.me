@@ -197,7 +197,7 @@ class CulturalManifestation extends Model
             return $this->coverMedia->publicUrl();
         }
 
-        return asset(CulturalEvent::FALLBACK_DEFAULT_IMAGE);
+        return \App\Support\CulturalCalendarDefaultImages::fallbackUrl();
     }
 }
 

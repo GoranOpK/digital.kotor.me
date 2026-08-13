@@ -7,14 +7,13 @@ use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
 use App\Models\Role;
 use App\Models\User;
-use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * 6A-07 — DATA SWITCH naslovne (legacy XOR canonical).
+ * 6A-07 — canonical naslovna (Phase B1: flag removed).
  */
 class CulturalPublicIndexDataSwitchTest extends TestCase
 {
@@ -42,25 +41,8 @@ class CulturalPublicIndexDataSwitchTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_legacy_flag_uses_legacy_index_data(): void
+    public function test_index_uses_canonical_and_excludes_legacy_rows(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
-
-        $this->makeLegacyEvent(['naslov' => 'LEGACY_INDEX_ONLY']);
-        $entry = $this->makePublishedEntry('CANONICAL_INDEX_ONLY');
-        $this->makeOccurrence($entry, ['datum' => '2026-08-20']);
-
-        $response = $this->actingAs($this->user)->get(route('cultural-calendar.index'));
-
-        $response->assertOk();
-        $response->assertSee('LEGACY_INDEX_ONLY', false);
-        $response->assertDontSee('CANONICAL_INDEX_ONLY', false);
-    }
-
-    public function test_canonical_flag_uses_canonical_index_data(): void
-    {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
-
         $this->makeLegacyEvent(['naslov' => 'LEGACY_INDEX_ONLY']);
         $entry = $this->makePublishedEntry('CANONICAL_INDEX_ONLY');
         $this->makeOccurrence($entry, ['datum' => '2026-08-20']);
@@ -72,24 +54,8 @@ class CulturalPublicIndexDataSwitchTest extends TestCase
         $response->assertDontSee('LEGACY_INDEX_ONLY', false);
     }
 
-    public function test_invalid_config_fail_safe_stays_legacy_on_index(): void
-    {
-        config(['cultural_calendar.public_read_source' => 'bogus']);
-
-        $this->makeLegacyEvent(['naslov' => 'FAILSAFE_LEGACY_HOME']);
-        $entry = $this->makePublishedEntry('FAILSAFE_CANONICAL_HOME');
-        $this->makeOccurrence($entry, ['datum' => '2026-08-20']);
-
-        $this->actingAs($this->user)
-            ->get(route('cultural-calendar.index'))
-            ->assertOk()
-            ->assertSee('FAILSAFE_LEGACY_HOME', false)
-            ->assertDontSee('FAILSAFE_CANONICAL_HOME', false);
-    }
-
     public function test_canonical_today_week_month_counts(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $todayEntry = $this->makePublishedEntry('Today Entry');
         $this->makeOccurrence($todayEntry, ['datum' => '2026-08-10']);
@@ -125,7 +91,6 @@ class CulturalPublicIndexDataSwitchTest extends TestCase
 
     public function test_canonical_calendar_counts_distinct_entry_per_day(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makePublishedEntry('Same Day Twice');
         $this->makeOccurrence($entry, ['datum' => '2026-08-15']);
@@ -143,7 +108,6 @@ class CulturalPublicIndexDataSwitchTest extends TestCase
 
     public function test_canonical_featured_rules(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $featured = $this->makePublishedEntry('Featured Aktuelan', ['featured' => true]);
         $this->makeOccurrence($featured, ['datum' => '2026-08-20']);
@@ -174,7 +138,6 @@ class CulturalPublicIndexDataSwitchTest extends TestCase
 
     public function test_canonical_featured_max_three_and_order_by_next_occ(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         foreach ([
             ['naslov' => 'Feat C', 'datum' => '2026-08-25'],
@@ -195,7 +158,6 @@ class CulturalPublicIndexDataSwitchTest extends TestCase
 
     public function test_canonical_upcoming_sort_and_exclusions(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $later = $this->makePublishedEntry('Upcoming Later');
         $earlier = $this->makePublishedEntry('Upcoming Earlier');
@@ -258,7 +220,6 @@ class CulturalPublicIndexDataSwitchTest extends TestCase
 
     public function test_canonical_empty_index_keeps_hero_and_sections(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $response = $this->actingAs($this->user)->get(route('cultural-calendar.index'));
 

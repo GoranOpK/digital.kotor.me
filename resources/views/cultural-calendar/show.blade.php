@@ -1,9 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-@php
-    $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
-@endphp
 <div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <style>
         .kk-show-header {
@@ -144,84 +141,53 @@
                 @include('cultural-calendar.partials.public-status-badge', ['event' => $event, 'variant' => 'detail'])
 
                 @if($event->status === 'cancelled'
-                    || ($isCanonicalEntry
-                        && $event->status === \App\Models\CulturalEventEntry::STATUS_ARCHIVED
+                    || ($event->status === \App\Models\CulturalEventEntry::STATUS_ARCHIVED
                         && $event->archived_from_status === \App\Models\CulturalEventEntry::STATUS_CANCELLED))
                     <p class="kk-show-cancelled-notice" role="status">
                         Ovaj događaj je otkazan i neće biti održan u planiranom terminu.
                     </p>
-                    @if($isCanonicalEntry && ($cancelNotice = $event->publicCancellationNotice()))
+                    @if($cancelNotice = $event->publicCancellationNotice())
                         <p class="kk-show-cancelled-notice" role="note">
                             <strong>Napomena:</strong> {{ $cancelNotice }}
                         </p>
                     @endif
                 @endif
 
-                @if($isCanonicalEntry)
-                    @if($organizerName = $event->publicOrganizerDisplayName())
-                        <div class="kk-show-meta">
-                            <strong>Organizator:</strong> {{ $organizerName }}
-                        </div>
-                    @endif
-
-                    @if(!empty($publicManifestation))
-                        <div class="kk-show-meta" data-kk-public-manifestation-link="1">
-                            <strong>Manifestacija:</strong>
-                            <a
-                                href="{{ route('cultural-calendar.manifestation', ['manifestacija' => $publicManifestation]) }}"
-                                class="text-blue-700 underline"
-                            >{{ $publicManifestation->naziv }}</a>
-                        </div>
-                    @endif
-
-                    @include('cultural-calendar.partials.show-occurrences', [
-                        'occurrences' => $event->publicDetailOccurrences(),
-                    ])
-
-                    @if($event->publicCategoryName())
-                        <div class="kk-show-meta">
-                            <strong>Kategorija:</strong> {{ $event->publicCategoryName() }}
-                        </div>
-                    @endif
-
-                    @if($event->tags->isNotEmpty())
-                        <div class="kk-show-meta">
-                            <strong>Oznake:</strong>
-                            <div class="kk-show-tags">
-                                @foreach($event->tags as $tag)
-                                    <span class="kk-show-tag">{{ $tag->naziv }}</span>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endif
-                @else
+                @if($organizerName = $event->publicOrganizerDisplayName())
                     <div class="kk-show-meta">
-                        <strong>Datum:</strong>
-                        {{ optional($event->datum_od)->format('d.m.Y') }}
-                        @if($event->datum_do)
-                            - {{ optional($event->datum_do)->format('d.m.Y') }}
-                        @endif
+                        <strong>Organizator:</strong> {{ $organizerName }}
                     </div>
+                @endif
 
-                    @if($event->vrijeme)
-                        <div class="kk-show-meta">
-                            <strong>Vrijeme:</strong>
-                            {{ substr((string) $event->vrijeme, 0, 5) }}
-                            @if($event->vrijeme_do)
-                                - {{ substr((string) $event->vrijeme_do, 0, 5) }}
-                            @endif
-                        </div>
-                    @endif
+                @if(!empty($publicManifestation))
+                    <div class="kk-show-meta" data-kk-public-manifestation-link="1">
+                        <strong>Manifestacija:</strong>
+                        <a
+                            href="{{ route('cultural-calendar.manifestation', ['manifestacija' => $publicManifestation]) }}"
+                            class="text-blue-700 underline"
+                        >{{ $publicManifestation->naziv }}</a>
+                    </div>
+                @endif
 
+                @include('cultural-calendar.partials.show-occurrences', [
+                    'occurrences' => $event->publicDetailOccurrences(),
+                ])
+
+                @if($event->publicCategoryName())
                     <div class="kk-show-meta">
-                        <strong>Kategorija:</strong> {{ $event->kategorija }}
+                        <strong>Kategorija:</strong> {{ $event->publicCategoryName() }}
                     </div>
+                @endif
 
-                    @if($event->lokacija)
-                        <div class="kk-show-meta">
-                            <strong>Lokacija:</strong> {{ $event->lokacija }}
+                @if($event->tags->isNotEmpty())
+                    <div class="kk-show-meta">
+                        <strong>Oznake:</strong>
+                        <div class="kk-show-tags">
+                            @foreach($event->tags as $tag)
+                                <span class="kk-show-tag">{{ $tag->naziv }}</span>
+                            @endforeach
                         </div>
-                    @endif
+                    </div>
                 @endif
 
                 @if($event->opis)

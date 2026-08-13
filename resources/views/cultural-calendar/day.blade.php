@@ -20,28 +20,17 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             @foreach($events as $event)
                 @php
-                    $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
-                    if ($isCanonicalEntry) {
-                        $cardOcc = $event->occurrenceOnDate($selectedDate->toDateString());
-                        $cardDatum = $cardOcc?->datum;
-                        $cardVrijeme = $cardOcc?->vrijeme_od;
-                        $cardKategorija = $event->category?->naziv;
-                        $cardLokacija = $cardOcc?->publicLocationDisplayName();
-                    } else {
-                        $cardDatum = $event->datum_od;
-                        $cardVrijeme = $event->vrijeme;
-                        $cardKategorija = $event->kategorija;
-                        $cardLokacija = $event->lokacija;
-                    }
+                    $cardOcc = $event->occurrenceOnDate($selectedDate->toDateString());
+                    $cardDatum = $cardOcc?->datum;
+                    $cardVrijeme = $cardOcc?->vrijeme_od;
+                    $cardKategorija = $event->category?->naziv;
+                    $cardLokacija = $cardOcc?->publicLocationDisplayName();
                 @endphp
                 <article class="bg-white border border-gray-200 rounded-lg overflow-hidden">
                     <img src="{{ $event->imageUrl() }}" alt="{{ $event->naslov }}" class="w-full h-44 object-cover">
                     <div class="p-4">
                         <div class="text-xs text-gray-500 mb-1">
                             {{ optional($cardDatum)->format('d.m.Y') }}
-                            @if(! $isCanonicalEntry && $event->datum_do)
-                                - {{ optional($event->datum_do)->format('d.m.Y') }}
-                            @endif
                             @if($cardVrijeme)
                                 • {{ substr((string) $cardVrijeme, 0, 5) }}
                             @endif

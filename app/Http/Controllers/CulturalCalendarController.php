@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CulturalEvent;
 use App\Models\CulturalEventEntry;
 use App\Services\CulturalCalendar\CulturalPublicEventQuery;
 use App\Services\CulturalCalendar\CulturalPublicManifestationQuery;
 use App\Services\CulturalCalendar\CulturalPublicSearchQuery;
-use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -58,22 +56,7 @@ class CulturalCalendarController extends Controller
 
         $selectedDateParam = $request->query('date');
 
-        if (CulturalPublicReadSource::usesCanonical()) {
-            return $this->indexCanonical(
-                $request,
-                $today,
-                $weekEnd,
-                $monthStart,
-                $monthEnd,
-                $selectedMonthValue,
-                $calendarMonthLabel,
-                $monthOptions,
-                $selectedDateParam,
-                $isKkAdmin
-            );
-        }
-
-        return $this->indexLegacy(
+        return $this->indexCanonical(
             $request,
             $today,
             $weekEnd,
@@ -85,152 +68,6 @@ class CulturalCalendarController extends Controller
             $selectedDateParam,
             $isKkAdmin
         );
-    }
-
-    /**
-     * Legacy naslovna — CulturalEvent (XOR; ponašanje prije 6A-07).
-     *
-     * @param  list<array{value: string, label: string}>  $monthOptions
-     */
-    private function indexLegacy(
-        Request $request,
-        Carbon $today,
-        Carbon $weekEnd,
-        Carbon $monthStart,
-        Carbon $monthEnd,
-        string $selectedMonthValue,
-        string $calendarMonthLabel,
-        array $monthOptions,
-        mixed $selectedDateParam,
-        bool $isKkAdmin
-    ): View {
-        $selectedDate = null;
-        $selectedDateEvents = null;
-
-        // Samo za korisnički pregled: kad korisnik klikne datum, podvučemo događaje za taj datum ispod kalendara.
-        if ($selectedDateParam && ! $isKkAdmin) {
-            try {
-                $selectedDate = Carbon::createFromFormat('Y-m-d', $selectedDateParam)->startOfDay();
-
-                $selectedDateEvents = CulturalEvent::query()
-                    ->publiclyVisible()
-                    ->whereDate('datum_od', '<=', $selectedDate)
-                    ->where(function ($query) use ($selectedDate) {
-                        $query->whereNull('datum_do')
-                            ->orWhereDate('datum_do', '>=', $selectedDate);
-                    })
-                    ->orderBy('vrijeme')
-                    ->orderBy('id')
-                    ->get();
-            } catch (\Throwable $e) {
-                $selectedDate = null;
-                $selectedDateEvents = null;
-            }
-        }
-
-        $todayCount = CulturalEvent::query()
-            ->publiclyVisible()
-            ->whereDate('datum_od', '<=', $today)
-            ->where(function ($query) use ($today) {
-                $query->whereNull('datum_do')
-                    ->orWhereDate('datum_do', '>=', $today);
-            })
-            ->count();
-
-        $weekCount = CulturalEvent::query()
-            ->publiclyVisible()
-            ->whereDate('datum_od', '<=', $weekEnd)
-            ->where(function ($query) use ($today) {
-                $query->whereNull('datum_do')
-                    ->orWhereDate('datum_do', '>=', $today);
-            })
-            ->count();
-
-        $monthCount = CulturalEvent::query()
-            ->publiclyVisible()
-            ->where(function ($query) use ($monthStart, $monthEnd) {
-                $query->where(function ($single) use ($monthStart, $monthEnd) {
-                    $single->whereNull('datum_do')
-                        ->whereDate('datum_od', '>=', $monthStart)
-                        ->whereDate('datum_od', '<=', $monthEnd);
-                })->orWhere(function ($range) use ($monthStart, $monthEnd) {
-                    $range->whereNotNull('datum_do')
-                        ->whereDate('datum_od', '<=', $monthEnd)
-                        ->whereDate('datum_do', '>=', $monthStart);
-                });
-            })
-            ->count();
-
-        // Istaknuti: samo published (PO-CR4B-03) — cancelled isključeni iz prikaza.
-        $featuredEvents = CulturalEvent::query()
-            ->where('status', 'published')
-            ->where('featured', true)
-            ->where(function ($query) use ($today) {
-                $query->where(function ($q) use ($today) {
-                    $q->whereNotNull('datum_do')
-                        ->whereDate('datum_do', '>=', $today);
-                })->orWhere(function ($q) use ($today) {
-                    $q->whereNull('datum_do')
-                        ->whereDate('datum_od', '>=', $today);
-                });
-            })
-            ->orderBy('datum_od')
-            ->take(3)
-            ->get();
-
-        $upcomingEvents = CulturalEvent::query()
-            ->publiclyVisible()
-            ->whereDate('datum_od', '>=', $today)
-            ->orderBy('datum_od')
-            ->orderBy('vrijeme')
-            ->take(3)
-            ->get();
-
-        $monthEvents = CulturalEvent::query()
-            ->publiclyVisible()
-            ->whereDate('datum_od', '<=', $monthEnd)
-            ->where(function ($query) use ($monthStart) {
-                $query->whereNull('datum_do')
-                    ->orWhereDate('datum_do', '>=', $monthStart);
-            })
-            ->get(['datum_od', 'datum_do']);
-
-        $eventDayCounts = [];
-        foreach ($monthEvents as $event) {
-            $start = Carbon::parse($event->datum_od)->startOfDay();
-            $end = $event->datum_do ? Carbon::parse($event->datum_do)->startOfDay() : $start->copy();
-
-            if ($start->lt($monthStart)) {
-                $start = $monthStart->copy();
-            }
-            if ($end->gt($monthEnd)) {
-                $end = $monthEnd->copy();
-            }
-
-            for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
-                $dateKey = $date->format('Y-m-d');
-                $eventDayCounts[$dateKey] = ($eventDayCounts[$dateKey] ?? 0) + 1;
-            }
-        }
-
-        $calendarDays = $this->buildCalendarDays($monthStart, $monthEnd, $today, $eventDayCounts);
-
-        return view('cultural-calendar.index', compact(
-            'today',
-            'weekEnd',
-            'todayCount',
-            'weekCount',
-            'monthCount',
-            'featuredEvents',
-            'upcomingEvents',
-            'calendarDays',
-            'calendarMonthLabel',
-            'monthOptions',
-            'selectedMonthValue',
-            'selectedDate',
-            'selectedDateEvents',
-            'isKkAdmin'
-        ));
     }
 
     /**
@@ -363,16 +200,12 @@ class CulturalCalendarController extends Controller
 
         $parsed = $this->parseEventsListFilters($request);
 
-        if (CulturalPublicReadSource::usesCanonical()) {
-            return $this->eventsCanonical($request, $parsed);
-        }
-
-        return $this->eventsLegacy($request, $parsed);
+        return $this->eventsCanonical($request, $parsed);
     }
 
     /**
      * Shared URL filter parsing for Pretraga (date/week/month/q).
-     * Category/location validation depends on read source.
+     * Category/location validation is applied in the canonical list query.
      *
      * @return array{
      *     today: Carbon,
@@ -476,153 +309,8 @@ class CulturalCalendarController extends Controller
     }
 
     /**
-     * Legacy Pretraga — CulturalEvent (XOR; ponašanje prije 6A-06).
-     *
-     * @param  array<string, mixed>  $parsed
-     */
-    private function eventsLegacy(Request $request, array $parsed): View
-    {
-        $today = $parsed['today'];
-        $date = $parsed['date'];
-        $weekStart = $parsed['weekStart'];
-        $weekEnd = $parsed['weekEnd'];
-        $selectedMonthStart = $parsed['selectedMonthStart'];
-        $selectedMonthLabel = $parsed['selectedMonthLabel'];
-        $selectedMonthValue = $parsed['selectedMonthValue'];
-        $q = $parsed['q'];
-
-        $category = null;
-        $categoryParam = $parsed['categoryParam'];
-        if (is_string($categoryParam) && $categoryParam !== '' && in_array($categoryParam, CulturalEvent::CATEGORIES, true)) {
-            $category = $categoryParam;
-        }
-
-        // PO-CR3-04: dropdown lokacija ostaje iz published (CR-004B ne mijenja filter definiciju).
-        $locationOptions = CulturalEvent::query()
-            ->where('status', 'published')
-            ->whereNotNull('lokacija')
-            ->where('lokacija', '!=', '')
-            ->distinct()
-            ->orderBy('lokacija')
-            ->pluck('lokacija')
-            ->values()
-            ->all();
-
-        $location = null;
-        $locationParam = $parsed['locationParam'];
-        if (is_string($locationParam) && $locationParam !== '' && in_array($locationParam, $locationOptions, true)) {
-            $location = $locationParam;
-        }
-
-        $eventsQuery = CulturalEvent::query()
-            ->publiclyVisible();
-
-        if ($date !== null) {
-            $selectedDate = Carbon::createFromFormat('Y-m-d', $date)->startOfDay();
-
-            $eventsQuery
-                ->where(function ($query) use ($today) {
-                    $query->where(function ($inner) use ($today) {
-                        $inner->whereNotNull('datum_do')
-                            ->whereDate('datum_do', '>=', $today);
-                    })->orWhere(function ($inner) use ($today) {
-                        $inner->whereNull('datum_do')
-                            ->whereDate('datum_od', '>=', $today);
-                    });
-                })
-                ->whereDate('datum_od', '<=', $selectedDate)
-                ->where(function ($query) use ($selectedDate) {
-                    $query->whereNull('datum_do')
-                        ->orWhereDate('datum_do', '>=', $selectedDate);
-                });
-        } elseif ($weekStart !== null && $weekEnd !== null) {
-            $eventsQuery
-                ->where(function ($query) use ($today) {
-                    $query->where(function ($inner) use ($today) {
-                        $inner->whereNotNull('datum_do')
-                            ->whereDate('datum_do', '>=', $today);
-                    })->orWhere(function ($inner) use ($today) {
-                        $inner->whereNull('datum_do')
-                            ->whereDate('datum_od', '>=', $today);
-                    });
-                })
-                ->whereDate('datum_od', '<=', $weekEnd->toDateString())
-                ->where(function ($query) use ($weekStart) {
-                    $query->whereNull('datum_do')
-                        ->orWhereDate('datum_do', '>=', $weekStart->toDateString());
-                });
-        } elseif ($selectedMonthStart !== null) {
-            $monthEnd = $selectedMonthStart->copy()->endOfMonth();
-
-            $eventsQuery->where(function ($query) use ($selectedMonthStart, $monthEnd) {
-                $query->where(function ($single) use ($selectedMonthStart, $monthEnd) {
-                    $single->whereNull('datum_do')
-                        ->whereDate('datum_od', '>=', $selectedMonthStart)
-                        ->whereDate('datum_od', '<=', $monthEnd);
-                })->orWhere(function ($range) use ($selectedMonthStart, $monthEnd) {
-                    $range->whereNotNull('datum_do')
-                        ->whereDate('datum_od', '<=', $monthEnd)
-                        ->whereDate('datum_do', '>=', $selectedMonthStart);
-                });
-            });
-        } else {
-            $eventsQuery->where(function ($query) use ($today) {
-                $query->where(function ($inner) use ($today) {
-                    $inner->whereNotNull('datum_do')
-                        ->whereDate('datum_do', '>=', $today);
-                })->orWhere(function ($inner) use ($today) {
-                    $inner->whereNull('datum_do')
-                        ->whereDate('datum_od', '>=', $today);
-                });
-            });
-        }
-
-        if ($q !== null) {
-            $like = '%'.addcslashes($q, '%_\\').'%';
-            $eventsQuery->where(function ($query) use ($like) {
-                $query->where('naslov', 'like', $like)
-                    ->orWhere('opis', 'like', $like)
-                    ->orWhere('lokacija', 'like', $like);
-            });
-        }
-
-        if ($category !== null) {
-            $eventsQuery->where('kategorija', $category);
-        }
-
-        if ($location !== null) {
-            $eventsQuery->where('lokacija', $location);
-        }
-
-        $events = $eventsQuery
-            ->orderBy('datum_od')
-            ->paginate(12)
-            ->withQueryString();
-
-        $categoryOptions = CulturalEvent::CATEGORIES;
-
-        return view('cultural-calendar.events', [
-            'results' => $events,
-            'events' => $events,
-            'tip' => CulturalPublicSearchQuery::TIP_DOGADJAJI,
-            'eventFiltersApplicable' => true,
-            'manifestationQuery' => app(CulturalPublicManifestationQuery::class),
-            'date' => $date,
-            'weekStart' => $weekStart,
-            'weekEnd' => $weekEnd,
-            'selectedMonthLabel' => $selectedMonthLabel,
-            'selectedMonthValue' => $selectedMonthValue,
-            'q' => $q,
-            'category' => $category,
-            'location' => $location,
-            'categoryOptions' => $categoryOptions,
-            'locationOptions' => $locationOptions,
-        ]);
-    }
-
-    /**
      * Canonical Pretraga — CulturalEventEntry via CulturalPublicEventQuery (6A-06).
-     * PHASE 6B-04: Tip sadržaja + combined Event/MF search (PO-6B-01/04/05/10).
+     * PHASE 6B-04: Tip sadržaja + connected Event/MF search (PO-6B-01/04/05/10).
      *
      * @param  array<string, mixed>  $parsed
      */
@@ -740,36 +428,18 @@ class CulturalCalendarController extends Controller
             return redirect()->route('cultural-event-entries.create');
         }
 
-        if (CulturalPublicReadSource::usesCanonical()) {
-            $dateYmd = $selectedDate->toDateString();
-            $events = app(CulturalPublicEventQuery::class)
-                ->filterByDate($dateYmd)
-                ->with(['category', 'coverMedia', 'occurrences.location'])
-                ->get()
-                ->sortBy(function (CulturalEventEntry $entry) use ($dateYmd): string {
-                    $occ = $entry->occurrenceOnDate($dateYmd);
-                    $time = trim((string) ($occ?->vrijeme_od ?? ''));
+        $dateYmd = $selectedDate->toDateString();
+        $events = app(CulturalPublicEventQuery::class)
+            ->filterByDate($dateYmd)
+            ->with(['category', 'coverMedia', 'occurrences.location'])
+            ->get()
+            ->sortBy(function (CulturalEventEntry $entry) use ($dateYmd): string {
+                $occ = $entry->occurrenceOnDate($dateYmd);
+                $time = trim((string) ($occ?->vrijeme_od ?? ''));
 
-                    return ($time !== '' ? $time : '00:00:00').'|'.$entry->id;
-                })
-                ->values();
-
-            return view('cultural-calendar.day', [
-                'events' => $events,
-                'selectedDate' => $selectedDate,
-            ]);
-        }
-
-        $events = CulturalEvent::query()
-            ->publiclyVisible()
-            ->whereDate('datum_od', '<=', $selectedDate)
-            ->where(function ($query) use ($selectedDate) {
-                $query->whereNull('datum_do')
-                    ->orWhereDate('datum_do', '>=', $selectedDate);
+                return ($time !== '' ? $time : '00:00:00').'|'.$entry->id;
             })
-            ->orderBy('vrijeme')
-            ->orderBy('id')
-            ->get();
+            ->values();
 
         return view('cultural-calendar.day', [
             'events' => $events,
@@ -779,34 +449,13 @@ class CulturalCalendarController extends Controller
 
     public function archive(Request $request)
     {
-        if (CulturalPublicReadSource::usesCanonical()) {
-            $events = app(CulturalPublicEventQuery::class)
-                ->orderedByLastHistoricalOccurrence()
-                ->with([
-                    'category',
-                    'coverMedia',
-                    'occurrences.location',
-                ])
-                ->paginate(12)
-                ->withQueryString();
-
-            return view('cultural-calendar.archive', compact('events'));
-        }
-
-        $today = Carbon::today();
-        $events = CulturalEvent::query()
-            ->publiclyVisible()
-            ->where(function ($query) use ($today) {
-                $query->where(function ($q) use ($today) {
-                    $q->whereNotNull('datum_do')
-                        ->whereDate('datum_do', '<', $today);
-                })->orWhere(function ($q) use ($today) {
-                    $q->whereNull('datum_do')
-                        ->whereDate('datum_od', '<', $today);
-                });
-            })
-            ->orderByDesc('datum_od')
-            ->orderByDesc('id')
+        $events = app(CulturalPublicEventQuery::class)
+            ->orderedByLastHistoricalOccurrence()
+            ->with([
+                'category',
+                'coverMedia',
+                'occurrences.location',
+            ])
             ->paginate(12)
             ->withQueryString();
 
@@ -817,7 +466,7 @@ class CulturalCalendarController extends Controller
      * Detalj događaja (6A-08 DATA SWITCH).
      *
      * Parametar ostaje {event}; bez route cutover-a (6A-10).
-     * Legacy: CulturalEvent po ID; canonical: CulturalEventEntry preko public query SSOT.
+     * Canonical: CulturalEventEntry preko public query SSOT.
      * PO-6B-09: javna veza ka Manifestaciji samo kada je MF public-linkable.
      */
     public function show(Request $request, string $event)
@@ -825,16 +474,9 @@ class CulturalCalendarController extends Controller
         $publicManifestation = null;
         $manifestationQuery = app(CulturalPublicManifestationQuery::class);
 
-        if (CulturalPublicReadSource::usesCanonical()) {
-            $event = app(CulturalPublicEventQuery::class)->findPublicEntryForShow($event);
-            if ($manifestationQuery->isPubliclyLinkable($event->manifestation)) {
-                $publicManifestation = $event->manifestation;
-            }
-        } else {
-            $event = CulturalEvent::query()->whereKey($event)->firstOrFail();
-            if (! $event->isPubliclyVisible()) {
-                abort(404);
-            }
+        $event = app(CulturalPublicEventQuery::class)->findPublicEntryForShow($event);
+        if ($manifestationQuery->isPubliclyLinkable($event->manifestation)) {
+            $publicManifestation = $event->manifestation;
         }
 
         $backUrl = (string) $request->query('back', '');

@@ -12,7 +12,6 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\CulturalCalendar\CulturalPublicSearchHit;
 use App\Services\CulturalCalendar\CulturalPublicSearchQuery;
-use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -44,8 +43,6 @@ class CulturalPublicContentTypeSearchTest extends TestCase
             'role_id' => Role::where('name', 'kk_admin')->firstOrFail()->id,
             'activation_status' => 'active',
         ]);
-
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
         Carbon::setTestNow(Carbon::parse('2026-08-10 12:00:00', config('app.timezone')));
     }
 

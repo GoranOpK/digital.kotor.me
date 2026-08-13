@@ -9,14 +9,13 @@ use App\Models\CulturalLocation;
 use App\Models\CulturalOccurrence;
 use App\Models\Role;
 use App\Models\User;
-use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * 6A-08 — DATA SWITCH javnog detalja Događaja (legacy XOR canonical).
+ * 6A-08 — canonical javni detalj Događaja (Phase B1: flag removed).
  */
 class CulturalPublicShowDataSwitchTest extends TestCase
 {
@@ -51,36 +50,8 @@ class CulturalPublicShowDataSwitchTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_legacy_flag_shows_legacy_detail(): void
+    public function test_show_uses_canonical_detail(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
-
-        $legacy = $this->makeLegacyEvent([
-            'naslov' => 'LEGACY_DETAIL_TITLE',
-            'opis' => 'Legacy opis detalja',
-            'kategorija' => 'Koncerti',
-            'lokacija' => 'Stari grad',
-            'datum_od' => '2026-08-20',
-            'vrijeme' => '19:00:00',
-        ]);
-
-        $response = $this->actingAs($this->user)
-            ->get(route('cultural-calendar.show', $legacy));
-
-        $response->assertOk();
-        $response->assertSee('LEGACY_DETAIL_TITLE', false);
-        $response->assertSee('Legacy opis detalja', false);
-        $response->assertSee('Koncerti', false);
-        $response->assertSee('Stari grad', false);
-        $response->assertSee('20.08.2026', false);
-        $response->assertSee('19:00', false);
-        $response->assertSee('Nazad', false);
-        $response->assertDontSee('Odgođeno', false);
-    }
-
-    public function test_canonical_flag_shows_canonical_detail(): void
-    {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $category = $this->makeCategory('Pozorište');
         $entry = $this->makePublishedEntry('CANONICAL_DETAIL_TITLE', [
@@ -109,21 +80,8 @@ class CulturalPublicShowDataSwitchTest extends TestCase
         $response->assertSee('Nazad', false);
     }
 
-    public function test_canonical_entry_not_opened_in_legacy_branch(): void
+    public function test_legacy_event_not_opened_without_matching_entry(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
-
-        $entry = $this->makePublishedEntry('ENTRY_ONLY_NO_LEGACY');
-        $this->makeOccurrence($entry, ['datum' => '2026-08-15']);
-
-        $this->actingAs($this->user)
-            ->get(route('cultural-calendar.show', $entry->id))
-            ->assertNotFound();
-    }
-
-    public function test_legacy_event_not_opened_in_canonical_branch_without_matching_entry(): void
-    {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $legacy = $this->makeLegacyEvent(['naslov' => 'LEGACY_ONLY_NO_ENTRY']);
 
@@ -134,7 +92,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_canonical_published_returns_200(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makePublishedEntry('Pub Show');
         $this->makeOccurrence($entry, ['datum' => '2026-08-12']);
@@ -147,7 +104,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_canonical_cancelled_entry_returns_200_with_br272(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makeEntry(CulturalEventEntry::STATUS_CANCELLED, 'Cancelled Show', [
             'cancellation_reason' => self::SECRET_REASON,
@@ -170,7 +126,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_canonical_draft_returns_404(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makeEntry(CulturalEventEntry::STATUS_DRAFT, 'Draft Show');
         $this->makeOccurrence($entry, ['datum' => '2026-08-12']);
@@ -182,7 +137,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_canonical_pending_approval_returns_404(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makeEntry(CulturalEventEntry::STATUS_PENDING_APPROVAL, 'Pending Show');
         $this->makeOccurrence($entry, ['datum' => '2026-08-12']);
@@ -194,7 +148,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_canonical_archived_returns_404(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makeEntry(CulturalEventEntry::STATUS_ARCHIVED, 'Archived Show');
         $this->makeOccurrence($entry, ['datum' => '2026-08-12']);
@@ -206,7 +159,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_canonical_missing_id_returns_404(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $this->actingAs($this->user)
             ->get(route('cultural-calendar.show', 999999))
@@ -215,7 +167,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_planned_occurrence_is_shown(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makePublishedEntry('Planiran Detail');
         $this->makeOccurrence($entry, [
@@ -240,7 +191,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_multiple_occurrences_all_shown_in_chronological_order(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makePublishedEntry('Multi OCC Detail');
         $this->makeOccurrence($entry, [
@@ -280,7 +230,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_postponed_occurrence_shown_with_label(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makePublishedEntry('Postponed Detail');
         $this->makeOccurrence($entry, [
@@ -307,7 +256,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_cancelled_occurrence_shown_with_label(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makePublishedEntry('Occ Cancelled Detail');
         $this->makeOccurrence($entry, [
@@ -327,7 +275,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_finished_occurrence_shown_with_label(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $entry = $this->makePublishedEntry('Finished Detail');
         $this->makeOccurrence($entry, [
@@ -347,7 +294,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_catalog_and_manual_locations_and_all_day(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $location = CulturalLocation::create([
             'naziv' => 'Crkva Sv. Luke',
@@ -383,7 +329,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
 
     public function test_ui_parity_elements_present_for_canonical(): void
     {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $category = $this->makeCategory('Film');
         $entry = $this->makePublishedEntry('UI Parity Title', [
@@ -409,24 +354,6 @@ class CulturalPublicShowDataSwitchTest extends TestCase
         $response->assertSee('kk-show-card', false);
         $response->assertSee('kk-show-photo', false);
         $response->assertSee('href="/kalendar-kulture/pregled-dogadjaja"', false);
-    }
-
-    public function test_default_config_keeps_legacy_detail(): void
-    {
-        $this->assertTrue(CulturalPublicReadSource::usesLegacy());
-
-        $legacy = $this->makeLegacyEvent(['naslov' => 'DEFAULT_LEGACY_SHOW']);
-        $entry = $this->makePublishedEntry('DEFAULT_CANONICAL_SHOW');
-        $this->makeOccurrence($entry, ['datum' => '2026-08-15']);
-
-        $this->actingAs($this->user)
-            ->get(route('cultural-calendar.show', $legacy->id))
-            ->assertOk()
-            ->assertSee('DEFAULT_LEGACY_SHOW', false);
-
-        $this->actingAs($this->user)
-            ->get(route('cultural-calendar.show', $entry->id))
-            ->assertNotFound();
     }
 
     /**

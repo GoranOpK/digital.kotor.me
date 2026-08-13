@@ -9,14 +9,13 @@ use App\Models\CulturalManifestation;
 use App\Models\CulturalOccurrence;
 use App\Models\Role;
 use App\Models\User;
-use App\Support\CulturalPublicReadSource;
 use Carbon\Carbon;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * 6A residual Package A — cultural-calendar.day canonical cutover.
+ * Package A — cultural-calendar.day canonical cutover (Phase B1: flag removed).
  */
 class CulturalCalendarDayCanonicalCutoverTest extends TestCase
 {
@@ -36,8 +35,6 @@ class CulturalCalendarDayCanonicalCutoverTest extends TestCase
 
         $this->withoutVite();
         $this->seed(RoleSeeder::class);
-
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::CANONICAL]);
 
         $this->user = User::factory()->create([
             'role_id' => Role::where('name', 'korisnik')->firstOrFail()->id,
@@ -214,35 +211,6 @@ class CulturalCalendarDayCanonicalCutoverTest extends TestCase
         $this->actingAs($this->editor)
             ->get(route('cultural-calendar.day', ['date' => '2026-08-15']))
             ->assertRedirect(route('cultural-event-entries.create'));
-    }
-
-    public function test_legacy_source_day_still_uses_cultural_event_query(): void
-    {
-        config(['cultural_calendar.public_read_source' => CulturalPublicReadSource::LEGACY]);
-
-        CulturalEvent::create([
-            'naslov' => 'DAY_LEGACY_VISIBLE',
-            'opis' => 'Legacy day',
-            'datum_od' => '2026-08-15',
-            'datum_do' => null,
-            'vrijeme' => '14:00:00',
-            'lokacija' => 'Kotor',
-            'kategorija' => 'Koncerti',
-            'status' => 'published',
-            'featured' => false,
-        ]);
-        $this->makePublishedEntry('DAY_CANONICAL_HIDDEN_ON_LEGACY', '2026-08-15', '15:00:00');
-
-        $response = $this->actingAs($this->user)
-            ->get(route('cultural-calendar.day', ['date' => '2026-08-15']))
-            ->assertOk()
-            ->assertViewIs('cultural-calendar.day');
-
-        $response->assertSee('DAY_LEGACY_VISIBLE', false);
-        $response->assertDontSee('DAY_CANONICAL_HIDDEN_ON_LEGACY', false);
-        $this->assertTrue(
-            $response->viewData('events')->every(fn ($e) => $e instanceof CulturalEvent)
-        );
     }
 
     public function test_day_view_has_no_detail_links(): void

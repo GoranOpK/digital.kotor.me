@@ -449,27 +449,16 @@
                     <div class="kk-upcoming-list">
                         @forelse($selectedDateEvents as $event)
                             @php
-                                $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
-                                if ($isCanonicalEntry) {
-                                    $cardOcc = $selectedDate
-                                        ? $event->occurrenceOnDate($selectedDate->toDateString())
-                                        : $event->nextRelevantOccurrence();
-                                    $cardDatum = $cardOcc?->datum;
-                                    $cardVrijeme = $cardOcc?->vrijeme_od;
-                                    $cardLokacija = $cardOcc?->publicLocationDisplayName();
-                                    $cardHref = route('cultural-calendar.show', [
-                                        'event' => $event,
-                                        'back' => request()->getRequestUri(),
-                                    ]);
-                                } else {
-                                    $cardDatum = $event->datum_od;
-                                    $cardVrijeme = $event->vrijeme;
-                                    $cardLokacija = $event->lokacija;
-                                    $cardHref = route('cultural-calendar.show', [
-                                        'event' => $event,
-                                        'back' => request()->getRequestUri(),
-                                    ]);
-                                }
+                                $cardOcc = $selectedDate
+                                    ? $event->occurrenceOnDate($selectedDate->toDateString())
+                                    : $event->nextRelevantOccurrence();
+                                $cardDatum = $cardOcc?->datum;
+                                $cardVrijeme = $cardOcc?->vrijeme_od;
+                                $cardLokacija = $cardOcc?->publicLocationDisplayName();
+                                $cardHref = route('cultural-calendar.show', [
+                                    'event' => $event,
+                                    'back' => request()->getRequestUri(),
+                                ]);
                             @endphp
                             <div class="kk-upcoming-item">
                                 @if($cardHref)
@@ -514,38 +503,25 @@
                     <div class="kk-upcoming-list">
                         @forelse($upcomingEvents as $event)
                             @php
-                                $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
-                                $homepageMode = $isCanonicalEntry
-                                    ? (string) ($event->homepage_card_mode ?? 'planned')
-                                    : 'planned';
-                                $isPostponedInfo = $isCanonicalEntry && $homepageMode === 'postponed_info';
-                                $additionalCount = ($isCanonicalEntry && ! $isPostponedInfo)
+                                $homepageMode = (string) ($event->homepage_card_mode ?? 'planned');
+                                $isPostponedInfo = $homepageMode === 'postponed_info';
+                                $additionalCount = ! $isPostponedInfo
                                     ? $event->additionalRelevantOccurrencesCount()
                                     : 0;
-                                if ($isCanonicalEntry) {
-                                    $cardOcc = $isPostponedInfo
-                                        ? ($event->relationLoaded('homepageSelectedOccurrence')
-                                            ? $event->getRelation('homepageSelectedOccurrence')
-                                            : null)
-                                        : ($event->relationLoaded('homepageSelectedOccurrence')
-                                            ? $event->getRelation('homepageSelectedOccurrence')
-                                            : $event->nextRelevantOccurrence());
-                                    $cardDatum = $cardOcc?->datum;
-                                    $cardVrijeme = $isPostponedInfo ? null : $cardOcc?->vrijeme_od;
-                                    $cardLokacija = $isPostponedInfo ? null : $cardOcc?->publicLocationDisplayName();
-                                    $cardHref = route('cultural-calendar.show', [
-                                        'event' => $event,
-                                        'back' => request()->getRequestUri(),
-                                    ]);
-                                } else {
-                                    $cardDatum = $event->datum_od;
-                                    $cardVrijeme = $event->vrijeme;
-                                    $cardLokacija = $event->lokacija;
-                                    $cardHref = route('cultural-calendar.show', [
-                                        'event' => $event,
-                                        'back' => request()->getRequestUri(),
-                                    ]);
-                                }
+                                $cardOcc = $isPostponedInfo
+                                    ? ($event->relationLoaded('homepageSelectedOccurrence')
+                                        ? $event->getRelation('homepageSelectedOccurrence')
+                                        : null)
+                                    : ($event->relationLoaded('homepageSelectedOccurrence')
+                                        ? $event->getRelation('homepageSelectedOccurrence')
+                                        : $event->nextRelevantOccurrence());
+                                $cardDatum = $cardOcc?->datum;
+                                $cardVrijeme = $isPostponedInfo ? null : $cardOcc?->vrijeme_od;
+                                $cardLokacija = $isPostponedInfo ? null : $cardOcc?->publicLocationDisplayName();
+                                $cardHref = route('cultural-calendar.show', [
+                                    'event' => $event,
+                                    'back' => request()->getRequestUri(),
+                                ]);
                             @endphp
                             <div class="kk-upcoming-item">
                                 @if($cardHref)
@@ -605,25 +581,14 @@
                 @if($featuredEvents->isNotEmpty())
                     @foreach($featuredEvents as $event)
                         @php
-                            $isCanonicalEntry = $event instanceof \App\Models\CulturalEventEntry;
-                            if ($isCanonicalEntry) {
-                                $cardOcc = $event->nextRelevantOccurrence();
-                                $cardDatum = $cardOcc?->datum;
-                                $cardVrijeme = $cardOcc?->vrijeme_od;
-                                $cardLokacija = $cardOcc?->publicLocationDisplayName();
-                                $cardHref = route('cultural-calendar.show', [
-                                    'event' => $event,
-                                    'back' => request()->getRequestUri(),
-                                ]);
-                            } else {
-                                $cardDatum = $event->datum_od;
-                                $cardVrijeme = $event->vrijeme;
-                                $cardLokacija = $event->lokacija;
-                                $cardHref = route('cultural-calendar.show', [
-                                    'event' => $event,
-                                    'back' => request()->getRequestUri(),
-                                ]);
-                            }
+                            $cardOcc = $event->nextRelevantOccurrence();
+                            $cardDatum = $cardOcc?->datum;
+                            $cardVrijeme = $cardOcc?->vrijeme_od;
+                            $cardLokacija = $cardOcc?->publicLocationDisplayName();
+                            $cardHref = route('cultural-calendar.show', [
+                                'event' => $event,
+                                'back' => request()->getRequestUri(),
+                            ]);
                         @endphp
                         <article class="kk-feature-card">
                             @if($cardHref)
