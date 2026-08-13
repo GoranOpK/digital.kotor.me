@@ -107,6 +107,88 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.manifestations')).'"', $html);
     }
 
+    public function test_desktop_moderiranje_uses_vanilla_js_hooks_without_alpine(): void
+    {
+        CulturalOrganizerContext::set($this->moderator, $this->orgA->id);
+
+        $html = $this->actingAs($this->moderator)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+
+        $layoutStart = strpos($html, 'data-kk-nav-moderator-block="1"');
+        $hamburgerStart = strpos($html, '<!-- Hamburger -->');
+        $this->assertNotFalse($layoutStart);
+        $this->assertNotFalse($hamburgerStart);
+        $desktopNav = substr($html, $layoutStart, $hamburgerStart - $layoutStart);
+
+        $this->assertStringContainsString('data-kk-moderation-root', $desktopNav);
+        $this->assertStringContainsString('data-kk-moderation-toggle', $desktopNav);
+        $this->assertStringContainsString('data-kk-moderation-menu', $desktopNav);
+        $this->assertStringContainsString('>Moderiranje</button>', $desktopNav);
+        $this->assertStringContainsString('data-kk-nav="mod-events"', $desktopNav);
+        $this->assertStringContainsString('data-kk-nav="mod-manifestations"', $desktopNav);
+
+        // Alpine was the production failure mode for this dropdown — must not remain here.
+        $this->assertStringNotContainsString('x-data=', $desktopNav);
+        $this->assertStringNotContainsString('x-show=', $desktopNav);
+        $this->assertStringNotContainsString('@click', $desktopNav);
+        $this->assertStringNotContainsString('x-cloak', $desktopNav);
+
+        // Shared KK button sizing tokens with Kontrolna tabla (same $kkNavBtn contract).
+        $this->assertMatchesRegularExpression(
+            '/data-kk-nav="kontrolna-tabla-moderator"[^>]*padding:8px 14px/u',
+            $desktopNav
+        );
+        $this->assertMatchesRegularExpression(
+            '/data-kk-moderation-toggle[^>]*padding:8px 14px/u',
+            $desktopNav
+        );
+        $this->assertMatchesRegularExpression(
+            '/data-kk-moderation-toggle[^>]*font-size:14px;font-weight:600/u',
+            $desktopNav
+        );
+    }
+
+    public function test_mobile_hamburger_uses_vanilla_js_hooks_without_alpine(): void
+    {
+        CulturalOrganizerContext::set($this->moderator, $this->orgA->id);
+
+        $html = $this->actingAs($this->moderator)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('data-kk-mobile-nav-root', $html);
+        $this->assertStringContainsString('data-kk-mobile-nav-toggle', $html);
+        $this->assertStringContainsString('data-kk-mobile-nav-menu', $html);
+        $this->assertStringContainsString('id="kk-mobile-nav-menu"', $html);
+        $this->assertStringContainsString('data-kk-mobile-nav-icon="closed"', $html);
+        $this->assertStringContainsString('data-kk-mobile-nav-icon="open"', $html);
+
+        $navStart = strpos($html, 'data-kk-mobile-nav-root');
+        $navEnd = strpos($html, '</nav>', $navStart);
+        $this->assertNotFalse($navStart);
+        $this->assertNotFalse($navEnd);
+        $navHtml = substr($html, $navStart, $navEnd - $navStart);
+
+        $this->assertStringNotContainsString('x-data=', $navHtml);
+        $this->assertStringNotContainsString('x-show=', $navHtml);
+        $this->assertStringNotContainsString('@click', $navHtml);
+        $this->assertStringNotContainsString(':class=', $navHtml);
+        $this->assertStringNotContainsString('x-cloak', $navHtml);
+
+        // Mobile Moderiranje section + public KK links remain inside the mobile menu.
+        $menuStart = strpos($html, 'data-kk-mobile-nav-menu');
+        $this->assertNotFalse($menuStart);
+        $menuHtml = substr($html, $menuStart);
+        $this->assertStringContainsString('data-kk-nav="moderiranje"', $menuHtml);
+        $this->assertStringContainsString('data-kk-nav="mod-events"', $menuHtml);
+        $this->assertStringContainsString('data-kk-nav="mod-manifestations"', $menuHtml);
+        $this->assertStringContainsString('href="'.e(route('cultural-calendar.index')).'"', $menuHtml);
+        $this->assertStringContainsString('href="'.e(route('cultural-calendar.events')).'"', $menuHtml);
+    }
+
     public function test_multi_org_moderator_sees_promijeni_organizatora_action(): void
     {
         $this->grant($this->moderator, $this->orgB);

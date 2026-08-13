@@ -261,6 +261,9 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $html);
         $this->assertStringNotContainsString('>Urednički rad<', $html);
         $this->assertStringNotContainsString('data-kk-nav-layout="two-row"', $html);
+        $this->assertStringContainsString('data-kk-mobile-nav-toggle', $html);
+        $this->assertStringContainsString('data-kk-mobile-nav-menu', $html);
+        $this->assertStringNotContainsString('data-kk-nav-moderator-block="1"', $html);
     }
 
     public function test_ordinary_user_sees_organizer_request_cta_to_create_route(): void
