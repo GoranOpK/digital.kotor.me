@@ -118,7 +118,7 @@
 </style>
 @endif
 <nav
-    x-data="{ open: false }"
+    data-kk-mobile-nav-root
     @class([
         'bg-white border-b border-gray-100 print:hidden',
         'dark:bg-gray-800 dark:border-gray-700' => ! $isKkSection,
@@ -377,15 +377,19 @@
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
                 <button
-                    @click="open = ! open"
+                    type="button"
+                    data-kk-mobile-nav-toggle
+                    aria-expanded="false"
+                    aria-controls="kk-mobile-nav-menu"
+                    aria-label="Navigacija"
                     @class([
                         'inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out',
                         'dark:text-gray-500 dark:hover:text-gray-400 dark:hover:bg-gray-900 dark:focus:bg-gray-900 dark:focus:text-gray-400' => ! $isKkSection,
                     ])
                 >
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                        <path data-kk-mobile-nav-icon="closed" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        <path data-kk-mobile-nav-icon="open" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -393,7 +397,7 @@
     </div>
 
     <!-- Responsive Navigation Menu -->
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
+    <div id="kk-mobile-nav-menu" data-kk-mobile-nav-menu class="hidden sm:hidden">
         <div class="pt-2 pb-3 px-2 space-y-2">
             @if($isKkAdmin || $isKkSection)
                 @if(! $isKkAdmin || $isKkPublicPortalContext)
@@ -584,3 +588,43 @@
         </div>
     </div>
 </nav>
+<script>
+(function () {
+    var root = document.querySelector('[data-kk-mobile-nav-root]');
+    if (!root) {
+        return;
+    }
+
+    var toggle = root.querySelector('[data-kk-mobile-nav-toggle]');
+    var menu = root.querySelector('[data-kk-mobile-nav-menu]');
+    if (!toggle || !menu) {
+        return;
+    }
+
+    var iconClosed = root.querySelector('[data-kk-mobile-nav-icon="closed"]');
+    var iconOpen = root.querySelector('[data-kk-mobile-nav-icon="open"]');
+
+    function setOpen(open) {
+        menu.classList.toggle('hidden', !open);
+        menu.classList.toggle('block', open);
+        toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+        if (iconClosed) {
+            iconClosed.classList.toggle('hidden', open);
+            iconClosed.classList.toggle('inline-flex', !open);
+        }
+
+        if (iconOpen) {
+            iconOpen.classList.toggle('hidden', !open);
+            iconOpen.classList.toggle('inline-flex', open);
+        }
+    }
+
+    setOpen(false);
+
+    toggle.addEventListener('click', function (event) {
+        event.preventDefault();
+        setOpen(menu.classList.contains('hidden'));
+    });
+})();
+</script>

@@ -198,6 +198,56 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertStringNotContainsString('<details', $mobileNav);
     }
 
+    public function test_mobile_hamburger_uses_inline_vanilla_hooks_without_alpine(): void
+    {
+        CulturalOrganizerContext::set($this->moderator, $this->orgA->id);
+
+        $html = $this->actingAs($this->moderator)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('data-kk-mobile-nav-root', $html);
+        $this->assertStringContainsString('data-kk-mobile-nav-toggle', $html);
+        $this->assertStringContainsString('data-kk-mobile-nav-menu', $html);
+        $this->assertStringContainsString('id="kk-mobile-nav-menu"', $html);
+        $this->assertStringContainsString('data-kk-mobile-nav-icon="closed"', $html);
+        $this->assertStringContainsString('data-kk-mobile-nav-icon="open"', $html);
+        $this->assertStringContainsString('aria-expanded="false"', $html);
+        $this->assertStringContainsString('aria-controls="kk-mobile-nav-menu"', $html);
+        $this->assertStringContainsString('aria-label="Navigacija"', $html);
+
+        $navStart = strpos($html, 'data-kk-mobile-nav-root');
+        $navEnd = strpos($html, '</nav>', $navStart);
+        $this->assertNotFalse($navStart);
+        $this->assertNotFalse($navEnd);
+        $navHtml = substr($html, $navStart, $navEnd - $navStart);
+
+        $this->assertStringNotContainsString('x-data=', $navHtml);
+        $this->assertStringNotContainsString('x-show=', $navHtml);
+        $this->assertStringNotContainsString('@click', $navHtml);
+        $this->assertStringNotContainsString(':class=', $navHtml);
+        $this->assertStringNotContainsString('x-cloak', $navHtml);
+
+        // Inline script ships with the layout (no Vite rebuild required).
+        $this->assertStringContainsString("querySelector('[data-kk-mobile-nav-toggle]')", $html);
+
+        // Desktop sizing regression guard.
+        preg_match(
+            '/data-kk-nav="kontrolna-tabla-moderator"[^>]*style="([^"]*)"/u',
+            $html,
+            $kontrolnaStyle
+        );
+        preg_match(
+            '/data-kk-nav="moderiranje"[^>]*style="([^"]*)"/u',
+            $html,
+            $moderiranjeStyle
+        );
+        $this->assertSame($kontrolnaStyle[1] ?? null, $moderiranjeStyle[1] ?? null);
+        $this->assertStringContainsString('width:128px', $kontrolnaStyle[1] ?? '');
+        $this->assertStringContainsString('height:38px', $kontrolnaStyle[1] ?? '');
+    }
+
     public function test_multi_org_moderator_sees_promijeni_organizatora_action(): void
     {
         $this->grant($this->moderator, $this->orgB);
