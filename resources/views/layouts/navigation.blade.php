@@ -161,6 +161,11 @@
                                 >Urednički portal</a>
                             @else
                                 <a
+                                    href="{{ route('cultural-calendar.index') }}"
+                                    data-kk-nav="bridge-public"
+                                    style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.*')) }}"
+                                >Kalendar kulture</a>
+                                <a
                                     href="{{ route('cultural-editorial-dashboard.index') }}"
                                     data-kk-nav="kontrolna-tabla"
                                     style="{{ $kkNavBtn(request()->routeIs('cultural-editorial-dashboard.*')) }}"
@@ -183,14 +188,14 @@
                                     href="{{ route('cultural-categories.index') }}"
                                     style="{{ $kkNavBtn(request()->routeIs('cultural-categories.*')) }}"
                                 >Kategorije</a>
-                                <a
-                                    href="{{ route('cultural-tags.index') }}"
-                                    style="{{ $kkNavBtn(request()->routeIs('cultural-tags.*')) }}"
-                                >Oznake</a>
                             @endif
                         </div>
                         <div class="kk-admin-nav-row" data-kk-nav-row="2">
                             @if($isKkEditorialPortalContext)
+                                <a
+                                    href="{{ route('cultural-tags.index') }}"
+                                    style="{{ $kkNavBtn(request()->routeIs('cultural-tags.*')) }}"
+                                >Oznake</a>
                                 <a
                                     href="{{ route('cultural-media.index') }}"
                                     style="{{ $kkNavBtn(request()->routeIs('cultural-media.*')) }}"
@@ -204,11 +209,6 @@
                                     data-kk-nav="zahtjevi"
                                     style="{{ $kkNavBtn(request()->routeIs('cultural-editorial-requests.*', 'cultural-organizer-creation-requests.index', 'cultural-organizer-creation-requests.show', 'cultural-organizer-creation-requests.approve', 'cultural-organizer-creation-requests.reject', 'cultural-moderator-requests.index', 'cultural-moderator-requests.show', 'cultural-moderator-requests.approve', 'cultural-moderator-requests.reject')) }}"
                                 >Zahtjevi</a>
-                                <a
-                                    href="{{ route('cultural-calendar.index') }}"
-                                    data-kk-nav="bridge-public"
-                                    style="{{ $kkNavBtn(request()->routeIs('cultural-calendar.*')) }}"
-                                >Javni portal</a>
                             @endif
                             <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                                 @csrf
@@ -401,6 +401,11 @@
                     @endif
                     @if($isKkAdmin && $isKkEditorialPortalContext)
                         <a
+                            href="{{ route('cultural-calendar.index') }}"
+                            data-kk-nav="bridge-public"
+                            style="{{ $kkNavBtnMobile(request()->routeIs('cultural-calendar.*')) }}"
+                        >Kalendar kulture</a>
+                        <a
                             href="{{ route('cultural-editorial-dashboard.index') }}"
                             data-kk-nav="kontrolna-tabla"
                             style="{{ $kkNavBtnMobile(request()->routeIs('cultural-editorial-dashboard.*')) }}"
@@ -440,11 +445,6 @@
                             data-kk-nav="zahtjevi"
                             style="{{ $kkNavBtnMobile(request()->routeIs('cultural-editorial-requests.*', 'cultural-organizer-creation-requests.index', 'cultural-organizer-creation-requests.show', 'cultural-organizer-creation-requests.approve', 'cultural-organizer-creation-requests.reject', 'cultural-moderator-requests.index', 'cultural-moderator-requests.show', 'cultural-moderator-requests.approve', 'cultural-moderator-requests.reject')) }}"
                         >Zahtjevi</a>
-                        <a
-                            href="{{ route('cultural-calendar.index') }}"
-                            data-kk-nav="bridge-public"
-                            style="{{ $kkNavBtnMobile(request()->routeIs('cultural-calendar.*')) }}"
-                        >Javni portal</a>
                     @endif
                     @auth
                         @if(\App\Support\CulturalModeratorEventAccess::isActiveModerator(auth()->user()))

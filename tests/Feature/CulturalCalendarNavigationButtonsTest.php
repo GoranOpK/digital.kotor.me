@@ -151,22 +151,34 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertNotFalse($hamburgerStart);
         $desktopNav = substr($html, $layoutStart, $hamburgerStart - $layoutStart);
 
-        foreach ([
+        $row1Start = strpos($desktopNav, 'data-kk-nav-row="1"');
+        $row2Start = strpos($desktopNav, 'data-kk-nav-row="2"');
+        $this->assertNotFalse($row1Start);
+        $this->assertNotFalse($row2Start);
+        $row1Html = substr($desktopNav, $row1Start, $row2Start - $row1Start);
+        $row2Html = substr($desktopNav, $row2Start);
+
+        $row1Labels = [
+            'Kalendar kulture',
             'Kontrolna tabla',
             'Upravljanje događajima',
             'Upravljanje manifestacijama',
             'Lokacije',
             'Kategorije',
-            'Oznake',
-            'Mediji',
-            'Organizatori',
-            'Zahtjevi',
-            'Javni portal',
-        ] as $label) {
-            $this->assertStringContainsString('>'.$label.'<', $desktopNav);
+        ];
+        foreach ($row1Labels as $label) {
+            $this->assertStringContainsString('>'.$label.'<', $row1Html);
+            $this->assertStringNotContainsString('>'.$label.'<', $row2Html);
         }
 
-        foreach (['Kalendar kulture', 'Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal', 'Urednički rad', 'Zahtjevi Org', 'Zahtjevi Mod'] as $label) {
+        $row2Labels = ['Oznake', 'Mediji', 'Organizatori', 'Zahtjevi'];
+        foreach ($row2Labels as $label) {
+            $this->assertStringContainsString('>'.$label.'<', $row2Html);
+            $this->assertStringNotContainsString('>'.$label.'<', $row1Html);
+        }
+        $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $row2Html);
+
+        foreach (['Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal', 'Urednički rad', 'Zahtjevi Org', 'Zahtjevi Mod', 'Javni portal'] as $label) {
             $this->assertStringNotContainsString('>'.$label.'<', $desktopNav);
         }
 
@@ -177,17 +189,25 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertStringContainsString('data-kk-nav="kontrolna-tabla"', $desktopNav);
         $this->assertStringContainsString('data-kk-nav="zahtjevi"', $desktopNav);
 
-        // Final editorial order: Kontrolna tabla before Upravljanje događajima; Zahtjevi after Organizatori.
+        // Order: Kalendar kulture first, Kontrolna tabla second; Zahtjevi after Organizatori.
+        $kalendarPos = strpos($desktopNav, '>Kalendar kulture<');
         $kontrolnaPos = strpos($desktopNav, '>Kontrolna tabla<');
         $dogadjajiPos = strpos($desktopNav, '>Upravljanje događajima<');
         $orgPos = strpos($desktopNav, '>Organizatori<');
         $zahtjeviPos = strpos($desktopNav, '>Zahtjevi<');
+        $this->assertNotFalse($kalendarPos);
         $this->assertNotFalse($kontrolnaPos);
         $this->assertNotFalse($dogadjajiPos);
+        $this->assertLessThan($kontrolnaPos, $kalendarPos);
         $this->assertLessThan($dogadjajiPos, $kontrolnaPos);
         $this->assertNotFalse($orgPos);
         $this->assertNotFalse($zahtjeviPos);
         $this->assertLessThan($zahtjeviPos, $orgPos);
+
+        $this->assertMatchesRegularExpression(
+            '/href="'.preg_quote(e(route('cultural-calendar.index')), '/').'"[^>]*>Kalendar kulture</u',
+            $desktopNav
+        );
     }
 
     public function test_kk_admin_sees_zahtjevi_only_in_editorial_context_and_never_ordinary_request_cta(): void

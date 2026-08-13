@@ -214,7 +214,8 @@ class CulturalEditorialDiscoverabilityTest extends TestCase
         );
         $this->assertStringNotContainsString('data-kk-nav="events-public"', $html);
         $this->assertStringNotContainsString('data-kk-nav="mf-public"', $html);
-        $this->assertStringContainsString('>Javni portal<', $html);
+        $this->assertStringContainsString('>Kalendar kulture<', $html);
+        $this->assertStringNotContainsString('>Javni portal<', $html);
     }
 
     public function test_kk_admin_mobile_public_nav_is_public_only_with_editorial_bridge(): void
@@ -263,6 +264,7 @@ class CulturalEditorialDiscoverabilityTest extends TestCase
         $mobileNav = substr($html, $mobileStart, $mobileEnd - $mobileStart);
 
         foreach ([
+            'Kalendar kulture',
             'Kontrolna tabla',
             'Upravljanje događajima',
             'Upravljanje manifestacijama',
@@ -272,13 +274,25 @@ class CulturalEditorialDiscoverabilityTest extends TestCase
             'Mediji',
             'Organizatori',
             'Zahtjevi',
-            'Javni portal',
         ] as $label) {
             $this->assertStringContainsString('>'.$label.'<', $mobileNav);
         }
-        foreach (['Kalendar kulture', 'Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal', 'Urednički rad', 'Zahtjevi Org', 'Zahtjevi Mod'] as $label) {
+        foreach (['Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal', 'Urednički rad', 'Zahtjevi Org', 'Zahtjevi Mod', 'Javni portal'] as $label) {
             $this->assertStringNotContainsString('>'.$label.'<', $mobileNav);
         }
+
+        $kalendarPos = strpos($mobileNav, '>Kalendar kulture<');
+        $kontrolnaPos = strpos($mobileNav, '>Kontrolna tabla<');
+        $dogadjajiPos = strpos($mobileNav, '>Upravljanje događajima<');
+        $this->assertNotFalse($kalendarPos);
+        $this->assertNotFalse($kontrolnaPos);
+        $this->assertNotFalse($dogadjajiPos);
+        $this->assertLessThan($kontrolnaPos, $kalendarPos);
+        $this->assertLessThan($dogadjajiPos, $kontrolnaPos);
+        $this->assertMatchesRegularExpression(
+            '/href="'.preg_quote(e(route('cultural-calendar.index')), '/').'"[^>]*>Kalendar kulture</u',
+            $mobileNav
+        );
     }
 
     public function test_ordinary_user_nav_keeps_public_labels_without_editorial_management(): void
