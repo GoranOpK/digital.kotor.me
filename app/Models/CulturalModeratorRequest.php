@@ -61,12 +61,15 @@ class CulturalModeratorRequest extends Model
         'decision_user_id',
         'decision_at',
         'decision_note',
+        'editor_dismissed_at',
+        'editor_dismissed_by_user_id',
     ];
 
     protected function casts(): array
     {
         return [
             'decision_at' => 'datetime',
+            'editor_dismissed_at' => 'datetime',
         ];
     }
 
@@ -78,6 +81,16 @@ class CulturalModeratorRequest extends Model
     public function isSubmitted(): bool
     {
         return $this->status === self::STATUS_SUBMITTED;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
+    }
+
+    public function isDismissedByEditor(): bool
+    {
+        return $this->editor_dismissed_at !== null;
     }
 
     public function statusLabel(): string
@@ -110,8 +123,18 @@ class CulturalModeratorRequest extends Model
         return $this->belongsTo(User::class, 'decision_user_id');
     }
 
+    public function editorDismissedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'editor_dismissed_by_user_id');
+    }
+
     public function scopeSubmitted(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_SUBMITTED);
+    }
+
+    public function scopeVisibleInEditorWorkspace(Builder $query): Builder
+    {
+        return $query->whereNull('editor_dismissed_at');
     }
 }

@@ -145,4 +145,100 @@ class CulturalEditorialRequestsUnifiedTest extends TestCase
             ->get(route('cultural-moderator-requests.index'))
             ->assertOk();
     }
+
+    public function test_dismissed_rejected_requests_absent_from_default_unified_lists(): void
+    {
+        $orgVisible = CulturalOrganizerCreationRequest::query()->create([
+            'proposed_naziv' => 'Org Visible Rejected',
+            'status' => CulturalOrganizerCreationRequest::STATUS_REJECTED,
+            'submitter_user_id' => $this->ordinary->id,
+            'proposed_moderator_user_id' => $this->moderator->id,
+            'proposed_moderator_email' => $this->moderator->email,
+            'proposed_moderator_is_submitter' => false,
+            'decision_user_id' => $this->kkAdmin->id,
+            'decision_at' => now(),
+            'decision_note' => 'Note',
+        ]);
+
+        CulturalOrganizerCreationRequest::query()->create([
+            'proposed_naziv' => 'Org Dismissed Rejected',
+            'status' => CulturalOrganizerCreationRequest::STATUS_REJECTED,
+            'submitter_user_id' => $this->ordinary->id,
+            'proposed_moderator_user_id' => $this->moderator->id,
+            'proposed_moderator_email' => $this->moderator->email,
+            'proposed_moderator_is_submitter' => false,
+            'decision_user_id' => $this->kkAdmin->id,
+            'decision_at' => now(),
+            'decision_note' => 'Note',
+            'editor_dismissed_at' => now(),
+            'editor_dismissed_by_user_id' => $this->kkAdmin->id,
+        ]);
+
+        $creation = CulturalOrganizerCreationRequest::query()->create([
+            'submitter_user_id' => $this->kkAdmin->id,
+            'proposed_moderator_user_id' => $this->kkAdmin->id,
+            'proposed_moderator_is_submitter' => true,
+            'proposed_naziv' => 'Org Zahtjevi Base',
+            'status' => CulturalOrganizerCreationRequest::STATUS_APPROVED,
+            'decision_user_id' => $this->kkAdmin->id,
+            'decision_at' => now(),
+        ]);
+
+        $organizer = CulturalOrganizer::query()->create([
+            'naziv' => 'Org Zahtjevi Base',
+            'status' => CulturalOrganizer::STATUS_ACTIVE,
+            'approved_creation_request_id' => $creation->id,
+        ]);
+
+        $modVisible = CulturalModeratorRequest::query()->create([
+            'organizer_id' => $organizer->id,
+            'type' => CulturalModeratorRequest::TYPE_ADD,
+            'status' => CulturalModeratorRequest::STATUS_REJECTED,
+            'submitter_user_id' => $this->ordinary->id,
+            'proposed_moderator_email' => 'visible-mod@example.com',
+            'proposed_moderator_name' => 'Visible Mod',
+            'decision_user_id' => $this->kkAdmin->id,
+            'decision_at' => now(),
+            'decision_note' => 'Note',
+        ]);
+
+        $modDismissed = CulturalModeratorRequest::query()->create([
+            'organizer_id' => $organizer->id,
+            'type' => CulturalModeratorRequest::TYPE_REMOVE,
+            'status' => CulturalModeratorRequest::STATUS_REJECTED,
+            'submitter_user_id' => $this->ordinary->id,
+            'target_user_id' => $this->moderator->id,
+            'decision_user_id' => $this->kkAdmin->id,
+            'decision_at' => now(),
+            'decision_note' => 'Note',
+            'editor_dismissed_at' => now(),
+            'editor_dismissed_by_user_id' => $this->kkAdmin->id,
+        ]);
+
+        $orgHtml = $this->actingAs($this->kkAdmin)
+            ->get(route('cultural-editorial-requests.index', ['sekcija' => 'organizatori']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Org Visible Rejected', $orgHtml);
+        $this->assertStringNotContainsString('Org Dismissed Rejected', $orgHtml);
+        $this->assertStringContainsString(
+            'href="'.e(route('cultural-organizer-creation-requests.show', $orgVisible)).'"',
+            $orgHtml
+        );
+
+        $modHtml = $this->actingAs($this->kkAdmin)
+            ->get(route('cultural-editorial-requests.index', ['sekcija' => 'moderatori']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString(
+            'href="'.e(route('cultural-moderator-requests.show', $modVisible)).'"',
+            $modHtml
+        );
+        $this->assertStringNotContainsString(
+            'href="'.e(route('cultural-moderator-requests.show', $modDismissed)).'"',
+            $modHtml
+        );
+    }
 }

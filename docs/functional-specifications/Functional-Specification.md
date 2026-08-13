@@ -90,6 +90,7 @@
 | PATCH-FS-068 | 2026-08-11 | **PO-ORG-05 / BM PATCH-067:** napomena Urednika na zahtjevu za kreiranje Organizatora — approve opciono; reject obavezno (ne-prazno); fail-closed bez parcijalnog write-a. Usklađen BR-137; dodat BR-307. Verzija ostaje 1.0.0. |
 | PATCH-FS-069 | 2026-08-11 | **PO-ORG-06 / BM PATCH-068:** privacy-safe Moderator invitation (ime+e-mail; waiting status; eligibility; resolver; neutral flash; emails; duplicates; REMOVE boundary). Usklađeni BR-053, BR-054, BR-135, BR-137, BR-275, BR-307; dodati BR-308–BR-320. Verzija ostaje 1.0.0. **Bez izmjene implementacije** (TARGET vs CURRENT). |
 | PATCH-FS-070 | 2026-08-12 | **PO-MF-WF-01–04 / PO-EV-WF-01 / BM PATCH-070:** dva MF toka po porijeklu kreiranja. Usklađeni BR-100, BR-101, BR-190, BR-195, BR-196; dodati BR-321–BR-325. Event: potvrđen backend guard da Entry bez Organizatora ne koristi submit/approval (BR-018 KEEP). Bez novog DB statusa. Verzija ostaje 1.0.0. |
+| PATCH-FS-071 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup / BM PATCH-072:** Urednik može ukloniti odbijeni Org/Mod zahtjev iz redovne liste Zahtjevi (workspace dismiss). BR-055 / BR-073 retention KEEP. Dodati BR-326–BR-327. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -197,11 +198,11 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.3 Izbor perioda i pregled sadržaja
    - 5.4 Detalj događaja
    - 5.5 Kreiranje i upravljanje događajem
-   - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137, BR-275–BR-276, BR-307–BR-320)
+   - 5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137, BR-275–BR-276, BR-307–BR-320, BR-326)
    - 5.7.1 Upravljanje održavanjima događaja (BR-056–BR-061)
    - 5.7.2 Upravljanje statusom događaja (BR-062–BR-066)
    - 5.7.3 Upravljanje statusom održavanja (BR-067–BR-069, BR-129–BR-134)
-   - 5.8 Upravljanje moderatorima (BR-070–BR-073)
+   - 5.8 Upravljanje moderatorima (BR-070–BR-073, BR-327)
    - 5.9 Upravljanje lokacijama (BR-074–BR-080, BR-206–BR-223)
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236, BR-277–BR-279)
    - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
@@ -1763,6 +1764,32 @@ DB/business request se **ne** rollbackuje zbog email transport failure. Mail nak
 
 ---
 
+##### BR-326 – Uklanjanje odbijenog zahtjeva za Organizatora iz uredničkog prikaza
+
+Urednik (`kk_admin`) može ukloniti zahtjev za kreiranje Organizatora iz redovne radne liste **Zahtjevi** isključivo kada je status zahtjeva **Odbijen**.
+
+**Odbijanje** = poslovna odluka (status postaje Odbijen; terminalno za taj zahtjev).
+
+**Uklanjanje iz prikaza** = urednički workspace cleanup; **nije** brisanje zapisa.
+
+Uklanjanje iz prikaza:
+
+* ne mijenja status (ostaje Odbijen);
+* ne briše request zapis;
+* ne mijenja decision_user / decision_at / decision_note;
+* ne briše ni ne mijenja User, Organizator ili Moderator grant;
+* ne šalje novi outcome e-mail;
+* ne utiče na mogućnost podnošenja novog zahtjeva (BR-136 / BM-ORG-11);
+* bilježi ko i kada je uklonio zahtjev iz prikaza.
+
+Server-side mora ponovo potvrditi status `rejected` prije upisa. UI skrivanje nije autorizacija.
+
+Redovni urednički prikaz `Zahtjevi` ne prikazuje uklonjene odbijene zahtjeve. Trajni audit zapis ostaje sačuvan (BR-055).
+
+**Status:** Approved
+
+---
+
 ### 5.7.1 Upravljanje održavanjima događaja
 
 #### BR-056 – Održavanja događaja
@@ -2052,6 +2079,32 @@ Organizator u svakom trenutku mora imati najmanje jednog aktivnog Moderatora.
 #### BR-073 – Evidencija zahtjeva za uklanjanje Moderatora
 
 Sistem vodi evidenciju svih zahtjeva za uklanjanje Moderatora, uključujući njihovo podnošenje, obradu i konačnu odluku.
+
+**Status:** Approved
+
+---
+
+#### BR-327 – Uklanjanje odbijenog zahtjeva za Moderatora iz uredničkog prikaza
+
+Urednik (`kk_admin`) može ukloniti zahtjev za dodjelu (ADD) ili uklanjanje (REMOVE) Moderatora iz redovne radne liste **Zahtjevi** isključivo kada je status zahtjeva **Odbijen**.
+
+**Odbijanje** = poslovna odluka.
+
+**Uklanjanje iz prikaza** = urednički workspace cleanup; **nije** brisanje zapisa.
+
+Uklanjanje iz prikaza:
+
+* ne mijenja status (ostaje Odbijen);
+* ne briše request zapis;
+* ne mijenja decision metadata;
+* ne briše ni ne mijenja aktivni Moderator grant (posebno relevantno za rejected REMOVE);
+* ne šalje novi outcome e-mail;
+* ne mijenja duplicate / resubmission pravila (BR-313);
+* bilježi ko i kada je uklonio zahtjev iz prikaza.
+
+Isto pravilo važi za rejected ADD i rejected REMOVE. Server-side status guard je obavezan.
+
+Redovni urednički prikaz `Zahtjevi` ne prikazuje uklonjene odbijene zahtjeve. Trajni audit zapis ostaje sačuvan (BR-055 / BR-073).
 
 **Status:** Approved
 
@@ -5107,3 +5160,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-11 | FS-001 (PATCH-FS-068): PO-ORG-05 / BM PATCH-067 — napomena Urednika na Org creation request; usklađen BR-137; dodat BR-307. Verzija ostaje 1.0.0. |
 | 2026-08-11 | FS-001 (PATCH-FS-069): PO-ORG-06 / BM PATCH-068 — privacy-safe Moderator invitation; usklađeni BR-053/054/055/135/137/275/307; dodati BR-308–BR-320. TARGET vs CURRENT. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-12 | FS-001 (PATCH-FS-070): PO-MF-WF-01–04 / BM PATCH-070 — dual MF lifecycle by creator origin; usklađeni BR-100/101/190/195/196; dodati BR-321–BR-325; Event submit guard (BR-325 / BR-018). Verzija ostaje 1.0.0. |
+| 2026-08-13 | FS-001 (PATCH-FS-071): PO-ORG/MOD rejected request editor cleanup / BM PATCH-072 — workspace dismiss odbijenih Org/Mod zahtjeva; BR-055/073 retention KEEP; dodati BR-326–BR-327. Verzija ostaje 1.0.0. |

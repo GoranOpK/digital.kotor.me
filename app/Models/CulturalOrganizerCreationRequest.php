@@ -52,6 +52,8 @@ class CulturalOrganizerCreationRequest extends Model
         'decision_user_id',
         'decision_at',
         'decision_note',
+        'editor_dismissed_at',
+        'editor_dismissed_by_user_id',
     ];
 
     protected function casts(): array
@@ -59,6 +61,7 @@ class CulturalOrganizerCreationRequest extends Model
         return [
             'proposed_moderator_is_submitter' => 'boolean',
             'decision_at' => 'datetime',
+            'editor_dismissed_at' => 'datetime',
         ];
     }
 
@@ -70,6 +73,16 @@ class CulturalOrganizerCreationRequest extends Model
     public function isSubmitted(): bool
     {
         return $this->status === self::STATUS_SUBMITTED;
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === self::STATUS_REJECTED;
+    }
+
+    public function isDismissedByEditor(): bool
+    {
+        return $this->editor_dismissed_at !== null;
     }
 
     public function statusLabel(): string
@@ -92,6 +105,11 @@ class CulturalOrganizerCreationRequest extends Model
         return $this->belongsTo(User::class, 'decision_user_id');
     }
 
+    public function editorDismissedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'editor_dismissed_by_user_id');
+    }
+
     public function organizer(): HasOne
     {
         return $this->hasOne(CulturalOrganizer::class, 'approved_creation_request_id');
@@ -100,5 +118,10 @@ class CulturalOrganizerCreationRequest extends Model
     public function scopeSubmitted(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_SUBMITTED);
+    }
+
+    public function scopeVisibleInEditorWorkspace(Builder $query): Builder
+    {
+        return $query->whereNull('editor_dismissed_at');
     }
 }

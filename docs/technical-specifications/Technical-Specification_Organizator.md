@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Organizator, Moderator i zahtjev za kreiranje Organizatora  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.4.1
-**Datum:** 2026-08-12
+**Verzija:** 0.4.2
+**Datum:** 2026-08-13
 
 ---
 
@@ -23,6 +23,7 @@
 | 0.3.1 | 2026-08-11 | **PO-ORG-05:** napomena Urednika — approve opciono; reject obavezno; storage `decision_note` (nullable u DB); server-side validacija; fail-closed. Usklađeno sa BM PATCH-067 / FS PATCH-FS-068 / BR-307. |
 | 0.4.0 | 2026-08-11 | **PO-ORG-06:** privacy-safe Moderator invitation — schema delta; waiting status; resolver (Verified + catch-up); mailables; editor gating; duplicates; outcome/REMOVE emails; supersede PO-ORG-02 selection model. Usklađeno sa BM PATCH-068 / FS PATCH-FS-069 / BR-308–BR-320. **TARGET contract; CURRENT production još koristi users dropdown.** Bez implementacije u ovom docs paketu. |
 | 0.4.1 | 2026-08-12 | **PO-ORG-06 PRODUCTION CLOSEOUT (status sync):** Packages 1–5 implementirani i produkciono potvrđeni; schema migracija RAN; discoverable CTA „Zahtjev za Organizatora“ (`814ff96`). Normativni ugovor §15 neizmijenjen. Optional durable mail retry / `invitation_sent_at` ostaje non-blocking OUT OF SCOPE. |
+| 0.4.2 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup:** `Ukloni` = workspace dismiss (`editor_dismissed_at` / `editor_dismissed_by_user_id`); samo `rejected`; samo `kk_admin`; **ne** hard delete; default `Zahtjevi` filter `editor_dismissed_at IS NULL`; show route KEEP. Usklađeno sa BM PATCH-072 / FS PATCH-FS-071 / BR-326–BR-327 / TS-010 v1.0.9. |
 
 Napomena:
 
@@ -377,6 +378,7 @@ Poslovni postupak kojim registrovani korisnik predlaže novi entitet Organizator
 * validaciona poruka: „Napomena je obavezna prilikom odbijanja zahtjeva.“;
 * trajni audit obavezan (BR-055, BM-ORG-09), uključujući sačuvanu napomenu kada postoji;
 * neutral flash podnosiocu (BR-312).
+* **Uklanjanje iz uredničkog prikaza (BM-ORG-20 / BR-326):** samo status `rejected`; samo Urednik; upis `editor_dismissed_at` + `editor_dismissed_by_user_id`; status i decision metadata **ne** mijenjaju se; **nema** hard delete; default lista `Zahtjevi` / Org indeks filtrira `editor_dismissed_at IS NULL`; show ruta ostaje dostupna `kk_admin`-u.
 
 ## 3.4 Zahtjev za dodjelu / uklanjanje Moderatora
 
@@ -400,6 +402,7 @@ Iako naziv dokumenta ističe zahtjev za kreiranje Organizatora, BM/FS zahtijevaj
 * reject REMOVE → silence;
 * zabranjeno ako bi ostao bez aktivnog Moderatora (BR-072);
 * trajna evidencija (BR-073).
+* **Uklanjanje iz uredničkog prikaza (BM-MOD-27 / BR-327):** isto pravilo za rejected ADD i rejected REMOVE — workspace dismiss metadata; grant netaknut; **ne** hard delete; default Mod lista filtrira dismissed.
 
 ## 3.5 Aktivni kontekst Organizatora
 
@@ -896,6 +899,8 @@ Ovo poglavlje definiše **logičke događaje** koje ova cjelina mora evidentirat
 | Odluka o uklanjanju Moderatora | Urednik | Pri odobrenju/odbijanju | Urednik; vrijeme; ishod |
 
 Lokalni tragovi nisu ručno izmjenjivi (BR-055).
+
+**Editor workspace dismiss (BM-ORG-20 / BM-MOD-27):** upis `editor_dismissed_at` / `editor_dismissed_by_user_id` **ne** briše lokalni audit trag; status i decision polja ostaju. Dismiss ≠ delete.
 
 ## 8.2 Poslovno značajni događaji relevantni za Evidenciju aktivnosti
 

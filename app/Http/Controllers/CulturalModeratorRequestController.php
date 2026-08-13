@@ -67,6 +67,7 @@ class CulturalModeratorRequestController extends Controller
         abort_unless(CulturalPortalAccess::isKkEditor(auth()->user()), 403);
 
         $query = CulturalModeratorRequest::query()
+            ->visibleInEditorWorkspace()
             ->with(['organizer', 'submitter', 'targetUser', 'decisionUser']);
 
         $status = $request->query('status');
@@ -97,7 +98,7 @@ class CulturalModeratorRequestController extends Controller
     {
         abort_unless(CulturalPortalAccess::isKkEditor(auth()->user()), 403);
 
-        $zahtjev->load(['organizer', 'submitter', 'targetUser', 'decisionUser']);
+        $zahtjev->load(['organizer', 'submitter', 'targetUser', 'decisionUser', 'editorDismissedBy']);
 
         return view('cultural-calendar.admin.moderator-requests.show', [
             'requestItem' => $zahtjev,
@@ -138,5 +139,31 @@ class CulturalModeratorRequestController extends Controller
         return redirect()
             ->route('cultural-moderator-requests.index')
             ->with('status', 'Zahtjev za Moderatora je odbijen.');
+    }
+
+    /**
+     * Hide rejected request from editor workspace (not hard delete).
+     * Same rule for rejected ADD and rejected REMOVE.
+     */
+    public function dismiss(CulturalModeratorRequest $zahtjev): RedirectResponse
+    {
+        abort_unless(CulturalPortalAccess::isKkEditor(auth()->user()), 403);
+
+        if (! $zahtjev->isRejected()) {
+            return redirect()
+                ->route('cultural-moderator-requests.show', $zahtjev)
+                ->withErrors(['decision' => 'Uklanjanje iz prikaza dozvoljeno je samo za odbijene zahtjeve.']);
+        }
+
+        if (! $zahtjev->isDismissedByEditor()) {
+            $zahtjev->update([
+                'editor_dismissed_at' => now(),
+                'editor_dismissed_by_user_id' => auth()->id(),
+            ]);
+        }
+
+        return redirect()
+            ->route('cultural-editorial-requests.index', ['sekcija' => 'moderatori'])
+            ->with('status', 'Odbijeni zahtjev je uklonjen iz prikaza.');
     }
 }

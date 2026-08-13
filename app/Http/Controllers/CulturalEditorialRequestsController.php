@@ -31,6 +31,7 @@ class CulturalEditorialRequestsController extends Controller
 
         if ($section === self::SECTION_MODERATORS) {
             $query = CulturalModeratorRequest::query()
+                ->visibleInEditorWorkspace()
                 ->with(['organizer', 'submitter', 'targetUser', 'decisionUser']);
 
             if (is_string($status) && in_array($status, CulturalModeratorRequest::STATUSES, true)) {
@@ -54,6 +55,7 @@ class CulturalEditorialRequestsController extends Controller
         }
 
         $query = CulturalOrganizerCreationRequest::query()
+            ->visibleInEditorWorkspace()
             ->with(['submitter', 'proposedModerator', 'decisionUser', 'organizer']);
 
         if (is_string($status) && in_array($status, CulturalOrganizerCreationRequest::STATUSES, true)) {

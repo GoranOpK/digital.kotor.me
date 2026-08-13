@@ -39,6 +39,7 @@ class CulturalOrganizerCreationRequestController extends Controller
         abort_unless(CulturalPortalAccess::isKkEditor(auth()->user()), 403);
 
         $query = CulturalOrganizerCreationRequest::query()
+            ->visibleInEditorWorkspace()
             ->with(['submitter', 'proposedModerator', 'decisionUser', 'organizer']);
 
         $status = $request->query('status');
@@ -70,7 +71,7 @@ class CulturalOrganizerCreationRequestController extends Controller
     {
         abort_unless(CulturalPortalAccess::isKkEditor(auth()->user()), 403);
 
-        $zahtjev->load(['submitter', 'proposedModerator', 'decisionUser', 'organizer']);
+        $zahtjev->load(['submitter', 'proposedModerator', 'decisionUser', 'organizer', 'editorDismissedBy']);
 
         return view('cultural-calendar.admin.organizer-creation-requests.show', [
             'requestItem' => $zahtjev,
@@ -113,6 +114,31 @@ class CulturalOrganizerCreationRequestController extends Controller
         return redirect()
             ->route('cultural-organizer-creation-requests.index')
             ->with('status', 'Zahtjev je odbijen. Organizator nije kreiran.');
+    }
+
+    /**
+     * Hide rejected request from editor workspace (not hard delete).
+     */
+    public function dismiss(CulturalOrganizerCreationRequest $zahtjev): RedirectResponse
+    {
+        abort_unless(CulturalPortalAccess::isKkEditor(auth()->user()), 403);
+
+        if (! $zahtjev->isRejected()) {
+            return redirect()
+                ->route('cultural-organizer-creation-requests.show', $zahtjev)
+                ->withErrors(['decision' => 'Uklanjanje iz prikaza dozvoljeno je samo za odbijene zahtjeve.']);
+        }
+
+        if (! $zahtjev->isDismissedByEditor()) {
+            $zahtjev->update([
+                'editor_dismissed_at' => now(),
+                'editor_dismissed_by_user_id' => auth()->id(),
+            ]);
+        }
+
+        return redirect()
+            ->route('cultural-editorial-requests.index', ['sekcija' => 'organizatori'])
+            ->with('status', 'Odbijeni zahtjev je uklonjen iz prikaza.');
     }
 
     private function assertNoOrganizerCreated(CulturalOrganizerCreationRequest $zahtjev): void

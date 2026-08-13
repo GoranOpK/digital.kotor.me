@@ -8,7 +8,7 @@
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
 **Implementacioni status V1:** ZAVRŠEN
-**Verzija:** 1.0.8
+**Verzija:** 1.0.9
 **Datum:** 2026-08-13
 
 ---
@@ -39,6 +39,7 @@
 
 | 1.0.7 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** U pripremi UI; Sačuvaj i nastavi; `organizer_manual_name`; delete draft; published direct edit; opcion cancel reasons; DU-03; security; test matrix PATCH-063. Bez izmjene implementacije. |
 | 1.0.8 | 2026-08-13 | **kk_admin UX / navigation consolidation (status only):** nav label `Urednički rad` → `Kontrolna tabla` (prva editorial stavka); objedinjeni nav entrypoint `Zahtjevi` (`cultural-editorial-requests.index`) sa sekcijama Org/Mod (decision tokovi KEEP); `kk_admin` post-login fallback → `cultural-calendar.index` uz safe intended. **IMPLEMENTED / TESTED (local).** Bez BM/FS izmjene. |
+| 1.0.9 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup:** `Ukloni` na odbijenom Org/Mod zahtjevu = workspace dismiss (`editor_dismissed_at`); **ne** hard delete; §6.7.1 retention KEEP; unified `Zahtjevi` default filter. Usklađeno sa BM PATCH-072 / FS PATCH-FS-071 / TS-001 v0.4.2. |
 Napomena:
 
 Ovo poglavlje služi isključivo za evidenciju razvoja dokumenta.
@@ -679,6 +680,7 @@ Bez novog BM/FS pravila i bez novog poslovnog statusa zahtjeva:
 * otvoreni zahtjevi za **dodjelu** ili **uklanjanje** Moderatora vezani za deaktiviranog Organizatora **ne mogu** proizvesti aktivno operativno ovlašćenje niti obnoviti kontekst rada nad deaktiviranim Organizatorom (posljedica BR-049–BR-050);
 * Sistem mora spriječiti dalju poslovnu obradu otvorenog zahtjeva nakon deaktivacije Organizatora, uz očuvanje postojećeg zapisa i istorije. Konkretan tehnički status zapisa određuje se u implementacionom modelu bez uvođenja novog poslovnog ishoda.
 * zapisi zahtjeva se ne brišu ako se propisuje auditabilnost (BR-055 / BR-073).
+* **PO-ORG/MOD editor cleanup:** akcija `Ukloni` na odbijenom zahtjevu **nije** brisanje zapisa. To je uklanjanje iz redovnog uredničkog workspace prikaza (`editor_dismissed_at` / `editor_dismissed_by_user_id`). Status ostaje `rejected`; decision metadata KEEP; default lista `Zahtjevi` filtrira dismissed redove. Show ruta ostaje dostupna `kk_admin`-u. Retention BR-055 / BR-073 / §6.7.1 ostaje važeća.
 
 ## 6.8 Ovlašćenja Moderatora
 

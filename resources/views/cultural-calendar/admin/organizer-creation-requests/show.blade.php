@@ -65,10 +65,37 @@
                 </div>
             </form>
         </div>
+    @elseif($requestItem->isRejected() && ! $requestItem->isDismissedByEditor())
+        <div class="bg-white rounded-lg border border-gray-200 p-6">
+            <form
+                method="POST"
+                action="{{ route('cultural-organizer-creation-requests.dismiss', $requestItem) }}"
+                onsubmit="return confirm('Da li ste sigurni da želite ukloniti ovaj odbijeni zahtjev iz prikaza?\n\nZahtjev ostaje sačuvan u evidenciji.');"
+            >
+                @csrf
+                <p class="text-sm text-gray-600 mb-3">Uklanja zahtjev iz redovne liste Zahtjevi. Zapis i odluka ostaju trajno sačuvani.</p>
+                <button
+                    type="submit"
+                    style="background:#fff; color:#b91c1c; padding:10px 16px; border-radius:8px; font-weight:600; border:1px solid #fca5a5; cursor:pointer;"
+                >
+                    Ukloni
+                </button>
+            </form>
+        </div>
+    @elseif($requestItem->isDismissedByEditor())
+        <div class="mb-4 rounded-md bg-gray-50 border border-gray-200 text-gray-700 px-4 py-3 text-sm">
+            Uklonjen iz uredničkog prikaza
+            @if($requestItem->editor_dismissed_at)
+                ({{ $requestItem->editor_dismissed_at }})
+            @endif
+            @if($requestItem->editorDismissedBy)
+                — {{ $requestItem->editorDismissedBy->name }}
+            @endif
+        </div>
     @endif
 
     <div class="mt-4">
-        <a href="{{ route('cultural-organizer-creation-requests.index') }}" class="text-sm text-gray-600 underline">Nazad na listu</a>
+        <a href="{{ route('cultural-editorial-requests.index', ['sekcija' => 'organizatori']) }}" class="text-sm text-gray-600 underline">Nazad na Zahtjeve</a>
     </div>
 </div>
 @endsection

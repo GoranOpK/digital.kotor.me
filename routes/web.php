@@ -384,6 +384,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-organizer-creation-requests.approve');
         Route::post('/kalendar-kulture/zahtjevi-organizator/{zahtjev}/reject', [CulturalOrganizerCreationRequestController::class, 'reject'])
             ->name('cultural-organizer-creation-requests.reject');
+        Route::post('/kalendar-kulture/zahtjevi-organizator/{zahtjev}/dismiss', [CulturalOrganizerCreationRequestController::class, 'dismiss'])
+            ->name('cultural-organizer-creation-requests.dismiss');
 
         Route::get('/kalendar-kulture/zahtjevi-moderator', [CulturalModeratorRequestController::class, 'index'])
             ->name('cultural-moderator-requests.index');
@@ -393,6 +395,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-moderator-requests.approve');
         Route::post('/kalendar-kulture/zahtjevi-moderator/{zahtjev}/reject', [CulturalModeratorRequestController::class, 'reject'])
             ->name('cultural-moderator-requests.reject');
+        Route::post('/kalendar-kulture/zahtjevi-moderator/{zahtjev}/dismiss', [CulturalModeratorRequestController::class, 'dismiss'])
+            ->name('cultural-moderator-requests.dismiss');
     });
 
     // --- DOPUNA: RUTE ZA PORTAL ŽENSKOG PREDUZETNIŠTVA ---
