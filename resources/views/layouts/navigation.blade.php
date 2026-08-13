@@ -110,7 +110,7 @@
 </style>
 @endif
 <nav
-    data-kk-mobile-nav-root
+    x-data="{ open: false }"
     @class([
         'bg-white border-b border-gray-100 print:hidden',
         'dark:bg-gray-800 dark:border-gray-700' => ! $isKkSection,
@@ -276,20 +276,19 @@
                                     >Kontrolna tabla</a>
                                     <div
                                         class="relative"
+                                        x-data="{ open: false }"
+                                        @click.outside="open = false"
                                         data-kk-nav="moderiranje"
-                                        data-kk-moderation-root
                                     >
                                         <button
                                             type="button"
-                                            data-kk-moderation-toggle
-                                            aria-expanded="false"
-                                            aria-haspopup="true"
-                                            style="{{ $kkNavBtn($isModeratorContentNav) }}border:0;cursor:pointer;font-family:inherit;line-height:inherit;box-sizing:border-box;"
+                                            @click="open = ! open"
+                                            style="{{ $kkNavBtn($isModeratorContentNav) }} border:0;cursor:pointer;"
                                         >Moderiranje</button>
                                         <div
-                                            data-kk-moderation-menu
-                                            hidden
-                                            style="position:absolute;z-index:50;margin-top:6px;min-width:200px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.08);padding:6px;"
+                                            x-show="open"
+                                            x-cloak
+                                            style="display:none;position:absolute;z-index:50;margin-top:6px;min-width:200px;background:#ffffff;border:1px solid #e5e7eb;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,.08);padding:6px;"
                                         >
                                             <a
                                                 href="{{ route('cultural-moderator-events.index') }}"
@@ -393,18 +392,15 @@
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
                 <button
-                    type="button"
-                    data-kk-mobile-nav-toggle
-                    aria-expanded="false"
-                    aria-controls="kk-mobile-nav-menu"
+                    @click="open = ! open"
                     @class([
                         'inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out',
                         'dark:text-gray-500 dark:hover:text-gray-400 dark:hover:bg-gray-900 dark:focus:bg-gray-900 dark:focus:text-gray-400' => ! $isKkSection,
                     ])
                 >
                     <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path data-kk-mobile-nav-icon="closed" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path data-kk-mobile-nav-icon="open" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
@@ -412,7 +408,7 @@
     </div>
 
     <!-- Responsive Navigation Menu -->
-    <div id="kk-mobile-nav-menu" data-kk-mobile-nav-menu class="hidden sm:hidden">
+    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 px-2 space-y-2">
             @if($isKkAdmin || $isKkSection)
                 @if(! $isKkAdmin || $isKkPublicPortalContext)

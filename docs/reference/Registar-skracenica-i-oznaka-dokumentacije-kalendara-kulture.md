@@ -4,7 +4,7 @@
 **Oznaka dokumenta:** RG-001
 **Naziv:** Registar skraćenica i oznaka dokumentacije Kalendara kulture
 **Status dokumenta:** Stable
-**Verzija:** 1.1.9
+**Verzija:** 1.1.8
 **Datum:** 2026-08-13
 
 ---
@@ -88,7 +88,6 @@ Uključene su samo **interne** skraćenice projekta koje se **stvarno koriste** 
 | **OFD** | Otvoreni nalaz (Open Finding) | Neriješena dokumentaciona stavka (npr. OFD-OB-006). |
 | **M-TS** | Metodologija — Technical Specification | Pravilo metodologije za TS dokumente (npr. M-TS-001). |
 | **PATCH** | Dokumentaciona zakrpa (Patch) | Identifikator usklađivanja dokumentacije (npr. PATCH-053 u BM). |
-| **HF** | Hotfix / hitna korektivna ispravka | Generička oznaka hitnog produkcionog korektiva u paketnim oznakama (npr. **MOD-UX-01-HF1**). Ordinal (`HF1`, `HF2`…) nije zasebna skraćenica. |
 | **PATCH-FS** | Zakrpa FS (Patch — Functional Specification) | Identifikator zakrpe FS dokumenta (npr. PATCH-FS-053). |
 | **QA** | Osiguranje kvaliteta (Quality Assurance) | Oznaka QA odluke ili korektivnog prolaza (npr. QA-TS0108-01). |
 | **BP** | Poslovni proces — Plaćanja (Business Process) | Poslovna odluka / proces u BM/FS Plaćanja (npr. BP-01 … BP-09). |
@@ -347,8 +346,7 @@ RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, katego
 | 1.1.6 | 2026-08-11 | Coverage + maintenance: dodati **MF**, **OCC**, **SSOT**, **CTA**, **KK**, **CAT-CUTOVER**, familije **PO-6A** / **PO-6B**; formalizovano pravilo da se RG-001 ažurira u istom dokumentacionom paketu kad se uvede nova projektna skraćenica. Usklađeno sa PO-6B-08/09 pre-impl docs. Bez izmjene implementacije. |
 | 1.1.7 | 2026-08-11 | **PO-6B-10:** primjer familije **PO-6B** dopunjen sa PO-6B-10 (već pokriveno familijom; bez novog abbreviation row-a). Usklađeno sa 6B-04 pre-commit docs sync. Bez izmjene implementacije. |
 | 1.1.8 | 2026-08-13 | **MOD-UX-01:** dodate skraćenice **UX**, **MOD**, **ORG** (dokumentacione / paketne; bez poslovnih definicija uloga). Usklađeno sa TS-010 v1.0.10 / Feature Registry status sync. Bez izmjene BM/FS. Bez izmjene implementacije. |
-| 1.1.9 | 2026-08-13 | **MOD-UX-01-HF1:** dodata skraćenica **HF** (Hotfix / hitna korektivna ispravka; ordinal HF1 nije zasebna skraćenica). Bez izmjene BM/FS/TS. Bez izmjene implementacije u ovom dokumentu. |
 
 ---
 
-**Kraj dokumenta RG-001 v1.1.9 (Stable)**
+**Kraj dokumenta RG-001 v1.1.8 (Stable)**
