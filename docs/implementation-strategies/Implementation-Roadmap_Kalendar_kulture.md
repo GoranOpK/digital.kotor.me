@@ -7,7 +7,7 @@
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active  
-**Verzija:** 1.0.10
+**Verzija:** 1.0.11
 **Datum:** 2026-08-13
 
 ---
@@ -27,6 +27,7 @@
 | 1.0.8 | 2026-08-12 | **6A residual Package A status sync:** `cultural-calendar.day` canonical cutover **IMPLEMENTED / TESTED (local)** (`CulturalPublicEventQuery::filterByDate` + `occurrenceOnDate`; legacy rollback KEEP). **NOT PRODUCTION VERIFIED.** Phase B hard-remove / flag cleanup ostaje. Bez izmjene redoslijeda Faza 7–8. Bez izmjene BM/FS. |
 | 1.0.9 | 2026-08-12 | **6A residual Package A PRODUCTION CLOSEOUT (status only):** `day()` canonical cutover **DEPLOYED** (`f35cb2e`); production smoke empty-date **PASS** — **PRODUCTION VERIFIED — EMPTY-DATE SCENARIO CONFIRMED**; content-bearing day not separately production-smoked (local coverage; not a blocker). **Package A CLOSED.** Phase B hard-remove / flag cleanup ostaje **OPEN**. Bez izmjene redoslijeda Faza 7–8. Bez izmjene BM/FS. |
 | 1.0.10 | 2026-08-13 | **Phase B1+B2 status sync:** flag + dual-read + legacy CRUD runtime **REMOVED** (canonical-only public read). **B3** `cultural_events` DROP = **OPEN / DEFERRED**. **IMPLEMENTED / TESTED (local); NOT PRODUCTION VERIFIED.** FAZA 7 (TS-011) ostaje naredna velika faza. Bez izmjene BM/FS. |
+| 1.0.11 | 2026-08-13 | **FAZA 6A FINAL DOCUMENTATION CLOSURE:** FAZA 6A = **CLOSED**; B1+B2 = **PRODUCTION VERIFIED / CLOSED**; categories **14/14 PASS**; public SSOT canonical-only; dual-read/write = 0; B3 DROP = **DEFERRED / non-blocking**; FAZA 7 ostaje naredna. Bez izmjene BM/FS. Bez izmjene implementacije. |
 
 ---
 
@@ -295,7 +296,7 @@ analiza → implementacija → test → review → merge → deploy
 | **Migracija** | Velika (nove tabele / FK) — **produkcijski RAN** (`2026_08_11_121000`, `2026_08_11_121100`) |
 | **Rizici** | Kardinalnost; arhiva MF ne briše događaje |
 | **Rezultat** | Domen + editorial lifecycle **DEPLOYED / PRODUCTION VERIFIED** |
-| **Zatim** | FAZA 7 (Newsletter) po redoslijedu; Phase B1+B2 = **IMPLEMENTED / TESTED (local)**; B3 table DROP ostaje **OPEN** |
+| **Zatim** | FAZA 7 (Newsletter) po redoslijedu; Phase B1+B2 = **PRODUCTION VERIFIED / CLOSED**; B3 table DROP ostaje **DEFERRED / non-blocking** |
 
 ### FAZA 5 — Urednički portal
 
@@ -313,16 +314,21 @@ analiza → implementacija → test → review → merge → deploy
 
 | Stavka | Opis |
 |--------|------|
+| **Status** | **CLOSED** — implementation complete; production verification **PASS** (PO-confirmed 2026-08-13) |
 | **Cilj** | Prelazak javnog portala Događaja sa `CulturalEvent` na `CulturalEventEntry` + `CulturalOccurrence`; CAT-CUTOVER; očuvanje postojećeg UI-ja |
 | **Moduli** | TS-009 (§1.7, §3.4, §7.3, §9–§12, §18); kanonski katalozi TS-006/007/008 po potrebi |
 | **PO** | PO-EV-01; PO-TS9-08A–PO-TS9-08J |
-| **Rizici** | Regresija badge/filtera/CR-001…004B; pogrešan public query; feature-flag zloupotreba (dual-read) |
-| **Rezultat** | Kanonski javni read za Događaje; privremeni flag legacy\|canonical; bez Manifestacija |
+| **CURRENT SSOT** | **CANONICAL ONLY**; active public legacy dependency **0**; dual-read **NO**; dual-write **NO** |
+| **Rezultat** | Kanonski javni read za Događaje; flag **uklonjen**; bez Manifestacija u 6A scope-u |
 | **Ne blokira** | TS-005 / Manifestacije |
-| **Van obuhvata** | Manifestacije (6B); slug/SEO; migracija legacy sadržaja; dual-read/write; javni `cancellation_reason` |
+| **Van obuhvata (historical plan note)** | Manifestacije (6B); slug/SEO; migracija legacy sadržaja; dual-read/write |
+| **cancellation_reason** | PATCH-063: opcioni javni note **dozvoljen** (superseduje PATCH-060 apsolutnu zabranu) |
+| **Categories** | Production canonical catalog **14/14 PASS** |
 | **Residual Package A** | `cultural-calendar.day` — **CLOSED**; PRODUCTION VERIFIED — EMPTY-DATE (`f35cb2e`) |
-| **Phase B1+B2** | Flag + legacy public/CRUD runtime cleanup — **IMPLEMENTED / TESTED (local)**; canonical-only; **NOT PRODUCTION VERIFIED** |
-| **Phase B3** | `cultural_events` table DROP — **OPEN / DEFERRED** |
+| **Phase B1** | Flag/config removal — **IMPLEMENTED / TESTED / PRODUCTION VERIFIED / CLOSED** |
+| **Phase B2** | Canonical-only public + legacy CRUD runtime removal — **IMPLEMENTED / TESTED / PRODUCTION VERIFIED / CLOSED** |
+| **Phase B3** | `cultural_events` table DROP — **DEFERRED** — non-runtime / **non-blocking for 6A** |
+| **Implementation remaining** | **NONE** |
 | **Zatim** | Stabilizacija → **FAZA 7 (TS-011 Newsletter)** |
 
 ### FAZA 6B — Manifestacije (javni portal)

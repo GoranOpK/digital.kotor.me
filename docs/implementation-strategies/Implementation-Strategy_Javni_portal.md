@@ -6,10 +6,10 @@
 **Naziv:** Implementaciona strategija javnog portala  
 **Feature ID:** FT-001  
 **Modul:** Kalendar kulture  
-**Referentna specifikacija:** TS-009 v1.0.6 Stable
+**Referentna specifikacija:** TS-009 v1.0.19 Stable
 **Status dokumenta:** Stable
-**Verzija:** 1.0.7
-**Datum:** 2026-08-09
+**Verzija:** 1.0.8
+**Datum:** 2026-08-13
 
 ---
 
@@ -20,7 +20,7 @@
 | Oznaka | IS-001 |
 | Naziv | Implementaciona strategija javnog portala |
 | Tip | Operativni planski dokument |
-| Referenca | TS-009 v1.0.6 Stable |
+| Referenca | TS-009 v1.0.19 Stable |
 | Usvojene odluke | IS-001-01 … IS-001-08 |
 
 ### IS-001-01 — Identitet dokumenta
@@ -48,11 +48,35 @@ IS-001:
 
 # 2. Svrha i status
 
-**Svrha:** omogućiti kontrolisanu, evolutivnu implementaciju javnog portala u skladu sa TS-009 v1.0.1, uz najmanji rizik za postojeću produkciju (princip IA-01).
+**Svrha:** omogućiti kontrolisanu, evolutivnu implementaciju javnog portala u skladu sa TS-009, uz najmanji rizik za postojeću produkciju (princip IA-01).
 
-**Status:** Stable (v1.0.0).
+**Status dokumenta:** Stable (v1.0.8).
 
 **Van svrhe:** SQL, Laravel kod, konačni dizajn klasa/metoda, nove Product Owner odluke, zamjena TS-003…TS-008.
+
+## 2.1 CURRENT STATE — FAZA 6A CLOSURE (2026-08-13)
+
+**FAZA 6A = CLOSED**
+
+| Stavka | Status |
+|--------|--------|
+| Public Event read SSOT | **CANONICAL ONLY** (`CulturalEventEntry` + `CulturalOccurrence`) |
+| Active public legacy dependency | **0** |
+| Dual-read | **NO** |
+| Dual-write | **NO** |
+| `CULTURAL_PUBLIC_READ_SOURCE` / XOR flag | **REMOVED** (nije current-state mehanizam) |
+| Package A (`cultural-calendar.day`) | **CLOSED** — PRODUCTION VERIFIED (empty-date) |
+| Phase **B1** (flag/config removal) | **IMPLEMENTED / TESTED / PRODUCTION VERIFIED / CLOSED** |
+| Phase **B2** (canonical-only public + legacy CRUD runtime removal) | **IMPLEMENTED / TESTED / PRODUCTION VERIFIED / CLOSED** |
+| Phase **B3** (`cultural_events` table DROP) | **DEFERRED** — non-runtime / **non-blocking for 6A** |
+| Production canonical categories | **14/14 PASS** (TS-007 §2.7 set) |
+| PATCH-063 | Opcioni javni `cancellation_reason` **dozvoljen** (superseduje PATCH-060 apsolutnu zabranu) |
+| Implementation remaining (6A) | **NONE** |
+| Production verification (6A / B1 / B2) | **PASS** (PO-confirmed) |
+| P0 / P1 | **0 / 0** |
+| 6B | **OUT OF SCOPE** for this closure; **does not block 6A** |
+
+Historical plan rows u §9.6 (privremeni flag; „bez javnog cancellation_reason“) ostaju istorijski; CURRENT STATE = ova tabela + TS-009 v1.0.19.
 
 ---
 
@@ -60,7 +84,7 @@ IS-001:
 
 | Dokument | Uloga |
 |----------|--------|
-| `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009 v1.0.1) | Referentna specifikacija javnog portala |
+| `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009 v1.0.19) | Referentna specifikacija javnog portala |
 | `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-11, BM-05, …) | Poslovna pravila (ne mijenjaju se ovim dokumentom) |
 | `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13) | Funkcionalni zahtjevi |
 | TS-003 Događaj | Domen Događaja; zavisnost Faze 4/6 |
@@ -376,16 +400,17 @@ Faza 6 (IS-001 istorijski naziv — završno usklađenje)
 | Stavka | Opis |
 |--------|------|
 | **Cilj** | Završiti usklađenost javnog portala sa TS-009; **IR-001 Faza 6A** = kanonski cutover Događaja (bez MF); **IR-001 Faza 6B** = Manifestacije |
-| **Obuhvat 6A** | Cutover `CulturalEvent` → `CulturalEventEntry`+`CulturalOccurrence`; kartica multi-OCC; sortiranje; Odgođen; CAT-CUTOVER; public query SSOT; privremeni flag; očuvanje UI (TS-009 §1.7, §7.3, §9–§12). **Van:** Manifestacije; slug; migracija legacy; dual-read/write; javni `cancellation_reason` |
-| **Obuhvat 6B** | MF lista/detalj/program; filter MF (TS-009 §6) |
+| **Obuhvat 6A (plan — historical)** | Cutover `CulturalEvent` → `CulturalEventEntry`+`CulturalOccurrence`; kartica multi-OCC; sortiranje; Odgođen; CAT-CUTOVER; public query SSOT; privremeni flag; očuvanje UI (TS-009 §1.7, §7.3, §9–§12). **Van:** Manifestacije; slug; migracija legacy; dual-read/write |
+| **CURRENT STATE 6A** | **CLOSED** — canonical-only SSOT; flag **uklonjen**; dual-read/write **0**; active public legacy dependency **0**; CAT-CUTOVER **14/14** produkcija; PATCH-063 opcioni javni `cancellation_reason` **dozvoljen**; B1+B2 **PRODUCTION VERIFIED / CLOSED**; B3 DROP **DEFERRED / non-blocking**. Vidi §2.1 |
+| **Obuhvat 6B** | MF lista/detalj/program; filter MF (TS-009 §6) — **zasebno CLOSED**; ne blokira 6A |
 | **Zavisnosti** | 6A: kanonski domen Događaj/Održavanje + katalozi; **TS-005 ne blokira 6A**. 6B: TS-005 spreman |
-| **Rizik** | **Srednji do Visok** (široka regresija) |
+| **Rizik** | **Srednji do Visok** (široka regresija) — historical plan risk |
 | **Uticaj na kod** | Sloj kontrolera/upita/prikaza; testovi: TM-JP (TS-009 §18) + široka regresija |
-| **Ulaz** | TS-009 v1.0.6; IR-001 v1.0.5; checklist usklađenosti |
-| **Izlaz** | 6A: kanonski javni read stabilan; 6B: MF portal; PO potvrda |
+| **Ulaz** | TS-009 (current Stable); IR-001 (current); checklist usklađenosti |
+| **Izlaz** | 6A: **CLOSED** (implementation + production verification); 6B: MF portal CLOSED zasebno |
 | **Test** | End-to-end: Početna → Pretraga → Detalji → (6B: Manifestacije) → Arhiva; TM-JP-* |
-| **Deploy** | Privremeni feature flag `legacy` XOR `canonical` (TS-009 §10.2); backup; smoke |
-| **Rollback** | Flag → `legacy`; zatim po CR paketima |
+| **Deploy (plan — historical)** | Privremeni feature flag `legacy` XOR `canonical` (TS-009 §10.2) — **supersedovano** Phase B1+B2 (flag removed) |
+| **Rollback (plan — historical)** | Flag → `legacy` — **nije** current-state put; B3 shell nije rollback mehanizam |
 
 ---
 
@@ -597,7 +622,8 @@ Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehni�
 | 1.0.5 | 2026-08-01 | CR-004A Implemented (dokumentacija `614706c`; implementacija `0f73240`; testovi 65/266). §9.3 / §9.3.1; referenca TS-009 v1.0.4. Precizirano: bez migracije/izmjene šeme; metoda na postojećem modelu CulturalEvent. Bez širenja Faze 3; Faza 3 nije označena kao završena. |
 | 1.0.6 | 2026-08-06 | CR-004B Planned (IS-001 Faza 3): korektivni prolaz — bez migracija/šeme; cancelled ostaje; portalna Arhiva = date query; archived nije javno; §9.3.2; TS-009 v1.0.5 §7.2; PO-CR4B-01…10. Faza 3 nije zatvorena. Bez izmjene implementacije. |
 | 1.0.7 | 2026-08-09 | **Faza 6A/6B (IR-001):** usklađenje sa TS-009 v1.0.6 — 6A kanonski cutover Događaja nije blokiran TS-005; §8 dijagram / §9.6 ažurirani. Bez izmjene implementacije. |
+| 1.0.8 | 2026-08-13 | **FAZA 6A DOCUMENTATION CLOSURE:** §2.1 CURRENT STATE — 6A **CLOSED**; canonical-only; B1+B2 PRODUCTION VERIFIED / CLOSED; categories 14/14; PATCH-063 supersede; B3 DEFERRED non-blocking; referenca TS-009 v1.0.19. Bez izmjene implementacije. |
 
 ---
 
-**Kraj dokumenta IS-001 v1.0.7 (Stable)**
+**Kraj dokumenta IS-001 v1.0.8 (Stable)**
