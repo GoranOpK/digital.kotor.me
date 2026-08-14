@@ -7,7 +7,7 @@
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active  
-**Verzija:** 1.0.13
+**Verzija:** 1.0.14
 **Datum:** 2026-08-14
 
 ---
@@ -30,6 +30,7 @@
 | 1.0.11 | 2026-08-13 | **FAZA 6A FINAL DOCUMENTATION CLOSURE:** FAZA 6A = **CLOSED**; B1+B2 = **PRODUCTION VERIFIED / CLOSED**; categories **14/14 PASS**; public SSOT canonical-only; dual-read/write = 0; B3 DROP = **DEFERRED / non-blocking**; FAZA 7 ostaje naredna. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 1.0.12 | 2026-08-14 | **PO-NL-01…22 / Newsletter decision sync:** FAZA 7 cilj = kanonski TS-011 v1.0.2; postojeći Newsletter = testna implementacija; **bez** migracije testnih pretplatnika / e-mail-only backfill-a; CANONICAL MODEL WINS. Usklađeno sa BM PATCH-073 / FS PATCH-FS-072. Bez izmjene implementacije. |
 | 1.0.13 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary:** FAZA 7 cilj = kanonski TS-011 v1.0.3. NL-03 = FIRST_INCLUDE ELIGIBILITY / CANDIDATE FOUNDATION (bez ledger write, bez e-maila, bez queue/scheduler). Usklađeno sa BM PATCH-074 / FS PATCH-FS-073. Bez izmjene implementacije. |
+| 1.0.14 | 2026-08-14 | **FAZA 7 FORMAL CLOSEOUT + STABILIZATION (status only):** NL-01…NL-06 **IMPLEMENTED / TESTED / COMMITTED / PUSHED**; kanonski model TS-011 v1.0.3. **FAZA 7 = FORMALLY CLOSED.** Repo HEAD `da5220d` (docs routing) / NL-06 `f9b8216`. Production evidence = **PO-CONFIRMED** (migracije Ran; regular 6h; priority 5 min; legacy weekly invoker = 0; `/newsletter` settings). Live production Git HEAD = **UNOBSERVED** iz Cursora. KEEP V1 limitations (Organizer listing URL; crash-after-SMTP; no queue/outbox; physical legacy files). Naredna numerisana faza = **Faza 8 / TS-012**. Bez izmjene BM/FS/TS-011 ugovora. Bez izmjene implementacije. |
 
 ---
 
@@ -155,7 +156,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | **TS-008** | Mediji | Da + storage | Da | Da | TS-003/005/007 | Da — u Fazi 1 | **Srednja–visoka** |
 | **TS-009** | Javni portal | Po fazi | Proširenje | Da | CR-004B (Faza 0); domen za Fazu 6 | CR-004B rano; domen kasnije | **Srednja** (preostalo) |
 | **TS-010** | Urednički portal | Koristi domen | Da | Da | TS-001, 003–008; emit → TS-012 (Faza 8) | Nakon domena; **Faza 5 V1 završena** | **Vrlo visoka** |
-| **TS-011** | Newsletter | Da | Da + job | Da | TS-001, 003, 004, 009, 010 | Nakon stabilnog lifecycle-a | **Visoka** |
+| **TS-011** | Newsletter | Da | Da + job | Da | TS-001, 003, 004, 009, 010 | **Faza 7 V1 završena / FORMALLY CLOSED** | **Visoka** (zatvorena) |
 | **TS-012** | Evidencija aktivnosti | Da | Da | Min. Admin | Svi emiteri stabilni | **Ne** — samo Faza 8 | **Srednja** |
 
 ### Stanje IS-001 / CR (javni portal, postojeći model)
@@ -178,7 +179,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | Održavanja 1..N | Nema | Faza 3 |
 | Manifestacije | **PRODUCTION ACCEPTED** (6B-01…6B-04 + PO-MF-WF; deployed) | **FAZA 4 / 6B FORMALLY CLOSED**; migracije RAN; `cultural_manifestations` = 0 redova; cleanup N/A |
 | Katalozi lokacija / kategorija / medija | Nema / ENUM | Faza 1 |
-| Newsletter (sedmični cron; testna implementacija) | Postoji | Zamjena kanonskim modelom u Fazi 7 (TS-011 v1.0.3); **bez** migracije testnih pretplatnika (**PO-NL-22**) |
+| Newsletter (Kalendar kulture) | **FAZA 7 FORMALLY CLOSED** — kanonski `User` pretplata; regular 6h + priority 5 min | Legacy weekly runtime **disabled**; tabela `newsletter_subscribers` fizički KEEP; **bez** backfill-a (**PO-NL-22**). Naredno: **Faza 8 / TS-012** |
 | Centralni audit (FT-003) | Nema | **Faza 8** (TS-012) — ne ranije |
 
 ---
@@ -298,7 +299,7 @@ analiza → implementacija → test → review → merge → deploy
 | **Migracija** | Velika (nove tabele / FK) — **produkcijski RAN** (`2026_08_11_121000`, `2026_08_11_121100`) |
 | **Rizici** | Kardinalnost; arhiva MF ne briše događaje |
 | **Rezultat** | Domen + editorial lifecycle **DEPLOYED / PRODUCTION VERIFIED** |
-| **Zatim** | FAZA 7 (Newsletter) po redoslijedu; Phase B1+B2 = **PRODUCTION VERIFIED / CLOSED**; B3 table DROP ostaje **DEFERRED / non-blocking** |
+| **Zatim** | **FAZA 7 FORMALLY CLOSED**; naredno = **Faza 8 / TS-012**; Phase B1+B2 = **PRODUCTION VERIFIED / CLOSED**; B3 table DROP ostaje **DEFERRED / non-blocking** |
 
 ### FAZA 5 — Urednički portal
 
@@ -331,7 +332,7 @@ analiza → implementacija → test → review → merge → deploy
 | **Phase B2** | Canonical-only public + legacy CRUD runtime removal — **IMPLEMENTED / TESTED / PRODUCTION VERIFIED / CLOSED** |
 | **Phase B3** | `cultural_events` table DROP — **DEFERRED** — non-runtime / **non-blocking for 6A** |
 | **Implementation remaining** | **NONE** |
-| **Zatim** | Stabilizacija → **FAZA 7 (TS-011 Newsletter)** |
+| **Zatim** | **FAZA 7 FORMALLY CLOSED** → **Faza 8 / TS-012** |
 
 ### FAZA 6B — Manifestacije (javni portal)
 
@@ -345,7 +346,7 @@ analiza → implementacija → test → review → merge → deploy
 | **Rezultat** | Lista / Detalji / program / navigacija / Tip sadržaja — **DEPLOYED**; editorial + moderator osnovni lifecycle + kk_admin nav **PRODUCTION VERIFIED** |
 | **Production** | **DEPLOYED** — migracije RAN; tabela postoji; 0 MF redova; cleanup N/A; **PHASE 6B FORMALLY CLOSED** |
 | **Limited content-smoke** | **NON-BLOCKING PRODUCTION SMOKE DEBT** (nije defect): public detail/program/Event→MF/search-with-hit; moderator resubmit; organizer-scope extra smoke. PO ne zahtijeva vještačke produkcijske MF. |
-| **Zatim** | FAZA 7 (Newsletter) po redoslijedu |
+| **Zatim** | **FAZA 7 FORMALLY CLOSED** → **Faza 8 / TS-012** |
 
 ### FAZA 6 — (istorijski naziv)
 
@@ -355,13 +356,16 @@ analiza → implementacija → test → review → merge → deploy
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Zamjena testnog sedmičnog digest-a kanonskim modelom TS-011 v1.0.3 |
+| **Status** | **FORMALLY CLOSED** — NL-01…NL-06 **IMPLEMENTED / TESTED / COMMITTED / PUSHED**; repo-level stabilization **PASS** |
+| **Cilj (ispunjen)** | Zamjena testnog sedmičnog digest-a kanonskim modelom TS-011 v1.0.3 |
 | **Moduli** | TS-011 |
-| **NL-03** | FIRST_INCLUDE ELIGIBILITY / CANDIDATE FOUNDATION. **IN:** Event eligibility; Subscription/User delivery eligibility; scope matching; Organizer matching; „Bez organizatora“; temporal eligibility; exclusion ako postoji successfully-delivered first_include ledger. **OUT:** ledger write; e-mail delivery; queue; scheduler; priority / cancellation / postponement notifications; pending/candidate tabela |
-| **Migracija** | Velika schema/domen pretplate (jedan deployment); **PO-NL-22:** **bez** migracije/backfill-a postojećih testnih pretplatnika; CANONICAL MODEL WINS |
-| **Rizici** | Dupla slanja; kontradiktorne poruke; paralelni stari weekly command ako se ne ugasi pri cutover-u; nedostatak canonical first-publication timestamp i preference effective-time za NL-03 query |
-| **Rezultat** | Event-driven newsletter na `User` pretplati; opseg „Svi događaji“ / „Odabrani organizatori“ / „Bez organizatora“; first_include ledger samo nakon uspješne isporuke |
-| **Zatim** | Stabilizacija |
+| **Paketi** | NL-01 pretplata; NL-02 `/newsletter` settings; NL-03 eligibility/`first_published_at`; NL-04 regular delivery; NL-05 priority; NL-06 legacy weekly disabled + ops/routing docs |
+| **Migracija** | Canonical schema deployed (**PO-CONFIRMED** Ran: `120000`, `140000`, `160000`, `180000`); **PO-NL-22:** **bez** backfill-a testnih pretplatnika |
+| **Scheduler (kanon / PO-CONFIRMED)** | `cultural-calendar:send-newsletter` `0 */6 * * *`; `cultural-calendar:send-newsletter-priority` `*/5 * * * *`; legacy weekly **nije** production invoker; **ne** `schedule:run` ako Plesk koristi direktne Artisan invokere |
+| **Production** | **PO-CONFIRMED:** Environment production; Debug OFF; Timezone `Europe/Belgrade`; Mail smtp; `/newsletter` settings UI. Live Git HEAD = **UNOBSERVED** iz Cursora. Ručni real mail = NO |
+| **KEEP V1** | Organizer listing URL u mailu; crash-after-SMTP window; nema queue/outbox; fizički legacy subscriber/weekly artefakti |
+| **TS-012** | **Ne** implementirano u Fazi 7 (emit/storage = Faza 8) |
+| **Zatim** | **Faza 8 / TS-012** (nakon ovog closeout-a) |
 
 ### FAZA 8 — Evidencija aktivnosti (TS-012)
 
@@ -369,7 +373,7 @@ analiza → implementacija → test → review → merge → deploy
 |--------|------|
 | **Cilj** | Centralni prijem, trajno skladište, Admin pristup; pun V1 katalog emitera |
 | **Moduli** | TS-012 — **integracija** sa već stabilnim emiterima (TS-001, 003, 004, 005, 010, 011) |
-| **Preduslov** | Stabilizacija Faze 7 (i svih prethodnih) |
+| **Preduslov** | **FAZA 7 FORMALLY CLOSED** + repo stabilization (NL-01…NL-06); kanonski emiteri TS-001, 003, 004, 005, 010, 011 postoje (emit u TS-012 još nije) |
 | **Rizici** | Rupe u katalogu; lom nepromjenjivosti |
 | **Rezultat** | FT-003 V1 zatvoren (bez retention / izvoza van BR-188) |
 | **Zatim** | **Završna stabilizacija** |
@@ -406,7 +410,7 @@ Naredna velika faza **ne počinje** dok stabilizacija nije potvrđena.
 | 5 | Matrica TS-010.8; gate-ovi | Feature po ulogama | Stari admin put |
 | 6A | Kanonski cutover Događaja; kartica multi-OCC; sort; CAT; flag | Public query + CulturalCalendar* | CR-001…004B |
 | 6B | MF portal + Tip sadržaja | **FORMALLY CLOSED / PRODUCTION ACCEPTED** (limited content-smoke) | 6A stabilan |
-| 7 | Okidači; objedinjavanje; odjava | Newsletter Feature | Mail / cron |
+| 7 | Okidači; objedinjavanje; odjava | **FORMALLY CLOSED** — NL-01…NL-06 Feature | Mail / cron; legacy weekly disabled |
 | 8 | Katalog aktivnosti; nepromjenjivost; Admin | Audit Feature | Emiteri ne smiju mijenjati prava |
 
 ---
