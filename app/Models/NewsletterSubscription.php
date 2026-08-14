@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Kanonska Newsletter pretplata (TS-011 v1.0.2 / NL-01).
@@ -52,6 +53,14 @@ class NewsletterSubscription extends Model
             'newsletter_subscription_id',
             'cultural_organizer_id'
         )->withTimestamps();
+    }
+
+    public function sourceCoverages(): HasMany
+    {
+        return $this->hasMany(
+            NewsletterSubscriptionSourceCoverage::class,
+            'newsletter_subscription_id'
+        );
     }
 
     public function isActive(): bool

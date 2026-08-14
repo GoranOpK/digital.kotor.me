@@ -108,6 +108,7 @@ final class EventLifecycle
             if ($locked->first_submitted_at === null) {
                 $locked->first_submitted_at = now();
             }
+            $this->stampFirstPublishedAt($locked);
             $locked->save();
 
             return $locked->fresh();
@@ -349,6 +350,13 @@ final class EventLifecycle
         }
     }
 
+    private function stampFirstPublishedAt(CulturalEventEntry $entry): void
+    {
+        if ($entry->first_published_at === null) {
+            $entry->first_published_at = now();
+        }
+    }
+
     private function apply(
         CulturalEventEntry $entry,
         string $status,
@@ -361,6 +369,10 @@ final class EventLifecycle
 
             if ($markSubmitted && $entry->first_submitted_at === null) {
                 $entry->first_submitted_at = now();
+            }
+
+            if ($status === CulturalEventEntry::STATUS_PUBLISHED) {
+                $this->stampFirstPublishedAt($entry);
             }
 
             $entry->save();

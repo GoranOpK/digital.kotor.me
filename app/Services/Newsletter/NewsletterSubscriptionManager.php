@@ -22,6 +22,10 @@ final class NewsletterSubscriptionManager
 
     public const MESSAGE_ALREADY_ACTIVE = 'Newsletter pretplata je već aktivna.';
 
+    public function __construct(
+        private readonly NewsletterSourceCoverageSync $coverageSync,
+    ) {}
+
     /**
      * @param  list<int>  $organizerIds
      */
@@ -43,14 +47,21 @@ final class NewsletterSubscriptionManager
                 $subscription->user_id = $user->id;
             }
 
+            $isReactivation = $subscription !== null && $subscription->isUnsubscribed();
+
             $subscription->status = NewsletterSubscription::STATUS_ACTIVE;
             $subscription->subscribed_at = now();
             $subscription->unsubscribed_at = null;
             $subscription->unsubscribe_token = Str::random(64);
 
-            $this->applySubmittedScope($subscription, $scopeMode, $organizerIds, $includeWithoutOrganizer);
+            if ($isReactivation) {
+                $this->coverageSync->closeAllOpen($subscription, $subscription->subscribed_at);
+            }
 
-            return $subscription->fresh(['organizers']);
+            $this->applySubmittedScope($subscription, $scopeMode, $organizerIds, $includeWithoutOrganizer);
+            $this->coverageSync->openInitial($subscription, $scopeMode, $organizerIds, $includeWithoutOrganizer);
+
+            return $subscription->fresh(['organizers', 'sourceCoverages']);
         });
     }
 
@@ -70,9 +81,28 @@ final class NewsletterSubscriptionManager
                 throw new RuntimeException('subscription_not_active');
             }
 
-            $this->applySubmittedScope($locked, $scopeMode, $organizerIds, $includeWithoutOrganizer);
+            $locked->load('organizers');
 
-            return $locked->fresh(['organizers']);
+            if ($this->coverageSync->sameEffectivePreferences(
+                $locked,
+                $scopeMode,
+                $organizerIds,
+                $includeWithoutOrganizer
+            )) {
+                $this->applySubmittedScope($locked, $scopeMode, $organizerIds, $includeWithoutOrganizer);
+
+                return $locked->fresh(['organizers', 'sourceCoverages']);
+            }
+
+            $this->applySubmittedScope($locked, $scopeMode, $organizerIds, $includeWithoutOrganizer);
+            $this->coverageSync->syncToMatchCurrentPreferences(
+                $locked,
+                $scopeMode,
+                $organizerIds,
+                $includeWithoutOrganizer
+            );
+
+            return $locked->fresh(['organizers', 'sourceCoverages']);
         });
     }
 
@@ -90,8 +120,9 @@ final class NewsletterSubscriptionManager
             }
 
             $locked->applyUnsubscribeState();
+            $this->coverageSync->closeAllOpen($locked, $locked->unsubscribed_at ?? now());
 
-            return $locked->fresh();
+            return $locked->fresh(['organizers', 'sourceCoverages']);
         });
     }
 

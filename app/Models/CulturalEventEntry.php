@@ -125,7 +125,18 @@ class CulturalEventEntry extends Model
         'created_by' => 'integer',
         'last_modified_by' => 'integer',
         'first_submitted_at' => 'datetime',
+        'first_published_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::updating(function (self $entry): void {
+            $original = $entry->getOriginal('first_published_at');
+            if ($original !== null && $entry->isDirty('first_published_at')) {
+                $entry->first_published_at = $original;
+            }
+        });
+    }
 
     public function isDraft(): bool
     {
