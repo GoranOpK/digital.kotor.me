@@ -7,6 +7,9 @@ use App\Models\CulturalEventChangeProposal;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
 use App\Models\User;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -16,6 +19,7 @@ final class EventWriter
 {
     public function __construct(
         private readonly EventCatalogGuard $catalogGuard,
+        private readonly CulturalActivityEmitter $activityEmitter,
     ) {}
 
     /**
@@ -49,7 +53,7 @@ final class EventWriter
             $this->assertCanSetFeatured(CulturalEventEntry::STATUS_DRAFT, null, hasAktuelnoOccurrence: false);
         }
 
-        return DB::transaction(function () use ($creator, $data, $organizerId, $organizerManualName, $categoryId, $coverMediaId, $tagIds, $featured) {
+        $created = DB::transaction(function () use ($creator, $data, $organizerId, $organizerManualName, $categoryId, $coverMediaId, $tagIds, $featured) {
             $entry = CulturalEventEntry::create([
                 'naslov' => $data['naslov'] ?? null,
                 'opis' => $data['opis'] ?? null,
@@ -69,6 +73,18 @@ final class EventWriter
 
             return $entry->fresh(['organizer', 'category', 'coverMedia', 'tags', 'occurrences']);
         });
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::EV_01,
+            CulturalActivityEventId::once(CulturalActivityCatalog::EV_01, (int) $created->id),
+            $creator,
+            (int) $created->id,
+            $created->created_at ?? now(),
+            ['entry_id' => (int) $created->id],
+            $created->organizer_id !== null ? (int) $created->organizer_id : null,
+        );
+
+        return $created;
     }
 
     /**
@@ -96,10 +112,28 @@ final class EventWriter
 
         if ($entry->isCancelled()) {
             if (array_key_exists('cancellation_reason', $data) && count($data) === 1) {
+                $previous = $entry->cancellation_reason;
                 $entry->cancellation_reason = $data['cancellation_reason'];
                 $entry->save();
+                $fresh = $entry->fresh();
+                if ($fresh !== null && (string) $previous !== (string) $fresh->cancellation_reason) {
+                    $this->activityEmitter->emitUser(
+                        CulturalActivityCatalog::EV_10,
+                        CulturalActivityEventId::repeatable(
+                            CulturalActivityCatalog::EV_10,
+                            (int) $fresh->id,
+                            ['reason_digest' => hash('sha256', (string) $fresh->cancellation_reason)],
+                            $entry->updated_at ?? $fresh->updated_at ?? now()
+                        ),
+                        $actor,
+                        (int) $fresh->id,
+                        $fresh->updated_at ?? now(),
+                        ['entry_id' => (int) $fresh->id],
+                        $fresh->organizer_id !== null ? (int) $fresh->organizer_id : null,
+                    );
+                }
 
-                return $entry->fresh();
+                return $fresh ?? $entry;
             }
 
             throw new CulturalEventDomainException(
@@ -185,7 +219,12 @@ final class EventWriter
             );
         }
 
-        return DB::transaction(function () use ($entry, $actor, $data, $featured, $nextManualName) {
+        $wasPublishedDirect = $entry->isPublished() && $entry->organizer_id === null;
+        $featuredBefore = (bool) $entry->featured;
+        $contentBefore = $this->contentIdentity($entry);
+
+        $persistAt = now();
+        $updated = DB::transaction(function () use ($entry, $actor, $data, $featured, $nextManualName, &$persistAt) {
             /** @var CulturalEventEntry $locked */
             $locked = CulturalEventEntry::query()
                 ->whereKey($entry->id)
@@ -243,6 +282,7 @@ final class EventWriter
 
             $locked->last_modified_by = $actor->id;
             $locked->save();
+            $persistAt = $locked->updated_at?->copy() ?? now();
 
             if (array_key_exists('tag_ids', $data) && is_array($data['tag_ids'])) {
                 $locked->tags()->sync(array_values(array_unique(array_map('intval', $data['tag_ids']))));
@@ -250,6 +290,27 @@ final class EventWriter
 
             return $locked->fresh(['organizer', 'category', 'coverMedia', 'tags', 'occurrences']);
         });
+
+        if ($wasPublishedDirect) {
+            $this->activityEmitter->emitUser(
+                CulturalActivityCatalog::EV_20,
+                CulturalActivityEventId::repeatable(
+                    CulturalActivityCatalog::EV_20,
+                    (int) $updated->id,
+                    ['from' => $contentBefore, 'to' => $this->contentIdentity($updated)],
+                    $persistAt
+                ),
+                $actor,
+                (int) $updated->id,
+                $updated->updated_at ?? now(),
+                ['entry_id' => (int) $updated->id],
+            );
+            if (array_key_exists('featured', $data) && $featuredBefore !== (bool) $updated->featured) {
+                $this->emitFeaturedChange($updated, $actor, (bool) $updated->featured, $persistAt);
+            }
+        }
+
+        return $updated;
     }
 
     /**
@@ -262,7 +323,7 @@ final class EventWriter
         $this->assertEligibleForOrganizerLink($entry);
         $this->catalogGuard->assertOrganizerAllowedForNewLink($organizerId);
 
-        return DB::transaction(function () use ($entry, $actor, $organizerId) {
+        $linked = DB::transaction(function () use ($entry, $actor, $organizerId) {
             /** @var CulturalEventEntry $locked */
             $locked = CulturalEventEntry::query()
                 ->whereKey($entry->id)
@@ -279,6 +340,25 @@ final class EventWriter
 
             return $locked->fresh(['organizer', 'category', 'coverMedia', 'tags', 'occurrences']);
         });
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::ORG_05,
+            CulturalActivityEventId::of(
+                CulturalActivityCatalog::ORG_05,
+                (int) $linked->id,
+                (int) $linked->organizer_id
+            ),
+            $actor,
+            (int) $linked->id,
+            $linked->updated_at ?? now(),
+            [
+                'entry_id' => (int) $linked->id,
+                'organizer_id' => (int) $linked->organizer_id,
+            ],
+            (int) $linked->organizer_id,
+        );
+
+        return $linked;
     }
 
     /**
@@ -287,6 +367,8 @@ final class EventWriter
      */
     public function destroyNeverPublishedDraft(CulturalEventEntry $entry, User $actor): void
     {
+        $entryId = (int) $entry->id;
+
         DB::transaction(function () use ($entry, $actor) {
             /** @var CulturalEventEntry $locked */
             $locked = CulturalEventEntry::query()
@@ -308,6 +390,15 @@ final class EventWriter
             $locked->tags()->detach();
             $locked->delete();
         });
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::EV_21,
+            CulturalActivityEventId::once(CulturalActivityCatalog::EV_21, $entryId),
+            $actor,
+            $entryId,
+            now(),
+            ['entry_id' => $entryId],
+        );
     }
 
     /**
@@ -382,13 +473,65 @@ final class EventWriter
             );
         }
 
-        return DB::transaction(function () use ($entry, $actor, $featured) {
+        $previous = (bool) $entry->featured;
+        $persistAt = now();
+        $updated = DB::transaction(function () use ($entry, $actor, $featured, &$persistAt) {
             $entry->featured = $featured;
             $entry->last_modified_by = $actor->id;
             $entry->save();
+            $persistAt = $entry->updated_at?->copy() ?? now();
 
             return $entry->fresh(['organizer', 'category', 'coverMedia', 'tags', 'occurrences']);
         });
+
+        if ($previous !== (bool) $updated->featured) {
+            $this->emitFeaturedChange($updated, $actor, (bool) $updated->featured, $persistAt);
+        }
+
+        return $updated;
+    }
+
+    private function emitFeaturedChange(
+        CulturalEventEntry $entry,
+        User $actor,
+        bool $featured,
+        \Carbon\CarbonInterface $persistAt,
+    ): void {
+        $catalogId = $featured ? CulturalActivityCatalog::EV_07 : CulturalActivityCatalog::EV_08;
+        $this->activityEmitter->emitUser(
+            $catalogId,
+            CulturalActivityEventId::repeatable(
+                $catalogId,
+                (int) $entry->id,
+                ['featured' => $featured ? 1 : 0],
+                $persistAt
+            ),
+            $actor,
+            (int) $entry->id,
+            $persistAt,
+            ['entry_id' => (int) $entry->id],
+            $entry->organizer_id !== null ? (int) $entry->organizer_id : null,
+        );
+    }
+
+    /**
+     * @return array<string, scalar|null|list<int>>
+     */
+    private function contentIdentity(CulturalEventEntry $entry): array
+    {
+        $tagIds = $entry->relationLoaded('tags')
+            ? $entry->tags->pluck('id')->map(fn ($id) => (int) $id)->sort()->values()->all()
+            : $entry->tags()->pluck('cultural_tags.id')->map(fn ($id) => (int) $id)->sort()->values()->all();
+
+        return [
+            'naslov' => (string) $entry->naslov,
+            'opis' => (string) ($entry->opis ?? ''),
+            'category_id' => $entry->category_id !== null ? (int) $entry->category_id : null,
+            'cover_media_id' => $entry->cover_media_id !== null ? (int) $entry->cover_media_id : null,
+            'featured' => (bool) $entry->featured ? 1 : 0,
+            'organizer_id' => $entry->organizer_id !== null ? (int) $entry->organizer_id : null,
+            'tag_ids' => $tagIds,
+        ];
     }
 
     /**

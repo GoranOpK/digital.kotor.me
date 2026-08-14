@@ -19,6 +19,10 @@ use Throwable;
  */
 final class ModeratorRequestSubmissionService
 {
+    public function __construct(
+        private readonly \App\Services\CulturalActivity\CulturalActivityEmitter $activityEmitter,
+    ) {}
+
     /**
      * @param  array{
      *     type: string,
@@ -81,6 +85,22 @@ final class ModeratorRequestSubmissionService
             $this->sendInvitation($request, $organizer);
         }
 
+        $this->activityEmitter->emitUser(
+            \App\Services\CulturalActivity\CulturalActivityCatalog::MOD_01,
+            \App\Services\CulturalActivity\CulturalActivityEventId::once(
+                \App\Services\CulturalActivity\CulturalActivityCatalog::MOD_01,
+                (int) $request->id
+            ),
+            $submitter,
+            (int) $request->id,
+            $request->created_at ?? now(),
+            [
+                'request_id' => (int) $request->id,
+                'organizer_id' => (int) $organizer->id,
+            ],
+            (int) $organizer->id,
+        );
+
         return $request;
     }
 
@@ -91,7 +111,7 @@ final class ModeratorRequestSubmissionService
     {
         $targetId = (int) $data['target_user_id'];
 
-        return DB::transaction(function () use ($submitter, $organizer, $targetId) {
+        $created = DB::transaction(function () use ($submitter, $organizer, $targetId) {
             $isTargetActive = CulturalModeratorAuthorization::query()
                 ->where('organizer_id', $organizer->id)
                 ->where('user_id', $targetId)
@@ -118,6 +138,24 @@ final class ModeratorRequestSubmissionService
                 'status' => CulturalModeratorRequest::STATUS_SUBMITTED,
             ]);
         });
+
+        $this->activityEmitter->emitUser(
+            \App\Services\CulturalActivity\CulturalActivityCatalog::MOD_04,
+            \App\Services\CulturalActivity\CulturalActivityEventId::once(
+                \App\Services\CulturalActivity\CulturalActivityCatalog::MOD_04,
+                (int) $created->id
+            ),
+            $submitter,
+            (int) $created->id,
+            $created->created_at ?? now(),
+            [
+                'request_id' => (int) $created->id,
+                'organizer_id' => (int) $organizer->id,
+            ],
+            (int) $organizer->id,
+        );
+
+        return $created;
     }
 
     private function assertNoUnfinishedAddDuplicate(int $organizerId, string $normalizedEmail): void

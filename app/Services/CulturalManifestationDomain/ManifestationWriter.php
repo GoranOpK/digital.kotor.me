@@ -6,6 +6,9 @@ use App\Exceptions\CulturalEventDomainException;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalManifestation;
 use App\Models\User;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use Illuminate\Support\Facades\DB;
 
 final class ManifestationWriter
@@ -24,6 +27,7 @@ final class ManifestationWriter
 
     public function __construct(
         private readonly ManifestationCatalogGuard $catalogGuard,
+        private readonly CulturalActivityEmitter $activityEmitter,
     ) {}
 
     /**
@@ -50,7 +54,7 @@ final class ManifestationWriter
         $this->catalogGuard->assertOrganizerAllowedForNewLink($organizerId);
         $this->catalogGuard->assertCoverMediaAllowedForNewLink($coverMediaId);
 
-        return DB::transaction(function () use ($creator, $data, $naziv, $organizerId, $coverMediaId, $eventIds) {
+        $created = DB::transaction(function () use ($creator, $data, $naziv, $organizerId, $coverMediaId, $eventIds) {
             $manifestation = CulturalManifestation::create([
                 'naziv' => $naziv,
                 'opis' => $this->normalizeNullableText($data['opis'] ?? null),
@@ -68,6 +72,18 @@ final class ManifestationWriter
 
             return $manifestation->fresh(['events', 'organizer', 'coverMedia']);
         });
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::MF_01,
+            CulturalActivityEventId::once(CulturalActivityCatalog::MF_01, (int) $created->id),
+            $creator,
+            (int) $created->id,
+            $created->created_at ?? now(),
+            ['manifestation_id' => (int) $created->id],
+            $created->organizer_id !== null ? (int) $created->organizer_id : null,
+        );
+
+        return $created;
     }
 
     /**
@@ -98,7 +114,12 @@ final class ManifestationWriter
             $this->catalogGuard->assertCoverMediaAllowedForNewLink($coverMediaId);
         }
 
-        return DB::transaction(function () use ($manifestation, $actor, $data, $organizerId, $coverMediaId) {
+        $webBefore = (string) ($manifestation->web_stranica ?? '');
+        $organizerBefore = $manifestation->organizer_id !== null ? (int) $manifestation->organizer_id : null;
+        $coverBefore = $manifestation->cover_media_id !== null ? (int) $manifestation->cover_media_id : null;
+
+        $persistAt = now();
+        $updated = DB::transaction(function () use ($manifestation, $actor, $data, $organizerId, $coverMediaId, &$persistAt) {
             /** @var CulturalManifestation $locked */
             $locked = CulturalManifestation::query()
                 ->whereKey($manifestation->id)
@@ -133,14 +154,81 @@ final class ManifestationWriter
 
             $locked->last_modified_by = $actor->id;
             $locked->save();
+            $persistAt = $locked->updated_at?->copy() ?? now();
 
             return $locked->fresh(['events', 'organizer', 'coverMedia']);
         });
+
+        if ($organizerChanging) {
+            $this->activityEmitter->emitUser(
+                CulturalActivityCatalog::MF_10,
+                CulturalActivityEventId::repeatable(
+                    CulturalActivityCatalog::MF_10,
+                    (int) $updated->id,
+                    [
+                        'from' => $organizerBefore,
+                        'to' => $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
+                    ],
+                    $persistAt
+                ),
+                $actor,
+                (int) $updated->id,
+                $persistAt,
+                [
+                    'manifestation_id' => (int) $updated->id,
+                    'organizer_id' => $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
+                ],
+                $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
+            );
+        }
+        if ($coverChanging) {
+            $this->activityEmitter->emitUser(
+                CulturalActivityCatalog::MF_11,
+                CulturalActivityEventId::repeatable(
+                    CulturalActivityCatalog::MF_11,
+                    (int) $updated->id,
+                    [
+                        'from' => $coverBefore,
+                        'to' => $updated->cover_media_id !== null ? (int) $updated->cover_media_id : null,
+                    ],
+                    $persistAt
+                ),
+                $actor,
+                (int) $updated->id,
+                $persistAt,
+                ['manifestation_id' => (int) $updated->id],
+                $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
+            );
+        }
+        if (array_key_exists('web_stranica', $data)
+            && $webBefore !== (string) ($updated->web_stranica ?? '')
+        ) {
+            $this->activityEmitter->emitUser(
+                CulturalActivityCatalog::MF_12,
+                CulturalActivityEventId::repeatable(
+                    CulturalActivityCatalog::MF_12,
+                    (int) $updated->id,
+                    [
+                        'from' => $webBefore,
+                        'to' => (string) ($updated->web_stranica ?? ''),
+                    ],
+                    $persistAt
+                ),
+                $actor,
+                (int) $updated->id,
+                $persistAt,
+                ['manifestation_id' => (int) $updated->id],
+                $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
+            );
+        }
+
+        return $updated;
     }
 
     public function linkEvent(CulturalManifestation $manifestation, int $eventEntryId, User $actor): CulturalManifestation
     {
-        return DB::transaction(function () use ($manifestation, $eventEntryId, $actor) {
+        $persistAt = now();
+        $linked = DB::transaction(function () use ($manifestation, $eventEntryId, $actor, &$persistAt) {
             /** @var CulturalManifestation $locked */
             $locked = CulturalManifestation::query()
                 ->whereKey($manifestation->id)
@@ -151,14 +239,36 @@ final class ManifestationWriter
             $this->linkEventsInternal($locked, [$eventEntryId], $actor->id);
             $locked->last_modified_by = $actor->id;
             $locked->save();
+            $persistAt = $locked->updated_at?->copy() ?? now();
 
             return $locked->fresh(['events', 'events.organizer']);
         });
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::MF_07,
+            CulturalActivityEventId::repeatable(
+                CulturalActivityCatalog::MF_07,
+                (int) $linked->id,
+                ['entry_id' => $eventEntryId],
+                $persistAt
+            ),
+            $actor,
+            (int) $linked->id,
+            $linked->updated_at ?? now(),
+            [
+                'manifestation_id' => (int) $linked->id,
+                'entry_id' => $eventEntryId,
+            ],
+            $linked->organizer_id !== null ? (int) $linked->organizer_id : null,
+        );
+
+        return $linked;
     }
 
     public function unlinkEvent(CulturalManifestation $manifestation, int $eventEntryId, User $actor): CulturalManifestation
     {
-        return DB::transaction(function () use ($manifestation, $eventEntryId, $actor) {
+        $persistAt = now();
+        $unlinked = DB::transaction(function () use ($manifestation, $eventEntryId, $actor, &$persistAt) {
             /** @var CulturalManifestation $locked */
             $locked = CulturalManifestation::query()
                 ->whereKey($manifestation->id)
@@ -184,9 +294,30 @@ final class ManifestationWriter
 
             $locked->last_modified_by = $actor->id;
             $locked->save();
+            $persistAt = $locked->updated_at?->copy() ?? now();
 
             return $locked->fresh(['events', 'events.organizer']);
         });
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::MF_08,
+            CulturalActivityEventId::repeatable(
+                CulturalActivityCatalog::MF_08,
+                (int) $unlinked->id,
+                ['entry_id' => $eventEntryId],
+                $persistAt
+            ),
+            $actor,
+            (int) $unlinked->id,
+            $unlinked->updated_at ?? now(),
+            [
+                'manifestation_id' => (int) $unlinked->id,
+                'entry_id' => $eventEntryId,
+            ],
+            $unlinked->organizer_id !== null ? (int) $unlinked->organizer_id : null,
+        );
+
+        return $unlinked;
     }
 
     /**
@@ -197,7 +328,9 @@ final class ManifestationWriter
         int $eventEntryId,
         User $actor,
     ): CulturalManifestation {
-        return DB::transaction(function () use ($targetManifestation, $eventEntryId, $actor) {
+        $fromId = 0;
+        $persistAt = now();
+        $moved = DB::transaction(function () use ($targetManifestation, $eventEntryId, $actor, &$fromId, &$persistAt) {
             /** @var CulturalManifestation $target */
             $target = CulturalManifestation::query()
                 ->whereKey($targetManifestation->id)
@@ -224,6 +357,8 @@ final class ManifestationWriter
                 throw new CulturalEventDomainException('Događaj je već povezan sa ovom Manifestacijom.');
             }
 
+            $fromId = (int) $entry->manifestation_id;
+
             /** @var CulturalManifestation $source */
             $source = CulturalManifestation::query()
                 ->whereKey($entry->manifestation_id)
@@ -241,9 +376,35 @@ final class ManifestationWriter
 
             $target->last_modified_by = $actor->id;
             $target->save();
+            $persistAt = $target->updated_at?->copy() ?? now();
 
             return $target->fresh(['events', 'events.organizer']);
         });
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::MF_09,
+            CulturalActivityEventId::repeatable(
+                CulturalActivityCatalog::MF_09,
+                (int) $moved->id,
+                [
+                    'from' => $fromId,
+                    'to' => (int) $moved->id,
+                    'entry_id' => $eventEntryId,
+                ],
+                $persistAt
+            ),
+            $actor,
+            (int) $moved->id,
+            $moved->updated_at ?? now(),
+            [
+                'from_id' => $fromId,
+                'to_id' => (int) $moved->id,
+                'entry_id' => $eventEntryId,
+            ],
+            $moved->organizer_id !== null ? (int) $moved->organizer_id : null,
+        );
+
+        return $moved;
     }
 
     public static function isEventEligibleForNewLink(CulturalEventEntry $entry): bool

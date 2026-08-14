@@ -7,10 +7,10 @@
 **Funkcionalna cjelina:** Evidencija aktivnosti  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** USVOJEN  
-**Verzija:** 1.0.3
+**Verzija:** 1.0.6
 **Datum:** 2026-08-14
 
-**Implementacija FT-003:** **F8-02 FOUNDATION IMPLEMENTED (local)** — centralni store/idempotency/immutability/safe facade. Emiteri TS12-* i Admin UI = **NOT STARTED**. Nije Technical Overview kompletnog FT-003.
+**Implementacija FT-003:** **F8-03 CANONICAL EMITTERS IMPLEMENTED (local)** — TS12-* povezani na poslovne tokove preko `CulturalActivityEmitter` + safe recorder. Katalog §7 **KEEP**. V1 audit = **best-effort / failure-isolated** (nema durable replay). `repeatable()` uniqueness = known V1 limitation. Admin UI = **NOT STARTED**. Nije Technical Overview kompletnog FT-003.
 
 ---
 
@@ -22,6 +22,9 @@
 | 1.0.1 | 2026-08-07 | PATCH-001: završna tehnička usklađenja — jedinstvenost `(source_module, event_id)`; neuspjeh Evidencije ne poništava poslovnu radnju + pouzdana ponovna obrada; kanonski emiter; istorijski integritet izvršioca. Bez novih poslovnih odluka; bez širenja V1; bez izmjene BM/FS/FR/ostalih TS. |
 | 1.0.2 | 2026-08-14 | **F8-01 canonical freeze:** status hygiene (uklonjen `(DRAFT)` / Nacrt); uklonjen stale FR-GAP; V1 katalog usklađen sa FS PATCH-FS-074; implementation-ready ugovor (identity, privacy, immutability, failure isolation, Admin V1, TM-AL). **FT-003 implementation = NOT STARTED.** Bez izmjene BM. Bez izmjene implementacije. |
 | 1.0.3 | 2026-08-14 | **F8-02 status only:** centralni store foundation (`cultural_activity_records`) **IMPLEMENTED (local)**; katalog §7 **KEEP**; emiteri/Admin UI i dalje NOT STARTED. Pozivni contract: safe recorder nakon uspješnog poslovnog persist-a, van poslovne transakcije. Bez izmjene BM/FS kataloga. |
+| 1.0.4 | 2026-08-14 | **F8-03 status only:** kanonski emiteri TS12-* **IMPLEMENTED (local)**; katalog §7 **KEEP**; Admin UI NOT STARTED. Bez izmjene BM/FS kataloga. |
+| 1.0.5 | 2026-08-14 | **V1 retry semantics clarification:** failure isolation + idempotent ingest (`source_module` + `event_id`). V1 **ne** garantuje durable replay neupisanog audit događaja nakon završetka procesa. Queue/outbox i dalje nije V1 obaveza. Katalog §7 **KEEP**. Bez izmjene BM/FS. |
+| 1.0.6 | 2026-08-14 | **F8-03 PO accept consistency:** `repeatable()` **KNOWN V1 LIMITATION** — nema matematičke/globalne uniqueness garancije kada su katalog ID, entity identity, canonical payload i persist timestamp do µs identični. DB unique `(source_module, event_id)` **KEEP**. Katalog §7 **KEEP**. Bez izmjene BM/FS. |
 
 Napomena:
 
@@ -39,6 +42,9 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.1 | 2026-08-07 | PATCH-001: (1) jedinstvenost audit događaja = `source_module` + `event_id`; (2) neuspjeh prijema/evidentiranja ne poništava poslovnu radnju; pouzdana ponovna obrada; (3) jedan kanonski emiter po poslovnoj radnji; (4) istorijski izvršilac nepromjenjiv nakon deaktivacije naloga. Dopunjeni §3, §5–6, §8, §13, §14–16, §19. |
 | 1.0.2 | 2026-08-14 | F8-01: USVOJEN bez DRAFT/Nacrt kontradikcije; FR-GAP uklonjen; §7 kanonska matrica + exclusions; §8.6 identity; §6.3 privacy; §11 paginacija; §20 TM-AL; implementacija pending. |
 | 1.0.3 | 2026-08-14 | F8-02 status: centralni store foundation; katalog KEEP; emiteri/UI pending. |
+| 1.0.4 | 2026-08-14 | F8-03 status: kanonski TS12-* emiteri **IMPLEMENTED (local)**; katalog KEEP; Admin UI pending. |
+| 1.0.5 | 2026-08-14 | V1 retry: best-effort / failure-isolated; idempotent ingest; **nema** durable replay garancije; katalog KEEP. |
+| 1.0.6 | 2026-08-14 | F8-03 PO accept: `repeatable()` uniqueness limitation; DB unique KEEP; katalog KEEP. |
 
 ---
 
@@ -203,7 +209,7 @@ Izvorni moduli **ne** upravljaju sadržajem, integritetom niti životnim cikluso
 3. **Jedan poslovni događaj → jedan (logički) audit zapis** (uz pravila dva zapisa pri odobrenju Organizatora — BR-179).
 4. **Idempotentni prijem** — jedinstvenost po kombinaciji `source_module` + `event_id`; ponovni prijem iste kombinacije ne stvara novi zapis.
 5. **Kanonski emiter** — svaka poslovno značajna radnja ima tačno jednog emitera audit događaja.
-6. **Izolacija neuspjeha** — neuspjeh Evidencije ne poništava već završenu poslovnu radnju; omogućena je pouzdana ponovna obrada.
+6. **Izolacija neuspjeha** — neuspjeh Evidencije ne poništava već završenu poslovnu radnju. Ponovni prijem iste već konstruisane kombinacije `source_module` + `event_id` je idempotentan. V1 **ne** garantuje durable replay neupisanog događaja nakon završetka procesa.
 7. **Nepromjenjivost** — nema update/delete kroz redovne tokove; istorijski izvršilac ostaje sačuvan.
 8. **Nezavisnost** — evidencija ne mijenja poslovna prava ni tokove.
 9. **Sistem ≠ korisnik** — automatske radnje imaju tip izvršioca Sistem.
@@ -398,7 +404,7 @@ Kanonski emiter u koloni Source module je **vlasnik lifecycle-a**. Ako portal (T
 4. TS-012 upisuje audit zapis.
 5. Ponovni prijem iste kombinacije **`source_module` + `event_id`** **ne** stvara novi zapis (tehnička zaštita od duplikata).
 6. **Neuspjeh** prijema ili trajnog evidentiranja audit događaja **ne smije** retroaktivno poništiti niti promijeniti već uspješno završenu poslovnu radnju.
-7. Sistem mora omogućiti **pouzdanu ponovnu obradu** audit događaja čije evidentiranje nije uspješno završeno (bez propisivanja konkretne tehnologije).
+7. Ako isti već konstruisani audit događaj (`source_module` + `event_id`) ponovo stigne, prijem je **idempotentan** (nema drugog zapisa). V1 **ne** obavezuje durable replay nakon završetka procesa.
 
 ## 8.2 Kanonski emiter
 
@@ -443,33 +449,44 @@ Kanonski ključ jedinstvenosti: kombinacija **`source_module` + `event_id`** (ev
 
 Globalni UUID **nije** obavezno pravilo.
 
-Implementacioni izbor (indeks, upsert, outbox, retry) nije propisan; semantika jeste:
+Implementacioni izbor (indeks, upsert) nije propisan; semantika V1 jeste:
 
-* ista kombinacija → najviše jedan zapis;
-* neuspješno evidentiranje → pouzdana ponovna obrada istog događaja.
+* ista već konstruisana kombinacija `source_module` + `event_id` → najviše jedan zapis (**idempotent ingest**);
+* neuspješno evidentiranje **ne** rollbackuje poslovnu radnju;
+* V1 **ne** uvodi outbox, queue niti pending tabelu;
+* V1 **ne** garantuje da će neupisani audit događaj kasnije biti rekonstruisan i ponovo poslat nakon što se proces/request završi.
 
 Izuzetak semantike BR-179: odobrenje kreiranja Organizatora proizvodi **dva** događaja (dva `event_id` kod istog kanonskog emitera), ne jedan.
 
-## 8.6 Identitet `event_id` i retry
+## 8.6 Identitet `event_id` (V1)
 
-1. `event_id` dodjeljuje **kanonski emiter**, jedinstven **unutar** `source_module` (nije obavezan globalni UUID).
-2. `event_id` mora biti **deterministički** za isto poslovno izvršenje, npr. `TS12-EV-09:{entry_id}:{cancelled_at}` ili `TS12-NL-05:{cycle_id}`.
-3. Random UUID je dozvoljen **samo** ako je isti identifikator sačuvan uz poslovnu radnju **prije** emitovanja. V1 **ne** uvodi queue/outbox kao obaveznu arhitekturu.
-4. Retry istog poslovnog izvršenja šalje **isti** `source_module` + `event_id` → prijem je no-op (nema novog zapisa).
-5. Dvije različite radnje nad istim entitetom (npr. postpone pa cancel) = **dva** `event_id`.
-6. Korekcija pogrešno emitovanog zapisa **nije** UPDATE starog; ako poslovna korekcija postoji, to je **novi** audit događaj. Pogrešan emit bez poslovne korekcije ostaje u evidenciji (nema delete API).
+1. `event_id` dodjeljuje **kanonski emiter**, jedinstven **unutar** `source_module` **na nivou store-a** (nije obavezan globalni UUID). Jedinstvenost zapisa je DB ugovor `(source_module, event_id)`.
+2. `event_id` **treba** razlikovati dvije poslovne radnje čiji se identity input razlikuje (katalog ID, entitet/kontekst, canonical payload i/ili persist vrijeme). V1 **ne** daje matematičku/globalnu uniqueness garanciju kada su svi ti ulazi identični (vidi known limitation za `repeatable()`).
+3. `event_id` mora biti **deterministički unutar konkretnog emit pokušaja**. Ako se ista već poznata poslovna identiteta ponovo emituje (npr. `once()` na request/cycle/create id), koristi se isti `event_id` — **ne** random per-call ID.
+4. Random UUID je dozvoljen **samo** ako je isti identifikator sačuvan uz poslovnu radnju **prije** emitovanja. V1 **ne** uvodi random UUID radi uniqueness.
+5. Ponovni prijem već konstruisanog `source_module` + `event_id` → prijem je no-op (nema novog zapisa) — **ingest idempotency**.
+6. Dvije radnje nad istim entitetom koje se razlikuju katalogom, payloadom ili persist vremenom (npr. postpone pa cancel) = **dva** `event_id`.
+7. Korekcija pogrešno emitovanog zapisa **nije** UPDATE starog; ako poslovna korekcija postoji, to je **novi** audit događaj. Pogrešan emit bez poslovne korekcije ostaje u evidenciji (nema delete API).
+8. V1 **ne tvrdi** da se `event_id` može rekonstruisati nakon potpunog audit failure-a i završetka procesa ako identitet događaja nije trajno sačuvan u poslovnom modelu (**durable replay nije V1 garancija**).
 
-## 8.7 Failure isolation (bez queue obaveze)
+**Known V1 limitation (`repeatable()`):** identitet se izvodi iz TS12 katalog ID-a, business entity/context identiteta, canonical payload digest-a i persist vremena do mikrosekunde. Dvije odvojene poslovne radnje sa potpuno istim tim ulazima mogu proizvesti isti `event_id`. To **nije** durable retry problem, **nije** razlog za migraciju, outbox ni random UUID, i **ne** mijenja DB unique `(source_module, event_id)`.
 
-Neuspjeh prijema/store-a **ne** rollbackuje poslovnu radnju (PATCH-001).
+## 8.7 Failure isolation — V1 best-effort (bez durable replay)
 
-Obavezno ponašanje:
+Neuspjeh prijema/store-a **ne** rollbackuje poslovnu radnju (PATCH-001; BM-AL-05; BR-170).
 
-* tehnički log neuspjeha (nije Audit zapis);
-* omogućiti pouzdan retry **istog** `event_id`;
-* duplicate protection na ingestu.
+**V1 semantika:**
 
-**CANON SILENT:** sinhroni emit, kasniji command replay ili druga tehnika — implementacioni izbor. Queue/outbox **nije** automatski uveden. Nova arhitektonska obaveza queue-a zahtijevala bi PO odluku.
+* Centralna Evidencija aktivnosti pokušava upis **odmah** nakon uspješne poslovne radnje.
+* Neuspjeh evidencije **ne smije** oboriti poslovnu radnju.
+* Neuspjeh se **tehnički loguje** (nije Audit zapis).
+* Store ostaje idempotentan za ponovljeni prijem istog `source_module` + `event_id`.
+* V1 **ne** garantuje trajni replay neupisanog audit događaja nakon završetka procesa.
+* Queue / outbox / pending tabela **nije** V1 obaveza i **nije** uvedena.
+
+**Known V1 limitation:** audit događaj koji ne uspije da se upiše nakon business success-a nema garantovan durable replay u istoj verziji sistema. Tehnički log ostaje jedini failure signal. To **nije** „eventualno će sigurno biti upisan“.
+
+Durable outbox/retry (isti `event_id` nakon gubitka procesa) je eventualni **V1.1/V2 backlog**, ne F8-03 acceptance criterion.
 
 ---
 
@@ -563,7 +580,7 @@ Poslovna radnja (uspješno sačuvana)
   → Audit događaj (source_module + event_id)
   → TS-012 prijem + validacija + idempotentnost
   → Trajni audit zapis
-     (neuspjeh ovdje ne poništava poslovnu radnju; omogućena ponovna obrada)
+     (neuspjeh ovdje ne poništava poslovnu radnju; V1 best-effort, bez durable replay)
   → Admin: minimalni hronološki pristup
 ```
 
@@ -638,7 +655,7 @@ AC-AL-13 · Newsletter aktivacije/slanja ulaze po BR-185; ne dupliraju katalog D
 AC-AL-14 · Emisija se ne prihvata za radnje van V1 kataloga (npr. pregled, sitne izmjene, auth platforme).  
 AC-AL-15 · Lokalni audit trag ≠ centralni zapis.  
 AC-AL-16 · Neuspjeh prijema ili trajnog evidentiranja ne poništava niti mijenja već uspješno završenu poslovnu radnju.  
-AC-AL-17 · Audit događaj čije evidentiranje nije uspjelo može se pouzdano ponovo obraditi bez stvaranja duplikata nakon uspjeha.  
+AC-AL-17 · Ponovni prijem već konstruisanog `source_module` + `event_id` ne stvara duplikat. V1 **ne** zahtijeva reconstructed retry nakon gubitka procesa.
 AC-AL-18 · Ista poslovna radnja ne proizvodi dva audit događaja iz različitih emitera (jedan kanonski emiter).  
 AC-AL-19 · Deaktivacija ili promjena statusa korisničkog naloga ne mijenja niti briše `actor_user_id` već evidentiranog zapisa.  
 
@@ -675,7 +692,7 @@ Napomena: način prenosa događaja (sinhrono/asinhrono), tačan oblik skladište
 
 1. Emisiju vezati na uspješan commit poslovne transakcije, ne na UI klik.
 2. Idempotentnost držati na kombinaciji `source_module` + `event_id` (deterministički `event_id`; ne zahtijevati globalni UUID).
-3. Neuspjeh Evidencije ne smije rollback-ovati poslovnu radnju; omogućiti pouzdan retry istog `event_id`. Queue/outbox nije V1 obaveza.
+3. Neuspjeh Evidencije ne smije rollback-ovati poslovnu radnju. Idempotent ingest za isti već konstruisani `event_id`. Queue/outbox **nije** V1 obaveza. Durable replay nakon završetka procesa **nije** V1 garancija.
 4. Jedan kanonski emiter po poslovnoj radnji — bez paralelne emisije iz TS-010 i TS-003 za istu radnju.
 5. Ne kreirati korisnički nalog za Sistem.
 6. Sačuvati istorijski `actor_user_id`; deaktivacija ili promjena imena/uloge ne smije narušiti audit zapis.
@@ -684,7 +701,7 @@ Napomena: način prenosa događaja (sinhrono/asinhrono), tačan oblik skladište
 9. Admin V1 = hronološki pristup + paginacija; filteri ostaju OOS.
 10. PATCH-053: ne emitovati „ponovnu objavu“ otkazanog događaja.
 11. Nema aplikacionog UPDATE/DELETE API-ja za audit zapise; Admin samo čita.
-12. **FT-003:** F8-02 = centralni store; F8-03 emiteri i Admin UI nisu u ovom paketu.
+12. **FT-003:** F8-02 = centralni store; F8-03 = kanonski emiteri (local); Admin UI = F8-04 (nije započet).
 13. Safe facade (`CulturalActivityRecorder::record`) zvati **nakon** uspješnog persist-a poslovne radnje; ne u istoj DB transakciji čiji bi rollback poništio poslovni zapis zbog audit greške.
 
 ---
@@ -697,7 +714,7 @@ Bez test koda u ovom paketu. Naredna implementacija mora dokazati:
 | ----- | -------- | -------- |
 | TM-AL-01 | Validan emit iz kataloga | Trajni zapis; polja §6.1 |
 | TM-AL-02 | Duplicate `source_module` + `event_id` | Nema drugog zapisa |
-| TM-AL-03 | Retry nakon neuspjelog store-a sa istim `event_id` | Jedan zapis nakon uspjeha |
+| TM-AL-03 | Ponovni prijem **već konstruisanog** `source_module` + `event_id` (isti input) | Najviše jedan zapis (idempotent ingest). **Nije** reconstructed retry nakon gubitka procesa |
 | TM-AL-04 | Pokušaj UPDATE audit zapisa | Odbijeno / nema API |
 | TM-AL-05 | Pokušaj DELETE audit zapisa | Odbijeno / nema API |
 | TM-AL-06 | User actor | `actor_type=user` + `actor_user_id` |

@@ -4,6 +4,9 @@ namespace App\Services\Newsletter;
 
 use App\Models\NewsletterSubscription;
 use App\Models\User;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -24,6 +27,7 @@ final class NewsletterSubscriptionManager
 
     public function __construct(
         private readonly NewsletterSourceCoverageSync $coverageSync,
+        private readonly CulturalActivityEmitter $activityEmitter,
     ) {}
 
     /**
@@ -31,7 +35,9 @@ final class NewsletterSubscriptionManager
      */
     public function activate(User $user, string $scopeMode, array $organizerIds, bool $includeWithoutOrganizer): NewsletterSubscription
     {
-        return DB::transaction(function () use ($user, $scopeMode, $organizerIds, $includeWithoutOrganizer) {
+        $kind = 'activate';
+        $persistAt = now();
+        $subscription = DB::transaction(function () use ($user, $scopeMode, $organizerIds, $includeWithoutOrganizer, &$kind, &$persistAt) {
             /** @var NewsletterSubscription|null $subscription */
             $subscription = NewsletterSubscription::query()
                 ->where('user_id', $user->id)
@@ -55,14 +61,37 @@ final class NewsletterSubscriptionManager
             $subscription->unsubscribe_token = Str::random(64);
 
             if ($isReactivation) {
+                $kind = 'reactivate';
                 $this->coverageSync->closeAllOpen($subscription, $subscription->subscribed_at);
             }
 
             $this->applySubmittedScope($subscription, $scopeMode, $organizerIds, $includeWithoutOrganizer);
             $this->coverageSync->openInitial($subscription, $scopeMode, $organizerIds, $includeWithoutOrganizer);
+            $persistAt = $subscription->subscribed_at?->copy() ?? now();
 
             return $subscription->fresh(['organizers', 'sourceCoverages']);
         });
+
+        $catalogId = $kind === 'reactivate'
+            ? CulturalActivityCatalog::NL_03
+            : CulturalActivityCatalog::NL_01;
+        $this->activityEmitter->emitUser(
+            $catalogId,
+            $kind === 'reactivate'
+                ? CulturalActivityEventId::repeatable(
+                    $catalogId,
+                    (int) $subscription->id,
+                    ['kind' => 'reactivate'],
+                    $persistAt
+                )
+                : CulturalActivityEventId::once($catalogId, (int) $subscription->id),
+            $user,
+            (int) $subscription->id,
+            $subscription->subscribed_at ?? now(),
+            ['subscription_id' => (int) $subscription->id],
+        );
+
+        return $subscription;
     }
 
     /**
@@ -70,7 +99,10 @@ final class NewsletterSubscriptionManager
      */
     public function updatePreferences(NewsletterSubscription $subscription, string $scopeMode, array $organizerIds, bool $includeWithoutOrganizer): NewsletterSubscription
     {
-        return DB::transaction(function () use ($subscription, $scopeMode, $organizerIds, $includeWithoutOrganizer) {
+        $changed = true;
+        $beforePrefs = $this->preferenceIdentity($subscription);
+        $persistAt = now();
+        $updated = DB::transaction(function () use ($subscription, $scopeMode, $organizerIds, $includeWithoutOrganizer, &$changed, &$persistAt) {
             /** @var NewsletterSubscription $locked */
             $locked = NewsletterSubscription::query()
                 ->whereKey($subscription->id)
@@ -89,6 +121,7 @@ final class NewsletterSubscriptionManager
                 $organizerIds,
                 $includeWithoutOrganizer
             )) {
+                $changed = false;
                 $this->applySubmittedScope($locked, $scopeMode, $organizerIds, $includeWithoutOrganizer);
 
                 return $locked->fresh(['organizers', 'sourceCoverages']);
@@ -101,14 +134,40 @@ final class NewsletterSubscriptionManager
                 $organizerIds,
                 $includeWithoutOrganizer
             );
+            $persistAt = $locked->updated_at?->copy() ?? now();
 
             return $locked->fresh(['organizers', 'sourceCoverages']);
         });
+
+        if ($changed) {
+            $user = $updated->user;
+            if ($user instanceof User) {
+                $this->activityEmitter->emitUser(
+                    CulturalActivityCatalog::NL_04,
+                    CulturalActivityEventId::repeatable(
+                        CulturalActivityCatalog::NL_04,
+                        (int) $updated->id,
+                        [
+                            'from' => $beforePrefs,
+                            'to' => $this->preferenceIdentity($updated, $scopeMode, $organizerIds, $includeWithoutOrganizer),
+                        ],
+                        $persistAt
+                    ),
+                    $user,
+                    (int) $updated->id,
+                    $updated->updated_at ?? now(),
+                    ['subscription_id' => (int) $updated->id],
+                );
+            }
+        }
+
+        return $updated;
     }
 
     public function unsubscribe(NewsletterSubscription $subscription): NewsletterSubscription
     {
-        return DB::transaction(function () use ($subscription) {
+        $persistAt = now();
+        $unsubscribed = DB::transaction(function () use ($subscription, &$persistAt) {
             /** @var NewsletterSubscription $locked */
             $locked = NewsletterSubscription::query()
                 ->whereKey($subscription->id)
@@ -121,9 +180,29 @@ final class NewsletterSubscriptionManager
 
             $locked->applyUnsubscribeState();
             $this->coverageSync->closeAllOpen($locked, $locked->unsubscribed_at ?? now());
+            $persistAt = $locked->unsubscribed_at?->copy() ?? now();
 
             return $locked->fresh(['organizers', 'sourceCoverages']);
         });
+
+        $user = $unsubscribed->user;
+        if ($user instanceof User) {
+            $this->activityEmitter->emitUser(
+                CulturalActivityCatalog::NL_02,
+                CulturalActivityEventId::repeatable(
+                    CulturalActivityCatalog::NL_02,
+                    (int) $unsubscribed->id,
+                    ['kind' => 'unsubscribe'],
+                    $persistAt
+                ),
+                $user,
+                (int) $unsubscribed->id,
+                $unsubscribed->unsubscribed_at ?? now(),
+                ['subscription_id' => (int) $unsubscribed->id],
+            );
+        }
+
+        return $unsubscribed;
     }
 
     /**
@@ -142,5 +221,35 @@ final class NewsletterSubscriptionManager
         }
 
         $subscription->applySelectedOrganizerScope($organizerIds, $includeWithoutOrganizer);
+    }
+
+    /**
+     * @param  list<int>  $organizerIds
+     * @return array<string, scalar|list<int>>
+     */
+    private function preferenceIdentity(
+        NewsletterSubscription $subscription,
+        ?string $scopeMode = null,
+        ?array $organizerIds = null,
+        ?bool $includeWithoutOrganizer = null,
+    ): array {
+        $scope = $scopeMode ?? (string) $subscription->scope_mode;
+        $without = $includeWithoutOrganizer ?? (bool) $subscription->include_without_organizer;
+        if ($organizerIds === null) {
+            $organizerIds = $subscription->organizers()
+                ->pluck('cultural_organizers.id')
+                ->map(fn ($id) => (int) $id)
+                ->sort()
+                ->values()
+                ->all();
+        } else {
+            $organizerIds = collect($organizerIds)->map(fn ($id) => (int) $id)->unique()->sort()->values()->all();
+        }
+
+        return [
+            'scope' => $scope,
+            'without_organizer' => $without ? 1 : 0,
+            'organizer_ids' => $scope === NewsletterSubscription::SCOPE_ALL_EVENTS ? [] : $organizerIds,
+        ];
     }
 }

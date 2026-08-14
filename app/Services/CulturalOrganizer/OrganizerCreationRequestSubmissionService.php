@@ -6,6 +6,9 @@ use App\Mail\CulturalOrganizerModeratorInvitationMail;
 use App\Models\CulturalOrganizerCreationRequest;
 use App\Models\User;
 use App\Support\CulturalPortalAccess;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -18,6 +21,10 @@ use Throwable;
  */
 final class OrganizerCreationRequestSubmissionService
 {
+    public function __construct(
+        private readonly CulturalActivityEmitter $activityEmitter,
+    ) {}
+
     public const NEUTRAL_SUBMIT_STATUS_MESSAGE = 'Zahtjev je uspješno podnesen. Predloženi Moderator mora imati aktivan i verifikovan korisnički nalog na platformi Digital Kotor prije nego što zahtjev može biti dostavljen Uredniku na odlučivanje.';
 
     /**
@@ -57,6 +64,15 @@ final class OrganizerCreationRequestSubmissionService
         if ($eligibleModerator === null) {
             $this->sendInvitation($request);
         }
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::ORG_01,
+            CulturalActivityEventId::once(CulturalActivityCatalog::ORG_01, (int) $request->id),
+            $submitter,
+            (int) $request->id,
+            $request->created_at ?? now(),
+            ['request_id' => (int) $request->id],
+        );
 
         return $request;
     }

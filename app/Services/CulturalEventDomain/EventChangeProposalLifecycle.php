@@ -8,6 +8,9 @@ use App\Models\CulturalEventEntry;
 use App\Models\User;
 use App\Support\CulturalModeratorEventAccess;
 use App\Support\CulturalPortalAccess;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,6 +21,7 @@ final class EventChangeProposalLifecycle
     public function __construct(
         private readonly EventCatalogGuard $catalogGuard,
         private readonly OccurrenceWriter $occurrenceWriter,
+        private readonly CulturalActivityEmitter $activityEmitter,
     ) {}
 
     public function submit(CulturalEventChangeProposal $proposal, User $actor): CulturalEventChangeProposal
@@ -35,7 +39,10 @@ final class EventChangeProposalLifecycle
         $this->assertProposalOperableAgainstEvent($proposal, $entry);
         $this->assertReadyForSubmitOrApprove($proposal, $entry);
 
-        return DB::transaction(function () use ($proposal, $actor) {
+        $isFirstSubmit = $proposal->first_submitted_at === null;
+        $priorReturn = (string) ($proposal->return_reason ?? '');
+        $persistAt = now();
+        $submitted = DB::transaction(function () use ($proposal, $actor, &$persistAt) {
             /** @var CulturalEventChangeProposal $locked */
             $locked = CulturalEventChangeProposal::query()
                 ->whereKey($proposal->id)
@@ -66,9 +73,32 @@ final class EventChangeProposalLifecycle
             $locked->return_reason = null;
             $locked->active_for_event_id = $entry->id;
             $locked->save();
+            $persistAt = $locked->last_submitted_at?->copy() ?? now();
 
             return $locked->fresh(['tags', 'eventEntry']);
         });
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::EV_15,
+            $isFirstSubmit
+                ? CulturalActivityEventId::once(CulturalActivityCatalog::EV_15, (int) $submitted->id)
+                : CulturalActivityEventId::repeatable(
+                    CulturalActivityCatalog::EV_15,
+                    (int) $submitted->id,
+                    ['prior_return_digest' => hash('sha256', $priorReturn)],
+                    $persistAt
+                ),
+            $actor,
+            (int) $submitted->id,
+            $submitted->last_submitted_at ?? now(),
+            [
+                'proposal_id' => (int) $submitted->id,
+                'entry_id' => (int) $submitted->event_entry_id,
+            ],
+            $submitted->eventEntry?->organizer_id !== null ? (int) $submitted->eventEntry->organizer_id : null,
+        );
+
+        return $submitted;
     }
 
     public function withdraw(CulturalEventChangeProposal $proposal, User $actor): CulturalEventChangeProposal
@@ -176,7 +206,8 @@ final class EventChangeProposalLifecycle
             );
         }
 
-        return DB::transaction(function () use ($proposal, $editor, $reason) {
+        $persistAt = now();
+        $returned = DB::transaction(function () use ($proposal, $editor, $reason, &$persistAt) {
             /** @var CulturalEventChangeProposal $locked */
             $locked = CulturalEventChangeProposal::query()
                 ->whereKey($proposal->id)
@@ -205,9 +236,30 @@ final class EventChangeProposalLifecycle
             $locked->last_modified_by = $editor->id;
             $locked->active_for_event_id = $locked->event_entry_id;
             $locked->save();
+            $persistAt = $locked->decision_at?->copy() ?? now();
 
             return $locked->fresh(['tags', 'eventEntry']);
         });
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::EV_17,
+            CulturalActivityEventId::repeatable(
+                CulturalActivityCatalog::EV_17,
+                (int) $returned->id,
+                ['reason_digest' => hash('sha256', $reason)],
+                $persistAt
+            ),
+            $editor,
+            (int) $returned->id,
+            $returned->decision_at ?? now(),
+            [
+                'proposal_id' => (int) $returned->id,
+                'entry_id' => (int) $returned->event_entry_id,
+            ],
+            $returned->eventEntry?->organizer_id !== null ? (int) $returned->eventEntry->organizer_id : null,
+        );
+
+        return $returned;
     }
 
     /**

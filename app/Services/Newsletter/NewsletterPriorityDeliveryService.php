@@ -5,6 +5,9 @@ namespace App\Services\Newsletter;
 use App\Mail\CulturalCalendarPriorityNewsletterMail;
 use App\Models\NewsletterPendingPriorityChange;
 use App\Models\NewsletterSubscription;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -17,6 +20,7 @@ final class NewsletterPriorityDeliveryService
         private readonly NewsletterPriorityComposer $composer,
         private readonly NewsletterFirstIncludeLedgerWriter $ledgerWriter,
         private readonly NewsletterOutboundMailer $mailer,
+        private readonly CulturalActivityEmitter $activityEmitter,
     ) {}
 
     /**
@@ -137,6 +141,14 @@ final class NewsletterPriorityDeliveryService
                 'ledger_write_failed: '.$e->getMessage()
             );
         }
+
+        $this->activityEmitter->emitSystem(
+            CulturalActivityCatalog::NL_06,
+            CulturalActivityEventId::once(CulturalActivityCatalog::NL_06, $cycleId),
+            null,
+            $sentAt,
+            ['cycle_id' => $cycleId],
+        );
 
         return new NewsletterPriorityDeliveryResult(
             NewsletterPriorityDeliveryResult::SENT,

@@ -10,6 +10,9 @@ use App\Models\CulturalModeratorRequest;
 use App\Models\CulturalOrganizer;
 use App\Models\User;
 use App\Support\CulturalPortalAccess;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -22,6 +25,10 @@ use Throwable;
  */
 final class ModeratorRequestDecisionService
 {
+    public function __construct(
+        private readonly CulturalActivityEmitter $activityEmitter,
+    ) {}
+
     public function approve(CulturalModeratorRequest $request, User $editor, ?string $decisionNote = null): CulturalModeratorRequest
     {
         if (! CulturalPortalAccess::isKkEditor($editor)) {
@@ -64,6 +71,25 @@ final class ModeratorRequestDecisionService
 
         $this->sendApprovalOutcome($approved);
 
+        $catalogId = $approved->type === CulturalModeratorRequest::TYPE_ADD
+            ? CulturalActivityCatalog::MOD_02
+            : CulturalActivityCatalog::MOD_05;
+        $decisionAt = $approved->decision_at ?? now();
+        $context = ['request_id' => (int) $approved->id];
+        if ($approved->type === CulturalModeratorRequest::TYPE_ADD && $approved->target_user_id !== null) {
+            $context['user_id'] = (int) $approved->target_user_id;
+        }
+
+        $this->activityEmitter->emitUser(
+            $catalogId,
+            CulturalActivityEventId::once($catalogId, (int) $approved->id),
+            $editor,
+            (int) $approved->id,
+            $decisionAt,
+            $context,
+            (int) $approved->organizer_id,
+        );
+
         return $approved;
     }
 
@@ -97,6 +123,20 @@ final class ModeratorRequestDecisionService
         if ($rejected->type === CulturalModeratorRequest::TYPE_ADD) {
             $this->sendAddRejectionOutcome($rejected);
         }
+
+        $catalogId = $rejected->type === CulturalModeratorRequest::TYPE_ADD
+            ? CulturalActivityCatalog::MOD_03
+            : CulturalActivityCatalog::MOD_06;
+        $decisionAt = $rejected->decision_at ?? now();
+        $this->activityEmitter->emitUser(
+            $catalogId,
+            CulturalActivityEventId::once($catalogId, (int) $rejected->id),
+            $editor,
+            (int) $rejected->id,
+            $decisionAt,
+            ['request_id' => (int) $rejected->id],
+            (int) $rejected->organizer_id,
+        );
 
         return $rejected;
     }

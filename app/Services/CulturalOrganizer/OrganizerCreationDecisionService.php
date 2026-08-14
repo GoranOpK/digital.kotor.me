@@ -9,6 +9,9 @@ use App\Models\CulturalOrganizer;
 use App\Models\CulturalOrganizerCreationRequest;
 use App\Models\User;
 use App\Support\CulturalPortalAccess;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -22,6 +25,10 @@ use Throwable;
  */
 final class OrganizerCreationDecisionService
 {
+    public function __construct(
+        private readonly CulturalActivityEmitter $activityEmitter,
+    ) {}
+
     public function approve(CulturalOrganizerCreationRequest $request, User $editor, ?string $decisionNote = null): CulturalOrganizer
     {
         if (! CulturalPortalAccess::isKkEditor($editor)) {
@@ -75,6 +82,49 @@ final class OrganizerCreationDecisionService
 
         $this->sendApprovalOutcome($request->fresh() ?? $request, $organizer);
 
+        $approvedRequest = $request->fresh() ?? $request;
+        $occurredAt = $approvedRequest->decision_at ?? now();
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::ORG_02,
+            CulturalActivityEventId::of(
+                CulturalActivityCatalog::ORG_02,
+                (int) $approvedRequest->id,
+                (int) $organizer->id
+            ),
+            $editor,
+            (int) $organizer->id,
+            $occurredAt,
+            [
+                'request_id' => (int) $approvedRequest->id,
+                'organizer_id' => (int) $organizer->id,
+            ],
+            (int) $organizer->id,
+        );
+
+        $grant = CulturalModeratorAuthorization::query()
+            ->where('organizer_id', $organizer->id)
+            ->where('source', CulturalModeratorAuthorization::SOURCE_INITIAL)
+            ->orderByDesc('id')
+            ->first();
+        if ($grant !== null) {
+            $this->activityEmitter->emitUser(
+                CulturalActivityCatalog::ORG_07,
+                CulturalActivityEventId::of(
+                    CulturalActivityCatalog::ORG_07,
+                    (int) $organizer->id,
+                    (int) $grant->id
+                ),
+                $editor,
+                (int) $grant->id,
+                $grant->activated_at ?? $occurredAt,
+                [
+                    'organizer_id' => (int) $organizer->id,
+                    'user_id' => (int) $grant->user_id,
+                ],
+                (int) $organizer->id,
+            );
+        }
+
         return $organizer;
     }
 
@@ -106,6 +156,16 @@ final class OrganizerCreationDecisionService
         });
 
         $this->sendRejectionOutcome($rejected);
+
+        $decisionAt = $rejected->decision_at ?? now();
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::ORG_03,
+            CulturalActivityEventId::once(CulturalActivityCatalog::ORG_03, (int) $rejected->id),
+            $editor,
+            (int) $rejected->id,
+            $decisionAt,
+            ['request_id' => (int) $rejected->id],
+        );
 
         return $rejected;
     }

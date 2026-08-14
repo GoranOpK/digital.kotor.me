@@ -263,7 +263,7 @@ class CulturalActivityFoundationTest extends TestCase
         $this->assertTrue(Schema::hasTable('newsletter_delivery_ledger'));
     }
 
-    public function test_existing_workflows_are_not_wired_to_central_audit(): void
+    public function test_canonical_emitters_are_wired_through_safe_helper(): void
     {
         $paths = [
             app_path('Services/CulturalEventDomain/EventLifecycle.php'),
@@ -278,12 +278,9 @@ class CulturalActivityFoundationTest extends TestCase
         foreach ($paths as $path) {
             $contents = file_get_contents($path);
             $this->assertIsString($contents);
-            $this->assertStringNotContainsString('CulturalActivityRecorder', $contents);
+            $this->assertStringContainsString('CulturalActivityEmitter', $contents);
             $this->assertStringNotContainsString('CulturalActivityStore', $contents);
-            $this->assertStringNotContainsString('CulturalActivityRecordInput', $contents);
         }
-
-        $this->assertDatabaseCount('cultural_activity_records', 0);
     }
 
     public function test_restrict_user_delete_keeps_historical_actor(): void

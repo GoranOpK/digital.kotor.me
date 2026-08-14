@@ -9,6 +9,9 @@ use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
 use App\Models\CulturalOrganizer;
 use App\Models\User;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use App\Services\Newsletter\NewsletterPriorityChangeRecorder;
 use Illuminate\Support\Facades\DB;
 
@@ -19,6 +22,7 @@ final class EventLifecycle
 {
     public function __construct(
         private readonly NewsletterPriorityChangeRecorder $priorityChangeRecorder,
+        private readonly CulturalActivityEmitter $activityEmitter,
     ) {}
 
     /**
@@ -37,7 +41,25 @@ final class EventLifecycle
         $this->assertTransition($entry, CulturalEventEntry::STATUS_PENDING_APPROVAL);
         $this->assertReadyForPublishGate($entry);
 
-        return $this->apply($entry, CulturalEventEntry::STATUS_PENDING_APPROVAL, $actor, markSubmitted: true);
+        $isResubmit = $entry->first_submitted_at !== null;
+        $fromStatus = $entry->status;
+        $persistAt = now();
+        $updated = $this->apply($entry, CulturalEventEntry::STATUS_PENDING_APPROVAL, $actor, markSubmitted: true, persistAt: $persistAt);
+        $catalogId = $isResubmit ? CulturalActivityCatalog::EV_04 : CulturalActivityCatalog::EV_02;
+        $eventId = $isResubmit
+            ? CulturalActivityEventId::repeatable($catalogId, (int) $updated->id, ['from' => $fromStatus], $persistAt)
+            : CulturalActivityEventId::once($catalogId, (int) $updated->id);
+        $this->activityEmitter->emitUser(
+            $catalogId,
+            $eventId,
+            $actor,
+            (int) $updated->id,
+            $isResubmit ? ($updated->updated_at ?? now()) : ($updated->first_submitted_at ?? now()),
+            ['entry_id' => (int) $updated->id],
+            $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
+        );
+
+        return $updated;
     }
 
     /**
@@ -48,7 +70,18 @@ final class EventLifecycle
         $this->assertTransition($entry, CulturalEventEntry::STATUS_PUBLISHED);
         $this->assertReadyForPublishGate($entry);
 
-        return $this->apply($entry, CulturalEventEntry::STATUS_PUBLISHED, $actor);
+        $updated = $this->apply($entry, CulturalEventEntry::STATUS_PUBLISHED, $actor);
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::EV_05,
+            CulturalActivityEventId::once(CulturalActivityCatalog::EV_05, (int) $updated->id),
+            $actor,
+            (int) $updated->id,
+            $updated->first_published_at ?? now(),
+            ['entry_id' => (int) $updated->id],
+            $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
+        );
+
+        return $updated;
     }
 
     /**
@@ -63,14 +96,33 @@ final class EventLifecycle
             throw new CulturalEventDomainException('Razlog vraćanja na doradu je obavezan.');
         }
 
-        return DB::transaction(function () use ($entry, $actor, $reason) {
+        $persistAt = now();
+        $updated = DB::transaction(function () use ($entry, $actor, $reason, &$persistAt) {
             $entry->status = CulturalEventEntry::STATUS_DRAFT;
             $entry->return_reason = $reason;
             $entry->last_modified_by = $actor->id;
             $entry->save();
+            $persistAt = $entry->updated_at?->copy() ?? now();
 
             return $entry->fresh();
         });
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::EV_03,
+            CulturalActivityEventId::repeatable(
+                CulturalActivityCatalog::EV_03,
+                (int) $updated->id,
+                ['reason_digest' => hash('sha256', $reason)],
+                $persistAt
+            ),
+            $actor,
+            (int) $updated->id,
+            $updated->updated_at ?? now(),
+            ['entry_id' => (int) $updated->id],
+            $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
+        );
+
+        return $updated;
     }
 
     /**
@@ -91,7 +143,7 @@ final class EventLifecycle
 
         $this->assertReadyForPublishGate($entry);
 
-        return DB::transaction(function () use ($entry, $actor) {
+        $published = DB::transaction(function () use ($entry, $actor) {
             /** @var CulturalEventEntry $locked */
             $locked = CulturalEventEntry::query()
                 ->whereKey($entry->id)
@@ -118,6 +170,17 @@ final class EventLifecycle
 
             return $locked->fresh();
         });
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::EV_06,
+            CulturalActivityEventId::once(CulturalActivityCatalog::EV_06, (int) $published->id),
+            $actor,
+            (int) $published->id,
+            $published->first_published_at ?? now(),
+            ['entry_id' => (int) $published->id],
+        );
+
+        return $published;
     }
 
     /**
@@ -134,7 +197,7 @@ final class EventLifecycle
             $reason = null;
         }
 
-        return DB::transaction(function () use ($entry, $actor, $reason) {
+        $cancelled = DB::transaction(function () use ($entry, $actor, $reason) {
             // BR-012 slot — isti predikat kao createFromPublished (UNIQUE active_for_event_id).
             $lockedProposals = CulturalEventChangeProposal::query()
                 ->where('active_for_event_id', $entry->id)
@@ -183,6 +246,18 @@ final class EventLifecycle
 
             return $cancelled;
         });
+
+        $this->activityEmitter->emitUser(
+            CulturalActivityCatalog::EV_09,
+            CulturalActivityEventId::once(CulturalActivityCatalog::EV_09, (int) $cancelled->id),
+            $actor,
+            (int) $cancelled->id,
+            $cancelled->updated_at ?? now(),
+            ['entry_id' => (int) $cancelled->id],
+            $cancelled->organizer_id !== null ? (int) $cancelled->organizer_id : null,
+        );
+
+        return $cancelled;
     }
 
     /**
@@ -203,7 +278,7 @@ final class EventLifecycle
      */
     public function archiveIfEligible(CulturalEventEntry $entry): CulturalEventEntry
     {
-        return DB::transaction(function () use ($entry) {
+        $archived = DB::transaction(function () use ($entry) {
             /** @var CulturalEventEntry $locked */
             $locked = CulturalEventEntry::query()
                 ->whereKey($entry->id)
@@ -246,6 +321,17 @@ final class EventLifecycle
 
             return $locked->fresh(['occurrences']);
         });
+
+        $this->activityEmitter->emitSystem(
+            CulturalActivityCatalog::EV_18,
+            CulturalActivityEventId::once(CulturalActivityCatalog::EV_18, (int) $archived->id),
+            (int) $archived->id,
+            $archived->updated_at ?? now(),
+            ['entry_id' => (int) $archived->id],
+            $archived->organizer_id !== null ? (int) $archived->organizer_id : null,
+        );
+
+        return $archived;
     }
 
     /**
@@ -370,8 +456,9 @@ final class EventLifecycle
         string $status,
         User $actor,
         bool $markSubmitted = false,
+        ?\Carbon\CarbonInterface &$persistAt = null,
     ): CulturalEventEntry {
-        return DB::transaction(function () use ($entry, $status, $actor, $markSubmitted) {
+        return DB::transaction(function () use ($entry, $status, $actor, $markSubmitted, &$persistAt) {
             $entry->status = $status;
             $entry->last_modified_by = $actor->id;
 
@@ -384,6 +471,7 @@ final class EventLifecycle
             }
 
             $entry->save();
+            $persistAt = $entry->updated_at?->copy() ?? now();
 
             return $entry->fresh();
         });

@@ -5,6 +5,10 @@ namespace App\Services\CulturalEventDomain;
 use App\Exceptions\CulturalEventDomainException;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
+use App\Models\User;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use App\Services\Newsletter\NewsletterPriorityChangeRecorder;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
@@ -18,19 +22,22 @@ final class OccurrenceLifecycle
     public function __construct(
         private readonly OccurrenceWriter $writer,
         private readonly NewsletterPriorityChangeRecorder $priorityChangeRecorder,
+        private readonly CulturalActivityEmitter $activityEmitter,
     ) {}
 
-    public function postpone(CulturalOccurrence $occurrence, ?string $reason = null): CulturalOccurrence
+    public function postpone(CulturalOccurrence $occurrence, ?string $reason = null, ?User $actor = null): CulturalOccurrence
     {
         $reason = $this->normalizeOptionalReason($reason);
 
-        return $this->withLockedOccurrence(
+        $persistAt = now();
+        $updated = $this->withLockedOccurrence(
             $occurrence,
             CulturalOccurrence::STATUS_POSTPONED,
-            function (CulturalOccurrence $locked) use ($reason): CulturalOccurrence {
+            function (CulturalOccurrence $locked) use ($reason, &$persistAt): CulturalOccurrence {
                 $locked->status = CulturalOccurrence::STATUS_POSTPONED;
                 $locked->postponement_reason = $reason;
                 $locked->save();
+                $persistAt = $locked->updated_at?->copy() ?? now();
 
                 $fresh = $locked->fresh(['eventEntry']);
                 $this->priorityChangeRecorder->recordPostponed($fresh);
@@ -38,6 +45,12 @@ final class OccurrenceLifecycle
                 return $fresh;
             }
         );
+
+        if ($actor !== null) {
+            $this->emitOccurrenceUser($updated, $actor, CulturalActivityCatalog::EV_11, $persistAt);
+        }
+
+        return $updated;
     }
 
     /**
@@ -50,16 +63,18 @@ final class OccurrenceLifecycle
      *     cjelodnevno?: bool
      * }  $newTermin
      */
-    public function resumeWithNewTermin(CulturalOccurrence $occurrence, array $newTermin): CulturalOccurrence
+    public function resumeWithNewTermin(CulturalOccurrence $occurrence, array $newTermin, ?User $actor = null): CulturalOccurrence
     {
-        return $this->withLockedOccurrence(
+        $persistAt = now();
+        $updated = $this->withLockedOccurrence(
             $occurrence,
             CulturalOccurrence::STATUS_PLANNED,
-            function (CulturalOccurrence $locked) use ($newTermin): CulturalOccurrence {
+            function (CulturalOccurrence $locked) use ($newTermin, &$persistAt): CulturalOccurrence {
                 $this->writer->applyTerminFromLifecycle($locked, $newTermin);
                 $locked->refresh();
                 $locked->status = CulturalOccurrence::STATUS_PLANNED;
                 $locked->save();
+                $persistAt = $locked->updated_at?->copy() ?? now();
 
                 $fresh = $locked->fresh(['eventEntry', 'location']);
                 $this->priorityChangeRecorder->recordDatetimeChanged($fresh);
@@ -67,13 +82,19 @@ final class OccurrenceLifecycle
                 return $fresh;
             }
         );
+
+        if ($actor !== null) {
+            $this->emitOccurrenceUser($updated, $actor, CulturalActivityCatalog::EV_13, $persistAt);
+        }
+
+        return $updated;
     }
 
-    public function cancel(CulturalOccurrence $occurrence, ?string $reason = null): CulturalOccurrence
+    public function cancel(CulturalOccurrence $occurrence, ?string $reason = null, ?User $actor = null): CulturalOccurrence
     {
         $reason = $this->normalizeOptionalReason($reason);
 
-        return $this->withLockedOccurrence(
+        $updated = $this->withLockedOccurrence(
             $occurrence,
             CulturalOccurrence::STATUS_CANCELLED,
             function (CulturalOccurrence $locked) use ($reason): CulturalOccurrence {
@@ -87,6 +108,12 @@ final class OccurrenceLifecycle
                 return $fresh;
             }
         );
+
+        if ($actor !== null) {
+            $this->emitOccurrenceUser($updated, $actor, CulturalActivityCatalog::EV_12);
+        }
+
+        return $updated;
     }
 
     /**
@@ -95,7 +122,7 @@ final class OccurrenceLifecycle
      */
     public function markFinished(CulturalOccurrence $occurrence): CulturalOccurrence
     {
-        return $this->withLockedOccurrence(
+        $updated = $this->withLockedOccurrence(
             $occurrence,
             CulturalOccurrence::STATUS_FINISHED,
             function (CulturalOccurrence $locked): CulturalOccurrence {
@@ -111,6 +138,10 @@ final class OccurrenceLifecycle
                 return $locked->fresh();
             }
         );
+
+        $this->emitOccurrenceSystem($updated);
+
+        return $updated;
     }
 
     /**
@@ -124,7 +155,7 @@ final class OccurrenceLifecycle
     ): ?CulturalOccurrence {
         $now ??= now((string) config('app.timezone'));
 
-        return DB::transaction(function () use ($occurrence, $now) {
+        $finished = DB::transaction(function () use ($occurrence, $now) {
             /** @var CulturalEventEntry $entry */
             $entry = CulturalEventEntry::query()
                 ->whereKey($occurrence->event_entry_id)
@@ -158,6 +189,12 @@ final class OccurrenceLifecycle
 
             return $locked->fresh();
         });
+
+        if ($finished !== null) {
+            $this->emitOccurrenceSystem($finished);
+        }
+
+        return $finished;
     }
 
     public function transitionTo(CulturalOccurrence $occurrence, string $target): CulturalOccurrence
@@ -185,11 +222,12 @@ final class OccurrenceLifecycle
     public function cancelWithoutAffectingEvent(
         CulturalOccurrence $occurrence,
         ?string $reason = null,
+        ?User $actor = null,
     ): array {
         $entry = $occurrence->eventEntry;
         $eventStatusBefore = $entry?->status;
 
-        $updated = $this->cancel($occurrence, $reason);
+        $updated = $this->cancel($occurrence, $reason, $actor);
 
         $entry?->refresh();
 
@@ -268,5 +306,67 @@ final class OccurrenceLifecycle
                 CulturalOccurrence::STATUS_LABELS[$target] ?? $target
             ));
         }
+    }
+
+    private function emitOccurrenceUser(
+        CulturalOccurrence $occurrence,
+        User $actor,
+        string $catalogId,
+        ?CarbonInterface $persistAt = null,
+    ): void {
+        $eventId = $catalogId === CulturalActivityCatalog::EV_12
+            ? CulturalActivityEventId::once($catalogId, (int) $occurrence->id)
+            : CulturalActivityEventId::repeatable(
+                $catalogId,
+                (int) $occurrence->id,
+                $this->occurrenceTerminIdentity($occurrence),
+                $persistAt ?? $occurrence->updated_at ?? now()
+            );
+
+        $this->activityEmitter->emitUser(
+            $catalogId,
+            $eventId,
+            $actor,
+            (int) $occurrence->id,
+            $persistAt ?? $occurrence->updated_at ?? now(),
+            [
+                'occurrence_id' => (int) $occurrence->id,
+                'entry_id' => (int) $occurrence->event_entry_id,
+            ],
+            $occurrence->eventEntry?->organizer_id !== null ? (int) $occurrence->eventEntry->organizer_id : null,
+        );
+    }
+
+    private function emitOccurrenceSystem(CulturalOccurrence $occurrence): void
+    {
+        $this->activityEmitter->emitSystem(
+            CulturalActivityCatalog::EV_19,
+            CulturalActivityEventId::once(CulturalActivityCatalog::EV_19, (int) $occurrence->id),
+            (int) $occurrence->id,
+            $occurrence->updated_at ?? now(),
+            [
+                'occurrence_id' => (int) $occurrence->id,
+                'entry_id' => (int) $occurrence->event_entry_id,
+            ],
+        );
+    }
+
+    /**
+     * @return array<string, scalar|null>
+     */
+    private function occurrenceTerminIdentity(CulturalOccurrence $occurrence): array
+    {
+        $datum = $occurrence->datum;
+        $datumString = $datum instanceof \DateTimeInterface
+            ? $datum->format('Y-m-d')
+            : (string) $datum;
+
+        return [
+            'datum' => $datumString,
+            'vrijeme_od' => $occurrence->vrijeme_od,
+            'vrijeme_do' => $occurrence->vrijeme_do,
+            'cjelodnevno' => (bool) $occurrence->cjelodnevno ? 1 : 0,
+            'location_id' => $occurrence->location_id !== null ? (int) $occurrence->location_id : null,
+        ];
     }
 }

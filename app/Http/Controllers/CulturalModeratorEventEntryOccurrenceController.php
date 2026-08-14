@@ -127,7 +127,7 @@ class CulturalModeratorEventEntryOccurrenceController extends Controller
         );
 
         try {
-            $this->occurrenceLifecycle->postpone($odrzavanje, $request->optionalReason());
+            $this->occurrenceLifecycle->postpone($odrzavanje, $request->optionalReason(), $request->user());
         } catch (CulturalEventDomainException $e) {
             return redirect()
                 ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
@@ -152,7 +152,7 @@ class CulturalModeratorEventEntryOccurrenceController extends Controller
         );
 
         try {
-            $this->occurrenceLifecycle->cancel($odrzavanje, $request->optionalReason());
+            $this->occurrenceLifecycle->cancel($odrzavanje, $request->optionalReason(), $request->user());
         } catch (CulturalEventDomainException $e) {
             return redirect()
                 ->route('cultural-moderator-events.edit', $moderator_dogadjaj)
@@ -177,7 +177,7 @@ class CulturalModeratorEventEntryOccurrenceController extends Controller
         );
 
         try {
-            $this->occurrenceLifecycle->resumeWithNewTermin($odrzavanje, $request->terminPayload());
+            $this->occurrenceLifecycle->resumeWithNewTermin($odrzavanje, $request->terminPayload(), $request->user());
         } catch (CulturalEventDomainException $e) {
             return redirect()
                 ->route('cultural-moderator-events.edit', $moderator_dogadjaj)

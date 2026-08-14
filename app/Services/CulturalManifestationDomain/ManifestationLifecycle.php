@@ -6,10 +6,17 @@ use App\Exceptions\CulturalEventDomainException;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalManifestation;
 use App\Models\User;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use Illuminate\Support\Facades\DB;
 
 final class ManifestationLifecycle
 {
+    public function __construct(
+        private readonly CulturalActivityEmitter $activityEmitter,
+    ) {}
+
     /**
      * PO-MF-WF-02 — Moderator-kreirana MF: Nacrt / Vraćena → Na odobrenju.
      * PO-MF-WF-01 — Urednik-kreirana MF ne smije ući u approval tok.
@@ -20,7 +27,10 @@ final class ManifestationLifecycle
         $this->assertTransition($manifestation, CulturalManifestation::STATUS_PENDING_APPROVAL);
         $this->assertReadyForSubmit($manifestation);
 
-        return DB::transaction(function () use ($manifestation, $actor) {
+        $isResubmit = $manifestation->first_submitted_at !== null;
+        $fromStatus = $manifestation->status;
+        $persistAt = now();
+        $updated = DB::transaction(function () use ($manifestation, $actor, &$persistAt) {
             /** @var CulturalManifestation $locked */
             $locked = CulturalManifestation::query()
                 ->whereKey($manifestation->id)
@@ -37,9 +47,27 @@ final class ManifestationLifecycle
                 $locked->first_submitted_at = now();
             }
             $locked->save();
+            $persistAt = $locked->updated_at?->copy() ?? now();
 
             return $locked->fresh();
         });
+
+        $this->emitUserAction(
+            CulturalActivityCatalog::MF_02,
+            $updated,
+            $actor,
+            $isResubmit
+                ? CulturalActivityEventId::repeatable(
+                    CulturalActivityCatalog::MF_02,
+                    (int) $updated->id,
+                    ['from' => $fromStatus],
+                    $persistAt
+                )
+                : CulturalActivityEventId::once(CulturalActivityCatalog::MF_02, (int) $updated->id),
+            $isResubmit ? $persistAt : ($updated->first_submitted_at ?? $persistAt)
+        );
+
+        return $updated;
     }
 
     /**
@@ -53,7 +81,8 @@ final class ManifestationLifecycle
         $this->assertNotEditorCreatedForApprovalFlow($manifestation);
         $this->assertTransition($manifestation, CulturalManifestation::STATUS_RETURNED_FOR_REVISION);
 
-        return DB::transaction(function () use ($manifestation, $actor) {
+        $persistAt = now();
+        $updated = DB::transaction(function () use ($manifestation, $actor, &$persistAt) {
             /** @var CulturalManifestation $locked */
             $locked = CulturalManifestation::query()
                 ->whereKey($manifestation->id)
@@ -66,9 +95,25 @@ final class ManifestationLifecycle
             $locked->status = CulturalManifestation::STATUS_RETURNED_FOR_REVISION;
             $locked->last_modified_by = $actor->id;
             $locked->save();
+            $persistAt = $locked->updated_at?->copy() ?? now();
 
             return $locked->fresh();
         });
+
+        $this->emitUserAction(
+            CulturalActivityCatalog::MF_03,
+            $updated,
+            $actor,
+            CulturalActivityEventId::repeatable(
+                CulturalActivityCatalog::MF_03,
+                (int) $updated->id,
+                ['from' => $manifestation->status],
+                $persistAt
+            ),
+            $persistAt
+        );
+
+        return $updated;
     }
 
     /**
@@ -89,7 +134,7 @@ final class ManifestationLifecycle
         $this->assertTransition($manifestation, CulturalManifestation::STATUS_PUBLISHED);
         $this->assertReadyForPublish($manifestation);
 
-        return DB::transaction(function () use ($manifestation, $actor) {
+        $updated = DB::transaction(function () use ($manifestation, $actor) {
             /** @var CulturalManifestation $locked */
             $locked = CulturalManifestation::query()
                 ->whereKey($manifestation->id)
@@ -119,6 +164,16 @@ final class ManifestationLifecycle
 
             return $locked->fresh();
         });
+
+        $this->emitUserAction(
+            CulturalActivityCatalog::MF_04,
+            $updated,
+            $actor,
+            CulturalActivityEventId::once(CulturalActivityCatalog::MF_04, (int) $updated->id),
+            $updated->published_at ?? now()
+        );
+
+        return $updated;
     }
 
     /**
@@ -129,7 +184,7 @@ final class ManifestationLifecycle
         $this->assertTransition($manifestation, CulturalManifestation::STATUS_PUBLISHED);
         $this->assertReadyForPublish($manifestation);
 
-        return DB::transaction(function () use ($manifestation, $actor) {
+        $updated = DB::transaction(function () use ($manifestation, $actor) {
             /** @var CulturalManifestation $locked */
             $locked = CulturalManifestation::query()
                 ->whereKey($manifestation->id)
@@ -146,6 +201,16 @@ final class ManifestationLifecycle
 
             return $locked->fresh();
         });
+
+        $this->emitUserAction(
+            CulturalActivityCatalog::MF_04,
+            $updated,
+            $actor,
+            CulturalActivityEventId::once(CulturalActivityCatalog::MF_04, (int) $updated->id),
+            $updated->published_at ?? now()
+        );
+
+        return $updated;
     }
 
     private function assertNotEditorCreatedForApprovalFlow(CulturalManifestation $manifestation): void
@@ -161,7 +226,7 @@ final class ManifestationLifecycle
     {
         $this->assertTransition($manifestation, CulturalManifestation::STATUS_CANCELLED);
 
-        return DB::transaction(function () use ($manifestation, $actor) {
+        $updated = DB::transaction(function () use ($manifestation, $actor) {
             /** @var CulturalManifestation $locked */
             $locked = CulturalManifestation::query()
                 ->whereKey($manifestation->id)
@@ -177,11 +242,21 @@ final class ManifestationLifecycle
 
             return $locked->fresh();
         });
+
+        $this->emitUserAction(
+            CulturalActivityCatalog::MF_05,
+            $updated,
+            $actor,
+            CulturalActivityEventId::once(CulturalActivityCatalog::MF_05, (int) $updated->id),
+            $updated->cancelled_at ?? now()
+        );
+
+        return $updated;
     }
 
     public function archiveIfEligible(CulturalManifestation $manifestation): CulturalManifestation
     {
-        return DB::transaction(function () use ($manifestation) {
+        $archived = DB::transaction(function () use ($manifestation) {
             /** @var CulturalManifestation $locked */
             $locked = CulturalManifestation::query()
                 ->whereKey($manifestation->id)
@@ -196,6 +271,17 @@ final class ManifestationLifecycle
 
             return $locked->fresh();
         });
+
+        $this->activityEmitter->emitSystem(
+            CulturalActivityCatalog::MF_06,
+            CulturalActivityEventId::once(CulturalActivityCatalog::MF_06, (int) $archived->id),
+            (int) $archived->id,
+            $archived->archived_at ?? now(),
+            ['manifestation_id' => (int) $archived->id],
+            $archived->organizer_id !== null ? (int) $archived->organizer_id : null,
+        );
+
+        return $archived;
     }
 
     public function assertReadyForSubmit(CulturalManifestation $manifestation): void
@@ -236,6 +322,24 @@ final class ManifestationLifecycle
                 CulturalManifestation::STATUS_LABELS[$target] ?? $target
             ));
         }
+    }
+
+    private function emitUserAction(
+        string $catalogId,
+        CulturalManifestation $manifestation,
+        User $actor,
+        string $eventId,
+        \Carbon\CarbonInterface $occurredAt,
+    ): void {
+        $this->activityEmitter->emitUser(
+            $catalogId,
+            $eventId,
+            $actor,
+            (int) $manifestation->id,
+            $occurredAt,
+            ['manifestation_id' => (int) $manifestation->id],
+            $manifestation->organizer_id !== null ? (int) $manifestation->organizer_id : null,
+        );
     }
 }
 

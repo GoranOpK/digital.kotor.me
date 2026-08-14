@@ -6,6 +6,9 @@ use App\Models\CulturalModeratorRequest;
 use App\Models\CulturalOrganizerCreationRequest;
 use App\Models\User;
 use App\Support\CulturalPortalAccess;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -21,6 +24,10 @@ use Throwable;
  */
 final class ModeratorEligibilityResolver
 {
+    public function __construct(
+        private readonly CulturalActivityEmitter $activityEmitter,
+    ) {}
+
     /**
      * @return int Number of requests transitioned to submitted
      */
@@ -57,6 +64,16 @@ final class ModeratorEligibilityResolver
             try {
                 if ($this->resolveOrganizerCreationRequestId((int) $requestId, $user, $normalizedEmail)) {
                     $resolved++;
+                    $fresh = CulturalOrganizerCreationRequest::query()->find($requestId);
+                    if ($fresh !== null) {
+                        $this->activityEmitter->emitSystem(
+                            CulturalActivityCatalog::MOD_07,
+                            CulturalActivityEventId::of(CulturalActivityCatalog::MOD_07, 'org', (int) $fresh->id),
+                            (int) $fresh->id,
+                            $fresh->updated_at ?? now(),
+                            ['request_id' => (int) $fresh->id],
+                        );
+                    }
                 }
             } catch (Throwable $e) {
                 Log::error('PO-ORG-06 eligibility resolver failed for Organizer creation request.', [
@@ -86,6 +103,20 @@ final class ModeratorEligibilityResolver
             try {
                 if ($this->resolveModeratorAddRequestId((int) $requestId, $user, $normalizedEmail)) {
                     $resolved++;
+                    $fresh = CulturalModeratorRequest::query()->find($requestId);
+                    if ($fresh !== null) {
+                        $this->activityEmitter->emitSystem(
+                            CulturalActivityCatalog::MOD_07,
+                            CulturalActivityEventId::of(CulturalActivityCatalog::MOD_07, 'mod', (int) $fresh->id),
+                            (int) $fresh->id,
+                            $fresh->updated_at ?? now(),
+                            [
+                                'request_id' => (int) $fresh->id,
+                                'organizer_id' => (int) $fresh->organizer_id,
+                            ],
+                            (int) $fresh->organizer_id,
+                        );
+                    }
                 }
             } catch (Throwable $e) {
                 Log::error('PO-ORG-06 eligibility resolver failed for Moderator ADD request.', [

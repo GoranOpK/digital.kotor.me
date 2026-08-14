@@ -4,6 +4,9 @@ namespace App\Services\Newsletter;
 
 use App\Mail\CulturalCalendarFirstIncludeNewsletterMail;
 use App\Models\NewsletterSubscription;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
+use App\Services\CulturalActivity\CulturalActivityEmitter;
+use App\Services\CulturalActivity\CulturalActivityEventId;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -14,6 +17,7 @@ final class NewsletterFirstIncludeDeliveryService
         private readonly NewsletterFirstIncludeComposer $composer,
         private readonly NewsletterFirstIncludeLedgerWriter $ledgerWriter,
         private readonly NewsletterOutboundMailer $mailer,
+        private readonly CulturalActivityEmitter $activityEmitter,
     ) {}
 
     public function deliverForSubscription(NewsletterSubscription $subscription): NewsletterFirstIncludeDeliveryResult
@@ -58,6 +62,14 @@ final class NewsletterFirstIncludeDeliveryService
                 'ledger_write_failed: '.$e->getMessage()
             );
         }
+
+        $this->activityEmitter->emitSystem(
+            CulturalActivityCatalog::NL_05,
+            CulturalActivityEventId::once(CulturalActivityCatalog::NL_05, $cycleId),
+            null,
+            $sentAt,
+            ['cycle_id' => $cycleId],
+        );
 
         return new NewsletterFirstIncludeDeliveryResult(
             NewsletterFirstIncludeDeliveryResult::SENT,

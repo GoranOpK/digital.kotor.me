@@ -13,6 +13,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(\App\Services\CulturalActivity\CulturalActivityStore::class);
         $this->app->singleton(\App\Services\CulturalActivity\CulturalActivityRecorder::class);
+        $this->app->singleton(\App\Services\CulturalActivity\CulturalActivityEmitter::class);
         $this->app->singleton(\App\Services\ExternalArchive\ExternalFileArchiveService::class);
     }
 
