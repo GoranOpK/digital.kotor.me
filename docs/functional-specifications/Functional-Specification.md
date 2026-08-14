@@ -91,6 +91,7 @@
 | PATCH-FS-069 | 2026-08-11 | **PO-ORG-06 / BM PATCH-068:** privacy-safe Moderator invitation (ime+e-mail; waiting status; eligibility; resolver; neutral flash; emails; duplicates; REMOVE boundary). Usklađeni BR-053, BR-054, BR-135, BR-137, BR-275, BR-307; dodati BR-308–BR-320. Verzija ostaje 1.0.0. **Bez izmjene implementacije** (TARGET vs CURRENT). |
 | PATCH-FS-070 | 2026-08-12 | **PO-MF-WF-01–04 / PO-EV-WF-01 / BM PATCH-070:** dva MF toka po porijeklu kreiranja. Usklađeni BR-100, BR-101, BR-190, BR-195, BR-196; dodati BR-321–BR-325. Event: potvrđen backend guard da Entry bez Organizatora ne koristi submit/approval (BR-018 KEEP). Bez novog DB statusa. Verzija ostaje 1.0.0. |
 | PATCH-FS-071 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup / BM PATCH-072:** Urednik može ukloniti odbijeni Org/Mod zahtjev iz redovne liste Zahtjevi (workspace dismiss). BR-055 / BR-073 retention KEEP. Dodati BR-326–BR-327. Verzija ostaje 1.0.0. |
+| PATCH-FS-072 | 2026-08-14 | **PO-NL-01…PO-NL-22 / BM PATCH-073:** Newsletter pretplata, preference, odjava, reaktivacija, `User`/e-mail lifecycle, Manifestacija granica, testni legacy. Usklađeni tokovi §5.15 i BR-140–BR-142, BR-149–BR-150, BR-152, BR-154, BR-156, BR-157; dodati BR-328–BR-344. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -211,7 +212,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
    - 5.14.3 Funkcionalni obuhvat Uredničkog portala (BR-126–BR-128)
-   - 5.15 Newsletter (BR-138–BR-169)
+   - 5.15 Newsletter (BR-138–BR-169, BR-328–BR-344)
    - 5.16 Evidencija aktivnosti (BR-170–BR-188, katalog Manifestacije)
 2. Istorija verzija (zaglavlje dokumenta)
 3. Change Log
@@ -4331,22 +4332,27 @@ Pretplata na Newsletter nema uticaja na prava korisnika, korisničke uloge, stat
 
 #### Funkcionalni tokovi
 
-##### Tok pretplate
+##### Tok prve pretplate
 
-1. Registrovani i verifikovani korisnik otvara podešavanja Newslettera.
-2. Aktivira pretplatu.
-3. Bira sve Organizatore ili jednog ili više konkretnih Organizatora.
-4. Potvrđuje izbor.
-5. Sistem evidentira aktivnu pretplatu.
-6. Pri prvoj aktivaciji pretplate sistem šalje potvrdu o aktiviranoj pretplati.
+1. Prijavljeni korisnik sa verifikovanom aktuelnom e-mail adresom otvara podešavanja Newslettera.
+2. Nijedan opseg nije unaprijed izabran.
+3. Korisnik eksplicitno bira „Svi događaji“ ili „Odabrani organizatori“ sa validnim izborom (najmanje jedan Organizator i/ili „Bez organizatora“).
+4. Korisnik izvršava akciju „Pretplati se“.
+5. Sistem validira prijavu, verifikovanu e-mail adresu i izbor.
+6. Ako validacija ne uspije, sistem prikazuje grešku u aplikaciji i ne aktivira pretplatu.
+7. Ako validacija uspije, pretplata odmah postaje aktivna. Sistem ne šalje dodatni e-mail confirmation link niti obaveznu servisnu e-mail poruku.
+8. Sistem prikazuje jasnu poruku o uspješnoj pretplati u aplikaciji.
 
-##### Tok izmjene izbora
+##### Tok izmjene preferenci
 
-1. Pretplatnik otvara podešavanja Newslettera.
-2. Mijenja izbor Organizatora.
-3. Potvrđuje izbor.
-4. Sistem novi izbor koristi pri budućim Newsletter slanjima.
-5. Izmjena izbora ne zahtijeva retroaktivno slanje ranije objavljenih događaja.
+1. Aktivni pretplatnik otvara podešavanja Newslettera.
+2. Mijenja režim i/ili izbor sadržaja.
+3. Izvršava akciju „Sačuvaj izmjene“ (odvojenu od „Odjavi se“).
+4. Sistem validira izbor. Prazan ili nevalidan izbor se ne čuva i ne izaziva odjavu; sistem prikazuje grešku u aplikaciji.
+5. Pri promjeni režima sistem tretira izbor kao novi kompletan izbor; prethodne preference drugog režima se ne zadržavaju kao skrivene aktivne preference i ne vraćaju se automatski.
+6. Sistem novi izbor koristi pri budućim Newsletter slanjima.
+7. Izmjena preferenci ne zahtijeva retroaktivno slanje ranije objavljenih događaja.
+8. Sistem prikazuje jasnu poruku o uspješnom čuvanju u aplikaciji. Obavezna servisna e-mail poruka se ne šalje.
 
 ##### Tok pripreme i slanja novoobjavljenih događaja
 
@@ -4354,14 +4360,14 @@ Pretplata na Newsletter nema uticaja na prava korisnika, korisničke uloge, stat
 2. Sistem pronalazi događaje koji su novoobjavljeni od prethodno relevantnog slanja ili još nisu poslati odgovarajućim pretplatnicima.
 3. Sistem zadržava samo događaje sa statusom **Objavljen**.
 4. Sistem zadržava samo događaje sa najmanje jednim budućim terminom.
-5. Sistem pronalazi aktivne pretplatnike kojima događaj odgovara prema izboru Organizatora.
+5. Sistem pronalazi pretplatnike sa aktivnom pretplatom i dozvoljenom isporukom kojima događaj odgovara prema važećem opsegu preferenci („Svi događaji“ ili „Odabrani organizatori“, uključujući „Bez organizatora“).
 6. Sistem isključuje događaje koji su konkretnom pretplatniku već poslati kao novoobjavljeni sadržaj.
 7. Sistem grupiše više odgovarajućih događaja u jednu poruku.
 8. Sistem grupiše sadržaj po Organizatoru.
 9. Sistem ne duplira događaj zbog više termina.
 10. Sistem u jednoj stavci prikazuje relevantne buduće termine događaja.
 11. Sistem dodaje link ka detaljima svakog događaja.
-12. Sistem dodaje link ka objavljenom pregledu događaja svakog Organizatora na portalu Kalendara kulture.
+12. Sistem, kada Događaj ima registrovanog Organizatora, dodaje link ka objavljenom pregledu događaja tog Organizatora na portalu Kalendara kulture.
 13. Sistem dodaje mogućnost odjave.
 14. Sistem ne šalje poruku pretplatniku bez odgovarajućih događaja.
 15. Sistem šalje jedan objedinjeni Newsletter svakom odgovarajućem pretplatniku.
@@ -4371,7 +4377,7 @@ Pretplata na Newsletter nema uticaja na prava korisnika, korisničke uloge, stat
 
 1. Nastaje jedna ili više uzastopnih poslovno značajnih promjena događaja: otkazivanje, odlaganje, promjena datuma, vremena ili lokacije održavanja.
 2. Sistem utvrđuje da li se promjena odnosi na jedan termin ili na kompletan događaj.
-3. Sistem pronalazi aktivne pretplatnike kojima je isti događaj prethodno bio uključen u Newsletter.
+3. Sistem pronalazi pretplatnike sa aktivnom pretplatom i dozvoljenom isporukom kojima je isti događaj prethodno bio uključen u Newsletter.
 4. Sistem isključuje pretplatnike kojima je ista promjena istog događaja (ili istog termina) već poslata.
 5. Ako je nad istim događajem nastalo više uzastopnih poslovno značajnih promjena prije slanja, sistem priprema jedinstveno obavještenje koje odražava posljednje važeće stanje; ne šalje istoriju niti međukorake.
 6. Sistem ne priprema međusobno kontradiktorna obavještenja za isti događaj u okviru istog ciklusa pripreme.
@@ -4380,10 +4386,25 @@ Pretplata na Newsletter nema uticaja na prava korisnika, korisničke uloge, stat
 
 ##### Tok odjave
 
-1. Pretplatnik bira odjavu kroz Newsletter poruku ili kroz podešavanja pretplate.
-2. Sistem deaktivira Newsletter pretplatu.
-3. Sistem potvrđuje uspješnu odjavu.
-4. Korisnik zadržava Digital Kotor nalog i pristup drugim modulima platforme.
+1. Pretplatnik bira akciju „Odjavi se“ kroz podešavanja pretplate ili kroz mogućnost odjave u Newsletter poruci.
+2. Sistem traži jednostavnu potvrdu korisnika. Ne traži ponovni unos lozinke niti e-mail confirmation.
+3. Nakon potvrde sistem pretplatu postavlja na neaktivnu, evidentira vrijeme odjave i uklanja aktivne preference, veze sa izabranim Organizatorima i aktivni izbor „Bez organizatora“. Zapis pretplate se ne briše.
+4. Sistem potvrđuje uspješnu odjavu porukom u aplikaciji. Obavezna servisna e-mail poruka se ne šalje.
+5. Korisnik zadržava Digital Kotor nalog i pristup drugim modulima platforme.
+
+##### Tok ponovne pretplate
+
+1. Ranije odjavljeni korisnik otvara podešavanja Newslettera.
+2. Sistem koristi postojeći zapis pretplate; ne kreira novi.
+3. Prethodne preference se ne vraćaju. Nijedan opseg nije unaprijed izabran.
+4. Korisnik pravi novi kompletan izbor prema istim pravilima kao kod prve pretplate i izvršava „Pretplati se“.
+5. Sistem reaktivira pretplatu i prikazuje poruku u aplikaciji.
+
+##### Tok kada nema relevantnog sadržaja
+
+1. Sistem priprema Newsletter za pretplatnika sa aktivnom pretplatom i dozvoljenom isporukom.
+2. Ako nema sadržaja koji odgovara važećim preferencama, sistem ne šalje e-mail.
+3. Pretplata i preference ostaju nepromijenjene.
 
 ---
 
@@ -4409,29 +4430,35 @@ Newsletter nije dostupan anonimnom, neprijavljenom posjetiocu.
 
 Pretplata na Newsletter je dobrovoljna.
 
+Registracija korisnika na Digital Kotor ne znači automatsku Newsletter pretplatu.
+
 Pretplata na Newsletter nije uslov za korišćenje Kalendara kulture niti drugih modula platforme Digital Kotor.
+
+Korisnik koji se nije pretplatio nije Newsletter pretplatnik, nema aktivnu pretplatu i ne prima Newsletter.
 
 ---
 
 ##### BR-141 – Upravljanje pretplatom
 
-Registrovani i verifikovani korisnik može:
+Registrovani i verifikovani prijavljeni korisnik može:
 
-* aktivirati Newsletter pretplatu;
-* mijenjati izbor Organizatora;
-* deaktivirati pretplatu (odjava);
-* ponovo aktivirati ranije odjavljenu pretplatu.
+* aktivirati Newsletter pretplatu akcijom „Pretplati se“;
+* mijenjati preference akcijom „Sačuvaj izmjene“;
+* deaktivirati pretplatu akcijom „Odjavi se“;
+* ponovo aktivirati ranije odjavljenu pretplatu, koristeći isti zapis pretplate.
 
 ---
 
-##### BR-142 – Izbor Organizatora
+##### BR-142 – Izbor opsega sadržaja
 
-Pretplatnik može izabrati:
+Pretplatnik bira tačno jedan režim:
 
-* sve Organizatore, odnosno sve događaje koji ispunjavaju pravila Newslettera; ili
-* jednog ili više konkretnih Organizatora.
+* „Svi događaji“ — dinamički opseg koji obuhvata događaje svih postojećih i budućih registrovanih Organizatora i događaje iz grupe „Bez organizatora“; ili
+* „Odabrani organizatori“ — jedan ili više registrovanih Organizatora i/ili izbor „Bez organizatora“.
 
-Ako korisnik ne izabere nijednog konkretnog Organizatora, sistem smatra da je izabrao sve Organizatore.
+Prazan selektivni izbor ne znači „Svi događaji“ i ne znači odjavu. Prazan selektivni izbor nije validan i ne može se aktivirati niti sačuvati.
+
+„Svi događaji“ se ne implementira kao snimak svih trenutno postojećih Organizatora.
 
 ---
 
@@ -4486,7 +4513,7 @@ Događaj može biti uključen kao novoobjavljeni sadržaj samo ako:
 * ima status **Objavljen**;
 * javno je dostupan u skladu sa pravilima portala;
 * ima najmanje jedno buduće održavanje u trenutku pripreme Newslettera;
-* odgovara izboru Organizatora konkretnog pretplatnika;
+* odgovara važećem opsegu preferenci konkretnog pretplatnika;
 * prethodno nije već poslat tom pretplatniku kao novoobjavljeni sadržaj.
 
 Kao novoobjavljeni sadržaj Newsletter ne uključuje događaje u statusima **Nacrt**, **Na odobrenju**, **Arhiviran** niti **Otkazan**.
@@ -4509,21 +4536,25 @@ Obavještenja o otkazivanju, odlaganju ili promjeni datuma, vremena ili lokacije
 
 ---
 
-##### BR-149 – Aktivni pretplatnik
+##### BR-149 – Aktivna pretplata i dozvoljena isporuka
 
-Aktivni pretplatnik je registrovani i verifikovani korisnik sa aktivnom Newsletter pretplatom koji nije izvršio odjavu.
+Aktivna pretplata postoji kada se korisnik dobrovoljno pretplatio i nije se odjavio.
 
-Postojanje odgovarajućih događaja nije dio definicije aktivnog pretplatnika.
+Postojanje odgovarajućih događaja nije dio definicije aktivne pretplate.
 
-Newsletter se šalje samo aktivnim pretplatnicima.
+Dozvoljena isporuka, pored aktivne pretplate, zahtijeva da `User` u trenutku slanja ima aktivan nalog i verifikovanu aktuelnu e-mail adresu.
+
+Newsletter se šalje samo kada su ispunjeni aktivna pretplata, dozvoljena isporuka i postojanje relevantnog sadržaja.
 
 ---
 
 ##### BR-150 – Ne-slati prazan Newsletter
 
-Ako za konkretnog aktivnog pretplatnika u trenutku pripreme nema nijednog odgovarajućeg novoobjavljenog događaja niti prioritetnog obavještenja prema pravilima slanja, Newsletter mu se ne šalje.
+Ako za konkretnog pretplatnika sa aktivnom pretplatom i dozvoljenom isporukom u trenutku pripreme nema nijednog Newsletter-relevantnog sadržaja koji odgovara njegovim važećim preferencama, Newsletter mu se ne šalje.
 
-Sistem ne smije dodavati događaje drugih Organizatora samo da bi Newsletter sadržao podatke.
+Sistem ne smije dodavati događaje izvan važećih preferenci samo da bi Newsletter sadržao podatke.
+
+Nepostojanje relevantnog sadržaja ne deaktivira pretplatu, nije greška i nije odjava.
 
 ---
 
@@ -4546,7 +4577,9 @@ Za svaki događaj Newsletter sadrži najmanje:
 
 ##### BR-152 – Veza ka pregledu Organizatora
 
-Za svakog Organizatora čiji se događaji prikazuju u Newsletteru, Newsletter sadrži vezu ka objavljenom pregledu događaja tog Organizatora na portalu Kalendara kulture.
+Za svakog registrovanog Organizatora čiji se događaji prikazuju u Newsletteru, Newsletter sadrži vezu ka objavljenom pregledu događaja tog Organizatora na portalu Kalendara kulture.
+
+Za grupu „Bez organizatora“ ne postoji veza ka pregledu registrovanog Organizatora.
 
 ---
 
@@ -4554,7 +4587,8 @@ Za svakog Organizatora čiji se događaji prikazuju u Newsletteru, Newsletter sa
 
 Kada Newsletter obuhvata više događaja:
 
-* događaji se grupišu po Organizatoru;
+* događaji sa registrovanim Organizatorom se grupišu po tom Organizatoru;
+* događaji iz grupe „Bez organizatora“ se grupišu pod tim nazivom;
 * isti događaj se ne prikazuje više puta;
 * događaj se ne duplira zbog više termina;
 * pretplatnik dobija jedan objedinjeni Newsletter, a ne poseban e-mail za svaki događaj niti nužno poseban e-mail za svakog Organizatora.
@@ -4563,16 +4597,22 @@ Kada Newsletter obuhvata više događaja:
 
 ##### BR-154 – Odjava
 
-Pretplatnik može izvršiti odjavu u svakom trenutku.
+Pretplatnik može izvršiti odjavu u svakom trenutku akcijom „Odjavi se“.
 
 Odjava je dostupna iz Newsletter poruke i kroz korisnički interfejs podešavanja pretplate.
 
+Prije izvršenja sistem traži jednostavnu potvrdu korisnika. Ne traži se ponovni unos lozinke niti e-mail confirmation.
+
 Odjava:
 
-* deaktivira Newsletter pretplatu;
+* pretplatu postavlja na neaktivnu i evidentira vrijeme odjave;
+* uklanja aktivne preference, veze sa izabranim Organizatorima i aktivni izbor „Bez organizatora“;
+* ne briše zapis pretplate;
 * ne briše Digital Kotor korisnički nalog;
 * ne utiče na pristup drugim modulima;
 * ne utiče na korisničke uloge.
+
+Prazan izbor opsega nije odjava.
 
 ---
 
@@ -4582,13 +4622,13 @@ Svaki poslati Newsletter sadrži jasnu mogućnost odjave.
 
 ---
 
-##### BR-156 – Potvrda prve aktivacije
+##### BR-156 – Potvrda u aplikaciji
 
-Nakon prve uspješne aktivacije Newsletter pretplate sistem korisniku šalje potvrdu o aktiviranoj pretplati.
+Nakon uspješne aktivacije, uspješnog čuvanja preferenci i uspješne odjave sistem prikazuje jasnu poruku u aplikaciji.
 
-Potvrda nije double opt-in. Double opt-in nije dio V1.
+Dodatni e-mail confirmation link za Newsletter pretplatu se ne zahtijeva. Double opt-in nije dio V1.
 
-Pri ponovnoj aktivaciji pretplate sistem može prikazati potvrdu u korisničkom interfejsu; ponovno slanje početne potvrde nije obavezno.
+Za aktivaciju, izmjenu preferenci i odjavu sistem ne šalje obavezne servisne e-mail poruke.
 
 ---
 
@@ -4604,7 +4644,12 @@ Za V1 nisu dio opsega Newslettera:
 * posebne Newsletter kampanje Organizatora;
 * ručno slanje Newslettera;
 * različiti Newsletteri po ulozi korisnika;
-* definisanje tačnog tehničkog intervala periodične ili prioritetne isporuke.
+* definisanje tačnog tehničkog intervala periodične ili prioritetne isporuke;
+* kriterijum pretplate „Prati Manifestaciju“;
+* automatska pretplata pri registraciji;
+* e-mail-only pretplatnik nezavisan od korisničkog naloga;
+* obavezne servisne e-mail poruke za aktivaciju, izmjenu preferenci i odjavu;
+* migracija testnih pretplatnika postojeće implementacije.
 
 ---
 
@@ -4712,6 +4757,146 @@ Više gotovo istovremenih poslovno značajnih promjena može biti predstavljeno 
 Pretplatniku se ne šalju međusobno kontradiktorna obavještenja za isti događaj u okviru istog ciklusa pripreme Newslettera.
 
 Korisnik dobija jedno konačno poslovno stanje događaja.
+
+##### BR-328 – Jedna pretplata po korisniku
+
+Jedan `User` može imati najviše jednu Newsletter pretplatu Kalendara kulture.
+
+Pri reaktivaciji sistem ne kreira novu pretplatu.
+
+##### BR-329 – Značenje „Bez organizatora“
+
+„Bez organizatora“ je usvojeni kratki UI naziv.
+
+Za Newsletter selekciju obuhvata Događaje koji nemaju kanonsku vezu sa registrovanim `CulturalOrganizer`, uključujući Događaj bez Organizatora i Događaj sa ručno upisanim nazivom neregistrovanog Organizatora bez veze sa `CulturalOrganizer`.
+
+Ručni naziv Organizatora ostaje podatak Događaja, ne pretvara se u `CulturalOrganizer`, ne postaje zaseban Newsletter izvor i ne stvara virtualnog Organizatora.
+
+Događaj sa registrovanim `CulturalOrganizer` ne pripada ovoj grupi.
+
+##### BR-330 – Minimalni validni izbor
+
+Aktivna pretplata mora imati validan opseg.
+
+Dozvoljeno:
+
+* „Svi događaji“; ili
+* „Odabrani organizatori“ sa najmanje jednim Organizatorom i/ili „Bez organizatora“.
+
+Dozvoljen je korisnik koji prati isključivo „Bez organizatora“.
+
+Nije dozvoljeno aktivirati ili sačuvati „Odabrani organizatori“ bez ijednog izbora.
+
+##### BR-331 – Prva pretplata
+
+Prilikom prve pretplate nijedan opseg nije unaprijed izabran.
+
+Korisnik mora eksplicitno izabrati validan opseg prije akcije „Pretplati se“.
+
+##### BR-332 – Aktivacija pretplate
+
+Korisnik mora biti prijavljen, imati verifikovanu aktuelnu e-mail adresu, napraviti validan izbor i eksplicitno izvršiti „Pretplati se“.
+
+Pretplata tada odmah postaje aktivna. Dodatni e-mail confirmation link se ne zahtijeva.
+
+##### BR-333 – Uređivanje preferenci
+
+Akcija „Sačuvaj izmjene“ je odvojena od „Odjavi se“.
+
+Promjena preferenci nije nova pretplata, nije odjava i ne mijenja kontinuitet aktivne pretplate.
+
+Prazan ili nevalidan izbor ne može se sačuvati i ne izaziva automatsku odjavu.
+
+##### BR-334 – Promjena režima
+
+Promjena između „Svi događaji“ i „Odabrani organizatori“ je novi kompletan izbor sadržaja.
+
+Prethodne preference drugog režima ne ostaju kao skrivene aktivne preference.
+
+Pri prelasku na „Svi događaji“ prethodne pojedinačne veze sa Organizatorima više nijesu aktivne preference.
+
+Pri prelasku na „Odabrani organizatori“ korisnik pravi novi izbor; sistem ne vraća automatski raniji selektivni izbor.
+
+##### BR-335 – Ponovna pretplata
+
+Pri ponovnoj pretplati koristi se postojeći zapis pretplate.
+
+Prethodne preference se ne vraćaju.
+
+Korisnik mora napraviti novi kompletan izbor prema istim validacionim pravilima kao kod prve pretplate.
+
+##### BR-336 – Deaktivirani Organizator
+
+Ako Organizator kojeg korisnik prati postane neaktivan:
+
+* preference se ne uklanjaju automatski;
+* korisnik se ne odjavljuje;
+* veza sa Organizatorom se čuva;
+* neaktivni Organizator se ne koristi kao aktivan Newsletter izvor dok je neaktivan.
+
+Ako Organizator ponovo postane aktivan, sačuvana preferenca ponovo važi.
+
+Ako korisnik prati samo neaktivne Organizatore, pretplata ostaje aktivna i ništa se ne šalje dok nema relevantnog sadržaja.
+
+##### BR-337 – Manifestacija nije kriterijum pretplate
+
+U V1 Manifestacija nije poseban kriterijum Newsletter pretplate.
+
+Ne uvodi se „Prati Manifestaciju“.
+
+Događaj koji pripada Manifestaciji selektuje se prema sopstvenom Newsletter kriterijumu: registrovani Organizator ili „Bez organizatora“.
+
+##### BR-338 – Promjena e-mail adrese
+
+Newsletter pretplata pripada `User` nalogu. Aktuelni `User.email` je adresa za isporuku.
+
+Ne vodi se zasebna Newsletter kopija e-mail adrese kao nezavisni izvor istine.
+
+Ako novi e-mail nije verifikovan: pretplata i preference ostaju sačuvane; isporuka je privremeno blokirana.
+
+Nakon verifikacije nove adrese isporuka se može nastaviti bez nove pretplate.
+
+##### BR-339 – Deaktivacija korisničkog naloga
+
+Deaktivacija `User` naloga nije Newsletter odjava.
+
+Pretplata i preference ostaju. Isporuka je blokirana.
+
+Ako se isti `User` legitimno reaktivira i ispunjava ostale uslove, postojeća pretplata može ponovo učestvovati u isporuci.
+
+##### BR-340 – Trajno brisanje korisnika
+
+Kod trajnog brisanja `User` naloga uklanja se njegova Newsletter pretplata, aktivne preference i veze prema Organizatorima.
+
+Newsletter pretplata ne postoji kao zapis bez korisnika.
+
+Istorijska evidencija već izvršenih isporuka nije predmet ovog pravila.
+
+##### BR-341 – Dejstvo izmjene preferenci
+
+Promjena Newsletter preferenci primjenjuje se od trenutka uspješnog čuvanja nadalje.
+
+Nema retroaktivnog dejstva.
+
+Promjena preference sama po sebi ne pokreće slanje ranije objavljenih Događaja koje korisnik ranije nije pratio.
+
+##### BR-342 – Greške i uspjeh u aplikaciji
+
+Sistem prikazuje jasne poruke o uspjehu i grešci u aplikaciji za aktivaciju, čuvanje preferenci, odjavu i validaciju izbora.
+
+##### BR-343 – Testna postojeća implementacija
+
+Postojeća Newsletter implementacija je testna.
+
+Nema obaveze migracije testnih pretplatnika niti kompatibilnosti sa starim e-mail-only ili fiksnim sedmičnim modelom.
+
+Novi Newsletter projektuje se direktno prema kanonskom modelu. Kanonski model ima prednost.
+
+##### BR-344 – Kanonski UI termini Newslettera
+
+Kanonski UI termini su: Newsletter; Pretplati se; Odjavi se; Sačuvaj izmjene; Svi događaji; Odabrani organizatori; Bez organizatora.
+
+Ne koristi se duži UI naziv „Uključi događaje bez Organizatora“.
 
 **Status:** Approved
 
@@ -5161,3 +5346,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-11 | FS-001 (PATCH-FS-069): PO-ORG-06 / BM PATCH-068 — privacy-safe Moderator invitation; usklađeni BR-053/054/055/135/137/275/307; dodati BR-308–BR-320. TARGET vs CURRENT. Bez izmjene implementacije. Verzija ostaje 1.0.0. |
 | 2026-08-12 | FS-001 (PATCH-FS-070): PO-MF-WF-01–04 / BM PATCH-070 — dual MF lifecycle by creator origin; usklađeni BR-100/101/190/195/196; dodati BR-321–BR-325; Event submit guard (BR-325 / BR-018). Verzija ostaje 1.0.0. |
 | 2026-08-13 | FS-001 (PATCH-FS-071): PO-ORG/MOD rejected request editor cleanup / BM PATCH-072 — workspace dismiss odbijenih Org/Mod zahtjeva; BR-055/073 retention KEEP; dodati BR-326–BR-327. Verzija ostaje 1.0.0. |
+| 2026-08-14 | FS-001 (PATCH-FS-072): PO-NL-01…PO-NL-22 / BM PATCH-073 — Newsletter pretplata i preference; usklađeni tokovi §5.15 i BR-140–BR-142, BR-149–BR-150, BR-152, BR-154, BR-156, BR-157; dodati BR-328–BR-344. Verzija ostaje 1.0.0. Bez izmjene implementacije. |

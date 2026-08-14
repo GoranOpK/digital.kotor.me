@@ -7,8 +7,8 @@
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active  
-**Verzija:** 1.0.11
-**Datum:** 2026-08-13
+**Verzija:** 1.0.12
+**Datum:** 2026-08-14
 
 ---
 
@@ -28,6 +28,7 @@
 | 1.0.9 | 2026-08-12 | **6A residual Package A PRODUCTION CLOSEOUT (status only):** `day()` canonical cutover **DEPLOYED** (`f35cb2e`); production smoke empty-date **PASS** — **PRODUCTION VERIFIED — EMPTY-DATE SCENARIO CONFIRMED**; content-bearing day not separately production-smoked (local coverage; not a blocker). **Package A CLOSED.** Phase B hard-remove / flag cleanup ostaje **OPEN**. Bez izmjene redoslijeda Faza 7–8. Bez izmjene BM/FS. |
 | 1.0.10 | 2026-08-13 | **Phase B1+B2 status sync:** flag + dual-read + legacy CRUD runtime **REMOVED** (canonical-only public read). **B3** `cultural_events` DROP = **OPEN / DEFERRED**. **IMPLEMENTED / TESTED (local); NOT PRODUCTION VERIFIED.** FAZA 7 (TS-011) ostaje naredna velika faza. Bez izmjene BM/FS. |
 | 1.0.11 | 2026-08-13 | **FAZA 6A FINAL DOCUMENTATION CLOSURE:** FAZA 6A = **CLOSED**; B1+B2 = **PRODUCTION VERIFIED / CLOSED**; categories **14/14 PASS**; public SSOT canonical-only; dual-read/write = 0; B3 DROP = **DEFERRED / non-blocking**; FAZA 7 ostaje naredna. Bez izmjene BM/FS. Bez izmjene implementacije. |
+| 1.0.12 | 2026-08-14 | **PO-NL-01…22 / Newsletter decision sync:** FAZA 7 cilj = kanonski TS-011 v1.0.2; postojeći Newsletter = testna implementacija; **bez** migracije testnih pretplatnika / e-mail-only backfill-a; CANONICAL MODEL WINS. Usklađeno sa BM PATCH-073 / FS PATCH-FS-072. Bez izmjene implementacije. |
 
 ---
 
@@ -103,7 +104,7 @@ Primjeri velikih migracija (schema / novi domen):
 
 * Uvođenje novog modela Događaj + Održavanja 1..N (TS-003 / TS-004) — **bez** migracije/backfill-a legacy `cultural_events` sadržaja (**PO-EV-01**)
 * Manifestacije (TS-005)
-* Newsletter model (TS-011)
+* Newsletter model (TS-011) — **bez** migracije/backfill-a testnih pretplatnika (**PO-NL-22**)
 
 **PO-EV-01:** Postojeći zapisi u `cultural_events` smatraju se isključivo testnim/prototipskim podacima, ne referentnim produkcijskim sadržajem. Ne radi se migracija tih zapisa, backfill, dual-write ni adapteri radi očuvanja legacy sadržaja. Novi domen implementira se direktno prema BM/FS/TS; legacy flat model ostaje privremeno do cutover-a.
 
@@ -176,7 +177,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | Održavanja 1..N | Nema | Faza 3 |
 | Manifestacije | **PRODUCTION ACCEPTED** (6B-01…6B-04 + PO-MF-WF; deployed) | **FAZA 4 / 6B FORMALLY CLOSED**; migracije RAN; `cultural_manifestations` = 0 redova; cleanup N/A |
 | Katalozi lokacija / kategorija / medija | Nema / ENUM | Faza 1 |
-| Newsletter (sedmični cron) | Postoji | Refaktor u Fazi 7 (TS-011) |
+| Newsletter (sedmični cron; testna implementacija) | Postoji | Zamjena kanonskim modelom u Fazi 7 (TS-011 v1.0.2); **bez** migracije testnih pretplatnika (**PO-NL-22**) |
 | Centralni audit (FT-003) | Nema | **Faza 8** (TS-012) — ne ranije |
 
 ---
@@ -353,11 +354,11 @@ analiza → implementacija → test → review → merge → deploy
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Zamjena sedmičnog digest-a modelom TS-011 |
+| **Cilj** | Zamjena testnog sedmičnog digest-a kanonskim modelom TS-011 v1.0.2 |
 | **Moduli** | TS-011 |
-| **Migracija** | Velika (pretplata / ledger / pending) — zaseban deployment |
-| **Rizici** | Dupla slanja; kontradiktorne poruke |
-| **Rezultat** | Event-driven newsletter |
+| **Migracija** | Velika schema/domen pretplate (jedan deployment); **PO-NL-22:** **bez** migracije/backfill-a postojećih testnih pretplatnika; CANONICAL MODEL WINS |
+| **Rizici** | Dupla slanja; kontradiktorne poruke; paralelni stari weekly command ako se ne ugasi pri cutover-u |
+| **Rezultat** | Event-driven newsletter na `User` pretplati; opseg „Svi događaji“ / „Odabrani organizatori“ / „Bez organizatora“ |
 | **Zatim** | Stabilizacija |
 
 ### FAZA 8 — Evidencija aktivnosti (TS-012)

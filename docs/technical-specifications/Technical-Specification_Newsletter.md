@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Newsletter  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** USVOJEN  
-**Verzija:** 1.0.1 (DRAFT)  
-**Datum:** 2026-08-07
+**Verzija:** 1.0.2
+**Datum:** 2026-08-14
 
 ---
 
@@ -18,6 +18,7 @@
 |---------|--------|------|
 | 1.0.0 | 2026-08-07 | Prvi nacrt Technical Specification za funkcionalnu cjelinu Newsletter. Usklađen sa BM-13 (BM-NL-01–BM-NL-25), BM-GL-19, FS §5.15 (BR-138–BR-169), FS §5.16 katalog Newsletter (BR-184–BR-186), TS-003 v0.1.2, TS-004, TS-009, TS-010 v1.0.1, Feature Registry (FT-001), METHODOLOGY. Uvažava PO-DG-07 / PATCH-053: Otkazan terminalan; nema republish logike; G-NL-08 zatvoren. Tehnički predlozi (model podataka, obrada zadataka, raspored automatske obrade, evidencija dostave) bez novih poslovnih pravila. Bez izmjene BM/FS/ostalih TS. Bez izmjene implementacije. |
 | 1.0.1 | 2026-08-07 | Završni PATCH nacrta prije validation-a: usvojena crnogorska terminologija; Pravila emitovanja okidača; Promjena na čekanju kao normativni dio prioritetnog toka; Evidencija dostavljenih Newsletter poruka (jedan Identitet pretplatnika); Kontrolni zapis promjene; cjelovito evidentiranje dostave; Arhitektura obrade Newsletter zadataka (obrada u grupama, raspodjela, pokazivač, skaliranje, ograničenje brzine); Raspored automatske obrade; Audit događaji; legacy PRAVILO 5.3.1–5.3.4; Van obuhvata PRAVILO 5.4.1–5.4.2. Bez novih BM/FS odluka. Bez izmjene drugih dokumenata. |
+| 1.0.2 | 2026-08-14 | **PO-NL-01…PO-NL-22 / BM PATCH-073 / FS PATCH-FS-072:** tehnički ugovor pretplate na `User`; jedna pretplata; `User.email` kao adresa isporuke (nije Newsletter SSOT); režimi `all_events` / `selected_organizers`; „Bez organizatora“; validan izbor; bez confirmation e-mail polja; odjava čisti aktivne preference; deaktivirani Organizator KEEP veze; cascade pri brisanju `User`; delivery eligibility; Manifestacija nije dimenzija pretplate; testni legacy bez backfill-a pretplatnika. Uklonjene stale CURRENT oznake „DRAFT“ / „Nacrt“ iz zaglavlja i statusa poglavlja (istorija verzija 1.0.0/1.0.1 KEEP). Bez izmjene implementacije. |
 
 Napomena:
 
@@ -33,6 +34,7 @@ Ne mijenjaju se postojeći redovi.
 |---------|--------|---------|
 | 1.0.0 | 2026-08-07 | Kreiran TS-011 (NACRT). Kompletna tehnička specifikacija Newslettera. |
 | 1.0.1 | 2026-08-07 | Završni PATCH: terminologija; okidači; Promjena na čekanju; Evidencija dostave; Kontrolni zapis promjene; cjelovita dostava; obrada zadataka; raspored; audit; legacy 5.3.1–5.3.4; van obuhvata 5.4.1–5.4.2. |
+| 1.0.2 | 2026-08-14 | PO-NL-01…22: pretplata na `User`; režimi opsega; „Bez organizatora“; delivery eligibility; bez confirmation e-mail polja; testni legacy bez migracije pretplatnika; cleanup stale DRAFT/Nacrt CURRENT oznaka. |
 
 ---
 
@@ -53,8 +55,8 @@ Dokument:
 
 Izvori istine za poslovna pravila:
 
-* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-13 BM-NL-01–BM-NL-25; BM-GL-19; BM PATCH-031–033; usklađenost sa PATCH-053 / PO-DG-07)
-* `docs/functional-specifications/Functional-Specification.md` (§5.15 BR-138–BR-169; §5.16 katalog Newsletter / BR-184–BR-186; PATCH-FS-031–034; usklađenost sa PATCH-FS-053)
+* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-13 BM-NL-01–BM-NL-44; BM-GL-19; BM-GL-27; BM PATCH-031–033; PATCH-073 / PO-NL-01…22; usklađenost sa PATCH-053 / PO-DG-07)
+* `docs/functional-specifications/Functional-Specification.md` (§5.15 BR-138–BR-169, BR-328–BR-344; §5.16 katalog Newsletter / BR-184–BR-186; PATCH-FS-031–034; PATCH-FS-072; usklađenost sa PATCH-FS-053)
 * `docs/features/Feature-Registry.md` (FT-001 — Newsletter)
 * `docs/METHODOLOGY.md` (M-TS-001–M-TS-005)
 * `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 v0.1.2)
@@ -68,34 +70,34 @@ Izvori istine za poslovna pravila:
 
 | Poglavlje | Status |
 |-----------|--------|
-| 1. Pregled funkcionalne cjeline | Nacrt |
-| 2. Granice odgovornosti | Nacrt |
-| 3. Arhitektonski principi | Nacrt |
-| 4. Komponente | Nacrt |
-| 5. Pravila emitovanja okidača | Nacrt |
-| 6. Model pretplate | Nacrt |
-| 7. Model podataka | Nacrt |
-| 8. Lifecycle pretplate | Nacrt |
-| 9. Lifecycle Newsletter poruke | Nacrt |
-| 10. Kandidati za slanje | Nacrt |
-| 11. Redovni Newsletter | Nacrt |
-| 12. Prioritetni Newsletter | Nacrt |
-| 13. Evidencija dostavljenih Newsletter poruka | Nacrt |
-| 14. Promjena na čekanju | Nacrt |
-| 15. Arhitektura obrade Newsletter zadataka | Nacrt |
-| 16. Raspored automatske obrade | Nacrt |
-| 17. Validacije | Nacrt |
-| 18. Guard uslovi | Nacrt |
-| 19. Error handling | Nacrt |
-| 20. Ponovni pokušaj | Nacrt |
-| 21. Audit događaji | Nacrt |
-| 22. Autorizacija | Nacrt |
-| 23. Matrica sljedivosti | Nacrt |
-| 24. Acceptance kriterijumi | Nacrt |
-| 25. Napomene za implementaciju | Nacrt |
-| 26. Legacy implementacija | Nacrt |
-| 27. Van obuhvata (Out of Scope) | Nacrt |
-| 28. Otvorena pitanja | Nacrt |
+| 1. Pregled funkcionalne cjeline | USVOJENO |
+| 2. Granice odgovornosti | USVOJENO |
+| 3. Arhitektonski principi | USVOJENO |
+| 4. Komponente | USVOJENO |
+| 5. Pravila emitovanja okidača | USVOJENO |
+| 6. Model pretplate | USVOJENO |
+| 7. Model podataka | USVOJENO |
+| 8. Lifecycle pretplate | USVOJENO |
+| 9. Lifecycle Newsletter poruke | USVOJENO |
+| 10. Kandidati za slanje | USVOJENO |
+| 11. Redovni Newsletter | USVOJENO |
+| 12. Prioritetni Newsletter | USVOJENO |
+| 13. Evidencija dostavljenih Newsletter poruka | USVOJENO |
+| 14. Promjena na čekanju | USVOJENO |
+| 15. Arhitektura obrade Newsletter zadataka | USVOJENO |
+| 16. Raspored automatske obrade | USVOJENO |
+| 17. Validacije | USVOJENO |
+| 18. Guard uslovi | USVOJENO |
+| 19. Error handling | USVOJENO |
+| 20. Ponovni pokušaj | USVOJENO |
+| 21. Audit događaji | USVOJENO |
+| 22. Autorizacija | USVOJENO |
+| 23. Matrica sljedivosti | USVOJENO |
+| 24. Acceptance kriterijumi | USVOJENO |
+| 25. Napomene za implementaciju | USVOJENO |
+| 26. Legacy implementacija | USVOJENO |
+| 27. Van obuhvata (Out of Scope) | USVOJENO |
+| 28. Otvorena pitanja | USVOJENO |
 
 ---
 
@@ -117,11 +119,12 @@ Izvori istine za poslovna pravila:
 Izvori
 
 Business Model:
-- BM-NL-01–BM-NL-25
+- BM-NL-01–BM-NL-44
 - BM-GL-19
+- BM-GL-27
 
 Functional Specification:
-- §5.15 (BR-138–BR-169)
+- §5.15 (BR-138–BR-169, BR-328–BR-344)
 - §5.16 katalog Newsletter (BR-184–BR-186)
 
 ## 1.1 Svrha funkcionalne cjeline
@@ -146,8 +149,8 @@ Obuhvat TS-011:
 1. obuhvat i granice odgovornosti modula Newsletter;
 2. arhitektura i komponente;
 3. pravila emitovanja okidača;
-4. model pretplate (korisnik, izbor Organizatora, aktivna pretplata, odjava, reaktivacija);
-5. konceptualni model podataka (pretplate, izbori Organizatora, Evidencija dostavljenih Newsletter poruka, Promjena na čekanju, token odjave, relacije);
+4. model pretplate (`User`, režimi opsega, „Bez organizatora“, aktivna pretplata, odjava, reaktivacija, delivery eligibility);
+5. konceptualni model podataka (pretplata na `User`, režim opsega, izbor Organizatora, izbor „Bez organizatora“, Evidencija dostavljenih Newsletter poruka, Promjena na čekanju, token odjave, relacije);
 6. lifecycle pretplate i Newsletter poruke;
 7. kandidati za slanje; redovni i prioritetni Newsletter;
 8. Evidencija dostavljenih Newsletter poruka (prvo uključivanje, zaštita od duplikata, posljednje stanje, agregacija, kontradiktorne poruke, cjelovito evidentiranje);
@@ -163,9 +166,10 @@ Van obuhvata ovog dokumenta: vidi §27 (PRAVILO 5.4.1–5.4.2).
 
 | Zavisnost | Uloga u odnosu na TS-011 |
 |-----------|---------------------------|
-| Platforma Digital Kotor – korisnički nalozi | Identitet pretplatnika; verifikovan nalog (BR-139) |
-| TS-001 Organizator | Filter izbora Organizatora; veza događaja → Organizator |
-| TS-003 Događaj | Status **Objavljen** / **Otkazan** / **Arhiviran**; okidač objave; terminalnost Otkazan |
+| Platforma Digital Kotor – korisnički nalozi | Identitet pretplatnika (`User`); aktuelni `User.email`; verifikacija; aktivnost naloga |
+| TS-001 Organizator | Filter izbora Organizatora; veza događaja → registrovani Organizator; deaktivacija Organizatora |
+| TS-003 Događaj | Status **Objavljen** / **Otkazan** / **Arhiviran**; okidač objave; terminalnost Otkazan; `organizer_id` vs ručni naziv |
+| TS-005 Manifestacija | Van dimenzije pretplate u V1; Događaj se selektuje po sopstvenom Organizator kriterijumu |
 | TS-004 Održavanje | Budući termini; **Odgođen**; otkaz termina; promjena datuma/vremena/lokacije |
 | TS-009 Javni portal | UI pretplate / odjave; linkovi ka detaljima događaja i pregledu Organizatora |
 | TS-010 Urednički portal | Izvori okidača (objava, otkaz, odlaganje, izmjene termina/lokacije); bez upravljanja pretplatnicima |
@@ -188,8 +192,8 @@ Sistem razlikuje tačno tri tipa u smislu BR-165:
 
 ## 2.1 Šta Newsletter radi
 
-* vodi pretplate registrovanih i verifikovanih korisnika;
-* čuva filter izbora Organizatora (**obavezni V1**; BM-NL-04, BR-142–BR-143);
+* vodi pretplate registrovanih i verifikovanih korisnika (jedna pretplata po `User`);
+* čuva opseg preferenci V1 (režim „Svi događaji“ ili „Odabrani organizatori“, uključujući „Bez organizatora“; BM-NL-04, BM-NL-27–BM-NL-29, BR-142, BR-328–BR-330);
 * periodično priprema i šalje redovni Newsletter o novoobjavljenim događajima;
 * priprema i šalje prioritetna obavještenja o poslovno značajnim promjenama;
 * vodi Evidenciju dostavljenih Newsletter poruka radi zaštite od duplikata;
@@ -284,85 +288,128 @@ Konceptualne komponente (bez obaveze imena klasa u kodu):
 
 ## 6.1 Korisnik
 
-* Pretplatnik = registrovani i **verifikovani** korisnik platforme Digital Kotor (BM-NL-04, BR-139).
+* Pretplata pripada `User` nalogu (BM-NL-39, BR-338). Aktuelni `User.email` je adresa za isporuku.
+* Ne vodi se zasebna Newsletter kopija e-mail adrese kao nezavisni izvor istine.
 * Anonimni / neprijavljeni posjetilac **nema** pristup pretplati.
-* Jedan korisnički nalog ↔ najviše jedna Newsletter pretplata.
-* **Identitet pretplatnika** je jedan kanonski izvor istine u modelu (veza pretplate na platformskog korisnika); drugi identifikatori se ne vode kao ravnopravni izvori istine.
+* Jedan `User` ↔ najviše jedna Newsletter pretplata (BM-NL-26, BR-328).
+* Aktivacija zahtijeva prijavljenog korisnika sa verifikovanom aktuelnom e-mail adresom (BM-NL-31, BR-332).
 
-## 6.2 Izbor Organizatora (obavezni V1)
+## 6.2 Opseg pretplate (obavezni V1)
 
-U skladu sa BM-NL-04 i BR-141–BR-143:
+U skladu sa BM-NL-27–BM-NL-29 i BR-142, BR-329–BR-330:
 
-* Pretplatnik može izabrati **sve Organizatore** ili **jednog ili više konkretnih** Organizatora.
-* Ako nije izabran nijedan konkretan Organizator, sistem tretira izbor kao **sve Organizatore**.
-* Tehnički predlog: režim `all_organizers = true` **ili** skup zapisa konkretnih Organizatora; prazan skup konkretnih izbora ≡ svi Organizatori.
-* Izbor Organizatora je **isključivo filter sadržaja**: ne daje prava nad Organizatorom ni događajima, ne otkriva pretplatnike Organizatoru/Moderatoru, ne omogućava slanje.
-* Pretplatnik može **mijenjati** svoj izbor; novi izbor važi za buduća slanja; nema retroaktivnog slanja ranije objavljenih događaja.
+* Režim `all_events` („Svi događaji“): dinamički filter. **Ne** zahtijeva pivot svih Organizatora. Obuhvata događaje svih postojećih i budućih registrovanih Organizatora i grupu „Bez organizatora“.
+* Režim `selected_organizers` („Odabrani organizatori“): pivot/relacija prema `CulturalOrganizer` za izabrane Organizatore **i/ili** eksplicitna preferenca `include_without_organizer` („Bez organizatora“).
+* Prazan selektivni izbor **nije** validan i **nije** ekvivalent „Svi događaji“.
+* Izbor je **isključivo filter sadržaja**.
+* Novi izbor važi od uspješnog čuvanja nadalje; nema retroaktivnog slanja (BM-NL-33, BR-341).
+* Promjena režima briše aktivne preference prethodnog režima; ne vraća automatski raniji selektivni izbor (BM-NL-34, BR-334).
 
-Ovo pravilo **nije** van obuhvata V1.
+## 6.3 „Bez organizatora“
 
-## 6.3 Aktivna pretplata
+Tehnički ugovor (BM-NL-28, BR-329):
 
-Aktivni pretplatnik (BM-NL-12, BR-149):
+* Uključeno: Događaj **bez** kanonske veze na `CulturalOrganizer` (`organizer_id` null), uključujući Događaj sa samo ručnim nazivom neregistrovanog Organizatora.
+* Nije uključeno: Događaj sa registrovanim `CulturalOrganizer`.
+* Ručni naziv nije virtualni Organizator i nije zaseban Newsletter izvor.
 
-* verifikovan korisnik;
+## 6.4 Aktivna pretplata vs dozvoljena isporuka
+
+Aktivna pretplata (BM-NL-12, BR-149):
+
 * pretplata u statusu **aktivna**;
-* nije izvršio odjavu.
+* korisnik nije izvršio odjavu.
 
-Postojanje kandidata za slanje **nije** dio definicije aktivnog pretplatnika.
+Dozvoljena isporuka (BM-NL-42):
 
-## 6.4 Odjava
+* aktivna pretplata; **i**
+* `User` nalog aktivan; **i**
+* aktuelni `User.email` verifikovan.
 
-* Dostupna iz Newsletter poruke (token link) i iz UI podešavanja (BR-154, BR-155).
-* Deaktivira pretplatu; **ne** briše nalog; **ne** mijenja uloge ni pristup modulima.
-* Tehnički: status odjavljen, vrijeme odjave, rotacija/invalidacija tokena odjave po potrebi.
+Postojanje kandidata za slanje **nije** dio definicije aktivne pretplate.
 
-## 6.5 Reaktivacija pretplate
+## 6.5 Odjava
 
-* Ranije odjavljeni korisnik može ponovo aktivirati pretplatu (BR-141).
-* Tehnički predlog: zadržati prethodni izbor Organizatora ako postoji; korisnik može izmijeniti pri ili nakon reaktivacije.
-* Ponovno slanje početne potvrde aktivacije **nije obavezno** (BR-156); UI potvrda je dovoljna.
+* Dostupna iz Newsletter poruke (token link) i iz UI akcijom „Odjavi se“ (BR-154, BR-155).
+* Prije izvršenja: jednostavna potvrda. Bez ponovnog unosa lozinke. Bez e-mail confirmationa.
+* Tehnički: status odjavljena; `unsubscribed_at`; uklanjanje aktivnih preferenci (pivot Organizatora i `include_without_organizer`); zapis pretplate **ostaje**; rotacija/invalidacija tokena odjave po potrebi.
+* Evidencija dostave se ne briše odjavom.
+
+## 6.6 Reaktivacija pretplate
+
+* Koristi se postojeći zapis pretplate (BM-NL-36, BR-335).
+* Prethodne preference se **ne** vraćaju.
+* Korisnik mora napraviti novi kompletan validan izbor, kao kod prve pretplate.
 * Reaktivacija **ne** zahtijeva retroaktivno slanje ranije objavljenih događaja.
 
-## 6.6 Potvrda prve aktivacije
+## 6.7 Potvrda aktivacije
 
-* Nakon **prve** uspješne aktivacije Sistem šalje e-mail potvrdu (BM-NL-15, BR-156).
+* Potvrda je **isključivo** poruka u aplikaciji (BM-NL-15, BM-NL-43, BR-156).
+* Nema dodatnog e-mail confirmation linka. Nema obavezne servisne e-mail poruke.
 * Nije double opt-in; double opt-in nije V1.
+* Polja `confirmation_sent_at` i `first_activated_at` **nisu** dio kanonskog modela (nema poslovne potrebe).
+
+## 6.8 Deaktivirani Organizator
+
+* Veza pretplata → Organizator se **ne** briše kada Organizator postane neaktivan (BM-NL-37, BR-336).
+* Neaktivni Organizator nije aktivan izvor dok je neaktivan.
+* Reaktivacija Organizatora ponovo aktivira sačuvanu preferencu.
+
+## 6.9 Manifestacija
+
+* Manifestacija **nije** dimenzija pretplate u V1 (BM-NL-38, BR-337).
+* Nema entiteta/preference „Prati Manifestaciju“.
+
+## 6.10 `User` lifecycle
+
+* Promjena e-maila: pretplata i preference ostaju; isporuka blokirana dok novi e-mail nije verifikovan.
+* Deaktivacija naloga: nije odjava; pretplata i preference ostaju; isporuka blokirana.
+* Trajno brisanje `User`: cascade uklanja pretplatu, aktivne preference i veze prema Organizatorima. Nema orphan pretplate.
 
 ---
 
 # 7. Model podataka
 
-Konceptualni model (bez SQL / migracija). Imena su predlog za implementaciju.
+Konceptualni model (bez SQL / migracija). Imena su predlog za implementaciju. Svako polje ima BM/FS sljedivost.
 
 ## 7.1 Entitet: Newsletter pretplata
 
-| Atribut (konceptualno) | Opis |
-|------------------------|------|
-| `id` | Identifikator pretplate |
-| Identitet pretplatnika | Kanonska veza na platformskog korisnika (unikatno) |
-| `status` | aktivna \| odjavljena |
-| `all_organizers` | `true` = svi Organizatori |
-| `subscribed_at` | Vrijeme posljednje aktivacije |
-| `unsubscribed_at` | Vrijeme odjave (nullable) |
-| `first_activated_at` | Vrijeme prve aktivacije (za potvrdu BR-156) |
-| `confirmation_sent_at` | Vrijeme slanja potvrde prve aktivacije |
-| Token odjave | Tajni token za odjavu iz poruke |
-| `created_at` / `updated_at` | Tehnički tragovi |
+| Atribut (konceptualno) | Odluka | Obrazloženje / sljedivost |
+|------------------------|--------|---------------------------|
+| `id` | KEEP | Identifikator pretplate |
+| Identitet pretplatnika (`user_id`, unikatno) | KEEP | BM-NL-26, BM-NL-39 |
+| `status` aktivna \| odjavljena | KEEP | BM-NL-12, BM-NL-35 |
+| `scope_mode` `all_events` \| `selected_organizers` | CHANGE (umjesto `all_organizers`) | BM-NL-27, BR-142 |
+| `include_without_organizer` | KEEP (novo, samo uz selektivni režim) | BM-NL-28, BM-NL-29; u `all_events` je implicitno obuhvaćeno dinamičkim opsegom i **ne** zahtijeva zasebno čuvanje kao aktivnu selektivnu preferencu |
+| `subscribed_at` | KEEP | Vrijeme posljednje aktivacije / reaktivacije |
+| `unsubscribed_at` | KEEP | Vrijeme odjave (nullable) |
+| `first_activated_at` | REMOVE | Bilo vezano za confirmation e-mail; nema kanonske potrebe (BM-NL-43) |
+| `confirmation_sent_at` | REMOVE | Nema confirmation e-maila (BM-NL-15, BM-NL-43, BR-156) |
+| Newsletter `email` kolona | REMOVE | SSOT je `User.email` (BM-NL-39) |
+| Token odjave | KEEP | BR-155 odjava iz poruke |
+| `created_at` / `updated_at` | KEEP | Tehnički tragovi |
+
+Kada je `scope_mode = all_events`, pivot Organizatora je prazan; filter se **ne** materijalizuje kao skup svih `organizer_id`.
+
+Kada je `scope_mode = selected_organizers`, mora postojati najmanje jedan `organizer_id` **ili** `include_without_organizer = true`.
 
 ## 7.2 Entitet: Izbor Organizatora
 
 | Atribut | Opis |
 |---------|------|
 | Veza na pretplatu | FK pretplate |
-| `organizer_id` | Izabrani Organizator |
+| `organizer_id` | Izabrani `CulturalOrganizer` |
 | unikatan par | (pretplata, Organizator) |
 
-Pravilo: kada je `all_organizers = true`, selekcije mogu biti prazne; filter se ne primjenjuje na konkretne ID-jeve.
+Pravilo: deaktivacija Organizatora **ne** briše ovaj zapis.
+
+Pri odjavi i pri prelasku na `all_events` aktivni zapisi se uklanjaju.
 
 ## 7.3 Entitet: Evidencija dostavljenih Newsletter poruka
 
 Evidencija uspješno dostavljenih stavki pretplatniku. Služi BM-NL-11, BM-NL-18, BM-NL-21.
+
+Pitanje zadržavanja istorijskih zapisa nakon trajnog brisanja `User` **nije** predmet PO-NL-18; ostaje uz delivery ledger model (DEFER detalj retention-a).
 
 | Atribut | Opis |
 |---------|------|
@@ -377,7 +424,7 @@ Evidencija uspješno dostavljenih stavki pretplatniku. Služi BM-NL-11, BM-NL-18
 | `sent_at` | Vrijeme uspješne dostave |
 | unikati | Vidi §13.2 |
 
-**Norma:** ne modelirati dva konkurentna identifikatora pretplatnika (npr. paralelno `subscription_id` i `user_id` kao ravnopravne izvore istine). Identitet pretplatnika je jedan.
+**Norma:** ne modelirati dva konkurentna identifikatora pretplatnika. Identitet pretplatnika je jedan. Ne kopirati e-mail u evidenciju kao SSOT.
 
 ## 7.4 Entitet: Promjena na čekanju
 
@@ -396,19 +443,38 @@ Tehnička evidencija poslovno značajne promjene koja je nastala, ali još nije 
 ## 7.5 Relacije
 
 ```
-Korisnik 1 ── 1 Newsletter pretplata
-Newsletter pretplata 1 ── * Izbor Organizatora ── 1 Organizator
+User 1 ── 0..1 Newsletter pretplata
+Newsletter pretplata 1 ── * Izbor Organizatora ── 1 CulturalOrganizer
 Newsletter pretplata 1 ── * Evidencija dostavljenih Newsletter poruka ── 1 Događaj
 Evidencija dostavljenih Newsletter poruka 0..1 ── Održavanje (TS-004)
 Događaj / Održavanje ── * Promjena na čekanju
 ```
 
+Trajno brisanje `User` uklanja pretplatu i aktivne preference (cascade). Nema orphan pretplate.
+
 ## 7.6 Token odjave
 
 * Generiše se pri aktivaciji / rotira pri reaktivaciji po potrebi.
-* Omogućava odjavu bez aktivne sesije (link u e-mailu).
+* Omogućava odjavu bez aktivne sesije (link u e-mailu), uz jednostavnu potvrdu.
 * Mora biti dovoljno entropije; ne smije biti predvidiv.
 * Nakon uspješne odjave token se invalidira ili zamjenjuje.
+
+## 7.7 Odluke o poljima (sažetak)
+
+| Polje / pretpostavka | CURRENT NEED | Odluka | Obrazloženje |
+|----------------------|--------------|--------|--------------|
+| `user_id` unikatno | Da | KEEP | Pretplata pripada `User` |
+| `status` / `subscribed_at` / `unsubscribed_at` | Da | KEEP | Aktivna vs odjavljena pretplata |
+| `scope_mode` | Da | CHANGE | Zamjenjuje `all_organizers` boolean semantiku praznog skupa |
+| `include_without_organizer` | Da (selektivni režim) | KEEP | BM-NL-28/29 |
+| Pivot `CulturalOrganizer` | Da (selektivni režim) | KEEP | Ne za `all_events` |
+| `confirmation_sent_at` | Ne | REMOVE | Nema servisnog confirmation e-maila |
+| `first_activated_at` | Ne | REMOVE | Nema kanonske potrebe bez confirmation e-maila |
+| Newsletter `email` kolona | Ne | REMOVE | SSOT = `User.email` |
+| Token odjave | Da | KEEP | Odjava iz poruke (BR-155) |
+| Fiksni sedmični raspored | Ne | REMOVE (poslovno) | BM-NL-07; legacy command REPLACE |
+| Migracija testnih pretplatnika | Ne | REMOVE | BM-NL-44, PO-NL-22 |
+| `manifestation_id` preference | Ne | DEFER / van V1 | BM-NL-38 |
 
 ---
 
@@ -416,26 +482,29 @@ Događaj / Održavanje ── * Promjena na čekanju
 
 ```
 [nema pretplate]
-       │ aktivacija (verifikovan korisnik)
+       │ aktivacija (prijavljen + verifikovan e-mail + validan izbor + „Pretplati se“)
        ▼
    Active  ←──────────────┐
-       │ odjava           │ reaktivacija
+       │ odjava           │ reaktivacija (novi kompletan izbor; isti zapis)
        ▼                  │
  Unsubscribed ────────────┘
 ```
 
-| Stanje | Smije primati Newsletter | Napomena |
-|--------|--------------------------|----------|
-| Active | Da | Uz ostale guard uslove |
-| Unsubscribed | Ne | Evidencija dostave ostaje |
-| Nema zapisa | Ne | |
+| Stanje pretplate | Smije primati Newsletter | Napomena |
+|------------------|--------------------------|----------|
+| Nema zapisa (nikad pretplaćen) | Ne | Nije pretplatnik |
+| Active + dozvoljena isporuka + relevantan sadržaj | Da | Jedini slučaj slanja |
+| Active + dozvoljena isporuka + nema sadržaja | Ne | Pretplata ostaje aktivna; e-mail se ne šalje |
+| Active + isporuka blokirana (`User`/e-mail) | Ne | Pretplata i preference ostaju |
+| Unsubscribed | Ne | Preference očišćene; zapis ostaje |
+| Trajno obrisan `User` | Ne | Pretplata ne postoji |
 
 Invariant:
 
 * odjava ne briše Evidenciju dostavljenih Newsletter poruka;
-* izmjena izbora Organizatora ne briše Evidenciju dostave i ne šalje retroaktivno stare događaje.
-
----
+* odjava briše aktivne preference;
+* izmjena preferenci ne briše Evidenciju dostave i ne šalje retroaktivno stare događaje;
+* reaktivacija ne vraća stare preference.
 
 # 9. Lifecycle Newsletter poruke
 
@@ -735,14 +804,18 @@ Obavezno:
 
 | ID | Pravilo | Kada |
 |----|---------|------|
-| V-NL-01 | Korisnik mora biti autentifikovan i verifikovan | Aktivacija / izmjena / odjava (UI) |
-| V-NL-02 | Organizator u selekciji mora postojati i biti validan | Izbor Organizatora |
-| V-NL-03 | Ne aktivirati duplu pretplatu za isti Identitet pretplatnika | Aktivacija |
+| V-NL-01 | Korisnik mora biti autentifikovan; aktuelni e-mail verifikovan | Aktivacija / izmjena / reaktivacija (UI) |
+| V-NL-02 | U selektivnom režimu Organizator u selekciji mora postojati | Izbor Organizatora |
+| V-NL-03 | Ne aktivirati duplu pretplatu za isti `User`; reaktivacija koristi isti zapis | Aktivacija / reaktivacija |
 | V-NL-04 | Token odjave mora biti validan i aktivan | Odjava iz e-maila |
 | V-NL-05 | Kandidat first_include: status Objavljen + budući termin | Redovni resolve |
 | V-NL-06 | Kandidat priority: postoji first_include + dozvoljena vrsta promjene | Prioritetni resolve |
 | V-NL-07 | Poruka mora sadržati link odjave | Sastavljanje |
 | V-NL-08 | Prazan sadržaj → skip | Sastavljanje |
+| V-NL-09 | `scope_mode` mora biti `all_events` ili `selected_organizers`; selektivni režim zahtijeva ≥1 Organizatora i/ili `include_without_organizer` | Aktivacija / čuvanje preferenci |
+| V-NL-10 | Prazan selektivni izbor se ne čuva i nije odjava | Čuvanje preferenci |
+| V-NL-11 | Odjava UI zahtijeva jednostavnu potvrdu | Odjava |
+| V-NL-12 | Dozvoljena isporuka: aktivan `User` + verifikovan `User.email` | Slanje |
 
 ---
 
@@ -751,8 +824,8 @@ Obavezno:
 Redoslijed guard-ova pri slanju (po pretplatniku):
 
 1. Pretplata aktivna.
-2. Korisnik i dalje verifikovan / nalog aktivan (tehnički predlog).
-3. Filter Organizatora.
+2. Dozvoljena isporuka: `User` aktivan i aktuelni e-mail verifikovan.
+3. Filter opsega (`all_events` ili selektivni izbor uključujući „Bez organizatora“); neaktivni Organizator nije aktivan izvor.
 4. Za redovni: nema `first_include`; događaj još Objavljen + budući termin.
 5. Za prioritetni: postoji `first_include`; nema isti Kontrolni zapis promjene; efektivno stanje nije zamijenjeno novijim.
 6. Non-empty payload.
@@ -837,7 +910,7 @@ Slanje Newslettera **ne** duplira zapise kataloga događaja (objava/otkaz ostaju
 
 | Radnja | Ko |
 |--------|----|
-| Aktivacija / odjava / reaktivacija / izbor Organizatora | Vlasnik naloga (verifikovan korisnik) |
+| Aktivacija / odjava / reaktivacija / izbor opsega | Vlasnik naloga (prijavljen; za aktivaciju/izmjenu: verifikovan e-mail) |
 | Odjava putem tokena | Posjednik validnog tokena (bez obavezne sesije) |
 | Pregled / upravljanje tuđim pretplatama | **Niko** u V1 (ni Organizator, ni Moderator, ni Urednik) |
 | Ručno slanje / izbor događaja za Newsletter | **Nije dozvoljeno** |
@@ -854,12 +927,12 @@ Organizator i Moderator **nemaju** uvid u identitet pretplatnika (BR-143).
 |------------|----|---------|----|-----------|
 | §1 Pregled | BM-NL-01–03, BM-GL-19 | BR-138–140, BR-144, BR-165 | FT-001 | — |
 | §2 Granice | BM-NL-03, BM-NL-08, BM-NL-14, BM-NL-16 | BR-144–146, BR-157, BR-159 | FT-001 | TS-003, TS-004, TS-009, TS-010 |
-| §3 Principi | BM-NL-06–13, BM-NL-22–25; PATCH-053 | BR-147–158, BR-166–169 | FT-001 | TS-003 |
+| §3 Principi | BM-NL-06–13, BM-NL-22–25, BM-NL-42; PATCH-053 | BR-147–158, BR-166–169, BR-149 | FT-001 | TS-003 |
 | §4 Komponente | BM-NL-07 | BR-148, BR-163 | FT-001 | — |
 | §5 Okidači | BM-NL-09, BM-NL-14, BM-NL-17; BM-DG-09 | BR-147, BR-159–160, BR-064 | FT-001 | TS-003, TS-004, TS-010 |
-| §6 Pretplata | BM-NL-04, BM-NL-05, BM-NL-12, BM-NL-15 | BR-139–143, BR-149, BR-154–156 | FT-001 | TS-009 |
-| §7 Model podataka | BM-NL-04, BM-NL-11, BM-NL-18, BM-NL-21 | BR-142, BR-158, BR-161, BR-164 | FT-001 | TS-001 |
-| §8 Lifecycle pretplate | BM-NL-04, BM-NL-05 | BR-141, BR-154 | FT-001 | — |
+| §6 Pretplata | BM-NL-04, BM-NL-05, BM-NL-12, BM-NL-15, BM-NL-26–BM-NL-44 | BR-139–143, BR-149, BR-154–156, BR-328–BR-344 | FT-001 | TS-001, TS-009 |
+| §7 Model podataka | BM-NL-04, BM-NL-26–BM-NL-29, BM-NL-39, BM-NL-41 | BR-142, BR-328–BR-330, BR-338, BR-340 | FT-001 | TS-001 |
+| §8 Lifecycle pretplate | BM-NL-04, BM-NL-05, BM-NL-35, BM-NL-36, BM-NL-42 | BR-141, BR-154, BR-335 | FT-001 | — |
 | §9 Lifecycle poruke | BM-NL-07, BM-NL-20 | BR-148, BR-163 | FT-001 | — |
 | §10 Kandidati | BM-NL-09–11, BM-NL-14, BM-NL-17–18 | BR-147, BR-158–161 | FT-001 | TS-003, TS-004 |
 | §11 Redovni | BM-NL-06, BM-NL-07, BM-NL-13 | BR-148–153, BR-150 | FT-001 | TS-009 |
@@ -868,12 +941,12 @@ Organizator i Moderator **nemaju** uvid u identitet pretplatnika (BR-143).
 | §14 Promjena na čekanju | BM-NL-22–25 | BR-166–169 | FT-001 | — |
 | §15 Obrada zadataka | BM-NL-07 | BR-148, BR-163 | FT-001 | — |
 | §16 Raspored | BM-NL-07, BM-NL-16 | BR-148, BR-157 | FT-001 | — |
-| §17 Validacije | BM-NL-* | BR-139–169 | FT-001 | — |
-| §18 Guard | BM-NL-09–13, BM-DG-09 | BR-147–150, BR-064 | FT-001 | TS-003 |
+| §17 Validacije | BM-NL-* | BR-139–169, BR-328–BR-344 | FT-001 | — |
+| §18 Guard | BM-NL-09–13, BM-NL-42, BM-DG-09 | BR-147–150, BR-064 | FT-001 | TS-003 |
 | §19–20 Error / Ponovni pokušaj | — | BR-186 | FT-001 | — |
 | §21 Audit događaji | — | BR-184–186 | FT-001 / FT-003 | TS-012 |
 | §22 Autorizacija | BM-NL-03, BM-NL-04 | BR-143–144 | FT-001 | TS-010 |
-| §26 Legacy | — | — | FT-001 | — |
+| §26 Legacy | BM-NL-44 | BR-343 | FT-001 | — |
 | §27 Van obuhvata | BM-NL-16 | BR-157 | FT-001 | — |
 
 Terminalnost Otkazan / zabrana republish: BM-DG-09, BR-064, TS-003 v0.1.2, TS-010 v1.0.1, G-NL-08 zatvoren.
@@ -882,29 +955,33 @@ Terminalnost Otkazan / zabrana republish: BM-DG-09, BR-064, TS-003 v0.1.2, TS-01
 
 # 24. Acceptance kriterijumi
 
-AC-NL-01 · Samo verifikovani korisnik može aktivirati pretplatu.  
-AC-NL-02 · Anonimni posjetilac ne može koristiti Newsletter.  
-AC-NL-03 · Pretplatnik može izabrati sve ili konkretne Organizatore; prazan konkretan izbor ≡ svi.  
-AC-NL-04 · Izbor Organizatora ne daje prava niti otkriva pretplatnike Organizatoru/Moderatoru; korisnik može mijenjati izbor.  
-AC-NL-05 · Prvo uključivanje samo za Objavljen + budući termin; ne za Nacrt/Na odobrenju/Arhiviran/Otkazan.  
-AC-NL-06 · Isti događaj se istom pretplatniku ne dostavlja ponovo kao first_include.  
-AC-NL-07 · Prazan Newsletter se ne šalje.  
-AC-NL-08 · Prioritet ide samo pretplatnicima sa first_include.  
-AC-NL-09 · Ista prioritetna promjena (Kontrolni zapis promjene) se ne dostavlja dvaput.  
-AC-NL-10 · Više Promjena na čekanju → jedno obavještenje sa posljednjim stanjem.  
-AC-NL-11 · Nema kontradiktornih poruka u istom ciklusu.  
-AC-NL-12 · Uređivačke izmjene ne okidaju Newsletter.  
-AC-NL-13 · Odjava iz poruke i iz UI deaktivira pretplatu bez brisanja naloga.  
-AC-NL-14 · Prva aktivacija šalje potvrdu; nije double opt-in.  
-AC-NL-15 · Organizator/Moderator/Urednik ne mogu ručno slati ni birati događaje za Newsletter.  
-AC-NL-16 · Ne postoji republish putanja; Otkazan ne vraća događaj u first_include bez novog događaja.  
-AC-NL-17 · Audit događaji pokrivaju katalog BR-185; ponovni pokušaji grešaka nisu audit.  
-AC-NL-18 · Redovni ciklus nije vezan za fiksni sedmični poslovni model.  
-AC-NL-19 · Poruka sadrži odjavu i linkove ka događaju / pregledu Organizatora.  
-AC-NL-20 · Okidač se emituje samo nakon trajno sačuvane poslovne promjene; obrada je odvojena od poslovne transakcije.  
-AC-NL-21 · Evidencija dostave za više stavki u jednoj poruci je cjelovita.  
-AC-NL-22 · Identitet pretplatnika je jedan kanonski izvor istine.  
-AC-NL-23 · Legacy implementacija ne smije ostati aktivna paralelno nakon migracije (PRAVILO 5.3.4).
+AC-NL-01 · Samo prijavljeni korisnik sa verifikovanom aktuelnom e-mail adresom može aktivirati pretplatu.
+AC-NL-02 · Anonimni posjetilac ne može koristiti Newsletter.
+AC-NL-03 · Pretplatnik bira „Svi događaji“ ili „Odabrani organizatori“; prazan selektivni izbor nije validan i nije odjava.
+AC-NL-04 · Izbor opsega ne daje prava niti otkriva pretplatnike Organizatoru/Moderatoru; korisnik može mijenjati izbor akcijom „Sačuvaj izmjene“.
+AC-NL-05 · Prvo uključivanje samo za Objavljen + budući termin; ne za Nacrt/Na odobrenju/Arhiviran/Otkazan.
+AC-NL-06 · Isti događaj se istom pretplatniku ne dostavlja ponovo kao first_include.
+AC-NL-07 · Prazan Newsletter se ne šalje.
+AC-NL-08 · Prioritet ide samo pretplatnicima sa first_include.
+AC-NL-09 · Ista prioritetna promjena (Kontrolni zapis promjene) se ne dostavlja dvaput.
+AC-NL-10 · Više Promjena na čekanju → jedno obavještenje sa posljednjim stanjem.
+AC-NL-11 · Nema kontradiktornih poruka u istom ciklusu.
+AC-NL-12 · Uređivačke izmjene ne okidaju Newsletter.
+AC-NL-13 · Odjava iz poruke i iz UI, uz jednostavnu potvrdu, deaktivira pretplatu bez brisanja naloga i bez brisanja zapisa pretplate; aktivne preference se uklanjaju.
+AC-NL-14 · Aktivacija, izmjena preferenci i odjava potvrđuju se u aplikaciji; nema dodatnog e-mail confirmationa niti obavezne servisne e-mail poruke.
+AC-NL-15 · Organizator/Moderator/Urednik ne mogu ručno slati ni birati događaje za Newsletter.
+AC-NL-16 · Ne postoji republish putanja; Otkazan ne vraća događaj u first_include bez novog događaja.
+AC-NL-17 · Audit događaji pokrivaju katalog BR-185; ponovni pokušaji grešaka nisu audit.
+AC-NL-18 · Redovni ciklus nije vezan za fiksni sedmični poslovni model.
+AC-NL-19 · Poruka sadrži odjavu i linkove ka događaju / pregledu registrovanog Organizatora (gdje postoji).
+AC-NL-20 · Okidač se emituje samo nakon trajno sačuvane poslovne promjene; obrada je odvojena od poslovne transakcije.
+AC-NL-21 · Evidencija dostave za više stavki u jednoj poruci je cjelovita.
+AC-NL-22 · Identitet pretplatnika je `User`; `User.email` je adresa isporuke, ne Newsletter SSOT.
+AC-NL-23 · Testni legacy pretplatnici se ne migriraju; kanonski model ima prednost; stari sedmični mehanizam ne ostaje paralelan nakon cutover-a (PRAVILO 5.3.4).
+AC-NL-24 · „Bez organizatora“ uključuje Događaje bez veze na `CulturalOrganizer`, uključujući ručni naziv; registrovani Organizator nije u toj grupi.
+AC-NL-25 · Deaktivirani Organizator ne briše preferencu; nije aktivan izvor dok je neaktivan.
+AC-NL-26 · Manifestacija nije dimenzija pretplate u V1.
+AC-NL-27 · Jedan `User` — jedna pretplata; reaktivacija ne kreira novi zapis i ne vraća stare preference.
 
 ---
 
@@ -914,13 +991,14 @@ AC-NL-23 · Legacy implementacija ne smije ostati aktivna paralelno nakon migrac
 2. Evidenciju dostave upisivati **cjelovito** sa uspješnim send-om (§13.3).
 3. Signale vezati na uspješno sačuvane statusne prelaze (§5), ne na UI klikove.
 4. Za događaje sa više termina koristiti `occurrence_id` u prioritetnoj Evidenciji.
-5. Pri deaktivaciji Organizatora: filter i dalje po `organizer_id`; poslovna pravila o vidljivosti događaja ostaju u TS-001/TS-003.
-6. UI pretplate uskladiti sa TS-009; backend ugovor sa ovim TS-om.
+5. Pri deaktivaciji Organizatora: preferenca ostaje; Organizator nije aktivan izvor dok je neaktivan.
+6. UI pretplate uskladiti sa TS-009; kanonski UI termini: Pretplati se, Odjavi se, Sačuvaj izmjene, Svi događaji, Odabrani organizatori, Bez organizatora.
 7. Konfiguracione ključeve rasporeda dokumentovati u ops/runbook-u, ne u BM.
 8. Ne graditi urednički „Newsletter admin” u V1.
-9. Potvrda aktivacije ≠ double opt-in gate.
-10. Pri migraciji slijediti §26 (PRAVILO 5.3.1–5.3.4).
-11. Izbor Organizatora je obavezni V1 (§6.2).
+9. Potvrda u aplikaciji ≠ double opt-in gate; nema confirmation e-maila.
+10. Pri cutover-u slijediti §26: kanonski model ima prednost; **nema** migracije testnih pretplatnika.
+11. Režim opsega je obavezni V1 (§6.2); `all_events` nije pivot svih Organizatora.
+12. Ne uvoditi polja `confirmation_sent_at` / `first_activated_at` / Newsletter `email` kolonu.
 
 ---
 
@@ -938,16 +1016,16 @@ Postojeća implementacija Newsletter funkcionalnosti može biti iskorišćena ka
 
 **PRAVILO 5.3.3**
 
-Migracija postojeće Newsletter funkcionalnosti na model definisan u TS-011 mora obezbijediti očuvanje svih podataka koji su i dalje validni prema usvojenom Business Model-u i Functional Specification-u, uz uklanjanje ili transformaciju podataka i ponašanja koja pripadaju starom modelu. Migracija ne smije proizvesti duple aktivne pretplate, duple evidencije dostave niti izgubiti validne podatke o postojećim pretplatnicima.
+Postojeća Newsletter implementacija je **testna**. Postojeći testni pretplatnici nijesu produkcioni poslovni podaci. **Nema** obaveze migracije testnih pretplatnika, **nema** A/B/C/D legacy backfill modela i **nema** obaveze kompatibilnosti sa starim e-mail-only modelom. Kanonski model ima prednost (CANONICAL MODEL WINS). Novi Newsletter implementira se direktno prema BM/FS/TS-011.
 
 **PRAVILO 5.3.4**
 
-Nakon završetka migracije, prethodna implementacija Newsletter funkcionalnosti ne smije ostati aktivna paralelno sa implementacijom definisanom u TS-011. U produkcionom okruženju u svakom trenutku smije biti aktivan isključivo jedan mehanizam za obradu i dostavu Newsletter poruka.
+Nakon cutover-a na kanonski model, prethodna testna implementacija Newsletter funkcionalnosti ne smije ostati aktivna paralelno sa implementacijom definisanom u TS-011. U produkcionom okruženju u svakom trenutku smije biti aktivan isključivo jedan mehanizam za obradu i dostavu Newsletter poruka. Ovaj dokumentacioni korak **ne** naređuje trenutno brisanje starog koda.
 
-## 26.2 Postojeći legacy model (informativno)
+## 26.2 Postojeći testni model (informativno)
 
-| Aspekt | Legacy |
-|--------|--------|
+| Aspekt | Trenutna testna implementacija |
+|--------|-------------------------------|
 | Publika | E-mail adresa; nije obavezno vezano za verifikovan nalog |
 | Tabela | `newsletter_subscribers` |
 | Okidač | Fiksni sedmični raspored (ponedjeljak 09:00) |
@@ -955,21 +1033,49 @@ Nakon završetka migracije, prethodna implementacija Newsletter funkcionalnosti 
 | Filter Organizatora | Ne postoji |
 | Prioritetne promjene | Ne postoje |
 | Evidencija dostave | Ne postoji |
-| Obrada | Artisan `cultural-calendar:send-weekly-newsletter` (sinhroni Mail) |
+| Obrada | Artisan `cultural-calendar:send-weekly-newsletter` (sinhroni Mail); `Schedule` ponedjeljak 09:00 u `routes/console.php` |
+| UI | Forma po e-mailu (`CulturalCalendarNewsletterController`) |
+| Welcome mail | `CulturalCalendarNewsletterWelcomeMail` pri prvoj prijavi |
 
-## 26.3 Ciljni model (ovaj TS)
+## 26.3 Klasifikacija prijelaza (dokumentaciono; kod se sada ne briše)
+
+**REUSE (vjerovatno, uz usklađivanje):**
+
+* Laravel Mail infrastruktura;
+* koncept tokena odjave (ne e-mail SSOT);
+* postojeći rasporedni mehanizam platforme (ne ponedjeljak-kao-poslovni-model);
+* dijelovi e-mail predloška ako se mogu prilagoditi kanonskom sadržaju.
+
+**REPLACE:**
+
+* `NewsletterSubscriber` e-mail-only model i `newsletter_subscribers.email` kao SSOT;
+* `CulturalCalendarNewsletterController` prijava/odjava po e-mailu bez `User` pretplate;
+* welcome/confirmation e-mail pri pretplati;
+* sedmični sadržaj i `cultural-calendar:send-weekly-newsletter` kao kanonski ciklus;
+* implicitna pretplata / prazan izbor ≡ svi Organizatori (nije u starom kodu, ali jeste u starom TS ugovoru — zamijenjeno).
+
+**REMOVE LATER (u odgovarajućem NL paketu, ne u ovom dokumentacionom koraku):**
+
+* tabela `newsletter_subscribers` nakon cutover-a;
+* `SendCulturalCalendarWeeklyNewsletter`;
+* `CulturalCalendarNewsletterWeeklyMail` / weekly Blade;
+* `CulturalCalendarNewsletterWelcomeMail`;
+* ponedjeljak 09:00 `Schedule` za weekly newsletter.
+
+## 26.4 Ciljni model (ovaj TS)
 
 | Aspekt | Cilj |
 |--------|------|
-| Publika | Verifikovani registrovani korisnik |
-| Pretplata | Pretplata + izbor Organizatora |
+| Publika | `User` sa aktivnom pretplatom i dozvoljenom isporukom |
+| Pretplata | Jedna pretplata po `User`; `User.email` kao adresa isporuke |
+| Opseg | `all_events` ili `selected_organizers` + opciono „Bez organizatora“ |
 | Okidač | Objava → first_include; poslovne promjene → prioritet |
 | Cadence | Raspored automatske obrade + period objedinjavanja (bez fiksnog sedmičnog BM pravila) |
-| Sadržaj | Kratak pregled događaja u e-mailu, grupisan po Organizatoru |
+| Sadržaj | Kratak pregled događaja u e-mailu, grupisan po registrovanom Organizatoru ili „Bez organizatora“ |
 | Evidencija dostave | Obavezno |
 | Ručno / kampanje | Nisu V1 (BM-NL-16 / BR-157) |
 
-Ovaj odsjek **ne** mijenja BM ni FS.
+Ovaj odsjek operacionalizuje usvojene BM/FS odluke i ne uvodi nova poslovna pravila.
 
 ---
 
@@ -983,7 +1089,7 @@ Poglavlje „Van obuhvata (Out of Scope)” definiše funkcionalnosti koje nisu 
 
 Sve funkcionalnosti definisane usvojenim Business Model-om i Functional Specification-om predstavljaju obavezni dio implementacije TS-011. Funkcionalnosti koje nisu definisane tim dokumentima smatraju se van obuhvata ove tehničke specifikacije za verziju V1.
 
-Napomena: granice V1 već usvojene u BM-NL-16 / BR-157 (npr. kategorije kao filter, personalizacija, kampanje, ručno slanje, Newsletter po ulozi, interval kao poslovno pravilo) ostaju na snazi kroz PRAVILO 5.4.2 — bez proširenja liste u ovom TS-u.
+Napomena: granice V1 već usvojene u BM-NL-16 / BR-157 (npr. kategorije kao filter, personalizacija, kampanje, ručno slanje, Newsletter po ulozi, interval kao poslovno pravilo, „Prati Manifestaciju“, e-mail-only pretplatnik, obavezne servisne e-mail poruke) ostaju na snazi kroz PRAVILO 5.4.2 — bez proširenja liste u ovom TS-u.
 
 ---
 

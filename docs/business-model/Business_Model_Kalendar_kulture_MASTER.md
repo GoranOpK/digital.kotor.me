@@ -86,6 +86,7 @@
 | PATCH-070 | 2026-08-12 | **PO-MF-WF-01–PO-MF-WF-04 / PO-EV-WF-01:** razdvojeni lifecycle tokovi Manifestacije po **porijeklu kreiranja** (akter kreiranja / `created_by` uloga), ne po `organizer_id`. Urednik-kreirana MF: Nacrt/U pripremi → direktna Objava (bez Pošalji na odobrenje / Na odobrenju / Vrati na doradu). Moderator-kreirana MF: Nacrt → odobravanje → Objava ili Vrati na doradu → resubmit. Usklađeni BM-MF-02/09/10; dodati BM-MF-21–BM-MF-23. Event model KEEP; potvrđen backend guard da Događaj bez Organizatora ne ulazi u submit/approval. Bez novog statusa; bez migracije/backfill/brisanja produkcijskih MF. |
 | PATCH-071 | 2026-08-12 | **PHASE 6B PRODUCTION CLOSEOUT (status sync):** Faza 6B i PO-MF-WF su **IMPLEMENTED / DEPLOYED / PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE (6B migracije RAN; `cultural_manifestations` = 0 redova; cleanup N/A; editorial + moderator osnovni lifecycle + kk_admin nav production verified). **Bez izmjene poslovnih pravila** BM-MF-*. Usklađeno sa Feature Registry / IR-001 v1.0.7 / TS-009 v1.0.16. FS PATCH-FS-070 historical KEEP. TS-005 KEEP. |
 | PATCH-072 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup:** Urednik (`kk_admin`) može ukloniti **odbijeni** Org/Mod (ADD/REMOVE) zahtjev iz redovne liste `Zahtjevi` (workspace dismiss / soft-hide). **Ne** hard delete; status ostaje `rejected`; decision metadata KEEP; User/Organizer/grant KEEP; resubmission KEEP. Dodati BM-ORG-20, BM-MOD-27. BR-055 / BR-073 / BM-ORG-09 / BM-MOD-15 KEEP (retention). Usklađeno sa FS PATCH-FS-071 / TS-001 v0.4.2 / TS-010 v1.0.9. |
+| PATCH-073 | 2026-08-14 | **PO-NL-01…PO-NL-22 (Newsletter decision sync):** dobrovoljna pretplata (bez automatske prijave pri registraciji); jedna pretplata po `User`; dva režima („Svi događaji“ / „Odabrani organizatori“); „Bez organizatora“; validan izbor; aktivacija bez dodatnog e-mail confirmationa; odjava/reaktivacija; preference samo ubuduće; deaktivirani Organizator; Manifestacija nije kriterijum pretplate; `User`/e-mail lifecycle; aktivna pretplata ≠ dozvoljena isporuka; nema praznog Newslettera; testna legacy implementacija bez migracije pretplatnika. Usklađeni BM-NL-04, BM-NL-05, BM-NL-06, BM-NL-12, BM-NL-13, BM-NL-15, BM-NL-16, BM-GL-19; dodati BM-NL-26–BM-NL-44, BM-GL-27. Usklađeno sa FS PATCH-FS-072 / TS-011 v1.0.2. **Bez izmjene implementacije.** |
 
 Napomena:
 
@@ -1887,15 +1888,15 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 
 ### BM-NL-04 — Pretplata
 
-> Svaki registrovani i verifikovani korisnik može se dobrovoljno prijaviti na newsletter Kalendara kulture. Prijava na newsletter nije uslov za korišćenje Kalendara kulture. Pretplatnik može izabrati sve Organizatore ili jednog ili više konkretnih Organizatora. Ako korisnik ne izabere nijednog konkretnog Organizatora, sistem smatra da je izabrao sve Organizatore. Izbor Organizatora je isključivo filter sadržaja i ne daje prava nad Organizatorom niti događajima.
+> Newsletter je dobrovoljna funkcionalnost. Registracija korisnika na Digital Kotor ne znači automatsku Newsletter pretplatu. Registrovani i verifikovani korisnik postaje Newsletter pretplatnik tek kada svojom eksplicitnom voljom aktivira pretplatu. Prijava na Newsletter nije uslov za korišćenje Kalendara kulture. Korisnik koji se nije pretplatio nije Newsletter pretplatnik, nema aktivnu pretplatu i ne prima Newsletter. Izbor opsega sadržaja je isključivo filter i ne daje prava nad Organizatorom niti događajima.
 
 ### BM-NL-05 — Odjava
 
-> Korisnik može u svakom trenutku odjaviti prijem newslettera. Odjava ne briše korisnički nalog niti utiče na pristup drugim modulima platforme.
+> „Odjavi se“ je zasebna eksplicitna akcija. Korisnik može u svakom trenutku odjaviti prijem Newslettera. Odjava ne briše korisnički nalog niti utiče na pristup drugim modulima platforme. Prazan ili nevalidan izbor opsega nije odjava. Posljedice odjave definiše BM-NL-35.
 
 ### BM-NL-06 — Sadržaj newslettera
 
-> Newsletter sadrži kratak pregled novoobjavljenih događaja i/ili poslovno značajnih promjena događaja koji odgovaraju aktivnoj pretplati i pravilima slanja. Za svaki događaj prikazuju se osnovne informacije i veza ka detaljima događaja, u skladu sa posljednjim poslovno važećim stanjem događaja u trenutku pripreme poruke. Događaji se grupišu po Organizatoru. Za svakog Organizatora Newsletter sadrži vezu ka objavljenom pregledu događaja tog Organizatora na portalu Kalendara kulture. Više novoobjavljenih događaja može biti objedinjeno u jednu Newsletter poruku. Isti događaj se ne prikazuje više puta zbog više termina; relevantni budući termini mogu biti prikazani unutar jedne stavke događaja.
+> Newsletter sadrži kratak pregled novoobjavljenih događaja i/ili poslovno značajnih promjena događaja koji odgovaraju aktivnoj pretplati, dozvoljenoj isporuci i pravilima slanja. Za svaki događaj prikazuju se osnovne informacije i veza ka detaljima događaja, u skladu sa posljednjim poslovno važećim stanjem događaja u trenutku pripreme poruke. Događaji sa registrovanim Organizatorom grupišu se po tom Organizatoru. Događaji koji pripadaju grupi „Bez organizatora“ (BM-NL-28) grupišu se pod tim nazivom. Za svakog registrovanog Organizatora čiji se događaji prikazuju, Newsletter sadrži vezu ka objavljenom pregledu događaja tog Organizatora na portalu Kalendara kulture. Više novoobjavljenih događaja može biti objedinjeno u jednu Newsletter poruku. Isti događaj se ne prikazuje više puta zbog više termina; relevantni budući termini mogu biti prikazani unutar jedne stavke događaja.
 
 ### BM-NL-07 — Periodična provjera i prioritetna obavještenja
 
@@ -1917,25 +1918,25 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 
 > Isti događaj se istom pretplatniku ne šalje ponovo kao novoobjavljeni sadržaj samo zato što sistem ponovo izvršava periodičnu provjeru. Događaj objavljen nakon prethodnog Newsletter slanja može biti uključen u naredno slanje ako je i dalje relevantan i odgovara aktivnoj pretplati.
 
-### BM-NL-12 — Aktivni pretplatnik
+### BM-NL-12 — Aktivna pretplata
 
-> Aktivni pretplatnik je registrovani i verifikovani korisnik sa aktivnom Newsletter pretplatom koji nije izvršio odjavu. Postojanje odgovarajućih događaja nije dio definicije aktivnog pretplatnika.
+> Aktivna pretplata postoji kada se korisnik dobrovoljno pretplatio i nije se odjavio. Postojanje odgovarajućih događaja nije dio definicije aktivne pretplate. Aktivna pretplata nije isto što i dozvoljena isporuka (BM-NL-42).
 
 ### BM-NL-13 — Ne-slati prazan Newsletter
 
-> Ako za konkretnog aktivnog pretplatnika u trenutku pripreme nema nijednog odgovarajućeg novoobjavljenog događaja niti prioritetnog obavještenja prema pravilima slanja, Newsletter mu se ne šalje. Sistem ne dodaje događaje drugih Organizatora samo da bi poruka imala sadržaj.
+> Ako za konkretnog pretplatnika sa aktivnom pretplatom koji ispunjava uslove dozvoljene isporuke u trenutku pripreme nema nijednog Newsletter-relevantnog sadržaja koji odgovara njegovim važećim preferencama, Newsletter mu se ne šalje. Pretplata i preference ostaju nepromijenjene. Newsletter nije obavezni periodični prazni bilten. Sistem ne dodaje događaje izvan važećih preferenci samo da bi poruka imala sadržaj. Nepostojanje relevantnog sadržaja ne deaktivira pretplatu, nije greška i nije odjava.
 
 ### BM-NL-14 — Uređivačke izmjene nisu okidač
 
 > Ispravka pravopisnih grešaka, izmjena opisa, izmjena ili dodavanje fotografija, izmjena dodatnih informacija koje ne utiču na održavanje događaja i druge uređivačke izmjene koje ne mijenjaju način održavanja događaja ne predstavljaju Newsletter okidač.
 
-### BM-NL-15 — Potvrda prve aktivacije
+### BM-NL-15 — Potvrda aktivacije
 
-> Nakon prve uspješne aktivacije Newsletter pretplate sistem šalje potvrdu o aktiviranoj pretplati. Double opt-in nije obavezan u V1.
+> Nakon uspješne aktivacije Newsletter pretplate sistem potvrđuje radnju jasnom porukom u aplikaciji. Dodatni e-mail confirmation link za Newsletter pretplatu se ne zahtijeva. Double opt-in nije dio V1. Obavezne servisne e-mail poruke za aktivaciju, izmjenu preferenci i odjavu nisu dio V1 (BM-NL-43).
 
 ### BM-NL-16 — Granice V1
 
-> U V1 opsegu Newslettera nisu: izbor kategorija događaja, personalizacija prema ponašanju, automatske preporuke, profilisanje, ručni izbor događaja od strane Urednika, Newsletter kampanje Organizatora, ručno slanje Newslettera, različiti Newsletteri po ulozi, te definisanje tačnog tehničkog intervala periodične ili prioritetne isporuke.
+> U V1 opsegu Newslettera nisu: izbor kategorija događaja, personalizacija prema ponašanju, automatske preporuke, profilisanje, ručni izbor događaja od strane Urednika, Newsletter kampanje Organizatora, ručno slanje Newslettera, različiti Newsletteri po ulozi, definisanje tačnog tehničkog intervala periodične ili prioritetne isporuke, kriterijum pretplate „Prati Manifestaciju“, automatska pretplata pri registraciji, e-mail-only pretplatnik nezavisan od korisničkog naloga, te obavezne servisne e-mail poruke za aktivaciju, izmjenu preferenci i odjavu.
 
 ### BM-NL-17 — Poslovno značajne promjene kao okidač
 
@@ -1972,6 +1973,82 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 ### BM-NL-25 — Zabranjena kontradiktorna obavještenja
 
 > Pretplatniku se ne šalju međusobno kontradiktorna obavještenja za isti događaj u okviru istog ciklusa pripreme Newslettera. Korisnik dobija jedno konačno poslovno stanje događaja.
+
+### BM-NL-26 — Jedna pretplata po korisniku
+
+> Jedan `User` može imati najviše jednu Newsletter pretplatu Kalendara kulture. Ista pretplata se kroz vrijeme može aktivirati, odjaviti, ponovo aktivirati i mijenjati joj se izbor sadržaja. Pri reaktivaciji se ne kreira nova pretplata.
+
+### BM-NL-27 — Režimi opsega pretplate
+
+> Pri aktivnoj pretplati korisnik bira tačno jedan od dva režima: „Svi događaji“ ili „Odabrani organizatori“. „Svi događaji“ je dinamički opseg: obuhvata događaje svih postojećih registrovanih Organizatora, događaje svih budućih registrovanih Organizatora i događaje iz grupe „Bez organizatora“. „Svi događaji“ nije snimak (snapshot) niti zbir svih trenutno postojećih Organizatora. Kanonski UI nazivi režima su „Svi događaji“ i „Odabrani organizatori“.
+
+### BM-NL-28 — Značenje „Bez organizatora“
+
+> „Bez organizatora“ je usvojeni kratki UI naziv. Za Newsletter selekciju obuhvata Događaje koji nemaju kanonsku vezu sa registrovanim `CulturalOrganizer`, uključujući: Događaj bez Organizatora; i Događaj kojem je Urednik ručno upisao naziv neregistrovanog Organizatora, ali ne postoji veza sa `CulturalOrganizer`. Ručni naziv Organizatora ostaje podatak Događaja; ne pretvara se u `CulturalOrganizer`; ne postaje zaseban Newsletter izvor; ne stvara virtualnog Organizatora. Događaj sa registrovanim `CulturalOrganizer` ne pripada ovoj grupi.
+
+### BM-NL-29 — Minimalni validni izbor
+
+> Aktivna pretplata mora imati validan opseg sadržaja. Dozvoljeno je: režim „Svi događaji“; ili režim „Odabrani organizatori“ sa najmanje jednim od: jednim ili više registrovanih Organizatora; izborom „Bez organizatora“; ili kombinacijom prethodnog. Dozvoljen je korisnik koji prati isključivo „Bez organizatora“. Nije dozvoljeno aktivirati ili sačuvati režim „Odabrani organizatori“ bez ijednog izbora. Prazan izbor ne znači odjavu.
+
+### BM-NL-30 — Prva pretplata
+
+> Prilikom prve pretplate nijedan opseg nije unaprijed izabran. Korisnik mora eksplicitno izabrati „Svi događaji“ ili „Odabrani organizatori“ sa validnim izborom, pa tek zatim izvršiti akciju „Pretplati se“.
+
+### BM-NL-31 — Uslovi aktivacije
+
+> Da bi pretplata postala aktivna, korisnik mora biti prijavljen, imati verifikovanu aktuelnu e-mail adresu, napraviti validan izbor opsega i eksplicitno izvršiti akciju „Pretplati se“. Tada pretplata odmah postaje aktivna, bez dodatnog e-mail confirmation linka.
+
+### BM-NL-32 — Uređivanje aktivne pretplate
+
+> Aktivni pretplatnik može uređivati Newsletter preference. Akcija „Sačuvaj izmjene“ je odvojena od akcije „Odjavi se“. Promjena preferenci nije nova pretplata, nije odjava i ne mijenja kontinuitet aktivne pretplate. Prazan ili nevalidan izbor ne može se sačuvati i ne izaziva automatsku odjavu.
+
+### BM-NL-33 — Promjene preferenci važe samo ubuduće
+
+> Promjena Newsletter preferenci primjenjuje se od trenutka uspješnog čuvanja nadalje. Nema retroaktivnog dejstva. Promjena preference sama po sebi ne pokreće slanje ranije objavljenih Događaja koje korisnik ranije nije pratio.
+
+### BM-NL-34 — Promjena režima
+
+> Promjena između „Svi događaji“ i „Odabrani organizatori“ predstavlja novi kompletan izbor sadržaja. Prethodne preference drugog režima ne ostaju kao skrivene aktivne preference. Pri prelasku na „Svi događaji“ prethodne pojedinačne veze sa Organizatorima više nijesu aktivne preference. Pri prelasku na „Odabrani organizatori“ korisnik pravi novi izbor i mora izabrati najmanje jednog Organizatora i/ili „Bez organizatora“. Sistem ne vraća automatski raniji selektivni izbor.
+
+### BM-NL-35 — Posljedice odjave
+
+> Prije izvršenja odjave sistem traži jednostavnu potvrdu korisnika. Ne traži se ponovni unos lozinke niti e-mail confirmation odjave. Nakon potvrđene odjave pretplata postaje neaktivna, evidentira se vrijeme odjave, uklanjaju se aktivne preference, uklanjaju se veze sa izabranim Organizatorima i uklanja se aktivni izbor „Bez organizatora“. Sam zapis pretplate se ne briše. Istorijska evidencija starih preferenci nije dio aktivnog preference modela i nije obavezna u V1.
+
+### BM-NL-36 — Ponovna pretplata
+
+> Ako se ranije odjavljeni korisnik ponovo pretplati, koristi se njegova postojeća Newsletter pretplata. Pretplata se reaktivira. Prethodne preference se ne vraćaju. Korisnik mora napraviti novi kompletan izbor sadržaja. Primjenjuju se ista validaciona pravila kao kod prve pretplate.
+
+### BM-NL-37 — Deaktivirani Organizator
+
+> Ako Organizator kojeg korisnik prati postane neaktivan, preference korisnika se ne uklanjaju automatski, korisnik se ne odjavljuje, a veza sa Organizatorom se čuva. Neaktivni Organizator se ne koristi kao aktivan Newsletter izvor dok je neaktivan. Ako Organizator ponovo postane aktivan, prethodno sačuvana preferenca ponovo važi. Ako korisnik prati samo neaktivne Organizatore, pretplata ostaje aktivna, a korisniku se ništa ne šalje dok nema relevantnog sadržaja.
+
+### BM-NL-38 — Manifestacija nije kriterijum pretplate
+
+> U V1 Manifestacija nije poseban kriterijum Newsletter pretplate. Ne uvodi se „Prati Manifestaciju“. Događaj koji pripada Manifestaciji selektuje se prema sopstvenom Newsletter kriterijumu: registrovani Organizator ili „Bez organizatora“. Pripadnost Manifestaciji sama po sebi ne daje korisniku pravo niti razlog da primi Događaj.
+
+### BM-NL-39 — Pretplata pripada korisničkom nalogu
+
+> Newsletter pretplata pripada `User` nalogu, a ne tekstualnoj e-mail adresi. Aktuelni `User.email` je adresa za isporuku. Ne koristi se zasebna Newsletter kopija e-mail adrese kao nezavisni izvor istine. Ako korisnik promijeni e-mail i novi e-mail nije verifikovan, pretplata i preference ostaju sačuvane, a Newsletter isporuka je privremeno blokirana. Nakon verifikacije nove e-mail adrese isporuka se može nastaviti; nije potrebna nova pretplata; preference ostaju iste.
+
+### BM-NL-40 — Deaktivacija korisničkog naloga
+
+> Deaktivacija `User` naloga ne predstavlja Newsletter odjavu. Pretplata ostaje. Preference ostaju. Newsletter isporuka je blokirana. Ako se isti `User` legitimno reaktivira i ispunjava ostale uslove, postojeća pretplata može ponovo učestvovati u isporuci.
+
+### BM-NL-41 — Trajno brisanje korisnika
+
+> Kod trajnog brisanja `User` naloga uklanja se njegova Newsletter pretplata, pripadajuće aktivne preference i veze prema Organizatorima. Newsletter pretplata ne postoji kao zapis bez korisnika. Pitanje istorijske evidencije već izvršenih Newsletter isporuka nije predmet ovog pravila; definiše se uz model evidencije dostave.
+
+### BM-NL-42 — Aktivna pretplata i dozvoljena isporuka
+
+> Sistem razlikuje: aktivnu pretplatu (BM-NL-12); dozvoljenu isporuku; i relevantan sadržaj. Dozvoljena isporuka, pored aktivne pretplate, zahtijeva da `User` u trenutku slanja ima aktivan korisnički nalog i verifikovanu aktuelnu e-mail adresu. Tek nakon aktivne pretplate i dozvoljene isporuke utvrđuje se da li postoji sadržaj koji odgovara važećim preferencama. Nepostojanje relevantnog sadržaja ne deaktivira pretplatu, nije greška i nije odjava.
+
+### BM-NL-43 — Potvrde u aplikaciji
+
+> U V1 aktivacija pretplate, izmjena preferenci i odjava potvrđuju se jasnim porukama u aplikaciji. Za te radnje se ne šalju obavezne servisne e-mail poruke. E-mail kanal koristi se za stvarne Newsletter isporuke.
+
+### BM-NL-44 — Testna postojeća implementacija
+
+> Postojeća Newsletter implementacija je testna. Postojeći testni pretplatnici nijesu produkcioni poslovni podaci koje treba migrirati. Nema obaveze migracije testnih pretplatnika, nema legacy backfill modela, nema obaveze kompatibilnosti sa starim e-mail-only modelom i nema obaveze očuvanja starog fiksnog sedmičnog poslovnog modela. Novi Newsletter projektuje se direktno prema kanonskom modelu. Kanonski model ima prednost. Postojeći kod se ne briše naslijepo; dijelovi se klasifikuju kao ponovna upotreba, zamjena ili naknadno uklanjanje u odgovarajućem implementacionom paketu.
 
 ---
 
@@ -2183,9 +2260,9 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 ### BM-GL-19 — Newsletter
 
-> Funkcionalnost namijenjena informisanju korisnika o novoobjavljenim kulturnim događajima i o poslovno značajnim promjenama događaja koje utiču na odluku o prisustvu.
+> Dobrovoljna funkcionalnost namijenjena informisanju pretplatnika o novoobjavljenim kulturnim događajima i o poslovno značajnim promjenama događaja koje utiču na odluku o prisustvu.
 >
-> Newsletter nije dio uredničkog procesa niti predstavlja poslovno obavještenje. Javno objavljivanje događaja predstavlja poslovni okidač za prvo uključivanje; otkazivanje, odlaganje i promjena datuma, vremena ili lokacije takođe predstavljaju Newsletter okidače.
+> Newsletter nije dio uredničkog procesa niti predstavlja poslovno obavještenje. Pretplata pripada korisničkom nalogu i nije automatska posljedica registracije. Javno objavljivanje događaja predstavlja poslovni okidač za prvo uključivanje; otkazivanje, odlaganje i promjena datuma, vremena ili lokacije takođe predstavljaju Newsletter okidače.
 
 ### BM-GL-20 — Evidencija aktivnosti
 
@@ -2206,6 +2283,10 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 ### BM-GL-26 — Informativna naslovna vidljivost Odgođenog
 
 > Poseban javni mehanizam na naslovnoj strani kojim Objavljeni Događaj, bez narednog Planiranog Održavanja, ostaje vidljiv zbog Odgođenog Održavanja bez poznatog novog termina, do isteka prvobitnog datuma uključivo (BM-PK-37). **Nije** isto što i Planirano Održavanje, naredno relevantno Planirano Održavanje (BM-PK-29), niti „upcoming" termin. Kartica u tom režimu komunicira „Odgođeno" i „Prvobitni termin"; prvobitni datum nije važeći termin održavanja.
+
+### BM-GL-27 — Bez organizatora (Newsletter)
+
+> Usvojeni kratki UI naziv Newsletter izbora. Obuhvata Događaje bez kanonske veze sa registrovanim Organizatorom, uključujući Događaj bez Organizatora i Događaj sa ručno upisanim nazivom neregistrovanog Organizatora. Nije registrovani Organizator i nije zaseban Newsletter izvor.
 
 ### BM-GL-21 — Završna odredba
 
