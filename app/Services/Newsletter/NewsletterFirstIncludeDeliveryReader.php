@@ -2,22 +2,23 @@
 
 namespace App\Services\Newsletter;
 
-use Illuminate\Support\Facades\Schema;
+use App\Models\CulturalEventEntry;
+use App\Models\NewsletterDeliveryLedger;
+use App\Models\NewsletterSubscription;
 
 /**
- * NL-03 read-only adapter for successful first_include delivery evidence.
- * Does not write. Physical ledger table is owned by a later delivery package.
+ * Read-only adapter for successful first_include delivery evidence.
  */
 final class NewsletterFirstIncludeDeliveryReader
 {
-    public function hasSuccessfulFirstInclude(int $userId, int $eventEntryId): bool
-    {
-        unset($userId, $eventEntryId);
-
-        if (! Schema::hasTable('newsletter_delivery_ledger')) {
-            return false;
-        }
-
-        return false;
+    public function hasSuccessfulFirstInclude(
+        NewsletterSubscription $subscription,
+        CulturalEventEntry $event
+    ): bool {
+        return NewsletterDeliveryLedger::query()
+            ->where('newsletter_subscription_id', $subscription->id)
+            ->where('cultural_event_entry_id', $event->id)
+            ->where('entry_type', NewsletterDeliveryLedger::TYPE_FIRST_INCLUDE)
+            ->exists();
     }
 }

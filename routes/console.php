@@ -16,10 +16,13 @@ Artisan::command('path:show', function () {
 // Cron / scheduler: koristimo delete-expired-documents.php u root-u + Plesk "Run a PHP script"
 // (Schedule:: nije korišćen jer Plesk Scheduled Tasks ne pokreće php artisan schedule:run)
 
-// Newsletter Kalendara kulture - svakog ponedjeljka u 09:00.
-Schedule::command('cultural-calendar:send-weekly-newsletter')
-    ->mondays()
-    ->at('09:00')
+// NL-04 — kanonski redovni first_include ciklus (tehnički interval, nije BM pravilo).
+// Legacy weekly command ostaje na disku do cutover cleanup-a; NE zakazivati paralelno.
+// Produkcijski Plesk invoker se ovdje NE mijenja.
+$newsletterHours = max(1, (int) config('newsletter.regular_interval_hours', 6));
+Schedule::command('cultural-calendar:send-newsletter')
+    ->cron('0 */'.$newsletterHours.' * * *')
+    ->withoutOverlapping()
     ->timezone(config('app.timezone', 'Europe/Podgorica'));
 
 // PO-AUTO-02 + automatsko arhiviranje: periodična provjera kandidata (poslovno vrijeme isteka ≠ interval).

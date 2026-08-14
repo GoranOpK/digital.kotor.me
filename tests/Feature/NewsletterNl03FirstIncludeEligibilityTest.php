@@ -23,7 +23,6 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
 /**
@@ -711,7 +710,7 @@ class NewsletterNl03FirstIncludeEligibilityTest extends TestCase
     private function assertNoDeliverySideEffects(): void
     {
         Mail::assertNothingSent();
-        $this->assertFalse(Schema::hasTable('newsletter_delivery_ledger'));
+        $this->assertSame(0, \App\Models\NewsletterDeliveryLedger::query()->count());
         $this->assertDatabaseCount('newsletter_subscribers', NewsletterSubscriber::query()->count());
     }
 

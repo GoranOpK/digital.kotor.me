@@ -353,7 +353,14 @@ class NewsletterNl01SubscriptionDataModelTest extends TestCase
         $this->assertTrue(Schema::hasTable('newsletter_subscriptions'));
         $this->assertTrue(Schema::hasTable('newsletter_subscription_organizers'));
         $this->assertTrue(Schema::hasTable('newsletter_subscription_source_coverages'));
+        $this->assertTrue(Schema::hasTable('newsletter_delivery_ledger'));
         $this->assertTrue(Schema::hasTable('newsletter_subscribers'));
+        $this->assertTrue(Schema::hasColumn('cultural_event_entries', 'first_published_at'));
+
+        $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
+
+        $this->assertFalse(Schema::hasTable('newsletter_delivery_ledger'));
+        $this->assertTrue(Schema::hasTable('newsletter_subscription_source_coverages'));
         $this->assertTrue(Schema::hasColumn('cultural_event_entries', 'first_published_at'));
 
         $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
@@ -374,6 +381,7 @@ class NewsletterNl01SubscriptionDataModelTest extends TestCase
         $this->assertTrue(Schema::hasTable('newsletter_subscriptions'));
         $this->assertTrue(Schema::hasTable('newsletter_subscription_organizers'));
         $this->assertTrue(Schema::hasTable('newsletter_subscription_source_coverages'));
+        $this->assertTrue(Schema::hasTable('newsletter_delivery_ledger'));
         $this->assertTrue(Schema::hasColumn('cultural_event_entries', 'first_published_at'));
     }
 

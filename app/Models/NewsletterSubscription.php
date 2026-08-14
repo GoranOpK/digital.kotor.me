@@ -63,6 +63,14 @@ class NewsletterSubscription extends Model
         );
     }
 
+    public function deliveryLedger(): HasMany
+    {
+        return $this->hasMany(
+            NewsletterDeliveryLedger::class,
+            'newsletter_subscription_id'
+        );
+    }
+
     public function isActive(): bool
     {
         return $this->status === self::STATUS_ACTIVE;

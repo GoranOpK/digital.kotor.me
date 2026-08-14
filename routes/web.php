@@ -29,6 +29,7 @@ use App\Http\Controllers\CulturalTagController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\EvaluationController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\NewsletterPublicUnsubscribeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentsController;
 use App\Http\Controllers\PublicNoticeContentController;
@@ -45,6 +46,14 @@ Route::get('/', [HomeController::class, 'index'])->name('home'); // Prikaz poče
 // Javni sadržaj Obavještenja (FT-004) — bez auth / verified / role middleware
 Route::get('/obavjestenja/{notice}/sadrzaj', [PublicNoticeContentController::class, 'show'])
     ->name('notices.public-content');
+
+// NL-04 — odjava iz Newsletter e-maila (token; bez sesije)
+Route::get('/newsletter/odjava/{token}', [NewsletterPublicUnsubscribeController::class, 'show'])
+    ->name('newsletter.unsubscribe.public.show');
+Route::post('/newsletter/odjava/{token}', [NewsletterPublicUnsubscribeController::class, 'unsubscribe'])
+    ->name('newsletter.unsubscribe.public.consume');
+Route::get('/newsletter/odjava-potvrda', [NewsletterPublicUnsubscribeController::class, 'done'])
+    ->name('newsletter.unsubscribe.public.done');
 
 // Rute za autentikaciju (login/register) - koristi Breeze, Fortify ili custom rješenje
 Route::get('/login', [HomeController::class, 'loginForm'])->name('login'); // Forma za login

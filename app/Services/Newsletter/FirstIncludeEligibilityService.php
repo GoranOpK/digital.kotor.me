@@ -46,12 +46,39 @@ final class FirstIncludeEligibilityService
             return false;
         }
 
-        $userId = (int) $subscription->user_id;
-        if ($this->deliveryReader->hasSuccessfulFirstInclude($userId, (int) $event->id)) {
+        if ($this->deliveryReader->hasSuccessfulFirstInclude($subscription, $event)) {
             return false;
         }
 
         return true;
+    }
+
+    /**
+     * Subscriber-oriented candidate scan. Reuses isEligible(); does not duplicate rules.
+     *
+     * @return Collection<int, CulturalEventEntry>
+     */
+    public function eligibleEventsFor(NewsletterSubscription $subscription): Collection
+    {
+        $subscription = $subscription->fresh(['user', 'organizers']) ?? $subscription;
+
+        if (! $this->subscriptionIsDeliveryEligible($subscription)) {
+            return collect();
+        }
+
+        $pool = CulturalEventEntry::query()
+            ->where('status', CulturalEventEntry::STATUS_PUBLISHED)
+            ->whereNotNull('first_published_at')
+            ->whereHas('occurrences', function ($query): void {
+                CulturalPublicCardOccurrenceCriteria::constrain($query);
+            })
+            ->with(['organizer', 'occurrences.location'])
+            ->orderBy('id')
+            ->get();
+
+        return $pool
+            ->filter(fn (CulturalEventEntry $event) => $this->isEligible($event, $subscription))
+            ->values();
     }
 
     /**
