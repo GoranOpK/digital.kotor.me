@@ -1,9 +1,9 @@
 # Moduli i rute
 
-**Poslednje ažuriranje:** 2026-06-30  
+**Poslednje ažuriranje:** 2026-08-14
 **Izvor u kodu:** `routes/web.php`, `routes/auth.php`
 
-Sve rute u nastavku (osim `/`, login, register) zahtijevaju middleware: `auth`, `verified`, `module_access_restrict`, osim ako nije drugačije navedeno.
+Sve rute u nastavku (osim `/`, login, register i javne Newsletter odjave) zahtijevaju middleware: `auth`, `verified`, `module_access_restrict`, osim ako nije drugačije navedeno.
 
 ---
 
@@ -16,6 +16,9 @@ Sve rute u nastavku (osim `/`, login, register) zahtijevaju middleware: `auth`, 
 | POST | `/login` | — | `HomeController@login` |
 | GET | `/register` | `register` | `HomeController@registerForm` |
 | POST | `/register` | — | `HomeController@register` |
+| GET | `/newsletter/odjava/{token}` | `newsletter.unsubscribe.public.show` | `NewsletterPublicUnsubscribeController@show` |
+| POST | `/newsletter/odjava/{token}` | `newsletter.unsubscribe.public.consume` | `NewsletterPublicUnsubscribeController@unsubscribe` |
+| GET | `/newsletter/odjava-potvrda` | `newsletter.unsubscribe.public.done` | `NewsletterPublicUnsubscribeController@done` |
 
 Breeze rute iz `auth.php` takođe učitavaju login/register — **duplikat imena ruta** (v. [project-todo.md](project-todo.md)).
 
@@ -29,6 +32,21 @@ Breeze rute iz `auth.php` takođe učitavaju login/register — **duplikat imena
 | GET | `/profile` | `profile.edit` | `ProfileController@edit` |
 | PUT | `/profile` | `profile.update` | `ProfileController@update` |
 | PUT | `/profile/password` | `profile.password.update` | `ProfileController@updatePassword` |
+
+---
+
+## Newsletter Kalendara kulture
+
+Pretplata pripada `User` nalogu. URI `/newsletter` **nije** opšti Newsletter Digital Kotor platforme. `/kalendar-kulture/newsletter` nije ruta.
+
+| Metoda | Putanja | Ime | Kontroler |
+|--------|---------|-----|-----------|
+| GET | `/newsletter` | `newsletter.settings` | `NewsletterSubscriptionController@show` |
+| POST | `/newsletter` | `newsletter.subscribe` | `NewsletterSubscriptionController@subscribe` |
+| PATCH | `/newsletter` | `newsletter.update` | `NewsletterSubscriptionController@update` |
+| POST | `/newsletter/odjava` | `newsletter.unsubscribe` | `NewsletterSubscriptionController@unsubscribe` |
+
+Javne token rute: v. tabelu **Javne rute**.
 
 ---
 
@@ -106,7 +124,6 @@ Breeze rute iz `auth.php` takođe učitavaju login/register — **duplikat imena
 | `/kalendar-kulture/arhiva-dogadjaja` | `cultural-calendar.archive` | |
 | `/kalendar-kulture/dogadjaj/{event}` | `cultural-calendar.show` | |
 | `/kalendar-kulture/dan/{date}` | `cultural-calendar.day` | |
-| POST `/kalendar-kulture/newsletter` | `cultural-calendar.newsletter.store` | |
 | resource `/kalendar-kulture/dogadjaji` | `cultural-events.*` | `CulturalEventController`, `role:kk_admin` |
 
 ---

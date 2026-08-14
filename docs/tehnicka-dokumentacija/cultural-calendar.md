@@ -59,7 +59,6 @@ Organizator i Moderator, kao i proces „Postani organizator“, nisu još imple
 | `/kalendar-kulture/arhiva-dogadjaja` | `cultural-calendar.archive` | Arhiva |
 | `/kalendar-kulture/dogadjaj/{event}` | `cultural-calendar.show` | Detalj događaja |
 | `/kalendar-kulture/dan/{date}` | `cultural-calendar.day` | Događaji za datum (nije standardni korisnički tok; za `kk_admin` redirect na create) |
-| POST `/kalendar-kulture/newsletter` | `cultural-calendar.newsletter.store` | Pretplata |
 
 **UI ponašanje (važeće):** u sekcijama **Pregled događaja**, **Arhiva događaja**, **Istaknuti događaji** i **Naredni događaji** kartice su klikabilne i otvaraju stranicu detalja događaja.
 
@@ -109,7 +108,21 @@ Timezone rasporeda = `config('app.timezone')` (default **`Europe/Belgrade`**).
 
 Legacy `cultural-calendar:send-weekly-newsletter` nije kanonski invoker; runtime slanje je isključeno. **Ne** zakazivati je u Plesku.
 
-Kanonska pretplata: `NewsletterSubscription` na `User` (rute `newsletter.*`). E-mail-only `NewsletterSubscriber` nije SSOT i nije produkcioni invoker.
+Kanonska pretplata: `NewsletterSubscription` na `User`. E-mail-only `NewsletterSubscriber` nije SSOT i nije produkcioni invoker.
+
+Ovo je **Newsletter Kalendara kulture** (pretplata na `User` nalog Digital Kotor). Nije opšti Newsletter platforme. URI `/newsletter` ne uvodi drugi Newsletter proizvod. `/kalendar-kulture/newsletter` **nije** ruta (nema redirect).
+
+HTTP rute (`routes/web.php`):
+
+| Metoda | Putanja | Ime | Napomena |
+|--------|---------|-----|----------|
+| GET | `/newsletter` | `newsletter.settings` | Prikaz postavki (`auth`, `verified`) |
+| POST | `/newsletter` | `newsletter.subscribe` | Aktivacija pretplate |
+| PATCH | `/newsletter` | `newsletter.update` | Izmjena postojeće pretplate |
+| POST | `/newsletter/odjava` | `newsletter.unsubscribe` | Odjava iz UI (sesija) |
+| GET | `/newsletter/odjava/{token}` | `newsletter.unsubscribe.public.show` | Javna odjava (token; bez sesije) |
+| POST | `/newsletter/odjava/{token}` | `newsletter.unsubscribe.public.consume` | Potvrda javne odjave |
+| GET | `/newsletter/odjava-potvrda` | `newsletter.unsubscribe.public.done` | Potvrda nakon javne odjave |
 
 ---
 
