@@ -382,6 +382,10 @@
                         <span class="info-value">{{ $user->email ?? 'N/A' }}</span>
                     </div>
                     <div class="info-item">
+                        <span class="info-label">Newsletter</span>
+                        <span class="info-value"><a href="{{ route('newsletter.settings') }}">Upravljaj pretplatom</a></span>
+                    </div>
+                    <div class="info-item">
                         <span class="info-label">Broj telefona</span>
                         <span class="info-value">{{ $user->phone ?? 'N/A' }}</span>
                     </div>

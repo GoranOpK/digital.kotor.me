@@ -323,6 +323,7 @@
         color: rgba(255, 255, 255, 0.92);
     }
     .kk-news-btn {
+        display: inline-block;
         border: 1px solid #d7263d;
         color: #fff;
         background: #d7263d;
@@ -330,6 +331,7 @@
         padding: 9px 16px;
         font-size: 0.88rem;
         font-weight: 600;
+        text-decoration: none;
     }
     .kk-contact {
         text-align: center;
@@ -358,18 +360,6 @@
     <section class="kk-hero" aria-label="Kalendar kulture">
         <img src="{{ asset('img/KKLOGOC.png') }}" alt="Logo Kalendara kulture" class="kk-logo">
     </section>
-
-    @if(session('newsletter_status'))
-        <div style="margin: 0 0 18px; padding: 12px 14px; border-radius: 8px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-size: 14px;">
-            {{ session('newsletter_status') }}
-        </div>
-    @endif
-
-    @error('email')
-        <div style="margin: 0 0 18px; padding: 12px 14px; border-radius: 8px; background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; font-size: 14px;">
-            {{ $message }}
-        </div>
-    @enderror
 
     <section class="kk-grid-3">
         <a
@@ -643,22 +633,8 @@
     <section class="kk-footer-wrap">
         <div class="kk-newsletter">
             <h3>Pratite <span>kalendar kulture</span></h3>
-            <p>Informišite se o kulturnim dešavanjima u Kotoru putem e-mail obavještenja.</p>
-            <form method="POST" action="{{ route('cultural-calendar.newsletter.store') }}" class="kk-news-form">
-                @csrf
-                <input
-                    type="email"
-                    name="email"
-                    value="{{ old('email', '') }}"
-                    placeholder="email@email.com"
-                    required
-                >
-                <label class="kk-news-check">
-                    <span>Odjavi me</span>
-                    <input type="checkbox" name="unsubscribe" value="1" @checked(old('unsubscribe'))>
-                </label>
-                <button type="submit" class="kk-news-btn">Pošalji</button>
-            </form>
+            <p>Upravljajte pretplatom na Newsletter Kalendara kulture.</p>
+            <a href="{{ route('newsletter.settings') }}" class="kk-news-btn">Newsletter</a>
         </div>
 
         <div class="kk-contact">

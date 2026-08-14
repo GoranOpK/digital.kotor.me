@@ -6,7 +6,6 @@ use App\Http\Controllers\BusinessPlanController;
 use App\Http\Controllers\CompetitionsController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\CulturalCalendarController;
-use App\Http\Controllers\CulturalCalendarNewsletterController;
 use App\Http\Controllers\CulturalEditorialDashboardController;
 use App\Http\Controllers\CulturalEditorialRequestsController;
 use App\Http\Controllers\CulturalEventChangeProposalController;
@@ -62,6 +61,12 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password.update');
+
+    // NL-02 — kanonska Newsletter pretplata (User-bound; bez e-mail SSOT)
+    Route::get('/newsletter', [\App\Http\Controllers\NewsletterSubscriptionController::class, 'show'])->name('newsletter.settings');
+    Route::post('/newsletter', [\App\Http\Controllers\NewsletterSubscriptionController::class, 'subscribe'])->name('newsletter.subscribe');
+    Route::patch('/newsletter', [\App\Http\Controllers\NewsletterSubscriptionController::class, 'update'])->name('newsletter.update');
+    Route::post('/newsletter/odjava', [\App\Http\Controllers\NewsletterSubscriptionController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
 
     // Biblioteka dokumenata
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
@@ -121,7 +126,6 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::get('/kalendar-kulture/manifestacije/{manifestacija}', [CulturalCalendarController::class, 'manifestationShow'])->name('cultural-calendar.manifestation');
     Route::get('/kalendar-kulture/dogadjaj/{event}', [CulturalCalendarController::class, 'show'])->name('cultural-calendar.show');
     Route::get('/kalendar-kulture/dan/{date}', [CulturalCalendarController::class, 'day'])->name('cultural-calendar.day');
-    Route::post('/kalendar-kulture/newsletter', [CulturalCalendarNewsletterController::class, 'store'])->name('cultural-calendar.newsletter.store');
 
     // TS-001 — zahtjev za kreiranje Organizatora (registrovani korisnik; ne kreira entitet)
     Route::get('/kalendar-kulture/zahtjev-organizator', [CulturalOrganizerCreationRequestController::class, 'create'])

@@ -99,6 +99,19 @@ class NewsletterSubscription extends Model
     }
 
     /**
+     * NL-02: selected_organizers stores exactly the submitted organizer set.
+     *
+     * @param  list<int>  $organizerIds
+     */
+    public function applySelectedOrganizerScope(array $organizerIds, bool $includeWithoutOrganizer): void
+    {
+        $this->scope_mode = self::SCOPE_SELECTED_ORGANIZERS;
+        $this->include_without_organizer = $includeWithoutOrganizer;
+        $this->save();
+        $this->organizers()->sync(array_values(array_unique($organizerIds)));
+    }
+
+    /**
      * NL-02 support: unsubscribe keeps the row, clears active preferences.
      */
     public function applyUnsubscribeState(): void
@@ -107,6 +120,7 @@ class NewsletterSubscription extends Model
         $this->unsubscribed_at = now();
         $this->scope_mode = null;
         $this->include_without_organizer = false;
+        $this->unsubscribe_token = null;
         $this->save();
         $this->organizers()->detach();
     }

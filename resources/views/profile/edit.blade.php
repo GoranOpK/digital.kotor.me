@@ -305,6 +305,12 @@
             </form>
         </div>
 
+        <div class="profile-card">
+            <h2>Newsletter</h2>
+            <p style="color: #4b5563; margin: 0 0 16px;">Upravljajte pretplatom na Newsletter Kalendara kulture.</p>
+            <a href="{{ route('newsletter.settings') }}" class="btn btn-primary">Newsletter</a>
+        </div>
+
         <!-- Promjena lozinke -->
         <div class="profile-card">
             <h2>Promjena lozinke</h2>

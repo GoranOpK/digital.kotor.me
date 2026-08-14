@@ -29,6 +29,10 @@ class RestrictRoleModuleAccess
             'profile.edit',
             'profile.update',
             'profile.password.update',
+            'newsletter.settings',
+            'newsletter.subscribe',
+            'newsletter.update',
+            'newsletter.unsubscribe',
         ];
 
         if ($routeName && in_array($routeName, $commonAllowed, true)) {
@@ -89,7 +93,7 @@ class RestrictRoleModuleAccess
                 return $next($request);
             }
 
-            if ($request->is('kalendar-kulture*') || $request->is('profile*')) {
+            if ($request->is('kalendar-kulture*') || $request->is('profile*') || $request->is('newsletter*')) {
                 return $next($request);
             }
 
@@ -136,7 +140,7 @@ class RestrictRoleModuleAccess
                 return $next($request);
             }
 
-            if ($request->is('admin/competitions*') || $request->is('admin/commissions*') || $request->is('competitions*') || $request->is('profile*')) {
+            if ($request->is('admin/competitions*') || $request->is('admin/commissions*') || $request->is('competitions*') || $request->is('profile*') || $request->is('newsletter*')) {
                 return $next($request);
             }
 
@@ -177,6 +181,7 @@ class RestrictRoleModuleAccess
                 || $request->is('applications/*/business-plan')
                 || $request->is('applications/*/documents/*')
                 || $request->is('profile*')
+                || $request->is('newsletter*')
             ) {
                 return $next($request);
             }
