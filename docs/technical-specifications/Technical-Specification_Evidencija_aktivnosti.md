@@ -7,8 +7,10 @@
 **Funkcionalna cjelina:** Evidencija aktivnosti  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** USVOJEN  
-**Verzija:** 1.0.1 (DRAFT)  
-**Datum:** 2026-08-07
+**Verzija:** 1.0.2
+**Datum:** 2026-08-14
+
+**Implementacija FT-003:** **NOT STARTED** — Faza 8 / F8-01 = canonical freeze. Ovaj dokument je implementation-ready ugovor. Nije Technical Overview runtime-a. Centralni store / emiteri / Admin UI **nisu** implementirani.
 
 ---
 
@@ -18,6 +20,7 @@
 |---------|--------|------|
 | 1.0.0 | 2026-08-07 | Prvi nacrt Technical Specification za funkcionalnu cjelinu Evidencija aktivnosti (Audit). Usklađen sa BM-14 (BM-AL-01–BM-AL-08), BM-EP-09, BM-GL-09, BM-GL-20, BM-MF-20; FS §5.16 (BR-170–BR-188); Feature Registry FT-003; TS-003 v0.1.2, TS-004, TS-010 v1.0.1, TS-011 v1.0.1; METHODOLOGY. Operacionalizuje centralni prijem, trajno evidentiranje, nepromjenjivost, Admin pristup i V1 katalog bez širenja BR-188. Bez izmjene BM/FS/ostalih TS/Feature Registry. Bez izmjene implementacije. |
 | 1.0.1 | 2026-08-07 | PATCH-001: završna tehnička usklađenja — jedinstvenost `(source_module, event_id)`; neuspjeh Evidencije ne poništava poslovnu radnju + pouzdana ponovna obrada; kanonski emiter; istorijski integritet izvršioca. Bez novih poslovnih odluka; bez širenja V1; bez izmjene BM/FS/FR/ostalih TS. |
+| 1.0.2 | 2026-08-14 | **F8-01 canonical freeze:** status hygiene (uklonjen `(DRAFT)` / Nacrt); uklonjen stale FR-GAP; V1 katalog usklađen sa FS PATCH-FS-074; implementation-ready ugovor (identity, privacy, immutability, failure isolation, Admin V1, TM-AL). **FT-003 implementation = NOT STARTED.** Bez izmjene BM. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -33,6 +36,7 @@ Ne mijenjaju se postojeći redovi.
 |---------|--------|---------|
 | 1.0.0 | 2026-08-07 | Kreiran TS-012 (NACRT). Kompletna tehnička specifikacija Evidencije aktivnosti: obuhvat, granice, arhitektura, model događaja/zapisa, katalog V1, prijem, nepromjenjivost, autorizacija, Admin pristup, razdvajanje od tehničkih logova, integracije, validacije, acceptance, sljedivost, Van obuhvata. |
 | 1.0.1 | 2026-08-07 | PATCH-001: (1) jedinstvenost audit događaja = `source_module` + `event_id`; (2) neuspjeh prijema/evidentiranja ne poništava poslovnu radnju; pouzdana ponovna obrada; (3) jedan kanonski emiter po poslovnoj radnji; (4) istorijski izvršilac nepromjenjiv nakon deaktivacije naloga. Dopunjeni §3, §5–6, §8, §13, §14–16, §19. |
+| 1.0.2 | 2026-08-14 | F8-01: USVOJEN bez DRAFT/Nacrt kontradikcije; FR-GAP uklonjen; §7 kanonska matrica + exclusions; §8.6 identity; §6.3 privacy; §11 paginacija; §20 TM-AL; implementacija pending. |
 
 ---
 
@@ -52,13 +56,13 @@ TS-012:
 Izvori istine za poslovna pravila:
 
 * `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-14 BM-AL-01–BM-AL-08; BM-EP-09; BM-GL-09; BM-GL-20; BM-MF-20)
-* `docs/functional-specifications/Functional-Specification.md` (§5.16 BR-170–BR-188; PATCH-FS-035 i usklađenja uključujući PATCH-FS-053 gdje se tiče kataloga Događaji)
+* `docs/functional-specifications/Functional-Specification.md` (§5.16 BR-170–BR-188, BR-349–BR-350; PATCH-FS-074)
 * `docs/features/Feature-Registry.md` (FT-003)
 * `docs/METHODOLOGY.md` (M-TS-001–M-TS-005)
-* `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 v0.1.2)
+* `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003)
 * `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004)
-* `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010 v1.0.1)
-* `docs/technical-specifications/Technical-Specification_Newsletter.md` (TS-011 v1.0.1)
+* `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010)
+* `docs/technical-specifications/Technical-Specification_Newsletter.md` (TS-011 v1.0.3)
 
 ---
 
@@ -66,25 +70,26 @@ Izvori istine za poslovna pravila:
 
 | Poglavlje | Status |
 |-----------|--------|
-| 1. Pregled funkcionalne cjeline | Nacrt |
-| 2. Granice odgovornosti | Nacrt |
-| 3. Arhitektonski principi | Nacrt |
-| 4. Komponente | Nacrt |
-| 5. Model audit događaja | Nacrt |
-| 6. Model audit zapisa | Nacrt |
-| 7. Katalog V1 | Nacrt |
-| 8. Prijem i evidentiranje | Nacrt |
-| 9. Nepromjenjivost | Nacrt |
-| 10. Autorizacija | Nacrt |
-| 11. Admin pristup | Nacrt |
-| 12. Razdvajanje od tehničkih logova | Nacrt |
-| 13. Integracije | Nacrt |
-| 14. Validacije | Nacrt |
-| 15. Matrica sljedivosti | Nacrt |
-| 16. Acceptance kriterijumi | Nacrt |
-| 17. Van obuhvata (Out of Scope) | Nacrt |
-| 18. Otvorena pitanja | Nacrt |
-| 19. Napomene za implementaciju | Nacrt |
+| 1. Pregled funkcionalne cjeline | USVOJENO |
+| 2. Granice odgovornosti | USVOJENO |
+| 3. Arhitektonski principi | USVOJENO |
+| 4. Komponente | USVOJENO |
+| 5. Model audit događaja | USVOJENO |
+| 6. Model audit zapisa | USVOJENO |
+| 7. Katalog V1 | USVOJENO |
+| 8. Prijem i evidentiranje | USVOJENO |
+| 9. Nepromjenjivost | USVOJENO |
+| 10. Autorizacija | USVOJENO |
+| 11. Admin pristup | USVOJENO |
+| 12. Razdvajanje od tehničkih logova | USVOJENO |
+| 13. Integracije | USVOJENO |
+| 14. Validacije | USVOJENO |
+| 15. Matrica sljedivosti | USVOJENO |
+| 16. Acceptance kriterijumi | USVOJENO |
+| 17. Van obuhvata (Out of Scope) | USVOJENO |
+| 18. Otvorena pitanja | USVOJENO |
+| 19. Napomene za implementaciju | USVOJENO |
+| 20. Test specification matrix (TM-AL) | USVOJENO |
 
 ---
 
@@ -96,7 +101,7 @@ Izvori istine za poslovna pravila:
 4. Sve što nije definisano u BM ili FS, a zahtijeva poslovnu odluku, evidentira se kao **Otvoreno pitanje**.
 5. Tehnički predlozi (zaštita od duplikata po `source_module` + `event_id`, kanonski emiter, izolacija neuspjeha Evidencije, istorijski izvršilac, minimalni hronološki prikaz) nisu nova poslovna pravila.
 6. Product Owner donosi poslovne odluke; ovaj dokument ih ne pretpostavlja.
-7. Granice V1 iz **BR-188** ostaju na snazi: napredni Admin UI, filteri, izvoz, retention i detaljna polja nisu dio ovog nacrta.
+7. Granice V1 iz **BR-188** ostaju na snazi: napredni Admin UI, filteri, izvoz, retention i detaljna polja nisu dio V1. Paginacija hronološke liste je tehnički dozvoljena.
 
 ---
 
@@ -276,56 +281,108 @@ U skladu sa BR-188, **ne** uvode se kao obavezna polja:
 
 Ako je za identifikaciju aktivnosti potreban kratak konzervativni opis (npr. šifra aktivnosti već pokrivena `activity_type`), ne proširuje se poslovni obuhvat.
 
+## 6.3 Dodatni kontekst (privacy-minimal)
+
+Opcioni `context` objekat smije sadržati **samo** identifikatore i šifre potrebne za reviziju (npr. `request_id`, `occurrence_id`, `cycle_id`, `activity_code`).
+
+**Zabranjeno** automatski čuvati:
+
+* lozinke, hash lozinki, session, CSRF;
+* unsubscribe tokene, invitation tokene, API tajne;
+* kompletan request body / model snapshot;
+* e-mail kao SSOT (koristiti `actor_user_id` / `object_id`);
+* privatne razloge otkazivanja/odlaganja osim ako FS ne nalaže da je sam razlog predmet revizije — u V1 se evidentira **radnja** unosa razloga, a tekst razloga ostaje na entitetu;
+* Newsletter delivery ledger sadržaj.
+
 ---
 
 # 7. Katalog V1
 
-Katalog je **isključivo** onaj iz FS §5.16. TS-012 ne dodaje aktivnosti.
+Poslovni SSOT kataloga je **FS §5.16** (uključujući PATCH-FS-074 / BR-349–BR-350). TS-012 ne dodaje aktivnosti van tog kataloga. Tehnički ID-jevi `TS12-*` su stabilni identifikatori za emiter/testove; nisu nove RG-001 skraćenice.
 
-## 7.1 Moderator (BR-177)
+Feature Registry **uključuje** Manifestacije u V1 katalogu FT-003. Stari FR-GAP je **zatvoren**.
 
-Ulaze: podnošenje / odobravanje / odbijanje zahtjeva za dodjelu; pokretanje / odobravanje / odbijanje uklanjanja ovlašćenja Moderatora.
+Jedinstvenost zapisa Moderator aktivnosti: BR-180. Promjena aktivnog konteksta **nije** zaseban zapis (BR-181). Pri odobrenju kreiranja Organizatora: **dva** `event_id` (BR-179).
 
-Jedinstvenost zapisa po BR-180. Promjena aktivnog konteksta **nije** zaseban zapis (BR-181).
+## 7.1 Kanonska matrica V1
 
-## 7.2 Organizatori (BR-178, BR-179)
+| ID | Source module | Event type | Poslovna radnja | Actor | Target | Minimal context | BM/FS source |
+| -- | ------------- | ---------- | --------------- | ----- | ------ | --------------- | ------------ |
+| TS12-MOD-01 | TS-001 | `mod.add.submit` | Podnošenje zahtjeva za dodjelu Moderatora | User | moderator_request | request_id; organizer_id | BR-177 |
+| TS12-MOD-02 | TS-001 | `mod.add.approve` | Odobravanje dodjele Moderatora | User | moderator_request | request_id; user_id granta | BR-177 |
+| TS12-MOD-03 | TS-001 | `mod.add.reject` | Odbijanje dodjele Moderatora | User | moderator_request | request_id | BR-177 |
+| TS12-MOD-04 | TS-001 | `mod.remove.submit` | Pokretanje uklanjanja Moderatora | User | moderator_request | request_id; organizer_id | BR-177 |
+| TS12-MOD-05 | TS-001 | `mod.remove.approve` | Odobravanje uklanjanja Moderatora | User | moderator_request | request_id | BR-177 |
+| TS12-MOD-06 | TS-001 | `mod.remove.reject` | Odbijanje uklanjanja Moderatora | User | moderator_request | request_id | BR-177 |
+| TS12-MOD-07 | TS-001 | `mod.request.eligible` | Čeka registraciju → Podnesen (ADD ili Org-creation predloženi Moderator) | Sistem | request | request_id | BR-349; BR-314 |
+| TS12-ORG-01 | TS-001 | `org.request.submit` | Podnošenje zahtjeva za kreiranje Organizatora | User | organizer_request | request_id | BR-178 |
+| TS12-ORG-02 | TS-001 | `org.request.approve` | Odobrenje zahtjeva i kreiranje Organizatora | User | organizer | request_id; organizer_id | BR-178; BR-179 (zapis 1) |
+| TS12-ORG-03 | TS-001 | `org.request.reject` | Odbijanje zahtjeva za kreiranje Organizatora | User | organizer_request | request_id | BR-178 |
+| TS12-ORG-04 | TS-001 | `org.deactivate` | Deaktivacija Organizatora | User | organizer | organizer_id | BR-178 |
+| TS12-ORG-05 | TS-003 | `org.event.link` | Naknadno povezivanje događaja sa Organizatorom | User | event | entry_id; organizer_id | BR-178; BR-052 |
+| TS12-ORG-06 | TS-001 | `org.profile.significant` | Poslovno značajna izmjena podataka Organizatora | User | organizer | organizer_id | BR-178 |
+| TS12-ORG-07 | TS-001 | `org.initial_moderator.grant` | Dodjela početnog Moderatora pri odobrenju kreiranja | User | moderator_grant | organizer_id; user_id | BR-179 (zapis 2); BR-180 |
+| TS12-EV-01 | TS-003 | `event.create` | Kreiranje događaja | User | event | entry_id | BR-182 |
+| TS12-EV-02 | TS-003 | `event.submit` | Slanje na odobrenje | User | event | entry_id | BR-182 |
+| TS12-EV-03 | TS-003 | `event.return` | Vraćanje na doradu | User | event | entry_id | BR-182 |
+| TS12-EV-04 | TS-003 | `event.resubmit` | Ponovno slanje na odobrenje | User | event | entry_id | BR-182 |
+| TS12-EV-05 | TS-003 | `event.approve` | Odobravanje događaja | User | event | entry_id | BR-182 |
+| TS12-EV-06 | TS-003 | `event.direct_publish` | Direktna objava Urednika | User | event | entry_id | BR-182 |
+| TS12-EV-07 | TS-003 | `event.feature` | Isticanje događaja | User | event | entry_id | BR-182 |
+| TS12-EV-08 | TS-003 | `event.unfeature` | Uklanjanje isticanja | User | event | entry_id | BR-182 |
+| TS12-EV-09 | TS-003 | `event.cancel` | Otkazivanje događaja | User | event | entry_id | BR-182 |
+| TS12-EV-10 | TS-003 | `event.cancellation_reason` | Unos/dopuna razloga otkazivanja | User | event | entry_id | BR-182 |
+| TS12-EV-11 | TS-004 | `occ.postpone` | Odlaganje Održavanja | User | occurrence | occurrence_id; entry_id | BR-182 |
+| TS12-EV-12 | TS-004 | `occ.cancel` | Otkazivanje pojedinačnog Održavanja (nije kaskada Event cancel) | User | occurrence | occurrence_id; entry_id | BR-182 |
+| TS12-EV-13 | TS-004 | `occ.reschedule` | Promjena termina Održavanja | User | occurrence | occurrence_id; entry_id | BR-182 |
+| TS12-EV-14 | TS-004 | `occ.location_change` | Promjena lokacije Održavanja | User | occurrence | occurrence_id; entry_id | BR-182 |
+| TS12-EV-15 | TS-003 | `event.proposal.submit` | Podnošenje prijedloga izmjena | User | proposal | proposal_id; entry_id | BR-182 |
+| TS12-EV-16 | TS-003 | `event.proposal.approve` | Odobravanje prijedloga izmjena | User | proposal | proposal_id; entry_id | BR-182 |
+| TS12-EV-17 | TS-003 | `event.proposal.return` | Vraćanje prijedloga na doradu | User | proposal | proposal_id; entry_id | BR-182 |
+| TS12-EV-18 | TS-003 | `event.auto_archive` | Automatsko arhiviranje događaja | Sistem | event | entry_id | BR-182; BR-184 |
+| TS12-EV-19 | TS-004 | `occ.auto_finish` | Automatsko završavanje Održavanja | Sistem | occurrence | occurrence_id; entry_id | BR-349; BR-068 |
+| TS12-EV-20 | TS-003 | `event.published_direct_edit` | Direktna izmjena objavljenog (Urednik, bez registrovanog Org) | User | event | entry_id | BR-349; BR-292 |
+| TS12-EV-21 | TS-003 | `event.unpublished_delete` | Trajno brisanje nikad objavljenog događaja | User | event | entry_id | BR-349; BR-290 |
+| TS12-MF-01 | TS-005 | `mf.create` | Kreiranje Manifestacije | User | manifestation | manifestation_id | BM-MF-20; §5.16 |
+| TS12-MF-02 | TS-005 | `mf.submit` | Slanje na odobrenje | User | manifestation | manifestation_id | §5.16 |
+| TS12-MF-03 | TS-005 | `mf.return` | Vraćanje na doradu | User | manifestation | manifestation_id | §5.16 |
+| TS12-MF-04 | TS-005 | `mf.publish` | Odobravanje / objava (uključujući uredničku direktnu objavu) | User | manifestation | manifestation_id | §5.16; PO-MF-WF |
+| TS12-MF-05 | TS-005 | `mf.cancel` | Otkazivanje Manifestacije | User | manifestation | manifestation_id | §5.16 |
+| TS12-MF-06 | TS-005 | `mf.auto_archive` | Automatsko arhiviranje Manifestacije | Sistem | manifestation | manifestation_id | §5.16; BR-184 |
+| TS12-MF-07 | TS-005 | `mf.event.add` | Dodavanje događaja Manifestaciji | User | manifestation | manifestation_id; entry_id | §5.16 |
+| TS12-MF-08 | TS-005 | `mf.event.remove` | Uklanjanje događaja iz Manifestacije | User | manifestation | manifestation_id; entry_id | §5.16 |
+| TS12-MF-09 | TS-005 | `mf.event.move` | Premještanje događaja između Manifestacija | User | manifestation | from_id; to_id; entry_id | §5.16 |
+| TS12-MF-10 | TS-005 | `mf.organizer.change` | Promjena Organizatora Manifestacije | User | manifestation | manifestation_id; organizer_id | §5.16 |
+| TS12-MF-11 | TS-005 | `mf.cover.change` | Promjena naslovne fotografije | User | manifestation | manifestation_id | §5.16 |
+| TS12-MF-12 | TS-005 | `mf.webinfo.change` | Promjena Web stranica / Više informacije | User | manifestation | manifestation_id | §5.16 |
+| TS12-NL-01 | TS-011 | `nl.activate` | Aktivacija pretplate | User | subscription | subscription_id | BR-185 |
+| TS12-NL-02 | TS-011 | `nl.unsubscribe` | Odjava | User | subscription | subscription_id | BR-185 |
+| TS12-NL-03 | TS-011 | `nl.reactivate` | Ponovna aktivacija | User | subscription | subscription_id | BR-185 |
+| TS12-NL-04 | TS-011 | `nl.preferences.change` | Promjena izbora Organizatora / preferenci | User | subscription | subscription_id | BR-185 |
+| TS12-NL-05 | TS-011 | `nl.send.regular` | Slanje redovnog Newslettera | Sistem | newsletter_cycle | cycle_id | BR-185; BR-184 |
+| TS12-NL-06 | TS-011 | `nl.send.priority` | Slanje prioritetnog obavještenja | Sistem | newsletter_cycle | cycle_id | BR-185; BR-184 |
 
-Ulaze: podnošenje / odobravanje / odbijanje zahtjeva za kreiranje; deaktivacija; naknadno povezivanje događaja; poslovno značajne izmjene Organizatora.
+Kanonski emiter u koloni Source module je **vlasnik lifecycle-a**. Ako portal (TS-010) izvršava radnju, i dalje emituje **jedan** kanonski emiter entiteta (TS-001/003/004/005/011), ne paralelno TS-010.
 
-Pri odobrenju kreiranja Organizatora: **dva** zapisa (odobrenje+kreiranje; dodjela početnog Moderatora) — bez trećeg duplikata (BR-179).
+## 7.2 Explicit exclusions
 
-## 7.3 Manifestacije (BM-AL-07, BM-MF-20, FS §5.16)
-
-Ulaze: kreiranje; slanje na odobrenje; vraćanje na doradu; odobravanje/objava; otkazivanje; automatsko arhiviranje (**Sistem**); dodavanje/uklanjanje/premještanje događaja; promjena Organizatora; promjena naslovne fotografije; promjena polja Web stranica / Više informacije.
-
-**Administrativni GAP (van izmjene ovog TS-a):** Feature Registry u sažetku FT-003 trenutno ne navodi Manifestacije u listi V1 kataloga, iako BM/FS to zahtijevaju. TS-012 **uključuje** Manifestacije. FR se u ovom zadatku ne mijenja.
-
-## 7.4 Događaji i Održavanja (BR-182, BR-183)
-
-Ulaze aktivnosti kataloga Događaji, uključujući:
-
-* urednički tok (kreiranje, slanje, vraćanje, ponovno slanje, odobrenje, direktna objava);
-* isticanje / uklanjanje isticanja;
-* otkazivanje; unos/dopuna razloga otkazivanja;
-* odlaganje održavanja; otkaz pojedinačnog održavanja; promjena termina; promjena lokacije;
-* prijedlozi izmjena (podnošenje / odobrenje / vraćanje);
-* automatsko arhiviranje (**Sistem**).
-
-**Ne postoji** zaseban katalog Održavanja; aktivnosti nad Održavanjem idu kroz katalog Događaji (BR-182). Emiter: TS-003 / TS-004.
-
-Ne ulaze: uređivanje nacrta, sitne izmjene, lock/unlock, pregled, pokušaj republish (BR-183 / BR-064).
-
-## 7.5 Newsletter (BR-185, BR-186)
-
-Ulaze: aktivacija; odjava; ponovna aktivacija; promjena izbora Organizatora; slanje redovnog Newslettera (**Sistem**); slanje prioritetnog obavještenja (**Sistem**).
-
-Ne ulaze: tehničke greške slanja i retry; potvrda aktivacije kao zaseban audit; pregled postavki; BR-128 obavještenja.
-
-Slanje Newslettera **ne** duplira katalog Događaji.
-
-## 7.6 Van kataloga (platforma)
-
-Autentikacija, nalog, platformske uloge Urednik/Administrator — van V1 kataloga Kalendara (BR-176).
+| Radnja | Razlog isključenja |
+| ------ | ------------------ |
+| Login / logout / verifikacija / lozinka / platformske uloge | BR-176 |
+| Promjena aktivnog Org konteksta | BR-181 |
+| GET / pregled / validaciona greška / autosave | nije poslovna odluka (BR-173) |
+| Uređivanje nacrta; Sačuvaj i nastavi; generator OCC na Nacrtu | BR-183; BR-350 |
+| Kaskadno otkazivanje OCC uz Event cancel | PO-AUTO-01; jedan zapis TS12-EV-09 |
+| Dismiss odbijenog zahtjeva (BR-326/327) | workspace cleanup; lokalni trag BM-ORG-20 / BM-MOD-27 |
+| Invitation / outcome e-mail i mail retry | BM-AL-08; BR-319; nije audit |
+| Newsletter delivery ledger i SMTP retry | BR-186; ledger ≠ audit store |
+| Pregled `/newsletter` bez izmjene | BR-186 |
+| CRUD Lokacija / Kategorija / Medija | van BM-AL-07 |
+| Brisanje Manifestacije; Arhiva MF lista; naslovni MF | van V1 |
+| MOD-UX / navigacija / label korekcije | nije poslovna radnja |
+| Cron tick bez katalog radnje | nije poslovna radnja |
+| Tehnički Laravel/exception log | BM-AL-02 |
+| Ponovna aktivacija Organizatora | nije usvojena u BM/FS |
 
 ---
 
@@ -365,10 +422,10 @@ Gdje više dokumenata opisuje istu oblast, emitovanje radi **samo** kanonski emi
 
 | Tip | Pravilo |
 |-----|---------|
-| **Korisnik** | `actor_type = user`; čuva se `actor_user_id` stvarnog izvršioca u trenutku radnje |
-| **Sistem** | `actor_type = system`; `actor_user_id` prazan; **ne** izmišlja se tehnički korisnički nalog „Sistem“ |
+| **Korisnik** | `actor_type = user`; `actor_user_id` stvarnog izvršioca (nalog). Uloga (Urednik/Moderator/Administrator) **nije** zaseban actor tip — SSOT je User + ovlašćenje u trenutku radnje. |
+| **Sistem** | `actor_type = system`; `actor_user_id` prazan; **ne** izmišlja se nalog „Sistem“ |
 
-Primjeri Sistem (BR-184 i katalog): automatsko arhiviranje događaja/manifestacije; slanje redovnog/prioritetnog Newslettera.
+Primjeri Sistem (BR-184): automatsko arhiviranje događaja/manifestacije; automatsko završavanje Održavanja; resolver Čeka→Podnesen; slanje redovnog/prioritetnog Newslettera.
 
 ### 8.4.1 Istorijski izvršilac
 
@@ -391,16 +448,38 @@ Implementacioni izbor (indeks, upsert, outbox, retry) nije propisan; semantika j
 
 Izuzetak semantike BR-179: odobrenje kreiranja Organizatora proizvodi **dva** događaja (dva `event_id` kod istog kanonskog emitera), ne jedan.
 
+## 8.6 Identitet `event_id` i retry
+
+1. `event_id` dodjeljuje **kanonski emiter**, jedinstven **unutar** `source_module` (nije obavezan globalni UUID).
+2. `event_id` mora biti **deterministički** za isto poslovno izvršenje, npr. `TS12-EV-09:{entry_id}:{cancelled_at}` ili `TS12-NL-05:{cycle_id}`.
+3. Random UUID je dozvoljen **samo** ako je isti identifikator sačuvan uz poslovnu radnju **prije** emitovanja. V1 **ne** uvodi queue/outbox kao obaveznu arhitekturu.
+4. Retry istog poslovnog izvršenja šalje **isti** `source_module` + `event_id` → prijem je no-op (nema novog zapisa).
+5. Dvije različite radnje nad istim entitetom (npr. postpone pa cancel) = **dva** `event_id`.
+6. Korekcija pogrešno emitovanog zapisa **nije** UPDATE starog; ako poslovna korekcija postoji, to je **novi** audit događaj. Pogrešan emit bez poslovne korekcije ostaje u evidenciji (nema delete API).
+
+## 8.7 Failure isolation (bez queue obaveze)
+
+Neuspjeh prijema/store-a **ne** rollbackuje poslovnu radnju (PATCH-001).
+
+Obavezno ponašanje:
+
+* tehnički log neuspjeha (nije Audit zapis);
+* omogućiti pouzdan retry **istog** `event_id`;
+* duplicate protection na ingestu.
+
+**CANON SILENT:** sinhroni emit, kasniji command replay ili druga tehnika — implementacioni izbor. Queue/outbox **nije** automatski uveden. Nova arhitektonska obaveza queue-a zahtijevala bi PO odluku.
+
 ---
 
 # 9. Nepromjenjivost
 
-1. Nakon nastanka audit zapis se **ne uređuje** kroz redovne aplikativne tokove.
-2. Audit zapis se **ne briše** kroz redovno korišćenje.
+1. Nakon nastanka audit zapis se **ne uređuje** kroz redovne aplikativne tokove (**nema UPDATE API**).
+2. Audit zapis se **ne briše** kroz redovno korišćenje (**nema DELETE API**).
 3. Korekcija poslovnog stanja entiteta **ne mijenja** prethodni audit zapis.
-4. Nova propisana poslovna radnja proizvodi **novi** audit događaj / zapis.
-5. Identitet izvršioca u zapisu ostaje istorijski tačan i nakon naknadne deaktivacije ili promjene statusa korisničkog naloga (vidi §8.4.1).
-6. Posebna retention / anonimizacija / sistemsko brisanje **nije** V1 (BR-188); vidi §17.
+4. Nova propisana poslovna radnja proizvodi **novi** audit događaj / zapis (korekcija ≠ edit starog zapisa).
+5. Identitet izvršioca u zapisu ostaje istorijski tačan i nakon naknadne deaktivacije ili promjene imena/uloge naloga (vidi §8.4.1).
+6. Admin samo čita. Posebna retention / anonimizacija / sistemsko brisanje **nije** V1 (BR-188); vidi §17.
+7. DB trigger **nije** V1 obaveza.
 
 ---
 
@@ -425,16 +504,22 @@ Pristup ima isključivo **Administrator platforme** (BM-AL-06, BR-174).
 
 ## 11.2 Minimalni V1 pregled
 
-Tehnički se dozvoljava **osnovni hronološki prikaz** zapisa (npr. lista po `occurred_at` / `recorded_at` silazno) dovoljan da Administrator pristupi evidenciji.
+Tehnički se dozvoljava **osnovni hronološki prikaz** zapisa (lista po `occurred_at` silazno) dovoljan da Administrator pristupi evidenciji, plus **paginacija** kao tehnička nužnost V1.
+
+Osnovni prikaz jednog zapisa: envelope iz §6.1 + privacy-minimal `context`.
+
+**CANON SILENT — implementation choice later** za konkretni Laravel URI. Implementacija prati postojeći obrazac Administracije platforme; ovaj TS ne izmišlja kanonski path.
 
 **Ne uvodi se** (BR-188):
 
 * napredni filteri;
 * puna pretraga;
-* sortiranje kao zasebna funkcionalnost;
+* sortiranje kao zasebna poslovna funkcionalnost (osim hronološkog defaulta);
 * izvoz;
+* retention UI;
+* delete / edit / bulk;
 * dashboard analitika;
-* detaljni audit explorer.
+* Moderator/Urednik feed.
 
 ---
 
@@ -505,7 +590,7 @@ Poslovna radnja (uspješno sačuvana)
 ```
 BM-AL-01…08 (+ BM-EP-09, BM-GL-09/20, BM-MF-20)
         ↓
-FS §5.16 BR-170…188
+FS §5.16 BR-170…188, BR-349–350
         ↓
 FT-003
         ↓
@@ -580,24 +665,55 @@ Posebna politika retencije **nije** predmet V1 dok se poslovno/funkcionalno ne u
 
 Nema otvorenih poslovnih pitanja.
 
-Napomena: način prenosa događaja (sinhrono/asinhrono), tačan oblik skladištenja kompozitnog ključa `source_module` + `event_id` i UI detalj hronološke liste su **implementacioni** izbori unutar usvojenog BM/FS okvira.
-
-**Administrativni GAP (nije predmet izmjene u ovom zadatku):** Feature Registry FT-003 u sažetku V1 kataloga ne navodi Manifestacije — uskladiti administrativno kasnije sa BM/FS/TS-012.
+Napomena: način prenosa događaja (sinhrono/asinhrono), tačan oblik skladištenja kompozitnog ključa `source_module` + `event_id` i UI detalj hronološke liste / URI su **implementacioni** izbori unutar usvojenog BM/FS okvira (**CANON SILENT**).
 
 ---
 
 # 19. Napomene za implementaciju
 
 1. Emisiju vezati na uspješan commit poslovne transakcije, ne na UI klik.
-2. Idempotentnost držati na kombinaciji `source_module` + `event_id` (ne zahtijevati globalni UUID).
-3. Neuspjeh Evidencije ne smije rollback-ovati poslovnu radnju; omogućiti pouzdanu ponovnu obradu.
-4. Jedan kanonski emiter po poslovnoj radnji — bez paralelne emisije iz drugog modula.
+2. Idempotentnost držati na kombinaciji `source_module` + `event_id` (deterministički `event_id`; ne zahtijevati globalni UUID).
+3. Neuspjeh Evidencije ne smije rollback-ovati poslovnu radnju; omogućiti pouzdan retry istog `event_id`. Queue/outbox nije V1 obaveza.
+4. Jedan kanonski emiter po poslovnoj radnji — bez paralelne emisije iz TS-010 i TS-003 za istu radnju.
 5. Ne kreirati korisnički nalog za Sistem.
-6. Sačuvati istorijski `actor_user_id`; deaktivacija naloga ne smije narušiti audit zapis.
+6. Sačuvati istorijski `actor_user_id`; deaktivacija ili promjena imena/uloge ne smije narušiti audit zapis.
 7. Ne miješati ledger Newsletter dostave sa Audit zapisom.
-8. Ne proširivati katalog „radi kompletnosti“ van FS §5.16.
-9. Admin V1 = hronološki pristup; filteri ostaju OOS.
+8. Ne proširivati katalog van FS §5.16 / BR-349; poštovati §7.2 exclusions.
+9. Admin V1 = hronološki pristup + paginacija; filteri ostaju OOS.
 10. PATCH-053: ne emitovati „ponovnu objavu“ otkazanog događaja.
+11. Nema aplikacionog UPDATE/DELETE API-ja za audit zapise; Admin samo čita.
+12. **FT-003 nije implementiran** dok Faza 8 ne isporuči store/emiter/UI.
+
+---
+
+# 20. Test specification matrix
+
+Bez test koda u ovom paketu. Naredna implementacija mora dokazati:
+
+| TM ID | Scenario | Expected |
+| ----- | -------- | -------- |
+| TM-AL-01 | Validan emit iz kataloga | Trajni zapis; polja §6.1 |
+| TM-AL-02 | Duplicate `source_module` + `event_id` | Nema drugog zapisa |
+| TM-AL-03 | Retry nakon neuspjelog store-a sa istim `event_id` | Jedan zapis nakon uspjeha |
+| TM-AL-04 | Pokušaj UPDATE audit zapisa | Odbijeno / nema API |
+| TM-AL-05 | Pokušaj DELETE audit zapisa | Odbijeno / nema API |
+| TM-AL-06 | User actor | `actor_type=user` + `actor_user_id` |
+| TM-AL-07 | Sistem actor (npr. auto-archive / NL send / auto-finish) | `actor_type=system`; prazan user id |
+| TM-AL-08 | Emit failure nakon uspješne poslovne radnje | Poslovna radnja ostaje; tehnički log |
+| TM-AL-09 | Guest / Moderator / Urednik / običan User na Admin listi | 403 / nema pristupa |
+| TM-AL-10 | Administrator platforme | Vidi hronološku listu |
+| TM-AL-11 | Redoslijed | Noviji `occurred_at` prije starijeg |
+| TM-AL-12 | Paginacija | Druga stranica ne duplira prvu; stabilan poredak |
+| TM-AL-13 | Privacy | Nema tokena/lozinke/unsubscribe tokena/request body u `context` |
+| TM-AL-14 | Dva različita `TS12-*` nad istim entitetom | Dva zapisa |
+| TM-AL-15 | BR-179 | Tačno dva zapisa; nema trećeg MOD duplikata |
+| TM-AL-16 | Newsletter ledger red | Nije audit zapis; TS12-NL-05/06 su zasebni |
+| TM-AL-17 | Emit van kataloga (npr. GET, dismiss, draft save) | Nema audit zapisa |
+| TM-AL-18 | Integracija TS-001 | Bar jedan MOD/ORG emit iz §7.1 |
+| TM-AL-19 | Integracija TS-003/004 | Bar jedan EV/OCC emit |
+| TM-AL-20 | Integracija TS-005 | Bar jedan MF emit |
+| TM-AL-21 | Integracija TS-011 | Bar jedan NL emit |
+| TM-AL-22 | Deaktivacija User nakon zapisa | `actor_user_id` nepromijenjen |
 
 ---
 

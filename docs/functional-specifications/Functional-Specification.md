@@ -93,6 +93,7 @@
 | PATCH-FS-071 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup / BM PATCH-072:** Urednik može ukloniti odbijeni Org/Mod zahtjev iz redovne liste Zahtjevi (workspace dismiss). BR-055 / BR-073 retention KEEP. Dodati BR-326–BR-327. Verzija ostaje 1.0.0. |
 | PATCH-FS-072 | 2026-08-14 | **PO-NL-01…PO-NL-22 / BM PATCH-073:** Newsletter pretplata, preference, odjava, reaktivacija, `User`/e-mail lifecycle, Manifestacija granica, testni legacy. Usklađeni tokovi §5.15 i BR-140–BR-142, BR-149–BR-150, BR-152, BR-154, BR-156, BR-157; dodati BR-328–BR-344. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 | PATCH-FS-073 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary / BM PATCH-074:** prva pretplata i reaktivacija nijesu retroaktivne; candidate ≠ dostava; evidencija first_include samo nakon uspješne isporuke. Usklađeni tokovi §5.15 i BR-147, BR-148, BR-158, BR-334, BR-335, BR-341; dodati BR-345–BR-348. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
+| PATCH-FS-074 | 2026-08-14 | **F8-01 / TS-012 canonical freeze:** usklađen §5.16 katalog sa kasnijim usvojenim radnjama (PO-ORG-06 resolver; PO-AUTO-02 auto-finish OCC; PATCH-063 direktna izmjena objavljenog / brisanje nacrta; BR-184 Sistem). Eksplicitna isključenja (dismiss BR-326/327; invitation e-mail; kaskadno OCC; lokacije/kategorije/mediji; Newsletter ledger). Dodati BR-349–BR-350; usklađeni BR-177, BR-178, BR-182, BR-183, BR-184. Bez nove poslovne odluke. Bez izmjene BM. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -214,7 +215,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.14.2 Korisnici, ovlašćenja i saradnja (BR-122–BR-125)
    - 5.14.3 Funkcionalni obuhvat Uredničkog portala (BR-126–BR-128)
    - 5.15 Newsletter (BR-138–BR-169, BR-328–BR-344)
-   - 5.16 Evidencija aktivnosti (BR-170–BR-188, katalog Manifestacije)
+   - 5.16 Evidencija aktivnosti (BR-170–BR-188, BR-349–BR-350, katalog Manifestacije; PATCH-FS-074 freeze)
 2. Istorija verzija (zaglavlje dokumenta)
 3. Change Log
 
@@ -5051,11 +5052,14 @@ U centralnu Evidenciju ulaze:
 * odbijanje zahtjeva za dodjelu ovlašćenja Moderatora;
 * pokretanje zahtjeva za uklanjanje ovlašćenja Moderatora;
 * odobravanje uklanjanja ovlašćenja Moderatora;
-* odbijanje zahtjeva za uklanjanje ovlašćenja Moderatora.
+* odbijanje zahtjeva za uklanjanje ovlašćenja Moderatora;
+* automatski prelaz zahtjeva iz stanja „Čeka registraciju Moderatora“ u „Podnesen“ (izvršilac: **Sistem**; PO-ORG-06 / BR-314) — za subsequent ADD i, analogno, za predloženog početnog Moderatora na zahtjevu za kreiranje Organizatora.
 
 Uključuju se i zahtjevi i konačne odluke. Svaka aktivnost je zaseban zapis. Ista aktivnost se ne duplira zbog pripadnosti oblasti „Korisnici i uloge“ i „Organizatori“.
 
 Promjena aktivnog konteksta Organizatora **ne ulazi** u centralnu Evidenciju; kontekst se bilježi kao atribut drugih zapisa kada je primjenjivo.
+
+Ne ulaze (pored opštih isključenja): invitation / outcome / REMOVE-approved e-mail i mail retry (BM-AL-08, BR-319); uklanjanje odbijenog zahtjeva iz uredničkog prikaza (BR-326 / BR-327 — lokalni trag na zahtjevu).
 
 ##### Katalog — Organizatori
 
@@ -5073,6 +5077,8 @@ Sitne tekstualne, tehničke ili redakcijske izmjene podataka Organizatora ne ula
 Vraćanje zahtjeva za kreiranje Organizatora na dopunu ne ulazi (nije dio usvojenog V1 modela).
 
 Ponovna aktivacija Organizatora ne ulazi: nije eksplicitno usvojena u BM/FS i ne uvodi se ovim poglavljem.
+
+Uklanjanje odbijenog zahtjeva za kreiranje Organizatora iz uredničkog prikaza (BR-326) ne ulazi u centralnu Evidenciju; lokalni trag na zahtjevu ispunjava BM-ORG-20.
 
 Pri odobrenju zahtjeva za kreiranje Organizatora nastaju **dva zapisa**:
 
@@ -5101,9 +5107,11 @@ U centralnu Evidenciju ulaze:
 Ne ulaze u centralnu Evidenciju:
 
 * sitne tekstualne ili redakcijske izmjene nacrta;
-* pregled bez izmjena.
+* pregled bez izmjena;
+* brisanje Manifestacije (nije V1);
+* posebna lista Arhiva Manifestacija / naslovni MF blok (portalni prikaz, nije poslovna radnja nad entitetom).
 
-Napomena (N-MF-05): katalog Manifestacije nije Product Owner odluka već funkcionalna razrada ravnopravnog entiteta u skladu sa BM-14 / BM-MF-20.
+Napomena (N-MF-05): katalog Manifestacije nije Product Owner odluka već funkcionalna razrada ravnopravnog entiteta u skladu sa BM-14 / BM-MF-20. Direktna objava urednički kreirane Manifestacije (PO-MF-WF) evidentira se kao **odobravanje / objava**, ne kao novi tip.
 
 ##### Katalog — Događaji
 
@@ -5126,18 +5134,23 @@ U centralnu Evidenciju ulaze:
 * podnošenje prijedloga izmjena objavljenog događaja;
 * odobravanje prijedloga izmjena;
 * vraćanje prijedloga izmjena na doradu;
-* automatsko arhiviranje događaja (izvršilac: **Sistem**).
+* automatsko arhiviranje događaja (izvršilac: **Sistem**);
+* automatsko završavanje Održavanja Planiran → Završen (izvršilac: **Sistem**; PO-AUTO-02 / BR-068);
+* direktna izmjena objavljenog događaja od strane Urednika tamo gdje je dozvoljena (bez registrovanog Organizatora; BM-UR-16 / BR-292);
+* trajno brisanje događaja koji nikad nije objavljen (BM-UR-15 / BR-290).
 
 Ne ulaze u centralnu Evidenciju:
 
 * uređivanje nacrta;
 * sitne uređivačke izmjene i tekstualne korekcije;
+* „Sačuvaj i nastavi“ / tehnički `draft` / U pripremi bez promjene poslovnog statusa ka odobrenju ili objavi;
+* generator Održavanja na Nacrtu (BR-060 / BR-061);
+* kaskadno otkazivanje Planiranih/Odgođenih Održavanja kao sastavni dio otkazivanja Događaja (PO-AUTO-01) — nije zaseban audit zapis;
+* ručni naziv neregistrovanog Organizatora kao zasebna radnja (polje uz kreiranje/izmjenu);
 * zaključavanje i otključavanje prijedloga;
 * pregled događaja bez izmjena;
 * pokušaj ponovne objave otkazanog događaja (nije dozvoljena poslovna radnja; BR-064);
 * druge operativne radnje bez poslovnog značaja.
-
-Napomena za kasniju razradu (van ovog PATCH-a kao novi tip aktivnosti): izmjene objavljenog događaja koje mijenjaju poslovno značajne karakteristike (npr. kategorija) mogu se tretirati kao poslovno značajne; precizan obuhvat nije dio ovog PATCH-a.
 
 ##### Katalog — Newsletter
 
@@ -5155,9 +5168,11 @@ Ne ulaze:
 * tehničke greške slanja i infrastrukturne greške, uključujući ponovne pokušaje isporuke;
 * potvrda aktivacije kao zaseban audit zapis;
 * pregled postavki bez izmjena;
-* urednička poslovna obavještenja (BR-128).
+* urednička poslovna obavještenja (BR-128);
+* evidencija uspješne Newsletter isporuke (delivery ledger) — to nije centralna Evidencija aktivnosti.
 
 Slanje Newslettera je zasebna aktivnost od promjena događaja i ne duplira zapise iz kataloga događaja.
+Promjena pretplatničkih preferenci (uključujući „Svi događaji“, odabrane Organizatore i „Bez organizatora“) evidentira se kao **promjena izbora Organizatora** iz ovog kataloga — nije zaseban tip po svakom polju forme.
 
 ---
 
@@ -5217,7 +5232,7 @@ Autentikacija, upravljanje korisničkim nalogom i dodjela ili ukidanje platforms
 
 ##### BR-177 – Katalog — Moderator
 
-Sistem evidentira u centralnoj Evidenciji aktivnosti podnošenje, odobravanje i odbijanje zahtjeva za dodjelu ili uklanjanje ovlašćenja Moderatora, u skladu sa katalogom ovog poglavlja.
+Sistem evidentira u centralnoj Evidenciji aktivnosti podnošenje, odobravanje i odbijanje zahtjeva za dodjelu ili uklanjanje ovlašćenja Moderatora, te automatski prelaz zahtjeva iz „Čeka registraciju Moderatora“ u „Podnesen“ (izvršilac: **Sistem**), u skladu sa katalogom ovog poglavlja.
 
 ---
 
@@ -5254,7 +5269,7 @@ Kada je primjenjivo, aktivni kontekst Organizatora bilježi se kao atribut drugi
 
 ##### BR-182 – Katalog — Događaji
 
-Sistem evidentira u centralnoj Evidenciji aktivnosti aktivnosti navedene u katalogu Događaji ovog poglavlja, uključujući urednički tok, isticanje, otkazivanje, unos ili dopunu razloga otkazivanja (napomene urednika), odlaganje održavanja, promjenu termina i lokacije, prijedloge izmjena i automatsko arhiviranje.
+Sistem evidentira u centralnoj Evidenciji aktivnosti aktivnosti navedene u katalogu Događaji ovog poglavlja, uključujući urednički tok, isticanje, otkazivanje, unos ili dopunu razloga otkazivanja (napomene urednika), odlaganje održavanja, promjenu termina i lokacije, prijedloge izmjena, automatsko arhiviranje, automatsko završavanje Održavanja, direktnu izmjenu objavljenog događaja gdje je dozvoljena i trajno brisanje nikad objavljenog događaja.
 
 Ne postoji zaseban katalog Održavanja u okviru centralne Evidencije aktivnosti; aktivnosti nad Održavanjem evidentiraju se kroz katalog Događaji.
 
@@ -5262,13 +5277,13 @@ Ne postoji zaseban katalog Održavanja u okviru centralne Evidencije aktivnosti;
 
 ##### BR-183 – Događaji — aktivnosti van centralne evidencije
 
-Uređivanje nacrta, sitne uređivačke izmjene, tekstualne korekcije, zaključavanje i otključavanje prijedloga, pregled bez izmjena te pokušaj ponovne objave otkazanog događaja (nije dozvoljena poslovna radnja; BR-064) ne ulaze u centralnu Evidenciju aktivnosti.
+Uređivanje nacrta, sitne uređivačke izmjene, tekstualne korekcije, zaključavanje i otključavanje prijedloga, pregled bez izmjena, generator Održavanja na Nacrtu, kaskadno otkazivanje Održavanja kao sastavni dio otkazivanja Događaja te pokušaj ponovne objave otkazanog događaja (nije dozvoljena poslovna radnja; BR-064) ne ulaze u centralnu Evidenciju aktivnosti.
 
 ---
 
 ##### BR-184 – Izvršilac Sistem
 
-Za automatsko arhiviranje događaja i za slanje redovnog ili prioritetnog Newslettera izvršilac u centralnoj Evidenciji aktivnosti je **Sistem**, a ne Administrator platforme niti drugi korisnik.
+Za automatsko arhiviranje događaja i Manifestacije, automatsko završavanje Održavanja, automatski prelaz zahtjeva Čeka registraciju → Podnesen, te za slanje redovnog ili prioritetnog Newslettera izvršilac u centralnoj Evidenciji aktivnosti je **Sistem**, a ne Administrator platforme niti drugi korisnik.
 
 ---
 
@@ -5301,6 +5316,37 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 * retention, arhiviranje zapisa, izuzeci od brisanja i anonimizacija;
 * izvoz (PDF, Excel, CSV, štampa, API);
 * Technical Specification i implementacija.
+
+**Status:** Approved
+
+---
+
+##### BR-349 – F8-01 — Dodatne V1 aktivnosti usklađene sa kasnijim PATCH-evima
+
+U V1 katalog centralne Evidencije aktivnosti ulaze i sljedeće radnje, izvedene iz već usvojenog BM/FS (bez nove poslovne odluke):
+
+* automatski prelaz zahtjeva „Čeka registraciju Moderatora“ → „Podnesen“ (Sistem; PO-ORG-06 / BR-314 / BM-ORG-15 / BM-MOD-22);
+* automatsko završavanje Održavanja Planiran → Završen (Sistem; PO-AUTO-02 / BR-068);
+* direktna izmjena objavljenog događaja od strane Urednika gdje je dozvoljena (BM-UR-16 / BR-292);
+* trajno brisanje događaja koji nikad nije objavljen (BM-UR-15 / BR-290).
+
+Tehnička matrica identifikatora je u TS-012. Ovo pravilo ne širi BM-AL-07 na Lokacije, Kategorije, Medije niti na platformske naloge.
+
+**Status:** Approved
+
+---
+
+##### BR-350 – F8-01 — Dodatna isključenja iz centralne Evidencije
+
+Pored BR-176, BR-181, BR-183 i BR-186, u centralnu Evidenciju **ne ulaze**:
+
+* uklanjanje odbijenog Org/Mod zahtjeva iz uredničkog prikaza (BR-326 / BR-327; lokalni trag ispunjava BM-ORG-20 / BM-MOD-27);
+* invitation / outcome / REMOVE-approved e-mail i mail retry (komunikacija / tehnički log; BM-AL-08, BR-319);
+* kaskadno otkazivanje Održavanja unutar otkazivanja Događaja (PO-AUTO-01) kao zaseban zapis;
+* CRUD kataloga Lokacija, Kategorija i Medija (nije oblast BM-AL-07);
+* Newsletter delivery ledger i tehnički retry slanja;
+* pregledi, GET, validacione greške, autosave, cron tick bez poslovne radnje, Moderator/Urednik UX/navigacija;
+* brisanje Manifestacije i ostale radnje eksplicitno van V1.
 
 **Status:** Approved
 
@@ -5411,3 +5457,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-13 | FS-001 (PATCH-FS-071): PO-ORG/MOD rejected request editor cleanup / BM PATCH-072 — workspace dismiss odbijenih Org/Mod zahtjeva; BR-055/073 retention KEEP; dodati BR-326–BR-327. Verzija ostaje 1.0.0. |
 | 2026-08-14 | FS-001 (PATCH-FS-072): PO-NL-01…PO-NL-22 / BM PATCH-073 — Newsletter pretplata i preference; usklađeni tokovi §5.15 i BR-140–BR-142, BR-149–BR-150, BR-152, BR-154, BR-156, BR-157; dodati BR-328–BR-344. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 | 2026-08-14 | FS-001 (PATCH-FS-073): NL-03 temporal eligibility + ledger boundary / BM PATCH-074 — prva pretplata i reaktivacija nijesu retroaktivne; candidate ≠ dostava. Usklađeni tokovi §5.15 i BR-147, BR-148, BR-158, BR-334, BR-335, BR-341; dodati BR-345–BR-348. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
+| 2026-08-14 | FS-001 (PATCH-FS-074): F8-01 / TS-012 canonical freeze — usklađen §5.16 katalog; BR-349–BR-350; usklađeni BR-177/178/182/183/184. Bez nove poslovne odluke. Bez izmjene BM. Verzija ostaje 1.0.0. Bez izmjene implementacije. |

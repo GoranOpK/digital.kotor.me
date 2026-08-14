@@ -39,7 +39,7 @@ Feature Registry predstavlja polaznu tačku za sljedivost kroz cijeli projekat.
 | ---------- | ---------------- | ------- | --------------------------------------------- |
 | FT-001     | Kalendar kulture | Active  | Prva funkcionalnost u razvoju                 |
 | FT-002     | Plaćanja         | Planned | Dokumentacija razvijena (BM-002/FS-002 usvojeni BP-01–BP-09; TS-002 djelimično usvojen, dokument u izradi) |
-| FT-003     | Evidencija aktivnosti (Kalendar kulture) | Usvojen (TS-012 v1.0.1) | FS §5.16; BM-14; V1 katalog uključuje Manifestacije; van opsega: pregled/filteri, retention, izvoz (BR-188) |
+| FT-003     | Evidencija aktivnosti (Kalendar kulture) | Usvojen (TS-012 v1.0.2) — **Faza 8 STARTED / canonical freeze; implementation pending** | FS §5.16 + PATCH-FS-074; BM-14; V1 katalog uključuje Manifestacije; van opsega: pregled/filteri, retention, izvoz (BR-188) |
 | FT-004     | Obavještenja     | Active  | V1 infrastruktura verifikovana testovima; javni panel + `competition_decision_html`; E2E emitovanje iz konkursa i dalje OFD-OB-006 |
 
 Dozvoljeni statusi:
@@ -390,7 +390,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.19); **FAZA 6A CLOSED**; 6B PRODUCTION ACCEPTED; Package A CLOSED; Phase B1+B2 PRODUCTION VERIFIED / CLOSED; B3 DEFERRED |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.11) — V1 + PATCH-063; MOD-UX-01 Alpine-free nav CURRENT STATE; PATCH-064 nije TS-010 scope (portal = TS-009) |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.3) — **FAZA 7 FORMALLY CLOSED** (NL-01…NL-06); emit ka TS-012 = **Faza 8** |
-| TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.1) — implementacija emit/storage = Roadmap **Faza 8** |
+| TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.2) — **Faza 8 STARTED / canonical freeze; implementation pending** |
 
 ---
 
@@ -474,7 +474,7 @@ Evidencija aktivnosti (Kalendar kulture)
 
 Status:
 
-Usvojen (TS-012 v1.0.1)
+Usvojen (TS-012 v1.0.2) — **Faza 8 STARTED / canonical freeze; implementation pending. Nije COMPLETED.**
 
 Napomena:
 
@@ -485,17 +485,17 @@ V1 katalog (FS / BM-AL-07 / BM-MF-20 / TS-012): Moderator ovlašćenja; Organiza
 Povezana dokumentacija:
 
 * Business Model — BM-14 (BM-AL-01–BM-AL-08), BM-EP-09, BM-GL-09, BM-GL-20, BM-MF-20
-* Functional Specification — §5.16 (BR-170–BR-188), PATCH-FS-035 (katalog Manifestacije: PATCH-FS-041)
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Evidencija_aktivnosti.md` (TS-012; verzija 1.0.1; Usvojen)
+* Functional Specification — §5.16 (BR-170–BR-188, BR-349–BR-350), PATCH-FS-035 / PATCH-FS-041 / **PATCH-FS-074**
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Evidencija_aktivnosti.md` (TS-012; verzija **1.0.2**; USVOJEN; **implementation pending**)
 
 Matrica sljedivosti (sažetak):
 
 | BM | FS | FT | TS |
 |----|----|----|-----|
-| BM-AL-01–BM-AL-08 | BR-170–BR-188 / §5.16 | FT-003 | TS-012 (usvojen v1.0.1) |
-| BM-EP-09 | §5.16 | FT-003 | TS-012 (usvojen v1.0.1) |
-| BM-GL-09, BM-GL-20 | BR-170, BR-174 | FT-003 | TS-012 (usvojen v1.0.1) |
-| BM-MF-20 | §5.16 katalog Manifestacije | FT-003 | TS-012 (usvojen v1.0.1) |
+| BM-AL-01–BM-AL-08 | BR-170–BR-188, BR-349–BR-350 / §5.16 | FT-003 | TS-012 (usvojen v1.0.2; implementation pending) |
+| BM-EP-09 | §5.16 | FT-003 | TS-012 (usvojen v1.0.2; implementation pending) |
+| BM-GL-09, BM-GL-20 | BR-170, BR-174 | FT-003 | TS-012 (usvojen v1.0.2; implementation pending) |
+| BM-MF-20 | §5.16 katalog Manifestacije | FT-003 | TS-012 (usvojen v1.0.2; implementation pending) |
 
 ---
 
@@ -654,5 +654,6 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-14 | FT-001 — **PO-NL-01…PO-NL-22 Newsletter decision sync:** dobrovoljna pretplata; jedna pretplata po `User`; režimi opsega; „Bez organizatora“; bez confirmation e-maila; testna legacy implementacija bez migracije pretplatnika. BM PATCH-073 (BM-NL-26–BM-NL-44); FS PATCH-FS-072 (BR-328–BR-344); TS-011 → **v1.0.2**; IR-001 → v1.0.12. RG-001 KEEP (PO-NL nisu nove RG skraćenice). **ADOPTED / DOCUMENTED / IMPLEMENTATION NOT STARTED.** Bez izmjene koda. |
 | 2026-08-14 | FT-001 — **NL-03 temporal eligibility + ledger boundary:** prva pretplata i reaktivacija nijesu retroaktivne; candidate ≠ dostava; first_include ledger = samo uspješna isporuka; NL-03 = eligibility/candidate foundation (bez ledger write / bez e-maila). BM PATCH-074 (BM-NL-45–BM-NL-47); FS PATCH-FS-073 (BR-345–BR-348); TS-011 → **v1.0.3**; IR-001 → v1.0.13. RG-001 KEEP. IS-001 KEEP. **ADOPTED / DOCUMENTED / NL-03 IMPLEMENTATION NOT STARTED.** Bez izmjene koda. |
 | 2026-08-14 | FT-001 — **FAZA 7 FORMAL CLOSEOUT + STABILIZATION (status only):** NL-01…NL-06 **IMPLEMENTED / TESTED / COMMITTED / PUSHED**; TS-011 v1.0.3 **KEEP** (nema rewrite ugovora). **FAZA 7 = FORMALLY CLOSED.** Settings `/newsletter`; regular 6h + priority 5 min; legacy weekly runtime disabled. Production = **PO-CONFIRMED** (migracije Ran; scheduler; `/newsletter` UI). Live production Git HEAD = **UNOBSERVED**. KEEP V1: Organizer listing URL; crash-after-SMTP; no queue/outbox; physical legacy. IR-001 → **v1.0.14**. TS-012 / BM / FS / TS-011 / IS-001 / RG-001 KEEP. **Naredna numerisana faza = Faza 8 / TS-012.** Bez izmjene implementacije. |
+| 2026-08-14 | FT-003 — **F8-01 TS-012 canonical freeze:** katalog V1 usklađen (FS PATCH-FS-074 / BR-349–BR-350); TS-012 → **v1.0.2** USVOJEN (bez DRAFT/Nacrt; FR-GAP uklonjen). **Faza 8 STARTED — canonical freeze. Implementation pending.** IR-001 → **v1.0.15**. BM / IS-001 / RG-001 KEEP. Bez store/emitter/UI koda. |
 | 2026-08-13 | FT-001 — **FR cross-reference cleanup:** CURRENT STATE pin IS-001 **1.0.7 → 1.0.8** (usklađeno sa `Implementation-Strategy_Javni_portal.md`). FAZA 6A/6B CLOSED KEEP; TS-009 v1.0.19 KEEP; IR-001 v1.0.11 KEEP. Bez izmjene implementacije. |
 | 2026-08-10 | FT-001 — **PHASE 6A-CLOSE-02:** legacy admin CRUD `cultural-events.*` disabled (middleware `legacy_cultural_events_disabled` → 403 all methods). Legacy code/table/views retained; `CULTURAL_PUBLIC_READ_SOURCE` + public legacy read rollback retained; canonical routes unchanged. **Nije** hard remove / flag cleanup (Phase B). |
