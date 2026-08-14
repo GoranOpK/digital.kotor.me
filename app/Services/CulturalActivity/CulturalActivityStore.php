@@ -54,7 +54,6 @@ class CulturalActivityStore
             'target_id' => $input->targetId,
             'organizer_context_id' => $input->organizerContextId,
             'context' => $input->normalizedContext() === [] ? null : $input->normalizedContext(),
-            'created_at' => now(),
         ]);
         $record->save();
 

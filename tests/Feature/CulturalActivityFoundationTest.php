@@ -73,6 +73,34 @@ class CulturalActivityFoundationTest extends TestCase
         $this->assertFalse(Schema::hasColumn('cultural_activity_records', 'updated_at'));
     }
 
+    public function test_created_at_column_has_current_timestamp_default(): void
+    {
+        $row = DB::selectOne(
+            "SELECT COLUMN_DEFAULT, IS_NULLABLE, COLUMN_TYPE
+             FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'cultural_activity_records'
+               AND COLUMN_NAME = 'created_at'"
+        );
+
+        $this->assertNotNull($row);
+        $this->assertSame('NO', $row->IS_NULLABLE);
+        $this->assertNotNull($row->COLUMN_DEFAULT);
+        $this->assertTrue(
+            str_contains(strtoupper((string) $row->COLUMN_DEFAULT), 'CURRENT_TIMESTAMP'),
+            'created_at default must be CURRENT_TIMESTAMP, got: '.$row->COLUMN_DEFAULT
+        );
+
+        $fk = DB::selectOne(
+            "SELECT DELETE_RULE
+             FROM information_schema.REFERENTIAL_CONSTRAINTS
+             WHERE CONSTRAINT_SCHEMA = DATABASE()
+               AND CONSTRAINT_NAME = 'car_actor_user_fk'"
+        );
+        $this->assertNotNull($fk);
+        $this->assertSame('RESTRICT', $fk->DELETE_RULE);
+    }
+
     public function test_idempotent_retry_does_not_insert_second_row(): void
     {
         $input = $this->userInput();

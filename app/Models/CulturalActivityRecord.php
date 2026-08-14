@@ -18,7 +18,10 @@ class CulturalActivityRecord extends Model
 
     protected $table = 'cultural_activity_records';
 
-    public const UPDATED_AT = null;
+    /**
+     * Store time dolazi iz MySQL DEFAULT CURRENT_TIMESTAMP, ne iz Eloquent timestamps.
+     */
+    public $timestamps = false;
 
     /**
      * Nema mass-assignment API-ja. Writer koristi forceFill unutar store-a.

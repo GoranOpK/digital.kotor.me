@@ -24,7 +24,8 @@ return new class extends Migration
             $table->unsignedBigInteger('target_id')->nullable();
             $table->unsignedBigInteger('organizer_context_id')->nullable();
             $table->json('context')->nullable();
-            $table->timestamp('created_at');
+            // MySQL strict/NO_ZERO_DATE: TIMESTAMP NOT NULL without DEFAULT → 1067.
+            $table->timestamp('created_at')->useCurrent();
 
             $table->unique(['source_module', 'event_id'], 'car_source_event_unique');
             $table->index('occurred_at', 'car_occurred_idx');
