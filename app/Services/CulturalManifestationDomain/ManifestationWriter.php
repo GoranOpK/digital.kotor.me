@@ -118,8 +118,8 @@ final class ManifestationWriter
         $organizerBefore = $manifestation->organizer_id !== null ? (int) $manifestation->organizer_id : null;
         $coverBefore = $manifestation->cover_media_id !== null ? (int) $manifestation->cover_media_id : null;
 
-        $persistAt = now();
-        $updated = DB::transaction(function () use ($manifestation, $actor, $data, $organizerId, $coverMediaId, &$persistAt) {
+        $actionAt = now();
+        $updated = DB::transaction(function () use ($manifestation, $actor, $data, $organizerId, $coverMediaId) {
             /** @var CulturalManifestation $locked */
             $locked = CulturalManifestation::query()
                 ->whereKey($manifestation->id)
@@ -154,7 +154,6 @@ final class ManifestationWriter
 
             $locked->last_modified_by = $actor->id;
             $locked->save();
-            $persistAt = $locked->updated_at?->copy() ?? now();
 
             return $locked->fresh(['events', 'organizer', 'coverMedia']);
         });
@@ -169,11 +168,11 @@ final class ManifestationWriter
                         'from' => $organizerBefore,
                         'to' => $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
                     ],
-                    $persistAt
+                    $actionAt
                 ),
                 $actor,
                 (int) $updated->id,
-                $persistAt,
+                $actionAt,
                 [
                     'manifestation_id' => (int) $updated->id,
                     'organizer_id' => $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
@@ -191,11 +190,11 @@ final class ManifestationWriter
                         'from' => $coverBefore,
                         'to' => $updated->cover_media_id !== null ? (int) $updated->cover_media_id : null,
                     ],
-                    $persistAt
+                    $actionAt
                 ),
                 $actor,
                 (int) $updated->id,
-                $persistAt,
+                $actionAt,
                 ['manifestation_id' => (int) $updated->id],
                 $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
             );
@@ -212,11 +211,11 @@ final class ManifestationWriter
                         'from' => $webBefore,
                         'to' => (string) ($updated->web_stranica ?? ''),
                     ],
-                    $persistAt
+                    $actionAt
                 ),
                 $actor,
                 (int) $updated->id,
-                $persistAt,
+                $actionAt,
                 ['manifestation_id' => (int) $updated->id],
                 $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
             );
@@ -227,8 +226,8 @@ final class ManifestationWriter
 
     public function linkEvent(CulturalManifestation $manifestation, int $eventEntryId, User $actor): CulturalManifestation
     {
-        $persistAt = now();
-        $linked = DB::transaction(function () use ($manifestation, $eventEntryId, $actor, &$persistAt) {
+        $actionAt = now();
+        $linked = DB::transaction(function () use ($manifestation, $eventEntryId, $actor) {
             /** @var CulturalManifestation $locked */
             $locked = CulturalManifestation::query()
                 ->whereKey($manifestation->id)
@@ -239,7 +238,6 @@ final class ManifestationWriter
             $this->linkEventsInternal($locked, [$eventEntryId], $actor->id);
             $locked->last_modified_by = $actor->id;
             $locked->save();
-            $persistAt = $locked->updated_at?->copy() ?? now();
 
             return $locked->fresh(['events', 'events.organizer']);
         });
@@ -250,11 +248,11 @@ final class ManifestationWriter
                 CulturalActivityCatalog::MF_07,
                 (int) $linked->id,
                 ['entry_id' => $eventEntryId],
-                $persistAt
+                $actionAt
             ),
             $actor,
             (int) $linked->id,
-            $linked->updated_at ?? now(),
+            $actionAt,
             [
                 'manifestation_id' => (int) $linked->id,
                 'entry_id' => $eventEntryId,
@@ -267,8 +265,8 @@ final class ManifestationWriter
 
     public function unlinkEvent(CulturalManifestation $manifestation, int $eventEntryId, User $actor): CulturalManifestation
     {
-        $persistAt = now();
-        $unlinked = DB::transaction(function () use ($manifestation, $eventEntryId, $actor, &$persistAt) {
+        $actionAt = now();
+        $unlinked = DB::transaction(function () use ($manifestation, $eventEntryId, $actor) {
             /** @var CulturalManifestation $locked */
             $locked = CulturalManifestation::query()
                 ->whereKey($manifestation->id)
@@ -294,7 +292,6 @@ final class ManifestationWriter
 
             $locked->last_modified_by = $actor->id;
             $locked->save();
-            $persistAt = $locked->updated_at?->copy() ?? now();
 
             return $locked->fresh(['events', 'events.organizer']);
         });
@@ -305,11 +302,11 @@ final class ManifestationWriter
                 CulturalActivityCatalog::MF_08,
                 (int) $unlinked->id,
                 ['entry_id' => $eventEntryId],
-                $persistAt
+                $actionAt
             ),
             $actor,
             (int) $unlinked->id,
-            $unlinked->updated_at ?? now(),
+            $actionAt,
             [
                 'manifestation_id' => (int) $unlinked->id,
                 'entry_id' => $eventEntryId,
@@ -329,8 +326,8 @@ final class ManifestationWriter
         User $actor,
     ): CulturalManifestation {
         $fromId = 0;
-        $persistAt = now();
-        $moved = DB::transaction(function () use ($targetManifestation, $eventEntryId, $actor, &$fromId, &$persistAt) {
+        $actionAt = now();
+        $moved = DB::transaction(function () use ($targetManifestation, $eventEntryId, $actor, &$fromId) {
             /** @var CulturalManifestation $target */
             $target = CulturalManifestation::query()
                 ->whereKey($targetManifestation->id)
@@ -376,7 +373,6 @@ final class ManifestationWriter
 
             $target->last_modified_by = $actor->id;
             $target->save();
-            $persistAt = $target->updated_at?->copy() ?? now();
 
             return $target->fresh(['events', 'events.organizer']);
         });
@@ -391,11 +387,11 @@ final class ManifestationWriter
                     'to' => (int) $moved->id,
                     'entry_id' => $eventEntryId,
                 ],
-                $persistAt
+                $actionAt
             ),
             $actor,
             (int) $moved->id,
-            $moved->updated_at ?? now(),
+            $actionAt,
             [
                 'from_id' => $fromId,
                 'to_id' => (int) $moved->id,

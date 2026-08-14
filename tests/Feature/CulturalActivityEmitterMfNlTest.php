@@ -19,8 +19,11 @@ use App\Services\CulturalManifestationDomain\ManifestationWriter;
 use App\Services\CulturalOrganizer\OrganizerCreationDecisionService;
 use App\Services\CulturalOrganizer\OrganizerCreationRequestSubmissionService;
 use App\Services\Newsletter\NewsletterSubscriptionManager;
+use App\Services\CulturalActivity\CulturalActivityEventId;
+use App\Services\CulturalActivity\CulturalActivityCatalog;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -62,6 +65,12 @@ class CulturalActivityEmitterMfNlTest extends TestCase
             'naziv' => 'MF Cat',
             'status' => CulturalCategory::STATUS_ACTIVE,
         ]);
+    }
+
+    protected function tearDown(): void
+    {
+        Carbon::setTestNow();
+        parent::tearDown();
     }
 
     public function test_manifestation_catalog_lifecycle(): void
@@ -141,6 +150,123 @@ class CulturalActivityEmitterMfNlTest extends TestCase
         $this->assertActivity('mf.cancel', ['target_id' => $mf->id]);
     }
 
+    public function test_mf07_occurred_at_is_link_action_time_not_stale_manifestation_updated_at(): void
+    {
+        $organizer = $this->makeOrganizer();
+        $event = $this->publishedEvent('Link Time');
+        $writer = app(ManifestationWriter::class);
+        $mf = $writer->createDraft($this->moderator, [
+            'naziv' => 'Stale MF',
+            'organizer_id' => $organizer->id,
+        ]);
+
+        $stale = Carbon::parse('2026-08-13 14:35:50');
+        $actionAt = Carbon::parse('2026-08-14 23:47:51');
+        $this->freezeManifestationUpdatedAt($mf, $stale);
+        $this->assertSame(
+            $stale->format('Y-m-d H:i:s'),
+            $mf->fresh()->updated_at?->format('Y-m-d H:i:s')
+        );
+
+        Carbon::setTestNow($actionAt);
+        $writer->linkEvent($mf->fresh(), $event->id, $this->moderator);
+
+        $row = $this->assertActivity('mf.event.add', ['target_id' => $mf->id]);
+        $this->assertSame($actionAt->format('Y-m-d H:i:s'), $row->occurred_at->format('Y-m-d H:i:s'));
+        $this->assertNotSame($stale->format('Y-m-d H:i:s'), $row->occurred_at->format('Y-m-d H:i:s'));
+        $this->assertSame(
+            CulturalActivityEventId::repeatable(
+                CulturalActivityCatalog::MF_07,
+                (int) $mf->id,
+                ['entry_id' => $event->id],
+                $actionAt
+            ),
+            $row->event_id
+        );
+        $this->assertStringNotContainsString('20260813143550', $row->event_id);
+        $this->assertStringContainsString(CulturalActivityEventId::clock($actionAt), $row->event_id);
+    }
+
+    public function test_mf08_and_mf09_use_action_time_not_stale_manifestation_updated_at(): void
+    {
+        $organizer = $this->makeOrganizer();
+        $eventKeep = $this->publishedEvent('Keep');
+        $eventMove = $this->publishedEvent('Move');
+        $eventUnlink = $this->publishedEvent('Unlink');
+        $writer = app(ManifestationWriter::class);
+
+        $source = $writer->createDraft($this->moderator, [
+            'naziv' => 'Source MF',
+            'organizer_id' => $organizer->id,
+        ]);
+        $target = $writer->createDraft($this->editor, [
+            'naziv' => 'Target MF',
+        ]);
+        $writer->linkEvent($source, $eventKeep->id, $this->moderator);
+        $writer->linkEvent($source->fresh(), $eventMove->id, $this->moderator);
+        $writer->linkEvent($source->fresh(), $eventUnlink->id, $this->moderator);
+
+        $stale = Carbon::parse('2026-08-13 14:35:50');
+        $actionAt = Carbon::parse('2026-08-14 23:47:51');
+        $this->freezeManifestationUpdatedAt($source->fresh(), $stale);
+        $this->freezeManifestationUpdatedAt($target->fresh(), $stale);
+        Carbon::setTestNow($actionAt);
+
+        $writer->moveEvent($target->fresh(), $eventMove->id, $this->editor);
+        $move = $this->assertActivity('mf.event.move', ['target_id' => $target->id]);
+        $this->assertSame($actionAt->format('Y-m-d H:i:s'), $move->occurred_at->format('Y-m-d H:i:s'));
+        $this->assertStringContainsString(CulturalActivityEventId::clock($actionAt), $move->event_id);
+        $this->assertStringNotContainsString('20260813143550', $move->event_id);
+
+        $writer->unlinkEvent($source->fresh(), $eventUnlink->id, $this->moderator);
+        $remove = $this->assertActivity('mf.event.remove', ['target_id' => $source->id]);
+        $this->assertSame($actionAt->format('Y-m-d H:i:s'), $remove->occurred_at->format('Y-m-d H:i:s'));
+        $this->assertStringContainsString(CulturalActivityEventId::clock($actionAt), $remove->event_id);
+        $this->assertStringNotContainsString('20260813143550', $remove->event_id);
+    }
+
+    public function test_mf10_to_mf12_use_action_time_not_stale_manifestation_updated_at(): void
+    {
+        $organizer = $this->makeOrganizer();
+        $writer = app(ManifestationWriter::class);
+        $mf = $writer->createDraft($this->moderator, [
+            'naziv' => 'Content MF',
+            'organizer_id' => $organizer->id,
+        ]);
+
+        $cover = CulturalMedia::create([
+            'naziv' => 'Cover Time',
+            'namjena' => CulturalMedia::PURPOSE_MANIFESTATION_COVER,
+            'status' => CulturalMedia::STATUS_ACTIVE,
+            'alt_tekst' => 'Alt',
+            'originalni_naziv' => 'time.jpg',
+            'interni_naziv' => 'time.jpg',
+            'mime' => 'image/jpeg',
+            'format' => 'jpeg',
+            'velicina' => 120,
+            'storage_path' => 'cultural-media/time.jpg',
+            'creator_id' => $this->editor->id,
+        ]);
+
+        $stale = Carbon::parse('2026-08-13 14:35:50');
+        $actionAt = Carbon::parse('2026-08-14 23:47:51');
+        $this->freezeManifestationUpdatedAt($mf->fresh(), $stale);
+        Carbon::setTestNow($actionAt);
+
+        $writer->updateContent($mf->fresh(), $this->editor, [
+            'cover_media_id' => $cover->id,
+            'web_stranica' => 'https://example.com/action-time',
+            'organizer_id' => null,
+        ]);
+
+        foreach (['mf.organizer.change', 'mf.cover.change', 'mf.webinfo.change'] as $type) {
+            $row = $this->assertActivity($type, ['target_id' => $mf->id]);
+            $this->assertSame($actionAt->format('Y-m-d H:i:s'), $row->occurred_at->format('Y-m-d H:i:s'), $type);
+            $this->assertStringContainsString(CulturalActivityEventId::clock($actionAt), $row->event_id, $type);
+            $this->assertStringNotContainsString('20260813143550', $row->event_id, $type);
+        }
+    }
+
     public function test_newsletter_user_actions_and_privacy(): void
     {
         $manager = app(NewsletterSubscriptionManager::class);
@@ -205,6 +331,14 @@ class CulturalActivityEmitterMfNlTest extends TestCase
         $this->assertArrayNotHasKey('email', $priority->context ?? []);
         $this->assertStringStartsWith('TS12-NL-06:', $priority->event_id);
         $this->assertNotSame($regular->event_id, $priority->event_id);
+    }
+
+    private function freezeManifestationUpdatedAt(CulturalManifestation $manifestation, Carbon $at): void
+    {
+        $manifestation->timestamps = false;
+        $manifestation->updated_at = $at;
+        $manifestation->save();
+        $manifestation->timestamps = true;
     }
 
     private function publishedEvent(string $naslov): CulturalEventEntry
