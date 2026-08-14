@@ -9,6 +9,7 @@ use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
 use App\Models\CulturalOrganizer;
 use App\Models\User;
+use App\Services\Newsletter\NewsletterPriorityChangeRecorder;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -16,6 +17,10 @@ use Illuminate\Support\Facades\DB;
  */
 final class EventLifecycle
 {
+    public function __construct(
+        private readonly NewsletterPriorityChangeRecorder $priorityChangeRecorder,
+    ) {}
+
     /**
      * Nacrt → Na odobrenju.
      * PO-EV-WF-01 / BM-ST-04 — Događaj bez registrovanog Organizatora ne šalje se na odobrenje
@@ -173,7 +178,10 @@ final class EventLifecycle
                 $occurrence->save();
             }
 
-            return $locked->fresh(['occurrences']);
+            $cancelled = $locked->fresh(['occurrences']);
+            $this->priorityChangeRecorder->recordEventCancelled($cancelled);
+
+            return $cancelled;
         });
     }
 

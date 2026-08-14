@@ -6,13 +6,17 @@ use App\Exceptions\CulturalEventDomainException;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalLocation;
 use App\Models\CulturalOccurrence;
-use Illuminate\Support\Facades\DB;
+use App\Services\Newsletter\NewsletterPriorityChangeRecorder;
 
 /**
  * Kreiranje / ažuriranje / fizičko uklanjanje Održavanja (TS-004).
  */
 final class OccurrenceWriter
 {
+    public function __construct(
+        private readonly NewsletterPriorityChangeRecorder $priorityChangeRecorder,
+    ) {}
+
     /**
      * @param  array{
      *     datum: string|\DateTimeInterface,
@@ -256,6 +260,8 @@ final class OccurrenceWriter
             );
         }
 
+        $occurrence->loadMissing('eventEntry');
+
         $merged = [
             'datum' => $data['datum'] ?? $occurrence->datum,
             'vrijeme_od' => array_key_exists('vrijeme_od', $data) ? $data['vrijeme_od'] : $occurrence->vrijeme_od,
@@ -272,10 +278,18 @@ final class OccurrenceWriter
 
         $normalized = $this->normalizeAndValidate($merged, validateNewLocation: $locationChanging);
 
+        $before = $occurrence->replicate();
+        $before->id = $occurrence->id;
+        $before->event_entry_id = $occurrence->event_entry_id;
+        $before->setRelation('eventEntry', $occurrence->eventEntry);
+
         $occurrence->fill($normalized);
         $occurrence->save();
 
-        return $occurrence->fresh(['location', 'eventEntry']);
+        $fresh = $occurrence->fresh(['location', 'eventEntry']);
+        $this->priorityChangeRecorder->recordPublishedOccurrenceFieldChanges($before, $fresh);
+
+        return $fresh;
     }
 
     /**

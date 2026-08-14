@@ -5,6 +5,7 @@ namespace App\Services\CulturalEventDomain;
 use App\Exceptions\CulturalEventDomainException;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalOccurrence;
+use App\Services\Newsletter\NewsletterPriorityChangeRecorder;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
@@ -16,6 +17,7 @@ final class OccurrenceLifecycle
 {
     public function __construct(
         private readonly OccurrenceWriter $writer,
+        private readonly NewsletterPriorityChangeRecorder $priorityChangeRecorder,
     ) {}
 
     public function postpone(CulturalOccurrence $occurrence, ?string $reason = null): CulturalOccurrence
@@ -30,7 +32,10 @@ final class OccurrenceLifecycle
                 $locked->postponement_reason = $reason;
                 $locked->save();
 
-                return $locked->fresh();
+                $fresh = $locked->fresh(['eventEntry']);
+                $this->priorityChangeRecorder->recordPostponed($fresh);
+
+                return $fresh;
             }
         );
     }
@@ -56,7 +61,10 @@ final class OccurrenceLifecycle
                 $locked->status = CulturalOccurrence::STATUS_PLANNED;
                 $locked->save();
 
-                return $locked->fresh();
+                $fresh = $locked->fresh(['eventEntry', 'location']);
+                $this->priorityChangeRecorder->recordDatetimeChanged($fresh);
+
+                return $fresh;
             }
         );
     }
@@ -73,7 +81,10 @@ final class OccurrenceLifecycle
                 $locked->cancellation_reason = $reason;
                 $locked->save();
 
-                return $locked->fresh(['eventEntry']);
+                $fresh = $locked->fresh(['eventEntry']);
+                $this->priorityChangeRecorder->recordOccurrenceCancelled($fresh);
+
+                return $fresh;
             }
         );
     }
