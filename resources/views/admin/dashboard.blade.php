@@ -381,6 +381,9 @@
                 <a href="{{ route('admin.users.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
                     👤 Korisnici
                 </a>
+                <a href="{{ route('admin.cultural-activity.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    Evidencija aktivnosti
+                </a>
                 @endif
             </div>
         </div>

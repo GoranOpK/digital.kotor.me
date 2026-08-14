@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\CulturalActivityAdminController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\BusinessPlanController;
 use App\Http\Controllers\CompetitionsController;
@@ -501,6 +502,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
 
             // Pregled prijava (samo admin i superadmin)
             Route::get('/applications', [AdminController::class, 'applications'])->name('applications.index');
+
+            Route::get('/evidencija-aktivnosti', [CulturalActivityAdminController::class, 'index'])->name('cultural-activity.index');
         });
     });
 

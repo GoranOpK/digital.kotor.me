@@ -177,6 +177,67 @@ final class CulturalActivityCatalog
     ];
 
     /**
+     * TS-012 §7.1 kolona „Poslovna radnja“, ključ = event_type.
+     *
+     * @var array<string, string>
+     */
+    private const LABELS = [
+        'mod.add.submit' => 'Podnošenje zahtjeva za dodjelu Moderatora',
+        'mod.add.approve' => 'Odobravanje dodjele Moderatora',
+        'mod.add.reject' => 'Odbijanje dodjele Moderatora',
+        'mod.remove.submit' => 'Pokretanje uklanjanja Moderatora',
+        'mod.remove.approve' => 'Odobravanje uklanjanja Moderatora',
+        'mod.remove.reject' => 'Odbijanje uklanjanja Moderatora',
+        'mod.request.eligible' => 'Čeka registraciju → Podnesen (ADD ili Org-creation predloženi Moderator)',
+        'org.request.submit' => 'Podnošenje zahtjeva za kreiranje Organizatora',
+        'org.request.approve' => 'Odobrenje zahtjeva i kreiranje Organizatora',
+        'org.request.reject' => 'Odbijanje zahtjeva za kreiranje Organizatora',
+        'org.deactivate' => 'Deaktivacija Organizatora',
+        'org.event.link' => 'Naknadno povezivanje događaja sa Organizatorom',
+        'org.profile.significant' => 'Poslovno značajna izmjena podataka Organizatora',
+        'org.initial_moderator.grant' => 'Dodjela početnog Moderatora pri odobrenju kreiranja',
+        'event.create' => 'Kreiranje događaja',
+        'event.submit' => 'Slanje na odobrenje',
+        'event.return' => 'Vraćanje na doradu',
+        'event.resubmit' => 'Ponovno slanje na odobrenje',
+        'event.approve' => 'Odobravanje događaja',
+        'event.direct_publish' => 'Direktna objava Urednika',
+        'event.feature' => 'Isticanje događaja',
+        'event.unfeature' => 'Uklanjanje isticanja',
+        'event.cancel' => 'Otkazivanje događaja',
+        'event.cancellation_reason' => 'Unos/dopuna razloga otkazivanja',
+        'occ.postpone' => 'Odlaganje Održavanja',
+        'occ.cancel' => 'Otkazivanje pojedinačnog Održavanja (nije kaskada Event cancel)',
+        'occ.reschedule' => 'Promjena termina Održavanja',
+        'occ.location_change' => 'Promjena lokacije Održavanja',
+        'event.proposal.submit' => 'Podnošenje prijedloga izmjena',
+        'event.proposal.approve' => 'Odobravanje prijedloga izmjena',
+        'event.proposal.return' => 'Vraćanje prijedloga na doradu',
+        'event.auto_archive' => 'Automatsko arhiviranje događaja',
+        'occ.auto_finish' => 'Automatsko završavanje Održavanja',
+        'event.published_direct_edit' => 'Direktna izmjena objavljenog (Urednik, bez registrovanog Org)',
+        'event.unpublished_delete' => 'Trajno brisanje nikad objavljenog događaja',
+        'mf.create' => 'Kreiranje Manifestacije',
+        'mf.submit' => 'Slanje na odobrenje',
+        'mf.return' => 'Vraćanje na doradu',
+        'mf.publish' => 'Odobravanje / objava (uključujući uredničku direktnu objavu)',
+        'mf.cancel' => 'Otkazivanje Manifestacije',
+        'mf.auto_archive' => 'Automatsko arhiviranje Manifestacije',
+        'mf.event.add' => 'Dodavanje događaja Manifestaciji',
+        'mf.event.remove' => 'Uklanjanje događaja iz Manifestacije',
+        'mf.event.move' => 'Premještanje događaja između Manifestacija',
+        'mf.organizer.change' => 'Promjena Organizatora Manifestacije',
+        'mf.cover.change' => 'Promjena naslovne fotografije',
+        'mf.webinfo.change' => 'Promjena Web stranica / Više informacije',
+        'nl.activate' => 'Aktivacija pretplate',
+        'nl.unsubscribe' => 'Odjava',
+        'nl.reactivate' => 'Ponovna aktivacija',
+        'nl.preferences.change' => 'Promjena izbora Organizatora / preferenci',
+        'nl.send.regular' => 'Slanje redovnog Newslettera',
+        'nl.send.priority' => 'Slanje prioritetnog obavještenja',
+    ];
+
+    /**
      * @return CatalogRow
      */
     public static function row(string $catalogId): array
@@ -186,5 +247,10 @@ final class CulturalActivityCatalog
         }
 
         return self::ROWS[$catalogId];
+    }
+
+    public static function labelForEventType(string $eventType): string
+    {
+        return self::LABELS[$eventType] ?? $eventType;
     }
 }
