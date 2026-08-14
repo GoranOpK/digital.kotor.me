@@ -17,7 +17,12 @@ class SendCulturalCalendarNewsletter extends Command
 
     public function handle(NewsletterFirstIncludeDeliveryService $delivery): int
     {
-        $lock = Cache::lock(self::LOCK_KEY, 1800);
+        $lockKey = (string) config('newsletter.cycle_lock_key', self::LOCK_KEY);
+        if ($lockKey === '') {
+            $lockKey = self::LOCK_KEY;
+        }
+
+        $lock = Cache::lock($lockKey, 1800);
         if (! $lock->get()) {
             $this->info('Preskočeno: redovni Newsletter ciklus je već u toku.');
 

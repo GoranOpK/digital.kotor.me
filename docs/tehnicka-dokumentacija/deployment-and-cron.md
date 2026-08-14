@@ -1,6 +1,6 @@
 # Deploy, cron i Artisan komande
 
-**Poslednje ažuriranje:** 2026-07-22
+**Poslednje ažuriranje:** 2026-08-14
 **Izvor u kodu:** root PHP skripte, `routes/console.php`, `app/Console/Commands/`, `queue-worker.php`
 
 Detaljni Plesk vodiči: [PLESK_FINAL_INSTRUCTIONS.md](PLESK_FINAL_INSTRUCTIONS.md), [PLESK_DELETE_EXPIRED_CRON.md](PLESK_DELETE_EXPIRED_CRON.md).
@@ -142,9 +142,14 @@ Izvor: Plesk **Scheduled Tasks** + Laravel Toolkit (jun 2026; worker args ažuri
 
 ### Laravel Toolkit → Scheduled Tasks (Artisan)
 
+Produkcija poziva Artisan komande **direktno** (Toolkit Scheduled Tasks). **Ne** dodavati `php artisan schedule:run` ako bi to udvostručilo iste poslove.
+
 | Komanda | Interval (cron) | Napomena |
 |---------|-----------------|----------|
-| `cultural-calendar:send-weekly-newsletter` | `0 9 * * 1` | Ponedjeljak 09:00 |
+| `cultural-calendar:send-newsletter` | `0 */6 * * *` | Kanonski redovni Newsletter (`first_include`) |
+| `cultural-calendar:send-newsletter-priority` | `*/5 * * * *` | Kanonski prioritetni Newsletter (`priority_change`) |
+
+Legacy `cultural-calendar:send-weekly-newsletter` **nije** kanonski invoker; runtime slanje je isključeno. **Ne** zakazivati je u Plesku.
 
 ### Plesk Scheduled Tasks (PHP skripte / ostalo)
 
@@ -205,7 +210,13 @@ Samo jedna instanca smije obrađivati red.
 
 ## Laravel scheduler (u kodu)
 
-U `routes/console.php` definisan je `cultural-calendar:send-weekly-newsletter` (ponedjeljak 09:00). Na produkciji se izvršava kroz **Toolkit Scheduled Tasks** (v. tabela iznad), ne nužno kroz `php artisan schedule:run`.
+U `routes/console.php` su registrovani:
+
+* `cultural-calendar:send-newsletter` (tehnički default 6h);
+* `cultural-calendar:send-newsletter-priority` (tehnički default 5 min);
+* `cultural-calendar:process-event-lifecycle` (svakih 15 min).
+
+Na produkciji se Newsletter **ne** oslanja na `php artisan schedule:run`. Invokeri su Toolkit Scheduled Tasks (v. tabela iznad). Ne uključivati i `schedule:run` i direktne Newsletter komande istovremeno.
 
 ---
 
@@ -217,7 +228,9 @@ U `routes/console.php` definisan je `cultural-calendar:send-weekly-newsletter` (
 | `documents:cleanup-temp-downloads` | Temp fajlovi MEGA downloada |
 | `documents:cleanup-orphaned` | Orphan fajlovi |
 | `storage:recalculate` | Rekalkulacija kvote korisnika |
-| `cultural-calendar:send-weekly-newsletter` | Sedmični newsletter |
+| `cultural-calendar:send-newsletter` | Kanonski redovni Newsletter (`first_include`) |
+| `cultural-calendar:send-newsletter-priority` | Kanonski prioritetni Newsletter (`priority_change`) |
+| `cultural-calendar:send-weekly-newsletter` | Legacy; runtime slanje **isključeno** — ne koristiti |
 | `competitions:send-candidates-list` | Email lista kandidata |
 | `upload:check-settings` | Dijagnostika uploada |
 | `imagemagick:check` | Provjera ImageMagick (Imagick + convert; PNG → PDF) |

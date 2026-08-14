@@ -16,7 +16,12 @@ class SendCulturalCalendarPriorityNewsletter extends Command
 
     public function handle(NewsletterPriorityDeliveryService $delivery): int
     {
-        $lock = Cache::lock(self::LOCK_KEY, 1800);
+        $lockKey = (string) config('newsletter.priority_cycle_lock_key', self::LOCK_KEY);
+        if ($lockKey === '') {
+            $lockKey = self::LOCK_KEY;
+        }
+
+        $lock = Cache::lock($lockKey, 1800);
         if (! $lock->get()) {
             $this->info('Preskočeno: prioritetni Newsletter ciklus je već u toku.');
 

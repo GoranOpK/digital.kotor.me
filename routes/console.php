@@ -23,7 +23,7 @@ $newsletterHours = max(1, (int) config('newsletter.regular_interval_hours', 6));
 Schedule::command('cultural-calendar:send-newsletter')
     ->cron('0 */'.$newsletterHours.' * * *')
     ->withoutOverlapping()
-    ->timezone(config('app.timezone', 'Europe/Podgorica'));
+    ->timezone(config('app.timezone', 'Europe/Belgrade'));
 
 // NL-05 — prioritetni flush (tehnički interval, nije BM pravilo).
 // Produkcijski Plesk invoker se ovdje NE mijenja.
@@ -31,7 +31,7 @@ $priorityFlushMinutes = max(1, (int) config('newsletter.priority_flush_interval_
 Schedule::command('cultural-calendar:send-newsletter-priority')
     ->cron('*/'.$priorityFlushMinutes.' * * * *')
     ->withoutOverlapping()
-    ->timezone(config('app.timezone', 'Europe/Podgorica'));
+    ->timezone(config('app.timezone', 'Europe/Belgrade'));
 
 // PO-AUTO-02 + automatsko arhiviranje: periodična provjera kandidata (poslovno vrijeme isteka ≠ interval).
 Schedule::command('cultural-calendar:process-event-lifecycle')

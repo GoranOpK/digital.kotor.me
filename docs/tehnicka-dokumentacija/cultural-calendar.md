@@ -1,7 +1,7 @@
 # Kalendar kulturnih događaja
 
-**Poslednje ažuriranje:** 2026-07-26 (terminološka migracija Termin → Održavanje događaja; odstupanje V1)
-**Izvor u kodu:** `CulturalCalendarController`, `CulturalEventController`, `CulturalEvent` model, `SendCulturalCalendarWeeklyNewsletter`
+**Poslednje ažuriranje:** 2026-08-14 (Newsletter ops: kanonski invokeri 6h / 5 min)
+**Izvor u kodu:** `CulturalCalendarController`, `CulturalEventController`, `CulturalEvent` model; Newsletter: `SendCulturalCalendarNewsletter`, `SendCulturalCalendarPriorityNewsletter` (legacy weekly command ostaje na disku, runtime slanje isključeno)
 **Tip dokumenta:** Technical Overview trenutne implementacije
 
 ---
@@ -98,22 +98,18 @@ Sistem uvijek prikazuje jednu naslovnu fotografiju. Ako nije postavljena sopstve
 
 ## Newsletter
 
-**Komanda:** `cultural-calendar:send-weekly-newsletter`  
-**Scheduler:** ponedjeljak 09:00, timezone `Europe/Podgorica` (`routes/console.php`)
+Kanonske Artisan komande. Na produkciji: Laravel Toolkit Scheduled Tasks (direktni invoker). **Ne** dodavati `schedule:run` ako ti taskovi već postoje.
 
-**UX i ponašanje prijave:**
+| Komanda | Produkcijski cron | Namjena |
+|---------|-------------------|---------|
+| `cultural-calendar:send-newsletter` | `0 */6 * * *` | Redovni `first_include` |
+| `cultural-calendar:send-newsletter-priority` | `*/5 * * * *` | Prioritetne poslovno značajne izmjene |
 
-- poruka o statusu newsletter prijave prikazuje se na vrhu stranice kalendara (odmah ispod tabova),
-- uneseni e-mail u polju za newsletter je jasno vidljiv (tamna boja teksta i čitljiv placeholder),
-- polje za unos newsletter e-maila je prazno nakon osvježavanja stranice (ne popunjava se automatski prijavljenim nalogom),
-- welcome mail se šalje samo pri prvoj prijavi adrese (ne i pri ponovnoj prijavi iste već aktivne adrese).
+Timezone rasporeda = `config('app.timezone')` (default **`Europe/Belgrade`**).
 
-Mail klase:
+Legacy `cultural-calendar:send-weekly-newsletter` nije kanonski invoker; runtime slanje je isključeno. **Ne** zakazivati je u Plesku.
 
-- `CulturalCalendarNewsletterWeeklyMail`
-- `CulturalCalendarNewsletterWelcomeMail`
-
-Model pretplatnika: `NewsletterSubscriber`.
+Kanonska pretplata: `NewsletterSubscription` na `User` (rute `newsletter.*`). E-mail-only `NewsletterSubscriber` nije SSOT i nije produkcioni invoker.
 
 ---
 

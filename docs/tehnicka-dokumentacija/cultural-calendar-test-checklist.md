@@ -91,16 +91,13 @@
 
 | # | Test | OK | Napomena |
 |---|------|:--:|----------|
-| N1 | Prijava emailom sa početne kalendara | ☐ | |
-| N2 | Welcome mail stiže | ☐ | |
-| N3 | Ponovna prijava istog emaila — jasna poruka | ☐ | |
-| N4 | Odjava (checkbox unsubscribe) | ☐ | |
-| N5 | Odjava nepostojećeg emaila — poruka bez greške | ☐ | |
-| N6 | Sedmični mail (Toolkit Artisan): `--dry-run` prikazuje primaoce | ☐ | |
-| N7 | Sedmični mail — stvarno slanje testirano (opciono) | ☐ | |
+| N1 | Prijavljeni verifikovani korisnik otvara `/newsletter` | ☐ | Kanonski settings UI |
+| N2 | Aktivacija pretplate (Svi događaji / Odabrani organizatori) | ☐ | Bez welcome e-maila |
+| N3 | Odjava iz UI uz potvrdu | ☐ | |
+| N4 | Odjava iz linka u poruci (nevažeći token = generic, bez 500) | ☐ | |
+| N5 | Ne pokretati ručno kanonske send komande na produkciji bez PO | ☐ | |
 
-**Komanda:** `cultural-calendar:send-weekly-newsletter`  
-**Scheduler:** ponedjeljak 09:00, `Europe/Podgorica` — v. [deployment-and-cron.md](deployment-and-cron.md).
+**Kanonske komande:** `cultural-calendar:send-newsletter` (6h), `cultural-calendar:send-newsletter-priority` (5 min). Legacy `cultural-calendar:send-weekly-newsletter` nije kanonski invoker (runtime slanje isključeno). V. [deployment-and-cron.md](deployment-and-cron.md).
 
 ---
 
@@ -124,7 +121,7 @@
 | I1 | Slike se učitavaju (`public/storage` → `storage/app/public`) | ☐ | |
 | I2 | Nove slike u `storage/app/public/cultural-events/` | ☐ | |
 | I3 | SMTP radi (newsletter) | ☐ | |
-| I4 | Cron za sedmični newsletter zakazan u Plesku | ☐ | |
+| I4 | Cron: regular 6h + priority 5 min u Toolkit Scheduled Tasks; legacy weekly **nije** zakazan | ☐ | |
 | I5 | Hero slika i logo kalendara (`img/heroKK.jpg`, `KKLOGOC.png`) | ☐ | |
 
 ---

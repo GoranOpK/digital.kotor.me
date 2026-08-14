@@ -166,7 +166,7 @@ Detalji: [stubs-and-future-modules.md](stubs-and-future-modules.md).
 1. **Duplikat auth ruta** — `routes/web.php` i `routes/auth.php` oba definišu `login`/`register`. Pri izmjenama auth-a provjeriti koja ruta je aktivna.
 2. **Legacy `evaluator`** — stari kod namjerno zadržan do kraja tekućeg konkursa; čišćenje nakon završetka.
 3. **MEGA kredencijali** — sesija za browser upload dobija credentials sa servera; v. [document-library-and-mega.md](document-library-and-mega.md).
-4. **Cron** — većina održavanja dokumenata ide preko Plesk PHP skripti u root-u, ne preko Laravel schedulera (osim newslettera).
+4. **Cron** — većina održavanja dokumenata ide preko Plesk PHP skripti u root-u. Newsletter na produkciji ide kroz **direktne** Toolkit Artisan taskove (`cultural-calendar:send-newsletter` 6h, `cultural-calendar:send-newsletter-priority` 5 min), ne kroz `schedule:run`.
 
 ---
 
