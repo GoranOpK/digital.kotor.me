@@ -39,7 +39,7 @@ Feature Registry predstavlja polaznu tačku za sljedivost kroz cijeli projekat.
 | ---------- | ---------------- | ------- | --------------------------------------------- |
 | FT-001     | Kalendar kulture | Active  | Prva funkcionalnost u razvoju                 |
 | FT-002     | Plaćanja         | Planned | Dokumentacija razvijena (BM-002/FS-002 usvojeni BP-01–BP-09; TS-002 djelimično usvojen, dokument u izradi) |
-| FT-003     | Evidencija aktivnosti (Kalendar kulture) | Usvojen (TS-012 v1.0.7) — **implementation complete in repo / production UI pending deploy**; Faza 8 **nije** production closed | FS §5.16 + PATCH-FS-074; BM-14; V1 katalog uključuje Manifestacije; van opsega: napredni pregled/filteri, retention, izvoz (BR-188); **nema durable audit replay**; `repeatable()` uniqueness = known V1 limitation |
+| FT-003     | Evidencija aktivnosti (Kalendar kulture) | Usvojen (TS-012 v1.0.8) — **FAZA 8 CLOSED: IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED** | FS §5.16 + PATCH-FS-074; BM-14; V1 katalog uključuje Manifestacije; van opsega: napredni pregled/filteri, retention, izvoz (BR-188); **nema durable audit replay**; `repeatable()` uniqueness = known V1 limitation |
 | FT-004     | Obavještenja     | Active  | V1 infrastruktura verifikovana testovima; javni panel + `competition_decision_html`; E2E emitovanje iz konkursa i dalje OFD-OB-006 |
 
 Dozvoljeni statusi:
@@ -390,7 +390,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.19); **FAZA 6A CLOSED**; 6B PRODUCTION ACCEPTED; Package A CLOSED; Phase B1+B2 PRODUCTION VERIFIED / CLOSED; B3 DEFERRED |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.11) — V1 + PATCH-063; MOD-UX-01 Alpine-free nav CURRENT STATE; PATCH-064 nije TS-010 scope (portal = TS-009) |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.3) — **FAZA 7 FORMALLY CLOSED** (NL-01…NL-06); emit ka TS-012 = **Faza 8** |
-| TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.7) — **implementation complete in repo / production UI pending deploy**; Faza 8 nije production closed |
+| TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.8) — **FAZA 8 CLOSED: IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED** |
 
 ---
 
@@ -474,7 +474,7 @@ Evidencija aktivnosti (Kalendar kulture)
 
 Status:
 
-Usvojen (TS-012 v1.0.7) — **implementation complete in repo / production UI pending deploy.** F8-02 store + F8-03 emitters = production active. F8-04 V1 Admin UI = implemented (read-only chronological list + pagination; no filters/search/export/show). V1 audit = best-effort / failure-isolated / no durable replay. `repeatable()` uniqueness = known V1 limitation. **Faza 8 nije production closed.**
+Usvojen (TS-012 v1.0.8) — **FAZA 8 CLOSED: IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED.** F8-01 freeze complete. F8-02 store + F8-03 emitters + F8-04 V1 Admin UI = production active / accepted (read-only chronological list + pagination; no filters/search/export/show). V1 audit = best-effort / failure-isolated / no durable replay. `repeatable()` uniqueness = known V1 limitation. Historical audit rows immutable.
 
 Napomena:
 
@@ -486,16 +486,16 @@ Povezana dokumentacija:
 
 * Business Model — BM-14 (BM-AL-01–BM-AL-08), BM-EP-09, BM-GL-09, BM-GL-20, BM-MF-20
 * Functional Specification — §5.16 (BR-170–BR-188, BR-349–BR-350), PATCH-FS-035 / PATCH-FS-041 / **PATCH-FS-074**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Evidencija_aktivnosti.md` (TS-012; verzija **1.0.7**; USVOJEN; **implementation complete in repo / production UI pending**; V1 best-effort)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Evidencija_aktivnosti.md` (TS-012; verzija **1.0.8**; USVOJEN; **FAZA 8 CLOSED / PRODUCTION ACCEPTED**; V1 best-effort)
 
 Matrica sljedivosti (sažetak):
 
 | BM | FS | FT | TS |
 |----|----|----|-----|
-| BM-AL-01–BM-AL-08 | BR-170–BR-188, BR-349–BR-350 / §5.16 | FT-003 | TS-012 (usvojen v1.0.7; implementation complete in repo / production UI pending; V1 best-effort) |
-| BM-EP-09 | §5.16 | FT-003 | TS-012 (usvojen v1.0.7; implementation complete in repo / production UI pending) |
-| BM-GL-09, BM-GL-20 | BR-170, BR-174 | FT-003 | TS-012 (usvojen v1.0.7; implementation complete in repo / production UI pending) |
-| BM-MF-20 | §5.16 katalog Manifestacije | FT-003 | TS-012 (usvojen v1.0.7; implementation complete in repo / production UI pending) |
+| BM-AL-01–BM-AL-08 | BR-170–BR-188, BR-349–BR-350 / §5.16 | FT-003 | TS-012 (usvojen v1.0.8; FAZA 8 CLOSED / PRODUCTION ACCEPTED; V1 best-effort) |
+| BM-EP-09 | §5.16 | FT-003 | TS-012 (usvojen v1.0.8; FAZA 8 CLOSED / PRODUCTION ACCEPTED) |
+| BM-GL-09, BM-GL-20 | BR-170, BR-174 | FT-003 | TS-012 (usvojen v1.0.8; FAZA 8 CLOSED / PRODUCTION ACCEPTED) |
+| BM-MF-20 | §5.16 katalog Manifestacije | FT-003 | TS-012 (usvojen v1.0.8; FAZA 8 CLOSED / PRODUCTION ACCEPTED) |
 
 ---
 
@@ -660,5 +660,6 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-14 | FT-003 — **V1 retry semantics clarification:** best-effort / failure-isolated; idempotent ingest; **nema** durable replay garancije. Known V1 limitation registrovan. TS-012 → **v1.0.5**. IR-001 → **v1.0.18**. BM / FS / IS-001 / RG-001 KEEP. **Nije commit/push.** |
 | 2026-08-14 | FT-003 — **F8-03 PO ACCEPT:** canonical emitters prihvaćeni. TS-012 → **v1.0.6** (`repeatable()` uniqueness limitation; durable replay i dalje nije V1). IR-001 → **v1.0.19**. BM / FS / IS-001 / RG-001 KEEP. Admin UI NOT STARTED. |
 | 2026-08-15 | FT-003 — **F8-04 PO ACCEPT (status):** minimalni V1 Admin UI **implementation complete in repo / production UI pending deploy**. TS-012 → **v1.0.7**. IR-001 → **v1.0.20**. BM / FS / IS-001 / RG-001 KEEP. Faza 8 **nije** production closed. |
+| 2026-08-15 | FT-003 — **FAZA 8 PRODUCTION CLOSEOUT (status):** F8-01…F8-04 **IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED / CLOSED**. TS-012 → **v1.0.8**. IR-001 → **v1.0.21**. BM / FS / IS-001 / RG-001 KEEP. Historical audit rows immutable. |
 | 2026-08-13 | FT-001 — **FR cross-reference cleanup:** CURRENT STATE pin IS-001 **1.0.7 → 1.0.8** (usklađeno sa `Implementation-Strategy_Javni_portal.md`). FAZA 6A/6B CLOSED KEEP; TS-009 v1.0.19 KEEP; IR-001 v1.0.11 KEEP. Bez izmjene implementacije. |
 | 2026-08-10 | FT-001 — **PHASE 6A-CLOSE-02:** legacy admin CRUD `cultural-events.*` disabled (middleware `legacy_cultural_events_disabled` → 403 all methods). Legacy code/table/views retained; `CULTURAL_PUBLIC_READ_SOURCE` + public legacy read rollback retained; canonical routes unchanged. **Nije** hard remove / flag cleanup (Phase B). |

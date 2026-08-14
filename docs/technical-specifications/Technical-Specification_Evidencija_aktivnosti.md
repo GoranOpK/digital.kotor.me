@@ -7,10 +7,10 @@
 **Funkcionalna cjelina:** Evidencija aktivnosti  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** USVOJEN  
-**Verzija:** 1.0.7
+**Verzija:** 1.0.8
 **Datum:** 2026-08-15
 
-**Implementacija FT-003:** **F8-02** centralni store = **IMPLEMENTED / production active**. **F8-03** canonical emitters = **IMPLEMENTED / production active**. **F8-04** minimalni Admin UI = **IMPLEMENTED u kodu**; production deploy **nije PO potvrđen**. Katalog §7 **KEEP**. V1 audit = **best-effort / failure-isolated** (nema durable replay). `repeatable()` uniqueness = known V1 limitation. V1 Admin UI = hronološka read-only lista + paginacija; **bez** filtera/search/export/show. Nije Technical Overview kompletnog FT-003. Nije Faza 8 production closeout.
+**Implementacija FT-003:** **FAZA 8 = IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED / CLOSED.** F8-01 canonical freeze complete. F8-02 centralni store = **IMPLEMENTED / PRODUCTION ACTIVE / ACCEPTED**. F8-03 canonical emitters = **IMPLEMENTED / PRODUCTION ACTIVE / ACCEPTED**. F8-04 minimalni Admin UI = **IMPLEMENTED / PRODUCTION ACTIVE / ACCEPTED** (`GET /admin/evidencija-aktivnosti`; Super Administrator production smoke PASS). Katalog §7 **KEEP**. V1 audit = **best-effort / failure-isolated** (nema durable replay). `repeatable()` uniqueness = known V1 limitation. V1 Admin UI = hronološka read-only lista + paginacija; **bez** filtera/search/export/show. Historical audit redovi **immutable** (nema korekcije starog `occurred_at`). Nije Technical Overview kompletnog FT-003.
 
 ---
 
@@ -26,6 +26,7 @@
 | 1.0.5 | 2026-08-14 | **V1 retry semantics clarification:** failure isolation + idempotent ingest (`source_module` + `event_id`). V1 **ne** garantuje durable replay neupisanog audit događaja nakon završetka procesa. Queue/outbox i dalje nije V1 obaveza. Katalog §7 **KEEP**. Bez izmjene BM/FS. |
 | 1.0.6 | 2026-08-14 | **F8-03 PO accept consistency:** `repeatable()` **KNOWN V1 LIMITATION** — nema matematičke/globalne uniqueness garancije kada su katalog ID, entity identity, canonical payload i persist timestamp do µs identični. DB unique `(source_module, event_id)` **KEEP**. Katalog §7 **KEEP**. Bez izmjene BM/FS. |
 | 1.0.7 | 2026-08-15 | **F8-04 status only:** minimalni Admin UI (hronološka read-only lista, paginacija, platformski Administrator) **IMPLEMENTED u kodu**; production deploy pending. F8-02/F8-03 = production active. Katalog §7 **KEEP**. Bez izmjene BM/FS. Nije Faza 8 production closeout. |
+| 1.0.8 | 2026-08-15 | **FAZA 8 PRODUCTION CLOSEOUT (status only):** F8-01…F8-04 **IMPLEMENTED / PRODUCTION ACTIVE / PRODUCTION ACCEPTED / CLOSED**. Admin UI production smoke PASS. Katalog §7 **KEEP**. Historical audit rows immutable. Bez izmjene BM/FS. |
 
 Napomena:
 
@@ -47,6 +48,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.5 | 2026-08-14 | V1 retry: best-effort / failure-isolated; idempotent ingest; **nema** durable replay garancije; katalog KEEP. |
 | 1.0.6 | 2026-08-14 | F8-03 PO accept: `repeatable()` uniqueness limitation; DB unique KEEP; katalog KEEP. |
 | 1.0.7 | 2026-08-15 | F8-04 status: V1 Admin UI implemented in code (read-only list + pagination); production pending; katalog KEEP. |
+| 1.0.8 | 2026-08-15 | FAZA 8 closeout: implementation complete / production active / production accepted / closed; katalog KEEP; historical rows immutable. |
 
 ---
 
@@ -703,7 +705,7 @@ Napomena: način prenosa događaja (sinhrono/asinhrono), tačan oblik skladište
 9. Admin V1 = hronološki pristup + paginacija; filteri ostaju OOS.
 10. PATCH-053: ne emitovati „ponovnu objavu“ otkazanog događaja.
 11. Nema aplikacionog UPDATE/DELETE API-ja za audit zapise; Admin samo čita.
-12. **FT-003:** F8-02 = centralni store (**production active**); F8-03 = kanonski emiteri (**production active**); F8-04 = minimalni Admin UI (**IMPLEMENTED u kodu**; production deploy pending). Faza 8 production closeout **nije** zatvoren.
+12. **FT-003 / FAZA 8 CLOSED:** F8-02 = centralni store (**PRODUCTION ACTIVE / ACCEPTED**); F8-03 = kanonski emiteri (**PRODUCTION ACTIVE / ACCEPTED**); F8-04 = minimalni Admin UI (**PRODUCTION ACTIVE / ACCEPTED**). Historical audit redovi se ne koriguju.
 13. Safe facade (`CulturalActivityRecorder::record`) zvati **nakon** uspješnog persist-a poslovne radnje; ne u istoj DB transakciji čiji bi rollback poništio poslovni zapis zbog audit greške.
 
 ---

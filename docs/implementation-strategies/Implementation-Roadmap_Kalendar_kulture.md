@@ -7,7 +7,7 @@
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active  
-**Verzija:** 1.0.20
+**Verzija:** 1.0.21
 **Datum:** 2026-08-15
 
 ---
@@ -37,6 +37,7 @@
 | 1.0.18 | 2026-08-14 | **F8-03 V1 retry semantics (docs):** best-effort / failure-isolated; **nema** durable replay garancije. TS-012 → v1.0.5. F8-03 emiteri i dalje local. Admin UI = **NOT STARTED**. BM/FS/IS/RG-001 KEEP. |
 | 1.0.19 | 2026-08-14 | **F8-03 PO ACCEPT:** canonical emitters **PO ACCEPTED** (local, awaiting commit/push). TS-012 → v1.0.6 (`repeatable()` uniqueness limitation). Admin UI = **NOT STARTED**. BM/FS/IS/RG-001 KEEP. |
 | 1.0.20 | 2026-08-15 | **F8-04 Admin UI (status):** F8-01 canonical freeze = complete; F8-02 foundation = complete / production active; F8-03 emitters = complete / production active; F8-04 Admin UI = **implementation complete**, production acceptance pending. TS-012 → v1.0.7. Faza 8 **nije** production closed. BM/FS/IS/RG-001 KEEP. |
+| 1.0.21 | 2026-08-15 | **FAZA 8 PRODUCTION CLOSEOUT (status only):** F8-01…F8-04 **IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED / CLOSED**. TS-012 → v1.0.8. Admin UI production smoke PASS. Historical audit rows immutable. Naredno po §6/§8 = **Završna stabilizacija** (nije započeta). BM/FS/IS/RG-001 KEEP. |
 
 ---
 
@@ -163,7 +164,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | **TS-009** | Javni portal | Po fazi | Proširenje | Da | CR-004B (Faza 0); domen za Fazu 6 | CR-004B rano; domen kasnije | **Srednja** (preostalo) |
 | **TS-010** | Urednički portal | Koristi domen | Da | Da | TS-001, 003–008; emit → TS-012 (Faza 8) | Nakon domena; **Faza 5 V1 završena** | **Vrlo visoka** |
 | **TS-011** | Newsletter | Da | Da + job | Da | TS-001, 003, 004, 009, 010 | **Faza 7 V1 završena / FORMALLY CLOSED** | **Visoka** (zatvorena) |
-| **TS-012** | Evidencija aktivnosti | Da | Da | Min. Admin | Svi emiteri stabilni | **Faza 8 STARTED — F8-04 implementation complete; production UI pending** | **Srednja** |
+| **TS-012** | Evidencija aktivnosti | Da | Da | Min. Admin | Svi emiteri stabilni | **FAZA 8 CLOSED — PRODUCTION ACCEPTED** | **Srednja** |
 
 ### Stanje IS-001 / CR (javni portal, postojeći model)
 
@@ -185,8 +186,8 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | Održavanja 1..N | Nema | Faza 3 |
 | Manifestacije | **PRODUCTION ACCEPTED** (6B-01…6B-04 + PO-MF-WF; deployed) | **FAZA 4 / 6B FORMALLY CLOSED**; migracije RAN; `cultural_manifestations` = 0 redova; cleanup N/A |
 | Katalozi lokacija / kategorija / medija | Nema / ENUM | Faza 1 |
-| Newsletter (Kalendar kulture) | **FAZA 7 FORMALLY CLOSED** — kanonski `User` pretplata; regular 6h + priority 5 min | Legacy weekly runtime **disabled**; tabela `newsletter_subscribers` fizički KEEP; **bez** backfill-a (**PO-NL-22**). Naredno: **Faza 8 / TS-012** |
-| Centralni audit (FT-003) | **Faza 8 STARTED — F8-02/F8-03 production active; F8-04 implementation complete, production pending** | Nije Faza 8 production closed |
+| Newsletter (Kalendar kulture) | **FAZA 7 FORMALLY CLOSED** — kanonski `User` pretplata; regular 6h + priority 5 min | Legacy weekly runtime **disabled**; tabela `newsletter_subscribers` fizički KEEP; **bez** backfill-a (**PO-NL-22**) |
+| Centralni audit (FT-003) | **FAZA 8 CLOSED — IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED** | Historical audit rows immutable; V1 KEEP (best-effort / no durable replay / no filters-export) |
 
 ---
 
@@ -377,15 +378,15 @@ analiza → implementacija → test → review → merge → deploy
 
 | Stavka | Opis |
 |--------|------|
-| **Status** | **STARTED — F8-01 complete; F8-02 foundation complete / production active; F8-03 emitters complete / production active; F8-04 Admin UI implementation complete, production acceptance pending.** V1 audit = **best-effort / failure-isolated / no durable replay**. `repeatable()` uniqueness = known V1 limitation. V1 Admin UI = hronološka read-only lista + paginacija; bez filtera/search/export/show. **Nije Faza 8 production closed.** |
+| **Status** | **CLOSED — IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED.** F8-01 canonical freeze complete. F8-02 store complete / production active / accepted. F8-03 emitters complete / production active / accepted. F8-04 Admin UI complete / production active / accepted (Super Administrator smoke PASS na `/admin/evidencija-aktivnosti`). V1 audit = **best-effort / failure-isolated / no durable replay**. `repeatable()` uniqueness = known V1 limitation. V1 Admin UI = hronološka read-only lista + paginacija; bez filtera/search/export/show. Historical audit redovi **immutable**. |
 | **Cilj** | Centralni prijem, trajno skladište, Admin pristup; pun V1 katalog emitera |
 | **Moduli** | TS-012 — **integracija** sa već stabilnim emiterima (TS-001, 003, 004, 005, 010, 011) |
 | **Preduslov** | **FAZA 7 FORMALLY CLOSED** — **ispunjen** |
 | **Katalog** | TS-012 §7 / FS PATCH-FS-074 — **FROZEN** |
 | **Rizici** | Lom nepromjenjivosti; propušten kanonski emiter |
 | **KEEP V1** | Audit write = best-effort; nema queue/outbox; nema durable replay neupisanog događaja nakon završetka procesa |
-| **Rezultat (cilj faze)** | FT-003 V1 zatvoren (bez retention / izvoza van BR-188) — **još nije ostvaren** (čeka controlled production UI smoke) |
-| **Zatim** | Controlled Plesk pull F8-04 + production UI smoke / Phase 8 closeout |
+| **Rezultat (cilj faze)** | FT-003 V1 zatvoren (bez retention / izvoza van BR-188) — **ostvaren** |
+| **Zatim** | **Završna stabilizacija** (IR-001 §6 / §8) — **nije započeta** |
 
 ---
 
@@ -420,7 +421,7 @@ Naredna velika faza **ne počinje** dok stabilizacija nije potvrđena.
 | 6A | Kanonski cutover Događaja; kartica multi-OCC; sort; CAT; flag | Public query + CulturalCalendar* | CR-001…004B |
 | 6B | MF portal + Tip sadržaja | **FORMALLY CLOSED / PRODUCTION ACCEPTED** (limited content-smoke) | 6A stabilan |
 | 7 | Okidači; objedinjavanje; odjava | **FORMALLY CLOSED** — NL-01…NL-06 Feature | Mail / cron; legacy weekly disabled |
-| 8 | Katalog aktivnosti; nepromjenjivost; Admin | Audit Feature | Emiteri ne smiju mijenjati prava |
+| 8 | Katalog aktivnosti; nepromjenjivost; Admin | **FORMALLY CLOSED / PRODUCTION ACCEPTED** — Foundation + Emitter + Admin UI Feature | Emiteri ne smiju mijenjati prava |
 
 ---
 
