@@ -7,10 +7,10 @@
 **Funkcionalna cjelina:** Evidencija aktivnosti  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** USVOJEN  
-**Verzija:** 1.0.2
+**Verzija:** 1.0.3
 **Datum:** 2026-08-14
 
-**Implementacija FT-003:** **NOT STARTED** — Faza 8 / F8-01 = canonical freeze. Ovaj dokument je implementation-ready ugovor. Nije Technical Overview runtime-a. Centralni store / emiteri / Admin UI **nisu** implementirani.
+**Implementacija FT-003:** **F8-02 FOUNDATION IMPLEMENTED (local)** — centralni store/idempotency/immutability/safe facade. Emiteri TS12-* i Admin UI = **NOT STARTED**. Nije Technical Overview kompletnog FT-003.
 
 ---
 
@@ -21,6 +21,7 @@
 | 1.0.0 | 2026-08-07 | Prvi nacrt Technical Specification za funkcionalnu cjelinu Evidencija aktivnosti (Audit). Usklađen sa BM-14 (BM-AL-01–BM-AL-08), BM-EP-09, BM-GL-09, BM-GL-20, BM-MF-20; FS §5.16 (BR-170–BR-188); Feature Registry FT-003; TS-003 v0.1.2, TS-004, TS-010 v1.0.1, TS-011 v1.0.1; METHODOLOGY. Operacionalizuje centralni prijem, trajno evidentiranje, nepromjenjivost, Admin pristup i V1 katalog bez širenja BR-188. Bez izmjene BM/FS/ostalih TS/Feature Registry. Bez izmjene implementacije. |
 | 1.0.1 | 2026-08-07 | PATCH-001: završna tehnička usklađenja — jedinstvenost `(source_module, event_id)`; neuspjeh Evidencije ne poništava poslovnu radnju + pouzdana ponovna obrada; kanonski emiter; istorijski integritet izvršioca. Bez novih poslovnih odluka; bez širenja V1; bez izmjene BM/FS/FR/ostalih TS. |
 | 1.0.2 | 2026-08-14 | **F8-01 canonical freeze:** status hygiene (uklonjen `(DRAFT)` / Nacrt); uklonjen stale FR-GAP; V1 katalog usklađen sa FS PATCH-FS-074; implementation-ready ugovor (identity, privacy, immutability, failure isolation, Admin V1, TM-AL). **FT-003 implementation = NOT STARTED.** Bez izmjene BM. Bez izmjene implementacije. |
+| 1.0.3 | 2026-08-14 | **F8-02 status only:** centralni store foundation (`cultural_activity_records`) **IMPLEMENTED (local)**; katalog §7 **KEEP**; emiteri/Admin UI i dalje NOT STARTED. Pozivni contract: safe recorder nakon uspješnog poslovnog persist-a, van poslovne transakcije. Bez izmjene BM/FS kataloga. |
 
 Napomena:
 
@@ -37,6 +38,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.0 | 2026-08-07 | Kreiran TS-012 (NACRT). Kompletna tehnička specifikacija Evidencije aktivnosti: obuhvat, granice, arhitektura, model događaja/zapisa, katalog V1, prijem, nepromjenjivost, autorizacija, Admin pristup, razdvajanje od tehničkih logova, integracije, validacije, acceptance, sljedivost, Van obuhvata. |
 | 1.0.1 | 2026-08-07 | PATCH-001: (1) jedinstvenost audit događaja = `source_module` + `event_id`; (2) neuspjeh prijema/evidentiranja ne poništava poslovnu radnju; pouzdana ponovna obrada; (3) jedan kanonski emiter po poslovnoj radnji; (4) istorijski izvršilac nepromjenjiv nakon deaktivacije naloga. Dopunjeni §3, §5–6, §8, §13, §14–16, §19. |
 | 1.0.2 | 2026-08-14 | F8-01: USVOJEN bez DRAFT/Nacrt kontradikcije; FR-GAP uklonjen; §7 kanonska matrica + exclusions; §8.6 identity; §6.3 privacy; §11 paginacija; §20 TM-AL; implementacija pending. |
+| 1.0.3 | 2026-08-14 | F8-02 status: centralni store foundation; katalog KEEP; emiteri/UI pending. |
 
 ---
 
@@ -682,7 +684,8 @@ Napomena: način prenosa događaja (sinhrono/asinhrono), tačan oblik skladište
 9. Admin V1 = hronološki pristup + paginacija; filteri ostaju OOS.
 10. PATCH-053: ne emitovati „ponovnu objavu“ otkazanog događaja.
 11. Nema aplikacionog UPDATE/DELETE API-ja za audit zapise; Admin samo čita.
-12. **FT-003 nije implementiran** dok Faza 8 ne isporuči store/emiter/UI.
+12. **FT-003:** F8-02 = centralni store; F8-03 emiteri i Admin UI nisu u ovom paketu.
+13. Safe facade (`CulturalActivityRecorder::record`) zvati **nakon** uspješnog persist-a poslovne radnje; ne u istoj DB transakciji čiji bi rollback poništio poslovni zapis zbog audit greške.
 
 ---
 

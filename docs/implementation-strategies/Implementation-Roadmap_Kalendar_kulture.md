@@ -7,7 +7,7 @@
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active  
-**Verzija:** 1.0.15
+**Verzija:** 1.0.16
 **Datum:** 2026-08-14
 
 ---
@@ -32,6 +32,7 @@
 | 1.0.13 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary:** FAZA 7 cilj = kanonski TS-011 v1.0.3. NL-03 = FIRST_INCLUDE ELIGIBILITY / CANDIDATE FOUNDATION (bez ledger write, bez e-maila, bez queue/scheduler). Usklađeno sa BM PATCH-074 / FS PATCH-FS-073. Bez izmjene implementacije. |
 | 1.0.14 | 2026-08-14 | **FAZA 7 FORMAL CLOSEOUT + STABILIZATION (status only):** NL-01…NL-06 **IMPLEMENTED / TESTED / COMMITTED / PUSHED**; kanonski model TS-011 v1.0.3. **FAZA 7 = FORMALLY CLOSED.** Repo HEAD `da5220d` (docs routing) / NL-06 `f9b8216`. Production evidence = **PO-CONFIRMED** (migracije Ran; regular 6h; priority 5 min; legacy weekly invoker = 0; `/newsletter` settings). Live production Git HEAD = **UNOBSERVED** iz Cursora. KEEP V1 limitations (Organizer listing URL; crash-after-SMTP; no queue/outbox; physical legacy files). Naredna numerisana faza = **Faza 8 / TS-012**. Bez izmjene BM/FS/TS-011 ugovora. Bez izmjene implementacije. |
 | 1.0.15 | 2026-08-14 | **F8-01 TS-012 canonical freeze (status):** **FAZA 8 STARTED — canonical freeze.** TS-012 v1.0.2 USVOJEN; FS PATCH-FS-074. Store/emiteri/Admin UI = **NOT STARTED**. Nije IMPLEMENTED/CLOSED. Bez izmjene BM. Bez izmjene implementacije. |
+| 1.0.16 | 2026-08-14 | **F8-02 central audit foundation (status):** store/idempotency/immutability/safe facade **IMPLEMENTED (local; awaiting PO accept/commit)**. Emiteri i Admin UI = **NOT STARTED**. TS-012 → v1.0.3 (status). Katalog KEEP. |
 
 ---
 
@@ -158,7 +159,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | **TS-009** | Javni portal | Po fazi | Proširenje | Da | CR-004B (Faza 0); domen za Fazu 6 | CR-004B rano; domen kasnije | **Srednja** (preostalo) |
 | **TS-010** | Urednički portal | Koristi domen | Da | Da | TS-001, 003–008; emit → TS-012 (Faza 8) | Nakon domena; **Faza 5 V1 završena** | **Vrlo visoka** |
 | **TS-011** | Newsletter | Da | Da + job | Da | TS-001, 003, 004, 009, 010 | **Faza 7 V1 završena / FORMALLY CLOSED** | **Visoka** (zatvorena) |
-| **TS-012** | Evidencija aktivnosti | Da | Da | Min. Admin | Svi emiteri stabilni | **Faza 8 STARTED — canonical freeze; implementation pending** | **Srednja** |
+| **TS-012** | Evidencija aktivnosti | Da | Da | Min. Admin | Svi emiteri stabilni | **Faza 8 STARTED — F8-02 store foundation (local); emiteri pending** | **Srednja** |
 
 ### Stanje IS-001 / CR (javni portal, postojeći model)
 
@@ -181,7 +182,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | Manifestacije | **PRODUCTION ACCEPTED** (6B-01…6B-04 + PO-MF-WF; deployed) | **FAZA 4 / 6B FORMALLY CLOSED**; migracije RAN; `cultural_manifestations` = 0 redova; cleanup N/A |
 | Katalozi lokacija / kategorija / medija | Nema / ENUM | Faza 1 |
 | Newsletter (Kalendar kulture) | **FAZA 7 FORMALLY CLOSED** — kanonski `User` pretplata; regular 6h + priority 5 min | Legacy weekly runtime **disabled**; tabela `newsletter_subscribers` fizički KEEP; **bez** backfill-a (**PO-NL-22**). Naredno: **Faza 8 / TS-012** |
-| Centralni audit (FT-003) | **Faza 8 STARTED — canonical freeze** (TS-012 v1.0.2); store/UI **NOT STARTED** | Nije IMPLEMENTED/CLOSED |
+| Centralni audit (FT-003) | **Faza 8 STARTED — F8-02 store foundation (local)**; emiteri/UI **NOT STARTED** | Nije IMPLEMENTED/CLOSED |
 
 ---
 
@@ -372,7 +373,7 @@ analiza → implementacija → test → review → merge → deploy
 
 | Stavka | Opis |
 |--------|------|
-| **Status** | **STARTED — canonical freeze** (F8-01). Store / emiteri / Admin UI = **NOT STARTED**. Nije IMPLEMENTED / CLOSED. |
+| **Status** | **STARTED — F8-02 foundation implemented (local, awaiting PO accept)**. Emiteri / Admin UI = **NOT STARTED**. Nije IMPLEMENTED / CLOSED. |
 | **Cilj** | Centralni prijem, trajno skladište, Admin pristup; pun V1 katalog emitera |
 | **Moduli** | TS-012 — **integracija** sa već stabilnim emiterima (TS-001, 003, 004, 005, 010, 011) |
 | **Preduslov** | **FAZA 7 FORMALLY CLOSED** — **ispunjen** |
