@@ -143,4 +143,12 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(CulturalModeratorAuthorization::class);
     }
+
+    /**
+     * NL-01 — kanonska Newsletter pretplata (najviše jedna; nije automatska).
+     */
+    public function newsletterSubscription()
+    {
+        return $this->hasOne(NewsletterSubscription::class);
+    }
 }

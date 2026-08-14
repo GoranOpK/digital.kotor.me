@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -72,6 +73,19 @@ class CulturalOrganizer extends Model
     public function moderatorRequests(): HasMany
     {
         return $this->hasMany(CulturalModeratorRequest::class, 'organizer_id');
+    }
+
+    /**
+     * NL-01 — selektivne Newsletter preference. Deaktivacija Organizatora ne briše pivot.
+     */
+    public function newsletterSubscriptions(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            NewsletterSubscription::class,
+            'newsletter_subscription_organizers',
+            'cultural_organizer_id',
+            'newsletter_subscription_id'
+        )->withTimestamps();
     }
 
     public function scopeActive(Builder $query): Builder
