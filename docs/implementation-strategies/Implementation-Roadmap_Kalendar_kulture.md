@@ -7,7 +7,7 @@
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active  
-**Verzija:** 1.0.12
+**Verzija:** 1.0.13
 **Datum:** 2026-08-14
 
 ---
@@ -29,6 +29,7 @@
 | 1.0.10 | 2026-08-13 | **Phase B1+B2 status sync:** flag + dual-read + legacy CRUD runtime **REMOVED** (canonical-only public read). **B3** `cultural_events` DROP = **OPEN / DEFERRED**. **IMPLEMENTED / TESTED (local); NOT PRODUCTION VERIFIED.** FAZA 7 (TS-011) ostaje naredna velika faza. Bez izmjene BM/FS. |
 | 1.0.11 | 2026-08-13 | **FAZA 6A FINAL DOCUMENTATION CLOSURE:** FAZA 6A = **CLOSED**; B1+B2 = **PRODUCTION VERIFIED / CLOSED**; categories **14/14 PASS**; public SSOT canonical-only; dual-read/write = 0; B3 DROP = **DEFERRED / non-blocking**; FAZA 7 ostaje naredna. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 1.0.12 | 2026-08-14 | **PO-NL-01…22 / Newsletter decision sync:** FAZA 7 cilj = kanonski TS-011 v1.0.2; postojeći Newsletter = testna implementacija; **bez** migracije testnih pretplatnika / e-mail-only backfill-a; CANONICAL MODEL WINS. Usklađeno sa BM PATCH-073 / FS PATCH-FS-072. Bez izmjene implementacije. |
+| 1.0.13 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary:** FAZA 7 cilj = kanonski TS-011 v1.0.3. NL-03 = FIRST_INCLUDE ELIGIBILITY / CANDIDATE FOUNDATION (bez ledger write, bez e-maila, bez queue/scheduler). Usklađeno sa BM PATCH-074 / FS PATCH-FS-073. Bez izmjene implementacije. |
 
 ---
 
@@ -177,7 +178,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | Održavanja 1..N | Nema | Faza 3 |
 | Manifestacije | **PRODUCTION ACCEPTED** (6B-01…6B-04 + PO-MF-WF; deployed) | **FAZA 4 / 6B FORMALLY CLOSED**; migracije RAN; `cultural_manifestations` = 0 redova; cleanup N/A |
 | Katalozi lokacija / kategorija / medija | Nema / ENUM | Faza 1 |
-| Newsletter (sedmični cron; testna implementacija) | Postoji | Zamjena kanonskim modelom u Fazi 7 (TS-011 v1.0.2); **bez** migracije testnih pretplatnika (**PO-NL-22**) |
+| Newsletter (sedmični cron; testna implementacija) | Postoji | Zamjena kanonskim modelom u Fazi 7 (TS-011 v1.0.3); **bez** migracije testnih pretplatnika (**PO-NL-22**) |
 | Centralni audit (FT-003) | Nema | **Faza 8** (TS-012) — ne ranije |
 
 ---
@@ -354,11 +355,12 @@ analiza → implementacija → test → review → merge → deploy
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Zamjena testnog sedmičnog digest-a kanonskim modelom TS-011 v1.0.2 |
+| **Cilj** | Zamjena testnog sedmičnog digest-a kanonskim modelom TS-011 v1.0.3 |
 | **Moduli** | TS-011 |
+| **NL-03** | FIRST_INCLUDE ELIGIBILITY / CANDIDATE FOUNDATION. **IN:** Event eligibility; Subscription/User delivery eligibility; scope matching; Organizer matching; „Bez organizatora“; temporal eligibility; exclusion ako postoji successfully-delivered first_include ledger. **OUT:** ledger write; e-mail delivery; queue; scheduler; priority / cancellation / postponement notifications; pending/candidate tabela |
 | **Migracija** | Velika schema/domen pretplate (jedan deployment); **PO-NL-22:** **bez** migracije/backfill-a postojećih testnih pretplatnika; CANONICAL MODEL WINS |
-| **Rizici** | Dupla slanja; kontradiktorne poruke; paralelni stari weekly command ako se ne ugasi pri cutover-u |
-| **Rezultat** | Event-driven newsletter na `User` pretplati; opseg „Svi događaji“ / „Odabrani organizatori“ / „Bez organizatora“ |
+| **Rizici** | Dupla slanja; kontradiktorne poruke; paralelni stari weekly command ako se ne ugasi pri cutover-u; nedostatak canonical first-publication timestamp i preference effective-time za NL-03 query |
+| **Rezultat** | Event-driven newsletter na `User` pretplati; opseg „Svi događaji“ / „Odabrani organizatori“ / „Bez organizatora“; first_include ledger samo nakon uspješne isporuke |
 | **Zatim** | Stabilizacija |
 
 ### FAZA 8 — Evidencija aktivnosti (TS-012)

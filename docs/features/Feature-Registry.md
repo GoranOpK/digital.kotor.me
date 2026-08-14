@@ -342,9 +342,10 @@ Povezana dokumentacija (Javni portal):
 
 Povezana dokumentacija (Newsletter):
 
-* Business Model — BM-13 (BM-NL-01–BM-NL-44), PATCH-031–PATCH-033, **PATCH-073 / PO-NL-01…22**; usklađenost sa PATCH-053 / PO-DG-07 (G-NL-08 zatvoren)
-* Functional Specification — §5.15 (BR-138–BR-169, BR-328–BR-344), PATCH-FS-032–PATCH-FS-034, **PATCH-FS-072**; §5.16 katalog Newsletter (BR-184–BR-186)
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Newsletter.md` (TS-011; verzija **1.0.2**; USVOJEN)
+* Business Model — BM-13 (BM-NL-01–BM-NL-47), PATCH-031–PATCH-033, **PATCH-073 / PO-NL-01…22**, **PATCH-074**; usklađenost sa PATCH-053 / PO-DG-07 (G-NL-08 zatvoren)
+* Functional Specification — §5.15 (BR-138–BR-169, BR-328–BR-348), PATCH-FS-032–PATCH-FS-034, **PATCH-FS-072**, **PATCH-FS-073**; §5.16 katalog Newsletter (BR-184–BR-186)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Newsletter.md` (TS-011; verzija **1.0.3**; USVOJEN)
+* **NL-03** = FIRST_INCLUDE ELIGIBILITY / CANDIDATE FOUNDATION. IN: Event eligibility; Subscription/User delivery eligibility; scope matching; Organizer matching; „Bez organizatora“; temporal eligibility; exclusion ako postoji successfully-delivered first_include ledger. OUT: ledger write; e-mail delivery; queue; scheduler; priority / cancellation / postponement notifications. **DOCUMENTED / NOT IMPLEMENTED.**
 
 Povezana dokumentacija (Urednički portal):
 
@@ -388,7 +389,7 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-008 | Mediji | FT-001 | Kalendar kulture | Usvojen (v0.1.0) |
 | TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.19); **FAZA 6A CLOSED**; 6B PRODUCTION ACCEPTED; Package A CLOSED; Phase B1+B2 PRODUCTION VERIFIED / CLOSED; B3 DEFERRED |
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.11) — V1 + PATCH-063; MOD-UX-01 Alpine-free nav CURRENT STATE; PATCH-064 nije TS-010 scope (portal = TS-009) |
-| TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.2) |
+| TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.3) |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.1) — implementacija emit/storage = Roadmap **Faza 8** |
 
 ---
@@ -651,5 +652,6 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-13 | FT-001 — **DOC-SYNC-TS010 (Alpine-free Moderator nav CURRENT STATE):** TS-010 → **v1.0.11** — **Moderiranje** = hub `<a>` (ne Alpine dropdown); `128×38`; hamburger inline vanilla JS; runtime bez Alpine dependency. Feature Registry status/version sync only. RG-001 / BM / FS / IR-001 / TS-001 / TS-005 KEEP. Bez izmjene implementacije. |
 | 2026-08-13 | FT-001 — **FAZA 6A FINAL DOCUMENTATION CLOSURE:** FAZA 6A = **CLOSED**; B1+B2 = **PRODUCTION VERIFIED / CLOSED**; production categories **14/14 PASS**; public SSOT canonical-only; dual-read/write = 0; P0/P1 = 0; implementation remaining **NONE**. IS-001 → v1.0.8; IR-001 → v1.0.11. TS-009 / BM / FS / TS-003 / TS-007 / RG-001 KEEP. B3 DROP = DEFERRED / non-blocking. 6B OUT OF SCOPE for this closure. Bez izmjene implementacije. |
 | 2026-08-14 | FT-001 — **PO-NL-01…PO-NL-22 Newsletter decision sync:** dobrovoljna pretplata; jedna pretplata po `User`; režimi opsega; „Bez organizatora“; bez confirmation e-maila; testna legacy implementacija bez migracije pretplatnika. BM PATCH-073 (BM-NL-26–BM-NL-44); FS PATCH-FS-072 (BR-328–BR-344); TS-011 → **v1.0.2**; IR-001 → v1.0.12. RG-001 KEEP (PO-NL nisu nove RG skraćenice). **ADOPTED / DOCUMENTED / IMPLEMENTATION NOT STARTED.** Bez izmjene koda. |
+| 2026-08-14 | FT-001 — **NL-03 temporal eligibility + ledger boundary:** prva pretplata i reaktivacija nijesu retroaktivne; candidate ≠ dostava; first_include ledger = samo uspješna isporuka; NL-03 = eligibility/candidate foundation (bez ledger write / bez e-maila). BM PATCH-074 (BM-NL-45–BM-NL-47); FS PATCH-FS-073 (BR-345–BR-348); TS-011 → **v1.0.3**; IR-001 → v1.0.13. RG-001 KEEP. IS-001 KEEP. **ADOPTED / DOCUMENTED / NL-03 IMPLEMENTATION NOT STARTED.** Bez izmjene koda. |
 | 2026-08-13 | FT-001 — **FR cross-reference cleanup:** CURRENT STATE pin IS-001 **1.0.7 → 1.0.8** (usklađeno sa `Implementation-Strategy_Javni_portal.md`). FAZA 6A/6B CLOSED KEEP; TS-009 v1.0.19 KEEP; IR-001 v1.0.11 KEEP. Bez izmjene implementacije. |
 | 2026-08-10 | FT-001 — **PHASE 6A-CLOSE-02:** legacy admin CRUD `cultural-events.*` disabled (middleware `legacy_cultural_events_disabled` → 403 all methods). Legacy code/table/views retained; `CULTURAL_PUBLIC_READ_SOURCE` + public legacy read rollback retained; canonical routes unchanged. **Nije** hard remove / flag cleanup (Phase B). |

@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Newsletter  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** USVOJEN  
-**Verzija:** 1.0.2
+**Verzija:** 1.0.3
 **Datum:** 2026-08-14
 
 ---
@@ -19,6 +19,7 @@
 | 1.0.0 | 2026-08-07 | Prvi nacrt Technical Specification za funkcionalnu cjelinu Newsletter. Usklađen sa BM-13 (BM-NL-01–BM-NL-25), BM-GL-19, FS §5.15 (BR-138–BR-169), FS §5.16 katalog Newsletter (BR-184–BR-186), TS-003 v0.1.2, TS-004, TS-009, TS-010 v1.0.1, Feature Registry (FT-001), METHODOLOGY. Uvažava PO-DG-07 / PATCH-053: Otkazan terminalan; nema republish logike; G-NL-08 zatvoren. Tehnički predlozi (model podataka, obrada zadataka, raspored automatske obrade, evidencija dostave) bez novih poslovnih pravila. Bez izmjene BM/FS/ostalih TS. Bez izmjene implementacije. |
 | 1.0.1 | 2026-08-07 | Završni PATCH nacrta prije validation-a: usvojena crnogorska terminologija; Pravila emitovanja okidača; Promjena na čekanju kao normativni dio prioritetnog toka; Evidencija dostavljenih Newsletter poruka (jedan Identitet pretplatnika); Kontrolni zapis promjene; cjelovito evidentiranje dostave; Arhitektura obrade Newsletter zadataka (obrada u grupama, raspodjela, pokazivač, skaliranje, ograničenje brzine); Raspored automatske obrade; Audit događaji; legacy PRAVILO 5.3.1–5.3.4; Van obuhvata PRAVILO 5.4.1–5.4.2. Bez novih BM/FS odluka. Bez izmjene drugih dokumenata. |
 | 1.0.2 | 2026-08-14 | **PO-NL-01…PO-NL-22 / BM PATCH-073 / FS PATCH-FS-072:** tehnički ugovor pretplate na `User`; jedna pretplata; `User.email` kao adresa isporuke (nije Newsletter SSOT); režimi `all_events` / `selected_organizers`; „Bez organizatora“; validan izbor; bez confirmation e-mail polja; odjava čisti aktivne preference; deaktivirani Organizator KEEP veze; cascade pri brisanju `User`; delivery eligibility; Manifestacija nije dimenzija pretplate; testni legacy bez backfill-a pretplatnika. Uklonjene stale CURRENT oznake „DRAFT“ / „Nacrt“ iz zaglavlja i statusa poglavlja (istorija verzija 1.0.0/1.0.1 KEEP). Bez izmjene implementacije. |
+| 1.0.3 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary / BM PATCH-074 / FS PATCH-FS-073:** `subscribed_at` = trenutna activation boundary; prva pretplata i reaktivacija nijesu retroaktivne; preference/širenje opsega nijesu retroaktivni; candidate ≠ queued/sent/delivered; `first_include` ledger row samo nakon uspješne isporuke; NL-03 ne piše ledger i ne šalje e-mail. Dokumentovan P1 gap: kanonski timestamp prve objave Event-a i preference effective-time. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -35,6 +36,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.0 | 2026-08-07 | Kreiran TS-011 (NACRT). Kompletna tehnička specifikacija Newslettera. |
 | 1.0.1 | 2026-08-07 | Završni PATCH: terminologija; okidači; Promjena na čekanju; Evidencija dostave; Kontrolni zapis promjene; cjelovita dostava; obrada zadataka; raspored; audit; legacy 5.3.1–5.3.4; van obuhvata 5.4.1–5.4.2. |
 | 1.0.2 | 2026-08-14 | PO-NL-01…22: pretplata na `User`; režimi opsega; „Bez organizatora“; delivery eligibility; bez confirmation e-mail polja; testni legacy bez migracije pretplatnika; cleanup stale DRAFT/Nacrt CURRENT oznaka. |
+| 1.0.3 | 2026-08-14 | Temporal eligibility; candidate vs delivery evidence; NL-03 = eligibility/candidate foundation (bez ledger write / bez e-maila); `subscribed_at` kao activation boundary; P1 timestamp gap dokumentovan. |
 
 ---
 
@@ -55,8 +57,8 @@ Dokument:
 
 Izvori istine za poslovna pravila:
 
-* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-13 BM-NL-01–BM-NL-44; BM-GL-19; BM-GL-27; BM PATCH-031–033; PATCH-073 / PO-NL-01…22; usklađenost sa PATCH-053 / PO-DG-07)
-* `docs/functional-specifications/Functional-Specification.md` (§5.15 BR-138–BR-169, BR-328–BR-344; §5.16 katalog Newsletter / BR-184–BR-186; PATCH-FS-031–034; PATCH-FS-072; usklađenost sa PATCH-FS-053)
+* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-13 BM-NL-01–BM-NL-47; BM-GL-19; BM-GL-27; BM PATCH-031–033; PATCH-073 / PO-NL-01…22; PATCH-074; usklađenost sa PATCH-053 / PO-DG-07)
+* `docs/functional-specifications/Functional-Specification.md` (§5.15 BR-138–BR-169, BR-328–BR-348; §5.16 katalog Newsletter / BR-184–BR-186; PATCH-FS-031–034; PATCH-FS-072; PATCH-FS-073; usklađenost sa PATCH-FS-053)
 * `docs/features/Feature-Registry.md` (FT-001 — Newsletter)
 * `docs/METHODOLOGY.md` (M-TS-001–M-TS-005)
 * `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 v0.1.2)
@@ -119,12 +121,12 @@ Izvori istine za poslovna pravila:
 Izvori
 
 Business Model:
-- BM-NL-01–BM-NL-44
+- BM-NL-01–BM-NL-47
 - BM-GL-19
 - BM-GL-27
 
 Functional Specification:
-- §5.15 (BR-138–BR-169, BR-328–BR-344)
+- §5.15 (BR-138–BR-169, BR-328–BR-348)
 - §5.16 katalog Newsletter (BR-184–BR-186)
 
 ## 1.1 Svrha funkcionalne cjeline
@@ -231,7 +233,7 @@ TS-009 obezbjeđuje UI površinu za pretplatu / odjavu / izbor Organizatora na j
 2. **Automatski sadržaj** — Sistem bira događaje; nema ručnog izbora (BR-146).
 3. **Dva kanala isporuke** — redovni (periodična agregacija novoobjavljenih) i prioritetni (blagovremena promjena).
 4. **Jedan e-mail po pretplatniku po ciklusu** — objedinjavanje po pravilima BM-NL-06 / BR-153; prioritetna mogu biti objedinjena uz blagovremenost (BM-NL-24).
-5. **Evidencija dostavljenih Newsletter poruka je izvor istine o „već dostavljeno"** — bez nje nema pouzdane zaštite od duplikata.
+5. **Evidencija dostavljenih Newsletter poruka je izvor istine o „već dostavljeno“** — upisuje se samo nakon uspješne e-mail isporuke. Nije registracija kandidata, nije pending i nije pre-send reservation.
 6. **Posljednje važeće stanje** — poruka odražava stanje u trenutku pripreme, ne istoriju međukoraka (BM-NL-22/23).
 7. **Bez kontradiktornih poruka** u istom ciklusu pripreme (BM-NL-25).
 8. **Nezavisnost** — pretplata ne utiče na prava ni statuse događaja.
@@ -302,7 +304,8 @@ U skladu sa BM-NL-27–BM-NL-29 i BR-142, BR-329–BR-330:
 * Režim `selected_organizers` („Odabrani organizatori“): pivot/relacija prema `CulturalOrganizer` za izabrane Organizatore **i/ili** eksplicitna preferenca `include_without_organizer` („Bez organizatora“).
 * Prazan selektivni izbor **nije** validan i **nije** ekvivalent „Svi događaji“.
 * Izbor je **isključivo filter sadržaja**.
-* Novi izbor važi od uspješnog čuvanja nadalje; nema retroaktivnog slanja (BM-NL-33, BR-341).
+* Novi izbor važi od uspješnog čuvanja nadalje. Promjena preference **ne proizvodi** retroaktivni `first_include` (BM-NL-33, BM-NL-34, BR-341, BR-346).
+* Ako korisnik tek od čuvanja počne pratiti Organizatora, uključi „Bez organizatora“ ili pređe na `all_events`, ranije objavljeni Događaji koji nijesu pripadali prethodnom izboru **ne** postaju `first_include` kandidati.
 * Promjena režima briše aktivne preference prethodnog režima; ne vraća automatski raniji selektivni izbor (BM-NL-34, BR-334).
 
 ## 6.3 „Bez organizatora“
@@ -340,7 +343,9 @@ Postojanje kandidata za slanje **nije** dio definicije aktivne pretplate.
 * Koristi se postojeći zapis pretplate (BM-NL-36, BR-335).
 * Prethodne preference se **ne** vraćaju.
 * Korisnik mora napraviti novi kompletan validan izbor, kao kod prve pretplate.
-* Reaktivacija **ne** zahtijeva retroaktivno slanje ranije objavljenih događaja.
+* Reaktivacija **ne proizvodi** retroaktivni `first_include` (BM-NL-46, BR-347). Događaj objavljen prije trenutka reaktivacije nije `first_include` kandidat zbog reaktivacije.
+* Reaktivacija postavlja novu vremensku granicu: `subscribed_at` se postavlja na trenutak reaktivacije i postaje trenutna activation boundary za buduću eligibility.
+* Formulacija „ne zahtijeva retroaktivno slanje“ **nije** dovoljna: retroaktivni `first_include` nije dozvoljen.
 
 ## 6.7 Potvrda aktivacije
 
@@ -366,6 +371,27 @@ Postojanje kandidata za slanje **nije** dio definicije aktivne pretplate.
 * Deaktivacija naloga: nije odjava; pretplata i preference ostaju; isporuka blokirana.
 * Trajno brisanje `User`: cascade uklanja pretplatu, aktivne preference i veze prema Organizatorima. Nema orphan pretplate.
 
+## 6.11 Vremenska eligibility (first_include)
+
+Za `first_include` eligibility:
+
+* `subscribed_at` je **trenutna activation boundary** (prva aktivacija i svaka reaktivacija). Ne uvodi se `activated_at` / `reactivated_at`.
+* Ako je trenutak relevantne prve objave Event-a **prije** trenutne activation boundary → Event **nije** `first_include` kandidat za tu pretplatu. Event se ne briše; to je recipient eligibility.
+* Ako je trenutak relevantne prve objave Event-a **≥** trenutne activation boundary → Event **može** biti kandidat ako ispunjava ostale uslove.
+* Preference i širenje opsega važe od uspješnog čuvanja nadalje (§6.2). Ne uvodi se `preference_effective_at` u ovom ugovoru.
+* **NL-03 TECHNICAL IMPLEMENTATION QUESTION:** postojeći model nema pouzdan per-preference timestamp za query „kada je ova preferenca postala efektivna“. Poslovno pravilo ostaje; tehnički datum se ne izmišlja ovdje. Vidi §25.
+
+### Matrica: nema retroaktivnog first_include
+
+| Scenario | Raniji Event postaje first_include kandidat? |
+|----------|-----------------------------------------------|
+| Prva pretplata nakon objave Event-a | NE |
+| Organizator dodat nakon objave Event-a | NE |
+| „Bez organizatora“ uključeno nakon objave | NE |
+| `selected_organizers` → `all_events` nakon objave | NE |
+| Reaktivacija nakon objave | NE |
+| Event objavljen nakon trenutne granice aktivacije / čuvanja preferenci i ostali uslovi PASS | DA |
+
 ---
 
 # 7. Model podataka
@@ -381,7 +407,7 @@ Konceptualni model (bez SQL / migracija). Imena su predlog za implementaciju. Sv
 | `status` aktivna \| odjavljena | KEEP | BM-NL-12, BM-NL-35 |
 | `scope_mode` `all_events` \| `selected_organizers` | CHANGE (umjesto `all_organizers`) | BM-NL-27, BR-142 |
 | `include_without_organizer` | KEEP (novo, samo uz selektivni režim) | BM-NL-28, BM-NL-29; u `all_events` je implicitno obuhvaćeno dinamičkim opsegom i **ne** zahtijeva zasebno čuvanje kao aktivnu selektivnu preferencu |
-| `subscribed_at` | KEEP | Vrijeme posljednje aktivacije / reaktivacije |
+| `subscribed_at` | KEEP | Trenutna activation boundary: vrijeme posljednje aktivacije / reaktivacije. Koristi se za first_include temporal eligibility (BM-NL-45, BM-NL-46). |
 | `unsubscribed_at` | KEEP | Vrijeme odjave (nullable) |
 | `first_activated_at` | REMOVE | Bilo vezano za confirmation e-mail; nema kanonske potrebe (BM-NL-43) |
 | `confirmation_sent_at` | REMOVE | Nema confirmation e-maila (BM-NL-15, BM-NL-43, BR-156) |
@@ -503,8 +529,8 @@ Invariant:
 
 * odjava ne briše Evidenciju dostavljenih Newsletter poruka;
 * odjava briše aktivne preference;
-* izmjena preferenci ne briše Evidenciju dostave i ne šalje retroaktivno stare događaje;
-* reaktivacija ne vraća stare preference.
+* izmjena preferenci ne briše Evidenciju dostave i ne proizvodi retroaktivni `first_include`;
+* reaktivacija ne vraća stare preference i ne proizvodi retroaktivni `first_include`.
 
 # 9. Lifecycle Newsletter poruke
 
@@ -543,19 +569,39 @@ Emitovanje okidača → Upsert Promjene na čekanju (posljednje stanje)
 
 # 10. Kandidati za slanje
 
+## 10.0 Candidate / eligibility vs delivery evidence
+
+Sistem razlikuje:
+
+**A. CANDIDATE / ELIGIBILITY**
+
+Event je `first_include` kandidat ako u trenutku razrješavanja ispunjava uslove da bude razmatran za prvo uključivanje u narednom redovnom ciklusu.
+
+Kandidat **nije**: queued, sent, delivered. Kandidat **nije** ledger red. NL-03 **ne** kreira `first_include` ledger zapis, **ne** postavlja `sent_at`, **ne** šalje e-mail i **ne** uvodi pending/registered/candidate tabelu.
+
+**B. DELIVERY EVIDENCE**
+
+`first_include` red u Evidenciji dostavljenih Newsletter poruka nastaje **samo** nakon uspješne e-mail isporuke (§13). `sent_at` = vrijeme uspješne isporuke.
+
+Ledger služi za istorijsku evidenciju i deduplikaciju budućih `first_include` slanja. Ne služi za candidate registration, pending state ni pre-send reservation, osim ako kasniji delivery design eksplicitno uvede zaseban ugovor.
+
 ## 10.1 Kandidat za prvo uključivanje
 
-Događaj je kandidat ako **istovremeno**:
+Event može biti `first_include` kandidat samo ako **istovremeno**:
 
-1. status = **Objavljen** (BM-NL-09, BR-147);
-2. javno dostupan po pravilima portala;
-3. ima ≥ 1 buduće održavanje u trenutku pripreme (BM-NL-10);
-4. odgovara izboru Organizatora pretplatnika;
-5. ne postoji zapis `first_include` u Evidenciji dostavljenih Newsletter poruka za (Identitet pretplatnika, događaj).
+1. Event ispunjava kanonske Event uslove: status = **Objavljen**; javno dostupan po pravilima portala; ≥ 1 buduće relevantno održavanje u trenutku pripreme (BM-NL-09, BM-NL-10, BR-147);
+2. pretplata / `User` imaju dozvoljenu isporuku (§6.4): pretplata aktivna; `User` aktivan; aktuelni `User.email` verifikovan;
+3. Event odgovara trenutnom opsegu pretplate (`all_events` ili selektivni izbor, uključujući „Bez organizatora“); neaktivni Organizator nije aktivan izvor;
+4. temporal eligibility PASS (§6.11): trenutak relevantne prve objave Event-a nije prije trenutne activation boundary (`subscribed_at`) niti prije trenutka od kojeg važi relevantna preferenca;
+5. za pretplatu + Event **ne postoji** prethodno uspješno dostavljen `first_include` ledger zapis.
+
+Postojanje `first_include` ledger zapisa = ALREADY DELIVERED → **nije** kandidat.
+
+Nepostojanje ledger zapisa samo po sebi **ne** znači da je Event kandidat.
 
 **Nisu** kandidati za prvo uključivanje: Nacrt, Na odobrenju, Arhiviran, **Otkazan**.
 
-Napomena (BR-114 vs BR-147): javni portal može prikazati otkazane događaje; to **ne** proširuje prvo uključivanje. Prioritetno obavještenje o otkazu je zaseban tip.
+Napomena (BR-114 vs BR-147): javni portal može prikazati otkazane događaje; to **ne** proširuje prvo uključivanje. Prioritetno obavještenje o otkazu je zaseban tip i **nije** dio NL-03.
 
 ## 10.2 Kandidat za prioritetno obavještenje
 
@@ -594,7 +640,7 @@ Objedinjeni e-mail o novoobjavljenim događajima koji odgovaraju aktivnim pretpl
 
 ## 11.3 Odnos prema vremenu objave
 
-Događaj ne mora biti poslat u trenutku objave; postaje kandidat za naredni redovni ciklus (BM-NL-09).
+Događaj ne mora biti poslat u trenutku objave; postaje kandidat za naredni redovni ciklus samo ako ispunjava §10.1, uključujući temporal eligibility. „Još nije poslat” ne čini Event automatski kandidatom.
 
 ---
 
@@ -649,9 +695,11 @@ Nije centralna Evidencija aktivnosti (TS-012). Nije tehnički log platforme za e
 
 ## 13.2 Prvo uključivanje i zaštita od duplikata
 
-* Upis `entry_type = first_include` **tek nakon uspješne isporuke** e-maila, u okviru **cjelovite** operacije (§13.3).
+* Upis `entry_type = first_include` **tek nakon uspješne isporuke** e-maila, u okviru **cjelovite** operacije (§13.3). NL-03 **ne** piše ovaj red.
+* `sent_at` = vrijeme uspješne isporuke. Ne postavlja se pri eligibility.
 * Ključ: (Identitet pretplatnika, događaj, first_include).
 * Sprečava ponovno slanje istog događaja kao novoobjavljenog pri narednim ciklusima (BM-NL-11, BR-158).
+* Ledger **nije** candidate registration / pending / pre-send reservation.
 
 | Pravilo | Mehanizam |
 |---------|-----------|
@@ -692,7 +740,8 @@ Tehnička realizacija (transakcija, outbox i sl.) je implementacioni detalj unut
 ## 13.6 Odjava i Evidencija
 
 * Evidencija se ne briše pri odjavi.
-* Pri reaktivaciji ne re-šalju se `first_include` stavke za već zabilježene događaje (tehnički predlog usklađen sa BM-NL-11 / BM-NL-18).
+* Pri reaktivaciji ne re-šalju se `first_include` stavke za već zabilježene događaje (BM-NL-11 / BM-NL-18).
+* Reaktivacija **takođe** ne proizvodi `first_include` kandidate za Event-e objavljene prije novog `subscribed_at`, čak i ako ledger red ne postoji (BM-NL-46).
 
 ---
 
@@ -808,7 +857,7 @@ Obavezno:
 | V-NL-02 | U selektivnom režimu Organizator u selekciji mora postojati | Izbor Organizatora |
 | V-NL-03 | Ne aktivirati duplu pretplatu za isti `User`; reaktivacija koristi isti zapis | Aktivacija / reaktivacija |
 | V-NL-04 | Token odjave mora biti validan i aktivan | Odjava iz e-maila |
-| V-NL-05 | Kandidat first_include: status Objavljen + budući termin | Redovni resolve |
+| V-NL-05 | Kandidat first_include: Objavljen + javno vidljiv + budući termin + opseg + temporal eligibility + nema uspješno dostavljen first_include ledger | Redovni resolve |
 | V-NL-06 | Kandidat priority: postoji first_include + dozvoljena vrsta promjene | Prioritetni resolve |
 | V-NL-07 | Poruka mora sadržati link odjave | Sastavljanje |
 | V-NL-08 | Prazan sadržaj → skip | Sastavljanje |
@@ -816,6 +865,7 @@ Obavezno:
 | V-NL-10 | Prazan selektivni izbor se ne čuva i nije odjava | Čuvanje preferenci |
 | V-NL-11 | Odjava UI zahtijeva jednostavnu potvrdu | Odjava |
 | V-NL-12 | Dozvoljena isporuka: aktivan `User` + verifikovan `User.email` | Slanje |
+| V-NL-13 | Temporal eligibility: Event publication ≥ current activation / relevant preference boundary | Redovni first_include resolve |
 
 ---
 
@@ -826,7 +876,7 @@ Redoslijed guard-ova pri slanju (po pretplatniku):
 1. Pretplata aktivna.
 2. Dozvoljena isporuka: `User` aktivan i aktuelni e-mail verifikovan.
 3. Filter opsega (`all_events` ili selektivni izbor uključujući „Bez organizatora“); neaktivni Organizator nije aktivan izvor.
-4. Za redovni: nema `first_include`; događaj još Objavljen + budući termin.
+4. Za redovni: Event ispunjava §10.1 (uključujući temporal eligibility); nema uspješno dostavljen `first_include`.
 5. Za prioritetni: postoji `first_include`; nema isti Kontrolni zapis promjene; efektivno stanje nije zamijenjeno novijim.
 6. Non-empty payload.
 7. Uspješan send → cjelovita Evidencija dostave → Audit događaj.
@@ -930,18 +980,18 @@ Organizator i Moderator **nemaju** uvid u identitet pretplatnika (BR-143).
 | §3 Principi | BM-NL-06–13, BM-NL-22–25, BM-NL-42; PATCH-053 | BR-147–158, BR-166–169, BR-149 | FT-001 | TS-003 |
 | §4 Komponente | BM-NL-07 | BR-148, BR-163 | FT-001 | — |
 | §5 Okidači | BM-NL-09, BM-NL-14, BM-NL-17; BM-DG-09 | BR-147, BR-159–160, BR-064 | FT-001 | TS-003, TS-004, TS-010 |
-| §6 Pretplata | BM-NL-04, BM-NL-05, BM-NL-12, BM-NL-15, BM-NL-26–BM-NL-44 | BR-139–143, BR-149, BR-154–156, BR-328–BR-344 | FT-001 | TS-001, TS-009 |
+| §6 Pretplata | BM-NL-04, BM-NL-05, BM-NL-12, BM-NL-15, BM-NL-26–BM-NL-47 | BR-139–143, BR-149, BR-154–156, BR-328–BR-348 | FT-001 | TS-001, TS-009 |
 | §7 Model podataka | BM-NL-04, BM-NL-26–BM-NL-29, BM-NL-39, BM-NL-41 | BR-142, BR-328–BR-330, BR-338, BR-340 | FT-001 | TS-001 |
-| §8 Lifecycle pretplate | BM-NL-04, BM-NL-05, BM-NL-35, BM-NL-36, BM-NL-42 | BR-141, BR-154, BR-335 | FT-001 | — |
+| §8 Lifecycle pretplate | BM-NL-04, BM-NL-05, BM-NL-35, BM-NL-36, BM-NL-42, BM-NL-45–BM-NL-46 | BR-141, BR-154, BR-335, BR-345–BR-347 | FT-001 | — |
 | §9 Lifecycle poruke | BM-NL-07, BM-NL-20 | BR-148, BR-163 | FT-001 | — |
-| §10 Kandidati | BM-NL-09–11, BM-NL-14, BM-NL-17–18 | BR-147, BR-158–161 | FT-001 | TS-003, TS-004 |
+| §10 Kandidati | BM-NL-09–11, BM-NL-14, BM-NL-17–18, BM-NL-33–34, BM-NL-45–BM-NL-47 | BR-147, BR-158–161, BR-341, BR-345–BR-348 | FT-001 | TS-003, TS-004 |
 | §11 Redovni | BM-NL-06, BM-NL-07, BM-NL-13 | BR-148–153, BR-150 | FT-001 | TS-009 |
 | §12 Prioritetni | BM-NL-17–25; BM-DG-09 | BR-160–169; BR-064 | FT-001 | TS-003, TS-004, TS-010 |
-| §13 Evidencija dostave | BM-NL-11, BM-NL-18, BM-NL-21–25 | BR-158, BR-161, BR-164, BR-166–169 | FT-001 | — |
+| §13 Evidencija dostave | BM-NL-11, BM-NL-18, BM-NL-21–25, BM-NL-47 | BR-158, BR-161, BR-164, BR-166–169, BR-348 | FT-001 | — |
 | §14 Promjena na čekanju | BM-NL-22–25 | BR-166–169 | FT-001 | — |
 | §15 Obrada zadataka | BM-NL-07 | BR-148, BR-163 | FT-001 | — |
 | §16 Raspored | BM-NL-07, BM-NL-16 | BR-148, BR-157 | FT-001 | — |
-| §17 Validacije | BM-NL-* | BR-139–169, BR-328–BR-344 | FT-001 | — |
+| §17 Validacije | BM-NL-* | BR-139–169, BR-328–BR-348 | FT-001 | — |
 | §18 Guard | BM-NL-09–13, BM-NL-42, BM-DG-09 | BR-147–150, BR-064 | FT-001 | TS-003 |
 | §19–20 Error / Ponovni pokušaj | — | BR-186 | FT-001 | — |
 | §21 Audit događaji | — | BR-184–186 | FT-001 / FT-003 | TS-012 |
@@ -982,6 +1032,10 @@ AC-NL-24 · „Bez organizatora“ uključuje Događaje bez veze na `CulturalOrg
 AC-NL-25 · Deaktivirani Organizator ne briše preferencu; nije aktivan izvor dok je neaktivan.
 AC-NL-26 · Manifestacija nije dimenzija pretplate u V1.
 AC-NL-27 · Jedan `User` — jedna pretplata; reaktivacija ne kreira novi zapis i ne vraća stare preference.
+AC-NL-28 · Prva pretplata i reaktivacija ne proizvode retroaktivni first_include; `subscribed_at` je trenutna activation boundary.
+AC-NL-29 · Promjena preferenci, dodavanje Organizatora, „Bez organizatora“ i selected → all ne pretvaraju ranije objavljene Event-e u first_include kandidate.
+AC-NL-30 · first_include ledger red nastaje samo nakon uspješne e-mail isporuke; `sent_at` = vrijeme uspješne isporuke; NL-03 ne piše ledger i ne šalje e-mail.
+AC-NL-31 · Kandidat ≠ queued/sent/delivered; nepostojanje ledger zapisa samo po sebi ne čini Event kandidatom.
 
 ---
 
@@ -999,6 +1053,11 @@ AC-NL-27 · Jedan `User` — jedna pretplata; reaktivacija ne kreira novi zapis 
 10. Pri cutover-u slijediti §26: kanonski model ima prednost; **nema** migracije testnih pretplatnika.
 11. Režim opsega je obavezni V1 (§6.2); `all_events` nije pivot svih Organizatora.
 12. Ne uvoditi polja `confirmation_sent_at` / `first_activated_at` / Newsletter `email` kolonu.
+13. **NL-03 formalni obuhvat = FIRST_INCLUDE ELIGIBILITY / CANDIDATE FOUNDATION.** IN: Event eligibility; Subscription/User delivery eligibility; scope matching; Organizer matching; „Bez organizatora“; temporal eligibility; exclusion ako postoji successfully-delivered first_include ledger. OUT: ledger write; `sent_at`; e-mail delivery; queue; scheduler; priority notifications; cancellation/postponement notifications; pending/candidate tabela.
+14. Ne tretirati `CulturalEventEntry.created_at` / `updated_at` / `first_submitted_at` kao canonical first publication timestamp. `first_submitted_at` je trenutak slanja na odobrenje / može biti postavljen i pri direktnoj objavi; **nije** pouzdan publication time. Manifestacija ima `published_at`; Event **nema** ekvivalent. **NL-03 TECHNICAL GAP — CANONICAL FIRST PUBLICATION TIMESTAMP.**
+15. `subscribed_at` je AVAILABLE activation boundary. Ne uvoditi `activated_at` / `reactivated_at` bez potrebe.
+16. **NL-03 TECHNICAL IMPLEMENTATION QUESTION — preference effective-time:** poslovno pravilo „od čuvanja nadalje“ je usvojeno. Schema nema pouzdan timestamp po pojedinačnoj preferenci (`include_without_organizer`, `scope_mode`, dodavanje Organizatora) koji kasniji query može koristiti bez dvoznacnosti. `newsletter_subscriptions.updated_at` **nije** sigurna granica (mijenja se i pri odjavi/reaktivaciji/bilo kojem čuvanju). Pivot `created_at` na organizer vezi nije dovoljan za cijeli skup pravila. Ne izmišljati `preference_effective_at` u ovom dokumentacionom patchu. NL-03 implementacija mora riješiti tehnički datum **bez** mijenjanja usvojenog poslovnog pravila.
+17. NL-03 ne smije kreirati first_include ledger zapis, postavljati `sent_at`, niti predstavljati kandidat kao poslat.
 
 ---
 

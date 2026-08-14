@@ -92,6 +92,7 @@
 | PATCH-FS-070 | 2026-08-12 | **PO-MF-WF-01–04 / PO-EV-WF-01 / BM PATCH-070:** dva MF toka po porijeklu kreiranja. Usklađeni BR-100, BR-101, BR-190, BR-195, BR-196; dodati BR-321–BR-325. Event: potvrđen backend guard da Entry bez Organizatora ne koristi submit/approval (BR-018 KEEP). Bez novog DB statusa. Verzija ostaje 1.0.0. |
 | PATCH-FS-071 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup / BM PATCH-072:** Urednik može ukloniti odbijeni Org/Mod zahtjev iz redovne liste Zahtjevi (workspace dismiss). BR-055 / BR-073 retention KEEP. Dodati BR-326–BR-327. Verzija ostaje 1.0.0. |
 | PATCH-FS-072 | 2026-08-14 | **PO-NL-01…PO-NL-22 / BM PATCH-073:** Newsletter pretplata, preference, odjava, reaktivacija, `User`/e-mail lifecycle, Manifestacija granica, testni legacy. Usklađeni tokovi §5.15 i BR-140–BR-142, BR-149–BR-150, BR-152, BR-154, BR-156, BR-157; dodati BR-328–BR-344. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
+| PATCH-FS-073 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary / BM PATCH-074:** prva pretplata i reaktivacija nijesu retroaktivne; candidate ≠ dostava; evidencija first_include samo nakon uspješne isporuke. Usklađeni tokovi §5.15 i BR-147, BR-148, BR-158, BR-334, BR-335, BR-341; dodati BR-345–BR-348. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 
 Napomena:
 
@@ -4305,7 +4306,7 @@ Newsletter predstavlja funkcionalnost modula Kalendara kulture namijenjenu infor
 
 Newsletter služi isključivo informisanju o kulturnim događajima i o njihovim poslovno značajnim promjenama u Kalendaru kulture.
 
-Javno objavljivanje događaja predstavlja poslovni okidač za prvo uključivanje događaja u Newsletter. Događaj ne mora biti poslat istog trenutka kada je objavljen; postaje kandidat za naredni odgovarajući Newsletter.
+Javno objavljivanje događaja predstavlja poslovni okidač za prvo uključivanje događaja u Newsletter. Događaj ne mora biti poslat istog trenutka kada je objavljen; postaje kandidat za naredni odgovarajući Newsletter samo ako ispunjava vremensku eligibility (BR-345–BR-347) i ostale uslove. Kandidat nije isto što i evidencija uspješne dostave (BR-348).
 
 Otkazivanje, odlaganje, promjena datuma, vremena ili lokacije održavanja takođe predstavljaju Newsletter okidače. Ta obavještenja šalju se bez nepotrebnog odlaganja kako bi pretplatnici blagovremeno bili informisani.
 
@@ -4351,13 +4352,13 @@ Pretplata na Newsletter nema uticaja na prava korisnika, korisničke uloge, stat
 4. Sistem validira izbor. Prazan ili nevalidan izbor se ne čuva i ne izaziva odjavu; sistem prikazuje grešku u aplikaciji.
 5. Pri promjeni režima sistem tretira izbor kao novi kompletan izbor; prethodne preference drugog režima se ne zadržavaju kao skrivene aktivne preference i ne vraćaju se automatski.
 6. Sistem novi izbor koristi pri budućim Newsletter slanjima.
-7. Izmjena preferenci ne zahtijeva retroaktivno slanje ranije objavljenih događaja.
+7. Izmjena preferenci ne proizvodi retroaktivno prvo uključivanje ranije objavljenih događaja. Novi izbor djeluje ubuduće od trenutka uspješnog čuvanja (BR-341, BR-346).
 8. Sistem prikazuje jasnu poruku o uspješnom čuvanju u aplikaciji. Obavezna servisna e-mail poruka se ne šalje.
 
 ##### Tok pripreme i slanja novoobjavljenih događaja
 
 1. Sistem periodično pokreće provjeru Newsletter sadržaja.
-2. Sistem pronalazi događaje koji su novoobjavljeni od prethodno relevantnog slanja ili još nisu poslati odgovarajućim pretplatnicima.
+2. Sistem razrješava kandidate za prvo uključivanje po paru Događaj + pretplata. Kandidat nije svaki Događaj koji nikada nije poslat. Uslovi: kanonski Event uslovi; pretplata i `User` imaju dozvoljenu isporuku; Događaj odgovara trenutnom opsegu; vremenska eligibility PASS (objava nije prije trenutne granice aktivacije niti prije trenutka od kojeg važi relevantna preferenca); ne postoji uspješno dostavljen zapis prvog uključivanja za taj par. Nepostojanje tog zapisa samo po sebi ne čini Događaj kandidatom.
 3. Sistem zadržava samo događaje sa statusom **Objavljen**.
 4. Sistem zadržava samo događaje sa najmanje jednim budućim terminom.
 5. Sistem pronalazi pretplatnike sa aktivnom pretplatom i dozvoljenom isporukom kojima događaj odgovara prema važećem opsegu preferenci („Svi događaji“ ili „Odabrani organizatori“, uključujući „Bez organizatora“).
@@ -4371,7 +4372,7 @@ Pretplata na Newsletter nema uticaja na prava korisnika, korisničke uloge, stat
 13. Sistem dodaje mogućnost odjave.
 14. Sistem ne šalje poruku pretplatniku bez odgovarajućih događaja.
 15. Sistem šalje jedan objedinjeni Newsletter svakom odgovarajućem pretplatniku.
-16. Sistem funkcionalno evidentira da su uključeni događaji poslati tom pretplatniku kao novoobjavljeni sadržaj kako se ne bi ponovili u narednoj provjeri.
+16. Nakon uspješnog slanja sistem funkcionalno evidentira da su uključeni događaji dostavljeni tom pretplatniku kao novoobjavljeni sadržaj kako se ne bi ponovili u narednoj provjeri. Evidencija se ne upisuje pri samom razrješavanju kandidata.
 
 ##### Tok prioritetnog obavještenja o poslovno značajnoj promjeni
 
@@ -4398,7 +4399,7 @@ Pretplata na Newsletter nema uticaja na prava korisnika, korisničke uloge, stat
 2. Sistem koristi postojeći zapis pretplate; ne kreira novi.
 3. Prethodne preference se ne vraćaju. Nijedan opseg nije unaprijed izabran.
 4. Korisnik pravi novi kompletan izbor prema istim pravilima kao kod prve pretplate i izvršava „Pretplati se“.
-5. Sistem reaktivira pretplatu i prikazuje poruku u aplikaciji.
+5. Sistem reaktivira pretplatu i prikazuje poruku u aplikaciji. Reaktivacija postavlja novu vremensku granicu; ne proizvodi retroaktivno prvo uključivanje (BR-347).
 
 ##### Tok kada nema relevantnog sadržaja
 
@@ -4514,7 +4515,10 @@ Događaj može biti uključen kao novoobjavljeni sadržaj samo ako:
 * javno je dostupan u skladu sa pravilima portala;
 * ima najmanje jedno buduće održavanje u trenutku pripreme Newslettera;
 * odgovara važećem opsegu preferenci konkretnog pretplatnika;
-* prethodno nije već poslat tom pretplatniku kao novoobjavljeni sadržaj.
+* prolazi vremensku eligibility: trenutak relevantne prve objave Događaja nije prije trenutne granice aktivacije pretplate niti prije trenutka od kojeg važi relevantna preferenca (BR-345–BR-347);
+* prethodno nije već uspješno dostavljen tom pretplatniku kao novoobjavljeni sadržaj.
+
+Nepostojanje evidencije dostave samo po sebi ne čini Događaj kandidatom.
 
 Kao novoobjavljeni sadržaj Newsletter ne uključuje događaje u statusima **Nacrt**, **Na odobrenju**, **Arhiviran** niti **Otkazan**.
 
@@ -4528,7 +4532,7 @@ Sistem periodično provjerava da li postoje novoobjavljeni događaji koji odgova
 
 Newsletter nije vezan za fiksni dan u sedmici niti za unaprijed definisanu kalendarsku sedmicu.
 
-Događaj ne mora biti poslat istog trenutka kada je objavljen; postaje kandidat za naredni odgovarajući Newsletter.
+Događaj ne mora biti poslat istog trenutka kada je objavljen; postaje kandidat za naredni odgovarajući Newsletter ako ispunjava sve uslove, uključujući vremensku eligibility. „Još nije poslat” ne znači automatski da je kandidat novom pretplatniku niti nakon reaktivacije ili širenja preferenci.
 
 Više događaja objavljenih u kratkom vremenskom periodu može se objediniti u jednu Newsletter poruku.
 
@@ -4657,7 +4661,9 @@ Za V1 nisu dio opsega Newslettera:
 
 Isti događaj se istom pretplatniku ne šalje ponovo kao novoobjavljeni sadržaj samo zato što sistem ponovo izvršava periodičnu provjeru.
 
-Događaj objavljen nakon prethodnog Newsletter slanja može biti uključen u naredno slanje, pod uslovom da je i dalje relevantan i da odgovara aktivnoj pretplati korisnika.
+Događaj objavljen nakon prethodnog Newsletter slanja može biti uključen u naredno slanje, pod uslovom da je i dalje relevantan, da odgovara aktivnoj pretplati korisnika i da prolazi vremensku eligibility.
+
+Nepostojanje evidencije dostave samo po sebi ne čini Događaj kandidatom. Evidencija prvog uključivanja nastaje tek nakon uspješne e-mail isporuke (BR-348).
 
 ---
 
@@ -4817,6 +4823,8 @@ Pri prelasku na „Svi događaji“ prethodne pojedinačne veze sa Organizatorim
 
 Pri prelasku na „Odabrani organizatori“ korisnik pravi novi izbor; sistem ne vraća automatski raniji selektivni izbor.
 
+Prelazak sa „Odabrani organizatori“ na „Svi događaji“ ne pretvara retroaktivno ranije objavljene Događaje u kandidate za prvo uključivanje samo zato što sada ulaze u širi opseg. Novi opseg djeluje ubuduće od trenutka uspješnog čuvanja.
+
 ##### BR-335 – Ponovna pretplata
 
 Pri ponovnoj pretplati koristi se postojeći zapis pretplate.
@@ -4824,6 +4832,8 @@ Pri ponovnoj pretplati koristi se postojeći zapis pretplate.
 Prethodne preference se ne vraćaju.
 
 Korisnik mora napraviti novi kompletan izbor prema istim validacionim pravilima kao kod prve pretplate.
+
+Reaktivacija ne proizvodi retroaktivno prvo uključivanje. Događaj objavljen prije trenutka reaktivacije ne postaje kandidat za prvo uključivanje zbog reaktivacije. Reaktivacija postavlja novu vremensku granicu za buduću procjenu kandidata.
 
 ##### BR-336 – Deaktivirani Organizator
 
@@ -4880,6 +4890,8 @@ Nema retroaktivnog dejstva.
 
 Promjena preference sama po sebi ne pokreće slanje ranije objavljenih Događaja koje korisnik ranije nije pratio.
 
+Ako korisnik tek od trenutka čuvanja počne pratiti registrovanog Organizatora ili uključi „Bez organizatora“, Događaji tog izvora koji su objavljeni prije tog čuvanja ne postaju retroaktivno kandidati za prvo uključivanje. To je recipient eligibility pravilo; Događaj se ne briše niti se ignoriše kao javni sadržaj.
+
 ##### BR-342 – Greške i uspjeh u aplikaciji
 
 Sistem prikazuje jasne poruke o uspjehu i grešci u aplikaciji za aktivaciju, čuvanje preferenci, odjavu i validaciju izbora.
@@ -4897,6 +4909,57 @@ Novi Newsletter projektuje se direktno prema kanonskom modelu. Kanonski model im
 Kanonski UI termini su: Newsletter; Pretplati se; Odjavi se; Sačuvaj izmjene; Svi događaji; Odabrani organizatori; Bez organizatora.
 
 Ne koristi se duži UI naziv „Uključi događaje bez Organizatora“.
+
+##### BR-345 – Prva pretplata nije retroaktivna
+
+Događaj objavljen prije nego što je korisnik prvi put aktivirao Newsletter pretplatu ne postaje kandidat za prvo uključivanje za tog pretplatnika.
+
+Pretplata djeluje ubuduće od trenutka aktivacije.
+
+To je recipient eligibility pravilo. Događaj se ne briše i ne gubi javnu vidljivost.
+
+Primjer: Događaj objavljen 10.08., pretplata aktivirana 14.08. → Događaj nije kandidat za prvo uključivanje tog pretplatnika.
+
+##### BR-346 – Promjena preferenci i širenje opsega nijesu retroaktivni
+
+Vrijedi BR-341.
+
+Prelazak Odabrani organizatori → Svi događaji, dodavanje Organizatora i uključivanje „Bez organizatora“ djeluju ubuduće od trenutka uspješnog čuvanja.
+
+Ranije objavljeni Događaji koji nijesu pripadali prethodnom izboru ne postaju retroaktivno kandidati za prvo uključivanje.
+
+##### BR-347 – Reaktivacija nije retroaktivna
+
+Reaktivacija iste Newsletter pretplate ne proizvodi retroaktivno prvo uključivanje.
+
+Događaj objavljen prije trenutka reaktivacije ne postaje kandidat za prvo uključivanje zbog reaktivacije.
+
+Reaktivacija postavlja novu vremensku granicu za buduću procjenu kandidata. Prethodne preference se ne vraćaju (BR-335).
+
+Primjer: odjava 01.08., Događaj objavljen 10.08., reaktivacija 14.08. → taj Događaj nije kandidat. Događaj objavljen 15.08. može biti kandidat ako ispunjava ostale uslove.
+
+##### BR-348 – Kandidat nije evidencija dostave
+
+Kandidat za prvo uključivanje znači da Događaj u trenutku pripreme ispunjava uslove da bude razmatran za naredni redovni Newsletter ciklus.
+
+Kandidat nije queued, nije poslat i nije dostavljen.
+
+Evidencija prvog uključivanja nastaje isključivo nakon uspješne e-mail isporuke. Ne upisuje se pri razrješavanju kandidata.
+
+Postojanje uspješno dostavljenog zapisa prvog uključivanja za pretplatu i Događaj znači ALREADY DELIVERED → nije kandidat.
+
+Nepostojanje tog zapisa samo po sebi ne znači da je Događaj kandidat.
+
+### Matrica: nema retroaktivnog prvog uključivanja
+
+| Scenario | Raniji Događaj postaje kandidat za prvo uključivanje? |
+|----------|------------------------------------------------------|
+| Prva pretplata nakon objave Događaja | NE |
+| Organizator dodat nakon objave Događaja | NE |
+| „Bez organizatora“ uključeno nakon objave | NE |
+| Prelazak Odabrani organizatori → Svi događaji nakon objave | NE |
+| Reaktivacija nakon objave | NE |
+| Događaj objavljen nakon trenutne granice aktivacije / čuvanja preferenci i ispunjava ostale uslove | DA |
 
 **Status:** Approved
 
@@ -5347,3 +5410,4 @@ Van opsega ovog PATCH-a (nije dio V1 razrade ovog poglavlja dok se posebno ne us
 | 2026-08-12 | FS-001 (PATCH-FS-070): PO-MF-WF-01–04 / BM PATCH-070 — dual MF lifecycle by creator origin; usklađeni BR-100/101/190/195/196; dodati BR-321–BR-325; Event submit guard (BR-325 / BR-018). Verzija ostaje 1.0.0. |
 | 2026-08-13 | FS-001 (PATCH-FS-071): PO-ORG/MOD rejected request editor cleanup / BM PATCH-072 — workspace dismiss odbijenih Org/Mod zahtjeva; BR-055/073 retention KEEP; dodati BR-326–BR-327. Verzija ostaje 1.0.0. |
 | 2026-08-14 | FS-001 (PATCH-FS-072): PO-NL-01…PO-NL-22 / BM PATCH-073 — Newsletter pretplata i preference; usklađeni tokovi §5.15 i BR-140–BR-142, BR-149–BR-150, BR-152, BR-154, BR-156, BR-157; dodati BR-328–BR-344. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
+| 2026-08-14 | FS-001 (PATCH-FS-073): NL-03 temporal eligibility + ledger boundary / BM PATCH-074 — prva pretplata i reaktivacija nijesu retroaktivne; candidate ≠ dostava. Usklađeni tokovi §5.15 i BR-147, BR-148, BR-158, BR-334, BR-335, BR-341; dodati BR-345–BR-348. Verzija ostaje 1.0.0. Bez izmjene implementacije. |

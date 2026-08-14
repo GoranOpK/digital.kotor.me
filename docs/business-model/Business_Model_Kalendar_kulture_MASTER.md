@@ -87,6 +87,7 @@
 | PATCH-071 | 2026-08-12 | **PHASE 6B PRODUCTION CLOSEOUT (status sync):** Faza 6B i PO-MF-WF su **IMPLEMENTED / DEPLOYED / PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE (6B migracije RAN; `cultural_manifestations` = 0 redova; cleanup N/A; editorial + moderator osnovni lifecycle + kk_admin nav production verified). **Bez izmjene poslovnih pravila** BM-MF-*. Usklađeno sa Feature Registry / IR-001 v1.0.7 / TS-009 v1.0.16. FS PATCH-FS-070 historical KEEP. TS-005 KEEP. |
 | PATCH-072 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup:** Urednik (`kk_admin`) može ukloniti **odbijeni** Org/Mod (ADD/REMOVE) zahtjev iz redovne liste `Zahtjevi` (workspace dismiss / soft-hide). **Ne** hard delete; status ostaje `rejected`; decision metadata KEEP; User/Organizer/grant KEEP; resubmission KEEP. Dodati BM-ORG-20, BM-MOD-27. BR-055 / BR-073 / BM-ORG-09 / BM-MOD-15 KEEP (retention). Usklađeno sa FS PATCH-FS-071 / TS-001 v0.4.2 / TS-010 v1.0.9. |
 | PATCH-073 | 2026-08-14 | **PO-NL-01…PO-NL-22 (Newsletter decision sync):** dobrovoljna pretplata (bez automatske prijave pri registraciji); jedna pretplata po `User`; dva režima („Svi događaji“ / „Odabrani organizatori“); „Bez organizatora“; validan izbor; aktivacija bez dodatnog e-mail confirmationa; odjava/reaktivacija; preference samo ubuduće; deaktivirani Organizator; Manifestacija nije kriterijum pretplate; `User`/e-mail lifecycle; aktivna pretplata ≠ dozvoljena isporuka; nema praznog Newslettera; testna legacy implementacija bez migracije pretplatnika. Usklađeni BM-NL-04, BM-NL-05, BM-NL-06, BM-NL-12, BM-NL-13, BM-NL-15, BM-NL-16, BM-GL-19; dodati BM-NL-26–BM-NL-44, BM-GL-27. Usklađeno sa FS PATCH-FS-072 / TS-011 v1.0.2. **Bez izmjene implementacije.** |
+| PATCH-074 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary:** prva pretplata nije retroaktivna; reaktivacija nije retroaktivna; first_include evidencija = samo uspješno dostavljena stavka (ne kandidat). Usklađeni BM-NL-33, BM-NL-34, BM-NL-36; dodati BM-NL-45–BM-NL-47. Usklađeno sa FS PATCH-FS-073 / TS-011 v1.0.3. **Bez izmjene implementacije.** |
 
 Napomena:
 
@@ -1908,7 +1909,7 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 
 ### BM-NL-09 — Objavljeni sadržaj i okidač prvog uključivanja
 
-> Prvo uključivanje događaja u Newsletter kao novoobjavljenog sadržaja moguće je isključivo za događaje u statusu Objavljen. Javno objavljivanje događaja predstavlja poslovni okidač za to prvo uključivanje. Događaj ne mora biti poslat istog trenutka kada je objavljen; postaje kandidat za naredni odgovarajući Newsletter. Događaji koji nijesu objavljeni ne mogu biti uključeni kao novoobjavljeni sadržaj.
+> Prvo uključivanje događaja u Newsletter kao novoobjavljenog sadržaja moguće je isključivo za događaje u statusu Objavljen. Javno objavljivanje događaja predstavlja poslovni okidač za to prvo uključivanje. Događaj ne mora biti poslat istog trenutka kada je objavljen; postaje kandidat za naredni odgovarajući Newsletter samo ako ispunjava i vremensku eligibility (BM-NL-33, BM-NL-45, BM-NL-46) i ostale uslove. Događaji koji nijesu objavljeni ne mogu biti uključeni kao novoobjavljeni sadržaj.
 
 ### BM-NL-10 — Relevantnost budućeg termina
 
@@ -1916,7 +1917,7 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 
 ### BM-NL-11 — Zaštita od ponovnog slanja prvog uključivanja
 
-> Isti događaj se istom pretplatniku ne šalje ponovo kao novoobjavljeni sadržaj samo zato što sistem ponovo izvršava periodičnu provjeru. Događaj objavljen nakon prethodnog Newsletter slanja može biti uključen u naredno slanje ako je i dalje relevantan i odgovara aktivnoj pretplati.
+> Isti događaj se istom pretplatniku ne šalje ponovo kao novoobjavljeni sadržaj samo zato što sistem ponovo izvršava periodičnu provjeru. Događaj objavljen nakon prethodnog Newsletter slanja može biti uključen u naredno slanje ako je i dalje relevantan, odgovara aktivnoj pretplati i prolazi vremensku eligibility. Nepostojanje evidencije dostave samo po sebi ne čini Događaj kandidatom. Evidencija prvog uključivanja nastaje tek nakon uspješne e-mail isporuke (BM-NL-47).
 
 ### BM-NL-12 — Aktivna pretplata
 
@@ -2005,10 +2006,14 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 ### BM-NL-33 — Promjene preferenci važe samo ubuduće
 
 > Promjena Newsletter preferenci primjenjuje se od trenutka uspješnog čuvanja nadalje. Nema retroaktivnog dejstva. Promjena preference sama po sebi ne pokreće slanje ranije objavljenih Događaja koje korisnik ranije nije pratio.
+>
+> Ako korisnik tek od trenutka čuvanja počne pratiti registrovanog Organizatora ili uključi „Bez organizatora“, Događaji tog izvora koji su objavljeni prije tog čuvanja **ne** postaju retroaktivno kandidati za prvo uključivanje. Događaj se ne briše niti se ignoriše kao javni sadržaj; to je samo pravilo recipient eligibility.
 
 ### BM-NL-34 — Promjena režima
 
 > Promjena između „Svi događaji“ i „Odabrani organizatori“ predstavlja novi kompletan izbor sadržaja. Prethodne preference drugog režima ne ostaju kao skrivene aktivne preference. Pri prelasku na „Svi događaji“ prethodne pojedinačne veze sa Organizatorima više nijesu aktivne preference. Pri prelasku na „Odabrani organizatori“ korisnik pravi novi izbor i mora izabrati najmanje jednog Organizatora i/ili „Bez organizatora“. Sistem ne vraća automatski raniji selektivni izbor.
+>
+> Prelazak sa „Odabrani organizatori“ na „Svi događaji“ **ne** pretvara retroaktivno ranije objavljene Događaje u kandidate za prvo uključivanje samo zato što sada ulaze u širi opseg. Novi opseg djeluje ubuduće od trenutka uspješnog čuvanja.
 
 ### BM-NL-35 — Posljedice odjave
 
@@ -2016,7 +2021,7 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 
 ### BM-NL-36 — Ponovna pretplata
 
-> Ako se ranije odjavljeni korisnik ponovo pretplati, koristi se njegova postojeća Newsletter pretplata. Pretplata se reaktivira. Prethodne preference se ne vraćaju. Korisnik mora napraviti novi kompletan izbor sadržaja. Primjenjuju se ista validaciona pravila kao kod prve pretplate.
+> Ako se ranije odjavljeni korisnik ponovo pretplati, koristi se njegova postojeća Newsletter pretplata. Pretplata se reaktivira. Prethodne preference se ne vraćaju. Korisnik mora napraviti novi kompletan izbor sadržaja. Primjenjuju se ista validaciona pravila kao kod prve pretplate. Reaktivacija **ne proizvodi** retroaktivno prvo uključivanje (BM-NL-46).
 
 ### BM-NL-37 — Deaktivirani Organizator
 
@@ -2049,6 +2054,35 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 ### BM-NL-44 — Testna postojeća implementacija
 
 > Postojeća Newsletter implementacija je testna. Postojeći testni pretplatnici nijesu produkcioni poslovni podaci koje treba migrirati. Nema obaveze migracije testnih pretplatnika, nema legacy backfill modela, nema obaveze kompatibilnosti sa starim e-mail-only modelom i nema obaveze očuvanja starog fiksnog sedmičnog poslovnog modela. Novi Newsletter projektuje se direktno prema kanonskom modelu. Kanonski model ima prednost. Postojeći kod se ne briše naslijepo; dijelovi se klasifikuju kao ponovna upotreba, zamjena ili naknadno uklanjanje u odgovarajućem implementacionom paketu.
+
+### BM-NL-45 — Prva pretplata nije retroaktivna
+
+> Događaj objavljen prije nego što je korisnik prvi put aktivirao Newsletter pretplatu **ne** postaje kandidat za prvo uključivanje za tog pretplatnika. Pretplata djeluje ubuduće od trenutka aktivacije. Događaj se ne briše i ne gubi javnu vidljivost; to je samo recipient eligibility pravilo.
+>
+> Primjer: Događaj objavljen 10.08., pretplata aktivirana 14.08. → Događaj nije kandidat za prvo uključivanje tog pretplatnika.
+
+### BM-NL-46 — Reaktivacija nije retroaktivna
+
+> Reaktivacija iste Newsletter pretplate **ne proizvodi** retroaktivno prvo uključivanje. Događaj objavljen prije trenutka reaktivacije **ne** postaje kandidat za prvo uključivanje zbog reaktivacije. Reaktivacija postavlja novu vremensku granicu za buduću procjenu kandidata za prvo uključivanje. Prethodne preference se ne vraćaju (BM-NL-36).
+>
+> Primjer: odjava 01.08., Događaj objavljen 10.08., reaktivacija 14.08. → taj Događaj nije kandidat. Događaj objavljen 15.08. može biti kandidat ako ispunjava ostale uslove.
+
+### BM-NL-47 — Kandidat za prvo uključivanje nije evidencija dostave
+
+> Kandidat za prvo uključivanje znači da Događaj u trenutku pripreme ispunjava uslove da bude razmatran za naredni redovni Newsletter ciklus. Kandidat **nije** queued, **nije** poslat i **nije** dostavljen.
+>
+> Evidencija dostavljenih Newsletter poruka za prvo uključivanje nastaje **isključivo** nakon uspješne e-mail isporuke. Nepostojanje tog zapisa samo po sebi **ne** čini Događaj kandidatom. Postojanje uspješno dostavljenog zapisa prvog uključivanja za isti par pretplatnik–Događaj isključuje ponovno kandidatstvo za prvo uključivanje (BM-NL-11).
+
+### Matrica: nema retroaktivnog prvog uključivanja
+
+| Scenario | Raniji Događaj postaje kandidat za prvo uključivanje? |
+|----------|------------------------------------------------------|
+| Prva pretplata nakon objave Događaja | NE |
+| Organizator dodat nakon objave Događaja | NE |
+| „Bez organizatora“ uključeno nakon objave | NE |
+| Prelazak Odabrani organizatori → Svi događaji nakon objave | NE |
+| Reaktivacija nakon objave | NE |
+| Događaj objavljen nakon trenutne granice aktivacije / čuvanja preferenci i ispunjava ostale uslove | DA |
 
 ---
 
@@ -2262,7 +2296,7 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 > Dobrovoljna funkcionalnost namijenjena informisanju pretplatnika o novoobjavljenim kulturnim događajima i o poslovno značajnim promjenama događaja koje utiču na odluku o prisustvu.
 >
-> Newsletter nije dio uredničkog procesa niti predstavlja poslovno obavještenje. Pretplata pripada korisničkom nalogu i nije automatska posljedica registracije. Javno objavljivanje događaja predstavlja poslovni okidač za prvo uključivanje; otkazivanje, odlaganje i promjena datuma, vremena ili lokacije takođe predstavljaju Newsletter okidače.
+> Newsletter nije dio uredničkog procesa niti predstavlja poslovno obavještenje. Pretplata pripada korisničkom nalogu i nije automatska posljedica registracije. Javno objavljivanje događaja predstavlja poslovni okidač za prvo uključivanje; otkazivanje, odlaganje i promjena datuma, vremena ili lokacije takođe predstavljaju Newsletter okidače. Prvo uključivanje nije retroaktivno u odnosu na trenutak aktivacije, reaktivacije ili čuvanja preferenci (BM-NL-33, BM-NL-45, BM-NL-46). Kandidat za prvo uključivanje nije isto što i evidencija uspješne dostave (BM-NL-47).
 
 ### BM-GL-20 — Evidencija aktivnosti
 
