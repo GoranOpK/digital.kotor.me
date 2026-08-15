@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\ValidatesCulturalCatalogItem;
 use App\Models\CulturalMedia;
+use App\Services\CulturalMedia\CulturalMediaFileValidator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -33,7 +34,7 @@ class CulturalMediaStoreRequest extends FormRequest
             'autor' => ['nullable', 'string', 'max:255'],
             'izvor' => ['nullable', 'string', 'max:255'],
             'licenca' => ['nullable', 'string', 'max:255'],
-            'fajl' => ['required', 'file', 'max:5120'],
+            'fajl' => ['required', 'file', 'max:'.CulturalMediaFileValidator::MAX_KILOBYTES],
         ];
     }
 
@@ -48,7 +49,7 @@ class CulturalMediaStoreRequest extends FormRequest
             'status.in' => 'Status nije validan.',
             'fajl.required' => 'Fotografija je obavezna.',
             'fajl.file' => 'Morate učitati validan fajl.',
-            'fajl.max' => 'Fotografija ne smije biti veća od 5 MB.',
+            'fajl.max' => 'Fotografija ne smije biti veća od 2 MB.',
         ];
     }
 

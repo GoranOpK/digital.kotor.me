@@ -114,7 +114,7 @@
 
     @if(! $isEdit)
         <div>
-            <label for="fajl" class="block text-sm font-medium text-gray-700 mb-1">Fotografija (JPEG, PNG ili WebP, max 5 MB)</label>
+            <label for="fajl" class="block text-sm font-medium text-gray-700 mb-1">Fotografija (JPEG, PNG ili WebP, max 2 MB)</label>
             <input
                 type="file"
                 id="fajl"

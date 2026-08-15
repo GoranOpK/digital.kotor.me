@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CulturalMediaStoreRequest;
 use App\Http\Requests\CulturalMediaUpdateRequest;
 use App\Models\CulturalMedia;
-use App\Services\CulturalMedia\CulturalMediaFileValidator;
+use App\Services\CulturalMedia\CulturalMediaIngestor;
 use App\Services\CulturalMedia\CulturalMediaLinkInspector;
 use App\Services\CulturalMedia\CulturalMediaStorage;
 use Illuminate\Http\RedirectResponse;
@@ -18,9 +18,9 @@ use Illuminate\View\View;
 class CulturalMediaController extends Controller
 {
     public function __construct(
-        private CulturalMediaFileValidator $fileValidator,
-        private CulturalMediaStorage $storage,
+        private CulturalMediaIngestor $ingestor,
         private CulturalMediaLinkInspector $linkInspector,
+        private CulturalMediaStorage $storage,
     ) {}
 
     public function index(): View
@@ -46,27 +46,16 @@ class CulturalMediaController extends Controller
     {
         $validated = $request->validated();
         $file = $request->file('fajl');
-        $meta = $this->fileValidator->validate($file);
-        $stored = $this->storage->store($file, $meta);
 
-        CulturalMedia::create([
+        $this->ingestor->ingest($file, [
+            'namjena' => $validated['namjena'],
             'naziv' => $validated['naziv'],
             'alt_tekst' => $validated['alt_tekst'],
-            'namjena' => $validated['namjena'],
             'status' => $validated['status'],
             'opis' => $validated['opis'] ?? null,
             'autor' => $validated['autor'] ?? null,
             'izvor' => $validated['izvor'] ?? null,
             'licenca' => $validated['licenca'] ?? null,
-            'tagovi' => null,
-            'originalni_naziv' => $meta['originalni_naziv'],
-            'interni_naziv' => $stored['interni_naziv'],
-            'mime' => $meta['mime'],
-            'format' => $meta['format'],
-            'sirina' => $meta['sirina'],
-            'visina' => $meta['visina'],
-            'velicina' => $meta['velicina'],
-            'storage_path' => $stored['storage_path'],
             'creator_id' => auth()->id(),
         ]);
 

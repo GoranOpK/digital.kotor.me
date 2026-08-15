@@ -95,12 +95,12 @@ class CulturalMediaCatalogTest extends TestCase
         Storage::disk('public')->assertExists($media->storage_path);
     }
 
-    public function test_file_larger_than_5mb_is_rejected(): void
+    public function test_file_larger_than_2mb_is_rejected(): void
     {
         $response = $this->actingAs($this->editor)
             ->from(route('cultural-media.create'))
             ->post(route('cultural-media.store'), $this->validPayload(
-                UploadedFile::fake()->create('huge.jpg', 5121, 'image/jpeg')
+                UploadedFile::fake()->create('huge.jpg', 2049, 'image/jpeg')
             ));
 
         $response->assertRedirect(route('cultural-media.create'));

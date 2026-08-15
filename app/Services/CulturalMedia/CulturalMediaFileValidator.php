@@ -6,12 +6,14 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Stroga serverska validacija fotografije (TS-008 / BM-MD-11).
- * JPEG / PNG / WebP, max 5 MB, čitljiva slika, usklađenost sadržaja ↔ MIME ↔ ekstenzija.
+ * Stroga serverska validacija fotografije (MED-10).
+ * JPEG / PNG / WebP, max 2 MB, čitljiva slika, usklađenost sadržaja ↔ MIME ↔ ekstenzija.
  */
 class CulturalMediaFileValidator
 {
-    public const MAX_BYTES = 5_242_880; // 5 MB = 5120 KB
+    public const MAX_BYTES = 2_097_152; // 2 MB
+
+    public const MAX_KILOBYTES = 2048;
 
     public const ALLOWED_MIMES = [
         'image/jpeg',
@@ -68,7 +70,7 @@ class CulturalMediaFileValidator
         $size = $file->getSize();
         if ($size === false || $size > self::MAX_BYTES) {
             throw ValidationException::withMessages([
-                'fajl' => 'Fotografija ne smije biti veća od 5 MB.',
+                'fajl' => 'Fotografija ne smije biti veća od 2 MB.',
             ]);
         }
 

@@ -49,12 +49,48 @@ class CulturalMediaStorage
         ];
     }
 
-    public function deleteFile(CulturalMedia $media): void
+    /**
+     * @return array{storage_path: string, interni_naziv: string}
+     */
+    public function storeContents(string $contents, string $extension): array
     {
-        if ($media->storage_path === '') {
+        $interniNaziv = Str::uuid()->toString().'.'.$extension;
+        $storagePath = self::DIRECTORY.'/'.$interniNaziv;
+
+        $stored = Storage::disk(self::DISK)->put($storagePath, $contents);
+
+        if ($stored === false) {
+            throw new \RuntimeException('Neuspješno čuvanje medijskog fajla.');
+        }
+
+        return [
+            'storage_path' => $storagePath,
+            'interni_naziv' => $interniNaziv,
+        ];
+    }
+
+    public function deletePath(string $storagePath): void
+    {
+        if (! $this->isManagedPath($storagePath)) {
             return;
         }
 
-        Storage::disk(self::DISK)->delete($media->storage_path);
+        Storage::disk(self::DISK)->delete($storagePath);
+    }
+
+    public function deleteFile(CulturalMedia $media): void
+    {
+        $this->deletePath((string) $media->storage_path);
+    }
+
+    private function isManagedPath(string $storagePath): bool
+    {
+        if ($storagePath === '' || str_contains($storagePath, '..')) {
+            return false;
+        }
+
+        $normalized = str_replace('\\', '/', $storagePath);
+
+        return str_starts_with($normalized, self::DIRECTORY.'/');
     }
 }

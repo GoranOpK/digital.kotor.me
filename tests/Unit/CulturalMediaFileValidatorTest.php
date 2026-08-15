@@ -30,6 +30,14 @@ class CulturalMediaFileValidatorTest extends TestCase
         $this->assertGreaterThanOrEqual(1, $meta['visina']);
     }
 
+    public function test_accepts_jpeg_with_jpeg_extension(): void
+    {
+        $meta = $this->validator->validate($this->uploadJpeg('cover.jpeg'));
+
+        $this->assertSame('image/jpeg', $meta['mime']);
+        $this->assertSame('jpg', $meta['ekstenzija']);
+    }
+
     public function test_accepts_png(): void
     {
         $meta = $this->validator->validate($this->uploadPng());
@@ -48,14 +56,43 @@ class CulturalMediaFileValidatorTest extends TestCase
 
     public function test_rejects_oversized_file(): void
     {
-        $file = UploadedFile::fake()->create('big.jpg', 5121, 'image/jpeg');
+        $file = UploadedFile::fake()->create('big.jpg', 2049, 'image/jpeg');
 
         try {
             $this->validator->validate($file);
             $this->fail('Expected ValidationException');
         } catch (ValidationException $e) {
             $this->assertArrayHasKey('fajl', $e->errors());
-            $this->assertStringContainsString('5 MB', $e->errors()['fajl'][0]);
+            $this->assertStringContainsString('2 MB', $e->errors()['fajl'][0]);
+        }
+    }
+
+    public function test_accepts_file_of_exactly_2mb(): void
+    {
+        $contents = str_pad($this->fixtureJpeg1x1(), CulturalMediaFileValidator::MAX_BYTES, "\0");
+        $this->assertSame(CulturalMediaFileValidator::MAX_BYTES, strlen($contents));
+
+        $meta = $this->validator->validate(
+            UploadedFile::fake()->createWithContent('exact.jpg', $contents)
+        );
+
+        $this->assertSame('image/jpeg', $meta['mime']);
+        $this->assertSame(CulturalMediaFileValidator::MAX_BYTES, $meta['velicina']);
+    }
+
+    public function test_rejects_file_one_byte_over_2mb(): void
+    {
+        $contents = str_pad($this->fixtureJpeg1x1(), CulturalMediaFileValidator::MAX_BYTES + 1, "\0");
+        $this->assertSame(CulturalMediaFileValidator::MAX_BYTES + 1, strlen($contents));
+
+        try {
+            $this->validator->validate(
+                UploadedFile::fake()->createWithContent('over.jpg', $contents)
+            );
+            $this->fail('Expected ValidationException');
+        } catch (ValidationException $e) {
+            $this->assertArrayHasKey('fajl', $e->errors());
+            $this->assertStringContainsString('2 MB', $e->errors()['fajl'][0]);
         }
     }
 
