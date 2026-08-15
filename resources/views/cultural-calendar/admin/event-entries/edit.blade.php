@@ -60,7 +60,7 @@
                 </div>
             @endif
         </div>
-        <form method="POST" action="{{ route('cultural-event-entries.update', $entry) }}">
+        <form method="POST" action="{{ route('cultural-event-entries.update', $entry) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             @include('cultural-calendar.admin.event-entries.partials.form', ['entry' => $entry])

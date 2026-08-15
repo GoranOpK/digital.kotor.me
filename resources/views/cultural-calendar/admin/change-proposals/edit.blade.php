@@ -23,7 +23,7 @@
     @endif
 
     <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl">
-        <form method="POST" action="{{ route('cultural-event-change-proposals.update', $proposal) }}" class="space-y-4">
+        <form method="POST" action="{{ route('cultural-event-change-proposals.update', $proposal) }}" class="space-y-4" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -52,15 +52,12 @@
             </div>
 
             <div>
-                <label for="proposed_cover_media_id" class="block text-sm font-medium text-gray-700 mb-1">Naslovni medij</label>
-                <select id="proposed_cover_media_id" name="proposed_cover_media_id" class="w-full rounded-md border-gray-300 shadow-sm">
-                    <option value="">— bez naslovne —</option>
-                    @foreach($mediaItems as $media)
-                        <option value="{{ $media->id }}" @selected((string) old('proposed_cover_media_id', $proposal->proposed_cover_media_id) === (string) $media->id)>
-                            {{ $media->naziv }}
-                        </option>
-                    @endforeach
-                </select>
+                @include('cultural-calendar.partials.event-cover-field', [
+                    'coverMedia' => $proposal->proposedCoverMedia,
+                    'liveCoverMedia' => $entry->coverMedia ?? null,
+                    'coverLocked' => false,
+                    'coverMode' => 'proposal',
+                ])
             </div>
 
             <div>

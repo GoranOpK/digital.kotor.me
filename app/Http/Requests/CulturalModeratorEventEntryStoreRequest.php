@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Http\Requests\Concerns\HandlesEventCoverUpload;
 use App\Http\Requests\Concerns\ValidatesCulturalCatalogItem;
 use App\Services\CulturalEventDomain\EventCatalogGuard;
 use App\Support\CulturalModeratorEventAccess;
@@ -15,6 +16,7 @@ use Illuminate\Validation\Validator;
  */
 class CulturalModeratorEventEntryStoreRequest extends FormRequest
 {
+    use HandlesEventCoverUpload;
     use ValidatesCulturalCatalogItem;
 
     public function authorize(): bool
@@ -36,7 +38,6 @@ class CulturalModeratorEventEntryStoreRequest extends FormRequest
             'naslov' => $this->filled('naslov') ? trim((string) $this->input('naslov')) : null,
             'opis' => $this->filled('opis') ? trim((string) $this->input('opis')) : null,
             'category_id' => $this->filled('category_id') ? (int) $this->input('category_id') : null,
-            'cover_media_id' => $this->filled('cover_media_id') ? (int) $this->input('cover_media_id') : null,
             'tag_ids' => array_values(array_filter(array_map('intval', (array) $this->input('tag_ids', [])))),
         ]);
 
@@ -55,10 +56,9 @@ class CulturalModeratorEventEntryStoreRequest extends FormRequest
             'opis' => ['nullable', 'string', 'max:20000'],
             'organizer_manual_name' => ['prohibited'],
             'category_id' => ['nullable', 'integer'],
-            'cover_media_id' => ['nullable', 'integer'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['integer'],
-        ];
+        ] + $this->eventCoverUploadRules();
     }
 
     public function withValidator(Validator $validator): void
@@ -73,7 +73,6 @@ class CulturalModeratorEventEntryStoreRequest extends FormRequest
 
             try {
                 $guard->assertCategoryAllowedForNewLink($this->input('category_id'));
-                $guard->assertCoverMediaAllowedForNewLink($this->input('cover_media_id'));
                 $guard->assertTagsAllowedForNewLinks($this->input('tag_ids', []));
             } catch (CulturalEventDomainException $e) {
                 $validator->errors()->add('domain', $e->getMessage());
@@ -88,7 +87,6 @@ class CulturalModeratorEventEntryStoreRequest extends FormRequest
      *     organizer_id: int,
      *     organizer_manual_name: null,
      *     category_id: ?int,
-     *     cover_media_id: ?int,
      *     tag_ids: list<int>,
      *     featured: bool
      * }
@@ -103,7 +101,6 @@ class CulturalModeratorEventEntryStoreRequest extends FormRequest
             'organizer_id' => $organizer->id,
             'organizer_manual_name' => null,
             'category_id' => $this->input('category_id'),
-            'cover_media_id' => $this->input('cover_media_id'),
             'tag_ids' => $this->input('tag_ids', []),
             'featured' => false,
         ];

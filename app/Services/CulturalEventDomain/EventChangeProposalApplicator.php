@@ -24,6 +24,7 @@ final class EventChangeProposalApplicator
         private readonly EventChangeProposalLifecycle $lifecycle,
         private readonly OccurrenceWriter $occurrenceWriter,
         private readonly CulturalActivityEmitter $activityEmitter,
+        private readonly EventCoverService $coverService,
     ) {}
 
     public function approve(CulturalEventChangeProposal $proposal, User $editor): CulturalEventChangeProposal
@@ -33,7 +34,8 @@ final class EventChangeProposalApplicator
         }
 
         $occEffects = [];
-        $approved = DB::transaction(function () use ($proposal, $editor, &$occEffects) {
+        $previousLiveCoverId = null;
+        $approved = DB::transaction(function () use ($proposal, $editor, &$occEffects, &$previousLiveCoverId) {
             /** @var CulturalEventChangeProposal $locked */
             $locked = CulturalEventChangeProposal::query()
                 ->whereKey($proposal->id)
@@ -59,6 +61,8 @@ final class EventChangeProposalApplicator
             // (same transaction) so Event→Occurrence order stays atomic without partial commit.
             $this->lifecycle->assertReadyForSubmitOrApprove($locked, $entry, withOccurrenceOps: false);
 
+            $previousLiveCoverId = $entry->cover_media_id !== null ? (int) $entry->cover_media_id : null;
+
             $entry->naslov = $locked->proposed_naslov;
             $entry->opis = $locked->proposed_opis;
             $entry->category_id = $locked->proposed_category_id;
@@ -81,6 +85,13 @@ final class EventChangeProposalApplicator
 
             return $locked->fresh(['tags', 'eventEntry', 'occurrenceOps']);
         });
+
+        $nextLiveCoverId = $approved->eventEntry?->cover_media_id !== null
+            ? (int) $approved->eventEntry->cover_media_id
+            : null;
+        if ($previousLiveCoverId !== null && $previousLiveCoverId !== $nextLiveCoverId) {
+            $this->coverService->deleteUnreferenced($previousLiveCoverId);
+        }
 
         $decisionAt = $approved->decision_at?->copy() ?? now();
         $this->activityEmitter->emitUser(

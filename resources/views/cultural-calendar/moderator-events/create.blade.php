@@ -17,7 +17,7 @@
     @endif
 
     <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl">
-        <form method="POST" action="{{ route('cultural-moderator-events.store') }}">
+        <form method="POST" action="{{ route('cultural-moderator-events.store') }}" enctype="multipart/form-data">
             @csrf
             @include('cultural-calendar.moderator-events.partials.form')
             <div class="mt-6">

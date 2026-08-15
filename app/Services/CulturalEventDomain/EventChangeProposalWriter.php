@@ -20,6 +20,7 @@ final class EventChangeProposalWriter
     public function __construct(
         private readonly EventCatalogGuard $catalogGuard,
         private readonly OccurrenceWriter $occurrenceWriter,
+        private readonly EventCoverService $coverService,
     ) {}
 
     public function createFromPublished(CulturalEventEntry $entry, User $actor): CulturalEventChangeProposal
@@ -122,6 +123,7 @@ final class EventChangeProposalWriter
         bool $asEditor = false,
     ): CulturalEventChangeProposal {
         $proposal->refresh();
+        $proposal->loadMissing('eventEntry');
 
         if ($proposal->isInoperable() || $proposal->isApproved()) {
             throw new CulturalEventDomainException(
@@ -144,6 +146,13 @@ final class EventChangeProposalWriter
             CulturalModeratorEventAccess::assertCanAccessEntry($actor, $proposal->eventEntry);
         }
 
+        $previousProposedCoverId = $proposal->proposed_cover_media_id !== null
+            ? (int) $proposal->proposed_cover_media_id
+            : null;
+        $liveCoverId = $proposal->eventEntry?->cover_media_id !== null
+            ? (int) $proposal->eventEntry->cover_media_id
+            : null;
+
         $categoryChanging = array_key_exists('proposed_category_id', $data)
             && (int) ($data['proposed_category_id'] ?? 0) !== (int) $proposal->proposed_category_id;
         $coverChanging = array_key_exists('proposed_cover_media_id', $data)
@@ -165,7 +174,7 @@ final class EventChangeProposalWriter
             }
         }
 
-        return DB::transaction(function () use ($proposal, $actor, $data) {
+        $updated = DB::transaction(function () use ($proposal, $actor, $data) {
             foreach (['proposed_naslov', 'proposed_opis', 'proposed_category_id', 'proposed_cover_media_id'] as $field) {
                 if (array_key_exists($field, $data)) {
                     $proposal->{$field} = $data[$field];
@@ -181,6 +190,19 @@ final class EventChangeProposalWriter
 
             return $proposal->fresh(['tags', 'proposedCategory', 'proposedCoverMedia', 'eventEntry', 'occurrenceOps']);
         });
+
+        $nextProposedCoverId = $updated->proposed_cover_media_id !== null
+            ? (int) $updated->proposed_cover_media_id
+            : null;
+        if (
+            $previousProposedCoverId !== null
+            && $previousProposedCoverId !== $nextProposedCoverId
+            && $previousProposedCoverId !== $liveCoverId
+        ) {
+            $this->coverService->deleteUnreferenced($previousProposedCoverId);
+        }
+
+        return $updated;
     }
 
     /**

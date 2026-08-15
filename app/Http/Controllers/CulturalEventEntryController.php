@@ -12,9 +12,9 @@ use App\Http\Requests\CulturalEventEntryStoreRequest;
 use App\Http\Requests\CulturalEventEntryUpdateRequest;
 use App\Models\CulturalCategory;
 use App\Models\CulturalEventEntry;
-use App\Models\CulturalMedia;
 use App\Models\CulturalOrganizer;
 use App\Models\CulturalTag;
+use App\Services\CulturalEventDomain\EventCoverBinder;
 use App\Services\CulturalEventDomain\EventLifecycle;
 use App\Services\CulturalEventDomain\EventWriter;
 use Illuminate\Http\RedirectResponse;
@@ -28,6 +28,7 @@ class CulturalEventEntryController extends Controller
     public function __construct(
         private readonly EventWriter $eventWriter,
         private readonly EventLifecycle $eventLifecycle,
+        private readonly EventCoverBinder $coverBinder,
     ) {}
 
     public function index(\Illuminate\Http\Request $request): View
@@ -68,7 +69,14 @@ class CulturalEventEntryController extends Controller
     public function store(CulturalEventEntryStoreRequest $request): RedirectResponse
     {
         try {
-            $entry = $this->eventWriter->createDraft($request->user(), $request->domainPayload());
+            $entry = $this->coverBinder->persistDirectEvent(
+                $request->domainPayload(),
+                $request->user(),
+                $request->file('cover_file'),
+                $request->wantsCoverRemoved(),
+                null,
+                fn (array $payload) => $this->eventWriter->createDraft($request->user(), $payload),
+            );
         } catch (CulturalEventDomainException $e) {
             return redirect()
                 ->back()
@@ -155,7 +163,18 @@ class CulturalEventEntryController extends Controller
             : 'Događaj je sačuvan.';
 
         try {
-            $this->eventWriter->updateContent($kanonski_dogadjaj, $request->user(), $request->domainPayload());
+            $this->coverBinder->persistDirectEvent(
+                $request->domainPayload(),
+                $request->user(),
+                $request->file('cover_file'),
+                $request->wantsCoverRemoved(),
+                $kanonski_dogadjaj,
+                fn (array $payload) => $this->eventWriter->updateContent(
+                    $kanonski_dogadjaj,
+                    $request->user(),
+                    $payload
+                ),
+            );
         } catch (CulturalEventDomainException $e) {
             return redirect()
                 ->back()
@@ -361,11 +380,6 @@ class CulturalEventEntryController extends Controller
             ->orderBy('naziv')
             ->orderBy('id')
             ->get();
-        $mediaItems = CulturalMedia::query()
-            ->active()
-            ->where('namjena', CulturalMedia::PURPOSE_EVENT_COVER)
-            ->orderedByName()
-            ->get();
         $tags = CulturalTag::query()
             ->where('status', CulturalTag::STATUS_ACTIVE)
             ->orderBy('naziv')
@@ -379,9 +393,6 @@ class CulturalEventEntryController extends Controller
             if ($entry->category && ! $categories->contains('id', $entry->category_id)) {
                 $categories = $categories->prepend($entry->category)->unique('id')->values();
             }
-            if ($entry->coverMedia && ! $mediaItems->contains('id', $entry->cover_media_id)) {
-                $mediaItems = $mediaItems->prepend($entry->coverMedia)->unique('id')->values();
-            }
             foreach ($entry->tags as $tag) {
                 if (! $tags->contains('id', $tag->id)) {
                     $tags = $tags->prepend($tag)->unique('id')->values();
@@ -389,6 +400,6 @@ class CulturalEventEntryController extends Controller
             }
         }
 
-        return compact('organizers', 'categories', 'mediaItems', 'tags');
+        return compact('organizers', 'categories', 'tags');
     }
 }

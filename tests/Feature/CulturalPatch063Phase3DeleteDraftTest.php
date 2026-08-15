@@ -177,7 +177,7 @@ class CulturalPatch063Phase3DeleteDraftTest extends TestCase
         ]);
         $this->assertDatabaseHas('cultural_tags', ['id' => $tag->id]);
         $this->assertDatabaseHas('cultural_categories', ['id' => $this->category->id]);
-        $this->assertDatabaseHas('cultural_media', ['id' => $media->id]);
+        $this->assertDatabaseMissing('cultural_media', ['id' => $media->id]);
         $this->assertDatabaseHas('cultural_locations', ['id' => $location->id]);
         $this->assertDatabaseHas('cultural_organizers', ['id' => $this->organizer->id]);
     }

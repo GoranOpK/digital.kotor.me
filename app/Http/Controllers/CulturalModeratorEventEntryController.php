@@ -9,8 +9,8 @@ use App\Http\Requests\CulturalModeratorEventEntryUpdateRequest;
 use App\Models\CulturalCategory;
 use App\Models\CulturalEventChangeProposal;
 use App\Models\CulturalEventEntry;
-use App\Models\CulturalMedia;
 use App\Models\CulturalTag;
+use App\Services\CulturalEventDomain\EventCoverBinder;
 use App\Services\CulturalEventDomain\EventLifecycle;
 use App\Services\CulturalEventDomain\EventWriter;
 use App\Support\CulturalModeratorEventAccess;
@@ -26,6 +26,7 @@ class CulturalModeratorEventEntryController extends Controller
     public function __construct(
         private readonly EventWriter $eventWriter,
         private readonly EventLifecycle $eventLifecycle,
+        private readonly EventCoverBinder $coverBinder,
     ) {}
 
     public function index(): View|RedirectResponse
@@ -91,7 +92,14 @@ class CulturalModeratorEventEntryController extends Controller
     public function store(CulturalModeratorEventEntryStoreRequest $request): RedirectResponse
     {
         try {
-            $entry = $this->eventWriter->createDraft($request->user(), $request->domainPayload());
+            $entry = $this->coverBinder->persistDirectEvent(
+                $request->domainPayload(),
+                $request->user(),
+                $request->file('cover_file'),
+                $request->wantsCoverRemoved(),
+                null,
+                fn (array $payload) => $this->eventWriter->createDraft($request->user(), $payload),
+            );
         } catch (CulturalEventDomainException $e) {
             return redirect()
                 ->back()
@@ -152,10 +160,17 @@ class CulturalModeratorEventEntryController extends Controller
         CulturalModeratorEventAccess::assertCanEditDraft($request->user(), $moderator_dogadjaj);
 
         try {
-            $this->eventWriter->updateContent(
-                $moderator_dogadjaj,
+            $this->coverBinder->persistDirectEvent(
+                $request->domainPayload(),
                 $request->user(),
-                $request->domainPayload()
+                $request->file('cover_file'),
+                $request->wantsCoverRemoved(),
+                $moderator_dogadjaj,
+                fn (array $payload) => $this->eventWriter->updateContent(
+                    $moderator_dogadjaj,
+                    $request->user(),
+                    $payload
+                ),
             );
         } catch (CulturalEventDomainException $e) {
             return redirect()
@@ -224,11 +239,6 @@ class CulturalModeratorEventEntryController extends Controller
             ->orderBy('naziv')
             ->orderBy('id')
             ->get();
-        $mediaItems = CulturalMedia::query()
-            ->active()
-            ->where('namjena', CulturalMedia::PURPOSE_EVENT_COVER)
-            ->orderedByName()
-            ->get();
         $tags = CulturalTag::query()
             ->where('status', CulturalTag::STATUS_ACTIVE)
             ->orderBy('naziv')
@@ -239,9 +249,6 @@ class CulturalModeratorEventEntryController extends Controller
             if ($entry->category && ! $categories->contains('id', $entry->category_id)) {
                 $categories = $categories->prepend($entry->category)->unique('id')->values();
             }
-            if ($entry->coverMedia && ! $mediaItems->contains('id', $entry->cover_media_id)) {
-                $mediaItems = $mediaItems->prepend($entry->coverMedia)->unique('id')->values();
-            }
             foreach ($entry->tags as $tag) {
                 if (! $tags->contains('id', $tag->id)) {
                     $tags = $tags->prepend($tag)->unique('id')->values();
@@ -249,6 +256,6 @@ class CulturalModeratorEventEntryController extends Controller
             }
         }
 
-        return compact('categories', 'mediaItems', 'tags');
+        return compact('categories', 'tags');
     }
 }

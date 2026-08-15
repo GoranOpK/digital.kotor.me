@@ -25,6 +25,8 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Tests\Support\CreatesCulturalMediaFixtures;
 use Tests\TestCase;
 
 /**
@@ -33,6 +35,7 @@ use Tests\TestCase;
  */
 class CulturalEventChangeProposalTest extends TestCase
 {
+    use CreatesCulturalMediaFixtures;
     use RefreshDatabase;
 
     private User $editor;
@@ -67,6 +70,7 @@ class CulturalEventChangeProposalTest extends TestCase
 
         $this->withoutVite();
         $this->seed(RoleSeeder::class);
+        Storage::fake('public');
 
         $korisnikId = Role::where('name', 'korisnik')->firstOrFail()->id;
 
@@ -268,14 +272,13 @@ class CulturalEventChangeProposalTest extends TestCase
         $proposal = $this->writer->createFromPublished($entry, $this->modA);
 
         $newTag = CulturalTag::create(['naziv' => 'Blues', 'status' => CulturalTag::STATUS_ACTIVE]);
-        $newCover = $this->makeActiveCoverMedia(['naziv' => 'Cover B', 'storage_path' => 'cultural-media/b.jpg']);
 
         $this->actingAs($this->modA)
             ->put(route('cultural-moderator-proposals.update', $proposal), [
                 'proposed_naslov' => 'Predloženo',
                 'proposed_opis' => 'Novi opis',
                 'proposed_category_id' => $this->category->id,
-                'proposed_cover_media_id' => $newCover->id,
+                'cover_file' => $this->uploadJpeg('pending.jpg'),
                 'tag_ids' => [$newTag->id],
             ])
             ->assertRedirect(route('cultural-moderator-proposals.edit', $proposal));
@@ -283,7 +286,11 @@ class CulturalEventChangeProposalTest extends TestCase
         $proposal->refresh();
         $this->assertSame('Predloženo', $proposal->proposed_naslov);
         $this->assertSame('Novi opis', $proposal->proposed_opis);
-        $this->assertSame($newCover->id, $proposal->proposed_cover_media_id);
+        $this->assertNotNull($proposal->proposed_cover_media_id);
+        $this->assertSame(
+            CulturalMedia::PURPOSE_EVENT_COVER,
+            CulturalMedia::query()->findOrFail($proposal->proposed_cover_media_id)->namjena
+        );
         $this->assertEqualsCanonicalizing([$newTag->id], $proposal->tags()->pluck('cultural_tags.id')->all());
 
         $entry->refresh();

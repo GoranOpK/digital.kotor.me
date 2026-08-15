@@ -197,7 +197,8 @@ final class EventLifecycle
             $reason = null;
         }
 
-        $cancelled = DB::transaction(function () use ($entry, $actor, $reason) {
+        $obsoleteProposalCovers = [];
+        $cancelled = DB::transaction(function () use ($entry, $actor, $reason, &$obsoleteProposalCovers) {
             // BR-012 slot — isti predikat kao createFromPublished (UNIQUE active_for_event_id).
             $lockedProposals = CulturalEventChangeProposal::query()
                 ->where('active_for_event_id', $entry->id)
@@ -226,8 +227,11 @@ final class EventLifecycle
             $locked->featured = false;
             $locked->save();
 
-            app(EventChangeProposalLifecycle::class)
-                ->markLockedProposalsInoperableForCancelledEvent($lockedProposals);
+            $obsoleteProposalCovers = app(EventChangeProposalLifecycle::class)
+                ->markLockedProposalsInoperableForCancelledEvent(
+                    $lockedProposals,
+                    $locked->cover_media_id !== null ? (int) $locked->cover_media_id : null,
+                );
 
             foreach ($lockedOccurrences as $occurrence) {
                 if (! in_array($occurrence->status, [
@@ -246,6 +250,9 @@ final class EventLifecycle
 
             return $cancelled;
         });
+
+        app(EventChangeProposalLifecycle::class)
+            ->cleanupObsoleteProposalCovers($obsoleteProposalCovers);
 
         $this->activityEmitter->emitUser(
             CulturalActivityCatalog::EV_09,

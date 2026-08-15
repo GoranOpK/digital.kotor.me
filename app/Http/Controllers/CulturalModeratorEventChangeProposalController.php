@@ -10,12 +10,12 @@ use App\Models\CulturalEventChangeProposal;
 use App\Models\CulturalEventChangeProposalOccurrence;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalLocation;
-use App\Models\CulturalMedia;
 use App\Models\CulturalOccurrence;
 use App\Models\CulturalTag;
 use App\Models\User;
 use App\Services\CulturalEventDomain\EventChangeProposalLifecycle;
 use App\Services\CulturalEventDomain\EventChangeProposalWriter;
+use App\Services\CulturalEventDomain\EventCoverBinder;
 use App\Support\CulturalModeratorEventAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -28,6 +28,7 @@ class CulturalModeratorEventChangeProposalController extends Controller
     public function __construct(
         private readonly EventChangeProposalWriter $writer,
         private readonly EventChangeProposalLifecycle $lifecycle,
+        private readonly EventCoverBinder $coverBinder,
     ) {}
 
     public function store(CulturalEventEntry $moderator_dogadjaj): RedirectResponse
@@ -95,10 +96,17 @@ class CulturalModeratorEventChangeProposalController extends Controller
         }
 
         try {
-            $this->writer->updateDraftContent(
-                $prijedlog,
+            $this->coverBinder->persistProposal(
+                $request->domainPayload(),
                 $request->user(),
-                $request->domainPayload()
+                $request->file('cover_file'),
+                $request->wantsCoverRemoved(),
+                $prijedlog,
+                fn (array $payload) => $this->writer->updateDraftContent(
+                    $prijedlog,
+                    $request->user(),
+                    $payload
+                ),
             );
         } catch (CulturalEventDomainException $e) {
             return redirect()
@@ -263,11 +271,6 @@ class CulturalModeratorEventChangeProposalController extends Controller
             ->orderBy('naziv')
             ->orderBy('id')
             ->get();
-        $mediaItems = CulturalMedia::query()
-            ->active()
-            ->where('namjena', CulturalMedia::PURPOSE_EVENT_COVER)
-            ->orderedByName()
-            ->get();
         $tags = CulturalTag::query()
             ->where('status', CulturalTag::STATUS_ACTIVE)
             ->orderBy('naziv')
@@ -282,9 +285,6 @@ class CulturalModeratorEventChangeProposalController extends Controller
         if ($proposal->proposedCategory && ! $categories->contains('id', $proposal->proposed_category_id)) {
             $categories = $categories->prepend($proposal->proposedCategory)->unique('id')->values();
         }
-        if ($proposal->proposedCoverMedia && ! $mediaItems->contains('id', $proposal->proposed_cover_media_id)) {
-            $mediaItems = $mediaItems->prepend($proposal->proposedCoverMedia)->unique('id')->values();
-        }
         foreach ($proposal->tags as $tag) {
             if (! $tags->contains('id', $tag->id)) {
                 $tags = $tags->prepend($tag)->unique('id')->values();
@@ -296,6 +296,6 @@ class CulturalModeratorEventChangeProposalController extends Controller
             }
         }
 
-        return compact('categories', 'mediaItems', 'tags', 'locations');
+        return compact('categories', 'tags', 'locations');
     }
 }

@@ -62,6 +62,10 @@ class CulturalEventEntryDraftUiTest extends TestCase
             ->assertSee('Isticanje događaja biće dostupno nakon objave.', false)
             ->assertDontSee('Featured: nije dostupno u pripremi', false)
             ->assertDontSee('name="organizer_id"', false)
+            ->assertSee('name="cover_file"', false)
+            ->assertSee('data-kk-event-cover', false)
+            ->assertSee('data-kk-cover-dropzone', false)
+            ->assertDontSee('name="cover_media_id"', false)
             ->assertDontSee('Novi nacrt (kanonski)', false);
 
         $category = $this->makeActiveCategory();
@@ -276,7 +280,7 @@ class CulturalEventEntryDraftUiTest extends TestCase
                 'naslov' => 'X',
                 'cover_media_id' => $media->id,
             ])
-            ->assertSessionHasErrors('domain');
+            ->assertSessionHasErrors('cover_media_id');
 
         $this->assertDatabaseCount('cultural_event_entries', 0);
     }

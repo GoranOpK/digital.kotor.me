@@ -70,22 +70,11 @@
     </div>
 
     <div>
-        <label for="cover_media_id" class="block text-sm font-medium text-gray-700 mb-1">Naslovni medij</label>
-        <select
-            id="cover_media_id"
-            name="cover_media_id"
-            class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-700 focus:ring-red-700"
-        >
-            <option value="">— bez naslovne —</option>
-            @foreach($mediaItems as $media)
-                <option value="{{ $media->id }}" @selected((string) old('cover_media_id', $entry->cover_media_id ?? '') === (string) $media->id)>
-                    {{ $media->naziv }}
-                </option>
-            @endforeach
-        </select>
-        @error('cover_media_id')
-            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-        @enderror
+        @include('cultural-calendar.partials.event-cover-field', [
+            'coverMedia' => $entry->coverMedia ?? null,
+            'coverLocked' => false,
+            'coverMode' => 'event',
+        ])
     </div>
 
     <div>

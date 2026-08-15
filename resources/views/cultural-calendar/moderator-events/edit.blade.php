@@ -37,7 +37,7 @@
                 </button>
             </form>
         </div>
-        <form method="POST" action="{{ route('cultural-moderator-events.update', $entry) }}">
+        <form method="POST" action="{{ route('cultural-moderator-events.update', $entry) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             @include('cultural-calendar.moderator-events.partials.form', ['entry' => $entry, 'activeOrganizer' => $activeOrganizer])

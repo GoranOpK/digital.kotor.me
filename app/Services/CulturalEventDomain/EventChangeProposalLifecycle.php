@@ -22,6 +22,7 @@ final class EventChangeProposalLifecycle
         private readonly EventCatalogGuard $catalogGuard,
         private readonly OccurrenceWriter $occurrenceWriter,
         private readonly CulturalActivityEmitter $activityEmitter,
+        private readonly EventCoverService $coverService,
     ) {}
 
     public function submit(CulturalEventChangeProposal $proposal, User $actor): CulturalEventChangeProposal
@@ -267,13 +268,22 @@ final class EventChangeProposalLifecycle
      * (poziva se unutar EventLifecycle::cancel nakon Proposal → Event lock-a).
      *
      * @param  iterable<int, CulturalEventChangeProposal>  $lockedProposals
+     * @return list<array{proposal_id: int, media_id: int}>
      */
-    public function markLockedProposalsInoperableForCancelledEvent(iterable $lockedProposals): void
-    {
+    public function markLockedProposalsInoperableForCancelledEvent(
+        iterable $lockedProposals,
+        ?int $liveCoverMediaId = null,
+    ): array {
+        $obsolete = [];
+
         foreach ($lockedProposals as $proposal) {
             if (! $proposal->isActive()) {
                 continue;
             }
+
+            $pendingId = $proposal->proposed_cover_media_id !== null
+                ? (int) $proposal->proposed_cover_media_id
+                : null;
 
             $proposal->status = CulturalEventChangeProposal::STATUS_INOPERABLE;
             $proposal->inoperable_at = now();
@@ -282,6 +292,28 @@ final class EventChangeProposalLifecycle
             $proposal->review_started_at = null;
             $proposal->review_started_by = null;
             $proposal->save();
+
+            if ($pendingId !== null && $pendingId !== $liveCoverMediaId) {
+                $obsolete[] = [
+                    'proposal_id' => (int) $proposal->id,
+                    'media_id' => $pendingId,
+                ];
+            }
+        }
+
+        return $obsolete;
+    }
+
+    /**
+     * @param  list<array{proposal_id: int, media_id: int}>  $obsolete
+     */
+    public function cleanupObsoleteProposalCovers(array $obsolete): void
+    {
+        foreach ($obsolete as $item) {
+            $this->coverService->deleteUnreferenced(
+                $item['media_id'],
+                exceptProposalIds: [$item['proposal_id']],
+            );
         }
     }
 

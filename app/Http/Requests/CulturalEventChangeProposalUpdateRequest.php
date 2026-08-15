@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\HandlesEventCoverUpload;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -10,6 +11,8 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class CulturalEventChangeProposalUpdateRequest extends FormRequest
 {
+    use HandlesEventCoverUpload;
+
     public function authorize(): bool
     {
         return true;
@@ -37,9 +40,6 @@ class CulturalEventChangeProposalUpdateRequest extends FormRequest
             'proposed_category_id' => $this->filled('proposed_category_id')
                 ? (int) $this->input('proposed_category_id')
                 : null,
-            'proposed_cover_media_id' => $this->filled('proposed_cover_media_id')
-                ? (int) $this->input('proposed_cover_media_id')
-                : null,
             'tag_ids' => array_values(array_unique(array_map(
                 'intval',
                 (array) $this->input('tag_ids', [])
@@ -53,10 +53,9 @@ class CulturalEventChangeProposalUpdateRequest extends FormRequest
             'proposed_naslov' => ['nullable', 'string', 'max:255'],
             'proposed_opis' => ['nullable', 'string'],
             'proposed_category_id' => ['nullable', 'integer'],
-            'proposed_cover_media_id' => ['nullable', 'integer'],
             'tag_ids' => ['array'],
             'tag_ids.*' => ['integer'],
-        ];
+        ] + $this->eventCoverUploadRules();
     }
 
     /**
@@ -64,7 +63,6 @@ class CulturalEventChangeProposalUpdateRequest extends FormRequest
      *     proposed_naslov: ?string,
      *     proposed_opis: ?string,
      *     proposed_category_id: ?int,
-     *     proposed_cover_media_id: ?int,
      *     tag_ids: list<int>
      * }
      */
@@ -74,7 +72,6 @@ class CulturalEventChangeProposalUpdateRequest extends FormRequest
             'proposed_naslov' => $this->input('proposed_naslov'),
             'proposed_opis' => $this->input('proposed_opis'),
             'proposed_category_id' => $this->input('proposed_category_id'),
-            'proposed_cover_media_id' => $this->input('proposed_cover_media_id'),
             'tag_ids' => $this->input('tag_ids', []),
         ];
     }

@@ -10,12 +10,12 @@ use App\Models\CulturalCategory;
 use App\Models\CulturalEventChangeProposal;
 use App\Models\CulturalEventChangeProposalOccurrence;
 use App\Models\CulturalLocation;
-use App\Models\CulturalMedia;
 use App\Models\CulturalOccurrence;
 use App\Models\CulturalTag;
 use App\Services\CulturalEventDomain\EventChangeProposalApplicator;
 use App\Services\CulturalEventDomain\EventChangeProposalLifecycle;
 use App\Services\CulturalEventDomain\EventChangeProposalWriter;
+use App\Services\CulturalEventDomain\EventCoverBinder;
 use App\Support\CulturalPortalAccess;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,6 +30,7 @@ class CulturalEventChangeProposalController extends Controller
         private readonly EventChangeProposalWriter $writer,
         private readonly EventChangeProposalLifecycle $lifecycle,
         private readonly EventChangeProposalApplicator $applicator,
+        private readonly EventCoverBinder $coverBinder,
     ) {}
 
     public function index(Request $request): View
@@ -133,11 +134,18 @@ class CulturalEventChangeProposalController extends Controller
         abort_unless(CulturalPortalAccess::isKkEditor($request->user()), 403);
 
         try {
-            $this->writer->updateDraftContent(
-                $prijedlog,
-                $request->user(),
+            $this->coverBinder->persistProposal(
                 $request->domainPayload(),
-                asEditor: true
+                $request->user(),
+                $request->file('cover_file'),
+                $request->wantsCoverRemoved(),
+                $prijedlog,
+                fn (array $payload) => $this->writer->updateDraftContent(
+                    $prijedlog,
+                    $request->user(),
+                    $payload,
+                    asEditor: true
+                ),
             );
         } catch (CulturalEventDomainException $e) {
             return redirect()
@@ -301,11 +309,6 @@ class CulturalEventChangeProposalController extends Controller
             ->orderBy('naziv')
             ->orderBy('id')
             ->get();
-        $mediaItems = CulturalMedia::query()
-            ->active()
-            ->where('namjena', CulturalMedia::PURPOSE_EVENT_COVER)
-            ->orderedByName()
-            ->get();
         $tags = CulturalTag::query()
             ->where('status', CulturalTag::STATUS_ACTIVE)
             ->orderBy('naziv')
@@ -320,9 +323,6 @@ class CulturalEventChangeProposalController extends Controller
         if ($proposal->proposedCategory && ! $categories->contains('id', $proposal->proposed_category_id)) {
             $categories = $categories->prepend($proposal->proposedCategory)->unique('id')->values();
         }
-        if ($proposal->proposedCoverMedia && ! $mediaItems->contains('id', $proposal->proposed_cover_media_id)) {
-            $mediaItems = $mediaItems->prepend($proposal->proposedCoverMedia)->unique('id')->values();
-        }
         foreach ($proposal->tags as $tag) {
             if (! $tags->contains('id', $tag->id)) {
                 $tags = $tags->prepend($tag)->unique('id')->values();
@@ -334,6 +334,6 @@ class CulturalEventChangeProposalController extends Controller
             }
         }
 
-        return compact('categories', 'mediaItems', 'tags', 'locations');
+        return compact('categories', 'tags', 'locations');
     }
 }

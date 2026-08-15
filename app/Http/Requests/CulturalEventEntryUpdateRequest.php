@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Http\Requests\Concerns\HandlesEventCoverUpload;
 use App\Http\Requests\Concerns\ValidatesCulturalCatalogItem;
 use App\Models\CulturalEventEntry;
 use App\Services\CulturalEventDomain\EventCatalogGuard;
@@ -11,6 +12,7 @@ use Illuminate\Validation\Validator;
 
 class CulturalEventEntryUpdateRequest extends FormRequest
 {
+    use HandlesEventCoverUpload;
     use ValidatesCulturalCatalogItem;
 
     public function authorize(): bool
@@ -29,7 +31,6 @@ class CulturalEventEntryUpdateRequest extends FormRequest
             'opis' => $this->filled('opis') ? trim((string) $this->input('opis')) : null,
             'organizer_manual_name' => $manual === '' ? null : $manual,
             'category_id' => $this->filled('category_id') ? (int) $this->input('category_id') : null,
-            'cover_media_id' => $this->filled('cover_media_id') ? (int) $this->input('cover_media_id') : null,
             'tag_ids' => array_values(array_filter(array_map('intval', (array) $this->input('tag_ids', [])))),
         ]);
 
@@ -55,7 +56,6 @@ class CulturalEventEntryUpdateRequest extends FormRequest
                 ? ['prohibited']
                 : ['nullable', 'string', 'max:255'],
             'category_id' => ['nullable', 'integer'],
-            'cover_media_id' => ['nullable', 'integer'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['integer'],
             'status' => ['prohibited'],
@@ -64,7 +64,7 @@ class CulturalEventEntryUpdateRequest extends FormRequest
             'return_reason' => ['prohibited'],
             'archived_from_status' => ['prohibited'],
             'first_submitted_at' => ['prohibited'],
-        ];
+        ] + $this->eventCoverUploadRules();
     }
 
     public function withValidator(Validator $validator): void
@@ -93,9 +93,6 @@ class CulturalEventEntryUpdateRequest extends FormRequest
                 if ((int) $this->input('category_id') !== (int) $entry->category_id) {
                     $guard->assertCategoryAllowedForNewLink($this->input('category_id'));
                 }
-                if ((int) $this->input('cover_media_id') !== (int) $entry->cover_media_id) {
-                    $guard->assertCoverMediaAllowedForNewLink($this->input('cover_media_id'));
-                }
 
                 $currentIds = $entry->tags()->pluck('cultural_tags.id')->map(fn ($id) => (int) $id)->all();
                 $newIds = $this->input('tag_ids', []);
@@ -116,7 +113,6 @@ class CulturalEventEntryUpdateRequest extends FormRequest
      *     organizer_id: ?int,
      *     organizer_manual_name: ?string,
      *     category_id: ?int,
-     *     cover_media_id: ?int,
      *     tag_ids: list<int>,
      *     featured?: bool
      * }
@@ -134,7 +130,6 @@ class CulturalEventEntryUpdateRequest extends FormRequest
                 ? null
                 : $this->input('organizer_manual_name'),
             'category_id' => $this->input('category_id'),
-            'cover_media_id' => $this->input('cover_media_id'),
             'tag_ids' => $this->input('tag_ids', []),
         ];
 

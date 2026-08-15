@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Exceptions\CulturalEventDomainException;
+use App\Http\Requests\Concerns\HandlesEventCoverUpload;
 use App\Http\Requests\Concerns\ValidatesCulturalCatalogItem;
 use App\Services\CulturalEventDomain\EventCatalogGuard;
 use Illuminate\Foundation\Http\FormRequest;
@@ -10,6 +11,7 @@ use Illuminate\Validation\Validator;
 
 class CulturalEventEntryStoreRequest extends FormRequest
 {
+    use HandlesEventCoverUpload;
     use ValidatesCulturalCatalogItem;
 
     public function authorize(): bool
@@ -28,7 +30,6 @@ class CulturalEventEntryStoreRequest extends FormRequest
             'opis' => $this->filled('opis') ? trim((string) $this->input('opis')) : null,
             'organizer_manual_name' => $manual === '' ? null : $manual,
             'category_id' => $this->filled('category_id') ? (int) $this->input('category_id') : null,
-            'cover_media_id' => $this->filled('cover_media_id') ? (int) $this->input('cover_media_id') : null,
             'tag_ids' => array_values(array_filter(array_map('intval', (array) $this->input('tag_ids', [])))),
         ]);
 
@@ -48,10 +49,9 @@ class CulturalEventEntryStoreRequest extends FormRequest
             'organizer_id' => ['prohibited'],
             'organizer_manual_name' => ['nullable', 'string', 'max:255'],
             'category_id' => ['nullable', 'integer'],
-            'cover_media_id' => ['nullable', 'integer'],
             'tag_ids' => ['nullable', 'array'],
             'tag_ids.*' => ['integer'],
-        ];
+        ] + $this->eventCoverUploadRules();
     }
 
     public function withValidator(Validator $validator): void
@@ -66,7 +66,6 @@ class CulturalEventEntryStoreRequest extends FormRequest
 
             try {
                 $guard->assertCategoryAllowedForNewLink($this->input('category_id'));
-                $guard->assertCoverMediaAllowedForNewLink($this->input('cover_media_id'));
                 $guard->assertTagsAllowedForNewLinks($this->input('tag_ids', []));
             } catch (CulturalEventDomainException $e) {
                 $validator->errors()->add('domain', $e->getMessage());
@@ -81,7 +80,6 @@ class CulturalEventEntryStoreRequest extends FormRequest
      *     organizer_id: null,
      *     organizer_manual_name: ?string,
      *     category_id: ?int,
-     *     cover_media_id: ?int,
      *     tag_ids: list<int>,
      *     featured: bool
      * }
@@ -94,7 +92,6 @@ class CulturalEventEntryStoreRequest extends FormRequest
             'organizer_id' => null,
             'organizer_manual_name' => $this->input('organizer_manual_name'),
             'category_id' => $this->input('category_id'),
-            'cover_media_id' => $this->input('cover_media_id'),
             'tag_ids' => $this->input('tag_ids', []),
             'featured' => false,
         ];

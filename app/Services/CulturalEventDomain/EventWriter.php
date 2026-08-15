@@ -20,6 +20,7 @@ final class EventWriter
     public function __construct(
         private readonly EventCatalogGuard $catalogGuard,
         private readonly CulturalActivityEmitter $activityEmitter,
+        private readonly EventCoverService $coverService,
     ) {}
 
     /**
@@ -222,6 +223,7 @@ final class EventWriter
         $wasPublishedDirect = $entry->isPublished() && $entry->organizer_id === null;
         $featuredBefore = (bool) $entry->featured;
         $contentBefore = $this->contentIdentity($entry);
+        $previousCoverId = $entry->cover_media_id !== null ? (int) $entry->cover_media_id : null;
 
         $persistAt = now();
         $updated = DB::transaction(function () use ($entry, $actor, $data, $featured, $nextManualName, &$persistAt) {
@@ -290,6 +292,11 @@ final class EventWriter
 
             return $locked->fresh(['organizer', 'category', 'coverMedia', 'tags', 'occurrences']);
         });
+
+        $nextCoverId = $updated->cover_media_id !== null ? (int) $updated->cover_media_id : null;
+        if ($previousCoverId !== null && $previousCoverId !== $nextCoverId) {
+            $this->coverService->deleteUnreferenced($previousCoverId);
+        }
 
         if ($wasPublishedDirect) {
             $this->activityEmitter->emitUser(
@@ -363,13 +370,14 @@ final class EventWriter
 
     /**
      * PATCH-063 / BR-290 — trajno brisanje nikad objavljenog Urednik direct-flow Događaja.
-     * Gate: draft + organizer_id null. Shared katalog se ne briše.
+     * Gate: draft + organizer_id null. Cover (ako postoji) se čisti nakon uspješnog brisanja Event-a.
      */
     public function destroyNeverPublishedDraft(CulturalEventEntry $entry, User $actor): void
     {
         $entryId = (int) $entry->id;
+        $obsoleteMediaIds = [];
 
-        DB::transaction(function () use ($entry, $actor) {
+        DB::transaction(function () use ($entry, &$obsoleteMediaIds) {
             /** @var CulturalEventEntry $locked */
             $locked = CulturalEventEntry::query()
                 ->whereKey($entry->id)
@@ -377,6 +385,18 @@ final class EventWriter
                 ->firstOrFail();
 
             $this->assertEligibleForNeverPublishedDestroy($locked);
+
+            if ($locked->cover_media_id !== null) {
+                $obsoleteMediaIds[] = (int) $locked->cover_media_id;
+            }
+
+            $proposalMediaIds = CulturalEventChangeProposal::query()
+                ->where('event_entry_id', $locked->id)
+                ->whereNotNull('proposed_cover_media_id')
+                ->pluck('proposed_cover_media_id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+            $obsoleteMediaIds = array_values(array_unique(array_merge($obsoleteMediaIds, $proposalMediaIds)));
 
             // TS-003 §4.12: proposals na draftu nijesu očekivani; ako postoje, ukloni prije OCC (restrict FK).
             CulturalEventChangeProposal::query()
@@ -390,6 +410,10 @@ final class EventWriter
             $locked->tags()->detach();
             $locked->delete();
         });
+
+        foreach ($obsoleteMediaIds as $mediaId) {
+            $this->coverService->deleteUnreferenced($mediaId);
+        }
 
         $this->activityEmitter->emitUser(
             CulturalActivityCatalog::EV_21,
