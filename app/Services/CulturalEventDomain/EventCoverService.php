@@ -15,7 +15,7 @@ use Illuminate\Validation\ValidationException;
 use Throwable;
 
 /**
- * MED-I2 — Event cover ingest + MED-21/22 cleanup (bez Media katalog reuse-a).
+ * MED-I2/I3 — cover ingest + MED-21/22 cleanup (Event default namjena; MF predaje manifestation_cover).
  */
 final class EventCoverService
 {
@@ -24,10 +24,15 @@ final class EventCoverService
         private readonly CulturalMediaStorage $storage,
     ) {}
 
-    public function planDirect(?int $currentCoverId, ?UploadedFile $file, bool $remove, User $actor): EventCoverPlan
-    {
+    public function planDirect(
+        ?int $currentCoverId,
+        ?UploadedFile $file,
+        bool $remove,
+        User $actor,
+        string $namjena = CulturalMedia::PURPOSE_EVENT_COVER,
+    ): EventCoverPlan {
         if ($file !== null) {
-            $ingested = $this->ingestEventCover($file, $actor);
+            $ingested = $this->ingestCover($file, $actor, $namjena);
 
             return new EventCoverPlan(
                 true,
@@ -77,9 +82,14 @@ final class EventCoverService
 
     public function ingestEventCover(UploadedFile $file, User $actor): CulturalMedia
     {
+        return $this->ingestCover($file, $actor, CulturalMedia::PURPOSE_EVENT_COVER);
+    }
+
+    public function ingestCover(UploadedFile $file, User $actor, string $namjena): CulturalMedia
+    {
         try {
             return $this->ingestor->ingest($file, [
-                'namjena' => CulturalMedia::PURPOSE_EVENT_COVER,
+                'namjena' => $namjena,
                 'creator_id' => $actor->id,
             ]);
         } catch (ValidationException $e) {

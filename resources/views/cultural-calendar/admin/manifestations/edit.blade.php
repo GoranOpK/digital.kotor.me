@@ -44,7 +44,7 @@
         @endif
     </div>
 
-    <form method="POST" action="{{ route('cultural-manifestations.update', $manifestation) }}" class="bg-white rounded-lg border border-gray-200 p-6">
+    <form method="POST" action="{{ route('cultural-manifestations.update', $manifestation) }}" enctype="multipart/form-data" class="bg-white rounded-lg border border-gray-200 p-6">
         @csrf
         @method('PUT')
         @include('cultural-calendar.admin.manifestations.partials.form', [
@@ -52,7 +52,6 @@
             'contentEditable' => $contentEditable,
             'showOrganizerPicker' => true,
             'organizers' => $organizers,
-            'mediaItems' => $mediaItems,
         ])
         @if($contentEditable)
             <div class="mt-6">

@@ -42,17 +42,12 @@
     @endif
 
     <div>
-        <label for="cover_media_id" class="block text-sm font-medium text-gray-700 mb-1">Naslovna fotografija</label>
-        <select id="cover_media_id" name="cover_media_id" @disabled(! $contentEditable)
-                class="w-full rounded-md border-gray-300 shadow-sm focus:border-red-700 focus:ring-red-700">
-            <option value="">— bez naslovne —</option>
-            @foreach($mediaItems as $media)
-                <option value="{{ $media->id }}" @selected((string) old('cover_media_id', $manifestation->cover_media_id ?? '') === (string) $media->id)>
-                    {{ $media->naziv }}
-                </option>
-            @endforeach
-        </select>
-        @error('cover_media_id')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+        @include('cultural-calendar.partials.event-cover-field', [
+            'coverMedia' => $manifestation->coverMedia ?? null,
+            'coverLocked' => ! $contentEditable,
+            'coverMode' => 'event',
+            'coverLockMessage' => 'Manifestacija je zaključana; naslovna fotografija se ne može mijenjati.',
+        ])
     </div>
 
     <div>

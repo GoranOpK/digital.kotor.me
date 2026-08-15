@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\CulturalActivity\CulturalActivityCatalog;
 use App\Services\CulturalActivity\CulturalActivityEmitter;
 use App\Services\CulturalActivity\CulturalActivityEventId;
+use App\Services\CulturalEventDomain\EventCoverService;
 use Illuminate\Support\Facades\DB;
 
 final class ManifestationWriter
@@ -28,6 +29,7 @@ final class ManifestationWriter
     public function __construct(
         private readonly ManifestationCatalogGuard $catalogGuard,
         private readonly CulturalActivityEmitter $activityEmitter,
+        private readonly EventCoverService $coverService,
     ) {}
 
     /**
@@ -219,6 +221,11 @@ final class ManifestationWriter
                 ['manifestation_id' => (int) $updated->id],
                 $updated->organizer_id !== null ? (int) $updated->organizer_id : null,
             );
+        }
+
+        $nextCoverId = $updated->cover_media_id !== null ? (int) $updated->cover_media_id : null;
+        if ($coverBefore !== null && $coverBefore !== $nextCoverId) {
+            $this->coverService->deleteUnreferenced($coverBefore);
         }
 
         return $updated;

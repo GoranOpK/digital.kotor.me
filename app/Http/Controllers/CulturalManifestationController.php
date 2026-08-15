@@ -8,8 +8,8 @@ use App\Http\Requests\CulturalManifestationStoreRequest;
 use App\Http\Requests\CulturalManifestationUpdateRequest;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalManifestation;
-use App\Models\CulturalMedia;
 use App\Models\CulturalOrganizer;
+use App\Services\CulturalManifestationDomain\ManifestationCoverBinder;
 use App\Services\CulturalManifestationDomain\ManifestationLifecycle;
 use App\Services\CulturalManifestationDomain\ManifestationPeriodCalculator;
 use App\Services\CulturalManifestationDomain\ManifestationWriter;
@@ -23,6 +23,7 @@ class CulturalManifestationController extends Controller
         private readonly ManifestationWriter $writer,
         private readonly ManifestationLifecycle $lifecycle,
         private readonly ManifestationPeriodCalculator $periodCalculator,
+        private readonly ManifestationCoverBinder $coverBinder,
     ) {}
 
     public function index(Request $request): View
@@ -64,7 +65,14 @@ class CulturalManifestationController extends Controller
     public function store(CulturalManifestationStoreRequest $request): RedirectResponse
     {
         try {
-            $manifestation = $this->writer->createDraft($request->user(), $request->domainPayload());
+            $manifestation = $this->coverBinder->persist(
+                $request->domainPayload(),
+                $request->user(),
+                $request->file('cover_file'),
+                $request->wantsCoverRemoved(),
+                null,
+                fn (array $payload) => $this->writer->createDraft($request->user(), $payload),
+            );
         } catch (CulturalEventDomainException $e) {
             return redirect()->back()->withInput()->withErrors(['domain' => $e->getMessage()]);
         }
@@ -126,7 +134,18 @@ class CulturalManifestationController extends Controller
         CulturalManifestation $kanonska_manifestacija,
     ): RedirectResponse {
         try {
-            $this->writer->updateContent($kanonska_manifestacija, $request->user(), $request->domainPayload());
+            $this->coverBinder->persist(
+                $request->domainPayload(),
+                $request->user(),
+                $request->file('cover_file'),
+                $request->wantsCoverRemoved(),
+                $kanonska_manifestacija,
+                fn (array $payload) => $this->writer->updateContent(
+                    $kanonska_manifestacija,
+                    $request->user(),
+                    $payload
+                ),
+            );
         } catch (CulturalEventDomainException $e) {
             return redirect()->back()->withInput()->withErrors(['domain' => $e->getMessage()]);
         }
@@ -253,7 +272,6 @@ class CulturalManifestationController extends Controller
     /**
      * @return array{
      *     organizers: \Illuminate\Support\Collection,
-     *     mediaItems: \Illuminate\Support\Collection,
      *     linkableEvents: \Illuminate\Support\Collection,
      *     moveCandidates: \Illuminate\Support\Collection
      * }
@@ -264,16 +282,6 @@ class CulturalManifestationController extends Controller
 
         if ($manifestation?->organizer && ! $organizers->contains('id', $manifestation->organizer_id)) {
             $organizers = $organizers->prepend($manifestation->organizer)->unique('id')->values();
-        }
-
-        $mediaItems = CulturalMedia::query()
-            ->active()
-            ->where('namjena', CulturalMedia::PURPOSE_MANIFESTATION_COVER)
-            ->orderedByName()
-            ->get();
-
-        if ($manifestation?->coverMedia && ! $mediaItems->contains('id', $manifestation->cover_media_id)) {
-            $mediaItems = $mediaItems->prepend($manifestation->coverMedia)->unique('id')->values();
         }
 
         $eligible = ManifestationWriter::NEW_LINK_ELIGIBLE_EVENT_STATUSES;
@@ -305,7 +313,6 @@ class CulturalManifestationController extends Controller
 
         return [
             'organizers' => $organizers,
-            'mediaItems' => $mediaItems,
             'linkableEvents' => $linkableEvents->filter(fn ($e) => $e->manifestation_id === null)->values(),
             'moveCandidates' => $moveCandidates,
         ];

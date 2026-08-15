@@ -76,7 +76,12 @@ class CulturalManifestationEditorUiTest extends TestCase
             ->assertSee('action="'.route('cultural-manifestations.store').'"', false)
             ->assertSee('method="POST"', false)
             ->assertSee('type="submit"', false)
-            ->assertSee('name="naziv"', false);
+            ->assertSee('name="naziv"', false)
+            ->assertSee('name="cover_file"', false)
+            ->assertSee('data-kk-event-cover', false)
+            ->assertSee('data-kk-cover-dropzone', false)
+            ->assertSee('enctype="multipart/form-data"', false)
+            ->assertDontSee('name="cover_media_id"', false);
     }
 
     public function test_ordinary_user_forbidden_and_guest_redirected(): void
@@ -91,14 +96,12 @@ class CulturalManifestationEditorUiTest extends TestCase
     public function test_store_minimal_draft_and_optional_fields(): void
     {
         $organizer = $this->makeOrganizer();
-        $media = $this->makeCoverMedia();
 
         $this->actingAs($this->editor)
             ->post(route('cultural-manifestations.store'), [
                 'naziv' => 'Kotor Art',
                 'opis' => 'Opis',
                 'organizer_id' => $organizer->id,
-                'cover_media_id' => $media->id,
                 'web_stranica' => 'https://example.com',
             ])
             ->assertRedirect();
@@ -326,7 +329,9 @@ class CulturalManifestationEditorUiTest extends TestCase
                 'naziv' => 'X',
                 'cover_media_id' => $media->id,
             ])
-            ->assertSessionHasErrors();
+            ->assertSessionHasErrors('cover_media_id');
+
+        $this->assertDatabaseCount('cultural_manifestations', 0);
     }
 
     private function makeDraftEvent(string $title): CulturalEventEntry

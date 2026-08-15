@@ -2,16 +2,15 @@
 
 namespace App\Http\Requests;
 
-use App\Exceptions\CulturalEventDomainException;
+use App\Http\Requests\Concerns\HandlesEventCoverUpload;
 use App\Http\Requests\Concerns\ValidatesCulturalCatalogItem;
 use App\Models\CulturalManifestation;
-use App\Services\CulturalManifestationDomain\ManifestationCatalogGuard;
 use App\Support\CulturalModeratorManifestationAccess;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Validator;
 
 class CulturalModeratorManifestationUpdateRequest extends FormRequest
 {
+    use HandlesEventCoverUpload;
     use ValidatesCulturalCatalogItem;
 
     public function authorize(): bool
@@ -53,10 +52,6 @@ class CulturalModeratorManifestationUpdateRequest extends FormRequest
             }
         }
 
-        if ($this->exists('cover_media_id')) {
-            $merge['cover_media_id'] = $this->filled('cover_media_id') ? (int) $this->input('cover_media_id') : null;
-        }
-
         if ($merge !== []) {
             $this->merge($merge);
         }
@@ -67,7 +62,6 @@ class CulturalModeratorManifestationUpdateRequest extends FormRequest
         return [
             'naziv' => ['sometimes', 'required', 'string', 'max:255'],
             'opis' => ['sometimes', 'nullable', 'string', 'max:20000'],
-            'cover_media_id' => ['sometimes', 'nullable', 'integer'],
             'web_stranica' => ['sometimes', 'nullable', 'string', 'max:2048', 'url'],
             'organizer_id' => ['prohibited'],
             'status' => ['prohibited'],
@@ -76,36 +70,13 @@ class CulturalModeratorManifestationUpdateRequest extends FormRequest
             'cancelled_at' => ['prohibited'],
             'archived_at' => ['prohibited'],
             'first_submitted_at' => ['prohibited'],
-        ];
-    }
-
-    public function withValidator(Validator $validator): void
-    {
-        $validator->after(function (Validator $validator) {
-            if ($validator->errors()->isNotEmpty()) {
-                return;
-            }
-
-            if (! $this->exists('cover_media_id')) {
-                return;
-            }
-
-            /** @var ManifestationCatalogGuard $guard */
-            $guard = app(ManifestationCatalogGuard::class);
-
-            try {
-                $guard->assertCoverMediaAllowedForNewLink($this->input('cover_media_id'));
-            } catch (CulturalEventDomainException $e) {
-                $validator->errors()->add('domain', $e->getMessage());
-            }
-        });
+        ] + $this->eventCoverUploadRules();
     }
 
     /**
      * @return array{
      *     naziv?: ?string,
      *     opis?: ?string,
-     *     cover_media_id?: ?int,
      *     web_stranica?: ?string
      * }
      */
@@ -113,7 +84,7 @@ class CulturalModeratorManifestationUpdateRequest extends FormRequest
     {
         $payload = [];
 
-        foreach (['naziv', 'opis', 'cover_media_id', 'web_stranica'] as $key) {
+        foreach (['naziv', 'opis', 'web_stranica'] as $key) {
             if ($this->exists($key)) {
                 $payload[$key] = $this->input($key);
             }

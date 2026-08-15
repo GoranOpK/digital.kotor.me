@@ -8,13 +8,12 @@
             <ul class="list-disc list-inside">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
         </div>
     @endif
-    <form method="POST" action="{{ route('cultural-moderator-manifestations.store') }}" class="bg-white rounded-lg border border-gray-200 p-6">
+    <form method="POST" action="{{ route('cultural-moderator-manifestations.store') }}" enctype="multipart/form-data" class="bg-white rounded-lg border border-gray-200 p-6">
         @csrf
         @include('cultural-calendar.admin.manifestations.partials.form', [
             'contentEditable' => true,
             'showOrganizerPicker' => false,
             'activeOrganizer' => $activeOrganizer,
-            'mediaItems' => $mediaItems,
             'organizers' => collect(),
         ])
         <div class="mt-6 flex gap-2">

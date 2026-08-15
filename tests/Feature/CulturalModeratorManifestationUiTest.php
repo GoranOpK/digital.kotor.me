@@ -130,7 +130,9 @@ class CulturalModeratorManifestationUiTest extends TestCase
             ->assertSee('Odustani')
             ->assertSee('background:#b91c1c', false)
             ->assertSee('action="'.route('cultural-moderator-manifestations.store').'"', false)
-            ->assertSee('type="submit"', false);
+            ->assertSee('type="submit"', false)
+            ->assertSee('name="cover_file"', false)
+            ->assertDontSee('name="cover_media_id"', false);
 
         $this->actingAs($this->modA)
             ->post(route('cultural-moderator-manifestations.store'), [

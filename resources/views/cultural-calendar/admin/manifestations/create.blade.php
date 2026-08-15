@@ -10,13 +10,12 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('cultural-manifestations.store') }}" class="bg-white rounded-lg border border-gray-200 p-6">
+    <form method="POST" action="{{ route('cultural-manifestations.store') }}" enctype="multipart/form-data" class="bg-white rounded-lg border border-gray-200 p-6">
         @csrf
         @include('cultural-calendar.admin.manifestations.partials.form', [
             'contentEditable' => true,
             'showOrganizerPicker' => true,
             'organizers' => $organizers,
-            'mediaItems' => $mediaItems,
         ])
         <div class="mt-6 flex gap-2">
             {{-- Inline styles: Tailwind preflight leaves submit buttons transparent; missing utility CSS → white-on-white. Match Event create CTA pattern. --}}

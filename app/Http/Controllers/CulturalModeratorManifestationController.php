@@ -8,7 +8,7 @@ use App\Http\Requests\CulturalModeratorManifestationStoreRequest;
 use App\Http\Requests\CulturalModeratorManifestationUpdateRequest;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalManifestation;
-use App\Models\CulturalMedia;
+use App\Services\CulturalManifestationDomain\ManifestationCoverBinder;
 use App\Services\CulturalManifestationDomain\ManifestationLifecycle;
 use App\Services\CulturalManifestationDomain\ManifestationPeriodCalculator;
 use App\Services\CulturalManifestationDomain\ManifestationWriter;
@@ -23,6 +23,7 @@ class CulturalModeratorManifestationController extends Controller
         private readonly ManifestationWriter $writer,
         private readonly ManifestationLifecycle $lifecycle,
         private readonly ManifestationPeriodCalculator $periodCalculator,
+        private readonly ManifestationCoverBinder $coverBinder,
     ) {}
 
     public function index(): View|RedirectResponse
@@ -83,7 +84,14 @@ class CulturalModeratorManifestationController extends Controller
     public function store(CulturalModeratorManifestationStoreRequest $request): RedirectResponse
     {
         try {
-            $manifestation = $this->writer->createDraft($request->user(), $request->domainPayload());
+            $manifestation = $this->coverBinder->persist(
+                $request->domainPayload(),
+                $request->user(),
+                $request->file('cover_file'),
+                $request->wantsCoverRemoved(),
+                null,
+                fn (array $payload) => $this->writer->createDraft($request->user(), $payload),
+            );
         } catch (CulturalEventDomainException $e) {
             return redirect()->back()->withInput()->withErrors(['domain' => $e->getMessage()]);
         }
@@ -144,7 +152,18 @@ class CulturalModeratorManifestationController extends Controller
         CulturalModeratorManifestationAccess::assertCanEditContent($request->user(), $moderator_manifestacija);
 
         try {
-            $this->writer->updateContent($moderator_manifestacija, $request->user(), $request->domainPayload());
+            $this->coverBinder->persist(
+                $request->domainPayload(),
+                $request->user(),
+                $request->file('cover_file'),
+                $request->wantsCoverRemoved(),
+                $moderator_manifestacija,
+                fn (array $payload) => $this->writer->updateContent(
+                    $moderator_manifestacija,
+                    $request->user(),
+                    $payload
+                ),
+            );
         } catch (CulturalEventDomainException $e) {
             return redirect()->back()->withInput()->withErrors(['domain' => $e->getMessage()]);
         }
@@ -251,23 +270,12 @@ class CulturalModeratorManifestationController extends Controller
 
     /**
      * @return array{
-     *     mediaItems: \Illuminate\Support\Collection,
      *     linkableEvents: \Illuminate\Support\Collection,
      *     moveCandidates: \Illuminate\Support\Collection
      * }
      */
     private function formCatalogs(?CulturalManifestation $manifestation = null): array
     {
-        $mediaItems = CulturalMedia::query()
-            ->active()
-            ->where('namjena', CulturalMedia::PURPOSE_MANIFESTATION_COVER)
-            ->orderedByName()
-            ->get();
-
-        if ($manifestation?->coverMedia && ! $mediaItems->contains('id', $manifestation->cover_media_id)) {
-            $mediaItems = $mediaItems->prepend($manifestation->coverMedia)->unique('id')->values();
-        }
-
         $eligible = ManifestationWriter::NEW_LINK_ELIGIBLE_EVENT_STATUSES;
         $currentId = $manifestation?->id;
 
@@ -291,7 +299,6 @@ class CulturalModeratorManifestationController extends Controller
             ->get();
 
         return [
-            'mediaItems' => $mediaItems,
             'linkableEvents' => $linkableEvents,
             'moveCandidates' => $moveCandidates,
         ];

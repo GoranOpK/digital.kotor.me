@@ -3,6 +3,7 @@
     $coverMedia = $coverMedia ?? null;
     $liveCoverMedia = $liveCoverMedia ?? null;
     $coverMode = $coverMode ?? 'event';
+    $coverLockMessage = $coverLockMessage ?? 'Događaj je zaključan; naslovna fotografija se ne može mijenjati.';
     $removeCoverOld = old('remove_cover');
     $removeRequested = $removeCoverOld === true
         || $removeCoverOld === 1
@@ -31,7 +32,7 @@
         @else
             <p class="text-sm text-gray-500">Nema naslovne fotografije.</p>
         @endif
-        <p class="mt-2 text-sm text-gray-500">Događaj je zaključan; naslovna fotografija se ne može mijenjati.</p>
+        <p class="mt-2 text-sm text-gray-500">{{ $coverLockMessage }}</p>
     @else
         <input type="hidden" name="remove_cover" value="{{ $removeRequested ? '1' : '0' }}" data-kk-cover-remove>
 
