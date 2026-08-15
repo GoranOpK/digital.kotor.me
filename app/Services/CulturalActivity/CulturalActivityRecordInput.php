@@ -103,18 +103,12 @@ final class CulturalActivityRecordInput
             throw new CulturalActivityRecordException('context ima previše ključeva.');
         }
 
-        $denied = [
-            'password', 'passwd', 'token', 'access_token', 'unsubscribe_token',
-            'session', 'session_id', 'csrf', 'csrf_token', 'secret',
-            'request', 'body', 'payload', 'payload_snapshot', 'ledger',
-        ];
-
         foreach ($context as $key => $value) {
             if (! is_string($key) || trim($key) === '') {
                 throw new CulturalActivityRecordException('context ključ mora biti ne-prazan string.');
             }
 
-            if (in_array(strtolower($key), $denied, true)) {
+            if (self::isDeniedContextKey($key)) {
                 throw new CulturalActivityRecordException('context sadrži zabranjeni ključ.');
             }
 
@@ -130,5 +124,31 @@ final class CulturalActivityRecordInput
                 throw new CulturalActivityRecordException('context vrijednost premašuje dozvoljenu dužinu.');
             }
         }
+    }
+
+    /**
+     * Exact-key + suffix denylist. Does not treat request_id as request/body.
+     */
+    private static function isDeniedContextKey(string $key): bool
+    {
+        $normalized = strtolower($key);
+        $exact = [
+            'password', 'passwd', 'token', 'secret', 'authorization', 'cookie',
+            'csrf', 'session', 'email', 'request', 'body', 'payload', 'ledger',
+            'access_token', 'unsubscribe_token', 'csrf_token', 'session_id',
+            'payload_snapshot',
+        ];
+
+        if (in_array($normalized, $exact, true)) {
+            return true;
+        }
+
+        foreach (['_token', '_secret', '_password', '_passwd', '_email'] as $suffix) {
+            if (str_ends_with($normalized, $suffix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

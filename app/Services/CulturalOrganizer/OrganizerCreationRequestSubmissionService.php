@@ -103,7 +103,6 @@ final class OrganizerCreationRequestSubmissionService
         } catch (Throwable $e) {
             Log::error('PO-ORG-06 invitation mail failed after Organizer creation request persist.', [
                 'creation_request_id' => $request->id,
-                'proposed_moderator_email' => $request->proposed_moderator_email,
                 'exception' => $e->getMessage(),
             ]);
         }

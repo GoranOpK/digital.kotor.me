@@ -255,7 +255,10 @@ class CulturalPoOrg06Package2OrganizerSubmitTest extends TestCase
         Log::shouldHaveReceived('error')
             ->withArgs(function (string $message, array $context = []): bool {
                 return str_contains($message, 'PO-ORG-06 invitation mail failed')
-                    && ($context['exception'] ?? null) === 'SMTP failure for test';
+                    && ($context['exception'] ?? null) === 'SMTP failure for test'
+                    && isset($context['creation_request_id'])
+                    && ! array_key_exists('proposed_moderator_email', $context)
+                    && ! in_array('mail.fail@example.com', $context, true);
             })
             ->once();
     }

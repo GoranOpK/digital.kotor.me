@@ -166,6 +166,35 @@ class CulturalPoOrg06Package5SubsequentModeratorFlowTest extends TestCase
         });
     }
 
+    public function test_add_invitation_mail_failure_log_does_not_include_email(): void
+    {
+        Log::spy();
+        Mail::shouldReceive('to')->once()->andThrow(new \RuntimeException('SMTP ADD invitation fail'));
+
+        $this->actingAs($this->initialModerator)
+            ->post(route('cultural-moderator-requests.store', $this->organizer), [
+                'type' => CulturalModeratorRequest::TYPE_ADD,
+                'proposed_moderator_name' => 'Mail Fail Add',
+                'proposed_moderator_email' => 'mailfail.add.invite@example.com',
+            ])
+            ->assertRedirect(route('cultural-moderator-workspace.index'));
+
+        $request = CulturalModeratorRequest::query()
+            ->where('proposed_moderator_email', 'mailfail.add.invite@example.com')
+            ->firstOrFail();
+        $this->assertTrue($request->isAwaitingModeratorEligibility());
+
+        Log::shouldHaveReceived('error')
+            ->withArgs(function (string $message, array $context = []): bool {
+                return str_contains($message, 'PO-ORG-06 ADD invitation mail failed')
+                    && ($context['exception'] ?? null) === 'SMTP ADD invitation fail'
+                    && isset($context['moderator_request_id'])
+                    && ! array_key_exists('proposed_moderator_email', $context)
+                    && ! in_array('mailfail.add.invite@example.com', $context, true);
+            })
+            ->once();
+    }
+
     public function test_duplicate_unfinished_add_blocked_and_cross_org_allowed(): void
     {
         Mail::fake();

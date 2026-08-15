@@ -225,12 +225,27 @@ class CulturalActivityFoundationTest extends TestCase
         }
 
         try {
+            $this->userInput(['context' => ['email' => 'hidden@example.com']]);
+            $this->fail('Email key must be rejected.');
+        } catch (CulturalActivityRecordException) {
+        }
+
+        try {
+            $this->userInput(['context' => ['access_token' => 'abc']]);
+            $this->fail('Suffix token key must be rejected.');
+        } catch (CulturalActivityRecordException) {
+        }
+
+        try {
             $this->userInput(['context' => ['snapshot' => ['id' => 1]]]);
             $this->fail('Nested context must be rejected.');
         } catch (CulturalActivityRecordException) {
         }
 
-        $this->assertDatabaseCount('cultural_activity_records', 0);
+        $allowed = $this->store->write($this->userInput(['context' => ['request_id' => 12]]));
+        $this->assertSame(['request_id' => 12], $allowed->record->context);
+
+        $this->assertDatabaseCount('cultural_activity_records', 1);
     }
 
     public function test_safe_facade_swallows_store_failure_and_logs(): void

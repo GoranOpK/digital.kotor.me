@@ -485,7 +485,7 @@ class CulturalOccurrenceGeneratorTest extends TestCase
 
     public function test_generator_rejected_for_non_draft_statuses_domain_and_http(): void
     {
-        $pending = $this->makeReadyDraft();
+        $pending = $this->makeReadyDraft('Pending', $this->organizer);
         $this->eventLifecycle->submitForApproval($pending, $this->editor);
         $pending = $pending->fresh();
 
@@ -495,7 +495,7 @@ class CulturalOccurrenceGeneratorTest extends TestCase
             ->assertRedirect(route('cultural-event-entries.index'))
             ->assertSessionHasErrors('domain');
 
-        $published = $this->makeReadyDraft('Pub');
+        $published = $this->makeReadyDraft('Pub', $this->organizer);
         $this->eventLifecycle->submitForApproval($published, $this->editor);
         $this->eventLifecycle->approve($published->fresh(), $this->editor);
         $published = $published->fresh();
@@ -504,7 +504,7 @@ class CulturalOccurrenceGeneratorTest extends TestCase
             ->post(route('cultural-event-entries.occurrences.generate', $published), $this->httpPayload())
             ->assertSessionHasErrors('domain');
 
-        $cancelled = $this->makeReadyDraft('Can');
+        $cancelled = $this->makeReadyDraft('Can', $this->organizer);
         $this->eventLifecycle->submitForApproval($cancelled, $this->editor);
         $this->eventLifecycle->approve($cancelled->fresh(), $this->editor);
         $this->eventLifecycle->cancel($cancelled->fresh(), $this->editor, 'Otkaz');
@@ -538,7 +538,7 @@ class CulturalOccurrenceGeneratorTest extends TestCase
 
     public function test_returned_draft_allows_generator(): void
     {
-        $entry = $this->makeReadyDraft('Return');
+        $entry = $this->makeReadyDraft('Return', $this->organizer);
         $this->eventLifecycle->submitForApproval($entry, $this->editor);
         $this->eventLifecycle->returnToDraft($entry->fresh(), $this->editor, 'Dorada');
         $entry = $entry->fresh();
@@ -737,9 +737,17 @@ class CulturalOccurrenceGeneratorTest extends TestCase
         ]);
     }
 
-    private function makeReadyDraft(string $naslov = 'Ready'): CulturalEventEntry
+    private function makeReadyDraft(string $naslov = 'Ready', ?CulturalOrganizer $organizer = null): CulturalEventEntry
     {
-        $entry = $this->makeDraft($naslov);
+        $payload = [
+            'naslov' => $naslov,
+            'category_id' => $this->category->id,
+        ];
+        if ($organizer !== null) {
+            $payload['organizer_id'] = $organizer->id;
+        }
+
+        $entry = $this->eventWriter->createDraft($this->editor, $payload);
         $this->writer->create($entry, [
             'datum' => '2026-09-01',
             'cjelodnevno' => true,

@@ -7,6 +7,8 @@ use App\Models\CulturalCategory;
 use App\Models\CulturalEventEntry;
 use App\Models\CulturalLocation;
 use App\Models\CulturalOccurrence;
+use App\Models\CulturalOrganizer;
+use App\Models\CulturalOrganizerCreationRequest;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\CulturalEventDomain\EventLifecycle;
@@ -305,10 +307,30 @@ class CulturalOccurrenceDomainTest extends TestCase
         $entry = $this->eventWriter->createDraft($this->editor, [
             'naslov' => 'Za objavu',
             'category_id' => $category->id,
+            'organizer_id' => $this->makeOrganizer('Org OCC delete')->id,
         ]);
         $this->writer->create($entry, ['datum' => '2026-09-01', 'cjelodnevno' => true]);
         $this->eventLifecycle->submitForApproval($entry->fresh(), $this->editor);
 
         return $entry->fresh(['occurrences']);
+    }
+
+    private function makeOrganizer(string $naziv): CulturalOrganizer
+    {
+        $request = CulturalOrganizerCreationRequest::create([
+            'submitter_user_id' => $this->editor->id,
+            'proposed_moderator_user_id' => $this->editor->id,
+            'proposed_moderator_is_submitter' => true,
+            'proposed_naziv' => $naziv,
+            'status' => CulturalOrganizerCreationRequest::STATUS_APPROVED,
+            'decision_user_id' => $this->editor->id,
+            'decision_at' => now(),
+        ]);
+
+        return CulturalOrganizer::create([
+            'naziv' => $naziv,
+            'status' => CulturalOrganizer::STATUS_ACTIVE,
+            'approved_creation_request_id' => $request->id,
+        ]);
     }
 }
