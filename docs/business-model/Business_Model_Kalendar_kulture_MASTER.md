@@ -88,6 +88,7 @@
 | PATCH-072 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup:** Urednik (`kk_admin`) može ukloniti **odbijeni** Org/Mod (ADD/REMOVE) zahtjev iz redovne liste `Zahtjevi` (workspace dismiss / soft-hide). **Ne** hard delete; status ostaje `rejected`; decision metadata KEEP; User/Organizer/grant KEEP; resubmission KEEP. Dodati BM-ORG-20, BM-MOD-27. BR-055 / BR-073 / BM-ORG-09 / BM-MOD-15 KEEP (retention). Usklađeno sa FS PATCH-FS-071 / TS-001 v0.4.2 / TS-010 v1.0.9. |
 | PATCH-073 | 2026-08-14 | **PO-NL-01…PO-NL-22 (Newsletter decision sync):** dobrovoljna pretplata (bez automatske prijave pri registraciji); jedna pretplata po `User`; dva režima („Svi događaji“ / „Odabrani organizatori“); „Bez organizatora“; validan izbor; aktivacija bez dodatnog e-mail confirmationa; odjava/reaktivacija; preference samo ubuduće; deaktivirani Organizator; Manifestacija nije kriterijum pretplate; `User`/e-mail lifecycle; aktivna pretplata ≠ dozvoljena isporuka; nema praznog Newslettera; testna legacy implementacija bez migracije pretplatnika. Usklađeni BM-NL-04, BM-NL-05, BM-NL-06, BM-NL-12, BM-NL-13, BM-NL-15, BM-NL-16, BM-GL-19; dodati BM-NL-26–BM-NL-44, BM-GL-27. Usklađeno sa FS PATCH-FS-072 / TS-011 v1.0.2. **Bez izmjene implementacije.** |
 | PATCH-074 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary:** prva pretplata nije retroaktivna; reaktivacija nije retroaktivna; first_include evidencija = samo uspješno dostavljena stavka (ne kandidat). Usklađeni BM-NL-33, BM-NL-34, BM-NL-36; dodati BM-NL-45–BM-NL-47. Usklađeno sa FS PATCH-FS-073 / TS-011 v1.0.3. **Bez izmjene implementacije.** |
+| PATCH-075 | 2026-08-15 | **MED-01–MED-28 (naslovna fotografija):** Mediji nijesu poslovna cjelina; `CulturalMedia` je interni tehnički mehanizam. Događaj/Manifestacija imaju `0..1` naslovnu fotografiju (upload u kontekstu sadržaja; bez biblioteke/reuse/galerije). Opciona za objavu. Fallback Događaja: naslovna → statička kategorijska fotografija → globalni placeholder; Manifestacija: zaseban statički placeholder. Formati JPEG/PNG/WebP, max 2 MB; resize >1920 px; storage `public/cultural-media/`; MEGA se ne koristi. Nema ekrana Mediji. Prava i lock prate sadržaj. **SUPERSEDED:** BM-MD-01–BM-MD-17 (PATCH-044 / TS8). Dodati BM-MD-18–BM-MD-36; usklađeni BM-GL-15, BM-PK-12, BM-EP-03, BM-DG-06, BM-MF-08, BM-UR-16. **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
 
 Napomena:
 
@@ -128,7 +129,7 @@ Dokument predstavlja referentni poslovni model za planiranje, razvoj, testiranje
 | BM-06 Održavanje događaja | USVOJENO |
 | BM-07 Lokacija | USVOJENO |
 | BM-08 Kategorije i oznake | USVOJENO |
-| BM-09 Mediji | USVOJENO |
+| BM-09 Naslovna fotografija (istorijski: Mediji) | USVOJENO — kanonski PATCH-075 / MED-01–MED-28; istorijski TS8 model SUPERSEDED |
 | BM-10 Statusi i životni ciklus događaja | USVOJENO |
 | BM-11 Portal Kalendara kulture | USVOJENO |
 | BM-12 Urednički portal | USVOJENO |
@@ -178,7 +179,7 @@ Svaka izmjena Business Modela mora biti rezultat usvojene poslovne odluke i evid
    - BM-06 Održavanje događaja
    - BM-07 Lokacija
    - BM-08 Kategorije i oznake
-   - BM-09 Mediji
+   - BM-09 Naslovna fotografija (istorijski: Mediji)
    - BM-10 Statusi i životni ciklus događaja
    - BM-11 Portal Kalendara kulture
    - BM-12 Urednički portal
@@ -473,7 +474,7 @@ Urednikov poslovni tok za takav Događaj je: Novi događaj → Sačuvaj i nastav
 | BM-UR-13 | Za Događaj koji Urednik kreira bez registrovanog Organizatora, podatak „Organizator“ unosi se isključivo ručno kao tekstualni naziv neregistrovanog Organizatora. Polje je **opciono**. Dozvoljen je samo naziv; ne uvode se e-mail, telefon, veb-sajt, adresa, kontakt osoba niti drugi podaci Organizatora u okviru ove funkcionalnosti. Ručni unos ne kreira zapis registrovanog Organizatora, ne dodjeljuje nalog, ne dodjeljuje Moderatora i ne pokreće postupak odobravanja. Događaj može biti objavljen i bez navedenog Organizatora. |
 | BM-UR-14 | Urednikov poslovni tok za Događaj bez registrovanog Organizatora je: Novi događaj → **Sačuvaj i nastavi** → **U pripremi** → dopuna → **Objavi**. Akcija „Sačuvaj i nastavi“ čuva započeti Događaj, ne objavljuje ga i ne šalje ga na odobrenje. „U pripremi“ označava Događaj koji je Urednik sačuvao, a koji još nikada nije bio objavljen; **nije** novi status životnog ciklusa i **nije** isto što i Moderatorski poslovni **Nacrt**. Takvi Događaji prikazuju se na zajedničkoj listi „Događaji“ (bez posebnog ekrana ili navigacije). Osnovne akcije za „U pripremi“ su Uredi i Obriši; Objavi se vrši iz samog Događaja. |
 | BM-UR-15 | Urednik može trajno obrisati Događaj **samo** ako taj Događaj nikada nije bio objavljen (stanje „U pripremi“). Nakon prve objave trajno brisanje nije dozvoljeno, bez obzira na kasnije stanje (Objavljen, Otkazan, Arhiviran). Otkazan Događaj se ne briše. |
-| BM-UR-16 | Urednik može **direktno** uređivati sadržajne podatke već Objavljenog Događaja koji pripada uredničkom toku (bez registrovanog Organizatora), radi ispravke ili dopune, bez Prijedloga izmjene i bez postupka odobravanja. Obuhvat, u granicama postojećeg modela, uključuje: naslov, opis, ručno uneseni naziv Organizatora, kategoriju, naslovni medij, oznake i druge obične sadržajne podatke za koje ne postoji posebno pravilo životnog ciklusa. Odgađanje Održavanja, otkazivanje Održavanja, otkazivanje Događaja i druge poslovno značajne radnje životnog ciklusa **ne** rade se kroz običan „Uredi“; koriste posebne akcije. Ovo pravilo **ne** ukida tok Prijedloga izmjene za Objavljeni Događaj Moderatorskog / registrovanog Organizatora. |
+| BM-UR-16 | Urednik može **direktno** uređivati sadržajne podatke već Objavljenog Događaja koji pripada uredničkom toku (bez registrovanog Organizatora), radi ispravke ili dopune, bez Prijedloga izmjene i bez postupka odobravanja. Obuhvat, u granicama postojećeg modela, uključuje: naslov, opis, ručno uneseni naziv Organizatora, kategoriju, naslovnu fotografiju, oznake i druge obične sadržajne podatke za koje ne postoji posebno pravilo životnog ciklusa. Odgađanje Održavanja, otkazivanje Održavanja, otkazivanje Događaja i druge poslovno značajne radnje životnog ciklusa **ne** rade se kroz običan „Uredi“; koriste posebne akcije. Ovo pravilo **ne** ukida tok Prijedloga izmjene za Objavljeni Događaj Moderatorskog / registrovanog Organizatora. |
 
 ## 5. Odnosi sa drugim poslovnim cjelinama
 
@@ -520,7 +521,7 @@ Događaj može biti samostalan ili biti dio jedne manifestacije. Pripadnost mani
 
 Lokacija nije svojstvo događaja već svojstvo održavanja događaja. Svako održavanje može imati svoju lokaciju.
 
-Događaj pripada jednoj primarnoj kategoriji. Dodatna klasifikacija događaja može se vršiti korišćenjem oznaka. Oznake nisu isto što i tagovi medija (BM-09). Događaj može biti sačuvan kao Nacrt (Moderator) ili U pripremi (Urednik) bez izabrane primarne kategorije. Za slanje događaja na odobrenje mora biti izabrana jedna primarna kategorija. Svaki objavljeni događaj mora imati jednu primarnu kategoriju.
+Događaj pripada jednoj primarnoj kategoriji. Dodatna klasifikacija događaja može se vršiti korišćenjem oznaka. Oznake Događaja nisu metapodaci fotografije (MED-07 / BM-MD-24). Događaj može biti sačuvan kao Nacrt (Moderator) ili U pripremi (Urednik) bez izabrane primarne kategorije. Za slanje događaja na odobrenje mora biti izabrana jedna primarna kategorija. Svaki objavljeni događaj mora imati jednu primarnu kategoriju.
 
 Događaj registrovanog Organizatora povezan je sa tačno jednim registrovanim Organizatorom i kreira ga Moderator tog Organizatora. Urednik samostalno kreira Događaj bez veze sa registrovanim Organizatorom i može opciono unijeti ručno naziv neregistrovanog Organizatora (BM-UR-13 / BM-DG-12). Takav Događaj može biti objavljen i bez navedenog Organizatora. Po registraciji odgovarajućeg Organizatora već Objavljen događaj bez registrovanog Organizatora može se naknadno povezati sa Organizatorom kao administrativna dopuna podataka, bez izmjene audita, istorije događaja i javno objavljenih verzija.
 
@@ -547,7 +548,7 @@ Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala odr
 | BM-DG-03 | Lokacija nije svojstvo događaja već svojstvo održavanja događaja. Svako održavanje može imati svoju lokaciju. Detaljna pravila definišu se u BM-07 Lokacija. |
 | BM-DG-04 | Nakon završetka svih održavanja sistem automatski arhivira događaj. Automatsko arhiviranje primjenjuje se na događaj u statusu Objavljen i na događaj u statusu Otkazan. Arhiviranje se ne izvršava ručno. Pri prelazu u Arhiviran Sistem mora pouzdano sačuvati iz kojeg relevantnog javnog statusa (Objavljen ili Otkazan) je Događaj arhiviran, radi istorijskog javnog prikaza (BM-PK-35 / PO-6A09-02). Detaljna pravila prikaza Javne Arhive definišu se u BM-11 Portal Kalendara kulture (BM-PK-13 / BM-PK-35). |
 | BM-DG-05 | Događaj može biti otkazan. Otkazani događaj ostaje evidentiran u sistemu i dobija status „Otkazan“. Moderator može samostalno otkazati objavljeni događaj isključivo dok Organizator ima status Aktivan i isključivo za Organizatora u čijem aktivnom kontekstu ima aktivno moderatorsko ovlašćenje. Deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više nema pravo otkazivanja događaja tog Organizatora; otkazivanje događaja deaktiviranog Organizatora izvršava isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj. Pri otkazivanju Događaja (Objavljen → Otkazan) primjenjuje se BM-DG-11. Pojedinačno održavanje događaja može biti otkazano bez uticaja na ostala održavanja istog događaja i bez prelaska cijelog Događaja u Otkazan; to ne isključuje BM-DG-11. Detaljna pravila za održavanja definišu se u BM-06 Održavanje događaja. |
-| BM-DG-06 | Događaj pripada jednoj primarnoj kategoriji. Dodatna klasifikacija događaja može se vršiti korišćenjem oznaka. Oznake nisu isto što i tagovi medija (BM-09). Detaljna pravila o kategorijama i oznakama definišu se u BM-08 Kategorije i oznake. |
+| BM-DG-06 | Događaj pripada jednoj primarnoj kategoriji. Dodatna klasifikacija događaja može se vršiti korišćenjem oznaka. Oznake Događaja nisu metapodaci fotografije i ne pripadaju naslovnoj fotografiji (MED-07 / BM-MD-24). Detaljna pravila o kategorijama i oznakama definišu se u BM-08 Kategorije i oznake. Naslovna fotografija Događaja: BM-09 / BM-MD-18+. |
 | BM-DG-07 | Događaj može biti sačuvan kao Nacrt (Moderator) ili U pripremi (Urednik) bez izabrane primarne kategorije. Za slanje događaja na odobrenje mora biti izabrana jedna primarna kategorija. Svaki objavljeni događaj mora imati jednu primarnu kategoriju. |
 | BM-DG-08 | Događaj registrovanog Organizatora povezan je sa tačno jednim registrovanim Organizatorom. **Urednički tok:** Događaj koji kreira Urednik nije povezan sa registrovanim Organizatorom; Urednik ne bira registrovanog Organizatora u create toku (BM-UR-12). Takav Događaj može imati opcion ručno uneseni naziv neregistrovanog Organizatora (BM-DG-12) i može biti objavljen i bez ikakvog navedenog Organizatora. **Naknadna dopuna (BM-UR-07 / PO-DG-08 / PO-DG-09):** kada odgovarajući Organizator bude registrovan i Aktivan, Urednik može jednokratno i jednosmjerno povezati taj Objavljeni događaj sa Aktivnim Organizatorom. Ovo pravilo ne dozvoljava proizvoljnu kasniju promjenu Organizatora, uklanjanje veze niti prebacivanje na drugog Organizatora. |
 | BM-DG-09 | Status Otkazan predstavlja terminalno stanje događaja u smislu povratka u Objavljen. Iz statusa Otkazan nije dozvoljen povratak u status Objavljen. Ako se isti kulturni program kasnije ponovo organizuje, ne reaktivira se postojeći događaj; kreira se novi događaj kao novi zapis sa novim životnim ciklusom. Promjena termina postojećeg događaja koji nije otkazan vrši se isključivo kroz status Odgođen na održavanju, u skladu sa BM-06. |
@@ -651,7 +652,7 @@ Objavljenoj Manifestaciji dozvoljeno je dodavanje i uklanjanje Događaja bez pro
 
 ### 3.7 Podaci Manifestacije
 
-Manifestacija ima sopstvene podatke, uključujući naziv, opis, opcionu naslovnu fotografiju i opciono polje Web stranica / Više informacije. Manifestacija ne nasljeđuje ove podatke od Događaja. Naslovna fotografija je nezavisna od fotografija Događaja; sistem ne preuzima automatski fotografiju Događaja. Kada fotografija nije postavljena, javni portal koristi podrazumijevanu ilustraciju ili placeholder.
+Manifestacija ima sopstvene podatke, uključujući naziv, opis, opcionu naslovnu fotografiju i opciono polje Web stranica / Više informacije. Manifestacija ne nasljeđuje ove podatke od Događaja. Naslovna fotografija je nezavisna od fotografija Događaja; sistem ne preuzima automatski fotografiju Događaja. Kada fotografija nije postavljena, javni portal koristi zasebni statički placeholder Manifestacije (MED-09 / BM-MD-26). Placeholder nije `CulturalMedia` zapis.
 
 SEO slug nije poslovni zahtjev V1. Sistem može koristiti interni identifikator ili tehnički URL. Eksterni URL (Web stranica / Više informacije) ne zamjenjuje podatke o terminima i lokacijama u sistemu.
 
@@ -678,7 +679,7 @@ Manifestacija može biti otkazana. Otkazivanje izvršava Moderator u aktivnom ko
 | BM-MF-05 | Početak i završetak Manifestacije sistem određuje automatski iz važećih održavanja Objavljenih Događaja (isključujući Otkazana i Odgođena bez potvrđenog novog termina). Ručni unos trajanja nije poslovni zahtjev. |
 | BM-MF-06 | Objavljena Manifestacija se automatski arhivira nakon isteka planiranog trajanja. Otkazana Manifestacija ostaje Otkazana do isteka planiranog trajanja, zatim je Sistem automatski arhivira. Arhiviranje se ne izvršava ručno. Arhiviranje Manifestacije ne arhivira automatski Događaje niti Održavanja. Prikaz arhive: BM-11. |
 | BM-MF-07 | Manifestacija može biti otkazana i dobija status Otkazana. Moderator u aktivnom kontekstu Organizatora može otkazati Manifestaciju kojom taj Organizator upravlja. Urednik može otkazati bilo koju Manifestaciju. Administrator platforme nema redovnu poslovnu ulogu u otkazivanju. Otkazivanje ne briše Događaje i ne mijenja njihove statuse niti statuse Održavanja. |
-| BM-MF-08 | Manifestacija ima sopstvene podatke (naziv, opis, opciona naslovna fotografija, opciono polje Web stranica / Više informacije). Ne nasljeđuje podatke od Događaja. Bez SEO slug-a kao poslovnog zahtjeva V1. Mediji: BM-09. |
+| BM-MF-08 | Manifestacija ima sopstvene podatke (naziv, opis, opciona naslovna fotografija `0..1`, opciono polje Web stranica / Više informacije). Ne nasljeđuje podatke od Događaja. Bez SEO slug-a kao poslovnog zahtjeva V1. Naslovna fotografija: BM-09 / MED-01–MED-28. |
 | BM-MF-09 | Manifestaciju može kreirati Moderator u ime svog Organizatora. Urednik može kreirati Manifestaciju u ime bilo kojeg Organizatora ili bez Organizatora (BM-03). Porijeklo toka = akter kreiranja (BM-MF-21), ne samo prisustvo Organizatora. |
 | BM-MF-10 | Manifestacija može biti sačuvana kao Nacrt i uređivana. **Moderator-kreirana:** za slanje na odobrenje mora ispunjavati BM-MF-02 i ostala pravila ovog poglavlja. **Urednik-kreirana:** Urednik čuva Nacrt / U pripremi i direktno objavljuje kada su ispunjeni uslovi objave (BM-MF-13 / BM-MF-22); bez samoodobravanja. |
 | BM-MF-11 | Statusi Manifestacije: Nacrt, Na odobrenju, Vraćena na doradu, Objavljena, Otkazana, Arhivirana. Nema statusa Odgođena. Odgađanje pripada Održavanju. Statusi Na odobrenju i Vraćena na doradu pripadaju **Moderator-kreiranom** toku odobravanja; Urednik-kreirana Manifestacija ne prolazi te statuse u redovnom toku (BM-MF-22). |
@@ -1083,115 +1084,211 @@ Za poglavlje BM-08 trenutno nema otvorenih poslovnih pitanja (javni CAT-CUTOVER 
 
 ---
 
-# BM-09 Mediji
+# BM-09 Naslovna fotografija Događaja i Manifestacije
 
-**Status poglavlja:** USVOJENO
+**Status poglavlja:** USVOJENO (kanonski model PATCH-075 / MED-01–MED-28)
+
+**Dokumentacioni status paketa:** PO ADOPTED / DOCS CANONICALIZED / **IMPLEMENTATION PENDING**
+
+**Istorijski naziv poglavlja:** Mediji (PATCH-009 / PATCH-044 / TS8). Taj model je **ZASTARJELO / SUPERSEDED**. Pravila BM-MD-01–BM-MD-17 ostaju u ovom poglavlju isključivo radi sljedivosti i **nisu** aktivni SSOT.
 
 ## 1. Svrha
 
-Definisanje poslovnog koncepta medija, zatvorenog kataloga namjena, povezivanja sa poslovnim entitetima, životnog ciklusa, ovlašćenja, metapodataka i prikaza u modulu Kalendara kulture.
+Definisanje kanonskog poslovnog modela **naslovne fotografije** Događaja i Manifestacije u Kalendaru kulture.
+
+Mediji **nijesu** posebna poslovna cjelina. Interni tehnički mehanizam (`CulturalMedia`, `cover_media_id`) nije poslovni objekat niti katalog.
 
 ## 2. Poslovni opis
 
-Medij je **samostalan poslovni entitet** i **zajednički platformski resurs**. Medij **nema poslovnog vlasnika**.
+Događaj ima `0..1` naslovnu fotografiju. Manifestacija ima `0..1` naslovnu fotografiju.
 
-Jedini poslovni tip medija u V1 je **Fotografija**.
+Fotografija se dodaje **isključivo uploadom nove fotografije** u kontekstu konkretnog Događaja ili Manifestacije. Nema biblioteke, reuse-a postojećih fotografija ni galerije u V1.
 
-Medij ima tačno jednu poslovnu namjenu iz zatvorenog kataloga namjena. Namjena nije isto što i tip medija, format datoteke, ekstenzija ili MIME tip.
+Naslovna fotografija **nije obavezna** za objavu. Na javnom portalu prikaz uvijek ima vizuel: naslovna, zatim fallback (BM-MD-25 / BM-MD-26).
+
+Oznake Događaja su zaseban koncept (BM-08) i **ne pripadaju** fotografiji.
 
 ## 3. Poslovni koncept
 
-U V1 mediji služe vizuelnom predstavljanju događaja, manifestacija i kategorija kroz tri namjene:
-
-1. Naslovna fotografija događaja (cover događaja);
-2. Naslovna fotografija manifestacije (cover manifestacije);
-3. Podrazumijevana fotografija kategorije.
-
-Upload medija vrši se isključivo tokom uređivanja događaja, manifestacije ili kategorije. Ne postoji zaseban poslovni ekran isključivo za upload.
-
-Kreator (creator) medija služi isključivo auditu, istoriji i logovima — nije vlasništvo.
+- Upload, zamjena i uklanjanje pripadaju sadržaju (Događaj / Manifestacija).
+- Prava i zaključavanje prate prava i uređivost tog sadržaja.
+- Korisnik ne unosi poslovne metapodatke fotografije (naziv, ALT, opis, autor, izvor, licenca, tagove, namjenu, status Aktivan/Neaktivan).
+- Sistem vodi samo potrebne tehničke podatke.
+- Fallback vizuelni resursi su **statički Git-verzionisani fajlovi aplikacije**, nisu `CulturalMedia` zapisi i nisu predmet uploada.
+- MEGA se ne koristi za fotografije Kalendara kulture.
+- Poseban ekran/modul „Mediji“ ne postoji u uredničkom portalu.
 
 ## 4. Poslovna pravila
 
+### 4.A Kanonska pravila (PATCH-075 / MED-01–MED-28) — AKTIVNI SSOT
+
+### BM-MD-18 — Nije poslovna cjelina (MED-01)
+
+> Naslovna fotografija nije samostalna poslovna cjelina Kalendara kulture. Interni tehnički mehanizam (`CulturalMedia`) nije poslovni objekat, katalog ni vlasnički entitet.
+
+### BM-MD-19 — Kardinalnost i galerija (MED-02)
+
+> Događaj ima `0..1` naslovnu fotografiju. Manifestacija ima `0..1` naslovnu fotografiju. U V1 nema galerije.
+
+### BM-MD-20 — Upload isključivo u kontekstu sadržaja (MED-03)
+
+> Fotografija se dodaje isključivo uploadom nove fotografije u kontekstu konkretnog Događaja ili Manifestacije. Nema biblioteke medija niti ponovne upotrebe (reuse) postojećih fotografija.
+
+### BM-MD-21 — Opcionost (MED-04)
+
+> Naslovna fotografija nije obavezna za objavu Događaja niti Manifestacije.
+
+### BM-MD-22 — Zamjena i uklanjanje (MED-05, MED-21, MED-22)
+
+> Kod zamjene ili uklanjanja stare fotografije brišu se njen interni tehnički zapis i fizički fajl.
+>
+> Kod zamjene nova fotografija mora potpuno uspjeti prije uklanjanja stare, ovim redom: (1) validacija; (2) obrada/resize; (3) storage; (4) DB promjena; (5) tek onda cleanup stare. Ako nova operacija ne uspije, stara ostaje netaknuta.
+>
+> Ako je nova fotografija uspješno postavljena, ali fizičko brisanje stare ne uspije: nova ostaje važeća; rollback se ne radi; greška se evidentira; stari fajl postaje orphan kandidat.
+
+### BM-MD-23 — Prava i zaključavanje (MED-06, MED-18)
+
+> Prava nad fotografijom prate prava nad konkretnim Događajem ili Manifestacijom. Nema zasebnog Media authorization modela. Fotografija prati stanje uređivosti sadržaja: kada je sadržaj zaključan, zaključana je i fotografija.
+
+### BM-MD-24 — Bez poslovnih metapodataka fotografije (MED-07)
+
+> Korisnik ne unosi poslovne metapodatke fotografije: naziv, ALT, opis, autor, izvor, licenca, tagove, namjenu ili status. Sistem vodi samo potrebne tehničke podatke. Oznake Događaja nisu metapodaci fotografije.
+
+### BM-MD-25 — Fallback Događaja (MED-08)
+
+> Prikaz Događaja: (1) naslovna fotografija; (2) statička Git-verzionisana fotografija primarne Kategorije; (3) globalni placeholder Događaja. Fallback nije poslovna veza i nije `CulturalMedia` zapis.
+
+### BM-MD-26 — Fallback Manifestacije (MED-09)
+
+> Manifestacija bez naslovne koristi svoj zasebni statički placeholder. Ne preuzima fotografiju Događaja niti obrnuto.
+
+### BM-MD-27 — Formati i veličina (MED-10)
+
+> Dozvoljeni upload formati: JPEG/JPG, PNG, WebP. Maksimalna veličina: **2 MB**. Serverski se provjeravaju stvarni sadržaj, MIME i ekstenzija.
+
+### BM-MD-28 — Obrada fotografije (MED-11, MED-12, MED-13)
+
+> Ako je duža strana fotografije veća od 1920 px, radi se proporcionalni resize na maksimalno 1920 px. Nema cropa; odnos stranica se čuva; manja fotografija se ne povećava. Čuva se samo konačna obrađena web fotografija; original se ne čuva zasebno. Format se ne konvertuje.
+
+### BM-MD-29 — Prikaz u okviru (MED-14)
+
+> U UI prostorima sa definisanim proporcijama koristi se `object-fit: cover`.
+
+### BM-MD-30 — Upozorenje ispod 800 px (MED-15)
+
+> Ako je duža strana manja od 800 px, korisniku se prikazuje informativno upozorenje. Upload nije blokiran.
+
+### BM-MD-31 — Storage (MED-16)
+
+> Fotografije se čuvaju na Laravel `public` disku u `storage/app/public/cultural-media/`. MEGA se ne koristi za fotografije Kalendara kulture.
+
+### BM-MD-32 — Nema ekrana Mediji; UX namjera (MED-17, MED-26)
+
+> Poseban ekran/modul „Mediji“ uklanja se iz uredničkog portala. UX naslovne: vizuelna upload kartica; drag & drop; standardni file picker; lokalni preview; Zamijeni; Ukloni; upozorenje <800 px. **Odustani** ne smije trajno promijeniti postojeću fotografiju. Kontrola je dostupna samo kada je sadržaj uređiv.
+
+### BM-MD-33 — Lifecycle sa sadržajem (MED-19, MED-20)
+
+> Trajno brisanje Događaja (dozvoljeni never-published zapis) trajno briše i pripadajuću fotografiju, interni tehnički zapis i fajl. Arhiviranje ili otkazivanje **ne** briše fotografiju.
+>
+> V1 **nema** poslovno trajno brisanje Manifestacije; MED-19 za Manifestaciju se ne uvodi kao nova delete operacija.
+
+### BM-MD-34 — Cleanup (MED-23, MED-24, MED-25)
+
+> Postoji usko ograničena serverska cleanup/reconciliation komanda samo za `storage/app/public/cultural-media/`. Ima podrazumijevani non-destructive pregledni režim i eksplicitni režim stvarnog brisanja. U V1 se pokreće samo ručno; nema schedulera.
+
+### BM-MD-35 — Statički fallback resursi (MED-27)
+
+> Fallback vizuelni resursi su statički Git-verzionisani fajlovi aplikacije: 14 kategorijskih fotografija (kanonske kategorije BM-08); 1 globalni placeholder Događaja; 1 placeholder Manifestacije. Nijesu `CulturalMedia` zapisi. Nema upload UI-ja za kategorijske fotografije.
+
+### BM-MD-36 — Audit kompatibilnost (MED-28)
+
+> Ne uvode se novi `media.*` audit kodovi. Postojeći zamrznuti kod `TS12-MF-11` / `mf.cover.change` ostaje nepromijenjen. TS-012 freeze katalog se ne otvara.
+
+### 4.B Istorijska pravila (PATCH-044 / TS8) — ZASTARJELO / SUPERSEDED
+
+Sljedeća pravila **nijesu** aktivni SSOT. Zamijenjena su BM-MD-18–BM-MD-36 / MED-01–MED-28. Tekst se ne briše radi sljedivosti.
+
 ### BM-MD-01 — Definicija medija
 
-> Medij je samostalan poslovni entitet tipa Fotografija u modulu Kalendara kulture. Medij je zajednički platformski resurs i nema poslovnog vlasnika.
+> **ZASTARJELO / SUPERSEDED (PATCH-075).** Istorijski: Medij je samostalan poslovni entitet tipa Fotografija u modulu Kalendara kulture. Medij je zajednički platformski resurs i nema poslovnog vlasnika.
 
 ### BM-MD-02 — Povezivanje medija
 
-> Jedan medij može biti povezan sa jednim ili više poslovnih entiteta u skladu sa svojom namjenom: događaji (naslovna fotografija događaja), manifestacije (naslovna fotografija manifestacije) ili kategorije (podrazumijevana fotografija kategorije). U V1 ne postoje poslovne veze medija sa lokacijama niti organizatorima.
+> **ZASTARJELO / SUPERSEDED (PATCH-075).** Istorijski: Jedan medij može biti povezan sa jednim ili više poslovnih entiteta u skladu sa svojom namjenom: događaji (naslovna fotografija događaja), manifestacije (naslovna fotografija manifestacije) ili kategorije (podrazumijevana fotografija kategorije). U V1 ne postoje poslovne veze medija sa lokacijama niti organizatorima.
 
 ### BM-MD-03 — Namjena medija
 
-> Medij ima tačno jednu poslovnu namjenu iz zatvorenog kataloga. Katalog namjena nije korisnički konfigurabilan i ne uređuje se kroz aplikaciju. Proširenje kataloga moguće je isključivo novom Product Owner odlukom i odgovarajućim PATCH-om dokumentacije. Namjene V1: Naslovna fotografija događaja; Naslovna fotografija manifestacije; Podrazumijevana fotografija kategorije. Isti medij-zapis ne može istovremeno imati dvije različite namjene.
+> **ZASTARJELO / SUPERSEDED (PATCH-075).** Istorijski: Medij ima tačno jednu poslovnu namjenu iz zatvorenog kataloga. Katalog namjena nije korisnički konfigurabilan i ne uređuje se kroz aplikaciju. Proširenje kataloga moguće je isključivo novom Product Owner odlukom i odgovarajućim PATCH-om dokumentacije. Namjene V1: Naslovna fotografija događaja; Naslovna fotografija manifestacije; Podrazumijevana fotografija kategorije. Isti medij-zapis ne može istovremeno imati dvije različite namjene.
 
 ### BM-MD-04 — Aktivnost medija
 
-> Medij ima status **Aktivan** ili **Neaktivan**. Soft delete se ne koristi. Neaktivan medij ne može dobiti nova poslovna povezivanja, ali ostaje povezan sa postojećim entitetima i nastavlja da se prikazuje kroz postojeće veze dok se veza ne ukloni ili medij ne zamijeni. Dozvoljena je reaktivacija (Neaktivan → Aktivan). Trajno brisanje medija dozvoljeno je isključivo kada medij nema nijednu poslovnu vezu. Deaktivacija ne briše postojeće veze niti fizički fajl i ne mijenja automatski događaj, manifestaciju ili kategoriju.
+> **ZASTARJELO / SUPERSEDED (PATCH-075).** Istorijski: Medij ima status **Aktivan** ili **Neaktivan**. Soft delete se ne koristi. Neaktivan medij ne može dobiti nova poslovna povezivanja, ali ostaje povezan sa postojećim entitetima i nastavlja da se prikazuje kroz postojeće veze dok se veza ne ukloni ili medij ne zamijeni. Dozvoljena je reaktivacija (Neaktivan → Aktivan). Trajno brisanje medija dozvoljeno je isključivo kada medij nema nijednu poslovnu vezu. Deaktivacija ne briše postojeće veze niti fizički fajl i ne mijenja automatski događaj, manifestaciju ili kategoriju.
 
 ### BM-MD-05 — Ovlašćenja nad medijima
 
-> Upload medija moguć je isključivo tokom uređivanja događaja, manifestacije ili kategorije. Moderator uploaduje, povezuje, zamjenjuje vezu i uklanja vezu isključivo u okviru svog organizacionog konteksta; Moderator ne mijenja medij-zapis (poslovne i tehničke atribute medija) niti aktivira, deaktivira, reaktivira ili trajno briše medij. Urednik uploaduje u okviru svojih ovlašćenja i upravlja medij-zapisom; isključivo Urednik aktivira, deaktivira, reaktivira i trajno briše medij. Organizator nije operativna uloga. Administrator platforme nema redovnu poslovnu ulogu u upravljanju medijima. Prije svake izmjene i prije trajnog brisanja sistem ponovo provjerava ovlašćenja i uslove; ako uslovi nisu ispunjeni, operacija se odbija.
+> **ZASTARJELO / SUPERSEDED (PATCH-075).** Istorijski: Upload medija moguć je isključivo tokom uređivanja događaja, manifestacije ili kategorije. Moderator uploaduje, povezuje, zamjenjuje vezu i uklanja vezu isključivo u okviru svog organizacionog konteksta; Moderator ne mijenja medij-zapis (poslovne i tehničke atribute medija) niti aktivira, deaktivira, reaktivira ili trajno briše medij. Urednik uploaduje u okviru svojih ovlašćenja i upravlja medij-zapisom; isključivo Urednik aktivira, deaktivira, reaktivira i trajno briše medij. Organizator nije operativna uloga. Administrator platforme nema redovnu poslovnu ulogu u upravljanju medijima. Prije svake izmjene i prije trajnog brisanja sistem ponovo provjerava ovlašćenja i uslove; ako uslovi nisu ispunjeni, operacija se odbija.
 
 ### BM-MD-06 — Naslovna fotografija događaja i hijerarhija prikaza
 
-> Događaj može imati najviše jednu direktno povezanu naslovnu fotografiju (kardinalnost 0..1). Direktna naslovna fotografija nije obavezna za objavu. Na javnom portalu događaj uvijek ima jednu prikazanu fotografiju po hijerarhiji: (1) direktno povezana naslovna fotografija događaja; (2) podrazumijevana fotografija primarne kategorije događaja; (3) globalni tehnički placeholder događaja. Fallback nije poslovna veza događaj–medij: sistem ne kreira vezu, ne kopira medij kategorije na događaj i ne smatra fallback naslovnom fotografijom događaja. Uklanjanje jedine naslovne fotografije događaja je dozvoljeno i aktivira istu hijerarhiju prikaza. Globalni tehnički placeholder nije poslovni medij, nema namjenu i nije zapis u katalogu medija.
+> **ZASTARJELO / SUPERSEDED (PATCH-075)** kao pravilo samostalnog Medija / `category_default` Media zapisa. Kanonski fallback Događaja: BM-MD-25. Istorijski tekst: Događaj može imati najviše jednu direktno povezanu naslovnu fotografiju (kardinalnost 0..1). Direktna naslovna fotografija nije obavezna za objavu. Na javnom portalu događaj uvijek ima jednu prikazanu fotografiju po hijerarhiji: (1) direktno povezana naslovna fotografija događaja; (2) podrazumijevana fotografija primarne kategorije događaja; (3) globalni tehnički placeholder događaja. Fallback nije poslovna veza događaj–medij: sistem ne kreira vezu, ne kopira medij kategorije na događaj i ne smatra fallback naslovnom fotografijom događaja. Uklanjanje jedine naslovne fotografije događaja je dozvoljeno i aktivira istu hijerarhiju prikaza. Globalni tehnički placeholder nije poslovni medij, nema namjenu i nije zapis u katalogu medija.
 
 ### BM-MD-07 — Naslovna fotografija manifestacije
 
-> Manifestacija može imati najviše jednu naslovnu fotografiju (0..1). Ako nije povezana, koristi se placeholder manifestacije. Placeholder manifestacije nije poslovni medij, nije zapis u katalogu medija i nije povezan poslovnom vezom. Ne postoji automatsko preuzimanje fotografije sa događaja na manifestaciju niti obrnuto, niti automatsko povezivanje ili kopiranje medij-zapisa. Ako isti fizički fajl treba obje namjene, postoje dva odvojena medij-zapisa sa različitim namjenama.
+> **ZASTARJELO / SUPERSEDED (PATCH-075)** u dijelu modela Medija-zapisa. Kanonski: BM-MD-19, BM-MD-26. Istorijski tekst: Manifestacija može imati najviše jednu naslovnu fotografiju (0..1). Ako nije povezana, koristi se placeholder manifestacije. Placeholder manifestacije nije poslovni medij, nije zapis u katalogu medija i nije povezan poslovnom vezom. Ne postoji automatsko preuzimanje fotografije sa događaja na manifestaciju niti obrnuto, niti automatsko povezivanje ili kopiranje medij-zapisa. Ako isti fizički fajl treba obje namjene, postoje dva odvojena medij-zapisa sa različitim namjenama.
 
 ### BM-MD-08 — Podrazumijevana fotografija kategorije
 
-> Kategorija može imati najviše jednu podrazumijevanu fotografiju (0..1). Veza je opciona; Aktivna kategorija ne mora imati podrazumijevanu fotografiju. Jedan medij sa ovom namjenom može biti povezan sa jednom ili više kategorija. Podrazumijevana fotografija kategorije ne smatra se naslovnom fotografijom događaja.
+> **ZASTARJELO / SUPERSEDED (PATCH-075).** Istorijski: Kategorija može imati najviše jednu podrazumijevanu fotografiju (0..1) kao Media vezu. Kanonski: statički Git resursi (BM-MD-35).
 
 ### BM-MD-09 — Kardinalnost medija prema entitetima
 
-> Medij sa namjenom „Naslovna fotografija događaja“ može biti povezan sa jednim ili više događaja (1..N). Medij sa namjenom „Naslovna fotografija manifestacije“ može biti povezan sa jednom ili više manifestacija (1..N). Medij sa namjenom „Podrazumijevana fotografija kategorije“ može biti povezan sa jednom ili više kategorija (1..N). Dijeljenje medija nije obavezno. Sistem ne smije automatski povezivati medij sa drugim entitetima niti automatski kreirati duplikate medij-zapisa.
+> **ZASTARJELO / SUPERSEDED (PATCH-075).** Istorijski: reuse 1..N entiteta iste namjene. Kanonski: nema reuse-a (BM-MD-20).
 
 ### BM-MD-10 — Uklanjanje veze
 
-> Uklanjanje medija sa jednog događaja, manifestacije ili kategorije uklanja samo tu vezu. Ne briše medij, ne briše fizički fajl i ne utiče na druge entitete povezane sa istim medijem.
+> **ZASTARJELO / SUPERSEDED (PATCH-075).** Istorijski: uklanjanje veze ne briše medij ni fajl. Kanonski: BM-MD-22.
 
 ### BM-MD-11 — Tip i formati fotografije
 
-> Jedini poslovni tip medija u V1 je Fotografija. Dozvoljeni formati: JPEG, PNG, WebP. Dozvoljene ekstenzije: `.jpg`, `.jpeg`, `.png`, `.webp`. Dozvoljeni MIME tipovi: `image/jpeg`, `image/png`, `image/webp`. Maksimalna veličina jedne fotografije je 5 MB (5120 KB). Nisu dozvoljeni: SVG, GIF, BMP, TIFF, HEIC/HEIF, animirane slike i svi formati koji nisu izričito dozvoljeni. Sistem mora potvrditi međusobnu podudarnost sadržaja, MIME tipa i ekstenzije. Serverska validacija je mjerodavna. Minimalne dimenzije i obavezni odnos stranica nisu poslovni uslov prijema. V1 ne zahtijeva automatski resize, thumbnail, kompresiju ni konverziju formata.
+> **ZASTARJELO / SUPERSEDED (PATCH-075)** u dijelu 5 MB i odsustva resize-a. Kanonski: BM-MD-27, BM-MD-28. Istorijski: max 5 MB; bez automatskog resize-a.
 
 ### BM-MD-12 — Vidljivost kataloga medija (nije vlasništvo)
 
-> Pri ponovnoj upotrebi medija Moderator vidi samo medije svog organizacionog konteksta. Urednik vidi kompletan katalog medija. Ovo je pravilo vidljivosti, ne vlasništva.
+> **ZASTARJELO / SUPERSEDED (PATCH-075).** Istorijski: Moderator vidi samo medije svog organizacionog konteksta; Urednik vidi kompletan katalog. Nema kataloga.
 
 ### BM-MD-13 — Pretraga medija
 
-> Moderator pretražuje medije po nazivu i opisu u okviru svog organizatora. Urednik pretražuje kompletan katalog uz filtere: status, namjena, organizator, kreator. Prikaz rezultata je u vidu kartica (thumbnail, naziv, namjena, dimenzije, veličina, datum) uz navigaciju load more ili infinite scroll.
+> **ZASTARJELO / SUPERSEDED (PATCH-075).** Istorijski: pretraga kataloga medija.
 
 ### BM-MD-14 — Poslovni metapodaci medija
 
-> Obavezni poslovni metapodaci: naziv, ALT tekst. Opcioni: opis, autor, izvor, licenca, tagovi. Tagovi postoje u modelu podataka, ali nisu dio V1 korisničkog interfejsa.
+> **ZASTARJELO / SUPERSEDED (PATCH-075).** Istorijski: obavezni naziv i ALT. Kanonski: BM-MD-24.
 
 ### BM-MD-15 — Tehnički metapodaci medija
 
-> Sistem automatski vodi najmanje: originalni naziv datoteke, interni naziv, MIME tip, format, dimenzije, veličinu, vrijeme uploada, kreatora, vrijeme posljednje izmjene i status.
+> **ZASTARJELO / SUPERSEDED (PATCH-075)** kao katalogski model. Kanonski: samo potrebni tehnički podaci (BM-MD-24).
 
 ### BM-MD-16 — Dupli upload
 
-> Pri uploadu sistem provjerava identičnu datoteku. Ako postoji, prikazuje se upozorenje i korisnik bira nastavak uploada ili korišćenje postojećeg medija. Duplikati nisu zabranjeni. Provjera sličnih (neidentičnih) fotografija nije dio V1.
+> **ZASTARJELO / SUPERSEDED (PATCH-075).** Istorijski: ponuda korišćenja postojećeg medija.
 
 ### BM-MD-17 — Opseg V1
 
-> U V1 ne ulaze: galerije fotografija, dokumenti kao poslovni medij, video, audio, mediji lokacija, mediji organizatora, proizvoljne korisničke namjene, uređivi katalog namjena, soft delete, scenario sa dva Urednika kao poslovno pravilo. Tehnička zaštita od uređivanja istog zapisa u više browser tabova nije poslovno pravilo.
+> **ZASTARJELO / SUPERSEDED (PATCH-075)** kao SSOT opsega samostalnog Medija. Galerija i dalje nije u V1 (BM-MD-19).
 
 ## 5. Odnosi sa drugim cjelinama
 
-- **Događaj** — opciona veza 0..1 na naslovnu fotografiju; prikaz uvijek jedne fotografije po BM-MD-06.
-- **Manifestacija** — opciona veza 0..1 na naslovnu fotografiju; BM-MD-07.
-- **Kategorija** — opciona veza 0..1 na podrazumijevanu fotografiju; BM-MD-08.
-- **Moderator / Urednik** — ovlašćenja BM-MD-05, BM-MD-12, BM-MD-13.
-- **Portal** — prikaz medija u skladu sa BM-PK-12 i hijerarhijom BM-MD-06.
+- **Događaj** — opciona naslovna fotografija `0..1`; upload u kontekstu Događaja; prikaz po BM-MD-25.
+- **Manifestacija** — opciona naslovna fotografija `0..1`; upload u kontekstu Manifestacije; prikaz po BM-MD-26.
+- **Kategorija** — 14 kanonskih kategorija imaju statičke Git fallback fotografije; nema `CulturalMedia` veze ni upload UI-ja.
+- **Oznake** — BM-08; nisu tagovi fotografije.
+- **Portal** — BM-PK-12.
+- **Urednički portal** — nema zasebnog ekrana Mediji (BM-EP-03, BM-MD-32).
+- **Evidencija** — BM-MD-36 / TS-012 KEEP `mf.cover.change`.
 
 ## 6. Otvorena pitanja
 
-Za poglavlje BM-09 trenutno nema otvorenih poslovnih pitanja.
+Za poglavlje BM-09 trenutno nema otvorenih poslovnih pitanja. Implementacija MED paketa nije predmet ovog PATCH-a.
 
 ---
 
@@ -1354,7 +1451,7 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 
 ### BM-PK-05 — Detaljan prikaz
 
-> Portal Kalendara kulture omogućava pregled detaljnih informacija o objavljenim događajima i manifestacijama, uključujući sa njima povezana održavanja (sa terminima i lokacijama), kategorije, oznake, medije i druge javno objavljene podatke u skladu sa poslovnim pravilima modula Kalendara kulture.
+> Portal Kalendara kulture omogućava pregled detaljnih informacija o objavljenim događajima i manifestacijama, uključujući sa njima povezana održavanja (sa terminima i lokacijama), kategorije, oznake, naslovnu fotografiju (ili fallback) i druge javno objavljene podatke u skladu sa poslovnim pravilima modula Kalendara kulture.
 
 ### BM-PK-06 — Pretraga
 
@@ -1398,9 +1495,17 @@ Za poglavlje BM-10 trenutno nema otvorenih poslovnih pitanja.
 >
 > Nakon cutover-a Faze 6A primarna kategorija na javnom portalu dolazi isključivo iz kanonskog kataloga (BM-PK-32 / BM-08).
 
-### BM-PK-12 — Prikaz medija
+### BM-PK-12 — Prikaz naslovne fotografije
 
-> Portal Kalendara kulture omogućava prikaz medija povezanih sa objavljenim događajima i manifestacijama, te prikaz fotografije događaja u skladu sa hijerarhijom naslovne fotografije / podrazumijevane fotografije kategorije / tehničkog placeholdera (BM-09). U V1 portal ne prikazuje medije lokacija niti organizatora.
+> Portal Kalendara kulture prikazuje naslovnu fotografiju objavljenog Događaja i objavljene Manifestacije.
+>
+> **Događaj (MED-08):** (1) naslovna fotografija Događaja; (2) statička Git-verzionisana fotografija primarne kategorije; (3) globalni placeholder Događaja.
+>
+> **Manifestacija (MED-09):** (1) naslovna fotografija Manifestacije; (2) zasebni statički placeholder Manifestacije.
+>
+> Fallback resursi nisu `CulturalMedia` zapisi i nisu poslovna veza. U okvirima sa definisanim proporcijama koristi se `object-fit: cover` (MED-14). U V1 portal ne prikazuje fotografije lokacija niti organizatora. Nema galerije.
+>
+> **PATCH-075 superseduje** ranije tumačenje ovog pravila kao prikaz samostalnog kataloga Medija / `category_default` Media zapisa (PATCH-044).
 
 ### BM-PK-13 — Prikaz otkazanih i arhiviranih događaja
 
@@ -1816,7 +1921,7 @@ Poslovna pravila rada pojedinačnih poslovnih entiteta definisana su odgovaraju�
 > * upravljanje Događajima (uključujući urednički tok U pripremi → Objavi i Moderatorski tok Nacrt → Pošalji na odobrenje);
 > * upravljanje Manifestacijama;
 > * upravljanje održavanjima događaja;
-> * upravljanje Medijima;
+> * upravljanje naslovnom fotografijom u kontekstu Događaja i Manifestacije (nema zasebnog ekrana Mediji);
 > * pregled statusa entiteta;
 > * sprovođenje uredničkog procesa;
 > * pregled poslovnih obavještenja i sistemskih informacija namijenjenih Moderatorima i Urednicima.
@@ -2276,9 +2381,11 @@ Definicije predstavljaju zajednički referentni okvir za sve učesnike u planira
 
 > Zapis poslovnog kataloga koji predstavlja osnovnu klasifikaciju Događaja (**vrsta Događaja**). Kategorija nije tehnička ENUM vrijednost. Katalog kategorija je proširiv. Početni V1 sadržaj kataloga usvojen je odlukom TS7-PO-07 / BM-KO-09. Događaj ima najviše jednu primarnu kategoriju; primarna kategorija je obavezna prije slanja na odobrenje i objave. Kategorija nije Manifestacija niti tip Organizatora (BM-KO-10).
 
-### BM-GL-15 — Mediji
+### BM-GL-15 — Naslovna fotografija
 
-> Samostalan poslovni entitet tipa Fotografija i zajednički platformski resurs bez poslovnog vlasnika. U V1 se povezuje sa Događajem (naslovna fotografija), Manifestacijom (naslovna fotografija) ili Kategorijom (podrazumijevana fotografija) u skladu sa zatvorenim katalogom namjena (BM-09).
+> Opciona naslovna fotografija Događaja (`0..1`) ili Manifestacije (`0..1`), postavljena isključivo uploadom u kontekstu tog sadržaja. Nije samostalan poslovni entitet ni katalog. Interni tehnički zapis (`CulturalMedia`) nije poslovni objekat. Kategorijske i placeholder fotografije su statički Git-verzionisani resursi aplikacije, nisu naslovna fotografija sadržaja (BM-09 / MED-01–MED-28).
+>
+> **Istorijski (PATCH-044 / TS8, SUPERSEDED):** pojam „Mediji“ označavao je samostalan poslovni entitet i zajednički platformski resurs sa katalogom namjena. Taj model je povučen PATCH-075.
 
 ### BM-GL-16 — Korisnički portal
 

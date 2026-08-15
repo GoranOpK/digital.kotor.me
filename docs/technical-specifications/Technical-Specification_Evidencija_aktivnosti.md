@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Evidencija aktivnosti  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** USVOJEN  
-**Verzija:** 1.0.8
+**Verzija:** 1.0.9
 **Datum:** 2026-08-15
 
 **Implementacija FT-003:** **FAZA 8 = IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED / CLOSED.** F8-01 canonical freeze complete. F8-02 centralni store = **IMPLEMENTED / PRODUCTION ACTIVE / ACCEPTED**. F8-03 canonical emitters = **IMPLEMENTED / PRODUCTION ACTIVE / ACCEPTED**. F8-04 minimalni Admin UI = **IMPLEMENTED / PRODUCTION ACTIVE / ACCEPTED** (`GET /admin/evidencija-aktivnosti`; Super Administrator production smoke PASS). Katalog §7 **KEEP**. V1 audit = **best-effort / failure-isolated** (nema durable replay). `repeatable()` uniqueness = known V1 limitation. V1 Admin UI = hronološka read-only lista + paginacija; **bez** filtera/search/export/show. Historical audit redovi **immutable** (nema korekcije starog `occurred_at`). Nije Technical Overview kompletnog FT-003.
@@ -27,6 +27,7 @@
 | 1.0.6 | 2026-08-14 | **F8-03 PO accept consistency:** `repeatable()` **KNOWN V1 LIMITATION** — nema matematičke/globalne uniqueness garancije kada su katalog ID, entity identity, canonical payload i persist timestamp do µs identični. DB unique `(source_module, event_id)` **KEEP**. Katalog §7 **KEEP**. Bez izmjene BM/FS. |
 | 1.0.7 | 2026-08-15 | **F8-04 status only:** minimalni Admin UI (hronološka read-only lista, paginacija, platformski Administrator) **IMPLEMENTED u kodu**; production deploy pending. F8-02/F8-03 = production active. Katalog §7 **KEEP**. Bez izmjene BM/FS. Nije Faza 8 production closeout. |
 | 1.0.8 | 2026-08-15 | **FAZA 8 PRODUCTION CLOSEOUT (status only):** F8-01…F8-04 **IMPLEMENTED / PRODUCTION ACTIVE / PRODUCTION ACCEPTED / CLOSED**. Admin UI production smoke PASS. Katalog §7 **KEEP**. Historical audit rows immutable. Bez izmjene BM/FS. |
+| 1.0.9 | 2026-08-15 | **MED-28 kompatibilnost (katalog KEEP):** nema novih `media.*` action kodova; **TS12-MF-11 / `mf.cover.change` = KEEP**; Event/MF content audit ostaje prema zamrznutom katalogu. Freeze katalog **nije** otvoren. Bez izmjene action code vrijednosti. |
 
 Napomena:
 
@@ -48,7 +49,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.5 | 2026-08-14 | V1 retry: best-effort / failure-isolated; idempotent ingest; **nema** durable replay garancije; katalog KEEP. |
 | 1.0.6 | 2026-08-14 | F8-03 PO accept: `repeatable()` uniqueness limitation; DB unique KEEP; katalog KEEP. |
 | 1.0.7 | 2026-08-15 | F8-04 status: V1 Admin UI implemented in code (read-only list + pagination); production pending; katalog KEEP. |
-| 1.0.8 | 2026-08-15 | FAZA 8 closeout: implementation complete / production active / production accepted / closed; katalog KEEP; historical rows immutable. |
+| 1.0.9 | 2026-08-15 | MED-28: no new `media.*`; TS12-MF-11 / `mf.cover.change` KEEP; freeze katalog not opened. |
 
 ---
 
@@ -375,6 +376,8 @@ Jedinstvenost zapisa Moderator aktivnosti: BR-180. Promjena aktivnog konteksta *
 | TS12-NL-06 | TS-011 | `nl.send.priority` | Slanje prioritetnog obavještenja | Sistem | newsletter_cycle | cycle_id | BR-185; BR-184 |
 
 Kanonski emiter u koloni Source module je **vlasnik lifecycle-a**. Ako portal (TS-010) izvršava radnju, i dalje emituje **jedan** kanonski emiter entiteta (TS-001/003/004/005/011), ne paralelno TS-010.
+
+**MED-28 / PATCH-075 (katalog neizmijenjen):** ne uvode se novi `media.*` kodovi. Postojeći **TS12-MF-11 / `mf.cover.change` ostaje**. Promjena naslovne fotografije Događaja ostaje pokrivena postojećim Event content audit kodovima iz ove matrice (bez novih kodova). TS-012 freeze se ne otvara.
 
 ## 7.2 Explicit exclusions
 

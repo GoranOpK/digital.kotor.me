@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Događaj  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.11
-**Datum:** 2026-08-12
+**Verzija:** 0.1.12
+**Datum:** 2026-08-15
 
 ---
 
@@ -28,6 +28,7 @@
 | 0.1.9 | 2026-08-09 | **PO-6A09-02:** §4.10 tačka 8 — očuvanje izvornog javnog statusa pri arhiviranju (BM-PK-35 / BR-286). Bez izmjene implementacije. |
 | 0.1.10 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** `organizer_manual_name`; XOR sa `organizer_id`; Urednik create/publish/delete draft; direktan published edit (Urednik); opcion `cancellation_reason` + javna napomena; §4.6–§4.9 / §4.12–§4.13 / §6. **Supersede:** apsolutni content lock Objavljenog za urednički tok; zabrana javnog razloga otkazivanja. Bez izmjene implementacije. |
 | 0.1.11 | 2026-08-12 | **PO-EV-WF-01 hardening:** §4.4 — `submitForApproval` / Nacrt→Na odobrenju **odbija** `organizer_id === null` (direktna objava je jedini put); usklađeno sa BR-018 / BR-325. Bez izmjene UI-ja ni ostalih Event lifecycle akcija. |
+| 0.1.12 | 2026-08-15 | **MED-01–MED-28:** naslovna fotografija `0..1`; nema `0..N` povezanih medija; nema reuse-a; upload pripada Događaju; trajno brisanje never-published briše cover; arhiva/otkaz ne brišu cover; `cover_media_id` može ostati tehnička interna veza. TS-008 nije aktivni SSOT. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
 
 Napomena:
 
@@ -138,7 +139,8 @@ Obuhvat TS-003:
 Van obuhvata ovog dokumenta:
 
 * implementacija, SQL, migracije, Laravel kod, API ugovori i rute;
-* puni tehnički model Održavanja (TS-004), Manifestacije (TS-005), Lokacije (TS-006), Kategorija/oznaka (TS-007), Medija (TS-008), Javnog portala (TS-009), Uredničkog portala (TS-010), Newslettera (TS-011), Evidencije aktivnosti (TS-012);
+* puni tehnički model Održavanja (TS-004), Manifestacije (TS-005), Lokacije (TS-006), Kategorija/oznaka (TS-007), Javnog portala (TS-009), Uredničkog portala (TS-010), Newslettera (TS-011), Evidencije aktivnosti (TS-012);
+* istorijski TS-008 (Mediji) — **SUPERSEDED**; naslovna fotografija pripada ovom dokumentu / MED paketu;
 * detaljan dizajn Organizatora / Moderatora (TS-001) — ovdje samo potrošačke veze.
 
 ## 1.3 Zavisnosti
@@ -151,8 +153,8 @@ Van obuhvata ovog dokumenta:
 | Održavanje događaja (TS-004) | Preduslov za slanje/objavu; uslov za automatsko arhiviranje |
 | Manifestacija (TS-005) | Opciona pripadnost |
 | Lokacija (TS-006) | Preko održavanja, ne kao atribut događaja |
-| Kategorije i oznake (TS-007) | Primarna kategorija i oznake |
-| Mediji (TS-008) | Naslovna fotografija i povezani mediji |
+| Kategorije i oznake (TS-007) | Primarna kategorija i oznake; statičke kategorijske fallback fotografije |
+| Naslovna fotografija (MED / BM-09) | `0..1` naslovna; upload u kontekstu Događaja; interni `cover_media_id` nije poslovni objekat |
 | Javni portal (TS-009) | Prikaz posljednje odobrene / javne verzije |
 | Urednički portal (TS-010) | Operativni prostor radnji |
 | Newsletter (TS-011) | Potrošač statusnih promjena (granica) |
@@ -287,7 +289,7 @@ Detaljni prelazi: §4.
 | Manifestacija | 0..1 | Opciono; najviše jedna (BM-DG-02) |
 | Primarna kategorija | 0..1 | Obavezna za slanje/objavu (BM-DG-07) |
 | Oznake | 0..N | Opcione (BM-DG-06) |
-| Mediji / naslovna fotografija | 0..N / 1 prikazna | Prikaz uvijek ima naslovnu (fallback kategorije — BM-MD-06 / FS §5.4) |
+| Naslovna fotografija | 0..1 | Opciona; nije `0..N` povezanih medija; nema reuse-a; prikaz uvijek ima vizuel (fallback kategorije / globalni placeholder — BM-MD-25 / FS §5.4.4) |
 | Prijedlog izmjene | 0..1 aktivan | Max jedan aktivan prijedlog (BR-012) |
 
 **Ograničenja**
@@ -308,7 +310,7 @@ flowchart LR
   LOK[Lokacija]
   KAT[Primarna kategorija]
   OZN[Oznake]
-  MED[Mediji]
+  NF[Naslovna fotografija 0..1]
 
   ORG -->|0..1 nosilac| DG
   DG -->|1..N nakon slanja/objave| OD
@@ -316,14 +318,14 @@ flowchart LR
   DG -->|0..1| MF
   DG -->|0..1| KAT
   DG -->|0..N| OZN
-  DG -->|naslovna / povezani| MED
+  DG -->|0..1 upload u kontekstu| NF
 ```
 
 * **Organizator** — nosilac; Moderatori rade u njegovo ime (TS-001).
 * **Održavanje** — termin(i) događaja; lokacija na održavanju (TS-004 / TS-006).
 * **Manifestacija** — opciono objedinjavanje (TS-005).
 * **Kategorije / oznake** — klasifikacija (TS-007).
-* **Mediji** — vizuelni sadržaj (TS-008).
+* **Naslovna fotografija** — `0..1`; upload u kontekstu Događaja (MED / BM-09). Interni `cover_media_id` nije poslovni objekat.
 
 TS-003 ne razrađuje tehničke modele tih cjelina.
 
@@ -613,11 +615,11 @@ Posebna domenska operacija BR-052 (BM-UR-07, BM-DG-08, PO-DG-08, PO-DG-09). Nije
 1. DB transaction;
 2. `lockForUpdate` na Entry;
 3. ponovna validacija statusa + authorization;
-4. obriši zavisne child / pivot podatke koji blokiraju FK (OCC pripadaju Entry-ju; tag pivot; media **reference**/veza; proposals / proposal OCC ako postoje; lokalni audit/log ako je vezan na Entry);
+4. obriši zavisne child / pivot podatke koji blokiraju FK (OCC pripadaju Entry-ju; tag pivot; naslovna fotografija — interni zapis i fizički fajl cover-a ovog Entry-ja; proposals / proposal OCC ako postoje; lokalni audit/log ako je vezan na Entry);
 5. detach pivota;
 6. obriši Entry.
 
-**Ne briši shared katalog:** `CulturalCategory`, `CulturalLocation`, `CulturalMedia`, `CulturalTag`, `CulturalOrganizer` — samo veze / child podatke Entry-ja.
+**Ne briši shared katalog:** `CulturalCategory`, `CulturalLocation`, `CulturalTag`, `CulturalOrganizer` — samo veze / child podatke Entry-ja. Naslovna fotografija **nije** shared katalog: trajno brisanje never-published Događaja **briše** pripadajući interni cover zapis i fajl (MED-19 / BM-MD-33). Arhiviranje i otkazivanje **ne** brišu cover (MED-20).
 
 ## 4.13 Direktan content update Objavljenog (Urednik / PATCH-063 / BR-292)
 
@@ -745,7 +747,7 @@ Izvori
 Business Model:
 - BM-DG-01–BM-DG-10
 - BM-ST-02
-- BM-MD-06, BM-KO-02, BM-KO-03
+- BM-MD-25, BM-KO-02, BM-KO-03
 
 Functional Specification:
 - §5.4 (prikaz)
@@ -766,7 +768,7 @@ erDiagram
   MANIFESTACIJA ||--o{ DOGADJAJ : "opciono 0..1"
   KATEGORIJA ||--o{ DOGADJAJ : "primarna 0..1"
   DOGADJAJ }o--o{ OZNAKA : "0..N"
-  DOGADJAJ }o--o{ MEDIJ : "naslovna / povezani"
+  DOGADJAJ ||--o| NASLOVNA_FOTOGRAFIJA : "0..1"
   DOGADJAJ ||--o| PRIJEDLOG_IZMJENE : "0..1 aktivan"
   DOGADJAJ ||--o| ISTICANJE : "0..3 globalno"
 ```
@@ -790,7 +792,7 @@ Atributi / svojstva potvrđeni usvojenim BM/FS (konceptualno):
 | Korisnik posljednje izmjene | Automatski | BR-026 |
 | Naslov | Potvrđen kao sadržaj prikaza / uređivanja | FS §5.4, §5.5.4 |
 | Opis | Opcioni u prikazu | FS §5.4 |
-| Naslovna fotografija / medij | Prikaz uvijek ima sliku (direktno ili fallback kategorije) | FS §5.4, BM-MD-06 |
+| Naslovna fotografija | `0..1`; interni `cover_media_id` dozvoljen kao tehnička veza; prikaz uvijek ima sliku (direktno ili statički fallback) | FS §5.4.4, BM-MD-18–BM-MD-25 |
 | Indikator istaknutosti | Najviše tri istaknuta globalno | BR-117 |
 | Postojanje ≥1 održavanja | Preduslov slanja/objave | BM-DG-01 |
 | Razlog otkazivanja Entry (`cancellation_reason`) | Postojeći `text` nullable; **opcion** pri cancel; može javno; jedino sadržajno polje izmjenjivo dok je Otkazan | BM-DG-10, BR-063, BR-064, BR-295 |
@@ -815,7 +817,7 @@ Svojstva koja TS-003 referencira, a čiji puni model pripada drugim TS:
 |-----------|---------|-------------------|
 | Održavanje (termin, status, lokacija) | TS-004 / TS-006 | Broj i završetak uslovljavaju validacije i arhivu |
 | Kategorija / oznake | TS-007 | Primarna obavezna za slanje/objavu |
-| Medij | TS-008 | Naslovna i povezani mediji |
+| Naslovna fotografija | MED / TS-003 / TS-010 | Upload u kontekstu Događaja; nema reuse; nije poslovni objekat |
 | Organizator / kontekst Moderatora | TS-001 | Autorizacija i pripadnost |
 | Javni prikaz | TS-009 | Potrošač javne verzije |
 
@@ -1022,9 +1024,9 @@ Samo granice. Bez tehničkih modela ciljnih TS dokumenata.
 | **TS-004** | Održavanja događaja; preduslov ≥1; završetak svih → signal za arhivu; statusi održavanja (Odgođen = jedini mehanizam promjene termina postojećeg događaja; otkaz termina) |
 | **TS-005** | Opciona pripadnost Manifestaciji (0..1) |
 | **TS-006** | Lokacija preko održavanja |
-| **TS-007** | Primarna kategorija i oznake; fallback fotografije kategorije |
-| **TS-008** | Naslovna i povezani mediji |
-| **TS-009** | Potrošač javne / arhivirane vidljivosti; istaknuti događaj |
+| **TS-007** | Primarna kategorija i oznake; statičke kategorijske fallback fotografije |
+| **TS-008** | **SUPERSEDED / HISTORICAL** — nije aktivni SSOT; naslovna fotografija = ovaj dokument / MED |
+| **TS-009** | Potrošač javne / arhivirane vidljivosti; istaknuti događaj; fallback prikaz |
 | **TS-010** | Operativni UI prostor radnji Moderatora i Urednika |
 | **TS-011** | Potrošač poslovno značajnih promjena statusa/sadržaja (okidači Newslettera) — bez modela Newslettera ovdje |
 | **TS-012** | Prima emisije iz §8.2; ne upravlja lifecycle događaja |
@@ -1130,7 +1132,7 @@ Rule-level i sekcijska sljedivost.
 |------------|----|---------|----|-----------|
 | §1 Pregled | BM-04, BM-10; BM-DG-01–BM-DG-10 | §5.4–§5.5, §5.7.1–§5.7.2; BR-131 | FT-001 | TS-001 (veza) |
 | §2 Principi | BM-DG-08/09/10, BM-ST-04/07/08/09, BM-TR-12 | BR-006, BR-018, BR-028, BR-064, BR-065, BR-131 | FT-001 | TS-004 |
-| §3 Tehnički model | BM-DG-01–BM-DG-10, BM-ST-02 | BR-013–BR-018, BR-025, BR-045, BR-056–BR-062, BR-117, BR-131 | FT-001 | TS-001, TS-004–TS-008 |
+| §3 Tehnički model | BM-DG-01–BM-DG-10, BM-ST-02 | BR-013–BR-018, BR-025, BR-045, BR-056–BR-062, BR-117, BR-131 | FT-001 | TS-001, TS-004–TS-007; TS-008 SUPERSEDED |
 | §4.3 Nacrt | BM-ST-03 | BR-013–BR-021 | FT-001 | TS-001 |
 | §4.4 Slanje | BM-ST-04, BM-DG-01, BM-DG-07 | BR-017, BR-028–BR-035 | FT-001 | TS-004, TS-007 |
 | §4.5 Pregled / odobrenje | BM-ST-05, BM-ST-06 | BR-023, BR-027, BR-036–BR-044 | FT-001 | TS-010 |
@@ -1141,7 +1143,7 @@ Rule-level i sekcijska sljedivost.
 | §4.10 Arhiviranje | BM-DG-04, BM-ST-08 | BR-065, BR-066 | FT-001 | TS-004 |
 | §4.11 Naknadno povezivanje | BM-UR-07, BM-DG-08 | BR-052 | FT-001 | TS-001 |
 | §5 Autorizacija | BM-DG-05/08/09/10, BM-ST-04/07/09, BM-MOD-16, BM-UR-* | BR-007, BR-018, BR-028, BR-063, BR-064, BR-117 | FT-001 | TS-001 |
-| §6 Model podataka | BM-DG-*, BM-DG-10, BM-ST-02 | §5.4; BR-014, BR-018, BR-062, BR-064, BR-117 | FT-001 | TS-004–TS-008 |
+| §6 Model podataka | BM-DG-*, BM-DG-10, BM-ST-02 | §5.4; BR-014, BR-018, BR-062, BR-064, BR-117 | FT-001 | TS-004–TS-007; MED / TS-010 |
 | §7 Validacije | BM-DG-*, BM-DG-09/10, BM-ST-04/07/08/09, BM-TR-12 | BR-017–BR-019, BR-028–BR-030, BR-063–BR-065, BR-131 | FT-001 | TS-004 |
 | §8 Audit | BM-AL-*, BM-ST-08, BM-DG-10 | BR-014, BR-026, BR-031, BR-043; §5.16; BR-182/183 | FT-001 / FT-003 | TS-012 |
 | §9 Integracije | BM-DG-*, BM-ORG-12, BM-TR-12 | BR-045, BR-052, BR-056+, BR-131 | FT-001 | TS-001, TS-004–TS-012 |

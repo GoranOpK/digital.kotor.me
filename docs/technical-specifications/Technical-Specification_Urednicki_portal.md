@@ -7,9 +7,9 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
-**Implementacioni status V1:** ZAVRŠEN
-**Verzija:** 1.0.11
-**Datum:** 2026-08-13
+**Implementacioni status V1:** ZAVRŠEN (osim MED naslovne fotografije: **DOCS CANONICALIZED / IMPLEMENTATION PENDING**)
+**Verzija:** 1.0.12
+**Datum:** 2026-08-15
 
 ---
 
@@ -42,6 +42,7 @@
 | 1.0.9 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup:** `Ukloni` na odbijenom Org/Mod zahtjevu = workspace dismiss (`editor_dismissed_at`); **ne** hard delete; §6.7.1 retention KEEP; unified `Zahtjevi` default filter. Usklađeno sa BM PATCH-072 / FS PATCH-FS-071 / TS-001 v0.4.2. |
 | 1.0.10 | 2026-08-13 | **MOD-UX-01 — Moderator UX / navigation corrective (status sync):** korisnički UI termini — primarni entrypoint **Kontrolna tabla** (`cultural-moderator-dashboard.index`); sadržajni entrypoint **Moderiranje** (grane Događaji / Manifestacije); `Organizator: <naziv>`; **Promijeni organizatora**; pomoćni ekran **Izbor organizatora**. Uklonjeni korisnički termini: Radna tabla / Mod rad / Moderatorski workspace / Workspace (u ovom značenju). Context switch redirect → Kontrolna tabla; approval email CTA → Kontrolna tabla. Auth / lifecycle / `CulturalOrganizerContext` KEEP. Bez BM/FS izmjene. |
 | 1.0.11 | 2026-08-13 | **DOC-SYNC / MOD-UX-01-HF* + UI-CLEANUP:** CURRENT STATE — **Moderiranje** = običan `<a>` ka `cultural-moderator-workspace.index` (hub: **Događaji organizatora** / **Manifestacije organizatora**); desktop **Kontrolna tabla** i **Moderiranje** isti sizing `128×38`; Kontrolna tabla bez page-level Moderiranje/Događaji/Manifestacije bloka; mobile hamburger = minimalni inline vanilla JS (**bez Alpine**); runtime view bez Alpine dependency-ja. Auth / lifecycle / context KEEP. Bez BM/FS izmjene. Bez izmjene implementacije u ovom dokumentu. |
+| 1.0.12 | 2026-08-15 | **MED-26 / MED-17:** UX naslovne fotografije na formama DG/MF (drag & drop, picker, preview, Zamijeni, Ukloni, warning <800 px, 2 MB JPEG/PNG/WebP; Odustani bez trajne izmjene). Uklonjeni kao aktivni: poseban ekran Mediji, katalog, izbor postojećeg Medija, samostalni CRUD, ALT/naziv/tagovi/namjena/status forme. Kontrola samo kada je sadržaj uređiv. TS-008 SUPERSEDED. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
 Napomena:
 
 Ovo poglavlje služi isključivo za evidenciju razvoja dokumenta.
@@ -77,6 +78,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.7 | 2026-08-10 | PATCH-063: U pripremi; delete draft; published direct edit; manual Org; test matrix. |
 | 1.0.10 | 2026-08-13 | STATUS SYNC: MOD-UX-01 — Moderator UI navigacija/terminologija (Kontrolna tabla / Moderiranje / Izbor organizatora); auth/lifecycle/context KEEP. |
 | 1.0.11 | 2026-08-13 | STATUS SYNC: Alpine-free Moderator navigation CURRENT STATE (Moderiranje hub link; 128×38; hamburger inline JS; bez Alpine runtime). |
+| 1.0.12 | 2026-08-15 | STATUS: MED-26 naslovna fotografija UX (docs); ekran Mediji SUPERSEDED; IMPLEMENTATION PENDING. |
 
 # Svrha dokumenta
 
@@ -99,7 +101,7 @@ Izvori istine:
 * `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001)
 * `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 v0.1.2)
 * `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004)
-* `docs/technical-specifications/Technical-Specification_Mediji.md` (TS-008)
+* `docs/technical-specifications/Technical-Specification_Mediji.md` (TS-008 — **SUPERSEDED / HISTORICAL**)
 * `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009)
 * `docs/features/Feature-Registry.md` (FT-001)
 * `docs/METHODOLOGY.md`
@@ -144,7 +146,7 @@ TS-010.5 — CRUD događaja i validacije obuhvata isključivo:
 2. prijedlog izmjene Objavljenog (poslovno ponašanje; N-DG-04 = implementacioni izbor skladištenja);
 3. nested CRUD Održavanja prema TS-004;
 4. validacije po akcijama i editabilnost po statusu/fazi;
-5. naslovnu fotografiju (veza TS-008) i veze Organizator / Manifestacija;
+5. naslovnu fotografiju (MED / §10.12; TS-008 SUPERSEDED) i veze Organizator / Manifestacija;
 6. Delete događaja kao nepodržanu operaciju V1.
 
 TS-010.6 — Dashboard uredničkog portala obuhvata isključivo:
@@ -216,7 +218,7 @@ TS-010.7 **ne razrađuje**: vidi §12.8 Van obuhvata TS-010.7.
 
 TS-010.8 **ne razrađuje**: vidi §13.11 Van obuhvata TS-010.8.
 
-Entiteti i domen van uredničkog portala ostaju u postojećim TS dokumentima (TS-001, TS-003–TS-008) i FT-003 / TS-012, bez dupliciranja njihovih pravila.
+Entiteti i domen van uredničkog portala ostaju u postojećim TS dokumentima (TS-001, TS-003–TS-007, TS-009; TS-008 = **SUPERSEDED / HISTORICAL**) i FT-003 / TS-012, bez dupliciranja njihovih pravila.
 
 ---
 
@@ -229,7 +231,7 @@ Entiteti i domen van uredničkog portala ostaju u postojećim TS dokumentima (TS
 | TS-001 — Organizator, Moderator i zahtjev | Granica entiteta i ovlašćenja Organizator/Moderator |
 | TS-003 — Događaj | Domenski lifecycle i prelazi statusa događaja |
 | TS-004 — Održavanje događaja | Predikat automatskog arhiviranja; model održavanja (N-TR-01/02/04); održavanje ≠ status događaja |
-| TS-008 — Mediji | Naslovna fotografija; MIME/veličina/ALT; lifecycle Medija |
+| TS-008 — Mediji | **SUPERSEDED / HISTORICAL** — naslovna fotografija = MED / §10.12; nema Media kataloga |
 | TS-009 — Javni portal | Javni potrošač podataka; CR-004B vidljivost; van uredničkog upravljanja |
 | BM-14 / FS §5.16 / FT-003 / TS-012 | Centralna Evidencija aktivnosti (granica za TS-010.7) |
 | Feature Registry (FT-001) | Sljedivost Feature ↔ TS |
@@ -256,7 +258,7 @@ Entiteti i domen van uredničkog portala ostaju u postojećim TS dokumentima (TS
 1. TS-010 pripada FT-001 – Kalendar kulture.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
 3. Nova poslovna pravila se ne uvode kroz TS-010.
-4. TS-010 opisuje **urednički portal**; ne zamjenjuje TS-009 (javni portal) niti TS-001 / TS-003 / TS-004 / TS-008 (entiteti); ne zamjenjuje FT-003 / TS-012 (centralna Evidencija aktivnosti).
+4. TS-010 opisuje **urednički portal**; ne zamjenjuje TS-009 (javni portal) niti TS-001 / TS-003 / TS-004 (entiteti). TS-008 nije aktivni entitetski SSOT (**SUPERSEDED** MED). Ne zamjenjuje FT-003 / TS-012 (centralna Evidencija aktivnosti).
 5. Podcjeline TS-010.1–TS-010.8 su usvojene; detaljna razrada ostaje unutar tih cjelina bez planiranih dodatnih podcjelina TS-010.
 6. Izmjene usvojenog sadržaja evidentiraju se novom verzijom dokumenta.
 
@@ -1127,7 +1129,7 @@ Napomena: matrica ne uvodi nove BM ili BR identifikatore.
 
 ## 8.5 TS-010.5
 
-| TS-010.5 tema | BM | FS | TS-003 | TS-004 | TS-008 | TS-009 | TS-010 |
+| TS-010.5 tema | BM | FS | TS-003 | TS-004 | MED | TS-009 | TS-010 |
 |---------------|----|----|--------|--------|--------|--------|--------|
 | V1 katalog sadržajnih polja | BM-DG | §5.4; BR-015–BR-017 | §6.2 | — | BM-MD | — | §9; N-DG-02 |
 | Create (Moderator / Urednik) | BM-ORG-04; BM-ST-03; BM-MOD-05 | BR-013–BR-020 | §4.3 | — | — | — | §6.8; §7 |
@@ -1135,9 +1137,9 @@ Napomena: matrica ne uvodi nove BM ili BR identifikatore.
 | Update po statusu/fazi | BM-ST; BM-DG-05–10 | BR-006–044; BR-062–066; BR-064 | §4–§5; §4.9 | N-TR-04 | — | — | §7; §10.5 |
 | Prijedlog izmjene / N-DG-04 | BM-DG; BM-ST-05 | BR-006–012; G-W02 | §4.7 | — | — | javna verzija | §7; §10.6 |
 | Validacije / gate-ovi | BM-DG-01, BM-DG-07–10 | BR-015–020; BR-028–039; BR-064; BR-131 | §6–§7 | §3–§4 | — | naslov prikaz | §9.5; §10.7 |
-| Nested Održavanja | BM-TR | BR-056–061; BR-082–091 | — | v0.1.5; N-TR-01/02/04 | — | — | §10.9 |
+| Nested Održavanja | BM-TR | BR-056–061 | — | v0.1.5; N-TR-01/02/04 | — | — | §10.9 |
 | Organizator / Manifestacija | BM-DG; BM-MF; BM-ORG | BR-129–134 | — | — | — | — | §10.10–§10.11 |
-| Naslovna fotografija | BM-MD-06 | BR-117 | — | — | TS-008 | fallback | §10.12 |
+| Naslovna fotografija | BM-MD-18+ | BR-351–BR-370 | — | — | MED / TS-003 | fallback | §10.12 |
 | Delete događaja nije V1 | BM-DG-04; BM-ST-08 | BR-065 | §4.10 | — | — | — | §10.13 |
 | Konflikt verzije | — | — | §5 (pregled) | — | — | — | §10.14 |
 | Guard CRUD | BM-EP; BM-MOD-04 | Platformsko; BR-051 | — | — | — | — | §7.3; §10.15 |
@@ -1146,7 +1148,8 @@ Napomena: matrica ne uvodi nove BM ili BR identifikatore.
 Lanac sljedivosti:
 
 ```text
-BM → FS → TS-001 → TS-003 → TS-004 → TS-008 → TS-009 → TS-010.1 → … → TS-010.5
+BM → FS → TS-001 → TS-003 → TS-004 → TS-009 → TS-010.1 → … → TS-010.5
+(TS-008 SUPERSEDED; naslovna fotografija = MED / §10.12)
 ```
 
 Napomena: matrica ne uvodi nove BM ili BR identifikatore. N-DG-04 ostaje implementaciona granica skladištenja.
@@ -1197,7 +1200,7 @@ Napomena: matrica ne uvodi nove BM ili BR identifikatore. PO-AL-01–PO-AL-04 su
 
 | TS-010.8 tema | BM | FS | TS | PO / QA |
 |---------------|----|----|----|---------|
-| Business Test Matrix (poslovni scenariji) | BM-EP; BM-ST; BM-DG; BM-ORG; BM-MOD; BM-UR; BM-TR; BM-AL | BR-006–BR-073; BR-118–BR-128; BR-170–BR-188; §5.16 | TS-001; TS-003; TS-004; TS-008; TS-009; TS-010.1–TS-010.7 | PO-DASH; PO-AL; QA-TS0108-01 |
+| Business Test Matrix (poslovni scenariji) | BM-EP; BM-ST; BM-DG; BM-ORG; BM-MOD; BM-UR; BM-TR; BM-AL | BR-006–BR-073; BR-118–BR-128; BR-170–BR-188; §5.16 | TS-001; TS-003; TS-004; TS-009; TS-010.1–TS-010.7 (TS-008 SUPERSEDED) | PO-DASH; PO-AL; QA-TS0108-01 |
 | Lanac sljedivosti BM→FS→TS→matrica | — | — | §13.10 | QA-TS0108-01 |
 | Van: QA plan / implementacija testova / CI | — | — | §13.11 | QA-TS0108-01 |
 
@@ -1208,7 +1211,7 @@ Business Model
         ↓
 Functional Specification
         ↓
-Technical Specifications (TS-001 / TS-003 / TS-004 / TS-008 / TS-009 / TS-010.1–TS-010.7)
+Technical Specifications (TS-001 / TS-003 / TS-004 / TS-009 / TS-010.1–TS-010.7; TS-008 SUPERSEDED)
         ↓
 Business Test Matrix (TS-010.8)
 ```
@@ -1240,9 +1243,9 @@ TS-010.5 (CRUD događaja i validacije) **operacionalizuje** ovaj katalog; ne red
 * Primarna kategorija
 * Oznake (0..N)
 
-### Mediji
+### Naslovna fotografija
 
-* Naslovna fotografija (0..1)
+* Naslovna fotografija (0..1); upload nove fotografije u kontekstu Događaja; nema izbora postojećeg Medija
 
 ### Održavanja
 
@@ -1292,7 +1295,7 @@ Usklađeno sa BM/FS / TS-003 (bez novih pravila). Detalj forme i poruka validaci
 | Organizator | 0..1 (izuzetak bez Org — Urednik) | Isto (BM-DG-08) |
 | Manifestacija | Opciono | Opciono |
 | Oznake | Opciono | Opciono |
-| Naslovna fotografija | Opciono | Opciono (fallback prikaza; BM-MD-06) |
+| Naslovna fotografija | Opciono | Opciono (fallback prikaza; BM-MD-21 / BM-MD-25) |
 | Održavanja | 0..N | ≥1 (BM-DG-01) |
 
 Naslov i opis su sadržajna polja kataloga (§9.1). **Naslov** može nedostajati u nepotpunom Nacrtu (BR-015); obavezan je za slanje na odobrenje i objavu kao operacionalizacija BR-017 i zahtjeva javnog prikaza (FS §5.4.2 / TS-009), ne kao novo polje. Detalj validacija po akcijama = §10.7.
@@ -1305,7 +1308,7 @@ TS-003 §6.2 / §6.4 dokumentuje potvrđeni konceptualni skup i ranije otvoreno 
 
 # 10. TS-010.5 — CRUD događaja i validacije
 
-Izvori: BM-ST, BM-DG (uključujući BM-DG-09/BM-DG-10), BM-TR (BM-TR-12), BM-MD, BM-MF, BM-MOD, BM-UR; BR-006–BR-044, BR-052, BR-056–BR-069, BR-082–BR-091, BR-117, BR-129–BR-134, BR-064, BR-131; TS-003 v0.1.2; TS-004 v0.1.5; TS-008; TS-009; TS-010.1–TS-010.4; §9 (N-DG-02); N-DG-04; N-TR-01; N-TR-02; N-TR-04; G-W02.
+Izvori: BM-ST, BM-DG (uključujući BM-DG-09/BM-DG-10), BM-TR (BM-TR-12), BM-MD-18–BM-MD-36, BM-MF, BM-MOD, BM-UR; BR-006–BR-044, BR-052, BR-056–BR-069, BR-082–BR-085, BR-117, BR-129–BR-134, BR-064, BR-131, BR-351–BR-370; TS-003; TS-004; TS-009; TS-010.1–TS-010.4; §9 (N-DG-02); N-DG-04; N-TR-01; N-TR-02; N-TR-04; G-W02. TS-008 / BR-086–BR-091 = SUPERSEDED.
 
 TS-010.5 ne uvodi nova poslovna pravila, nove BM/BR identifikatore, nova sadržajna polja, nove statuse, nove workflow grane, novu poslovnu ulogu niti entitet Serija. Tehnički operacionalizuje usvojene BM/FS i zatvoreni katalog §9.
 
@@ -1324,7 +1327,7 @@ Sadržajna polja (bez proširenja):
 | Osnovni podaci | naslov; opis |
 | Organizacija | Organizator `0..1`; Manifestacija `0..1` |
 | Klasifikacija | primarna kategorija; oznake `0..N` |
-| Mediji | naslovna fotografija `0..1` |
+| Naslovna fotografija | `0..1` (nije Media katalog) |
 | Održavanja | lista prema TS-004 |
 
 **Nijesu sadržajna polja** (FS §5.4.9 / §9.3): status; lifecycle; istaknutost (Feature); aktivni prijedlog izmjene; audit; kreator; timestamps; posljednji korisnik koji je mijenjao.
@@ -1542,18 +1545,19 @@ Nakon toga **nema** Delete Održavanja. Otkazivanje ≠ Delete (N-TR-04).
 * Na Objavljenom — promjena veze kroz prijedlog izmjene.
 * Manifestacija **ne određuje** CRUD polja događaja.
 
-## 10.12 Naslovna fotografija (TS-008)
+## 10.12 Naslovna fotografija (MED-26)
 
-* Opciona veza `0..1` prema Mediju.
-* Moderator može izabrati ili dodati Medij prema dozvoljenim tokovima.
-* Urednik — prava prema TS-008.
-* Uklanjanje veze naslovne **nije** brisanje Medija.
-* Fallback prikaza — postojeća pravila (BM-MD-06).
-* MIME, veličina, naziv, ALT, lifecycle Medija — **TS-008**.
-* Na Objavljenom — Moderator: promjena naslovne kroz **prijedlog izmjene**. Urednik direct (``organizer_id`` null): **direktan** content update (TS-003 §4.13 / PATCH-063).
+* Opciona `0..1` naslovna fotografija Događaja (isto za Manifestaciju na MF formi).
+* **Nema** izbora postojećeg Medija, biblioteke, reuse-a, samostalnog Media CRUD-a, ni forme ALT/naziv/tagovi/namjena/status.
+* Upload: vizuelna kartica; drag & drop; standardni file picker; lokalni preview; **Zamijeni**; **Ukloni**; JPEG/PNG/WebP; max **2 MB**; informativno upozorenje ako je duža strana <800 px (upload nije blokiran).
+* **Odustani** ne smije trajno promijeniti postojeću fotografiju.
+* Kontrola je dostupna **samo** kada je sadržaj uređiv (zaključan sadržaj ⇒ zaključana fotografija).
+* Uklanjanje / uspješna zamjena briše interni zapis i fizički fajl (MED-05 / MED-21 / MED-22).
+* Fallback prikaza — BM-MD-25 (statička kategorijska / globalni placeholder); nije `CulturalMedia`.
+* Na Objavljenom — Moderator: promjena naslovne kroz **prijedlog izmjene**. Urednik direct (`organizer_id` null): **direktan** content update (TS-003 §4.13 / PATCH-063).
 * **Feature (istaknutost)** nije sadržajno polje i **ne ide** kroz sadržajni prijedlog.
 
-Kompletan CRUD Medija nije dio TS-010.5.
+Poseban ekran/modul „Mediji“ **nije** dio uredničkog portala (MED-17).
 
 ## 10.13 Delete događaja (PATCH-063 / BR-290 — supersede)
 
@@ -1629,7 +1633,7 @@ Moderator **nema** posebnu platformsku rolu (TS-010.1 / G-17).
 * centralna Evidencija aktivnosti (FT-003 / TS-012; obaveze portala — TS-010.7);
 * Newsletter; Obavještenja;
 * javni portal (TS-009);
-* kompletan CRUD Medija;
+* poseban ekran/katalog Medija i samostalni Media CRUD;
 * API; rute; modeli baze; migracije;
 * detaljan UI dizajn;
 * implementaciona tehnologija zaključavanja / skladištenja verzija (N-DG-04).
@@ -2013,7 +2017,7 @@ TS-010.7 je cjelina **FT-001**. Centralna Evidencija aktivnosti je cjelina **FT-
 
 # 13. TS-010.8 — Business Test Matrix
 
-Izvori: BM (BM-EP, BM-ST, BM-DG, BM-ORG, BM-MOD, BM-UR, BM-TR, BM-AL, BM-GL); FS (Platformsko pravilo; BR-006–BR-073; BR-118–BR-128; BR-170–BR-188; §5.16); TS-001; TS-003; TS-004 v0.1.5; TS-008; TS-009; TS-010.1–TS-010.7; **PO-DASH-01–05**; **PO-AL-01–04**; **QA-TS0108-01**.
+Izvori: BM (BM-EP, BM-ST, BM-DG, BM-ORG, BM-MOD, BM-UR, BM-TR, BM-AL, BM-GL); FS (Platformsko pravilo; BR-006–BR-073; BR-118–BR-128; BR-170–BR-188; §5.16); TS-001; TS-003; TS-004; TS-009; TS-010.1–TS-010.7; **PO-DASH-01–05**; **PO-AL-01–04**; **QA-TS0108-01**. TS-008 SUPERSEDED.
 
 TS-010.8 ne uvodi nova poslovna pravila, nove statuse, nove entitete ni nova ovlašćenja. Provjerava isključivo već usvojena pravila.
 
@@ -2063,7 +2067,7 @@ Prioritet i Level **nisu** obavezni i **nijesu** poslovna pravila.
 | TM-READ | Read prava / read-only |
 | TM-VAL | Validacije / gate-ovi |
 | TM-MF | Manifestacija |
-| TM-MD | Naslovna fotografija / Mediji |
+| TM-MD | Naslovna fotografija |
 | TM-DASH | Dashboard |
 | TM-AUD | Lokalni audit / obaveza evidencije |
 | TM-CON | Concurrency |
@@ -2186,7 +2190,7 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | TM-PROP-08 | Prijedlog | N-DG-04 granica | Aktivni prijedlog | Provjera ponašanja | Bez zahtjeva za tabelu/snapshot/JSON/verzijski broj | Granični | N-DG-04; TS-010.5 §10.6 |
 | TM-CON-01 | Concurrency | Stale update | Dvije sesije; novija sačuvana | Sačuvaj zastarjele podatke | Ne smije tiho prepisati noviju izmjenu | Negativan | TS-010.5 §10.14 |
 
-## 13.8 Matrica — Održavanja, generator, Manifestacija, Mediji
+## 13.8 Matrica — Održavanja, generator, Manifestacija, naslovna fotografija
 
 | Test ID | Oblast | Scenario | Preduslov | Akcija | Očekivani rezultat | Tip | Traceability |
 |---------|--------|----------|-----------|--------|-------------------|-----|---------------|
@@ -2217,11 +2221,13 @@ Scenariji pretpostavljaju, gdje je primjenjivo: Urednik; Administrator; korisnik
 | TM-MF-01 | Manifestacija | Veza 0..1 | Nacrt | Link / unlink MF | Dozvoljeno | Pozitivan | TS-005; TS-010.5 |
 | TM-MF-02 | Manifestacija | Na Objavljenom | Objavljen | Link/unlink kroz prijedlog | Direktno ne; kroz prijedlog da | Granični | TS-010.5 |
 | TM-MF-03 | Manifestacija | Nezavisan lifecycle | Promjena MF | Događaj se ne mijenja automatski | Bez automatske promjene Događaja | Granični | TS-005; TS-010.5 |
-| TM-MD-01 | Naslovna | Opciona 0..1 | Nacrt | Bez naslovne | Dozvoljeno; fallback | Pozitivan | TS-008; TS-010.5 §10.12 |
-| TM-MD-02 | Naslovna | Izbor postojeće Medije | Medij postoji | Poveži | Veza uspostavljena | Pozitivan | TS-008; TS-010.5 |
-| TM-MD-03 | Naslovna | Uklanjanje veze | Naslovna povezana | Ukloni vezu | Medij nije obrisan | Pozitivan | TS-008; TS-010.5 |
-| TM-MD-04 | Naslovna | Na Objavljenom | Objavljen | Promjena kroz prijedlog | Direktno ne; kroz prijedlog da | Granični | TS-010.5 §10.12 |
+| TM-MD-01 | Naslovna | Opciona 0..1 | Nacrt | Bez naslovne | Dozvoljeno; fallback | Pozitivan | MED; TS-010.5 §10.12 |
+| TM-MD-02 | Naslovna | Upload nove fotografije | Sadržaj uređiv | Upload JPEG/PNG/WebP ≤2 MB | Naslovna postavljena; nema izbora postojećeg | Pozitivan | MED-03; TS-010.5 |
+| TM-MD-03 | Naslovna | Ukloni | Naslovna postoji; sadržaj uređiv | Ukloni | Zapis i fajl obrisani; fallback | Pozitivan | MED-05; TS-010.5 |
+| TM-MD-04 | Naslovna | Na Objavljenom | Objavljen | Promjena kroz prijedlog (Mod) / direktno (Urednik direct) | Prema lock pravilima | Granični | TS-010.5 §10.12 |
 | TM-MD-05 | Naslovna | Feature ≠ sadržajni prijedlog | Objavljen | Istaknutost | Nije dio sadržajnog prijedloga | Granični | TS-010.5 §10.12 |
+| TM-MD-06 | Naslovna | Odustani | Lokalni preview / nova datoteka | Odustani | Postojeća fotografija netaknuta | Pozitivan | MED-26 |
+| TM-MD-07 | Naslovna | Warning <800 px | Duža strana <800 | Upload | Upozorenje; nije blokiran | Granični | MED-15 |
 
 ## 13.9 Matrica — Dashboard, audit, boundary
 
@@ -2257,7 +2263,7 @@ Business Model
 Functional Specification
         ↓
 Technical Specifications
-  (TS-001 · TS-003 · TS-004 · TS-008 · TS-009 · TS-010.1–TS-010.7)
+  (TS-001 · TS-003 · TS-004 · TS-009 · TS-010.1–TS-010.7; TS-008 SUPERSEDED)
         ↓
 Business Test Matrix (TS-010.8)
 ```

@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.20
+**Verzija:** 1.0.21
 **Datum:** 2026-08-15
 
 ---
@@ -41,6 +41,7 @@
 | 1.0.18 | 2026-08-12 | **6A residual Package A PRODUCTION CLOSEOUT (status only):** `day()` canonical branch **production active** (`f35cb2e`); empty-date smoke `/kalendar-kulture/dan/2026-08-12` **PASS** — **PRODUCTION VERIFIED — EMPTY-DATE SCENARIO CONFIRMED**; content-bearing day not separately production-smoked (local suite; not a blocker); no badge/detail-link/redirect changes; feature flag + legacy rollback **KEEP**; Phase B hard-remove **NOT DONE / OPEN**. **Package A CLOSED.** Bez izmjene normative §5.4 date semantics. Bez izmjene BM/FS. |
 | 1.0.19 | 2026-08-13 | **Phase B1+B2 status sync:** public portal **canonical-only**; `CULTURAL_PUBLIC_READ_SOURCE` / dual-read / legacy CRUD runtime **REMOVED**; image helpers → `CulturalCalendarDefaultImages`; `cultural_events` table **KEEP**; B3 DROP **OPEN**. **IMPLEMENTED / TESTED (local); NOT PRODUCTION VERIFIED.** Bez izmjene normative §5.4. Bez izmjene BM/FS. |
 | 1.0.20 | 2026-08-15 | **Status hygiene (V1 closeout):** Phase B1+B2 = **PRODUCTION VERIFIED / CLOSED** (usklađeno sa IS-001 v1.0.8 / IR-001). B3 DROP = **DEFERRED**. Business contract KEEP. |
+| 1.0.21 | 2026-08-15 | **MED-01–MED-28:** javni prikaz — Događaj: naslovna → statička kategorijska (14 kanonskih naziva) → globalni event placeholder; Manifestacija: naslovna → statički MF placeholder. `object-fit: cover` u definisanim frame-ovima. Nema legacy `CulturalEvent.slika` kao SSOT. Nema `category_default` Media zapisa. TS-008 SUPERSEDED. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
 
 ---
 
@@ -196,8 +197,8 @@ Poslovni model entiteta Manifestacija (lifecycle, kardinalnost, uslovi objave) o
 | TS-004 Održavanje | Održavanja (termini kao vremenski atributi) i lokacije u prikazu; unosi u programu MF |
 | TS-005 Manifestacija | Entitet MF; javni prikaz liste / Detalja manifestacije / programa (bez dupliciranja lifecycle pravila) |
 | TS-006 Lokacije | Filter i prikaz lokacija |
-| TS-007 Kategorije i oznake | Filter kategorije; prikaz kategorije i oznaka |
-| TS-008 Mediji | Prikaz fotografija (naslovna / fallback); tagovi medija nisu V1 UI |
+| TS-007 Kategorije i oznake | Filter kategorije; prikaz kategorije i oznaka; 14 kanonskih statičkih fallback fotografija |
+| TS-008 Mediji | **SUPERSEDED / HISTORICAL** — nije aktivni SSOT; prikaz fotografija = MED / BM-PK-12 |
 | TS-010 Urednički portal | Nije dio javnog portala; Urednik označava istaknute |
 | TS-011 Newsletter | Povezano; van usvojenog obuhvata TS-009 |
 
@@ -210,7 +211,7 @@ Poslovni model entiteta Manifestacija (lifecycle, kardinalnost, uslovi objave) o
 
 ### Faza 6A — Javni portal Događaja
 
-Obuhvata prelazak javnog portala Događaja sa legacy `CulturalEvent` na kanonski `CulturalEventEntry` + `CulturalOccurrence`, uz kanonske kataloge (`CulturalCategory`, lokacije, medija) potrebne za javni prikaz Događaja.
+Obuhvata prelazak javnog portala Događaja sa legacy `CulturalEvent` na kanonski `CulturalEventEntry` + `CulturalOccurrence`, uz kanonske kataloge (`CulturalCategory`, lokacije) potrebne za javni prikaz Događaja. Fallback fotografije kategorija su statički Git resursi, nisu Media katalog.
 
 Faza 6A realizuje se uz **maksimalno očuvanje postojećeg izgleda** javnog portala (IA-01 / PO-TS9-08A).
 
@@ -664,7 +665,7 @@ Raspored sekcija (postojeći, zadržava se): Hero → statistike → (kalendar +
 | Maksimum | 3 istaknuta u jednom trenutku |
 | Uslov | Javno objavljeni **i** aktuelni |
 | Izbor | Urednik; bez automatske selekcije sistema |
-| Kartica | Postojeći izgled: naslovna fotografija, datum, vrijeme, lokacija (ako postoji), naslov, kratak opis, link na detalj |
+| Kartica | Postojeći izgled: naslovna fotografija (ili fallback; `object-fit: cover` u definisanom frame-u), datum, vrijeme, lokacija (ako postoji), naslov, kratak opis, link na detalj |
 | Prazno stanje | Neutralno; **bez** administrativnih poruka na javnom portalu |
 
 ## 5.3 PO-TS9-06C — Statistike
@@ -857,7 +858,7 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 | Vidljivost | Aktivna lista prikazuje javno dostupne Manifestacije koje nijesu Arhivirane: Objavljene, te Otkazane do isteka izvedenog perioda (PO-6B-08 / §6.7) |
 | Sortiranje | (1) datum početka, (2) naziv |
 | Paginacija | 12 po stranici, standardna |
-| Kartica | Naslovna fotografija; naziv; period; kratak opis; broj objavljenih događaja u programu; link „Detalji manifestacije“; za Otkazanu — jasna oznaka „Otkazana“ |
+| Kartica | Naslovna fotografija ili statički MF placeholder (`object-fit: cover` u definisanom frame-u); naziv; period; kratak opis; broj objavljenih događaja u programu; link „Detalji manifestacije“; za Otkazanu — jasna oznaka „Otkazana“ |
 | V1 | Bez pretrage; bez filtera |
 | Prazno | Neutralna poruka |
 
@@ -980,9 +981,13 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 Portalni obuhvat (referenca, ne nova pravila):
 
 * naslov i osnovni identitet događaja;
-* fotografija / fallback (BM-PK-12 / BR-113 / TS-008);
+* fotografija / fallback (BM-PK-12 / BR-113 / MED-08; **ne** TS-008 kao aktivni SSOT; **ne** `CulturalEvent.slika`);
+  * Događaj: (1) naslovna; (2) statička Git fotografija kanonske kategorije (14 naziva); (3) globalni event placeholder;
+  * Manifestacija: (1) naslovna; (2) zasebni statički MF placeholder;
+  * definisani image frame-ovi: `object-fit: cover` (MED-14);
+  * fallback nisu `CulturalMedia` / `category_default` zapisi;
 * Održavanja sa terminima i lokacijama (BM-PK-09–10 / BR-110–111 / TS-004);
-* Kategorija i Oznake (BM-PK-11 / BR-112 / TS-007) — **Oznake ≠ Tagovi**;
+* Kategorija i Oznake (BM-PK-11 / BR-112 / TS-007) — **Oznake ≠ tagovi fotografije**;
 * statusne oznake / status badge prema §7.1 (BM-PK-13 / BR-114; CR-004A);
 * opis i javno objavljeni podaci (BM-PK-05 / BR-106);
 * informativni blok Manifestacije kada postoji veza **i** MF je javno dostupna (BM-PK-28 / BM-PK-39 / BR-269 / BR-305 / PO-6B-09).
@@ -1365,7 +1370,7 @@ Zato Faza 6A:
 
 Prelazak **nije** redizajn. Sačuvati: hero, vizuelni identitet, raspored stranica, izgled kartica, strukturu portala, dobre UI obrasce.
 
-UI izmjene dozvoljene samo kada su neophodne radi: kanonskog modela; više Održavanja; statusa; kanonskih kategorija/lokacija/medija; eksplicitno usvojenih BM/FS pravila.
+UI izmjene dozvoljene samo kada su neophodne radi: kanonskog modela; više Održavanja; statusa; kanonskih kategorija/lokacija; naslovne fotografije (MED); eksplicitno usvojenih BM/FS pravila.
 
 ## 9.4 CAT-CUTOVER (PO-TS9-08E)
 

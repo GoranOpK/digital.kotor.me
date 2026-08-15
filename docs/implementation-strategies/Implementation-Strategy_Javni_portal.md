@@ -8,8 +8,8 @@
 **Modul:** Kalendar kulture  
 **Referentna specifikacija:** TS-009 v1.0.19 Stable
 **Status dokumenta:** Stable
-**Verzija:** 1.0.8
-**Datum:** 2026-08-13
+**Verzija:** 1.0.9
+**Datum:** 2026-08-15
 
 ---
 
@@ -91,7 +91,7 @@ Historical plan rows u §9.6 (privremeni flag; „bez javnog cancellation_reason
 | TS-004 Održavanje | Domen Održavanja; zavisnost Faze 4/5/6 |
 | TS-005 Manifestacija | Domen Manifestacije; zavisnost Faze 4/5 |
 | TS-007 Kategorije i oznake | Oznake događaja; zavisnost Faze 4/6 |
-| TS-008 Mediji | Mediji / fallback; zavisnost Faze 4/6 (po obuhvatu) |
+| TS-008 Mediji | **SUPERSEDED / HISTORICAL** (MED-01–MED-28); fallback prikaza = TS-009 / MED-08/09 |
 | `docs/features/Feature-Registry.md` | Registar FT-001 / plan TS |
 
 **Napomena o putanji:** Dokument je smješten u `docs/implementation-strategies/`, analogno `docs/technical-specifications/` i `docs/change-requests/`.
@@ -130,7 +130,7 @@ Kanonski nazivi:
 | Termin | Isključivo vremenski atributi Održavanja; nije entitet |
 | Kategorija | Primarna klasifikacija događaja |
 | **Oznake** | Dodatna klasifikacija događaja (BM-08 / TS-007). **Jedini** kanonski termin za tu klasifikaciju. |
-| **Tagovi** | Metapodaci medija (BM-09 / TS-008). **Nisu** sinonim za Oznake; nisu V1 UI (TS-009). |
+| **Tagovi** | Istorijski: metapodaci medija (BM-09 / TS-008, SUPERSEDED MED-07). **Nisu** sinonim za Oznake; nisu V1 UI. |
 | Statusne oznake | Javni prikaz poslovnog statusa (npr. Otkazano). **Nisu** isto što i Oznake (BM-08). |
 
 U IS-001 se **ne** koristi riječ „Tagovi“ za klasifikaciju događaja.
@@ -623,7 +623,8 @@ Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehni�
 | 1.0.6 | 2026-08-06 | CR-004B Planned (IS-001 Faza 3): korektivni prolaz — bez migracija/šeme; cancelled ostaje; portalna Arhiva = date query; archived nije javno; §9.3.2; TS-009 v1.0.5 §7.2; PO-CR4B-01…10. Faza 3 nije zatvorena. Bez izmjene implementacije. |
 | 1.0.7 | 2026-08-09 | **Faza 6A/6B (IR-001):** usklađenje sa TS-009 v1.0.6 — 6A kanonski cutover Događaja nije blokiran TS-005; §8 dijagram / §9.6 ažurirani. Bez izmjene implementacije. |
 | 1.0.8 | 2026-08-13 | **FAZA 6A DOCUMENTATION CLOSURE:** §2.1 CURRENT STATE — 6A **CLOSED**; canonical-only; B1+B2 PRODUCTION VERIFIED / CLOSED; categories 14/14; PATCH-063 supersede; B3 DEFERRED non-blocking; referenca TS-009 v1.0.19. Bez izmjene implementacije. |
+| 1.0.9 | 2026-08-15 | **MED marker:** stari Media model (TS-008 / tagovi medija) **SUPERSEDED** MED-01–MED-28. Istorijski sadržaj faza nije prepisan. Bez izmjene implementacije. |
 
 ---
 
-**Kraj dokumenta IS-001 v1.0.8 (Stable)**
+**Kraj dokumenta IS-001 v1.0.9 (Stable)**

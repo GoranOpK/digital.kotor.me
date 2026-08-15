@@ -1,14 +1,33 @@
 # Digital Kotor
 # Technical Specification
-## Mediji
+## Mediji (istorijski)
 
 **Feature ID:** FT-001  
 **Oznaka dokumenta:** TS-008  
-**Funkcionalna cjelina:** Mediji  
-**Modul:** Kalendar kulture  
-**Status dokumenta:** Usvojen  
-**Verzija:** 0.1.0  
-**Datum:** 2026-07-31
+**Funkcionalna cjelina:** Mediji (istorijski)
+**Modul:** Kalendar kulture
+**Status dokumenta:** **SUPERSEDED / HISTORICAL / ZASTARJELO**
+**Verzija:** 0.1.1
+**Datum:** 2026-08-15
+
+> **Ovaj dokument nije aktivni SSOT za V1.**
+>
+> TS-008 (v0.1.0, Usvojen 2026-07-31) opisivao je samostalnu poslovnu cjelinu **Mediji**. Taj model je **supersedovan** PO paketom **MED-01–MED-28** (BM PATCH-075 / FS PATCH-FS-075).
+>
+> Status **Usvojen** kao aktivna V1 funkcionalna cjelina **više ne važi**.
+>
+> Kanonska pravila su raspoređena u:
+>
+> * **TS-003** — naslovna fotografija Događaja (`0..1`, upload u kontekstu, lifecycle);
+> * **TS-005** — naslovna fotografija Manifestacije (`0..1`, MF placeholder);
+> * **TS-007** — statičke Git kategorijske fotografije (nije `CulturalMedia`);
+> * **TS-009** — javni fallback i `object-fit: cover`;
+> * **TS-010** — UX naslovne fotografije (nema ekrana Mediji);
+> * **TS-012** — samo audit kompatibilnost (`TS12-MF-11` / `mf.cover.change` KEEP; bez novih `media.*` kodova).
+>
+> Poglavlja 1–14 ispod ostaju **istorijski zapis** TS8-01–TS8-09 / BM-MD-01–17. Ne koristiti ih kao aktivnu specifikaciju za implementaciju.
+>
+> **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING** za MED paket. Ovaj dokument **ne** tvrdi da je MED implementacija COMPLETE.
 
 ---
 
@@ -17,61 +36,63 @@
 | Verzija | Datum | Opis |
 |---------|--------|------|
 | 0.1.0 | 2026-07-31 | Prva kompletna tehnička specifikacija za Medije. Ugrađene usvojene Product Owner odluke TS8-01–TS8-09 i usklađene sa BM-09 (PATCH-044), FS §5.11 (PATCH-FS-046) i TS pravilima projekta. Bez SQL, API ugovora, Laravel koda i migracija. |
+| 0.1.1 | 2026-08-15 | **SUPERSEDED / HISTORICAL:** TS-008 povučen kao aktivni SSOT. Kanonski model = MED-01–MED-28 (BM PATCH-075 / FS PATCH-FS-075). Nova pravila u TS-003, TS-005, TS-007, TS-009, TS-010; TS-012 samo audit kompatibilnost. Istorijski sadržaj poglavlja 1–14 zadržan radi sljedivosti. **IMPLEMENTATION PENDING** za MED. Bez izmjene koda. |
 
 ---
 
 # Svrha dokumenta
 
-Ovaj dokument opisuje tehničku realizaciju funkcionalne cjeline **Mediji** u okviru FT-001 – Kalendar kulture.
+**Ovaj dokument je istorijski zapis.** Nije aktivni SSOT za implementaciju.
 
-TS-008:
+Do v0.1.0 opisivao je tehničku realizaciju tadašnje funkcionalne cjeline **Mediji** (TS8-01–TS8-09). Taj model je **SUPERSEDED** paketom **MED-01–MED-28**.
 
-* ne uvodi nova poslovna pravila;
-* ne mijenja Business Model ni Functional Specification;
-* ne predstavlja implementaciju;
-* ne definiše SQL, migracije, Laravel kod ni konkretne API ugovore.
+Poglavlja 1–14 ispod ostaju radi sljedivosti. Ne koristiti ih kao aktivnu specifikaciju.
 
-Izvori istine:
+Kanonski SSOT: BM PATCH-075, FS PATCH-FS-075, TS-003, TS-005, TS-007, TS-009, TS-010; TS-012 samo audit kompatibilnost.
 
-* `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-09 BM-MD-01–BM-MD-17, BM-GL-15, BM-PK-12)
-* `docs/functional-specifications/Functional-Specification.md` (§5.11, BR-086–BR-091, BR-237–BR-254; §5.4.4; BR-113)
-* usvojene PO odluke: TS8-01 .. TS8-09
-* `docs/features/Feature-Registry.md`
-* `docs/METHODOLOGY.md`
+Istorijski izvori (v0.1.0):
+
+* BM-09 BM-MD-01–BM-MD-17, BM-GL-15, BM-PK-12 (sada SUPERSEDED / zamijenjeni PATCH-075)
+* FS §5.11 BR-086–BR-091, BR-237–BR-254 (SUPERSEDED PATCH-FS-075)
+* TS8-01 .. TS8-09
 
 ---
 
 # Status razvoja Technical Specification
 
+**Dokument:** SUPERSEDED / HISTORICAL. Poglavlja ispod su istorijski Usvojena za TS8 model i **nisu** aktivni V1 cilj.
+
 | Poglavlje | Status |
 |-----------|--------|
-| 1. Pregled funkcionalne cjeline | Usvojeno |
-| 2. Arhitektonski principi | Usvojeno |
-| 3. Tehnički model | Usvojeno |
-| 4. Tokovi | Usvojeno |
-| 5. Autorizacija i ovlašćenja | Usvojeno |
-| 6. Model podataka | Usvojeno |
-| 7. Validacije | Usvojeno |
-| 8. Evidencija aktivnosti (Audit) | Usvojeno |
-| 9. Integracije | Usvojeno |
-| 10. Nefunkcionalni zahtjevi | Usvojeno |
-| 11. Granice V1 (Out of Scope) | Usvojeno |
-| 12. Otvorena pitanja | Usvojeno |
-| 13. Matrica sljedivosti | Usvojeno |
-| 14. Napomene za implementaciju | Usvojeno |
+| 1. Pregled funkcionalne cjeline | Istorijski Usvojeno — SUPERSEDED |
+| 2. Arhitektonski principi | Istorijski Usvojeno — SUPERSEDED |
+| 3. Tehnički model | Istorijski Usvojeno — SUPERSEDED |
+| 4. Tokovi | Istorijski Usvojeno — SUPERSEDED |
+| 5. Autorizacija i ovlašćenja | Istorijski Usvojeno — SUPERSEDED |
+| 6. Model podataka | Istorijski Usvojeno — SUPERSEDED |
+| 7. Validacije | Istorijski Usvojeno — SUPERSEDED |
+| 8. Evidencija aktivnosti (Audit) | Istorijski Usvojeno — SUPERSEDED |
+| 9. Integracije | Istorijski Usvojeno — SUPERSEDED |
+| 10. Nefunkcionalni zahtjevi | Istorijski Usvojeno — SUPERSEDED |
+| 11. Granice V1 (Out of Scope) | Istorijski Usvojeno — SUPERSEDED |
+| 12. Otvorena pitanja | Istorijski Usvojeno — SUPERSEDED |
+| 13. Matrica sljedivosti | Istorijski Usvojeno — SUPERSEDED |
+| 14. Napomene za implementaciju | Istorijski Usvojeno — SUPERSEDED |
 
 ---
 
 # Pravila upravljanja ovim dokumentom
 
-1. TS-008 pripada FT-001 – Kalendar kulture.
-2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
-3. Nova poslovna pravila se ne uvode kroz TS-008.
-4. Izmjene usvojenog sadržaja evidentiraju se novom verzijom dokumenta i odgovarajućim PATCH-om BM/FS, gdje je primjenjivo.
+1. TS-008 je **historijski** dokument FT-001. Nije aktivni SSOT.
+2. Istorijski sadržaj se ne briše radi sljedivosti.
+3. Nova poslovna pravila se **ne** uvode kroz TS-008. Kanonski model = MED-01–MED-28.
+4. Izmjene ovog dokumenta smiju samo održavati supersession/status, ne reaktivirati TS8 model.
 
 ---
 
 # 1. Pregled funkcionalne cjeline
+
+> **Istorijski TS8 sadržaj (SUPERSEDED).** Ne koristiti kao aktivnu specifikaciju.
 
 ## 1.1 Svrha funkcionalne cjeline
 
@@ -348,7 +369,9 @@ Creator i vremenske oznake ostaju na mediju radi lokalne istorije.
 
 # 12. Otvorena pitanja
 
-Za TS-008 trenutno nema otvorenih Product Owner pitanja. Sve TS8-01–TS8-09 odluke su usvojene.
+**Istorijski (v0.1.0):** za tadašnji TS8 model nije bilo otvorenih PO pitanja; TS8-01–TS8-09 su bile usvojene.
+
+**Aktuelno:** TS8 model je **SUPERSEDED** MED-01–MED-28. Ne otvarati nova TS-008 pitanja. Implementacija ide prema MED paketu.
 
 ---
 
@@ -370,6 +393,8 @@ Za TS-008 trenutno nema otvorenih Product Owner pitanja. Sve TS8-01–TS8-09 odl
 ---
 
 # 14. Napomene za implementaciju
+
+> **ZASTARJELO / SUPERSEDED.** Sljedeće tačke su istorijske napomene TS8 modela. **Ne implementirati** ih kao važeća pravila. Važeći ugovor: MED-01–MED-28 (npr. MED-05 briše fajl pri zamjeni/uklanjanju; nema Media kataloga; Urednik ne upravlja samostalnim medij-zapisom).
 
 1. Ne tretirati `CulturalEvent.slika` string kao trajni poslovni model Medija.
 2. Ne uvoditi Spatie/collections kao poslovni zahtjev — izbor tehnologije je implementacioni.

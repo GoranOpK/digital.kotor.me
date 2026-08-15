@@ -94,6 +94,7 @@
 | PATCH-FS-072 | 2026-08-14 | **PO-NL-01…PO-NL-22 / BM PATCH-073:** Newsletter pretplata, preference, odjava, reaktivacija, `User`/e-mail lifecycle, Manifestacija granica, testni legacy. Usklađeni tokovi §5.15 i BR-140–BR-142, BR-149–BR-150, BR-152, BR-154, BR-156, BR-157; dodati BR-328–BR-344. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 | PATCH-FS-073 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary / BM PATCH-074:** prva pretplata i reaktivacija nijesu retroaktivne; candidate ≠ dostava; evidencija first_include samo nakon uspješne isporuke. Usklađeni tokovi §5.15 i BR-147, BR-148, BR-158, BR-334, BR-335, BR-341; dodati BR-345–BR-348. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 | PATCH-FS-074 | 2026-08-14 | **F8-01 / TS-012 canonical freeze:** usklađen §5.16 katalog sa kasnijim usvojenim radnjama (PO-ORG-06 resolver; PO-AUTO-02 auto-finish OCC; PATCH-063 direktna izmjena objavljenog / brisanje nacrta; BR-184 Sistem). Eksplicitna isključenja (dismiss BR-326/327; invitation e-mail; kaskadno OCC; lokacije/kategorije/mediji; Newsletter ledger). Dodati BR-349–BR-350; usklađeni BR-177, BR-178, BR-182, BR-183, BR-184. Bez nove poslovne odluke. Bez izmjene BM. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
+| PATCH-FS-075 | 2026-08-15 | **MED-01–MED-28 / BM PATCH-075:** §5.11 preimenovan u Naslovna fotografija Događaja i Manifestacije. **SUPERSEDED:** BR-086–BR-091, BR-237–BR-254 (TS8 model). Dodati BR-351–BR-370. Usklađeni §5.4.4, BR-113, BR-197. TS-008 više nije aktivni FS SSOT. **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Verzija ostaje 1.0.0. Bez izmjene koda. |
 
 Napomena:
 
@@ -141,7 +142,7 @@ Dokument predstavlja referentnu funkcionalnu specifikaciju za planiranje, razvoj
 | FS-001 – §5.8 Upravljanje moderatorima | Approved |
 | FS-001 – §5.9 Upravljanje lokacijama | Approved |
 | FS-001 – §5.10 Upravljanje kategorijama i oznakama | Approved |
-| FS-001 – §5.11 Upravljanje medijima | Approved |
+| FS-001 – §5.11 Naslovna fotografija Događaja i Manifestacije (istorijski: Upravljanje medijima) | Approved — kanonski PATCH-FS-075 / MED; TS8 BR SUPERSEDED |
 | FS-001 – §5.12 Upravljanje manifestacijama | Approved |
 | FS-001 – §5.13 Javni portal — pregled, pretraga i prikaz | Approved |
 | FS-001 – §5.14 Urednički portal | Approved |
@@ -208,7 +209,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
    - 5.8 Upravljanje moderatorima (BR-070–BR-073, BR-327)
    - 5.9 Upravljanje lokacijama (BR-074–BR-080, BR-206–BR-223)
    - 5.10 Upravljanje kategorijama i oznakama (BR-081–BR-085, BR-224–BR-236, BR-277–BR-279)
-   - 5.11 Upravljanje medijima (BR-086–BR-091, BR-237–BR-254)
+   - 5.11 Naslovna fotografija Događaja i Manifestacije (BR-351–BR-370; istorijski BR-086–BR-091, BR-237–BR-254 SUPERSEDED)
    - 5.12 Upravljanje manifestacijama (BR-092–BR-101, BR-189–BR-205, BR-321–BR-325)
    - 5.13 Javni portal — pregled, pretraga i prikaz (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, BR-296–BR-306)
    - 5.14.1 Namjena i položaj Uredničkog portala (BR-118–BR-121)
@@ -659,19 +660,17 @@ Napomena: Trenutna implementacija može čuvati datum, vrijeme i lokaciju direkt
 
 #### 5.4.4 Fotografija događaja
 
-Sistem prikazuje jednu naslovnu fotografiju događaja po hijerarhiji:
+Sistem prikazuje jednu naslovnu fotografiju događaja po hijerarhiji (MED-08 / BR-357):
 
-1. direktno povezana naslovna fotografija događaja;
-2. podrazumijevana fotografija primarne kategorije događaja;
-3. globalni tehnički placeholder događaja.
+1. naslovna fotografija Događaja;
+2. statička Git-verzionisana fotografija primarne kategorije;
+3. globalni placeholder Događaja.
 
-Ako Moderator ili Urednik ne postavi fotografiju događaja, sistem prikazuje podrazumijevanu fotografiju kategorije kada postoji; inače tehnički placeholder.
+Naslovna fotografija nije obavezna za objavu. Korisnik nikada ne vidi događaj bez prikazane fotografije.
 
-Korisnik nikada ne vidi događaj bez prikazane fotografije.
+Fallback nije poslovna veza i nije `CulturalMedia` zapis. Legacy `CulturalEvent.slika` nije SSOT. Galerija fotografija nije dio V1 detalja događaja.
 
-Fallback nije poslovna veza događaj–medij.
-
-Galerija fotografija nije dio V1 detalja događaja.
+U okvirima sa definisanim proporcijama koristi se `object-fit: cover` (MED-14 / BR-361).
 
 ---
 
@@ -2603,231 +2602,289 @@ Tehnički cutover javnog portala (Faza 6A / TS-009): legacy `CulturalEvent` sadr
 
 ---
 
-### 5.11 Upravljanje medijima
+### 5.11 Naslovna fotografija Događaja i Manifestacije
+
+**Kanonski status:** PATCH-FS-075 / MED-01–MED-28 / BM PATCH-075. **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING.**
+
+Mediji nijesu posebna poslovna cjelina. `CulturalMedia` je interni tehnički mehanizam, nije poslovni objekat.
+
+Aktivna pravila: **BR-351–BR-370**. Pravila BR-086–BR-091 i BR-237–BR-254 su **ZASTARJELO / SUPERSEDED** (TS8 / PATCH-FS-046) i ostaju ispod radi sljedivosti.
+
+---
+
+#### BR-351 – Nije poslovna cjelina (MED-01)
+
+Naslovna fotografija nije samostalna poslovna cjelina Kalendara kulture. Interni tehnički zapis nije katalog ni vlasnički entitet.
+
+---
+
+#### BR-352 – Kardinalnost (MED-02)
+
+Događaj ima `0..1` naslovnu fotografiju. Manifestacija ima `0..1` naslovnu fotografiju. Nema galerije u V1.
+
+---
+
+#### BR-353 – Upload u kontekstu sadržaja (MED-03)
+
+Fotografija se dodaje isključivo uploadom nove fotografije u kontekstu konkretnog Događaja ili Manifestacije. Nema biblioteke niti reuse-a postojećih fotografija.
+
+---
+
+#### BR-354 – Opcionost (MED-04)
+
+Naslovna fotografija nije obavezna za objavu.
+
+---
+
+#### BR-355 – Prava i zaključavanje (MED-06, MED-18)
+
+Prava nad fotografijom prate prava nad konkretnim Događajem ili Manifestacijom. Nema zasebnog Media authorization modela. Kada je sadržaj zaključan, zaključana je i fotografija. Kontrola je dostupna samo kada je sadržaj uređiv.
+
+---
+
+#### BR-356 – Bez poslovnih metapodataka (MED-07)
+
+Korisnik ne unosi naziv, ALT, opis, autor, izvor, licenca, tagove, namjenu ili status fotografije. Sistem vodi samo potrebne tehničke podatke. Oznake Događaja ne pripadaju fotografiji.
+
+---
+
+#### BR-357 – Fallback Događaja (MED-08)
+
+Prikaz Događaja: (1) naslovna fotografija; (2) statička Git-verzionisana fotografija primarne kategorije; (3) globalni placeholder Događaja. Fallback nije `CulturalMedia` zapis.
+
+---
+
+#### BR-358 – Fallback Manifestacije (MED-09)
+
+Manifestacija bez naslovne koristi zasebni statički placeholder Manifestacije.
+
+---
+
+#### BR-359 – Formati i veličina (MED-10)
+
+Dozvoljeni formati: JPEG/JPG, PNG, WebP. Maksimalna veličina: **2 MB**. Serverski se provjeravaju stvarni sadržaj, MIME i ekstenzija.
+
+---
+
+#### BR-360 – Obrada (MED-11, MED-12, MED-13)
+
+Ako je duža strana >1920 px, proporcionalni resize na maksimalno 1920 px. Nema cropa; odnos stranica se čuva; manja se ne povećava. Čuva se samo konačna obrađena web fotografija. Format se ne konvertuje.
+
+---
+
+#### BR-361 – Prikaz u okviru (MED-14)
+
+U UI prostorima sa definisanim proporcijama koristi se `object-fit: cover`.
+
+---
+
+#### BR-362 – Upozorenje <800 px (MED-15)
+
+Ako je duža strana <800 px, korisniku se prikazuje informativno upozorenje. Upload nije blokiran.
+
+---
+
+#### BR-363 – Storage (MED-16)
+
+Fotografije se čuvaju na Laravel `public` disku u `storage/app/public/cultural-media/`. MEGA se ne koristi za fotografije Kalendara kulture.
+
+---
+
+#### BR-364 – Nema ekrana Mediji (MED-17)
+
+Poseban ekran/modul „Mediji“ uklanja se iz uredničkog portala. Nema samostalnog Media CRUD-a ni izbora postojećeg Medija.
+
+---
+
+#### BR-365 – Zamjena, uklanjanje i failure (MED-05, MED-21, MED-22)
+
+Kod zamjene ili uklanjanja brišu se interni tehnički zapis i fizički fajl.
+
+Kod zamjene nova fotografija mora potpuno uspjeti prije uklanjanja stare: validacija → obrada/resize → storage → DB promjena → cleanup stare. Ako nova operacija ne uspije, stara ostaje netaknuta.
+
+Ako je nova uspješno postavljena, a fizičko brisanje stare ne uspije: nova ostaje važeća; rollback se ne radi; greška se evidentira; stari fajl je orphan kandidat.
+
+---
+
+#### BR-366 – Lifecycle sa sadržajem (MED-19, MED-20)
+
+Trajno brisanje dozvoljenog never-published Događaja trajno briše naslovnu fotografiju, interni zapis i fajl. Arhiviranje ili otkazivanje ne briše fotografiju.
+
+V1 nema poslovno trajno brisanje Manifestacije; ovo pravilo ne uvodi delete Manifestacije.
+
+---
+
+#### BR-367 – Cleanup (MED-23, MED-24, MED-25)
+
+Usko ograničena serverska cleanup/reconciliation komanda samo za `storage/app/public/cultural-media/`. Podrazumijevani non-destructive pregledni režim i eksplicitni režim stvarnog brisanja. U V1 samo ručno; nema schedulera.
+
+---
+
+#### BR-368 – UX naslovne fotografije (MED-26)
+
+Vizuelna upload kartica; drag & drop; standardni file picker; lokalni preview; Zamijeni; Ukloni; warning <800 px; JPEG/PNG/WebP; max 2 MB. **Odustani** ne izvršava trajnu promjenu postojeće fotografije.
+
+---
+
+#### BR-369 – Statički fallback resursi (MED-27)
+
+14 kategorijskih fotografija, 1 globalni placeholder Događaja i 1 placeholder Manifestacije su statički Git-verzionisani fajlovi aplikacije. Nijesu `CulturalMedia` zapisi. Nema upload UI-ja za kategorijske fotografije.
+
+---
+
+#### BR-370 – Audit kompatibilnost (MED-28)
+
+Ne uvode se novi `media.*` audit kodovi. `TS12-MF-11` / `mf.cover.change` ostaje. TS-012 freeze katalog se ne otvara.
+
+---
+
+##### Istorijska pravila §5.11 (TS8 / PATCH-FS-046) — ZASTARJELO / SUPERSEDED
+
+Tekst ispod nije aktivni SSOT. Brojevi se ne recikliraju.
 
 #### BR-086 – Mediji
 
-Medij je samostalan poslovni entitet tipa Fotografija i zajednički platformski resurs bez poslovnog vlasnika.
-
-U V1 mediji služe vizuelnom predstavljanju događaja, manifestacija i kategorija.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075).** Istorijski: Medij je samostalan poslovni entitet tipa Fotografija i zajednički platformski resurs bez poslovnog vlasnika. U V1 mediji služe vizuelnom predstavljanju događaja, manifestacija i kategorija.
 
 ---
 
 #### BR-087 – Povezivanje medija
 
-Jedan medij može biti povezan sa jednim ili više događaja, manifestacija ili kategorija, u skladu sa svojom namjenom.
-
-U V1 ne postoje poslovne veze medija sa lokacijama niti organizatorima.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075).** Istorijski: Jedan medij može biti povezan sa jednim ili više događaja, manifestacija ili kategorija, u skladu sa svojom namjenom. U V1 ne postoje poslovne veze medija sa lokacijama niti organizatorima.
 
 ---
 
 #### BR-088 – Namjena medija
 
-Svaki medij ima tačno jednu poslovnu namjenu iz zatvorenog kataloga:
-
-1. Naslovna fotografija događaja;
-2. Naslovna fotografija manifestacije;
-3. Podrazumijevana fotografija kategorije.
-
-Katalog namjena nije korisnički konfigurabilan i ne uređuje se kroz aplikaciju.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075).** Istorijski: Svaki medij ima tačno jednu poslovnu namjenu iz zatvorenog kataloga: naslovna događaja; naslovna manifestacije; podrazumijevana fotografija kategorije. Katalog namjena nije korisnički konfigurabilan.
 
 ---
 
 #### BR-089 – Aktivnost medija
 
-Medij ima status Aktivan ili Neaktivan. Soft delete se ne koristi.
-
-Neaktivan medij ne može dobiti nova poslovna povezivanja.
-
-Neaktivan medij ostaje povezan sa postojećim entitetima i nastavlja da se prikazuje kroz postojeće veze dok se veza ne ukloni ili medij ne zamijeni.
-
-Dozvoljena je reaktivacija.
-
-Trajno brisanje dozvoljeno je isključivo kada medij nema nijednu poslovnu vezu.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075).** Istorijski: Medij ima status Aktivan ili Neaktivan. Soft delete se ne koristi. Neaktivan medij ne može dobiti nova poslovna povezivanja. Trajno brisanje dozvoljeno je isključivo kada medij nema nijednu poslovnu vezu.
 
 ---
 
 #### BR-090 – Korišćenje medija
 
-Upload medija moguć je isključivo tokom uređivanja događaja, manifestacije ili kategorije. Ne postoji poseban ekran isključivo za upload.
-
-Moderator uploaduje, povezuje, zamjenjuje vezu i uklanja vezu isključivo u okviru svog organizacionog konteksta. Moderator ne mijenja medij-zapis niti aktivira, deaktivira, reaktivira ili trajno briše medij.
-
-Urednik uploaduje u okviru svojih ovlašćenja i upravlja medij-zapisom. Isključivo Urednik aktivira, deaktivira, reaktivira i trajno briše medij.
-
-Kreator medija služi isključivo auditu, istoriji i logovima i ne predstavlja vlasništvo.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075).** Istorijski: Upload tokom uređivanja događaja, manifestacije ili kategorije; Moderator samo veze; Urednik upravlja medij-zapisom i lifecycle-om.
 
 ---
 
 #### BR-091 – Naslovna fotografija događaja
 
-Događaj može imati najviše jednu direktno povezanu naslovnu fotografiju (0..1). Direktna naslovna nije obavezna za objavu.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075)** kao model Medija / `category_default` zapisa. Kanonski: BR-352, BR-354, BR-357.
 
-Na javnom portalu događaj uvijek ima jednu prikazanu fotografiju:
-
-1. direktno povezana naslovna fotografija događaja;
-2. podrazumijevana fotografija primarne kategorije;
-3. globalni tehnički placeholder događaja.
-
-Fallback nije poslovna veza događaj–medij.
-
-Uklanjanje jedine naslovne fotografije događaja je dozvoljeno i aktivira istu hijerarhiju prikaza.
+Istorijski: Događaj 0..1 direktna naslovna; hijerarhija direktna → kategorija → placeholder; fallback nije poslovna veza.
 
 ---
 
 #### BR-237 – Naslovna fotografija manifestacije
 
-Manifestacija može imati najviše jednu naslovnu fotografiju (0..1).
-
-Ako nije povezana, koristi se placeholder manifestacije koji nije poslovni medij.
-
-Ne postoji automatsko preuzimanje fotografije sa događaja na manifestaciju niti obrnuto.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075)** u dijelu Medija-zapisa. Kanonski: BR-352, BR-358, BR-197.
 
 ---
 
 #### BR-238 – Podrazumijevana fotografija kategorije
 
-Kategorija može imati najviše jednu podrazumijevanu fotografiju (0..1). Veza je opciona.
-
-Podrazumijevana fotografija kategorije ne smatra se naslovnom fotografijom događaja.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075).** Istorijski: kategorija 0..1 Media veza. Kanonski: BR-369.
 
 ---
 
 #### BR-239 – Kardinalnost medija prema entitetima
 
-Medij sa namjenom naslovne fotografije događaja može biti povezan sa jednim ili više događaja.
-
-Medij sa namjenom naslovne fotografije manifestacije može biti povezan sa jednom ili više manifestacija.
-
-Medij sa namjenom podrazumijevane fotografije kategorije može biti povezan sa jednom ili više kategorija.
-
-Dijeljenje nije obavezno. Sistem ne smije automatski povezivati medij niti automatski kreirati duplikate medij-zapisa.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075).** Istorijski: reuse 1..N. Kanonski: BR-353.
 
 ---
 
 #### BR-240 – Uklanjanje veze
 
-Uklanjanje medija sa jednog entiteta uklanja samo tu vezu.
-
-Ne briše medij, ne briše fizički fajl i ne utiče na druge entitete povezane sa istim medijem.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075).** Istorijski: uklanjanje veze ne briše medij ni fajl. Kanonski: BR-365.
 
 ---
 
 #### BR-241 – Tip i formati
 
-Jedini poslovni tip medija u V1 je Fotografija.
-
-Dozvoljeni formati: JPEG, PNG, WebP.
-
-Dozvoljene ekstenzije: `.jpg`, `.jpeg`, `.png`, `.webp`.
-
-Dozvoljeni MIME tipovi: `image/jpeg`, `image/png`, `image/webp`.
-
-Maksimalna veličina: 5 MB (5120 KB).
-
-Nisu dozvoljeni: SVG, GIF, BMP, TIFF, HEIC/HEIF, animirane slike i svi formati koji nisu izričito dozvoljeni.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075)** u dijelu 5 MB. Kanonski: BR-359 (2 MB).
 
 ---
 
 #### BR-242 – Validacija datoteke
 
-Sistem mora na serverskoj strani potvrditi da su sadržaj, MIME tip i ekstenzija međusobno podudarni i da datoteka nije veća od 5 MB, da je stvarna čitljiva slika dozvoljenog formata.
-
-HTML atribut `accept` nije dovoljna sigurnosna kontrola.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075)** u dijelu 5 MB. Kanonski: BR-359.
 
 ---
 
 #### BR-243 – Dimenzije i obrada
 
-Minimalne dimenzije i obavezni odnos stranica nisu uslov prijema.
-
-V1 ne zahtijeva automatski resize, thumbnail, kompresiju, isijecanje niti konverziju formata.
-
-Prikaz različitih odnosa stranica rješava se kroz UI bez deformisanja originalne fotografije.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075)** u dijelu „nema resize“. Kanonski: BR-360.
 
 ---
 
 #### BR-244 – Vidljivost pri ponovnoj upotrebi
 
-Moderator vidi samo medije svog organizacionog konteksta.
-
-Urednik vidi kompletan katalog medija.
-
-Ovo je pravilo vidljivosti, ne vlasništva.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075).** Istorijski: katalog po organizacionom kontekstu.
 
 ---
 
 #### BR-245 – Pretraga medija
 
-Moderator pretražuje po nazivu i opisu u okviru svog organizatora.
-
-Urednik pretražuje kompletan katalog uz filtere: status, namjena, organizator, kreator.
-
-Prikaz: kartice (thumbnail, naziv, namjena, dimenzije, veličina, datum) uz load more ili infinite scroll.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075).**
 
 ---
 
 #### BR-246 – Poslovni metapodaci
 
-Obavezni: naziv, ALT tekst.
-
-Opcioni: opis, autor, izvor, licenca, tagovi.
-
-Tagovi postoje u modelu podataka, ali nisu dio V1 korisničkog interfejsa.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075).** Istorijski: obavezni naziv i ALT. Kanonski: BR-356.
 
 ---
 
 #### BR-247 – Tehnički metapodaci
 
-Sistem automatski vodi: originalni naziv, interni naziv, MIME, format, dimenzije, veličinu, vrijeme uploada, kreatora, vrijeme posljednje izmjene i status.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075)** kao katalogski model. Kanonski: samo potrebni tehnički podaci (BR-356).
 
 ---
 
 #### BR-248 – Dupli upload
 
-Pri uploadu sistem provjerava identičnu datoteku.
-
-Ako postoji, prikazuje se upozorenje i korisnik bira nastavak uploada ili korišćenje postojećeg medija.
-
-Duplikati nisu zabranjeni. Provjera sličnih fotografija nije dio V1.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075).** Istorijski: ponuda korišćenja postojećeg medija.
 
 ---
 
 #### BR-249 – Ponovna provjera ovlašćenja
 
-Prije svake izmjene sistem ponovo provjerava ovlašćenja. Ako korisnik više nema pravo, operacija se odbija.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075)** kao zaseban Media CRUD tok. Ovlašćenja prate sadržaj (BR-355).
 
 ---
 
 #### BR-250 – Ponovna provjera prije trajnog brisanja
 
-Prije trajnog brisanja sistem ponovo provjerava poslovne veze, status i ostale uslove. Ako uslovi nisu ispunjeni, brisanje se odbija.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075)** kao samostalno brisanje Medija. Kanonski: BR-365, BR-366.
 
 ---
 
 #### BR-251 – Uloga Organizatora
 
-Organizator nije operativna uloga i ne upravlja medijima.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075)** kao zasebno Media pravilo. Organizator i dalje nije operativna uloga uredničkog portala.
 
 ---
 
 #### BR-252 – Uloga Administratora platforme
 
-Administrator platforme nema redovnu poslovnu ulogu u upravljanju medijima.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075)** kao zasebno Media pravilo.
 
 ---
 
 #### BR-253 – Placeholderi
 
-Globalni tehnički placeholder događaja i placeholder manifestacije nisu poslovni mediji, nisu predmet korisničkog uploada, nisu medij-zapisi i ne moraju poštovati katalog namjena.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075)** kao „nisu poslovni mediji u katalogu“. Kanonski: BR-369.
 
 ---
 
 #### BR-254 – Opseg V1 za medije
 
-U V1 ne ulaze: galerije, dokumenti kao poslovni medij, video, audio, mediji lokacija, mediji organizatora, proizvoljne namjene, uređivi katalog namjena, soft delete.
-
-Scenario sa dva Urednika nije poslovno pravilo. Eventualna zaštita od uređivanja istog zapisa u više browser tabova je isključivo tehnička implementacija.
+**ZASTARJELO / SUPERSEDED (PATCH-FS-075)** kao SSOT samostalnog Medija. Galerija i dalje nije u V1 (BR-352).
 
 **Status:** Approved
 
@@ -3061,15 +3118,15 @@ Objavljena manifestacija može se uređivati u skladu sa ovlašćenjima uloga, u
 
 #### BR-197 – Naslovna fotografija manifestacije
 
-Manifestacija može imati najviše jednu naslovnu fotografiju.
+Manifestacija može imati najviše jednu naslovnu fotografiju (`0..1`).
 
-Fotografija je opciona i nezavisna od fotografija događaja.
+Fotografija je opciona i nezavisna od fotografija događaja. Upload samo u kontekstu Manifestacije; nema reuse-a.
 
 Promjena ili uklanjanje fotografije događaja ne utiče na fotografiju manifestacije.
 
 Sistem ne preuzima automatski fotografiju događaja.
 
-Kada fotografija nije postavljena, javni portal koristi podrazumijevanu ilustraciju ili placeholder.
+Kada fotografija nije postavljena, javni portal koristi **zasebni statički placeholder Manifestacije** (Git-verzionisani resurs; nije `CulturalMedia`). Detaljna pravila: §5.11 / BR-351–BR-370.
 
 ---
 
@@ -3233,7 +3290,7 @@ Pregled obuhvata listu, detalj i program Manifestacije (BR-265–BR-269).
 
 #### BR-106 – Detaljan prikaz
 
-Javni portal omogućava pregled detaljnih informacija o objavljenim događajima i manifestacijama, uključujući sa njima povezana održavanja (sa terminima i lokacijama), kategorije, oznake, medije i druge javno objavljene podatke u skladu sa poslovnim pravilima modula Kalendara kulture.
+Javni portal omogućava pregled detaljnih informacija o objavljenim događajima i manifestacijama, uključujući sa njima povezana održavanja (sa terminima i lokacijama), kategorije, oznake, naslovnu fotografiju (sa fallbackom) i druge javno objavljene podatke u skladu sa poslovnim pravilima modula Kalendara kulture.
 
 ---
 
@@ -3297,11 +3354,17 @@ Nakon cutover-a Faze 6A primarna kategorija i filter kategorija na javnom portal
 
 ---
 
-#### BR-113 – Prikaz medija
+#### BR-113 – Prikaz naslovne fotografije
 
-Javni portal omogućava prikaz medija povezanih sa objavljenim događajima i manifestacijama, te prikaz fotografije događaja u skladu sa hijerarhijom naslovne fotografije / podrazumijevane fotografije kategorije / tehničkog placeholdera.
+Javni portal prikazuje naslovnu fotografiju objavljenog Događaja i objavljene Manifestacije.
 
-U V1 portal ne prikazuje medije lokacija niti organizatora.
+**Događaj:** (1) naslovna fotografija; (2) statička kategorijska fotografija; (3) globalni placeholder Događaja.
+
+**Manifestacija:** (1) naslovna fotografija; (2) statički placeholder Manifestacije.
+
+U okvirima sa definisanim proporcijama koristi se `object-fit: cover`. U V1 portal ne prikazuje fotografije lokacija niti organizatora. Nema galerije. Nema `category_default` Media zapisa.
+
+> **PATCH-FS-075** superseduje ranije tumačenje ovog pravila kao prikaz samostalnog kataloga Medija.
 
 ---
 
@@ -5458,3 +5521,4 @@ Pored BR-176, BR-181, BR-183 i BR-186, u centralnu Evidenciju **ne ulaze**:
 | 2026-08-14 | FS-001 (PATCH-FS-072): PO-NL-01…PO-NL-22 / BM PATCH-073 — Newsletter pretplata i preference; usklađeni tokovi §5.15 i BR-140–BR-142, BR-149–BR-150, BR-152, BR-154, BR-156, BR-157; dodati BR-328–BR-344. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 | 2026-08-14 | FS-001 (PATCH-FS-073): NL-03 temporal eligibility + ledger boundary / BM PATCH-074 — prva pretplata i reaktivacija nijesu retroaktivne; candidate ≠ dostava. Usklađeni tokovi §5.15 i BR-147, BR-148, BR-158, BR-334, BR-335, BR-341; dodati BR-345–BR-348. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 | 2026-08-14 | FS-001 (PATCH-FS-074): F8-01 / TS-012 canonical freeze — usklađen §5.16 katalog; BR-349–BR-350; usklađeni BR-177/178/182/183/184. Bez nove poslovne odluke. Bez izmjene BM. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
+| 2026-08-15 | FS-001 (PATCH-FS-075): MED-01–MED-28 / BM PATCH-075 — §5.11 Naslovna fotografija; BR-351–BR-370; SUPERSEDED BR-086–091, BR-237–254; usklađeni §5.4.4, BR-113, BR-197. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Verzija ostaje 1.0.0. Bez izmjene koda. |

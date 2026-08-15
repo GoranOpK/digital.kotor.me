@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Manifestacija  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.5
-**Datum:** 2026-08-11
+**Verzija:** 0.1.6
+**Datum:** 2026-08-15
 
 ---
 
@@ -22,6 +22,7 @@
 | 0.1.3 | 2026-08-11 | 6B-DOC-01 status sync (PO-6B-01…03): potvrđene granice TS-005 prema TS-009 — Manifestacija nema sopstvenu ni agregiranu lokaciju; javni detalj Arhivirane MF ostaje portalni ugovor TS-009; bez posebne MF Arhive u V1. Bez SQL/API/Laravel detalja i bez izmjene poslovnih pravila. |
 | 0.1.4 | 2026-08-11 | PO-6B-08/09 status sync: potvrđeno da javna vidljivost Otkazane MF i Event→MF anti-leak pripadaju TS-009 §6.7–§6.8; domain lifecycle ostaje — Otkazana do isteka perioda → Arhivirana; Objavljena→Arhivirana bez obavezne Otkazane međufaze; MF nema status Odgođena; MF/Event lifecycle nezavisni. Bez izmjene SQL/API/Laravel i bez novih portalnih UI pravila u TS-005. |
 | 0.1.5 | 2026-08-12 | **PO-MF-WF-01–04 / BM PATCH-070 / FS PATCH-FS-070:** razdvojeni EDITOR-CREATED vs MODERATOR-CREATED lifecycle; porijeklo = `created_by` → uloga `kk_admin` (ne `organizer_id`); tehnički statusi KEEP (`draft`, `pending_approval`, `returned_for_revision`, `published`, …); §4 tokovi/matrica/autorizacija usklađeni. Bez nove kolone/migracije. |
+| 0.1.6 | 2026-08-15 | **MED-01–MED-28:** naslovna fotografija Manifestacije `0..1`; upload samo kroz Manifestaciju; bez reuse-a; opciona; zaseban statički MF placeholder; prava i lock prate Manifestaciju; arhiva/otkaz ne brišu cover. V1 **nema** trajno brisanje Manifestacije (MED-19 se ne uvodi kao nova delete operacija). TS-008 SUPERSEDED. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
 
 Napomena:
 
@@ -137,7 +138,7 @@ Obuhvat TS-005:
 Van obuhvata:
 
 * implementacija, SQL, migracije, Laravel kod, API;
-* puni modeli Događaja, Održavanja, Lokacije, Kategorija, Medija, Portala, Newslettera, Evidencije;
+* puni modeli Događaja, Održavanja, Lokacije, Kategorija, Portala, Newslettera, Evidencije;
 * SEO slug kao poslovna funkcionalnost V1.
 
 ## 1.3 Zavisnosti
@@ -149,7 +150,7 @@ Van obuhvata:
 | TS-004 Održavanje | Izvedeno trajanje i uslov arhive; bez direktne relacije |
 | TS-006 Lokacija | Samo posredno preko Održavanja |
 | TS-007 Kategorije | Samo izvedeno iz Objavljenih Događaja |
-| TS-008 Mediji | Opciona naslovna fotografija |
+| Naslovna fotografija (MED / BM-09) | Opciona naslovna `0..1`; upload samo kroz Manifestaciju |
 | TS-009 Javni portal | Prikaz Objavljene MF; program: Objavljeni + Otkazani (oznaka); detalj UI → TS-009 |
 | TS-010 Urednički portal | Operativni prostor |
 | TS-012 Evidencija | Prima poslovno značajne događaje (katalog — otvoreno ako nije u FS) |
@@ -454,7 +455,7 @@ erDiagram
 | Opis | Sopstveni opis | BM-MF-08 |
 | Status | Jedan od šest statusa | BM-MF-11, BR-189 |
 | Organizator (ref.) | 0..1 | BM-MF-12, BR-190 |
-| Naslovna fotografija | 0..1, opciono | BM-MF-17, BR-197 |
+| Naslovna fotografija | 0..1, opciono; upload u kontekstu MF; bez reuse-a; interni `cover_media_id` nije poslovni objekat | BM-MF-08, BR-197, MED-02–MED-04 |
 | Web stranica / Više informacije | Opcioni eksterni URL | BM-MF-18, BR-198 |
 | Početak / završetak | Izvedeno, ne ručni unos | BM-MF-05 |
 | Audit / vremenske oznake | U skladu sa standardom TS-003/004 | tehnička nužnost |
@@ -539,8 +540,8 @@ Centralna Evidencija: Manifestacija je ravnopravan entitet; emisija prema katalo
 | **TS-004** | Trajanje i arhiva iz održavanja; bez direktne relacije |
 | **TS-006** | Lokacije samo preko Održavanja Objavljenih Događaja |
 | **TS-007** | Izvedene kategorije iz Objavljenih Događaja |
-| **TS-008** | Naslovna fotografija MF |
-| **TS-009** | Javni prikaz: naziv, opis, foto/placeholder, Org. ako postoji, URL, izvedeno trajanje; program: Objavljeni + Otkazani (oznaka „Otkazano“) + javna održavanja/lokacije; UI detalj → TS-009 |
+| **TS-008** | **SUPERSEDED / HISTORICAL** — nije aktivni SSOT |
+| **TS-009** | Javni prikaz: naziv, opis, naslovna ili **zasebni statički MF placeholder**, Org. ako postoji, URL, izvedeno trajanje; program: Objavljeni + Otkazani (oznaka „Otkazano“) + javna održavanja/lokacije; UI detalj → TS-009 |
 | **TS-010** | Uredničke radnje §4–§5 |
 | **TS-012** | Audit emisije (nakon kataloga) |
 
@@ -562,7 +563,7 @@ Pregled; kreiranje; uređivanje; povezivanje/uklanjanje Događaja; fotografija; 
 
 * Zabraniti M:N Događaj–Manifestacija.
 * Zabraniti javni prikaz neobjavljenih Događaja u programu MF.
-* Validacija URL-a i sigurno upravljanje slikama (TS-008).
+* Validacija URL-a. Sigurno upravljanje naslovnom fotografijom prema MED / TS-010 (TS-008 SUPERSEDED).
 
 ## 10.2 Autorizacija
 
@@ -619,7 +620,7 @@ Napomena (**N-MF-05**, nije Product Owner odluka): Manifestacija se vodi u centr
 | §3 Model / trajanje | BM-MF-03–05, 08, 12, 19 | BR-094–096, 190, 203 | PO-MF-02, 05, 07–08, 10 | FT-001 | |
 | §4 Tokovi | BM-MF-02, 06–07, 10, 13–15, 19 | BR-101, 189–196, 202–204 | PO-MF-01, 03, 04, 09, 11 | FT-001 | |
 | §5 Autorizacija | BM-MF-07, 09, 12 | BR-098, 100, 190 | PO-MF-02, 12 | FT-001 | TS-001 |
-| §6 Podaci | BM-MF-08, 16–18 | BR-099, 197–200 | PO-MF-07–08 | FT-001 | TS-008 |
+| §6 Podaci | BM-MF-08, 16–18 | BR-099, 197–200 | PO-MF-07–08 | FT-001 | MED / TS-010 (TS-008 SUPERSEDED) |
 | §7 Validacije | BM-MF-02, 13–14, 19 | BR-191–193, 200–202 | PO-MF-03–04, 09 | FT-001 | |
 | §8 Audit | BM-MF-20, BM-14 | BR-205, §5.16 | — (N-MF-05 napomena) | FT-003 | TS-012 |
 | §9 Integracije | BM-PK-*, BM-MF-04 | BR-105, 111–112, 192 | PO-MF-04 | FT-001 | TS-003–TS-010 |
@@ -634,6 +635,7 @@ Napomena (**N-MF-05**, nije Product Owner odluka): Manifestacija se vodi u centr
 2. Objava MF: provjera ≥1 Objavljen Događaj u trenutku odobrenja.
 3. Javni API/view programa: `status_dogadjaja IN (Objavljen, Otkazan)`; Otkazani sa oznakom „Otkazano“ (detalj UI: TS-009).
 4. Trajanje: izračun u upitu/servisu, ne kao ručna polja za unos.
-5. Placeholder fotografije: postojeći dizajn sistema.
+5. Placeholder fotografije Manifestacije: zaseban statički Git-verzionisani resurs (MED-09 / MED-27); nije `CulturalMedia`.
+6. Ne uvoditi trajno brisanje Manifestacije u V1 zbog naslovne fotografije (MED-19 se ne primjenjuje dok delete MF ne postoji).
 6. Ne uvoditi slug polje u V1 šemu zbog poslovnog zahtjeva.
 7. Odstupanja trenutne implementacije vode se u Technical Overview, ne u TS-005.
