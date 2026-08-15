@@ -1,6 +1,6 @@
 # Moduli i rute
 
-**Poslednje ažuriranje:** 2026-08-14
+**Poslednje ažuriranje:** 2026-08-15
 **Izvor u kodu:** `routes/web.php`, `routes/auth.php`
 
 Sve rute u nastavku (osim `/`, login, register i javne Newsletter odjave) zahtijevaju middleware: `auth`, `verified`, `module_access_restrict`, osim ako nije drugačije navedeno.
@@ -124,7 +124,9 @@ Javne token rute: v. tabelu **Javne rute**.
 | `/kalendar-kulture/arhiva-dogadjaja` | `cultural-calendar.archive` | |
 | `/kalendar-kulture/dogadjaj/{event}` | `cultural-calendar.show` | |
 | `/kalendar-kulture/dan/{date}` | `cultural-calendar.day` | |
-| resource `/kalendar-kulture/dogadjaji` | `cultural-events.*` | `CulturalEventController`, `role:kk_admin` |
+| `/kalendar-kulture/kanonski-dogadjaji` | `cultural-event-entries.*` | `CulturalEventEntryController`, `role:kk_admin` |
+
+Legacy `cultural-events.*` / `CulturalEventController` / `/kalendar-kulture/dogadjaji` **nijesu registrovani** (B2 removed; B3 table DROP deferred).
 
 ---
 
@@ -132,7 +134,7 @@ Javne token rute: v. tabelu **Javne rute**.
 
 Zaštićeno `role:admin`, `role:admin,konkurs_admin`, ili `role:admin,konkurs_admin,komisija` zavisno od rute.
 
-Glavne grupe: korisnici, prijave, konkursi (CRUD, publish, close, ranking, winners), komisije (članovi, izjave).
+Glavne grupe: korisnici, prijave, konkursi (CRUD, publish, close, ranking, winners), komisije (članovi, izjave), **Evidencija aktivnosti** (`GET /admin/evidencija-aktivnosti`, `admin.cultural-activity.index`, `role:admin` — read-only).
 
 Kontroler: `AdminController`.
 

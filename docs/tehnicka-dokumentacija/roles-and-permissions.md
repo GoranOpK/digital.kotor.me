@@ -1,6 +1,6 @@
 # Uloge i dozvole
 
-**Poslednje ažuriranje:** 2026-06-30  
+**Poslednje ažuriranje:** 2026-08-15
 **Izvor u kodu:** `database/seeders/RoleSeeder.php`, `RoleMiddleware.php`, `RestrictRoleModuleAccess.php`, `routes/web.php`
 
 ---
@@ -38,7 +38,8 @@ Zajednički dozvoljeni route name-ovi za sve: `dashboard`, `logout`, `profile.ed
 
 ### `kk_admin`
 
-Dozvoljeno: kalendar kulture (`cultural-calendar.*`, `cultural-events.*`, URL `kalendar-kulture*`), profil.  
+Dozvoljeno: kalendar kulture (`cultural-calendar.*`, `cultural-event-entries.*`, editorial/org/mod prefiksi iz `RestrictRoleModuleAccess`, URL `kalendar-kulture*` / `newsletter*`), profil.
+`GET /admin/evidencija-aktivnosti` **nije** dozvoljen (`kk_admin` → redirect na kalendar). Legacy `cultural-events.*` nije registrovan.
 Sve ostalo → redirect na `cultural-calendar.index`.
 
 ### `konkurs_admin`

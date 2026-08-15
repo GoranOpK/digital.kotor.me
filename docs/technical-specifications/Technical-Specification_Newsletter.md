@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Newsletter  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** USVOJEN  
-**Verzija:** 1.0.3
-**Datum:** 2026-08-14
+**Verzija:** 1.0.4
+**Datum:** 2026-08-15
 
 ---
 
@@ -20,6 +20,7 @@
 | 1.0.1 | 2026-08-07 | Završni PATCH nacrta prije validation-a: usvojena crnogorska terminologija; Pravila emitovanja okidača; Promjena na čekanju kao normativni dio prioritetnog toka; Evidencija dostavljenih Newsletter poruka (jedan Identitet pretplatnika); Kontrolni zapis promjene; cjelovito evidentiranje dostave; Arhitektura obrade Newsletter zadataka (obrada u grupama, raspodjela, pokazivač, skaliranje, ograničenje brzine); Raspored automatske obrade; Audit događaji; legacy PRAVILO 5.3.1–5.3.4; Van obuhvata PRAVILO 5.4.1–5.4.2. Bez novih BM/FS odluka. Bez izmjene drugih dokumenata. |
 | 1.0.2 | 2026-08-14 | **PO-NL-01…PO-NL-22 / BM PATCH-073 / FS PATCH-FS-072:** tehnički ugovor pretplate na `User`; jedna pretplata; `User.email` kao adresa isporuke (nije Newsletter SSOT); režimi `all_events` / `selected_organizers`; „Bez organizatora“; validan izbor; bez confirmation e-mail polja; odjava čisti aktivne preference; deaktivirani Organizator KEEP veze; cascade pri brisanju `User`; delivery eligibility; Manifestacija nije dimenzija pretplate; testni legacy bez backfill-a pretplatnika. Uklonjene stale CURRENT oznake „DRAFT“ / „Nacrt“ iz zaglavlja i statusa poglavlja (istorija verzija 1.0.0/1.0.1 KEEP). Bez izmjene implementacije. |
 | 1.0.3 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary / BM PATCH-074 / FS PATCH-FS-073:** `subscribed_at` = trenutna activation boundary; prva pretplata i reaktivacija nijesu retroaktivne; preference/širenje opsega nijesu retroaktivni; candidate ≠ queued/sent/delivered; `first_include` ledger row samo nakon uspješne isporuke; NL-03 ne piše ledger i ne šalje e-mail. Dokumentovan P1 gap: kanonski timestamp prve objave Event-a i preference effective-time. Bez izmjene implementacije. |
+| 1.0.4 | 2026-08-15 | **Status hygiene (V1 closeout):** §26.2 označen kao **ISTORIJSKI / REPLACED**. Current runtime = `cultural-calendar:send-newsletter` + `cultural-calendar:send-newsletter-priority`; legacy weekly = no-op / nije kanonski invoker. Business contract KEEP. |
 
 Napomena:
 
@@ -37,6 +38,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.1 | 2026-08-07 | Završni PATCH: terminologija; okidači; Promjena na čekanju; Evidencija dostave; Kontrolni zapis promjene; cjelovita dostava; obrada zadataka; raspored; audit; legacy 5.3.1–5.3.4; van obuhvata 5.4.1–5.4.2. |
 | 1.0.2 | 2026-08-14 | PO-NL-01…22: pretplata na `User`; režimi opsega; „Bez organizatora“; delivery eligibility; bez confirmation e-mail polja; testni legacy bez migracije pretplatnika; cleanup stale DRAFT/Nacrt CURRENT oznaka. |
 | 1.0.3 | 2026-08-14 | Temporal eligibility; candidate vs delivery evidence; NL-03 = eligibility/candidate foundation (bez ledger write / bez e-maila); `subscribed_at` kao activation boundary; P1 timestamp gap dokumentovan. |
+| 1.0.4 | 2026-08-15 | §26.2 = historical/replaced; current runtime = regular + priority commands; weekly no-op. |
 
 ---
 
@@ -1081,9 +1083,11 @@ Postojeća Newsletter implementacija je **testna**. Postojeći testni pretplatni
 
 Nakon cutover-a na kanonski model, prethodna testna implementacija Newsletter funkcionalnosti ne smije ostati aktivna paralelno sa implementacijom definisanom u TS-011. U produkcionom okruženju u svakom trenutku smije biti aktivan isključivo jedan mehanizam za obradu i dostavu Newsletter poruka. Ovaj dokumentacioni korak **ne** naređuje trenutno brisanje starog koda.
 
-## 26.2 Postojeći testni model (informativno)
+## 26.2 Istorijski testni model (REPLACED — nije current runtime)
 
-| Aspekt | Trenutna testna implementacija |
+**CURRENT runtime (FAZA 7 CLOSED):** `cultural-calendar:send-newsletter` (regular) i `cultural-calendar:send-newsletter-priority` (priority). Legacy `cultural-calendar:send-weekly-newsletter` = **runtime no-op**; **nije** kanonski invoker. Tabela ispod opisuje **prethodni testni model** (PRAVILO 5.3.3 / 5.3.4) i **ne** opisuje produkcioni Newsletter.
+
+| Aspekt | Istorijska testna implementacija (REPLACED) |
 |--------|-------------------------------|
 | Publika | E-mail adresa; nije obavezno vezano za verifikovan nalog |
 | Tabela | `newsletter_subscribers` |

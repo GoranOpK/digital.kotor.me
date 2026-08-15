@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.19
-**Datum:** 2026-08-13
+**Verzija:** 1.0.20
+**Datum:** 2026-08-15
 
 ---
 
@@ -40,6 +40,7 @@
 | 1.0.17 | 2026-08-12 | **6A residual Package A status sync:** `cultural-calendar.day` — kada je `CULTURAL_PUBLIC_READ_SOURCE=canonical`, handler koristi `CulturalPublicEventQuery::filterByDate` + `occurrenceOnDate` (isti SSOT kao selected-day na indexu); legacy branch KEEP; kk_admin redirect KEEP; bez badge/detail-link. **IMPLEMENTED / TESTED (local).** Phase B hard-remove / flag cleanup **ne** zatvoren. Bez izmjene BM/FS. |
 | 1.0.18 | 2026-08-12 | **6A residual Package A PRODUCTION CLOSEOUT (status only):** `day()` canonical branch **production active** (`f35cb2e`); empty-date smoke `/kalendar-kulture/dan/2026-08-12` **PASS** — **PRODUCTION VERIFIED — EMPTY-DATE SCENARIO CONFIRMED**; content-bearing day not separately production-smoked (local suite; not a blocker); no badge/detail-link/redirect changes; feature flag + legacy rollback **KEEP**; Phase B hard-remove **NOT DONE / OPEN**. **Package A CLOSED.** Bez izmjene normative §5.4 date semantics. Bez izmjene BM/FS. |
 | 1.0.19 | 2026-08-13 | **Phase B1+B2 status sync:** public portal **canonical-only**; `CULTURAL_PUBLIC_READ_SOURCE` / dual-read / legacy CRUD runtime **REMOVED**; image helpers → `CulturalCalendarDefaultImages`; `cultural_events` table **KEEP**; B3 DROP **OPEN**. **IMPLEMENTED / TESTED (local); NOT PRODUCTION VERIFIED.** Bez izmjene normative §5.4. Bez izmjene BM/FS. |
+| 1.0.20 | 2026-08-15 | **Status hygiene (V1 closeout):** Phase B1+B2 = **PRODUCTION VERIFIED / CLOSED** (usklađeno sa IS-001 v1.0.8 / IR-001). B3 DROP = **DEFERRED**. Business contract KEEP. |
 
 ---
 
@@ -103,7 +104,7 @@ Izvori istine:
 | 2. Informaciona arhitektura i prikazi | Usvojeno |
 | 3. Pretraga i pregled — filteri | Usvojeno |
 | 3.4 Sortiranje Pretrage (Faza 6A) | Usvojeno |
-| 4. Tehnička napomena: ruta `cultural-calendar.day` | Usvojeno (**Package A CLOSED**; Phase B1+B2 canonical-only local; B3 OPEN) |
+| 4. Tehnička napomena: ruta `cultural-calendar.day` | Usvojeno (**Package A CLOSED**; Phase B1+B2 **PRODUCTION VERIFIED / CLOSED**; B3 DEFERRED) |
 | 5. Početna stranica — Hero, istaknuti, statistike, lista | Usvojeno |
 | 6. Manifestacije (javni portal) | Usvojeno (**FORMALLY CLOSED / PRODUCTION ACCEPTED**; limited content-smoke coverage) |
 | 7. Detalji događaja (baseline) | Usvojeno |
@@ -621,8 +622,8 @@ Ruta `cultural-calendar.day` (`GET /kalendar-kulture/dan/{date}`):
 | Canonical read | `CulturalPublicEventQuery::filterByDate` + `CulturalEventEntry::occurrenceOnDate`; jedan Entry po danu; bez badge / bez detail link; **jedini runtime path** |
 | Legacy read (rollback) | **REMOVED** (Phase B1+B2) |
 | Package A status | **CLOSED** — **PRODUCTION VERIFIED — EMPTY-DATE SCENARIO CONFIRMED** (`f35cb2e`) |
-| Phase B1+B2 | Flag + dual-read + legacy CRUD runtime — **IMPLEMENTED / TESTED (local)**; **NOT PRODUCTION VERIFIED** |
-| Phase B3 | `cultural_events` DROP — **OPEN / DEFERRED** |
+| Phase B1+B2 | Flag + dual-read + legacy CRUD runtime — **PRODUCTION VERIFIED / CLOSED** |
+| Phase B3 | `cultural_events` DROP — **DEFERRED** (nije V1 blocker) |
 
 Ova napomena ne nalaže B3 table DROP niti redesign `day` UI-ja.
 
@@ -1412,7 +1413,7 @@ Flag služi isključivo kao rollback zaštita — **nije** trajna arhitektura.
 
 **Intermediate status (PHASE 6A-CLOSE-02 — historical):** prije Phase B, legacy admin CRUD bio HTTP-disabled (403) uz zadržan flag.
 
-**CURRENT (Phase B1+B2):** koraci 1–4 iznad za flag + public read + CRUD runtime = **DONE (local)**; tabela `cultural_events` / model class shell = **KEEP do B3**.
+**CURRENT (Phase B1+B2):** koraci 1–4 iznad za flag + public read + CRUD runtime = **DONE / PRODUCTION VERIFIED / CLOSED**; tabela `cultural_events` / model class shell = **KEEP do B3** (B3 DROP **DEFERRED**; nije V1 blocker).
 
 Ovaj dokument **ne** implementira B3 DROP — samo evidentira status.
 

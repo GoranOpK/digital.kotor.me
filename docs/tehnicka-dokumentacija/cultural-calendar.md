@@ -1,8 +1,10 @@
 # Kalendar kulturnih događaja
 
-**Poslednje ažuriranje:** 2026-08-14 (Newsletter ops: kanonski invokeri 6h / 5 min)
-**Izvor u kodu:** `CulturalCalendarController`, `CulturalEventController`, `CulturalEvent` model; Newsletter: `SendCulturalCalendarNewsletter`, `SendCulturalCalendarPriorityNewsletter` (legacy weekly command ostaje na disku, runtime slanje isključeno)
+**Poslednje ažuriranje:** 2026-08-15
+**Izvor u kodu:** `CulturalCalendarController`, `CulturalPublicEventQuery`, `CulturalEventEntry` / `CulturalOccurrence`; editorial: `CulturalEventEntryController`; Newsletter: `SendCulturalCalendarNewsletter`, `SendCulturalCalendarPriorityNewsletter` (legacy weekly command ostaje na disku, runtime slanje isključeno)
 **Tip dokumenta:** Technical Overview trenutne implementacije
+
+**CURRENT STATE (V1 COMPLETE):** Javni i urednički runtime čitaju **kanonski** model (`CulturalEventEntry` + `CulturalOccurrence`). Legacy `CulturalEvent` / `cultural_events` = **fizički KEEP / runtime disabled / B3 DROP DEFERRED**. Organizator, Moderator, „Postani organizator“, Manifestacije, Newsletter (`/newsletter`) i Evidencija aktivnosti su **implementirani**. Stari odlomci ispod koji opisuju flat `CulturalEvent` kao current V1 **nisu** current runtime — zadržani su kao istorijski TO tekst dok se TO ne prepise zasebno.
 
 ---
 
@@ -38,15 +40,11 @@ Business Model razlikuje sljedeće poslovne uloge:
 * **Moderator** (Moderator organizatora) — operativni korisnik Organizatora; **nije** Urednik;
 * **Urednik** — odobrava Organizatore i sadržaj, te objavljuje događaje.
 
-Funkcija **„Postani organizator“** usvojena je u Business Modelu: podnosilac zahtjeva nakon odobrenja Urednika automatski postaje prvi Moderator; naredne Moderatore predlažu postojeći Moderatori, a ovlašćenja dodjeljuje isključivo Urednik. Funkcionalnost **trenutno još nije implementirana** u aplikaciji.
+Funkcija **„Postani organizator“** usvojena je u Business Modelu: podnosilac zahtjeva nakon odobrenja Urednika automatski postaje prvi Moderator; naredne Moderatore predlažu postojeći Moderatori, a ovlašćenja dodjeljuje isključivo Urednik. **CURRENT:** Organizator, Moderator i „Postani organizator“ su **implementirani** (TS-001 / TS-010).
 
 ### Trenutna implementacija
 
-U produkcijskom kodu administracija događaja vezana je za tehničku ulogu `kk_admin`.
-
-Uloga `kk_admin` odgovara poslovnoj ulozi **Urednika** Kalendara kulture i **ne** predstavlja ulogu Moderatora.
-
-Organizator i Moderator, kao i proces „Postani organizator“, nisu još implementirani u aplikaciji.
+U produkcijskom kodu urednička administracija događaja vezana je za tehničku ulogu `kk_admin` (poslovni **Urednik**). Organizator i Moderator su zasebne uloge/ovlašćenja, ne `kk_admin`.
 
 ---
 
@@ -66,14 +64,16 @@ Organizator i Moderator, kao i proces „Postani organizator“, nisu još imple
 
 ## Administracija (`kk_admin` / Urednik)
 
-Resource rute: `/kalendar-kulture/dogadjaji` → `cultural-events.*`  
-Kontroler: `CulturalEventController` (bez `show` akcije).
+**CURRENT:** resource rute `/kalendar-kulture/kanonski-dogadjaji` → `cultural-event-entries.*`, kontroler `CulturalEventEntryController`.
+Legacy `/kalendar-kulture/dogadjaji` / `cultural-events.*` / `CulturalEventController` **nijesu registrovani**.
 
 `kk_admin` je ograničen na kalendar modul (`RestrictRoleModuleAccess`).
 
 ---
 
-## Model `CulturalEvent`
+## Model `CulturalEvent` (ISTORIJSKI — nije current runtime)
+
+**CURRENT runtime** = `CulturalEventEntry` + `CulturalOccurrence`. Odlomak ispod opisuje legacy flat model (B3 physical KEEP / runtime disabled).
 
 ### Statusi (`STATUSES`)
 

@@ -6,8 +6,8 @@
 **Naziv:** Implementation Roadmap — Kalendar kulture V1  
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
-**Status dokumenta:** Active  
-**Verzija:** 1.0.21
+**Status dokumenta:** Active — **Kalendar kulture V1 COMPLETE**
+**Verzija:** 1.0.22
 **Datum:** 2026-08-15
 
 ---
@@ -38,6 +38,7 @@
 | 1.0.19 | 2026-08-14 | **F8-03 PO ACCEPT:** canonical emitters **PO ACCEPTED** (local, awaiting commit/push). TS-012 → v1.0.6 (`repeatable()` uniqueness limitation). Admin UI = **NOT STARTED**. BM/FS/IS/RG-001 KEEP. |
 | 1.0.20 | 2026-08-15 | **F8-04 Admin UI (status):** F8-01 canonical freeze = complete; F8-02 foundation = complete / production active; F8-03 emitters = complete / production active; F8-04 Admin UI = **implementation complete**, production acceptance pending. TS-012 → v1.0.7. Faza 8 **nije** production closed. BM/FS/IS/RG-001 KEEP. |
 | 1.0.21 | 2026-08-15 | **FAZA 8 PRODUCTION CLOSEOUT (status only):** F8-01…F8-04 **IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED / CLOSED**. TS-012 → v1.0.8. Admin UI production smoke PASS. Historical audit rows immutable. Naredno po §6/§8 = **Završna stabilizacija** (nije započeta). BM/FS/IS/RG-001 KEEP. |
+| 1.0.22 | 2026-08-15 | **ZAVRŠNA STABILIZACIJA CLOSED / V1 COMPLETE (status only):** Faze 0–8 **CLOSED**. Corrective 01 (`1f9d959`) OCC fixture + audit/invitation privacy. Regression 1045 passed / 0 failed. Runtime = canonical-only. **B3** `cultural_events` physical DROP = **DEFERRED** (nije V1 blocker). Nema Faze 9. TS-011 → v1.0.4; TS-009 → v1.0.20 (status hygiene). BM/FS/IS/RG-001 KEEP. |
 
 ---
 
@@ -177,6 +178,8 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 
 # 5. Postojeća produkcija (sažetak)
 
+**CURRENT (2026-08-15):** Kalendar kulture V1 = **COMPLETE**. Faze 0–8 + Završna stabilizacija = **CLOSED**. Public/editorial runtime = **canonical-only** (`CulturalEventEntry` / `CulturalOccurrence`). Legacy `cultural_events` = **fizički KEEP / runtime disabled / B3 DROP DEFERRED**. Tabela ispod je **istorijski baseline** iz IR v1.0.0 (stanje prije Faza 0–8) — **nije** current runtime mapa.
+
 | Područje | Stanje | Akcija |
 |----------|--------|--------|
 | Javni portal | Postoji; CR-001–004A usklađeni | Faza 0: CR-004B; **Faza 6A:** kanonski cutover Događaja (**završena**); **Faza 6B:** Manifestacije (**FORMALLY CLOSED** / **PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE) |
@@ -243,6 +246,8 @@ FAZA 8
     ↓
   Završna stabilizacija
 ```
+
+**CURRENT:** Faze 0–8 i Završna stabilizacija = **CLOSED**. Kalendar kulture V1 = **COMPLETE**. Nema Faze 9 u ovom IR-001.
 
 Za svaku logičku cjelinu unutar faze:
 
@@ -384,15 +389,27 @@ analiza → implementacija → test → review → merge → deploy
 | **Preduslov** | **FAZA 7 FORMALLY CLOSED** — **ispunjen** |
 | **Katalog** | TS-012 §7 / FS PATCH-FS-074 — **FROZEN** |
 | **Rizici** | Lom nepromjenjivosti; propušten kanonski emiter |
-| **KEEP V1** | Audit write = best-effort; nema queue/outbox; nema durable replay neupisanog događaja nakon završetka procesa |
+| **KEEP V1** | Audit write = best-effort; nema queue/outbox; nema durable replay; `repeatable()` uniqueness limitation; Admin UI bez filtera/search/export/show; historical rows immutable |
 | **Rezultat (cilj faze)** | FT-003 V1 zatvoren (bez retention / izvoza van BR-188) — **ostvaren** |
-| **Zatim** | **Završna stabilizacija** (IR-001 §6 / §8) — **nije započeta** |
+| **Zatim** | **Završna stabilizacija** (IR-001 §6 / §8) — **CLOSED** (vidi dolje) |
+
+### ZAVRŠNA STABILIZACIJA — Kalendar kulture V1
+
+| Stavka | Opis |
+|--------|------|
+| **Status** | **CLOSED / COMPLETE.** Feature + regresioni testovi PASS (`1f9d959`; 1045 passed / 0 failed / 5153 assertions). Production smoke Faza 6A/6B/7/8 = **PO-CONFIRMED**. |
+| **Cilj** | Kontrolni punkt nakon Faze 8 (§8): testovi, review, smoke, posmatranje. |
+| **Rezultat** | **Kalendar kulture V1 = COMPLETE.** Runtime closed. Physical B3 DROP = **DEFERRED**. |
+| **KEEP V1** | **Audit:** failure isolation; no durable replay; no outbox/queue; `repeatable()` uniqueness limitation; no filter/search/export/show; historical rows immutable. **Newsletter:** crash-after-SMTP duplicate window; no queue/outbox; organizer listing URL omitted; legacy physical artifacts remain. **Manifestation:** delete OOS. **Public / legacy:** B3 `cultural_events` physical DROP deferred; day view without badge/detail-link (TD-TS9-01). |
+| **Zatim** | Nema numerisane **Faze 9** u ovom IR-001. Post-V1 physical cleanup (B3) nije dio V1 COMPLETE. |
 
 ---
 
 # 8. Stabilizacija (obavezni kontrolni punkt)
 
 Primjenjuje se nakon Faza 0–7 i kao **Završna stabilizacija** nakon Faze 8.
+
+**CURRENT:** Završna stabilizacija nakon Faze 8 = **CLOSED / COMPLETE** (IR-001 v1.0.22). Nema naredne numerisane velike faze u ovom dokumentu.
 
 | Stavka | Obavezno |
 |--------|----------|
