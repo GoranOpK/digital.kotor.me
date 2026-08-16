@@ -327,7 +327,9 @@ class CulturalEventEntry extends Model
     }
 
     /**
-     * Javni URL naslovne fotografije (6A-06): coverMedia ili category default / global fallback.
+     * Javni URL naslovne fotografije (MED-08 / MED-I4A):
+     * coverMedia → kanonski category Git fallback (ako postoji) → globalni Event placeholder.
+     * Nije CulturalEvent.slika. Nije category_default Media.
      */
     public function imageUrl(): string
     {

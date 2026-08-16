@@ -188,8 +188,8 @@ class CulturalManifestation extends Model
     }
 
     /**
-     * Javni cover URL — cover media ili generički placeholder.
-     * Ne fallback-uje na medije povezanih Događaja (BM-MF-17).
+     * Javni cover URL (MED-09 / MED-I4A): cover media ili zaseban MF fallback resolver.
+     * Ne koristi Event category fallback niti fotografije povezanih Događaja (BM-MF-17).
      */
     public function imageUrl(): string
     {
@@ -197,7 +197,7 @@ class CulturalManifestation extends Model
             return $this->coverMedia->publicUrl();
         }
 
-        return \App\Support\CulturalCalendarDefaultImages::fallbackUrl();
+        return \App\Support\CulturalCalendarDefaultImages::manifestationFallbackUrl();
     }
 }
 
