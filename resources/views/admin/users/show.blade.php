@@ -76,6 +76,7 @@
         <div class="mt-6 pt-6 border-t">
             <h3 class="text-lg font-semibold mb-4">Akcije</h3>
             <div class="flex gap-4">
+                @if(! $user->isSuperadmin())
                 @if($user->activation_status === 'active')
                     <form method="POST" action="{{ route('admin.users.deactivate', $user) }}">
                         @csrf
@@ -90,6 +91,9 @@
                             Aktiviraj korisnika
                         </button>
                     </form>
+                @endif
+                @else
+                    <p class="text-sm text-gray-600">Aktivacija i deaktivacija superadmin naloga nisu dostupne kroz Users administraciju.</p>
                 @endif
             </div>
         </div>

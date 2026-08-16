@@ -118,6 +118,13 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Role::class);
     }
 
+    public function isSuperadmin(): bool
+    {
+        $role = $this->relationLoaded('role') ? $this->role : $this->role()->first();
+
+        return $role !== null && $role->isSuperadmin();
+    }
+
     /**
      * Puna adresa iz profila (ulica i broj + grad) za obrasce prijave.
      */

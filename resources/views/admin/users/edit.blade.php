@@ -17,6 +17,18 @@
         </div>
     @endif
 
+            @if($user->isSuperadmin())
+                <div class="bg-white rounded-lg shadow p-6">
+                    <p class="text-sm text-gray-800 mb-4">
+                        Superadmin nalog se ne uređuje kroz Users administraciju. Uloga i status aktivacije ostaju provisioning-controlled.
+                    </p>
+                    <p class="text-sm text-gray-600 mb-1"><strong>Uloga:</strong> {{ $user->role->display_name ?? 'Super administrator' }}</p>
+                    <p class="text-sm text-gray-600 mb-4"><strong>Status:</strong> {{ $user->activation_status === 'active' ? 'Aktivan' : 'Deaktiviran' }}</p>
+                    <a href="{{ route('admin.users.show', $user) }}" class="bg-gray-300 text-gray-700 px-6 py-2 rounded hover:bg-gray-400">
+                        Nazad
+                    </a>
+                </div>
+            @else
     <div class="bg-white rounded-lg shadow p-6">
         <form method="POST" action="{{ route('admin.users.update', $user) }}">
             @csrf
@@ -91,6 +103,7 @@
             </div>
         </form>
     </div>
+            @endif
 </div>
 @endsection
 

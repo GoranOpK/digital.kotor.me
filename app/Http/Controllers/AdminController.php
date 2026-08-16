@@ -76,6 +76,27 @@ class AdminController extends Controller
     }
 
     /**
+     * ADM-C1 — Users administracija ne mutira superadmin identitet (rola ni activation).
+     */
+    private function assertUsersAdministrationMayMutate(User $user): void
+    {
+        if ($user->isSuperadmin()) {
+            abort(403, 'Superadmin nalog se ne upravlja kroz Users administraciju.');
+        }
+    }
+
+    /**
+     * ADM-C1 — superadmin rola se ne dodjeljuje kroz Users UI/HTTP.
+     */
+    private function assertRoleIdAssignableViaUsersAdministration(int $roleId): void
+    {
+        $role = Role::query()->find($roleId);
+        if ($role === null || $role->isSuperadmin()) {
+            abort(403, 'Superadmin rola se ne dodjeljuje kroz Users administraciju.');
+        }
+    }
+
+    /**
      * Vraća ID komisije za člana komisije
      */
     protected function getCommissionIdForMember(): ?int
@@ -306,7 +327,7 @@ class AdminController extends Controller
         }
 
         $user->load('role');
-        $roles = \App\Models\Role::all();
+        $roles = Role::assignableForUsersAdministration();
 
         return view('admin.users.edit', compact('user', 'roles'));
     }
@@ -321,6 +342,8 @@ class AdminController extends Controller
         if ($currentUser->role && $currentUser->role->name === 'konkurs_admin') {
             abort(403, 'Nemate pristup upravljanju korisnicima.');
         }
+        $this->assertUsersAdministrationMayMutate($user);
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -330,6 +353,8 @@ class AdminController extends Controller
             'activation_status' => 'required|in:active,deactivated',
             'password' => 'nullable|min:8|confirmed',
         ]);
+
+        $this->assertRoleIdAssignableViaUsersAdministration((int) $validated['role_id']);
 
         $user->first_name = $validated['first_name'];
         $user->last_name = $validated['last_name'];
@@ -364,6 +389,7 @@ class AdminController extends Controller
         if ($currentUser->role && $currentUser->role->name === 'konkurs_admin') {
             abort(403, 'Nemate pristup upravljanju korisnicima.');
         }
+        $this->assertUsersAdministrationMayMutate($user);
         $user->activation_status = 'deactivated';
         $user->save();
 
@@ -380,6 +406,7 @@ class AdminController extends Controller
         if ($currentUser->role && $currentUser->role->name === 'konkurs_admin') {
             abort(403, 'Nemate pristup upravljanju korisnicima.');
         }
+        $this->assertUsersAdministrationMayMutate($user);
         $user->activation_status = 'active';
         $user->save();
 
