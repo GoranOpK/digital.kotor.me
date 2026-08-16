@@ -1,8 +1,9 @@
 # Digital Kotor
-# Feature Registry
+# Feature Registry — Kalendar kulture
 
 **Status dokumenta:** AKTIVAN
 **Verzija:** 0.1
+**Scope:** modul Kalendar kulture (nije globalni Feature Registry platforme Digital Kotor)
 
 ---
 
@@ -10,26 +11,21 @@
 
 ## Svrha
 
-Feature Registry predstavlja centralni registar svih funkcionalnosti sistema Digital Kotor.
+Ovaj dokument je Feature Registry **modula Kalendar kulture**.
 
-Svaka funkcionalnost dobija jedinstveni identifikator (Feature ID) koji ostaje nepromijenjen tokom cijelog životnog ciklusa projekta.
+Digital Kotor je platforma sa više zasebnih sibling modula. Ovaj registar evidentira samo funkcionalnosti Kalendara kulture. Drugi moduli platforme nisu aktivne stavke ovog registra.
 
-Feature ID omogućava povezivanje poslovne dokumentacije, funkcionalnih specifikacija, tehničkih specifikacija, Change Request-ova, implementacije i testiranja.
+Feature ID omogućava povezivanje poslovne dokumentacije, funkcionalnih specifikacija, tehničkih specifikacija, Change Request-ova, implementacije i testiranja **unutar ovog modula**.
 
 ---
 
 # Pravila
 
-Svaka funkcionalnost dobija jedinstveni identifikator u formatu:
-
-* FT-001
-* FT-002
-* FT-003
-* ...
+Svaka funkcionalnost ovog modula dobija jedinstveni identifikator u formatu FT-nnn (npr. FT-001, FT-003).
 
 Feature ID se dodjeljuje samo jednom i nikada se ne koristi ponovo.
 
-Feature Registry predstavlja polaznu tačku za sljedivost kroz cijeli projekat.
+Ovaj Feature Registry predstavlja polaznu tačku za sljedivost kroz dokumentaciju Kalendara kulture.
 
 ---
 
@@ -37,8 +33,7 @@ Feature Registry predstavlja polaznu tačku za sljedivost kroz cijeli projekat.
 
 | Feature ID | Naziv            | Status  | Napomena                                      |
 | ---------- | ---------------- | ------- | --------------------------------------------- |
-| FT-001     | Kalendar kulture | Active  | **V1 COMPLETE** (Faze 0–8 + Završna stabilizacija CLOSED). B3 `cultural_events` physical DROP = DEFERRED. |
-| FT-002     | Plaćanja         | Planned | Dokumentacija razvijena (BM-002/FS-002 usvojeni BP-01–BP-09; TS-002 djelimično usvojen, dokument u izradi) |
+| FT-001     | Kalendar kulture | Active  | **V1 COMPLETE** (Faze 0–8 + Završna stabilizacija CLOSED). **V1 TECHNICAL VERIFICATION = PASS.** **FINAL FULL REGRESSION = GREEN** (1286/6224/0/0/12 skipped). **BLOCKS V1 CLOSEOUT = NO.** Javni / urednički / Administracija = **ACCEPTED FOR V1 CLOSEOUT**. MED = FORMALLY CLOSED. B3 `cultural_events` physical DROP = **DEFERRED / POST-V1 / NON-BLOCKING**. MED-I4B = DEFERRED / NON-BLOCKING. HEAD `4595a14` = COMMITTED/PUSHED; production deploy ovog HEAD-a **NOT CONFIRMED**. |
 | FT-003     | Evidencija aktivnosti (Kalendar kulture) | Usvojen (TS-012 v1.0.8) — **FAZA 8 CLOSED: IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED** | FS §5.16 + PATCH-FS-074; BM-14; V1 katalog uključuje Manifestacije; van opsega: napredni pregled/filteri, retention, izvoz (BR-188); **nema durable audit replay**; `repeatable()` uniqueness = known V1 limitation |
 | FT-004     | Obavještenja     | Active  | V1 infrastruktura verifikovana testovima; javni panel + `competition_decision_html`; E2E emitovanje iz konkursa i dalje OFD-OB-006 |
 
@@ -84,7 +79,7 @@ Technical Specification mora biti vezana za odgovarajući Feature ID.
 
 Jedan Feature može biti povezan sa jednim ili više TS dokumenata.
 
-TS dokumenti koriste jedinstvenu globalnu numeraciju (TS-001, TS-002, TS-003...), nezavisno od Feature ID-a.
+TS dokumenti Kalendara kulture koriste globalnu platformsku numeraciju (M-TS-002). **TS-002 nije dio dokumentacionog plana Kalendara kulture** (oznaka je zauzeta van ovog modula).
 
 Na ovaj način svaka funkcionalnost može biti praćena od poslovne ideje do produkcije.
 
@@ -104,7 +99,7 @@ Active
 
 Napomena:
 
-FT-001 je aktivan modul. **Kalendar kulture V1 = COMPLETE** (Faze 0–8 + Završna stabilizacija **CLOSED**; IR-001 v1.0.22). **Faza 6A — Javni portal Događaja** — **CLOSED** (canonical-only SSOT; B1+B2 PRODUCTION VERIFIED / CLOSED; categories **14/14 PASS**; dual-read/write = 0). **6A residual Package A** (`cultural-calendar.day`): **CLOSED** / PRODUCTION VERIFIED — EMPTY-DATE. **Phase B1+B2:** **PRODUCTION VERIFIED / CLOSED**. **B3** (table DROP) = **DEFERRED / NON-RUNTIME / NON-BLOCKING**. **kk_admin UX / navigation consolidation:** `Kontrolna tabla` + unified `Zahtjevi` — **IMPLEMENTED / PRODUCTION ACTIVE**. **PO-ORG/MOD rejected request editor cleanup** i **MOD-UX-01** — **IMPLEMENTED / PRODUCTION ACTIVE** (historical changelog redovi „NOT DEPLOYED“ ostaju tačni za datum unosa). TS-010 → **v1.0.11**. **Faza 6B — Manifestacije:** **FORMALLY CLOSED / PRODUCTION ACCEPTED** (WITH LIMITED CONTENT-SMOKE COVERAGE).
+FT-001 je aktivan modul. **Kalendar kulture V1 = COMPLETE** (Faze 0–8 + Završna stabilizacija **CLOSED**; IR-001 v1.0.25). **V1 FUNCTIONAL IMPLEMENTATION = COMPLETE.** **V1 TECHNICAL VERIFICATION = PASS.** **V1 FULL-SYSTEM CROSS-VALIDATION = PASS** (active conflicts = 0). **FINAL FULL REGRESSION = GREEN** (PHPUnit 11.5.39; PHP 8.3.21; GD=yes; WebP=yes; 1286 tests / 6224 assertions / 0 failed / 0 errors / 12 skipped Imagick-environment; MED-critical skipped = 0). **BLOCKS V1 CLOSEOUT = NO.** **Javni portal** = ACCEPTED FOR V1 CLOSEOUT. **Urednički portal** = ACCEPTED FOR V1 CLOSEOUT. **Administracija** = ACCEPTED FOR V1 CLOSEOUT (ADMIN-AUDIT-01 CLOSED via `4595a14`; ADMIN-AUDIT-02 TEST GAP / NON-BLOCKING; ADMIN-AUDIT-04 LOW / NON-BLOCKING). **MED** = FORMALLY CLOSED. **B3** = DEFERRED / NON-BLOCKING / POST-V1. **MED-I4B** = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. Repository HEAD `4595a14` = COMMITTED / PUSHED; **production deploy ovog HEAD-a = NOT CONFIRMED**. **Faza 6A — Javni portal Događaja** — **CLOSED** (canonical-only SSOT; B1+B2 PRODUCTION VERIFIED / CLOSED; categories **14/14 PASS**; dual-read/write = 0). **6A residual Package A** (`cultural-calendar.day`): **CLOSED** / PRODUCTION VERIFIED — EMPTY-DATE. **Phase B1+B2:** **PRODUCTION VERIFIED / CLOSED**. **kk_admin UX / navigation consolidation:** `Kontrolna tabla` + unified `Zahtjevi` — **IMPLEMENTED / PRODUCTION ACTIVE**. **PO-ORG/MOD rejected request editor cleanup** i **MOD-UX-01** — **IMPLEMENTED / PRODUCTION ACTIVE** (historical changelog redovi „NOT DEPLOYED“ ostaju tačni za datum unosa). TS-010 → **v1.0.14**. **Faza 6B — Manifestacije:** **FORMALLY CLOSED / PRODUCTION ACCEPTED** (WITH LIMITED CONTENT-SMOKE COVERAGE).
 
 **Newsletter (u okviru FT-001):** **FAZA 7 / TS-011 = FORMALLY CLOSED.** Kanonska pretplata na `User` (nije automatska pri registraciji); jedna pretplata po korisniku; režimi „Svi događaji“ i „Odabrani organizatori“ + „Bez organizatora“; aktivacija bez dodatnog e-mail confirmationa; odjava/reaktivacija nad istim zapisom; preference samo ubuduće; aktivna pretplata ≠ dozvoljena isporuka; nema praznog Newslettera. Regular `cultural-calendar:send-newsletter` (6h) + priority `cultural-calendar:send-newsletter-priority` (5 min). Manifestacija nije kriterijum pretplate u V1. Legacy weekly runtime **disabled**; fizički legacy artefakti KEEP. **Bez** migracije testnih pretplatnika. Settings URI = `/newsletter`. TS-012 emit = **Faza 8 CLOSED**.
 
@@ -340,7 +335,7 @@ Povezana dokumentacija (Naslovna fotografija / MED):
 * **MED-01–MED-28** = **ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED** (closeout 2026-08-16). **MED-I4B** vizueli = DEFERRED / NON-BLOCKING.
 * Business Model — BM-09 (BM-MD-18–BM-MD-36 aktivno; BM-MD-01–17 SUPERSEDED), BM-GL-15, BM-PK-12, **PATCH-075 / PATCH-076**
 * Functional Specification — §5.11 (BR-351–BR-370; BR-086–091 / BR-237–254 SUPERSEDED), §5.4.4, BR-113, **PATCH-FS-075 / PATCH-FS-076**
-* Technical Specification — TS-003 v0.1.13; TS-005 v0.1.7; TS-007 v0.1.4; TS-009 v1.0.22; TS-010 v1.0.13; TS-012 v1.0.9 (katalog KEEP)
+* Technical Specification — TS-003 v0.1.13; TS-005 v0.1.7; TS-007 v0.1.4; TS-009 v1.0.23; TS-010 v1.0.14; TS-012 v1.0.9 (katalog KEEP)
 * TS-008 v0.1.2 = **SUPERSEDED / HISTORICAL** (`Technical-Specification_Mediji.md`)
 * TS8-01–TS8-09 = **ZASTARJELO / SUPERSEDED**
 
@@ -354,8 +349,8 @@ Povezana dokumentacija (Javni portal):
 
 * Business Model — BM-11 (BM-PK-01–BM-PK-40, BM-GL-26), BM-AR-02, PATCH-045–PATCH-048, PATCH-051 (CR-004B), PATCH-060–**PATCH-066**; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E, PO-TS9-08A–08J, PO-6A11-01, PO-6A09-01…06, **PO-U / PATCH-063**, **PO-064 / PATCH-064**, **PO-6B-08/09 / PATCH-065**, **PO-6B-10 / PATCH-066**
 * Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, **BR-287–BR-306**), PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060–**PATCH-FS-067**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija **1.0.22**; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A; PO-6A11-01; PO-6A09; **PATCH-063** §7.2.4 / §7.3.4–§7.3.6; **PATCH-064** §5.4–§5.5 / §11.3 / TM-JP-23…38; **PO-6B-01…05**; **PO-6B-08/09** §6.7–§6.8; **PO-6B-10** §3.4.1; **PHASE 6B FORMALLY CLOSED** / limited content-smoke; Package A CLOSED; **Phase B1+B2 PRODUCTION VERIFIED / CLOSED**; **FAZA 6A CLOSED**; B3 DEFERRED)
-* Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija **1.0.10**; Stable)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija **1.0.23**; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A; PO-6A11-01; PO-6A09; **PATCH-063** §7.2.4 / §7.3.4–§7.3.6; **PATCH-064** §5.4–§5.5 / §11.3 / TM-JP-23…38; **PO-6B-01…05**; **PO-6B-08/09** §6.7–§6.8; **PO-6B-10** §3.4.1; **PHASE 6B FORMALLY CLOSED** / limited content-smoke; Package A CLOSED; **Phase B1+B2 PRODUCTION VERIFIED / CLOSED**; **FAZA 6A CLOSED**; B3 DEFERRED / POST-V1; **PUBLIC PORTAL FINAL AUDIT = PASS / ACCEPTED FOR V1 CLOSEOUT**)
+* Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija **1.0.11**; Stable)
 * Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Implemented, IS-001 Faza 2 — `month=YYYY-MM`; commit `c5d396f`); CR-003 (Implemented, IS-001 Faza 2 — `q`/`category`/`location`; dokumentacija `fc35132`; implementacija `595045a`; TS-009 v1.0.2; IS-001 v1.0.2); CR-004A (Implemented, IS-001 Faza 3 — javni status badge; PO-CR4A-01…05; dokumentacija `614706c`; implementacija `0f73240`; TS-009 v1.0.4; IS-001 v1.0.5); CR-004B (Planned, IS-001 Faza 3 — javni prikaz otkazanih; PO-CR4B-01…10; TS-009 v1.0.5 §7.2; IS-001 v1.0.6 §9.3.2)
 
 Povezana dokumentacija (Newsletter):
@@ -382,7 +377,7 @@ Povezana dokumentacija (Urednički portal):
   * **PO-AL-04:** Bez novih aktivnosti; samo BM/FS katalog.
 * Usvojena QA odluka (Business Test Matrix — TS-010.8):
   * **QA-TS0108-01:** TS-010.8 = Business Test Matrix; nije QA Plan / Test Strategy / Test Implementation / CI / coverage.
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija **1.0.11**; USVOJEN — V1 implementaciono završen za prethodni obuhvat; **PATCH-063 dokumentaciono usvojen i implementiran**; **MOD-UX-01** = UI/navigation status sync (+ Alpine-free CURRENT STATE); **PATCH-064** = portalna delta u TS-009 (nije TS-010 scope); usklađen sa TS-003 v0.1.10 / TS-004 v0.1.9)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija **1.0.14**; USVOJEN — V1 implementaciono završen; **FINAL EDITORIAL AUDIT = PASS / ACCEPTED FOR V1 CLOSEOUT**; **PATCH-063 dokumentaciono usvojen i implementiran**; **MOD-UX-01** = UI/navigation status sync (+ Alpine-free CURRENT STATE); **PATCH-064** = portalna delta u TS-009 (nije TS-010 scope); usklađen sa TS-003 v0.1.13 / TS-004 v0.1.9)
   * TS-010.1 Osnove uredničkog portala — Usvojeno / implementirano
   * TS-010.2 Organizatori — Usvojeno / implementirano
   * TS-010.3 Moderator Organizatora — Usvojeno / implementirano
@@ -394,7 +389,7 @@ Povezana dokumentacija (Urednički portal):
 
 **Planirani Technical Specification dokumenti (modul Kalendar kulture):**
 
-Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaćanja (FT-002) i nije dio ovog plana.
+Plan koristi globalnu numeraciju (M-TS-002). **TS-002 nije dio dokumentacionog plana Kalendara kulture** (oznaka je zauzeta van ovog modula).
 
 | TS | Naziv | Feature | Modul | Status |
 | -- | ----- | ------- | ----- | ------ |
@@ -409,78 +404,6 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.13) — V1 KEEP; MED-26 UX **IMPLEMENTATION COMPLETE / VERIFIED**; Media CRUD REMOVED |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.4) — **FAZA 7 FORMALLY CLOSED** (NL-01…NL-06); emit ka TS-012 = **Faza 8 CLOSED**; izmjena fotografije **nije** NL okidač (KEEP) |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.9) — katalog KEEP; MED-28: `TS12-MF-11` KEEP; no new `media.*` |
-
----
-
-## FT-002
-
-Naziv:
-
-Plaćanja
-
-Status:
-
-Planned
-
-Napomena:
-
-Modul za elektronsko plaćanje finansijskih obaveza prema Opštini Kotor. Poslovna i funkcionalna dokumentacija su usklađene i usvojene za BP-01 do BP-09 (BM-002/FS-002), dok je TS-002 u statusu dokumenta u izradi sa djelimično usvojenim tehničkim poglavljima. Implementacija nije započeta.
-
-Povezana dokumentacija:
-
-* Pravni okvir: `docs/pravni-okvir/Pravni_okvir_Placanja.md`
-* Katalog finansijskih obaveza: `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md`
-* Business Model: `docs/business-model/Business_Model_Placanja.md`
-* Functional Specification: `docs/functional-specifications/Functional-Specification_Placanja.md`
-* Technical Specification: `docs/technical-specifications/Technical-Specification_Placanja.md`
-
-Sljedivost:
-
-FT-002
-→ BM-002
-→ FS-002
-→ TS-002
-
-Usvojene projektne odluke:
-
-* P-01 do P-08 — Projektna načela modula Plaćanja
-* F-01 — Obavezni obuhvat V1
-* UR-01 — Uplatni računi (referentni / konfiguracioni podaci)
-* BP-01 — Pronalaženje vrste uplate
-* BP-02 — Način popunjavanja podataka za plaćanje
-* BP-03 — Pregled i potvrda prije plaćanja
-* BP-04 — Jedinstvena integracija sa sistemom elektronskog plaćanja
-* BP-05 — Obrada ishoda elektronskog plaćanja
-* BP-06 — Potvrda o izvršenom elektronskom plaćanju
-* BP-07 — Izvor obaveznih podataka za elektronsko plaćanje
-* BP-08 — Životni ciklus transakcije
-* BP-09 — Istorija transakcija i pregled plaćanja
-
-Sljedivost poslovnih odluka:
-
-| Oznaka | Naziv | BM | FS | TS |
-|--------|-------|----|----|----|
-| BP-01 | Pronalaženje vrste uplate | BM-002 / 9.1 | FS-002 / 7.1 | TS-002 / 2.5 |
-| BP-02 | Način popunjavanja podataka za plaćanje | BM-002 / 9.2 | FS-002 / 7.2 | TS-002 / 2.5 |
-| BP-03 | Pregled i potvrda prije plaćanja | BM-002 / 9.3 | FS-002 / 7.3 | TS-002 / 2.5 |
-| BP-04 | Jedinstvena integracija sa sistemom elektronskog plaćanja | BM-002 / 9.4 | FS-002 / 7.4 | TS-002 / 2.6 |
-| BP-05 | Obrada ishoda elektronskog plaćanja | BM-002 / 9.5 | FS-002 / 7.5 | TS-002 / 2.7 |
-| BP-06 | Potvrda o izvršenom elektronskom plaćanju | BM-002 / 9.6 | FS-002 / 7.6 | TS-002 / 2.8 |
-| BP-07 | Izvor obaveznih podataka za elektronsko plaćanje | BM-002 / 9.7 | FS-002 / 7.7 | TS-002 / 2.9 |
-| BP-08 | Životni ciklus transakcije | BM-002 / 9.8 | FS-002 / 7.8 | TS-002 / 2.10 |
-| BP-09 | Istorija transakcija i pregled plaćanja | BM-002 / 9.9 | FS-002 / 7.9 | TS-002 / 2.11 |
-
-Veze BP-04: P-03, P-08, UR-01.
-
-Veze BP-05: BP-03, BP-04.
-
-Veze BP-06: BP-05, BP-09.
-
-Veze BP-07: BP-02, BP-03, UR-01, BP-04.
-
-Veze BP-08: BP-03, BP-04, BP-05, BP-06, P-08.
-
-Veze BP-09: BP-06, BP-08, UR-01.
 
 ---
 
@@ -682,5 +605,7 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-15 | FT-001 / FT-003 — **V1 COMPLETE / ZAVRŠNA STABILIZACIJA CLOSED (status):** IR-001 → **v1.0.22**. Corrective 01 `1f9d959`. Runtime canonical-only. B3 DROP **DEFERRED**. TS-011 → **v1.0.4**; TS-009 → **v1.0.20** (status hygiene). BM / FS / IS-001 / RG-001 KEEP. Nema Faze 9. |
 | 2026-08-15 | FT-001 — **MED-01–MED-28 dokumentaciona kanonizacija:** naslovna fotografija DG/MF; TS-008 / TS8-01–09 / BM-MD-01–17 SUPERSEDED. **ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Nije code COMPLETE. Nije Faza 9. BM PATCH-075; FS PATCH-FS-075; TS-003 v0.1.12; TS-005 v0.1.6; TS-007 v0.1.3; TS-008 v0.1.1 SUPERSEDED; TS-009 v1.0.21; TS-010 v1.0.12; TS-011 KEEP; TS-012 v1.0.9 (`TS12-MF-11` KEEP; no `media.*`); IR-001 v1.0.23; IS-001 v1.0.9; RG-001 v1.1.10. Bez izmjene koda. |
 | 2026-08-16 | FT-001 — **MED documentation closeout:** **ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED.** MED-I1 `6060bee`; MED-I2 `e7c6a07`; MED-I3 `b416c0b`; MED-I4A `3ef974b`; MED-I5 `6a4d50e`. **MED-I4B** = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. Nije Faza 9. BM PATCH-076; FS PATCH-FS-076; TS-003 v0.1.13; TS-005 v0.1.7; TS-007 v0.1.4; TS-008 v0.1.2 SUPERSEDED; TS-009 v1.0.22; TS-010 v1.0.13; TS-011 KEEP; TS-012 v1.0.9 KEEP (`TS12-MF-11`; no `media.*`); IR-001 v1.0.24; IS-001 v1.0.10; RG-001 v1.1.11 (status hygiene postojeće MED oznake; MED-I* nisu RG skraćenice). Bez izmjene koda/testova/migracija/aseta. |
+| 2026-08-16 | FT-001 / FT-003 — **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** Javni / urednički / Administracija final auditi = **PASS / ACCEPTED FOR V1 CLOSEOUT**. Full-system cross-validation = **PASS**. Final full regression = **GREEN** (1286/6224/0 failed/0 errors/12 skipped). **BLOCKS V1 CLOSEOUT = NO**. MED KEEP CLOSED. B3 = DEFERRED / POST-V1 / NON-BLOCKING (audit = no action required before V1). ADM-C1 `4595a14` CLOSED u repou; production deploy ovog HEAD-a **NOT CONFIRMED**. ADMIN-AUDIT-02/04 NON-BLOCKING. IR-001 → **v1.0.25**. TS-009 → v1.0.23. TS-010 → v1.0.14. IS-001 → v1.0.11. BM PATCH-077 / FS PATCH-FS-077 (status only). TS-003/005/007/008/011/012 KEEP. RG-001 → **v1.1.12** (granica: Plaćanje nije aktivni KK registar). Nema Faze 9. Bez izmjene koda/testova/migracija. |
+| 2026-08-16 | FT-001 — **PO module boundary:** ovaj Feature Registry = **Kalendar kulture**. Uklonjen aktivni zapis **FT-002 / Plaćanje** (sibling modul Digital Kotora; nije član ovog registra). **TS-002 nije dio dokumentacionog plana Kalendara kulture** (oznaka zauzeta van ovog modula). Nije V1/deferred/post-V1/blocker/dependency Kalendara kulture. RG-001 → **v1.1.12**. |
 | 2026-08-13 | FT-001 — **FR cross-reference cleanup:** CURRENT STATE pin IS-001 **1.0.7 → 1.0.8** (usklađeno sa `Implementation-Strategy_Javni_portal.md`). FAZA 6A/6B CLOSED KEEP; TS-009 v1.0.19 KEEP; IR-001 v1.0.11 KEEP. Bez izmjene implementacije. |
 | 2026-08-10 | FT-001 — **PHASE 6A-CLOSE-02:** legacy admin CRUD `cultural-events.*` disabled (middleware `legacy_cultural_events_disabled` → 403 all methods). Legacy code/table/views retained; `CULTURAL_PUBLIC_READ_SOURCE` + public legacy read rollback retained; canonical routes unchanged. **Nije** hard remove / flag cleanup (Phase B). |

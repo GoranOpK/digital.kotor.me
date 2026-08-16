@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
-**Implementacioni status V1:** ZAVRŠEN. MED naslovna fotografija = **IMPLEMENTATION COMPLETE / VERIFIED**. MED-I4B finalni vizuelni resursi = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK**.
-**Verzija:** 1.0.13
+**Implementacioni status V1:** ZAVRŠEN. **FINAL EDITORIAL AUDIT = PASS / ACCEPTED FOR V1 CLOSEOUT.** MED naslovna fotografija = **IMPLEMENTATION COMPLETE / VERIFIED**. MED-I4B finalni vizuelni resursi = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK**.
+**Verzija:** 1.0.14
 **Datum:** 2026-08-16
 
 ---
@@ -44,6 +44,7 @@
 | 1.0.11 | 2026-08-13 | **DOC-SYNC / MOD-UX-01-HF* + UI-CLEANUP:** CURRENT STATE — **Moderiranje** = običan `<a>` ka `cultural-moderator-workspace.index` (hub: **Događaji organizatora** / **Manifestacije organizatora**); desktop **Kontrolna tabla** i **Moderiranje** isti sizing `128×38`; Kontrolna tabla bez page-level Moderiranje/Događaji/Manifestacije bloka; mobile hamburger = minimalni inline vanilla JS (**bez Alpine**); runtime view bez Alpine dependency-ja. Auth / lifecycle / context KEEP. Bez BM/FS izmjene. Bez izmjene implementacije u ovom dokumentu. |
 | 1.0.12 | 2026-08-15 | **MED-26 / MED-17:** UX naslovne fotografije na formama DG/MF (drag & drop, picker, preview, Zamijeni, Ukloni, warning <800 px, 2 MB JPEG/PNG/WebP; Odustani bez trajne izmjene). Uklonjeni kao aktivni: poseban ekran Mediji, katalog, izbor postojećeg Medija, samostalni CRUD, ALT/naziv/tagovi/namjena/status forme. Kontrola samo kada je sadržaj uređiv. TS-008 SUPERSEDED. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
 | 1.0.13 | 2026-08-16 | **MED documentation closeout:** Media CRUD/nav/katalog **REMOVED**; cover UX na Event/MF formama **IMPLEMENTATION COMPLETE / VERIFIED**. Operativni cleanup: `cultural-media:cleanup` (dry-run default; `--delete`; ručno; bez schedulera). MED-I4B vizueli nisu TS-010 blocker. |
+| 1.0.14 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** Urednički portal final audit = **PASS / ACCEPTED FOR V1 CLOSEOUT**. Full-system cross-validation = **PASS**. Final full regression = **GREEN** (1286/6224/0/0/12 skipped). **BLOCKS V1 CLOSEOUT = NO**. Administracija nije TS-010 SSOT (ADM-C1 evidentiran u IR-001). Business contract KEEP. |
 Napomena:
 
 Ovo poglavlje služi isključivo za evidenciju razvoja dokumenta.

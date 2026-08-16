@@ -4,7 +4,7 @@
 **Oznaka dokumenta:** RG-001
 **Naziv:** Registar skraćenica i oznaka dokumentacije Kalendara kulture
 **Status dokumenta:** Stable
-**Verzija:** 1.1.11
+**Verzija:** 1.1.12
 **Datum:** 2026-08-16
 
 ---
@@ -91,7 +91,6 @@ Uključene su samo **interne** skraćenice projekta koje se **stvarno koriste** 
 | **HF** | Hotfix / hitna korektivna ispravka | Generička oznaka hitnog produkcionog korektiva u paketnim oznakama (npr. **MOD-UX-01-HF1**, **MOD-UX-01-HF2**). Ordinal (`HF1`, `HF2`…) nije zasebna skraćenica. |
 | **PATCH-FS** | Zakrpa FS (Patch — Functional Specification) | Identifikator zakrpe FS dokumenta (npr. PATCH-FS-053). |
 | **QA** | Osiguranje kvaliteta (Quality Assurance) | Oznaka QA odluke ili korektivnog prolaza (npr. QA-TS0108-01). |
-| **BP** | Poslovni proces — Plaćanja (Business Process) | Poslovna odluka / proces u BM/FS Plaćanja (npr. BP-01 … BP-09). |
 | **AC** | Acceptance Criteria | Identifikator acceptance kriterijuma u TS (npr. AC-NL-01). |
 | **GAP** | Gap | Dokumentacioni ili implementacioni jaz; vidi i `G-*`, `G-W*`, `G-NL-*` (§2.4). |
 | **MF** | Manifestacija | Dokumentaciona skraćenica za poslovni entitet Manifestacija (BM-05 / TS-005). Prefiks pravila: **BM-MF-***. |
@@ -118,7 +117,7 @@ Uključene su samo **interne** skraćenice projekta koje se **stvarno koriste** 
 |----------------|----------|---------|
 | **FR** | **Functional Requirement** — identifikator zahtjeva unutar FS | FR-001, FR-OB-001 |
 | **Feature Registry** | Dokument / registar funkcionalnosti (pun naziv; **nema** skraćenice FR) | `docs/features/Feature-Registry.md` |
-| **FT** | **Feature ID** — ID stavke u Feature Registry-ju | FT-001, FT-004 |
+| **FT** | **Feature ID** — ID stavke u Feature Registry-ju Kalendara kulture | FT-001, FT-003 |
 
 **Feature Registry se ne skraćuje kao FR.**
 Ako neko kaže „FR“, u Digital Kotor dokumentaciji to znači *Functional Requirement*, ne Feature Registry.
@@ -191,10 +190,6 @@ Prefiksi se **ne** spajaju u jednu generičku oznaku. Svaki ima svoj namespace.
 | **V-NL** | Validation | Validaciono pravilo — Newsletter | TS-011 | V-NL-01 |
 | **DM-** | Dashboard | Kategorija Moderatora — vidi §2.7 | TS-010.6 | DM-01 |
 | **DU-** | Dashboard | Kategorija Urednika — vidi §2.7 | TS-010.6 | DU-01 |
-| **BR-P** | Business Rule | Plaćanja | FS Plaćanja | BR-P-* |
-| **P-** | Projektno načelo | Plaćanja | BM/FS Plaćanja | P-01 … P-08 |
-| **F-** | Funkcionalna odluka | Plaćanja | BM/FS Plaćanja | F-01 |
-| **UR-** | Uplatni računi | Plaćanja (**≠** BM-UR) | BM/FS Plaćanja | UR-01 |
 | **FR-OB** / **UC-OB** / **OFD-OB** / **NC-OB** | FR / UC / OFD / negative case | Obavještenja | FS/UC Obavještenja | FR-OB-001 |
 | **C-UC-OB** | Candidate use case | Obavještenja | UC Obavještenja | C-UC-OB-001 |
 | **FS-OB-FLOW** | Tok u FS | Obavještenja | FS Obavještenja | FS-OB-FLOW-01 |
@@ -209,10 +204,10 @@ Prefiksi se **ne** spajaju u jednu generičku oznaku. Svaki ima svoj namespace.
 | **FR** | Jednoznačno = Functional Requirement; zabuna sa Feature Registry je terminološki rizik (razriješeno §2.2). |
 | **BR** | U FS se koristi kao identifikator pravila (`BR-*`). Kanonska skraćenica ostaje **BR** = Business Rule. |
 | **OFD** | Kanonski: **Open Finding** (`OFD-*`). |
-| **UR-** vs **BM-UR** | **UR-01** = uplatni računi (Plaćanja). **BM-UR-*** = pravila Urednika u Kalendaru kulture. Nisu ista stvar. |
+| **UR-** vs **BM-UR** | **BM-UR-*** = pravila Urednika u Kalendaru kulture. Prefiks **UR-** (bez BM-) **nije** KK prefiks i nije dio ovog registra. |
 | **G-** vs **G-W** vs **G-NL** | **G-nn** = gap u TS-010; **G-Wnn** = workflow gap u TS-010; **G-NL-*** = gap Newsletter. |
 | **PO** | Označava Product Owner ulogu i prefiks product odluka (`PO-*`). |
-| **BM, FS, TS, IS, IR, CR, TO, FT, IA, TD, UC, UI, API, URL, V1, NFR, FK, CRUD, M-TS, RG, PATCH, QA, BP, AC, GAP, MF, OCC, SSOT, CTA, KK, CAT-CUTOVER** | Nema drugog dokumentacionog značenja u pregledanom korpusu. |
+| **BM, FS, TS, IS, IR, CR, TO, FT, IA, TD, UC, UI, API, URL, V1, NFR, FK, CRUD, M-TS, RG, PATCH, QA, AC, GAP, MF, OCC, SSOT, CTA, KK, CAT-CUTOVER** | Nema drugog dokumentacionog značenja u pregledanom korpusu. |
 
 Nema drugih skraćenica u ovom dokumentu sa dva **konkurentna** kanonska značenja pored navedenih napomena.
 
@@ -223,7 +218,7 @@ Kanonski nazivi prema Feature Registry / odgovarajućim TS dokumentima. Globalna
 | Oznaka | Modul |
 |--------|--------|
 | **TS-001** | Organizator, Moderator i zahtjev za kreiranje Organizatora |
-| **TS-002** | Plaćanja (FT-002; nije dio KK implementacionog plana FT-001) |
+| **TS-002** | Nije dio dokumentacionog plana Kalendara kulture; oznaka je zauzeta van ovog modula. |
 | **TS-003** | Događaj |
 | **TS-004** | Održavanje događaja |
 | **TS-005** | Manifestacija |
@@ -351,7 +346,8 @@ RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, katego
 | 1.1.9 | 2026-08-13 | **MOD-UX-01-HF2:** dodata skraćenica **HF** (Hotfix / hitna korektivna ispravka; ordinal HF1/HF2 nije zasebna skraćenica). Bez izmjene BM/FS/TS. Bez izmjene implementacije u ovom dokumentu. |
 | 1.1.10 | 2026-08-15 | **MED / MED-*:** registracija PO paketa naslovne fotografije (primjer MED-01). **TS8-** → ZASTARJELO / SUPERSEDED (sljedivost ka MED). **BM-MD** → TS8 model ZASTARJELO; BM-MD-18–36 aktivna naslovna fotografija. **TS-008** u mapi TS → historijski/supersedovan. Usklađeno sa BM PATCH-075 / FS PATCH-FS-075. Bez izmjene implementacije. |
 | 1.1.11 | 2026-08-16 | **MED status hygiene (nema nove skraćenice):** AKTIVNO polje MED ažurirano na IMPLEMENTATION COMPLETE / VERIFIED. MED-I1/I2/I3/I4A/I4B/I5 **nisu** registrovani (radni nazivi implementacionih paketa). TS8- / TS-008 SUPERSEDED KEEP. |
+| 1.1.12 | 2026-08-16 | **Module boundary:** uklonjene aktivne oznake drugog Digital Kotor modula (BP, BR-P, P-, F-, UR- kao Plaćanje). **TS-002** u mapi TS = numeraciona granica (nije dio KK plana; oznaka zauzeta van ovog modula). Bez opisa sadržaja drugog modula. Feature Registry ovog registra = Kalendar kulture. Bez izmjene implementacije. |
 
 ---
 
-**Kraj dokumenta RG-001 v1.1.11 (Stable)**
+**Kraj dokumenta RG-001 v1.1.12 (Stable)**

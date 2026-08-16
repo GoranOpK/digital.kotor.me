@@ -7,7 +7,7 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.22
+**Verzija:** 1.0.23
 **Datum:** 2026-08-16
 
 ---
@@ -43,6 +43,7 @@
 | 1.0.20 | 2026-08-15 | **Status hygiene (V1 closeout):** Phase B1+B2 = **PRODUCTION VERIFIED / CLOSED** (usklađeno sa IS-001 v1.0.8 / IR-001). B3 DROP = **DEFERRED**. Business contract KEEP. |
 | 1.0.21 | 2026-08-15 | **MED-01–MED-28:** javni prikaz — Događaj: naslovna → statička kategorijska (14 kanonskih naziva) → globalni event placeholder; Manifestacija: naslovna → statički MF placeholder. `object-fit: cover` u definisanim frame-ovima. Nema legacy `CulturalEvent.slika` kao SSOT. Nema `category_default` Media zapisa. TS-008 SUPERSEDED. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
 | 1.0.22 | 2026-08-16 | **MED documentation closeout:** public fallback resolver **IMPLEMENTATION COMPLETE / VERIFIED**. `object-fit: cover` KEEP. `CulturalEvent.slika` / `category_default` nisu SSOT. **MED-I4B** finalni vizueli = DEFERRED / NON-BLOCKING (MISSING/AMBIGUOUS dedicated assets padaju na globalni Event PNG; MF dedicated placeholder deferred). |
+| 1.0.23 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** Javni portal final audit = **PASS / ACCEPTED FOR V1 CLOSEOUT**. Full-system cross-validation = **PASS**. Final full regression = **GREEN** (1286/6224/0/0/12 skipped). **BLOCKS V1 CLOSEOUT = NO**. B3 DROP = **DEFERRED / POST-V1 / NON-BLOCKING**. MED-I4B KEEP deferred. Business contract KEEP. Production deploy HEAD `4595a14` **NOT CONFIRMED**. |
 
 ---
 
@@ -1420,7 +1421,9 @@ Flag služi isključivo kao rollback zaštita — **nije** trajna arhitektura.
 
 **Intermediate status (PHASE 6A-CLOSE-02 — historical):** prije Phase B, legacy admin CRUD bio HTTP-disabled (403) uz zadržan flag.
 
-**CURRENT (Phase B1+B2):** koraci 1–4 iznad za flag + public read + CRUD runtime = **DONE / PRODUCTION VERIFIED / CLOSED**; tabela `cultural_events` / model class shell = **KEEP do B3** (B3 DROP **DEFERRED**; nije V1 blocker).
+**CURRENT (Phase B1+B2):** koraci 1–4 iznad za flag + public read + CRUD runtime = **DONE / PRODUCTION VERIFIED / CLOSED**; tabela `cultural_events` / model class shell = **KEEP do B3** (B3 DROP **DEFERRED / POST-V1 / NON-BLOCKING**; nije V1 blocker).
+
+**CURRENT (V1 documentation closeout, 2026-08-16):** javni portal final audit = **PASS / ACCEPTED FOR V1 CLOSEOUT**; final full regression **GREEN**; **BLOCKS V1 CLOSEOUT = NO**.
 
 Ovaj dokument **ne** implementira B3 DROP — samo evidentira status.
 

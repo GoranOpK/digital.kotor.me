@@ -6,9 +6,9 @@
 **Naziv:** Implementaciona strategija javnog portala  
 **Feature ID:** FT-001  
 **Modul:** Kalendar kulture  
-**Referentna specifikacija:** TS-009 v1.0.22 Stable
+**Referentna specifikacija:** TS-009 v1.0.23 Stable
 **Status dokumenta:** Stable
-**Verzija:** 1.0.10
+**Verzija:** 1.0.11
 **Datum:** 2026-08-16
 
 ---
@@ -20,7 +20,7 @@
 | Oznaka | IS-001 |
 | Naziv | Implementaciona strategija javnog portala |
 | Tip | Operativni planski dokument |
-| Referenca | TS-009 v1.0.22 Stable |
+| Referenca | TS-009 v1.0.23 Stable |
 | Usvojene odluke | IS-001-01 … IS-001-08 |
 
 ### IS-001-01 — Identitet dokumenta
@@ -50,7 +50,7 @@ IS-001:
 
 **Svrha:** omogućiti kontrolisanu, evolutivnu implementaciju javnog portala u skladu sa TS-009, uz najmanji rizik za postojeću produkciju (princip IA-01).
 
-**Status dokumenta:** Stable (v1.0.8).
+**Status dokumenta:** Stable (v1.0.11).
 
 **Van svrhe:** SQL, Laravel kod, konačni dizajn klasa/metoda, nove Product Owner odluke, zamjena TS-003…TS-008.
 
@@ -76,7 +76,23 @@ IS-001:
 | P0 / P1 | **0 / 0** |
 | 6B | **OUT OF SCOPE** for this closure; **does not block 6A** |
 
-Historical plan rows u §9.6 (privremeni flag; „bez javnog cancellation_reason“) ostaju istorijski; CURRENT STATE = ova tabela + TS-009 v1.0.22.
+Historical plan rows u §9.6 (privremeni flag; „bez javnog cancellation_reason“) ostaju istorijski; CURRENT STATE = ova tabela + TS-009 v1.0.23.
+
+## 2.2 V1 DOCUMENTATION CLOSEOUT (2026-08-16)
+
+| Stavka | Status |
+|--------|--------|
+| Public portal final audit | **PASS — ACCEPTED FOR V1 CLOSEOUT** |
+| V1 full-system cross-validation | **PASS** (active conflicts = 0) |
+| Final full regression | **GREEN** — 1286 tests / 6224 assertions / 0 failed / 0 errors / 12 skipped (Imagick/environment; MED-critical skipped = 0) |
+| Runtime | PHPUnit 11.5.39; PHP 8.3.21; GD=yes; WebP=yes; warnings/deprecations/risky = 0; exit 0 |
+| **BLOCKS V1 CLOSEOUT** | **NO** |
+| B3 | **DEFERRED / NON-BLOCKING / POST-V1** (nije 6A/V1 blocker) |
+| MED-I4B | **DEFERRED / NON-BLOCKING PROJECT ASSET WORK** |
+| Repository HEAD | `4595a14` — **COMMITTED / PUSHED** |
+| Production deploy ovog HEAD-a | **NOT CONFIRMED** |
+
+Istorijski 6A CURRENT STATE (§2.1) KEEP.
 
 ---
 
@@ -84,7 +100,7 @@ Historical plan rows u §9.6 (privremeni flag; „bez javnog cancellation_reason
 
 | Dokument | Uloga |
 |----------|--------|
-| `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009 v1.0.22) | Referentna specifikacija javnog portala |
+| `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009 v1.0.23) | Referentna specifikacija javnog portala |
 | `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-11, BM-05, …) | Poslovna pravila (ne mijenjaju se ovim dokumentom) |
 | `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13) | Funkcionalni zahtjevi |
 | TS-003 Događaj | Domen Događaja; zavisnost Faze 4/6 |
@@ -625,7 +641,8 @@ Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehni�
 | 1.0.8 | 2026-08-13 | **FAZA 6A DOCUMENTATION CLOSURE:** §2.1 CURRENT STATE — 6A **CLOSED**; canonical-only; B1+B2 PRODUCTION VERIFIED / CLOSED; categories 14/14; PATCH-063 supersede; B3 DEFERRED non-blocking; referenca TS-009 v1.0.19. Bez izmjene implementacije. |
 | 1.0.9 | 2026-08-15 | **MED marker:** stari Media model (TS-008 / tagovi medija) **SUPERSEDED** MED-01–MED-28. Istorijski sadržaj faza nije prepisan. Bez izmjene implementacije. |
 | 1.0.10 | 2026-08-16 | **MED documentation closeout:** public fallback resolver **COMPLETE / VERIFIED**. Finalni vizuelni asset rad (**MED-I4B**) = DEFERRED / NON-BLOCKING. Istorijske faze KEEP. Referenca TS-009 v1.0.22. |
+| 1.0.11 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** §2.2 — javni portal final audit **PASS / ACCEPTED**; cross-validation **PASS**; final regression **GREEN** (1286/6224). B3 KEEP deferred. Production deploy HEAD `4595a14` **NOT CONFIRMED**. Referenca TS-009 v1.0.23. Istorijske faze KEEP. |
 
 ---
 
-**Kraj dokumenta IS-001 v1.0.10 (Stable)**
+**Kraj dokumenta IS-001 v1.0.11 (Stable)**

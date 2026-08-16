@@ -6,8 +6,8 @@
 **Naziv:** Implementation Roadmap — Kalendar kulture V1  
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
-**Status dokumenta:** Active — **Kalendar kulture V1 COMPLETE**; MED naslovna fotografija = **DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED** (nije Faza 9; MED-I4B vizueli = DEFERRED / NON-BLOCKING)
-**Verzija:** 1.0.24
+**Status dokumenta:** Active — **Kalendar kulture V1 COMPLETE**; **V1 TECHNICAL VERIFICATION = PASS**; **V1 FULL-SYSTEM CROSS-VALIDATION = PASS**; **FINAL FULL REGRESSION = GREEN**; **BLOCKS V1 CLOSEOUT = NO**. MED = FORMALLY CLOSED. B3 = DEFERRED / NON-BLOCKING / POST-V1. MED-I4B = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. Repository HEAD `4595a14` = COMMITTED / PUSHED; production deploy ovog HEAD-a = **NOT CONFIRMED**.
+**Verzija:** 1.0.25
 **Datum:** 2026-08-16
 
 ---
@@ -41,6 +41,7 @@
 | 1.0.22 | 2026-08-15 | **ZAVRŠNA STABILIZACIJA CLOSED / V1 COMPLETE (status only):** Faze 0–8 **CLOSED**. Corrective 01 (`1f9d959`) OCC fixture + audit/invitation privacy. Regression 1045 passed / 0 failed. Runtime = canonical-only. **B3** `cultural_events` physical DROP = **DEFERRED** (nije V1 blocker). Nema Faze 9. TS-011 → v1.0.4; TS-009 → v1.0.20 (status hygiene). BM/FS/IS/RG-001 KEEP. |
 | 1.0.23 | 2026-08-15 | **MED-01–MED-28 dokumentaciona kanonizacija (nije implementacija):** istorijski zapis Faze 1 da je TS-008 „završen u kodu“ ostaje kao istorija tadašnjeg TS8 modela; taj poslovni model je **SUPERSEDED**. Kanonski SSOT = MED paket. **Nije** Faza 9. **Nije** MED implementation COMPLETE. |
 | 1.0.24 | 2026-08-16 | **MED documentation closeout:** MED-01–MED-28 = **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED**. Paketi: MED-I1 `6060bee`; MED-I2 `e7c6a07`; MED-I3 `b416c0b`; MED-I4A `3ef974b`; MED-I5 `6a4d50e`. **MED-I4B** = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. **Nije** Faza 9. Istorijski V1 Faza 0–8 closeout KEEP. Obsolete `cultural_media` schema cleanup = DEFERRED / NON-BLOCKING. |
+| 1.0.25 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** Javni / urednički / Administracija final auditi = **PASS / ACCEPTED FOR V1 CLOSEOUT**. Full-system cross-validation = **PASS** (active conflicts = 0). Final full regression = **GREEN** (PHPUnit 11.5.39; PHP 8.3.21; GD=yes; WebP=yes; 1286 tests / 6224 assertions / 0 failed / 0 errors / 12 skipped Imagick-environment; 0 warnings / 0 deprecations / 0 risky; exit 0). **BLOCKS V1 CLOSEOUT = NO**. MED KEEP CLOSED. B3 audit = **NO ACTION REQUIRED BEFORE V1** (physical DROP/storage = POST-V1; preduslov = production read-only recheck). ADM-C1 `4595a14` = Users superadmin protection **CLOSED** u repou (COMMITTED / PUSHED; production deploy ovog HEAD-a **NOT CONFIRMED**). ADMIN-AUDIT-02 = TEST GAP / NON-BLOCKING; ADMIN-AUDIT-04 = LOW / NON-BLOCKING. Nema Faze 9. BM/FS pravila KEEP. RG-001 → **v1.1.12** (granica: Plaćanje nije aktivni KK registar). |
 
 ---
 
@@ -180,7 +181,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 
 # 5. Postojeća produkcija (sažetak)
 
-**CURRENT (2026-08-15):** Kalendar kulture V1 = **COMPLETE**. Faze 0–8 + Završna stabilizacija = **CLOSED**. Public/editorial runtime = **canonical-only** (`CulturalEventEntry` / `CulturalOccurrence`). Legacy `cultural_events` = **fizički KEEP / runtime disabled / B3 DROP DEFERRED**. Tabela ispod je **istorijski baseline** iz IR v1.0.0 (stanje prije Faza 0–8) — **nije** current runtime mapa.
+**CURRENT (2026-08-16):** Kalendar kulture V1 = **COMPLETE**. **V1 FUNCTIONAL IMPLEMENTATION = COMPLETE.** **V1 TECHNICAL VERIFICATION = PASS.** **V1 FULL-SYSTEM CROSS-VALIDATION = PASS.** **FINAL FULL REGRESSION = GREEN.** **BLOCKS V1 CLOSEOUT = NO.** Faze 0–8 + Završna stabilizacija = **CLOSED**. Public/editorial runtime = **canonical-only** (`CulturalEventEntry` / `CulturalOccurrence`). Legacy `cultural_events` = **fizički KEEP / runtime disabled / B3 DROP DEFERRED / POST-V1 / NON-BLOCKING**. MED = **FORMALLY CLOSED**. MED-I4B = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK**. Repository `origin/main` HEAD = `4595a14` (**COMMITTED / PUSHED**). **Production deploy ovog HEAD-a = NOT CONFIRMED** (istorijski PRODUCTION ACCEPTED za Faze 6A/6B/7/8 ostaje VALID HISTORICAL za te ranije closeout-e). Tabela ispod je **istorijski baseline** iz IR v1.0.0 (stanje prije Faza 0–8) — **nije** current runtime mapa.
 
 | Područje | Stanje | Akcija |
 |----------|--------|--------|
@@ -265,6 +266,10 @@ FAZA 8
 **MED-I4B inventory (vizueli, ne funkcija):** MISSING — Dječiji programi, Konferencije, Sajmovi, zaseban MF placeholder. AMBIGUOUS (bez automatske PO odluke o legacy JPG) — Književni programi, Publikacije, Prezentacije i predavanja, Paneli i tribine. Bezbjedni pad = globalni Event placeholder.
 
 **Schema debt:** obsolete `cultural_media` kolone = DEFERRED / NON-BLOCKING; **nema** migracije u MED closeout-u.
+
+**B3 / legacy (post-V1):** B3 / LEGACY CLEANUP AUDIT = **NO ACTION REQUIRED BEFORE V1**; **BLOCKS V1 CLOSEOUT = NO**. MUST BEFORE V1 = **NONE**. Physical DROP `cultural_events` / `CulturalEvent` shell / `CulturalEvent.slika` / `cultural-events/` storage = **DEFERRED / NON-BLOCKING / POST-V1**. Ako se kasnije radi: **production read-only recheck** je preduslov. Nije V1 blocker.
+
+**Administracija (repo corrective, nije Faza 9):** ADMIN-AUDIT-01 = **CLOSED** (`4595a14` — Users UI ne dodjeljuje/skida/aktivira/deaktivira `superadmin`; provisioning ostaje env-driven). ADMIN-AUDIT-02 = **TEST GAP / NON-BLOCKING**. ADMIN-AUDIT-04 = **LOW / NON-BLOCKING** (prazan leftover `admin/media` dir nakon MED-I5). Ove oznake su radni audit ID-evi, **nisu** RG-001 skraćenice.
 
 Ovo **nije** nova numerisana faza.
 
@@ -416,11 +421,11 @@ analiza → implementacija → test → review → merge → deploy
 
 | Stavka | Opis |
 |--------|------|
-| **Status** | **CLOSED / COMPLETE.** Feature + regresioni testovi PASS (`1f9d959`; 1045 passed / 0 failed / 5153 assertions). Production smoke Faza 6A/6B/7/8 = **PO-CONFIRMED**. |
+| **Status** | **CLOSED / COMPLETE.** Istorijski: Feature + regresija na `1f9d959` (1045 passed). **Finalna V1 verifikacija (2026-08-16):** full-system cross-validation **PASS**; final full regression **GREEN** — 1286 tests / 6224 assertions / 0 failed / 0 errors / 12 skipped (Imagick/environment; MED-critical skipped = 0); PHPUnit 11.5.39; PHP 8.3.21; GD=yes; WebP=yes; warnings/deprecations/risky = 0; exit 0. Javni / urednički / Administracija final auditi = **PASS / ACCEPTED FOR V1 CLOSEOUT**. Production smoke Faza 6A/6B/7/8 = **PO-CONFIRMED** (istorijski). Production deploy HEAD `4595a14` = **NOT CONFIRMED**. |
 | **Cilj** | Kontrolni punkt nakon Faze 8 (§8): testovi, review, smoke, posmatranje. |
-| **Rezultat** | **Kalendar kulture V1 = COMPLETE.** Runtime closed. Physical B3 DROP = **DEFERRED**. |
-| **KEEP V1** | **Audit:** failure isolation; no durable replay; no outbox/queue; `repeatable()` uniqueness limitation; no filter/search/export/show; historical rows immutable. **Newsletter:** crash-after-SMTP duplicate window; no queue/outbox; organizer listing URL omitted; legacy physical artifacts remain. **Manifestation:** delete OOS. **Public / legacy:** B3 `cultural_events` physical DROP deferred; day view without badge/detail-link (TD-TS9-01). |
-| **Zatim** | Nema numerisane **Faze 9** u ovom IR-001. Post-V1 physical cleanup (B3) nije dio V1 COMPLETE. |
+| **Rezultat** | **Kalendar kulture V1 = COMPLETE.** **V1 TECHNICAL VERIFICATION = PASS.** **BLOCKS V1 CLOSEOUT = NO.** Runtime closed. Physical B3 DROP = **DEFERRED / POST-V1**. MED = **FORMALLY CLOSED**. MED-I4B = **DEFERRED / NON-BLOCKING**. |
+| **KEEP V1** | **Audit:** failure isolation; no durable replay; no outbox/queue; `repeatable()` uniqueness limitation; no filter/search/export/show; historical rows immutable. **Newsletter:** crash-after-SMTP duplicate window; no queue/outbox; organizer listing URL omitted; legacy physical artifacts remain. **Manifestation:** delete OOS. **Public / legacy:** B3 `cultural_events` physical DROP deferred; day view without badge/detail-link (TD-TS9-01). **Administracija:** ADMIN-AUDIT-02 test gap; ADMIN-AUDIT-04 dead Media remnants. |
+| **Zatim** | Nema numerisane **Faze 9** u ovom IR-001. Post-V1: B3 physical cleanup (uz production read-only recheck); MED-I4B vizueli; obsolete `cultural_media` schema. |
 
 ---
 
@@ -428,7 +433,7 @@ analiza → implementacija → test → review → merge → deploy
 
 Primjenjuje se nakon Faza 0–7 i kao **Završna stabilizacija** nakon Faze 8.
 
-**CURRENT:** Završna stabilizacija nakon Faze 8 = **CLOSED / COMPLETE** (IR-001 v1.0.22). Nema naredne numerisane velike faze u ovom dokumentu.
+**CURRENT:** Završna stabilizacija nakon Faze 8 = **CLOSED / COMPLETE** (IR-001 v1.0.22). Finalni V1 documentation closeout = **IR-001 v1.0.25**. Nema naredne numerisane velike faze u ovom dokumentu.
 
 | Stavka | Obavezno |
 |--------|----------|

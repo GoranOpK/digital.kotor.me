@@ -1104,7 +1104,7 @@ U skladu sa P-06, razvoj modula zasniva se na:
 | 4 | Funkcionalna specifikacija | `docs/functional-specifications/Functional-Specification_Placanja.md` |
 | 5 | Tehnička specifikacija | `docs/technical-specifications/Technical-Specification_Placanja.md` |
 
-Feature Registry: FT-002 — `docs/features/Feature-Registry.md`
+Feature Registry Kalendara kulture (`docs/features/Feature-Registry.md`) **ne** registruje ovaj modul. Plaćanje je zaseban sibling modul Digital Kotora.
 
 ---
 

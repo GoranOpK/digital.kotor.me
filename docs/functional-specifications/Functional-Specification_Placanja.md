@@ -1059,7 +1059,7 @@ Okvirni kriterijumi (prošireni za BP-01–BP-09; ostatak nakon detaljnih UI odl
 | Pravni okvir | `docs/pravni-okvir/Pravni_okvir_Placanja.md` |
 | Katalog | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` |
 | Technical Specification (TS-002) | `docs/technical-specifications/Technical-Specification_Placanja.md` |
-| Feature Registry | `docs/features/Feature-Registry.md` |
+| Feature Registry Kalendara kulture | `docs/features/Feature-Registry.md` — **ne** registruje ovaj modul (sibling Digital Kotor) |
 
 ### Sljedivost BP
 

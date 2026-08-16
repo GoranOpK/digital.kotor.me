@@ -4,7 +4,7 @@
 **Izvor u kodu:** `CulturalCalendarController`, `CulturalPublicEventQuery`, `CulturalEventEntry` / `CulturalOccurrence`; editorial: `CulturalEventEntryController`; Newsletter: `SendCulturalCalendarNewsletter`, `SendCulturalCalendarPriorityNewsletter` (legacy weekly command ostaje na disku, runtime slanje isključeno)
 **Tip dokumenta:** Technical Overview trenutne implementacije
 
-**CURRENT STATE (V1 COMPLETE):** Javni i urednički runtime čitaju **kanonski** model (`CulturalEventEntry` + `CulturalOccurrence`). Legacy `CulturalEvent` / `cultural_events` = **fizički KEEP / runtime disabled / B3 DROP DEFERRED**. Organizator, Moderator, „Postani organizator“, Manifestacije, Newsletter (`/newsletter`) i Evidencija aktivnosti su **implementirani**. Stari odlomci ispod koji opisuju flat `CulturalEvent` kao current V1 **nisu** current runtime — zadržani su kao istorijski TO tekst dok se TO ne prepise zasebno.
+**CURRENT STATE (V1 COMPLETE):** Javni i urednički runtime čitaju **kanonski** model (`CulturalEventEntry` + `CulturalOccurrence`). **V1 TECHNICAL VERIFICATION = PASS.** **FINAL FULL REGRESSION = GREEN** (1286/6224/0/0/12 skipped). **BLOCKS V1 CLOSEOUT = NO.** Javni / urednički / Administracija = **ACCEPTED FOR V1 CLOSEOUT**. MED = FORMALLY CLOSED. Legacy `CulturalEvent` / `cultural_events` = **fizički KEEP / runtime disabled / B3 DROP DEFERRED / POST-V1**. MED-I4B vizueli = DEFERRED / NON-BLOCKING. Organizator, Moderator, „Postani organizator“, Manifestacije, Newsletter (`/newsletter`) i Evidencija aktivnosti su **implementirani**. Stari odlomci ispod koji opisuju flat `CulturalEvent` kao current V1 **nisu** current runtime — zadržani su kao istorijski TO tekst dok se TO ne prepise zasebno.
 
 ---
 
