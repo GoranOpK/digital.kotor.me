@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Kategorije i oznake
 **Modul:** Kalendar kulture
 **Status dokumenta:** Usvojen
-**Verzija:** 0.1.3
-**Datum:** 2026-08-15
+**Verzija:** 0.1.4
+**Datum:** 2026-08-16
 
 ---
 
@@ -20,6 +20,7 @@
 | 0.1.1 | 2026-08-08 | **TS7-PO-07** / BM PATCH-059 / FS PATCH-FS-059: konačni početni V1 katalog (14 kategorija); razdvajanje kanonskog DB kataloga od PO početnog sadržaja; semantičko mapiranje legacy→kanonski; cutover = TS-009. Bez implementacije seed/migracije. |
 | 0.1.2 | 2026-08-09 | **Faza 6A / PO-TS9-08E:** javni CAT-CUTOVER bez migracije legacy sadržaja i bez alias mape (PO-EV-01); preduslov 14 kategorija u `cultural_categories`; tehnički ugovor u TS-009. Bez implementacije seed/migracije. |
 | 0.1.3 | 2026-08-15 | **MED-27 / MED-08:** 14 kanonskih kategorija imaju statičke Git-verzionisane vizuelne resurse aplikacije kao fallback Događaja; **nije** `CulturalMedia` veza; nema upload UI-ja za kategorijske fotografije. Katalog Oznaka Događaja KEEP. TS-008 SUPERSEDED. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
+| 0.1.4 | 2026-08-16 | **MED documentation closeout:** fallback **resolver** COMPLETE / VERIFIED. **Ne** tvrdi se da svih 14 dedicated fotografija postoji fizički. MED-I4B = DEFERRED / NON-BLOCKING. MISSING: Dječiji programi, Konferencije, Sajmovi. AMBIGUOUS (bez automatske PO odluke o legacy JPG): Književni programi, Publikacije, Prezentacije i predavanja, Paneli i tribine. Oznake Događaja KEEP. |
 
 ---
 
@@ -396,6 +397,6 @@ Napomena: konkretan početni sadržaj kataloga usvojen je odlukom **TS7-PO-07** 
 3. Ne migrirati test podatke kao referentni katalog.
 4. Ne uvoditi dual-write / tranzicioni ENUM+FK model u ovom dokumentu.
 5. Implementacija mora ostati usklađena sa: Organizator = entitet; Moderator = ovlašćenje; Urednik = upravlja katalogom; Administrator platforme = sistemska administracija.
-6. Fallback fotografije 14 kanonskih kategorija su **statički Git-verzionisani vizuelni resursi aplikacije** (MED-27). **Nisu** `CulturalMedia` veza niti `category_default` Media zapis. Nema upload UI-ja za kategorijske fotografije. Mapiranje se veže na katalogski zapis (kanonski naziv), ne na ENUM string kao izvor istine.
+6. Fallback fotografije 14 kanonskih kategorija su **statički Git-verzionisani vizuelni resursi aplikacije** (MED-27). **Nisu** `CulturalMedia` veza niti `category_default` Media zapis. Nema upload UI-ja za kategorijske fotografije. Mapiranje se veže na katalogski zapis (kanonski naziv), ne na ENUM string kao izvor istine. Resolver mapira samo **READY** dedicated fajlove; MISSING/AMBIGUOUS padaju na globalni Event placeholder. **MED-I4B** finalni vizuelni set = DEFERRED / NON-BLOCKING — **nije** tvrdnja da 14/14 dedicated fotografija postoji u repo-u.
 7. **TS7-PO-07:** početni V1 sadržaj = 14 usvojenih naziva (BM-KO-09). Obezbijediti ih u kanonskom katalogu prije TS-009 Faza 6A cutover-a; **način** (seed/ručno/…) nije propisan ovdje.
 8. Semantičko mapiranje legacy→kanonski: BM-KO-11 / BR-279 (referentno). **Faza 6A:** bez migracije legacy sadržaja; bez alias mape; javni portal = `CulturalCategory` (PO-TS9-08E / PO-EV-01).

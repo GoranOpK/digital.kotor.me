@@ -4,8 +4,8 @@
 **Oznaka dokumenta:** RG-001
 **Naziv:** Registar skraćenica i oznaka dokumentacije Kalendara kulture
 **Status dokumenta:** Stable
-**Verzija:** 1.1.10
-**Datum:** 2026-08-15
+**Verzija:** 1.1.11
+**Datum:** 2026-08-16
 
 ---
 
@@ -175,7 +175,7 @@ Prefiksi se **ne** spajaju u jednu generičku oznaku. Svaki ima svoj namespace.
 | **PO-N-TR** | Product Owner odluka | Zatvara / precizira N-TR pitanje | TS-004 | PO-N-TR-02-01; **PO-N-TR-02-04** |
 | **TS7-PO** | Product Owner odluka | Kategorije i oznake (TS-007) | TS-007 | TS7-PO-01 |
 | **TS8-** | Product / tehnička odluka | Mediji (TS-008) — **ZASTARJELO / SUPERSEDED** MED-01–MED-28 | TS-008 (istorijski) | TS8-01 |
-| **MED** / **MED-*** | Product Owner paket odluka | Naslovna fotografija Događaja i Manifestacije u Kalendaru kulture. **AKTIVNO** (ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING). | BM PATCH-075 / FS PATCH-FS-075 / TS-003/005/007/009/010 | MED-01 |
+| **MED** / **MED-*** | Product Owner paket odluka | Naslovna fotografija Događaja i Manifestacije u Kalendaru kulture. **AKTIVNO** (ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED). Finalni vizuelni set dijelova fallback asseta ostaje projektni follow-up (nije nova RG skraćenica). | BM PATCH-075 / PATCH-076 / FS PATCH-FS-075 / PATCH-FS-076 / TS-003/005/007/009/010 | MED-01 |
 | **N-DG** | Otvoreno pitanje / napomena | Događaj | TS-003 / TS-010 | N-DG-02, N-DG-04 |
 | **N-MF** | Otvoreno pitanje / napomena | Manifestacija | TS-005 | N-MF-01 |
 | **N-TR** | Otvoreno pitanje / napomena | Održavanje | TS-004 | N-TR-02 |
@@ -350,7 +350,8 @@ RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, katego
 | 1.1.8 | 2026-08-13 | **MOD-UX-01:** dodate skraćenice **UX**, **MOD**, **ORG** (dokumentacione / paketne; bez poslovnih definicija uloga). Usklađeno sa TS-010 v1.0.10 / Feature Registry status sync. Bez izmjene BM/FS. Bez izmjene implementacije. |
 | 1.1.9 | 2026-08-13 | **MOD-UX-01-HF2:** dodata skraćenica **HF** (Hotfix / hitna korektivna ispravka; ordinal HF1/HF2 nije zasebna skraćenica). Bez izmjene BM/FS/TS. Bez izmjene implementacije u ovom dokumentu. |
 | 1.1.10 | 2026-08-15 | **MED / MED-*:** registracija PO paketa naslovne fotografije (primjer MED-01). **TS8-** → ZASTARJELO / SUPERSEDED (sljedivost ka MED). **BM-MD** → TS8 model ZASTARJELO; BM-MD-18–36 aktivna naslovna fotografija. **TS-008** u mapi TS → historijski/supersedovan. Usklađeno sa BM PATCH-075 / FS PATCH-FS-075. Bez izmjene implementacije. |
+| 1.1.11 | 2026-08-16 | **MED status hygiene (nema nove skraćenice):** AKTIVNO polje MED ažurirano na IMPLEMENTATION COMPLETE / VERIFIED. MED-I1/I2/I3/I4A/I4B/I5 **nisu** registrovani (radni nazivi implementacionih paketa). TS8- / TS-008 SUPERSEDED KEEP. |
 
 ---
 
-**Kraj dokumenta RG-001 v1.1.10 (Stable)**
+**Kraj dokumenta RG-001 v1.1.11 (Stable)**

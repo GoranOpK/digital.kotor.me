@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.21
-**Datum:** 2026-08-15
+**Verzija:** 1.0.22
+**Datum:** 2026-08-16
 
 ---
 
@@ -42,6 +42,7 @@
 | 1.0.19 | 2026-08-13 | **Phase B1+B2 status sync:** public portal **canonical-only**; `CULTURAL_PUBLIC_READ_SOURCE` / dual-read / legacy CRUD runtime **REMOVED**; image helpers → `CulturalCalendarDefaultImages`; `cultural_events` table **KEEP**; B3 DROP **OPEN**. **IMPLEMENTED / TESTED (local); NOT PRODUCTION VERIFIED.** Bez izmjene normative §5.4. Bez izmjene BM/FS. |
 | 1.0.20 | 2026-08-15 | **Status hygiene (V1 closeout):** Phase B1+B2 = **PRODUCTION VERIFIED / CLOSED** (usklađeno sa IS-001 v1.0.8 / IR-001). B3 DROP = **DEFERRED**. Business contract KEEP. |
 | 1.0.21 | 2026-08-15 | **MED-01–MED-28:** javni prikaz — Događaj: naslovna → statička kategorijska (14 kanonskih naziva) → globalni event placeholder; Manifestacija: naslovna → statički MF placeholder. `object-fit: cover` u definisanim frame-ovima. Nema legacy `CulturalEvent.slika` kao SSOT. Nema `category_default` Media zapisa. TS-008 SUPERSEDED. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
+| 1.0.22 | 2026-08-16 | **MED documentation closeout:** public fallback resolver **IMPLEMENTATION COMPLETE / VERIFIED**. `object-fit: cover` KEEP. `CulturalEvent.slika` / `category_default` nisu SSOT. **MED-I4B** finalni vizueli = DEFERRED / NON-BLOCKING (MISSING/AMBIGUOUS dedicated assets padaju na globalni Event PNG; MF dedicated placeholder deferred). |
 
 ---
 
@@ -91,7 +92,7 @@ Izvori istine:
 | Termin | Isključivo vremenski atributi Održavanja (datum/vrijeme); nije entitet |
 | Kategorija | Primarna klasifikacija događaja |
 | Oznake | Dodatna klasifikacija događaja (BM-08 / TS-007) |
-| Tagovi | Metapodaci medija (BM-09); nisu sinonim za Oznake; nisu V1 UI |
+| Tagovi | Istorijski metapodaci medija (BM-09 / TS-008; **SUPERSEDED** MED-07). **Nisu** sinonim za Oznake; nisu V1 UI. |
 | Statusne oznake / status badge | Javni prikaz **izračunatog** javnog stanja događaja: Predstoji, U toku, Završen, Otkazan (CR-004A / §7.1). Nisu statusi baze. **Odgođen** nije javni status Događaja. |
 
 ---
@@ -197,7 +198,7 @@ Poslovni model entiteta Manifestacija (lifecycle, kardinalnost, uslovi objave) o
 | TS-004 Održavanje | Održavanja (termini kao vremenski atributi) i lokacije u prikazu; unosi u programu MF |
 | TS-005 Manifestacija | Entitet MF; javni prikaz liste / Detalja manifestacije / programa (bez dupliciranja lifecycle pravila) |
 | TS-006 Lokacije | Filter i prikaz lokacija |
-| TS-007 Kategorije i oznake | Filter kategorije; prikaz kategorije i oznaka; 14 kanonskih statičkih fallback fotografija |
+| TS-007 Kategorije i oznake | Filter kategorije; prikaz kategorije i oznaka; kanonski statički fallback (resolver COMPLETE; 14 dedicated fajlova nisu svi fizički READY — MED-I4B) |
 | TS-008 Mediji | **SUPERSEDED / HISTORICAL** — nije aktivni SSOT; prikaz fotografija = MED / BM-PK-12 |
 | TS-010 Urednički portal | Nije dio javnog portala; Urednik označava istaknute |
 | TS-011 Newsletter | Povezano; van usvojenog obuhvata TS-009 |
@@ -982,10 +983,11 @@ Portalni obuhvat (referenca, ne nova pravila):
 
 * naslov i osnovni identitet događaja;
 * fotografija / fallback (BM-PK-12 / BR-113 / MED-08; **ne** TS-008 kao aktivni SSOT; **ne** `CulturalEvent.slika`);
-  * Događaj: (1) naslovna; (2) statička Git fotografija kanonske kategorije (14 naziva); (3) globalni event placeholder;
-  * Manifestacija: (1) naslovna; (2) zasebni statički MF placeholder;
+  * Događaj: (1) naslovna; (2) statička Git fotografija kanonske kategorije **ako dedicated fajl postoji (READY)**; (3) globalni event placeholder;
+  * Manifestacija: (1) naslovna; (2) MF fallback resolver (zaseban ugovor; finalni dedicated MF placeholder = **MED-I4B DEFERRED**; privremeni compatibility path na globalni Event PNG);
   * definisani image frame-ovi: `object-fit: cover` (MED-14);
   * fallback nisu `CulturalMedia` / `category_default` zapisi;
+  * **MED-I4B:** MISSING/AMBIGUOUS dedicated kategorijski fajlovi nisu fizički kompletirani; padaju na globalni Event placeholder. Nije funkcionalni blocker.
 * Održavanja sa terminima i lokacijama (BM-PK-09–10 / BR-110–111 / TS-004);
 * Kategorija i Oznake (BM-PK-11 / BR-112 / TS-007) — **Oznake ≠ tagovi fotografije**;
 * statusne oznake / status badge prema §7.1 (BM-PK-13 / BR-114; CR-004A);
@@ -1582,6 +1584,7 @@ Granice (bez dupliciranja u TS-009): lifecycle Događaja → TS-003; Održavanje
 * **Faza 6A:** kanonski cutover (§9–§12); kartica/sortiranje/Odgođen (§7.3 / §3.4); CAT-CUTOVER; privremeni flag (§10.2); public query SSOT (§11); test matrica §18. **Bez** Manifestacija (Faza 6B / §6).
 * Detalji događaja / Arhiva događaja: uskladiti prikaz sa BM-PK-05/13 i BR-106/114/270–274; status badge prema §7.1; dostupnost otkazanih prema §7.2; ne uvoditi paralelna lifecycle pravila.
 * Ne duplicirati TS-003 / TS-004 / TS-005 u portalskom sloju.
+* **MED closeout (v1.0.22):** public fallback resolver COMPLETE / VERIFIED. `CulturalEvent.slika` nije SSOT. `category_default` Media nije javni fallback SSOT. MED-I4B vizueli = DEFERRED / NON-BLOCKING.
 
 ---
 

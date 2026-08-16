@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Mediji (istorijski)
 **Modul:** Kalendar kulture
 **Status dokumenta:** **SUPERSEDED / HISTORICAL / ZASTARJELO**
-**Verzija:** 0.1.1
-**Datum:** 2026-08-15
+**Verzija:** 0.1.2
+**Datum:** 2026-08-16
 
 > **Ovaj dokument nije aktivni SSOT za V1.**
 >
@@ -27,7 +27,9 @@
 >
 > Poglavlja 1–14 ispod ostaju **istorijski zapis** TS8-01–TS8-09 / BM-MD-01–17. Ne koristiti ih kao aktivnu specifikaciju za implementaciju.
 >
-> **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING** za MED paket. Ovaj dokument **ne** tvrdi da je MED implementacija COMPLETE.
+> **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED** za MED replacement model (TS-003/005/007/009/010; TS-012 compatibility KEEP). Ovaj dokument ostaje **SUPERSEDED / HISTORICAL** i **nije** aktivni V1 SSOT.
+>
+> **MED-I4B** finalni vizuelni resursi = DEFERRED / NON-BLOCKING PROJECT ASSET WORK (nije razlog da se TS-008 vrati u Usvojen).
 
 ---
 
@@ -37,6 +39,7 @@
 |---------|--------|------|
 | 0.1.0 | 2026-07-31 | Prva kompletna tehnička specifikacija za Medije. Ugrađene usvojene Product Owner odluke TS8-01–TS8-09 i usklađene sa BM-09 (PATCH-044), FS §5.11 (PATCH-FS-046) i TS pravilima projekta. Bez SQL, API ugovora, Laravel koda i migracija. |
 | 0.1.1 | 2026-08-15 | **SUPERSEDED / HISTORICAL:** TS-008 povučen kao aktivni SSOT. Kanonski model = MED-01–MED-28 (BM PATCH-075 / FS PATCH-FS-075). Nova pravila u TS-003, TS-005, TS-007, TS-009, TS-010; TS-012 samo audit kompatibilnost. Istorijski sadržaj poglavlja 1–14 zadržan radi sljedivosti. **IMPLEMENTATION PENDING** za MED. Bez izmjene koda. |
+| 0.1.2 | 2026-08-16 | **MED documentation closeout (status only):** MED replacement model = **IMPLEMENTED / VERIFIED**. TS-008 ostaje SUPERSEDED / HISTORICAL. Poglavlja 1–14 nisu brisana. MED-I4B vizueli deferred. Bez kataloških/poslovnih izmjena TS8 teksta. |
 
 ---
 
@@ -371,7 +374,7 @@ Creator i vremenske oznake ostaju na mediju radi lokalne istorije.
 
 **Istorijski (v0.1.0):** za tadašnji TS8 model nije bilo otvorenih PO pitanja; TS8-01–TS8-09 su bile usvojene.
 
-**Aktuelno:** TS8 model je **SUPERSEDED** MED-01–MED-28. Ne otvarati nova TS-008 pitanja. Implementacija ide prema MED paketu.
+**Aktuelno:** TS8 model je **SUPERSEDED** MED-01–MED-28. Ne otvarati nova TS-008 pitanja. MED replacement model = **IMPLEMENTED / VERIFIED** (aktivni SSOT: TS-003/005/007/009/010).
 
 ---
 

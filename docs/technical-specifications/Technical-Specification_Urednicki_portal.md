@@ -7,9 +7,9 @@
 **Funkcionalna cjelina:** Urednički portal Kalendara kulture
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
-**Implementacioni status V1:** ZAVRŠEN (osim MED naslovne fotografije: **DOCS CANONICALIZED / IMPLEMENTATION PENDING**)
-**Verzija:** 1.0.12
-**Datum:** 2026-08-15
+**Implementacioni status V1:** ZAVRŠEN. MED naslovna fotografija = **IMPLEMENTATION COMPLETE / VERIFIED**. MED-I4B finalni vizuelni resursi = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK**.
+**Verzija:** 1.0.13
+**Datum:** 2026-08-16
 
 ---
 
@@ -43,6 +43,7 @@
 | 1.0.10 | 2026-08-13 | **MOD-UX-01 — Moderator UX / navigation corrective (status sync):** korisnički UI termini — primarni entrypoint **Kontrolna tabla** (`cultural-moderator-dashboard.index`); sadržajni entrypoint **Moderiranje** (grane Događaji / Manifestacije); `Organizator: <naziv>`; **Promijeni organizatora**; pomoćni ekran **Izbor organizatora**. Uklonjeni korisnički termini: Radna tabla / Mod rad / Moderatorski workspace / Workspace (u ovom značenju). Context switch redirect → Kontrolna tabla; approval email CTA → Kontrolna tabla. Auth / lifecycle / `CulturalOrganizerContext` KEEP. Bez BM/FS izmjene. |
 | 1.0.11 | 2026-08-13 | **DOC-SYNC / MOD-UX-01-HF* + UI-CLEANUP:** CURRENT STATE — **Moderiranje** = običan `<a>` ka `cultural-moderator-workspace.index` (hub: **Događaji organizatora** / **Manifestacije organizatora**); desktop **Kontrolna tabla** i **Moderiranje** isti sizing `128×38`; Kontrolna tabla bez page-level Moderiranje/Događaji/Manifestacije bloka; mobile hamburger = minimalni inline vanilla JS (**bez Alpine**); runtime view bez Alpine dependency-ja. Auth / lifecycle / context KEEP. Bez BM/FS izmjene. Bez izmjene implementacije u ovom dokumentu. |
 | 1.0.12 | 2026-08-15 | **MED-26 / MED-17:** UX naslovne fotografije na formama DG/MF (drag & drop, picker, preview, Zamijeni, Ukloni, warning <800 px, 2 MB JPEG/PNG/WebP; Odustani bez trajne izmjene). Uklonjeni kao aktivni: poseban ekran Mediji, katalog, izbor postojećeg Medija, samostalni CRUD, ALT/naziv/tagovi/namjena/status forme. Kontrola samo kada je sadržaj uređiv. TS-008 SUPERSEDED. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
+| 1.0.13 | 2026-08-16 | **MED documentation closeout:** Media CRUD/nav/katalog **REMOVED**; cover UX na Event/MF formama **IMPLEMENTATION COMPLETE / VERIFIED**. Operativni cleanup: `cultural-media:cleanup` (dry-run default; `--delete`; ručno; bez schedulera). MED-I4B vizueli nisu TS-010 blocker. |
 Napomena:
 
 Ovo poglavlje služi isključivo za evidenciju razvoja dokumenta.
@@ -79,6 +80,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.10 | 2026-08-13 | STATUS SYNC: MOD-UX-01 — Moderator UI navigacija/terminologija (Kontrolna tabla / Moderiranje / Izbor organizatora); auth/lifecycle/context KEEP. |
 | 1.0.11 | 2026-08-13 | STATUS SYNC: Alpine-free Moderator navigation CURRENT STATE (Moderiranje hub link; 128×38; hamburger inline JS; bez Alpine runtime). |
 | 1.0.12 | 2026-08-15 | STATUS: MED-26 naslovna fotografija UX (docs); ekran Mediji SUPERSEDED; IMPLEMENTATION PENDING. |
+| 1.0.13 | 2026-08-16 | STATUS: MED-26/17 **IMPLEMENTATION COMPLETE / VERIFIED**; Media CRUD/nav REMOVED; `cultural-media:cleanup` manual-only. |
 
 # Svrha dokumenta
 
@@ -1553,11 +1555,13 @@ Nakon toga **nema** Delete Održavanja. Otkazivanje ≠ Delete (N-TR-04).
 * **Odustani** ne smije trajno promijeniti postojeću fotografiju.
 * Kontrola je dostupna **samo** kada je sadržaj uređiv (zaključan sadržaj ⇒ zaključana fotografija).
 * Uklanjanje / uspješna zamjena briše interni zapis i fizički fajl (MED-05 / MED-21 / MED-22).
-* Fallback prikaza — BM-MD-25 (statička kategorijska / globalni placeholder); nije `CulturalMedia`.
+* Fallback prikaza — BM-MD-25 (statička kategorijska **ako READY** / globalni placeholder); nije `CulturalMedia`. MED-I4B vizueli nisu preduslov za cover UX.
 * Na Objavljenom — Moderator: promjena naslovne kroz **prijedlog izmjene**. Urednik direct (`organizer_id` null): **direktan** content update (TS-003 §4.13 / PATCH-063).
 * **Feature (istaknutost)** nije sadržajno polje i **ne ide** kroz sadržajni prijedlog.
 
-Poseban ekran/modul „Mediji“ **nije** dio uredničkog portala (MED-17).
+Poseban ekran/modul „Mediji“ **nije** dio uredničkog portala (MED-17). Media CRUD, katalog, navigacija Mediji i izbor postojećeg Media zapisa = **REMOVED**.
+
+**Operativni cleanup (MED-23–MED-25 / MED-I5; nije poslovna oznaka):** Artisan `cultural-media:cleanup`; default DRY RUN / preview; destruktivno samo eksplicitni `--delete`; scope `public/cultural-media/`; ručno; **nema** schedulera. Orphan = fizički fajl bez matching `CulturalMedia.storage_path`. DB missing-file i suspicious path = report only (nikad arbitrary delete).
 
 ## 10.13 Delete događaja (PATCH-063 / BR-290 — supersede)
 
@@ -1583,7 +1587,9 @@ Poseban ekran/modul „Mediji“ **nije** dio uredničkog portala (MED-17).
 3. obriši child OCC (FK restrict);
 4. detach tag/media pivots i proposals pripadajuće Entry-ju;
 5. obriši Entry;
-6. **ne** briši shared katalog (Category / Location / Media / Tag / Organizer).
+6. **ne** briši shared katalog (Category / Location / Tag / Organizer).
+
+**MED-19:** naslovna fotografija **nije** shared katalog. Trajno brisanje never-published Događaja briše interni cover zapis (`CulturalMedia`) i fajl (TS-003). Stavka 6 odnosi se na `CulturalCategory` / `CulturalLocation` / `CulturalTag` / `CulturalOrganizer`.
 
 Ovo **nije** isto što i fizičko uklanjanje Održavanja iz početnog Nacrta (N-TR-04 / §10.9.4).
 

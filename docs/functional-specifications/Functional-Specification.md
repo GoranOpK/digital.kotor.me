@@ -95,6 +95,7 @@
 | PATCH-FS-073 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary / BM PATCH-074:** prva pretplata i reaktivacija nijesu retroaktivne; candidate ≠ dostava; evidencija first_include samo nakon uspješne isporuke. Usklađeni tokovi §5.15 i BR-147, BR-148, BR-158, BR-334, BR-335, BR-341; dodati BR-345–BR-348. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 | PATCH-FS-074 | 2026-08-14 | **F8-01 / TS-012 canonical freeze:** usklađen §5.16 katalog sa kasnijim usvojenim radnjama (PO-ORG-06 resolver; PO-AUTO-02 auto-finish OCC; PATCH-063 direktna izmjena objavljenog / brisanje nacrta; BR-184 Sistem). Eksplicitna isključenja (dismiss BR-326/327; invitation e-mail; kaskadno OCC; lokacije/kategorije/mediji; Newsletter ledger). Dodati BR-349–BR-350; usklađeni BR-177, BR-178, BR-182, BR-183, BR-184. Bez nove poslovne odluke. Bez izmjene BM. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 | PATCH-FS-075 | 2026-08-15 | **MED-01–MED-28 / BM PATCH-075:** §5.11 preimenovan u Naslovna fotografija Događaja i Manifestacije. **SUPERSEDED:** BR-086–BR-091, BR-237–BR-254 (TS8 model). Dodati BR-351–BR-370. Usklađeni §5.4.4, BR-113, BR-197. TS-008 više nije aktivni FS SSOT. **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Verzija ostaje 1.0.0. Bez izmjene koda. |
+| PATCH-FS-076 | 2026-08-16 | **MED documentation closeout (status only):** MED-01–MED-28 = **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED**. BR-351–BR-370 **KEEP**. BR-086–091 i BR-237–254 ostaju SUPERSEDED. **MED-I4B** = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK**. Bez novih BR. Verzija ostaje 1.0.0. |
 
 Napomena:
 
@@ -2604,7 +2605,9 @@ Tehnički cutover javnog portala (Faza 6A / TS-009): legacy `CulturalEvent` sadr
 
 ### 5.11 Naslovna fotografija Događaja i Manifestacije
 
-**Kanonski status:** PATCH-FS-075 / MED-01–MED-28 / BM PATCH-075. **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING.**
+**Kanonski status:** PATCH-FS-075 / PATCH-FS-076 / MED-01–MED-28 / BM PATCH-075. **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED.**
+
+**MED-I4B:** finalni vizuelni resursi = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK** (fallback resolver COMPLETE; nije funkcionalni blocker).
 
 Mediji nijesu posebna poslovna cjelina. `CulturalMedia` je interni tehnički mehanizam, nije poslovni objekat.
 
@@ -2729,6 +2732,8 @@ Vizuelna upload kartica; drag & drop; standardni file picker; lokalni preview; Z
 #### BR-369 – Statički fallback resursi (MED-27)
 
 14 kategorijskih fotografija, 1 globalni placeholder Događaja i 1 placeholder Manifestacije su statički Git-verzionisani fajlovi aplikacije. Nijesu `CulturalMedia` zapisi. Nema upload UI-ja za kategorijske fotografije.
+
+**Napomena (PATCH-FS-076 / MED-I4B):** kanonski **model** resursa, ne tvrdnja da je fizički set kompletiran. Resolver COMPLETE / VERIFIED. Finalni vizueli = DEFERRED / NON-BLOCKING. MISSING: Dječiji programi, Konferencije, Sajmovi, zaseban MF placeholder. AMBIGUOUS (bez automatske PO odluke o legacy JPG): Književni programi, Publikacije, Prezentacije i predavanja, Paneli i tribine. Bezbjedni pad = globalni Event placeholder.
 
 ---
 
@@ -5522,3 +5527,4 @@ Pored BR-176, BR-181, BR-183 i BR-186, u centralnu Evidenciju **ne ulaze**:
 | 2026-08-14 | FS-001 (PATCH-FS-073): NL-03 temporal eligibility + ledger boundary / BM PATCH-074 — prva pretplata i reaktivacija nijesu retroaktivne; candidate ≠ dostava. Usklađeni tokovi §5.15 i BR-147, BR-148, BR-158, BR-334, BR-335, BR-341; dodati BR-345–BR-348. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 | 2026-08-14 | FS-001 (PATCH-FS-074): F8-01 / TS-012 canonical freeze — usklađen §5.16 katalog; BR-349–BR-350; usklađeni BR-177/178/182/183/184. Bez nove poslovne odluke. Bez izmjene BM. Verzija ostaje 1.0.0. Bez izmjene implementacije. |
 | 2026-08-15 | FS-001 (PATCH-FS-075): MED-01–MED-28 / BM PATCH-075 — §5.11 Naslovna fotografija; BR-351–BR-370; SUPERSEDED BR-086–091, BR-237–254; usklađeni §5.4.4, BR-113, BR-197. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Verzija ostaje 1.0.0. Bez izmjene koda. |
+| 2026-08-16 | FS-001 (PATCH-FS-076): MED documentation closeout — **IMPLEMENTATION COMPLETE / VERIFIED**; BR KEEP; MED-I4B deferred visual assets. Verzija ostaje 1.0.0. |

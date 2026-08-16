@@ -89,6 +89,7 @@
 | PATCH-073 | 2026-08-14 | **PO-NL-01…PO-NL-22 (Newsletter decision sync):** dobrovoljna pretplata (bez automatske prijave pri registraciji); jedna pretplata po `User`; dva režima („Svi događaji“ / „Odabrani organizatori“); „Bez organizatora“; validan izbor; aktivacija bez dodatnog e-mail confirmationa; odjava/reaktivacija; preference samo ubuduće; deaktivirani Organizator; Manifestacija nije kriterijum pretplate; `User`/e-mail lifecycle; aktivna pretplata ≠ dozvoljena isporuka; nema praznog Newslettera; testna legacy implementacija bez migracije pretplatnika. Usklađeni BM-NL-04, BM-NL-05, BM-NL-06, BM-NL-12, BM-NL-13, BM-NL-15, BM-NL-16, BM-GL-19; dodati BM-NL-26–BM-NL-44, BM-GL-27. Usklađeno sa FS PATCH-FS-072 / TS-011 v1.0.2. **Bez izmjene implementacije.** |
 | PATCH-074 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary:** prva pretplata nije retroaktivna; reaktivacija nije retroaktivna; first_include evidencija = samo uspješno dostavljena stavka (ne kandidat). Usklađeni BM-NL-33, BM-NL-34, BM-NL-36; dodati BM-NL-45–BM-NL-47. Usklađeno sa FS PATCH-FS-073 / TS-011 v1.0.3. **Bez izmjene implementacije.** |
 | PATCH-075 | 2026-08-15 | **MED-01–MED-28 (naslovna fotografija):** Mediji nijesu poslovna cjelina; `CulturalMedia` je interni tehnički mehanizam. Događaj/Manifestacija imaju `0..1` naslovnu fotografiju (upload u kontekstu sadržaja; bez biblioteke/reuse/galerije). Opciona za objavu. Fallback Događaja: naslovna → statička kategorijska fotografija → globalni placeholder; Manifestacija: zaseban statički placeholder. Formati JPEG/PNG/WebP, max 2 MB; resize >1920 px; storage `public/cultural-media/`; MEGA se ne koristi. Nema ekrana Mediji. Prava i lock prate sadržaj. **SUPERSEDED:** BM-MD-01–BM-MD-17 (PATCH-044 / TS8). Dodati BM-MD-18–BM-MD-36; usklađeni BM-GL-15, BM-PK-12, BM-EP-03, BM-DG-06, BM-MF-08, BM-UR-16. **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
+| PATCH-076 | 2026-08-16 | **MED documentation closeout (status only):** MED-01–MED-28 = **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED**. Poslovna pravila BM-MD-18–BM-MD-36 **KEEP**. **MED-I4B** finalni vizuelni resursi = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK** (nije funkcionalni blocker). Obsolete `cultural_media` kolone = **DEFERRED / NON-BLOCKING**; bez schema migracije u ovom closeout-u. BM-MD-01–17 ostaju SUPERSEDED. Nije Faza 9. Bez izmjene poslovnih pravila. |
 
 Napomena:
 
@@ -1088,7 +1089,9 @@ Za poglavlje BM-08 trenutno nema otvorenih poslovnih pitanja (javni CAT-CUTOVER 
 
 **Status poglavlja:** USVOJENO (kanonski model PATCH-075 / MED-01–MED-28)
 
-**Dokumentacioni status paketa:** PO ADOPTED / DOCS CANONICALIZED / **IMPLEMENTATION PENDING**
+**Dokumentacioni status paketa:** PO ADOPTED / DOCS CANONICALIZED / **IMPLEMENTATION COMPLETE / VERIFIED**
+
+**MED-I4B:** finalni projektni vizuelni resursi = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK**. Fallback arhitektura/resolver = COMPLETE / VERIFIED. Dok I4B nije završen, MISSING/AMBIGUOUS dedicated fajlovi bezbjedno padaju na globalni Event placeholder. Ne kanonizuje se veza na legacy JPG.
 
 **Istorijski naziv poglavlja:** Mediji (PATCH-009 / PATCH-044 / TS8). Taj model je **ZASTARJELO / SUPERSEDED**. Pravila BM-MD-01–BM-MD-17 ostaju u ovom poglavlju isključivo radi sljedivosti i **nisu** aktivni SSOT.
 
@@ -1199,6 +1202,8 @@ Oznake Događaja su zaseban koncept (BM-08) i **ne pripadaju** fotografiji.
 ### BM-MD-35 — Statički fallback resursi (MED-27)
 
 > Fallback vizuelni resursi su statički Git-verzionisani fajlovi aplikacije: 14 kategorijskih fotografija (kanonske kategorije BM-08); 1 globalni placeholder Događaja; 1 placeholder Manifestacije. Nijesu `CulturalMedia` zapisi. Nema upload UI-ja za kategorijske fotografije.
+>
+> **Napomena (PATCH-076 / MED-I4B):** ovo je kanonski **model** fallback resursa, ne tvrdnja da je svih 14 dedicated fotografija plus zaseban MF placeholder fizički kompletirano. Resolver i bezbjedni globalni Event fallback su implementirani. Finalni vizuelni set = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. MISSING: Dječiji programi, Konferencije, Sajmovi, zaseban MF placeholder. AMBIGUOUS (bez automatske PO odluke o legacy JPG): Književni programi, Publikacije, Prezentacije i predavanja, Paneli i tribine.
 
 ### BM-MD-36 — Audit kompatibilnost (MED-28)
 

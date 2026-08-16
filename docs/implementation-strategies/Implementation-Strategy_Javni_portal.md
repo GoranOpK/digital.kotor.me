@@ -6,10 +6,10 @@
 **Naziv:** Implementaciona strategija javnog portala  
 **Feature ID:** FT-001  
 **Modul:** Kalendar kulture  
-**Referentna specifikacija:** TS-009 v1.0.19 Stable
+**Referentna specifikacija:** TS-009 v1.0.22 Stable
 **Status dokumenta:** Stable
-**Verzija:** 1.0.9
-**Datum:** 2026-08-15
+**Verzija:** 1.0.10
+**Datum:** 2026-08-16
 
 ---
 
@@ -20,7 +20,7 @@
 | Oznaka | IS-001 |
 | Naziv | Implementaciona strategija javnog portala |
 | Tip | Operativni planski dokument |
-| Referenca | TS-009 v1.0.19 Stable |
+| Referenca | TS-009 v1.0.22 Stable |
 | Usvojene odluke | IS-001-01 … IS-001-08 |
 
 ### IS-001-01 — Identitet dokumenta
@@ -76,7 +76,7 @@ IS-001:
 | P0 / P1 | **0 / 0** |
 | 6B | **OUT OF SCOPE** for this closure; **does not block 6A** |
 
-Historical plan rows u §9.6 (privremeni flag; „bez javnog cancellation_reason“) ostaju istorijski; CURRENT STATE = ova tabela + TS-009 v1.0.19.
+Historical plan rows u §9.6 (privremeni flag; „bez javnog cancellation_reason“) ostaju istorijski; CURRENT STATE = ova tabela + TS-009 v1.0.22.
 
 ---
 
@@ -84,7 +84,7 @@ Historical plan rows u §9.6 (privremeni flag; „bez javnog cancellation_reason
 
 | Dokument | Uloga |
 |----------|--------|
-| `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009 v1.0.19) | Referentna specifikacija javnog portala |
+| `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009 v1.0.22) | Referentna specifikacija javnog portala |
 | `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-11, BM-05, …) | Poslovna pravila (ne mijenjaju se ovim dokumentom) |
 | `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13) | Funkcionalni zahtjevi |
 | TS-003 Događaj | Domen Događaja; zavisnost Faze 4/6 |
@@ -624,7 +624,8 @@ Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehni�
 | 1.0.7 | 2026-08-09 | **Faza 6A/6B (IR-001):** usklađenje sa TS-009 v1.0.6 — 6A kanonski cutover Događaja nije blokiran TS-005; §8 dijagram / §9.6 ažurirani. Bez izmjene implementacije. |
 | 1.0.8 | 2026-08-13 | **FAZA 6A DOCUMENTATION CLOSURE:** §2.1 CURRENT STATE — 6A **CLOSED**; canonical-only; B1+B2 PRODUCTION VERIFIED / CLOSED; categories 14/14; PATCH-063 supersede; B3 DEFERRED non-blocking; referenca TS-009 v1.0.19. Bez izmjene implementacije. |
 | 1.0.9 | 2026-08-15 | **MED marker:** stari Media model (TS-008 / tagovi medija) **SUPERSEDED** MED-01–MED-28. Istorijski sadržaj faza nije prepisan. Bez izmjene implementacije. |
+| 1.0.10 | 2026-08-16 | **MED documentation closeout:** public fallback resolver **COMPLETE / VERIFIED**. Finalni vizuelni asset rad (**MED-I4B**) = DEFERRED / NON-BLOCKING. Istorijske faze KEEP. Referenca TS-009 v1.0.22. |
 
 ---
 
-**Kraj dokumenta IS-001 v1.0.9 (Stable)**
+**Kraj dokumenta IS-001 v1.0.10 (Stable)**

@@ -6,9 +6,9 @@
 **Naziv:** Implementation Roadmap — Kalendar kulture V1  
 **Feature ID:** FT-001 (+ FT-003 / TS-012)  
 **Modul:** Kalendar kulture  
-**Status dokumenta:** Active — **Kalendar kulture V1 COMPLETE**; MED naslovna fotografija = **DOCS CANONICALIZED / IMPLEMENTATION PENDING** (nije Faza 9)
-**Verzija:** 1.0.23
-**Datum:** 2026-08-15
+**Status dokumenta:** Active — **Kalendar kulture V1 COMPLETE**; MED naslovna fotografija = **DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED** (nije Faza 9; MED-I4B vizueli = DEFERRED / NON-BLOCKING)
+**Verzija:** 1.0.24
+**Datum:** 2026-08-16
 
 ---
 
@@ -40,6 +40,7 @@
 | 1.0.21 | 2026-08-15 | **FAZA 8 PRODUCTION CLOSEOUT (status only):** F8-01…F8-04 **IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED / CLOSED**. TS-012 → v1.0.8. Admin UI production smoke PASS. Historical audit rows immutable. Naredno po §6/§8 = **Završna stabilizacija** (nije započeta). BM/FS/IS/RG-001 KEEP. |
 | 1.0.22 | 2026-08-15 | **ZAVRŠNA STABILIZACIJA CLOSED / V1 COMPLETE (status only):** Faze 0–8 **CLOSED**. Corrective 01 (`1f9d959`) OCC fixture + audit/invitation privacy. Regression 1045 passed / 0 failed. Runtime = canonical-only. **B3** `cultural_events` physical DROP = **DEFERRED** (nije V1 blocker). Nema Faze 9. TS-011 → v1.0.4; TS-009 → v1.0.20 (status hygiene). BM/FS/IS/RG-001 KEEP. |
 | 1.0.23 | 2026-08-15 | **MED-01–MED-28 dokumentaciona kanonizacija (nije implementacija):** istorijski zapis Faze 1 da je TS-008 „završen u kodu“ ostaje kao istorija tadašnjeg TS8 modela; taj poslovni model je **SUPERSEDED**. Kanonski SSOT = MED paket. **Nije** Faza 9. **Nije** MED implementation COMPLETE. |
+| 1.0.24 | 2026-08-16 | **MED documentation closeout:** MED-01–MED-28 = **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED**. Paketi: MED-I1 `6060bee`; MED-I2 `e7c6a07`; MED-I3 `b416c0b`; MED-I4A `3ef974b`; MED-I5 `6a4d50e`. **MED-I4B** = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. **Nije** Faza 9. Istorijski V1 Faza 0–8 closeout KEEP. Obsolete `cultural_media` schema cleanup = DEFERRED / NON-BLOCKING. |
 
 ---
 
@@ -162,7 +163,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | **TS-005** | Manifestacija | Da | Da | Da | TS-001, TS-003, TS-004 | Nakon jezgra | **Visoka** |
 | **TS-006** | Lokacije | Da | Da | Da | Potrošači TS-003/004; audit emit tek Faza 8 | Da — u Fazi 1 | **Srednja–visoka** |
 | **TS-007** | Kategorije i oznake | Da | Da | Da | TS-003; bez migracije test ENUM-a | Da — u Fazi 1 | **Srednja** |
-| **TS-008** | Mediji (istorijski) | Da + storage | Da | Da | SUPERSEDED MED-01–MED-28; vidi IR v1.0.23 | Istorijski Faza 1 | **Srednja–visoka** (model zastario) |
+| **TS-008** | Mediji (istorijski) | Da + storage | Da | Da | SUPERSEDED MED-01–MED-28; vidi IR v1.0.24 | Istorijski Faza 1 | **Srednja–visoka** (model zastario) |
 | **TS-009** | Javni portal | Po fazi | Proširenje | Da | CR-004B (Faza 0); domen za Fazu 6 | CR-004B rano; domen kasnije | **Srednja** (preostalo) |
 | **TS-010** | Urednički portal | Koristi domen | Da | Da | TS-001, 003–008; emit → TS-012 (Faza 8) | Nakon domena; **Faza 5 V1 završena** | **Vrlo visoka** |
 | **TS-011** | Newsletter | Da | Da + job | Da | TS-001, 003, 004, 009, 010 | **Faza 7 V1 završena / FORMALLY CLOSED** | **Visoka** (zatvorena) |
@@ -250,7 +251,22 @@ FAZA 8
 
 **CURRENT:** Faze 0–8 i Završna stabilizacija = **CLOSED**. Kalendar kulture V1 = **COMPLETE**. Nema Faze 9 u ovom IR-001.
 
-**MED corrective (2026-08-15):** PO paket MED-01–MED-28 je **usvojen i dokumentaciono kanonizovan**. Implementacija naslovne fotografije prema MED **nije** COMPLETE. Ovo **nije** nova numerisana faza.
+**MED corrective (post-closeout paket, nije Faza 9):** PO paket MED-01–MED-28 je **usvojen, dokumentaciono kanonizovan, implementiran i verifikovan**.
+
+| Paket | Status | Implementacioni dokaz |
+|-------|--------|------------------------|
+| MED-I1 ingest/validation/storage | COMPLETE / VERIFIED / PUSHED | `6060bee` |
+| MED-I2 Event cover workflow | COMPLETE / VERIFIED / PUSHED | `e7c6a07` |
+| MED-I3 Manifestation cover workflow | COMPLETE / VERIFIED / PUSHED | `b416c0b` |
+| MED-I4A public fallback resolver | COMPLETE / VERIFIED / PUSHED | `3ef974b` |
+| MED-I4B final visual assets | **DEFERRED / NON-BLOCKING PROJECT ASSET WORK** | nema implementacionog commita (nije funkcionalni blocker) |
+| MED-I5 Media CRUD removal + cleanup | COMPLETE / VERIFIED / PUSHED | `6a4d50e` |
+
+**MED-I4B inventory (vizueli, ne funkcija):** MISSING — Dječiji programi, Konferencije, Sajmovi, zaseban MF placeholder. AMBIGUOUS (bez automatske PO odluke o legacy JPG) — Književni programi, Publikacije, Prezentacije i predavanja, Paneli i tribine. Bezbjedni pad = globalni Event placeholder.
+
+**Schema debt:** obsolete `cultural_media` kolone = DEFERRED / NON-BLOCKING; **nema** migracije u MED closeout-u.
+
+Ovo **nije** nova numerisana faza.
 
 Za svaku logičku cjelinu unutar faze:
 

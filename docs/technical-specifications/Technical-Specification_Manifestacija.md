@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Manifestacija  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.6
-**Datum:** 2026-08-15
+**Verzija:** 0.1.7
+**Datum:** 2026-08-16
 
 ---
 
@@ -23,6 +23,7 @@
 | 0.1.4 | 2026-08-11 | PO-6B-08/09 status sync: potvrđeno da javna vidljivost Otkazane MF i Event→MF anti-leak pripadaju TS-009 §6.7–§6.8; domain lifecycle ostaje — Otkazana do isteka perioda → Arhivirana; Objavljena→Arhivirana bez obavezne Otkazane međufaze; MF nema status Odgođena; MF/Event lifecycle nezavisni. Bez izmjene SQL/API/Laravel i bez novih portalnih UI pravila u TS-005. |
 | 0.1.5 | 2026-08-12 | **PO-MF-WF-01–04 / BM PATCH-070 / FS PATCH-FS-070:** razdvojeni EDITOR-CREATED vs MODERATOR-CREATED lifecycle; porijeklo = `created_by` → uloga `kk_admin` (ne `organizer_id`); tehnički statusi KEEP (`draft`, `pending_approval`, `returned_for_revision`, `published`, …); §4 tokovi/matrica/autorizacija usklađeni. Bez nove kolone/migracije. |
 | 0.1.6 | 2026-08-15 | **MED-01–MED-28:** naslovna fotografija Manifestacije `0..1`; upload samo kroz Manifestaciju; bez reuse-a; opciona; zaseban statički MF placeholder; prava i lock prate Manifestaciju; arhiva/otkaz ne brišu cover. V1 **nema** trajno brisanje Manifestacije (MED-19 se ne uvodi kao nova delete operacija). TS-008 SUPERSEDED. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
+| 0.1.7 | 2026-08-16 | **MED documentation closeout:** MF cover upload/lifecycle/lock **IMPLEMENTATION COMPLETE / VERIFIED**. MED-19 i dalje **nije** MF destroy. Fallback resolver COMPLETE; **zaseban finalni MF placeholder fajl = MED-I4B DEFERRED** (privremeni compatibility path na globalni Event PNG; nije kanonizacija Event cover-a kao MF sadržaja). |
 
 Napomena:
 
@@ -635,7 +636,7 @@ Napomena (**N-MF-05**, nije Product Owner odluka): Manifestacija se vodi u centr
 2. Objava MF: provjera ≥1 Objavljen Događaj u trenutku odobrenja.
 3. Javni API/view programa: `status_dogadjaja IN (Objavljen, Otkazan)`; Otkazani sa oznakom „Otkazano“ (detalj UI: TS-009).
 4. Trajanje: izračun u upitu/servisu, ne kao ručna polja za unos.
-5. Placeholder fotografije Manifestacije: zaseban statički Git-verzionisani resurs (MED-09 / MED-27); nije `CulturalMedia`.
+5. Placeholder fotografije Manifestacije: zaseban statički Git-verzionisani resurs (MED-09 / MED-27); nije `CulturalMedia`. **MED-I4B:** finalni dedicated MF placeholder fajl = DEFERRED / NON-BLOCKING; resolver COMPLETE (privremeni compatibility path na globalni Event PNG dok I4B ne isporuči zaseban fajl).
 6. Ne uvoditi trajno brisanje Manifestacije u V1 zbog naslovne fotografije (MED-19 se ne primjenjuje dok delete MF ne postoji).
-6. Ne uvoditi slug polje u V1 šemu zbog poslovnog zahtjeva.
-7. Odstupanja trenutne implementacije vode se u Technical Overview, ne u TS-005.
+7. Ne uvoditi slug polje u V1 šemu zbog poslovnog zahtjeva.
+8. Odstupanja trenutne implementacije vode se u Technical Overview, ne u TS-005.

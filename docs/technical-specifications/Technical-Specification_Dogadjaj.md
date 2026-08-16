@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Događaj  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
-**Verzija:** 0.1.12
-**Datum:** 2026-08-15
+**Verzija:** 0.1.13
+**Datum:** 2026-08-16
 
 ---
 
@@ -29,6 +29,7 @@
 | 0.1.10 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** `organizer_manual_name`; XOR sa `organizer_id`; Urednik create/publish/delete draft; direktan published edit (Urednik); opcion `cancellation_reason` + javna napomena; §4.6–§4.9 / §4.12–§4.13 / §6. **Supersede:** apsolutni content lock Objavljenog za urednički tok; zabrana javnog razloga otkazivanja. Bez izmjene implementacije. |
 | 0.1.11 | 2026-08-12 | **PO-EV-WF-01 hardening:** §4.4 — `submitForApproval` / Nacrt→Na odobrenju **odbija** `organizer_id === null` (direktna objava je jedini put); usklađeno sa BR-018 / BR-325. Bez izmjene UI-ja ni ostalih Event lifecycle akcija. |
 | 0.1.12 | 2026-08-15 | **MED-01–MED-28:** naslovna fotografija `0..1`; nema `0..N` povezanih medija; nema reuse-a; upload pripada Događaju; trajno brisanje never-published briše cover; arhiva/otkaz ne brišu cover; `cover_media_id` može ostati tehnička interna veza. TS-008 nije aktivni SSOT. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
+| 0.1.13 | 2026-08-16 | **MED documentation closeout:** cover model **IMPLEMENTATION COMPLETE / VERIFIED**. Pravila KEEP. Operativni cleanup: `cultural-media:cleanup` (dry-run default; `--delete` eksplicitno; ručno; bez schedulera). Obsolete `cultural_media` kolone = DEFERRED / NON-BLOCKING. MED-I4B vizueli = DEFERRED (nije TS-003 funkcionalni blocker). |
 
 Napomena:
 
@@ -1165,3 +1166,4 @@ Ovo poglavlje je strogo nenormativno.
 6. Trenutna implementacija i odstupanja ostaju u `docs/tehnicka-dokumentacija/cultural-calendar.md` (Technical Overview), ne u TS-003.
 7. Emisije ka TS-012 držati usklađenim sa katalogom FS §5.16; ne proširivati katalog kroz TS; ne emitovati „Ponovna objava događaja“.
 8. **PO-EV-01:** Postojeći `CulturalEvent` / `cultural_events` podaci su isključivo testni/prototipski i nisu predmet migracije ni backfill-a u novi model. Implementacija uspostavlja kanonski model Događaj (+ Održavanja prema TS-004) direktno prema ovom TS-u, bez dual-write i bez adaptera radi očuvanja legacy zapisa. Privremeni flat model ostaje samo do cutover-a na novi domen.
+9. **MED closeout (v0.1.13):** naslovna fotografija Događaja (`0..1`, upload u kontekstu, bez reuse/kataloga) = **IMPLEMENTED / VERIFIED**. Trajno brisanje never-published briše interni cover + fajl; cancel/archive zadržavaju cover. Cleanup komanda `cultural-media:cleanup` je ručna, default preview, destruktivno samo `--delete`, scope `public/cultural-media/`. Obsolete kolone `cultural_media` se ne čiste u ovom closeout-u.

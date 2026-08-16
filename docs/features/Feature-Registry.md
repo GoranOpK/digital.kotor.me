@@ -220,9 +220,10 @@ FT-001 je aktivan modul. **Kalendar kulture V1 = COMPLETE** (Faze 0–8 + Završ
 
 **Usvojene poslovne odluke (Naslovna fotografija — MED; 2026-08-15):**
 
-**Status:** **ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Nije code COMPLETE.
+**Status:** **ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED.**
 
-- **MED-01–MED-28:** kanonski paket naslovne fotografije Događaja i Manifestacije. SSOT: BM PATCH-075, FS PATCH-FS-075, TS-003/005/007/009/010; TS-012 KEEP `mf.cover.change`. TS-008 i TS8-01–09 SUPERSEDED.
+- **MED-01–MED-28:** kanonski paket naslovne fotografije Događaja i Manifestacije. SSOT: BM PATCH-075 / PATCH-076, FS PATCH-FS-075 / PATCH-FS-076, TS-003/005/007/009/010; TS-012 KEEP `mf.cover.change`. TS-008 i TS8-01–09 SUPERSEDED.
+- **MED-I4B:** finalni vizuelni resursi = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK** (nije funkcionalni blocker). Fallback resolver COMPLETE.
 
 **Usvojene product / IA odluke (Javni portal — TS-009 faza 1):**
 - **IA-01:** Evolutivni razvoj javnog portala; bez redizajna; zadržavanje postojeće strukture i tokova uz minimalne neophodne izmjene.
@@ -310,7 +311,7 @@ Povezana dokumentacija (Događaj):
 
 * Business Model — BM-04 (BM-DG-01–BM-DG-13), BM-10 (BM-ST-01–BM-ST-11), BM-UR-12–BM-UR-16, BM-MOD-19, BM-TR-12/19/20, BM-PK-36; PATCH-035/036 (otkazivanje), PATCH-037 (direktna objava / arhiva), **PATCH-053 / PO-DG-07** (terminalnost Otkazan), **PATCH-055 / PO-AUTO-01 / PO-AUTO-02**, **PATCH-056 / PO-DG-08 / PO-DG-09**, **PATCH-057 / PO-DG-10**, **PATCH-058 / PO-N-TR-02-04**, **PATCH-063 / PO-U-01…19** (urednički tok; ručni Org; U pripremi; delete; published edit; razlozi)
 * Functional Specification — §5.4–§5.5, §5.7.1–§5.7.2 (BR-006–BR-044, BR-062–BR-066, BR-131, **BR-287–BR-295**), §5.6 BR-052, §5.16 katalog Događaji; PATCH-FS-037/038/039; **PATCH-FS-053**; **PATCH-FS-056**; **PATCH-FS-057**; **PATCH-FS-058**; **PATCH-FS-063**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija **0.1.11**; Usvojen; PATCH-063 + PO-EV-WF-01 hardening)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija **0.1.13**; Usvojen; PATCH-063 + PO-EV-WF-01 + MED cover COMPLETE)
 
 Povezana dokumentacija (Održavanje):
 
@@ -320,7 +321,7 @@ Povezana dokumentacija (Manifestacija):
 
 * Business Model — BM-05 (BM-MF-01–BM-MF-23), PATCH-038–PATCH-039, PATCH-070, **PATCH-071** (6B production closeout status only); PO-MF-01–PO-MF-12, PO-MF-WF-01–04
 * Functional Specification — §5.12 (BR-092–BR-101, BR-189–BR-205), §5.16 katalog Manifestacije, PATCH-FS-040–PATCH-FS-041
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Manifestacija.md` (TS-005; verzija **0.1.5**; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Manifestacija.md` (TS-005; verzija **0.1.7**; Usvojen)
 
 Povezana dokumentacija (Lokacije):
 
@@ -332,29 +333,29 @@ Povezana dokumentacija (Kategorije i oznake):
 
 * Business Model — BM-08 (BM-KO-01–BM-KO-11), BM-GL-14, BM-GL-23, PATCH-043, **PATCH-059 / TS7-PO-07**
 * Functional Specification — §5.10 (BR-081–BR-085, BR-224–BR-236, **BR-277–BR-279**), PATCH-FS-045, **PATCH-FS-059**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Kategorije_i_oznake.md` (TS-007; verzija **0.1.1**; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Kategorije_i_oznake.md` (TS-007; verzija **0.1.4**; Usvojen)
 
 Povezana dokumentacija (Naslovna fotografija / MED):
 
-* **MED-01–MED-28** = **ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING** (2026-08-15). Nije code COMPLETE.
-* Business Model — BM-09 (BM-MD-18–BM-MD-36 aktivno; BM-MD-01–17 SUPERSEDED), BM-GL-15, BM-PK-12, **PATCH-075**
-* Functional Specification — §5.11 (BR-351–BR-370; BR-086–091 / BR-237–254 SUPERSEDED), §5.4.4, BR-113, **PATCH-FS-075**
-* Technical Specification — TS-003 v0.1.12; TS-005 v0.1.6; TS-007 v0.1.3; TS-009 v1.0.21; TS-010 v1.0.12; TS-012 v1.0.9 (katalog KEEP)
-* TS-008 v0.1.1 = **SUPERSEDED / HISTORICAL** (`Technical-Specification_Mediji.md`)
+* **MED-01–MED-28** = **ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED** (closeout 2026-08-16). **MED-I4B** vizueli = DEFERRED / NON-BLOCKING.
+* Business Model — BM-09 (BM-MD-18–BM-MD-36 aktivno; BM-MD-01–17 SUPERSEDED), BM-GL-15, BM-PK-12, **PATCH-075 / PATCH-076**
+* Functional Specification — §5.11 (BR-351–BR-370; BR-086–091 / BR-237–254 SUPERSEDED), §5.4.4, BR-113, **PATCH-FS-075 / PATCH-FS-076**
+* Technical Specification — TS-003 v0.1.13; TS-005 v0.1.7; TS-007 v0.1.4; TS-009 v1.0.22; TS-010 v1.0.13; TS-012 v1.0.9 (katalog KEEP)
+* TS-008 v0.1.2 = **SUPERSEDED / HISTORICAL** (`Technical-Specification_Mediji.md`)
 * TS8-01–TS8-09 = **ZASTARJELO / SUPERSEDED**
 
 Povezana dokumentacija (Mediji — istorijski TS8):
 
 * Business Model — BM-09 (BM-MD-01–BM-MD-17), BM-GL-15, BM-PK-12, PATCH-044; TS8-01–TS8-09 — **SUPERSEDED PATCH-075**
 * Functional Specification — §5.11 (BR-086–BR-091, BR-237–BR-254), §5.4.4, BR-113, PATCH-FS-046 — **SUPERSEDED PATCH-FS-075**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Mediji.md` (TS-008; verzija **0.1.1**; **SUPERSEDED / HISTORICAL**)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Mediji.md` (TS-008; verzija **0.1.2**; **SUPERSEDED / HISTORICAL**)
 
 Povezana dokumentacija (Javni portal):
 
 * Business Model — BM-11 (BM-PK-01–BM-PK-40, BM-GL-26), BM-AR-02, PATCH-045–PATCH-048, PATCH-051 (CR-004B), PATCH-060–**PATCH-066**; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E, PO-TS9-08A–08J, PO-6A11-01, PO-6A09-01…06, **PO-U / PATCH-063**, **PO-064 / PATCH-064**, **PO-6B-08/09 / PATCH-065**, **PO-6B-10 / PATCH-066**
 * Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, **BR-287–BR-306**), PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060–**PATCH-FS-067**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija **1.0.20**; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A; PO-6A11-01; PO-6A09; **PATCH-063** §7.2.4 / §7.3.4–§7.3.6; **PATCH-064** §5.4–§5.5 / §11.3 / TM-JP-23…38; **PO-6B-01…05**; **PO-6B-08/09** §6.7–§6.8; **PO-6B-10** §3.4.1; **PHASE 6B FORMALLY CLOSED** / limited content-smoke; Package A CLOSED; **Phase B1+B2 PRODUCTION VERIFIED / CLOSED**; **FAZA 6A CLOSED**; B3 DEFERRED)
-* Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija **1.0.8**; Stable)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija **1.0.22**; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A; PO-6A11-01; PO-6A09; **PATCH-063** §7.2.4 / §7.3.4–§7.3.6; **PATCH-064** §5.4–§5.5 / §11.3 / TM-JP-23…38; **PO-6B-01…05**; **PO-6B-08/09** §6.7–§6.8; **PO-6B-10** §3.4.1; **PHASE 6B FORMALLY CLOSED** / limited content-smoke; Package A CLOSED; **Phase B1+B2 PRODUCTION VERIFIED / CLOSED**; **FAZA 6A CLOSED**; B3 DEFERRED)
+* Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija **1.0.10**; Stable)
 * Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Implemented, IS-001 Faza 2 — `month=YYYY-MM`; commit `c5d396f`); CR-003 (Implemented, IS-001 Faza 2 — `q`/`category`/`location`; dokumentacija `fc35132`; implementacija `595045a`; TS-009 v1.0.2; IS-001 v1.0.2); CR-004A (Implemented, IS-001 Faza 3 — javni status badge; PO-CR4A-01…05; dokumentacija `614706c`; implementacija `0f73240`; TS-009 v1.0.4; IS-001 v1.0.5); CR-004B (Planned, IS-001 Faza 3 — javni prikaz otkazanih; PO-CR4B-01…10; TS-009 v1.0.5 §7.2; IS-001 v1.0.6 §9.3.2)
 
 Povezana dokumentacija (Newsletter):
@@ -398,14 +399,14 @@ Plan koristi globalnu numeraciju (M-TS-002). Oznaka TS-002 pripada modulu Plaća
 | TS | Naziv | Feature | Modul | Status |
 | -- | ----- | ------- | ----- | ------ |
 | TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.4.1) — PO-ORG-06 IMPLEMENTED / PRODUCTION VERIFIED |
-| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.12); MED cover docs; IMPLEMENTATION PENDING za MED |
+| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.13); MED cover **IMPLEMENTATION COMPLETE / VERIFIED** |
 | TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.9); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni; PATCH-063 docs |
-| TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.6); MED cover docs |
+| TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.7); MED cover **COMPLETE / VERIFIED**; MED-19 MF destroy nije uveden |
 | TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
-| TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.3); TS7-PO-07; statički Git fallback foto (MED-27) |
-| TS-008 | Mediji (istorijski) | FT-001 | Kalendar kulture | **SUPERSEDED / HISTORICAL** (v0.1.1); TS8-01–09 zastarjeli; kanon = MED-01–28 |
-| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.21); MED fallback docs; **IMPLEMENTATION PENDING** za MED vizuelne resurse |
-| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.12) — V1 KEEP; MED-26 UX **DOCS CANONICALIZED / IMPLEMENTATION PENDING** |
+| TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.4); fallback resolver COMPLETE; MED-I4B dedicated vizueli DEFERRED |
+| TS-008 | Mediji (istorijski) | FT-001 | Kalendar kulture | **SUPERSEDED / HISTORICAL** (v0.1.2); TS8-01–09 zastarjeli; kanon = MED-01–28 |
+| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.22); MED fallback resolver COMPLETE; **MED-I4B** vizueli DEFERRED / NON-BLOCKING |
+| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.13) — V1 KEEP; MED-26 UX **IMPLEMENTATION COMPLETE / VERIFIED**; Media CRUD REMOVED |
 | TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.4) — **FAZA 7 FORMALLY CLOSED** (NL-01…NL-06); emit ka TS-012 = **Faza 8 CLOSED**; izmjena fotografije **nije** NL okidač (KEEP) |
 | TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.9) — katalog KEEP; MED-28: `TS12-MF-11` KEEP; no new `media.*` |
 
@@ -680,5 +681,6 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-15 | FT-003 — **FAZA 8 PRODUCTION CLOSEOUT (status):** F8-01…F8-04 **IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED / CLOSED**. TS-012 → **v1.0.8**. IR-001 → **v1.0.21**. BM / FS / IS-001 / RG-001 KEEP. Historical audit rows immutable. |
 | 2026-08-15 | FT-001 / FT-003 — **V1 COMPLETE / ZAVRŠNA STABILIZACIJA CLOSED (status):** IR-001 → **v1.0.22**. Corrective 01 `1f9d959`. Runtime canonical-only. B3 DROP **DEFERRED**. TS-011 → **v1.0.4**; TS-009 → **v1.0.20** (status hygiene). BM / FS / IS-001 / RG-001 KEEP. Nema Faze 9. |
 | 2026-08-15 | FT-001 — **MED-01–MED-28 dokumentaciona kanonizacija:** naslovna fotografija DG/MF; TS-008 / TS8-01–09 / BM-MD-01–17 SUPERSEDED. **ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Nije code COMPLETE. Nije Faza 9. BM PATCH-075; FS PATCH-FS-075; TS-003 v0.1.12; TS-005 v0.1.6; TS-007 v0.1.3; TS-008 v0.1.1 SUPERSEDED; TS-009 v1.0.21; TS-010 v1.0.12; TS-011 KEEP; TS-012 v1.0.9 (`TS12-MF-11` KEEP; no `media.*`); IR-001 v1.0.23; IS-001 v1.0.9; RG-001 v1.1.10. Bez izmjene koda. |
+| 2026-08-16 | FT-001 — **MED documentation closeout:** **ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED.** MED-I1 `6060bee`; MED-I2 `e7c6a07`; MED-I3 `b416c0b`; MED-I4A `3ef974b`; MED-I5 `6a4d50e`. **MED-I4B** = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. Nije Faza 9. BM PATCH-076; FS PATCH-FS-076; TS-003 v0.1.13; TS-005 v0.1.7; TS-007 v0.1.4; TS-008 v0.1.2 SUPERSEDED; TS-009 v1.0.22; TS-010 v1.0.13; TS-011 KEEP; TS-012 v1.0.9 KEEP (`TS12-MF-11`; no `media.*`); IR-001 v1.0.24; IS-001 v1.0.10; RG-001 v1.1.11 (status hygiene postojeće MED oznake; MED-I* nisu RG skraćenice). Bez izmjene koda/testova/migracija/aseta. |
 | 2026-08-13 | FT-001 — **FR cross-reference cleanup:** CURRENT STATE pin IS-001 **1.0.7 → 1.0.8** (usklađeno sa `Implementation-Strategy_Javni_portal.md`). FAZA 6A/6B CLOSED KEEP; TS-009 v1.0.19 KEEP; IR-001 v1.0.11 KEEP. Bez izmjene implementacije. |
 | 2026-08-10 | FT-001 — **PHASE 6A-CLOSE-02:** legacy admin CRUD `cultural-events.*` disabled (middleware `legacy_cultural_events_disabled` → 403 all methods). Legacy code/table/views retained; `CULTURAL_PUBLIC_READ_SOURCE` + public legacy read rollback retained; canonical routes unchanged. **Nije** hard remove / flag cleanup (Phase B). |
