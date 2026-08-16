@@ -241,7 +241,6 @@ class CulturalEditorialDiscoverabilityTest extends TestCase
             'Lokacije',
             'Kategorije',
             'Oznake',
-            'Mediji',
             'Organizatori',
             'Zahtjevi',
             'Javni portal',
@@ -271,12 +270,13 @@ class CulturalEditorialDiscoverabilityTest extends TestCase
             'Lokacije',
             'Kategorije',
             'Oznake',
-            'Mediji',
             'Organizatori',
             'Zahtjevi',
         ] as $label) {
             $this->assertStringContainsString('>'.$label.'<', $mobileNav);
         }
+        $this->assertStringNotContainsString('>Mediji<', $mobileNav);
+        $this->assertStringNotContainsString('/kalendar-kulture/mediji', $mobileNav);
         foreach (['Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal', 'Urednički rad', 'Zahtjevi Org', 'Zahtjevi Mod', 'Javni portal'] as $label) {
             $this->assertStringNotContainsString('>'.$label.'<', $mobileNav);
         }

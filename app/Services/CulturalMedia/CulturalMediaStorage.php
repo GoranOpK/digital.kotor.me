@@ -69,6 +69,20 @@ class CulturalMediaStorage
         ];
     }
 
+    public function isManagedPath(string $storagePath): bool
+    {
+        if ($storagePath === '' || str_contains($storagePath, '..')) {
+            return false;
+        }
+
+        $normalized = str_replace('\\', '/', $storagePath);
+        if (preg_match('#^[a-zA-Z]:/#', $normalized) === 1 || str_starts_with($normalized, '/')) {
+            return false;
+        }
+
+        return str_starts_with($normalized, self::DIRECTORY.'/');
+    }
+
     public function deletePath(string $storagePath): void
     {
         if (! $this->isManagedPath($storagePath)) {
@@ -81,16 +95,5 @@ class CulturalMediaStorage
     public function deleteFile(CulturalMedia $media): void
     {
         $this->deletePath((string) $media->storage_path);
-    }
-
-    private function isManagedPath(string $storagePath): bool
-    {
-        if ($storagePath === '' || str_contains($storagePath, '..')) {
-            return false;
-        }
-
-        $normalized = str_replace('\\', '/', $storagePath);
-
-        return str_starts_with($normalized, self::DIRECTORY.'/');
     }
 }

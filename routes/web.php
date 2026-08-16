@@ -15,7 +15,6 @@ use App\Http\Controllers\CulturalEventEntryOccurrenceController;
 use App\Http\Controllers\CulturalLocationController;
 use App\Http\Controllers\CulturalCategoryController;
 use App\Http\Controllers\CulturalManifestationController;
-use App\Http\Controllers\CulturalMediaController;
 use App\Http\Controllers\CulturalModeratorDashboardController;
 use App\Http\Controllers\CulturalModeratorEventEntryController;
 use App\Http\Controllers\CulturalModeratorManifestationController;
@@ -370,15 +369,6 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             ->name('cultural-tags.deactivate');
         Route::post('/kalendar-kulture/oznake/{oznake}/activate', [CulturalTagController::class, 'activate'])
             ->name('cultural-tags.activate');
-
-        Route::resource('/kalendar-kulture/mediji', CulturalMediaController::class)
-            ->except(['show'])
-            ->parameters(['mediji' => 'mediji'])
-            ->names('cultural-media');
-        Route::post('/kalendar-kulture/mediji/{mediji}/deactivate', [CulturalMediaController::class, 'deactivate'])
-            ->name('cultural-media.deactivate');
-        Route::post('/kalendar-kulture/mediji/{mediji}/activate', [CulturalMediaController::class, 'activate'])
-            ->name('cultural-media.activate');
 
         // TS-001 — Organizatori i uredničke odluke
         Route::get('/kalendar-kulture/organizatori', [CulturalOrganizerController::class, 'index'])

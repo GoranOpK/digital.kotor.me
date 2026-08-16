@@ -134,7 +134,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertStringNotContainsString('href="'.e(route('cultural-locations.index')).'"', $html);
         $this->assertStringNotContainsString('href="'.e(route('cultural-categories.index')).'"', $html);
         $this->assertStringNotContainsString('href="'.e(route('cultural-tags.index')).'"', $html);
-        $this->assertStringNotContainsString('href="'.e(route('cultural-media.index')).'"', $html);
+        $this->assertStringNotContainsString('href="/kalendar-kulture/mediji"', $html);
         $this->assertStringContainsString('action="'.e(route('logout')).'"', $html);
     }
 
@@ -171,11 +171,13 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
             $this->assertStringNotContainsString('>'.$label.'<', $row2Html);
         }
 
-        $row2Labels = ['Oznake', 'Mediji', 'Organizatori', 'Zahtjevi'];
+        $row2Labels = ['Oznake', 'Organizatori', 'Zahtjevi'];
         foreach ($row2Labels as $label) {
             $this->assertStringContainsString('>'.$label.'<', $row2Html);
             $this->assertStringNotContainsString('>'.$label.'<', $row1Html);
         }
+        $this->assertStringNotContainsString('>Mediji<', $desktopNav);
+        $this->assertStringNotContainsString('/kalendar-kulture/mediji', $desktopNav);
         $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $row2Html);
 
         foreach (['Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal', 'Urednički rad', 'Zahtjevi Org', 'Zahtjevi Mod', 'Javni portal'] as $label) {

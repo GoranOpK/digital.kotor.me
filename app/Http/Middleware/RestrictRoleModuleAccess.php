@@ -77,10 +77,6 @@ class RestrictRoleModuleAccess
                 return $next($request);
             }
 
-            if ($routeName && str_starts_with($routeName, 'cultural-media.')) {
-                return $next($request);
-            }
-
             if ($routeName && (
                 str_starts_with($routeName, 'cultural-organizers.')
                 || str_starts_with($routeName, 'cultural-organizer-creation-requests.')

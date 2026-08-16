@@ -13,7 +13,6 @@
         'cultural-locations.*',
         'cultural-categories.*',
         'cultural-tags.*',
-        'cultural-media.*',
         'cultural-organizers.*',
         'cultural-organizer-creation-requests.*',
         'cultural-moderator-requests.*',
@@ -218,10 +217,6 @@
                                     href="{{ route('cultural-tags.index') }}"
                                     style="{{ $kkNavBtn(request()->routeIs('cultural-tags.*')) }}"
                                 >Oznake</a>
-                                <a
-                                    href="{{ route('cultural-media.index') }}"
-                                    style="{{ $kkNavBtn(request()->routeIs('cultural-media.*')) }}"
-                                >Mediji</a>
                                 <a
                                     href="{{ route('cultural-organizers.index') }}"
                                     style="{{ $kkNavBtn(request()->routeIs('cultural-organizers.*')) }}"
@@ -476,10 +471,6 @@
                             href="{{ route('cultural-tags.index') }}"
                             style="{{ $kkNavBtnMobile(request()->routeIs('cultural-tags.*')) }}"
                         >Oznake</a>
-                        <a
-                            href="{{ route('cultural-media.index') }}"
-                            style="{{ $kkNavBtnMobile(request()->routeIs('cultural-media.*')) }}"
-                        >Mediji</a>
                         <a
                             href="{{ route('cultural-organizers.index') }}"
                             style="{{ $kkNavBtnMobile(request()->routeIs('cultural-organizers.*')) }}"
