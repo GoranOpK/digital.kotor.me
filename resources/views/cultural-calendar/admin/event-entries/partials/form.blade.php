@@ -81,21 +81,26 @@
 
     <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Oznake</label>
-        <div class="flex flex-wrap gap-x-5 gap-y-2 border border-gray-200 rounded-md p-3" data-kk-event-tags="wrap">
+        {{-- Inline grid: Tailwind gap utilities are not in the compiled KK CSS, so class-only wrap packed labels flush. --}}
+        <div
+            data-kk-event-tags="grid"
+            style="display:grid; grid-template-columns:repeat(auto-fill, minmax(12.5rem, 1fr)); column-gap:1.5rem; row-gap:0.75rem; align-items:center; border:1px solid #e5e7eb; border-radius:0.375rem; padding:0.875rem 1rem;"
+        >
             @php
                 $selectedTagIds = collect(old('tag_ids', $entry?->tags?->pluck('id')->all() ?? []))->map(fn ($id) => (int) $id)->all();
                 $sortedTags = $tags->sortBy(fn ($tag) => mb_strtolower((string) $tag->naziv), SORT_NATURAL)->values();
             @endphp
             @forelse($sortedTags as $tag)
-                <label class="inline-flex items-center gap-2 text-sm text-gray-700 whitespace-nowrap">
+                <label style="display:flex; align-items:center; gap:0.5rem; margin:0; min-width:0; font-size:0.875rem; line-height:1.25; color:#374151;">
                     <input
                         type="checkbox"
                         name="tag_ids[]"
                         value="{{ $tag->id }}"
                         @checked(in_array((int) $tag->id, $selectedTagIds, true))
                         class="rounded border-gray-300 text-red-700 focus:ring-red-700"
+                        style="flex-shrink:0; margin:0;"
                     >
-                    {{ $tag->naziv }}
+                    <span>{{ $tag->naziv }}</span>
                 </label>
             @empty
                 <p class="text-sm text-gray-500">Nema aktivnih oznaka.</p>
