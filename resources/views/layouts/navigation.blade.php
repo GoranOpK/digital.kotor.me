@@ -80,30 +80,7 @@
 @if($isKkAdmin || $isKkSection)
 {{-- Inline CSS: Tailwind purge often omits sm:flex-col, which collapsed both rows into one horizontal flex. --}}
 <style>
-    .kk-nav-bar {
-        width: 100%;
-        max-width: none !important;
-        margin-left: 0 !important;
-        margin-right: 0 !important;
-        padding-left: 16px;
-        padding-right: 16px;
-        box-sizing: border-box;
-    }
-    .kk-nav-bar-inner {
-        display: flex;
-        justify-content: space-between;
-        align-items: stretch;
-        width: 100%;
-        min-height: 64px;
-        box-sizing: border-box;
-    }
-    .kk-nav-left {
-        display: flex;
-        justify-content: flex-start;
-        align-items: stretch;
-        min-width: 0;
-        flex: 1 1 auto;
-    }
+    .kk-admin-nav-desktop { display: none; }
     .kk-admin-nav-row {
         display: flex;
         flex-direction: row;
@@ -124,14 +101,21 @@
         align-self: stretch;
         text-align: left;
     }
+    .kk-admin-nav-row > a:first-child,
+    .kk-section-links > a:first-child {
+        padding-left: 0 !important;
+    }
     .kk-section-links {
         justify-content: flex-start !important;
-        margin-left: 12px;
+        margin-left: 0 !important;
     }
     .kk-admin-nav-desktop[data-kk-nav-context="editorial"] a,
     nav[data-kk-nav-context="editorial"] .kk-logout-link {
         font-size: 12px !important;
         padding: 8px 8px !important;
+    }
+    .kk-admin-nav-desktop[data-kk-nav-context="editorial"] .kk-admin-nav-row > a:first-child {
+        padding-left: 0 !important;
     }
     .kk-admin-nav-desktop a:hover,
     .kk-admin-nav-desktop a:focus,
@@ -153,7 +137,7 @@
             align-items: stretch;
             justify-content: flex-start;
             gap: 4px;
-            margin-left: 12px;
+            margin-left: 0;
             flex: 0 1 auto;
             min-width: 0;
             max-width: 100%;
@@ -173,28 +157,28 @@
 >
     <!-- Primary Navigation Menu -->
     <div @class([
-        'px-4 sm:px-6 lg:px-8',
-        'kk-nav-bar' => $isKkAdmin || $isKkSection,
-        'mx-auto max-w-7xl' => ! ($isKkAdmin || $isKkSection),
+        'mx-auto px-4 sm:px-6 lg:px-8',
+        'kk-shell' => $isKkAdmin || $isKkSection,
+        'max-w-7xl' => ! ($isKkAdmin || $isKkSection),
     ])>
         <div @class([
             'flex justify-between min-h-16',
-            'kk-nav-bar-inner' => $isKkAdmin || $isKkSection,
             'items-stretch' => $isKkAdmin,
             'items-center flex-wrap gap-y-2 py-2' => ! $isKkAdmin,
         ])>
             <div @class([
                 'flex justify-start min-w-0 flex-1',
-                'kk-nav-left' => $isKkAdmin || $isKkSection,
                 'items-stretch' => $isKkAdmin,
                 'items-center flex-wrap gap-y-2' => ! $isKkAdmin,
             ])>
+                @unless($isKkAdmin || $isKkSection)
                 <!-- Logo -->
-                <div class="shrink-0 flex items-center" style="{{ $isKkAdmin ? 'min-height: 38px;' : '' }}">
-                    <a href="{{ $isKkAdmin ? route('cultural-calendar.index') : ($isCompetitionAdmin ? route('admin.dashboard') : route('dashboard')) }}">
+                <div class="shrink-0 flex items-center">
+                    <a href="{{ $isCompetitionAdmin ? route('admin.dashboard') : route('dashboard') }}">
                         <img src="{{ asset('img/logo.png') }}" alt="Digital Kotor" class="block h-10 w-auto">
                     </a>
                 </div>
+                @endunless
 
                 <!-- Navigation Links -->
                 @if($isKkAdmin)
@@ -277,7 +261,7 @@
                 @elseif($isKkSection)
                     <div
                         class="hidden sm:flex sm:items-center sm:justify-start sm:flex-wrap kk-section-links"
-                        style="margin-left: 12px; gap: 8px; flex: 0 1 auto; min-width: 0;"
+                        style="margin-left: 0; gap: 8px; flex: 0 1 auto; min-width: 0;"
                     >
                         <a
                             href="{{ route('cultural-calendar.index') }}"

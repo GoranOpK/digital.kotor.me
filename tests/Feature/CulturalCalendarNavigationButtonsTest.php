@@ -116,9 +116,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         }
         $this->assertMatchesRegularExpression('/color:#111827[^>]*>\s*Odjava\s*</', $html);
 
-        $this->assertStringContainsString('kk-nav-bar', $html);
-        $this->assertStringContainsString('max-width: none', $html);
-        $this->assertStringContainsString('margin-left: 0', $html);
+        $this->assertStringContainsString('kk-shell', $html);
         $this->assertStringContainsString('kk-admin-nav-desktop', $html);
         $this->assertStringContainsString('flex-direction: row', $html);
         $this->assertStringContainsString('flex-wrap: nowrap', $html);
