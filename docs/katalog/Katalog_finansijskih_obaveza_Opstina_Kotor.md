@@ -1,10 +1,11 @@
 # Digital Kotor
-# Katalog finansijskih obaveza prema Opštini Kotor
-## Modul: Plaćanja
+# Katalog finansijskih obaveza Opštine Kotor
+## Modul: e-Plaćanje
 
-**Feature ID:** FT-002
+**Oznaka dokumenta:** EP-KF-001
+**Modul:** e-Plaćanje
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.3
+**Verzija:** 0.4
 
 ---
 
@@ -15,6 +16,7 @@
 | 0.1 | 2026-07-27 | Uspostavljena kompletna struktura Kataloga. Definisana poglavlja, tabele i kolone. Katalog nije popunjen — čeka konačan spisak vrsta uplata. |
 | 0.2 | 2026-07-27 | Popunjen Katalog na osnovu dostavljenog spiska vrsta uplata (Prihodi Opštine Kotor). Uneseno 17 kategorija i 41 pojedinačna vrsta uplate. Interna oznaka / šifra ostavljena prazna. |
 | 0.3 | 2026-07-27 | Dopuna: uplatni računi kao referentni podaci iz Naredbe; Katalog je poslovni referentni dokument (nije šifrarnik ni implementacioni artefakt). |
+| 0.4 | 2026-08-17 | Dokumentacioni corrective: oznaka EP-KF-001; namespace EP-*; pripadnost modulu e-Plaćanje. Bez izmjene sadržaja kataloga. |
 
 Napomena:
 
@@ -28,7 +30,7 @@ Ne mijenjaju se postojeći redovi.
 
 ## Svrha dokumenta
 
-Katalog predstavlja **poslovni referentni dokument** finansijskih obaveza (vrsta uplata) i pripadajućih uplatnih računa koje modul Plaćanja podržava u okviru projekta Digital Kotor.
+Katalog predstavlja **poslovni referentni dokument** finansijskih obaveza (vrsta uplata) i pripadajućih uplatnih računa koje modul e-Plaćanje podržava u okviru projekta Digital Kotor.
 
 Katalog je jedini projektni izvor liste vrsta uplata za dokumentaciju i projektovanje (F-01, P-06).
 
@@ -53,7 +55,7 @@ Katalog je jedini projektni izvor liste vrsta uplata za dokumentaciju i projekto
 
 # Pravila upravljanja Katalogom
 
-1. Katalog pripada modulu Plaćanja (FT-002).
+1. Katalog pripada modulu e-Plaćanja (EP-KF-001).
 
 2. Unos vrsta uplata vrši se isključivo na osnovu spiska dostavljenog u okviru projekta.
 
@@ -504,3 +506,4 @@ Napomena: naziv poglavlja zadržan iz strukture dokumenta. Izmjene se evidentira
 | 2026-07-27 | Kreirana struktura Kataloga (verzija 0.1). Tabele i kolone definisane; sadržaj vrsta uplata nije unesen. |
 | 2026-07-27 | Verzija 0.2 — Popunjen Katalog: 17 kategorija, 41 vrsta uplate. Interna oznaka / šifra prazna. Pravni osnov: Potrebno pravno potvrditi. |
 | 2026-07-27 | Verzija 0.3 — Usvojeno pravilo UR-01: uplatni računi = referentni podaci; Katalog ≠ šifrarnik / implementacioni artefakt. |
+| 2026-08-17 | Verzija 0.4 — Dokumentacioni corrective: oznaka EP-KF-001; namespace EP-*; pripadnost modulu e-Plaćanje. Bez izmjene 17 kategorija, 41 vrste uplate, računa, pravnih osnova ili internih šifara. |

@@ -1,6 +1,6 @@
 # Status projekta i indeks dokumentacije
 
-**Poslednje ažuriranje:** 2026-06-30
+**Poslednje ažuriranje:** 2026-08-17
 
 Portal **digital.kotor.me** — Laravel 12 aplikacija Opštine Kotor. **Konceptualni model:** [platforma + cjeline](architecture-overview.md#konceptualni-model-projekta-važeće) — trenutno produkcija: biblioteka dokumenata (platforma), kalendar kulture, Podrška ženskom preduzetništvu. Hosting: Plesk.
 
@@ -19,8 +19,8 @@ Pregled po **cjelinama** (v. [architecture-overview.md](architecture-overview.md
 | **Podrška ženskom preduzetništvu** | Evaluacija i komisija | **Produkcija** | [application-lifecycle.md](application-lifecycle.md) |
 | **Podrška ženskom preduzetništvu** | Ugovori i izvještaji | **Produkcija** (osnovni tok) | [application-lifecycle.md](application-lifecycle.md) |
 | **Podrška ženskom preduzetništvu** | Admin (konkursi, komisije) | **Produkcija** | [roles-and-permissions.md](roles-and-permissions.md) |
-| **Konkursi** | Mladi u preduzetništvu (`omladinsko`) | **Sljedeći** | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
-| Platforma (stub) | Online plaćanja | **Stub** (vidljiv u UI) | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
+| **Konkursi** | Mladi u preduzetništvu (`omladinsko`) | **Odložen za sada** | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
+| **e-Plaćanje** | Elektronsko plaćanje finansijskih obaveza | **Trenutni razvojni prioritet** (dokumentacija EP-*; aplikacioni kod lokalno) | [Poslovni model e-Plaćanja](../business-model/Business_Model_e-Placanje.md) |
 | Platforma (stub) | Tenderi | **Stub** (vidljiv u UI) | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
 | Platforma (stub) | Obavještenja | **Stub** (vidljiv u UI) | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
 
@@ -90,8 +90,8 @@ Indeks: [README.md](README.md) — Plesk, MEGA setup, cleanup, code review izvje
 
 Vidi [project-todo.md](project-todo.md) za detaljan spisak. **Redoslijed tima:**
 
-1. **Konkurs za mlade u preduzetništvu** (`omladinsko`) — sljedeća cjelina
-2. **Online plaćanja** — implementacija
+1. **e-Plaćanje** — trenutni razvojni prioritet. Aplikacioni kod se razvija lokalno; produkcioni deploy aplikacionog koda nije odobren.
+2. **Konkurs za mlade u preduzetništvu** (`omladinsko`) — odložen za sada
 3. **Tenderi** — implementacija
 4. Uputstva za Predsjednika i članove komisije (dokumentacija)
 5. Dogovor sa drugim administratorom o **feature branch** strategiji

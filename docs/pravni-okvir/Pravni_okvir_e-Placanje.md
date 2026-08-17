@@ -1,10 +1,11 @@
 # Digital Kotor
-# Pravni okvir
-## Modul: Plaćanja
+# Pravni okvir e-Plaćanja
+## Modul: e-Plaćanje
 
-**Feature ID:** FT-002
+**Oznaka dokumenta:** EP-PO-001
+**Modul:** e-Plaćanje
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.2
+**Verzija:** 0.3
 
 ---
 
@@ -12,8 +13,9 @@
 
 | Verzija / PATCH | Datum | Opis |
 |-----------------|--------|------|
-| 0.1 | 2026-07-27 | Uspostavljena početna struktura Pravnog okvira modula Plaćanja. Unesene usvojene projektne odluke P-05, P-07 i povezane odluke P-01–P-08 i F-01. |
+| 0.1 | 2026-07-27 | Uspostavljena početna struktura Pravnog okvira modula e-Plaćanja. Unesene usvojene projektne odluke P-05, P-07 i povezane odluke P-01–P-08 i F-01. |
 | 0.2 | 2026-07-27 | Usklađivanje sa UR-01: Katalog kao poslovni referentni dokument; uplatni računi kao referentni / konfiguracioni podaci. |
+| 0.3 | 2026-08-17 | Dokumentacioni corrective: oznaka EP-PO-001; namespace EP-*; naziv modula e-Plaćanje. Bez izmjene pravnih zaključaka. |
 
 Napomena:
 
@@ -27,7 +29,7 @@ Ne mijenjaju se postojeći redovi.
 
 ## Svrha dokumenta
 
-Dokument definiše pravni okvir modula Plaćanja na platformi Digital Kotor.
+Dokument definiše pravni okvir modula e-Plaćanja na platformi Digital Kotor.
 
 Predstavlja osnov za usklađenost funkcionalnosti modula sa važećim propisima Crne Gore i Opštine Kotor.
 
@@ -49,7 +51,7 @@ Predstavlja osnov za usklađenost funkcionalnosti modula sa važećim propisima 
 
 # Pravila upravljanja dokumentom
 
-1. Pravni okvir predstavlja zvanični dokument pravne usklađenosti modula Plaćanja (FT-002).
+1. Pravni okvir predstavlja zvanični dokument pravne usklađenosti modula e-Plaćanja (EP-PO-001).
 
 2. Posljednja usvojena verzija predstavlja jedini izvor istine za pravni okvir u okviru projekta.
 
@@ -75,7 +77,7 @@ Predstavlja osnov za usklađenost funkcionalnosti modula sa važećim propisima 
 
 # 1. Uvod
 
-Modul Plaćanja (FT-002) služi isključivo za elektronsko plaćanje finansijskih obaveza prema Opštini Kotor putem platforme Digital Kotor (P-01).
+Modul e-Plaćanje služi isključivo za elektronsko plaćanje finansijskih obaveza prema Opštini Kotor putem platforme Digital Kotor (P-01).
 
 Modul ne obračunava finansijske obaveze, ne donosi upravna rješenja, ne kreira zaduženja i ne vodi izvorne evidencije finansijskih obaveza (P-03).
 
@@ -87,7 +89,7 @@ Za svaku finansijsku obavezu izvorni informacioni sistem ili nadležni organ Op�
 
 Sljedeća projektna načela (P-01 do P-08) predstavljaju obavezujuće projektne odluke i moraju se poštovati u cijeloj dokumentaciji i razvoju modula. Tekst načela ne smije se mijenjati niti proširivati bez nove projektne odluke.
 
-Puna formulacija načela nalazi se u Business Modelu (BM-002), poglavlje „Usvojena projektna načela (P-01 do P-08)“.
+Puna formulacija načela nalazi se u poslovnom modelu (EP-BM-001), poglavlje „Usvojena projektna načela (P-01 do P-08)“.
 
 Za Pravni okvir posebno su mjerodavna:
 
@@ -179,9 +181,10 @@ Napomena: Tabela je namjerno prazna. Popunjavanje slijedi u narednom koraku proj
 | Dokument | Putanja | Uloga |
 |----------|---------|-------|
 | Katalog finansijskih obaveza | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` | Poslovni referentni dokument vrsta uplata i uplatnih računa (nije šifrarnik) |
-| Business Model | `docs/business-model/Business_Model_Placanja.md` | Poslovna pravila i načela P-01–P-08 |
-| Functional Specification | `docs/functional-specifications/Functional-Specification_Placanja.md` | Funkcionalni zahtjevi, uključujući F-01 |
-| Technical Specification | `docs/technical-specifications/Technical-Specification_Placanja.md` | Tehnička specifikacija (nakon usvajanja tehničkih odluka) |
+| Poslovni model e-Plaćanja (EP-BM-001) | `docs/business-model/Business_Model_e-Placanje.md` | Poslovna pravila i načela P-01–P-08 |
+| Funkcionalna specifikacija e-Plaćanja (EP-FS-001) | `docs/functional-specifications/Functional-Specification_e-Placanje.md` | Funkcionalni zahtjevi, uključujući F-01 |
+| Tehnička specifikacija e-Plaćanja (EP-TS-001) | `docs/technical-specifications/Technical-Specification_e-Placanje.md` | Tehnička specifikacija (nakon usvajanja tehničkih odluka) |
+| Registar skraćenica e-Plaćanja (EP-RG-001) | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-e-Placanja.md` | Dokumentacione oznake e-Plaćanja |
 
 U skladu sa F-01 i UR-01, brojevi uplatnih računa u Katalogu tretiraju se kao **referentni podaci** iz važeće Naredbe. Katalog nije šifrarnik. Aplikacija koristi konfiguracioni izvor (šifrarnik izveden iz Kataloga); računi se ne hardkodiraju u kodu.
 
@@ -195,7 +198,7 @@ Konkretan spisak vrsta uplata unosi se isključivo iz Kataloga nakon dostave pro
 
 # 7. Završne odredbe
 
-1. Ovaj dokument važi za modul Plaćanja (FT-002).
+1. Ovaj dokument važi za modul e-Plaćanje (EP-PO-001).
 2. Izmjene se unose isključivo kroz usvojene projektne ili pravne odluke i PATCH evidenciju.
 3. U slučaju neslaganja između pretpostavki i potvrđenih propisa, primjenjuje se potvrđeni propis, uz ažuriranje dokumentacije kroz PATCH.
 
@@ -207,3 +210,4 @@ Konkretan spisak vrsta uplata unosi se isključivo iz Kataloga nakon dostave pro
 |-------|---------|
 | 2026-07-27 | Kreirana početna verzija 0.1 Pravnog okvira. Unesene odluke P-05, P-07 i veze na P-01–P-08 i F-01. Registar pravnih osnova ostavljen prazan. |
 | 2026-07-27 | Verzija 0.2 — Usklađeno sa UR-01 (Katalog ≠ šifrarnik; računi = referentni / konfiguracioni podaci). |
+| 2026-08-17 | Verzija 0.3 — Dokumentacioni corrective: oznaka EP-PO-001; namespace EP-*; naziv modula e-Plaćanje. Bez izmjene pravnih zaključaka i statusa pravnih osnova. |

@@ -1,10 +1,11 @@
 # Digital Kotor
-# Technical Specification
-## Modul: Plaćanja
+# Tehnička specifikacija e-Plaćanja
+## Modul: e-Plaćanje
 
-**Feature ID:** FT-002
+**Oznaka dokumenta:** EP-TS-001
+**Modul:** e-Plaćanje
 **Status dokumenta:** U IZRADI
-**Verzija:** 1.0.1
+**Verzija:** 1.0.2
 
 ---
 
@@ -20,10 +21,11 @@
 | 0.6 | 2026-07-27 | BP-06 – Generisanje potvrde nezavisno od konkretnog payment gateway-a; bez formata/dostave/PDF pretpostavki. |
 | 0.7 | 2026-07-27 | BP-07 – Izvor obaveznih podataka (iznos, primalac, račun, poziv na broj, svrha) kao konfiguracija vrste uplate; bez implementacionog dizajna. |
 | 0.8 | 2026-07-27 | BP-08 – Životni ciklus transakcije (statusi, state machine, audit, potvrda izvornom sistemu); bez implementacionog dizajna. |
-| 0.9 | 2026-07-27 | PATCH-008A – Redakcijsko usklađivanje BP-05/BP-06/BP-08: korisnička poruka ≠ status; početni status Kreirana; potvrda ≠ knjiženje. |
-| 0.9.1 | 2026-07-27 | PATCH-008B – Redakcijsko usklađivanje: evidencija bilježi trenutni status transakcije. |
+| 0.9 | 2026-07-27 | EP-PATCH-BM-008A – Redakcijsko usklađivanje BP-05/BP-06/BP-08: korisnička poruka ≠ status; početni status Kreirana; potvrda ≠ knjiženje. |
+| 0.9.1 | 2026-07-27 | EP-PATCH-BM-008B – Redakcijsko usklađivanje: evidencija bilježi trenutni status transakcije. |
 | 1.0 | 2026-07-27 | BP-09 – Istorija transakcija i pregled plaćanja (pristup, lista, filteri, detalji, retention); bez implementacionog dizajna. |
-| 1.0.1 | 2026-07-27 | PATCH-009A – Redakcijsko: BP-06↔BP-09 (istorija); terminologija identifikatora. |
+| 1.0.1 | 2026-07-27 | EP-PATCH-BM-009A – Redakcijsko: BP-06↔BP-09 (istorija); terminologija identifikatora. |
+| 1.0.2 | 2026-08-17 | Dokumentacioni corrective: oznaka EP-TS-001; namespace EP-*; naziv modula e-Plaćanje. Statusi NIJE USVOJENO zadržani. Bez novih tehničkih odluka. |
 
 Napomena:
 
@@ -37,9 +39,9 @@ Ne mijenjaju se postojeći redovi.
 
 ## Svrha dokumenta
 
-Dokument će predstavljati tehničku specifikaciju modula Plaćanja nakon usvajanja tehničkih odluka.
+Dokument će predstavljati tehničku specifikaciju modula e-Plaćanja nakon usvajanja tehničkih odluka.
 
-U verziji 1.0.1 dokument:
+U verziji 1.0.2 dokument:
 
 * uspostavlja strukturu tehničke specifikacije;
 * bilježi obavezujuća projektna ograničenja iz usvojenih odluka;
@@ -53,35 +55,35 @@ U verziji 1.0.1 dokument:
 
 | Poglavlje | Status |
 |-----------|--------|
-| TS-002 / 1. Uvod i veza sa dokumentacijom | U IZRADI |
-| TS-002 / 2. Obavezujuća projektna ograničenja | USVOJENO |
-| TS-002 / 2.4 Uplatni računi – konfiguracioni podaci (UR-01) | USVOJENO |
-| TS-002 / 2.5 Ograničenja iz BP-01, BP-02 i BP-03 | USVOJENO |
-| TS-002 / 2.6 BP-04 – Jedinstvena integracija sa payment gateway slojem | USVOJENO |
-| TS-002 / 2.7 BP-05 – Obrada ishoda transakcije | USVOJENO |
-| TS-002 / 2.8 BP-06 – Potvrda o izvršenom plaćanju | USVOJENO |
-| TS-002 / 2.9 BP-07 – Izvor obaveznih podataka za elektronsko plaćanje | USVOJENO |
-| TS-002 / 2.10 BP-08 – Životni ciklus transakcije | USVOJENO |
-| TS-002 / 2.11 BP-09 – Istorija transakcija i pregled plaćanja | USVOJENO |
-| TS-002 / 3. Arhitektura rješenja | NIJE USVOJENO |
-| TS-002 / 4. Model podataka | NIJE USVOJENO |
-| TS-002 / 5. Integracije | NIJE USVOJENO |
-| TS-002 / 6. Sigurnost | NIJE USVOJENO |
-| TS-002 / 7. Interfejsi i API | NIJE USVOJENO |
-| TS-002 / 8. Ne-funkcionalni zahtjevi | NIJE USVOJENO |
-| TS-002 / 9. Plan implementacije | NIJE USVOJENO |
+| EP-TS-001 / 1. Uvod i veza sa dokumentacijom | U IZRADI |
+| EP-TS-001 / 2. Obavezujuća projektna ograničenja | USVOJENO |
+| EP-TS-001 / 2.4 Uplatni računi – konfiguracioni podaci (UR-01) | USVOJENO |
+| EP-TS-001 / 2.5 Ograničenja iz BP-01, BP-02 i BP-03 | USVOJENO |
+| EP-TS-001 / 2.6 BP-04 – Jedinstvena integracija sa payment gateway slojem | USVOJENO |
+| EP-TS-001 / 2.7 BP-05 – Obrada ishoda transakcije | USVOJENO |
+| EP-TS-001 / 2.8 BP-06 – Potvrda o izvršenom plaćanju | USVOJENO |
+| EP-TS-001 / 2.9 BP-07 – Izvor obaveznih podataka za elektronsko plaćanje | USVOJENO |
+| EP-TS-001 / 2.10 BP-08 – Životni ciklus transakcije | USVOJENO |
+| EP-TS-001 / 2.11 BP-09 – Istorija transakcija i pregled plaćanja | USVOJENO |
+| EP-TS-001 / 3. Arhitektura rješenja | NIJE USVOJENO |
+| EP-TS-001 / 4. Model podataka | NIJE USVOJENO |
+| EP-TS-001 / 5. Integracije | NIJE USVOJENO |
+| EP-TS-001 / 6. Sigurnost | NIJE USVOJENO |
+| EP-TS-001 / 7. Interfejsi i API | NIJE USVOJENO |
+| EP-TS-001 / 8. Ne-funkcionalni zahtjevi | NIJE USVOJENO |
+| EP-TS-001 / 9. Plan implementacije | NIJE USVOJENO |
 
 ---
 
 # Pravila upravljanja Technical Specification
 
-1. Technical Specification pripada modulu Plaćanja (FT-002 / TS-002).
+1. Tehnička specifikacija pripada modulu e-Plaćanja (EP-TS-001).
 
 2. Tehnička rješenja unose se isključivo nakon usvojene tehničke ili projektne odluke i evidentiraju kroz PATCH.
 
 3. Cursor ne smije samostalno projektovati bazu podataka, API-je, integracije, arhitekturu ni druga tehnička rješenja.
 
-4. Technical Specification mora ostati usklađena sa Business Modelom (BM-002) i Functional Specification (FS-002).
+4. Tehnička specifikacija mora ostati usklađena sa poslovnim modelom (EP-BM-001) i funkcionalnom specifikacijom (EP-FS-001).
 
 5. Odluke P-01 do P-08, F-01, UR-01 i BP-01 do BP-09 su obavezujuća ograničenja i ne smiju se mijenjati bez nove projektne odluke.
 
@@ -101,25 +103,26 @@ U verziji 1.0.1 dokument:
 
 ---
 
-# TS-002 / 1. Uvod i veza sa dokumentacijom
+# EP-TS-001 / 1. Uvod i veza sa dokumentacijom
 
-Modul Plaćanja (FT-002) služi isključivo za elektronsko plaćanje finansijskih obaveza prema Opštini Kotor putem platforme Digital Kotor (P-01).
+Modul e-Plaćanje služi isključivo za elektronsko plaćanje finansijskih obaveza prema Opštini Kotor putem platforme Digital Kotor (P-01).
 
 Tehnička specifikacija razvija se u okviru dokumentacije propisane odlukom P-06:
 
 | # | Dokument | Putanja |
 |---|----------|---------|
-| 1 | Pravni okvir | `docs/pravni-okvir/Pravni_okvir_Placanja.md` |
-| 2 | Katalog finansijskih obaveza | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` |
-| 3 | Business Model | `docs/business-model/Business_Model_Placanja.md` |
-| 4 | Functional Specification | `docs/functional-specifications/Functional-Specification_Placanja.md` |
-| 5 | Technical Specification | `docs/technical-specifications/Technical-Specification_Placanja.md` |
+| 1 | Pravni okvir e-Plaćanja (EP-PO-001) | `docs/pravni-okvir/Pravni_okvir_e-Placanje.md` |
+| 2 | Katalog finansijskih obaveza (EP-KF-001) | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` |
+| 3 | Poslovni model e-Plaćanja (EP-BM-001) | `docs/business-model/Business_Model_e-Placanje.md` |
+| 4 | Funkcionalna specifikacija e-Plaćanja (EP-FS-001) | `docs/functional-specifications/Functional-Specification_e-Placanje.md` |
+| 5 | Tehnička specifikacija e-Plaćanja (EP-TS-001) | `docs/technical-specifications/Technical-Specification_e-Placanje.md` |
+| 6 | Registar skraćenica e-Plaćanja (EP-RG-001) | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-e-Placanja.md` |
 
-Sljedivost: FT-002 → BM-002 → FS-002 → TS-002
+Sljedivost: EP-BM-001 → EP-FS-001 → EP-TS-001
 
 ---
 
-# TS-002 / 2. Obavezujuća projektna ograničenja
+# EP-TS-001 / 2. Obavezujuća projektna ograničenja
 
 **Status:** USVOJENO
 
@@ -455,7 +458,7 @@ Odluka **ne** projektuje UI, paginaciju, tehnologiju arhiviranja, shemu baze ni 
 
 ---
 
-# TS-002 / 3. Arhitektura rješenja
+# EP-TS-001 / 3. Arhitektura rješenja
 
 **Status:** NIJE USVOJENO
 
@@ -473,7 +476,7 @@ Obavezujuća ograničenja:
 
 ---
 
-# TS-002 / 4. Model podataka
+# EP-TS-001 / 4. Model podataka
 
 **Status:** NIJE USVOJENO
 
@@ -483,7 +486,7 @@ Obavezujuće ograničenje (UR-01): kada model bude usvajan, uplatni računi mora
 
 ---
 
-# TS-002 / 5. Integracije
+# EP-TS-001 / 5. Integracije
 
 **Status:** NIJE USVOJENO
 
@@ -501,7 +504,7 @@ Napomena (P-08, BP-02, BP-04, BP-07, BP-08):
 
 ---
 
-# TS-002 / 6. Sigurnost
+# EP-TS-001 / 6. Sigurnost
 
 **Status:** NIJE USVOJENO
 
@@ -509,7 +512,7 @@ Poglavlje je rezervisano.
 
 ---
 
-# TS-002 / 7. Interfejsi i API
+# EP-TS-001 / 7. Interfejsi i API
 
 **Status:** NIJE USVOJENO
 
@@ -517,7 +520,7 @@ Poglavlje je rezervisano. API-ji, rute i interfejsi se ne projektuju u ovoj fazi
 
 ---
 
-# TS-002 / 8. Ne-funkcionalni zahtjevi
+# EP-TS-001 / 8. Ne-funkcionalni zahtjevi
 
 **Status:** NIJE USVOJENO
 
@@ -525,11 +528,15 @@ Poglavlje je rezervisano.
 
 ---
 
-# TS-002 / 9. Plan implementacije
+# EP-TS-001 / 9. Plan implementacije
 
 **Status:** NIJE USVOJENO
 
 Poglavlje je rezervisano. Implementacija aplikacionog koda nije predmet ove faze dokumentacije, ali implementaciono pravilo UR-01 važi čim razvoj započne.
+
+Dokumentaciona napomena (nije usvojena tehnička odluka i ne mijenja status ovog poglavlja):
+
+Razvoj aplikacionog koda e-Plaćanja u ovoj fazi obavlja se lokalno. Produkcioni deploy aplikacionog koda e-Plaćanja nije odobren. Dokumentacione izmjene mogu se commitovati i pushovati prema standardnom dokumentacionom toku projekta.
 
 ---
 
@@ -545,7 +552,8 @@ Poglavlje je rezervisano. Implementacija aplikacionog koda nije predmet ove faze
 | 2026-07-27 | Verzija 0.6 — BP-06: generisanje potvrde nezavisno od gateway-a; bez PDF/e-mail/formata. |
 | 2026-07-27 | Verzija 0.7 — BP-07: izvor obaveznih podataka (BP-07.1 do BP-07.5) kao konfiguracija vrste uplate. |
 | 2026-07-27 | Verzija 0.8 — BP-08: životni ciklus transakcije (BP-08.1 do BP-08.5); state machine; audit; potvrda izvornom sistemu. |
-| 2026-07-27 | Verzija 0.9 — PATCH-008A: redakcijsko usklađivanje BP-05/BP-06/BP-08. |
-| 2026-07-27 | Verzija 0.9.1 — PATCH-008B: evidencija bilježi trenutni status transakcije. |
+| 2026-07-27 | Verzija 0.9 — EP-PATCH-BM-008A: redakcijsko usklađivanje BP-05/BP-06/BP-08. |
+| 2026-07-27 | Verzija 0.9.1 — EP-PATCH-BM-008B: evidencija bilježi trenutni status transakcije. |
 | 2026-07-27 | Verzija 1.0 — BP-09: istorija transakcija i pregled plaćanja (BP-09.1 do BP-09.5). |
-| 2026-07-27 | Verzija 1.0.1 — PATCH-009A: BP-06↔BP-09 (istorija); terminologija identifikatora. |
+| 2026-07-27 | Verzija 1.0.1 — EP-PATCH-BM-009A: BP-06↔BP-09 (istorija); terminologija identifikatora. |
+| 2026-08-17 | Verzija 1.0.2 — Dokumentacioni corrective: oznaka EP-TS-001; namespace EP-*; naziv modula e-Plaćanje. Statusi NIJE USVOJENO zadržani. Bez novih tehničkih odluka. |
