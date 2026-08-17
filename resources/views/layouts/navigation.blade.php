@@ -80,7 +80,30 @@
 @if($isKkAdmin || $isKkSection)
 {{-- Inline CSS: Tailwind purge often omits sm:flex-col, which collapsed both rows into one horizontal flex. --}}
 <style>
-    .kk-admin-nav-desktop { display: none; }
+    .kk-nav-bar {
+        width: 100%;
+        max-width: none !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 16px;
+        padding-right: 16px;
+        box-sizing: border-box;
+    }
+    .kk-nav-bar-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: stretch;
+        width: 100%;
+        min-height: 64px;
+        box-sizing: border-box;
+    }
+    .kk-nav-left {
+        display: flex;
+        justify-content: flex-start;
+        align-items: stretch;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
     .kk-admin-nav-row {
         display: flex;
         flex-direction: row;
@@ -150,20 +173,22 @@
 >
     <!-- Primary Navigation Menu -->
     <div @class([
-        'mx-auto px-4 sm:px-6 lg:px-8',
-        'kk-shell' => $isKkSection,
-        'max-w-7xl' => ! $isKkSection,
+        'px-4 sm:px-6 lg:px-8',
+        'kk-nav-bar' => $isKkAdmin || $isKkSection,
+        'mx-auto max-w-7xl' => ! ($isKkAdmin || $isKkSection),
     ])>
         <div @class([
             'flex justify-between min-h-16',
+            'kk-nav-bar-inner' => $isKkAdmin || $isKkSection,
             'items-stretch' => $isKkAdmin,
             'items-center flex-wrap gap-y-2 py-2' => ! $isKkAdmin,
-        ]) style="{{ $isKkAdmin ? 'width:100%;max-width:100%;box-sizing:border-box;' : '' }}">
+        ])>
             <div @class([
                 'flex justify-start min-w-0 flex-1',
+                'kk-nav-left' => $isKkAdmin || $isKkSection,
                 'items-stretch' => $isKkAdmin,
                 'items-center flex-wrap gap-y-2' => ! $isKkAdmin,
-            ]) style="{{ $isKkAdmin ? 'min-width:0;max-width:100%;box-sizing:border-box;' : '' }}">
+            ])>
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center" style="{{ $isKkAdmin ? 'min-height: 38px;' : '' }}">
                     <a href="{{ $isKkAdmin ? route('cultural-calendar.index') : ($isCompetitionAdmin ? route('admin.dashboard') : route('dashboard')) }}">
@@ -252,7 +277,7 @@
                 @elseif($isKkSection)
                     <div
                         class="hidden sm:flex sm:items-center sm:justify-start sm:flex-wrap kk-section-links"
-                        style="margin-left: 16px; gap: 8px; flex: 1 1 auto; min-width: 0;"
+                        style="margin-left: 12px; gap: 8px; flex: 0 1 auto; min-width: 0;"
                     >
                         <a
                             href="{{ route('cultural-calendar.index') }}"
