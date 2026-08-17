@@ -37,9 +37,9 @@
     $kkNavBtn = static function (bool $active): string {
         $tape = $active ? '#7a0f17' : 'transparent';
 
-        return 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:8px;'
+        return 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:0;'
             .'background:transparent;color:#7a0f17;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;'
-            ."border-bottom:2px solid {$tape};";
+            ."border-bottom:3px solid {$tape};";
     };
     // Shared desktop sizing for moderator entrypoints (Kontrolna tabla + Moderiranje) — both <a>.
     // Explicit equal width+height (content-width alone would make Moderiranje narrower).
@@ -50,9 +50,9 @@
     $kkNavBtnMobile = static function (bool $active): string {
         $tape = $active ? '#7a0f17' : 'transparent';
 
-        return 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:8px;'
+        return 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:0;'
             .'background:transparent;color:#7a0f17;font-size:16px;font-weight:600;text-decoration:none;'
-            ."border-bottom:2px solid {$tape};";
+            ."border-bottom:3px solid {$tape};";
     };
     $kkLogoutBtn = 'min-width:100px;background:#0d6efd;color:#ffffff;border:1px solid #0d6efd;border-radius:8px;'
         .'padding:8px 14px;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;'
@@ -84,13 +84,22 @@
     .kk-admin-nav-row {
         display: flex;
         flex-direction: row;
-        flex-wrap: wrap;
-        align-items: center;
+        flex-wrap: nowrap;
+        align-items: stretch;
         justify-content: flex-start;
-        gap: 8px;
-        width: 100%;
+        gap: 4px;
+        width: auto;
         max-width: 100%;
         box-sizing: border-box;
+    }
+    .kk-admin-nav-desktop a,
+    .kk-section-links a {
+        border-radius: 0 !important;
+        align-self: stretch;
+    }
+    .kk-admin-nav-desktop[data-kk-nav-context="editorial"] a {
+        font-size: 12px !important;
+        padding: 8px 8px !important;
     }
     .kk-admin-nav-desktop a:hover,
     .kk-admin-nav-desktop a:focus,
@@ -103,25 +112,15 @@
     @media (min-width: 640px) {
         .kk-admin-nav-desktop {
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: stretch;
-            gap: 8px;
-            margin-left: 16px;
+            justify-content: flex-start;
+            gap: 4px;
+            margin-left: 12px;
             flex: 1 1 auto;
             min-width: 0;
             max-width: 100%;
             box-sizing: border-box;
-        }
-        .kk-admin-nav-desktop[data-kk-nav-context="public"] {
-            flex-direction: row;
-            align-items: center;
-            justify-content: flex-start;
-            gap: 8px;
-        }
-        .kk-admin-nav-desktop[data-kk-nav-context="public"] .kk-admin-nav-row {
-            width: auto;
-            max-width: none;
-            flex-wrap: nowrap;
         }
     }
 </style>
@@ -141,13 +140,13 @@
         'max-w-7xl' => ! $isKkSection,
     ])>
         <div @class([
-            'flex justify-between min-h-16 py-2',
-            'items-start' => $isKkAdmin,
-            'items-center flex-wrap gap-y-2' => ! $isKkAdmin,
+            'flex justify-between min-h-16',
+            'items-stretch' => $isKkAdmin,
+            'items-center flex-wrap gap-y-2 py-2' => ! $isKkAdmin,
         ]) style="{{ $isKkAdmin ? 'width:100%;max-width:100%;box-sizing:border-box;' : '' }}">
             <div @class([
                 'flex justify-start min-w-0 flex-1',
-                'items-start' => $isKkAdmin,
+                'items-stretch' => $isKkAdmin,
                 'items-center flex-wrap gap-y-2' => ! $isKkAdmin,
             ]) style="{{ $isKkAdmin ? 'min-width:0;max-width:100%;box-sizing:border-box;' : '' }}">
                 <!-- Logo -->
@@ -159,10 +158,10 @@
 
                 <!-- Navigation Links -->
                 @if($isKkAdmin)
-                    {{-- Explicit two-row desktop layout (column via scoped CSS, not Tailwind flex-col). --}}
+                    {{-- Single-row desktop layout; editorial uses a smaller font so all items fit. --}}
                     <div
                         class="kk-admin-nav-desktop"
-                        data-kk-nav-layout="two-row"
+                        data-kk-nav-layout="one-row"
                         data-kk-nav-context="{{ $isKkPublicPortalContext ? 'public' : 'editorial' }}"
                     >
                         <div class="kk-admin-nav-row" data-kk-nav-row="1">
@@ -219,25 +218,21 @@
                                     href="{{ route('cultural-categories.index') }}"
                                     style="{{ $kkNavBtn(request()->routeIs('cultural-categories.*')) }}"
                                 >Kategorije</a>
+                                <a
+                                    href="{{ route('cultural-tags.index') }}"
+                                    style="{{ $kkNavBtn(request()->routeIs('cultural-tags.*')) }}"
+                                >Oznake</a>
+                                <a
+                                    href="{{ route('cultural-organizers.index') }}"
+                                    style="{{ $kkNavBtn(request()->routeIs('cultural-organizers.*')) }}"
+                                >Organizatori</a>
+                                <a
+                                    href="{{ route('cultural-editorial-requests.index') }}"
+                                    data-kk-nav="zahtjevi"
+                                    style="{{ $kkNavBtn(request()->routeIs('cultural-editorial-requests.*', 'cultural-organizer-creation-requests.index', 'cultural-organizer-creation-requests.show', 'cultural-organizer-creation-requests.approve', 'cultural-organizer-creation-requests.reject', 'cultural-moderator-requests.index', 'cultural-moderator-requests.show', 'cultural-moderator-requests.approve', 'cultural-moderator-requests.reject')) }}"
+                                >Zahtjevi</a>
                             @endif
                         </div>
-                        @if($isKkEditorialPortalContext)
-                        <div class="kk-admin-nav-row" data-kk-nav-row="2">
-                            <a
-                                href="{{ route('cultural-tags.index') }}"
-                                style="{{ $kkNavBtn(request()->routeIs('cultural-tags.*')) }}"
-                            >Oznake</a>
-                            <a
-                                href="{{ route('cultural-organizers.index') }}"
-                                style="{{ $kkNavBtn(request()->routeIs('cultural-organizers.*')) }}"
-                            >Organizatori</a>
-                            <a
-                                href="{{ route('cultural-editorial-requests.index') }}"
-                                data-kk-nav="zahtjevi"
-                                style="{{ $kkNavBtn(request()->routeIs('cultural-editorial-requests.*', 'cultural-organizer-creation-requests.index', 'cultural-organizer-creation-requests.show', 'cultural-organizer-creation-requests.approve', 'cultural-organizer-creation-requests.reject', 'cultural-moderator-requests.index', 'cultural-moderator-requests.show', 'cultural-moderator-requests.approve', 'cultural-moderator-requests.reject')) }}"
-                            >Zahtjevi</a>
-                        </div>
-                        @endif
                     </div>
                 @elseif($isKkSection)
                     <div

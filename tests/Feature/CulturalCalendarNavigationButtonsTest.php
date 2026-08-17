@@ -69,7 +69,8 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
 
         $this->assertStringContainsString('background:#0d6efd', $html);
         $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $html);
-        $this->assertStringContainsString('border-bottom:2px solid', $html);
+        $this->assertStringContainsString('border-bottom:3px solid', $html);
+        $this->assertStringContainsString('border-radius:0', $html);
         $this->assertStringContainsString('border-bottom-color: #7a0f17', $html);
     }
 
@@ -80,11 +81,11 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $this->assertStringContainsString('data-kk-nav-layout="two-row"', $html);
+        $this->assertStringContainsString('data-kk-nav-layout="one-row"', $html);
         $this->assertStringContainsString('data-kk-nav-row="1"', $html);
         $this->assertStringNotContainsString('data-kk-nav-row="2"', $html);
 
-        $layoutStart = strpos($html, 'data-kk-nav-layout="two-row"');
+        $layoutStart = strpos($html, 'data-kk-nav-layout="one-row"');
         $hamburgerStart = strpos($html, '<!-- Hamburger -->');
         $this->assertNotFalse($layoutStart);
         $this->assertNotFalse($hamburgerStart);
@@ -115,7 +116,8 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $html);
 
         $this->assertStringContainsString('kk-admin-nav-desktop', $html);
-        $this->assertStringContainsString('flex-direction: column', $html);
+        $this->assertStringContainsString('flex-direction: row', $html);
+        $this->assertStringContainsString('flex-wrap: nowrap', $html);
         $this->assertStringContainsString('justify-content: flex-start', $html);
         $this->assertStringNotContainsString('sm:flex-col', $html);
 
@@ -140,18 +142,16 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
             ->assertOk()
             ->getContent();
 
-        $layoutStart = strpos($html, 'data-kk-nav-layout="two-row"');
+        $layoutStart = strpos($html, 'data-kk-nav-layout="one-row"');
         $hamburgerStart = strpos($html, '<!-- Hamburger -->');
         $this->assertNotFalse($layoutStart);
         $this->assertNotFalse($hamburgerStart);
         $desktopNav = substr($html, $layoutStart, $hamburgerStart - $layoutStart);
 
-        $row1Start = strpos($desktopNav, 'data-kk-nav-row="1"');
-        $row2Start = strpos($desktopNav, 'data-kk-nav-row="2"');
-        $this->assertNotFalse($row1Start);
-        $this->assertNotFalse($row2Start);
-        $row1Html = substr($desktopNav, $row1Start, $row2Start - $row1Start);
-        $row2Html = substr($desktopNav, $row2Start);
+        $this->assertStringContainsString('data-kk-nav-row="1"', $desktopNav);
+        $this->assertStringNotContainsString('data-kk-nav-row="2"', $desktopNav);
+        $this->assertStringContainsString('font-size: 12px', $html);
+        $this->assertStringContainsString('flex-wrap: nowrap', $html);
 
         $row1Labels = [
             'Kalendar kulture',
@@ -160,20 +160,16 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
             'Upravljanje manifestacijama',
             'Lokacije',
             'Kategorije',
+            'Oznake',
+            'Organizatori',
+            'Zahtjevi',
         ];
         foreach ($row1Labels as $label) {
-            $this->assertStringContainsString('>'.$label.'<', $row1Html);
-            $this->assertStringNotContainsString('>'.$label.'<', $row2Html);
-        }
-
-        $row2Labels = ['Oznake', 'Organizatori', 'Zahtjevi'];
-        foreach ($row2Labels as $label) {
-            $this->assertStringContainsString('>'.$label.'<', $row2Html);
-            $this->assertStringNotContainsString('>'.$label.'<', $row1Html);
+            $this->assertStringContainsString('>'.$label.'<', $desktopNav);
         }
         $this->assertStringNotContainsString('>Mediji<', $desktopNav);
         $this->assertStringNotContainsString('/kalendar-kulture/mediji', $desktopNav);
-        $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $row2Html);
+        $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $html);
 
         foreach (['Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal', 'Urednički rad', 'Zahtjevi Org', 'Zahtjevi Mod', 'Javni portal'] as $label) {
             $this->assertStringNotContainsString('>'.$label.'<', $desktopNav);
