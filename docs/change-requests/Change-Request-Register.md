@@ -4,7 +4,7 @@
 
 **Oznaka dokumenta:** KK-CR-REG-001
 **Status dokumenta:** AKTIVAN
-**Verzija:** 0.8
+**Verzija:** 0.9
 
 ---
 
@@ -58,7 +58,7 @@ Svaki odobreni poslovni zahtjev koji zahtijeva izmjenu implementacije mora biti 
 | CR-002 | KK-IS-001 Faza 2 — Mjesečni filter i klik treće statistike | KK-FS-001 → §5.2 / BR-263; KK-TS-009 §3.2 | Medium | UI, Backend | Implemented |
 | CR-003 | KK-IS-001 Faza 2 — Filteri Pretrage i pregleda (`q` / `category` / `location`) | KK-FS-001 → BR-257 / BR-107–108; KK-TS-009 §3.3 | Medium | UI, Backend | Implemented |
 | CR-004A | KK-IS-001 Faza 3 — Javni status badge (Predstoji / U toku / Završen / Otkazan) | KK-FS-001 → BR-114; KK-TS-009 §7.1; PO-CR4A-01…05 | Medium | UI, Backend | Implemented |
-| CR-004B | KK-IS-001 Faza 3 — Javni prikaz otkazanih događaja | KK-FS-001 → BR-270–BR-274; BR-001/114/116; KK-TS-009 §7.2; PO-CR4B-01…10 | Medium | UI, Backend | Planned |
+| CR-004B | KK-IS-001 Faza 3 — Javni prikaz otkazanih događaja | KK-FS-001 → BR-270–BR-274; BR-001/114/116; KK-TS-009 §7.2; PO-CR4B-01…10 | Medium | UI, Backend | Implemented |
 
 ---
 
@@ -310,7 +310,16 @@ Medium
 
 ### Status
 
-**Planned**
+**Implemented** (2026-08-07). Administrativni closeout 2026-08-17.
+
+### Implementacija
+
+* Dokumentaciona priprema: `c6aad0b` (`docs(calendar): prepare CR-004B cancelled event visibility`).
+* Implementacija: `d0ccfe1` (`feat(calendar): implement CR-004B cancelled event visibility`).
+* Kanonski runtime cutover: `ebf6903` (`refactor(calendar): remove legacy public runtime`) — ponašanje zadržano na `CulturalEventEntry` / `CulturalOccurrence`.
+* Test: `tests/Feature/CulturalCalendarCr004BCancelledVisibilityTest.php`.
+* Kasnija odluka PO-6A09 / BR-286 proširuje archive lifecycle; **ne** superseduje CR-004B.
+* Bez izmjene poslovnog zahtjeva, implementation scope-a i V1 closeout-a u ovom administrativnom closeout-u.
 
 ---
 
@@ -361,3 +370,4 @@ Ovaj model omogućava da se za svaku funkcionalnost može utvrditi:
 | 2026-08-01 | CR-004A status → Implemented (dokumentacija `614706c`; implementacija `0f73240`). Testovi 65/266. Bez migracija/ruta/izmjene šeme. Verzija registra 0.7. |
 | 2026-08-06 | Evidentiran CR-004B (Planned): javni prikaz otkazanih; korektivni prolaz (portalna Arhiva ≠ archived; status ostaje cancelled); PO-CR4B-01…10; BR-270–BR-274; TS-009 §7.2; IS-001 §9.3.2. Bez izmjene BR-065 / BM-DG-04. Verzija registra 0.8. |
 | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
+| 2026-08-17 | Administrativni closeout CR-004B: status **Planned → Implemented**, usklađen sa postojećom implementacijom iz 2026-08-07 (`d0ccfe1`; kanonski runtime `ebf6903`). Poslovni zahtjev, implementation scope i V1 closeout nijesu mijenjani. ID `CR-004B` KEEP. Verzija registra 0.9. |

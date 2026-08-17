@@ -7,8 +7,8 @@
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
-**Verzija:** 1.0.23
-**Datum:** 2026-08-16
+**Verzija:** 1.0.24
+**Datum:** 2026-08-17
 
 ---
 
@@ -45,6 +45,7 @@
 | 1.0.22 | 2026-08-16 | **MED documentation closeout:** public fallback resolver **IMPLEMENTATION COMPLETE / VERIFIED**. `object-fit: cover` KEEP. `CulturalEvent.slika` / `category_default` nisu SSOT. **MED-I4B** finalni vizueli = DEFERRED / NON-BLOCKING (MISSING/AMBIGUOUS dedicated assets padaju na globalni Event PNG; MF dedicated placeholder deferred). |
 | 1.0.23 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** Javni portal final audit = **PASS / ACCEPTED FOR V1 CLOSEOUT**. Full-system cross-validation = **PASS**. Final full regression = **GREEN** (1286/6224/0/0/12 skipped). **BLOCKS V1 CLOSEOUT = NO**. B3 DROP = **DEFERRED / POST-V1 / NON-BLOCKING**. MED-I4B KEEP deferred. Business contract KEEP. Production deploy HEAD `4595a14` **NOT CONFIRMED**. |
 | — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
+| 1.0.24 | 2026-08-17 | **CR-004B administrative closeout (status only):** §7.2 Status — razdvojeno **CR-004B = Implemented** od kasnije odluke PO-6A09 / BR-286 (Faza 6A CLOSED). Poslovna pravila, BR-270–274, BR-286 i PO-6A09 nijesu sadržajno mijenjani. |
 
 ---
 
@@ -1151,7 +1152,7 @@ Granica „U toku“ kompatibilna je sa `isExpiredAt` (istek strogo nakon `expir
 | Odluke | PO-CR4B-01 … PO-CR4B-10 |
 | BM | BM-PK-13 / BM-PK-35 (prikaz); BM-PK-15 (Istaknuti); BM-DG-05 (prava — bez izmjene); BM-DG-04 (lifecycle arhiviranje — na snazi) |
 | FS | BR-270–BR-274; BR-286; BR-001, BR-002, BR-004, BR-114, BR-116 (usklađeno); BR-063 / BR-065 (lifecycle na snazi) |
-| Status | Dokumentaciono usvojeno; kanonska Javna Arhiva = PO-6A09 / BR-286 (implementacija Planned u 6A-09) |
+| Status | **CR-004B = Implemented** (`d0ccfe1`; kanonski runtime `ebf6903`). Kanonska Javna Arhiva = kasnija odluka PO-6A09 / BR-286 (Faza 6A CLOSED) — **ne** superseduje CR-004B. |
 
 ### 7.2.0 Planirani termin (flat model)
 

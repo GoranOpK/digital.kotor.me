@@ -7,8 +7,8 @@
 **Feature ID:** FT-001 (+ FT-003 / KK-TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active — **Kalendar kulture V1 COMPLETE**; **V1 TECHNICAL VERIFICATION = PASS**; **V1 FULL-SYSTEM CROSS-VALIDATION = PASS**; **FINAL FULL REGRESSION = GREEN**; **BLOCKS V1 CLOSEOUT = NO**. MED = FORMALLY CLOSED. B3 = DEFERRED / NON-BLOCKING / POST-V1. MED-I4B = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. Repository HEAD `4595a14` = COMMITTED / PUSHED; production deploy ovog HEAD-a = **NOT CONFIRMED**.
-**Verzija:** 1.0.25
-**Datum:** 2026-08-16
+**Verzija:** 1.0.26
+**Datum:** 2026-08-17
 
 ---
 
@@ -43,6 +43,7 @@
 | 1.0.24 | 2026-08-16 | **MED documentation closeout:** MED-01–MED-28 = **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED**. Paketi: MED-I1 `6060bee`; MED-I2 `e7c6a07`; MED-I3 `b416c0b`; MED-I4A `3ef974b`; MED-I5 `6a4d50e`. **MED-I4B** = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. **Nije** Faza 9. Istorijski V1 Faza 0–8 closeout KEEP. Obsolete `cultural_media` schema cleanup = DEFERRED / NON-BLOCKING. |
 | 1.0.25 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** Javni / urednički / Administracija final auditi = **PASS / ACCEPTED FOR V1 CLOSEOUT**. Full-system cross-validation = **PASS** (active conflicts = 0). Final full regression = **GREEN** (PHPUnit 11.5.39; PHP 8.3.21; GD=yes; WebP=yes; 1286 tests / 6224 assertions / 0 failed / 0 errors / 12 skipped Imagick-environment; 0 warnings / 0 deprecations / 0 risky; exit 0). **BLOCKS V1 CLOSEOUT = NO**. MED KEEP CLOSED. B3 audit = **NO ACTION REQUIRED BEFORE V1** (physical DROP/storage = POST-V1; preduslov = production read-only recheck). ADM-C1 `4595a14` = Users superadmin protection **CLOSED** u repou (COMMITTED / PUSHED; production deploy ovog HEAD-a **NOT CONFIRMED**). ADMIN-AUDIT-02 = TEST GAP / NON-BLOCKING; ADMIN-AUDIT-04 = LOW / NON-BLOCKING. Nema Faze 9. BM/FS pravila KEEP. RG-001 → **v1.1.12** (granica: Plaćanje nije aktivni KK registar). |
 | — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
+| 1.0.26 | 2026-08-17 | **CR-004B administrative closeout (status only):** CR tabela **Planned → Implemented** (`d0ccfe1`; kanonski runtime `ebf6903`). Faza 0 ostaje **CLOSED**. V1 ostaje **COMPLETE / CLOSED**. Nijedna faza nije otvorena. Poslovni zahtjev i implementation scope nijesu mijenjani. |
 
 ---
 
@@ -176,7 +177,7 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | CR | Status | Obuhvat |
 |----|--------|---------|
 | CR-001…CR-004A | Implemented | UI, filteri, badge |
-| **CR-004B** | **Planned** | Javni prikaz `cancelled` — Faza 0 |
+| **CR-004B** | **Implemented** | Javni prikaz `cancelled` — Faza 0 CLOSED |
 
 ---
 

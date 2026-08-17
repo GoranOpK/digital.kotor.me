@@ -8,8 +8,8 @@
 **Modul:** Kalendar kulture
 **Status dokumenta:** USVOJEN
 **Implementacioni status V1:** ZAVRŠEN. **FINAL EDITORIAL AUDIT = PASS / ACCEPTED FOR V1 CLOSEOUT.** MED naslovna fotografija = **IMPLEMENTATION COMPLETE / VERIFIED**. MED-I4B finalni vizuelni resursi = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK**.
-**Verzija:** 1.0.14
-**Datum:** 2026-08-16
+**Verzija:** 1.0.15
+**Datum:** 2026-08-17
 
 ---
 
@@ -46,6 +46,7 @@
 | 1.0.12 | 2026-08-15 | **MED-26 / MED-17:** UX naslovne fotografije na formama DG/MF (drag & drop, picker, preview, Zamijeni, Ukloni, warning <800 px, 2 MB JPEG/PNG/WebP; Odustani bez trajne izmjene). Uklonjeni kao aktivni: poseban ekran Mediji, katalog, izbor postojećeg Medija, samostalni CRUD, ALT/naziv/tagovi/namjena/status forme. Kontrola samo kada je sadržaj uređiv. KK-TS-008 SUPERSEDED. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
 | 1.0.13 | 2026-08-16 | **MED documentation closeout:** Media CRUD/nav/katalog **REMOVED**; cover UX na Event/MF formama **IMPLEMENTATION COMPLETE / VERIFIED**. Operativni cleanup: `cultural-media:cleanup` (dry-run default; `--delete`; ručno; bez schedulera). MED-I4B vizueli nisu KK-TS-010 blocker. |
 | 1.0.14 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** Urednički portal final audit = **PASS / ACCEPTED FOR V1 CLOSEOUT**. Full-system cross-validation = **PASS**. Final full regression = **GREEN** (1286/6224/0/0/12 skipped). **BLOCKS V1 CLOSEOUT = NO**. Administracija nije KK-TS-010 SSOT (ADM-C1 evidentiran u KK-IR-001). Business contract KEEP. |
+| 1.0.15 | 2026-08-17 | **CR-004B administrative closeout (status only):** §7.9 — uklonjena aktivna tvrdnja da CR-004B ostaje Planned; CR-004B = **Implemented** (`d0ccfe1`; kanonski runtime `ebf6903`). Workflow pravila, BR-063/BR-065 i V1 closeout nijesu mijenjani. |
 Napomena:
 
 Ovo poglavlje služi isključivo za evidenciju razvoja dokumenta.
@@ -84,6 +85,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.11 | 2026-08-13 | STATUS SYNC: Alpine-free Moderator navigation CURRENT STATE (Moderiranje hub link; 128×38; hamburger inline JS; bez Alpine runtime). |
 | 1.0.12 | 2026-08-15 | STATUS: MED-26 naslovna fotografija UX (docs); ekran Mediji SUPERSEDED; IMPLEMENTATION PENDING. |
 | 1.0.13 | 2026-08-16 | STATUS: MED-26/17 **IMPLEMENTATION COMPLETE / VERIFIED**; Media CRUD/nav REMOVED; `cultural-media:cleanup` manual-only. |
+| 1.0.15 | 2026-08-17 | STATUS SYNC: CR-004B §7.9 **Planned → Implemented** (administrativni closeout; bez izmjene workflow pravila). |
 
 # Svrha dokumenta
 
@@ -1022,7 +1024,7 @@ Referenca: **KK-TS-009 §7.2**; BR-270–BR-274; BM-PK-13.
 
 * Urednički **workflow prelazi ostaju isti** (otkaz → Otkazan; arhiva → Arhiviran po BR-065).
 * KK-TS-010.4 **ne ponavlja** javni portal: vidljivost `cancelled`, portalna Arhiva ≠ interni `archived`, badge, Istaknuti — isključivo KK-TS-009.
-* CR-004B ne mijenja BR-063 ni BR-065; implementacija CR-004B ostaje Planned u Feature Registry.
+* CR-004B ne mijenja BR-063 ni BR-065; implementacija CR-004B = **Implemented** (KK-CR-REG-001; javni portal KK-TS-009 §7.2).
 
 ## 7.10 Veza sa ulogama (KK-TS-010.1–KK-TS-010.3)
 

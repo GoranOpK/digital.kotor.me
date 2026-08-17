@@ -6,10 +6,10 @@
 **Naziv:** Implementaciona strategija javnog portala  
 **Feature ID:** FT-001  
 **Modul:** Kalendar kulture  
-**Referentna specifikacija:** KK-TS-009 v1.0.23 Stable
+**Referentna specifikacija:** KK-TS-009 v1.0.24 Stable
 **Status dokumenta:** Stable
-**Verzija:** 1.0.11
-**Datum:** 2026-08-16
+**Verzija:** 1.0.12
+**Datum:** 2026-08-17
 
 ---
 
@@ -20,7 +20,7 @@
 | Oznaka | KK-IS-001 |
 | Naziv | Implementaciona strategija javnog portala |
 | Tip | Operativni planski dokument |
-| Referenca | KK-TS-009 v1.0.23 Stable |
+| Referenca | KK-TS-009 v1.0.24 Stable |
 | Usvojene odluke | KK-IS-001-01 … KK-IS-001-08 |
 
 ### KK-IS-001-01 — Identitet dokumenta
@@ -76,7 +76,7 @@ KK-IS-001:
 | P0 / P1 | **0 / 0** |
 | 6B | **OUT OF SCOPE** for this closure; **does not block 6A** |
 
-Historical plan rows u §9.6 (privremeni flag; „bez javnog cancellation_reason“) ostaju istorijski; CURRENT STATE = ova tabela + KK-TS-009 v1.0.23.
+Historical plan rows u §9.6 (privremeni flag; „bez javnog cancellation_reason“) ostaju istorijski; CURRENT STATE = ova tabela + KK-TS-009 v1.0.24.
 
 ## 2.2 V1 DOCUMENTATION CLOSEOUT (2026-08-16)
 
@@ -100,7 +100,7 @@ Istorijski 6A CURRENT STATE (§2.1) KEEP.
 
 | Dokument | Uloga |
 |----------|--------|
-| `docs/technical-specifications/Technical-Specification_Javni_portal.md` (KK-TS-009 v1.0.23) | Referentna specifikacija javnog portala |
+| `docs/technical-specifications/Technical-Specification_Javni_portal.md` (KK-TS-009 v1.0.24) | Referentna specifikacija javnog portala |
 | `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-11, BM-05, …) | Poslovna pravila (ne mijenjaju se ovim dokumentom) |
 | `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13) | Funkcionalni zahtjevi |
 | KK-TS-003 Događaj | Domen Događaja; zavisnost Faze 4/6 |
@@ -331,7 +331,7 @@ Faza 6 (KK-IS-001 istorijski naziv — završno usklađenje)
 | Stavka | Opis |
 |--------|------|
 | **Cilj** | Uskladiti Detalje događaja i Arhivu događaja **isključivo u granicama postojećeg modela** (baseline KK-TS-009 §7–§8), bez uvođenja domena Održavanja, Oznaka ili Manifestacije |
-| **Obuhvat** | Postojeći detalj; **CR-004A (Implemented):** javni status badge (KK-TS-009 §7.1; PO-CR4A-01…05); **CR-004B (Planned):** javni prikaz otkazanih događaja (KK-TS-009 §7.2; PO-CR4B-01…10); navigacija i povratak; Arhiva; kartice Arhive. **Van obuhvata:** više Održavanja; Oznake (BM-08); blok Manifestacije; izmjena kriterijuma ulaska u Arhivu ka BM-DG-04 (to je Faza 6 ili zaseban odobreni CR); novi statusi baze; Odgođen kao status Događaja; izmjena BR-065 / BM-DG-04 |
+| **Obuhvat** | Postojeći detalj; **CR-004A (Implemented):** javni status badge (KK-TS-009 §7.1; PO-CR4A-01…05); **CR-004B (Implemented):** javni prikaz otkazanih događaja (KK-TS-009 §7.2; PO-CR4B-01…10); navigacija i povratak; Arhiva; kartice Arhive. **Van obuhvata:** više Održavanja; Oznake (BM-08); blok Manifestacije; izmjena kriterijuma ulaska u Arhivu ka BM-DG-04 (to je Faza 6 ili zaseban odobreni CR); novi statusi baze; Odgođen kao status Događaja; izmjena BR-065 / BM-DG-04 |
 | **Zavisnosti** | Faze 1–2 nisu strogi preduslov za početak; **ne zamjenjuje** Fazu 6 |
 | **Rizik** | **Srednji** |
 | **Uticaj na kod** | Sloj kontrolera / helper za izračun javnog stanja (bez novih tabela); prikazi kartica i Detalja; rute: bez novih; baza: ne |
@@ -363,14 +363,14 @@ Faza 6 (KK-IS-001 istorijski naziv — završno usklađenje)
 
 | Stavka | Opis |
 |--------|------|
-| **Status** | **Planned** |
-| **Dokumentacija** | KK-TS-009 v1.0.5 §7.2; KK-IS-001 v1.0.6 §9.3 / §9.3.2; BM-PK-13 (PATCH-051); FS PATCH-FS-051 (BR-270–BR-274); PO-CR4B-01…10 |
+| **Status** | **Implemented** (2026-08-07, `d0ccfe1`; kanonski runtime `ebf6903`). Administrativni closeout 2026-08-17. |
+| **Dokumentacija** | KK-TS-009 §7.2; KK-IS-001 §9.3 / §9.3.2; BM-PK-13 (PATCH-051); FS PATCH-FS-051 (BR-270–BR-274); PO-CR4B-01…10 |
 | **Cilj** | Uskladiti javnu dostupnost i portalni prikaz otkazanih događaja bez migracije i bez izmjene internog lifecycle-a |
 | **Obuhvat** | Aktivne površine: javni skup `published` \| `cancelled` uz vremenske uslove; Istaknuti isključuju `cancelled` (bez izmjene flaga); sistemsko obavještenje na Detaljima; portalna Arhiva = query po datumu (`published` ili `cancelled` + prošao termin); status otkazanog ostaje `cancelled`; javni status uvijek **Otkazan**; statistike/datumski skupovi uključuju otkazane; bez novih filtera/URL/search moda |
 | **Van obuhvata** | Odgođen; Faza 4 / Faza 5; migracije / izmjena šeme / novi modeli / tabele; izmjena BR-065 / BM-DG-04; javna dostupnost internog statusa `archived`; prelaz `cancelled → archived`; izmjena prava otkazivanja (BR-063 / BM-DG-05); izmjena flaga Istaknut |
 | **Controller / View** | Proširenje query dostupnosti (bez migracije); Istaknuti filter; `show` dozvoljava `cancelled`; Blade obavještenje na Detaljima; Arhiva uključuje otkazane nakon termina (date query); bez novih ruta |
 | **Test** | Dostupnost cancelled na aktivnim površinama; Istaknuti bez cancelled; show URL; obavještenje; portalna Arhiva po datumu uz badge Otkazan; Pretraga bez novog moda; statistike uključuju cancelled; regresija CR-001…CR-004A |
-| **Rizik** | **Srednji**. Napomena: buduća implementacija BR-065 (`cancelled → archived`) može zahtijevati novi CR ili migraciju radi očuvanja istorije otkazivanja — nije dio CR-004B. |
+| **Rizik** | **Srednji** (historijski paket). Napomena: CR-004B nije uključivao BR-065 (`cancelled → archived`); kasnije uređeno zasebnom odlukom PO-6A09 / BR-286 — **ne** superseduje CR-004B. |
 | **Deploy / Rollback** | Bez migracije / bez promjene šeme; rollback = vraćanje query/UI promjena — bez undo baze |
 
 ---
@@ -643,7 +643,8 @@ Ova pitanja **ne rješava** KK-IS-001; zahtijevaju analizu i Product Owner / teh
 | 1.0.10 | 2026-08-16 | **MED documentation closeout:** public fallback resolver **COMPLETE / VERIFIED**. Finalni vizuelni asset rad (**MED-I4B**) = DEFERRED / NON-BLOCKING. Istorijske faze KEEP. Referenca TS-009 v1.0.22. |
 | 1.0.11 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** §2.2 — javni portal final audit **PASS / ACCEPTED**; cross-validation **PASS**; final regression **GREEN** (1286/6224). B3 KEEP deferred. Production deploy HEAD `4595a14` **NOT CONFIRMED**. Referenca TS-009 v1.0.23. Istorijske faze KEEP. |
 | — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
+| 1.0.12 | 2026-08-17 | **CR-004B administrative closeout (status only):** §9.3.2 / Faza 3 obuhvat — CR-004B **Planned → Implemented** (`d0ccfe1`; kanonski runtime `ebf6903`). Poslovni zahtjev, faze, V1 closeout i implementacija nijesu mijenjani. |
 
 ---
 
-**Kraj dokumenta KK-IS-001 v1.0.11 (Stable)**
+**Kraj dokumenta KK-IS-001 v1.0.12 (Stable)**
