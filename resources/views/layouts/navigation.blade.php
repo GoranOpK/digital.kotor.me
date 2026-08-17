@@ -33,12 +33,13 @@
     $showPublicManifestationsNav = ! $isKkAdmin || $isKkPublicPortalContext;
     $showEditorialManifestationsNav = $isKkEditorialPortalContext;
 
-    // Shared KK nav button styles (existing red palette).
+    // Shared KK nav link styles: red text, transparent fill, red tape on active/hover.
     $kkNavBtn = static function (bool $active): string {
-        $bg = $active ? '#5f0c12' : '#7a0f17';
+        $tape = $active ? '#7a0f17' : 'transparent';
 
         return 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:8px;'
-            ."background:{$bg};color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;";
+            .'background:transparent;color:#7a0f17;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;'
+            ."border-bottom:2px solid {$tape};";
     };
     // Shared desktop sizing for moderator entrypoints (Kontrolna tabla + Moderiranje) — both <a>.
     // Explicit equal width+height (content-width alone would make Moderiranje narrower).
@@ -47,10 +48,11 @@
             .'box-sizing:border-box;line-height:1.25;min-height:38px;height:38px;width:128px;min-width:128px;';
     };
     $kkNavBtnMobile = static function (bool $active): string {
-        $bg = $active ? '#5f0c12' : '#7a0f17';
+        $tape = $active ? '#7a0f17' : 'transparent';
 
         return 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:8px;'
-            ."background:{$bg};color:#ffffff;font-size:16px;font-weight:600;text-decoration:none;";
+            .'background:transparent;color:#7a0f17;font-size:16px;font-weight:600;text-decoration:none;'
+            ."border-bottom:2px solid {$tape};";
     };
     $kkLogoutBtn = 'min-width:100px;background:#0d6efd;color:#ffffff;border:1px solid #0d6efd;border-radius:8px;'
         .'padding:8px 14px;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;'
@@ -75,7 +77,7 @@
     $isModeratorHubNav = $isModeratorContentNav
         || request()->routeIs('cultural-moderator-workspace.*');
 @endphp
-@if($isKkAdmin)
+@if($isKkAdmin || $isKkSection)
 {{-- Inline CSS: Tailwind purge often omits sm:flex-col, which collapsed both rows into one horizontal flex. --}}
 <style>
     .kk-admin-nav-desktop { display: none; }
@@ -84,11 +86,19 @@
         flex-direction: row;
         flex-wrap: wrap;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         gap: 8px;
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
+    }
+    .kk-admin-nav-desktop a:hover,
+    .kk-admin-nav-desktop a:focus,
+    .kk-section-links a:hover,
+    .kk-section-links a:focus,
+    #kk-mobile-nav-menu a:hover,
+    #kk-mobile-nav-menu a:focus {
+        border-bottom-color: #7a0f17 !important;
     }
     @media (min-width: 640px) {
         .kk-admin-nav-desktop {
@@ -105,7 +115,7 @@
         .kk-admin-nav-desktop[data-kk-nav-context="public"] {
             flex-direction: row;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             gap: 8px;
         }
         .kk-admin-nav-desktop[data-kk-nav-context="public"] .kk-admin-nav-row {
@@ -139,7 +149,7 @@
                 'flex justify-start min-w-0 flex-1',
                 'items-start' => $isKkAdmin,
                 'items-center flex-wrap gap-y-2' => ! $isKkAdmin,
-            ]) style="{{ $isKkAdmin ? 'width:100%;max-width:100%;box-sizing:border-box;' : '' }}">
+            ]) style="{{ $isKkAdmin ? 'min-width:0;max-width:100%;box-sizing:border-box;' : '' }}">
                 <!-- Logo -->
                 <div class="shrink-0 flex items-center" style="{{ $isKkAdmin ? 'min-height: 38px;' : '' }}">
                     <a href="{{ $isKkAdmin ? route('cultural-calendar.index') : ($isCompetitionAdmin ? route('admin.dashboard') : route('dashboard')) }}">
@@ -211,37 +221,27 @@
                                 >Kategorije</a>
                             @endif
                         </div>
+                        @if($isKkEditorialPortalContext)
                         <div class="kk-admin-nav-row" data-kk-nav-row="2">
-                            @if($isKkEditorialPortalContext)
-                                <a
-                                    href="{{ route('cultural-tags.index') }}"
-                                    style="{{ $kkNavBtn(request()->routeIs('cultural-tags.*')) }}"
-                                >Oznake</a>
-                                <a
-                                    href="{{ route('cultural-organizers.index') }}"
-                                    style="{{ $kkNavBtn(request()->routeIs('cultural-organizers.*')) }}"
-                                >Organizatori</a>
-                                <a
-                                    href="{{ route('cultural-editorial-requests.index') }}"
-                                    data-kk-nav="zahtjevi"
-                                    style="{{ $kkNavBtn(request()->routeIs('cultural-editorial-requests.*', 'cultural-organizer-creation-requests.index', 'cultural-organizer-creation-requests.show', 'cultural-organizer-creation-requests.approve', 'cultural-organizer-creation-requests.reject', 'cultural-moderator-requests.index', 'cultural-moderator-requests.show', 'cultural-moderator-requests.approve', 'cultural-moderator-requests.reject')) }}"
-                                >Zahtjevi</a>
-                            @endif
-                            <form method="POST" action="{{ route('logout') }}" style="margin:0;">
-                                @csrf
-                                <button
-                                    type="submit"
-                                    class="inline-flex items-center justify-center text-sm font-semibold"
-                                    style="{{ $kkLogoutBtn }}"
-                                >
-                                    Odjava
-                                </button>
-                            </form>
+                            <a
+                                href="{{ route('cultural-tags.index') }}"
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-tags.*')) }}"
+                            >Oznake</a>
+                            <a
+                                href="{{ route('cultural-organizers.index') }}"
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-organizers.*')) }}"
+                            >Organizatori</a>
+                            <a
+                                href="{{ route('cultural-editorial-requests.index') }}"
+                                data-kk-nav="zahtjevi"
+                                style="{{ $kkNavBtn(request()->routeIs('cultural-editorial-requests.*', 'cultural-organizer-creation-requests.index', 'cultural-organizer-creation-requests.show', 'cultural-organizer-creation-requests.approve', 'cultural-organizer-creation-requests.reject', 'cultural-moderator-requests.index', 'cultural-moderator-requests.show', 'cultural-moderator-requests.approve', 'cultural-moderator-requests.reject')) }}"
+                            >Zahtjevi</a>
                         </div>
+                        @endif
                     </div>
                 @elseif($isKkSection)
                     <div
-                        class="hidden sm:flex sm:items-center sm:justify-start sm:flex-wrap"
+                        class="hidden sm:flex sm:items-center sm:justify-start sm:flex-wrap kk-section-links"
                         style="margin-left: 16px; gap: 8px; flex: 1 1 auto; min-width: 0;"
                     >
                         <a
@@ -344,10 +344,10 @@
                 @endif
             </div>
 
-            <!-- User info + Logout (non-kk_admin only; kk_admin must not place name among nav buttons) -->
-            @unless($isKkAdmin)
-            <div class="hidden sm:flex sm:items-center sm:ms-6 shrink-0" style="align-items:center; gap:12px;">
+            <!-- User info + Logout: links stay left, Odjava stays right. kk_admin name is not shown among nav items. -->
+            <div class="hidden sm:flex sm:items-center sm:ms-6 shrink-0" style="align-items:center; gap:12px; margin-left:auto;">
                 @auth
+                    @unless($isKkAdmin)
                     <span @class(['text-sm text-gray-700', 'dark:text-gray-200' => ! $isKkSection]) style="margin-right: 8px;">
                         @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
                             Administrator konkursa
@@ -355,6 +355,7 @@
                         {{ Auth::user()->name }}
                         @endif
                     </span>
+                    @endunless
                     <form method="POST" action="{{ route('logout') }}" style="margin:0;">
                         @csrf
                         <button
@@ -367,7 +368,6 @@
                     </form>
                 @endauth
             </div>
-            @endunless
 
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">

@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * UI regresija: KK navigacija — crvena dugmad, plava Odjava, eksplicitna 2 reda za kk_admin.
+ * UI regresija: KK navigacija — crveni tekst, crvena traka na hover/active, plava Odjava desno.
  */
 class CulturalCalendarNavigationButtonsTest extends TestCase
 {
@@ -55,9 +55,9 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
             'Urednički portal',
         ] as $label) {
             $this->assertMatchesRegularExpression(
-                '/background:#(?:7a0f17|5f0c12)[^>]*>'.preg_quote($label, '/').'</',
+                '/color:#7a0f17[^>]*>'.preg_quote($label, '/').'</',
                 $html,
-                "Expected red button style for: {$label}"
+                "Expected red text style for: {$label}"
             );
         }
 
@@ -69,7 +69,8 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
 
         $this->assertStringContainsString('background:#0d6efd', $html);
         $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $html);
-        $this->assertStringNotContainsString('border-bottom: 2px solid', $html);
+        $this->assertStringContainsString('border-bottom:2px solid', $html);
+        $this->assertStringContainsString('border-bottom-color: #7a0f17', $html);
     }
 
     public function test_kk_admin_desktop_has_two_explicit_nav_rows_with_stable_hrefs(): void
@@ -81,7 +82,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
 
         $this->assertStringContainsString('data-kk-nav-layout="two-row"', $html);
         $this->assertStringContainsString('data-kk-nav-row="1"', $html);
-        $this->assertStringContainsString('data-kk-nav-row="2"', $html);
+        $this->assertStringNotContainsString('data-kk-nav-row="2"', $html);
 
         $layoutStart = strpos($html, 'data-kk-nav-layout="two-row"');
         $hamburgerStart = strpos($html, '<!-- Hamburger -->');
@@ -91,17 +92,11 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
 
         $desktopNav = substr($html, $layoutStart, $hamburgerStart - $layoutStart);
         $row1Start = strpos($desktopNav, 'data-kk-nav-row="1"');
-        $row2Start = strpos($desktopNav, 'data-kk-nav-row="2"');
         $this->assertNotFalse($row1Start);
-        $this->assertNotFalse($row2Start);
-        $this->assertLessThan($row2Start, $row1Start);
-
-        $row1Html = substr($desktopNav, $row1Start, $row2Start - $row1Start);
-        $row2Html = substr($desktopNav, $row2Start);
+        $row1Html = substr($desktopNav, $row1Start);
 
         foreach (['Kalendar kulture', 'Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal'] as $label) {
             $this->assertStringContainsString('>'.$label.'<', $row1Html);
-            $this->assertStringNotContainsString('>'.$label.'<', $row2Html);
         }
 
         $this->assertStringNotContainsString('>Upravljanje događajima<', $row1Html);
@@ -115,13 +110,13 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertStringNotContainsString('data-kk-nav="mf-editorial"', $row1Html);
 
         foreach (['Kategorije', 'Oznake', 'Mediji', 'Organizatori', 'Zahtjevi Org', 'Zahtjevi Mod', 'Javni portal'] as $label) {
-            $this->assertStringNotContainsString('>'.$label.'<', $row2Html);
+            $this->assertStringNotContainsString('>'.$label.'<', $row1Html);
         }
-        $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $row2Html);
+        $this->assertMatchesRegularExpression('/background:#0d6efd[^>]*>\s*Odjava\s*</', $html);
 
         $this->assertStringContainsString('kk-admin-nav-desktop', $html);
         $this->assertStringContainsString('flex-direction: column', $html);
-        $this->assertStringContainsString('justify-content: center', $html);
+        $this->assertStringContainsString('justify-content: flex-start', $html);
         $this->assertStringNotContainsString('sm:flex-col', $html);
 
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.index')).'"', $html);
@@ -254,9 +249,9 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
 
         foreach (['Kalendar kulture', 'Događaji', 'Arhiva događaja', 'Zahtjev za Organizatora'] as $label) {
             $this->assertMatchesRegularExpression(
-                '/background:#(?:7a0f17|5f0c12)[^>]*>'.preg_quote($label, '/').'</',
+                '/color:#7a0f17[^>]*>'.preg_quote($label, '/').'</',
                 $html,
-                "Expected red button style for: {$label}"
+                "Expected red text style for: {$label}"
             );
         }
 
