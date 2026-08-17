@@ -37,7 +37,7 @@
     $kkNavBtn = static function (bool $active): string {
         $tape = $active ? '#7a0f17' : 'transparent';
 
-        return 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:0;'
+        return 'display:inline-flex;align-items:center;justify-content:flex-start;padding:8px 14px;border-radius:0;'
             .'background:transparent;color:#7a0f17;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;'
             ."border-bottom:3px solid {$tape};";
     };
@@ -54,12 +54,12 @@
             .'background:transparent;color:#7a0f17;font-size:16px;font-weight:600;text-decoration:none;'
             ."border-bottom:3px solid {$tape};";
     };
-    $kkLogoutBtn = 'min-width:100px;background:#0d6efd;color:#ffffff;border:1px solid #0d6efd;border-radius:8px;'
-        .'padding:8px 14px;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;'
-        .'text-decoration:none;font-size:14px;font-weight:600;';
-    $kkLogoutBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:8px;'
-        .'background:#0d6efd;color:#ffffff;border:1px solid #0d6efd;font-size:16px;font-weight:600;'
-        .'text-decoration:none;text-align:center;cursor:pointer;';
+    $kkLogoutBtn = 'display:inline-flex;align-items:center;justify-content:flex-start;padding:8px 14px;border-radius:0;'
+        .'background:transparent;color:#111827;border:0;border-bottom:3px solid transparent;cursor:pointer;'
+        .'text-decoration:none;font-size:14px;font-weight:600;white-space:nowrap;';
+    $kkLogoutBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:0;'
+        .'background:transparent;color:#111827;border:0;border-bottom:3px solid transparent;font-size:16px;'
+        .'font-weight:600;text-decoration:none;text-align:left;cursor:pointer;';
 
     // Moderator UX block (grant-based; not a platform role). Labels only — access stays in middleware.
     $isActiveModeratorUser = $user && \App\Support\CulturalModeratorEventAccess::isActiveModerator($user);
@@ -90,14 +90,23 @@
         gap: 4px;
         width: auto;
         max-width: 100%;
+        margin: 0;
         box-sizing: border-box;
+        text-align: left;
     }
     .kk-admin-nav-desktop a,
-    .kk-section-links a {
+    .kk-section-links a,
+    .kk-logout-link {
         border-radius: 0 !important;
         align-self: stretch;
+        text-align: left;
     }
-    .kk-admin-nav-desktop[data-kk-nav-context="editorial"] a {
+    .kk-section-links {
+        justify-content: flex-start !important;
+        margin-left: 12px;
+    }
+    .kk-admin-nav-desktop[data-kk-nav-context="editorial"] a,
+    nav[data-kk-nav-context="editorial"] .kk-logout-link {
         font-size: 12px !important;
         padding: 8px 8px !important;
     }
@@ -109,6 +118,11 @@
     #kk-mobile-nav-menu a:focus {
         border-bottom-color: #7a0f17 !important;
     }
+    .kk-logout-link:hover,
+    .kk-logout-link:focus {
+        border-bottom-color: #111827 !important;
+        color: #111827 !important;
+    }
     @media (min-width: 640px) {
         .kk-admin-nav-desktop {
             display: flex;
@@ -117,7 +131,7 @@
             justify-content: flex-start;
             gap: 4px;
             margin-left: 12px;
-            flex: 1 1 auto;
+            flex: 0 1 auto;
             min-width: 0;
             max-width: 100%;
             box-sizing: border-box;
@@ -127,6 +141,7 @@
 @endif
 <nav
     data-kk-mobile-nav-root
+    @if($isKkEditorialPortalContext) data-kk-nav-context="editorial" @elseif($isKkSection) data-kk-nav-context="public" @endif
     @class([
         'bg-white border-b border-gray-100 print:hidden',
         'dark:bg-gray-800 dark:border-gray-700' => ! $isKkSection,
@@ -340,10 +355,10 @@
             </div>
 
             <!-- User info + Logout: links stay left, Odjava stays right. kk_admin name is not shown among nav items. -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6 shrink-0" style="align-items:center; gap:12px; margin-left:auto;">
+            <div class="hidden sm:flex sm:items-stretch sm:ms-6 shrink-0" style="align-items:stretch; margin-left:auto;">
                 @auth
                     @unless($isKkAdmin)
-                    <span @class(['text-sm text-gray-700', 'dark:text-gray-200' => ! $isKkSection]) style="margin-right: 8px;">
+                    <span @class(['text-sm text-gray-700', 'dark:text-gray-200' => ! $isKkSection]) style="margin-right: 8px; display:inline-flex; align-items:center;">
                         @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
                             Administrator konkursa
                         @else
@@ -351,11 +366,11 @@
                         @endif
                     </span>
                     @endunless
-                    <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                    <form method="POST" action="{{ route('logout') }}" style="margin:0; display:flex; align-items:stretch;">
                         @csrf
                         <button
                             type="submit"
-                            class="inline-flex items-center justify-center text-sm font-semibold"
+                            class="kk-logout-link"
                             style="{{ $kkLogoutBtn }}"
                         >
                             Odjava
@@ -565,7 +580,7 @@
                 <div class="mt-3 px-2 space-y-2">
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" style="{{ $kkLogoutBtnMobile }}">
+                        <button type="submit" class="kk-logout-link" style="{{ $kkLogoutBtnMobile }}">
                             Odjava
                         </button>
                     </form>
