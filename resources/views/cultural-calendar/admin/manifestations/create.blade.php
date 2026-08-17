@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-3xl">
+<div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <h1 style="font-size:28px; font-weight:700; margin:0 0 16px; color:#111827;">Nova Manifestacija</h1>
 
     @if($errors->any())
@@ -10,7 +10,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('cultural-manifestations.store') }}" enctype="multipart/form-data" class="bg-white rounded-lg border border-gray-200 p-6">
+    <form method="POST" action="{{ route('cultural-manifestations.store') }}" enctype="multipart/form-data" class="bg-white rounded-lg border border-gray-200 p-6 md:p-8 max-w-4xl">
         @csrf
         @include('cultural-calendar.admin.manifestations.partials.form', [
             'contentEditable' => true,

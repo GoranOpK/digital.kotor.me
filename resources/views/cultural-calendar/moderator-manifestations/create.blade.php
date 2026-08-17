@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-3xl">
+<div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
     <h1 style="font-size:28px; font-weight:700; margin:0 0 16px; color:#111827;">Nova Manifestacija</h1>
     @if($errors->any())
         <div class="mb-4 rounded-md bg-red-50 border border-red-200 text-red-800 px-4 py-3">
             <ul class="list-disc list-inside">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
         </div>
     @endif
-    <form method="POST" action="{{ route('cultural-moderator-manifestations.store') }}" enctype="multipart/form-data" class="bg-white rounded-lg border border-gray-200 p-6">
+    <form method="POST" action="{{ route('cultural-moderator-manifestations.store') }}" enctype="multipart/form-data" class="bg-white rounded-lg border border-gray-200 p-6 md:p-8 max-w-4xl">
         @csrf
         @include('cultural-calendar.admin.manifestations.partials.form', [
             'contentEditable' => true,

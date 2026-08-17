@@ -70,6 +70,7 @@ class CulturalManifestationEditorUiTest extends TestCase
             ->get(route('cultural-manifestations.create'))
             ->assertOk()
             ->assertSee('Nova Manifestacija')
+            ->assertSee('data-kk-mf-form-row="organizer-website"', false)
             ->assertSee('Sačuvaj nacrt')
             ->assertSee('Odustani')
             ->assertSee('background:#b91c1c', false)

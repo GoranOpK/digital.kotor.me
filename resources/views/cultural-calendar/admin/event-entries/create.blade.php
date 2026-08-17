@@ -17,7 +17,7 @@
         </div>
     @endif
 
-    <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl">
+    <div class="bg-white rounded-lg border border-gray-200 p-6 md:p-8 max-w-4xl">
         <form method="POST" action="{{ route('cultural-event-entries.store') }}" enctype="multipart/form-data">
             @csrf
             @include('cultural-calendar.admin.event-entries.partials.form')

@@ -56,6 +56,8 @@ class CulturalEventEntryDraftUiTest extends TestCase
             ->assertOk()
             ->assertSee('Novi događaj', false)
             ->assertSee('Sačuvaj i nastavi', false)
+            ->assertSee('data-kk-event-form-row="category-organizer"', false)
+            ->assertSee('data-kk-event-tags="wrap"', false)
             ->assertSee('name="organizer_manual_name"', false)
             ->assertSee('Opciono — unesite naziv organizatora', false)
             ->assertDontSee('naziv ako nije u katalogu', false)

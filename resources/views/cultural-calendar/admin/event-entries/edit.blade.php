@@ -37,7 +37,7 @@
         </div>
     @endif
 
-    <div class="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl mb-8">
+    <div class="bg-white rounded-lg border border-gray-200 p-6 md:p-8 max-w-4xl mb-8">
         <div class="flex flex-wrap justify-between gap-3 items-start mb-4">
             <h2 class="text-lg font-semibold text-gray-900 mb-0">Podaci događaja</h2>
             @if(! $publishedDirectEdit)
