@@ -68,7 +68,7 @@ Pregled koncepta: [architecture-overview.md](architecture-overview.md#konceptual
 | Implementacija | metode prazne |
 | Baza | `notifications` tabela |
 
-**Status:** stub.
+**Status:** stub. Ovo **nije** FT-004 Obavještenja (`Notice`, javni panel na `/`, `notices.public-content`).
 
 ---
 

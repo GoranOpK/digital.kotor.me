@@ -4,7 +4,7 @@
 **Oznaka dokumenta:** KK-RG-001
 **Naziv:** Registar skraćenica i oznaka dokumentacije Kalendara kulture
 **Status dokumenta:** Stable
-**Verzija:** 1.1.13
+**Verzija:** 1.1.14
 **Datum:** 2026-08-17
 
 ---
@@ -69,7 +69,7 @@ Dokumentacioni namespace Kalendara kulture je `KK-*`.
 
 Numeracija dokumentacionih ID-eva je lokalna unutar namespace-a. `KK-TS-002` trenutno **nije dodijeljen** i dokument nije kreiran. Broj 002 u `KK-*` namespace-u nije rezervisan za e-Plaćanje.
 
-FT-004 / Obavještenja pripadaju platformskoj dokumentaciji i biće uređeni kroz `DK-*` namespace corrective. `TS-013` ostaje trenutna oznaka tehničke specifikacije Obavještenja.
+FT-004 / Obavještenja pripadaju platformskom namespace-u; vidi `DK-RG-001` / `DK-FR-001`.
 
 ## 2.1 Tipovi dokumenata i identifikatori dokumentacije
 
@@ -167,7 +167,7 @@ Prefiksi ispod **nisu** poslovne definicije — samo objašnjavaju oznaku ID-a p
 | **BM-AR** | Arhitektura poslovnih cjelina | AKTIVNO | BM-AR-* |
 | **BM-GR** | Opšta poslovna pravila | AKTIVNO | BM-GR-* |
 
-**BM-OB** nije aktivni KK prefiks. Obavještenja / FT-004 pripadaju platformskoj dokumentaciji (`DK-*` corrective pending).
+**BM-OB** nije aktivni KK prefiks. FT-004 / Obavještenja pripadaju platformskom namespace-u; vidi `DK-RG-001` / `DK-FR-001`.
 
 **BM-TR:** Prefiks je **AKTIVAN** za domen Održavanja (npr. BM-TR-12). Slovo „TR“ u imenu je istorijsko (raniji radni naziv „Termin“); to **ne** znači da je prefiks zastario ili neaktivan.
 
@@ -230,7 +230,7 @@ Nema drugih skraćenica u ovom dokumentu sa dva **konkurentna** kanonska značen
 
 ## 2.6 Mapa KK-TS dokumenata
 
-Kanonski nazivi prema Feature Registry / odgovarajućim TS dokumentima. Lokalna numeracija unutar `KK-*` (M-TS-002). `KK-TS-002` nije dodijeljen. `KK-TS-013` ne postoji (`TS-013` = Obavještenja, platforma).
+Kanonski nazivi prema Feature Registry / odgovarajućim TS dokumentima. Lokalna numeracija unutar `KK-*` (M-TS-002). `KK-TS-002` nije dodijeljen. `KK-TS-013` ne postoji. Istorijski document ID Obavještenja `TS-013` zamijenjen je sa `DK-TS-001` (platforma; vidi `DK-RG-001`).
 
 | Oznaka | Dokument |
 |--------|----------|
@@ -381,7 +381,8 @@ KK-RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, kat
 | 1.1.11 | 2026-08-16 | **MED status hygiene (nema nove skraćenice):** AKTIVNO polje MED ažurirano na IMPLEMENTATION COMPLETE / VERIFIED. MED-I1/I2/I3/I4A/I4B/I5 **nisu** registrovani (radni nazivi implementacionih paketa). TS8- / TS-008 SUPERSEDED KEEP. |
 | 1.1.12 | 2026-08-16 | **Module boundary:** uklonjene aktivne oznake drugog Digital Kotor modula (BP, BR-P, P-, F-, UR- kao Plaćanje). **TS-002** u mapi TS = numeraciona granica (nije dio KK plana; oznaka zauzeta van ovog modula). Bez opisa sadržaja drugog modula. Feature Registry ovog registra = Kalendar kulture. Bez izmjene implementacije. |
 | 1.1.13 | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Registrovani `KK-BM` / `KK-FS` / `KK-TS` / `KK-IS` / `KK-IR` / `KK-RG` / `KK-FR` / `KK-CR-REG`. Runtime dual-key (`source_module`). `KK-TS-002` nije dodijeljen. FT-004 / Obavještenja uklonjeni iz aktivnog KK kataloga. PATCH / PATCH-FS KEEP. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
+| 1.1.14 | 2026-08-17 | FT-004 / Obavještenja: finalna granica prema platformskom namespace-u (`DK-RG-001` / `DK-FR-001`). `TS-013` evidentiran kao istorijski document ID zamijenjen sa `DK-TS-001`. BM-OB nije KK prefiks. Istorijski changelog KEEP. Bez izmjene implementacije. |
 
 ---
 
-**Kraj dokumenta KK-RG-001 v1.1.13 (Stable)**
+**Kraj dokumenta KK-RG-001 v1.1.14 (Stable)**

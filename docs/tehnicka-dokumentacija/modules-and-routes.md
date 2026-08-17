@@ -1,6 +1,6 @@
 # Moduli i rute
 
-**Poslednje ažuriranje:** 2026-08-15
+**Poslednje ažuriranje:** 2026-08-17
 **Izvor u kodu:** `routes/web.php`, `routes/auth.php`
 
 Sve rute u nastavku (osim `/`, login, register i javne Newsletter odjave) zahtijevaju middleware: `auth`, `verified`, `module_access_restrict`, osim ako nije drugačije navedeno.
@@ -19,6 +19,7 @@ Sve rute u nastavku (osim `/`, login, register i javne Newsletter odjave) zahtij
 | GET | `/newsletter/odjava/{token}` | `newsletter.unsubscribe.public.show` | `NewsletterPublicUnsubscribeController@show` |
 | POST | `/newsletter/odjava/{token}` | `newsletter.unsubscribe.public.consume` | `NewsletterPublicUnsubscribeController@unsubscribe` |
 | GET | `/newsletter/odjava-potvrda` | `newsletter.unsubscribe.public.done` | `NewsletterPublicUnsubscribeController@done` |
+| GET | `/obavjestenja/{notice}/sadrzaj` | `notices.public-content` | `PublicNoticeContentController@show` |
 
 Breeze rute iz `auth.php` takođe učitavaju login/register — **duplikat imena ruta** (v. [project-todo.md](project-todo.md)).
 
@@ -146,7 +147,7 @@ Kontroler: `AdminController`.
 |---------|--------|
 | `/payments`, `/payments/pay` | Stub — `PaymentsController` |
 | `/tenders`, `/tenders/{id}`, `/tenders/purchase` | Stub — `TendersController` |
-| `/notifications`, `/notifications/send` | Stub — `NotificationController` |
+| `/notifications`, `/notifications/send` | Stub — `NotificationController` (nije FT-004 Obavještenja) |
 
 V. [stubs-and-future-modules.md](stubs-and-future-modules.md).
 

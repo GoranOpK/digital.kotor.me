@@ -1,10 +1,12 @@
 # Digital Kotor
 # Use Case Specification
-## Funkcionalnost: Obavještenja
+## Funkcionalnost: Obavještenja (platformska funkcionalnost Digital Kotora)
 
+**Oznaka dokumenta:** DK-UC-001
 **Feature ID:** FT-004  
 **Status dokumenta:** U IZRADI  
 **Verzija:** 0.1
+**Namespace:** DK-* (platforma Digital Kotor)
 
 ---
 
@@ -13,6 +15,7 @@
 | Verzija / PATCH | Datum | Opis |
 |-----------------|--------|------|
 | 0.1 | 2026-07-31 | Početna Use Case specifikacija za FT-004 Obavještenja. Identifikovani usvojeni poslovni use case-ovi, kandidati i otvorena pitanja na osnovu Business Model v0.1 + PATCH-001. |
+| 2026-08-17 | 2026-08-17 | Administrativna dodjela dokumentacionog ID-a `DK-UC-001`; aktivne reference prebačene na DK-BM-001 / DK-FS-001 / DK-TS-001 / DK-FR-001. Poslovni sadržaj, UC-OB / C-UC-OB oznake i status U IZRADI ostaju nepromijenjeni. |
 
 Napomena:
 
@@ -44,11 +47,16 @@ Služi za provjeru da su poslovni scenariji identifikovani prije početka Functi
 
 Usvojeni Business Model:
 
-`docs/business-model/Business_Model_Obavjestenja.md`
+**DK-BM-001** — `docs/business-model/Business_Model_Obavjestenja.md`
 
 Feature Registry:
 
-`docs/features/Feature-Registry.md` — FT-004
+**DK-FR-001** — `docs/features/Feature-Registry_Digital-Kotor.md` — FT-004
+
+Povezani dokumenti:
+
+* Functional Specification: **DK-FS-001** — `docs/functional-specifications/Functional_Specification_Obavjestenja.md`
+* Technical Specification: **DK-TS-001** — `docs/technical-specifications/Technical_Specification_Obavjestenja.md`
 
 Svaki usvojeni use case mora biti sljediv do jednog ili više pravila BM-OB-* i odluka PO-OB-*.
 

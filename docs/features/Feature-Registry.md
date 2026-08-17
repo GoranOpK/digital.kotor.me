@@ -37,7 +37,7 @@ Ovaj Feature Registry predstavlja polaznu tačku za sljedivost kroz dokumentacij
 | FT-001     | Kalendar kulture | Active  | **V1 COMPLETE** (Faze 0–8 + Završna stabilizacija CLOSED). **V1 TECHNICAL VERIFICATION = PASS.** **FINAL FULL REGRESSION = GREEN** (1286/6224/0/0/12 skipped). **BLOCKS V1 CLOSEOUT = NO.** Javni / urednički / Administracija = **ACCEPTED FOR V1 CLOSEOUT**. MED = FORMALLY CLOSED. B3 `cultural_events` physical DROP = **DEFERRED / POST-V1 / NON-BLOCKING**. MED-I4B = DEFERRED / NON-BLOCKING. HEAD `4595a14` = COMMITTED/PUSHED; production deploy ovog HEAD-a **NOT CONFIRMED**. |
 | FT-003     | Evidencija aktivnosti (Kalendar kulture) | Usvojen (KK-TS-012 v1.0.8) — **FAZA 8 CLOSED: IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED** | FS §5.16 + PATCH-FS-074; BM-14; V1 katalog uključuje Manifestacije; van opsega: napredni pregled/filteri, retention, izvoz (BR-188); **nema durable audit replay**; `repeatable()` uniqueness = known V1 limitation |
 
-Aktivni KK Feature Registry scope: **FT-001**, **FT-003**. Istorijski **FT-002** nije član ovog registra (sibling modul). **FT-004 / Obavještenja** nijesu dio Kalendara kulture — platformska funkcionalnost; predmet budućeg `DK-*` corrective-a. Istorijski changelog zapisi FT-004 ostaju kao istorija.
+Aktivni KK Feature Registry scope: **FT-001**, **FT-003**. Istorijski **FT-002** nije član ovog registra (sibling modul). **FT-004 / Obavještenja** nijesu dio Kalendara kulture — platformska funkcionalnost; kanonski registar: `DK-FR-001`. Istorijski changelog zapisi FT-004 ostaju kao istorija.
 
 Dozvoljeni statusi:
 
@@ -444,18 +444,11 @@ Matrica sljedivosti (sažetak):
 
 ## FT-004 — van aktivnog KK scope-a
 
-FT-004 / Obavještenja **nijesu** funkcionalnost Kalendara kulture i **nijesu** aktivna stavka ovog Feature Registry-ja.
+FT-004 / Obavještenja je platformska funkcionalnost; kanonski registar: `DK-FR-001` (`docs/features/Feature-Registry_Digital-Kotor.md`).
 
-**OWNERSHIP = PLATFORM.** `KK-*` namespace se na FT-004 ne primjenjuje. `TS-013` ostaje trenutna oznaka tehničke specifikacije Obavještenja. Izdvajanje u `DK-*` **nije** dio ovog paketa.
+Ovaj dokument **ne** sadrži detaljni kanonski opis FT-004. `KK-*` namespace se na FT-004 ne primjenjuje.
 
-Kanonski dokumenti (ID-evi neizmijenjeni u ovom corrective-u):
-
-* Business Model: `docs/business-model/Business_Model_Obavjestenja.md`
-* Use Case Specification: `docs/use-cases/Use_Cases_Obavjestenja.md`
-* Functional Specification: `docs/functional-specifications/Functional_Specification_Obavjestenja.md`
-* Technical Specification: `docs/technical-specifications/Technical_Specification_Obavjestenja.md` (`TS-013`)
-
-Istorijski changelog zapisi FT-004 ostaju kao istorija. Ovaj paket ne reinterpretira FT-004.
+Istorijski changelog zapisi FT-004 ostaju kao istorija.
 
 ---
 
@@ -580,3 +573,4 @@ Istorijski changelog zapisi FT-004 ostaju kao istorija. Ovaj paket ne reinterpre
 | 2026-08-13 | FT-001 — **FR cross-reference cleanup:** CURRENT STATE pin IS-001 **1.0.7 → 1.0.8** (usklađeno sa `Implementation-Strategy_Javni_portal.md`). FAZA 6A/6B CLOSED KEEP; TS-009 v1.0.19 KEEP; IR-001 v1.0.11 KEEP. Bez izmjene implementacije. |
 | 2026-08-10 | FT-001 — **PHASE 6A-CLOSE-02:** legacy admin CRUD `cultural-events.*` disabled (middleware `legacy_cultural_events_disabled` → 403 all methods). Legacy code/table/views retained; `CULTURAL_PUBLIC_READ_SOURCE` + public legacy read rollback retained; canonical routes unchanged. **Nije** hard remove / flag cleanup (Phase B). |
 | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. FT-004 / Obavještenja uklonjeni iz aktivnog KK Feature Registry scope-a (platformska funkcionalnost; budući `DK-*` corrective). Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
+| 2026-08-17 | FT-004 / Obavještenja: kanonski opis uklonjen iz ovog registra; pointer na `DK-FR-001`. Poslovni i tehnički sadržaj, FT-001 / FT-003 i istorijski changelog ostaju nepromijenjeni. |

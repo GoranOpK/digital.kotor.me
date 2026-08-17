@@ -22,7 +22,8 @@ Pregled po **cjelinama** (v. [architecture-overview.md](architecture-overview.md
 | **Konkursi** | Mladi u preduzetništvu (`omladinsko`) | **Odložen za sada** | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
 | **e-Plaćanje** | Elektronsko plaćanje finansijskih obaveza | **Trenutni razvojni prioritet** (dokumentacija EP-*; aplikacioni kod lokalno) | [Poslovni model e-Plaćanja](../business-model/Business_Model_e-Placanje.md) |
 | Platforma (stub) | Tenderi | **Stub** (vidljiv u UI) | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
-| Platforma (stub) | Obavještenja | **Stub** (vidljiv u UI) | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
+| **Platforma** | FT-004 / Obavještenja (`Notice`, javni panel na `/`, `notices.public-content`) | **Infrastruktura implementirana** (E2E iz izvornog procesa otvoren; dokumentacija U IZRADI) | [DK-FR-001](../features/Feature-Registry_Digital-Kotor.md) |
+| Platforma (stub) | `/notifications` (`NotificationController`) | **Stub** (nije FT-004 Obavještenja) | [stubs-and-future-modules.md](stubs-and-future-modules.md) |
 
 *Nove cjeline na platformu dokumentovati tek nakon eksplicitne najave.*
 

@@ -1,6 +1,6 @@
 # Baza — entiteti i relacije
 
-**Poslednje ažuriranje:** 2026-06-30  
+**Poslednje ažuriranje:** 2026-08-17  
 **Izvor u kodu:** `app/Models/`, `database/migrations/`
 
 ---
@@ -46,6 +46,7 @@ CulturalEvent ──belongsTo──> User (created_by)
 | `CulturalEvent` | `cultural_events` | Događaj |
 | `NewsletterSubscriber` | `newsletter_subscribers` | Newsletter |
 | `Tender`, `Payment` | `tenders`, `payments` | Stub — minimalna upotreba |
+| `Notice` | `notices` | FT-004 Obavještenja — javni panel zvaničnog sadržaja (nije `/notifications` stub) |
 
 ---
 

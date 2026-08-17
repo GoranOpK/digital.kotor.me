@@ -1,10 +1,20 @@
 # Digital Kotor
 # Business Model
-## Funkcionalnost: Obavještenja
+## Funkcionalnost: Obavještenja (platformska funkcionalnost Digital Kotora)
 
+**Oznaka dokumenta:** DK-BM-001
 **Feature ID:** FT-004  
 **Status dokumenta:** U IZRADI  
 **Verzija:** 0.1
+**Namespace:** DK-* (platforma Digital Kotor)
+
+Povezani dokumenti:
+
+* Use Case Specification: **DK-UC-001** — `docs/use-cases/Use_Cases_Obavjestenja.md`
+* Functional Specification: **DK-FS-001** — `docs/functional-specifications/Functional_Specification_Obavjestenja.md`
+* Technical Specification: **DK-TS-001** — `docs/technical-specifications/Technical_Specification_Obavjestenja.md`
+* Feature Registry: **DK-FR-001** — `docs/features/Feature-Registry_Digital-Kotor.md`
+* Registar oznaka: **DK-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Digital-Kotor.md`
 
 ---
 
@@ -14,6 +24,7 @@
 |-----------------|--------|------|
 | 0.1 | 2026-07-31 | Uspostavljena početna struktura Business Modela funkcionalnosti Obavještenja (FT-004). Unesene usvojene Product Owner odluke PO-OB-01 do PO-OB-11 i odgovarajuća poslovna pravila BM-OB-01 do BM-OB-11. |
 | PATCH-001 | 2026-07-31 | PO-OB-12 / BM-OB-12 — stabilna javna dostupnost referenciranog zvaničnog sadržaja; PO-OB-13 / BM-OB-13 — značenje zamjene (vidljivost u aktivnom panelu). Usklađena terminologija; ažurirana otvorena pitanja. |
+| 2026-08-17 | 2026-08-17 | Administrativna dodjela dokumentacionog ID-a `DK-BM-001`; poslovni sadržaj, BM-OB / PO-OB pravila i status U IZRADI ostaju nepromijenjeni. |
 
 Napomena:
 

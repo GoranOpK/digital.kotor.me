@@ -1,13 +1,15 @@
 # Digital Kotor
 # Technical Specification
-## Funkcionalnost: Obavještenja
+## Funkcionalnost: Obavještenja (platformska funkcionalnost Digital Kotora)
 
 **Feature ID:** FT-004  
-**Oznaka dokumenta:** TS-013  
+**Oznaka dokumenta:** DK-TS-001  
 **Funkcionalna cjelina:** Obavještenja (platformska prezentacija)  
 **Status dokumenta:** U IZRADI  
 **Verzija:** 0.1  
 **Datum:** 2026-07-31
+**Namespace:** DK-* (platforma Digital Kotor)
+**Istorijski document ID:** TS-013
 
 ---
 
@@ -16,6 +18,7 @@
 | Verzija / PATCH | Datum | Opis |
 |-----------------|--------|------|
 | 0.1 | 2026-07-31 | Početna Technical Specification (TS-013) za FT-004. Jedna koherentna Laravel implementacija usvojenih FR-OB-001 do FR-OB-017. Neriješeni OFD evidentirani kao tehnički blocker-i. Bez uvođenja novih poslovnih pravila. |
+| 2026-08-17 | 2026-08-17 | Administrativna migracija dokumentacionog ID-a sa `TS-013` na `DK-TS-001`; poslovni, funkcionalni i tehnički sadržaj ostaju nepromijenjeni. |
 
 Napomena:
 
@@ -31,7 +34,7 @@ Ne mijenjaju se postojeći redovi.
 
 Dokument opisuje **jednu** tehnički koherentnu realizaciju usvojene Functional Specification za Obavještenja.
 
-TS-013:
+DK-TS-001:
 
 * implementira usvojene FR-OB zahtjeve;
 * **ne** uvodi nova poslovna pravila;
@@ -41,10 +44,10 @@ TS-013:
 
 Izvori istine:
 
-* `docs/business-model/Business_Model_Obavjestenja.md`
-* `docs/use-cases/Use_Cases_Obavjestenja.md`
-* `docs/functional-specifications/Functional_Specification_Obavjestenja.md` (v0.1 + PATCH-FS-OB-001)
-* `docs/features/Feature-Registry.md`
+* **DK-BM-001** — `docs/business-model/Business_Model_Obavjestenja.md`
+* **DK-UC-001** — `docs/use-cases/Use_Cases_Obavjestenja.md`
+* **DK-FS-001** — `docs/functional-specifications/Functional_Specification_Obavjestenja.md` (v0.1 + PATCH-FS-OB-001)
+* **DK-FR-001** — `docs/features/Feature-Registry_Digital-Kotor.md`
 * `docs/METHODOLOGY.md` (M-TS-001 … M-TS-005)
 
 ---
@@ -74,9 +77,9 @@ Ukupan status dokumenta: **U IZRADI** (zbog OFD blocker-a koji ograničavaju pot
 
 # Pravila upravljanja dokumentom
 
-1. TS-013 pripada FT-004 – Obavještenja.
+1. DK-TS-001 pripada FT-004 – Obavještenja.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM, UC i FS.
-3. Nova poslovna pravila se ne uvode kroz TS-013.
+3. Nova poslovna pravila se ne uvode kroz DK-TS-001.
 4. Ako implementacija zahtijeva rješavanje OFD, evidentira se blocker; OFD se ne rješava u TS.
 5. Izmjene usvojenog sadržaja evidentiraju se PATCH-om / novom verzijom.
 
@@ -105,7 +108,7 @@ Ručna objava, urednički workflow, arhiva, read-tracking, inbox, kriterijum „
 
 ## 1.4 Oznaka dokumenta
 
-**TS-013** (globalna numeracija; sljedeći slobodan broj nakon TS-012 rezervisanog za FT-003).
+**DK-TS-001** (lokalna numeracija unutar `DK-*` namespace-a). Istorijski document ID: `TS-013`. `TS-013` se ne koristi kao aktivni kanonski document ID.
 
 ---
 

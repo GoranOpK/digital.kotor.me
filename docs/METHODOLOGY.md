@@ -112,7 +112,7 @@ Primjeri postojećih namespace prefiksa (lista **nije** zatvorena):
 
 * `KK-TS-001`, `KK-TS-003` — Kalendar kulture;
 * `EP-TS-001` — e-Plaćanje;
-* budući `DK-TS-*` — zajednička/platformska dokumentacija Digital Kotora.
+* `DK-TS-001` — zajednička/platformska dokumentacija Digital Kotora.
 
 Novi poslovni moduli mogu uvesti sopstveni dokumentacioni namespace, uz istu lokalnu numeraciju unutar tog namespace-a.
 
@@ -423,3 +423,4 @@ Ova odredba ne uvodi širu politiku imenovanja ostalih dokumentacionih foldera.
 | 2026-07-28 | Dodata pravila M-TS-001 do M-TS-004 za Technical Specification dokumente (više TS po Feature-u, globalna numeracija, obavezno poglavlje „Granice V1 (Out of Scope)“, sekcijska i rule-level sljedivost). |
 | 2026-07-28 | Dodato pravilo M-TS-005 — Standardna struktura Technical Specification dokumenta (jedinstvena struktura, redosljed i nazivi poglavlja za sve TS dokumente). |
 | 2026-08-17 | M-TS-002: prelazak sa globalne TS numeracije na modulni dokumentacioni namespace (`KK-*`, `EP-*`, budući `DK-*`; lista prefiksa nije zatvorena). Administrativna migracija dokumentacionog ID-a Kalendara kulture na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
+| 2026-08-17 | M-TS-002 primjer: `DK-TS-001` sada postoji kao platformska dokumentacija Digital Kotora. Metodologija ostaje globalna i nema `DK-*` document ID. |
