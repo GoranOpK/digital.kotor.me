@@ -1,6 +1,6 @@
 # Arhitektura — pregled
 
-**Poslednje ažuriranje:** 2026-06-30  
+**Poslednje ažuriranje:** 2026-08-17  
 **Izvor u kodu:** `composer.json`, `package.json`, `bootstrap/app.php`
 
 ---
@@ -77,9 +77,11 @@ Planirano je **nekoliko vrsta konkursa** i dodatne cjeline. **Redoslijed (odluka
 |---|---------|--------|
 | — | Kalendar kulture | Završeno |
 | — | Konkurs žensko preduzetništvo | Završeno |
-| 1 | Konkurs mladi u preduzetništvu (`omladinsko`) | Sljedeći |
-| 2 | Online plaćanja | Planirano |
-| 3 | Tenderi | Planirano |
+| 1 | e-Plaćanje | Trenutni razvojni prioritet |
+| — | Konkurs mladi u preduzetništvu (`omladinsko`) | Odložen za sada |
+| — | Tenderi | Stub / future module |
+
+Žensko i omladinsko su vrste/tokovi unutar istog modula Konkursi (`Competition` framework; budući namespace `KN-*`, dokumenti nijesu kreirani). Poseban `OM-*` namespace ne postoji.
 
 Nova cjelina se unosi u dokumentaciju i razvoj tek kad je eksplicitno najavljena. Stub moduli (plaćanja, tenderi, obavještenja) **namjerno su vidljivi** u UI — v. [stubs-and-future-modules.md](stubs-and-future-modules.md).
 
@@ -100,7 +102,7 @@ Tok, Git, tim: [project-operations.md](project-operations.md). Cron i Toolkit: [
 |---------|------------------|
 | Platforma | Horizontalni sloj: auth, `UserDocument`, zajednički middleware |
 | Kalendar | Odvojene rute, kontroleri, `kk_admin` |
-| Žensko preduzetništvo | Modul konkursa + filter `type=zensko`; baza podržava i `omladinsko` — **sljedeći tip** za aktivaciju |
+| Žensko preduzetništvo | Modul konkursa + filter `type=zensko`; baza podržava i `omladinsko` — **odložen za sada** |
 
 ---
 

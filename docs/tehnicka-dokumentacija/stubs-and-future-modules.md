@@ -1,6 +1,6 @@
 # Stub moduli i budući razvoj
 
-**Poslednje ažuriranje:** 2026-06-30 (dopuna: prioriteti, evaluator, stubovi)  
+**Poslednje ažuriranje:** 2026-08-17 (dopuna: kanonski prioritet e-Plaćanje; omladinski konkurs odložen)  
 **Izvor u kodu:** kontroleri, rute, migracije
 
 Ovi moduli imaju **rute, view-ove i/ili tabele**, ali **nisu funkcionalno implementirani** i **nisu objavljene cjeline** — korisnicima ne služe kao gotova usluga.
@@ -18,11 +18,11 @@ Ovi moduli imaju **rute, view-ove i/ili tabele**, ali **nisu funkcionalno implem
 - Kalendar kulturnih događaja — **završeno**
 - Podrška ženskom preduzetništvu (konkurs, `type=zensko`) — **završeno**
 
-**Sljedeće (redoslijed tima):**
+**Sljedeće (kanonski redoslijed):**
 
-1. Konkurs za mlade u preduzetništvu (`omladinsko`)
-2. Online plaćanja
-3. Tenderi
+1. **e-Plaćanje** — trenutni razvojni prioritet
+2. Konkurs za mlade u preduzetništvu (`omladinsko`) — **odložen za sada**
+3. Tenderi — stub / future module (namespace nije usvojen)
 
 Planirano je **nekoliko vrsta konkursa** na zajedničkom modulu konkursa.
 

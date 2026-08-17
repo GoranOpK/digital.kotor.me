@@ -29,6 +29,8 @@ Registri i oznake Kalendara kulture, uključujući `KK-RG-001`, ne koriste se ka
 
 e-Plaćanje i Kalendar kulture su potpuno odvojeni moduli. Ovaj registar ne registruje oznake Kalendara kulture.
 
+Platformski dokumentacioni standard je `DK-DS-001`. Usvojeni namespace Konkursa je `KN-*` (dokumenti nijesu kreirani). Tenderi nemaju namespace. Ovaj registar ih ne vodi.
+
 ---
 
 # 3. Dokumentacione oznake
@@ -142,3 +144,4 @@ Napomena: ova tabela ne tvrdi da navedene oznake nikada nijesu korišćene. Evid
 |-------|---------|
 | 2026-08-17 | Verzija 1.0 — Uspostavljen EP-RG-001. Registrovan EP-* namespace, kanonski dokumenti, patch prefiksi, poslovne skraćenice iz postojećih dokumenata i zabranjene legacy oznake. |
 | 2026-08-17 | Granica prema Kalendaru kulture: referentna oznaka registra KK ažurirana sa `RG-001` na `KK-RG-001`. Poslovni sadržaj e-Plaćanja neizmijenjen. |
+| 2026-08-17 | Granica: pointer na `DK-DS-001`; `KN-*` rezervisan (nije EP). `EP-PO-001` KEEP. Poslovni sadržaj e-Plaćanja neizmijenjen. |

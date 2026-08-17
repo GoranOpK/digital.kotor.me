@@ -1,6 +1,6 @@
 # Poslovna pravila
 
-**Poslednje ažuriranje:** 2026-06-30 (dopuna: izvor Odluke, prioriteti konkursa)  
+**Poslednje ažuriranje:** 2026-08-17 (dopuna: kanonski prioritet e-Plaćanje; omladinski konkurs odložen)  
 **Izvor u kodu:** `KotorAddress`, `HomeController`, `ProfileUpdateRequest`, `ApplicationController`, `Application` model
 
 ---
@@ -99,9 +99,9 @@ Planirano je **nekoliko vrsta konkursa** na istom modulu (`Competition.type`). R
 |------------|---------|--------|
 | — | Kalendar kulture | **Završeno** (produkcija) |
 | — | Konkurs — žensko preduzetništvo (`zensko`) | **Završeno** (produkcija) |
-| 1 | Konkurs — mladi u preduzetništvu (`omladinsko`) | **Sljedeći** — baza/UI pripremljeni djelimično |
-| 2 | Online plaćanja | Nakon mladih konkursa |
-| 3 | Tenderi | Nakon plaćanja |
+| 1 | e-Plaćanje | **Trenutni razvojni prioritet** |
+| — | Konkurs — mladi u preduzetništvu (`omladinsko`) | **Odložen za sada** — baza/UI pripremljeni djelimično; razvoj se ne pokreće |
+| — | Tenderi | Stub / future module |
 
 V. [project-operations.md](project-operations.md#prioritet-budućih-cjelina), [stubs-and-future-modules.md](stubs-and-future-modules.md).
 

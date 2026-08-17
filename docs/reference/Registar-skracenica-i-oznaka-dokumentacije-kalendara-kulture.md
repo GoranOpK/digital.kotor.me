@@ -4,7 +4,7 @@
 **Oznaka dokumenta:** KK-RG-001
 **Naziv:** Registar skraćenica i oznaka dokumentacije Kalendara kulture
 **Status dokumenta:** Stable
-**Verzija:** 1.1.14
+**Verzija:** 1.1.15
 **Datum:** 2026-08-17
 
 ---
@@ -65,6 +65,8 @@ Dokumentacioni namespace Kalendara kulture je `KK-*`.
 
 * `EP-*` pripada e-Plaćanju.
 * `DK-*` pripada zajedničkoj/platformskoj dokumentaciji Digital Kotora.
+* `KN-*` je usvojeni budući namespace Konkursa; kanonski KN dokumenti nijesu kreirani. Tenderi nemaju namespace.
+* Platformski dokumentacioni standard: `DK-DS-001`.
 * Lista namespace prefiksa **nije** zatvorena: novi poslovni moduli mogu uvesti sopstveni prefiks, uz lokalnu numeraciju unutar tog namespace-a.
 
 Numeracija dokumentacionih ID-eva je lokalna unutar namespace-a. `KK-TS-002` trenutno **nije dodijeljen** i dokument nije kreiran. Broj 002 u `KK-*` namespace-u nije rezervisan za e-Plaćanje.
@@ -382,7 +384,8 @@ KK-RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, kat
 | 1.1.12 | 2026-08-16 | **Module boundary:** uklonjene aktivne oznake drugog Digital Kotor modula (BP, BR-P, P-, F-, UR- kao Plaćanje). **TS-002** u mapi TS = numeraciona granica (nije dio KK plana; oznaka zauzeta van ovog modula). Bez opisa sadržaja drugog modula. Feature Registry ovog registra = Kalendar kulture. Bez izmjene implementacije. |
 | 1.1.13 | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Registrovani `KK-BM` / `KK-FS` / `KK-TS` / `KK-IS` / `KK-IR` / `KK-RG` / `KK-FR` / `KK-CR-REG`. Runtime dual-key (`source_module`). `KK-TS-002` nije dodijeljen. FT-004 / Obavještenja uklonjeni iz aktivnog KK kataloga. PATCH / PATCH-FS KEEP. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 | 1.1.14 | 2026-08-17 | FT-004 / Obavještenja: finalna granica prema platformskom namespace-u (`DK-RG-001` / `DK-FR-001`). `TS-013` evidentiran kao istorijski document ID zamijenjen sa `DK-TS-001`. BM-OB nije KK prefiks. Istorijski changelog KEEP. Bez izmjene implementacije. |
+| 1.1.15 | 2026-08-17 | Granica namespace-a: pointer na `DK-DS-001`; `KN-*` rezervisan za Konkurse (dokumenti nijesu kreirani). Tenderi bez namespace-a. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 ---
 
-**Kraj dokumenta KK-RG-001 v1.1.14 (Stable)**
+**Kraj dokumenta KK-RG-001 v1.1.15 (Stable)**

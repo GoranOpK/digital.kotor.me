@@ -81,6 +81,8 @@ Indeks: [README.md](README.md) — Plesk, MEGA setup, cleanup, code review izvje
 | Fajl | Namjena |
 |------|---------|
 | [project-conventions.md](project-conventions.md) | Pravila održavanja dokumentacije |
+| [../METHODOLOGY.md](../METHODOLOGY.md) | Metodologija dokumentacije Digital Kotora |
+| [../reference/Digital-Kotor-Documentation-Standard.md](../reference/Digital-Kotor-Documentation-Standard.md) | DK-DS-001 — Documentation Standard v1 |
 | [project-todo.md](project-todo.md) | Otvoreni zadaci |
 | [project-done.md](project-done.md) | Završeno |
 | [handoff-new-chat.md](handoff-new-chat.md) | Uputstvo za novog agenta |
@@ -93,7 +95,7 @@ Vidi [project-todo.md](project-todo.md) za detaljan spisak. **Redoslijed tima:**
 
 1. **e-Plaćanje** — trenutni razvojni prioritet. Aplikacioni kod se razvija lokalno; produkcioni deploy aplikacionog koda nije odobren.
 2. **Konkurs za mlade u preduzetništvu** (`omladinsko`) — odložen za sada
-3. **Tenderi** — implementacija
+3. **Tenderi** — stub / future module (namespace nije usvojen)
 4. Uputstva za Predsjednika i članove komisije (dokumentacija)
 5. Dogovor sa drugim administratorom o **feature branch** strategiji
 6. Čišćenje `evaluator` / `/evaluations` **nakon** završetka tekućeg konkursa

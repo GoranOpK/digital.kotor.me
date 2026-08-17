@@ -5,7 +5,7 @@
 **Naziv:** Registar skraćenica i oznaka platformske dokumentacije Digital Kotora
 **Vlasništvo:** platformski sloj Digital Kotora
 **Status dokumenta:** AKTIVAN
-**Verzija:** 1.0.0
+**Verzija:** 1.1.0
 **Datum:** 2026-08-17
 
 ---
@@ -14,13 +14,13 @@
 
 DK-RG-001 je referentni i živi dokument. Predstavlja centralni registar skraćenica i dokumentacionih oznaka **zajedničke/platformske dokumentacije Digital Kotora**.
 
-Nije poslovni pojmovnik. Ne definiše poslovna pravila ni tehnička rješenja. Ne zamjenjuje DK-BM-001, DK-UC-001, DK-FS-001, DK-TS-001 ili DK-FR-001.
+Nije poslovni pojmovnik. Ne definiše poslovna pravila ni tehnička rješenja. Ne zamjenjuje DK-BM-001, DK-UC-001, DK-FS-001, DK-TS-001, DK-FR-001 ili DK-DS-001.
 
-Nije registar Kalendara kulture (`KK-RG-001`) i nije registar e-Plaćanja (`EP-RG-001`).
+Nije registar Kalendara kulture (`KK-RG-001`) i nije registar e-Plaćanja (`EP-RG-001`). Nije globalni katalog svih poslovnih oznaka svih modula.
 
 Auth, korisnici, uloge, MEGA, Plesk, deployment, project operations, handoff, architecture overview, shared landing i module access ostaju **DK REFERENCE / OPERATIONS** dok Product Owner ne otvori poseban dokumentacioni paket. Ovaj registar im **ne** dodjeljuje `DK-BM` / `DK-FS` / `DK-TS` ID-eve.
 
-`docs/METHODOLOGY.md` ostaje globalna projektna metodologija i **nema** `DK-*` document ID.
+`docs/METHODOLOGY.md` ostaje globalna projektna metodologija i **nema** `DK-*` document ID. Normativni dokumentacioni standard platforme je **DK-DS-001**.
 
 ---
 
@@ -28,13 +28,22 @@ Auth, korisnici, uloge, MEGA, Plesk, deployment, project operations, handoff, ar
 
 `DK-*` koristi se za zajedničku/platformsku dokumentaciju Digital Kotora.
 
-`KK-*` pripada Kalendaru kulture.
+Usvojeni dokumentacioni namespace-i Digital Kotora:
 
-`EP-*` pripada e-Plaćanju.
+| Prefiks | Modul / sloj | Status u ovom registru |
+|---------|--------------|------------------------|
+| **KK** | Kalendar kulture | AKTIVAN (nije sadržaj ovog registra) |
+| **EP** | e-Plaćanje | AKTIVAN (nije sadržaj ovog registra) |
+| **DK** | Platformski sloj | AKTIVAN (ovaj registar) |
+| **KN** | Konkursi | USVOJEN za budući corrective; kanonski KN dokumenti **nisu** kreirani |
 
-Numeracija je lokalna po namespace-u. Lista namespace prefiksa **nije** zatvorena: novi poslovni moduli mogu uvesti sopstveni prefiks.
+Tenderi **nemaju** usvojeni namespace.
 
-U ovom paketu **nisu** uvedeni: `DK-IS-*`, `DK-IR-*`, `DK-CR-*`, `DK-FT-*`, `DK-PATCH-*`.
+Žensko preduzetništvo i omladinski konkurs nijesu zasebni namespace-i; pripadaju budućem `KN-*` / `Competition` framework-u. Poseban `OM-*` **ne postoji**.
+
+Numeracija je lokalna po namespace-u i tipu dokumenta. Lista namespace prefiksa **nije** zatvorena: novi poslovni moduli dobijaju prefiks samo Product Owner odlukom.
+
+U platformskom `DK-*` sloju **nisu** uvedeni: `DK-IS-*`, `DK-IR-*`, `DK-CR-*`, `DK-FT-*`, `DK-PATCH-*`, `DK-BM-002`, `DK-FS-002`, `DK-TS-002`.
 
 ---
 
@@ -48,6 +57,7 @@ U ovom paketu **nisu** uvedeni: `DK-IS-*`, `DK-IR-*`, `DK-CR-*`, `DK-FT-*`, `DK-
 | **DK-TS** | Tehnička specifikacija platformske dokumentacije | Dokumentacioni prefiks TS dokumenata `DK-*`. |
 | **DK-RG** | Registar skraćenica i oznaka platformske dokumentacije | Ovaj dokument. |
 | **DK-FR** | Feature Registry platformske dokumentacije | Dokumentacioni prefiks Feature Registry dokumenata `DK-*`. |
+| **DK-DS** | Digital Kotor Documentation Standard | Dokumentacioni prefiks platformskog dokumentacionog standarda. |
 
 ---
 
@@ -61,6 +71,7 @@ U ovom paketu **nisu** uvedeni: `DK-IS-*`, `DK-IR-*`, `DK-CR-*`, `DK-FT-*`, `DK-
 | **DK-TS-001** | Tehnička specifikacija Obavještenja | `docs/technical-specifications/Technical_Specification_Obavjestenja.md` | U IZRADI |
 | **DK-RG-001** | Registar skraćenica i oznaka platformske dokumentacije Digital Kotora | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Digital-Kotor.md` | AKTIVAN |
 | **DK-FR-001** | Feature Registry — Digital Kotor platforma | `docs/features/Feature-Registry_Digital-Kotor.md` | AKTIVAN |
+| **DK-DS-001** | Digital Kotor Documentation Standard v1 | `docs/reference/Digital-Kotor-Documentation-Standard.md` | USVOJENO |
 
 Fajlovi Obavještenja **nisu** preimenovani. Document ID je u zaglavlju, ne u imenu fajla.
 
@@ -124,7 +135,8 @@ Runtime entitet FT-004 je `Notice` (tabela `notices`), javni panel na `/`, javna
 | Verzija | Datum | Opis |
 |---------|--------|------|
 | 1.0.0 | 2026-08-17 | Uspostavljen DK-RG-001. Registrovani `DK-BM` / `DK-UC` / `DK-FS` / `DK-TS` / `DK-RG` / `DK-FR` i kanonski dokumenti `*-001`. FT-004 KEEP kao feature ID. `TS-013` → istorijski document ID; aktivni ID `DK-TS-001`. Poslovne oznake BM-OB / PO-OB / FR-OB / UC-OB / C-UC-OB / OFD-OB / PATCH-FS-OB / FS-OB-FLOW KEEP. Bez izmjene aplikacionog koda. |
+| 1.1.0 | 2026-08-17 | Registrovani `DK-DS` / `DK-DS-001`. Usvojeni namespace-i evidentiirani: KK, EP, DK, KN (Konkursi — rezervisan). Tenderi bez namespace-a. Bez kreiranja KN dokumenata. Bez izmjene FT-004 BM/UC/FS/TS sadržaja. |
 
 ---
 
-**Kraj dokumenta DK-RG-001 v1.0.0**
+**Kraj dokumenta DK-RG-001 v1.1.0**

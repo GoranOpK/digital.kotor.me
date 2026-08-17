@@ -1,18 +1,18 @@
 # Project TODO — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-07-22
+**Poslednje ažuriranje:** 2026-08-17
 
 Otvoreni zadaci (dokumentacija i proizvod). Završeno → [project-done.md](project-done.md).
 
-**Prioritet cjelina (tim):** mladi konkurs → plaćanja → tenderi. V. [project-operations.md](project-operations.md#prioritet-budućih-cjelina).
+**Prioritet cjelina (kanonski):** e-Plaćanje = trenutni razvojni prioritet; omladinski konkurs (`omladinsko`) = odložen za sada; tenderi = stub / future. V. [project-operations.md](project-operations.md#prioritet-budućih-cjelina).
 
 ---
 
 ## Produkt — sljedeće (prioritet)
 
-- [ ] **Konkurs za mlade u preduzetništvu** (`type=omladinsko`) — aktivacija u UI i poslovna logika po Odluci
-- [ ] **Online plaćanja** — implementacija nakon mladih konkursa
-- [ ] **Tenderi** — implementacija nakon plaćanja
+- [ ] **e-Plaćanje** — trenutni razvojni prioritet; sljedeći korak je priprema lokalnog development/test okruženja (nije ovaj dokumentacioni paket)
+- [ ] **Konkurs za mlade u preduzetništvu** (`type=omladinsko`) — **odložen za sada**
+- [ ] **Tenderi** — stub / future module; implementacija nakon što PO otvori modul
 
 ## Dokumentacija
 

@@ -1,6 +1,6 @@
 # Handoff — novi chat / novi agent
 
-**Poslednje ažuriranje:** 2026-07-22
+**Poslednje ažuriranje:** 2026-08-17
 
 Kratko uputstvo da nastaviš rad na **digital.kotor.me** bez čitanja cijelog repoa.
 
@@ -18,7 +18,7 @@ Laravel 12 (PHP 8.2+) portal Opštine Kotor. **Konceptualni model** (v. [archite
 
 **Stubovi (vidljivi u UI, nisu gotovi):** plaćanja, tenderi, obavještenja — namjerno ostaju da se vidi da se radi na projektu.
 
-**Prioritet cjelina:** mladi konkurs (`omladinsko`) → plaćanja → tenderi. Kalendar i žensko preduzetništvo su završeni.
+**Prioritet cjelina (kanonski):** e-Plaćanje = trenutni razvojni prioritet; omladinski konkurs (`omladinsko`) = odložen za sada; tenderi = stub / future. Kalendar i žensko preduzetništvo su završeni.
 
 **Odluka o konkursu:** zvaničan izvor je katalog propisa / Službeni list; nema pravila mimo Odluke.
 

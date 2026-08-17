@@ -1,6 +1,6 @@
 # Operativa tima i projekta
 
-**Poslednje ažuriranje:** 2026-06-30 (dopuna: Odluka, prioriteti, MEGA, evaluator)  
+**Poslednje ažuriranje:** 2026-08-17 (dopuna: kanonski prioritet e-Plaćanje; omladinski konkurs odložen)  
 **Namjena:** dogovoreni način rada koji nije uvijek vidljiv iz koda — za developere i AI agente.
 
 Povezano: [deployment-and-cron.md](deployment-and-cron.md), [project-conventions.md](project-conventions.md).
@@ -92,13 +92,13 @@ Plesk automatski radi **dnevni backup baze i cijelog sajta** — bez ručne inte
 |-----------|---------|--------|
 | — | **Kalendar kulture** | Završeno |
 | — | **Konkursi** — žensko preduzetništvo (`zensko`) | Završeno |
-| 1 | **Konkursi** — mladi u preduzetništvu (`omladinsko`) | Sljedeći konkretni zadatak |
-| 2 | **Online plaćanja** | Nakon mladih konkursa |
-| 3 | **Tenderi** | Nakon plaćanja |
+| 1 | **e-Plaćanje** | Trenutni razvojni prioritet |
+| — | **Konkursi** — mladi u preduzetništvu (`omladinsko`) | Odložen za sada |
+| — | **Tenderi** | Stub / future module (namespace nije usvojen) |
 
-Planirano je **nekoliko vrsta konkursa** na zajedničkom modulu; `omladinsko` je sljedeći tip koji se aktivira u UI.
+Modul **Konkursi** (budući dokumentacioni namespace `KN-*`) obuhvata žensko i omladinsko kao vrste/tokove istog `Competition` framework-a. `KN-*` dokumenti nijesu kreirani ovim paketom. Poseban `OM-*` namespace ne postoji.
 
-Stub moduli (plaćanja, tenderi, obavještenja) **ostaju vidljivi** u portalu — namjerno, da korisnici vide da se radi na projektu.
+Stub moduli (plaćanja, tenderi, `/notifications`) **ostaju vidljivi** u portalu — namjerno, da korisnici vide da se radi na projektu. FT-004 Obavještenja ≠ `/notifications` stub.
 
 V. [stubs-and-future-modules.md](stubs-and-future-modules.md), [project-status-next-steps.md](project-status-next-steps.md), [business-rules.md](business-rules.md#tipovi-i-prioritet-važeće--odluka-tima).
 
