@@ -2,6 +2,7 @@
 # Change Request Register
 ## Modul: Kalendar kulture
 
+**Oznaka dokumenta:** KK-CR-REG-001
 **Status dokumenta:** AKTIVAN
 **Verzija:** 0.8
 
@@ -53,11 +54,11 @@ Svaki odobreni poslovni zahtjev koji zahtijeva izmjenu implementacije mora biti 
 
 | ID | Naziv | FS Referenca | Prioritet | Procjena uticaja | Status |
 | -- | ----- | ------------ | --------- | ---------------- | ------ |
-| CR-001 | IS-001 Faza 1 — Usklađenje postojećeg javnog UI | FS-001 → §5.1–§5.3, BR-261–BR-264 | Medium | UI, Backend | Implemented |
-| CR-002 | IS-001 Faza 2 — Mjesečni filter i klik treće statistike | FS-001 → §5.2 / BR-263; TS-009 §3.2 | Medium | UI, Backend | Implemented |
-| CR-003 | IS-001 Faza 2 — Filteri Pretrage i pregleda (`q` / `category` / `location`) | FS-001 → BR-257 / BR-107–108; TS-009 §3.3 | Medium | UI, Backend | Implemented |
-| CR-004A | IS-001 Faza 3 — Javni status badge (Predstoji / U toku / Završen / Otkazan) | FS-001 → BR-114; TS-009 §7.1; PO-CR4A-01…05 | Medium | UI, Backend | Implemented |
-| CR-004B | IS-001 Faza 3 — Javni prikaz otkazanih događaja | FS-001 → BR-270–BR-274; BR-001/114/116; TS-009 §7.2; PO-CR4B-01…10 | Medium | UI, Backend | Planned |
+| CR-001 | KK-IS-001 Faza 1 — Usklađenje postojećeg javnog UI | KK-FS-001 → §5.1–§5.3, BR-261–BR-264 | Medium | UI, Backend | Implemented |
+| CR-002 | KK-IS-001 Faza 2 — Mjesečni filter i klik treće statistike | KK-FS-001 → §5.2 / BR-263; KK-TS-009 §3.2 | Medium | UI, Backend | Implemented |
+| CR-003 | KK-IS-001 Faza 2 — Filteri Pretrage i pregleda (`q` / `category` / `location`) | KK-FS-001 → BR-257 / BR-107–108; KK-TS-009 §3.3 | Medium | UI, Backend | Implemented |
+| CR-004A | KK-IS-001 Faza 3 — Javni status badge (Predstoji / U toku / Završen / Otkazan) | KK-FS-001 → BR-114; KK-TS-009 §7.1; PO-CR4A-01…05 | Medium | UI, Backend | Implemented |
+| CR-004B | KK-IS-001 Faza 3 — Javni prikaz otkazanih događaja | KK-FS-001 → BR-270–BR-274; BR-001/114/116; KK-TS-009 §7.2; PO-CR4B-01…10 | Medium | UI, Backend | Planned |
 
 ---
 
@@ -65,11 +66,11 @@ Svaki odobreni poslovni zahtjev koji zahtijeva izmjenu implementacije mora biti 
 
 ### Naziv
 
-IS-001 Faza 1 — Usklađenje postojećeg javnog korisničkog interfejsa.
+KK-IS-001 Faza 1 — Usklađenje postojećeg javnog korisničkog interfejsa.
 
 ### Referenca
 
-FS-001 → §5.1–§5.3, BR-261–BR-264; TS-009; IS-001 Faza 1.
+KK-FS-001 → §5.1–§5.3, BR-261–BR-264; KK-TS-009; KK-IS-001 Faza 1.
 
 ### Opis
 
@@ -79,7 +80,7 @@ Usklađivanje postojećeg javnog UI sa usvojenim odlukama (terminologija „Pret
 
 ### Razlog
 
-Implementacija nije bila u potpunosti usklađena sa usvojenim BM/FS/TS-009 za početnu stranicu.
+Implementacija nije bila u potpunosti usklađena sa usvojenim BM/FS/KK-TS-009 za početnu stranicu.
 
 ### Prioritet
 
@@ -100,11 +101,11 @@ Medium
 
 ### Naziv
 
-IS-001 Faza 2 — Mjesečni filter i klik treće statističke kartice.
+KK-IS-001 Faza 2 — Mjesečni filter i klik treće statističke kartice.
 
 ### Referenca
 
-FS-001 → §5.2 / BR-263; BM-PK-22; TS-009 §3.2 / §5.3; IS-001 Faza 2.
+KK-FS-001 → §5.2 / BR-263; BM-PK-22; KK-TS-009 §3.2 / §5.3; KK-IS-001 Faza 2.
 
 ### Opis
 
@@ -123,7 +124,7 @@ Usvojena pravila:
 
 ### Razlog
 
-CR-001 je namjerno odgodio mjesečni filter. BM-PK-22 / BR-263 / TS-009 zahtijevaju klikabilnost treće kartice; CR-002 zatvara taj jaz u okviru IS-001 Faze 2.
+CR-001 je namjerno odgodio mjesečni filter. BM-PK-22 / BR-263 / KK-TS-009 zahtijevaju klikabilnost treće kartice; CR-002 zatvara taj jaz u okviru KK-IS-001 Faze 2.
 
 ### Prioritet
 
@@ -140,7 +141,7 @@ Medium
 
 ### Implementacija
 
-* Dokumentacioni commit: `d01c6d0` (TS-009 / IS-001 v1.0.1; ugovor za `month`).
+* Dokumentacioni commit: `d01c6d0` (KK-TS-009 / KK-IS-001 v1.0.1; ugovor za `month`).
 * Implementacioni commit: `c5d396f` (`feat(cultural-calendar): implement CR-002 month filter`).
 * Isporuka: klik treće statističke kartice → `month=YYYY-MM`; mjesečni overlap filter; prioritet `date` → `week_start`/`week_end` → `month` (bez kombinovanja); nevalidan `month` se bezbjedno ignoriše; broj na kartici i lista koriste isti skup događaja; podnaslov „Izabrani mjesec: …“.
 * Testiranje: `29 passed (121 assertions)` (`CulturalCalendarCr001Phase1Test` + `CulturalCalendarCr002MonthFilterTest`).
@@ -152,11 +153,11 @@ Medium
 
 ### Naziv
 
-IS-001 Faza 2 — Filteri na stranici „Pretraga i pregled“ (`q` / `category` / `location`).
+KK-IS-001 Faza 2 — Filteri na stranici „Pretraga i pregled“ (`q` / `category` / `location`).
 
 ### Referenca
 
-FS-001 → BR-257, BR-107, BR-108; BM-PK-06, BM-PK-07, BM-PK-18; TS-009 §3.3; IS-001 §9.2.1; PO-CR3-01 … PO-CR3-08.
+KK-FS-001 → BR-257, BR-107, BR-108; BM-PK-06, BM-PK-07, BM-PK-18; KK-TS-009 §3.3; KK-IS-001 §9.2.1; PO-CR3-01 … PO-CR3-08.
 
 ### Opis
 
@@ -175,7 +176,7 @@ Na postojećoj stranici „Pretraga i pregled“ (`cultural-calendar.events`) uv
 
 ### Razlog
 
-CR-002 zatvorio je mjesečni datumski ulaz. Preostali dio IS-001 Faze 2 / PO-TS9-04A (pretraga, kategorija, lokacija, filter UI, reset) zahtijeva usklađivanje implementacije sa usvojenim BM/FS/TS.
+CR-002 zatvorio je mjesečni datumski ulaz. Preostali dio KK-IS-001 Faze 2 / PO-TS9-04A (pretraga, kategorija, lokacija, filter UI, reset) zahtijeva usklađivanje implementacije sa usvojenim BM/FS/TS.
 
 ### Prioritet
 
@@ -192,7 +193,7 @@ Medium
 
 ### Implementacija
 
-* Dokumentacioni commit: `fc35132` (`docs: prepare CR-003 filter documentation`; TS-009 / IS-001 v1.0.2; PO-CR3-01…08).
+* Dokumentacioni commit: `fc35132` (`docs: prepare CR-003 filter documentation`; KK-TS-009 / KK-IS-001 v1.0.2; PO-CR3-01…08).
 * Implementacioni commit: `595045a` (`feat(cultural-calendar): implement CR-003 event filters`).
 * Isporuka:
   * tekstualna pretraga `q` (naslov, opis, lokacija);
@@ -212,11 +213,11 @@ Medium
 
 ### Naziv
 
-IS-001 Faza 3 — Javni status badge (Predstoji / U toku / Završen / Otkazan).
+KK-IS-001 Faza 3 — Javni status badge (Predstoji / U toku / Završen / Otkazan).
 
 ### Referenca
 
-FS-001 → BR-114; BM-PK-13; TS-009 §7.1; IS-001 §9.3 / §9.3.1; PO-CR4A-01 … PO-CR4A-05.
+KK-FS-001 → BR-114; BM-PK-13; KK-TS-009 §7.1; KK-IS-001 §9.3 / §9.3.1; PO-CR4A-01 … PO-CR4A-05.
 
 ### Opis
 
@@ -236,7 +237,7 @@ Na javnom portalu uvesti jedinstveni status badge događaja:
 
 ### Razlog
 
-BM-PK-13 / BR-114 zahtijevaju jasan prikaz statusa na javnom portalu. CR-004A formalizuje izračunata javna stanja i jedinstveni badge u okviru IS-001 Faze 3, bez izmjene lifecycle Događaja.
+BM-PK-13 / BR-114 zahtijevaju jasan prikaz statusa na javnom portalu. CR-004A formalizuje izračunata javna stanja i jedinstveni badge u okviru KK-IS-001 Faze 3, bez izmjene lifecycle Događaja.
 
 ### Prioritet
 
@@ -271,11 +272,11 @@ Medium
 
 ### Naziv
 
-IS-001 Faza 3 — Javni prikaz otkazanih događaja.
+KK-IS-001 Faza 3 — Javni prikaz otkazanih događaja.
 
 ### Referenca
 
-FS-001 → BR-270–BR-274; BR-001, BR-114, BR-116; BM-PK-13; BM-DG-05 / BR-063 (prava — bez izmjene); TS-009 §7.2 / §8; IS-001 §9.3 / §9.3.2; PO-CR4B-01 … PO-CR4B-10.
+KK-FS-001 → BR-270–BR-274; BR-001, BR-114, BR-116; BM-PK-13; BM-DG-05 / BR-063 (prava — bez izmjene); KK-TS-009 §7.2 / §8; KK-IS-001 §9.3 / §9.3.2; PO-CR4B-01 … PO-CR4B-10.
 
 ### Opis
 
@@ -359,3 +360,4 @@ Ovaj model omogućava da se za svaku funkcionalnost može utvrditi:
 | 2026-08-01 | Evidentiran CR-004A (Planned): javni status badge Predstoji / U toku / Završen / Otkazan; PO-CR4A-01…04; TS-009 §7.1; IS-001 §9.3.1. Verzija registra 0.6. |
 | 2026-08-01 | CR-004A status → Implemented (dokumentacija `614706c`; implementacija `0f73240`). Testovi 65/266. Bez migracija/ruta/izmjene šeme. Verzija registra 0.7. |
 | 2026-08-06 | Evidentiran CR-004B (Planned): javni prikaz otkazanih; korektivni prolaz (portalna Arhiva ≠ archived; status ostaje cancelled); PO-CR4B-01…10; BR-270–BR-274; TS-009 §7.2; IS-001 §9.3.2. Bez izmjene BR-065 / BM-DG-04. Verzija registra 0.8. |
+| 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |

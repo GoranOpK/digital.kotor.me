@@ -3,7 +3,7 @@
 ## Javni portal
 
 **Feature ID:** FT-001  
-**Oznaka dokumenta:** TS-009  
+**Oznaka dokumenta:** KK-TS-009  
 **Funkcionalna cjelina:** Javni portal Kalendara kulture  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Stable
@@ -44,6 +44,7 @@
 | 1.0.21 | 2026-08-15 | **MED-01–MED-28:** javni prikaz — Događaj: naslovna → statička kategorijska (14 kanonskih naziva) → globalni event placeholder; Manifestacija: naslovna → statički MF placeholder. `object-fit: cover` u definisanim frame-ovima. Nema legacy `CulturalEvent.slika` kao SSOT. Nema `category_default` Media zapisa. TS-008 SUPERSEDED. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
 | 1.0.22 | 2026-08-16 | **MED documentation closeout:** public fallback resolver **IMPLEMENTATION COMPLETE / VERIFIED**. `object-fit: cover` KEEP. `CulturalEvent.slika` / `category_default` nisu SSOT. **MED-I4B** finalni vizueli = DEFERRED / NON-BLOCKING (MISSING/AMBIGUOUS dedicated assets padaju na globalni Event PNG; MF dedicated placeholder deferred). |
 | 1.0.23 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** Javni portal final audit = **PASS / ACCEPTED FOR V1 CLOSEOUT**. Full-system cross-validation = **PASS**. Final full regression = **GREEN** (1286/6224/0/0/12 skipped). **BLOCKS V1 CLOSEOUT = NO**. B3 DROP = **DEFERRED / POST-V1 / NON-BLOCKING**. MED-I4B KEEP deferred. Business contract KEEP. Production deploy HEAD `4595a14` **NOT CONFIRMED**. |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 ---
 
@@ -51,7 +52,7 @@
 
 Ovaj dokument opisuje tehničku specifikaciju funkcionalne cjeline **Javni portal** u okviru FT-001 – Kalendar kulture.
 
-TS-009:
+KK-TS-009:
 
 * ne uvodi nova poslovna pravila van usvojenih BM/FS;
 * ne predstavlja implementaciju;
@@ -73,12 +74,12 @@ Izvori istine:
 * usvojene odluke **PO-6B-01…05** (Tip sadržaja na Pretrazi + semantika filtera po tipu; MF `q` = Naziv+Opis; MF bez agregirane lokacije; Arhivirana MF = direct detail dostupan, bez posebne MF Arhive u V1)
 * usvojene odluke **PO-6B-08 / PO-6B-09** (Otkazana MF javno vidljiva do isteka perioda; Event→MF anti-leak matrica)
 * usvojena odluka **PO-6B-10** (globalno Tip=Sve sortiranje Pretrage — miješani hronološki poredak Događaja i Manifestacija)
-* granice entiteta: TS-005 (Manifestacija), TS-003 (Događaj), TS-004 (Održavanje) — TS-009 ne duplicira njihova poslovna pravila
+* granice entiteta: KK-TS-005 (Manifestacija), KK-TS-003 (Događaj), KK-TS-004 (Održavanje) — KK-TS-009 ne duplicira njihova poslovna pravila
 * `docs/features/Feature-Registry.md`
 * `docs/METHODOLOGY.md`
-* `docs/implementation-strategies/Implementation-Roadmap_Kalendar_kulture.md` (IR-001 — Faza 6A / 6B)
+* `docs/implementation-strategies/Implementation-Roadmap_Kalendar_kulture.md` (KK-IR-001 — Faza 6A / 6B)
 
-### Terminologija (kanonski nazivi u TS-009)
+### Terminologija (kanonski nazivi u KK-TS-009)
 
 | Pojam | Značenje u dokumentaciji |
 |-------|--------------------------|
@@ -89,11 +90,11 @@ Izvori istine:
 | Manifestacije | Zasebna cjelina (lista) |
 | Detalji manifestacije | Stranica jedne Manifestacije (+ program) |
 | Arhiva događaja | Stranica arhive |
-| Održavanje | Poslovni entitet (TS-004); u dokumentaciji se ne zamjenjuje pojmom „Termin“ |
+| Održavanje | Poslovni entitet (KK-TS-004); u dokumentaciji se ne zamjenjuje pojmom „Termin“ |
 | Termin | Isključivo vremenski atributi Održavanja (datum/vrijeme); nije entitet |
 | Kategorija | Primarna klasifikacija događaja |
-| Oznake | Dodatna klasifikacija događaja (BM-08 / TS-007) |
-| Tagovi | Istorijski metapodaci medija (BM-09 / TS-008; **SUPERSEDED** MED-07). **Nisu** sinonim za Oznake; nisu V1 UI. |
+| Oznake | Dodatna klasifikacija događaja (BM-08 / KK-TS-007) |
+| Tagovi | Istorijski metapodaci medija (BM-09 / KK-TS-008; **SUPERSEDED** MED-07). **Nisu** sinonim za Oznake; nisu V1 UI. |
 | Statusne oznake / status badge | Javni prikaz **izračunatog** javnog stanja događaja: Predstoji, U toku, Završen, Otkazan (CR-004A / §7.1). Nisu statusi baze. **Odgođen** nije javni status Događaja. |
 
 ---
@@ -131,13 +132,13 @@ Izvori istine:
 
 # Pravila upravljanja ovim dokumentom
 
-1. TS-009 pripada FT-001 – Kalendar kulture.
+1. KK-TS-009 pripada FT-001 – Kalendar kulture.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
-3. Nova poslovna pravila se ne uvode kroz TS-009.
+3. Nova poslovna pravila se ne uvode kroz KK-TS-009.
 4. Princip **IA-01**: evolucija postojećeg javnog portala; bez redizajna i bez nove strukture stranica van usvojenih odluka.
 5. Izmjene usvojenog sadržaja evidentiraju se novom verzijom dokumenta i odgovarajućim PATCH-om BM/FS, gdje je primjenjivo.
 6. Odluke faza 1–3 ostaju važeće.
-7. TS-009 opisuje **isključivo javni portal**; poslovni model entiteta Manifestacija ostaje u BM-05 / TS-005; Događaj u TS-003; Održavanje u TS-004.
+7. KK-TS-009 opisuje **isključivo javni portal**; poslovni model entiteta Manifestacija ostaje u BM-05 / KK-TS-005; Događaj u KK-TS-003; Održavanje u KK-TS-004.
 8. Detalji događaja i Arhiva događaja pokriveni su postojećim BM/FS pravilima (§7–§8); bez zasebnih PO-TS9-* za te stranice.
 
 ---
@@ -180,35 +181,35 @@ Faza 3 obuhvata isključivo usvojene odluke za **Manifestacije na javnom portalu
 * Program Manifestacije (PO-TS9-07D);
 * Veza Manifestacija ↔ Događaji na portalu (PO-TS9-07E).
 
-Poslovni model entiteta Manifestacija (lifecycle, kardinalnost, uslovi objave) ostaje u BM-05 / TS-005. TS-009 definiše **isključivo javni prikaz i navigaciju**.
+Poslovni model entiteta Manifestacija (lifecycle, kardinalnost, uslovi objave) ostaje u BM-05 / KK-TS-005. KK-TS-009 definiše **isključivo javni prikaz i navigaciju**.
 
 ## 1.5 Van obuhvata faze 1–3 (dokumentacioni)
 
 * dodatni URL ugovori filtera izvan usvojenih §3.2 / §3.3 (npr. napredni facet filteri);
 * implementacija filtera, rename navigacije, klikabilnih statistika, dugmeta „Prikaži sve događaje“, praznog stanja istaknutih;
 * implementacija cjelina Manifestacije na portalu (lista, Detalji manifestacije, program, navigacija);
-* newsletter UI (TS-011);
-* urednički portal (TS-010);
+* newsletter UI (KK-TS-011);
+* urednički portal (KK-TS-010);
 * potpuni model upita prema novom domenu (Održavanje, Manifestacija, Lokacija katalog, …).
 
 ## 1.6 Zavisnosti
 
-| Zavisnost | Uloga u odnosu na TS-009 |
+| Zavisnost | Uloga u odnosu na KK-TS-009 |
 |-----------|---------------------------|
-| TS-003 Događaj | Izvor javne verzije događaja; isticanje; Detalji događaja + blok veze ka MF |
-| TS-004 Održavanje | Održavanja (termini kao vremenski atributi) i lokacije u prikazu; unosi u programu MF |
-| TS-005 Manifestacija | Entitet MF; javni prikaz liste / Detalja manifestacije / programa (bez dupliciranja lifecycle pravila) |
-| TS-006 Lokacije | Filter i prikaz lokacija |
-| TS-007 Kategorije i oznake | Filter kategorije; prikaz kategorije i oznaka; kanonski statički fallback (resolver COMPLETE; 14 dedicated fajlova nisu svi fizički READY — MED-I4B) |
-| TS-008 Mediji | **SUPERSEDED / HISTORICAL** — nije aktivni SSOT; prikaz fotografija = MED / BM-PK-12 |
-| TS-010 Urednički portal | Nije dio javnog portala; Urednik označava istaknute |
-| TS-011 Newsletter | Povezano; van usvojenog obuhvata TS-009 |
+| KK-TS-003 Događaj | Izvor javne verzije događaja; isticanje; Detalji događaja + blok veze ka MF |
+| KK-TS-004 Održavanje | Održavanja (termini kao vremenski atributi) i lokacije u prikazu; unosi u programu MF |
+| KK-TS-005 Manifestacija | Entitet MF; javni prikaz liste / Detalja manifestacije / programa (bez dupliciranja lifecycle pravila) |
+| KK-TS-006 Lokacije | Filter i prikaz lokacija |
+| KK-TS-007 Kategorije i oznake | Filter kategorije; prikaz kategorije i oznaka; kanonski statički fallback (resolver COMPLETE; 14 dedicated fajlova nisu svi fizički READY — MED-I4B) |
+| KK-TS-008 Mediji | **SUPERSEDED / HISTORICAL** — nije aktivni SSOT; prikaz fotografija = MED / BM-PK-12 |
+| KK-TS-010 Urednički portal | Nije dio javnog portala; Urednik označava istaknute |
+| KK-TS-011 Newsletter | Povezano; van usvojenog obuhvata KK-TS-009 |
 
-## 1.7 Faza 6A / 6B — granica obuhvata (IR-001)
+## 1.7 Faza 6A / 6B — granica obuhvata (KK-IR-001)
 
 | Odluka | PO-TS9-08F |
 |--------|------------|
-| IR | IR-001 Faza 6A / 6B |
+| IR | KK-IR-001 Faza 6A / 6B |
 | BM/FS | BM-PK-16; BR-255; BM-PK-24–28 (6B) |
 
 ### Faza 6A — Javni portal Događaja
@@ -217,11 +218,11 @@ Obuhvata prelazak javnog portala Događaja sa legacy `CulturalEvent` na kanonski
 
 Faza 6A realizuje se uz **maksimalno očuvanje postojećeg izgleda** javnog portala (IA-01 / PO-TS9-08A).
 
-**TS-005 / Manifestacije ne blokiraju Fazu 6A.**
+**KK-TS-005 / Manifestacije ne blokiraju Fazu 6A.**
 
 ### Faza 6B — Manifestacije
 
-Manifestacije na javnom portalu (TS-009 §6 / PO-TS9-07A–07E; Tip sadržaja / MF `q` / PO-6B-10 na Pretrazi) su **DEPLOYED / PRODUCTION ACCEPTED** (paketi 6B-01…6B-04; PO-MF-WF `d3c7a96`).
+Manifestacije na javnom portalu (KK-TS-009 §6 / PO-TS9-07A–07E; Tip sadržaja / MF `q` / PO-6B-10 na Pretrazi) su **DEPLOYED / PRODUCTION ACCEPTED** (paketi 6B-01…6B-04; PO-MF-WF `d3c7a96`).
 
 **PHASE 6B FORMALLY CLOSED.** Produkcijske 6B migracije **RAN**; tabela `cultural_manifestations` postoji; trenutno **0 redova**. Cleanup testnih MF = N/A.
 
@@ -366,7 +367,7 @@ Mjesečni kontekst prikazuje se kao aktivni filter ili podnaslov, npr.:
 |--------|------------------------|
 | BM | BM-PK-06, BM-PK-07, BM-PK-18 |
 | FS | BR-107, BR-108, BR-257 |
-| IS | IS-001 Faza 2 / CR-003 |
+| IS | KK-IS-001 Faza 2 / CR-003 |
 
 Dokumentuje implementacioni ugovor za ne-datumske filtere na stranici „Pretraga i pregled“: tekstualnu pretragu, kategoriju, lokaciju i tip sadržaja.
 
@@ -829,9 +830,9 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 
 ---# 6. Manifestacije (javni portal) — dokumentaciona faza 3 / Faza 6B
 
-> **Granica:** Poslovna pravila entiteta Manifestacija (BM-05 / TS-005), Događaja (TS-003) i Održavanja (TS-004) se ovdje ne dupliciraju. Ova sekcija definiše isključivo javni prikaz i navigaciju (PO-TS9-07A–07E; Tip sadržaja / PO-6B-10 u §3.3–§3.4.1).
+> **Granica:** Poslovna pravila entiteta Manifestacija (BM-05 / KK-TS-005), Događaja (KK-TS-003) i Održavanja (KK-TS-004) se ovdje ne dupliciraju. Ova sekcija definiše isključivo javni prikaz i navigaciju (PO-TS9-07A–07E; Tip sadržaja / PO-6B-10 u §3.3–§3.4.1).
 >
-> **Status:** **FORMALLY CLOSED / PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE (6B-01…6B-04 deployed; 6B migracije RAN; 0 MF redova). Public detail/program/search-with-hit **nisu** produkcijski smoke-testirani. Faza 6A **nije** uključivala Manifestacije. TS-005 **nije** blokirao Fazu 6A (PO-TS9-08F).
+> **Status:** **FORMALLY CLOSED / PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE (6B-01…6B-04 deployed; 6B migracije RAN; 0 MF redova). Public detail/program/search-with-hit **nisu** produkcijski smoke-testirani. Faza 6A **nije** uključivala Manifestacije. KK-TS-005 **nije** blokirao Fazu 6A (PO-TS9-08F).
 
 ## 6.1 PO-TS9-07A — Zasebna cjelina
 
@@ -905,7 +906,7 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 
 | Stavka | Vrijednost |
 |--------|------------|
-| Kardinalnost | 1 MF → N događaja; događaj ≤ 1 MF; događaj može biti bez MF — **pravila entiteta:** BM-05 / TS-005, BM-04 / TS-003 (ovdje samo portalna navigacija) |
+| Kardinalnost | 1 MF → N događaja; događaj ≤ 1 MF; događaj može biti bez MF — **pravila entiteta:** BM-05 / KK-TS-005, BM-04 / KK-TS-003 (ovdje samo portalna navigacija) |
 | Uloga | MF = programski okvir; događaj = osnovni poslovni entitet |
 | Detalji događaja | Blok pripadnosti Manifestaciji **samo** kada je MF javno dostupna (PO-6B-09 / §6.8): oznaka + naziv + link; **bez** statusa MF na detalju Događaja |
 | Detalji manifestacije | Program → „Detalji događaja“ |
@@ -972,7 +973,7 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 
 # 7. Detalji događaja (baseline)
 
-> Stranica „Detalji događaja“ pokrivena je usvojenim BM/FS pravilima. TS-009 ne duplicira lifecycle Događaja (TS-003), Održavanja (TS-004) ni Manifestacije (TS-005). **Javni status badge:** §7.1 (CR-004A / PO-CR4A-01…05). **Javni prikaz otkazanih:** §7.2 (CR-004B / PO-CR4B-01…10).
+> Stranica „Detalji događaja“ pokrivena je usvojenim BM/FS pravilima. KK-TS-009 ne duplicira lifecycle Događaja (KK-TS-003), Održavanja (KK-TS-004) ni Manifestacije (KK-TS-005). **Javni status badge:** §7.1 (CR-004A / PO-CR4A-01…05). **Javni prikaz otkazanih:** §7.2 (CR-004B / PO-CR4B-01…10).
 
 | Referenca | Sadržaj |
 |-----------|---------|
@@ -983,14 +984,14 @@ Nova metoda SSOT (npr. `homepageNextEventsForPublicIndex(): Collection` kandidat
 Portalni obuhvat (referenca, ne nova pravila):
 
 * naslov i osnovni identitet događaja;
-* fotografija / fallback (BM-PK-12 / BR-113 / MED-08; **ne** TS-008 kao aktivni SSOT; **ne** `CulturalEvent.slika`);
+* fotografija / fallback (BM-PK-12 / BR-113 / MED-08; **ne** KK-TS-008 kao aktivni SSOT; **ne** `CulturalEvent.slika`);
   * Događaj: (1) naslovna; (2) statička Git fotografija kanonske kategorije **ako dedicated fajl postoji (READY)**; (3) globalni event placeholder;
   * Manifestacija: (1) naslovna; (2) MF fallback resolver (zaseban ugovor; finalni dedicated MF placeholder = **MED-I4B DEFERRED**; privremeni compatibility path na globalni Event PNG);
   * definisani image frame-ovi: `object-fit: cover` (MED-14);
   * fallback nisu `CulturalMedia` / `category_default` zapisi;
   * **MED-I4B:** MISSING/AMBIGUOUS dedicated kategorijski fajlovi nisu fizički kompletirani; padaju na globalni Event placeholder. Nije funkcionalni blocker.
-* Održavanja sa terminima i lokacijama (BM-PK-09–10 / BR-110–111 / TS-004);
-* Kategorija i Oznake (BM-PK-11 / BR-112 / TS-007) — **Oznake ≠ tagovi fotografije**;
+* Održavanja sa terminima i lokacijama (BM-PK-09–10 / BR-110–111 / KK-TS-004);
+* Kategorija i Oznake (BM-PK-11 / BR-112 / KK-TS-007) — **Oznake ≠ tagovi fotografije**;
 * statusne oznake / status badge prema §7.1 (BM-PK-13 / BR-114; CR-004A);
 * opis i javno objavljeni podaci (BM-PK-05 / BR-106);
 * informativni blok Manifestacije kada postoji veza **i** MF je javno dostupna (BM-PK-28 / BM-PK-39 / BR-269 / BR-305 / PO-6B-09).
@@ -1001,7 +1002,7 @@ Portalni obuhvat (referenca, ne nova pravila):
 
 | Stavka | Vrijednost |
 |--------|------------|
-| CR | CR-004A (IS-001 Faza 3) |
+| CR | CR-004A (KK-IS-001 Faza 3) |
 | Odluke | PO-CR4A-01 … PO-CR4A-05 |
 | BM | BM-PK-13 (prikaz; bez novih BM pravila) |
 | FS | BR-114 (prikaz; bez novih BR) |
@@ -1027,7 +1028,7 @@ Interni statusi sistema **ne prikazuju se** građanima kao labela:
 
 **Otkazan** prikazuje se kada je interni status događaja `cancelled` i ima **apsolutni prioritet** nad svim ostalim javnim stanjima.
 
-**Odgođen** nije status Događaja. Ostaje isključivo status Održavanja (BM-TR / FS §5.7.3 / TS-004) i **ne prikazuje se** kao javni status Događaja.
+**Odgođen** nije status Događaja. Ostaje isključivo status Održavanja (BM-TR / FS §5.7.3 / KK-TS-004) i **ne prikazuje se** kao javni status Događaja.
 
 Predstoji, U toku i Završen **nisu** statusi baze podataka — isključivo izračunata javna stanja. CR-004A ne uvodi nove statuse baze niti mijenja životni ciklus Događaja ili Održavanja.
 
@@ -1146,7 +1147,7 @@ Granica „U toku“ kompatibilna je sa `isExpiredAt` (istek strogo nakon `expir
 
 | Stavka | Vrijednost |
 |--------|------------|
-| CR | CR-004B (IS-001 Faza 3) |
+| CR | CR-004B (KK-IS-001 Faza 3) |
 | Odluke | PO-CR4B-01 … PO-CR4B-10 |
 | BM | BM-PK-13 / BM-PK-35 (prikaz); BM-PK-15 (Istaknuti); BM-DG-05 (prava — bez izmjene); BM-DG-04 (lifecycle arhiviranje — na snazi) |
 | FS | BR-270–BR-274; BR-286; BR-001, BR-002, BR-004, BR-114, BR-116 (usklađeno); BR-063 / BR-065 (lifecycle na snazi) |
@@ -1257,13 +1258,13 @@ Nakon isteka planiranog termina otkazani događaj:
 |--------|------------------------|
 | BM | BM-PK-09, BM-PK-29, BM-PK-31 |
 | FS | BR-110, BR-280, BR-282 |
-| Granica | TS-004 (lifecycle Održavanja — bez dupliciranja) |
+| Granica | KK-TS-004 (lifecycle Održavanja — bez dupliciranja) |
 
 ### 7.3.1 Definicija „relevantnog“ Održavanja (javni portal)
 
 Za kartični glavni termin i sortiranje Pretrage (**naredno relevantno važeće**):
 
-* Održavanje u statusu **Planiran** čiji termin još nije prošao (prema vremenskoj zoni aplikacije i pravilima završetka iz TS-004 / CR-004A vremenske logike na nivou Održavanja);
+* Održavanje u statusu **Planiran** čiji termin još nije prošao (prema vremenskoj zoni aplikacije i pravilima završetka iz KK-TS-004 / CR-004A vremenske logike na nivou Održavanja);
 * **Odgođeno** Održavanje **nije** glavni termin kartice niti ključ sortiranja dok postoji Planirano naredno;
 * **Otkazano** Održavanje nije „važeće“ za glavni termin kartice aktivnog (neotkazanog) Događaja.
 
@@ -1294,7 +1295,7 @@ Prikazuju se **sva** javno relevantna Održavanja (BM-PK-09 / BR-110).
 
 * **Detalj — Odgođeno bez novog termina:** prikazati status **„Odgođeno“**; label **„Prvobitni termin“**; postojeći originalni datum; opcion `postponement_reason` ako postoji.
 * **Ne** prikazivati Odgođeno kao aktivno predstojeće Održavanje (§7.3.1).
-* **Kada novi datum unesen i status Planiran:** novi datum = aktivni termin; razlog/history ostaje po TS-004; glavni prikaz **ne** tvrdi da je trenutno Odgođeno.
+* **Kada novi datum unesen i status Planiran:** novi datum = aktivni termin; razlog/history ostaje po KK-TS-004; glavni prikaz **ne** tvrdi da je trenutno Odgođeno.
 * * **Kartica — standardni režim:** stari odgođeni termin **nije** važeći glavni termin; kartica prikazuje prvo naredno relevantno **Planirano** Održavanje (+ „+ još N" po §7.3.2 planned).
 * **Kartica — `postponed_info` (naslovna, PATCH-064):** kada nema narednog Planiranog, kartica **može** prikazati Odgođeno informativno (§5.5 / BR-296); prvobitni datum nije upcoming termin.
 
@@ -1310,13 +1311,13 @@ Prikazuju se **sva** javno relevantna Održavanja (BM-PK-09 / BR-110).
 * Ako postoji registrovani Organizator (`organizer_id`): postojeći prikaz.
 * Inače ako postoji `organizer_manual_name`: prikazati taj naziv kao Organizator.
 * Ako oba nedostaju: bez Organizatora / ne prikazivati praznu sekciju (postojeće UI pravilo).
-* Fail-closed: ne smiju oba tipa biti istovremeno aktivna za isti poslovni tok (XOR — TS-003 §6.2).
+* Fail-closed: ne smiju oba tipa biti istovremeno aktivna za isti poslovni tok (XOR — KK-TS-003 §6.2).
 
 ---
 
 # 8. Arhiva događaja (baseline + kanonski ugovor PO-6A09)
 
-> Stranica „Arhiva događaja“ pokrivena je usvojenim BM/FS. Pravila **kada** Događaj prelazi u interni status Arhiviran ostaju u BM-04 / TS-003 (BM-DG-04); TS-009 definiše portalni prikaz. **Javni status badge:** §7.1. **Otkazani u portalnoj Arhivi:** §7.2 / CR-004B (javni status ostaje **Otkazan**).
+> Stranica „Arhiva događaja“ pokrivena je usvojenim BM/FS. Pravila **kada** Događaj prelazi u interni status Arhiviran ostaju u BM-04 / KK-TS-003 (BM-DG-04); KK-TS-009 definiše portalni prikaz. **Javni status badge:** §7.1. **Otkazani u portalnoj Arhivi:** §7.2 / CR-004B (javni status ostaje **Otkazan**).
 
 | Referenca | Sadržaj |
 |-----------|---------|
@@ -1343,7 +1344,7 @@ Portalni obuhvat (referenca):
 |--------|----------------------------------|
 | BM | BM-PK-16, BM-PK-32; BM-KO-11 |
 | FS | BR-255, BR-283, BR-279 |
-| IR | IR-001 Faza 6A |
+| IR | KK-IR-001 Faza 6A |
 
 ## 9.1 SSOT nakon cutover-a
 
@@ -1520,7 +1521,7 @@ Nema otvorenih pitanja koja blokiraju dokumentacioni ugovor Faze 6A. Implementac
 
 # 16. Matrica sljedivosti
 
-| Odluka / tema | BM | FS | TS-009 |
+| Odluka / tema | BM | FS | KK-TS-009 |
 |---------------|----|----|--------|
 | IA-01 | BM-PK-16, BM-AR-02 | BR-255 | §2.1 |
 | PO-TS9-03A | BM-PK-17 | BR-256 | §2.3 |
@@ -1562,31 +1563,31 @@ Nema otvorenih pitanja koja blokiraju dokumentacioni ugovor Faze 6A. Implementac
 | PO-6B-10 Tip=Sve sortiranje | BM-PK-40 | BR-306 | §3.4.1 |
 | PO-TS9-08D Odgođen | BM-PK-31 | BR-282 | §7.3.4 |
 | PO-TS9-08E CAT-CUTOVER | BM-PK-32, BM-KO-09–11 | BR-277–BR-279, BR-283 | §3.3.3, §9.4 |
-| PO-TS9-08F Faza 6A/6B | — | — | §1.7; IR-001 |
+| PO-TS9-08F Faza 6A/6B | — | — | §1.7; KK-IR-001 |
 | PO-TS9-08G cancellation_reason V1 | BM-PK-33, BM-DG-10 | BR-272, BR-284, BR-064 | §7.2.4 |
 | PO-TS9-08H legacy URL | — | — | §10.1 |
 | PO-TS9-08I feature flag | — | — | §10.2 |
 | PO-TS9-08J public query SSOT | — | — | §11–§12 |
 
-Granice (bez dupliciranja u TS-009): lifecycle Događaja → TS-003; Održavanje/Termin → TS-004; Manifestacija entitet → TS-005 (implementacija portala = Faza 6B).
+Granice (bez dupliciranja u KK-TS-009): lifecycle Događaja → KK-TS-003; Održavanje/Termin → KK-TS-004; Manifestacija entitet → KK-TS-005 (implementacija portala = Faza 6B).
 
 ---
 
 # 17. Napomene za implementaciju
 
-* Verzije do v1.0.0 (uključujući) su **dokumentacione**; ne mijenja se kod u okviru tih verzija. Od v1.0.1 CR-002 dokumentuje ugovor za implementaciju (IS-001 Faza 2); kod se ne mijenja u dokumentacionom koraku.
+* Verzije do v1.0.0 (uključujući) su **dokumentacione**; ne mijenja se kod u okviru tih verzija. Od v1.0.1 CR-002 dokumentuje ugovor za implementaciju (KK-IS-001 Faza 2); kod se ne mijenja u dokumentacionom koraku.
 * Pri budućoj implementaciji: poštovati IA-01 (minimalne izmjene postojećeg portala).
 * Rename navigacionog labela „Pregled događaja“ → „Pretraga i pregled“ (PO-TS9-03A) — isporučeno u CR-001.
 * Filteri (PO-TS9-04A) pripadaju stranici Pretraga i pregled; datumski ulazi sa statistika: §3.2 / CR-002 (`month=YYYY-MM`); ne-datumski filteri: §3.3 / CR-003 (`q`, `category`, `location`).
 * Internu podršku dan-view toka ne tretirati kao javni ekran u IA (TD-TS9-01).
-* CR-001 (IS-001 Faza 1): terminologija; Hero; istaknuti max 3 + neutralno prazno; Danas/Ove sedmice klikabilne; label mjeseca; naredni max 3; „Prikaži sve događaje“.
-* CR-002 (IS-001 Faza 2): treća kartica klikabilna sa `month`; isti skup kartica/lista; prioritet filtera; podnaslov „Izabrani mjesec: …“.
-* CR-003 (IS-001 Faza 2): filter zona `q` / `category` / `location`; AND sa datumskim mehanizmom; aktivni filteri (×); „Poništi sve filtere“; GET forma; state persistence (PO-CR3-01…08).
-* CR-004A (IS-001 Faza 3): javni status badge Predstoji / U toku / Završen / Otkazan na Početnoj, Pretrazi i pregledu, Arhivi i Detaljima; izračunata stanja; `cancelled` → Otkazan (prioritet); Odgođen nije status Događaja (PO-CR4A-01…05 / §7.1). Dokumentacija `614706c`; implementacija `0f73240`.
-* CR-004B (IS-001 Faza 3; Implemented): javni prikaz otkazanih — aktivne površine i portalna Arhiva (vremenska; ≠ interni `archived`); status ostaje `cancelled`; Istaknuti isključuju cancelled; show dozvoljava cancelled; sistemsko obavještenje; statistike/datumski skupovi uključuju cancelled; javni status uvijek Otkazan (PO-CR4B-01…10 / §7.2). Bez migracija; bez javne dostupnosti `archived`; bez izmjene BR-065 / BM-DG-04. PATCH-063 dopušta opcion javni `cancellation_reason` kada postoji (§7.2.4 / BR-295).
+* CR-001 (KK-IS-001 Faza 1): terminologija; Hero; istaknuti max 3 + neutralno prazno; Danas/Ove sedmice klikabilne; label mjeseca; naredni max 3; „Prikaži sve događaje“.
+* CR-002 (KK-IS-001 Faza 2): treća kartica klikabilna sa `month`; isti skup kartica/lista; prioritet filtera; podnaslov „Izabrani mjesec: …“.
+* CR-003 (KK-IS-001 Faza 2): filter zona `q` / `category` / `location`; AND sa datumskim mehanizmom; aktivni filteri (×); „Poništi sve filtere“; GET forma; state persistence (PO-CR3-01…08).
+* CR-004A (KK-IS-001 Faza 3): javni status badge Predstoji / U toku / Završen / Otkazan na Početnoj, Pretrazi i pregledu, Arhivi i Detaljima; izračunata stanja; `cancelled` → Otkazan (prioritet); Odgođen nije status Događaja (PO-CR4A-01…05 / §7.1). Dokumentacija `614706c`; implementacija `0f73240`.
+* CR-004B (KK-IS-001 Faza 3; Implemented): javni prikaz otkazanih — aktivne površine i portalna Arhiva (vremenska; ≠ interni `archived`); status ostaje `cancelled`; Istaknuti isključuju cancelled; show dozvoljava cancelled; sistemsko obavještenje; statistike/datumski skupovi uključuju cancelled; javni status uvijek Otkazan (PO-CR4B-01…10 / §7.2). Bez migracija; bez javne dostupnosti `archived`; bez izmjene BR-065 / BM-DG-04. PATCH-063 dopušta opcion javni `cancellation_reason` kada postoji (§7.2.4 / BR-295).
 * **Faza 6A:** kanonski cutover (§9–§12); kartica/sortiranje/Odgođen (§7.3 / §3.4); CAT-CUTOVER; privremeni flag (§10.2); public query SSOT (§11); test matrica §18. **Bez** Manifestacija (Faza 6B / §6).
 * Detalji događaja / Arhiva događaja: uskladiti prikaz sa BM-PK-05/13 i BR-106/114/270–274; status badge prema §7.1; dostupnost otkazanih prema §7.2; ne uvoditi paralelna lifecycle pravila.
-* Ne duplicirati TS-003 / TS-004 / TS-005 u portalskom sloju.
+* Ne duplicirati KK-TS-003 / KK-TS-004 / KK-TS-005 u portalskom sloju.
 * **MED closeout (v1.0.22):** public fallback resolver COMPLETE / VERIFIED. `CulturalEvent.slika` nije SSOT. `category_default` Media nije javni fallback SSOT. MED-I4B vizueli = DEFERRED / NON-BLOCKING.
 
 ---
@@ -1595,7 +1596,7 @@ Granice (bez dupliciranja u TS-009): lifecycle Događaja → TS-003; Održavanje
 * **PATCH-064 homepage (implemented):** §5.5 / §11.3 isporučeno bez diranja Pretrage, calendar counts, selected-day, featured, lifecycle. `CulturalPublicCardOccurrenceCriteria` ostaje planned-only. Tie-breaker ostaje `entry.id ASC`.
 # 18. Test matrica Faze 6A (TM-JP) — dokumentaciono
 
-Konvencija: `TM-JP-*` (Javni Portal), u skladu sa `TM-*` iz RG-001 / TS-010.8. **Bez test koda** u ovom PATCH-u.
+Konvencija: `TM-JP-*` (Javni Portal), u skladu sa `TM-*` iz KK-RG-001 / KK-TS-010.8. **Bez test koda** u ovom PATCH-u.
 
 | ID | Tema | Preduslov | Očekivano | Tip | Sljedivost |
 |----|------|-----------|-----------|-----|------------|

@@ -3,7 +3,7 @@
 ## Newsletter
 
 **Feature ID:** FT-001  
-**Oznaka dokumenta:** TS-011  
+**Oznaka dokumenta:** KK-TS-011  
 **Funkcionalna cjelina:** Newsletter  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** USVOJEN  
@@ -21,6 +21,7 @@
 | 1.0.2 | 2026-08-14 | **PO-NL-01…PO-NL-22 / BM PATCH-073 / FS PATCH-FS-072:** tehnički ugovor pretplate na `User`; jedna pretplata; `User.email` kao adresa isporuke (nije Newsletter SSOT); režimi `all_events` / `selected_organizers`; „Bez organizatora“; validan izbor; bez confirmation e-mail polja; odjava čisti aktivne preference; deaktivirani Organizator KEEP veze; cascade pri brisanju `User`; delivery eligibility; Manifestacija nije dimenzija pretplate; testni legacy bez backfill-a pretplatnika. Uklonjene stale CURRENT oznake „DRAFT“ / „Nacrt“ iz zaglavlja i statusa poglavlja (istorija verzija 1.0.0/1.0.1 KEEP). Bez izmjene implementacije. |
 | 1.0.3 | 2026-08-14 | **NL-03 temporal eligibility + ledger boundary / BM PATCH-074 / FS PATCH-FS-073:** `subscribed_at` = trenutna activation boundary; prva pretplata i reaktivacija nijesu retroaktivne; preference/širenje opsega nijesu retroaktivni; candidate ≠ queued/sent/delivered; `first_include` ledger row samo nakon uspješne isporuke; NL-03 ne piše ledger i ne šalje e-mail. Dokumentovan P1 gap: kanonski timestamp prve objave Event-a i preference effective-time. Bez izmjene implementacije. |
 | 1.0.4 | 2026-08-15 | **Status hygiene (V1 closeout):** §26.2 označen kao **ISTORIJSKI / REPLACED**. Current runtime = `cultural-calendar:send-newsletter` + `cultural-calendar:send-newsletter-priority`; legacy weekly = no-op / nije kanonski invoker. Business contract KEEP. |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 Napomena:
 
@@ -39,6 +40,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.2 | 2026-08-14 | PO-NL-01…22: pretplata na `User`; režimi opsega; „Bez organizatora“; delivery eligibility; bez confirmation e-mail polja; testni legacy bez migracije pretplatnika; cleanup stale DRAFT/Nacrt CURRENT oznaka. |
 | 1.0.3 | 2026-08-14 | Temporal eligibility; candidate vs delivery evidence; NL-03 = eligibility/candidate foundation (bez ledger write / bez e-maila); `subscribed_at` kao activation boundary; P1 timestamp gap dokumentovan. |
 | 1.0.4 | 2026-08-15 | §26.2 = historical/replaced; current runtime = regular + priority commands; weekly no-op. |
+| 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 ---
 
@@ -46,7 +48,7 @@ Ne mijenjaju se postojeći redovi.
 
 Ovaj dokument opisuje kako će se usvojeni Business Model i Functional Specification za funkcionalnu cjelinu **Newsletter** tehnički realizovati u okviru FT-001 – Kalendar kulture.
 
-TS-011 obrađuje jednu logički zaokruženu funkcionalnu cjelinu unutar FT-001 i ne predstavlja kompletnu tehničku specifikaciju svih cjelina Feature-a FT-001.
+KK-TS-011 obrađuje jednu logički zaokruženu funkcionalnu cjelinu unutar FT-001 i ne predstavlja kompletnu tehničku specifikaciju svih cjelina Feature-a FT-001.
 
 Dokument:
 
@@ -63,10 +65,10 @@ Izvori istine za poslovna pravila:
 * `docs/functional-specifications/Functional-Specification.md` (§5.15 BR-138–BR-169, BR-328–BR-348; §5.16 katalog Newsletter / BR-184–BR-186; PATCH-FS-031–034; PATCH-FS-072; PATCH-FS-073; usklađenost sa PATCH-FS-053)
 * `docs/features/Feature-Registry.md` (FT-001 — Newsletter)
 * `docs/METHODOLOGY.md` (M-TS-001–M-TS-005)
-* `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 v0.1.2)
-* `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004)
-* `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009)
-* `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010 v1.0.1)
+* `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (KK-TS-003 v0.1.2)
+* `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (KK-TS-004)
+* `docs/technical-specifications/Technical-Specification_Javni_portal.md` (KK-TS-009)
+* `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (KK-TS-010 v1.0.1)
 
 ---
 
@@ -107,14 +109,14 @@ Izvori istine za poslovna pravila:
 
 # Pravila upravljanja ovim dokumentom
 
-1. TS-011 pripada FT-001 – Kalendar kulture.
+1. KK-TS-011 pripada FT-001 – Kalendar kulture.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
 3. Nova poslovna pravila se ne uvode kroz Technical Specification.
 4. Sve što nije definisano u BM ili FS, a zahtijeva poslovnu odluku, evidentira se kao **Otvoreno pitanje**.
 5. Tehnički predlozi (interval rasporeda automatske obrade, period objedinjavanja, imena komponenti, polja evidencije dostave) nisu poslovna pravila o učestalosti niti o sadržaju Newslettera.
 6. Product Owner donosi poslovne odluke; ovaj dokument ih ne pretpostavlja.
 7. Izmjene usvojenog sadržaja u narednim verzijama evidentiraju se novim redom u istoriji verzija.
-8. **Otkazan** je terminalan za povratak u **Objavljen** (PO-DG-07 / PATCH-053). TS-011 **ne smije** sadržati logiku za republish / reaktivaciju otkazanog događaja. G-NL-08 je zatvoren.
+8. **Otkazan** je terminalan za povratak u **Objavljen** (PO-DG-07 / PATCH-053). KK-TS-011 **ne smije** sadržati logiku za republish / reaktivaciju otkazanog događaja. G-NL-08 je zatvoren.
 
 ---
 
@@ -148,7 +150,7 @@ Newsletter:
 
 ## 1.2 Obuhvat dokumenta
 
-Obuhvat TS-011:
+Obuhvat KK-TS-011:
 
 1. obuhvat i granice odgovornosti modula Newsletter;
 2. arhitektura i komponente;
@@ -161,23 +163,23 @@ Obuhvat TS-011:
 9. Promjena na čekanju (normativni dio prioritetnog toka);
 10. Arhitektura obrade Newsletter zadataka i Raspored automatske obrade;
 11. validacije, guard uslovi, error handling, ponovni pokušaj;
-12. Audit događaji ka TS-012;
+12. Audit događaji ka KK-TS-012;
 13. autorizacija, sljedivost, acceptance, implementacione napomene, legacy implementacija.
 
 Van obuhvata ovog dokumenta: vidi §27 (PRAVILO 5.4.1–5.4.2).
 
 ## 1.3 Zavisnosti
 
-| Zavisnost | Uloga u odnosu na TS-011 |
+| Zavisnost | Uloga u odnosu na KK-TS-011 |
 |-----------|---------------------------|
 | Platforma Digital Kotor – korisnički nalozi | Identitet pretplatnika (`User`); aktuelni `User.email`; verifikacija; aktivnost naloga |
-| TS-001 Organizator | Filter izbora Organizatora; veza događaja → registrovani Organizator; deaktivacija Organizatora |
-| TS-003 Događaj | Status **Objavljen** / **Otkazan** / **Arhiviran**; okidač objave; terminalnost Otkazan; `organizer_id` vs ručni naziv |
-| TS-005 Manifestacija | Van dimenzije pretplate u V1; Događaj se selektuje po sopstvenom Organizator kriterijumu |
-| TS-004 Održavanje | Budući termini; **Odgođen**; otkaz termina; promjena datuma/vremena/lokacije |
-| TS-009 Javni portal | UI pretplate / odjave; linkovi ka detaljima događaja i pregledu Organizatora |
-| TS-010 Urednički portal | Izvori okidača (objava, otkaz, odlaganje, izmjene termina/lokacije); bez upravljanja pretplatnicima |
-| TS-012 Evidencija aktivnosti | Prima Audit događaje iz kataloga Newsletter |
+| KK-TS-001 Organizator | Filter izbora Organizatora; veza događaja → registrovani Organizator; deaktivacija Organizatora |
+| KK-TS-003 Događaj | Status **Objavljen** / **Otkazan** / **Arhiviran**; okidač objave; terminalnost Otkazan; `organizer_id` vs ručni naziv |
+| KK-TS-005 Manifestacija | Van dimenzije pretplate u V1; Događaj se selektuje po sopstvenom Organizator kriterijumu |
+| KK-TS-004 Održavanje | Budući termini; **Odgođen**; otkaz termina; promjena datuma/vremena/lokacije |
+| KK-TS-009 Javni portal | UI pretplate / odjave; linkovi ka detaljima događaja i pregledu Organizatora |
+| KK-TS-010 Urednički portal | Izvori okidača (objava, otkaz, odlaganje, izmjene termina/lokacije); bez upravljanja pretplatnicima |
+| KK-TS-012 Evidencija aktivnosti | Prima Audit događaje iz kataloga Newsletter |
 | Infrastruktura elektronske pošte platforme | Isporuka e-mail poruka |
 
 ## 1.4 Tipovi sadržaja (norma)
@@ -201,7 +203,7 @@ Sistem razlikuje tačno tri tipa u smislu BR-165:
 * periodično priprema i šalje redovni Newsletter o novoobjavljenim događajima;
 * priprema i šalje prioritetna obavještenja o poslovno značajnim promjenama;
 * vodi Evidenciju dostavljenih Newsletter poruka radi zaštite od duplikata;
-* emituje Audit događaje ka centralnoj Evidenciji (TS-012).
+* emituje Audit događaje ka centralnoj Evidenciji (KK-TS-012).
 
 ## 2.2 Šta Newsletter ne radi
 
@@ -210,28 +212,28 @@ Sistem razlikuje tačno tri tipa u smislu BR-165:
 * ne šalje poslovna obavještenja Uredničkog portala (BR-128);
 * ne omogućava Organizatoru, Moderatoru ni Uredniku upravljanje pretplatnicima ni ručno slanje;
 * ne uvodi kategorije, personalizaciju, preporuke, kampanje ni Newsletter po ulozi (granice usvojene u BM-NL-16 / BR-157);
-* **ne sadrži logiku republish-a** (nema putanje Otkazan → Objavljen; novi program = novi događaj, TS-003 / PATCH-053);
+* **ne sadrži logiku republish-a** (nema putanje Otkazan → Objavljen; novi program = novi događaj, KK-TS-003 / PATCH-053);
 * ne mijenja prava korisnika ni poslovne procese zbog pretplate (BM-NL-08, BR-145).
 
-## 2.3 Granica prema TS-003 / TS-004 / TS-010
+## 2.3 Granica prema KK-TS-003 / KK-TS-004 / KK-TS-010
 
 | Izvor | Okidač za Newsletter | Napomena |
 |-------|----------------------|----------|
-| TS-010 / TS-003 | Prelaz u **Objavljen** (odobrenje / direktna objava) | Kandidat za **prvo uključivanje** |
-| TS-010 / TS-003 | Prelaz u **Otkazan** | Prioritetno obavještenje **samo** pretplatnicima sa zapisom prvog uključivanja u Evidenciji dostavljenih Newsletter poruka; terminalan status — nema kasnijeg republish okidača |
-| TS-004 | **Odgođen**; povratak sa novim terminom; promjena datuma/vremena/lokacije; otkaz pojedinačnog održavanja | Prioritetno obavještenje; scope = termin ili kompletan događaj (BR-162) |
-| TS-003 | Prelaz u **Arhiviran** | Nije okidač prvog uključivanja; nije prioritetni okidač po BM-NL-17 |
-| TS-010 | Uređivačke izmjene opisa/fotografija | **Nisu** okidač (BR-159) |
+| KK-TS-010 / KK-TS-003 | Prelaz u **Objavljen** (odobrenje / direktna objava) | Kandidat za **prvo uključivanje** |
+| KK-TS-010 / KK-TS-003 | Prelaz u **Otkazan** | Prioritetno obavještenje **samo** pretplatnicima sa zapisom prvog uključivanja u Evidenciji dostavljenih Newsletter poruka; terminalan status — nema kasnijeg republish okidača |
+| KK-TS-004 | **Odgođen**; povratak sa novim terminom; promjena datuma/vremena/lokacije; otkaz pojedinačnog održavanja | Prioritetno obavještenje; scope = termin ili kompletan događaj (BR-162) |
+| KK-TS-003 | Prelaz u **Arhiviran** | Nije okidač prvog uključivanja; nije prioritetni okidač po BM-NL-17 |
+| KK-TS-010 | Uređivačke izmjene opisa/fotografija | **Nisu** okidač (BR-159) |
 
-## 2.4 Granica prema TS-009
+## 2.4 Granica prema KK-TS-009
 
-TS-009 obezbjeđuje UI površinu za pretplatu / odjavu / izbor Organizatora na javnom portalu. TS-011 definiše poslovno-tehnička pravila i backend ponašanje; UI detalji ostaju u TS-009 / implementaciji portala.
+KK-TS-009 obezbjeđuje UI površinu za pretplatu / odjavu / izbor Organizatora na javnom portalu. KK-TS-011 definiše poslovno-tehnička pravila i backend ponašanje; UI detalji ostaju u KK-TS-009 / implementaciji portala.
 
 ---
 
 # 3. Arhitektonski principi
 
-1. **BM/FS su izvor istine** — TS-011 ih operacionalizuje, ne proširuje.
+1. **BM/FS su izvor istine** — KK-TS-011 ih operacionalizuje, ne proširuje.
 2. **Automatski sadržaj** — Sistem bira događaje; nema ručnog izbora (BR-146).
 3. **Dva kanala isporuke** — redovni (periodična agregacija novoobjavljenih) i prioritetni (blagovremena promjena).
 4. **Jedan e-mail po pretplatniku po ciklusu** — objedinjavanje po pravilima BM-NL-06 / BR-153; prioritetna mogu biti objedinjena uz blagovremenost (BM-NL-24).
@@ -261,7 +263,7 @@ Konceptualne komponente (bez obaveze imena klasa u kodu):
 | **Dispečer pošte** | Raspodjela zadataka / slanje e-mail poruka |
 | **Prijem okidača** | Prima interne signale nakon uspješno sačuvanih poslovnih promjena (vidi §5) |
 | **Mehanizam rasporeda automatske obrade** | Periodični redovni ciklus; period objedinjavanja za prioritet |
-| **Emiter Audit događaja** | Emisija ka TS-012 |
+| **Emiter Audit događaja** | Emisija ka KK-TS-012 |
 
 ---
 
@@ -272,7 +274,7 @@ Konceptualne komponente (bez obaveze imena klasa u kodu):
 1. Newsletter dobija interni signal **isključivo** nakon uspješno završene i **trajno sačuvane** poslovne promjene.
 2. Signal predstavlja **potvrđenu poslovnu promjenu**, a ne korisničku UI akciju.
 3. Ako poslovna promjena nije uspješno sačuvana, Newsletter okidač se **ne emituje**.
-4. Obrada Newslettera odvija se **odvojeno** od osnovne poslovne transakcije (TS-003 / TS-004 / TS-010 ne čekaju završetak Newsletter obrade).
+4. Obrada Newslettera odvija se **odvojeno** od osnovne poslovne transakcije (KK-TS-003 / KK-TS-004 / KK-TS-010 ne čekaju završetak Newsletter obrade).
 5. Okidači imaju **jednoznačno značenje** po vrsti poslovne promjene (npr. objava događaja; otkaz događaja; odlaganje održavanja; promjena datuma/vremena/lokacije; otkaz održavanja).
 6. Ova specifikacija **ne** vezuje emitovanje za konkretne Laravel Event klase, Redis, RabbitMQ niti drugu tehnologiju — način prenosa signala je implementacioni detalj unutar gornjih normi.
 
@@ -474,7 +476,7 @@ Tehnička evidencija poslovno značajne promjene koja je nastala, ali još nije 
 User 1 ── 0..1 Newsletter pretplata
 Newsletter pretplata 1 ── * Izbor Organizatora ── 1 CulturalOrganizer
 Newsletter pretplata 1 ── * Evidencija dostavljenih Newsletter poruka ── 1 Događaj
-Evidencija dostavljenih Newsletter poruka 0..1 ── Održavanje (TS-004)
+Evidencija dostavljenih Newsletter poruka 0..1 ── Održavanje (KK-TS-004)
 Događaj / Održavanje ── * Promjena na čekanju
 ```
 
@@ -609,7 +611,7 @@ Napomena (BR-114 vs BR-147): javni portal može prikazati otkazane događaje; to
 
 Promjena je kandidat ako:
 
-1. tip je iz BM-NL-17 / BR-160 (otkaz događaja, odlaganje, promjena datuma/vremena/lokacije; uključujući otkaz termina po TS-004);
+1. tip je iz BM-NL-17 / BR-160 (otkaz događaja, odlaganje, promjena datuma/vremena/lokacije; uključujući otkaz termina po KK-TS-004);
 2. postoji `first_include` za pretplatnika i taj događaj (BM-NL-18);
 3. pretplatnik je aktivan;
 4. ista promjena (Kontrolni zapis promjene) nije već dostavljena (BM-NL-21);
@@ -652,7 +654,7 @@ Događaj ne mora biti poslat u trenutku objave; postaje kandidat za naredni redo
 
 Blagovremeno informisanje pretplatnika kojima je događaj **već** bio dostavljen o poslovno značajnim promjenama (BM-NL-17–20).
 
-## 12.2 Izvori okidača (usklađenost sa TS-003 / TS-004 / TS-010)
+## 12.2 Izvori okidača (usklađenost sa KK-TS-003 / KK-TS-004 / KK-TS-010)
 
 | Poslovna radnja | Značenje okidača | Scope obavještenja |
 |-----------------|------------------|-------------------|
@@ -693,7 +695,7 @@ Evidencija dostavljenih Newsletter poruka služi za:
 * određivanje publike za prioritetna obavještenja;
 * očuvanje posljednjeg dostavljenog stanja (u smislu već dostavljenih stavki / Kontrolnog zapisa).
 
-Nije centralna Evidencija aktivnosti (TS-012). Nije tehnički log platforme za elektronsku poštu.
+Nije centralna Evidencija aktivnosti (KK-TS-012). Nije tehnički log platforme za elektronsku poštu.
 
 ## 13.2 Prvo uključivanje i zaštita od duplikata
 
@@ -716,7 +718,7 @@ Nije centralna Evidencija aktivnosti (TS-012). Nije tehnički log platforme za e
 * prepoznavanje već obrađenih poslovno značajnih promjena;
 * sprječavanje duplih i kontradiktornih Newsletter poruka.
 
-Način njegovog izračunavanja **nije** predmet TS-011 i ostaje implementacioni detalj.
+Način njegovog izračunavanja **nije** predmet KK-TS-011 i ostaje implementacioni detalj.
 
 ## 13.3 Cjelovito evidentiranje dostave
 
@@ -731,7 +733,7 @@ Tehnička realizacija (transakcija, outbox i sl.) je implementacioni detalj unut
 
 ## 13.4 Posljednje stanje i agregacija
 
-* Sastavljač poruke čita **trenutno** poslovno stanje događaja/održavanja iz TS-003/TS-004 u trenutku pripreme (BM-NL-23).
+* Sastavljač poruke čita **trenutno** poslovno stanje događaja/održavanja iz KK-TS-003/KK-TS-004 u trenutku pripreme (BM-NL-23).
 * Agregacija prioritetnih promjena ide preko Promjene na čekanju; u Evidenciju ulazi Kontrolni zapis **konačnog** dostavljenog stanja.
 
 ## 13.5 Kontradiktorne poruke
@@ -825,7 +827,7 @@ Ne propisuje se konkretna tehnologija reda za obradu.
 
 ## 16.1 Norma (BM/FS)
 
-BM-NL-07 i BR-157 **namjerno ne** definišu interval. TS-011 predlaže tehničko rješenje **bez** uvođenja poslovnog pravila o učestalosti.
+BM-NL-07 i BR-157 **namjerno ne** definišu interval. KK-TS-011 predlaže tehničko rješenje **bez** uvođenja poslovnog pravila o učestalosti.
 
 ## 16.2 Početna tehnička konfiguracija
 
@@ -885,7 +887,7 @@ Redoslijed guard-ova pri slanju (po pretplatniku):
 
 Guard „nema republish”:
 
-* Prijem okidača **ignoriše** signal tipa „Otkazan → Objavljen” (takav prelaz nije dozvoljen u TS-003 / PATCH-053).
+* Prijem okidača **ignoriše** signal tipa „Otkazan → Objavljen” (takav prelaz nije dozvoljen u KK-TS-003 / PATCH-053).
 * Novi događaj (novi ID) nakon otkazanog programa tretira se isključivo kao kandidat za **prvo uključivanje**, ako ispunjava §10.1.
 
 ---
@@ -925,11 +927,11 @@ Ponovni pokušaj **nije** poslovno ponavljanje sadržaja i **nije** Audit događ
 
 # 21. Audit događaji
 
-## 21.1 Razgraničenje TS-011 / TS-012
+## 21.1 Razgraničenje KK-TS-011 / KK-TS-012
 
-* TS-011 **emituje** Audit događaje za aktivnosti definisane BM i FS (katalog Newsletter).
-* TS-011 **ne** određuje: skladištenje, prikaz, pretragu, retenciju, administraciju audit podataka.
-* To pripada **TS-012**.
+* KK-TS-011 **emituje** Audit događaje za aktivnosti definisane BM i FS (katalog Newsletter).
+* KK-TS-011 **ne** određuje: skladištenje, prikaz, pretragu, retenciju, administraciju audit podataka.
+* To pripada **KK-TS-012**.
 * **Evidencija dostavljenih Newsletter poruka nije audit** i ne smije se poistovjećivati sa audit evidencijom.
 
 ## 21.2 Katalog (BR-185 / FS §5.16)
@@ -967,7 +969,7 @@ Slanje Newslettera **ne** duplira zapise kataloga događaja (objava/otkaz ostaju
 | Pregled / upravljanje tuđim pretplatama | **Niko** u V1 (ni Organizator, ni Moderator, ni Urednik) |
 | Ručno slanje / izbor događaja za Newsletter | **Nije dozvoljeno** |
 | Pokretanje rasporeda / zadataka | Sistem / ops infrastruktura |
-| Čitanje centralne evidencije Newsletter audita | Administrator platforme (preko TS-012) |
+| Čitanje centralne evidencije Newsletter audita | Administrator platforme (preko KK-TS-012) |
 
 Organizator i Moderator **nemaju** uvid u identitet pretplatnika (BR-143).
 
@@ -978,30 +980,30 @@ Organizator i Moderator **nemaju** uvid u identitet pretplatnika (BR-143).
 | TS sekcija | BM | FS / BR | FT | Ostali TS |
 |------------|----|---------|----|-----------|
 | §1 Pregled | BM-NL-01–03, BM-GL-19 | BR-138–140, BR-144, BR-165 | FT-001 | — |
-| §2 Granice | BM-NL-03, BM-NL-08, BM-NL-14, BM-NL-16 | BR-144–146, BR-157, BR-159 | FT-001 | TS-003, TS-004, TS-009, TS-010 |
-| §3 Principi | BM-NL-06–13, BM-NL-22–25, BM-NL-42; PATCH-053 | BR-147–158, BR-166–169, BR-149 | FT-001 | TS-003 |
+| §2 Granice | BM-NL-03, BM-NL-08, BM-NL-14, BM-NL-16 | BR-144–146, BR-157, BR-159 | FT-001 | KK-TS-003, KK-TS-004, KK-TS-009, KK-TS-010 |
+| §3 Principi | BM-NL-06–13, BM-NL-22–25, BM-NL-42; PATCH-053 | BR-147–158, BR-166–169, BR-149 | FT-001 | KK-TS-003 |
 | §4 Komponente | BM-NL-07 | BR-148, BR-163 | FT-001 | — |
-| §5 Okidači | BM-NL-09, BM-NL-14, BM-NL-17; BM-DG-09 | BR-147, BR-159–160, BR-064 | FT-001 | TS-003, TS-004, TS-010 |
-| §6 Pretplata | BM-NL-04, BM-NL-05, BM-NL-12, BM-NL-15, BM-NL-26–BM-NL-47 | BR-139–143, BR-149, BR-154–156, BR-328–BR-348 | FT-001 | TS-001, TS-009 |
-| §7 Model podataka | BM-NL-04, BM-NL-26–BM-NL-29, BM-NL-39, BM-NL-41 | BR-142, BR-328–BR-330, BR-338, BR-340 | FT-001 | TS-001 |
+| §5 Okidači | BM-NL-09, BM-NL-14, BM-NL-17; BM-DG-09 | BR-147, BR-159–160, BR-064 | FT-001 | KK-TS-003, KK-TS-004, KK-TS-010 |
+| §6 Pretplata | BM-NL-04, BM-NL-05, BM-NL-12, BM-NL-15, BM-NL-26–BM-NL-47 | BR-139–143, BR-149, BR-154–156, BR-328–BR-348 | FT-001 | KK-TS-001, KK-TS-009 |
+| §7 Model podataka | BM-NL-04, BM-NL-26–BM-NL-29, BM-NL-39, BM-NL-41 | BR-142, BR-328–BR-330, BR-338, BR-340 | FT-001 | KK-TS-001 |
 | §8 Lifecycle pretplate | BM-NL-04, BM-NL-05, BM-NL-35, BM-NL-36, BM-NL-42, BM-NL-45–BM-NL-46 | BR-141, BR-154, BR-335, BR-345–BR-347 | FT-001 | — |
 | §9 Lifecycle poruke | BM-NL-07, BM-NL-20 | BR-148, BR-163 | FT-001 | — |
-| §10 Kandidati | BM-NL-09–11, BM-NL-14, BM-NL-17–18, BM-NL-33–34, BM-NL-45–BM-NL-47 | BR-147, BR-158–161, BR-341, BR-345–BR-348 | FT-001 | TS-003, TS-004 |
-| §11 Redovni | BM-NL-06, BM-NL-07, BM-NL-13 | BR-148–153, BR-150 | FT-001 | TS-009 |
-| §12 Prioritetni | BM-NL-17–25; BM-DG-09 | BR-160–169; BR-064 | FT-001 | TS-003, TS-004, TS-010 |
+| §10 Kandidati | BM-NL-09–11, BM-NL-14, BM-NL-17–18, BM-NL-33–34, BM-NL-45–BM-NL-47 | BR-147, BR-158–161, BR-341, BR-345–BR-348 | FT-001 | KK-TS-003, KK-TS-004 |
+| §11 Redovni | BM-NL-06, BM-NL-07, BM-NL-13 | BR-148–153, BR-150 | FT-001 | KK-TS-009 |
+| §12 Prioritetni | BM-NL-17–25; BM-DG-09 | BR-160–169; BR-064 | FT-001 | KK-TS-003, KK-TS-004, KK-TS-010 |
 | §13 Evidencija dostave | BM-NL-11, BM-NL-18, BM-NL-21–25, BM-NL-47 | BR-158, BR-161, BR-164, BR-166–169, BR-348 | FT-001 | — |
 | §14 Promjena na čekanju | BM-NL-22–25 | BR-166–169 | FT-001 | — |
 | §15 Obrada zadataka | BM-NL-07 | BR-148, BR-163 | FT-001 | — |
 | §16 Raspored | BM-NL-07, BM-NL-16 | BR-148, BR-157 | FT-001 | — |
 | §17 Validacije | BM-NL-* | BR-139–169, BR-328–BR-348 | FT-001 | — |
-| §18 Guard | BM-NL-09–13, BM-NL-42, BM-DG-09 | BR-147–150, BR-064 | FT-001 | TS-003 |
+| §18 Guard | BM-NL-09–13, BM-NL-42, BM-DG-09 | BR-147–150, BR-064 | FT-001 | KK-TS-003 |
 | §19–20 Error / Ponovni pokušaj | — | BR-186 | FT-001 | — |
-| §21 Audit događaji | — | BR-184–186 | FT-001 / FT-003 | TS-012 |
-| §22 Autorizacija | BM-NL-03, BM-NL-04 | BR-143–144 | FT-001 | TS-010 |
+| §21 Audit događaji | — | BR-184–186 | FT-001 / FT-003 | KK-TS-012 |
+| §22 Autorizacija | BM-NL-03, BM-NL-04 | BR-143–144 | FT-001 | KK-TS-010 |
 | §26 Legacy | BM-NL-44 | BR-343 | FT-001 | — |
 | §27 Van obuhvata | BM-NL-16 | BR-157 | FT-001 | — |
 
-Terminalnost Otkazan / zabrana republish: BM-DG-09, BR-064, TS-003 v0.1.2, TS-010 v1.0.1, G-NL-08 zatvoren.
+Terminalnost Otkazan / zabrana republish: BM-DG-09, BR-064, KK-TS-003 v0.1.2, KK-TS-010 v1.0.1, G-NL-08 zatvoren.
 
 ---
 
@@ -1048,7 +1050,7 @@ AC-NL-31 · Kandidat ≠ queued/sent/delivered; nepostojanje ledger zapisa samo 
 3. Signale vezati na uspješno sačuvane statusne prelaze (§5), ne na UI klikove.
 4. Za događaje sa više termina koristiti `occurrence_id` u prioritetnoj Evidenciji.
 5. Pri deaktivaciji Organizatora: preferenca ostaje; Organizator nije aktivan izvor dok je neaktivan.
-6. UI pretplate uskladiti sa TS-009; kanonski UI termini: Pretplati se, Odjavi se, Sačuvaj izmjene, Svi događaji, Odabrani organizatori, Bez organizatora.
+6. UI pretplate uskladiti sa KK-TS-009; kanonski UI termini: Pretplati se, Odjavi se, Sačuvaj izmjene, Svi događaji, Odabrani organizatori, Bez organizatora.
 7. Konfiguracione ključeve rasporeda dokumentovati u ops/runbook-u, ne u BM.
 8. Ne graditi urednički „Newsletter admin” u V1.
 9. Potvrda u aplikaciji ≠ double opt-in gate; nema confirmation e-maila.
@@ -1069,19 +1071,19 @@ AC-NL-31 · Kandidat ≠ queued/sent/delivered; nepostojanje ledger zapisa samo 
 
 **PRAVILO 5.3.1**
 
-TS-011 definiše ciljnu tehničku arhitekturu Newsletter sistema za verziju V1 i predstavlja izvor istine za njegovu implementaciju. Postojeća implementacija Newsletter funkcionalnosti ne predstavlja normativni izvor i ne može imati prednost u odnosu na usvojena pravila definisana u Business Model-u, Functional Specification-u i ovoj tehničkoj specifikaciji.
+KK-TS-011 definiše ciljnu tehničku arhitekturu Newsletter sistema za verziju V1 i predstavlja izvor istine za njegovu implementaciju. Postojeća implementacija Newsletter funkcionalnosti ne predstavlja normativni izvor i ne može imati prednost u odnosu na usvojena pravila definisana u Business Model-u, Functional Specification-u i ovoj tehničkoj specifikaciji.
 
 **PRAVILO 5.3.2**
 
-Postojeća implementacija Newsletter funkcionalnosti može biti iskorišćena kao osnova za implementaciju, pod uslovom da je u potpunosti usklađena sa pravilima definisanim u Business Model-u, Functional Specification-u i TS-011. Svaki dio postojeće implementacije koji nije usklađen sa usvojenim pravilima mora biti izmijenjen ili zamijenjen.
+Postojeća implementacija Newsletter funkcionalnosti može biti iskorišćena kao osnova za implementaciju, pod uslovom da je u potpunosti usklađena sa pravilima definisanim u Business Model-u, Functional Specification-u i KK-TS-011. Svaki dio postojeće implementacije koji nije usklađen sa usvojenim pravilima mora biti izmijenjen ili zamijenjen.
 
 **PRAVILO 5.3.3**
 
-Postojeća Newsletter implementacija je **testna**. Postojeći testni pretplatnici nijesu produkcioni poslovni podaci. **Nema** obaveze migracije testnih pretplatnika, **nema** A/B/C/D legacy backfill modela i **nema** obaveze kompatibilnosti sa starim e-mail-only modelom. Kanonski model ima prednost (CANONICAL MODEL WINS). Novi Newsletter implementira se direktno prema BM/FS/TS-011.
+Postojeća Newsletter implementacija je **testna**. Postojeći testni pretplatnici nijesu produkcioni poslovni podaci. **Nema** obaveze migracije testnih pretplatnika, **nema** A/B/C/D legacy backfill modela i **nema** obaveze kompatibilnosti sa starim e-mail-only modelom. Kanonski model ima prednost (CANONICAL MODEL WINS). Novi Newsletter implementira se direktno prema BM/FS/KK-TS-011.
 
 **PRAVILO 5.3.4**
 
-Nakon cutover-a na kanonski model, prethodna testna implementacija Newsletter funkcionalnosti ne smije ostati aktivna paralelno sa implementacijom definisanom u TS-011. U produkcionom okruženju u svakom trenutku smije biti aktivan isključivo jedan mehanizam za obradu i dostavu Newsletter poruka. Ovaj dokumentacioni korak **ne** naređuje trenutno brisanje starog koda.
+Nakon cutover-a na kanonski model, prethodna testna implementacija Newsletter funkcionalnosti ne smije ostati aktivna paralelno sa implementacijom definisanom u KK-TS-011. U produkcionom okruženju u svakom trenutku smije biti aktivan isključivo jedan mehanizam za obradu i dostavu Newsletter poruka. Ovaj dokumentacioni korak **ne** naređuje trenutno brisanje starog koda.
 
 ## 26.2 Istorijski testni model (REPLACED — nije current runtime)
 
@@ -1146,11 +1148,11 @@ Ovaj odsjek operacionalizuje usvojene BM/FS odluke i ne uvodi nova poslovna prav
 
 **PRAVILO 5.4.1**
 
-Poglavlje „Van obuhvata (Out of Scope)” definiše funkcionalnosti koje nisu predmet implementacije TS-011 u verziji V1. Funkcionalnosti navedene u ovom poglavlju ne smatraju se dijelom zahtjeva za implementaciju niti se njihovo nepostojanje smatra nedostatkom implementacije.
+Poglavlje „Van obuhvata (Out of Scope)” definiše funkcionalnosti koje nisu predmet implementacije KK-TS-011 u verziji V1. Funkcionalnosti navedene u ovom poglavlju ne smatraju se dijelom zahtjeva za implementaciju niti se njihovo nepostojanje smatra nedostatkom implementacije.
 
 **PRAVILO 5.4.2**
 
-Sve funkcionalnosti definisane usvojenim Business Model-om i Functional Specification-om predstavljaju obavezni dio implementacije TS-011. Funkcionalnosti koje nisu definisane tim dokumentima smatraju se van obuhvata ove tehničke specifikacije za verziju V1.
+Sve funkcionalnosti definisane usvojenim Business Model-om i Functional Specification-om predstavljaju obavezni dio implementacije KK-TS-011. Funkcionalnosti koje nisu definisane tim dokumentima smatraju se van obuhvata ove tehničke specifikacije za verziju V1.
 
 Napomena: granice V1 već usvojene u BM-NL-16 / BR-157 (npr. kategorije kao filter, personalizacija, kampanje, ručno slanje, Newsletter po ulozi, interval kao poslovno pravilo, „Prati Manifestaciju“, e-mail-only pretplatnik, obavezne servisne e-mail poruke) ostaju na snazi kroz PRAVILO 5.4.2 — bez proširenja liste u ovom TS-u.
 

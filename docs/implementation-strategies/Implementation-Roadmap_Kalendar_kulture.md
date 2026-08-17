@@ -2,9 +2,9 @@
 # Implementation Roadmap
 ## Kalendar kulture V1
 
-**Oznaka dokumenta:** IR-001  
+**Oznaka dokumenta:** KK-IR-001  
 **Naziv:** Implementation Roadmap — Kalendar kulture V1  
-**Feature ID:** FT-001 (+ FT-003 / TS-012)  
+**Feature ID:** FT-001 (+ FT-003 / KK-TS-012)  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Active — **Kalendar kulture V1 COMPLETE**; **V1 TECHNICAL VERIFICATION = PASS**; **V1 FULL-SYSTEM CROSS-VALIDATION = PASS**; **FINAL FULL REGRESSION = GREEN**; **BLOCKS V1 CLOSEOUT = NO**. MED = FORMALLY CLOSED. B3 = DEFERRED / NON-BLOCKING / POST-V1. MED-I4B = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. Repository HEAD `4595a14` = COMMITTED / PUSHED; production deploy ovog HEAD-a = **NOT CONFIRMED**.
 **Verzija:** 1.0.25
@@ -42,6 +42,7 @@
 | 1.0.23 | 2026-08-15 | **MED-01–MED-28 dokumentaciona kanonizacija (nije implementacija):** istorijski zapis Faze 1 da je TS-008 „završen u kodu“ ostaje kao istorija tadašnjeg TS8 modela; taj poslovni model je **SUPERSEDED**. Kanonski SSOT = MED paket. **Nije** Faza 9. **Nije** MED implementation COMPLETE. |
 | 1.0.24 | 2026-08-16 | **MED documentation closeout:** MED-01–MED-28 = **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED**. Paketi: MED-I1 `6060bee`; MED-I2 `e7c6a07`; MED-I3 `b416c0b`; MED-I4A `3ef974b`; MED-I5 `6a4d50e`. **MED-I4B** = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. **Nije** Faza 9. Istorijski V1 Faza 0–8 closeout KEEP. Obsolete `cultural_media` schema cleanup = DEFERRED / NON-BLOCKING. |
 | 1.0.25 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** Javni / urednički / Administracija final auditi = **PASS / ACCEPTED FOR V1 CLOSEOUT**. Full-system cross-validation = **PASS** (active conflicts = 0). Final full regression = **GREEN** (PHPUnit 11.5.39; PHP 8.3.21; GD=yes; WebP=yes; 1286 tests / 6224 assertions / 0 failed / 0 errors / 12 skipped Imagick-environment; 0 warnings / 0 deprecations / 0 risky; exit 0). **BLOCKS V1 CLOSEOUT = NO**. MED KEEP CLOSED. B3 audit = **NO ACTION REQUIRED BEFORE V1** (physical DROP/storage = POST-V1; preduslov = production read-only recheck). ADM-C1 `4595a14` = Users superadmin protection **CLOSED** u repou (COMMITTED / PUSHED; production deploy ovog HEAD-a **NOT CONFIRMED**). ADMIN-AUDIT-02 = TEST GAP / NON-BLOCKING; ADMIN-AUDIT-04 = LOW / NON-BLOCKING. Nema Faze 9. BM/FS pravila KEEP. RG-001 → **v1.1.12** (granica: Plaćanje nije aktivni KK registar). |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 ---
 
@@ -51,14 +52,14 @@
 |--------|------------|
 | Tip | Operativni planski dokument |
 | Svrha | Redoslijed, faze, disciplina i rizici implementacije Kalendara kulture V1 |
-| Ne zamjenjuje | BM, FS, Feature Registry, TS, IS-001 |
+| Ne zamjenjuje | BM, FS, Feature Registry, TS, KK-IS-001 |
 
 Ovaj dokument:
 
 * ne definiše nova poslovna pravila;
-* ne mijenja BM, FS, Feature Registry, Technical Specification ni IS-001;
+* ne mijenja BM, FS, Feature Registry, Technical Specification ni KK-IS-001;
 * ne sadrži SQL, Laravel kod ni PATCH predloge za te dokumente;
-* mora ostati sljediv prema usvojenim TS i IS-001.
+* mora ostati sljediv prema usvojenim TS i KK-IS-001.
 
 ---
 
@@ -69,30 +70,30 @@ Ovaj dokument:
 | Business Model — Kalendar kulture (Stable) | Poslovna pravila |
 | Functional Specification — Kalendar kulture (Stable) | Funkcionalni zahtjevi |
 | Feature Registry | FT-001 / FT-003; plan TS |
-| IS-001 | Implementaciona strategija javnog portala (TS-009) |
+| KK-IS-001 | Implementaciona strategija javnog portala (KK-TS-009) |
 | Change Request Register | CR-001…CR-004B |
-| TS-001, TS-003–TS-012 | Usvojene tehničke specifikacije |
+| KK-TS-001, KK-TS-003–KK-TS-012 | Usvojene tehničke specifikacije |
 
 ---
 
 # 3. Principi (PATCH-001)
 
-## 3.1 TS-012 — samo završna integraciona faza
+## 3.1 KK-TS-012 — samo završna integraciona faza
 
-TS-012 (Evidencija aktivnosti) je **centralni prijemnik** audit događaja.
+KK-TS-012 (Evidencija aktivnosti) je **centralni prijemnik** audit događaja.
 
-**Ne uvoditi** TS-012 parcijalno (npr. „audit skelet“ u Fazi 1).
+**Ne uvoditi** KK-TS-012 parcijalno (npr. „audit skelet“ u Fazi 1).
 
-Puna vrijednost TS-012 postoji tek kada postoje kanonski emiteri iz:
+Puna vrijednost KK-TS-012 postoji tek kada postoje kanonski emiteri iz:
 
-* TS-001
-* TS-003
-* TS-004
-* TS-005
-* TS-010
-* TS-011
+* KK-TS-001
+* KK-TS-003
+* KK-TS-004
+* KK-TS-005
+* KK-TS-010
+* KK-TS-011
 
-**Pravilo:** TS-012 implementirati kao **FAZU 8** — završnu integracionu fazu — nakon stabilizacije svih emitera.
+**Pravilo:** KK-TS-012 implementirati kao **FAZU 8** — završnu integracionu fazu — nakon stabilizacije svih emitera.
 
 ## 3.2 Stabilizaciona faza
 
@@ -115,9 +116,9 @@ Trajanje (broj dana) **nije** propisano ovim dokumentom — ostaje operativna od
 
 Primjeri velikih migracija (schema / novi domen):
 
-* Uvođenje novog modela Događaj + Održavanja 1..N (TS-003 / TS-004) — **bez** migracije/backfill-a legacy `cultural_events` sadržaja (**PO-EV-01**)
-* Manifestacije (TS-005)
-* Newsletter model (TS-011) — **bez** migracije/backfill-a testnih pretplatnika (**PO-NL-22**)
+* Uvođenje novog modela Događaj + Održavanja 1..N (KK-TS-003 / KK-TS-004) — **bez** migracije/backfill-a legacy `cultural_events` sadržaja (**PO-EV-01**)
+* Manifestacije (KK-TS-005)
+* Newsletter model (KK-TS-011) — **bez** migracije/backfill-a testnih pretplatnika (**PO-NL-22**)
 
 **PO-EV-01:** Postojeći zapisi u `cultural_events` smatraju se isključivo testnim/prototipskim podacima, ne referentnim produkcijskim sadržajem. Ne radi se migracija tih zapisa, backfill, dual-write ni adapteri radi očuvanja legacy sadržaja. Novi domen implementira se direktno prema BM/FS/TS; legacy flat model ostaje privremeno do cutover-a.
 
@@ -158,19 +159,19 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 
 | TS | Naziv | Baza | Novi API / rute | UI | Zavisnosti | Paralelno? | Složenost |
 |----|-------|:----:|:---------------:|:--:|------------|------------|-----------|
-| **TS-001** | Organizator / Moderator / zahtjevi | Da | Da | Da | Platformski User/Role; emisija → TS-012 (tek Faza 8) | Djelimično sa katalozima nakon Faze 1 | **Visoka** |
-| **TS-003** | Događaj | Da | Da | Da (preko TS-010) | TS-001, TS-004, TS-006–008 | Ne — jezgro sa TS-004 | **Vrlo visoka** |
-| **TS-004** | Održavanje | Da | Da | Da (TS-010) | TS-003, TS-006 | Samo u paru sa TS-003 | **Vrlo visoka** |
-| **TS-005** | Manifestacija | Da | Da | Da | TS-001, TS-003, TS-004 | Nakon jezgra | **Visoka** |
-| **TS-006** | Lokacije | Da | Da | Da | Potrošači TS-003/004; audit emit tek Faza 8 | Da — u Fazi 1 | **Srednja–visoka** |
-| **TS-007** | Kategorije i oznake | Da | Da | Da | TS-003; bez migracije test ENUM-a | Da — u Fazi 1 | **Srednja** |
-| **TS-008** | Mediji (istorijski) | Da + storage | Da | Da | SUPERSEDED MED-01–MED-28; vidi IR v1.0.24 | Istorijski Faza 1 | **Srednja–visoka** (model zastario) |
-| **TS-009** | Javni portal | Po fazi | Proširenje | Da | CR-004B (Faza 0); domen za Fazu 6 | CR-004B rano; domen kasnije | **Srednja** (preostalo) |
-| **TS-010** | Urednički portal | Koristi domen | Da | Da | TS-001, 003–008; emit → TS-012 (Faza 8) | Nakon domena; **Faza 5 V1 završena** | **Vrlo visoka** |
-| **TS-011** | Newsletter | Da | Da + job | Da | TS-001, 003, 004, 009, 010 | **Faza 7 V1 završena / FORMALLY CLOSED** | **Visoka** (zatvorena) |
-| **TS-012** | Evidencija aktivnosti | Da | Da | Min. Admin | Svi emiteri stabilni | **FAZA 8 CLOSED — PRODUCTION ACCEPTED** | **Srednja** |
+| **KK-TS-001** | Organizator / Moderator / zahtjevi | Da | Da | Da | Platformski User/Role; emisija → KK-TS-012 (tek Faza 8) | Djelimično sa katalozima nakon Faze 1 | **Visoka** |
+| **KK-TS-003** | Događaj | Da | Da | Da (preko KK-TS-010) | KK-TS-001, KK-TS-004, KK-TS-006–008 | Ne — jezgro sa KK-TS-004 | **Vrlo visoka** |
+| **KK-TS-004** | Održavanje | Da | Da | Da (KK-TS-010) | KK-TS-003, KK-TS-006 | Samo u paru sa KK-TS-003 | **Vrlo visoka** |
+| **KK-TS-005** | Manifestacija | Da | Da | Da | KK-TS-001, KK-TS-003, KK-TS-004 | Nakon jezgra | **Visoka** |
+| **KK-TS-006** | Lokacije | Da | Da | Da | Potrošači KK-TS-003/004; audit emit tek Faza 8 | Da — u Fazi 1 | **Srednja–visoka** |
+| **KK-TS-007** | Kategorije i oznake | Da | Da | Da | KK-TS-003; bez migracije test ENUM-a | Da — u Fazi 1 | **Srednja** |
+| **KK-TS-008** | Mediji (istorijski) | Da + storage | Da | Da | SUPERSEDED MED-01–MED-28; vidi IR v1.0.24 | Istorijski Faza 1 | **Srednja–visoka** (model zastario) |
+| **KK-TS-009** | Javni portal | Po fazi | Proširenje | Da | CR-004B (Faza 0); domen za Fazu 6 | CR-004B rano; domen kasnije | **Srednja** (preostalo) |
+| **KK-TS-010** | Urednički portal | Koristi domen | Da | Da | KK-TS-001, 003–008; emit → KK-TS-012 (Faza 8) | Nakon domena; **Faza 5 V1 završena** | **Vrlo visoka** |
+| **KK-TS-011** | Newsletter | Da | Da + job | Da | KK-TS-001, 003, 004, 009, 010 | **Faza 7 V1 završena / FORMALLY CLOSED** | **Visoka** (zatvorena) |
+| **KK-TS-012** | Evidencija aktivnosti | Da | Da | Min. Admin | Svi emiteri stabilni | **FAZA 8 CLOSED — PRODUCTION ACCEPTED** | **Srednja** |
 
-### Stanje IS-001 / CR (javni portal, postojeći model)
+### Stanje KK-IS-001 / CR (javni portal, postojeći model)
 
 | CR | Status | Obuhvat |
 |----|--------|---------|
@@ -186,9 +187,9 @@ Napomena: „API“ = nove/izmijenjene HTTP rute i kontroleri (Blade monolit).
 | Područje | Stanje | Akcija |
 |----------|--------|--------|
 | Javni portal | Postoji; CR-001–004A usklađeni | Faza 0: CR-004B; **Faza 6A:** kanonski cutover Događaja (**završena**); **Faza 6B:** Manifestacije (**FORMALLY CLOSED** / **PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE) |
-| `CulturalEvent` flat | Postoji (testni/prototipski podaci — **PO-EV-01**) | Faza 3: novi domen TS-003/004; zamjena flat modela **bez** migracije/backfill legacy sadržaja |
-| Admin `kk_admin` | Postoji | Refaktor u Fazi 5 (TS-010) |
-| Organizator / Moderator | Nema | Faza 2 (TS-001) |
+| `CulturalEvent` flat | Postoji (testni/prototipski podaci — **PO-EV-01**) | Faza 3: novi domen KK-TS-003/004; zamjena flat modela **bez** migracije/backfill legacy sadržaja |
+| Admin `kk_admin` | Postoji | Refaktor u Fazi 5 (KK-TS-010) |
+| Organizator / Moderator | Nema | Faza 2 (KK-TS-001) |
 | Održavanja 1..N | Nema | Faza 3 |
 | Manifestacije | **PRODUCTION ACCEPTED** (6B-01…6B-04 + PO-MF-WF; deployed) | **FAZA 4 / 6B FORMALLY CLOSED**; migracije RAN; `cultural_manifestations` = 0 redova; cleanup N/A |
 | Katalozi lokacija / kategorija / medija | Nema / ENUM | Faza 1 |
@@ -206,51 +207,51 @@ FAZA 0
   Stabilizacija
     ↓
 FAZA 1
-  TS-006
-  TS-007
-  TS-008
+  KK-TS-006
+  KK-TS-007
+  KK-TS-008
     ↓
   Stabilizacija
     ↓
 FAZA 2
-  TS-001
+  KK-TS-001
     ↓
   Stabilizacija
     ↓
 FAZA 3
-  TS-003
-  TS-004
+  KK-TS-003
+  KK-TS-004
     ↓
   Stabilizacija
     ↓
 FAZA 4
-  TS-005
+  KK-TS-005
     ↓
   Stabilizacija
     ↓
 FAZA 5
-  TS-010
+  KK-TS-010
     ↓
   Stabilizacija
     ↓
 FAZA 6
-  TS-009
+  KK-TS-009
   (preostale domenske funkcionalnosti)
     ↓
   Stabilizacija
     ↓
 FAZA 7
-  TS-011
+  KK-TS-011
     ↓
   Stabilizacija
     ↓
 FAZA 8
-  TS-012
+  KK-TS-012
     ↓
   Završna stabilizacija
 ```
 
-**CURRENT:** Faze 0–8 i Završna stabilizacija = **CLOSED**. Kalendar kulture V1 = **COMPLETE**. Nema Faze 9 u ovom IR-001.
+**CURRENT:** Faze 0–8 i Završna stabilizacija = **CLOSED**. Kalendar kulture V1 = **COMPLETE**. Nema Faze 9 u ovom KK-IR-001.
 
 **MED corrective (post-closeout paket, nije Faza 9):** PO paket MED-01–MED-28 je **usvojen, dokumentaciono kanonizovan, implementiran i verifikovan**.
 
@@ -269,7 +270,7 @@ FAZA 8
 
 **B3 / legacy (post-V1):** B3 / LEGACY CLEANUP AUDIT = **NO ACTION REQUIRED BEFORE V1**; **BLOCKS V1 CLOSEOUT = NO**. MUST BEFORE V1 = **NONE**. Physical DROP `cultural_events` / `CulturalEvent` shell / `CulturalEvent.slika` / `cultural-events/` storage = **DEFERRED / NON-BLOCKING / POST-V1**. Ako se kasnije radi: **production read-only recheck** je preduslov. Nije V1 blocker.
 
-**Administracija (repo corrective, nije Faza 9):** ADMIN-AUDIT-01 = **CLOSED** (`4595a14` — Users UI ne dodjeljuje/skida/aktivira/deaktivira `superadmin`; provisioning ostaje env-driven). ADMIN-AUDIT-02 = **TEST GAP / NON-BLOCKING**. ADMIN-AUDIT-04 = **LOW / NON-BLOCKING** (prazan leftover `admin/media` dir nakon MED-I5). Ove oznake su radni audit ID-evi, **nisu** RG-001 skraćenice.
+**Administracija (repo corrective, nije Faza 9):** ADMIN-AUDIT-01 = **CLOSED** (`4595a14` — Users UI ne dodjeljuje/skida/aktivira/deaktivira `superadmin`; provisioning ostaje env-driven). ADMIN-AUDIT-02 = **TEST GAP / NON-BLOCKING**. ADMIN-AUDIT-04 = **LOW / NON-BLOCKING** (prazan leftover `admin/media` dir nakon MED-I5). Ove oznake su radni audit ID-evi, **nisu** KK-RG-001 skraćenice.
 
 Ovo **nije** nova numerisana faza.
 
@@ -287,8 +288,8 @@ analiza → implementacija → test → review → merge → deploy
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Završiti IS-001 Fazu 3 na postojećem modelu (javni prikaz otkazanih) |
-| **Moduli** | TS-009 (query / UI); bez migracije |
+| **Cilj** | Završiti KK-IS-001 Fazu 3 na postojećem modelu (javni prikaz otkazanih) |
+| **Moduli** | KK-TS-009 (query / UI); bez migracije |
 | **Rizici** | Pogrešan skup `published\|cancelled`; regresija Istaknutih / statistika |
 | **Rezultat** | Otkazani javno dostupni po PO-CR4B |
 | **Zatim** | Stabilizacija |
@@ -298,8 +299,8 @@ analiza → implementacija → test → review → merge → deploy
 | Stavka | Opis |
 |--------|------|
 | **Cilj** | Stabilni dijeljeni resursi prije lifecycle-a događaja |
-| **Moduli** | TS-006 Lokacije; TS-007 Kategorije i oznake; TS-008 Mediji (istorijski TS8 model — kasnije SUPERSEDED MED paketom; vidi IR v1.0.23) |
-| **Van obuhvata** | **TS-012** (nema audit skeleta u ovoj fazi) |
+| **Moduli** | KK-TS-006 Lokacije; KK-TS-007 Kategorije i oznake; KK-TS-008 Mediji (istorijski TS8 model — kasnije SUPERSEDED MED paketom; vidi IR v1.0.23) |
+| **Van obuhvata** | **KK-TS-012** (nema audit skeleta u ovoj fazi) |
 | **Rizici** | Merge lokacija; ENUM → katalog; storage / MIME |
 | **Rezultat** | Katalozi upravljivi |
 | **Zatim** | Stabilizacija |
@@ -309,17 +310,17 @@ analiza → implementacija → test → review → merge → deploy
 | Stavka | Opis |
 |--------|------|
 | **Cilj** | Poslovni entitet Organizator + Moderator + zahtjevi |
-| **Moduli** | TS-001 |
+| **Moduli** | KK-TS-001 |
 | **Rizici** | `kk_admin` vs Urednik; invariant ≥1 aktivnog Moderatora |
-| **Rezultat** | Org / Mod u bazi; priprema za TS-010 |
+| **Rezultat** | Org / Mod u bazi; priprema za KK-TS-010 |
 | **Zatim** | Stabilizacija |
 
 ### FAZA 3 — Događaj + Održavanje
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Uskladiti model sa TS-003 / TS-004; uvesti Održavanja 1..N |
-| **Moduli** | TS-003, TS-004 |
+| **Cilj** | Uskladiti model sa KK-TS-003 / KK-TS-004; uvesti Održavanja 1..N |
+| **Moduli** | KK-TS-003, KK-TS-004 |
 | **Migracija** | **Velika** (schema / novi domen) — Održavanja 1..N; **jedina** velika migracija domena u tom deploymentu. **PO-EV-01:** bez migracije/backfill/dual-write postojećih `cultural_events` zapisa |
 | **Rizici** | Implementacija novog domena; cutover javnog portala; zamjena flat modela; regresija badge-a / filtera / CR-001…004B |
 | **Rezultat** | Kanonski Događaj + 1..N održavanja; lifecycle konzistentan; legacy flat model zamijenjen |
@@ -331,23 +332,23 @@ analiza → implementacija → test → review → merge → deploy
 |--------|------|
 | **Status** | **FORMALLY CLOSED / PRODUCTION ACCEPTED** — domen **6B-01** (`26217f6`); editorial **6B-02** (`0e8f7c3`); PO-MF-WF (`d3c7a96`) |
 | **Cilj** | Entitet Manifestacija + veze |
-| **Moduli** | TS-005 |
+| **Moduli** | KK-TS-005 |
 | **Migracija** | Velika (nove tabele / FK) — **produkcijski RAN** (`2026_08_11_121000`, `2026_08_11_121100`) |
 | **Rizici** | Kardinalnost; arhiva MF ne briše događaje |
 | **Rezultat** | Domen + editorial lifecycle **DEPLOYED / PRODUCTION VERIFIED** |
-| **Zatim** | **FAZA 7 FORMALLY CLOSED**; naredno = **Faza 8 / TS-012**; Phase B1+B2 = **PRODUCTION VERIFIED / CLOSED**; B3 table DROP ostaje **DEFERRED / non-blocking** |
+| **Zatim** | **FAZA 7 FORMALLY CLOSED**; naredno = **Faza 8 / KK-TS-012**; Phase B1+B2 = **PRODUCTION VERIFIED / CLOSED**; B3 table DROP ostaje **DEFERRED / non-blocking** |
 
 ### FAZA 5 — Urednički portal
 
 | Stavka | Opis |
 |--------|------|
-| **Status** | **V1 funkcionalno / implementaciono završen** (TS-010 v1.0.6; Cultural: 420 passed / 1740 assertions) |
-| **Cilj** | TS-010 umjesto direktnog `kk_admin` CRUD-a |
-| **Moduli** | TS-010 (cjeline 010.1–010.7; 010.8 = Business Test Matrix) |
+| **Status** | **V1 funkcionalno / implementaciono završen** (KK-TS-010 v1.0.6; Cultural: 420 passed / 1740 assertions) |
+| **Cilj** | KK-TS-010 umjesto direktnog `kk_admin` CRUD-a |
+| **Moduli** | KK-TS-010 (cjeline 010.1–010.7; 010.8 = Business Test Matrix) |
 | **Rizici** | Prijedlozi izmjena; zaključavanje; regresija admin tokova |
 | **Rezultat** | Moderator / Urednik operativni tokovi V1 — **ostvareno** |
-| **Van obuhvata Faze 5** | TS-005 (Manifestacije); TS-009 javni cutover; TS-012 emit/storage (Faza 8); TS-010.7 ostaje obaveza / dependency ka TS-012 |
-| **Zatim** | Stabilizacija → **Faza 6A (TS-009 javni portal Događaja)** |
+| **Van obuhvata Faze 5** | KK-TS-005 (Manifestacije); KK-TS-009 javni cutover; KK-TS-012 emit/storage (Faza 8); KK-TS-010.7 ostaje obaveza / dependency ka KK-TS-012 |
+| **Zatim** | Stabilizacija → **Faza 6A (KK-TS-009 javni portal Događaja)** |
 
 ### FAZA 6A — Javni portal Događaja (kanonski cutover)
 
@@ -355,11 +356,11 @@ analiza → implementacija → test → review → merge → deploy
 |--------|------|
 | **Status** | **CLOSED** — implementation complete; production verification **PASS** (PO-confirmed 2026-08-13) |
 | **Cilj** | Prelazak javnog portala Događaja sa `CulturalEvent` na `CulturalEventEntry` + `CulturalOccurrence`; CAT-CUTOVER; očuvanje postojećeg UI-ja |
-| **Moduli** | TS-009 (§1.7, §3.4, §7.3, §9–§12, §18); kanonski katalozi TS-006/007/008 po potrebi |
+| **Moduli** | KK-TS-009 (§1.7, §3.4, §7.3, §9–§12, §18); kanonski katalozi KK-TS-006/007/008 po potrebi |
 | **PO** | PO-EV-01; PO-TS9-08A–PO-TS9-08J |
 | **CURRENT SSOT** | **CANONICAL ONLY**; active public legacy dependency **0**; dual-read **NO**; dual-write **NO** |
 | **Rezultat** | Kanonski javni read za Događaje; flag **uklonjen**; bez Manifestacija u 6A scope-u |
-| **Ne blokira** | TS-005 / Manifestacije |
+| **Ne blokira** | KK-TS-005 / Manifestacije |
 | **Van obuhvata (historical plan note)** | Manifestacije (6B); slug/SEO; migracija legacy sadržaja; dual-read/write |
 | **cancellation_reason** | PATCH-063: opcioni javni note **dozvoljen** (superseduje PATCH-060 apsolutnu zabranu) |
 | **Categories** | Production canonical catalog **14/14 PASS** |
@@ -368,21 +369,21 @@ analiza → implementacija → test → review → merge → deploy
 | **Phase B2** | Canonical-only public + legacy CRUD runtime removal — **IMPLEMENTED / TESTED / PRODUCTION VERIFIED / CLOSED** |
 | **Phase B3** | `cultural_events` table DROP — **DEFERRED** — non-runtime / **non-blocking for 6A** |
 | **Implementation remaining** | **NONE** |
-| **Zatim** | **FAZA 7 FORMALLY CLOSED** → **Faza 8 / TS-012** |
+| **Zatim** | **FAZA 7 FORMALLY CLOSED** → **Faza 8 / KK-TS-012** |
 
 ### FAZA 6B — Manifestacije (javni portal)
 
 | Stavka | Opis |
 |--------|------|
 | **Status** | **FORMALLY CLOSED / PRODUCTION ACCEPTED** WITH LIMITED CONTENT-SMOKE COVERAGE — javni portal + Tip sadržaja/Pretraga: **6B-03 / 6B-03A / 6B-04**; editorial MF: **6B-02**; domen: **6B-01**; lifecycle corrective: PO-MF-WF (`d3c7a96`) |
-| **Cilj** | Javni portal Manifestacija (TS-009 §6 / PO-TS9-07A–07E) + Tip sadržaja / MF `q` / PO-6B-10 na Pretrazi |
-| **Moduli** | TS-005; TS-009 §3.3–§3.4.1 / §6 |
+| **Cilj** | Javni portal Manifestacija (KK-TS-009 §6 / PO-TS9-07A–07E) + Tip sadržaja / MF `q` / PO-6B-10 na Pretrazi |
+| **Moduli** | KK-TS-005; KK-TS-009 §3.3–§3.4.1 / §6 |
 | **Dokaz** | `7875e99` (portal); `0c99241` (search/tip); editorial `0e8f7c3`; domain `26217f6`; lifecycle `d3c7a96` |
 | **Test gate** | Functional 244/992; closeout 88 passed / 639 assertions / 0 failed / 0 errors |
 | **Rezultat** | Lista / Detalji / program / navigacija / Tip sadržaja — **DEPLOYED**; editorial + moderator osnovni lifecycle + kk_admin nav **PRODUCTION VERIFIED** |
 | **Production** | **DEPLOYED** — migracije RAN; tabela postoji; 0 MF redova; cleanup N/A; **PHASE 6B FORMALLY CLOSED** |
 | **Limited content-smoke** | **NON-BLOCKING PRODUCTION SMOKE DEBT** (nije defect): public detail/program/Event→MF/search-with-hit; moderator resubmit; organizer-scope extra smoke. PO ne zahtijeva vještačke produkcijske MF. |
-| **Zatim** | **FAZA 7 FORMALLY CLOSED** → **Faza 8 / TS-012** |
+| **Zatim** | **FAZA 7 FORMALLY CLOSED** → **Faza 8 / KK-TS-012** |
 
 ### FAZA 6 — (istorijski naziv)
 
@@ -393,29 +394,29 @@ analiza → implementacija → test → review → merge → deploy
 | Stavka | Opis |
 |--------|------|
 | **Status** | **FORMALLY CLOSED** — NL-01…NL-06 **IMPLEMENTED / TESTED / COMMITTED / PUSHED**; repo-level stabilization **PASS** |
-| **Cilj (ispunjen)** | Zamjena testnog sedmičnog digest-a kanonskim modelom TS-011 v1.0.3 |
-| **Moduli** | TS-011 |
+| **Cilj (ispunjen)** | Zamjena testnog sedmičnog digest-a kanonskim modelom KK-TS-011 v1.0.3 |
+| **Moduli** | KK-TS-011 |
 | **Paketi** | NL-01 pretplata; NL-02 `/newsletter` settings; NL-03 eligibility/`first_published_at`; NL-04 regular delivery; NL-05 priority; NL-06 legacy weekly disabled + ops/routing docs |
 | **Migracija** | Canonical schema deployed (**PO-CONFIRMED** Ran: `120000`, `140000`, `160000`, `180000`); **PO-NL-22:** **bez** backfill-a testnih pretplatnika |
 | **Scheduler (kanon / PO-CONFIRMED)** | `cultural-calendar:send-newsletter` `0 */6 * * *`; `cultural-calendar:send-newsletter-priority` `*/5 * * * *`; legacy weekly **nije** production invoker; **ne** `schedule:run` ako Plesk koristi direktne Artisan invokere |
 | **Production** | **PO-CONFIRMED:** Environment production; Debug OFF; Timezone `Europe/Belgrade`; Mail smtp; `/newsletter` settings UI. Live Git HEAD = **UNOBSERVED** iz Cursora. Ručni real mail = NO |
 | **KEEP V1** | Organizer listing URL u mailu; crash-after-SMTP window; nema queue/outbox; fizički legacy subscriber/weekly artefakti |
-| **TS-012** | **Ne** implementirano u Fazi 7 (emit/storage = Faza 8) |
-| **Zatim** | **Faza 8 / TS-012** (nakon ovog closeout-a) |
+| **KK-TS-012** | **Ne** implementirano u Fazi 7 (emit/storage = Faza 8) |
+| **Zatim** | **Faza 8 / KK-TS-012** (nakon ovog closeout-a) |
 
-### FAZA 8 — Evidencija aktivnosti (TS-012)
+### FAZA 8 — Evidencija aktivnosti (KK-TS-012)
 
 | Stavka | Opis |
 |--------|------|
 | **Status** | **CLOSED — IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED.** F8-01 canonical freeze complete. F8-02 store complete / production active / accepted. F8-03 emitters complete / production active / accepted. F8-04 Admin UI complete / production active / accepted (Super Administrator smoke PASS na `/admin/evidencija-aktivnosti`). V1 audit = **best-effort / failure-isolated / no durable replay**. `repeatable()` uniqueness = known V1 limitation. V1 Admin UI = hronološka read-only lista + paginacija; bez filtera/search/export/show. Historical audit redovi **immutable**. |
 | **Cilj** | Centralni prijem, trajno skladište, Admin pristup; pun V1 katalog emitera |
-| **Moduli** | TS-012 — **integracija** sa već stabilnim emiterima (TS-001, 003, 004, 005, 010, 011) |
+| **Moduli** | KK-TS-012 — **integracija** sa već stabilnim emiterima (KK-TS-001, 003, 004, 005, 010, 011) |
 | **Preduslov** | **FAZA 7 FORMALLY CLOSED** — **ispunjen** |
-| **Katalog** | TS-012 §7 / FS PATCH-FS-074 — **FROZEN** |
+| **Katalog** | KK-TS-012 §7 / FS PATCH-FS-074 — **FROZEN** |
 | **Rizici** | Lom nepromjenjivosti; propušten kanonski emiter |
 | **KEEP V1** | Audit write = best-effort; nema queue/outbox; nema durable replay; `repeatable()` uniqueness limitation; Admin UI bez filtera/search/export/show; historical rows immutable |
 | **Rezultat (cilj faze)** | FT-003 V1 zatvoren (bez retention / izvoza van BR-188) — **ostvaren** |
-| **Zatim** | **Završna stabilizacija** (IR-001 §6 / §8) — **CLOSED** (vidi dolje) |
+| **Zatim** | **Završna stabilizacija** (KK-IR-001 §6 / §8) — **CLOSED** (vidi dolje) |
 
 ### ZAVRŠNA STABILIZACIJA — Kalendar kulture V1
 
@@ -425,7 +426,7 @@ analiza → implementacija → test → review → merge → deploy
 | **Cilj** | Kontrolni punkt nakon Faze 8 (§8): testovi, review, smoke, posmatranje. |
 | **Rezultat** | **Kalendar kulture V1 = COMPLETE.** **V1 TECHNICAL VERIFICATION = PASS.** **BLOCKS V1 CLOSEOUT = NO.** Runtime closed. Physical B3 DROP = **DEFERRED / POST-V1**. MED = **FORMALLY CLOSED**. MED-I4B = **DEFERRED / NON-BLOCKING**. |
 | **KEEP V1** | **Audit:** failure isolation; no durable replay; no outbox/queue; `repeatable()` uniqueness limitation; no filter/search/export/show; historical rows immutable. **Newsletter:** crash-after-SMTP duplicate window; no queue/outbox; organizer listing URL omitted; legacy physical artifacts remain. **Manifestation:** delete OOS. **Public / legacy:** B3 `cultural_events` physical DROP deferred; day view without badge/detail-link (TD-TS9-01). **Administracija:** ADMIN-AUDIT-02 test gap; ADMIN-AUDIT-04 dead Media remnants. |
-| **Zatim** | Nema numerisane **Faze 9** u ovom IR-001. Post-V1: B3 physical cleanup (uz production read-only recheck); MED-I4B vizueli; obsolete `cultural_media` schema. |
+| **Zatim** | Nema numerisane **Faze 9** u ovom KK-IR-001. Post-V1: B3 physical cleanup (uz production read-only recheck); MED-I4B vizueli; obsolete `cultural_media` schema. |
 
 ---
 
@@ -433,7 +434,7 @@ analiza → implementacija → test → review → merge → deploy
 
 Primjenjuje se nakon Faza 0–7 i kao **Završna stabilizacija** nakon Faze 8.
 
-**CURRENT:** Završna stabilizacija nakon Faze 8 = **CLOSED / COMPLETE** (IR-001 v1.0.22). Finalni V1 documentation closeout = **IR-001 v1.0.25**. Nema naredne numerisane velike faze u ovom dokumentu.
+**CURRENT:** Završna stabilizacija nakon Faze 8 = **CLOSED / COMPLETE** (KK-IR-001 v1.0.22). Finalni V1 documentation closeout = **KK-IR-001 v1.0.25**. Nema naredne numerisane velike faze u ovom dokumentu.
 
 | Stavka | Obavezno |
 |--------|----------|
@@ -454,11 +455,11 @@ Naredna velika faza **ne počinje** dok stabilizacija nije potvrđena.
 | Faza | Obavezno | Očekivani testovi | Tipične regresije |
 |------|----------|-------------------|-------------------|
 | 0 | Dostupnost `cancelled`; Istaknuti; Arhiva; Detalji | CR-004B Feature; regresija CR-001…004A | Badge, filteri, statistike |
-| 1 | CRUD kataloga; deaktivacija; merge; MIME | Feature TS-006/007/008 | Javni filter kategorije/lokacije |
-| 2 | Zahtjevi Org/Mod; kontekst | Feature TS-001 | Role middleware |
+| 1 | CRUD kataloga; deaktivacija; merge; MIME | Feature KK-TS-006/007/008 | Javni filter kategorije/lokacije |
+| 2 | Zahtjevi Org/Mod; kontekst | Feature KK-TS-001 | Role middleware |
 | 3 | Migracija dry-run; ≥1 održavanje; Odgođen; Otkazan terminalan | Domain Feature + migracioni testovi | `publicStatus`, liste, admin |
-| 4 | Veze MF↔DG; program | Feature TS-005 | Događaji bez MF |
-| 5 | Matrica TS-010.8; gate-ovi | Feature po ulogama | Stari admin put |
+| 4 | Veze MF↔DG; program | Feature KK-TS-005 | Događaji bez MF |
+| 5 | Matrica KK-TS-010.8; gate-ovi | Feature po ulogama | Stari admin put |
 | 6A | Kanonski cutover Događaja; kartica multi-OCC; sort; CAT; flag | Public query + CulturalCalendar* | CR-001…004B |
 | 6B | MF portal + Tip sadržaja | **FORMALLY CLOSED / PRODUCTION ACCEPTED** (limited content-smoke) | 6A stabilan |
 | 7 | Okidači; objedinjavanje; odjava | **FORMALLY CLOSED** — NL-01…NL-06 Feature | Mail / cron; legacy weekly disabled |
@@ -472,19 +473,19 @@ Naredna velika faza **ne počinje** dok stabilizacija nije potvrđena.
 2. UI-only / additive faze (0, dijelovi 1–2, 5–6 bez velike migracije): deploy bez maintenance window gdje je moguće.
 3. Velike migracije (Faze 3, 4, 7 — i eventualno Faza 8 skladište): **jedna po deploymentu**; backup; rollback plan; staging dry-run; produkcioni smoke.
 4. Feature flag: privremeno za Fazu 6A (`legacy` XOR `canonical`); za MF navigaciju (6B), novi urednički portal i novi newsletter dok se ne potvrdi stabilnost.
-5. Stari `kk_admin` tok gasiti tek nakon što TS-010 pokrije potrebne tokove.
+5. Stari `kk_admin` tok gasiti tek nakon što KK-TS-010 pokrije potrebne tokove.
 
 ---
 
 # 11. Najveći tehnički rizik
 
-Faza 6A (TS-009): javni cutover na `CulturalEventEntry` + `CulturalOccurrence` — **bez** migracije/backfill-a postojećih testnih zapisa (**PO-EV-01**); bez dual-read/dual-write. Regresioni rizik: badge, filteri, CR-001…004B, lifecycle otkazanih, kartica multi-Održavanje. TS-005 **ne blokira** 6A.
+Faza 6A (KK-TS-009): javni cutover na `CulturalEventEntry` + `CulturalOccurrence` — **bez** migracije/backfill-a postojećih testnih zapisa (**PO-EV-01**); bez dual-read/dual-write. Regresioni rizik: badge, filteri, CR-001…004B, lifecycle otkazanih, kartica multi-Održavanje. KK-TS-005 **ne blokira** 6A.
 
 ---
 
 # 12. Prvi implementacioni korak
 
-**CR-004B** (Faza 0), zatim Stabilizacija, zatim Faza 1 (TS-006 / TS-007 / TS-008).
+**CR-004B** (Faza 0), zatim Stabilizacija, zatim Faza 1 (KK-TS-006 / KK-TS-007 / KK-TS-008).
 
 ---
 
@@ -492,7 +493,7 @@ Faza 6A (TS-009): javni cutover na `CulturalEventEntry` + `CulturalOccurrence` �
 
 | # | Izmjena |
 |---|---------|
-| 1 | Uklonjena preporuka „Audit skelet u Fazi 1“; TS-012 isključivo Faza 8 |
+| 1 | Uklonjena preporuka „Audit skelet u Fazi 1“; KK-TS-012 isključivo Faza 8 |
 | 2 | Dodata obavezna Stabilizacija nakon svake velike faze + Završna stabilizacija |
 | 3 | Dodat princip: jedna velika migracija domena po deploymentu (+ backup / rollback / dry-run / smoke) |
 | 4 | Dodata implementaciona disciplina: jedna logička cjelina iz TS po zadatku; lanac analiza→…→deploy |

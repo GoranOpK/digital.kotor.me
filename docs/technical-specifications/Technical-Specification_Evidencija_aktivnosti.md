@@ -3,7 +3,7 @@
 ## Evidencija aktivnosti (Audit)
 
 **Feature ID:** FT-003  
-**Oznaka dokumenta:** TS-012  
+**Oznaka dokumenta:** KK-TS-012  
 **Funkcionalna cjelina:** Evidencija aktivnosti  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** USVOJEN  
@@ -28,6 +28,7 @@
 | 1.0.7 | 2026-08-15 | **F8-04 status only:** minimalni Admin UI (hronološka read-only lista, paginacija, platformski Administrator) **IMPLEMENTED u kodu**; production deploy pending. F8-02/F8-03 = production active. Katalog §7 **KEEP**. Bez izmjene BM/FS. Nije Faza 8 production closeout. |
 | 1.0.8 | 2026-08-15 | **FAZA 8 PRODUCTION CLOSEOUT (status only):** F8-01…F8-04 **IMPLEMENTED / PRODUCTION ACTIVE / PRODUCTION ACCEPTED / CLOSED**. Admin UI production smoke PASS. Katalog §7 **KEEP**. Historical audit rows immutable. Bez izmjene BM/FS. |
 | 1.0.9 | 2026-08-15 | **MED-28 kompatibilnost (katalog KEEP):** nema novih `media.*` action kodova; **TS12-MF-11 / `mf.cover.change` = KEEP**; Event/MF content audit ostaje prema zamrznutom katalogu. Freeze katalog **nije** otvoren. Bez izmjene action code vrijednosti. |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 Napomena:
 
@@ -50,6 +51,7 @@ Ne mijenjaju se postojeći redovi.
 | 1.0.6 | 2026-08-14 | F8-03 PO accept: `repeatable()` uniqueness limitation; DB unique KEEP; katalog KEEP. |
 | 1.0.7 | 2026-08-15 | F8-04 status: V1 Admin UI implemented in code (read-only list + pagination); production pending; katalog KEEP. |
 | 1.0.9 | 2026-08-15 | MED-28: no new `media.*`; TS12-MF-11 / `mf.cover.change` KEEP; freeze katalog not opened. |
+| 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 ---
 
@@ -57,7 +59,7 @@ Ne mijenjaju se postojeći redovi.
 
 Ovaj dokument opisuje kako će se usvojeni Business Model i Functional Specification za funkcionalnu cjelinu **Evidencija aktivnosti** tehnički realizovati u okviru **FT-003**.
 
-TS-012:
+KK-TS-012:
 
 * ne uvodi nova poslovna pravila;
 * ne zamjenjuje Business Model niti Functional Specification;
@@ -72,10 +74,10 @@ Izvori istine za poslovna pravila:
 * `docs/functional-specifications/Functional-Specification.md` (§5.16 BR-170–BR-188, BR-349–BR-350; PATCH-FS-074)
 * `docs/features/Feature-Registry.md` (FT-003)
 * `docs/METHODOLOGY.md` (M-TS-001–M-TS-005)
-* `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003)
-* `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004)
-* `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010)
-* `docs/technical-specifications/Technical-Specification_Newsletter.md` (TS-011 v1.0.3)
+* `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (KK-TS-003)
+* `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (KK-TS-004)
+* `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (KK-TS-010)
+* `docs/technical-specifications/Technical-Specification_Newsletter.md` (KK-TS-011 v1.0.3)
 
 ---
 
@@ -108,7 +110,7 @@ Izvori istine za poslovna pravila:
 
 # Pravila upravljanja ovim dokumentom
 
-1. TS-012 pripada **FT-003** – Evidencija aktivnosti (Kalendar kulture).
+1. KK-TS-012 pripada **FT-003** – Evidencija aktivnosti (Kalendar kulture).
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
 3. Nova poslovna pravila se ne uvode kroz Technical Specification.
 4. Sve što nije definisano u BM ili FS, a zahtijeva poslovnu odluku, evidentira se kao **Otvoreno pitanje**.
@@ -154,7 +156,7 @@ Evidencija aktivnosti:
 2. arhitektura prijema i trajnog evidentiranja;
 3. model audit događaja i audit zapisa (minimalni sadržaj);
 4. V1 katalog aktivnosti (Moderator, Organizatori, Manifestacije, Događaji / Održavanja, Newsletter);
-5. ugovor prijema iz TS-003 / TS-004 / TS-010 / TS-011;
+5. ugovor prijema iz KK-TS-003 / KK-TS-004 / KK-TS-010 / KK-TS-011;
 6. nepromjenjivost;
 7. autorizacija i minimalni Admin pristup;
 8. razdvajanje od tehničkih logova;
@@ -166,19 +168,19 @@ Van obuhvata: vidi §17 (usklađeno sa BR-188).
 
 | Zavisnost | Uloga |
 |-----------|--------|
-| TS-001 Organizator / Moderator | Emisija kataloga Organizatori / Moderator (preko portala / TS-010) |
-| TS-003 Događaj | Emisija kataloga Događaji |
-| TS-004 Održavanje | Emisija aktivnosti održavanja kroz katalog Događaji |
-| TS-005 Manifestacija | Emisija kataloga Manifestacije (granica; emiteri u uredničkom toku) |
-| TS-010 Urednički portal | Obaveza emitovanja (TS-010.7); bez UI centralne evidencije |
-| TS-011 Newsletter | Emisija kataloga Newsletter |
+| KK-TS-001 Organizator / Moderator | Emisija kataloga Organizatori / Moderator (preko portala / KK-TS-010) |
+| KK-TS-003 Događaj | Emisija kataloga Događaji |
+| KK-TS-004 Održavanje | Emisija aktivnosti održavanja kroz katalog Događaji |
+| KK-TS-005 Manifestacija | Emisija kataloga Manifestacije (granica; emiteri u uredničkom toku) |
+| KK-TS-010 Urednički portal | Obaveza emitovanja (KK-TS-010.7); bez UI centralne evidencije |
+| KK-TS-011 Newsletter | Emisija kataloga Newsletter |
 | Platforma Digital Kotor | Identitet korisnika; uloga Administrator platforme |
 
 ---
 
 # 2. Granice odgovornosti
 
-## 2.1 Šta TS-012 radi
+## 2.1 Šta KK-TS-012 radi
 
 * prima audit događaje nakon uspješno završenih poslovnih radnji iz kataloga;
 * trajno evidentira audit zapise;
@@ -186,7 +188,7 @@ Van obuhvata: vidi §17 (usklađeno sa BR-188).
 * omogućava pristup Administratori platforme;
 * razlikuje korisničkog izvršioca i izvršioca **Sistem**.
 
-## 2.2 Šta TS-012 ne radi
+## 2.2 Šta KK-TS-012 ne radi
 
 * ne određuje *zašto* se poslovna radnja smije desiti (to je BM/FS i izvorni TS);
 * ne upravlja lifecycle-om događaja, održavanja, pretplata niti uredničkim workflow-om;
@@ -198,8 +200,8 @@ Van obuhvata: vidi §17 (usklađeno sa BR-188).
 
 | Koncept | Vlasnik | Napomena |
 |---------|---------|----------|
-| Lokalni audit trag | TS-001 / TS-003 / TS-010 … | Vidljiv ovlašćenim ulogama na entitetu; ≠ centralna evidencija |
-| Centralna Evidencija | **TS-012 / FT-003** | Direktan pristup samo Administrator |
+| Lokalni audit trag | KK-TS-001 / KK-TS-003 / KK-TS-010 … | Vidljiv ovlašćenim ulogama na entitetu; ≠ centralna evidencija |
+| Centralna Evidencija | **KK-TS-012 / FT-003** | Direktan pristup samo Administrator |
 
 Prikaz lokalnih tragova **nije** direktan pristup centralnoj Evidenciji (BR-175).
 
@@ -238,7 +240,7 @@ Izvorni moduli **ne** upravljaju sadržajem, integritetom niti životnim cikluso
 
 # 5. Model audit događaja
 
-**Audit događaj** je poruka koju emiter šalje TS-012 nakon uspješno završene poslovne radnje iz V1 kataloga.
+**Audit događaj** je poruka koju emiter šalje KK-TS-012 nakon uspješno završene poslovne radnje iz V1 kataloga.
 
 Konceptualni atributi (bez SQL):
 
@@ -252,12 +254,12 @@ Konceptualni atributi (bez SQL):
 | `object_type` | Tip poslovnog objekta (npr. događaj, održavanje, organizator, pretplata, manifestacija, zahtjev) |
 | `object_id` | Identitet objekta |
 | `organizer_context_id` | Kontekst Organizatora kada je primjenjivo (BR-181) |
-| `source_module` | Izvorni modul / TS (npr. TS-003, TS-011); dio ključa jedinstvenosti |
+| `source_module` | Persistirani runtime ključ izvornog modula (npr. `TS-003`, `TS-011`); **nije** kanonski dokumentacioni ID (`KK-TS-003`). Dio ključa jedinstvenosti |
 | `catalog_area` | Moderator \| Organizatori \| Manifestacije \| Događaji \| Newsletter |
 
 **Jedinstvenost audit događaja** utvrđuje se kombinacijom **`source_module` + `event_id`**. Globalni UUID nije obavezno pravilo. Ponovni prijem iste kombinacije ne smije proizvesti novi audit zapis.
 
-TS-012 **ne** propisuje Laravel Event klase, Redis ni queue tehnologiju.
+KK-TS-012 **ne** propisuje Laravel Event klase, Redis ni queue tehnologiju.
 
 ---
 
@@ -311,13 +313,15 @@ Opcioni `context` objekat smije sadržati **samo** identifikatore i šifre potre
 
 # 7. Katalog V1
 
-Poslovni SSOT kataloga je **FS §5.16** (uključujući PATCH-FS-074 / BR-349–BR-350). TS-012 ne dodaje aktivnosti van tog kataloga. Tehnički ID-jevi `TS12-*` su stabilni identifikatori za emiter/testove; nisu nove RG-001 skraćenice.
+Poslovni SSOT kataloga je **FS §5.16** (uključujući PATCH-FS-074 / BR-349–BR-350). KK-TS-012 ne dodaje aktivnosti van tog kataloga. Tehnički ID-jevi `TS12-*` su stabilni identifikatori za emiter/testove; nisu nove KK-RG-001 skraćenice.
 
 Feature Registry **uključuje** Manifestacije u V1 katalogu FT-003. Stari FR-GAP je **zatvoren**.
 
 Jedinstvenost zapisa Moderator aktivnosti: BR-180. Promjena aktivnog konteksta **nije** zaseban zapis (BR-181). Pri odobrenju kreiranja Organizatora: **dva** `event_id` (BR-179).
 
 ## 7.1 Kanonska matrica V1
+
+**Runtime dual-key:** kolona Source module sadrži persistirani runtime ključ (`source_module`), npr. `TS-003`. To **nije** kanonski dokumentacioni ID. Dokument emitera je npr. `KK-TS-003`. Runtime vrijednosti se ovim dokumentacionim corrective-om ne mijenjaju.
 
 | ID | Source module | Event type | Poslovna radnja | Actor | Target | Minimal context | BM/FS source |
 | -- | ------------- | ---------- | --------------- | ----- | ------ | --------------- | ------------ |
@@ -375,9 +379,9 @@ Jedinstvenost zapisa Moderator aktivnosti: BR-180. Promjena aktivnog konteksta *
 | TS12-NL-05 | TS-011 | `nl.send.regular` | Slanje redovnog Newslettera | Sistem | newsletter_cycle | cycle_id | BR-185; BR-184 |
 | TS12-NL-06 | TS-011 | `nl.send.priority` | Slanje prioritetnog obavještenja | Sistem | newsletter_cycle | cycle_id | BR-185; BR-184 |
 
-Kanonski emiter u koloni Source module je **vlasnik lifecycle-a**. Ako portal (TS-010) izvršava radnju, i dalje emituje **jedan** kanonski emiter entiteta (TS-001/003/004/005/011), ne paralelno TS-010.
+Kanonski emiter u koloni Source module je **vlasnik lifecycle-a**. Ako portal (KK-TS-010) izvršava radnju, i dalje emituje **jedan** kanonski emiter entiteta (TS-001/003/004/005/011), ne paralelno KK-TS-010.
 
-**MED-28 / PATCH-075 (katalog neizmijenjen):** ne uvode se novi `media.*` kodovi. Postojeći **TS12-MF-11 / `mf.cover.change` ostaje**. Promjena naslovne fotografije Događaja ostaje pokrivena postojećim Event content audit kodovima iz ove matrice (bez novih kodova). TS-012 freeze se ne otvara.
+**MED-28 / PATCH-075 (katalog neizmijenjen):** ne uvode se novi `media.*` kodovi. Postojeći **TS12-MF-11 / `mf.cover.change` ostaje**. Promjena naslovne fotografije Događaja ostaje pokrivena postojećim Event content audit kodovima iz ove matrice (bez novih kodova). KK-TS-012 freeze se ne otvara.
 
 ## 7.2 Explicit exclusions
 
@@ -406,9 +410,9 @@ Kanonski emiter u koloni Source module je **vlasnik lifecycle-a**. Ako portal (T
 ## 8.1 Ugovor prijema
 
 1. Emiter šalje audit događaj **tek nakon** uspješno završene i trajno sačuvane poslovne radnje.
-2. Emiter određuje `activity_type` u skladu sa FS katalogom; TS-012 ne tumači poslovne razloge radnje.
-3. TS-012 validira obavezne atribute i pripadnost katalogu.
-4. TS-012 upisuje audit zapis.
+2. Emiter određuje `activity_type` u skladu sa FS katalogom; KK-TS-012 ne tumači poslovne razloge radnje.
+3. KK-TS-012 validira obavezne atribute i pripadnost katalogu.
+4. KK-TS-012 upisuje audit zapis.
 5. Ponovni prijem iste kombinacije **`source_module` + `event_id`** **ne** stvara novi zapis (tehnička zaštita od duplikata).
 6. **Neuspjeh** prijema ili trajnog evidentiranja audit događaja **ne smije** retroaktivno poništiti niti promijeniti već uspješno završenu poslovnu radnju.
 7. Ako isti već konstruisani audit događaj (`source_module` + `event_id`) ponovo stigne, prijem je **idempotentan** (nema drugog zapisa). V1 **ne** obavezuje durable replay nakon završetka procesa.
@@ -425,13 +429,13 @@ Ostali moduli **ne** emituju zasebne audit događaje za istu poslovnu radnju.
 
 | Kanonski emiter | Katalog | Referenca |
 |-----------------|---------|-----------|
-| TS-003 | Događaji (dio lifecycle događaja) | TS-003 §8.2 |
-| TS-004 | Događaji — Održavanje | TS-004 §8.2 |
-| TS-010 (urednički portal) | Moderator, Organizatori, Manifestacije; Događaji gdje je portal kanonski vlasnik toka | TS-010.7 |
-| TS-011 | Newsletter | TS-011 §21 |
-| TS-001 / tokovi Organizator–Moderator | Moderator / Organizatori (gdje je TS-001 kanonski; inače TS-010) | granica uz TS-010 |
+| KK-TS-003 | Događaji (dio lifecycle događaja) | KK-TS-003 §8.2 |
+| KK-TS-004 | Događaji — Održavanje | KK-TS-004 §8.2 |
+| KK-TS-010 (urednički portal) | Moderator, Organizatori, Manifestacije; Događaji gdje je portal kanonski vlasnik toka | KK-TS-010.7 |
+| KK-TS-011 | Newsletter | KK-TS-011 §21 |
+| KK-TS-001 / tokovi Organizator–Moderator | Moderator / Organizatori (gdje je KK-TS-001 kanonski; inače KK-TS-010) | granica uz KK-TS-010 |
 
-Gdje više dokumenata opisuje istu oblast, emitovanje radi **samo** kanonski emiter za konkretnu radnju (npr. lifecycle Održavanja → TS-004; uredničko odobrenje u portalu → TS-010).
+Gdje više dokumenata opisuje istu oblast, emitovanje radi **samo** kanonski emiter za konkretnu radnju (npr. lifecycle Održavanja → KK-TS-004; uredničko odobrenje u portalu → KK-TS-010).
 
 ## 8.4 Izvršilac
 
@@ -448,7 +452,7 @@ Audit zapis **trajno** čuva identitet izvršioca kakav je bio u trenutku nastan
 
 Naknadna deaktivacija ili promjena statusa korisničkog naloga **ne smije** izmijeniti niti učiniti neodređenim izvršioca već evidentirane aktivnosti.
 
-TS-012 **ne** određuje politiku životnog ciklusa korisničkih naloga; određuje samo da ta politika **ne smije** narušiti istorijski integritet Evidencije aktivnosti.
+KK-TS-012 **ne** određuje politiku životnog ciklusa korisničkih naloga; određuje samo da ta politika **ne smije** narušiti istorijski integritet Evidencije aktivnosti.
 
 ## 8.5 Zaštita od duplikata (tehnički predlog)
 
@@ -517,7 +521,7 @@ Durable outbox/retry (isti `event_id` nakon gubitka procesa) je eventualni **V1.
 | Organizator (entitet) | Ne | — |
 | Moderator | Ne | Emisija preko portala |
 | Urednik | Ne | Emisija preko portala |
-| Registrovani korisnik | Ne | Newsletter pretplata (TS-011) |
+| Registrovani korisnik | Ne | Newsletter pretplata (KK-TS-011) |
 | Sistem | Nije uloga za pregled | Automatski zapisi |
 
 ---
@@ -560,22 +564,22 @@ Ne ulaze kao Audit:
 * serverski događaji bez poslovnog značaja;
 * infrastruktura rasporeda / ograničenja brzine slanja.
 
-Takvi podaci pripadaju tehničkom logovanju platforme, izvan TS-012.
+Takvi podaci pripadaju tehničkom logovanju platforme, izvan KK-TS-012.
 
-**Evidencija dostavljenih Newsletter poruka (TS-011) nije audit.**
+**Evidencija dostavljenih Newsletter poruka (KK-TS-011) nije audit.**
 
 ---
 
 # 13. Integracije
 
-| Dokument | Uloga prema TS-012 |
+| Dokument | Uloga prema KK-TS-012 |
 |----------|-------------------|
-| TS-003 | Kanonski emiter kataloga Događaji (svoj lifecycle); ne projektuje skladište |
-| TS-004 | Kanonski emiter aktivnosti Održavanja kroz katalog Događaji |
-| TS-005 | Poslovni izvor Manifestacije; emisija preko kanonskog emitera u uredničkom toku / portalu |
-| TS-010 | Kanonski emiter gdje portal potvrđuje završetak radnje (Moderator, Organizatori, Manifestacije, dio Događaja); lokalni ≠ centralni; bez UI centralne |
-| TS-011 | Kanonski emiter kataloga Newsletter; skladište/pregled = TS-012 |
-| TS-001 | Kanonski emiter Organizator/Moderator gdje upravlja lifecycle-om; inače usklađenje sa TS-010 |
+| KK-TS-003 | Kanonski emiter kataloga Događaji (svoj lifecycle); ne projektuje skladište |
+| KK-TS-004 | Kanonski emiter aktivnosti Održavanja kroz katalog Događaji |
+| KK-TS-005 | Poslovni izvor Manifestacije; emisija preko kanonskog emitera u uredničkom toku / portalu |
+| KK-TS-010 | Kanonski emiter gdje portal potvrđuje završetak radnje (Moderator, Organizatori, Manifestacije, dio Događaja); lokalni ≠ centralni; bez UI centralne |
+| KK-TS-011 | Kanonski emiter kataloga Newsletter; skladište/pregled = KK-TS-012 |
+| KK-TS-001 | Kanonski emiter Organizator/Moderator gdje upravlja lifecycle-om; inače usklađenje sa KK-TS-010 |
 
 Pravilo: **jedna poslovna radnja → jedan kanonski emiter → jedan audit događaj** (izuzev BR-179: dva događaja / dva `event_id`).
 
@@ -583,9 +587,9 @@ Tok:
 
 ```
 Poslovna radnja (uspješno sačuvana)
-  → Kanonski emiter (TS-003/004/010/011/…)
+  → Kanonski emiter (KK-TS-003/004/010/011/…)
   → Audit događaj (source_module + event_id)
-  → TS-012 prijem + validacija + idempotentnost
+  → KK-TS-012 prijem + validacija + idempotentnost
   → Trajni audit zapis
      (neuspjeh ovdje ne poništava poslovnu radnju; V1 best-effort, bez durable replay)
   → Admin: minimalni hronološki pristup
@@ -620,20 +624,20 @@ FS §5.16 BR-170…188, BR-349–350
         ↓
 FT-003
         ↓
-TS-003 / TS-004 / TS-010 / TS-011  (emisija)
+KK-TS-003 / KK-TS-004 / KK-TS-010 / KK-TS-011  (emisija)
         ↓
-TS-012  (prijem, skladište, Admin pristup)
+KK-TS-012  (prijem, skladište, Admin pristup)
 ```
 
 | TS sekcija | BM | FS / BR | FT | Emiteri |
 |------------|----|---------|----|---------|
 | §1–2 Pregled / granice | BM-AL-01–08 | BR-170–175 | FT-003 | — |
 | §5–6 Model | BM-AL-01, BM-AL-03 | BR-173; BR-188 | FT-003 | — |
-| §7.1 Moderator | BM-AL-07 | BR-177, BR-180–181 | FT-003 | TS-010 / TS-001 |
-| §7.2 Organizatori | BM-AL-07 | BR-178–179 | FT-003 | TS-010 / TS-001 |
-| §7.3 Manifestacije | BM-AL-07, BM-MF-20 | §5.16 katalog | FT-003 | TS-010 / TS-005 |
-| §7.4 Događaji / Održavanja | BM-AL-07 | BR-182–183 | FT-003 | TS-003, TS-004 |
-| §7.5 Newsletter | BM-AL-07 | BR-184–186 | FT-003 | TS-011 |
+| §7.1 Moderator | BM-AL-07 | BR-177, BR-180–181 | FT-003 | KK-TS-010 / KK-TS-001 |
+| §7.2 Organizatori | BM-AL-07 | BR-178–179 | FT-003 | KK-TS-010 / KK-TS-001 |
+| §7.3 Manifestacije | BM-AL-07, BM-MF-20 | §5.16 katalog | FT-003 | KK-TS-010 / KK-TS-005 |
+| §7.4 Događaji / Održavanja | BM-AL-07 | BR-182–183 | FT-003 | KK-TS-003, KK-TS-004 |
+| §7.5 Newsletter | BM-AL-07 | BR-184–186 | FT-003 | KK-TS-011 |
 | §8 Prijem | BM-AL-03–05 | BR-170 | FT-003 | kanonski emiteri |
 | §8.2 Kanonski emiter | BM-AL-03 | BR-170 | FT-003 | jedan emiter / radnja |
 | §8.4.1 Istorijski izvršilac | BM-AL-04 | BR-173; BR-187 | FT-003 | — |
@@ -670,7 +674,7 @@ AC-AL-19 · Deaktivacija ili promjena statusa korisničkog naloga ne mijenja nit
 
 # 17. Van obuhvata (Out of Scope)
 
-U skladu sa **BR-188** i usvojenim V1, TS-012 **ne** uvodi:
+U skladu sa **BR-188** i usvojenim V1, KK-TS-012 **ne** uvodi:
 
 1. napredne filtere;
 2. naprednu / punu pretragu;
@@ -700,7 +704,7 @@ Napomena: način prenosa događaja (sinhrono/asinhrono), tačan oblik skladište
 1. Emisiju vezati na uspješan commit poslovne transakcije, ne na UI klik.
 2. Idempotentnost držati na kombinaciji `source_module` + `event_id` (deterministički `event_id`; ne zahtijevati globalni UUID).
 3. Neuspjeh Evidencije ne smije rollback-ovati poslovnu radnju. Idempotent ingest za isti već konstruisani `event_id`. Queue/outbox **nije** V1 obaveza. Durable replay nakon završetka procesa **nije** V1 garancija.
-4. Jedan kanonski emiter po poslovnoj radnji — bez paralelne emisije iz TS-010 i TS-003 za istu radnju.
+4. Jedan kanonski emiter po poslovnoj radnji — bez paralelne emisije iz KK-TS-010 i KK-TS-003 za istu radnju.
 5. Ne kreirati korisnički nalog za Sistem.
 6. Sačuvati istorijski `actor_user_id`; deaktivacija ili promjena imena/uloge ne smije narušiti audit zapis.
 7. Ne miješati ledger Newsletter dostave sa Audit zapisom.
@@ -736,10 +740,10 @@ Bez test koda u ovom paketu. Naredna implementacija mora dokazati:
 | TM-AL-15 | BR-179 | Tačno dva zapisa; nema trećeg MOD duplikata |
 | TM-AL-16 | Newsletter ledger red | Nije audit zapis; TS12-NL-05/06 su zasebni |
 | TM-AL-17 | Emit van kataloga (npr. GET, dismiss, draft save) | Nema audit zapisa |
-| TM-AL-18 | Integracija TS-001 | Bar jedan MOD/ORG emit iz §7.1 |
-| TM-AL-19 | Integracija TS-003/004 | Bar jedan EV/OCC emit |
-| TM-AL-20 | Integracija TS-005 | Bar jedan MF emit |
-| TM-AL-21 | Integracija TS-011 | Bar jedan NL emit |
+| TM-AL-18 | Integracija KK-TS-001 | Bar jedan MOD/ORG emit iz §7.1 |
+| TM-AL-19 | Integracija KK-TS-003/004 | Bar jedan EV/OCC emit |
+| TM-AL-20 | Integracija KK-TS-005 | Bar jedan MF emit |
+| TM-AL-21 | Integracija KK-TS-011 | Bar jedan NL emit |
 | TM-AL-22 | Deaktivacija User nakon zapisa | `actor_user_id` nepromijenjen |
 
 ---

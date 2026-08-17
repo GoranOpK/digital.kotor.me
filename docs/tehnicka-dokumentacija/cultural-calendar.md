@@ -40,7 +40,7 @@ Business Model razlikuje sljedeće poslovne uloge:
 * **Moderator** (Moderator organizatora) — operativni korisnik Organizatora; **nije** Urednik;
 * **Urednik** — odobrava Organizatore i sadržaj, te objavljuje događaje.
 
-Funkcija **„Postani organizator“** usvojena je u Business Modelu: podnosilac zahtjeva nakon odobrenja Urednika automatski postaje prvi Moderator; naredne Moderatore predlažu postojeći Moderatori, a ovlašćenja dodjeljuje isključivo Urednik. **CURRENT:** Organizator, Moderator i „Postani organizator“ su **implementirani** (TS-001 / TS-010).
+Funkcija **„Postani organizator“** usvojena je u Business Modelu: podnosilac zahtjeva nakon odobrenja Urednika automatski postaje prvi Moderator; naredne Moderatore predlažu postojeći Moderatori, a ovlašćenja dodjeljuje isključivo Urednik. **CURRENT:** Organizator, Moderator i „Postani organizator“ su **implementirani** (KK-TS-001 / KK-TS-010).
 
 ### Trenutna implementacija
 

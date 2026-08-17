@@ -3,7 +3,7 @@
 ## Mediji (istorijski)
 
 **Feature ID:** FT-001  
-**Oznaka dokumenta:** TS-008  
+**Oznaka dokumenta:** KK-TS-008  
 **Funkcionalna cjelina:** Mediji (istorijski)
 **Modul:** Kalendar kulture
 **Status dokumenta:** **SUPERSEDED / HISTORICAL / ZASTARJELO**
@@ -12,24 +12,24 @@
 
 > **Ovaj dokument nije aktivni SSOT za V1.**
 >
-> TS-008 (v0.1.0, Usvojen 2026-07-31) opisivao je samostalnu poslovnu cjelinu **Mediji**. Taj model je **supersedovan** PO paketom **MED-01–MED-28** (BM PATCH-075 / FS PATCH-FS-075).
+> KK-TS-008 (v0.1.0, Usvojen 2026-07-31) opisivao je samostalnu poslovnu cjelinu **Mediji**. Taj model je **supersedovan** PO paketom **MED-01–MED-28** (BM PATCH-075 / FS PATCH-FS-075).
 >
 > Status **Usvojen** kao aktivna V1 funkcionalna cjelina **više ne važi**.
 >
 > Kanonska pravila su raspoređena u:
 >
-> * **TS-003** — naslovna fotografija Događaja (`0..1`, upload u kontekstu, lifecycle);
-> * **TS-005** — naslovna fotografija Manifestacije (`0..1`, MF placeholder);
-> * **TS-007** — statičke Git kategorijske fotografije (nije `CulturalMedia`);
-> * **TS-009** — javni fallback i `object-fit: cover`;
-> * **TS-010** — UX naslovne fotografije (nema ekrana Mediji);
-> * **TS-012** — samo audit kompatibilnost (`TS12-MF-11` / `mf.cover.change` KEEP; bez novih `media.*` kodova).
+> * **KK-TS-003** — naslovna fotografija Događaja (`0..1`, upload u kontekstu, lifecycle);
+> * **KK-TS-005** — naslovna fotografija Manifestacije (`0..1`, MF placeholder);
+> * **KK-TS-007** — statičke Git kategorijske fotografije (nije `CulturalMedia`);
+> * **KK-TS-009** — javni fallback i `object-fit: cover`;
+> * **KK-TS-010** — UX naslovne fotografije (nema ekrana Mediji);
+> * **KK-TS-012** — samo audit kompatibilnost (`TS12-MF-11` / `mf.cover.change` KEEP; bez novih `media.*` kodova).
 >
 > Poglavlja 1–14 ispod ostaju **istorijski zapis** TS8-01–TS8-09 / BM-MD-01–17. Ne koristiti ih kao aktivnu specifikaciju za implementaciju.
 >
-> **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED** za MED replacement model (TS-003/005/007/009/010; TS-012 compatibility KEEP). Ovaj dokument ostaje **SUPERSEDED / HISTORICAL** i **nije** aktivni V1 SSOT.
+> **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED** za MED replacement model (KK-TS-003/005/007/009/010; KK-TS-012 compatibility KEEP). Ovaj dokument ostaje **SUPERSEDED / HISTORICAL** i **nije** aktivni V1 SSOT.
 >
-> **MED-I4B** finalni vizuelni resursi = DEFERRED / NON-BLOCKING PROJECT ASSET WORK (nije razlog da se TS-008 vrati u Usvojen).
+> **MED-I4B** finalni vizuelni resursi = DEFERRED / NON-BLOCKING PROJECT ASSET WORK (nije razlog da se KK-TS-008 vrati u Usvojen).
 
 ---
 
@@ -40,6 +40,7 @@
 | 0.1.0 | 2026-07-31 | Prva kompletna tehnička specifikacija za Medije. Ugrađene usvojene Product Owner odluke TS8-01–TS8-09 i usklađene sa BM-09 (PATCH-044), FS §5.11 (PATCH-FS-046) i TS pravilima projekta. Bez SQL, API ugovora, Laravel koda i migracija. |
 | 0.1.1 | 2026-08-15 | **SUPERSEDED / HISTORICAL:** TS-008 povučen kao aktivni SSOT. Kanonski model = MED-01–MED-28 (BM PATCH-075 / FS PATCH-FS-075). Nova pravila u TS-003, TS-005, TS-007, TS-009, TS-010; TS-012 samo audit kompatibilnost. Istorijski sadržaj poglavlja 1–14 zadržan radi sljedivosti. **IMPLEMENTATION PENDING** za MED. Bez izmjene koda. |
 | 0.1.2 | 2026-08-16 | **MED documentation closeout (status only):** MED replacement model = **IMPLEMENTED / VERIFIED**. TS-008 ostaje SUPERSEDED / HISTORICAL. Poglavlja 1–14 nisu brisana. MED-I4B vizueli deferred. Bez kataloških/poslovnih izmjena TS8 teksta. |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 ---
 
@@ -51,7 +52,7 @@ Do v0.1.0 opisivao je tehničku realizaciju tadašnje funkcionalne cjeline **Med
 
 Poglavlja 1–14 ispod ostaju radi sljedivosti. Ne koristiti ih kao aktivnu specifikaciju.
 
-Kanonski SSOT: BM PATCH-075, FS PATCH-FS-075, TS-003, TS-005, TS-007, TS-009, TS-010; TS-012 samo audit kompatibilnost.
+Kanonski SSOT: BM PATCH-075, FS PATCH-FS-075, KK-TS-003, KK-TS-005, KK-TS-007, KK-TS-009, KK-TS-010; KK-TS-012 samo audit kompatibilnost.
 
 Istorijski izvori (v0.1.0):
 
@@ -86,9 +87,9 @@ Istorijski izvori (v0.1.0):
 
 # Pravila upravljanja ovim dokumentom
 
-1. TS-008 je **historijski** dokument FT-001. Nije aktivni SSOT.
+1. KK-TS-008 je **historijski** dokument FT-001. Nije aktivni SSOT.
 2. Istorijski sadržaj se ne briše radi sljedivosti.
-3. Nova poslovna pravila se **ne** uvode kroz TS-008. Kanonski model = MED-01–MED-28.
+3. Nova poslovna pravila se **ne** uvode kroz KK-TS-008. Kanonski model = MED-01–MED-28.
 4. Izmjene ovog dokumenta smiju samo održavati supersession/status, ne reaktivirati TS8 model.
 
 ---
@@ -105,7 +106,7 @@ U V1 medij nosi tačno jednu namjenu iz zatvorenog kataloga i povezuje se sa dog
 
 ## 1.2 Obuhvat dokumenta
 
-TS-008 obuhvata:
+KK-TS-008 obuhvata:
 
 * entitet Medij i poslovne veze;
 * zatvoreni katalog namjena;
@@ -120,15 +121,15 @@ TS-008 obuhvata:
 
 ## 1.3 Zavisnosti
 
-| Zavisnost | Uloga u odnosu na TS-008 |
+| Zavisnost | Uloga u odnosu na KK-TS-008 |
 |-----------|---------------------------|
-| TS-001 Organizator / Moderator | Organizacioni kontekst Moderatora; vidljivost medija |
-| TS-003 Događaj | Veza 0..1 naslovna fotografija; hijerarhija prikaza |
-| TS-005 Manifestacija | Veza 0..1 naslovna fotografija; placeholder MF |
-| TS-007 Kategorije i oznake | Veza 0..1 podrazumijevana fotografija kategorije |
-| TS-009 Javni portal | Potrošač prikaza fotografija |
-| TS-010 Urednički portal | UI za uređivanje entiteta i upravljanje medij-zapisom |
-| TS-012 Evidencija aktivnosti | Audit poslovno značajnih radnji nad medijima |
+| KK-TS-001 Organizator / Moderator | Organizacioni kontekst Moderatora; vidljivost medija |
+| KK-TS-003 Događaj | Veza 0..1 naslovna fotografija; hijerarhija prikaza |
+| KK-TS-005 Manifestacija | Veza 0..1 naslovna fotografija; placeholder MF |
+| KK-TS-007 Kategorije i oznake | Veza 0..1 podrazumijevana fotografija kategorije |
+| KK-TS-009 Javni portal | Potrošač prikaza fotografija |
+| KK-TS-010 Urednički portal | UI za uređivanje entiteta i upravljanje medij-zapisom |
+| KK-TS-012 Evidencija aktivnosti | Audit poslovno značajnih radnji nad medijima |
 
 ---
 
@@ -329,7 +330,7 @@ erDiagram
 
 # 8. Evidencija aktivnosti (Audit)
 
-Poslovno značajne radnje (kreiranje medija, izmjena medij-zapisa, povezivanje/uklanjanje veze, deaktivacija/reaktivacija, trajno brisanje) evidentiraju se u skladu sa BM-14 / FS §5.16 i budućim TS-012.
+Poslovno značajne radnje (kreiranje medija, izmjena medij-zapisa, povezivanje/uklanjanje veze, deaktivacija/reaktivacija, trajno brisanje) evidentiraju se u skladu sa BM-14 / FS §5.16 i budućim KK-TS-012.
 
 Creator i vremenske oznake ostaju na mediju radi lokalne istorije.
 
@@ -339,10 +340,10 @@ Creator i vremenske oznake ostaju na mediju radi lokalne istorije.
 
 | Integracija | Opis |
 |-------------|------|
-| TS-003 | Naslovna događaja; prikaz |
-| TS-005 | Naslovna MF; placeholder |
-| TS-007 | Default fotografija kategorije |
-| TS-009 / TS-010 | Prikaz i urednički UI |
+| KK-TS-003 | Naslovna događaja; prikaz |
+| KK-TS-005 | Naslovna MF; placeholder |
+| KK-TS-007 | Default fotografija kategorije |
+| KK-TS-009 / KK-TS-010 | Prikaz i urednički UI |
 | Storage | Fizičko skladištenje fotografija (javni disk / ekvivalent) |
 
 ---
@@ -374,13 +375,13 @@ Creator i vremenske oznake ostaju na mediju radi lokalne istorije.
 
 **Istorijski (v0.1.0):** za tadašnji TS8 model nije bilo otvorenih PO pitanja; TS8-01–TS8-09 su bile usvojene.
 
-**Aktuelno:** TS8 model je **SUPERSEDED** MED-01–MED-28. Ne otvarati nova TS-008 pitanja. MED replacement model = **IMPLEMENTED / VERIFIED** (aktivni SSOT: TS-003/005/007/009/010).
+**Aktuelno:** TS8 model je **SUPERSEDED** MED-01–MED-28. Ne otvarati nova KK-TS-008 pitanja. MED replacement model = **IMPLEMENTED / VERIFIED** (aktivni SSOT: KK-TS-003/005/007/009/010).
 
 ---
 
 # 13. Matrica sljedivosti
 
-| PO | BM | FS | TS-008 |
+| PO | BM | FS | KK-TS-008 |
 |----|----|----|--------|
 | TS8-01 | BM-MD-01, BM-GL-15 | BR-086 | §2.1, §3.1 |
 | TS8-02 | BM-MD-03 | BR-088 | §3.2 |
@@ -406,6 +407,6 @@ Creator i vremenske oznake ostaju na mediju radi lokalne istorije.
 5. Ne uvoditi soft delete.
 6. Ne uvoditi medije lokacija/organizatora u V1.
 7. Fallback kategorije i placeholderi ne smiju kreirati lažne veze događaj–medij.
-8. Uskladiti mapiranje default fotografije sa katalogom kategorija (TS-007), ne sa ENUM stringom.
+8. Uskladiti mapiranje default fotografije sa katalogom kategorija (KK-TS-007), ne sa ENUM stringom.
 9. HTML `accept="image/*"` nije dovoljan; koristiti strogi serverski allowlist JPEG/PNG/WebP.
 10. Implementacija mora ostati usklađena sa: Organizator = entitet; Moderator = ovlašćenje u kontekstu; Urednik upravlja medij-zapisom i lifecycle-om.

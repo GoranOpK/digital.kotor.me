@@ -3,7 +3,7 @@
 ## Događaj
 
 **Feature ID:** FT-001  
-**Oznaka dokumenta:** TS-003  
+**Oznaka dokumenta:** KK-TS-003  
 **Funkcionalna cjelina:** Događaj  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
@@ -30,6 +30,7 @@
 | 0.1.11 | 2026-08-12 | **PO-EV-WF-01 hardening:** §4.4 — `submitForApproval` / Nacrt→Na odobrenju **odbija** `organizer_id === null` (direktna objava je jedini put); usklađeno sa BR-018 / BR-325. Bez izmjene UI-ja ni ostalih Event lifecycle akcija. |
 | 0.1.12 | 2026-08-15 | **MED-01–MED-28:** naslovna fotografija `0..1`; nema `0..N` povezanih medija; nema reuse-a; upload pripada Događaju; trajno brisanje never-published briše cover; arhiva/otkaz ne brišu cover; `cover_media_id` može ostati tehnička interna veza. TS-008 nije aktivni SSOT. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
 | 0.1.13 | 2026-08-16 | **MED documentation closeout:** cover model **IMPLEMENTATION COMPLETE / VERIFIED**. Pravila KEEP. Operativni cleanup: `cultural-media:cleanup` (dry-run default; `--delete` eksplicitno; ručno; bez schedulera). Obsolete `cultural_media` kolone = DEFERRED / NON-BLOCKING. MED-I4B vizueli = DEFERRED (nije TS-003 funkcionalni blocker). |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 Napomena:
 
@@ -43,7 +44,7 @@ Ne mijenjaju se postojeći redovi.
 
 Ovaj dokument opisuje kako će se usvojeni Business Model i Functional Specification za funkcionalnu cjelinu **Događaj** tehnički realizovati u okviru FT-001 – Kalendar kulture.
 
-TS-003 obrađuje jednu logički zaokruženu funkcionalnu cjelinu unutar FT-001 i ne predstavlja kompletnu tehničku specifikaciju svih cjelina Feature-a FT-001.
+KK-TS-003 obrađuje jednu logički zaokruženu funkcionalnu cjelinu unutar FT-001 i ne predstavlja kompletnu tehničku specifikaciju svih cjelina Feature-a FT-001.
 
 Dokument:
 
@@ -59,7 +60,7 @@ Izvori istine za poslovna pravila:
 * `docs/functional-specifications/Functional-Specification.md` (§5.4–§5.5, §5.7.1–§5.7.2 relevantno, §5.16 katalog Događaji, BR-006–BR-044, BR-045, BR-052, BR-056–BR-066, BR-117, BR-131, BR-182/BR-183; PATCH-FS-053; PATCH-FS-055; PATCH-FS-056)
 * `docs/features/Feature-Registry.md` (FT-001)
 * `docs/METHODOLOGY.md` (M-TS-001–M-TS-005)
-* `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001 — referentni obrazac i granice prema Organizatoru / Moderatoru)
+* `docs/technical-specifications/Technical-Specification_Organizator.md` (KK-TS-001 — referentni obrazac i granice prema Organizatoru / Moderatoru)
 
 ---
 
@@ -86,7 +87,7 @@ Izvori istine za poslovna pravila:
 
 # Pravila upravljanja ovim dokumentom
 
-1. TS-003 pripada FT-001 – Kalendar kulture.
+1. KK-TS-003 pripada FT-001 – Kalendar kulture.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
 3. Nova poslovna pravila se ne uvode kroz Technical Specification.
 4. Sve što nije definisano u BM ili FS evidentira se kao **Otvoreno pitanje**.
@@ -127,41 +128,41 @@ Događaj:
 
 ## 1.2 Obuhvat dokumenta
 
-Obuhvat TS-003:
+Obuhvat KK-TS-003:
 
 * tehnički model entiteta Događaj;
 * životni ciklus i dozvoljeni statusni prelazi;
 * urednički tok (nacrt, slanje, pregled, odobrenje, vraćanje, direktna objava, izmjene objavljenog, otkazivanje, terminalnost statusa Otkazan / istorijski zapis, automatsko arhiviranje);
 * logički model autorizacije za radnje nad događajem;
 * konceptualni model podataka (bez SQL / migracija);
-* lokalni audit tragovi i emisija događaja ka centralnoj Evidenciji (TS-012 / FT-003);
+* lokalni audit tragovi i emisija događaja ka centralnoj Evidenciji (KK-TS-012 / FT-003);
 * integracione granice prema ostalim planiranim TS dokumentima FT-001.
 
 Van obuhvata ovog dokumenta:
 
 * implementacija, SQL, migracije, Laravel kod, API ugovori i rute;
-* puni tehnički model Održavanja (TS-004), Manifestacije (TS-005), Lokacije (TS-006), Kategorija/oznaka (TS-007), Javnog portala (TS-009), Uredničkog portala (TS-010), Newslettera (TS-011), Evidencije aktivnosti (TS-012);
-* istorijski TS-008 (Mediji) — **SUPERSEDED**; naslovna fotografija pripada ovom dokumentu / MED paketu;
-* detaljan dizajn Organizatora / Moderatora (TS-001) — ovdje samo potrošačke veze.
+* puni tehnički model Održavanja (KK-TS-004), Manifestacije (KK-TS-005), Lokacije (KK-TS-006), Kategorija/oznaka (KK-TS-007), Javnog portala (KK-TS-009), Uredničkog portala (KK-TS-010), Newslettera (KK-TS-011), Evidencije aktivnosti (KK-TS-012);
+* istorijski KK-TS-008 (Mediji) — **SUPERSEDED**; naslovna fotografija pripada ovom dokumentu / MED paketu;
+* detaljan dizajn Organizatora / Moderatora (KK-TS-001) — ovdje samo potrošačke veze.
 
 ## 1.3 Zavisnosti
 
-| Zavisnost | Uloga u odnosu na TS-003 |
+| Zavisnost | Uloga u odnosu na KK-TS-003 |
 |-----------|---------------------------|
-| TS-001 Organizator / Moderator | Pripadnost događaja Organizatoru; aktivni kontekst; ovlašćenja Moderatora; deaktivacija |
+| KK-TS-001 Organizator / Moderator | Pripadnost događaja Organizatoru; aktivni kontekst; ovlašćenja Moderatora; deaktivacija |
 | Platforma Digital Kotor – korisnički nalozi | Identitet kreatora, Moderatora i Urednika |
 | Platformska uloga Urednik | Objava, odobravanje, otkazivanje, unos/dopuna razloga otkazivanja, direktna objava bez Organizatora |
-| Održavanje događaja (TS-004) | Preduslov za slanje/objavu; uslov za automatsko arhiviranje |
-| Manifestacija (TS-005) | Opciona pripadnost |
-| Lokacija (TS-006) | Preko održavanja, ne kao atribut događaja |
-| Kategorije i oznake (TS-007) | Primarna kategorija i oznake; statičke kategorijske fallback fotografije |
+| Održavanje događaja (KK-TS-004) | Preduslov za slanje/objavu; uslov za automatsko arhiviranje |
+| Manifestacija (KK-TS-005) | Opciona pripadnost |
+| Lokacija (KK-TS-006) | Preko održavanja, ne kao atribut događaja |
+| Kategorije i oznake (KK-TS-007) | Primarna kategorija i oznake; statičke kategorijske fallback fotografije |
 | Naslovna fotografija (MED / BM-09) | `0..1` naslovna; upload u kontekstu Događaja; interni `cover_media_id` nije poslovni objekat |
-| Javni portal (TS-009) | Prikaz posljednje odobrene / javne verzije |
-| Urednički portal (TS-010) | Operativni prostor radnji |
-| Newsletter (TS-011) | Potrošač statusnih promjena (granica) |
-| Evidencija aktivnosti (TS-012) | Prima poslovno značajne događaje iz kataloga |
+| Javni portal (KK-TS-009) | Prikaz posljednje odobrene / javne verzije |
+| Urednički portal (KK-TS-010) | Operativni prostor radnji |
+| Newsletter (KK-TS-011) | Potrošač statusnih promjena (granica) |
+| Evidencija aktivnosti (KK-TS-012) | Prima poslovno značajne događaje iz kataloga |
 
-## 1.4 Veze sa BM, FS, FT-001 i TS-001
+## 1.4 Veze sa BM, FS, FT-001 i KK-TS-001
 
 ```
 FT-001 Kalendar kulture
@@ -169,8 +170,8 @@ FT-001 Kalendar kulture
   → BM-10 Status događaja (BM-ST-01–BM-ST-09)
   → BM-03 Urednik (BM-UR-06, BM-UR-07, BM-UR-11)
   → FS §5.4–§5.5, §5.7.2, §5.16
-  → TS-001 (Organizator / Moderator — preduslov ovlašćenja)
-  → TS-003 (ovaj dokument)
+  → KK-TS-001 (Organizator / Moderator — preduslov ovlašćenja)
+  → KK-TS-003 (ovaj dokument)
 ```
 
 ---
@@ -197,11 +198,11 @@ Functional Specification:
 
 Događaj je osnovna programska jedinica Kalendara kulture. Tehnički model tretira Događaj kao agregat čiji životni ciklus, javna vidljivost i uredničke odluke pripadaju ovoj cjelini.
 
-Pojedinačna **održavanja** su povezani entiteti (granica TS-004), ali preduslovi nad njihovim brojem i završetkom direktno uslovljavaju prelaze događaja (slanje, objava, arhiviranje).
+Pojedinačna **održavanja** su povezani entiteti (granica KK-TS-004), ali preduslovi nad njihovim brojem i završetkom direktno uslovljavaju prelaze događaja (slanje, objava, arhiviranje).
 
 ## 2.2 Razdvajanje sadržaja od nosioca
 
-* **Organizator** je nosilac sadržaja (TS-001), ne izvršilac radnji.
+* **Organizator** je nosilac sadržaja (KK-TS-001), ne izvršilac radnji.
 * **Moderator** izvršava operativne radnje u aktivnom kontekstu aktivnog Organizatora.
 * **Urednik** isključivo odobrava, objavljuje i otkazuje u skladu sa pravilima; ne vraća otkazani događaj u Objavljen.
 * Događaj bez registrovanog Organizatora je usvojeni izuzetak (javni interes), ne alternativni model za događaje sa Organizatorom.
@@ -230,7 +231,7 @@ Status **Otkazan** je terminalan za povratak u **Objavljen** (BM-DG-09, BM-ST-07
 * Prelaz Otkazan → Objavljen **nije** dozvoljen i mora biti odbijen validacijom.
 * Jedini usvojeni izlaz iz Otkazan je Otkazan → Arhiviran (Sistem), kada su sva održavanja završena.
 * Ako se isti kulturni program kasnije ponovo organizuje, kreira se **novi** događaj (novi zapis, novi lifecycle) — ne reaktivira se postojeći.
-* Promjena termina postojećeg (neotkazanog) događaja vrši se isključivo kroz status **Odgođen** na održavanju (granica TS-004; BM-TR-12, BR-131).
+* Promjena termina postojećeg (neotkazanog) događaja vrši se isključivo kroz status **Odgođen** na održavanju (granica KK-TS-004; BM-TR-12, BR-131).
 * Događaj u statusu Otkazan je istorijski zapis: forma je **read-only**, osim razloga otkazivanja / napomene urednika (BM-DG-10, BR-064).
 
 ## 2.7 Auditabilnost i sljedivost
@@ -242,7 +243,7 @@ Svaka poslovno značajna radnja nad događajem mora ostaviti:
 
 ## 2.8 Modularnost unutar FT-001
 
-TS-003 ne projektuje druge cjeline. Integracije su ugovori granica (§9), ne ugrađeni modeli drugih TS dokumenata.
+KK-TS-003 ne projektuje druge cjeline. Integracije su ugovori granica (§9), ne ugrađeni modeli drugih TS dokumenata.
 
 ---
 
@@ -322,13 +323,13 @@ flowchart LR
   DG -->|0..1 upload u kontekstu| NF
 ```
 
-* **Organizator** — nosilac; Moderatori rade u njegovo ime (TS-001).
-* **Održavanje** — termin(i) događaja; lokacija na održavanju (TS-004 / TS-006).
-* **Manifestacija** — opciono objedinjavanje (TS-005).
-* **Kategorije / oznake** — klasifikacija (TS-007).
+* **Organizator** — nosilac; Moderatori rade u njegovo ime (KK-TS-001).
+* **Održavanje** — termin(i) događaja; lokacija na održavanju (KK-TS-004 / KK-TS-006).
+* **Manifestacija** — opciono objedinjavanje (KK-TS-005).
+* **Kategorije / oznake** — klasifikacija (KK-TS-007).
 * **Naslovna fotografija** — `0..1`; upload u kontekstu Događaja (MED / BM-09). Interni `cover_media_id` nije poslovni objekat.
 
-TS-003 ne razrađuje tehničke modele tih cjelina.
+KK-TS-003 ne razrađuje tehničke modele tih cjelina.
 
 ## 3.3 Agregat i odgovornosti komponenti
 
@@ -338,7 +339,7 @@ TS-003 ne razrađuje tehničke modele tih cjelina.
 | Usluga prelaza statusa | Dozvoljeni prelazi, izvršioci, zabrane |
 | Usluga odobravanja | Zaključavanje pregleda, odobrenje, vraćanje |
 | Usluga arhiviranja | Sistemski prelaz nakon završetka svih održavanja |
-| Integracioni adapteri | Emisija ka TS-012; čitanje konteksta iz TS-001 |
+| Integracioni adapteri | Emisija ka KK-TS-012; čitanje konteksta iz KK-TS-001 |
 
 ## 3.4 Prijedlog izmjene objavljenog događaja
 
@@ -512,20 +513,20 @@ draft (UI: U pripremi) → published
 6. U okviru **iste atomske poslovne operacije** otkazivanja Događaja, sva Održavanja koja su u tom trenutku u statusu **Planiran** ili **Odgođen** prelaze u **Otkazan**. Održavanja u statusu **Završen** ili **Otkazan** ostaju nepromijenjena. Nakon operacije ne smije ostati Planirano niti Odgođeno Održavanje (PO-AUTO-01 / BM-DG-11 / BR-063). To **nije** Planiran → Završen.
 7. Otkazani događaj ostaje evidentiran kao **istorijski zapis**; prikaz po pravilima portala (BM-DG-10, BR-063, BR-064).
 8. Nakon završene operacije otkazivanja (uključujući korak 6) forma događaja je **read-only**, osim razloga otkazivanja / napomene urednika (§4.9).
-9. Polje `cancellation_reason` (postojeće, `text` nullable): **opcion** pri otkazivanju. Request validation i `EventLifecycle::cancel` **ne** smiju zahtijevati razlog. Ako je unesen, može se javno prikazati (TS-009; BR-295). Atomski zapis: status + razlog u istoj transakciji.
+9. Polje `cancellation_reason` (postojeće, `text` nullable): **opcion** pri otkazivanju. Request validation i `EventLifecycle::cancel` **ne** smiju zahtijevati razlog. Ako je unesen, može se javno prikazati (KK-TS-009; BR-295). Atomski zapis: status + razlog u istoj transakciji.
 
 ## 4.9 Terminalnost statusa Otkazan (istorijski zapis)
 
 **Tehnički tok / guard uslovi**
 
 1. Ulaz: status **Otkazan**.
-2. Jedini usvojeni statusni izlaz: **Otkazan → Arhiviran** (Sistem), kada nijedno Održavanje nije u statusu Planiran niti Odgođen (BM-DG-04, BM-ST-08, BR-065; TS-004 §4.9). Nakon PO-AUTO-01 otvorena Održavanja su već Otkazana u okviru otkazivanja Događaja, pa predikat arhive može biti ispunjen odmah ili nakon što su preostala Održavanja već bila Završen/Otkazan.
+2. Jedini usvojeni statusni izlaz: **Otkazan → Arhiviran** (Sistem), kada nijedno Održavanje nije u statusu Planiran niti Odgođen (BM-DG-04, BM-ST-08, BR-065; KK-TS-004 §4.9). Nakon PO-AUTO-01 otvorena Održavanja su već Otkazana u okviru otkazivanja Događaja, pa predikat arhive može biti ispunjen odmah ili nakon što su preostala Održavanja već bila Završen/Otkazan.
 3. Prelaz **Otkazan → Objavljen** nije dozvoljen; mora biti odbijen validacijom (BM-DG-09, BM-ST-07, BM-ST-09, BR-064).
 4. Moderator ne može vratiti otkazani događaj u Objavljen; Urednik takođe ne može (BM-UR-11, BM-MOD-16).
 5. Reaktivacija postojećeg otkazanog događaja ne postoji. Ako se isti kulturni program kasnije ponovo organizuje, kreira se **novi** događaj (novi zapis, novi lifecycle) (BM-DG-09).
-6. Promjena termina postojećeg (neotkazanog) događaja nije radnja nad statusom događaja: vrši se isključivo kroz status **Odgođen** na održavanju (granica TS-004; BM-TR-12, BR-131).
+6. Promjena termina postojećeg (neotkazanog) događaja nije radnja nad statusom događaja: vrši se isključivo kroz status **Odgođen** na održavanju (granica KK-TS-004; BM-TR-12, BR-131).
 7. Dok je status Otkazan, forma je **read-only**. Nije dozvoljena **naknadna** izmjena naziva, opisa, Organizatora, kategorije, datuma, vremena, lokacije, fotografija niti drugih sadržajnih podataka događaja ili povezanih održavanja (BM-DG-10, BR-064). Automatsko otkazivanje otvorenih Održavanja iz §4.8 korak 6 dio je same operacije otkazivanja.
-8. Jedini izuzetak: **Urednik** smije unijeti ili dopuniti **razlog otkazivanja (napomenu urednika)** — polje `cancellation_reason` je **opcion** (BM-DG-10, BM-UR-11, BR-064). Ako je unesen, **može se javno prikazati** kao napomena uz sistemsko obavještenje (BM-PK-36 / BR-295; TS-009). **PATCH-063 superseduje** raniju V1 zabranu javnog prikaza (TS-003 v0.1.8 / BR-284).
+8. Jedini izuzetak: **Urednik** smije unijeti ili dopuniti **razlog otkazivanja (napomenu urednika)** — polje `cancellation_reason` je **opcion** (BM-DG-10, BM-UR-11, BR-064). Ako je unesen, **može se javno prikazati** kao napomena uz sistemsko obavještenje (BM-PK-36 / BR-295; KK-TS-009). **PATCH-063 superseduje** raniju V1 zabranu javnog prikaza (KK-TS-003 v0.1.8 / BR-284).
 9. Pokušaj izmjene bilo kog drugog polja dok je status Otkazan mora biti odbijen validacijom.
 10. **Fail-closed:** Otkazan se ne briše; nema republish (Otkazan → Objavljen zabranjen).
 
@@ -542,13 +543,13 @@ flowchart TD
 **Tehnički tok**
 
 1. Ulazi: **Objavljen** ili **Otkazan** (BM-DG-04, BM-ST-08, BR-065).
-2. Uslov: nijedno Održavanje nije u statusu **Planiran** niti **Odgođen** (TS-004 §4.9 / N-TR-03). Održavanja Završen i Otkazan ne blokiraju.
+2. Uslov: nijedno Održavanje nije u statusu **Planiran** niti **Odgođen** (KK-TS-004 §4.9 / N-TR-03). Održavanja Završen i Otkazan ne blokiraju.
 3. Izvršilac: **Sistem**.
 4. Bez ručne intervencije.
 5. Bez novog statusa.
 6. Za događaj u statusu Otkazan ovo je jedini usvojeni izlaz iz terminalnog stanja (nema povratka u Objavljen).
 7. Nakon otkazivanja Događaja (PO-AUTO-01) otvorena Održavanja su već Otkazana; Sistem ne koristi Planiran → Završen da bi zatvorio Održavanja Otkazanog Događaja.
-8. **Očuvanje izvornog javnog statusa (PO-6A09-02 / BM-PK-35 / BR-286):** Pri prelazu u Arhiviran Sistem mora pouzdano sačuvati da li je ulaz bio Objavljen ili Otkazan (radni naziv polja: `archived_from_status`). Interni status Arhiviran nije javni badge. Javni istorijski ishod: iz Otkazan → **Otkazan**; iz Objavljen → **Završen**. Detalj portalnog ugovora: TS-009 §8.
+8. **Očuvanje izvornog javnog statusa (PO-6A09-02 / BM-PK-35 / BR-286):** Pri prelazu u Arhiviran Sistem mora pouzdano sačuvati da li je ulaz bio Objavljen ili Otkazan (radni naziv polja: `archived_from_status`). Interni status Arhiviran nije javni badge. Javni istorijski ishod: iz Otkazan → **Otkazan**; iz Objavljen → **Završen**. Detalj portalnog ugovora: KK-TS-009 §8.
 
 ## 4.11 Naknadno povezivanje sa Organizatorom
 
@@ -589,7 +590,7 @@ Posebna domenska operacija BR-052 (BM-UR-07, BM-DG-08, PO-DG-08, PO-DG-09). Nije
 
 **Konkurentnost:** pri izvršenju ponovo se mora provjeriti aktuelni status Događaja, da je `organizer_id` i dalje `null`, i da je izabrani Organizator Aktivan. Sistem mora spriječiti da paralelni zahtjev pregazi već izvršeno povezivanje (drugi paralelni uspjeh na istom Događaju nije dozvoljen). Tehnologija zaključavanja nije propisana ovim dokumentom.
 
-**Audit:** operacija se kasnije evidentira kroz centralnu Evidenciju aktivnosti (FS §5.16 / TS-012). Ne uvodi se privremeni audit sistem.
+**Audit:** operacija se kasnije evidentira kroz centralnu Evidenciju aktivnosti (FS §5.16 / KK-TS-012). Ne uvodi se privremeni audit sistem.
 
 ## 4.12 Trajno brisanje nikad objavljenog Događaja (PATCH-063 / BR-290)
 
@@ -699,7 +700,7 @@ Logički model (bez middleware / framework detalja).
 * Objavljeni sadržaj: samo kroz **Prijedlog izmjene** (nema direct published content update).
 * Delete Entry: **nije** podržan u V1 za Moderatorov tok.
 * Ne mijenja sadržaj otkazanog događaja niti razlog otkazivanja.
-* Nakon deaktivacije Organizatora ne izvršava poslovne radnje nad događajima tog Organizatora (BR-007, BR-049/BR-050 veza preko TS-001).
+* Nakon deaktivacije Organizatora ne izvršava poslovne radnje nad događajima tog Organizatora (BR-007, BR-049/BR-050 veza preko KK-TS-001).
 
 ## 5.3 Posebna pravila Urednika
 
@@ -731,7 +732,7 @@ Server-side (Request validation + service/domain invariant). **Ne** oslanjati se
 ## 5.5 Administrator platforme
 
 Nije učesnik uredničkog toka događaja.  
-Relevantan je isključivo kroz centralnu Evidenciju aktivnosti (TS-012 / FT-003) — van normativnog toka TS-003.
+Relevantan je isključivo kroz centralnu Evidenciju aktivnosti (KK-TS-012 / FT-003) — van normativnog toka KK-TS-003.
 
 ## 5.6 Organizator kao poslovni entitet
 
@@ -812,15 +813,15 @@ Zabranjeno: `organizer_id != null` **i** non-null `organizer_manual_name` istovr
 
 ## 6.3 Referencirani atributi
 
-Svojstva koja TS-003 referencira, a čiji puni model pripada drugim TS:
+Svojstva koja KK-TS-003 referencira, a čiji puni model pripada drugim TS:
 
-| Referenca | Vlasnik | Napomena za TS-003 |
+| Referenca | Vlasnik | Napomena za KK-TS-003 |
 |-----------|---------|-------------------|
-| Održavanje (termin, status, lokacija) | TS-004 / TS-006 | Broj i završetak uslovljavaju validacije i arhivu |
-| Kategorija / oznake | TS-007 | Primarna obavezna za slanje/objavu |
-| Naslovna fotografija | MED / TS-003 / TS-010 | Upload u kontekstu Događaja; nema reuse; nije poslovni objekat |
-| Organizator / kontekst Moderatora | TS-001 | Autorizacija i pripadnost |
-| Javni prikaz | TS-009 | Potrošač javne verzije |
+| Održavanje (termin, status, lokacija) | KK-TS-004 / KK-TS-006 | Broj i završetak uslovljavaju validacije i arhivu |
+| Kategorija / oznake | KK-TS-007 | Primarna obavezna za slanje/objavu |
+| Naslovna fotografija | MED / KK-TS-003 / KK-TS-010 | Upload u kontekstu Događaja; nema reuse; nije poslovni objekat |
+| Organizator / kontekst Moderatora | KK-TS-001 | Autorizacija i pripadnost |
+| Javni prikaz | KK-TS-009 | Potrošač javne verzije |
 
 ## 6.4 Otvoreni atributi
 
@@ -856,7 +857,7 @@ Takođe otvoreno:
 
 Entry `cancellation_reason` **već postoji** — ne dodavati novu kolonu; samo promijeniti validation (required → optional).
 
-OCC razlozi (`postponement_reason`, OCC `cancellation_reason`) — **TS-004**.
+OCC razlozi (`postponement_reason`, OCC `cancellation_reason`) — **KK-TS-004**.
 
 ---
 
@@ -889,14 +890,14 @@ Za svako relevantno pravilo: implementaciona posljedica (bez kopiranja BM teksta
 | BM-DG-05 / BR-063 | Autorizovati otkaz po matrici §5; ulaz samo Objavljen |
 | BM-DG-06/07 | Zahtijevati primarnu kategoriju pri slanju/objavi; dozvoliti odsustvo u Nacrtu |
 | BM-DG-08 / BR-018 / BR-045 / BR-052 | Enforce 0..1 Org.; direktna objava samo pri 0; naknadno povezivanje samo Objavljen + null → Aktivan Org (jednosmjerno) |
-| BM-DG-09 / BR-064 | Odbijati Otkazan → Objavljen; novi program = novi zapis; Odgođen (TS-004) = jedini mehanizam promjene termina |
+| BM-DG-09 / BR-064 | Odbijati Otkazan → Objavljen; novi program = novi zapis; Odgođen (KK-TS-004) = jedini mehanizam promjene termina |
 | BM-DG-10 / BR-064 | Dok je Otkazan: read-only sadržaj; dozvoliti samo izmjenu razloga otkazivanja (Urednik) |
 | BM-ST-04 / BR-028 | Zabraniti Nacrt→Objavljen ako Org. postoji |
 | BM-ST-05 / BR-040 | Vraćanje zahtijeva razlog; status → Nacrt |
 | BM-ST-07 | Otkaz po matrici; nema reaktivacije / ponovne objave |
 | BM-ST-08 | Arhiva i iz Otkazan |
 | BM-ST-09 | Svaki nedozvoljeni prelaz → odbijanje (uključujući Otkazan → Objavljen) |
-| BM-TR-12 / BR-131 | Promjena termina postojećeg događaja samo preko Odgođen na održavanju (granica TS-004) |
+| BM-TR-12 / BR-131 | Promjena termina postojećeg događaja samo preko Odgođen na održavanju (granica KK-TS-004) |
 | BR-012 | Odbiti drugi aktivni prijedlog izmjene |
 | BR-019 | Bez autosave nacrta pri napuštanju |
 | BR-033/034 | Event: povlačenje VAN V1; Proposal: povlačenje samo prije početka pregleda |
@@ -959,7 +960,7 @@ Functional Specification:
 - §5.16 katalog Događaji
 - BR-171, BR-182, BR-183
 
-TS-003 ne projektuje FT-003 / TS-012.
+KK-TS-003 ne projektuje FT-003 / KK-TS-012.
 
 ## 8.1 Lokalni audit tragovi
 
@@ -974,9 +975,9 @@ TS-003 ne projektuje FT-003 / TS-012.
 
 Lokalni tragovi nisu ručno izmjenjivi i nisu zamjena za centralnu evidenciju (BR-171).
 
-## 8.2 Emisija ka centralnoj Evidenciji (TS-012)
+## 8.2 Emisija ka centralnoj Evidenciji (KK-TS-012)
 
-U skladu sa katalogom Događaji, TS-003 mora biti u stanju emitovati:
+U skladu sa katalogom Događaji, KK-TS-003 mora biti u stanju emitovati:
 
 | Događaj | Izvršilac |
 |---------|-----------|
@@ -989,9 +990,9 @@ U skladu sa katalogom Događaji, TS-003 mora biti u stanju emitovati:
 | Isticanje / uklanjanje isticanja | Urednik |
 | Otkazivanje događaja | Moderator / Urednik |
 | Unos / dopuna razloga otkazivanja | Urednik |
-| Odlaganje održavanja | (granica TS-004; emisija događaja vezana za događaj) |
-| Otkaz pojedinačnog održavanja | (granica TS-004) |
-| Promjena termina / lokacije održavanja | (granica TS-004) |
+| Odlaganje održavanja | (granica KK-TS-004; emisija događaja vezana za događaj) |
+| Otkaz pojedinačnog održavanja | (granica KK-TS-004) |
+| Promjena termina / lokacije održavanja | (granica KK-TS-004) |
 | Podnošenje / odobravanje / vraćanje prijedloga izmjena | Moderator / Urednik |
 | Automatsko arhiviranje | **Sistem** |
 
@@ -1019,18 +1020,18 @@ Functional Specification:
 
 Samo granice. Bez tehničkih modela ciljnih TS dokumenata.
 
-| TS | Granica prema TS-003 |
+| TS | Granica prema KK-TS-003 |
 |----|----------------------|
-| **TS-001** | Pripadnost Organizatoru; aktivni kontekst; status Org.; ovlašćenja Moderatora; deaktivacija → prestanak moderatorskih radnji; naknadno povezivanje |
-| **TS-004** | Održavanja događaja; preduslov ≥1; završetak svih → signal za arhivu; statusi održavanja (Odgođen = jedini mehanizam promjene termina postojećeg događaja; otkaz termina) |
-| **TS-005** | Opciona pripadnost Manifestaciji (0..1) |
-| **TS-006** | Lokacija preko održavanja |
-| **TS-007** | Primarna kategorija i oznake; statičke kategorijske fallback fotografije |
-| **TS-008** | **SUPERSEDED / HISTORICAL** — nije aktivni SSOT; naslovna fotografija = ovaj dokument / MED |
-| **TS-009** | Potrošač javne / arhivirane vidljivosti; istaknuti događaj; fallback prikaz |
-| **TS-010** | Operativni UI prostor radnji Moderatora i Urednika |
-| **TS-011** | Potrošač poslovno značajnih promjena statusa/sadržaja (okidači Newslettera) — bez modela Newslettera ovdje |
-| **TS-012** | Prima emisije iz §8.2; ne upravlja lifecycle događaja |
+| **KK-TS-001** | Pripadnost Organizatoru; aktivni kontekst; status Org.; ovlašćenja Moderatora; deaktivacija → prestanak moderatorskih radnji; naknadno povezivanje |
+| **KK-TS-004** | Održavanja događaja; preduslov ≥1; završetak svih → signal za arhivu; statusi održavanja (Odgođen = jedini mehanizam promjene termina postojećeg događaja; otkaz termina) |
+| **KK-TS-005** | Opciona pripadnost Manifestaciji (0..1) |
+| **KK-TS-006** | Lokacija preko održavanja |
+| **KK-TS-007** | Primarna kategorija i oznake; statičke kategorijske fallback fotografije |
+| **KK-TS-008** | **SUPERSEDED / HISTORICAL** — nije aktivni SSOT; naslovna fotografija = ovaj dokument / MED |
+| **KK-TS-009** | Potrošač javne / arhivirane vidljivosti; istaknuti događaj; fallback prikaz |
+| **KK-TS-010** | Operativni UI prostor radnji Moderatora i Urednika |
+| **KK-TS-011** | Potrošač poslovno značajnih promjena statusa/sadržaja (okidači Newslettera) — bez modela Newslettera ovdje |
+| **KK-TS-012** | Prima emisije iz §8.2; ne upravlja lifecycle događaja |
 
 ---
 
@@ -1079,7 +1080,7 @@ Functional Specification:
 
 ## 10.6 Održavanje
 
-* TS-003 ostaje usklađen sa BM/FS; nova poslovna pravila ulaze isključivo preko BM/FS.
+* KK-TS-003 ostaje usklađen sa BM/FS; nova poslovna pravila ulaze isključivo preko BM/FS.
 * Odstupanja trenutne implementacije vode se u Technical Overview, ne u ovom dokumentu.
 
 ---
@@ -1097,17 +1098,17 @@ Functional Specification:
 - BR-044
 - §5.16 (šta ne ulazi u evidenciju)
 
-Usvojene granice V1 za TS-003:
+Usvojene granice V1 za KK-TS-003:
 
 1. Ovaj dokument ne projektuje implementaciju (kod, Laravel, SQL, migracije, API ugovore i rute).
-2. Puni tehnički modeli Održavanja, Manifestacije, Lokacije, Kategorija, Medija, Portala, Newslettera i Evidencije nisu dio TS-003 (samo granice §9).
+2. Puni tehnički modeli Održavanja, Manifestacije, Lokacije, Kategorija, Medija, Portala, Newslettera i Evidencije nisu dio KK-TS-003 (samo granice §9).
 3. Trajno odbijanje događaja nije dio V1 — samo odobrenje ili vraćanje na doradu (BR-044).
 4. Ručno arhiviranje nije dio V1.
 5. Izlaz iz statusa Arhiviran nije usvojen u V1.
 6. Prelaz Otkazan → Objavljen, ponovna objava i reaktivacija otkazanog događaja nisu dio V1 (BM-DG-09, BR-064).
 7. Funkcionalnosti prikaza isključene u FS §5.4.9 (galerija, mapa/GPS, share/print, lični kalendar, kontakt/web/društvene mreže Organizatora, dokumenti, cijena, rezervacije, SEO) nisu dio obuhvata ovog TS-a.
 8. Autosave nacrta pri napuštanju obrasca nije dio V1 (BR-019).
-9. Detaljan dizajn FT-003 / TS-012 nije dio TS-003.
+9. Detaljan dizajn FT-003 / KK-TS-012 nije dio KK-TS-003.
 
 ---
 
@@ -1131,23 +1132,23 @@ Rule-level i sekcijska sljedivost.
 
 | TS sekcija | BM | FS / BR | FT | Ostali TS |
 |------------|----|---------|----|-----------|
-| §1 Pregled | BM-04, BM-10; BM-DG-01–BM-DG-10 | §5.4–§5.5, §5.7.1–§5.7.2; BR-131 | FT-001 | TS-001 (veza) |
-| §2 Principi | BM-DG-08/09/10, BM-ST-04/07/08/09, BM-TR-12 | BR-006, BR-018, BR-028, BR-064, BR-065, BR-131 | FT-001 | TS-004 |
-| §3 Tehnički model | BM-DG-01–BM-DG-10, BM-ST-02 | BR-013–BR-018, BR-025, BR-045, BR-056–BR-062, BR-117, BR-131 | FT-001 | TS-001, TS-004–TS-007; TS-008 SUPERSEDED |
-| §4.3 Nacrt | BM-ST-03 | BR-013–BR-021 | FT-001 | TS-001 |
-| §4.4 Slanje | BM-ST-04, BM-DG-01, BM-DG-07 | BR-017, BR-028–BR-035 | FT-001 | TS-004, TS-007 |
-| §4.5 Pregled / odobrenje | BM-ST-05, BM-ST-06 | BR-023, BR-027, BR-036–BR-044 | FT-001 | TS-010 |
-| §4.6 Direktna objava | BM-ST-04, BM-DG-08, BM-UR-06 | BR-018, BR-028, BR-045 | FT-001 | TS-001 |
+| §1 Pregled | BM-04, BM-10; BM-DG-01–BM-DG-10 | §5.4–§5.5, §5.7.1–§5.7.2; BR-131 | FT-001 | KK-TS-001 (veza) |
+| §2 Principi | BM-DG-08/09/10, BM-ST-04/07/08/09, BM-TR-12 | BR-006, BR-018, BR-028, BR-064, BR-065, BR-131 | FT-001 | KK-TS-004 |
+| §3 Tehnički model | BM-DG-01–BM-DG-10, BM-ST-02 | BR-013–BR-018, BR-025, BR-045, BR-056–BR-062, BR-117, BR-131 | FT-001 | KK-TS-001, KK-TS-004–KK-TS-007; KK-TS-008 SUPERSEDED |
+| §4.3 Nacrt | BM-ST-03 | BR-013–BR-021 | FT-001 | KK-TS-001 |
+| §4.4 Slanje | BM-ST-04, BM-DG-01, BM-DG-07 | BR-017, BR-028–BR-035 | FT-001 | KK-TS-004, KK-TS-007 |
+| §4.5 Pregled / odobrenje | BM-ST-05, BM-ST-06 | BR-023, BR-027, BR-036–BR-044 | FT-001 | KK-TS-010 |
+| §4.6 Direktna objava | BM-ST-04, BM-DG-08, BM-UR-06 | BR-018, BR-028, BR-045 | FT-001 | KK-TS-001 |
 | §4.7 Izmjene objavljenog | — | BR-006–BR-012, BR-025 | FT-001 | — |
-| §4.8 Otkazivanje | BM-DG-05, BM-DG-10, BM-ST-07, BM-MOD-16, BM-ORG-12, BM-UR-11 | BR-007, BR-063, BR-064 | FT-001 | TS-001 |
-| §4.9 Terminalnost Otkazan | BM-DG-09, BM-DG-10, BM-ST-07, BM-ST-09, BM-UR-11, BM-TR-12 | BR-064, BR-131 | FT-001 | TS-004 |
-| §4.10 Arhiviranje | BM-DG-04, BM-ST-08 | BR-065, BR-066 | FT-001 | TS-004 |
-| §4.11 Naknadno povezivanje | BM-UR-07, BM-DG-08 | BR-052 | FT-001 | TS-001 |
-| §5 Autorizacija | BM-DG-05/08/09/10, BM-ST-04/07/09, BM-MOD-16, BM-UR-* | BR-007, BR-018, BR-028, BR-063, BR-064, BR-117 | FT-001 | TS-001 |
-| §6 Model podataka | BM-DG-*, BM-DG-10, BM-ST-02 | §5.4; BR-014, BR-018, BR-062, BR-064, BR-117 | FT-001 | TS-004–TS-007; MED / TS-010 |
-| §7 Validacije | BM-DG-*, BM-DG-09/10, BM-ST-04/07/08/09, BM-TR-12 | BR-017–BR-019, BR-028–BR-030, BR-063–BR-065, BR-131 | FT-001 | TS-004 |
-| §8 Audit | BM-AL-*, BM-ST-08, BM-DG-10 | BR-014, BR-026, BR-031, BR-043; §5.16; BR-182/183 | FT-001 / FT-003 | TS-012 |
-| §9 Integracije | BM-DG-*, BM-ORG-12, BM-TR-12 | BR-045, BR-052, BR-056+, BR-131 | FT-001 | TS-001, TS-004–TS-012 |
+| §4.8 Otkazivanje | BM-DG-05, BM-DG-10, BM-ST-07, BM-MOD-16, BM-ORG-12, BM-UR-11 | BR-007, BR-063, BR-064 | FT-001 | KK-TS-001 |
+| §4.9 Terminalnost Otkazan | BM-DG-09, BM-DG-10, BM-ST-07, BM-ST-09, BM-UR-11, BM-TR-12 | BR-064, BR-131 | FT-001 | KK-TS-004 |
+| §4.10 Arhiviranje | BM-DG-04, BM-ST-08 | BR-065, BR-066 | FT-001 | KK-TS-004 |
+| §4.11 Naknadno povezivanje | BM-UR-07, BM-DG-08 | BR-052 | FT-001 | KK-TS-001 |
+| §5 Autorizacija | BM-DG-05/08/09/10, BM-ST-04/07/09, BM-MOD-16, BM-UR-* | BR-007, BR-018, BR-028, BR-063, BR-064, BR-117 | FT-001 | KK-TS-001 |
+| §6 Model podataka | BM-DG-*, BM-DG-10, BM-ST-02 | §5.4; BR-014, BR-018, BR-062, BR-064, BR-117 | FT-001 | KK-TS-004–KK-TS-007; MED / KK-TS-010 |
+| §7 Validacije | BM-DG-*, BM-DG-09/10, BM-ST-04/07/08/09, BM-TR-12 | BR-017–BR-019, BR-028–BR-030, BR-063–BR-065, BR-131 | FT-001 | KK-TS-004 |
+| §8 Audit | BM-AL-*, BM-ST-08, BM-DG-10 | BR-014, BR-026, BR-031, BR-043; §5.16; BR-182/183 | FT-001 / FT-003 | KK-TS-012 |
+| §9 Integracije | BM-DG-*, BM-ORG-12, BM-TR-12 | BR-045, BR-052, BR-056+, BR-131 | FT-001 | KK-TS-001, KK-TS-004–KK-TS-012 |
 | §10 NFR | BM-ST-09 | BR-012, BR-023, BR-064, BR-065 | FT-001 | — |
 | §11 Granice V1 | BM-04/10, BM-DG-09 | BR-044, BR-064; §5.4.9 | FT-001 | — |
 | §12 Otvorena | — | BR-032 (kanal); katalog polja; verzije | FT-001 | — |
@@ -1159,11 +1160,11 @@ Rule-level i sekcijska sljedivost.
 Ovo poglavlje je strogo nenormativno.
 
 1. Pri implementaciji prvo uspostaviti statusni motor i matricu autorizacije (§4–§5), zatim sadržajna polja nakon zatvaranja N-DG-02.
-2. Automatsko arhiviranje treba tretirati kao sistemski proces ovisan o signalu završetka održavanja iz TS-004.
+2. Automatsko arhiviranje treba tretirati kao sistemski proces ovisan o signalu završetka održavanja iz KK-TS-004.
 3. Direktnu objavu implementirati kao zasebnu dozvoljenu tranziciju sa tvrdom provjerom odsustva Organizatora — ne kao opšti bypass odobravanja.
 4. Status Otkazan tretirati kao terminalan za povratak u Objavljen; UI/API ne smiju nuditi ponovnu objavu niti uređivanje sadržaja osim razloga otkazivanja.
 5. Verzijski model (N-DG-04) odabrati tako da javni portal nikada ne čita neodobrene prijedloge.
-6. Trenutna implementacija i odstupanja ostaju u `docs/tehnicka-dokumentacija/cultural-calendar.md` (Technical Overview), ne u TS-003.
-7. Emisije ka TS-012 držati usklađenim sa katalogom FS §5.16; ne proširivati katalog kroz TS; ne emitovati „Ponovna objava događaja“.
-8. **PO-EV-01:** Postojeći `CulturalEvent` / `cultural_events` podaci su isključivo testni/prototipski i nisu predmet migracije ni backfill-a u novi model. Implementacija uspostavlja kanonski model Događaj (+ Održavanja prema TS-004) direktno prema ovom TS-u, bez dual-write i bez adaptera radi očuvanja legacy zapisa. Privremeni flat model ostaje samo do cutover-a na novi domen.
+6. Trenutna implementacija i odstupanja ostaju u `docs/tehnicka-dokumentacija/cultural-calendar.md` (Technical Overview), ne u KK-TS-003.
+7. Emisije ka KK-TS-012 držati usklađenim sa katalogom FS §5.16; ne proširivati katalog kroz TS; ne emitovati „Ponovna objava događaja“.
+8. **PO-EV-01:** Postojeći `CulturalEvent` / `cultural_events` podaci su isključivo testni/prototipski i nisu predmet migracije ni backfill-a u novi model. Implementacija uspostavlja kanonski model Događaj (+ Održavanja prema KK-TS-004) direktno prema ovom TS-u, bez dual-write i bez adaptera radi očuvanja legacy zapisa. Privremeni flat model ostaje samo do cutover-a na novi domen.
 9. **MED closeout (v0.1.13):** naslovna fotografija Događaja (`0..1`, upload u kontekstu, bez reuse/kataloga) = **IMPLEMENTED / VERIFIED**. Trajno brisanje never-published briše interni cover + fajl; cancel/archive zadržavaju cover. Cleanup komanda `cultural-media:cleanup` je ručna, default preview, destruktivno samo `--delete`, scope `public/cultural-media/`. Obsolete kolone `cultural_media` se ne čiste u ovom closeout-u.

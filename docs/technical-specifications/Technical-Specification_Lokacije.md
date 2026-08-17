@@ -3,7 +3,7 @@
 ## Lokacije
 
 **Feature ID:** FT-001  
-**Oznaka dokumenta:** TS-006  
+**Oznaka dokumenta:** KK-TS-006  
 **Funkcionalna cjelina:** Lokacije  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
@@ -18,6 +18,7 @@
 |---------|--------|------|
 | 0.1.0 | 2026-07-30 | Prva kompletna tehnička specifikacija za Lokacije. Ugrađene usvojene Product Owner odluke PO-LOC-01–PO-LOC-07 i usklađene sa BM-07, FS §5.9 i TS pravilima projekta. Bez SQL, API ugovora, Laravel koda i migracija. |
 | 0.1.1 | 2026-07-30 | Korekcija prema novim PO odlukama za razrješenje KON-LOC-01 i KON-LOC-02: katalog Lokacija je opcioni za ponovno korišćenje, ručni unos naziva Lokacije je dozvoljen, kataloška referenca je opciona, merge i referencijalni integritet važe za postojeće kataloške veze. Bez promjene opsega V1 (fizičke Lokacije). |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 ---
 
@@ -25,7 +26,7 @@
 
 Ovaj dokument opisuje tehničku realizaciju funkcionalne cjeline **Lokacije** u okviru FT-001 – Kalendar kulture.
 
-TS-006:
+KK-TS-006:
 
 * ne uvodi nova poslovna pravila;
 * ne mijenja Business Model ni Functional Specification;
@@ -65,9 +66,9 @@ Izvori istine:
 
 # Pravila upravljanja ovim dokumentom
 
-1. TS-006 pripada FT-001 – Kalendar kulture.
+1. KK-TS-006 pripada FT-001 – Kalendar kulture.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
-3. Nova poslovna pravila se ne uvode kroz TS-006.
+3. Nova poslovna pravila se ne uvode kroz KK-TS-006.
 4. Izmjene usvojenog sadržaja evidentiraju se novom verzijom dokumenta i odgovarajućim PATCH-om BM/FS, gdje je primjenjivo.
 
 ---
@@ -82,7 +83,7 @@ Moderator može koristiti Lokaciju kroz Događaje i Održavanja na tri načina: 
 
 ## 1.2 Obuhvat dokumenta
 
-TS-006 obuhvata:
+KK-TS-006 obuhvata:
 
 * centralni katalog kataloških Lokacija;
 * jedinstvenost i obradu mogućih duplikata;
@@ -94,13 +95,13 @@ TS-006 obuhvata:
 
 ## 1.3 Zavisnosti
 
-| Zavisnost | Uloga u odnosu na TS-006 |
+| Zavisnost | Uloga u odnosu na KK-TS-006 |
 |-----------|---------------------------|
-| TS-001 Organizator / Moderator | Moderator radi u ime Organizatora; Organizator nije operativna uloga |
-| TS-003 Događaj | Događaj može biti bez Lokacije; kada je definisana Lokacija može biti kataloška ili ručno unesena preko Održavanja |
-| TS-004 Održavanje događaja | Lokacija pripada Održavanju |
-| TS-010 Urednički portal | Operativni UI za workflow Lokacija |
-| TS-012 Evidencija aktivnosti | Centralna evidencija poslovno značajnih lokacijskih radnji |
+| KK-TS-001 Organizator / Moderator | Moderator radi u ime Organizatora; Organizator nije operativna uloga |
+| KK-TS-003 Događaj | Događaj može biti bez Lokacije; kada je definisana Lokacija može biti kataloška ili ručno unesena preko Održavanja |
+| KK-TS-004 Održavanje događaja | Lokacija pripada Održavanju |
+| KK-TS-010 Urednički portal | Operativni UI za workflow Lokacija |
+| KK-TS-012 Evidencija aktivnosti | Centralna evidencija poslovno značajnih lokacijskih radnji |
 
 ## 1.4 Veza sa BM / FS / PO
 
@@ -108,7 +109,7 @@ TS-006 obuhvata:
 PO-LOC-01..07
   -> BM-07 Lokacija, BM-GL-13
   -> FS §5.9 (BR-074..080, BR-206..223)
-  -> TS-006 (ovaj dokument)
+  -> KK-TS-006 (ovaj dokument)
 ```
 
 ---
@@ -309,11 +310,11 @@ Audit je nepromjenjiv i ne predstavlja rollback mehanizam.
 
 | TS | Ugovor granice |
 |----|-----------------|
-| TS-001 | Moderatorski kontekst i razdvajanje Organizator/Moderator |
-| TS-003 | Događaj koristi Lokacije kroz Održavanja |
-| TS-004 | Lokacija pripada Održavanju |
-| TS-010 | Urednički workflow Lokacija |
-| TS-012 | Centralna Evidencija aktivnosti za lokacijske radnje |
+| KK-TS-001 | Moderatorski kontekst i razdvajanje Organizator/Moderator |
+| KK-TS-003 | Događaj koristi Lokacije kroz Održavanja |
+| KK-TS-004 | Lokacija pripada Održavanju |
+| KK-TS-010 | Urednički workflow Lokacija |
+| KK-TS-012 | Centralna Evidencija aktivnosti za lokacijske radnje |
 
 ---
 
@@ -347,27 +348,27 @@ Van opsega V1:
 
 # 12. Otvorena pitanja
 
-Nema otvorenih Product Owner pitanja za TS-006 na osnovu usvojenih odluka PO-LOC-01 .. PO-LOC-07.
+Nema otvorenih Product Owner pitanja za KK-TS-006 na osnovu usvojenih odluka PO-LOC-01 .. PO-LOC-07.
 
 ---
 
 # 13. Matrica sljedivosti
 
-| PO | BM | FS | TS-006 | Feature Registry |
+| PO | BM | FS | KK-TS-006 | Feature Registry |
 |----|----|----|--------|------------------|
-| PO-LOC-01 (korekcija) | BM-LK-01, BM-LK-02 | BR-074, BR-075, BR-077 | §1, §2, §3, §6 | FT-001 / TS-006 veza |
-| PO-LOC-02 | BM-LK-06 | BR-206, BR-207 | §3, §4, §7 | FT-001 / TS-006 veza |
-| PO-LOC-03 | BM-LK-07 | BR-208..BR-211 | §2, §4, §5 | FT-001 / TS-006 veza |
-| PO-LOC-04 | BM-LK-05, BM-LK-08 | BR-078, BR-212..BR-215 | §3, §4, §7 | FT-001 / TS-006 veza |
-| PO-LOC-05 (korekcija) | BM-LK-09, BM-LK-10 | BR-216..BR-219 | §2, §3, §6, §7 | FT-001 / TS-006 veza |
-| PO-LOC-06 | BM-LK-11 | BR-220..BR-222 | §8 | FT-001 / TS-006 veza |
-| PO-LOC-07 | BM-LK-12, BM-GL-13 | BR-223 | §11 | FT-001 / TS-006 veza |
+| PO-LOC-01 (korekcija) | BM-LK-01, BM-LK-02 | BR-074, BR-075, BR-077 | §1, §2, §3, §6 | FT-001 / KK-TS-006 veza |
+| PO-LOC-02 | BM-LK-06 | BR-206, BR-207 | §3, §4, §7 | FT-001 / KK-TS-006 veza |
+| PO-LOC-03 | BM-LK-07 | BR-208..BR-211 | §2, §4, §5 | FT-001 / KK-TS-006 veza |
+| PO-LOC-04 | BM-LK-05, BM-LK-08 | BR-078, BR-212..BR-215 | §3, §4, §7 | FT-001 / KK-TS-006 veza |
+| PO-LOC-05 (korekcija) | BM-LK-09, BM-LK-10 | BR-216..BR-219 | §2, §3, §6, §7 | FT-001 / KK-TS-006 veza |
+| PO-LOC-06 | BM-LK-11 | BR-220..BR-222 | §8 | FT-001 / KK-TS-006 veza |
+| PO-LOC-07 | BM-LK-12, BM-GL-13 | BR-223 | §11 | FT-001 / KK-TS-006 veza |
 
 ---
 
 # 14. Napomene za implementaciju
 
-1. TS-006 je normativni cilj; trenutno implementaciono stanje može odstupati i vodi se u Technical Overview dokumentaciji.
+1. KK-TS-006 je normativni cilj; trenutno implementaciono stanje može odstupati i vodi se u Technical Overview dokumentaciji.
 2. Implementacija mora ostati usklađena sa pravilom da Organizator nije operativna uloga.
 3. Uvođenje online/hibridnih Lokacija zahtijeva novu Product Owner odluku prije izmjene BM/FS/TS.
 4. Merge utiče samo na kataloške reference; ručno uneseni tekst Lokacije ne mijenja se automatski.

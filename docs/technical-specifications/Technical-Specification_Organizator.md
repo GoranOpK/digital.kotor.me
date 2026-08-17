@@ -3,7 +3,7 @@
 ## Organizator, Moderator i zahtjev za kreiranje Organizatora
 
 **Feature ID:** FT-001  
-**Oznaka dokumenta:** TS-001  
+**Oznaka dokumenta:** KK-TS-001  
 **Funkcionalna cjelina:** Organizator, Moderator i zahtjev za kreiranje Organizatora  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
@@ -24,6 +24,7 @@
 | 0.4.0 | 2026-08-11 | **PO-ORG-06:** privacy-safe Moderator invitation — schema delta; waiting status; resolver (Verified + catch-up); mailables; editor gating; duplicates; outcome/REMOVE emails; supersede PO-ORG-02 selection model. Usklađeno sa BM PATCH-068 / FS PATCH-FS-069 / BR-308–BR-320. **TARGET contract; CURRENT production još koristi users dropdown.** Bez implementacije u ovom docs paketu. |
 | 0.4.1 | 2026-08-12 | **PO-ORG-06 PRODUCTION CLOSEOUT (status sync):** Packages 1–5 implementirani i produkciono potvrđeni; schema migracija RAN; discoverable CTA „Zahtjev za Organizatora“ (`814ff96`). Normativni ugovor §15 neizmijenjen. Optional durable mail retry / `invitation_sent_at` ostaje non-blocking OUT OF SCOPE. |
 | 0.4.2 | 2026-08-13 | **PO-ORG/MOD rejected request editor cleanup:** `Ukloni` = workspace dismiss (`editor_dismissed_at` / `editor_dismissed_by_user_id`); samo `rejected`; samo `kk_admin`; **ne** hard delete; default `Zahtjevi` filter `editor_dismissed_at IS NULL`; show route KEEP. Usklađeno sa BM PATCH-072 / FS PATCH-FS-071 / BR-326–BR-327 / TS-010 v1.0.9. |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 Napomena:
 
@@ -37,7 +38,7 @@ Ne mijenjaju se postojeći redovi.
 
 Ovaj dokument opisuje kako će se usvojeni Business Model i Functional Specification za funkcionalnu cjelinu **Organizator**, **Moderator** i **Zahtjev za kreiranje Organizatora** tehnički realizovati u okviru FT-001 – Kalendar kulture.
 
-TS-001 obrađuje jednu logički zaokruženu funkcionalnu cjelinu unutar FT-001 i ne predstavlja kompletnu tehničku specifikaciju svih cjelina Feature-a FT-001.
+KK-TS-001 obrađuje jednu logički zaokruženu funkcionalnu cjelinu unutar FT-001 i ne predstavlja kompletnu tehničku specifikaciju svih cjelina Feature-a FT-001.
 
 Dokument:
 
@@ -80,7 +81,7 @@ Izvori istine za poslovna pravila:
 
 # Pravila upravljanja ovim dokumentom
 
-1. TS-001 pripada FT-001 – Kalendar kulture.
+1. KK-TS-001 pripada FT-001 – Kalendar kulture.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
 3. Nova poslovna pravila se ne uvode kroz Technical Specification.
 4. Sve što nije definisano u BM ili FS evidentira se kao **Otvoreno pitanje**.
@@ -121,7 +122,7 @@ Kreiranje Organizatora pokreće se **zahtjevom za kreiranje Organizatora**, koji
 
 ## 1.2 Obuhvat dokumenta
 
-Obuhvat TS-001:
+Obuhvat KK-TS-001:
 
 * tehnički model Organizatora kao poslovnog entiteta;
 * tehnički model ovlašćenja Moderatora u odnosu na Organizatora;
@@ -143,13 +144,13 @@ Van obuhvata ovog dokumenta:
 
 ## 1.3 Zavisnosti
 
-| Zavisnost | Uloga u odnosu na TS-001 |
+| Zavisnost | Uloga u odnosu na KK-TS-001 |
 |-----------|---------------------------|
 | Platforma Digital Kotor – korisnički nalozi | Identitet podnosioca, predloženog Moderatora, aktivnog Moderatora i Urednika |
 | Platformske uloge (Urednik / Administrator platforme) | Dodjela van Kalendara kulture; Kalendar koristi već dodijeljenu ulogu Urednika |
 | Urednički portal | Operativni prostor Moderatora i Urednika |
 | Događaji / Manifestacije | Pripadaju Organizatoru; Moderatori rade u aktivnom kontekstu Organizatora |
-| Evidencija aktivnosti (FT-003) | Prima poslovno značajne događaje iz kataloga FS §5.16; TS-001 ne projektuje FT-003 |
+| Evidencija aktivnosti (FT-003) | Prima poslovno značajne događaje iz kataloga FS §5.16; KK-TS-001 ne projektuje FT-003 |
 | Technical Overview (`cultural-calendar.md`) | Opisuje trenutno stanje; nije izvor istine za ciljni model |
 
 ## 1.4 Veze sa BM, FS i FT-001
@@ -163,10 +164,10 @@ FT-001 Kalendar kulture
   → FS §5.6 Upravljanje organizatorima (BR-045–BR-055, BR-135–BR-137, BR-275–BR-276)
   → FS §5.8 Upravljanje moderatorima (BR-070–BR-073)
   → FS §5.16 Evidencija aktivnosti (katalog Organizatori / Moderator; bez projektovanja FT-003)
-  → TS-001 (ovaj dokument)
+  → KK-TS-001 (ovaj dokument)
 ```
 
-Trenutna implementacija još ne sadrži ovu cjelinu; odstupanja se vode u Technical Overview, ne u TS-001.
+Trenutna implementacija još ne sadrži ovu cjelinu; odstupanja se vode u Technical Overview, ne u KK-TS-001.
 
 ---
 
@@ -420,7 +421,7 @@ Tehnički mehanizam izbora / čuvanja konteksta nije propisan u FS — **Otvoren
 
 Urednik je isključiva administrativna uloga Uredničkog portala (BM-UR-09).
 
-U okviru TS-001 Urednik (platformska uloga `kk_admin`):
+U okviru KK-TS-001 Urednik (platformska uloga `kk_admin`):
 
 * odobrava / odbija zahtjeve za kreiranje Organizatora;
 * odobrava / odbija dodjelu i uklanjanje Moderatora;
@@ -962,7 +963,7 @@ Functional Specification:
 
 ## 9.4 Evidencija aktivnosti
 
-* TS-001 obezbjeđuje izvore događaja iz §8.2.
+* KK-TS-001 obezbjeđuje izvore događaja iz §8.2.
 * FT-003 definiše centralnu evidenciju, pristup Administratora platforme i detalje skladištenja — van obuhvata ovog dokumenta.
 * Lokalni audit tragovi ostaju na entitetima/zahtjevima i ne zamjenjuju centralnu evidenciju.
 
@@ -1023,7 +1024,7 @@ Detaljan mehanizam zaključavanja nije propisan u BM/FS — tehnički izbor osta
 
 ## 10.6 Održavanje
 
-* TS-001 ostaje usklađen sa BM/FS; odstupanja implementacije vode se u Technical Overview.
+* KK-TS-001 ostaje usklađen sa BM/FS; odstupanja implementacije vode se u Technical Overview.
 * Izmjene poslovnih pravila ulaze isključivo preko BM/FS, zatim usklađivanja TS.
 * FT-003 i detalji događajskog workflow-a razvijaju se kao zasebne specifikacije / poglavlja, uz stabilne integracione tačke iz §9.
 
@@ -1041,12 +1042,12 @@ Functional Specification:
 - §5.6, §5.8
 - §5.16 (posebno BR-176 i BR-188)
 
-Ovo poglavlje navodi usvojene granice obuhvata TS-001 za V1.
+Ovo poglavlje navodi usvojene granice obuhvata KK-TS-001 za V1.
 
 1. Ovaj dokument ne projektuje implementaciju (kod, Laravel komponente, SQL, migracije, API ugovore i rute).
-2. Detaljni dizajn centralne Evidencije aktivnosti (FT-003) nije dio obuhvata TS-001.
-3. Tehnički model workflow-a događaja u punoj širini nije dio obuhvata TS-001; u ovom dokumentu navode se samo veze koje su nužne za cjelinu Organizator / Moderator.
-4. Funkcionalnosti Newsletter-a, lokacija, kategorija, medija i javnog portala nisu dio obuhvata TS-001, osim tačaka koje direktno utiču na poslovna pravila Organizatora i Moderatora.
+2. Detaljni dizajn centralne Evidencije aktivnosti (FT-003) nije dio obuhvata KK-TS-001.
+3. Tehnički model workflow-a događaja u punoj širini nije dio obuhvata KK-TS-001; u ovom dokumentu navode se samo veze koje su nužne za cjelinu Organizator / Moderator.
+4. Funkcionalnosti Newsletter-a, lokacija, kategorija, medija i javnog portala nisu dio obuhvata KK-TS-001, osim tačaka koje direktno utiču na poslovna pravila Organizatora i Moderatora.
 5. Van opsega ovog TS-a ostaju i aktivnosti koje FS §5.16 eksplicitno isključuje iz V1 kataloga centralne Evidencije aktivnosti (npr. autentikacija/platformske aktivnosti), jer nisu predmet ove funkcionalne cjeline.
 6. Nema dodatnih usvojenih isključenja van V1 osim onih navedenih u BM i FS izvorima.
 
@@ -1076,7 +1077,7 @@ Pitanja za kasnije PO odluke ili implementacioni izbor u okviru usvojenih granic
 8. Da li podnosilac može povući zahtjev prije odluke Urednika?
 9. Da li Moderator može pokrenuti uklanjanje samog sebe?
 10. Šta se dešava sa otvorenim zahtjevima za Moderatore i aktivnim ovlašćenjima pri deaktivaciji Organizatora?
-11. Kako korisnik bira i mijenja aktivni kontekst Organizatora (UX) — tipično uz TS-010?
+11. Kako korisnik bira i mijenja aktivni kontekst Organizatora (UX) — tipično uz KK-TS-010?
 12. Tipovi / vrste Organizatora u V1?
 14. Vidljivost odbijenog zahtjeva podnosiocu / Uredniku?
 16. Poslovna potvrda zabrane više istovremenih aktivnih ovlašćenja istog para User–Org (tehnički invariant već predviđen)?
@@ -1110,7 +1111,7 @@ Napomena: pitanje **13** zatvoreno u §12.1 odlukom PO-ORG-06-F.
 4. Predlaganje = ime+e-mail; grant = `user_id` nakon resolve + approve (PO-ORG-06 supersede PO-ORG-02 selection).
 5. Katalog polja V1: PO-ORG-01 — ne širiti pravnim/geo podacima.
 6. Napomena: Org creation reject REQUIRED (PO-ORG-05); ADD reject REQUIRED (PO-ORG-06 / BR-317) — `decision_note` storage postoji na oba modela.
-7. FK Događaj → Organizator: TS-003. Pun UI Moderatorskog rada: TS-010. Centralni audit: TS-012.
+7. FK Događaj → Organizator: KK-TS-003. Pun UI Moderatorskog rada: KK-TS-010. Centralni audit: KK-TS-012.
 8. Trenutna implementacija i odstupanja: `docs/tehnicka-dokumentacija/cultural-calendar.md` (Technical Overview).
 9. Detaljni implementacioni ugovor PO-ORG-06: **§15**.
 10. Optional polish (non-blocking): durable mail retry / outbox / `invitation_sent_at` — **nije** V1 blocker; **nije** lažno označen kao implementiran.

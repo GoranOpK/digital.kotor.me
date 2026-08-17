@@ -3,7 +3,7 @@
 ## Održavanje događaja
 
 **Feature ID:** FT-001  
-**Oznaka dokumenta:** TS-004  
+**Oznaka dokumenta:** KK-TS-004  
 **Funkcionalna cjelina:** Održavanje događaja  
 **Modul:** Kalendar kulture  
 **Status dokumenta:** Usvojen  
@@ -26,6 +26,7 @@
 | 0.1.7 | 2026-08-08 | **PO-AUTO-01 / PO-AUTO-02** (BM PATCH-055 / FS PATCH-FS-055): preciziran trenutak Planiran → Završen (§4.8); otkazivanje roditeljskog Događaja otkazuje Planirana/Odgođena Održavanja (§4.9); usklađene matrice i validacije. Bez izmjene implementacije. |
 | 0.1.8 | 2026-08-08 | **PO-N-TR-02-04** (BM PATCH-058 / FS PATCH-FS-058): preciziran V1 generator — samo Nacrt; algoritmi dnevno/sedmično/mjesečno; XOR; max 100; šablon; duplikati; atomičnost; bez preview/Proposal. Usklađeni §3.5, §4.4, §5.1, §7. Bez izmjene implementacije. |
 | 0.1.9 | 2026-08-10 | **BM PATCH-063 / FS PATCH-FS-063 (PO-U):** odgađanje bez novog termina; opcion `postponement_reason`; opcion OCC `cancellation_reason` (različito od Entry); javni „Prvobitni termin“; §4.5 / §4.7 / §6. Bez izmjene implementacije. |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 Napomena:
 
@@ -39,7 +40,7 @@ Ne mijenjaju se postojeći redovi.
 
 Ovaj dokument opisuje kako će se usvojeni Business Model i Functional Specification za funkcionalnu cjelinu **Održavanje događaja** tehnički realizovati u okviru FT-001 – Kalendar kulture.
 
-TS-004 obrađuje jednu logički zaokruženu funkcionalnu cjelinu unutar FT-001 i ne predstavlja kompletnu tehničku specifikaciju svih cjelina Feature-a FT-001.
+KK-TS-004 obrađuje jednu logički zaokruženu funkcionalnu cjelinu unutar FT-001 i ne predstavlja kompletnu tehničku specifikaciju svih cjelina Feature-a FT-001.
 
 Dokument:
 
@@ -48,7 +49,7 @@ Dokument:
 * nije Technical Overview trenutne implementacije;
 * nije Change Request;
 * ne definiše SQL, migracije, Laravel kod niti konkretne API ugovore;
-* ne projektuje TS-003 (Događaj), TS-006 (Lokacije) niti ostale cjeline — samo granice.
+* ne projektuje KK-TS-003 (Događaj), KK-TS-006 (Lokacije) niti ostale cjeline — samo granice.
 
 Izvori istine za poslovna pravila:
 
@@ -56,8 +57,8 @@ Izvori istine za poslovna pravila:
 * `docs/functional-specifications/Functional-Specification.md` (§5.7.1, §5.7.3; §5.4.3; §5.16 relevantno; BR-056–BR-061, BR-063, BR-065, BR-067–BR-069, BR-129–BR-134; PATCH-FS-055)
 * `docs/features/Feature-Registry.md` (FT-001)
 * `docs/METHODOLOGY.md` (M-TS-001–M-TS-005)
-* `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001 — kontekst / ovlašćenja)
-* `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — referentna veza Događaj ↔ Održavanje)
+* `docs/technical-specifications/Technical-Specification_Organizator.md` (KK-TS-001 — kontekst / ovlašćenja)
+* `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (KK-TS-003 — referentna veza Događaj ↔ Održavanje)
 
 **Terminološko pravilo (BM-16 / BM-06; V1):** pojam **Termin** označava isključivo skup vremenskih atributa entiteta Održavanje (datum, vrijeme, cjelodnevnost i druga vremenska svojstva). Termin nije poslovni entitet, nije zaseban domeni objekat i nije zaseban konceptualni entitet. Nije sinonim za entitet Održavanje.
 
@@ -86,13 +87,13 @@ Izvori istine za poslovna pravila:
 
 # Pravila upravljanja ovim dokumentom
 
-1. TS-004 pripada FT-001 – Kalendar kulture.
+1. KK-TS-004 pripada FT-001 – Kalendar kulture.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
 3. Nova poslovna pravila se ne uvode kroz Technical Specification.
 4. Sve što nije definisano u BM ili FS evidentira se kao **Otvoreno pitanje**.
 5. Product Owner donosi poslovne odluke; ovaj dokument ih ne pretpostavlja.
 6. Izmjene usvojenog sadržaja u narednim verzijama evidentiraju se novim redom u istoriji verzija.
-7. Veze prema Događaju moraju ostati konzistentne sa TS-003.
+7. Veze prema Događaju moraju ostati konzistentne sa KK-TS-003.
 
 ---
 
@@ -126,48 +127,48 @@ Održavanje:
 
 ## 1.2 Obuhvat dokumenta
 
-Obuhvat TS-004:
+Obuhvat KK-TS-004:
 
 * tehnički model entiteta Održavanje;
 * životni ciklus statusa održavanja (Planiran, Odgođen, Otkazan, Završen);
 * veza prema Događaju (kardinalnost, preduslovi objave/arhive);
 * termin i cjelodnevnost;
-* opciona lokacija: kataloška Lokacija ili ručno uneseni naziv Lokacije (model = TS-006);
+* opciona lokacija: kataloška Lokacija ili ručno uneseni naziv Lokacije (model = KK-TS-006);
 * ponavljanje i izuzeci;
 * autorizacija statusnih prelaza;
 * konceptualni model podataka;
 * validacije;
-* lokalni audit i emisije ka TS-012;
+* lokalni audit i emisije ka KK-TS-012;
 * integracione granice.
 
 Van obuhvata:
 
 * implementacija, SQL, migracije, Laravel, API;
-* puni model Događaja (TS-003), Lokacije (TS-006), Manifestacije (TS-005), portala, Newslettera, Evidencije;
+* puni model Događaja (KK-TS-003), Lokacije (KK-TS-006), Manifestacije (KK-TS-005), portala, Newslettera, Evidencije;
 * napredni RRULE / iCalendar modeli;
 * ulaznice i cijena (BM-TR-11).
 
 ## 1.3 Zavisnosti
 
-| Zavisnost | Uloga u odnosu na TS-004 |
+| Zavisnost | Uloga u odnosu na KK-TS-004 |
 |-----------|---------------------------|
-| TS-003 Događaj | Roditeljski agregat; preduslov ≥1 održavanje za slanje/objavu; signal završetka svih održavanja za arhivu |
-| TS-001 Organizator / Moderator | Kontekst i ovlašćenja za statusne radnje kada događaj ima Organizatora |
-| TS-006 Lokacije | Model kataloške Lokacije i pravila za ručni unos naziva Lokacije; TS-004 koristi taj model bez redefinisanja |
-| TS-005 Manifestacija | Posredno: trajanje Manifestacije iz termina održavanja događaja |
-| TS-009 / TS-010 | Prikaz i operativni prostor |
-| TS-011 Newsletter | Potrošač odlaganja / promjene termina / lokacije / otkaza održavanja |
-| TS-012 Evidencija | Prima emisije iz kataloga |
+| KK-TS-003 Događaj | Roditeljski agregat; preduslov ≥1 održavanje za slanje/objavu; signal završetka svih održavanja za arhivu |
+| KK-TS-001 Organizator / Moderator | Kontekst i ovlašćenja za statusne radnje kada događaj ima Organizatora |
+| KK-TS-006 Lokacije | Model kataloške Lokacije i pravila za ručni unos naziva Lokacije; KK-TS-004 koristi taj model bez redefinisanja |
+| KK-TS-005 Manifestacija | Posredno: trajanje Manifestacije iz termina održavanja događaja |
+| KK-TS-009 / KK-TS-010 | Prikaz i operativni prostor |
+| KK-TS-011 Newsletter | Potrošač odlaganja / promjene termina / lokacije / otkaza održavanja |
+| KK-TS-012 Evidencija | Prima emisije iz kataloga |
 
-## 1.4 Veze sa BM, FS, FT-001 i TS-003
+## 1.4 Veze sa BM, FS, FT-001 i KK-TS-003
 
 ```
 FT-001 Kalendar kulture
   → BM-06 Održavanje događaja (BM-TR-01–BM-TR-18)
   → BM-04 (BM-DG-01, BM-DG-03, BM-DG-04)
   → FS §5.7.1, §5.7.3, §5.4.3
-  → TS-003 Događaj (roditelj)
-  → TS-004 (ovaj dokument)
+  → KK-TS-003 Događaj (roditelj)
+  → KK-TS-004 (ovaj dokument)
 ```
 
 ---
@@ -197,27 +198,27 @@ U V1 se ne uvodi Termin kao domeni objekat. Vremenska svojstva (jedan kalendarsk
 ## 2.3 Status održavanja ≠ status događaja
 
 Statusi Planiran / Odgođen / Otkazan / Završen pripadaju isključivo održavanju (BM-TR-09, BM-TR-12, BR-067, BR-134).  
-Ne mijenjaju urednički workflow događaja iz TS-003.
+Ne mijenjaju urednički workflow događaja iz KK-TS-003.
 
 ## 2.4 Lokacija je opciona i pripada održavanju
 
 Lokacija nije atribut Događaja (BM-DG-03).  
 Održavanje može imati katalošku Lokaciju, ručno uneseni naziv Lokacije ili biti bez definisane Lokacije (BM-TR-04, BR-058).  
-Pun model kataloške Lokacije i pravila razdvajanja od ručnog unosa su u TS-006.
+Pun model kataloške Lokacije i pravila razdvajanja od ručnog unosa su u KK-TS-006.
 
 ## 2.5 Izuzeci su lokalni
 
 Izmjena, pomjeranje ili otkaz jednog održavanja ne smije mijenjati ostala održavanja istog događaja (BM-TR-07, BR-061).
 
-## 2.6 Usklađenost sa TS-003
+## 2.6 Usklađenost sa KK-TS-003
 
 * Nacrt događaja: 0 održavanja dozvoljeno.
-* Slanje / objava / direktna objava: ≥1 održavanje obavezno (BM-DG-01, TS-003 §7).
-* Automatska arhiva događaja: nakon završetka svih održavanja (BM-DG-04, BR-065, TS-003 §4.10).
+* Slanje / objava / direktna objava: ≥1 održavanje obavezno (BM-DG-01, KK-TS-003 §7).
+* Automatska arhiva događaja: nakon završetka svih održavanja (BM-DG-04, BR-065, KK-TS-003 §4.10).
 
 ## 2.7 Modularnost
 
-TS-004 ne ugrađuje modele drugih TS; integracije su ugovori granica (§9).
+KK-TS-004 ne ugrađuje modele drugih TS; integracije su ugovori granica (§9).
 
 ---
 
@@ -258,8 +259,8 @@ Detaljni prelazi: §4.
 | Veza | Kardinalnost | Napomena |
 |------|--------------|----------|
 | Događaj | N : 1 | Obavezno; ne samostalno (BM-TR-02) |
-| Kataloška Lokacija | 0..1 | Opciono (BM-TR-04); kada postoji, važi model TS-006 |
-| Manifestacija | — | Posredno preko Događaja (TS-005) |
+| Kataloška Lokacija | 0..1 | Opciono (BM-TR-04); kada postoji, važi model KK-TS-006 |
+| Manifestacija | — | Posredno preko Događaja (KK-TS-005) |
 
 **Ograničenja**
 
@@ -282,10 +283,10 @@ flowchart TD
   DG -->|0..1| MF
 ```
 
-* **Događaj (TS-003)** — roditelj.
-* **Kataloška Lokacija (TS-006)** — opciona referenca kada se koristi katalog.
+* **Događaj (KK-TS-003)** — roditelj.
+* **Kataloška Lokacija (KK-TS-006)** — opciona referenca kada se koristi katalog.
 * **Ručno uneseni naziv Lokacije** — tekst na nivou Održavanja, bez obavezne kataloške reference.
-* **Manifestacija (TS-005)** — posredno; početak/završetak Manifestacije iz vremenskih atributa održavanja (BM-MF-05).
+* **Manifestacija (KK-TS-005)** — posredno; početak/završetak Manifestacije iz vremenskih atributa održavanja (BM-MF-05).
 
 ## 3.3 Model jednog održavanja (N-TR-01 — zatvoreno)
 
@@ -308,7 +309,7 @@ Termin predstavlja skup vremenskih atributa entiteta Održavanje i nije zaseban 
 * vrijeme početka
 * vrijeme završetka
 * oznaka cjelodnevnog održavanja
-* lokacija prema postojećem modelu TS-004 (§2.4 / §6.2; BM-TR-04, BR-058)
+* lokacija prema postojećem modelu KK-TS-004 (§2.4 / §6.2; BM-TR-04, BR-058)
 
 ### 3.3.2 Dozvoljene kombinacije
 
@@ -350,9 +351,9 @@ Jedno održavanje **ne** koristi:
 
 Ne uvodi se raspon datuma.
 
-### 3.3.5 Veza sa TS-010
+### 3.3.5 Veza sa KK-TS-010
 
-TS-010 (urednički portal) koristi ovaj model održavanja **bez redefinisanja**. Sadržajni katalog događaja (TS-010 §9 / N-DG-02) sadrži relaciju prema održavanjima; vremenska polja ostaju u TS-004.
+KK-TS-010 (urednički portal) koristi ovaj model održavanja **bez redefinisanja**. Sadržajni katalog događaja (KK-TS-010 §9 / N-DG-02) sadrži relaciju prema održavanjima; vremenska polja ostaju u KK-TS-004.
 
 ## 3.4 Agregat i odgovornosti
 
@@ -361,7 +362,7 @@ TS-010 (urednički portal) koristi ovaj model održavanja **bez redefinisanja**.
 | Entitet Održavanje | Vremenski atributi, lokacija-ref, status, veza na Događaj |
 | Generator ponavljanja | Jednokratno kreira N održavanja (dnevno/sedmično/mjesečno); nije entitet (§3.5) |
 | Usluga statusnih prelaza | Dozvoljene tranzicije Planiran/Odgođen/Otkazan/Završen |
-| Signal završetka | Obavještava TS-003 kada više nema održavanja u statusu Planiran ili Odgođen |
+| Signal završetka | Obavještava KK-TS-003 kada više nema održavanja u statusu Planiran ili Odgođen |
 
 ## 3.5 Generator ponavljanja (N-TR-02 — zatvoreno; PO-N-TR-02-04)
 
@@ -479,7 +480,7 @@ Napomena: iz **Otkazan** i **Završen** nema usvojenih povratnih tranzicija u BM
 1. Održavanje se kreira isključivo u kontekstu postojećeg Događaja (BM-TR-02).
 2. Datum je obavezan; vrijeme početka/završetka opciono (BR-057; §3.3).
 3. Cjelodnevno → samo datum; vremena se ne unose (BR-059; §3.3).
-4. Lokacija opciona (BR-058); ako se bira, mora biti aktivna (BM-LK-05 — granica TS-006).
+4. Lokacija opciona (BR-058); ako se bira, mora biti aktivna (BM-LK-05 — granica KK-TS-006).
 5. Početni status: **Planiran** (iz definicije BM-TR-10 / uobičajeni ulaz kreiranja).
 6. Validacije vremenskih polja: §3.3.3 / §7.
 
@@ -575,11 +576,11 @@ flowchart LR
 2. Otkaz = status **Otkazan** (BR-069); ne utiče na ostala; **nije** fizičko uklanjanje (§4.3a); **ne** mijenja status Entry-ja.
 3. Ostala održavanja ostaju nepromijenjena.
 4. Nema izmjene „cijele serije“ niti regeneracije (§3.5).
-5. **Opcion razlog otkazivanja Održavanja (PATCH-063 / BR-294):** kolona na `cultural_occurrences` — `cancellation_reason` (`text` nullable). Semantički **različito** od Entry `cultural_event_entries.cancellation_reason`. Atomski: status + razlog u istoj transakciji. Razlog može biti javno prikazan (TS-009). Ne blokira cancel ako je null.
+5. **Opcion razlog otkazivanja Održavanja (PATCH-063 / BR-294):** kolona na `cultural_occurrences` — `cancellation_reason` (`text` nullable). Semantički **različito** od Entry `cultural_event_entries.cancellation_reason`. Atomski: status + razlog u istoj transakciji. Razlog može biti javno prikazan (KK-TS-009). Ne blokira cancel ako je null.
 
 ## 4.6 Izmjene podataka na objavljenom događaju
 
-Izmjene termina, lokacije ili drugih podataka održavanja objavljenog događaja, **osim** postavljanja statusa Planiran / Odgođen / Otkazan po BR-132/133 (uključujući opcione razloge), podliježu istom uredničkom toku odobravanja kao Događaj **za Moderatorov tok** (BM-TR-08, BR-061, TS-003). Za Urednikov direct published content update vidi TS-003 §4.13 — lifecycle postpone/cancel **nisu** ordinary content edit.
+Izmjene termina, lokacije ili drugih podataka održavanja objavljenog događaja, **osim** postavljanja statusa Planiran / Odgođen / Otkazan po BR-132/133 (uključujući opcione razloge), podliježu istom uredničkom toku odobravanja kao Događaj **za Moderatorov tok** (BM-TR-08, BR-061, KK-TS-003). Za Urednikov direct published content update vidi KK-TS-003 §4.13 — lifecycle postpone/cancel **nisu** ordinary content edit.
 
 Statusni prelazi Planiran ↔ Odgođen / Otkazan su zasebna ovlašćenja (§5).
 
@@ -590,7 +591,7 @@ Statusni prelazi Planiran ↔ Odgođen / Otkazan su zasebna ovlašćenja (§5).
 3. **Opcion `postponement_reason`** (`text` nullable na `cultural_occurrences`): ne blokira postpone; može biti javno prikazan; ostaje kao istorijski podatak i nakon unosa novog termina (`resumeWithNewTermin`), osim ako kasnija PO odluka kaže drugačije. Atomski: status + razlog u istoj transakciji.
 4. Odgođen → Planiran tek nakon određivanja **novog termina**; isti zapis; istorija (uključujući prvobitni termin i razlog) sačuvana; novo održavanje se ne kreira (BR-130, BR-131, BM-TR-15). Implementaciono: `resumeWithNewTermin` — upis novog datuma/vremena + status Planiran; **ne** briše `postponement_reason` po defaultu.
 5. Odgođen → Otkazan dozvoljeno; druge tranzicije iz Odgođen nisu dozvoljene (BR-130).
-6. Javni prikaz Odgođenog bez novog termina: status „Odgođeno“, „Prvobitni termin“, originalni datum, opcion razlog — **TS-009**.
+6. Javni prikaz Odgođenog bez novog termina: status „Odgođeno“, „Prvobitni termin“, originalni datum, opcion razlog — **KK-TS-009**.
 
 ## 4.8 Automatski završetak
 
@@ -614,11 +615,11 @@ Sistem **ne** izvršava automatsko završavanje za Održavanja u statusu:
 
 Automatsko završavanje **nije** mehanizam zatvaranja Održavanja nakon otkazivanja Događaja; to uređuje §4.9 / PO-AUTO-01.
 
-## 4.9 Signal ka TS-003 — arhiviranje događaja i otkazivanje roditelja
+## 4.9 Signal ka KK-TS-003 — arhiviranje događaja i otkazivanje roditelja
 
 Događaj ispunjava uslov za automatsko arhiviranje kada više ne postoji nijedno održavanje u statusu **Planiran** ili **Odgođen**. Održavanja u statusima **Završen** i **Otkazan** smatraju se konačno obrađenim i ne sprečavaju automatsko arhiviranje događaja.
 
-Kada je uslov ispunjen, TS-004 omogućava Sistemu da izvrši arhiviranje Događaja iz statusa **Objavljen** ili **Otkazan**, u skladu sa BM-DG-04, BR-065 i TS-003 §4.10.
+Kada je uslov ispunjen, KK-TS-004 omogućava Sistemu da izvrši arhiviranje Događaja iz statusa **Objavljen** ili **Otkazan**, u skladu sa BM-DG-04, BR-065 i KK-TS-003 §4.10.
 
 ### Otkazivanje roditeljskog Događaja (PO-AUTO-01)
 
@@ -629,15 +630,15 @@ Kada roditeljski Događaj prelazi **Objavljen → Otkazan**, u okviru **iste ato
 * Održavanja u statusu **Završen** ostaju **Završen**;
 * Održavanja u statusu **Otkazan** ostaju **Otkazan**.
 
-To **nije** automatski Planiran → Završen. Nakon operacije na Otkazanom Događaju ne smije ostati Planirano niti Odgođeno Održavanje (BM-DG-11 / BR-063; TS-003 §4.8).
+To **nije** automatski Planiran → Završen. Nakon operacije na Otkazanom Događaju ne smije ostati Planirano niti Odgođeno Održavanje (BM-DG-11 / BR-063; KK-TS-003 §4.8).
 
 ## 4.10 Veza kardinalnosti sa Događajem
 
 ```mermaid
 flowchart TD
   A[Događaj Nacrt] -->|0..N održavanja| B[Dozvoljeno]
-  C[Slanje / Objava] -->|zahtijeva ≥1| D[Validacija TS-003 + TS-004]
-  E[Nema Planiran ni Odgođen] -->|signal| F[TS-003: Arhiviran]
+  C[Slanje / Objava] -->|zahtijeva ≥1| D[Validacija KK-TS-003 + KK-TS-004]
+  E[Nema Planiran ni Odgođen] -->|signal| F[KK-TS-003: Arhiviran]
 ```
 
 ---
@@ -652,7 +653,7 @@ Business Model:
 
 Functional Specification:
 - BR-061, BR-132–BR-134
-- BR-007 (opseg Moderatora — preko TS-001/TS-003)
+- BR-007 (opseg Moderatora — preko KK-TS-001/KK-TS-003)
 
 Logički model (bez middleware).
 
@@ -674,12 +675,12 @@ Logički model (bez middleware).
 
 * Statusne radnje sa Organizatorom: Moderator u aktivnom kontekstu; Organizator ne izvršava radnje (BR-132).
 * Bez Organizatora: Urednik (BR-133).
-* BR-132/133 ne mijenjaju status događaja ni workflow TS-003 (BR-134).
+* BR-132/133 ne mijenjaju status događaja ni workflow KK-TS-003 (BR-134).
 * Izmjene podataka (osim navedenih statusa) na objavljenom događaju idu kroz odobravanje događaja (BR-061).
 
 ## 5.3 Administrator platforme
 
-Nije učesnik toka održavanja; relevantan samo preko TS-012.
+Nije učesnik toka održavanja; relevantan samo preko KK-TS-012.
 
 ---
 
@@ -739,15 +740,15 @@ Atributi / svojstva potvrđeni usvojenim BM/FS i zatvorenim N-TR-01 (konceptualn
 
 | Referenca | Vlasnik | Napomena |
 |-----------|---------|----------|
-| Kataloška Lokacija (naziv, status Aktivna/Deaktivirana, ostali podaci) | TS-006 | V1 prikaz: tekstualni podatak; bez obaveznog GPS/mape (§5.4.3) |
-| Ručno uneseni naziv Lokacije | TS-004 (u skladu sa TS-006 razdvajanjem modela) | Tekst na nivou konkretnog Održavanja; bez obavezne kataloške veze |
-| Događaj / status događaja | TS-003 | Preduslovi i arhiva |
+| Kataloška Lokacija (naziv, status Aktivna/Deaktivirana, ostali podaci) | KK-TS-006 | V1 prikaz: tekstualni podatak; bez obaveznog GPS/mape (§5.4.3) |
+| Ručno uneseni naziv Lokacije | KK-TS-004 (u skladu sa KK-TS-006 razdvajanjem modela) | Tekst na nivou konkretnog Održavanja; bez obavezne kataloške veze |
+| Događaj / status događaja | KK-TS-003 | Preduslovi i arhiva |
 | Prikaz datuma i vremena početka/završetka | FS §5.4.3 | Prikaz nad atributima §3.3 / §6.2; višednevni program = više održavanja |
-| Urednički portal | TS-010 | Koristi model §3.3 bez redefinisanja |
+| Urednički portal | KK-TS-010 | Koristi model §3.3 bez redefinisanja |
 
 ## 6.4 Otvoreni atributi
 
-* GPS koordinate nisu usvojen atribut održavanja; prikaz mape/GPS van V1 (§5.4.3 / §5.4.9). Eventualni GPS na kataloškoj Lokaciji = TS-006, ne TS-004.
+* GPS koordinate nisu usvojen atribut održavanja; prikaz mape/GPS van V1 (§5.4.3 / §5.4.9). Eventualni GPS na kataloškoj Lokaciji = KK-TS-006, ne KK-TS-004.
 
 ## 6.5 Integritet
 
@@ -803,8 +804,8 @@ Functional Specification:
 | BM-TR-15 / BR-131 | Povratak = update istog zapisa, ne insert |
 | BM-TR-16/17 / BR-132/133 | Autorizacija po postojanju Organizatora |
 | BR-068 | Sistem: Planiran→Završen prema PO-AUTO-02 (vrijeme_do ako postoji; inače kraj dana `datum`; app timezone) |
-| BM-DG-01 | TS-003 validacija ≥1 pri slanju/objavi — TS-004 obezbjeđuje brojanje |
-| BM-DG-04 / BR-065 | Signal ka TS-003 kada nema održavanja u statusu Planiran ili Odgođen |
+| BM-DG-01 | KK-TS-003 validacija ≥1 pri slanju/objavi — KK-TS-004 obezbjeđuje brojanje |
+| BM-DG-04 / BR-065 | Signal ka KK-TS-003 kada nema održavanja u statusu Planiran ili Odgođen |
 | BM-DG-11 / BR-063 | Pri otkazivanju Događaja: Planiran/Odgođen → Otkazan (atomski sa Event cancel) |
 
 ## 7.2 Tabela validacija po toku
@@ -823,7 +824,7 @@ Functional Specification:
 | Event status = Nacrt (re-check) | Generisanje | Sistem | Odbijanje ako nije Nacrt |
 | Potpuni duplikat (postojeći ili batch) | Generisanje | Sistem | Odbijanje cijele operacije |
 | Krajnji < početni | Generisanje | Sistem | Odbijanje |
-| ≥1 održavanje | Slanje/objava događaja | TS-003 + TS-004 | Blokada događaja |
+| ≥1 održavanje | Slanje/objava događaja | KK-TS-003 + KK-TS-004 | Blokada događaja |
 | Nedozvoljen statusni prelaz | Promjena statusa | Sistem | Odbijanje |
 | Novi termin pri Odgođen→Planiran | Povratak | Sistem | Blokada bez novog termina |
 | `postponement_reason` opcion | postpone | Sistem | Dozvoljeno null; ako popunjen — text validacija |
@@ -832,10 +833,10 @@ Functional Specification:
 | Otkaz samo iz Planiran/Odgođen | Otkaz | Sistem | Odbijanje inače |
 | Izmjena samo odabranog | Pomjeranje / otkaz | Sistem | Ostala nepromijenjena |
 | Autorizacija Mod/Urednik | Statusne radnje | Sistem | Odbijanje |
-| Podaci na objavljenom kroz approval | Izmjena podataka | TS-003 tok | Blokada direktnog bypass-a |
+| Podaci na objavljenom kroz approval | Izmjena podataka | KK-TS-003 tok | Blokada direktnog bypass-a |
 | Istek termina | Završetak | Sistem | Planiran→Završen (PO-AUTO-02) |
-| Otkazivanje Događaja | Event cancel | Sistem / TS-003 | Planiran/Odgođen→Otkazan (PO-AUTO-01) |
-| Nema održavanja u statusu Planiran ili Odgođen | Arhiva događaja | Sistem | Emituje signal ka TS-003 za automatsko arhiviranje |
+| Otkazivanje Događaja | Event cancel | Sistem / KK-TS-003 | Planiran/Odgođen→Otkazan (PO-AUTO-01) |
+| Nema održavanja u statusu Planiran ili Odgođen | Arhiva događaja | Sistem | Emituje signal ka KK-TS-003 za automatsko arhiviranje |
 | Fizičko uklanjanje — samo Nacrt bez uredničkog postupka | Uklanjanje (§4.3a) | Sistem | Odbijanje inače |
 | Fizičko uklanjanje nakon prvog slanja | Uklanjanje | Sistem | Odbijanje; koristiti izmjenu/status |
 
@@ -862,7 +863,7 @@ Functional Specification:
 - §5.16 katalog Događaji (odlaganje, otkaz pojedinačnog, promjena termina, promjena lokacije)
 - BR-171
 
-TS-004 ne projektuje TS-012.
+KK-TS-004 ne projektuje KK-TS-012.
 
 ## 8.1 Lokalni audit tragovi
 
@@ -874,9 +875,9 @@ TS-004 ne projektuje TS-012.
 | Status Odgođen / Planiran / Otkazan | Moderator / Urednik | Pri prelazu | stari/novi status, izvršilac |
 | Automatski Završen | Sistem | Pri isteku | vrijeme, izvršilac Sistem |
 
-## 8.2 Emisija ka centralnoj Evidenciji (TS-012)
+## 8.2 Emisija ka centralnoj Evidenciji (KK-TS-012)
 
-U skladu sa katalogom Događaji, relevantne emisije koje TS-004 podržava / pokreće:
+U skladu sa katalogom Događaji, relevantne emisije koje KK-TS-004 podržava / pokreće:
 
 | Događaj | Izvršilac |
 |---------|-----------|
@@ -885,7 +886,7 @@ U skladu sa katalogom Događaji, relevantne emisije koje TS-004 podržava / pokr
 | Promjena termina održavanja | Moderator / Urednik |
 | Promjena lokacije održavanja | Moderator / Urednik |
 
-Automatsko arhiviranje **događaja** emituje TS-003 (izvršilac Sistem), nakon signala iz TS-004.
+Automatsko arhiviranje **događaja** emituje KK-TS-003 (izvršilac Sistem), nakon signala iz KK-TS-004.
 
 **Ne emituju se** sitne operativne radnje bez poslovnog značaja, u skladu sa FS §5.16.
 
@@ -903,18 +904,18 @@ Functional Specification:
 
 Samo granice.
 
-| TS | Granica prema TS-004 |
+| TS | Granica prema KK-TS-004 |
 |----|----------------------|
-| **TS-003** | Roditelj Događaj; ≥1 za objavu; signal za arhivu; approval tok za podatke na objavljenom |
-| **TS-001** | Kontekst Moderatora / status Organizatora za autorizaciju |
-| **TS-005** | Posredno: traženje min/max termina održavanja događaja Manifestacije |
-| **TS-006** | Entitet kataloška Lokacija; status Aktivna/Deaktivirana; izbor iz kataloga ili ručni unos naziva Lokacije |
-| **TS-007** | Nema direktne veze (kategorija na događaju) |
-| **TS-008** | Nema direktne veze (mediji na događaju/lokaciji) |
-| **TS-009** | Prikaz termina i lokacije (§5.4.3) |
-| **TS-010** | UI za unos/statuse |
-| **TS-011** | Okidači: odlaganje, otkaz termina, promjena datuma/vremena/lokacije |
-| **TS-012** | Prima emisije §8.2 |
+| **KK-TS-003** | Roditelj Događaj; ≥1 za objavu; signal za arhivu; approval tok za podatke na objavljenom |
+| **KK-TS-001** | Kontekst Moderatora / status Organizatora za autorizaciju |
+| **KK-TS-005** | Posredno: traženje min/max termina održavanja događaja Manifestacije |
+| **KK-TS-006** | Entitet kataloška Lokacija; status Aktivna/Deaktivirana; izbor iz kataloga ili ručni unos naziva Lokacije |
+| **KK-TS-007** | Nema direktne veze (kategorija na događaju) |
+| **KK-TS-008** | Nema direktne veze (mediji na događaju/lokaciji) |
+| **KK-TS-009** | Prikaz termina i lokacije (§5.4.3) |
+| **KK-TS-010** | UI za unos/statuse |
+| **KK-TS-011** | Okidači: odlaganje, otkaz termina, promjena datuma/vremena/lokacije |
+| **KK-TS-012** | Prima emisije §8.2 |
 
 ---
 
@@ -957,7 +958,7 @@ Functional Specification:
 
 ## 10.6 Održavanje
 
-* TS-004 ostaje usklađen sa BM/FS i TS-003.
+* KK-TS-004 ostaje usklađen sa BM/FS i KK-TS-003.
 * Odstupanja trenutne implementacije (npr. termin na događaju umjesto na održavanju) vode se u Technical Overview.
 
 ---
@@ -974,14 +975,14 @@ Functional Specification:
 - §5.4.3 / §5.4.9 (GPS/mapa)
 - BR-060 (generator: dnevno/sedmično/mjesečno; max 100; van V1: RRULE / beskonačno / intervali)
 
-Usvojene granice V1 za TS-004:
+Usvojene granice V1 za KK-TS-004:
 
 1. Nema implementacionog dizajna (SQL, API, Laravel, migracije).
 2. Ulaznice i cijena nisu dio V1 (BM-TR-11).
 3. Napredni RRULE / iCalendar / proizvoljni recurrence izrazi, beskonačne serije, intervali i trajna pravila ponavljanja nisu dio V1 (N-TR-02 zatvoren — §3.5).
 4. Obavezni GPS / mapa prikaza lokacije nisu dio V1 (§5.4.3 / §5.4.9).
-5. Puni model Lokacije nije dio TS-004 (TS-006).
-6. Puni model Događaja nije dio TS-004 (TS-003).
+5. Puni model Lokacije nije dio KK-TS-004 (KK-TS-006).
+6. Puni model Događaja nije dio KK-TS-004 (KK-TS-003).
 7. Ručno postavljanje statusa Završen nije usvojeno — samo Sistem (BR-068).
 8. Fizičko uklanjanje održavanja dozvoljeno je **samo** po §4.3a (Nacrt prije prvog uredničkog postupka). Soft delete, hard delete kao opšti mehanizam, recycle bin i lifecycle Delete **nisu** dio V1. Nakon prvog slanja — isključivo izmjena / statusi (N-TR-04 zatvoren).
 9. Status **Odgođen** nije status događaja i ne uvodi se na nivo Događaja.
@@ -995,7 +996,7 @@ Pitanja koja ostaju nakon analize BM/FS. Bez predloženih odgovora.
 
 Ne vraćaju se zatvorene odluke o: lokaciji opcionoj, cjelodnevnom, dnevnom/sedmičnom/mjesečnom generisanju (N-TR-02 **ZATVORENO** — §3.5 / PO-N-TR-02-01–03), lokalnim izuzecima, statusima Planiran/Odgođen/Otkazan/Završen, ovlašćenjima Mod/Urednik, vezi ≥1 održavanje / arhiva događaja, uslovu automatskog arhiviranja (N-TR-03 zatvoren), modelu jednog održavanja / katalogu vremenskih polja (N-TR-01 zatvoren — §3.3), fizičkom uklanjanju iz nacrta prije prvog uredničkog postupka (N-TR-04 **ZATVORENO** — §4.3a).
 
-Za TS-004 trenutno **nema** otvorenih pitanja.
+Za KK-TS-004 trenutno **nema** otvorenih pitanja.
 
 ---
 
@@ -1003,23 +1004,23 @@ Za TS-004 trenutno **nema** otvorenih pitanja.
 
 | TS sekcija | BM | FS / BR | FT | Ostali TS |
 |------------|----|---------|----|-----------|
-| §1 Pregled | BM-06, BM-DG-01/03/04 | §5.7.1, §5.7.3 | FT-001 | TS-003 |
-| §2 Principi | BM-TR-01/02/09/12/18, BM-DG-03 | BR-056, BR-067, BR-134 | FT-001 | TS-003 |
-| §3 Tehnički model | BM-TR-01–BM-TR-10 | BR-056–BR-060, BR-067; §5.4.3 | FT-001 | TS-003, TS-006, TS-010 |
+| §1 Pregled | BM-06, BM-DG-01/03/04 | §5.7.1, §5.7.3 | FT-001 | KK-TS-003 |
+| §2 Principi | BM-TR-01/02/09/12/18, BM-DG-03 | BR-056, BR-067, BR-134 | FT-001 | KK-TS-003 |
+| §3 Tehnički model | BM-TR-01–BM-TR-10 | BR-056–BR-060, BR-067; §5.4.3 | FT-001 | KK-TS-003, KK-TS-006, KK-TS-010 |
 | §4.1–4.2 Lifecycle | BM-TR-10, BM-TR-13–15 | BR-067–BR-069, BR-129–131 | FT-001 | — |
-| §4.3 Kreiranje | BM-TR-02–05 | BR-056–BR-059 | FT-001 | TS-003 |
-| §4.3a Uklanjanje iz nacrta | BM-DG-01 | BR-056; §5.16 (istorija/audit); N-TR-04 ZATVORENO | FT-001 | TS-003 |
+| §4.3 Kreiranje | BM-TR-02–05 | BR-056–BR-059 | FT-001 | KK-TS-003 |
+| §4.3a Uklanjanje iz nacrta | BM-DG-01 | BR-056; §5.16 (istorija/audit); N-TR-04 ZATVORENO | FT-001 | KK-TS-003 |
 | §4.4 Generisanje | BM-TR-06 | BR-060; N-TR-02 ZATVORENO | FT-001 | — |
 | §4.5 Izuzeci | BM-TR-07 | BR-061, BR-069 | FT-001 | — |
-| §4.6 Izmjene objavljenog | BM-TR-08 | BR-061 | FT-001 | TS-003 |
+| §4.6 Izmjene objavljenog | BM-TR-08 | BR-061 | FT-001 | KK-TS-003 |
 | §4.7 Odgađanje | BM-TR-14/15 | BR-130/131 | FT-001 | — |
 | §4.8 Auto Završen | BM-TR-10, BM-TR-13; PO-AUTO-02 | BR-068, BR-129 | FT-001 | — |
-| §4.9 Arhiva / cancel cascade | BM-DG-04, BM-DG-11; PO-AUTO-01 | BR-063, BR-065 | FT-001 | TS-003 |
-| §5 Autorizacija | BM-TR-16–18 | BR-132–134, BR-061 | FT-001 | TS-001, TS-003 |
-| §6 Model podataka | BM-TR-01–06, BM-LK-* | BR-056–060, §5.4.3 | FT-001 | TS-006 |
-| §7 Validacije | BM-TR-*, BM-DG-01/04 | BR-056–061, BR-068/069, BR-129–131 | FT-001 | TS-003 |
-| §8 Audit | — | §5.16 katalog | FT-001 / FT-003 | TS-012 |
-| §9 Integracije | BM-TR-*, BM-MF-05 | BR-056+, BR-065 | FT-001 | TS-001, TS-003, TS-005–TS-012 |
+| §4.9 Arhiva / cancel cascade | BM-DG-04, BM-DG-11; PO-AUTO-01 | BR-063, BR-065 | FT-001 | KK-TS-003 |
+| §5 Autorizacija | BM-TR-16–18 | BR-132–134, BR-061 | FT-001 | KK-TS-001, KK-TS-003 |
+| §6 Model podataka | BM-TR-01–06, BM-LK-* | BR-056–060, §5.4.3 | FT-001 | KK-TS-006 |
+| §7 Validacije | BM-TR-*, BM-DG-01/04 | BR-056–061, BR-068/069, BR-129–131 | FT-001 | KK-TS-003 |
+| §8 Audit | — | §5.16 katalog | FT-001 / FT-003 | KK-TS-012 |
+| §9 Integracije | BM-TR-*, BM-MF-05 | BR-056+, BR-065 | FT-001 | KK-TS-001, KK-TS-003, KK-TS-005–KK-TS-012 |
 | §10 NFR | BM-DG-04 | BR-068 | FT-001 | — |
 | §11 Granice V1 | BM-TR-11 | §5.4.3/§5.4.9 | FT-001 | — |
 | §12 Otvorena | — | — (nema otvorenih) | FT-001 | — |
@@ -1031,9 +1032,9 @@ Za TS-004 trenutno **nema** otvorenih pitanja.
 Ovo poglavlje je strogo nenormativno.
 
 1. Prvo uspostaviti vezu Događaj 1—N Održavanje i statusni motor (§4), zatim generator ponavljanja.
-2. Signal arhive ka TS-003 držati eksplicitnim ugovorom; ne ugrađivati arhivu događaja u TS-004.
+2. Signal arhive ka KK-TS-003 držati eksplicitnim ugovorom; ne ugrađivati arhivu događaja u KK-TS-004.
 3. Statusne radnje (Odgođen/Otkazan/Planiran) razdvojiti od approval toka za podatke (BR-061 vs BR-132/133).
 4. Ne implementirati RRULE u V1.
-5. Trenutna implementacija koja drži termin/lokaciju na događaju je odstupanje — Technical Overview, ne TS-004.
-6. GPS/mapu ne uvoditi kroz TS-004.
-7. **PO-EV-01:** Postojeći flat termini/lokacije na `CulturalEvent` nisu predmet migracije ni backfill-a u Održavanja. Implementacija uspostavlja kanonski model 1 Događaj — N Održavanja direktno prema ovom TS-u (uz TS-003), bez dual-write i bez adaptera radi očuvanja legacy zapisa. Privremeni flat model ostaje samo do cutover-a.
+5. Trenutna implementacija koja drži termin/lokaciju na događaju je odstupanje — Technical Overview, ne KK-TS-004.
+6. GPS/mapu ne uvoditi kroz KK-TS-004.
+7. **PO-EV-01:** Postojeći flat termini/lokacije na `CulturalEvent` nisu predmet migracije ni backfill-a u Održavanja. Implementacija uspostavlja kanonski model 1 Događaj — N Održavanja direktno prema ovom TS-u (uz KK-TS-003), bez dual-write i bez adaptera radi očuvanja legacy zapisa. Privremeni flat model ostaje samo do cutover-a.

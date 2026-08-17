@@ -1,19 +1,19 @@
 # Kalendar kulture
 # Registar skraćenica i oznaka dokumentacije Kalendara kulture
 
-**Oznaka dokumenta:** RG-001
+**Oznaka dokumenta:** KK-RG-001
 **Naziv:** Registar skraćenica i oznaka dokumentacije Kalendara kulture
 **Status dokumenta:** Stable
-**Verzija:** 1.1.12
-**Datum:** 2026-08-16
+**Verzija:** 1.1.13
+**Datum:** 2026-08-17
 
 ---
 
 # 1. Svrha i način korišćenja
 
-### RG-001-01 — Identitet
+### KK-RG-001-01 — Identitet
 
-RG-001 je **referentni i živi** dokument. Predstavlja **centralni registar skraćenica i oznaka** koje se koriste u dokumentaciji modula **Kalendar kulture**.
+KK-RG-001 je **referentni i živi** dokument. Predstavlja **centralni registar skraćenica i oznaka** koje se koriste u dokumentaciji modula **Kalendar kulture**.
 
 Nije opšti katalog oznaka za kompletnu platformu Digital Kotor.
 
@@ -38,14 +38,14 @@ Odgovara na pitanja:
 
 **Princip:** jedna kanonska skraćenica = jedno značenje = jedan referentni dokument ili dokumentacioni standard.
 
-RG-001:
+KK-RG-001:
 
 * **nije poslovni pojmovnik** i ne definiše poslovne ni tehničke koncepte;
 * ne definiše poslovna pravila ni funkcionalnosti;
 * ne zamjenjuje BM, FS, TS, IS, IR, Feature Registry ili CR;
 * samo evidentira skraćenice i identifikatore koji se **stvarno koriste** u usvojenoj dokumentaciji Kalendara kulture.
 
-**Poslovni pojmovi i statusi** (npr. Nacrt, Objavljen, Otkazan, Planiran, Odgođen) definišu se u **BM-GL**, **BM-ST** i odgovarajućim FS/TS sekcijama — vidi §2.8. RG-001 ih samo referencira.
+**Poslovni pojmovi i statusi** (npr. Nacrt, Objavljen, Otkazan, Planiran, Odgođen) definišu se u **BM-GL**, **BM-ST** i odgovarajućim FS/TS sekcijama — vidi §2.8. KK-RG-001 ih samo referencira.
 
 **Kako koristiti:** pročitati §2 za skraćenice, zatim §3 da znate koji tip dokumenta otvoriti. Za sadržaj pravila ići u vlasnički dokument (BM/FS/TS/…).
 
@@ -55,29 +55,49 @@ RG-001:
 
 # 2. Skraćenice
 
-### RG-001-02 — Struktura (dio A)
+### KK-RG-001-02 — Struktura (dio A)
 
 Uključene su samo **interne** skraćenice projekta koje se **stvarno koriste** u usvojenoj dokumentaciji.
+
+## 2.0 Dokumentacioni namespace
+
+Dokumentacioni namespace Kalendara kulture je `KK-*`.
+
+* `EP-*` pripada e-Plaćanju.
+* `DK-*` pripada zajedničkoj/platformskoj dokumentaciji Digital Kotora.
+* Lista namespace prefiksa **nije** zatvorena: novi poslovni moduli mogu uvesti sopstveni prefiks, uz lokalnu numeraciju unutar tog namespace-a.
+
+Numeracija dokumentacionih ID-eva je lokalna unutar namespace-a. `KK-TS-002` trenutno **nije dodijeljen** i dokument nije kreiran. Broj 002 u `KK-*` namespace-u nije rezervisan za e-Plaćanje.
+
+FT-004 / Obavještenja pripadaju platformskoj dokumentaciji i biće uređeni kroz `DK-*` namespace corrective. `TS-013` ostaje trenutna oznaka tehničke specifikacije Obavještenja.
 
 ## 2.1 Tipovi dokumenata i identifikatori dokumentacije
 
 | Skraćenica | Puni naziv | Kratko objašnjenje |
 |------------|------------|-------------------|
-| **BM** | Poslovni model (Business Model) | Tip dokumenta: poslovni model (pravila i koncepti), bez implementacije. |
+| **KK-BM** | Poslovni model Kalendara kulture | Dokumentacioni prefiks BM dokumenata KK. Kanonski dokument: **KK-BM-001**. |
+| **KK-FS** | Funkcionalna specifikacija Kalendara kulture | Dokumentacioni prefiks FS dokumenata KK. Kanonski dokument: **KK-FS-001**. |
+| **KK-TS** | Tehnička specifikacija Kalendara kulture | Dokumentacioni prefiks TS dokumenata KK. Mapa KK-TS-001, KK-TS-003…KK-TS-012: §2.6. |
+| **KK-IS** | Implementaciona strategija Kalendara kulture | Dokumentacioni prefiks IS. Kanonski dokument: **KK-IS-001**. |
+| **KK-IR** | Implementacioni roadmap Kalendara kulture | Dokumentacioni prefiks IR. Kanonski dokument: **KK-IR-001**. |
+| **KK-RG** | Registar skraćenica i oznaka dokumentacije Kalendara kulture | Ovaj dokument. Kanonski dokument: **KK-RG-001**. |
+| **KK-FR** | Feature Registry dokument Kalendara kulture | Dokumentacioni ID registra funkcionalnosti. Kanonski dokument: **KK-FR-001**. **Nije** Feature ID (`FT-*`) i **nije** Functional Requirement (`FR-*`). |
+| **KK-CR-REG** | Change Request Register dokument Kalendara kulture | Dokumentacioni ID registra zahtjeva. Kanonski dokument: **KK-CR-REG-001**. Pojedinačni zahtjevi ostaju `CR-001` … `CR-004B`. |
+| **BM** | Poslovni model (Business Model) | Tip dokumenta: poslovni model (pravila i koncepti), bez implementacije. Poslovne oznake ostaju `BM-01`…`BM-17`, `BM-ORG-*` itd. (bez KK prefiksa). |
 | **FS** | Funkcionalna specifikacija (Functional Specification) | Tip dokumenta: šta sistem radi za korisnika. |
-| **TS** | Tehnička specifikacija (Technical Specification) | Tip dokumenta: tehnička razrada usvojenog BM/FS. Mapa TS-001…TS-012: §2.6. |
-| **IS** | Implementaciona strategija (Implementation Strategy) | Tip dokumenta: faze, rizici, isporuka, rollback (npr. IS-001 Javni portal). |
-| **IR** | Implementacioni roadmap (Implementation Roadmap) | Tip dokumenta: operativni redoslijed i faze realizacije. **IR-001** = Implementation Roadmap — Kalendar kulture V1 (`docs/implementation-strategies/Implementation-Roadmap_Kalendar_kulture.md`). |
-| **RG** | Registar skraćenica i oznaka dokumentacije Kalendara kulture | Ovaj dokument (RG-001). |
-| **CR** | Zahtjev za izmjenu (Change Request) | Odobreni zahtjev za izmjenu implementacije (npr. CR-001). |
-| **BR** | Poslovno/funkcionalno pravilo (Business Rule) | Identifikator pravila u FS (npr. BR-102); sljedivost ka BM. |
-| **FR** | Funkcionalni zahtjev (Functional Requirement) | Identifikator zahtjeva u nekim FS dokumentima (npr. FR-001, FR-OB-001). **Nije** Feature Registry. |
-| **FT** | Feature ID | Jedinstveni ID funkcionalnosti u Feature Registry-ju (npr. FT-001). |
-| **PO** | Product Owner | Uloga / prefiks product odluka (npr. PO-DG-07, PO-ORG-01, PO-AUTO-01, PO-TS9-03A). |
+| **TS** | Tehnička specifikacija (Technical Specification) | Tip dokumenta: tehnička razrada usvojenog BM/FS. Dokumentacioni ID koristi `KK-TS-*`. |
+| **IS** | Implementaciona strategija (Implementation Strategy) | Tip dokumenta: faze, rizici, isporuka, rollback (npr. KK-IS-001 Javni portal). |
+| **IR** | Implementacioni roadmap (Implementation Roadmap) | Tip dokumenta: operativni redoslijed i faze realizacije. **KK-IR-001** = Implementation Roadmap — Kalendar kulture V1 (`docs/implementation-strategies/Implementation-Roadmap_Kalendar_kulture.md`). |
+| **RG** | Registar skraćenica i oznaka dokumentacije Kalendara kulture | Ovaj dokument (KK-RG-001). |
+| **CR** | Zahtjev za izmjenu (Change Request) | Odobreni zahtjev za izmjenu implementacije (npr. CR-001). **Nije** dokumentacioni ID registra. |
+| **BR** | Poslovno/funkcionalno pravilo (Business Rule) | Identifikator pravila u FS (npr. BR-102); sljedivost ka BM. Bez KK prefiksa. |
+| **FR** | Funkcionalni zahtjev (Functional Requirement) | Identifikator zahtjeva u nekim FS dokumentima (npr. FR-001). **Nije** Feature Registry. |
+| **FT** | Feature ID | Jedinstveni ID funkcionalnosti u Feature Registry-ju (npr. FT-001, FT-003). Bez KK prefiksa. |
+| **PO** | Product Owner | Uloga / prefiks product odluka (npr. PO-DG-07, PO-ORG-01, PO-AUTO-01, PO-TS9-03A). Bez KK prefiksa. |
 | **IA** | Informaciona arhitektura (Information Architecture) | Informaciono-arhitektonska odluka (npr. IA-01). |
 | **TD** | Tehnička odluka (Technical Decision) | Tehnička odluka evidentirana u TS (npr. TD-TS9-01). |
 | **TO** | Tehnički pregled (Technical Overview) | Pregled trenutne implementacije i odstupanja od BM/FS/TS. |
-| **UC** | Use Case | Opis korisničkog scenarija (npr. UC-OB-001). |
+| **UC** | Use Case | Opis korisničkog scenarija. |
 | **UI** | Korisnički interfejs (User Interface) | Često u procjeni uticaja CR-a. |
 | **API** | Application Programming Interface | Programski interfejs u dokumentacionom / CR kontekstu projekta. |
 | **URL** | Uniform Resource Locator | Adresa / putanja resursa u ugovorima filtera i navigacije. |
@@ -85,21 +105,21 @@ Uključene su samo **interne** skraćenice projekta koje se **stvarno koriste** 
 | **NFR** | Nefunkcionalni zahtjev (Non-Functional Requirement) | Npr. poglavlje u TS. |
 | **FK** | Strani ključ (Foreign Key) | Relacijska veza u modelu podataka (u TS kontekstu). |
 | **CRUD** | Create, Read, Update, Delete | Osnovne operacije nad zapisima (u TS / CRUD poglavljima). |
-| **OFD** | Otvoreni nalaz (Open Finding) | Neriješena dokumentaciona stavka (npr. OFD-OB-006). |
+| **OFD** | Otvoreni nalaz (Open Finding) | Neriješena dokumentaciona stavka. |
 | **M-TS** | Metodologija — Technical Specification | Pravilo metodologije za TS dokumente (npr. M-TS-001). |
-| **PATCH** | Dokumentaciona zakrpa (Patch) | Identifikator usklađivanja dokumentacije (npr. PATCH-053 u BM). |
+| **PATCH** | Dokumentaciona zakrpa (Patch) | Identifikator usklađivanja dokumentacije (npr. PATCH-053 u BM). Postojeći `PATCH-001` … `PATCH-077` ostaju legacy/stabilni identifikatori Kalendara kulture; **nema** retroaktivnog `KK-PATCH-*`. |
 | **HF** | Hotfix / hitna korektivna ispravka | Generička oznaka hitnog produkcionog korektiva u paketnim oznakama (npr. **MOD-UX-01-HF1**, **MOD-UX-01-HF2**). Ordinal (`HF1`, `HF2`…) nije zasebna skraćenica. |
-| **PATCH-FS** | Zakrpa FS (Patch — Functional Specification) | Identifikator zakrpe FS dokumenta (npr. PATCH-FS-053). |
+| **PATCH-FS** | Zakrpa FS (Patch — Functional Specification) | Identifikator zakrpe FS dokumenta (npr. PATCH-FS-053, PATCH-FS-001 … PATCH-FS-077). PATCH-FS namespace ostaje nepromijenjen. |
 | **QA** | Osiguranje kvaliteta (Quality Assurance) | Oznaka QA odluke ili korektivnog prolaza (npr. QA-TS0108-01). |
 | **AC** | Acceptance Criteria | Identifikator acceptance kriterijuma u TS (npr. AC-NL-01). |
 | **GAP** | Gap | Dokumentacioni ili implementacioni jaz; vidi i `G-*`, `G-W*`, `G-NL-*` (§2.4). |
-| **MF** | Manifestacija | Dokumentaciona skraćenica za poslovni entitet Manifestacija (BM-05 / TS-005). Prefiks pravila: **BM-MF-***. |
+| **MF** | Manifestacija | Dokumentaciona skraćenica za poslovni entitet Manifestacija (BM-05 / KK-TS-005). Prefiks pravila: **BM-MF-***. |
 | **OCC** | Occurrence / Održavanje | Tehnička skraćenica za kanonski entitet `CulturalOccurrence`, koji u poslovnoj terminologiji predstavlja **Održavanje**. Ne prevoditi naziv klase. |
 | **SSOT** | Single Source of Truth | Jedini mjerodavni izvor podataka/istine za dati domen (npr. public query SSOT). |
 | **CTA** | Call to Action | Poziv na akciju u UI/portalskom kontekstu (npr. Hero bez CTA dugmadi). |
 | **KK** | Kalendar kulture | Skraćenica naziva modula Kalendar kulture. |
-| **MOD** | Moderator | Dokumentaciona skraćenica za **Moderator Organizatora** u paketnim oznakama (npr. **MOD-UX-01**). Poslovna definicija ostaje u BM-MOD / TS-001 / TS-010.3 — RG-001 ne definiše ulogu. |
-| **ORG** | Organizator | Dokumentaciona skraćenica za **Organizatora** u paketnim / PO oznakama (npr. **PO-ORG-***). Poslovna definicija ostaje u BM-ORG / TS-001 / TS-010.2. |
+| **MOD** | Moderator | Dokumentaciona skraćenica za **Moderator Organizatora** u paketnim oznakama (npr. **MOD-UX-01**). Poslovna definicija ostaje u BM-MOD / KK-TS-001 / KK-TS-010.3 — KK-RG-001 ne definiše ulogu. |
+| **ORG** | Organizator | Dokumentaciona skraćenica za **Organizatora** u paketnim / PO oznakama (npr. **PO-ORG-***). Poslovna definicija ostaje u BM-ORG / KK-TS-001 / KK-TS-010.2. |
 | **UX** | Korisničko iskustvo (User Experience) | Dokumentaciona skraćenica / prefiks UX korektiva i navigacionih paketa (npr. **MOD-UX-01**). |
 | **CAT-CUTOVER** | Category cutover | Dokumentaciona/implementaciona oznaka cutover-a kategorija na kanonski katalog (PO-TS9-08E). |
 
@@ -109,19 +129,19 @@ Uključene su samo **interne** skraćenice projekta koje se **stvarno koriste** 
 |-----|--------|
 | **TS** | Šta/kako tehnički (specifikacija usvojenog BM/FS). |
 | **IS** | Kako se stabilna TS uvodi u produkciju (strategija isporuke). |
-| **IR** | Operativni roadmap: redoslijed faza i realizacije (npr. IR-001). |
+| **IR** | Operativni roadmap: redoslijed faza i realizacije (npr. KK-IR-001). |
 
 ## 2.2 FR i Feature Registry (obavezno razlikovanje)
 
 | Oznaka / naziv | Značenje | Primjer |
 |----------------|----------|---------|
-| **FR** | **Functional Requirement** — identifikator zahtjeva unutar FS | FR-001, FR-OB-001 |
-| **Feature Registry** | Dokument / registar funkcionalnosti (pun naziv; **nema** skraćenice FR) | `docs/features/Feature-Registry.md` |
+| **FR** | **Functional Requirement** — identifikator zahtjeva unutar FS | FR-001 |
+| **Feature Registry** | Dokument / registar funkcionalnosti Kalendara kulture; dokumentacioni ID **KK-FR-001** (**nema** skraćenice FR) | `docs/features/Feature-Registry.md` |
 | **FT** | **Feature ID** — ID stavke u Feature Registry-ju Kalendara kulture | FT-001, FT-003 |
 
 **Feature Registry se ne skraćuje kao FR.**
 Ako neko kaže „FR“, u Digital Kotor dokumentaciji to znači *Functional Requirement*, ne Feature Registry.
-Za registar funkcionalnosti koristi se pun naziv **Feature Registry**; za identifikatore funkcionalnosti koristi se **FT-***.
+Za registar funkcionalnosti koristi se pun naziv **Feature Registry** (dokument `KK-FR-001`); za identifikatore funkcionalnosti koristi se **FT-***. FT-004 / Obavještenja nijesu aktivni KK Feature.
 
 ## 2.3 Prefiksi identifikatora u BM (domeni)
 
@@ -146,7 +166,8 @@ Prefiksi ispod **nisu** poslovne definicije — samo objašnjavaju oznaku ID-a p
 | **BM-GL** | Pojmovnik / glosar BM | AKTIVNO | BM-GL-19 |
 | **BM-AR** | Arhitektura poslovnih cjelina | AKTIVNO | BM-AR-* |
 | **BM-GR** | Opšta poslovna pravila | AKTIVNO | BM-GR-* |
-| **BM-OB** | Obavještenja | AKTIVNO | BM-OB-* |
+
+**BM-OB** nije aktivni KK prefiks. Obavještenja / FT-004 pripadaju platformskoj dokumentaciji (`DK-*` corrective pending).
 
 **BM-TR:** Prefiks je **AKTIVAN** za domen Održavanja (npr. BM-TR-12). Slovo „TR“ u imenu je istorijsko (raniji radni naziv „Termin“); to **ne** znači da je prefiks zastario ili neaktivan.
 
@@ -159,41 +180,37 @@ Prefiksi se **ne** spajaju u jednu generičku oznaku. Svaki ima svoj namespace.
 | Prefiks | Tip oznake | Značenje | Dokument / modul | Primjer |
 |---------|------------|----------|------------------|---------|
 | **PO-DG** | Product Owner odluka | Događaj | BM / FS / Feature Registry | PO-DG-07 |
-| **PO-AUTO** | Product Owner odluka | Automatske / sistemske poslovne posljedice Kalendara kulture (npr. cascade otkazivanja, automatski završetak) | BM / FS / TS-003 / TS-004 / TS-010 | PO-AUTO-01, PO-AUTO-02 |
-| **PO-ORG** | Product Owner odluka | Organizator / Moderator i model pristupa uredničkom portalu; konkretne odluke: **PO-ORG-01…** | TS-001, BM PATCH-054, FS PATCH-FS-054, Feature Registry | PO-ORG-01 |
-| **PO-EV** | Product Owner / implementaciona odluka | Kanonski Event domen (Događaj / Održavanje); postoji npr. **PO-EV-01** | TS-003, IR-001, Feature Registry | PO-EV-01 |
-| **PO-MF** | Product Owner odluka | Manifestacija | Feature Registry / TS-005 | PO-MF-01 |
-| **PO-LOC** | Product Owner odluka | Lokacije | TS-006 | PO-LOC-01 |
-| **PO-OB** | Product Owner odluka | Obavještenja | FT-004 dokumentacija | PO-OB-* |
-| **PO-AL** | Product Owner odluka | Evidencija aktivnosti | TS-010.7 / TS-012 | PO-AL-01 |
-| **PO-DASH** | Product Owner odluka | Dashboard | TS-010.6 | PO-DASH-01 |
-| **PO-TS9** | Product Owner odluka | U okviru TS-009 | TS-009 / Feature Registry | PO-TS9-03A |
-| **PO-6A** | Product Owner odluka | Faza 6A — javni portal Događaja | TS-009 / Feature Registry | PO-6A09-01, PO-6A11-01 |
-| **PO-6B** | Product Owner odluka | Faza 6B — Manifestacije (domen / portal / Pretraga) | BM / FS / TS-005 / TS-009 / Feature Registry | PO-6B-01…05, PO-6B-08, PO-6B-09, PO-6B-10 |
-| **PO-CR3** / **PO-CR4A** / **PO-CR4B** | Product Owner odluka | Vezane za CR-003 / CR-004A / CR-004B | TS-009 / IS-001 | PO-CR4A-01 |
-| **PO-N-TR** | Product Owner odluka | Zatvara / precizira N-TR pitanje | TS-004 | PO-N-TR-02-01; **PO-N-TR-02-04** |
-| **TS7-PO** | Product Owner odluka | Kategorije i oznake (TS-007) | TS-007 | TS7-PO-01 |
-| **TS8-** | Product / tehnička odluka | Mediji (TS-008) — **ZASTARJELO / SUPERSEDED** MED-01–MED-28 | TS-008 (istorijski) | TS8-01 |
-| **MED** / **MED-*** | Product Owner paket odluka | Naslovna fotografija Događaja i Manifestacije u Kalendaru kulture. **AKTIVNO** (ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED). Finalni vizuelni set dijelova fallback asseta ostaje projektni follow-up (nije nova RG skraćenica). | BM PATCH-075 / PATCH-076 / FS PATCH-FS-075 / PATCH-FS-076 / TS-003/005/007/009/010 | MED-01 |
-| **N-DG** | Otvoreno pitanje / napomena | Događaj | TS-003 / TS-010 | N-DG-02, N-DG-04 |
-| **N-MF** | Otvoreno pitanje / napomena | Manifestacija | TS-005 | N-MF-01 |
-| **N-TR** | Otvoreno pitanje / napomena | Održavanje | TS-004 | N-TR-02 |
-| **G-** / **G-nn** | GAP / nalaz | Gap u TS-010 (urednički portal) | TS-010 | G-11 |
-| **G-W** / **G-Wnn** | GAP / workflow nalaz | Workflow gap u TS-010; **G-W02** = otkazivanje Objavljenog događaja čini aktivni prijedlog izmjene neoperativnim | TS-010 §7.12 | G-W02 |
-| **G-NL** | GAP / nalaz | Newsletter | TS-011 | G-NL-08 |
-| **CR** | Change Request | Odobrena izmjena implementacije | Change Request Register / IS-001 | CR-001 |
-| **TD** / **TD-TS9** | Tehnička odluka | Technical Decision u TS | TS-009 | TD-TS9-01 |
-| **TM-** | Test | Test Matrix scenario | TS-010.8; TS-009 §18 | TM-PUB-06; TM-JP-01 |
-| **T10-** | Implementacioni marker | Implementacioni zadaci / markeri zatvaranja **TS-010** (Urednički portal); nije Feature ID niti TM scenario | Feature Registry / TS-010 | T10-WF-01, T10-GEN-01 |
-| **QA** / **QA-TS0108** | QA odluka | Quality Assurance prolaz | TS-010.8 | QA-TS0108-01 |
-| **AC-NL** | Acceptance Criteria | Newsletter | TS-011 | AC-NL-01 |
-| **V-NL** | Validation | Validaciono pravilo — Newsletter | TS-011 | V-NL-01 |
-| **DM-** | Dashboard | Kategorija Moderatora — vidi §2.7 | TS-010.6 | DM-01 |
-| **DU-** | Dashboard | Kategorija Urednika — vidi §2.7 | TS-010.6 | DU-01 |
-| **FR-OB** / **UC-OB** / **OFD-OB** / **NC-OB** | FR / UC / OFD / negative case | Obavještenja | FS/UC Obavještenja | FR-OB-001 |
-| **C-UC-OB** | Candidate use case | Obavještenja | UC Obavještenja | C-UC-OB-001 |
-| **FS-OB-FLOW** | Tok u FS | Obavještenja | FS Obavještenja | FS-OB-FLOW-01 |
-| **KON-LOC** | Konflikt / konzistentnost | Lokacije | TS-006 | KON-LOC-01 |
+| **PO-AUTO** | Product Owner odluka | Automatske / sistemske poslovne posljedice Kalendara kulture (npr. cascade otkazivanja, automatski završetak) | BM / FS / KK-TS-003 / KK-TS-004 / KK-TS-010 | PO-AUTO-01, PO-AUTO-02 |
+| **PO-ORG** | Product Owner odluka | Organizator / Moderator i model pristupa uredničkom portalu; konkretne odluke: **PO-ORG-01…** | KK-TS-001, BM PATCH-054, FS PATCH-FS-054, Feature Registry | PO-ORG-01 |
+| **PO-EV** | Product Owner / implementaciona odluka | Kanonski Event domen (Događaj / Održavanje); postoji npr. **PO-EV-01** | KK-TS-003, KK-IR-001, Feature Registry | PO-EV-01 |
+| **PO-MF** | Product Owner odluka | Manifestacija | Feature Registry / KK-TS-005 | PO-MF-01 |
+| **PO-LOC** | Product Owner odluka | Lokacije | KK-TS-006 | PO-LOC-01 |
+| **PO-AL** | Product Owner odluka | Evidencija aktivnosti | KK-TS-010.7 / KK-TS-012 | PO-AL-01 |
+| **PO-DASH** | Product Owner odluka | Dashboard | KK-TS-010.6 | PO-DASH-01 |
+| **PO-TS9** | Product Owner odluka | U okviru KK-TS-009 | KK-TS-009 / Feature Registry | PO-TS9-03A |
+| **PO-6A** | Product Owner odluka | Faza 6A — javni portal Događaja | KK-TS-009 / Feature Registry | PO-6A09-01, PO-6A11-01 |
+| **PO-6B** | Product Owner odluka | Faza 6B — Manifestacije (domen / portal / Pretraga) | BM / FS / KK-TS-005 / KK-TS-009 / Feature Registry | PO-6B-01…05, PO-6B-08, PO-6B-09, PO-6B-10 |
+| **PO-CR3** / **PO-CR4A** / **PO-CR4B** | Product Owner odluka | Vezane za CR-003 / CR-004A / CR-004B | KK-TS-009 / KK-IS-001 | PO-CR4A-01 |
+| **PO-N-TR** | Product Owner odluka | Zatvara / precizira N-TR pitanje | KK-TS-004 | PO-N-TR-02-01; **PO-N-TR-02-04** |
+| **TS7-PO** | Product Owner odluka | Kategorije i oznake (KK-TS-007) | KK-TS-007 | TS7-PO-01 |
+| **TS8-** | Product / tehnička odluka | Mediji (KK-TS-008) — **ZASTARJELO / SUPERSEDED** MED-01–MED-28 | KK-TS-008 (istorijski) | TS8-01 |
+| **MED** / **MED-*** | Product Owner paket odluka | Naslovna fotografija Događaja i Manifestacije u Kalendaru kulture. **AKTIVNO** (ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED). Finalni vizuelni set dijelova fallback asseta ostaje projektni follow-up (nije nova RG skraćenica). | BM PATCH-075 / PATCH-076 / FS PATCH-FS-075 / PATCH-FS-076 / KK-TS-003/005/007/009/010 | MED-01 |
+| **N-DG** | Otvoreno pitanje / napomena | Događaj | KK-TS-003 / KK-TS-010 | N-DG-02, N-DG-04 |
+| **N-MF** | Otvoreno pitanje / napomena | Manifestacija | KK-TS-005 | N-MF-01 |
+| **N-TR** | Otvoreno pitanje / napomena | Održavanje | KK-TS-004 | N-TR-02 |
+| **G-** / **G-nn** | GAP / nalaz | Gap u KK-TS-010 (urednički portal) | KK-TS-010 | G-11 |
+| **G-W** / **G-Wnn** | GAP / workflow nalaz | Workflow gap u KK-TS-010; **G-W02** = otkazivanje Objavljenog događaja čini aktivni prijedlog izmjene neoperativnim | KK-TS-010 §7.12 | G-W02 |
+| **G-NL** | GAP / nalaz | Newsletter | KK-TS-011 | G-NL-08 |
+| **CR** | Change Request | Odobrena izmjena implementacije | Change Request Register / KK-IS-001 | CR-001 |
+| **TD** / **TD-TS9** | Tehnička odluka | Technical Decision u TS | KK-TS-009 | TD-TS9-01 |
+| **TM-** | Test | Test Matrix scenario | KK-TS-010.8; KK-TS-009 §18 | TM-PUB-06; TM-JP-01 |
+| **T10-** | Implementacioni marker | Implementacioni zadaci / markeri zatvaranja **KK-TS-010** (Urednički portal); nije Feature ID niti TM scenario | Feature Registry / KK-TS-010 | T10-WF-01, T10-GEN-01 |
+| **QA** / **QA-TS0108** | QA odluka | Quality Assurance prolaz | KK-TS-010.8 | QA-TS0108-01 |
+| **AC-NL** | Acceptance Criteria | Newsletter | KK-TS-011 | AC-NL-01 |
+| **V-NL** | Validation | Validaciono pravilo — Newsletter | KK-TS-011 | V-NL-01 |
+| **DM-** | Dashboard | Kategorija Moderatora — vidi §2.7 | KK-TS-010.6 | DM-01 |
+| **DU-** | Dashboard | Kategorija Urednika — vidi §2.7 | KK-TS-010.6 | DU-01 |
+| **KON-LOC** | Konflikt / konzistentnost | Lokacije | KK-TS-006 | KON-LOC-01 |
 
 **G- ≠ G-W ≠ G-NL:** zajedničko slovo „G“, različiti namespace-i i značenja.
 
@@ -205,36 +222,52 @@ Prefiksi se **ne** spajaju u jednu generičku oznaku. Svaki ima svoj namespace.
 | **BR** | U FS se koristi kao identifikator pravila (`BR-*`). Kanonska skraćenica ostaje **BR** = Business Rule. |
 | **OFD** | Kanonski: **Open Finding** (`OFD-*`). |
 | **UR-** vs **BM-UR** | **BM-UR-*** = pravila Urednika u Kalendaru kulture. Prefiks **UR-** (bez BM-) **nije** KK prefiks i nije dio ovog registra. |
-| **G-** vs **G-W** vs **G-NL** | **G-nn** = gap u TS-010; **G-Wnn** = workflow gap u TS-010; **G-NL-*** = gap Newsletter. |
+| **G-** vs **G-W** vs **G-NL** | **G-nn** = gap u KK-TS-010; **G-Wnn** = workflow gap u KK-TS-010; **G-NL-*** = gap Newsletter. |
 | **PO** | Označava Product Owner ulogu i prefiks product odluka (`PO-*`). |
 | **BM, FS, TS, IS, IR, CR, TO, FT, IA, TD, UC, UI, API, URL, V1, NFR, FK, CRUD, M-TS, RG, PATCH, QA, AC, GAP, MF, OCC, SSOT, CTA, KK, CAT-CUTOVER** | Nema drugog dokumentacionog značenja u pregledanom korpusu. |
 
 Nema drugih skraćenica u ovom dokumentu sa dva **konkurentna** kanonska značenja pored navedenih napomena.
 
-## 2.6 Mapa TS-001 … TS-012
+## 2.6 Mapa KK-TS dokumenata
 
-Kanonski nazivi prema Feature Registry / odgovarajućim TS dokumentima. Globalna numeracija (M-TS-002).
+Kanonski nazivi prema Feature Registry / odgovarajućim TS dokumentima. Lokalna numeracija unutar `KK-*` (M-TS-002). `KK-TS-002` nije dodijeljen. `KK-TS-013` ne postoji (`TS-013` = Obavještenja, platforma).
 
-| Oznaka | Modul |
-|--------|--------|
-| **TS-001** | Organizator, Moderator i zahtjev za kreiranje Organizatora |
-| **TS-002** | Nije dio dokumentacionog plana Kalendara kulture; oznaka je zauzeta van ovog modula. |
-| **TS-003** | Događaj |
-| **TS-004** | Održavanje događaja |
-| **TS-005** | Manifestacija |
-| **TS-006** | Lokacije |
-| **TS-007** | Kategorije i oznake |
-| **TS-008** | Mediji — **historijski / SUPERSEDED** (MED-01–MED-28); nije aktivni V1 SSOT |
-| **TS-009** | Javni portal |
-| **TS-010** | Urednički portal (podcjeline TS-010.1 … TS-010.8) |
-| **TS-011** | Newsletter |
-| **TS-012** | Evidencija aktivnosti |
+| Oznaka | Dokument |
+|--------|----------|
+| **KK-TS-001** | Organizator, Moderator i zahtjev za kreiranje Organizatora |
+| **KK-TS-002** | Nije dodijeljen (dokument nije kreiran) |
+| **KK-TS-003** | Događaj |
+| **KK-TS-004** | Održavanje događaja |
+| **KK-TS-005** | Manifestacija |
+| **KK-TS-006** | Lokacije |
+| **KK-TS-007** | Kategorije i oznake |
+| **KK-TS-008** | Mediji — **historijski / SUPERSEDED** (MED-01–MED-28); nije aktivni V1 SSOT |
+| **KK-TS-009** | Javni portal |
+| **KK-TS-010** | Urednički portal (podcjeline KK-TS-010.1 … KK-TS-010.8) |
+| **KK-TS-011** | Newsletter |
+| **KK-TS-012** | Evidencija aktivnosti |
+
+## 2.6a Runtime dual-key (`source_module`)
+
+Dokumentacioni ID može biti `KK-TS-003`, dok postojeći runtime/persistirani ključ `source_module = TS-003` ostaje nepromijenjen radi kompatibilnosti i predstavlja tehnički runtime identifikator, ne kanonski dokumentacioni ID.
+
+Isti princip važi za ostale postojeće runtime `source_module` vrijednosti:
+
+| Dokumentacioni ID | Runtime `source_module` |
+|-------------------|-------------------------|
+| `KK-TS-001` | `TS-001` |
+| `KK-TS-003` | `TS-003` |
+| `KK-TS-004` | `TS-004` |
+| `KK-TS-005` | `TS-005` |
+| `KK-TS-011` | `TS-011` |
+
+`TS12-*` ostaju tehnički identifikatori kataloga Evidencije aktivnosti (nisu dokumentacioni ID-evi `KK-TS-*`).
 
 ## 2.7 Dashboard oznake — DU / DM
 
-**DU** = Dashboard Urednika / kategorija uredničke radne table (TS-010.6).
+**DU** = Dashboard Urednika / kategorija uredničke radne table (KK-TS-010.6).
 
-| Oznaka | Naziv (TS-010) |
+| Oznaka | Naziv (KK-TS-010) |
 |--------|----------------|
 | **DU-01** | Čeka pregled (događaji) |
 | **DU-02** | Prijedlozi izmjene na pregledu |
@@ -242,19 +275,19 @@ Kanonski nazivi prema Feature Registry / odgovarajućim TS dokumentima. Globalna
 | **DU-04** | Zahtjevi za Organizatora |
 | **DU-05** | Zahtjevi za Moderatore |
 
-**DM** = Dashboard Moderatora (TS-010.6).
+**DM** = Dashboard Moderatora (KK-TS-010.6).
 
-| Oznaka | Naziv (TS-010) |
+| Oznaka | Naziv (KK-TS-010) |
 |--------|----------------|
 | **DM-01** | Nacrti |
 | **DM-02** | Na odobrenju |
 | **DM-03** | Aktivni prijedlozi izmjene |
 
-Detaljna semantika brojača i filtera ostaje u **TS-010**; RG-001 samo identifikuje oznake.
+Detaljna semantika brojača i filtera ostaje u **KK-TS-010**; KK-RG-001 samo identifikuje oznake.
 
 ## 2.8 Referenca na poslovne pojmove i statuse
 
-RG-001 **ne** definiše lifecycle ni poslovne pojmove.
+KK-RG-001 **ne** definiše lifecycle ni poslovne pojmove.
 
 Statusi i termini kao što su: Nacrt, Na odobrenju, Objavljen, Otkazan, Arhiviran, Planiran, Odgođen, Završen, Aktivna, Neaktivna, Deaktivirana — definišu se u:
 
@@ -266,7 +299,7 @@ Statusi i termini kao što su: Nacrt, Na odobrenju, Objavljen, Otkazan, Arhivira
 
 # 3. Referentni dokumenti
 
-### RG-001-03 — Struktura (dio B)
+### KK-RG-001-03 — Struktura (dio B)
 
 Samo orijentacija — **ne** prepisuje sadržaj BM/FS/TS/IS/IR.
 
@@ -276,13 +309,13 @@ Samo orijentacija — **ne** prepisuje sadržaj BM/FS/TS/IS/IR.
 | **Functional Specification (FS)** | Šta sistem mora raditi (BR / FR). | Kada treba funkcionalno ponašanje, bez koda. |
 | **Technical Specification (TS)** | Kako se usvojeni BM/FS tehnički razrađuju. | Prije implementacije ili tehničkog review-a. |
 | **Implementation Strategy (IS)** | Kako se TS uvodi u produkciju (faze, rizik, isporuka). | Prije početka implementacionog rada na stabilnoj TS. |
-| **Implementation Roadmap (IR)** | Operativni redoslijed i faze realizacije (npr. IR-001). | Pri planiranju / praćenju implementacije Kalendara kulture. |
-| **Feature Registry** | Registar funkcionalnosti (**FT-ID**); **nije** skraćenica FR. | Orijentacija: koji Feature / TS postoje i status. |
-| **Change Request (CR)** | Evidencija odobrenih izmjena implementacije. | Prije usklađivanja koda sa FS. |
+| **Implementation Roadmap (IR)** | Operativni redoslijed i faze realizacije (npr. KK-IR-001). | Pri planiranju / praćenju implementacije Kalendara kulture. |
+| **Feature Registry (`KK-FR-001`)** | Registar funkcionalnosti (**FT-ID**); **nije** skraćenica FR. | Orijentacija: koji Feature / TS postoje i status. |
+| **Change Request Register (`KK-CR-REG-001`)** | Evidencija odobrenih izmjena implementacije. Pojedinačni ID-evi ostaju `CR-*`. | Prije usklađivanja koda sa FS. |
 | **Technical Overview (TO)** | Šta je trenutno implementirano i gdje odstupa od BM/FS/TS. | Kada treba stanje implementacije, ne ciljni model. |
 | **Use Cases (UC)** | Korisnički scenariji. | Za scenarije prije FS detalja (gdje postoje). |
 | **Metodologija** (`docs/METHODOLOGY.md`) | Pravila pisanja i odnosa dokumenata (npr. M-TS-*). | Pri pisanju ili reviziji BM/FS/TS. |
-| **RG-001 (ovaj dokument)** | Skraćenice i oznake dokumentacije Kalendara kulture. | Na ulasku u dokumentaciju KK; nije izvor pravila. |
+| **KK-RG-001 (ovaj dokument)** | Skraćenice i oznake dokumentacije Kalendara kulture. | Na ulasku u dokumentaciju KK; nije izvor pravila. |
 
 **Gdje leže u repozitorijumu (orijentacija):**
 
@@ -302,28 +335,28 @@ Samo orijentacija — **ne** prepisuje sadržaj BM/FS/TS/IS/IR.
 
 # 4. Pravila održavanja
 
-### RG-001-04 — Upravljanje
+### KK-RG-001-04 — Upravljanje
 
-* RG-001 **nije** izvor istine za poslovna ili tehnička pravila.
+* KK-RG-001 **nije** izvor istine za poslovna ili tehnička pravila.
 * Prednost imaju vlasnički dokumenti: BM, FS, TS, IS, IR, Feature Registry, CR, TO.
 * Nova skraćenica se dodaje tek kada se **stvarno koristi** u usvojenoj dokumentaciji **i** kada je specifična za projekat (vidi Pravilo obuhvata u §1).
-* **Kada se u dokumentaciji Kalendara kulture uvede nova projektna skraćenica ili akronim, Katalog skraćenica (RG-001) mora se ažurirati u istom dokumentacionom paketu.**
-* Skraćenice se ne mijenjaju samostalno u RG-001; prvo se usklađuje referentni dokument.
+* **Kada se u dokumentaciji Kalendara kulture uvede nova projektna skraćenica ili akronim, Katalog skraćenica (KK-RG-001) mora se ažurirati u istom dokumentacionom paketu.**
+* Skraćenice se ne mijenjaju samostalno u KK-RG-001; prvo se usklađuje referentni dokument.
 * Zastarjela skraćenica se ne briše bez traga — označava se kao **ZASTARJELO** i upućuje na važeći naziv.
-* U RG-001 se **ne** unose: poslovni pojmovnik; opšte tehničke/industrijske skraćenice; poslovni termini koji nisu skraćenice.
+* U KK-RG-001 se **ne** unose: poslovni pojmovnik; opšte tehničke/industrijske skraćenice; poslovni termini koji nisu skraćenice.
 * Ako paket eksplicitno zabranjuje izmjene dokumentacije, a uvede novu skraćenicu: prijavi `ABBREVIATION CATALOG UPDATE REQUIRED` i ne krši scope.
 
-### RG-001-05 — Održavanje
+### KK-RG-001-05 — Održavanje
 
-RG-001 se ažurira samo kada:
+KK-RG-001 se ažurira samo kada:
 
 * nastane nova **interna** standardna skraćenica projekta;
 * nastane novi tip referentnog dokumenta;
 * promijeni se zvanični naziv ili skraćenica;
 * skraćenica postane zastarjela;
-* dokumentacioni paket uvodi novu projektnu skraćenicu (vidi RG-001-04).
+* dokumentacioni paket uvodi novu projektnu skraćenicu (vidi KK-RG-001-04).
 
-RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, kategorija, statusa, uloga ili pojedinačnih modula — osim ako uvedu **novu internu skraćenicu**.
+KK-RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, kategorija, statusa, uloga ili pojedinačnih modula — osim ako uvedu **novu internu skraćenicu**.
 
 ---
 
@@ -347,7 +380,8 @@ RG-001 se **ne** ažurira zbog: novih funkcionalnosti, poslovnih pravila, katego
 | 1.1.10 | 2026-08-15 | **MED / MED-*:** registracija PO paketa naslovne fotografije (primjer MED-01). **TS8-** → ZASTARJELO / SUPERSEDED (sljedivost ka MED). **BM-MD** → TS8 model ZASTARJELO; BM-MD-18–36 aktivna naslovna fotografija. **TS-008** u mapi TS → historijski/supersedovan. Usklađeno sa BM PATCH-075 / FS PATCH-FS-075. Bez izmjene implementacije. |
 | 1.1.11 | 2026-08-16 | **MED status hygiene (nema nove skraćenice):** AKTIVNO polje MED ažurirano na IMPLEMENTATION COMPLETE / VERIFIED. MED-I1/I2/I3/I4A/I4B/I5 **nisu** registrovani (radni nazivi implementacionih paketa). TS8- / TS-008 SUPERSEDED KEEP. |
 | 1.1.12 | 2026-08-16 | **Module boundary:** uklonjene aktivne oznake drugog Digital Kotor modula (BP, BR-P, P-, F-, UR- kao Plaćanje). **TS-002** u mapi TS = numeraciona granica (nije dio KK plana; oznaka zauzeta van ovog modula). Bez opisa sadržaja drugog modula. Feature Registry ovog registra = Kalendar kulture. Bez izmjene implementacije. |
+| 1.1.13 | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Registrovani `KK-BM` / `KK-FS` / `KK-TS` / `KK-IS` / `KK-IR` / `KK-RG` / `KK-FR` / `KK-CR-REG`. Runtime dual-key (`source_module`). `KK-TS-002` nije dodijeljen. FT-004 / Obavještenja uklonjeni iz aktivnog KK kataloga. PATCH / PATCH-FS KEEP. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 ---
 
-**Kraj dokumenta RG-001 v1.1.12 (Stable)**
+**Kraj dokumenta KK-RG-001 v1.1.13 (Stable)**

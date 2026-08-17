@@ -3,7 +3,7 @@
 ## Kategorije i oznake
 
 **Feature ID:** FT-001
-**Oznaka dokumenta:** TS-007
+**Oznaka dokumenta:** KK-TS-007
 **Funkcionalna cjelina:** Kategorije i oznake
 **Modul:** Kalendar kulture
 **Status dokumenta:** Usvojen
@@ -21,6 +21,7 @@
 | 0.1.2 | 2026-08-09 | **Faza 6A / PO-TS9-08E:** javni CAT-CUTOVER bez migracije legacy sadržaja i bez alias mape (PO-EV-01); preduslov 14 kategorija u `cultural_categories`; tehnički ugovor u TS-009. Bez implementacije seed/migracije. |
 | 0.1.3 | 2026-08-15 | **MED-27 / MED-08:** 14 kanonskih kategorija imaju statičke Git-verzionisane vizuelne resurse aplikacije kao fallback Događaja; **nije** `CulturalMedia` veza; nema upload UI-ja za kategorijske fotografije. Katalog Oznaka Događaja KEEP. TS-008 SUPERSEDED. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
 | 0.1.4 | 2026-08-16 | **MED documentation closeout:** fallback **resolver** COMPLETE / VERIFIED. **Ne** tvrdi se da svih 14 dedicated fotografija postoji fizički. MED-I4B = DEFERRED / NON-BLOCKING. MISSING: Dječiji programi, Konferencije, Sajmovi. AMBIGUOUS (bez automatske PO odluke o legacy JPG): Književni programi, Publikacije, Prezentacije i predavanja, Paneli i tribine. Oznake Događaja KEEP. |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 ---
 
@@ -28,7 +29,7 @@
 
 Ovaj dokument opisuje tehničku realizaciju funkcionalne cjeline **Kategorije i oznake** u okviru FT-001 – Kalendar kulture.
 
-TS-007:
+KK-TS-007:
 
 * ne uvodi nova poslovna pravila;
 * ne mijenja Business Model ni Functional Specification;
@@ -68,9 +69,9 @@ Izvori istine:
 
 # Pravila upravljanja ovim dokumentom
 
-1. TS-007 pripada FT-001 – Kalendar kulture.
+1. KK-TS-007 pripada FT-001 – Kalendar kulture.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM i FS.
-3. Nova poslovna pravila se ne uvode kroz TS-007.
+3. Nova poslovna pravila se ne uvode kroz KK-TS-007.
 4. Izmjene usvojenog sadržaja evidentiraju se novom verzijom dokumenta i odgovarajućim PATCH-om BM/FS, gdje je primjenjivo.
 
 ---
@@ -85,7 +86,7 @@ Oznaka je zapis poslovnog kataloga koji predstavlja dodatnu klasifikaciju Događ
 
 ## 1.2 Obuhvat dokumenta
 
-TS-007 obuhvata:
+KK-TS-007 obuhvata:
 
 * poslovni katalog Kategorija;
 * poslovni katalog Oznaka;
@@ -98,13 +99,13 @@ TS-007 obuhvata:
 
 ## 1.3 Zavisnosti
 
-| Zavisnost | Uloga u odnosu na TS-007 |
+| Zavisnost | Uloga u odnosu na KK-TS-007 |
 |-----------|---------------------------|
-| TS-001 Organizator / Moderator | Moderator radi u ime Organizatora; Organizator nije operativna uloga |
-| TS-003 Događaj | Događaj referencira primarnu kategoriju i opciono oznake |
-| TS-005 Manifestacija | Manifestacija nema sopstvene kategorije ni oznake; eventualni portalni prikaz je izveden iz Događaja |
-| TS-010 Urednički portal | Operativni UI za upravljanje katalogom (Urednik) i izbor pri događaju (Moderator/Urednik) |
-| TS-012 Evidencija aktivnosti | Centralna evidencija poslovno značajnih radnji nad katalogom (gdje je u opsegu) |
+| KK-TS-001 Organizator / Moderator | Moderator radi u ime Organizatora; Organizator nije operativna uloga |
+| KK-TS-003 Događaj | Događaj referencira primarnu kategoriju i opciono oznake |
+| KK-TS-005 Manifestacija | Manifestacija nema sopstvene kategorije ni oznake; eventualni portalni prikaz je izveden iz Događaja |
+| KK-TS-010 Urednički portal | Operativni UI za upravljanje katalogom (Urednik) i izbor pri događaju (Moderator/Urednik) |
+| KK-TS-012 Evidencija aktivnosti | Centralna evidencija poslovno značajnih radnji nad katalogom (gdje je u opsegu) |
 
 ## 1.4 Veza sa BM / FS / PO
 
@@ -112,7 +113,7 @@ TS-007 obuhvata:
 TS7-PO-01..07
   -> BM-08 Kategorije i oznake, BM-GL-14, BM-GL-23
   -> FS §5.10 (BR-081..085, BR-224..236, BR-277..279)
-  -> TS-007 (ovaj dokument)
+  -> KK-TS-007 (ovaj dokument)
 ```
 
 ---
@@ -135,7 +136,7 @@ Katalog je proširiv dodavanjem novih zapisa od strane Urednika.
 | **Početni V1 sadržaj (PO)** | Usvojeni skup od **14** naziva (BM-KO-09 / BR-277) sa kojim V1 ulazi u produkcijski/cutover režim |
 | **Legacy lista** | `CulturalEvent::CATEGORIES` / ENUM string — **nije** kanonski izvor istine |
 
-Početni V1 sadržaj **nije** ENUM. Urednik i dalje može proširiti katalog. Obezbjeđivanje početnog sadržaja u bazi prije cutover-a je preduslov za TS-009; **način** (seed, ručni unos, migracija) **nije** propisan ovim dokumentom i ne implementira se ovdje.
+Početni V1 sadržaj **nije** ENUM. Urednik i dalje može proširiti katalog. Obezbjeđivanje početnog sadržaja u bazi prije cutover-a je preduslov za KK-TS-009; **način** (seed, ručni unos, migracija) **nije** propisan ovim dokumentom i ne implementira se ovdje.
 
 ## 2.2 Razdvajanje pojmova i uloga
 
@@ -153,7 +154,7 @@ Oznake su dio V1. Nisu zamjena za primarnu kategoriju.
 
 Ne radi se migracija postojećih test podataka kao referentni katalog. Ne uvodi se kompatibilnost sa starim modelom kao trajni dual model. Ne pravi se tranzicioni ENUM+FK model. Postojeće test kategorije nisu referentni poslovni podaci. Katalog se definiše kao novi poslovni katalog.
 
-**Napomena (TS-009 Faza 6A):** javni portal nakon cutover-a koristi isključivo kanonski `CulturalCategory`. Legacy `CulturalEvent` sadržaj je testni (**PO-EV-01**): **ne** migrira se; **ne** uvodi se URL/legacy alias mapa. Semantičko mapiranje: BM-KO-11 / BR-279 (referentno, ne runtime adapter). Preduslov: 14 usvojenih kategorija u `cultural_categories` (TS-009 §9.4).
+**Napomena (KK-TS-009 Faza 6A):** javni portal nakon cutover-a koristi isključivo kanonski `CulturalCategory`. Legacy `CulturalEvent` sadržaj je testni (**PO-EV-01**): **ne** migrira se; **ne** uvodi se URL/legacy alias mapa. Semantičko mapiranje: BM-KO-11 / BR-279 (referentno, ne runtime adapter). Preduslov: 14 usvojenih kategorija u `cultural_categories` (KK-TS-009 §9.4).
 
 ## 2.5 Bez kategorije „Nešto drugo“
 
@@ -319,9 +320,9 @@ Obavezno:
 
 # 8. Evidencija aktivnosti (Audit)
 
-Poslovno značajne radnje nad katalogom (kreiranje, izmjena, deaktivacija, reaktivacija) evidentiraju se u skladu sa BM-14 / FS §5.16 i budućim TS-012, bez uvođenja novog modela ovlašćenja.
+Poslovno značajne radnje nad katalogom (kreiranje, izmjena, deaktivacija, reaktivacija) evidentiraju se u skladu sa BM-14 / FS §5.16 i budućim KK-TS-012, bez uvođenja novog modela ovlašćenja.
 
-Lokalni tragovi na entitetima Događaja (promjena kategorije/oznaka) ostaju predmet TS-003 / Evidencije događaja.
+Lokalni tragovi na entitetima Događaja (promjena kategorije/oznaka) ostaju predmet KK-TS-003 / Evidencije događaja.
 
 ---
 
@@ -329,11 +330,11 @@ Lokalni tragovi na entitetima Događaja (promjena kategorije/oznaka) ostaju pred
 
 | TS | Ugovor granice |
 |----|-----------------|
-| TS-001 | Moderatorski kontekst; Organizator nije operativna uloga |
-| TS-003 | Primarna kategorija i oznake na Događaju; uslovi slanja/objave |
-| TS-005 | Manifestacija bez sopstvenih kategorija/oznaka |
-| TS-010 | UI kataloga (Urednik) i izbor na obrascu događaja |
-| TS-012 | Centralna Evidencija aktivnosti |
+| KK-TS-001 | Moderatorski kontekst; Organizator nije operativna uloga |
+| KK-TS-003 | Primarna kategorija i oznake na Događaju; uslovi slanja/objave |
+| KK-TS-005 | Manifestacija bez sopstvenih kategorija/oznaka |
+| KK-TS-010 | UI kataloga (Urednik) i izbor na obrascu događaja |
+| KK-TS-012 | Centralna Evidencija aktivnosti |
 
 ---
 
@@ -370,15 +371,15 @@ U V1: oznake jesu u opsegu.
 
 # 12. Otvorena pitanja
 
-Za TS-007 trenutno nema otvorenih pitanja koja blokiraju usvajanje ovog dokumenta.
+Za KK-TS-007 trenutno nema otvorenih pitanja koja blokiraju usvajanje ovog dokumenta.
 
-Napomena: konkretan početni sadržaj kataloga usvojen je odlukom **TS7-PO-07** (BM-KO-09 / BR-277) kao **14** naziva sa redoslijedom. To **nije** fiksna ENUM lista; katalog ostaje proširiv. Javni CAT-CUTOVER = **TS-009 Faza 6A** (bez migracije legacy sadržaja).
+Napomena: konkretan početni sadržaj kataloga usvojen je odlukom **TS7-PO-07** (BM-KO-09 / BR-277) kao **14** naziva sa redoslijedom. To **nije** fiksna ENUM lista; katalog ostaje proširiv. Javni CAT-CUTOVER = **KK-TS-009 Faza 6A** (bez migracije legacy sadržaja).
 
 ---
 
 # 13. Matrica sljedivosti
 
-| PO | BM | FS | TS-007 |
+| PO | BM | FS | KK-TS-007 |
 |----|----|----|--------|
 | TS7-PO-01 | BM-KO-01 | BR-081, BR-224, BR-235 | §2.1, §3.1, §10.2 |
 | TS7-PO-02 | BM-KO-03, BM-GL-23 | BR-083, BR-236 | §2.3, §3.2, §3.4, §11 |
@@ -398,5 +399,5 @@ Napomena: konkretan početni sadržaj kataloga usvojen je odlukom **TS7-PO-07** 
 4. Ne uvoditi dual-write / tranzicioni ENUM+FK model u ovom dokumentu.
 5. Implementacija mora ostati usklađena sa: Organizator = entitet; Moderator = ovlašćenje; Urednik = upravlja katalogom; Administrator platforme = sistemska administracija.
 6. Fallback fotografije 14 kanonskih kategorija su **statički Git-verzionisani vizuelni resursi aplikacije** (MED-27). **Nisu** `CulturalMedia` veza niti `category_default` Media zapis. Nema upload UI-ja za kategorijske fotografije. Mapiranje se veže na katalogski zapis (kanonski naziv), ne na ENUM string kao izvor istine. Resolver mapira samo **READY** dedicated fajlove; MISSING/AMBIGUOUS padaju na globalni Event placeholder. **MED-I4B** finalni vizuelni set = DEFERRED / NON-BLOCKING — **nije** tvrdnja da 14/14 dedicated fotografija postoji u repo-u.
-7. **TS7-PO-07:** početni V1 sadržaj = 14 usvojenih naziva (BM-KO-09). Obezbijediti ih u kanonskom katalogu prije TS-009 Faza 6A cutover-a; **način** (seed/ručno/…) nije propisan ovdje.
+7. **TS7-PO-07:** početni V1 sadržaj = 14 usvojenih naziva (BM-KO-09). Obezbijediti ih u kanonskom katalogu prije KK-TS-009 Faza 6A cutover-a; **način** (seed/ručno/…) nije propisan ovdje.
 8. Semantičko mapiranje legacy→kanonski: BM-KO-11 / BR-279 (referentno). **Faza 6A:** bez migracije legacy sadržaja; bez alias mape; javni portal = `CulturalCategory` (PO-TS9-08E / PO-EV-01).

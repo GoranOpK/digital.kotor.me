@@ -1,6 +1,7 @@
 # Digital Kotor
 # Feature Registry — Kalendar kulture
 
+**Oznaka dokumenta:** KK-FR-001
 **Status dokumenta:** AKTIVAN
 **Verzija:** 0.1
 **Scope:** modul Kalendar kulture (nije globalni Feature Registry platforme Digital Kotor)
@@ -34,8 +35,9 @@ Ovaj Feature Registry predstavlja polaznu tačku za sljedivost kroz dokumentacij
 | Feature ID | Naziv            | Status  | Napomena                                      |
 | ---------- | ---------------- | ------- | --------------------------------------------- |
 | FT-001     | Kalendar kulture | Active  | **V1 COMPLETE** (Faze 0–8 + Završna stabilizacija CLOSED). **V1 TECHNICAL VERIFICATION = PASS.** **FINAL FULL REGRESSION = GREEN** (1286/6224/0/0/12 skipped). **BLOCKS V1 CLOSEOUT = NO.** Javni / urednički / Administracija = **ACCEPTED FOR V1 CLOSEOUT**. MED = FORMALLY CLOSED. B3 `cultural_events` physical DROP = **DEFERRED / POST-V1 / NON-BLOCKING**. MED-I4B = DEFERRED / NON-BLOCKING. HEAD `4595a14` = COMMITTED/PUSHED; production deploy ovog HEAD-a **NOT CONFIRMED**. |
-| FT-003     | Evidencija aktivnosti (Kalendar kulture) | Usvojen (TS-012 v1.0.8) — **FAZA 8 CLOSED: IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED** | FS §5.16 + PATCH-FS-074; BM-14; V1 katalog uključuje Manifestacije; van opsega: napredni pregled/filteri, retention, izvoz (BR-188); **nema durable audit replay**; `repeatable()` uniqueness = known V1 limitation |
-| FT-004     | Obavještenja     | Active  | V1 infrastruktura verifikovana testovima; javni panel + `competition_decision_html`; E2E emitovanje iz konkursa i dalje OFD-OB-006 |
+| FT-003     | Evidencija aktivnosti (Kalendar kulture) | Usvojen (KK-TS-012 v1.0.8) — **FAZA 8 CLOSED: IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED** | FS §5.16 + PATCH-FS-074; BM-14; V1 katalog uključuje Manifestacije; van opsega: napredni pregled/filteri, retention, izvoz (BR-188); **nema durable audit replay**; `repeatable()` uniqueness = known V1 limitation |
+
+Aktivni KK Feature Registry scope: **FT-001**, **FT-003**. Istorijski **FT-002** nije član ovog registra (sibling modul). **FT-004 / Obavještenja** nijesu dio Kalendara kulture — platformska funkcionalnost; predmet budućeg `DK-*` corrective-a. Istorijski changelog zapisi FT-004 ostaju kao istorija.
 
 Dozvoljeni statusi:
 
@@ -60,10 +62,10 @@ Svaka funkcionalnost može biti povezana sa:
 Primjer:
 
 FT-001
-→ BM-001
-→ FS-001
+→ KK-BM-001
+→ KK-FS-001
 → CR-001
-→ TS-001
+→ KK-TS-001
 → Test Cases
 → Produkcija
 
@@ -79,7 +81,7 @@ Technical Specification mora biti vezana za odgovarajući Feature ID.
 
 Jedan Feature može biti povezan sa jednim ili više TS dokumenata.
 
-TS dokumenti Kalendara kulture koriste globalnu platformsku numeraciju (M-TS-002). **TS-002 nije dio dokumentacionog plana Kalendara kulture** (oznaka je zauzeta van ovog modula).
+Dokumentacioni identifikatori Kalendara kulture koriste namespace `KK-*` (M-TS-002). Numeracija je lokalna unutar tog namespace-a. `KK-TS-002` trenutno **nije dodijeljen** (lokalni broj 002 je neiskorišćen; nije rezervisan za e-Plaćanje). e-Plaćanje koristi sopstveni `EP-*` namespace.
 
 Na ovaj način svaka funkcionalnost može biti praćena od poslovne ideje do produkcije.
 
@@ -99,54 +101,54 @@ Active
 
 Napomena:
 
-FT-001 je aktivan modul. **Kalendar kulture V1 = COMPLETE** (Faze 0–8 + Završna stabilizacija **CLOSED**; IR-001 v1.0.25). **V1 FUNCTIONAL IMPLEMENTATION = COMPLETE.** **V1 TECHNICAL VERIFICATION = PASS.** **V1 FULL-SYSTEM CROSS-VALIDATION = PASS** (active conflicts = 0). **FINAL FULL REGRESSION = GREEN** (PHPUnit 11.5.39; PHP 8.3.21; GD=yes; WebP=yes; 1286 tests / 6224 assertions / 0 failed / 0 errors / 12 skipped Imagick-environment; MED-critical skipped = 0). **BLOCKS V1 CLOSEOUT = NO.** **Javni portal** = ACCEPTED FOR V1 CLOSEOUT. **Urednički portal** = ACCEPTED FOR V1 CLOSEOUT. **Administracija** = ACCEPTED FOR V1 CLOSEOUT (ADMIN-AUDIT-01 CLOSED via `4595a14`; ADMIN-AUDIT-02 TEST GAP / NON-BLOCKING; ADMIN-AUDIT-04 LOW / NON-BLOCKING). **MED** = FORMALLY CLOSED. **B3** = DEFERRED / NON-BLOCKING / POST-V1. **MED-I4B** = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. Repository HEAD `4595a14` = COMMITTED / PUSHED; **production deploy ovog HEAD-a = NOT CONFIRMED**. **Faza 6A — Javni portal Događaja** — **CLOSED** (canonical-only SSOT; B1+B2 PRODUCTION VERIFIED / CLOSED; categories **14/14 PASS**; dual-read/write = 0). **6A residual Package A** (`cultural-calendar.day`): **CLOSED** / PRODUCTION VERIFIED — EMPTY-DATE. **Phase B1+B2:** **PRODUCTION VERIFIED / CLOSED**. **kk_admin UX / navigation consolidation:** `Kontrolna tabla` + unified `Zahtjevi` — **IMPLEMENTED / PRODUCTION ACTIVE**. **PO-ORG/MOD rejected request editor cleanup** i **MOD-UX-01** — **IMPLEMENTED / PRODUCTION ACTIVE** (historical changelog redovi „NOT DEPLOYED“ ostaju tačni za datum unosa). TS-010 → **v1.0.14**. **Faza 6B — Manifestacije:** **FORMALLY CLOSED / PRODUCTION ACCEPTED** (WITH LIMITED CONTENT-SMOKE COVERAGE).
+FT-001 je aktivan modul. **Kalendar kulture V1 = COMPLETE** (Faze 0–8 + Završna stabilizacija **CLOSED**; KK-IR-001 v1.0.25). **V1 FUNCTIONAL IMPLEMENTATION = COMPLETE.** **V1 TECHNICAL VERIFICATION = PASS.** **V1 FULL-SYSTEM CROSS-VALIDATION = PASS** (active conflicts = 0). **FINAL FULL REGRESSION = GREEN** (PHPUnit 11.5.39; PHP 8.3.21; GD=yes; WebP=yes; 1286 tests / 6224 assertions / 0 failed / 0 errors / 12 skipped Imagick-environment; MED-critical skipped = 0). **BLOCKS V1 CLOSEOUT = NO.** **Javni portal** = ACCEPTED FOR V1 CLOSEOUT. **Urednički portal** = ACCEPTED FOR V1 CLOSEOUT. **Administracija** = ACCEPTED FOR V1 CLOSEOUT (ADMIN-AUDIT-01 CLOSED via `4595a14`; ADMIN-AUDIT-02 TEST GAP / NON-BLOCKING; ADMIN-AUDIT-04 LOW / NON-BLOCKING). **MED** = FORMALLY CLOSED. **B3** = DEFERRED / NON-BLOCKING / POST-V1. **MED-I4B** = DEFERRED / NON-BLOCKING PROJECT ASSET WORK. Repository HEAD `4595a14` = COMMITTED / PUSHED; **production deploy ovog HEAD-a = NOT CONFIRMED**. **Faza 6A — Javni portal Događaja** — **CLOSED** (canonical-only SSOT; B1+B2 PRODUCTION VERIFIED / CLOSED; categories **14/14 PASS**; dual-read/write = 0). **6A residual Package A** (`cultural-calendar.day`): **CLOSED** / PRODUCTION VERIFIED — EMPTY-DATE. **Phase B1+B2:** **PRODUCTION VERIFIED / CLOSED**. **kk_admin UX / navigation consolidation:** `Kontrolna tabla` + unified `Zahtjevi` — **IMPLEMENTED / PRODUCTION ACTIVE**. **PO-ORG/MOD rejected request editor cleanup** i **MOD-UX-01** — **IMPLEMENTED / PRODUCTION ACTIVE** (historical changelog redovi „NOT DEPLOYED“ ostaju tačni za datum unosa). KK-TS-010 → **v1.0.14**. **Faza 6B — Manifestacije:** **FORMALLY CLOSED / PRODUCTION ACCEPTED** (WITH LIMITED CONTENT-SMOKE COVERAGE).
 
-**Newsletter (u okviru FT-001):** **FAZA 7 / TS-011 = FORMALLY CLOSED.** Kanonska pretplata na `User` (nije automatska pri registraciji); jedna pretplata po korisniku; režimi „Svi događaji“ i „Odabrani organizatori“ + „Bez organizatora“; aktivacija bez dodatnog e-mail confirmationa; odjava/reaktivacija nad istim zapisom; preference samo ubuduće; aktivna pretplata ≠ dozvoljena isporuka; nema praznog Newslettera. Regular `cultural-calendar:send-newsletter` (6h) + priority `cultural-calendar:send-newsletter-priority` (5 min). Manifestacija nije kriterijum pretplate u V1. Legacy weekly runtime **disabled**; fizički legacy artefakti KEEP. **Bez** migracije testnih pretplatnika. Settings URI = `/newsletter`. TS-012 emit = **Faza 8 CLOSED**.
+**Newsletter (u okviru FT-001):** **FAZA 7 / KK-TS-011 = FORMALLY CLOSED.** Kanonska pretplata na `User` (nije automatska pri registraciji); jedna pretplata po korisniku; režimi „Svi događaji“ i „Odabrani organizatori“ + „Bez organizatora“; aktivacija bez dodatnog e-mail confirmationa; odjava/reaktivacija nad istim zapisom; preference samo ubuduće; aktivna pretplata ≠ dozvoljena isporuka; nema praznog Newslettera. Regular `cultural-calendar:send-newsletter` (6h) + priority `cultural-calendar:send-newsletter-priority` (5 min). Manifestacija nije kriterijum pretplate u V1. Legacy weekly runtime **disabled**; fizički legacy artefakti KEEP. **Bez** migracije testnih pretplatnika. Settings URI = `/newsletter`. KK-TS-012 emit = **Faza 8 CLOSED**.
 
-**Usvojene poslovne odluke (Događaj — otkazivanje / terminalnost Otkazan):** Dok je Organizator aktivan, Moderator može otkazati objavljeni događaj u aktivnom kontekstu; deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više ne izvršava poslovne radnje nad njegovim događajima — otkazivanje tada isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj (BM PATCH-035/036: BM-ORG-12, BM-DG-05, BM-ST-07, BM-MOD-16, BM-UR-11; FS PATCH-FS-037/038: BR-007, BR-049, BR-050, BR-063). **PO-DG-07 / BM PATCH-053 / FS PATCH-FS-053** (superseduje isključivo dio PATCH-035 / N-DG-01 koji je dozvoljavao Otkazan → Objavljen): status **Otkazan** je terminalan za povratak u **Objavljen**; prelaz Otkazan → Objavljen nije dozvoljen; isti kulturni program kasnije = **novi** događaj (novi zapis); **Odgođen** na održavanju = jedini mehanizam promjene termina postojećeg (neotkazanog) događaja (BM-TR-12, BR-131); Otkazan = istorijski zapis / forma **read-only**; jedina dozvoljena izmjena = razlog otkazivanja (napomena urednika) — Urednik (BM-DG-09, BM-DG-10, BM-ST-07, BM-ST-09, BM-UR-11; BR-064). Jedini usvojeni statusni izlaz iz Otkazan ostaje Otkazan → Arhiviran (Sistem; BR-065). **PO-AUTO-01 / BM PATCH-055 / FS PATCH-FS-055:** pri Objavljen → Otkazan, Planirana i Odgođena Održavanja automatski postaju Otkazana u istoj poslovnoj operaciji (BM-DG-11); Završen/Otkazan Održavanja nepromijenjena. **PATCH-063 / PO-U:** razlog otkazivanja Događaja je **opcion** i ako je unesen **može se javno prikazati** (BM-PK-36 / BR-295); **ne** mijenja terminalnost Otkazan, zabranu republish-a, zabranu delete nakon objave niti historical/read-only sadržaj. Relevantno za TS-003 v0.1.10, TS-004 v0.1.9, TS-009 v1.0.9, TS-010 v1.0.7 (**dokumentaciono usvojeno i implementirano**).
+**Usvojene poslovne odluke (Događaj — otkazivanje / terminalnost Otkazan):** Dok je Organizator aktivan, Moderator može otkazati objavljeni događaj u aktivnom kontekstu; deaktivacijom Organizatora moderatorski kontekst prestaje i Moderator više ne izvršava poslovne radnje nad njegovim događajima — otkazivanje tada isključivo Urednik. Urednik može otkazati bilo koji objavljeni događaj (BM PATCH-035/036: BM-ORG-12, BM-DG-05, BM-ST-07, BM-MOD-16, BM-UR-11; FS PATCH-FS-037/038: BR-007, BR-049, BR-050, BR-063). **PO-DG-07 / BM PATCH-053 / FS PATCH-FS-053** (superseduje isključivo dio PATCH-035 / N-DG-01 koji je dozvoljavao Otkazan → Objavljen): status **Otkazan** je terminalan za povratak u **Objavljen**; prelaz Otkazan → Objavljen nije dozvoljen; isti kulturni program kasnije = **novi** događaj (novi zapis); **Odgođen** na održavanju = jedini mehanizam promjene termina postojećeg (neotkazanog) događaja (BM-TR-12, BR-131); Otkazan = istorijski zapis / forma **read-only**; jedina dozvoljena izmjena = razlog otkazivanja (napomena urednika) — Urednik (BM-DG-09, BM-DG-10, BM-ST-07, BM-ST-09, BM-UR-11; BR-064). Jedini usvojeni statusni izlaz iz Otkazan ostaje Otkazan → Arhiviran (Sistem; BR-065). **PO-AUTO-01 / BM PATCH-055 / FS PATCH-FS-055:** pri Objavljen → Otkazan, Planirana i Odgođena Održavanja automatski postaju Otkazana u istoj poslovnoj operaciji (BM-DG-11); Završen/Otkazan Održavanja nepromijenjena. **PATCH-063 / PO-U:** razlog otkazivanja Događaja je **opcion** i ako je unesen **može se javno prikazati** (BM-PK-36 / BR-295); **ne** mijenja terminalnost Otkazan, zabranu republish-a, zabranu delete nakon objave niti historical/read-only sadržaj. Relevantno za KK-TS-003 v0.1.10, KK-TS-004 v0.1.9, KK-TS-009 v1.0.9, KK-TS-010 v1.0.7 (**dokumentaciono usvojeno i implementirano**).
 
 **Usvojene poslovne odluke (Događaj — direktna objava / arhiviranje):** **PO-DG-05** (N-DG-05 zatvoren; BM PATCH-037 BM-ST-04; FS PATCH-FS-039 BR-018, BR-028; **precizirano PATCH-063 / PO-U**): Direktna objava Urednika dozvoljena je isključivo za Događaj **bez veze sa registrovanim Organizatorom** (`organizer_id` null / nije `CulturalOrganizer`). „Bez Organizatora“ **ne** znači „bez ikakvog naziva Organizatora“ — Urednik može opciono imati ručno upisan naziv neregistrovanog Organizatora (`organizer_manual_name`); taj naziv **ne** utiče na approval i **ne** blokira direct publish kada je publish gate ispunjen. Događaj **sa registrovanim Organizatorom** ide isključivo Nacrt → Na odobrenju → Objavljen (Moderator; bez direct publish). Otkazan događaj automatski prelazi u Arhiviran nakon završetka svih održavanja, isto kao Objavljen (PO-DG-06 / N-DG-06 zatvoren; BM-DG-04, BM-ST-08; BR-065). **PO-AUTO-02:** Sistemski Planiran → Završen nakon `vrijeme_do` ako postoji, inače nakon kraja kalendarskog dana `datum` (aplikaciona vremenska zona); Odgođen/Otkazan se ne završavaju automatski.
 
-**Usvojene poslovne odluke (Događaj — naknadno povezivanje sa Organizatorom):** **PO-DG-08 / PO-DG-09** (BM PATCH-056 / FS PATCH-FS-056): BR-052 važi isključivo za Objavljen + bez Organizatora; samo Urednik; samo Aktivan Organizator; jednosmjerno bez Organizatora → Aktivan Org; bez uklanjanja/zamjene Organizatora u V1; status ostaje Objavljen. Relevantno za TS-003 v0.1.6 i TS-010 v1.0.3.
+**Usvojene poslovne odluke (Događaj — naknadno povezivanje sa Organizatorom):** **PO-DG-08 / PO-DG-09** (BM PATCH-056 / FS PATCH-FS-056): BR-052 važi isključivo za Objavljen + bez Organizatora; samo Urednik; samo Aktivan Organizator; jednosmjerno bez Organizatora → Aktivan Org; bez uklanjanja/zamjene Organizatora u V1; status ostaje Objavljen. Relevantno za KK-TS-003 v0.1.6 i KK-TS-010 v1.0.3.
 
-**Usvojene poslovne odluke (Događaj — V1 prvi Event review):** **PO-DG-10** (BM PATCH-057 / FS PATCH-FS-057): Na odobrenju = sadržajno zaključan do Odobri / Vrati na doradu; bez Moderator povlačenja Eventa; bez „Počni pregled“; bez direktnog uređivanja Urednika na pending Eventu. Ne mijenja tok Prijedloga izmjene Objavljenog. Relevantno za TS-003 v0.1.7 i TS-010 v1.0.4. TM-WF-03/04/06 i TM-CRUD-08 supersedovani za Event (VAN V1). **PATCH-063 ne zamjenjuje ovaj Moderatorski approval tok.**
+**Usvojene poslovne odluke (Događaj — V1 prvi Event review):** **PO-DG-10** (BM PATCH-057 / FS PATCH-FS-057): Na odobrenju = sadržajno zaključan do Odobri / Vrati na doradu; bez Moderator povlačenja Eventa; bez „Počni pregled“; bez direktnog uređivanja Urednika na pending Eventu. Ne mijenja tok Prijedloga izmjene Objavljenog. Relevantno za KK-TS-003 v0.1.7 i KK-TS-010 v1.0.4. TM-WF-03/04/06 i TM-CRUD-08 supersedovani za Event (VAN V1). **PATCH-063 ne zamjenjuje ovaj Moderatorski approval tok.**
 
 **Usvojene poslovne odluke (Događaj / Održavanje / javni portal — PATCH-063 / PO-U-01…19):** **BM PATCH-063 / FS PATCH-FS-063** usvajaju urednički tok kreiranja, pripreme i neposrednog upravljanja Događajem. **Status:** dokumentacija **usvojena** (BM/FS/TS); **implementacija PATCH-063 završena** (produkcija; HEAD `9825fec`). Ne uvodi novi FT ID — proširuje FT-001 / postojeće Događaj–Održavanje–portal feature-e.
 
 | ID (paket) | Suština | BM | FS | TS |
 |------------|---------|----|----|-----|
-| PO-U / BM-UR-12 | Urednik create bez izbora registrovanog Org | BM-UR-12, BM-DG-08, BM-ORG-04 | BR-287, BR-021, BR-045 | TS-003 v0.1.10; TS-010 v1.0.7 |
-| PO-U / BM-UR-13 | Opcion ručni naziv neregistrovanog Org (samo naziv) | BM-UR-13, BM-DG-12 | BR-288 | TS-003 §6.2 (`organizer_manual_name`); TS-009 §7.3.6 |
-| PO-U / BM-UR-14 | Sačuvaj i nastavi → U pripremi (tehnički `draft`; nije novi status; Mod = Nacrt) | BM-UR-14, BM-ST-03, BM-ST-11, BM-EP-11 | BR-013, BR-015, BR-016, BR-289 | TS-003 §4.2–§4.3; TS-010 §10.7.0 / DU-03 |
-| PO-U / BM-UR-15 | Trajno brisanje samo nikad objavljenog (U pripremi / `draft`) | BM-UR-15 | BR-290 | TS-003 §4.12; TS-010 §10.13 |
-| PO-U / PO-DG-05 preciz. | Direct publish bez approval; publish gate; ručni Org ne blokira | BM-ST-04, BM-UR-06 | BR-018, BR-028, BR-291 | TS-003 §4.6; TS-010 |
-| PO-U / BM-UR-16 | Direktan published content edit (Urednik, bez registrovanog Org); Mod proposal ostaje | BM-UR-16, BM-ST-11 | BR-025 (supersede partial), BR-292 | TS-003 §4.7/§4.13; TS-010 §10.5 |
-| PO-U / BM-TR-19 | Odgođen bez obaveznog novog termina odmah; Prvobitni termin | BM-TR-19, BM-PK-31 | BR-130, BR-282, BR-293 | TS-004 §4.7; TS-009 §7.3.4 |
-| PO-U / razlozi | Opcion `postponement_reason`; OCC `cancellation_reason`; Entry `cancellation_reason` opcion + javna napomena | BM-TR-20, BM-DG-10, BM-PK-36 | BR-063/064/069/272/284/294/295 | TS-003; TS-004 §4.5/§4.7/§6.6; TS-009 §7.2.4/§7.3.5 |
-| PO-U / PO-DG-07 KEEP | Otkazan terminalan; nema republish; nema delete nakon objave; historical; novi program = novi DG | BM-DG-09/10, BM-ST-07/09 | BR-064 | TS-003 §4.9; TS-009 archive (PATCH-062) |
+| PO-U / BM-UR-12 | Urednik create bez izbora registrovanog Org | BM-UR-12, BM-DG-08, BM-ORG-04 | BR-287, BR-021, BR-045 | KK-TS-003 v0.1.10; KK-TS-010 v1.0.7 |
+| PO-U / BM-UR-13 | Opcion ručni naziv neregistrovanog Org (samo naziv) | BM-UR-13, BM-DG-12 | BR-288 | KK-TS-003 §6.2 (`organizer_manual_name`); KK-TS-009 §7.3.6 |
+| PO-U / BM-UR-14 | Sačuvaj i nastavi → U pripremi (tehnički `draft`; nije novi status; Mod = Nacrt) | BM-UR-14, BM-ST-03, BM-ST-11, BM-EP-11 | BR-013, BR-015, BR-016, BR-289 | KK-TS-003 §4.2–§4.3; KK-TS-010 §10.7.0 / DU-03 |
+| PO-U / BM-UR-15 | Trajno brisanje samo nikad objavljenog (U pripremi / `draft`) | BM-UR-15 | BR-290 | KK-TS-003 §4.12; KK-TS-010 §10.13 |
+| PO-U / PO-DG-05 preciz. | Direct publish bez approval; publish gate; ručni Org ne blokira | BM-ST-04, BM-UR-06 | BR-018, BR-028, BR-291 | KK-TS-003 §4.6; KK-TS-010 |
+| PO-U / BM-UR-16 | Direktan published content edit (Urednik, bez registrovanog Org); Mod proposal ostaje | BM-UR-16, BM-ST-11 | BR-025 (supersede partial), BR-292 | KK-TS-003 §4.7/§4.13; KK-TS-010 §10.5 |
+| PO-U / BM-TR-19 | Odgođen bez obaveznog novog termina odmah; Prvobitni termin | BM-TR-19, BM-PK-31 | BR-130, BR-282, BR-293 | KK-TS-004 §4.7; KK-TS-009 §7.3.4 |
+| PO-U / razlozi | Opcion `postponement_reason`; OCC `cancellation_reason`; Entry `cancellation_reason` opcion + javna napomena | BM-TR-20, BM-DG-10, BM-PK-36 | BR-063/064/069/272/284/294/295 | KK-TS-003; KK-TS-004 §4.5/§4.7/§6.6; KK-TS-009 §7.2.4/§7.3.5 |
+| PO-U / PO-DG-07 KEEP | Otkazan terminalan; nema republish; nema delete nakon objave; historical; novi program = novi DG | BM-DG-09/10, BM-ST-07/09 | BR-064 | KK-TS-003 §4.9; KK-TS-009 archive (PATCH-062) |
 
 **Tehnička napomena (PATCH-063 — implementirano):** `cultural_event_entries.organizer_manual_name`; `cultural_occurrences.postponement_reason` + `cancellation_reason`; Entry `cancellation_reason` opcion.
 
 **Moderator regression (PATCH-063 KEEP):** Nacrt → Pošalji na odobrenje → zaključavanje → Odobri/Vrati; published izmjene preko Prijedloga; **nema** direct publish Moderatora (PO-DG-10 / PO-DG-05).
 
-**Implementacioni closeout (TS-010 V1):** Urednički portal V1 je **implementaciono završen** za prethodni obuhvat (TS-010 v1.0.6). Zatvoreni implementacioni markeri: **T10-WF-01** (PO-DG-10), **T10-GEN-01**, **GAP-RESUME-01** / **R-02** / **TM-OCC-17**. Verifikacija tada: `php artisan test --filter=Cultural` — 420 passed / 1740 assertions. **PATCH-063** (TS-010 v1.0.7 i povezani TS) je **dokumentaciono usvojen i implementiran** (produkcija). **PATCH-064** portalna delta je takođe **implementirana, testirana i deployovana** (vidi donji blok). **Ne** uključuje: TS-005 Manifestacije; TS-012 emit/storage (Roadmap Faza 8).
+**Implementacioni closeout (KK-TS-010 V1):** Urednički portal V1 je **implementaciono završen** za prethodni obuhvat (KK-TS-010 v1.0.6). Zatvoreni implementacioni markeri: **T10-WF-01** (PO-DG-10), **T10-GEN-01**, **GAP-RESUME-01** / **R-02** / **TM-OCC-17**. Verifikacija tada: `php artisan test --filter=Cultural` — 420 passed / 1740 assertions. **PATCH-063** (KK-TS-010 v1.0.7 i povezani TS) je **dokumentaciono usvojen i implementiran** (produkcija). **PATCH-064** portalna delta je takođe **implementirana, testirana i deployovana** (vidi donji blok). **Ne** uključuje: KK-TS-005 Manifestacije; KK-TS-012 emit/storage (Roadmap Faza 8).
 
-**Usvojene poslovne odluke (Javni portal — PATCH-064 / PO-064 — informativna naslovna vidljivost Odgođenog):** **BM PATCH-064 / FS PATCH-FS-064 / TS-009 v1.0.10.** Ne uvodi novi FT ID — proširuje FT-001 / postojeće naslovne / kartične / Odgođeno portal feature-e (PO-TS9-06D, PO-TS9-08B/08D). **Status:** dokumentacija **usvojena** (BM/FS/TS); **implementacija PATCH-064 završena, testirana i produkcijski potvrđena**.
+**Usvojene poslovne odluke (Javni portal — PATCH-064 / PO-064 — informativna naslovna vidljivost Odgođenog):** **BM PATCH-064 / FS PATCH-FS-064 / KK-TS-009 v1.0.10.** Ne uvodi novi FT ID — proširuje FT-001 / postojeće naslovne / kartične / Odgođeno portal feature-e (PO-TS9-06D, PO-TS9-08B/08D). **Status:** dokumentacija **usvojena** (BM/FS/TS); **implementacija PATCH-064 završena, testirana i produkcijski potvrđena**.
 
 | ID (paket) | Suština | BM | FS | TS |
 |------------|---------|----|----|-----|
-| PO-064 / planned mode | Standardna kartica = prvo naredno relevantno **Planirano** OCC; ranking = taj datum | BM-PK-29, BM-PK-37 | BR-280, BR-297 | TS-009 §5.5 / §7.3.2 (`mode=planned`) |
-| PO-064 / postponed_info | Bez narednog Planiranog + Odgođeno bez novog termina + prvobitni ≥ today → informativna naslovna kartica („Odgođeno“ / „Prvobitni termin"); prvobitni ≠ važeći termin; Odgođeno ≠ Planirano/upcoming | BM-PK-37, BM-GL-26, BM-PK-31, BM-TR-19 | BR-296, BR-282, BR-295 | TS-009 §5.5 (`mode=postponed_info`); prvobitni = `OCC.datum` |
-| PO-064 / multi postponed | Najbliže neisteklo Odgođeno; prelaz nakon isteka; nakon posljednjeg nema naslovne po tom osnovu | BM-PK-37 | BR-296 | TS-009 §5.5.2 |
-| PO-064 / shared pool | Planirani + informativno Odgođeni u **jednom** hronološkom bazenu; sort po ranking datumu; **nema** tip-prioriteta za slotove; max **3** | BM-PK-23, BM-PK-37 | BR-264, BR-297 | TS-009 §5.4 / §5.5.5 / §11.3 |
-| PO-064 / one Entry one slot | Ako postoji naredno Planirano → samo planned mode; Entry ne ulazi dvaput | BM-PK-29/37 | BR-297 | TS-009 §5.5.2 |
-| PO-064 / tie-breaker | Stabilan tehnički `entry.id ASC`; mode **nije** poslovni tie-breaker | (FS ostavio TS-u) | BR-297 | TS-009 §5.5.5 |
-| PO-064 / + još N | U `postponed_info` **ne** prikazivati standardni „+ još N" (broji samo Planirana card-relevant OCC) | — | BR-280 (planned) | TS-009 §5.5.6 / §7.3.2 |
-| PO-064 / KEEP | Pretraga sort, detalj PATCH-063, calendar counts, selected-day, Otkazano, arhiva, newsletter, lifecycle, Urednik/Moderator — **NO CHANGE** | BM-PK-37 granice | BR-281 / BR-296 KEEP | TS-009 §5.5.1 / §5.5.9 |
+| PO-064 / planned mode | Standardna kartica = prvo naredno relevantno **Planirano** OCC; ranking = taj datum | BM-PK-29, BM-PK-37 | BR-280, BR-297 | KK-TS-009 §5.5 / §7.3.2 (`mode=planned`) |
+| PO-064 / postponed_info | Bez narednog Planiranog + Odgođeno bez novog termina + prvobitni ≥ today → informativna naslovna kartica („Odgođeno“ / „Prvobitni termin"); prvobitni ≠ važeći termin; Odgođeno ≠ Planirano/upcoming | BM-PK-37, BM-GL-26, BM-PK-31, BM-TR-19 | BR-296, BR-282, BR-295 | KK-TS-009 §5.5 (`mode=postponed_info`); prvobitni = `OCC.datum` |
+| PO-064 / multi postponed | Najbliže neisteklo Odgođeno; prelaz nakon isteka; nakon posljednjeg nema naslovne po tom osnovu | BM-PK-37 | BR-296 | KK-TS-009 §5.5.2 |
+| PO-064 / shared pool | Planirani + informativno Odgođeni u **jednom** hronološkom bazenu; sort po ranking datumu; **nema** tip-prioriteta za slotove; max **3** | BM-PK-23, BM-PK-37 | BR-264, BR-297 | KK-TS-009 §5.4 / §5.5.5 / §11.3 |
+| PO-064 / one Entry one slot | Ako postoji naredno Planirano → samo planned mode; Entry ne ulazi dvaput | BM-PK-29/37 | BR-297 | KK-TS-009 §5.5.2 |
+| PO-064 / tie-breaker | Stabilan tehnički `entry.id ASC`; mode **nije** poslovni tie-breaker | (FS ostavio TS-u) | BR-297 | KK-TS-009 §5.5.5 |
+| PO-064 / + još N | U `postponed_info` **ne** prikazivati standardni „+ još N" (broji samo Planirana card-relevant OCC) | — | BR-280 (planned) | KK-TS-009 §5.5.6 / §7.3.2 |
+| PO-064 / KEEP | Pretraga sort, detalj PATCH-063, calendar counts, selected-day, Otkazano, arhiva, newsletter, lifecycle, Urednik/Moderator — **NO CHANGE** | BM-PK-37 granice | BR-281 / BR-296 KEEP | KK-TS-009 §5.5.1 / §5.5.9 |
 
-**Coverage napomena (status sync):** TS-009 TM-JP-23…38 scenariji su behavioralno pokriveni kroz implementaciju i regresije PATCH-064 / CLOSE-04; nema otvorenog 6A implementacionog paketa za ovu stavku.
+**Coverage napomena (status sync):** KK-TS-009 TM-JP-23…38 scenariji su behavioralno pokriveni kroz implementaciju i regresije PATCH-064 / CLOSE-04; nema otvorenog 6A implementacionog paketa za ovu stavku.
 
-**Usvojene poslovne odluke (Održavanje — V1 generator):** **PO-N-TR-02-04** (BM PATCH-058 / FS PATCH-FS-058): generator samo na Nacrtu; dnevno/sedmično/mjesečno algoritmi; broj XOR krajnji datum; max 100; šablon vremena/lokacije; Planiran; potpuni duplikati odbijaju cijelu operaciju; atomičnost; bez preview; bez Proposal/Objavljen generatora. **T10-GEN-01 = ZATVOREN** (implementiran i testiran: `OccurrenceGenerator`, Urednik/Moderator HTTP/UI, `CulturalOccurrenceGeneratorTest`). Relevantno za TS-004 v0.1.8 i TS-010 v1.0.6. PATCH-063 ne mijenja generator.
+**Usvojene poslovne odluke (Održavanje — V1 generator):** **PO-N-TR-02-04** (BM PATCH-058 / FS PATCH-FS-058): generator samo na Nacrtu; dnevno/sedmično/mjesečno algoritmi; broj XOR krajnji datum; max 100; šablon vremena/lokacije; Planiran; potpuni duplikati odbijaju cijelu operaciju; atomičnost; bez preview; bez Proposal/Objavljen generatora. **T10-GEN-01 = ZATVOREN** (implementiran i testiran: `OccurrenceGenerator`, Urednik/Moderator HTTP/UI, `CulturalOccurrenceGeneratorTest`). Relevantno za KK-TS-004 v0.1.8 i KK-TS-010 v1.0.6. PATCH-063 ne mijenja generator.
 
 **Usvojene poslovne odluke (Lokacije):**
 - **PO-LOC-01 (korekcija):** Lokacija iz kataloga je samostalan poslovni entitet, a centralni katalog predstavlja opcioni katalog za ponovno korišćenje Lokacija (nije obavezan i nije jedini izvor svih Lokacija). Moderator može odabrati katalošku Lokaciju ili ručno unijeti naziv Lokacije.
@@ -164,26 +166,26 @@ FT-001 je aktivan modul. **Kalendar kulture V1 = COMPLETE** (Faze 0–8 + Završ
 - **TS7-PO-04:** Bez migracije test podataka; bez kompatibilnosti/tranzicije sa starim modelom; novi poslovni katalog; test kategorije nisu referentni poslovni podaci.
 - **TS7-PO-05:** Kategorija „Nešto drugo“ ne postoji; Urednik proširuje katalog; oznake nisu zamjena za kategoriju.
 - **TS7-PO-06:** Katalogom kategorija i oznaka upravlja isključivo Urednik; Moderator samo koristi pri uređivanju događaja; bez workflow-a predlaganja, dodatnih statusa i ovlašćenja.
-- **TS7-PO-07:** Konačni početni V1 katalog kategorija Događaja (14 naziva, usvojeni redoslijed); značenja; kategorija ≠ Manifestacija / ≠ tip Organizatora; odbačene legacy vrijednosti; semantičko mapiranje; tehnički cutover = TS-009. BM PATCH-059 / FS PATCH-FS-059 / TS-007 v0.1.1. **Nije** nova CRUD funkcionalnost (katalog CRUD već implementiran); **nije** implementacija cutover-a.
+- **TS7-PO-07:** Konačni početni V1 katalog kategorija Događaja (14 naziva, usvojeni redoslijed); značenja; kategorija ≠ Manifestacija / ≠ tip Organizatora; odbačene legacy vrijednosti; semantičko mapiranje; tehnički cutover = KK-TS-009. BM PATCH-059 / FS PATCH-FS-059 / KK-TS-007 v0.1.1. **Nije** nova CRUD funkcionalnost (katalog CRUD već implementiran); **nije** implementacija cutover-a.
 
 **Usvojene poslovne odluke (Organizator / Moderator — PO-ORG):**
 - **PO-ORG-01:** Katalog polja Organizatora V1 — naziv (obavezno); opis, kontakt e-mail, telefon, web (opciono); status Aktivan/Deaktiviran; sistemski datumi. Van V1: PIB, MB, adresa, GPS, društvene mreže, logo, ostali pravni podaci.
 - **PO-ORG-02:** *(istorijski / djelimično superseded)* Moderator grant vezan na postojeći aktivan nalog (`user_id`). **Selection pretpostavka** „biraj samo iz users kataloga / zabrana imena+e-maila pri submit-u“ **superseded** odlukom **PO-ORG-06**. Grant i dalje nastaje tek nakon Editor approval na resolve-ovani `user_id`.
 - **PO-ORG-03:** Organizator se kreira tek nakon odobrenja Urednika (atomično sa početnim Moderatorom); podnošenje zahtjeva ne kreira entitet.
 - **PO-ORG-04:** Moderator pristupa uredničkom portalu iz aktivnog ovlašćenja; nije nova platformska uloga; `kk_admin` = jedina platformska uloga Urednika.
-- **PO-ORG-05:** Napomena Urednika na zahtjevu za kreiranje Organizatora — pri odobrenju opciona; pri odbijanju obavezna (ne-prazna); fail-closed bez napomene; napomena se trajno čuva. BM PATCH-067 / FS PATCH-FS-068 (BR-307) / TS-001 v0.3.1. **KEEP.** PO-ORG-06 proširuje obaveznu reject napomenu i na subsequent ADD (BR-317).
-- **PO-ORG-06:** Privacy-safe Moderator invitation (first + subsequent ADD) — ime+e-mail; stanje „Čeka registraciju Moderatora“; auto → Podnesen kad eligible; neutral flash; invitation/outcome/REMOVE-approved emails; supersede PO-ORG-02 selection model. BM PATCH-068 / FS PATCH-FS-069 (BR-308–BR-320) / TS-001 v0.4.1. **Status: ADOPTED / DOCUMENTED / IMPLEMENTED / PRODUCTION VERIFIED.** Packages 1–5 + produkciona schema migracija + produkcioni smoke (PO-confirmed). Discoverable ordinary-user CTA „Zahtjev za Organizatora“ uključen (`814ff96`). Optional durable mail retry / `invitation_sent_at` = OUT OF SCOPE (non-blocking).
+- **PO-ORG-05:** Napomena Urednika na zahtjevu za kreiranje Organizatora — pri odobrenju opciona; pri odbijanju obavezna (ne-prazna); fail-closed bez napomene; napomena se trajno čuva. BM PATCH-067 / FS PATCH-FS-068 (BR-307) / KK-TS-001 v0.3.1. **KEEP.** PO-ORG-06 proširuje obaveznu reject napomenu i na subsequent ADD (BR-317).
+- **PO-ORG-06:** Privacy-safe Moderator invitation (first + subsequent ADD) — ime+e-mail; stanje „Čeka registraciju Moderatora“; auto → Podnesen kad eligible; neutral flash; invitation/outcome/REMOVE-approved emails; supersede PO-ORG-02 selection model. BM PATCH-068 / FS PATCH-FS-069 (BR-308–BR-320) / KK-TS-001 v0.4.1. **Status: ADOPTED / DOCUMENTED / IMPLEMENTED / PRODUCTION VERIFIED.** Packages 1–5 + produkciona schema migracija + produkcioni smoke (PO-confirmed). Discoverable ordinary-user CTA „Zahtjev za Organizatora“ uključen (`814ff96`). Optional durable mail retry / `invitation_sent_at` = OUT OF SCOPE (non-blocking).
 
 **Usvojene implementacione odluke (Događaj / Održavanje — PO-EV):**
-- **PO-EV-01:** Postojeći podaci Kalendara kulture (`cultural_events`) su isključivo testni/prototipski; nisu referentni produkcijski sadržaj. Bez migracije/backfill-a/dual-write-a/adaptera radi legacy sadržaja. Novi domen Događaj + Održavanje (TS-003/TS-004) implementira se direktno prema BM/FS/TS. Legacy flat model privremen do cutover-a. **Potvrđeno za Fazu 6A** javnog portala (TS-009 v1.0.6 / IR-001 v1.0.5).
+- **PO-EV-01:** Postojeći podaci Kalendara kulture (`cultural_events`) su isključivo testni/prototipski; nisu referentni produkcijski sadržaj. Bez migracije/backfill-a/dual-write-a/adaptera radi legacy sadržaja. Novi domen Događaj + Održavanje (KK-TS-003/KK-TS-004) implementira se direktno prema BM/FS/TS. Legacy flat model privremen do cutover-a. **Potvrđeno za Fazu 6A** javnog portala (KK-TS-009 v1.0.6 / KK-IR-001 v1.0.5).
 
-**Usvojene product odluke (Javni portal — Faza 6A / TS-009 v1.0.8):**
+**Usvojene product odluke (Javni portal — Faza 6A / KK-TS-009 v1.0.8):**
 - **PO-TS9-08A:** Očuvanje postojećeg izgleda javnog portala; bez redizajna; UI izmjene samo kad neophodne zbog kanonskog modela / usvojenih pravila.
 - **PO-TS9-08B:** Kartica = prvo naredno relevantno **Planirano** Održavanje; „+ još N termina“ (Planirana); detalj = sva javno relevantna Održavanja. **PATCH-064:** standardni režim ostaje; informativni `postponed_info` je zaseban naslovni mode (bez „+ još N“).
 - **PO-TS9-08C:** Pretraga sortira rastuće po prvom narednom relevantnom Održavanju (sistemsko; bez korisničkog sortiranja). **PATCH-064 KEEP** — naslovni ranking ≠ Pretraga.
 - **PO-TS9-08D:** Odgođeno na detalju sa oznakom / Prvobitni termin (PATCH-063); kartica u standardnom režimu prikazuje naredno **Planirano**. **PATCH-064:** kada nema Planiranog, naslovna može koristiti informativni Odgođeno režim (BM-PK-37 / BR-296).
 - **PO-TS9-08E:** CAT-CUTOVER — isključivo `CulturalCategory` (14); bez legacy alias mape; preduslov 14 u bazi.
-- **PO-TS9-08F:** Faza 6A (Događaji) / 6B (Manifestacije); TS-005 ne blokira 6A.
+- **PO-TS9-08F:** Faza 6A (Događaji) / 6B (Manifestacije); KK-TS-005 ne blokira 6A.
 - **PO-TS9-08G:** V1 — BR-272 standardno obavještenje. **PATCH-063 / BM-PK-36 / BR-295 superseduje** raniju zabranu javnog `cancellation_reason`: ako je opcion razlog unesen, **može** se javno prikazati kao napomena.
 - **PO-TS9-08H:** Legacy URL smije 404; bez redirect mape; bez slug-a u 6A.
 - **PO-TS9-08I:** Privremeni feature flag `legacy` XOR `canonical`; zatim uklanjanje flag-a i legacy public/CRUD.
@@ -191,7 +193,7 @@ FT-001 je aktivan modul. **Kalendar kulture V1 = COMPLETE** (Faze 0–8 + Završ
   - **6A residual Package A (`cultural-calendar.day`):** **CLOSED** — PRODUCTION VERIFIED — EMPTY-DATE (`f35cb2e`).
   - **Phase B1+B2 (CURRENT):** **IMPLEMENTED / TESTED / PRODUCTION VERIFIED / CLOSED** — flag removed; public portal canonical-only; legacy CRUD routes/controller/views removed; image helpers → `CulturalCalendarDefaultImages`; `CulturalEvent` model class KEEP (non-runtime / B3 shell; table retained). **B3 table DROP = DEFERRED / NON-BLOCKING.** **FAZA 6A = CLOSED.**
 - **PO-TS9-08J:** Minimalni public query SSOT — aktivni `base()` odvojen od archive-only query-ja (PO-6A09-01).
-- **PO-6A11-01:** Kanonski javni status Događaja (multi-OCC): Otkazan prioritet; agregat U toku → Predstoji → Završen; postponed-only / 0 OCC → bez badge-a; BM-PK-34 / BR-285 / TS-009 §7.1.6.
+- **PO-6A11-01:** Kanonski javni status Događaja (multi-OCC): Otkazan prioritet; agregat U toku → Predstoji → Završen; postponed-only / 0 OCC → bez badge-a; BM-PK-34 / BR-285 / KK-TS-009 §7.1.6.
 - **PO-6A09-01:** Aktivni public skup ostaje `published`|`cancelled`; Javna Arhiva = poseban archive-only query; `archived` ne ulazi u `base()`.
 - **PO-6A09-02:** Pri arhiviranju sačuvati izvorni javni status (`published`|`cancelled`); radni naziv `archived_from_status`.
 - **PO-6A09-03:** Direct URL 200 za archive-public Entry; draft/pending → 404.
@@ -217,22 +219,22 @@ FT-001 je aktivan modul. **Kalendar kulture V1 = COMPLETE** (Faze 0–8 + Završ
 
 **Status:** **ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED.**
 
-- **MED-01–MED-28:** kanonski paket naslovne fotografije Događaja i Manifestacije. SSOT: BM PATCH-075 / PATCH-076, FS PATCH-FS-075 / PATCH-FS-076, TS-003/005/007/009/010; TS-012 KEEP `mf.cover.change`. TS-008 i TS8-01–09 SUPERSEDED.
+- **MED-01–MED-28:** kanonski paket naslovne fotografije Događaja i Manifestacije. SSOT: BM PATCH-075 / PATCH-076, FS PATCH-FS-075 / PATCH-FS-076, KK-TS-003/005/007/009/010; KK-TS-012 KEEP `mf.cover.change`. KK-TS-008 i TS8-01–09 SUPERSEDED.
 - **MED-I4B:** finalni vizuelni resursi = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK** (nije funkcionalni blocker). Fallback resolver COMPLETE.
 
-**Usvojene product / IA odluke (Javni portal — TS-009 faza 1):**
+**Usvojene product / IA odluke (Javni portal — KK-TS-009 faza 1):**
 - **IA-01:** Evolutivni razvoj javnog portala; bez redizajna; zadržavanje postojeće strukture i tokova uz minimalne neophodne izmjene.
 - **PO-TS9-03A:** Stranica „Pregled događaja“ → „Pretraga i pregled“; centralno mjesto za pretragu i pregled.
 - **PO-TS9-04A:** Filteri (datum, kategorija, lokacija, manifestacija) sastavni dio „Pretrage i pregleda“; uvijek vidljivi; kombinovanje; „Poništi filtere“; stanje u URL-u.
 
 **Usvojene product odluke (CR-003 — filteri Pretrage i pregleda):**
-- **PO-CR3-01…08:** URL `q`/`category`/`location`; pretraga naslov/opis/lokacija; dropdown kategorije (`CATEGORIES`) i lokacije (distinct objavljenih); AND sa jednim datumskim mehanizmom; aktivni filteri (×); „Poništi sve filtere“; GET filter zona; state persistence. Referenca: TS-009 §3.3.
+- **PO-CR3-01…08:** URL `q`/`category`/`location`; pretraga naslov/opis/lokacija; dropdown kategorije (`CATEGORIES`) i lokacije (distinct objavljenih); AND sa jednim datumskim mehanizmom; aktivni filteri (×); „Poništi sve filtere“; GET filter zona; state persistence. Referenca: KK-TS-009 §3.3.
 
 **Usvojene product odluke (CR-004A — javni status badge):**
 - **PO-CR4A-01:** Javna stanja Predstoji / U toku / Završen / Otkazan; interni statusi se ne prikazuju; `cancelled` → Otkazan (prioritet); Odgođen nije status Događaja.
 - **PO-CR4A-02:** Badge na Početnoj, Pretrazi i pregledu, Arhivi i Detaljima; isti tekst/badge/logika.
 - **PO-CR4A-03:** Pravila određivanja (Otkazan; zatim vremenska stanja po `datum_od`/`datum_do`/`vrijeme`/`vrijeme_do`); izračunata stanja, ne statusi baze; vremenska zona aplikacije.
-- **PO-CR4A-04:** Kartice — gornji desni ugao fotografije; Detalji — ispod naslova; jedinstven vizuelni izgled. Referenca: TS-009 §7.1.
+- **PO-CR4A-04:** Kartice — gornji desni ugao fotografije; Detalji — ispod naslova; jedinstven vizuelni izgled. Referenca: KK-TS-009 §7.1.
 - **PO-CR4A-05:** Ako se javni status ne može pouzdano odrediti zbog nekonzistentnih podataka, badge se ne prikazuje (bez exceptiona / „Unknown“). Dokumentuje već usvojeno i implementirano ponašanje (`0f73240`).
 
 **Usvojene product odluke (CR-004B — javni prikaz otkazanih događaja):**
@@ -245,20 +247,20 @@ FT-001 je aktivan modul. **Kalendar kulture V1 = COMPLETE** (Faze 0–8 + Završ
 - **PO-CR4B-07:** Odgođen nije dio CR-004B.
 - **PO-CR4B-08:** Prava otkazivanja = postojeća BR-063 / BM-DG-05 (Moderator Organizatora + Urednik); bez novih pravila prava.
 - **PO-CR4B-09:** Historijski: CR-004B nije mijenjao BR-065/BM-DG-04 niti otvarao interni `archived` javnosti; budući `cancelled → archived` zahtijevao je očuvanje informacije o otkazivanju. **Revidirano (PO-6A09):** lifecycle `cancelled → archived` je na snazi; očuvanje Otkazan kroz arhiviranje je obavezni ugovor Javne Arhive (vidi PO-6A09-02/04).
-- **PO-CR4B-10:** Regresija CR-001…CR-004A (badge, filteri, mjesečni filter, UI baseline). Referenca: TS-009 §7.2.
+- **PO-CR4B-10:** Regresija CR-001…CR-004A (badge, filteri, mjesečni filter, UI baseline). Referenca: KK-TS-009 §7.2.
 
 **Usvojene product / IA odluke (nastavak):**
 - **PO-TS9-05A:** Zadržavaju se postojeći prikazi; ne uvode se novi ekrani.
 - **PO-TS9-05B:** „Pretraga i pregled“ = samo lista; mjesečni kalendar samo na početnoj.
 - **TD-TS9-01:** Ruta `cultural-calendar.day` nije dio referentne IA javnog portala; interna tehnička podrška admin toku. **Package A status:** canonical cutover **PRODUCTION VERIFIED — EMPTY-DATE SCENARIO CONFIRMED** (`f35cb2e`); Phase B1+B2 **CLOSED**; **FAZA 6A = CLOSED**.
 
-**Usvojene product odluke (Javni portal — TS-009 faza 2 — početna stranica):**
+**Usvojene product odluke (Javni portal — KK-TS-009 faza 2 — početna stranica):**
 - **PO-TS9-06A:** Hero — sastavni dio; postojeći vizuelni identitet; statički; nije uređiv iz admina; bez baze, CTA, promo, rotacije, videa; isključivo identitet modula.
 - **PO-TS9-06B:** Istaknuti — postojeće mjesto/raspored; max 3; samo objavljeni i aktuelni; bira Urednik (ne sistem); kartice: foto, datum, vrijeme, lokacija, naslov, kratak opis, link na detalj; neutralno prazno stanje bez admin poruka.
 - **PO-TS9-06C:** Statistike — 3 klikabilne kartice (Danas, Ove sedmice, Izabrani mjesec = naziv izabranog mjeseca); klik → Pretraga i pregled sa datumskim filterom; 0 ostaje klikabilno; brojači i `date`/`week`/`month` pregledi uključuju javno dostupne događaje (`published` | `cancelled`) u odgovarajućem vremenskom skupu (CR-004B); bez novih filtera/URL parametara.
-- **PO-TS9-06D:** Lista ispod kalendara — bez datuma: „Naredni događaji“ max 3; sa datumom: svi za dan (aktivni OCC filter); dugme „Prikaži sve događaje“ → Pretraga i pregled (sa/bez datumskog filtera); postojeće prazno stanje. **PATCH-064 / PO-064:** „Naredni“ = zajednički hronološki bazen Planiranih + informativno Odgođenih (BR-264/297; TS-009 §5.4–§5.5); max 3 KEEP; selected-day / calendar counts KEEP (postponed nije aktivni dan).
+- **PO-TS9-06D:** Lista ispod kalendara — bez datuma: „Naredni događaji“ max 3; sa datumom: svi za dan (aktivni OCC filter); dugme „Prikaži sve događaje“ → Pretraga i pregled (sa/bez datumskog filtera); postojeće prazno stanje. **PATCH-064 / PO-064:** „Naredni“ = zajednički hronološki bazen Planiranih + informativno Odgođenih (BR-264/297; KK-TS-009 §5.4–§5.5); max 3 KEEP; selected-day / calendar counts KEEP (postponed nije aktivni dan).
 
-**Usvojene product odluke (Javni portal — TS-009 faza 3 — Manifestacije):**
+**Usvojene product odluke (Javni portal — KK-TS-009 faza 3 — Manifestacije):**
 - **PO-TS9-07A:** Manifestacije = zasebna cjelina portala; stavka navigacije „Manifestacije“; lista + Detalji manifestacije + program; ne kroz kategorije događaja; bez redizajna.
 - **PO-TS9-07B:** Lista — javno dostupne MF koje nijesu Arhivirane (Objavljene + Otkazane do isteka perioda per PO-6B-08); sort datum početka → naziv; 12/stranica; kartica (foto, naziv, period, opis, broj objavljenih događaja, „Detalji manifestacije“; Otkazana → oznaka); V1 bez pretrage/filtera; neutralno prazno.
 - **PO-TS9-07C:** Detalji manifestacije — foto, naziv, period, organizator, web, opis, program ispod; Manifestacija nema sopstvenu ni agregiranu lokaciju (lokacija samo po programskoj stavci); V1 bez galerija/video/dijeljenja/rezervacija/komentara.
@@ -294,116 +296,116 @@ FT-001 je aktivan modul. **Kalendar kulture V1 = COMPLETE** (Faze 0–8 + Završ
 
 **Known follow-ups (NON-BLOCKING):** BM-MF-19 invariant drift ako Event lifecycle van MF writer-a ukloni posljednji published Event (IMPORTANT / future corrective); Tip=Sve full lightweight projection load (V1 NON-BLOCKER / future optimization).
 
-PO-6B-01…05, **PO-6B-08/09** i **PO-6B-10** usvojene (BM/FS/TS-009/Feature Registry). Core domain i editorial flow ostaju dio istog 6B functional closeout-a.
+PO-6B-01…05, **PO-6B-08/09** i **PO-6B-10** usvojene (BM/FS/KK-TS-009/Feature Registry). Core domain i editorial flow ostaju dio istog 6B functional closeout-a.
 
-**Napomena (TS-009 v1.0.0 Stable):** Detalji događaja i Arhiva događaja nemaju zasebne PO-TS9-* odluke; pokriveni su BM-PK-05 / BM-PK-13 i BR-106 / BR-114 (baseline u TS-009 §7–§8). **CR-004A / PO-CR4A-01…05** dopunjavaju javni status badge (TS-009 §7.1). **CR-004B / PO-CR4B-01…10** dopunjavaju javni prikaz otkazanih (TS-009 §7.2; BR-270–BR-274).
+**Napomena (KK-TS-009 v1.0.0 Stable):** Detalji događaja i Arhiva događaja nemaju zasebne PO-TS9-* odluke; pokriveni su BM-PK-05 / BM-PK-13 i BR-106 / BR-114 (baseline u KK-TS-009 §7–§8). **CR-004A / PO-CR4A-01…05** dopunjavaju javni status badge (KK-TS-009 §7.1). **CR-004B / PO-CR4B-01…10** dopunjavaju javni prikaz otkazanih (KK-TS-009 §7.2; BR-270–BR-274).
 
 Povezana dokumentacija (Organizator):
 
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Organizator.md` (TS-001; funkcionalna cjelina Organizator / Moderator / Zahtjev za kreiranje Organizatora u okviru FT-001)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Organizator.md` (KK-TS-001; funkcionalna cjelina Organizator / Moderator / Zahtjev za kreiranje Organizatora u okviru FT-001)
 
 Povezana dokumentacija (Događaj):
 
 * Business Model — BM-04 (BM-DG-01–BM-DG-13), BM-10 (BM-ST-01–BM-ST-11), BM-UR-12–BM-UR-16, BM-MOD-19, BM-TR-12/19/20, BM-PK-36; PATCH-035/036 (otkazivanje), PATCH-037 (direktna objava / arhiva), **PATCH-053 / PO-DG-07** (terminalnost Otkazan), **PATCH-055 / PO-AUTO-01 / PO-AUTO-02**, **PATCH-056 / PO-DG-08 / PO-DG-09**, **PATCH-057 / PO-DG-10**, **PATCH-058 / PO-N-TR-02-04**, **PATCH-063 / PO-U-01…19** (urednički tok; ručni Org; U pripremi; delete; published edit; razlozi)
 * Functional Specification — §5.4–§5.5, §5.7.1–§5.7.2 (BR-006–BR-044, BR-062–BR-066, BR-131, **BR-287–BR-295**), §5.6 BR-052, §5.16 katalog Događaji; PATCH-FS-037/038/039; **PATCH-FS-053**; **PATCH-FS-056**; **PATCH-FS-057**; **PATCH-FS-058**; **PATCH-FS-063**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (TS-003 — Događaj; verzija **0.1.13**; Usvojen; PATCH-063 + PO-EV-WF-01 + MED cover COMPLETE)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Dogadjaj.md` (KK-TS-003 — Događaj; verzija **0.1.13**; Usvojen; PATCH-063 + PO-EV-WF-01 + MED cover COMPLETE)
 
 Povezana dokumentacija (Održavanje):
 
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (TS-004; verzija **0.1.9**; Usvojen; N-TR-01 / N-TR-02 / N-TR-04 zatvoreni; PO-N-TR-02-04; PATCH-063 postpone/OCC razlozi)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Odrzavanje.md` (KK-TS-004; verzija **0.1.9**; Usvojen; N-TR-01 / N-TR-02 / N-TR-04 zatvoreni; PO-N-TR-02-04; PATCH-063 postpone/OCC razlozi)
 
 Povezana dokumentacija (Manifestacija):
 
 * Business Model — BM-05 (BM-MF-01–BM-MF-23), PATCH-038–PATCH-039, PATCH-070, **PATCH-071** (6B production closeout status only); PO-MF-01–PO-MF-12, PO-MF-WF-01–04
 * Functional Specification — §5.12 (BR-092–BR-101, BR-189–BR-205), §5.16 katalog Manifestacije, PATCH-FS-040–PATCH-FS-041
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Manifestacija.md` (TS-005; verzija **0.1.7**; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Manifestacija.md` (KK-TS-005; verzija **0.1.7**; Usvojen)
 
 Povezana dokumentacija (Lokacije):
 
 * Business Model — BM-07 (BM-LK-01–BM-LK-12), BM-GL-13, PATCH-040, PATCH-041; PO-LOC-01–PO-LOC-07
 * Functional Specification — §5.9 (BR-074–BR-080, BR-206–BR-223), PATCH-FS-042, PATCH-FS-043
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Lokacije.md` (TS-006; verzija 0.1.1; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Lokacije.md` (KK-TS-006; verzija 0.1.1; Usvojen)
 
 Povezana dokumentacija (Kategorije i oznake):
 
 * Business Model — BM-08 (BM-KO-01–BM-KO-11), BM-GL-14, BM-GL-23, PATCH-043, **PATCH-059 / TS7-PO-07**
 * Functional Specification — §5.10 (BR-081–BR-085, BR-224–BR-236, **BR-277–BR-279**), PATCH-FS-045, **PATCH-FS-059**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Kategorije_i_oznake.md` (TS-007; verzija **0.1.4**; Usvojen)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Kategorije_i_oznake.md` (KK-TS-007; verzija **0.1.4**; Usvojen)
 
 Povezana dokumentacija (Naslovna fotografija / MED):
 
 * **MED-01–MED-28** = **ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED** (closeout 2026-08-16). **MED-I4B** vizueli = DEFERRED / NON-BLOCKING.
 * Business Model — BM-09 (BM-MD-18–BM-MD-36 aktivno; BM-MD-01–17 SUPERSEDED), BM-GL-15, BM-PK-12, **PATCH-075 / PATCH-076**
 * Functional Specification — §5.11 (BR-351–BR-370; BR-086–091 / BR-237–254 SUPERSEDED), §5.4.4, BR-113, **PATCH-FS-075 / PATCH-FS-076**
-* Technical Specification — TS-003 v0.1.13; TS-005 v0.1.7; TS-007 v0.1.4; TS-009 v1.0.23; TS-010 v1.0.14; TS-012 v1.0.9 (katalog KEEP)
-* TS-008 v0.1.2 = **SUPERSEDED / HISTORICAL** (`Technical-Specification_Mediji.md`)
+* Technical Specification — KK-TS-003 v0.1.13; KK-TS-005 v0.1.7; KK-TS-007 v0.1.4; KK-TS-009 v1.0.23; KK-TS-010 v1.0.14; KK-TS-012 v1.0.9 (katalog KEEP)
+* KK-TS-008 v0.1.2 = **SUPERSEDED / HISTORICAL** (`Technical-Specification_Mediji.md`)
 * TS8-01–TS8-09 = **ZASTARJELO / SUPERSEDED**
 
 Povezana dokumentacija (Mediji — istorijski TS8):
 
 * Business Model — BM-09 (BM-MD-01–BM-MD-17), BM-GL-15, BM-PK-12, PATCH-044; TS8-01–TS8-09 — **SUPERSEDED PATCH-075**
 * Functional Specification — §5.11 (BR-086–BR-091, BR-237–BR-254), §5.4.4, BR-113, PATCH-FS-046 — **SUPERSEDED PATCH-FS-075**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Mediji.md` (TS-008; verzija **0.1.2**; **SUPERSEDED / HISTORICAL**)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Mediji.md` (KK-TS-008; verzija **0.1.2**; **SUPERSEDED / HISTORICAL**)
 
 Povezana dokumentacija (Javni portal):
 
 * Business Model — BM-11 (BM-PK-01–BM-PK-40, BM-GL-26), BM-AR-02, PATCH-045–PATCH-048, PATCH-051 (CR-004B), PATCH-060–**PATCH-066**; IA-01, PO-TS9-03A–05B, PO-TS9-06A–06D, PO-TS9-07A–07E, PO-TS9-08A–08J, PO-6A11-01, PO-6A09-01…06, **PO-U / PATCH-063**, **PO-064 / PATCH-064**, **PO-6B-08/09 / PATCH-065**, **PO-6B-10 / PATCH-066**
 * Functional Specification — §5.1–§5.4, §5.13 (BR-102–BR-117, BR-255–BR-274, BR-280–BR-286, **BR-287–BR-306**), PATCH-FS-047–PATCH-FS-049, PATCH-FS-051, PATCH-FS-060–**PATCH-FS-067**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009; verzija **1.0.23**; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A; PO-6A11-01; PO-6A09; **PATCH-063** §7.2.4 / §7.3.4–§7.3.6; **PATCH-064** §5.4–§5.5 / §11.3 / TM-JP-23…38; **PO-6B-01…05**; **PO-6B-08/09** §6.7–§6.8; **PO-6B-10** §3.4.1; **PHASE 6B FORMALLY CLOSED** / limited content-smoke; Package A CLOSED; **Phase B1+B2 PRODUCTION VERIFIED / CLOSED**; **FAZA 6A CLOSED**; B3 DEFERRED / POST-V1; **PUBLIC PORTAL FINAL AUDIT = PASS / ACCEPTED FOR V1 CLOSEOUT**)
-* Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (IS-001; verzija **1.0.11**; Stable)
-* Change Request — CR-001 (Implemented, IS-001 Faza 1); CR-002 (Implemented, IS-001 Faza 2 — `month=YYYY-MM`; commit `c5d396f`); CR-003 (Implemented, IS-001 Faza 2 — `q`/`category`/`location`; dokumentacija `fc35132`; implementacija `595045a`; TS-009 v1.0.2; IS-001 v1.0.2); CR-004A (Implemented, IS-001 Faza 3 — javni status badge; PO-CR4A-01…05; dokumentacija `614706c`; implementacija `0f73240`; TS-009 v1.0.4; IS-001 v1.0.5); CR-004B (Planned, IS-001 Faza 3 — javni prikaz otkazanih; PO-CR4B-01…10; TS-009 v1.0.5 §7.2; IS-001 v1.0.6 §9.3.2)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Javni_portal.md` (KK-TS-009; verzija **1.0.23**; Stable; TD-TS9-01; CR-002 §3.2; CR-003 §3.3; CR-004A §7.1; CR-004B §7.2; Faza 6A; PO-6A11-01; PO-6A09; **PATCH-063** §7.2.4 / §7.3.4–§7.3.6; **PATCH-064** §5.4–§5.5 / §11.3 / TM-JP-23…38; **PO-6B-01…05**; **PO-6B-08/09** §6.7–§6.8; **PO-6B-10** §3.4.1; **PHASE 6B FORMALLY CLOSED** / limited content-smoke; Package A CLOSED; **Phase B1+B2 PRODUCTION VERIFIED / CLOSED**; **FAZA 6A CLOSED**; B3 DEFERRED / POST-V1; **PUBLIC PORTAL FINAL AUDIT = PASS / ACCEPTED FOR V1 CLOSEOUT**)
+* Implementation Strategy — `docs/implementation-strategies/Implementation-Strategy_Javni_portal.md` (KK-IS-001; verzija **1.0.11**; Stable)
+* Change Request — CR-001 (Implemented, KK-IS-001 Faza 1); CR-002 (Implemented, KK-IS-001 Faza 2 — `month=YYYY-MM`; commit `c5d396f`); CR-003 (Implemented, KK-IS-001 Faza 2 — `q`/`category`/`location`; dokumentacija `fc35132`; implementacija `595045a`; KK-TS-009 v1.0.2; KK-IS-001 v1.0.2); CR-004A (Implemented, KK-IS-001 Faza 3 — javni status badge; PO-CR4A-01…05; dokumentacija `614706c`; implementacija `0f73240`; KK-TS-009 v1.0.4; KK-IS-001 v1.0.5); CR-004B (Planned, KK-IS-001 Faza 3 — javni prikaz otkazanih; PO-CR4B-01…10; KK-TS-009 v1.0.5 §7.2; KK-IS-001 v1.0.6 §9.3.2)
 
 Povezana dokumentacija (Newsletter):
 
 * Business Model — BM-13 (BM-NL-01–BM-NL-47), PATCH-031–PATCH-033, **PATCH-073 / PO-NL-01…22**, **PATCH-074**; usklađenost sa PATCH-053 / PO-DG-07 (G-NL-08 zatvoren)
 * Functional Specification — §5.15 (BR-138–BR-169, BR-328–BR-348), PATCH-FS-032–PATCH-FS-034, **PATCH-FS-072**, **PATCH-FS-073**; §5.16 katalog Newsletter (BR-184–BR-186)
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Newsletter.md` (TS-011; verzija **1.0.4**; USVOJEN)
-* **FAZA 7** = NL-01…NL-06 **IMPLEMENTED / FORMALLY CLOSED** (eligibility + regular/priority delivery + legacy weekly disabled). Settings = `/newsletter`. **TS-012 emit/storage = Faza 8 CLOSED.** Legacy physical files KEEP. Production evidence = **PO-CONFIRMED**; live Git HEAD = **UNOBSERVED** iz Cursora.
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Newsletter.md` (KK-TS-011; verzija **1.0.4**; USVOJEN)
+* **FAZA 7** = NL-01…NL-06 **IMPLEMENTED / FORMALLY CLOSED** (eligibility + regular/priority delivery + legacy weekly disabled). Settings = `/newsletter`. **KK-TS-012 emit/storage = Faza 8 CLOSED.** Legacy physical files KEEP. Production evidence = **PO-CONFIRMED**; live Git HEAD = **UNOBSERVED** iz Cursora.
 
 Povezana dokumentacija (Urednički portal):
 
 * Business Model — BM-12 (BM-EP-01–BM-EP-11), BM-01–BM-03 (uloge), BM-MOD-04, BM-UR-09, BM-UR-12–BM-UR-16, BM-GL-09/24/25; BM-DG-09/BM-DG-10 / **PATCH-053**; **PATCH-063 / PO-U**
 * Functional Specification — Platformsko pravilo; §5.14 (BR-118–BR-128); BR-007; BR-048; BR-051; BR-063–BR-065; BR-131; **BR-287–BR-295**; **PATCH-FS-053**; **PATCH-FS-063**
-* Usvojene product odluke (Dashboard — TS-010.6):
+* Usvojene product odluke (Dashboard — KK-TS-010.6):
   * **PO-DASH-01:** Radna tabla prijavljenog korisnika; sadržaj po ulozi/ovlašćenjima/aktivnom kontekstu; svrha = brz nastavak rada; statistika pomoćna.
   * **PO-DASH-02:** Informacije za nastavak rada; nije izvještavanje ni poslovna analitika.
   * **PO-DASH-03:** Samo stavke koje zahtijevaju akciju ili predstavljaju aktivni rad; bez informacija bez operativnog značaja.
   * **PO-DASH-04:** Sažete kategorije sa brojačem; klik → lista sa filterom; nema liste događaja na Dashboardu; ne duplira CRUD.
   * **PO-DASH-05:** Jedinstven raspored po ulozi; bez personalizacije, drag&drop, skrivanja kartica, korisničkih layout-a.
-* Usvojene product odluke (Evidencija aktivnosti — TS-010.7):
-  * **PO-AL-01:** TS-010.7 = obaveze portala prema centralnoj Evidenciji; ne UI centralne; ne zamjenjuje FT-003/TS-012; Mod/Urednik bez direktnog pristupa; pristup samo Administrator.
+* Usvojene product odluke (Evidencija aktivnosti — KK-TS-010.7):
+  * **PO-AL-01:** KK-TS-010.7 = obaveze portala prema centralnoj Evidenciji; ne UI centralne; ne zamjenjuje FT-003/KK-TS-012; Mod/Urednik bez direktnog pristupa; pristup samo Administrator.
   * **PO-AL-02:** Lokalni audit ≠ centralna Evidencija (FT-003).
-  * **PO-AL-03:** Samo obaveza evidentiranja; bez API/SQL/strukture/prikaza (FT-003/TS-012).
+  * **PO-AL-03:** Samo obaveza evidentiranja; bez API/SQL/strukture/prikaza (FT-003/KK-TS-012).
   * **PO-AL-04:** Bez novih aktivnosti; samo BM/FS katalog.
-* Usvojena QA odluka (Business Test Matrix — TS-010.8):
-  * **QA-TS0108-01:** TS-010.8 = Business Test Matrix; nije QA Plan / Test Strategy / Test Implementation / CI / coverage.
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (TS-010; verzija **1.0.14**; USVOJEN — V1 implementaciono završen; **FINAL EDITORIAL AUDIT = PASS / ACCEPTED FOR V1 CLOSEOUT**; **PATCH-063 dokumentaciono usvojen i implementiran**; **MOD-UX-01** = UI/navigation status sync (+ Alpine-free CURRENT STATE); **PATCH-064** = portalna delta u TS-009 (nije TS-010 scope); usklađen sa TS-003 v0.1.13 / TS-004 v0.1.9)
-  * TS-010.1 Osnove uredničkog portala — Usvojeno / implementirano
-  * TS-010.2 Organizatori — Usvojeno / implementirano
-  * TS-010.3 Moderator Organizatora — Usvojeno / implementirano
-  * TS-010.4 Workflow događaja — Usvojeno / implementirano (terminalnost Otkazan; bez Otkazan → Objavljen; PO-DG-10); **PATCH-063 usvojeno i implementirano**
-  * TS-010.5 CRUD događaja i validacije — Usvojeno / implementirano (prethodni obuhvat); **PATCH-063** (ručni Org, U pripremi, delete draft, published direct edit) — **dokumentaciono usvojeno i implementirano**
-  * TS-010.6 Dashboard uredničkog portala — Usvojeno / implementirano; DU-03 → „Događaji u pripremi“ (PATCH-063 implementirano)
-  * TS-010.7 Evidencija aktivnosti uredničkog portala — Usvojeno (obaveza); emit/storage = **TS-012 / Faza 8**
-  * TS-010.8 Business Test Matrix — Usvojeno (poslovna matrica; §13.x PATCH-063 matrica za buduću implementaciju)
+* Usvojena QA odluka (Business Test Matrix — KK-TS-010.8):
+  * **QA-TS0108-01:** KK-TS-010.8 = Business Test Matrix; nije QA Plan / Test Strategy / Test Implementation / CI / coverage.
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Urednicki_portal.md` (KK-TS-010; verzija **1.0.14**; USVOJEN — V1 implementaciono završen; **FINAL EDITORIAL AUDIT = PASS / ACCEPTED FOR V1 CLOSEOUT**; **PATCH-063 dokumentaciono usvojen i implementiran**; **MOD-UX-01** = UI/navigation status sync (+ Alpine-free CURRENT STATE); **PATCH-064** = portalna delta u KK-TS-009 (nije KK-TS-010 scope); usklađen sa KK-TS-003 v0.1.13 / KK-TS-004 v0.1.9)
+  * KK-TS-010.1 Osnove uredničkog portala — Usvojeno / implementirano
+  * KK-TS-010.2 Organizatori — Usvojeno / implementirano
+  * KK-TS-010.3 Moderator Organizatora — Usvojeno / implementirano
+  * KK-TS-010.4 Workflow događaja — Usvojeno / implementirano (terminalnost Otkazan; bez Otkazan → Objavljen; PO-DG-10); **PATCH-063 usvojeno i implementirano**
+  * KK-TS-010.5 CRUD događaja i validacije — Usvojeno / implementirano (prethodni obuhvat); **PATCH-063** (ručni Org, U pripremi, delete draft, published direct edit) — **dokumentaciono usvojeno i implementirano**
+  * KK-TS-010.6 Dashboard uredničkog portala — Usvojeno / implementirano; DU-03 → „Događaji u pripremi“ (PATCH-063 implementirano)
+  * KK-TS-010.7 Evidencija aktivnosti uredničkog portala — Usvojeno (obaveza); emit/storage = **KK-TS-012 / Faza 8**
+  * KK-TS-010.8 Business Test Matrix — Usvojeno (poslovna matrica; §13.x PATCH-063 matrica za buduću implementaciju)
 
 **Planirani Technical Specification dokumenti (modul Kalendar kulture):**
 
-Plan koristi globalnu numeraciju (M-TS-002). **TS-002 nije dio dokumentacionog plana Kalendara kulture** (oznaka je zauzeta van ovog modula).
+Plan koristi lokalnu numeraciju unutar `KK-*` namespace-a (M-TS-002). `KK-TS-002` trenutno nije dodijeljen i nije kreiran. e-Plaćanje nije vlasnik broja 002 u ovom namespace-u.
 
 | TS | Naziv | Feature | Modul | Status |
 | -- | ----- | ------- | ----- | ------ |
-| TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.4.1) — PO-ORG-06 IMPLEMENTED / PRODUCTION VERIFIED |
-| TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.13); MED cover **IMPLEMENTATION COMPLETE / VERIFIED** |
-| TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.9); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni; PATCH-063 docs |
-| TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.7); MED cover **COMPLETE / VERIFIED**; MED-19 MF destroy nije uveden |
-| TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
-| TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.4); fallback resolver COMPLETE; MED-I4B dedicated vizueli DEFERRED |
-| TS-008 | Mediji (istorijski) | FT-001 | Kalendar kulture | **SUPERSEDED / HISTORICAL** (v0.1.2); TS8-01–09 zastarjeli; kanon = MED-01–28 |
-| TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.22); MED fallback resolver COMPLETE; **MED-I4B** vizueli DEFERRED / NON-BLOCKING |
-| TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.13) — V1 KEEP; MED-26 UX **IMPLEMENTATION COMPLETE / VERIFIED**; Media CRUD REMOVED |
-| TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.4) — **FAZA 7 FORMALLY CLOSED** (NL-01…NL-06); emit ka TS-012 = **Faza 8 CLOSED**; izmjena fotografije **nije** NL okidač (KEEP) |
-| TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.9) — katalog KEEP; MED-28: `TS12-MF-11` KEEP; no new `media.*` |
+| KK-TS-001 | Organizator, Moderator i zahtjev za kreiranje Organizatora | FT-001 | Kalendar kulture | Usvojen (v0.4.1) — PO-ORG-06 IMPLEMENTED / PRODUCTION VERIFIED |
+| KK-TS-003 | Događaj | FT-001 | Kalendar kulture | Usvojen (v0.1.13); MED cover **IMPLEMENTATION COMPLETE / VERIFIED** |
+| KK-TS-004 | Održavanje događaja | FT-001 | Kalendar kulture | Usvojen (v0.1.9); N-TR-01 / N-TR-02 / N-TR-04 zatvoreni; PATCH-063 docs |
+| KK-TS-005 | Manifestacija | FT-001 | Kalendar kulture | Usvojen (v0.1.7); MED cover **COMPLETE / VERIFIED**; MED-19 MF destroy nije uveden |
+| KK-TS-006 | Lokacije | FT-001 | Kalendar kulture | Usvojen (v0.1.1) |
+| KK-TS-007 | Kategorije i oznake | FT-001 | Kalendar kulture | Usvojen (v0.1.4); fallback resolver COMPLETE; MED-I4B dedicated vizueli DEFERRED |
+| KK-TS-008 | Mediji (istorijski) | FT-001 | Kalendar kulture | **SUPERSEDED / HISTORICAL** (v0.1.2); TS8-01–09 zastarjeli; kanon = MED-01–28 |
+| KK-TS-009 | Javni portal | FT-001 | Kalendar kulture | Stable (v1.0.22); MED fallback resolver COMPLETE; **MED-I4B** vizueli DEFERRED / NON-BLOCKING |
+| KK-TS-010 | Urednički portal | FT-001 | Kalendar kulture | Usvojen (v1.0.13) — V1 KEEP; MED-26 UX **IMPLEMENTATION COMPLETE / VERIFIED**; Media CRUD REMOVED |
+| KK-TS-011 | Newsletter | FT-001 | Kalendar kulture | Usvojen (v1.0.4) — **FAZA 7 FORMALLY CLOSED** (NL-01…NL-06); emit ka KK-TS-012 = **Faza 8 CLOSED**; izmjena fotografije **nije** NL okidač (KEEP) |
+| KK-TS-012 | Evidencija aktivnosti | FT-003 | Kalendar kulture | Usvojen (v1.0.9) — katalog KEEP; MED-28: `TS12-MF-11` KEEP; no new `media.*` |
 
 ---
 
@@ -415,77 +417,45 @@ Evidencija aktivnosti (Kalendar kulture)
 
 Status:
 
-Usvojen (TS-012 v1.0.8) — **FAZA 8 CLOSED: IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED.** F8-01 freeze complete. F8-02 store + F8-03 emitters + F8-04 V1 Admin UI = production active / accepted (read-only chronological list + pagination; no filters/search/export/show). V1 audit = best-effort / failure-isolated / no durable replay. `repeatable()` uniqueness = known V1 limitation. Historical audit rows immutable.
+Usvojen (KK-TS-012 v1.0.8) — **FAZA 8 CLOSED: IMPLEMENTATION COMPLETE / PRODUCTION ACTIVE / PRODUCTION ACCEPTED.** F8-01 freeze complete. F8-02 store + F8-03 emitters + F8-04 V1 Admin UI = production active / accepted (read-only chronological list + pagination; no filters/search/export/show). V1 audit = best-effort / failure-isolated / no durable replay. `repeatable()` uniqueness = known V1 limitation. Historical audit rows immutable.
 
 Napomena:
 
 Centralna Evidencija aktivnosti modula Kalendar kulture — dokumentovanje poslovno značajnih radnji radi odgovornosti, kontrole i revizije. Direktan pristup: Administrator platforme. Razlikuje se od lokalnih audit tragova na entitetima.
 
-V1 katalog (FS / BM-AL-07 / BM-MF-20 / TS-012): Moderator ovlašćenja; Organizatori; Manifestacije; događaji (uključujući aktivnosti nad Održavanjem); Newsletter. Van opsega (BR-188): autentikacija/platformski nalozi i uloge, detaljni Admin pregled/filteri, retention, izvoz.
+V1 katalog (FS / BM-AL-07 / BM-MF-20 / KK-TS-012): Moderator ovlašćenja; Organizatori; Manifestacije; događaji (uključujući aktivnosti nad Održavanjem); Newsletter. Van opsega (BR-188): autentikacija/platformski nalozi i uloge, detaljni Admin pregled/filteri, retention, izvoz.
 
 Povezana dokumentacija:
 
 * Business Model — BM-14 (BM-AL-01–BM-AL-08), BM-EP-09, BM-GL-09, BM-GL-20, BM-MF-20
 * Functional Specification — §5.16 (BR-170–BR-188, BR-349–BR-350), PATCH-FS-035 / PATCH-FS-041 / **PATCH-FS-074**
-* Technical Specification — `docs/technical-specifications/Technical-Specification_Evidencija_aktivnosti.md` (TS-012; verzija **1.0.8**; USVOJEN; **FAZA 8 CLOSED / PRODUCTION ACCEPTED**; V1 best-effort)
+* Technical Specification — `docs/technical-specifications/Technical-Specification_Evidencija_aktivnosti.md` (KK-TS-012; verzija **1.0.8**; USVOJEN; **FAZA 8 CLOSED / PRODUCTION ACCEPTED**; V1 best-effort)
 
 Matrica sljedivosti (sažetak):
 
 | BM | FS | FT | TS |
 |----|----|----|-----|
-| BM-AL-01–BM-AL-08 | BR-170–BR-188, BR-349–BR-350 / §5.16 | FT-003 | TS-012 (usvojen v1.0.8; FAZA 8 CLOSED / PRODUCTION ACCEPTED; V1 best-effort) |
-| BM-EP-09 | §5.16 | FT-003 | TS-012 (usvojen v1.0.8; FAZA 8 CLOSED / PRODUCTION ACCEPTED) |
-| BM-GL-09, BM-GL-20 | BR-170, BR-174 | FT-003 | TS-012 (usvojen v1.0.8; FAZA 8 CLOSED / PRODUCTION ACCEPTED) |
-| BM-MF-20 | §5.16 katalog Manifestacije | FT-003 | TS-012 (usvojen v1.0.8; FAZA 8 CLOSED / PRODUCTION ACCEPTED) |
+| BM-AL-01–BM-AL-08 | BR-170–BR-188, BR-349–BR-350 / §5.16 | FT-003 | KK-TS-012 (usvojen v1.0.8; FAZA 8 CLOSED / PRODUCTION ACCEPTED; V1 best-effort) |
+| BM-EP-09 | §5.16 | FT-003 | KK-TS-012 (usvojen v1.0.8; FAZA 8 CLOSED / PRODUCTION ACCEPTED) |
+| BM-GL-09, BM-GL-20 | BR-170, BR-174 | FT-003 | KK-TS-012 (usvojen v1.0.8; FAZA 8 CLOSED / PRODUCTION ACCEPTED) |
+| BM-MF-20 | §5.16 katalog Manifestacije | FT-003 | KK-TS-012 (usvojen v1.0.8; FAZA 8 CLOSED / PRODUCTION ACCEPTED) |
 
 ---
 
-## FT-004
+## FT-004 — van aktivnog KK scope-a
 
-Naziv:
+FT-004 / Obavještenja **nijesu** funkcionalnost Kalendara kulture i **nijesu** aktivna stavka ovog Feature Registry-ja.
 
-Obavještenja
+**OWNERSHIP = PLATFORM.** `KK-*` namespace se na FT-004 ne primjenjuje. `TS-013` ostaje trenutna oznaka tehničke specifikacije Obavještenja. Izdvajanje u `DK-*` **nije** dio ovog paketa.
 
-Status:
-
-Active
-
-Napomena:
-
-Unakrsna (cross-platform) funkcionalnost Digital Kotor za javno predstavljanje zvaničnog sadržaja nastalog u drugim funkcionalnostima platforme. Nije zaseban aplikativni modul, nije korisnički inbox, nije sistem privatnih poruka, nije konvencionalni centar notifikacija sa stanjem pročitano/nepročitano i nije urednički CMS za vijesti.
-
-V1 infrastruktura je implementirana i verifikovana (`ObavjestenjaFeatureTest` + smoke): `notices`, `NoticePublicationService`, događaj/listener (jednom registrovan), panel na `/`, javna ruta `notices.public-content`, `competition_decision_html`. End-to-end automatizam iz izvornog konkursa i dalje blokiran OFD-OB-006.
-
-Povezana dokumentacija:
+Kanonski dokumenti (ID-evi neizmijenjeni u ovom corrective-u):
 
 * Business Model: `docs/business-model/Business_Model_Obavjestenja.md`
 * Use Case Specification: `docs/use-cases/Use_Cases_Obavjestenja.md`
 * Functional Specification: `docs/functional-specifications/Functional_Specification_Obavjestenja.md`
-* Technical Specification: `docs/technical-specifications/Technical_Specification_Obavjestenja.md` (TS-013)
+* Technical Specification: `docs/technical-specifications/Technical_Specification_Obavjestenja.md` (`TS-013`)
 
-Sljedivost:
-
-FT-004
-→ Business Model Obavještenja (v0.1 + PATCH-001, U IZRADI)
-→ Use Cases Obavještenja (v0.1, U IZRADI)
-→ Functional Specification Obavještenja (v0.1 + PATCH-FS-OB-001, U IZRADI)
-→ Technical Specification Obavještenja (TS-013 v0.1, U IZRADI)
-
-Usvojene Product Owner odluke (evidentirane u Business Modelu):
-
-* PO-OB-01 — Svrha
-* PO-OB-02 — Mjesto na platformi
-* PO-OB-03 — Javna dostupnost
-* PO-OB-04 — Struktura Obavještenja
-* PO-OB-05 — Vrste referenciranog sadržaja
-* PO-OB-06 — Automatsko nastajanje
-* PO-OB-07 — Odgovornost izvorne funkcionalnosti
-* PO-OB-08 — Početni izvori
-* PO-OB-09 — Trajanje vidljivosti
-* PO-OB-10 — Bez praćenja čitanja u usvojenom obuhvatu
-* PO-OB-11 — Bez ručnog uredničkog workflow-a u usvojenom scenariju
-* PO-OB-12 — Stabilna javna dostupnost
-* PO-OB-13 — Značenje zamjene
+Istorijski changelog zapisi FT-004 ostaju kao istorija. Ovaj paket ne reinterpretira FT-004.
 
 ---
 
@@ -609,3 +579,4 @@ Usvojene Product Owner odluke (evidentirane u Business Modelu):
 | 2026-08-16 | FT-001 — **PO module boundary:** ovaj Feature Registry = **Kalendar kulture**. Uklonjen aktivni zapis **FT-002 / Plaćanje** (sibling modul Digital Kotora; nije član ovog registra). **TS-002 nije dio dokumentacionog plana Kalendara kulture** (oznaka zauzeta van ovog modula). Nije V1/deferred/post-V1/blocker/dependency Kalendara kulture. RG-001 → **v1.1.12**. |
 | 2026-08-13 | FT-001 — **FR cross-reference cleanup:** CURRENT STATE pin IS-001 **1.0.7 → 1.0.8** (usklađeno sa `Implementation-Strategy_Javni_portal.md`). FAZA 6A/6B CLOSED KEEP; TS-009 v1.0.19 KEEP; IR-001 v1.0.11 KEEP. Bez izmjene implementacije. |
 | 2026-08-10 | FT-001 — **PHASE 6A-CLOSE-02:** legacy admin CRUD `cultural-events.*` disabled (middleware `legacy_cultural_events_disabled` → 403 all methods). Legacy code/table/views retained; `CULTURAL_PUBLIC_READ_SOURCE` + public legacy read rollback retained; canonical routes unchanged. **Nije** hard remove / flag cleanup (Phase B). |
+| 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. FT-004 / Obavještenja uklonjeni iz aktivnog KK Feature Registry scope-a (platformska funkcionalnost; budući `DK-*` corrective). Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |

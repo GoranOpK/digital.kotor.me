@@ -2,6 +2,7 @@
 # Business Model
 ## Modul: Kalendar kulture
 
+**Oznaka dokumenta:** KK-BM-001
 **Status dokumenta:** Stable
 **Verzija:** 1.0.0
 
@@ -91,6 +92,7 @@
 | PATCH-075 | 2026-08-15 | **MED-01–MED-28 (naslovna fotografija):** Mediji nijesu poslovna cjelina; `CulturalMedia` je interni tehnički mehanizam. Događaj/Manifestacija imaju `0..1` naslovnu fotografiju (upload u kontekstu sadržaja; bez biblioteke/reuse/galerije). Opciona za objavu. Fallback Događaja: naslovna → statička kategorijska fotografija → globalni placeholder; Manifestacija: zaseban statički placeholder. Formati JPEG/PNG/WebP, max 2 MB; resize >1920 px; storage `public/cultural-media/`; MEGA se ne koristi. Nema ekrana Mediji. Prava i lock prate sadržaj. **SUPERSEDED:** BM-MD-01–BM-MD-17 (PATCH-044 / TS8). Dodati BM-MD-18–BM-MD-36; usklađeni BM-GL-15, BM-PK-12, BM-EP-03, BM-DG-06, BM-MF-08, BM-UR-16. **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Bez izmjene koda. |
 | PATCH-076 | 2026-08-16 | **MED documentation closeout (status only):** MED-01–MED-28 = **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED**. Poslovna pravila BM-MD-18–BM-MD-36 **KEEP**. **MED-I4B** finalni vizuelni resursi = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK** (nije funkcionalni blocker). Obsolete `cultural_media` kolone = **DEFERRED / NON-BLOCKING**; bez schema migracije u ovom closeout-u. BM-MD-01–17 ostaju SUPERSEDED. Nije Faza 9. Bez izmjene poslovnih pravila. |
 | PATCH-077 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** V1 FUNCTIONAL IMPLEMENTATION = COMPLETE; V1 TECHNICAL VERIFICATION = PASS; FINAL FULL REGRESSION = GREEN (1286/6224/0/0/12 skipped); BLOCKS V1 CLOSEOUT = NO. Javni / urednički / Administracija = ACCEPTED FOR V1 CLOSEOUT. MED KEEP CLOSED. B3 = DEFERRED / POST-V1 / NON-BLOCKING. MED-I4B KEEP deferred. Production deploy HEAD `4595a14` **NOT CONFIRMED**. Bez novih BM oznaka. Bez izmjene poslovnih pravila. |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 Napomena:
 
@@ -308,7 +310,7 @@ Svaki naredni Moderator može biti predložen isključivo od strane postojećeg 
 
 Urednik može u bilo kojem trenutku deaktivirati Organizatora bez prethodnog zahtjeva Organizatora ili Moderatora. Deaktivacijom Organizatora prestaje moderatorski kontekst za tog Organizatora; Moderatori više ne izvršavaju poslovne radnje nad njegovim događajima.
 
-**Napomena o implementaciji:** Osnovni tok zahtjeva za kreiranje Organizatora i upravljanje Moderatorima **postoji** u aplikaciji (TS-001 / Faza 2). **PO-ORG-06 / PATCH-068** privacy-safe invitation ugovor je **IMPLEMENTED / PRODUCTION VERIFIED** (Packages 1–5; produkciona schema migracija; produkcioni smoke PO-confirmed; discoverable CTA „Zahtjev za Organizatora“). Forma koristi ime+e-mail predloženog Moderatora **bez** users kataloga. Optional durable mail retry / `invitation_sent_at` ostaje non-blocking OUT OF SCOPE.
+**Napomena o implementaciji:** Osnovni tok zahtjeva za kreiranje Organizatora i upravljanje Moderatorima **postoji** u aplikaciji (KK-TS-001 / Faza 2). **PO-ORG-06 / PATCH-068** privacy-safe invitation ugovor je **IMPLEMENTED / PRODUCTION VERIFIED** (Packages 1–5; produkciona schema migracija; produkcioni smoke PO-confirmed; discoverable CTA „Zahtjev za Organizatora“). Forma koristi ime+e-mail predloženog Moderatora **bez** users kataloga. Optional durable mail retry / `invitation_sent_at` ostaje non-blocking OUT OF SCOPE.
 
 **Napomena o nazivu:** Raniji naziv funkcionalnosti „Postani organizator“ zamijenjen je poslovno preciznijim nazivom „zahtjev za kreiranje Organizatora“.
 
@@ -702,7 +704,7 @@ Manifestacija može biti otkazana. Otkazivanje izvršava Moderator u aktivnom ko
 
 Nema otvorenih poslovnih pitanja.
 
-Napomena (N-MF-05, nije Product Owner odluka): Manifestacija ulazi u centralnu Evidenciju aktivnosti kao ravnopravan poslovni entitet; detaljan katalog stavki definiše Functional Specification / TS-005.
+Napomena (N-MF-05, nije Product Owner odluka): Manifestacija ulazi u centralnu Evidenciju aktivnosti kao ravnopravan poslovni entitet; detaljan katalog stavki definiše Functional Specification / KK-TS-005.
 
 ---
 
@@ -972,7 +974,7 @@ Kategorije i oznake definišu se kao novi poslovni katalog. Ne radi se migracija
 
 Kategorija „Nešto drugo“ više ne postoji u poslovnom modelu. Ako nijedna postojeća kategorija nije odgovarajuća, Urednik proširuje katalog novom kategorijom.
 
-**TS7-PO-07:** Product Owner je usvojio **konačni početni V1 katalog** od 14 kategorija Događaja (sa redoslijedom). To je početni poslovni sadržaj kataloga za V1 / cutover režim — **nije** tehnička ENUM lista. Katalog ostaje proširiv (BM-KO-01, BM-KO-07). Tehnički cutover i mapiranje postojećih legacy podataka pripadaju **TS-009** / Roadmap Fazi 6.
+**TS7-PO-07:** Product Owner je usvojio **konačni početni V1 katalog** od 14 kategorija Događaja (sa redoslijedom). To je početni poslovni sadržaj kataloga za V1 / cutover režim — **nije** tehnička ENUM lista. Katalog ostaje proširiv (BM-KO-01, BM-KO-07). Tehnički cutover i mapiranje postojećih legacy podataka pripadaju **KK-TS-009** / Roadmap Fazi 6.
 
 ## 3. Poslovni koncept
 
@@ -1078,11 +1080,11 @@ Ne uvodi se workflow za predlaganje kategorija ili oznaka, dodatni statusi odobr
 - **Organizator** — poslovni entitet; nije operativna uloga nad katalogom; tip Organizatora nije kategorija Događaja.
 - **Manifestacija** — nije kategorija Događaja; Događaji unutar Manifestacije zadržavaju vlastitu kategoriju vrste.
 - **Administrator platforme** — nema redovnu poslovnu ulogu nad katalogom; sistemska administracija.
-- **TS-009 / javni portal** — Faza 6A cutover: kanonski katalog `CulturalCategory` (BM-PK-32); bez migracije legacy sadržaja (PO-EV-01 / BM-KO-11).
+- **KK-TS-009 / javni portal** — Faza 6A cutover: kanonski katalog `CulturalCategory` (BM-PK-32); bez migracije legacy sadržaja (PO-EV-01 / BM-KO-11).
 
 ## 6. Otvorena pitanja
 
-Za poglavlje BM-08 trenutno nema otvorenih poslovnih pitanja (javni CAT-CUTOVER = TS-009 Faza 6A).
+Za poglavlje BM-08 trenutno nema otvorenih poslovnih pitanja (javni CAT-CUTOVER = KK-TS-009 Faza 6A).
 
 ---
 
@@ -1208,7 +1210,7 @@ Oznake Događaja su zaseban koncept (BM-08) i **ne pripadaju** fotografiji.
 
 ### BM-MD-36 — Audit kompatibilnost (MED-28)
 
-> Ne uvode se novi `media.*` audit kodovi. Postojeći zamrznuti kod `TS12-MF-11` / `mf.cover.change` ostaje nepromijenjen. TS-012 freeze katalog se ne otvara.
+> Ne uvode se novi `media.*` audit kodovi. Postojeći zamrznuti kod `TS12-MF-11` / `mf.cover.change` ostaje nepromijenjen. KK-TS-012 freeze katalog se ne otvara.
 
 ### 4.B Istorijska pravila (PATCH-044 / TS8) — ZASTARJELO / SUPERSEDED
 
@@ -1290,7 +1292,7 @@ Sljedeća pravila **nijesu** aktivni SSOT. Zamijenjena su BM-MD-18–BM-MD-36 / 
 - **Oznake** — BM-08; nisu tagovi fotografije.
 - **Portal** — BM-PK-12.
 - **Urednički portal** — nema zasebnog ekrana Mediji (BM-EP-03, BM-MD-32).
-- **Evidencija** — BM-MD-36 / TS-012 KEEP `mf.cover.change`.
+- **Evidencija** — BM-MD-36 / KK-TS-012 KEEP `mf.cover.change`.
 
 ## 6. Otvorena pitanja
 

@@ -1,12 +1,12 @@
 # Digital Kotor
 # Implementation Strategy
-## IS-001 — Implementaciona strategija javnog portala
+## KK-IS-001 — Implementaciona strategija javnog portala
 
-**Oznaka dokumenta:** IS-001  
+**Oznaka dokumenta:** KK-IS-001  
 **Naziv:** Implementaciona strategija javnog portala  
 **Feature ID:** FT-001  
 **Modul:** Kalendar kulture  
-**Referentna specifikacija:** TS-009 v1.0.23 Stable
+**Referentna specifikacija:** KK-TS-009 v1.0.23 Stable
 **Status dokumenta:** Stable
 **Verzija:** 1.0.11
 **Datum:** 2026-08-16
@@ -17,15 +17,15 @@
 
 | Stavka | Vrijednost |
 |--------|------------|
-| Oznaka | IS-001 |
+| Oznaka | KK-IS-001 |
 | Naziv | Implementaciona strategija javnog portala |
 | Tip | Operativni planski dokument |
-| Referenca | TS-009 v1.0.23 Stable |
-| Usvojene odluke | IS-001-01 … IS-001-08 |
+| Referenca | KK-TS-009 v1.0.23 Stable |
+| Usvojene odluke | KK-IS-001-01 … KK-IS-001-08 |
 
-### IS-001-01 — Identitet dokumenta
+### KK-IS-001-01 — Identitet dokumenta
 
-IS-001 je operativni planski dokument koji definiše:
+KK-IS-001 je operativni planski dokument koji definiše:
 
 * faze implementacije;
 * međuzavisnosti;
@@ -35,24 +35,24 @@ IS-001 je operativni planski dokument koji definiše:
 * strategiju deploy-a;
 * strategiju rollback-a;
 
-za implementaciju **TS-009 v1.0.5**, bez mijenjanja usvojenih poslovnih, funkcionalnih i tehničkih pravila.
+za implementaciju **KK-TS-009 v1.0.5**, bez mijenjanja usvojenih poslovnih, funkcionalnih i tehničkih pravila.
 
-IS-001:
+KK-IS-001:
 
 * ne definiše nove funkcionalnosti;
 * ne predstavlja zamjenu za BM, FS ili TS;
 * ne mijenja usvojena BM/FS/TS pravila;
-* mora ostati potpuno sljediv prema TS-009.
+* mora ostati potpuno sljediv prema KK-TS-009.
 
 ---
 
 # 2. Svrha i status
 
-**Svrha:** omogućiti kontrolisanu, evolutivnu implementaciju javnog portala u skladu sa TS-009, uz najmanji rizik za postojeću produkciju (princip IA-01).
+**Svrha:** omogućiti kontrolisanu, evolutivnu implementaciju javnog portala u skladu sa KK-TS-009, uz najmanji rizik za postojeću produkciju (princip IA-01).
 
 **Status dokumenta:** Stable (v1.0.11).
 
-**Van svrhe:** SQL, Laravel kod, konačni dizajn klasa/metoda, nove Product Owner odluke, zamjena TS-003…TS-008.
+**Van svrhe:** SQL, Laravel kod, konačni dizajn klasa/metoda, nove Product Owner odluke, zamjena KK-TS-003…KK-TS-008.
 
 ## 2.1 CURRENT STATE — FAZA 6A CLOSURE (2026-08-13)
 
@@ -69,14 +69,14 @@ IS-001:
 | Phase **B1** (flag/config removal) | **IMPLEMENTED / TESTED / PRODUCTION VERIFIED / CLOSED** |
 | Phase **B2** (canonical-only public + legacy CRUD runtime removal) | **IMPLEMENTED / TESTED / PRODUCTION VERIFIED / CLOSED** |
 | Phase **B3** (`cultural_events` table DROP) | **DEFERRED** — non-runtime / **non-blocking for 6A** |
-| Production canonical categories | **14/14 PASS** (TS-007 §2.7 set) |
+| Production canonical categories | **14/14 PASS** (KK-TS-007 §2.7 set) |
 | PATCH-063 | Opcioni javni `cancellation_reason` **dozvoljen** (superseduje PATCH-060 apsolutnu zabranu) |
 | Implementation remaining (6A) | **NONE** |
 | Production verification (6A / B1 / B2) | **PASS** (PO-confirmed) |
 | P0 / P1 | **0 / 0** |
 | 6B | **OUT OF SCOPE** for this closure; **does not block 6A** |
 
-Historical plan rows u §9.6 (privremeni flag; „bez javnog cancellation_reason“) ostaju istorijski; CURRENT STATE = ova tabela + TS-009 v1.0.23.
+Historical plan rows u §9.6 (privremeni flag; „bez javnog cancellation_reason“) ostaju istorijski; CURRENT STATE = ova tabela + KK-TS-009 v1.0.23.
 
 ## 2.2 V1 DOCUMENTATION CLOSEOUT (2026-08-16)
 
@@ -100,19 +100,19 @@ Istorijski 6A CURRENT STATE (§2.1) KEEP.
 
 | Dokument | Uloga |
 |----------|--------|
-| `docs/technical-specifications/Technical-Specification_Javni_portal.md` (TS-009 v1.0.23) | Referentna specifikacija javnog portala |
+| `docs/technical-specifications/Technical-Specification_Javni_portal.md` (KK-TS-009 v1.0.23) | Referentna specifikacija javnog portala |
 | `docs/business-model/Business_Model_Kalendar_kulture_MASTER.md` (BM-11, BM-05, …) | Poslovna pravila (ne mijenjaju se ovim dokumentom) |
 | `docs/functional-specifications/Functional-Specification.md` (§5.1–§5.4, §5.13) | Funkcionalni zahtjevi |
-| TS-003 Događaj | Domen Događaja; zavisnost Faze 4/6 |
-| TS-004 Održavanje | Domen Održavanja; zavisnost Faze 4/5/6 |
-| TS-005 Manifestacija | Domen Manifestacije; zavisnost Faze 4/5 |
-| TS-007 Kategorije i oznake | Oznake događaja; zavisnost Faze 4/6 |
-| TS-008 Mediji | **SUPERSEDED / HISTORICAL** (MED-01–MED-28); fallback prikaza = TS-009 / MED-08/09 |
+| KK-TS-003 Događaj | Domen Događaja; zavisnost Faze 4/6 |
+| KK-TS-004 Održavanje | Domen Održavanja; zavisnost Faze 4/5/6 |
+| KK-TS-005 Manifestacija | Domen Manifestacije; zavisnost Faze 4/5 |
+| KK-TS-007 Kategorije i oznake | Oznake događaja; zavisnost Faze 4/6 |
+| KK-TS-008 Mediji | **SUPERSEDED / HISTORICAL** (MED-01–MED-28); fallback prikaza = KK-TS-009 / MED-08/09 |
 | `docs/features/Feature-Registry.md` | Registar FT-001 / plan TS |
 
 **Napomena o putanji:** Dokument je smješten u `docs/implementation-strategies/`, analogno `docs/technical-specifications/` i `docs/change-requests/`.
 
-**Napomena o oznaci TS-010:** Feature Registry rezerviše **TS-010** za *Urednički portal*. IS-001 nije taj dokument i ne zamjenjuje ga.
+**Napomena o oznaci KK-TS-010:** Feature Registry rezerviše **KK-TS-010** za *Urednički portal*. KK-IS-001 nije taj dokument i ne zamjenjuje ga.
 
 ---
 
@@ -120,17 +120,17 @@ Istorijski 6A CURRENT STATE (§2.1) KEEP.
 
 ### Granice
 
-IS-001 **ne smije**:
+KK-IS-001 **ne smije**:
 
-* mijenjati TS-009, BM ili FS;
+* mijenjati KK-TS-009, BM ili FS;
 * uvoditi nova poslovna pravila ili nove PO odluke;
 * davati SQL, Laravel kod ili konačnu arhitekturu klasa;
-* zamijeniti tehničke specifikacije domena (TS-003…TS-008);
+* zamijeniti tehničke specifikacije domena (KK-TS-003…KK-TS-008);
 * rješavati otvorena pitanja bez Product Owner-a.
 
-IS-001 **smije** navoditi: pogođene tehničke slojeve, tip migracije, nivo rizika, zavisnosti, redoslijed, test/deploy/rollback obuhvat.
+KK-IS-001 **smije** navoditi: pogođene tehničke slojeve, tip migracije, nivo rizika, zavisnosti, redoslijed, test/deploy/rollback obuhvat.
 
-### Terminologija (usklađeno sa BM / FS / TS-009)
+### Terminologija (usklađeno sa BM / FS / KK-TS-009)
 
 Kanonski nazivi:
 
@@ -142,20 +142,20 @@ Kanonski nazivi:
 | Detalji događaja | Stranica jednog događaja |
 | Manifestacije / Detalji manifestacije | Zasebna cjelina / stranica Manifestacije |
 | Arhiva događaja | Stranica arhive |
-| Održavanje | Poslovni entitet (TS-004) |
+| Održavanje | Poslovni entitet (KK-TS-004) |
 | Termin | Isključivo vremenski atributi Održavanja; nije entitet |
 | Kategorija | Primarna klasifikacija događaja |
-| **Oznake** | Dodatna klasifikacija događaja (BM-08 / TS-007). **Jedini** kanonski termin za tu klasifikaciju. |
-| **Tagovi** | Istorijski: metapodaci medija (BM-09 / TS-008, SUPERSEDED MED-07). **Nisu** sinonim za Oznake; nisu V1 UI. |
+| **Oznake** | Dodatna klasifikacija događaja (BM-08 / KK-TS-007). **Jedini** kanonski termin za tu klasifikaciju. |
+| **Tagovi** | Istorijski: metapodaci medija (BM-09 / KK-TS-008, SUPERSEDED MED-07). **Nisu** sinonim za Oznake; nisu V1 UI. |
 | Statusne oznake | Javni prikaz poslovnog statusa (npr. Otkazano). **Nisu** isto što i Oznake (BM-08). |
 
-U IS-001 se **ne** koristi riječ „Tagovi“ za klasifikaciju događaja.
+U KK-IS-001 se **ne** koristi riječ „Tagovi“ za klasifikaciju događaja.
 
 ---
 
 # 5. Implementacioni principi
 
-### IS-001-02 — Implementacioni principi
+### KK-IS-001-02 — Implementacioni principi
 
 1. Minimalne izmjene postojeće produkcione aplikacije.
 2. Evolutivni razvoj bez nepotrebnog redizajna (usklađeno sa IA-01 / BM-PK-16 / BR-255).
@@ -164,7 +164,7 @@ U IS-001 se **ne** koristi riječ „Tagovi“ za klasifikaciju događaja.
 5. Očuvanje kompatibilnosti postojećih funkcionalnosti.
 6. Samostalno testiranje svake faze.
 7. Mogućnost sigurnog rollback-a.
-8. Potpuna sljedivost prema BM, FS i TS-009.
+8. Potpuna sljedivost prema BM, FS i KK-TS-009.
 
 Implementacija **ne smije** uvoditi funkcionalnosti koje nijesu prethodno usvojene kroz dokumentaciju.
 
@@ -178,17 +178,17 @@ Implementacija **ne smije** uvoditi funkcionalnosti koje nijesu prethodno usvoje
 
 # 6. Pregled trenutnog stanja
 
-Na osnovu analize postojeće implementacije (bez izmjene koda u okviru IS-001):
+Na osnovu analize postojeće implementacije (bez izmjene koda u okviru KK-IS-001):
 
 | Područje | Stanje (sažetak) |
 |----------|------------------|
-| Početna | Hero statički; istaknuti / statistike / lista ispod kalendara postoje, djelimično odstupaju od TS-009 (npr. limiti, klikabilnost, dugme „Prikaži sve“) |
+| Početna | Hero statički; istaknuti / statistike / lista ispod kalendara postoje, djelimično odstupaju od KK-TS-009 (npr. limiti, klikabilnost, dugme „Prikaži sve“) |
 | Pretraga i pregled | Stranica postoji (UI naziv još „Pregled događaja“); filteri nepotpuni u odnosu na PO-TS9-04A |
 | Detalji događaja | Postoje; datum/vrijeme/lokacija na događaju (bez zasebnog Održavanja); bez bloka Manifestacije; statusne oznake ograničene |
 | Arhiva događaja | Postoji lista (objavljeni + završen period po datumu); bez punih statusnih oznaka po BM-PK-13 |
 | Manifestacije (portal) | Nisu implementirane (nema entiteta / ruta / UI) |
 | Održavanja | Nisu zaseban model; podaci na događaju (TO odstupanje) |
-| Oznake / Mediji (domen) | Nisu u skladu sa punim TS-007/TS-008 modelom na portalu |
+| Oznake / Mediji (domen) | Nisu u skladu sa punim KK-TS-007/KK-TS-008 modelom na portalu |
 
 Detaljna matrica odstupanja: §7.
 
@@ -196,7 +196,7 @@ Detaljna matrica odstupanja: §7.
 
 # 7. Matrica funkcionalnosti i odstupanja
 
-| Funkcionalnost (TS-009) | Postoji | Potrebna izmjena | Nova implementacija | Tipična faza |
+| Funkcionalnost (KK-TS-009) | Postoji | Potrebna izmjena | Nova implementacija | Tipična faza |
 |-------------------------|:------:|:----------------:|:-------------------:|:------------:|
 | IA-01 evolutivni okvir | djelimično | — | — | sve |
 | Rename → Pretraga i pregled | ne (UI) | da | ne | 1 |
@@ -241,15 +241,15 @@ Faza 5 (Manifestacije na portalu)
     └─► zahtijeva Fazu 4 (Manifestacija + Održavanja za program)
     └─► ne zatvara puno usklađenje Detalja/Arhive (to je Faza 6)
 
-Faza 6A (IR-001 — javni portal Događaja / kanonski cutover)
-    └─► **ne blokira** TS-005 / Manifestacije (PO-TS9-08F)
-    └─► više Održavanja, CAT-CUTOVER, public query SSOT (TS-009 §7.3 / §9–§12)
+Faza 6A (KK-IR-001 — javni portal Događaja / kanonski cutover)
+    └─► **ne blokira** KK-TS-005 / Manifestacije (PO-TS9-08F)
+    └─► više Održavanja, CAT-CUTOVER, public query SSOT (KK-TS-009 §7.3 / §9–§12)
 
-Faza 6B (IR-001 — Manifestacije na portalu)
-    └─► zahtijeva TS-005 spreman; mapira se na IS-001 Fazu 5 + dio ranije „Faze 6“
+Faza 6B (KK-IR-001 — Manifestacije na portalu)
+    └─► zahtijeva KK-TS-005 spreman; mapira se na KK-IS-001 Fazu 5 + dio ranije „Faze 6“
 
-Faza 6 (IS-001 istorijski naziv — završno usklađenje)
-    └─► tumači se kao **6A + 6B** po IR-001 v1.0.5; 6A nije uslovljena MF portalom
+Faza 6 (KK-IS-001 istorijski naziv — završno usklađenje)
+    └─► tumači se kao **6A + 6B** po KK-IR-001 v1.0.5; 6A nije uslovljena MF portalom
 ```
 
 **Granica Faza 3 vs Faza 6 (obavezna):**
@@ -263,24 +263,24 @@ Faza 6 (IS-001 istorijski naziv — završno usklađenje)
 | Manifestacije | Van | **Faza 6B** (ne blokira 6A) |
 | Kriterijum Arhive | Bez izmjene ka BM-DG-04 osim ako poseban CR i PO odobre ranije | Usklađenje sa BM-PK-13 / BR-114 u punom smislu |
 
-**Obavezujući redoslijed** (IS-001-03): 1 → 2 → 3 → 4 → 5 → 6, uz izuzetak: **IR Faza 6A** (kanonski cutover Događaja) **nije** blokirana IS Fazom 5 / TS-005 (PO-TS9-08F / IR-001). Ograničeni paralelizam Faze 2 i Faze 3 dozvoljen je samo uz odobrenje i bez dijeljenih konflikata.
+**Obavezujući redoslijed** (KK-IS-001-03): 1 → 2 → 3 → 4 → 5 → 6, uz izuzetak: **IR Faza 6A** (kanonski cutover Događaja) **nije** blokirana IS Fazom 5 / KK-TS-005 (PO-TS9-08F / KK-IR-001). Ograničeni paralelizam Faze 2 i Faze 3 dozvoljen je samo uz odobrenje i bez dijeljenih konflikata.
 
 ---
 
 # 9. Implementacione faze
 
-### IS-001-03 — Implementacione faze
+### KK-IS-001-03 — Implementacione faze
 
 ## 9.1 Faza 1 — Usklađenje postojećeg korisničkog interfejsa
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Uskladiti postojeći javni UI sa usvojenim TS-009 odlukama za početnu i terminologiju (PO-TS9-03A label; PO-TS9-06A–06D), bez novog domena |
+| **Cilj** | Uskladiti postojeći javni UI sa usvojenim KK-TS-009 odlukama za početnu i terminologiju (PO-TS9-03A label; PO-TS9-06A–06D), bez novog domena |
 | **Obuhvat** | Terminologija (Pretraga i pregled); Početna; Hero (provjera usklađenosti); istaknuti (max 3, prazno stanje); statistike (klikabilnost, naziv mjeseca); lista ispod kalendara (max 3, „Prikaži sve“); očuvanje postojećih javnih tokova; TD-TS9-01 (interni dan-view nije javni ekran IA) |
 | **Zavisnosti** | Nema domenskih preduslova |
 | **Rizik** | **Nizak** |
 | **Uticaj na kod** | Sloj kontrolera (početna / limiti upita); model (eventualno validacija isticanja); prikazi (početna, navigacija); rute: bez novih; stilovi: malo; klijentska logika kalendara: eventualno label; baza: ne; testovi: da |
-| **Ulaz** | TS-009 usvojen; rizik/test/rollback plan; Faza 1 definisana |
+| **Ulaz** | KK-TS-009 usvojen; rizik/test/rollback plan; Faza 1 definisana |
 | **Izlaz** | UI usklađen sa PO-TS9-03A (label), 06A–06D, BM-PK-15/21–23; testovi OK; PO potvrda |
 | **Test** | Početna: Hero, ≤3 istaknuta, 3 statistike + navigacija na Pretragu i pregled, lista ≤3 / dan, dugme; navigacioni naziv |
 | **Deploy** | Bez migracije; bez maintenance window; backup preporučen kao uobičajena praksa; feature flag nije neophodan; smoke: početna + Pretraga i pregled + Detalji događaja + Arhiva događaja |
@@ -295,12 +295,12 @@ Faza 6 (IS-001 istorijski naziv — završno usklađenje)
 | Stavka | Opis |
 |--------|------|
 | **Cilj** | Centralna Pretraga i pregled sa filterima i URL stanjem (PO-TS9-04A), uključujući CR-002 mjesečni filter i CR-003 ne-datumske filtere; bez filtera Manifestacije |
-| **Obuhvat** | Pretraga; filteri (datum, kategorija, lokacija — u granicama postojećeg modela); URL stanje; očuvanje konteksta; paginacija; sortiranje po usvojenim pravilima; „Poništi filtere“; **CR-002 (Implemented):** `month` + treća kartica; **CR-003 (Implemented):** `q` / `category` / `location`, filter zona, aktivni filteri, reset (PO-CR3-01…08 / TS-009 §3.3). **Faza 2 je završena u granicama postojećeg modela.** Filter Manifestacije ostaje **Faza 5**; Oznake ostaju **Faza 4/6**. |
+| **Obuhvat** | Pretraga; filteri (datum, kategorija, lokacija — u granicama postojećeg modela); URL stanje; očuvanje konteksta; paginacija; sortiranje po usvojenim pravilima; „Poništi filtere“; **CR-002 (Implemented):** `month` + treća kartica; **CR-003 (Implemented):** `q` / `category` / `location`, filter zona, aktivni filteri, reset (PO-CR3-01…08 / KK-TS-009 §3.3). **Faza 2 je završena u granicama postojećeg modela.** Filter Manifestacije ostaje **Faza 5**; Oznake ostaju **Faza 4/6**. |
 | **Zavisnosti** | Preferira Fazu 1 (CR-001 završen). CR-002 i CR-003 završeni. Filter Manifestacije **nije** u ovoj fazi |
 | **Rizik** | **Srednji** |
 | **Uticaj na kod** | Sloj kontrolera (`events` upiti); prikaz Pretrage i pregleda (filter zona / aktivni filteri); početna (linkovi statistika — CR-002); rute: bez novih; stilovi: malo; baza: ne; testovi: da |
-| **Ulaz** | Faza 1, CR-002 i CR-003 završeni; TS-009 v1.0.2 (§3.2–§3.3) |
-| **Izlaz** | Filteri + URL u skladu sa BM-PK-18 / BR-257 / TS-009 §3.2–§3.3 (postojeći model); regresija CR-001/CR-002/CR-003 OK |
+| **Ulaz** | Faza 1, CR-002 i CR-003 završeni; KK-TS-009 v1.0.2 (§3.2–§3.3) |
+| **Izlaz** | Filteri + URL u skladu sa BM-PK-18 / BR-257 / KK-TS-009 §3.2–§3.3 (postojeći model); regresija CR-001/CR-002/CR-003 OK |
 | **Test** | Prioritet `date` / `week_*` / `month`; AND `q`/`category`/`location`; prazni rezultati; paginacija + query string; aktivni filteri (×); „Poništi sve filtere“; ulazi sa statistika; state persistence / `back` |
 | **Deploy** | Bez migracije; bez MW; feature flag opciono; smoke: Pretraga i pregled + linkovi sa početne |
 | **Rollback** | **Potpuni** ili **djelimični** (UI filtera) — bez migracije |
@@ -313,7 +313,7 @@ Faza 6 (IS-001 istorijski naziv — završno usklađenje)
 | **Dokumentacija** | `fc35132` (`docs: prepare CR-003 filter documentation`) |
 | **Implementacija** | `595045a` (`feat(cultural-calendar): implement CR-003 event filters`) |
 | **Testiranje** | `41 passed (194 assertions)` (`CulturalCalendarCr001Phase1Test` + `CulturalCalendarCr002MonthFilterTest` + `CulturalCalendarCr003FiltersTest`) |
-| **Cilj** | Isporuka ne-datumskih filtera na „Pretrazi i pregledu“ prema TS-009 §3.3 i PO-CR3-01…08 |
+| **Cilj** | Isporuka ne-datumskih filtera na „Pretrazi i pregledu“ prema KK-TS-009 §3.3 i PO-CR3-01…08 |
 | **Obuhvat** | GET filter zona (tekst, dropdown kategorije, dropdown lokacije, Pretraži); query `q`/`category`/`location`; AND sa aktivnim datumskim mehanizmom; aktivni filteri sa ×; „Poništi sve filtere“ → čist URL; state persistence kroz paginaciju i `back` |
 | **Controller** | `CulturalCalendarController::events` — parsiranje/validacija `q`/`category`/`location`; AND filteri; dropdown lokacija = distinct objavljenih `lokacija`; kategorije = `CulturalEvent::CATEGORIES`; bez novih ruta |
 | **View** | `resources/views/cultural-calendar/events.blade.php` — filter zona; aktivni filteri; lista/paginacija/prazno stanje; datumski filteri **ne** u filter zoni |
@@ -330,25 +330,25 @@ Faza 6 (IS-001 istorijski naziv — završno usklađenje)
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Uskladiti Detalje događaja i Arhivu događaja **isključivo u granicama postojećeg modela** (baseline TS-009 §7–§8), bez uvođenja domena Održavanja, Oznaka ili Manifestacije |
-| **Obuhvat** | Postojeći detalj; **CR-004A (Implemented):** javni status badge (TS-009 §7.1; PO-CR4A-01…05); **CR-004B (Planned):** javni prikaz otkazanih događaja (TS-009 §7.2; PO-CR4B-01…10); navigacija i povratak; Arhiva; kartice Arhive. **Van obuhvata:** više Održavanja; Oznake (BM-08); blok Manifestacije; izmjena kriterijuma ulaska u Arhivu ka BM-DG-04 (to je Faza 6 ili zaseban odobreni CR); novi statusi baze; Odgođen kao status Događaja; izmjena BR-065 / BM-DG-04 |
+| **Cilj** | Uskladiti Detalje događaja i Arhivu događaja **isključivo u granicama postojećeg modela** (baseline KK-TS-009 §7–§8), bez uvođenja domena Održavanja, Oznaka ili Manifestacije |
+| **Obuhvat** | Postojeći detalj; **CR-004A (Implemented):** javni status badge (KK-TS-009 §7.1; PO-CR4A-01…05); **CR-004B (Planned):** javni prikaz otkazanih događaja (KK-TS-009 §7.2; PO-CR4B-01…10); navigacija i povratak; Arhiva; kartice Arhive. **Van obuhvata:** više Održavanja; Oznake (BM-08); blok Manifestacije; izmjena kriterijuma ulaska u Arhivu ka BM-DG-04 (to je Faza 6 ili zaseban odobreni CR); novi statusi baze; Odgođen kao status Događaja; izmjena BR-065 / BM-DG-04 |
 | **Zavisnosti** | Faze 1–2 nisu strogi preduslov za početak; **ne zamjenjuje** Fazu 6 |
 | **Rizik** | **Srednji** |
 | **Uticaj na kod** | Sloj kontrolera / helper za izračun javnog stanja (bez novih tabela); prikazi kartica i Detalja; rute: bez novih; baza: ne |
-| **Ulaz** | Plan test/rollback; granica „postojeći model“ dokumentovana u CR; TS-009 §7.1 |
+| **Ulaz** | Plan test/rollback; granica „postojeći model“ dokumentovana u CR; KK-TS-009 §7.1 |
 | **Izlaz** | Prikaz i navigacija usklađeni u dogovorenom baseline obimu; status badge konzistentan na svim javnim prikazima; nema regresije dostupnosti detalja / povratka; PO potvrda |
 | **Test** | Detalji za javno dostupne događaje; povratak na Arhivu / Pretragu i pregled sa kontekstom; lista Arhive; status badge (Otkazan prioritet; Predstoji / U toku / Završen po pravilima) |
 | **Deploy** | Bez migracije; bez MW; feature flag nije neophodan; smoke: Detalji + Arhiva + Pretraga i pregled + Početna |
 | **Rollback** | **Potpuni rollback** |
 
-**Ograničenje:** Ne uvoditi nova polja/tabele/relacije u ovoj fazi. Ne simulirati puni TS-004/TS-007/TS-005 prikaz.
+**Ograničenje:** Ne uvoditi nova polja/tabele/relacije u ovoj fazi. Ne simulirati puni KK-TS-004/KK-TS-007/KK-TS-005 prikaz.
 
 ### 9.3.1 CR-004A — Javni status badge (implementacioni paket)
 
 | Stavka | Opis |
 |--------|------|
 | **Status** | **Implemented** |
-| **Dokumentacija** | `614706c` (`docs: prepare CR-004A public event status badges`); TS-009 v1.0.4 §7.1; IS-001 v1.0.5 §9.3 / §9.3.1; PO-CR4A-01…05 |
+| **Dokumentacija** | `614706c` (`docs: prepare CR-004A public event status badges`); KK-TS-009 v1.0.4 §7.1; KK-IS-001 v1.0.5 §9.3 / §9.3.1; PO-CR4A-01…05 |
 | **Implementacija** | `0f73240` (`feat(cultural-calendar): implement CR-004A public status badges`) |
 | **Testiranje** | `65 passed (266 assertions)` (`CulturalEventPublicStatusTest` + `CulturalCalendarCr004APublicStatusTest` + regresija CR-001/CR-002/CR-003) |
 | **Cilj** | Jedinstveni javni status badge na svim javnim prikazima događaja |
@@ -364,7 +364,7 @@ Faza 6 (IS-001 istorijski naziv — završno usklađenje)
 | Stavka | Opis |
 |--------|------|
 | **Status** | **Planned** |
-| **Dokumentacija** | TS-009 v1.0.5 §7.2; IS-001 v1.0.6 §9.3 / §9.3.2; BM-PK-13 (PATCH-051); FS PATCH-FS-051 (BR-270–BR-274); PO-CR4B-01…10 |
+| **Dokumentacija** | KK-TS-009 v1.0.5 §7.2; KK-IS-001 v1.0.6 §9.3 / §9.3.2; BM-PK-13 (PATCH-051); FS PATCH-FS-051 (BR-270–BR-274); PO-CR4B-01…10 |
 | **Cilj** | Uskladiti javnu dostupnost i portalni prikaz otkazanih događaja bez migracije i bez izmjene internog lifecycle-a |
 | **Obuhvat** | Aktivne površine: javni skup `published` \| `cancelled` uz vremenske uslove; Istaknuti isključuju `cancelled` (bez izmjene flaga); sistemsko obavještenje na Detaljima; portalna Arhiva = query po datumu (`published` ili `cancelled` + prošao termin); status otkazanog ostaje `cancelled`; javni status uvijek **Otkazan**; statistike/datumski skupovi uključuju otkazane; bez novih filtera/URL/search moda |
 | **Van obuhvata** | Odgođen; Faza 4 / Faza 5; migracije / izmjena šeme / novi modeli / tabele; izmjena BR-065 / BM-DG-04; javna dostupnost internog statusa `archived`; prelaz `cancelled → archived`; izmjena prava otkazivanja (BR-063 / BM-DG-05); izmjena flaga Istaknut |
@@ -379,8 +379,8 @@ Faza 6 (IS-001 istorijski naziv — završno usklađenje)
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Uvesti / uskladiti domenske entitete potrebne za puni TS-009 potrošački sloj, prema TS-003/004/005/007/008 — **bez** portalskih MF ekrana (to je Faza 5) |
-| **Obuhvat** | Manifestacija; Održavanja; Oznake; Mediji (ako su dio potvrđenog implementacionog obuhvata CR-a); migracije; modeli i relacije; urednički tokovi kao **zavisnost** (planirani TS-010 / postojeći admin — van IS-001 detalja) |
+| **Cilj** | Uvesti / uskladiti domenske entitete potrebne za puni KK-TS-009 potrošački sloj, prema KK-TS-003/004/005/007/008 — **bez** portalskih MF ekrana (to je Faza 5) |
+| **Obuhvat** | Manifestacija; Održavanja; Oznake; Mediji (ako su dio potvrđenog implementacionog obuhvata CR-a); migracije; modeli i relacije; urednički tokovi kao **zavisnost** (planirani KK-TS-010 / postojeći admin — van KK-IS-001 detalja) |
 | **Zavisnosti** | Faze 1–3 završene ili odobren izuzetak. Zasebni CR za domen. |
 | **Rizik** | **Visok** |
 | **Uticaj na kod** | Novi/prošireni modeli; migracije; admin/urednički tokovi; javni portal u ovoj fazi **minimalno** (samo kompatibilnost čitanja); testovi: obavezni domen + regresija portala |
@@ -411,28 +411,28 @@ Faza 6 (IS-001 istorijski naziv — završno usklađenje)
 
 ---
 
-## 9.6 Faza 6 — Završno usklađenje (mapiranje IR-001: 6A + 6B)
+## 9.6 Faza 6 — Završno usklađenje (mapiranje KK-IR-001: 6A + 6B)
 
 | Stavka | Opis |
 |--------|------|
-| **Cilj** | Završiti usklađenost javnog portala sa TS-009; **IR-001 Faza 6A** = kanonski cutover Događaja (bez MF); **IR-001 Faza 6B** = Manifestacije |
-| **Obuhvat 6A (plan — historical)** | Cutover `CulturalEvent` → `CulturalEventEntry`+`CulturalOccurrence`; kartica multi-OCC; sortiranje; Odgođen; CAT-CUTOVER; public query SSOT; privremeni flag; očuvanje UI (TS-009 §1.7, §7.3, §9–§12). **Van:** Manifestacije; slug; migracija legacy; dual-read/write |
+| **Cilj** | Završiti usklađenost javnog portala sa KK-TS-009; **KK-IR-001 Faza 6A** = kanonski cutover Događaja (bez MF); **KK-IR-001 Faza 6B** = Manifestacije |
+| **Obuhvat 6A (plan — historical)** | Cutover `CulturalEvent` → `CulturalEventEntry`+`CulturalOccurrence`; kartica multi-OCC; sortiranje; Odgođen; CAT-CUTOVER; public query SSOT; privremeni flag; očuvanje UI (KK-TS-009 §1.7, §7.3, §9–§12). **Van:** Manifestacije; slug; migracija legacy; dual-read/write |
 | **CURRENT STATE 6A** | **CLOSED** — canonical-only SSOT; flag **uklonjen**; dual-read/write **0**; active public legacy dependency **0**; CAT-CUTOVER **14/14** produkcija; PATCH-063 opcioni javni `cancellation_reason` **dozvoljen**; B1+B2 **PRODUCTION VERIFIED / CLOSED**; B3 DROP **DEFERRED / non-blocking**. Vidi §2.1 |
-| **Obuhvat 6B** | MF lista/detalj/program; filter MF (TS-009 §6) — **zasebno CLOSED**; ne blokira 6A |
-| **Zavisnosti** | 6A: kanonski domen Događaj/Održavanje + katalozi; **TS-005 ne blokira 6A**. 6B: TS-005 spreman |
+| **Obuhvat 6B** | MF lista/detalj/program; filter MF (KK-TS-009 §6) — **zasebno CLOSED**; ne blokira 6A |
+| **Zavisnosti** | 6A: kanonski domen Događaj/Održavanje + katalozi; **KK-TS-005 ne blokira 6A**. 6B: KK-TS-005 spreman |
 | **Rizik** | **Srednji do Visok** (široka regresija) — historical plan risk |
-| **Uticaj na kod** | Sloj kontrolera/upita/prikaza; testovi: TM-JP (TS-009 §18) + široka regresija |
-| **Ulaz** | TS-009 (current Stable); IR-001 (current); checklist usklađenosti |
+| **Uticaj na kod** | Sloj kontrolera/upita/prikaza; testovi: TM-JP (KK-TS-009 §18) + široka regresija |
+| **Ulaz** | KK-TS-009 (current Stable); KK-IR-001 (current); checklist usklađenosti |
 | **Izlaz** | 6A: **CLOSED** (implementation + production verification); 6B: MF portal CLOSED zasebno |
 | **Test** | End-to-end: Početna → Pretraga → Detalji → (6B: Manifestacije) → Arhiva; TM-JP-* |
-| **Deploy (plan — historical)** | Privremeni feature flag `legacy` XOR `canonical` (TS-009 §10.2) — **supersedovano** Phase B1+B2 (flag removed) |
+| **Deploy (plan — historical)** | Privremeni feature flag `legacy` XOR `canonical` (KK-TS-009 §10.2) — **supersedovano** Phase B1+B2 (flag removed) |
 | **Rollback (plan — historical)** | Flag → `legacy` — **nije** current-state put; B3 shell nije rollback mehanizam |
 
 ---
 
 # 10. Upravljanje rizikom
 
-### IS-001-04 — Upravljanje implementacionim rizikom
+### KK-IS-001-04 — Upravljanje implementacionim rizikom
 
 | Nivo | Kriterijumi |
 |------|-------------|
@@ -457,12 +457,12 @@ Faza 6 (IS-001 istorijski naziv — završno usklađenje)
 
 # 11. Ulazni i izlazni kriterijumi
 
-### IS-001-05 — Ulazni i izlazni kriterijumi
+### KK-IS-001-05 — Ulazni i izlazni kriterijumi
 
 **Ulazni (svaka faza):**
 
 * BM, FS i TS zahtjevi usvojeni;
-* faza definisana u IS-001;
+* faza definisana u KK-IS-001;
 * potrebne prethodne faze završene (ili odobren izuzetak);
 * procijenjen rizik;
 * postoji plan testiranja;
@@ -479,7 +479,7 @@ Faza 6 (IS-001 istorijski naziv — završno usklađenje)
 * implementacija odgovara specifikaciji;
 * planirani testovi uspješni;
 * nema neprihvatljive regresije;
-* potrebna dokumentacija usklađena (ako je bilo CR/TO ažuriranje — van izmjene TS-009 pravila);
+* potrebna dokumentacija usklađena (ako je bilo CR/TO ažuriranje — van izmjene KK-TS-009 pravila);
 * faza spremna za isporuku;
 * Product Owner formalno potvrdio završetak.
 
@@ -504,7 +504,7 @@ Faza 6 (IS-001 istorijski naziv — završno usklađenje)
 
 # 13. Strategija isporuke
 
-### IS-001-06 — Strategija isporuke (Deploy)
+### KK-IS-001-06 — Strategija isporuke (Deploy)
 
 Opšta pravila:
 
@@ -529,7 +529,7 @@ Opšta pravila:
 
 # 14. Strategija rollback-a
 
-### IS-001-07 — Strategija povratka (Rollback)
+### KK-IS-001-07 — Strategija povratka (Rollback)
 
 Klasifikacije: Potpuni; Djelimični; Uz migraciju podataka; Nije preporučljiv.
 
@@ -555,9 +555,9 @@ Plan rollback-a mora postojati **prije** isporuke.
 
 # 15. Upravljanje promjenama specifikacije
 
-### IS-001-08 — Upravljanje promjenama specifikacije
+### KK-IS-001-08 — Upravljanje promjenama specifikacije
 
-**TS-009 v1.0.1** je referentna specifikacija.
+**KK-TS-009 v1.0.1** je referentna specifikacija.
 
 Proces promjene:
 
@@ -577,29 +577,29 @@ Ne dozvoljavaju se nevidljive ili nedokumentovane izmjene stabilne specifikacije
 
 ---
 
-# 16. Matrica sljedivosti prema TS-009
+# 16. Matrica sljedivosti prema KK-TS-009
 
-| IS-001 | TS-009 / odluke | BM / FS (referenca) |
+| KK-IS-001 | KK-TS-009 / odluke | BM / FS (referenca) |
 |--------|-----------------|---------------------|
 | Faza 1 | IA-01; PO-TS9-03A (label); PO-TS9-05A/05B (provjera); PO-TS9-06A–06D; TD-TS9-01 | BM-PK-15, BM-PK-16, BM-PK-19–23; BR-117, BR-255, BR-258–264; §5.1–§5.3 |
-| Faza 2 | PO-TS9-03A; PO-TS9-04A; **CR-002** (`month`); **CR-003** (`q`/`category`/`location`, PO-CR3-01…08) | BM-PK-17–18, BM-PK-22 (takođe BM-PK-06–07); BR-256–257, BR-263 (takođe BR-107–108); TS-009 §3.2–§3.3 |
-| Faza 3 | TS-009 §7–§8 **baseline**; **CR-004A** §7.1 (PO-CR4A-01…05); **CR-004B** §7.2 (PO-CR4B-01…10) | BM-PK-05 (djelimično), BM-PK-13; BR-106, BR-114, BR-270–BR-274. **Ne:** BM-PK-09/11 (Održavanja/Oznake); bez izmjene BM-DG-04 |
-| Faza 4 | Granice domena (nije portal UI) | TS-003/004/005/007/008; BM-04/05/06/08/09; odgovarajući BR u FS §5.5–5.12 |
-| Faza 5 | PO-TS9-07A–07E; TS-009 §6 | BM-PK-24–28; BM-MF-13; BR-265–269, BR-192 |
-| Faza 6 | TS-009 §7–§8 **puni** obuhvat nakon domena | BM-PK-05, BM-PK-09–14; BR-106, BR-110–115; §5.4 |
-| IS-001-02 | IA-01 | BM-PK-16; BR-255 |
-| IS-001-08 | TS-009 v1.0.5 Stable | — |
+| Faza 2 | PO-TS9-03A; PO-TS9-04A; **CR-002** (`month`); **CR-003** (`q`/`category`/`location`, PO-CR3-01…08) | BM-PK-17–18, BM-PK-22 (takođe BM-PK-06–07); BR-256–257, BR-263 (takođe BR-107–108); KK-TS-009 §3.2–§3.3 |
+| Faza 3 | KK-TS-009 §7–§8 **baseline**; **CR-004A** §7.1 (PO-CR4A-01…05); **CR-004B** §7.2 (PO-CR4B-01…10) | BM-PK-05 (djelimično), BM-PK-13; BR-106, BR-114, BR-270–BR-274. **Ne:** BM-PK-09/11 (Održavanja/Oznake); bez izmjene BM-DG-04 |
+| Faza 4 | Granice domena (nije portal UI) | KK-TS-003/004/005/007/008; BM-04/05/06/08/09; odgovarajući BR u FS §5.5–5.12 |
+| Faza 5 | PO-TS9-07A–07E; KK-TS-009 §6 | BM-PK-24–28; BM-MF-13; BR-265–269, BR-192 |
+| Faza 6 | KK-TS-009 §7–§8 **puni** obuhvat nakon domena | BM-PK-05, BM-PK-09–14; BR-106, BR-110–115; §5.4 |
+| KK-IS-001-02 | IA-01 | BM-PK-16; BR-255 |
+| KK-IS-001-08 | KK-TS-009 v1.0.5 Stable | — |
 
-| Usvojena odluka | Primarne sekcije IS-001 |
+| Usvojena odluka | Primarne sekcije KK-IS-001 |
 |-----------------|-------------------------|
-| IS-001-01 | §1, §2 |
-| IS-001-02 | §5 |
-| IS-001-03 | §9 |
-| IS-001-04 | §10 |
-| IS-001-05 | §11 |
-| IS-001-06 | §13 |
-| IS-001-07 | §14 |
-| IS-001-08 | §15 |
+| KK-IS-001-01 | §1, §2 |
+| KK-IS-001-02 | §5 |
+| KK-IS-001-03 | §9 |
+| KK-IS-001-04 | §10 |
+| KK-IS-001-05 | §11 |
+| KK-IS-001-06 | §13 |
+| KK-IS-001-07 | §14 |
+| KK-IS-001-08 | §15 |
 
 ---
 
@@ -607,20 +607,20 @@ Ne dozvoljavaju se nevidljive ili nedokumentovane izmjene stabilne specifikacije
 
 ### Pretpostavke
 
-* Implementacija prati IS-001 redoslijed faza osim uz odobreni izuzetak.
-* Faza 4 obuhvata uredničke tokove samo kao zavisnost; detalj uredničkog portala ostaje u okviru planiranog TS-010 / zasebnih CR.
-* Mediji u Fazi 4 ulaze samo ako CR potvrdi obuhvat (TS-008).
+* Implementacija prati KK-IS-001 redoslijed faza osim uz odobreni izuzetak.
+* Faza 4 obuhvata uredničke tokove samo kao zavisnost; detalj uredničkog portala ostaje u okviru planiranog KK-TS-010 / zasebnih CR.
+* Mediji u Fazi 4 ulaze samo ako CR potvrdi obuhvat (KK-TS-008).
 
-### Otvorena pitanja (bez PO odluke u IS-001)
+### Otvorena pitanja (bez PO odluke u KK-IS-001)
 
 1. Tačan CR raspored unutar Faze 4 (redoslijed Održavanja vs Manifestacija vs Oznake vs Mediji).
 2. Kada se kriterijum Arhive usklađuje sa BM-DG-04 / statusom Arhiviran — **podrazumijevano Faza 6**; ranije samo uz zaseban CR i PO odobrenje (Faza 3 to ne radi).
 3. Feature-flag mehanizam — postoji li već na platformi ili se uvodi samo po potrebi Faze 5.
-4. Obim Medija (TS-008) u prvom CR-u Faze 4 (samo hijerarhija prikaza / fallback vs širi obuhvat).
+4. Obim Medija (KK-TS-008) u prvom CR-u Faze 4 (samo hijerarhija prikaza / fallback vs širi obuhvat).
 
 **Uklonjeno kao „otvoreno“:** miješanje pojmova Oznake/Tagovi — razriješeno kanonskom terminologijom (§4). Preklapanje Faze 3/6 — razriješeno eksplicitnom granicom (§8, §9.3, §9.6).
 
-Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehničko odobrenje prije pogođene faze.
+Ova pitanja **ne rješava** KK-IS-001; zahtijevaju analizu i Product Owner / tehničko odobrenje prije pogođene faze.
 
 ---
 
@@ -642,7 +642,8 @@ Ova pitanja **ne rješava** IS-001; zahtijevaju analizu i Product Owner / tehni�
 | 1.0.9 | 2026-08-15 | **MED marker:** stari Media model (TS-008 / tagovi medija) **SUPERSEDED** MED-01–MED-28. Istorijski sadržaj faza nije prepisan. Bez izmjene implementacije. |
 | 1.0.10 | 2026-08-16 | **MED documentation closeout:** public fallback resolver **COMPLETE / VERIFIED**. Finalni vizuelni asset rad (**MED-I4B**) = DEFERRED / NON-BLOCKING. Istorijske faze KEEP. Referenca TS-009 v1.0.22. |
 | 1.0.11 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** §2.2 — javni portal final audit **PASS / ACCEPTED**; cross-validation **PASS**; final regression **GREEN** (1286/6224). B3 KEEP deferred. Production deploy HEAD `4595a14` **NOT CONFIRMED**. Referenca TS-009 v1.0.23. Istorijske faze KEEP. |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 ---
 
-**Kraj dokumenta IS-001 v1.0.11 (Stable)**
+**Kraj dokumenta KK-IS-001 v1.0.11 (Stable)**

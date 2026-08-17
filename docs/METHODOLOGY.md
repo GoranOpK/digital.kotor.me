@@ -104,13 +104,21 @@ Svaki TS dokument obrađuje jednu logički zaokruženu funkcionalnu cjelinu unut
 
 Veza između Feature-a i pripadajućih TS dokumenata evidentira se u Feature Registry-ju i matricama sljedivosti.
 
-### M-TS-002 — Globalna numeracija TS dokumenata
+### M-TS-002 — Namespace dokumentacionih identifikatora
 
-Svi TS dokumenti imaju jedinstvenu globalnu numeraciju (TS-001, TS-002, TS-003...).
+Dokumentacioni identifikatori imaju namespace poslovnog modula ili platformskog sloja. Numeracija je lokalna unutar tog namespace-a.
+
+Primjeri postojećih namespace prefiksa (lista **nije** zatvorena):
+
+* `KK-TS-001`, `KK-TS-003` — Kalendar kulture;
+* `EP-TS-001` — e-Plaćanje;
+* budući `DK-TS-*` — zajednička/platformska dokumentacija Digital Kotora.
+
+Novi poslovni moduli mogu uvesti sopstveni dokumentacioni namespace, uz istu lokalnu numeraciju unutar tog namespace-a.
 
 Numeracija TS dokumenata je nezavisna od Feature ID-a.
 
-Jedan Feature može biti povezan sa više različito numerisanih TS dokumenata.
+Jedan Feature može biti povezan sa više različito numerisanih TS dokumenata unutar namespace-a svog modula.
 
 Postojeće oznake TS dokumenata ne mijenjaju se bez prethodne provjere registra i međusobnih referenci.
 
@@ -136,6 +144,8 @@ Svaki TS dokument mora sadržati sljedivost prema Business Model dokumentima i F
 2. rule-level sljedivost.
 
 Sekcijska sljedivost se navodi na početku svakog većeg poglavlja kroz pregled relevantnih izvora iz BM-a i FS-a.
+
+Primjer sljedivosti sa modulnim namespace-om: `KK-BM-001` → `KK-FS-001` → `KK-TS-003`. Drugi moduli koriste sopstveni prefiks (npr. `EP-BM-001` → `EP-FS-001` → `EP-TS-001`).
 
 Rule-level sljedivost je obavezna za poslovno kritična i tehnički značajna pravila, posebno za:
 
@@ -208,13 +218,13 @@ Ne smije se izmišljati sadržaj samo radi popunjavanja poglavlja.
 
 #### Numeracija
 
-* Oznaka dokumenta, poput `TS-001`, `TS-002` ili `TS-003`, navodi se u zaglavlju i metapodacima dokumenta.
+* Oznaka dokumenta, poput `KK-TS-001`, `KK-TS-003` ili `EP-TS-001`, navodi se u zaglavlju i metapodacima dokumenta. Prefiks je namespace poslovnog modula ili platformskog sloja; numeracija je lokalna unutar tog namespace-a.
 * Naslovi poglavlja koriste jednostavnu numeraciju:
   * `1.`
   * `2.`
   * `3.`
 * Oznaka dokumenta ne ponavlja se u naslovu svakog poglavlja.
-* Obrasci poput `TS-002 / 1`, `TS-002 / 2`, `TS-002 / 3` nisu dozvoljeni u standardnoj strukturi.
+* Obrasci poput `KK-TS-001 / 1`, `KK-TS-001 / 2`, `KK-TS-001 / 3` nisu dozvoljeni u standardnoj strukturi.
 
 #### Pravila preimenovanja i izmjene strukture
 
@@ -412,3 +422,4 @@ Ova odredba ne uvodi širu politiku imenovanja ostalih dokumentacionih foldera.
 | 2026-07-26 | Usvojeno pravilo odnosa Business Model / Functional Specification / Technical Overview; registar odstupanja vodi se isključivo u Technical Overview dokumentu modula. |
 | 2026-07-28 | Dodata pravila M-TS-001 do M-TS-004 za Technical Specification dokumente (više TS po Feature-u, globalna numeracija, obavezno poglavlje „Granice V1 (Out of Scope)“, sekcijska i rule-level sljedivost). |
 | 2026-07-28 | Dodato pravilo M-TS-005 — Standardna struktura Technical Specification dokumenta (jedinstvena struktura, redosljed i nazivi poglavlja za sve TS dokumente). |
+| 2026-08-17 | M-TS-002: prelazak sa globalne TS numeracije na modulni dokumentacioni namespace (`KK-*`, `EP-*`, budući `DK-*`; lista prefiksa nije zatvorena). Administrativna migracija dokumentacionog ID-a Kalendara kulture na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |

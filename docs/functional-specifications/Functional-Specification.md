@@ -2,6 +2,7 @@
 # Functional Specification
 ## Modul: Kalendar kulture
 
+**Oznaka dokumenta:** KK-FS-001
 **Status dokumenta:** Stable
 **Verzija:** 1.0.0
 
@@ -97,6 +98,7 @@
 | PATCH-FS-075 | 2026-08-15 | **MED-01–MED-28 / BM PATCH-075:** §5.11 preimenovan u Naslovna fotografija Događaja i Manifestacije. **SUPERSEDED:** BR-086–BR-091, BR-237–BR-254 (TS8 model). Dodati BR-351–BR-370. Usklađeni §5.4.4, BR-113, BR-197. TS-008 više nije aktivni FS SSOT. **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Verzija ostaje 1.0.0. Bez izmjene koda. |
 | PATCH-FS-076 | 2026-08-16 | **MED documentation closeout (status only):** MED-01–MED-28 = **PO ADOPTED / DOCS CANONICALIZED / IMPLEMENTATION COMPLETE / VERIFIED**. BR-351–BR-370 **KEEP**. BR-086–091 i BR-237–254 ostaju SUPERSEDED. **MED-I4B** = **DEFERRED / NON-BLOCKING PROJECT ASSET WORK**. Bez novih BR. Verzija ostaje 1.0.0. |
 | PATCH-FS-077 | 2026-08-16 | **FINAL V1 DOCUMENTATION CLOSEOUT (status only):** V1 FUNCTIONAL IMPLEMENTATION = COMPLETE; V1 TECHNICAL VERIFICATION = PASS; FINAL FULL REGRESSION = GREEN (1286/6224/0/0/12 skipped); BLOCKS V1 CLOSEOUT = NO. Javni / urednički / Administracija = ACCEPTED FOR V1 CLOSEOUT. MED KEEP CLOSED. B3 = DEFERRED / POST-V1 / NON-BLOCKING. MED-I4B KEEP deferred. Production deploy HEAD `4595a14` **NOT CONFIRMED**. Bez novih BR. Verzija ostaje 1.0.0. |
+| — | 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 
 Napomena:
 
@@ -129,27 +131,27 @@ Dokument predstavlja referentnu funkcionalnu specifikaciju za planiranje, razvoj
 
 | Poglavlje | Status |
 |-----------|--------|
-| FS-001 – §1 Svrha | Approved |
-| FS-001 – §2 Korisnici | Approved |
-| FS-001 – §3 Preduslovi | Approved |
-| FS-001 – Platformsko pravilo | Approved |
-| FS-001 – §4 Poslovna pravila | Approved |
-| FS-001 – §5.1 Hero sekcija | Approved |
-| FS-001 – §5.2 Statistički pokazatelji | Approved |
-| FS-001 – §5.3 Izbor perioda i pregled sadržaja | Approved |
-| FS-001 – §5.4 Detalj događaja | Approved |
-| FS-001 – §5.5 Kreiranje i upravljanje događajem | Approved |
-| FS-001 – §5.6 Upravljanje organizatorima | Approved |
-| FS-001 – §5.7 Upravljanje održavanjima i statusima | Approved |
-| FS-001 – §5.8 Upravljanje moderatorima | Approved |
-| FS-001 – §5.9 Upravljanje lokacijama | Approved |
-| FS-001 – §5.10 Upravljanje kategorijama i oznakama | Approved |
-| FS-001 – §5.11 Naslovna fotografija Događaja i Manifestacije (istorijski: Upravljanje medijima) | Approved — kanonski PATCH-FS-075 / MED; TS8 BR SUPERSEDED |
-| FS-001 – §5.12 Upravljanje manifestacijama | Approved |
-| FS-001 – §5.13 Javni portal — pregled, pretraga i prikaz | Approved |
-| FS-001 – §5.14 Urednički portal | Approved |
-| FS-001 – §5.15 Newsletter | Approved |
-| FS-001 – §5.16 Evidencija aktivnosti | Approved |
+| KK-FS-001 – §1 Svrha | Approved |
+| KK-FS-001 – §2 Korisnici | Approved |
+| KK-FS-001 – §3 Preduslovi | Approved |
+| KK-FS-001 – Platformsko pravilo | Approved |
+| KK-FS-001 – §4 Poslovna pravila | Approved |
+| KK-FS-001 – §5.1 Hero sekcija | Approved |
+| KK-FS-001 – §5.2 Statistički pokazatelji | Approved |
+| KK-FS-001 – §5.3 Izbor perioda i pregled sadržaja | Approved |
+| KK-FS-001 – §5.4 Detalj događaja | Approved |
+| KK-FS-001 – §5.5 Kreiranje i upravljanje događajem | Approved |
+| KK-FS-001 – §5.6 Upravljanje organizatorima | Approved |
+| KK-FS-001 – §5.7 Upravljanje održavanjima i statusima | Approved |
+| KK-FS-001 – §5.8 Upravljanje moderatorima | Approved |
+| KK-FS-001 – §5.9 Upravljanje lokacijama | Approved |
+| KK-FS-001 – §5.10 Upravljanje kategorijama i oznakama | Approved |
+| KK-FS-001 – §5.11 Naslovna fotografija Događaja i Manifestacije (istorijski: Upravljanje medijima) | Approved — kanonski PATCH-FS-075 / MED; TS8 BR SUPERSEDED |
+| KK-FS-001 – §5.12 Upravljanje manifestacijama | Approved |
+| KK-FS-001 – §5.13 Javni portal — pregled, pretraga i prikaz | Approved |
+| KK-FS-001 – §5.14 Urednički portal | Approved |
+| KK-FS-001 – §5.15 Newsletter | Approved |
+| KK-FS-001 – §5.16 Evidencija aktivnosti | Approved |
 
 ---
 
@@ -193,7 +195,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
 
 ## Sadržaj
 
-1. FS-001 – Functional Specification (Modul: Kalendar kulture)
+1. KK-FS-001 – Functional Specification (Modul: Kalendar kulture)
    - 1. Svrha
    - 2. Korisnici
    - 3. Preduslovi
@@ -224,7 +226,7 @@ Ako postojeća implementacija ispunjava poslovnu svrhu i ne postoji nijedan od n
 
 ---
 
-# FS-001 – Functional Specification (Modul: Kalendar kulture)
+# KK-FS-001 – Functional Specification (Modul: Kalendar kulture)
 
 ## 1. Svrha
 
@@ -455,9 +457,9 @@ Klik otvara „Pretragu i pregled“ sa odgovarajućim datumskim filterom za taj
 
 #### Napomena
 
-CR-001 (IS-001 Faza 1; Implemented) uskladio je terminologiju, Hero, istaknute, kartice Danas/Ove sedmice, label treće kartice, listu ispod kalendara i „Prikaži sve događaje“.
+CR-001 (KK-IS-001 Faza 1; Implemented) uskladio je terminologiju, Hero, istaknute, kartice Danas/Ove sedmice, label treće kartice, listu ispod kalendara i „Prikaži sve događaje“.
 
-CR-002 (IS-001 Faza 2; Implemented, commit `c5d396f`) implementirao je klikabilnu treću statističku karticu (Izabrani mjesec) sa mjesečnim filterom `month=YYYY-MM` na stranici „Pretraga i pregled“ (TS-009 §3.2).
+CR-002 (KK-IS-001 Faza 2; Implemented, commit `c5d396f`) implementirao je klikabilnu treću statističku karticu (Izabrani mjesec) sa mjesečnim filterom `month=YYYY-MM` na stranici „Pretraga i pregled“ (KK-TS-009 §3.2).
 
 **Status:** Approved
 
@@ -1518,7 +1520,7 @@ Posebna operacija naknadnog povezivanja (PO-DG-08 / PO-DG-09 / BM-UR-07) omoguć
 * prethodne javne verzije / istoriju događaja;
 * ne kreira Prijedlog izmjene.
 
-**Evidentiranje:** naknadno povezivanje se kasnije evidentira kroz centralnu Evidenciju aktivnosti (katalog Organizatori / §5.16; TS-012).
+**Evidentiranje:** naknadno povezivanje se kasnije evidentira kroz centralnu Evidenciju aktivnosti (katalog Organizatori / §5.16; KK-TS-012).
 
 **Statusna matrica dostupnosti BR-052:**
 
@@ -2598,7 +2600,7 @@ Semantičko mapiranje (PO; ne implementacija cutover-a):
 
 Nove kategorije bez legacy ekvivalenta: Dječiji programi; Konferencije; Sajmovi — bez automatskog mapiranja.
 
-Tehnički cutover javnog portala (Faza 6A / TS-009): legacy `CulturalEvent` sadržaj je testni (PO-EV-01); **ne** migrira se; **ne** uvodi se dual-read/dual-write; **ne** uvodi se URL/legacy alias mapa kategorija; javni portal koristi isključivo kanonski katalog (BR-283). Semantičko mapiranje iznad ostaje referentno za razumijevanje rename-a, ne kao runtime adapter. Izbacivanje iz kanonskog kataloga ne briše automatski postojeće testne legacy događaje.
+Tehnički cutover javnog portala (Faza 6A / KK-TS-009): legacy `CulturalEvent` sadržaj je testni (PO-EV-01); **ne** migrira se; **ne** uvodi se dual-read/dual-write; **ne** uvodi se URL/legacy alias mapa kategorija; javni portal koristi isključivo kanonski katalog (BR-283). Semantičko mapiranje iznad ostaje referentno za razumijevanje rename-a, ne kao runtime adapter. Izbacivanje iz kanonskog kataloga ne briše automatski postojeće testne legacy događaje.
 
 **Status:** Approved
 
@@ -2740,7 +2742,7 @@ Vizuelna upload kartica; drag & drop; standardni file picker; lokalni preview; Z
 
 #### BR-370 – Audit kompatibilnost (MED-28)
 
-Ne uvode se novi `media.*` audit kodovi. `TS12-MF-11` / `mf.cover.change` ostaje. TS-012 freeze katalog se ne otvara.
+Ne uvode se novi `media.*` audit kodovi. `TS12-MF-11` / `mf.cover.change` ostaje. KK-TS-012 freeze katalog se ne otvara.
 
 ---
 
@@ -3380,17 +3382,17 @@ Javni portal omogućava prikaz otkazanih i arhiviranih događaja u skladu sa pos
 
 Status otkazanog ili arhiviranog događaja mora biti jasno prikazan korisniku.
 
-Za **javni prikaz otkazanih događaja** važe BR-270–BR-274 (CR-004B). Javni status badge uređuje CR-004A (TS-009 §7.1); kanonska multi-OCC agregacija uređuje **BR-285** (PO-6A11-01 / BM-PK-34).
+Za **javni prikaz otkazanih događaja** važe BR-270–BR-274 (CR-004B). Javni status badge uređuje CR-004A (KK-TS-009 §7.1); kanonska multi-OCC agregacija uređuje **BR-285** (PO-6A11-01 / BM-PK-34).
 
 **Javna Arhiva** (istorijski pogled) uređuje **BR-286** (PO-6A09-01…06 / BM-PK-35). Interni lifecycle status i javni status nisu isto. Korisnik za otkazani događaj uvijek vidi javni status **Otkazan**. Dok je interni status `cancelled`, Arhiva ga čita kao `cancelled` + prošli termin. Nakon prelaza u `archived`, istorijski badge ostaje **Otkazan** ili **Završen** prema sačuvanom izvornom statusu — ne „Arhiviran“. Aktivne javne površine ne čitaju `archived` globalno.
 
-> **Napomena (doc-CR-004A-impl):** CR-004A (Implemented — `0f73240` / `614706c`) dokumentuje javni status badge u **TS-009 §7.1** (PO-CR4A-01…05). Interni statusi se ne prikazuju kao labela; `cancelled` → **Otkazan** (prioritet). Predstoji / U toku / Završen su izračunata stanja.
+> **Napomena (doc-CR-004A-impl):** CR-004A (Implemented — `0f73240` / `614706c`) dokumentuje javni status badge u **KK-TS-009 §7.1** (PO-CR4A-01…05). Interni statusi se ne prikazuju kao labela; `cancelled` → **Otkazan** (prioritet). Predstoji / U toku / Završen su izračunata stanja.
 
-> **Napomena (doc-CR-004B):** CR-004B (IS-001 Faza 3) dokumentuje javnu dostupnost i portalni prikaz otkazanih u **TS-009 §7.2** i **IS-001 §9.3.2** (PO-CR4B-01…10; BR-270–BR-274). Historijski: otkazani zadržava `cancelled`; portalna Arhiva nije bila sinonim za interni `archived`; CR-004B nije otvarao sve `archived` zapise. Aktivni ugovor Javne Arhive: **BR-286** / BM-PK-35 (očuvanje Otkazan kroz arhiviranje).
+> **Napomena (doc-CR-004B):** CR-004B (KK-IS-001 Faza 3) dokumentuje javnu dostupnost i portalni prikaz otkazanih u **KK-TS-009 §7.2** i **KK-IS-001 §9.3.2** (PO-CR4B-01…10; BR-270–BR-274). Historijski: otkazani zadržava `cancelled`; portalna Arhiva nije bila sinonim za interni `archived`; CR-004B nije otvarao sve `archived` zapise. Aktivni ugovor Javne Arhive: **BR-286** / BM-PK-35 (očuvanje Otkazan kroz arhiviranje).
 
-> **Napomena (PO-6A11-01):** Kanonski Entry sa više Održavanja — agregatni javni status prema BR-285 / TS-009 §7.1.6.
+> **Napomena (PO-6A11-01):** Kanonski Entry sa više Održavanja — agregatni javni status prema BR-285 / KK-TS-009 §7.1.6.
 
-> **Napomena (PO-6A09-01…06):** Kanonska Javna Arhiva — BR-286 / TS-009 §8 / §12; očuvanje izvornog statusa; istorijski badge Otkazan/Završen.
+> **Napomena (PO-6A09-01…06):** Kanonska Javna Arhiva — BR-286 / KK-TS-009 §8 / §12; očuvanje izvornog statusa; istorijski badge Otkazan/Završen.
 
 ---
 
@@ -3479,7 +3481,7 @@ Event-specifični filteri (`category`, `location`, `date`, `week_start`, `week_e
 
 #### Napomena (CR-003)
 
-CR-003 (IS-001 Faza 2; Implemented, commit `595045a`) isporučio je ne-datumske filtere na „Pretrazi i pregledu“ (`q`, `category`, `location`; filter zona; AND sa datumskim mehanizmom; aktivni filteri; „Poništi sve filtere“) u skladu sa **TS-009 §3.3**, **IS-001 §9.2.1** i PO-CR3-01…08. Dokumentacioni ugovor: `fc35132`. Bez izmjene BR-257 i bez novih BR identifikatora.
+CR-003 (KK-IS-001 Faza 2; Implemented, commit `595045a`) isporučio je ne-datumske filtere na „Pretrazi i pregledu“ (`q`, `category`, `location`; filter zona; AND sa datumskim mehanizmom; aktivni filteri; „Poništi sve filtere“) u skladu sa **KK-TS-009 §3.3**, **KK-IS-001 §9.2.1** i PO-CR3-01…08. Dokumentacioni ugovor: `fc35132`. Bez izmjene BR-257 i bez novih BR identifikatora.
 
 #### BR-298 – Tip sadržaja na Pretrazi i pregledu
 
@@ -3666,7 +3668,7 @@ Mjesečni kalendar ostaje isključivo na početnoj stranici.
 
 Referentna informaciona arhitektura javnog korisničkog toka obuhvata postojeće javne prikaze (uključujući početnu stranicu, „Pretragu i pregled“, arhivu i detalj događaja) u skladu sa BR-255 i BR-258.
 
-Zasebna stranica „Dan“ nije dio referentne informacione arhitekture javnog portala; njena tehnička uloga dokumentovana je u TS-009 (TD-TS9-01).
+Zasebna stranica „Dan“ nije dio referentne informacione arhitekture javnog portala; njena tehnička uloga dokumentovana je u KK-TS-009 (TD-TS9-01).
 
 ---
 
@@ -3953,7 +3955,7 @@ Javni status Događaja (Predstoji / U toku / Završen / Otkazan) nije isto što 
 
 Odgođeno Održavanje ne koristi se kao zamjenski termin za javni vremenski status Događaja. Na Detalju i dalje važi BR-282. Kartična relevantnost Planiranog (BR-280) i informativna naslovna vidljivost Odgođenog (BR-296) ostaju **zasebna** pravila; BR-296 **ne** mijenja agregatni vremenski status iz ovog paragrafa.
 
-Legacy flat status (postojeći model bez Održavanja) ostaje prema CR-004A / TS-009 §7.1.3 A–D i ne mijenja se ovim pravilom.
+Legacy flat status (postojeći model bez Održavanja) ostaje prema CR-004A / KK-TS-009 §7.1.3 A–D i ne mijenja se ovim pravilom.
 
 **Status:** Approved
 
@@ -5399,7 +5401,7 @@ U V1 katalog centralne Evidencije aktivnosti ulaze i sljedeće radnje, izvedene 
 * direktna izmjena objavljenog događaja od strane Urednika gdje je dozvoljena (BM-UR-16 / BR-292);
 * trajno brisanje događaja koji nikad nije objavljen (BM-UR-15 / BR-290).
 
-Tehnička matrica identifikatora je u TS-012. Ovo pravilo ne širi BM-AL-07 na Lokacije, Kategorije, Medije niti na platformske naloge.
+Tehnička matrica identifikatora je u KK-TS-012. Ovo pravilo ne širi BM-AL-07 na Lokacije, Kategorije, Medije niti na platformske naloge.
 
 **Status:** Approved
 
@@ -5530,3 +5532,4 @@ Pored BR-176, BR-181, BR-183 i BR-186, u centralnu Evidenciju **ne ulaze**:
 | 2026-08-15 | FS-001 (PATCH-FS-075): MED-01–MED-28 / BM PATCH-075 — §5.11 Naslovna fotografija; BR-351–BR-370; SUPERSEDED BR-086–091, BR-237–254; usklađeni §5.4.4, BR-113, BR-197. **DOCS CANONICALIZED / IMPLEMENTATION PENDING.** Verzija ostaje 1.0.0. Bez izmjene koda. |
 | 2026-08-16 | FS-001 (PATCH-FS-076): MED documentation closeout — **IMPLEMENTATION COMPLETE / VERIFIED**; BR KEEP; MED-I4B deferred visual assets. Verzija ostaje 1.0.0. |
 | 2026-08-16 | FS-001 (PATCH-FS-077): FINAL V1 documentation closeout — verification PASS; regression GREEN 1286/6224; BLOCKS V1 = NO; B3/MED-I4B deferred. Verzija ostaje 1.0.0. |
+| 2026-08-17 | Administrativna migracija dokumentacionog ID-a na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |

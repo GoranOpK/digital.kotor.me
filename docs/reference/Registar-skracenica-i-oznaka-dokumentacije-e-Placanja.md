@@ -25,7 +25,7 @@ Uključene su samo oznake koje se stvarno koriste u dokumentaciji e-Plaćanja, p
 
 Sve dokumentacione oznake specifične za modul e-Plaćanje koriste prefiks `EP-`.
 
-Registri i oznake Kalendara kulture, uključujući `RG-001`, ne koriste se kao registri e-Plaćanja.
+Registri i oznake Kalendara kulture, uključujući `KK-RG-001`, ne koriste se kao registri e-Plaćanja.
 
 e-Plaćanje i Kalendar kulture su potpuno odvojeni moduli. Ovaj registar ne registruje oznake Kalendara kulture.
 
@@ -132,7 +132,7 @@ Sljedeće oznake su **istorijske**. Koristile su se u ranijoj dokumentaciji Pla�
 
 Napomena: ova tabela ne tvrdi da navedene oznake nikada nijesu korišćene. Evidentira da se više ne koriste u aktivnoj dokumentaciji e-Plaćanja.
 
-`RG-001` pripada Kalendaru kulture i nije registar e-Plaćanja.
+`KK-RG-001` pripada Kalendaru kulture i nije registar e-Plaćanja.
 
 ---
 
@@ -141,3 +141,4 @@ Napomena: ova tabela ne tvrdi da navedene oznake nikada nijesu korišćene. Evid
 | Datum | Izmjena |
 |-------|---------|
 | 2026-08-17 | Verzija 1.0 — Uspostavljen EP-RG-001. Registrovan EP-* namespace, kanonski dokumenti, patch prefiksi, poslovne skraćenice iz postojećih dokumenata i zabranjene legacy oznake. |
+| 2026-08-17 | Granica prema Kalendaru kulture: referentna oznaka registra KK ažurirana sa `RG-001` na `KK-RG-001`. Poslovni sadržaj e-Plaćanja neizmijenjen. |
