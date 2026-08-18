@@ -57,6 +57,8 @@ class CulturalEventEntryDraftUiTest extends TestCase
             ->assertSee('Novi događaj', false)
             ->assertSee('Sačuvaj i nastavi', false)
             ->assertSee('data-kk-event-form-row="category-organizer"', false)
+            ->assertSee('data-kk-padded-fields', false)
+            ->assertSee('padding: 10px 14px', false)
             ->assertSee('data-kk-event-tags="grid"', false)
             ->assertSee('grid-template-columns:repeat(auto-fill, minmax(12.5rem, 1fr))', false)
             ->assertSee('name="organizer_manual_name"', false)

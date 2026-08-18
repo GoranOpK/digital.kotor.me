@@ -49,6 +49,18 @@
                 width: 100%;
                 box-sizing: border-box;
             }
+            /* Text/select padding: Tailwind form utilities are not in compiled KK CSS. */
+            .kk-padded-fields input[type="text"],
+            .kk-padded-fields input[type="url"],
+            .kk-padded-fields textarea,
+            .kk-padded-fields select {
+                box-sizing: border-box;
+                padding: 10px 14px;
+                line-height: 1.45;
+            }
+            .kk-padded-fields select {
+                min-height: 2.75rem;
+            }
             /* Desktop-only scroll-following bottom background (not tied to a page footer). */
             .kk-scroll-bg {
                 display: none;

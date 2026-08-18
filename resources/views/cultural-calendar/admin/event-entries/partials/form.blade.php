@@ -2,7 +2,7 @@
     $entry = $entry ?? null;
 @endphp
 
-<div class="space-y-6">
+<div class="space-y-6 kk-padded-fields" data-kk-padded-fields>
     <div>
         <label for="naslov" class="block text-sm font-medium text-gray-700 mb-2">Naslov</label>
         <input
