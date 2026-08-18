@@ -157,7 +157,7 @@ class CulturalModeratorUxNavigationTest extends TestCase
         );
         $this->assertStringContainsString('display:inline-flex', $kontrolnaStyle[1]);
         $this->assertStringContainsString('align-items:center', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('justify-content:center', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('justify-content:flex-start', $kontrolnaStyle[1]);
         $this->assertStringContainsString('padding:8px 14px', $kontrolnaStyle[1]);
         $this->assertStringContainsString('min-height:38px', $kontrolnaStyle[1]);
         $this->assertStringContainsString('height:38px', $kontrolnaStyle[1]);
