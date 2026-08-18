@@ -13,6 +13,25 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <style>
+            input:not([type]),
+            input[type="text"],
+            input[type="url"],
+            input[type="email"],
+            input[type="password"],
+            input[type="number"],
+            input[type="date"],
+            input[type="time"],
+            input[type="search"],
+            input[type="tel"],
+            textarea,
+            select {
+                box-sizing: border-box;
+                padding: 10px 14px;
+                line-height: 1.45;
+            }
+            select { min-height: 2.75rem; }
+        </style>
     </head>
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100 dark:bg-gray-900">

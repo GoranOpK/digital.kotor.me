@@ -39,6 +39,29 @@
             @media print {
                 nav { display: none !important; }
             }
+            /* Inner padding for type-in boxes and dropdowns. Tailwind form utilities are not in compiled CSS. */
+            input:not([type]),
+            input[type="text"],
+            input[type="url"],
+            input[type="email"],
+            input[type="password"],
+            input[type="number"],
+            input[type="date"],
+            input[type="time"],
+            input[type="datetime-local"],
+            input[type="month"],
+            input[type="week"],
+            input[type="search"],
+            input[type="tel"],
+            textarea,
+            select {
+                box-sizing: border-box;
+                padding: 10px 14px;
+                line-height: 1.45;
+            }
+            select {
+                min-height: 2.75rem;
+            }
             @if($isKkSection)
             /* Kalendar kulture: always light UI, content width matches main banner (1120px). */
             html.kk-section { color-scheme: light; }
@@ -48,18 +71,6 @@
                 margin-right: auto;
                 width: 100%;
                 box-sizing: border-box;
-            }
-            /* Text/select padding: Tailwind form utilities are not in compiled KK CSS. */
-            .kk-padded-fields input[type="text"],
-            .kk-padded-fields input[type="url"],
-            .kk-padded-fields textarea,
-            .kk-padded-fields select {
-                box-sizing: border-box;
-                padding: 10px 14px;
-                line-height: 1.45;
-            }
-            .kk-padded-fields select {
-                min-height: 2.75rem;
             }
             /* Desktop-only scroll-following bottom background (not tied to a page footer). */
             .kk-scroll-bg {
