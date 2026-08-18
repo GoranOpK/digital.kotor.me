@@ -23,7 +23,7 @@
         .btn-primary:hover { background:var(--primary-dark); }
         .btn-outline { border-color:var(--primary); color:var(--primary); background:#fff; }
         .btn-outline:hover { border-color:var(--primary-dark); color:var(--primary-dark); }
-        .btn-logout { background:#374151; color:#fff; border:none; }
+        .btn-logout { background:#374151; color:#fff; border:none; border-radius:0; }
         .btn-logout:hover { background:#1f2937; }
         .btn-link { color:var(--primary); text-decoration:none; font-size:14px; padding:8px 0; }
         .btn-link:hover { text-decoration:underline; }

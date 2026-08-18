@@ -29,7 +29,7 @@
         .btn-primary:hover { background:var(--primary-dark); }
         .btn-outline { border-color:var(--primary); color:var(--primary); background:#fff; }
         .btn-outline:hover { border-color:var(--primary-dark); color:var(--primary-dark); }
-        .btn-logout { background:#374151; color:#fff; border:none; cursor:pointer; }
+        .btn-logout { background:#374151; color:#fff; border:none; cursor:pointer; border-radius:0; }
         .btn-logout:hover { background:#1f2937; }
         .btn-danger-outline { border-color:#dc2626; color:#dc2626; background:#fff; }
         .btn-danger-outline:hover { border-color:#b91c1c; color:#b91c1c; }

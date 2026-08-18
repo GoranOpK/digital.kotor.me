@@ -54,11 +54,11 @@
             .'background:transparent;color:#7a0f17;font-size:16px;font-weight:600;text-decoration:none;'
             ."border-bottom:3px solid {$tape};";
     };
-    $kkLogoutBtn = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:6px;'
-        .'background:#374151;color:#ffffff;border:0;cursor:pointer;'
+    $kkLogoutBtn = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;'
+        .'background:#374151;color:#ffffff;border:0;border-radius:0;cursor:pointer;'
         .'text-decoration:none;font-size:14px;font-weight:600;white-space:nowrap;';
-    $kkLogoutBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:6px;'
-        .'background:#374151;color:#ffffff;border:0;font-size:16px;'
+    $kkLogoutBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;'
+        .'background:#374151;color:#ffffff;border:0;border-radius:0;font-size:16px;'
         .'font-weight:600;text-decoration:none;text-align:left;cursor:pointer;';
 
     // Moderator UX block (grant-based; not a platform role). Labels only — access stays in middleware.
@@ -82,6 +82,9 @@
     .kk-logout-link:focus {
         background: #1f2937 !important;
         color: #ffffff !important;
+    }
+    .kk-logout-link {
+        border-radius: 0 !important;
     }
 </style>
 @if($isKkAdmin || $isKkSection)

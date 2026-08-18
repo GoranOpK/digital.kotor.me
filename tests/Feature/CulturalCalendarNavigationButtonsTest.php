@@ -67,7 +67,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertStringNotContainsString('>Lokacije<', $html);
         $this->assertStringNotContainsString('>Kategorije<', $html);
 
-        $this->assertMatchesRegularExpression('/background:#374151[^"]*color:#ffffff[^"]*"[^>]*>\s*Odjava\s*</', $html);
+        $this->assertMatchesRegularExpression('/background:#374151[^"]*color:#ffffff[^"]*border-radius:0[^"]*"[^>]*>\s*Odjava\s*</', $html);
         $this->assertStringNotContainsString('background:#0d6efd', $html);
         $this->assertStringContainsString('border-bottom:3px solid', $html);
         $this->assertStringContainsString('border-radius:0', $html);
@@ -113,7 +113,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         foreach (['Kategorije', 'Oznake', 'Mediji', 'Organizatori', 'Zahtjevi Org', 'Zahtjevi Mod', 'Javni portal'] as $label) {
             $this->assertStringNotContainsString('>'.$label.'<', $row1Html);
         }
-        $this->assertMatchesRegularExpression('/background:#374151[^"]*color:#ffffff[^"]*"[^>]*>\s*Odjava\s*</', $html);
+        $this->assertMatchesRegularExpression('/background:#374151[^"]*color:#ffffff[^"]*border-radius:0[^"]*"[^>]*>\s*Odjava\s*</', $html);
 
         $this->assertStringContainsString('kk-shell', $html);
         $this->assertStringContainsString('kk-admin-nav-desktop', $html);
@@ -170,7 +170,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         }
         $this->assertStringNotContainsString('>Mediji<', $desktopNav);
         $this->assertStringNotContainsString('/kalendar-kulture/mediji', $desktopNav);
-        $this->assertMatchesRegularExpression('/background:#374151[^"]*color:#ffffff[^"]*"[^>]*>\s*Odjava\s*</', $html);
+        $this->assertMatchesRegularExpression('/background:#374151[^"]*color:#ffffff[^"]*border-radius:0[^"]*"[^>]*>\s*Odjava\s*</', $html);
 
         foreach (['Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal', 'Urednički rad', 'Zahtjevi Org', 'Zahtjevi Mod', 'Javni portal'] as $label) {
             $this->assertStringNotContainsString('>'.$label.'<', $desktopNav);
@@ -252,7 +252,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
             );
         }
 
-        $this->assertMatchesRegularExpression('/background:#374151[^"]*color:#ffffff[^"]*"[^>]*>\s*Odjava\s*</', $html);
+        $this->assertMatchesRegularExpression('/background:#374151[^"]*color:#ffffff[^"]*border-radius:0[^"]*"[^>]*>\s*Odjava\s*</', $html);
         $this->assertStringNotContainsString('>Urednički rad<', $html);
         $this->assertStringNotContainsString('data-kk-nav-layout="two-row"', $html);
         $this->assertStringContainsString('data-kk-mobile-nav-toggle', $html);
