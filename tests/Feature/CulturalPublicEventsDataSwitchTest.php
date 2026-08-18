@@ -55,6 +55,8 @@ class CulturalPublicEventsDataSwitchTest extends TestCase
         $response->assertOk();
         $response->assertSee('CANONICAL_ONLY_TITLE', false);
         $response->assertDontSee('LEGACY_ONLY_TITLE', false);
+        $response->assertSee('data-kk-events-grid="responsive-3"', false);
+        $response->assertSee('repeat(3, minmax(0, 1fr))', false);
     }
 
     public function test_legacy_event_not_shown_on_events_list(): void
