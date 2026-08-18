@@ -54,11 +54,11 @@
             .'background:transparent;color:#7a0f17;font-size:16px;font-weight:600;text-decoration:none;'
             ."border-bottom:3px solid {$tape};";
     };
-    $kkLogoutBtn = 'display:inline-flex;align-items:center;justify-content:flex-start;padding:8px 14px;border-radius:0;'
-        .'background:transparent;color:#111827;border:0;border-bottom:3px solid transparent;cursor:pointer;'
+    $kkLogoutBtn = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;border-radius:6px;'
+        .'background:#374151;color:#ffffff;border:0;cursor:pointer;'
         .'text-decoration:none;font-size:14px;font-weight:600;white-space:nowrap;';
-    $kkLogoutBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:0;'
-        .'background:transparent;color:#111827;border:0;border-bottom:3px solid transparent;font-size:16px;'
+    $kkLogoutBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:6px;'
+        .'background:#374151;color:#ffffff;border:0;font-size:16px;'
         .'font-weight:600;text-decoration:none;text-align:left;cursor:pointer;';
 
     // Moderator UX block (grant-based; not a platform role). Labels only — access stays in middleware.
@@ -77,6 +77,13 @@
     $isModeratorHubNav = $isModeratorContentNav
         || request()->routeIs('cultural-moderator-workspace.*');
 @endphp
+<style>
+    .kk-logout-link:hover,
+    .kk-logout-link:focus {
+        background: #1f2937 !important;
+        color: #ffffff !important;
+    }
+</style>
 @if($isKkAdmin || $isKkSection)
 {{-- Inline CSS: Tailwind purge often omits sm:flex-col, which collapsed both rows into one horizontal flex. --}}
 <style>
@@ -95,9 +102,12 @@
         text-align: left;
     }
     .kk-admin-nav-desktop a,
-    .kk-section-links a,
-    .kk-logout-link {
+    .kk-section-links a {
         border-radius: 0 !important;
+        align-self: stretch;
+        text-align: left;
+    }
+    .kk-logout-link {
         align-self: stretch;
         text-align: left;
     }
@@ -124,11 +134,6 @@
     #kk-mobile-nav-menu a:hover,
     #kk-mobile-nav-menu a:focus {
         border-bottom-color: #7a0f17 !important;
-    }
-    .kk-logout-link:hover,
-    .kk-logout-link:focus {
-        border-bottom-color: #111827 !important;
-        color: #111827 !important;
     }
     @media (min-width: 640px) {
         .kk-admin-nav-desktop {
