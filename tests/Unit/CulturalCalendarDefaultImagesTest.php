@@ -162,28 +162,24 @@ class CulturalCalendarDefaultImagesTest extends TestCase
         );
     }
 
-    public function test_manifestation_fallback_is_a_separate_contract_with_temporary_compatibility_asset(): void
+    public function test_manifestation_fallback_uses_dedicated_asset_not_event_placeholder(): void
     {
-        $this->assertSame(
-            'img/kalendar-kulture-default-event.png',
-            CulturalCalendarDefaultImages::FALLBACK_MANIFESTATION_IMAGE,
-            'MED-I4A: temporary compatibility — not a dedicated MED-I4B MF file.'
-        );
-        $this->assertSame(
+        $relative = 'img/kalendar-kulture/categories/manifestacije.jpg';
+
+        $this->assertSame($relative, CulturalCalendarDefaultImages::FALLBACK_MANIFESTATION_IMAGE);
+        $this->assertTrue(is_file(public_path($relative)));
+        $this->assertNotSame(
             CulturalCalendarDefaultImages::FALLBACK_DEFAULT_IMAGE,
-            CulturalCalendarDefaultImages::FALLBACK_MANIFESTATION_IMAGE,
-            'Compatibility only: MF path currently points at the Event global PNG file.'
+            CulturalCalendarDefaultImages::FALLBACK_MANIFESTATION_IMAGE
         );
-        $this->assertSame(
-            CulturalCalendarDefaultImages::FALLBACK_MANIFESTATION_IMAGE,
-            CulturalCalendarDefaultImages::manifestationFallbackPath()
-        );
-        $this->assertSame(
-            asset(CulturalCalendarDefaultImages::FALLBACK_MANIFESTATION_IMAGE),
-            CulturalCalendarDefaultImages::manifestationFallbackUrl()
-        );
+        $this->assertSame($relative, CulturalCalendarDefaultImages::manifestationFallbackPath());
+        $this->assertSame(asset($relative), CulturalCalendarDefaultImages::manifestationFallbackUrl());
         $this->assertNotSame(
             CulturalCalendarDefaultImages::pathForCategory('Koncerti'),
+            CulturalCalendarDefaultImages::manifestationFallbackPath()
+        );
+        $this->assertNotSame(
+            CulturalCalendarDefaultImages::FALLBACK_DEFAULT_IMAGE,
             CulturalCalendarDefaultImages::manifestationFallbackPath()
         );
     }

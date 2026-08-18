@@ -135,11 +135,8 @@ class CulturalPublicFallbackImageTest extends TestCase
         $this->assertSame(CulturalCalendarDefaultImages::manifestationFallbackUrl(), $url);
         $this->assertNotSame(CulturalCalendarDefaultImages::urlForCategory('Koncerti'), $url);
         $this->assertStringNotContainsString('/categories/', $url);
-        $this->assertStringContainsString(
-            'kalendar-kulture-default-event.png',
-            $url,
-            'MED-I4A temporary compatibility: MF fallback still points at Event global PNG until MED-I4B.'
-        );
+        $this->assertStringContainsString('manifestacije.jpg', $url);
+        $this->assertStringNotContainsString('kalendar-kulture-default-event.png', $url);
     }
 
     public function test_public_event_card_and_detail_keep_object_fit_cover(): void

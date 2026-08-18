@@ -8,7 +8,7 @@ use App\Services\CulturalCategory\CanonicalCulturalCategoryCatalog;
  * Javni fallback vizueli Kalendara kulture (MED-I4A).
  *
  * Event: statička fotografija kanonske kategorije (ako postoji Git fajl) → globalni Event placeholder.
- * Manifestacija: zaseban MF fallback ugovor (MED-I4B asset još nije dodat; compatibility path).
+ * Manifestacija: zaseban MF placeholder (`manifestacije.jpg`) → globalni Event placeholder ako fajl nedostaje.
  *
  * Nije CulturalMedia. Nije category_default. Nije CulturalEvent.slika.
  */
@@ -48,12 +48,10 @@ final class CulturalCalendarDefaultImages
     public const FALLBACK_DEFAULT_IMAGE = 'img/kalendar-kulture-default-event.png';
 
     /**
-     * Manifestation placeholder path contract (MED-09).
-     *
-     * Temporary compatibility: same file as the Event global PNG until MED-I4B adds a dedicated asset.
-     * Callers must use manifestationFallbackUrl(), not Event category fallback.
+     * Manifestation placeholder (MED-09). Dedicated file; not an Event category asset.
+     * If the file is missing on disk, manifestationFallbackPath() falls back to the Event global PNG.
      */
-    public const FALLBACK_MANIFESTATION_IMAGE = 'img/kalendar-kulture-default-event.png';
+    public const FALLBACK_MANIFESTATION_IMAGE = 'img/kalendar-kulture/categories/manifestacije.jpg';
 
     public static function isCanonicalCategory(?string $category): bool
     {
