@@ -72,7 +72,7 @@ class CulturalPublicFallbackImageTest extends TestCase
 
     public function test_event_without_cover_and_missing_category_uses_global_event_fallback(): void
     {
-        $category = $this->category('Konferencije');
+        $category = $this->category('Sajmovi');
         $entry = $this->makePublishedEntry('EVENT_MISSING_FALLBACK', $category);
 
         $this->assertSame(
@@ -83,16 +83,14 @@ class CulturalPublicFallbackImageTest extends TestCase
         $this->assertStringNotContainsString('/categories/', $entry->imageUrl());
     }
 
-    public function test_event_without_cover_and_ambiguous_category_uses_global_event_fallback(): void
+    public function test_event_without_cover_and_literary_category_uses_assigned_asset(): void
     {
         $category = $this->category('Književni programi');
-        $entry = $this->makePublishedEntry('EVENT_AMBIGUOUS_FALLBACK', $category);
+        $entry = $this->makePublishedEntry('EVENT_LITERARY_FALLBACK', $category);
 
-        $this->assertSame(
-            CulturalCalendarDefaultImages::fallbackUrl(),
-            $entry->fresh()->load('category')->imageUrl()
-        );
-        $this->assertStringNotContainsString('knjizevne-veceri.jpg', $entry->imageUrl());
+        $expected = CulturalCalendarDefaultImages::urlForCategory('Književni programi');
+        $this->assertSame($expected, $entry->fresh()->load('category')->imageUrl());
+        $this->assertStringContainsString('knjizevne-veceri.jpg', $entry->imageUrl());
     }
 
     public function test_event_without_cover_and_without_category_uses_global_event_fallback(): void

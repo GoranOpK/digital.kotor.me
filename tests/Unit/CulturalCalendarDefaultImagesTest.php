@@ -16,12 +16,18 @@ class CulturalCalendarDefaultImagesTest extends TestCase
     {
         return [
             ['Koncerti', 'img/kalendar-kulture/categories/koncerti.jpg'],
-            ['Predstave', 'img/kalendar-kulture/categories/predstave.jpg'],
+            ['Predstave', 'img/kalendar-kulture/categories/performansi.jpg'],
             ['Sportski događaji', 'img/kalendar-kulture/categories/sportski-dogadjaji.jpg'],
             ['Izložbe', 'img/kalendar-kulture/categories/izlozbe.jpg'],
+            ['Književni programi', 'img/kalendar-kulture/categories/knjizevne-veceri.jpg'],
             ['Filmske projekcije', 'img/kalendar-kulture/categories/filmske-projekcije.jpg'],
+            ['Dječiji programi', 'img/kalendar-kulture/categories/predstave.jpg'],
+            ['Konferencije', 'img/kalendar-kulture/categories/prezentacije.jpg'],
             ['Radionice', 'img/kalendar-kulture/categories/radionice.jpg'],
+            ['Publikacije', 'img/kalendar-kulture/categories/promocije-publikacija.jpg'],
             ['Performansi', 'img/kalendar-kulture/categories/performansi.jpg'],
+            ['Prezentacije i predavanja', 'img/kalendar-kulture/categories/prezentacije.jpg'],
+            ['Paneli i tribine', 'img/kalendar-kulture/categories/paneli-o-kulturi.jpg'],
         ];
     }
 
@@ -31,22 +37,7 @@ class CulturalCalendarDefaultImagesTest extends TestCase
     public static function missingCategories(): array
     {
         return [
-            ['Dječiji programi'],
-            ['Konferencije'],
             ['Sajmovi'],
-        ];
-    }
-
-    /**
-     * @return list<array{0: string, 1: string}>
-     */
-    public static function ambiguousCategoriesWithLegacyCandidates(): array
-    {
-        return [
-            ['Književni programi', 'img/kalendar-kulture/categories/knjizevne-veceri.jpg'],
-            ['Publikacije', 'img/kalendar-kulture/categories/promocije-publikacija.jpg'],
-            ['Prezentacije i predavanja', 'img/kalendar-kulture/categories/prezentacije.jpg'],
-            ['Paneli i tribine', 'img/kalendar-kulture/categories/paneli-o-kulturi.jpg'],
         ];
     }
 
@@ -95,7 +86,8 @@ class CulturalCalendarDefaultImagesTest extends TestCase
             $this->assertContains($name, $canonical);
         }
 
-        $this->assertCount(7, $map);
+        $this->assertCount(13, $map);
+        $this->assertArrayNotHasKey('Sajmovi', $map);
         $this->assertSame(
             $map,
             CulturalCalendarDefaultImages::CATEGORY_DEFAULT_IMAGES
@@ -125,23 +117,6 @@ class CulturalCalendarDefaultImagesTest extends TestCase
         );
         $this->assertSame(
             CulturalCalendarDefaultImages::fallbackUrl(),
-            CulturalCalendarDefaultImages::urlForCategory($name)
-        );
-    }
-
-    #[DataProvider('ambiguousCategoriesWithLegacyCandidates')]
-    public function test_ambiguous_category_does_not_use_legacy_rename_candidate(string $name, string $legacyRelative): void
-    {
-        $this->assertTrue(CulturalCalendarDefaultImages::isCanonicalCategory($name));
-        $this->assertFalse(CulturalCalendarDefaultImages::hasDedicatedCategoryAssetMapping($name));
-        $this->assertTrue(is_file(public_path($legacyRelative)), 'Legacy candidate still exists on disk.');
-        $this->assertSame(
-            CulturalCalendarDefaultImages::FALLBACK_DEFAULT_IMAGE,
-            CulturalCalendarDefaultImages::pathForCategory($name)
-        );
-        $this->assertNotSame($legacyRelative, CulturalCalendarDefaultImages::pathForCategory($name));
-        $this->assertStringNotContainsString(
-            basename($legacyRelative),
             CulturalCalendarDefaultImages::urlForCategory($name)
         );
     }
