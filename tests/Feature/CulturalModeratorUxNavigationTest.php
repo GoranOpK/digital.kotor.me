@@ -63,6 +63,8 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertStringNotContainsString('data-kk-nav-moderator-block="1"', $html);
         $this->assertStringNotContainsString('data-kk-nav="kontrolna-tabla-moderator"', $html);
         $this->assertStringNotContainsString('data-kk-nav="moderiranje"', $html);
+        $this->assertStringNotContainsString('data-kk-nav="moderator-guide"', $html);
+        $this->assertStringNotContainsString('>Moderator uputstvo<', $html);
         $this->assertStringNotContainsString('>Radna tabla<', $html);
         $this->assertStringNotContainsString('>Mod rad<', $html);
         $this->assertStringNotContainsString(
@@ -106,6 +108,36 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.events')).'"', $html);
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.archive')).'"', $html);
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.manifestations')).'"', $html);
+    }
+
+    public function test_active_moderator_sees_guide_button_next_to_logout_ordinary_user_does_not(): void
+    {
+        CulturalOrganizerContext::set($this->moderator, $this->orgA->id);
+
+        $html = $this->actingAs($this->moderator)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+
+        $guideHref = e(asset('pdf/'.rawurlencode('Moderator uputstvo.pdf')));
+        $this->assertSame(2, substr_count($html, 'data-kk-nav="moderator-guide"'));
+        $this->assertSame(2, substr_count($html, '>Moderator uputstvo<'));
+        $this->assertStringContainsString('href="'.$guideHref.'"', $html);
+        $this->assertMatchesRegularExpression(
+            '/background:#7a0f17[^"]*color:#ffffff[^"]*border-radius:0[^"]*"[^>]*>Moderator uputstvo</',
+            $html
+        );
+        $this->assertTrue(
+            is_file(public_path('pdf/Moderator uputstvo.pdf')),
+            'Expected Moderator uputstvo.pdf in public/pdf.'
+        );
+
+        $ordinaryHtml = $this->actingAs($this->ordinary)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('data-kk-nav="moderator-guide"', $ordinaryHtml);
+        $this->assertStringNotContainsString('>Moderator uputstvo<', $ordinaryHtml);
     }
 
     public function test_desktop_and_mobile_moderiranje_are_plain_links_with_identical_sizing(): void

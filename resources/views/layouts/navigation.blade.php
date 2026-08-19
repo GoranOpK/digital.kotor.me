@@ -60,6 +60,13 @@
     $kkLogoutBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;'
         .'background:#374151;color:#ffffff;border:0;border-radius:0;font-size:16px;'
         .'font-weight:600;text-decoration:none;text-align:left;cursor:pointer;';
+    $kkModeratorGuideBtn = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;'
+        .'background:#7a0f17;color:#ffffff;border:0;border-radius:0;cursor:pointer;'
+        .'text-decoration:none;font-size:14px;font-weight:600;white-space:nowrap;';
+    $kkModeratorGuideBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;'
+        .'background:#7a0f17;color:#ffffff;border:0;border-radius:0;font-size:16px;'
+        .'font-weight:600;text-decoration:none;text-align:left;';
+    $moderatorGuideUrl = asset('pdf/'.rawurlencode('Moderator uputstvo.pdf'));
 
     // Moderator UX block (grant-based; not a platform role). Labels only — access stays in middleware.
     $isActiveModeratorUser = $user && \App\Support\CulturalModeratorEventAccess::isActiveModerator($user);
@@ -85,6 +92,16 @@
     }
     .kk-logout-link {
         border-radius: 0 !important;
+    }
+    .kk-moderator-guide-link {
+        border-radius: 0 !important;
+    }
+    .kk-moderator-guide-link:hover,
+    .kk-moderator-guide-link:focus {
+        background: #5c0b11 !important;
+        color: #ffffff !important;
+        border-bottom-color: transparent !important;
+        text-decoration: none !important;
     }
 </style>
 @if($isKkAdmin || $isKkSection)
@@ -123,7 +140,8 @@
         margin-left: 0 !important;
     }
     .kk-admin-nav-desktop[data-kk-nav-context="editorial"] a,
-    nav[data-kk-nav-context="editorial"] .kk-logout-link {
+    nav[data-kk-nav-context="editorial"] .kk-logout-link,
+    nav[data-kk-nav-context="editorial"] .kk-moderator-guide-link {
         font-size: 12px !important;
         padding: 8px 8px !important;
     }
@@ -134,8 +152,8 @@
     .kk-admin-nav-desktop a:focus,
     .kk-section-links a:hover,
     .kk-section-links a:focus,
-    #kk-mobile-nav-menu a:hover,
-    #kk-mobile-nav-menu a:focus {
+    #kk-mobile-nav-menu a:hover:not(.kk-moderator-guide-link),
+    #kk-mobile-nav-menu a:focus:not(.kk-moderator-guide-link) {
         border-bottom-color: #7a0f17 !important;
     }
     @media (min-width: 640px) {
@@ -383,6 +401,17 @@
                         @endif
                     </span>
                     @endunless
+                    <div style="display:flex; align-items:stretch; gap:8px;">
+                        @if($isActiveModeratorUser)
+                            <a
+                                href="{{ $moderatorGuideUrl }}"
+                                class="kk-moderator-guide-link"
+                                data-kk-nav="moderator-guide"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style="{{ $kkModeratorGuideBtn }}"
+                            >Moderator uputstvo</a>
+                        @endif
                     <form method="POST" action="{{ route('logout') }}" style="margin:0; display:flex; align-items:stretch;">
                         @csrf
                         <button
@@ -393,6 +422,7 @@
                             Odjava
                         </button>
                     </form>
+                    </div>
                 @endauth
             </div>
 
@@ -595,6 +625,16 @@
                 </div>
 
                 <div class="mt-3 px-2 space-y-2">
+                    @if($isActiveModeratorUser)
+                        <a
+                            href="{{ $moderatorGuideUrl }}"
+                            class="kk-moderator-guide-link"
+                            data-kk-nav="moderator-guide"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style="{{ $kkModeratorGuideBtnMobile }}"
+                        >Moderator uputstvo</a>
+                    @endif
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="kk-logout-link" style="{{ $kkLogoutBtnMobile }}">
