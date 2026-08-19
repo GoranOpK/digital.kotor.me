@@ -44,7 +44,7 @@ class ProfileUpdateRequest extends FormRequest
             'address' => ['required', 'string', 'max:500'],
             'city' => ['required', 'string', 'max:255'],
             'user_type' => ['required', 'string', 'in:Fizičko lice,Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)'],
-            'residential_status' => ['required', 'string', 'in:resident,non-resident,ex-non-resident'],
+            'residential_status' => ['required', 'string', 'in:resident,non-resident'],
         ];
 
         // Adresa se provjerava kao ulica + grad zajedno (v. withValidator)

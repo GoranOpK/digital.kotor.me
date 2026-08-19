@@ -238,7 +238,6 @@
                     <select name="residential_status" id="residential_status" class="form-control" required>
                         <option value="resident" {{ old('residential_status', $user->residential_status) === 'resident' ? 'selected' : '' }}>Rezident</option>
                         <option value="non-resident" {{ old('residential_status', $user->residential_status) === 'non-resident' ? 'selected' : '' }}>Nerezident</option>
-                        <option value="ex-non-resident" {{ old('residential_status', $user->residential_status) === 'ex-non-resident' ? 'selected' : '' }}>Bivši nerezident</option>
                     </select>
                     @error('residential_status')
                         <div class="form-error">{{ $message }}</div>

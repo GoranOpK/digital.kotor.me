@@ -1,6 +1,6 @@
 # Autentikacija i registracija
 
-**Poslednje ažuriranje:** 2026-06-30  
+**Poslednje ažuriranje:** 2026-08-18  
 **Izvor u kodu:** `HomeController`, `ProfileController`, `ProfileUpdateRequest`, `routes/auth.php`, `app/Models/User.php`
 
 ---
@@ -33,6 +33,17 @@
 | PIB | 9 cifara, unique |
 | Adresa | Kotor opština (v. [business-rules.md](business-rules.md)) |
 
+### Rezidentnost
+
+Fizičko lice (i Preduzetnik pri registraciji) ima samo dva statusa prebivališta:
+
+- `resident` — Rezident
+- `non-resident` — Nerezident
+
+`ex-non-resident` („Bivši nerezident“) je **legacy** vrijednost uklonjena iz aktivnog modela. Nije kanonska kategorija; profil i registracija je ne nude i ne prihvataju.
+
+Ovo **nije** zamjena za kanonski DK dokument korisničkog modela (taj paket još nije otvoren; v. `DK-RG-001`).
+
 ### Default uloga
 
 `korisnik` (`role_id` iz `RoleSeeder`).
@@ -44,6 +55,7 @@
 **Rute:** `profile.edit`, `profile.update`, `profile.password.update`
 
 - Ažuriranje adrese (ulica + grad), PIB/JMB, kontakt podataka
+- Status rezidentnosti: samo Rezident / Nerezident (`resident` / `non-resident`)
 - `ProfileUpdateRequest` — ista Kotor i PIB pravila kao pri registraciji
 - `User::formattedAddress()` — prikaz „ulica, grad“
 

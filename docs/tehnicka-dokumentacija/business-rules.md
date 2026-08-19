@@ -1,6 +1,6 @@
 # Poslovna pravila
 
-**Poslednje ažuriranje:** 2026-08-17 (dopuna: kanonski prioritet e-Plaćanje; omladinski konkurs odložen)  
+**Poslednje ažuriranje:** 2026-08-18 (dopuna: kanonska rezidentnost fizičkog lica samo Rezident / Nerezident)  
 **Izvor u kodu:** `KotorAddress`, `HomeController`, `ProfileUpdateRequest`, `ApplicationController`, `Application` model
 
 ---
@@ -39,6 +39,8 @@ Kotor, Dobrota, Prčanj, Škaljari, Risan, Perast, Muo, Orahovac, Stoliv, Ljuta,
 | **JMB** | 13 cifara + kontrolna cifra (`HomeController::validateJMB`) | Rezidenti (fizička lica) |
 | **PIB** | Tačno **9** cifara (`regex:/^[0-9]{9}$/`), unique u `users` | Pravna lica / preduzetnici |
 | **Pasoš** | Alternativa za nerezidente | `residential_status=non-resident` |
+
+Kanonski `users.residential_status` za fizičko lice: samo `resident` / `non-resident`. `ex-non-resident` je legacy vrijednost uklonjena iz aktivnog modela (nije treći status).
 
 Kolone u bazi: `users.pib` VARCHAR(9) (migracija `2026_06_26_150000_restore_pib_length_to_9.php`).
 
