@@ -5,7 +5,7 @@
 **Oznaka dokumenta:** EP-TS-001
 **Modul:** e-Plaćanje
 **Status dokumenta:** U IZRADI
-**Verzija:** 1.0.3
+**Verzija:** 1.0.4
 
 ---
 
@@ -27,6 +27,7 @@
 | 1.0.1 | 2026-07-27 | EP-PATCH-BM-009A – Redakcijsko: BP-06↔BP-09 (istorija); terminologija identifikatora. |
 | 1.0.2 | 2026-08-17 | Dokumentacioni corrective: oznaka EP-TS-001; namespace EP-*; naziv modula e-Plaćanje. Statusi NIJE USVOJENO zadržani. Bez novih tehničkih odluka. |
 | 1.0.3 | 2026-08-20 | EP-PATCH-TS-001 — Nasljeđivanje zatvorenog Koraka 6 / EP-BM-001 v1.0.0. SUPERSEDE stale business contract (Kreirana/U toku; preuzimanje iz izvornog sistema; zapis prije gateway-a; 17 kategorija + 41 vrsta uplate). Bez izbora gateway mehanizma. Bez finalne DB šeme. `APPLICATION DEVELOPMENT = LOCAL ONLY`. `PRODUCTION APPLICATION DEPLOY = NOT APPROVED`. |
+| 1.0.4 | 2026-08-20 | EP-PATCH-TS-002 — Usklađivanje platform user-model zavisnosti sa kanonskih 8 tipova. Application corrective COMPLETE; production data cleanup OPEN. Mapping 17/41 ostaje OPEN. Bez application implementation-a. |
 
 Napomena:
 
@@ -42,7 +43,7 @@ Ne mijenjaju se postojeći redovi.
 
 Dokument je tehnička specifikacija **U IZRADI**. Nasljeđuje zatvoreni poslovni model (EP-BM-001) i funkcionalne zahtjeve (EP-FS-001).
 
-U verziji 1.0.3 dokument:
+U verziji 1.0.4 dokument:
 
 * usklađuje obavezujuća projektna ograničenja sa Korakom 6 (2026-08-20);
 * više **ne** propagira superseded poslovni ugovor;
@@ -97,7 +98,7 @@ Ova granica **nije** usvojena tehnička arhitektura. Poglavlja 3–9 ostaju **NI
 2. Tehnička rješenja unose se isključivo nakon usvojene tehničke ili projektne odluke i evidentiraju kroz PATCH.
 3. Cursor ne smije samostalno projektovati bazu podataka, API-je, integracije, arhitekturu ni druga tehnička rješenja.
 4. Tehnička specifikacija mora ostati usklađena sa poslovnim modelom (EP-BM-001) i funkcionalnom specifikacijom (EP-FS-001). **KORAK 6 WINS.**
-5. P-01 do P-08, F-01, UR-01 i BP-01 do BP-09 ostaju identifikatori. Aktivno značenje je ono iz EP-BM-001 v1.0.0 (KEEP / UPDATE / SUPERSEDE). Stari TS tekst koji je u konfliktu je **SUPERSEDE**.
+5. P-01 do P-08, F-01, UR-01 i BP-01 do BP-09 ostaju identifikatori. Aktivno značenje je ono iz EP-BM-001 (KEEP / UPDATE / SUPERSEDE). Stari TS tekst koji je u konfliktu je **SUPERSEDE**.
 6. Ako bankovna/gateway dokumentacija još nije ugovorena, mehanizam se **ne** bira.
 
 ---
@@ -165,14 +166,14 @@ Ova ograničenja važe za sva buduća tehnička rješenja. Ne predstavljaju tehn
 | Račun | Gdje se sredstva uplaćuju (41). Jedna vrsta može imati 1..N računa. |
 | Filter | `korisnik → dozvoljena vrsta → dozvoljeni račun(i)`. Račun ne proširuje pravo sa nivoa vrste. |
 | Izvor liste | Isključivo EP-KF-001; bez samostalnog dopunjavanja iz propisa. |
-| Mapping | Konačno mapiranje na korisničke kategorije = OPEN PRE-PRODUCTION. Ne izmišljati u TS. |
+| Mapping | Konačno mapiranje 17/41 na 8 kanonskih user types = OPEN PRE-PRODUCTION. Ne izmišljati u TS. |
 
 ## 2.3 Dokumentacioni preduslov za tehnički dizajn
 
 Prije usvajanja tehničkih rješenja (poglavlja 3–9) potrebno je:
 
-1. zatvoreni BM (ispunjeno: EP-BM-001 v1.0.0);
-2. FR usklađeni sa Korakom 6 (EP-FS-001 v1.1.0, status U IZRADI zbog gateway AC);
+1. zatvoreni BM (ispunjeno: EP-BM-001 v1.0.1);
+2. FR usklađeni sa Korakom 6 i kanonskim user modelom (EP-FS-001 v1.1.1, status U IZRADI zbog gateway AC);
 3. gateway/bankovna dokumentacija za mehanizam statusa;
 4. usvojene posebne tehničke odluke za arhitekturu, podatke i integracije.
 
@@ -448,7 +449,11 @@ Konkretan gateway, banka, merchant model, API, webhook, callback, status-check i
 
 V1 **ne** projektuje integraciju sa izvornim sistemima Opštine za preuzimanje obaveze niti outbound potvrdu izvornom sistemu.
 
-Platform user-model (residential_status NULL, legal-entity fallback, declare-on-use) = **PRE-PRODUCTION PLATFORM DEPENDENCY**. TS ih ne implementira.
+`PLATFORM USER MODEL CORRECTIVE = COMPLETE` (application-level). TS ne implementira user model.
+
+`PRODUCTION LEGACY DATA CLEANUP = OPEN PRE-PRODUCTION` (production COUNT-ovi; legal-entity `resident`; NULL FL/Preduzetnik residential; `ex-non-resident`).
+
+Declare-on-use ostaje poslovni ugovor (samo FL/Preduzetnik). UI aktivacija i EP application nisu predmet ovog dokumenta.
 
 ---
 
@@ -504,8 +509,8 @@ Status svih: **OPEN PRE-PRODUCTION DEPENDENCY**
 6. long-running U obradi resolution;
 7. reversal / refund / chargeback contract;
 8. legal / privacy retention;
-9–12. platform residential-status dependencies (EP-BM-001 / 11);
-13. final mapping 17/41.
+9–12. production platform user-data cleanup (EP-BM-001 / 11);
+13. final mapping 17/41 na kanonske user types (`FINAL 17/41 USER CATEGORY MAPPING = OPEN`).
 
 ---
 
@@ -527,3 +532,4 @@ Status svih: **OPEN PRE-PRODUCTION DEPENDENCY**
 | 2026-07-27 | Verzija 1.0.1 — EP-PATCH-BM-009A: BP-06↔BP-09 (istorija); terminologija identifikatora. |
 | 2026-08-17 | Verzija 1.0.2 — Dokumentacioni corrective: oznaka EP-TS-001; namespace EP-*; naziv modula e-Plaćanje. Statusi NIJE USVOJENO zadržani. Bez novih tehničkih odluka. |
 | 2026-08-20 | Verzija 1.0.3 / EP-PATCH-TS-001 — Nasljeđivanje zatvorenog Koraka 6. SUPERSEDE stale business contract. Poglavlja 3–9 ostaju NIJE USVOJENO. Bez izbora gateway mehanizma i bez finalne DB šeme. |
+| 2026-08-20 | Verzija 1.0.4 / EP-PATCH-TS-002 — Platform user-model zavisnost usklađena sa kanonskih 8 tipova. Application corrective COMPLETE; production data cleanup OPEN. Mapping ostaje OPEN. |

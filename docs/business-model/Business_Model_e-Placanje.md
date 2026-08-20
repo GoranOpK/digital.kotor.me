@@ -5,7 +5,7 @@
 **Oznaka dokumenta:** EP-BM-001
 **Modul:** e-Plaćanje
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.0
+**Verzija:** 1.0.1
 **Datum usvajanja poslovnog modela V1:** 2026-08-20 (Korak 6 — CLOSED)
 
 ---
@@ -28,6 +28,7 @@
 | EP-PATCH-BM-009A | 2026-07-27 | Redakcijsko usklađivanje: BP-06↔BP-09 (istorija); terminološko razdvajanje identifikatora transakcije. |
 | EP-PATCH-BM-010 | 2026-08-17 | Dokumentacioni corrective: oznaka EP-BM-001; namespace EP-*; naziv modula e-Plaćanje. Bez izmjene poslovnih odluka. |
 | EP-PATCH-BM-011 | 2026-08-20 | Usklađivanje sa zatvorenim Korakom 6 (V1 poslovni model CLOSED). SUPERSEDE: ontologija 17 kategorija + 41 vrsta uplate; statusi Kreirana/U toku; preuzimanje obaveze/iznosa iz izvornog sistema; zapis transakcije prije gateway-a. KEEP: P-01–P-08 u suštini granica; UR-01; BP-04. Bez application implementation-a. |
+| EP-PATCH-BM-012 | 2026-08-20 | Usklađivanje EP korisničkog modela sa kanonskim platform V1 user modelom (8 kategorija). Identity vs eligibility granica. Platform application corrective COMPLETE; production data cleanup OPEN. Bez application implementation-a. |
 
 Napomena:
 
@@ -43,7 +44,7 @@ Ne mijenjaju se postojeći redovi.
 
 Dokument je **poslovni SSOT** zatvorenog V1 modela e-Plaćanja (Korak 6, 2026-08-20).
 
-Korak 6 se ne reinterpretira. Pre-production zavisnosti (poglavlje 16) **nisu** ponovno otvaranje Koraka 6.
+Korak 6 se ne reinterpretira. Pre-production zavisnosti (poglavlje 11) **nisu** ponovno otvaranje Koraka 6.
 
 Terminologija: EP-RG-001.
 
@@ -231,7 +232,7 @@ Jedna vrsta plaćanja može imati jedan ili više računa.
 
 Spisak se ne dopunjava samostalnim tumačenjem propisa.
 
-Konačno mapiranje 17/41 na korisničke kategorije i payment rules = **OPEN PRE-PRODUCTION DEPENDENCY** (poglavlje 16, stavka 13). Ne izmišlja se u ovom dokumentu.
+Konačno mapiranje 17/41 na korisničke kategorije i payment rules = **OPEN PRE-PRODUCTION DEPENDENCY** (poglavlje 11, stavka 13). Ne izmišlja se u ovom dokumentu.
 
 ## F-01 — SUPERSEDE
 
@@ -287,11 +288,47 @@ Aplikacija (kada bude implementirana) koristi konfiguracioni izvor izveden iz Ka
 
 # 8. Korisnički model relevantan za EP
 
-**Status:** USVOJENO (Korak 6)
+**Status:** USVOJENO (Korak 6; usklađeno sa kanonskim platform V1 user modelom)
 
-Ovo **nije** platformski DK user-model dokument. Platform corrective (NULL status, legal-entity auto-`resident`, production COUNT) ostaje **PRE-PRODUCTION PLATFORM DEPENDENCY**. EP ovdje samo definiše šta mu treba.
+EP **ne** definiše sopstvene user types. Koristi kanonski platformski `user_type`.
 
-## 8.1 Fizičko lice — rezidentnost
+Osnovna kategorija korisnika određuje identitet/oblik korisnika.
+
+Svojstva potrebna za pravo učešća na konkretnom konkursu predstavljaju zaseban eligibility sloj i ne postaju automatski `user_type` Digital Kotora.
+
+Nisu `user_type`: Poljoprivrednik; Registrovani poljoprivredni proizvođač; Ribar; Marikulturista; Mladi preduzetnik; Mikro / Malo / Srednje preduzeće; Individualni sportista.
+
+`CANONICAL USER TYPES = 8`
+
+| Canonical type | Legal nature | Storage value |
+|---|---|---|
+| Fizičko lice | fizičko lice | `Fizičko lice` |
+| Preduzetnik | fizičko lice (poslovna kategorija) | `Preduzetnik` |
+| DOO | pravno lice | `Društvo sa ograničenom odgovornošću` |
+| AD | pravno lice | `Akcionarsko društvo` |
+| OD | pravno lice | `Ortačko društvo` |
+| KD | pravno lice | `Komanditno društvo` |
+| Nevladino udruženje | pravno lice | `Nevladino udruženje` |
+| Sportska organizacija | pravno lice | `Sportska organizacija` |
+
+`STORAGE VALUE = full legal name`. `DOO` / `AD` / `OD` / `KD` su kanonske labele/kodovi, ne drugi user model.
+
+Lista se ne proširuje bez PO odluke. Nisu aktivni V1 user types: Nevladina fondacija; Javna ustanova; Privatna ustanova; Dio stranog privrednog društva; Politička partija; Vjerska zajednica; Komora; Sindikat; Druge organizacije; generičko `Ostalo`.
+
+Legacy ENUM vrijednosti mogu privremeno ostati u storage-u radi production safety. To je `LEGACY / COMPATIBILITY ONLY — NOT AVAILABLE FOR NEW REGISTRATION`. Nisu kanonske V1 kategorije i ne nabrajaju se u aktivnoj listi.
+
+`PLATFORM USER MODEL CORRECTIVE = COMPLETE`
+
+`PRODUCTION LEGACY DATA CLEANUP = OPEN PRE-PRODUCTION`
+
+`FINAL 17/41 USER CATEGORY MAPPING = OPEN`
+
+## 8.1 Fizičko lice i Preduzetnik — rezidentnost
+
+`residential_status` se primjenjuje **samo** na:
+
+* Fizičko lice
+* Preduzetnik
 
 Kanonske vrijednosti:
 
@@ -306,37 +343,25 @@ Rezidentnost **nije** državljanstvo. **Ne izvodi se** iz JMB-a, pasoša, adrese
 
 `DECLARE-ON-USE GATE`
 
-Tek kada fizičko lice / Preduzetnik pristupi funkciji kojoj je status potreban, mora izabrati Rezident ili Nerezident.
+Tek kada Fizičko lice / Preduzetnik (NULL / unknown status) pristupi funkciji kojoj je status potreban, mora izabrati Rezident ili Nerezident.
 
 Nema auto-backfill-a, auto-mapiranja ni ponovne registracije.
 
+Pravno lice **ne** prolazi declare-on-use.
+
 ## 8.3 Preduzetnik
 
-Preduzetnik zadržava identitet fizičkog lica. Nastupa u registrovanom svojstvu Preduzetnika. Može imati Rezident/Nerezident. Nije zaseban pravni identitet.
+Preduzetnik je **fizičko lice** i posebna poslovna kategorija fizičkog lica. Zadržava identitet fizičkog lica. Eligible je za `residential_status`. **Nije** pravno lice.
 
 ## 8.4 Pravno lice
 
-Pravno lice **NEMA** `residential_status` u kanonskom poslovnom modelu za EP filtering.
+Pravno lice **NEMA** `residential_status` u kanonskom poslovnom modelu.
 
-Postojeće automatsko `resident` za pravno lice u application kodu = **technical legacy / PRE-PRODUCTION PLATFORM DEPENDENCY**. Ne koristi se za EP filter.
+Postojeći production-like `resident` na pravnim licima = **PRE-PRODUCTION PLATFORM DATA DEPENDENCY**. Ne koristi se za EP filter. Application write path više ne postavlja taj fallback.
 
-Digital Kotor evidentira konkretan zakonski oblik. Najmanje:
-
-* OD (Ortačko društvo)
-* KD (Komanditno društvo)
-* AD (Akcionarsko društvo)
-* DOO (Društvo sa ograničenom odgovornošću)
-
-uz:
-
-* dio stranog privrednog društva;
-* Nevladino udruženje;
-* Nevladina fondacija;
-* Javna ustanova.
+Kanonska pravna lica V1: DOO, AD, OD, KD, Nevladino udruženje, Sportska organizacija.
 
 Generičko `Ostalo` **nije** usvojeno. „Javni sektor“ **nije** pravni oblik.
-
-Lista se ne proširuje bez PO odluke.
 
 ---
 
@@ -586,13 +611,17 @@ Ovo **nije** ponovno otvaranje Koraka 6.
 6. dugotrajni `U obradi` resolution;
 7. reversal/refund/chargeback contract ako postoji;
 8. retention / legal / privacy review;
-9. production audit existing `residential_status`;
+9. production audit existing `residential_status` (platform data);
 10. production legacy `ex-non-resident` COUNT/mapping ako postoji;
-11. legal-entity `resident` legacy corrective (platform);
-12. NULL residential status legacy users (platform);
-13. konačno mapiranje 17 vrsta / 41 računa na korisničke kategorije i pravila.
+11. legal-entity `resident` legacy data cleanup (platform);
+12. NULL residential status na Fizičkom licu i Preduzetniku (platform);
+13. konačno mapiranje 17 vrsta / 41 računa na kanonske korisničke kategorije i pravila.
 
-Stavke 9–12 su **PRE-PRODUCTION PLATFORM DEPENDENCY**. Ovaj paket ih ne implementira.
+`PLATFORM USER MODEL CORRECTIVE = COMPLETE` (application-level; commit `9c63e36`).
+
+Stavke 9–12 ostaju **PRODUCTION LEGACY DATA CLEANUP = OPEN PRE-PRODUCTION**. Ovaj paket ih ne čisti.
+
+Stavka 13: `FINAL 17/41 USER CATEGORY MAPPING = OPEN`. Ne izmišlja se ovdje.
 
 ---
 
@@ -651,3 +680,4 @@ Lanac: `EP-BM-001 → EP-FS-001 → EP-TS-001`
 | 2026-07-27 | EP-PATCH-BM-009A — BP-06↔BP-09; identifikatori. |
 | 2026-08-17 | EP-PATCH-BM-010 — Dokumentacioni corrective: EP-BM-001; namespace EP-*. |
 | 2026-08-20 | EP-PATCH-BM-011 / verzija 1.0.0 — Usklađivanje sa zatvorenim Korakom 6. Status dokumenta USVOJENO za V1 poslovni model. Application implementation nije pokrenuta. |
+| 2026-08-20 | EP-PATCH-BM-012 / verzija 1.0.1 — EP korisnički model usklađen sa kanonskih 8 platform user types. Identity vs eligibility granica. Platform application corrective COMPLETE; production data cleanup OPEN. |

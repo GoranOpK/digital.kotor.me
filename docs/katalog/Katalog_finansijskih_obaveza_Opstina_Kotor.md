@@ -5,7 +5,7 @@
 **Oznaka dokumenta:** EP-KF-001
 **Modul:** e-Plaćanje
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.5
+**Verzija:** 0.6
 
 ---
 
@@ -18,6 +18,7 @@
 | 0.3 | 2026-07-27 | Dopuna: uplatni računi kao referentni podaci iz Naredbe; Katalog je poslovni referentni dokument (nije šifrarnik ni implementacioni artefakt). |
 | 0.4 | 2026-08-17 | Dokumentacioni corrective: oznaka EP-KF-001; namespace EP-*; pripadnost modulu e-Plaćanje. Bez izmjene sadržaja kataloga. |
 | 0.5 | 2026-08-20 | Korak 6 ontologija: 17 vrsta plaćanja → 41 račun. Brojevi računa sačuvani. Ciljne grupe označene kao LEGACY / PARTIAL MAPPING. Bez izmišljenog mapiranja. |
+| 0.6 | 2026-08-20 | Labela mapping-a: `LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING`. Kanonskih 8 user types referencirano; 17/41 mapping ostaje OPEN. Bez izmišljenog mapiranja. |
 
 Napomena:
 
@@ -66,8 +67,8 @@ Katalog **nije** šifrarnik i **nije** implementacioni artefakt (UR-01). Aplikac
 3. Brojevi računa su **referentni podaci** iz Naredbe. Navođenje nije hardkodiranje.
 4. Pravni osnov: **Potrebno pravno potvrditi** dok nije potvrđen (P-07).
 5. Korišćeni račun se ne briše; deaktivira se. Promjena broja = novi zapis.
-6. Konačno mapiranje na korisničke kategorije (Korak 6 filter) **nije** usvojeno. Postojeće ciljne grupe = **LEGACY / PARTIAL MAPPING — REQUIRES KORAK 6 MAPPING**.
-7. Ne pretvarati „građani“ u resident/non-resident. Ne pretvarati „pravna lica“ u sve legal forms.
+6. Konačno mapiranje na kanonske korisničke kategorije **nije** usvojeno. Postojeće ciljne grupe = **LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING**.
+7. Ne pretvarati „građani“ u resident/non-resident. Ne pretvarati „pravna lica“ u sve legal forms. Ne izmišljati mapping na 8 kanonskih tipova.
 
 ---
 
@@ -225,9 +226,9 @@ Napomena: naziv „Ostale komunalne takse“ je naziv stavke iz izvornog spiska 
 
 | Broj računa | Naziv / opis | Status | Legacy ciljna grupa | Status pravnog osnova | Napomena |
 |-------------|--------------|--------|---------------------|------------------------|----------|
-| 530-92223906-37 | Naknada za komunalno opremanje građevinskog zemljišta za pravna lica. | TBD | pravna lica — LEGACY / PARTIAL MAPPING — REQUIRES KORAK 6 MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 5.1 |
-| 530-92223911-22 | Naknada za komunalno opremanje građevinskog zemljišta za preduzetnike. | TBD | preduzetnici — LEGACY / PARTIAL MAPPING — REQUIRES KORAK 6 MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 5.2 |
-| 530-92223932-56 | Naknada za komunalno opremanje građevinskog zemljišta za građane. | TBD | građani — LEGACY / PARTIAL MAPPING — REQUIRES KORAK 6 MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 5.3 |
+| 530-92223906-37 | Naknada za komunalno opremanje građevinskog zemljišta za pravna lica. | TBD | pravna lica — LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 5.1 |
+| 530-92223911-22 | Naknada za komunalno opremanje građevinskog zemljišta za preduzetnike. | TBD | preduzetnici — LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 5.2 |
+| 530-92223932-56 | Naknada za komunalno opremanje građevinskog zemljišta za građane. | TBD | građani — LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 5.3 |
 
 ## 5.6 Vrsta 6 — Naknada za korišćenje građevinskog zemljišta (za zaostale obaveze)
 
@@ -235,9 +236,9 @@ Napomena: naziv „Ostale komunalne takse“ je naziv stavke iz izvornog spiska 
 
 | Broj računa | Naziv / opis | Status | Legacy ciljna grupa | Status pravnog osnova | Napomena |
 |-------------|--------------|--------|---------------------|------------------------|----------|
-| 530-92223927-71 | Naknada za korišćenje građevinskog zemljišta za pravna lica. | TBD | pravna lica — LEGACY / PARTIAL MAPPING — REQUIRES KORAK 6 MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 6.1 |
-| 530-92223948-08 | Naknada za korišćenje građevinskog zemljišta za preduzetnike. | TBD | preduzetnici — LEGACY / PARTIAL MAPPING — REQUIRES KORAK 6 MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 6.2 |
-| 530-92223953-90 | Naknada za korišćenje građevinskog zemljišta za građane. | TBD | građani — LEGACY / PARTIAL MAPPING — REQUIRES KORAK 6 MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 6.3 |
+| 530-92223927-71 | Naknada za korišćenje građevinskog zemljišta za pravna lica. | TBD | pravna lica — LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 6.1 |
+| 530-92223948-08 | Naknada za korišćenje građevinskog zemljišta za preduzetnike. | TBD | preduzetnici — LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 6.2 |
+| 530-92223953-90 | Naknada za korišćenje građevinskog zemljišta za građane. | TBD | građani — LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 6.3 |
 
 ## 5.7 Vrsta 7 — Naknada za korišćenje opštinskih i nekategorisanih puteva
 
@@ -260,9 +261,9 @@ Napomena: naziv „Ostale komunalne takse“ je naziv stavke iz izvornog spiska 
 
 | Broj računa | Naziv / opis | Status | Legacy ciljna grupa | Status pravnog osnova | Napomena |
 |-------------|--------------|--------|---------------------|------------------------|----------|
-| 530-92262296-06 | Naknada za izgradnju i održavanje lokalnih puteva i drugih javnih objekata od opšteg značaja za pravna lica. | TBD | pravna lica — LEGACY / PARTIAL MAPPING — REQUIRES KORAK 6 MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 8.1 |
-| 530-92262303-82 | Naknada za izgradnju i održavanje lokalnih puteva i drugih javnih objekata od opšteg značaja za preduzetnike. | TBD | preduzetnici — LEGACY / PARTIAL MAPPING — REQUIRES KORAK 6 MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 8.2 |
-| 530-92262319-34 | Naknada za izgradnju i održavanje lokalnih puteva i drugih javnih objekata od opšteg značaja za građane. | TBD | građani — LEGACY / PARTIAL MAPPING — REQUIRES KORAK 6 MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 8.3 |
+| 530-92262296-06 | Naknada za izgradnju i održavanje lokalnih puteva i drugih javnih objekata od opšteg značaja za pravna lica. | TBD | pravna lica — LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 8.1 |
+| 530-92262303-82 | Naknada za izgradnju i održavanje lokalnih puteva i drugih javnih objekata od opšteg značaja za preduzetnike. | TBD | preduzetnici — LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 8.2 |
+| 530-92262319-34 | Naknada za izgradnju i održavanje lokalnih puteva i drugih javnih objekata od opšteg značaja za građane. | TBD | građani — LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING | Potrebno pravno potvrditi | Numeracija iz izvora: 8.3 |
 
 ## 5.9 Vrsta 9 — Prihodi koje svojom djelatnošću ostvare opštinski organi, organizacije i službe
 
@@ -392,15 +393,22 @@ Napomena: naziv „Ostale komunalne takse“ je naziv stavke iz izvornog spiska 
 
 **Status:** OPEN PRE-PRODUCTION DEPENDENCY
 
-Konačno mapiranje 17 vrsta / 41 računa na korisničke kategorije (fizičko lice Rezident/Nerezident, Preduzetnik, konkretni pravni oblici) **nije** usvojeno.
+Konačno mapiranje 17 vrsta / 41 računa na kanonskih 8 korisničkih kategorija **nije** usvojeno.
 
-9 računa u vrstama 5, 6 i 8 imaju naslijeđenu kolonu ciljne grupe (`građani` / `preduzetnici` / `pravna lica`). To je **LEGACY / PARTIAL MAPPING — REQUIRES KORAK 6 MAPPING**.
+`FINAL 17/41 USER CATEGORY MAPPING = OPEN`
+
+Kanonski platform user types (identitet; **nije** EP mapping):
+
+* Fizičko lice; Preduzetnik
+* DOO; AD; OD; KD; Nevladino udruženje; Sportska organizacija
+
+9 računa u vrstama 5, 6 i 8 imaju naslijeđenu kolonu ciljne grupe (`građani` / `preduzetnici` / `pravna lica`). To je **LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING**.
 
 Nije izvršeno:
 
 * građani → resident ili non-resident;
 * pravna lica → svi pravni oblici;
-* bilo koje drugo automatsko mapiranje.
+* bilo koje drugo automatsko mapiranje na 8 kanonskih tipova.
 
 ---
 
@@ -434,3 +442,4 @@ Izmjene se evidentiraju na nivou Kataloga. Aplikacioni šifrarnik, kada bude izv
 | 2026-07-27 | Verzija 0.3 — Usvojeno pravilo UR-01: uplatni računi = referentni podaci; Katalog ≠ šifrarnik / implementacioni artefakt. |
 | 2026-08-17 | Verzija 0.4 — Dokumentacioni corrective: oznaka EP-KF-001; namespace EP-*; pripadnost modulu e-Plaćanje. Bez izmjene 17 kategorija, 41 vrste uplate, računa, pravnih osnova ili internih šifara. |
 | 2026-08-20 | Verzija 0.5 — Korak 6 ontologija: 17 vrsta plaćanja → 41 račun. Stara ontologija SUPERSEDE. Brojevi računa sačuvani. Mapping nije izmišljen. |
+| 2026-08-20 | Verzija 0.6 — Mapping labela usklađena sa kanonskim platform user modelom (8 tipova). `FINAL 17/41 USER CATEGORY MAPPING = OPEN`. Bez izmišljenog mapiranja. |

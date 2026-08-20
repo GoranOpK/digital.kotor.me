@@ -5,7 +5,7 @@
 **Oznaka dokumenta:** EP-FS-001
 **Modul:** e-Plaćanje
 **Status dokumenta:** U IZRADI
-**Verzija:** 1.1.0
+**Verzija:** 1.1.1
 
 ---
 
@@ -27,6 +27,7 @@
 | EP-PATCH-FS-009A | 2026-07-27 | Redakcijsko usklađivanje: BP-06↔BP-09 (istorija); terminološko razdvajanje identifikatora transakcije. |
 | EP-PATCH-FS-010 | 2026-08-17 | Dokumentacioni corrective: oznaka EP-FS-001; namespace EP-*; naziv modula e-Plaćanje. Bez izmjene funkcionalnih pravila. |
 | EP-PATCH-FS-011 | 2026-08-20 | Usklađivanje FR sa zatvorenim Korakom 6 / EP-BM-001 v1.0.0. SUPERSEDE Kreirana/U toku i preuzimanja obaveze. Bez UI pixel-level. Bez application implementation-a. |
+| EP-PATCH-FS-012 | 2026-08-20 | Usklađivanje §4 sa kanonskim platform V1 user modelom (8 kategorija). Identity vs eligibility granica. Bez availability mapping-a. Bez application implementation-a. |
 
 ---
 
@@ -47,7 +48,7 @@ Ne projektuje UI piksele, API, gateway protokol ni bazu.
 | 1. Svrha | USVOJENO |
 | 2. Obuhvat V1 | USVOJENO |
 | 3. Granice | USVOJENO |
-| 4. Korisnici i eligibility | USVOJENO na nivou FR; platform deps OPEN |
+| 4. Korisnici i eligibility | USVOJENO na nivou FR; production data deps OPEN |
 | 5. Katalog i filter | USVOJENO |
 | 6. Tok plaćanja | USVOJENO |
 | 7. Statusi, idempotentnost, immutability | USVOJENO |
@@ -120,7 +121,22 @@ Sistem **ne**:
 
 # 4. Korisnici i eligibility
 
-**Status:** USVOJENO (FR); platform corrective OPEN
+**Status:** USVOJENO (FR); `PLATFORM USER MODEL CORRECTIVE = COMPLETE`; production data cleanup OPEN
+
+EP **ne** definiše sopstvene user types. Koristi kanonski platformski `user_type` (8 kategorija). SSOT: EP-BM-001 / 8.
+
+Osnovna kategorija korisnika određuje identitet/oblik korisnika.
+
+Svojstva potrebna za pravo učešća na konkretnom konkursu predstavljaju zaseban eligibility sloj i ne postaju automatski `user_type` Digital Kotora.
+
+Nisu `user_type`: Poljoprivrednik; Registrovani poljoprivredni proizvođač; Ribar; Marikulturista; Mladi preduzetnik; Mikro / Malo / Srednje preduzeće; Individualni sportista.
+
+Kanonski V1 skup:
+
+* Fizička lica: Fizičko lice; Preduzetnik
+* Pravna lica: DOO; AD; OD; KD; Nevladino udruženje; Sportska organizacija
+
+Preduzetnik je fizičko lice (poslovna kategorija), eligible za `residential_status`, **nije** pravno lice.
 
 ## 4.1 Uplatilac
 
@@ -130,7 +146,7 @@ Prije gateway-a: **current profile**. Na nastanku transakcije: **immutable snaps
 
 ## 4.2 Declare-on-use
 
-Ako fizičko lice ili Preduzetnik nema kanonski `resident` / `non-resident`, sistem **ne** filtrira vrste plaćanja po pretpostavci.
+Ako Fizičko lice ili Preduzetnik nema kanonski `resident` / `non-resident`, sistem **ne** filtrira vrste plaćanja po pretpostavci.
 
 Korisnik mora izjaviti status (**DECLARE-ON-USE GATE**) prije funkcije kojoj je status potreban.
 
@@ -138,13 +154,15 @@ Nema auto-backfill-a.
 
 ## 4.3 Pravno lice
 
-EP filtering **ne** koristi `residential_status`. Koristi konkretan zakonski oblik kada availability to bude zahtijevalo.
+EP filtering **ne** koristi `residential_status`. Koristi konkretan kanonski zakonski oblik kada availability to bude zahtijevalo.
 
-Postojeći application fallback `resident` za pravno lice = platform dependency; FS ga ne tretirati kao kanonski EP status.
+Pravna lica V1: DOO, AD, OD, KD, Nevladino udruženje, Sportska organizacija.
+
+Postojeći production-like `resident` na pravnom licu = **PRODUCTION LEGACY DATA CLEANUP = OPEN PRE-PRODUCTION**. FS ga ne tretirati kao kanonski EP status.
 
 ## 4.4 Availability
 
-Konačno mapiranje 17/41 = OPEN PRE-PRODUCTION. Do tada FR zahtijeva da filter **postoji** kao mehanizam; konkretna pravila se ne izmišljaju.
+Konačno mapiranje 17/41 na 8 kanonskih kategorija = **OPEN PRE-PRODUCTION**. `FINAL 17/41 USER CATEGORY MAPPING = OPEN`. Do tada FR zahtijeva da filter **postoji** kao mehanizam; konkretna pravila se ne izmišljaju.
 
 ---
 
@@ -346,3 +364,4 @@ Dokumentacioni AC (bez implementacije):
 | 2026-07-27 | EP-PATCH-FS-001 … EP-PATCH-FS-009A — BP-01 do BP-09 i redakcije. |
 | 2026-08-17 | EP-PATCH-FS-010 — EP-FS-001 namespace. |
 | 2026-08-20 | EP-PATCH-FS-011 / verzija 1.1.0 — FR usklađeni sa Korakom 6. Status dokumenta ostaje U IZRADI zbog gateway AC. |
+| 2026-08-20 | EP-PATCH-FS-012 / verzija 1.1.1 — §4 usklađen sa kanonskih 8 platform user types. Identity vs eligibility granica. Mapping 17/41 ostaje OPEN. |

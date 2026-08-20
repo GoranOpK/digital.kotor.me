@@ -6,7 +6,7 @@
 **Naziv:** Registar skraćenica, oznaka i terminologije e-Plaćanja
 **Modul:** e-Plaćanje
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.1
+**Verzija:** 1.1.1
 **Datum:** 2026-08-20
 
 ---
@@ -56,7 +56,7 @@ Ako bi EP paket trebao novu **projektnu/platformsku** oznaku koja po DK-DS-001 p
 
 | Oznaka | Dokument | Putanja | Status |
 |--------|----------|---------|--------|
-| **EP-BM-001** | Poslovni model e-Plaćanja | `docs/business-model/Business_Model_e-Placanje.md` | USVOJENO (V1 BM, Korak 6, 2026-08-20) |
+| **EP-BM-001** | Poslovni model e-Plaćanja | `docs/business-model/Business_Model_e-Placanje.md` | USVOJENO (V1 BM, Korak 6; user model v1.0.1) |
 | **EP-FS-001** | Funkcionalna specifikacija e-Plaćanja | `docs/functional-specifications/Functional-Specification_e-Placanje.md` | U IZRADI |
 | **EP-TS-001** | Tehnička specifikacija e-Plaćanja | `docs/technical-specifications/Technical-Specification_e-Placanje.md` | U IZRADI |
 | **EP-KF-001** | Katalog finansijskih obaveza Opštine Kotor | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` | U IZRADI (ontologija usklađena; mapping OPEN) |
@@ -73,9 +73,9 @@ Ne postoje aktivni EP dokumenti `BM-002`, `FS-002`, `TS-002`, `EP-BM-002`, `EP-F
 
 | Oznaka | Puni naziv | Značenje | Gdje se koristi |
 |--------|------------|----------|-----------------|
-| **EP-PATCH-BM** | Patch poslovnog modela e-Plaćanja | Identifikator izmjene EP-BM-001 (EP-PATCH-BM-001 … EP-PATCH-BM-011). | EP-BM-001; navođenje u EP-TS-001 |
-| **EP-PATCH-FS** | Patch funkcionalne specifikacije e-Plaćanja | Identifikator izmjene EP-FS-001 (EP-PATCH-FS-001 … EP-PATCH-FS-011). | EP-FS-001 |
-| **EP-PATCH-TS** | Patch tehničke specifikacije e-Plaćanja | Identifikator izmjene EP-TS-001. Izdato: **EP-PATCH-TS-001** (2026-08-20). | EP-TS-001 |
+| **EP-PATCH-BM** | Patch poslovnog modela e-Plaćanja | Identifikator izmjene EP-BM-001 (EP-PATCH-BM-001 … EP-PATCH-BM-012). | EP-BM-001; navođenje u EP-TS-001 |
+| **EP-PATCH-FS** | Patch funkcionalne specifikacije e-Plaćanja | Identifikator izmjene EP-FS-001 (EP-PATCH-FS-001 … EP-PATCH-FS-012). | EP-FS-001 |
+| **EP-PATCH-TS** | Patch tehničke specifikacije e-Plaćanja | Identifikator izmjene EP-TS-001. Izdato: **EP-PATCH-TS-001**, **EP-PATCH-TS-002**. | EP-TS-001 |
 
 Ovi prefiksi ne smiju se miješati sa `PATCH-FS-*`, `PATCH-BM-*` ili `PATCH-TS-*` Kalendara kulture.
 
@@ -112,7 +112,7 @@ Registrovane su samo skraćenice koje se stvarno koriste u kanonskim EP dokument
 | **F-01** | Obavezni obuhvat V1 | 17 vrsta plaćanja i 41 račun iz Kataloga. **SUPERSEDE** stara ontologija 17 kategorija + 41 vrsta uplate. | EP-BM-001 / 6; EP-FS-001; EP-KF-001; EP-PO-001 |
 | **UR** | Uplatni računi | Odluka o tretmanu uplatnih računa. | EP-BM-001, EP-FS-001, EP-TS-001, EP-KF-001, EP-PO-001 |
 | **UR-01** | Uplatni računi – referentni i konfiguracioni podaci | Katalog = poslovni referentni dokument (nije šifrarnik); aplikacija koristi konfiguracioni izvor; bez hardkodiranja i bez ručnog unosa računa. | EP-BM-001; EP-FS-001; EP-TS-001 / 2.4 |
-| **BP** | Poslovni proces / poslovna odluka | Usvojeni poslovni procesi BP-01 do BP-09. Aktivno značenje = EP-BM-001 v1.0.0 (KEEP / UPDATE / SUPERSEDE). | EP-BM-001 / 9; EP-FS-001; EP-TS-001 / 2 |
+| **BP** | Poslovni proces / poslovna odluka | Usvojeni poslovni procesi BP-01 do BP-09. Aktivno značenje = EP-BM-001 (KEEP / UPDATE / SUPERSEDE). | EP-BM-001 / 9; EP-FS-001; EP-TS-001 / 2 |
 | **BP-01** | Katalog vrsta plaćanja | Filterisani pregled i pretraga nad jednim katalogom. UPDATE. | EP-BM-001; EP-FS-001; EP-TS-001 |
 | **BP-02** | Popunjavanje podataka | Profil + korisnički iznos; ne izvorni sistem. SUPERSEDE starog dual-mode preuzimanja. | EP-BM-001; EP-FS-001; EP-TS-001 |
 | **BP-03** | Pregled i potvrda prije plaćanja | Formiranje → pregled → izričita potvrda → gateway; odustajanje = NO TRANSACTION. UPDATE. | EP-BM-001; EP-FS-001; EP-TS-001 |
@@ -147,14 +147,14 @@ Nisu uvedene nove kratke šifre tipa `EP-XYZ-001` za poslovna pravila.
 
 Registrovani **novi** identifikatori u odnosu na EP-RG-001 v1.0:
 
-* **EP-PATCH-BM-011**
-* **EP-PATCH-FS-011**
-* **EP-PATCH-TS-001**
+* **EP-PATCH-BM-011**, **EP-PATCH-BM-012**
+* **EP-PATCH-FS-011**, **EP-PATCH-FS-012**
+* **EP-PATCH-TS-001**, **EP-PATCH-TS-002**
 * **FR-CAT-***, **FR-FLOW-***, **FR-ST-***, **FR-HIS-***, **FR-CONF-***, **FR-MAIL-***, **FR-ADM-***
 
 Kanonski termini Koraka 6 (poglavlje 5) nisu nove šifre.
 
-Pravni oblici (OD, KD, AD, DOO, …) nisu EP dokumentacione oznake; pripadaju platform user-modelu i referenciraju se, ne registruju se ovdje kao EP ID.
+Pravni oblici (DOO, AD, OD, KD, Nevladino udruženje, Sportska organizacija) nisu EP dokumentacione oznake; pripadaju platform user-modelu i referenciraju se, ne registruju se ovdje kao EP ID.
 
 ---
 
@@ -192,15 +192,21 @@ Za svaki pojam: kanonski crnogorski naziv; eventualni tehnički engleski; znače
 
 ### 5.2 Platform user-model termini (referenca, nije EP pravni SSOT)
 
-Sljedeći termini pripadaju platformskom korisničkom modelu. EP ih koristi kao dependency; ne duplira kao novi EP pravni katalog:
+Sljedeći termini pripadaju platformskom korisničkom modelu. EP ih koristi kao dependency; ne duplira kao novi EP pravni katalog.
 
-* fizičko lice; Preduzetnik; pravno lice;
-* Rezident / Nerezident (`resident` / `non-resident`);
-* zakonski oblici najmanje: OD, KD, AD, DOO; dio stranog privrednog društva; Nevladino udruženje; Nevladina fondacija; Javna ustanova.
+Kanonski V1 skup (`CANONICAL USER TYPES = 8`):
+
+* Fizička lica: Fizičko lice; Preduzetnik (fizičko lice / poslovna kategorija; nije pravno lice);
+* Pravna lica: DOO; AD; OD; KD; Nevladino udruženje; Sportska organizacija;
+* Rezident / Nerezident (`resident` / `non-resident`) — samo Fizičko lice i Preduzetnik.
 
 „Javni sektor“ nije pravni oblik. Generičko `Ostalo` nije usvojeno.
 
-Korekcija platform koda (HomeController, enum, seeders, NULL status) = **PRE-PRODUCTION PLATFORM DEPENDENCY**. Nije predmet EP dokumentacionog corrective-a.
+Nisu aktivni V1 user types: Nevladina fondacija; Javna ustanova; Dio stranog privrednog društva; Druge organizacije.
+
+Konkursna svojstva (Poljoprivrednik, Ribar, Marikulturista, Mladi preduzetnik, MSP veličina, Individualni sportista) nisu `user_type`.
+
+`PLATFORM USER MODEL CORRECTIVE = COMPLETE` (application-level). `PRODUCTION LEGACY DATA CLEANUP = OPEN PRE-PRODUCTION`.
 
 ---
 
@@ -217,6 +223,7 @@ Istorija se ne briše. Changelog i ovaj odjeljak smiju navoditi termine.
 | **pending** | Stub/DB default i stari tehnički naziv | Nije kanonski V1 status |
 | **Greška** | Kao poslovni status V1 | Ne koristiti |
 | **17 kategorija + 41 vrsta uplate** | Stara KF ontologija; 1 račun po „vrsti uplate“ | SUPERSEDE; kanonski: 17 vrsta plaćanja → 41 račun |
+| **Nevladina fondacija / Javna ustanova / Dio stranog privrednog društva** | Raniji širi EP user-model spisak | Nisu aktivni V1 user types; `LEGACY / COMPATIBILITY ONLY — NOT AVAILABLE FOR NEW REGISTRATION` |
 | **kategorija** (kao 17 kanonskih jedinica) | Organizacija starog kataloga | Ne koristiti za novi V1 sadržaj |
 | **vrsta uplate** (kao 41 kanonska jedinica) | Stara jedinica sa 1 računom | Ne koristiti; koristiti **račun** ili **vrsta plaćanja** prema Koraku 6 |
 | **izvorni sistem** kao izvor iznosa/zaduženja u V1 toku | BP-02 / BP-07 stari model | SUPERSEDE za V1; P-08 ostaje granica nadležnosti |
@@ -255,3 +262,4 @@ Isto pravilo kao v1.0, zadržano:
 | 2026-08-17 | Granica prema Kalendaru kulture: referentna oznaka registra KK ažurirana sa `RG-001` na `KK-RG-001`. Poslovni sadržaj e-Plaćanja neizmijenjen. |
 | 2026-08-17 | Granica: pointer na `DK-DS-001`; `KN-*` rezervisan (nije EP). `EP-PO-001` KEEP. Poslovni sadržaj e-Plaćanja neizmijenjen. |
 | 2026-08-20 | Verzija 1.1 — Proširenje u puni katalog skraćenica, oznaka i terminologije usklađen sa Korakom 6. Terminološki katalog; legacy/superseded termini; FR-* prefiksi; EP-PATCH-TS-001; ažurirani statusi kanonskih dokumenata. |
+| 2026-08-20 | Verzija 1.1.1 — Platform user-model termini usklađeni sa kanonskih 8 tipova. EP-PATCH-BM-012 / FS-012 / TS-002. Bez novog registra/dokumenta. |
