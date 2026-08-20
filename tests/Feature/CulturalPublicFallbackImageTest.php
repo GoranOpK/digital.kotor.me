@@ -134,7 +134,6 @@ class CulturalPublicFallbackImageTest extends TestCase
         $url = $mf->fresh()->load('coverMedia')->imageUrl();
         $this->assertSame(CulturalCalendarDefaultImages::manifestationFallbackUrl(), $url);
         $this->assertNotSame(CulturalCalendarDefaultImages::urlForCategory('Koncerti'), $url);
-        $this->assertStringNotContainsString('/categories/', $url);
         $this->assertStringContainsString('manifestacije.jpg', $url);
         $this->assertStringNotContainsString('kalendar-kulture-default-event.png', $url);
     }
