@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\User;
 use App\Support\KotorAddress;
 use App\Support\Pib;
+use App\Support\UserType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -43,24 +44,48 @@ class ProfileUpdateRequest extends FormRequest
             'phone' => ['required', 'string', 'max:50'],
             'address' => ['required', 'string', 'max:500'],
             'city' => ['required', 'string', 'max:255'],
-            'user_type' => ['required', 'string', 'in:Fizičko lice,Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)'],
-            'residential_status' => ['required', 'string', 'in:resident,non-resident'],
         ];
 
-        // Adresa se provjerava kao ulica + grad zajedno (v. withValidator)
+        if (! $user->collectsBusinessIdentity()) {
+            return $rules;
+        }
 
-        // Validacija za JMB (obavezno za fizička lica)
-        if ($this->input('user_type') === 'Fizičko lice') {
+        $allowedTypes = UserType::allowedProfileWriteValues($user->user_type);
+
+        $rules['user_type'] = ['required', 'string', Rule::in($allowedTypes)];
+
+        $incomingType = $this->input('user_type', $user->user_type);
+
+        if (UserType::requiresResidentialStatus($incomingType)) {
+            $rules['residential_status'] = ['required', 'string', 'in:resident,non-resident'];
+        }
+
+        if (UserType::isNaturalPerson($incomingType)) {
             $rules['jmb'] = [
-                'required',
+                'nullable',
                 'string',
                 'size:13',
                 'regex:/^[0-9]{13}$/',
                 Rule::unique(User::class)->ignore($user->id),
             ];
-            $rules['pib'] = ['nullable'];
+            if ($this->input('residential_status', $user->residential_status) === 'resident') {
+                $rules['jmb'] = [
+                    'required',
+                    'string',
+                    'size:13',
+                    'regex:/^[0-9]{13}$/',
+                    Rule::unique(User::class)->ignore($user->id),
+                ];
+            }
+            $rules['pib'] = [
+                'nullable',
+                'string',
+                'size:'.Pib::LENGTH,
+                'regex:'.Pib::REGEX,
+                Rule::unique(User::class)->ignore($user->id),
+            ];
+            $rules['company_name'] = ['nullable', 'string', 'max:255'];
         } else {
-            // Validacija za PIB (obavezno za pravna lica)
             $rules['pib'] = [
                 'required',
                 'string',
@@ -69,10 +94,10 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($user->id),
             ];
             $rules['jmb'] = ['nullable'];
+            $rules['company_name'] = ['required', 'string', 'max:255'];
         }
 
-        // Validacija za passport (opciono za nerezidente)
-        if ($this->input('residential_status') !== 'resident') {
+        if ($this->input('residential_status') !== 'resident' && UserType::requiresResidentialStatus($incomingType)) {
             $rules['passport_number'] = [
                 'nullable',
                 'string',
@@ -121,9 +146,7 @@ class ProfileUpdateRequest extends FormRequest
             return true;
         }
 
-        $userType = $this->input('user_type');
-
-        return is_string($userType) && $userType !== 'Fizičko lice';
+        return UserType::isLegalEntity($this->input('user_type', $this->user()?->user_type));
     }
 
     /**

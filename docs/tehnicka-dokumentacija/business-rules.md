@@ -1,7 +1,7 @@
 # Poslovna pravila
 
-**Poslednje ažuriranje:** 2026-08-18 (dopuna: kanonska rezidentnost fizičkog lica samo Rezident / Nerezident)  
-**Izvor u kodu:** `KotorAddress`, `HomeController`, `ProfileUpdateRequest`, `ApplicationController`, `Application` model
+**Poslednje ažuriranje:** 2026-08-20 (kanonski V1 korisnički model: 8 kategorija; Preduzetnik = fizičko lice)
+**Izvor u kodu:** `KotorAddress`, `HomeController`, `ProfileUpdateRequest`, `ApplicationController`, `Application` model, `App\Support\UserType`
 
 ---
 
@@ -36,19 +36,23 @@ Kotor, Dobrota, Prčanj, Škaljari, Risan, Perast, Muo, Orahovac, Stoliv, Ljuta,
 
 | Identifikator | Pravilo | Ko |
 |---------------|---------|-----|
-| **JMB** | 13 cifara + kontrolna cifra (`HomeController::validateJMB`) | Rezidenti (fizička lica) |
-| **PIB** | Tačno **9** cifara (`regex:/^[0-9]{9}$/`), unique u `users` | Pravna lica / preduzetnici |
-| **Pasoš** | Alternativa za nerezidente | `residential_status=non-resident` |
+| **JMB** | 13 cifara + kontrolna cifra (`HomeController::validateJMB`) | Rezidenti (Fizičko lice i Preduzetnik) |
+| **PIB** | Tačno **8** cifara (`App\Support\Pib`), unique u `users` | Pravna lica. Preduzetnik: **nije** automatski obavezan |
+| **Pasoš** | Alternativa za nerezidente | `residential_status=non-resident` (samo Fizičko lice / Preduzetnik) |
 
-Kanonski `users.residential_status` za fizičko lice: samo `resident` / `non-resident`. `ex-non-resident` je legacy vrijednost uklonjena iz aktivnog modela (nije treći status).
+Kanonski `users.residential_status` za Fizičko lice i Preduzetnika: samo `resident` / `non-resident`. Pravno lice: `NULL` na novom zapisu. `ex-non-resident` je legacy vrijednost uklonjena iz aktivnog modela (nije treći status).
 
-Kolone u bazi: `users.pib` VARCHAR(9) (migracija `2026_06_26_150000_restore_pib_length_to_9.php`).
+Kolone u bazi: `users.pib` VARCHAR(8); identifikaciono polje je `users.jmb` (nije `jmbg`).
 
 ---
 
 ## Registracija — tipovi korisnika
 
-`user_type` / `business_type` određuju Obrazac pri prijavi i obavezna polja pri registraciji.
+`users.user_type` je osnovni identitet/oblik korisnika (8 kanonskih vrijednosti). `business_type` je **polje forme** pri registraciji, nije kolona u `users`.
+
+Preduzetnik je fizičko lice sa registrovanom djelatnošću, nije pravno lice.
+
+Svojstva potrebna za konkretan konkurs (npr. poljoprivrednik, MSP veličina, individualni sportista) nisu `user_type`; ostaju u konkursnom/eligibility sloju.
 
 Detalji: [authentication-and-registration.md](authentication-and-registration.md).
 

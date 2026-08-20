@@ -1,6 +1,6 @@
 # Baza — entiteti i relacije
 
-**Poslednje ažuriranje:** 2026-08-17  
+**Poslednje ažuriranje:** 2026-08-20
 **Izvor u kodu:** `app/Models/`, `database/migrations/`
 
 ---
@@ -54,7 +54,13 @@ CulturalEvent ──belongsTo──> User (created_by)
 
 ### `users`
 
-`role_id`, `activation_status`, `user_type`, `business_type`, `residential_status`, `jmbg`, `pib`, `passport_number`, `address`, `city`, `phone`
+`role_id`, `activation_status`, `user_type`, `residential_status`, `jmb`, `pib`, `passport_number`, `address`, `city`, `phone`, `company_name`
+
+Nema kolone `business_type`. Identifikaciono polje fizičkog lica je `jmb`, ne `jmbg`.
+
+`user_type` (ENUM, safe expansion): 8 kanonskih vrijednosti + 4 zadržane legacy vrijednosti. Nove registracije pišu samo kanonski skup. SSOT: `App\Support\UserType`.
+
+`residential_status`: `resident` / `non-resident` / `NULL`. Novi zapisi pravnih lica = `NULL`.
 
 ### `competitions`
 
