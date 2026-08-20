@@ -5,7 +5,7 @@
 **Oznaka dokumenta:** EP-PO-001
 **Modul:** e-Plaćanje
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.3
+**Verzija:** 0.4
 
 ---
 
@@ -16,6 +16,7 @@
 | 0.1 | 2026-07-27 | Uspostavljena početna struktura Pravnog okvira modula e-Plaćanja. Unesene usvojene projektne odluke P-05, P-07 i povezane odluke P-01–P-08 i F-01. |
 | 0.2 | 2026-07-27 | Usklađivanje sa UR-01: Katalog kao poslovni referentni dokument; uplatni računi kao referentni / konfiguracioni podaci. |
 | 0.3 | 2026-08-17 | Dokumentacioni corrective: oznaka EP-PO-001; namespace EP-*; naziv modula e-Plaćanje. Bez izmjene pravnih zaključaka. |
+| 0.4 | 2026-08-20 | Minimalni pointer usklađenosti sa Korakom 6: priroda potvrde; retention OPEN PRE-PRODUCTION; kartični podaci. Pravni osnovi po vrstama nijesu reinterpretirani. |
 
 Napomena:
 
@@ -46,6 +47,7 @@ Predstavlja osnov za usklađenost funkcionalnosti modula sa važećim propisima 
 | 5. Registar pravnih osnova po vrstama obaveza | REZERVISANO |
 | 6. Veza sa Katalogom i ostalom dokumentacijom | U IZRADI |
 | 7. Završne odredbe | U IZRADI |
+| 8. Poslovno-pravni pointeri Koraka 6 | USVOJENO kao pointer; nije nova pravna osnova |
 
 ---
 
@@ -72,6 +74,7 @@ Predstavlja osnov za usklađenost funkcionalnosti modula sa važećim propisima 
 5. Registar pravnih osnova po vrstama obaveza
 6. Veza sa Katalogom i ostalom dokumentacijom
 7. Završne odredbe
+8. Poslovno-pravni pointeri Koraka 6
 
 ---
 
@@ -101,7 +104,7 @@ Za Pravni okvir posebno su mjerodavna:
 | P-05 | Regulatorna usklađenost | Svaka funkcionalnost mora imati pravni osnov. |
 | P-07 | Propis kao izvor istine | Pravni osnov se evidentira po propisanim poljima; bez pretpostavki. |
 | P-08 | Izvorni sistem ostaje nadležan | Izvorni sistem / nadležni organ ostaje mjerodavan. |
-| F-01 | Obavezni obuhvat V1 | Vrste uplata i računi iz projekta; računi u Katalogu kao referentni podaci. |
+| F-01 | Obavezni obuhvat V1 | 17 vrsta plaćanja i 41 račun iz Kataloga (Korak 6 ontologija). Računi u Katalogu kao referentni podaci. |
 | UR-01 | Uplatni računi | Katalog = referentni dokument; aplikacija koristi šifrarnik (konfiguracioni izvor), bez hardkodiranja. |
 
 ---
@@ -180,7 +183,7 @@ Napomena: Tabela je namjerno prazna. Popunjavanje slijedi u narednom koraku proj
 
 | Dokument | Putanja | Uloga |
 |----------|---------|-------|
-| Katalog finansijskih obaveza | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` | Poslovni referentni dokument vrsta uplata i uplatnih računa (nije šifrarnik) |
+| Katalog finansijskih obaveza | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` | Poslovni referentni dokument 17 vrsta plaćanja i 41 računa (nije šifrarnik) |
 | Poslovni model e-Plaćanja (EP-BM-001) | `docs/business-model/Business_Model_e-Placanje.md` | Poslovna pravila i načela P-01–P-08 |
 | Funkcionalna specifikacija e-Plaćanja (EP-FS-001) | `docs/functional-specifications/Functional-Specification_e-Placanje.md` | Funkcionalni zahtjevi, uključujući F-01 |
 | Tehnička specifikacija e-Plaćanja (EP-TS-001) | `docs/technical-specifications/Technical-Specification_e-Placanje.md` | Tehnička specifikacija (nakon usvajanja tehničkih odluka) |
@@ -192,7 +195,9 @@ Referentni propis naveden u F-01 za obuhvat V1:
 
 **Naredba o načinu uplate javnih prihoda** („Službeni list Crne Gore“, broj 006/25 od 29.01.2025. godine), u dijelu koji je obuhvaćen ovim projektom.
 
-Konkretan spisak vrsta uplata unosi se isključivo iz Kataloga nakon dostave projektnog spiska. Ovaj dokument ne dopunjava spisak samostalnim tumačenjem propisa.
+Konkretan spisak vrsta plaćanja i računa unosi se isključivo iz Kataloga. Ovaj dokument ne dopunjava spisak samostalnim tumačenjem propisa.
+
+Kanonska ontologija Kataloga (Korak 6): **17 vrsta plaćanja → 41 račun**. Stara formulacija „17 kategorija + 41 vrsta uplate“ je superseded u EP-KF-001; pravni osnovi po stavkama ostaju **Potrebno pravno potvrditi**.
 
 ---
 
@@ -204,6 +209,41 @@ Konkretan spisak vrsta uplata unosi se isključivo iz Kataloga nakon dostave pro
 
 ---
 
+# 8. Poslovno-pravni pointeri Koraka 6
+
+**Status:** USVOJENO kao dokumentacioni pointer. **Nije** nova pravna osnova, **nije** reinterpretacija P-05/P-07/P-08 i **nije** popunjavanje registra u poglavlju 5.
+
+Ove stavke usklađuju Pravni okvir sa zatvorenim poslovnim modelom (EP-BM-001 v1.0.0, 2026-08-20) tamo gdje je to direktno potrebno zbog prirode potvrde, retention otvorenog pitanja i kartičnih podataka.
+
+## 8.1 Priroda potvrde o EP transakciji
+
+Potvrda o uspješnoj e-Plaćanje transakciji (uključujući PDF):
+
+* jeste dokaz da je konkretna EP transakcija uspješno izvršena prema server-confirmed gateway rezultatu;
+* **nije** fiskalni račun;
+* **nije** upravno rješenje;
+* **nije** dokaz da je konkretna finansijska obaveza izmirena.
+
+Izvorni sistem / nadležni organ ostaje mjerodavan za utvrđivanje izmirenja (P-08).
+
+## 8.2 Retention / deletion / anonymization
+
+Rok čuvanja, brisanje i anonimizacija finansijske istorije e-Plaćanja:
+
+**OPEN PRE-PRODUCTION DEPENDENCY**
+
+**PRE-PRODUCTION LEGAL / REGULATORY REVIEW REQUIRED**
+
+Ovaj dokument **ne** određuje rok. User account lifecycle ne briše automatski finansijsku istoriju (EP-BM-001). To nije zatvoreno pravno pravilo retention-a.
+
+## 8.3 Kartični podaci
+
+Prema poslovnom modelu, Digital Kotor **ne** prikuplja, **ne** obrađuje i **ne** čuva osjetljive kartične podatke. Gateway obrađuje karticu.
+
+Tehničko-pravni review konkretnog gateway ugovora (PCI/DSS obaveze pružaoca, data-retention set, maskirani podaci) ostaje **OPEN PRE-PRODUCTION**. Ovaj pointer ne bira gateway i ne popunjava pravni osnov.
+
+---
+
 # Change Log
 
 | Datum | Izmjena |
@@ -211,3 +251,4 @@ Konkretan spisak vrsta uplata unosi se isključivo iz Kataloga nakon dostave pro
 | 2026-07-27 | Kreirana početna verzija 0.1 Pravnog okvira. Unesene odluke P-05, P-07 i veze na P-01–P-08 i F-01. Registar pravnih osnova ostavljen prazan. |
 | 2026-07-27 | Verzija 0.2 — Usklađeno sa UR-01 (Katalog ≠ šifrarnik; računi = referentni / konfiguracioni podaci). |
 | 2026-08-17 | Verzija 0.3 — Dokumentacioni corrective: oznaka EP-PO-001; namespace EP-*; naziv modula e-Plaćanje. Bez izmjene pravnih zaključaka i statusa pravnih osnova. |
+| 2026-08-20 | Verzija 0.4 — Minimalni pointeri Koraka 6 (priroda potvrde; retention OPEN; kartični podaci). Registar pravnih osnova ostaje prazan. Pravni osnovi nijesu reinterpretirani. |
