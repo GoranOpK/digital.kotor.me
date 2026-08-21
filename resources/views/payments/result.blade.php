@@ -24,6 +24,15 @@
         <div><span class="text-sm text-gray-500">Identifikator transakcije</span><div class="font-mono text-sm">{{ $transaction->merchant_transaction_id }}</div></div>
     </div>
 
+    @if($status === \App\Enums\PaymentStatus::Successful)
+        <div class="mt-4 space-y-2">
+            <a href="{{ route('payments.confirmation.pdf', $transaction) }}" class="bg-indigo-600 text-white px-4 py-2 rounded inline-block">Preuzmi potvrdu (PDF)</a>
+            @if(!empty($confirmationEmailSent))
+                <p class="text-sm text-gray-700">Potvrda je poslata na email.</p>
+            @endif
+        </div>
+    @endif
+
     @if($status === \App\Enums\PaymentStatus::Failed)
         <p class="text-sm text-gray-700 mt-4">Novac nije naplaćen kroz ovaj tok.</p>
     @endif

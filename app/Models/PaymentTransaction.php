@@ -107,4 +107,9 @@ class PaymentTransaction extends Model
     {
         return $this->hasMany(PaymentTransactionEvent::class);
     }
+
+    public function confirmationDeliveries(): HasMany
+    {
+        return $this->hasMany(PaymentConfirmationDelivery::class);
+    }
 }

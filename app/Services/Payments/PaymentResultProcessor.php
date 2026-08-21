@@ -7,9 +7,14 @@ use App\Models\PaymentTransaction;
 use App\Models\PaymentTransactionEvent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PaymentResultProcessor
 {
+    public function __construct(
+        private readonly PaymentConfirmationDeliveryService $confirmations,
+    ) {}
+
     public function apply(PaymentTransaction $transaction, PaymentGatewayVerifiedResult $result): PaymentTransaction
     {
         try {
@@ -25,7 +30,9 @@ class PaymentResultProcessor
             throw $e;
         }
 
-        return DB::transaction(function () use ($transaction, $result) {
+        $newlySuccessful = false;
+
+        $updated = DB::transaction(function () use ($transaction, $result, &$newlySuccessful) {
             $locked = PaymentTransaction::query()
                 ->whereKey($transaction->id)
                 ->lockForUpdate()
@@ -69,6 +76,10 @@ class PaymentResultProcessor
 
             $this->recordTransition($locked, $result);
 
+            if ($result->status === PaymentStatus::Successful) {
+                $newlySuccessful = true;
+            }
+
             Log::info('ep.payment.callback_applied', [
                 'transaction_uuid' => $locked->uuid,
                 'merchant_transaction_id' => $locked->merchant_transaction_id,
@@ -78,6 +89,20 @@ class PaymentResultProcessor
 
             return $locked->fresh();
         });
+
+        if ($newlySuccessful) {
+            try {
+                $this->confirmations->sendAfterNewSuccessfulTransition($updated);
+            } catch (Throwable $e) {
+                Log::info('ep.payment.confirmation_delivery_failed', [
+                    'transaction_uuid' => $updated->uuid,
+                    'merchant_transaction_id' => $updated->merchant_transaction_id,
+                    'exception_class' => $e::class,
+                ]);
+            }
+        }
+
+        return $updated;
     }
 
     private function assertAmountAndCurrency(PaymentTransaction $transaction, PaymentGatewayVerifiedResult $result): void

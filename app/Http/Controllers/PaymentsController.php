@@ -9,6 +9,9 @@ use App\Models\PaymentType;
 use App\Services\Payments\EpModuleSettings;
 use App\Services\Payments\FakePaymentGatewayUnavailableException;
 use App\Services\Payments\PaymentAvailabilityService;
+use App\Services\Payments\PaymentConfirmationAssembler;
+use App\Services\Payments\PaymentConfirmationDeliveryService;
+use App\Services\Payments\PaymentConfirmationPdfRenderer;
 use App\Services\Payments\PaymentDraftService;
 use App\Services\Payments\PaymentGatewayNotConfiguredException;
 use App\Services\Payments\PaymentResultRejectedException;
@@ -17,7 +20,9 @@ use App\Support\ResidentialStatusDeclaration;
 use App\Support\UserType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\View\View;
+use LogicException;
 
 class PaymentsController extends Controller
 {
@@ -26,6 +31,9 @@ class PaymentsController extends Controller
         private readonly PaymentDraftService $drafts,
         private readonly EpModuleSettings $module,
         private readonly PaymentStartService $starts,
+        private readonly PaymentConfirmationAssembler $confirmations,
+        private readonly PaymentConfirmationPdfRenderer $confirmationPdf,
+        private readonly PaymentConfirmationDeliveryService $confirmationDeliveries,
     ) {}
 
     public function index(Request $request): View|RedirectResponse
@@ -212,6 +220,24 @@ class PaymentsController extends Controller
         return view('payments.result', [
             'transaction' => $paymentTransaction,
             'snapshot' => $snapshot,
+            'confirmationEmailSent' => $this->confirmationDeliveries->emailWasSent($paymentTransaction),
+        ]);
+    }
+
+    public function downloadConfirmation(Request $request, PaymentTransaction $paymentTransaction): Response
+    {
+        abort_unless((int) $paymentTransaction->user_id === (int) $request->user()->id, 404);
+
+        try {
+            $confirmation = $this->confirmations->fromSuccessfulTransaction($paymentTransaction);
+            $binary = $this->confirmationPdf->render($confirmation);
+        } catch (LogicException) {
+            abort(404);
+        }
+
+        return response($binary, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$confirmation->pdfFilename.'"',
         ]);
     }
 
