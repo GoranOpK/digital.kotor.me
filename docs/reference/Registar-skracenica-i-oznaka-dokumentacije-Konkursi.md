@@ -7,8 +7,8 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.0
-**Datum:** 2026-08-18
+**Verzija:** 0.1.1
+**Datum:** 2026-08-19
 
 ---
 
@@ -17,6 +17,7 @@
 | Verzija / PATCH | Datum | Opis |
 |-----------------|--------|------|
 | 0.1.0 | 2026-08-18 | Uspostavljen KN-RG-001 kao jedinstveni registar oznaka modula Konkursi. Razdvojeni namespace cijelog modula i obuhvat trenutne dokumentacione faze. Razdvojeni zajednički konfigurabilni okvir od zasebnih poslovnih i funkcionalnih profila tipa konkursa. Registrovan kanonski lanac KN-RG-001 → KN-BM-001 → KN-BM-002 → KN-FS-001 → KN-FS-002 → KN-TS-001. Uvedeno pravilo da se oznake evidentiraju u istom koraku u kojem se prvi put koriste. Opcioni tipovi dokumenata, PATCH instance i interne oznake nijesu rezervisani unaprijed. |
+| 0.1.1 | 2026-08-19 | Evidentirana struktura interne oznake `BM-KN-NNN` i ažuriran status `KN-BM-001` na `U IZRADI`. |
 
 Napomena:
 
@@ -26,7 +27,7 @@ Kod svake naredne verzije dodaje se novi red u tabeli.
 
 Ne mijenjaju se postojeći redovi.
 
-Dokument ima status `U IZRADI` i nije formalno usvojen. Korekcije ovog nacrta ne izdaju PATCH oznaku i ne mijenjaju broj verzije.
+Dokument ima status `U IZRADI` i nije formalno usvojen. Dok dokument ima status `U IZRADI`, redakcijske korekcije koje ne mijenjaju značenje mogu se unositi u okviru iste radne verzije. Kada se odobrenim dokumentacionim korakom doda ili promijeni sadržaj, obuhvat ili usvojeno pravilo dokumenta, povećava se radna verzija i dodaje novi red u istoriju verzija. Više povezanih izmjena jednog odobrenog dokumentacionog koraka mogu se evidentirati kao jedna radna verzija. Postojeći redovi istorije verzija ne mijenjaju se. PATCH oznaka se ne izdaje dok dokument nije formalno usvojen.
 
 ---
 
@@ -175,7 +176,7 @@ Prefiksi pripadaju **namespace-u KN**.
 | Oznaka | Dokument | Putanja | Obuhvat sadržaja | Status |
 |--------|----------|---------|------------------|--------|
 | **KN-RG-001** | Registar skraćenica i oznaka dokumentacije Konkursa | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` | namespace KN; granice faze; pravila evidencije oznaka | U IZRADI |
-| **KN-BM-001** | Zajednički poslovni model modula Konkursi | `docs/business-model/Business_Model_Konkursi.md` | Zajednički pojmovi, konfigurabilni okvir i pravila razdvajanja tipova konkursa | planiran; fajl nije kreiran |
+| **KN-BM-001** | Zajednički poslovni model modula Konkursi | `docs/business-model/Business_Model_Konkursi.md` | Zajednički pojmovi, konfigurabilni okvir i pravila razdvajanja tipova konkursa | U IZRADI |
 | **KN-BM-002** | Poslovni profil konkursa za podršku preduzetništvu mladih | `docs/business-model/Business_Model_Konkursi_Mladi.md` | Akteri, kategorije, dokumenti, obrasci, faze i poslovna pravila profila mladih koja utiču na platformu | planiran; fajl nije kreiran |
 | **KN-FS-001** | Zajedničke funkcionalnosti modula Konkursi | `docs/functional-specifications/Functional-Specification_Konkursi.md` | Zajedničke i konfigurabilne funkcionalnosti modula | planiran; fajl nije kreiran |
 | **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Funkcionalno ponašanje, forme i validacije profila mladih izvedeni iz `KN-BM-002` | planiran; fajl nije kreiran |
@@ -193,9 +194,9 @@ Konkretne oznake opcionih tipova se **ne** rezervišu unaprijed. Kada odobrena o
 
 # 6. PATCH model
 
-Naknadne kontrolisane izmjene dokumentacije modula Konkursi označavaju se prema obrascu `KN-PATCH-{TIP}-{NNN}`. Konkretna PATCH oznaka evidentira se u `KN-RG-001` tek kada se prvi put stvarno upotrijebi. Dokumenti sa statusom `U IZRADI` mogu se korigovati bez PATCH oznake dok nisu formalno usvojeni.
+Naknadne kontrolisane izmjene dokumentacije modula Konkursi označavaju se prema obrascu `KN-PATCH-{TIP}-{NNN}`. Konkretna PATCH oznaka evidentira se u `KN-RG-001` tek kada se prvi put stvarno upotrijebi. Dokumenti sa statusom `U IZRADI` mogu se korigovati bez PATCH oznake dok nijesu formalno usvojeni.
 
-U verziji 0.1.0 nema izdatih PATCH oznaka.
+Nijedna `KN-PATCH-*` oznaka trenutno nije izdata.
 
 ---
 
@@ -203,7 +204,7 @@ U verziji 0.1.0 nema izdatih PATCH oznaka.
 
 Dokumentacione oznake modula Konkursi nisu isto što i runtime vrijednosti aplikacije. Vrijednosti koje postoje u kodu ili bazi ne postaju automatski usvojene oznake. Runtime oznake definišu se i odobravaju u `KN-TS-001`, a u `KN-RG-001` evidentiraju se samo ako se koriste za sljedivost između dokumentacije i implementacije.
 
-U verziji 0.1.0 nema evidentiranih runtime oznaka.
+Trenutno nema evidentiranih runtime oznaka.
 
 ---
 
@@ -211,7 +212,13 @@ U verziji 0.1.0 nema evidentiranih runtime oznaka.
 
 Interne oznake poslovnih i funkcionalnih pravila ne uvode se unaprijed. Njihova struktura odobrava se prije prve upotrebe u odgovarajućem dokumentu. Oznake moraju razlikovati zajednička pravila modula, pravila tipa konkursa i, samo ako bude potrebno, pravila godišnje instance. Svaka odobrena oznaka evidentira se u `KN-RG-001` u istom koraku u kojem se prvi put koristi.
 
-U verziji 0.1.0 nema dodijeljenih internih oznaka. Interna oznaka **nije** document ID (`DK-DS-001` §5).
+| Oznaka | Značenje | Namjena | Dokument | Tip konkursa / sloj | Status |
+|--------|----------|---------|----------|---------------------|--------|
+| **BM-KN-NNN** | Zajedničko poslovno pravilo modula Konkursi | Označavanje pravila zajedničkog poslovnog okvira | `KN-BM-001` | Zajednički sloj modula Konkursi | aktivna struktura |
+
+* `BM-KN-NNN` nije Document ID.
+* Konkretni brojevi se ne rezervišu unaprijed.
+* Prva konkretna oznaka nastaje tek kada se napiše i odobri prvo zajedničko poslovno pravilo.
 
 ---
 
@@ -227,7 +234,7 @@ U verziji 0.1.0 nema dodijeljenih internih oznaka. Interna oznaka **nije** docum
 |--------|--------|
 | **OM-*** | Poseban namespace ne postoji (`DK-DS-001` §1). |
 
-U verziji 0.1.0 nema oznaka sa statusom **ZASTARJELO**.
+Trenutno nema oznaka sa statusom **ZASTARJELO**.
 
 ---
 
@@ -241,4 +248,4 @@ U verziji 0.1.0 nema oznaka sa statusom **ZASTARJELO**.
 
 ---
 
-**Kraj dokumenta KN-RG-001 v0.1.0**
+**Kraj dokumenta KN-RG-001 v0.1.1**
