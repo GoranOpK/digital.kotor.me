@@ -101,6 +101,7 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::get('/payments/pregled', [PaymentsController::class, 'preview'])->name('payments.preview');
     Route::post('/payments/pregled/pokreni', [PaymentsController::class, 'launch'])->name('payments.launch');
     Route::post('/payments/odustani', [PaymentsController::class, 'abandon'])->name('payments.abandon');
+    Route::get('/payments/istorija', [PaymentsController::class, 'history'])->name('payments.history');
     Route::get('/payments/transakcije/{payment_transaction}', [PaymentsController::class, 'result'])->name('payments.result');
     Route::get('/payments/transakcije/{payment_transaction}/potvrda', [PaymentsController::class, 'downloadConfirmation'])->name('payments.confirmation.pdf');
     Route::get('/payments/simulator/{payment_transaction}', [\App\Http\Controllers\FakePaymentGatewayController::class, 'show'])

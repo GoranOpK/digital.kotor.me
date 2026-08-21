@@ -5,7 +5,7 @@
 **Oznaka dokumenta:** EP-TS-001
 **Modul:** e-Plaćanje
 **Status dokumenta:** U IZRADI
-**Verzija:** 1.0.11
+**Verzija:** 1.0.12
 
 ---
 
@@ -35,6 +35,7 @@
 | 1.0.9 | 2026-08-21 | EP-PATCH-TS-007 — Faza 5 local initiation + Fake Gateway lifecycle IMPLEMENTED locally. Explicit start kreira PaymentInitiation + PaymentTransaction(processing). Bankart nije implementiran. Nije production complete. |
 | 1.0.10 | 2026-08-21 | EP-PATCH-TS-008 — Faza 6A provider-neutral gateway hardening IMPLEMENTED locally. Bankart adapter ostaje BLOCKED BY EXTERNAL DEPENDENCY. Nije production complete. |
 | 1.0.11 | 2026-08-21 | EP-PATCH-TS-009 — Faza 7 confirmation PDF/email IMPLEMENTED locally. Samo Uspješna. Nije fiskalni račun ni dokaz izmirenja. Nije production complete. |
+| 1.0.12 | 2026-08-21 | EP-PATCH-TS-010 — Faza 8 Moja e-Plaćanja (istorija sopstvenih transakcija) IMPLEMENTED locally. Nije production complete. |
 
 Napomena:
 
@@ -50,7 +51,7 @@ Ne mijenjaju se postojeći redovi.
 
 Dokument je tehnička specifikacija **U IZRADI**. Nasljeđuje zatvoreni poslovni model (EP-BM-001) i funkcionalne zahtjeve (EP-FS-001).
 
-U verziji 1.0.11 dokument:
+U verziji 1.0.12 dokument:
 
 * usklađuje obavezujuća projektna ograničenja sa Korakom 6 (2026-08-20);
 * više **ne** propagira superseded poslovni ugovor;
@@ -63,6 +64,7 @@ U verziji 1.0.11 dokument:
 * evidentira **IMPLEMENTED locally** Faze 5: explicit start boundary, PaymentInitiation + PaymentTransaction(processing), Fake Gateway, verified result, terminal statuses. Bankart contract ostaje OPEN. Nije production complete.
 * evidentira **IMPLEMENTED locally** Faze 6A: provider-neutral gateway port, verified result boundary, inquiry/reconciliation foundation. `BANKART ADAPTER = BLOCKED BY EXTERNAL DEPENDENCY`.
 * evidentira **IMPLEMENTED locally** Faze 7: potvrda o uspješnoj transakciji (PDF on-demand + email nakon prvog processing→successful). Nije fiskalni račun. Nije production complete.
+* evidentira **IMPLEMENTED locally** Faze 8: Moja e-Plaćanja — istorija sopstvenih transakcija, snapshot SSOT, detalj reuse `payments.result`. Nije production complete.
 
 Poslovni SSOT ostaje EP-BM-001. Terminologija: EP-RG-001.
 
@@ -74,7 +76,7 @@ Poslovni SSOT ostaje EP-BM-001. Terminologija: EP-RG-001.
 |---------|--------|
 | `APPLICATION DEVELOPMENT = LOCAL ONLY` | VAŽI |
 | `PRODUCTION APPLICATION DEPLOY = NOT APPROVED` | VAŽI |
-| Application implementation | **PHASE 1–7 IMPLEMENTED** (local/test): foundation through confirmation PDF/email. Bankart **NOT IMPLEMENTED**. Nije production-ready. |
+| Application implementation | **PHASE 1–8 IMPLEMENTED** (local/test): foundation through user payment history. Bankart **NOT IMPLEMENTED**. Nije production-ready. |
 | Dokumentacioni commit/push | dozvoljen po projektnom toku |
 
 Ova granica **nije** usvojena tehnička arhitektura. Poglavlja 3–9 ostaju **NIJE USVOJENO**, osim evidentiranog Faza 1 foundation zapisa ispod.
@@ -244,7 +246,7 @@ Provider-neutral internal id: `EPLOCAL-{ULID}`. Unique, server-generated, not us
 
 ## Još nije implementirano
 
-Bankart adapter/credentials/endpoints/HMAC; EP catalog audit subsystem; 17/41 seed; purpose/model/code/reference konfiguracija; user payment history (F8); admin transaction UI (F9).
+Bankart adapter/credentials/endpoints/HMAC; EP catalog audit subsystem; 17/41 seed; purpose/model/code/reference konfiguracija; admin transaction UI (F9).
 
 ---
 
@@ -331,6 +333,21 @@ PDF/email failure ne mijenja PaymentStatus.
 
 ---
 
+# Faza 8 — Moja e-Plaćanja / istorija sopstvenih transakcija (IMPLEMENTED locally)
+
+**Status:** IMPLEMENTED locally. **NOT** production complete. **PO LOCAL ACCEPTANCE = PASS**.
+
+Korisnik vidi samo sopstvene `PaymentTransaction` zapise. Lista: `GET /payments/istorija` (`payments.history`). Detalj reuse postojeće `GET /payments/transakcije/{uuid}` (`payments.result`). PDF ostaje F7 ruta.
+
+- Snapshot je istorijski SSOT; live katalog se ne čita.
+- Lista: `created_at` = datum pokretanja; najnovije prvo (`created_at`, `id`).
+- Filter statusa: svi / 4 kanonska statusa. Paginacija 15.
+- User-facing timeline: pokrenuto, preusmjereno, terminalni status. Tehnički gateway event-i se ne prikazuju.
+- Module OFF blokira nova plaćanja; history/detail/PDF ostaju.
+- Nema admin UI, resend email, Bankart, 17/41. Nema nove migracije (FK `user_id` index KEEP).
+
+---
+
 # Status razvoja Technical Specification
 
 | Poglavlje | Status |
@@ -358,7 +375,8 @@ PDF/email failure ne mijenja PaymentStatus.
 | EP-TS-001 / Faza 4 user payment flow | IMPLEMENTED locally (do preview-a; PO local PASS; nije production complete) |
 | EP-TS-001 / Faza 5 initiation + Fake Gateway | IMPLEMENTED locally (PO local PASS; Bankart OPEN; nije production complete) |
 | EP-TS-001 / Faza 6A provider-neutral gateway hardening | IMPLEMENTED locally (Bankart adapter BLOCKED BY EXTERNAL DEPENDENCY) |
-| EP-TS-001 / Faza 7 confirmation PDF/email | IMPLEMENTED locally (samo Uspješna; nije production complete) |
+| EP-TS-001 / Faza 7 confirmation PDF/email | IMPLEMENTED locally (samo Uspješna; PO local PASS; nije production complete) |
+| EP-TS-001 / Faza 8 user payment history | IMPLEMENTED locally (sopstvene transakcije; nije production complete) |
 
 ---
 
@@ -810,3 +828,4 @@ Status svih: **OPEN PRE-PRODUCTION DEPENDENCY**
 | 2026-08-21 | Verzija 1.0.9 / EP-PATCH-TS-007 — Faza 5 local initiation + Fake Gateway lifecycle evidentirana kao IMPLEMENTED locally. Bankart nije implementiran. Provider contract ostaje OPEN. |
 | 2026-08-21 | Verzija 1.0.10 / EP-PATCH-TS-008 — Faza 6A provider-neutral gateway hardening IMPLEMENTED locally. Bankart adapter BLOCKED BY EXTERNAL DEPENDENCY. |
 | 2026-08-21 | Verzija 1.0.11 / EP-PATCH-TS-009 — Faza 7 confirmation PDF/email IMPLEMENTED locally. Samo Uspješna. Nije fiskalni račun ni dokaz izmirenja. |
+| 2026-08-21 | Verzija 1.0.12 / EP-PATCH-TS-010 — Faza 8 Moja e-Plaćanja IMPLEMENTED locally. Istorija sopstvenih transakcija; nije production complete. |

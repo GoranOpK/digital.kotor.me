@@ -3,7 +3,10 @@
 @section('content')
 <div class="container mx-auto px-4 py-8 max-w-3xl">
     <h1 class="text-3xl font-bold mb-2">e-Plaćanje</h1>
-    <p class="text-sm text-gray-600 mb-6">Dostupne vrste plaćanja za vaš korisnički profil.</p>
+    <p class="text-sm text-gray-600 mb-4">Dostupne vrste plaćanja za vaš korisnički profil.</p>
+    <p class="mb-6">
+        <a href="{{ route('payments.history') }}" class="text-indigo-700 hover:underline">Moja e-Plaćanja</a>
+    </p>
 
     @if(session('success'))
         <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">{{ session('success') }}</div>

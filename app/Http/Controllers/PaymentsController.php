@@ -14,8 +14,11 @@ use App\Services\Payments\PaymentConfirmationDeliveryService;
 use App\Services\Payments\PaymentConfirmationPdfRenderer;
 use App\Services\Payments\PaymentDraftService;
 use App\Services\Payments\PaymentGatewayNotConfiguredException;
+use App\Services\Payments\PaymentHistoryService;
 use App\Services\Payments\PaymentResultRejectedException;
 use App\Services\Payments\PaymentStartService;
+use App\Services\Payments\PaymentTransactionSnapshotView;
+use App\Services\Payments\PaymentUserTimeline;
 use App\Support\ResidentialStatusDeclaration;
 use App\Support\UserType;
 use Illuminate\Http\RedirectResponse;
@@ -34,12 +37,16 @@ class PaymentsController extends Controller
         private readonly PaymentConfirmationAssembler $confirmations,
         private readonly PaymentConfirmationPdfRenderer $confirmationPdf,
         private readonly PaymentConfirmationDeliveryService $confirmationDeliveries,
+        private readonly PaymentHistoryService $history,
+        private readonly PaymentUserTimeline $timeline,
     ) {}
 
     public function index(Request $request): View|RedirectResponse
     {
         if (! $this->module->newPaymentsEnabled()) {
-            return view('payments.disabled');
+            return view('payments.disabled', [
+                'newPaymentsEnabled' => false,
+            ]);
         }
 
         if ($redirect = $this->declarationRedirect($request)) {
@@ -50,6 +57,7 @@ class PaymentsController extends Controller
 
         return view('payments.index', [
             'types' => $types,
+            'newPaymentsEnabled' => true,
         ]);
     }
 
@@ -211,16 +219,31 @@ class PaymentsController extends Controller
         return redirect()->to($this->starts->redirectAfterStart($transaction));
     }
 
+    public function history(Request $request): View
+    {
+        $status = $this->history->statusFilter($request->query('status'));
+        $transactions = $this->history->paginateFor($request->user(), $status);
+
+        return view('payments.history', [
+            'transactions' => $transactions,
+            'statusFilter' => $status,
+            'newPaymentsEnabled' => $this->module->newPaymentsEnabled(),
+        ]);
+    }
+
     public function result(Request $request, PaymentTransaction $paymentTransaction): View
     {
         abort_unless((int) $paymentTransaction->user_id === (int) $request->user()->id, 404);
 
-        $snapshot = is_array($paymentTransaction->snapshot) ? $paymentTransaction->snapshot : [];
+        $paymentTransaction->load('events');
 
         return view('payments.result', [
             'transaction' => $paymentTransaction,
-            'snapshot' => $snapshot,
+            'snapshot' => PaymentTransactionSnapshotView::from($paymentTransaction),
+            'timeline' => $this->timeline->forTransaction($paymentTransaction),
+            'successfulAtLabel' => $this->timeline->successfulAtLabel($paymentTransaction),
             'confirmationEmailSent' => $this->confirmationDeliveries->emailWasSent($paymentTransaction),
+            'newPaymentsEnabled' => $this->module->newPaymentsEnabled(),
         ]);
     }
 

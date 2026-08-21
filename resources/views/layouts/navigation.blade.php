@@ -350,6 +350,9 @@
                         <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                             Moj Panel
                         </x-nav-link>
+                        <x-nav-link :href="route('payments.history')" :active="request()->routeIs('payments.history', 'payments.result', 'payments.confirmation.pdf')">
+                            Moja e-Plaćanja
+                        </x-nav-link>
                         @auth
                             @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
                                 <x-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*') && ! request()->is('admin/e-placanje*')">
@@ -601,6 +604,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                     Moj Panel
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('payments.history')" :active="request()->routeIs('payments.history', 'payments.result', 'payments.confirmation.pdf')">
+                    Moja e-Plaćanja
                 </x-responsive-nav-link>
                 @auth
                     @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
