@@ -352,8 +352,11 @@
                         </x-nav-link>
                         @auth
                             @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
-                                <x-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
+                                <x-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*') && ! request()->is('admin/e-placanje*')">
                                     Administracija
+                                </x-nav-link>
+                                <x-nav-link :href="route('admin.e-payments.payment-types.index')" :active="request()->is('admin/e-placanje*')">
+                                    Katalog e-Plaćanja
                                 </x-nav-link>
                             @endif
                         @endauth
@@ -601,8 +604,11 @@
                 </x-responsive-nav-link>
                 @auth
                     @if(auth()->user()->role && (auth()->user()->role->name === 'superadmin' || auth()->user()->role->name === 'admin'))
-                        <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*')">
+                        <x-responsive-nav-link :href="route('admin.dashboard')" :active="request()->is('admin*') && ! request()->is('admin/e-placanje*')">
                             Administracija
+                        </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('admin.e-payments.payment-types.index')" :active="request()->is('admin/e-placanje*')">
+                            Katalog e-Plaćanja
                         </x-responsive-nav-link>
                     @endif
                 @endauth

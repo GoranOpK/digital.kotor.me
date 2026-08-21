@@ -7,7 +7,7 @@ use App\Models\User;
 /**
  * Reusable declare-on-use contract za residential_status.
  *
- * UI aktivacija je odložena do prvog stvarnog module consumera.
+ * UI se aktivira u e-Plaćanju (Faza 4) kada FL/Preduzetnik nema kanonski status.
  */
 final class ResidentialStatusDeclaration
 {

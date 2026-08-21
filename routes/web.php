@@ -91,9 +91,26 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     // MEGA API endpoints
     Route::post('/api/mega/session', [DocumentController::class, 'getMegaSession'])->name('mega.session');
 
-    // Modul za online plaćanja opštinskih prihoda
-    Route::get('/payments', [PaymentsController::class, 'index'])->name('payments.index'); // Prikaz forme i istorije uplata
-    Route::post('/payments/pay', [PaymentsController::class, 'pay'])->name('payments.pay'); // Slanje zahtjeva za uplatu
+    // e-Plaćanje — user flow + lokalni Fake Gateway lifecycle
+    Route::get('/payments', [PaymentsController::class, 'index'])->name('payments.index');
+    Route::post('/payments/pay', [PaymentsController::class, 'pay'])->name('payments.pay'); // legacy stub; no transaction
+    Route::get('/payments/deklaracija-prebivalista', [\App\Http\Controllers\PaymentResidentialDeclarationController::class, 'create'])->name('payments.declaration.create');
+    Route::post('/payments/deklaracija-prebivalista', [\App\Http\Controllers\PaymentResidentialDeclarationController::class, 'store'])->name('payments.declaration.store');
+    Route::get('/payments/iznos', [PaymentsController::class, 'editAmount'])->name('payments.amount.edit');
+    Route::post('/payments/iznos', [PaymentsController::class, 'storeAmount'])->name('payments.amount.store');
+    Route::get('/payments/pregled', [PaymentsController::class, 'preview'])->name('payments.preview');
+    Route::post('/payments/pregled/pokreni', [PaymentsController::class, 'launch'])->name('payments.launch');
+    Route::post('/payments/odustani', [PaymentsController::class, 'abandon'])->name('payments.abandon');
+    Route::get('/payments/transakcije/{payment_transaction}', [PaymentsController::class, 'result'])->name('payments.result');
+    Route::get('/payments/simulator/{payment_transaction}', [\App\Http\Controllers\FakePaymentGatewayController::class, 'show'])
+        ->middleware('signed')
+        ->name('payments.fake.show');
+    Route::post('/payments/simulator/{payment_transaction}/{outcome}', [\App\Http\Controllers\FakePaymentGatewayController::class, 'simulate'])
+        ->middleware('signed')
+        ->whereIn('outcome', ['successful', 'failed', 'cancelled'])
+        ->name('payments.fake.simulate');
+    Route::get('/payments/{payment_type}/start', [PaymentsController::class, 'start'])->name('payments.start');
+    Route::post('/payments/{payment_type}/racun', [PaymentsController::class, 'storeAccount'])->name('payments.account.store');
 
     // Modul za konkurse (žensko/omladinsko preduzetništvo)
     Route::get('/competitions', [CompetitionsController::class, 'index'])->name('competitions.index'); // Lista konkursa
@@ -494,6 +511,39 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::get('/applications', [AdminController::class, 'applications'])->name('applications.index');
 
             Route::get('/evidencija-aktivnosti', [CulturalActivityAdminController::class, 'index'])->name('cultural-activity.index');
+
+            Route::prefix('e-placanje')->name('e-payments.')->group(function () {
+                Route::get('/payment-types', [\App\Http\Controllers\Admin\PaymentTypeController::class, 'index'])->name('payment-types.index');
+                Route::get('/payment-types/create', [\App\Http\Controllers\Admin\PaymentTypeController::class, 'create'])->name('payment-types.create');
+                Route::post('/payment-types', [\App\Http\Controllers\Admin\PaymentTypeController::class, 'store'])->name('payment-types.store');
+                Route::get('/payment-types/{payment_type}/edit', [\App\Http\Controllers\Admin\PaymentTypeController::class, 'edit'])->name('payment-types.edit');
+                Route::put('/payment-types/{payment_type}', [\App\Http\Controllers\Admin\PaymentTypeController::class, 'update'])->name('payment-types.update');
+                Route::post('/payment-types/{payment_type}/activate', [\App\Http\Controllers\Admin\PaymentTypeController::class, 'activate'])->name('payment-types.activate');
+                Route::post('/payment-types/{payment_type}/deactivate', [\App\Http\Controllers\Admin\PaymentTypeController::class, 'deactivate'])->name('payment-types.deactivate');
+
+                Route::get('/payment-types/{payment_type}/accounts', [\App\Http\Controllers\Admin\PaymentAccountController::class, 'index'])->name('payment-types.accounts.index');
+                Route::get('/payment-types/{payment_type}/accounts/create', [\App\Http\Controllers\Admin\PaymentAccountController::class, 'create'])->name('payment-types.accounts.create');
+                Route::post('/payment-types/{payment_type}/accounts', [\App\Http\Controllers\Admin\PaymentAccountController::class, 'store'])->name('payment-types.accounts.store');
+                Route::get('/payment-types/{payment_type}/accounts/{payment_account}/edit', [\App\Http\Controllers\Admin\PaymentAccountController::class, 'edit'])->name('payment-types.accounts.edit');
+                Route::put('/payment-types/{payment_type}/accounts/{payment_account}', [\App\Http\Controllers\Admin\PaymentAccountController::class, 'update'])->name('payment-types.accounts.update');
+                Route::post('/payment-types/{payment_type}/accounts/{payment_account}/activate', [\App\Http\Controllers\Admin\PaymentAccountController::class, 'activate'])->name('payment-types.accounts.activate');
+                Route::post('/payment-types/{payment_type}/accounts/{payment_account}/deactivate', [\App\Http\Controllers\Admin\PaymentAccountController::class, 'deactivate'])->name('payment-types.accounts.deactivate');
+
+                Route::get('/payment-types/{payment_type}/availabilities', [\App\Http\Controllers\Admin\PaymentTypeAvailabilityController::class, 'index'])->name('payment-types.availabilities.index');
+                Route::get('/payment-types/{payment_type}/availabilities/create', [\App\Http\Controllers\Admin\PaymentTypeAvailabilityController::class, 'create'])->name('payment-types.availabilities.create');
+                Route::post('/payment-types/{payment_type}/availabilities', [\App\Http\Controllers\Admin\PaymentTypeAvailabilityController::class, 'store'])->name('payment-types.availabilities.store');
+                Route::post('/payment-types/{payment_type}/availabilities/{payment_type_availability}/activate', [\App\Http\Controllers\Admin\PaymentTypeAvailabilityController::class, 'activate'])->name('payment-types.availabilities.activate');
+                Route::post('/payment-types/{payment_type}/availabilities/{payment_type_availability}/deactivate', [\App\Http\Controllers\Admin\PaymentTypeAvailabilityController::class, 'deactivate'])->name('payment-types.availabilities.deactivate');
+
+                Route::get('/payment-types/{payment_type}/accounts/{payment_account}/availabilities', [\App\Http\Controllers\Admin\PaymentAccountAvailabilityController::class, 'index'])->name('payment-types.accounts.availabilities.index');
+                Route::get('/payment-types/{payment_type}/accounts/{payment_account}/availabilities/create', [\App\Http\Controllers\Admin\PaymentAccountAvailabilityController::class, 'create'])->name('payment-types.accounts.availabilities.create');
+                Route::post('/payment-types/{payment_type}/accounts/{payment_account}/availabilities', [\App\Http\Controllers\Admin\PaymentAccountAvailabilityController::class, 'store'])->name('payment-types.accounts.availabilities.store');
+                Route::post('/payment-types/{payment_type}/accounts/{payment_account}/availabilities/{payment_account_availability}/activate', [\App\Http\Controllers\Admin\PaymentAccountAvailabilityController::class, 'activate'])->name('payment-types.accounts.availabilities.activate');
+                Route::post('/payment-types/{payment_type}/accounts/{payment_account}/availabilities/{payment_account_availability}/deactivate', [\App\Http\Controllers\Admin\PaymentAccountAvailabilityController::class, 'deactivate'])->name('payment-types.accounts.availabilities.deactivate');
+
+                Route::get('/settings', [\App\Http\Controllers\Admin\EpModuleSettingsController::class, 'edit'])->name('settings.edit');
+                Route::post('/settings', [\App\Http\Controllers\Admin\EpModuleSettingsController::class, 'update'])->name('settings.update');
+            });
         });
     });
 
