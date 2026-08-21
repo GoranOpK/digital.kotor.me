@@ -87,7 +87,9 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertSame(2, substr_count($html, 'data-kk-nav="moderiranje"'));
         $this->assertStringContainsString('>Kontrolna tabla<', $html);
         $this->assertStringContainsString('>Moderiranje<', $html);
-        $this->assertStringContainsString('Organizator: UX Org A', $html);
+        $this->assertStringContainsString('>UX Org A<', $html);
+        $this->assertStringNotContainsString('Organizator: UX Org A', $html);
+        $this->assertStringNotContainsString('>'.$this->moderator->name.'<', $html);
         $this->assertStringContainsString(
             'href="'.e(route('cultural-moderator-dashboard.index')).'"',
             $html
@@ -189,34 +191,16 @@ class CulturalModeratorUxNavigationTest extends TestCase
         );
         $this->assertStringContainsString('display:inline-flex', $kontrolnaStyle[1]);
         $this->assertStringContainsString('align-items:center', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('justify-content:flex-start', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('padding:8px 14px', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('min-height:38px', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('height:38px', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('width:128px', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('min-width:128px', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('line-height:1.25', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('justify-content:center', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('padding:6px 10px', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('min-height:32px', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('height:32px', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('line-height:1.2', $kontrolnaStyle[1]);
         $this->assertStringContainsString('box-sizing:border-box', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('font-size:14px;font-weight:600', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('font-size:13px;font-weight:600', $kontrolnaStyle[1]);
         $this->assertStringContainsString('white-space:nowrap', $kontrolnaStyle[1]);
-        $this->assertSame(
-            1,
-            preg_match('/(?:^|;)width:128px(?:;|$)/u', $kontrolnaStyle[1]),
-            'Shared explicit width constraint required for equal Moderiranje/Kontrolna tabla width.'
-        );
-        $this->assertSame(
-            1,
-            preg_match('/(?:^|;)width:128px(?:;|$)/u', $moderiranjeStyle[1]),
-            'Moderiranje must use the same explicit width as Kontrolna tabla.'
-        );
-        $this->assertSame(
-            1,
-            preg_match('/(?:^|;)min-width:128px(?:;|$)/u', $kontrolnaStyle[1])
-        );
-        $this->assertSame(
-            1,
-            preg_match('/(?:^|;)min-width:128px(?:;|$)/u', $moderiranjeStyle[1])
-        );
+        $this->assertStringNotContainsString('width:128px', $kontrolnaStyle[1]);
+        $this->assertStringNotContainsString('min-width:128px', $kontrolnaStyle[1]);
 
         $menuStart = strpos($html, '<!-- Responsive Navigation Menu -->');
         $this->assertNotFalse($menuStart);
@@ -276,8 +260,9 @@ class CulturalModeratorUxNavigationTest extends TestCase
             $moderiranjeStyle
         );
         $this->assertSame($kontrolnaStyle[1] ?? null, $moderiranjeStyle[1] ?? null);
-        $this->assertStringContainsString('width:128px', $kontrolnaStyle[1] ?? '');
-        $this->assertStringContainsString('height:38px', $kontrolnaStyle[1] ?? '');
+        $this->assertStringContainsString('height:32px', $kontrolnaStyle[1] ?? '');
+        $this->assertStringContainsString('font-size:13px', $kontrolnaStyle[1] ?? '');
+        $this->assertStringNotContainsString('width:128px', $kontrolnaStyle[1] ?? '');
     }
 
     public function test_multi_org_moderator_sees_promijeni_organizatora_action(): void

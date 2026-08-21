@@ -41,11 +41,14 @@
             .'background:transparent;color:#7a0f17;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;'
             ."border-bottom:3px solid {$tape};";
     };
-    // Shared desktop sizing for moderator entrypoints (Kontrolna tabla + Moderiranje) — both <a>.
-    // Explicit equal width+height (content-width alone would make Moderiranje narrower).
+    // Compact desktop sizing for moderator entrypoints (Kontrolna tabla + Moderiranje) — both <a>, shared style.
     $kkModeratorEntryBtn = static function (bool $active) use ($kkNavBtn): string {
-        return $kkNavBtn($active)
-            .'box-sizing:border-box;line-height:1.25;min-height:38px;height:38px;width:128px;min-width:128px;';
+        $tape = $active ? '#7a0f17' : 'transparent';
+
+        return 'display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:0;'
+            .'background:transparent;color:#7a0f17;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;'
+            ."border-bottom:3px solid {$tape};"
+            .'box-sizing:border-box;line-height:1.2;min-height:32px;height:32px;';
     };
     $kkNavBtnMobile = static function (bool $active): string {
         $tape = $active ? '#7a0f17' : 'transparent';
@@ -54,15 +57,15 @@
             .'background:transparent;color:#7a0f17;font-size:16px;font-weight:600;text-decoration:none;'
             ."border-bottom:3px solid {$tape};";
     };
-    $kkLogoutBtn = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;'
+    $kkModeratorGuideBtn = 'display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;'
+        .'background:#7a0f17;color:#ffffff;border:0;border-radius:0;cursor:pointer;'
+        .'text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;min-height:32px;height:32px;box-sizing:border-box;';
+    $kkLogoutBtn = 'display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;'
         .'background:#374151;color:#ffffff;border:0;border-radius:0;cursor:pointer;'
-        .'text-decoration:none;font-size:14px;font-weight:600;white-space:nowrap;';
+        .'text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;min-height:32px;height:32px;box-sizing:border-box;';
     $kkLogoutBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;'
         .'background:#374151;color:#ffffff;border:0;border-radius:0;font-size:16px;'
         .'font-weight:600;text-decoration:none;text-align:left;cursor:pointer;';
-    $kkModeratorGuideBtn = 'display:inline-flex;align-items:center;justify-content:center;padding:8px 14px;'
-        .'background:#7a0f17;color:#ffffff;border:0;border-radius:0;cursor:pointer;'
-        .'text-decoration:none;font-size:14px;font-weight:600;white-space:nowrap;';
     $kkModeratorGuideBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;'
         .'background:#7a0f17;color:#ffffff;border:0;border-radius:0;font-size:16px;'
         .'font-weight:600;text-decoration:none;text-align:left;';
@@ -312,36 +315,6 @@
                                     style="{{ $kkNavBtn(request()->routeIs('cultural-organizer-creation-requests.create', 'cultural-organizer-creation-requests.store')) }}"
                                 >Zahtjev za Organizatora</a>
                             @endif
-                            @if($isActiveModeratorUser)
-                                <span
-                                    data-kk-nav-moderator-block="1"
-                                    style="display:inline-flex;align-items:center;flex-wrap:wrap;gap:8px;margin-left:4px;padding-left:8px;border-left:2px solid #e5e7eb;"
-                                >
-                                    <a
-                                        href="{{ route('cultural-moderator-dashboard.index') }}"
-                                        data-kk-nav="kontrolna-tabla-moderator"
-                                        style="{{ $kkModeratorEntryBtn(request()->routeIs('cultural-moderator-dashboard.*')) }}"
-                                    >Kontrolna tabla</a>
-                                    <a
-                                        href="{{ route('cultural-moderator-workspace.index') }}"
-                                        data-kk-nav="moderiranje"
-                                        style="{{ $kkModeratorEntryBtn($isModeratorHubNav) }}"
-                                    >Moderiranje</a>
-                                    @if($moderatorActiveOrganizer)
-                                        <span
-                                            data-kk-nav="active-organizer"
-                                            style="display:inline-flex;align-items:center;padding:8px 12px;border-radius:8px;background:#f3f4f6;color:#111827;font-size:13px;font-weight:600;white-space:nowrap;"
-                                        >Organizator: {{ $moderatorActiveOrganizer->naziv }}</span>
-                                    @endif
-                                    @if($moderatorAvailableOrganizerCount > 1)
-                                        <a
-                                            href="{{ route('cultural-moderator-workspace.index') }}"
-                                            data-kk-nav="promijeni-organizatora"
-                                            style="{{ $kkNavBtn(request()->routeIs('cultural-moderator-workspace.*')) }}"
-                                        >Promijeni organizatora</a>
-                                    @endif
-                                </span>
-                            @endif
                         @endauth
                     </div>
                 @else
@@ -389,29 +362,56 @@
                 @endif
             </div>
 
-            <!-- User info + Logout: links stay left, Odjava stays right. kk_admin name is not shown among nav items. -->
-            <div class="hidden sm:flex sm:items-stretch sm:ms-6 shrink-0" style="align-items:stretch; margin-left:auto;">
+            <!-- Right cluster: moderator tools (compact) + guide + Odjava. No personal name for moderators/kk_admin. -->
+            <div class="hidden sm:flex sm:items-center sm:ms-6 shrink-0" style="align-items:center; margin-left:auto; gap:8px;">
                 @auth
-                    @unless($isKkAdmin)
-                    <span @class(['text-sm text-gray-700', 'dark:text-gray-200' => ! $isKkSection]) style="margin-right: 8px; display:inline-flex; align-items:center;">
-                        @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
-                            Administrator konkursa
-                        @else
-                        {{ Auth::user()->name }}
-                        @endif
-                    </span>
-                    @endunless
-                    <div style="display:flex; align-items:stretch; gap:8px;">
-                        @if($isActiveModeratorUser)
+                    @if($isActiveModeratorUser)
+                        <span
+                            data-kk-nav-moderator-block="1"
+                            style="display:inline-flex;align-items:center;flex-wrap:nowrap;gap:4px;padding-right:8px;border-right:2px solid #e5e7eb;"
+                        >
                             <a
-                                href="{{ $moderatorGuideUrl }}"
-                                class="kk-moderator-guide-link"
-                                data-kk-nav="moderator-guide"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style="{{ $kkModeratorGuideBtn }}"
-                            >Moderator uputstvo</a>
-                        @endif
+                                href="{{ route('cultural-moderator-dashboard.index') }}"
+                                data-kk-nav="kontrolna-tabla-moderator"
+                                style="{{ $kkModeratorEntryBtn(request()->routeIs('cultural-moderator-dashboard.*')) }}"
+                            >Kontrolna tabla</a>
+                            <a
+                                href="{{ route('cultural-moderator-workspace.index') }}"
+                                data-kk-nav="moderiranje"
+                                style="{{ $kkModeratorEntryBtn($isModeratorHubNav) }}"
+                            >Moderiranje</a>
+                            @if($moderatorActiveOrganizer)
+                                <span
+                                    data-kk-nav="active-organizer"
+                                    style="display:inline-flex;align-items:center;padding:4px 8px;border-radius:0;background:#f3f4f6;color:#111827;font-size:12px;font-weight:600;white-space:nowrap;max-width:11rem;overflow:hidden;text-overflow:ellipsis;"
+                                    title="Organizator: {{ $moderatorActiveOrganizer->naziv }}"
+                                >{{ $moderatorActiveOrganizer->naziv }}</span>
+                            @endif
+                            @if($moderatorAvailableOrganizerCount > 1)
+                                <a
+                                    href="{{ route('cultural-moderator-workspace.index') }}"
+                                    data-kk-nav="promijeni-organizatora"
+                                    style="{{ $kkModeratorEntryBtn(request()->routeIs('cultural-moderator-workspace.*')) }}"
+                                >Promijeni</a>
+                            @endif
+                        </span>
+                        <a
+                            href="{{ $moderatorGuideUrl }}"
+                            class="kk-moderator-guide-link"
+                            data-kk-nav="moderator-guide"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style="{{ $kkModeratorGuideBtn }}"
+                        >Moderator uputstvo</a>
+                    @elseif(! $isKkAdmin)
+                        <span @class(['text-sm text-gray-700', 'dark:text-gray-200' => ! $isKkSection]) style="display:inline-flex; align-items:center;">
+                            @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
+                                Administrator konkursa
+                            @else
+                                {{ Auth::user()->name }}
+                            @endif
+                        </span>
+                    @endif
                     <form method="POST" action="{{ route('logout') }}" style="margin:0; display:flex; align-items:stretch;">
                         @csrf
                         <button
@@ -422,7 +422,6 @@
                             Odjava
                         </button>
                     </form>
-                    </div>
                 @endauth
             </div>
 
@@ -613,6 +612,7 @@
         <!-- Responsive Settings Options -->
         <div @class(['pt-4 pb-1 border-t border-gray-200', 'dark:border-gray-600' => ! $isKkSection])>
             @auth
+                @unless($isActiveModeratorUser)
                 <div class="px-4">
                     <div @class(['font-medium text-base text-gray-800', 'dark:text-gray-200' => ! $isKkSection])>
                         @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
@@ -623,6 +623,7 @@
                     </div>
                     <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
                 </div>
+                @endunless
 
                 <div class="mt-3 px-2 space-y-2">
                     @if($isActiveModeratorUser)
