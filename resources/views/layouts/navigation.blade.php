@@ -402,7 +402,7 @@
                             target="_blank"
                             rel="noopener noreferrer"
                             style="{{ $kkModeratorGuideBtn }}"
-                        >Moderator uputstvo</a>
+                        >Uputstvo</a>
                     @elseif(! $isKkAdmin)
                         <span @class(['text-sm text-gray-700', 'dark:text-gray-200' => ! $isKkSection]) style="display:inline-flex; align-items:center;">
                             @if(auth()->user()->role && auth()->user()->role->name === 'konkurs_admin')
@@ -634,7 +634,7 @@
                             target="_blank"
                             rel="noopener noreferrer"
                             style="{{ $kkModeratorGuideBtnMobile }}"
-                        >Moderator uputstvo</a>
+                        >Uputstvo</a>
                     @endif
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf

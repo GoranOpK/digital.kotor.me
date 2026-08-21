@@ -64,7 +64,7 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertStringNotContainsString('data-kk-nav="kontrolna-tabla-moderator"', $html);
         $this->assertStringNotContainsString('data-kk-nav="moderiranje"', $html);
         $this->assertStringNotContainsString('data-kk-nav="moderator-guide"', $html);
-        $this->assertStringNotContainsString('>Moderator uputstvo<', $html);
+        $this->assertStringNotContainsString('>Uputstvo<', $html);
         $this->assertStringNotContainsString('>Radna tabla<', $html);
         $this->assertStringNotContainsString('>Mod rad<', $html);
         $this->assertStringNotContainsString(
@@ -123,10 +123,10 @@ class CulturalModeratorUxNavigationTest extends TestCase
 
         $guideHref = e(asset('pdf/'.rawurlencode('Moderator uputstvo.pdf')));
         $this->assertSame(2, substr_count($html, 'data-kk-nav="moderator-guide"'));
-        $this->assertSame(2, substr_count($html, '>Moderator uputstvo<'));
+        $this->assertSame(2, substr_count($html, '>Uputstvo<'));
         $this->assertStringContainsString('href="'.$guideHref.'"', $html);
         $this->assertMatchesRegularExpression(
-            '/background:#7a0f17[^"]*color:#ffffff[^"]*border-radius:0[^"]*"[^>]*>Moderator uputstvo</',
+            '/background:#7a0f17[^"]*color:#ffffff[^"]*border-radius:0[^"]*"[^>]*>Uputstvo</',
             $html
         );
         $this->assertTrue(
@@ -139,7 +139,7 @@ class CulturalModeratorUxNavigationTest extends TestCase
             ->assertOk()
             ->getContent();
         $this->assertStringNotContainsString('data-kk-nav="moderator-guide"', $ordinaryHtml);
-        $this->assertStringNotContainsString('>Moderator uputstvo<', $ordinaryHtml);
+        $this->assertStringNotContainsString('>Uputstvo<', $ordinaryHtml);
     }
 
     public function test_desktop_and_mobile_moderiranje_are_plain_links_with_identical_sizing(): void

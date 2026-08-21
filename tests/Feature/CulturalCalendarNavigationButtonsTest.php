@@ -259,7 +259,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertStringContainsString('data-kk-mobile-nav-menu', $html);
         $this->assertStringNotContainsString('data-kk-nav-moderator-block="1"', $html);
         $this->assertStringNotContainsString('data-kk-nav="moderator-guide"', $html);
-        $this->assertStringNotContainsString('>Moderator uputstvo<', $html);
+        $this->assertStringNotContainsString('>Uputstvo<', $html);
         $this->assertStringNotContainsString('x-data="{ open: false }"', $html);
     }
 
