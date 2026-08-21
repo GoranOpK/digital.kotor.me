@@ -197,7 +197,7 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertStringContainsString('height:32px', $kontrolnaStyle[1]);
         $this->assertStringContainsString('line-height:1.2', $kontrolnaStyle[1]);
         $this->assertStringContainsString('box-sizing:border-box', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('font-size:13px;font-weight:600', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('font-size:11px;font-weight:600', $kontrolnaStyle[1]);
         $this->assertStringContainsString('white-space:nowrap', $kontrolnaStyle[1]);
         $this->assertStringNotContainsString('width:128px', $kontrolnaStyle[1]);
         $this->assertStringNotContainsString('min-width:128px', $kontrolnaStyle[1]);
@@ -261,7 +261,7 @@ class CulturalModeratorUxNavigationTest extends TestCase
         );
         $this->assertSame($kontrolnaStyle[1] ?? null, $moderiranjeStyle[1] ?? null);
         $this->assertStringContainsString('height:32px', $kontrolnaStyle[1] ?? '');
-        $this->assertStringContainsString('font-size:13px', $kontrolnaStyle[1] ?? '');
+        $this->assertStringContainsString('font-size:11px', $kontrolnaStyle[1] ?? '');
         $this->assertStringNotContainsString('width:128px', $kontrolnaStyle[1] ?? '');
     }
 

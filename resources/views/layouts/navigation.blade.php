@@ -38,7 +38,7 @@
         $tape = $active ? '#7a0f17' : 'transparent';
 
         return 'display:inline-flex;align-items:center;justify-content:flex-start;padding:8px 14px;border-radius:0;'
-            .'background:transparent;color:#7a0f17;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap;'
+            .'background:transparent;color:#7a0f17;font-size:12px;font-weight:600;text-decoration:none;white-space:nowrap;'
             ."border-bottom:3px solid {$tape};";
     };
     // Compact desktop sizing for moderator entrypoints (Kontrolna tabla + Moderiranje) — both <a>, shared style.
@@ -46,7 +46,7 @@
         $tape = $active ? '#7a0f17' : 'transparent';
 
         return 'display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;border-radius:0;'
-            .'background:transparent;color:#7a0f17;font-size:13px;font-weight:600;text-decoration:none;white-space:nowrap;'
+            .'background:transparent;color:#7a0f17;font-size:11px;font-weight:600;text-decoration:none;white-space:nowrap;'
             ."border-bottom:3px solid {$tape};"
             .'box-sizing:border-box;line-height:1.2;min-height:32px;height:32px;';
     };
@@ -54,20 +54,20 @@
         $tape = $active ? '#7a0f17' : 'transparent';
 
         return 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:0;'
-            .'background:transparent;color:#7a0f17;font-size:16px;font-weight:600;text-decoration:none;'
+            .'background:transparent;color:#7a0f17;font-size:14px;font-weight:600;text-decoration:none;'
             ."border-bottom:3px solid {$tape};";
     };
     $kkModeratorGuideBtn = 'display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;'
         .'background:#7a0f17;color:#ffffff;border:0;border-radius:0;cursor:pointer;'
-        .'text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;min-height:32px;height:32px;box-sizing:border-box;';
+        .'text-decoration:none;font-size:11px;font-weight:600;white-space:nowrap;min-height:32px;height:32px;box-sizing:border-box;';
     $kkLogoutBtn = 'display:inline-flex;align-items:center;justify-content:center;padding:6px 10px;'
         .'background:#374151;color:#ffffff;border:0;border-radius:0;cursor:pointer;'
-        .'text-decoration:none;font-size:13px;font-weight:600;white-space:nowrap;min-height:32px;height:32px;box-sizing:border-box;';
+        .'text-decoration:none;font-size:11px;font-weight:600;white-space:nowrap;min-height:32px;height:32px;box-sizing:border-box;';
     $kkLogoutBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;'
-        .'background:#374151;color:#ffffff;border:0;border-radius:0;font-size:16px;'
+        .'background:#374151;color:#ffffff;border:0;border-radius:0;font-size:14px;'
         .'font-weight:600;text-decoration:none;text-align:left;cursor:pointer;';
     $kkModeratorGuideBtnMobile = 'display:block;width:100%;box-sizing:border-box;padding:10px 16px;'
-        .'background:#7a0f17;color:#ffffff;border:0;border-radius:0;font-size:16px;'
+        .'background:#7a0f17;color:#ffffff;border:0;border-radius:0;font-size:14px;'
         .'font-weight:600;text-decoration:none;text-align:left;';
     $moderatorGuideUrl = asset('pdf/'.rawurlencode('Moderator uputstvo.pdf'));
 
@@ -145,7 +145,7 @@
     .kk-admin-nav-desktop[data-kk-nav-context="editorial"] a,
     nav[data-kk-nav-context="editorial"] .kk-logout-link,
     nav[data-kk-nav-context="editorial"] .kk-moderator-guide-link {
-        font-size: 12px !important;
+        font-size: 10px !important;
         padding: 8px 8px !important;
     }
     .kk-admin-nav-desktop[data-kk-nav-context="editorial"] .kk-admin-nav-row > a:first-child {
@@ -383,7 +383,7 @@
                             @if($moderatorActiveOrganizer)
                                 <span
                                     data-kk-nav="active-organizer"
-                                    style="display:inline-flex;align-items:center;padding:4px 8px;border-radius:0;background:#f3f4f6;color:#111827;font-size:12px;font-weight:600;white-space:nowrap;max-width:11rem;overflow:hidden;text-overflow:ellipsis;"
+                                    style="display:inline-flex;align-items:center;padding:4px 8px;border-radius:0;background:#f3f4f6;color:#111827;font-size:10px;font-weight:600;white-space:nowrap;max-width:11rem;overflow:hidden;text-overflow:ellipsis;"
                                     title="Organizator: {{ $moderatorActiveOrganizer->naziv }}"
                                 >{{ $moderatorActiveOrganizer->naziv }}</span>
                             @endif
@@ -553,7 +553,7 @@
                                 @if($moderatorActiveOrganizer)
                                     <span
                                         data-kk-nav="active-organizer"
-                                        style="display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:8px;background:#f3f4f6;color:#111827;font-size:14px;font-weight:600;"
+                                        style="display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:8px;background:#f3f4f6;color:#111827;font-size:12px;font-weight:600;"
                                     >Organizator: {{ $moderatorActiveOrganizer->naziv }}</span>
                                 @endif
                                 @if($moderatorAvailableOrganizerCount > 1)
