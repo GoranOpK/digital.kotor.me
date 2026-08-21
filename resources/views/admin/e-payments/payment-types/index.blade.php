@@ -2,12 +2,14 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-8">
+    @include('admin.e-payments.partials.nav')
     <div class="flex justify-between items-center mb-6">
         <div>
             <h1 class="text-3xl font-bold">Katalog e-Plaćanja — vrste</h1>
             <p class="text-sm text-gray-600 mt-1">Lokalna administracija. Korisnički tok do pregleda je lokalni. Nije production-ready.</p>
         </div>
         <div class="flex gap-3">
+            <a href="{{ route('admin.e-payments.transactions.index') }}" class="px-4 py-2 border rounded">Transakcije</a>
             <a href="{{ route('admin.e-payments.settings.edit') }}" class="px-4 py-2 border rounded">Nova plaćanja</a>
             <a href="{{ route('admin.e-payments.payment-types.create') }}" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Nova vrsta</a>
         </div>

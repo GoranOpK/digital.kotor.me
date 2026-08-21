@@ -2,6 +2,7 @@
 
 @section('content')
 <div class="container mx-auto px-4 py-8 max-w-2xl">
+    @include('admin.e-payments.partials.nav')
     <a href="{{ route('admin.e-payments.payment-types.index') }}" class="text-gray-600 hover:text-gray-900">← Katalog</a>
     <h1 class="text-3xl font-bold mt-2 mb-2">e-Plaćanje — nova plaćanja</h1>
     <p class="text-sm text-gray-600 mb-6">Onemogućavanje sprečava nove tokove. Nije production audit. Nije gateway.</p>

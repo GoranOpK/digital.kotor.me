@@ -515,6 +515,10 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::get('/evidencija-aktivnosti', [CulturalActivityAdminController::class, 'index'])->name('cultural-activity.index');
 
             Route::prefix('e-placanje')->name('e-payments.')->group(function () {
+                Route::get('/transakcije', [\App\Http\Controllers\Admin\PaymentTransactionController::class, 'index'])->name('transactions.index');
+                Route::get('/transakcije/{payment_transaction}', [\App\Http\Controllers\Admin\PaymentTransactionController::class, 'show'])->name('transactions.show');
+                Route::post('/transakcije/{payment_transaction}/provjeri-status', [\App\Http\Controllers\Admin\PaymentTransactionController::class, 'checkStatus'])->name('transactions.check-status');
+
                 Route::get('/payment-types', [\App\Http\Controllers\Admin\PaymentTypeController::class, 'index'])->name('payment-types.index');
                 Route::get('/payment-types/create', [\App\Http\Controllers\Admin\PaymentTypeController::class, 'create'])->name('payment-types.create');
                 Route::post('/payment-types', [\App\Http\Controllers\Admin\PaymentTypeController::class, 'store'])->name('payment-types.store');
