@@ -19,6 +19,11 @@ class PaymentTransaction extends Model
     /** @use HasFactory<\Database\Factories\PaymentTransactionFactory> */
     use HasFactory;
 
+    /**
+     * Set only by PaymentResultProcessor for processing → terminal.
+     */
+    public static bool $allowCanonicalStatusTransition = false;
+
     protected $fillable = [
         'uuid',
         'payment_initiation_id',
@@ -30,6 +35,7 @@ class PaymentTransaction extends Model
         'currency',
         'merchant_transaction_id',
         'gateway_reference',
+        'provider',
         'snapshot',
     ];
 
@@ -55,9 +61,28 @@ class PaymentTransaction extends Model
         });
 
         static::updating(function (self $transaction): void {
-            foreach (['amount', 'currency', 'merchant_transaction_id', 'payment_initiation_id', 'user_id'] as $field) {
+            foreach ([
+                'uuid',
+                'amount',
+                'currency',
+                'merchant_transaction_id',
+                'payment_initiation_id',
+                'user_id',
+                'payment_type_id',
+                'payment_account_id',
+                'snapshot',
+                'provider',
+            ] as $field) {
                 if ($transaction->isDirty($field)) {
                     $transaction->{$field} = $transaction->getOriginal($field);
+                }
+            }
+
+            if ($transaction->isDirty('gateway_reference')) {
+                $original = $transaction->getOriginal('gateway_reference');
+                $original = is_string($original) && $original !== '' ? $original : null;
+                if ($original !== null) {
+                    $transaction->gateway_reference = $original;
                 }
             }
 
@@ -67,7 +92,7 @@ class PaymentTransaction extends Model
                     ? $original
                     : PaymentStatus::from((string) $original);
 
-                if ($from->isTerminal()) {
+                if ($from->isTerminal() || ! self::$allowCanonicalStatusTransition) {
                     $transaction->status = $from;
                 }
             }

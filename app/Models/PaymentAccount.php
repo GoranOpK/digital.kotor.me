@@ -57,8 +57,10 @@ class PaymentAccount extends Model
     protected static function booted(): void
     {
         static::updating(function (self $account): void {
-            if ($account->isDirty('account_number')) {
-                $account->account_number = $account->getOriginal('account_number');
+            foreach (['account_number', 'payment_type_id'] as $field) {
+                if ($account->isDirty($field)) {
+                    $account->{$field} = $account->getOriginal($field);
+                }
             }
         });
     }

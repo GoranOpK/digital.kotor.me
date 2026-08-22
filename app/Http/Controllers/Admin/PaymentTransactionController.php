@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\FilterPaymentTransactionsRequest;
 use App\Models\PaymentTransaction;
 use App\Models\PaymentType;
+use App\Services\Payments\FakePaymentGatewayUnavailableException;
 use App\Services\Payments\GatewayInquiryException;
 use App\Services\Payments\GatewayVerificationException;
 use App\Services\Payments\PaymentAdminTimeline;
@@ -53,7 +54,7 @@ class PaymentTransactionController extends Controller
             'timeline' => $this->adminTimeline->forTransaction($paymentTransaction),
             'successfulAtLabel' => $this->userTimeline->successfulAtLabel($paymentTransaction),
             'canInquire' => $this->canInquire($paymentTransaction),
-            'configuredProvider' => $this->configuredProviderName(),
+            'providerLabel' => $this->providerLabel($paymentTransaction),
         ]);
     }
 
@@ -68,8 +69,8 @@ class PaymentTransactionController extends Controller
         }
 
         try {
-            $gateway = $this->gateways->resolve();
-        } catch (PaymentGatewayNotConfiguredException) {
+            $gateway = $this->gateways->forTransaction($paymentTransaction);
+        } catch (PaymentGatewayNotConfiguredException|FakePaymentGatewayUnavailableException) {
             return redirect()
                 ->route('admin.e-payments.transactions.show', $paymentTransaction)
                 ->with('error', 'Provajder ne podržava provjeru statusa.');
@@ -107,22 +108,24 @@ class PaymentTransactionController extends Controller
             return false;
         }
 
+        if (! is_string($transaction->provider) || $transaction->provider === '') {
+            return false;
+        }
+
         try {
-            $gateway = $this->gateways->resolve();
-        } catch (PaymentGatewayNotConfiguredException) {
+            $gateway = $this->gateways->forTransaction($transaction);
+        } catch (PaymentGatewayNotConfiguredException|FakePaymentGatewayUnavailableException) {
             return false;
         }
 
         return $gateway->capabilities()->statusInquiry && $gateway instanceof PaymentGatewayStatusInquiry;
     }
 
-    private function configuredProviderName(): string
+    private function providerLabel(PaymentTransaction $transaction): string
     {
-        try {
-            return $this->gateways->resolve()->name();
-        } catch (PaymentGatewayNotConfiguredException) {
-            return '';
-        }
+        $provider = $transaction->provider;
+
+        return is_string($provider) && $provider !== '' ? $provider : 'Nepoznato';
     }
 
     private function lastInquiryOutcome(PaymentTransaction $transaction): string

@@ -44,6 +44,25 @@ class PaymentInitiation extends Model
                 $initiation->currency = 'EUR';
             }
         });
+
+        static::updating(function (self $initiation): void {
+            foreach ([
+                'uuid',
+                'user_id',
+                'payment_type_id',
+                'payment_account_id',
+                'amount',
+                'currency',
+            ] as $field) {
+                if ($initiation->isDirty($field)) {
+                    $initiation->{$field} = $initiation->getOriginal($field);
+                }
+            }
+        });
+
+        static::deleting(function (): void {
+            throw new \LogicException('Payment initiations must not be deleted.');
+        });
     }
 
     public function user(): BelongsTo

@@ -21,4 +21,27 @@ final class PaymentTransactionEventType
     public const FAILED = 'payment.failed';
 
     public const CANCELLED = 'payment.cancelled';
+
+    /**
+     * @return list<string>
+     */
+    public static function values(): array
+    {
+        return [
+            self::STARTED,
+            self::GATEWAY_REDIRECTED,
+            self::GATEWAY_START_FAILED,
+            self::GATEWAY_VERIFICATION_FAILED,
+            self::GATEWAY_CONTRADICTORY_RESULT,
+            self::GATEWAY_INQUIRY,
+            self::SUCCESSFUL,
+            self::FAILED,
+            self::CANCELLED,
+        ];
+    }
+
+    public static function isKnown(string $type): bool
+    {
+        return in_array($type, self::values(), true);
+    }
 }

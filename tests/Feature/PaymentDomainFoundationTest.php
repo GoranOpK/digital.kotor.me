@@ -28,6 +28,7 @@ class PaymentDomainFoundationTest extends TestCase
             'payment_initiations',
             'payment_transactions',
             'payment_transaction_events',
+            'ep_catalog_audits',
         ] as $table) {
             $this->assertTrue(Schema::hasTable($table), "Missing table {$table}");
         }
@@ -43,12 +44,16 @@ class PaymentDomainFoundationTest extends TestCase
         ]));
         $this->assertTrue(Schema::hasColumns('payment_transactions', [
             'id', 'uuid', 'payment_initiation_id', 'user_id', 'payment_type_id', 'payment_account_id',
-            'status', 'amount', 'currency', 'merchant_transaction_id', 'gateway_reference', 'snapshot',
+            'status', 'amount', 'currency', 'merchant_transaction_id', 'gateway_reference', 'provider', 'snapshot',
         ]));
         $this->assertTrue(Schema::hasColumns('payment_transaction_events', [
             'id', 'payment_transaction_id', 'event_type', 'provider_event_id', 'payload',
             'occurred_at', 'received_at',
         ]));
+        $this->assertTrue(Schema::hasColumns('ep_catalog_audits', [
+            'id', 'actor_user_id', 'action', 'entity_type', 'entity_id', 'changes', 'created_at',
+        ]));
+        $this->assertFalse(Schema::hasColumn('ep_catalog_audits', 'updated_at'));
 
         $this->assertTrue(Schema::hasTable('payments'));
     }
@@ -149,11 +154,12 @@ class PaymentDomainFoundationTest extends TestCase
         ]);
         $event = PaymentTransactionEvent::factory()->create([
             'payment_transaction_id' => $transaction->id,
-            'payload' => ['note' => 'synthetic-event'],
+            'payload' => ['reason' => 'synthetic-event', 'email' => 'do-not-store@example.com'],
         ]);
 
         $this->assertSame('Synthetic label', $transaction->fresh()->snapshot['payment_type_name']);
-        $this->assertSame('synthetic-event', $event->fresh()->payload['note']);
+        $this->assertSame('synthetic-event', $event->fresh()->payload['reason']);
+        $this->assertArrayNotHasKey('email', $event->fresh()->payload);
     }
 
     public function test_inactive_catalog_rows_keep_transaction_history_and_snapshot(): void

@@ -5,7 +5,7 @@
 **Oznaka dokumenta:** EP-TS-001
 **Modul:** e-Plaćanje
 **Status dokumenta:** U IZRADI
-**Verzija:** 1.0.13
+**Verzija:** 1.0.14
 
 ---
 
@@ -37,6 +37,7 @@
 | 1.0.11 | 2026-08-21 | EP-PATCH-TS-009 — Faza 7 confirmation PDF/email IMPLEMENTED locally. Samo Uspješna. Nije fiskalni račun ni dokaz izmirenja. Nije production complete. |
 | 1.0.12 | 2026-08-21 | EP-PATCH-TS-010 — Faza 8 Moja e-Plaćanja (istorija sopstvenih transakcija) IMPLEMENTED locally. Nije production complete. |
 | 1.0.13 | 2026-08-21 | EP-PATCH-TS-011 — Faza 9 admin transaction operations IMPLEMENTED locally. Read-only pregled + capability-gated inquiry. Nije production complete. |
+| 1.0.14 | 2026-08-22 | EP-PATCH-TS-012 — Faza 10 audit/security hardening IMPLEMENTED locally. EP-specific catalog audit + immutable historical provider identity. PO-10.1/PO-10.2 USVOJENO. Nije production complete. |
 
 Napomena:
 
@@ -52,7 +53,7 @@ Ne mijenjaju se postojeći redovi.
 
 Dokument je tehnička specifikacija **U IZRADI**. Nasljeđuje zatvoreni poslovni model (EP-BM-001) i funkcionalne zahtjeve (EP-FS-001).
 
-U verziji 1.0.13 dokument:
+U verziji 1.0.14 dokument:
 
 * usklađuje obavezujuća projektna ograničenja sa Korakom 6 (2026-08-20);
 * više **ne** propagira superseded poslovni ugovor;
@@ -67,6 +68,7 @@ U verziji 1.0.13 dokument:
 * evidentira **IMPLEMENTED locally** Faze 7: potvrda o uspješnoj transakciji (PDF on-demand + email nakon prvog processing→successful). Nije fiskalni račun. Nije production complete.
 * evidentira **IMPLEMENTED locally** Faze 8: Moja e-Plaćanja — istorija sopstvenih transakcija, snapshot SSOT, detalj reuse `payments.result`. Nije production complete.
 * evidentira **IMPLEMENTED locally** Faze 9: admin read-only transaction pregled + status inquiry kroz F6A port. Nema manual status/delete/resend. Nije production complete.
+* evidentira **IMPLEMENTED locally** Faze 10: security hardening; EP-specific catalog audit; immutable `PaymentTransaction.provider`. Nije production complete.
 
 Poslovni SSOT ostaje EP-BM-001. Terminologija: EP-RG-001.
 
@@ -78,7 +80,7 @@ Poslovni SSOT ostaje EP-BM-001. Terminologija: EP-RG-001.
 |---------|--------|
 | `APPLICATION DEVELOPMENT = LOCAL ONLY` | VAŽI |
 | `PRODUCTION APPLICATION DEPLOY = NOT APPROVED` | VAŽI |
-| Application implementation | **PHASE 1–9 IMPLEMENTED** (local/test): foundation through admin transaction operations. Bankart **NOT IMPLEMENTED**. Nije production-ready. |
+| Application implementation | **PHASE 1–10 IMPLEMENTED** (local/test): F1–F9 + F10 security hardening, EP catalog audit, historical provider identity. Bankart **NOT IMPLEMENTED**. Nije production-ready. |
 | Dokumentacioni commit/push | dozvoljen po projektnom toku |
 
 Ova granica **nije** usvojena tehnička arhitektura. Poglavlja 3–9 ostaju **NIJE USVOJENO**, osim evidentiranog Faza 1 foundation zapisa ispod.
@@ -362,8 +364,59 @@ Admin read-only operativni pregled: `GET /admin/e-placanje/transakcije`, detalj 
 - Delivery status read-only; nema resend; nema admin PDF.
 - Status inquiry SAMO ako je `processing` i provider `statusInquiry` capability. Fake = unsupported, bez CTA.
 - Inquiry reuse `PaymentStatusInquiryService` + `PaymentResultProcessor`. Nema manual status/delete.
-- Provider identity = trenutno konfigurisani F6A resolver. Historical provider column nije uvedena; Bankart-era identity ostaje OPEN.
+- Historical provider identity: F10 `payment_transactions.provider` (nullable legacy). Inquiry koristi persisted provider, ne current config.
 - Module OFF ne blokira admin pregled ni inquiry postojeće processing transakcije.
+
+---
+
+# Faza 10 — Audit / security hardening (IMPLEMENTED locally)
+
+**Status:** IMPLEMENTED locally. **NOT** production complete. **PO LOCAL ACCEPTANCE = PASS**.
+
+**EP PHASE 10 = COMPLETE**
+
+F10 je učvrstio postojeći EP V1 bez novih payment business funkcija, zatim usvojio PO-10.1 i PO-10.2.
+
+Security hardening (zadržano):
+
+- Authorization/IDOR fail-closed (auth + verified; own transaction; admin `role:admin`; Fake signed + owner + non-production).
+- Transaction identity (user/type/account/amount/currency/merchant id/snapshot/uuid/provider) immutable after start. Status processing→terminal samo kroz `PaymentResultProcessor`. Terminal immutable. Nema Eloquent delete.
+- `PaymentTransactionEvent` append-only; known event types only; payload whitelist. Nema raw callback/PII/secrets.
+- Log redaction; generic UI greške; CSRF; Fake GET samo prikaz (signed).
+- Admin inquiry: admin-only, processing-only, capability-gated, merchant id sa transakcije, throttle `ep-admin-inquiry` 20/min.
+- PDF/email/history/admin Blade escape; PDF on-demand.
+- Fake production forbidden; unknown provider fail closed. Nema card data.
+
+## EP CATALOG AUDIT — IMPLEMENTED (EP-specific)
+
+PO-10.1 USVOJENO. Tabela `ep_catalog_audits`, servis `PaymentCatalogAuditService`.
+
+- Append-only. Nema update/delete/admin audit UI u ovom scope-u.
+- Actor = `actor_user_id` (prijavljeni Administrator). FK `restrictOnDelete` — audit red ne nestaje.
+- Nije KK `CulturalActivityRecord`. Nije `PaymentTransactionEvent`.
+- Akcije: type/account created/updated/activated/deactivated; availability added/activated/deactivated; module enabled/disabled. Nema audit za GET.
+- `changes` JSON: safe from/to (name, active, user_type, residential_status, enabled; `account_number` samo pri CREATE). Bez secrets/request/headers.
+- Write nakon uspješne business promjene, u istoj DB transakciji.
+
+## Transaction events vs catalog audit
+
+- `PaymentTransactionEvent` = finansijski/payment lifecycle evidence.
+- `ep_catalog_audits` = administrativne izmjene kataloga/modula.
+- Zabranjeno miješanje.
+
+## HISTORICAL PROVIDER IDENTITY — IMPLEMENTED
+
+PO-10.2 USVOJENO. Kolona `payment_transactions.provider` (string, nullable, provider-neutral).
+
+- Setuje se pri create iz `$gateway->name()` (resolved current gateway). Nije request input. Nije snapshot field.
+- Immutable nakon create. Fake V1 = `fake`. Budući kanonski identifier definiše F6B ugovor — Bankart nije implementiran.
+- Legacy/null = historical unknown. Nema migration backfill `fake`.
+- Inquiry: `PaymentGatewayResolver::forTransaction()`. Null ili unknown → fail closed, bez current-config fallback, bez CTA.
+- Admin detalj prikazuje persisted `Provajder` (`Nepoznato` ako null). Ne prikazuje „trenutno konfigurisani provajder“.
+
+`HISTORICAL PROVIDER IDENTITY BLOCKS F6B = NO` (samo ovaj arhitektonski blocker). F6B i dalje čeka ugovor, dokumentaciju, credentials, callback/inquiry contract.
+
+Nema Bankart pretpostavki. Nema F11.
 
 ---
 
@@ -397,6 +450,7 @@ Admin read-only operativni pregled: `GET /admin/e-placanje/transakcije`, detalj 
 | EP-TS-001 / Faza 7 confirmation PDF/email | IMPLEMENTED locally (samo Uspješna; PO local PASS; nije production complete) |
 | EP-TS-001 / Faza 8 user payment history | IMPLEMENTED locally (sopstvene transakcije; PO local PASS; nije production complete) |
 | EP-TS-001 / Faza 9 admin transaction operations | IMPLEMENTED locally (read-only + capability-gated inquiry; nije production complete) |
+| EP-TS-001 / Faza 10 audit/security hardening | IMPLEMENTED locally (security hardening + EP catalog audit + historical provider identity; nije production complete) |
 
 ---
 
@@ -850,3 +904,4 @@ Status svih: **OPEN PRE-PRODUCTION DEPENDENCY**
 | 2026-08-21 | Verzija 1.0.11 / EP-PATCH-TS-009 — Faza 7 confirmation PDF/email IMPLEMENTED locally. Samo Uspješna. Nije fiskalni račun ni dokaz izmirenja. |
 | 2026-08-21 | Verzija 1.0.12 / EP-PATCH-TS-010 — Faza 8 Moja e-Plaćanja IMPLEMENTED locally. Istorija sopstvenih transakcija; nije production complete. |
 | 2026-08-21 | Verzija 1.0.13 / EP-PATCH-TS-011 — Faza 9 admin transaction operations IMPLEMENTED locally. Read-only pregled + capability-gated inquiry. |
+| 2026-08-22 | Verzija 1.0.14 / EP-PATCH-TS-012 — Faza 10 audit/security hardening IMPLEMENTED locally. EP-specific catalog audit; immutable historical provider identity. |

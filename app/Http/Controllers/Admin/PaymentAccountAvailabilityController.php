@@ -7,12 +7,18 @@ use App\Http\Requests\Admin\StorePaymentAccountAvailabilityRequest;
 use App\Models\PaymentAccount;
 use App\Models\PaymentAccountAvailability;
 use App\Models\PaymentType;
+use App\Services\Payments\PaymentCatalogAuditService;
 use App\Support\UserType;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class PaymentAccountAvailabilityController extends Controller
 {
+    public function __construct(
+        private readonly PaymentCatalogAuditService $audits,
+    ) {}
     public function index(PaymentType $paymentType, PaymentAccount $paymentAccount): View
     {
         $this->assertAccountBelongsToType($paymentType, $paymentAccount);
@@ -45,11 +51,14 @@ class PaymentAccountAvailabilityController extends Controller
     ): RedirectResponse {
         $this->assertAccountBelongsToType($paymentType, $paymentAccount);
 
-        $paymentAccount->availabilities()->create([
-            'user_type' => $request->validated('user_type'),
-            'residential_status' => $request->validated('residential_status'),
-            'is_active' => true,
-        ]);
+        DB::transaction(function () use ($request, $paymentAccount) {
+            $rule = $paymentAccount->availabilities()->create([
+                'user_type' => $request->validated('user_type'),
+                'residential_status' => $request->validated('residential_status'),
+                'is_active' => true,
+            ]);
+            $this->audits->accountAvailabilityAdded($request->user(), $rule);
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.accounts.availabilities.index', [$paymentType, $paymentAccount])
@@ -57,6 +66,7 @@ class PaymentAccountAvailabilityController extends Controller
     }
 
     public function activate(
+        Request $request,
         PaymentType $paymentType,
         PaymentAccount $paymentAccount,
         PaymentAccountAvailability $paymentAccountAvailability
@@ -64,7 +74,15 @@ class PaymentAccountAvailabilityController extends Controller
         $this->assertAccountBelongsToType($paymentType, $paymentAccount);
         $this->assertRuleBelongsToAccount($paymentAccount, $paymentAccountAvailability);
 
-        $paymentAccountAvailability->update(['is_active' => true]);
+        DB::transaction(function () use ($request, $paymentAccountAvailability) {
+            $fromActive = (bool) $paymentAccountAvailability->is_active;
+            $paymentAccountAvailability->update(['is_active' => true]);
+            $this->audits->accountAvailabilityActivated(
+                $request->user(),
+                $paymentAccountAvailability->fresh() ?? $paymentAccountAvailability,
+                $fromActive
+            );
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.accounts.availabilities.index', [$paymentType, $paymentAccount])
@@ -72,6 +90,7 @@ class PaymentAccountAvailabilityController extends Controller
     }
 
     public function deactivate(
+        Request $request,
         PaymentType $paymentType,
         PaymentAccount $paymentAccount,
         PaymentAccountAvailability $paymentAccountAvailability
@@ -79,7 +98,15 @@ class PaymentAccountAvailabilityController extends Controller
         $this->assertAccountBelongsToType($paymentType, $paymentAccount);
         $this->assertRuleBelongsToAccount($paymentAccount, $paymentAccountAvailability);
 
-        $paymentAccountAvailability->update(['is_active' => false]);
+        DB::transaction(function () use ($request, $paymentAccountAvailability) {
+            $fromActive = (bool) $paymentAccountAvailability->is_active;
+            $paymentAccountAvailability->update(['is_active' => false]);
+            $this->audits->accountAvailabilityDeactivated(
+                $request->user(),
+                $paymentAccountAvailability->fresh() ?? $paymentAccountAvailability,
+                $fromActive
+            );
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.accounts.availabilities.index', [$paymentType, $paymentAccount])

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\PaymentTransaction;
 use App\Models\PaymentTransactionEvent;
+use App\Services\Payments\PaymentTransactionEventType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,9 +18,9 @@ class PaymentTransactionEventFactory extends Factory
     {
         return [
             'payment_transaction_id' => PaymentTransaction::factory(),
-            'event_type' => 'synthetic_recorded',
+            'event_type' => PaymentTransactionEventType::STARTED,
             'provider_event_id' => null,
-            'payload' => ['source' => 'factory'],
+            'payload' => ['provider' => 'fake'],
             'occurred_at' => now(),
             'received_at' => now(),
         ];

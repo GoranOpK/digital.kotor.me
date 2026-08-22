@@ -7,11 +7,18 @@ use App\Http\Requests\Admin\StorePaymentAccountRequest;
 use App\Http\Requests\Admin\UpdatePaymentAccountRequest;
 use App\Models\PaymentAccount;
 use App\Models\PaymentType;
+use App\Services\Payments\PaymentCatalogAuditService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class PaymentAccountController extends Controller
 {
+    public function __construct(
+        private readonly PaymentCatalogAuditService $audits,
+    ) {}
+
     public function index(PaymentType $paymentType): View
     {
         $accounts = $paymentType->accounts()->orderBy('account_number')->paginate(20);
@@ -29,11 +36,14 @@ class PaymentAccountController extends Controller
 
     public function store(StorePaymentAccountRequest $request, PaymentType $paymentType): RedirectResponse
     {
-        $paymentType->accounts()->create([
-            'account_number' => trim($request->validated('account_number')),
-            'name' => $request->validated('name'),
-            'is_active' => false,
-        ]);
+        DB::transaction(function () use ($request, $paymentType) {
+            $account = $paymentType->accounts()->create([
+                'account_number' => trim($request->validated('account_number')),
+                'name' => $request->validated('name'),
+                'is_active' => false,
+            ]);
+            $this->audits->accountCreated($request->user(), $account);
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.accounts.index', $paymentType)
@@ -57,16 +67,23 @@ class PaymentAccountController extends Controller
     ): RedirectResponse {
         $this->assertAccountBelongsToType($paymentType, $paymentAccount);
 
-        $paymentAccount->update([
-            'name' => $request->validated('name'),
-        ]);
+        DB::transaction(function () use ($request, $paymentAccount) {
+            $from = [
+                'name' => (string) ($paymentAccount->name ?? ''),
+                'is_active' => (bool) $paymentAccount->is_active,
+            ];
+            $paymentAccount->update([
+                'name' => $request->validated('name'),
+            ]);
+            $this->audits->accountUpdated($request->user(), $paymentAccount->fresh() ?? $paymentAccount, $from);
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.accounts.index', $paymentType)
             ->with('success', 'Račun je ažuriran. Broj računa nije mijenjan.');
     }
 
-    public function activate(PaymentType $paymentType, PaymentAccount $paymentAccount): RedirectResponse
+    public function activate(Request $request, PaymentType $paymentType, PaymentAccount $paymentAccount): RedirectResponse
     {
         $this->assertAccountBelongsToType($paymentType, $paymentAccount);
 
@@ -77,22 +94,33 @@ class PaymentAccountController extends Controller
                 ->with('error', $reason);
         }
 
-        $paymentAccount->update(['is_active' => true]);
+        DB::transaction(function () use ($request, $paymentAccount) {
+            $fromActive = (bool) $paymentAccount->is_active;
+            $paymentAccount->update(['is_active' => true]);
+            $this->audits->accountActivated($request->user(), $paymentAccount->fresh() ?? $paymentAccount, $fromActive);
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.accounts.index', $paymentType)
             ->with('success', 'Račun je aktiviran (lokalni katalog; nije production-ready).');
     }
 
-    public function deactivate(PaymentType $paymentType, PaymentAccount $paymentAccount): RedirectResponse
+    public function deactivate(Request $request, PaymentType $paymentType, PaymentAccount $paymentAccount): RedirectResponse
     {
         $this->assertAccountBelongsToType($paymentType, $paymentAccount);
 
-        $paymentAccount->update(['is_active' => false]);
+        DB::transaction(function () use ($request, $paymentType, $paymentAccount) {
+            $fromAccountActive = (bool) $paymentAccount->is_active;
+            $fromTypeActive = (bool) $paymentType->is_active;
+            $paymentAccount->update(['is_active' => false]);
+            $this->audits->accountDeactivated($request->user(), $paymentAccount->fresh() ?? $paymentAccount, $fromAccountActive);
 
-        if ($paymentType->is_active && $paymentType->activationBlockReason() !== null) {
-            $paymentType->update(['is_active' => false]);
-        }
+            $paymentType->refresh();
+            if ($fromTypeActive && $paymentType->activationBlockReason() !== null) {
+                $paymentType->update(['is_active' => false]);
+                $this->audits->typeDeactivated($request->user(), $paymentType->fresh() ?? $paymentType, $fromTypeActive);
+            }
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.accounts.index', $paymentType)

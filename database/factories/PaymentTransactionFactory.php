@@ -30,6 +30,7 @@ class PaymentTransactionFactory extends Factory
             'currency' => $initiation->currency,
             'merchant_transaction_id' => null,
             'gateway_reference' => null,
+            'provider' => null,
             'snapshot' => [
                 'amount' => (string) $initiation->amount,
                 'currency' => 'EUR',

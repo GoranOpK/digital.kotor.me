@@ -16,7 +16,7 @@ class PaymentStatusInquiryService
 
     public function checkStatus(PaymentTransaction $transaction, ?PaymentGateway $gateway = null): PaymentTransaction
     {
-        $gateway ??= $this->gateways->resolve();
+        $gateway ??= $this->gateways->forTransaction($transaction);
 
         if (! $gateway->capabilities()->statusInquiry || ! $gateway instanceof PaymentGatewayStatusInquiry) {
             $this->recordInquiry($transaction, $gateway->name(), PaymentGatewayInquiryOutcome::Unsupported->value);

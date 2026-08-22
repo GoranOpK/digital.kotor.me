@@ -6,12 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePaymentTypeAvailabilityRequest;
 use App\Models\PaymentType;
 use App\Models\PaymentTypeAvailability;
+use App\Services\Payments\PaymentCatalogAuditService;
 use App\Support\UserType;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class PaymentTypeAvailabilityController extends Controller
 {
+    public function __construct(
+        private readonly PaymentCatalogAuditService $audits,
+    ) {}
     public function index(PaymentType $paymentType): View
     {
         $rules = $paymentType->availabilities()->orderBy('user_type')->orderBy('residential_status')->get();
@@ -33,33 +39,52 @@ class PaymentTypeAvailabilityController extends Controller
 
     public function store(StorePaymentTypeAvailabilityRequest $request, PaymentType $paymentType): RedirectResponse
     {
-        $paymentType->availabilities()->create([
-            'user_type' => $request->validated('user_type'),
-            'residential_status' => $request->validated('residential_status'),
-            'is_active' => true,
-        ]);
+        DB::transaction(function () use ($request, $paymentType) {
+            $rule = $paymentType->availabilities()->create([
+                'user_type' => $request->validated('user_type'),
+                'residential_status' => $request->validated('residential_status'),
+                'is_active' => true,
+            ]);
+            $this->audits->typeAvailabilityAdded($request->user(), $rule);
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.availabilities.index', $paymentType)
             ->with('success', 'Pravilo dostupnosti vrste je sačuvano. Nije 17/41 mapiranje.');
     }
 
-    public function activate(PaymentType $paymentType, PaymentTypeAvailability $paymentTypeAvailability): RedirectResponse
+    public function activate(Request $request, PaymentType $paymentType, PaymentTypeAvailability $paymentTypeAvailability): RedirectResponse
     {
         $this->assertRuleBelongsToType($paymentType, $paymentTypeAvailability);
 
-        $paymentTypeAvailability->update(['is_active' => true]);
+        DB::transaction(function () use ($request, $paymentTypeAvailability) {
+            $fromActive = (bool) $paymentTypeAvailability->is_active;
+            $paymentTypeAvailability->update(['is_active' => true]);
+            $this->audits->typeAvailabilityActivated(
+                $request->user(),
+                $paymentTypeAvailability->fresh() ?? $paymentTypeAvailability,
+                $fromActive
+            );
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.availabilities.index', $paymentType)
             ->with('success', 'Pravilo dostupnosti je aktivirano.');
     }
 
-    public function deactivate(PaymentType $paymentType, PaymentTypeAvailability $paymentTypeAvailability): RedirectResponse
+    public function deactivate(Request $request, PaymentType $paymentType, PaymentTypeAvailability $paymentTypeAvailability): RedirectResponse
     {
         $this->assertRuleBelongsToType($paymentType, $paymentTypeAvailability);
 
-        $paymentTypeAvailability->update(['is_active' => false]);
+        DB::transaction(function () use ($request, $paymentTypeAvailability) {
+            $fromActive = (bool) $paymentTypeAvailability->is_active;
+            $paymentTypeAvailability->update(['is_active' => false]);
+            $this->audits->typeAvailabilityDeactivated(
+                $request->user(),
+                $paymentTypeAvailability->fresh() ?? $paymentTypeAvailability,
+                $fromActive
+            );
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.availabilities.index', $paymentType)

@@ -27,6 +27,13 @@ class PaymentResultProcessor
                 ['reason' => 'amount_or_currency_mismatch']
             );
 
+            Log::info('ep.payment.verification_failed', [
+                'transaction_uuid' => $transaction->uuid,
+                'merchant_transaction_id' => $transaction->merchant_transaction_id,
+                'provider' => $result->provider,
+                'reason' => 'amount_or_currency_mismatch',
+            ]);
+
             throw $e;
         }
 
@@ -72,7 +79,13 @@ class PaymentResultProcessor
             if ($result->providerReference !== null && $result->providerReference !== '') {
                 $locked->gateway_reference = $result->providerReference;
             }
-            $locked->save();
+
+            PaymentTransaction::$allowCanonicalStatusTransition = true;
+            try {
+                $locked->save();
+            } finally {
+                PaymentTransaction::$allowCanonicalStatusTransition = false;
+            }
 
             $this->recordTransition($locked, $result);
 

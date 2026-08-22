@@ -16,6 +16,7 @@ use App\Services\Payments\PaymentGatewayResolver;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Route;
 use Tests\Support\MakesCanonicalUsers;
 use Tests\Support\MakesSyntheticPaymentCatalog;
@@ -42,6 +43,7 @@ class PaymentAdminTransactionTest extends TestCase
         $this->admin = $this->userWithRole('admin', 'Platform Admin', 'ep-f9-admin@example.com');
         $this->payer = $this->makeKorisnik(['email' => 'payer-f9@example.com']);
         Mail::fake();
+        RateLimiter::clear('ep-admin-inquiry:'.$this->admin->id);
     }
 
     public function test_guest_and_non_admin_cannot_list_transactions(): void
@@ -169,6 +171,9 @@ class PaymentAdminTransactionTest extends TestCase
         $this->actingAs($this->admin)->get(route('admin.e-payments.transactions.show', $transaction))
             ->assertOk()
             ->assertSee('U obradi')
+            ->assertSee('Provajder')
+            ->assertSee('fake')
+            ->assertDontSee('Trenutno konfigurisani provajder')
             ->assertDontSee('Provjeri status');
 
         $this->actingAs($this->admin)->post(route('admin.e-payments.transactions.check-status', $transaction))
@@ -317,6 +322,13 @@ class PaymentAdminTransactionTest extends TestCase
 
                 public function resolve(): PaymentGateway
                 {
+                    return $this->fixed;
+                }
+
+                public function forTransaction(\App\Models\PaymentTransaction $transaction): PaymentGateway
+                {
+                    unset($transaction);
+
                     return $this->fixed;
                 }
             }

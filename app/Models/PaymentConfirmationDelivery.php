@@ -29,6 +29,21 @@ class PaymentConfirmationDelivery extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::updating(function (self $delivery): void {
+            foreach (['payment_transaction_id', 'channel', 'recipient_email'] as $field) {
+                if ($delivery->isDirty($field)) {
+                    $delivery->{$field} = $delivery->getOriginal($field);
+                }
+            }
+        });
+
+        static::deleting(function (): void {
+            throw new \LogicException('Payment confirmation deliveries must not be deleted.');
+        });
+    }
+
     public function transaction(): BelongsTo
     {
         return $this->belongsTo(PaymentTransaction::class, 'payment_transaction_id');

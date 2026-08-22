@@ -52,10 +52,9 @@ final class PaymentAdminTimeline
     private function safeMetadata(PaymentTransactionEvent $event): array
     {
         $payload = is_array($event->payload) ? $event->payload : [];
-        $allowed = ['provider', 'inquiry_outcome', 'reason', 'current_status', 'incoming_status'];
         $safe = [];
 
-        foreach ($allowed as $key) {
+        foreach (PaymentTransactionEventPayload::KEYS as $key) {
             $value = $payload[$key] ?? null;
             if (is_string($value) && $value !== '') {
                 $safe[$key] = $value;

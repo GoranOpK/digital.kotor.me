@@ -7,6 +7,7 @@ use App\Models\PaymentInitiation;
 use App\Models\PaymentTransaction;
 use App\Models\PaymentTransactionEvent;
 use App\Models\User;
+use App\Services\Payments\FakePaymentGateway;
 use App\Services\Payments\PaymentTransactionEventType;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -78,6 +79,7 @@ class PaymentInitiationFlowTest extends TestCase
         $this->assertSame($account->account_number, $transaction->snapshot['account_number']);
         $this->assertNotNull($transaction->merchant_transaction_id);
         $this->assertStringStartsWith('EPLOCAL-', $transaction->merchant_transaction_id);
+        $this->assertSame(app(FakePaymentGateway::class)->name(), $transaction->provider);
         $this->assertTrue(
             PaymentTransactionEvent::query()
                 ->where('payment_transaction_id', $transaction->id)

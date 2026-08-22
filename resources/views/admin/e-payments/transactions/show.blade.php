@@ -22,9 +22,7 @@
             <div><span class="text-sm text-gray-500">Referenca provajdera</span><div class="font-mono text-sm">{{ $transaction->gateway_reference }}</div></div>
         @endif
         <div><span class="text-sm text-gray-500">Status</span><div>{{ $transaction->status->label() }}</div></div>
-        @if($configuredProvider !== '')
-            <div><span class="text-sm text-gray-500">Trenutno konfigurisani provajder</span><div>{{ $configuredProvider }}</div></div>
-        @endif
+        <div><span class="text-sm text-gray-500">Provajder</span><div>{{ $providerLabel }}</div></div>
     </div>
 
     <div class="bg-white rounded-lg shadow p-6 space-y-3 mb-4">

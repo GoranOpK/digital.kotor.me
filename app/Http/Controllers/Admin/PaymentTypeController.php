@@ -6,11 +6,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StorePaymentTypeRequest;
 use App\Http\Requests\Admin\UpdatePaymentTypeRequest;
 use App\Models\PaymentType;
+use App\Services\Payments\PaymentCatalogAuditService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class PaymentTypeController extends Controller
 {
+    public function __construct(
+        private readonly PaymentCatalogAuditService $audits,
+    ) {}
+
     public function index(): View
     {
         $types = PaymentType::query()
@@ -28,12 +35,17 @@ class PaymentTypeController extends Controller
 
     public function store(StorePaymentTypeRequest $request): RedirectResponse
     {
-        $type = PaymentType::query()->create([
-            'code' => $request->validated('code'),
-            'name' => $request->validated('name'),
-            'description' => $request->validated('description'),
-            'is_active' => false,
-        ]);
+        $type = DB::transaction(function () use ($request) {
+            $type = PaymentType::query()->create([
+                'code' => $request->validated('code'),
+                'name' => $request->validated('name'),
+                'description' => $request->validated('description'),
+                'is_active' => false,
+            ]);
+            $this->audits->typeCreated($request->user(), $type);
+
+            return $type;
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.accounts.index', $type)
@@ -47,17 +59,25 @@ class PaymentTypeController extends Controller
 
     public function update(UpdatePaymentTypeRequest $request, PaymentType $paymentType): RedirectResponse
     {
-        $paymentType->update([
-            'name' => $request->validated('name'),
-            'description' => $request->validated('description'),
-        ]);
+        DB::transaction(function () use ($request, $paymentType) {
+            $from = [
+                'name' => (string) $paymentType->name,
+                'description' => (string) ($paymentType->description ?? ''),
+                'is_active' => (bool) $paymentType->is_active,
+            ];
+            $paymentType->update([
+                'name' => $request->validated('name'),
+                'description' => $request->validated('description'),
+            ]);
+            $this->audits->typeUpdated($request->user(), $paymentType->fresh() ?? $paymentType, $from);
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.index')
             ->with('success', 'Vrsta plaćanja je ažurirana.');
     }
 
-    public function activate(PaymentType $paymentType): RedirectResponse
+    public function activate(Request $request, PaymentType $paymentType): RedirectResponse
     {
         $reason = $paymentType->activationBlockReason();
         if ($reason !== null) {
@@ -66,16 +86,24 @@ class PaymentTypeController extends Controller
                 ->with('error', $reason);
         }
 
-        $paymentType->update(['is_active' => true]);
+        DB::transaction(function () use ($request, $paymentType) {
+            $fromActive = (bool) $paymentType->is_active;
+            $paymentType->update(['is_active' => true]);
+            $this->audits->typeActivated($request->user(), $paymentType->fresh() ?? $paymentType, $fromActive);
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.index')
             ->with('success', 'Vrsta plaćanja je aktivirana (lokalni katalog; nije production-ready).');
     }
 
-    public function deactivate(PaymentType $paymentType): RedirectResponse
+    public function deactivate(Request $request, PaymentType $paymentType): RedirectResponse
     {
-        $paymentType->update(['is_active' => false]);
+        DB::transaction(function () use ($request, $paymentType) {
+            $fromActive = (bool) $paymentType->is_active;
+            $paymentType->update(['is_active' => false]);
+            $this->audits->typeDeactivated($request->user(), $paymentType->fresh() ?? $paymentType, $fromActive);
+        });
 
         return redirect()
             ->route('admin.e-payments.payment-types.index')

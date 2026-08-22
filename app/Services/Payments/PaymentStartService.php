@@ -65,7 +65,15 @@ class PaymentStartService
             throw new PaymentResultRejectedException('Payment selection is no longer available.');
         }
 
-        $provider = $this->gateways->resolve()->name();
+        try {
+            $provider = $this->gateways->resolve()->name();
+        } catch (PaymentGatewayNotConfiguredException|FakePaymentGatewayUnavailableException $e) {
+            Log::info('ep.payment.provider_misconfigured', [
+                'exception_class' => $e::class,
+            ]);
+
+            throw $e;
+        }
 
         $lock = Cache::lock('ep-payment-start:'.$merchantId, 15);
 
@@ -102,6 +110,7 @@ class PaymentStartService
                         'amount' => $amount,
                         'currency' => 'EUR',
                         'merchant_transaction_id' => $merchantId,
+                        'provider' => $provider,
                         'snapshot' => $this->snapshot($user, $type, $account, $amount),
                     ]);
 
@@ -150,7 +159,7 @@ class PaymentStartService
     public function redirectAfterStart(PaymentTransaction $transaction): string
     {
         try {
-            $gateway = $this->gateways->resolve();
+            $gateway = $this->gateways->forTransaction($transaction);
             $result = $gateway->start(PaymentGatewayStartRequest::fromTransaction($transaction));
 
             if (! $result->isRedirectReady()) {
@@ -178,11 +187,9 @@ class PaymentStartService
 
             return (string) $result->redirectUrl;
         } catch (Throwable $e) {
-            $provider = 'unknown';
-            try {
-                $provider = $this->gateways->resolve()->name();
-            } catch (Throwable) {
-            }
+            $provider = is_string($transaction->provider) && $transaction->provider !== ''
+                ? $transaction->provider
+                : 'unknown';
 
             Log::info('ep.payment.gateway_start_exception', [
                 'transaction_uuid' => $transaction->uuid,
@@ -191,7 +198,7 @@ class PaymentStartService
                 'exception_class' => $e::class,
             ]);
 
-            $this->recordStartFailed($transaction, $provider, $e::class);
+            $this->recordStartFailed($transaction, $provider, 'start_exception');
 
             return route('payments.result', $transaction);
         }
