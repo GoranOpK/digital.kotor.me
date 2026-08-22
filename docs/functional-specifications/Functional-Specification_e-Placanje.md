@@ -5,7 +5,7 @@
 **Oznaka dokumenta:** EP-FS-001
 **Modul:** e-Plaćanje
 **Status dokumenta:** U IZRADI
-**Verzija:** 1.1.1
+**Verzija:** 1.1.2
 
 ---
 
@@ -28,6 +28,7 @@
 | EP-PATCH-FS-010 | 2026-08-17 | Dokumentacioni corrective: oznaka EP-FS-001; namespace EP-*; naziv modula e-Plaćanje. Bez izmjene funkcionalnih pravila. |
 | EP-PATCH-FS-011 | 2026-08-20 | Usklađivanje FR sa zatvorenim Korakom 6 / EP-BM-001 v1.0.0. SUPERSEDE Kreirana/U toku i preuzimanja obaveze. Bez UI pixel-level. Bez application implementation-a. |
 | EP-PATCH-FS-012 | 2026-08-20 | Usklađivanje §4 sa kanonskim platform V1 user modelom (8 kategorija). Identity vs eligibility granica. Bez availability mapping-a. Bez application implementation-a. |
+| EP-PATCH-FS-013 | 2026-08-22 | F11: `FINAL 17/41 USER CATEGORY MAPPING = USVOJENO`. Filter mehanizam ostaje FR; konkretna matrica = EP-KF-001. Purpose/model/šifra/poziv ostaju OPEN. |
 
 ---
 
@@ -162,7 +163,7 @@ Postojeći production-like `resident` na pravnom licu = **PRODUCTION LEGACY DATA
 
 ## 4.4 Availability
 
-Konačno mapiranje 17/41 na 8 kanonskih kategorija = **OPEN PRE-PRODUCTION**. `FINAL 17/41 USER CATEGORY MAPPING = OPEN`. Do tada FR zahtijeva da filter **postoji** kao mehanizam; konkretna pravila se ne izmišljaju.
+Konačno mapiranje 17/41 na 8 kanonskih kategorija = **USVOJENO** (F11; EP-KF-001 v0.7). `FINAL 17/41 USER CATEGORY MAPPING = USVOJENO`. FR zahtijeva da filter **postoji** kao mehanizam; konkretna matrica je u Katalogu, ne u FS. Purpose / model / šifra plaćanja / poziv ostaju OPEN.
 
 ---
 
@@ -365,3 +366,4 @@ Dokumentacioni AC (bez implementacije):
 | 2026-08-17 | EP-PATCH-FS-010 — EP-FS-001 namespace. |
 | 2026-08-20 | EP-PATCH-FS-011 / verzija 1.1.0 — FR usklađeni sa Korakom 6. Status dokumenta ostaje U IZRADI zbog gateway AC. |
 | 2026-08-20 | EP-PATCH-FS-012 / verzija 1.1.1 — §4 usklađen sa kanonskih 8 platform user types. Identity vs eligibility granica. Mapping 17/41 ostaje OPEN. |
+| 2026-08-22 | EP-PATCH-FS-013 / verzija 1.1.2 — `FINAL 17/41 USER CATEGORY MAPPING = USVOJENO`. Konkretna matrica = EP-KF-001. Purpose/model/šifra/poziv OPEN. |

@@ -5,7 +5,7 @@
 **Oznaka dokumenta:** EP-BM-001
 **Modul:** e-Plaćanje
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.1
+**Verzija:** 1.0.2
 **Datum usvajanja poslovnog modela V1:** 2026-08-20 (Korak 6 — CLOSED)
 
 ---
@@ -29,6 +29,7 @@
 | EP-PATCH-BM-010 | 2026-08-17 | Dokumentacioni corrective: oznaka EP-BM-001; namespace EP-*; naziv modula e-Plaćanje. Bez izmjene poslovnih odluka. |
 | EP-PATCH-BM-011 | 2026-08-20 | Usklađivanje sa zatvorenim Korakom 6 (V1 poslovni model CLOSED). SUPERSEDE: ontologija 17 kategorija + 41 vrsta uplate; statusi Kreirana/U toku; preuzimanje obaveze/iznosa iz izvornog sistema; zapis transakcije prije gateway-a. KEEP: P-01–P-08 u suštini granica; UR-01; BP-04. Bez application implementation-a. |
 | EP-PATCH-BM-012 | 2026-08-20 | Usklađivanje EP korisničkog modela sa kanonskim platform V1 user modelom (8 kategorija). Identity vs eligibility granica. Platform application corrective COMPLETE; production data cleanup OPEN. Bez application implementation-a. |
+| EP-PATCH-BM-013 | 2026-08-22 | F11: `FINAL 17/41 USER CATEGORY MAPPING = USVOJENO`. Konkretna matrica = EP-KF-001. Purpose/model/šifra/poziv ostaju OPEN. Bez izmjene poslovnih pravila filtera. |
 
 Napomena:
 
@@ -232,7 +233,9 @@ Jedna vrsta plaćanja može imati jedan ili više računa.
 
 Spisak se ne dopunjava samostalnim tumačenjem propisa.
 
-Konačno mapiranje 17/41 na korisničke kategorije i payment rules = **OPEN PRE-PRODUCTION DEPENDENCY** (poglavlje 11, stavka 13). Ne izmišlja se u ovom dokumentu.
+Konačno mapiranje 17/41 na korisničke kategorije (visibility / availability) = **USVOJENO** (F11; EP-KF-001 v0.7). Konkretna matrica se ne duplira ovdje.
+
+Purpose / model / šifra plaćanja / poziv na broj ostaju **OPEN** (poglavlje 11).
 
 ## F-01 — SUPERSEDE
 
@@ -321,7 +324,7 @@ Legacy ENUM vrijednosti mogu privremeno ostati u storage-u radi production safet
 
 `PRODUCTION LEGACY DATA CLEANUP = OPEN PRE-PRODUCTION`
 
-`FINAL 17/41 USER CATEGORY MAPPING = OPEN`
+`FINAL 17/41 USER CATEGORY MAPPING = USVOJENO`
 
 ## 8.1 Fizičko lice i Preduzetnik — rezidentnost
 
@@ -615,13 +618,13 @@ Ovo **nije** ponovno otvaranje Koraka 6.
 10. production legacy `ex-non-resident` COUNT/mapping ako postoji;
 11. legal-entity `resident` legacy data cleanup (platform);
 12. NULL residential status na Fizičkom licu i Preduzetniku (platform);
-13. konačno mapiranje 17 vrsta / 41 računa na kanonske korisničke kategorije i pravila.
+13. konačno mapiranje 17 vrsta / 41 računa na kanonske korisničke kategorije (visibility / availability) = **USVOJENO** (F11; EP-KF-001). Purpose / model / šifra plaćanja / poziv ostaju OPEN.
 
 `PLATFORM USER MODEL CORRECTIVE = COMPLETE` (application-level; commit `9c63e36`).
 
 Stavke 9–12 ostaju **PRODUCTION LEGACY DATA CLEANUP = OPEN PRE-PRODUCTION**. Ovaj paket ih ne čisti.
 
-Stavka 13: `FINAL 17/41 USER CATEGORY MAPPING = OPEN`. Ne izmišlja se ovdje.
+Stavka 13: `FINAL 17/41 USER CATEGORY MAPPING = USVOJENO` (EP-KF-001). Purpose / model / šifra / poziv ostaju OPEN. Matrica se ne izmišlja ovdje.
 
 ---
 
@@ -681,3 +684,4 @@ Lanac: `EP-BM-001 → EP-FS-001 → EP-TS-001`
 | 2026-08-17 | EP-PATCH-BM-010 — Dokumentacioni corrective: EP-BM-001; namespace EP-*. |
 | 2026-08-20 | EP-PATCH-BM-011 / verzija 1.0.0 — Usklađivanje sa zatvorenim Korakom 6. Status dokumenta USVOJENO za V1 poslovni model. Application implementation nije pokrenuta. |
 | 2026-08-20 | EP-PATCH-BM-012 / verzija 1.0.1 — EP korisnički model usklađen sa kanonskih 8 platform user types. Identity vs eligibility granica. Platform application corrective COMPLETE; production data cleanup OPEN. |
+| 2026-08-22 | EP-PATCH-BM-013 / verzija 1.0.2 — `FINAL 17/41 USER CATEGORY MAPPING = USVOJENO`. Matrica = EP-KF-001. Purpose/model/šifra/poziv OPEN. |

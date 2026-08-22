@@ -5,7 +5,7 @@
 **Oznaka dokumenta:** EP-TS-001
 **Modul:** e-Plaćanje
 **Status dokumenta:** U IZRADI
-**Verzija:** 1.0.14
+**Verzija:** 1.0.15
 
 ---
 
@@ -38,6 +38,7 @@
 | 1.0.12 | 2026-08-21 | EP-PATCH-TS-010 — Faza 8 Moja e-Plaćanja (istorija sopstvenih transakcija) IMPLEMENTED locally. Nije production complete. |
 | 1.0.13 | 2026-08-21 | EP-PATCH-TS-011 — Faza 9 admin transaction operations IMPLEMENTED locally. Read-only pregled + capability-gated inquiry. Nije production complete. |
 | 1.0.14 | 2026-08-22 | EP-PATCH-TS-012 — Faza 10 audit/security hardening IMPLEMENTED locally. EP-specific catalog audit + immutable historical provider identity. PO-10.1/PO-10.2 USVOJENO. Nije production complete. |
+| 1.0.15 | 2026-08-22 | EP-PATCH-TS-013 — Faza 11 real 17/41 catalog + availability IMPLEMENTED locally. Idempotent import, default inactive, #18 excluded. Purpose/model/code/reference OPEN. Bankart NOT IMPLEMENTED. Nije production complete. |
 
 Napomena:
 
@@ -53,7 +54,7 @@ Ne mijenjaju se postojeći redovi.
 
 Dokument je tehnička specifikacija **U IZRADI**. Nasljeđuje zatvoreni poslovni model (EP-BM-001) i funkcionalne zahtjeve (EP-FS-001).
 
-U verziji 1.0.14 dokument:
+U verziji 1.0.15 dokument:
 
 * usklađuje obavezujuća projektna ograničenja sa Korakom 6 (2026-08-20);
 * više **ne** propagira superseded poslovni ugovor;
@@ -69,6 +70,7 @@ U verziji 1.0.14 dokument:
 * evidentira **IMPLEMENTED locally** Faze 8: Moja e-Plaćanja — istorija sopstvenih transakcija, snapshot SSOT, detalj reuse `payments.result`. Nije production complete.
 * evidentira **IMPLEMENTED locally** Faze 9: admin read-only transaction pregled + status inquiry kroz F6A port. Nema manual status/delete/resend. Nije production complete.
 * evidentira **IMPLEMENTED locally** Faze 10: security hardening; EP-specific catalog audit; immutable `PaymentTransaction.provider`. Nije production complete.
+* evidentira **IMPLEMENTED locally** Faze 11: kanonskih 17 vrsta / 41 račun + type/account availability; idempotentni import; default neaktivan. #18 Bedemi excluded. Purpose/model/code/reference ostaju OPEN. Bankart nije implementiran. Nije production complete.
 
 Poslovni SSOT ostaje EP-BM-001. Terminologija: EP-RG-001.
 
@@ -80,7 +82,7 @@ Poslovni SSOT ostaje EP-BM-001. Terminologija: EP-RG-001.
 |---------|--------|
 | `APPLICATION DEVELOPMENT = LOCAL ONLY` | VAŽI |
 | `PRODUCTION APPLICATION DEPLOY = NOT APPROVED` | VAŽI |
-| Application implementation | **PHASE 1–10 IMPLEMENTED** (local/test): F1–F9 + F10 security hardening, EP catalog audit, historical provider identity. Bankart **NOT IMPLEMENTED**. Nije production-ready. |
+| Application implementation | **PHASE 1–11 IMPLEMENTED** (local/test): F1–F10 + F11 real 17/41 catalog + availability. Bankart **NOT IMPLEMENTED**. Nije production-ready. |
 | Dokumentacioni commit/push | dozvoljen po projektnom toku |
 
 Ova granica **nije** usvojena tehnička arhitektura. Poglavlja 3–9 ostaju **NIJE USVOJENO**, osim evidentiranog Faza 1 foundation zapisa ispod.
@@ -416,7 +418,46 @@ PO-10.2 USVOJENO. Kolona `payment_transactions.provider` (string, nullable, prov
 
 `HISTORICAL PROVIDER IDENTITY BLOCKS F6B = NO` (samo ovaj arhitektonski blocker). F6B i dalje čeka ugovor, dokumentaciju, credentials, callback/inquiry contract.
 
-Nema Bankart pretpostavki. Nema F11.
+Nema Bankart pretpostavki. F11 je odvojena faza.
+
+---
+
+# Faza 11 — Real 17/41 catalog + availability (IMPLEMENTED locally)
+
+**Status:** IMPLEMENTED locally. **NOT** production complete. **PO LOCAL ACCEPTANCE = PASS**.
+
+**EP PHASE 11 = COMPLETE**
+
+Kanonski katalog V1:
+
+- **17** `PaymentType` + **41** `PaymentAccount` iz EP-KF-001.
+- Usvojene immutable šifre vrsta (`PaymentType.code`) — vidi EP-KF-001 §4.
+- Type-level availability = unija account-level (engine: TYPE ∩ ACCOUNT).
+- Account-level = PO matrix (ALL8 / FL2 / PRED2 / LEGAL6 / BIZ6 / ALL8 minus FL).
+- `#18 Bedemi` (`530-92262338-74`) = OUT OF EP SCOPE. Nije u katalogu.
+- Zapisi se kreiraju **neaktivni** (`is_active = false`). COMPLETE+VALID activation policy KEEP.
+- Nova migracija = NONE. Bankart = NOT IMPLEMENTED.
+
+Import:
+
+- Artisan `ep:import-canonical-catalog` (nije seeder, nije deploy hook).
+- Create-if-absent. Idempotentno. Nikad truncate / hard delete / rewrite `account_number`.
+- Konflikt (ime/type mismatch) se prijavi; postojeći red se ne prepisuje.
+- Audit: postojeći `PaymentCatalogAuditService` / `ep_catalog_audits`. Nema `PaymentTransactionEvent` za catalog writes.
+- `APP_ENV=production` refuse. Za write: `--actor-id`. `--dry-run` samo validira definiciju.
+
+Ostaje OPEN (nije F11):
+
+- PURPOSE CONFIG
+- MODEL CONFIG
+- PAYMENT CODE CONFIG
+- REFERENCE CONFIG
+- REAL BANKART
+- production go-live / activate-all
+
+`#16` `530-92262336-80` ostaje kanonski broj. Mogući tok naplate preko DOO „Komunalno Kotor“ = PRE-PRODUCTION VERIFICATION.
+
+F12 nije započet.
 
 ---
 
@@ -443,7 +484,7 @@ Nema Bankart pretpostavki. Nema F11.
 | EP-TS-001 / 9. Plan implementacije | NIJE USVOJENO |
 | EP-TS-001 / Faza 1 domain/schema foundation | IMPLEMENTED (local/test; nije cjelokupni model podataka) |
 | EP-TS-001 / Faza 2 catalog admin | IMPLEMENTED locally (nije production complete) |
-| EP-TS-001 / Faza 3 availability engine | IMPLEMENTED locally (nije production complete; 17/41 mapping OPEN) |
+| EP-TS-001 / Faza 3 availability engine | IMPLEMENTED locally (nije production complete; F11 real matrix loaded separately) |
 | EP-TS-001 / Faza 4 user payment flow | IMPLEMENTED locally (do preview-a; PO local PASS; nije production complete) |
 | EP-TS-001 / Faza 5 initiation + Fake Gateway | IMPLEMENTED locally (PO local PASS; Bankart OPEN; nije production complete) |
 | EP-TS-001 / Faza 6A provider-neutral gateway hardening | IMPLEMENTED locally (Bankart adapter BLOCKED BY EXTERNAL DEPENDENCY) |
@@ -451,6 +492,7 @@ Nema Bankart pretpostavki. Nema F11.
 | EP-TS-001 / Faza 8 user payment history | IMPLEMENTED locally (sopstvene transakcije; PO local PASS; nije production complete) |
 | EP-TS-001 / Faza 9 admin transaction operations | IMPLEMENTED locally (read-only + capability-gated inquiry; nije production complete) |
 | EP-TS-001 / Faza 10 audit/security hardening | IMPLEMENTED locally (security hardening + EP catalog audit + historical provider identity; nije production complete) |
+| EP-TS-001 / Faza 11 real 17/41 catalog + availability | IMPLEMENTED locally (17/41 + matrix; default inactive; PO local PASS; nije production complete) |
 
 ---
 
@@ -528,7 +570,7 @@ Ova ograničenja važe za sva buduća tehnička rješenja. Ne predstavljaju tehn
 | Račun | Gdje se sredstva uplaćuju (41). Jedna vrsta može imati 1..N računa. |
 | Filter | `korisnik → dozvoljena vrsta → dozvoljeni račun(i)`. Račun ne proširuje pravo sa nivoa vrste. |
 | Izvor liste | Isključivo EP-KF-001; bez samostalnog dopunjavanja iz propisa. |
-| Mapping | Konačno mapiranje 17/41 na 8 kanonskih user types = OPEN PRE-PRODUCTION. Ne izmišljati u TS. |
+| Mapping | Visibility matrix 17/41 na 8 kanonskih user types = USVOJENO (F11 PO; EP-KF-001 §7). Purpose/model/šifra/poziv ostaju OPEN. |
 
 ## 2.3 Dokumentacioni preduslov za tehnički dizajn
 
@@ -539,7 +581,7 @@ Prije usvajanja tehničkih rješenja (poglavlja 3–9) potrebno je:
 3. gateway/bankovna dokumentacija za mehanizam statusa;
 4. usvojene posebne tehničke odluke za arhitekturu, podatke i integracije.
 
-Katalog ontologija je usklađena; konačni availability mapping ostaje OPEN.
+Katalog ontologija je usklađena. F11 visibility matrix je USVOJENO u EP-KF-001. Purpose/model/šifra plaćanja/poziv ostaju OPEN.
 
 ## 2.4 Uplatni računi – konfiguracioni podaci (UR-01)
 
@@ -872,7 +914,7 @@ Status svih: **OPEN PRE-PRODUCTION DEPENDENCY**
 7. reversal / refund / chargeback contract;
 8. legal / privacy retention;
 9–12. production platform user-data cleanup (EP-BM-001 / 11);
-13. final mapping 17/41 na kanonske user types (`FINAL 17/41 USER CATEGORY MAPPING = OPEN`).
+13. purpose / model / šifra plaćanja / poziv na broj ostaju OPEN (`PURPOSE/MODEL/PAYMENT CODE/REFERENCE CONFIG = OPEN`). Visibility matrix 17/41 = USVOJENO (F11; EP-KF-001).
 
 ---
 
@@ -905,3 +947,4 @@ Status svih: **OPEN PRE-PRODUCTION DEPENDENCY**
 | 2026-08-21 | Verzija 1.0.12 / EP-PATCH-TS-010 — Faza 8 Moja e-Plaćanja IMPLEMENTED locally. Istorija sopstvenih transakcija; nije production complete. |
 | 2026-08-21 | Verzija 1.0.13 / EP-PATCH-TS-011 — Faza 9 admin transaction operations IMPLEMENTED locally. Read-only pregled + capability-gated inquiry. |
 | 2026-08-22 | Verzija 1.0.14 / EP-PATCH-TS-012 — Faza 10 audit/security hardening IMPLEMENTED locally. EP-specific catalog audit; immutable historical provider identity. |
+| 2026-08-22 | Verzija 1.0.15 / EP-PATCH-TS-013 — Faza 11 real 17/41 catalog + availability IMPLEMENTED locally. Idempotent import; default inactive; #18 excluded. Purpose/model/code/reference OPEN. Bankart NOT IMPLEMENTED. |

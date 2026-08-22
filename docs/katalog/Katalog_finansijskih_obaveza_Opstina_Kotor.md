@@ -5,7 +5,7 @@
 **Oznaka dokumenta:** EP-KF-001
 **Modul:** e-Plaćanje
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.6
+**Verzija:** 0.7
 
 ---
 
@@ -19,6 +19,7 @@
 | 0.4 | 2026-08-17 | Dokumentacioni corrective: oznaka EP-KF-001; namespace EP-*; pripadnost modulu e-Plaćanje. Bez izmjene sadržaja kataloga. |
 | 0.5 | 2026-08-20 | Korak 6 ontologija: 17 vrsta plaćanja → 41 račun. Brojevi računa sačuvani. Ciljne grupe označene kao LEGACY / PARTIAL MAPPING. Bez izmišljenog mapiranja. |
 | 0.6 | 2026-08-20 | Labela mapping-a: `LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING`. Kanonskih 8 user types referencirano; 17/41 mapping ostaje OPEN. Bez izmišljenog mapiranja. |
+| 0.7 | 2026-08-22 | F11: usvojene interne šifre 17 vrsta; usvojena availability matrica (PO). #18 Bedemi OUT OF EP SCOPE. Status aktivnosti kataloga u aplikaciji = neaktivan do go-live. Purpose/model/šifra/poziv ostaju TBD. |
 
 Napomena:
 
@@ -52,10 +53,10 @@ Katalog **nije** šifrarnik i **nije** implementacioni artefakt (UR-01). Aplikac
 | 1. Uvod i ontologija | USVOJENO (Korak 6) |
 | 2. Obavezujuća pravila | USVOJENO |
 | 3. Definicija pojmova | USVOJENO |
-| 4. Pregled 17 vrsta plaćanja | POPUNJENO |
-| 5. Vrste i računi (detalj) | POPUNJENO; mapping OPEN |
+| 4. Pregled 17 vrsta plaćanja | POPUNJENO; šifre USVOJENO (F11) |
+| 5. Vrste i računi (detalj) | POPUNJENO; purpose/model/šifra/poziv OPEN |
 | 6. Zbirna tabela 41 računa | POPUNJENO |
-| 7. Availability / korisničke kategorije | OPEN PRE-PRODUCTION |
+| 7. Availability / korisničke kategorije | USVOJENO (F11 PO matrix) |
 | 8. Evidencija izmjena | STRUKTURA SPREMNA |
 
 ---
@@ -67,8 +68,8 @@ Katalog **nije** šifrarnik i **nije** implementacioni artefakt (UR-01). Aplikac
 3. Brojevi računa su **referentni podaci** iz Naredbe. Navođenje nije hardkodiranje.
 4. Pravni osnov: **Potrebno pravno potvrditi** dok nije potvrđen (P-07).
 5. Korišćeni račun se ne briše; deaktivira se. Promjena broja = novi zapis.
-6. Konačno mapiranje na kanonske korisničke kategorije **nije** usvojeno. Postojeće ciljne grupe = **LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING**.
-7. Ne pretvarati „građani“ u resident/non-resident. Ne pretvarati „pravna lica“ u sve legal forms. Ne izmišljati mapping na 8 kanonskih tipova.
+6. F11 visibility matrix na 8 kanonskih korisničkih kategorija = **USVOJENO** (PO; vidi §7). Naslijeđene kolone „građani / preduzetnici / pravna lica“ ostaju istorijski LEGACY tekst.
+7. Purpose / model / šifra plaćanja / poziv na broj ostaju **OPEN**. Ne izmišljati te vrijednosti u Katalogu.
 
 ---
 
@@ -111,7 +112,7 @@ Bez aktivnog, validnog i dozvoljenog računa vrsta se korisniku ne prikazuje.
 | P-08 | Izvorni sistem / nadležni organ ostaje mjerodavan za stvarnu obavezu. V1 ne preuzima zaduženja. |
 | UR-01 | Računi u Katalogu = referentni podaci; Katalog ≠ šifrarnik. |
 
-**Status popunjenosti:** 17 vrsta, 41 račun uneseni. Interna šifra vrste/računa = prazna do posebne odluke. Status aktivnosti = **TBD / REQUIRES VALIDATION**. Poziv na broj / model / šifra plaćanja / osnovna svrha po računu = **TBD / REQUIRES VALIDATION** osim gdje je već bilo u prethodnoj verziji (nije bilo).
+**Status popunjenosti:** 17 vrsta, 41 račun uneseni. Interna šifra **vrste** = USVOJENO (F11 kodovi). Interna šifra računa = nije potrebna (identitet = `account_number`). Status aktivnosti u aplikaciji = **neaktivan** do production go-live. Poziv na broj / model / šifra plaćanja / osnovna svrha po računu = **TBD / REQUIRES VALIDATION**. #18 Bedemi (`530-92262338-74`) nije dio e-Plaćanja.
 
 ---
 
@@ -121,7 +122,7 @@ Bez aktivnog, validnog i dozvoljenog računa vrsta se korisniku ne prikazuje.
 |-------|------------|
 | Vrsta plaćanja | Šta korisnik plaća. Kanonska jedinica kataloga V1 (17). |
 | Račun | Gdje se sredstva uplaćuju. Pripada tačno jednoj vrsti plaćanja (41). |
-| Availability | Pravilo koje vrste/račune smije koristiti data korisnička kategorija. Konačno mapiranje OPEN. |
+| Availability | Pravilo koje vrste/račune smije koristiti data korisnička kategorija. F11 visibility matrix USVOJENO (§7). |
 | LEGACY / PARTIAL MAPPING | Raniji unos „ciljna grupa“ (građani / preduzetnici / pravna lica) na nivou nekadašnje „vrste uplate“. Nije Korak 6 filter. |
 
 **LEGACY / SUPERSEDED — DO NOT USE FOR NEW EP V1 CONTENT:**
@@ -133,34 +134,36 @@ Bez aktivnog, validnog i dozvoljenog računa vrsta se korisniku ne prikazuje.
 
 # 4. Pregled 17 vrsta plaćanja
 
-| RB | Naziv vrste plaćanja | Broj računa | Availability (Korak 6) | Napomena |
-|----|----------------------|------------:|------------------------|----------|
-| 1 | Prirez porezu na dohodak fizičkih lica | 1 | OPEN | |
-| 2 | Lokalni porezi | 2 | OPEN | |
-| 3 | Lokalne administrativne takse | 1 | OPEN | |
-| 4 | Lokalne komunalne takse | 9 | OPEN | |
-| 5 | Naknada za komunalno opremanje građevinskog zemljišta | 3 | OPEN; legacy ciljne grupe na računima | |
-| 6 | Naknada za korišćenje građevinskog zemljišta (za zaostale obaveze) | 3 | OPEN; legacy ciljne grupe na računima | |
-| 7 | Naknada za korišćenje opštinskih i nekategorisanih puteva | 8 | OPEN | |
-| 8 | Naknada za izgradnju i održavanje lokalnih puteva i drugih javnih objekata od opštinskog značaja (za zaostale obaveze) | 3 | OPEN; legacy ciljne grupe na računima | |
-| 9 | Prihodi koje svojom djelatnošću ostvare opštinski organi, organizacije i službe | 2 | OPEN | |
-| 10 | Prihodi po osnovu kamata i kazni | 2 | OPEN | |
-| 11 | Boravišna taksa | 1 | OPEN | |
-| 12 | Turistička taksa | 1 | OPEN | |
-| 13 | Članski doprinos u turističkim organizacijama | 1 | OPEN | |
-| 14 | Troškovi postupka za slobodan pristup informacijama | 1 | OPEN | |
-| 15 | Taksa na upotrebu elektroakustičnih i akustičnih uređaja u ugostiteljskim objektima nakon 24 časa | 1 | OPEN | |
-| 16 | Naknada troškova za premještanje vozila | 1 | OPEN | |
-| 17 | Naknada za ekonomsko iskorišćavanje kulturnih dobara | 1 | OPEN | |
-| **Σ** | | **41** | | |
+| RB | Šifra (`PaymentType.code`) | Naziv vrste plaćanja | Broj računa | Availability (F11 PO) | Napomena |
+|----|---------------------------|----------------------|------------:|------------------------|----------|
+| 1 | prirez-porezu-na-dohodak | Prirez porezu na dohodak fizičkih lica | 1 | ALL8 | |
+| 2 | lokalni-porezi | Lokalni porezi | 2 | ALL8 | |
+| 3 | lokalne-administrativne-takse | Lokalne administrativne takse | 1 | ALL8 | |
+| 4 | lokalne-komunalne-takse | Lokalne komunalne takse | 9 | ALL8 na nivou vrste; računi miješani (vidi §7) | |
+| 5 | komunalno-opremanje-zemljista | Naknada za komunalno opremanje građevinskog zemljišta | 3 | ALL8 na nivou vrste; split po računu | |
+| 6 | koriscenje-gradjevinskog-zemljista | Naknada za korišćenje građevinskog zemljišta (za zaostale obaveze) | 3 | ALL8 na nivou vrste; split po računu | |
+| 7 | koriscenje-puteva | Naknada za korišćenje opštinskih i nekategorisanih puteva | 8 | ALL8 | |
+| 8 | izgradnja-odrzavanje-lokalnih-puteva | Naknada za izgradnju i održavanje lokalnih puteva i drugih javnih objekata od opštinskog značaja (za zaostale obaveze) | 3 | ALL8 na nivou vrste; split po računu | |
+| 9 | prihodi-opstinskih-organa | Prihodi koje svojom djelatnošću ostvare opštinski organi, organizacije i službe | 2 | ALL8 | |
+| 10 | kamate-i-kazne | Prihodi po osnovu kamata i kazni | 2 | ALL8 | |
+| 11 | boravisna-taksa | Boravišna taksa | 1 | ALL8 | |
+| 12 | turisticka-taksa | Turistička taksa | 1 | FL2 only | |
+| 13 | clanski-doprinos-turistickim-organizacijama | Članski doprinos u turističkim organizacijama | 1 | ALL8 | bez provjere šifre djelatnosti u V1 |
+| 14 | troskovi-slobodan-pristup-informacijama | Troškovi postupka za slobodan pristup informacijama | 1 | ALL8 | |
+| 15 | taksa-akusticni-uredjaji | Taksa na upotrebu elektroakustičnih i akustičnih uređaja u ugostiteljskim objektima nakon 24 časa | 1 | BIZ6 | |
+| 16 | premjestanje-vozila | Naknada troškova za premještanje vozila | 1 | ALL8 | PRE-PRODUCTION: mogući tok naplate preko DOO Komunalno Kotor vs ovaj račun |
+| 17 | ekonomsko-iskoriscavanje-kulturnih-dobara | Naknada za ekonomsko iskorišćavanje kulturnih dobara | 1 | ALL8 | |
+| **Σ** | | | **41** | | |
 
-Status aktivnosti svake vrste: **TBD / REQUIRES VALIDATION**.
+Status aktivnosti svake vrste u aplikaciji: **neaktivan** dok nisu COMPLETE+VALID (purpose/model/šifra/poziv još OPEN) i dok production go-live nije odobren.
 
-Dozvoljene korisničke kategorije na nivou vrste: **OPEN PRE-PRODUCTION** (Korak 6 stavka 13).
+Dozvoljene korisničke kategorije: **USVOJENO (F11 PO matrix, §7)**. Visibility ≠ utvrđivanje obaveze.
 
 ---
 
 # 5. Vrste plaćanja i pripadajući računi
+
+Aplikacioni zapisi (F11): `is_active = false`. Purpose / model / šifra plaćanja / poziv = **TBD / REQUIRES VALIDATION**.
 
 Kolone računa:
 
@@ -329,7 +332,7 @@ Napomena: naziv „Ostale komunalne takse“ je naziv stavke iz izvornog spiska 
 
 | Broj računa | Naziv / opis | Status | Legacy ciljna grupa | Status pravnog osnova | Napomena |
 |-------------|--------------|--------|---------------------|------------------------|----------|
-| 530-92262336-80 | Naknada troškova za premještanje vozila. | TBD | — | Potrebno pravno potvrditi | Numeracija iz izvora: 15.1 |
+| 530-92262336-80 | Naknada troškova za premještanje vozila. | TBD | — | Potrebno pravno potvrditi | Numeracija iz izvora: 15.1. PRE-PRODUCTION: mogući tok naplate preko DOO „Komunalno Kotor“ vs ovaj račun — verifikovati prije go-live. Broj računa se ne mijenja. |
 
 ## 5.17 Vrsta 17 — Naknada za ekonomsko iskorišćavanje kulturnih dobara
 
@@ -391,24 +394,63 @@ Napomena: naziv „Ostale komunalne takse“ je naziv stavke iz izvornog spiska 
 
 # 7. Availability
 
-**Status:** OPEN PRE-PRODUCTION DEPENDENCY
+**Status:** USVOJENO (F11 PO) za visibility matrix. Aplikacioni zapisi se uvoze **neaktivni**.
 
-Konačno mapiranje 17 vrsta / 41 računa na kanonskih 8 korisničkih kategorija **nije** usvojeno.
+`FINAL 17/41 USER CATEGORY MAPPING = USVOJENO`
 
-`FINAL 17/41 USER CATEGORY MAPPING = OPEN`
+Kanonski storage (identitet): Fizičko lice; Preduzetnik; Društvo sa ograničenom odgovornošću; Akcionarsko društvo; Ortačko društvo; Komanditno društvo; Nevladino udruženje; Sportska organizacija.
 
-Kanonski platform user types (identitet; **nije** EP mapping):
+Natural persons: `resident` + `non-resident` (dva reda). Legal persons: `residential_status = null`.
 
-* Fizičko lice; Preduzetnik
-* DOO; AD; OD; KD; Nevladino udruženje; Sportska organizacija
+ALL8 = 10 redova. FL2 = Fizičko lice resident+non-resident. PRED2 = Preduzetnik resident+non-resident. LEGAL6 = DOO+AD+OD+KD+NVO+SO. BIZ6 = PRED2+DOO+AD+OD+KD. Type-level = unija account-level (engine: TYPE ∩ ACCOUNT).
 
-9 računa u vrstama 5, 6 i 8 imaju naslijeđenu kolonu ciljne grupe (`građani` / `preduzetnici` / `pravna lica`). To je **LEGACY / PARTIAL MAPPING — REQUIRES CANONICAL USER-TYPE MAPPING**.
+| Račun | Availability |
+|-------|----------------|
+| 530-9228009-77 | ALL8 |
+| 530-9228014-62 | ALL8 |
+| 530-9228020-44 | ALL8 |
+| 530-9226777-87 | ALL8 |
+| 530-92232405-51 | ALL8 |
+| 530-92232494-75 | BIZ6 |
+| 530-92232473-41 | BIZ6 |
+| 530-92232517-06 | PRED2 + LEGAL6 (bez Fizičko lice) |
+| 530-92232468-56 | BIZ6 |
+| 530-92232538-40 | ALL8 |
+| 530-92232431-70 | ALL8 |
+| 530-92232447-22 | BIZ6 |
+| 530-9223247-07 | ALL8 |
+| 530-92223906-37 | LEGAL6 |
+| 530-92223911-22 | PRED2 |
+| 530-92223932-56 | FL2 |
+| 530-92223927-71 | LEGAL6 |
+| 530-92223948-08 | PRED2 |
+| 530-92223953-90 | FL2 |
+| 530-92262320-31 | ALL8 |
+| 530-92262329-04 | ALL8 |
+| 530-92262321-28 | ALL8 |
+| 530-92262322-25 | ALL8 |
+| 530-92262323-22 | ALL8 |
+| 530-92262324-19 | ALL8 |
+| 530-92262326-13 | ALL8 |
+| 530-92262327-10 | ALL8 |
+| 530-92262296-06 | LEGAL6 |
+| 530-92262303-82 | PRED2 |
+| 530-92262319-34 | FL2 |
+| 530-9226121-18 | ALL8 |
+| 530-9226228-85 | ALL8 |
+| 530-92262371-72 | ALL8 |
+| 530-92262387-24 | ALL8 |
+| 530-9223205-36 | ALL8 |
+| 530-9223206-33 | FL2 only |
+| 530-9223207-30 | ALL8 |
+| 530-92262334-86 | ALL8 |
+| 530-92262335-83 | BIZ6 |
+| 530-92262336-80 | ALL8 |
+| 530-92262337-77 | ALL8 |
 
-Nije izvršeno:
+**#18 OUT OF EP SCOPE:** Naknada za obilazak kotorskih bedema i tvrđave Sv. Ivan / `530-92262338-74` — nije PaymentType, nije PaymentAccount.
 
-* građani → resident ili non-resident;
-* pravna lica → svi pravni oblici;
-* bilo koje drugo automatsko mapiranje na 8 kanonskih tipova.
+Naslijeđene kolone ciljne grupe na vrstama 5/6/8 ostaju istorijski LEGACY tekst; aktivno mapiranje je gornja matrica (građani → FL2; preduzetnici → PRED2; pravna lica → LEGAL6).
 
 ---
 
@@ -419,6 +461,7 @@ Izmjene se evidentiraju na nivou Kataloga. Aplikacioni šifrarnik, kada bude izv
 | Datum | Vrsta / račun | Polje | Stara vrijednost | Nova vrijednost | Razlog / osnov | PATCH / odluka | Napomena |
 |-------|---------------|-------|------------------|-----------------|----------------|----------------|----------|
 | 2026-08-20 | ontologija | model | 17 kategorija + 41 vrsta uplate | 17 vrsta plaćanja + 41 račun | Korak 6 CLOSED | EP-KF 0.5 | Brojevi računa neizmijenjeni |
+| 2026-08-22 | sve vrste | code + availability | prazna šifra / OPEN mapping | 17 kodova + PO matrix | F11 PO | EP-KF 0.7 | #18 excluded; zapisi neaktivni |
 
 ---
 
@@ -427,9 +470,9 @@ Izmjene se evidentiraju na nivou Kataloga. Aplikacioni šifrarnik, kada bude izv
 1. **17 PAYMENT TYPES = 17**
 2. **41 ACCOUNTS = 41**
 3. Svi brojevi računa iz verzije 0.4 sačuvani.
-4. Interna šifra ostaje prazna do posebne odluke.
+4. Interna šifra vrste = USVOJENO (F11). #18 Bedemi OUT OF EP SCOPE.
 5. Pravni osnov: Potrebno pravno potvrditi.
-6. USER CATEGORY MAPPING = PARTIAL / OPEN.
+6. USER CATEGORY MAPPING = USVOJENO (F11 PO). Purpose/model/šifra plaćanja/poziv = OPEN.
 
 ---
 
@@ -443,3 +486,4 @@ Izmjene se evidentiraju na nivou Kataloga. Aplikacioni šifrarnik, kada bude izv
 | 2026-08-17 | Verzija 0.4 — Dokumentacioni corrective: oznaka EP-KF-001; namespace EP-*; pripadnost modulu e-Plaćanje. Bez izmjene 17 kategorija, 41 vrste uplate, računa, pravnih osnova ili internih šifara. |
 | 2026-08-20 | Verzija 0.5 — Korak 6 ontologija: 17 vrsta plaćanja → 41 račun. Stara ontologija SUPERSEDE. Brojevi računa sačuvani. Mapping nije izmišljen. |
 | 2026-08-20 | Verzija 0.6 — Mapping labela usklađena sa kanonskim platform user modelom (8 tipova). `FINAL 17/41 USER CATEGORY MAPPING = OPEN`. Bez izmišljenog mapiranja. |
+| 2026-08-22 | Verzija 0.7 — F11: 17 kodova USVOJENO; availability matrix USVOJENO; #18 Bedemi excluded; aplikacioni katalog default neaktivan. Purpose/model/šifra/poziv ostaju TBD. |

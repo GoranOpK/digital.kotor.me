@@ -6,8 +6,8 @@
 **Naziv:** Registar skraćenica, oznaka i terminologije e-Plaćanja
 **Modul:** e-Plaćanje
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.1.1
-**Datum:** 2026-08-20
+**Verzija:** 1.1.3
+**Datum:** 2026-08-22
 
 ---
 
@@ -56,10 +56,10 @@ Ako bi EP paket trebao novu **projektnu/platformsku** oznaku koja po DK-DS-001 p
 
 | Oznaka | Dokument | Putanja | Status |
 |--------|----------|---------|--------|
-| **EP-BM-001** | Poslovni model e-Plaćanja | `docs/business-model/Business_Model_e-Placanje.md` | USVOJENO (V1 BM, Korak 6; user model v1.0.1) |
-| **EP-FS-001** | Funkcionalna specifikacija e-Plaćanja | `docs/functional-specifications/Functional-Specification_e-Placanje.md` | U IZRADI |
+| **EP-BM-001** | Poslovni model e-Plaćanja | `docs/business-model/Business_Model_e-Placanje.md` | USVOJENO (V1 BM, Korak 6; v1.0.2; mapping USVOJENO) |
+| **EP-FS-001** | Funkcionalna specifikacija e-Plaćanja | `docs/functional-specifications/Functional-Specification_e-Placanje.md` | U IZRADI (v1.1.2; mapping USVOJENO) |
 | **EP-TS-001** | Tehnička specifikacija e-Plaćanja | `docs/technical-specifications/Technical-Specification_e-Placanje.md` | U IZRADI |
-| **EP-KF-001** | Katalog finansijskih obaveza Opštine Kotor | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` | U IZRADI (ontologija usklađena; mapping OPEN) |
+| **EP-KF-001** | Katalog finansijskih obaveza Opštine Kotor | `docs/katalog/Katalog_finansijskih_obaveza_Opstina_Kotor.md` | U IZRADI (v0.7; 17/41; mapping USVOJENO; F11 IMPLEMENTED locally; nije production complete; purpose/model/šifra/poziv OPEN; Bankart NOT IMPLEMENTED) |
 | **EP-PO-001** | Pravni okvir e-Plaćanja | `docs/pravni-okvir/Pravni_okvir_e-Placanje.md` | U IZRADI |
 | **EP-RG-001** | Registar skraćenica, oznaka i terminologije e-Plaćanja | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-e-Placanja.md` | USVOJENO |
 
@@ -73,9 +73,9 @@ Ne postoje aktivni EP dokumenti `BM-002`, `FS-002`, `TS-002`, `EP-BM-002`, `EP-F
 
 | Oznaka | Puni naziv | Značenje | Gdje se koristi |
 |--------|------------|----------|-----------------|
-| **EP-PATCH-BM** | Patch poslovnog modela e-Plaćanja | Identifikator izmjene EP-BM-001 (EP-PATCH-BM-001 … EP-PATCH-BM-012). | EP-BM-001; navođenje u EP-TS-001 |
-| **EP-PATCH-FS** | Patch funkcionalne specifikacije e-Plaćanja | Identifikator izmjene EP-FS-001 (EP-PATCH-FS-001 … EP-PATCH-FS-012). | EP-FS-001 |
-| **EP-PATCH-TS** | Patch tehničke specifikacije e-Plaćanja | Identifikator izmjene EP-TS-001. Izdato: **EP-PATCH-TS-001**, **EP-PATCH-TS-002**. | EP-TS-001 |
+| **EP-PATCH-BM** | Patch poslovnog modela e-Plaćanja | Identifikator izmjene EP-BM-001 (EP-PATCH-BM-001 … EP-PATCH-BM-013). | EP-BM-001; navođenje u EP-TS-001 |
+| **EP-PATCH-FS** | Patch funkcionalne specifikacije e-Plaćanja | Identifikator izmjene EP-FS-001 (EP-PATCH-FS-001 … EP-PATCH-FS-013). | EP-FS-001 |
+| **EP-PATCH-TS** | Patch tehničke specifikacije e-Plaćanja | Identifikator izmjene EP-TS-001. Izdato: **EP-PATCH-TS-001**, **EP-PATCH-TS-002**, **EP-PATCH-TS-003**, **EP-PATCH-TS-004**, **EP-PATCH-TS-005**, **EP-PATCH-TS-006**, **EP-PATCH-TS-007**, **EP-PATCH-TS-008**, **EP-PATCH-TS-009**, **EP-PATCH-TS-010**, **EP-PATCH-TS-011**, **EP-PATCH-TS-012**, **EP-PATCH-TS-013**. | EP-TS-001 |
 
 Ovi prefiksi ne smiju se miješati sa `PATCH-FS-*`, `PATCH-BM-*` ili `PATCH-TS-*` Kalendara kulture.
 
@@ -263,3 +263,5 @@ Isto pravilo kao v1.0, zadržano:
 | 2026-08-17 | Granica: pointer na `DK-DS-001`; `KN-*` rezervisan (nije EP). `EP-PO-001` KEEP. Poslovni sadržaj e-Plaćanja neizmijenjen. |
 | 2026-08-20 | Verzija 1.1 — Proširenje u puni katalog skraćenica, oznaka i terminologije usklađen sa Korakom 6. Terminološki katalog; legacy/superseded termini; FR-* prefiksi; EP-PATCH-TS-001; ažurirani statusi kanonskih dokumenata. |
 | 2026-08-20 | Verzija 1.1.1 — Platform user-model termini usklađeni sa kanonskih 8 tipova. EP-PATCH-BM-012 / FS-012 / TS-002. Bez novog registra/dokumenta. |
+| 2026-08-22 | Verzija 1.1.2 — Aktuelni status EP-KF-001: mapping USVOJENO (F11 locally; nije production complete). Izdati EP-PATCH-TS identifikatori 001–013. Bez nove poslovne skraćenice. |
+| 2026-08-22 | Verzija 1.1.3 — Aktuelni status EP-BM-001 v1.0.2 / EP-FS-001 v1.1.2: mapping USVOJENO. Izdati EP-PATCH-BM/FS kroz 013. |
