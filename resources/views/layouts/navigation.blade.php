@@ -560,7 +560,8 @@
                                     <span
                                         data-kk-nav="active-organizer"
                                         style="display:block;width:100%;box-sizing:border-box;padding:10px 16px;border-radius:8px;background:#f3f4f6;color:#111827;font-size:12px;font-weight:600;"
-                                    >Organizator: {{ $moderatorActiveOrganizer->naziv }}</span>
+                                        title="Organizator: {{ $moderatorActiveOrganizer->naziv }}"
+                                    >{{ $moderatorActiveOrganizer->naziv }}</span>
                                 @endif
                                 @if($moderatorAvailableOrganizerCount > 1)
                                     <a

@@ -151,7 +151,8 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
 
         $this->assertStringContainsString('data-kk-nav-row="1"', $desktopNav);
         $this->assertStringNotContainsString('data-kk-nav-row="2"', $desktopNav);
-        $this->assertStringContainsString('font-size: 12px', $html);
+        // Editorial one-row contract: intentional 10px override so the strip fits; ignore CSS spacing variants.
+        $this->assertMatchesRegularExpression('/font-size:\s*10px/u', $html);
         $this->assertStringContainsString('flex-wrap: nowrap', $html);
 
         $row1Labels = [

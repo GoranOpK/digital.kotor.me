@@ -87,8 +87,11 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertSame(2, substr_count($html, 'data-kk-nav="moderiranje"'));
         $this->assertStringContainsString('>Kontrolna tabla<', $html);
         $this->assertStringContainsString('>Moderiranje<', $html);
+        $this->assertSame(2, substr_count($html, 'data-kk-nav="active-organizer"'));
         $this->assertStringContainsString('>UX Org A<', $html);
-        $this->assertStringNotContainsString('Organizator: UX Org A', $html);
+        // Visible label is name-only (desktop + mobile); "Organizator:" may remain only in title=.
+        $this->assertDoesNotMatchRegularExpression('/>Organizator:\s*UX Org A</u', $html);
+        $this->assertSame(2, preg_match_all('/data-kk-nav="active-organizer"[^>]*title="Organizator: UX Org A"/u', $html));
         $this->assertStringNotContainsString('>'.$this->moderator->name.'<', $html);
         $this->assertStringContainsString(
             'href="'.e(route('cultural-moderator-dashboard.index')).'"',
