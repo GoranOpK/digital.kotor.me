@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.0
+**Verzija:** 1.0.1
 **Datum:** 2026-08-26
 
 Povezani dokumenti:
@@ -29,6 +29,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | Verzija / PATCH | Datum | Opis |
 |-----------------|--------|------|
 | 1.0.0 | 2026-08-26 | Usvojen poslovni profil Konkursa za podršku ženskom preduzetništvu prema Odluci 027/26 i završenom poslovnom modelovanju. Evidentirana dva otvorena pravna pitanja. |
+| 1.0.1 / KN-PATCH-BM-001 | 2026-08-26 | Zatvorena OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2. Usvojeno: (1) pri preklapanju 20% sa 10% ili 5% primjenjuje se maksimalna granica od 20%; procenti se ne sabiraju; 20% nije automatski dodijeljeni iznos; (2) Komisija može raspisati drugi Javni konkurs; raspisivanje nije automatsko; ako Komisija odluči da raspiše drugi Konkurs, mora biti raspisan najkasnije do isteka trećeg kvartala tekuće godine. |
 
 Napomena:
 
@@ -40,7 +41,7 @@ Ne mijenjaju se postojeći redovi.
 
 Dokument ima status `USVOJEN`. Nakon formalnog usvajanja, kontrolisane izmjene označavaju se prema `KN-PATCH-BM-{NNN}` i evidentiraju se u `KN-RG-001` tek pri prvoj stvarnoj upotrebi.
 
-Dva otvorena pravna pitanja iz Poglavlja 13 i završnog registra OPEN pitanja **nijesu** zatvorena ovim usvajanjem. Relevantni dijelovi ostaju otvoreni u skladu sa `KN-BM-001` §7.8 i `BM-KN-009`.
+Formalna otvorena pravna pitanja OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2 zatvorena su poslovnom odlukom u verziji 1.0.1 / `KN-PATCH-BM-001`. Kanonska pravila su u Poglavlju 13.
 
 ---
 
@@ -66,7 +67,7 @@ Dokument je kanonski poslovni profil tipa konkursa **Žensko preduzetništvo**. 
 | 10. Eliminatorni kriterijumi | USVOJENO |
 | 11. Druga sjednica i usmeno obrazloženje | USVOJENO |
 | 12. Ocjenjivanje | USVOJENO |
-| 13. Preliminarna i konačna rang-lista | USVOJENO, uz OPEN #1 i OPEN #2 |
+| 13. Preliminarna i konačna rang-lista | USVOJENO |
 | 14. Predlog Odluke i završetak rada Komisije | USVOJENO |
 | 15. Konačna Odluka, objava i granica V1 | USVOJENO |
 
@@ -292,7 +293,7 @@ Konkurs mora sadržati podatke propisane čl. 4 Odluke 027/26, uključujući:
 
 Ukupan iznos sredstava koja se raspodjeljuju definiše se Javnim konkursom (čl. 3).
 
-Odredbe o drugom Konkursu nijesu zatvorene ovim poglavljem. Vidi OPEN LEGAL ISSUE #2 u Poglavlju 13.
+Drugi Konkurs **nije** automatski. Komisija **može raspisati** drugi Javni konkurs. Ako Komisija odluči da ga raspiše, drugi Konkurs mora biti raspisan najkasnije do isteka trećeg kvartala tekuće godine. Kanonsko pravilo: Poglavlje 13.8.
 
 ---
 
@@ -534,7 +535,7 @@ Ova tačka **ne blokira** status `USVOJEN` profila. Ne donosi se novo poslovno p
 
 # 13. Preliminarna i konačna rang-lista
 
-Status poglavlja: USVOJENO, uz OPEN #1 i OPEN #2
+Status poglavlja: USVOJENO
 
 Preliminarna i konačna rang-lista **nijesu** dva fizički odvojena poslovna objekta. To su **dva stanja iste rang-liste**.
 
@@ -596,26 +597,19 @@ Uz čl. 3: ukupan iznos sredstava koja se raspodjeljuju definiše se Javnim konk
 
 Ograničenje se odnosi na **jedan biznis plan**.
 
-### OPEN LEGAL ISSUE #1 — preklapanje 20% sa 10% / 5%
+### Preklapanje 20% sa 10% / 5%
 
-Član 18 **ne** određuje izričito prioritet kada isti biznis plan:
+Ako isti biznis plan ispunjava uslove za maksimalni iznos od **20%** po osnovu inovativne djelatnosti i/ili zelenog preduzetništva i istovremeno pripada kategoriji za koju bi po drugom osnovu važila granica od **10%**, primjenjuje se maksimalna granica od **20%**.
 
-* ispunjava kriterijum inovativne i/ili zelene djelatnosti (20%)
+Ako isti biznis plan ispunjava uslove za maksimalni iznos od **20%** po osnovu inovativne djelatnosti i/ili zelenog preduzetništva i istovremeno pripada kategoriji za koju bi po drugom osnovu važila granica od **5%**, primjenjuje se maksimalna granica od **20%**.
 
-i istovremeno
+20% ima prioritet u ova dva slučaja preklapanja.
 
-* Podnositeljka pripada kategoriji 10% ili 5%.
+Ovo je **maksimalna granica**, ne automatski dodijeljeni iznos. Podnositeljka ne dobija automatski 20% ukupnog iznosa. Stvarno odobreni iznos i dalje zavisi od traženog iznosa, raspoloživih sredstava, rangiranja, odluke Komisije i ostalih usvojenih ograničenja raspodjele.
 
-Ovaj profil **ne propisuje**:
+Ovaj profil **ne** sabira procente. Ne primjenjuje se 20% + 10% = 30%, niti 20% + 5% = 25%. Ne primjenjuje se niža granica 10% ili 5% kada je istovremeno ispunjen uslov za 20%.
 
-* sabiranje procenata;
-* automatskih 20%;
-* automatski strožu granicu;
-* bilo koji drugi prioritet.
-
-**Status:** OPEN — potrebno pravno/poslovno razjašnjenje prije automatizacije maksimalnog dozvoljenog iznosa u slučaju preklapanja kategorija.
-
-Ovo pitanje nije riješeno ovim dokumentom.
+Ovo pravilo **nije** OPEN. Status: USVOJENO.
 
 ## 13.5. Raspodjela sredstava
 
@@ -624,10 +618,10 @@ Sredstva se raspodjeljuju u skladu sa konačnom rang-listom do utroška raspolo�
 Odobreni iznos:
 
 * ne može biti veći od traženog;
-* ne može biti veći od primjenjivog maksimalnog iznosa iz čl. 18, kada je kategorija jednoznačna;
+* ne može biti veći od primjenjivog maksimalnog iznosa iz čl. 18, uključujući usvojeno pravilo preklapanja iz §13.4;
 * ne može biti veći od preostalih raspoloživih sredstava.
 
-U slučaju preklapanja kategorija iz OPEN LEGAL ISSUE #1, maksimalni iznos se ne automatizuje ovim profilom.
+U slučaju preklapanja 20% sa 10% ili 5% primjenjuje se maksimalna granica od 20%, prema §13.4.
 
 ## 13.6. Tie-break
 
@@ -674,30 +668,21 @@ Zadržani sadržaj prikaza:
 
 ## 13.8. Drugi Konkurs
 
-Dokumentuju se **obe** relevantne odredbe Odluke 027/26, bez izbora između njih.
+Ako sredstva planirana budžetom Opštine Kotor za podršku ženskom preduzetništvu nijesu raspodijeljena ili nijesu u cjelosti raspodijeljena po prvom Konkursu, Komisija **može raspisati** drugi Javni konkurs.
 
-Član 4:
+Raspisivanje drugog Konkursa **nije** automatsko. Činjenica da nakon prvog Konkursa nijesu raspodijeljena sva sredstva sama po sebi **ne** proizvodi automatsko raspisivanje drugog Konkursa.
 
-Ako sredstva planirana budžetom Opštine Kotor za ovu namjenu ne budu raspodijeljena ili ne budu u cjelosti raspodijeljena za kandidovane biznis planove po prvom Konkursu, **raspisuje se** drugi Konkurs, najkasnije do isteka trećeg kvartala tekuće godine.
+Komisija donosi odluku da li će koristiti mogućnost raspisivanja drugog Konkursa.
 
-Član 18:
+Ako Komisija odluči da raspiše drugi Konkurs, drugi Konkurs mora biti raspisan najkasnije do isteka trećeg kvartala tekuće godine.
 
-Ukoliko sva sredstva nisu raspodjeljena na prvom Konkursu, Komisija **može raspisati** drugi Javni konkurs.
+Ovo pravilo **nije** OPEN. Status: USVOJENO.
 
-### OPEN LEGAL ISSUE #2 — obaveznost drugog Konkursa
+Normativna sljedivost:
 
-Postoji normativna razlika između „raspisuje se“ (čl. 4) i „Komisija može raspisati“ (čl. 18).
+Član 4 koristi formulaciju „raspisuje se“. Član 18 koristi formulaciju „Komisija može raspisati drugi Javni konkurs“. Za kanonski poslovni model usvojeno je pravilo da Komisija **može raspisati** drugi Konkurs.
 
-Ovaj profil **ne odlučuje** samostalno da je drugi Konkurs obavezan ili opcion.
-
-**Status:** OPEN — potrebno pravno razjašnjenje obaveznosti drugog Konkursa zbog različitih formulacija unutar važeće Odluke.
-
-Ovo pitanje nije riješeno ovim dokumentom.
-
-Nije OPEN:
-
-* prvi Konkurs se raspisuje u drugom kvartalu tekuće godine;
-* ako se primjenjuje odredba o drugom Konkursu, propisani krajnji rok je najkasnije do isteka trećeg kvartala tekuće godine.
+Prvi Konkurs se raspisuje u drugom kvartalu tekuće godine.
 
 ---
 
@@ -788,17 +773,14 @@ Van Platforme u V1 ostaju, osim gdje je ovaj profil već eksplicitno drugačije 
 
 # Otvorena pravna pitanja ovog profila
 
-Ova pitanja **nijesu sakrivena** i **nijesu riješena** usvajanjem dokumenta.
+Trenutno nema formalnih otvorenih pravnih pitanja ovog profila.
 
-| # | Pitanje | Pravni status | Blokira USVOJEN profila | Sljedeća odluka |
-|---|---------|---------------|-------------------------|-----------------|
-| OPEN LEGAL ISSUE #1 | Preklapanje 20% sa 10%/5% kada isti biznis plan spada pod čl. 18 tač. 1 i pod tač. 2 ili 3 | AMBIGUOUS u 027/26 | Ne blokira usvajanje profila; blokira automatizaciju kapice iznosa u slučaju preklapanja | Pravno/poslovno razjašnjenje |
-| OPEN LEGAL ISSUE #2 | Da li je drugi Konkurs obavezan („raspisuje se“, čl. 4) ili opcion („može raspisati“, čl. 18) | Kontradikcija unutar 027/26 | Ne blokira usvajanje profila; blokira jednoznačno pravilo o drugom Konkursu | Pravno razjašnjenje |
+OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2 zatvoreni su poslovnom odlukom u verziji 1.0.1 / `KN-PATCH-BM-001`. Kanonska pravila su u Poglavlju 13.
 
 Normativna praznina — zamjena člana Komisije tokom ocjenjivanja:
 
-Odluka uređuje imenovanje zamjene, ali ne sudbinu već sačuvanih ocjena. To **nije** treći blocking OPEN. Usvojena immutability ostaje. Pitanje ne blokira status `USVOJEN`.
+Odluka uređuje imenovanje zamjene, ali ne sudbinu već sačuvanih ocjena. To **nije** blocking OPEN. Usvojena immutability ostaje. Pitanje ne blokira status `USVOJEN`.
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.0**
+**Kraj dokumenta KN-BM-003 v1.0.1**

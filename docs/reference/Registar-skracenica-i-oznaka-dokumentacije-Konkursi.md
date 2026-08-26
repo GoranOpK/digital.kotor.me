@@ -7,7 +7,7 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.7
+**Verzija:** 0.1.8
 **Datum:** 2026-08-26
 
 ---
@@ -24,6 +24,7 @@
 | 0.1.5 | 2026-08-25 | Ažuriran status `KN-BM-001` na `USVOJEN`. |
 | 0.1.6 | 2026-08-25 | Ažuriran status `KN-BM-002` na `U IZRADI` i evidentirana struktura interne oznake `BM-ML-NNN`. Konkretne oznake profila mladih nijesu uvedene. |
 | 0.1.7 | 2026-08-26 | Registrovan poslovni profil `KN-BM-003` (Žensko preduzetništvo). Evidentirana dva otvorena pravna pitanja tog profila, bez uvođenja novih skraćenica. |
+| 0.1.8 | 2026-08-26 | U `KN-BM-003` v1.0.1 / `KN-PATCH-BM-001` zatvorena OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2. Evidentiran `KN-PATCH-BM-001`. Nema aktivnih formalnih OPEN pitanja iz `KN-BM-003`. |
 
 Napomena:
 
@@ -192,12 +193,14 @@ Prefiksi pripadaju **namespace-u KN**.
 
 ## 4.3. Otvorena pravna pitanja evidentirana u KN dokumentima
 
-`KN-RG-001` nije izvor poslovnih pravila i ne zatvara pravna pitanja. Sljedeća otvorena pravna pitanja su stvarno dokumentovana u `KN-BM-003` i ovdje se samo evidentiraju radi sljedivosti. Nova skraćenica se ne uvodi.
+`KN-RG-001` nije izvor poslovnih pravila i ne zatvara pravna pitanja. Nova skraćenica se ne uvodi.
 
-| Pitanje | Dokument | Status | Napomena |
-|---------|----------|--------|----------|
-| Preklapanje maksimalnog iznosa 20% sa 10%/5% kada isti biznis plan spada pod više tačaka čl. 18 Odluke 027/26 | KN-BM-003, OPEN LEGAL ISSUE #1 | OPEN | Ne rješava se pretpostavkom. Blokira automatizaciju kapice iznosa u slučaju preklapanja. |
-| Obaveznost drugog Konkursa: „raspisuje se“ (čl. 4) naspram „Komisija može raspisati“ (čl. 18) Odluke 027/26 | KN-BM-003, OPEN LEGAL ISSUE #2 | OPEN | Ne rješava se pretpostavkom. |
+Trenutno nema aktivnih formalnih otvorenih pravnih pitanja evidentiranih iz `KN-BM-003`.
+
+U `KN-BM-003` v1.0.1 / `KN-PATCH-BM-001` zatvorena su:
+
+* preklapanje maksimalne granice 20% sa 10%/5%: primjenjuje se maksimalna granica od 20%; procenti se ne sabiraju; 20% nije automatski dodijeljeni iznos;
+* obaveznost drugog Konkursa: Komisija može raspisati drugi Javni konkurs; raspisivanje nije automatsko; ako se raspisuje, najkasnije do isteka trećeg kvartala tekuće godine.
 
 Normativna praznina o sudbini sačuvanih ocjena pri zamjeni člana Komisije dokumentovana je u `KN-BM-003` Poglavlju 12. Nije blocking OPEN i nije posebna oznaka.
 
@@ -215,7 +218,9 @@ Konkretne oznake opcionih tipova se **ne** rezervišu unaprijed. Kada odobrena o
 
 Naknadne kontrolisane izmjene dokumentacije modula Konkursi označavaju se prema obrascu `KN-PATCH-{TIP}-{NNN}`. Konkretna PATCH oznaka evidentira se u `KN-RG-001` tek kada se prvi put stvarno upotrijebi. Dokumenti sa statusom `U IZRADI` mogu se korigovati bez PATCH oznake dok nijesu formalno usvojeni.
 
-Nijedna `KN-PATCH-*` oznaka trenutno nije izdata.
+| Oznaka | Dokument | Verzija dokumenta | Datum | Sadržaj |
+|--------|----------|-------------------|--------|---------|
+| **KN-PATCH-BM-001** | KN-BM-003 | 1.0.1 | 2026-08-26 | Zatvorena OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2. (1) Pri preklapanju 20% sa 10% ili 5% primjenjuje se maksimalna granica od 20%; procenti se ne sabiraju; 20% nije automatski dodijeljeni iznos. (2) Komisija može raspisati drugi Javni konkurs; raspisivanje nije automatsko; ako se raspisuje, najkasnije do isteka trećeg kvartala tekuće godine. |
 
 ---
 
@@ -287,4 +292,4 @@ Trenutno nema oznaka sa statusom **ZASTARJELO**.
 
 ---
 
-**Kraj dokumenta KN-RG-001 v0.1.7**
+**Kraj dokumenta KN-RG-001 v0.1.8**
