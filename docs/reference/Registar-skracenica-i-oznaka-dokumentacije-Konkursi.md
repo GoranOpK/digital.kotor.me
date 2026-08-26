@@ -7,7 +7,7 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.5
+**Verzija:** 0.1.6
 **Datum:** 2026-08-25
 
 ---
@@ -22,6 +22,7 @@
 | 0.1.3 | 2026-08-24 | Evidentirano zajedničko poslovno pravilo `BM-KN-014`. |
 | 0.1.4 | 2026-08-24 | Evidentirano zajedničko poslovno pravilo `BM-KN-015`. |
 | 0.1.5 | 2026-08-25 | Ažuriran status `KN-BM-001` na `USVOJEN`. |
+| 0.1.6 | 2026-08-25 | Ažuriran status `KN-BM-002` na `U IZRADI` i evidentirana struktura interne oznake `BM-ML-NNN`. Konkretne oznake profila mladih nijesu uvedene. |
 
 Napomena:
 
@@ -181,7 +182,7 @@ Prefiksi pripadaju **namespace-u KN**.
 |--------|----------|---------|------------------|--------|
 | **KN-RG-001** | Registar skraćenica i oznaka dokumentacije Konkursa | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` | namespace KN; granice faze; pravila evidencije oznaka | U IZRADI |
 | **KN-BM-001** | Zajednički poslovni model modula Konkursi | `docs/business-model/Business_Model_Konkursi.md` | Zajednički pojmovi, konfigurabilni okvir i pravila razdvajanja tipova konkursa | USVOJEN |
-| **KN-BM-002** | Poslovni profil konkursa za podršku preduzetništvu mladih | `docs/business-model/Business_Model_Konkursi_Mladi.md` | Akteri, kategorije, dokumenti, obrasci, faze i poslovna pravila profila mladih koja utiču na platformu | planiran; fajl nije kreiran |
+| **KN-BM-002** | Poslovni profil konkursa za podršku preduzetništvu mladih | `docs/business-model/Business_Model_Konkursi_Mladi.md` | Akteri, kategorije, dokumenti, obrasci, faze i poslovna pravila profila mladih koja utiču na platformu | U IZRADI |
 | **KN-FS-001** | Zajedničke funkcionalnosti modula Konkursi | `docs/functional-specifications/Functional-Specification_Konkursi.md` | Zajedničke i konfigurabilne funkcionalnosti modula | planiran; fajl nije kreiran |
 | **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Funkcionalno ponašanje, forme i validacije profila mladih izvedeni iz `KN-BM-002` | planiran; fajl nije kreiran |
 | **KN-TS-001** | Zajednička tehnička specifikacija modula Konkursi | `docs/technical-specifications/Technical-Specification_Konkursi.md` | Zajednička arhitektura, konfiguracioni mehanizam i tehnički model modula | planiran; fajl nije kreiran |
@@ -234,10 +235,15 @@ Interne oznake poslovnih i funkcionalnih pravila ne uvode se unaprijed. Njihova 
 | **BM-KN-013** | Tip konkursa ima stabilan poslovni identitet | Zajedničko poslovno pravilo | `KN-BM-001` | Zajednički sloj modula Konkursi | aktivna |
 | **BM-KN-014** | Administrator konkursa ne može biti član Komisije | Zajedničko poslovno pravilo | `KN-BM-001` | Zajednički sloj modula Konkursi | aktivna |
 | **BM-KN-015** | Jedna aktivno podnijeta Prijava po Podnosiocu i Pozivu | Zajedničko poslovno pravilo | `KN-BM-001` | Zajednički sloj modula Konkursi | aktivna |
+| **BM-ML-NNN** | Poslovno pravilo profila konkursa za podršku preduzetništvu mladih | Označavanje konkretnih poslovnih pravila u `KN-BM-002` | `KN-BM-002` | Profil konkursa za podršku preduzetništvu mladih | aktivna struktura |
 
 * `BM-KN-NNN` nije Document ID.
 * Konkretni brojevi se ne rezervišu unaprijed.
 * Evidentirane konkretne oznake: `BM-KN-001`–`BM-KN-015`. Naredni brojevi nisu rezervisani.
+* `BM-ML-NNN` nije Document ID.
+* Konkretni brojevi nijesu rezervisani.
+* `BM-ML-001` još nije uveden.
+* Konkretna oznaka evidentira se u istom koraku prve odobrene upotrebe.
 
 ---
 
@@ -267,4 +273,4 @@ Trenutno nema oznaka sa statusom **ZASTARJELO**.
 
 ---
 
-**Kraj dokumenta KN-RG-001 v0.1.5**
+**Kraj dokumenta KN-RG-001 v0.1.6**
