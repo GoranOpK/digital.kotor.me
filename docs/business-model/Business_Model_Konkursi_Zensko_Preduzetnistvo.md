@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.1
+**Verzija:** 1.0.2
 **Datum:** 2026-08-26
 
 Povezani dokumenti:
@@ -30,6 +30,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 |-----------------|--------|------|
 | 1.0.0 | 2026-08-26 | Usvojen poslovni profil Konkursa za podršku ženskom preduzetništvu prema Odluci 027/26 i završenom poslovnom modelovanju. Evidentirana dva otvorena pravna pitanja. |
 | 1.0.1 / KN-PATCH-BM-001 | 2026-08-26 | Zatvorena OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2. Usvojeno: (1) pri preklapanju 20% sa 10% ili 5% primjenjuje se maksimalna granica od 20%; procenti se ne sabiraju; 20% nije automatski dodijeljeni iznos; (2) Komisija može raspisati drugi Javni konkurs; raspisivanje nije automatsko; ako Komisija odluči da raspiše drugi Konkurs, mora biti raspisan najkasnije do isteka trećeg kvartala tekuće godine. |
+| 1.0.2 / KN-PATCH-BM-002 | 2026-08-26 | Usklađenje sa Odlukom 027/26 i usvojenim FS tokom: (1) U pripremi / Podnesena / Povučena — Podnesena nije izmjenjiva; (2) eliminatorni kriterijum 1 iz čl. 19 obrađuje se kroz provjeru potpunosti i Prigovor iz čl. 17; (3) Obrazac 3 i nacrt ocjena od prve sjednice; kriterijum 10 tek nakon usmenog; (4) nepromjenjivost tek nakon završavanja individualnog ocjenjivanja, ne pri čuvanju nacrta. |
 
 Napomena:
 
@@ -71,7 +72,7 @@ Dokument je kanonski poslovni profil tipa konkursa **Žensko preduzetništvo**. 
 | 14. Predlog Odluke i završetak rada Komisije | USVOJENO |
 | 15. Konačna Odluka, objava i granica V1 | USVOJENO |
 
-Normativna praznina o sudbini sačuvanih ocjena pri zamjeni člana Komisije dokumentovana je u Poglavlju 12. Ne blokira status `USVOJEN`.
+Normativna praznina o sudbini završenih individualnih ocjena pri zamjeni člana Komisije dokumentovana je u Poglavlju 12. Ne blokira status `USVOJEN`.
 
 ---
 
@@ -190,7 +191,9 @@ Podnositeljka je žensko lice koje učestvuje na Konkursu podnošenjem Prijave, 
 
 Podnositeljka na Platformi:
 
-* priprema, podnosi, uređuje, povlači i briše Prijavu do isteka roka;
+* **U pripremi**, samo dok rok traje: uređuje, briše i podnosi sopstvenu Prijavu;
+* **Podnesena**: sadržaj je zaključan; ne uređuje se i ne briše se; može se povući samo do isteka roka;
+* **Povučena**: ne nastavlja postupak; nema reaktivacije;
 * ima pristup samo sopstvenim Prijavama; javna rang-lista, konačna Odluka i drugi javno objavljeni rezultati Konkursa zaseban su javni sadržaj, a nijesu kompletna Prijava.
 
 ## 4.2. Administrator Konkursa
@@ -325,13 +328,27 @@ Prijava i prateća dokumentacija podnose se Komisiji **elektronski** preko digit
 
 Jedno fizičko lice / preduzetnica / društvo može konkurisati sa **jednim biznis planom** po Javnom konkursu (čl. 18).
 
-Do isteka roka za prijavljivanje Podnositeljka može:
+Osnovna poslovna stanja Prijave:
 
-* uređivati Prijavu;
-* povući Prijavu;
-* obrisati Prijavu.
+**U pripremi** — samo dok rok za prijavu traje:
 
-Nakon isteka roka te radnje **nijesu** dozvoljene.
+* uređivanje: DA;
+* brisanje: DA;
+* podnošenje: DA.
+
+**Podnesena** nastaje eksplicitnim podnošenjem. Nakon podnošenja sadržaj je zaključan.
+
+* uređivanje: NE;
+* brisanje: NE;
+* povlačenje: DA, samo dok rok traje.
+
+**Povučena** više ne učestvuje u postupku.
+
+* uređivanje: NE;
+* reaktivacija: NE;
+* povratak u Podnesena: NE.
+
+Istek roka **nije** dodatno stanje Prijave. Nakon isteka roka nema uređivanja, podnošenja, brisanja ni povlačenja.
 
 ## 7.1. Privatnost Prijava
 
@@ -384,7 +401,9 @@ Predsjednik Komisije na Platformi, u ime Komisije, evidentira da li Podnositeljk
 
 Ako Komisija utvrdi da je Prijava nepotpuna, ista se označava kao takva u listi za ocjenjivanje iz čl. 19 i Komisija je **neće dalje razmatrati** (čl. 17).
 
-To je administrativna nepotpunost dokumentacije. Nije isto što i eliminatorni kriterijum iz Poglavlja 10, niti što je konačna ocjena ispod 30 bodova.
+Čl. 17 propisuje funkcionalni postupak za nepotpunu dokumentaciju. Čl. 19 tu istu nepotpunu dokumentaciju navodi kao eliminatorni kriterijum 1 (nedostatak formalnih uslova za kandidovanje biznis plana). Zato se kriterijum 1 funkcionalno obrađuje kroz administrativnu provjeru potpunosti i Prigovor iz čl. 17. Ne uvodi se druga elektronska provjera istog razloga.
+
+Ovo **nije** isto što i konačna ocjena ispod 30 bodova.
 
 ## 9.2. Prigovor
 
@@ -412,17 +431,19 @@ Eliminatorni kriterijumi prema čl. 19 Odluke 027/26 su:
 2. preduzetnica/društvo nije dostavila/lo Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) za biznis plan koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine;
 3. biznis plan nije vezan za prioritetne oblasti navedene u članu 10 Odluke 027/26.
 
+**Kriterijum 1** se funkcionalno obrađuje kroz administrativnu provjeru potpunosti i Prigovor iz čl. 17 (Poglavlje 9). Ne uvodi se druga elektronska provjera istog razloga.
+
+**Kriterijumi 2 i 3** ostaju zasebni. Komisija ih utvrđuje usmeno i kolektivno. Kada utvrdi razlog 2 ili 3, predsjednik Komisije u ime Komisije evidentira zaključak, a konkretan razlog evidentira u postojećoj Napomeni. Takav biznis plan ne ulazi u ocjenjivanje po pozitivnim kriterijumima. Osnovno stanje Prijave ostaje Podnesena. Ne uvodi se novo polje Obrasca 3, novi checkbox, nova kolona ni novi Prigovor za kriterijume 2 i 3.
+
 Ovaj profil strogo razdvaja:
 
 | | Šta | Gdje |
 |--|-----|------|
-| A | administrativna nepotpunost dokumentacije | Poglavlje 9; čl. 17 |
-| B | eliminatorni kriterijumi | ovo poglavlje; čl. 19 |
+| A | nepotpuna dokumentacija / eliminatorni kriterijum 1 | Poglavlje 9; čl. 17 i čl. 19 |
+| B | eliminatorni kriterijumi 2 i 3 | ovo poglavlje; čl. 19 |
 | C | konačna ocjena ispod 30 bodova | Poglavlje 13; čl. 21 |
 
 Prag ispod 30 bodova **nije** administrativni eliminatorni kriterijum i **nije** dio ovog poglavlja.
-
-Ako operativni način evidentiranja eliminatornog kriterijuma na Platformi nije usvojen ovim profilom, ne izmišlja se. Funkcionalna razrada pripada FS sloju.
 
 ---
 
@@ -434,9 +455,9 @@ Drugu sjednicu Komisije i usmeno obrazloženje biznis planova Komisija zakazuje 
 
 Na drugoj sjednici sprovodi se usmeno obrazloženje biznis planova. Relevantno učešće Podnositeljke je usmeno obrazloženje sopstvenog biznis plana.
 
-Nakon sprovedenih usmenih obrazloženja prelazi se na individualno ocjenjivanje (čl. 20).
+Nakon sprovedenog usmenog obrazloženja može se ocijeniti kriterijum 10. Nacrt ocjena za ostale pozitivne kriterijume može postojati i prije toga. Individualno ocjenjivanje se **ne** može završiti prije ocjene svih 10 kriterijuma.
 
-Ovo poglavlje **ne** sadrži pravila o tajnosti ocjena niti o immutability. Ta pravila pripadaju Poglavlju 12.
+Ovo poglavlje **ne** sadrži pravila o tajnosti ocjena niti o nepromjenjivosti. Ta pravila pripadaju Poglavlju 12.
 
 ---
 
@@ -444,7 +465,13 @@ Ovo poglavlje **ne** sadrži pravila o tajnosti ocjena niti o immutability. Ta p
 
 Status poglavlja: USVOJENO
 
-Ocjenjivanje počinje **nakon** sprovedenih usmenih obrazloženja na drugoj sjednici (čl. 20).
+Obrazac 3 / lista za ocjenjivanje koristi se **od prve sjednice**.
+
+Član Komisije može unositi i čuvati **nacrt** sopstvenih ocjena za pozitivne kriterijume za koje već raspolaže potrebnim osnovom. Nacrt nije obavezan prije usmenog obrazloženja. Član **nije** dužan ocjenjivati prije usmenog.
+
+Kriterijum 10 (usmeno obrazloženje) ocjenjuje se **tek nakon** sprovedenog usmenog obrazloženja biznis plana (čl. 20).
+
+Individualno ocjenjivanje **ne može biti završeno** prije nego što su ocijenjena svih 10 pozitivnih kriterijuma.
 
 Svaki od pet članova Komisije, uključujući predsjednika, ocjenjuje svaki od deset pozitivnih kriterijuma za svaki relevantni biznis plan.
 
@@ -473,15 +500,19 @@ Za ocjenu biznis plana prema pozitivnim kriterijumima koristi se skala od **1 do
 
 Dok ocjenjivanje traje, članovi Komisije imaju uvid samo u svoje ocjene (čl. 20).
 
-Dok svih 5 članova ne završi ocjenjivanje, član vidi samo svoje individualne ocjene. Isto važi za predsjednika Komisije.
+Dok svih 5 članova ne završi individualno ocjenjivanje **svih** biznis planova koji su ušli u pozitivno ocjenjivanje, član vidi samo svoje individualne ocjene. Isto važi za predsjednika Komisije.
 
 Naknadni uvid u ocjene drugih članova **ne** otključava sopstvene ocjene.
 
-## 12.4. Immutability
+## 12.4. Nepromjenjivost nakon završavanja
 
-Jednom unesena i **sačuvana** individualna ocjena člana Komisije ostaje trajno upisana i ne može se izmijeniti, obrisati, poništiti niti zamijeniti drugom ocjenom.
+Čuvanje **nacrta** omogućava nastavak rada i izmjene. Nacrt **nije** konačna individualna ocjena. Obično čuvanje nacrta **nije** okidač nepromjenjivosti.
 
-Nema:
+Član eksplicitno **završava** individualno ocjenjivanje. Završavanje zahtijeva potvrdu i moguće je tek kada su unesene ocjene za svih 10 pozitivnih kriterijuma.
+
+Tek nakon potvrđenog završavanja ocjene postaju nepromjenjive. Ne mogu se izmijeniti, obrisati, poništiti niti zamijeniti drugom ocjenom.
+
+Nema, nakon završavanja:
 
 * izmjene;
 * brisanja;
@@ -493,7 +524,7 @@ Ovo je usvojeno poslovno pravilo profila. Odluka 027/26 nema odredbu u direktnom
 
 ## 12.5. Završetak ocjenjivanja i proračun
 
-Ocjenjivanje je završeno kada svih 5 članova završi i sačuva sve potrebne ocjene.
+Ocjenjivanje je završeno kada svih 5 članova završi individualno ocjenjivanje svih biznis planova koji su ušli u pozitivno ocjenjivanje.
 
 Prosječna ocjena po svakom kriterijumu predstavlja zbir bodova svih članova Komisije podijeljen brojem članova Komisije (čl. 20).
 
@@ -525,9 +556,9 @@ Odluka 027/26 uređuje:
 * imenovanje novog člana u roku od **15 dana** od prestanka mandata (čl. 10);
 * kvorum i obavezno prisustvo svih članova pri intervjuu i punovažnim odlukama (čl. 6).
 
-Odluka 027/26 **ne** uređuje sudbinu individualnih ocjena koje je član već sačuvao prije prestanka mandata ili zamjene.
+Odluka 027/26 **ne** uređuje sudbinu individualnih ocjena koje je član već **završio** prije prestanka mandata ili zamjene.
 
-To je **normativna praznina**, ne konflikt sa usvojenim pravilom immutability. Immutability se ovim ne mijenja.
+To je **normativna praznina**, ne konflikt sa usvojenim pravilom nepromjenjivosti nakon završavanja. Nepromjenjivost završene ocjene se ovim ne mijenja.
 
 Ova tačka **ne blokira** status `USVOJEN` profila. Ne donosi se novo poslovno pravilo kojim bi se praznina popunila.
 
@@ -779,8 +810,8 @@ OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2 zatvoreni su poslovnom odlukom u verzi
 
 Normativna praznina — zamjena člana Komisije tokom ocjenjivanja:
 
-Odluka uređuje imenovanje zamjene, ali ne sudbinu već sačuvanih ocjena. To **nije** blocking OPEN. Usvojena immutability ostaje. Pitanje ne blokira status `USVOJEN`.
+Odluka uređuje imenovanje zamjene, ali ne sudbinu već **završenih** individualnih ocjena. To **nije** blocking OPEN. Usvojena nepromjenjivost nakon završavanja ostaje. Pitanje ne blokira status `USVOJEN`.
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.1**
+**Kraj dokumenta KN-BM-003 v1.0.2**

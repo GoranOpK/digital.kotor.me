@@ -7,7 +7,7 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.8
+**Verzija:** 0.1.10
 **Datum:** 2026-08-26
 
 ---
@@ -25,6 +25,8 @@
 | 0.1.6 | 2026-08-25 | Ažuriran status `KN-BM-002` na `U IZRADI` i evidentirana struktura interne oznake `BM-ML-NNN`. Konkretne oznake profila mladih nijesu uvedene. |
 | 0.1.7 | 2026-08-26 | Registrovan poslovni profil `KN-BM-003` (Žensko preduzetništvo). Evidentirana dva otvorena pravna pitanja tog profila, bez uvođenja novih skraćenica. |
 | 0.1.8 | 2026-08-26 | U `KN-BM-003` v1.0.1 / `KN-PATCH-BM-001` zatvorena OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2. Evidentiran `KN-PATCH-BM-001`. Nema aktivnih formalnih OPEN pitanja iz `KN-BM-003`. |
+| 0.1.9 | 2026-08-26 | Registrovan funkcionalni profil `KN-FS-003` (Žensko preduzetništvo), status `U IZRADI`. `KN-FS-001` i `KN-FS-002` ostaju planirani. |
+| 0.1.10 | 2026-08-26 | Evidentiran `KN-PATCH-BM-002` / `KN-BM-003` v1.0.2. Usklađeni tok Prijave, eliminatorni kriterijum 1 sa čl. 17, nacrt ocjena i nepromjenjivost nakon završavanja. |
 
 Napomena:
 
@@ -118,7 +120,7 @@ KN-RG-001:
 
 # 2. Obuhvat registra
 
-Namespace `KN` obuhvata dokumentaciju svih konkursa u okviru modula Konkursi. Trenutna dokumentaciona faza uspostavlja zajednički konfigurabilni okvir modula Konkursi, usvojeni poslovni profil konkursa za podršku ženskom preduzetništvu (`KN-BM-003`), poslovni profil konkursa za podršku preduzetništvu mladih (`KN-BM-002`, status `U IZRADI`) i planirani funkcionalni profil konkursa za podršku preduzetništvu mladih (`KN-FS-002`).
+Namespace `KN` obuhvata dokumentaciju svih konkursa u okviru modula Konkursi. Trenutna dokumentaciona faza uspostavlja zajednički konfigurabilni okvir modula Konkursi, usvojeni poslovni profil konkursa za podršku ženskom preduzetništvu (`KN-BM-003`), funkcionalni profil tog tipa konkursa u izradi (`KN-FS-003`), poslovni profil konkursa za podršku preduzetništvu mladih (`KN-BM-002`, status `U IZRADI`) i planirani funkcionalni profil konkursa za podršku preduzetništvu mladih (`KN-FS-002`).
 
 Dokumentacija se dijeli na:
 
@@ -139,7 +141,7 @@ Ove kategorije se ne spajaju. Prazne kategorije se ne popunjavaju unaprijed.
 
 Usvojeni dokumentacioni lanac ove faze:
 
-`KN-RG-001 → KN-BM-001 → KN-BM-002 → KN-BM-003 → KN-FS-001 → KN-FS-002 → KN-TS-001`
+`KN-RG-001 → KN-BM-001 → KN-BM-002 → KN-BM-003 → KN-FS-001 → KN-FS-002 → KN-FS-003 → KN-TS-001`
 
 Razgraničenje sadržaja:
 
@@ -148,6 +150,7 @@ Razgraničenje sadržaja:
 * `KN-BM-003` definiše poslovne posebnosti konkursa za podršku ženskom preduzetništvu;
 * `KN-FS-001` definiše zajedničke i konfigurabilne funkcionalnosti;
 * `KN-FS-002` definiše funkcionalnu primjenu profila mladih;
+* `KN-FS-003` definiše funkcionalnu primjenu profila ženskog preduzetništva;
 * `KN-TS-001` definiše zajedničku tehničku realizaciju;
 * godišnja instanca konkursa nije novi BM/FS/TS dokument.
 
@@ -176,7 +179,7 @@ Prefiksi pripadaju **namespace-u KN**.
 | **KN** | Konkursi | Prefiks dokumentacionog namespace-a cijelog modula Konkursi. | Svi KN dokumenti | aktivna |
 | **KN-RG** | Registar skraćenica i oznaka dokumentacije Konkursa | Tip dokumenta: RG. | KN-RG-001 | aktivna |
 | **KN-BM** | Poslovni model Konkursa | Tip dokumenta: poslovni model. | KN-BM-001; KN-BM-002; KN-BM-003 | aktivna |
-| **KN-FS** | Funkcionalna specifikacija Konkursa | Tip dokumenta: funkcionalna specifikacija. | KN-FS-001; KN-FS-002 | aktivna |
+| **KN-FS** | Funkcionalna specifikacija Konkursa | Tip dokumenta: funkcionalna specifikacija. | KN-FS-001; KN-FS-002; KN-FS-003 | aktivna |
 | **KN-TS** | Tehnička specifikacija Konkursa | Tip dokumenta: tehnička specifikacija. | KN-TS-001 | aktivna |
 
 ## 4.2 Kanonski dokumenti ove faze
@@ -189,6 +192,7 @@ Prefiksi pripadaju **namespace-u KN**.
 | **KN-BM-003** | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` | Akteri, faze, ocjenjivanje, rangiranje, predlog i konačna Odluka profila ženskog preduzetništva prema Odluci 027/26 | USVOJEN |
 | **KN-FS-001** | Zajedničke funkcionalnosti modula Konkursi | `docs/functional-specifications/Functional-Specification_Konkursi.md` | Zajedničke i konfigurabilne funkcionalnosti modula | planiran; fajl nije kreiran |
 | **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Funkcionalno ponašanje, forme i validacije profila mladih izvedeni iz `KN-BM-002` | planiran; fajl nije kreiran |
+| **KN-FS-003** | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` | Funkcionalno ponašanje Platforme za profil ženskog preduzetništva izvedeno iz `KN-BM-003` | U IZRADI |
 | **KN-TS-001** | Zajednička tehnička specifikacija modula Konkursi | `docs/technical-specifications/Technical-Specification_Konkursi.md` | Zajednička arhitektura, konfiguracioni mehanizam i tehnički model modula | planiran; fajl nije kreiran |
 
 ## 4.3. Otvorena pravna pitanja evidentirana u KN dokumentima
@@ -202,7 +206,9 @@ U `KN-BM-003` v1.0.1 / `KN-PATCH-BM-001` zatvorena su:
 * preklapanje maksimalne granice 20% sa 10%/5%: primjenjuje se maksimalna granica od 20%; procenti se ne sabiraju; 20% nije automatski dodijeljeni iznos;
 * obaveznost drugog Konkursa: Komisija može raspisati drugi Javni konkurs; raspisivanje nije automatsko; ako se raspisuje, najkasnije do isteka trećeg kvartala tekuće godine.
 
-Normativna praznina o sudbini sačuvanih ocjena pri zamjeni člana Komisije dokumentovana je u `KN-BM-003` Poglavlju 12. Nije blocking OPEN i nije posebna oznaka.
+U `KN-BM-003` v1.0.2 / `KN-PATCH-BM-002` usklađeni su: stanja Prijave U pripremi / Podnesena / Povučena; eliminatorni kriterijum 1 sa postupkom čl. 17; nacrt ocjena od prve sjednice; nepromjenjivost tek nakon završavanja individualnog ocjenjivanja.
+
+Normativna praznina o sudbini završenih ocjena pri zamjeni člana Komisije dokumentovana je u `KN-BM-003` Poglavlju 12. Nije blocking OPEN i nije posebna oznaka.
 
 ---
 
@@ -221,6 +227,7 @@ Naknadne kontrolisane izmjene dokumentacije modula Konkursi označavaju se prema
 | Oznaka | Dokument | Verzija dokumenta | Datum | Sadržaj |
 |--------|----------|-------------------|--------|---------|
 | **KN-PATCH-BM-001** | KN-BM-003 | 1.0.1 | 2026-08-26 | Zatvorena OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2. (1) Pri preklapanju 20% sa 10% ili 5% primjenjuje se maksimalna granica od 20%; procenti se ne sabiraju; 20% nije automatski dodijeljeni iznos. (2) Komisija može raspisati drugi Javni konkurs; raspisivanje nije automatsko; ako se raspisuje, najkasnije do isteka trećeg kvartala tekuće godine. |
+| **KN-PATCH-BM-002** | KN-BM-003 | 1.0.2 | 2026-08-26 | Usklađenje sa Odlukom 027/26: stanja Prijave; eliminatorni kriterijum 1 kroz čl. 17; nacrt ocjena od prve sjednice; nepromjenjivost tek nakon završavanja individualnog ocjenjivanja. |
 
 ---
 
@@ -292,4 +299,4 @@ Trenutno nema oznaka sa statusom **ZASTARJELO**.
 
 ---
 
-**Kraj dokumenta KN-RG-001 v0.1.8**
+**Kraj dokumenta KN-RG-001 v0.1.10**
