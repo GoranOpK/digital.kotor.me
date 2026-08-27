@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.0
-**Datum:** 2026-08-26
+**Verzija:** 0.1.1
+**Datum:** 2026-08-27
 
 Povezani dokumenti:
 
@@ -30,6 +30,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | Verzija / PATCH | Datum | Opis |
 |-----------------|--------|------|
 | 0.1.0 | 2026-08-26 | Uspostavljen kostur `KN-FS-003`. Napisana i usvojena Poglavlja 1–4. Poglavlje 3 usklađeno: Sekretarijat donosi konačnu Odluku van Platforme; Administrator Konkursa objavljuje već donesenu Odluku na Platformi; Podnesena Prijava nije izmjenjiva; nacrt ocjena vs završavanje. Poglavlje 4 konsoliduje usvojena funkcionalna stanja. Referenca na `KN-BM-003` v1.0.2. Poglavlja 5–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.1 | 2026-08-27 | Napisano Poglavlje 5: Komisija u konfiguraciji Konkursa, nalog člana, mandat / zamjena / smjena, dodjela Komisije, konfiguracija instance, čuvanje i validnost. Mehanika objave i toka roka pripada Poglavlju 6. Poglavlja 6–19 ostaju za naredne odobrene dokumentacione korake. |
 
 Napomena:
 
@@ -57,7 +58,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 2. Odnos prema BM / FS / TS | USVOJENO |
 | 3. Akteri i ovlašćenja na Platformi | USVOJENO |
 | 4. Funkcionalna stanja | USVOJENO |
-| 5. Kreiranje i konfiguracija Konkursa | NIJE ZAPOČETO |
+| 5. Kreiranje i konfiguracija Konkursa | USVOJENO |
 | 6. Objavljivanje i rok za Prijave | NIJE ZAPOČETO |
 | 7. Prijava Podnositeljke | NIJE ZAPOČETO |
 | 8. Privatnost Prijava | NIJE ZAPOČETO |
@@ -73,7 +74,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 5–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
+Radna struktura Poglavlja 6–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
 
 ---
 
@@ -731,11 +732,198 @@ Interni tehnički mehanizmi kojima Platforma sprovodi usvojena pravila pripadaju
 
 # 5. Kreiranje i konfiguracija Konkursa
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje određuje Komisiju u mjeri potrebnoj za konfiguraciju Konkursa, kreiranje konkretne instance i čuvanje / validnost / izmjenu / brisanje te konfiguracije.
+
+Ne određuje mehaniku objave, kanale objave, pravni ili funkcionalni početak roka od 20 dana, ranu javnu vidljivost, automatsko otvaranje ili zatvaranje podnošenja, niti životni ciklus Prijave. To pripada Poglavlju 6, odnosno kasnijim poglavljima.
+
+## 5.1. Komisija u konfiguraciji Konkursa
+
+Komisija postoji **prije** dodjele konkretnom Konkursu. Pri kreiranju / konfiguraciji Konkursa bira se već postojeća odgovarajuća Komisija.
+
+Komisiju formalno imenuje sekretar Sekretarijata za razvoj preduzetništva, komunalne poslove i saobraćaj, Rješenjem (`KN-BM-003` §4.3, §4.5). Administrator Konkursa **ne** imenuje Komisiju putem Platforme. Platforma podržava administrativno evidentiranje / konfiguraciju da bi već imenovana Komisija mogla biti korišćena u konkursnom postupku. Pravni postupak imenovanja se ovim ne redefiniše.
+
+Identifikacioni / konfiguracioni podaci Komisije, bez razrade polje-po-polje, obuhvataju najmanje naziv, godinu i podatke o mandatu.
+
+Mandat Komisije traje **godinu dana** (čl. 6; `KN-BM-003` §4.3). Početak mandata se evidentira. Kraj slijedi iz usvojenog jednogodišnjeg trajanja.
+
+Za ovaj profil Komisija ima **pet članova** u propisanom sastavu prema čl. 6 Odluke 027/26 i `KN-BM-003` §4.3:
+
+1. predsjednik Komisije — predstavnik Opštine Kotor;
+2. predstavnik Opštine Kotor iz redova zaposlenih u Sekretarijatu za razvoj preduzetništva, komunalne poslove i saobraćaj, koji je sekretar Komisije;
+3. drugi predstavnik Opštine Kotor iz redova zaposlenih u tom Sekretarijatu;
+4. predstavnica Udruženja preduzetnica Crne Gore ili strukovnih udruženja, ili biznisa, ili akademske zajednice;
+5. predstavnica Ženske političke mreže.
+
+Ovih pet pozicija **nijesu** pet novih platformskih uloga. Funkcionalni akteri ostaju oni iz Poglavlja 3.
+
+Pravno konstituisana Komisija ima pet članova. Čl. 6 ostaje autoritativan.
+
+Administrator Konkursa može sačuvati **nepotpun** zapis Komisije prije nego što su poznati svi podaci o članovima i naknadno dopuniti ostale članove. To je samo nepotpun Platform zapis. **Ne** tumači se kao pravno konstituisana Komisija sa manje od pet članova.
+
+Čuvanje koristi običnu radnju **Sačuvaj komisiju**. Ne uvodi se zasebna radnja ni stanje „Završi evidentiranje“. Platforma utvrđuje potpunost / valjanost iz evidentiranih podataka kada kasnija radnja zahtijeva potpunu Komisiju.
+
+Konkursi se planiraju tako da se njihov postupak završi prije isteka mandata dodijeljene Komisije. Ne uvodi se V1 tok oporavka zbog isteka mandata cijele Komisije tokom aktivnog Konkursa.
+
+## 5.2. Članovi Komisije i pristup
+
+Jedan od dva predstavnika tog Sekretarijata je **sekretar Komisije**. To je funkcija / pozicija unutar sastava Komisije. Ne stvara se zasebna platformska uloga niti dodatno Platform ovlašćenje samo zbog te oznake.
+
+Član Komisije za komisijske funkcije koristi **namjenski nalog člana Komisije**.
+
+Administrator Konkursa uspostavlja taj nalog prema usvojenom toku, uključujući početnu lozinku. Član završava primjenjivi postupak verifikacije / aktivacije emaila i može naknadno izmijeniti lozinku.
+
+Ako isto lice već koristi Platformu u drugoj ulozi / svojstvu, taj drugi nalog se **ne** koristi automatski za rad Komisije. Komisijske funkcije se koriste kroz namjenski nalog člana Komisije.
+
+Isti nalog / lice člana Komisije može učestvovati u uzastopnim Komisijama i u Komisijama različitih tipova konkursa. Ne duplicira se lice zbog novog članstva. Članstvo u konkretnoj Komisiji i nalog / identitet lica **funkcionalno su odvojeni**.
+
+Tehnička realizacija autentikacije nije predmet ovog dokumenta.
+
+Primjenjuje se već usvojeno `BM-KN-014`: Administrator Konkursa ne može biti član Komisije istog Konkursa. Namjenski nalog to ne ukida.
+
+Komisija se može evidentirati, dopuniti i dodijeliti **prije** nego što svaki član verifikuje email. Verifikacija emaila **nije** uslov samo za čuvanje / formiranje zapisa Komisije.
+
+Pojedinačni član mora ispuniti potrebnu verifikaciju / aktivaciju **prije** sopstvenih elektronskih radnji Komisije.
+
+## 5.3. Promjene sastava Komisije
+
+### Zamjenski član
+
+Sekretar Sekretarijata za razvoj preduzetništva, komunalne poslove i saobraćaj može, posebnim aktom, imenovati zamjenskog člana zbog odsustva člana Komisije (čl. 6).
+
+Zamjenski član:
+
+* veže se za člana / poziciju koja se zamjenjuje;
+* **nije** šesti redovni član Komisije;
+* evidentira se na Platformi nakon što relevantno vanjsko imenovanje već postoji.
+
+Imenovanje zamjene prethodi sjednici / radu u kojem zamjena učestvuje. Administrator Konkursa **ne** imenuje zamjenu tokom sjednice Komisije.
+
+Za funkcionalnu istoriju:
+
+* već završene radnje ostaju pripisane članu koji ih je izvršio;
+* zamjena obavlja primjenjive **naknadne** radnje zamijenjene pozicije;
+* istorijske radnje se ne prepisuju, ne ponavljaju i ne pripisuju zamjeni.
+
+### Prestanak mandata člana i novi član
+
+Ako mandat pojedinačnog člana prestane prije isteka mandata Komisije:
+
+* bivši član i njegove istorijske radnje ostaju sačuvani;
+* bivši član se ne prepisuje;
+* novi imenovani član zauzima relevantnu poziciju za **naknadni** rad;
+* mandat novog člana traje do isteka mandata Komisije.
+
+Izmjena pojedinačnog člana **ne** stvara novu Komisiju.
+
+Platforma može evidentirati primjenjivi prestanak članstva prema čl. 7–10. Pravni postupak razrješenja / imenovanja odvija se van Platforme. Ne uvode se dodatne automatske pravne posljedice. Ne uvodi se novo automatsko zabranjujuće pravilo mimo onoga što je već kanonski uspostavljeno.
+
+Ovo poglavlje **ne** popunjava normativnu prazninu o sudbini već završenih individualnih ocjena (`KN-BM-003` §12.7; `KN-FS-003` §3.4, §4.8).
+
+Sastav i istorija Komisije moraju omogućiti utvrđivanje ko je u relevantnom trenutku zauzimao koju poziciju i izvršio relevantne radnje Komisije.
+
+### Uređivanje i brisanje Komisije
+
+Dok se podaci Komisije još pripremaju, Administrator Konkursa može dopuniti nedostajuće podatke o članovima i ispraviti pogrešne podatke. Ispravka koja ne mijenja identitet člana niti stvarno članstvo ostaje obična korekcija.
+
+Komisija koja još nije istorijski korišćena može se i dalje uređivati. Ako izmjena učini Komisiju nepotpunom, nije dostupna za radnju koja zahtijeva potpunu Komisiju dok se ponovo ne dopuni.
+
+Kada istorijsko učešće Komisije već postoji, stvarna izmjena sastava **ne** vrši se prostim prepisivanjem jednog lica drugim. Koristi se usvojeni tok zamjenskog člana / prestanka mandata / novog člana.
+
+Neiskorišćena Komisija može se obrisati.
+
+Komisija koja je učestvovala u postupku Konkursa **ne** briše se.
+
+Istek mandata **nije** brisanje.
+
+Brisanje neiskorišćene Komisije **ne** briše ponovo upotrebljiv identitet / nalog člana Komisije.
+
+## 5.4. Dodjela Komisije Konkursu
+
+Ista Komisija koristi se za isti tip konkursa dok njen mandat traje. Ista konkretna Komisija može služiti više konkretnih Konkursa odgovarajućeg tipa tokom mandata, tamo gdje profil to dozvoljava, uključujući drugi Konkurs tog tipa (`KN-BM-003` §13.8).
+
+Lice može zasebno učestvovati u različitim Komisijama, uključujući Komisije različitih tipova konkursa.
+
+Pri konfiguraciji Konkursa Administrator Konkursa bira **postojeću** odgovarajuću Komisiju. Dodjela ne stvara novu Komisiju i ne stvara nova članstva.
+
+Komisija mora ispuniti usvojene uslove potpunosti / valjanosti potrebne za stvarno sprovođenje Konkursa.
+
+Član koji nije završio potrebnu verifikaciju naloga ne može obavljati sopstvene elektronske radnje Komisije. To samo po sebi **ne** znači da zapis Komisije ne može postojati ili biti dodijeljen.
+
+Dodijeljena Komisija može se izmijeniti dok Konkurs **još nije** objavljen. Nakon objave, cijela dodijeljena Komisija se **ne** zamjenjuje običnim uređivanjem Konkursa.
+
+Naknadne izmjene pojedinih lica idu usvojenim tokovima zamjenskog člana / prestanka mandata / novog člana. To **nije** zamjena same Komisije.
+
+Objava se ovdje navodi **samo** kao granica poslije koje obična zamjena cijele dodijeljene Komisije više nije dozvoljena. Mehanika objave nije predmet ovog poglavlja.
+
+## 5.5. Kreiranje i konfiguracija instance Konkursa
+
+Administrator Konkursa kreira konkretnu godišnju instancu Konkursa za izabrani tip. Tip određuje primjenjivi poslovni / funkcionalni profil. Za Žensko preduzetništvo to je `KN-BM-003` / `KN-FS-003`.
+
+Gdje pravila profila dozvoljavaju, u istoj godini može postojati više konkretnih Konkursa istog tipa. Drugi Javni konkurs je **zasebna instanca**. Nije ponovno otvaranje prvog Konkursa.
+
+Obični konfiguracioni podaci, bez razrade polje-po-polje, obuhvataju najmanje:
+
+* naziv;
+* opis;
+* tip Konkursa;
+* godinu;
+* broj Konkursa;
+* ukupan budžet;
+* datum početka;
+* dodijeljenu Komisiju.
+
+**Broj Konkursa nije automatski redni broj.** To je zavodni broj koji Administrator Konkursa dobija sa pisarnice i unosi na Platformi (`KN-BM-003` §5).
+
+Postojeća sirova HTML implementacija opisa **nije** normativna. Informativni tekst smije se zahtijevati bez propisivanja sirovog HTML uređivanja.
+
+Svaka konkretna instanca ima sopstveni ukupan raspoloživi budžet. Ako je drugi Javni konkurs dozvoljen jer sredstva ostaju, to je zasebna instanca sa sopstvenim raspoloživim iznosom. Nije ponovno otvaranje prvog Konkursa.
+
+Za ovaj profil usvojeno trajanje roka za prijavu je **20 dana** (`KN-BM-003` §6; čl. 5 i čl. 13). Na nivou konfiguracije ovog poglavlja:
+
+* Administrator evidentira relevantnu konfiguraciju datuma početka;
+* odgovarajuća vrijednost kraja roka može se izvesti iz propisanog trajanja od 20 dana;
+* trajanje od 20 dana **nije** proizvoljno trajanje koje Administrator konfigurira za ovaj profil.
+
+Ovo poglavlje **ne** određuje događaj koji pravno ili funkcionalno pokreće rok od 20 dana, niti učinak isteka roka na Prijave. To pripada Poglavlju 6.
+
+## 5.6. Čuvanje i validnost konfiguracije
+
+**Sačuvaj konkurs** čuva konfiguraciju Konkursa. Čuvanje **nije** objava.
+
+Sačuvani neobjavljeni Konkurs može se i dalje uređivati.
+
+Ne uvodi se zasebna radnja ni stanje „Završi konfiguraciju“.
+
+Model konfiguracije: **Sačuvaj** → uređivanje dok je dozvoljeno → konfiguracija mora biti valjana / potpuna prije nego što smije preći u objavu.
+
+Ovo poglavlje ne određuje kako objava funkcioniše. Mehanika objave pripada Poglavlju 6.
+
+## 5.7. Izmjene i brisanje
+
+Dok Konkurs nije objavljen, konfiguracija se može uređivati u skladu sa usvojenim pravilima ovog poglavlja.
+
+Nakon objave, obično uređivanje **ne smije** mijenjati suštinsku konfiguraciju / uslove Konkursa. To obuhvata zaštićene dimenzije:
+
+* tip Konkursa;
+* godinu;
+* raspoloživi budžet;
+* dodijeljenu Komisiju;
+* konfiguraciju vezanu za rok.
+
+Čisto informativne korekcije ostaju moguće ako ne mijenjaju uslove Konkursa. Ne uvodi se novi pravni tok izmjene Javnog konkursa.
+
+Objava se ovdje koristi **samo** kao granica izmjenjivosti konfiguracije.
+
+Neobjavljeni Konkurs bez relevantnog istorijskog učešća može se obrisati.
+
+Nakon objave obično brisanje **nije** dozvoljeno.
+
+Arhiviranje **nije** brisanje. Kasniji tok arhiviranja nije predmet ovog poglavlja, osim te razlike.
 
 ---
+
 
 # 6. Objavljivanje i rok za Prijave
 
@@ -849,4 +1037,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.0**
+**Kraj dokumenta KN-FS-003 v0.1.1**
