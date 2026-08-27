@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.1
+**Verzija:** 0.1.2
 **Datum:** 2026-08-27
 
 Povezani dokumenti:
@@ -31,6 +31,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 |-----------------|--------|------|
 | 0.1.0 | 2026-08-26 | Uspostavljen kostur `KN-FS-003`. Napisana i usvojena Poglavlja 1–4. Poglavlje 3 usklađeno: Sekretarijat donosi konačnu Odluku van Platforme; Administrator Konkursa objavljuje već donesenu Odluku na Platformi; Podnesena Prijava nije izmjenjiva; nacrt ocjena vs završavanje. Poglavlje 4 konsoliduje usvojena funkcionalna stanja. Referenca na `KN-BM-003` v1.0.2. Poglavlja 5–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.1 | 2026-08-27 | Napisano Poglavlje 5: Komisija u konfiguraciji Konkursa, nalog člana, mandat / zamjena / smjena, dodjela Komisije, konfiguracija instance, čuvanje i validnost. Mehanika objave i toka roka pripada Poglavlju 6. Poglavlja 6–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.2 | 2026-08-27 | Napisano i usvojeno Poglavlje 6: objava Konkursa, rok za Prijave od 20 kalendarskih dana, automatski prestanak podnošenja, prikaz ISTEKLO; Konkurs ostaje Objavljen. Poglavlja 7–19 ostaju za naredne odobrene dokumentacione korake. |
 
 Napomena:
 
@@ -59,7 +60,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 3. Akteri i ovlašćenja na Platformi | USVOJENO |
 | 4. Funkcionalna stanja | USVOJENO |
 | 5. Kreiranje i konfiguracija Konkursa | USVOJENO |
-| 6. Objavljivanje i rok za Prijave | NIJE ZAPOČETO |
+| 6. Objavljivanje i rok za Prijave | USVOJENO |
 | 7. Prijava Podnositeljke | NIJE ZAPOČETO |
 | 8. Privatnost Prijava | NIJE ZAPOČETO |
 | 9. Istek roka i pristup Komisije | NIJE ZAPOČETO |
@@ -74,7 +75,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 6–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
+Radna struktura Poglavlja 7–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
 
 ---
 
@@ -927,9 +928,90 @@ Arhiviranje **nije** brisanje. Kasniji tok arhiviranja nije predmet ovog poglavl
 
 # 6. Objavljivanje i rok za Prijave
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje određuje objavljivanje Konkursa na Platformi i rok za podnošenje Prijava.
+
+## 6.1. Uslovi i radnja objavljivanja
+
+Konkurs se može objaviti samo kada je njegova konfiguracija potpuna i valjana prema pravilima profila Žensko preduzetništvo.
+
+Čuvanje i objavljivanje su **zasebne** radnje.
+
+**Sačuvaj konkurs** **ne** objavljuje Konkurs.
+
+Objavljivanje je zasebna radnja **Administratora Konkursa**.
+
+Prije objave Platforma provjerava obavezne uslove objave. Ako uslovi nijesu ispunjeni, objava se **odbija** i Administratoru Konkursa se prikazuje šta nedostaje.
+
+Objavom Konkurs prelazi:
+
+**Nacrt → Objavljen.**
+
+## 6.2. Početak i trajanje roka za Prijave
+
+Objavljivanje **pokreće** rok za podnošenje Prijava.
+
+Datum objave je istovremeno datum početka roka za prijavu.
+
+Za Žensko preduzetništvo rok za prijavu traje **20 kalendarskih dana**, računajući od datuma objave.
+
+20 dana **ne** tumači se kao 480 sati od tačnog časa objave.
+
+Rok ističe **23:59:59** posljednjeg kalendarskog dana.
+
+Administrator Konkursa **ne** može običnim upravljanjem Konkursom proizvoljno skratiti niti produžiti propisanih 20 dana.
+
+Nema zasebnog razdoblja u kojem je Konkurs objavljen, a podnošenje Prijava još nije počelo.
+
+## 6.3. Kanali objavljivanja
+
+Platforma omogućava objavu Konkursa na Digital Kotoru.
+
+Objava / oglašavanje putem ostalih kanala koje propisuju relevantni akti odvija se **van Platforme**.
+
+Platforma te vanjske kanale **ne** vodi i **ne** automatizuje.
+
+Objava na Platformi **sama po sebi ne potvrđuje** da je objava kroz sve ostale propisane kanale izvršena.
+
+## 6.4. Prikaz objavljenog Konkursa i roka
+
+Nakon objave status Konkursa je **Objavljen**.
+
+Prikaz objavljenog Konkursa sadrži:
+
+* Status;
+* Budžet;
+* Komisija;
+* Rok za prijave;
+* Datum objave;
+* Datum početka;
+* Datum isteka roka za prijavu;
+* Preostalo vremena;
+* Opis konkursa;
+* informativni blok o roku za prijavu, sa preostalim danima i datumom / vremenom isteka.
+
+U odnosu na Nacrt, objava uspostavlja i prikazuje konkretne vremenske podatke o početku i isteku roka za prijavu.
+
+Tokom cijelog roka za prijavu Konkurs ostaje **Objavljen**.
+
+## 6.5. Istek roka za Prijave
+
+U **23:59:59** posljednjeg dana roka za prijavu, rok za podnošenje Prijava prestaje.
+
+Od tog trenutka Platforma **automatski** sprečava podnošenje novih Prijava.
+
+Za prestanak podnošenja **nije** potrebna radnja Administratora Konkursa.
+
+Platforma više **ne** prikazuje aktivnu vrijednost preostalog vremena za podnošenje Prijava. Prikazuje:
+
+**ISTEKLO**
+
+Istek roka za prijavu **ne** mijenja status Konkursa. Konkurs ostaje **Objavljen**.
+
+Pristup Komisije nakon isteka roka za prijavu: Poglavlje 9 — Istek roka i pristup Komisije.
+
+Kasniji tok Konkursa, uključujući rok za odlučivanje / zatvaranje, zatvaranje i Arhivu: Poglavlje 15 — Predlog Odluke, zatvaranje, arhiva i objava.
 
 ---
 
@@ -1037,4 +1119,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.1**
+**Kraj dokumenta KN-FS-003 v0.1.2**
