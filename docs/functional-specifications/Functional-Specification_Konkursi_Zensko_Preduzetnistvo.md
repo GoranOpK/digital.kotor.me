@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.3
+**Verzija:** 0.1.4
 **Datum:** 2026-08-28
 
 Povezani dokumenti:
@@ -33,6 +33,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.1 | 2026-08-27 | Napisano Poglavlje 5: Komisija u konfiguraciji Konkursa, nalog člana, mandat / zamjena / smjena, dodjela Komisije, konfiguracija instance, čuvanje i validnost. Mehanika objave i toka roka pripada Poglavlju 6. Poglavlja 6–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.2 | 2026-08-27 | Napisano i usvojeno Poglavlje 6: objava Konkursa, rok za Prijave od 20 kalendarskih dana, automatski prestanak podnošenja, prikaz ISTEKLO; Konkurs ostaje Objavljen. Poglavlja 7–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.3 | 2026-08-28 | Napisano Poglavlje 7 — Prijava Podnositeljke. Usklađeno: nakon uspješnog podnošenja Prijava je Podnesena i zaključana; Podnositeljka je ne može mijenjati, povući, obrisati ni ponovo podnijeti. Stanja Prijave: U pripremi / Podnesena. Poglavlja 8–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.4 | 2026-08-28 | Napisano Poglavlje 8 — Privatnost Prijava. Dok rok za prijavu traje, pojedinačna Prijava je privatna u stanjima U pripremi i Podnesena. Administrator konkursa vidi samo zbirni broj Prijava konkretnog Konkursa. Komisija nema pristup informacijama o Prijavama. Poglavlja 9–19 ostaju za naredne odobrene dokumentacione korake. |
 
 Napomena:
 
@@ -63,7 +64,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 5. Kreiranje i konfiguracija Konkursa | USVOJENO |
 | 6. Objavljivanje i rok za Prijave | USVOJENO |
 | 7. Prijava Podnositeljke | USVOJENO |
-| 8. Privatnost Prijava | NIJE ZAPOČETO |
+| 8. Privatnost Prijava | USVOJENO |
 | 9. Istek roka i pristup Komisije | NIJE ZAPOČETO |
 | 10. Prva sjednica, administrativna provjera i Prigovor | NIJE ZAPOČETO |
 | 11. Eliminatorni kriterijumi | NIJE ZAPOČETO |
@@ -76,7 +77,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 8–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
+Radna struktura Poglavlja 9–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
 
 ---
 
@@ -1578,9 +1579,91 @@ Prijava **U pripremi** nakon isteka roka ne može se obrisati.
 
 # 8. Privatnost Prijava
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje određuje privatnost i pristup Prijavama **dok rok za prijavu traje**.
+
+Granica poglavlja je istek roka za prijavu.
+
+Pravila pristupa nakon isteka roka za prijavu određuju se u narednom poglavlju.
+
+Osnov: `KN-BM-003` §4.1, §4.4, §7.1, §8.
+
+## 8.1. Opšte pravilo
+
+Dok rok za prijavu traje, pojedinačna Prijava je privatna, bez obzira na to da li je njeno stanje:
+
+* **U pripremi**;
+* **Podnesena**.
+
+Prelazak **U pripremi → Podnesena** sam po sebi **ne** otvara pristup Prijavi.
+
+Podnesena Prijava ostaje privatna do isteka roka za prijavu.
+
+## 8.2. Pristup po akterima
+
+### Podnositeljka
+
+Podnositeljka ima pristup **samo sopstvenoj** Prijavi, uključujući podatke Prijave, Obrazac 1a / Obrazac 1b, Obrazac 2 / Biznis plan i prateću dokumentaciju.
+
+Ne može pristupiti Prijavi druge Podnositeljke, njenom identitetu kroz Prijavu, stanju tuđe Prijave, tuđim Obrascima, tuđem Biznis planu ni tuđoj pratećoj dokumentaciji.
+
+Ovo poglavlje ne mijenja pravila uređivanja iz Poglavlja 7. Predmet je samo pristup / privatnost.
+
+### Administrator konkursa
+
+Dok rok za prijavu traje, Administrator konkursa može vidjeti **samo zbirni ukupan broj evidentiranih Prijava** konkretnog Konkursa.
+
+Taj zbir:
+
+* obuhvata evidentirane Prijave tog Konkursa;
+* **ne** dijeli se na **U pripremi** i **Podnesena**;
+* **ne** otkriva identitet Podnositeljke;
+* **ne** prikazuje listu pojedinačnih Prijava;
+* **ne** prikazuje pojedinačne metapodatke Prijave;
+* **ne** omogućava prelazak na pojedinačnu Prijavu.
+
+Dok rok traje, Administrator konkursa **nema** pristup pojedinačnoj Prijavi, identitetu Podnositeljke kroz tu Prijavu, pojedinačnom stanju, datumu / vremenu podnošenja, tipu Podnositeljke ili fazi biznisa kroz pojedinačnu Prijavu, pojedinačnim iznosima ili drugim metapodacima Prijave, Obrascu 1a / 1b, Obrascu 2 / Biznis planu, metapodacima prateće dokumentacije ni fajlovima prateće dokumentacije.
+
+### Komisija
+
+Dok rok za prijavu traje, članovi Komisije **nemaju** pristup informacijama o Prijavama.
+
+Ne vide zbirni broj Prijava, listu Prijava, identitet Podnositeljki, pojedinačna stanja, pojedinačne metapodatke, Obrazac 1a / 1b, Obrazac 2 / Biznis plan, metapodatke prateće dokumentacije ni fajlove prateće dokumentacije.
+
+Činjenica da je Prijava podnesena prije isteka roka **ne** čini je vidljivom Komisiji dok rok traje.
+
+### Administrator platforme i Super administrator
+
+Administrator platforme i Super administrator **ne** stiču poslovno pravo uvida u sadržaj pojedinačnih Prijava dok rok za prijavu traje samo zato što imaju platformsku administratorsku ulogu.
+
+Platformska tehnička privilegija sama po sebi **nije** ovlašćenje za uvid u sadržaj Prijava Konkursa.
+
+## 8.3. Obuhvat zaštićenog sadržaja
+
+Privatnost važi za Prijavu kao cjelinu.
+
+Zaštićeni sadržaj obuhvata najmanje:
+
+* identitet Podnositeljke i pojedinačne podatke Podnositeljke izložene kroz Prijavu;
+* stanje Prijave na nivou pojedinačne Prijave;
+* pojedinačne metapodatke Prijave;
+* Obrazac 1a / Obrazac 1b;
+* Obrazac 2 / Biznis plan;
+* metapodatke prateće dokumentacije;
+* učitane fajlove prateće dokumentacije.
+
+Prateća dokumentacija prati isto pravilo privatnosti kao Prijava kojoj pripada.
+
+## 8.4. Sprovođenje na strani servera
+
+Ograničenja pristupa sprovode se na strani servera.
+
+Nije dovoljno sakriti stavku navigacije, dugme, tabelu ili vezu u korisničkom interfejsu.
+
+Poznavanje ili pogađanje identifikatora Prijave, identifikatora dokumenta, rute ili URL-a **ne** smije zaobići usvojena pravila pristupa.
+
+Ovo poglavlje određuje obavezno ponašanje, ne tehnički mehanizam sprovođenja.
 
 ---
 
@@ -1672,4 +1755,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.3**
+**Kraj dokumenta KN-FS-003 v0.1.4**
