@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.4
+**Verzija:** 0.1.5
 **Datum:** 2026-08-28
 
 Povezani dokumenti:
@@ -34,6 +34,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.2 | 2026-08-27 | Napisano i usvojeno Poglavlje 6: objava Konkursa, rok za Prijave od 20 kalendarskih dana, automatski prestanak podnošenja, prikaz ISTEKLO; Konkurs ostaje Objavljen. Poglavlja 7–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.3 | 2026-08-28 | Napisano Poglavlje 7 — Prijava Podnositeljke. Usklađeno: nakon uspješnog podnošenja Prijava je Podnesena i zaključana; Podnositeljka je ne može mijenjati, povući, obrisati ni ponovo podnijeti. Stanja Prijave: U pripremi / Podnesena. Poglavlja 8–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.4 | 2026-08-28 | Napisano Poglavlje 8 — Privatnost Prijava. Dok rok za prijavu traje, pojedinačna Prijava je privatna u stanjima U pripremi i Podnesena. Administrator konkursa vidi samo zbirni broj Prijava konkretnog Konkursa. Komisija nema pristup informacijama o Prijavama. Poglavlja 9–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.5 | 2026-08-28 | Napisano Poglavlje 9 — Istek roka i pristup Komisije. Rok ističe automatski bez promjene stanja. Komisiji postaju dostupne samo Podnesene Prijave konkretnog Konkursa, aktivnim članovima dodijeljene Komisije. Pregled prateće dokumentacije DA, preuzimanje NE. Poglavlja 10–19 ostaju za naredne odobrene dokumentacione korake. |
 
 Napomena:
 
@@ -65,7 +66,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 6. Objavljivanje i rok za Prijave | USVOJENO |
 | 7. Prijava Podnositeljke | USVOJENO |
 | 8. Privatnost Prijava | USVOJENO |
-| 9. Istek roka i pristup Komisije | NIJE ZAPOČETO |
+| 9. Istek roka i pristup Komisije | USVOJENO |
 | 10. Prva sjednica, administrativna provjera i Prigovor | NIJE ZAPOČETO |
 | 11. Eliminatorni kriterijumi | NIJE ZAPOČETO |
 | 12. Druga sjednica i usmeno obrazloženje | NIJE ZAPOČETO |
@@ -77,7 +78,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 9–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
+Radna struktura Poglavlja 10–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
 
 ---
 
@@ -1669,9 +1670,116 @@ Ovo poglavlje određuje obavezno ponašanje, ne tehnički mehanizam sprovođenja
 
 # 9. Istek roka i pristup Komisije
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje određuje istek roka za podnošenje Prijava i pristup Komisije Prijavama **nakon** isteka tog roka.
+
+Pravila privatnosti iz Poglavlja 8 ostaju na snazi dok rok konkretnog Konkursa ne istekne.
+
+Ovo poglavlje **ne** određuje prvu sjednicu, administrativnu provjeru, Prigovor ni kasniji rad Komisije. Ti tokovi pripadaju narednim poglavljima.
+
+Osnov: `KN-BM-003` §6, §8; Poglavlja 6 i 8 ovog dokumenta.
+
+## 9.1. Istek roka
+
+Rok za podnošenje Prijava ističe automatski prema roku utvrđenom za konkretni Konkurs.
+
+Za istek **nije** potrebna radnja Administratora konkursa, Komisije, Administratora platforme ni drugog aktera.
+
+Istek sam po sebi **ne**:
+
+* mijenja stanje Konkursa;
+* mijenja stanje Prijave;
+* pretvara Prijavu **U pripremi** u drugo stanje;
+* pretvara Prijavu **Podnesena** u drugo stanje.
+
+Konkurs zato može ostati u postojećem stanju, uključujući **Objavljen**, i nakon što je rok za prijavu istekao.
+
+Promjena stanja Konkursa **nije** preduslov isteka roka.
+
+Podnošenje Prijave nakon isteka roka uređeno je Poglavljem 7. Ovo poglavlje to ne ponavlja.
+
+## 9.2. Prijave dostupne Komisiji
+
+Nakon isteka roka za prijavu konkretnog Konkursa, pristup Komisije se otključava **automatski**.
+
+Nema zasebne ručne radnje otključavanja. Takva radnja **nije** dozvoljena.
+
+Komisiji postaju dostupne **samo Prijave u stanju Podnesena** tog konkretnog Konkursa.
+
+Prijave u stanju **U pripremi** ostaju nevidljive Komisiji i nakon isteka roka.
+
+Za Prijavu **U pripremi** Komisija ne smije dobiti:
+
+* vidljivost na listi;
+* pristup pojedinačnoj Prijavi;
+* identitet Podnositeljke kroz tu Prijavu;
+* metapodatke Prijave;
+* Obrazac 1a / Obrazac 1b;
+* Obrazac 2 / Biznis plan;
+* metapodatke prateće dokumentacije;
+* pregled fajla prateće dokumentacije.
+
+Poznavanje ili pogađanje identifikatora Prijave, identifikatora dokumenta, rute ili URL-a **ne** smije zaobići ovo pravilo.
+
+Dok rok traje, Komisija **nema** pristup informacijama o Prijavama, uključujući zbirni broj Prijava, u skladu sa Poglavljem 8.
+
+Nakon isteka roka Komisija može vidjeti **broj Podnesenih Prijava** koje su joj dostupne za konkretni Konkurs. Taj broj **ne** obuhvata Prijave **U pripremi**.
+
+## 9.3. Ovlašćenje člana Komisije
+
+Pristup nakon isteka roka imaju **samo aktivni članovi Komisije** dodijeljene konkretnom Konkursu.
+
+Član:
+
+* druge Komisije;
+* sa neaktivnim članstvom;
+* bez dodjele kroz Komisiju odgovornu za taj Konkurs
+
+**ne** stječe pristup Prijavama.
+
+Ako je jedna Komisija dodijeljena više Konkursima, rok i pristup za svaki Konkurs utvrđuju se **zasebno**.
+
+Istek roka Konkursa A **ne** otključava Prijave Konkursa B čiji rok još nije istekao.
+
+Pristup je zato:
+
+* po konkretnom Konkursu;
+* zavisan od isteka roka tog Konkursa;
+* zavisan od aktivnog članstva u Komisiji tog Konkursa.
+
+## 9.4. Obuhvat pristupa Komisije
+
+Za ovlašćenu **Podnesenu** Prijavu, nakon isteka roka, Komisija može pristupiti cjelovitom sadržaju Prijave potrebnom za njen kasniji rad, uključujući:
+
+* identitet Podnositeljke i podatke Podnositeljke izložene kroz Prijavu;
+* pojedinačne podatke i metapodatke Prijave;
+* Obrazac 1a / Obrazac 1b;
+* Obrazac 2 / Biznis plan;
+* metapodatke prateće dokumentacije;
+* **pregled** fajlova prateće dokumentacije.
+
+Prateća dokumentacija je Komisiji **preglediva** kroz Platformu.
+
+Članovi Komisije **ne** smiju preuzimati fajlove prateće dokumentacije.
+
+Ograničenje pregleda i zabrana preuzimanja sprovode se na strani servera.
+
+## 9.5. Administrator konkursa i zabrana ranog otključavanja
+
+Istek roka za prijavu **sam po sebi ne** daje Administratoru konkursa novo pravo pristupa sadržaju pojedinačne Prijave.
+
+Prava i odgovornosti Administratora konkursa u vezi sa administrativnom provjerom određuju se u Poglavlju 10.
+
+Pristup Komisije pokreće **istek roka za prijavu konkretnog Konkursa**.
+
+Nema zasebnog ručnog otključavanja.
+
+Promjena stanja Konkursa **nije** alternativni mehanizam za obilaženje roka.
+
+Zatvaranje, arhiviranje ili druga sadašnja ili buduća oznaka stanja Konkursa **ne** otključava Komisiji pristup Prijavama prije stvarnog isteka roka za prijavu tog Konkursa.
+
+Pravila privatnosti iz Poglavlja 8 ostaju na snazi do stvarnog isteka roka.
 
 ---
 
@@ -1755,4 +1863,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.4**
+**Kraj dokumenta KN-FS-003 v0.1.5**
