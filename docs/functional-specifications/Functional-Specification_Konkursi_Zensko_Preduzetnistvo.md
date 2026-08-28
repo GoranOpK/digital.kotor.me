@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.5
+**Verzija:** 0.1.6
 **Datum:** 2026-08-28
 
 Povezani dokumenti:
@@ -35,6 +35,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.3 | 2026-08-28 | Napisano Poglavlje 7 — Prijava Podnositeljke. Usklađeno: nakon uspješnog podnošenja Prijava je Podnesena i zaključana; Podnositeljka je ne može mijenjati, povući, obrisati ni ponovo podnijeti. Stanja Prijave: U pripremi / Podnesena. Poglavlja 8–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.4 | 2026-08-28 | Napisano Poglavlje 8 — Privatnost Prijava. Dok rok za prijavu traje, pojedinačna Prijava je privatna u stanjima U pripremi i Podnesena. Administrator konkursa vidi samo zbirni broj Prijava konkretnog Konkursa. Komisija nema pristup informacijama o Prijavama. Poglavlja 9–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.5 | 2026-08-28 | Napisano Poglavlje 9 — Istek roka i pristup Komisije. Rok ističe automatski bez promjene stanja. Komisiji postaju dostupne samo Podnesene Prijave konkretnog Konkursa, aktivnim članovima dodijeljene Komisije. Pregled prateće dokumentacije DA, preuzimanje NE. Poglavlja 10–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.6 | 2026-08-28 | Napisano Poglavlje 10 — Prva sjednica, administrativna provjera i Prigovor. Komisija vrši administrativnu provjeru Podnesenih Prijava. Predsjednik evidentira Potpuna / Nepotpuna. Nema dopune nakon isteka roka. Prigovor ide isključivo preko Platforme. Poglavlja 11–19 ostaju za naredne odobrene dokumentacione korake. |
 
 Napomena:
 
@@ -67,7 +68,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 7. Prijava Podnositeljke | USVOJENO |
 | 8. Privatnost Prijava | USVOJENO |
 | 9. Istek roka i pristup Komisije | USVOJENO |
-| 10. Prva sjednica, administrativna provjera i Prigovor | NIJE ZAPOČETO |
+| 10. Prva sjednica, administrativna provjera i Prigovor | USVOJENO |
 | 11. Eliminatorni kriterijumi | NIJE ZAPOČETO |
 | 12. Druga sjednica i usmeno obrazloženje | NIJE ZAPOČETO |
 | 13. Individualno ocjenjivanje | NIJE ZAPOČETO |
@@ -78,7 +79,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 10–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
+Radna struktura Poglavlja 11–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
 
 ---
 
@@ -1785,9 +1786,163 @@ Pravila privatnosti iz Poglavlja 8 ostaju na snazi do stvarnog isteka roka.
 
 # 10. Prva sjednica, administrativna provjera i Prigovor
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje određuje prvu sjednicu Komisije, administrativnu provjeru potpunosti Podnesenih Prijava i Prigovor na rezultat te provjere.
+
+Ne određuje eliminatorne kriterijume 2 i 3, usmeno obrazloženje, ocjenjivanje, rangiranje ni Odluku. Ti tokovi pripadaju narednim poglavljima.
+
+Nedostatak obavezne dokumentacije (eliminatorni kriterijum 1 iz čl. 19) funkcionalno se obrađuje **samo** kroz administrativnu provjeru i Prigovor ovog poglavlja. Ne uvodi se druga elektronska provjera istog razloga.
+
+Osnov: `KN-BM-003` §4.3, §9, §10; Poglavlja 4.5, 7 i 9 ovog dokumenta.
+
+## 10.1. Prva sjednica Komisije
+
+Komisija održava prvu sjednicu najkasnije u roku od **7 dana** od isteka roka za podnošenje Prijava.
+
+Predmet ove faze je **administrativna provjera** Podnesenih Prijava konkretnog Konkursa.
+
+Prva sjednica je poslovni / postupovni događaj.
+
+V1 **ne** zahtijeva zaseban entitet, model ni tok sjednice na Platformi. Ne uvodi se otvaranje / zatvaranje sjednice, evidencija prisustva, zapisnik ni ručna Platform radnja kojom se otključava administrativna provjera.
+
+Funkcionalnost Platforme u ovom poglavlju usmjerena je na **evidentiranje rezultata administrativne provjere po Prijavi**.
+
+## 10.2. Administrativna provjera
+
+Administrativnu provjeru vrši **Komisija**.
+
+Predsjednik Komisije na Platformi, **u ime Komisije**, evidentira rezultat administrativne provjere.
+
+Administrator konkursa **nije** akter koji vrši ili evidentira administrativnu provjeru.
+
+U administrativnu provjeru ulaze **samo Prijave u stanju Podnesena**.
+
+Provjera utvrđuje da li Prijava sadrži **cjelokupan obavezni paket** koji važi za tu Prijavu / kategoriju Podnositeljke:
+
+* primjenjivi Obrazac 1a ili Obrazac 1b;
+* Obrazac 2 / Biznis plan;
+* obaveznu prateću dokumentaciju koja važi za tu Podnositeljku i fazu biznisa.
+
+Ovo poglavlje **ne** mijenja pravila podnošenja iz Poglavlja 7. Uspješno konačno podnošenje već zahtijeva primjenjivi Obrazac 1a / 1b i popunjen Obrazac 2 / Biznis plan. Nedostatak prateće dokumentacije **ne** sprečava konačno podnošenje.
+
+Administrativna provjera je:
+
+* po Prijavi;
+* jedan konačni administrativni rezultat;
+* **ne** zaseban rezultat / stanje za svaki pojedinačni dokument.
+
+Platforma može identificirati i prikazati nedostajuću obaveznu prateću dokumentaciju kao podršku pregledu.
+
+Konačni administrativni rezultat evidentira Predsjednik Komisije.
+
+Dozvoljeni rezultati administrativne provjere:
+
+* **Potpuna**;
+* **Nepotpuna**.
+
+To su **rezultati postupka**, ne osnovna stanja Prijave. Osnovno stanje Prijave ostaje **Podnesena**.
+
+Administrativna provjera je funkcionalno **nezavisna** od kasnijeg ocjenjivanja. Ovo poglavlje ne određuje kriterijume ocjenjivanja ni tok ocjenjivanja.
+
+## 10.3. Nepotpuna Prijava i dopuna
+
+Nakon isteka roka za prijavu **nema dopune** podnesene Prijave.
+
+Podnositeljka u ovoj fazi **ne** smije:
+
+* uređivati Obrazac 1a / Obrazac 1b;
+* uređivati Obrazac 2 / Biznis plan;
+* dodati novu prateću dokumentaciju;
+* zamijeniti već podnesenu prateću dokumentaciju;
+* na drugi način izmijeniti snimak podnesene Prijave.
+
+Ako je rezultat administrativne provjere **Potpuna**, Prijava može ići ka narednim fazama Konkursa.
+
+Ako je rezultat **Nepotpuna**, Prijava **ne** ide dalje dok je pravo na Prigovor otvoreno ili dok je podneseni Prigovor u postupku.
+
+Ne uvodi se tok zahtjeva za dopunu, rok za dopunu, broj pokušaja dopune ni pravo učitavanja dokumenata nakon isteka roka.
+
+## 10.4. Prigovor
+
+Podnositeljka čija je Prijava utvrđena kao **Nepotpuna** prima obavještenje **preko Platforme** o:
+
+* rezultatu administrativne provjere;
+* pravu na podnošenje Prigovora;
+* primjenjivom roku.
+
+Prigovor se podnosi:
+
+* **isključivo preko Platforme** / digitalnog servisa;
+* za konkretnu Prijavu;
+* od strane Podnositeljke;
+* u roku od **3 dana** od **slanja** obavještenja o administrativnoj nepotpunosti.
+
+Koristi se formulacija **3 dana**. Ne tumači se kao 3 radna dana.
+
+Prigovor omogućava Podnositeljki da unese obrazloženje.
+
+Prigovor **nije** dopuna Prijave.
+
+Prigovor **ne** smije omogućiti:
+
+* nove prateće dokumente;
+* zamjenu pratećih dokumenata;
+* izmjenu Obrasca 1a / Obrasca 1b;
+* izmjenu Obrasca 2 / Biznis plana;
+* bilo koju drugu izmjenu snimka podnesene Prijave.
+
+Komisija odlučuje o Prigovoru u roku od **7 dana** od prijema.
+
+Stanja / rezultati postupka Prigovora:
+
+* **Podnesen**;
+* **Prihvaćen**;
+* **Odbijen**.
+
+To su stanja postupka Prigovora, ne osnovna stanja Prijave.
+
+Ako je Prigovor **Prihvaćen**:
+
+* administrativni rezultat postaje / tretira se kao **Potpuna**;
+* Prijava nastavlja naredne faze Konkursa.
+
+Ako je Prigovor **Odbijen**:
+
+* administrativni rezultat ostaje **Nepotpuna**;
+* Prijava se **ne** razmatra dalje.
+
+Ako Prigovor nije podnesen u roku od 3 dana:
+
+* **Nepotpuna** postaje konačna za ovu administrativnu fazu;
+* Prijava se **ne** razmatra dalje.
+
+V1 kanal Prigovora je **Platforma**. Vanjski e-mail **nije** važeći kanal podnošenja Prigovora.
+
+## 10.5. Završetak administrativne provjere
+
+**Potpuna** / **Nepotpuna** ostaju rezultati administrativne provjere. **Ne** uvode se kao nova osnovna stanja Prijave.
+
+**Podnesen** / **Prihvaćen** / **Odbijen** ostaju stanja postupka Prigovora. **Ne** uvode se kao osnovna stanja Prijave.
+
+Prijava može izaći iz ove administrativne faze i ići dalje **samo** ako je njen konačni administrativni rezultat **Potpuna**.
+
+To može nastati:
+
+* neposredno administrativnom provjerom;
+* ili nakon **Prihvaćenog** Prigovora.
+
+Za Prijavu koja je prvobitno **Nepotpuna**:
+
+* kasniji rad Komisije je blokiran dok traje rok od 3 dana za Prigovor;
+* ako je Prigovor podnesen, kasniji rad Komisije je blokiran dok Komisija o njemu ne odluči;
+* Prihvaćen Prigovor dozvoljava nastavak;
+* Odbijen Prigovor sprečava dalje razmatranje;
+* istek roka za Prigovor bez podnošenja sprečava dalje razmatranje.
+
+To je izlazna granica Poglavlja 10.
+
+Ovo poglavlje **ne** određuje koju suštinsku provjeru Komisija obavlja nakon te granice.
 
 ---
 
@@ -1863,4 +2018,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.5**
+**Kraj dokumenta KN-FS-003 v0.1.6**
