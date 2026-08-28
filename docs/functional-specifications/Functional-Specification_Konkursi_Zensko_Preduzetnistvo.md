@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.6
+**Verzija:** 0.1.8
 **Datum:** 2026-08-28
 
 Povezani dokumenti:
@@ -36,6 +36,8 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.4 | 2026-08-28 | Napisano Poglavlje 8 — Privatnost Prijava. Dok rok za prijavu traje, pojedinačna Prijava je privatna u stanjima U pripremi i Podnesena. Administrator konkursa vidi samo zbirni broj Prijava konkretnog Konkursa. Komisija nema pristup informacijama o Prijavama. Poglavlja 9–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.5 | 2026-08-28 | Napisano Poglavlje 9 — Istek roka i pristup Komisije. Rok ističe automatski bez promjene stanja. Komisiji postaju dostupne samo Podnesene Prijave konkretnog Konkursa, aktivnim članovima dodijeljene Komisije. Pregled prateće dokumentacije DA, preuzimanje NE. Poglavlja 10–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.6 | 2026-08-28 | Napisano Poglavlje 10 — Prva sjednica, administrativna provjera i Prigovor. Komisija vrši administrativnu provjeru Podnesenih Prijava. Predsjednik evidentira Potpuna / Nepotpuna. Nema dopune nakon isteka roka. Prigovor ide isključivo preko Platforme. Poglavlja 11–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.7 | 2026-08-28 | Poglavlje 11 — Eliminatorni kriterijumi — privremeno obustavljeno (`OBUSTAVLJENO`) do pribavljanja i analize autoritativnog izvora Odluke 027/26. Poglavlja 12–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.8 | 2026-08-28 | Napisano Poglavlje 12 — Druga sjednica i usmeno obrazloženje. Druga sjednica i usmeno obrazloženje su van Platforme. Platforma ne zakazuje, ne poziva i ne evidentira prisustvo. Kriterijum 10 se ocjenjuje nakon usmenog obrazloženja kao poslovno pravilo, bez tehničkog otključavanja. Poglavlja 13–19 ostaju za naredne odobrene dokumentacione korake. |
 
 Napomena:
 
@@ -69,8 +71,8 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 8. Privatnost Prijava | USVOJENO |
 | 9. Istek roka i pristup Komisije | USVOJENO |
 | 10. Prva sjednica, administrativna provjera i Prigovor | USVOJENO |
-| 11. Eliminatorni kriterijumi | NIJE ZAPOČETO |
-| 12. Druga sjednica i usmeno obrazloženje | NIJE ZAPOČETO |
+| 11. Eliminatorni kriterijumi | OBUSTAVLJENO |
+| 12. Druga sjednica i usmeno obrazloženje | USVOJENO |
 | 13. Individualno ocjenjivanje | NIJE ZAPOČETO |
 | 14. Rang-lista, iznosi i treća sjednica | NIJE ZAPOČETO |
 | 15. Predlog Odluke, zatvaranje, arhiva i objava | NIJE ZAPOČETO |
@@ -79,7 +81,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 11–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
+Radna struktura Poglavlja 13–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
 
 ---
 
@@ -1948,17 +1950,107 @@ Ovo poglavlje **ne** određuje koju suštinsku provjeru Komisija obavlja nakon t
 
 # 11. Eliminatorni kriterijumi
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: OBUSTAVLJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje **nije** završeno.
+
+Poglavlje je **privremeno obustavljeno** dok se ne pribavi i ne analizira autoritativni izvor Odluke 027/26.
+
+Eliminatorni kriterijumi 2 i 3 zavise od odredbi Odluke 027/26. Odluka 027/26 trenutno nije dostupna u repozitorijumu / skupu izvora. Bez tog izvora tačno funkcionalno ponašanje ne može se specificirati bez pretpostavki.
+
+**OBUSTAVLJENO** znači privremenu obustavu do pribavljanja autoritativnog izvora. **Ne** znači odbijeno, otkazano, uklonjeno iz V1 niti trajno van obuhvata.
+
+Poznati kontekst, bez razrade:
+
+* eliminatorni kriterijum 1 / administrativna nepotpunost već je obrađen u Poglavlju 10;
+* kriterijumi 2 i 3 se ovdje **ne** razrađuju;
+* ne uvodi se privremeno ciljno ponašanje;
+* ne uvode se tehničke pretpostavke.
 
 ---
 
 # 12. Druga sjednica i usmeno obrazloženje
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje određuje drugu sjednicu Komisije i usmeno obrazloženje Biznis plana.
+
+Ne određuje eliminatorne kriterijume 2 i 3, individualno ocjenjivanje, rangiranje ni Odluku. Ti tokovi pripadaju drugim poglavljima.
+
+Poglavlje **ne** rješava Poglavlje 11. Koristi rezultat prethodnih faza, bez njihovog ponovnog definisanja.
+
+Osnov: `KN-BM-003` §4.3, §11, §12; Poglavlja 7, 9 i 10 ovog dokumenta.
+
+## 12.1. Druga sjednica Komisije
+
+Komisija zakazuje drugu sjednicu i usmeno obrazloženje Biznis planova u roku od **15 dana** od održavanja prve sjednice.
+
+Koristi se formulacija **15 dana**. Ne tumači se kao 15 radnih dana.
+
+Na usmeno obrazloženje dolaze Podnositeljke čije su Prijave do tog trenutka ispunile sve prethodno propisane uslove za nastavak postupka.
+
+Ovo poglavlje **ne** nabraja te uslove i **ne** uvodi model prolaska Poglavlja 11.
+
+Druga sjednica i njeno zakazivanje obavljaju se **van Platforme**.
+
+Platforma **ne** upravlja zakazivanjem druge sjednice. Ne uvodi se entitet sjednice, stanje sjednice, raspored, datum sjednice, termin po Prijavi, lokacija, onlajn veza, pomjeranje ni otkazivanje na Platformi.
+
+## 12.2. Usmeno obrazloženje Biznis plana
+
+Podnositeljka usmeno obrazlaže sopstveni podneseni Biznis plan pred Komisijom.
+
+Usmeno obrazloženje se sprovodi **van Platforme**.
+
+Platforma **ne** upravlja:
+
+* pozivom Podnositeljki;
+* terminima;
+* prisustvom Podnositeljke;
+* nedolaskom;
+* pomjeranjem termina;
+* lokacijom;
+* onlajn sastankom;
+* trajanjem;
+* tokom / sadržajem usmenog obrazloženja.
+
+Podnesena Prijava, Biznis plan i pripadajuća dokumentacija ostaju zaključani za izmjene, ali su dostupni Komisiji za pregled u skladu sa njenim pravima pristupa.
+
+Usmeno obrazloženje **ne** predstavlja izmjenu Prijave, Biznis plana niti dopunu dokumentacije.
+
+Zaključanost **nije** sakrivanje od Komisije. Ne uvodi se izuzetak od pravila snimka podnesene Prijave.
+
+## 12.3. Uloga Komisije
+
+Usmeno obrazloženje sprovodi se pred Komisijom.
+
+Prilikom usmenog obrazloženja obavezno je prisustvo **svih** članova Komisije.
+
+Nakon usmenog obrazloženja članovi Komisije nastavljaju ocjenjivanje na Platformi.
+
+Ne uvodi se evidencija prisustva na Platformi, zapisnik usmenog obrazloženja, rezultat položio / nije položio, ni posebna Platform radnja kojom se potvrđuje da je usmeno obrazloženje održano.
+
+## 12.4. Granica prema ocjenjivanju
+
+Kriterijum 10 odnosi se na usmeno obrazloženje Biznis plana.
+
+Prema poslovnom postupku, članovi Komisije ocjenjuju kriterijum 10 **nakon** što je usmeno obrazloženje sprovedeno.
+
+To je **poslovno pravilo postupka**. **Nije** tehnička Platform kapija.
+
+Platforma **ne** treba da zna, evidentira, potvrđuje, zaključava niti otključava da li je usmeno obrazloženje održano prije unosa ocjene kriterijuma 10.
+
+Ne uvodi se oznaka, potvrda, server-side kapija, zaključavanje / otključavanje kriterijuma 10, ni tehnička zavisnost između dokaza o usmenom obrazloženju i unosa te ocjene.
+
+Kada je Prijava ispunila prethodne uslove i dostupna je članovima Komisije za ocjenjivanje, članovi Komisije mogu koristiti funkcionalnost ocjenjivanja. Odgovornost da kriterijum 10 ocjene tek nakon usmenog obrazloženja pripada poslovnom postupku Komisije. Platforma taj redoslijed **ne** tehnički nameće.
+
+Detalj individualnog ocjenjivanja, skala, formula i završavanje pripadaju Poglavlju 13.
+
+Platforma u ovoj fazi:
+
+* omogućava ovlašćeni pristup Komisije podnesenoj Prijavi, Biznis planu i dokumentaciji prema već usvojenim pravilima pristupa;
+* omogućava funkcionalnost ocjenjivanja čija se pravila razrađuju u Poglavlju 13.
+
+Platforma **ne** zakazuje drugu sjednicu, ne poziva Podnositeljke, ne vodi termine, ne evidentira prisustvo / nedolazak, ne sprovodi usmeno obrazloženje, ne evidentira njegov završetak i **ne** otključava tehnički kriterijum 10.
 
 ---
 
@@ -2018,4 +2110,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.6**
+**Kraj dokumenta KN-FS-003 v0.1.8**
