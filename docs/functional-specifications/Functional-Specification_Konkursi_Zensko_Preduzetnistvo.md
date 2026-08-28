@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.2
-**Datum:** 2026-08-27
+**Verzija:** 0.1.3
+**Datum:** 2026-08-28
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN v1.0.0)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN v1.0.2)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN v1.0.3)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 
@@ -32,6 +32,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.0 | 2026-08-26 | Uspostavljen kostur `KN-FS-003`. Napisana i usvojena Poglavlja 1–4. Poglavlje 3 usklađeno: Sekretarijat donosi konačnu Odluku van Platforme; Administrator Konkursa objavljuje već donesenu Odluku na Platformi; Podnesena Prijava nije izmjenjiva; nacrt ocjena vs završavanje. Poglavlje 4 konsoliduje usvojena funkcionalna stanja. Referenca na `KN-BM-003` v1.0.2. Poglavlja 5–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.1 | 2026-08-27 | Napisano Poglavlje 5: Komisija u konfiguraciji Konkursa, nalog člana, mandat / zamjena / smjena, dodjela Komisije, konfiguracija instance, čuvanje i validnost. Mehanika objave i toka roka pripada Poglavlju 6. Poglavlja 6–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.2 | 2026-08-27 | Napisano i usvojeno Poglavlje 6: objava Konkursa, rok za Prijave od 20 kalendarskih dana, automatski prestanak podnošenja, prikaz ISTEKLO; Konkurs ostaje Objavljen. Poglavlja 7–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.3 | 2026-08-28 | Napisano Poglavlje 7 — Prijava Podnositeljke. Usklađeno: nakon uspješnog podnošenja Prijava je Podnesena i zaključana; Podnositeljka je ne može mijenjati, povući, obrisati ni ponovo podnijeti. Stanja Prijave: U pripremi / Podnesena. Poglavlja 8–19 ostaju za naredne odobrene dokumentacione korake. |
 
 Napomena:
 
@@ -61,7 +62,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 4. Funkcionalna stanja | USVOJENO |
 | 5. Kreiranje i konfiguracija Konkursa | USVOJENO |
 | 6. Objavljivanje i rok za Prijave | USVOJENO |
-| 7. Prijava Podnositeljke | NIJE ZAPOČETO |
+| 7. Prijava Podnositeljke | USVOJENO |
 | 8. Privatnost Prijava | NIJE ZAPOČETO |
 | 9. Istek roka i pristup Komisije | NIJE ZAPOČETO |
 | 10. Prva sjednica, administrativna provjera i Prigovor | NIJE ZAPOČETO |
@@ -75,7 +76,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 7–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
+Radna struktura Poglavlja 8–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom.
 
 ---
 
@@ -252,13 +253,8 @@ Ovlašćenja zavise od osnovnog funkcionalnog stanja Prijave. Detalj stanja: Pog
 
 * sadržaj više nije izmjenjiv;
 * ne može se obrisati;
-* može se povući samo do isteka roka.
-
-**Povučena:**
-
-* ne nastavlja postupak;
-* ne može se uređivati;
-* ne može se vratiti u Podnesena.
+* ne može se povući;
+* ne može se ponovo podnijeti.
 
 Gdje usvojeni tok to predviđa, Podnositeljka podnosi Prigovor Komisiji putem digitalnog servisa (`KN-BM-003` §9.2). Detalj: Poglavlja 4 i 10.
 
@@ -271,7 +267,7 @@ Polja, validacije i forme nisu predmet ovog poglavlja. Detalj: Poglavlja 6–8 i
 * arhiviranje samo po sebi ne otvara tuđe Prijave;
 * javna rang-lista / konačna Odluka / javni rezultat nisu obrazac Prijave, biznis plan, prilozi ni drugi nejavni dijelovi tuđeg dosijea;
 * Podnesena Prijava **nije** izmjenjiva, ni dok rok još traje;
-* nakon isteka roka nema uređivanja, podnošenja, povlačenja ni brisanja Prijave.
+* nakon isteka roka nema uređivanja, podnošenja ni brisanja Prijave.
 
 ## 3.3. Administrator Konkursa
 
@@ -397,7 +393,7 @@ Vrijednosti se odnose na redovnu interakciju sa Platformom u ovom profilu. `USLO
 
 Sekretarijat za razvoj preduzetništva, komunalne poslove i saobraćaj i Administrator platforme **nijesu** profilni funkcionalni akteri. Nisu u ovoj matrici.
 
-Podnesena Prijava **nije** izmjenjiva i **nije** brisiva. Može se samo povući do isteka roka. Povučena Prijava se ne vraća u Podnesena.
+Podnesena Prijava **nije** izmjenjiva, **nije** brisiva i **ne** povlači se. Ne može se ponovo podnijeti.
 
 Konačnu Odluku **donosi** taj Sekretarijat van Platforme. Objavu već donesene konačne Odluke **na Platformi** vrši Administrator Konkursa. Objava nije donošenje.
 
@@ -434,7 +430,7 @@ Dok rok traje, dozvoljene su samo radnje koje odgovaraju osnovnom stanju Prijave
 
 Nakon isteka roka:
 
-* nema novih izmjena, podnošenja, brisanja ni povlačenja Prijave;
+* nema novih izmjena, podnošenja ni brisanja Prijave;
 * Komisiji postaje dostupan konkursni tok prema Odluci 027/26 (`KN-BM-003` §8).
 
 ## 4.3. Zatvaranje i arhiviranje Konkursa
@@ -458,8 +454,7 @@ Redoslijed predlaganja i zatvaranja: §4.13 i §4.14.
 Kanonska osnovna stanja Prijave su:
 
 * **U pripremi**;
-* **Podnesena**;
-* **Povučena**.
+* **Podnesena**.
 
 Istek roka **nije** dodatno stanje Prijave.
 
@@ -473,13 +468,8 @@ Istek roka **nije** dodatno stanje Prijave.
 
 * uređivanje: NE;
 * brisanje: NE;
-* povlačenje: DA, samo dok rok traje.
-
-**Povučena** više ne učestvuje u postupku.
-
-* uređivanje: NE;
-* ponovno aktiviranje: NE;
-* povratak u Podnesena: NE.
+* povlačenje: NE;
+* ponovno podnošenje: NE.
 
 ## 4.5. Administrativna provjera i Prigovor
 
@@ -1017,9 +1007,572 @@ Kasniji tok Konkursa, uključujući rok za odlučivanje / zatvaranje, zatvaranje
 
 # 7. Prijava Podnositeljke
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje određuje tok Prijave sa strane Podnositeljke: nastanak, popunjavanje Obrazaca 1a / 1b i Obrasca 2, prateću dokumentaciju, podnošenje, zaključavanje i brisanje.
+
+Ne određuje pristup Komisije, administrativnu provjeru, Prigovor, ocjenjivanje, rangiranje ni Odluku. Ti tokovi pripadaju Poglavljima 8–15.
+
+Osnov: `KN-BM-003` §4.1, §7; čl. 13 i čl. 18 Odluke 027/26.
+
+## 7.1. Nastanak Prijave
+
+Podnositeljka može započeti Prijavu samo za Konkurs u stanju **Objavljen**, dok rok za prijavu traje.
+
+Prijava pripada jednoj konkretnoj Podnositeljki i jednom konkretnom Konkursu. Ne može se prenijeti na drugu Podnositeljku niti na drugi Konkurs.
+
+Nova Prijava se ne može započeti nakon isteka roka za prijavu.
+
+Nakon izbora faze biznisa i radnje **Prijavi se na konkurs** počinje tok Prijave Podnositeljke.
+
+Ovo poglavlje ne propisuje trenutak tehničkog nastanka zapisa niti ponašanje baze podataka.
+
+## 7.2. Jedna Prijava po konkretnom Konkursu
+
+Za jedan konkretni Konkurs jedna Podnositeljka može imati najviše jednu postojeću Prijavu (`KN-BM-003` §7; čl. 18).
+
+Ako Prijava već postoji, Platforma nastavlja tu Prijavu. Ne stvara drugu Prijavu za isti konkretni Konkurs.
+
+Pravilo važi nezavisno za svaku konkretnu instancu Konkursa.
+
+Izuzetak: ako se Prijava u stanju **U pripremi** obriše dok je brisanje još dozvoljeno (§7.18), Prijava tada ne postoji. Podnositeljka može započeti novu Prijavu za isti konkretni Konkurs dok rok za prijavu još traje.
+
+## 7.3. Čuvanje tokom popunjavanja
+
+Prijava se može popunjavati kroz više sesija.
+
+Čuvanje nepotpunog sadržaja:
+
+* **nije** konačno podnošenje;
+* čuva unesene podatke Podnositeljke;
+* omogućava nastavak dok rok za prijavu traje.
+
+Ne uvodi se dodatna opšta kapija „podobnosti za podnošenje“ mimo uslova iz §7.14.
+
+Razlikuju se:
+
+* stanje Prijave: **U pripremi** / **Podnesena**;
+* poslovno stanje popunjenosti pojedinačnog Obrasca: **Nacrt** / **Popunjen**.
+
+Prijava u toku popunjavanja, prije uspješnog podnošenja, jeste **U pripremi**. Prijava **nije** Nacrt.
+
+## 7.4. Tip Podnositeljke i faza biznisa
+
+Tip Podnositeljke dolazi sa Platforme. Podnositeljka **ne** bira ručno tip Podnositeljke unutar Prijave.
+
+Mapiranje:
+
+* fizičko lice bez registrovane djelatnosti i preduzetnica → **Obrazac 1a**;
+* društvo (DOO) → **Obrazac 1b**.
+
+Podnositeljka bira fazu biznisa.
+
+Tip Podnositeljke i faza biznisa određuju:
+
+* primjenjivi tok Prijave;
+* primjenjivi skup prateće dokumentacije prema čl. 13 (§7.13).
+
+Nakon izbora, faza biznisa je zaključana za tu Prijavu.
+
+Tip Podnositeljke je zaključan za tu Prijavu.
+
+Nalog društva (DOO) na Platformi **ne** znači nužno da formalno registrovano društvo već postoji.
+
+Žena koja namjerava da osnuje društvo može koristiti tok Podnositeljke društva i prije formalne registracije društva.
+
+Postojanje registrovanog biznisa je zaseban uslov. Razlikuje se od tipa naloga / tipa Podnositeljke.
+
+Ne uvodi se tip Podnositeljke van navedenog mapiranja.
+
+## 7.5. Zajedničko ponašanje Obrasca 1a i Obrasca 1b
+
+Platforma otvara Obrazac 1a ili Obrazac 1b prema tipu naloga.
+
+Poznati podaci profila se automatski popunjavaju.
+
+Faza biznisa se prenosi automatski.
+
+Podatke koji nijesu dostupni iz profila unosi Podnositeljka.
+
+Automatski popunjeni podaci su **početne** vrijednosti.
+
+**JMBG:**
+
+* automatski se popunjava;
+* zaključan je.
+
+Ostali usvojeni automatski popunjeni podaci Obrasca su izmjenjivi za konkretnu Prijavu, osim ako su izričito zaključani.
+
+Izmjena podataka Obrasca:
+
+* mijenja konkretnu Prijavu;
+* **ne** mijenja profil na Platformi.
+
+Tip Podnositeljke: zaključan.
+
+Faza biznisa: zaključana.
+
+Sačuvane vrijednosti Obrasca postaju podaci konkretne Prijave.
+
+Naknadne izmjene profila **ne** mijenjaju automatski već sačuvane podatke Prijave.
+
+## 7.6. Stanje popunjenosti Obrasca 1a / 1b
+
+Svaki Obrazac 1a / 1b ima poslovna stanja popunjenosti:
+
+* **Nacrt**;
+* **Popunjen**.
+
+Ako obavezna polja ili obavezna izjava o istinitosti nijesu potpuni, Obrazac je **Nacrt**.
+
+Kada su sva obavezna / primjenjiva polja i obavezna izjava potpuni, Obrazac je **Popunjen**.
+
+**Popunjen** Obrazac **ne** znači da je Prijava **Podnesena**.
+
+Ne zahtijeva se posebna implementacija statusa u bazi podataka za popunjenost Obrasca.
+
+Obavezna izjava:
+
+*Kao podnositeljka prijave pod punom materijalnom i krivičnom odgovornošću izjavljujem da su gore navedeni podaci istiniti.*
+
+## 7.7. Obrazac 1a
+
+Obrazac 1a primjenjuje se na:
+
+* fizičko lice bez registrovane djelatnosti;
+* preduzetnicu.
+
+Uvijek obavezno:
+
+* Naziv biznis plana;
+* Ime i prezime;
+* JMBG;
+* Kontakt telefon;
+* Adresa;
+* E-mail;
+* Oblast u kojoj planira realizaciju biznis plana;
+* Faza biznisa;
+* izjava o istinitosti (§7.6).
+
+Izmjenjivost:
+
+* Naziv biznis plana: izmjenjiv;
+* Ime i prezime: automatski popunjeno, izmjenjivo;
+* JMBG: automatski popunjen, zaključan;
+* Kontakt telefon: automatski popunjen, izmjenjiv;
+* Adresa: automatski popunjena, izmjenjiva;
+* E-mail: automatski popunjen, izmjenjiv;
+* Oblast realizacije: izmjenjiva;
+* Faza biznisa: prenesena iz prethodnog izbora, zaključana.
+
+Nijesu bezuslovno obavezni:
+
+* Oblik registracije;
+* CRPS;
+* PIB.
+
+Ova polja zavise od toga da li registrovana djelatnost postoji.
+
+Opcioni podaci trenutnog digitalnog Obrasca:
+
+* Broj računa;
+* PDV broj;
+* Website.
+
+Tip Podnositeljke: izveden iz naloga; ne bira se ručno.
+
+## 7.8. Obrazac 1b
+
+Obrazac 1b primjenjuje se na tok Podnositeljke društva (DOO).
+
+Nalog društva **ne** dokazuje formalnu registraciju društva.
+
+Uvijek obavezno i izmjenjivo:
+
+* Naziv biznis plana;
+* Ime i prezime nositeljke biznisa;
+* Kontakt telefon;
+* Adresa;
+* E-mail;
+* Oblast realizacije biznis plana.
+
+Automatsko popunjavanje gdje podaci Platforme postoje.
+
+Uvijek obavezno i zaključano:
+
+* JMBG;
+* Tip Podnositeljke;
+* Faza biznisa.
+
+Obavezna je izjava o istinitosti (§7.6).
+
+Ako registrovani biznis postoji, postaju primjenjiva / obavezna:
+
+* Oblik registracije;
+* Broj registracije u CRPS;
+* Osnivač/ica;
+* Izvršni direktor/ica;
+* Sjedište društva;
+* PIB.
+
+Vrijednosti izvedene iz zaključanog identiteta / tipa Podnositeljke ostaju zaključane gdje je to primjenjivo. Ostali konkretni podaci Prijave uređuju se prema §7.5.
+
+Opciono:
+
+* Broj računa;
+* PDV broj;
+* Website.
+
+Ako registrovani biznis ne postoji, odsustvo polja registracije **ne** sprečava da Obrazac 1b postane **Popunjen**.
+
+## 7.9. Prelazak na Obrazac 2
+
+Redovni tok Podnositeljke dozvoljava prelazak na Obrazac 2 tek kada je odgovarajući Obrazac 1a / 1b **Popunjen**.
+
+Obrazac 1a / 1b u stanju **Nacrt**:
+
+* može se sačuvati;
+* ne dozvoljava redovni prelazak na Obrazac 2.
+
+Otvaranje Obrasca 2:
+
+* **nije** podnošenje Prijave;
+* stvara ili nastavlja Obrazac 2 koji pripada istoj konkretnoj Prijavi.
+
+Jedna Prijava ima jedan Obrazac 2.
+
+## 7.10. Obrazac 2 — tehnička kompletnost
+
+Obrazac 2 ima poslovna stanja popunjenosti:
+
+* **Nacrt**;
+* **Popunjen**.
+
+**Q1 — Naziv biznis ideje**
+
+* obavezno;
+* početno se preuzima iz sačuvanog Obrasca 1a / 1b, polje *Naziv biznis plana*;
+* izmjenjivo unutar Obrasca 2;
+* izmjena vrijednosti u Obrascu 2 ne mijenja Obrazac 1a / 1b.
+
+**Q2 — Podaci Podnositeljke**
+
+Obavezno:
+
+* ime;
+* JMBG;
+* adresa;
+* telefon;
+* e-mail.
+
+Izvor: sačuvana konkretna Prijava, **ne** živi profil.
+
+Izmjenjivo u Obrascu 2:
+
+* ime;
+* adresa;
+* telefon;
+* e-mail.
+
+Zaključano:
+
+* JMBG.
+
+Izmjene utiču samo na Obrazac 2.
+
+**Q3 — Da li imate registrovan biznis?**
+
+* obavezno;
+* automatski se izvodi iz konkretne Prijave;
+* zaključano.
+
+Ako je odgovor DA, blok registrovanog biznisa postaje primjenjiv.
+
+Ako je odgovor NE, polja registrovanog biznisa nijesu obavezna.
+
+**Q4 — Podaci registrovanog biznisa**
+
+* prenose se iz Obrasca 1a / 1b;
+* obaveznost prati primjenjiva pravila Obrasca 1a / 1b;
+* izmjenjivo, osim vrijednosti koje su već određene kao zaključane;
+* izmjene u Obrascu 2 ne mijenjaju Obrazac 1a / 1b niti profil.
+
+**Q5 — Rezime**
+
+* obavezno;
+* unosi ga Podnositeljka;
+* izmjenjivo do konačnog podnošenja.
+
+**Napomena o finansijama**
+
+Obavezna potvrda:
+
+*Potvrđujem da sam pročitala napomenu*
+
+Ta potvrda je dio tehničke kompletnosti Obrasca 2.
+
+Tehničko polje implementacije, samo radi sljedivosti: `finances_notice_confirmed`.
+
+**Ostali sadržaj biznis plana**
+
+Ostala suštinska / bodovana pitanja **nijesu** pojedinačno obavezna za tehničku kompletnost Obrasca 2.
+
+Neodgovorena suštinska / bodovana pitanja sama po sebi **ne** sprečavaju da Obrazac 2 postane **Popunjen**.
+
+Prije konačnog podnošenja Platforma može upozoriti Podnositeljku da suštinski sadržaj biznis plana nije potpun i da to može uticati na ocjenjivanje.
+
+Ovo poglavlje **ne** određuje posljedice ocjenjivanja ni ponašanje Komisije.
+
+Tačno:
+
+* nedostatak tehnički obaveznog sadržaja → Obrazac 2 ostaje **Nacrt**;
+* nedostatak neobaveznog suštinskog / bodovanog sadržaja → **ne** čini Obrazac 2 tehnički nepotpunim.
+
+## 7.11. Čuvanje i uređivanje Obrasca 2
+
+Nepotpun Obrazac 2 može se sačuvati kao **Nacrt**.
+
+Čuvanje Obrasca 2 **nije** podnošenje Prijave.
+
+Kada je tehnička kompletnost ispunjena, Obrazac 2 je **Popunjen**.
+
+**Popunjen** Obrazac 2 ostaje izmjenjiv dok:
+
+* Prijava nije podnesena;
+* rok za prijavu još traje.
+
+Ponovno čuvanje ažurira isti Obrazac 2. Ne stvara se drugi Obrazac 2.
+
+Nakon konačnog podnošenja Podnositeljka ne može mijenjati Obrazac 2 (§7.16).
+
+## 7.12. Prateća dokumentacija — opšte pravilo
+
+Prateća dokumentacija pripada istoj konkretnoj Prijavi.
+
+Platforma prikazuje primjenjivi skup dokumenata na osnovu:
+
+* tipa Podnositeljke;
+* faze biznisa;
+* primjenjivih uslovnih činjenica.
+
+Dokumenti mogu biti:
+
+* obavezni;
+* uslovno obavezni;
+* opcioni / dokaz za dodatne bodove.
+
+**Obavezan dokument** znači: propisan Konkursom.
+
+**Ne** znači: tehnička prepreka konačnog podnošenja.
+
+Ako nedostaju obavezni ili primjenjivi uslovni dokumenti:
+
+* Platforma upozorava Podnositeljku prije konačnog podnošenja;
+* nedostajuće stavke se nabrajaju;
+* Podnositeljka i dalje može nastaviti konačno podnošenje.
+
+Opcioni dokumenti / dokazi za dodatne bodove nijesu tehnički uslov podnošenja.
+
+Ovo poglavlje **ne** određuje bodovanje opcionog dokaza.
+
+Upravljanje dokumentima prije podnošenja:
+
+* jedan dokument po tipu dokumenta;
+* više fajlova za isti dokaz može se spojiti u jedan dokument;
+* Podnositeljka može dodati dokumente;
+* Podnositeljka može ukloniti dokumente;
+* zamjena = uklanjanje postojećeg dokumenta + učitavanje zamjene.
+
+Nakon konačnog podnošenja nema dodavanja, uklanjanja ni zamjene (§7.16).
+
+## 7.13. Katalog prateće dokumentacije (čl. 13)
+
+Za sva četiri skupa važi opšte pravilo upozorenja i dozvole iz §7.12. Nedostajući dokumenti se **ne** pretvaraju u prepreku konačnog podnošenja.
+
+Obrazac 1a, Obrazac 1b i Obrazac 2 su obavezni digitalni Obrasci Prijave, nisu prilozi za učitavanje.
+
+### A. Preduzetnica koja započinje biznis
+
+1. Obrazac 1a — obavezni digitalni Obrazac
+2. Obrazac 2 — obavezni digitalni Obrazac
+3. Ovjerena kopija lične karte — obavezno
+4. CRPS — uslovno ako postoji registrovana djelatnost
+5. Registracija kod Poreske uprave — uslovno ako postoji registrovana djelatnost
+6. Dokaz o PDV statusu — uslovno ako postoji registrovana djelatnost; odgovarajuća varijanta prema PDV statusu
+7. Potvrda Osnovnog suda da se ne vodi krivični postupak — obavezno
+8. Uvjerenje o lokalnim obavezama, ne starije od 30 dana — obavezno
+9. Uvjerenje o porezu na nepokretnost, ne starije od 30 dana — obavezno
+10. Dokaz o poslovnom žiro-računu — uslovno ako postoji registrovana djelatnost
+11. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — opciono / dokaz za dodatne bodove
+12. Predračuni — obavezno
+
+### B. Preduzetnica koja planira razvoj poslovanja
+
+1. Obrazac 1a
+2. Obrazac 2
+3. Ovjerena kopija lične karte — obavezno
+4. CRPS — obavezno
+5. Registracija kod Poreske uprave — obavezno
+6. Dokaz o PDV statusu — obavezno; odgovarajuća alternativa prema PDV statusu
+7. Potvrda Osnovnog suda — obavezno
+8. Uvjerenje o lokalnim obavezama, ne starije od 30 dana — obavezno
+9. Uvjerenje o porezu na nepokretnost, ne starije od 30 dana — obavezno
+10. Potvrda Poreske uprave o porezima i doprinosima, ne starija od 30 dana — obavezno
+11. IOPPD ili potvrda Poreske uprave da nema zaposlenih — obavezna alternativa
+12. Dokaz o poslovnom žiro-računu — obavezno
+13. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — opciono / dokaz za dodatne bodove
+14. Predračuni — obavezno
+
+### C. Društvo koje započinje biznis
+
+1. Obrazac 1b
+2. Obrazac 2
+3. Ovjerena kopija lične karte nositeljke biznisa — obavezno
+4. CRPS — uslovno ako postoji registrovana djelatnost
+5. Registracija kod Poreske uprave — uslovno ako postoji registrovana djelatnost
+6. Dokaz o PDV statusu — uslovno ako postoji registrovana djelatnost; odgovarajuća varijanta prema PDV statusu
+7. Važeći Statut — uslovno ako postoji registrovana djelatnost
+8. Važeći karton deponovanih potpisa — uslovno ako postoji registrovana djelatnost
+9. Potvrda Osnovnog suda za Podnositeljku / nositeljku biznisa — obavezno
+10. Uvjerenje o lokalnim poreskim obavezama, ne starije od 30 dana — obavezno
+11. Uvjerenje o porezu na nepokretnost, ne starije od 30 dana — obavezno
+12. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — opciono / dokaz za dodatne bodove
+13. Predračuni — obavezno
+
+### D. Društvo koje planira razvoj poslovanja
+
+1. Obrazac 1b
+2. Obrazac 2
+3. Ovjerena kopija lične karte nositeljke biznisa — obavezno
+4. CRPS — obavezno
+5. Registracija kod Poreske uprave — obavezno
+6. Dokaz o PDV statusu — obavezno; odgovarajuća alternativa prema PDV statusu
+7. Važeći Statut — obavezno
+8. Važeći karton deponovanih potpisa — obavezno
+9. Paket godišnjih računa za prethodnu godinu — obavezno:
+   * Bilans stanja;
+   * Bilans uspjeha;
+   * analitika kupaca;
+   * analitika dobavljača.
+
+   Ako analitika kupaca ne postoji zato što su kupci isključivo fizička lica / neposredna kasa, periodični izvještaj kase prihvata se kao alternativni dokaz unutar ove stavke.
+
+10. Dokaz da se ne vodi krivični postupak za nositeljku **i** društvo — obavezno
+11. Dokaz o lokalnim porezima, ne stariji od 30 dana, za nositeljku **i** društvo — obavezno
+12. Dokaz o porezu na nepokretnost, ne stariji od 30 dana, za nositeljku **i** društvo — obavezno
+13. Potvrda Poreske uprave o porezima i doprinosima, ne starija od 30 dana, za nositeljku **i** društvo — obavezno
+14. IOPPD za posljednji mjesec — obavezno
+15. Dokaz Zavoda za zapošljavanje o evidenciji dužoj od 12 mjeseci — opciono / dokaz za dodatne bodove
+16. Predračuni — obavezno
+
+## 7.14. Podnošenje Prijave
+
+Konačno podnošenje je dozvoljeno samo kada su ispunjeni svi sljedeći uslovi:
+
+1. odgovarajući Obrazac 1a / 1b je **Popunjen**;
+2. Obrazac 2 je **Popunjen**;
+3. tehnička kompletnost Obrasca 2 uključuje potvrdu napomene o finansijama (§7.10);
+4. Konkurs je **Objavljen** i rok za prijavu još traje;
+5. Podnositeljka izričito potvrđuje konačno podnošenje.
+
+Nedostajuća prateća dokumentacija **ne** blokira podnošenje.
+
+Ako nedostaju obavezni ili primjenjivi uslovni dokumenti, prije konačne potvrde prikazuje se upozorenje i spisak nedostajućih stavki (§7.12).
+
+Konačna potvrda mora jasno obavijestiti Podnositeljku da nakon uspješnog konačnog podnošenja:
+
+* Prijava postaje **Podnesena**;
+* Prijava postaje zaključana;
+* ne može se mijenjati;
+* ne može se povući;
+* ne može se obrisati.
+
+Podnositeljka mora izričito potvrditi.
+
+Ako Podnositeljka odustane, Prijava ostaje **U pripremi**.
+
+Ne propisuje se da li je potvrda modal ili stranica.
+
+## 7.15. Uspješno podnošenje
+
+Nakon uspješnog podnošenja na strani servera:
+
+* Prijava prelazi: **U pripremi → Podnesena**;
+* evidentira se datum / vrijeme uspješnog podnošenja;
+* dodjeljuje se `redni_broj` unutar konkretnog Konkursa.
+
+`redni_broj` se **ne** dodjeljuje:
+
+* pri otvaranju Obrasca 1a / 1b;
+* pri početku popunjavanja;
+* pri čuvanju Obrasca 1a / 1b;
+* samo zato što Obrazac postane **Popunjen**;
+* pri otvaranju ili čuvanju Obrasca 2.
+
+Jednom dodijeljen, `redni_broj` ostaje nepromijenjen.
+
+Podnositeljka prima potvrdu da je podnošenje uspjelo.
+
+Ne zahtijeva se prikaz `redni_broj` u toj potvrdi.
+
+Prijava se smatra **Podnesenom** tek nakon uspješne serverske operacije.
+
+## 7.16. Zaključavanje nakon podnošenja
+
+Nakon što Prijava postane **Podnesena**, Podnositeljka je može pregledati.
+
+Podnositeljka ne može:
+
+* uređivati Obrazac 1a / 1b;
+* uređivati Obrazac 2;
+* mijenjati tip Podnositeljke;
+* mijenjati fazu biznisa;
+* dodati prateću dokumentaciju;
+* ukloniti prateću dokumentaciju;
+* zamijeniti prateću dokumentaciju;
+* obrisati Prijavu;
+* povući Prijavu;
+* ponovo podnijeti Prijavu.
+
+Naknadne izmjene profila na Platformi **ne** mijenjaju snimak podnesene Prijave.
+
+U V1 nema povlačenja Podnesene Prijave sa strane Podnositeljke.
+
+## 7.17. Prijava U pripremi nakon isteka roka
+
+Ako je Prijava još **U pripremi** kada rok za prijavu istekne:
+
+* ostaje evidentirana kao **U pripremi**;
+* ne prelazi automatski u drugo stanje;
+* **nije** podnesena;
+* Podnositeljka je može pregledati.
+
+Podnositeljka više ne može:
+
+* uređivati Obrazac 1a / 1b;
+* uređivati Obrazac 2;
+* mijenjati tip Podnositeljke;
+* mijenjati fazu biznisa;
+* dodati, ukloniti ili zamijeniti prateću dokumentaciju;
+* podnijeti Prijavu;
+* obrisati Prijavu.
+
+Ovo poglavlje ne određuje trajanje čuvanja ni arhiviranja.
+
+## 7.18. Brisanje prije podnošenja
+
+Podnositeljka može obrisati Prijavu samo kada su istovremeno ispunjena oba uslova:
+
+* Prijava je **U pripremi**;
+* rok za prijavu još traje.
+
+Brisanje uklanja tu konkretnu nepodnesenu Prijavu.
+
+Nakon brisanja, dok rok za prijavu ostaje otvoren, Podnositeljka može započeti novu Prijavu za isti konkretni Konkurs.
+
+**Podnesena** Prijava se ne može obrisati.
+
+Prijava **U pripremi** nakon isteka roka ne može se obrisati.
 
 ---
 
@@ -1119,4 +1672,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.2**
+**Kraj dokumenta KN-FS-003 v0.1.3**

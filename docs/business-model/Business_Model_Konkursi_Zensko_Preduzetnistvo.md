@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.2
-**Datum:** 2026-08-26
+**Verzija:** 1.0.3
+**Datum:** 2026-08-28
 
 Povezani dokumenti:
 
@@ -31,6 +31,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.0 | 2026-08-26 | Usvojen poslovni profil Konkursa za podršku ženskom preduzetništvu prema Odluci 027/26 i završenom poslovnom modelovanju. Evidentirana dva otvorena pravna pitanja. |
 | 1.0.1 / KN-PATCH-BM-001 | 2026-08-26 | Zatvorena OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2. Usvojeno: (1) pri preklapanju 20% sa 10% ili 5% primjenjuje se maksimalna granica od 20%; procenti se ne sabiraju; 20% nije automatski dodijeljeni iznos; (2) Komisija može raspisati drugi Javni konkurs; raspisivanje nije automatsko; ako Komisija odluči da raspiše drugi Konkurs, mora biti raspisan najkasnije do isteka trećeg kvartala tekuće godine. |
 | 1.0.2 / KN-PATCH-BM-002 | 2026-08-26 | Usklađenje sa Odlukom 027/26 i usvojenim FS tokom: (1) U pripremi / Podnesena / Povučena — Podnesena nije izmjenjiva; (2) eliminatorni kriterijum 1 iz čl. 19 obrađuje se kroz provjeru potpunosti i Prigovor iz čl. 17; (3) Obrazac 3 i nacrt ocjena od prve sjednice; kriterijum 10 tek nakon usmenog; (4) nepromjenjivost tek nakon završavanja individualnog ocjenjivanja, ne pri čuvanju nacrta. |
+| 1.0.3 / KN-PATCH-BM-003 | 2026-08-28 | Usklađenje povlačenja Prijave: nakon uspješnog podnošenja Prijava je Podnesena; Podnositeljka je ne može mijenjati, povući, obrisati ni ponovo podnijeti. U V1 nema stanja Povučena ni povlačenja Podnesene Prijave sa strane Podnositeljke. Kanonska stanja Prijave: U pripremi / Podnesena. |
 
 Napomena:
 
@@ -116,7 +117,7 @@ Ovaj profil opisuje tip konkursa **Žensko preduzetništvo**: raspodjelu bespovr
 Profil određuje poslovna pravila koja utiču na:
 
 * kreiranje i objavljivanje Konkursa;
-* podnošenje, izmjenu, povlačenje i brisanje Prijave;
+* podnošenje, izmjenu i brisanje Prijave;
 * rad Komisije;
 * ocjenjivanje, rangiranje i predlaganje Odluke;
 * zatvaranje i arhiviranje Konkursa;
@@ -192,8 +193,7 @@ Podnositeljka je žensko lice koje učestvuje na Konkursu podnošenjem Prijave, 
 Podnositeljka na Platformi:
 
 * **U pripremi**, samo dok rok traje: uređuje, briše i podnosi sopstvenu Prijavu;
-* **Podnesena**: sadržaj je zaključan; ne uređuje se i ne briše se; može se povući samo do isteka roka;
-* **Povučena**: ne nastavlja postupak; nema reaktivacije;
+* **Podnesena**: sadržaj je zaključan; ne uređuje se, ne briše se i ne povlači se;
 * ima pristup samo sopstvenim Prijavama; javna rang-lista, konačna Odluka i drugi javno objavljeni rezultati Konkursa zaseban su javni sadržaj, a nijesu kompletna Prijava.
 
 ## 4.2. Administrator Konkursa
@@ -340,15 +340,10 @@ Osnovna poslovna stanja Prijave:
 
 * uređivanje: NE;
 * brisanje: NE;
-* povlačenje: DA, samo dok rok traje.
+* povlačenje: NE;
+* ponovno podnošenje: NE.
 
-**Povučena** više ne učestvuje u postupku.
-
-* uređivanje: NE;
-* reaktivacija: NE;
-* povratak u Podnesena: NE.
-
-Istek roka **nije** dodatno stanje Prijave. Nakon isteka roka nema uređivanja, podnošenja, brisanja ni povlačenja.
+Istek roka **nije** dodatno stanje Prijave. Nakon isteka roka nema uređivanja, podnošenja ni brisanja.
 
 ## 7.1. Privatnost Prijava
 
@@ -814,4 +809,4 @@ Odluka uređuje imenovanje zamjene, ali ne sudbinu već **završenih** individua
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.2**
+**Kraj dokumenta KN-BM-003 v1.0.3**
