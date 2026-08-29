@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.8
-**Datum:** 2026-08-28
+**Verzija:** 0.1.9
+**Datum:** 2026-08-29
 
 Povezani dokumenti:
 
@@ -38,6 +38,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.6 | 2026-08-28 | Napisano Poglavlje 10 — Prva sjednica, administrativna provjera i Prigovor. Komisija vrši administrativnu provjeru Podnesenih Prijava. Predsjednik evidentira Potpuna / Nepotpuna. Nema dopune nakon isteka roka. Prigovor ide isključivo preko Platforme. Poglavlja 11–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.7 | 2026-08-28 | Poglavlje 11 — Eliminatorni kriterijumi — privremeno obustavljeno (`OBUSTAVLJENO`) do pribavljanja i analize autoritativnog izvora Odluke 027/26. Poglavlja 12–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.8 | 2026-08-28 | Napisano Poglavlje 12 — Druga sjednica i usmeno obrazloženje. Druga sjednica i usmeno obrazloženje su van Platforme. Platforma ne zakazuje, ne poziva i ne evidentira prisustvo. Kriterijum 10 se ocjenjuje nakon usmenog obrazloženja kao poslovno pravilo, bez tehničkog otključavanja. Poglavlja 13–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.9 | 2026-08-29 | Napisano Poglavlje 13 — Individualno ocjenjivanje. Pet članova ocjenjuje 10 pozitivnih kriterijuma skalom 1–5. Nacrt do eksplicitnog Završi ocjenjivanje. Tajnost do završetka ciklusa. Ostale napomene opcione. Dodatni bodovi, prosjeci, prag 30 i rang-lista pripadaju Poglavlju 14. Poglavlja 14–19 ostaju za naredne odobrene dokumentacione korake. |
 
 Napomena:
 
@@ -73,7 +74,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 10. Prva sjednica, administrativna provjera i Prigovor | USVOJENO |
 | 11. Eliminatorni kriterijumi | OBUSTAVLJENO |
 | 12. Druga sjednica i usmeno obrazloženje | USVOJENO |
-| 13. Individualno ocjenjivanje | NIJE ZAPOČETO |
+| 13. Individualno ocjenjivanje | USVOJENO |
 | 14. Rang-lista, iznosi i treća sjednica | NIJE ZAPOČETO |
 | 15. Predlog Odluke, zatvaranje, arhiva i objava | NIJE ZAPOČETO |
 | 16. Funkcionalne zabrane i enforcement | NIJE ZAPOČETO |
@@ -81,7 +82,7 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 13–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
+Radna struktura Poglavlja 14–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
 
 ---
 
@@ -2056,9 +2057,154 @@ Platforma **ne** zakazuje drugu sjednicu, ne poziva Podnositeljke, ne vodi termi
 
 # 13. Individualno ocjenjivanje
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje određuje individualno ocjenjivanje članova Komisije na Platformi.
+
+Ne određuje dodatne bodove, prosjeke, konačnu ocjenu Prijave, prag od 30 bodova, rang-listu, iznose ni treću sjednicu. Ti tokovi pripadaju Poglavlju 14 ili kasnijim poglavljima.
+
+Poglavlje **ne** rješava Poglavlje 11. Koristi rezultat prethodnih faza, bez njihovog ponovnog definisanja.
+
+Poglavlje 12 ostaje usvojeno: usmeno obrazloženje je van Platforme; kriterijum 10 **nije** tehnička Platform kapija.
+
+Osnov: `KN-BM-003` §4.3, §12; Poglavlja 3.4, 3.5, 4.7, 4.8, 9, 10 i 12 ovog dokumenta.
+
+## 13.1. Individualno ocjenjivanje članova Komisije
+
+Svaki od **pet** članova Komisije individualno ocjenjuje svaku Prijavu koja je do tog trenutka ispunila sve prethodno propisane uslove za nastavak do individualnog ocjenjivanja.
+
+Predsjednik Komisije učestvuje kao **jedan od pet** ocjenjivača.
+
+Svih pet članova ima **istu težinu** pri individualnom ocjenjivanju.
+
+Svaki član vrši **sopstveno** individualno ocjenjivanje.
+
+Ovo poglavlje **ne** nabraja prethodne uslove i **ne** uvodi model prolaska Poglavlja 11.
+
+Ne uvodi se rangiranje, prosjek, dodatni bodovi, iznos ni kolektivni rezultat Komisije.
+
+## 13.2. Kriterijumi i skala ocjenjivanja
+
+Individualno ocjenjivanje sadrži tačno **10** pozitivnih kriterijuma.
+
+Svaki kriterijum ocjenjuje se **cijeli broj** od **1 do 5**.
+
+* **1** — najniži stepen odgovaranja navedenom kriterijumu;
+* **5** — potpuno odgovara navedenom kriterijumu.
+
+Kriterijumi **nijesu** ponderisani.
+
+Svih 10 kriterijuma je **obavezno** za završavanje individualnog ocjenjivanja.
+
+Pozitivni kriterijumi (`KN-BM-003` §12.1; čl. 19):
+
+1. Obrazac biznis plana je detaljno popunjen sa svim neophodnim informacijama i jasno su precizirani proizvodi/usluge koje će se ponuditi na tržištu.
+2. Jasno su identifikovani potencijalni kupci i njihove karakteristike.
+3. Biznis plan će omogućiti samozapošljavanje i/ili zapošljavanje (stalno ili sezonsko) lica sa teritorije opštine Kotor.
+4. Prepoznata je i navedena konkurencija kao i slabosti i snage iste.
+5. Jasno su navedeni potrebni resursi i identifikovani dobavljači.
+6. Biznis ideja je finansijski održiva (jasno su prikazani očekivani prihodi i rashodi poslovanja).
+7. Podaci o preduzetnici (fizičko lice/preduzetnica posjeduje iskustvo, potrebna znanja i vještine, te svijest o preduzetničkim osobinama koje mora unaprijediti).
+8. Preduzetnica planira raspored poslova uz identifikaciju osoba za njihovo obavljanje.
+9. Razvijena matrica rizika je jasna i logična.
+10. Usmeno obrazloženje biznis plana (preduzetnica je uvjerljiva i sigurna u svoju biznis ideju, pokazuje visoku motivisanost za realizaciju iste i spremno odgovara na sva pitanja).
+
+Kriterijum 10 je kriterijum usmenog obrazloženja. Poslovni redoslijed unosa uređuje Poglavlje 12. Ovo poglavlje **ne** mijenja tu granicu.
+
+Ne uvode se dodatni bodovi, prag od 30 bodova, prosjeci, konačna ocjena Prijave ni rang-lista.
+
+## 13.3. Nacrt individualne ocjene
+
+Dok član **nije** odabrao **Završi ocjenjivanje**, njegovo individualno ocjenjivanje ostaje **nacrt**.
+
+Nacrt se odnosi na **cjelokupno** individualno ocjenjivanje člana, ne samo na kriterijume 1–9.
+
+Dok ocjena ostaje nacrt, član može unositi i mijenjati sopstvene ocjene kriterijuma.
+
+Ocjene unesene kao nacrt **nijesu** konačne.
+
+Član može sačuvati nacrt i kasnije nastaviti uređivanje.
+
+Granica izmjenjivosti je eksplicitna radnja **Završi ocjenjivanje**, **ne** kriterijum 10.
+
+Kriterijum 10, prema poslovnom postupku Poglavlja 12, ocjenjuje se nakon što je usmeno obrazloženje sprovedeno.
+
+Platforma **ne** kontroliše tehnički kada se unosi ocjena kriterijuma 10. Ne uvodi se posebno zaključavanje / otključavanje kriterijuma 10. Kriterijum 10 **nema** zasebno tehničko stanje. Ne uvodi se oznaka da je usmeno obrazloženje održano.
+
+## 13.4. Završavanje individualnog ocjenjivanja
+
+Individualno ocjenjivanje može se završiti **samo** kada su unesene ocjene za svih 10 kriterijuma.
+
+Član eksplicitno bira **Završi ocjenjivanje**.
+
+Platforma zahtijeva **potvrdu** te radnje.
+
+Nakon potvrde, individualno ocjenjivanje postaje **konačno**.
+
+Ocjene kriterijuma se nakon završavanja **ne** mogu mijenjati.
+
+Ne uvodi se automatsko završavanje samo zato što su sva polja popunjena. Ne uvodi se ponovno otvaranje, ovlašćenje predsjednika da mijenja tuđu ocjenu, ovlašćenje Administratora konkursa da mijenja ocjene, ni uređivanje završenih ocjena.
+
+## 13.5. Tajnost individualnog ocjenjivanja
+
+Dok je cjelokupan ciklus individualnog ocjenjivanja **otvoren**, svaki član Komisije vidi **samo sopstvene** individualne ocjene.
+
+Predsjednik Komisije **nema** privilegovan uvid u individualne ocjene drugih članova dok taj ciklus traje.
+
+Administrator konkursa **ne** dobija pristup individualnim ocjenama članova Komisije dok je ciklus individualnog ocjenjivanja otvoren.
+
+Podnositeljka **ne** dobija pristup individualnim ocjenama članova Komisije u ovom poglavlju.
+
+Individualne ocjene drugih članova postaju dostupne Komisiji **tek** kada svi članovi Komisije završe individualno ocjenjivanje **svih** Prijava koje su ušle u ciklus individualnog ocjenjivanja.
+
+Ovo poglavlje **ne** određuje kasniju javnu objavu ni pristup Podnositeljke rezultatima.
+
+## 13.6. Ostale napomene
+
+Svaki član Komisije može, za konkretnu Prijavu koju individualno ocjenjuje, unijeti **Ostale napomene**.
+
+Polje je **opciono**.
+
+Napomena pripada konkretnom članu Komisije i konkretnoj Prijavi. Odnosi se na individualno ocjenjivanje Prijave **kao cjeline**.
+
+**Nije** zaseban kriterijum ocjenjivanja. **Ne** dodaje i **ne** oduzima bodove.
+
+Ista tajnost kao za individualne ocjene:
+
+* dok je ciklus individualnog ocjenjivanja otvoren, član vidi sopstvene Ostale napomene;
+* napomene drugih članova **ne** otkrivaju se ranije samo zato što su svi članovi ocjenili jednu konkretnu Prijavu;
+* napomene drugih članova mogu se otkriti zajedno sa njihovim individualnim ocjenama nakon završetka **cjelokupnog** ciklusa individualnog ocjenjivanja.
+
+Ostale napomene **nijesu** Napomena iz Poglavlja 11 o eliminatornim kriterijumima.
+
+Ne uvode se napomene po pojedinačnom kriterijumu.
+
+## 13.7. Granica prema Poglavlju 14
+
+Poglavlje 13 obuhvata:
+
+* individualne ocjene kriterijuma;
+* nacrt;
+* izmjenjivost prije završavanja;
+* eksplicitno završavanje;
+* nepromjenjivost nakon završavanja;
+* tajnost;
+* opcione Ostale napomene.
+
+Poglavlje 13 **ne** određuje:
+
+* dodatne bodove;
+* prosjek po kriterijumu;
+* ukupni prosjek;
+* konačnu ocjenu Prijave;
+* prag od 30 bodova;
+* preliminarnu rang-listu;
+* pravila jednakih bodova;
+* predloženi iznos sredstava;
+* treću sjednicu;
+* kolektivnu odluku Komisije.
+
+To pripada Poglavlju 14 ili kasnijim poglavljima.
 
 ---
 
@@ -2110,4 +2256,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.8**
+**Kraj dokumenta KN-FS-003 v0.1.9**
