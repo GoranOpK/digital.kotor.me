@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.13
+**Verzija:** 0.1.14
 **Datum:** 2026-08-29
 
 Povezani dokumenti:
@@ -43,6 +43,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.11 | 2026-08-29 | Napisano Poglavlje 15 — Predlog Odluke, zvanična Odluka, zaključivanje, arhiva i objava. Predlog se generiše iz zaključane konačne rang-liste. Zvanična Odluka nastaje fizičkim potpisom sekretara van Platforme. Zaključivanje nije donošenje. Ciljno: Administrator konkursa postavlja i objavljuje potpisani primjerak. Poglavlja 16–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.12 | 2026-08-29 | Napisano Poglavlje 16 — Funkcionalne zabrane i zaštita poslovnih pravila. Platforma štiti zaključane Prijave, privatnost, individualno ocjenjivanje, konačni rezultat, Predlog/Odluku i završeni Konkurs. Ne uvodi nove tokove. Poglavlja 17–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.13 | 2026-08-29 | Napisano Poglavlje 17 — V1 granica. Inventar obuhvata: od konfiguracije Konkursa do objave već donesene zvanične Odluke. Van V1 ostaju postupanja poslije Odluke i radnje kojima Platforma ne upravlja. Poglavlje 11 i ostale neriešene tačke ostaju odložene zavisnosti, ne van V1. Poglavlja 18–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.14 | 2026-08-29 | Napisano Poglavlje 18 — Prihvatni kriterijumi. 24 provjerljiva ishoda usvojenih pravila Poglavlja 3–17. Format Ako / Kada / Onda. Poglavlje 11 i zavisnosti iz §17.3 ostaju bez prihvatnih kriterijuma. Poglavlje 19 ostaje za naredni odobreni dokumentacioni korak. |
 
 Napomena:
 
@@ -83,10 +84,10 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 15. Predlog Odluke, zatvaranje, arhiva i objava | USVOJENO |
 | 16. Funkcionalne zabrane i zaštita poslovnih pravila | USVOJENO |
 | 17. V1 granica | USVOJENO |
-| 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
+| 18. Prihvatni kriterijumi | USVOJENO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 18–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
+Radna struktura Poglavlja 19 je odobrena. Sadržaj tog poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
 
 ---
 
@@ -3205,9 +3206,323 @@ Nijedna otvorena tačka **ne** smije se rješavati implementacionom pretpostavko
 
 # 18. Prihvatni kriterijumi
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje **ne** uvodi nova poslovna ili funkcionalna pravila.
+
+Prihvatni kriterijumi predstavljaju **provjerljive funkcionalne ishode** pravila već usvojenih u prethodnim poglavljima ovog dokumenta.
+
+Otvorene i odložene zavisnosti iz §17.3 **ne** dobijaju prihvatne kriterijume dok odgovarajuće pravilo ne bude usvojeno.
+
+Za eliminatorne kriterijume 2 i 3 iz Poglavlja 11 **ne** definišu se prihvatni kriterijumi dok je Poglavlje 11 **OBUSTAVLJENO**.
+
+Svaki kriterijum koristi format **Ako / Kada / Onda**. **Ne** uvode se identifikatori `AC-*`. **Ne** određuje se konkretan test framework.
+
+Osnov: Poglavlja 3–17 ovog dokumenta.
+
+## 18.1. Konkurs, objava i rok
+
+### 18.1.1 — Konfigurisan Konkurs i Komisija
+
+**Ako:** Administrator konkursa kreira konkretan Konkurs i unese obavezne podatke potrebne za njegovu konfiguraciju, uključujući Komisiju i njene članove.
+
+**Kada:** konfiguracija bude uspješno sačuvana.
+
+**Onda:** Platforma ima konkretan Konkurs sa pripadajućom konfiguracijom i Komisijom, tako da se dalji tok odnosi isključivo na tu konkretnu instancu Konkursa.
+
+### 18.1.2 — Objava Konkursa i istek roka za prijave
+
+**Ako:** konkretan Konkurs ispunjava uslove za objavu i ima definisan rok za podnošenje Prijava.
+
+**Kada:** Konkurs bude objavljen.
+
+**Onda:** Konkurs je javno dostupan za prijavljivanje tokom propisanog perioda, a istekom roka Platforma automatski onemogućava dalje podnošenje Prijava bez posebne radnje Administratora konkursa.
+
+## 18.2. Prijava i zaključavanje
+
+### 18.2.1 — Finalno podnošenje Prijave
+
+**Ako:** rok za prijavljivanje traje, Prijava je **U pripremi**, a odgovarajući Obrazac 1a ili 1b i Biznis plan ispunjavaju obavezne uslove za finalno podnošenje iz Poglavlja 7.
+
+**Kada:** Podnositeljka izvrši finalno podnošenje Prijave.
+
+**Onda:** Platforma evidentira Prijavu kao **Podnesena**, zaključava njen sadržaj i dodjeljuje `redni_broj`.
+
+Nedostatak pratećeg dokumenta koji prema Poglavlju 7 proizvodi samo upozorenje i **nije** uslov finalnog podnošenja **ne** smije blokirati podnošenje.
+
+### 18.2.2 — Zaključavanje Podnesene Prijave
+
+**Ako:** Prijava ima stanje **Podnesena**.
+
+**Kada:** Podnositeljka ili drugi korisnik pokuša izmijeniti ili obrisati Prijavu, izmijeniti obrasce ili Biznis plan, ili dodati, zamijeniti ili ukloniti prateću dokumentaciju.
+
+**Onda:** Platforma odbija radnju i čuva sadržaj Prijave u stanju u kojem je bio u trenutku uspješnog finalnog podnošenja.
+
+**Podnesena** Prijava **ne** može se povući niti vratiti u stanje **U pripremi**.
+
+### 18.2.3 — Prijava U pripremi nakon isteka roka
+
+**Ako:** Prijava je **U pripremi** i rok za podnošenje Prijava istekne.
+
+**Kada:** Podnositeljka pristupi Prijavi ili pokuša izvršiti radnju nad njom.
+
+**Onda:** Platforma omogućava samo pregled i onemogućava izmjenu, brisanje i finalno podnošenje.
+
+Trajanje čuvanja ovakve Prijave **nije** predmet ovog kriterijuma. To je otvorena tačka iz §17.3.
+
+## 18.3. Privatnost i pristup
+
+### 18.3.1 — Privatnost Prijave tokom roka
+
+**Ako:** rok za podnošenje Prijava za konkretan Konkurs još traje.
+
+**Kada:** Podnositeljka, član Komisije ili Administrator konkursa pristupa podacima Konkursa.
+
+**Onda:** Podnositeljka smije pristupiti samo svojim Prijavama. Komisija **nema** pristup pojedinačnim Prijavama niti zbirnom broju Prijava. Administrator konkursa smije vidjeti samo zbirni broj evidentiranih Prijava, bez liste, identiteta, pojedinačnih statusa, sadržaja ili mogućnosti ulaska u konkretnu Prijavu.
+
+Zaštita mora važiti i pri neposrednom pokušaju pristupa konkretnoj Prijavi preko njenog identifikatora ili URL-a.
+
+### 18.3.2 — Pristup Komisije nakon isteka roka
+
+**Ako:** rok za podnošenje Prijava za konkretan Konkurs je istekao.
+
+**Kada:** aktivni član Komisije dodijeljen tom Konkursu pristupi Prijavama.
+
+**Onda:** Platforma omogućava pristup samo Prijavama u stanju **Podnesena** koje pripadaju tom konkretnom Konkursu.
+
+Prijave **U pripremi** ostaju nedostupne, kao i Prijave drugih Konkursa za koje korisnik **nema** aktivno članstvo u Komisiji.
+
+Samo posjedovanje uloge člana Komisije **nije** dovoljno za pristup Prijavama drugog Konkursa.
+
+### 18.3.3 — Pregled prateće dokumentacije Komisije
+
+**Ako:** član Komisije ima pravo pristupa konkretnoj **Podnesenoj** Prijavi.
+
+**Kada:** pristupi njenoj pratećoj dokumentaciji.
+
+**Onda:** Platforma omogućava pregled metapodataka i sadržaja dokumenta u okviru dozvoljenog pregleda, ali **ne** omogućava njegovo preuzimanje.
+
+Ograničenje mora važiti i pri neposrednom pristupu resursu.
+
+## 18.4. Administrativna provjera i Prigovor
+
+### 18.4.1 — Administrativna provjera Prijave
+
+**Ako:** Komisiji je nakon isteka roka dostupna **Podnesena** Prijava.
+
+**Kada:** Komisija izvrši administrativnu provjeru, a Predsjednik Komisije evidentira njen konačni rezultat.
+
+**Onda:** Platforma evidentira jedan konačni rezultat administrativne provjere — **Potpuna** ili **Nepotpuna** — bez promjene osnovnog stanja Prijave i bez izmjene njenog zaključanog sadržaja.
+
+Prijava sa konačnim rezultatom **Potpuna** može nastaviti postupak.
+
+Prijava sa rezultatom **Nepotpuna** **ne** može nastaviti u narednu fazu dok postoji pravo na Prigovor ili dok podneseni Prigovor nije konačno riješen.
+
+### 18.4.2 — Prigovor na rezultat administrativne provjere
+
+**Ako:** za Prijavu je evidentiran rezultat **Nepotpuna** i Podnositeljki je poslato obavještenje o tom rezultatu i pravu na Prigovor.
+
+**Kada:** Podnositeljka u roku od 3 dana od slanja obavještenja podnese Prigovor putem Platforme.
+
+**Onda:** Platforma povezuje Prigovor sa konkretnom Prijavom i omogućava njegovo rješavanje bez izmjene zaključanog sadržaja Prijave, obrazaca, Biznis plana ili prateće dokumentacije.
+
+Ako Komisija prihvati Prigovor, konačni rezultat administrativne provjere postaje **Potpuna**.
+
+Ako Komisija odbije Prigovor, rezultat ostaje **Nepotpuna**.
+
+Ako blagovremeni Prigovor nije podnesen, **Nepotpuna** postaje konačni rezultat administrativne provjere.
+
+Prigovor **ne** omogućava naknadnu dopunu ili zamjenu dokumentacije.
+
+Ovaj kriterijum **ne** uvodi novo ponašanje Platforme vezano za istek roka Komisije od 7 dana. **Ne** definiše ponovno otvaranje završenog Prigovora.
+
+## 18.5. Individualno ocjenjivanje
+
+### 18.5.1 — Unos individualnih ocjena
+
+**Ako:** član Komisije ima pravo da ocjenjuje konkretnu Prijavu koja je ispunila prethodno propisane uslove za nastavak postupka.
+
+**Kada:** vrši individualno ocjenjivanje.
+
+**Onda:** Platforma omogućava unos i čuvanje njegove ocjene za svih **10** kriterijuma, pri čemu svaka ocjena mora biti cijeli broj od **1** do **5**.
+
+Dok individualno ocjenjivanje nije završeno, član može mijenjati svoje ocjene i **Ostale napomene**.
+
+Platforma **ne** zahtijeva tehničku potvrdu održanog usmenog obrazloženja kao preduslov za ocjenjivanje kriterijuma 10.
+
+### 18.5.2 — Završavanje individualnog ocjenjivanja
+
+**Ako:** član Komisije ocjenjuje konkretnu Prijavu.
+
+**Kada:** pokuša izvršiti **„Završi ocjenjivanje“**.
+
+**Onda:** Platforma smije završiti individualno ocjenjivanje samo ako postoje važeće ocjene od **1** do **5** za svih **10** kriterijuma.
+
+Nedostajuća **Ostala napomena** **ne** blokira završavanje ocjenjivanja.
+
+### 18.5.3 — Tajnost individualnog ocjenjivanja
+
+**Ako:** kompletan ciklus individualnog ocjenjivanja još nije završen.
+
+**Kada:** član Komisije, uključujući Predsjednika Komisije, pristupa individualnim ocjenama.
+
+**Onda:** smije vidjeti samo svoje ocjene i svoje **Ostale napomene**.
+
+Predsjednik Komisije **nema** privilegovan pristup ocjenama drugih članova.
+
+Administrator konkursa i Podnositeljka **nemaju** pristup individualnim ocjenama.
+
+Ocjene i **Ostale napomene** drugih članova postaju dostupne Komisiji **tek** kada svih pet članova završi individualno ocjenjivanje svih Prijava uključenih u ciklus.
+
+### 18.5.4 — Nepovratnost završene individualne ocjene
+
+**Ako:** član Komisije izvrši **„Završi ocjenjivanje“** za konkretnu Prijavu.
+
+**Kada:** on ili drugi korisnik pokuša izmijeniti ocjene ili **Ostale napomene**, vratiti ocjenjivanje u nacrt ili ga ponovo otvoriti.
+
+**Onda:** Platforma odbija radnju i čuva završenu individualnu ocjenu neizmijenjenom.
+
+Zabrana važi i za privilegovane platformske uloge.
+
+Ovaj kriterijum **ne** definiše ponašanje pri zamjeni člana Komisije nakon završenog individualnog ocjenjivanja.
+
+## 18.6. Rang-lista i iznosi
+
+### 18.6.1 — Formiranje zbirnih rezultata
+
+**Ako:** individualno ocjenjivanje još nije završeno za svih pet članova Komisije i sve Prijave uključene u ciklus.
+
+**Kada:** Platforma provjerava da li može formirati zbirne rezultate.
+
+**Onda:** zbirni rezultati **ne** smiju biti formirani niti dostupni Komisiji.
+
+Kada svih pet članova završi individualno ocjenjivanje svih Prijava u ciklusu, Platforma formira zbirne rezultate i čini ih dostupnim Komisiji u skladu sa Poglavljem 14.
+
+### 18.6.2 — Konačna ocjena i prag za podršku
+
+**Ako:** kompletan ciklus individualnog ocjenjivanja je završen.
+
+**Kada:** Platforma formira rezultat konkretne Prijave.
+
+**Onda:** izračunava prosječne ocjene, primjenjuje evidentirane dodatne bodove i formira konačnu ocjenu prema pravilima Poglavlja 14.
+
+Prijava sa konačnom ocjenom manjom od **30** bodova ostaje na rang-listi ispod odgovarajuće granice i **ne** može biti označena kao **Podržava**.
+
+Prijava sa najmanje **30** bodova može biti predmet odluke Komisije **Podržava** ili **Odbija**.
+
+### 18.6.3 — Odluka o podršci i predloženi iznos
+
+**Ako:** Prijava ima najmanje **30** bodova i dođe na red za odlučivanje prema rang-listi.
+
+**Kada:** Predsjednik Komisije evidentira ishod treće sjednice.
+
+**Onda:** Platforma omogućava evidentiranje **Podržava** ili **Odbija**.
+
+Za **Podržava** mora biti evidentiran predloženi iznos podrške.
+
+Platforma **ne** smije dozvoliti iznos koji krši ograničenja iz Poglavlja 14: traženi iznos, primjenjivi maksimum podrške i raspoloživa sredstva.
+
+Raspodjela mora poštovati redoslijed rang-liste.
+
+Djelimična dodjela preostalog iznosa **ne** nastaje automatski, već samo kada je Komisija tako odlučila.
+
+Za **Odbija** kod Prijave sa najmanje **30** bodova mora biti evidentirano detaljno obrazloženje.
+
+### 18.6.4 — Jednaki bodovi i zaključavanje konačne rang-liste
+
+**Ako:** dvije ili više Prijava imaju jednaku konačnu ocjenu.
+
+**Kada:** njihov međusobni redoslijed utiče na raspodjelu raspoloživih sredstava.
+
+**Onda:** primjenjuje se usvojeno pravilo prednosti iz Poglavlja 14, a ako ono ne razriješi slučaj, odluka Komisije donosi se većinom ukupnog sastava Komisije.
+
+Takvo razrješenje **ne** mijenja zajedničke rang-pozicije Prijava sa jednakim brojem bodova.
+
+Kada su evidentirani svi potrebni ishodi treće sjednice, Platforma formira konačnu rang-listu kao zaključani rezultat.
+
+Nakon toga se **ne** smiju mijenjati konačne ocjene, rang-pozicije, **Podržava** / **Odbija**, predloženi iznosi niti rezultat razrješenja jednakih bodova.
+
+Ovaj kriterijum **ne** prepisuje detaljne formule i pojedinačne vrijednosti iz Poglavlja 14.
+
+## 18.7. Predlog Odluke, zaključivanje i objava
+
+### 18.7.1 — Generisanje Predloga Odluke
+
+**Ako:** konačna rang-lista je formirana i zaključana.
+
+**Kada:** Predsjednik Komisije izvrši **„Generiši Odluku“**.
+
+**Onda:** Platforma iz zaključanog konačnog rezultata formira Predlog Odluke bez mogućnosti da tom radnjom izmijeni konačne ocjene, rang-pozicije, **Podržava** / **Odbija**, predložene iznose ili druge zaključane rezultate Komisije.
+
+Generisani dokument ostaje **Predlog Odluke** i samim generisanjem **ne** postaje zvanična Odluka Sekretarijata.
+
+### 18.7.2 — Nastanak zvanične Odluke van Platforme
+
+**Ako:** Predlog Odluke je formiran.
+
+**Kada:** se postupak donošenja zvanične Odluke nastavlja.
+
+**Onda:** Platforma **ne** tretira elektronsko odobravanje, elektronski potpis ili tehničku potvrdu potpisa kao uslov ili događaj kojim Predlog postaje zvanična Odluka.
+
+Zvanična Odluka nastaje fizičkim potpisom nadležnog sekretara **van Platforme**.
+
+Platforma **ne** uvodi tehnički preduslov kojim provjerava da li je taj fizički događaj nastupio.
+
+### 18.7.3 — Zaključivanje Konkursa
+
+**Ako:** je Predsjednik Komisije, u skladu sa svojom poslovnom odgovornošću, obaviješten da je zvanična Odluka fizički potpisana.
+
+**Kada:** izvrši **„Zaključi Konkurs“**.
+
+**Onda:** Platforma označava Konkurs završenim i arhiviranim bez izmjene zaključane konačne rang-liste ili bilo kojeg rezultata Komisije.
+
+**„Zaključi Konkurs“** **nije** donošenje, potpisivanje, objavljivanje niti dostavljanje zvanične Odluke.
+
+Platforma **ne** zahtijeva tehničku potvrdu fizičkog potpisa kao preduslov za ovu radnju.
+
+### 18.7.4 — Čuvanje i objavljivanje zvanične Odluke
+
+**Ako:** Konkurs je zaključen i postoji elektronski primjerak fizički potpisane zvanične Odluke.
+
+**Kada:** Administrator konkursa učita taj primjerak i izvrši njegovu objavu.
+
+**Onda:** Platforma čuva zvaničnu Odluku povezanu sa konkretnim Konkursom i javno objavljuje upravo taj potpisani primjerak, a **ne** ranije generisani Predlog Odluke.
+
+Učitani zvanični primjerak čuva se u cjelini i **ne** može se uređivati kroz Platformu.
+
+Ovo je **ciljna V1 sposobnost**.
+
+Ovaj kriterijum **ne** definiše postupak zamjene pogrešno učitanog primjerka. To je otvorena zavisnost iz §17.3.
+
+## 18.8. Nepovratnost i funkcionalne zabrane
+
+### 18.8.1 — Nepovratnost završenog Konkursa
+
+**Ako:** Konkurs je zaključen i time završen i arhiviran.
+
+**Kada:** korisnik pokuša ponovo otvoriti Konkurs, nastaviti njegov završeni postupak ili izmijeniti zaključane rezultate.
+
+**Onda:** Platforma odbija radnju i čuva Konkurs i njegove zaključane rezultate neizmijenjenim.
+
+Naknadno čuvanje ili objavljivanje zvanične Odluke Sekretarijata **ne** otvara ponovo Konkurs niti omogućava nastavak završenog postupka.
+
+### 18.8.2 — Zabrana zaobilaženja funkcionalnih ograničenja
+
+**Ako:** je za određenu radnju u Poglavljima 7–16 usvojena zabrana, zaključavanje ili ograničenje pristupa.
+
+**Kada:** korisnik pokuša izvršiti zabranjenu radnju redovnim putem, neposrednim pristupom resursu ili korišćenjem privilegovane platformske uloge.
+
+**Onda:** Platforma sprečava izvršenje radnje i čuva zaštićene podatke i stanje neizmijenjenim.
+
+Uloga Administratora platforme ili Super administratora sama po sebi **ne** omogućava:
+
+* preuzimanje poslovne uloge drugog aktera Konkursa;
+* pristup sadržaju za koji ta uloga nema poslovno pravo pristupa;
+* izmjenu zaključane Prijave ili završenog individualnog ocjenjivanja;
+* izmjenu zaključane konačne rang-liste ili rezultata;
+* ponovno otvaranje završenog Konkursa.
+
+Ovaj kriterijum **ne** propisuje tehnički mehanizam sprovođenja ovih zabrana.
 
 ---
 
@@ -3219,4 +3534,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.13**
+**Kraj dokumenta KN-FS-003 v0.1.14**
