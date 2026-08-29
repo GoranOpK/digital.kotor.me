@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.15
+**Verzija:** 0.1.16
 **Datum:** 2026-08-29
 
 Povezani dokumenti:
@@ -45,6 +45,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.13 | 2026-08-29 | Napisano Poglavlje 17 — V1 granica. Inventar obuhvata: od konfiguracije Konkursa do objave već donesene zvanične Odluke. Van V1 ostaju postupanja poslije Odluke i radnje kojima Platforma ne upravlja. Poglavlje 11 i ostale neriešene tačke ostaju odložene zavisnosti, ne van V1. Poglavlja 18–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.14 | 2026-08-29 | Napisano Poglavlje 18 — Prihvatni kriterijumi. 24 provjerljiva ishoda usvojenih pravila Poglavlja 3–17. Format Ako / Kada / Onda. Poglavlje 11 i zavisnosti iz §17.3 ostaju bez prihvatnih kriterijuma. Poglavlje 19 ostaje za naredni odobreni dokumentacioni korak. |
 | 0.1.15 | 2026-08-29 | Napisano Poglavlje 19 — Sljedivost. Evidentirana matrica sljedivosti `KN-BM-003` → `KN-FS-003` → Poglavlje 18. Poglavlje 11 i zavisnosti iz §17.3 ostaju bez izmišljenih veza. Korekcija reference na `KN-BM-003` v1.0.4. |
+| 0.1.16 | 2026-08-29 | Controlled corrective. Tri ranije otvorene funkcionalne zavisnosti iz §17.3 razriješene su i vraćene u matična poglavlja: korekcija pogrešno objavljenog primjerka zvanične Odluke; nepovratnost završenog Prigovora; ponašanje Prijave `U pripremi` nakon isteka roka. Poglavlje 11 i zamjena člana Komisije ostaju neriešene. |
 
 Napomena:
 
@@ -295,7 +296,9 @@ Na Platformi upravlja konkursnim administrativnim radnjama u okviru usvojenih ov
 
 **Objava na Platformi nije donošenje Odluke.**
 
-Administrator Konkursa objavljuje već donesenu konačnu Odluku. Ne donosi je, ne odobrava je, ne mijenja je, ne zamjenjuje je i ne uređuje njen sadržaj. Ne djeluje u ime tog Sekretarijata.
+Administrator Konkursa objavljuje već donesenu konačnu Odluku. Ne donosi je, ne odobrava je i ne uređuje njen sadržaj. Ne djeluje u ime tog Sekretarijata.
+
+Korekcija elektronskog primjerka prema §15.7.5 **nije** donošenje, izmjena ni zamjena fizički donesene zvanične Odluke.
 
 Detalj kreiranja i objave Konkursa: Poglavlja 5 i 6. Detalj objave konačne Odluke: Poglavlje 15.
 
@@ -309,7 +312,7 @@ Administrator Konkursa **nema** ovlašćenje da:
 * utvrđuje rang-listu;
 * generiše predlog Odluke u ime Komisije niti završava Platform radnju kojom predlog postaje pripremljen za dostavu Sekretarijatu;
 * donosi konačnu Odluku;
-* odobrava, mijenja, zamjenjuje ili sadržinski uređuje konačnu Odluku;
+* odobrava, mijenja, zamjenjuje ili sadržinski uređuje fizički donesenu konačnu Odluku;
 * obavlja radnje koje pripadaju predsjedniku Komisije ili Administratoru platforme.
 
 V1 ne uvodi funkcije nakon objave konačne Odluke van `KN-BM-003` Poglavlja 15.
@@ -476,6 +479,8 @@ Istek roka **nije** dodatno stanje Prijave.
 * brisanje: DA;
 * podnošenje: DA.
 
+Nakon isteka roka Prijava **U pripremi** ostaje **U pripremi**. Ostaje sačuvana i samo za pregled. Detalj: §7.17.
+
 **Podnesena** nastaje eksplicitnim podnošenjem. Nakon podnošenja sadržaj je nepromjenjiv.
 
 * uređivanje: NE;
@@ -505,6 +510,8 @@ Prigovor je zaseban tok u kontekstu čl. 17:
 Prihvaćen: Prijava nastavlja dalji tok prema pravilima ovog profila.
 
 Odbijen: Prijava ostaje nepotpuna i ne razmatra se dalje.
+
+**Prihvaćen** i **Odbijen** su konačni ishodi tog Prigovora. Detalj: §10.4.
 
 ## 4.6. Eliminatorni kriterijumi
 
@@ -704,7 +711,9 @@ Sekretarijat za razvoj preduzetništva, komunalne poslove i saobraćaj donosi ko
 
 Nakon donošenja, Administrator Konkursa objavljuje **već donesenu** Odluku na Platformi.
 
-Administrator Konkursa ne donosi, ne odobrava i ne mijenja sadržaj Odluke.
+Administrator Konkursa ne donosi, ne odobrava i ne mijenja sadržaj fizički donesene Odluke.
+
+Korekcija elektronskog primjerka prema §15.7.5 **nije** izmjena fizički donesene Odluke.
 
 Objava je dozvoljena nad **arhiviranim** Konkursom. To **nije** ponovno otvaranje Konkursa.
 
@@ -1557,6 +1566,7 @@ Ako je Prijava još **U pripremi** kada rok za prijavu istekne:
 * ostaje evidentirana kao **U pripremi**;
 * ne prelazi automatski u drugo stanje;
 * **nije** podnesena;
+* ostaje sačuvana na Platformi;
 * Podnositeljka je može pregledati.
 
 Podnositeljka više ne može:
@@ -1569,7 +1579,9 @@ Podnositeljka više ne može:
 * podnijeti Prijavu;
 * obrisati Prijavu.
 
-Ovo poglavlje ne određuje trajanje čuvanja ni arhiviranja.
+Takva Prijava **ne** briše se automatski. V1 **ne** uvodi automatsko naknadno brisanje.
+
+Konkretan rok čuvanja **nije** definisan. To je namjerna V1 granica. **Nije** otvorena funkcionalna zavisnost.
 
 ## 7.18. Brisanje prije podnošenja
 
@@ -1920,6 +1932,20 @@ Ako je Prigovor **Odbijen**:
 
 * administrativni rezultat ostaje **Nepotpuna**;
 * Prijava se **ne** razmatra dalje.
+
+**Prihvaćen** i **Odbijen** su konačni ishodi tog Prigovora.
+
+Jednom završen Prigovor **ne** može se ponovo otvoriti kroz Platformu.
+
+Nema:
+
+* povratka u **Podnesen**;
+* ponovnog odlučivanja o istom Prigovoru;
+* administratorskog reopen-a.
+
+Administrator platforme i Super administrator **ne** mogu zaobići ovu zabranu samo zbog privilegovane platformske uloge.
+
+Eventualni drugi pravni postupak **nije** ponovno otvaranje ovog Prigovora i **nije** predmet ovog pravila. Ne uvodi se novi pravni lijek ni novo stanje Prigovora.
 
 Ako Prigovor nije podnesen u roku od 3 dana:
 
@@ -2921,13 +2947,15 @@ Radnja samo evidentira zvanični dokument uz konkretni Konkurs.
 
 Administrator konkursa postavlja elektronski primjerak fizički potpisane Odluke **u cjelini**.
 
+Elektronski primjerak fizički potpisane zvanične Odluke pripada konkretnom Konkursu.
+
 Dokument predstavlja zvanični primjerak Odluke za konkretni Konkurs.
 
 Dokument se **ne** uređuje kroz Platformu. Platforma iz dokumenta **ne** izračunava ponovo rezultate. Postavljanje dokumenta **ne** mijenja zaključanu konačnu rang-listu.
 
-Ovo poglavlje **ne** određuje format fajla, maksimalnu veličinu, naziv fajla, storage lokaciju ni tehničke validacije. To pripada tehničkoj specifikaciji.
+Korekcija pogrešno **objavljenog** primjerka uređena je u §15.7.5. Korekcija **nije** uređivanje dokumenta kroz Platformu.
 
-Postupak kontrolisane zamjene pogrešno postavljenog dokumenta **nije** definisan. Ovo poglavlje ga **ne** uvodi.
+Ovo poglavlje **ne** određuje format fajla, maksimalnu veličinu, naziv fajla, storage lokaciju ni tehničke validacije. To pripada tehničkoj specifikaciji.
 
 ## 15.7. Objavljivanje i dostavljanje
 
@@ -2935,13 +2963,20 @@ Postupak kontrolisane zamjene pogrešno postavljenog dokumenta **nije** definisa
 
 Nakon postavljanja potpisane zvanične Odluke Administrator konkursa objavljuje Odluku na Platformi.
 
-Javni objekat je **elektronski primjerak fizički potpisane zvanične Odluke**.
+Izvor zvanične Odluke je modul **Konkursi**. Javni kanal objave je postojeća platformska funkcionalnost **FT-004 Obavještenja**.
+
+**Ne** uvodi se paralelni javni sistem objavljivanja Odluke.
+
+Javni objekat je **elektronski primjerak fizički potpisane zvanične Odluke** Sekretarijata.
 
 **Ne** objavljuje se:
 
 * živi, ponovo generisani Predlog kao zamjena za zvanični dokument;
 * nepotpisani Predlog;
-* ponovo generisana rang-lista kao zamjena za zvaničnu Odluku.
+* ponovo generisana rang-lista kao zamjena za zvaničnu Odluku;
+* postojeći živi HTML prikaz Predloga (`competition_decision_html`) kao zvanična Odluka.
+
+`competition_decision_html` **nije** zvanična Odluka i **ne** smije biti javni objekat zvanične Odluke.
 
 Objavljivanje je **posebna radnja** nakon postavljanja. Objavljivanje **ne** mijenja rezultate niti rang-listu.
 
@@ -2976,6 +3011,27 @@ Platforma je odgovorna za objavljivanje zvanične Odluke na **digital.kotor.me**
 Ostali propisani kanali objavljivanja, uključujući internet stranicu Opštine Kotor, oglasnu tablu Opštine i medije (uključujući lokalni javni emiter), odvijaju se **van Platforme**.
 
 Platforma njima **ne** upravlja i **ne** evidentira njihovo izvršenje.
+
+### 15.7.5. Korekcija pogrešno objavljenog primjerka
+
+Ako je Administrator konkursa objavio pogrešan elektronski primjerak zvanične Odluke:
+
+1. Administrator konkursa objavljuje ispravan primjerak.
+2. Ispravni primjerak predstavlja **novu javnu objavu**.
+3. Prethodna pogrešna objava uklanja se iz aktivnog javnog prikaza.
+4. Pogrešni dokument nakon korekcije **ne** smije biti javno dostupan, uključujući pristup preko prethodnog javnog URL-a.
+5. Pogrešna objava ostaje interno evidentirana radi traga.
+6. Korekcija elektronskog primjerka:
+   * **nije** donošenje nove Odluke;
+   * **nije** izmjena fizički donesene Odluke;
+   * **ne** mijenja zaključanu konačnu rang-listu;
+   * **ne** mijenja rezultate;
+   * **ne** mijenja odluku Podržava / Odbija;
+   * **ne** mijenja predložene iznose podrške.
+
+Javni kanal korekcije je isti kao i za prvu objavu: **FT-004 Obavještenja**. Izvor ostaje modul Konkursi.
+
+Ovo poglavlje **ne** određuje tehničku realizaciju čuvanja, javnog URL-a ni internog traga.
 
 ## 15.8. Mogućnost raspisivanja drugog Konkursa
 
@@ -3036,7 +3092,9 @@ Nakon isteka roka **nije** dozvoljena naknadna dopuna zaključane Prijave kroz a
 
 Administrativna provjera i Prigovor mogu proizvoditi nove podatke postupka. **Ne** smiju mijenjati zaključani sadržaj Prijave.
 
-Ovo poglavlje **ne** uvodi pravilo o ponovnom otvaranju završenog Prigovora. To pitanje nije dovoljno poslovno definisano.
+Završen Prigovor **ne** može se ponovo otvoriti. **Ne** može se vratiti u **Podnesen**. **Ne** može se ponovo odlučivati o istom Prigovoru.
+
+Privilegovana platformska uloga **ne** daje pravo zaobilaženja ove zabrane.
 
 ## 16.3. Privatnost i pristup Prijavama
 
@@ -3102,9 +3160,11 @@ Predsjednik Komisije poslovno izvršava radnju **„Zaključi Konkurs“** nakon
 
 Radnja **„Zaključi Konkurs“** **ne** smije mijenjati konačni rezultat. **Nije** usvajanje, potpisivanje, objavljivanje niti dostavljanje Odluke.
 
-Elektronska kopija fizički potpisane zvanične Odluke čuva se na Platformi kao cjelovit i nepromjenjiv dokument. Objavljivanje te kopije je **zasebna** radnja.
+Elektronska kopija fizički potpisane zvanične Odluke čuva se na Platformi kao cjelovit dokument. Objavljivanje te kopije je **zasebna** radnja. Javni kanal objave je **FT-004 Obavještenja**.
 
-Ovo poglavlje **ne** definiše postupak zamjene pogrešno učitanog fajla zvanične Odluke. To pitanje ostaje otvoreno jer nije poslovno razriješeno prethodnim poglavljima.
+Korekcija pogrešno objavljenog primjerka uređena je u §15.7.5.
+
+Korekcija **ne** mijenja zaključanu konačnu rang-listu, rezultate, odluku Podržava / Odbija ni predložene iznose. Povučeni pogrešni primjerak **ne** smije ostati javno dostupan. Interni trag pogrešne objave ostaje.
 
 ## 16.7. Nepovratnost završenog Konkursa
 
@@ -3193,13 +3253,7 @@ Otvorene i odložene zavisnosti **nijesu** automatski funkcionalnosti van V1. Ov
 
 1. **Poglavlje 11 / eliminatorni kriterijumi 2 i 3.** Poglavlje 11 ostaje **OBUSTAVLJENO**. Čeka autoritativni izvor Odluke 027/26. Kriterijumi 2 i 3 **nijesu** ukinuti niti isključeni iz V1. Njihovo funkcionalno ponašanje se ovdje **ne** definiše. Eliminatorni kriterijum 1 ostaje definisan kroz Poglavlje 10. **Ne** uvodi se privremeni model podobnosti za kriterijume 2 i 3.
 
-2. **Zamjena pogrešno učitanog primjerka zvanične Odluke.** Postupak kontrolisane zamjene **nije** definisan. Ovo poglavlje ga **ne** rješava.
-
-3. **Zamjena člana Komisije nakon završenog individualnog ocjenjivanja.** Postupanje sa već završenim individualnim ocjenama ostaje neriješeno. Ovo poglavlje **ne** izmišlja to pravilo.
-
-4. **Ponovno otvaranje završenog Prigovora.** Postupak **nije** definisan. Ovo poglavlje ga **ne** uvodi.
-
-5. **Trajanje čuvanja Prijave U pripremi nakon isteka roka.** Postojeće pravilo da nakon isteka roka Prijava ostaje samo za pregled ostaje na snazi. Period čuvanja **nije** određen.
+2. **Zamjena člana Komisije nakon završenog individualnog ocjenjivanja.** Postupanje sa već završenim individualnim ocjenama ostaje neriješeno. Ovo poglavlje **ne** izmišlja to pravilo.
 
 Nijedna otvorena tačka **ne** smije se rješavati implementacionom pretpostavkom. Ako je razrješenje potrebno za V1, prvo se mora usvojiti odgovarajuće poslovno ili funkcionalno pravilo u poglavlju kojem tema pripada.
 
@@ -3213,7 +3267,7 @@ Ovo poglavlje **ne** uvodi nova poslovna ili funkcionalna pravila.
 
 Prihvatni kriterijumi predstavljaju **provjerljive funkcionalne ishode** pravila već usvojenih u prethodnim poglavljima ovog dokumenta.
 
-Otvorene i odložene zavisnosti iz §17.3 **ne** dobijaju prihvatne kriterijume dok odgovarajuće pravilo ne bude usvojeno.
+Preostale otvorene i odložene zavisnosti iz §17.3 **ne** dobijaju prihvatne kriterijume dok odgovarajuće pravilo ne bude usvojeno.
 
 Za eliminatorne kriterijume 2 i 3 iz Poglavlja 11 **ne** definišu se prihvatni kriterijumi dok je Poglavlje 11 **OBUSTAVLJENO**.
 
@@ -3269,7 +3323,9 @@ Nedostatak pratećeg dokumenta koji prema Poglavlju 7 proizvodi samo upozorenje 
 
 **Onda:** Platforma omogućava samo pregled i onemogućava izmjenu, brisanje i finalno podnošenje.
 
-Trajanje čuvanja ovakve Prijave **nije** predmet ovog kriterijuma. To je otvorena tačka iz §17.3.
+Prijava ostaje **U pripremi** i ostaje sačuvana. **Ne** briše se automatski. V1 **ne** uvodi automatsko naknadno brisanje.
+
+Konkretan rok čuvanja **nije** prihvatni ishod ovog kriterijuma. **Nije** definisan ovim FS-om.
 
 ## 18.3. Privatnost i pristup
 
@@ -3333,9 +3389,11 @@ Ako Komisija odbije Prigovor, rezultat ostaje **Nepotpuna**.
 
 Ako blagovremeni Prigovor nije podnesen, **Nepotpuna** postaje konačni rezultat administrativne provjere.
 
+Nakon ishoda **Prihvaćen** ili **Odbijen** Platforma **ne** vraća Prigovor u **Podnesen**, **ne** omogućava ponovno odlučivanje o istom Prigovoru i **ne** omogućava privilegovani reopen.
+
 Prigovor **ne** omogućava naknadnu dopunu ili zamjenu dokumentacije.
 
-Ovaj kriterijum **ne** uvodi novo ponašanje Platforme vezano za istek roka Komisije od 7 dana. **Ne** definiše ponovno otvaranje završenog Prigovora.
+Ovaj kriterijum **ne** uvodi novo ponašanje Platforme vezano za istek roka Komisije od 7 dana.
 
 ## 18.5. Individualno ocjenjivanje
 
@@ -3491,9 +3549,21 @@ Platforma **ne** zahtijeva tehničku potvrdu fizičkog potpisa kao preduslov za 
 
 Učitani zvanični primjerak čuva se u cjelini i **ne** može se uređivati kroz Platformu.
 
+Javni kanal objave je **FT-004 Obavještenja**. `competition_decision_html` **nije** zvanična Odluka i **ne** smije biti javni objekat zvanične Odluke.
+
 Ovo je **ciljna V1 sposobnost**.
 
-Ovaj kriterijum **ne** definiše postupak zamjene pogrešno učitanog primjerka. To je otvorena zavisnost iz §17.3.
+**Ako:** je javno objavljen pogrešan elektronski primjerak zvanične Odluke.
+
+**Kada:** Administrator konkursa izvrši korekciju objavom ispravnog primjerka.
+
+**Onda:**
+
+* ispravni primjerak predstavlja novu javnu objavu;
+* prethodna pogrešna objava više nije aktivna;
+* pogrešni dokument **nije** dostupan ni preko prethodnog javnog URL-a;
+* interni trag pogrešne objave ostaje;
+* rang-lista, rezultati i iznosi ostaju nepromijenjeni.
 
 ## 18.8. Nepovratnost i funkcionalne zabrane
 
@@ -3531,7 +3601,7 @@ Ovaj kriterijum **ne** propisuje tehnički mehanizam sprovođenja ovih zabrana.
 
 Status poglavlja: USVOJENO
 
-Ovo poglavlje evidentira sljedivost već usvojenih pravila. **Ne** uvodi nova poslovna ni funkcionalna pravila. **Ne** mijenja Poglavlja 1–18. **Ne** rješava Poglavlje 11. **Ne** rješava otvorene i odložene zavisnosti iz §17.3. **Ne** određuje tehničku realizaciju.
+Ovo poglavlje evidentira sljedivost već usvojenih pravila. **Ne** uvodi nova poslovna ni funkcionalna pravila. **Ne** mijenja Poglavlja 1–18. **Ne** rješava Poglavlje 11. **Ne** rješava preostalu otvorenu zavisnost iz §17.3 (zamjena člana Komisije nakon završenog individualnog ocjenjivanja). **Ne** određuje tehničku realizaciju.
 
 Osnov: `KN-BM-003` v1.0.4; Poglavlja 1–18 ovog dokumenta.
 
@@ -3638,7 +3708,7 @@ Matrica sljedivosti:
 | Poslovni izvor | Funkcionalna razrada | Prihvatni kriterijum | Status / napomena |
 |---|---|---|---|
 | `KN-BM-003` §4.1, §7 | §3.2, §4.4, §7.14–§7.16 | §18.2.1, §18.2.2 | USVOJENO. Podnositeljka; stanja U pripremi / Podnesena; finalno podnošenje; zaključavanje. |
-| `KN-BM-003` §7 | §7.17 | §18.2.3 | USVOJENO. U pripremi nakon isteka roka ostaje samo za pregled. Period čuvanja: vidi OTVORENO. |
+| `KN-BM-003` §7 | §7.17 | §18.2.3 | USVOJENO. U pripremi nakon isteka roka ostaje sačuvana i samo za pregled. Nema automatskog brisanja u V1. Konkretan rok čuvanja nije propisan ovim FS-om. |
 | `KN-BM-003` §4.2, §5 | §3.3, §5.1, §5.4, §5.5 | §18.1.1 | USVOJENO. Administrator konkursa kreira konkretan Konkurs i bira već imenovanu Komisiju. |
 | `KN-BM-003` §4.3, §4.5 | §3.4, §3.5, §5.1 | §18.1.1 | USVOJENO. Komisija od pet članova; Predsjednik evidentira u ime Komisije; imenovanje Sekretarijata ostaje van Platforme. |
 | `KN-BM-003` §4.4 | §3.6.B, §16.1 | §18.8.2 | USVOJENO. Administrator platforme nije profilni konkursni akter. §18.8.2 je grupna funkcionalna zabrana. |
@@ -3651,7 +3721,7 @@ Matrica sljedivosti:
 | `KN-BM-003` §8 | §9.2, §9.3 | §18.3.2 | USVOJENO. Nakon isteka roka Komisiji su dostupne samo Podnesene Prijave konkretnog Konkursa, aktivnim članovima dodijeljene Komisije. |
 | Najbliži poslovni kontekst: `KN-BM-003` §8. Neposredni izvor: ovaj dokument §9.4 | §9.4, §16.3 | §18.3.3 | USVOJENO. Pregled prateće dokumentacije DA, preuzimanje NE. `KN-BM-003` §8 uređuje pristup dokumentaciji, ali **ne** propisuje eksplicitno zabranu preuzimanja. |
 | `KN-BM-003` §9, §9.1, §10 (kriterijum 1) | §10.2, §10.3, §10.5 | §18.4.1 | USVOJENO. Eliminatorni kriterijum 1 se funkcionalno obrađuje kroz administrativnu provjeru. |
-| `KN-BM-003` §9.2 | §10.4 | §18.4.2 | USVOJENO. Prigovor preko Platforme, bez dopune zaključanog sadržaja. Rok Komisije od 7 dana nije prihvatni ishod. |
+| `KN-BM-003` §9.2 | §10.4 | §18.4.2 | USVOJENO. Prigovor preko Platforme, bez dopune zaključanog sadržaja. Rok Komisije od 7 dana nije prihvatni ishod. Nepovratnost `Prihvaćen` / `Odbijen` je **funkcionalna razrada**. `KN-BM-003` §9.2 taj detalj **ne** propisuje eksplicitno. |
 | `KN-BM-003` §10 (kriterijumi 2 i 3) | §11 | — | OBUSTAVLJENO. Poglavlje 11. Funkcionalno ponašanje se **ne** definiše. BM Napomena **nije** zamjena za nedostajuću FS odluku. |
 | `KN-BM-003` §11 | §12.1–§12.4 | §18.5.1 | USVOJENO. Druga sjednica i usmeno obrazloženje su van Platforme. §18.5.1 pokriva samo negativni ishod: Platforma ne zahtijeva tehničku potvrdu usmenog obrazloženja. |
 | `KN-BM-003` §12, §12.1, §12.2 | §13.1–§13.3 | §18.5.1 | USVOJENO. Deset kriterijuma; skala 1–5; nacrt. |
@@ -3666,22 +3736,16 @@ Matrica sljedivosti:
 | `KN-BM-003` §13.8 | §15.8, §17.2 | — | USVOJENO. Evidentirana je samo poslovna mogućnost drugog Konkursa. Detaljan tok **nije** predmet ovog FS-a. |
 | `KN-BM-003` §14 | §15.2 | §18.7.1 | USVOJENO. Generiši Odluku proizvodi Predlog i ne mijenja zaključani rezultat. |
 | `KN-BM-003` §14.1 | §15.4, §15.5, §16.6, §16.7 | §18.7.3, §18.8.1 | USVOJENO. Zaključi Konkurs nakon poslovnog obavještenja o potpisu; arhiva istim činom; nije donošenje Odluke. |
-| `KN-BM-003` §15.2 | §15.6, §15.7.1 | §18.7.4 | USVOJENO. Čuvanje i objava potpisanog primjerka je ciljna V1 sposobnost. Dostava podržanim Podnositeljkama ostaje van Platforme. Zamjena fajla: vidi OTVORENO. |
+| `KN-BM-003` §15.2 | §15.6, §15.7.1, §15.7.5 | §18.7.4 | USVOJENO. Čuvanje i objava potpisanog primjerka je ciljna V1 sposobnost. Javni objekat je potpisani primjerak. FT-004 je javni kanal, ne vlasnik Odluke. Korekcija pogrešno objavljenog primjerka: §15.7.5. Korekcija je **funkcionalna razrada** prema §19.2.6. Dostava podržanim Podnositeljkama ostaje van Platforme. |
 | `KN-BM-003` §15.1 | §15.7.2 | — | USVOJENO. Rok objave 45 dana od isteka roka za Prijave je poslovni rok. Nije automatska radnja Platforme. Nema zasebnog prihvatnog kriterijuma. |
 | `KN-BM-003` §15.3 | §1.2, §4.15, §17.1, §17.2 | — | USVOJENO. V1 na Platformi završava se objavom već donesene Odluke. |
 | `KN-BM-003` §7, §12.4, §13.7, §14.1 | §16.1, §16.2, §16.5, §16.7 | §18.8.1, §18.8.2 | USVOJENO. Grupna zaštita zaključanih podataka i zabrana zaobilaženja. |
-| — | §15.6.4, §16.6, §17.3 | — | OTVORENO. Zamjena pogrešno učitanog primjerka zvanične Odluke. |
-| — | §16.2, §17.3 | — | OTVORENO. Ponovno otvaranje završenog Prigovora. |
-| — | §7.17, §17.3 | — | OTVORENO. Trajanje čuvanja Prijave U pripremi nakon isteka roka. |
 
 Pregled obustavljenih i otvorenih veza, bez novih pravila:
 
 1. Eliminatorni kriterijumi 2 i 3 — **OBUSTAVLJENO** (`KN-BM-003` §10; ovaj dokument §11, §17.3).
-2. Zamjena pogrešno učitanog primjerka zvanične Odluke — **OTVORENO** (§15.6.4, §16.6, §17.3).
-3. Zamjena člana Komisije nakon završenog individualnog ocjenjivanja / sudbina završenih ocjena — **OTVORENO** (`KN-BM-003` §12.7; ovaj dokument §5.3, §17.3).
-4. Ponovno otvaranje završenog Prigovora — **OTVORENO** (§16.2, §17.3).
-5. Trajanje čuvanja Prijave U pripremi nakon isteka roka — **OTVORENO** (§7.17, §17.3).
+2. Zamjena člana Komisije nakon završenog individualnog ocjenjivanja / sudbina završenih ocjena — **OTVORENO** (`KN-BM-003` §12.7; ovaj dokument §5.3, §17.3).
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.15**
+**Kraj dokumenta KN-FS-003 v0.1.16**
