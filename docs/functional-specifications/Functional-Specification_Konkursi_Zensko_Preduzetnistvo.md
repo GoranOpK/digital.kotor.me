@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.10
+**Verzija:** 0.1.11
 **Datum:** 2026-08-29
 
 Povezani dokumenti:
@@ -40,6 +40,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.8 | 2026-08-28 | Napisano Poglavlje 12 — Druga sjednica i usmeno obrazloženje. Druga sjednica i usmeno obrazloženje su van Platforme. Platforma ne zakazuje, ne poziva i ne evidentira prisustvo. Kriterijum 10 se ocjenjuje nakon usmenog obrazloženja kao poslovno pravilo, bez tehničkog otključavanja. Poglavlja 13–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.9 | 2026-08-29 | Napisano Poglavlje 13 — Individualno ocjenjivanje. Pet članova ocjenjuje 10 pozitivnih kriterijuma skalom 1–5. Nacrt do eksplicitnog Završi ocjenjivanje. Tajnost do završetka ciklusa. Ostale napomene opcione. Dodatni bodovi, prosjeci, prag 30 i rang-lista pripadaju Poglavlju 14. Poglavlja 14–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.10 | 2026-08-29 | Napisano Poglavlje 14 — Rang-lista, iznosi i treća sjednica. Zbirni rezultati i preliminarna rang-lista nastaju tek po završetku cjelokupnog ciklusa. Dodatni bodovi, konačna ocjena, prag 30, treća sjednica van Platforme, predloženi iznosi, tie-break čl. 21 i zaključana konačna rang-lista. Predlog Odluke, zatvaranje, arhiva i objava pripadaju Poglavlju 15. Poglavlja 15–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.11 | 2026-08-29 | Napisano Poglavlje 15 — Predlog Odluke, zvanična Odluka, zaključivanje, arhiva i objava. Predlog se generiše iz zaključane konačne rang-liste. Zvanična Odluka nastaje fizičkim potpisom sekretara van Platforme. Zaključivanje nije donošenje. Ciljno: Administrator konkursa postavlja i objavljuje potpisani primjerak. Poglavlja 16–19 ostaju za naredne odobrene dokumentacione korake. |
 
 Napomena:
 
@@ -77,13 +78,13 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 12. Druga sjednica i usmeno obrazloženje | USVOJENO |
 | 13. Individualno ocjenjivanje | USVOJENO |
 | 14. Rang-lista, iznosi i treća sjednica | USVOJENO |
-| 15. Predlog Odluke, zatvaranje, arhiva i objava | NIJE ZAPOČETO |
+| 15. Predlog Odluke, zatvaranje, arhiva i objava | USVOJENO |
 | 16. Funkcionalne zabrane i enforcement | NIJE ZAPOČETO |
 | 17. V1 granica | NIJE ZAPOČETO |
 | 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 15–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
+Radna struktura Poglavlja 16–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
 
 ---
 
@@ -2666,11 +2667,336 @@ Izričito **ne** obuhvata:
 
 # 15. Predlog Odluke, zatvaranje, arhiva i objava
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje određuje tok od zaključane konačne rang-liste do Predloga Odluke, nastanka zvanične Odluke, zaključivanja Konkursa, arhive i objavljivanja zvanične Odluke na Platformi.
+
+Poglavlje **ne** mijenja Poglavlje 14. Konačna rang-lista ostaje zaključana. Nema novog ocjenjivanja ni nove selekcije.
+
+Kanonski redoslijed:
+
+* zaključana konačna rang-lista;
+* Platforma generiše Predlog Odluke;
+* Komisija provjerava Predlog;
+* Predlog se štampa;
+* van Platforme se dostavlja sekretaru nadležnog Sekretarijata;
+* sekretar pregleda i fizički potpisuje;
+* fizičkim potpisom Predlog postaje zvanična Odluka;
+* sekretar van Platforme obavještava Komisiju;
+* Predsjednik Komisije zaključuje Konkurs;
+* Konkurs se istovremeno smatra arhiviranim;
+* Administrator konkursa postavlja elektronski primjerak fizički potpisane zvanične Odluke;
+* Administrator konkursa objavljuje taj zvanični primjerak na Platformi.
+
+**Predlog Odluke nije zvanična Odluka.** Generisanje na Platformi **ne** predstavlja donošenje Odluke. Zvanična Odluka nastaje fizičkim potpisom sekretara **van Platforme**. Zaključivanje Konkursa **nije** donošenje Odluke.
+
+Osnov: `KN-BM-003` §4.2, §4.3, §4.5, §13.8, §14, §15; Poglavlja 3.3, 3.5, 4.12 i 14 ovog dokumenta.
+
+## 15.1. Polazna tačka — zaključana konačna rang-lista
+
+Poglavlje 15 počinje kada Platforma formira konačnu rang-listu prema Poglavlju 14.
+
+Konačna rang-lista je zaključani rezultat rada Komisije i **ulaz** u postupak Predloga Odluke i zvanične Odluke.
+
+U Poglavlju 15 **nema**:
+
+* ponovnog ocjenjivanja;
+* nove selekcije;
+* izmjene individualnih ocjena;
+* izmjene dodatnih bodova;
+* izmjene konačnih ocjena;
+* izmjene pozicija;
+* izmjene zaključka Podržava / Odbija;
+* izmjene predloženih iznosa podrške;
+* izmjene ishoda prioriteta finansiranja pri jednakim bodovima;
+* izmjene obrazloženja / napomena Komisije;
+* izmjene drugih zaključanih podataka konačne rang-liste.
+
+Predlog Odluke i svi naredni koraci koriste zaključanu konačnu rang-listu kao izvor rezultata. Ovo poglavlje **ne** razrađuje ponovo pravila Poglavlja 14.
+
+## 15.2. Predlog Odluke
+
+### 15.2.1. Generisanje Predloga Odluke
+
+Predlog Odluke je šablonski dokument. Platforma ga generiše iz zaključane konačne rang-liste i drugih već evidentiranih podataka Konkursa potrebnih za dokument.
+
+Predsjednik Komisije pokreće generisanje postojećom funkcijom **„Generiši Odluku“**, u ime Komisije. Predsjednik **nije** samostalni donosilac Predloga.
+
+Predsjednik **ne** sastavlja Predlog ručno i **ne** odlučuje ponovo o rezultatima.
+
+Platforma popunjava unaprijed definisani šablon. Šablon može obuhvatiti:
+
+* podržane Biznis planove;
+* Podnositeljke;
+* konačne ocjene;
+* predložene iznose podrške;
+* ukupna raspoloživa i dodijeljena sredstva;
+* druge već evidentirane podatke Konkursa potrebne za šablon.
+
+Šablon može sadržati unaprijed definisani pravni osnov, dispozitiv, članove, obrazloženje i mjesto za potpis sekretara.
+
+Ovo poglavlje **ne** zamrzava konkretan tekst šablona jedne godišnje instance. Ne pretvara postojeći prikaz na Platformi u kanonski tekst ovog dokumenta.
+
+Postojeći UI ili kod može koristiti naziv „Odluka“. To **ne** određuje poslovno značenje. Dokument nastao ovom funkcijom je **Predlog Odluke**.
+
+### 15.2.2. Izvor podataka i nepromjenljivost rezultata
+
+Predlog koristi zaključane podatke konačne rang-liste i druge već evidentirane podatke Konkursa potrebne za šablon.
+
+Generisanje **ne može** mijenjati:
+
+* podržane Prijave;
+* konačne ocjene;
+* pozicije / rang;
+* predložene iznose podrške;
+* druge zaključane rezultate.
+
+Funkcija „Generiši Odluku“ **nije** editor rezultata i **nije** slobodni editor dokumenta.
+
+### 15.2.3. Status generisanog dokumenta
+
+Dokument nastao funkcijom „Generiši Odluku“ je **Predlog Odluke**.
+
+Generisanjem:
+
+* **ne** nastaje zvanična Odluka Sekretarijata;
+* Konkurs se **ne** zaključuje;
+* dokument se **ne** objavljuje kao zvanična Odluka;
+* **ne** vrši se dostavljanje zvanične Odluke.
+
+Samo nadležni sekretar fizičkim potpisom pretvara Predlog u zvaničnu Odluku, prema §15.3.2.
+
+### 15.2.4. Potpisi i Predlog Odluke
+
+Generisanje Predloga na Platformi **ne** uvodi novi elektronski postupak potpisivanja.
+
+Potpisi članova Komisije koji se odnose na konačnu rang-listu ostaju vezani za konačnu rang-listu, prema već usvojenom pravilu Poglavlja 14. **Ne** prenose se kao elektronski potpisi Predloga.
+
+Ne uvodi se:
+
+* pet elektronskih potpisa Predloga;
+* status „čeka potpis“, „djelimično potpisan“ ili „potpisan“ za Predlog;
+* elektronsko potpisivanje Predloga;
+* novi signing workflow.
+
+Ako je fizički potpis na Predlogu potreban prema formalnom postupku, odvija se **van Platforme**.
+
+## 15.3. Postupanje sa Predlogom i nastanak zvanične Odluke
+
+### 15.3.1. Provjera Predloga Odluke od strane Komisije
+
+Nakon generisanja Komisija provjerava Predlog prije upućivanja Sekretarijatu.
+
+Provjera potvrđuje da dokument odgovara zaključanoj konačnoj rang-listi i rezultatima Komisije.
+
+Provjera **nije** novi krug odlučivanja. Komisija kroz provjeru **ne** mijenja zaključane rezultate.
+
+Ako je Predlog ispravan:
+
+* štampa se;
+* fizički se dostavlja sekretaru Sekretarijata za razvoj preduzetništva, komunalne poslove i saobraćaj.
+
+Platforma u V1 **ne** upravlja fizičkim slanjem dokumenta sekretaru.
+
+### 15.3.2. Potpis sekretara i nastanak zvanične Odluke
+
+Sekretar **van Platforme** prima i pregleda Predlog.
+
+Ako ga prihvata, fizički ga potpisuje.
+
+**Fizičkim potpisom sekretara Predlog Odluke postaje zvanična Odluka** Sekretarijata za razvoj preduzetništva, komunalne poslove i saobraćaj.
+
+Prije fizičkog potpisa dokument je Predlog.
+
+Generisanje, provjera, štampanje ili fizička dostava sekretaru **sami po sebi** ne čine dokument zvaničnom Odlukom.
+
+Platforma **nema**:
+
+* elektronsko prihvatanje sekretara;
+* elektronski potpis sekretara;
+* poseban workflow Sekretarijata;
+* checkbox „sekretar prihvatio“;
+* status prihvatanja sekretara;
+* poslovni korak `proposed_at` ili sličan zapis samo radi ovog toka.
+
+### 15.3.3. Obavještavanje Komisije
+
+Nakon fizičkog potpisa sekretar **van Platforme** obavještava Komisiju da je Predlog prihvaćen i da je nastala zvanična Odluka.
+
+Platforma **ne** evidentira posebno ovo obavještenje.
+
+Nakon tog obavještenja Predsjednik Komisije može koristiti funkciju „Zaključi Konkurs“ (§15.4).
+
+To je poslovna odgovornost Predsjednika. Platforma **ne** provjerava elektronski da je fizički potpis izvršen niti da je obavještenje stiglo.
+
+## 15.4. Zatvaranje Konkursa
+
+### 15.4.1. Ko i kada zaključuje Konkurs
+
+Konkurs zaključuje **isključivo Predsjednik Komisije**, kao poslovnu radnju, postojećom funkcijom **„Zaključi Konkurs“**.
+
+Predsjednik to radi **tek nakon** što ga sekretar van Platforme obavijesti da je Predlog fizički potpisan i postao zvanična Odluka.
+
+Zaključivanje:
+
+* **nije** automatsko;
+* **ne** izvršava ga Sekretarijat;
+* **ne** izvršava ga Administrator konkursa;
+* **ne** izvršava ga Administrator platforme / Super administrator kao poslovnu radnju.
+
+Platforma **ne** provjerava elektronski fizički potpis sekretara.
+
+Postojeći UI ili kod može koristiti drugi natpis za istu funkciju. Poslovni naziv radnje je **„Zaključi Konkurs“**.
+
+### 15.4.2. Posljedice zaključivanja
+
+Klikom na „Zaključi Konkurs“ konkretni Konkurs prelazi u završeno stanje. Postupak Konkursa na Platformi smatra se zaključenim.
+
+Zaključivanje **ne** mijenja:
+
+* konačnu rang-listu;
+* rezultate Komisije;
+* konačne ocjene;
+* predložene iznose podrške;
+* zvaničnu Odluku.
+
+Zaključivanje **nije** donošenje Odluke. Zvanična Odluka već postoji fizičkim potpisom sekretara.
+
+Zaključivanje **nije** objavljivanje Odluke.
+
+Detaljne funkcionalne zabrane, autorizacija i server-side enforcement nakon zaključivanja pripadaju Poglavlju 16.
+
+## 15.5. Arhiva
+
+### 15.5.1. Automatsko arhiviranje zaključenog Konkursa
+
+Zaključivanjem se Konkurs **istovremeno** tretira kao arhiviran.
+
+Nema posebnog poslovnog koraka niti dugmeta „Arhiviraj“. Nije potrebna dodatna radnja Predsjednika Komisije, Administratora konkursa ili Administratora platforme.
+
+Arhiviranje **ne** mijenja rezultate. Arhivirani Konkurs ostaje sačuvan kao istorijski zapis.
+
+Arhiviranje **nije** objavljivanje Odluke.
+
+## 15.6. Konačna Odluka Sekretarijata
+
+### 15.6.1. Zvanična Odluka kao dokument za objavljivanje
+
+Zvanična Odluka je dokument nastao fizičkim potpisom sekretara na prethodno generisanom Predlogu.
+
+Platforma nakon zaključivanja **ne** generiše novu konačnu Odluku.
+
+Zaključivanje samo po sebi **ne** pretvara Predlog u zvaničnu Odluku.
+
+Za dalje postupanje relevantan je fizički potpisani primjerak zvanične Odluke.
+
+### 15.6.2. Čuvanje zvanične Odluke na Platformi
+
+Uvodi se **ciljna** funkcionalnost čuvanja elektronskog primjerka fizički potpisane zvanične Odluke na Platformi, povezanog sa konkretnim Konkursom.
+
+Ovo poglavlje **ne** tvrdi da je ta funkcionalnost već implementirana. Definiše je kao cilj.
+
+### 15.6.3. Postavljanje potpisane Odluke
+
+Administrator konkursa postavlja na Platformu elektronski primjerak fizički potpisane zvanične Odluke.
+
+Postavljanje se vrši **nakon** što je Predsjednik zaključio Konkurs.
+
+Postavljanjem:
+
+* Odluka se **ne** donosi;
+* Administrator konkursa **ne** potvrđuje rezultate;
+* **ne** mijenja se rang-lista;
+* **ne** mijenjaju se ocjene;
+* **ne** mijenja se zaključak Podržava / Odbija;
+* **ne** mijenjaju se predloženi iznosi podrške.
+
+Radnja samo evidentira zvanični dokument uz konkretni Konkurs.
+
+### 15.6.4. Integritet zvanične Odluke
+
+Administrator konkursa postavlja elektronski primjerak fizički potpisane Odluke **u cjelini**.
+
+Dokument predstavlja zvanični primjerak Odluke za konkretni Konkurs.
+
+Dokument se **ne** uređuje kroz Platformu. Platforma iz dokumenta **ne** izračunava ponovo rezultate. Postavljanje dokumenta **ne** mijenja zaključanu konačnu rang-listu.
+
+Ovo poglavlje **ne** određuje format fajla, maksimalnu veličinu, naziv fajla, storage lokaciju ni tehničke validacije. To pripada tehničkoj specifikaciji.
+
+Postupak kontrolisane zamjene pogrešno postavljenog dokumenta **nije** definisan. Ovo poglavlje ga **ne** uvodi.
+
+## 15.7. Objavljivanje i dostavljanje
+
+### 15.7.1. Objavljivanje zvanične Odluke na Platformi
+
+Nakon postavljanja potpisane zvanične Odluke Administrator konkursa objavljuje Odluku na Platformi.
+
+Javni objekat je **elektronski primjerak fizički potpisane zvanične Odluke**.
+
+**Ne** objavljuje se:
+
+* živi, ponovo generisani Predlog kao zamjena za zvanični dokument;
+* nepotpisani Predlog;
+* ponovo generisana rang-lista kao zamjena za zvaničnu Odluku.
+
+Objavljivanje je **posebna radnja** nakon postavljanja. Objavljivanje **ne** mijenja rezultate niti rang-listu.
+
+Objava na Platformi **nije** donošenje Odluke. Administrator konkursa objavljuje već donesenu zvaničnu Odluku, u skladu sa Poglavljem 3.3.
+
+### 15.7.2. Rok za objavljivanje Odluke
+
+Zvanična Odluka mora biti objavljena najkasnije u roku od **45 dana od isteka roka za podnošenje Prijava**.
+
+Rok se **ne** računa od:
+
+* generisanja Predloga;
+* fizičkog potpisa sekretara;
+* zaključivanja Konkursa.
+
+Ovo je poslovni rok. Ne uvodi se automatska objava 45. dana niti novo ponašanje za prekoračenje roka bez posebne poslovne odluke.
+
+### 15.7.3. Dostavljanje Odluke podržanim Podnositeljkama
+
+Zvanična Odluka se **van Platforme** dostavlja samo Podnositeljkama čiji su Biznis planovi Odlukom **podržani** za dodjelu sredstava.
+
+Ne dostavlja se kroz Platformu. Ne uvodi se email, Platform notification, PDF prilog ni link kao obavezni sistemski workflow dostave.
+
+Dostava **ne** obuhvata sve Podnositeljke samo zato što imaju Podnesenu Prijavu.
+
+Predmet dostavljanja je **zvanična Odluka**, ne Predlog.
+
+### 15.7.4. Ostali kanali javnog objavljivanja
+
+Platforma je odgovorna za objavljivanje zvanične Odluke na **digital.kotor.me**.
+
+Ostali propisani kanali objavljivanja, uključujući internet stranicu Opštine Kotor, oglasnu tablu Opštine i medije (uključujući lokalni javni emiter), odvijaju se **van Platforme**.
+
+Platforma njima **ne** upravlja i **ne** evidentira njihovo izvršenje.
+
+## 15.8. Mogućnost raspisivanja drugog Konkursa
+
+Ako sredstva namijenjena podršci ženskom preduzetništvu nijesu utrošena, odnosno nijesu u potpunosti raspoređena do kraja trećeg kvartala, može se raspisati drugi Konkurs.
+
+Poglavlje 15 evidentira **isključivo** ovu poslovnu mogućnost. Kanonska razrada ostaje u `KN-BM-003` §13.8.
+
+Ovo poglavlje **ne** određuje kreiranje drugog Konkursa, novu instancu, kopiranje konfiguracije, rokove, iznose ni workflow drugog Konkursa.
+
+## 15.9. Granica prema Poglavlju 16
+
+Poglavlje 15 završava poslovni tok:
+
+* zaključana konačna rang-lista;
+* Predlog Odluke;
+* zvanična Odluka;
+* zaključivanje / arhiva;
+* objavljivanje zvanične Odluke na Platformi.
+
+Detaljne funkcionalne zabrane, authorization pravila i server-side enforcement kojima se štite zaključani rezultati i završeni Konkurs pripadaju **Poglavlju 16**.
+
+Ovo poglavlje ih **ne** razrađuje.
 
 ---
+
 
 # 16. Funkcionalne zabrane i enforcement
 
@@ -2704,4 +3030,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.10**
+**Kraj dokumenta KN-FS-003 v0.1.11**

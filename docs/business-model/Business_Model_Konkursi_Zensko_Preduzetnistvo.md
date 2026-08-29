@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.3
-**Datum:** 2026-08-28
+**Verzija:** 1.0.4
+**Datum:** 2026-08-29
 
 Povezani dokumenti:
 
@@ -32,6 +32,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.1 / KN-PATCH-BM-001 | 2026-08-26 | Zatvorena OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2. Usvojeno: (1) pri preklapanju 20% sa 10% ili 5% primjenjuje se maksimalna granica od 20%; procenti se ne sabiraju; 20% nije automatski dodijeljeni iznos; (2) Komisija može raspisati drugi Javni konkurs; raspisivanje nije automatsko; ako Komisija odluči da raspiše drugi Konkurs, mora biti raspisan najkasnije do isteka trećeg kvartala tekuće godine. |
 | 1.0.2 / KN-PATCH-BM-002 | 2026-08-26 | Usklađenje sa Odlukom 027/26 i usvojenim FS tokom: (1) U pripremi / Podnesena / Povučena — Podnesena nije izmjenjiva; (2) eliminatorni kriterijum 1 iz čl. 19 obrađuje se kroz provjeru potpunosti i Prigovor iz čl. 17; (3) Obrazac 3 i nacrt ocjena od prve sjednice; kriterijum 10 tek nakon usmenog; (4) nepromjenjivost tek nakon završavanja individualnog ocjenjivanja, ne pri čuvanju nacrta. |
 | 1.0.3 / KN-PATCH-BM-003 | 2026-08-28 | Usklađenje povlačenja Prijave: nakon uspješnog podnošenja Prijava je Podnesena; Podnositeljka je ne može mijenjati, povući, obrisati ni ponovo podnijeti. U V1 nema stanja Povučena ni povlačenja Podnesene Prijave sa strane Podnositeljke. Kanonska stanja Prijave: U pripremi / Podnesena. |
+| 1.0.4 / KN-PATCH-BM-004 | 2026-08-29 | Ciljano usklađenje redoslijeda Predloga i zvanične Odluke sa usvojenim `KN-FS-003` Poglavljem 15: zvanična Odluka nastaje fizičkim potpisom sekretara prije zaključivanja Konkursa; dostava zvanične Odluke samo podržanim Podnositeljkama, van Platforme. |
 
 Napomena:
 
@@ -229,8 +230,8 @@ Predsjednik Komisije ima istu težinu kao ostali članovi pri individualnom ocje
 * rezultat administrativne provjere dokumentacije;
 * dodatne bodove;
 * zaključke, iznose i obrazloženja sa treće sjednice;
-* tehničku radnju generisanja predloga Odluke i predlaganja Sekretarijatu za razvoj preduzetništva, komunalne poslove i saobraćaj;
-* zatvaranje Konkursa nakon predlaganja.
+* tehničku radnju generisanja Predloga Odluke na Platformi;
+* zaključivanje Konkursa nakon što je nadležni sekretar prihvatio Predlog i fizičkim potpisom donio zvaničnu Odluku, odnosno nakon što je Komisija o tome obaviještena.
 
 Predsjednik **nije** samostalni donosilac predloga niti konačne Odluke.
 
@@ -245,8 +246,10 @@ Sekretarijat za razvoj preduzetništva, komunalne poslove i saobraćaj **nije** 
 U ovom profilu:
 
 * sekretar Sekretarijata za razvoj preduzetništva, komunalne poslove i saobraćaj imenuje Komisiju i, prema čl. 6 i čl. 10, zamjenskog odnosno novog člana;
-* Komisija predlog Odluke predlaže Sekretarijatu za razvoj preduzetništva, komunalne poslove i saobraćaj;
-* Sekretarijat za razvoj preduzetništva, komunalne poslove i saobraćaj donosi i objavljuje konačnu Odluku (čl. 22–24);
+* Komisija Predlog Odluke dostavlja Sekretarijatu za razvoj preduzetništva, komunalne poslove i saobraćaj;
+* sekretar razmatra Predlog i, ako ga prihvata, fizičkim potpisom donosi zvaničnu Odluku;
+* Sekretarijat za razvoj preduzetništva, komunalne poslove i saobraćaj ostaje nadležan za donošenje konačne Odluke i za njeno propisano objavljivanje (čl. 22–24);
+* digitalni servis Opštine Kotor (digital.kotor.me) jedan je od propisanih kanala objave **već donesene** zvanične Odluke;
 * pojedinačna Rješenja, ugovori i praćenje realizacije pripadaju Sekretarijatu za razvoj preduzetništva, komunalne poslove i saobraćaj i u V1 ostaju van Platforme, osim gdje ovaj profil izričito drugačije odredi.
 
 Puni naziv se koristi svuda u ovom dokumentu. Ne uvodi se ad hoc skraćenica.
@@ -718,12 +721,18 @@ Status poglavlja: USVOJENO
 
 Kanonski tok nakon konačne rang-liste (čl. 22):
 
-konačna rang-lista  
-→ Komisija putem Platforme generiše predlog Odluke  
-→ Komisija predlog predlaže Sekretarijatu za razvoj preduzetništva, komunalne poslove i saobraćaj  
-→ predsjednik Komisije zatvara Konkurs  
-→ Konkurs se pohranjuje u Arhivu Konkursa  
-→ Sekretarijat za razvoj preduzetništva, komunalne poslove i saobraćaj donosi/objavljuje konačnu Odluku.
+* zaključana konačna rang-lista;
+* Komisija putem Platforme generiše Predlog Odluke;
+* Komisija provjerava Predlog;
+* Predlog se van Platforme dostavlja Sekretarijatu za razvoj preduzetništva, komunalne poslove i saobraćaj;
+* sekretar pregleda Predlog;
+* fizičkim potpisom sekretara Predlog postaje zvanična Odluka tog Sekretarijata;
+* sekretar van Platforme obavještava Komisiju;
+* predsjednik Komisije zaključuje Konkurs na Platformi;
+* Konkurs se smatra arhiviranim;
+* zvanična Odluka se objavljuje u skladu sa Poglavljem 15.
+
+Konkurs se **ne** zaključuje prije donošenja zvanične Odluke. Zaključivanje Konkursa **nije** donošenje Odluke.
 
 Poslovni generator predloga je **Komisija**.
 
@@ -739,18 +748,22 @@ Između konačne rang-liste i predloga **nema**:
 
 Podržani planovi iz konačne rang-liste prenose se u predlog Odluke.
 
-## 14.1. Redoslijed zatvaranja i arhive
+## 14.1. Redoslijed zaključivanja i arhive
 
-Redoslijed čl. 22 mora biti očuvan:
+Redoslijed mora biti očuvan:
 
-1. Komisija generiše predlog;
-2. Komisija predlaže predlog Sekretarijatu za razvoj preduzetništva, komunalne poslove i saobraćaj;
-3. **tek onda** predsjednik Komisije zatvara Konkurs;
-4. zatim se Konkurs pohranjuje u Arhivu Konkursa.
+1. Komisija generiše Predlog;
+2. Komisija Predlog dostavlja Sekretarijatu za razvoj preduzetništva, komunalne poslove i saobraćaj;
+3. sekretar fizičkim potpisom donosi zvaničnu Odluku;
+4. sekretar van Platforme obavještava Komisiju da je Odluka donesena;
+5. **tek onda** predsjednik Komisije zaključuje Konkurs;
+6. zaključivanjem se Konkurs smatra arhiviranim.
 
-Ispravno: generate → propose/send → close → archive.
+Zvanična Odluka nastaje **prije** zaključivanja Konkursa.
 
-Nije dozvoljeno: generate → close → send.
+Nije dozvoljeno zaključiti Konkurs prije nego što sekretar donese zvaničnu Odluku.
+
+Ovaj profil **ne** uvodi elektronsku potvrdu sekretara, checkbox prihvatanja niti poseban Platform workflow obavještavanja Komisije.
 
 Arhiviranje ne mijenja poslovni rezultat i ne briše istoriju (`KN-BM-001` Poglavlje 18).
 
@@ -772,14 +785,18 @@ Sve prethodne faze potrebne za donošenje i objavljivanje moraju stati unutar to
 
 ## 15.2. Dostavljanje i objava
 
-Odluka se dostavlja učesnicama Konkursa i objavljuje (čl. 24):
+Zvanična Odluka se dostavlja Podnositeljkama čiji su Biznis planovi **podržani** za dodjelu sredstava. Dostavljanje je **van Platforme**.
+
+Dostava **ne** obuhvata sve Podnositeljke samo zato što imaju Podnesenu Prijavu. Predmet dostavljanja je zvanična Odluka, ne Predlog Komisije.
+
+Zvanična Odluka se objavljuje (čl. 24):
 
 * na vebsajtu Opštine Kotor;
 * na digitalnom servisu Opštine Kotor;
 * putem lokalnog radio emitera;
 * na oglasnoj tabli Opštine Kotor.
 
-Objavljivanje na digital.kotor.me predstavlja objavljivanje **već donesene** konačne Odluke. To **nije** generisanje predloga Komisije.
+Objavljivanje na digital.kotor.me predstavlja objavljivanje **već donesene** zvanične Odluke. To **nije** generisanje Predloga Komisije.
 
 ## 15.3. Granica V1
 
@@ -809,4 +826,4 @@ Odluka uređuje imenovanje zamjene, ali ne sudbinu već **završenih** individua
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.3**
+**Kraj dokumenta KN-BM-003 v1.0.4**
