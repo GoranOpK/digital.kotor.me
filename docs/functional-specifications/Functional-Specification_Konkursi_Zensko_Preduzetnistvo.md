@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.12
+**Verzija:** 0.1.13
 **Datum:** 2026-08-29
 
 Povezani dokumenti:
@@ -42,6 +42,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.10 | 2026-08-29 | Napisano Poglavlje 14 — Rang-lista, iznosi i treća sjednica. Zbirni rezultati i preliminarna rang-lista nastaju tek po završetku cjelokupnog ciklusa. Dodatni bodovi, konačna ocjena, prag 30, treća sjednica van Platforme, predloženi iznosi, tie-break čl. 21 i zaključana konačna rang-lista. Predlog Odluke, zatvaranje, arhiva i objava pripadaju Poglavlju 15. Poglavlja 15–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.11 | 2026-08-29 | Napisano Poglavlje 15 — Predlog Odluke, zvanična Odluka, zaključivanje, arhiva i objava. Predlog se generiše iz zaključane konačne rang-liste. Zvanična Odluka nastaje fizičkim potpisom sekretara van Platforme. Zaključivanje nije donošenje. Ciljno: Administrator konkursa postavlja i objavljuje potpisani primjerak. Poglavlja 16–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.12 | 2026-08-29 | Napisano Poglavlje 16 — Funkcionalne zabrane i zaštita poslovnih pravila. Platforma štiti zaključane Prijave, privatnost, individualno ocjenjivanje, konačni rezultat, Predlog/Odluku i završeni Konkurs. Ne uvodi nove tokove. Poglavlja 17–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.13 | 2026-08-29 | Napisano Poglavlje 17 — V1 granica. Inventar obuhvata: od konfiguracije Konkursa do objave već donesene zvanične Odluke. Van V1 ostaju postupanja poslije Odluke i radnje kojima Platforma ne upravlja. Poglavlje 11 i ostale neriešene tačke ostaju odložene zavisnosti, ne van V1. Poglavlja 18–19 ostaju za naredne odobrene dokumentacione korake. |
 
 Napomena:
 
@@ -81,11 +82,11 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 14. Rang-lista, iznosi i treća sjednica | USVOJENO |
 | 15. Predlog Odluke, zatvaranje, arhiva i objava | USVOJENO |
 | 16. Funkcionalne zabrane i zaštita poslovnih pravila | USVOJENO |
-| 17. V1 granica | NIJE ZAPOČETO |
+| 17. V1 granica | USVOJENO |
 | 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 17–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
+Radna struktura Poglavlja 18–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
 
 ---
 
@@ -3118,9 +3119,87 @@ Kasnije čuvanje i objavljivanje zvanične Odluke Sekretarijata **nije** ponovno
 
 # 17. V1 granica
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje određuje funkcionalni obuhvat V1 na Platformi. **Ne** uvodi nove poslovne tokove, nova pravila, nova stanja, nove entitete ni nove uloge.
+
+**Ne** ponavlja detaljna pravila Poglavlja 7–15. **Ne** ponavlja funkcionalne zabrane Poglavlja 16. **Ne** određuje prihvatne kriterijume ni sljedivost.
+
+**Ne** rješava Poglavlje 11. Poglavlje 11 ostaje **OBUSTAVLJENO**.
+
+Osnov: Poglavlja 1.2, 3–16 ovog dokumenta; `KN-BM-003` §15.3.
+
+## 17.1. Obuhvat V1
+
+V1 obuhvata kompletan konkursni tok koji Platforma podržava od konfiguracije konkretnog Konkursa do objavljivanja već donesene zvanične Odluke Sekretarijata.
+
+U obuhvat ulaze funkcionalnosti definisane Poglavljima 3–16, uključujući:
+
+* aktere i osnovna stanja;
+* konfiguraciju Konkursa i Komisije;
+* objavu i rok;
+* Prijavu i njeno zaključavanje;
+* privatnost i pristup Komisije;
+* administrativnu provjeru i Prigovor;
+* individualno ocjenjivanje;
+* formiranje rang-liste i iznosa;
+* generisanje Predloga Odluke;
+* zaključivanje i arhiviranje Konkursa;
+* čuvanje i objavljivanje potpisane zvanične Odluke;
+* funkcionalnu zaštitu usvojenih zabrana.
+
+Detaljna pravila tih poglavlja ovdje se **ne** prepisuju.
+
+Čuvanje i objavljivanje fizički potpisane zvanične Odluke jeste **ciljna V1 sposobnost**. **Ne** postaje funkcionalnost van V1 samo zato što trenutno nije potpuno implementirana.
+
+## 17.2. Funkcionalnosti van V1
+
+Nakon objavljivanja zvanične Odluke, van V1 ostaju:
+
+* pojedinačna Rješenja;
+* pravni lijekovi poslije konačne Odluke;
+* Ugovori;
+* isplata sredstava;
+* praćenje realizacije;
+* kontrola namjene sredstava;
+* naknadne izmjene Odluke zbog odustanka.
+
+Platforma u V1 **ne** upravlja ovim poslovnim radnjama:
+
+* elektronskim vođenjem sjednica Komisije;
+* organizacijom, evidencijom prisustva, nedolaska i pomjeranja termina usmenog obrazloženja;
+* fizičkim potpisivanjem dokumenata;
+* elektronskim prihvatanjem ili potpisivanjem Odluke od Sekretarijata;
+* dostavljanjem zvanične Odluke podržanim Podnositeljkama.
+
+V1 **ne** uvodi:
+
+* tehničku provjeru kojom bi Platforma utvrđivala da je usmeno obrazloženje završeno prije ocjene;
+* tehnički preduslov potpisa Sekretarijata;
+* elektronsko glasanje Komisije;
+* ponovno otvaranje završene individualne ocjene;
+* ponovno otvaranje završenog Konkursa;
+* posebnu radnju „Arhiviraj Konkurs“.
+
+Detaljan tok eventualnog drugog Konkursa **nije** predmet ovog dokumenta. Ostaje samo već usvojena mogućnost njegovog raspisivanja prema `KN-BM-003`.
+
+Otvorene i odložene zavisnosti iz §17.3 **nijesu** trajno van V1.
+
+## 17.3. Otvorene i odložene zavisnosti V1
+
+Otvorene i odložene zavisnosti **nijesu** automatski funkcionalnosti van V1. Ovo poglavlje za njih **ne** uvodi privremena poslovna pravila.
+
+1. **Poglavlje 11 / eliminatorni kriterijumi 2 i 3.** Poglavlje 11 ostaje **OBUSTAVLJENO**. Čeka autoritativni izvor Odluke 027/26. Kriterijumi 2 i 3 **nijesu** ukinuti niti isključeni iz V1. Njihovo funkcionalno ponašanje se ovdje **ne** definiše. Eliminatorni kriterijum 1 ostaje definisan kroz Poglavlje 10. **Ne** uvodi se privremeni model podobnosti za kriterijume 2 i 3.
+
+2. **Zamjena pogrešno učitanog primjerka zvanične Odluke.** Postupak kontrolisane zamjene **nije** definisan. Ovo poglavlje ga **ne** rješava.
+
+3. **Zamjena člana Komisije nakon završenog individualnog ocjenjivanja.** Postupanje sa već završenim individualnim ocjenama ostaje neriješeno. Ovo poglavlje **ne** izmišlja to pravilo.
+
+4. **Ponovno otvaranje završenog Prigovora.** Postupak **nije** definisan. Ovo poglavlje ga **ne** uvodi.
+
+5. **Trajanje čuvanja Prijave U pripremi nakon isteka roka.** Postojeće pravilo da nakon isteka roka Prijava ostaje samo za pregled ostaje na snazi. Period čuvanja **nije** određen.
+
+Nijedna otvorena tačka **ne** smije se rješavati implementacionom pretpostavkom. Ako je razrješenje potrebno za V1, prvo se mora usvojiti odgovarajuće poslovno ili funkcionalno pravilo u poglavlju kojem tema pripada.
 
 ---
 
@@ -3140,4 +3219,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.12**
+**Kraj dokumenta KN-FS-003 v0.1.13**
