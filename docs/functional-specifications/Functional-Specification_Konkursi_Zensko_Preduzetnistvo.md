@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.14
+**Verzija:** 0.1.15
 **Datum:** 2026-08-29
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN v1.0.0)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN v1.0.3)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN v1.0.4)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 
@@ -44,6 +44,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.12 | 2026-08-29 | Napisano Poglavlje 16 — Funkcionalne zabrane i zaštita poslovnih pravila. Platforma štiti zaključane Prijave, privatnost, individualno ocjenjivanje, konačni rezultat, Predlog/Odluku i završeni Konkurs. Ne uvodi nove tokove. Poglavlja 17–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.13 | 2026-08-29 | Napisano Poglavlje 17 — V1 granica. Inventar obuhvata: od konfiguracije Konkursa do objave već donesene zvanične Odluke. Van V1 ostaju postupanja poslije Odluke i radnje kojima Platforma ne upravlja. Poglavlje 11 i ostale neriešene tačke ostaju odložene zavisnosti, ne van V1. Poglavlja 18–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.14 | 2026-08-29 | Napisano Poglavlje 18 — Prihvatni kriterijumi. 24 provjerljiva ishoda usvojenih pravila Poglavlja 3–17. Format Ako / Kada / Onda. Poglavlje 11 i zavisnosti iz §17.3 ostaju bez prihvatnih kriterijuma. Poglavlje 19 ostaje za naredni odobreni dokumentacioni korak. |
+| 0.1.15 | 2026-08-29 | Napisano Poglavlje 19 — Sljedivost. Evidentirana matrica sljedivosti `KN-BM-003` → `KN-FS-003` → Poglavlje 18. Poglavlje 11 i zavisnosti iz §17.3 ostaju bez izmišljenih veza. Korekcija reference na `KN-BM-003` v1.0.4. |
 
 Napomena:
 
@@ -85,9 +86,9 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 16. Funkcionalne zabrane i zaštita poslovnih pravila | USVOJENO |
 | 17. V1 granica | USVOJENO |
 | 18. Prihvatni kriterijumi | USVOJENO |
-| 19. Sljedivost | NIJE ZAPOČETO |
+| 19. Sljedivost | USVOJENO |
 
-Radna struktura Poglavlja 19 je odobrena. Sadržaj tog poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
+Poglavlja 1–10 i 12–19 su usvojena. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
 
 ---
 
@@ -3528,10 +3529,159 @@ Ovaj kriterijum **ne** propisuje tehnički mehanizam sprovođenja ovih zabrana.
 
 # 19. Sljedivost
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje evidentira sljedivost već usvojenih pravila. **Ne** uvodi nova poslovna ni funkcionalna pravila. **Ne** mijenja Poglavlja 1–18. **Ne** rješava Poglavlje 11. **Ne** rješava otvorene i odložene zavisnosti iz §17.3. **Ne** određuje tehničku realizaciju.
+
+Osnov: `KN-BM-003` v1.0.4; Poglavlja 1–18 ovog dokumenta.
+
+## 19.1. Svrha i pravila sljedivosti
+
+### 19.1.1. Svrha sljedivosti
+
+Poglavlje 19 omogućava utvrđivanje veze između poslovnog pravila, njegove funkcionalne razrade i, gdje postoji, prihvatnog kriterijuma.
+
+Sljedivost služi pregledu i provjeri pokrivenosti. **Nije** novi izvor pravila.
+
+### 19.1.2. Smjer sljedivosti
+
+Kanonski lanac je:
+
+`KN-BM-003` → `KN-FS-003` → Poglavlje 18 ovog dokumenta.
+
+Sljedivost mora biti moguća:
+
+* naprijed: `KN-BM-003` → `KN-FS-003` → prihvatni kriterijum;
+* nazad: prihvatni kriterijum → `KN-FS-003` → `KN-BM-003`.
+
+Gdje konkretno ponašanje nastaje na funkcionalnom nivou, neposredni izvor je ovaj dokument. Poslovni kontekst se navodi ako postoji, prema §19.2.6.
+
+### 19.1.3. Nivo povezivanja
+
+Veza koristi **najniži smisleni postojeći numerisani nivo**.
+
+Sljedivost **ne** povezuje svaku rečenicu. Jedan red matrice predstavlja jednu funkcionalno zaokruženu vezu.
+
+**Ne** uvode se novi identifikatori samo radi sljedivosti.
+
+### 19.1.4. Prihvatni kriterijum nije obavezan za svaku vezu
+
+Zaseban prihvatni kriterijum **nije** potreban za svako poslovno ili funkcionalno pravilo.
+
+Ako zaseban kriterijum ne postoji, u koloni prihvatnog kriterijuma stoji `—`.
+
+Nedostatak prihvatnog kriterijuma **ne** znači da pravilo nije usvojeno. **Ne** smije se stvarati nedostajuća funkcionalna razrada da bi se popunila matrica.
+
+### 19.1.5. Obustavljene i otvorene veze
+
+Za Poglavlje 11 i otvorene zavisnosti iz §17.3 **ne** izmišlja se nedostajuća veza.
+
+* **OBUSTAVLJENO** — funkcionalna razrada čeka usvajanje Poglavlja 11;
+* **OTVORENO** — pitanje je evidentirano u §17.3 i ovdje se **ne** rješava.
+
+## 19.2. Matrica sljedivosti
+
+Kolone matrice:
+
+| Poslovni izvor | Funkcionalna razrada | Prihvatni kriterijum | Status / napomena |
+
+### 19.2.1. Jedinica sljedivosti
+
+Jedan red je jedna funkcionalno zaokružena veza. Red **nije** jedna rečenica izvora.
+
+Jedan red može obuhvatiti više neposredno relevantnih referenci istog predmeta.
+
+### 19.2.2. Poslovni izvor
+
+Poslovni izvor je stvarna referenca iz `KN-BM-003` v1.0.4.
+
+Može sadržati više BM referenci kada zajedno čine isti poslovni predmet.
+
+Ako konkretan detalj **nije** posebno iskazan u `KN-BM-003`, ne stvara se vještačka BM veza. Primjenjuje se §19.2.6.
+
+### 19.2.3. Funkcionalna razrada
+
+Funkcionalna razrada je stvarna referenca iz ovog dokumenta.
+
+Koristi se najniži smisleni postojeći numerisani nivo. Može sadržati više FS referenci.
+
+### 19.2.4. Prihvatni kriterijum
+
+Prihvatni kriterijum je stvarna referenca iz Poglavlja 18 (`§18.x.x`).
+
+Može ih biti više. Ako zaseban kriterijum ne postoji, stoji `—`.
+
+**Ne** uvode se identifikatori `AC-*`.
+
+### 19.2.5. Status i napomena
+
+Dozvoljeni statusi:
+
+* **USVOJENO** — veza je usvojena u navedenim dokumentima;
+* **OBUSTAVLJENO** — čeka Poglavlje 11;
+* **OTVORENO** — čeka razrješenje prema §17.3.
+
+Napomena objašnjava obuhvat, kombinovani ishod ili primjenu §19.2.6. **Ne** uvodi novo pravilo.
+
+### 19.2.6. Veza koja nastaje na funkcionalnom nivou
+
+Ako je konkretno ponašanje izričito usvojeno u ovom dokumentu, a njegov neposredni detalj **nije** posebno iskazan u `KN-BM-003`:
+
+* **ne** stvara se vještačka direktna BM veza;
+* navodi se najbliži stvarni poslovni kontekst, ako postoji;
+* ovaj dokument ostaje neposredni izvor konkretnog funkcionalnog ponašanja;
+* napomena kaže da je riječ o **funkcionalnoj razradi**, ne o 1:1 poslovnom pravilu;
+* status može biti **USVOJENO**, jer je funkcionalno pravilo već usvojeno.
+
+Matrica sljedivosti:
+
+| Poslovni izvor | Funkcionalna razrada | Prihvatni kriterijum | Status / napomena |
+|---|---|---|---|
+| `KN-BM-003` §4.1, §7 | §3.2, §4.4, §7.14–§7.16 | §18.2.1, §18.2.2 | USVOJENO. Podnositeljka; stanja U pripremi / Podnesena; finalno podnošenje; zaključavanje. |
+| `KN-BM-003` §7 | §7.17 | §18.2.3 | USVOJENO. U pripremi nakon isteka roka ostaje samo za pregled. Period čuvanja: vidi OTVORENO. |
+| `KN-BM-003` §4.2, §5 | §3.3, §5.1, §5.4, §5.5 | §18.1.1 | USVOJENO. Administrator konkursa kreira konkretan Konkurs i bira već imenovanu Komisiju. |
+| `KN-BM-003` §4.3, §4.5 | §3.4, §3.5, §5.1 | §18.1.1 | USVOJENO. Komisija od pet članova; Predsjednik evidentira u ime Komisije; imenovanje Sekretarijata ostaje van Platforme. |
+| `KN-BM-003` §4.4 | §3.6.B, §16.1 | §18.8.2 | USVOJENO. Administrator platforme nije profilni konkursni akter. §18.8.2 je grupna funkcionalna zabrana. |
+| `KN-BM-003` §4.5, §14, §15 | §3.6.A, §15.3.2, §16.6 | §18.7.2 | USVOJENO. Sekretarijat nije profilni Platform akter. Zvanična Odluka nastaje fizičkim potpisom van Platforme. |
+| `KN-BM-003` §4.6 | — | — | USVOJENO. Izjave Komisije se fizički potpisuju van Platforme. Nema zasebnog prihvatnog kriterijuma. |
+| `KN-BM-003` §6, §6.1 | §6.1, §6.2, §6.5 | §18.1.2 | USVOJENO. Objava na Platformi i automatski prestanak podnošenja istekom roka. Ostali kanali objave: §6.3, van Platforme. |
+| `KN-BM-003` §7.1 | §8.1, §8.2 | §18.3.1 | USVOJENO. Podnositeljka pristupa samo sopstvenoj Prijavi. |
+| `KN-BM-003` §8 | §8.2, §9.2 | §18.3.1 | USVOJENO. Komisija nema pristup Prijavama dok rok traje. |
+| Najbliži poslovni kontekst: `KN-BM-003` §4.2, §8. Neposredni izvor: ovaj dokument §8.2 | §8.2 | §18.3.1 | USVOJENO. Zbirni broj evidentiranih Prijava za Administratora konkursa tokom roka je **funkcionalna razrada**. `KN-BM-003` §4.2 i §8 taj detalj **ne** propisuju eksplicitno. |
+| `KN-BM-003` §8 | §9.2, §9.3 | §18.3.2 | USVOJENO. Nakon isteka roka Komisiji su dostupne samo Podnesene Prijave konkretnog Konkursa, aktivnim članovima dodijeljene Komisije. |
+| Najbliži poslovni kontekst: `KN-BM-003` §8. Neposredni izvor: ovaj dokument §9.4 | §9.4, §16.3 | §18.3.3 | USVOJENO. Pregled prateće dokumentacije DA, preuzimanje NE. `KN-BM-003` §8 uređuje pristup dokumentaciji, ali **ne** propisuje eksplicitno zabranu preuzimanja. |
+| `KN-BM-003` §9, §9.1, §10 (kriterijum 1) | §10.2, §10.3, §10.5 | §18.4.1 | USVOJENO. Eliminatorni kriterijum 1 se funkcionalno obrađuje kroz administrativnu provjeru. |
+| `KN-BM-003` §9.2 | §10.4 | §18.4.2 | USVOJENO. Prigovor preko Platforme, bez dopune zaključanog sadržaja. Rok Komisije od 7 dana nije prihvatni ishod. |
+| `KN-BM-003` §10 (kriterijumi 2 i 3) | §11 | — | OBUSTAVLJENO. Poglavlje 11. Funkcionalno ponašanje se **ne** definiše. BM Napomena **nije** zamjena za nedostajuću FS odluku. |
+| `KN-BM-003` §11 | §12.1–§12.4 | §18.5.1 | USVOJENO. Druga sjednica i usmeno obrazloženje su van Platforme. §18.5.1 pokriva samo negativni ishod: Platforma ne zahtijeva tehničku potvrdu usmenog obrazloženja. |
+| `KN-BM-003` §12, §12.1, §12.2 | §13.1–§13.3 | §18.5.1 | USVOJENO. Deset kriterijuma; skala 1–5; nacrt. |
+| `KN-BM-003` §12.4 | §13.4, §16.4 | §18.5.2, §18.5.4 | USVOJENO. Završi ocjenjivanje zahtijeva svih 10 ocjena; zatim nepovratnost. |
+| `KN-BM-003` §12.3 | §13.5, §13.6 | §18.5.3 | USVOJENO. Tajnost do završetka kompletnog ciklusa. |
+| `KN-BM-003` §12.7 | §5.3, §17.3 | — | OTVORENO. Sudbina završenih individualnih ocjena pri zamjeni člana. |
+| `KN-BM-003` §12.5, §12.6, §13.1 | §14.1–§14.4, §14.6 | §18.6.1, §18.6.2 | USVOJENO. Zbirni rezultati i preliminarna rang-lista tek po završetku ciklusa. |
+| `KN-BM-003` §13.3 | §14.5 | §18.6.2 | USVOJENO. Prag od 30 bodova. |
+| `KN-BM-003` §13.2, §13.4, §13.5 | §14.7, §14.8 | §18.6.3 | USVOJENO. Podržava / Odbija, predloženi iznos, limiti i raspodjela. Treća sjednica van Platforme. |
+| `KN-BM-003` §13.6 | §14.9 | §18.6.4 | USVOJENO. Jednaki bodovi; dijeljene rang-pozicije se ne mijenjaju. |
+| `KN-BM-003` §13.7 | §14.10, §16.5 | §18.6.4 | USVOJENO. Konačna rang-lista je zaključani rezultat. |
+| `KN-BM-003` §13.8 | §15.8, §17.2 | — | USVOJENO. Evidentirana je samo poslovna mogućnost drugog Konkursa. Detaljan tok **nije** predmet ovog FS-a. |
+| `KN-BM-003` §14 | §15.2 | §18.7.1 | USVOJENO. Generiši Odluku proizvodi Predlog i ne mijenja zaključani rezultat. |
+| `KN-BM-003` §14.1 | §15.4, §15.5, §16.6, §16.7 | §18.7.3, §18.8.1 | USVOJENO. Zaključi Konkurs nakon poslovnog obavještenja o potpisu; arhiva istim činom; nije donošenje Odluke. |
+| `KN-BM-003` §15.2 | §15.6, §15.7.1 | §18.7.4 | USVOJENO. Čuvanje i objava potpisanog primjerka je ciljna V1 sposobnost. Dostava podržanim Podnositeljkama ostaje van Platforme. Zamjena fajla: vidi OTVORENO. |
+| `KN-BM-003` §15.1 | §15.7.2 | — | USVOJENO. Rok objave 45 dana od isteka roka za Prijave je poslovni rok. Nije automatska radnja Platforme. Nema zasebnog prihvatnog kriterijuma. |
+| `KN-BM-003` §15.3 | §1.2, §4.15, §17.1, §17.2 | — | USVOJENO. V1 na Platformi završava se objavom već donesene Odluke. |
+| `KN-BM-003` §7, §12.4, §13.7, §14.1 | §16.1, §16.2, §16.5, §16.7 | §18.8.1, §18.8.2 | USVOJENO. Grupna zaštita zaključanih podataka i zabrana zaobilaženja. |
+| — | §15.6.4, §16.6, §17.3 | — | OTVORENO. Zamjena pogrešno učitanog primjerka zvanične Odluke. |
+| — | §16.2, §17.3 | — | OTVORENO. Ponovno otvaranje završenog Prigovora. |
+| — | §7.17, §17.3 | — | OTVORENO. Trajanje čuvanja Prijave U pripremi nakon isteka roka. |
+
+Pregled obustavljenih i otvorenih veza, bez novih pravila:
+
+1. Eliminatorni kriterijumi 2 i 3 — **OBUSTAVLJENO** (`KN-BM-003` §10; ovaj dokument §11, §17.3).
+2. Zamjena pogrešno učitanog primjerka zvanične Odluke — **OTVORENO** (§15.6.4, §16.6, §17.3).
+3. Zamjena člana Komisije nakon završenog individualnog ocjenjivanja / sudbina završenih ocjena — **OTVORENO** (`KN-BM-003` §12.7; ovaj dokument §5.3, §17.3).
+4. Ponovno otvaranje završenog Prigovora — **OTVORENO** (§16.2, §17.3).
+5. Trajanje čuvanja Prijave U pripremi nakon isteka roka — **OTVORENO** (§7.17, §17.3).
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.14**
+**Kraj dokumenta KN-FS-003 v0.1.15**
