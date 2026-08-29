@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.9
+**Verzija:** 0.1.10
 **Datum:** 2026-08-29
 
 Povezani dokumenti:
@@ -39,6 +39,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.7 | 2026-08-28 | Poglavlje 11 — Eliminatorni kriterijumi — privremeno obustavljeno (`OBUSTAVLJENO`) do pribavljanja i analize autoritativnog izvora Odluke 027/26. Poglavlja 12–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.8 | 2026-08-28 | Napisano Poglavlje 12 — Druga sjednica i usmeno obrazloženje. Druga sjednica i usmeno obrazloženje su van Platforme. Platforma ne zakazuje, ne poziva i ne evidentira prisustvo. Kriterijum 10 se ocjenjuje nakon usmenog obrazloženja kao poslovno pravilo, bez tehničkog otključavanja. Poglavlja 13–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.9 | 2026-08-29 | Napisano Poglavlje 13 — Individualno ocjenjivanje. Pet članova ocjenjuje 10 pozitivnih kriterijuma skalom 1–5. Nacrt do eksplicitnog Završi ocjenjivanje. Tajnost do završetka ciklusa. Ostale napomene opcione. Dodatni bodovi, prosjeci, prag 30 i rang-lista pripadaju Poglavlju 14. Poglavlja 14–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.10 | 2026-08-29 | Napisano Poglavlje 14 — Rang-lista, iznosi i treća sjednica. Zbirni rezultati i preliminarna rang-lista nastaju tek po završetku cjelokupnog ciklusa. Dodatni bodovi, konačna ocjena, prag 30, treća sjednica van Platforme, predloženi iznosi, tie-break čl. 21 i zaključana konačna rang-lista. Predlog Odluke, zatvaranje, arhiva i objava pripadaju Poglavlju 15. Poglavlja 15–19 ostaju za naredne odobrene dokumentacione korake. |
 
 Napomena:
 
@@ -75,14 +76,14 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 11. Eliminatorni kriterijumi | OBUSTAVLJENO |
 | 12. Druga sjednica i usmeno obrazloženje | USVOJENO |
 | 13. Individualno ocjenjivanje | USVOJENO |
-| 14. Rang-lista, iznosi i treća sjednica | NIJE ZAPOČETO |
+| 14. Rang-lista, iznosi i treća sjednica | USVOJENO |
 | 15. Predlog Odluke, zatvaranje, arhiva i objava | NIJE ZAPOČETO |
 | 16. Funkcionalne zabrane i enforcement | NIJE ZAPOČETO |
 | 17. V1 granica | NIJE ZAPOČETO |
 | 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 14–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
+Radna struktura Poglavlja 15–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
 
 ---
 
@@ -2210,9 +2211,456 @@ To pripada Poglavlju 14 ili kasnijim poglavljima.
 
 # 14. Rang-lista, iznosi i treća sjednica
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje određuje zbirne rezultate, dodatne bodove, konačnu ocjenu, prag od 30 bodova, preliminarnu i konačnu rang-listu, treću sjednicu Komisije, zaključke Podržava / Odbija i predložene iznose podrške.
+
+Poglavlje **ne** rješava Poglavlje 11. Koristi rezultat prethodnih faza, bez njihovog ponovnog definisanja.
+
+Poglavlja 12 i 13 ostaju usvojena. Ovo poglavlje **ne** mijenja individualno ocjenjivanje, nacrt, završavanje, nepromjenjivost individualnih ocjena ni tajnost dok ciklus traje.
+
+Ne određuje predlog Odluke, predlaganje Sekretarijatu, zatvaranje Konkursa, arhivu, konačnu Odluku ni objavu. Ti tokovi pripadaju Poglavlju 15.
+
+Osnov: `KN-BM-003` §4.3, §12.5, §12.6, §13; Poglavlja 3.5, 4.9–4.12, 12 i 13 ovog dokumenta.
+
+## 14.1. Završetak individualnog ocjenjivanja i formiranje zbirnih rezultata
+
+Poglavlje 14 počinje kada svih **pet** članova Komisije završi individualno ocjenjivanje **svih** Prijava koje su do tog trenutka ispunile sve prethodno propisane uslove za nastavak postupka i ušle u ocjenjivanje.
+
+Završetak je **globalan** za cjelokupan ciklus individualnog ocjenjivanja, **ne** po pojedinačnoj Prijavi.
+
+Ovo poglavlje **ne** nabraja prethodne uslove i **ne** uvodi model prolaska Poglavlja 11.
+
+Kada je cjelokupan ciklus individualnog ocjenjivanja završen, Platforma **automatski** prelazi na formiranje zbirnih rezultata.
+
+Za početak zbirnog proračuna **nije** potrebna radnja Predsjednika Komisije niti Administratora konkursa.
+
+Tek u tom globalnom trenutku prestaje granica tajnosti iz Poglavlja 13. Članovi Komisije tada mogu vidjeti konačne individualne ocjene drugih članova i zbirne rezultate.
+
+Ponašanje preliminarne rang-liste određuje §14.6.
+
+## 14.2. Prosječne ocjene
+
+Za svaki od 10 kriterijuma ocjenjivanja:
+
+prosječna ocjena kriterijuma = zbir konačnih individualnih ocjena svih pet članova Komisije / 5
+
+U proračun ulaze ocjene **svih pet** članova.
+
+Kriterijumi imaju **istu težinu**. Ne uvodi se ponderisanje kriterijuma.
+
+Svaka prosječna ocjena kriterijuma zaokružuje se na **dvije decimale**. Ta zaokružena vrijednost koristi se u daljem proračunu.
+
+Ovo poglavlje **ne** propisuje programsku funkciju zaokruživanja.
+
+## 14.3. Dodatni bodovi
+
+Predsjednik Komisije može, u ime Komisije, evidentirati osnov za dodatne bodove konkretne Prijave čim raspolaže potrebnim podacima za utvrđivanje tog osnova.
+
+**Ne** mora čekati završetak cjelokupnog ciklusa individualnog ocjenjivanja.
+
+Predsjednik evidentira ostvareni osnov. Platforma primjenjuje **fiksan** broj bodova za taj osnov. Platforma **ne** odlučuje samostalno da li je činjenični osnov ispunjen.
+
+Kanonski dodatni bodovi (`KN-BM-003` §12.6; čl. 19):
+
+* **+1** — prisustvo Info danu i obuci za izradu Biznis plana, za tekuću godinu;
+* **+2** — fizičko lice koje planira registrovanje biznisa;
+* **+2** — evidencija Zavoda za zapošljavanje duže od 12 mjeseci;
+* **+3** — inovativna i/ili zelena biznis ideja.
+
+Bodovi su **kumulativni**. Maksimum dodatnih bodova = **8**.
+
+Dodatni bodovi **nijesu** jedanaesti kriterijum ocjenjivanja i **nijesu** individualno ocjenjivanje člana Komisije.
+
+Rano evidentiranje osnova **ne** smije otkriti niti na drugi način uticati na tajne individualne ocjene iz Poglavlja 13.
+
+Ne uvodi se novi tok dokaza, novo stanje Prijave, automatski motor podobnosti ni drugi nepodržani poslovni postupak.
+
+Razlikuje se:
+
+* **unos** — Predsjednik može evidentirati osnov i prije globalnog završetka ocjenjivanja;
+* **konačna vidljivost zbirnih rezultata i rang-liste** — ostaje uređena granicom tajnosti Poglavlja 13 i §14.1 / §14.6.
+
+## 14.4. Konačna ocjena
+
+konačna ocjena Prijave = zbir 10 prosječnih ocjena kriterijuma + dodatni bodovi
+
+Maksimum = **58** bodova.
+
+Platforma izračunava konačnu ocjenu. **Nije** ručno izmjenjivo polje ocjene.
+
+U proračun ulaze prosječne ocjene kriterijuma zaokružene na dvije decimale iz §14.2. Konačna ocjena se prikazuje na **dvije decimale**.
+
+Matematički, konačna ocjena konkretne Prijave može biti izračunljiva kada su svih pet članova završili individualno ocjenjivanje te Prijave i kada su evidentirani podaci o dodatnim bodovima.
+
+To **ne** završava globalni ciklus ocjenjivanja, **ne** prestaje tajnost ciklusa i **ne** formira preliminarnu rang-listu ranije.
+
+Dok preliminarna rang-lista **nije** formirana, ako Predsjednik ispravi evidentirani osnov dodatnih bodova, Platforma **automatski** preračunava izvedenu konačnu ocjenu.
+
+Individualne ocjene ostaju zaključane prema Poglavlju 13.
+
+Ne uvodi se trajna zaključanost konačne ocjene već pri prvom matematičkom izračunu. Granicu rang-liste određuje §14.6. Zaključanost rezultata Poglavlja 14 određuje §14.10.
+
+## 14.5. Prag od 30 bodova
+
+Prag od **30 bodova** odnosi se na **konačnu ocjenu**, uključujući dodatne bodove.
+
+Ako je konačna ocjena **< 30**:
+
+* Prijava ostaje na preliminarnoj rang-listi;
+* prikazuje se ispod praga od 30 bodova;
+* **ne** može dobiti finansijsku podršku;
+* **ne** dodjeljuje se iznos podrške;
+* **ne** uvodi se posebno osnovno stanje Prijave „Odbijena“ samo zbog ocjene ispod 30;
+* na trećoj sjednici se **ne** odbija dodatno samo zbog praga.
+
+Ako je konačna ocjena **≥ 30**:
+
+* Prijava je iznad praga;
+* može se razmatrati za finansijsku podršku;
+* ocjena ≥ 30 **ne garantuje** podršku.
+
+Platforma automatski utvrđuje da li je ocjena ispod ili iznad praga. To je matematička posljedica, **ne** diskrecija Komisije.
+
+## 14.6. Preliminarna rang-lista
+
+Preliminarna rang-lista formira se **automatski** tek kada je završen **cjelokupan globalni** ciklus individualnog ocjenjivanja.
+
+Redoslijed je po konačnoj ocjeni, od najviše ka nižoj.
+
+Ne uvodi se ručno premještanje od strane Predsjednika Komisije, člana Komisije niti Administratora konkursa.
+
+Postoji **jedna** poslovna rang-lista. Prag od 30 bodova može se vizuelno označiti. To **ne** stvara dvije odvojene poslovne liste.
+
+Sve Prijave koje su ušle u pozitivno ocjenjivanje ostaju na listi, uključujući one ispod 30 bodova.
+
+Prijave sa istom konačnom ocjenom imaju **isti rang**. Koriste se **dijeljene** pozicije. Primjer: 1, 2, 2, 4.
+
+Tehnički identifikator Prijave, `redni_broj`, vrijeme podnošenja, identifikator u bazi niti druga skrivena tehnička vrijednost **nije** poslovni tie-break za rang.
+
+Pravilo čl. 21 o prioritetu finansiranja pri jednakim bodovima pripada §14.9. **Ne** mijenja dijeljene pozicije na rang-listi.
+
+Vidljivost preliminarne rang-liste:
+
+* svih pet članova Komisije može je vidjeti;
+* Predsjednik Komisije ima istu vidljivost rezultata, uz funkcije evidentiranja zaključaka Komisije koje mu pripadaju;
+* Administrator konkursa može **vidjeti** preliminarnu rang-listu, ali **ne** može mijenjati ocjene, dodatne bodove, pozicije niti zaključke Komisije;
+* Podnositeljka **ne** dobija pristup preliminarnoj rang-listi u ovom poglavlju;
+* preliminarna rang-lista se u ovom poglavlju **ne** objavljuje javno.
+
+## 14.7. Treća sjednica Komisije
+
+Komisija zakazuje treću sjednicu u roku od **7 dana** od održavanja **druge sjednice i usmenih obrazloženja / intervjua** (čl. 20; `KN-BM-003` §13.2).
+
+Koristi se formulacija **7 dana**. Ne tumači se kao 7 radnih dana.
+
+Rok **ne** teče od završetka ocjenjivanja niti od formiranja preliminarne rang-liste.
+
+Poslovni tok:
+
+* usmeno obrazloženje;
+* individualno ocjenjivanje;
+* završetak cjelokupnog ciklusa ocjenjivanja;
+* preliminarna rang-lista;
+* treća sjednica.
+
+Na trećoj sjednici Komisija razmatra preliminarnu rang-listu.
+
+Za Prijave sa konačnom ocjenom **≥ 30** utvrđuje **Podržava** ili **Odbija**. Gdje utvrdi Podržava, utvrđuje predloženi iznos podrške.
+
+Gdje je potrebno, primjenjuje se prioritet finansiranja pri jednakim bodovima prema §14.9.
+
+Prijave ispod 30 bodova **ne** odbijaju se dodatno samo zbog ocjene.
+
+Obavezno je prisustvo **svih pet** članova Komisije.
+
+Organizacija i održavanje treće sjednice su **van Platforme**.
+
+Platforma **ne** upravlja:
+
+* zakazivanjem;
+* pozivima;
+* lokacijom;
+* prisustvom;
+* elektronskim prisustvom;
+* otvaranjem / zatvaranjem sjednice;
+* opštim elektronskim glasanjem.
+
+Predsjednik Komisije na Platformi, u ime Komisije, evidentira zaključke Komisije.
+
+Ne uvodi se opšti tok elektronskog glasanja. Ako je potrebno glasanje za prioritet finansiranja, glasa se na poslovnoj sjednici. Platforma evidentira **samo ishod**, prema §14.9.
+
+## 14.8. Podržava / Odbija, iznosi i raspodjela
+
+### 14.8.1. Podržava / Odbija
+
+Za svaku Prijavu sa konačnom ocjenom **≥ 30** Komisija na trećoj sjednici utvrđuje **Podržava** ili **Odbija**.
+
+Predsjednik Komisije evidentira zaključak na Platformi, u ime Komisije.
+
+Prijave sa ocjenom **< 30** **ne** dobijaju dodatni zaključak Odbija samo zbog ocjene.
+
+### 14.8.2. Ručni unos iznosa
+
+Ako je zaključak **Podržava**, Predsjednik ručno unosi **predloženi iznos podrške**.
+
+Platforma **ne** popunjava taj iznos automatski i **ne** postavlja ga kao podrazumijevanu vrijednost.
+
+Poslovni naziv je **predloženi iznos podrške**. Postojeći tehnički identifikator polja, ako postoji u implementaciji (npr. `approved_amount`), **nije** poslovni naziv.
+
+### 14.8.3. Maksimum 20% / 10% / 5%
+
+Platforma određuje primjenjivi maksimum prema čl. 18 (`KN-BM-003` §13.4):
+
+* **20%** — biznis plan za inovativne djelatnosti i/ili zeleno preduzetništvo;
+* **10%** — fizička lica / preduzetnice / društva kojima ranije **nijesu** dodjeljivana budžetska sredstva Opštine Kotor za ovu podršku;
+* **5%** — preduzetnice / društva kojima su ranije dodjeljivana budžetska sredstva za podršku ženskom preduzetništvu.
+
+Osnovica je ukupni iznos definisan Javnim konkursom za tekuću godinu, prema usvojenom tumačenju čl. 18.
+
+Usvojeno pravilo preklapanja. **Ne** otvara se ponovo:
+
+* ako istovremeno postoji osnov za **5%** i **20%**, primjenjuje se **20%**;
+* ako istovremeno postoji osnov za **10%** i **20%**, primjenjuje se **20%**;
+* procenti se **ne** sabiraju.
+
+Predsjednik i dalje ručno unosi predloženi iznos. Platforma **ne dozvoljava** iznos iznad primjenjivog maksimuma.
+
+20% je **maksimalna granica**, ne automatski dodijeljeni iznos.
+
+### 14.8.4. Ograničenje traženim iznosom
+
+Maksimalna podrška za konkretnu Prijavu ne može preći:
+
+* iznos koji je Podnositeljka zatražila; i
+* primjenjivi maksimum 20% / 10% / 5%.
+
+Gornja granica u ovoj tački je **manja** od te dvije vrijednosti.
+
+### 14.8.5. Preostala sredstva
+
+Platforma stalno izračunava:
+
+preostala sredstva = ukupan iznos Konkursa − zbir već predloženih iznosa podrške
+
+Predloženi iznos **ne** može preći preostala raspoloživa sredstva.
+
+Stvarni maksimum za unos je stoga ograničen:
+
+1. traženim iznosom;
+2. primjenjivim maksimumom 20% / 10% / 5%;
+3. preostalim sredstvima Konkursa.
+
+Platforma **ne** dodjeljuje preostali iznos automatski. Komisija odlučuje. Predsjednik evidentira.
+
+### 14.8.6. Redoslijed raspodjele
+
+Komisija razmatra Prijave za finansiranje prema redoslijedu preliminarne rang-liste, od najviše rangirane naniže.
+
+Za svaku Prijavu sa ocjenom **≥ 30**:
+
+* Komisija utvrđuje Podržava ili Odbija;
+* ako je Podržava, Predsjednik evidentira predloženi iznos uz sva usvojena ograničenja;
+* ako je Odbija, sredstva ostaju raspoloživa i raspodjela se nastavlja na sljedeću Prijavu.
+
+Odbija **ne** prekida raspodjelu i **ne** sprečava niže rangiranu Prijavu da dobije podršku.
+
+Prijave sa jednakim bodovima uređuje §14.9.
+
+### 14.8.7. Djelimična podrška zbog preostalog budžeta
+
+Ako Prijava dođe na red, a preostala sredstva Konkursa su manja od iznosa koji bi inače mogla dobiti:
+
+* Komisija odlučuje da li će je podržati preostalim raspoloživim iznosom;
+* Platforma prikazuje i nameće preostali iznos kao maksimum;
+* Platforma ga **ne** dodjeljuje automatski.
+
+Ako Komisija **ne** podrži Prijavu tim smanjenim iznosom, zaključak je **Odbija**.
+
+Kada preostala sredstva padnu na nulu, nijedna kasnija Prijava **ne** može dobiti finansijsku podršku.
+
+### 14.8.8. Odbija — obavezno obrazloženje
+
+Za Prijavu sa ocjenom **≥ 30** kod koje Komisija utvrdi **Odbija**:
+
+* detaljno tekstualno obrazloženje je **obavezno**;
+* Predsjednik ga evidentira na Platformi, u ime Komisije;
+* Platforma **ne** dozvoljava završavanje konačnog zaključka Odbija bez tog obrazloženja.
+
+Ne uvodi se katalog razloga, šifra razloga, proizvoljan minimalni broj karaktera ni nove kategorije odbijanja.
+
+Prijave sa ocjenom **< 30** **ne** zahtijevaju ovo obrazloženje Odbija samo zato što su ispod praga.
+
+### 14.8.9. Podržava — obrazloženje
+
+Ako je zaključak **Podržava**:
+
+* predloženi iznos podrške je **obavezan**;
+* zasebno tekstualno obrazloženje **nije** obavezno;
+* Platforma može dozvoliti opcionu napomenu / obrazloženje Komisije;
+* taj tekst **nije** uslov završavanja.
+
+Postojeći prikaz ili podatak može već sadržati obrazloženje za podržane Prijave. To ga **ne** čini obaveznim.
+
+### 14.8.10. Završenost za konkretnu Prijavu
+
+Za Prijavu sa ocjenom **≥ 30**:
+
+**Podržava** je završena kada su evidentirani zaključak Podržava i predloženi iznos podrške, i kada iznos zadovoljava sva ograničenja iz §14.8.
+
+**Odbija** je završena kada su evidentirani zaključak Odbija i obavezno detaljno obrazloženje, i kada **nije** dodijeljen predloženi iznos podrške.
+
+Prijave sa ocjenom **< 30** **ne** zahtijevaju unos Podržava / Odbija samo da bi ova faza bila završena.
+
+Završenost jedne Prijave **sama po sebi ne** formira konačnu rang-listu. Globalnu završenost određuje §14.10.
+
+## 14.9. Jednaki bodovi
+
+Ovo je pravilo **prioriteta finansiranja** prema čl. 21. **Ne** mijenja dijeljene pozicije na rang-listi iz §14.6.
+
+Primjenjuje se kada jednake konačne ocjene zahtijevaju utvrđivanje prioriteta finansiranja, odnosno kada raspoloživa sredstva nijesu dovoljna za finansiranje svih Prijava sa tom ocjenom.
+
+### 14.9.1. Prednost — otpočinjanje biznisa
+
+Kada jednake konačne ocjene zahtijevaju utvrđivanje prioriteta finansiranja, prvo se primjenjuje pravilo čl. 21:
+
+prednost ima biznis plan koji se odnosi na **otpočinjanje biznisa**.
+
+To određuje samo prioritet finansiranja. **Ne** mijenja konačne ocjene niti dijeljene pozicije.
+
+Ako to pravilo jednoznačno odredi prioritet, taj ishod se evidentira prema §14.9.3.
+
+### 14.9.2. Odluka Komisije ako prednost nije riješena
+
+Ako se prioritet **ne** može riješiti pravilom o otpočinjanju biznisa, Komisija odlučuje koja od izjednačenih Prijava ima prioritet finansiranja.
+
+Odluka se donosi **većinom od ukupnog broja članova Komisije**.
+
+Komisija ima pet članova. Potrebna većina = **najmanje 3 od 5**.
+
+Odluka se donosi na trećoj poslovnoj sjednici. Ne uvodi se tok elektronskog individualnog glasanja.
+
+### 14.9.3. Evidentiranje ishoda
+
+Predsjednik Komisije na Platformi evidentira:
+
+* koja Prijava je dobila prioritet finansiranja;
+* da li je osnov **otpočinjanje biznisa** ili odluka Komisije.
+
+Platforma **ne** evidentira pojedinačne elektronske glasove članova.
+
+Ne zahtijeva se evidencija odnosa glasova 3:2, 4:1 ili 5:0, osim ako kasniji autoritativni izvor to izričito zatraži.
+
+Ishod:
+
+* **ne** mijenja konačnu ocjenu;
+* **ne** mijenja dijeljenu poziciju na rang-listi;
+* koristi se **samo** za raspodjelu sredstava.
+
+## 14.10. Konačna rang-lista
+
+### 14.10.1. Automatsko formiranje
+
+Platforma **automatski** formira konačnu rang-listu kada su završeni svi potrebni rezultati treće sjednice.
+
+Za Prijave sa ocjenom **≥ 30** mora biti završena Podržava prema §14.8 ili Odbija prema §14.8.
+
+Gdje je §14.9 bio potreban, mora biti evidentiran i ishod prioriteta finansiranja.
+
+Prijave sa ocjenom **< 30** **ne** zahtijevaju dodatni zaključak Komisije samo radi formiranja konačne rang-liste.
+
+Ne uvodi se zasebno dugme „Formiraj konačnu rang-listu“, ručni početak od strane Predsjednika, niti ručni početak od strane Administratora konkursa.
+
+### 14.10.2. Sadržaj
+
+Preliminarna i konačna rang-lista su **dva stanja iste** poslovne rang-liste, ne dva odvojena poslovna objekta.
+
+Konačna rang-lista zadržava:
+
+* redoslijed po konačnoj ocjeni;
+* dijeljene pozicije za jednake ocjene.
+
+Odluke o finansiranju **ne** prepisuju ocjene niti pozicije.
+
+Konačna rang-lista prikazuje najmanje poslovne podatke već usvojene za ovaj model, uključujući:
+
+* poziciju;
+* konačnu ocjenu;
+* identifikaciju Podnositeljke / Biznis plana;
+* traženi iznos;
+* ishod finansiranja;
+* predloženi iznos podrške gdje je Prijava podržana;
+* relevantne podatke o zaključku Komisije.
+
+Za Prijave sa ocjenom **≥ 30** koje su Odbija, detaljno obrazloženje ostaje dio evidentiranog zaključka Komisije.
+
+Za Prijave sa ocjenom **< 30** prikazuje se činjenica da prag **nije** ostvaren, bez uvođenja novog osnovnog stanja Prijave.
+
+Usvojeni V1 prikaz ostaje prezentacioni zahtjev (`KN-BM-003` §13.7; Poglavlje 4.12 ovog dokumenta). Potpisivanje ostaje fizički, van Platforme, prema već usvojenom pravilu.
+
+### 14.10.3. Zaključavanje
+
+Kada Platforma automatski formira konačnu rang-listu, rezultat Poglavlja 14 je **zaključan**.
+
+Nakon toga, u redovnom toku Konkursa, niko **ne** smije mijenjati podatke koji određuju tu konačnu rang-listu, uključujući:
+
+* konačne individualne ocjene;
+* dodatne bodove;
+* konačnu ocjenu;
+* pozicije na rang-listi;
+* zaključak Podržava / Odbija;
+* predloženi iznos podrške;
+* ishod prioriteta finansiranja;
+* evidentirano obrazloženje / napomenu Komisije.
+
+Ne uvodi se ovlašćenje Administratora konkursa, poslovno ovlašćenje Super administratora, „otključaj rang-listu“, ponovno otvaranje niti tok uređivanja nakon konačne rang-liste.
+
+Ako budući pravni zahtjev bude zahtijevao postupak ispravke, to se određuje posebno. Ovo poglavlje ga **ne** uvodi.
+
+### 14.10.4. Vidljivost i nepromjenjivost
+
+Nakon formiranja:
+
+* svih pet članova Komisije može vidjeti cjelokupnu konačnu rang-listu;
+* Administrator konkursa može je vidjeti;
+* niko je **ne** smije mijenjati.
+
+Izričito **ne** mijenjaju je: Predsjednik Komisije, drugi član Komisije, Administrator konkursa, Administrator platforme, niti Super administrator samo zbog platformske uloge.
+
+Podnositeljka **ne** dobija pristup samo zato što je konačna rang-lista formirana.
+
+Konačna rang-lista se u ovom poglavlju **ne** objavljuje javno.
+
+Javna / konačna objava Odluke pripada Poglavlju 15.
+
+## 14.11. Granica prema Poglavlju 15
+
+Poglavlje 14 završava se kada su:
+
+* završeno individualno ocjenjivanje;
+* izračunati zbirni rezultati i konačne ocjene;
+* formirana preliminarna rang-lista;
+* održana treća sjednica;
+* evidentirani potrebni zaključci Komisije;
+* raspodijeljeni predloženi iznosi podrške prema usvojenim ograničenjima;
+* riješen potrebni prioritet finansiranja pri jednakim bodovima;
+* Platforma automatski formirala konačnu rang-listu;
+* konačna rang-lista zaključana i nepromjenjiva.
+
+Konačna rang-lista je **izlaz** Poglavlja 14 i **ulaz** u Poglavlje 15.
+
+Ovo poglavlje **ne** ulazi u Poglavlje 15.
+
+Izričito **ne** obuhvata:
+
+* generisanje / izradu predloga Odluke;
+* predlaganje / dostavu Sekretarijatu za razvoj preduzetništva, komunalne poslove i saobraćaj;
+* zatvaranje Konkursa;
+* arhiviranje;
+* konačnu Odluku tog Sekretarijata;
+* objavu konačne Odluke;
+* tok obavještavanja / objave prema Podnositeljki;
+* drugi / ponovljeni Konkurs.
 
 ---
 
@@ -2256,4 +2704,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.9**
+**Kraj dokumenta KN-FS-003 v0.1.10**
