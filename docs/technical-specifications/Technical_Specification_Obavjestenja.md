@@ -19,6 +19,7 @@
 |-----------------|--------|------|
 | 0.1 | 2026-07-31 | Početna Technical Specification (TS-013) za FT-004. Jedna koherentna Laravel implementacija usvojenih FR-OB-001 do FR-OB-017. Neriješeni OFD evidentirani kao tehnički blocker-i. Bez uvođenja novih poslovnih pravila. |
 | 2026-08-17 | 2026-08-17 | Administrativna migracija dokumentacionog ID-a sa `TS-013` na `DK-TS-001`; poslovni, funkcionalni i tehnički sadržaj ostaju nepromijenjeni. |
+| 2026-08-29 | 2026-08-29 | Usklađivanje sa DK-FS-001 PATCH-FS-OB-002 i KN-FS-003 v0.1.16 za source-specific objavu i korekciju zvanične Odluke Konkursa. Razdvojene panel vidljivost i javna dostupnost; persisted trag korekcije; `competition_decision_html` nije target delivery zvanične Odluke. Header 0.1 KEEP. Status U IZRADI. Runtime **nije** implementiran ovim redoslijedom. |
 
 Napomena:
 
@@ -38,7 +39,7 @@ DK-TS-001:
 
 * implementira usvojene FR-OB zahtjeve;
 * **ne** uvodi nova poslovna pravila;
-* **ne** rješava Product Owner odluke (OFD);
+* **ne** rješava Product Owner odluke (OFD) generički;
 * **ne** mijenja Business Model, Use Case Specification ni Functional Specification;
 * **ne** predstavlja napisan aplikativni kod.
 
@@ -46,8 +47,9 @@ Izvori istine:
 
 * **DK-BM-001** — `docs/business-model/Business_Model_Obavjestenja.md`
 * **DK-UC-001** — `docs/use-cases/Use_Cases_Obavjestenja.md`
-* **DK-FS-001** — `docs/functional-specifications/Functional_Specification_Obavjestenja.md` (v0.1 + PATCH-FS-OB-001)
-* **DK-FR-001** — `docs/features/Feature-Registry_Digital-Kotor.md`
+* **DK-FS-001** — `docs/functional-specifications/Functional_Specification_Obavjestenja.md` (v0.1 + PATCH-FS-OB-001 + **PATCH-FS-OB-002**)
+* **DK-FR-001** — `docs/features/Feature-Registry_Digital-Kotor.md` (v1.1.0)
+* **KN-FS-003** v0.1.16 — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (source-specific binding za zvaničnu Odluku Konkursa: §15.6, §15.7.1, §15.7.5, §16.6, §18.7.4)
 * `docs/METHODOLOGY.md` (M-TS-001 … M-TS-005)
 
 ---
@@ -71,7 +73,9 @@ Izvori istine:
 | 13. Matrica sljedivosti | U IZRADI |
 | 14. Napomene za implementaciju | U IZRADI |
 
-Ukupan status dokumenta: **U IZRADI** (zbog OFD blocker-a koji ograničavaju potpunu produkcijsku pokrivenost svih FR).
+Ukupan status dokumenta: **U IZRADI** (zbog OFD blocker-a koji ograničavaju potpunu produkcijsku pokrivenost svih FR; source-specific KN binding ne zatvara OFD generički).
+
+Ovaj dokument **ne** tvrdi da je target ponašanje već implementirano u runtime-u.
 
 ---
 
@@ -80,14 +84,14 @@ Ukupan status dokumenta: **U IZRADI** (zbog OFD blocker-a koji ograničavaju pot
 1. DK-TS-001 pripada FT-004 – Obavještenja.
 2. Tehnički sadržaj mora ostati usklađen sa usvojenim BM, UC i FS.
 3. Nova poslovna pravila se ne uvode kroz DK-TS-001.
-4. Ako implementacija zahtijeva rješavanje OFD, evidentira se blocker; OFD se ne rješava u TS.
-5. Izmjene usvojenog sadržaja evidentiraju se PATCH-om / novom verzijom.
+4. Ako implementacija zahtijeva rješavanje OFD, evidentira se blocker; OFD se **generički** ne rješava u TS. Source-specific binding iz KN-FS-003 / PATCH-FS-OB-002 nije zatvaranje OFD za sve izvore.
+5. Izmjene sadržaja evidentiraju se novim redom u istoriji verzija. Ovaj dokument **nema** `PATCH-TS-*` porodicu.
 
 ---
 
 # 1. Pregled funkcionalne cjeline
 
-**Sekcijska sljedivost:** BM-OB-01–BM-OB-13; UC-OB-001–UC-OB-005; FR-OB-001–FR-OB-017
+**Sekcijska sljedivost:** BM-OB-01–BM-OB-13; UC-OB-001–UC-OB-005; FR-OB-001–FR-OB-017; DK-FS PATCH-FS-OB-002; KN-FS-003 v0.1.16
 
 ## 1.1 Svrha
 
@@ -100,11 +104,23 @@ Obavještenja su unakrsna platformska prezentacija: javni panel na početnoj str
 * događaj koji okida automatsku objavu (pokreće ga izvorna funkcionalnost);
 * javne rute i Blade prezentacija panela;
 * javna isporuka referenciranog zvaničnog sadržaja van administrativnog interfejsa;
+* razdvajanje vidljivosti u aktivnom panelu od javne dostupnosti sadržaja konkretnog Notice-a;
+* source-specific isporuka i korekcija zvanične Odluke Konkursa kao **kanal**, ne kao vlasnik dokumenta;
 * testovi i uticaj na deploy/migracije.
 
 ## 1.3 Van ovog TS (usvojeno FS/BM)
 
-Ručna objava, urednički workflow, arhiva, read-tracking, inbox, kriterijum „odgovarajuće“ zamjene, redoslijed, maksimum stavki, izvor opisa, tačni okidači po izvornoj funkcionalnosti.
+Ručna objava, urednički workflow, arhiva, read-tracking, inbox, kriterijum „odgovarajuće“ zamjene, redoslijed, maksimum stavki, izvor opisa, tačni okidači po **svim** izvornim funkcionalnostima (OFD-OB-006 ostaje generički OTVORENO).
+
+**Nije** dio ovog TS:
+
+* Competition SQL / KN data schema;
+* storage driver, disk, filesystem path, signed-URL tehnologija;
+* HTTP status / redirect za nedostupan sadržaj;
+* Notice CMS / admin CRUD Obavještenja;
+* zamjena učitanog ali još neobjavljenog primjerka (namjerno nedefinisano).
+
+Za zvaničnu Odluku Konkursa konkretan okidač objave i korekcija **jesu** vezani KN-FS-003 v0.1.16; to **nije** generički okidač za tenderi/ostale izvore.
 
 ## 1.4 Oznaka dokumenta
 
@@ -114,7 +130,7 @@ Ručna objava, urednički workflow, arhiva, read-tracking, inbox, kriterijum „
 
 # 2. Arhitektonski principi
 
-**Sekcijska sljedivost:** FR-OB-001–FR-OB-017; BM-OB-07; BM-OB-12
+**Sekcijska sljedivost:** FR-OB-001–FR-OB-017; BM-OB-07; BM-OB-12; DK-FS PATCH-FS-OB-002; KN-FS-003 §15.6, §15.7.1, §15.7.5
 
 ## 2.1 Mjesto u sistemu
 
@@ -132,11 +148,12 @@ Realizacija se uklapa u postojeću Laravel monolitnu strukturu:
 
 | Komponenta | Odgovornost |
 |------------|-------------|
-| Izvorna funkcionalnost | Utvrđuje spremnost/obaveznost objave (FR-OB-011) i emituje događaj; po potrebi prosleđuje `supersedes_notice_id` |
-| `NoticePublicationService` | Kreira Obavještenje, postavlja vidljivost u aktivnom panelu, po pozivu vrši zamjenu vidljivosti |
+| Izvorna funkcionalnost | Utvrđuje spremnost/obaveznost objave (FR-OB-011) i emituje događaj; po potrebi zahtijeva ordinary panel supersession i/ili korekciju/public revoke |
+| Modul **Konkursi** (za zvaničnu Odluku) | Vlasnik je zvaničnog dokumenta; čuva nepromjenjivi elektronski primjerak; određuje koji primjerak je predmet objave; Administrator konkursa pokreće objavu i korekciju |
+| `NoticePublicationService` | Kreira zapis objave (Notice); postavlja vidljivost u aktivnom panelu; po pozivu vrši ordinary panel supersession; pri korekciji upisuje persisted trag i javno povlačenje prethodnog |
 | `HomeController` + Blade partial | Render panela na početnoj stranici za sve posjetioce |
-| `PublicNoticeContentController` | Javna isporuka referenciranog zvaničnog sadržaja |
-| Obavještenja sloj | **Ne** utvrđuje da li je postupak spreman za objavu (FR-OB-012) |
+| `PublicNoticeContentController` | Javna isporuka referenciranog zvaničnog sadržaja **samo ako je konkretna objava javno dostupna** |
+| Obavještenja sloj | **Ne** utvrđuje da li je postupak spreman za objavu (FR-OB-012); **ne** je vlasnik Odluke; **ne** kopira Odluku u Notice storage |
 
 ## 2.3 Jedna arhitektura automatske objave
 
@@ -146,57 +163,138 @@ Usvojena arhitektura (jedina u ovom TS):
 2. Listener `PublishOfficialContentNotice` sinhrono poziva `NoticePublicationService::publish(...)`.
 3. Nema queue job-a za V1 ovog TS (nije potreban za usvojene FR).
 4. Nema Laravel Scheduler zadatka za Obavještenja.
-5. Nema administratorskog odobrenja u toku (FR-OB-014).
+5. Nema administratorskog odobrenja u toku Obavještenja (FR-OB-014). Objava zvanične Odluke Konkursa je radnja **izvornog** modula, ne Notice CMS.
 
 ## 2.4 Javni pristup sadržaju
 
 Referenca u panelu vodi na **javnu** rutu koju kontroliše `PublicNoticeContentController`, ne na administrativne rute (FR-OB-010).
 
+Ista konceptualna ruta ostaje kanal. Prije isporuke sadržaja provjerava se **javna dostupnost konkretne objave**. Ako objava nije javno dostupna, sadržaj se **ne** servira.
+
+Potpisani primjerak **ne** smije zavisiti od stabilnog direktnog public storage URL-a koji zaobilazi tu provjeru.
+
+Ovaj TS **ne** određuje HTTP status ni redirect.
+
 ## 2.5 Zabrane dizajna
 
 * Ne koristiti postojeću stub tabelu `notifications` ni `NotificationController` (druga semantika; stub).
 * Ne uvoditi read/unread kolone (FR-OB-017).
-* Ne uvoditi admin CRUD za Obavještenja u V1 ovog TS.
+* Ne uvoditi admin CRUD / CMS za Obavještenja zbog ovog corrective-a.
+* Ne kopirati zvaničnu Odluku u Notice storage.
+* Ne uvoditi generički file delivery za sve FT-004 izvore.
+* Ne tretirati svaki `supersedes_notice_id` kao korekciju / public revoke.
+* Ne uvoditi audit subsystem niti generički versioning subsystem.
+* Ne dizajnirati Competition SQL u ovom dokumentu.
+
+## 2.6 CURRENT vs TARGET — zvanična Odluka Konkursa
+
+**CURRENT RUNTIME / legacy delivery**
+
+`content_delivery = competition_decision_html` učitava `Competition` i renderuje živi HTML iz `CompetitionDecisionDocumentBuilder` (isti poslovni sadržaj kao admin Predlog).
+
+To **nije** zvanična Odluka. **Ne** smije biti delivery zvanične Odluke u **target** toku.
+
+**TARGET** za **novu** objavu zvanične Odluke Konkursa:
+
+javni objekat je elektronski primjerak fizički potpisane zvanične Odluke, koji pripada Konkursima.
+
+Postojeći istorijski Notice redovi sa `competition_decision_html` **ne** nestaju i **ne** migriraju se automatski u potpisani fajl ovim TS-om.
 
 ---
 
 # 3. Tehnički model
 
-**Sekcijska sljedivost:** FR-OB-004–FR-OB-016; BM-OB-04; BM-OB-13
+**Sekcijska sljedivost:** FR-OB-004–FR-OB-016; BM-OB-04; BM-OB-13; DK-FS PATCH-FS-OB-002; KN-FS-003 §15.7.5
 
 ## 3.1 Entitet `Notice` (Obavještenje)
 
-Poslovni unos panela. Nije zvanični sadržaj.
+Poslovni unos panela **i** zapis javne objave. Nije zvanični sadržaj. Nije vlasnik fajla.
 
-### Posmatrana vidljivost (FS §5)
+### Posmatrana vidljivost u aktivnom panelu (FS §5)
 
 | Tehničko polje | Posmatrano značenje |
 |----------------|---------------------|
 | `visible_in_active_panel = true` | Vidljivo u aktivnom panelu |
 | `visible_in_active_panel = false` | Nije vidljivo u aktivnom panelu |
 
+`visible_in_active_panel` **ne** određuje smije li javna FT-004 ruta isporučiti sadržaj.
+
 Nema statusa nacrt / na odobrenju / arhivirano / obrisano / zakazano.
+
+### Javna dostupnost sadržaja konkretnog Notice-a
+
+Odvojena semantika od panela.
+
+| Logičko stanje | Posmatrano značenje |
+|----------------|---------------------|
+| sadržaj javno dostupan | javna FT-004 ruta smije isporučiti referencirani sadržaj ove objave |
+| sadržaj javno povučen | javna FT-004 ruta **ne** servira sadržaj ove objave |
+
+Fizičko ime persisted atributa pripada implementaciji. TS zahtijeva **trajno** stanje ove semantike na Notice zapisu.
+
+**Mora ostati moguće:**
+
+* **UC-OB-005:** `visible_in_active_panel = false` **i** sadržaj i dalje javno dostupan preko postojeće javne rute.
+* **KN korekcija:** `visible_in_active_panel = false` **i** sadržaj **nije** javno dostupan preko prethodne javne rute.
+
+Postojeći (legacy) Notice zapisi tretiraju se kao **javno dostupni**, uključujući one sa `visible_in_active_panel = false`, osim ako budu eksplicitno javno povučeni novim correction tokom. `visible_in_active_panel = false` na postojećem zapisu **ne** znači automatski public revoke.
 
 ## 3.2 Referenca na zvanični sadržaj
 
-Obavještenje čuva **neprozirnu** vezu ka izvornom sadržaju:
+Obavještenje čuva **neprozirnu** vezu ka izvoru:
 
 * `source_type` — tip izvora (npr. `competition_decision`);
-* `source_id` — identifikator u izvornoj funkcionalnosti;
-* `content_delivery` — interni ključ načina isporuke koje `PublicNoticeContentController` razrješava.
+* `source_id` — identifikator izvorne funkcionalnosti (za CURRENT HTML: `competitions.id`);
+* `content_delivery` — interni runtime ključ načina isporuke koje `PublicNoticeContentController` razrješava.
 
-Primjer za konkursnu odluku: `source_type = competition_decision`, `source_id = competitions.id`, isporuka renderuje postojeći sadržaj odluke **van** admin middleware grupe.
+Notice **ne** čuva kopiju fajla, path, disk, MIME, original filename ni hash.
 
-## 3.3 Zamjena vidljivosti
+### CURRENT / legacy — `competition_decision_html`
 
-**Rule-level:** FR-OB-015, FR-OB-016; OFD-OB-001
+`source_type = competition_decision`, `source_id = competitions.id`. Isporuka renderuje živi HTML Predloga **van** admin middleware grupe.
 
-`NoticePublicationService::publish` prima opcioni `supersedes_notice_id` **isključivo od izvorne funkcionalnosti**.
+To ostaje dokumentovano kao CURRENT/legacy. **Nije** target delivery zvanične Odluke.
 
-* Ako je prosleđen: novo Obavještenje `visible_in_active_panel = true`; staro `visible_in_active_panel = false`; zapisi i zvanični sadržaj se **ne** brišu.
-* Ako nije prosleđen: kreira se novo vidljivo Obavještenje; TS **ne** automatski bira šta zamijeniti (OFD-OB-001 blocker).
+### TARGET — zvanična Odluka Konkursa
 
-## 3.4 Komponente (pregled)
+Delivery je source-specific ključ **`competition_decision_signed_copy`**.
+
+To je runtime vrijednost `content_delivery`, istog naming obrasca kao `competition_decision_html`. **Nije** nova DK dokumentaciona oznaka i **nije** generički file delivery za sve izvore.
+
+Javna ruta razrješava **tačan nepromjenjivi izvorni primjerak** koji pripada **toj** Notice objavi, pa ga servira samo ako je ta objava javno dostupna.
+
+`source_id = competitions.id` **samo po sebi nije dovoljno** da razlikuje više istorijskih potpisanih primjeraka iste Odluke. Izvor mora omogućiti jednoznačno razrješavanje konkretnog primjerka (logički identitet izvornog objekta, odvojen od samog ID-a Konkursa ako je to potrebno). Fizička kolona / SQL shema Konkursa **nije** predmet ovog TS.
+
+`ApplicationDocument` i `UserDocument` **nisu** vlasnici zvanične Odluke.
+
+## 3.3 Zamjena vidljivosti (ordinary / UC-OB-005)
+
+**Rule-level:** FR-OB-015, FR-OB-016; BM-OB-13; OFD-OB-001
+
+`NoticePublicationService::publish` prima od izvorne funkcionalnosti zahtjev za ordinary panel supersession (ulazni `supersedes_notice_id` u event payload-u).
+
+* Ako je ordinary supersession: novo Obavještenje `visible_in_active_panel = true`; staro `visible_in_active_panel = false`; zapisi se **ne** brišu; **javna dostupnost starog se ne gasi automatski**.
+* Ako nije prosleđen prethodnik: kreira se novo vidljivo Obavještenje; TS **ne** automatski bira šta zamijeniti (OFD-OB-001 blocker).
+
+Transient `supersedes_notice_id` u event payload-u **nije** persisted trag. Ordinary supersession **ne** smije se reinterpretirati kao korekcija.
+
+## 3.4 Korekcija pogrešno objavljenog primjerka (KN-FS-003 §15.7.5)
+
+Ovo **nije** UC-OB-005 i **nije** FS-OB-FLOW-03. Source-specific binding; OFD-OB-007 ostaje generički OTVORENO za ostale izvore.
+
+Tehnički ishod korekcije:
+
+1. Izvor čuva **novi** ispravni nepromjenjivi primjerak (ne overwrite prethodnog).
+2. Nastaje **nova** Notice objava (novi zapis).
+3. Prethodni pogrešni Notice više nije u aktivnom panelu.
+4. Sadržaj prethodnog pogrešnog Notice-a **nije** javno dostupan.
+5. Prethodni Notice red ostaje.
+6. Postoji **persisted** veza: koji prethodni Notice je korigovan i koja nova objava ga je zamijenila, sa značenjem da je prethodni **javno povučen zbog korekcije**, a ne samo skinut s panela.
+7. Korekcija **ne** mijenja rang-listu, rezultate ni iznose (to ostaje u izvornom modulu; FT-004 to ne dira).
+
+Ovaj TS **ne** određuje HTTP status starog URL-a.
+
+## 3.5 Komponente (pregled)
 
 | Element | Put / naziv | FR |
 |---------|-------------|-----|
@@ -208,16 +306,17 @@ Primjer za konkursnu odluku: `source_type = competition_decision`, `source_id = 
 | Controller (public content) | `App\Http\Controllers\PublicNoticeContentController` | FR-OB-008–010 |
 | Blade | `resources/views/partials/obavjestenja-panel.blade.php` | FR-OB-001–007 |
 | Landing | uključivanje partiala u `landing.blade.php` | FR-OB-001, 004 |
+| Izvor (Konkursi) | čuvanje i razrješavanje potpisanog primjerka; emitovanje događaja | FR-OB-011; KN-FS-003 |
 
 Repositories: projekat ih sistematski ne koristi — **ne uvode se**.
 
-Policies: javni pristup bez Policy klase; admin Policy nije potreban jer nema admin CRUD.
+Policies: javni pristup Notice sadržaju bez Notice Policy klase. Admin Notice CRUD se **ne** uvodi. Autorizacija upload/publish/correction je **source-side** (Konkursi), ne Notice CMS.
 
 ---
 
 # 4. Tokovi
 
-**Sekcijska sljedivost:** FS-OB-FLOW-01–03; UC-OB-001–005
+**Sekcijska sljedivost:** FS-OB-FLOW-01–03; UC-OB-001–005; KN-FS-003 §15.7.1, §15.7.5
 
 ## 4.1 FS-OB-FLOW-01 — Javni pregled
 
@@ -232,35 +331,66 @@ Policies: javni pristup bez Policy klase; admin Policy nije potreban jer nema ad
 ## 4.2 FS-OB-FLOW-02 — Automatska objava
 
 1. Izvorna funkcionalnost utvrdi spremnost (van Obavještenja; FR-OB-011).
-2. Dispečuje `OfficialContentReadyForPublicPublication` sa payload-om: `title`, opcioni `short_description`, `source_type`, `source_id`, `content_delivery`, opcioni `supersedes_notice_id`.
+2. Dispečuje `OfficialContentReadyForPublicPublication`.
 3. Listener poziva `NoticePublicationService::publish`.
-4. Obavještenje je `visible_in_active_panel = true`.
-5. Javni sadržaj dostupan preko `PublicNoticeContentController`.
+4. Obavještenje je `visible_in_active_panel = true` i javno dostupno (osim ako izvor eksplicitno naredi drugačije, što nije ordinary publish).
+5. Javni sadržaj dostupan preko `PublicNoticeContentController` **ako** je objava javno dostupna.
 
-**Konkretni okidač u konkursima/tenderima nije dio ovog TS** (OFD-OB-006). TS definiše ugovor događaja; veza iz konkurasa je blocker dok PO ne usvoji stanje.
+**OFD-OB-006 ostaje generički OTVORENO** (tenderi i ostali izvori).
 
-## 4.3 FS-OB-FLOW-03 — Zamjena u aktivnom panelu
+**Source-specific:** za zvaničnu Odluku Konkursa spremnost i radnju objave određuje izvorni modul Konkursi; Administrator konkursa pokreće objavu prema KN-FS-003 v0.1.16 §15.7.1. To ne zatvara OFD-OB-006 za ostale izvore.
 
-1. Izvorna funkcionalnost pri objavi prosledi `supersedes_notice_id`.
+## 4.3 FS-OB-FLOW-03 — Zamjena u aktivnom panelu (ordinary)
+
+1. Izvorna funkcionalnost pri objavi zahtijeva ordinary panel supersession (`supersedes_notice_id` u payload-u).
 2. Servis postavi staro `visible_in_active_panel = false`, novo `true`.
-3. Redovi i zvanični sadržaj ostaju (FR-OB-016).
+3. Redovi ostaju (FR-OB-016).
+4. Javna dostupnost starog **ostaje** (nije public revoke).
 
-Bez `supersedes_notice_id` tok zamjene se **ne** izvršava automatski.
+Bez zahtjeva za supersession tok zamjene se **ne** izvršava automatski.
+
+Ovaj tok **ne** uređuje KN korekciju.
+
+## 4.4 Korekcija zvanične Odluke Konkursa (tehnički tok)
+
+Nije novi `FS-OB-FLOW-*` ID. Nije usvojeni generički UC. Binding: KN-FS-003 §15.7.5 / DK-FS PATCH-FS-OB-002.
+
+1. Administrator konkursa u izvornom modulu postavlja **novi** ispravni nepromjenjivi primjerak.
+2. Izvor dispečuje objavu sa delivery `competition_decision_signed_copy`, identitetom tog primjerka, i zahtjevom za **korekciju / public revoke** prethodnog Notice-a (ne ordinary supersession).
+3. Servis kreira novi Notice; prethodni skida s panela; prethodnom gasi javnu dostupnost; upisuje persisted trag korekcije.
+4. Javna ruta za prethodni Notice **ne** servira sadržaj.
+5. Javna ruta za novi Notice servira ispravni primjerak, ako je nova objava javno dostupna.
 
 ---
 
 # 5. Autorizacija i ovlašćenja
 
-**Sekcijska sljedivost:** FR-OB-002, FR-OB-003, FR-OB-010, FR-OB-014, FR-OB-017
+**Sekcijska sljedivost:** FR-OB-002, FR-OB-003, FR-OB-010, FR-OB-014, FR-OB-017; KN-FS-003 §15.7.1, §15.7.5, §16.1, §18.8.2
 
-| Radnja | Middleware / pravilo |
+| Radnja | Pravilo |
 |--------|----------------------|
 | Pregled panela | Javna ruta `GET /` — **bez** `auth`, **bez** `verified` |
-| Pristup zvaničnom sadržaju Obavještenja | Javna ruta — **bez** `auth` |
-| Objava Obavještenja | Samo kroz događaj iz izvorne funkcionalnosti; **nema** admin approve rute |
+| Pristup zvaničnom sadržaju Obavještenja | Javna ruta — **bez** `auth`; isporuka samo ako je **ta** objava javno dostupna |
+| Objava Obavještenja (kanal) | Samo kroz događaj iz izvorne funkcionalnosti; **nema** Notice approve rute |
 | Admin CRUD Obavještenja | **Nije** u obuhvatu |
 
 `RestrictRoleModuleAccess` i `role:*` **ne** primjenjuju se na javne rute Obavještenja.
+
+### Source-side — zvanična Odluka Konkursa
+
+| Radnja | Ko |
+|--------|--------|
+| Postavljanje (upload/store) potpisanog primjerka | Administrator konkursa |
+| Objava kroz FT-004 | Administrator konkursa |
+| Korekcija | Administrator konkursa |
+| Predsjednik Komisije | **Nema** ovu poslovnu radnju (Predlog / Zaključi nisu objava Odluke) |
+| Član Komisije | **Nema** |
+
+CURRENT `RoleMiddleware` propušta `superadmin` kroz `role:*`. To **nije** dovoljno niti dopušteno kao poslovni bypass za ove radnje (KN-FS-003 §16.1, §18.8.2).
+
+Izvorni modul mora sprovesti autorizaciju koja zahtijeva poslovnu ulogu Administratora konkursa. Uloga Administratora platforme ili Super administratora **sama po sebi** ne daje pravo upload/publish/correction.
+
+Ovaj TS **ne** dizajnira Policy klasu ni imena metoda.
 
 Nema read-tracking autorizacije ni inbox dozvola.
 
@@ -268,34 +398,49 @@ Nema read-tracking autorizacije ni inbox dozvola.
 
 # 6. Model podataka
 
-**Sekcijska sljedivost:** FR-OB-005–007, 010, 015, 016
+**Sekcijska sljedivost:** FR-OB-005–007, 010, 015, 016; DK-FS PATCH-FS-OB-002
 
-## 6.1 Nova tabela `notices`
+## 6.1 Tabela `notices` — postojeća CURRENT osnova
 
 | Kolona | Tip | Null | Napomena |
-|--------|-----|------|----------|
-| `id` | BIGINT UNSIGNED PK | ne | |
+|--------|--------|------|----------|
+| `id` | BIGINT UNSIGNED PK | ne | identitet Notice-a |
 | `title` | VARCHAR(255) | ne | FR-OB-005 |
-| `short_description` | TEXT | da | FR-OB-007; izvor opisa = OFD-OB-008 (kolona prima vrijednost ako je prosleđena) |
-| `visible_in_active_panel` | BOOLEAN | ne | default `true` pri objavi; FR-OB-015 |
+| `short_description` | TEXT | da | FR-OB-007; izvor opisa = OFD-OB-008 |
+| `visible_in_active_panel` | BOOLEAN | ne | default `true` pri objavi; **samo panel**; FR-OB-015 |
 | `source_type` | VARCHAR(64) | ne | veza ka izvoru |
-| `source_id` | BIGINT UNSIGNED | ne | |
-| `content_delivery` | VARCHAR(64) | ne | ključ isporuke za public controller |
+| `source_id` | BIGINT UNSIGNED | ne | izvorni entitet (za HTML: Konkurs); vidi §3.2 za primjerak |
+| `content_delivery` | VARCHAR(64) | ne | runtime ključ isporuke |
 | `published_at` | TIMESTAMP | ne | tehnički trenutak objave |
 | `created_at` / `updated_at` | TIMESTAMP | | |
 
-**Indeksi:**
+**Indeksi (CURRENT):**
 
 * `(visible_in_active_panel, published_at)` — učitavanje panela;
 * `(source_type, source_id)` — pronalaženje po izvoru.
 
-**FK:** nema obaveznog FK ka `competitions` (izvor može biti više tipova; polimorfna logička veza preko `source_type`/`source_id`).
+**FK:** nema obaveznog FK ka `competitions`.
 
-**Constraints:** `title` NOT NULL.
+## 6.1.1 Logički target atributi Notice-a (bez zaključavanja fizičkog imena kolone)
+
+Implementacija **mora** persisted-ovati sljedeću semantiku. Fizička imena kolona pripadaju implementaciji / migraciji.
+
+| Logički atribut | Semantika |
+|-----------------|-----------|
+| Javna dostupnost sadržaja | da / ne; odvojeno od `visible_in_active_panel`; legacy default = **dostupno** |
+| Persisted predecessor | koji prethodni Notice je ova objava zamijenila, kada postoji |
+| Značenje veze | ordinary panel supersession **naspram** korekcije / public revoke |
+| Identitet izvornog objekta | jednoznačna referenca na nepromjenjivi primjerak koji ova objava servira, kada `source_id` Konkursa nije dovoljan |
+
+Ovo **nije** audit tabela. **Nije** generički versioning.
+
+Notice **ne** dobija: disk, MIME, original filename, hash, file blob/path, soft delete, generic audit metadata.
 
 ## 6.2 Izmijenjene tabele
 
-Nema obaveznih izmjena postojećih tabela za V1 ovog TS.
+**Notice:** implementacija će zahtijevati migracionu dopunu persisted modela za §6.1.1. Ovaj TS **ne** navodi SQL.
+
+**Competition / KN tabele:** ovaj TS **ne** dizajnira. Vidi §6.4.
 
 ## 6.3 Šta se namjerno ne uvodi
 
@@ -304,7 +449,21 @@ Nema obaveznih izmjena postojećih tabela za V1 ovog TS.
 * `approved_by`, `approved_at`;
 * `sort_order` / `priority` kao poslovni redoslijed (OFD-OB-009);
 * `max_visible` konfiguracija (OFD-OB-010);
-* tabela grupe „odgovarajućih“ zamjena (OFD-OB-001).
+* tabela grupe „odgovarajućih“ zamjena (OFD-OB-001);
+* file storage kolone na `notices`;
+* generički file delivery za sve izvore;
+* ponašanje za uploaded-but-unpublished replacement.
+
+## 6.4 Ugovor prema izvoru Konkursi (bez SQL)
+
+Konkursi moraju omogućiti:
+
+* čuvanje nepromjenjivog elektronskog primjerka fizički potpisane Odluke, povezanog sa konkretnim Konkursom;
+* više istorijskih primjeraka kada korekcija napravi novi (bez in-place overwrite objavljenog primjerka);
+* jednoznačno razrješavanje primjerka vezanog za konkretnu Notice objavu;
+* određivanje primjerka koji se objavljuje.
+
+Konkretna KN data schema pripada kasnijem izvornom tehničkom dizajnu / Phase C. `ApplicationDocument` / `UserDocument` nisu vlasnici Odluke.
 
 ---
 
@@ -319,11 +478,16 @@ Pri `NoticePublicationService::publish`:
 | Naslov | obavezan, string, max 255 |
 | Kratak opis | opciono, string |
 | `source_type`, `source_id`, `content_delivery` | obavezni |
-| `supersedes_notice_id` | opciono; ako postoji mora referencirati postojeći `notices.id` |
+| Prethodni Notice (payload) | opciono; ako postoji mora referencirati postojeći `notices.id` |
+| Ordinary vs korekcija | ako je korekcija / public revoke, prethodni Notice je obavezan |
+| Target delivery zvanične Odluke | `competition_decision_signed_copy`; izvor mora omogućiti razrješavanje konkretnog primjerka |
+| `competition_decision_html` | **nije** validan delivery za **novu** zvaničnu Odluku Konkursa |
 
 Nema validacije „odgovarajuće“ zamjene (OFD-OB-001).
 
-Nema validacije poslovnog stanja konkursa (OFD-OB-006) unutar Obavještenja.
+Nema validacije poslovnog stanja konkursa (OFD-OB-006) **unutar** Obavještenja. Izvor (Konkursi) ostaje odgovoran.
+
+FT-004 **ne** validira niti mijenja rang-listu, rezultate ni iznose.
 
 ---
 
@@ -335,7 +499,10 @@ Ne uvodi se:
 
 * evidencija otvaranja Obavještenja;
 * potvrda prijema;
-* immutable audit trail objave kao poslovni zahtjev.
+* immutable audit trail objave kao poslovni zahtjev;
+* zaseban audit subsystem za korekciju.
+
+Interni trag korekcije je **Notice zapis + persisted veza** (§3.4, §6.1.1), ne audit tabela.
 
 Operativni Laravel log (tehnički) dozvoljen je u implementacionim napomenama, ali nije FR.
 
@@ -343,26 +510,37 @@ Operativni Laravel log (tehnički) dozvoljen je u implementacionim napomenama, a
 
 # 9. Integracije
 
-**Sekcijska sljedivost:** FR-OB-008–011; BM-OB-08
+**Sekcijska sljedivost:** FR-OB-008–011; BM-OB-08; KN-FS-003 §15.7.1, §15.7.5
 
 ## 9.1 Ugovor događaja (ulaz iz izvornih funkcionalnosti)
 
-`OfficialContentReadyForPublicPublication` payload:
+Osnovna semantika ostaje: izvor signalizira da je zvanični sadržaj spreman za javnu objavu.
+
+Logički ugovor (bez PHP constructor/signature):
 
 * `title` (string)
 * `short_description` (?string)
 * `source_type` (string)
-* `source_id` (int)
+* `source_id` (izvorni entitet, npr. Konkurs)
 * `content_delivery` (string)
-* `supersedes_notice_id` (?int)
+* identitet izvornog objekta koji treba razriješiti za ovu objavu (kada `source_id` nije dovoljan)
+* ordinary panel supersession **naspram** korekcije / public revoke prethodnog
+* prethodni Notice kada postoji korekcija (i, po potrebi, za ordinary supersession)
 
-## 9.2 Isporuka sadržaja — prvi podržani `content_delivery`
+Payload polje `supersedes_notice_id` i dalje može postojati kao **ulaz**. **Nije** samo po sebi persisted trag. Ordinary supersession i korekcija **ne** smiju se izjednačiti.
 
-| `content_delivery` | Ponašanje `PublicNoticeContentController` |
-|--------------------|-------------------------------------------|
-| `competition_decision_html` | Učitava `Competition` po `source_id` i renderuje javni Blade ekvivalent sadržaja odluke (isti poslovni sadržaj kao admin decision view), **bez** `role:` / admin middleware |
+Ovaj TS **ne** finalizuje PHP potpis događaja.
 
-Drugi tipovi (tenderi, ostalo) — tek nakon OFD-OB-006 i dokumentacije izvorne funkcionalnosti; do tada blocker za te izvore.
+## 9.2 Isporuka sadržaja — `content_delivery`
+
+| `content_delivery` | Status | Ponašanje |
+|--------------------|--------|-----------|
+| `competition_decision_html` | **CURRENT / legacy** | Učitava `Competition` po `source_id` i renderuje živi HTML Predloga. **Nije** zvanična Odluka. **Ne** smije biti delivery **nove** zvanične Odluke. Postojeći zapisi se **ne** migriraju ovim corrective-om. |
+| `competition_decision_signed_copy` | **TARGET** za novu zvaničnu Odluku Konkursa | Javna ruta razrješava nepromjenjivi potpisani primjerak u izvornom modulu i servira ga **samo** ako je konkretni Notice javno dostupan. Notice ne drži fajl. Nije generički file delivery za sve izvore. |
+
+Drugi tipovi (tenderi, ostalo) — tek nakon OFD-OB-006 i dokumentacije izvorne funkcionalnosti.
+
+**CURRENT RUNTIME** implementira samo `competition_decision_html`. File isporuka potpisanog primjerka **nije** već implementirana.
 
 ## 9.3 Eksterni sistemi
 
@@ -384,13 +562,19 @@ Usvojeno da **nije** dio V1 ovog TS / usvojenog FS obuhvata:
 
 * arhiva i pregled arhive;
 * ručna / urednička objava;
-* administratorsko odobrenje objave;
+* administratorsko odobrenje objave Obavještenja;
 * read/unread, acknowledgment, inbox;
 * automatsko određivanje „odgovarajuće“ zamjene bez ulaza izvorne funkcionalnosti;
 * poslovni algoritam redoslijeda i maksimum stavki;
 * objava na `kotor.me`;
 * queue/scheduler za Obavještenja;
-* admin UI za Obavještenja.
+* admin UI / CMS za Obavještenja;
+* **uploaded-but-unpublished replacement** (namjerno nedefinisano);
+* Competition SQL;
+* storage driver / disk / path / signed URL;
+* HTTP status / redirect za javno povučeni sadržaj;
+* retroaktivna migracija `competition_decision_html` u potpisani fajl;
+* retroaktivno gašenje svih starih hidden URL-ova.
 
 ---
 
@@ -400,20 +584,22 @@ Usvojeno da **nije** dio V1 ovog TS / usvojenog FS obuhvata:
 
 | OFD | Uticaj na implementaciju | Blokira / ograničava |
 |-----|--------------------------|----------------------|
-| OFD-OB-001 | Servis ne može sam izračunati `supersedes_notice_id` | Potpuna automatska zamjena bez ulaza izvora |
-| OFD-OB-002 | Nije poznato da li više vidljivih iz iste kategorije smije koegzistirati | Pravila pri objavi bez `supersedes` |
-| OFD-OB-003 | Nema ponašanja za otkazan / prazan novi postupak | Exception tok zamjene |
-| OFD-OB-004 | Nema arhive / dugoročnog UI | Samo `visible_in_active_panel`; nema archive feature |
+| OFD-OB-001 | Servis ne može sam izračunati prethodnika | Potpuna automatska zamjena bez ulaza izvora |
+| OFD-OB-002 | Nije poznato da li više vidljivih iz iste kategorije smije koegzistirati | Pravila pri objavi bez supersession |
+| OFD-OB-003 | Nema ponašanja za otkazan / prazan novi postupak | Exception tok ordinary zamjene |
+| OFD-OB-004 | Nema arhive / dugoročnog UI | Panel flag ≠ arhiva; public availability nije arhiva |
 | OFD-OB-005 | Nema admin create UI | Namjerno van obuhvata |
-| OFD-OB-006 | Nema veze iz konkurasa/tendera ka događaju | Produkcijski end-to-end automatizam iz izvora |
-| OFD-OB-007 | Nema toka ispravke sadržaja / ažuriranja Obavještenja | Update semantika |
+| OFD-OB-006 | Nema generičke veze iz svih izvora ka događaju | **Ostaje generički OTVORENO.** Za zvaničnu Odluku Konkursa okidač je KN-FS-003 §15.7.1. |
+| OFD-OB-007 | Nema generičkog toka ispravke za sve izvore | **Ostaje generički OTVORENO.** Za zvaničnu Odluku Konkursa ponašanje je KN-FS-003 §15.7.5. |
 | OFD-OB-008 | Nije poznat izvor `short_description` | Kolona postoji; popuna zavisi od izvora |
 | OFD-OB-009 | Redoslijed u panelu nije poslovno usvojen | Privremeni tehnički `orderBy published_at` |
 | OFD-OB-010 | Nema limita broja stavki | Query bez `limit` osim ako PO odluči |
 
 ## 12.2 Ostalo
 
-Nema dodatnih tehničkih otvorenih pitanja van OFD blocker-a.
+Uploaded-but-unpublished replacement ostaje **nedefinisano**.
+
+Nema dodatnih tehničkih otvorenih pitanja koja bi zahtijevala PO odluku za ovaj source-specific corrective.
 
 ---
 
@@ -430,32 +616,32 @@ Nema dodatnih tehničkih otvorenih pitanja van OFD blocker-a.
 | FR-OB-005 | Prikaz `notice.title` |
 | FR-OB-006 | Link ka `route('notices.public-content', $notice)` |
 | FR-OB-007 | Prikaz `short_description` ako nije null |
-| FR-OB-008 | `PublicNoticeContentController@show` |
-| FR-OB-009 | Controller grana po `content_delivery` (HTML view ili file response) |
-| FR-OB-010 | Javna ruta; zabranjen redirect na admin decision rutu kao jedini mehanizam |
-| FR-OB-011 | Odgovornost izvora; događaj emituje **izvor** |
-| FR-OB-012 | `NoticePublicationService` ne sadrži logiku „da li je konkurs spreman“ |
+| FR-OB-008 | `PublicNoticeContentController@show`; isporuka samo ako je objava javno dostupna |
+| FR-OB-009 | Controller grana po `content_delivery`. **CURRENT RUNTIME:** samo HTML view (`competition_decision_html`); file response **nije** implementiran. **TARGET** za zvaničnu Odluku Konkursa: isporuka potpisanog primjerka preko FT-004 (`competition_decision_signed_copy`). To **nije** generički file delivery za sve izvore. |
+| FR-OB-010 | Javna ruta; zabranjen redirect na admin decision rutu kao jedini mehanizam; target Odluka nije živi HTML Predloga |
+| FR-OB-011 | Odgovornost izvora; događaj emituje **izvor**. Za Odluku Konkursa: KN-FS-003 §15.7.1. OFD-OB-006 ostaje generički OTVORENO. |
+| FR-OB-012 | `NoticePublicationService` ne sadrži logiku „da li je konkurs spreman“ i ne mijenja rezultate |
 | FR-OB-013 | Listener → `publish()` → `visible_in_active_panel = true` |
-| FR-OB-014 | Nema approve endpointa / statusa na odobrenju |
-| FR-OB-015 | `publish(..., supersedes_notice_id)` postavlja staro `visible_in_active_panel = false` |
-| FR-OB-016 | Nema `delete()` na `Notice` ni na izvornom sadržaju u toku zamjene |
+| FR-OB-014 | Nema Notice approve endpointa / statusa na odobrenju |
+| FR-OB-015 | Ordinary supersession postavlja staro `visible_in_active_panel = false`; **ne** gasi javnu dostupnost |
+| FR-OB-016 | Nema `delete()` na `Notice` ni na izvornom sadržaju u ordinary zamjeni; korekcija je odvojen tok (public revoke, red ostaje) |
 | FR-OB-017 | Nema kolona/tabela read-tracking; nema poziva notifikacionog inboxa |
 
 ## 13.2 FR → BM → PO (sažetak)
 
-Poklapa se sa FS matricom 11.B; TS ne mijenja taj lanac.
+Poklapa se sa FS matricom 11.B; TS ne mijenja taj lanac. Source-specific KN binding je u DK-FS PATCH-FS-OB-002; TS ga tehnički realizuje kao kanal.
 
 ## 13.3 Pokrivenost FR
 
 Svaki FR-OB-001 … FR-OB-017 ima tehničku stavku u §13.1.
 
-Ograničenje: FR-OB-011/013 end-to-end iz konkursa zahtijeva OFD-OB-006; infrastruktura događaja je specificirana, veza izvora je blocker.
+Ograničenje: FR-OB-011/013 end-to-end iz konkursa za **generičke** izvore i dalje OFD-OB-006; za zvaničnu Odluku Konkursa binding postoji, runtime veza još nije implementirana.
 
 ---
 
 # 14. Napomene za implementaciju
 
-**Nenormativno.**
+**Nenormativno** u pogledu HTTP statusa, storage drivera, diskova, path-ova i PHP potpisa. Semantika u §2–§9 ostaje mjerodavna.
 
 ## 14.1 Rute (predloženo)
 
@@ -464,25 +650,38 @@ Ograničenje: FR-OB-011/013 end-to-end iz konkursa zahtijeva OFD-OB-006; infrast
 | GET | `/` | `home` | web (postojeće) | `HomeController@index` (proširenje) |
 | GET | `/obavjestenja/{notice}/sadrzaj` | `notices.public-content` | web, **bez auth** | `PublicNoticeContentController@show` |
 
-Bez novih admin ruta.
+Bez novih **Notice** admin ruta. Upload/publish/correction pripadaju izvornom modulu Konkursi; ovaj TS **ne** određuje njihove URI.
 
 ## 14.2 Kontroleri
 
-* `HomeController@index` — prosleđuje `$activeNotices` u `landing`.
-* `PublicNoticeContentController@show(Notice $notice)` — abort 404 ako nije smisleno servirati; za V1 dozvoliti isporuku i kada `visible_in_active_panel = false` **nije** usvojeno kao arhiva (OFD-OB-004). Dok OFD-OB-004 nije riješen: isporuka javnog sadržaja zahtijeva da Obavještenje postoji; **ne** implementirati archive browser. Za usklađenost sa FR-OB-010 dok je unos vidljiv, sadržaj mora biti dostupan; ponašanje nakon skidanja s panela ostaje blocker (OFD-OB-004) — implementacija V1: sadržaj ostaje dostupan preko iste javne rute (usklađeno sa FR-OB-016 „zamjena ≠ gubitak dostupnosti“), bez UI arhive.
+* `HomeController@index` — prosleđuje `$activeNotices` (`visible_in_active_panel = true`) u `landing`.
+* `PublicNoticeContentController@show(Notice $notice)`:
+  * **ne** koristi `visible_in_active_panel` kao jedini uslov isporuke;
+  * **prije isporuke** provjerava javnu dostupnost konkretne objave;
+  * ako objava **nije** javno dostupna: sadržaj se **ne** servira (ovaj TS **ne** određuje HTTP status ni redirect);
+  * **ordinary UC-OB-005:** Notice skinut s panela ostaje javno dostupan; sadržaj **smije** biti isporučen;
+  * **KN korekcija:** sadržaj prethodnog pogrešnog Notice-a **nije** javno dostupan preko prethodne javne rute;
+  * `competition_decision_html`: CURRENT/legacy HTML Predloga; **nije** target zvanične Odluke;
+  * `competition_decision_signed_copy`: razrješava izvorni nepromjenjivi primjerak i servira ga preko FT-004, bez stabilnog public storage URL-a koji zaobilazi provjeru;
+  * unknown `content_delivery`: sadržaj se ne servira.
+
+OFD-OB-004 (arhiva UI) ostaje otvoren i **nije** isto što i public revoke korekcije.
 
 ## 14.3 Servisi
 
 `App\Services\Notices\NoticePublicationService`
 
-* `publish(array $payload): Notice`
-* transakcija DB pri zamjeni vidljivosti
+* `publish(...)` kreira Notice;
+* transakcija pri ordinary panel supersession **i** pri korekciji (panel + public revoke + persisted trag);
+* ordinary supersession **ne** postavlja public revoke;
+* korekcija **ne** briše prethodni Notice.
 
 ## 14.4 Event / Listener
 
 * Event: `OfficialContentReadyForPublicPublication`
 * Listener: `PublishOfficialContentNotice` (sync, `ShouldQueue` **ne**)
-* Registracija u `EventServiceProvider` / Laravel 11 discovery
+* Registracija: Laravel auto-discovery (bez dvostrukog `Event::listen`)
+* Logički ugovor: §9.1. PHP signature se ovdje **ne** finalizuje.
 
 ## 14.5 Blade
 
@@ -492,27 +691,43 @@ Bez novih admin ruta.
 
 ## 14.6 Migracije / deploy
 
-* Nova migracija `create_notices_table`
-* `php artisan migrate` na Plesk nakon deploy-a
-* Nema promjene cron/queue worker konfiguracije za ovaj feature
-* Nema nove env varijable
+* CURRENT: migracija `create_notices_table` već postoji.
+* Target: dodatna migracija **Notice persisted modela** za semantiku iz §6.1.1. **Bez SQL-a u ovom dokumentu.**
+* Legacy redovi: javna dostupnost = dostupno; `visible_in_active_panel = false` **ne** pretvara se u public revoke.
+* `competition_decision_html` zapisi se **ne** pretvaraju u potpisane fajlove.
+* Nema retroaktivnog gašenja svih starih hidden URL-ova.
+* Competition schema migracije **nisu** dio ovog TS.
+* Nema promjene cron/queue worker konfiguracije za ovaj feature kao uslov ovog TS.
 
 ## 14.7 Testovi (plan)
+
+Bez pisanja testova. Target pokrivenost (feature, u skladu sa `ObavjestenjaFeatureTest` + izvorni Konkursi testovi):
 
 | Test | Pokriva |
 |------|---------|
 | Feature: guest vidi panel na `/` | FR-OB-001, 002, 004 |
 | Feature: auth i guest vide iste vidljive stavke | FR-OB-003 |
 | Feature: panel prikazuje title / description / link | FR-OB-005–007 |
-| Feature: guest otvara javni sadržaj bez auth | FR-OB-008, 010 |
-| Unit/Feature: `publish` kreira visible notice | FR-OB-013, 014 |
-| Feature: `publish` sa supersedes skida staro s panela, ne briše red | FR-OB-015, 016 |
+| Feature: guest otvara javni sadržaj bez auth kada je objava javno dostupna | FR-OB-008, 010 |
+| Feature: `publish` kreira visible notice | FR-OB-013, 014 |
+| Feature: ordinary supersession skida staro s panela, ne briše red, **stari URL ostaje dostupan** | FR-OB-015, 016; UC-OB-005 regresija |
 | Feature: nema upisa u read-tracking | FR-OB-017 |
-| Negative: Obavještenja sloj ne sadrži competition-status gate | FR-OB-012 |
+| Negative: Obavještenja sloj ne sadrži competition-status / ranking gate | FR-OB-012 |
+| Feature: Administrator konkursa postavlja potpisani primjerak | KN §15.6.3 |
+| Feature: authorization — samo Administrator konkursa; predsjednik/član nemaju; platform `admin`/`superadmin` nisu business bypass | KN §16.1, §18.8.2 |
+| Feature: publish zvanične Odluke kroz FT-004 | KN §15.7.1 |
+| Feature: public delivery `competition_decision_signed_copy` | TARGET |
+| Feature: Notice nije vlasnik fajla | ownership |
+| Feature: korekcija = nova objava | KN §15.7.5 |
+| Feature: prethodni pogrešni Notice skinut s panela | KN §15.7.5 |
+| Feature: prethodni pogrešni sadržaj nije dostupan na starom URL-u | KN §15.7.5; bez tvrdnje o HTTP statusu |
+| Feature: persisted correction trace | §3.4 |
+| Feature: rang/rezultati/iznosi nepromijenjeni korekcijom | KN §15.7.5 |
+| Feature: `competition_decision_html` nije delivery nove zvanične Odluke | PATCH-FS-OB-002 |
 
 ## 14.8 Administracija
 
-Nema admin UI. Tehnička podrška = događaj + servis + javne rute.
+Nema Notice admin UI. Tehnička podrška FT-004 = događaj + servis + javne rute. Upload/publish/correction UI pripada Konkursima, ne ovom TS-u kao Notice CMS.
 
 ## 14.9 Uticaj na postojeći stub
 
@@ -522,9 +737,10 @@ Nema admin UI. Tehnička podrška = događaj + servis + javne rute.
 
 # Provjera usklađenosti
 
-* Nova funkcionalnost van FR: **ne**
+* Nova funkcionalnost van FR: **ne** (source-specific binding već u DK-FS PATCH-FS-OB-002 / KN-FS-003)
 * Nova poslovna pravila: **ne**
-* Riješeni OFD: **ne** (samo blocker lista)
-* Protivrečnost BM/UC/FS: **nije identifikovana**
-* Svaki FR ima tehničku stavku: **da** (uz zabilježena ograničenja OFD)
+* Riješeni OFD generički: **ne** (OFD-OB-006 i OFD-OB-007 ostaju generički OTVORENO)
+* Protivrečnost BM/UC/FS: **nije identifikovana** (UC-OB-005 KEEP; KN korekcija odvojena)
+* Svaki FR ima tehničku stavku: **da** (uz zabilježena ograničenja OFD i CURRENT vs TARGET)
 * Svaka tehnička komponenta u §3/§13 referencira FR: **da**
+* Runtime implementiran ovim dokumentom: **ne**
