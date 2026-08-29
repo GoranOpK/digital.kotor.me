@@ -16,6 +16,7 @@
 |-----------------|--------|------|
 | 0.1 | 2026-07-31 | Početna Use Case specifikacija za FT-004 Obavještenja. Identifikovani usvojeni poslovni use case-ovi, kandidati i otvorena pitanja na osnovu Business Model v0.1 + PATCH-001. |
 | 2026-08-17 | 2026-08-17 | Administrativna dodjela dokumentacionog ID-a `DK-UC-001`; aktivne reference prebačene na DK-BM-001 / DK-FS-001 / DK-TS-001 / DK-FR-001. Poslovni sadržaj, UC-OB / C-UC-OB oznake i status U IZRADI ostaju nepromijenjeni. |
+| 2026-08-29 | 2026-08-29 | Source-specific binding `KN-FS-003` v0.1.16 za zvaničnu Odluku Konkursa (C-UC-OB-002 ostaje generički kandidat; UC-OB-005 KEEP; OFD-OB-006 ostaje generički OTVORENO). Header verzija ostaje 0.1. Status U IZRADI nepromijenjen. |
 
 Napomena:
 
@@ -141,7 +142,7 @@ Nema zasebnog inboxa, praćenja čitanja, administratorskog odobrenja objave ni 
 | ID | Naziv | Razlog statusa kandidata |
 |----|-------|--------------------------|
 | C-UC-OB-001 | Pristup zvaničnom sadržaju nakon nestanka sa aktivnog panela | BM-OB-13 isključuje automatski gubitak dostupnosti, ali arhiviranje i dugoročna dostupnost nisu usvojeni |
-| C-UC-OB-002 | Ispravka ili zamjena već objavljenog zvaničnog sadržaja | Otvoreno pitanje BM §11 tačka 7 |
+| C-UC-OB-002 | Ispravka ili zamjena već objavljenog zvaničnog sadržaja | Otvoreno pitanje BM §11 tačka 7. Za zvaničnu Odluku Konkursa vidi `KN-FS-003` v0.1.16 §15.7.5 (source-specific binding). Kandidat ostaje za ostale izvore. |
 | C-UC-OB-003 | Ručna objava opšteg opštinskog obavještenja | Van usvojenog scenarija; otvoreno pitanje BM §11 tačka 5 |
 | C-UC-OB-004 | Istovremena vidljivost više Obavještenja iste kategorije | Otvoreno pitanje BM §11 tačka 2 |
 
@@ -270,7 +271,8 @@ Nema usvojenih poslovnih izuzetaka koji uslovljavaju prijavu ili registraciju ra
 **A1 — Početni izvor: konkurs**
 
 1. Izvorna funkcionalnost je konkurs.
-2. Tok je isti; konkretno poslovno stanje konkursa nije detaljno usvojeno u Business Modelu Obavještenja (otvoreno pitanje).
+2. Tok je isti; konkretno poslovno stanje konkursa **generički** nije detaljno usvojeno u Business Modelu Obavještenja (OFD-OB-006 ostaje OTVORENO).
+3. **Izvorni binding:** za zvaničnu Odluku Konkursa izvorni modul Konkursi određuje spremnost, a Administrator konkursa pokreće objavu prema `KN-FS-003` v0.1.16 §15.7.1. To ne zatvara OFD-OB-006 za ostale izvore niti za ostali konkursni sadržaj van te Odluke.
 
 **A2 — Početni izvor: tender ili druga funkcionalnost**
 
@@ -334,6 +336,8 @@ Nema usvojenih poslovnih izuzetaka koji uslovljavaju prijavu ili registraciju ra
 * Zvanični sadržaj je javno dostupan kroz stabilan javni mehanizam.
 * Izvorna funkcionalnost ostaje odgovorna za proces i sadržaj.
 
+**Izvorni binding — zvanična Odluka Konkursa:** generički model ovog use case-a ostaje nepromijenjen (automatsko nastajanje kanala; bez uredničkog workflow-a Obavještenja). Za zvaničnu Odluku Konkursa spremnost i radnju objave određuje izvorni modul Konkursi; Administrator konkursa pokreće objavu prema `KN-FS-003` v0.1.16 §15.7.1. OFD-OB-006 ostaje generički OTVORENO.
+
 ---
 
 ## UC-OB-005 — Zamjena Obavještenja u aktivnom panelu
@@ -372,6 +376,8 @@ Nema usvojenih alternativnih tokova. Kriterijumi „odgovarajuće“ zamjene i i
 * Aktivni panel prikazuje novo Obavještenje umjesto starijeg (prema usvojenom prezentacionom očekivanju).
 * Zamjena nije automatski izazvala brisanje ni uništavanje zvaničnog sadržaja.
 * Dugoročna dostupnost / arhiviranje starijeg sadržaja nisu uređeni ovim use case-om.
+
+**Razgraničenje (nije izmjena ovog use case-a):** UC-OB-005 uređuje zamjenu vidljivosti u aktivnom panelu zbog narednog ekvivalentnog postupka/sadržaja. **Ne** primjenjuje se kao pravilo korekcije pogrešno objavljenog primjerka iste zvanične Odluke Konkursa. Za taj slučaj važi `KN-FS-003` v0.1.16 §15.7.5 (vidi C-UC-OB-002). Ovo **nije** reinterpretacija BM-OB-13 i **ne** uvodi pravilo da svako Obavještenje sklonjeno s panela gubi javni pristup.
 
 ---
 
@@ -429,9 +435,15 @@ Kandidati **nisu** usvojeni use case-ovi. Ne ulaze u Functional Specification do
 
 ## C-UC-OB-002 — Ispravka ili zamjena već objavljenog zvaničnog sadržaja
 
-**Zašto kandidat:** Nije usvojeno kako se ponaša javni unos ako se zvanični sadržaj ispravi ili zamijeni.
+**Status:** GENERIČKI KANDIDAT. **Nije** usvojeni use case. Ovaj dokument ga **ne** promovira u usvojeni generički UC.
 
-**Potrebna odluka:** BM §11 tačka 7.
+**Zašto kandidat:** Nije usvojeno kako se ponaša javni unos ako se zvanični sadržaj ispravi ili zamijeni, **osim** source-specific bindinga ispod.
+
+**Potrebna odluka:** BM §11 tačka 7 ostaje potrebna za **generičko** ponašanje svih izvora.
+
+**Izvorni binding — zvanična Odluka Konkursa:** Za zvaničnu Odluku Konkursa konkretno ponašanje je već određeno dokumentom `KN-FS-003` v0.1.16 §15.7.5 (uz §15.6, §15.7.1, §16.6, §18.7.4). To je binding konkretnog izvora, ne usvajanje C-UC-OB-002 za sve module i **ne** univerzalno pravilo FT-004.
+
+Za druge izvore C-UC-OB-002 ostaje otvoren/kandidat prema postojećem statusu.
 
 ---
 
@@ -460,8 +472,8 @@ Otvorena pitanja koja sprečavaju potpuni opis interakcija (preuzeta / usklađen
 3. Šta ako noviji postupak ne proizvede zamjenu (izuzetak UC-OB-005 / E1)?
 4. Kako se uređuju arhiviranje i dugoročna dostupnost (C-UC-OB-001)?
 5. Da li je dozvoljena ručna objava opštih obavještenja (C-UC-OB-003)?
-6. Koje tačno poslovno stanje u svakoj izvornoj funkcionalnosti pokreće UC-OB-003?
-7. Kako se ponaša Obavještenje pri ispravci zvaničnog sadržaja (C-UC-OB-002)?
+6. Koje tačno poslovno stanje u svakoj izvornoj funkcionalnosti pokreće UC-OB-003? Za zvaničnu Odluku Konkursa konkretnu radnju objave određuje `KN-FS-003` v0.1.16 §15.7.1; OFD-OB-006 ostaje generički OTVORENO.
+7. Kako se ponaša Obavještenje pri ispravci zvaničnog sadržaja (C-UC-OB-002)? Za zvaničnu Odluku Konkursa važi `KN-FS-003` v0.1.16 §15.7.5 (source-specific binding). Generička korekcija drugih izvora ostaje otvorena; C-UC-OB-002 **nije** zatvoren generički.
 8. Odakle dolazi kratak opis (uticaj na UC-OB-004 / A1)?
 9. Koje je pravilo redoslijeda u panelu (uticaj na UC-OB-001)?
 10. Postoji li maksimalan broj vidljivih Obavještenja (uticaj na UC-OB-001 / UC-OB-005)?
@@ -483,7 +495,7 @@ Ova pitanja **ne** uvode nova usvojena pravila.
 | Kandidat | Povezano BM / otvoreno pitanje |
 |----------|--------------------------------|
 | C-UC-OB-001 | BM-OB-13; BM §11.4 |
-| C-UC-OB-002 | BM §11.7 |
+| C-UC-OB-002 | BM §11.7 (generički). Za zvaničnu Odluku Konkursa: `KN-FS-003` v0.1.16 §15.7.5 (source-specific binding; kandidat ostaje) |
 | C-UC-OB-003 | BM-OB-11; BM §11.5 |
 | C-UC-OB-004 | BM-OB-09; BM §11.2 |
 
