@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.11
+**Verzija:** 0.1.12
 **Datum:** 2026-08-29
 
 Povezani dokumenti:
@@ -41,6 +41,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.9 | 2026-08-29 | Napisano Poglavlje 13 — Individualno ocjenjivanje. Pet članova ocjenjuje 10 pozitivnih kriterijuma skalom 1–5. Nacrt do eksplicitnog Završi ocjenjivanje. Tajnost do završetka ciklusa. Ostale napomene opcione. Dodatni bodovi, prosjeci, prag 30 i rang-lista pripadaju Poglavlju 14. Poglavlja 14–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.10 | 2026-08-29 | Napisano Poglavlje 14 — Rang-lista, iznosi i treća sjednica. Zbirni rezultati i preliminarna rang-lista nastaju tek po završetku cjelokupnog ciklusa. Dodatni bodovi, konačna ocjena, prag 30, treća sjednica van Platforme, predloženi iznosi, tie-break čl. 21 i zaključana konačna rang-lista. Predlog Odluke, zatvaranje, arhiva i objava pripadaju Poglavlju 15. Poglavlja 15–19 ostaju za naredne odobrene dokumentacione korake. |
 | 0.1.11 | 2026-08-29 | Napisano Poglavlje 15 — Predlog Odluke, zvanična Odluka, zaključivanje, arhiva i objava. Predlog se generiše iz zaključane konačne rang-liste. Zvanična Odluka nastaje fizičkim potpisom sekretara van Platforme. Zaključivanje nije donošenje. Ciljno: Administrator konkursa postavlja i objavljuje potpisani primjerak. Poglavlja 16–19 ostaju za naredne odobrene dokumentacione korake. |
+| 0.1.12 | 2026-08-29 | Napisano Poglavlje 16 — Funkcionalne zabrane i zaštita poslovnih pravila. Platforma štiti zaključane Prijave, privatnost, individualno ocjenjivanje, konačni rezultat, Predlog/Odluku i završeni Konkurs. Ne uvodi nove tokove. Poglavlja 17–19 ostaju za naredne odobrene dokumentacione korake. |
 
 Napomena:
 
@@ -79,12 +80,12 @@ Dokument je funkcionalna specifikacija tipa konkursa **Žensko preduzetništvo**
 | 13. Individualno ocjenjivanje | USVOJENO |
 | 14. Rang-lista, iznosi i treća sjednica | USVOJENO |
 | 15. Predlog Odluke, zatvaranje, arhiva i objava | USVOJENO |
-| 16. Funkcionalne zabrane i enforcement | NIJE ZAPOČETO |
+| 16. Funkcionalne zabrane i zaštita poslovnih pravila | USVOJENO |
 | 17. V1 granica | NIJE ZAPOČETO |
 | 18. Prihvatni kriterijumi | NIJE ZAPOČETO |
 | 19. Sljedivost | NIJE ZAPOČETO |
 
-Radna struktura Poglavlja 16–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
+Radna struktura Poglavlja 17–19 je odobrena. Sadržaj tih poglavlja **nije** odobren ovim korakom. Poglavlje 11 je **OBUSTAVLJENO** do pribavljanja autoritativnog izvora.
 
 ---
 
@@ -116,7 +117,7 @@ Radna struktura Poglavlja 16–19 je odobrena. Sadržaj tih poglavlja **nije** o
 13. Individualno ocjenjivanje
 14. Rang-lista, iznosi i treća sjednica
 15. Predlog Odluke, zatvaranje, arhiva i objava
-16. Funkcionalne zabrane i enforcement
+16. Funkcionalne zabrane i zaštita poslovnih pravila
 17. V1 granica
 18. Prihvatni kriterijumi
 19. Sljedivost
@@ -2998,13 +2999,122 @@ Ovo poglavlje ih **ne** razrađuje.
 ---
 
 
-# 16. Funkcionalne zabrane i enforcement
+# 16. Funkcionalne zabrane i zaštita poslovnih pravila
 
-Status poglavlja: NIJE ZAPOČETO
+Status poglavlja: USVOJENO
 
-Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom koraku.
+Ovo poglavlje definiše funkcionalne zabrane i zaštitu pravila usvojenih u Poglavljima 7–15.
+
+**Ne** uvodi nove poslovne tokove, nova osnovna stanja, nove entitete, novu radnju „Arhiviraj Konkurs“, override mehanizme ni izuzetke za privilegovane platformske uloge.
+
+**Ne** rješava Poglavlje 11. Poglavlje 11 ostaje **OBUSTAVLJENO**. Ovo poglavlje **ne** definiše niti indirektno uvodi eliminatorne kriterijume 2 i 3.
+
+Osnov: Poglavlja 7–15 ovog dokumenta; `KN-BM-003` §4.2–§4.5, §7, §14, §15.
+
+## 16.1. Obuhvat funkcionalnih zabrana
+
+Poglavlje 16 **ne** uvodi nove poslovne tokove. Definiše funkcionalnu zaštitu pravila i ograničenja usvojenih u Poglavljima 7–15.
+
+Kada je prethodnim poglavljima određena zabrana, zaključavanje ili ograničenje pristupa, Platforma mora spriječiti izvršenje zabranjene radnje. Nije dovoljno samo sakriti dugme, link ili drugi element korisničkog interfejsa.
+
+Zabranjena radnja **ne** smije postati moguća korišćenjem neposrednog URL-a ili identifikatora, alternativne dostupne putanje ili privilegovane platformske uloge.
+
+Uloga Administratora platforme ili Super administratora sama po sebi **ne** daje poslovno pravo zaobilaženja pravila Konkursa, izvršenja radnje koja pripada drugom akteru ili izmjene zaključanih podataka.
+
+Konkretnu tehničku realizaciju ovih zabrana ovo poglavlje **ne** određuje.
+
+## 16.2. Zaključavanje Prijave i zabrana naknadne dopune
+
+Prijava u stanju **Podnesena** zaključava se u trenutku uspješnog konačnog podnošenja. Njen podneseni sadržaj više se **ne** može mijenjati.
+
+Prijava koja do isteka roka ostane **U pripremi**, nakon isteka roka ostaje samo dostupna za pregled. **Ne** može se dalje uređivati, brisati niti konačno podnijeti.
+
+Nakon isteka roka **nije** dozvoljena naknadna dopuna zaključane Prijave kroz administrativnu provjeru, Prigovor ili kasniju fazu postupka.
+
+Administrativna provjera i Prigovor mogu proizvoditi nove podatke postupka. **Ne** smiju mijenjati zaključani sadržaj Prijave.
+
+Ovo poglavlje **ne** uvodi pravilo o ponovnom otvaranju završenog Prigovora. To pitanje nije dovoljno poslovno definisano.
+
+## 16.3. Privatnost i pristup Prijavama
+
+Dok rok za podnošenje Prijava traje, Komisija **nema** pristup pojedinačnim Prijavama niti zbirnom broju Prijava.
+
+Nakon isteka roka Komisiji mogu biti dostupne **samo** Prijave u stanju **Podnesena** za konkretni Konkurs.
+
+Prijava koja je ostala **U pripremi** **ne** smije postati dostupna Komisiji nakon isteka roka, niti kroz alternativnu putanju.
+
+Pristup imaju **samo aktivni članovi Komisije** dodijeljene konkretnom Konkursu. Opšta uloga člana Komisije **ne** daje pristup Prijavama drugih Konkursa.
+
+Ovlašćeni član Komisije ima pravo **pregleda** kompletne **Podnesene** Prijave i prateće dokumentacije. **Nema** pravo preuzimanja pratećih dokumenata.
+
+Zaštita pristupa mora važiti i pri neposrednom pristupu URL-u ili identifikatoru.
+
+Administrator platforme i Super administrator **ne** dobijaju poslovno pravo pristupa sadržaju pojedinačne Prijave samo na osnovu privilegovane platformske uloge.
+
+## 16.4. Zaštita individualnog ocjenjivanja
+
+Dok traje individualno ocjenjivanje, svaki član Komisije vidi **samo sopstvene** individualne ocjene i sopstvene Ostale napomene.
+
+Predsjednik Komisije **nema** privilegovan pristup individualnim ocjenama drugih članova.
+
+Tajnost traje do završetka **kompletnog** ciklusa individualnog ocjenjivanja: dok svih pet članova Komisije ne završe ocjenjivanje svih Prijava koje pripadaju tom ciklusu.
+
+Radnja **„Završi ocjenjivanje“** može se izvršiti samo kada su unesene važeće ocjene za svih **10** kriterijuma, u rasponu **1–5**.
+
+**Ostale napomene** su opcione i **ne** blokiraju završavanje ocjenjivanja.
+
+**Ne** uvodi se tehnički gate kojim bi Platforma provjeravala završetak usmenog obrazloženja Biznis plana za kriterijum 10.
+
+Nakon radnje **„Završi ocjenjivanje“** individualna ocjena postaje zaključana. **Ne** može se izmijeniti, ponovo otvoriti niti vratiti u nacrt, uključujući kroz privilegovanu administrativnu ulogu.
+
+Zbirni rezultati mogu nastati **tek** nakon završetka kompletnog ciklusa individualnog ocjenjivanja.
+
+## 16.5. Zaštita konačnog rezultata
+
+Kada je konačna rang-lista formirana prema Poglavlju 14, ona predstavlja **zaključani** konačni rezultat Komisije.
+
+Nakon zaključavanja **ne** mogu se mijenjati podaci koji čine ili određuju konačni rezultat, uključujući:
+
+* konačne ocjene;
+* poredak;
+* zaključak Podržava / Odbija;
+* predloženi iznos podrške;
+* rezultat primjene pravila za jednake bodove.
+
+Pravila o pragu od 30 bodova, maksimalnim iznosima podrške, raspoloživim sredstvima, redoslijedu raspodjele, djelimičnom preostalom iznosu i jednakim bodovima moraju se poštovati prema Poglavlju 14. **Ne** mogu se zaobići alternativnom radnjom ili privilegovanom ulogom.
+
+Ovo poglavlje **ne** ponavlja algoritam obračuna i rangiranja iz Poglavlja 14.
+
+## 16.6. Predlog Odluke, zvanična Odluka i zaključivanje
+
+Radnja **„Generiši Odluku“** koristi zaključani konačni rezultat za formiranje Predloga Odluke. **Ne** smije mijenjati konačnu rang-listu niti druge zaključane rezultate.
+
+Generisani dokument ostaje **Predlog Odluke**. Samim generisanjem **ne** postaje zvanična Odluka Sekretarijata.
+
+Zvanična Odluka Sekretarijata nastaje fizičkim potpisom nadležnog sekretara **van Platforme**.
+
+Platforma **ne** uvodi elektronsko potpisivanje sekretara, dugme za elektronsko prihvatanje, checkbox potvrde potpisa niti drugi tehnički preduslov potpisa.
+
+Predsjednik Komisije poslovno izvršava radnju **„Zaključi Konkurs“** nakon što bude obaviješten da je Odluka fizički potpisana. Platforma **ne** provjerava taj fizički događaj kao tehnički preduslov.
+
+Radnja **„Zaključi Konkurs“** **ne** smije mijenjati konačni rezultat. **Nije** usvajanje, potpisivanje, objavljivanje niti dostavljanje Odluke.
+
+Elektronska kopija fizički potpisane zvanične Odluke čuva se na Platformi kao cjelovit i nepromjenjiv dokument. Objavljivanje te kopije je **zasebna** radnja.
+
+Ovo poglavlje **ne** definiše postupak zamjene pogrešno učitanog fajla zvanične Odluke. To pitanje ostaje otvoreno jer nije poslovno razriješeno prethodnim poglavljima.
+
+## 16.7. Nepovratnost završenog Konkursa
+
+Nakon radnje **„Zaključi Konkurs“** Konkurs je završen i prelazi u arhivski režim.
+
+Završeni Konkurs **ne** može se ponovo otvoriti radi nastavka ili ponavljanja konkursnog postupka.
+
+Privilegovana platformska uloga **nije** način za ponovno otvaranje završenog Konkursa niti za izmjenu zaključanih rezultata.
+
+Kasnije čuvanje i objavljivanje zvanične Odluke Sekretarijata **nije** ponovno otvaranje Konkursa.
 
 ---
+
 
 # 17. V1 granica
 
@@ -3030,4 +3140,4 @@ Sadržaj ovog poglavlja biće definisan u narednom odobrenom dokumentacionom kor
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.11**
+**Kraj dokumenta KN-FS-003 v0.1.12**
