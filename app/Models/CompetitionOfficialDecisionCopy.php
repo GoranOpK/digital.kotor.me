@@ -37,6 +37,13 @@ class CompetitionOfficialDecisionCopy extends Model
             ->exists();
     }
 
+    public function isCurrentlyPublished(): bool
+    {
+        return static::activeSignedCopyNoticesQuery($this->competition_id)
+            ->where('source_object_id', $this->id)
+            ->exists();
+    }
+
     public static function competitionHasPublishedSignedCopy(int $competitionId): bool
     {
         return Notice::query()
@@ -44,5 +51,19 @@ class CompetitionOfficialDecisionCopy extends Model
             ->where('source_id', $competitionId)
             ->where('content_delivery', 'competition_decision_signed_copy')
             ->exists();
+    }
+
+    public static function activeSignedCopyNotices(int $competitionId)
+    {
+        return static::activeSignedCopyNoticesQuery($competitionId)->get();
+    }
+
+    public static function activeSignedCopyNoticesQuery(int $competitionId)
+    {
+        return Notice::query()
+            ->where('source_type', 'competition_decision')
+            ->where('source_id', $competitionId)
+            ->where('content_delivery', 'competition_decision_signed_copy')
+            ->where('publicly_available', true);
     }
 }

@@ -569,6 +569,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
                 ->name('competitions.official-decision.store');
             Route::post('/competitions/{competition}/official-decision/{copy}/publish', [CompetitionOfficialDecisionController::class, 'publish'])
                 ->name('competitions.official-decision.publish');
+            Route::post('/competitions/{competition}/official-decision/{copy}/correct', [CompetitionOfficialDecisionController::class, 'correct'])
+                ->name('competitions.official-decision.correct');
             Route::delete('/competitions/{competition}', [AdminController::class, 'destroyCompetition'])->name('competitions.destroy');
         });
     });

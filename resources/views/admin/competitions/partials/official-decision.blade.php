@@ -7,6 +7,8 @@
         && $isCompetitionAdmin
         && in_array($competition->status, ['closed', 'completed'], true);
     $hasSignedCopyPublication = \App\Models\CompetitionOfficialDecisionCopy::competitionHasPublishedSignedCopy($competition->id);
+    $activeSignedCopyNotices = \App\Models\CompetitionOfficialDecisionCopy::activeSignedCopyNotices($competition->id);
+    $hasExactlyOneActivePublication = $activeSignedCopyNotices->count() === 1;
 @endphp
 
 <div class="info-card">
@@ -22,12 +24,17 @@
                     @if($copy->uploadedBy)
                         — postavio {{ $copy->uploadedBy->name }}
                     @endif
-                    @if($copy->hasBeenPublished())
+                    @if($copy->isCurrentlyPublished())
                         <span style="color: #065f46; font-weight: 600;"> — Objavljeno</span>
                     @elseif($canManageOfficialDecision && ! $hasSignedCopyPublication)
                         <form method="POST" action="{{ route('admin.competitions.official-decision.publish', [$competition, $copy]) }}" style="display: inline; margin-left: 8px;">
                             @csrf
                             <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Objavi</button>
+                        </form>
+                    @elseif($canManageOfficialDecision && $hasExactlyOneActivePublication && ! $copy->hasBeenPublished())
+                        <form method="POST" action="{{ route('admin.competitions.official-decision.correct', [$competition, $copy]) }}" style="display: inline; margin-left: 8px;" onsubmit="return confirm('Korigovati objavu? Pogrešni primjerak više neće biti javno dostupan.');">
+                            @csrf
+                            <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Koriguj objavu</button>
                         </form>
                     @endif
                 </li>

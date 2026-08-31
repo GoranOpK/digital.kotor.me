@@ -347,7 +347,7 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $page->assertOk();
         $page->assertSee('Objavljeno', false);
         $page->assertDontSee('>Objavi</button>', false);
-        $page->assertDontSee('Koriguj', false);
+        $page->assertSee('Koriguj objavu', false);
     }
 
     public function test_copy_from_another_competition_cannot_be_published(): void
@@ -510,6 +510,336 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $after->assertDontSee('Povuci', false);
     }
 
+    public function test_konkurs_admin_can_correct_wrongly_published_signed_copy(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition, 'OLD-COPY-BYTES');
+        $copyB = $this->createCopyWithFile($competition, 'NEW-COPY-BYTES');
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+        )->assertRedirect();
+
+        $noticeA = Notice::query()->sole();
+        $statusBefore = $competition->status;
+        $closedAtBefore = optional($competition->closed_at)?->toDateTimeString();
+        $titleBefore = $competition->title;
+        $yearBefore = $competition->year;
+        $budgetBefore = $competition->budget;
+
+        $response = $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copyB]),
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHas('success');
+
+        $this->assertSame(2, Notice::query()->count());
+
+        $noticeA->refresh();
+        $noticeB = Notice::query()->whereKeyNot($noticeA->id)->sole();
+
+        $this->assertFalse($noticeA->visible_in_active_panel);
+        $this->assertFalse($noticeA->publicly_available);
+        $this->assertSame($copyA->id, $noticeA->source_object_id);
+
+        $this->assertTrue($noticeB->visible_in_active_panel);
+        $this->assertTrue($noticeB->publicly_available);
+        $this->assertSame($noticeA->id, $noticeB->superseded_notice_id);
+        $this->assertSame($copyB->id, $noticeB->source_object_id);
+        $this->assertSame('competition_decision_signed_copy', $noticeB->content_delivery);
+
+        $this->assertNotNull(CompetitionOfficialDecisionCopy::query()->find($copyA->id));
+        $this->assertNotNull(CompetitionOfficialDecisionCopy::query()->find($copyB->id));
+        Storage::disk('local')->assertExists($copyA->storage_path);
+        Storage::disk('local')->assertExists($copyB->storage_path);
+
+        $competition->refresh();
+        $this->assertSame($statusBefore, $competition->status);
+        $this->assertSame($closedAtBefore, optional($competition->closed_at)?->toDateTimeString());
+        $this->assertSame($titleBefore, $competition->title);
+        $this->assertSame($yearBefore, $competition->year);
+        $this->assertSame($budgetBefore, $competition->budget);
+    }
+
+    public function test_correction_revokes_old_public_url_and_serves_new_copy(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition, 'OLD-COPY-BYTES');
+        $copyB = $this->createCopyWithFile($competition, 'NEW-COPY-BYTES');
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+        )->assertRedirect();
+
+        $noticeA = Notice::query()->sole();
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copyB]),
+        )->assertRedirect();
+
+        $noticeB = Notice::query()->whereKeyNot($noticeA->id)->sole();
+
+        auth()->logout();
+
+        $oldResponse = $this->get(route('notices.public-content', $noticeA));
+        $oldResponse->assertNotFound();
+        $this->assertStringNotContainsString('OLD-COPY-BYTES', $oldResponse->getContent());
+        $this->assertStringNotContainsString('NEW-COPY-BYTES', $oldResponse->getContent());
+
+        $newResponse = $this->get(route('notices.public-content', $noticeB));
+        $newResponse->assertOk();
+        $this->assertGuest();
+        $this->assertSame('NEW-COPY-BYTES', $this->servedFileContents($newResponse));
+        $this->assertStringNotContainsString('OLD-COPY-BYTES', $this->servedFileContents($newResponse));
+    }
+
+    public function test_correction_dispatches_event_with_public_revoke_and_predecessor(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition);
+        $copyB = $this->createCopyWithFile($competition);
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+        )->assertRedirect();
+
+        $oldNotice = Notice::query()->sole();
+
+        Event::fake([OfficialContentReadyForPublicPublication::class]);
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copyB]),
+        )->assertRedirect();
+
+        Event::assertDispatched(OfficialContentReadyForPublicPublication::class, function ($event) use ($oldNotice, $copyB, $competition) {
+            return $event->public_revoke === true
+                && $event->supersedes_notice_id === $oldNotice->id
+                && $event->source_object_id === $copyB->id
+                && $event->source_id === $competition->id
+                && $event->content_delivery === 'competition_decision_signed_copy';
+        });
+    }
+
+    public function test_admin_cannot_correct_signed_copy(): void
+    {
+        $this->assertRoleCannotCorrect('admin');
+    }
+
+    public function test_superadmin_cannot_correct_signed_copy(): void
+    {
+        $this->assertRoleCannotCorrect('superadmin');
+    }
+
+    public function test_commission_member_cannot_correct_signed_copy(): void
+    {
+        $this->assertRoleCannotCorrect('komisija');
+    }
+
+    public function test_ordinary_user_cannot_correct_signed_copy(): void
+    {
+        $this->assertRoleCannotCorrect('korisnik');
+    }
+
+    public function test_correction_is_rejected_without_an_active_publication(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition);
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copy]),
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHasErrors('error');
+        $this->assertSame(0, Notice::query()->count());
+    }
+
+    public function test_correction_copy_from_another_competition_is_rejected(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competitionA = $this->createCompletedCompetition('Konkurs A');
+        $competitionB = $this->createCompletedCompetition('Konkurs B');
+        $copyA = $this->createCopyWithFile($competitionA);
+        $copyB = $this->createCopyWithFile($competitionB);
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competitionA, $copyA]),
+        )->assertRedirect();
+
+        $noticeA = Notice::query()->sole();
+
+        $response = $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.correct', [$competitionA, $copyB]),
+        );
+
+        $response->assertNotFound();
+        $this->assertSame(1, Notice::query()->count());
+        $noticeA->refresh();
+        $this->assertTrue($noticeA->publicly_available);
+        $this->assertTrue($noticeA->visible_in_active_panel);
+    }
+
+    public function test_correction_is_rejected_when_new_copy_was_already_published(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition);
+        $copyB = $this->createCopyWithFile($competition);
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+        )->assertRedirect();
+
+        Notice::factory()->create([
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'source_object_id' => $copyB->id,
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => false,
+            'publicly_available' => false,
+        ]);
+
+        $noticeA = Notice::query()->where('source_object_id', $copyA->id)->sole();
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copyB]),
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHasErrors('error');
+        $this->assertSame(2, Notice::query()->count());
+        $noticeA->refresh();
+        $this->assertTrue($noticeA->publicly_available);
+        $this->assertTrue($noticeA->visible_in_active_panel);
+    }
+
+    public function test_correction_is_rejected_when_new_copy_is_the_active_source(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition);
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+        )->assertRedirect();
+
+        $noticeA = Notice::query()->sole();
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copyA]),
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHasErrors('error');
+        $this->assertSame(1, Notice::query()->count());
+        $noticeA->refresh();
+        $this->assertTrue($noticeA->publicly_available);
+        $this->assertTrue($noticeA->visible_in_active_panel);
+        $this->assertNull($noticeA->superseded_notice_id);
+    }
+
+    public function test_correction_is_rejected_when_new_file_is_missing(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition);
+        $copyB = CompetitionOfficialDecisionCopy::create([
+            'competition_id' => $competition->id,
+            'storage_path' => 'competitions/'.$competition->id.'/official-decisions/missing-correct.pdf',
+        ]);
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+        )->assertRedirect();
+
+        $noticeA = Notice::query()->sole();
+
+        $response = $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copyB]),
+        );
+
+        $response->assertNotFound();
+        $this->assertSame(1, Notice::query()->count());
+        $noticeA->refresh();
+        $this->assertTrue($noticeA->publicly_available);
+        $this->assertTrue($noticeA->visible_in_active_panel);
+    }
+
+    public function test_correction_is_rejected_when_multiple_active_signed_copy_notices_exist(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition);
+        $copyB = $this->createCopyWithFile($competition);
+        $copyC = $this->createCopyWithFile($competition);
+
+        Notice::factory()->create([
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'source_object_id' => $copyA->id,
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+        ]);
+        Notice::factory()->create([
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'source_object_id' => $copyB->id,
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+        ]);
+
+        $noticesBefore = Notice::query()->get()->map(fn (Notice $notice) => [
+            'id' => $notice->id,
+            'publicly_available' => $notice->publicly_available,
+            'visible_in_active_panel' => $notice->visible_in_active_panel,
+            'superseded_notice_id' => $notice->superseded_notice_id,
+        ])->all();
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copyC]),
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHasErrors('error');
+        $this->assertSame(2, Notice::query()->count());
+        $this->assertFalse($copyC->fresh()->hasBeenPublished());
+
+        foreach ($noticesBefore as $snapshot) {
+            $notice = Notice::query()->findOrFail($snapshot['id']);
+            $this->assertTrue($notice->publicly_available);
+            $this->assertTrue($notice->visible_in_active_panel);
+            $this->assertNull($notice->superseded_notice_id);
+        }
+    }
+
+    public function test_unpublished_second_copy_shows_correct_not_ordinary_publish(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition);
+        $copyB = $this->createCopyWithFile($competition);
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+        )->assertRedirect();
+
+        $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $page->assertOk();
+        $page->assertSee('Objavljeno', false);
+        $page->assertSee('Koriguj objavu', false);
+        $page->assertDontSee('>Objavi</button>', false);
+        $page->assertDontSee('Povuci', false);
+        $page->assertDontSee('Zamijeni', false);
+        $page->assertDontSee('Izbriši', false);
+    }
+
     private function assertSignedCopyDeliveryFailed($response, ?string $forbiddenBytes = null): void
     {
         $response->assertNotFound();
@@ -550,13 +880,13 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         ]);
     }
 
-    private function createCopyWithFile(Competition $competition): CompetitionOfficialDecisionCopy
+    private function createCopyWithFile(Competition $competition, string $contents = 'SIGNED-COPY-BYTES'): CompetitionOfficialDecisionCopy
     {
         $copy = CompetitionOfficialDecisionCopy::create([
             'competition_id' => $competition->id,
             'storage_path' => 'competitions/'.$competition->id.'/official-decisions/'.uniqid('copy_', true).'.pdf',
         ]);
-        Storage::disk('local')->put($copy->storage_path, 'SIGNED-COPY-BYTES');
+        Storage::disk('local')->put($copy->storage_path, $contents);
 
         return $copy;
     }
@@ -585,6 +915,35 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
 
         $response->assertForbidden();
         $this->assertSame($noticesBefore, Notice::query()->count());
+        Event::assertNotDispatched(OfficialContentReadyForPublicPublication::class);
+    }
+
+    private function assertRoleCannotCorrect(string $roleName): void
+    {
+        $publisher = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition);
+        $copyB = $this->createCopyWithFile($competition);
+
+        $this->actingAs($publisher)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+        )->assertRedirect();
+
+        $noticeA = Notice::query()->sole();
+
+        Event::fake([OfficialContentReadyForPublicPublication::class]);
+
+        $user = $this->userWithRole($roleName);
+        $response = $this->actingAs($user)->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copyB]),
+        );
+
+        $response->assertForbidden();
+        $this->assertSame(1, Notice::query()->count());
+        $noticeA->refresh();
+        $this->assertTrue($noticeA->publicly_available);
+        $this->assertTrue($noticeA->visible_in_active_panel);
+        $this->assertFalse($copyB->fresh()->hasBeenPublished());
         Event::assertNotDispatched(OfficialContentReadyForPublicPublication::class);
     }
 }

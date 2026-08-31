@@ -81,6 +81,67 @@ class CompetitionOfficialDecisionController extends Controller
             ->with('success', 'Zvanična Odluka je objavljena.');
     }
 
+    public function correct(
+        Competition $competition,
+        CompetitionOfficialDecisionCopy $copy,
+    ): RedirectResponse {
+        $this->assertKonkursAdmin();
+        $this->assertCompetitionAllowsOfficialDecisionAction($competition);
+
+        if ((int) $copy->competition_id !== (int) $competition->id) {
+            abort(404);
+        }
+
+        $storagePath = $copy->storage_path;
+
+        if (! is_string($storagePath) || $storagePath === '' || ! Storage::disk('local')->exists($storagePath)) {
+            abort(404);
+        }
+
+        $activeNotices = CompetitionOfficialDecisionCopy::activeSignedCopyNotices($competition->id);
+
+        if ($activeNotices->count() === 0) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Nema aktivne objave zvanične Odluke za korekciju.']);
+        }
+
+        if ($activeNotices->count() > 1) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Nije moguće korigovati objavu jer postoji više aktivnih objava.']);
+        }
+
+        $oldNotice = $activeNotices->first();
+
+        if ((int) $oldNotice->source_object_id === (int) $copy->id) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Korekcija mora koristiti drugi primjerak.']);
+        }
+
+        if ($copy->hasBeenPublished()) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Ovaj primjerak je već objavljen.']);
+        }
+
+        event(new OfficialContentReadyForPublicPublication(
+            'Odluka o dodjeli sredstava',
+            $competition->title,
+            'competition_decision',
+            $competition->id,
+            'competition_decision_signed_copy',
+            $oldNotice->id,
+            true,
+            $copy->id,
+        ));
+
+        return redirect()
+            ->route('admin.competitions.show', $competition)
+            ->with('success', 'Objava zvanične Odluke je korigovana.');
+    }
+
     private function assertKonkursAdmin(): void
     {
         $roleName = auth()->user()?->role?->name;
