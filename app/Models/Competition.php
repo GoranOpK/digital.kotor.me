@@ -81,6 +81,12 @@ class Competition extends Model
         return $this->hasOne(UpNumber::class);
     }
 
+    // Veza: konkurs ima više istorijskih potpisanih primjeraka zvanične Odluke
+    public function officialDecisionCopies()
+    {
+        return $this->hasMany(CompetitionOfficialDecisionCopy::class);
+    }
+
     /**
      * Izračunava datum i vreme isteka konkursa
      */
