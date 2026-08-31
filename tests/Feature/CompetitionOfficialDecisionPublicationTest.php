@@ -563,6 +563,96 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $this->assertSame($budgetBefore, $competition->budget);
     }
 
+    public function test_second_correction_revokes_previous_active_notice_and_keeps_full_trace(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition, 'COPY-A-BYTES');
+        $copyB = $this->createCopyWithFile($competition, 'COPY-B-BYTES');
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+        )->assertRedirect();
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copyB]),
+        )->assertRedirect();
+
+        $noticeA = Notice::query()->where('source_object_id', $copyA->id)->sole();
+        $noticeB = Notice::query()->where('source_object_id', $copyB->id)->sole();
+        $statusBefore = $competition->status;
+        $closedAtBefore = optional($competition->closed_at)?->toDateTimeString();
+        $budgetBefore = $competition->budget;
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.store', $competition),
+            ['official_decision_copy' => UploadedFile::fake()->createWithContent('korekcija-c.pdf', 'COPY-C-BYTES')],
+        )->assertRedirect();
+
+        $copyC = CompetitionOfficialDecisionCopy::query()->whereKeyNot([$copyA->id, $copyB->id])->sole();
+
+        $response = $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copyC]),
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHas('success');
+
+        $this->assertSame(3, Notice::query()->count());
+        $this->assertSame(3, CompetitionOfficialDecisionCopy::query()->count());
+
+        $noticeA->refresh();
+        $noticeB->refresh();
+        $noticeC = Notice::query()->where('source_object_id', $copyC->id)->sole();
+
+        $this->assertFalse($noticeA->visible_in_active_panel);
+        $this->assertFalse($noticeA->publicly_available);
+        $this->assertSame($copyA->id, $noticeA->source_object_id);
+        $this->assertNull($noticeA->superseded_notice_id);
+
+        $this->assertFalse($noticeB->visible_in_active_panel);
+        $this->assertFalse($noticeB->publicly_available);
+        $this->assertSame($noticeA->id, $noticeB->superseded_notice_id);
+        $this->assertSame($copyB->id, $noticeB->source_object_id);
+
+        $this->assertTrue($noticeC->visible_in_active_panel);
+        $this->assertTrue($noticeC->publicly_available);
+        $this->assertSame($noticeB->id, $noticeC->superseded_notice_id);
+        $this->assertSame($copyC->id, $noticeC->source_object_id);
+
+        Storage::disk('local')->assertExists($copyA->storage_path);
+        Storage::disk('local')->assertExists($copyB->storage_path);
+        Storage::disk('local')->assertExists($copyC->storage_path);
+
+        $competition->refresh();
+        $this->assertSame($statusBefore, $competition->status);
+        $this->assertSame($closedAtBefore, optional($competition->closed_at)?->toDateTimeString());
+        $this->assertSame($budgetBefore, $competition->budget);
+
+        auth()->logout();
+
+        $oldA = $this->get(route('notices.public-content', $noticeA));
+        $oldA->assertNotFound();
+        $this->assertStringNotContainsString('COPY-A-BYTES', $oldA->getContent());
+
+        $oldB = $this->get(route('notices.public-content', $noticeB));
+        $oldB->assertNotFound();
+        $this->assertStringNotContainsString('COPY-B-BYTES', $oldB->getContent());
+
+        $newC = $this->get(route('notices.public-content', $noticeC));
+        $newC->assertOk();
+        $this->assertGuest();
+        $this->assertSame('COPY-C-BYTES', $this->servedFileContents($newC));
+        $this->assertStringNotContainsString('COPY-A-BYTES', $this->servedFileContents($newC));
+        $this->assertStringNotContainsString('COPY-B-BYTES', $this->servedFileContents($newC));
+
+        $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $page->assertOk();
+        $page->assertSee('Objavljeno', false);
+        $page->assertDontSee('>Objavi</button>', false);
+        $page->assertDontSee('Koriguj objavu', false);
+    }
+
     public function test_correction_revokes_old_public_url_and_serves_new_copy(): void
     {
         $admin = $this->userWithRole('konkurs_admin');
