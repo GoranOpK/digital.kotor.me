@@ -531,6 +531,91 @@ class ObavjestenjaFeatureTest extends TestCase
         $this->assertDatabaseMissing('notices', ['title' => 'Revoke bez prethodnika']);
     }
 
+    public function test_publicly_unavailable_notice_does_not_serve_content(): void
+    {
+        $competition = $this->createCompletedCompetition('Konkurs za nedostupnu objavu');
+
+        $notice = Notice::factory()->create([
+            'title' => 'Povučeno obavještenje',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'content_delivery' => 'competition_decision_html',
+            'visible_in_active_panel' => false,
+            'publicly_available' => false,
+        ]);
+
+        $response = $this->get(route('notices.public-content', $notice));
+
+        $response->assertNotFound();
+        $this->assertNull($response->headers->get('Location'));
+        $response->assertDontSee('ODLUKU', false);
+        $response->assertDontSee('Povučeno obavještenje', false);
+    }
+
+    public function test_hidden_but_publicly_available_legacy_html_notice_url_still_serves(): void
+    {
+        $competition = $this->createCompletedCompetition('Konkurs za skrivenu HTML objavu');
+
+        $notice = Notice::factory()->hiddenFromPanel()->create([
+            'title' => 'Skriveno ali dostupno HTML',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'content_delivery' => 'competition_decision_html',
+            'publicly_available' => true,
+        ]);
+
+        $home = $this->get(route('home'));
+        $home->assertOk();
+        $home->assertDontSee('Skriveno ali dostupno HTML', false);
+
+        $response = $this->get(route('notices.public-content', $notice));
+
+        $response->assertOk();
+        $response->assertSee('ODLUKU', false);
+        $this->assertNull($response->headers->get('Location'));
+    }
+
+    public function test_corrected_old_notice_does_not_serve_content(): void
+    {
+        $competition = $this->createCompletedCompetition('Konkurs za korekciju');
+
+        $old = Notice::factory()->create([
+            'title' => 'Pogrešna objava za javni URL',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'content_delivery' => 'competition_decision_html',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+        ]);
+
+        $new = $this->publicationService->publish([
+            'title' => 'Ispravljena objava',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'content_delivery' => 'competition_decision_html',
+            'supersedes_notice_id' => $old->id,
+            'public_revoke' => true,
+        ]);
+
+        $old->refresh();
+
+        $this->assertFalse($old->visible_in_active_panel);
+        $this->assertFalse($old->publicly_available);
+        $this->assertTrue($new->visible_in_active_panel);
+
+        $home = $this->get(route('home'));
+        $home->assertOk();
+        $home->assertDontSee('Pogrešna objava za javni URL', false);
+        $home->assertSee('Ispravljena objava', false);
+
+        $response = $this->get(route('notices.public-content', $old));
+
+        $response->assertNotFound();
+        $this->assertNull($response->headers->get('Location'));
+        $response->assertDontSee('ODLUKU', false);
+        $response->assertDontSee('Pogrešna objava za javni URL', false);
+    }
+
     public function test_public_revoke_rolls_back_when_create_fails(): void
     {
         $old = Notice::factory()->create([
@@ -567,5 +652,21 @@ class ObavjestenjaFeatureTest extends TestCase
         $this->assertTrue($old->visible_in_active_panel);
         $this->assertTrue($old->publicly_available);
         $this->assertDatabaseMissing('notices', ['title' => 'Force revoke rollback']);
+    }
+
+    private function createCompletedCompetition(string $title): Competition
+    {
+        return Competition::create([
+            'title' => $title,
+            'description' => 'Opis',
+            'start_date' => now()->subDays(30)->toDateString(),
+            'end_date' => now()->subDays(5)->toDateString(),
+            'type' => 'zensko',
+            'status' => 'completed',
+            'year' => 2026,
+            'deadline_days' => 20,
+            'published_at' => now()->subDays(40),
+            'closed_at' => now()->subDay(),
+        ]);
     }
 }
