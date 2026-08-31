@@ -22,11 +22,11 @@ class CompetitionOfficialDecisionController extends Controller
         $this->assertCompetitionAllowsOfficialDecisionAction($competition);
 
         $validated = $request->validate([
-            'official_decision_copy' => ['required', 'file', 'mimes:pdf', 'max:10240'],
+            'official_decision_copy' => ['required', 'file', 'mimes:pdf', 'max:2048'],
         ], [
             'official_decision_copy.required' => 'Potpisani primjerak zvanične Odluke je obavezan.',
             'official_decision_copy.mimes' => 'Potpisani primjerak mora biti PDF fajl.',
-            'official_decision_copy.max' => 'Potpisani primjerak ne može biti veći od 10MB.',
+            'official_decision_copy.max' => 'Potpisani primjerak ne može biti veći od 2MB.',
         ]);
 
         $service->store($competition, $validated['official_decision_copy'], $request->user());

@@ -147,6 +147,21 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
         $this->assertSame([], Storage::disk('local')->allFiles());
     }
 
+    public function test_upload_larger_than_two_megabytes_is_rejected(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompetition('completed');
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.store', $competition),
+            ['official_decision_copy' => UploadedFile::fake()->create('odluka.pdf', 2049, 'application/pdf')],
+        );
+
+        $response->assertSessionHasErrors('official_decision_copy');
+        $this->assertSame(0, CompetitionOfficialDecisionCopy::query()->count());
+        $this->assertSame([], Storage::disk('local')->allFiles());
+    }
+
     public function test_db_failure_after_storage_write_does_not_leave_orphan_file(): void
     {
         $admin = $this->userWithRole('konkurs_admin');
