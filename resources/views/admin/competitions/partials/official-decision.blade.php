@@ -3,9 +3,10 @@
         ->with('uploadedBy')
         ->orderBy('id')
         ->get();
-    $canUploadOfficialDecision = isset($isCompetitionAdmin)
+    $canManageOfficialDecision = isset($isCompetitionAdmin)
         && $isCompetitionAdmin
         && in_array($competition->status, ['closed', 'completed'], true);
+    $hasSignedCopyPublication = \App\Models\CompetitionOfficialDecisionCopy::competitionHasPublishedSignedCopy($competition->id);
 @endphp
 
 <div class="info-card">
@@ -16,17 +17,25 @@
     @else
         <ul style="margin: 0 0 16px; padding-left: 20px; color: #374151; font-size: 14px; line-height: 1.6;">
             @foreach($officialDecisionCopies as $copy)
-                <li>
+                <li style="margin-bottom: 8px;">
                     Evidentiran {{ $copy->created_at?->format('d.m.Y H:i') }}
                     @if($copy->uploadedBy)
                         — postavio {{ $copy->uploadedBy->name }}
+                    @endif
+                    @if($copy->hasBeenPublished())
+                        <span style="color: #065f46; font-weight: 600;"> — Objavljeno</span>
+                    @elseif($canManageOfficialDecision && ! $hasSignedCopyPublication)
+                        <form method="POST" action="{{ route('admin.competitions.official-decision.publish', [$competition, $copy]) }}" style="display: inline; margin-left: 8px;">
+                            @csrf
+                            <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Objavi</button>
+                        </form>
                     @endif
                 </li>
             @endforeach
         </ul>
     @endif
 
-    @if($canUploadOfficialDecision)
+    @if($canManageOfficialDecision)
         <form method="POST" action="{{ route('admin.competitions.official-decision.store', $competition) }}" enctype="multipart/form-data">
             @csrf
             <div style="margin-bottom: 12px;">

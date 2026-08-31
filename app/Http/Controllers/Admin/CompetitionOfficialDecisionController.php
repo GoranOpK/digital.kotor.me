@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\OfficialContentReadyForPublicPublication;
 use App\Http\Controllers\Controller;
 use App\Models\Competition;
+use App\Models\CompetitionOfficialDecisionCopy;
 use App\Services\Competitions\CompetitionOfficialDecisionCopyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class CompetitionOfficialDecisionController extends Controller
 {
@@ -16,7 +19,7 @@ class CompetitionOfficialDecisionController extends Controller
         CompetitionOfficialDecisionCopyService $service,
     ): RedirectResponse {
         $this->assertKonkursAdmin();
-        $this->assertCompetitionAllowsOfficialDecisionUpload($competition);
+        $this->assertCompetitionAllowsOfficialDecisionAction($competition);
 
         $validated = $request->validate([
             'official_decision_copy' => ['required', 'file', 'mimes:pdf', 'max:10240'],
@@ -33,6 +36,51 @@ class CompetitionOfficialDecisionController extends Controller
             ->with('success', 'Potpisani primjerak zvanične Odluke je postavljen.');
     }
 
+    public function publish(
+        Competition $competition,
+        CompetitionOfficialDecisionCopy $copy,
+    ): RedirectResponse {
+        $this->assertKonkursAdmin();
+        $this->assertCompetitionAllowsOfficialDecisionAction($competition);
+
+        if ((int) $copy->competition_id !== (int) $competition->id) {
+            abort(404);
+        }
+
+        $storagePath = $copy->storage_path;
+
+        if (! is_string($storagePath) || $storagePath === '' || ! Storage::disk('local')->exists($storagePath)) {
+            abort(404);
+        }
+
+        if ($copy->hasBeenPublished()) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Ovaj primjerak je već objavljen.']);
+        }
+
+        if (CompetitionOfficialDecisionCopy::competitionHasPublishedSignedCopy($competition->id)) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Zvanična Odluka je već objavljena za ovaj Konkurs.']);
+        }
+
+        event(new OfficialContentReadyForPublicPublication(
+            'Odluka o dodjeli sredstava',
+            $competition->title,
+            'competition_decision',
+            $competition->id,
+            'competition_decision_signed_copy',
+            null,
+            false,
+            $copy->id,
+        ));
+
+        return redirect()
+            ->route('admin.competitions.show', $competition)
+            ->with('success', 'Zvanična Odluka je objavljena.');
+    }
+
     private function assertKonkursAdmin(): void
     {
         $roleName = auth()->user()?->role?->name;
@@ -42,7 +90,7 @@ class CompetitionOfficialDecisionController extends Controller
         }
     }
 
-    private function assertCompetitionAllowsOfficialDecisionUpload(Competition $competition): void
+    private function assertCompetitionAllowsOfficialDecisionAction(Competition $competition): void
     {
         if (! in_array($competition->status, ['closed', 'completed'], true)) {
             abort(403);
