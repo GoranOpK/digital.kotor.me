@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Events\OfficialContentReadyForPublicPublication;
 use App\Listeners\PublishOfficialContentNotice;
 use App\Models\Competition;
+use App\Models\CompetitionOfficialDecisionCopy;
 use App\Models\Notice;
 use App\Models\Role;
 use App\Models\User;
@@ -213,10 +214,14 @@ class ObavjestenjaFeatureTest extends TestCase
         ]);
 
         $this->assertTrue($notice->visible_in_active_panel);
+        $this->assertTrue($notice->publicly_available);
+        $this->assertNull($notice->superseded_notice_id);
+        $this->assertNull($notice->source_object_id);
         $this->assertDatabaseHas('notices', [
             'id' => $notice->id,
             'title' => 'Nova objava',
             'visible_in_active_panel' => true,
+            'publicly_available' => true,
         ]);
     }
 
@@ -238,7 +243,10 @@ class ObavjestenjaFeatureTest extends TestCase
         $old->refresh();
 
         $this->assertFalse($old->visible_in_active_panel);
+        $this->assertTrue($old->publicly_available);
         $this->assertTrue($new->visible_in_active_panel);
+        $this->assertTrue($new->publicly_available);
+        $this->assertSame($old->id, $new->superseded_notice_id);
     }
 
     public function test_supersession_does_not_delete_the_old_notice(): void
@@ -289,6 +297,7 @@ class ObavjestenjaFeatureTest extends TestCase
 
         $old->refresh();
         $this->assertTrue($old->visible_in_active_panel);
+        $this->assertTrue($old->publicly_available);
         $this->assertDatabaseMissing('notices', ['title' => 'Force rollback']);
     }
 
@@ -406,5 +415,157 @@ class ObavjestenjaFeatureTest extends TestCase
         $this->get(route('home'))
             ->assertOk()
             ->assertDontSee('Neaktivno na panelu', false);
+    }
+
+    public function test_event_defaults_remain_backward_compatible_without_new_arguments(): void
+    {
+        $event = new OfficialContentReadyForPublicPublication(
+            'Legacy event',
+            null,
+            'competition_decision',
+            21,
+            'competition_decision_html',
+            null,
+        );
+
+        $this->assertFalse($event->public_revoke);
+        $this->assertNull($event->source_object_id);
+
+        $payload = $event->toPublicationPayload();
+        $this->assertFalse($payload['public_revoke']);
+        $this->assertNull($payload['source_object_id']);
+        $this->assertArrayHasKey('supersedes_notice_id', $payload);
+
+        $listener = app(PublishOfficialContentNotice::class);
+        $listener->handle($event);
+
+        $this->assertDatabaseHas('notices', [
+            'title' => 'Legacy event',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+            'source_object_id' => null,
+            'superseded_notice_id' => null,
+        ]);
+    }
+
+    public function test_source_object_id_is_persisted_from_publication_payload(): void
+    {
+        $competition = Competition::create([
+            'title' => 'Konkurs za source object',
+            'description' => 'Opis',
+            'start_date' => now()->subDays(30)->toDateString(),
+            'end_date' => now()->subDays(5)->toDateString(),
+            'type' => 'zensko',
+            'status' => 'completed',
+            'year' => 2026,
+            'deadline_days' => 20,
+            'published_at' => now()->subDays(40),
+            'closed_at' => now()->subDay(),
+        ]);
+        $copy = CompetitionOfficialDecisionCopy::create([
+            'competition_id' => $competition->id,
+            'storage_path' => 'competitions/decisions/payload.bin',
+        ]);
+
+        $event = new OfficialContentReadyForPublicPublication(
+            'Objava sa primjerkom',
+            null,
+            'competition_decision',
+            $competition->id,
+            'competition_decision_signed_copy',
+            null,
+            false,
+            $copy->id,
+        );
+
+        $notice = $this->publicationService->publish($event->toPublicationPayload());
+
+        $this->assertSame($copy->id, $notice->source_object_id);
+        $this->assertSame($competition->id, $notice->source_id);
+    }
+
+    public function test_public_revoke_hides_predecessor_and_revokes_public_availability(): void
+    {
+        $old = Notice::factory()->create([
+            'title' => 'Pogrešna objava',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+        ]);
+
+        $new = $this->publicationService->publish([
+            'title' => 'Ispravna objava',
+            'source_type' => 'competition_decision',
+            'source_id' => 8,
+            'content_delivery' => 'competition_decision_html',
+            'supersedes_notice_id' => $old->id,
+            'public_revoke' => true,
+        ]);
+
+        $old->refresh();
+
+        $this->assertFalse($old->visible_in_active_panel);
+        $this->assertFalse($old->publicly_available);
+        $this->assertTrue($new->visible_in_active_panel);
+        $this->assertTrue($new->publicly_available);
+        $this->assertSame($old->id, $new->superseded_notice_id);
+    }
+
+    public function test_public_revoke_without_predecessor_is_rejected(): void
+    {
+        $before = Notice::query()->count();
+
+        try {
+            $this->publicationService->publish([
+                'title' => 'Revoke bez prethodnika',
+                'source_type' => 'competition_decision',
+                'source_id' => 12,
+                'content_delivery' => 'competition_decision_html',
+                'public_revoke' => true,
+            ]);
+            $this->fail('Expected ValidationException was not thrown.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('supersedes_notice_id', $exception->errors());
+        }
+
+        $this->assertSame($before, Notice::query()->count());
+        $this->assertDatabaseMissing('notices', ['title' => 'Revoke bez prethodnika']);
+    }
+
+    public function test_public_revoke_rolls_back_when_create_fails(): void
+    {
+        $old = Notice::factory()->create([
+            'title' => 'Prije revoke rollback',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+        ]);
+
+        $listener = function (Notice $notice) {
+            if ($notice->title === 'Force revoke rollback') {
+                throw new \RuntimeException('Forced failure during revoke create');
+            }
+        };
+
+        Notice::creating($listener);
+
+        try {
+            $this->publicationService->publish([
+                'title' => 'Force revoke rollback',
+                'source_type' => 'competition_decision',
+                'source_id' => 13,
+                'content_delivery' => 'competition_decision_html',
+                'supersedes_notice_id' => $old->id,
+                'public_revoke' => true,
+            ]);
+            $this->fail('Expected RuntimeException was not thrown.');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('Forced failure during revoke create', $e->getMessage());
+        } finally {
+            Notice::flushEventListeners();
+        }
+
+        $old->refresh();
+        $this->assertTrue($old->visible_in_active_panel);
+        $this->assertTrue($old->publicly_available);
+        $this->assertDatabaseMissing('notices', ['title' => 'Force revoke rollback']);
     }
 }
