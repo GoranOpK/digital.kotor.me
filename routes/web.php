@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\Admin\CompetitionOfficialDecisionController;
 use App\Http\Controllers\CulturalActivityAdminController;
 use App\Http\Controllers\ApplicationController;
 use App\Http\Controllers\BusinessPlanController;
@@ -564,6 +565,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
             Route::get('/competitions/{competition}/edit', [AdminController::class, 'editCompetition'])->name('competitions.edit');
             Route::put('/competitions/{competition}', [AdminController::class, 'updateCompetition'])->name('competitions.update');
             Route::post('/competitions/{competition}/publish', [AdminController::class, 'publishCompetition'])->name('competitions.publish');
+            Route::post('/competitions/{competition}/official-decision', [CompetitionOfficialDecisionController::class, 'store'])
+                ->name('competitions.official-decision.store');
             Route::delete('/competitions/{competition}', [AdminController::class, 'destroyCompetition'])->name('competitions.destroy');
         });
     });
