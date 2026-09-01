@@ -63,6 +63,10 @@ class ApplicationController extends Controller
                 if ($appCompetition && !in_array($appCompetition->status, ['closed', 'completed']) && !$appCompetition->isApplicationDeadlinePassed()) {
                     abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs.');
                 }
+
+                if ($appCompetition && $appCompetition->isCommissionProcessingBlocked()) {
+                    abort(403, \App\Models\Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
+                }
             }
 
             // Administrator konkursa: read-only pristup obrascu samo u arhivi (closed/completed)
@@ -533,6 +537,10 @@ class ApplicationController extends Controller
             if ($competition && !in_array($competition->status, ['closed', 'completed']) && !$competition->isApplicationDeadlinePassed()) {
                 abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (20 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
             }
+
+            if ($competition && $competition->isCommissionProcessingBlocked()) {
+                abort(403, \App\Models\Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
+            }
         }
 
         $application->load(['competition', 'businessPlan', 'documents', 'evaluationScores.commissionMember', 'contract', 'reports']);
@@ -871,6 +879,10 @@ class ApplicationController extends Controller
             $competition = $application->competition;
             if ($competition && !in_array($competition->status, ['closed', 'completed']) && !$competition->isApplicationDeadlinePassed()) {
                 abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs (20 dana). Do tada prijave nisu dostupne za pregled ni ocjenjivanje.');
+            }
+
+            if ($competition && $competition->isCommissionProcessingBlocked()) {
+                abort(403, \App\Models\Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
             }
         }
 

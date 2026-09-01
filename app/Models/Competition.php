@@ -235,6 +235,106 @@ class Competition extends Model
     }
 
     /**
+     * Profil Žensko preduzetništvo predviđa Komisiju (`KN-BM-003`).
+     */
+    public function profileProvidesCommission(): bool
+    {
+        return $this->type === 'zensko';
+    }
+
+    /**
+     * Potpuna i valjana Komisija za `zensko`: pet aktivnih članova, od kojih je jedan predsjednik (`KN-BM-003` §4.3).
+     */
+    public function hasCompleteValidCommission(): bool
+    {
+        if (! $this->profileProvidesCommission()) {
+            return true;
+        }
+
+        return self::commissionIsCompleteAndValid($this->commission);
+    }
+
+    public static function commissionIsCompleteAndValid(?Commission $commission): bool
+    {
+        if (! $commission) {
+            return false;
+        }
+
+        $active = $commission->relationLoaded('activeMembers')
+            ? $commission->activeMembers
+            : $commission->activeMembers()->get();
+
+        if ($active->count() !== 5) {
+            return false;
+        }
+
+        return $active->contains(fn (CommissionMember $member) => $member->position === 'predsjednik');
+    }
+
+    /**
+     * Nakon isteka roka (ili zatvaranja) postupak Komisije ostaje blokiran dok Komisija nije potpuna i valjana.
+     * Ne uvodi novo lifecycle stanje.
+     */
+    public function isCommissionProcessingBlocked(): bool
+    {
+        if (! $this->profileProvidesCommission()) {
+            return false;
+        }
+
+        $deadlineRelevant = $this->isApplicationDeadlinePassed()
+            || in_array($this->status, ['closed', 'completed'], true);
+
+        if (! $deadlineRelevant) {
+            return false;
+        }
+
+        return ! $this->hasCompleteValidCommission();
+    }
+
+    public const COMMISSION_PROCESSING_BLOCKED_MESSAGE = 'Pristup Komisije prijavama i dalji konkursni postupak blokirani su dok Konkursu nije dodijeljena potpuna i valjana Komisija.';
+
+    public const WHOLE_COMMISSION_REPLACE_AFTER_DEADLINE_MESSAGE = 'Nakon isteka roka za Prijave nije dozvoljena obična zamjena cijele dodijeljene Komisije.';
+
+    public const WHOLE_COMMISSION_REPLACE_MUST_BE_VALID_MESSAGE = 'Cijela Komisija može se zamijeniti samo drugom potpunom i valjanom Komisijom.';
+
+    /**
+     * @return string|null Poruka greške ako dodjela/zamjena nije dozvoljena.
+     */
+    public function commissionAssignmentChangeError(?int $newCommissionId): ?string
+    {
+        if (! $this->profileProvidesCommission()) {
+            return null;
+        }
+
+        $oldId = $this->commission_id ? (int) $this->commission_id : null;
+        $newId = $newCommissionId;
+
+        if ($oldId === $newId) {
+            return null;
+        }
+
+        $deadlinePassed = $this->isApplicationDeadlinePassed()
+            || in_array($this->status, ['closed', 'completed'], true);
+
+        if ($deadlinePassed) {
+            if ($oldId !== null) {
+                return self::WHOLE_COMMISSION_REPLACE_AFTER_DEADLINE_MESSAGE;
+            }
+
+            return null;
+        }
+
+        if ($oldId !== null && $newId !== null) {
+            $newCommission = Commission::with('activeMembers')->find($newId);
+            if (! self::commissionIsCompleteAndValid($newCommission)) {
+                return self::WHOLE_COMMISSION_REPLACE_MUST_BE_VALID_MESSAGE;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Provjerava da li je rang lista formirana - rok za prijave je istekao
      * i svi članovi komisije su ocjenili sve prijave
      */

@@ -7,8 +7,8 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.12
-**Datum:** 2026-08-29
+**Verzija:** 0.1.13
+**Datum:** 2026-09-01
 
 ---
 
@@ -29,6 +29,7 @@
 | 0.1.10 | 2026-08-26 | Evidentiran `KN-PATCH-BM-002` / `KN-BM-003` v1.0.2. Usklađeni tok Prijave, eliminatorni kriterijum 1 sa čl. 17, nacrt ocjena i nepromjenjivost nakon završavanja. |
 | 0.1.11 | 2026-08-28 | Evidentiran `KN-PATCH-BM-003` / `KN-BM-003` v1.0.3. Usklađeno: Podnesena Prijava se ne povlači sa strane Podnositeljke nakon konačnog podnošenja. |
 | 0.1.12 | 2026-08-29 | Evidentiran `KN-PATCH-BM-004` / `KN-BM-003` v1.0.4. Ciljano usklađenje završnog toka Predloga Odluke, zvanične Odluke, zaključivanja, arhive i dostavljanja/objavljivanja sa usvojenim `KN-FS-003` Poglavljem 15. |
+| 0.1.13 | 2026-09-01 | Evidentiran `KN-PATCH-BM-005` / `KN-BM-003` v1.0.5. Vrijeme dodjele Komisije: objava bez Komisije; granica dodjele/zamjene cijele Komisije je istek roka za Prijave; istek bez potpune i valjane Komisije blokira pristup/postupak. Normativna praznina o završenim ocjenama pri zamjeni člana ostaje. |
 
 Napomena:
 
@@ -214,6 +215,8 @@ U `KN-BM-003` v1.0.3 / `KN-PATCH-BM-003` usklađeno je: Podnesena Prijava se ne 
 
 U `KN-BM-003` v1.0.4 / `KN-PATCH-BM-004` usklađeno je: zvanična Odluka nastaje fizičkim potpisom sekretara prije zaključivanja Konkursa; dostava zvanične Odluke samo podržanim Podnositeljkama, van Platforme.
 
+U `KN-BM-003` v1.0.5 / `KN-PATCH-BM-005` usklađeno je: objava može uslijediti bez dodijeljene Komisije; potpuna i valjana Komisija mora biti dodijeljena najkasnije prije isteka roka za Prijave; istek bez nje ne produžava rok i blokira pristup/postupak do dopune; obična zamjena cijele Komisije dozvoljena je do isteka roka, ne samo do objave.
+
 Normativna praznina o sudbini završenih ocjena pri zamjeni člana Komisije dokumentovana je u `KN-BM-003` Poglavlju 12. Nije blocking OPEN i nije posebna oznaka.
 
 ---
@@ -236,6 +239,7 @@ Naknadne kontrolisane izmjene dokumentacije modula Konkursi označavaju se prema
 | **KN-PATCH-BM-002** | KN-BM-003 | 1.0.2 | 2026-08-26 | Usklađenje sa Odlukom 027/26: stanja Prijave; eliminatorni kriterijum 1 kroz čl. 17; nacrt ocjena od prve sjednice; nepromjenjivost tek nakon završavanja individualnog ocjenjivanja. |
 | **KN-PATCH-BM-003** | KN-BM-003 | 1.0.3 | 2026-08-28 | Usklađenje: Podnesena Prijava se ne povlači sa strane Podnositeljke nakon konačnog podnošenja. |
 | **KN-PATCH-BM-004** | KN-BM-003 | 1.0.4 | 2026-08-29 | Ciljano usklađenje završnog toka Predloga Odluke, zvanične Odluke, zaključivanja, arhive i dostavljanja/objavljivanja sa usvojenim `KN-FS-003` Poglavljem 15. |
+| **KN-PATCH-BM-005** | KN-BM-003 | 1.0.5 | 2026-09-01 | Vrijeme dodjele Komisije: objava bez Komisije; granica dodjele/zamjene cijele Komisije je istek roka za Prijave; istek bez potpune i valjane Komisije blokira pristup/postupak. Zamjena pojedinačnog člana i OPEN pitanje završenih ocjena ostaju. |
 
 ---
 
@@ -307,4 +311,4 @@ Trenutno nema oznaka sa statusom **ZASTARJELO**.
 
 ---
 
-**Kraj dokumenta KN-RG-001 v0.1.12**
+**Kraj dokumenta KN-RG-001 v0.1.13**

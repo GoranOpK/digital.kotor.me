@@ -8,14 +8,14 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.16
-**Datum:** 2026-08-29
+**Verzija:** 0.1.17
+**Datum:** 2026-09-01
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
 * Zajednički poslovni model modula Konkursi: **KN-BM-001** — `docs/business-model/Business_Model_Konkursi.md` (USVOJEN v1.0.0)
-* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN v1.0.4)
+* Poslovni profil: **KN-BM-003** — `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` (USVOJEN v1.0.5)
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 
@@ -46,6 +46,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.14 | 2026-08-29 | Napisano Poglavlje 18 — Prihvatni kriterijumi. 24 provjerljiva ishoda usvojenih pravila Poglavlja 3–17. Format Ako / Kada / Onda. Poglavlje 11 i zavisnosti iz §17.3 ostaju bez prihvatnih kriterijuma. Poglavlje 19 ostaje za naredni odobreni dokumentacioni korak. |
 | 0.1.15 | 2026-08-29 | Napisano Poglavlje 19 — Sljedivost. Evidentirana matrica sljedivosti `KN-BM-003` → `KN-FS-003` → Poglavlje 18. Poglavlje 11 i zavisnosti iz §17.3 ostaju bez izmišljenih veza. Korekcija reference na `KN-BM-003` v1.0.4. |
 | 0.1.16 | 2026-08-29 | Controlled corrective. Tri ranije otvorene funkcionalne zavisnosti iz §17.3 razriješene su i vraćene u matična poglavlja: korekcija pogrešno objavljenog primjerka zvanične Odluke; nepovratnost završenog Prigovora; ponašanje Prijave `U pripremi` nakon isteka roka. Poglavlje 11 i zamjena člana Komisije ostaju neriešene. |
+| 0.1.17 | 2026-09-01 | Controlled corrective. Vrijeme dodjele Komisije usklađeno sa `KN-BM-003` v1.0.5 / `KN-PATCH-BM-005`: objava bez Komisije; granica dodjele/zamjene cijele Komisije je istek roka za Prijave; istek bez potpune i valjane Komisije blokira pristup i postupak bez novog statusa. Zamjena pojedinačnog člana i OPEN pitanje završenih ocjena ostaju. Poglavlje 11 netaknuto. |
 
 Napomena:
 
@@ -140,7 +141,7 @@ Dokument određuje kako Platforma ostvaruje usvojena poslovna pravila tog profil
 
 ## 1.1. Izvor istine
 
-Primarni poslovni SSOT ovog profila je `KN-BM-003` v1.0.2.
+Primarni poslovni SSOT ovog profila je `KN-BM-003` v1.0.5.
 
 Zajednički poslovni SSOT modula Konkursi je `KN-BM-001` v1.0.0.
 
@@ -812,6 +813,8 @@ Zamjenski član:
 
 Imenovanje zamjene prethodi sjednici / radu u kojem zamjena učestvuje. Administrator Konkursa **ne** imenuje zamjenu tokom sjednice Komisije.
 
+Zamjenski član može se dodati u **bilo kojoj** tački postupka kada se potreba ukaže. To **nije** zamjena cijele Komisije.
+
 Za funkcionalnu istoriju:
 
 * već završene radnje ostaju pripisane članu koji ih je izvršio;
@@ -857,17 +860,22 @@ Ista Komisija koristi se za isti tip konkursa dok njen mandat traje. Ista konkre
 
 Lice može zasebno učestvovati u različitim Komisijama, uključujući Komisije različitih tipova konkursa.
 
-Pri konfiguraciji Konkursa Administrator Konkursa bira **postojeću** odgovarajuću Komisiju. Dodjela ne stvara novu Komisiju i ne stvara nova članstva.
+Pri konfiguraciji Konkursa Administrator Konkursa **može** izabrati postojeću odgovarajuću Komisiju. Dodjela **nije** obavezna pri kreiranju niti pri objavi. Dodjela ne stvara novu Komisiju i ne stvara nova članstva.
 
-Komisija mora ispuniti usvojene uslove potpunosti / valjanosti potrebne za stvarno sprovođenje Konkursa.
+Komisija mora ispuniti usvojene uslove potpunosti / valjanosti potrebne za stvarno sprovođenje Konkursa. Ti uslovi su usvojeni u `KN-BM-003` §4.3: pet članova, od kojih je jedan predsjednik Komisije. Ne uvode se drugačiji broj članova, pozicije, sastav ni uslovi podobnosti.
 
 Član koji nije završio potrebnu verifikaciju naloga ne može obavljati sopstvene elektronske radnje Komisije. To samo po sebi **ne** znači da zapis Komisije ne može postojati ili biti dodijeljen.
 
-Dodijeljena Komisija može se izmijeniti dok Konkurs **još nije** objavljen. Nakon objave, cijela dodijeljena Komisija se **ne** zamjenjuje običnim uređivanjem Konkursa.
+Do isteka roka za podnošenje Prijava Administrator Konkursa može:
+
+* dodijeliti Komisiju već objavljenom Konkursu;
+* zamijeniti cijelu dodijeljenu Komisiju **drugom potpunom i valjanom** Komisijom.
+
+Nakon isteka roka obična zamjena cijele dodijeljene Komisije **nije** dozvoljena. Ako Komisija nedostaje ili nije potpuna i valjana, Administrator je dodjeljuje ili dopunjuje; to **nije** obična zamjena cijele već dodijeljene Komisije.
 
 Naknadne izmjene pojedinih lica idu usvojenim tokovima zamjenskog člana / prestanka mandata / novog člana. To **nije** zamjena same Komisije.
 
-Objava se ovdje navodi **samo** kao granica poslije koje obična zamjena cijele dodijeljene Komisije više nije dozvoljena. Mehanika objave nije predmet ovog poglavlja.
+Granica obične zamjene cijele Komisije je **istek roka za Prijave**, ne objava. Mehanika objave i isteka roka pripada Poglavlju 6, odnosno Poglavlju 9.
 
 ## 5.5. Kreiranje i konfiguracija instance Konkursa
 
@@ -908,7 +916,7 @@ Sačuvani neobjavljeni Konkurs može se i dalje uređivati.
 
 Ne uvodi se zasebna radnja ni stanje „Završi konfiguraciju“.
 
-Model konfiguracije: **Sačuvaj** → uređivanje dok je dozvoljeno → konfiguracija mora biti valjana / potpuna prije nego što smije preći u objavu.
+Model konfiguracije: **Sačuvaj** → uređivanje dok je dozvoljeno → ostala konfiguracija mora biti valjana / potpuna prije nego što smije preći u objavu. **Dodijeljena Komisija nije uslov objave.** Objava može uslijediti bez dodijeljene Komisije.
 
 Ovo poglavlje ne određuje kako objava funkcioniše. Mehanika objave pripada Poglavlju 6.
 
@@ -921,12 +929,13 @@ Nakon objave, obično uređivanje **ne smije** mijenjati suštinsku konfiguracij
 * tip Konkursa;
 * godinu;
 * raspoloživi budžet;
-* dodijeljenu Komisiju;
 * konfiguraciju vezanu za rok.
+
+Dodijeljena Komisija **nije** zaštićena dimenzija od trenutka objave. Obična zamjena cijele Komisije ostaje dozvoljena do isteka roka za Prijave, prema §5.4.
 
 Čisto informativne korekcije ostaju moguće ako ne mijenjaju uslove Konkursa. Ne uvodi se novi pravni tok izmjene Javnog konkursa.
 
-Objava se ovdje koristi **samo** kao granica izmjenjivosti konfiguracije.
+Objava se ovdje koristi **samo** kao granica izmjenjivosti ostale suštinske konfiguracije, osim dodjele Komisije.
 
 Neobjavljeni Konkurs bez relevantnog istorijskog učešća može se obrisati.
 
@@ -945,7 +954,9 @@ Ovo poglavlje određuje objavljivanje Konkursa na Platformi i rok za podnošenje
 
 ## 6.1. Uslovi i radnja objavljivanja
 
-Konkurs se može objaviti samo kada je njegova konfiguracija potpuna i valjana prema pravilima profila Žensko preduzetništvo.
+Konkurs se može objaviti samo kada je njegova ostala konfiguracija potpuna i valjana prema pravilima profila Žensko preduzetništvo.
+
+**Dodijeljena Komisija nije uslov objave.** Konkurs **može** biti objavljen bez dodijeljene Komisije. Odsustvo Komisije **ne** odgađa rok za Prijave.
 
 Čuvanje i objavljivanje su **zasebne** radnje.
 
@@ -962,6 +973,8 @@ Objavom Konkurs prelazi:
 ## 6.2. Početak i trajanje roka za Prijave
 
 Objavljivanje **pokreće** rok za podnošenje Prijava.
+
+Odsustvo dodijeljene Komisije **ne** odgađa početak ni trajanje ovog roka.
 
 Datum objave je istovremeno datum početka roka za prijavu.
 
@@ -1723,9 +1736,9 @@ Podnošenje Prijave nakon isteka roka uređeno je Poglavljem 7. Ovo poglavlje to
 
 ## 9.2. Prijave dostupne Komisiji
 
-Nakon isteka roka za prijavu konkretnog Konkursa, pristup Komisije se otključava **automatski**.
+Nakon isteka roka za prijavu konkretnog Konkursa, pristup Komisije se otključava **automatski**, **ako** je tom Konkursu dodijeljena potpuna i valjana Komisija.
 
-Nema zasebne ručne radnje otključavanja. Takva radnja **nije** dozvoljena.
+Ako Komisija nedostaje ili nije potpuna i valjana, pristup ostaje blokiran. Istek roka **ne** otključava Prijave dok se to ne ispravi. Nema zasebne ručne radnje otključavanja. Takva radnja **nije** dozvoljena.
 
 Komisiji postaju dostupne **samo Prijave u stanju Podnesena** tog konkretnog Konkursa.
 
@@ -1803,6 +1816,23 @@ Zatvaranje, arhiviranje ili druga sadašnja ili buduća oznaka stanja Konkursa *
 
 Pravila privatnosti iz Poglavlja 8 ostaju na snazi do stvarnog isteka roka.
 
+## 9.6. Istek roka bez potpune i valjane Komisije
+
+Ako rok za Prijave istekne, a Konkurs **nema** potpunu i valjanu dodijeljenu Komisiju (`KN-BM-003` §4.3, §6.2, §8):
+
+* rok ističe redovno;
+* nove Prijave se više ne primaju;
+* rok se **ne** produžava niti mijenja automatski;
+* pristup Komisije Prijavama ostaje blokiran;
+* administrativna provjera / prva sjednica ne mogu početi;
+* dalji konkursni postupak ostaje blokiran.
+
+Ne uvodi se novo funkcionalno stanje Konkursa zbog odsustva Komisije. Konkurs može ostati **Objavljen**.
+
+Administrator konkursa mora dodijeliti odnosno dopuniti potpunu i valjanu Komisiju. Tek nakon toga pristup i postupak mogu nastaviti, uz ostale već usvojene uslove.
+
+Ako Komisija već nije dodijeljena, prva dodjela nakon isteka roka **jeste** dozvoljena. Obična zamjena cijele već dodijeljene Komisije nakon isteka roka **nije** dozvoljena (§5.4).
+
 ---
 
 # 10. Prva sjednica, administrativna provjera i Prigovor
@@ -1828,6 +1858,8 @@ Prva sjednica je poslovni / postupovni događaj.
 V1 **ne** zahtijeva zaseban entitet, model ni tok sjednice na Platformi. Ne uvodi se otvaranje / zatvaranje sjednice, evidencija prisustva, zapisnik ni ručna Platform radnja kojom se otključava administrativna provjera.
 
 Funkcionalnost Platforme u ovom poglavlju usmjerena je na **evidentiranje rezultata administrativne provjere po Prijavi**.
+
+Ako Konkurs nakon isteka roka nema potpunu i valjanu dodijeljenu Komisiju, administrativna provjera i prva sjednica **ne mogu početi**. Pravilo: Poglavlje 9.6.
 
 ## 10.2. Administrativna provjera
 
@@ -3279,11 +3311,11 @@ Osnov: Poglavlja 3–17 ovog dokumenta.
 
 ### 18.1.1 — Konfigurisan Konkurs i Komisija
 
-**Ako:** Administrator konkursa kreira konkretan Konkurs i unese obavezne podatke potrebne za njegovu konfiguraciju, uključujući Komisiju i njene članove.
+**Ako:** Administrator konkursa kreira konkretan Konkurs i unese obavezne podatke potrebne za njegovu konfiguraciju. Komisija može, ali ne mora, biti dodijeljena u tom koraku.
 
 **Kada:** konfiguracija bude uspješno sačuvana.
 
-**Onda:** Platforma ima konkretan Konkurs sa pripadajućom konfiguracijom i Komisijom, tako da se dalji tok odnosi isključivo na tu konkretnu instancu Konkursa.
+**Onda:** Platforma ima konkretan Konkurs sa pripadajućom konfiguracijom. Ako je Komisija dodijeljena, dalji tok se odnosi na tu Komisiju. Ako nije, Konkurs postoji bez dodijeljene Komisije.
 
 ### 18.1.2 — Objava Konkursa i istek roka za prijave
 
@@ -3292,6 +3324,30 @@ Osnov: Poglavlja 3–17 ovog dokumenta.
 **Kada:** Konkurs bude objavljen.
 
 **Onda:** Konkurs je javno dostupan za prijavljivanje tokom propisanog perioda, a istekom roka Platforma automatski onemogućava dalje podnošenje Prijava bez posebne radnje Administratora konkursa.
+
+### 18.1.3 — Objava bez dodijeljene Komisije
+
+**Ako:** konkretan Konkurs ispunjava ostale uslove za objavu, a Komisija mu nije dodijeljena.
+
+**Kada:** Administrator konkursa objavi Konkurs.
+
+**Onda:** Platforma objavljuje Konkurs. Odsustvo Komisije **ne** odbija objavu i **ne** odgađa rok za Prijave.
+
+### 18.1.4 — Dodjela i zamjena cijele Komisije do isteka roka
+
+**Ako:** Konkurs je objavljen, rok za Prijave još nije istekao, a Administrator konkursa dodjeljuje postojeću Komisiju ili zamjenjuje cijelu dodijeljenu Komisiju drugom potpunom i valjanom Komisijom.
+
+**Kada:** dodjela ili zamjena bude sačuvana.
+
+**Onda:** Platforma prihvata dodjelu. Nakon isteka roka obična zamjena cijele već dodijeljene Komisije se odbija.
+
+### 18.1.5 — Istek roka bez potpune i valjane Komisije
+
+**Ako:** rok za Prijave istekne, a Konkurs nema potpunu i valjanu dodijeljenu Komisiju.
+
+**Kada:** rok istekne.
+
+**Onda:** rok ističe redovno; nove Prijave se ne primaju; rok se ne produžava; pristup Komisije i administrativna provjera / prva sjednica ostaju blokirani dok Administrator konkursa ne dodijeli ili ne dopuni potpunu i valjanu Komisiju. Novo stanje Konkursa se **ne** uvodi.
 
 ## 18.2. Prijava i zaključavanje
 
@@ -3603,7 +3659,7 @@ Status poglavlja: USVOJENO
 
 Ovo poglavlje evidentira sljedivost već usvojenih pravila. **Ne** uvodi nova poslovna ni funkcionalna pravila. **Ne** mijenja Poglavlja 1–18. **Ne** rješava Poglavlje 11. **Ne** rješava preostalu otvorenu zavisnost iz §17.3 (zamjena člana Komisije nakon završenog individualnog ocjenjivanja). **Ne** određuje tehničku realizaciju.
 
-Osnov: `KN-BM-003` v1.0.4; Poglavlja 1–18 ovog dokumenta.
+Osnov: `KN-BM-003` v1.0.5; Poglavlja 1–18 ovog dokumenta.
 
 ## 19.1. Svrha i pravila sljedivosti
 
@@ -3663,7 +3719,7 @@ Jedan red može obuhvatiti više neposredno relevantnih referenci istog predmeta
 
 ### 19.2.2. Poslovni izvor
 
-Poslovni izvor je stvarna referenca iz `KN-BM-003` v1.0.4.
+Poslovni izvor je stvarna referenca iz `KN-BM-003` v1.0.5.
 
 Može sadržati više BM referenci kada zajedno čine isti poslovni predmet.
 
@@ -3709,16 +3765,17 @@ Matrica sljedivosti:
 |---|---|---|---|
 | `KN-BM-003` §4.1, §7 | §3.2, §4.4, §7.14–§7.16 | §18.2.1, §18.2.2 | USVOJENO. Podnositeljka; stanja U pripremi / Podnesena; finalno podnošenje; zaključavanje. |
 | `KN-BM-003` §7 | §7.17 | §18.2.3 | USVOJENO. U pripremi nakon isteka roka ostaje sačuvana i samo za pregled. Nema automatskog brisanja u V1. Konkretan rok čuvanja nije propisan ovim FS-om. |
-| `KN-BM-003` §4.2, §5 | §3.3, §5.1, §5.4, §5.5 | §18.1.1 | USVOJENO. Administrator konkursa kreira konkretan Konkurs i bira već imenovanu Komisiju. |
+| `KN-BM-003` §4.2, §5, §6.2 | §3.3, §5.1, §5.4, §5.5 | §18.1.1, §18.1.3 | USVOJENO. Administrator konkursa kreira konkretan Konkurs. Komisija može, ali ne mora, biti dodijeljena pri kreiranju i pri objavi. |
 | `KN-BM-003` §4.3, §4.5 | §3.4, §3.5, §5.1 | §18.1.1 | USVOJENO. Komisija od pet članova; Predsjednik evidentira u ime Komisije; imenovanje Sekretarijata ostaje van Platforme. |
 | `KN-BM-003` §4.4 | §3.6.B, §16.1 | §18.8.2 | USVOJENO. Administrator platforme nije profilni konkursni akter. §18.8.2 je grupna funkcionalna zabrana. |
 | `KN-BM-003` §4.5, §14, §15 | §3.6.A, §15.3.2, §16.6 | §18.7.2 | USVOJENO. Sekretarijat nije profilni Platform akter. Zvanična Odluka nastaje fizičkim potpisom van Platforme. |
 | `KN-BM-003` §4.6 | — | — | USVOJENO. Izjave Komisije se fizički potpisuju van Platforme. Nema zasebnog prihvatnog kriterijuma. |
-| `KN-BM-003` §6, §6.1 | §6.1, §6.2, §6.5 | §18.1.2 | USVOJENO. Objava na Platformi i automatski prestanak podnošenja istekom roka. Ostali kanali objave: §6.3, van Platforme. |
+| `KN-BM-003` §6, §6.1, §6.2 | §6.1, §6.2, §6.5 | §18.1.2, §18.1.3 | USVOJENO. Objava na Platformi i automatski prestanak podnošenja istekom roka. Objava nije uslovljena Komisijom. Ostali kanali objave: §6.3, van Platforme. |
 | `KN-BM-003` §7.1 | §8.1, §8.2 | §18.3.1 | USVOJENO. Podnositeljka pristupa samo sopstvenoj Prijavi. |
 | `KN-BM-003` §8 | §8.2, §9.2 | §18.3.1 | USVOJENO. Komisija nema pristup Prijavama dok rok traje. |
 | Najbliži poslovni kontekst: `KN-BM-003` §4.2, §8. Neposredni izvor: ovaj dokument §8.2 | §8.2 | §18.3.1 | USVOJENO. Zbirni broj evidentiranih Prijava za Administratora konkursa tokom roka je **funkcionalna razrada**. `KN-BM-003` §4.2 i §8 taj detalj **ne** propisuju eksplicitno. |
-| `KN-BM-003` §8 | §9.2, §9.3 | §18.3.2 | USVOJENO. Nakon isteka roka Komisiji su dostupne samo Podnesene Prijave konkretnog Konkursa, aktivnim članovima dodijeljene Komisije. |
+| `KN-BM-003` §8 | §9.2, §9.3, §9.6 | §18.3.2, §18.1.5 | USVOJENO. Nakon isteka roka Komisiji su dostupne samo Podnesene Prijave konkretnog Konkursa, aktivnim članovima dodijeljene **potpune i valjane** Komisije. Bez nje pristup i postupak ostaju blokirani. |
+| `KN-BM-003` §6.2 | §5.4, §5.7, §9.6 | §18.1.4, §18.1.5 | USVOJENO. Obična zamjena cijele Komisije do isteka roka za Prijave; nakon isteka nije dozvoljena. Prva dodjela / dopuna nakon isteka jeste dozvoljena. |
 | Najbliži poslovni kontekst: `KN-BM-003` §8. Neposredni izvor: ovaj dokument §9.4 | §9.4, §16.3 | §18.3.3 | USVOJENO. Pregled prateće dokumentacije DA, preuzimanje NE. `KN-BM-003` §8 uređuje pristup dokumentaciji, ali **ne** propisuje eksplicitno zabranu preuzimanja. |
 | `KN-BM-003` §9, §9.1, §10 (kriterijum 1) | §10.2, §10.3, §10.5 | §18.4.1 | USVOJENO. Eliminatorni kriterijum 1 se funkcionalno obrađuje kroz administrativnu provjeru. |
 | `KN-BM-003` §9.2 | §10.4 | §18.4.2 | USVOJENO. Prigovor preko Platforme, bez dopune zaključanog sadržaja. Rok Komisije od 7 dana nije prihvatni ishod. Nepovratnost `Prihvaćen` / `Odbijen` je **funkcionalna razrada**. `KN-BM-003` §9.2 taj detalj **ne** propisuje eksplicitno. |
@@ -3748,4 +3805,4 @@ Pregled obustavljenih i otvorenih veza, bez novih pravila:
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.16**
+**Kraj dokumenta KN-FS-003 v0.1.17**

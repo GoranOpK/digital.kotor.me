@@ -113,6 +113,10 @@ class BusinessPlanController extends Controller
             if ($competition && !in_array($competition->status, ['closed', 'completed']) && !$competition->isApplicationDeadlinePassed()) {
                 abort(403, 'Prijave su komisiji vidljive tek nakon isteka roka za prijavljivanje na konkurs.');
             }
+
+            if ($competition && $competition->isCommissionProcessingBlocked()) {
+                abort(403, \App\Models\Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
+            }
         }
 
         // Proveri da li je Obrazac 1a/1b kompletno popunjen

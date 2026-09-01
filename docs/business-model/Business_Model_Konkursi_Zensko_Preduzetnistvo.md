@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.4
-**Datum:** 2026-08-29
+**Verzija:** 1.0.5
+**Datum:** 2026-09-01
 
 Povezani dokumenti:
 
@@ -33,6 +33,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.2 / KN-PATCH-BM-002 | 2026-08-26 | Usklađenje sa Odlukom 027/26 i usvojenim FS tokom: (1) U pripremi / Podnesena / Povučena — Podnesena nije izmjenjiva; (2) eliminatorni kriterijum 1 iz čl. 19 obrađuje se kroz provjeru potpunosti i Prigovor iz čl. 17; (3) Obrazac 3 i nacrt ocjena od prve sjednice; kriterijum 10 tek nakon usmenog; (4) nepromjenjivost tek nakon završavanja individualnog ocjenjivanja, ne pri čuvanju nacrta. |
 | 1.0.3 / KN-PATCH-BM-003 | 2026-08-28 | Usklađenje povlačenja Prijave: nakon uspješnog podnošenja Prijava je Podnesena; Podnositeljka je ne može mijenjati, povući, obrisati ni ponovo podnijeti. U V1 nema stanja Povučena ni povlačenja Podnesene Prijave sa strane Podnositeljke. Kanonska stanja Prijave: U pripremi / Podnesena. |
 | 1.0.4 / KN-PATCH-BM-004 | 2026-08-29 | Ciljano usklađenje redoslijeda Predloga i zvanične Odluke sa usvojenim `KN-FS-003` Poglavljem 15: zvanična Odluka nastaje fizičkim potpisom sekretara prije zaključivanja Konkursa; dostava zvanične Odluke samo podržanim Podnositeljkama, van Platforme. |
+| 1.0.5 / KN-PATCH-BM-005 | 2026-09-01 | Vrijeme dodjele Komisije: objava može uslijediti bez dodijeljene Komisije; potpuna i valjana Komisija mora biti dodijeljena najkasnije prije isteka roka za Prijave; istek bez nje ne produžava rok i blokira pristup/postupak do dopune; obična zamjena cijele Komisije dozvoljena do isteka roka, ne samo do objave. Zamjena pojedinačnog člana i OPEN pitanje završenih ocjena ostaju. |
 
 Napomena:
 
@@ -282,6 +283,8 @@ Obavezni poslovni sadržaj forme/profila Konkursa:
 * Komisija;
 * informacije o roku.
 
+Komisija je obavezni poslovni sadržaj **profila** ovog Konkursa. To **ne** znači da Komisija mora biti dodijeljena prije objave. Vrijeme dodjele i valjanosti: Poglavlje 6.2. Potpunost i valjanost sastava: Poglavlje 4.3.
+
 **Broj Konkursa nije automatski redni broj.** Predstavlja zavodni broj koji Administrator Konkursa dobija sa pisarnice i ručno unosi na Platformi.
 
 Prvi Konkurs se raspisuje u drugom kvartalu tekuće godine (čl. 4).
@@ -320,6 +323,27 @@ Rok se računa u kalendarskim danima. Krajnji dan traje do kraja tog kalendarsko
 Primjer:
 
 Ako je Konkurs objavljen 01.01.2027. u 09:00 i rok je 20 dana, krajnji rok je **21.01.2027. u 23:59:59**.
+
+## 6.2. Komisija, objava i rok
+
+Odsustvo dodijeljene Komisije **nije** smetnja objavi. Konkurs ovog profila **može** biti objavljen bez dodijeljene Komisije.
+
+Rok za podnošenje Prijava **ne** odgađa se zbog odsustva Komisije.
+
+Ako ovaj profil predviđa Komisiju, potpuna i valjana Komisija mora biti dodijeljena Konkursu **najkasnije prije isteka** roka za podnošenje Prijava. Potpunost i valjanost određuju se prema Poglavlju 4.3. Ne uvode se drugačiji broj članova, pozicije, sastav ni uslovi podobnosti.
+
+Do isteka tog roka Administrator Konkursa može:
+
+* dodijeliti Komisiju već objavljenom Konkursu;
+* zamijeniti cijelu dodijeljenu Komisiju **drugom potpunom i valjanom** Komisijom.
+
+Nakon isteka roka obična zamjena cijele dodijeljene Komisije **nije** dozvoljena.
+
+Ako Komisija u trenutku isteka roka nedostaje ili nije potpuna i valjana, Administrator Konkursa je dodjeljuje ili dopunjuje. Ta radnja **nije** obična zamjena cijele već dodijeljene Komisije.
+
+Zamjena pojedinačnog člana Komisije (zamjenski odnosno novi član) **nije** zamjena cijele Komisije. Imenovanje ostaje prema Poglavlju 4.5. Sudbina već završenih individualnih ocjena ostaje normativna praznina iz Poglavlja 12.7.
+
+Ne uvodi se novo poslovno stanje Konkursa zbog odsustva Komisije.
 
 ---
 
@@ -380,6 +404,19 @@ Zabrana obuhvata:
 * priloženu dokumentaciju.
 
 Pristup Komisiji počinje tek nakon isteka roka.
+
+Ako rok istekne, a Konkurs **nema** potpunu i valjanu dodijeljenu Komisiju:
+
+* rok za Prijave ističe redovno;
+* nove Prijave se više ne primaju;
+* rok se **ne** produžava niti mijenja automatski;
+* pristup Komisije Prijavama ostaje blokiran;
+* administrativna provjera / prva sjednica ne mogu početi;
+* dalji konkursni postupak ostaje blokiran.
+
+Administrator Konkursa mora dodijeliti odnosno dopuniti potpunu i valjanu Komisiju. Tek nakon toga postupak može nastaviti, uz ostale već usvojene uslove ovog profila.
+
+Ne uvodi se novo poslovno stanje Konkursa zbog odsustva Komisije.
 
 Ovo pravilo pripada ovoj fazi. Ne ponavlja se u Poglavlju 12.
 
@@ -826,4 +863,4 @@ Odluka uređuje imenovanje zamjene, ali ne sudbinu već **završenih** individua
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.4**
+**Kraj dokumenta KN-BM-003 v1.0.5**
