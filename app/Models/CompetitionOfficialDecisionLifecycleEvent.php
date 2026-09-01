@@ -18,6 +18,8 @@ class CompetitionOfficialDecisionLifecycleEvent extends Model
 
     public const ACTION_UNPUBLISHED = 'official_decision_unpublished';
 
+    public const ACTION_REPUBLISHED = 'official_decision_republished';
+
     protected $table = 'competition_official_decision_lifecycle_events';
 
     protected $fillable = [

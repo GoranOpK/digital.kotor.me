@@ -307,6 +307,128 @@ class CompetitionOfficialDecisionController extends Controller
             ->with('success', 'Objava zvanične Odluke je povučena.');
     }
 
+    public function republish(
+        Request $request,
+        Competition $competition,
+        CompetitionOfficialDecisionCopy $copy,
+    ): RedirectResponse {
+        $this->assertKonkursAdmin();
+        $this->assertCompetitionAllowsOfficialDecisionAction($competition);
+        $this->assertCopyIsLiveOnCompetition($competition, $copy);
+
+        $storagePath = $copy->storage_path;
+
+        if (! is_string($storagePath) || $storagePath === '' || ! Storage::disk('local')->exists($storagePath)) {
+            abort(404);
+        }
+
+        if (! $copy->hasBeenPublished()) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Ovaj primjerak nije ranije objavljen.']);
+        }
+
+        if ($copy->isCurrentlyPublished()) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Ovaj primjerak je već objavljen.']);
+        }
+
+        $activeNotices = CompetitionOfficialDecisionCopy::activeSignedCopyNotices($competition->id);
+
+        if ($activeNotices->count() > 1) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Nije moguće ponovo objaviti jer postoji više aktivnih objava.']);
+        }
+
+        if ($activeNotices->count() === 1) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Zvanična Odluka je već objavljena za ovaj Konkurs.']);
+        }
+
+        $previousNotice = $copy->previousRevokedSignedCopyNoticesQuery()->first();
+
+        if ($previousNotice === null) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Nema povučene objave ovog primjerka za ponovno objavljivanje.']);
+        }
+
+        $request->merge([
+            'business_title' => trim((string) $request->input('business_title', '')),
+        ]);
+
+        $validated = $request->validate([
+            'business_title' => ['required', 'string', 'max:255'],
+            'business_published_on' => ['required', 'date', 'before_or_equal:today'],
+        ], [
+            'business_title.required' => 'Naziv dokumenta je obavezan.',
+            'business_title.string' => 'Naziv dokumenta mora biti tekst.',
+            'business_title.max' => 'Naziv dokumenta ne može biti duži od 255 karaktera.',
+            'business_published_on.required' => 'Datum objave je obavezan.',
+            'business_published_on.date' => 'Datum objave nije ispravan.',
+            'business_published_on.before_or_equal' => 'Datum objave ne može biti u budućnosti.',
+        ]);
+
+        $businessTitle = $validated['business_title'];
+        $businessPublishedOn = $validated['business_published_on'];
+        $oldTitle = $copy->business_title;
+        $oldPublishedOn = optional($copy->business_published_on)?->toDateString();
+        $actorUserId = $request->user()->id;
+        $previousNoticeId = $previousNotice->id;
+
+        DB::transaction(function () use (
+            $copy,
+            $competition,
+            $businessTitle,
+            $businessPublishedOn,
+            $oldTitle,
+            $oldPublishedOn,
+            $actorUserId,
+            $previousNoticeId,
+        ) {
+            $copy->business_title = $businessTitle;
+            $copy->business_published_on = $businessPublishedOn;
+            $copy->save();
+
+            CompetitionOfficialDecisionLifecycleEvent::create([
+                'competition_official_decision_copy_id' => $copy->id,
+                'competition_id' => $competition->id,
+                'action' => CompetitionOfficialDecisionLifecycleEvent::ACTION_REPUBLISHED,
+                'actor_user_id' => $actorUserId,
+                'payload' => [
+                    'previous_notice_id' => $previousNoticeId,
+                    'business_title' => [
+                        'from' => $oldTitle,
+                        'to' => $businessTitle,
+                    ],
+                    'business_published_on' => [
+                        'from' => $oldPublishedOn,
+                        'to' => $businessPublishedOn,
+                    ],
+                ],
+            ]);
+
+            event(new OfficialContentReadyForPublicPublication(
+                $businessTitle,
+                $competition->title,
+                'competition_decision',
+                $competition->id,
+                'competition_decision_signed_copy',
+                null,
+                false,
+                $copy->id,
+                $businessPublishedOn,
+            ));
+        });
+
+        return redirect()
+            ->route('admin.competitions.show', $competition)
+            ->with('success', 'Zvanična Odluka je ponovo objavljena.');
+    }
+
     private function assertCopyIsLiveOnCompetition(
         Competition $competition,
         CompetitionOfficialDecisionCopy $copy,

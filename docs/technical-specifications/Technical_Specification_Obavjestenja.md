@@ -6,8 +6,8 @@
 **Oznaka dokumenta:** DK-TS-001  
 **Funkcionalna cjelina:** Obavještenja (platformska prezentacija)  
 **Status dokumenta:** U IZRADI  
-**Verzija:** 0.1.4
-**Datum:** 2026-09-01
+**Verzija:** 0.1.5
+**Datum:** 2026-09-02
 **Namespace:** DK-* (platforma Digital Kotor)
 **Istorijski document ID:** TS-013
 
@@ -24,6 +24,7 @@
 | 0.1.2 | 2026-09-01 | Evidencija LOCAL PO MANUAL ACCEPTANCE. Tok upload potpisanog primjerka → prva objava → javni signed-copy → korekcija ručno potvrđen lokalno 01.09.2026. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.** Plesk/production nijesu bili predmet testa. Automatski testovi ostaju. Status U IZRADI. Feature nije CLOSED. |
 | 0.1.3 | 2026-09-01 | Dokumentacioni channel contract za KN lifecycle zvanične Odluke (`KN-BM-003` v1.0.6 §15.4; `KN-FS-003` v0.1.21; DK-FS PATCH-FS-OB-003). Razdvojeni poslovni datum prikaza i `published_at`. Dokumentovani metadata update, source-specific revoke, republish, korekcija svih aktivnih reprezentacija i permanent-delete revoke. **Bez implementacije.** Ordinary UC-OB-005 KEEP. OFD-OB-006 / OFD-OB-007 ostaju generički OTVORENO. Status U IZRADI. |
 | 0.1.4 | 2026-09-01 | Inventory/status sinhronizacija. First-publish source-provided `title` / `public_display_date` (KN `business_title` / `business_published_on`), Notice kolona `public_display_date` i publication payload `public_display_date` su **IMPLEMENTED** (CURRENT RUNTIME). Channel primitive `updatePublicMetadata` / `revokePublicAvailability` i dedicated event/listener sloj (`OfficialContentPublicMetadataUpdated`, `UpdateOfficialContentPublicMetadata`, `OfficialContentPublicAvailabilityRevoked`, `RevokeOfficialContentPublicAvailability`) su **IMPLEMENTED** (CURRENT RUNTIME). **IMPLEMENTED ≠ PRODUCTION DEPLOYED.** Postojeći PDF correction tok i dalje šalje hardkodovani naslov (DEFERRED gap). Republish, permanent-delete, uniqueness, leftover HTML cleanup i finalni javni prikaz poslovnog datuma ostaju **DOCUMENTED / NOT YET IMPLEMENTED**. Normativni contract KEEP. Ordinary UC-OB-005 KEEP. Status U IZRADI. Feature nije CLOSED. |
+| 0.1.5 | 2026-09-02 | Inventory/status sinhronizacija. Republish iste povučene kopije (`KN-FS-003` §16.13) je **IMPLEMENTED LOCALLY / PO ACCEPTED** (CURRENT RUNTIME): KN `republish()`; ista `CompetitionOfficialDecisionCopy` / isti PDF; novi Notice kroz postojeći `OfficialContentReadyForPublicPublication` (`public_revoke=false`, `supersedes_notice_id=null`); lifecycle audit `official_decision_republished`. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.** **Nije** PRODUCTION ACCEPTED. Permanent-delete, uniqueness, leftover HTML cleanup i finalni javni prikaz poslovnog datuma ostaju **DOCUMENTED / NOT YET IMPLEMENTED**. Normativni contract KEEP. Ordinary UC-OB-005 KEEP. Status U IZRADI. Feature nije CLOSED. |
 
 Napomena:
 
@@ -80,9 +81,9 @@ Izvori istine:
 
 Ukupan status dokumenta: **U IZRADI** (zbog OFD blocker-a koji ograničavaju potpunu produkcijsku pokrivenost svih FR; source-specific KN binding ne zatvara OFD generički).
 
-Source-specific runtime za zvaničnu Odluku Konkursa (`competition_decision_signed_copy`, first publication, **direct predecessor revoke pri signed-copy korekciji**, **in-place metadata update**, **source-specific unpublish**) **jeste implementiran** (CURRENT RUNTIME; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**). Republish, revoke svih aktivnih reprezentacija iste Odluke, leftover `competition_decision_html` cleanup i permanent-delete revoke ostaju **dokumentovani i nisu implementirani**. Generički OFD-OB-006 / OFD-OB-007 ostaju OTVORENO.
+Source-specific runtime za zvaničnu Odluku Konkursa (`competition_decision_signed_copy`, first publication, **direct predecessor revoke pri signed-copy korekciji**, **in-place metadata update**, **source-specific unpublish**, **republish iste povučene kopije**) **jeste implementiran** (CURRENT RUNTIME; **IMPLEMENTED LOCALLY / PO ACCEPTED**; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**). Revoke svih aktivnih reprezentacija iste Odluke, leftover `competition_decision_html` cleanup i permanent-delete revoke ostaju **dokumentovani i nisu implementirani**. Generički OFD-OB-006 / OFD-OB-007 ostaju OTVORENO.
 
-Lokalni PO ručni prihvatni test (01.09.2026) potvrdio je taj source-specific tok. To **nije** production deploy i **nije** PRODUCTION ACCEPTED.
+Lokalni PO ručni prihvatni test (01.09.2026) potvrdio je signed-copy tok upload → first publication → korekcija (§14.10). Republish je **IMPLEMENTED LOCALLY / PO ACCEPTED** u CURRENT RUNTIME i **nije** dio tog ručnog testa. To **nije** production deploy i **nije** PRODUCTION ACCEPTED.
 
 ---
 
@@ -113,7 +114,7 @@ Obavještenja su unakrsna platformska prezentacija: javni panel na početnoj str
 * javna isporuka referenciranog zvaničnog sadržaja van administrativnog interfejsa;
 * razdvajanje vidljivosti u aktivnom panelu od javne dostupnosti sadržaja konkretnog Notice-a;
 * source-specific isporuka i korekcija zvanične Odluke Konkursa kao **kanal**, ne kao vlasnik dokumenta;
-* dokumentovani channel ugovor za KN lifecycle: metadata update i source-specific revoke su **IMPLEMENTED** (CURRENT RUNTIME; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**); finalni javni prikaz poslovnog datuma, republish, revoke svih aktivnih reprezentacija iste Odluke i permanent-delete revoke ostaju **DOCUMENTED / NOT YET IMPLEMENTED**;
+* dokumentovani channel ugovor za KN lifecycle: metadata update, source-specific revoke i republish iste povučene kopije su **IMPLEMENTED** (CURRENT RUNTIME; **IMPLEMENTED LOCALLY / PO ACCEPTED**; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**); finalni javni prikaz poslovnog datuma, revoke svih aktivnih reprezentacija iste Odluke i permanent-delete revoke ostaju **DOCUMENTED / NOT YET IMPLEMENTED**;
 * testovi i uticaj na deploy/migracije.
 
 ## 1.3 Van ovog TS (usvojeno FS/BM)
@@ -429,17 +430,22 @@ Ovo **nije** ordinary UC-OB-005 supersession.
 
 Minimalni ugovor: `NoticePublicationService::revokePublicAvailability` + event `OfficialContentPublicAvailabilityRevoked` / listener `RevokeOfficialContentPublicAvailability`. Listener mapira naredbu u tu metodu. **Ne** koristiti `OfficialContentReadyForPublicPublication`. CURRENT RUNTIME. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.**
 
-## 4.7 Republish istog source objekta — DOCUMENTED / NOT YET IMPLEMENTED
+## 4.7 Republish istog source objekta — IMPLEMENTED
 
-Nakon source-specific revoke, KN može ponovo objaviti isti `source_object_id` kroz postojeći `publish` ugovor:
+Nakon source-specific revoke, KN ponovo objavljuje isti `source_object_id` kroz postojeći `publish` ugovor:
 
+* ista `CompetitionOfficialDecisionCopy` i isti PDF / `storage_path`; nema novog upload-a;
 * nastaje **novi** Notice red;
-* `source_object_id` može biti isti;
+* isti source identity (`source_type` / `source_id` / `content_delivery` / `source_object_id`);
+* `public_revoke = false`; `supersedes_notice_id = null`;
 * `published_at` je novo automatsko tehničko vrijeme;
-* KN predaje novi `title` i poslovni datum prikaza;
-* javno postoji samo jedna važeća objava tog KN sadržaja.
+* KN predaje novi `title` i poslovni datum prikaza; datum nije budući;
+* stari revoked Notice ostaje nedirnut;
+* current-public konflikt i missing PDF se refuse-uju.
 
-Istorijsko postojanje Notice-a **nije** samo po sebi zabrana. CURRENT RUNTIME helperi `hasBeenPublished()` i `competitionHasPublishedSignedCopy()` koriste `exists()` na istorijskom Notice-u i **blokirali bi** ovaj tok; to je KN/runtime gap, ne izmjena ordinary UC-OB-005.
+Istorijsko postojanje Notice-a **nije** zabrana. `hasBeenPublished()` ostaje istorijski `exists()` i **nije** oslabljen; republish koristi current-public stanje (`isCurrentlyPublished()` / `activeSignedCopyNotices()`). Višestruki unpublish → republish ciklus je podržan; KN audit `official_decision_republished` bilježi `previous_notice_id` neposredno prethodnog revoked Notice-a.
+
+Minimalni ugovor: KN `republish()` + postojeći event `OfficialContentReadyForPublicPublication` / listener `PublishOfficialContentNotice` / `NoticePublicationService::publish`. CURRENT RUNTIME. **IMPLEMENTED LOCALLY / PO ACCEPTED.** **IMPLEMENTED ≠ PRODUCTION DEPLOYED.**
 
 ## 4.8 Permanent-delete revocation — DOCUMENTED / NOT YET IMPLEMENTED
 
@@ -470,13 +476,14 @@ Fizičko brisanje KN PDF-a i KN tombstone/audit **nisu** odgovornost FT-004. Ist
 | Objava kroz FT-004 | Administrator konkursa |
 | Korekcija | Administrator konkursa |
 | Metadata update / povlačenje (unpublish) | Administrator konkursa (**IMPLEMENTED** na kanalu; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) |
-| Ponovna objava / naredba kanala pri trajnom uklanjanju | Administrator konkursa (**DOCUMENTED / NOT YET IMPLEMENTED** na kanalu) |
+| Ponovna objava | Administrator konkursa (**IMPLEMENTED LOCALLY / PO ACCEPTED** na kanalu; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) |
+| Naredba kanala pri trajnom uklanjanju | Administrator konkursa (**DOCUMENTED / NOT YET IMPLEMENTED** na kanalu) |
 | Predsjednik Komisije | **Nema** ovu poslovnu radnju (Predlog / Zaključi nisu objava Odluke) |
 | Član Komisije | **Nema** |
 
 **IMPLEMENTED:** `RoleMiddleware` i dalje propušta `superadmin` kroz `role:*`. To **nije** dovoljno niti dopušteno kao poslovni bypass za ove radnje (KN-FS-003 §16.1, §18.8.2).
 
-Izvorni modul **sprovodi** source-side guard: `role.name === 'konkurs_admin'` za upload, publish, correct, metadata update i unpublish. Isto ovlašćenje važi za buduće republish / permanent-delete naredbe kanala. Uloga Administratora platforme (`admin`) ili Super administratora **sama po sebi** ne daje pravo upload/publish/correction/revoke.
+Izvorni modul **sprovodi** source-side guard: `role.name === 'konkurs_admin'` za upload, publish, correct, metadata update, unpublish i republish. Isto ovlašćenje važi za buduću permanent-delete naredbu kanala. Uloga Administratora platforme (`admin`) ili Super administratora **sama po sebi** ne daje pravo upload/publish/correction/revoke.
 
 Ovaj TS **ne** dizajnira Policy klasu ni imena metoda.
 
@@ -655,7 +662,7 @@ Payload polje `supersedes_notice_id` ostaje **ulaz**. **Nije** samo po sebi kore
 |---------|--------|------------------|-----------|
 | Metadata update | **IMPLEMENTED** (CURRENT RUNTIME; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) | `NoticePublicationService::updatePublicMetadata` + event `OfficialContentPublicMetadataUpdated` | In-place `title` i/ili display date; isti `source_object_id`; bez novog Notice reda; `published_at` nedirnut |
 | Source-specific revoke | **IMPLEMENTED** (CURRENT RUNTIME; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) | `NoticePublicationService::revokePublicAvailability` + event `OfficialContentPublicAvailabilityRevoked` | Postojeći Notice: `visible_in_active_panel=false`, `publicly_available=false`; bez insert-a |
-| Republish | **DOCUMENTED / NOT YET IMPLEMENTED** | postojeći `publish` | Novi Notice; isti `source_object_id` dozvoljen; novo `published_at`; istorijski Notice nije zabrana |
+| Republish | **IMPLEMENTED** (CURRENT RUNTIME; **IMPLEMENTED LOCALLY / PO ACCEPTED**; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**) | postojeći `publish` (`OfficialContentReadyForPublicPublication`) | Novi Notice; isti `source_object_id`; isti PDF; `public_revoke=false`; `supersedes_notice_id=null`; novo `published_at`; istorijski Notice nije zabrana |
 | Permanent-delete | **DOCUMENTED / NOT YET IMPLEMENTED** | isti revoke ugovor | FT-004 ne briše PDF i ne hard-delete-uje Notice |
 
 ## 9.2 Isporuka sadržaja — `content_delivery`
@@ -855,9 +862,9 @@ Pokrivenost je **IMPLEMENTED** u `ObavjestenjaFeatureTest`, `CompetitionOfficial
 | Feature: rang/rezultati/iznosi nepromijenjeni korekcijom | KN §15.7.5 |
 | Feature: `competition_decision_html` nije delivery nove zvanične Odluke | PATCH-FS-OB-002 |
 
-**IMPLEMENTED** u `CompetitionOfficialDecisionLifecycleActionsTest` / `ObavjestenjaFeatureTest`: metadata-only correction; publish → unpublish; old URL after unpublish. CURRENT RUNTIME. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.**
+**IMPLEMENTED** u `CompetitionOfficialDecisionLifecycleActionsTest` / `ObavjestenjaFeatureTest`: metadata-only correction; publish → unpublish; old URL after unpublish; unpublish → republish iste kopije / istog PDF-a; uzastopni republish ciklus (`previous_notice_id` = neposredni revoked Notice). CURRENT RUNTIME. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.**
 
-**Nije pokriveno (NOT YET IMPLEMENTED):** unpublish → republish same PDF; landing uniqueness nakon korekcije; revoke leftover HTML iste Odluke; permanent-delete channel revocation.
+**Nije pokriveno (NOT YET IMPLEMENTED):** landing uniqueness nakon korekcije; revoke leftover HTML iste Odluke; permanent-delete channel revocation.
 
 ## 14.8 Administracija
 
@@ -904,19 +911,19 @@ Ovo **ne** zatvara FT-004 kao cijeli feature.
 * stari URL tog predecessor-a ne servira sadržaj; novi URL servira novi PDF;
 * ordinary UC-OB-005: panel hide bez gubitka `publicly_available`;
 * in-place metadata update (`updatePublicMetadata` + `OfficialContentPublicMetadataUpdated`);
-* source-specific unpublish (`revokePublicAvailability` + `OfficialContentPublicAvailabilityRevoked`) bez novog Notice reda.
+* source-specific unpublish (`revokePublicAvailability` + `OfficialContentPublicAvailabilityRevoked`) bez novog Notice reda;
+* republish iste povučene kopije (`republish()` + postojeći `OfficialContentReadyForPublicPublication`): isti `source_object_id` / PDF; novi Notice; `public_revoke=false`; `supersedes_notice_id=null`.
 
 **DOCUMENTED / NOT YET IMPLEMENTED:**
 
 * finalni javni prikaz `public_display_date` na panelu (čuvanje polja **nije** rendering);
 * postojeći PDF correction tok: još šalje hardkodovani naslov `'Odluka o dodjeli sredstava'` i ne prenosi kompletan first-publish metadata tok (`public_display_date`); puna correction uniqueness ostaje deferred;
-* republish istog `source_object_id` nakon revoke-a;
 * puna semantika „samo jedna važeća javna objava“ iste Odluke;
 * cleanup/revoke svih trenutno aktivnih reprezentacija iste Odluke, uključujući leftover `competition_decision_html`;
 * landing uniqueness;
 * permanent-delete channel revoke.
 
-Metadata update i source-specific unpublish **jesu** implementirani u CURRENT RUNTIME i **nisu** PRODUCTION DEPLOYED / PRODUCTION ACCEPTED. Republish, uniqueness, leftover HTML cleanup i permanent-delete **nisu** implementirani i **nisu** production accepted. Feature FT-004 **nije** CLOSED.
+Metadata update, source-specific unpublish i republish iste povučene kopije **jesu** implementirani u CURRENT RUNTIME (**IMPLEMENTED LOCALLY / PO ACCEPTED**) i **nisu** PRODUCTION DEPLOYED / PRODUCTION ACCEPTED. Uniqueness, leftover HTML cleanup, permanent-delete i finalni javni prikaz poslovnog datuma **nisu** implementirani i **nisu** production accepted. Feature FT-004 **nije** CLOSED.
 
 ---
 
@@ -928,7 +935,7 @@ Metadata update i source-specific unpublish **jesu** implementirani u CURRENT RU
 * Protivrečnost BM/UC/FS: **nije identifikovana** (UC-OB-005 KEEP; KN revoke/correction odvojeni)
 * Svaki FR ima tehničku stavku: **da** (uz zabilježena ograničenja OFD; signed-copy je IMPLEMENTED, HTML ostaje LEGACY)
 * Svaka tehnička komponenta u §3/§13 referencira FR: **da**
-* Source-specific KN signed-copy runtime implementiran: **da** (first publish + direct predecessor revoke + metadata update + source-specific unpublish)
+* Source-specific KN signed-copy runtime implementiran: **da** (first publish + direct predecessor revoke + metadata update + source-specific unpublish + republish iste povučene kopije)
 * Puni KN lifecycle §16.8–§16.16 implementiran: **ne**
 * LOCAL PO MANUAL ACCEPTANCE signed-copy toka (2026-09-01, lokalno): **da**
 * PRODUCTION DEPLOYED / PRODUCTION ACCEPTED tog toka: **ne**

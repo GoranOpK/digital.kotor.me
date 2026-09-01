@@ -94,4 +94,15 @@ class CompetitionOfficialDecisionCopy extends Model
             ->where('content_delivery', 'competition_decision_signed_copy')
             ->where('publicly_available', true);
     }
+
+    public function previousRevokedSignedCopyNoticesQuery()
+    {
+        return Notice::query()
+            ->where('source_type', 'competition_decision')
+            ->where('source_id', $this->competition_id)
+            ->where('source_object_id', $this->id)
+            ->where('content_delivery', 'competition_decision_signed_copy')
+            ->where('publicly_available', false)
+            ->orderByDesc('id');
+    }
 }

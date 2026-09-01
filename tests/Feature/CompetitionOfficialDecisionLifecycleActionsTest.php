@@ -556,6 +556,446 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         $this->assertSame($copy->business_title, $copy->fresh()->business_title);
     }
 
+    public function test_konkurs_admin_can_republish_the_same_unpublished_copy(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'REPUBLISH-PDF-BYTES', 'Naziv prije ponovne objave');
+        $originalPath = $copy->storage_path;
+        $originalBytes = Storage::disk('local')->get($originalPath);
+        $firstDate = now()->subDays(6)->toDateString();
+
+        $this->travelTo(now()->subMinute());
+        $this->publishCopy($admin, $competition, $copy, $firstDate);
+        $noticeA = Notice::query()->sole();
+        $publishedAtA = $noticeA->published_at->toDateTimeString();
+        $this->unpublishCopy($admin, $competition, $copy);
+
+        $newTitle = 'Naziv nakon ponovne objave';
+        $newDate = now()->subDays(2)->toDateString();
+        $copyId = $copy->id;
+        $statusBefore = $competition->fresh()->status;
+        $budgetBefore = $competition->fresh()->budget;
+
+        $this->travelTo(now()->addMinute());
+
+        $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $page->assertOk();
+        $page->assertSee('Ponovo objavi', false);
+        $page->assertSee('value="Naziv prije ponovne objave"', false);
+        $page->assertSee('PDF se ne mijenja. Ponovo se objavljuje isti sačuvani primjerak.', false);
+        $page->assertDontSee('>Objavi</button>', false);
+        $page->assertDontSee('Ispravi podatke objave', false);
+        $page->assertDontSee('Povuci objavu', false);
+
+        $response = $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.republish', [$competition, $copy]),
+            $this->republishPayload($newTitle, $newDate),
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHas('success');
+
+        $copy->refresh();
+        $noticeA->refresh();
+        $noticeB = Notice::query()->whereKeyNot($noticeA->id)->sole();
+
+        $this->assertSame($copyId, $copy->id);
+        $this->assertSame($originalPath, $copy->storage_path);
+        $this->assertSame($originalBytes, Storage::disk('local')->get($originalPath));
+        $this->assertSame($newTitle, $copy->business_title);
+        $this->assertSame($newDate, optional($copy->business_published_on)?->toDateString());
+        $this->assertNull($copy->permanently_deleted_at);
+        $this->assertNull($copy->permanent_delete_pending_at);
+
+        $this->assertSame(2, Notice::query()->count());
+        $this->assertNotSame($noticeA->id, $noticeB->id);
+        $this->assertSame($copy->id, $noticeB->source_object_id);
+        $this->assertSame($noticeA->source_type, $noticeB->source_type);
+        $this->assertSame($noticeA->source_id, $noticeB->source_id);
+        $this->assertSame($noticeA->content_delivery, $noticeB->content_delivery);
+        $this->assertNull($noticeB->superseded_notice_id);
+        $this->assertSame($newTitle, $noticeB->title);
+        $this->assertSame($newDate, optional($noticeB->public_display_date)?->toDateString());
+        $this->assertNotSame($publishedAtA, $noticeB->published_at->toDateTimeString());
+        $this->assertTrue($noticeB->visible_in_active_panel);
+        $this->assertTrue($noticeB->publicly_available);
+
+        $this->assertFalse($noticeA->visible_in_active_panel);
+        $this->assertFalse($noticeA->publicly_available);
+        $this->assertSame($publishedAtA, $noticeA->published_at->toDateTimeString());
+        $this->assertSame($copy->id, $noticeA->source_object_id);
+
+        $this->assertSame($statusBefore, $competition->fresh()->status);
+        $this->assertSame($budgetBefore, $competition->fresh()->budget);
+
+        $audit = CompetitionOfficialDecisionLifecycleEvent::query()
+            ->where('action', CompetitionOfficialDecisionLifecycleEvent::ACTION_REPUBLISHED)
+            ->sole();
+        $this->assertSame($copy->id, $audit->competition_official_decision_copy_id);
+        $this->assertSame($competition->id, $audit->competition_id);
+        $this->assertSame($admin->id, $audit->actor_user_id);
+        $this->assertNotNull($audit->created_at);
+        $this->assertSame($noticeA->id, $audit->payload['previous_notice_id']);
+        $this->assertSame('Naziv prije ponovne objave', $audit->payload['business_title']['from']);
+        $this->assertSame($newTitle, $audit->payload['business_title']['to']);
+        $this->assertSame($firstDate, $audit->payload['business_published_on']['from']);
+        $this->assertSame($newDate, $audit->payload['business_published_on']['to']);
+        $this->assertArrayNotHasKey('notice_id', $audit->payload);
+        $this->assertArrayNotHasKey('pdf', $audit->payload);
+
+        $this->get(route('home'))->assertSee($newTitle, false);
+        $this->get(route('home'))->assertDontSee('Naziv prije ponovne objave', false);
+
+        $newPublic = $this->get(route('notices.public-content', $noticeB));
+        $newPublic->assertOk();
+        $this->assertSame('REPUBLISH-PDF-BYTES', $this->servedFileContents($newPublic));
+
+        $oldPublic = $this->get(route('notices.public-content', $noticeA));
+        $oldPublic->assertNotFound();
+        $this->assertStringNotContainsString('REPUBLISH-PDF-BYTES', $oldPublic->getContent());
+    }
+
+    public function test_second_republish_cycle_uses_previous_notice_b_not_a(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'CYCLE-PDF-BYTES', 'Naziv ciklusa A');
+        $originalPath = $copy->storage_path;
+        $originalBytes = Storage::disk('local')->get($originalPath);
+        $copyId = $copy->id;
+        $dateA = now()->subDays(6)->toDateString();
+        $dateB = now()->subDays(3)->toDateString();
+        $dateC = now()->subDay()->toDateString();
+
+        $this->publishCopy($admin, $competition, $copy, $dateA);
+        $noticeA = Notice::query()->sole();
+        $this->unpublishCopy($admin, $competition, $copy);
+
+        $noticeA->refresh();
+        $this->assertFalse($noticeA->visible_in_active_panel);
+        $this->assertFalse($noticeA->publicly_available);
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.republish', [$competition, $copy]),
+            $this->republishPayload('Naziv ciklusa B', $dateB),
+        )->assertRedirect();
+
+        $noticeB = Notice::query()->whereKeyNot($noticeA->id)->sole();
+        $this->unpublishCopy($admin, $competition, $copy);
+
+        $noticeB->refresh();
+        $this->assertFalse($noticeB->visible_in_active_panel);
+        $this->assertFalse($noticeB->publicly_available);
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.republish', [$competition, $copy]),
+            $this->republishPayload('Naziv ciklusa C', $dateC),
+        )->assertRedirect();
+
+        $copy->refresh();
+        $noticeA->refresh();
+        $noticeB->refresh();
+        $noticeC = Notice::query()
+            ->whereKeyNot($noticeA->id)
+            ->whereKeyNot($noticeB->id)
+            ->sole();
+
+        $this->assertSame($copyId, $copy->id);
+        $this->assertSame(1, CompetitionOfficialDecisionCopy::query()->count());
+        $this->assertSame($originalPath, $copy->storage_path);
+        $this->assertSame($originalBytes, Storage::disk('local')->get($originalPath));
+        $this->assertSame('Naziv ciklusa C', $copy->business_title);
+        $this->assertSame($dateC, optional($copy->business_published_on)?->toDateString());
+
+        $this->assertSame(3, Notice::query()->count());
+        $this->assertNotSame($noticeA->id, $noticeB->id);
+        $this->assertNotSame($noticeB->id, $noticeC->id);
+        $this->assertNotSame($noticeA->id, $noticeC->id);
+
+        $this->assertFalse($noticeA->visible_in_active_panel);
+        $this->assertFalse($noticeA->publicly_available);
+        $this->assertFalse($noticeB->visible_in_active_panel);
+        $this->assertFalse($noticeB->publicly_available);
+        $this->assertTrue($noticeC->visible_in_active_panel);
+        $this->assertTrue($noticeC->publicly_available);
+
+        foreach ([$noticeA, $noticeB, $noticeC] as $notice) {
+            $this->assertSame('competition_decision', $notice->source_type);
+            $this->assertSame($competition->id, $notice->source_id);
+            $this->assertSame('competition_decision_signed_copy', $notice->content_delivery);
+            $this->assertSame($copyId, $notice->source_object_id);
+        }
+
+        $this->assertNull($noticeB->superseded_notice_id);
+        $this->assertNull($noticeC->superseded_notice_id);
+        $this->assertSame('Naziv ciklusa C', $noticeC->title);
+        $this->assertSame($dateC, optional($noticeC->public_display_date)?->toDateString());
+
+        $republishAudits = CompetitionOfficialDecisionLifecycleEvent::query()
+            ->where('action', CompetitionOfficialDecisionLifecycleEvent::ACTION_REPUBLISHED)
+            ->where('competition_official_decision_copy_id', $copyId)
+            ->orderBy('id')
+            ->get();
+
+        $this->assertCount(2, $republishAudits);
+
+        $auditB = $republishAudits[0];
+        $this->assertSame($noticeA->id, $auditB->payload['previous_notice_id']);
+        $this->assertSame('Naziv ciklusa A', $auditB->payload['business_title']['from']);
+        $this->assertSame('Naziv ciklusa B', $auditB->payload['business_title']['to']);
+        $this->assertSame($dateA, $auditB->payload['business_published_on']['from']);
+        $this->assertSame($dateB, $auditB->payload['business_published_on']['to']);
+
+        $auditC = $republishAudits[1];
+        $this->assertSame($noticeB->id, $auditC->payload['previous_notice_id']);
+        $this->assertNotSame($noticeA->id, $auditC->payload['previous_notice_id']);
+        $this->assertSame('Naziv ciklusa B', $auditC->payload['business_title']['from']);
+        $this->assertSame('Naziv ciklusa C', $auditC->payload['business_title']['to']);
+        $this->assertSame($dateB, $auditC->payload['business_published_on']['from']);
+        $this->assertSame($dateC, $auditC->payload['business_published_on']['to']);
+    }
+
+    public function test_republish_dispatches_existing_publish_event_without_supersession(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'SIGNED-COPY-BYTES', 'Stari naziv');
+        $this->publishCopy($admin, $competition, $copy, now()->subDays(4)->toDateString());
+        $this->unpublishCopy($admin, $competition, $copy);
+
+        Event::fake([OfficialContentReadyForPublicPublication::class]);
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.republish', [$competition, $copy]),
+            $this->republishPayload('Novi naziv', now()->subDay()->toDateString()),
+        )->assertRedirect();
+
+        Event::assertDispatched(OfficialContentReadyForPublicPublication::class, function ($event) use ($copy) {
+            return $event->title === 'Novi naziv'
+                && $event->source_type === 'competition_decision'
+                && $event->source_id === $copy->competition_id
+                && $event->content_delivery === 'competition_decision_signed_copy'
+                && $event->source_object_id === $copy->id
+                && $event->public_revoke === false
+                && $event->supersedes_notice_id === null
+                && $event->public_display_date === now()->subDay()->toDateString();
+        });
+    }
+
+    public function test_currently_published_copy_cannot_republish(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'SIGNED-COPY-BYTES', 'Objavljeni naziv');
+        $this->publishCopy($admin, $competition, $copy);
+
+        $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $page->assertOk();
+        $page->assertSee('Povuci objavu', false);
+        $page->assertDontSee('Ponovo objavi', false);
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.republish', [$competition, $copy]),
+            $this->republishPayload(),
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHasErrors('error');
+        $this->assertSame(1, Notice::query()->count());
+        $this->assertTrue(Notice::query()->sole()->publicly_available);
+        $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->where('action', CompetitionOfficialDecisionLifecycleEvent::ACTION_REPUBLISHED)->count());
+    }
+
+    public function test_never_published_copy_cannot_republish(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'SIGNED-COPY-BYTES', 'Još neobjavljen naziv');
+
+        $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $page->assertOk();
+        $page->assertSee('>Objavi</button>', false);
+        $page->assertDontSee('Ponovo objavi', false);
+        $page->assertDontSee(route('admin.competitions.official-decision.republish', [$competition, $copy]), false);
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.republish', [$competition, $copy]),
+            $this->republishPayload(),
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHasErrors('error');
+        $this->assertSame(0, Notice::query()->count());
+        $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->count());
+        $this->assertSame('Još neobjavljen naziv', $copy->fresh()->business_title);
+        $this->assertNull($copy->fresh()->business_published_on);
+    }
+
+    public function test_republish_future_business_date_is_rejected(): void
+    {
+        $this->assertRepublishValidationRejected(
+            ['business_title' => 'Validan naziv', 'business_published_on' => now()->addDay()->toDateString()],
+            'business_published_on',
+        );
+    }
+
+    public function test_republish_whitespace_only_title_is_rejected(): void
+    {
+        $this->assertRepublishValidationRejected(
+            ['business_title' => '   ', 'business_published_on' => now()->subDay()->toDateString()],
+            'business_title',
+        );
+    }
+
+    public function test_deleted_or_pending_copy_cannot_republish(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+
+        $deletedCompetition = $this->createCompletedCompetition('Konkurs deleted republish');
+        $deleted = $this->createCopyWithFile($deletedCompetition, 'SIGNED-COPY-BYTES', 'Deleted naziv');
+        $this->publishCopy($admin, $deletedCompetition, $deleted);
+        $this->unpublishCopy($admin, $deletedCompetition, $deleted);
+        $deleted->forceFill([
+            'permanently_deleted_at' => now(),
+            'permanently_deleted_by' => $admin->id,
+        ])->save();
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.republish', [$deletedCompetition, $deleted]),
+            $this->republishPayload(),
+        )->assertNotFound();
+
+        $pendingCompetition = $this->createCompletedCompetition('Konkurs pending republish');
+        $pending = $this->createCopyWithFile($pendingCompetition, 'SIGNED-COPY-BYTES', 'Pending naziv');
+        $this->publishCopy($admin, $pendingCompetition, $pending);
+        $this->unpublishCopy($admin, $pendingCompetition, $pending);
+        $pending->forceFill(['permanent_delete_pending_at' => now()])->save();
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.republish', [$pendingCompetition, $pending]),
+            $this->republishPayload(),
+        )->assertNotFound();
+
+        $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->where('action', CompetitionOfficialDecisionLifecycleEvent::ACTION_REPUBLISHED)->count());
+        $this->assertSame(1, Notice::query()->where('source_object_id', $deleted->id)->count());
+        $this->assertSame(1, Notice::query()->where('source_object_id', $pending->id)->count());
+        $this->assertFalse(Notice::query()->where('source_object_id', $deleted->id)->sole()->publicly_available);
+        $this->assertFalse(Notice::query()->where('source_object_id', $pending->id)->sole()->publicly_available);
+        $this->assertSame('Deleted naziv', $deleted->fresh()->business_title);
+        $this->assertSame('Pending naziv', $pending->fresh()->business_title);
+    }
+
+    public function test_other_current_public_copy_blocks_republish(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition, 'COPY-A-BYTES', 'Copy A');
+        $copyB = $this->createCopyWithFile($competition, 'COPY-B-BYTES', 'Copy B');
+        $this->publishCopy($admin, $competition, $copyA);
+        $this->unpublishCopy($admin, $competition, $copyA);
+        $this->forceCurrentPublicSignedCopyNotice($competition, $copyB);
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.republish', [$competition, $copyA]),
+            $this->republishPayload(),
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHasErrors('error');
+        $this->assertSame(1, Notice::query()->where('source_object_id', $copyA->id)->count());
+        $this->assertFalse(Notice::query()->where('source_object_id', $copyA->id)->sole()->publicly_available);
+        $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->where('action', CompetitionOfficialDecisionLifecycleEvent::ACTION_REPUBLISHED)->count());
+        $this->assertSame('Copy A', $copyA->fresh()->business_title);
+    }
+
+    public function test_multiple_current_public_signed_copy_notices_block_republish(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition, 'COPY-A-BYTES', 'Copy A');
+        $copyB = $this->createCopyWithFile($competition, 'COPY-B-BYTES', 'Copy B');
+        $copyC = $this->createCopyWithFile($competition, 'COPY-C-BYTES', 'Copy C');
+        $this->publishCopy($admin, $competition, $copyA);
+        $this->unpublishCopy($admin, $competition, $copyA);
+        $this->forceCurrentPublicSignedCopyNotice($competition, $copyB);
+        $this->forceCurrentPublicSignedCopyNotice($competition, $copyC);
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.republish', [$competition, $copyA]),
+            $this->republishPayload(),
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHasErrors('error');
+        $this->assertSame(1, Notice::query()->where('source_object_id', $copyA->id)->count());
+        $this->assertFalse(Notice::query()->where('source_object_id', $copyA->id)->sole()->publicly_available);
+        $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->where('action', CompetitionOfficialDecisionLifecycleEvent::ACTION_REPUBLISHED)->count());
+    }
+
+    public function test_missing_pdf_cannot_republish(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition);
+        $this->publishCopy($admin, $competition, $copy);
+        $this->unpublishCopy($admin, $competition, $copy);
+        Storage::disk('local')->delete($copy->storage_path);
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.republish', [$competition, $copy]),
+            $this->republishPayload(),
+        )->assertNotFound();
+
+        $this->assertSame(1, Notice::query()->count());
+        $this->assertFalse(Notice::query()->sole()->publicly_available);
+        $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->where('action', CompetitionOfficialDecisionLifecycleEvent::ACTION_REPUBLISHED)->count());
+    }
+
+    public function test_republish_channel_failure_rolls_back_kn_metadata_and_audit(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'SIGNED-COPY-BYTES', 'Stari naziv');
+        $this->publishCopy($admin, $competition, $copy, now()->subDays(5)->toDateString());
+        $this->unpublishCopy($admin, $competition, $copy);
+        $noticeA = Notice::query()->sole();
+        $titleBefore = $copy->fresh()->business_title;
+        $dateBefore = optional($copy->fresh()->business_published_on)?->toDateString();
+        $auditsBefore = CompetitionOfficialDecisionLifecycleEvent::query()->count();
+
+        Notice::creating(function () {
+            throw new RuntimeException('Forced republish channel failure');
+        });
+
+        try {
+            $this->withoutExceptionHandling();
+            $this->actingAs($admin)->post(
+                route('admin.competitions.official-decision.republish', [$competition, $copy]),
+                $this->republishPayload('Novi naziv', now()->subDay()->toDateString()),
+            );
+            $this->fail('Expected RuntimeException was not thrown.');
+        } catch (RuntimeException $exception) {
+            if ($exception->getMessage() === 'Expected RuntimeException was not thrown.') {
+                throw $exception;
+            }
+            $this->assertSame('Forced republish channel failure', $exception->getMessage());
+        } finally {
+            Notice::flushEventListeners();
+        }
+
+        $copy->refresh();
+        $noticeA->refresh();
+        $this->assertSame($titleBefore, $copy->business_title);
+        $this->assertSame($dateBefore, optional($copy->business_published_on)?->toDateString());
+        $this->assertSame($auditsBefore, CompetitionOfficialDecisionLifecycleEvent::query()->count());
+        $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->where('action', CompetitionOfficialDecisionLifecycleEvent::ACTION_REPUBLISHED)->count());
+        $this->assertSame(1, Notice::query()->count());
+        $this->assertSame($noticeA->id, Notice::query()->sole()->id);
+        $this->assertFalse($noticeA->publicly_available);
+        $this->assertFalse($noticeA->visible_in_active_panel);
+    }
+
     public function test_kn_controller_does_not_call_channel_primitives_directly(): void
     {
         $source = file_get_contents((new ReflectionClass(CompetitionOfficialDecisionController::class))->getFileName());
@@ -655,6 +1095,67 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         $this->assertTrue($notice->fresh()->visible_in_active_panel);
         $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->count());
         $this->assertSame(1, Notice::query()->count());
+    }
+
+    private function unpublishCopy(
+        User $admin,
+        Competition $competition,
+        CompetitionOfficialDecisionCopy $copy,
+    ): void {
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.unpublish', [$competition, $copy]),
+        )->assertRedirect();
+    }
+
+    private function republishPayload(
+        string $title = 'Naziv nakon ponovne objave',
+        ?string $date = null,
+    ): array {
+        return [
+            'business_title' => $title,
+            'business_published_on' => $date ?? now()->subDay()->toDateString(),
+        ];
+    }
+
+    private function assertRepublishValidationRejected(array $payload, string $errorKey): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'SIGNED-COPY-BYTES', 'Stari poslovni naziv');
+        $this->publishCopy($admin, $competition, $copy, now()->subDays(4)->toDateString());
+        $this->unpublishCopy($admin, $competition, $copy);
+        $notice = Notice::query()->sole();
+        $copyTitleBefore = $copy->fresh()->business_title;
+        $copyDateBefore = optional($copy->fresh()->business_published_on)?->toDateString();
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.republish', [$competition, $copy]),
+            $payload,
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHasErrors($errorKey);
+        $this->assertSame($copyTitleBefore, $copy->fresh()->business_title);
+        $this->assertSame($copyDateBefore, optional($copy->fresh()->business_published_on)?->toDateString());
+        $this->assertSame(1, Notice::query()->count());
+        $this->assertFalse($notice->fresh()->publicly_available);
+        $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->where('action', CompetitionOfficialDecisionLifecycleEvent::ACTION_REPUBLISHED)->count());
+    }
+
+    private function forceCurrentPublicSignedCopyNotice(
+        Competition $competition,
+        CompetitionOfficialDecisionCopy $copy,
+    ): Notice {
+        return Notice::factory()->create([
+            'title' => 'Forced current public notice',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'source_object_id' => $copy->id,
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+            'published_at' => now(),
+        ]);
     }
 
     private function publishCopy(
