@@ -6,8 +6,8 @@
 **Oznaka dokumenta:** DK-TS-001  
 **Funkcionalna cjelina:** Obavještenja (platformska prezentacija)  
 **Status dokumenta:** U IZRADI  
-**Verzija:** 0.1.1
-**Datum:** 2026-08-31
+**Verzija:** 0.1.2
+**Datum:** 2026-09-01
 **Namespace:** DK-* (platforma Digital Kotor)
 **Istorijski document ID:** TS-013
 
@@ -21,6 +21,7 @@
 | 2026-08-17 | 2026-08-17 | Administrativna migracija dokumentacionog ID-a sa `TS-013` na `DK-TS-001`; poslovni, funkcionalni i tehnički sadržaj ostaju nepromijenjeni. |
 | 2026-08-29 | 2026-08-29 | Usklađivanje sa DK-FS-001 PATCH-FS-OB-002 i KN-FS-003 v0.1.16 za source-specific objavu i korekciju zvanične Odluke Konkursa. Razdvojene panel vidljivost i javna dostupnost; persisted trag korekcije; `competition_decision_html` nije target delivery zvanične Odluke. Header 0.1 KEEP. Status U IZRADI. Runtime **nije** implementiran ovim redoslijedom. |
 | 0.1.1 | 2026-08-31 | Implementation-state closeout nakon Phase C. Delivery `competition_decision_signed_copy`, first publication i source-specific korekcija zvanične Odluke Konkursa prešli su iz target/design u **IMPLEMENTED** runtime. Ordinary UC-OB-005 semantika KEEP. OFD-OB-006 i OFD-OB-007 ostaju generički OTVORENO. Header 0.1.1. Status U IZRADI. |
+| 0.1.2 | 2026-09-01 | Evidencija LOCAL PO MANUAL ACCEPTANCE. Tok upload potpisanog primjerka → prva objava → javni signed-copy → korekcija ručno potvrđen lokalno 01.09.2026. **IMPLEMENTED ≠ PRODUCTION DEPLOYED.** Plesk/production nijesu bili predmet testa. Automatski testovi ostaju. Status U IZRADI. Feature nije CLOSED. |
 
 Napomena:
 
@@ -49,7 +50,7 @@ Izvori istine:
 * **DK-BM-001** — `docs/business-model/Business_Model_Obavjestenja.md`
 * **DK-UC-001** — `docs/use-cases/Use_Cases_Obavjestenja.md`
 * **DK-FS-001** — `docs/functional-specifications/Functional_Specification_Obavjestenja.md` (v0.1 + PATCH-FS-OB-001 + **PATCH-FS-OB-002**)
-* **DK-FR-001** — `docs/features/Feature-Registry_Digital-Kotor.md` (v1.1.0)
+* **DK-FR-001** — `docs/features/Feature-Registry_Digital-Kotor.md` (v1.1.1)
 * **KN-FS-003** v0.1.16 — `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` (source-specific binding za zvaničnu Odluku Konkursa: §15.6, §15.7.1, §15.7.5, §16.6, §18.7.4)
 * `docs/METHODOLOGY.md` (M-TS-001 … M-TS-005)
 
@@ -77,6 +78,8 @@ Izvori istine:
 Ukupan status dokumenta: **U IZRADI** (zbog OFD blocker-a koji ograničavaju potpunu produkcijsku pokrivenost svih FR; source-specific KN binding ne zatvara OFD generički).
 
 Source-specific runtime za zvaničnu Odluku Konkursa (`competition_decision_signed_copy`, first publication, KN korekcija) **jeste implementiran**. Ovaj dokument više **ne** tretira taj tok kao nerazvijeni TARGET. Generički OFD-OB-006 / OFD-OB-007 ostaju OTVORENO.
+
+Lokalni PO ručni prihvatni test (01.09.2026) potvrdio je taj source-specific tok. To **nije** production deploy i **nije** PRODUCTION ACCEPTED.
 
 ---
 
@@ -757,6 +760,29 @@ Nema Notice admin UI. Tehnička podrška FT-004 = događaj + servis + javne rute
 
 `NotificationController` i tabela `notifications` ostaju netaknuti (stub „Obavještenja“ u starom smislu ≠ FT-004). Eventualno uklanjanje stub UI-a nije dio ovog TS.
 
+## 14.10 LOCAL PO MANUAL ACCEPTANCE (2026-09-01)
+
+**Nije** PRODUCTION DEPLOYED. **Nije** PRODUCTION ACCEPTED. Plesk i produkcija **nijesu** bili predmet ovog testa.
+
+Okruženje: lokalna aplikacija `http://127.0.0.1:8000`. Konkurs tipa `zensko`, status **Završen**. Poslovna uloga: Administrator konkursa.
+
+KN ostaje vlasnik poslovnog procesa zvanične Odluke. FT-004 ostaje javni kanal objave. Ovaj zapis **ne** mijenja BM/FS zahtjeve, **ne** zatvara OFD-OB-006 / OFD-OB-007 generički, **ne** dira Poglavlje 11 `KN-FS-003` niti otvoreno pitanje zamjenskog člana Komisije.
+
+| Korak | Posmatrani ishod (lokalno) |
+|-------|----------------------------|
+| Upload PDF ≤ 2 MB | Kontrola vidljiva i funkcionalna; primjerak uspješno postavljen i evidentiran, još **nije** javno objavljen |
+| Prva objava | Akcija „Objavi“; poruka „Zvanična Odluka je objavljena.“ |
+| Javni pristup prvoj objavi | `/obavjestenja/1/sadrzaj` u Incognito/Private, bez prijave Administratora konkursa; potpisani PDF se otvorio |
+| Drugi primjerak | Novi PDF evidentiran; prvi i dalje „Objavljeno“; drugi ponudio „Koriguj objavu“ |
+| Potvrda korekcije | „Korigovati objavu? Pogrešni primjerak više neće biti javno dostupan.“ |
+| Ishod korekcije | Poruka „Objava zvanične Odluke je korigovana.“ |
+| Stari javni URL | `/obavjestenja/1/sadrzaj` u Incognito: HTTP 404 / Not Found. Posmatrani ishod ovog lokalnog testa; ovaj TS i dalje **ne** određuje HTTP status kao ugovor |
+| Novi javni URL | `/obavjestenja/2/sadrzaj` u Incognito: potpisani PDF se javno otvorio |
+
+Ručno potvrđeno: upload; odvojenost upload-a i objave; prva javna objava; javna dostupnost bez autentifikacije; postavljanje novog primjerka; source-specific korekcija; uklanjanje javne dostupnosti pogrešnog primjerka; stari direktni URL više ne servira sadržaj; novi primjerak je javno dostupan; korekcija **ne** zahtijeva izmjenu rezultata / rangiranja / Odluke kao poslovnog ishoda.
+
+Ovo **ne** zatvara FT-004 kao cijeli feature.
+
 ---
 
 # Provjera usklađenosti
@@ -768,4 +794,6 @@ Nema Notice admin UI. Tehnička podrška FT-004 = događaj + servis + javne rute
 * Svaki FR ima tehničku stavku: **da** (uz zabilježena ograničenja OFD; signed-copy je IMPLEMENTED, HTML ostaje LEGACY)
 * Svaka tehnička komponenta u §3/§13 referencira FR: **da**
 * Source-specific KN signed-copy runtime implementiran: **da**
+* LOCAL PO MANUAL ACCEPTANCE tog toka (2026-09-01, lokalno): **da**
+* PRODUCTION DEPLOYED / PRODUCTION ACCEPTED tog toka: **ne**
 * Generički OFD-OB-006 / OFD-OB-007 zatvoreni: **ne**
