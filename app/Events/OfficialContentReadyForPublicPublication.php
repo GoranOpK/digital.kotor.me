@@ -19,6 +19,7 @@ class OfficialContentReadyForPublicPublication
         public readonly ?int $supersedes_notice_id = null,
         public readonly bool $public_revoke = false,
         public readonly ?int $source_object_id = null,
+        public readonly ?string $public_display_date = null,
     ) {}
 
     /**
@@ -30,7 +31,8 @@ class OfficialContentReadyForPublicPublication
      *     content_delivery: string,
      *     supersedes_notice_id: int|null,
      *     public_revoke: bool,
-     *     source_object_id: int|null
+     *     source_object_id: int|null,
+     *     public_display_date: string|null
      * }
      */
     public function toPublicationPayload(): array
@@ -44,6 +46,7 @@ class OfficialContentReadyForPublicPublication
             'supersedes_notice_id' => $this->supersedes_notice_id,
             'public_revoke' => $this->public_revoke,
             'source_object_id' => $this->source_object_id,
+            'public_display_date' => $this->public_display_date,
         ];
     }
 }

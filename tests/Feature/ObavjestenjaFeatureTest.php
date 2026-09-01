@@ -430,11 +430,14 @@ class ObavjestenjaFeatureTest extends TestCase
 
         $this->assertFalse($event->public_revoke);
         $this->assertNull($event->source_object_id);
+        $this->assertNull($event->public_display_date);
 
         $payload = $event->toPublicationPayload();
         $this->assertFalse($payload['public_revoke']);
         $this->assertNull($payload['source_object_id']);
         $this->assertArrayHasKey('supersedes_notice_id', $payload);
+        $this->assertArrayHasKey('public_display_date', $payload);
+        $this->assertNull($payload['public_display_date']);
 
         $listener = app(PublishOfficialContentNotice::class);
         $listener->handle($event);

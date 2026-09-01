@@ -20,7 +20,8 @@ class NoticePublicationService
      *     content_delivery: string,
      *     supersedes_notice_id?: int|null,
      *     public_revoke?: bool,
-     *     source_object_id?: int|null
+     *     source_object_id?: int|null,
+     *     public_display_date?: string|null
      * }  $payload
      *
      * @throws ValidationException
@@ -38,6 +39,7 @@ class NoticePublicationService
             'supersedes_notice_id' => ['nullable', 'integer', 'exists:notices,id', 'required_if:public_revoke,true'],
             'public_revoke' => ['boolean'],
             'source_object_id' => ['nullable', 'integer'],
+            'public_display_date' => ['nullable', 'date'],
         ])->validate();
 
         $predecessorId = $validated['supersedes_notice_id'] ?? null;
@@ -69,6 +71,7 @@ class NoticePublicationService
                 'superseded_notice_id' => $predecessorId,
                 'source_object_id' => $validated['source_object_id'] ?? null,
                 'published_at' => now(),
+                'public_display_date' => $validated['public_display_date'] ?? null,
             ]);
         });
     }

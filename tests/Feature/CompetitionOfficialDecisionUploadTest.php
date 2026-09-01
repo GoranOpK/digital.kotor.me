@@ -37,7 +37,7 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
 
         $response = $this->actingAs($admin)->post(
             route('admin.competitions.official-decision.store', $competition),
-            ['official_decision_copy' => $this->pdfUpload('odluka.pdf')],
+            $this->storePayload($this->pdfUpload('odluka.pdf')),
         );
 
         $response->assertRedirect(route('admin.competitions.show', $competition));
@@ -46,6 +46,8 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
         $copy = CompetitionOfficialDecisionCopy::query()->sole();
         $this->assertSame($competition->id, $copy->competition_id);
         $this->assertSame($admin->id, $copy->uploaded_by);
+        $this->assertSame('Odluka test primjerka', $copy->business_title);
+        $this->assertNotSame('odluka.pdf', $copy->business_title);
         $this->assertNotSame('', (string) $copy->storage_path);
         Storage::disk('local')->assertExists($copy->storage_path);
         $this->assertSame($noticesBefore, Notice::query()->count());
@@ -59,7 +61,7 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
 
         $this->actingAs($admin)->post(
             route('admin.competitions.official-decision.store', $competition),
-            ['official_decision_copy' => $this->pdfUpload('prva.pdf')],
+            $this->storePayload($this->pdfUpload('prva.pdf'), 'Prva odluka'),
         )->assertRedirect();
 
         $first = CompetitionOfficialDecisionCopy::query()->sole();
@@ -68,7 +70,7 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
 
         $this->actingAs($admin)->post(
             route('admin.competitions.official-decision.store', $competition),
-            ['official_decision_copy' => $this->pdfUpload('druga.pdf')],
+            $this->storePayload($this->pdfUpload('druga.pdf'), 'Druga odluka'),
         )->assertRedirect();
 
         $this->assertSame(2, CompetitionOfficialDecisionCopy::query()->count());
@@ -111,7 +113,7 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
 
         $response = $this->actingAs($admin)->post(
             route('admin.competitions.official-decision.store', $competition),
-            ['official_decision_copy' => $this->pdfUpload('odluka.pdf')],
+            $this->storePayload($this->pdfUpload('odluka.pdf')),
         );
 
         $response->assertForbidden();
@@ -126,7 +128,7 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
 
         $this->actingAs($admin)->post(
             route('admin.competitions.official-decision.store', $competition),
-            ['official_decision_copy' => $this->pdfUpload('odluka.pdf')],
+            $this->storePayload($this->pdfUpload('odluka.pdf')),
         )->assertRedirect(route('admin.competitions.show', $competition));
 
         $this->assertSame(1, CompetitionOfficialDecisionCopy::query()->count());
@@ -139,7 +141,7 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
 
         $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
             route('admin.competitions.official-decision.store', $competition),
-            ['official_decision_copy' => UploadedFile::fake()->create('malware.exe', 20, 'application/x-msdownload')],
+            $this->storePayload(UploadedFile::fake()->create('malware.exe', 20, 'application/x-msdownload')),
         );
 
         $response->assertSessionHasErrors('official_decision_copy');
@@ -154,7 +156,7 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
 
         $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
             route('admin.competitions.official-decision.store', $competition),
-            ['official_decision_copy' => UploadedFile::fake()->create('odluka.pdf', 2049, 'application/pdf')],
+            $this->storePayload(UploadedFile::fake()->create('odluka.pdf', 2049, 'application/pdf')),
         );
 
         $response->assertSessionHasErrors('official_decision_copy');
@@ -175,7 +177,7 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
             $this->withoutExceptionHandling();
             $this->actingAs($admin)->post(
                 route('admin.competitions.official-decision.store', $competition),
-                ['official_decision_copy' => $this->pdfUpload('odluka.pdf')],
+                $this->storePayload($this->pdfUpload('odluka.pdf')),
             );
             $this->fail('Expected RuntimeException was not thrown.');
         } catch (\RuntimeException $exception) {
@@ -200,11 +202,86 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Zvanična Odluka', false);
+        $response->assertSee('Naziv dokumenta', false);
+        $response->assertSee('name="business_title"', false);
         $response->assertSee('name="official_decision_copy"', false);
         $response->assertSee('Postavi primjerak', false);
         $response->assertDontSee('Koriguj', false);
         $response->assertDontSee('Objavi Odluku', false);
         $response->assertDontSee('Povuci', false);
+        $response->assertDontSee('Ispravi podatke objave', false);
+        $response->assertDontSee('Ponovo objavi', false);
+        $response->assertDontSee('Trajno obriši', false);
+    }
+
+    public function test_upload_without_business_title_is_rejected(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompetition('completed');
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.store', $competition),
+            ['official_decision_copy' => $this->pdfUpload('odluka.pdf')],
+        );
+
+        $response->assertSessionHasErrors('business_title');
+        $this->assertSame(0, CompetitionOfficialDecisionCopy::query()->count());
+        $this->assertSame([], Storage::disk('local')->allFiles());
+    }
+
+    public function test_whitespace_only_business_title_is_rejected(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompetition('completed');
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.store', $competition),
+            $this->storePayload($this->pdfUpload('odluka.pdf'), '   '),
+        );
+
+        $response->assertSessionHasErrors('business_title');
+        $this->assertSame(0, CompetitionOfficialDecisionCopy::query()->count());
+        $this->assertSame([], Storage::disk('local')->allFiles());
+    }
+
+    public function test_business_title_longer_than_255_characters_is_rejected(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompetition('completed');
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.store', $competition),
+            $this->storePayload($this->pdfUpload('odluka.pdf'), str_repeat('a', 256)),
+        );
+
+        $response->assertSessionHasErrors('business_title');
+        $this->assertSame(0, CompetitionOfficialDecisionCopy::query()->count());
+        $this->assertSame([], Storage::disk('local')->allFiles());
+    }
+
+    public function test_uploaded_copy_stores_entered_business_title_not_original_filename(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompetition('completed');
+        $title = 'Odluka o dodjeli za 2026. godinu';
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.store', $competition),
+            $this->storePayload($this->pdfUpload('izvorni-fajl.pdf'), $title),
+        )->assertRedirect();
+
+        $copy = CompetitionOfficialDecisionCopy::query()->sole();
+        $this->assertSame($title, $copy->business_title);
+        $this->assertNotSame('izvorni-fajl.pdf', $copy->business_title);
+        Storage::disk('local')->assertExists($copy->storage_path);
+    }
+
+    private function storePayload(UploadedFile $file, string $title = 'Odluka test primjerka'): array
+    {
+        return [
+            'official_decision_copy' => $file,
+            'business_title' => $title,
+        ];
     }
 
     private function assertRoleCannotUpload(string $roleName): void
@@ -214,7 +291,7 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
 
         $response = $this->actingAs($user)->post(
             route('admin.competitions.official-decision.store', $competition),
-            ['official_decision_copy' => $this->pdfUpload('odluka.pdf')],
+            $this->storePayload($this->pdfUpload('odluka.pdf')),
         );
 
         $response->assertForbidden();

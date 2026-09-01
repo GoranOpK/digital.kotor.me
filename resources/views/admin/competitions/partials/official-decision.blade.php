@@ -27,8 +27,12 @@
                     @if($copy->isCurrentlyPublished())
                         <span style="color: #065f46; font-weight: 600;"> — Objavljeno</span>
                     @elseif($canManageOfficialDecision && ! $hasSignedCopyPublication)
-                        <form method="POST" action="{{ route('admin.competitions.official-decision.publish', [$competition, $copy]) }}" style="display: inline; margin-left: 8px;">
+                        <form class="official-decision-publish-form" method="POST" action="{{ route('admin.competitions.official-decision.publish', [$competition, $copy]) }}" style="display: block; margin-top: 8px;">
                             @csrf
+                            <div style="margin-bottom: 8px;">
+                                <label for="business_published_on_{{ $copy->id }}" style="display: block; font-weight: 600; margin-bottom: 4px;">Datum objave</label>
+                                <input type="date" id="business_published_on_{{ $copy->id }}" name="business_published_on" value="{{ old('business_published_on') }}" max="{{ now()->toDateString() }}" required style="padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
+                            </div>
                             <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Objavi</button>
                         </form>
                     @elseif($canManageOfficialDecision && $hasExactlyOneActivePublication && ! $copy->hasBeenPublished())
@@ -44,7 +48,8 @@
 
     @if($canManageOfficialDecision)
         <style>
-            .official-decision-upload-form input[type="file"] {
+            .official-decision-upload-form input[type="file"],
+            .official-decision-upload-form input[type="text"] {
                 display: block;
                 width: 100%;
                 max-width: 480px;
@@ -74,6 +79,10 @@
         </style>
         <form class="official-decision-upload-form" method="POST" action="{{ route('admin.competitions.official-decision.store', $competition) }}" enctype="multipart/form-data">
             @csrf
+            <div style="margin-bottom: 12px;">
+                <label for="business_title" style="display: block; font-weight: 600; margin-bottom: 8px;">Naziv dokumenta</label>
+                <input type="text" id="business_title" name="business_title" value="{{ old('business_title') }}" maxlength="255" required>
+            </div>
             <div style="margin-bottom: 12px;">
                 <label for="official_decision_copy" style="display: block; font-weight: 600; margin-bottom: 8px;">Potpisani primjerak</label>
                 <input type="file" id="official_decision_copy" name="official_decision_copy" accept="application/pdf" required>
