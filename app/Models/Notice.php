@@ -19,6 +19,7 @@ class Notice extends Model
         'source_object_id',
         'content_delivery',
         'published_at',
+        'public_display_date',
         'superseded_notice_id',
     ];
 
@@ -26,6 +27,7 @@ class Notice extends Model
         'visible_in_active_panel' => 'boolean',
         'publicly_available' => 'boolean',
         'published_at' => 'datetime',
+        'public_display_date' => 'date',
         'source_id' => 'integer',
         'source_object_id' => 'integer',
         'superseded_notice_id' => 'integer',

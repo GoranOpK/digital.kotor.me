@@ -10,11 +10,20 @@ class CompetitionOfficialDecisionCopy extends Model
         'competition_id',
         'storage_path',
         'uploaded_by',
+        'business_title',
+        'business_published_on',
+        'permanent_delete_pending_at',
+        'permanently_deleted_at',
+        'permanently_deleted_by',
     ];
 
     protected $casts = [
         'competition_id' => 'integer',
         'uploaded_by' => 'integer',
+        'business_published_on' => 'date',
+        'permanent_delete_pending_at' => 'datetime',
+        'permanently_deleted_at' => 'datetime',
+        'permanently_deleted_by' => 'integer',
     ];
 
     public function competition()
@@ -25,6 +34,16 @@ class CompetitionOfficialDecisionCopy extends Model
     public function uploadedBy()
     {
         return $this->belongsTo(User::class, 'uploaded_by');
+    }
+
+    public function permanentlyDeletedBy()
+    {
+        return $this->belongsTo(User::class, 'permanently_deleted_by');
+    }
+
+    public function lifecycleEvents()
+    {
+        return $this->hasMany(CompetitionOfficialDecisionLifecycleEvent::class);
     }
 
     public function hasBeenPublished(): bool
