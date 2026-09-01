@@ -2,8 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Events\OfficialContentPublicAvailabilityRevoked;
+use App\Events\OfficialContentPublicMetadataUpdated;
 use App\Events\OfficialContentReadyForPublicPublication;
 use App\Listeners\PublishOfficialContentNotice;
+use App\Listeners\RevokeOfficialContentPublicAvailability;
+use App\Listeners\UpdateOfficialContentPublicMetadata;
 use App\Models\Competition;
 use App\Models\CompetitionOfficialDecisionCopy;
 use App\Models\Notice;
@@ -11,6 +15,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\Notices\NoticePublicationService;
 use Database\Seeders\RoleSeeder;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -837,6 +842,84 @@ class ObavjestenjaFeatureTest extends TestCase
         $this->assertFalse($second->publicly_available);
         $this->assertSame('Već povučeno', $second->title);
         $this->assertSame($publishedAtPersisted, $second->published_at->toDateTimeString());
+    }
+
+    public function test_metadata_event_listener_updates_public_metadata_synchronously(): void
+    {
+        $notice = Notice::factory()->create([
+            'title' => 'Kanal stari naziv',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+            'published_at' => now()->subDays(3),
+            'public_display_date' => now()->subDays(9)->toDateString(),
+        ]);
+        $publishedAt = $notice->published_at->toDateTimeString();
+        $displayDate = now()->subDays(2)->toDateString();
+
+        $this->assertFalse(is_subclass_of(UpdateOfficialContentPublicMetadata::class, ShouldQueue::class));
+        $this->assertFalse(is_subclass_of(OfficialContentPublicMetadataUpdated::class, ShouldDispatchAfterCommit::class));
+        $this->assertFalse(is_subclass_of(OfficialContentPublicMetadataUpdated::class, ShouldQueue::class));
+
+        $listeners = app('events')->getRawListeners()[OfficialContentPublicMetadataUpdated::class] ?? [];
+        $this->assertCount(1, $listeners);
+
+        event(new OfficialContentPublicMetadataUpdated($notice->id, 'Kanal novi naziv', $displayDate));
+
+        $notice->refresh();
+        $this->assertSame('Kanal novi naziv', $notice->title);
+        $this->assertSame($displayDate, optional($notice->public_display_date)?->toDateString());
+        $this->assertSame($publishedAt, $notice->published_at->toDateTimeString());
+        $this->assertTrue($notice->publicly_available);
+        $this->assertTrue($notice->visible_in_active_panel);
+        $this->assertSame(1, Notice::query()->count());
+    }
+
+    public function test_revoke_event_listener_revokes_public_availability_synchronously(): void
+    {
+        $notice = Notice::factory()->create([
+            'title' => 'Kanal za revoke event',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+        ]);
+
+        $this->assertFalse(is_subclass_of(RevokeOfficialContentPublicAvailability::class, ShouldQueue::class));
+        $this->assertFalse(is_subclass_of(OfficialContentPublicAvailabilityRevoked::class, ShouldDispatchAfterCommit::class));
+        $this->assertFalse(is_subclass_of(OfficialContentPublicAvailabilityRevoked::class, ShouldQueue::class));
+
+        $listeners = app('events')->getRawListeners()[OfficialContentPublicAvailabilityRevoked::class] ?? [];
+        $this->assertCount(1, $listeners);
+
+        event(new OfficialContentPublicAvailabilityRevoked($notice->id));
+
+        $notice->refresh();
+        $this->assertFalse($notice->visible_in_active_panel);
+        $this->assertFalse($notice->publicly_available);
+        $this->assertSame(1, Notice::query()->count());
+        $this->assertSame('Kanal za revoke event', $notice->title);
+    }
+
+    public function test_metadata_and_revoke_events_do_not_carry_kn_authorization_or_overload_publish(): void
+    {
+        $metadataEvent = file_get_contents((new ReflectionClass(OfficialContentPublicMetadataUpdated::class))->getFileName());
+        $revokeEvent = file_get_contents((new ReflectionClass(OfficialContentPublicAvailabilityRevoked::class))->getFileName());
+        $metadataListener = file_get_contents((new ReflectionClass(UpdateOfficialContentPublicMetadata::class))->getFileName());
+        $revokeListener = file_get_contents((new ReflectionClass(RevokeOfficialContentPublicAvailability::class))->getFileName());
+        $publishListener = file_get_contents((new ReflectionClass(PublishOfficialContentNotice::class))->getFileName());
+        $publishEvent = file_get_contents((new ReflectionClass(OfficialContentReadyForPublicPublication::class))->getFileName());
+
+        foreach ([$metadataEvent, $revokeEvent, $metadataListener, $revokeListener] as $source) {
+            $this->assertStringNotContainsString('konkurs_admin', $source);
+            $this->assertStringNotContainsString('assertKonkursAdmin', $source);
+            $this->assertStringNotContainsString('permanently_deleted', $source);
+            $this->assertStringNotContainsString('closed', $source);
+        }
+
+        $this->assertStringNotContainsString('updatePublicMetadata', $publishListener);
+        $this->assertStringNotContainsString('revokePublicAvailability', $publishListener);
+        $this->assertStringNotContainsString('OfficialContentPublicMetadataUpdated', $publishEvent);
+        $this->assertStringNotContainsString('OfficialContentPublicAvailabilityRevoked', $publishEvent);
+        $this->assertStringContainsString('updatePublicMetadata', $metadataListener);
+        $this->assertStringContainsString('revokePublicAvailability', $revokeListener);
     }
 
     private function createSignedCopy(Competition $competition, string $contents): CompetitionOfficialDecisionCopy

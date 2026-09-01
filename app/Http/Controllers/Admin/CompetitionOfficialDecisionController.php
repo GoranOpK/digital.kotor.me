@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\OfficialContentPublicAvailabilityRevoked;
+use App\Events\OfficialContentPublicMetadataUpdated;
 use App\Events\OfficialContentReadyForPublicPublication;
 use App\Http\Controllers\Controller;
 use App\Models\Competition;
 use App\Models\CompetitionOfficialDecisionCopy;
+use App\Models\CompetitionOfficialDecisionLifecycleEvent;
+use App\Models\Notice;
 use App\Services\Competitions\CompetitionOfficialDecisionCopyService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -183,6 +187,158 @@ class CompetitionOfficialDecisionController extends Controller
         return redirect()
             ->route('admin.competitions.show', $competition)
             ->with('success', 'Objava zvanične Odluke je korigovana.');
+    }
+
+    public function updateMetadata(
+        Request $request,
+        Competition $competition,
+        CompetitionOfficialDecisionCopy $copy,
+    ): RedirectResponse {
+        $this->assertKonkursAdmin();
+        $this->assertCompetitionAllowsOfficialDecisionAction($competition);
+        $this->assertCopyIsLiveOnCompetition($competition, $copy);
+
+        $notice = $this->currentPublicSignedCopyNoticeOrRedirect($competition, $copy);
+
+        if ($notice instanceof RedirectResponse) {
+            return $notice;
+        }
+
+        $request->merge([
+            'business_title' => trim((string) $request->input('business_title', '')),
+        ]);
+
+        $validated = $request->validate([
+            'business_title' => ['required', 'string', 'max:255'],
+            'business_published_on' => ['required', 'date', 'before_or_equal:today'],
+        ], [
+            'business_title.required' => 'Naziv dokumenta je obavezan.',
+            'business_title.string' => 'Naziv dokumenta mora biti tekst.',
+            'business_title.max' => 'Naziv dokumenta ne može biti duži od 255 karaktera.',
+            'business_published_on.required' => 'Datum objave je obavezan.',
+            'business_published_on.date' => 'Datum objave nije ispravan.',
+            'business_published_on.before_or_equal' => 'Datum objave ne može biti u budućnosti.',
+        ]);
+
+        $businessTitle = $validated['business_title'];
+        $businessPublishedOn = $validated['business_published_on'];
+        $oldTitle = $copy->business_title;
+        $oldPublishedOn = optional($copy->business_published_on)?->toDateString();
+        $actorUserId = $request->user()->id;
+
+        DB::transaction(function () use (
+            $copy,
+            $competition,
+            $notice,
+            $businessTitle,
+            $businessPublishedOn,
+            $oldTitle,
+            $oldPublishedOn,
+            $actorUserId,
+        ) {
+            $copy->business_title = $businessTitle;
+            $copy->business_published_on = $businessPublishedOn;
+            $copy->save();
+
+            CompetitionOfficialDecisionLifecycleEvent::create([
+                'competition_official_decision_copy_id' => $copy->id,
+                'competition_id' => $competition->id,
+                'action' => CompetitionOfficialDecisionLifecycleEvent::ACTION_METADATA_CORRECTED,
+                'actor_user_id' => $actorUserId,
+                'payload' => [
+                    'business_title' => [
+                        'from' => $oldTitle,
+                        'to' => $businessTitle,
+                    ],
+                    'business_published_on' => [
+                        'from' => $oldPublishedOn,
+                        'to' => $businessPublishedOn,
+                    ],
+                    'notice_id' => $notice->id,
+                ],
+            ]);
+
+            event(new OfficialContentPublicMetadataUpdated(
+                $notice->id,
+                $businessTitle,
+                $businessPublishedOn,
+            ));
+        });
+
+        return redirect()
+            ->route('admin.competitions.show', $competition)
+            ->with('success', 'Podaci objave zvanične Odluke su ispravljeni.');
+    }
+
+    public function unpublish(
+        Request $request,
+        Competition $competition,
+        CompetitionOfficialDecisionCopy $copy,
+    ): RedirectResponse {
+        $this->assertKonkursAdmin();
+        $this->assertCompetitionAllowsOfficialDecisionAction($competition);
+        $this->assertCopyIsLiveOnCompetition($competition, $copy);
+
+        $notice = $this->currentPublicSignedCopyNoticeOrRedirect($competition, $copy);
+
+        if ($notice instanceof RedirectResponse) {
+            return $notice;
+        }
+
+        $actorUserId = $request->user()->id;
+
+        DB::transaction(function () use ($copy, $competition, $notice, $actorUserId) {
+            CompetitionOfficialDecisionLifecycleEvent::create([
+                'competition_official_decision_copy_id' => $copy->id,
+                'competition_id' => $competition->id,
+                'action' => CompetitionOfficialDecisionLifecycleEvent::ACTION_UNPUBLISHED,
+                'actor_user_id' => $actorUserId,
+                'payload' => [
+                    'public_availability_revoked' => true,
+                    'notice_id' => $notice->id,
+                ],
+            ]);
+
+            event(new OfficialContentPublicAvailabilityRevoked($notice->id));
+        });
+
+        return redirect()
+            ->route('admin.competitions.show', $competition)
+            ->with('success', 'Objava zvanične Odluke je povučena.');
+    }
+
+    private function assertCopyIsLiveOnCompetition(
+        Competition $competition,
+        CompetitionOfficialDecisionCopy $copy,
+    ): void {
+        if ((int) $copy->competition_id !== (int) $competition->id) {
+            abort(404);
+        }
+
+        if ($copy->permanently_deleted_at !== null || $copy->permanent_delete_pending_at !== null) {
+            abort(404);
+        }
+    }
+
+    private function currentPublicSignedCopyNoticeOrRedirect(
+        Competition $competition,
+        CompetitionOfficialDecisionCopy $copy,
+    ): Notice|RedirectResponse {
+        $notices = $copy->currentPublicSignedCopyNotices();
+
+        if ($notices->count() === 0) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Nema trenutno javne objave zvanične Odluke za ovaj primjerak.']);
+        }
+
+        if ($notices->count() > 1) {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['error' => 'Nije moguće nastaviti jer postoji više aktivnih objava ovog primjerka.']);
+        }
+
+        return $notices->first();
     }
 
     private function assertKonkursAdmin(): void

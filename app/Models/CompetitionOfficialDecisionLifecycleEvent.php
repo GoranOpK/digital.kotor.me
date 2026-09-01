@@ -14,6 +14,10 @@ class CompetitionOfficialDecisionLifecycleEvent extends Model
 {
     public const UPDATED_AT = null;
 
+    public const ACTION_METADATA_CORRECTED = 'official_decision_metadata_corrected';
+
+    public const ACTION_UNPUBLISHED = 'official_decision_unpublished';
+
     protected $table = 'competition_official_decision_lifecycle_events';
 
     protected $fillable = [

@@ -545,7 +545,10 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $after->assertSee('Objavljeno', false);
         $after->assertDontSee('>Objavi</button>', false);
         $after->assertDontSee('Koriguj', false);
-        $after->assertDontSee('Povuci', false);
+        $after->assertSee('Ispravi podatke objave', false);
+        $after->assertSee('Povuci objavu', false);
+        $after->assertDontSee('Ponovo objavi', false);
+        $after->assertDontSee('Trajno obriši', false);
     }
 
     public function test_konkurs_admin_can_correct_wrongly_published_signed_copy(): void
@@ -975,7 +978,8 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $page->assertSee('Objavljeno', false);
         $page->assertSee('Koriguj objavu', false);
         $page->assertDontSee('>Objavi</button>', false);
-        $page->assertDontSee('Povuci', false);
+        $page->assertSee('Povuci objavu', false);
+        $page->assertDontSee('Ponovo objavi', false);
         $page->assertDontSee('Zamijeni', false);
         $page->assertDontSee('Izbriši', false);
     }

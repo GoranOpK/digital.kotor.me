@@ -58,9 +58,18 @@ class CompetitionOfficialDecisionCopy extends Model
 
     public function isCurrentlyPublished(): bool
     {
+        return $this->currentPublicSignedCopyNoticesQuery()->exists();
+    }
+
+    public function currentPublicSignedCopyNotices()
+    {
+        return $this->currentPublicSignedCopyNoticesQuery()->get();
+    }
+
+    public function currentPublicSignedCopyNoticesQuery()
+    {
         return static::activeSignedCopyNoticesQuery($this->competition_id)
-            ->where('source_object_id', $this->id)
-            ->exists();
+            ->where('source_object_id', $this->id);
     }
 
     public static function competitionHasPublishedSignedCopy(int $competitionId): bool

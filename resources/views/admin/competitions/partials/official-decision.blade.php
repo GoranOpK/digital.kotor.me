@@ -26,6 +26,25 @@
                     @endif
                     @if($copy->isCurrentlyPublished())
                         <span style="color: #065f46; font-weight: 600;"> — Objavljeno</span>
+                        @if($canManageOfficialDecision)
+                            <form class="official-decision-metadata-form" method="POST" action="{{ route('admin.competitions.official-decision.update-metadata', [$competition, $copy]) }}" style="display: block; margin-top: 8px;">
+                                @csrf
+                                <div style="margin-bottom: 8px;">
+                                    <label for="business_title_metadata_{{ $copy->id }}" style="display: block; font-weight: 600; margin-bottom: 4px;">Naziv dokumenta</label>
+                                    <input type="text" id="business_title_metadata_{{ $copy->id }}" name="business_title" value="{{ old('business_title', $copy->business_title) }}" maxlength="255" required style="padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; max-width: 480px; width: 100%; box-sizing: border-box;">
+                                </div>
+                                <div style="margin-bottom: 8px;">
+                                    <label for="business_published_on_metadata_{{ $copy->id }}" style="display: block; font-weight: 600; margin-bottom: 4px;">Datum objave</label>
+                                    <input type="date" id="business_published_on_metadata_{{ $copy->id }}" name="business_published_on" value="{{ old('business_published_on', optional($copy->business_published_on)?->toDateString()) }}" max="{{ now()->toDateString() }}" required style="padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
+                                </div>
+                                <p style="margin: 0 0 8px; color: #6b7280; font-size: 13px;">PDF se ne mijenja. Mijenjaju se samo naziv dokumenta i datum objave.</p>
+                                <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Ispravi podatke objave</button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.competitions.official-decision.unpublish', [$competition, $copy]) }}" style="display: inline; margin-top: 8px;" onsubmit="return confirm('Povuci objavu? Potpisani primjerak ostaje sačuvan interno, ali više neće biti javno dostupan.');">
+                                @csrf
+                                <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Povuci objavu</button>
+                            </form>
+                        @endif
                     @elseif($canManageOfficialDecision && ! $hasSignedCopyPublication)
                         <form class="official-decision-publish-form" method="POST" action="{{ route('admin.competitions.official-decision.publish', [$competition, $copy]) }}" style="display: block; margin-top: 8px;">
                             @csrf
