@@ -43,11 +43,41 @@
     @endif
 
     @if($canManageOfficialDecision)
-        <form method="POST" action="{{ route('admin.competitions.official-decision.store', $competition) }}" enctype="multipart/form-data">
+        <style>
+            .official-decision-upload-form input[type="file"] {
+                display: block;
+                width: 100%;
+                max-width: 480px;
+                box-sizing: border-box;
+                padding: 8px;
+                border: 1px solid #d1d5db;
+                border-radius: 8px;
+                background: #fff;
+                color: #111827;
+                font-size: 14px;
+                line-height: 1.45;
+            }
+            .official-decision-upload-form input[type="file"]::file-selector-button {
+                margin-right: 12px;
+                padding: 8px 16px;
+                border: 0;
+                border-radius: 6px;
+                background: #0B3D91;
+                color: #fff;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+            .official-decision-upload-form input[type="file"]::file-selector-button:hover {
+                background: #0A347B;
+            }
+        </style>
+        <form class="official-decision-upload-form" method="POST" action="{{ route('admin.competitions.official-decision.store', $competition) }}" enctype="multipart/form-data">
             @csrf
             <div style="margin-bottom: 12px;">
                 <label for="official_decision_copy" style="display: block; font-weight: 600; margin-bottom: 8px;">Potpisani primjerak</label>
-                <input type="file" id="official_decision_copy" name="official_decision_copy" accept="application/pdf">
+                <input type="file" id="official_decision_copy" name="official_decision_copy" accept="application/pdf" required>
+                <p style="margin: 8px 0 0; color: #6b7280; font-size: 13px;">Dozvoljen je PDF fajl do 2 MB.</p>
             </div>
             <button type="submit" class="btn btn-success" style="margin-left: 0;">Postavi primjerak</button>
         </form>
