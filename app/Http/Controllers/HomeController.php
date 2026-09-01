@@ -112,10 +112,7 @@ class HomeController extends Controller
             } elseif ($user && $user->role && $user->role->name === 'konkurs_admin') {
                 $request->session()->forget('url.intended');
 
-                return redirect()->route('admin.competitions.index', [
-                    'type' => 'zensko',
-                    'tab' => 'active',
-                ]);
+                return redirect()->route('admin.dashboard');
             }
 
             return $this->redirectAfterLogin($request, $default);

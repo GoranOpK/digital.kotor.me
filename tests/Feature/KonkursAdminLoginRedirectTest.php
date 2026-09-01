@@ -19,7 +19,7 @@ class KonkursAdminLoginRedirectTest extends TestCase
         $this->seed(RoleSeeder::class);
     }
 
-    public function test_konkurs_admin_normal_login_lands_on_zensko_active_competitions(): void
+    public function test_konkurs_admin_normal_login_lands_on_konkursi_hub(): void
     {
         $admin = User::factory()->create([
             'role_id' => Role::where('name', 'konkurs_admin')->firstOrFail()->id,
@@ -33,13 +33,11 @@ class KonkursAdminLoginRedirectTest extends TestCase
         ]);
 
         $this->assertAuthenticatedAs($admin);
-        $response->assertRedirect(route('admin.competitions.index', [
-            'type' => 'zensko',
-            'tab' => 'active',
-        ]));
-        parse_str((string) parse_url((string) $response->headers->get('Location'), PHP_URL_QUERY), $query);
-        $this->assertSame('zensko', $query['type'] ?? null);
-        $this->assertSame('active', $query['tab'] ?? null);
+        $response->assertRedirect(route('admin.dashboard'));
+        $this->assertNotSame(
+            route('admin.competitions.index', ['type' => 'zensko', 'tab' => 'active']),
+            $response->headers->get('Location')
+        );
     }
 
     public function test_ordinary_user_login_keeps_home_fallback(): void
@@ -101,7 +99,10 @@ class KonkursAdminLoginRedirectTest extends TestCase
             'password' => bcrypt('password'),
         ]);
 
-        $intended = route('admin.dashboard', absolute: false);
+        $intended = route('admin.competitions.index', [
+            'type' => 'zensko',
+            'tab' => 'active',
+        ], absolute: false);
 
         $response = $this->withSession(['url.intended' => url($intended)])
             ->post('/login', [
@@ -110,12 +111,8 @@ class KonkursAdminLoginRedirectTest extends TestCase
             ]);
 
         $this->assertAuthenticatedAs($admin);
-        $location = (string) $response->headers->get('Location');
-        $this->assertStringNotContainsString('/admin/dashboard', $location);
-        $response->assertRedirect(route('admin.competitions.index', [
-            'type' => 'zensko',
-            'tab' => 'active',
-        ]));
+        $response->assertRedirect(route('admin.dashboard'));
+        $this->assertNotSame(url($intended), $response->headers->get('Location'));
         $response->assertSessionMissing('url.intended');
     }
 
@@ -170,9 +167,10 @@ class KonkursAdminLoginRedirectTest extends TestCase
             ]);
 
         $this->assertAuthenticatedAs($admin);
-        $response->assertRedirect(route('admin.competitions.index', [
-            'type' => 'zensko',
-            'tab' => 'active',
-        ]));
+        $response->assertRedirect(route('admin.dashboard'));
+        $this->assertNotSame(
+            route('admin.competitions.index', ['type' => 'zensko', 'tab' => 'active']),
+            $response->headers->get('Location')
+        );
     }
 }
