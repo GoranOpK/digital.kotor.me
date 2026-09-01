@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\OfficialContentPublicAvailabilityRevoked;
 use Illuminate\Database\Eloquent\Model;
 
 class CompetitionOfficialDecisionCopy extends Model
@@ -104,5 +105,29 @@ class CompetitionOfficialDecisionCopy extends Model
             ->where('content_delivery', 'competition_decision_signed_copy')
             ->where('publicly_available', false)
             ->orderByDesc('id');
+    }
+
+    public static function leftoverDecisionHtmlNoticesQuery(int $competitionId)
+    {
+        return Notice::query()
+            ->where('source_type', 'competition_decision')
+            ->where('source_id', $competitionId)
+            ->where('content_delivery', 'competition_decision_html')
+            ->where(function ($query) {
+                $query->where('visible_in_active_panel', true)
+                    ->orWhere('publicly_available', true);
+            });
+    }
+
+    public static function leftoverDecisionHtmlNotices(int $competitionId)
+    {
+        return static::leftoverDecisionHtmlNoticesQuery($competitionId)->get();
+    }
+
+    public static function revokeLeftoverDecisionHtmlPublications(int $competitionId): void
+    {
+        foreach (static::leftoverDecisionHtmlNotices($competitionId) as $notice) {
+            event(new OfficialContentPublicAvailabilityRevoked($notice->id));
+        }
     }
 }

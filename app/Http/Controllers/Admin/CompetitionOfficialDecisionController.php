@@ -110,6 +110,8 @@ class CompetitionOfficialDecisionController extends Controller
             $copy->business_published_on = $businessPublishedOn;
             $copy->save();
 
+            CompetitionOfficialDecisionCopy::revokeLeftoverDecisionHtmlPublications($competition->id);
+
             event(new OfficialContentReadyForPublicPublication(
                 $businessTitle,
                 $competition->title,
@@ -129,6 +131,7 @@ class CompetitionOfficialDecisionController extends Controller
     }
 
     public function correct(
+        Request $request,
         Competition $competition,
         CompetitionOfficialDecisionCopy $copy,
     ): RedirectResponse {
@@ -173,16 +176,48 @@ class CompetitionOfficialDecisionController extends Controller
                 ->withErrors(['error' => 'Ovaj primjerak je već objavljen.']);
         }
 
-        event(new OfficialContentReadyForPublicPublication(
-            'Odluka o dodjeli sredstava',
-            $competition->title,
-            'competition_decision',
-            $competition->id,
-            'competition_decision_signed_copy',
-            $oldNotice->id,
-            true,
-            $copy->id,
-        ));
+        $businessTitle = trim((string) $copy->business_title);
+
+        if ($businessTitle === '') {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['business_title' => 'Naziv dokumenta je obavezan.']);
+        }
+
+        $validated = $request->validate([
+            'business_published_on' => ['required', 'date', 'before_or_equal:today'],
+        ], [
+            'business_published_on.required' => 'Datum objave je obavezan.',
+            'business_published_on.date' => 'Datum objave nije ispravan.',
+            'business_published_on.before_or_equal' => 'Datum objave ne može biti u budućnosti.',
+        ]);
+
+        $businessPublishedOn = $validated['business_published_on'];
+
+        DB::transaction(function () use (
+            $copy,
+            $competition,
+            $businessTitle,
+            $businessPublishedOn,
+            $oldNotice,
+        ) {
+            $copy->business_published_on = $businessPublishedOn;
+            $copy->save();
+
+            CompetitionOfficialDecisionCopy::revokeLeftoverDecisionHtmlPublications($competition->id);
+
+            event(new OfficialContentReadyForPublicPublication(
+                $businessTitle,
+                $competition->title,
+                'competition_decision',
+                $competition->id,
+                'competition_decision_signed_copy',
+                $oldNotice->id,
+                true,
+                $copy->id,
+                $businessPublishedOn,
+            ));
+        });
 
         return redirect()
             ->route('admin.competitions.show', $competition)
@@ -392,6 +427,8 @@ class CompetitionOfficialDecisionController extends Controller
             $copy->business_title = $businessTitle;
             $copy->business_published_on = $businessPublishedOn;
             $copy->save();
+
+            CompetitionOfficialDecisionCopy::revokeLeftoverDecisionHtmlPublications($competition->id);
 
             CompetitionOfficialDecisionLifecycleEvent::create([
                 'competition_official_decision_copy_id' => $copy->id,

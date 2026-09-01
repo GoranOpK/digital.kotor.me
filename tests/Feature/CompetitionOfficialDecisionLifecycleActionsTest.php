@@ -756,6 +756,59 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         $this->assertSame($dateC, $auditC->payload['business_published_on']['to']);
     }
 
+    public function test_republish_revokes_leftover_legacy_html(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'REPUBLISH-PDF-BYTES', 'Naziv A');
+
+        $this->publishCopy($admin, $competition, $copy, now()->subDays(5)->toDateString());
+        $this->unpublishCopy($admin, $competition, $copy);
+        $noticeA = Notice::query()->where('source_object_id', $copy->id)->sole();
+        $html = Notice::factory()->create([
+            'title' => 'Legacy HTML Odluka',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'source_object_id' => null,
+            'content_delivery' => 'competition_decision_html',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+        ]);
+        $originalPath = $copy->storage_path;
+        $originalBytes = Storage::disk('local')->get($originalPath);
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.republish', [$competition, $copy]),
+            $this->republishPayload('Naziv B', now()->subDay()->toDateString()),
+        )->assertRedirect();
+
+        $html->refresh();
+        $noticeA->refresh();
+        $noticeB = Notice::query()
+            ->where('source_object_id', $copy->id)
+            ->whereKeyNot($noticeA->id)
+            ->sole();
+
+        $this->assertFalse($html->visible_in_active_panel);
+        $this->assertFalse($html->publicly_available);
+        $this->assertFalse($noticeA->visible_in_active_panel);
+        $this->assertFalse($noticeA->publicly_available);
+        $this->assertTrue($noticeB->visible_in_active_panel);
+        $this->assertTrue($noticeB->publicly_available);
+        $this->assertNull($noticeB->superseded_notice_id);
+        $this->assertSame($copy->id, $noticeB->source_object_id);
+        $this->assertSame($originalPath, $copy->fresh()->storage_path);
+        $this->assertSame($originalBytes, Storage::disk('local')->get($originalPath));
+
+        auth()->logout();
+        $this->get(route('notices.public-content', $html))->assertNotFound();
+        $this->get(route('notices.public-content', $noticeA))->assertNotFound();
+        $this->get(route('notices.public-content', $noticeB))->assertOk();
+        $this->assertSame('REPUBLISH-PDF-BYTES', $this->servedFileContents(
+            $this->get(route('notices.public-content', $noticeB))
+        ));
+    }
+
     public function test_republish_dispatches_existing_publish_event_without_supersession(): void
     {
         $admin = $this->userWithRole('konkurs_admin');

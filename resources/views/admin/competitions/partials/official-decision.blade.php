@@ -69,8 +69,13 @@
                             <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Ponovo objavi</button>
                         </form>
                     @elseif($canManageOfficialDecision && $hasExactlyOneActivePublication && ! $copy->hasBeenPublished())
-                        <form method="POST" action="{{ route('admin.competitions.official-decision.correct', [$competition, $copy]) }}" style="display: inline; margin-left: 8px;" onsubmit="return confirm('Korigovati objavu? Pogrešni primjerak više neće biti javno dostupan.');">
+                        <form class="official-decision-correct-form" method="POST" action="{{ route('admin.competitions.official-decision.correct', [$competition, $copy]) }}" style="display: block; margin-top: 8px;" onsubmit="return confirm('Korigovati objavu? Pogrešni primjerak više neće biti javno dostupan.');">
                             @csrf
+                            <p style="margin: 0 0 8px; color: #374151; font-size: 13px;">Naziv dokumenta: {{ $copy->business_title }}</p>
+                            <div style="margin-bottom: 8px;">
+                                <label for="business_published_on_correct_{{ $copy->id }}" style="display: block; font-weight: 600; margin-bottom: 4px;">Datum objave</label>
+                                <input type="date" id="business_published_on_correct_{{ $copy->id }}" name="business_published_on" value="{{ old('business_published_on') }}" max="{{ now()->toDateString() }}" required style="padding: 8px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;">
+                            </div>
                             <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Koriguj objavu</button>
                         </form>
                     @endif
