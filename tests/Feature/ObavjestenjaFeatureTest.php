@@ -15,6 +15,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Illuminate\Validation\ValidationException;
 use ReflectionClass;
 use Tests\TestCase;
@@ -655,6 +657,197 @@ class ObavjestenjaFeatureTest extends TestCase
         $this->assertTrue($old->visible_in_active_panel);
         $this->assertTrue($old->publicly_available);
         $this->assertDatabaseMissing('notices', ['title' => 'Force revoke rollback']);
+    }
+
+    public function test_ordinary_supersession_hides_panel_but_keeps_direct_public_url(): void
+    {
+        $competition = $this->createCompletedCompetition('Konkurs ordinary supersession');
+        $old = Notice::factory()->create([
+            'title' => 'Ordinary staro',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'content_delivery' => 'competition_decision_html',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+        ]);
+
+        $new = $this->publicationService->publish([
+            'title' => 'Ordinary novo',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'content_delivery' => 'competition_decision_html',
+            'supersedes_notice_id' => $old->id,
+        ]);
+
+        $old->refresh();
+
+        $this->assertFalse($old->visible_in_active_panel);
+        $this->assertTrue($old->publicly_available);
+        $this->assertTrue($new->visible_in_active_panel);
+        $this->assertTrue($new->publicly_available);
+
+        $home = $this->get(route('home'));
+        $home->assertOk();
+        $home->assertDontSee('Ordinary staro', false);
+        $home->assertSee('Ordinary novo', false);
+
+        $direct = $this->get(route('notices.public-content', $old));
+        $direct->assertOk();
+        $this->assertNull($direct->headers->get('Location'));
+    }
+
+    public function test_update_public_metadata_changes_title_and_display_date_on_the_same_notice(): void
+    {
+        Storage::fake('local');
+        $competition = $this->createCompletedCompetition('Konkurs za metadata');
+        $copy = $this->createSignedCopy($competition, 'METADATA-COPY-BYTES');
+        $publishedAt = now()->subDays(4);
+        $notice = Notice::factory()->create([
+            'title' => 'Stari javni naziv',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'source_object_id' => $copy->id,
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+            'published_at' => $publishedAt,
+            'public_display_date' => now()->subDays(10)->toDateString(),
+        ]);
+        $publishedAtPersisted = $notice->published_at->toDateTimeString();
+        $noticesBefore = Notice::query()->count();
+        $displayDate = now()->subDays(2)->toDateString();
+
+        $updated = $this->publicationService->updatePublicMetadata($notice, [
+            'title' => 'Novi javni naziv',
+            'public_display_date' => $displayDate,
+        ]);
+
+        $this->assertSame($notice->id, $updated->id);
+        $this->assertSame($noticesBefore, Notice::query()->count());
+        $this->assertSame('Novi javni naziv', $updated->title);
+        $this->assertSame($displayDate, optional($updated->public_display_date)?->toDateString());
+        $this->assertSame($publishedAtPersisted, $updated->published_at->toDateTimeString());
+        $this->assertSame('competition_decision', $updated->source_type);
+        $this->assertSame($competition->id, $updated->source_id);
+        $this->assertSame($copy->id, $updated->source_object_id);
+        $this->assertSame('competition_decision_signed_copy', $updated->content_delivery);
+        $this->assertTrue($updated->publicly_available);
+        $this->assertTrue($updated->visible_in_active_panel);
+
+        $response = $this->get(route('notices.public-content', $updated));
+        $response->assertOk();
+        $this->assertInstanceOf(BinaryFileResponse::class, $response->baseResponse);
+        $this->assertSame(
+            'METADATA-COPY-BYTES',
+            file_get_contents($response->baseResponse->getFile()->getPathname())
+        );
+    }
+
+    public function test_update_public_metadata_does_not_republish_a_revoked_notice(): void
+    {
+        $notice = Notice::factory()->create([
+            'title' => 'Povučeni naziv',
+            'visible_in_active_panel' => false,
+            'publicly_available' => false,
+            'public_display_date' => now()->subDay()->toDateString(),
+        ]);
+
+        $updated = $this->publicationService->updatePublicMetadata($notice, [
+            'title' => 'Ispravljeni povučeni naziv',
+            'public_display_date' => now()->subDays(3)->toDateString(),
+        ]);
+
+        $this->assertSame($notice->id, $updated->id);
+        $this->assertSame('Ispravljeni povučeni naziv', $updated->title);
+        $this->assertFalse($updated->visible_in_active_panel);
+        $this->assertFalse($updated->publicly_available);
+        $this->assertSame(1, Notice::query()->count());
+    }
+
+    public function test_revoke_public_availability_hides_panel_and_direct_access_without_new_notice(): void
+    {
+        Storage::fake('local');
+        $competition = $this->createCompletedCompetition('Konkurs za revoke');
+        $copy = $this->createSignedCopy($competition, 'REVOKE-COPY-BYTES');
+        $publishedAt = now()->subDays(5);
+        $displayDate = now()->subDays(6)->toDateString();
+        $notice = Notice::factory()->create([
+            'title' => 'Aktivna objava za revoke',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'source_object_id' => $copy->id,
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => true,
+            'publicly_available' => true,
+            'published_at' => $publishedAt,
+            'public_display_date' => $displayDate,
+            'superseded_notice_id' => null,
+        ]);
+        $publishedAtPersisted = $notice->published_at->toDateTimeString();
+        $noticesBefore = Notice::query()->count();
+
+        $this->get(route('home'))->assertSee('Aktivna objava za revoke', false);
+        $this->get(route('notices.public-content', $notice))->assertOk();
+
+        $revoked = $this->publicationService->revokePublicAvailability($notice);
+
+        $this->assertSame($notice->id, $revoked->id);
+        $this->assertSame($noticesBefore, Notice::query()->count());
+        $this->assertFalse($revoked->visible_in_active_panel);
+        $this->assertFalse($revoked->publicly_available);
+        $this->assertSame('Aktivna objava za revoke', $revoked->title);
+        $this->assertSame($displayDate, optional($revoked->public_display_date)?->toDateString());
+        $this->assertSame($publishedAtPersisted, $revoked->published_at->toDateTimeString());
+        $this->assertSame('competition_decision', $revoked->source_type);
+        $this->assertSame($competition->id, $revoked->source_id);
+        $this->assertSame($copy->id, $revoked->source_object_id);
+        $this->assertSame('competition_decision_signed_copy', $revoked->content_delivery);
+        $this->assertNull($revoked->superseded_notice_id);
+        Storage::disk('local')->assertExists($copy->storage_path);
+
+        $home = $this->get(route('home'));
+        $home->assertOk();
+        $home->assertDontSee('Aktivna objava za revoke', false);
+
+        $direct = $this->get(route('notices.public-content', $revoked));
+        $direct->assertNotFound();
+        $this->assertNull($direct->headers->get('Location'));
+        $this->assertStringNotContainsString('REVOKE-COPY-BYTES', $direct->getContent());
+    }
+
+    public function test_revoke_public_availability_is_idempotent(): void
+    {
+        $publishedAt = now()->subDays(2);
+        $notice = Notice::factory()->create([
+            'title' => 'Već povučeno',
+            'visible_in_active_panel' => false,
+            'publicly_available' => false,
+            'published_at' => $publishedAt,
+            'public_display_date' => now()->subDays(8)->toDateString(),
+        ]);
+        $publishedAtPersisted = $notice->published_at->toDateTimeString();
+        $noticesBefore = Notice::query()->count();
+
+        $first = $this->publicationService->revokePublicAvailability($notice);
+        $second = $this->publicationService->revokePublicAvailability($first);
+
+        $this->assertSame($notice->id, $second->id);
+        $this->assertSame($noticesBefore, Notice::query()->count());
+        $this->assertFalse($second->visible_in_active_panel);
+        $this->assertFalse($second->publicly_available);
+        $this->assertSame('Već povučeno', $second->title);
+        $this->assertSame($publishedAtPersisted, $second->published_at->toDateTimeString());
+    }
+
+    private function createSignedCopy(Competition $competition, string $contents): CompetitionOfficialDecisionCopy
+    {
+        $copy = CompetitionOfficialDecisionCopy::create([
+            'competition_id' => $competition->id,
+            'storage_path' => 'competitions/'.$competition->id.'/official-decisions/'.uniqid('copy_', true).'.pdf',
+        ]);
+        Storage::disk('local')->put($copy->storage_path, $contents);
+
+        return $copy;
     }
 
     private function createCompletedCompetition(string $title): Competition

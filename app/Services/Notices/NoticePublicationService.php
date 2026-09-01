@@ -75,4 +75,50 @@ class NoticePublicationService
             ]);
         });
     }
+
+    /**
+     * In-place channel update of public display metadata on an existing Notice.
+     *
+     * Source modules own business validation. This method persists only
+     * title and public_display_date on the given Notice row.
+     *
+     * @param  array{
+     *     title: string,
+     *     public_display_date: string|null
+     * }  $metadata
+     *
+     * @throws ValidationException
+     */
+    public function updatePublicMetadata(Notice $notice, array $metadata): Notice
+    {
+        $validated = Validator::make($metadata, [
+            'title' => ['required', 'string', 'max:255'],
+            'public_display_date' => ['nullable', 'date'],
+        ])->validate();
+
+        return DB::transaction(function () use ($notice, $validated) {
+            $notice->title = $validated['title'];
+            $notice->public_display_date = $validated['public_display_date'] ?? null;
+            $notice->save();
+
+            return $notice->refresh();
+        });
+    }
+
+    /**
+     * Source-initiated channel revoke of public availability for an existing Notice.
+     *
+     * Idempotent: repeating the call on an already revoked Notice does not
+     * insert a row, restore public availability, or change published_at.
+     */
+    public function revokePublicAvailability(Notice $notice): Notice
+    {
+        return DB::transaction(function () use ($notice) {
+            $notice->visible_in_active_panel = false;
+            $notice->publicly_available = false;
+            $notice->save();
+
+            return $notice->refresh();
+        });
+    }
 }
