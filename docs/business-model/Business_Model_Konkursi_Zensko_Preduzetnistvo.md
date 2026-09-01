@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.5
+**Verzija:** 1.0.6
 **Datum:** 2026-09-01
 
 Povezani dokumenti:
@@ -34,6 +34,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.3 / KN-PATCH-BM-003 | 2026-08-28 | Usklađenje povlačenja Prijave: nakon uspješnog podnošenja Prijava je Podnesena; Podnositeljka je ne može mijenjati, povući, obrisati ni ponovo podnijeti. U V1 nema stanja Povučena ni povlačenja Podnesene Prijave sa strane Podnositeljke. Kanonska stanja Prijave: U pripremi / Podnesena. |
 | 1.0.4 / KN-PATCH-BM-004 | 2026-08-29 | Ciljano usklađenje redoslijeda Predloga i zvanične Odluke sa usvojenim `KN-FS-003` Poglavljem 15: zvanična Odluka nastaje fizičkim potpisom sekretara prije zaključivanja Konkursa; dostava zvanične Odluke samo podržanim Podnositeljkama, van Platforme. |
 | 1.0.5 / KN-PATCH-BM-005 | 2026-09-01 | Vrijeme dodjele Komisije: objava može uslijediti bez dodijeljene Komisije; potpuna i valjana Komisija mora biti dodijeljena najkasnije prije isteka roka za Prijave; istek bez nje ne produžava rok i blokira pristup/postupak do dopune; obična zamjena cijele Komisije dozvoljena do isteka roka, ne samo do objave. Zamjena pojedinačnog člana i OPEN pitanje završenih ocjena ostaju. |
+| 1.0.6 / KN-PATCH-BM-006 | 2026-09-01 | Elektronski primjerak zvanične Odluke na Platformi: povlačenje objave, ponovna objava, trajno uklanjanje, novi primjerak nakon uklanjanja; javno samo trenutno važeća objava. Nije donošenje Odluke i ne mijenja rezultate. Ostali kanali objave ostaju van Platforme. |
 
 Napomena:
 
@@ -849,6 +850,34 @@ Van Platforme u V1 ostaju, osim gdje je ovaj profil već eksplicitno drugačije 
 * kontrola namjenskog korišćenja;
 * naknadne izmjene Odluke zbog odustanka.
 
+## 15.4. Elektronski primjerak zvanične Odluke na Platformi
+
+Objavljivanje već donesene zvanične Odluke na digital.kotor.me odnosi se na **elektronski primjerak** te Odluke.
+
+To **nije** donošenje Odluke. Vlasnik zvanične Odluke ostaje poslovni tok Konkursa.
+
+Administrator Konkursa može **povući objavu** trenutno objavljene zvanične Odluke sa Platforme.
+
+Povučeni elektronski primjerak ostaje sačuvan i može kasnije biti **ponovo objavljen**.
+
+Administrator Konkursa može **trajno ukloniti elektronski primjerak** prethodno objavljene zvanične Odluke.
+
+Kod trajnog uklanjanja sam elektronski dokument više se **ne** čuva niti može biti vraćen kroz Platformu. Mora ostati trag da je Odluka postojala i da je elektronski primjerak trajno uklonjen.
+
+Nakon trajnog uklanjanja može se učitati i objaviti **novi elektronski primjerak** zvanične Odluke za isti Konkurs.
+
+Na Platformi javno postoji **samo trenutno važeća objava** zvanične Odluke.
+
+Povlačenje objave, ponovna objava i trajno uklanjanje elektronskog primjerka:
+
+* **nisu** donošenje nove Odluke;
+* **ne** mijenjaju rezultate Konkursa;
+* **ne** mijenjaju bodove;
+* **ne** mijenjaju rang-listu;
+* **ne** mijenjaju dodijeljene iznose.
+
+Ovo pravilo odnosi se **isključivo** na objavu elektronskog primjerka na Platformi digital.kotor.me. **Ne** uređuje druge kanale objave iz §15.2 koji se odvijaju van Platforme.
+
 ---
 
 # Otvorena pravna pitanja ovog profila
@@ -863,4 +892,4 @@ Odluka uređuje imenovanje zamjene, ali ne sudbinu već **završenih** individua
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.5**
+**Kraj dokumenta KN-BM-003 v1.0.6**

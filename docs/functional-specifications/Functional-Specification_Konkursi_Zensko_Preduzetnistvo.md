@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.17
+**Verzija:** 0.1.21
 **Datum:** 2026-09-01
 
 Povezani dokumenti:
@@ -47,6 +47,10 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 0.1.15 | 2026-08-29 | Napisano Poglavlje 19 — Sljedivost. Evidentirana matrica sljedivosti `KN-BM-003` → `KN-FS-003` → Poglavlje 18. Poglavlje 11 i zavisnosti iz §17.3 ostaju bez izmišljenih veza. Korekcija reference na `KN-BM-003` v1.0.4. |
 | 0.1.16 | 2026-08-29 | Controlled corrective. Tri ranije otvorene funkcionalne zavisnosti iz §17.3 razriješene su i vraćene u matična poglavlja: korekcija pogrešno objavljenog primjerka zvanične Odluke; nepovratnost završenog Prigovora; ponašanje Prijave `U pripremi` nakon isteka roka. Poglavlje 11 i zamjena člana Komisije ostaju neriešene. |
 | 0.1.17 | 2026-09-01 | Controlled corrective. Vrijeme dodjele Komisije usklađeno sa `KN-BM-003` v1.0.5 / `KN-PATCH-BM-005`: objava bez Komisije; granica dodjele/zamjene cijele Komisije je istek roka za Prijave; istek bez potpune i valjane Komisije blokira pristup i postupak bez novog statusa. Zamjena pojedinačnog člana i OPEN pitanje završenih ocjena ostaju. Poglavlje 11 netaknuto. |
+| 0.1.18 | 2026-09-01 | Controlled corrective. Poglavlje 16 dopunjeno usvojenim lifecycle pravilima elektronskog primjerka zvanične Odluke: poslovni naziv, poslovni datum objave, korekcija primjerka, ispravka metapodataka, povlačenje, ponovna objava, trajno brisanje, nova Odluka nakon brisanja i javni prikaz. Postojeća §16.1–§16.7 KEEP. FT-004 ostaje kanal javne dostupnosti. Poglavlje 11 netaknuto. |
+| 0.1.19 | 2026-09-01 | Controlled corrective. Poglavlje 18 dopunjeno prihvatnim kriterijumima §18.9 za lifecycle zvanične Odluke (§16.8–§16.16). Postojeći §18.1–§18.8 KEEP. Korekcija pogrešnog primjerka ostaje u §18.7.4; §18.9.3 samo dopunjuje razliku prema povlačenju, trajnom brisanju i nepromijenjenim bodovima. Poglavlje 16 i Poglavlje 19 nijesu dirani. |
+| 0.1.20 | 2026-09-01 | Controlled corrective. Poglavlje 19 dopunjeno sljedivošću za §16.8–§16.16 i §18.9.1–§18.9.10. Postojeće veze matrice KEEP. Nema izmišljene 1:1 BM veze za povlačenje, ponovnu objavu ni trajno brisanje. Poglavlja 16 i 18 nijesu dirana. |
+| 0.1.21 | 2026-09-01 | Controlled corrective. Poglavlje 19: remap sljedivosti §16.12–§16.16 na eksplicitnu poslovnu osnovu `KN-BM-003` §15.4 / `KN-PATCH-BM-006`. §16.8, §16.9, §16.10 i §16.11 KEEP. Poglavlja 16 i 18 nijesu dirana. |
 
 Napomena:
 
@@ -3208,6 +3212,177 @@ Privilegovana platformska uloga **nije** način za ponovno otvaranje završenog 
 
 Kasnije čuvanje i objavljivanje zvanične Odluke Sekretarijata **nije** ponovno otvaranje Konkursa.
 
+Dodatno usvojena pravila §16.8–§16.16 određuju lifecycle elektronskog primjerka zvanične Odluke na Platformi. **Ne** mijenjaju §16.1–§16.7. **Ne** mijenjaju zaključane rezultate Konkursa. **Ne** predstavljaju donošenje Odluke na Platformi. Vlasnik lifecycle-a je modul **Konkursi**. **FT-004 Obavještenja** ostaje javni kanal dostupnosti, ne vlasnik dokumenta i ne generički CMS zvanične Odluke.
+
+## 16.8. Poslovni naziv zvanične Odluke
+
+Administrator konkursa obavezno unosi **poslovni naziv** zvanične Odluke.
+
+Platforma **ne** generiše poslovni naziv automatski.
+
+Originalni filename PDF fajla **nije** poslovni naziv.
+
+Poslovni naziv se unosi pri objavi, pri ponovnoj objavi i, kada je dozvoljena ispravka metapodataka, pri toj ispravci.
+
+## 16.9. Poslovni datum objave
+
+Administrator konkursa određuje **poslovni datum objave**.
+
+Poslovni datum:
+
+* može biti današnji;
+* može biti raniji;
+* **ne** može biti budući.
+
+Poslovni datum objave **odvojen** je od tehničkog vremena izvršenja radnje.
+
+Tehnički timestamp izvršenja radnje Platforma evidentira **automatski**. Taj tehnički zapis je **nepromjenjiv**.
+
+Poslovni datum se određuje pri objavi, pri ponovnoj objavi i, kada je dozvoljena ispravka metapodataka, pri toj ispravci.
+
+## 16.10. Korekcija pogrešnog PDF primjerka
+
+Korekcija pogrešno objavljenog elektronskog primjerka ostaje uređena u §15.7.5 i §16.6. Ovo pravilo to potvrđuje u lifecycle skupu i **ne** uvodi drugi tok korekcije.
+
+Ako je Administrator konkursa objavio pogrešan PDF primjerak:
+
+* novi ispravni primjerak zamjenjuje prethodni u javnom prikazu;
+* javno postoji **samo jedna** važeća objava;
+* prethodni PDF **nije** javno dostupan, uključujući pristup preko prethodnog javnog URL-a;
+* prethodni primjerak i trag objave ostaju interno;
+* korekcija **ne** mijenja rezultate, rang-listu, bodove, odluku Podržava / Odbija ni predložene iznose.
+
+Korekcija **nije** povlačenje iz §16.12. Korekcija **nije** trajno brisanje iz §16.14. Korekcija koristi **novi** ispravni primjerak, ne isti PDF.
+
+## 16.11. Ispravka metapodataka objavljene Odluke
+
+Administrator konkursa može, **bez zamjene PDF-a**, ispraviti:
+
+* poslovni naziv dokumenta;
+* poslovni datum objave.
+
+PDF ostaje isti.
+
+Poslovni datum i nakon ispravke **ne** može biti budući.
+
+Revizijski trag **mora** sačuvati:
+
+* prethodnu vrijednost;
+* novu vrijednost;
+* korisnika koji je izvršio ispravku;
+* tehničko vrijeme izmjene.
+
+Ispravka metapodataka **nije** korekcija primjerka iz §16.10. **Nije** nova objava. **Ne** mijenja rezultate, rang-listu, bodove ni iznose.
+
+## 16.12. Povlačenje objave
+
+Administrator konkursa može povući **trenutno objavljenu** zvaničnu Odluku sa javnog prikaza.
+
+Nakon povlačenja:
+
+* Odluka se više **ne** prikazuje među javnim Obavještenjima;
+* PDF **nije** javno dostupan ni preko direktnog javnog URL-a;
+* Odluka i PDF ostaju interno sačuvani;
+* Platforma evidentira ko je izvršio povlačenje i kada;
+* konkurs, prijave, bodovi, rang-lista, dodijeljeni iznosi i rezultati ostaju nepromijenjeni;
+* povučeni primjerak **može** kasnije biti ponovo objavljen prema §16.13.
+
+Povlačenje **nije** trajno brisanje. Povlačenje **nije** korekcija primjerka iz §16.10.
+
+Javni kanal prestanka prikaza i prestanka javne dostupnosti je **FT-004 Obavještenja**. Izvor ostaje modul Konkursi.
+
+## 16.13. Ponovna objava povučene Odluke
+
+Administrator konkursa može ponovo objaviti povučenu Odluku **bez ponovnog učitavanja PDF-a**.
+
+Prilikom ponovne objave:
+
+* koristi se isti sačuvani PDF;
+* Administrator obavezno određuje poslovni naziv dokumenta;
+* Administrator obavezno određuje poslovni datum objave;
+* poslovni datum **ne** smije biti budući;
+* Platforma automatski evidentira novi tehnički trenutak objavljivanja;
+* prethodna objava i povlačenje ostaju u internom revizijskom tragu;
+* javno ponovo postoji **samo jedna** važeća objava.
+
+Ponovna objava **nije** korekcija primjerka. Ponovna objava **nije** trajno brisanje. Ponovna objava **ne** mijenja rezultate, rang-listu, bodove ni iznose.
+
+Razlika ostaje:
+
+* **povlačenje** — isti PDF ostaje sačuvan i može ponovo biti objavljen;
+* **trajno brisanje** — PDF se fizički uklanja i ne može biti vraćen; za kasniju objavu potreban je novi primjerak.
+
+## 16.14. Trajno brisanje objavljene Odluke
+
+Administrator konkursa može trajno obrisati objavljenu zvaničnu Odluku.
+
+Trajno brisanje znači:
+
+* PDF se fizički uklanja iz čuvanja na Platformi;
+* PDF više **nije** dostupan ni javno ni kroz administrativni interfejs;
+* javna objava se uklanja;
+* direktni javni URL više **nije** dostupan;
+* obrisani PDF **nije** moguće vratiti kroz Platformu.
+
+Revizijski trag se **ne** briše.
+
+Platforma trajno mora sačuvati najmanje:
+
+* činjenicu da je Odluka postojala;
+* naziv dokumenta;
+* poslovni datum objave;
+* podatak o njenom prethodnom objavljivanju;
+* korisnika koji je izvršio trajno brisanje;
+* tehničko vrijeme trajnog brisanja;
+* činjenicu da je izvršeno trajno brisanje.
+
+Sam PDF se nakon trajnog brisanja **ne** čuva.
+
+Za trajno brisanje **nije** potrebno unositi obrazloženje razloga.
+
+Korisnički interfejs mora zahtijevati **eksplicitnu potvrdu** prije trajnog brisanja i jasno upozoriti da PDF neće biti moguće vratiti.
+
+Trajno brisanje **nije** povlačenje iz §16.12. Trajno obrisani primjerak **ne** može se ponovo objaviti. Trajno brisanje **ne** mijenja rezultate, rang-listu, bodove ni iznose.
+
+## 16.15. Nova Odluka nakon trajnog brisanja
+
+Nakon trajnog brisanja prethodne Odluke Administrator konkursa može učitati i objaviti **novi primjerak** zvanične Odluke za isti Konkurs.
+
+Novi primjerak:
+
+* predstavlja novi zapis;
+* ima novi PDF;
+* ima obavezni poslovni naziv koji unosi Administrator;
+* ima poslovni datum objave;
+* ima sopstveni tehnički trag učitavanja i objavljivanja;
+* **ne** vraća niti mijenja prethodno obrisani PDF.
+
+Interni revizijski trag mora omogućiti slijed:
+
+Odluka A → objavljena → trajno obrisana → Odluka B → objavljena
+
+Na javnom prikazu postoji samo trenutno važeća Odluka.
+
+Nova Odluka **ne** mijenja rezultate konkursa, bodove, rang-listu niti dodijeljene iznose.
+
+## 16.16. Javni prikaz važeće Odluke
+
+Građanin vidi samo **trenutno važeću** objavu:
+
+* poslovni naziv;
+* poslovni datum objave;
+* važeći PDF.
+
+Građanin **ne** vidi:
+
+* tehničke timestampove;
+* istoriju korekcija;
+* prethodne nazive ili poslovne datume;
+* identitet Administratora konkursa;
+* povučene, zamijenjene ili trajno obrisane dokumente.
+
+Javni panel i javni URL ostaju kanal **FT-004 Obavještenja**. FT-004 **ne** uvodi generički CMS lifecycle Obavještenja radi ovih pravila. FT-004 uključuje ili isključuje javnu dostupnost konkretne objave prema naredbi izvornog modula Konkursi.
+
 ---
 
 
@@ -3651,6 +3826,130 @@ Uloga Administratora platforme ili Super administratora sama po sebi **ne** omog
 
 Ovaj kriterijum **ne** propisuje tehnički mehanizam sprovođenja ovih zabrana.
 
+## 18.9. Lifecycle zvanične Odluke na Platformi
+
+Ovi kriterijumi provjeravaju ishode §16.8–§16.16. **Ne** uvode nova pravila. **Ne** određuju tehničku realizaciju, storage, rute, modele ni generički CMS Obavještenja.
+
+Postojeći ishod čuvanja, prve objave i korekcije pogrešnog primjerka ostaje §18.7.4.
+
+### 18.9.1 — Poslovni naziv zvanične Odluke
+
+**Ako:** Administrator konkursa objavljuje ili ponovo objavljuje zvaničnu Odluku.
+
+**Kada:** izvrši tu radnju.
+
+**Onda:** mora unijeti poslovni naziv. Platforma **ne** generiše poslovni naziv. Originalni filename PDF fajla **nije** poslovni naziv. Javni prikaz pokazuje uneseni poslovni naziv.
+
+**Ako:** Administrator konkursa pokuša objavu ili ponovnu objavu bez poslovnog naziva.
+
+**Kada:** izvrši tu radnju.
+
+**Onda:** Platforma odbija objavu.
+
+### 18.9.2 — Poslovni datum objave
+
+**Ako:** Administrator konkursa određuje poslovni datum objave.
+
+**Kada:** unese današnji ili raniji datum.
+
+**Onda:** Platforma prihvata poslovni datum. Poslovni datum je **odvojen** od automatskog tehničkog vremena izvršenja radnje. Tehničko vrijeme se evidentira automatski i ostaje nepromjenjivo.
+
+**Ako:** Administrator konkursa unese budući poslovni datum.
+
+**Kada:** pokuša objavu, ponovnu objavu ili ispravku metapodataka.
+
+**Onda:** Platforma odbija radnju.
+
+### 18.9.3 — Korekcija pogrešnog primjerka, dopuna uz §18.7.4
+
+Ishod korekcije pogrešno objavljenog primjerka ostaje §18.7.4: nova javna objava ispravnog primjerka, prethodna objava više nije aktivna, stari javni URL ne daje stari PDF, interni trag ostaje, rang-lista, rezultati i iznosi ostaju nepromijenjeni.
+
+**Ako:** Administrator konkursa koriguje pogrešno objavljeni primjerak prema §16.10.
+
+**Kada:** korekcija bude izvršena.
+
+**Onda:** javno postoji samo jedna važeća objava; korekcija koristi **novi** ispravni PDF, ne isti primjerak; korekcija **nije** povlačenje iz §16.12 i **nije** trajno brisanje iz §16.14; bodovi ostaju nepromijenjeni.
+
+### 18.9.4 — Ispravka metapodataka bez zamjene PDF-a
+
+**Ako:** postoji objavljena zvanična Odluka.
+
+**Kada:** Administrator konkursa ispravi poslovni naziv i/ili poslovni datum objave, bez zamjene PDF-a.
+
+**Onda:** PDF ostaje isti. Javni prikaz pokazuje nove vrijednosti. Interni trag čuva prethodnu vrijednost, novu vrijednost, korisnika koji je izvršio ispravku i tehničko vrijeme izmjene. Rang-lista, bodovi, rezultati i iznosi ostaju nepromijenjeni.
+
+### 18.9.5 — Povlačenje objave
+
+**Ako:** zvanična Odluka je trenutno objavljena.
+
+**Kada:** Administrator konkursa izvrši povlačenje objave.
+
+**Onda:** Odluka nestaje iz javnog prikaza. Direktni javni URL više **ne** daje PDF. PDF ostaje interno sačuvan. Platforma evidentira ko je izvršio povlačenje i kada. Prijave, bodovi, rang-lista, dodijeljeni iznosi i rezultati ostaju nepromijenjeni. Povučeni primjerak **može** kasnije biti ponovo objavljen.
+
+### 18.9.6 — Ponovna objava povučenog primjerka
+
+**Ako:** zvanična Odluka je povučena, a njen PDF je interno sačuvan.
+
+**Kada:** Administrator konkursa izvrši ponovnu objavu.
+
+**Onda:** koristi se isti PDF. Administrator određuje poslovni naziv i dozvoljeni poslovni datum. Nastaje novi tehnički trag objave. Prethodna objava i povlačenje ostaju u internom tragu. Javno postoji samo jedna važeća objava. Rang-lista, bodovi, rezultati i iznosi ostaju nepromijenjeni.
+
+### 18.9.7 — Trajno brisanje objavljene Odluke
+
+**Ako:** Administrator konkursa pokrene trajno brisanje objavljene zvanične Odluke.
+
+**Kada:** ne da eksplicitnu potvrdu.
+
+**Onda:** Platforma **ne** izvršava brisanje.
+
+**Ako:** Administrator konkursa da eksplicitnu potvrdu trajnog brisanja.
+
+**Kada:** brisanje bude izvršeno.
+
+**Onda:**
+
+* obrazloženje razloga **nije** uslov radnje;
+* PDF se fizički uklanja;
+* PDF više **nije** dostupan javno;
+* PDF više **nije** dostupan kroz administrativni interfejs;
+* stari javni URL **ne** daje dokument;
+* PDF **nije** moguće vratiti kroz Platformu;
+* revizijski trag ostaje i sadrži najmanje podatke iz §16.14: činjenicu da je Odluka postojala, naziv, poslovni datum objave, podatak o prethodnom objavljivanju, korisnika koji je izvršio brisanje, tehničko vrijeme brisanja i činjenicu trajnog brisanja;
+* prijave, bodovi, rang-lista, dodijeljeni iznosi i rezultati ostaju nepromijenjeni;
+* taj primjerak **ne** može se ponovo objaviti.
+
+### 18.9.8 — Nova Odluka nakon trajnog brisanja
+
+**Ako:** prethodna zvanična Odluka istog Konkursa je trajno obrisana.
+
+**Kada:** Administrator konkursa učita i objavi novi primjerak.
+
+**Onda:** nastaje novi primjerak sa novim PDF-om. Prethodno obrisani PDF se **ne** vraća. Interni slijed ostaje evidentiran: prethodna Odluka → objavljena → trajno obrisana → nova Odluka → objavljena. Javno postoji samo nova važeća objava. Rang-lista, bodovi, rezultati i iznosi ostaju nepromijenjeni.
+
+### 18.9.9 — Javni prikaz važeće Odluke
+
+**Ako:** građanin pristupa javnom prikazu zvanične Odluke.
+
+**Kada:** postoji trenutno važeća objava.
+
+**Onda:** vidi samo tu objavu: poslovni naziv, poslovni datum objave i važeći PDF.
+
+**Ne** vidi tehničke timestampove, istoriju korekcija, prethodne nazive ili poslovne datume, identitet Administratora konkursa, niti povučene, zamijenjene ili trajno obrisane primjerke.
+
+Ako trenutno važeće objave nema, javni prikaz **ne** prikazuje povučeni, zamijenjeni ili trajno obrisani primjerak.
+
+### 18.9.10 — Autorizacija lifecycle radnji zvanične Odluke
+
+**Ako:** se izvršava lifecycle radnja iz §16.8–§16.16.
+
+**Kada:** radnju pokuša izvršiti korisnik koji **nije** Administrator konkursa, ili Administrator konkursa izvan dozvoljenog konteksta.
+
+**Onda:** Platforma odbija radnju.
+
+Te radnje **ne** smiju omogućiti zaobilaženje funkcionalnih zabrana Poglavlja 16.
+
+Uloga Administratora platforme ili Super administratora sama po sebi **nije** dovoljna. §18.8.2 ostaje na snazi.
+
 ---
 
 # 19. Sljedivost
@@ -3794,6 +4093,16 @@ Matrica sljedivosti:
 | `KN-BM-003` §14 | §15.2 | §18.7.1 | USVOJENO. Generiši Odluku proizvodi Predlog i ne mijenja zaključani rezultat. |
 | `KN-BM-003` §14.1 | §15.4, §15.5, §16.6, §16.7 | §18.7.3, §18.8.1 | USVOJENO. Zaključi Konkurs nakon poslovnog obavještenja o potpisu; arhiva istim činom; nije donošenje Odluke. |
 | `KN-BM-003` §15.2 | §15.6, §15.7.1, §15.7.5 | §18.7.4 | USVOJENO. Čuvanje i objava potpisanog primjerka je ciljna V1 sposobnost. Javni objekat je potpisani primjerak. FT-004 je javni kanal, ne vlasnik Odluke. Korekcija pogrešno objavljenog primjerka: §15.7.5. Korekcija je **funkcionalna razrada** prema §19.2.6. Dostava podržanim Podnositeljkama ostaje van Platforme. |
+| Najbliži poslovni kontekst: `KN-BM-003` §15.2. Neposredni izvor: ovaj dokument §16.8 | §16.8 | §18.9.1 | USVOJENO. Poslovni naziv zvanične Odluke je **funkcionalna razrada**. `KN-BM-003` §15.2 uređuje objavu već donesene Odluke na digital.kotor.me, ali **ne** propisuje obavezan poslovni naziv niti zabranu originalnog filename-a. |
+| Najbliži poslovni kontekst: `KN-BM-003` §15.2. Neposredni izvor: ovaj dokument §16.9 | §16.9 | §18.9.2 | USVOJENO. Poslovni datum objave, odvojen od tehničkog vremena, je **funkcionalna razrada**. `KN-BM-003` §15.2 **ne** propisuje poslovni datum ni zabranu budućeg datuma. |
+| Najbliži poslovni kontekst: `KN-BM-003` §15.2. Neposredni izvor: ovaj dokument §15.7.5, §16.6, §16.10 | §15.7.5, §16.10 | §18.7.4, §18.9.3 | USVOJENO. §16.10 potvrđuje postojeću korekciju iz §15.7.5 u lifecycle skupu. **Nije** nova BM odredba i **nije** drugi tok korekcije. §18.7.4 ostaje osnovni prihvatni ishod. §18.9.3 dopunjuje jednu važeću objavu, novi PDF, razliku prema povlačenju/trajnom brisanju i nepromijenjene bodove. |
+| Najbliži poslovni kontekst: `KN-BM-003` §15.2. Neposredni izvor: ovaj dokument §16.11 | §16.11 | §18.9.4 | USVOJENO. Ispravka poslovnog naziva i poslovnog datuma bez zamjene PDF-a je **funkcionalna razrada**. `KN-BM-003` **nema** eksplicitnu odredbu o ispravci metapodataka objavljene Odluke. |
+| `KN-BM-003` §15.4 | §16.12 | §18.9.5 | USVOJENO. Povlačenje objave trenutno objavljene zvanične Odluke sa Platforme. |
+| `KN-BM-003` §15.4 | §16.13 | §18.9.6 | USVOJENO. Ponovna objava povučenog elektronskog primjerka. |
+| `KN-BM-003` §15.4 | §16.14 | §18.9.7 | USVOJENO. Trajno uklanjanje elektronskog primjerka. Sam dokument se ne čuva niti vraća kroz Platformu. Trag da je Odluka postojala i da je primjerak trajno uklonjen ostaje. Detaljan sadržaj internog traga ostaje u §16.14. |
+| `KN-BM-003` §15.4 | §16.15 | §18.9.8 | USVOJENO. Nakon trajnog uklanjanja može se učitati i objaviti novi elektronski primjerak za isti Konkurs. |
+| `KN-BM-003` §15.4 | §16.16 | §18.9.9 | USVOJENO. §15.4 je poslovna osnova da na Platformi javno postoji samo trenutno važeća objava. Koje metapodatke građanin vidi ili ne vidi ostaje **funkcionalna razrada**. |
+| `KN-BM-003` §4.2, §4.4; za lifecycle elektronskog primjerka `KN-BM-003` §15.4 | §16.1, §16.8–§16.16 | §18.9.10, §18.8.2 | USVOJENO. Horizontalni enforcement. §4.2 i §4.4 određuju aktera Administratora konkursa i da Administrator platforme nije profilni konkursni akter. §15.4 je poslovna osnova za povlačenje objave, ponovnu objavu, trajno uklanjanje, novi primjerak nakon uklanjanja i pravilo jedne važeće javne objave. §15.4 **nije** poslovna osnova za §16.8, §16.9, §16.10 ni §16.11. §18.8.2 ostaje grupna zabrana zaobilaženja. |
 | `KN-BM-003` §15.1 | §15.7.2 | — | USVOJENO. Rok objave 45 dana od isteka roka za Prijave je poslovni rok. Nije automatska radnja Platforme. Nema zasebnog prihvatnog kriterijuma. |
 | `KN-BM-003` §15.3 | §1.2, §4.15, §17.1, §17.2 | — | USVOJENO. V1 na Platformi završava se objavom već donesene Odluke. |
 | `KN-BM-003` §7, §12.4, §13.7, §14.1 | §16.1, §16.2, §16.5, §16.7 | §18.8.1, §18.8.2 | USVOJENO. Grupna zaštita zaključanih podataka i zabrana zaobilaženja. |
@@ -3805,4 +4114,4 @@ Pregled obustavljenih i otvorenih veza, bez novih pravila:
 
 ---
 
-**Kraj dokumenta KN-FS-003 v0.1.17**
+**Kraj dokumenta KN-FS-003 v0.1.21**

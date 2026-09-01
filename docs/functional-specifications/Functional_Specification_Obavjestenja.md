@@ -19,6 +19,7 @@
 | PATCH-FS-OB-001 | 2026-07-31 | Editorial consistency improvements — ispravka formulacije svrhe dokumenta; preciziranje observable result / acceptance criteria (FR-OB-005, FR-OB-010, FR-OB-013); tipografska ispravka naslova FR-OB-015. Bez izmjene semantike zahtjeva. |
 | 2026-08-17 | 2026-08-17 | Administrativna dodjela dokumentacionog ID-a `DK-FS-001`; aktivne reference prebačene na DK-BM-001 / DK-UC-001 / DK-TS-001 / DK-FR-001. Funkcionalni sadržaj, FR-OB / OFD-OB / PATCH-FS-OB oznake i status U IZRADI ostaju nepromijenjeni. |
 | PATCH-FS-OB-002 | 2026-08-29 | Source-specific binding `KN-FS-003` v0.1.16 za zvaničnu Odluku Konkursa. OFD-OB-006 i OFD-OB-007 ostaju generički OTVORENO. UC-OB-005 / FR-OB-016 / FR-OB-010 semantika KEEP. Bez novog univerzalnog FR-OB. Bez TS/implementacije. Osnovna verzija ostaje 0.1. |
+| PATCH-FS-OB-003 | 2026-09-01 | Source-specific channel ponašanje za KN lifecycle zvanične Odluke (`KN-BM-003` v1.0.6 §15.4; `KN-FS-003` v0.1.21 §16.8–§16.16). Poslovni naziv i poslovni datum od izvora; metadata update; source-specific revoke; republish; korekcija svih aktivnih reprezentacija; permanent-delete revoke. UC-OB-005 / FR-OB-010 / FR-OB-015 / FR-OB-016 KEEP. OFD-OB-006 i OFD-OB-007 ostaju generički OTVORENO. Bez novog univerzalnog FR-OB. Osnovna verzija ostaje 0.1. |
 
 Napomena:
 
@@ -168,7 +169,7 @@ U usvojenom obuhvatu **nije** dio funkcionalnih zahtjeva:
 
 Ova lista ostaje važeća kao **generička** granica usvojenih FR-OB.
 
-**Izvorni binding, ne novi univerzalni FR:** za zvaničnu Odluku Konkursa ponašanje čuvanja, objave i korekcije određuje `KN-FS-003` v0.1.16 (§15.6, §15.7.1, §15.7.5, §16.6, §18.7.4). To **ne** usvaja ispravku već objavljenog sadržaja za ostale izvore FT-004 i **ne** nameće jedan format fajla svim izvorima.
+**Izvorni binding, ne novi univerzalni FR:** za zvaničnu Odluku Konkursa ponašanje čuvanja, objave, korekcije i lifecycle-a elektronskog primjerka određuju `KN-BM-003` v1.0.6 §15.4 i `KN-FS-003` v0.1.21 (§15.6, §15.7.1, §15.7.5, §16.6, §16.8–§16.16, §18.7.4, §18.9). To **ne** usvaja ispravku već objavljenog sadržaja za ostale izvore FT-004, **ne** nameće jedan format fajla svim izvorima i **ne** uvodi generički lifecycle svih Obavještenja.
 
 ---
 
@@ -184,23 +185,54 @@ Ova lista ostaje važeća kao **generička** granica usvojenih FR-OB.
 
 ### Izvorni binding — zvanična Odluka Konkursa
 
-Ovo **nije** novi univerzalni FR-OB. **Ne** usvaja generičko ponašanje za sve izvore FT-004. Binding izvora: `KN-FS-003` v0.1.16 (§15.6, §15.7.1, §15.7.5, §16.6, §18.7.4).
+Ovo **nije** novi univerzalni FR-OB. **Ne** usvaja generičko ponašanje za sve izvore FT-004. Binding izvora: `KN-BM-003` v1.0.6 §15.4; `KN-FS-003` v0.1.21 (§15.6, §15.7.1, §15.7.5, §16.6, §16.8–§16.16, §18.7.4, §18.9).
 
-1. Izvorni modul **Konkursi** je vlasnik zvanične Odluke i čuva/posjeduje zvanični sadržaj.
-2. FT-004 Obavještenja su **javni kanal**, a ne izvor niti vlasnik Odluke. FT-004 javno prezentuje/servira sadržaj koji izvorni modul preda kao spreman za javnu objavu.
+1. Izvorni modul **Konkursi** je vlasnik zvanične Odluke, elektronskog primjerka, poslovnog naziva, poslovnog datuma objave, lifecycle-a primjerka i istorijskog/revizijskog traga.
+2. FT-004 Obavještenja su **javni kanal**, a ne izvor niti vlasnik Odluke. FT-004 javno prezentuje/servira sadržaj koji izvorni modul preda kao spreman za javnu objavu, povlačenje, ponovnu objavu ili ukidanje dostupnosti.
 3. Javni objekat zvanične Odluke je **elektronski primjerak fizički potpisane zvanične Odluke**.
 4. Živi prikaz Predloga Odluke (`competition_decision_html`) **nije** zvanična Odluka i **ne** smije biti javni objekat zvanične Odluke.
-5. Administrator konkursa izvršava poslovnu radnju objave **u izvornom modulu Konkursi**, prema `KN-FS-003` §15.7.1.
-6. Korekcija pogrešno **objavljenog** primjerka iste zvanične Odluke Konkursa slijedi `KN-FS-003` §15.7.5:
+5. Administrator konkursa izvršava poslovne radnje objave i lifecycle-a **u izvornom modulu Konkursi**, prema `KN-FS-003` §15.7.1 i §16.8–§16.16.
+6. Korekcija pogrešno **objavljenog** primjerka iste zvanične Odluke Konkursa slijedi `KN-FS-003` §15.7.5 / §16.10:
    * ispravni primjerak predstavlja novu javnu objavu;
    * pogrešna objava nestaje iz aktivnog javnog prikaza;
    * pogrešni dokument više nije javno dostupan ni preko prethodnog javnog URL-a;
+   * sve trenutno javno aktivne reprezentacije iste Odluke, uključujući eventualnu leftover `competition_decision_html` reprezentaciju, gube aktivni panel status i direktnu javnu dostupnost;
+   * javno ostaje samo jedna važeća objava te Odluke;
    * interni trag ostaje;
    * korekcija ne mijenja rang-listu, rezultate niti iznose.
 
-Ovo **nije** isto što i UC-OB-005 / FS-OB-FLOW-03 (zamjena vidljivosti zbog narednog ekvivalentnog postupka). **Ne** uvodi se univerzalno pravilo da svako Obavještenje sklonjeno s panela gubi javni pristup.
+Ovo **nije** isto što i UC-OB-005 / FS-OB-FLOW-03 (zamjena vidljivosti zbog narednog ekvivalentnog postupka). **Ne** uvodi se univerzalno pravilo da svako Obavještenje sklonjeno s panela gubi javni pristup. **Ne** uvodi se generički Notice CMS niti nova urednička uloga za Obavještenja.
 
-Ovaj binding **ne** određuje tehničku realizaciju čuvanja, javnog URL-a ni internog traga.
+#### Poslovni naziv
+
+FT-004 koristi `title` koji dobija od izvora. Za zvaničnu Odluku Konkursa poslovni naziv određuje KN; FT-004 ga prima i javno prikazuje; FT-004 ga **ne** generiše.
+
+#### Poslovni datum objave i tehničko vrijeme
+
+Za zvaničnu Odluku Konkursa postoje dva odvojena pojma:
+
+* **poslovni datum objave** — dolazi od source modula; služi javnom prikazu;
+* **tehničko vrijeme objave** — automatski nastaje izvršenjem channel publish radnje; **nije** isto što i poslovni datum; **ne** smije biti prepisano ručno unesenim poslovnim datumom.
+
+Validacija da poslovni datum ne smije biti budući ostaje odgovornost KN. Ovaj dokument tu validaciju **ne** propisuje.
+
+#### Metadata-only correction
+
+Izvor može zahtijevati izmjenu `title` i/ili poslovnog datuma na trenutno važećem Obavještenju, bez novog PDF-a, bez novog source objekta i bez novog Notice reda. Istorija poslovne izmjene ostaje odgovornost KN.
+
+#### Source-specific unpublish (revoke)
+
+Izvor može zahtijevati ukidanje javne dostupnosti trenutno važećeg Obavještenja: nestaje sa aktivnog panela **i** prestaje direktna javna dostupnost, **bez** kreiranja novog Obavještenja. Ovo je source-specific revoke, **ne** ordinary UC-OB-005 supersession.
+
+#### Republish
+
+Izvor može ponovo objaviti isti source objekt nakon source-specific povlačenja. Tada može nastati novi Notice red; `source_object_id` može biti isti; nastaje novo tehničko vrijeme objave; javno mora postojati samo jedna važeća objava tog KN sadržaja. Istorijski Notice **ne** smije sam po sebi blokirati republish.
+
+#### Permanent-delete revocation
+
+Ako KN trajno uklanja elektronski primjerak, FT-004 uklanja važeći Notice sa panela, ukida direktnu javnu dostupnost i zadržava istorijski Notice zapis. FT-004 **ne** briše fizički KN PDF i **ne** hard-delete-uje istorijski Notice zbog ove radnje.
+
+Ovaj binding **ne** određuje tehničku realizaciju čuvanja, javnog URL-a, internog traga niti KN tombstone zapisa.
 
 ---
 
@@ -221,7 +253,7 @@ Nisu usvojeni formalni statusi tipa: nacrt, na odobrenju, arhivirano, obrisano, 
 
 Zamjena u aktivnom panelu mijenja samo ovu posmatranu vidljivost i **ne** podrazumijeva brisanje, arhiviranje, gubitak javne dostupnosti ni uništavanje zvaničnog sadržaja (BM-OB-13).
 
-Ovo pravilo **ne** uređuje source-specific korekciju pogrešno objavljenog primjerka zvanične Odluke Konkursa iz `KN-FS-003` v0.1.16 §15.7.5.
+Ovo pravilo **ne** uređuje source-specific korekciju, povlačenje, ponovnu objavu ni trajno uklanjanje zvanične Odluke Konkursa iz `KN-BM-003` §15.4 / `KN-FS-003` v0.1.21 §15.7.5 / §16.8–§16.16.
 
 Kriterijum „odgovarajuće“ zamjene nije usvojen (OFD-OB-001).
 
@@ -249,7 +281,7 @@ Kriterijum „odgovarajuće“ zamjene nije usvojen (OFD-OB-001).
 
 **Pokriva:** UC-OB-003, UC-OB-004 · **FR:** FR-OB-011 do FR-OB-014, FR-OB-005 do FR-OB-010
 
-**Napomena:** Za zvaničnu Odluku Konkursa spremnost i radnju objave određuje izvorni modul Konkursi prema `KN-FS-003` v0.1.16 §15.7.1. OFD-OB-006 ostaje generički OTVORENO.
+**Napomena:** Za zvaničnu Odluku Konkursa spremnost i radnju objave određuje izvorni modul Konkursi prema `KN-FS-003` v0.1.21 §15.7.1. OFD-OB-006 ostaje generički OTVORENO.
 
 ## FS-OB-FLOW-03 — Zamjena u aktivnom panelu
 
@@ -258,9 +290,9 @@ Kriterijum „odgovarajuće“ zamjene nije usvojen (OFD-OB-001).
 3. Zamjena sama po sebi ne briše niti uništava zvanični sadržaj i ne podrazumijeva automatsko arhiviranje ni automatski gubitak javne dostupnosti.
 
 **Pokriva:** UC-OB-005 · **FR:** FR-OB-015, FR-OB-016  
-**Napomena:** kriterijum „odgovarajuće“ i ponašanje bez zamjene ostaju OFD. Ovaj tok **ne** uređuje source-specific korekciju pogrešno objavljenog primjerka zvanične Odluke Konkursa iz `KN-FS-003` v0.1.16 §15.7.5 i **ne** uvodi univerzalno pravilo da svako Obavještenje sklonjeno s panela gubi javni pristup.
+**Napomena:** kriterijum „odgovarajuće“ i ponašanje bez zamjene ostaju OFD. Ovaj tok **ne** uređuje source-specific korekciju, povlačenje, ponovnu objavu ni trajno uklanjanje zvanične Odluke Konkursa iz `KN-BM-003` §15.4 / `KN-FS-003` v0.1.21 §15.7.5 / §16.8–§16.16 i **ne** uvodi univerzalno pravilo da svako Obavještenje sklonjeno s panela gubi javni pristup.
 
-**Broj funkcionalnih tokova:** 3
+**Broj funkcionalnih tokova:** 3. Source-specific KN channel naredbe **nisu** novi `FS-OB-FLOW-*` identifikatori.
 
 ---
 
@@ -363,6 +395,8 @@ Kriterijum „odgovarajuće“ zamjene nije usvojen (OFD-OB-001).
 | **Acceptance criteria** | Given javno vidljivo Obavještenje sa naslovom, When javnost pregleda panel, Then naslov tog Obavještenja je prikazan. |
 | **Status** | USVOJENO |
 
+**Napomena (source-specific, ne novi FR):** Za zvaničnu Odluku Konkursa naslov koji FT-004 prikazuje je poslovni naziv koji KN preda kanalu. FT-004 ga **ne** generiše.
+
 ---
 
 ## FR-OB-006 — Prikaz reference na zvanični sadržaj
@@ -441,7 +475,7 @@ Kriterijum „odgovarajuće“ zamjene nije usvojen (OFD-OB-001).
 | **Acceptance criteria** | Given Obavještenje koje referencira dinamički sadržaj ili statički dokument, When javnost pristupi referenci, Then pristup je funkcionalno dozvoljen u oba slučaja kao javni zvanični sadržaj. |
 | **Status** | USVOJENO |
 
-**Napomena:** Oba oblika ostaju dozvoljena za FT-004 kao cjelinu. Za **zvaničnu Odluku Konkursa** `KN-FS-003` v0.1.16 konkretizuje izbor: javni objekat je potpisani elektronski primjerak. To **ne** proglašava da svi izvori FT-004 moraju koristiti fajl.
+**Napomena:** Oba oblika ostaju dozvoljena za FT-004 kao cjelinu. Za **zvaničnu Odluku Konkursa** `KN-FS-003` v0.1.21 konkretizuje izbor: javni objekat je potpisani elektronski primjerak. To **ne** proglašava da svi izvori FT-004 moraju koristiti fajl.
 
 ---
 
@@ -462,7 +496,7 @@ Kriterijum „odgovarajuće“ zamjene nije usvojen (OFD-OB-001).
 | **Acceptance criteria** | Given da je Obavještenje javno vidljivo, When neprijavljeni posjetilac pristupa referenciranom sadržaju, Then sadržaj je dostupan kroz javni mehanizam pristupa bez zahtjeva za korišćenjem administrativnog interfejsa. |
 | **Status** | USVOJENO |
 
-**Napomena:** Ovo pravilo važi **dok je Obavještenje javno vidljivo**. **Ne** prepisuje se u generičko pravilo da Obavještenje koje nije u aktivnom panelu nikad nije javno dostupno. Source-specific korekcija pogrešno objavljenog primjerka zvanične Odluke Konkursa (`KN-FS-003` v0.1.16 §15.7.5) je binding konkretnog izvora, ne izmjena generičke semantike svih Notice zapisa.
+**Napomena:** Ovo pravilo važi **dok je Obavještenje javno vidljivo**. **Ne** prepisuje se u generičko pravilo da Obavještenje koje nije u aktivnom panelu nikad nije javno dostupno. Source-specific korekcija, povlačenje i trajno uklanjanje zvanične Odluke Konkursa (`KN-BM-003` §15.4; `KN-FS-003` v0.1.21 §15.7.5 / §16.10 / §16.12 / §16.14) su binding konkretnog izvora, ne izmjena generičke semantike svih Notice zapisa.
 
 ---
 
@@ -483,7 +517,7 @@ Kriterijum „odgovarajuće“ zamjene nije usvojen (OFD-OB-001).
 | **Acceptance criteria** | Given poslovni proces izvorne funkcionalnosti, When se razmatra javna objava zvaničnog sadržaja, Then odluku o tome da li je sadržaj spreman ili obavezan za objavu donosi izvorna funkcionalnost. |
 | **Status** | USVOJENO |
 
-**Napomena:** Tačno stanje-okidač po izvornoj funkcionalnosti nije usvojeno (OFD-OB-006 ostaje generički OTVORENO). Za zvaničnu Odluku Konkursa konkretna radnja objave određena je u `KN-FS-003` v0.1.16 §15.7.1.
+**Napomena:** Tačno stanje-okidač po izvornoj funkcionalnosti nije usvojeno (OFD-OB-006 ostaje generički OTVORENO). Za zvaničnu Odluku Konkursa konkretna radnja objave određena je u `KN-FS-003` v0.1.21 §15.7.1.
 
 ---
 
@@ -582,7 +616,7 @@ Kriterijum „odgovarajuće“ zamjene nije usvojen (OFD-OB-001).
 | **Acceptance criteria** | Given zamjenu starijeg Obavještenja novim u aktivnom panelu, When se posmatra posljedično značenje zamjene, Then zamjena sama po sebi ne predstavlja brisanje, uništavanje, automatsko arhiviranje ni automatski gubitak javne dostupnosti referenciranog zvaničnog sadržaja. |
 | **Status** | USVOJENO |
 
-**Napomena:** Dugoročna dostupnost / arhiva ostaju OFD-OB-004; ovaj zahtjev ne usvaja arhivu. Ovo pravilo **ne** uređuje source-specific korekciju pogrešno objavljenog primjerka zvanične Odluke Konkursa iz `KN-FS-003` v0.1.16 §15.7.5.
+**Napomena:** Dugoročna dostupnost / arhiva ostaju OFD-OB-004; ovaj zahtjev ne usvaja arhivu. Ovo pravilo **ne** uređuje source-specific korekciju, povlačenje, ponovnu objavu ni trajno uklanjanje zvanične Odluke Konkursa iz `KN-BM-003` §15.4 / `KN-FS-003` v0.1.21 §15.7.5 / §16.8–§16.16.
 
 ---
 
@@ -669,12 +703,12 @@ Ove odluke **nisu** usvojeni zahtjevi. Značenje pitanja nije mijenjano u odnosu
 | OFD-OB-009 | Da li se redoslijed određuje vremenom objave, poslovnim značajem ili drugim pravilom? | Panel | UC-OB-001 | BM §11.9 | Da |
 | OFD-OB-010 | Postoji li maksimalan broj vidljivih Obavještenja na početnoj stranici? | Panel | UC-OB-001, UC-OB-005 | BM §11.10 | Da |
 
-**Broj otvorenih funkcionalnih odluka:** 10 (generički). Nijedna OFD nije zatvorena ovim PATCH-om.
+**Broj otvorenih funkcionalnih odluka:** 10 (generički). Nijedna OFD nije zatvorena ovim PATCH-om. Nijedna OFD **nije** RESOLVED / CLOSED / IMPLEMENTED generički.
 
 **Source-specific napomene (ne zatvaraju OFD generički i nisu univerzalno pravilo FT-004):**
 
-* **OFD-OB-006:** Za zvaničnu Odluku Konkursa konkretan okidač/radnja objave određeni su `KN-FS-003` v0.1.16 §15.7.1 (izvorni modul Konkursi; Administrator konkursa pokreće objavu). Za ostale izvore OFD-OB-006 ostaje OTVORENO.
-* **OFD-OB-007:** Za korekciju pogrešno objavljenog primjerka zvanične Odluke Konkursa konkretno ponašanje određuje `KN-FS-003` v0.1.16 §15.7.5. Za druge izvore pitanje ostaje OTVORENO.
+* **OFD-OB-006:** Za zvaničnu Odluku Konkursa konkretan okidač/radnja objave određeni su `KN-FS-003` v0.1.21 §15.7.1 (izvorni modul Konkursi; Administrator konkursa pokreće objavu). Za ostale izvore OFD-OB-006 ostaje OTVORENO.
+* **OFD-OB-007:** Za zvaničnu Odluku Konkursa source-specific ponašanje korekcije, metadata update, povlačenja, ponovne objave i ukidanja dostupnosti određuju `KN-BM-003` v1.0.6 §15.4 i `KN-FS-003` v0.1.21 §15.7.5 / §16.8–§16.16. KN lifecycle **ne** rješava ponašanje drugih source modula. Za druge izvore pitanje ostaje OTVORENO.
 
 ---
 
