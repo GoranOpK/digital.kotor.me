@@ -6,7 +6,7 @@
     $canManageOfficialDecision = isset($isCompetitionAdmin)
         && $isCompetitionAdmin
         && in_array($competition->status, ['closed', 'completed'], true);
-    $hasSignedCopyPublication = \App\Models\CompetitionOfficialDecisionCopy::competitionHasPublishedSignedCopy($competition->id);
+    $hasSignedCopyPublication = \App\Models\CompetitionOfficialDecisionCopy::competitionHasNonTombstonedSignedCopyPublication($competition->id);
     $activeSignedCopyNotices = \App\Models\CompetitionOfficialDecisionCopy::activeSignedCopyNotices($competition->id);
     $hasExactlyOneActivePublication = $activeSignedCopyNotices->count() === 1;
 @endphp
@@ -24,7 +24,23 @@
                     @if($copy->uploadedBy)
                         — postavio {{ $copy->uploadedBy->name }}
                     @endif
-                    @if($copy->isCurrentlyPublished())
+                    @if($copy->permanently_deleted_at !== null)
+                        <span style="color: #6b7280; font-weight: 600;"> — Trajno obrisan</span>
+                        @if($copy->business_title)
+                            <span style="color: #6b7280;"> — {{ $copy->business_title }}</span>
+                        @endif
+                        @if($copy->business_published_on)
+                            <span style="color: #6b7280;"> — {{ $copy->business_published_on->format('d.m.Y') }}</span>
+                        @endif
+                    @elseif($copy->permanent_delete_pending_at !== null)
+                        <span style="color: #92400e; font-weight: 600;"> — Trajno brisanje je u toku</span>
+                        @if($canManageOfficialDecision)
+                            <form class="official-decision-permanent-delete-form" method="POST" action="{{ route('admin.competitions.official-decision.permanent-delete', [$competition, $copy]) }}" style="display: inline; margin-top: 8px;" onsubmit="return confirm('Ponoviti trajno brisanje? Ova radnja je nepovratna. Potpisani primjerak će biti fizički uklonjen i neće moći biti vraćen kroz Platformu.');">
+                                @csrf
+                                <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Ponovi trajno brisanje</button>
+                            </form>
+                        @endif
+                    @elseif($copy->isCurrentlyPublished())
                         <span style="color: #065f46; font-weight: 600;"> — Objavljeno</span>
                         @if($canManageOfficialDecision)
                             <form class="official-decision-metadata-form" method="POST" action="{{ route('admin.competitions.official-decision.update-metadata', [$competition, $copy]) }}" style="display: block; margin-top: 8px;">
@@ -43,6 +59,10 @@
                             <form method="POST" action="{{ route('admin.competitions.official-decision.unpublish', [$competition, $copy]) }}" style="display: inline; margin-top: 8px;" onsubmit="return confirm('Povuci objavu? Potpisani primjerak ostaje sačuvan interno, ali više neće biti javno dostupan.');">
                                 @csrf
                                 <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Povuci objavu</button>
+                            </form>
+                            <form class="official-decision-permanent-delete-form" method="POST" action="{{ route('admin.competitions.official-decision.permanent-delete', [$competition, $copy]) }}" style="display: inline; margin-top: 8px;" onsubmit="return confirm('Trajno obrisati? Ova radnja je nepovratna. Potpisani primjerak će biti fizički uklonjen i neće moći biti vraćen kroz Platformu.');">
+                                @csrf
+                                <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Trajno obriši</button>
                             </form>
                         @endif
                     @elseif($canManageOfficialDecision && ! $hasSignedCopyPublication)
@@ -67,6 +87,10 @@
                             </div>
                             <p style="margin: 0 0 8px; color: #6b7280; font-size: 13px;">PDF se ne mijenja. Ponovo se objavljuje isti sačuvani primjerak.</p>
                             <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Ponovo objavi</button>
+                        </form>
+                        <form class="official-decision-permanent-delete-form" method="POST" action="{{ route('admin.competitions.official-decision.permanent-delete', [$competition, $copy]) }}" style="display: inline; margin-top: 8px;" onsubmit="return confirm('Trajno obrisati? Ova radnja je nepovratna. Potpisani primjerak će biti fizički uklonjen i neće moći biti vraćen kroz Platformu.');">
+                            @csrf
+                            <button type="submit" class="btn btn-success" style="margin-left: 0; padding: 6px 12px; font-size: 13px;">Trajno obriši</button>
                         </form>
                     @elseif($canManageOfficialDecision && $hasExactlyOneActivePublication && ! $copy->hasBeenPublished())
                         <form class="official-decision-correct-form" method="POST" action="{{ route('admin.competitions.official-decision.correct', [$competition, $copy]) }}" style="display: block; margin-top: 8px;" onsubmit="return confirm('Korigovati objavu? Pogrešni primjerak više neće biti javno dostupan.');">

@@ -577,6 +577,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
                 ->name('competitions.official-decision.unpublish');
             Route::post('/competitions/{competition}/official-decision/{copy}/republish', [CompetitionOfficialDecisionController::class, 'republish'])
                 ->name('competitions.official-decision.republish');
+            Route::post('/competitions/{competition}/official-decision/{copy}/permanent-delete', [CompetitionOfficialDecisionController::class, 'permanentlyDelete'])
+                ->name('competitions.official-decision.permanent-delete');
             Route::delete('/competitions/{competition}', [AdminController::class, 'destroyCompetition'])->name('competitions.destroy');
         });
     });

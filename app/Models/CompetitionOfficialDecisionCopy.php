@@ -82,6 +82,25 @@ class CompetitionOfficialDecisionCopy extends Model
             ->exists();
     }
 
+    public static function competitionHasNonTombstonedSignedCopyPublication(int $competitionId): bool
+    {
+        $copyIds = static::query()
+            ->where('competition_id', $competitionId)
+            ->whereNull('permanently_deleted_at')
+            ->pluck('id');
+
+        if ($copyIds->isEmpty()) {
+            return false;
+        }
+
+        return Notice::query()
+            ->where('source_type', 'competition_decision')
+            ->where('source_id', $competitionId)
+            ->where('content_delivery', 'competition_decision_signed_copy')
+            ->whereIn('source_object_id', $copyIds)
+            ->exists();
+    }
+
     public static function activeSignedCopyNotices(int $competitionId)
     {
         return static::activeSignedCopyNoticesQuery($competitionId)->get();

@@ -118,6 +118,7 @@ class RestrictRoleModuleAccess
                 'admin.competitions.official-decision.store',
                 'admin.competitions.official-decision.publish',
                 'admin.competitions.official-decision.correct',
+                'admin.competitions.official-decision.permanent-delete',
                 'applications.create',
                 'applications.business-plan.create',
                 'applications.document.view',

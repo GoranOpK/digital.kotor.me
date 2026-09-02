@@ -359,7 +359,7 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         $page->assertOk();
         $page->assertSee('Povuci objavu', false);
         $page->assertDontSee('Ponovo objavi', false);
-        $page->assertDontSee('Trajno obriši', false);
+        $page->assertSee('Trajno obriši', false);
 
         $response = $this->actingAs($admin)->post(
             route('admin.competitions.official-decision.unpublish', [$competition, $copy]),

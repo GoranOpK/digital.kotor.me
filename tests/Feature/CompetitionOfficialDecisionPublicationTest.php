@@ -548,7 +548,7 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $after->assertSee('Ispravi podatke objave', false);
         $after->assertSee('Povuci objavu', false);
         $after->assertDontSee('Ponovo objavi', false);
-        $after->assertDontSee('Trajno obriši', false);
+        $after->assertSee('Trajno obriši', false);
     }
 
     public function test_konkurs_admin_can_correct_wrongly_published_signed_copy(): void
@@ -1000,7 +1000,60 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $page->assertSee('Povuci objavu', false);
         $page->assertDontSee('Ponovo objavi', false);
         $page->assertDontSee('Zamijeni', false);
-        $page->assertDontSee('Izbriši', false);
+        $page->assertDontSee('>Izbriši</', false);
+        $page->assertSee('Trajno obriši', false);
+    }
+
+    public function test_pending_copy_cannot_be_used_for_correction(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition, 'COPY-A-BYTES', 'Naziv A');
+        $copyB = $this->createCopyWithFile($competition, 'COPY-B-BYTES', 'Naziv B');
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+            $this->firstPublishPayload(),
+        )->assertRedirect();
+
+        $copyB->forceFill(['permanent_delete_pending_at' => now()])->save();
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copyB]),
+            $this->correctionPayload(),
+        )->assertNotFound();
+
+        $this->assertTrue(Notice::query()->sole()->publicly_available);
+        $this->assertFalse($copyB->fresh()->hasBeenPublished());
+        $this->assertSame($copyB->storage_path, $copyB->fresh()->storage_path);
+        Storage::disk('local')->assertExists($copyB->storage_path);
+    }
+
+    public function test_permanently_deleted_copy_cannot_be_used_for_correction(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition, 'COPY-A-BYTES', 'Naziv A');
+        $copyB = $this->createCopyWithFile($competition, 'COPY-B-BYTES', 'COPY-B-BYTES');
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+            $this->firstPublishPayload(),
+        )->assertRedirect();
+
+        $copyB->forceFill([
+            'permanently_deleted_at' => now(),
+            'permanently_deleted_by' => $admin->id,
+        ])->save();
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.correct', [$competition, $copyB]),
+            $this->correctionPayload(),
+        )->assertNotFound();
+
+        $this->assertTrue(Notice::query()->sole()->publicly_available);
+        $this->assertFalse($copyB->fresh()->hasBeenPublished());
+        Storage::disk('local')->assertExists($copyB->storage_path);
     }
 
     public function test_first_publish_without_business_date_is_rejected(): void

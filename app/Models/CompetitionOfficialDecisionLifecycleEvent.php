@@ -20,6 +20,10 @@ class CompetitionOfficialDecisionLifecycleEvent extends Model
 
     public const ACTION_REPUBLISHED = 'official_decision_republished';
 
+    public const ACTION_PERMANENT_DELETE_STARTED = 'official_decision_permanent_delete_started';
+
+    public const ACTION_PERMANENT_DELETE_COMPLETED = 'official_decision_permanent_delete_completed';
+
     protected $table = 'competition_official_decision_lifecycle_events';
 
     protected $fillable = [
