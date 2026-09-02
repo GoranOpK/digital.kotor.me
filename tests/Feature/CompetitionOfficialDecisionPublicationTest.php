@@ -1096,12 +1096,22 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $copy = $this->createCopyWithFile($competition);
         $past = now()->subDays(10)->toDateString();
 
+        Notice::factory()->withoutDescription()->create([
+            'title' => 'Drugi Notice bez KN datuma FT8',
+            'source_type' => 'other_source',
+            'source_id' => 4242,
+            'content_delivery' => 'unsupported',
+            'visible_in_active_panel' => true,
+            'public_display_date' => null,
+            'published_at' => now()->subDays(20),
+        ]);
+
         $this->actingAs($admin)->post(
             route('admin.competitions.official-decision.publish', [$competition, $copy]),
             $this->firstPublishPayload($past),
         )->assertRedirect();
 
-        $notice = Notice::query()->sole();
+        $notice = Notice::query()->where('source_object_id', $copy->id)->sole();
         $copy->refresh();
 
         $this->assertSame($past, optional($copy->business_published_on)?->toDateString());
@@ -1111,6 +1121,17 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $this->assertNotSame($past, $notice->published_at->toDateString());
         $this->assertSame($copy->id, $notice->source_object_id);
         $this->assertSame($copy->business_title, $notice->title);
+
+        auth()->logout();
+        $this->assertHomePanelShowsBusinessDate($copy->business_title, $past);
+        $panelItem = $this->homePanelItemHtml($copy->business_title);
+        $this->assertStringNotContainsString($notice->published_at->format('d.m.Y'), $panelItem);
+        $direct = $this->get(route('notices.public-content', $notice));
+        $direct->assertOk();
+        $this->assertInstanceOf(BinaryFileResponse::class, $direct->baseResponse);
+        $this->assertHomePanelOmitsBusinessDate('Drugi Notice bez KN datuma FT8');
+        $otherItem = $this->homePanelItemHtml('Drugi Notice bez KN datuma FT8');
+        $this->assertStringNotContainsString(\Illuminate\Support\Carbon::parse($past)->format('d.m.Y'), $otherItem);
     }
 
     public function test_first_publish_rejects_future_business_date(): void
@@ -1235,9 +1256,18 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $competition = $this->createCompletedCompetition();
         $copy = $this->createCopyWithFile($competition, 'SIGNED-A-BYTES', 'Naziv signed A');
         $html = $this->legacyHtmlNotice($competition, [
+            'title' => 'Legacy HTML Odluka',
             'visible_in_active_panel' => true,
             'publicly_available' => true,
+            'public_display_date' => null,
+            'published_at' => now()->subDays(9),
+            'short_description' => null,
         ]);
+
+        auth()->logout();
+        $this->assertHomePanelOmitsBusinessDate('Legacy HTML Odluka');
+        $leftoverItem = $this->homePanelItemHtml('Legacy HTML Odluka');
+        $this->assertStringNotContainsString($html->published_at->format('d.m.Y'), $leftoverItem);
 
         $this->actingAs($admin)->post(
             route('admin.competitions.official-decision.publish', [$competition, $copy]),
@@ -1259,6 +1289,8 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $this->assertSame('SIGNED-A-BYTES', $this->servedFileContents(
             $this->get(route('notices.public-content', $signed))
         ));
+        $this->assertHomePanelShowsBusinessDate('Naziv signed A', optional($signed->public_display_date)?->toDateString());
+        $this->get(route('home'))->assertDontSee('Legacy HTML Odluka', false);
     }
 
     public function test_correction_revokes_leftover_html_and_leaves_one_current_publication(): void
@@ -1337,6 +1369,14 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $this->assertNotNull($noticeB->published_at);
         $this->assertTrue($noticeB->published_at->isSameDay(now()));
         $this->assertNotSame($dateB, $noticeB->published_at->toDateString());
+
+        auth()->logout();
+        $this->assertHomePanelShowsBusinessDate('Kanonski naziv B', $dateB);
+        $this->get(route('home'))->assertDontSee('Naziv A', false);
+        $this->assertInstanceOf(
+            BinaryFileResponse::class,
+            $this->get(route('notices.public-content', $noticeB))->baseResponse
+        );
     }
 
     public function test_correction_future_business_date_is_rejected(): void
@@ -1661,5 +1701,46 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $this->assertTrue($noticeA->visible_in_active_panel);
         $this->assertFalse($copyB->fresh()->hasBeenPublished());
         Event::assertNotDispatched(OfficialContentReadyForPublicPublication::class);
+    }
+
+    private function homePanelItemHtml(string $title): string
+    {
+        $html = $this->get(route('home'))->assertOk()->getContent();
+        $this->assertStringContainsString($title, $html);
+
+        $this->assertTrue(
+            (bool) preg_match('/<section class="obavjestenja-panel"[\s\S]*?<\/section>/u', $html, $panel),
+            'Obavještenja panel was not found on home.'
+        );
+
+        $quoted = preg_quote($title, '/');
+        $this->assertTrue(
+            (bool) preg_match(
+                '/<li\b[^>]*>((?:(?!<\/li>).)*'.$quoted.'(?:(?!<\/li>).)*)<\/li>/us',
+                $panel[0],
+                $matches
+            ),
+            'Home panel item for ['.$title.'] was not found.'
+        );
+
+        return $matches[0];
+    }
+
+    private function assertHomePanelShowsBusinessDate(string $title, string $isoDate): void
+    {
+        $item = $this->homePanelItemHtml($title);
+        $visible = \Illuminate\Support\Carbon::parse($isoDate)->format('d.m.Y');
+
+        $this->assertStringContainsString('Datum objave', $item);
+        $this->assertStringContainsString('datetime="'.$isoDate.'"', $item);
+        $this->assertStringContainsString('>'.$visible.'</time>', $item);
+    }
+
+    private function assertHomePanelOmitsBusinessDate(string $title): void
+    {
+        $item = $this->homePanelItemHtml($title);
+
+        $this->assertStringNotContainsString('Datum objave', $item);
+        $this->assertStringNotContainsString('<time', $item);
     }
 }

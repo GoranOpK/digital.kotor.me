@@ -19,6 +19,11 @@
                                 {{ $notice->title }}
                             </a>
                         </h3>
+                        @if($notice->public_display_date)
+                            <p style="margin: 0 0 8px; color: #6b7280; font-size: 13px;">
+                                Datum objave: <time datetime="{{ $notice->public_display_date->toDateString() }}">{{ $notice->public_display_date->format('d.m.Y') }}</time>
+                            </p>
+                        @endif
                         @if(filled($notice->short_description))
                             <p style="margin: 0 0 8px; color: #4b5563; font-size: 14px;">
                                 {{ $notice->short_description }}

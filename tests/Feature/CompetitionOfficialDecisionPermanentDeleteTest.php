@@ -60,6 +60,7 @@ class CompetitionOfficialDecisionPermanentDeleteTest extends TestCase
             route('admin.competitions.official-decision.permanent-delete', [$competition, $copy]),
         )->assertStatus(405);
 
+        $this->assertHomePanelShowsBusinessDate('Naziv za trajno brisanje', $publishedOn);
         $directBefore = $this->get(route('notices.public-content', $notice));
         $directBefore->assertOk();
         $this->assertInstanceOf(BinaryFileResponse::class, $directBefore->baseResponse);
@@ -522,6 +523,11 @@ class CompetitionOfficialDecisionPermanentDeleteTest extends TestCase
         $this->assertNotNull(Notice::query()->where('source_object_id', $copyA->id)->first());
         $this->assertTrue(CompetitionOfficialDecisionCopy::competitionHasNonTombstonedSignedCopyPublication($competition->id));
 
+        auth()->logout();
+        $this->assertHomePanelShowsBusinessDate('Naziv B', $dateB);
+        $this->get(route('home'))->assertDontSee('Naziv A', false);
+        $this->actingAs($admin);
+
         $copyC = $this->createCopyWithFile($competition, 'COPY-C-BYTES', 'Naziv C');
         $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
             route('admin.competitions.official-decision.publish', [$competition, $copyC]),
@@ -885,5 +891,38 @@ class CompetitionOfficialDecisionPermanentDeleteTest extends TestCase
             CompetitionOfficialDecisionLifecycleEvent::ACTION_PERMANENT_DELETE_STARTED,
             CompetitionOfficialDecisionLifecycleEvent::ACTION_PERMANENT_DELETE_COMPLETED,
         ])->count());
+    }
+
+    private function homePanelItemHtml(string $title): string
+    {
+        $html = $this->get(route('home'))->assertOk()->getContent();
+        $this->assertStringContainsString($title, $html);
+
+        $this->assertTrue(
+            (bool) preg_match('/<section class="obavjestenja-panel"[\s\S]*?<\/section>/u', $html, $panel),
+            'Obavještenja panel was not found on home.'
+        );
+
+        $quoted = preg_quote($title, '/');
+        $this->assertTrue(
+            (bool) preg_match(
+                '/<li\b[^>]*>((?:(?!<\/li>).)*'.$quoted.'(?:(?!<\/li>).)*)<\/li>/us',
+                $panel[0],
+                $matches
+            ),
+            'Home panel item for ['.$title.'] was not found.'
+        );
+
+        return $matches[0];
+    }
+
+    private function assertHomePanelShowsBusinessDate(string $title, string $isoDate): void
+    {
+        $item = $this->homePanelItemHtml($title);
+        $visible = \Illuminate\Support\Carbon::parse($isoDate)->format('d.m.Y');
+
+        $this->assertStringContainsString('Datum objave', $item);
+        $this->assertStringContainsString('datetime="'.$isoDate.'"', $item);
+        $this->assertStringContainsString('>'.$visible.'</time>', $item);
     }
 }

@@ -122,6 +122,10 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         );
 
         $this->get(route('home'))->assertSee($newTitle, false);
+        $this->get(route('home'))->assertDontSee('Stari poslovni naziv', false);
+        $this->assertHomePanelShowsBusinessDate($newTitle, $newDate);
+        $item = $this->homePanelItemHtml($newTitle);
+        $this->assertStringNotContainsString(now()->subDays(8)->format('d.m.Y'), $item);
         $direct = $this->get(route('notices.public-content', $notice));
         $direct->assertOk();
         $this->assertSame('METADATA-PDF-BYTES', $this->servedFileContents($direct));
@@ -352,7 +356,7 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         $yearBefore = $competition->fresh()->year;
         $noticesBefore = Notice::query()->count();
 
-        $this->get(route('home'))->assertSee($title, false);
+        $this->assertHomePanelShowsBusinessDate($title, $publishedOn);
         $this->get(route('notices.public-content', $notice))->assertOk();
 
         $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
@@ -646,6 +650,14 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
 
         $this->get(route('home'))->assertSee($newTitle, false);
         $this->get(route('home'))->assertDontSee('Naziv prije ponovne objave', false);
+        $this->assertHomePanelShowsBusinessDate($newTitle, $newDate);
+        $republishItem = $this->homePanelItemHtml($newTitle);
+        $this->assertStringNotContainsString($noticeB->published_at->format('d.m.Y H:i'), $republishItem);
+        $businessVisible = \Illuminate\Support\Carbon::parse($newDate)->format('d.m.Y');
+        $this->assertStringContainsString($businessVisible, $republishItem);
+        if ($noticeB->published_at->format('d.m.Y') !== $businessVisible) {
+            $this->assertStringNotContainsString($noticeB->published_at->format('d.m.Y'), $republishItem);
+        }
 
         $newPublic = $this->get(route('notices.public-content', $noticeB));
         $newPublic->assertOk();
@@ -1285,5 +1297,38 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
             'activation_status' => 'active',
             'email_verified_at' => now(),
         ]);
+    }
+
+    private function homePanelItemHtml(string $title): string
+    {
+        $html = $this->get(route('home'))->assertOk()->getContent();
+        $this->assertStringContainsString($title, $html);
+
+        $this->assertTrue(
+            (bool) preg_match('/<section class="obavjestenja-panel"[\s\S]*?<\/section>/u', $html, $panel),
+            'Obavještenja panel was not found on home.'
+        );
+
+        $quoted = preg_quote($title, '/');
+        $this->assertTrue(
+            (bool) preg_match(
+                '/<li\b[^>]*>((?:(?!<\/li>).)*'.$quoted.'(?:(?!<\/li>).)*)<\/li>/us',
+                $panel[0],
+                $matches
+            ),
+            'Home panel item for ['.$title.'] was not found.'
+        );
+
+        return $matches[0];
+    }
+
+    private function assertHomePanelShowsBusinessDate(string $title, string $isoDate): void
+    {
+        $item = $this->homePanelItemHtml($title);
+        $visible = \Illuminate\Support\Carbon::parse($isoDate)->format('d.m.Y');
+
+        $this->assertStringContainsString('Datum objave', $item);
+        $this->assertStringContainsString('datetime="'.$isoDate.'"', $item);
+        $this->assertStringContainsString('>'.$visible.'</time>', $item);
     }
 }

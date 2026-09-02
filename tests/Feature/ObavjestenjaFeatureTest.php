@@ -151,6 +151,114 @@ class ObavjestenjaFeatureTest extends TestCase
             ->assertSee(route('notices.public-content', $notice, false), false);
     }
 
+    public function test_panel_shows_public_display_date_as_datum_objave_in_d_m_y_format(): void
+    {
+        Storage::fake('local');
+        $competition = $this->createCompletedCompetition('Konkurs za FT8 datum');
+        $copy = $this->createSignedCopy($competition, 'FT8-PRIVACY-BYTES');
+
+        $notice = Notice::factory()->withoutDescription()->create([
+            'title' => 'Naslov sa poslovnim datumom FT8',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'source_object_id' => $copy->id,
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => true,
+            'public_display_date' => '2026-01-15',
+            'published_at' => '2026-08-20 11:22:33',
+        ]);
+
+        $item = $this->homePanelItemHtml('Naslov sa poslovnim datumom FT8');
+
+        $this->assertStringContainsString('Datum objave', $item);
+        $this->assertStringContainsString('datetime="2026-01-15"', $item);
+        $this->assertStringContainsString('>15.01.2026</time>', $item);
+        $this->assertStringNotContainsString('>2026-01-15</time>', $item);
+        $this->assertStringNotContainsString('20.08.2026', $item);
+        $this->assertStringNotContainsString('11:22:33', $item);
+        $this->assertStringNotContainsString($copy->storage_path, $item);
+        $this->assertStringNotContainsString('storage_path', $item);
+        $this->assertStringNotContainsString('uploaded_by', $item);
+        $this->assertStringNotContainsString('actor_user_id', $item);
+        $this->assertStringNotContainsString('source_object_id', $item);
+        $this->assertStringContainsString(route('notices.public-content', $notice, false), $item);
+    }
+
+    public function test_panel_omits_date_row_when_public_display_date_is_null(): void
+    {
+        Notice::factory()->withoutDescription()->create([
+            'title' => 'Naslov bez poslovnog datuma FT8',
+            'visible_in_active_panel' => true,
+            'public_display_date' => null,
+            'published_at' => '2026-03-17 09:45:00',
+        ]);
+
+        $this->assertHomePanelOmitsBusinessDate('Naslov bez poslovnog datuma FT8');
+        $item = $this->homePanelItemHtml('Naslov bez poslovnog datuma FT8');
+        $this->assertStringNotContainsString('17.03.2026', $item);
+        $this->assertStringNotContainsString('09:45:00', $item);
+    }
+
+    public function test_ordinary_notice_without_public_display_date_keeps_pre_phase_8_panel_shape(): void
+    {
+        Notice::factory()->withoutDescription()->create([
+            'title' => 'Ordinary Notice FT8 izolacija',
+            'source_type' => 'other_source',
+            'content_delivery' => 'unsupported',
+            'visible_in_active_panel' => true,
+            'public_display_date' => null,
+            'published_at' => '2026-04-11 16:05:00',
+        ]);
+
+        Notice::factory()->withoutDescription()->create([
+            'title' => 'KN signed-copy sa datumom FT8',
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => true,
+            'public_display_date' => '2026-01-15',
+            'published_at' => '2026-08-20 11:22:33',
+        ]);
+
+        $ordinary = $this->homePanelItemHtml('Ordinary Notice FT8 izolacija');
+        $this->assertStringNotContainsString('Datum objave', $ordinary);
+        $this->assertStringNotContainsString('<time', $ordinary);
+        $this->assertStringNotContainsString('11.04.2026', $ordinary);
+        $this->assertStringNotContainsString('16:05:00', $ordinary);
+
+        $this->assertHomePanelShowsBusinessDate('KN signed-copy sa datumom FT8', '2026-01-15');
+    }
+
+    public function test_leftover_html_notice_without_public_display_date_has_no_date_row(): void
+    {
+        Notice::factory()->withoutDescription()->create([
+            'title' => 'Legacy HTML Odluka FT8',
+            'source_type' => 'competition_decision',
+            'content_delivery' => 'competition_decision_html',
+            'visible_in_active_panel' => true,
+            'public_display_date' => null,
+            'published_at' => '2026-05-09 08:00:00',
+        ]);
+
+        $this->assertHomePanelOmitsBusinessDate('Legacy HTML Odluka FT8');
+        $item = $this->homePanelItemHtml('Legacy HTML Odluka FT8');
+        $this->assertStringNotContainsString('09.05.2026', $item);
+    }
+
+    public function test_signed_copy_notice_with_null_public_display_date_omits_date_row(): void
+    {
+        Notice::factory()->withoutDescription()->create([
+            'title' => 'Signed-copy bez datuma FT8',
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => true,
+            'public_display_date' => null,
+            'published_at' => '2026-07-21 13:10:00',
+        ]);
+
+        $this->assertHomePanelOmitsBusinessDate('Signed-copy bez datuma FT8');
+        $item = $this->homePanelItemHtml('Signed-copy bez datuma FT8');
+        $this->assertStringNotContainsString('21.07.2026', $item);
+        $this->assertStringNotContainsString('13:10:00', $item);
+    }
+
     public function test_guest_can_access_supported_public_content_without_authentication(): void
     {
         $competition = Competition::create([
@@ -947,5 +1055,46 @@ class ObavjestenjaFeatureTest extends TestCase
             'published_at' => now()->subDays(40),
             'closed_at' => now()->subDay(),
         ]);
+    }
+
+    private function homePanelItemHtml(string $title): string
+    {
+        $html = $this->get(route('home'))->assertOk()->getContent();
+        $this->assertStringContainsString($title, $html);
+
+        $this->assertTrue(
+            (bool) preg_match('/<section class="obavjestenja-panel"[\s\S]*?<\/section>/u', $html, $panel),
+            'Obavještenja panel was not found on home.'
+        );
+
+        $quoted = preg_quote($title, '/');
+        $this->assertTrue(
+            (bool) preg_match(
+                '/<li\b[^>]*>((?:(?!<\/li>).)*'.$quoted.'(?:(?!<\/li>).)*)<\/li>/us',
+                $panel[0],
+                $matches
+            ),
+            'Home panel item for ['.$title.'] was not found.'
+        );
+
+        return $matches[0];
+    }
+
+    private function assertHomePanelShowsBusinessDate(string $title, string $isoDate): void
+    {
+        $item = $this->homePanelItemHtml($title);
+        $visible = \Illuminate\Support\Carbon::parse($isoDate)->format('d.m.Y');
+
+        $this->assertStringContainsString('Datum objave', $item);
+        $this->assertStringContainsString('datetime="'.$isoDate.'"', $item);
+        $this->assertStringContainsString('>'.$visible.'</time>', $item);
+    }
+
+    private function assertHomePanelOmitsBusinessDate(string $title): void
+    {
+        $item = $this->homePanelItemHtml($title);
+
+        $this->assertStringNotContainsString('Datum objave', $item);
+        $this->assertStringNotContainsString('<time', $item);
     }
 }
