@@ -1133,10 +1133,18 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $this->assertNotSame($past, $notice->published_at->toDateString());
         $this->assertSame($copy->id, $notice->source_object_id);
         $this->assertSame($copy->business_title, $notice->title);
+        $this->assertSame($competition->title, $notice->short_description);
 
         auth()->logout();
         $this->assertHomePanelShowsBusinessDate($copy->business_title, $past);
         $panelItem = $this->homePanelItemHtml($copy->business_title);
+        $this->assertSame(1, substr_count($panelItem, $competition->title));
+        $this->assertMatchesRegularExpression(
+            '/<p[^>]*>\s*'.preg_quote($competition->title, '/').'\s*<\/p>\s*<h3[^>]*>\s*<a href="'.preg_quote(route('notices.public-content', $notice), '/').'"\s+target="_blank"\s+rel="noopener noreferrer"[^>]*>\s*'.preg_quote($copy->business_title, '/').'\s*<\/a>\s*<\/h3>\s*<p[^>]*>\s*Datum objave:/u',
+            $panelItem
+        );
+        $this->assertSame(1, preg_match_all('/<a\b/u', $panelItem));
+        $this->assertStringNotContainsString('Pogledaj zvanični sadržaj', $panelItem);
         $this->assertStringNotContainsString($notice->published_at->format('d.m.Y'), $panelItem);
         $direct = $this->get(route('notices.public-content', $notice));
         $direct->assertOk();

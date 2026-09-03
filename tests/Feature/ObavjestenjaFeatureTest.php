@@ -128,12 +128,39 @@ class ObavjestenjaFeatureTest extends TestCase
         Notice::factory()->create([
             'title' => 'Sa opisom',
             'short_description' => 'Kratki javni opis',
+            'source_type' => 'other_source',
+            'content_delivery' => 'unsupported',
             'visible_in_active_panel' => true,
         ]);
 
-        $this->get(route('home'))
-            ->assertOk()
-            ->assertSee('Kratki javni opis', false);
+        $item = $this->homePanelItemHtml('Sa opisom');
+
+        $this->assertStringContainsString('Kratki javni opis', $item);
+        $this->assertStringNotContainsString('target="_blank"', $item);
+        $this->assertStringNotContainsString('Pogledaj zvanični sadržaj', $item);
+    }
+
+    public function test_legacy_html_notice_still_renders_short_description(): void
+    {
+        Notice::factory()->create([
+            'title' => 'Legacy HTML Odluka sa opisom',
+            'short_description' => 'HTML opis ostaje vidljiv',
+            'source_type' => 'competition_decision',
+            'content_delivery' => 'competition_decision_html',
+            'visible_in_active_panel' => true,
+            'public_display_date' => null,
+        ]);
+
+        $item = $this->homePanelItemHtml('Legacy HTML Odluka sa opisom');
+
+        $this->assertStringContainsString('HTML opis ostaje vidljiv', $item);
+        $this->assertStringNotContainsString('target="_blank"', $item);
+        $this->assertStringNotContainsString('rel="noopener noreferrer"', $item);
+        $this->assertStringNotContainsString('Pogledaj zvanični sadržaj', $item);
+        $this->assertStringNotContainsString(
+            'Javni pregled zvaničnog sadržaja nastalog u drugim funkcionalnostima Digital Kotor.',
+            $item
+        );
     }
 
     public function test_short_description_is_omitted_when_null(): void
@@ -245,6 +272,7 @@ class ObavjestenjaFeatureTest extends TestCase
             'source_object_id' => $copy->id,
             'content_delivery' => 'competition_decision_signed_copy',
             'visible_in_active_panel' => true,
+            'public_display_date' => '2026-02-18',
         ]);
 
         $item = $this->homePanelItemHtml('Poslovni naziv Odluke za panel');
@@ -252,15 +280,22 @@ class ObavjestenjaFeatureTest extends TestCase
         $competitionTitle = preg_quote($competition->title, '/');
         $decisionTitle = preg_quote($notice->title, '/');
 
-        $this->assertStringContainsString($competition->title, $item);
+        $this->assertSame('Snapshot koji nije Competition.title', $notice->short_description);
+        $this->assertSame(1, substr_count($item, $competition->title));
+        $this->assertStringNotContainsString('Snapshot koji nije Competition.title', $item);
         $this->assertDoesNotMatchRegularExpression(
             '/<a\b[^>]*>\s*'.$competitionTitle.'\s*<\/a>/u',
             $item
         );
         $this->assertMatchesRegularExpression(
-            '/<p[^>]*>\s*'.$competitionTitle.'\s*<\/p>\s*<h3[^>]*>\s*<a href="'.preg_quote($publicUrl, '/').'"\s+target="_blank"\s+rel="noopener noreferrer"[^>]*>\s*'.$decisionTitle.'\s*<\/a>/u',
+            '/<p[^>]*>\s*'.$competitionTitle.'\s*<\/p>\s*<h3[^>]*>\s*<a href="'.preg_quote($publicUrl, '/').'"\s+target="_blank"\s+rel="noopener noreferrer"[^>]*>\s*'.$decisionTitle.'\s*<\/a>\s*<\/h3>\s*<p[^>]*>\s*Datum objave: <time datetime="2026-02-18">18\.02\.2026<\/time>/u',
             $item
         );
+        $this->assertDoesNotMatchRegularExpression(
+            '/Datum objave:[\s\S]*'.$competitionTitle.'/u',
+            $item
+        );
+        $this->assertSame(1, preg_match_all('/<a\b/u', $item));
         $this->assertSame(1, substr_count($item, 'href="'.$publicUrl.'"'));
         $this->assertSame(1, substr_count($item, 'target="_blank"'));
         $this->assertSame(1, substr_count($item, 'rel="noopener noreferrer"'));
@@ -269,7 +304,6 @@ class ObavjestenjaFeatureTest extends TestCase
             'Javni pregled zvaničnog sadržaja nastalog u drugim funkcionalnostima Digital Kotor.',
             $item
         );
-        $this->assertStringContainsString('Snapshot koji nije Competition.title', $item);
     }
 
     public function test_ordinary_and_legacy_html_notices_do_not_show_competition_title(): void
@@ -278,22 +312,25 @@ class ObavjestenjaFeatureTest extends TestCase
         $competition = $this->createCompletedCompetition('KN naziv koji ordinary i HTML ne smiju vidjeti');
         $copy = $this->createSignedCopy($competition, 'SIGNED-COPY-ISOLATION');
 
-        Notice::factory()->withoutDescription()->create([
+        Notice::factory()->create([
             'title' => 'Signed-copy sa KN nazivom izolacija',
+            'short_description' => $competition->title,
             'source_type' => 'competition_decision',
             'source_id' => $competition->id,
             'source_object_id' => $copy->id,
             'content_delivery' => 'competition_decision_signed_copy',
             'visible_in_active_panel' => true,
         ]);
-        Notice::factory()->withoutDescription()->create([
+        Notice::factory()->create([
             'title' => 'Ordinary Notice bez KN naziva',
+            'short_description' => 'Ordinary kratki opis ostaje vidljiv',
             'source_type' => 'other_source',
             'content_delivery' => 'unsupported',
             'visible_in_active_panel' => true,
         ]);
-        Notice::factory()->withoutDescription()->create([
+        Notice::factory()->create([
             'title' => 'Legacy HTML Odluka bez KN naziva',
+            'short_description' => 'Legacy HTML kratki opis ostaje vidljiv',
             'source_type' => 'competition_decision',
             'source_id' => $competition->id,
             'source_object_id' => $copy->id,
@@ -305,9 +342,11 @@ class ObavjestenjaFeatureTest extends TestCase
         $ordinaryItem = $this->homePanelItemHtml('Ordinary Notice bez KN naziva');
         $legacyItem = $this->homePanelItemHtml('Legacy HTML Odluka bez KN naziva');
 
-        $this->assertStringContainsString($competition->title, $signedItem);
+        $this->assertSame(1, substr_count($signedItem, $competition->title));
         $this->assertStringNotContainsString($competition->title, $ordinaryItem);
         $this->assertStringNotContainsString($competition->title, $legacyItem);
+        $this->assertStringContainsString('Ordinary kratki opis ostaje vidljiv', $ordinaryItem);
+        $this->assertStringContainsString('Legacy HTML kratki opis ostaje vidljiv', $legacyItem);
         $this->assertStringNotContainsString('Pogledaj zvanični sadržaj', $ordinaryItem);
         $this->assertStringNotContainsString('Pogledaj zvanični sadržaj', $legacyItem);
         $this->assertStringNotContainsString('target="_blank"', $ordinaryItem);

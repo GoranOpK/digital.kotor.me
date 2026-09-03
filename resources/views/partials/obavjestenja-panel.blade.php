@@ -33,7 +33,7 @@
                                 Datum objave: <time datetime="{{ $notice->public_display_date->toDateString() }}">{{ $notice->public_display_date->format('d.m.Y') }}</time>
                             </p>
                         @endif
-                        @if(filled($notice->short_description))
+                        @if(! $opensSignedOfficialDecision && filled($notice->short_description))
                             <p style="margin: 0 0 8px; color: #4b5563; font-size: 14px;">
                                 {{ $notice->short_description }}
                             </p>
