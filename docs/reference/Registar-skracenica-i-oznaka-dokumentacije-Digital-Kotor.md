@@ -5,8 +5,8 @@
 **Naziv:** Registar skraćenica i oznaka platformske dokumentacije Digital Kotora
 **Vlasništvo:** platformski sloj Digital Kotora
 **Status dokumenta:** AKTIVAN
-**Verzija:** 1.1.0
-**Datum:** 2026-08-17
+**Verzija:** 1.2.1
+**Datum:** 2026-09-03
 
 ---
 
@@ -14,11 +14,13 @@
 
 DK-RG-001 je referentni i živi dokument. Predstavlja centralni registar skraćenica i dokumentacionih oznaka **zajedničke/platformske dokumentacije Digital Kotora**.
 
-Nije poslovni pojmovnik. Ne definiše poslovna pravila ni tehnička rješenja. Ne zamjenjuje DK-BM-001, DK-UC-001, DK-FS-001, DK-TS-001, DK-FR-001 ili DK-DS-001.
+Nije poslovni pojmovnik. Ne definiše poslovna pravila ni tehnička rješenja. Ne zamjenjuje DK-BM-001, DK-BM-002, DK-UC-001, DK-FS-001, DK-TS-001, DK-FR-001 ili DK-DS-001.
 
 Nije registar Kalendara kulture (`KK-RG-001`) i nije registar e-Plaćanja (`EP-RG-001`). Nije globalni katalog svih poslovnih oznaka svih modula.
 
-Auth, korisnici, uloge, MEGA, Plesk, deployment, project operations, handoff, architecture overview, shared landing i module access ostaju **DK REFERENCE / OPERATIONS** dok Product Owner ne otvori poseban dokumentacioni paket. Ovaj registar im **ne** dodjeljuje `DK-BM` / `DK-FS` / `DK-TS` ID-eve.
+Product Owner je otvorio dokumentacioni paket **registracije i korisničkog identiteta**. Ovaj registar mu dodjeljuje **DK-BM-002**. Dokumenti `DK-UC-002`, `DK-FS-002` i `DK-TS-002` **nisu** uvedeni.
+
+Uloge, biblioteka dokumenata, MEGA, Plesk, deployment, project operations, handoff, architecture overview, shared landing i module access ostaju **DK REFERENCE / OPERATIONS** dok Product Owner ne otvori poseban dokumentacioni paket. Ovaj registar im **ne** dodjeljuje `DK-BM` / `DK-FS` / `DK-TS` ID-eve.
 
 `docs/METHODOLOGY.md` ostaje globalna projektna metodologija i **nema** `DK-*` document ID. Normativni dokumentacioni standard platforme je **DK-DS-001**.
 
@@ -43,7 +45,7 @@ Tenderi **nemaju** usvojeni namespace.
 
 Numeracija je lokalna po namespace-u i tipu dokumenta. Lista namespace prefiksa **nije** zatvorena: novi poslovni moduli dobijaju prefiks samo Product Owner odlukom.
 
-U platformskom `DK-*` sloju **nisu** uvedeni: `DK-IS-*`, `DK-IR-*`, `DK-CR-*`, `DK-FT-*`, `DK-PATCH-*`, `DK-BM-002`, `DK-FS-002`, `DK-TS-002`.
+U platformskom `DK-*` sloju **nisu** uvedeni: `DK-IS-*`, `DK-IR-*`, `DK-CR-*`, `DK-FT-*`, `DK-PATCH-*`, `DK-UC-002`, `DK-FS-002`, `DK-TS-002`.
 
 ---
 
@@ -66,6 +68,7 @@ U platformskom `DK-*` sloju **nisu** uvedeni: `DK-IS-*`, `DK-IR-*`, `DK-CR-*`, `
 | Oznaka | Dokument | Path | Status |
 |--------|----------|------|--------|
 | **DK-BM-001** | Poslovni model Obavještenja (platformska funkcionalnost Digital Kotora) | `docs/business-model/Business_Model_Obavjestenja.md` | U IZRADI |
+| **DK-BM-002** | Poslovni model registracije i korisničkog identiteta Platforme Digital Kotor | `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md` | USVOJENO |
 | **DK-UC-001** | Use Cases Obavještenja | `docs/use-cases/Use_Cases_Obavjestenja.md` | U IZRADI |
 | **DK-FS-001** | Funkcionalna specifikacija Obavještenja | `docs/functional-specifications/Functional_Specification_Obavjestenja.md` | U IZRADI |
 | **DK-TS-001** | Tehnička specifikacija Obavještenja | `docs/technical-specifications/Technical_Specification_Obavjestenja.md` | U IZRADI |
@@ -136,7 +139,9 @@ Runtime entitet FT-004 je `Notice` (tabela `notices`), javni panel na `/`, javna
 |---------|--------|------|
 | 1.0.0 | 2026-08-17 | Uspostavljen DK-RG-001. Registrovani `DK-BM` / `DK-UC` / `DK-FS` / `DK-TS` / `DK-RG` / `DK-FR` i kanonski dokumenti `*-001`. FT-004 KEEP kao feature ID. `TS-013` → istorijski document ID; aktivni ID `DK-TS-001`. Poslovne oznake BM-OB / PO-OB / FR-OB / UC-OB / C-UC-OB / OFD-OB / PATCH-FS-OB / FS-OB-FLOW KEEP. Bez izmjene aplikacionog koda. |
 | 1.1.0 | 2026-08-17 | Registrovani `DK-DS` / `DK-DS-001`. Usvojeni namespace-i evidentiirani: KK, EP, DK, KN (Konkursi — rezervisan). Tenderi bez namespace-a. Bez kreiranja KN dokumenata. Bez izmjene FT-004 BM/UC/FS/TS sadržaja. |
+| 1.2.0 | 2026-09-03 | Product Owner otvorio dokumentacioni paket registracije i korisničkog identiteta. Registrovan `DK-BM-002` (U IZRADI). `DK-UC-002`, `DK-FS-002` i `DK-TS-002` nisu uvedeni. Uloge, biblioteka dokumenata i operations ostaju DK REFERENCE / OPERATIONS. |
+| 1.2.1 | 2026-09-03 | Status / closeout: `DK-BM-002` evidentiran kao USVOJENO. `DK-UC-002`, `DK-FS-002` i `DK-TS-002` nisu uvedeni. |
 
 ---
 
-**Kraj dokumenta DK-RG-001 v1.1.0**
+**Kraj dokumenta DK-RG-001 v1.2.1**

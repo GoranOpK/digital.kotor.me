@@ -3,7 +3,7 @@
 
 **Status dokumenta:** AKTIVAN
 **Verzija:** 1.0
-**Datum:** 2026-08-17
+**Datum:** 2026-09-03
 
 Ovo je **metodologija cijelog Digital Kotora**: proces, primjena i TS struktura.
 
@@ -66,7 +66,11 @@ Njihova svrha:
 
 **Nisu** zamjena za BM/FS/TS. **Ne** dobijaju automatski `{NS}-BM/FS/TS` ID.
 
-Auth, korisnici, uloge i biblioteka dokumenata ostaju **DK REFERENCE / OPERATIONS** dok PO ne otvori zaseban paket. Ne kreirati `DK-BM-002` / `DK-FS-002` / `DK-TS-002` usput.
+Registracija i korisnički identitet imaju otvoren platformski dokumentacioni paket: **DK-BM-002** (USVOJENO). Više nisu isključivo DK REFERENCE / OPERATIONS.
+
+Uloge i biblioteka dokumenata ostaju **DK REFERENCE / OPERATIONS** dok PO ne otvori zaseban paket. Nisu obuhvaćeni `DK-BM-002`.
+
+`DK-UC-002`, `DK-FS-002` i `DK-TS-002` nisu uvedeni. Ne kreirati ih usput.
 
 ## 3.3 Business Model, Functional Specification i implementacija
 
@@ -505,3 +509,5 @@ jer se prvo evidentiraju donesene odluke o isključenjima, a zatim nedonesene od
 | 2026-08-17 | M-TS-002: prelazak sa globalne TS numeracije na modulni dokumentacioni namespace (`KK-*`, `EP-*`, budući `DK-*`; lista prefiksa nije zatvorena). Administrativna migracija dokumentacionog ID-a Kalendara kulture na `KK-*` namespace. Poslovni i tehnički sadržaj, status i closeout ostaju nepromijenjeni. |
 | 2026-08-17 | M-TS-002 primjer: `DK-TS-001` sada postoji kao platformska dokumentacija Digital Kotora. Metodologija ostaje globalna i nema `DK-*` document ID. |
 | 2026-08-17 | Digital Kotor Documentation Standard v1: metodologija generalizovana na cijelu platformu; normativni standard `DK-DS-001`; M-TS-001…M-TS-005 sačuvani kao TS proces. Namespace `KN` rezervisan. e-Plaćanje = trenutni razvojni prioritet. Omladinski konkurs odložen. Bez izmjene aplikacionog koda. |
+| 2026-09-03 | Dokumentaciona granica: registracija i korisnički identitet imaju otvoren paket `DK-BM-002` (U IZRADI). Uloge i biblioteka dokumenata ostaju DK REFERENCE / OPERATIONS. `DK-UC-002` / `DK-FS-002` / `DK-TS-002` nisu uvedeni. |
+| 2026-09-03 | Statusna granica: `DK-BM-002` evidentiran kao USVOJENO. Uloge i biblioteka dokumenata ostaju DK REFERENCE / OPERATIONS. `DK-UC-002` / `DK-FS-002` / `DK-TS-002` nisu uvedeni. |
