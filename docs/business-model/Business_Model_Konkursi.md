@@ -7,13 +7,13 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.0
-**Datum:** 2026-08-25
+**Verzija:** 1.0.1
+**Datum:** 2026-09-02
 
 Povezani dokumenti:
 
 * Registar oznaka: **KN-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md`
-* Poslovni profil mladih: **KN-BM-002** — `docs/business-model/Business_Model_Konkursi_Mladi.md` (planiran; fajl nije kreiran)
+* Poslovni profil mladih: **KN-BM-002** — `docs/business-model/Business_Model_Konkursi_Mladi.md` — Poslovni profil konkursa za podršku preduzetništvu mladih, v1.0.1, status USVOJEN.
 * Zajedničke funkcionalnosti modula Konkursi: **KN-FS-001** — `docs/functional-specifications/Functional-Specification_Konkursi.md` (planiran; fajl nije kreiran)
 * Funkcionalni profil konkursa za podršku preduzetništvu mladih: **KN-FS-002** — `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` (planiran; fajl nije kreiran)
 * Zajednička tehnička specifikacija modula Konkursi: **KN-TS-001** — `docs/technical-specifications/Technical-Specification_Konkursi.md` (planiran; fajl nije kreiran)
@@ -46,6 +46,7 @@ Povezani dokumenti:
 | 0.1.19 | 2026-08-25 | Uklonjena planirana Poglavlja 19–21; Poglavlje 18 utvrđeno kao završno sadržajno poglavlje KN-BM-001. |
 | 0.1.20 | 2026-08-25 | Završne redakcijske korekcije: usklađeni nazivi Poglavlja 7 i 9 i kanonski lanac istorijske sljedivosti u §18.2. |
 | 1.0.0 | 2026-08-25 | Formalno usvojen zajednički poslovni model modula Konkursi; završni audit i redakcijske korekcije zatvoreni. |
+| 1.0.1 | 2026-09-02 | KN-PATCH-BM-008 — Usklađene reference na poslovni profil konkursa za podršku preduzetništvu mladih: KN-BM-002 postoji i usvojen je; uklonjene zastarjele formulacije da je dokument planiran ili da fajl nije kreiran. |
 
 Napomena:
 
@@ -143,7 +144,7 @@ Dokument se primjenjuje na sve postojeće i buduće tipove konkursa koji se vode
 
 `KN-BM-001` nalazi se poslije registra `KN-RG-001` u dokumentacionom lancu i predstavlja osnovu za izradu zasebnih poslovnih profila, funkcionalnih specifikacija i zajedničke tehničke specifikacije modula.
 
-Konkretna pravila konkursa za podršku preduzetništvu mladih ne pripadaju ovom dokumentu. Ona će biti dokumentovana u poslovnom profilu `KN-BM-002`.
+Konkretna pravila konkursa za podršku preduzetništvu mladih ne pripadaju ovom dokumentu. Ona su dokumentovana u poslovnom profilu `KN-BM-002`.
 
 ---
 
@@ -233,7 +234,7 @@ Tu pripadaju, kada su relevantni za taj tip:
 * eliminacioni uslovi;
 * druga poslovna pravila konkretnog tipa konkursa.
 
-Za konkurs za podršku preduzetništvu mladih planirani poslovni profil je `KN-BM-002`.
+Za konkurs za podršku preduzetništvu mladih poslovni profil je `KN-BM-002`.
 
 Godišnje promjenljive vrijednosti ne treba unositi u poslovni profil ako predstavljaju podatke konkretne godišnje instance ili poziva.
 
@@ -2719,4 +2720,4 @@ Tehnička realizacija pripada `KN-TS-001`.
 
 ---
 
-**Kraj dokumenta KN-BM-001 v1.0.0**
+**Kraj dokumenta KN-BM-001 v1.0.1**
