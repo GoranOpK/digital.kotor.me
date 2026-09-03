@@ -231,6 +231,156 @@ class ObavjestenjaFeatureTest extends TestCase
         $this->assertStringNotContainsString('rel="noopener noreferrer"', $legacyItem);
     }
 
+    public function test_signed_copy_panel_shows_related_competition_title_above_decision_link(): void
+    {
+        Storage::fake('local');
+        $competition = $this->createCompletedCompetition('Kanonski naziv Konkursa za panel Odluke');
+        $copy = $this->createSignedCopy($competition, 'SIGNED-COPY-COMPETITION-TITLE');
+
+        $notice = Notice::factory()->create([
+            'title' => 'Poslovni naziv Odluke za panel',
+            'short_description' => 'Snapshot koji nije Competition.title',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'source_object_id' => $copy->id,
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => true,
+        ]);
+
+        $item = $this->homePanelItemHtml('Poslovni naziv Odluke za panel');
+        $publicUrl = route('notices.public-content', $notice);
+        $competitionTitle = preg_quote($competition->title, '/');
+        $decisionTitle = preg_quote($notice->title, '/');
+
+        $this->assertStringContainsString($competition->title, $item);
+        $this->assertDoesNotMatchRegularExpression(
+            '/<a\b[^>]*>\s*'.$competitionTitle.'\s*<\/a>/u',
+            $item
+        );
+        $this->assertMatchesRegularExpression(
+            '/<p[^>]*>\s*'.$competitionTitle.'\s*<\/p>\s*<h3[^>]*>\s*<a href="'.preg_quote($publicUrl, '/').'"\s+target="_blank"\s+rel="noopener noreferrer"[^>]*>\s*'.$decisionTitle.'\s*<\/a>/u',
+            $item
+        );
+        $this->assertSame(1, substr_count($item, 'href="'.$publicUrl.'"'));
+        $this->assertSame(1, substr_count($item, 'target="_blank"'));
+        $this->assertSame(1, substr_count($item, 'rel="noopener noreferrer"'));
+        $this->assertStringNotContainsString('Pogledaj zvanični sadržaj', $item);
+        $this->assertStringNotContainsString(
+            'Javni pregled zvaničnog sadržaja nastalog u drugim funkcionalnostima Digital Kotor.',
+            $item
+        );
+        $this->assertStringContainsString('Snapshot koji nije Competition.title', $item);
+    }
+
+    public function test_ordinary_and_legacy_html_notices_do_not_show_competition_title(): void
+    {
+        Storage::fake('local');
+        $competition = $this->createCompletedCompetition('KN naziv koji ordinary i HTML ne smiju vidjeti');
+        $copy = $this->createSignedCopy($competition, 'SIGNED-COPY-ISOLATION');
+
+        Notice::factory()->withoutDescription()->create([
+            'title' => 'Signed-copy sa KN nazivom izolacija',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'source_object_id' => $copy->id,
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => true,
+        ]);
+        Notice::factory()->withoutDescription()->create([
+            'title' => 'Ordinary Notice bez KN naziva',
+            'source_type' => 'other_source',
+            'content_delivery' => 'unsupported',
+            'visible_in_active_panel' => true,
+        ]);
+        Notice::factory()->withoutDescription()->create([
+            'title' => 'Legacy HTML Odluka bez KN naziva',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'source_object_id' => $copy->id,
+            'content_delivery' => 'competition_decision_html',
+            'visible_in_active_panel' => true,
+        ]);
+
+        $signedItem = $this->homePanelItemHtml('Signed-copy sa KN nazivom izolacija');
+        $ordinaryItem = $this->homePanelItemHtml('Ordinary Notice bez KN naziva');
+        $legacyItem = $this->homePanelItemHtml('Legacy HTML Odluka bez KN naziva');
+
+        $this->assertStringContainsString($competition->title, $signedItem);
+        $this->assertStringNotContainsString($competition->title, $ordinaryItem);
+        $this->assertStringNotContainsString($competition->title, $legacyItem);
+        $this->assertStringNotContainsString('Pogledaj zvanični sadržaj', $ordinaryItem);
+        $this->assertStringNotContainsString('Pogledaj zvanični sadržaj', $legacyItem);
+        $this->assertStringNotContainsString('target="_blank"', $ordinaryItem);
+        $this->assertStringNotContainsString('target="_blank"', $legacyItem);
+    }
+
+    public function test_signed_copy_without_source_object_does_not_break_home_panel(): void
+    {
+        Notice::factory()->withoutDescription()->create([
+            'title' => 'Signed-copy bez source objekta',
+            'source_type' => 'competition_decision',
+            'source_id' => 40404,
+            'source_object_id' => null,
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => true,
+        ]);
+
+        $response = $this->get(route('home'));
+        $response->assertOk();
+        $response->assertDontSee(
+            'Javni pregled zvaničnog sadržaja nastalog u drugim funkcionalnostima Digital Kotor.',
+            false
+        );
+        $response->assertDontSee('Pogledaj zvanični sadržaj', false);
+
+        $item = $this->homePanelItemHtml('Signed-copy bez source objekta');
+        $this->assertMatchesRegularExpression(
+            '/<h3[^>]*>\s*<a href="[^"]+"\s+target="_blank"\s+rel="noopener noreferrer"[^>]*>\s*Signed-copy bez source objekta\s*<\/a>/u',
+            $item
+        );
+        $this->assertStringNotContainsString('<p', $item);
+    }
+
+    public function test_home_panel_eager_loads_competition_for_signed_copy_notices(): void
+    {
+        Storage::fake('local');
+
+        foreach (['A', 'B', 'C'] as $suffix) {
+            $competition = $this->createCompletedCompetition('Konkurs N+1 '.$suffix);
+            $copy = $this->createSignedCopy($competition, 'N-PLUS-ONE-'.$suffix);
+            Notice::factory()->withoutDescription()->create([
+                'title' => 'Odluka N+1 '.$suffix,
+                'source_type' => 'competition_decision',
+                'source_id' => $competition->id,
+                'source_object_id' => $copy->id,
+                'content_delivery' => 'competition_decision_signed_copy',
+                'visible_in_active_panel' => true,
+            ]);
+        }
+
+        $copyQueries = 0;
+        $competitionQueries = 0;
+        DB::listen(function ($query) use (&$copyQueries, &$competitionQueries) {
+            $sql = $query->sql;
+            if (str_contains($sql, 'competition_official_decision_copies')) {
+                $copyQueries++;
+            }
+            if (preg_match('/\bcompetitions\b/', $sql) === 1
+                && ! str_contains($sql, 'competition_official_decision')) {
+                $competitionQueries++;
+            }
+        });
+
+        $response = $this->get(route('home'));
+        $response->assertOk();
+        $response->assertSee('Konkurs N+1 A', false);
+        $response->assertSee('Konkurs N+1 B', false);
+        $response->assertSee('Konkurs N+1 C', false);
+
+        $this->assertLessThanOrEqual(1, $copyQueries);
+        $this->assertLessThanOrEqual(1, $competitionQueries);
+    }
+
     public function test_panel_shows_public_display_date_as_datum_objave_in_d_m_y_format(): void
     {
         Storage::fake('local');

@@ -22,6 +22,7 @@ class HomeController extends Controller
     {
         $activeNotices = Notice::query()
             ->where('visible_in_active_panel', true)
+            ->with(['sourceObject.competition'])
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->get();

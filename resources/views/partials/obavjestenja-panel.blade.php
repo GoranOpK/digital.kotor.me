@@ -13,8 +13,16 @@
                     @php
                         $publicContentUrl = route('notices.public-content', $notice);
                         $opensSignedOfficialDecision = $notice->content_delivery === 'competition_decision_signed_copy';
+                        $competitionTitle = $opensSignedOfficialDecision
+                            ? $notice->sourceObject?->competition?->title
+                            : null;
                     @endphp
                     <li style="border: 1px solid #e5e7eb; border-radius: 12px; padding: 14px; background: #ffffff;">
+                        @if(filled($competitionTitle))
+                            <p style="margin: 0 0 6px; color: #4b5563; font-size: 13px;">
+                                {{ $competitionTitle }}
+                            </p>
+                        @endif
                         <h3 style="margin: 0 0 6px; font-size: 16px; color: #111827;">
                             <a href="{{ $publicContentUrl }}" @if($opensSignedOfficialDecision) target="_blank" rel="noopener noreferrer" @endif style="color: #0B3D91; text-decoration: none; font-weight: 700;">
                                 {{ $notice->title }}
