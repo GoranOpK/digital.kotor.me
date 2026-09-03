@@ -8,8 +8,8 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.6
-**Datum:** 2026-09-01
+**Verzija:** 1.0.7
+**Datum:** 2026-09-03
 
 Povezani dokumenti:
 
@@ -35,6 +35,7 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.4 / KN-PATCH-BM-004 | 2026-08-29 | Ciljano usklađenje redoslijeda Predloga i zvanične Odluke sa usvojenim `KN-FS-003` Poglavljem 15: zvanična Odluka nastaje fizičkim potpisom sekretara prije zaključivanja Konkursa; dostava zvanične Odluke samo podržanim Podnositeljkama, van Platforme. |
 | 1.0.5 / KN-PATCH-BM-005 | 2026-09-01 | Vrijeme dodjele Komisije: objava može uslijediti bez dodijeljene Komisije; potpuna i valjana Komisija mora biti dodijeljena najkasnije prije isteka roka za Prijave; istek bez nje ne produžava rok i blokira pristup/postupak do dopune; obična zamjena cijele Komisije dozvoljena do isteka roka, ne samo do objave. Zamjena pojedinačnog člana i OPEN pitanje završenih ocjena ostaju. |
 | 1.0.6 / KN-PATCH-BM-006 | 2026-09-01 | Elektronski primjerak zvanične Odluke na Platformi: povlačenje objave, ponovna objava, trajno uklanjanje, novi primjerak nakon uklanjanja; javno samo trenutno važeća objava. Nije donošenje Odluke i ne mijenja rezultate. Ostali kanali objave ostaju van Platforme. |
+| 1.0.7 / KN-PATCH-BM-007 | 2026-09-03 | Usvojena mogućnost trajnog brisanja učitanog elektronskog primjerka zvanične Odluke prije prve objave: fizičko nepovratno uklanjanje PDF-a uz odgovarajući interni audit trag; to nije povlačenje javne objave jer objava nije nastala. Postojeća norma za trajno uklanjanje prethodno objavljenog primjerka ostaje. Nije donošenje Odluke i ne mijenja rezultate, bodove, rang-listu ni iznose. **Nije** runtime produkcijski prihvaćeno. |
 
 Napomena:
 
@@ -860,9 +861,13 @@ Administrator Konkursa može **povući objavu** trenutno objavljene zvanične Od
 
 Povučeni elektronski primjerak ostaje sačuvan i može kasnije biti **ponovo objavljen**.
 
-Administrator Konkursa može **trajno ukloniti elektronski primjerak** prethodno objavljene zvanične Odluke.
+Administrator Konkursa može **trajno ukloniti elektronski primjerak** zvanične Odluke u dvije situacije:
 
-Kod trajnog uklanjanja sam elektronski dokument više se **ne** čuva niti može biti vraćen kroz Platformu. Mora ostati trag da je Odluka postojala i da je elektronski primjerak trajno uklonjen.
+**A. Učitani primjerak prije prve objave.** Administrator može trajno ukloniti učitani elektronski primjerak koji još **nije** bio objavljen na Platformi. To se odnosi na učitani PDF. To **nije** povlačenje javne objave, jer objava na Platformi nije nastala. PDF se fizički i nepovratno uklanja. Platforma zadržava odgovarajući interni audit trag.
+
+**B. Prethodno objavljeni primjerak.** Administrator može trajno ukloniti elektronski primjerak prethodno objavljene zvanične Odluke.
+
+Kod trajnog uklanjanja, u obje situacije, sam elektronski dokument više se **ne** čuva niti može biti vraćen kroz Platformu. Mora ostati trag da je elektronski primjerak postojao i da je trajno uklonjen. U situaciji A taj trag nije trag javne objave, jer objava nije nastala.
 
 Nakon trajnog uklanjanja može se učitati i objaviti **novi elektronski primjerak** zvanične Odluke za isti Konkurs.
 
@@ -892,4 +897,4 @@ Odluka uređuje imenovanje zamjene, ali ne sudbinu već **završenih** individua
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.6**
+**Kraj dokumenta KN-BM-003 v1.0.7**

@@ -205,7 +205,8 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
         $response->assertSee('Naziv dokumenta', false);
         $response->assertSee('name="business_title"', false);
         $response->assertSee('name="official_decision_copy"', false);
-        $response->assertSee('Postavi primjerak', false);
+        $response->assertSee('>Učitaj Odluku</button>', false);
+        $response->assertDontSee('Postavi primjerak', false);
         $response->assertDontSee('Koriguj', false);
         $response->assertDontSee('Objavi Odluku', false);
         $response->assertDontSee('Povuci', false);
@@ -297,6 +298,24 @@ class CompetitionOfficialDecisionUploadTest extends TestCase
         $response->assertForbidden();
         $this->assertSame(0, CompetitionOfficialDecisionCopy::query()->count());
         $this->assertSame([], Storage::disk('local')->allFiles());
+    }
+
+    public function test_empty_official_decision_state_does_not_show_history_or_publish_actions(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompetition('completed');
+
+        $response = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+
+        $response->assertOk();
+        $response->assertSee('>Učitaj Odluku</button>', false);
+        $response->assertSee('Potpisani PDF', false);
+        $response->assertDontSee('Evidentiran', false);
+        $response->assertDontSee('Trajno obrisan', false);
+        $response->assertDontSee('>Objavi Odluku</button>', false);
+        $response->assertDontSee('Upravljaj objavom', false);
+        $response->assertDontSee('Postavi primjerak', false);
+        $response->assertDontSee('Postavi Odluku', false);
     }
 
     private function pdfUpload(string $name): UploadedFile

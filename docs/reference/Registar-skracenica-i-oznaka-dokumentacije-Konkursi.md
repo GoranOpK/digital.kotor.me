@@ -7,8 +7,8 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** U IZRADI
-**Verzija:** 0.1.14
-**Datum:** 2026-09-01
+**Verzija:** 0.1.15
+**Datum:** 2026-09-03
 
 ---
 
@@ -31,6 +31,7 @@
 | 0.1.12 | 2026-08-29 | Evidentiran `KN-PATCH-BM-004` / `KN-BM-003` v1.0.4. Ciljano usklađenje završnog toka Predloga Odluke, zvanične Odluke, zaključivanja, arhive i dostavljanja/objavljivanja sa usvojenim `KN-FS-003` Poglavljem 15. |
 | 0.1.13 | 2026-09-01 | Evidentiran `KN-PATCH-BM-005` / `KN-BM-003` v1.0.5. Vrijeme dodjele Komisije: objava bez Komisije; granica dodjele/zamjene cijele Komisije je istek roka za Prijave; istek bez potpune i valjane Komisije blokira pristup/postupak. Normativna praznina o završenim ocjenama pri zamjeni člana ostaje. |
 | 0.1.14 | 2026-09-01 | Evidentiran `KN-PATCH-BM-006` / `KN-BM-003` v1.0.6. Elektronski primjerak zvanične Odluke na Platformi: povlačenje objave, ponovna objava, trajno uklanjanje, novi primjerak nakon uklanjanja. |
+| 0.1.15 | 2026-09-03 | Evidentiran `KN-PATCH-BM-007` / `KN-BM-003` v1.0.7. Kontrolisana naknadna izmjena `KN-BM-003` v1.0.6 → v1.0.7: trajno uklanjanje učitanog elektronskog primjerka zvanične Odluke i prije prve objave. |
 
 Napomena:
 
@@ -220,6 +221,8 @@ U `KN-BM-003` v1.0.5 / `KN-PATCH-BM-005` usklađeno je: objava može uslijediti 
 
 U `KN-BM-003` v1.0.6 / `KN-PATCH-BM-006` usklađeno je: Administrator Konkursa može povući objavu elektronskog primjerka zvanične Odluke na Platformi, ponovo je objaviti, ili trajno ukloniti elektronski primjerak uz očuvan trag; nakon trajnog uklanjanja može se objaviti novi primjerak; javno postoji samo trenutno važeća objava. To nije donošenje Odluke i ne mijenja rezultate. Ostali kanali objave ostaju van Platforme.
 
+U `KN-BM-003` v1.0.7 / `KN-PATCH-BM-007` usklađeno je: Administrator Konkursa može trajno ukloniti učitani elektronski primjerak zvanične Odluke i prije prve objave. Postojeća norma za trajno uklanjanje prethodno objavljenog primjerka ostaje.
+
 Normativna praznina o sudbini završenih ocjena pri zamjeni člana Komisije dokumentovana je u `KN-BM-003` Poglavlju 12. Nije blocking OPEN i nije posebna oznaka.
 
 ---
@@ -244,6 +247,7 @@ Naknadne kontrolisane izmjene dokumentacije modula Konkursi označavaju se prema
 | **KN-PATCH-BM-004** | KN-BM-003 | 1.0.4 | 2026-08-29 | Ciljano usklađenje završnog toka Predloga Odluke, zvanične Odluke, zaključivanja, arhive i dostavljanja/objavljivanja sa usvojenim `KN-FS-003` Poglavljem 15. |
 | **KN-PATCH-BM-005** | KN-BM-003 | 1.0.5 | 2026-09-01 | Vrijeme dodjele Komisije: objava bez Komisije; granica dodjele/zamjene cijele Komisije je istek roka za Prijave; istek bez potpune i valjane Komisije blokira pristup/postupak. Zamjena pojedinačnog člana i OPEN pitanje završenih ocjena ostaju. |
 | **KN-PATCH-BM-006** | KN-BM-003 | 1.0.6 | 2026-09-01 | Elektronski primjerak zvanične Odluke na Platformi: povlačenje objave, ponovna objava, trajno uklanjanje, novi primjerak nakon uklanjanja; javno samo trenutno važeća objava. Nije donošenje Odluke i ne mijenja rezultate. |
+| **KN-PATCH-BM-007** | KN-BM-003 | 1.0.7 | 2026-09-03 | Kontrolisana naknadna izmjena `KN-BM-003` v1.0.6 → v1.0.7. Trajno uklanjanje učitanog elektronskog primjerka zvanične Odluke i prije prve objave. Postojeća norma za prethodno objavljeni primjerak ostaje. |
 
 ---
 
@@ -315,4 +319,4 @@ Trenutno nema oznaka sa statusom **ZASTARJELO**.
 
 ---
 
-**Kraj dokumenta KN-RG-001 v0.1.14**
+**Kraj dokumenta KN-RG-001 v0.1.15**

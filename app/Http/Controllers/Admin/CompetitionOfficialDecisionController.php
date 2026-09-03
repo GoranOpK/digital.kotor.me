@@ -242,26 +242,62 @@ class CompetitionOfficialDecisionController extends Controller
             return $notice;
         }
 
-        $request->merge([
-            'business_title' => trim((string) $request->input('business_title', '')),
-        ]);
+        if ($request->exists('business_title')) {
+            $request->merge([
+                'business_title' => trim((string) $request->input('business_title', '')),
+            ]);
+        }
 
-        $validated = $request->validate([
-            'business_title' => ['required', 'string', 'max:255'],
-            'business_published_on' => ['required', 'date', 'before_or_equal:today'],
-        ], [
-            'business_title.required' => 'Naziv dokumenta je obavezan.',
-            'business_title.string' => 'Naziv dokumenta mora biti tekst.',
-            'business_title.max' => 'Naziv dokumenta ne može biti duži od 255 karaktera.',
-            'business_published_on.required' => 'Datum objave je obavezan.',
-            'business_published_on.date' => 'Datum objave nije ispravan.',
-            'business_published_on.before_or_equal' => 'Datum objave ne može biti u budućnosti.',
-        ]);
+        $existingTitle = trim((string) $copy->business_title);
+        $existingPublishedOn = optional($copy->business_published_on)?->toDateString();
+        $titleInput = $request->input('business_title');
+        $dateInput = $request->input('business_published_on');
+        $titleProvided = $request->exists('business_title') && trim((string) $titleInput) !== '';
+        $dateProvided = $request->exists('business_published_on') && trim((string) $dateInput) !== '';
 
-        $businessTitle = $validated['business_title'];
-        $businessPublishedOn = $validated['business_published_on'];
+        $rules = [];
+        $messages = [];
+
+        if ($titleProvided) {
+            $rules['business_title'] = ['required', 'string', 'max:255'];
+            $messages['business_title.required'] = 'Naziv dokumenta je obavezan.';
+            $messages['business_title.string'] = 'Naziv dokumenta mora biti tekst.';
+            $messages['business_title.max'] = 'Naziv dokumenta ne može biti duži od 255 karaktera.';
+        }
+
+        if ($dateProvided) {
+            $rules['business_published_on'] = ['required', 'date', 'before_or_equal:today'];
+            $messages['business_published_on.required'] = 'Datum objave je obavezan.';
+            $messages['business_published_on.date'] = 'Datum objave nije ispravan.';
+            $messages['business_published_on.before_or_equal'] = 'Datum objave ne može biti u budućnosti.';
+        }
+
+        $validated = $rules === [] ? [] : $request->validate($rules, $messages);
+
+        $businessTitle = $titleProvided ? trim((string) $validated['business_title']) : $existingTitle;
+        $businessPublishedOn = $dateProvided ? $validated['business_published_on'] : $existingPublishedOn;
+
+        if ($businessTitle === '') {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['business_title' => 'Naziv dokumenta je obavezan.']);
+        }
+
+        if (! is_string($businessPublishedOn) || $businessPublishedOn === '') {
+            return redirect()
+                ->route('admin.competitions.show', $competition)
+                ->withErrors(['business_published_on' => 'Datum objave je obavezan.']);
+        }
+
         $oldTitle = $copy->business_title;
-        $oldPublishedOn = optional($copy->business_published_on)?->toDateString();
+        $oldPublishedOn = $existingPublishedOn;
+        $titleChanged = $businessTitle !== $existingTitle;
+        $dateChanged = $businessPublishedOn !== $existingPublishedOn;
+
+        if (! $titleChanged && ! $dateChanged) {
+            return redirect()->route('admin.competitions.show', $competition);
+        }
+
         $actorUserId = $request->user()->id;
 
         DB::transaction(function () use (
@@ -489,12 +525,6 @@ class CompetitionOfficialDecisionController extends Controller
             abort(404);
         }
 
-        if ($t1['outcome'] === 'never_published') {
-            return redirect()
-                ->route('admin.competitions.show', $competition)
-                ->withErrors(['error' => 'Ovaj primjerak nije ranije objavljen.']);
-        }
-
         if ($t1['outcome'] === 'multiple_current') {
             return redirect()
                 ->route('admin.competitions.show', $competition)
@@ -572,7 +602,7 @@ class CompetitionOfficialDecisionController extends Controller
             $activeCount = $activeNotices->count();
 
             if ($locked->permanent_delete_pending_at !== null) {
-                if ($activeCount > 0) {
+                if ($locked->currentPublicSignedCopyNoticesQuery()->exists()) {
                     return ['outcome' => 'pending_public_active'];
                 }
 
@@ -582,9 +612,7 @@ class CompetitionOfficialDecisionController extends Controller
                 ];
             }
 
-            if (! $locked->hasBeenPublished()) {
-                return ['outcome' => 'never_published'];
-            }
+            $neverPublished = ! $locked->hasBeenPublished();
 
             if ($activeCount > 1) {
                 return ['outcome' => 'multiple_current'];
@@ -596,16 +624,20 @@ class CompetitionOfficialDecisionController extends Controller
                 $notice = $activeNotices->first();
 
                 if ((int) $notice->source_object_id !== (int) $locked->id) {
-                    return ['outcome' => 'current_belongs_to_another_copy'];
+                    if (! $neverPublished) {
+                        return ['outcome' => 'current_belongs_to_another_copy'];
+                    }
+                } else {
+                    $noticeId = $notice->id;
+                    event(new OfficialContentPublicAvailabilityRevoked($notice->id));
                 }
-
-                $noticeId = $notice->id;
-                event(new OfficialContentPublicAvailabilityRevoked($notice->id));
             } else {
                 $noticeId = $locked->previousRevokedSignedCopyNoticesQuery()->first()?->id;
             }
 
-            CompetitionOfficialDecisionCopy::revokeLeftoverDecisionHtmlPublications($competition->id);
+            if (! $neverPublished) {
+                CompetitionOfficialDecisionCopy::revokeLeftoverDecisionHtmlPublications($competition->id);
+            }
 
             $locked->permanent_delete_pending_at = now();
             $locked->save();
@@ -652,9 +684,7 @@ class CompetitionOfficialDecisionController extends Controller
                 return ['outcome' => 'not_pending'];
             }
 
-            $activeCount = CompetitionOfficialDecisionCopy::activeSignedCopyNotices($competition->id)->count();
-
-            if ($activeCount > 0) {
+            if ($locked->currentPublicSignedCopyNoticesQuery()->exists()) {
                 return ['outcome' => 'pending_public_active'];
             }
 

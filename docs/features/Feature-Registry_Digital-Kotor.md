@@ -5,8 +5,8 @@
 **Naziv:** Feature Registry — Digital Kotor platforma
 **Vlasništvo:** platformski sloj Digital Kotora
 **Status dokumenta:** AKTIVAN
-**Verzija:** 1.1.6
-**Datum:** 2026-09-02
+**Verzija:** 1.1.7
+**Datum:** 2026-09-03
 
 ---
 
@@ -24,7 +24,7 @@ Registruje samo funkcionalnosti čiji je ownership **PLATFORM**. Auth, MEGA, Ple
 
 | Feature ID | Naziv | Ownership | Status | BM | UC | FS | TS |
 | ---------- | ----- | --------- | ------ | -- | -- | -- | -- |
-| FT-004 | Obavještenja | PLATFORM | Infrastruktura implementirana / aktivna; signed-copy first publication + leftover HTML cleanup + application-level uniqueness + direct predecessor revoke + correction business title/date + metadata correction + source-specific unpublish + republish iste povučene kopije + crash-safe permanent-delete lifecycle + nova Copy nakon completed tombstone + finalni javni prikaz poslovnog datuma na FT-004 panelu IMPLEMENTED LOCALLY / PO ACCEPTED; LOCAL PO MANUAL ACCEPTANCE signed-copy toka 2026-09-01; NOT PRODUCTION DEPLOYED; NOT PRODUCTION ACCEPTED; feature nije CLOSED; E2E za ostale izvore otvoren (OFD-OB-006); dokumenti U IZRADI | DK-BM-001 | DK-UC-001 | DK-FS-001 | DK-TS-001 |
+| FT-004 | Obavještenja | PLATFORM | Infrastruktura implementirana / aktivna; signed-copy first publication + leftover HTML cleanup + application-level uniqueness + direct predecessor revoke + correction business title/date + metadata correction + source-specific unpublish + republish iste povučene kopije + crash-safe permanent-delete lifecycle + nova Copy nakon completed tombstone + finalni javni prikaz poslovnog datuma na FT-004 panelu IMPLEMENTED LOCALLY / PO ACCEPTED; Faza 8 PUSHED TO ORIGIN/MAIN; CURRENT UX corrective IMPLEMENTED LOCALLY / PO ACCEPTED i NOT YET COMMITTED / NOT YET PUSHED; LOCAL PO MANUAL ACCEPTANCE signed-copy toka 2026-09-01; NOT PRODUCTION DEPLOYED; NOT PRODUCTION ACCEPTED; feature nije CLOSED; E2E za ostale izvore otvoren (OFD-OB-006); dokumenti U IZRADI | DK-BM-001 | DK-UC-001 | DK-FS-001 | DK-TS-001 |
 
 FT-004 **nije** formalno zatvoren kao cijeli feature.
 
@@ -50,10 +50,10 @@ FT-004 nije KK Newsletter i nije `/notifications` stub.
 
 * Infrastruktura: implementirana / aktivna (`Notice`, tabela `notices`, servis objave, događaj/listener, javni panel na `/`, ruta `notices.public-content`).
 * Source-specific E2E za **zvaničnu Odluku Konkursa** — **IMPLEMENTED:** upload → first publication → `competition_decision_signed_copy` → korekcija sa revoke-om **neposrednog** signed-copy predecessor-a. LOCAL PO MANUAL ACCEPTANCE 2026-09-01 na `http://127.0.0.1:8000`. **NOT PRODUCTION DEPLOYED.** Plesk/production nijesu bili predmet tog testa. Detalj: `DK-TS-001` §14.10.
-* Source-specific KN lifecycle — **IMPLEMENTED LOCALLY / PO ACCEPTED** (CURRENT RUNTIME; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**): poslovni naziv od KN, poslovni datum prikaza (čuvanje **i** javni panel rendering: **Datum objave**, `d.m.Y`, ISO `datetime`, null-safe, bez `published_at` fallback-a), leftover `competition_decision_html` cleanup pri first publish / PDF correction / republish / permanent-delete T1, application-level Decision publication uniqueness (nije DB unique constraint), PDF correction business title/date, metadata correction, source-specific unpublish, republish iste povučene kopije, crash-safe permanent-delete (T1 / filesystem / T2, pending/retry, physical PDF removal, completed tombstone, lifecycle audit STARTED/COMPLETED), nova Copy poslije completed delete, postojeća autorizacija/guard kontinuitet, reuse postojećeg FT-004 revoke primitive. Binding: `KN-BM-003` v1.0.6 §15.4 / `KN-FS-003` v0.1.21 §16.8–§16.16; DK-UC-001 v0.1.1; DK-FS-001 PATCH-FS-OB-003; DK-TS-001 v0.1.8. **Nije** PRODUCTION ACCEPTED. **Nije** PRODUCTION DEPLOYED. Tehnički panel render (`@if($notice->public_display_date)`) **nije** generička FT-004 date policy i **ne** zatvara OFD-OB-006. Faza 7 (permanent-delete) ostaje **PUSHED TO ORIGIN/MAIN**. Faza 8 (javni prikaz datuma) je local uncommitted **IMPLEMENTED LOCALLY / PO ACCEPTED**.
+* Source-specific KN lifecycle — **IMPLEMENTED LOCALLY / PO ACCEPTED** (CURRENT RUNTIME; **IMPLEMENTED ≠ PRODUCTION DEPLOYED**): poslovni naziv od KN, poslovni datum prikaza (čuvanje **i** javni panel rendering: **Datum objave**, `d.m.Y`, ISO `datetime`, null-safe, bez `published_at` fallback-a), leftover `competition_decision_html` cleanup pri first publish / PDF correction / republish / permanent-delete T1, application-level Decision publication uniqueness (nije DB unique constraint), PDF correction business title/date, metadata correction, source-specific unpublish, republish iste povučene kopije, crash-safe permanent-delete (T1 / filesystem / T2, pending/retry, physical PDF removal, completed tombstone, lifecycle audit STARTED/COMPLETED), nova Copy poslije completed delete, postojeća autorizacija/guard kontinuitet, reuse postojećeg FT-004 revoke primitive. Binding: `KN-BM-003` v1.0.7 §15.4 / `KN-FS-003` v0.1.22 §16.8–§16.16; DK-UC-001 v0.1.1; DK-FS-001 PATCH-FS-OB-003; DK-TS-001 v0.1.9. **Nije** PRODUCTION ACCEPTED. **Nije** PRODUCTION DEPLOYED. Tehnički panel render (`@if($notice->public_display_date)`) **nije** generička FT-004 date policy i **ne** zatvara OFD-OB-006. Faza 7 (permanent-delete) ostaje **PUSHED TO ORIGIN/MAIN**. Faza 8 (javni prikaz datuma) je **PUSHED TO ORIGIN/MAIN** (`8d34ecf129008386faaf826332ad0fd3a6536332`). CURRENT UX corrective (CURRENT admin projekcija, never-published delete, pending retry UI, metadata KEEP/no-op) je **IMPLEMENTED LOCALLY / PO ACCEPTED** i **NOT YET COMMITTED / NOT YET PUSHED**. Detalj: `DK-TS-001` §4.10.
 * E2E integracija za **ostale** izvore: otvorena / blokirana — **OFD-OB-006** ostaje generički otvoren.
 * Dokumentacija: **U IZRADI**. OFD-OB-001 do OFD-OB-010 ostaju **generički** otvoreni. Nijedna OFD nije RESOLVED / CLOSED / IMPLEMENTED generički.
-* **Source-specific target binding:** `KN-BM-003` §15.4 i `KN-FS-003` v0.1.21 (§15.6, §15.7.1, §15.7.5, §16.6, §16.8–§16.16, §18.7.4, §18.9) određuju ponašanje javnog kanala za **zvaničnu Odluku Konkursa**. To **nije** zatvaranje OFD-OB-007 za sve izvore.
+* **Source-specific target binding:** `KN-BM-003` v1.0.7 §15.4 i `KN-FS-003` v0.1.22 (§15.6, §15.7.1, §15.7.5, §16.6, §16.8–§16.16, §18.7.4, §18.9) određuju ponašanje javnog kanala za **zvaničnu Odluku Konkursa**. To **nije** zatvaranje OFD-OB-007 za sve izvore.
 * **CURRENT IMPLEMENTED** javni objekat nove zvanične Odluke Konkursa je `competition_decision_signed_copy`. `competition_decision_html` ostaje LEGACY path i **nije** target nove objave.
 
 Cijeli feature **nije** CLOSED / COMPLETE / PRODUCTION ACCEPTED.
@@ -80,7 +80,8 @@ Cijeli feature **nije** CLOSED / COMPLETE / PRODUCTION ACCEPTED.
 | 1.1.4 | 2026-09-02 | FT-004 status-only: leftover `competition_decision_html` cleanup, application-level Decision publication uniqueness i PDF correction business title/date IMPLEMENTED LOCALLY / PO ACCEPTED. Binding ažuriran na DK-TS-001 v0.1.6. Permanent-delete / nova kopija nakon permanent delete / finalni javni prikaz poslovnog datuma ostaju DOCUMENTED / NOT YET IMPLEMENTED. NOT PRODUCTION DEPLOYED. NOT PRODUCTION ACCEPTED. Feature nije zatvoren. Bez izmjene aplikacionog koda. |
 | 1.1.5 | 2026-09-02 | FT-004 status-only: crash-safe permanent-delete lifecycle zvanične Odluke i nova Copy poslije completed tombstone IMPLEMENTED LOCALLY / PO ACCEPTED. Binding ažuriran na DK-TS-001 v0.1.7. Finalni javni prikaz poslovnog datuma ostaje DOCUMENTED / NOT YET IMPLEMENTED (Faza 8). NOT PRODUCTION DEPLOYED. NOT PRODUCTION ACCEPTED. Feature nije zatvoren. Bez izmjene aplikacionog koda. |
 | 1.1.6 | 2026-09-02 | FT-004 status-only: finalni javni prikaz poslovnog datuma na FT-004 panelu (Faza 8) IMPLEMENTED LOCALLY / PO ACCEPTED. Binding ažuriran na DK-TS-001 v0.1.8. OFD-OB-006 ostaje generički otvoren. NOT PRODUCTION DEPLOYED. NOT PRODUCTION ACCEPTED. Feature nije zatvoren. Bez izmjene aplikacionog koda. |
+| 1.1.7 | 2026-09-03 | FT-004 status-only: Faza 8 PUSHED TO ORIGIN/MAIN (`8d34ecf129008386faaf826332ad0fd3a6536332`). CURRENT UX corrective IMPLEMENTED LOCALLY / PO ACCEPTED i NOT YET COMMITTED / NOT YET PUSHED. Binding ažuriran na KN-BM-003 v1.0.7, KN-FS-003 v0.1.22, DK-TS-001 v0.1.9. NOT PRODUCTION DEPLOYED. NOT PRODUCTION ACCEPTED. Feature nije zatvoren. Bez izmjene aplikacionog koda. |
 
 ---
 
-**Kraj dokumenta DK-FR-001 v1.1.6**
+**Kraj dokumenta DK-FR-001 v1.1.7**

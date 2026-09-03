@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Events\OfficialContentPublicAvailabilityRevoked;
 use App\Http\Controllers\Admin\CompetitionOfficialDecisionController;
 use App\Models\Competition;
 use App\Models\CompetitionOfficialDecisionCopy;
@@ -12,6 +13,7 @@ use App\Models\User;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use ReflectionClass;
 use RuntimeException;
@@ -51,7 +53,7 @@ class CompetitionOfficialDecisionPermanentDeleteTest extends TestCase
         $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
         $page->assertOk();
         $page->assertSee('Trajno obriši', false);
-        $page->assertSee('Ova radnja je nepovratna', false);
+        $page->assertSee('Ova radnja trajno briše dokument i ne može se poništiti.', false);
         $page->assertDontSee('name="delete_reason"', false);
         $page->assertDontSee('name="reason"', false);
         $page->assertDontSee('name="comment"', false);
@@ -121,16 +123,18 @@ class CompetitionOfficialDecisionPermanentDeleteTest extends TestCase
 
         $tombstonePage = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
         $tombstonePage->assertOk();
-        $tombstonePage->assertSee('Trajno obrisan', false);
-        $tombstonePage->assertSee('Naziv za trajno brisanje', false);
+        $tombstonePage->assertSee('>Učitaj Odluku</button>', false);
+        $tombstonePage->assertDontSee('Trajno obrisan', false);
+        $tombstonePage->assertDontSee('Naziv za trajno brisanje', false);
         $tombstonePage->assertDontSee('Trajno obriši', false);
         $tombstonePage->assertDontSee('Ponovi trajno brisanje', false);
-        $tombstonePage->assertDontSee('>Objavi</button>', false);
+        $tombstonePage->assertDontSee('>Objavi Odluku</button>', false);
         $tombstonePage->assertDontSee('Ponovo objavi', false);
         $tombstonePage->assertDontSee('Koriguj objavu', false);
         $tombstonePage->assertDontSee('Ispravi podatke objave', false);
         $tombstonePage->assertDontSee('Povuci objavu', false);
         $tombstonePage->assertDontSee($originalPath, false);
+        $tombstonePage->assertDontSee('Evidentiran', false);
     }
 
     public function test_withdrawn_historical_published_copy_can_be_permanently_deleted(): void
@@ -167,28 +171,153 @@ class CompetitionOfficialDecisionPermanentDeleteTest extends TestCase
         $this->get(route('notices.public-content', $notice))->assertNotFound();
     }
 
-    public function test_never_published_copy_cannot_be_permanently_deleted(): void
+    public function test_live_never_published_copy_can_be_permanently_deleted(): void
     {
         $admin = $this->userWithRole('konkurs_admin');
         $competition = $this->createCompletedCompetition();
         $copy = $this->createCopyWithFile($competition, 'NEVER-PUBLISHED-BYTES', 'Neobjavljeni naziv');
         $originalPath = $copy->storage_path;
+        $copyId = $copy->id;
 
         $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
-        $page->assertSee('>Objavi</button>', false);
+        $page->assertSee('>Objavi Odluku</button>', false);
+        $page->assertSee('Nije objavljena', false);
+        $page->assertSee('Odustani i obriši Odluku', false);
+        $page->assertSee('Obrisati učitanu Odluku?', false);
+        $page->assertSee('Ovo je učitani PDF koji još nije objavljen', false);
         $page->assertDontSee('Trajno obriši', false);
+        $page->assertDontSee('Ponovi trajno brisanje', false);
+        $page->assertDontSee('name="delete_reason"', false);
 
-        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+        Event::fake([OfficialContentPublicAvailabilityRevoked::class]);
+
+        $response = $this->actingAs($admin)->post(
             $this->permanentDeleteRoute($competition, $copy),
         );
 
         $response->assertRedirect(route('admin.competitions.show', $competition));
-        $response->assertSessionHasErrors('error');
-        $this->assertNull($copy->fresh()->permanently_deleted_at);
-        $this->assertNull($copy->fresh()->permanent_delete_pending_at);
-        $this->assertSame($originalPath, $copy->fresh()->storage_path);
-        Storage::disk('local')->assertExists($originalPath);
-        $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->count());
+        $response->assertSessionHas('success');
+
+        $copy->refresh();
+        $this->assertNotNull(CompetitionOfficialDecisionCopy::query()->find($copyId));
+        $this->assertNotNull($copy->permanently_deleted_at);
+        $this->assertSame($admin->id, $copy->permanently_deleted_by);
+        $this->assertNull($copy->permanent_delete_pending_at);
+        $this->assertNull($copy->storage_path);
+        $this->assertFalse($copy->hasBeenPublished());
+        $this->assertFalse(Storage::disk('local')->exists($originalPath));
+        Storage::disk('local')->assertMissing($originalPath);
+        $this->assertSame(0, Notice::query()->count());
+        Event::assertNotDispatched(OfficialContentPublicAvailabilityRevoked::class);
+
+        $started = $this->lifecycleEvents(CompetitionOfficialDecisionLifecycleEvent::ACTION_PERMANENT_DELETE_STARTED);
+        $completed = $this->lifecycleEvents(CompetitionOfficialDecisionLifecycleEvent::ACTION_PERMANENT_DELETE_COMPLETED);
+        $this->assertCount(1, $started);
+        $this->assertCount(1, $completed);
+        $this->assertSame($copy->id, $started[0]->competition_official_decision_copy_id);
+        $this->assertSame($admin->id, $started[0]->actor_user_id);
+        $this->assertSame('Neobjavljeni naziv', $started[0]->payload['business_title']);
+        $this->assertNull($started[0]->payload['business_published_on']);
+        $this->assertNull($started[0]->payload['notice_id']);
+        $this->assertSame('Neobjavljeni naziv', $completed[0]->payload['business_title']);
+        $this->assertNull($completed[0]->payload['business_published_on']);
+        $this->assertNull($completed[0]->payload['notice_id']);
+
+        $after = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $after->assertOk();
+        $after->assertSee('>Učitaj Odluku</button>', false);
+        $after->assertDontSee('Neobjavljeni naziv', false);
+        $after->assertDontSee('>Objavi Odluku</button>', false);
+        $after->assertDontSee('Odustani i obriši Odluku', false);
+        $after->assertDontSee('Trajno obrisan', false);
+        $after->assertDontSee('Ponovi trajno brisanje', false);
+        $after->assertDontSee($originalPath, false);
+    }
+
+    public function test_never_published_replacement_candidate_can_be_deleted_without_revoking_current_publication(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition, 'PUBLIC-BYTES', 'Javna Odluka');
+        $this->publishCopy($admin, $competition, $copyA, now()->subDays(2)->toDateString());
+        $noticeA = Notice::query()->sole();
+        $copyB = $this->createCopyWithFile($competition, 'REPLACEMENT-BYTES', 'Zamjenska Odluka');
+
+        $this->actingAs($admin)->post(
+            $this->permanentDeleteRoute($competition, $copyB),
+        )->assertRedirect(route('admin.competitions.show', $competition));
+
+        $copyB->refresh();
+        $noticeA->refresh();
+        $this->assertNotNull($copyB->permanently_deleted_at);
+        $this->assertFalse($copyB->hasBeenPublished());
+        $this->assertTrue($noticeA->publicly_available);
+        $this->assertTrue($copyA->fresh()->isCurrentlyPublished());
+        $this->assertSame(1, Notice::query()->count());
+        $this->get(route('notices.public-content', $noticeA))->assertOk();
+
+        $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $page->assertSee('Javna Odluka', false);
+        $page->assertSee('Objavljena', false);
+        $page->assertDontSee('Zamjenska Odluka', false);
+        $page->assertDontSee('Ponovi trajno brisanje', false);
+    }
+
+    public function test_pending_never_published_replacement_does_not_replace_current_public_copy(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition, 'PUBLIC-A-BYTES', 'Javna Odluka ostaje');
+        $this->publishCopy($admin, $competition, $copyA, now()->subDays(3)->toDateString());
+        $noticeA = Notice::query()->sole();
+        $copyB = $this->createCopyWithFile($competition, 'PENDING-B-BYTES', 'Pending zamjenska Odluka');
+
+        $this->app->bind(CompetitionOfficialDecisionController::class, function () {
+            return new class extends CompetitionOfficialDecisionController
+            {
+                protected function deleteOfficialDecisionStoredPdf(?string $storagePath): bool
+                {
+                    return false;
+                }
+            };
+        });
+
+        $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            $this->permanentDeleteRoute($competition, $copyB),
+        )->assertRedirect(route('admin.competitions.show', $competition));
+
+        $copyA->refresh();
+        $copyB->refresh();
+        $noticeA->refresh();
+        $this->assertTrue($copyA->isCurrentlyPublished());
+        $this->assertTrue($noticeA->publicly_available);
+        $this->assertTrue($noticeA->visible_in_active_panel);
+        $this->assertFalse($copyB->hasBeenPublished());
+        $this->assertNotNull($copyB->permanent_delete_pending_at);
+        $this->assertNull($copyB->permanently_deleted_at);
+        $this->assertNull($copyA->permanent_delete_pending_at);
+        $this->assertSame(1, Notice::query()->count());
+
+        $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $page->assertOk();
+        $page->assertSee('Javna Odluka ostaje', false);
+        $page->assertSee('Objavljena', false);
+        $page->assertSee('Otvori PDF', false);
+        $page->assertSee(route('notices.public-content', $noticeA), false);
+        $page->assertSee('Upravljaj objavom', false);
+        $page->assertSee('Učitaj zamjensku Odluku', false);
+        $page->assertSee('Trajno brisanje Odluke nije završeno.', false);
+        $page->assertSee('>Ponovi trajno brisanje</button>', false);
+        $page->assertSee(route('admin.competitions.official-decision.permanent-delete', [$competition, $copyB]), false);
+        $page->assertDontSee('Objavi zamjenu', false);
+        $page->assertDontSee(route('admin.competitions.official-decision.correct', [$competition, $copyB]), false);
+        $page->assertDontSee('>Objavi Odluku</button>', false);
+        $page->assertDontSee('Ponovo objavi', false);
+        $page->assertDontSee('Trajno brisanje je u toku', false);
+
+        $this->get(route('notices.public-content', $noticeA))->assertOk();
+
+        $this->app->bind(CompetitionOfficialDecisionController::class, CompetitionOfficialDecisionController::class);
     }
 
     public function test_permanent_delete_revokes_leftover_html_and_direct_url(): void
@@ -296,9 +425,20 @@ class CompetitionOfficialDecisionPermanentDeleteTest extends TestCase
         $this->get(route('notices.public-content', $notice))->assertNotFound();
 
         $pendingPage = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
-        $pendingPage->assertSee('Trajno brisanje je u toku', false);
-        $pendingPage->assertSee('Ponovi trajno brisanje', false);
-        $pendingPage->assertDontSee('Objavljeno', false);
+        $pendingPage->assertOk();
+        $pendingPage->assertSee('Trajno brisanje Odluke nije završeno.', false);
+        $pendingPage->assertSee('>Ponovi trajno brisanje</button>', false);
+        $pendingPage->assertSee(route('admin.competitions.official-decision.permanent-delete', [$competition, $copy]), false);
+        $pendingPage->assertDontSee('>Učitaj Odluku</button>', false);
+        $pendingPage->assertDontSee('>Objavi Odluku</button>', false);
+        $pendingPage->assertDontSee('Ponovo objavi', false);
+        $pendingPage->assertDontSee('Ispravi podatke objave', false);
+        $pendingPage->assertDontSee('Objavi zamjenu', false);
+        $pendingPage->assertDontSee('Povuci objavu', false);
+        $pendingPage->assertDontSee('Upravljaj objavom', false);
+        $pendingPage->assertDontSee('Objavljena', false);
+        $pendingPage->assertDontSee('Otvori PDF', false);
+        $pendingPage->assertDontSee('Trajno brisanje je u toku', false);
 
         $this->app->bind(CompetitionOfficialDecisionController::class, CompetitionOfficialDecisionController::class);
     }
@@ -493,8 +633,10 @@ class CompetitionOfficialDecisionPermanentDeleteTest extends TestCase
             ->firstOrFail();
 
         $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
-        $page->assertSee('>Objavi</button>', false);
+        $page->assertSee('>Objavi Odluku</button>', false);
         $page->assertSee(route('admin.competitions.official-decision.publish', [$competition, $copyB]), false);
+        $page->assertDontSee('Trajno obrisan', false);
+        $page->assertDontSee('Naziv A', false);
 
         $dateB = now()->subDay()->toDateString();
         $this->actingAs($admin)->post(
@@ -751,6 +893,94 @@ class CompetitionOfficialDecisionPermanentDeleteTest extends TestCase
         $this->assertCount(1, $this->lifecycleEvents(CompetitionOfficialDecisionLifecycleEvent::ACTION_PERMANENT_DELETE_STARTED));
         $this->assertCount(1, $this->lifecycleEvents(CompetitionOfficialDecisionLifecycleEvent::ACTION_PERMANENT_DELETE_COMPLETED));
         $this->assertNotNull($copy->fresh()->permanently_deleted_at);
+    }
+
+    public function test_pending_retry_ui_completes_the_same_copy_without_duplicate_started_audit(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'PENDING-UI-BYTES', 'Pending UI naziv');
+        $copyId = $copy->id;
+        $this->publishCopy($admin, $competition, $copy);
+        $this->simulatePendingAfterT1($admin, $competition, $copy);
+
+        $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $page->assertSee('Trajno brisanje Odluke nije završeno.', false);
+        $page->assertSee('>Ponovi trajno brisanje</button>', false);
+        $page->assertSee(route('admin.competitions.official-decision.permanent-delete', [$competition, $copy]), false);
+        $page->assertDontSee('>Učitaj Odluku</button>', false);
+        $page->assertDontSee('>Objavi Odluku</button>', false);
+        $page->assertDontSee('Ponovo objavi', false);
+        $page->assertDontSee('Ispravi podatke objave', false);
+        $page->assertDontSee('Povuci objavu', false);
+        $page->assertDontSee('Upravljaj objavom', false);
+
+        $this->actingAs($admin)->post($this->permanentDeleteRoute($competition, $copy))->assertRedirect();
+        $copy->refresh();
+        $this->assertSame($copyId, $copy->id);
+        $this->assertNotNull($copy->permanently_deleted_at);
+        $this->assertNull($copy->permanent_delete_pending_at);
+        $this->assertNull($copy->storage_path);
+        $this->assertCount(1, $this->lifecycleEvents(CompetitionOfficialDecisionLifecycleEvent::ACTION_PERMANENT_DELETE_STARTED));
+        $this->assertCount(1, $this->lifecycleEvents(CompetitionOfficialDecisionLifecycleEvent::ACTION_PERMANENT_DELETE_COMPLETED));
+
+        $after = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $after->assertSee('>Učitaj Odluku</button>', false);
+        $after->assertDontSee('Ponovi trajno brisanje', false);
+        $after->assertDontSee('Pending UI naziv', false);
+        $this->assertNotNull(CompetitionOfficialDecisionCopy::query()->find($copyId));
+    }
+
+    public function test_repeated_filesystem_failure_keeps_pending_retry_ui_available(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'STICKY-RETRY-BYTES', 'Naziv sticky retry');
+        $originalPath = $copy->storage_path;
+        $this->publishCopy($admin, $competition, $copy);
+
+        $this->app->bind(CompetitionOfficialDecisionController::class, function () {
+            return new class extends CompetitionOfficialDecisionController
+            {
+                protected function deleteOfficialDecisionStoredPdf(?string $storagePath): bool
+                {
+                    return false;
+                }
+            };
+        });
+
+        $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            $this->permanentDeleteRoute($competition, $copy),
+        )->assertRedirect(route('admin.competitions.show', $competition));
+
+        $copy->refresh();
+        $this->assertNotNull($copy->permanent_delete_pending_at);
+        $this->assertNull($copy->permanently_deleted_at);
+        Storage::disk('local')->assertExists($originalPath);
+
+        $firstPage = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $firstPage->assertSee('Trajno brisanje Odluke nije završeno.', false);
+        $firstPage->assertSee('>Ponovi trajno brisanje</button>', false);
+
+        $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            $this->permanentDeleteRoute($competition, $copy),
+        )->assertRedirect(route('admin.competitions.show', $competition));
+
+        $copy->refresh();
+        $this->assertNotNull($copy->permanent_delete_pending_at);
+        $this->assertNull($copy->permanently_deleted_at);
+        $this->assertSame($originalPath, $copy->storage_path);
+        Storage::disk('local')->assertExists($originalPath);
+        $this->assertCount(1, $this->lifecycleEvents(CompetitionOfficialDecisionLifecycleEvent::ACTION_PERMANENT_DELETE_STARTED));
+        $this->assertCount(0, $this->lifecycleEvents(CompetitionOfficialDecisionLifecycleEvent::ACTION_PERMANENT_DELETE_COMPLETED));
+
+        $secondPage = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $secondPage->assertSee('Trajno brisanje Odluke nije završeno.', false);
+        $secondPage->assertSee('>Ponovi trajno brisanje</button>', false);
+        $secondPage->assertSee(route('admin.competitions.official-decision.permanent-delete', [$competition, $copy]), false);
+        $secondPage->assertDontSee('>Učitaj Odluku</button>', false);
+
+        $this->app->bind(CompetitionOfficialDecisionController::class, CompetitionOfficialDecisionController::class);
     }
 
     /**

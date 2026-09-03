@@ -358,9 +358,10 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
 
         $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
         $page->assertOk();
-        $page->assertSee('Objavljeno', false);
-        $page->assertDontSee('>Objavi</button>', false);
-        $page->assertSee('Koriguj objavu', false);
+        $page->assertSee('Objavljena', false);
+        $page->assertDontSee('>Objavi Odluku</button>', false);
+        $page->assertSee('Zamijeni Odluku', false);
+        $page->assertSee('Objavi zamjenu', false);
     }
 
     public function test_copy_from_another_competition_cannot_be_published(): void
@@ -525,15 +526,20 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
 
         $before = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
         $before->assertOk();
-        $before->assertSee('Objavi', false);
+        $before->assertSee('Objavi Odluku', false);
+        $before->assertSee('Nije objavljena', false);
         $before->assertSee('Datum objave', false);
         $before->assertSee('name="business_published_on"', false);
-        $before->assertDontSee('Objavljeno', false);
+        $before->assertDontSee('Objavljena', false);
         $before->assertDontSee('Koriguj', false);
         $before->assertDontSee('Povuci', false);
         $before->assertDontSee('Ispravi podatke objave', false);
         $before->assertDontSee('Ponovo objavi', false);
+        $before->assertSee('Odustani i obriši Odluku', false);
         $before->assertDontSee('Trajno obriši', false);
+        $before->assertDontSee('Upravljaj objavom', false);
+        $before->assertDontSee('>Učitaj Odluku</button>', false);
+        $before->assertDontSee('Evidentiran', false);
 
         $this->actingAs($admin)->post(
             route('admin.competitions.official-decision.publish', [$competition, $copy]),
@@ -542,13 +548,18 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
 
         $after = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
         $after->assertOk();
-        $after->assertSee('Objavljeno', false);
-        $after->assertDontSee('>Objavi</button>', false);
+        $after->assertSee('Objavljena', false);
+        $after->assertSee('Otvori PDF', false);
+        $after->assertSee('Upravljaj objavom', false);
+        $after->assertDontSee('>Objavi Odluku</button>', false);
         $after->assertDontSee('Koriguj', false);
         $after->assertSee('Ispravi podatke objave', false);
         $after->assertSee('Povuci objavu', false);
         $after->assertDontSee('Ponovo objavi', false);
         $after->assertSee('Trajno obriši', false);
+        $after->assertSee('Zamijeni Odluku', false);
+        $after->assertSee('Učitaj zamjensku Odluku', false);
+        $after->assertDontSee('Evidentiran', false);
     }
 
     public function test_konkurs_admin_can_correct_wrongly_published_signed_copy(): void
@@ -701,9 +712,10 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
 
         $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
         $page->assertOk();
-        $page->assertSee('Objavljeno', false);
-        $page->assertDontSee('>Objavi</button>', false);
+        $page->assertSee('Objavljena', false);
+        $page->assertDontSee('>Objavi Odluku</button>', false);
         $page->assertDontSee('Koriguj objavu', false);
+        $page->assertDontSee('Objavi zamjenu', false);
     }
 
     public function test_correction_revokes_old_public_url_and_serves_new_copy(): void
@@ -992,14 +1004,14 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
 
         $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
         $page->assertOk();
-        $page->assertSee('Objavljeno', false);
-        $page->assertSee('Koriguj objavu', false);
+        $page->assertSee('Objavljena', false);
+        $page->assertSee('Zamijeni Odluku', false);
+        $page->assertSee('Objavi zamjenu', false);
         $page->assertSee('official-decision-correct-form', false);
         $page->assertSee('Datum objave', false);
-        $page->assertDontSee('>Objavi</button>', false);
+        $page->assertDontSee('>Objavi Odluku</button>', false);
         $page->assertSee('Povuci objavu', false);
         $page->assertDontSee('Ponovo objavi', false);
-        $page->assertDontSee('Zamijeni', false);
         $page->assertDontSee('>Izbriši</', false);
         $page->assertSee('Trajno obriši', false);
     }
@@ -1540,6 +1552,168 @@ class CompetitionOfficialDecisionPublicationTest extends TestCase
         $this->assertFalse(
             CompetitionOfficialDecisionCopy::leftoverDecisionHtmlNoticesQuery($competition->id)->exists()
         );
+    }
+
+    public function test_admin_current_view_hides_history_and_shows_one_publish_form_for_newest_never_published_copy(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $older = $this->createCopyWithFile($competition, 'OLDER-BYTES', 'Stariji neobjavljeni naziv');
+        $newer = $this->createCopyWithFile($competition, 'NEWER-BYTES', 'Noviji neobjavljeni naziv');
+
+        $this->assertGreaterThan($older->id, $newer->id);
+        $this->assertSame(2, CompetitionOfficialDecisionCopy::query()->where('competition_id', $competition->id)->count());
+
+        $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $page->assertOk();
+        $page->assertSee('Noviji neobjavljeni naziv', false);
+        $page->assertSee('Nije objavljena', false);
+        $page->assertSee('>Objavi Odluku</button>', false);
+        $page->assertSee(route('admin.competitions.official-decision.publish', [$competition, $newer]), false);
+        $page->assertDontSee(route('admin.competitions.official-decision.publish', [$competition, $older]), false);
+        $page->assertDontSee('Stariji neobjavljeni naziv', false);
+        $page->assertDontSee('Evidentiran', false);
+        $page->assertDontSee('>Učitaj Odluku</button>', false);
+        $page->assertDontSee('Upravljaj objavom', false);
+        $page->assertSee('Odustani i obriši Odluku', false);
+        $this->assertSame(2, CompetitionOfficialDecisionCopy::query()->where('competition_id', $competition->id)->count());
+        $this->assertNull($older->fresh()->permanently_deleted_at);
+        $this->assertNull($newer->fresh()->permanently_deleted_at);
+    }
+
+    public function test_replacement_upload_does_not_change_current_public_publication(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition, 'PUBLIC-BYTES', 'Javna Odluka');
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+            $this->firstPublishPayload(now()->subDays(2)->toDateString()),
+        )->assertRedirect();
+
+        $noticeA = Notice::query()->sole();
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.store', $competition),
+            $this->storeOfficialDecisionPayload(
+                UploadedFile::fake()->createWithContent('zamjena.pdf', 'REPLACEMENT-BYTES'),
+                'Zamjenska Odluka'
+            ),
+        )->assertRedirect(route('admin.competitions.show', $competition));
+
+        $copyB = CompetitionOfficialDecisionCopy::query()
+            ->where('competition_id', $competition->id)
+            ->whereKeyNot($copyA->id)
+            ->sole();
+
+        $this->assertFalse($copyB->hasBeenPublished());
+        $this->assertTrue($noticeA->fresh()->publicly_available);
+        $this->assertSame(1, Notice::query()->where('publicly_available', true)->count());
+
+        $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $page->assertSee('Javna Odluka', false);
+        $page->assertSee('Objavljena', false);
+        $page->assertSee('Otvori PDF', false);
+        $page->assertSee(route('notices.public-content', $noticeA), false);
+        $page->assertSee('Zamijeni Odluku', false);
+        $page->assertSee('Zamjenska Odluka', false);
+        $page->assertSee('Objavi zamjenu', false);
+        $page->assertSee(route('admin.competitions.official-decision.correct', [$competition, $copyB]), false);
+        $page->assertDontSee('>Objavi Odluku</button>', false);
+        $page->assertDontSee('Evidentiran', false);
+
+        $this->get(route('notices.public-content', $noticeA))->assertOk();
+    }
+
+    public function test_published_current_view_does_not_list_tombstoned_or_historical_copy_rows(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $tombstone = $this->createCopyWithFile($competition, 'TOMBSTONE-BYTES', 'Istorijski tombstone naziv');
+        $tombstone->forceFill([
+            'permanently_deleted_at' => now(),
+            'permanently_deleted_by' => $admin->id,
+            'storage_path' => null,
+        ])->save();
+        $live = $this->createCopyWithFile($competition, 'LIVE-BYTES', 'Trenutna Odluka');
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $live]),
+            $this->firstPublishPayload(now()->subDays(5)->toDateString()),
+        )->assertRedirect();
+
+        $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $page->assertSee('Trenutna Odluka', false);
+        $page->assertSee('Objavljena', false);
+        $page->assertSee(now()->subDays(5)->format('d.m.Y'), false);
+        $page->assertDontSee('Istorijski tombstone naziv', false);
+        $page->assertDontSee('Trajno obrisan', false);
+        $page->assertDontSee('Evidentiran', false);
+        $page->assertDontSee('postavio', false);
+    }
+
+    public function test_withdrawn_current_view_hides_never_published_replacement_candidate(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copyA = $this->createCopyWithFile($competition, 'WITHDRAWN-A-BYTES', 'Povučena javna Odluka');
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyA]),
+            $this->firstPublishPayload(now()->subDays(2)->toDateString()),
+        )->assertRedirect();
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.store', $competition),
+            $this->storeOfficialDecisionPayload(
+                UploadedFile::fake()->createWithContent('zamjena.pdf', 'LEFTOVER-B-BYTES'),
+                'Sakrivena zamjenska Odluka'
+            ),
+        )->assertRedirect();
+
+        $copyB = CompetitionOfficialDecisionCopy::query()
+            ->where('competition_id', $competition->id)
+            ->whereKeyNot($copyA->id)
+            ->sole();
+
+        $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.unpublish', [$competition, $copyA]),
+        )->assertRedirect();
+
+        $copyA->refresh();
+        $copyB->refresh();
+        $this->assertTrue($copyA->hasBeenPublished());
+        $this->assertFalse($copyA->isCurrentlyPublished());
+        $this->assertNull($copyA->permanently_deleted_at);
+        $this->assertNull($copyA->permanent_delete_pending_at);
+        $this->assertFalse($copyB->hasBeenPublished());
+        $this->assertNull($copyB->permanently_deleted_at);
+        $this->assertNull($copyB->permanent_delete_pending_at);
+
+        $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $page->assertOk();
+        $page->assertSee('Povučena javna Odluka', false);
+        $page->assertSee('Objava povučena', false);
+        $page->assertSee('Ponovo objavi', false);
+        $page->assertSee(route('admin.competitions.official-decision.republish', [$competition, $copyA]), false);
+        $page->assertDontSee('Sakrivena zamjenska Odluka', false);
+        $page->assertDontSee('>Objavi Odluku</button>', false);
+        $page->assertDontSee('Objavi zamjenu', false);
+        $page->assertDontSee(route('admin.competitions.official-decision.publish', [$competition, $copyB]), false);
+        $page->assertDontSee(route('admin.competitions.official-decision.correct', [$competition, $copyB]), false);
+        $page->assertDontSee('Evidentiran', false);
+        $page->assertDontSee('>Učitaj Odluku</button>', false);
+        $page->assertDontSee('Upravljaj objavom', false);
+
+        Event::fake([OfficialContentReadyForPublicPublication::class]);
+        $blocked = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.publish', [$competition, $copyB]),
+            $this->firstPublishPayload(),
+        );
+        $blocked->assertRedirect(route('admin.competitions.show', $competition));
+        $blocked->assertSessionHasErrors('error');
+        $this->assertFalse($copyB->fresh()->hasBeenPublished());
+        Event::assertNotDispatched(OfficialContentReadyForPublicPublication::class);
+        $this->assertSame(2, CompetitionOfficialDecisionCopy::query()->where('competition_id', $competition->id)->count());
     }
 
     private function currentPublicDecisionNoticeCount(Competition $competition): int

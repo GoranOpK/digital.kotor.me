@@ -60,8 +60,10 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
         $page->assertOk();
         $page->assertSee('Ispravi podatke objave', false);
-        $page->assertSee('PDF se ne mijenja', false);
+        $page->assertSee('Sačuvaj izmjene', false);
         $page->assertSee('value="Stari poslovni naziv"', false);
+        $page->assertSee('value="'.now()->subDays(8)->toDateString().'"', false);
+        $page->assertSee('Upravljaj objavom', false);
 
         $response = $this->actingAs($admin)->post(
             route('admin.competitions.official-decision.update-metadata', [$competition, $copy]),
@@ -235,17 +237,29 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->count());
     }
 
-    public function test_metadata_correction_rejects_missing_title(): void
+    public function test_metadata_correction_keeps_existing_title_when_title_is_omitted(): void
     {
-        $this->assertMetadataValidationRejected(['business_published_on' => now()->toDateString()], 'business_title');
+        $this->assertMetadataPartialUpdate(
+            ['business_published_on' => now()->subDay()->toDateString()],
+            'Stari poslovni naziv',
+            now()->subDay()->toDateString(),
+            titleChanged: false,
+            dateChanged: true,
+        );
     }
 
-    public function test_metadata_correction_rejects_whitespace_title(): void
+    public function test_metadata_correction_keeps_existing_title_when_title_is_blank(): void
     {
-        $this->assertMetadataValidationRejected([
-            'business_title' => '   ',
-            'business_published_on' => now()->toDateString(),
-        ], 'business_title');
+        $this->assertMetadataPartialUpdate(
+            [
+                'business_title' => '   ',
+                'business_published_on' => now()->subDay()->toDateString(),
+            ],
+            'Stari poslovni naziv',
+            now()->subDay()->toDateString(),
+            titleChanged: false,
+            dateChanged: true,
+        );
     }
 
     public function test_metadata_correction_rejects_title_longer_than_255(): void
@@ -256,9 +270,119 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         ], 'business_title');
     }
 
-    public function test_metadata_correction_rejects_missing_date(): void
+    public function test_metadata_correction_keeps_existing_date_when_date_is_omitted(): void
     {
-        $this->assertMetadataValidationRejected(['business_title' => 'Validan naziv'], 'business_published_on');
+        $this->assertMetadataPartialUpdate(
+            ['business_title' => 'Validan naziv'],
+            'Validan naziv',
+            now()->subDays(4)->toDateString(),
+            titleChanged: true,
+            dateChanged: false,
+        );
+    }
+
+    public function test_metadata_correction_keeps_existing_date_when_date_is_blank(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'SIGNED-COPY-BYTES', 'Stari poslovni naziv');
+        $originalDate = now()->subDays(4)->toDateString();
+        $this->publishCopy($admin, $competition, $copy, $originalDate);
+        $notice = Notice::query()->sole();
+        $publishedAt = $notice->published_at->toDateTimeString();
+
+        Event::fake([OfficialContentPublicMetadataUpdated::class]);
+
+        $response = $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.update-metadata', [$competition, $copy]),
+            [
+                'business_published_on' => '',
+            ],
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $this->assertSame('Stari poslovni naziv', $copy->fresh()->business_title);
+        $this->assertSame($originalDate, optional($copy->fresh()->business_published_on)?->toDateString());
+        $this->assertNotNull($copy->fresh()->business_published_on);
+        $this->assertSame('Stari poslovni naziv', $notice->fresh()->title);
+        $this->assertSame($originalDate, optional($notice->fresh()->public_display_date)?->toDateString());
+        $this->assertSame($publishedAt, $notice->fresh()->published_at->toDateTimeString());
+        $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->count());
+        Event::assertNotDispatched(OfficialContentPublicMetadataUpdated::class);
+    }
+
+    public function test_metadata_correction_is_noop_when_values_are_unchanged(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'SIGNED-COPY-BYTES', 'Stari poslovni naziv');
+        $originalDate = now()->subDays(4)->toDateString();
+        $this->publishCopy($admin, $competition, $copy, $originalDate);
+        $notice = Notice::query()->sole();
+        $publishedAt = $notice->published_at->toDateTimeString();
+
+        Event::fake([OfficialContentPublicMetadataUpdated::class]);
+
+        $response = $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.update-metadata', [$competition, $copy]),
+            [
+                'business_title' => 'Stari poslovni naziv',
+                'business_published_on' => $originalDate,
+            ],
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $this->assertSame('Stari poslovni naziv', $copy->fresh()->business_title);
+        $this->assertSame($originalDate, optional($copy->fresh()->business_published_on)?->toDateString());
+        $this->assertSame('Stari poslovni naziv', $notice->fresh()->title);
+        $this->assertSame($originalDate, optional($notice->fresh()->public_display_date)?->toDateString());
+        $this->assertSame($publishedAt, $notice->fresh()->published_at->toDateTimeString());
+        $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->count());
+        Event::assertNotDispatched(OfficialContentPublicMetadataUpdated::class);
+    }
+
+    public function test_metadata_correction_title_only_does_not_invent_a_date_change_in_audit(): void
+    {
+        $this->assertMetadataPartialUpdate(
+            ['business_title' => 'Samo novi naziv'],
+            'Samo novi naziv',
+            now()->subDays(4)->toDateString(),
+            titleChanged: true,
+            dateChanged: false,
+        );
+    }
+
+    public function test_metadata_correction_date_only_does_not_invent_a_title_change_in_audit(): void
+    {
+        $this->assertMetadataPartialUpdate(
+            ['business_published_on' => now()->subDay()->toDateString()],
+            'Stari poslovni naziv',
+            now()->subDay()->toDateString(),
+            titleChanged: false,
+            dateChanged: true,
+        );
+    }
+
+    public function test_metadata_correction_rejects_empty_effective_title_when_existing_title_is_empty(): void
+    {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'SIGNED-COPY-BYTES', 'Stari poslovni naziv');
+        $this->publishCopy($admin, $competition, $copy, now()->subDays(4)->toDateString());
+        $copy->forceFill(['business_title' => ''])->save();
+
+        $response = $this->actingAs($admin)->from(route('admin.competitions.show', $competition))->post(
+            route('admin.competitions.official-decision.update-metadata', [$competition, $copy]),
+            [
+                'business_title' => '   ',
+                'business_published_on' => now()->subDay()->toDateString(),
+            ],
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHasErrors('business_title');
+        $this->assertSame('', $copy->fresh()->business_title);
+        $this->assertSame(0, CompetitionOfficialDecisionLifecycleEvent::query()->count());
     }
 
     public function test_metadata_correction_rejects_future_date(): void
@@ -362,8 +486,11 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
         $page->assertOk();
         $page->assertSee('Povuci objavu', false);
+        $page->assertSee('Da li želite da povučete ovu Odluku iz javne objave?', false);
         $page->assertDontSee('Ponovo objavi', false);
         $page->assertSee('Trajno obriši', false);
+        $page->assertDontSee('name="delete_reason"', false);
+        $page->assertDontSee('name="reason"', false);
 
         $response = $this->actingAs($admin)->post(
             route('admin.competitions.official-decision.unpublish', [$competition, $copy]),
@@ -405,6 +532,16 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         $direct = $this->get(route('notices.public-content', $notice));
         $direct->assertNotFound();
         $this->assertStringNotContainsString('UNPUBLISH-PDF-BYTES', $direct->getContent());
+
+        $after = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
+        $after->assertOk();
+        $after->assertSee('Objava povučena', false);
+        $after->assertSee('Ponovo objavi', false);
+        $after->assertSee($title, false);
+        $after->assertDontSee('>Objavi Odluku</button>', false);
+        $after->assertDontSee('Upravljaj objavom', false);
+        $after->assertDontSee('Zamijeni Odluku', false);
+        $after->assertDontSee('>Učitaj Odluku</button>', false);
     }
 
     public function test_admin_cannot_unpublish_signed_copy(): void
@@ -586,11 +723,12 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
         $page->assertOk();
         $page->assertSee('Ponovo objavi', false);
+        $page->assertSee('Objava povučena', false);
         $page->assertSee('value="Naziv prije ponovne objave"', false);
-        $page->assertSee('PDF se ne mijenja. Ponovo se objavljuje isti sačuvani primjerak.', false);
-        $page->assertDontSee('>Objavi</button>', false);
+        $page->assertDontSee('>Objavi Odluku</button>', false);
         $page->assertDontSee('Ispravi podatke objave', false);
         $page->assertDontSee('Povuci objavu', false);
+        $page->assertDontSee('>Učitaj Odluku</button>', false);
 
         $response = $this->actingAs($admin)->post(
             route('admin.competitions.official-decision.republish', [$competition, $copy]),
@@ -880,7 +1018,7 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
 
         $page = $this->actingAs($admin)->get(route('admin.competitions.show', $competition));
         $page->assertOk();
-        $page->assertSee('>Objavi</button>', false);
+        $page->assertSee('>Objavi Odluku</button>', false);
         $page->assertDontSee('Ponovo objavi', false);
         $page->assertDontSee(route('admin.competitions.official-decision.republish', [$competition, $copy]), false);
 
@@ -1093,6 +1231,49 @@ class CompetitionOfficialDecisionLifecycleActionsTest extends TestCase
         Event::assertNotDispatched(OfficialContentReadyForPublicPublication::class);
         $this->assertSame('Ispravljeni naziv', Notice::query()->sole()->title);
         $this->assertFalse(Notice::query()->sole()->publicly_available);
+    }
+
+    private function assertMetadataPartialUpdate(
+        array $payload,
+        string $expectedTitle,
+        string $expectedDate,
+        bool $titleChanged,
+        bool $dateChanged,
+    ): void {
+        $admin = $this->userWithRole('konkurs_admin');
+        $competition = $this->createCompletedCompetition();
+        $copy = $this->createCopyWithFile($competition, 'SIGNED-COPY-BYTES', 'Stari poslovni naziv');
+        $originalDate = now()->subDays(4)->toDateString();
+        $this->publishCopy($admin, $competition, $copy, $originalDate);
+        $notice = Notice::query()->sole();
+        $publishedAt = $notice->published_at->toDateTimeString();
+
+        $response = $this->actingAs($admin)->post(
+            route('admin.competitions.official-decision.update-metadata', [$competition, $copy]),
+            $payload,
+        );
+
+        $response->assertRedirect(route('admin.competitions.show', $competition));
+        $response->assertSessionHas('success');
+
+        $copy->refresh();
+        $notice->refresh();
+        $this->assertSame($expectedTitle, $copy->business_title);
+        $this->assertSame($expectedDate, optional($copy->business_published_on)?->toDateString());
+        $this->assertSame($expectedTitle, $notice->title);
+        $this->assertSame($expectedDate, optional($notice->public_display_date)?->toDateString());
+        $this->assertSame($publishedAt, $notice->published_at->toDateTimeString());
+        $this->assertTrue($notice->publicly_available);
+
+        $audit = CompetitionOfficialDecisionLifecycleEvent::query()->sole();
+        $this->assertSame(CompetitionOfficialDecisionLifecycleEvent::ACTION_METADATA_CORRECTED, $audit->action);
+        $this->assertSame('Stari poslovni naziv', $audit->payload['business_title']['from']);
+        $this->assertSame($expectedTitle, $audit->payload['business_title']['to']);
+        $this->assertSame($originalDate, $audit->payload['business_published_on']['from']);
+        $this->assertSame($expectedDate, $audit->payload['business_published_on']['to']);
+        $this->assertSame($titleChanged, $audit->payload['business_title']['from'] !== $audit->payload['business_title']['to']);
+        $this->assertSame($dateChanged, $audit->payload['business_published_on']['from'] !== $audit->payload['business_published_on']['to']);
+        $this->assertSame($notice->id, $audit->payload['notice_id']);
     }
 
     private function assertMetadataValidationRejected(array $payload, string $errorKey): void
