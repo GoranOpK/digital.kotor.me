@@ -5,8 +5,8 @@
 **Naziv:** Registar skraćenica i oznaka platformske dokumentacije Digital Kotora
 **Vlasništvo:** platformski sloj Digital Kotora
 **Status dokumenta:** AKTIVAN
-**Verzija:** 1.2.0
-**Datum:** 2026-08-18
+**Verzija:** 1.2.2
+**Datum:** 2026-09-03
 
 ---
 
@@ -35,7 +35,7 @@ Usvojeni dokumentacioni namespace-i Digital Kotora:
 | **KK** | Kalendar kulture | AKTIVAN (nije sadržaj ovog registra) |
 | **EP** | e-Plaćanje | AKTIVAN (nije sadržaj ovog registra) |
 | **DK** | Platformski sloj | AKTIVAN (ovaj registar) |
-| **KN** | Konkursi | USVOJEN. Kanonski paket: `KN-RG-001` (USVOJENO). `KN-PRO-001` / `KN-BM-001` / `KN-FS-001` / `KN-TS-001` = NACRT. Nije sadržaj ovog registra. |
+| **KN** | Konkursi | USVOJEN. Kanonski paket: `KN-RG-001` (USVOJENO). `KN-BM-001` = USVOJENO; `KN-FS-001` = USVOJENO; `KN-PRO-001` / `KN-TS-001` = NACRT. Nije sadržaj ovog registra. |
 
 Tenderi **nemaju** usvojeni namespace.
 
@@ -137,7 +137,9 @@ Runtime entitet FT-004 je `Notice` (tabela `notices`), javni panel na `/`, javna
 | 1.0.0 | 2026-08-17 | Uspostavljen DK-RG-001. Registrovani `DK-BM` / `DK-UC` / `DK-FS` / `DK-TS` / `DK-RG` / `DK-FR` i kanonski dokumenti `*-001`. FT-004 KEEP kao feature ID. `TS-013` → istorijski document ID; aktivni ID `DK-TS-001`. Poslovne oznake BM-OB / PO-OB / FR-OB / UC-OB / C-UC-OB / OFD-OB / PATCH-FS-OB / FS-OB-FLOW KEEP. Bez izmjene aplikacionog koda. |
 | 1.1.0 | 2026-08-17 | Registrovani `DK-DS` / `DK-DS-001`. Usvojeni namespace-i evidentiirani: KK, EP, DK, KN (Konkursi — rezervisan). Tenderi bez namespace-a. Bez kreiranja KN dokumenata. Bez izmjene FT-004 BM/UC/FS/TS sadržaja. |
 | 1.2.0 | 2026-08-18 | Namespace `KN`: kanonski paket otvoren (`KN-RG-001`). DK-RG i dalje nije katalog KN oznaka. Bez izmjene FT-004 BM/UC/FS/TS sadržaja. Bez izmjene aplikacionog koda. |
+| 1.2.1 | 2026-09-03 | Administrativno usklađivanje §2 summary: `KN-BM-001` = USVOJENO; `KN-PRO-001` / `KN-FS-001` / `KN-TS-001` ostaju NACRT. DK-RG i dalje nije katalog KN oznaka. Bez izmjene FT-004 BM/UC/FS/TS sadržaja. |
+| 1.2.2 | 2026-09-03 | Administrativno usklađivanje §2 summary: `KN-FS-001` = USVOJENO; `KN-PRO-001` / `KN-TS-001` ostaju NACRT. DK-RG i dalje nije katalog KN oznaka. Bez izmjene FT-004 BM/UC/FS/TS sadržaja. |
 
 ---
 
-**Kraj dokumenta DK-RG-001 v1.2.0**
+**Kraj dokumenta DK-RG-001 v1.2.2**

@@ -7,8 +7,8 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJENO
-**Verzija:** 0.2.7
-**Datum:** 2026-08-18
+**Verzija:** 0.2.10
+**Datum:** 2026-09-03
 
 ---
 
@@ -26,6 +26,9 @@
 | 0.2.6 | 2026-08-18 | Evidentirana PO DECISION 7 (terminološka standardizacija za budući KN-FS): USVOJENO opcija 1. Zadržavaju se izvorni termini po stvarnom kontekstu; ne uvodi se univerzalni zamjenski termin. Stavka 7 uklonjena iz `PO DECISION REQUIRED`. Registar nema otvorenih stavki. Status ostaje NACRT. FS/TS/PRO/RG nijesu mijenjani. |
 | 0.2.7 | 2026-08-18 | Post-audit editorial cleanup. Usklađen opis izvora u §1 (KN-PRO-001, Q1–Q6, PO DECISION 1–5 i 7). Uklonjena zastarjela legenda kolone „Klasa“ u §9. Usklađen status/izvor KN-BR registra u §9. Nema izmjene poslovnih pravila. Status ostaje NACRT. FS/TS/PRO/RG nijesu mijenjani. |
 | 0.2.7 — PO APPROVAL | 2026-08-18 | Formalno PO usvajanje KN-BM-001 v0.2.7. Status: USVOJENO. Nema promjene poslovnih pravila. Zaključana BM baseline i SSOT za izradu KN-FS. |
+| 0.2.8 / KN-PATCH-BM-001 | 2026-09-03 | Usklađivanje bodovanja sa potvrđenim PO pravilom: pojedinačne ocjene članova = cijeli brojevi 1–5; formula prosjeka i konačne ocjene nepromijenjena (Odluka/P3); konačni/ukupni skor prikazuje se na dvije decimale (DISPLAY); prag i rangiranje na CALCULATION VALUE. „Bez decimala“ ograničeno na pojedinačne ocjene. Izmijenjeni KN-BR-036, KN-BR-037, §17.3, §25, §35 BM PO DECISION 4. Status ostaje USVOJENO. KN-PRO/KN-TS/kod nijesu mijenjani. |
+| 0.2.9 / KN-PATCH-BM-002 | 2026-09-03 | Administrativno usklađivanje živog pokazivača na KN-PRO-001: §34 `NACRT v0.1.3` → `NACRT v0.1.4`. Bez izmjene KN-BR, poslovnih pravila, žensko/mladi modela ili interpretacije Odluke. §1 zadržava v0.1.3 kao zaključanu derivacionu baseline. Status ostaje USVOJENO. KN-FS/KN-PRO/KN-TS/kod nijesu mijenjani. |
+| 0.2.10 / KN-PATCH-BM-003 | 2026-09-03 | Administrativno usklađivanje živog pokazivača na KN-FS-001: §34 `NACRT — nije mijenjan ovim korakom` → `v0.2.12 USVOJENO`. Bez izmjene KN-BR, poslovnih pravila, žensko/mladi modela ili interpretacije Odluke. Status ostaje USVOJENO. KN-FS/KN-PRO/KN-TS/kod nijesu mijenjani. |
 
 Napomena:
 
@@ -42,7 +45,7 @@ Svaki PATCH dobija:
 - kratak naziv,
 - kratak opis izmjene.
 
-Naziv PATCH-a predstavlja zvanični naziv izmjene i koristi se u istoriji verzija. PATCH model: KN-RG-001 / DK-DS-001 §8. Nijedan `KN-PATCH-BM-*` još nije izdat.
+Naziv PATCH-a predstavlja zvanični naziv izmjene i koristi se u istoriji verzija. PATCH model: KN-RG-001 / DK-DS-001 §8. Izdat: `KN-PATCH-BM-001` (v0.2.8), `KN-PATCH-BM-002` (v0.2.9), `KN-PATCH-BM-003` (v0.2.10).
 
 ---
 
@@ -50,7 +53,7 @@ Naziv PATCH-a predstavlja zvanični naziv izmjene i koristi se u istoriji verzij
 
 Dokument predstavlja **ciljni** referentni poslovni model cjeline Konkursi za planiranje, razvoj, testiranje i održavanje.
 
-U verziji 0.2.7 dokument sadrži prvu punu derivaciju poslovnih pravila iz KN-PRO-001 i PO odluka Q1–Q6, uz usvojene **PO DECISION 1–5** i **PO DECISION 7**, granicu izvora za naknadu/Poslovnik (bivša stavka 6) i prazan `PO DECISION REQUIRED` registar. **Ne** opisuje postojeći aplikacioni kod. **Ne** prenosi poslovna pravila iz postojeće implementacije ženskog preduzetništva. Status dokumenta: **USVOJENO** (formalno PO usvajanje KN-BM-001 v0.2.7; nema promjene poslovnih pravila).
+U verziji 0.2.10 dokument zadržava punu derivaciju poslovnih pravila iz KN-PRO-001 i PO odluka Q1–Q6, uz usvojene **PO DECISION 1–5** i **PO DECISION 7**, granicu izvora za naknadu/Poslovnik (bivša stavka 6) i prazan `PO DECISION REQUIRED` registar, uz `KN-PATCH-BM-001` (prikaz konačnog/ukupnog skora na dvije decimale; pojedinačne ocjene = cijeli brojevi 1–5), `KN-PATCH-BM-002` (živi pokazivač na KN-PRO-001 v0.1.4 u §34) i `KN-PATCH-BM-003` (živi pokazivač na KN-FS-001 v0.2.12 USVOJENO u §34). **Ne** opisuje postojeći aplikacioni kod. **Ne** prenosi poslovna pravila iz postojeće implementacije ženskog preduzetništva. Status dokumenta: **USVOJENO**.
 
 Identifikatori `KN-BR-*` su lokalni identifikatori poslovnih pravila ovog dokumenta (DK-DS-001 §5, MODULE-INTERNAL). **Nisu** Document ID, **nisu** Feature ID, **nisu** `KN-DOC-*` i **nisu** FS `BR-*`.
 
@@ -103,7 +106,7 @@ Identifikatori `KN-BR-*` su lokalni identifikatori poslovnih pravila ovog dokume
 
 1. Poslovni model predstavlja ciljnu zvaničnu poslovnu specifikaciju cjeline Konkursi (KN-BM-001).
 
-2. Posljednja **usvojena** verzija Business Modela predstavlja jedini izvor istine (Single Source of Truth) za poslovna pravila cjeline. KN-BM-001 **v0.2.7** je **USVOJENO** (formalno PO usvajanje) i predstavlja zaključanu BM baseline i SSOT za izradu KN-FS. Buduća izmjena poslovnog pravila ide kroz kontrolisanu izmjenu KN-BM-001, ne kroz KN-FS.
+2. Posljednja **usvojena** verzija Business Modela predstavlja jedini izvor istine (Single Source of Truth) za poslovna pravila cjeline. KN-BM-001 **v0.2.10** je **USVOJENO** (formalno PO usvajanje v0.2.7; `KN-PATCH-BM-001` usklađuje prikaz konačnog skora; `KN-PATCH-BM-002` usklađuje živi pokazivač na KN-PRO-001 v0.1.4; `KN-PATCH-BM-003` usklađuje živi pokazivač na KN-FS-001 v0.2.12 USVOJENO) i predstavlja zaključanu BM baseline i SSOT za izradu KN-FS. Buduća izmjena poslovnog pravila ide kroz kontrolisanu izmjenu KN-BM-001, ne kroz KN-FS.
 
 3. Poglavlja sa statusom USVOJENO mijenjaju se isključivo kroz PATCH koji predstavlja novu poslovnu ili projektnu odluku.
 
@@ -111,7 +114,7 @@ Identifikatori `KN-BR-*` su lokalni identifikatori poslovnih pravila ovog dokume
 
 5. Poslovna pravila se izvode isključivo iz: KN-PRO-001; usvojenih PO odluka Q1–Q6; PO DECISION 1–5; PO DECISION 7; KN-RG-001; važećeg Digital Kotor kanonskog standarda. Ne izmišljaju se. Ne preuzimaju se nekritički iz postojeće implementacije.
 
-6. Ako postoji razlika između implementacije sistema i usvojenog Business Modela, implementacija se usklađuje sa Business Modelom, osim ako se odlukom ne izmijeni sam Business Model. Ovo pravilo je na snazi jer je KN-BM-001 v0.2.7 **USVOJENO**.
+6. Ako postoji razlika između implementacije sistema i usvojenog Business Modela, implementacija se usklađuje sa Business Modelom, osim ako se odlukom ne izmijeni sam Business Model. Ovo pravilo je na snazi jer je KN-BM-001 **USVOJENO** (trenutno v0.2.10).
 
 7. Source anomalies iz KN-PRO-001 ostaju u pravnom registru. BM koristi donesenu PO poslovnu interpretaciju i referencira KN-PRO; ne ponavlja cijeli anomaly register i ne predstavlja PO tumačenje kao doslovni tekst Odluke.
 
@@ -495,8 +498,8 @@ Konvencija: `KN-BR-{NNN}` = lokalni ID poslovnog pravila. Status svakog pravila:
 | KN-BR-033 | Tri eliminatorna kriterijuma | Sva 3 eliminatorna kriterijuma čl.20 ostaju na snazi iako P3 operacionalizuje provjeru potpunosti dokumentacije. | KN-PRO čl.20, P3 | Q4 | Komisija | Evaluacija | P3 ne ukida elim. 2 i 3 | |
 | KN-BR-034 | Individualno bodovanje | Svaki od tri člana Komisije (Predsjednik, Član 1, Član 2) mora ocijeniti svih 10 pozitivnih kriterijuma. | KN-PRO čl.21 | PO DECISION 2; PO DECISION 4 | Članovi Komisije | Nakon intervjua | Individualni bodovi za svih 10 kriterijuma | Nema neocijenjenog kriterijuma |
 | KN-BR-035 | Privatnost bodova | Tokom bodovanja članovi imaju uvid samo u svoje bodove. | KN-PRO čl.21 | — | Članovi Komisije | Bodovanje u toku | Nema uvida u tuđe bodove | |
-| KN-BR-036 | Prosječna ocjena | Prosječna ocjena po kriterijumu = zbir bodova svih članova / broj članova (3). Bodovi i ocjene se vode i prikazuju bez decimala. Dodatna pravila zaokruživanja nijesu usvojena. | KN-PRO čl.21 | PO DECISION 4 | Komisija | Svi članovi ocijenili kriterijum | Prosjek po kriterijumu, bez decimala | Formula ostaje usklađena sa Odlukom / KN-PRO |
-| KN-BR-037 | Konačna ocjena | Konačna ocjena = zbir prosječnih ocjena po svim kriterijumima. Vodi se i prikazuje bez decimala. Dodatna pravila zaokruživanja nijesu usvojena. | KN-PRO čl.21 | PO DECISION 4 | Komisija | Svi kriterijumi ocijenjeni | Jedna konačna ocjena, bez decimala | Usklađeno sa Odlukom, KN-PRO i KN-BR-029 |
+| KN-BR-036 | Prosječna ocjena | Prosječna ocjena po kriterijumu = zbir pojedinačnih ocjena sva 3 člana / 3. Pojedinačne ocjene su cijeli brojevi 1–5 (KN-BR-030). **CALCULATION VALUE** prosjeka smije imati decimale koje proizlaze iz formule. Ne uvodi se novo poslovno pravilo zaokruživanja prosjeka. | KN-PRO čl.21 | PO DECISION 4; KN-PATCH-BM-001 | Komisija | Svi članovi ocijenili kriterijum | Prosjek po kriterijumu (formula) | Formula ostaje usklađena sa Odlukom / KN-PRO |
+| KN-BR-037 | Konačna ocjena | Konačna ocjena (**CALCULATION VALUE**) = zbir prosječnih ocjena svih 10 kriterijuma. **Konačni/ukupni skor prikazuje se na dvije decimale** (**DISPLAY VALUE**). Prag i rangiranje koriste stvarnu vrijednost formule, ne zasebno poslovno rounding pravilo. | KN-PRO čl.21 | PO DECISION 4; KN-PATCH-BM-001 | Komisija | Svi kriterijumi ocijenjeni | Konačna ocjena (formula); prikaz na 2 decimale | Usklađeno sa Odlukom, KN-PRO i KN-BR-029 |
 | KN-BR-038 | Preliminarna rang lista | Po završetku ocjenjivanja automatski se formira preliminarna rang lista sa bodovima, bez utvrđenih iznosa. | KN-PRO čl.21 | — | Komisija | Svi planovi ocijenjeni | Preliminarna lista | |
 | KN-BR-039 | Treća sjednica | Komisija zakazuje treću sjednicu u roku 7 dana od druge sjednice i usmenih intervjua. | KN-PRO čl.21 | — | Komisija | Druga sjednica/intervjui održani | Treća sjednica ≤ 7 dana | |
 | KN-BR-040 | Konačna rang lista | Na trećoj sjednici Komisija za svaki plan konstatuje da li se podržava ili odbija i iznos subvencije. Lista sadrži ime/naziv, vrstu, bodove, potrebna sredstva, odobrena sredstva i potpise svih članova. | KN-PRO čl.22 | — | Komisija; predsjednik | Treća sjednica | Konačna rang lista | Predsjednik unosi zaključke i obrazloženja odbijenih |
@@ -823,7 +826,10 @@ P3 sadrži svih 10 pozitivnih kriterijuma i naznaku potpune dokumentacije. P3 **
 * nema ocjene 0, prazne ocjene niti neocijenjenog kriterijuma;
 * bodovanje, prosječna ocjena po kriterijumu, konačna ocjena i prag podrške ostaju usklađeni sa Odlukom i KN-PRO (KN-BR-036, KN-BR-037, KN-BR-029);
 * plan ulaganja sa konačnom ocjenom ispod 30 bodova ne podržava se (KN-BR-029);
-* bodovi / ocjene se vode i prikazuju **bez decimala**; dodatna pravila zaokruživanja i decimalni prikazi nijesu usvojeni.
+* **INPUT:** pojedinačne ocjene članova = cijeli brojevi 1–5;
+* **CALCULATION:** formula prosjeka (zbir/3) i konačne ocjene (zbir 10 prosjeka) nepromijenjena; CALCULATION VALUE smije imati decimale koje proizlaze iz formule;
+* **DISPLAY:** konačni/ukupni skor prikazuje se na **dvije decimale**;
+* prag i rangiranje koriste CALCULATION VALUE (stvarnu vrijednost formule), ne zasebno poslovno rounding pravilo.
 
 Ostala mehanika iz KN-PRO:
 
@@ -1068,7 +1074,7 @@ Ne definišu se implementacioni validatori.
 | Prag bodova | < 30 = bez podrške | čl.22 |
 | Rok prigovora | 3 dana od slanja obavještenja | čl.18 |
 | Rok odluke o prigovoru | 7 dana od prijema | čl.18 |
-| Skala bodova | isključivo 1, 2, 3, 4 ili 5; nema 0 / prazno / neocijenjeno; vođenje i prikaz bez decimala | P3; Q4; PO DECISION 4 |
+| Skala bodova | Pojedinačne ocjene: isključivo 1, 2, 3, 4 ili 5 (cijeli broj); nema 0 / prazno / neocijenjeno. Konačni/ukupni skor prikazuje se na dvije decimale. | P3; Q4; PO DECISION 4; KN-PATCH-BM-001 |
 | Izvještavanje | P4/P4a + fakture + izvodi u ugovornom roku | čl.28 |
 | Bruto plate | ugovor ≥ 12 mj.; subvencionisani period ≤ 6 mj. | Q5 |
 
@@ -1233,8 +1239,8 @@ Budući KN-FS zadržava izvorne termine po kontekstu (**PO DECISION 7**, opcija 
 | Dokument | Putanja | Status |
 |----------|---------|--------|
 | KN-RG-001 | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` | USVOJENO |
-| KN-PRO-001 | `docs/pravni-okvir/Pravni_okvir_Konkursi.md` | NACRT v0.1.3 |
-| KN-FS-001 | `docs/functional-specifications/Functional-Specification_Konkursi.md` | NACRT — nije mijenjan ovim korakom |
+| KN-PRO-001 | `docs/pravni-okvir/Pravni_okvir_Konkursi.md` | NACRT v0.1.4 |
+| KN-FS-001 | `docs/functional-specifications/Functional-Specification_Konkursi.md` | v0.2.12 USVOJENO |
 | KN-TS-001 | `docs/technical-specifications/Technical-Specification_Konkursi.md` | NACRT — nije mijenjan ovim korakom |
 
 `KN-FR-*`, `KN-CR-REG-*`, `KN-IS-*`, `KN-IR-*` i UC **nisu** kreirani (DK-DS-001 §3).
@@ -1253,7 +1259,7 @@ Usvojene PO interpretacije za derivaciju BM (prenijete iz KN-PRO-001 §4.21): **
 
 **PO DECISION 3 — životni ciklus / runtime statusi:** USVOJENO. KN-BM-001 ne uvodi zatvoreni katalog aplikacionih/runtime statusa. Životni ciklus se opisuje procesno i narativno prema Odluci. Tabela/faze nisu runtime state machine. Konkretni runtime statusi, nazivi, prelazi i pravila promjene definišu se kasnije u KN-FS-001 kada FS to zahtijeva, bez izmišljanja ako Odluka nije jednoznačna. Odluka ostaje glavni poslovni/normativni izvor. Vidi poglavlja 16 i 26.
 
-**PO DECISION 4 — bodovanje:** USVOJENO. Komisija ima tačno 3 člana (Predsjednik, Član 1, Član 2). Svaki ocjenjuje svih 10 pozitivnih kriterijuma ocjenom isključivo 1, 2, 3, 4 ili 5. Nema 0, prazne ocjene ni neocijenjenog kriterijuma. Formula prosjeka, konačna ocjena i prag 30 ostaju usklađeni sa Odlukom i KN-PRO. Bodovi/ocjene se vode i prikazuju bez decimala; dodatna pravila zaokruživanja nijesu usvojena. Vidi KN-BR-029, KN-BR-030, KN-BR-034, KN-BR-036, KN-BR-037 i poglavlje 17.
+**PO DECISION 4 — bodovanje:** USVOJENO. Komisija ima tačno 3 člana (Predsjednik, Član 1, Član 2). Svaki ocjenjuje svih 10 pozitivnih kriterijuma ocjenom isključivo 1, 2, 3, 4 ili 5 (cijeli broj). Nema 0, prazne ocjene ni neocijenjenog kriterijuma. Formula prosjeka, konačna ocjena i prag 30 ostaju usklađeni sa Odlukom i KN-PRO. **„Bez decimala“ odnosi se samo na pojedinačne ocjene članova Komisije.** **Konačni/ukupni skor prikazuje se na dvije decimale** (DISPLAY). Ne uvodi se novo poslovno rounding pravilo koje mijenja formulu ili prag; prag i rangiranje koriste CALCULATION VALUE. Vidi KN-BR-029, KN-BR-030, KN-BR-034, KN-BR-036, KN-BR-037, poglavlje 17 i `KN-PATCH-BM-001`.
 
 **PO DECISION 5 — katalog skraćenica pojedinačnog konkursa:** USVOJENO. KN-RG-001 ostaje modulni registar cjeline Konkursi. Svaki budući pojedinačni konkurs mora imati poseban katalog/dokument skraćenica tipa RG, po principu postojećeg Digital Kotor / Kalendar kulture dokumentacionog obrasca. Katalog konkretnog konkursa dobija sljedeći slobodni Document ID `KN-RG-xxx`; konkretan broj se ne rezerviše unaprijed. Prilikom formalnog otvaranja konkretnog konkursa prvo se provjerava KN registar i dodjeljuje sljedeći slobodni KN-RG broj. Ne uvodi se novi KF tip dokumenta. Katalog konkretnog konkursa se sada ne kreira. Vidi KN-DOC-08 i poglavlje 5.
 
@@ -1261,7 +1267,7 @@ Usvojene PO interpretacije za derivaciju BM (prenijete iz KN-PRO-001 §4.21): **
 
 **PO DECISION 7 — terminološka standardizacija za budući KN-FS:** USVOJENO, opcija 1. U KN-BM-001 i budućem KN-FS zadržavaju se termini iz pravnih i poslovnih izvora prema njihovom stvarnom kontekstu. Ne uvodi se jedan novi univerzalni termin tamo gdje izvori koriste različite termine ili pojmove (npr. preduzetnik, društvo, MMSP, DOO, plan ulaganja, biznis plan, Javni poziv / Javni konkurs). Pravno ili poslovno značenje izvornog termina ne mijenja se samo radi ujednačavanja. Ako budući KN-FS ili konkretan UI zahtijeva jedan jedinstveni naziv, to se ne definiše proizvoljno: pitanje se evidentira i, kada je potrebno, traži se PO odluka. Vidi poglavlja 33 i 34.
 
-Ovaj dokument je **USVOJENO** (KN-BM-001 v0.2.7; formalno PO usvajanje; nema promjene poslovnih pravila). Derivirana `KN-BR-*` pravila imaju status **DERIVED / USVOJENO**.
+Ovaj dokument je **USVOJENO** (KN-BM-001 v0.2.10; formalno PO usvajanje v0.2.7; `KN-PATCH-BM-001`; `KN-PATCH-BM-002`; `KN-PATCH-BM-003`). Derivirana `KN-BR-*` pravila imaju status **DERIVED / USVOJENO**.
 
 Dokumentaciona načela: `KN-DOC-01` … `KN-DOC-08` (poglavlje 5). Nisu BR. KN-DOC-08 ne kreira katalog konkretnog konkursa i ne rezerviše `KN-RG-xxx` broj.
 
@@ -1283,4 +1289,4 @@ Napomena: DERIVED DATE stupanja na snagu (čl.32) ostaje u KN-PRO; nije BM block
 
 ---
 
-**Kraj dokumenta KN-BM-001 v0.2.7 USVOJENO**
+**Kraj dokumenta KN-BM-001 v0.2.10 USVOJENO**

@@ -7,8 +7,8 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** NACRT
-**Verzija:** 0.1.3
-**Datum:** 2026-08-18
+**Verzija:** 0.1.4
+**Datum:** 2026-09-03
 
 ---
 
@@ -20,6 +20,7 @@
 | 0.1.1 | 2026-08-18 | Pravna ekstrakcija Odluke: popunjen registar članova 1–32, izdvojeni akteri/condition registry/dokumentacija-obrasci/rokovi-finansije-kriterijumi-bodovanje-odluke/ugovor-praćenje-izvještavanje, uz `SOURCE ANOMALIES / LEGAL CLARIFICATIONS REQUIRED`. BM/FS/TS nijesu mijenjani. |
 | 0.1.2 | 2026-08-18 | Validirana postojeća djelimična ekstrakcija prema oba izvora (osnovni tekst + PDF prilozi). Potvrđeni i obrađeni obrasci P1a/P1b/P2/P3/P4/P4a; uklonjene zastarjele `MISSING SOURCE ATTACHMENT` oznake za dostupne priloge; P3 skala 1–5 evidentirana kao eksplicitno pravilo iz obrasca; anomaly registar dopunjen razlikama član-tekst vs obrazac. Status ostaje NACRT. BM/FS/TS nijesu mijenjani. |
 | 0.1.3 | 2026-08-18 | PO review Q1–Q6: donesene PO odluke evidentirane u `PO DECISION REGISTER`; source anomalies zadržane radi traceability-ja; uklonjeni BM blocker statusi za Q1–Q6. Metadata header usklađen sa changelogom (0.1.2→0.1.3). Status ostaje NACRT. BM/FS/TS nijesu mijenjani. |
+| 0.1.4 | 2026-09-03 | Katalog source anomalies (§4.20): dodata stavka **4.20.L** — čl.13 referenca „Ugovor iz člana 27“ dok je ugovor u čl.26 (čl.27 = praćenje). Izvor se ne prepravlja; bez nove PO odluke; bez izmjene poslovnog značenja. BM/FS/TS/RG/kod nijesu mijenjani. Status ostaje NACRT. |
 
 Napomena:
 
@@ -1230,7 +1231,7 @@ VII. ODRŽIVOST I DUGOROČNI EFEKTI
 
 ## 4.20 SOURCE ANOMALIES / LEGAL CLARIFICATIONS REQUIRED
 
-> Posebno provjereno cross-reference po zadatom modelu: čl.19→čl.13; čl.16→čl.15; čl.31 “MMSP mladih”; dodatne interne reference uključuju terminologiju “Javni konkurs”.
+> Posebno provjereno cross-reference po zadatom modelu: čl.19→čl.13; čl.16→čl.15; čl.31 “MMSP mladih”; čl.13→„Ugovor iz člana 27“; dodatne interne reference uključuju terminologiju “Javni konkurs”.
 
 # 4.20.A. Član 19 → član 13
 * U tekstu čl.19: “jedan preduzetnik/društvo može konkurisati za dvije vrste subvencija iz člana 13 ove Odluke...”; te “iznos subvencije do 80% ... za subvenciju iz člana 13 tačka 1”
@@ -1316,6 +1317,15 @@ Zaključak:
 * **DERIVED DATE** stupanja na snagu (čl.32): računanje „osmog dana“ — `DERIVED — REQUIRES PO/LEGAL CONFIRMATION` (nije BM blocker).
 * **Tipografske/terminološke varijacije** (4.20.D, 4.20.J): `dodjela/dodijela`, `plan ulaganja/biznis plan`, `Javni poziv/Javni konkurs`, `MMSP/DOO/društvo` — dokumentovane; ne mijenjaju proces bez PO odluke o terminološkoj standardizaciji u BM.
 * **FORM/TEXT INCONSISTENCY** (4.20.H, 4.20.I): P1a/P1b vs čl.16; P2 vs čl.17 — razrada obrascem; ne blokira BM derivaciju.
+* **SOURCE CROSS-REFERENCE ANOMALY** (4.20.L): čl.13 → „Ugovor iz člana 27“ — katalog dopunjen; izvor i KN-BR-073 ne mijenjaju se.
+
+# 4.20.L. Član 13 → „Ugovor iz člana 27“
+
+* **SOURCE:** U čl.13 (neprihvatljivi troškovi) tekst referencira troškove nastale „prije potpisivanja Ugovora iz člana 27 ove Odluke“.
+* **OBSERVATION:** Ugovor o dodjeli subvencija je normativno uređen **članom 26**. **Član 27** uređuje praćenje realizacije / kontrolu (uključujući preusmjeravanje sredstava).
+* **HANDLING:** Izvor se **ne** prepravlja. KN dokumentacija čuva izvornu referencu i anomaliju evidentira radi sljedivosti. Poslovno pravilo ostaje: troškovi prije potpisivanja Ugovora nisu prihvatljivi (vidi KN-BM-001 / KN-BR-073: izvor citira „člana 27“; BM ne prepravlja citat).
+* **STATUS:** **SOURCE CROSS-REFERENCE ANOMALY** (ne popravljati izvor).
+* Nova PO odluka **nije** potrebna; žensko/mladi i V1 scope nijesu pogođeni.
 
 ---
 
@@ -1383,4 +1393,4 @@ Ovaj dokument sadrži registar članova `1–32`, uključujući završne odredbe
 
 ---
 
-**Kraj dokumenta KN-PRO-001 v0.1.3**
+**Kraj dokumenta KN-PRO-001 v0.1.4**

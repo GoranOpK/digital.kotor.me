@@ -6,8 +6,8 @@
 **Modul:** Konkursi
 **Vlasništvo:** cjelina Konkursi (`KN`)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.0
-**Datum:** 2026-08-18
+**Verzija:** 1.0.8
+**Datum:** 2026-09-03
 
 ---
 
@@ -59,8 +59,8 @@ Tipovi i obaveznost preuzeti su iz DK-DS-001 §3. Ovaj registar ih ne proširuje
 |------|---------|----------------------------------|
 | **RG** | Registar skraćenica i oznaka | Kreiran: KN-RG-001 (ovaj dokument) |
 | **PRO** | Pravni okvir (novi moduli) | Kreiran: KN-PRO-001 — NACRT |
-| **BM** | Poslovni model | Kreiran: KN-BM-001 — NACRT |
-| **FS** | Funkcionalna specifikacija | Kreiran: KN-FS-001 — NACRT |
+| **BM** | Poslovni model | Kreiran: KN-BM-001 — USVOJENO |
+| **FS** | Funkcionalna specifikacija | Kreiran: KN-FS-001 — USVOJENO |
 | **TS** | Tehnička specifikacija | Kreiran: KN-TS-001 — NACRT |
 | **UC** | Use Cases | CONDITIONAL / ONLY WHEN NEEDED — **NOT YET CREATED** |
 | **FR** | Feature Registry | CONDITIONAL / ONLY WHEN NEEDED — **NOT YET CREATED** |
@@ -84,8 +84,8 @@ Pravni okvir novog modula koristi tip **PRO**, ne `PO`. `PO-*` u drugim modulima
 |--------|----------|---------|------------------|
 | **KN-RG-001** | Registar skraćenica i oznaka dokumentacije Konkursa | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` | USVOJENO |
 | **KN-PRO-001** | Pravni okvir Konkursa | `docs/pravni-okvir/Pravni_okvir_Konkursi.md` | NACRT |
-| **KN-BM-001** | Poslovni model Konkursa | `docs/business-model/Business_Model_Konkursi.md` | NACRT |
-| **KN-FS-001** | Funkcionalna specifikacija Konkursa | `docs/functional-specifications/Functional-Specification_Konkursi.md` | NACRT |
+| **KN-BM-001** | Poslovni model Konkursa | `docs/business-model/Business_Model_Konkursi.md` | USVOJENO |
+| **KN-FS-001** | Funkcionalna specifikacija Konkursa | `docs/functional-specifications/Functional-Specification_Konkursi.md` | USVOJENO |
 | **KN-TS-001** | Tehnička specifikacija Konkursa | `docs/technical-specifications/Technical-Specification_Konkursi.md` | NACRT |
 
 Dokumentaciona hijerarhija (nije prenos pravnih pravila):
@@ -114,7 +114,7 @@ Pravila su DK-DS-001 §6–§8. KN ih primjenjuje, ne mijenja.
 
 | Kategorija | KN model | Status |
 |------------|----------|--------|
-| PATCH | `{NS}-PATCH-{TYPE}-{NNN}` npr. `KN-PATCH-BM-001` | RESERVED; nijedan PATCH još nije izdat |
+| PATCH | `{NS}-PATCH-{TYPE}-{NNN}` npr. `KN-PATCH-BM-001` | MODEL ACTIVE; izdati: `KN-PATCH-BM-001`, `KN-PATCH-BM-002`, `KN-PATCH-BM-003`, `KN-PATCH-FS-001`, `KN-PATCH-FS-002`, `KN-PATCH-FS-003`, `KN-PATCH-FS-004`, `KN-PATCH-FS-005` |
 | Feature ID | Globalni `FT-*` **nije obavezan**. Ako se kasnije uvede FR: `{NS}-FR-001`; model feature ID-a definiše se tada u ovom RG-u i **ne** nastavlja automatski istorijski `FT-*` niz. | **NOT YET CREATED** |
 | CR | Ako zatreba: `KN-CR-{NNN}`; registar `KN-CR-REG-001` | **NOT YET CREATED** |
 | KN-DOC | Dokumentaciona načela otvaranja paketa (`KN-DOC-01` … `KN-DOC-07`) | Žive u KN-BM-001 §5. **Nisu** poslovna pravila konkursa i **nisu** BR. |
@@ -141,7 +141,7 @@ Postojeći runtime identiteti implementacije ženskog preduzetništva (klase, ta
 
 Za **nove** KN dokumente status dokumenta: `NACRT` · `U IZRADI` · `USVOJENO` · `SUPERSEDED` · `ARHIVIRANO`.
 
-PO odluka da se **otvara** kanonski KN paket je USVOJENA. Status pojedinačnih sadržajnih dokumenata (PRO/BM/FS/TS) u ovom koraku je **NACRT**, jer pravni i poslovni sadržaj još nije analiziran.
+PO odluka da se **otvara** kanonski KN paket je USVOJENA. Trenutni statusi sadržajnih dokumenata (usklađeno sa zaglavljima): **KN-BM-001 = USVOJENO**; **KN-FS-001 = USVOJENO** (v0.2.12); **KN-PRO-001 = NACRT**; **KN-TS-001 = NACRT**.
 
 Minimalni metadata: Document ID · Naziv · Namespace / modul · Verzija · Status dokumenta · Datum posljednje izmjene (DK-DS-001 §13).
 
@@ -188,7 +188,15 @@ Zabranjene / deprecated oznake u KN kanonskim dokumentima:
 | Verzija | Datum | Opis |
 |---------|--------|------|
 | 1.0.0 | 2026-08-18 | Uspostavljen KN-RG-001. Otvoren kanonski dokumentacioni paket cjeline Konkursi. Registrovani namespace `KN`, tipovi, kanonski dokumenti KN-PRO/BM/FS/TS-001 (NACRT), PATCH/FR/CR model po DK-DS-001, dokumentaciona načela `KN-DOC-*`, runtime dual-key KEEP, granice prema KK/EP/DK i legacy ženskom preduzetništvu. Bez poslovnih pravila iz Odluke. Bez izmjene aplikacionog koda. |
+| 1.0.1 | 2026-09-03 | Administrativno usklađivanje registra sa kanonskim stanjem: KN-BM-001 = USVOJENO (§4, §5, §8); PATCH model ostaje `{NS}-PATCH-{TYPE}-{NNN}`; evidentirani izdati `KN-PATCH-BM-001` i `KN-PATCH-FS-001` (§6). Uklonjena netačna tvrdnja „nijedan PATCH još nije izdat“. KN-PRO/FS/TS ostaju NACRT. Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.2 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-FS-002` (§6; KN-FS-001 v0.2.9 / FS PO DECISION 4 OPTION D). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.3 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-FS-003` (§6; KN-FS-001 v0.2.10 / FS PO DECISION 5 OPTION B — BALANCED). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.4 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-FS-004` (§6; KN-FS-001 v0.2.11 / FS PO DECISION 5 — OPTION B, PO CORRECTION: `evaluated` STORED). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.5 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-FS-005` (§6; KN-FS-001 v0.2.12 / FS PO DECISION 6 OPTION A — `submitted` → Podnesena). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.6 | 2026-09-03 | Administrativno usklađivanje registra sa formalnim PO usvajanjem KN-FS-001 v0.2.12: STATUS = USVOJENO (§4, §5, §8). KN-PRO/KN-TS ostaju NACRT. Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.7 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-BM-002` (§6; KN-BM-001 v0.2.9 / živi pokazivač na KN-PRO-001 v0.1.4). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.8 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-BM-003` (§6; KN-BM-001 v0.2.10 / živi pokazivač na KN-FS-001 v0.2.12 USVOJENO). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
 
 ---
 
-**Kraj dokumenta KN-RG-001 v1.0.0**
+**Kraj dokumenta KN-RG-001 v1.0.8**
