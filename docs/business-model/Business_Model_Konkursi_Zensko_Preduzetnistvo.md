@@ -8,7 +8,7 @@
 **Namespace:** KN
 **Tip konkursa:** Žensko preduzetništvo
 **Status dokumenta:** USVOJEN
-**Verzija:** 1.0.7
+**Verzija:** 1.0.9
 **Datum:** 2026-09-03
 
 Povezani dokumenti:
@@ -36,6 +36,8 @@ Ovaj dokument **ne** tvrdi da je opisano ponašanje već implementirano na Platf
 | 1.0.5 / KN-PATCH-BM-005 | 2026-09-01 | Vrijeme dodjele Komisije: objava može uslijediti bez dodijeljene Komisije; potpuna i valjana Komisija mora biti dodijeljena najkasnije prije isteka roka za Prijave; istek bez nje ne produžava rok i blokira pristup/postupak do dopune; obična zamjena cijele Komisije dozvoljena do isteka roka, ne samo do objave. Zamjena pojedinačnog člana i OPEN pitanje završenih ocjena ostaju. |
 | 1.0.6 / KN-PATCH-BM-006 | 2026-09-01 | Elektronski primjerak zvanične Odluke na Platformi: povlačenje objave, ponovna objava, trajno uklanjanje, novi primjerak nakon uklanjanja; javno samo trenutno važeća objava. Nije donošenje Odluke i ne mijenja rezultate. Ostali kanali objave ostaju van Platforme. |
 | 1.0.7 / KN-PATCH-BM-007 | 2026-09-03 | Usvojena mogućnost trajnog brisanja učitanog elektronskog primjerka zvanične Odluke prije prve objave: fizičko nepovratno uklanjanje PDF-a uz odgovarajući interni audit trag; to nije povlačenje javne objave jer objava nije nastala. Postojeća norma za trajno uklanjanje prethodno objavljenog primjerka ostaje. Nije donošenje Odluke i ne mijenja rezultate, bodove, rang-listu ni iznose. **Nije** runtime produkcijski prihvaćeno. |
+| 1.0.8 / KN-PATCH-BM-011 | 2026-09-03 | Usvojeni poslovni model tri eliminatorna kriterijuma na Obrascu 3: zasebne stavke redoslijedom 1 → 2 → 3; utvrđuje i potvrđuje ih predsjednik Komisije; Da / Ne*; podrazumijevano Da; prolaz Da/Da/Da; odbijanje tek pri potvrdi Obrasca 3; postojeća Napomena obavezna pri najmanje jednom Ne*; Prigovor se odnosi na sva tri kriterijuma; individualno bodovanje tek nakon potvrđenog Da/Da/Da. **Nije** runtime produkcijski prihvaćeno. |
+| 1.0.9 / KN-PATCH-BM-012 | 2026-09-03 | Zatvorena ranija normativna praznina §12.7: zamjena člana Komisije nema retroaktivno dejstvo; završene radnje i završene individualne ocjene prethodnog člana ostaju važeće; zamjenski član nastavlja samo nezavršeni dio postupka. **Nije** runtime produkcijski prihvaćeno. |
 
 Napomena:
 
@@ -77,7 +79,7 @@ Dokument je kanonski poslovni profil tipa konkursa **Žensko preduzetništvo**. 
 | 14. Predlog Odluke i završetak rada Komisije | USVOJENO |
 | 15. Konačna Odluka, objava i granica V1 | USVOJENO |
 
-Normativna praznina o sudbini završenih individualnih ocjena pri zamjeni člana Komisije dokumentovana je u Poglavlju 12. Ne blokira status `USVOJEN`.
+Usvojeno pravilo o zamjeni člana Komisije bez retroaktivnog dejstva dokumentovano je u Poglavlju 12.7.
 
 ---
 
@@ -230,7 +232,7 @@ Kvorum za rad je prisustvo većine od ukupnog broja članova. Prilikom sprovođe
 
 Predsjednik Komisije ima istu težinu kao ostali članovi pri individualnom ocjenjivanju. Pored toga, na Platformi u ime Komisije evidentira:
 
-* rezultat administrativne provjere dokumentacije;
+* rezultat tri eliminatorna kriterijuma na Obrascu 3 (Poglavlje 10);
 * dodatne bodove;
 * zaključke, iznose i obrazloženja sa treće sjednice;
 * tehničku radnju generisanja Predloga Odluke na Platformi;
@@ -343,7 +345,7 @@ Nakon isteka roka obična zamjena cijele dodijeljene Komisije **nije** dozvoljen
 
 Ako Komisija u trenutku isteka roka nedostaje ili nije potpuna i valjana, Administrator Konkursa je dodjeljuje ili dopunjuje. Ta radnja **nije** obična zamjena cijele već dodijeljene Komisije.
 
-Zamjena pojedinačnog člana Komisije (zamjenski odnosno novi član) **nije** zamjena cijele Komisije. Imenovanje ostaje prema Poglavlju 4.5. Sudbina već završenih individualnih ocjena ostaje normativna praznina iz Poglavlja 12.7.
+Zamjena pojedinačnog člana Komisije (zamjenski odnosno novi član) **nije** zamjena cijele Komisije. Imenovanje ostaje prema Poglavlju 4.5. Dejstvo zamjene na završene radnje i individualne ocjene: Poglavlje 12.7.
 
 Ne uvodi se novo poslovno stanje Konkursa zbog odsustva Komisije.
 
@@ -432,17 +434,26 @@ Komisija zakazuje prvu sjednicu u roku od najkasnije **7 dana** od isteka roka z
 
 Na prvoj sjednici Komisija pregleda elektronski zaprimljene Prijave.
 
-Predsjednik Komisije na Platformi, u ime Komisije, evidentira da li Podnositeljka ima svu potrebnu dokumentaciju.
+Predsjednik Komisije na Platformi, u ime Komisije, evidentira tri eliminatorna kriterijuma na Obrascu 3. Poslovna semantika, redoslijed, Da / Ne* i trenutak odbijanja pripadaju Poglavlju 10.
 
 ## 9.1. Nepotpuna Prijava
 
-Ako Komisija utvrdi da je Prijava nepotpuna, ista se označava kao takva u listi za ocjenjivanje iz čl. 19 i Komisija je **neće dalje razmatrati** (čl. 17).
+Nedostatak formalnih uslova za kandidovanje biznis plana (nepotpuna dokumentacija) je **eliminatorni kriterijum 1**. Evidentira se kao prva stavka Obrasca 3. Ne uvodi se druga elektronska provjera istog razloga.
 
-Čl. 17 propisuje funkcionalni postupak za nepotpunu dokumentaciju. Čl. 19 tu istu nepotpunu dokumentaciju navodi kao eliminatorni kriterijum 1 (nedostatak formalnih uslova za kandidovanje biznis plana). Zato se kriterijum 1 funkcionalno obrađuje kroz administrativnu provjeru potpunosti i Prigovor iz čl. 17. Ne uvodi se druga elektronska provjera istog razloga.
+Ako je nakon potvrde Obrasca 3 utvrđen najmanje jedan eliminatorni razlog, Prijava se odbija po eliminatornoj provjeri i Komisija je **neće dalje razmatrati**, osim ako Prigovor bude prihvaćen i nakon odluke Komisije više ne postoji eliminatorni razlog (Poglavlja 9.2 i 10).
 
 Ovo **nije** isto što i konačna ocjena ispod 30 bodova.
 
 ## 9.2. Prigovor
+
+**Pravo na Prigovor odnosi se na sva tri eliminatorna kriterijuma.**
+
+Ako je Prijava odbijena zbog jednog ili više eliminatornih kriterijuma:
+
+* Podnositeljka ima pravo na Prigovor;
+* Prigovor se odnosi na odbijanje Prijave;
+* u okviru Prigovora mogu se osporavati utvrđeni eliminatorni razlozi;
+* Komisija odlučuje o Prigovoru.
 
 Komisija, putem registrovanog mail-a Podnositeljke na digitalnom servisu Opštine Kotor, obavještava Podnositeljku o mogućnosti podnošenja Prigovora Komisiji putem digitalnog servisa u roku od **3 dana** od dana slanja obavještenja (čl. 17).
 
@@ -450,9 +461,11 @@ Koristi se formulacija Odluke: **3 dana**. Ne dodaje se „radna“.
 
 Komisija donosi odluku o prihvatanju ili odbijanju Prigovora u roku od **7 dana** od prijema istoga (čl. 17).
 
-Ako se Prigovor prihvati, Prijava se dalje razmatra prema pravilima ovog profila.
+Ako nakon odluke Komisije više ne postoji eliminatorni razlog, Prijava nastavlja konkursni postupak i omogućava se individualno bodovanje.
 
-Ako se Prigovor odbije, Prijava ostaje nepotpuna i Komisija je ne razmatra dalje.
+Ako nakon odluke Komisije i dalje postoji eliminatorni razlog, Prijava ostaje eliminisana i bodovanje se ne omogućava.
+
+Ne uvodi se zaseban Prigovor za svaki kriterijum niti posebne procesne grane za svaku kombinaciju Da / Ne*.
 
 ---
 
@@ -462,22 +475,60 @@ Status poglavlja: USVOJENO
 
 Komisija vrši dodjelu sredstava na osnovu pozitivnih i eliminatornih kriterijuma (čl. 19).
 
-Eliminatorni kriterijumi prema čl. 19 Odluke 027/26 su:
+Tri eliminatorna kriterijuma, ovim redoslijedom, tretiraju se kao PO-potvrđeni poslovni ulaz za ovaj profil. Ovaj dokument **ne** tvrdi da je originalni PDF Odluke 027/26 bio u repozitorijumu.
 
-1. nedostatak formalnih uslova za kandidovanje biznis plana (nepotpuna dokumentacija);
-2. preduzetnica/društvo nije dostavila/lo Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) za biznis plan koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine;
-3. biznis plan nije vezan za prioritetne oblasti navedene u članu 10 Odluke 027/26.
+1. Nedostatak formalnih uslova za kandidovanje biznis plana (nepotpuna dokumentacija);
+2. Preduzetnica/društvo nije dostavila/lo Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine;
+3. Biznis plan nije vezan za prioritetne oblasti navedene u članu 10 ove Odluke.
 
-**Kriterijum 1** se funkcionalno obrađuje kroz administrativnu provjeru potpunosti i Prigovor iz čl. 17 (Poglavlje 9). Ne uvodi se druga elektronska provjera istog razloga.
+Sva tri kriterijuma su dio Obrasca 3. Predstavljaju tri zasebne i eksplicitno vidljive stavke, redoslijedom **1 → 2 → 3**. Utvrđuje ih i potvrđuje **isključivo predsjednik Komisije**. Ostali članovi Komisije vide rezultate, ali ih **ne** mogu mijenjati.
 
-**Kriterijumi 2 i 3** ostaju zasebni. Komisija ih utvrđuje usmeno i kolektivno. Kada utvrdi razlog 2 ili 3, predsjednik Komisije u ime Komisije evidentira zaključak, a konkretan razlog evidentira u postojećoj Napomeni. Takav biznis plan ne ulazi u ocjenjivanje po pozitivnim kriterijumima. Osnovno stanje Prijave ostaje Podnesena. Ne uvodi se novo polje Obrasca 3, novi checkbox, nova kolona ni novi Prigovor za kriterijume 2 i 3.
+Formulacije stavki Obrasca 3, sa istom poslovnom semantikom (**Da** = nema eliminacije po tom kriterijumu; **Ne\*** = postoji eliminatorni razlog):
+
+1. **Dostavljena su sva potrebna dokumenta?** a. Da b. Ne\*
+2. **Dostavljen je Izvještaj o realizaciji biznis plana sa Finansijskim izvještajem (Obrasci 4 i 4a) i pratećom dokumentacijom (fakture i izvodi sa banke) za biznis plan koji je u prethodnom periodu finansiran ili djelimično finansiran iz budžeta Opštine?** a. Da b. Ne\*
+3. **Biznis plan je vezan za prioritetne oblasti navedene u članu 10 Odluke?** a. Da b. Ne\*
+
+Za sva tri kriterijuma **Da** je podrazumijevano označeno. Predsjednik mijenja odgovor na **Ne\*** kada utvrdi eliminatorni razlog.
+
+Za prolazak eliminatorne provjere potrebna je kombinacija **Da / Da / Da**. Najmanje jedno **Ne\*** znači da Prijava ne prolazi eliminatornu provjeru.
+
+Predsjednik može završiti provjeru sva tri kriterijuma prije potvrde Obrasca 3. Sam izbor **Ne\*** **nije** trenutak izvršenja odbijanja. Odbijanje se izvršava prilikom potvrde / slanja Obrasca 3, nakon što je predsjednik završio provjeru sva tri kriterijuma. Tako se mogu evidentirati svi postojeći eliminatorni razlozi prije potvrde.
+
+Ne uvode se posebne napomene za svaki eliminatorni kriterijum. Postojeće jedinstveno polje **Ostale napomene / Napomena** ostaje zajedničko polje Obrasca 3.
+
+Ako postoji najmanje jedno **Ne\***, ta Napomena je obavezna prije potvrde odbijanja.
+
+Ako su sva tri odgovora **Da**, Napomena ostaje u svojoj postojećoj ulozi i **ne** pretvara se u posebno eliminatorno polje.
+
+Ako predsjednik potvrđuje Obrazac 3 sa najmanje jednim **Ne\***, prije izvršenja odbijanja mora dobiti eksplicitnu potvrdu da će Prijava biti odbijena zbog jednog ili više eliminatornih kriterijuma. Poslovna semantika poruke:
+
+**Prijava ne ispunjava jedan ili više eliminatornih kriterijuma i biće odbijena. Da li želite da nastavite?**
+
+Tek nakon eksplicitne potvrde predsjednika izvršava se odbijanje. Ako predsjednik odustane, odbijanje se ne izvršava i ostaje na Obrascu 3.
+
+Eliminatorna provjera **prethodi** individualnom bodovanju.
+
+Dok predsjednik nije potvrdio **Da / Da / Da** za sva tri kriterijuma, unos bodova **nije** dozvoljen nijednom članu Komisije.
+
+Nakon potvrđenog **Da / Da / Da** Prijava prolazi eliminatornu provjeru i članovima Komisije postaje dostupno individualno bodovanje.
+
+Ako je potvrđeno najmanje jedno **Ne\***, Prijava se odbija i bodovanje se ne aktivira.
+
+**Pravo na Prigovor odnosi se na sva tri eliminatorna kriterijuma.** Postupovni rokovi i kanal Prigovora ostaju u Poglavlju 9.2. Ako nakon odluke Komisije više ne postoji eliminatorni razlog, Prijava nastavlja postupak i omogućava se individualno bodovanje. Ako i dalje postoji eliminatorni razlog, Prijava ostaje eliminisana i bodovanje se ne omogućava.
+
+Nakon potvrđenog odbijanja Obrazac 3 ostaje trajno dostupan u režimu pregleda. Mora biti evidentirano najmanje: rezultat sva tri eliminatorna kriterijuma; postojeća Napomena; činjenica da je Prijava odbijena po eliminatornoj provjeri; datum i vrijeme potvrde; predsjednik Komisije koji je izvršio potvrdu.
+
+Nakon potvrđenog odbijanja eliminatorni odgovori i Napomena su zaključani. Bodovanje ostaje onemogućeno dok važi rezultat eliminatorne provjere, odnosno do eventualnog drugačijeg konačnog ishoda Prigovora.
+
+Osnovno stanje Prijave ostaje **Podnesena**. Ne uvodi se novo osnovno stanje Eliminisana / Odbijena.
 
 Ovaj profil strogo razdvaja:
 
 | | Šta | Gdje |
 |--|-----|------|
-| A | nepotpuna dokumentacija / eliminatorni kriterijum 1 | Poglavlje 9; čl. 17 i čl. 19 |
-| B | eliminatorni kriterijumi 2 i 3 | ovo poglavlje; čl. 19 |
+| A | tri eliminatorna kriterijuma na Obrascu 3 | ovo poglavlje; čl. 19 |
+| B | Prigovor na odbijanje Prijave po eliminatornoj provjeri | Poglavlje 9.2; čl. 17 |
 | C | konačna ocjena ispod 30 bodova | Poglavlje 13; čl. 21 |
 
 Prag ispod 30 bodova **nije** administrativni eliminatorni kriterijum i **nije** dio ovog poglavlja.
@@ -502,9 +553,11 @@ Ovo poglavlje **ne** sadrži pravila o tajnosti ocjena niti o nepromjenjivosti. 
 
 Status poglavlja: USVOJENO
 
-Obrazac 3 / lista za ocjenjivanje koristi se **od prve sjednice**.
+Obrazac 3 / lista za ocjenjivanje koristi se **od prve sjednice**. Eliminatorna provjera na Obrascu 3 prethodi individualnom bodovanju (Poglavlje 10).
 
-Član Komisije može unositi i čuvati **nacrt** sopstvenih ocjena za pozitivne kriterijume za koje već raspolaže potrebnim osnovom. Nacrt nije obavezan prije usmenog obrazloženja. Član **nije** dužan ocjenjivati prije usmenog.
+Dok predsjednik nije potvrdio **Da / Da / Da** za sva tri eliminatorna kriterijuma, unos bodova **nije** dozvoljen nijednom članu Komisije, uključujući nacrt.
+
+Nakon potvrđenog **Da / Da / Da** član Komisije može unositi i čuvati **nacrt** sopstvenih ocjena za pozitivne kriterijume za koje već raspolaže potrebnim osnovom. Nacrt nije obavezan prije usmenog obrazloženja. Član **nije** dužan ocjenjivati prije usmenog.
 
 Kriterijum 10 (usmeno obrazloženje) ocjenjuje se **tek nakon** sprovedenog usmenog obrazloženja biznis plana (čl. 20).
 
@@ -583,21 +636,21 @@ Dodatni bodovi prema čl. 19:
 Maksimalno dodatnih bodova = **8**.  
 Maksimalna konačna ocjena = **58**.
 
-## 12.7. Zamjena člana Komisije — normativna praznina
+## 12.7. Zamjena člana Komisije
 
-Odluka 027/26 uređuje:
+Odluka 027/26 uređuje imenovanje zamjenskog odnosno novog člana (čl. 6–10). Imenovanje ostaje prema Poglavlju 4.5.
 
-* zamjenskog člana zbog odsustva (čl. 6);
-* prestanak mandata (čl. 7);
-* razrješenje (čl. 8–9);
-* imenovanje novog člana u roku od **15 dana** od prestanka mandata (čl. 10);
-* kvorum i obavezno prisustvo svih članova pri intervjuu i punovažnim odlukama (čl. 6).
+**Zamjena člana Komisije nema retroaktivno dejstvo.** Važi samo unaprijed, od trenutka zamjene.
 
-Odluka 027/26 **ne** uređuje sudbinu individualnih ocjena koje je član već **završio** prije prestanka mandata ili zamjene.
+Sve radnje i individualne ocjene koje je prethodni član Komisije **završio** prije prestanka članstva ostaju važeće. Ostaju dio istorije postupka. **Ne** brišu se. **Ne** poništavaju se. **Ne** prenose se na zamjenskog člana. **Ne** ocjenjuju se ponovo samo zato što je član zamijenjen.
 
-To je **normativna praznina**, ne konflikt sa usvojenim pravilom nepromjenjivosti nakon završavanja. Nepromjenjivost završene ocjene se ovim ne mijenja.
+Završena individualna ocjena prethodnog člana ostaje važeća individualna ocjena **tog prethodnog člana**. **Ne** postaje ocjena zamjenskog člana. Zamjenski član je **ne** može retroaktivno mijenjati.
 
-Ova tačka **ne blokira** status `USVOJEN` profila. Ne donosi se novo poslovno pravilo kojim bi se praznina popunila.
+Zamjenski član Komisije preuzima ulogu od trenutka zamjene i nastavlja postupak **samo** za radnje i individualna ocjenjivanja koja do trenutka zamjene nijesu završena.
+
+Sama zamjena člana **ne** utiče na već završene ocjene drugih članova Komisije, već završene radnje Komisije ni istoriju postupka.
+
+Ovo pravilo **ne** mijenja usvojenu nepromjenjivost nakon završavanja.
 
 ---
 
@@ -891,10 +944,8 @@ Trenutno nema formalnih otvorenih pravnih pitanja ovog profila.
 
 OPEN LEGAL ISSUE #1 i OPEN LEGAL ISSUE #2 zatvoreni su poslovnom odlukom u verziji 1.0.1 / `KN-PATCH-BM-001`. Kanonska pravila su u Poglavlju 13.
 
-Normativna praznina — zamjena člana Komisije tokom ocjenjivanja:
-
-Odluka uređuje imenovanje zamjene, ali ne sudbinu već **završenih** individualnih ocjena. To **nije** blocking OPEN. Usvojena nepromjenjivost nakon završavanja ostaje. Pitanje ne blokira status `USVOJEN`.
+Ranija normativna praznina o sudbini završenih individualnih ocjena pri zamjeni člana Komisije zatvorena je u verziji 1.0.9 / `KN-PATCH-BM-012`. Kanonsko pravilo je u Poglavlju 12.7.
 
 ---
 
-**Kraj dokumenta KN-BM-003 v1.0.7**
+**Kraj dokumenta KN-BM-003 v1.0.9**
