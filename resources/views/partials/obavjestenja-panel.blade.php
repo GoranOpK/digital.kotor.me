@@ -30,9 +30,6 @@
                                 {{ $notice->short_description }}
                             </p>
                         @endif
-                        <a href="{{ $publicContentUrl }}" @if($opensSignedOfficialDecision) target="_blank" rel="noopener noreferrer" @endif style="color: #0B3D91; font-weight: 600; font-size: 14px; text-decoration: none;">
-                            Pogledaj zvanični sadržaj →
-                        </a>
                     </li>
                 @endforeach
             </ul>

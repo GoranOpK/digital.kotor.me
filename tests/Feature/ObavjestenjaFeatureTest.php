@@ -49,6 +49,7 @@ class ObavjestenjaFeatureTest extends TestCase
             'Javni pregled zvaničnog sadržaja nastalog u drugim funkcionalnostima Digital Kotor.',
             false
         );
+        $response->assertDontSee('Pogledaj zvanični sadržaj', false);
     }
 
     public function test_authenticated_user_sees_same_active_notices_as_guest(): void
@@ -181,11 +182,12 @@ class ObavjestenjaFeatureTest extends TestCase
         $item = $this->homePanelItemHtml('Zvanična Odluka novi tab');
         $publicUrl = route('notices.public-content', $notice);
 
-        $this->assertSame(2, substr_count($item, 'href="'.$publicUrl.'"'));
-        $this->assertSame(2, substr_count($item, 'target="_blank"'));
-        $this->assertSame(2, substr_count($item, 'rel="noopener noreferrer"'));
+        $this->assertStringNotContainsString('Pogledaj zvanični sadržaj', $item);
+        $this->assertSame(1, substr_count($item, 'href="'.$publicUrl.'"'));
+        $this->assertSame(1, substr_count($item, 'target="_blank"'));
+        $this->assertSame(1, substr_count($item, 'rel="noopener noreferrer"'));
         $this->assertMatchesRegularExpression(
-            '/<a href="'.preg_quote($publicUrl, '/').'"\s+target="_blank"\s+rel="noopener noreferrer"/',
+            '/<h3[^>]*>\s*<a href="'.preg_quote($publicUrl, '/').'"\s+target="_blank"\s+rel="noopener noreferrer"[^>]*>\s*Zvanična Odluka novi tab\s*<\/a>/u',
             $item
         );
     }
@@ -208,8 +210,21 @@ class ObavjestenjaFeatureTest extends TestCase
         $ordinaryItem = $this->homePanelItemHtml('Ordinary Notice isti tab');
         $legacyItem = $this->homePanelItemHtml('Legacy HTML Odluka isti tab');
 
-        $this->assertStringContainsString(route('notices.public-content', $ordinary, false), $ordinaryItem);
-        $this->assertStringContainsString(route('notices.public-content', $legacyHtml, false), $legacyItem);
+        $ordinaryUrl = route('notices.public-content', $ordinary);
+        $legacyUrl = route('notices.public-content', $legacyHtml);
+
+        $this->assertStringNotContainsString('Pogledaj zvanični sadržaj', $ordinaryItem);
+        $this->assertStringNotContainsString('Pogledaj zvanični sadržaj', $legacyItem);
+        $this->assertSame(1, substr_count($ordinaryItem, 'href="'.$ordinaryUrl.'"'));
+        $this->assertSame(1, substr_count($legacyItem, 'href="'.$legacyUrl.'"'));
+        $this->assertMatchesRegularExpression(
+            '/<h3[^>]*>\s*<a href="'.preg_quote($ordinaryUrl, '/').'"[^>]*>\s*Ordinary Notice isti tab\s*<\/a>/u',
+            $ordinaryItem
+        );
+        $this->assertMatchesRegularExpression(
+            '/<h3[^>]*>\s*<a href="'.preg_quote($legacyUrl, '/').'"[^>]*>\s*Legacy HTML Odluka isti tab\s*<\/a>/u',
+            $legacyItem
+        );
         $this->assertStringNotContainsString('target="_blank"', $ordinaryItem);
         $this->assertStringNotContainsString('rel="noopener noreferrer"', $ordinaryItem);
         $this->assertStringNotContainsString('target="_blank"', $legacyItem);
