@@ -45,6 +45,10 @@ class ObavjestenjaFeatureTest extends TestCase
         $response->assertOk();
         $response->assertSee('Obavještenja', false);
         $response->assertSee('id="obavjestenja-heading"', false);
+        $response->assertDontSee(
+            'Javni pregled zvaničnog sadržaja nastalog u drugim funkcionalnostima Digital Kotor.',
+            false
+        );
     }
 
     public function test_authenticated_user_sees_same_active_notices_as_guest(): void
@@ -70,6 +74,14 @@ class ObavjestenjaFeatureTest extends TestCase
         $auth->assertOk()->assertSee('Zajedničko obavještenje FT004', false);
         $guest->assertSee(route('notices.public-content', $notice, false), false);
         $auth->assertSee(route('notices.public-content', $notice, false), false);
+        $guest->assertDontSee(
+            'Javni pregled zvaničnog sadržaja nastalog u drugim funkcionalnostima Digital Kotor.',
+            false
+        );
+        $auth->assertDontSee(
+            'Javni pregled zvaničnog sadržaja nastalog u drugim funkcionalnostima Digital Kotor.',
+            false
+        );
     }
 
     public function test_panel_remains_rendered_when_no_active_notices_exist(): void
@@ -149,6 +161,59 @@ class ObavjestenjaFeatureTest extends TestCase
         $this->get(route('home'))
             ->assertOk()
             ->assertSee(route('notices.public-content', $notice, false), false);
+    }
+
+    public function test_signed_official_decision_panel_links_open_in_a_new_tab(): void
+    {
+        Storage::fake('local');
+        $competition = $this->createCompletedCompetition('Konkurs za novi tab Odluke');
+        $copy = $this->createSignedCopy($competition, 'SIGNED-COPY-NEW-TAB');
+
+        $notice = Notice::factory()->withoutDescription()->create([
+            'title' => 'Zvanična Odluka novi tab',
+            'source_type' => 'competition_decision',
+            'source_id' => $competition->id,
+            'source_object_id' => $copy->id,
+            'content_delivery' => 'competition_decision_signed_copy',
+            'visible_in_active_panel' => true,
+        ]);
+
+        $item = $this->homePanelItemHtml('Zvanična Odluka novi tab');
+        $publicUrl = route('notices.public-content', $notice);
+
+        $this->assertSame(2, substr_count($item, 'href="'.$publicUrl.'"'));
+        $this->assertSame(2, substr_count($item, 'target="_blank"'));
+        $this->assertSame(2, substr_count($item, 'rel="noopener noreferrer"'));
+        $this->assertMatchesRegularExpression(
+            '/<a href="'.preg_quote($publicUrl, '/').'"\s+target="_blank"\s+rel="noopener noreferrer"/',
+            $item
+        );
+    }
+
+    public function test_ordinary_and_legacy_html_notice_panel_links_stay_in_the_same_tab(): void
+    {
+        $ordinary = Notice::factory()->withoutDescription()->create([
+            'title' => 'Ordinary Notice isti tab',
+            'source_type' => 'other_source',
+            'content_delivery' => 'unsupported',
+            'visible_in_active_panel' => true,
+        ]);
+        $legacyHtml = Notice::factory()->withoutDescription()->create([
+            'title' => 'Legacy HTML Odluka isti tab',
+            'source_type' => 'competition_decision',
+            'content_delivery' => 'competition_decision_html',
+            'visible_in_active_panel' => true,
+        ]);
+
+        $ordinaryItem = $this->homePanelItemHtml('Ordinary Notice isti tab');
+        $legacyItem = $this->homePanelItemHtml('Legacy HTML Odluka isti tab');
+
+        $this->assertStringContainsString(route('notices.public-content', $ordinary, false), $ordinaryItem);
+        $this->assertStringContainsString(route('notices.public-content', $legacyHtml, false), $legacyItem);
+        $this->assertStringNotContainsString('target="_blank"', $ordinaryItem);
+        $this->assertStringNotContainsString('rel="noopener noreferrer"', $ordinaryItem);
+        $this->assertStringNotContainsString('target="_blank"', $legacyItem);
+        $this->assertStringNotContainsString('rel="noopener noreferrer"', $legacyItem);
     }
 
     public function test_panel_shows_public_display_date_as_datum_objave_in_d_m_y_format(): void
