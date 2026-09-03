@@ -3,7 +3,7 @@
 
 **Status dokumenta:** AKTIVAN
 **Verzija:** 1.0
-**Datum:** 2026-09-03
+**Datum:** 2026-09-04
 
 Ovo je **metodologija cijelog Digital Kotora**: proces, primjena i TS struktura.
 
@@ -70,7 +70,7 @@ Registracija i korisnički identitet imaju otvoren platformski dokumentacioni pa
 
 Uloge i biblioteka dokumenata ostaju **DK REFERENCE / OPERATIONS** dok PO ne otvori zaseban paket. Nisu obuhvaćeni `DK-BM-002`.
 
-`DK-UC-002`, `DK-FS-002` i `DK-TS-002` nisu uvedeni. Ne kreirati ih usput.
+`DK-FS-002` je uveden (USVOJENO). `DK-UC-002` i `DK-TS-002` nisu uvedeni. Ne kreirati ih usput.
 
 ## 3.3 Business Model, Functional Specification i implementacija
 
@@ -511,3 +511,5 @@ jer se prvo evidentiraju donesene odluke o isključenjima, a zatim nedonesene od
 | 2026-08-17 | Digital Kotor Documentation Standard v1: metodologija generalizovana na cijelu platformu; normativni standard `DK-DS-001`; M-TS-001…M-TS-005 sačuvani kao TS proces. Namespace `KN` rezervisan. e-Plaćanje = trenutni razvojni prioritet. Omladinski konkurs odložen. Bez izmjene aplikacionog koda. |
 | 2026-09-03 | Dokumentaciona granica: registracija i korisnički identitet imaju otvoren paket `DK-BM-002` (U IZRADI). Uloge i biblioteka dokumenata ostaju DK REFERENCE / OPERATIONS. `DK-UC-002` / `DK-FS-002` / `DK-TS-002` nisu uvedeni. |
 | 2026-09-03 | Statusna granica: `DK-BM-002` evidentiran kao USVOJENO. Uloge i biblioteka dokumenata ostaju DK REFERENCE / OPERATIONS. `DK-UC-002` / `DK-FS-002` / `DK-TS-002` nisu uvedeni. |
+| 2026-09-03 | Dokumentaciona granica: `DK-FS-002` uveden (U IZRADI). Uloge i biblioteka dokumenata ostaju DK REFERENCE / OPERATIONS. `DK-UC-002` i `DK-TS-002` nisu uvedeni. |
+| 2026-09-04 | Statusna granica: `DK-FS-002` evidentiran kao USVOJENO. Uloge i biblioteka dokumenata ostaju DK REFERENCE / OPERATIONS. `DK-UC-002` i `DK-TS-002` nisu uvedeni. |
