@@ -7,7 +7,7 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJENO
-**Verzija:** 0.2.10
+**Verzija:** 0.2.11
 **Datum:** 2026-09-03
 
 ---
@@ -29,6 +29,7 @@
 | 0.2.8 / KN-PATCH-BM-001 | 2026-09-03 | Usklađivanje bodovanja sa potvrđenim PO pravilom: pojedinačne ocjene članova = cijeli brojevi 1–5; formula prosjeka i konačne ocjene nepromijenjena (Odluka/P3); konačni/ukupni skor prikazuje se na dvije decimale (DISPLAY); prag i rangiranje na CALCULATION VALUE. „Bez decimala“ ograničeno na pojedinačne ocjene. Izmijenjeni KN-BR-036, KN-BR-037, §17.3, §25, §35 BM PO DECISION 4. Status ostaje USVOJENO. KN-PRO/KN-TS/kod nijesu mijenjani. |
 | 0.2.9 / KN-PATCH-BM-002 | 2026-09-03 | Administrativno usklađivanje živog pokazivača na KN-PRO-001: §34 `NACRT v0.1.3` → `NACRT v0.1.4`. Bez izmjene KN-BR, poslovnih pravila, žensko/mladi modela ili interpretacije Odluke. §1 zadržava v0.1.3 kao zaključanu derivacionu baseline. Status ostaje USVOJENO. KN-FS/KN-PRO/KN-TS/kod nijesu mijenjani. |
 | 0.2.10 / KN-PATCH-BM-003 | 2026-09-03 | Administrativno usklađivanje živog pokazivača na KN-FS-001: §34 `NACRT — nije mijenjan ovim korakom` → `v0.2.12 USVOJENO`. Bez izmjene KN-BR, poslovnih pravila, žensko/mladi modela ili interpretacije Odluke. Status ostaje USVOJENO. KN-FS/KN-PRO/KN-TS/kod nijesu mijenjani. |
+| 0.2.11 / KN-PATCH-BM-004 | 2026-09-03 | PO-HYBRID-1…5 USVOJENO (hybrid reconciliation). Lokalni KN-BM-001 ostaje kanonski Odluka BM; remote „Zajednički“ ne zamjenjuje. Apsorbovane kompatibilne apstrakcije (tip→profil→instanca→poziv; konfigurabilne sposobnosti; jedna aktivna konačna prijava bez withdraw). KEEP: 5 statusa (FS), OPTION D, post-submit lock, Komisija=3, KN-BR-004/005 za ovu Odluku. REJECT: dual meaning KN-BM-001; BM-KN-015 withdraw kao universal; women-5 kao common; BM-ML-040 raniji gate. Call frequency = PROFILE/LEGAL/CONFIG; youth Q2/2. poziv i specijalizacije = PROFILE PENDING (Document ID ne dodijeljen). NEW KN-BR = NO. Status ostaje USVOJENO. KN-PRO/KN-TS/kod nijesu mijenjani. |
 
 Napomena:
 
@@ -45,7 +46,7 @@ Svaki PATCH dobija:
 - kratak naziv,
 - kratak opis izmjene.
 
-Naziv PATCH-a predstavlja zvanični naziv izmjene i koristi se u istoriji verzija. PATCH model: KN-RG-001 / DK-DS-001 §8. Izdat: `KN-PATCH-BM-001` (v0.2.8), `KN-PATCH-BM-002` (v0.2.9), `KN-PATCH-BM-003` (v0.2.10).
+Naziv PATCH-a predstavlja zvanični naziv izmjene i koristi se u istoriji verzija. PATCH model: KN-RG-001 / DK-DS-001 §8. Izdat: `KN-PATCH-BM-001` (v0.2.8), `KN-PATCH-BM-002` (v0.2.9), `KN-PATCH-BM-003` (v0.2.10), `KN-PATCH-BM-004` (v0.2.11).
 
 ---
 
@@ -53,7 +54,7 @@ Naziv PATCH-a predstavlja zvanični naziv izmjene i koristi se u istoriji verzij
 
 Dokument predstavlja **ciljni** referentni poslovni model cjeline Konkursi za planiranje, razvoj, testiranje i održavanje.
 
-U verziji 0.2.10 dokument zadržava punu derivaciju poslovnih pravila iz KN-PRO-001 i PO odluka Q1–Q6, uz usvojene **PO DECISION 1–5** i **PO DECISION 7**, granicu izvora za naknadu/Poslovnik (bivša stavka 6) i prazan `PO DECISION REQUIRED` registar, uz `KN-PATCH-BM-001` (prikaz konačnog/ukupnog skora na dvije decimale; pojedinačne ocjene = cijeli brojevi 1–5), `KN-PATCH-BM-002` (živi pokazivač na KN-PRO-001 v0.1.4 u §34) i `KN-PATCH-BM-003` (živi pokazivač na KN-FS-001 v0.2.12 USVOJENO u §34). **Ne** opisuje postojeći aplikacioni kod. **Ne** prenosi poslovna pravila iz postojeće implementacije ženskog preduzetništva. Status dokumenta: **USVOJENO**.
+U verziji 0.2.11 dokument zadržava punu derivaciju poslovnih pravila iz KN-PRO-001 i PO odluka Q1–Q6, uz usvojene **PO DECISION 1–5** i **PO DECISION 7**, granicu izvora za naknadu/Poslovnik (bivša stavka 6), usvojene **PO-HYBRID-1…5** (`KN-PATCH-BM-004`) i prazan `PO DECISION REQUIRED` registar, uz `KN-PATCH-BM-001` (prikaz konačnog/ukupnog skora na dvije decimale; pojedinačne ocjene = cijeli brojevi 1–5), `KN-PATCH-BM-002` (živi pokazivač na KN-PRO-001 v0.1.4 u §34), `KN-PATCH-BM-003` (živi pokazivač na KN-FS-001 v0.2.12 USVOJENO u §34) i `KN-PATCH-BM-004` (hybrid reconciliation). **Ne** opisuje postojeći aplikacioni kod. **Ne** prenosi poslovna pravila iz postojeće implementacije ženskog preduzetništva. Status dokumenta: **USVOJENO**.
 
 Identifikatori `KN-BR-*` su lokalni identifikatori poslovnih pravila ovog dokumenta (DK-DS-001 §5, MODULE-INTERNAL). **Nisu** Document ID, **nisu** Feature ID, **nisu** `KN-DOC-*` i **nisu** FS `BR-*`.
 
@@ -97,7 +98,7 @@ Identifikatori `KN-BR-*` su lokalni identifikatori poslovnih pravila ovog dokume
 | 32. Prenos PO odluka Q1–Q6 | USVOJENO |
 | 33. Rječnik poslovnih pojmova | USVOJENO — PO DECISION 7 (opcija 1) |
 | 34. Veza sa dokumentacijom | USVOJENO |
-| 35. Registar usvojenih poslovnih odluka | USVOJENO — Q1–Q6 + PO DECISION 1–5 i 7; granica izvora stavka 6; BM USVOJENO |
+| 35. Registar usvojenih poslovnih odluka | USVOJENO — Q1–Q6 + PO DECISION 1–5 i 7; PO-HYBRID-1…5; granica izvora stavka 6; BM USVOJENO |
 | 36. PO DECISION REQUIRED | USVOJENO — nema otvorenih stavki |
 
 ---
@@ -106,15 +107,15 @@ Identifikatori `KN-BR-*` su lokalni identifikatori poslovnih pravila ovog dokume
 
 1. Poslovni model predstavlja ciljnu zvaničnu poslovnu specifikaciju cjeline Konkursi (KN-BM-001).
 
-2. Posljednja **usvojena** verzija Business Modela predstavlja jedini izvor istine (Single Source of Truth) za poslovna pravila cjeline. KN-BM-001 **v0.2.10** je **USVOJENO** (formalno PO usvajanje v0.2.7; `KN-PATCH-BM-001` usklađuje prikaz konačnog skora; `KN-PATCH-BM-002` usklađuje živi pokazivač na KN-PRO-001 v0.1.4; `KN-PATCH-BM-003` usklađuje živi pokazivač na KN-FS-001 v0.2.12 USVOJENO) i predstavlja zaključanu BM baseline i SSOT za izradu KN-FS. Buduća izmjena poslovnog pravila ide kroz kontrolisanu izmjenu KN-BM-001, ne kroz KN-FS.
+2. Posljednja **usvojena** verzija Business Modela predstavlja jedini izvor istine (Single Source of Truth) za poslovna pravila cjeline. KN-BM-001 **v0.2.11** je **USVOJENO** (formalno PO usvajanje v0.2.7; `KN-PATCH-BM-001` usklađuje prikaz konačnog skora; `KN-PATCH-BM-002` usklađuje živi pokazivač na KN-PRO-001 v0.1.4; `KN-PATCH-BM-003` usklađuje živi pokazivač na KN-FS-001 v0.2.12 USVOJENO; `KN-PATCH-BM-004` evidentira PO-HYBRID-1…5) i predstavlja zaključanu BM baseline i SSOT za izradu KN-FS. Buduća izmjena poslovnog pravila ide kroz kontrolisanu izmjenu KN-BM-001, ne kroz KN-FS.
 
 3. Poglavlja sa statusom USVOJENO mijenjaju se isključivo kroz PATCH koji predstavlja novu poslovnu ili projektnu odluku.
 
 4. Cursor ima ulogu urednika verzionisanog dokumenta i ne smije samostalno unositi, pretpostavljati ili dopunjavati poslovna pravila.
 
-5. Poslovna pravila se izvode isključivo iz: KN-PRO-001; usvojenih PO odluka Q1–Q6; PO DECISION 1–5; PO DECISION 7; KN-RG-001; važećeg Digital Kotor kanonskog standarda. Ne izmišljaju se. Ne preuzimaju se nekritički iz postojeće implementacije.
+5. Poslovna pravila se izvode isključivo iz: KN-PRO-001; usvojenih PO odluka Q1–Q6; PO DECISION 1–5; PO DECISION 7; PO-HYBRID-1…5; KN-RG-001; važećeg Digital Kotor kanonskog standarda. Ne izmišljaju se. Ne preuzimaju se nekritički iz postojeće implementacije.
 
-6. Ako postoji razlika između implementacije sistema i usvojenog Business Modela, implementacija se usklađuje sa Business Modelom, osim ako se odlukom ne izmijeni sam Business Model. Ovo pravilo je na snazi jer je KN-BM-001 **USVOJENO** (trenutno v0.2.10).
+6. Ako postoji razlika između implementacije sistema i usvojenog Business Modela, implementacija se usklađuje sa Business Modelom, osim ako se odlukom ne izmijeni sam Business Model. Ovo pravilo je na snazi jer je KN-BM-001 **USVOJENO** (trenutno v0.2.11).
 
 7. Source anomalies iz KN-PRO-001 ostaju u pravnom registru. BM koristi donesenu PO poslovnu interpretaciju i referencira KN-PRO; ne ponavlja cijeli anomaly register i ne predstavlja PO tumačenje kao doslovni tekst Odluke.
 
@@ -1240,7 +1241,7 @@ Budući KN-FS zadržava izvorne termine po kontekstu (**PO DECISION 7**, opcija 
 |----------|---------|--------|
 | KN-RG-001 | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Konkursi.md` | USVOJENO |
 | KN-PRO-001 | `docs/pravni-okvir/Pravni_okvir_Konkursi.md` | NACRT v0.1.4 |
-| KN-FS-001 | `docs/functional-specifications/Functional-Specification_Konkursi.md` | v0.2.12 USVOJENO |
+| KN-FS-001 | `docs/functional-specifications/Functional-Specification_Konkursi.md` | v0.2.13 USVOJENO |
 | KN-TS-001 | `docs/technical-specifications/Technical-Specification_Konkursi.md` | NACRT — nije mijenjan ovim korakom |
 
 `KN-FR-*`, `KN-CR-REG-*`, `KN-IS-*`, `KN-IR-*` i UC **nisu** kreirani (DK-DS-001 §3).
@@ -1267,7 +1268,23 @@ Usvojene PO interpretacije za derivaciju BM (prenijete iz KN-PRO-001 §4.21): **
 
 **PO DECISION 7 — terminološka standardizacija za budući KN-FS:** USVOJENO, opcija 1. U KN-BM-001 i budućem KN-FS zadržavaju se termini iz pravnih i poslovnih izvora prema njihovom stvarnom kontekstu. Ne uvodi se jedan novi univerzalni termin tamo gdje izvori koriste različite termine ili pojmove (npr. preduzetnik, društvo, MMSP, DOO, plan ulaganja, biznis plan, Javni poziv / Javni konkurs). Pravno ili poslovno značenje izvornog termina ne mijenja se samo radi ujednačavanja. Ako budući KN-FS ili konkretan UI zahtijeva jedan jedinstveni naziv, to se ne definiše proizvoljno: pitanje se evidentira i, kada je potrebno, traži se PO odluka. Vidi poglavlja 33 i 34.
 
-Ovaj dokument je **USVOJENO** (KN-BM-001 v0.2.10; formalno PO usvajanje v0.2.7; `KN-PATCH-BM-001`; `KN-PATCH-BM-002`; `KN-PATCH-BM-003`). Derivirana `KN-BR-*` pravila imaju status **DERIVED / USVOJENO**.
+**PO-HYBRID-1 — Document ID / zajednički sloj (A+D):** USVOJENO. Lokalni `KN-BM-001` ostaje kanonski Odluka-derivirani BM (`KN-BR-*`). Remote dokument istog Document ID-a („Zajednički poslovni model“ v1.0.1) **ne** zamjenjuje lokalni lanac i **ne** smije imati drugo živo značenje pod istim ID-om. Kompatibilne korisne apstrakcije apsorbuju se u ovaj dokument kao **dokumentacioni modeli** (ispod); **NEW KN-BR = NO**. Novi framework Document ID dodjeljuje se **samo** kad je governance jednoznačan preko lokalnog i remote RG-a; inače = **PENDING**. Remote youth/women profili (`KN-BM-002` / `KN-BM-003` na remote liniji) ostaju **non-canonical input** dok lokalni profil Document ID nije dodijeljen bez kolizije.
+
+**Apsorbovane kompatibilne apstrakcije (dokumentacioni model; ne uvode `BM-KN-*` ID-eve):** tip konkursa → poslovni profil → godišnja instanca → Poziv; verzija profila i istorijska primjena; opcione/konfigurabilne sposobnosti (prijava, ocjenjivanje, rangiranje, odluka/ugovor, arhiva) koje profil uključuje samo kad su potrebne; razdvajanje administratora konkursa od člana Komisije (usklađeno sa lokalnim akterima); najviše jedna **aktivno** konačno podnesena prijava po podnosiocu i Pozivu **bez** univerzalnog withdraw/resubmit.
+
+**PO-HYBRID-2 — statusi prijave:** USVOJENO. Zadržava se kanonski FS katalog od **5** statusa (`draft`, `submitted`, `evaluated`, `approved`, `rejected`). Mapiranje youth osnovnih stanja: `U pripremi` → `draft`; `Podnesena` → `submitted`. **Ne** uvodi se drugi youth katalog statusa prijave. Potpuna/Nepotpuna, prigovor, bodovanje i rangiranje ostaju DERIVED / PROCESS / SEPARATE ENTITY (FS PO DECISION 5).
+
+**PO-HYBRID-3 — scoring visibility:** USVOJENO. Zadržava se **OPTION D** (FS PO DECISION 4). Remote `BM-ML-040` (raniji gate: međusobni uvid kad sva 3 člana završe sve prijave, **bez** uslova formirane rang-liste) = **REJECT** kao zamjena lokalnog gate-a.
+
+**PO-HYBRID-4 — post-submit lock:** USVOJENO. Zadržava se zaključavanje nakon konačne predaje (nema edit/delete/reopen/withdraw radi ponovnog podnošenja). Remote `BM-KN-015` withdraw/resubmit **nije** univerzalno common pravilo.
+
+**PO-HYBRID-5 — učestalost raspisivanja:** USVOJENO. Učestalost / kvartal / drugi Poziv = **PROFILE / LEGAL / CONFIG**, ne univerzalni BR za sve tipove. `KN-BR-004` / `KN-BR-005` ostaju derivacija **ove** Odluke (jedan put godišnje; treći kvartal) i **ne** univerzalizuju se na youth. Youth Q2 + uslovni drugi poziv = **YOUTH SPECIALIZATION** (PROFILE PENDING).
+
+**WOMEN komisija 5 članova:** **LEGACY / HISTORICAL** only; **ne** common. Kanonski COMMON / youth = **Komisija = 3** (PO DECISION 2 / KN-BR-050). Women 5 se **ne** importuje u common.
+
+**Youth specializations (PROFILE PENDING — Document ID nije dodijeljen ovim PATCH-om):** starost 18–30; M-obrasci i youth dokumentacioni paketi; Q2 prvi poziv + uslovni drugi poziv; procentualni limiti 30%/20%/15%; povezani youth kvorum/sekvence kao profilni detalj. Izvor dokaza: remote youth BM (BM-ML-*). **Ne** prepisuju se u univerzalne `KN-BR-*`. **Ne** popunjavaju se iz women.
+
+Ovaj dokument je **USVOJENO** (KN-BM-001 v0.2.11; formalno PO usvajanje v0.2.7; `KN-PATCH-BM-001`; `KN-PATCH-BM-002`; `KN-PATCH-BM-003`; `KN-PATCH-BM-004`). Derivirana `KN-BR-*` pravila imaju status **DERIVED / USVOJENO**.
 
 Dokumentaciona načela: `KN-DOC-01` … `KN-DOC-08` (poglavlje 5). Nisu BR. KN-DOC-08 ne kreira katalog konkretnog konkursa i ne rezerviše `KN-RG-xxx` broj.
 
@@ -1281,7 +1298,7 @@ Oznake stavki su redni brojevi ovog registra. **Nisu** Document ID. Stavka 1 je 
 
 Trenutno **nema** otvorenih stavki. Nova pitanja koja izvor ne rješava jednoznačno i dalje se evidentiraju ovdje prema pravilu 8. Preporuka **nije** odluka.
 
-Q1–Q6, PO DECISION 1–5 i PO DECISION 7 ostaju RESOLVED. Q1–Q6 nijesu BM blocker. Bivša stavka 6 nije otvorena PO odluka.
+Q1–Q6, PO DECISION 1–5, PO DECISION 7 i **PO-HYBRID-1…5** ostaju RESOLVED. Q1–Q6 nijesu BM blocker. Bivša stavka 6 nije otvorena PO odluka.
 
 ---
 
@@ -1289,4 +1306,4 @@ Napomena: DERIVED DATE stupanja na snagu (čl.32) ostaje u KN-PRO; nije BM block
 
 ---
 
-**Kraj dokumenta KN-BM-001 v0.2.10 USVOJENO**
+**Kraj dokumenta KN-BM-001 v0.2.11 USVOJENO**

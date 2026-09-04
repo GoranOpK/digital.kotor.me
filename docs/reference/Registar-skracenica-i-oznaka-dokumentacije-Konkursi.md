@@ -6,7 +6,7 @@
 **Modul:** Konkursi
 **Vlasništvo:** cjelina Konkursi (`KN`)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.8
+**Verzija:** 1.0.9
 **Datum:** 2026-09-03
 
 ---
@@ -114,7 +114,7 @@ Pravila su DK-DS-001 §6–§8. KN ih primjenjuje, ne mijenja.
 
 | Kategorija | KN model | Status |
 |------------|----------|--------|
-| PATCH | `{NS}-PATCH-{TYPE}-{NNN}` npr. `KN-PATCH-BM-001` | MODEL ACTIVE; izdati: `KN-PATCH-BM-001`, `KN-PATCH-BM-002`, `KN-PATCH-BM-003`, `KN-PATCH-FS-001`, `KN-PATCH-FS-002`, `KN-PATCH-FS-003`, `KN-PATCH-FS-004`, `KN-PATCH-FS-005` |
+| PATCH | `{NS}-PATCH-{TYPE}-{NNN}` npr. `KN-PATCH-BM-001` | MODEL ACTIVE; izdati: `KN-PATCH-BM-001`, `KN-PATCH-BM-002`, `KN-PATCH-BM-003`, `KN-PATCH-BM-004`, `KN-PATCH-FS-001`, `KN-PATCH-FS-002`, `KN-PATCH-FS-003`, `KN-PATCH-FS-004`, `KN-PATCH-FS-005`, `KN-PATCH-FS-006` |
 | Feature ID | Globalni `FT-*` **nije obavezan**. Ako se kasnije uvede FR: `{NS}-FR-001`; model feature ID-a definiše se tada u ovom RG-u i **ne** nastavlja automatski istorijski `FT-*` niz. | **NOT YET CREATED** |
 | CR | Ako zatreba: `KN-CR-{NNN}`; registar `KN-CR-REG-001` | **NOT YET CREATED** |
 | KN-DOC | Dokumentaciona načela otvaranja paketa (`KN-DOC-01` … `KN-DOC-07`) | Žive u KN-BM-001 §5. **Nisu** poslovna pravila konkursa i **nisu** BR. |
@@ -141,7 +141,7 @@ Postojeći runtime identiteti implementacije ženskog preduzetništva (klase, ta
 
 Za **nove** KN dokumente status dokumenta: `NACRT` · `U IZRADI` · `USVOJENO` · `SUPERSEDED` · `ARHIVIRANO`.
 
-PO odluka da se **otvara** kanonski KN paket je USVOJENA. Trenutni statusi sadržajnih dokumenata (usklađeno sa zaglavljima): **KN-BM-001 = USVOJENO**; **KN-FS-001 = USVOJENO** (v0.2.12); **KN-PRO-001 = NACRT**; **KN-TS-001 = NACRT**.
+PO odluka da se **otvara** kanonski KN paket je USVOJENA. Trenutni statusi sadržajnih dokumenata (usklađeno sa zaglavljima): **KN-BM-001 = USVOJENO** (v0.2.11); **KN-FS-001 = USVOJENO** (v0.2.13); **KN-PRO-001 = NACRT**; **KN-TS-001 = NACRT**.
 
 Minimalni metadata: Document ID · Naziv · Namespace / modul · Verzija · Status dokumenta · Datum posljednje izmjene (DK-DS-001 §13).
 
@@ -196,7 +196,8 @@ Zabranjene / deprecated oznake u KN kanonskim dokumentima:
 | 1.0.6 | 2026-09-03 | Administrativno usklađivanje registra sa formalnim PO usvajanjem KN-FS-001 v0.2.12: STATUS = USVOJENO (§4, §5, §8). KN-PRO/KN-TS ostaju NACRT. Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
 | 1.0.7 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-BM-002` (§6; KN-BM-001 v0.2.9 / živi pokazivač na KN-PRO-001 v0.1.4). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
 | 1.0.8 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-BM-003` (§6; KN-BM-001 v0.2.10 / živi pokazivač na KN-FS-001 v0.2.12 USVOJENO). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
+| 1.0.9 | 2026-09-03 | Administrativno: evidentirani izdati `KN-PATCH-BM-004` i `KN-PATCH-FS-006` (§6; KN-BM-001 v0.2.11 / KN-FS-001 v0.2.13 — PO-HYBRID-1…5). Bez `KN-PATCH-REG`. Bez dodjele Document ID-a za youth/women profile. |
 
 ---
 
-**Kraj dokumenta KN-RG-001 v1.0.8**
+**Kraj dokumenta KN-RG-001 v1.0.9**

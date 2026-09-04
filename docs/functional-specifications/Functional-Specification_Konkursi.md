@@ -7,10 +7,10 @@
 **Modul:** Konkursi
 **Namespace:** KN
 **Status dokumenta:** USVOJENO
-**Verzija:** 0.2.12
+**Verzija:** 0.2.13
 **Datum:** 2026-09-03
 
-**Poslovni SSOT:** KN-BM-001 v0.2.8 USVOJENO (`docs/business-model/Business_Model_Konkursi.md`; `KN-PATCH-BM-001`)
+**Poslovni SSOT:** KN-BM-001 v0.2.11 USVOJENO (`docs/business-model/Business_Model_Konkursi.md`; `KN-PATCH-BM-004`)
 
 ---
 
@@ -33,6 +33,7 @@
 | 0.2.11 / KN-PATCH-FS-004 | 2026-09-03 | **PO CORRECTION** FS PO DECISION 5 — **OPTION B — BALANCED**, `evaluated` zadržan kao **STORED** kanonski status prijave (isti model žensko / mladi). Kanonski katalog: `draft`, `submitted`, `evaluated`, `approved`, `rejected`. Minimalni prelazi: `draft`→`submitted`; `submitted`→`evaluated` (kad je evaluacija završena i nije ranije odbijena); `submitted`→`rejected`; `evaluated`→`approved` \| `evaluated`→`rejected`. Bez nove PO: nema povratka u `draft` iz `submitted`/`evaluated`/`approved`/`rejected`. Klasifikacija admin review / prigovor / intervju / bodovanje u toku / rangiranje nepromijenjena (nisu statusi prijave). UI label za `submitted` ostaje **PENDING PO 6**. Izmijenjeni KN-FR-031, KN-FR-041, §9, §12, §13, §14. PO 6 PENDING. Status ostaje NACRT. KN-BM/KN-PRO/KN-TS/kod nijesu mijenjani. |
 | 0.2.12 / KN-PATCH-FS-005 | 2026-09-03 | FS PO DECISION 6 resolved / USVOJENO — **OPTION A**. Kanonski UI labeli statusa prijave (backend nepromijenjen): `draft`→**Nacrt**; `submitted`→**Podnesena**; `evaluated`→**Ocijenjena**; `approved`→**Odobrena**; `rejected`→**Odbijena**. **„U obradi“ nije** kanonski UI label za `submitted`. Isto za žensko / mladi (ako youth UI nije implementiran — isti labeli). UI-only; **NEW BUSINESS RULE = NO**. Javni poziv vs Javni konkurs ostaje kontekstualno; prijava ≠ zahtjev. Izmijenjeni KN-FR-040, §3.2, §9, §12, §13, §14. Sve FS PO odluke zatvorene (0 otvorenih). Status ostaje NACRT. KN-BM/KN-PRO/KN-TS/kod nijesu mijenjani. |
 | 0.2.12 — PO APPROVAL | 2026-09-03 | Formalno PO usvajanje KN-FS-001 v0.2.12. Status: USVOJENO. Nema promjene funkcionalnih zahtjeva ni poslovnih pravila. Zaključana FS baseline i SSOT za izradu KN-TS. |
+| 0.2.13 / KN-PATCH-FS-006 | 2026-09-03 | Evidentiranje PO-HYBRID-1…5 u FS. KEEP: 5 statusa; mapiranje `U pripremi`→`draft`, `Podnesena`→`submitted`; OPTION D; post-submit lock; Komisija=3. REJECT: BM-ML-040 raniji gate; BM-KN-015 withdraw kao universal; women-5 kao common; drugi youth status katalog. Call frequency = PROFILE/LEGAL/CONFIG. Youth specializations = PROFILE PENDING (bez novog FR). NEW BUSINESS RULE = NO; NEW KN-FR = NO. Status ostaje USVOJENO. KN-PRO/KN-TS/kod nijesu mijenjani. |
 
 Napomena uz historiju 0.2.3 (red se **ne** mijenja): oznaka „FS PO DECISION 7“ u tom redu je tadašnja numeracija. Od v0.2.4 isto pravilo (jedna konačno predana prijava, User + Competition) evidentirano je kao dio **FS PO DECISION 2 — RESOLVED / USVOJENO** i KN-FR-042. Trenutna numeracija nije FS PO DECISION 7.
 
@@ -51,7 +52,7 @@ Svaki PATCH dobija:
 - kratak naziv,
 - kratak opis izmjene.
 
-PATCH model: KN-RG-001 / DK-DS-001 §8. Izdat: `KN-PATCH-FS-001` (v0.2.8), `KN-PATCH-FS-002` (v0.2.9), `KN-PATCH-FS-003` (v0.2.10), `KN-PATCH-FS-004` (v0.2.11), `KN-PATCH-FS-005` (v0.2.12).
+PATCH model: KN-RG-001 / DK-DS-001 §8. Izdat: `KN-PATCH-FS-001` (v0.2.8), `KN-PATCH-FS-002` (v0.2.9), `KN-PATCH-FS-003` (v0.2.10), `KN-PATCH-FS-004` (v0.2.11), `KN-PATCH-FS-005` (v0.2.12), `KN-PATCH-FS-006` (v0.2.13).
 
 ---
 
@@ -59,7 +60,7 @@ PATCH model: KN-RG-001 / DK-DS-001 §8. Izdat: `KN-PATCH-FS-001` (v0.2.8), `KN-P
 
 Dokument predstavlja referentnu funkcionalnu specifikaciju cjeline Konkursi.
 
-U verziji 0.2.12 razrađuje **kako** usvojena poslovna pravila iz KN-BM-001 v0.2.8 treba da se ponašaju u digitalnom servisu za V1, uz sljedivost `KN-BR-*` → `KN-FR-*` → KN-TS = PENDING, uključujući **FS PO DECISION 1**, **FS PO DECISION 2**, **FS PO DECISION 3**, **FS PO DECISION 4** (OPTION D — scoring visibility; `KN-PATCH-FS-002`), **FS PO DECISION 5** (OPTION B — BALANCED, PO CORRECTION: `evaluated` STORED; `KN-PATCH-FS-004`) i **FS PO DECISION 6** (OPTION A — kanonski UI labeli statusa prijave; `submitted` → **Podnesena**; `KN-PATCH-FS-005`).
+U verziji 0.2.13 razrađuje **kako** usvojena poslovna pravila iz KN-BM-001 v0.2.11 treba da se ponašaju u digitalnom servisu za V1, uz sljedivost `KN-BR-*` → `KN-FR-*` → KN-TS = PENDING, uključujući **FS PO DECISION 1**, **FS PO DECISION 2**, **FS PO DECISION 3**, **FS PO DECISION 4** (OPTION D — scoring visibility; `KN-PATCH-FS-002`), **FS PO DECISION 5** (OPTION B — BALANCED, PO CORRECTION: `evaluated` STORED; `KN-PATCH-FS-004`), **FS PO DECISION 6** (OPTION A — kanonski UI labeli statusa prijave; `submitted` → **Podnesena**; `KN-PATCH-FS-005`) i **PO-HYBRID-1…5** (`KN-PATCH-FS-006` / `KN-PATCH-BM-004`).
 
 Identifikatori `KN-FR-*` su lokalni identifikatori funkcionalnih zahtjeva ovog dokumenta (DK-DS-001 §5, MODULE-INTERNAL; KN-RG-001: `{NS}-FR-001`). **Nisu** Document ID, **nisu** Feature Registry dokument, **nisu** `KN-BR-*` i **nisu** KK `BR-*`.
 
@@ -84,7 +85,7 @@ KN-BM-001 ostaje poslovni SSOT. Ovaj FS **ne** uvodi tiho poslovna pravila mimo 
 | 11. Ivice slučajeva (edge cases) | USVOJENO — BM §28; usvojene FS PO odluke gdje su već evidentirane |
 | 12. Sljedivost prema Business Modelu | USVOJENO |
 | 13. Prihvatni kriterijumi V1 | USVOJENO |
-| 14. PO DECISION REQUIRED | USVOJENO — 0 otvorenih; stavke 1–6 RESOLVED / USVOJENO (stavka 5 sa PO CORRECTION; stavka 6 OPTION A) |
+| 14. PO DECISION REQUIRED | USVOJENO — 0 otvorenih; stavke 1–6 RESOLVED / USVOJENO; PO-HYBRID-1…5 RESOLVED |
 | 15. KN-BR coverage 001–080 | USVOJENO |
 
 ---
@@ -93,7 +94,7 @@ KN-BM-001 ostaje poslovni SSOT. Ovaj FS **ne** uvodi tiho poslovna pravila mimo 
 
 1. Funkcionalna specifikacija pripada cjelini Konkursi (KN-FS-001).
 
-2. Posljednja usvojena verzija Functional Specification predstavlja jedini izvor istine za funkcionalne zahtjeve. KN-FS-001 **v0.2.12** je **USVOJENO** (formalno PO usvajanje) i predstavlja zaključanu FS baseline i SSOT za izradu KN-TS. Poslovni SSOT ostaje KN-BM-001 v0.2.8 USVOJENO.
+2. Posljednja usvojena verzija Functional Specification predstavlja jedini izvor istine za funkcionalne zahtjeve. KN-FS-001 **v0.2.13** je **USVOJENO** (formalno PO usvajanje v0.2.12; `KN-PATCH-FS-006` evidentira PO-HYBRID-1…5) i predstavlja zaključanu FS baseline i SSOT za izradu KN-TS. Poslovni SSOT ostaje KN-BM-001 v0.2.11 USVOJENO.
 
 3. Poglavlja sa statusom USVOJENO mijenjaju se isključivo kroz PATCH.
 
@@ -579,9 +580,9 @@ Oznake stavki su redni brojevi ovog FS registra. **Nisu** Document ID. Preporuka
 
 **Otvoreno:** 0 stavki.
 
-**Zatvoreno:** stavka 1 — **FS PO DECISION 1**; stavka 2 — **FS PO DECISION 2**; stavka 3 — **FS PO DECISION 3**; stavka 4 — **FS PO DECISION 4**; stavka 5 — **FS PO DECISION 5** (sa **PO CORRECTION**); stavka 6 — **FS PO DECISION 6** (**OPTION A**). Nisu isto što i BM PO DECISION 1 / 2 / 3 / 4 / 5.
+**Zatvoreno:** stavka 1 — **FS PO DECISION 1**; stavka 2 — **FS PO DECISION 2**; stavka 3 — **FS PO DECISION 3**; stavka 4 — **FS PO DECISION 4**; stavka 5 — **FS PO DECISION 5** (sa **PO CORRECTION**); stavka 6 — **FS PO DECISION 6** (**OPTION A**); stavka 7 — **PO-HYBRID-1…5**. Nisu isto što i BM PO DECISION 1 / 2 / 3 / 4 / 5.
 
-KN-BM-001 v0.2.8 nema otvorenih BM stavki. Ove stavke su **funkcionalne** nejednoznačnosti pri derivaciji V1.
+KN-BM-001 v0.2.11 nema otvorenih BM stavki. Ove stavke su **funkcionalne** nejednoznačnosti pri derivaciji V1, plus hybrid reconciliation.
 
 ---
 
@@ -675,9 +676,24 @@ KN-BM-001 v0.2.8 nema otvorenih BM stavki. Ove stavke su **funkcionalne** nejedn
 
 ---
 
+### 7. Hybrid reconciliation (PO-HYBRID-1…5) — RESOLVED / USVOJENO
+
+* **Izvor:** KN-BM-001 v0.2.11 / `KN-PATCH-BM-004`; remote youth BM (non-canonical input); usvojene FS PO DECISION 2 / 4 / 5 / 6.
+* **Odluka (`KN-PATCH-FS-006`):**
+  1. **Statusi:** KEEP lokalni katalog od 5 statusa. Mapiranje youth: `U pripremi` → `draft`; `Podnesena` → `submitted` (UI label **Podnesena** ostaje). **Ne** uvodi se drugi youth status katalog.
+  2. **Scoring visibility:** KEEP **OPTION D**. Remote `BM-ML-040` raniji gate = **REJECT** kao zamjena.
+  3. **Lock:** KEEP post-submit lock (nema edit/delete/reopen/withdraw). Remote `BM-KN-015` withdraw **nije** universal V1.
+  4. **Call frequency:** PROFILE / LEGAL / CONFIG; youth Q2 / drugi poziv **nije** univerzalni FR. Lokalni `KN-BR-004`/`005` ostaju za ovu Odluku.
+  5. **Komisija:** COMMON = 3. Women 5 = LEGACY/HISTORICAL only; **ne** import u common/youth.
+  6. **Youth specializations** (age 18–30, M-forms, Q2/2nd call, % 30/20/15) = PROFILE PENDING dokumentacione reference; **NEW KN-FR = NO**.
+  7. **NEW BUSINESS RULE = NO.** Odluka ne mijenja postojeće `KN-FR-*` niti uvodi novi FR.
+* **Status:** **RESOLVED / USVOJENO**.
+
+---
+
 ## 14.2 Otvorena pitanja (PENDING PO)
 
-Nema otvorenih FS PO DECISION stavki. Sve stavke 1–6 su **RESOLVED / USVOJENO**.
+Nema otvorenih FS PO DECISION stavki. Sve stavke 1–6 su **RESOLVED / USVOJENO**. **PO-HYBRID-1…5** su **RESOLVED / USVOJENO**.
 
 ---
 
@@ -772,4 +788,4 @@ Kategorije: **A** = V1 FUNCTIONAL REQUIREMENT; **B** = BUSINESS RULE — NO DIRE
 
 ---
 
-**Kraj dokumenta KN-FS-001 v0.2.12**
+**Kraj dokumenta KN-FS-001 v0.2.13**
