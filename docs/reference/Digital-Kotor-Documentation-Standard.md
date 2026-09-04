@@ -5,8 +5,8 @@
 **Naziv:** Digital Kotor Documentation Standard v1
 **Vlasništvo:** platformski sloj Digital Kotora
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.0
-**Datum:** 2026-08-17
+**Verzija:** 1.0.5
+**Datum:** 2026-09-04
 
 Ovo je **normativni** dokumentacioni standard cijele platforme Digital Kotor.
 
@@ -135,6 +135,18 @@ Postojeći EP namespaced model (`EP-PATCH-BM-*`, `EP-PATCH-FS-*`) ostaje.
 
 Za **nove module**: `{NS}-PATCH-{TYPE}-{NNN}` (npr. `KN-PATCH-BM-001`). Ako modul usvoji jednostavniji model, mora biti eksplicitan u njegovom RG-u.
 
+### Kolizija PATCH oznake prije prve objave
+
+Kanonsko objavljeno stanje dokumentacione PATCH oznake je `origin/main`.
+
+**A. Objavljena oznaka.** Oznaka koja je objavljena na `origin/main` predstavlja kanonski identifikator. Ne smije se naknadno preimenovati niti dodijeliti drugom značenju. Objavljena istorija na `origin/main` se ne prepisuje.
+
+**B. Neobjavljena oznaka.** Oznaka koja postoji samo u lokalnom radu i još nije objavljena na `origin/main` može se prije prve objave korigovati ako je u međuvremenu došlo do kolizije sa oznakom koja je već kanonski objavljena.
+
+**C. Prioritet.** U slučaju kolizije: objavljena oznaka zadržava identitet i značenje; neobjavljena oznaka dobija novu slobodnu oznaku; poslovni i dokumentacioni sadržaj corrective-a se time ne mijenja; objavljena istorija se ne prepisuje.
+
+**D. Registar.** Nova slobodna oznaka mora se provjeriti prema CURRENT registru odgovarajućeg namespace-a prije prve objave.
+
 ---
 
 # 9. Runtime / stable key
@@ -225,7 +237,11 @@ Za **nove** dokumente: čitljiv filename sa tipom i predmetom/modulom, latinica 
 
 Technical Overview / Operations **nije** zamjena za BM/FS/TS. **Ne** dodjeljivati joj automatski modulne BM/FS/TS ID-eve.
 
-Auth, korisnici, uloge, biblioteka dokumenata ostaju **DK REFERENCE / OPERATIONS**. Ne kreirati `DK-BM-002` / `DK-FS-002` / `DK-TS-002` dok PO ne otvori zaseban paket.
+Registracija i korisnički identitet imaju otvoren platformski dokumentacioni paket. Kanonski poslovni model je **DK-BM-002** (status **USVOJENO**). Taj predmet više **nije** isključivo DK REFERENCE / OPERATIONS.
+
+Uloge i biblioteka dokumenata ostaju **DK REFERENCE / OPERATIONS** dok PO ne otvori zaseban paket. **Nisu** automatski obuhvaćeni `DK-BM-002`.
+
+`DK-FS-002` je uveden (status **USVOJENO**). `DK-UC-002` i `DK-TS-002` **nisu** uvedeni. Ne kreirati ih usput. Njihovo eventualno uvođenje ide kroz kontrolisani dokumentacioni korak prema ovom standardu i PO procesu.
 
 ---
 
@@ -259,7 +275,12 @@ Stabilni legacy ID-evi (KK `PATCH-*`, KK `CR-*`, `FT-*`, `EP-PO-001`, runtime `T
 | Verzija | Datum | Opis |
 |---------|--------|------|
 | 1.0.0 | 2026-08-17 | Usvojen Digital Kotor Documentation Standard v1. Formalizovani namespace, document ID, tipovi, PRO vs EP-PO-001, CR/PATCH/FT/runtime pravila, statusne dimenzije, folderi. KN rezervisan. Tenderi bez namespace-a. |
+| 1.0.1 | 2026-09-03 | Evidencija PO-usvojenog pravila u §8 PATCH: neobjavljena dokumentaciona oznaka može se korigovati prije prve objave pri koliziji sa već objavljenom oznakom; objavljena oznaka zadržava identitet; objavljena istorija na `origin/main` se ne prepisuje. |
+| 1.0.2 | 2026-09-03 | §15: usklađenje sa PO-otvorenim paketom registracije i korisničkog identiteta. `DK-BM-002` je kanonski poslovni model (U IZRADI). Uloge i biblioteka dokumenata ostaju DK REFERENCE / OPERATIONS. `DK-UC-002` / `DK-FS-002` / `DK-TS-002` nisu uvedeni. |
+| 1.0.3 | 2026-09-03 | §15: status `DK-BM-002` usklađen sa PO usvajanjem dokumenta kao cjeline (USVOJENO). `DK-UC-002` / `DK-FS-002` / `DK-TS-002` nisu uvedeni. |
+| 1.0.4 | 2026-09-03 | §15: `DK-FS-002` evidentiran kao uveden (U IZRADI). `DK-UC-002` i `DK-TS-002` nisu uvedeni. Metodologija razvoja neizmijenjena. |
+| 1.0.5 | 2026-09-04 | §15: status `DK-FS-002` usklađen sa PO usvajanjem dokumenta kao cjeline (USVOJENO). `DK-UC-002` i `DK-TS-002` nisu uvedeni. Metodologija razvoja neizmijenjena. |
 
 ---
 
-**Kraj dokumenta DK-DS-001 v1.0.0**
+**Kraj dokumenta DK-DS-001 v1.0.5**

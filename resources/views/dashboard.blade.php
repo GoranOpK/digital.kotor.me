@@ -252,10 +252,10 @@
     $isSuperAdmin = $user->role && $user->role->name === 'superadmin';
     $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
     $isKomisija = isset($isKomisija) ? $isKomisija : ($user->role && $user->role->name === 'komisija');
-    $isPhysicalPerson = $user->user_type === 'Fizičko lice';
+    $isPhysicalPerson = $user->isNaturalPerson();
     $isResident = $user->residential_status === 'resident';
     $isNonResident = $user->residential_status === 'non-resident';
-    $isLegalEntity = $user->user_type !== 'Fizičko lice';
+    $isLegalEntity = $user->isLegalEntity();
     
     // Određivanje tipa korisnika za prikaz
     if ($isSuperAdmin) {
@@ -267,6 +267,8 @@
         $userTypeLabel = $positionLabel . ' komisije';
     } elseif ($isKomisija) {
         $userTypeLabel = 'Član komisije';
+    } elseif ($user->isEntrepreneur()) {
+        $userTypeLabel = 'Preduzetnik';
     } elseif ($isPhysicalPerson && $isResident) {
         $userTypeLabel = 'Fizičko lice (Rezident)';
     } elseif ($isPhysicalPerson && $isNonResident) {

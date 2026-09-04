@@ -5,7 +5,7 @@
     $activeOrganizer = $activeOrganizer ?? null;
 @endphp
 
-<div class="space-y-6">
+<div class="space-y-6 kk-padded-fields" data-kk-padded-fields>
     <div>
         <label for="naziv" class="block text-sm font-medium text-gray-700 mb-2">Naziv *</label>
         <input type="text" id="naziv" name="naziv" value="{{ old('naziv', $manifestation->naziv ?? '') }}" maxlength="255"

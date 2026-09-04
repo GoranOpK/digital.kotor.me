@@ -71,6 +71,71 @@ class ProfileTest extends TestCase
         $this->assertSame('Petar Petrović', $user->name);
         $this->assertSame('petar.profile@example.com', $user->email);
         $this->assertNull($user->email_verified_at);
+        $this->assertSame('resident', $user->residential_status);
+    }
+
+    public function test_profile_information_can_be_updated_to_non_resident(): void
+    {
+        $user = $this->makeUser();
+
+        $response = $this
+            ->actingAs($user)
+            ->put(route('profile.update'), [
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'address' => $user->address,
+                'city' => $user->city,
+                'user_type' => 'Fizičko lice',
+                'residential_status' => 'non-resident',
+                'jmb' => $user->jmb,
+                'passport_number' => 'AB123456',
+            ]);
+
+        $response
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('dashboard'));
+
+        $this->assertSame('non-resident', $user->refresh()->residential_status);
+        $this->assertSame('AB123456', $user->passport_number);
+    }
+
+    public function test_profile_update_rejects_legacy_ex_non_resident_status(): void
+    {
+        $user = $this->makeUser();
+
+        $this
+            ->actingAs($user)
+            ->from(route('profile.edit'))
+            ->put(route('profile.update'), [
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'address' => $user->address,
+                'city' => $user->city,
+                'user_type' => 'Fizičko lice',
+                'residential_status' => 'ex-non-resident',
+                'jmb' => $user->jmb,
+            ])
+            ->assertSessionHasErrors('residential_status')
+            ->assertRedirect(route('profile.edit'));
+
+        $this->assertSame('resident', $user->refresh()->residential_status);
+    }
+
+    public function test_profile_form_does_not_offer_legacy_ex_non_resident_option(): void
+    {
+        $html = $this->actingAs($this->makeUser())
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('ex-non-resident', $html);
+        $this->assertStringNotContainsString('Bivši nerezident', $html);
+        $this->assertStringContainsString('value="resident"', $html);
+        $this->assertStringContainsString('value="non-resident"', $html);
     }
 
     public function test_email_verification_status_is_unchanged_when_the_email_address_is_unchanged(): void

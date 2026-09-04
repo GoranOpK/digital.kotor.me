@@ -63,6 +63,8 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertStringNotContainsString('data-kk-nav-moderator-block="1"', $html);
         $this->assertStringNotContainsString('data-kk-nav="kontrolna-tabla-moderator"', $html);
         $this->assertStringNotContainsString('data-kk-nav="moderiranje"', $html);
+        $this->assertStringNotContainsString('data-kk-nav="moderator-guide"', $html);
+        $this->assertStringNotContainsString('>Uputstvo<', $html);
         $this->assertStringNotContainsString('>Radna tabla<', $html);
         $this->assertStringNotContainsString('>Mod rad<', $html);
         $this->assertStringNotContainsString(
@@ -85,7 +87,12 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertSame(2, substr_count($html, 'data-kk-nav="moderiranje"'));
         $this->assertStringContainsString('>Kontrolna tabla<', $html);
         $this->assertStringContainsString('>Moderiranje<', $html);
-        $this->assertStringContainsString('Organizator: UX Org A', $html);
+        $this->assertSame(2, substr_count($html, 'data-kk-nav="active-organizer"'));
+        $this->assertStringContainsString('>UX Org A<', $html);
+        // Visible label is name-only (desktop + mobile); "Organizator:" may remain only in title=.
+        $this->assertDoesNotMatchRegularExpression('/>Organizator:\s*UX Org A</u', $html);
+        $this->assertSame(2, preg_match_all('/data-kk-nav="active-organizer"[^>]*title="Organizator: UX Org A"/u', $html));
+        $this->assertStringNotContainsString('>'.$this->moderator->name.'<', $html);
         $this->assertStringContainsString(
             'href="'.e(route('cultural-moderator-dashboard.index')).'"',
             $html
@@ -106,6 +113,36 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.events')).'"', $html);
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.archive')).'"', $html);
         $this->assertStringContainsString('href="'.e(route('cultural-calendar.manifestations')).'"', $html);
+    }
+
+    public function test_active_moderator_sees_guide_button_next_to_logout_ordinary_user_does_not(): void
+    {
+        CulturalOrganizerContext::set($this->moderator, $this->orgA->id);
+
+        $html = $this->actingAs($this->moderator)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+
+        $guideHref = e(asset('pdf/'.rawurlencode('Moderator uputstvo.pdf')));
+        $this->assertSame(2, substr_count($html, 'data-kk-nav="moderator-guide"'));
+        $this->assertSame(2, substr_count($html, '>Uputstvo<'));
+        $this->assertStringContainsString('href="'.$guideHref.'"', $html);
+        $this->assertMatchesRegularExpression(
+            '/background:#7a0f17[^"]*color:#ffffff[^"]*border-radius:0[^"]*"[^>]*>Uputstvo</',
+            $html
+        );
+        $this->assertTrue(
+            is_file(public_path('pdf/Moderator uputstvo.pdf')),
+            'Expected Moderator uputstvo.pdf in public/pdf.'
+        );
+
+        $ordinaryHtml = $this->actingAs($this->ordinary)
+            ->get(route('cultural-calendar.index'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('data-kk-nav="moderator-guide"', $ordinaryHtml);
+        $this->assertStringNotContainsString('>Uputstvo<', $ordinaryHtml);
     }
 
     public function test_desktop_and_mobile_moderiranje_are_plain_links_with_identical_sizing(): void
@@ -158,33 +195,15 @@ class CulturalModeratorUxNavigationTest extends TestCase
         $this->assertStringContainsString('display:inline-flex', $kontrolnaStyle[1]);
         $this->assertStringContainsString('align-items:center', $kontrolnaStyle[1]);
         $this->assertStringContainsString('justify-content:center', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('padding:8px 14px', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('min-height:38px', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('height:38px', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('width:128px', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('min-width:128px', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('line-height:1.25', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('padding:6px 10px', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('min-height:32px', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('height:32px', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('line-height:1.2', $kontrolnaStyle[1]);
         $this->assertStringContainsString('box-sizing:border-box', $kontrolnaStyle[1]);
-        $this->assertStringContainsString('font-size:14px;font-weight:600', $kontrolnaStyle[1]);
+        $this->assertStringContainsString('font-size:11px;font-weight:600', $kontrolnaStyle[1]);
         $this->assertStringContainsString('white-space:nowrap', $kontrolnaStyle[1]);
-        $this->assertSame(
-            1,
-            preg_match('/(?:^|;)width:128px(?:;|$)/u', $kontrolnaStyle[1]),
-            'Shared explicit width constraint required for equal Moderiranje/Kontrolna tabla width.'
-        );
-        $this->assertSame(
-            1,
-            preg_match('/(?:^|;)width:128px(?:;|$)/u', $moderiranjeStyle[1]),
-            'Moderiranje must use the same explicit width as Kontrolna tabla.'
-        );
-        $this->assertSame(
-            1,
-            preg_match('/(?:^|;)min-width:128px(?:;|$)/u', $kontrolnaStyle[1])
-        );
-        $this->assertSame(
-            1,
-            preg_match('/(?:^|;)min-width:128px(?:;|$)/u', $moderiranjeStyle[1])
-        );
+        $this->assertStringNotContainsString('width:128px', $kontrolnaStyle[1]);
+        $this->assertStringNotContainsString('min-width:128px', $kontrolnaStyle[1]);
 
         $menuStart = strpos($html, '<!-- Responsive Navigation Menu -->');
         $this->assertNotFalse($menuStart);
@@ -244,8 +263,9 @@ class CulturalModeratorUxNavigationTest extends TestCase
             $moderiranjeStyle
         );
         $this->assertSame($kontrolnaStyle[1] ?? null, $moderiranjeStyle[1] ?? null);
-        $this->assertStringContainsString('width:128px', $kontrolnaStyle[1] ?? '');
-        $this->assertStringContainsString('height:38px', $kontrolnaStyle[1] ?? '');
+        $this->assertStringContainsString('height:32px', $kontrolnaStyle[1] ?? '');
+        $this->assertStringContainsString('font-size:11px', $kontrolnaStyle[1] ?? '');
+        $this->assertStringNotContainsString('width:128px', $kontrolnaStyle[1] ?? '');
     }
 
     public function test_multi_org_moderator_sees_promijeni_organizatora_action(): void

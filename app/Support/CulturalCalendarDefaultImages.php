@@ -8,27 +8,33 @@ use App\Services\CulturalCategory\CanonicalCulturalCategoryCatalog;
  * Javni fallback vizueli Kalendara kulture (MED-I4A).
  *
  * Event: statička fotografija kanonske kategorije (ako postoji Git fajl) → globalni Event placeholder.
- * Manifestacija: zaseban MF fallback ugovor (MED-I4B asset još nije dodat; compatibility path).
+ * Manifestacija: zaseban MF placeholder (`manifestacije.jpg`) → globalni Event placeholder ako fajl nedostaje.
  *
  * Nije CulturalMedia. Nije category_default. Nije CulturalEvent.slika.
  */
 final class CulturalCalendarDefaultImages
 {
     /**
-     * Dedicated Git category fallbacks — only MED-I4A READY canonical names.
-     * MISSING and AMBIGUOUS canonical names are omitted on purpose (global Event fallback).
+     * Dedicated Git category fallbacks by canonical name.
+     * Sajmovi has no dedicated file yet and falls back to the global Event placeholder.
      * Legacy-only category names are not keys here.
      *
      * @var array<string, string>
      */
     public const DEDICATED_CATEGORY_ASSETS = [
         'Koncerti' => 'koncerti.jpg',
-        'Predstave' => 'predstave.jpg',
+        'Predstave' => 'performansi.jpg',
         'Sportski događaji' => 'sportski-dogadjaji.jpg',
         'Izložbe' => 'izlozbe.jpg',
+        'Književni programi' => 'knjizevne-veceri.jpg',
         'Filmske projekcije' => 'filmske-projekcije.jpg',
+        'Dječiji programi' => 'predstave.jpg',
+        'Konferencije' => 'prezentacije.jpg',
         'Radionice' => 'radionice.jpg',
+        'Publikacije' => 'promocije-publikacija.jpg',
         'Performansi' => 'performansi.jpg',
+        'Prezentacije i predavanja' => 'prezentacije.jpg',
+        'Paneli i tribine' => 'paneli-o-kulturi.jpg',
     ];
 
     /**
@@ -42,12 +48,10 @@ final class CulturalCalendarDefaultImages
     public const FALLBACK_DEFAULT_IMAGE = 'img/kalendar-kulture-default-event.png';
 
     /**
-     * Manifestation placeholder path contract (MED-09).
-     *
-     * Temporary compatibility: same file as the Event global PNG until MED-I4B adds a dedicated asset.
-     * Callers must use manifestationFallbackUrl(), not Event category fallback.
+     * Manifestation placeholder (MED-09). Dedicated file; not an Event category asset.
+     * If the file is missing on disk, manifestationFallbackPath() falls back to the Event global PNG.
      */
-    public const FALLBACK_MANIFESTATION_IMAGE = 'img/kalendar-kulture-default-event.png';
+    public const FALLBACK_MANIFESTATION_IMAGE = 'img/kalendar-kulture/categories/manifestacije.jpg';
 
     public static function isCanonicalCategory(?string $category): bool
     {

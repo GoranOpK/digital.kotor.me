@@ -72,15 +72,9 @@
                     <label for="business_type" class="form-label">Tip privrednog subjekta <span class="required">*</span></label>
                     <select name="business_type" id="business_type" class="form-control">
                         <option value="">Izaberite tip</option>
-                        <option value="Preduzetnik" @selected(old('business_type') === 'Preduzetnik')>Preduzetnik</option>
-                        <option value="Ortačko društvo" @selected(old('business_type') === 'Ortačko društvo')>Ortačko društvo</option>
-                        <option value="Komanditno društvo" @selected(old('business_type') === 'Komanditno društvo')>Komanditno društvo</option>
-                        <option value="Društvo sa ograničenom odgovornošću" @selected(old('business_type') === 'Društvo sa ograničenom odgovornošću')>Društvo sa ograničenom odgovornošću</option>
-                        <option value="Akcionarsko društvo" @selected(old('business_type') === 'Akcionarsko društvo')>Akcionarsko društvo</option>
-                        <option value="Dio stranog društva (predstavništvo ili poslovna jedinica)" @selected(old('business_type') === 'Dio stranog društva (predstavništvo ili poslovna jedinica)')>Dio stranog društva (predstavništvo ili poslovna jedinica)</option>
-                        <option value="Udruženje (nvo, fondacije, sportske organizacije)" @selected(old('business_type') === 'Udruženje (nvo, fondacije, sportske organizacije)')>Udruženje (nvo, fondacije, sportske organizacije)</option>
-                        <option value="Ustanova (državne i privatne)" @selected(old('business_type') === 'Ustanova (državne i privatne)')>Ustanova (državne i privatne)</option>
-                        <option value="Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)" @selected(old('business_type') === 'Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)')>Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)</option>
+                        @foreach(($businessTypeOptions ?? []) as $value => $label)
+                            <option value="{{ $value }}" @selected(old('business_type') === $value)>{{ $label }}</option>
+                        @endforeach
                     </select>
                     <div class="form-error" id="business_type_error"></div>
                 </div>

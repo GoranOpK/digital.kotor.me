@@ -37,6 +37,19 @@
     $kkEditorialCtaStyle = 'display:inline-block; background:#b91c1c; color:#fff; text-decoration:none; padding:10px 14px; border-radius:8px; font-weight:600;';
 @endphp
 <div class="kk-shell mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <style>
+        .kk-events-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+        @media (min-width: 640px) {
+            .kk-events-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (min-width: 992px) {
+            .kk-events-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+    </style>
     <div class="flex items-center justify-between mb-6 gap-3 flex-wrap">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">
@@ -246,7 +259,7 @@
             @endif
         </div>
     @else
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div class="kk-events-grid" data-kk-events-grid="responsive-3">
             @foreach($results as $result)
                 @php
                     $hit = $result instanceof CulturalPublicSearchHit ? $result : null;

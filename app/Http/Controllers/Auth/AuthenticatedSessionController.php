@@ -32,6 +32,10 @@ class AuthenticatedSessionController extends Controller
         $user = Auth::user();
         if ($user && $user->role && $user->role->name === 'kk_admin') {
             $default = route('cultural-calendar.index', absolute: false);
+        } elseif ($user && $user->role && $user->role->name === 'konkurs_admin') {
+            $request->session()->forget('url.intended');
+
+            return redirect()->route('admin.dashboard');
         }
 
         return $this->redirectAfterLogin($request, $default);

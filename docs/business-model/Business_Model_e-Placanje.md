@@ -4,8 +4,9 @@
 
 **Oznaka dokumenta:** EP-BM-001
 **Modul:** e-Plaćanje
-**Status dokumenta:** U IZRADI
-**Verzija:** 0.1
+**Status dokumenta:** USVOJENO
+**Verzija:** 1.0.2
+**Datum usvajanja poslovnog modela V1:** 2026-08-20 (Korak 6 — CLOSED)
 
 ---
 
@@ -26,6 +27,9 @@
 | EP-PATCH-BM-009 | 2026-07-27 | BP-09 – Istorija transakcija i pregled plaćanja (BP-09.1 do BP-09.5). |
 | EP-PATCH-BM-009A | 2026-07-27 | Redakcijsko usklađivanje: BP-06↔BP-09 (istorija); terminološko razdvajanje identifikatora transakcije. |
 | EP-PATCH-BM-010 | 2026-08-17 | Dokumentacioni corrective: oznaka EP-BM-001; namespace EP-*; naziv modula e-Plaćanje. Bez izmjene poslovnih odluka. |
+| EP-PATCH-BM-011 | 2026-08-20 | Usklađivanje sa zatvorenim Korakom 6 (V1 poslovni model CLOSED). SUPERSEDE: ontologija 17 kategorija + 41 vrsta uplate; statusi Kreirana/U toku; preuzimanje obaveze/iznosa iz izvornog sistema; zapis transakcije prije gateway-a. KEEP: P-01–P-08 u suštini granica; UR-01; BP-04. Bez application implementation-a. |
+| EP-PATCH-BM-012 | 2026-08-20 | Usklađivanje EP korisničkog modela sa kanonskim platform V1 user modelom (8 kategorija). Identity vs eligibility granica. Platform application corrective COMPLETE; production data cleanup OPEN. Bez application implementation-a. |
+| EP-PATCH-BM-013 | 2026-08-22 | F11: `FINAL 17/41 USER CATEGORY MAPPING = USVOJENO`. Konkretna matrica = EP-KF-001. Purpose/model/šifra/poziv ostaju OPEN. Bez izmjene poslovnih pravila filtera. |
 
 Napomena:
 
@@ -35,175 +39,151 @@ Kod svake naredne verzije dodaje se novi red u tabeli.
 
 Ne mijenjaju se postojeći redovi.
 
-Svaki PATCH dobija:
-
-- jedinstvenu oznaku (EP-PATCH-BM-001, EP-PATCH-BM-002...),
-- datum,
-- kratak naziv,
-- kratak opis izmjene.
-
-Naziv PATCH-a predstavlja zvanični naziv izmjene i koristi se u istoriji verzija.
-
 ---
 
 ## Svrha dokumenta
 
-Dokument predstavlja referentni poslovni model za planiranje, razvoj, testiranje i održavanje modula e-Plaćanja.
+Dokument je **poslovni SSOT** zatvorenog V1 modela e-Plaćanja (Korak 6, 2026-08-20).
+
+Korak 6 se ne reinterpretira. Pre-production zavisnosti (poglavlje 11) **nisu** ponovno otvaranje Koraka 6.
+
+Terminologija: EP-RG-001.
 
 ---
 
 # Status razvoja Business Modela
 
-| Poglavlje | Status |
-|-----------|--------|
-| EP-BM-001 / 1. Uvod | U IZRADI |
-| EP-BM-001 / 2. Svrha | USVOJENO (P-01) |
-| EP-BM-001 / 3. Ciljevi | U IZRADI |
-| EP-BM-001 / 4. Opseg | USVOJENO (P-02, F-01) |
-| EP-BM-001 / 5. Poslovni principi (P-01 do P-08) | USVOJENO |
-| EP-BM-001 / 6. Obavezni obuhvat V1 (F-01) | USVOJENO |
-| EP-BM-001 / 6a. Uplatni računi – referentni i konfiguracioni podaci (UR-01) | USVOJENO |
-| EP-BM-001 / 7. Poslovni entiteti | REZERVISANO |
-| EP-BM-001 / 8. Korisničke uloge | REZERVISANO |
-| EP-BM-001 / 9. Poslovni procesi | USVOJENO (BP-01 do BP-09) |
-| EP-BM-001 / 9.1 BP-01 – Pronalaženje vrste uplate | USVOJENO |
-| EP-BM-001 / 9.2 BP-02 – Način popunjavanja podataka za plaćanje | USVOJENO |
-| EP-BM-001 / 9.3 BP-03 – Pregled i potvrda prije plaćanja | USVOJENO |
-| EP-BM-001 / 9.4 BP-04 – Jedinstvena integracija sa sistemom elektronskog plaćanja | USVOJENO |
-| EP-BM-001 / 9.5 BP-05 – Obrada ishoda elektronskog plaćanja | USVOJENO |
-| EP-BM-001 / 9.6 BP-06 – Potvrda o izvršenom elektronskom plaćanju | USVOJENO |
-| EP-BM-001 / 9.7 BP-07 – Izvor obaveznih podataka za elektronsko plaćanje | USVOJENO |
-| EP-BM-001 / 9.8 BP-08 – Životni ciklus transakcije | USVOJENO |
-| EP-BM-001 / 9.9 BP-09 – Istorija transakcija i pregled plaćanja | USVOJENO |
-| EP-BM-001 / 10. Veza sa dokumentacijom | U IZRADI |
-| EP-BM-001 / 11. Rječnik poslovnih pojmova | U IZRADI |
-| EP-BM-001 / 12. Registar usvojenih poslovnih odluka (BP) | USVOJENO (BP-01 do BP-09) |
+| Poglavlje | Status | Korak 6 |
+|-----------|--------|---------|
+| 1. Uvod | USVOJENO | KEEP |
+| 2. Svrha V1 | USVOJENO | UPDATE (P-01) |
+| 3. Ciljevi | USVOJENO | UPDATE |
+| 4. Opseg i granice | USVOJENO | UPDATE (P-02, P-03, P-04, P-08) |
+| 5. Projektna načela P-01 do P-08 | USVOJENO | KEEP suštine; UPDATE primjene |
+| 6. Obavezni obuhvat V1 (F-01) | USVOJENO | SUPERSEDE ontologije |
+| 6a. Uplatni računi (UR-01) | USVOJENO | KEEP + UPDATE filtera |
+| 7. Poslovni entiteti | USVOJENO | UPDATE |
+| 8. Korisnički model relevantan za EP | USVOJENO | NOVO (Korak 6) |
+| 9. Poslovni procesi BP-01 do BP-09 | USVOJENO | UPDATE / SUPERSEDE |
+| 10. Administracija kataloga i transakcija | USVOJENO | NOVO (Korak 6) |
+| 11. Pre-production zavisnosti | USVOJENO kao OPEN lista | NOVO |
+| 12. Veza sa dokumentacijom | USVOJENO | KEEP |
+| 13. Registar usvojenih odluka | USVOJENO | UPDATE |
 
 ---
 
 # Pravila upravljanja Business Modelom
 
 1. Poslovni model predstavlja zvaničnu poslovnu specifikaciju modula e-Plaćanja (EP-BM-001).
-
-2. Posljednja usvojena verzija Business Modela predstavlja jedini izvor istine (Single Source of Truth) za poslovna pravila modula.
-
+2. Zatvoreni Korak 6 (2026-08-20) je jedini izvor istine za V1 poslovna pravila.
 3. Poglavlja sa statusom USVOJENO mijenjaju se isključivo kroz PATCH koji predstavlja novu poslovnu ili projektnu odluku.
-
-4. Kompletan Business Model generiše se isključivo na izričit zahtjev.
-
-5. Cursor ima ulogu urednika verzionisanog dokumenta i ne smije samostalno prepisivati, preformulisati ili reorganizovati usvojeni sadržaj.
-
-6. Usvojena projektna načela P-01 do P-08, odluke F-01 i UR-01, te poslovne odluke BP-01 do BP-09 ne smiju se mijenjati niti proširivati bez nove projektne odluke.
-
-7. Ako postoji razlika između implementacije sistema i Business Modela, implementacija se usklađuje sa Business Modelom, osim ako se odlukom ne izmijeni sam Business Model.
-
----
-
-# Upravljanje promjenama
-
-Svaka izmjena Business Modela mora biti rezultat usvojene poslovne ili projektne odluke i evidentirana kroz odgovarajući PATCH.
+4. Ako postoji razlika između starijeg BP teksta i Koraka 6: **KORAK 6 WINS**.
+5. Ako postoji razlika između implementacije i ovog dokumenta, implementacija se usklađuje sa Business Modelom.
+6. Application implementation **nije** predmet ovog dokumenta. Stub ostaje stub dok PO ne odobri implementaciju.
 
 ---
 
 ## Sadržaj
 
 1. Uvod
-2. Svrha
+2. Svrha V1
 3. Ciljevi
-4. Opseg
-5. Usvojena projektna načela (P-01 do P-08)
+4. Opseg i granice
+5. Projektna načela (P-01 do P-08)
 6. Obavezni obuhvat V1 (F-01)
-6a. Uplatni računi – referentni i konfiguracioni podaci (UR-01)
+6a. Uplatni računi (UR-01)
 7. Poslovni entiteti
-8. Korisničke uloge
+8. Korisnički model relevantan za EP
 9. Poslovni procesi (BP-01 do BP-09)
-10. Veza sa dokumentacijom
-11. Rječnik poslovnih pojmova
-12. Registar usvojenih poslovnih odluka (BP)
+10. Administracija kataloga i transakcija
+11. Pre-production zavisnosti
+12. Veza sa dokumentacijom
+13. Registar usvojenih odluka
 
 ---
 
 # 1. Uvod
 
-Business Model definiše poslovna pravila, poslovne entitete, korisničke uloge i način funkcionisanja modula e-Plaćanja. Dokument predstavlja osnov za izradu funkcionalne i tehničke specifikacije.
-
 Modul e-Plaćanje je funkcionalnost platforme Digital Kotor.
+
+Ovaj dokument definiše zatvoreni V1 poslovni model. Ne projektuje UI, bazu, API, gateway protokol ni application kod.
 
 ---
 
-# 2. Svrha
+# 2. Svrha V1
 
-**Status:** USVOJENO (P-01)
+**Status:** USVOJENO (P-01, Korak 6)
 
-Modul **e-Plaćanje** služi isključivo za elektronsko plaćanje finansijskih obaveza prema Opštini Kotor putem platforme Digital Kotor.
+V1 e-Plaćanja je:
+
+> servis za korisnički iniciranu elektronsku uplatu prema kontrolisanom katalogu vrsta plaćanja i računa Opštine Kotor.
+
+Korisnik plaća **u svoje ime**.
+
+`Plati za drugo lice` = **OUT OF V1**
 
 ---
 
 # 3. Ciljevi
 
-**Status:** U IZRADI
+**Status:** USVOJENO
 
-Na osnovu usvojenih načela, ciljevi modula u V1 uključuju:
-
-* omogućiti online plaćanje finansijskih obaveza koje se danas mogu platiti na blagajni Opštine Kotor (P-02);
-* predstavljati elektronski kanal za izvršenje plaćanja već utvrđenih finansijskih obaveza (P-02, P-03);
-* ostati u granicama odgovornosti definisanim projektnim načelima (P-03, P-04, P-08);
-* osigurati usklađenost sa pravnim okvirom (P-05, P-07).
-
-Detaljniji poslovni ciljevi mogu se dopuniti naknadnom projektnom odlukom.
+* omogućiti korisniku da elektronski uplati prema katalogu Opštine Kotor;
+* ostati u granicama P-03 / P-04 / P-08 i Koraka 6 (modul ne utvrđuje obavezu);
+* osigurati usklađenost sa pravnim okvirom (P-05, P-07);
+* evidentirati ishod konkretne EP transakcije, bez tvrdnje da je obaveza izmirena.
 
 ---
 
-# 4. Opseg
+# 4. Opseg i granice
 
-**Status:** USVOJENO (P-02, F-01)
+**Status:** USVOJENO (P-02, P-03, P-04, P-08, Korak 6)
 
-## 4.1 Obuhvat V1 (P-02)
+## 4.1 Šta V1 jeste
 
-Modul omogućava online plaćanje finansijskih obaveza koje se danas mogu platiti na blagajni Opštine Kotor.
+Elektronski kanal za korisnički iniciranu uplatu iz kontrolisanog kataloga (17 vrsta plaćanja, 41 račun — EP-KF-001).
 
-U prvoj fazi modul predstavlja isključivo elektronski kanal za izvršenje plaćanja.
+## 4.2 Šta V1 NE radi
 
-## 4.2 Granice (P-03, P-04, P-08)
+V1 **NE**:
 
-Modul e-Plaćanje:
+* pronalazi korisnikova rješenja;
+* preuzima rješenja;
+* preuzima zaduženja;
+* utvrđuje postojanje obaveze;
+* izračunava visinu obaveze;
+* predlaže iznos obaveze;
+* vodi saldo obaveze;
+* potvrđuje da je konkretnom uplatom obaveza izmirena.
 
-* ne obračunava finansijske obaveze;
-* ne donosi upravna rješenja;
-* ne kreira zaduženja;
-* ne vodi izvorne evidencije finansijskih obaveza;
-* ne uvodi nove finansijske obaveze niti mijenja postojeće poslovne procese Opštine Kotor;
-* ne mijenja sadržaj podataka izvornog informacionog sistema ili nadležnog organa.
+## 4.3 Out of V1
 
-## 4.3 Obuhvat vrsta uplata (F-01)
-
-Obuhvat pojedinačnih vrsta uplata i uplatnih računa utvrđuje se Katalogom finansijskih obaveza, na osnovu spiska dostavljenog u okviru projekta. Detalji su u poglavlju 6.
+* `Plati za drugo lice`
+* refund kroz user portal
+* ručni unos računa primaoca
+* ručna izmjena statusa transakcije od strane administratora
 
 ---
 
-# 5. Usvojena projektna načela (P-01 do P-08)
+# 5. Projektna načela (P-01 do P-08)
 
 **Status:** USVOJENO
 
-Ovih osam projektnih načela predstavljaju obavezujuće projektne odluke. Ne smiju se mijenjati niti proširivati bez nove projektne odluke.
+Suština načela ostaje. Primjena je usklađena sa Korakom 6 (EP-PATCH-BM-011). Tekst se ne proširuje novim P-ID-evima.
 
----
-
-## P-01 – Svrha modula
+## P-01 – Svrha modula — KEEP / UPDATE
 
 Modul **e-Plaćanje** služi isključivo za elektronsko plaćanje finansijskih obaveza prema Opštini Kotor putem platforme Digital Kotor.
 
----
+**Korak 6 primjena:** isključivo korisnički inicirana uplata prema kontrolisanom katalogu; ne servis za pronalaženje ili izmirenje utvrđene obaveze u izvornom sistemu.
 
-## P-02 – Obuhvat V1
+## P-02 – Obuhvat V1 — KEEP / UPDATE
 
-Modul omogućava online plaćanje finansijskih obaveza koje se danas mogu platiti na blagajni Opštine Kotor.
+Modul omogućava online plaćanje prema katalogu koji odgovara prihodima koji se mogu platiti na blagajni Opštine Kotor, u obuhvatu projektnog spiska (F-01 / EP-KF-001).
 
-U prvoj fazi modul predstavlja isključivo elektronski kanal za izvršenje plaćanja.
+**Korak 6 primjena:** V1 je elektronski kanal za uplatu, ne kanal koji preuzima zaduženje sa blagajne.
 
----
-
-## P-03 – Granice odgovornosti
+## P-03 – Granice odgovornosti — KEEP
 
 Modul e-Plaćanje:
 
@@ -212,891 +192,443 @@ Modul e-Plaćanje:
 * ne kreira zaduženja;
 * ne vodi izvorne evidencije finansijskih obaveza.
 
-Njegova uloga je omogućavanje elektronskog plaćanja već utvrđenih finansijskih obaveza.
+**Korak 6:** ranija rečenica da je uloga „plaćanje već utvrđenih obaveza“ ne smije se čitati kao da Digital Kotor utvrđuje ili preuzima konkretnu obavezu.
 
----
-
-## P-04 – Postojeći poslovni procesi
+## P-04 – Postojeći poslovni procesi — KEEP
 
 Modul e-Plaćanje ne uvodi nove finansijske obaveze niti mijenja postojeće poslovne procese Opštine Kotor.
 
-Predstavlja elektronski kanal za izvršenje plaćanja postojećih finansijskih obaveza u skladu sa važećim propisima.
-
----
-
-## P-05 – Regulatorna usklađenost
+## P-05 – Regulatorna usklađenost — KEEP
 
 Svaka funkcionalnost modula mora imati odgovarajući pravni osnov u zakonima Crne Gore ili važećim propisima Opštine Kotor.
 
----
+## P-06 – Dokumentacija — KEEP
 
-## P-06 – Dokumentacija
+Razvoj modula zasniva se na: EP-PO-001, EP-KF-001, EP-BM-001, EP-FS-001, EP-TS-001. Oznake: EP-RG-001.
 
-Razvoj modula zasniva se na sljedećim dokumentima:
+## P-07 – Propis kao izvor istine — KEEP
 
-1. Pravni okvir modula e-Plaćanja.
-2. Katalog finansijskih obaveza prema Opštini Kotor.
-3. Business Model.
-4. Funkcionalna specifikacija.
-5. Tehnička specifikacija.
+Svaka vrsta plaćanja mora biti povezana sa pravnim osnovom kada je potvrđen. Ako nije: **Potrebno pravno potvrditi.** Ne unose se pretpostavljeni pravni podaci.
 
-Dokumentacija predstavlja osnov za projektovanje, razvoj i održavanje modula.
+## P-08 – Izvorni sistem ostaje nadležan — KEEP / UPDATE
 
----
+Za stvarnu finansijsku obavezu izvorni informacioni sistem ili nadležni organ Opštine Kotor ostaje jedini mjerodavan izvor.
 
-## P-07 – Propis kao izvor istine
-
-Svaka pojedinačna vrsta finansijske obaveze mora biti povezana sa odgovarajućim pravnim osnovom.
-
-Kada podaci budu dostupni, potrebno je evidentirati:
-
-* naziv propisa;
-* broj i godinu službenog glasila;
-* relevantni član propisa;
-* nadležni organ;
-* napomene o primjeni.
-
-Ako pravni osnov nije potvrđen, potrebno ga je označiti kao:
-
-**Potrebno pravno potvrditi.**
-
-Ne smiju se unositi pretpostavljeni ili nepotvrđeni pravni podaci.
-
----
-
-## P-08 – Izvorni sistem ostaje nadležan
-
-Za svaku finansijsku obavezu izvorni informacioni sistem ili nadležni organ Opštine Kotor ostaje jedini mjerodavan izvor podataka.
-
-Modul e-Plaćanje koristi te podatke isključivo radi omogućavanja elektronskog plaćanja i ne mijenja njihov sadržaj.
+**Korak 6 SUPERSEDE primjene:** V1 **ne** preuzima podatke obaveze iz izvornog sistema radi popunjavanja uplatnice. V1 **ne** potvrđuje izvornom sistemu da je obaveza izmirena. Izvorni sistem ostaje mjerodavan; Digital Kotor evidentira samo ishod sopstvene EP transakcije.
 
 ---
 
 # 6. Obavezni obuhvat V1 (F-01)
 
-**Status:** USVOJENO
+**Status:** USVOJENO — ontologija SUPERSEDE (Korak 6)
 
-## FUNKCIONALNA ODLUKA F-01 – OBAVEZNI OBUHVAT V1
+## F-01 — aktivna formulacija
 
-Modul e-Plaćanje u verziji V1 mora podržati sve pojedinačne vrste uplata i sve pripadajuće uplatne račune definisane važećom:
+V1 podržava katalog iz projektnog spiska (Naredba o načinu uplate javnih prihoda, „Službeni list Crne Gore“, br. 006/25 od 29.01.2025.), u dijelu obuhvaćenom projektom:
 
-**Naredbom o načinu uplate javnih prihoda**
-(„Službeni list Crne Gore“, broj 006/25 od 29.01.2025. godine),
+* **17 vrsta plaćanja** — *šta* korisnik plaća;
+* **41 račun** — *gdje* se sredstva uplaćuju.
 
-koje su obuhvaćene ovim projektom.
+Jedna vrsta plaćanja može imati jedan ili više računa.
 
-Važna razlika:
+Spisak se ne dopunjava samostalnim tumačenjem propisa.
 
-* glavne numerisane cjeline predstavljaju kategorije uplata;
-* svaka podstavka sa posebnim nazivom i računom predstavlja zasebnu vrstu uplate;
-* sistem mora podržati svaku pojedinačnu vrstu uplate koja je obuhvaćena projektom.
+Konačno mapiranje 17/41 na korisničke kategorije (visibility / availability) = **USVOJENO** (F11; EP-KF-001 v0.7). Konkretna matrica se ne duplira ovdje.
 
-Glavne kategorije služe isključivo za logičku organizaciju i prikaz korisnicima.
+Purpose / model / šifra plaćanja / poziv na broj ostaju **OPEN** (poglavlje 11).
 
-Svaka pojedinačna vrsta uplate mora imati najmanje:
+## F-01 — SUPERSEDE
 
-* pripadajuću kategoriju;
-* puni naziv vrste uplate;
-* uplatni račun;
-* internu oznaku ili šifru;
-* status primjene;
-* pravni osnov (kada bude utvrđen);
-* napomenu o ciljnoj grupi (građani, preduzetnici, pravna lica ili više grupa), kada je to moguće utvrditi iz propisa.
+Sljedeća historijska ontologija **nije** kanonska za V1:
 
-Brojevi računa ne smiju biti hardkodirani u aplikacionom kodu. U dokumentaciji i projektovanju treba ih tretirati kao podatke šifrarnika koji se mogu ažurirati u slučaju izmjene važećih propisa.
+> 17 kategorija + 41 vrsta uplate; svaka podstavka = zasebna vrsta uplate; kategorije samo za prikaz.
 
-Prilikom izrade dokumentacije koristi se isključivo spisak vrsta uplata koji je dostavljen u okviru ovog projekta. Ne dodaju se druge vrste uplata na osnovu samostalnog tumačenja propisa ili drugih izvora.
+To je legacy KF model. Aktivno: `17 vrsta plaćanja → 41 račun`.
 
 ---
 
-# 6a. Uplatni računi – referentni i konfiguracioni podaci (UR-01)
+# 6a. Uplatni računi (UR-01)
 
-**Status:** USVOJENO
+**Status:** USVOJENO — KEEP + UPDATE
 
-## Projektna odluka UR-01
+Brojevi računa u EP-KF-001 su **referentni podaci** iz Naredbe. Navođenje u dokumentaciji **nije** hardkodiranje.
 
-Brojevi uplatnih računa predstavljaju **referentne podatke** preuzete iz važeće **Naredbe o načinu uplate javnih prihoda**.
+Katalog je **poslovni referentni dokument**, nije aplikacioni šifrarnik.
 
-Njihovo navođenje u dokumentaciji (Katalog finansijskih obaveza) služi isključivo za dokumentovanje poslovnih podataka koji važe u trenutku izrade dokumentacije.
+Aplikacija (kada bude implementirana) koristi konfiguracioni izvor izveden iz Kataloga. Računi se **ne** hardkodiraju.
 
-To ne predstavlja hardkodiranje niti projektovanje implementacije.
+### Korak 6 pravila računa — UPDATE
 
-### Katalog
-
-U Katalogu se evidentiraju naziv vrste uplate, pripadajuća kategorija, broj uplatnog računa i ostali podaci predviđeni strukturom Kataloga.
-
-Brojevi računa u Katalogu predstavljaju referentne podatke preuzete iz važećeg propisa.
-
-Katalog finansijskih obaveza predstavlja **poslovni referentni dokument**. Nije šifrarnik i ne predstavlja implementacioni artefakt.
-
-### Funkcionalna specifikacija
-
-Funkcionalna specifikacija ne unosi konkretne brojeve računa. Definiše da svaka vrsta uplate ima referencu na odgovarajući uplatni račun definisan u Katalogu.
-
-### Aplikacija i šifrarnik
-
-Uplatni računi predstavljaju konfiguracione podatke (šifrarnik) i ne smiju biti hardkodirani u aplikacionom kodu.
-
-Aplikacija mora koristiti podatke iz konfiguracionog izvora (šifrarnika), a ne vrijednosti ugrađene u programski kod.
-
-Iz Kataloga će u narednim fazama razvoja biti izveden odgovarajući šifrarnik koji će predstavljati izvor podataka za aplikaciju.
+* Korisnik **ne može** ručno unijeti proizvoljan račun primaoca.
+* Račun uvijek dolazi iz kontrolisanog kataloga.
+* Kanonski filter: `korisnik → dozvoljena vrsta plaćanja → dozvoljeni račun(i)`.
+* Račun **ne može** proširiti pravo koje korisnik nema na nivou vrste.
+* 1 dozvoljeni račun: sistem ga može automatski odabrati.
+* 2+ dozvoljenih: korisnik bira između dozvoljenih.
+* Vrsta se korisniku prikazuje samo ako postoji najmanje jedan **aktivan**, **validno konfigurisan** i **dozvoljen** račun za njegovu kategoriju.
+* Korišćeni račun se **ne briše**; deaktivira se.
+* Promjena broja računa = `deactivate` starog + **novi** catalog record. Opisni podaci se mogu uređivati.
+* Promjena kataloga ne mijenja istorijske transakcije.
 
 ---
 
 # 7. Poslovni entiteti
 
-**Status:** REZERVISANO
+**Status:** USVOJENO (konceptualno; bez SQL šeme)
 
-Poglavlje će se dopuniti nakon popunjavanja Kataloga i usvajanja dodatnih poslovnih odluka.
+| Entitet | Značenje |
+|---------|----------|
+| Vrsta plaćanja | Šta korisnik plaća (17 u V1 katalogu) |
+| Račun | Gdje se sredstva uplaćuju (41 u V1 katalogu) |
+| Uplatilac | Kanonski Digital Kotor user profile; na transakciji: immutable snapshot |
+| Transakcija | Poslovni zapis pokušaja plaćanja koji je prihvaćen/pokrenut prema gateway-u |
+| Potvrda o uspješnoj transakciji | Dokaz konkretne uspješne EP transakcije; nije fiskalni račun ni izmirenje obaveze |
+| Payment gateway | Infrastruktura kartičnog plaćanja; SSOT konačnog statusa |
 
-Očekivani entiteti (rezervisano, bez tehničkog projektovanja):
-
-* Kategorija uplate
-* Vrsta uplate (finansijska obaveza)
-* Uplatni račun (kao atribut / referentni podatak u Katalogu; u aplikaciji — konfiguracioni podatak šifrarnika izvedenog iz Kataloga)
-* Plaćanje (poslovni događaj izvršenja uplate) — detalji naknadno
-
----
-
-# 8. Korisničke uloge
-
-**Status:** REZERVISANO
-
-Poglavlje još nije definisano. Uloge će se usvojiti posebnom odlukom.
-
-Napomena: Autentifikacija i upravljanje korisničkim nalogom pripadaju platformi Digital Kotor, a ne poslovnom domenu modula e-Plaćanja, osim ako se drugačije ne odluči.
+**SUPERSEDE entiteta:** „Kategorija uplate“ kao jedinica V1 kataloga (17). Kategorija u starom KF smislu više nije kanonski entitet.
 
 ---
 
-# 9. Poslovni procesi
+# 8. Korisnički model relevantan za EP
 
-**Status:** USVOJENO (BP-01 do BP-09)
+**Status:** USVOJENO (Korak 6; usklađeno sa kanonskim platform V1 user modelom)
 
-U skladu sa P-02 i P-04, V1 proces je elektronski kanal za izvršenje plaćanja postojećih finansijskih obaveza, bez izmjene postojećih poslovnih procesa Opštine Kotor.
+EP **ne** definiše sopstvene user types. Koristi kanonski platformski `user_type`.
 
-## 9.0 Objedinjeni poslovni tok
+Osnovna kategorija korisnika određuje identitet/oblik korisnika.
 
-1. Korisnik pronađe i odabere vrstu uplate (BP-01).
-2. Sistem pribavi podatke za plaćanje automatski ili kroz ručni unos (BP-02); izvori obaveznih podataka određuju se konfiguracijom vrste uplate (BP-07).
-3. Sistem izvrši validaciju.
-4. Korisniku se prikaže pregled podataka za plaćanje (BP-03).
-5. Korisnik potvrdi podatke (BP-03).
-6. Tek nakon potvrde kreira se zapis o transakciji i korisnik se preusmjerava na payment gateway (BP-04, BP-08.1); životni ciklus statusa uređuje BP-08.
-7. Nakon završetka obrade od strane sistema elektronskog plaćanja, modul ažurira status transakcije i prikaže odgovarajuću informaciju korisniku (BP-05, BP-08).
-8. Korisniku se prikaže potvrda o ishodu transakcije; za uspješno izvršene transakcije potvrda je dostupna za pregled i preuzimanje (BP-06); po potrebi se dostavlja potvrda izvornom informacionom sistemu (BP-08.5).
-9. Korisnik može pregledati istoriju i detalje transakcija u skladu sa pravima pristupa (BP-09).
+Svojstva potrebna za pravo učešća na konkretnom konkursu predstavljaju zaseban eligibility sloj i ne postaju automatski `user_type` Digital Kotora.
 
-Napomena: Korisnički proces plaćanja **nije** zavisan od broja računa javnih prihoda niti od konkretnog pružaoca usluge elektronskog plaćanja (BP-04). Konkretna banka, payment gateway, merchant model i tehnička implementacija **ne** biraju se ovim poglavljem.
+Nisu `user_type`: Poljoprivrednik; Registrovani poljoprivredni proizvođač; Ribar; Marikulturista; Mladi preduzetnik; Mikro / Malo / Srednje preduzeće; Individualni sportista.
 
----
+`CANONICAL USER TYPES = 8`
 
-## 9.1 BP-01 – Pronalaženje vrste uplate
+| Canonical type | Legal nature | Storage value |
+|---|---|---|
+| Fizičko lice | fizičko lice | `Fizičko lice` |
+| Preduzetnik | fizičko lice (poslovna kategorija) | `Preduzetnik` |
+| DOO | pravno lice | `Društvo sa ograničenom odgovornošću` |
+| AD | pravno lice | `Akcionarsko društvo` |
+| OD | pravno lice | `Ortačko društvo` |
+| KD | pravno lice | `Komanditno društvo` |
+| Nevladino udruženje | pravno lice | `Nevladino udruženje` |
+| Sportska organizacija | pravno lice | `Sportska organizacija` |
 
-**Status:** USVOJENO
+`STORAGE VALUE = full legal name`. `DOO` / `AD` / `OD` / `KD` su kanonske labele/kodovi, ne drugi user model.
 
-### Odluka
+Lista se ne proširuje bez PO odluke. Nisu aktivni V1 user types: Nevladina fondacija; Javna ustanova; Privatna ustanova; Dio stranog privrednog društva; Politička partija; Vjerska zajednica; Komora; Sindikat; Druge organizacije; generičko `Ostalo`.
 
-Korisnik može pronaći vrstu uplate na dva načina:
+Legacy ENUM vrijednosti mogu privremeno ostati u storage-u radi production safety. To je `LEGACY / COMPATIBILITY ONLY — NOT AVAILABLE FOR NEW REGISTRATION`. Nisu kanonske V1 kategorije i ne nabrajaju se u aktivnoj listi.
 
-1. pregledom po hijerarhiji:
-   * kategorija;
-   * pojedinačna vrsta uplate;
-2. pretragom svih vrsta uplata po nazivu.
+`PLATFORM USER MODEL CORRECTIVE = COMPLETE`
 
-Oba načina koriste isti **Katalog finansijskih obaveza prema Opštini Kotor** kao jedini referentni izvor vrsta uplata.
+`PRODUCTION LEGACY DATA CLEANUP = OPEN PRE-PRODUCTION`
 
-### Poslovna pravila
+`FINAL 17/41 USER CATEGORY MAPPING = USVOJENO`
 
-* Kategorije služe za organizaciju i pregled.
-* Pretraga se vrši nad pojedinačnim vrstama uplata.
-* Pregled po kategorijama i pretraga vode do iste vrste uplate.
-* Ne smije postojati posebna ili duplirana lista vrsta uplata za pretragu.
-* Nazivi i klasifikacija vrsta uplata preuzimaju se iz Kataloga.
+## 8.1 Fizičko lice i Preduzetnik — rezidentnost
 
----
+`residential_status` se primjenjuje **samo** na:
 
-## 9.2 BP-02 – Način popunjavanja podataka za plaćanje
+* Fizičko lice
+* Preduzetnik
 
-**Status:** USVOJENO
+Kanonske vrijednosti:
 
-### Odluka
+* `resident` — Rezident
+* `non-resident` — Nerezident
 
-Nakon odabira vrste uplate, podaci potrebni za plaćanje popunjavaju se kombinovanim modelom.
+`ex-non-resident` **nije** kanonska kategorija (uklonjen iz aktivnog modela).
 
-#### Automatsko preuzimanje
+Rezidentnost **nije** državljanstvo. **Ne izvodi se** iz JMB-a, pasoša, adrese, državljanstva niti broja dana. Digital Kotor je **ne izračunava**. Korisnik status **izjavljuje**.
 
-Ako za odabranu vrstu uplate postoji integracija sa izvornim informacionim sistemom, modul automatski preuzima podatke potrebne za plaćanje.
+## 8.2 Existing user bez kanonskog statusa
 
-Izvorni informacioni sistem ili nadležni organ ostaje mjerodavan izvor podataka (P-08).
+`DECLARE-ON-USE GATE`
 
-#### Ručni unos
+Tek kada Fizičko lice / Preduzetnik (NULL / unknown status) pristupi funkciji kojoj je status potreban, mora izabrati Rezident ili Nerezident.
 
-Ako integracija ne postoji, korisniku se prikazuje obrazac za ručni unos podataka potrebnih za plaćanje.
+Nema auto-backfill-a, auto-mapiranja ni ponovne registracije.
 
-Obavezni podaci mogu se razlikovati u zavisnosti od vrste uplate.
+Pravno lice **ne** prolazi declare-on-use.
 
-### Poslovna pravila
+## 8.3 Preduzetnik
 
-* Sistem određuje da li za konkretnu vrstu uplate postoji aktivna integracija.
-* Korisnik ne bira između automatskog i ručnog načina.
-* Kada postoji aktivna integracija, koristi se automatsko preuzimanje.
-* Kada integracija ne postoji, koristi se ručni unos.
-* Dodavanje integracije u budućnosti ne smije zahtijevati promjenu osnovnog korisničkog toka.
-* Automatski preuzeti podaci ne smiju se proizvoljno mijenjati ako ih izvorni sistem označava kao mjerodavne ili neizmjenjive.
-* Konkretne integracije, protokoli i izvorni sistemi **ne** projektuju se ovom odlukom.
+Preduzetnik je **fizičko lice** i posebna poslovna kategorija fizičkog lica. Zadržava identitet fizičkog lica. Eligible je za `residential_status`. **Nije** pravno lice.
 
----
+## 8.4 Pravno lice
 
-## 9.3 BP-03 – Pregled i potvrda prije plaćanja
+Pravno lice **NEMA** `residential_status` u kanonskom poslovnom modelu.
 
-**Status:** USVOJENO
+Postojeći production-like `resident` na pravnim licima = **PRE-PRODUCTION PLATFORM DATA DEPENDENCY**. Ne koristi se za EP filter. Application write path više ne postavlja taj fallback.
 
-### Odluka
+Kanonska pravna lica V1: DOO, AD, OD, KD, Nevladino udruženje, Sportska organizacija.
 
-Prije pokretanja elektronskog plaćanja korisniku se mora prikazati pregled svih relevantnih podataka za plaćanje.
-
-Plaćanje može biti pokrenuto tek nakon izričite potvrde korisnika.
-
-### Poslovni tok
-
-1. Korisnik odabere vrstu uplate.
-2. Sistem automatski preuzme podatke ili korisnik unese potrebne podatke.
-3. Sistem izvrši validaciju.
-4. Korisniku se prikaže pregled podataka za plaćanje.
-5. Korisnik potvrdi podatke.
-6. Tek nakon potvrde može početi proces elektronskog plaćanja.
-
-### Pregled treba da sadrži najmanje
-
-* kategoriju;
-* vrstu uplate;
-* naziv primaoca;
-* uplatni račun (referenca na Katalog / šifrarnik; bez hardkodiranja);
-* iznos;
-* poziv na broj, kada postoji;
-* svrhu ili opis plaćanja, kada postoji;
-* ostale relevantne podatke za konkretnu vrstu uplate.
-
-Podaci koji nijesu primjenjivi na konkretnu vrstu uplate ne prikazuju se.
-
-### Poslovna pravila
-
-* Sve validacije moraju biti završene prije prikaza pregleda.
-* Korisnik može da se vrati na prethodni korak i izmijeni podatke prije potvrde.
-* Nakon potvrde i pokretanja procesa plaćanja, podaci te transakcije više se ne mogu mijenjati.
-* Potvrda korisnika nije potvrda da je transakcija uspješno izvršena.
-* Status uspjeha ili neuspjeha plaćanja utvrđuje se tek kroz kasnije definisan proces izvršenja plaćanja.
-* Tehnički način potvrde, autentifikacija payment gateway-a i sadržaj potvrde o izvršenoj transakciji **ne** definišu se ovom odlukom.
+Generičko `Ostalo` **nije** usvojeno. „Javni sektor“ **nije** pravni oblik.
 
 ---
 
-## 9.4 BP-04 – Jedinstvena integracija sa sistemom elektronskog plaćanja
+# 9. Poslovni procesi (BP-01 do BP-09)
 
-**Status:** USVOJENO
+**Status:** USVOJENO — UPDATE / SUPERSEDE prema Koraku 6
 
-### Odluka
+## 9.0 Kanonski tok
 
-Modul e-Plaćanje koristi **jedinstvenu tehničku integraciju** sa sistemom elektronskog plaćanja (payment gateway).
+`formiranje naloga` → `pregled` → `izričita potvrda korisnika` → `gateway`
 
-Broj računa javnih prihoda ne smije uslovljavati razvoj posebne gateway integracije za svaki pojedinačni račun.
+Prije gateway-a korisnik može: nazad; izmijeniti vlastite unose/izbore; odustati.
 
-Za svaku transakciju sistem, na osnovu odabrane vrste uplate i odgovarajuće konfiguracije, određuje na koji račun javnog prihoda se sredstva usmjeravaju.
+Odustajanje prije gateway-a: **NO TRANSACTION**. Nije `Otkazana`. Nije `Neuspješna`.
 
-Korisnički proces plaćanja nije zavisan od broja računa javnih prihoda niti od konkretnog pružaoca usluge elektronskog plaćanja.
+Neposredno prije pokušaja kreiranja transakcije sistem ponovo provjerava: korisnika, profil, prava, dostupnost vrste, dostupnost računa, validnost konfiguracije.
 
-### Poslovna pravila
+## 9.1 BP-01 – Pronalaženje vrste plaćanja — UPDATE
 
-* Modul koristi jednu tehničku integraciju prema payment gateway-u.
-* Jedna integracija može podržavati više računa javnih prihoda.
-* Vrsta uplate određuje konfiguraciju plaćanja.
-* Brojevi računa nisu dio poslovne logike.
-* Povezivanje vrste uplate sa računom vrši se kroz konfiguraciju sistema (UR-01).
-* Dodavanje nove vrste uplate ili promjena računa ne smije zahtijevati razvoj nove gateway integracije.
+Korisnik vidi samo vrste plaćanja dozvoljene njegovoj kategoriji za koje postoji najmanje jedan aktivan, validan i dozvoljen račun.
 
-### Arhitektonski principi (poslovni nivo)
+Pregled i pretraga rade nad **istim** katalogom (EP-KF-001 / izvedeni šifrarnik). Nema paralelne liste.
 
-* Payment gateway predstavlja infrastrukturnu komponentu, a ne poslovnu logiku.
-* Poslovni proces plaćanja mora biti nezavisan od konkretne banke ili pružaoca usluge elektronskog plaćanja.
-* Modul mora omogućiti zamjenu payment gateway-a bez izmjene poslovnog toka korisnika.
-* Konfiguracija računa, merchant profila, terminala ili drugih parametara integracije mora biti odvojena od aplikacionog koda.
+Ako nema nijedne dostupne vrste: modul ostaje dostupan sa **empty state**. Istorija i potvrde ostaju dostupne.
 
-### Veze sa drugim odlukama
+## 9.2 BP-02 – Popunjavanje podataka — SUPERSEDE + nova formulacija
 
-* **P-03** — Modul ne vodi izvorne finansijske evidencije; gateway integracija ne mijenja tu granicu odgovornosti.
-* **P-08** — Izvorni sistemi / nadležni organi ostaju mjerodavni za podatke o obavezi.
-* **UR-01** — Konfiguracioni podaci (uključujući račune) ne smiju biti hardkodirani.
+**SUPERSEDE:** automatsko preuzimanje podataka obaveze iz izvornog informacionog sistema; korisnik bira ručni unos vs integraciju.
 
-### Ograničenje
+**Aktivno:**
 
-Odluka **ne** bira i **ne** pretpostavlja konkretnog merchant-a, marketplace model, terminal ID, MID, banku, payment gateway, API ni tehnologiju. To ostaje predmet buduće tehničke analize i ugovaranja.
+* uplatilac = current canonical Digital Kotor profile; korisnik ne unosi drugi identitet;
+* iznos = **korisnik unosi** (BP-07.1);
+* račun = iz kataloga (UR-01 / 6a);
+* svrha = osnovni tekst formira sistem prema vrsti plaćanja;
+* poziv na broj = per vrsta/račun (system / user input / optional / N/A);
+* model i šifra plaćanja = sistemski; korisnik ih ne određuje proizvoljno.
+
+## 9.3 BP-03 – Pregled i potvrda — UPDATE
+
+Obavezni pregled i **izričita** potvrda prije gateway-a.
+
+Sama potvrda korisnika **nije** dovoljna za nastanak transakcije (BP-08.1).
+
+Potvrda korisnika **nije** potvrda uspjeha plaćanja.
+
+## 9.4 BP-04 – Jedinstvena integracija — KEEP
+
+Jedna tehnička integracija prema payment gateway sloju. Broj računa ne uslovljava posebne integracije. Gateway je infrastruktura. Zamjena gateway-a ne mijenja poslovni tok korisnika.
+
+Konkretna banka, protokol, webhook/callback/status API = **OPEN PRE-PRODUCTION DEPENDENCY**.
+
+## 9.5 BP-05 – Ishod plaćanja — UPDATE
+
+Konačni status = **server-confirmed gateway result**.
+
+Browser return = **NOT AUTHORITATIVE**.
+
+Digital Kotor **ne nagađa** status.
+
+Korisničke poruke nisu novi statusi.
+
+Ako gateway dostavi kontradiktorne rezultate: **ne** važi `last response wins`. Čuvaju se rezultati; status se razrješava prema autoritativnom gateway stanju. Tačan mehanizam = pre-production dependency.
+
+## 9.6 BP-06 – Potvrda o uspješnoj transakciji — UPDATE
+
+Samo za status **Uspješna**.
+
+Potvrda **jeste** dokaz uspješno izvršene konkretne EP transakcije.
+
+Potvrda **nije**: fiskalni račun; rješenje; dokaz da je obaveza izmirena.
+
+**PDF = YES.**
+
+Minimum sadržaja: snapshot uplatioca; vrsta plaćanja; račun; iznos; svrha; poziv/model/šifra kada se koriste; datum/vrijeme; Digital Kotor transaction ID; gateway reference ako postoji; status Uspješna; jasno objašnjenje prirode potvrde.
+
+**Email:** automatski samo za Uspješna, na email važeći u trenutku transakcije (snapshot ga čuva). Neuspjelo slanje **ne** mijenja finansijski status. Korisnik iz detalja Uspješne može zatražiti ponovno slanje na **trenutni validni** email naloga. Resend ne mijenja snapshot.
+
+## 9.7 BP-07 – Podaci uplatnice — SUPERSEDE djelimično
+
+### BP-07.1 Iznos — SUPERSEDE
+
+**SUPERSEDE:** fiksni iznos; iznos iz izvornog sistema; predloženi iznos.
+
+**Aktivno:** korisnik unosi iznos. Valuta **EUR**. Iznos **> 0**. Najviše **2 decimale**. Nema univerzalnog min/max dok gateway ili konkretno plaćanje to ne zahtijeva.
+
+Digital Kotor ne izračunava, ne predlaže i ne potvrđuje visinu obaveze.
+
+**Provizija:** snosi Opština Kotor. Korisnik: **NO ADDITIONAL FEE**. Iznos terećenja kartice = iznos koji je korisnik potvrdio.
+
+### BP-07.2 Primalac — KEEP / UPDATE
+
+Primalac dolazi iz konfiguracije kataloga. Korisnik ga ne mijenja.
+
+### BP-07.3 Račun — UPDATE
+
+Vidi 6a. Korisnik ne unosi proizvoljan račun. Biraju se samo dozvoljeni računi (1 auto / 2+ izbor).
+
+### BP-07.4 Poziv na broj — UPDATE
+
+Definiše se per vrsta plaćanja i račun. Može biti: sistemski; korisnički unos; optional; not applicable.
+
+### BP-07.5 Svrha — SUPERSEDE ručnog/izvornog modela kao default
+
+**Aktivno:** osnovnu svrhu formira sistem prema vrsti plaćanja.
+
+**SUPERSEDE kao V1 default:** „bez svrhe“, svrha iz izvornog sistema, slobodan ručni unos svrhe kao opšti model.
+
+## 9.8 BP-08 – Životni ciklus transakcije — SUPERSEDE statusnog modela
+
+### BP-08.1 Granica nastanka — SUPERSEDE
+
+**SUPERSEDE:** zapis se kreira odmah nakon potvrde korisnika, prije gateway-a, sa statusom **Kreirana**.
+
+**Aktivno:** sama potvrda korisnika nije dovoljna. Transakcija dobija status **U obradi** tek kada Digital Kotor pouzdano utvrdi da je konkretan pokušaj plaćanja **prihvaćen/pokrenut** prema payment gateway-u.
+
+Ako gateway proces nije pokrenut: **NO TRANSACTION**. Nema `Neuspješna`. Nema `Otkazana`.
+
+Na nastanku: **immutable historical snapshot** (profil, vrsta, račun, iznos, svrha, email tada, konfiguracija).
+
+### BP-08.2 Statusi — SUPERSEDE
+
+V1 ima **tačno četiri** statusa:
+
+1. **U obradi** — gateway proces pokrenut, konačni rezultat nepoznat.
+2. **Uspješna** — gateway pouzdano potvrdio uspješno plaćanje. Konačni status osnovne transakcije.
+3. **Neuspješna** — gateway proces pokrenut i gateway pouzdano potvrdio da plaćanje nije izvršeno.
+4. **Otkazana** — gateway proces pokrenut i gateway pouzdano potvrdio otkazivanje.
+
+**REMOVE / SUPERSEDE kao V1 poslovni statusi:** `Kreirana`, `U toku`, `pending`, `Greška`.
+
+Odustajanje prije gateway-a **nije** `Otkazana`.
+
+### BP-08.3 Promjena statusa — UPDATE
+
+Status mijenja isključivo autoritativni gateway rezultat (ili ugovoreni status-check mehanizam). Administrator **ne bira** rezultat.
+
+Samo vrijeme **ne** mijenja `U obradi`.
+
+Admin može pokrenuti **Provjeri status** ako gateway to podržava. Ako ne podržava: ostaje `U obradi` dok se pouzdano ne razriješi drugim ugovorenim mehanizmom.
+
+### BP-08.4 Prelazi — UPDATE
+
+Dozvoljeno:
+
+* U obradi → Uspješna
+* U obradi → Neuspješna
+* U obradi → Otkazana
+
+Konačni statusi se ne vraćaju unazad. Originalna **Uspješna** ostaje Uspješna i ako kasnije postoji reversal/refund/chargeback kao **odvojen linked event** (OUT OF V1 za user portal refund; event model nije definisan).
+
+### BP-08.5 Potvrda izvornom sistemu — SUPERSEDE za V1
+
+**SUPERSEDE:** obavezna/opciona dostava potvrde izvornom sistemu kao dio V1 životnog ciklusa.
+
+**Aktivno:** V1 ne potvrđuje izvornom sistemu da je obaveza izmirena. P-08 ostaje: izvorni sistem je mjerodavan za obavezu.
+
+### BP-08.6 Idempotentnost — NOVO u okviru BP-08
+
+Jedna korisnička potvrda: **max 1 transakcija**, **max 1 gateway attempt**.
+
+Dupli klik / refresh / retry istog zahtjeva: **NO NEW TRANSACTION**.
+
+Ponovljeni isti gateway callback: **NO DUPLICATE EFFECT**.
+
+Svjesni novi pokušaj nakon Neuspješna ili Otkazana: **NEW TRANSACTION + NEW SNAPSHOT**.
+
+Sistem ne zaključuje da su dvije nove uplatnice ista obaveza samo zbog istog iznosa, računa, svrhe ili poziva na broj. V1 ne poznaje stvarnu obavezu. Blokira se ponovno pokretanje iste postojeće transakcije `U obradi`.
+
+Tehnički ključevi/tokeni se **ne** definišu u BM.
+
+### BP-08.7 Immutability — UPDATE (bivši BP-03 nastavak)
+
+Nakon gateway start-a transakcija je immutable. Korisnik ne uređuje U obradi / Uspješnu / Neuspješnu / Otkazanu.
+
+Naknadna promjena profila, kataloga, računa, naziva, svrhe ili pravila **ne** mijenja istorijsku transakciju.
+
+Administrator smije mijenjati katalog i dok postoje `U obradi` transakcije. Promjena važi samo za **nova** plaćanja.
+
+## 9.9 BP-09 – Istorija — UPDATE
+
+Korisnik vidi **ONLY OWN TRANSACTIONS**, sve četiri statusa.
+
+Minimum liste: datum/vrijeme; vrsta plaćanja; iznos; status; Digital Kotor transaction ID.
+
+Detalj može prikazati snapshot.
+
+Korisnik **ne može** brisati. Administrator **ne može** brisati kroz regularni admin UI.
+
+User account lifecycle **ne briše** automatski finansijsku istoriju.
+
+Retention / brisanje / anonimizacija: **PRE-PRODUCTION LEGAL / REGULATORY REVIEW REQUIRED**. BM ne određuje proizvoljan rok.
 
 ---
 
-## 9.5 BP-05 – Obrada ishoda elektronskog plaćanja
+# 10. Administracija kataloga i transakcija
 
-**Status:** USVOJENO
+**Status:** USVOJENO (Korak 6)
 
-### Odluka
+## 10.1 Katalog
 
-Nakon završetka procesa elektronskog plaćanja, modul e-Plaćanje mora evidentirati ishod transakcije i korisniku prikazati odgovarajuću informaciju.
+Vlasnik: **Administrator platforme**.
 
-Modul ne donosi odluku o uspješnosti transakcije, već koristi status koji vrati sistem elektronskog plaćanja.
+Obični korisnik ne mijenja katalog.
 
-### Poslovni tok nakon završetka plaćanja
+Administrator može: kreirati/uređivati vrstu plaćanja; dodavati račun; aktivirati/deaktivirati; definisati availability; definisati sistemske parametre plaćanja.
 
-1. Korisnik je potvrdio podatke i pokrenuo elektronsko plaćanje (BP-03, BP-04).
-2. Sistem elektronskog plaćanja završi obradu transakcije.
-3. Modul primi / preuzme status ishoda iz sistema elektronskog plaćanja.
-4. Modul evidentira ishod transakcije.
-5. Korisniku se prikaže odgovarajuća poruka i jedinstveni identifikator transakcije, kada je dostupan.
+Aktivacija za korisnike samo ako je konfiguracija **COMPLETE + VALID**.
 
-### Poslovna pravila – ishodi
+Sve poslovno značajne izmjene kataloga imaju audit: **ko**, **kada**, **šta**. Tehnički action kodovi nisu usvojeni.
 
-Sistem mora podržati najmanje sljedeće ishode:
+## 10.2 Modul offline / disabled
 
-* Plaćanje uspješno izvršeno.
-* Plaćanje nije izvršeno.
-* Plaćanje otkazano od strane korisnika.
-* Status transakcije trenutno nije moguće potvrditi (npr. privremena nedostupnost ili obrada u toku).
+Administrator može privremeno zaustaviti **nova plaćanja**.
 
-Za svaki ishod korisniku mora biti prikazana odgovarajuća poruka i jedinstveni identifikator transakcije, kada je dostupan.
+Tada korisnik ne može pokrenuti novu transakciju. Istorija, detalji i potvrde ostaju dostupni. Existing `U obradi` nastavljaju gateway lifecycle.
 
-Napomena (usklađenje sa BP-08):
+## 10.3 Administracija transakcija
 
-Poruka „Status trenutno nije moguće potvrditi“ predstavlja korisničku informaciju i **ne** uvodi novi status transakcije. Dok se čeka konačna potvrda od payment gateway-a, transakcija zadržava status **U toku**.
+Administrator može: pregledati sve transakcije; snapshot; status; status history; relevantne gateway reference; inicirati provjeru `U obradi` ako gateway to omogućava.
 
-Interni statusi transakcije uređeni su životnim ciklusom (BP-08): Kreirana, U toku, Uspješna, Neuspješna, Otkazana.
+Administrator **NE može:** ručno proglasiti Uspješna / Neuspješna / Otkazana; brisati finansijsku transakciju kroz regularni UI.
 
-### Evidencija
+## 10.4 Kartični podaci
 
-Za svaku pokrenutu transakciju evidentirati najmanje:
+Digital Kotor **ne** prikuplja, **ne** obrađuje i **ne** čuva osjetljive kartične podatke. Gateway obrađuje karticu.
 
-* jedinstveni identifikator transakcije;
-* vrstu uplate;
-* datum i vrijeme pokretanja;
-* datum i vrijeme završetka, kada je poznato;
-* trenutni status transakcije (status transakcije u trenutku evidentiranja);
-* identifikator payment gateway-a, kada postoji.
+Digital Kotor čuva samo minimalno potrebne gateway podatke. Maskirani card data samo ako ih gateway standardno vraća **i** opravdano su potrebni. Ako nijesu: **ne čuvati**.
 
-Struktura baze podataka i tehnički model evidencije **ne** definišu se ovom odlukom.
+## 10.5 Refund
 
-### Poslovni principi
-
-* Modul ne potvrđuje finansijsko knjiženje u izvornim sistemima.
-* Modul evidentira rezultat procesa elektronskog plaćanja.
-* Dalja obrada u izvornim sistemima ostaje predmet njihovih poslovnih pravila.
-* Evidencija transakcija mora omogućiti naknadnu provjeru i reviziju.
-
-### Veze sa drugim odlukama
-
-* **BP-03** — Potvrda korisnika nije potvrda uspjeha transakcije; ishod se utvrđuje nakon obrade od strane sistema elektronskog plaćanja.
-* **BP-04** — Ishod se prima kroz jedinstvenu integraciju sa payment gateway slojem.
-* **BP-08** — Interni statusi i prelazi transakcije; korisničke poruke o ishodu nisu novi statusi.
-
-### Ograničenje
-
-Odluka **ne** opisuje API-je, webhooks, callback mehanizme, konkretan payment gateway, banku ni model baze podataka.
+Refund kroz user portal = **OUT OF V1**. Originalna Uspješna ostaje Uspješna. Naknadni reversal/refund/chargeback, ako ga protokol zahtijeva: **separate linked financial event**. Event model nije definisan.
 
 ---
 
-## 9.6 BP-06 – Potvrda o izvršenom elektronskom plaćanju
+# 11. Pre-production zavisnosti
 
-**Status:** USVOJENO
+**Status:** OPEN PRE-PRODUCTION DEPENDENCY
 
-### Odluka
+Ovo **nije** ponovno otvaranje Koraka 6.
 
-Nakon završetka procesa elektronskog plaćanja, modul e-Plaćanje korisniku prikazuje potvrdu o ishodu transakcije.
+1. stvarni bank/gateway protokol;
+2. callback / webhook / status mechanism;
+3. tačan gateway data contract;
+4. tačan skup gateway podataka za čuvanje;
+5. eventualni min/max iznosi;
+6. dugotrajni `U obradi` resolution;
+7. reversal/refund/chargeback contract ako postoji;
+8. retention / legal / privacy review;
+9. production audit existing `residential_status` (platform data);
+10. production legacy `ex-non-resident` COUNT/mapping ako postoji;
+11. legal-entity `resident` legacy data cleanup (platform);
+12. NULL residential status na Fizičkom licu i Preduzetniku (platform);
+13. konačno mapiranje 17 vrsta / 41 računa na kanonske korisničke kategorije (visibility / availability) = **USVOJENO** (F11; EP-KF-001). Purpose / model / šifra plaćanja / poziv ostaju OPEN.
 
-Ako je transakcija uspješno izvršena, potvrda mora biti dostupna za pregled i preuzimanje.
+`PLATFORM USER MODEL CORRECTIVE = COMPLETE` (application-level; commit `9c63e36`).
 
-Potvrda predstavlja evidenciju izvršene elektronske transakcije u okviru modula e-Plaćanja i **ne predstavlja službeni finansijski dokument niti potvrdu da je uplata već proknjižena u izvornom informacionom sistemu**.
+Stavke 9–12 ostaju **PRODUCTION LEGACY DATA CLEANUP = OPEN PRE-PRODUCTION**. Ovaj paket ih ne čisti.
 
-### Završni korak korisničkog procesa
-
-BP-06 predstavlja završni korak korisničkog procesa plaćanja nakon obrade ishoda (BP-05).
-
-### Poslovna pravila
-
-Sistem mora omogućiti da korisnik:
-
-* pregleda potvrdu odmah nakon završetka transakcije;
-* ponovo otvori potvrdu iz istorije svojih transakcija, u skladu sa pravilima definisanim u BP-09;
-* preuzme potvrdu u elektronskom obliku.
-
-Potvrda se generiše isključivo za transakcije koje imaju konačan status (**Uspješna**).
-
-Za transakcije u statusu **Otkazana** ili **Neuspješna**, te za transakcije u statusu **U toku** (kada se korisniku prikazuje informativna poruka da status plaćanja trenutno nije moguće potvrditi), sistem prikazuje odgovarajuću informaciju, ali ne generiše potvrdu o uspješnom plaćanju.
-
-### Minimalni sadržaj potvrde
-
-Potvrda treba da sadrži najmanje:
-
-* jedinstveni identifikator transakcije;
-* datum i vrijeme transakcije;
-* vrstu uplate;
-* naziv finansijske obaveze;
-* iznos;
-* status transakcije;
-* identifikator payment gateway-a, kada postoji;
-* naziv primaoca;
-* broj računa na koji je izvršena uplata (referenca na konfiguraciju / Katalog; bez hardkodiranja u kodu — UR-01);
-* poziv na broj, kada postoji.
-
-Napomena (terminologija identifikatora):
-
-* **Jedinstveni identifikator transakcije** — interni identifikator koji vodi modul e-Plaćanje.
-* **Referentni broj transakcije** — identifikator koji se prikazuje korisniku u istoriji, detaljima i potvrdi (BP-09).
-* **Identifikator payment gateway-a** — eksterni identifikator koji dodjeljuje payment gateway.
-
-Da li su jedinstveni identifikator i referentni broj isti ili različiti ostaje **implementaciona odluka** i nije predmet ove dokumentacije. Na potvrdi se prikazuje identifikator u skladu sa tom implementacionom odlukom, uz identifikator payment gateway-a kada postoji.
-
-Ne prikazivati povjerljive podatke platne kartice.
-
-### Poslovni principi
-
-Potvrda:
-
-* ne zamjenjuje račun, rješenje ili drugi službeni dokument;
-* ne predstavlja dokaz da je uplata već evidentirana u izvornom sistemu;
-* predstavlja potvrdu da je elektronska platna transakcija završena sa prikazanim statusom.
-
-Ako izvorni informacioni sistem naknadno potvrdi ili odbije knjiženje, to predstavlja zaseban poslovni proces koji nije obuhvaćen ovom odlukom.
-
-### Veze sa drugim odlukama
-
-* **BP-05** — Obrada ishoda elektronskog plaćanja; potvrda se zasniva na evidentiranom ishodu.
-* **BP-09** — Istorija transakcija i pregled plaćanja.
-
-### Ograničenje
-
-Odluka **ne** definiše format datoteke, PDF, e-mail potvrde, digitalni potpis, fiskalizaciju, elektronski pečat, arhiviranje, računovodstveno knjiženje ni API-je.
+Stavka 13: `FINAL 17/41 USER CATEGORY MAPPING = USVOJENO` (EP-KF-001). Purpose / model / šifra / poziv ostaju OPEN. Matrica se ne izmišlja ovdje.
 
 ---
 
-## 9.7 BP-07 – Izvor obaveznih podataka za elektronsko plaćanje
-
-**Status:** USVOJENO
-
-### Odluka
-
-Za svaku vrstu uplate konfiguracijom se određuje izvor obaveznih podataka potrebnih za elektronsko plaćanje.
-
-BP-07 definiše izvore za:
-
-* iznos (BP-07.1);
-* primaoca (BP-07.2);
-* račun za uplatu (BP-07.3);
-* poziv na broj (BP-07.4);
-* svrhu plaćanja (BP-07.5).
-
-### Veze sa drugim odlukama
-
-* **BP-02** — Način popunjavanja podataka (automatski / ručni); BP-07 precizira izvore po poljima.
-* **BP-03** — Pregled i potvrda prije plaćanja koristi podatke pribavljene prema BP-07.
-* **UR-01** — Broj računa dolazi iz konfiguracionog šifrarnika izvedenog iz Kataloga.
-* **BP-04** — Brojevi računa nisu dio poslovne logike; povezivanje vrste uplate sa računom vrši se kroz konfiguraciju.
-
----
-
-### BP-07.1 – Izvor iznosa
-
-#### Odluka
-
-Za svaku vrstu uplate konfiguracijom se određuje način određivanja iznosa.
-
-Podržani modeli:
-
-1. Fiksni iznos.
-2. Iznos iz izvornog informacionog sistema.
-3. Ručni unos.
-4. Predloženi iznos koji korisnik može izmijeniti samo ako je to dozvoljeno konfiguracijom.
-
-#### Poslovna pravila
-
-* Način određivanja iznosa definiše se konfiguracijom vrste uplate.
-* Korisnik može mijenjati iznos samo kada je to dozvoljeno konfiguracijom.
-* Kada iznos dolazi iz izvornog informacionog sistema, korisnik ga ne može mijenjati.
-* Modul e-Plaćanje ne obračunava iznos, već ga preuzima ili prihvata u skladu sa pravilima za konkretnu vrstu uplate.
-
----
-
-### BP-07.2 – Izvor primaoca
-
-#### Odluka
-
-Za svaku vrstu uplate konfiguracijom se određuje način određivanja primaoca.
-
-Podržani modeli:
-
-1. Fiksni primalac.
-2. Primalac iz izvornog informacionog sistema.
-
-#### Poslovna pravila
-
-* Način određivanja primaoca definiše se konfiguracijom vrste uplate.
-* Korisnik ne može mijenjati primaoca.
-* Kada primalac dolazi iz izvornog informacionog sistema, korisnik ga ne može mijenjati.
-* Modul e-Plaćanje ne određuje primaoca već ga preuzima ili koristi iz konfiguracije.
-
----
-
-### BP-07.3 – Izvor računa za uplatu
-
-#### Odluka
-
-Broj računa određuje se iz konfiguracionog šifrarnika koji je izveden iz Kataloga finansijskih obaveza.
-
-Katalog ostaje referentni poslovni dokument, dok aplikacija koristi konfiguracioni šifrarnik kao operativni izvor podataka.
-
-#### Poslovna pravila
-
-* Katalog finansijskih obaveza predstavlja referentni izvor poslovnih podataka.
-* Konfiguracioni šifrarnik predstavlja operativni izvor koji koristi aplikacija.
-* Broj računa nije dio poslovne logike niti aplikacionog koda.
-* Promjena broja računa vrši se kroz konfiguraciju bez izmjene poslovnog modela ili aplikacionog koda.
-* Korisnik ne može mijenjati broj računa.
-
----
-
-### BP-07.4 – Izvor poziva na broj
-
-#### Odluka
-
-Za svaku vrstu uplate konfiguracijom se određuje način određivanja poziva na broj.
-
-Podržani modeli:
-
-1. Bez poziva na broj.
-2. Fiksna vrijednost.
-3. Vrijednost iz izvornog informacionog sistema.
-4. Ručni unos.
-
-#### Poslovna pravila
-
-* Način određivanja poziva na broj definiše se konfiguracijom vrste uplate.
-* Kada poziv na broj dolazi iz izvornog informacionog sistema, korisnik ga ne može mijenjati.
-* Kada je predviđen ručni unos primjenjuju se definisana pravila validacije.
-* Kada za vrstu uplate nije predviđen poziv na broj, polje se ne prikazuje korisniku.
-* Modul e-Plaćanje ne generiše poziv na broj osim ako to bude definisano posebnom poslovnom odlukom.
-
----
-
-### BP-07.5 – Izvor svrhe plaćanja
-
-#### Odluka
-
-Za svaku vrstu uplate konfiguracijom se određuje način određivanja svrhe plaćanja.
-
-Podržani modeli:
-
-1. Bez svrhe plaćanja.
-2. Fiksna svrha plaćanja.
-3. Svrha iz izvornog informacionog sistema.
-4. Ručni unos.
-
-#### Poslovna pravila
-
-* Način određivanja svrhe plaćanja definiše se konfiguracijom vrste uplate.
-* Kada svrha dolazi iz izvornog informacionog sistema, korisnik je ne može mijenjati.
-* Kada je predviđen ručni unos primjenjuju se definisana pravila validacije.
-* Kada za vrstu uplate svrha nije predviđena, polje se ne prikazuje korisniku.
-* Modul e-Plaćanje ne generiše svrhu plaćanja osim ako to bude definisano posebnom poslovnom odlukom.
-
----
-
-## 9.8 BP-08 – Životni ciklus transakcije
-
-**Status:** USVOJENO
-
-### Odluka
-
-Životni ciklus transakcije uređuje kreiranje zapisa, statuse, dozvoljene prelaze i eventualnu potvrdu izvornom informacionom sistemu.
-
-BP-08 definiše:
-
-* evidentiranje transakcije (BP-08.1);
-* statuse transakcije (BP-08.2);
-* promjenu statusa transakcije (BP-08.3);
-* dozvoljene prelaze između statusa (BP-08.4);
-* potvrdu uspješnog plaćanja izvornom informacionom sistemu (BP-08.5).
-
-### Veze sa drugim odlukama
-
-* **BP-03** — Transakcija se kreira nakon izričite potvrde korisnika.
-* **BP-04** — Preusmjeravanje na payment gateway kroz jedinstvenu integraciju.
-* **BP-05** — Obrada ishoda elektronskog plaćanja; statusi i prelazi preciziraju životni ciklus.
-* **BP-06** — Potvrda korisniku zasniva se na konačnom ishodu transakcije.
-* **P-08** — Izvorni sistem ostaje mjerodavan; modul ne preuzima njegovu poslovnu logiku.
-
----
-
-### BP-08.1 – Evidentiranje transakcije
-
-#### Odluka
-
-Zapis o transakciji kreira se prije preusmjeravanja korisnika na payment gateway.
-
-Nakon kreiranja transakcije korisnik se preusmjerava na payment gateway radi izvršenja plaćanja.
-
-Status transakcije se naknadno ažurira na osnovu povratne informacije od payment gateway-a.
-
-#### Poslovna pravila
-
-* Transakcija se kreira odmah nakon što korisnik potvrdi plaćanje.
-* Svaka transakcija dobija **jedinstveni identifikator transakcije** (interni identifikator koji vodi modul e-Plaćanje).
-* Početni status svake novoformirane transakcije je **Kreirana**.
-* Početni status transakcije određuje se prije preusmjeravanja korisnika na payment gateway.
-* Payment gateway koristi identifikator transakcije za povezivanje povratnih informacija sa odgovarajućom transakcijom.
-* Modul e-Plaćanje čuva zapis o svim započetim transakcijama, bez obzira na njihov konačni ishod.
-
-Napomena (terminologija): Odnos jedinstvenog identifikatora transakcije i referentnog broja transakcije (prikaz korisniku) nije propisan ovom odlukom; to ostaje implementaciona odluka.
-
----
-
-### BP-08.2 – Statusi transakcije
-
-#### Odluka
-
-Modul e-Plaćanje podržava sljedeće statuse transakcije:
-
-* Kreirana
-* U toku
-* Uspješna
-* Neuspješna
-* Otkazana
-
-#### Opis statusa
-
-* **Kreirana** – transakcija je evidentirana i spremna za slanje prema payment gateway-u.
-* **U toku** – korisnik je preusmjeren na payment gateway ili se čeka konačna potvrda.
-* **Uspješna** – payment gateway je potvrdio uspješno izvršeno plaćanje.
-* **Neuspješna** – plaćanje nije izvršeno ili je odbijeno.
-* **Otkazana** – korisnik je odustao od plaćanja ili je proces prekinut prije završetka.
-
-#### Poslovna pravila
-
-* Svaka transakcija u svakom trenutku ima tačno jedan status.
-* Status transakcije mijenja se isključivo prema pravilima životnog ciklusa transakcije.
-* Konačni statusi su Uspješna, Neuspješna i Otkazana.
-* Nakon prelaska u konačni status transakcija se više ne vraća u prethodni status.
-
----
-
-### BP-08.3 – Promjena statusa transakcije
-
-#### Odluka
-
-Status transakcije mijenja se isključivo automatski, na osnovu događaja koje modul e-Plaćanje primi od payment gateway-a ili internih sistemskih procesa.
-
-Administrator i ostali korisnici nemaju mogućnost ručne izmjene statusa transakcije.
-
-#### Poslovna pravila
-
-* Status transakcije može mijenjati isključivo sistem.
-* Ručna izmjena statusa transakcije nije dozvoljena.
-* Promjena statusa mora biti zasnovana na verifikovanom sistemskom događaju.
-* Svaka promjena statusa evidentira se u audit zapisu sa vremenom promjene i izvorom događaja.
-* Modul e-Plaćanje ne dozvoljava zaobilaženje definisanog životnog ciklusa transakcije.
-
----
-
-### BP-08.4 – Dozvoljeni prelazi između statusa
-
-#### Odluka
-
-Životni ciklus transakcije definiše se kao mašina stanja (State Machine).
-
-Dozvoljeni su isključivo unaprijed definisani prelazi između statusa.
-
-#### Dozvoljeni prelazi
-
-* Kreirana → U toku
-* U toku → Uspješna
-* U toku → Neuspješna
-* U toku → Otkazana
-
-Nijedan drugi prelaz nije dozvoljen.
-
-#### Poslovna pravila
-
-* Dozvoljeni su isključivo definisani prelazi između statusa.
-* Sistem mora odbiti svaki pokušaj nedozvoljenog prelaza.
-* Statusi Uspješna, Neuspješna i Otkazana predstavljaju konačna stanja.
-* Nakon dostizanja konačnog stanja nisu dozvoljene dalje promjene statusa.
-* Svaki uspješan ili odbijen pokušaj promjene statusa evidentira se u audit zapisu.
-
----
-
-### BP-08.5 – Potvrda uspješnog plaćanja izvornom informacionom sistemu
-
-#### Odluka
-
-Nakon što payment gateway potvrdi uspješno izvršeno plaćanje, modul e-Plaćanje:
-
-1. ažurira status transakcije na Uspješna;
-2. evidentira uspješno izvršeno plaćanje;
-3. ako je za vrstu uplate definisana integracija, automatski dostavlja potvrdu izvornom informacionom sistemu;
-4. ako integracija nije definisana, proces se završava evidentiranjem uspješne transakcije u modulu e-Plaćanja.
-
-#### Poslovna pravila
-
-* Potvrda izvornom informacionom sistemu šalje se samo kada je za konkretnu vrstu uplate definisana integracija.
-* Modul e-Plaćanje ne preuzima poslovnu logiku izvornog informacionog sistema.
-* Dostavljanje potvrde izvornom informacionom sistemu predstavlja razmjenu informacija o uspješno izvršenom plaćanju i **ne** predstavlja finansijsko knjiženje niti potvrdu knjiženja u izvornom informacionom sistemu.
-* Ako potvrdu nije moguće dostaviti, transakcija zadržava status Uspješna, a neuspjela isporuka potvrde evidentira se kao poseban sistemski događaj.
-* Svaki pokušaj dostavljanja potvrde evidentira se u audit zapisu.
-
----
-
-## 9.9 BP-09 – Istorija transakcija i pregled plaćanja
-
-**Status:** USVOJENO
-
-### Odluka
-
-Modul e-Plaćanje omogućava istoriju transakcija i pregled plaćanja, uključujući listu, pretragu, detaljan pregled i zadržavanje / arhiviranje zapisa.
-
-BP-09 definiše:
-
-* pravo pristupa istoriji transakcija (BP-09.1);
-* sadržaj liste transakcija (BP-09.2);
-* pretragu i filtriranje istorije transakcija (BP-09.3);
-* detaljan pregled transakcije (BP-09.4);
-* zadržavanje (retention) i arhiviranje istorije transakcija (BP-09.5).
-
-### Veze sa drugim odlukama
-
-* **BP-06** — Potvrda o izvršenom plaćanju; istorija omogućava ponovni pristup potvrdi / detaljima.
-* **BP-08** — Statusi i životni ciklus transakcije; lista i detalji prikazuju status iz BP-08.
-* **UR-01** — Broj računa na pregledu dolazi iz konfiguracionog izvora, bez hardkodiranja u kodu.
-
----
-
-### BP-09.1 – Pravo pristupa istoriji transakcija
-
-#### Odluka
-
-Pristup istoriji transakcija određuje se na osnovu uloge korisnika.
-
-* Korisnik može pregledati isključivo svoje transakcije.
-* Administrator platforme može pregledati sve transakcije u skladu sa svojim ovlašćenjima.
-
-#### Poslovna pravila
-
-* Korisnik može pregledati isključivo transakcije koje je sam inicirao.
-* Administrator platforme može pregledati sve transakcije.
-* Pregled transakcija ne daje pravo izmjene podataka.
-* Prava pristupa određuju se u skladu sa ulogama na platformi.
-* Administrativni pregled transakcija evidentira se u audit logu.
-
----
-
-### BP-09.2 – Sadržaj liste transakcija
-
-#### Odluka
-
-Lista transakcija prikazuje:
-
-* Datum i vrijeme transakcije
-* Vrstu uplate
-* Iznos
-* Status transakcije
-* Referentni broj transakcije
-* Primaoca
-* Poziv na broj (kada postoji)
-* Način plaćanja (ako ga payment gateway dostavlja)
-* Akciju „Pregled detalja“
-
-#### Poslovna pravila
-
-* Lista prikazuje samo podatke koje korisnik ima pravo da vidi.
-* Lista ne prikazuje osjetljive podatke o sredstvu plaćanja (broj kartice, CVV, puni broj računa korisnika i sl.).
-* Svaka transakcija ima **referentni broj transakcije** prikazan u listi.
-* Iz liste je moguće otvoriti detaljan pregled transakcije.
-* Polja koja nisu primjenjiva za određenu transakciju ne prikazuju vrijednost ili se prikazuju kao prazna, u skladu sa pravilima korisničkog interfejsa.
-
-Napomena (terminologija): Referentni broj transakcije je identifikator koji se prikazuje korisniku. Odnos prema jedinstvenom identifikatoru transakcije nije propisan ovom odlukom.
-
----
-
-### BP-09.3 – Pretraga i filtriranje istorije transakcija
-
-#### Odluka
-
-Modul e-Plaćanje omogućava naprednu pretragu i filtriranje istorije transakcija.
-
-Podržani kriterijumi:
-
-* Period (od–do)
-* Status transakcije
-* Vrsta uplate
-* Referentni broj transakcije
-* Primalac
-* Raspon iznosa (od–do)
-* Tekstualna pretraga (gdje je primjenjivo)
-
-#### Poslovna pravila
-
-* Moguće je kombinovati više kriterijuma filtriranja.
-* Primijenjeni filteri utiču isključivo na prikaz rezultata i ne mijenjaju podatke.
-* Rezultati pretrage prikazuju se u skladu sa pravima pristupa korisnika.
-* Ako nijedna transakcija ne odgovara zadatim kriterijumima, sistem prikazuje odgovarajuću informativnu poruku.
-* Filteri ne omogućavaju pristup transakcijama za koje korisnik nema ovlašćenje.
-
----
-
-### BP-09.4 – Detaljan pregled transakcije
-
-#### Odluka
-
-Detaljan pregled transakcije prikazuje sve relevantne podatke korišćene ili nastale tokom procesa plaćanja.
-
-Prikazuju se:
-
-* Datum i vrijeme kreiranja transakcije
-* Datum i vrijeme posljednje promjene statusa
-* Referentni broj transakcije
-* Vrsta uplate
-* Iznos
-* Status transakcije
-* Primalac
-* Broj računa za uplatu
-* Poziv na broj (kada postoji)
-* Svrha plaćanja (kada postoji)
-* Način plaćanja (ako ga payment gateway dostavlja)
-* **Identifikator payment gateway-a** (ako postoji)
-* Status dostavljanja potvrde izvornom informacionom sistemu (kada postoji integracija)
-
-#### Poslovna pravila
-
-* Detaljan pregled prikazuje samo podatke koje korisnik ima pravo da vidi.
-* Osjetljivi podaci o sredstvu plaćanja nikada se ne prikazuju.
-* Ako određeni podatak nije primjenjiv za konkretnu transakciju, ne prikazuje se ili se označava kao „Nije primjenjivo“, u skladu sa pravilima korisničkog interfejsa.
-* Detaljan pregled je isključivo informativan i ne omogućava izmjenu podataka.
-
----
-
-### BP-09.5 – Zadržavanje (Retention) i arhiviranje istorije transakcija
-
-#### Odluka
-
-Transakcije se trajno evidentiraju u sistemu.
-
-Radi optimizacije performansi, starije transakcije mogu biti automatski arhivirane, pri čemu ostaju dostupne za pregled i pretragu u skladu sa pravima pristupa.
-
-#### Poslovna pravila
-
-* Sve transakcije trajno se evidentiraju.
-* Arhiviranje ne mijenja sadržaj transakcije niti njen identitet.
-* Arhivirane transakcije ostaju dostupne za pregled i pretragu u skladu sa pravima pristupa.
-* Funkcionalnosti modula e-Plaćanja ne omogućavaju brisanje transakcija.
-* Način i period arhiviranja definišu se sistemskom konfiguracijom i važećim propisima.
-
----
-
-# 10. Veza sa dokumentacijom
-
-U skladu sa P-06, razvoj modula zasniva se na:
+# 12. Veza sa dokumentacijom
 
 | # | Dokument | Putanja |
 |---|----------|---------|
@@ -1107,69 +639,29 @@ U skladu sa P-06, razvoj modula zasniva se na:
 | 5 | Tehnička specifikacija e-Plaćanja (EP-TS-001) | `docs/technical-specifications/Technical-Specification_e-Placanje.md` |
 | 6 | Registar skraćenica i oznaka e-Plaćanja (EP-RG-001) | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-e-Placanja.md` |
 
-Registar skraćenica e-Plaćanja je **EP-RG-001**. Feature Registry i RG-001 Kalendara kulture **ne** registruju ovaj modul. e-Plaćanje je zaseban sibling modul Digital Kotora.
+Lanac: `EP-BM-001 → EP-FS-001 → EP-TS-001`
+
+`KK-RG-001` i `DK-RG-001` nisu EP poslovni SSOT.
 
 ---
 
-# 11. Rječnik poslovnih pojmova
+# 13. Registar usvojenih odluka
 
-**Status:** U IZRADI
-
-| Pojam | Definicija | Izvor |
-|-------|------------|-------|
-| Modul e-Plaćanje | Modul platforme Digital Kotor za elektronsko plaćanje finansijskih obaveza prema Opštini Kotor | P-01 |
-| Finansijska obaveza | Obaveza plaćanja prema Opštini Kotor koja je već utvrđena izvan modula | P-03 |
-| Kategorija uplate | Logička grupa za organizaciju i prikaz | F-01 |
-| Vrsta uplate | Pojedinačna obaveza sa nazivom i uplatnim računom; jedinica podrške sistema | F-01 |
-| Uplatni račun | Broj računa za uplatu; u Katalogu referentni podatak iz Naredbe; u aplikaciji konfiguracioni podatak šifrarnika | F-01, UR-01 |
-| Katalog | Poslovni referentni dokument vrsta uplata i računa; nije šifrarnik ni implementacioni artefakt | P-06, F-01, UR-01 |
-| Šifrarnik (aplikacioni) | Konfiguracioni izvor podataka za aplikaciju; izvodi se iz Kataloga u narednim fazama | UR-01 |
-| Izvorni sistem | Informacioni sistem ili nadležni organ mjerodavan za podatke o obavezi | P-08 |
-| Pregled po hijerarhiji | Pronalaženje vrste uplate preko kategorije, zatim pojedinačne vrste | BP-01 |
-| Pretraga po nazivu | Pronalaženje vrste uplate pretragom nad pojedinačnim vrstama uplata | BP-01 |
-| Automatsko preuzimanje podataka | Popunjavanje podataka za plaćanje iz izvornog sistema kada postoji aktivna integracija | BP-02 |
-| Ručni unos podataka | Popunjavanje podataka za plaćanje obrazcem kada integracija ne postoji | BP-02 |
-| Pregled i potvrda prije plaćanja | Obavezni prikaz i izričita potvrda podataka prije pokretanja elektronskog plaćanja | BP-03 |
-| Jedinstvena gateway integracija | Jedna tehnička integracija prema payment gateway sloju; računi i parametri u konfiguraciji; poslovni tok nezavisan od pružaoca | BP-04 |
-| Ishod elektronskog plaćanja | Evidentiranje i prikaz rezultata transakcije na osnovu statusa sistema elektronskog plaćanja | BP-05 |
-| Potvrda o izvršenom plaćanju | Pregled i preuzimanje potvrde o ishodu transakcije; nije službeni finansijski dokument | BP-06 |
-| Izvor obaveznih podataka | Konfiguracijom vrste uplate određen način pribavljanja iznosa, primaoca, računa, poziva na broj i svrhe plaćanja | BP-07 |
-| Životni ciklus transakcije | Kreiranje zapisa, statusi, automatski prelazi i eventualna potvrda izvornom sistemu | BP-08 |
-| Status transakcije | Jedan od: Kreirana, U toku, Uspješna, Neuspješna, Otkazana | BP-08.2 |
-| Istorija transakcija | Pregled, pretraga i detalji transakcija u skladu sa pravima pristupa | BP-09 |
-| Jedinstveni identifikator transakcije | Interni identifikator koji vodi modul e-Plaćanje | BP-08.1 |
-| Referentni broj transakcije | Identifikator koji se prikazuje korisniku u istoriji, detaljima i potvrdi | BP-09.2 |
-| Identifikator payment gateway-a | Eksterni identifikator koji dodjeljuje payment gateway | BP-05, BP-09.4 |
-
-Napomena (terminologija identifikatora): Dokumentacija razlikuje tri pojma navedena iznad. Da li su jedinstveni identifikator i referentni broj isti ili različiti **nije** propisano i ostaje implementaciona odluka.
-
----
-
-# 12. Registar usvojenih poslovnih odluka (BP)
-
-| Oznaka | Naziv | Status | Sljedivost |
-|--------|-------|--------|------------|
-| BP-01 | Pronalaženje vrste uplate | USVOJENO | EP-BM-001 / 9.1 → EP-FS-001 / 7.1 |
-| BP-02 | Način popunjavanja podataka za plaćanje | USVOJENO | EP-BM-001 / 9.2 → EP-FS-001 / 7.2 |
-| BP-03 | Pregled i potvrda prije plaćanja | USVOJENO | EP-BM-001 / 9.3 → EP-FS-001 / 7.3 |
-| BP-04 | Jedinstvena integracija sa sistemom elektronskog plaćanja | USVOJENO | EP-BM-001 / 9.4 → EP-FS-001 / 7.4 → EP-TS-001 / 2.6 |
-| BP-05 | Obrada ishoda elektronskog plaćanja | USVOJENO | EP-BM-001 / 9.5 → EP-FS-001 / 7.5 → EP-TS-001 / 2.7 |
-| BP-06 | Potvrda o izvršenom elektronskom plaćanju | USVOJENO | EP-BM-001 / 9.6 → EP-FS-001 / 7.6 → EP-TS-001 / 2.8 |
-| BP-07 | Izvor obaveznih podataka za elektronsko plaćanje | USVOJENO | EP-BM-001 / 9.7 → EP-FS-001 / 7.7 → EP-TS-001 / 2.9 |
-| BP-08 | Životni ciklus transakcije | USVOJENO | EP-BM-001 / 9.8 → EP-FS-001 / 7.8 → EP-TS-001 / 2.10 |
-| BP-09 | Istorija transakcija i pregled plaćanja | USVOJENO | EP-BM-001 / 9.9 → EP-FS-001 / 7.9 → EP-TS-001 / 2.11 |
-
-Veze BP-04: P-03, P-08, UR-01.
-
-Veze BP-05: BP-03, BP-04.
-
-Veze BP-06: BP-05, BP-09.
-
-Veze BP-07: BP-02, BP-03, UR-01, BP-04.
-
-Veze BP-08: BP-03, BP-04, BP-05, BP-06, P-08.
-
-Veze BP-09: BP-06, BP-08, UR-01.
+| Oznaka | Aktivno značenje | Korak 6 |
+|--------|------------------|---------|
+| P-01 … P-08 | Projektna načela | KEEP / UPDATE primjene |
+| F-01 | 17 vrsta plaćanja, 41 račun | SUPERSEDE ontologije |
+| UR-01 | Računi = katalog/šifrarnik, ne hardkod | KEEP + UPDATE filtera |
+| BP-01 | Filterisani katalog vrsta | UPDATE |
+| BP-02 | Profil + korisnički iznos; ne izvorni sistem | SUPERSEDE |
+| BP-03 | Pregled i potvrda; odustajanje ≠ transakcija | UPDATE |
+| BP-04 | Jedna gateway integracija | KEEP |
+| BP-05 | Gateway SSOT; browser not authoritative | UPDATE |
+| BP-06 | Potvrda/PDF/email samo Uspješna | UPDATE |
+| BP-07 | Podaci uplatnice | SUPERSEDE 07.1/07.5 default |
+| BP-08 | 4 statusa; granica gateway start | SUPERSEDE |
+| BP-08.5 | Potvrda izvornom sistemu | SUPERSEDE za V1 |
+| BP-09 | Istorija only-own; no delete | UPDATE |
 
 ---
 
@@ -1178,15 +670,18 @@ Veze BP-09: BP-06, BP-08, UR-01.
 | Datum | Izmjena |
 |-------|---------|
 | 2026-07-27 | Kreirana početna verzija 0.1. Unesena načela P-01–P-08 i odluka F-01. Rezervisana poglavlja entiteta, uloga i procesa. |
-| 2026-07-27 | EP-PATCH-BM-001 — UR-01: uplatni računi kao referentni / konfiguracioni podaci; Katalog ≠ šifrarnik. |
-| 2026-07-27 | EP-PATCH-BM-002 — BP-01, BP-02, BP-03 usvojene; poslovni procesi i registar BP. |
-| 2026-07-27 | EP-PATCH-BM-003 — BP-04: jedinstvena integracija sa sistemom elektronskog plaćanja. |
-| 2026-07-27 | EP-PATCH-BM-004 — BP-05: obrada ishoda elektronskog plaćanja. |
-| 2026-07-27 | EP-PATCH-BM-005 — BP-06: potvrda o izvršenom elektronskom plaćanju. |
-| 2026-07-27 | EP-PATCH-BM-006 — BP-07: izvor obaveznih podataka za elektronsko plaćanje (BP-07.1 do BP-07.5). |
-| 2026-07-27 | EP-PATCH-BM-007 — BP-08: životni ciklus transakcije (BP-08.1 do BP-08.5). |
+| 2026-07-27 | EP-PATCH-BM-001 — UR-01. |
+| 2026-07-27 | EP-PATCH-BM-002 — BP-01, BP-02, BP-03. |
+| 2026-07-27 | EP-PATCH-BM-003 — BP-04. |
+| 2026-07-27 | EP-PATCH-BM-004 — BP-05. |
+| 2026-07-27 | EP-PATCH-BM-005 — BP-06. |
+| 2026-07-27 | EP-PATCH-BM-006 — BP-07. |
+| 2026-07-27 | EP-PATCH-BM-007 — BP-08. |
 | 2026-07-27 | EP-PATCH-BM-008A — Redakcijsko usklađivanje BP-05/BP-06/BP-08 (poruka ≠ status; Kreirana; potvrda ≠ knjiženje). |
-| 2026-07-27 | EP-PATCH-BM-008B — Redakcijsko usklađivanje: evidencija bilježi trenutni status transakcije. |
-| 2026-07-27 | EP-PATCH-BM-009 — BP-09: istorija transakcija i pregled plaćanja (BP-09.1 do BP-09.5). |
-| 2026-07-27 | EP-PATCH-BM-009A — Redakcijsko: BP-06↔BP-09 (istorija); terminologija identifikatora. |
-| 2026-08-17 | EP-PATCH-BM-010 — Dokumentacioni corrective: oznaka EP-BM-001; namespace EP-*; naziv modula e-Plaćanje. Bez izmjene poslovnih odluka P-01–P-08, F-01, UR-01, BP-01–BP-09. |
+| 2026-07-27 | EP-PATCH-BM-008B — evidencija trenutnog statusa. |
+| 2026-07-27 | EP-PATCH-BM-009 — BP-09. |
+| 2026-07-27 | EP-PATCH-BM-009A — BP-06↔BP-09; identifikatori. |
+| 2026-08-17 | EP-PATCH-BM-010 — Dokumentacioni corrective: EP-BM-001; namespace EP-*. |
+| 2026-08-20 | EP-PATCH-BM-011 / verzija 1.0.0 — Usklađivanje sa zatvorenim Korakom 6. Status dokumenta USVOJENO za V1 poslovni model. Application implementation nije pokrenuta. |
+| 2026-08-20 | EP-PATCH-BM-012 / verzija 1.0.1 — EP korisnički model usklađen sa kanonskih 8 platform user types. Identity vs eligibility granica. Platform application corrective COMPLETE; production data cleanup OPEN. |
+| 2026-08-22 | EP-PATCH-BM-013 / verzija 1.0.2 — `FINAL 17/41 USER CATEGORY MAPPING = USVOJENO`. Matrica = EP-KF-001. Purpose/model/šifra/poziv OPEN. |

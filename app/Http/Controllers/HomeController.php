@@ -9,6 +9,7 @@ use App\Models\Notice;
 use App\Models\User;
 use App\Support\PhoneNumber;
 use App\Support\Pib;
+use App\Support\UserType;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,6 +22,7 @@ class HomeController extends Controller
     {
         $activeNotices = Notice::query()
             ->where('visible_in_active_panel', true)
+            ->with(['sourceObject.competition'])
             ->orderByDesc('published_at')
             ->orderByDesc('id')
             ->get();
@@ -108,6 +110,10 @@ class HomeController extends Controller
             $user = Auth::user();
             if ($user && $user->role && $user->role->name === 'kk_admin') {
                 $default = route('cultural-calendar.index');
+            } elseif ($user && $user->role && $user->role->name === 'konkurs_admin') {
+                $request->session()->forget('url.intended');
+
+                return redirect()->route('admin.dashboard');
             }
 
             return $this->redirectAfterLogin($request, $default);
@@ -142,7 +148,9 @@ class HomeController extends Controller
 
     public function registerForm()
     {
-        return view('auth.register');
+        return view('auth.register', [
+            'businessTypeOptions' => UserType::registrationBusinessOptions(),
+        ]);
     }
 
     /**
@@ -272,12 +280,12 @@ class HomeController extends Controller
         ];
 
         // Validacija u zavisnosti od tipa korisnika
-        if ($request->user_type === 'Registrovan privredni subjekt') {
-            $rules['business_type'] = ['required', 'in:Preduzetnik,Ortačko društvo,Komanditno društvo,Društvo sa ograničenom odgovornošću,Akcionarsko društvo,Dio stranog društva (predstavništvo ili poslovna jedinica),Udruženje (nvo, fondacije, sportske organizacije),Ustanova (državne i privatne),Druge organizacije (Političke partije, Vjerske zajednice, Komore, Sindikati)'];
+        if ($request->user_type === UserType::REGISTRATION_GROUP_BUSINESS) {
+            $rules['business_type'] = ['required', 'in:'.implode(',', UserType::registrationBusinessStorageValues())];
             $messages['business_type.required'] = 'Odaberite tip privrednog subjekta.';
+            $messages['business_type.in'] = 'Odaberite podržanu kategoriju korisnika.';
 
-            // Ako nije Preduzetnik, naziv subjekta i PIB su obavezni
-            if ($request->business_type && $request->business_type !== 'Preduzetnik') {
+            if ($request->business_type && UserType::isLegalEntity($request->business_type)) {
                 $rules['company_name'] = ['required', 'string', 'max:255'];
                 $messages['company_name.required'] = 'Naziv privrednog subjekta je obavezan.';
                 $rules['pib'] = ['required', 'string', 'regex:'.Pib::REGEX, 'unique:users,pib'];
@@ -286,23 +294,21 @@ class HomeController extends Controller
                 $messages['pib.unique'] = 'PIB je već registrovan.';
             }
 
-            // Ako je Preduzetnik, proveri residential_status
-            if ($request->business_type === 'Preduzetnik') {
+            if ($request->business_type === UserType::ENTREPRENEUR) {
                 $rules['residential_status'] = ['required', 'in:resident,non-resident'];
                 $messages['residential_status.required'] = 'Status prebivališta je obavezan.';
             }
         }
 
-        // Validacija za Fizičko lice i Preduzetnik - residential_status
-        if ($request->user_type === 'Fizičko lice') {
+        if ($request->user_type === UserType::PHYSICAL_PERSON) {
             $rules['residential_status'] = ['required', 'in:resident,non-resident'];
             $messages['residential_status.required'] = 'Status prebivališta je obavezan.';
         }
 
         // Validacija JMB/PIB/Passport u zavisnosti od residential_status
         if ($request->residential_status === 'resident') {
-            if ($request->user_type === 'Fizičko lice' ||
-                ($request->user_type === 'Registrovan privredni subjekt' && $request->business_type === 'Preduzetnik')) {
+            if ($request->user_type === UserType::PHYSICAL_PERSON ||
+                ($request->user_type === UserType::REGISTRATION_GROUP_BUSINESS && $request->business_type === UserType::ENTREPRENEUR)) {
                 $rules['jmb'] = ['required', 'string', 'regex:/^[0-9]{13}$/'];
                 $messages['jmb.required'] = 'JMB je obavezan za rezidente.';
                 $messages['jmb.regex'] = 'JMB mora imati tačno 13 cifara.';
@@ -394,10 +400,17 @@ class HomeController extends Controller
 
         // Priprema podataka za kreiranje korisnika
         // Podrazumevana rola je 3 (korisnik) - dodeljena će se kasnije ako treba
+        $storedUserType = $request->business_type ?? $validated['user_type'];
+        if ($storedUserType === UserType::REGISTRATION_GROUP_BUSINESS || ! UserType::isCanonical($storedUserType)) {
+            return back()->withErrors(['user_type' => 'Odaberite podržanu kategoriju korisnika.'])->withInput();
+        }
+
         $userData = [
             'name' => $validated['first_name'].' '.$validated['last_name'],
-            'user_type' => $request->business_type ?? $validated['user_type'],
-            'residential_status' => $validated['residential_status'] ?? 'resident',
+            'user_type' => $storedUserType,
+            'residential_status' => UserType::requiresResidentialStatus($storedUserType)
+                ? ($validated['residential_status'] ?? null)
+                : null,
             'first_name' => $validated['first_name'],
             'last_name' => $validated['last_name'],
             'email' => strtolower($validated['email']),
@@ -551,9 +564,9 @@ class HomeController extends Controller
             return true;
         }
 
-        if ($request->user_type === 'Registrovan privredni subjekt'
+        if ($request->user_type === UserType::REGISTRATION_GROUP_BUSINESS
             && $request->business_type
-            && $request->business_type !== 'Preduzetnik') {
+            && UserType::isLegalEntity($request->business_type)) {
             return true;
         }
 

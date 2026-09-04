@@ -30,6 +30,13 @@ class EvaluationController extends Controller
         return CommissionMember::activeForCommission($userId, $commissionId);
     }
 
+    protected function abortIfCommissionProcessingBlocked(?\App\Models\Competition $competition): void
+    {
+        if ($competition && $competition->isCommissionProcessingBlocked()) {
+            abort(403, \App\Models\Competition::COMMISSION_PROCESSING_BLOCKED_MESSAGE);
+        }
+    }
+
     /**
      * Lista prijava za ocjenjivanje
      */
@@ -50,7 +57,11 @@ class EvaluationController extends Controller
 
         // Prijave su komisiji vidljive i na ocjenjivanje tek nakon isteka roka za prijavljivanje (20 dana)
         $competitionIds = $commission->competitions->filter(function ($c) {
-            return in_array($c->status, ['closed', 'completed']) || $c->isApplicationDeadlinePassed();
+            if (! in_array($c->status, ['closed', 'completed']) && ! $c->isApplicationDeadlinePassed()) {
+                return false;
+            }
+
+            return ! $c->isCommissionProcessingBlocked();
         })->pluck('id');
         
         // Prijave koje treba ocjeniti (submitted, evaluated ili rejected status)
@@ -185,6 +196,8 @@ class EvaluationController extends Controller
             if ($competition && !$competition->isApplicationDeadlinePassed() && !in_array($competition->status, ['closed', 'completed'])) {
                 abort(403, 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 45 dana za donošenje odluke od strane komisije.');
             }
+
+            $this->abortIfCommissionProcessingBlocked($competition);
             
             // Provjeri da li je prošao rok od 45 dana za ocjenjivanje
             if ($competition && $competition->isEvaluationDeadlinePassed()) {
@@ -324,6 +337,8 @@ class EvaluationController extends Controller
             return redirect()->back()
                 ->withErrors(['error' => 'Ocjenjivanje počinje tek kada istekne rok od 20 dana za prijave na konkurs. Nakon toga počinje rok od 45 dana za donošenje odluke od strane komisije.']);
         }
+
+        $this->abortIfCommissionProcessingBlocked($competition);
         
         // Provjeri da li je prošao rok od 45 dana za ocjenjivanje
         if ($competition && $competition->isEvaluationDeadlinePassed()) {
@@ -856,6 +871,8 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
+        $this->abortIfCommissionProcessingBlocked($application->competition);
+
         $evaluationScore = EvaluationScore::where('application_id', $application->id)
             ->where('commission_member_id', $commissionMember->id)
             ->first();
@@ -948,6 +965,8 @@ class EvaluationController extends Controller
             abort(403, 'Niste član komisije.');
         }
 
+        $this->abortIfCommissionProcessingBlocked($application->competition);
+
         // Proveri da li je predsjednik
         if ($commissionMember->position !== 'predsjednik') {
             abort(403, 'Samo predsjednik komisije može donijeti zaključak.');
@@ -1037,6 +1056,8 @@ class EvaluationController extends Controller
         if (!$commissionMember) {
             abort(403, 'Niste član komisije.');
         }
+
+        $this->abortIfCommissionProcessingBlocked($application->competition);
 
         // Proveri da li je predsjednik već potpisao
         if (!$application->signed_by_chairman) {

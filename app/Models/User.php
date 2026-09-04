@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Notifications\VerifyEmailNotification;
+use App\Support\UserType;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -125,6 +126,46 @@ class User extends Authenticatable implements MustVerifyEmail
         return $role !== null && $role->isSuperadmin();
     }
 
+    public function isStaffAccount(): bool
+    {
+        $role = $this->relationLoaded('role') ? $this->role : $this->role()->first();
+        $name = $role?->name;
+
+        return in_array($name, [
+            'admin',
+            'komisija',
+            'superadmin',
+            'konkurs_admin',
+            'kk_admin',
+        ], true);
+    }
+
+    public function collectsBusinessIdentity(): bool
+    {
+        if (UserType::isNaturalPerson($this->user_type) || UserType::isLegalEntity($this->user_type)) {
+            return true;
+        }
+
+        $role = $this->relationLoaded('role') ? $this->role : $this->role()->first();
+
+        return $role !== null && $role->name === 'korisnik';
+    }
+
+    public function isNaturalPerson(): bool
+    {
+        return UserType::isNaturalPerson($this->user_type);
+    }
+
+    public function isEntrepreneur(): bool
+    {
+        return UserType::isEntrepreneur($this->user_type);
+    }
+
+    public function isLegalEntity(): bool
+    {
+        return UserType::isLegalEntity($this->user_type);
+    }
+
     /**
      * Puna adresa iz profila (ulica i broj + grad) za obrasce prijave.
      */
@@ -157,5 +198,15 @@ class User extends Authenticatable implements MustVerifyEmail
     public function newsletterSubscription()
     {
         return $this->hasOne(NewsletterSubscription::class);
+    }
+
+    public function paymentInitiations()
+    {
+        return $this->hasMany(PaymentInitiation::class);
+    }
+
+    public function paymentTransactions()
+    {
+        return $this->hasMany(PaymentTransaction::class);
     }
 }

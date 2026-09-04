@@ -338,6 +338,8 @@
         @endif
         @endif
 
+        @include('admin.competitions.partials.official-decision')
+
         @php
             $daysUntilApplicationDeadline = $competition->getDaysUntilApplicationDeadline();
             $daysUntilEvaluationDeadline = $competition->getDaysUntilEvaluationDeadline();

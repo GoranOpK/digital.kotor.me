@@ -5,8 +5,8 @@
 **Naziv:** Registar skraćenica i oznaka platformske dokumentacije Digital Kotora
 **Vlasništvo:** platformski sloj Digital Kotora
 **Status dokumenta:** AKTIVAN
-**Verzija:** 1.2.2
-**Datum:** 2026-09-03
+**Verzija:** 1.3.0
+**Datum:** 2026-09-04
 
 ---
 
@@ -14,11 +14,13 @@
 
 DK-RG-001 je referentni i živi dokument. Predstavlja centralni registar skraćenica i dokumentacionih oznaka **zajedničke/platformske dokumentacije Digital Kotora**.
 
-Nije poslovni pojmovnik. Ne definiše poslovna pravila ni tehnička rješenja. Ne zamjenjuje DK-BM-001, DK-UC-001, DK-FS-001, DK-TS-001, DK-FR-001 ili DK-DS-001.
+Nije poslovni pojmovnik. Ne definiše poslovna pravila ni tehnička rješenja. Ne zamjenjuje DK-BM-001, DK-BM-002, DK-UC-001, DK-FS-001, DK-FS-002, DK-TS-001, DK-FR-001 ili DK-DS-001.
 
 Nije registar Kalendara kulture (`KK-RG-001`), nije registar e-Plaćanja (`EP-RG-001`) i nije registar Konkursa (`KN-RG-001`). Nije globalni katalog svih poslovnih oznaka svih modula.
 
-Auth, korisnici, uloge, MEGA, Plesk, deployment, project operations, handoff, architecture overview, shared landing i module access ostaju **DK REFERENCE / OPERATIONS** dok Product Owner ne otvori poseban dokumentacioni paket. Ovaj registar im **ne** dodjeljuje `DK-BM` / `DK-FS` / `DK-TS` ID-eve.
+Product Owner je otvorio dokumentacioni paket **registracije i korisničkog identiteta**. Ovaj registar mu dodjeljuje **DK-BM-002** (USVOJENO) i **DK-FS-002** (USVOJENO). Dokumenti `DK-UC-002` i `DK-TS-002` **nisu** uvedeni.
+
+Uloge, biblioteka dokumenata, MEGA, Plesk, deployment, project operations, handoff, architecture overview, shared landing i module access ostaju **DK REFERENCE / OPERATIONS** dok Product Owner ne otvori poseban dokumentacioni paket. Ovaj registar im **ne** dodjeljuje `DK-BM` / `DK-FS` / `DK-TS` ID-eve.
 
 `docs/METHODOLOGY.md` ostaje globalna projektna metodologija i **nema** `DK-*` document ID. Normativni dokumentacioni standard platforme je **DK-DS-001**.
 
@@ -35,7 +37,7 @@ Usvojeni dokumentacioni namespace-i Digital Kotora:
 | **KK** | Kalendar kulture | AKTIVAN (nije sadržaj ovog registra) |
 | **EP** | e-Plaćanje | AKTIVAN (nije sadržaj ovog registra) |
 | **DK** | Platformski sloj | AKTIVAN (ovaj registar) |
-| **KN** | Konkursi | USVOJEN. Kanonski paket: `KN-RG-001` (USVOJENO). `KN-BM-001` = USVOJENO; `KN-FS-001` = USVOJENO; `KN-PRO-001` / `KN-TS-001` = NACRT. Nije sadržaj ovog registra. |
+| **KN** | Konkursi | USVOJEN. Kanonski paket: `KN-RG-001` (USVOJENO). `KN-BM-001` / `KN-FS-001` = USVOJENO (kanonski Odluka SSOT); `KN-PRO-001` / `KN-TS-001` = NACRT. Sačuvani profili/framework (`KN-BM-002`, `KN-BM-003`, `KN-BM-004`, `KN-FS-002` planiran, `KN-FS-003`) nijesu trenutni Odluka SSOT — vodi `KN-RG-001`. Nije sadržaj ovog registra. |
 
 Tenderi **nemaju** usvojeni namespace.
 
@@ -43,7 +45,7 @@ Tenderi **nemaju** usvojeni namespace.
 
 Numeracija je lokalna po namespace-u i tipu dokumenta. Lista namespace prefiksa **nije** zatvorena: novi poslovni moduli dobijaju prefiks samo Product Owner odlukom.
 
-U platformskom `DK-*` sloju **nisu** uvedeni: `DK-IS-*`, `DK-IR-*`, `DK-CR-*`, `DK-FT-*`, `DK-PATCH-*`, `DK-BM-002`, `DK-FS-002`, `DK-TS-002`.
+U platformskom `DK-*` sloju **nisu** uvedeni: `DK-IS-*`, `DK-IR-*`, `DK-CR-*`, `DK-FT-*`, `DK-PATCH-*`, `DK-UC-002`, `DK-TS-002`.
 
 ---
 
@@ -66,8 +68,10 @@ U platformskom `DK-*` sloju **nisu** uvedeni: `DK-IS-*`, `DK-IR-*`, `DK-CR-*`, `
 | Oznaka | Dokument | Path | Status |
 |--------|----------|------|--------|
 | **DK-BM-001** | Poslovni model Obavještenja (platformska funkcionalnost Digital Kotora) | `docs/business-model/Business_Model_Obavjestenja.md` | U IZRADI |
+| **DK-BM-002** | Poslovni model registracije i korisničkog identiteta Platforme Digital Kotor | `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md` | USVOJENO |
 | **DK-UC-001** | Use Cases Obavještenja | `docs/use-cases/Use_Cases_Obavjestenja.md` | U IZRADI |
 | **DK-FS-001** | Funkcionalna specifikacija Obavještenja | `docs/functional-specifications/Functional_Specification_Obavjestenja.md` | U IZRADI |
+| **DK-FS-002** | Funkcionalna specifikacija registracije i korisničkog identiteta Platforme Digital Kotor | `docs/functional-specifications/Functional_Specification_Registracija_korisnickog_identiteta.md` | USVOJENO |
 | **DK-TS-001** | Tehnička specifikacija Obavještenja | `docs/technical-specifications/Technical_Specification_Obavjestenja.md` | U IZRADI |
 | **DK-RG-001** | Registar skraćenica i oznaka platformske dokumentacije Digital Kotora | `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Digital-Kotor.md` | AKTIVAN |
 | **DK-FR-001** | Feature Registry — Digital Kotor platforma | `docs/features/Feature-Registry_Digital-Kotor.md` | AKTIVAN |
@@ -139,7 +143,8 @@ Runtime entitet FT-004 je `Notice` (tabela `notices`), javni panel na `/`, javna
 | 1.2.0 | 2026-08-18 | Namespace `KN`: kanonski paket otvoren (`KN-RG-001`). DK-RG i dalje nije katalog KN oznaka. Bez izmjene FT-004 BM/UC/FS/TS sadržaja. Bez izmjene aplikacionog koda. |
 | 1.2.1 | 2026-09-03 | Administrativno usklađivanje §2 summary: `KN-BM-001` = USVOJENO; `KN-PRO-001` / `KN-FS-001` / `KN-TS-001` ostaju NACRT. DK-RG i dalje nije katalog KN oznaka. Bez izmjene FT-004 BM/UC/FS/TS sadržaja. |
 | 1.2.2 | 2026-09-03 | Administrativno usklađivanje §2 summary: `KN-FS-001` = USVOJENO; `KN-PRO-001` / `KN-TS-001` ostaju NACRT. DK-RG i dalje nije katalog KN oznaka. Bez izmjene FT-004 BM/UC/FS/TS sadržaja. |
+| 1.3.0 | 2026-09-04 | Kontrolisana remote integracija (Phase 3C): sačuvani remote Document ID-evi `DK-BM-002` i `DK-FS-002` (USVOJENO — registracija/korisnički identitet). §2 summary usklađen sa `KN-RG-001` v1.0.10: kanonski Odluka SSOT `KN-BM-001` / `KN-FS-001`; `KN-PRO-001` / `KN-TS-001` = NACRT; sačuvani profili/framework `KN-BM-002` / `KN-BM-003` / `KN-BM-004` / `KN-FS-002` (planiran) / `KN-FS-003` nijesu trenutni Odluka SSOT. Lokalna istorija `1.0.0`–`1.2.2` zadržana. `DK-UC-002` / `DK-TS-002` nisu uvedeni. DK-RG i dalje nije katalog KN oznaka. Bez izmjene FT-004 BM/UC/FS/TS sadržaja. Bez `DK-PATCH`. |
 
 ---
 
-**Kraj dokumenta DK-RG-001 v1.2.2**
+**Kraj dokumenta DK-RG-001 v1.3.0**

@@ -1,27 +1,36 @@
-{{-- Prikaz forme i istorije uplata --}}
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    <h2>Online plaćanje opštinskih prihoda</h2>
-    <form method="POST" action="{{ route('payments.pay') }}">
-        @csrf
-        <div class="mb-3">
-            <label for="payment_type" class="form-label">Vrsta prihoda</label>
-            <select name="payment_type" class="form-control">
-                <option value="komunalije">Komunalije</option>
-                <option value="renta">Renta</option>
-                <option value="takse">Administrativne takse</option>
-            </select>
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+    <h1 class="text-3xl font-bold mb-2">e-Plaćanje</h1>
+    <p class="text-sm text-gray-600 mb-4">Dostupne vrste plaćanja za vaš korisnički profil.</p>
+    <p class="mb-6">
+        <a href="{{ route('payments.history') }}" class="text-indigo-700 hover:underline">Moja e-Plaćanja</a>
+    </p>
+
+    @if(session('success'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{{ session('error') }}</div>
+    @endif
+
+    @if($types->isEmpty())
+        <div class="bg-white rounded-lg shadow p-6">
+            <p>Trenutno nema dostupnih vrsta plaćanja za vaš korisnički profil.</p>
         </div>
-        <div class="mb-3">
-            <label for="amount" class="form-label">Iznos</label>
-            <input type="number" name="amount" class="form-control" required>
+    @else
+        <div class="space-y-4">
+            @foreach($types as $type)
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold">{{ $type->name }}</h2>
+                    @if($type->description)
+                        <p class="text-gray-600 mt-1">{{ $type->description }}</p>
+                    @endif
+                    <a href="{{ route('payments.start', $type) }}" class="inline-block mt-4 bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">Nastavi</a>
+                </div>
+            @endforeach
         </div>
-        <button type="submit" class="btn btn-primary">Plati online</button>
-    </form>
-    <hr>
-    <h4>Istorija uplata</h4>
-    {{-- Ovdje prikazi listu uplata korisnika --}}
+    @endif
 </div>
 @endsection

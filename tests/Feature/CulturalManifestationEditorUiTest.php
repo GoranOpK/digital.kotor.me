@@ -71,6 +71,8 @@ class CulturalManifestationEditorUiTest extends TestCase
             ->assertOk()
             ->assertSee('Nova Manifestacija')
             ->assertSee('data-kk-mf-form-row="organizer-website"', false)
+            ->assertSee('data-kk-padded-fields', false)
+            ->assertSee('padding: 10px 14px', false)
             ->assertSee('Sačuvaj nacrt')
             ->assertSee('Odustani')
             ->assertSee('background:#b91c1c', false)

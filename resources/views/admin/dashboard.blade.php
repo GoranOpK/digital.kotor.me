@@ -384,6 +384,15 @@
                 <a href="{{ route('admin.cultural-activity.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
                     Evidencija aktivnosti
                 </a>
+                <a href="{{ route('admin.e-payments.payment-types.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    Katalog e-Plaćanja
+                </a>
+                <a href="{{ route('admin.e-payments.transactions.index') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    Transakcije e-Plaćanja
+                </a>
+                <a href="{{ route('admin.e-payments.settings.edit') }}" class="link-primary" style="padding: 12px; background: #f9fafb; border-radius: 8px; text-align: center;">
+                    Nova plaćanja (uklj/isklj)
+                </a>
                 @endif
             </div>
         </div>

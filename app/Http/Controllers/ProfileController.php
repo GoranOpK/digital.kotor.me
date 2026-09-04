@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Support\PhoneNumber;
+use App\Support\UserType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -37,24 +38,26 @@ class ProfileController extends Controller
         $user->address = $request->address;
         $user->city = $request->city;
 
-        // Ažuriraj tip korisnika
-        if ($request->has('user_type')) {
+        $incomingType = $request->input('user_type', $user->user_type);
+
+        if ($user->collectsBusinessIdentity() && $request->has('user_type')) {
             $user->user_type = $request->user_type;
         }
 
-        // Ažuriraj status rezidentnosti
-        if ($request->has('residential_status')) {
+        if (UserType::requiresResidentialStatus($incomingType) && $request->filled('residential_status')) {
             $user->residential_status = $request->residential_status;
         }
 
-        // Ažuriraj JMB (za fizička lica)
         if ($request->has('jmb')) {
-            $user->jmb = $request->jmb;
+            $user->jmb = $request->jmb ?: null;
         }
 
-        // Ažuriraj PIB (za pravna lica)
         if ($request->has('pib')) {
-            $user->pib = $request->pib;
+            $user->pib = $request->pib ?: null;
+        }
+
+        if ($request->has('company_name')) {
+            $user->company_name = $request->company_name ? trim($request->company_name) : null;
         }
 
         // Ažuriraj broj pasoša (za nerezidente)

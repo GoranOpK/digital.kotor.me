@@ -193,25 +193,46 @@ class DocumentImageFingerprintTest extends TestCase
     }
 
     private function tempJpegWithOrientation6(): string
-    {
-        $path = tempnam(sys_get_temp_dir(), 'ori_');
-        $this->assertNotFalse($path);
-        $path .= '.jpg';
+{
+    $path = tempnam(sys_get_temp_dir(), 'ori_');
+    $this->assertNotFalse($path);
+    $path .= '.jpg';
 
-        $img = new \Imagick();
-        $img->newImage(20, 10, new \ImagickPixel('red'));
-        $img->setImageFormat('jpeg');
-        $img->setImageCompressionQuality(90);
-        // EXIF Orientation 6 = Rotate 90 CW
-        $img->setImageOrientation(\Imagick::ORIENTATION_RIGHTTOP);
-        $img->writeImage($path);
-        $img->clear();
-        $img->destroy();
+    $img = new \Imagick();
+    $img->newImage(20, 10, new \ImagickPixel('red'));
+    $img->setImageFormat('jpeg');
+    $img->setImageCompressionQuality(90);
 
-        $this->beforeApplicationDestroyed(static function () use ($path) {
-            @unlink($path);
-        });
+    $jpeg = $img->getImageBlob();
 
-        return $path;
-    }
+    $img->clear();
+    $img->destroy();
+
+    // Minimal valid EXIF APP1 segment:
+    // Orientation tag 0x0112 = 6 (Rotate 90° CW).
+    $tiff =
+        "II" .
+        "\x2A\x00" .
+        "\x08\x00\x00\x00" .
+        "\x01\x00" .
+        "\x12\x01" .
+        "\x03\x00" .
+        "\x01\x00\x00\x00" .
+        "\x06\x00\x00\x00" .
+        "\x00\x00\x00\x00";
+
+    $payload = "Exif\x00\x00" . $tiff;
+    $app1 = "\xFF\xE1" . pack('n', strlen($payload) + 2) . $payload;
+
+    // JPEG SOI (FF D8) + EXIF APP1 + ostatak JPEG-a.
+    $jpeg = substr($jpeg, 0, 2) . $app1 . substr($jpeg, 2);
+
+    file_put_contents($path, $jpeg);
+
+    $this->beforeApplicationDestroyed(static function () use ($path) {
+        @unlink($path);
+    });
+
+    return $path;
+}
 }

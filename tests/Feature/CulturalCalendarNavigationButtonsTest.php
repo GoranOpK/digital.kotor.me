@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * UI regresija: KK navigacija — crveni tekst, crvena traka na hover/active, crna Odjava desno.
+ * UI regresija: KK navigacija — crveni tekst, crvena traka na hover/active, invertirana Odjava desno.
  */
 class CulturalCalendarNavigationButtonsTest extends TestCase
 {
@@ -67,8 +67,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         $this->assertStringNotContainsString('>Lokacije<', $html);
         $this->assertStringNotContainsString('>Kategorije<', $html);
 
-        $this->assertStringContainsString('color:#111827', $html);
-        $this->assertMatchesRegularExpression('/color:#111827[^>]*>\s*Odjava\s*</', $html);
+        $this->assertMatchesRegularExpression('/background:#374151[^"]*color:#ffffff[^"]*border-radius:0[^"]*"[^>]*>\s*Odjava\s*</', $html);
         $this->assertStringNotContainsString('background:#0d6efd', $html);
         $this->assertStringContainsString('border-bottom:3px solid', $html);
         $this->assertStringContainsString('border-radius:0', $html);
@@ -114,7 +113,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         foreach (['Kategorije', 'Oznake', 'Mediji', 'Organizatori', 'Zahtjevi Org', 'Zahtjevi Mod', 'Javni portal'] as $label) {
             $this->assertStringNotContainsString('>'.$label.'<', $row1Html);
         }
-        $this->assertMatchesRegularExpression('/color:#111827[^>]*>\s*Odjava\s*</', $html);
+        $this->assertMatchesRegularExpression('/background:#374151[^"]*color:#ffffff[^"]*border-radius:0[^"]*"[^>]*>\s*Odjava\s*</', $html);
 
         $this->assertStringContainsString('kk-shell', $html);
         $this->assertStringContainsString('kk-admin-nav-desktop', $html);
@@ -152,7 +151,8 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
 
         $this->assertStringContainsString('data-kk-nav-row="1"', $desktopNav);
         $this->assertStringNotContainsString('data-kk-nav-row="2"', $desktopNav);
-        $this->assertStringContainsString('font-size: 12px', $html);
+        // Editorial one-row contract: intentional 10px override so the strip fits; ignore CSS spacing variants.
+        $this->assertMatchesRegularExpression('/font-size:\s*10px/u', $html);
         $this->assertStringContainsString('flex-wrap: nowrap', $html);
 
         $row1Labels = [
@@ -171,7 +171,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         }
         $this->assertStringNotContainsString('>Mediji<', $desktopNav);
         $this->assertStringNotContainsString('/kalendar-kulture/mediji', $desktopNav);
-        $this->assertMatchesRegularExpression('/color:#111827[^>]*>\s*Odjava\s*</', $html);
+        $this->assertMatchesRegularExpression('/background:#374151[^"]*color:#ffffff[^"]*border-radius:0[^"]*"[^>]*>\s*Odjava\s*</', $html);
 
         foreach (['Događaji', 'Arhiva događaja', 'Manifestacije', 'Urednički portal', 'Urednički rad', 'Zahtjevi Org', 'Zahtjevi Mod', 'Javni portal'] as $label) {
             $this->assertStringNotContainsString('>'.$label.'<', $desktopNav);
@@ -238,7 +238,7 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
         );
     }
 
-    public function test_regular_user_calendar_nav_uses_red_buttons_and_blue_logout(): void
+    public function test_regular_user_calendar_nav_uses_red_buttons_and_inverted_logout(): void
     {
         $html = $this->actingAs($this->regularUser)
             ->get(route('cultural-calendar.index'))
@@ -253,12 +253,14 @@ class CulturalCalendarNavigationButtonsTest extends TestCase
             );
         }
 
-        $this->assertMatchesRegularExpression('/color:#111827[^>]*>\s*Odjava\s*</', $html);
+        $this->assertMatchesRegularExpression('/background:#374151[^"]*color:#ffffff[^"]*border-radius:0[^"]*"[^>]*>\s*Odjava\s*</', $html);
         $this->assertStringNotContainsString('>Urednički rad<', $html);
         $this->assertStringNotContainsString('data-kk-nav-layout="two-row"', $html);
         $this->assertStringContainsString('data-kk-mobile-nav-toggle', $html);
         $this->assertStringContainsString('data-kk-mobile-nav-menu', $html);
         $this->assertStringNotContainsString('data-kk-nav-moderator-block="1"', $html);
+        $this->assertStringNotContainsString('data-kk-nav="moderator-guide"', $html);
+        $this->assertStringNotContainsString('>Uputstvo<', $html);
         $this->assertStringNotContainsString('x-data="{ open: false }"', $html);
     }
 

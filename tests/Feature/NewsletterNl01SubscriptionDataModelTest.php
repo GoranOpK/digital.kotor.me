@@ -359,7 +359,9 @@ class NewsletterNl01SubscriptionDataModelTest extends TestCase
         $this->assertTrue(Schema::hasColumn('cultural_event_entries', 'first_published_at'));
 
         if (Schema::hasTable('cultural_activity_records')) {
-            $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
+            while (Schema::hasTable('cultural_activity_records')) {
+                $this->artisan('migrate:rollback', ['--step' => 1])->assertSuccessful();
+            }
             $this->assertFalse(Schema::hasTable('cultural_activity_records'));
         }
 
