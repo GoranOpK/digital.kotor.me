@@ -40,6 +40,11 @@ class IdentityCensusReadOnlyTest extends TestCase
         'DB::unprepared',
         'INSERT INTO',
         'DELETE FROM',
+        'REPLACE INTO',
+        'CREATE TABLE',
+        'ALTER TABLE',
+        'DROP TABLE',
+        'TRUNCATE',
     ];
 
     protected function setUp(): void
@@ -230,6 +235,7 @@ class IdentityCensusReadOnlyTest extends TestCase
     {
         $files = [
             'app/Console/Commands/IdentityCensusCommand.php' => base_path('app/Console/Commands/IdentityCensusCommand.php'),
+            'app/Console/Commands/IdentityProductionCensusCommand.php' => base_path('app/Console/Commands/IdentityProductionCensusCommand.php'),
         ];
 
         $root = base_path('app/Identity/Census');

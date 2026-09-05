@@ -15,6 +15,8 @@ use App\Support\UserType;
  */
 final class IdentityCensusService
 {
+    public const READONLY_CONNECTION = 'identity_census_readonly';
+
     private const CHUNK_SIZE = 100;
 
     private const OTHER_TYPOGRAPHIC = 'Druge organizacije (Političke partije, Verske zajednice, Komore, Sindikati)';
@@ -27,37 +29,79 @@ final class IdentityCensusService
 
     public function run(): IdentityCensusReport
     {
+        return $this->execute(null, true, null);
+    }
+
+    /**
+     * Production path: explicit connection, streamed rows, no full row buffer.
+     *
+     * @param  callable(IdentityCensusRow): void  $onRow
+     */
+    public function runOnConnection(string $connectionName, callable $onRow): IdentityCensusReport
+    {
+        if ($connectionName === '') {
+            throw new \InvalidArgumentException('Dedicated census connection name is required.');
+        }
+
+        return $this->execute($connectionName, false, $onRow);
+    }
+
+    /**
+     * @param  callable(IdentityCensusRow): void|null  $onRow
+     */
+    private function execute(?string $connectionName, bool $collectRows, ?callable $onRow): IdentityCensusReport
+    {
         $started = now()->toIso8601String();
         $rows = [];
         $maxId = 0;
+        $rowCount = 0;
         $jmbFingerprints = [];
+        $aggregateState = $this->newAggregateState();
 
-        User::query()
-            ->with('role')
+        $query = $connectionName === null ? User::query() : User::on($connectionName);
+        if ($connectionName !== null) {
+            $query->with(['role' => function ($roleQuery) use ($connectionName): void {
+                $roleQuery->getModel()->setConnection($connectionName);
+            }]);
+        } else {
+            $query->with('role');
+        }
+        $query
             ->orderBy('id')
-            ->chunkById(self::CHUNK_SIZE, function ($users) use (&$rows, &$maxId, &$jmbFingerprints): void {
+            ->chunkById(self::CHUNK_SIZE, function ($users) use (&$rows, &$maxId, &$rowCount, &$jmbFingerprints, &$aggregateState, $collectRows, $onRow): void {
                 foreach ($users as $user) {
                     $trimmedJmb = $this->outerTrim($user->jmb);
                     if ($trimmedJmb !== null) {
                         $jmbFingerprints[hash('sha256', $trimmedJmb)][] = (int) $user->id;
                     }
-                    $rows[] = $this->classify($user);
+                    $classified = $this->classify($user);
+                    $this->absorbRow($aggregateState, $classified);
+                    $rowCount++;
                     $maxId = max($maxId, (int) $user->id);
+                    if ($collectRows) {
+                        $rows[] = $classified;
+                    }
+                    if ($onRow !== null) {
+                        $onRow($classified);
+                    }
                 }
             });
+
+        $ended = now()->toIso8601String();
 
         return new IdentityCensusReport(
             $rows,
             [
                 'started_at' => $started,
-                'ended_at' => now()->toIso8601String(),
+                'ended_at' => $ended,
+                'finished_at' => $ended,
                 'environment' => (string) app()->environment(),
                 'commit_hash' => $this->commitHash(),
                 'spec' => 'DK-TS-002 D15 Step 3',
-                'row_count' => count($rows),
+                'row_count' => $rowCount,
                 'max_user_id' => $maxId === 0 ? null : $maxId,
             ],
-            $this->aggregates($rows, $jmbFingerprints),
+            $this->finalizeAggregates($aggregateState, $jmbFingerprints, $rowCount),
         );
     }
 
@@ -744,132 +788,139 @@ final class IdentityCensusService
     }
 
     /**
-     * @param  list<IdentityCensusRow>  $rows
+     * @return array<string, mixed>
+     */
+    private function newAggregateState(): array
+    {
+        return [
+            'byType' => [],
+            'byStatus' => [
+                IdentityCensusRow::NON_SUBJECT_ACCOUNT => 0,
+                IdentityCensusRow::UNSUPPORTED => 0,
+                IdentityCensusRow::AMBIGUOUS_MAPPING => 0,
+                IdentityCensusRow::INVALID_LEGACY => 0,
+                IdentityCensusRow::MISSING_REQUIRED => 0,
+                IdentityCensusRow::BACKFILLABLE => 0,
+            ],
+            'bySubject' => ['physical_person' => 0, 'entrepreneur' => 0, 'legal_entity' => 0, 'foreign_branch' => 0],
+            'jmb' => ['valid' => 0, 'missing' => 0, 'invalid' => 0, 'not_applicable' => 0],
+            'pib' => ['valid' => 0, 'missing' => 0, 'invalid' => 0, 'not_applicable' => 0],
+            'crps' => ['source_unavailable' => 0, 'not_applicable' => 0],
+            'residency' => ['valid' => 0, 'missing' => 0, 'invalid' => 0, 'not_applicable' => 0],
+            'city' => ['present' => 0, 'missing' => 0, 'not_applicable' => 0],
+            'doc' => ['present_valid' => 0, 'missing' => 0, 'ambiguous' => 0, 'not_applicable' => 0],
+            'ap' => ['source_unavailable' => 0, 'not_applicable' => 0],
+            'rep' => ['source_unavailable' => 0, 'not_applicable' => 0],
+            'nonSubject' => 0,
+            'candidates' => 0,
+            'deterministic' => 0,
+            'ambiguous' => 0,
+            'unsupported' => 0,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $state
+     */
+    private function absorbRow(array &$state, IdentityCensusRow $row): void
+    {
+        $typeKey = $row->legacyUserType ?? 'NULL';
+        $state['byType'][$typeKey] = ($state['byType'][$typeKey] ?? 0) + 1;
+        $state['byStatus'][$row->rowStatus] = ($state['byStatus'][$row->rowStatus] ?? 0) + 1;
+
+        if ($row->rowStatus === IdentityCensusRow::NON_SUBJECT_ACCOUNT) {
+            $state['nonSubject']++;
+        } else {
+            $state['candidates']++;
+        }
+
+        if ($row->rowStatus === IdentityCensusRow::UNSUPPORTED) {
+            $state['unsupported']++;
+        } elseif ($row->rowStatus === IdentityCensusRow::AMBIGUOUS_MAPPING) {
+            $state['ambiguous']++;
+        } elseif ($row->subjectType !== null) {
+            $state['deterministic']++;
+        }
+
+        if ($row->isEntrepreneur) {
+            $state['bySubject']['entrepreneur']++;
+        } elseif ($row->subjectType === PlatformIdentity::SUBJECT_PHYSICAL_PERSON) {
+            $state['bySubject']['physical_person']++;
+        } elseif ($row->subjectType === PlatformIdentity::SUBJECT_LEGAL_ENTITY) {
+            $state['bySubject']['legal_entity']++;
+        } elseif ($row->subjectType === PlatformIdentity::SUBJECT_FOREIGN_BRANCH) {
+            $state['bySubject']['foreign_branch']++;
+        }
+
+        $this->countStatus($state['jmb'], $row->fieldStatuses['jmb'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE);
+        $this->countStatus($state['pib'], $row->fieldStatuses['pib'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE);
+        $crpsStatus = $row->fieldStatuses['crps'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE;
+        if ($crpsStatus === IdentityCensusFieldStatus::SOURCE_UNAVAILABLE) {
+            $state['crps']['source_unavailable']++;
+        } else {
+            $state['crps']['not_applicable']++;
+        }
+        $this->countStatus($state['residency'], $row->fieldStatuses['residential_status'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE);
+
+        $cityStatus = $row->fieldStatuses['city'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE;
+        if ($cityStatus === IdentityCensusFieldStatus::PRESENT_VALID) {
+            $state['city']['present']++;
+        } elseif ($cityStatus === IdentityCensusFieldStatus::MISSING) {
+            $state['city']['missing']++;
+        } else {
+            $state['city']['not_applicable']++;
+        }
+
+        $docStatus = $row->fieldStatuses['id_document_type'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE;
+        if ($docStatus === IdentityCensusFieldStatus::PRESENT_VALID) {
+            $state['doc']['present_valid']++;
+        } elseif ($docStatus === IdentityCensusFieldStatus::MISSING) {
+            $state['doc']['missing']++;
+        } elseif ($docStatus === IdentityCensusFieldStatus::AMBIGUOUS) {
+            $state['doc']['ambiguous']++;
+        } else {
+            $state['doc']['not_applicable']++;
+        }
+
+        $apStatus = $row->fieldStatuses['authorized_person'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE;
+        if ($apStatus === IdentityCensusFieldStatus::SOURCE_UNAVAILABLE) {
+            $state['ap']['source_unavailable']++;
+        } else {
+            $state['ap']['not_applicable']++;
+        }
+        $repStatus = $row->fieldStatuses['representative'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE;
+        if ($repStatus === IdentityCensusFieldStatus::SOURCE_UNAVAILABLE) {
+            $state['rep']['source_unavailable']++;
+        } else {
+            $state['rep']['not_applicable']++;
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $state
      * @param  array<string, list<int>>  $jmbFingerprints
      * @return array<string, mixed>
      */
-    private function aggregates(array $rows, array $jmbFingerprints = []): array
+    private function finalizeAggregates(array $state, array $jmbFingerprints, int $rowCount): array
     {
-        $inc = static function (array &$bag, string $key): void {
-            $bag[$key] = ($bag[$key] ?? 0) + 1;
-        };
-
-        $byType = [];
-        $byStatus = [
-            IdentityCensusRow::NON_SUBJECT_ACCOUNT => 0,
-            IdentityCensusRow::UNSUPPORTED => 0,
-            IdentityCensusRow::AMBIGUOUS_MAPPING => 0,
-            IdentityCensusRow::INVALID_LEGACY => 0,
-            IdentityCensusRow::MISSING_REQUIRED => 0,
-            IdentityCensusRow::BACKFILLABLE => 0,
-        ];
-        $bySubject = ['physical_person' => 0, 'entrepreneur' => 0, 'legal_entity' => 0, 'foreign_branch' => 0];
-        $jmb = ['valid' => 0, 'missing' => 0, 'invalid' => 0, 'not_applicable' => 0];
-        $pib = ['valid' => 0, 'missing' => 0, 'invalid' => 0, 'not_applicable' => 0];
-        $crps = ['source_unavailable' => 0, 'not_applicable' => 0];
-        $residency = ['valid' => 0, 'missing' => 0, 'invalid' => 0, 'not_applicable' => 0];
-        $city = ['present' => 0, 'missing' => 0, 'not_applicable' => 0];
-        $doc = ['present_valid' => 0, 'missing' => 0, 'ambiguous' => 0, 'not_applicable' => 0];
-        $ap = ['source_unavailable' => 0, 'not_applicable' => 0];
-        $rep = ['source_unavailable' => 0, 'not_applicable' => 0];
-
-        $nonSubject = 0;
-        $candidates = 0;
-        $deterministic = 0;
-        $ambiguous = 0;
-        $unsupported = 0;
-
-        foreach ($rows as $row) {
-            $typeKey = $row->legacyUserType ?? 'NULL';
-            $inc($byType, $typeKey);
-            $inc($byStatus, $row->rowStatus);
-
-            if ($row->rowStatus === IdentityCensusRow::NON_SUBJECT_ACCOUNT) {
-                $nonSubject++;
-            } else {
-                $candidates++;
-            }
-
-            if ($row->rowStatus === IdentityCensusRow::UNSUPPORTED) {
-                $unsupported++;
-            } elseif ($row->rowStatus === IdentityCensusRow::AMBIGUOUS_MAPPING) {
-                $ambiguous++;
-            } elseif ($row->subjectType !== null) {
-                $deterministic++;
-            }
-
-            if ($row->isEntrepreneur) {
-                $bySubject['entrepreneur']++;
-            } elseif ($row->subjectType === PlatformIdentity::SUBJECT_PHYSICAL_PERSON) {
-                $bySubject['physical_person']++;
-            } elseif ($row->subjectType === PlatformIdentity::SUBJECT_LEGAL_ENTITY) {
-                $bySubject['legal_entity']++;
-            } elseif ($row->subjectType === PlatformIdentity::SUBJECT_FOREIGN_BRANCH) {
-                $bySubject['foreign_branch']++;
-            }
-
-            $this->countStatus($jmb, $row->fieldStatuses['jmb'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE);
-            $this->countStatus($pib, $row->fieldStatuses['pib'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE);
-            $crpsStatus = $row->fieldStatuses['crps'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE;
-            if ($crpsStatus === IdentityCensusFieldStatus::SOURCE_UNAVAILABLE) {
-                $crps['source_unavailable']++;
-            } else {
-                $crps['not_applicable']++;
-            }
-            $this->countStatus($residency, $row->fieldStatuses['residential_status'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE);
-
-            $cityStatus = $row->fieldStatuses['city'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE;
-            if ($cityStatus === IdentityCensusFieldStatus::PRESENT_VALID) {
-                $city['present']++;
-            } elseif ($cityStatus === IdentityCensusFieldStatus::MISSING) {
-                $city['missing']++;
-            } else {
-                $city['not_applicable']++;
-            }
-
-            $docStatus = $row->fieldStatuses['id_document_type'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE;
-            if ($docStatus === IdentityCensusFieldStatus::PRESENT_VALID) {
-                $doc['present_valid']++;
-            } elseif ($docStatus === IdentityCensusFieldStatus::MISSING) {
-                $doc['missing']++;
-            } elseif ($docStatus === IdentityCensusFieldStatus::AMBIGUOUS) {
-                $doc['ambiguous']++;
-            } else {
-                $doc['not_applicable']++;
-            }
-
-            $apStatus = $row->fieldStatuses['authorized_person'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE;
-            if ($apStatus === IdentityCensusFieldStatus::SOURCE_UNAVAILABLE) {
-                $ap['source_unavailable']++;
-            } else {
-                $ap['not_applicable']++;
-            }
-            $repStatus = $row->fieldStatuses['representative'] ?? IdentityCensusFieldStatus::NOT_APPLICABLE;
-            if ($repStatus === IdentityCensusFieldStatus::SOURCE_UNAVAILABLE) {
-                $rep['source_unavailable']++;
-            } else {
-                $rep['not_applicable']++;
-            }
-        }
-
         return [
-            'total_users' => count($rows),
-            'non_subject_internal' => $nonSubject,
-            'registered_subject_candidates' => $candidates,
-            'by_legacy_user_type' => $byType,
-            'deterministic_mapping' => $deterministic,
-            'ambiguous_mapping' => $ambiguous,
-            'unsupported_mapping' => $unsupported,
-            'row_statuses' => $byStatus,
-            'by_subject' => $bySubject,
-            'jmb' => $jmb,
-            'pib' => $pib,
-            'crps' => $crps,
-            'residency' => $residency,
-            'city' => $city,
-            'id_document_type' => $doc,
-            'authorized_person' => $ap,
-            'representative' => $rep,
+            'total_users' => $rowCount,
+            'non_subject_internal' => $state['nonSubject'],
+            'registered_subject_candidates' => $state['candidates'],
+            'by_legacy_user_type' => $state['byType'],
+            'deterministic_mapping' => $state['deterministic'],
+            'ambiguous_mapping' => $state['ambiguous'],
+            'unsupported_mapping' => $state['unsupported'],
+            'row_statuses' => $state['byStatus'],
+            'by_subject' => $state['bySubject'],
+            'jmb' => $state['jmb'],
+            'pib' => $state['pib'],
+            'crps' => $state['crps'],
+            'residency' => $state['residency'],
+            'city' => $state['city'],
+            'id_document_type' => $state['doc'],
+            'authorized_person' => $state['ap'],
+            'representative' => $state['rep'],
             'jmb_duplicate_fingerprint_groups' => count(array_filter(
                 $jmbFingerprints,
                 static fn (array $ids): bool => count($ids) > 1
