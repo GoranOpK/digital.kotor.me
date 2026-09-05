@@ -6,8 +6,8 @@
 **Naziv:** Poslovni model registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.0
-**Datum:** 2026-09-03
+**Verzija:** 1.0.4
+**Datum:** 2026-09-05
 
 Povezani dokumenti:
 
@@ -27,6 +27,10 @@ Dokumenti `DK-UC-002`, `DK-FS-002` i `DK-TS-002` **nisu** kreirani ovim korakom.
 | 0.1.0 | 2026-09-03 | Otvoren dokumentacioni paket. Evidentiran PO-usvojeni platformski poslovni model registracije i korisničkog identiteta, uključujući pravilo da postojeći korisnici ne ponavljaju registraciju. Status dokumenta: U IZRADI. |
 | 0.1.1 | 2026-09-03 | PO sadržajni pregled: akteri registracije; razdvajanje potvrde unosa i verifikacije e-maila; relokacija rezidentnosti Dijela stranog privrednog društva; PIB vs CRPS; granica prema Kalendaru kulture; arhitektura slojeva; prijava postojećeg korisnika i dopuna profila; uklonjen rječnik poslovnih pojmova. Status dokumenta ostaje U IZRADI. |
 | 1.0.0 | 2026-09-03 | Status / closeout: Product Owner usvojio DK-BM-002 kao cjelinu. Status dokumenta: USVOJENO. Poslovni sadržaj neizmijenjen. |
+| 1.0.1 | 2026-09-05 | PO odluka: jedan korisnički nalog predstavlja tačno jedan platformski korisnički identitet, i obrnuto. Poglavlje 3. Status dokumenta ostaje USVOJENO. |
+| 1.0.2 | 2026-09-05 | PO preciziranje domena pravila 1:1: odnosi se na nalog koji predstavlja registrovani platformski subjekt; interni/staff nalog nije automatski registrovani identitet. Poglavlje 3. Status dokumenta ostaje USVOJENO. |
+| 1.0.3 | 2026-09-05 | PO corrective: CRPS registracioni broj obavezan za Preduzetnika i pravne oblike OD, KD, AD i DOO, uz zadržani DSPD; PIB i CRPS eksplicitno razdvojeni; V1 ne prikuplja CRPS ni dodatni matični/registarski identifikator za Nevladino udruženje, Nevladinu fondaciju i Sportsku organizaciju. Status dokumenta ostaje USVOJENO. |
+| 1.0.4 | 2026-09-05 | Status/reference corrective: `DK-FS-002` je već usklađen sa pravilima o CRPS registracionom broju; usklađenost nije otvorena BM stavka. Poslovna pravila neizmijenjena. Status dokumenta ostaje USVOJENO. |
 
 Napomena:
 
@@ -148,6 +152,8 @@ DK-BM-002 **ne** preuzima:
 
 Konkursi, e-Plaćanje i Kalendar kulture koriste platformski korisnički identitet. Nijesu akteri procesa registracije.
 
+Ovaj model opisuje registraciju i identitet **registrovanog platformskog subjekta**. Tehnički, administrativni ili drugi interni nalog koji postoji isključivo radi pristupa Platformi i izvršavanja platformske uloge **nije** automatski registrovani platformski subjekt i **nije** poseban akter ovog procesa.
+
 ---
 
 # 3. Entiteti
@@ -166,6 +172,12 @@ Poslovni entiteti ovog modela:
 | **Ovlašćeno lice** | Fizička osoba koja zastupa Pravno lice pri registraciji. |
 | **Zastupnik** | Fizička osoba koja zastupa Dio stranog privrednog društva pri registraciji. |
 | **Korisnički profil** | Poslovni skup identifikacionih, kontaktnih i adresnih podataka vezan za isti nalog. |
+
+Pravilo 1:1 primjenjuje se na korisnički nalog koji predstavlja registrovani platformski korisnički identitet / subjekt. Takav nalog predstavlja tačno jedan platformski korisnički identitet, a taj platformski identitet pripada tačno tom jednom nalogu. Isti takav nalog ne može paralelno predstavljati više platformskih korisničkih identiteta. Ima tačno jednu aktivnu Vrstu subjekta: Fizičko lice, Pravno lice ili Dio stranog privrednog društva. Korisnički profil pripada tom istom nalogu i tom jedinstvenom identitetu.
+
+Tehnički, administrativni ili drugi interni nalog koji postoji isključivo radi pristupa Platformi i izvršavanja platformske uloge **ne** mora predstavljati registrovani platformski subjekt i **ne** mora imati identitet Fizičkog lica, Pravnog lica ili Dijela stranog privrednog društva samo zato što nalog postoji. Platformska uloga sama po sebi **ne** proizvodi Vrstu subjekta. Takav nalog **ne** smije se vještački klasifikovati kao Fizičko lice samo zato što pripada konkretnoj osobi. Osoba koja ima internu ili platformsku ulogu i dalje **može** imati registrovani korisnički identitet; nalog / autorizaciona uloga **nije** automatski isto što i registrovani platformski identitet subjekta. Ne uvodi se četvrta Vrsta subjekta za staff.
+
+Preduzetnik nije drugi platformski identitet niti četvrta Vrsta subjekta; ostaje poslovni kontekst istog identiteta Fizičkog lica. KN `applicant_type`, EP availability i KK uloge nijesu dodatni platformski identiteti.
 
 ---
 
@@ -283,6 +295,8 @@ Poslovni skup podataka:
 - Ulica i broj *
 - Grad *
 
+CRPS registracioni broj se **ne primjenjuje** na Fizičko lice koje nije Preduzetnik. Ne uvoditi CRPS za tu granu.
+
 ---
 
 # 7. Preduzetnik
@@ -296,6 +310,7 @@ Redosljed ključnih poslovnih podataka:
 - odgovarajući identifikacioni podatak *
 - Naziv preduzetnika *
 - PIB *
+- CRPS registracioni broj *
 
 Za Nerezidenta primjenjuje se i:
 
@@ -307,6 +322,10 @@ Usvojeno pravilo za PIB Preduzetnika:
 
 - PIB ima tačno 8 cifara;
 - validira se kontrolna cifra prema važećem pravilu.
+
+CRPS registracioni broj Preduzetnika je obavezan. PIB i CRPS registracioni broj su zasebni identifikacioni podaci i ne smiju se poistovjećivati.
+
+Ovaj BM **ne** propisuje format CRPS registracionog broja.
 
 Nakon poslovnih identifikacionih podataka slijede:
 
@@ -348,6 +367,7 @@ Ne uvoditi:
 - Pravni oblik *
 - Puni naziv pravnog lica *
 - PIB *
+- CRPS registracioni broj * kada je Pravni oblik Ortačko društvo (OD), Komanditno društvo (KD), Akcionarsko društvo (AD) ili Društvo sa ograničenom odgovornošću (DOO)
 - Ime ovlašćenog lica *
 - Prezime ovlašćenog lica *
 - Identifikacioni dokument ovlašćenog lica *
@@ -385,6 +405,39 @@ Usvojeno pravilo:
 - PIB ima tačno 8 cifara;
 - validira se kontrolna cifra prema važećem pravilu.
 
+## 8.4 CRPS registracioni broj Pravnog lica
+
+CRPS registracioni broj **nije** obavezan za svako Pravno lice. Primjena u V1 zavisi od Pravnog oblika.
+
+Obavezan je za:
+
+- Ortačko društvo (OD)
+- Komanditno društvo (KD)
+- Akcionarsko društvo (AD)
+- Društvo sa ograničenom odgovornošću (DOO)
+
+Za te pravne oblike PIB i CRPS registracioni broj su zasebni identifikacioni podaci i ne smiju se poistovjećivati.
+
+U V1 se **ne prikuplja** za:
+
+- Nevladino udruženje
+- Nevladinu fondaciju
+- Sportsku organizaciju
+
+Ovaj BM **ne** propisuje format CRPS registracionog broja.
+
+## 8.5 V1 granica identifikatora za NVO i Sportsku organizaciju
+
+PIB ostaje obavezan identifikacioni podatak za sve pravne oblike iz poglavlja 8.1, uključujući Nevladino udruženje, Nevladinu fondaciju i Sportsku organizaciju.
+
+U V1 Digital Kotor **ne prikuplja** kao dio kanonskog korisničkog identiteta:
+
+- dodatni matični ili registarski identifikator Nevladinog udruženja ili Nevladine fondacije iz njihovih matičnih registara;
+- dodatni identifikator Sportske organizacije iz Registra sportskih organizacija;
+- CRPS registracioni broj za te tri pravne oblike.
+
+Ovo je granica obuhvata V1 kanonskog identiteta. Ne znači da ti subjekti nemaju matični registar, da nemaju registarski identifikator, niti da nikada nemaju CRPS.
+
 ---
 
 # 9. Dio stranog privrednog društva
@@ -402,11 +455,13 @@ Dio stranog privrednog društva **nema** Status rezidentnosti. Status rezidentno
 
 PIB Dijela stranog privrednog društva je obavezan podatak. Predstavlja poreski identifikacioni broj dodijeljen u Crnoj Gori. PIB je odvojen i različit podatak od CRPS registracionog broja. Platforma zahtijeva unos PIB-a prilikom registracije Dijela stranog privrednog društva.
 
+CRPS registracioni broj Dijela stranog privrednog društva ostaje obavezan. CRPS registracioni broj **nije** identifikator isključivo Dijela stranog privrednog društva. Isti poslovni podatak se u V1 zahtijeva i za Preduzetnika i za Pravno lice oblika OD, KD, AD i DOO, prema poglavljima 7 i 8.
+
 Ovaj BM **ne** propisuje:
 
 - da PIB Dijela stranog privrednog društva mora imati 8 cifara;
 - da taj PIB mora proći ISO 7064 Modul 11,10 provjeru;
-- format CRPS registracionog broja.
+- format CRPS registracionog broja za bilo koji subjekt.
 
 Tačna funkcionalna i tehnička validacija PIB-a Dijela stranog privrednog društva ostaje za `DK-FS-002` / `DK-TS-002`, prema važećim pravilima nadležnog organa. Ti dokumenti **nisu** kreirani ovim korakom.
 
@@ -579,7 +634,7 @@ Ovaj dokument **ne** prenosi poslovna pravila Kalendara kulture i **ne** mijenja
 
 Poslovni slojevi se ne miješaju:
 
-1. **Platformski identitet** — `DK-*`. Ko je korisnik Platforme i kojoj Vrsti subjekta pripada.
+1. **Platformski identitet** — `DK-*`. Ko je registrovani subjekt Platforme i kojoj Vrsti subjekta pripada. Uloga nije identitet. Uloga nije Vrsta subjekta.
 2. **Kalendar kulture** — `KK-*`. Uloge, ovlašćenja i poslovni procesi Kalendara kulture koriste platformski identitet, ali ne određuju Vrstu subjekta niti mijenjaju platformski identitet.
 3. **Konkursi** — `KN-*`. Modulska prihvatljivost: ko može biti Podnosilac / Podnositeljka na konkretnom konkursu.
 4. **e-Plaćanje** — `EP-*`. Modulska dostupnost: koja kategorija korisnika može koristiti konkretnu vrstu plaćanja.
@@ -627,11 +682,20 @@ Zatvoreno je:
 
 Postojeći korisnik može normalno da se prijavi na Platformu. Dopuna nedostajućih podataka zahtijeva se tek prije korišćenja funkcionalnosti za koju su ti podaci potrebni.
 
+Za PIB i CRPS registracioni broj:
+
+- PIB i CRPS registracioni broj su zasebni identifikacioni podaci;
+- primjena CRPS registracionog broja po Vrsti subjekta i Pravnom obliku je zatvorena u ovom BM-u (poglavlja 6, 7, 8 i 9);
+- V1 granica za Nevladino udruženje, Nevladinu fondaciju i Sportsku organizaciju je zatvorena: dodatni matični/registarski identifikator i CRPS se ne prikupljaju kao dio kanonskog identiteta;
+- format CRPS registracionog broja ostaje za FS/TS.
+
 Za PIB Dijela stranog privrednog društva:
 
 - poslovna obaveznost PIB-a je zatvorena;
 - odvojenost PIB-a od CRPS registracionog broja je zatvorena;
 - tačna funkcionalna i tehnička validacija ostaje za FS/TS prema važećim pravilima nadležnog organa.
+
+`DK-FS-002` je usklađen sa ovim pravilima o CRPS registracionom broju. Ta usklađenost **nije** predmet ovog BM-a.
 
 Sljedeće stavke **nisu** BM pitanja:
 
@@ -671,4 +735,4 @@ Buduće FS / TS / migration rješenje mora poštovati poglavlje 11 i poglavlje 1
 
 ---
 
-**Kraj dokumenta DK-BM-002 v1.0.0**
+**Kraj dokumenta DK-BM-002 v1.0.4**
