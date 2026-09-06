@@ -19,6 +19,7 @@ use Database\Seeders\RoleSeeder;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Tests\Support\MakesCanonicalUsers;
 use Tests\Support\MakesSyntheticPaymentCatalog;
 use Tests\TestCase;
@@ -72,7 +73,105 @@ class IdentityProductionShadowSafetyTest extends TestCase
         $this->assertNotContains('reconcile', $options);
         $this->assertNotContains('enable', $options);
         $this->assertNotContains('fallback', $options);
-        $this->assertNotContains('write', $options);
+        $this->assertNotContains('skip-ep', $options);
+        $this->assertNotContains('ignore-missing', $options);
+        $this->assertNotContains('allow-missing-tables', $options);
+        $this->assertContains('scope', $options);
+    }
+
+    public function test_invalid_scope_fails_before_query(): void
+    {
+        $this->app['env'] = 'production';
+        $this->bindDedicatedReadOnlyConnection();
+        [$aggregate, $rows] = $this->protectedPaths();
+
+        $queries = $this->captureQueries(function () use ($aggregate, $rows): void {
+            $this->artisan('identity:shadow-production', [
+                '--census-max-user-id' => '1',
+                '--aggregate' => $aggregate,
+                '--rows' => $rows,
+                '--scope' => 'skip-ep',
+            ])->expectsOutputToContain('--scope is invalid')
+                ->assertFailed();
+        });
+
+        $this->assertNoIdentityTableQueries($queries);
+        $this->cleanupPaths($aggregate, $rows);
+    }
+
+    public function test_scoped_command_runs_without_ep_catalog_and_keeps_gate_open(): void
+    {
+        $user = $this->makeKorisnik([
+            'email' => 'prod-scope-pii@example.test',
+            'jmb' => $this->validJmb($this->jmbSerial++),
+            'first_name' => 'ScopePiiFirst',
+            'last_name' => 'ScopePiiLast',
+            'phone' => '+38267111888',
+            'address' => 'Scope Street 2',
+            'city' => 'Kotor',
+        ]);
+        $user->load('role');
+        $classified = (new IdentityCensusService)->classify($user);
+        $snapshot = (new IdentityBackfillProjector)->project($user, $classified);
+        $this->assertNotNull($snapshot);
+        (new CanonicalIdentityWriter)->createForUser($user, $snapshot);
+
+        Schema::disableForeignKeyConstraints();
+        foreach ([
+            'payment_account_availabilities',
+            'payment_type_availabilities',
+            'payment_confirmation_deliveries',
+            'payment_transaction_events',
+            'payment_transactions',
+            'payment_initiations',
+            'payment_accounts',
+            'payment_types',
+        ] as $table) {
+            Schema::dropIfExists($table);
+        }
+        Schema::enableForeignKeyConstraints();
+
+        $this->app['env'] = 'production';
+        $this->bindDedicatedReadOnlyConnection();
+        [$aggregate, $rows] = $this->protectedPaths();
+
+        $queries = $this->captureQueries(function () use ($aggregate, $rows, $user): void {
+            $this->artisan('identity:shadow-production', [
+                '--census-max-user-id' => (string) $user->id,
+                '--aggregate' => $aggregate,
+                '--rows' => $rows,
+                '--scope' => 'active-identity-wave',
+            ])->expectsOutputToContain('SCOPED PASS — ACTIVE IDENTITY WAVE')
+                ->expectsOutputToContain('EP GATE OPEN / DEFERRED')
+                ->assertSuccessful();
+        });
+
+        foreach ($queries as $query) {
+            $haystack = $query->sql.' '.json_encode($query->bindings);
+            foreach (['payment_types', 'payment_accounts', 'payment_type_availabilities', 'payment_account_availabilities'] as $table) {
+                $this->assertDoesNotMatchRegularExpression('/\\b'.$table.'\\b/i', $haystack);
+            }
+            $this->assertDoesNotMatchRegularExpression('/\\b(insert|update|delete|replace|truncate)\\b/i', $query->sql);
+        }
+
+        $decoded = json_decode((string) file_get_contents($aggregate), true);
+        $this->assertSame('scoped_production_shadow', $decoded['metadata']['mode']);
+        $this->assertSame('active-identity-wave', $decoded['metadata']['scope']);
+        $this->assertSame(4, $decoded['aggregates']['required_flow_count']);
+        $this->assertSame('OPEN', $decoded['metadata']['deferred_gates']['ep_availability']['status']);
+        $this->assertSame('ep_module_undeployed', $decoded['metadata']['deferred_gates']['ep_availability']['reason']);
+        $this->assertSame('earliest_of', $decoded['metadata']['deferred_gates']['ep_availability']['required_before']['mode']);
+        $this->assertSame(
+            ['ep_production_activation', 'canonical_writer_authority'],
+            $decoded['metadata']['deferred_gates']['ep_availability']['required_before']['events']
+        );
+        $this->assertFalse($decoded['metadata']['step6_closed']);
+        $this->assertFalse($decoded['metadata']['five_flow_closed']);
+        $combined = (string) file_get_contents($aggregate).(string) file_get_contents($rows);
+        $this->assertStringNotContainsString('prod-scope-pii@example.test', $combined);
+        $this->assertStringNotContainsString('ScopePiiFirst', $combined);
+
+        $this->cleanupPaths($aggregate, $rows);
     }
 
     public function test_missing_dedicated_connection_config_fails_before_query(): void

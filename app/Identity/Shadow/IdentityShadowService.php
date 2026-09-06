@@ -66,6 +66,13 @@ final class IdentityShadowService
 
     private string $connection = IdentityCensusService::READONLY_CONNECTION;
 
+    private string $scope = IdentityShadowScope::FULL;
+
+    /**
+     * @var list<string>
+     */
+    private array $requiredFlows = IdentityShadowFlow::REQUIRED;
+
     public function __construct(
         private readonly IdentityCensusService $census = new IdentityCensusService,
         private readonly IdentityBackfillProjector $projector = new IdentityBackfillProjector,
@@ -79,11 +86,13 @@ final class IdentityShadowService
     }
 
     /**
-     * @param  array{census_reference_date?: ?string, census_max_user_id?: int|string|null}  $metadata
+     * @param  array{census_reference_date?: ?string, census_max_user_id?: int|string|null, scope?: string|null}  $metadata
      * @param  callable(IdentityShadowUserOutcome): void|null  $onRow
      */
     public function run(array $metadata = [], ?callable $onRow = null): IdentityShadowReport
     {
+        $this->scope = IdentityShadowScope::resolve($metadata['scope'] ?? null);
+        $this->requiredFlows = IdentityShadowScope::requiredFlows($this->scope);
         $this->assertSwitchesOff();
         $this->assertReadOnlyConnection();
         $this->assertReadableTables();
@@ -95,7 +104,9 @@ final class IdentityShadowService
         $rowCount = 0;
         $eligibleUserIds = [];
         $aggregates = $this->emptyAggregates();
-        $catalog = $this->loadPaymentCatalog();
+        $catalog = IdentityShadowScope::includesCatalog($this->scope)
+            ? $this->loadPaymentCatalog()
+            : collect();
 
         try {
             User::on($this->connection)
@@ -154,43 +165,66 @@ final class IdentityShadowService
 
         $ended = now()->toIso8601String();
         $eligible = count($eligibleUserIds);
-        $requiredFlows = count(IdentityShadowFlow::REQUIRED);
+        $requiredFlows = count($this->requiredFlows);
         $evaluable = 0;
         foreach ($outcomes as $outcome) {
             if (isset($eligibleUserIds[$outcome->userId]) && $outcome->status !== IdentityShadowStatus::NOT_EVALUABLE) {
                 $evaluable++;
             }
         }
-        $accountCount = $catalog->sum(static fn (PaymentType $type): int => $type->accounts->count());
+        $includeCatalog = IdentityShadowScope::includesCatalog($this->scope);
+        $accountCount = $includeCatalog
+            ? $catalog->sum(static fn (PaymentType $type): int => $type->accounts->count())
+            : 0;
         $aggregates['eligible_user_count'] = $eligible;
         $aggregates['required_flow_count'] = $requiredFlows;
         $aggregates['evaluable_comparison_count'] = $evaluable;
-        $aggregates['expected_match_comparisons'] = $evaluable;
-        $aggregates['catalog_type_count'] = $catalog->count();
+        $aggregates['expected_match_comparisons'] = IdentityShadowScope::isActiveIdentityWave($this->scope)
+            ? $eligible * $requiredFlows
+            : $evaluable;
+        $aggregates['catalog_type_count'] = $includeCatalog ? $catalog->count() : 0;
         $aggregates['catalog_account_count'] = $accountCount;
-        $aggregates['ep_evaluated_type_count'] = $catalog->count();
+        $aggregates['ep_evaluated_type_count'] = $aggregates['catalog_type_count'];
         $aggregates['ep_evaluated_account_count'] = $accountCount;
-        $aggregates['ep_compared_decision_count'] = $catalog->count() + $accountCount;
+        $aggregates['ep_compared_decision_count'] = $includeCatalog
+            ? $catalog->count() + $accountCount
+            : 0;
+
+        $deferredGates = IdentityShadowScope::deferredGates($this->scope);
+        if ($deferredGates !== []) {
+            $aggregates['deferred_gates'] = $deferredGates;
+        }
+
+        $scoped = IdentityShadowScope::isActiveIdentityWave($this->scope);
+        $reportMetadata = [
+            'started_at' => $started,
+            'ended_at' => $ended,
+            'finished_at' => $ended,
+            'environment' => (string) app()->environment(),
+            'commit_hash' => $this->commitHash(),
+            'spec' => 'DK-TS-002 D15 Step 6',
+            'mode' => $scoped ? 'scoped_production_shadow' : 'shadow',
+            'scope' => $this->scope,
+            'required_flows' => $this->requiredFlows,
+            'row_count' => $rowCount,
+            'comparison_count' => count($outcomes),
+            'live_max_user_id' => $maxId === 0 ? null : $maxId,
+            'census_reference_date' => $this->optionalString($metadata['census_reference_date'] ?? null),
+            'census_max_user_id' => $censusMaxUserId,
+            'connection' => $this->connection,
+            'canonical_read' => false,
+            'canonical_write' => false,
+        ];
+        if ($scoped) {
+            $reportMetadata['wave'] = 'active_identity_wave';
+            $reportMetadata['deferred_gates'] = $deferredGates;
+            $reportMetadata['step6_closed'] = false;
+            $reportMetadata['five_flow_closed'] = false;
+        }
 
         return new IdentityShadowReport(
             $outcomes,
-            [
-                'started_at' => $started,
-                'ended_at' => $ended,
-                'finished_at' => $ended,
-                'environment' => (string) app()->environment(),
-                'commit_hash' => $this->commitHash(),
-                'spec' => 'DK-TS-002 D15 Step 6',
-                'mode' => 'shadow',
-                'row_count' => $rowCount,
-                'comparison_count' => count($outcomes),
-                'live_max_user_id' => $maxId === 0 ? null : $maxId,
-                'census_reference_date' => $this->optionalString($metadata['census_reference_date'] ?? null),
-                'census_max_user_id' => $censusMaxUserId,
-                'connection' => $this->connection,
-                'canonical_read' => false,
-                'canonical_write' => false,
-            ],
+            $reportMetadata,
             $aggregates,
         );
     }
@@ -271,7 +305,7 @@ final class IdentityShadowService
         $userId = (int) $user->id;
         $outcomes = [];
 
-        foreach (IdentityShadowFlow::REQUIRED as $flow) {
+        foreach ($this->requiredFlows as $flow) {
             try {
                 $result = match ($flow) {
                     IdentityShadowFlow::EP_AVAILABILITY => $this->epAvailability->compare($user, $canonical, $catalog),
@@ -318,7 +352,7 @@ final class IdentityShadowService
     private function uniform(int $userId, string $status, array $reasonCodes): array
     {
         $outcomes = [];
-        foreach (IdentityShadowFlow::REQUIRED as $flow) {
+        foreach ($this->requiredFlows as $flow) {
             $outcomes[] = new IdentityShadowUserOutcome($userId, $flow, $status, $reasonCodes, []);
         }
 
@@ -443,10 +477,13 @@ final class IdentityShadowService
      * @param  callable(string): bool  $hasTable
      * @return list<string>
      */
-    public static function missingRequiredTables(callable $hasTable): array
+    public static function missingRequiredTables(callable $hasTable, bool $includeCatalog = true): array
     {
+        $tables = $includeCatalog
+            ? array_merge(self::REQUIRED_TABLES, self::CATALOG_TABLES)
+            : self::REQUIRED_TABLES;
         $missing = [];
-        foreach (array_merge(self::REQUIRED_TABLES, self::CATALOG_TABLES) as $table) {
+        foreach ($tables as $table) {
             if (! $hasTable($table)) {
                 $missing[] = $table;
             }
@@ -457,7 +494,9 @@ final class IdentityShadowService
 
     private function assertReadableTables(): void
     {
-        $required = array_merge(self::REQUIRED_TABLES, self::CATALOG_TABLES);
+        $required = IdentityShadowScope::includesCatalog($this->scope)
+            ? array_merge(self::REQUIRED_TABLES, self::CATALOG_TABLES)
+            : self::REQUIRED_TABLES;
         try {
             $missing = [];
             foreach ($required as $table) {
@@ -472,8 +511,11 @@ final class IdentityShadowService
         }
 
         if ($missing !== []) {
+            $kind = IdentityShadowScope::includesCatalog($this->scope)
+                ? 'identity and catalog tables'
+                : 'identity tables';
             throw new IdentityShadowException(
-                'Step 6 shadow requires identity and catalog tables: '.implode(', ', $missing)
+                'Step 6 shadow requires '.$kind.': '.implode(', ', $missing)
             );
         }
 
@@ -504,7 +546,7 @@ final class IdentityShadowService
             IdentityShadowStatus::NOT_EVALUABLE => 0,
         ];
         $byFlow = [];
-        foreach (IdentityShadowFlow::REQUIRED as $flow) {
+        foreach ($this->requiredFlows as $flow) {
             $byFlow[$flow] = $byStatus;
         }
 
@@ -512,7 +554,7 @@ final class IdentityShadowService
             'by_status' => $byStatus,
             'by_flow' => $byFlow,
             'eligible_user_count' => 0,
-            'required_flow_count' => count(IdentityShadowFlow::REQUIRED),
+            'required_flow_count' => count($this->requiredFlows),
             'evaluable_comparison_count' => 0,
             'expected_match_comparisons' => 0,
             'catalog_type_count' => 0,

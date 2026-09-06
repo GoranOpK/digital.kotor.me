@@ -412,6 +412,10 @@ class IdentityShadowServiceTest extends TestCase
             IdentityShadowService::missingRequiredTables(static fn (): bool => false)
         );
         $this->assertSame([], IdentityShadowService::missingRequiredTables(static fn (): bool => true));
+        $this->assertSame(
+            IdentityShadowService::REQUIRED_TABLES,
+            IdentityShadowService::missingRequiredTables(static fn (): bool => false, false)
+        );
 
         $source = (string) file_get_contents(app_path('Identity/Shadow/IdentityShadowService.php'))
             .(string) file_get_contents(app_path('Console/Commands/IdentityProductionShadowCommand.php'));
@@ -421,6 +425,9 @@ class IdentityShadowServiceTest extends TestCase
         $this->assertStringNotContainsString('--apply', $source);
         $this->assertStringNotContainsString('--repair', $source);
         $this->assertStringNotContainsString('--reconcile', $source);
+        $this->assertStringNotContainsString('--skip-ep', $source);
+        $this->assertStringNotContainsString('--ignore-missing', $source);
+        $this->assertStringNotContainsString('--allow-missing-tables', $source);
     }
 
     public function test_no_http_wiring_of_shadow_or_canonical_reader(): void

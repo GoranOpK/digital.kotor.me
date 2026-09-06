@@ -24,4 +24,16 @@ final class IdentityShadowFlow
         self::PROFILE_DISPLAY,
         self::DASHBOARD_DISPLAY,
     ];
+
+    /**
+     * PO-adopted scoped production wave. ep_availability remains an OPEN deferred hard gate.
+     *
+     * @var list<string>
+     */
+    public const ACTIVE_IDENTITY_WAVE = [
+        self::KN_APPLICANT_TYPE,
+        self::KN_APPLICATION_PREFILL,
+        self::PROFILE_DISPLAY,
+        self::DASHBOARD_DISPLAY,
+    ];
 }
