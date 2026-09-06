@@ -6,6 +6,7 @@ use App\Identity\CanonicalIdentityWriteException;
 use App\Identity\CanonicalIdentityWriter;
 use App\Identity\Census\IdentityCensusRow;
 use App\Identity\Census\IdentityCensusService;
+use App\Identity\IdentityCanonicalGraphFingerprint;
 use App\Identity\IdentitySnapshot;
 use App\Models\PlatformIdentity;
 use App\Models\User;
@@ -200,26 +201,7 @@ final class IdentityBackfillService
      */
     private function projectionFingerprint(IdentitySnapshot $snapshot): array
     {
-        $fl = $snapshot->physicalPerson;
-
-        return [
-            'user_id' => $snapshot->userId,
-            'subject_type' => $snapshot->subjectType,
-            'mobile_phone' => $this->outerTrim($snapshot->mobilePhone),
-            'first_name' => $fl?->firstName,
-            'last_name' => $fl?->lastName,
-            'residential_status' => $fl?->residentialStatus,
-            'id_document_type' => $fl?->idDocumentType,
-            'jmb' => $fl?->jmb,
-            'passport_number' => $fl?->passportNumber,
-            'residence_country_code' => $fl?->residenceCountryCode,
-            'is_entrepreneur' => $fl?->isEntrepreneur === true,
-            'entrepreneur_business_name' => $fl?->entrepreneurBusinessName,
-            'pib' => $fl?->pib,
-            'crps_number' => $fl?->crpsNumber,
-            'street_and_number' => $fl?->streetAndNumber,
-            'city' => $fl?->city,
-        ];
+        return IdentityCanonicalGraphFingerprint::fromSnapshot($snapshot);
     }
 
     /**
@@ -232,24 +214,7 @@ final class IdentityBackfillService
             return null;
         }
 
-        return [
-            'user_id' => (int) $platform->user_id,
-            'subject_type' => $platform->subject_type,
-            'mobile_phone' => $this->outerTrim($platform->mobile_phone),
-            'first_name' => $fl->first_name,
-            'last_name' => $fl->last_name,
-            'residential_status' => $fl->residential_status,
-            'id_document_type' => $fl->id_document_type,
-            'jmb' => $fl->jmb,
-            'passport_number' => $this->outerTrim($fl->passport_number),
-            'residence_country_code' => $this->outerTrim($fl->residence_country_code),
-            'is_entrepreneur' => $fl->is_entrepreneur === true,
-            'entrepreneur_business_name' => $this->outerTrim($fl->entrepreneur_business_name),
-            'pib' => $this->outerTrim($fl->pib),
-            'crps_number' => $this->outerTrim($fl->crps_number),
-            'street_and_number' => $fl->street_and_number,
-            'city' => $fl->city,
-        ];
+        return IdentityCanonicalGraphFingerprint::fromPersistedPhysicalPersonGraph($platform, $fl);
     }
 
     private function assertSwitchesOff(): void
@@ -341,17 +306,6 @@ final class IdentityBackfillService
     {
         $aggregates['by_status'][$outcome->status] = ($aggregates['by_status'][$outcome->status] ?? 0) + 1;
         $aggregates['by_live_row_status'][$outcome->liveRowStatus] = ($aggregates['by_live_row_status'][$outcome->liveRowStatus] ?? 0) + 1;
-    }
-
-    private function outerTrim(mixed $value): ?string
-    {
-        if (! is_string($value)) {
-            return null;
-        }
-
-        $trimmed = trim($value);
-
-        return $trimmed === '' ? null : $trimmed;
     }
 
     private function optionalString(mixed $value): ?string
