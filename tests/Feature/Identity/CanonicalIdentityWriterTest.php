@@ -266,6 +266,74 @@ class CanonicalIdentityWriterTest extends TestCase
         }
     }
 
+    public function test_update_physical_person_graph_is_in_place_and_does_not_mutate_users(): void
+    {
+        $user = $this->makeKorisnik();
+        $before = $this->legacyIdentityPayload($user);
+        $this->writer->createForUser($user, $this->flSnapshot($user, [
+            'person' => ['residenceCountryCode' => null],
+        ]));
+        $platformId = (int) PlatformIdentity::query()->where('user_id', $user->id)->value('id');
+        $flId = (int) PhysicalPersonIdentity::query()->value('id');
+
+        $updated = $this->flSnapshot($user, [
+            'mobilePhone' => '+38267000999',
+            'person' => [
+                'firstName' => 'Nova',
+                'lastName' => 'Anić',
+                'streetAndNumber' => 'Njegoševa 99',
+                'city' => 'Budva',
+                'jmb' => '0000000000000',
+                'residenceCountryCode' => null,
+            ],
+        ]);
+        $this->writer->updatePhysicalPersonGraph($user, $updated);
+
+        $this->assertSame(1, PlatformIdentity::query()->where('user_id', $user->id)->count());
+        $this->assertSame(1, PhysicalPersonIdentity::query()->count());
+        $this->assertSame($platformId, (int) PlatformIdentity::query()->where('user_id', $user->id)->value('id'));
+        $this->assertSame($flId, (int) PhysicalPersonIdentity::query()->value('id'));
+        $this->assertSame('+38267000999', PlatformIdentity::query()->first()->mobile_phone);
+        $this->assertSame('Nova', PhysicalPersonIdentity::query()->first()->first_name);
+        $this->assertSame('Budva', PhysicalPersonIdentity::query()->first()->city);
+        $this->assertSame($before, $this->legacyIdentityPayload($user->fresh()));
+        $this->assertSame(0, LegalEntityIdentity::query()->count());
+    }
+
+    public function test_update_physical_person_graph_refuses_non_fl_snapshot(): void
+    {
+        $user = $this->makeKorisnik();
+        $this->writer->createForUser($user, $this->flSnapshot($user, [
+            'person' => ['residenceCountryCode' => null],
+        ]));
+        $before = PhysicalPersonIdentity::query()->first()->toArray();
+
+        try {
+            $this->writer->updatePhysicalPersonGraph($user, $this->plSnapshot($user));
+            $this->fail('Legal entity snapshot must not update an FL graph.');
+        } catch (CanonicalIdentityWriteException) {
+            $this->assertSame($before, PhysicalPersonIdentity::query()->first()->toArray());
+            $this->assertSame(0, LegalEntityIdentity::query()->count());
+        }
+    }
+
+    public function test_create_for_user_still_refuses_existing_platform_identity(): void
+    {
+        $user = $this->makeKorisnik();
+        $snapshot = $this->flSnapshot($user, [
+            'person' => ['residenceCountryCode' => null],
+        ]);
+        $this->writer->createForUser($user, $snapshot);
+
+        try {
+            $this->writer->createForUser($user, $snapshot);
+            $this->fail('createForUser must remain create-only.');
+        } catch (CanonicalIdentityWriteException) {
+            $this->assertSame(1, PlatformIdentity::query()->where('user_id', $user->id)->count());
+            $this->assertSame(1, PhysicalPersonIdentity::query()->count());
+        }
+    }
+
     /**
      * @return array<string, mixed>
      */

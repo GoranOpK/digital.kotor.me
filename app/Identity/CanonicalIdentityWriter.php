@@ -16,8 +16,10 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Create-only canonical identity capability. Not rollout-gated.
- * If invoked, it persists. Step 2 runtime never invokes it.
+ * Canonical identity writer. Not rollout-gated. If invoked, it persists.
+ * Step 2 runtime never invokes it.
+ * createForUser() preserves Step 4 create-only semantics.
+ * updatePhysicalPersonGraph() is the narrow Step 7 same-branch FL updater.
  */
 final class CanonicalIdentityWriter
 {
@@ -78,6 +80,139 @@ final class CanonicalIdentityWriter
             throw $e;
         } catch (Throwable $e) {
             throw new CanonicalIdentityWriteException('Canonical identity create failed.', 0, $e);
+        }
+    }
+
+    /**
+     * Additive Step 7 same-branch FL in-place update. Not a general updater.
+     * Does not delete/recreate the graph. Does not mutate users.
+     */
+    public function updatePhysicalPersonGraph(User $user, IdentitySnapshot $snapshot): PlatformIdentity
+    {
+        $this->assertSameBranchFlUpdateSnapshot($user, $snapshot);
+
+        try {
+            return DB::transaction(function () use ($user, $snapshot) {
+                $platform = PlatformIdentity::query()
+                    ->where('user_id', $user->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($platform === null) {
+                    throw new CanonicalIdentityWriteException('Platform identity does not exist for this user.');
+                }
+
+                $this->assertPersistedSameBranchFlGraph($platform);
+
+                $fl = PhysicalPersonIdentity::query()
+                    ->where('platform_identity_id', $platform->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($fl === null) {
+                    throw new CanonicalIdentityWriteException('Physical person identity does not exist for this platform.');
+                }
+
+                $person = $snapshot->physicalPerson;
+                $platform->mobile_phone = $snapshot->mobilePhone;
+                $platform->save();
+
+                $fl->first_name = $person->firstName;
+                $fl->last_name = $person->lastName;
+                $fl->residential_status = $person->residentialStatus;
+                $fl->id_document_type = $person->idDocumentType;
+                $fl->jmb = $person->jmb;
+                $fl->passport_number = $person->passportNumber;
+                $fl->residence_country_code = $person->residenceCountryCode;
+                $fl->is_entrepreneur = $person->isEntrepreneur;
+                $fl->entrepreneur_business_name = $person->entrepreneurBusinessName;
+                $fl->pib = $person->pib;
+                $fl->crps_number = $person->crpsNumber;
+                $fl->street_and_number = $person->streetAndNumber;
+                $fl->city = $person->city;
+                $fl->save();
+
+                return $platform->refresh();
+            });
+        } catch (CanonicalIdentityWriteException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            throw new CanonicalIdentityWriteException('Canonical identity update failed.', 0, $e);
+        }
+    }
+
+    private function assertSameBranchFlUpdateSnapshot(User $user, IdentitySnapshot $snapshot): void
+    {
+        if ($snapshot->userId !== $user->id) {
+            throw new CanonicalIdentityWriteException('Snapshot user id does not match the target user.');
+        }
+
+        if (! $snapshot->isRegisteredSubject) {
+            throw new CanonicalIdentityWriteException('Canonical update requires a registered subject.');
+        }
+
+        if ($snapshot->legacyFacts !== null) {
+            throw new CanonicalIdentityWriteException('Canonical update does not accept legacy facts.');
+        }
+
+        if ($snapshot->subjectType !== PlatformIdentity::SUBJECT_PHYSICAL_PERSON) {
+            throw new CanonicalIdentityWriteException('Canonical update requires the physical person subject type.');
+        }
+
+        if ($snapshot->legalEntity !== null || $snapshot->foreignBranch !== null) {
+            throw new CanonicalIdentityWriteException('Canonical update refuses non-FL branches.');
+        }
+
+        $this->assertPhysicalPerson($snapshot);
+
+        $fl = $snapshot->physicalPerson;
+        if ($fl->isEntrepreneur) {
+            throw new CanonicalIdentityWriteException('Canonical update refuses entrepreneur graphs.');
+        }
+
+        if ($fl->residentialStatus !== PhysicalPersonIdentity::RESIDENTIAL_RESIDENT) {
+            throw new CanonicalIdentityWriteException('Canonical update requires resident status.');
+        }
+
+        if ($fl->idDocumentType !== PhysicalPersonIdentity::DOCUMENT_JMB) {
+            throw new CanonicalIdentityWriteException('Canonical update requires a JMB document.');
+        }
+
+        $this->assertOptionalIdentifier($fl->jmb);
+        $this->assertOptionalPib($fl->pib);
+        $this->assertOptionalCrps($fl->crpsNumber);
+        $this->assertOptionalCountry($fl->residenceCountryCode);
+    }
+
+    private function assertPersistedSameBranchFlGraph(PlatformIdentity $platform): void
+    {
+        if ($platform->subject_type !== PlatformIdentity::SUBJECT_PHYSICAL_PERSON) {
+            throw new CanonicalIdentityWriteException('Persisted graph is not a physical person branch.');
+        }
+
+        $flCount = PhysicalPersonIdentity::query()->where('platform_identity_id', $platform->id)->count();
+        $leCount = LegalEntityIdentity::query()->where('platform_identity_id', $platform->id)->count();
+        $fbCount = ForeignBranchIdentity::query()->where('platform_identity_id', $platform->id)->count();
+
+        if ($flCount !== 1 || $leCount !== 0 || $fbCount !== 0) {
+            throw new CanonicalIdentityWriteException('Persisted graph is not a same-branch Step-4 FL graph.');
+        }
+
+        $fl = PhysicalPersonIdentity::query()->where('platform_identity_id', $platform->id)->first();
+        if ($fl === null) {
+            throw new CanonicalIdentityWriteException('Persisted physical person row is missing.');
+        }
+
+        if ($fl->is_entrepreneur === true) {
+            throw new CanonicalIdentityWriteException('Persisted graph is not a non-entrepreneur FL branch.');
+        }
+
+        if ($fl->residential_status !== PhysicalPersonIdentity::RESIDENTIAL_RESIDENT) {
+            throw new CanonicalIdentityWriteException('Persisted graph is not a resident FL branch.');
+        }
+
+        if ($fl->id_document_type !== PhysicalPersonIdentity::DOCUMENT_JMB) {
+            throw new CanonicalIdentityWriteException('Persisted graph is not a JMB FL branch.');
         }
     }
 
