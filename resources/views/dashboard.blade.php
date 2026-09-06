@@ -252,10 +252,12 @@
     $isSuperAdmin = $user->role && $user->role->name === 'superadmin';
     $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
     $isKomisija = isset($isKomisija) ? $isKomisija : ($user->role && $user->role->name === 'komisija');
-    $isPhysicalPerson = \App\Support\UserType::isNaturalPerson($subjectIdentity->userType ?? $user->user_type);
-    $isResident = ($subjectIdentity->residentialStatus ?? $user->residential_status) === 'resident';
-    $isNonResident = ($subjectIdentity->residentialStatus ?? $user->residential_status) === 'non-resident';
-    $isLegalEntity = $user->isLegalEntity();
+    $identityType = $subjectIdentity->userType;
+    $identityResidency = $subjectIdentity->residentialStatus;
+    $isPhysicalPerson = \App\Support\UserType::isNaturalPerson($identityType);
+    $isResident = $identityResidency === 'resident';
+    $isNonResident = $identityResidency === 'non-resident';
+    $isLegalEntity = \App\Support\UserType::isLegalEntity($identityType);
     
     // Određivanje tipa korisnika za prikaz
     if ($isSuperAdmin) {
@@ -267,14 +269,16 @@
         $userTypeLabel = $positionLabel . ' komisije';
     } elseif ($isKomisija) {
         $userTypeLabel = 'Član komisije';
-    } elseif (\App\Support\UserType::isEntrepreneur($subjectIdentity->userType ?? $user->user_type)) {
+    } elseif (\App\Support\UserType::isEntrepreneur($identityType)) {
         $userTypeLabel = 'Preduzetnik';
     } elseif ($isPhysicalPerson && $isResident) {
         $userTypeLabel = 'Fizičko lice (Rezident)';
     } elseif ($isPhysicalPerson && $isNonResident) {
         $userTypeLabel = 'Fizičko lice (Nerezident)';
+    } elseif (filled($identityType)) {
+        $userTypeLabel = $identityType;
     } else {
-        $userTypeLabel = $subjectIdentity->userType ?? $user->user_type ?? 'Pravno lice';
+        $userTypeLabel = config('identity.canonical_read') ? 'N/A' : 'Pravno lice';
     }
     
     // Izračunaj korišćen prostor za dokumente

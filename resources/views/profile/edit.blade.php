@@ -205,7 +205,16 @@
                     @enderror
                 </div>
 
-                    @if($user->collectsBusinessIdentity())
+                    @php
+                        $identityFormBranch = config('identity.canonical_read')
+                            ? ($subjectIdentity->hasCurrentSubjectIdentity()
+                                && (
+                                    \App\Support\UserType::isNaturalPerson($subjectIdentity->userType)
+                                    || \App\Support\UserType::isLegalEntity($subjectIdentity->userType)
+                                ))
+                            : $user->collectsBusinessIdentity();
+                    @endphp
+                    @if($identityFormBranch)
                     <div class="form-group">
                     <label for="user_type" class="form-label">Tip korisnika <span class="required">*</span></label>
                     <select name="user_type" id="user_type" class="form-control" required onchange="toggleUserTypeFields()">

@@ -1020,7 +1020,13 @@ class ApplicationController extends Controller
                 return 'Sjedište društva mora biti na teritoriji Opštine Kotor.';
             }
         } else {
-            $address = $application->businessPlan?->applicant_address ?: $application->user?->formattedAddress();
+            $identity = $application->user
+                ? app(CurrentIdentityResolver::class)->viewFor($application->user)
+                : null;
+            $identityAddress = $identity
+                ? KotorAddress::formatStreetAndCity($identity->address, $identity->city)
+                : '';
+            $address = $application->businessPlan?->applicant_address ?: $identityAddress;
             if (!KotorAddress::isInKotorMunicipality($address)) {
                 return KotorAddress::validationMessage();
             }

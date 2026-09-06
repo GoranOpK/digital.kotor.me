@@ -381,7 +381,7 @@
             } elseif ($applicantType === 'doo' || $applicantType === 'ostalo') {
                 $obrazacLabel = 'Obrazac 1b';
             }
-            $userProfileAddress = auth()->user()->formattedAddress();
+            $userProfileAddress = \App\Support\KotorAddress::formatStreetAndCity($subjectIdentity->address, $subjectIdentity->city);
         @endphp
         <div class="obrazac-zaglavlje">
             <div class="obrazac-zaglavlje-top">
@@ -464,15 +464,17 @@
             
             @php
                 // Helper funkcija za dobijanje vrednosti polja (old > existingApplication > default)
-                function getFieldValue($field, $default = '') {
-                    $oldValue = old($field);
-                    if ($oldValue !== null) {
-                        return $oldValue;
+                if (! function_exists('getFieldValue')) {
+                    function getFieldValue($field, $default = '') {
+                        $oldValue = old($field);
+                        if ($oldValue !== null) {
+                            return $oldValue;
+                        }
+                        if (isset($existingApplication) && $existingApplication && $existingApplication->$field) {
+                            return $existingApplication->$field;
+                        }
+                        return $default;
                     }
-                    if (isset($existingApplication) && $existingApplication && $existingApplication->$field) {
-                        return $existingApplication->$field;
-                    }
-                    return $default;
                 }
             @endphp
             
@@ -663,7 +665,7 @@
                                 type="tel" 
                                 name="preduzetnik_phone" 
                                 class="form-control @error('preduzetnik_phone') error @enderror"
-                                value="{{ old('preduzetnik_phone', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->phone : $subjectIdentity->phone) }}"
+                                value="{{ old('preduzetnik_phone', $subjectIdentity->phone) }}"
                                 maxlength="50"
                                 placeholder="Npr. +382 67 123 456"
                             >
@@ -782,7 +784,7 @@
                                 type="text" 
                                 name="pib" 
                                 class="form-control @error('pib') error @enderror"
-                                value="{{ old('pib', isset($existingApplication) && $existingApplication ? $existingApplication->pib : auth()->user()->pib) }}"
+                                value="{{ old('pib', isset($existingApplication) && $existingApplication ? $existingApplication->pib : $subjectIdentity->pib) }}"
                                 maxlength="8"
                                 pattern="[0-9]{8}"
                                 placeholder="8 cifara"
@@ -931,7 +933,7 @@
                                 type="tel" 
                                 name="doo_phone" 
                                 class="form-control @error('doo_phone') error @enderror"
-                                value="{{ old('doo_phone', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->phone : $subjectIdentity->phone) }}"
+                                value="{{ old('doo_phone', $subjectIdentity->phone) }}"
                                 maxlength="50"
                                 placeholder="Npr. +382 67 123 456"
                             >
@@ -1099,7 +1101,7 @@
                             type="text" 
                             name="pib" 
                             class="form-control @error('pib') error @enderror"
-                            value="{{ old('pib', isset($existingApplication) && $existingApplication ? $existingApplication->pib : auth()->user()->pib) }}"
+                            value="{{ old('pib', isset($existingApplication) && $existingApplication ? $existingApplication->pib : $subjectIdentity->pib) }}"
                             maxlength="8"
                             pattern="[0-9]{8}"
                             placeholder="8 cifara"

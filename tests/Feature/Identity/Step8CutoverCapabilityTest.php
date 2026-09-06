@@ -9,6 +9,7 @@ use App\Identity\CanonicalIdentityWriter;
 use App\Identity\Cutover\IdentityCutoverAttestation;
 use App\Identity\Runtime\IdentityMutationDeniedException;
 use App\Identity\Runtime\IdentityMutationGuard;
+use App\Models\Application;
 use App\Models\PaymentAccount;
 use App\Models\PaymentTransaction;
 use App\Models\PaymentType;
@@ -600,6 +601,347 @@ class Step8CutoverCapabilityTest extends TestCase
             ->assertDontSee('0202990123456', false);
     }
 
+    public function test_dashboard_read_off_preserves_legacy_identity_labels(): void
+    {
+        $user = $this->makeKorisnik();
+
+        $html = $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Fizičko lice (Rezident)', $html);
+        $this->assertStringContainsString('Kotor', $html);
+        $this->assertStringContainsString('+38267000001', $html);
+    }
+
+    public function test_dashboard_read_on_uses_canonical_type_and_residency_only(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::ENTREPRENEUR,
+            'residential_status' => 'non-resident',
+            'jmb' => $this->validJmb(41),
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user, [
+            'person' => [
+                'jmb' => $this->validJmb(41),
+                'firstName' => 'Kanon',
+                'city' => 'Podgorica',
+            ],
+        ]));
+        config(['identity.canonical_read' => true]);
+
+        $html = $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('Fizičko lice (Rezident)', $html);
+        $this->assertStringNotContainsString('Preduzetnik', $html);
+        $this->assertStringNotContainsString('Fizičko lice (Nerezident)', $html);
+        $this->assertStringContainsString('Podgorica', $html);
+    }
+
+    public function test_dashboard_read_on_missing_subject_does_not_show_stale_legacy_identity(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'residential_status' => 'resident',
+            'company_name' => 'Stale DOO',
+            'pib' => '12345672',
+        ]);
+        config(['identity.canonical_read' => true]);
+
+        $html = $this->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('Fizičko lice (Rezident)', $html);
+        $this->assertStringNotContainsString('Društvo sa ograničenom odgovornošću', $html);
+        $this->assertStringNotContainsString('Stale DOO', $html);
+        $this->assertStringNotContainsString('12345672', $html);
+        $this->assertStringNotContainsString('+38267000001', $html);
+        $this->assertStringContainsString('N/A', $html);
+    }
+
+    public function test_profile_read_off_preserves_legacy_form_branch(): void
+    {
+        $user = $this->makeKorisnik(['user_type' => UserType::ENTREPRENEUR]);
+
+        $html = $this->actingAs($user)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('id="physicalPersonFields"', $html);
+        $this->assertStringContainsString('id="user_type"', $html);
+        $this->assertStringContainsString('Poslovno ime', $html);
+    }
+
+    public function test_profile_read_on_form_branch_is_canonical_not_legacy_fallback(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'pib' => '12345672',
+            'company_name' => 'Stale DOO',
+            'jmb' => $this->validJmb(42),
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user, [
+            'person' => ['jmb' => $this->validJmb(42)],
+        ]));
+        config(['identity.canonical_read' => true]);
+
+        $html = $this->actingAs($user)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('id="physicalPersonFields"', $html);
+        $this->assertStringContainsString('id="residentialStatusGroup"', $html);
+        $this->assertStringNotContainsString('Stale DOO', $html);
+        $this->assertMatchesRegularExpression('/value="Fizičko lice"\s+selected/', $html);
+        $this->assertDoesNotMatchRegularExpression('/value="Društvo sa ograničenom odgovornošću"\s+selected/', $html);
+    }
+
+    public function test_profile_read_on_missing_subject_does_not_use_collects_business_identity_fallback(): void
+    {
+        $user = $this->makeKorisnik([
+            'user_type' => UserType::ENTREPRENEUR,
+            'company_name' => 'Stale Radnja',
+            'jmb' => '0202990123456',
+        ]);
+        config(['identity.canonical_read' => true]);
+
+        $html = $this->actingAs($user)
+            ->get(route('profile.edit'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('id="user_type"', $html);
+        $this->assertStringNotContainsString('Stale Radnja', $html);
+        $this->assertStringNotContainsString('0202990123456', $html);
+        $this->assertStringNotContainsString('id="physicalPersonFields"', $html);
+    }
+
+    public function test_admin_subject_edit_read_on_uses_canonical_contact_only(): void
+    {
+        $admin = $this->makeAdmin();
+        $user = $this->makeKorisnik([
+            'first_name' => 'Stale',
+            'last_name' => 'Ime',
+            'phone' => '+38267000001',
+            'jmb' => $this->validJmb(43),
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user, [
+            'person' => [
+                'firstName' => 'KanonIme',
+                'lastName' => 'KanonPrezime',
+                'jmb' => $this->validJmb(43),
+            ],
+            'mobilePhone' => '+38267111000',
+        ]));
+        config(['identity.canonical_read' => true]);
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.users.edit', $user))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('value="KanonIme"', $html);
+        $this->assertStringContainsString('value="KanonPrezime"', $html);
+        $this->assertStringContainsString('value="+38267111000"', $html);
+        $this->assertStringNotContainsString('value="Stale"', $html);
+        $this->assertStringNotContainsString('value="Ime"', $html);
+        $this->assertStringNotContainsString('value="+38267000001"', $html);
+    }
+
+    public function test_admin_subject_missing_graph_does_not_fall_back_to_users_identity(): void
+    {
+        $admin = $this->makeAdmin();
+        $user = $this->makeKorisnik([
+            'first_name' => 'Stale',
+            'last_name' => 'Ime',
+            'phone' => '+38267000001',
+        ]);
+        config(['identity.canonical_read' => true]);
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.users.edit', $user))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('value="Stale"', $html);
+        $this->assertStringNotContainsString('value="Ime"', $html);
+        $this->assertStringNotContainsString('value="+38267000001"', $html);
+    }
+
+    public function test_admin_staff_account_only_edit_still_uses_account_fields(): void
+    {
+        $admin = $this->makeAdmin();
+        $staff = User::factory()->create([
+            'role_id' => Role::where('name', 'komisija')->firstOrFail()->id,
+            'activation_status' => 'active',
+            'email_verified_at' => now(),
+            'user_type' => null,
+            'first_name' => 'Komisija',
+            'last_name' => 'Član',
+            'phone' => '+38267888000',
+        ]);
+        config(['identity.canonical_read' => true]);
+
+        $html = $this->actingAs($admin)
+            ->get(route('admin.users.edit', $staff))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('value="Komisija"', $html);
+        $this->assertStringContainsString('value="Član"', $html);
+        $this->assertStringContainsString('value="+38267888000"', $html);
+    }
+
+    public function test_kn_current_phone_and_pib_prefill_read_on_uses_canonical(): void
+    {
+        $user = $this->makeKorisnik([
+            'phone' => '+38267000998',
+            'pib' => '87654321',
+            'jmb' => $this->validJmb(44),
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user, [
+            'person' => [
+                'jmb' => $this->validJmb(44),
+                'isEntrepreneur' => true,
+                'entrepreneurBusinessName' => 'Radnja Ana',
+                'pib' => '12345672',
+                'crpsNumber' => '10000001',
+            ],
+            'mobilePhone' => '+38267111000',
+        ]));
+        config(['identity.canonical_read' => true]);
+
+        $competition = $this->openCompetition();
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', $competition))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('value="+38267111000"', $html);
+        $this->assertStringNotContainsString('value="+38267000998"', $html);
+        $this->assertStringNotContainsString('value="87654321"', $html);
+        $this->assertStringContainsString('value="12345672"', $html);
+    }
+
+    public function test_kn_existing_application_current_phone_uses_canonical_not_users_phone(): void
+    {
+        $user = $this->makeKorisnik([
+            'phone' => '+38267000997',
+            'jmb' => $this->validJmb(46),
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user, [
+            'person' => [
+                'jmb' => $this->validJmb(46),
+                'isEntrepreneur' => true,
+                'entrepreneurBusinessName' => 'Radnja Ana',
+                'pib' => '12345672',
+                'crpsNumber' => '10000001',
+            ],
+            'mobilePhone' => '+38267111001',
+        ]));
+        config(['identity.canonical_read' => true]);
+
+        $competition = $this->openCompetition();
+        $application = Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $user->id,
+            'business_plan_name' => 'Plan',
+            'applicant_type' => 'preduzetnica',
+            'business_stage' => 'započinjanje',
+            'status' => 'draft',
+        ]);
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', ['competition' => $competition, 'application_id' => $application->id]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('value="+38267111001"', $html);
+        $this->assertStringNotContainsString('value="+38267000997"', $html);
+    }
+
+    public function test_kn_missing_canonical_does_not_fall_back_to_users_phone_or_pib(): void
+    {
+        $user = $this->makeKorisnik([
+            'phone' => '+38267000999',
+            'pib' => '12345672',
+            'user_type' => UserType::ENTREPRENEUR,
+        ]);
+        config(['identity.canonical_read' => true]);
+
+        $competition = $this->openCompetition();
+        $application = Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $user->id,
+            'business_plan_name' => 'Plan',
+            'applicant_type' => 'preduzetnica',
+            'business_stage' => 'započinjanje',
+            'status' => 'draft',
+        ]);
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', ['competition' => $competition, 'application_id' => $application->id]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('+38267000999', $html);
+        $this->assertStringNotContainsString('value="12345672"', $html);
+    }
+
+    public function test_kn_historical_application_snapshot_phone_and_pib_remain_unchanged(): void
+    {
+        $user = $this->makeKorisnik([
+            'phone' => '+38267000001',
+            'pib' => '11111117',
+            'jmb' => $this->validJmb(45),
+        ]);
+        (new CanonicalIdentityWriter)->createForUser($user, $this->flSnapshot($user, [
+            'person' => ['jmb' => $this->validJmb(45)],
+            'mobilePhone' => '+38267111000',
+        ]));
+        config(['identity.canonical_read' => true]);
+
+        $competition = $this->openCompetition();
+        $application = Application::create([
+            'competition_id' => $competition->id,
+            'user_id' => $user->id,
+            'business_plan_name' => 'Plan',
+            'applicant_type' => 'fizicko_lice',
+            'business_stage' => 'započinjanje',
+            'status' => 'draft',
+            'physical_person_phone' => '+38267999000',
+            'pib' => '99999993',
+        ]);
+
+        $html = $this->actingAs($user)
+            ->get(route('applications.create', ['competition' => $competition, 'application_id' => $application->id]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('value="+38267999000"', $html);
+        $this->assertStringContainsString('value="99999993"', $html);
+        $this->assertStringNotContainsString('value="+38267000001"', $html);
+    }
+
+    public function test_corrective_02_does_not_enable_identity_switches_or_ep(): void
+    {
+        $this->assertSame(false, config('identity.canonical_read'));
+        $this->assertSame(false, config('identity.canonical_write'));
+        $this->assertSame(false, config('identity.identity_write_freeze'));
+        $this->assertSame(false, config('identity.ep_identity_flows'));
+        $this->assertFalse(app(\App\Identity\Runtime\IdentityMutationGuard::class)->canonicalHttpWriteAllowed());
+        $this->assertFalse(app(\App\Identity\Runtime\EpIdentityFlowGuard::class)->enabled());
+    }
+
     public function test_step7_still_cannot_claim_cutover_readiness(): void
     {
         $report = (new IdentityCutoverAttestation)->report();
@@ -615,6 +957,15 @@ class Step8CutoverCapabilityTest extends TestCase
         $this->artisan('identity:cutover-attestation')
             ->assertSuccessful()
             ->expectsOutputToContain('"cutover_ready": false');
+    }
+
+    private function makeAdmin(): User
+    {
+        return User::factory()->create([
+            'role_id' => Role::where('name', 'admin')->firstOrFail()->id,
+            'activation_status' => 'active',
+            'email_verified_at' => now(),
+        ]);
     }
 
     /**
