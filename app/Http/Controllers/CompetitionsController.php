@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Competition;
 use App\Models\Application;
+use App\Support\CompetitionApplicantType;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 use Carbon\Carbon;
@@ -81,17 +82,8 @@ class CompetitionsController extends Controller
             $userApplication = $competition->applications()
                 ->where('user_id', auth()->id())
                 ->first();
-            
-            // Odredi applicant_type na osnovu user_type
-            if ($userType === 'Preduzetnik' || $userType === 'Preduzetnica') {
-                $applicantType = 'preduzetnica';
-            } elseif ($userType === 'Društvo sa ograničenom odgovornošću' || $userType === 'DOO') {
-                $applicantType = 'doo';
-            } elseif ($userType === 'Fizičko lice' || $userType === 'Rezident') {
-                $applicantType = 'fizicko_lice';
-            } else {
-                $applicantType = 'ostalo';
-            }
+
+            $applicantType = CompetitionApplicantType::fromUserType($userType);
         }
 
         // Dokument labels za mapiranje

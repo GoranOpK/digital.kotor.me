@@ -496,26 +496,13 @@
                         @php
                             $userType = auth()->user()->user_type ?? '';
                             $residentialStatus = auth()->user()->residential_status ?? '';
-                            $isFizickoLiceRezident = ($userType === 'Fizičko lice' && $residentialStatus === 'resident');
+                            $isFizickoLiceRezident = \App\Support\ApplicationCreateApplicantTypeDefault::isFizickoLiceRezident($userType, $residentialStatus);
                             $preferredApplicantType = $preferredApplicantType ?? null;
-                            if ($preferredApplicantType && in_array($preferredApplicantType, ['preduzetnica', 'doo', 'fizicko_lice', 'ostalo'])) {
-                                if ($preferredApplicantType === 'fizicko_lice' && $isFizickoLiceRezident) {
-                                    $defaultType = 'preduzetnica';
-                                } else {
-                                    $defaultType = $preferredApplicantType;
-                                }
-                            } else {
-                                $defaultType = 'preduzetnica';
-                                if ($userType === 'Društvo sa ograničenom odgovornošću' || $userType === 'DOO') {
-                                    $defaultType = 'doo';
-                                } elseif ($userType === 'Fizičko lice' || $userType === 'Rezident') {
-                                    $defaultType = 'preduzetnica';
-                                } elseif (in_array($userType, ['Preduzetnik', 'Preduzetnica'])) {
-                                    $defaultType = 'preduzetnica';
-                                } elseif ($userType && $userType !== 'Fizičko lice' && $userType !== 'Preduzetnik' && $userType !== 'Preduzetnica') {
-                                    $defaultType = 'ostalo';
-                                }
-                            }
+                            $defaultType = \App\Support\ApplicationCreateApplicantTypeDefault::forUser(
+                                $userType,
+                                $residentialStatus,
+                                $preferredApplicantType
+                            );
                         @endphp
                         <div class="radio-group">
                             <div class="radio-option">
