@@ -1,8 +1,19 @@
 # Project done — digital.kotor.me
 
-**Poslednje ažuriranje:** 2026-07-23
+**Poslednje ažuriranje:** 2026-09-06
 
 Kratka historija značajnih završetaka. Detalji u tematskim `.md` fajlovima ili git istoriji.
+
+---
+
+## 2026-09-06 — DK-TS-002 / D15 Step 8 production closeout
+
+- Capability i logički cutover = **PO USVOJENO / CLOSED / PRODUCTION PASS**
+- GATE 1 PASS (N=67; Step 7 dry-run PASS; APPLY NOT REQUIRED; verify 17/31/0 blockers)
+- GATE 2 PASS (`canonical_read=true`, `canonical_write=true`, freeze=false, EP identity flows=false)
+- Kanonski identitet je produkcioni autoritet; **R1 ACTIVE**
+- Dokumentacija: `DK-TS-002` v1.0.1 §14.1 (status-only). BM/FS KEEP. DK-RG-001 KEEP.
+- Kasnije D15 faze (stabilizacija, mirror OFF, CONTRACT, DROP) ostaju OPEN i **ne** drže Step 8 otvorenim.
 
 ---
 

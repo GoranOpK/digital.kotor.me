@@ -3,7 +3,7 @@
 
 **Status dokumenta:** AKTIVAN
 **Verzija:** 1.0
-**Datum:** 2026-09-05
+**Datum:** 2026-09-06
 
 Ovo je **metodologija cijelog Digital Kotora**: proces, primjena i TS struktura.
 
@@ -70,7 +70,7 @@ Registracija i korisnički identitet imaju otvoren platformski dokumentacioni pa
 
 Uloge i biblioteka dokumenata ostaju **DK REFERENCE / OPERATIONS** dok PO ne otvori zaseban paket. Nisu obuhvaćeni `DK-BM-002`.
 
-`DK-FS-002` je uveden (USVOJENO). `DK-TS-002` je uveden (v1.0.0 / USVOJENO). `DK-UC-002` nije uveden. Ne kreirati `DK-UC-002` usput.
+`DK-FS-002` je uveden (USVOJENO). `DK-TS-002` je uveden (v1.0.1 / USVOJENO; D15 Step 8 capability i logički cutover = CLOSED / PRODUCTION PASS). `DK-UC-002` nije uveden. Ne kreirati `DK-UC-002` usput.
 
 ## 3.3 Business Model, Functional Specification i implementacija
 
@@ -515,3 +515,4 @@ jer se prvo evidentiraju donesene odluke o isključenjima, a zatim nedonesene od
 | 2026-09-04 | Statusna granica: `DK-FS-002` evidentiran kao USVOJENO. Uloge i biblioteka dokumenata ostaju DK REFERENCE / OPERATIONS. `DK-UC-002` i `DK-TS-002` nisu uvedeni. |
 | 2026-09-04 | Dokumentaciona granica: `DK-TS-002` uveden (U IZRADI). Uloge i biblioteka dokumenata ostaju DK REFERENCE / OPERATIONS. `DK-UC-002` nije uveden. |
 | 2026-09-05 | Statusna granica: `DK-TS-002` evidentiran kao USVOJENO (v1.0.0). Uloge i biblioteka dokumenata ostaju DK REFERENCE / OPERATIONS. `DK-UC-002` nije uveden. |
+| 2026-09-06 | Statusna granica: `DK-TS-002` v1.0.1 status-only production closeout. D15 Step 8 capability i logički cutover = PO USVOJENO / CLOSED / PRODUCTION PASS. Kanonski identitet je produkcioni autoritet. R1 ACTIVE. D1–D15 nijesu reotvorene. Kasnije D15 faze ostaju otvorene. `DK-UC-002` nije uveden. |

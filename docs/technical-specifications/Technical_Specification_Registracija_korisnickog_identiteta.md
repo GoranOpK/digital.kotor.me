@@ -6,13 +6,13 @@
 **Naziv:** Tehnička specifikacija registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.0
-**Datum:** 2026-09-05
+**Verzija:** 1.0.1
+**Datum:** 2026-09-06
 
 Povezani dokumenti:
 
-* Poslovni model (SSOT): **DK-BM-002** v1.0.3 USVOJENO — `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md`
-* Funkcionalna specifikacija (SSOT): **DK-FS-002** v1.0.3 USVOJENO — `docs/functional-specifications/Functional_Specification_Registracija_korisnickog_identiteta.md`
+* Poslovni model (SSOT): **DK-BM-002** v1.0.4 USVOJENO — `docs/business-model/Business_Model_Registracija_korisnickog_identiteta.md`
+* Funkcionalna specifikacija (SSOT): **DK-FS-002** v1.0.4 USVOJENO — `docs/functional-specifications/Functional_Specification_Registracija_korisnickog_identiteta.md`
 * Registar oznaka: **DK-RG-001** — `docs/reference/Registar-skracenica-i-oznaka-dokumentacije-Digital-Kotor.md`
 * Dokumentacioni standard: **DK-DS-001** — `docs/reference/Digital-Kotor-Documentation-Standard.md`
 * Metodologija TS: `docs/METHODOLOGY.md` (M-TS-001 … M-TS-005)
@@ -27,7 +27,7 @@ Ovaj dokument **ne** uvodi nova poslovna ni funkcionalna pravila.
 
 Ovaj dokument **ne** tvrdi da je opisano ponašanje već usklađeno sa `DK-FS-002` u runtime-u.
 
-Dokument kao cjelina ima status **USVOJENO**. To je usvajanje tehničke specifikacije, a **nije** izvršena implementacija.
+Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje D15 Step 8 (capability i logički cutover) je evidentirano u v1.0.1 / §14.1 kao **CLOSED / PRODUCTION PASS**. D1–D15 **nisu** reotvorene. Kasnije D15 faze (stabilizacija, mirror OFF, CONTRACT, fizički DROP) **ostaju otvorene**.
 
 ---
 
@@ -59,6 +59,7 @@ Dokument kao cjelina ima status **USVOJENO**. To je usvajanje tehničke specifik
 | 0.1.21 | 2026-09-05 | PO usvojio OPEN TECHNICAL DECISION 14: migraciona strategija / backfill postojećih korisničkih podataka na D1 ciljni identitet; OPTION B; isti nalog; bez nagađanja; invalid legacy ≠ D10 missing; kanonski identitet jedini SSOT; izvedeni `users.user_type` mirror samo gdje je representable; Foundation bez lažnog mirror-a; NEW BUSINESS RULE REQUIRED: NO. Poglavlja 6, 7, 9, 10, 12, 13 i 14. Decision 15 ostaje OPEN. Status dokumenta ostaje U IZRADI. |
 | 0.1.22 | 2026-09-05 | PO usvojio OPEN TECHNICAL DECISION 15: rollout / transition / cutover / rollback; OPTION 3 — SHADOW-FIRST HYBRID / REFINED; reader capability prije writer authority; isti logički cutover; bez opšteg dual-write-a; raw legacy nije current replica; rollback rizik od aktivacije kanonskog pisca; Foundation hard non-representability; NEW BUSINESS RULE REQUIRED: NO. Poglavlja 6, 7, 9, 10, 12, 13 i 14. Decisions 1–15 CLOSED / PO USVOJENO. Otvorenih tehničkih odluka: 0. Status dokumenta ostaje U IZRADI. Usvajanje D15 **ne** autorizuje produkcioni deploy, census, backfill ni DROP. |
 | 1.0.0 | 2026-09-05 | Finalno PO usvajanje DK-TS-002 kao cjeline. Status dokumenta: USVOJENO. D1–D15 CLOSED / PO USVOJENO. OPEN TECHNICAL DECISIONS: NONE. Otvorenih odluka: 0. Finalization Review: PASS. BM → FS sljedivost: PASS. FS → TS sljedivost: PASS. D1–D15 fully integrated: YES. Real contradictions: 0. Finalization blockers: 0. Normativni sadržaj D1–D15 nije mijenjan. Usvajanje specifikacije **nije** izvršenje implementacije, census, backfill, migracije, produkcionog rollout-a, fizičkog DROP-a legacy kolona ni deploy-a. |
+| 1.0.1 | 2026-09-06 | Status-only production closeout D15 Step 8. Capability i logički cutover = PO USVOJENO / CLOSED / PRODUCTION PASS. GATE 1 CLOSED / PASS. GATE 2 CLOSED / PASS. Kanonski identitet je produkcioni autoritet. R1 ACTIVE. D1–D15 nijesu reotvorene. Normativni sadržaj Poglavlja 1–13 nije mijenjan. BM/FS KEEP. Kasnije D15 faze ostaju otvorene. |
 
 Napomena:
 
@@ -84,9 +85,9 @@ DK-TS-002:
 
 Tehničke odluke 1–15 su CLOSED / PO USVOJENO. Trenutno nema otvorenih tehničkih odluka.
 
-Jedini izvor poslovnih pravila je **DK-BM-002** v1.0.3.
+Jedini izvor poslovnih pravila je **DK-BM-002** v1.0.4.
 
-Jedini izvor zahtijevanog posmatranog ponašanja je **DK-FS-002** v1.0.3.
+Jedini izvor zahtijevanog posmatranog ponašanja je **DK-FS-002** v1.0.4.
 
 Ako se TS i FS razlikuju, **FS pobjedjuje** za funkcionalno ponašanje. Ako se FS i BM razlikuju, **BM pobjedjuje**.
 
@@ -132,12 +133,14 @@ Istorijski redovi verzija 0.1.0–0.1.22 koji navode U IZRADI ili OPEN odluke op
 
 Usvajanje DK-TS-002 v1.0.0 **ne** autorizuje implementaciju, data census, pristup bazi, backfill, izvršenje migracije, produkcioni rollout, fizički DROP legacy kolona ni deploy. Naredna implementaciona faza mora posebno slijediti usvojene D14/D15 kapije.
 
+Produkcioni D15 Step 8 closeout (capability i logički cutover) je evidentiran u v1.0.1 / §14.1. To **ne** mijenja značenje usvajanja v1.0.0, **ne** reotvara D1–D15 i **ne** zatvara kasnije D15 faze (stabilizacija, preostala kompatibilnost, mirror OFF, CONTRACT, fizički DROP).
+
 ---
 
 # Pravila upravljanja dokumentom
 
 1. DK-TS-002 pripada platformskom sloju `DK-*` (registracija i korisnički identitet).
-2. Tehnički sadržaj mora ostati usklađen sa `DK-BM-002` v1.0.3 i `DK-FS-002` v1.0.3.
+2. Tehnički sadržaj mora ostati usklađen sa `DK-BM-002` v1.0.4 i `DK-FS-002` v1.0.4.
 3. Nova poslovna i funkcionalna pravila se ne uvode kroz DK-TS-002.
 4. `OPEN BUSINESS QUESTIONS` i `OPEN FS DECISIONS` ostaju **NONE**. Tehničke dileme žive samo kao `OPEN TECHNICAL DECISIONS`.
 5. AS-IS baseline se ne pretvara automatski u ciljno rješenje.
@@ -3961,8 +3964,108 @@ Implementacija mora slijediti usvojena normativna Poglavlja 1–13. Postojeća r
 
 Tehničke odluke 1–15 iz §12 su **CLOSED / PO USVOJENO**. Usvajanje odluke 15 **ne** autorizuje produkcioni deploy, census, backfill ni DROP. Fizički storage obrazac identiteta usvojen je odlukom 1 (Poglavlje 6.15). Obrazac kompatibilnosti `users.user_type` usvojen je odlukom 2 (Poglavlje 6.17). Semantičko mapiranje legacy `users.user_type` usvojeno je odlukom 3 (Poglavlje 6.18). Kompatibilnost KN `applicant_type` usvojena je odlukom 4 (Poglavlje 6.19). Kompatibilnost EP availability usvojena je odlukom 5 (Poglavlje 6.20). Kanonski katalog država usvojen je odlukom 6 (Poglavlje 6.21). Arhitektura JMB/PIB validatora usvojena je odlukom 7 (Poglavlje 6.22). Tehnička validacija CRPS registracionog broja usvojena je odlukom 8 (Poglavlje 6.23). Kanonski katalog validacionih poruka usvojen je odlukom 9 (Poglavlje 6.24). Dopuna postojećeg korisnika usvojena je odlukom 10 (Poglavlje 6.25). Lokalizacija korisničkog sadržaja verification e-maila usvojena je odlukom 11 (Poglavlje 6.26). Tehnički mehanizam e-mail verifikacije usvojen je odlukom 12 (Poglavlje 6.27). Tehnička realizacija uklanjanja Kotor ograničenja Grada usvojena je odlukom 13 (Poglavlje 6.28). Migracija / backfill usvojena je odlukom 14 (Poglavlje 6.29). Rollout / cutover / rollback usvojeni su odlukom 15 (Poglavlje 6.30).
 
-Implementacioni redoslijed izvršenja (census, backfill, deploy) **nije** nalog ovog poglavlja. D15 closeout je dokumentacioni; **nije** izvršenje. Finalno PO usvajanje DK-TS-002 v1.0.0 **nije** izvršenje implementacije.
+Implementacioni redoslijed izvršenja (census, backfill, deploy) **nije** nalog ovog poglavlja. D15 **odluka** closeout u v1.0.0 je dokumentacioni i **nije** izvršenje. Finalno PO usvajanje DK-TS-002 v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje Step 8 je evidentirano u §14.1.
+
+## 14.1 D15 Step 8 — production closeout (nenormativno; 2026-09-06)
+
+Ovo podpoglavlje je **strogo nenormativno**. Evidencija je IMPLEMENTATION / PRODUCTION. **Ne** mijenja D1–D15. **Ne** uvodi novo poslovno pravilo. **Ne** autorizuje mirror OFF, CONTRACT, fizički DROP niti uključivanje EP identity tokova.
+
+**PO odluka:** DK-TS-002 / D15 / STEP 8 capability i logički cutover = **PO USVOJENO** = **CLOSED / PRODUCTION PASS**.
+
+Kanonski upstream ostaje: DK-BM-002 v1.0.4 USVOJENO; DK-FS-002 v1.0.4 USVOJENO; DK-TS-002 v1.0.0 USVOJENO (normativno). Ova verzija 1.0.1 je status-only.
+
+### Produkciono stanje nakon logičkog cutover-a
+
+| Flag | Vrijednost |
+|------|------------|
+| `IDENTITY_CANONICAL_READ` | `true` |
+| `IDENTITY_CANONICAL_WRITE` | `true` |
+| `IDENTITY_WRITE_FREEZE` | `false` |
+| `IDENTITY_EP_IDENTITY_FLOWS` | `false` |
+
+Kanonski identitet je produkcioni autoritet. **R1 = ACTIVE.** Aktivan legacy identity autoritet = **NE**. EP hard gate ostaje **OPEN**; live EP identity tokovi ostaju **durably disabled**.
+
+### GATE 1 — zaštićeni prozor
+
+**PO USVOJENO / CLOSED / PASS.**
+
+- HTTP freeze proven: `POST /register` → HTTP 403, poruka `Registracija subjekta je trenutno onemogućena.`
+- Produkcijski `max_execution_time` = 30 s. FastCGI worker recycle: Plesk PHP Settings Apply (nije PHP-FPM).
+- Finalna stabilna populaciona granica: N1=67, N2=67, **N=67**.
+
+Finalni Step 7 production DRY-RUN:
+
+| Stavka | Vrijednost |
+|--------|------------|
+| mode | dry-run |
+| census_max_user_id | 67 |
+| live_max_user_id | 67 |
+| row_count | 48 |
+| reconcile_passed | true |
+| graph_readiness_passed | true |
+| cutover_ready | false |
+| population_boundary_protected | false |
+| would_create / created | 0 / 0 |
+| would_update / updated | 0 / 0 |
+| skipped_idempotent | 17 |
+| source_drift | 0 |
+| conflict | 0 |
+| canonical_invalid | 0 |
+| failed | 0 |
+| ep_gate | OPEN |
+
+**Step 7 APPLY: NOT REQUIRED / NOT EXECUTED.**
+
+Finalni production VERIFY:
+
+| Stavka | Vrijednost |
+|--------|------------|
+| mode | verify |
+| census_max_user_id | 67 |
+| row_count | 48 |
+| verified | 17 |
+| skipped_not_eligible | 31 |
+| skipped_outside_census_boundary | 0 |
+| missing_canonical | 0 |
+| canonical_mismatch | 0 |
+| source_drift | 0 |
+| canonical_graph_invalid | 0 |
+| unexpected_canonical | 0 |
+| failed | 0 |
+
+### GATE 2 — logički cutover
+
+**PO USVOJENO / CLOSED / PASS.**
+
+Redoslijed: `canonical_read=true` → FastCGI recycle → GET smoke PASS → `canonical_write=true` → FastCGI recycle → controlled existing-profile canonical writer smoke (`Profil je uspješno ažuriran.`) → freeze=false → final dashboard/profile HTTP smoke PASS.
+
+Kanonski HTTP persist se dogodio. Zato je **R1 ACTIVE**. Legacy-only rollback je nesiguran.
+
+### Post-cutover stabilization audit
+
+Verdict: **A — POST-CUTOVER STABLE / READY FOR STEP 8 CLOSEOUT.**
+
+- canonical identity authoritative = YES
+- active legacy identity authority = NO
+- registration / profile / admin writers safe = YES
+- non-backfillable use-gates safe = YES
+- EP durable disable safe = YES
+- high-risk code corrective required = NO
+- NEW BUSINESS RULE REQUIRED = NO
+
+### Šta Step 8 **ne** zatvara
+
+Prema D15 redoslijedu, nakon logičkog cutover-a ostaje **OPEN**:
+
+- stabilizacioni / observation period (tačan broj dana nije usvojen);
+- migracija preostalih kompatibilnih leftover čitalaca;
+- mirror OFF eligibility;
+- formalni fallback-OFF retire;
+- CONTRACT eligibility;
+- fizički DROP legacy kolona.
+
+Te faze **ne** drže Step 8 otvorenim.
 
 ---
 
-**Kraj dokumenta DK-TS-002 v1.0.0**
+**Kraj dokumenta DK-TS-002 v1.0.1**

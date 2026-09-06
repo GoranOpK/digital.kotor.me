@@ -5,8 +5,8 @@
 **Naziv:** Digital Kotor Documentation Standard v1
 **Vlasništvo:** platformski sloj Digital Kotora
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.7
-**Datum:** 2026-09-05
+**Verzija:** 1.0.8
+**Datum:** 2026-09-06
 
 Ovo je **normativni** dokumentacioni standard cijele platforme Digital Kotor.
 
@@ -241,7 +241,7 @@ Registracija i korisnički identitet imaju otvoren platformski dokumentacioni pa
 
 Uloge i biblioteka dokumenata ostaju **DK REFERENCE / OPERATIONS** dok PO ne otvori zaseban paket. **Nisu** automatski obuhvaćeni `DK-BM-002`.
 
-`DK-FS-002` je uveden (status **USVOJENO**). `DK-TS-002` je uveden (v1.0.0 / status **USVOJENO**). `DK-UC-002` **nije** uveden. Ne kreirati `DK-UC-002` usput. Njegovo eventualno uvođenje ide kroz kontrolisani dokumentacioni korak prema ovom standardu i PO procesu.
+`DK-FS-002` je uveden (status **USVOJENO**). `DK-TS-002` je uveden (v1.0.1 / status **USVOJENO**; D15 Step 8 capability i logički cutover = CLOSED / PRODUCTION PASS). `DK-UC-002` **nije** uveden. Ne kreirati `DK-UC-002` usput. Njegovo eventualno uvođenje ide kroz kontrolisani dokumentacioni korak prema ovom standardu i PO procesu.
 
 ---
 
@@ -282,7 +282,8 @@ Stabilni legacy ID-evi (KK `PATCH-*`, KK `CR-*`, `FT-*`, `EP-PO-001`, runtime `T
 | 1.0.5 | 2026-09-04 | §15: status `DK-FS-002` usklađen sa PO usvajanjem dokumenta kao cjeline (USVOJENO). `DK-UC-002` i `DK-TS-002` nisu uvedeni. Metodologija razvoja neizmijenjena. |
 | 1.0.6 | 2026-09-04 | §15: `DK-TS-002` evidentiran kao uveden (U IZRADI). `DK-UC-002` nije uveden. Metodologija razvoja neizmijenjena. |
 | 1.0.7 | 2026-09-05 | §15: status `DK-TS-002` usklađen sa PO usvajanjem dokumenta kao cjeline (v1.0.0 / USVOJENO). `DK-UC-002` nije uveden. Metodologija razvoja neizmijenjena. Istorijski red 1.0.6 neizmijenjen. |
+| 1.0.8 | 2026-09-06 | §15: `DK-TS-002` v1.0.1 status-only production closeout D15 Step 8 (CLOSED / PRODUCTION PASS). Normativni status USVOJENO neizmijenjen. D1–D15 nijesu reotvorene. `DK-UC-002` nije uveden. Metodologija razvoja neizmijenjena. Istorijski red 1.0.7 neizmijenjen. |
 
 ---
 
-**Kraj dokumenta DK-DS-001 v1.0.7**
+**Kraj dokumenta DK-DS-001 v1.0.8**

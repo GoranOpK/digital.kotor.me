@@ -1,6 +1,6 @@
 # Environment varijable
 
-**Posljednje ažuriranje:** 2026-07-22
+**Posljednje ažuriranje:** 2026-09-06
 **Izvor u kodu:** `.env.example`, `config/*.php`, direktni `env()` pozivi
 
 ---
@@ -14,6 +14,21 @@
 | `APP_KEY` | — | Laravel enkripcija (obavezno) |
 | `APP_DEBUG` | true | Debug (false na produkciji) |
 | `APP_URL` | http://localhost | Bazni URL |
+
+---
+
+## Identitet (DK-TS-002 / D15)
+
+Izvor u kodu: `config/identity.php`. Default svih četiri ključa = **false**. Promjena na produkciji zahtijeva recycle persistent FastCGI PHP workers (Plesk PHP Settings Apply), zatim HTTP potvrdu. CLI `artisan` **nije** HTTP dokaz.
+
+| Varijabla | Produkcija 2026-09-06 | Namjena |
+|-----------|----------------------|---------|
+| `IDENTITY_CANONICAL_READ` | `true` | Kanonski identitet je read SSOT |
+| `IDENTITY_CANONICAL_WRITE` | `true` | Kanonski HTTP writer authority |
+| `IDENTITY_WRITE_FREEZE` | `false` | Targeted identity-write freeze; trenutno isključen nakon GATE 2 |
+| `IDENTITY_EP_IDENTITY_FLOWS` | `false` | Durable disable live EP identity tokova; admin DB toggle ne može bypass |
+
+**R1 ACTIVE.** Ne vraćati `canonical_read`/`canonical_write` na `false` kao recovery shortcut. EP hard gate ostaje OPEN; live EP identity tokovi ostaju disabled. Detalj: `DK-TS-002` v1.0.1 §14.1.
 
 ---
 

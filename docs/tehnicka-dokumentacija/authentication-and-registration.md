@@ -1,7 +1,9 @@
 # Autentikacija i registracija
 
-**Poslednje ažuriranje:** 2026-08-20
+**Poslednje ažuriranje:** 2026-09-06
 **Izvor u kodu:** `HomeController`, `ProfileController`, `ProfileUpdateRequest`, `app/Support/UserType`, `app/Support/ResidentialStatusDeclaration`, `routes/auth.php`, `app/Models/User.php`
+
+**Produkcija 2026-09-06 (DK-TS-002 v1.0.1 / D15 Step 8 CLOSED / PRODUCTION PASS):** kanonski identitet je produkcioni autoritet (`IDENTITY_CANONICAL_READ=true`, `IDENTITY_CANONICAL_WRITE=true`, `IDENTITY_WRITE_FREEZE=false`, `IDENTITY_EP_IDENTITY_FLOWS=false`). **R1 ACTIVE.** `users.user_type` je izvedeni compatibility mirror, **nije** current identity SSOT. Istorijski opis ispod ostaje AS-IS compatibility / account sloj; ne pretvara se u pre-cutover stanje. Detalj: `DK-TS-002` §14.1.
 
 ---
 
