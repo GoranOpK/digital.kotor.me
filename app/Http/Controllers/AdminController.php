@@ -15,6 +15,10 @@ use App\Models\Role;
 use App\Models\Tender;
 use App\Models\UpNumber;
 use App\Models\User;
+use App\Identity\CanonicalIdentityWriteException;
+use App\Identity\Runtime\CanonicalHttpIdentityService;
+use App\Identity\Runtime\IdentityMutationGuard;
+use App\Identity\Runtime\IdentityUseGateException;
 use App\Services\CulturalOrganizer\ModeratorEligibilityResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -356,11 +360,30 @@ class AdminController extends Controller
 
         $this->assertRoleIdAssignableViaUsersAdministration((int) $validated['role_id']);
 
-        $user->first_name = $validated['first_name'];
-        $user->last_name = $validated['last_name'];
-        $user->name = $validated['first_name'].' '.$validated['last_name'];
+        $identityService = app(CanonicalHttpIdentityService::class);
+        $guard = app(IdentityMutationGuard::class);
+
+        if ($guard->canonicalHttpWriteAllowed()) {
+            try {
+                $identityService->updateAdminIdentityContact(
+                    $user,
+                    $validated['first_name'],
+                    $validated['last_name'],
+                    $validated['phone'] ?? null
+                );
+            } catch (IdentityUseGateException) {
+                // NON_SUBJECT / no graph: account-layer only
+            } catch (CanonicalIdentityWriteException $e) {
+                return back()->withErrors(['phone' => 'Ažuriranje identiteta nije uspjelo.'])->withInput();
+            }
+        } elseif ($guard->legacyIdentityMutationAllowed()) {
+            $user->first_name = $validated['first_name'];
+            $user->last_name = $validated['last_name'];
+            $user->name = $validated['first_name'].' '.$validated['last_name'];
+            $user->phone = $validated['phone'] ?? null;
+        }
+
         $user->email = $validated['email'];
-        $user->phone = $validated['phone'] ?? null;
         $user->role_id = $validated['role_id'];
         $user->activation_status = $validated['activation_status'];
 
@@ -1325,8 +1348,6 @@ class AdminController extends Controller
                     'password' => Hash::make($memberData['password']),
                     'role_id' => $komisijaRole->id,
                     'activation_status' => 'active',
-                    'user_type' => 'Fizičko lice',
-                    'residential_status' => 'resident',
                 ]);
             }
 
@@ -1668,8 +1689,6 @@ class AdminController extends Controller
                 'password' => Hash::make($validated['password']),
                 'role_id' => $komisijaRole->id,
                 'activation_status' => 'active',
-                'user_type' => 'Fizičko lice',
-                'residential_status' => 'resident',
             ]);
 
             $this->sendEmailVerificationToCommissionMember($user);

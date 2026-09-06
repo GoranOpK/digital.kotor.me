@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Identity\CanonicalIdentityWriteException;
+use App\Identity\Runtime\CanonicalHttpIdentityService;
+use App\Identity\Runtime\IdentityMutationDeniedException;
 use App\Models\Application;
 use App\Models\CommissionMember;
 use App\Models\Competition;
@@ -436,8 +439,18 @@ class HomeController extends Controller
             $userData['passport_number'] = strtoupper($validated['passport_number']);
         }
 
-        // Kreiranje korisnika
-        $user = User::create($userData);
+        try {
+            $user = app(CanonicalHttpIdentityService::class)->registerFromValidated(
+                $userData,
+                $validated,
+                $jmbToValidate,
+                $storedUserType,
+            );
+        } catch (IdentityMutationDeniedException $e) {
+            abort(403, $e->getMessage());
+        } catch (CanonicalIdentityWriteException $e) {
+            return back()->withErrors(['user_type' => 'Registracija identiteta nije uspjela.'])->withInput();
+        }
 
         // Slanje email verifikacije
         event(new Registered($user));

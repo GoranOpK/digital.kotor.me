@@ -2,6 +2,7 @@
 
 namespace App\Services\Payments;
 
+use App\Identity\Runtime\EpIdentityFlowGuard;
 use App\Models\PaymentAccount;
 use App\Models\PaymentType;
 use App\Models\User;
@@ -16,7 +17,8 @@ class PaymentDraftService
     public const SESSION_KEY = 'ep_payment_draft';
 
     public function __construct(
-        private readonly PaymentAvailabilityService $availability
+        private readonly PaymentAvailabilityService $availability,
+        private readonly EpIdentityFlowGuard $epIdentityFlows = new EpIdentityFlowGuard,
     ) {}
 
     /**
@@ -41,6 +43,8 @@ class PaymentDraftService
      */
     public function put(Request $request, array $payload): void
     {
+        $this->epIdentityFlows->assertEnabled();
+
         $user = $request->user();
         if ($user === null) {
             return;
@@ -95,6 +99,8 @@ class PaymentDraftService
 
     public function payerLabel(User $user): string
     {
+        $this->epIdentityFlows->assertEnabled();
+
         if (UserType::isLegalEntity($user->user_type) && filled($user->company_name)) {
             return (string) $user->company_name;
         }

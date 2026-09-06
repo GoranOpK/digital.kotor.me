@@ -266,6 +266,29 @@ class CanonicalIdentityWriterTest extends TestCase
         }
     }
 
+    public function test_update_live_graph_allows_non_resident_same_subject_fl(): void
+    {
+        $user = $this->makeKorisnik();
+        $this->writer->createForUser($user, $this->flSnapshot($user, [
+            'person' => ['residenceCountryCode' => null],
+        ]));
+
+        $updated = $this->flSnapshot($user, [
+            'person' => [
+                'residentialStatus' => PhysicalPersonIdentity::RESIDENTIAL_NON_RESIDENT,
+                'idDocumentType' => PhysicalPersonIdentity::DOCUMENT_PASSPORT,
+                'jmb' => null,
+                'passportNumber' => 'XY123456',
+                'residenceCountryCode' => null,
+            ],
+        ]);
+        $this->writer->updateLiveGraph($user, $updated);
+
+        $this->assertSame(PhysicalPersonIdentity::RESIDENTIAL_NON_RESIDENT, PhysicalPersonIdentity::query()->value('residential_status'));
+        $this->assertSame('XY123456', PhysicalPersonIdentity::query()->value('passport_number'));
+        $this->assertSame('resident', $user->fresh()->residential_status);
+    }
+
     public function test_update_physical_person_graph_is_in_place_and_does_not_mutate_users(): void
     {
         $user = $this->makeKorisnik();

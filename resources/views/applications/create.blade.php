@@ -494,8 +494,8 @@
                             "Preduzetnica" se odnosi na fizička lica koja imaju registrovanu djelatnost (preduzetnici).
                         </div>
                         @php
-                            $userType = auth()->user()->user_type ?? '';
-                            $residentialStatus = auth()->user()->residential_status ?? '';
+                            $userType = $subjectIdentity->userType ?? '';
+                            $residentialStatus = $subjectIdentity->residentialStatus ?? '';
                             $isFizickoLiceRezident = \App\Support\ApplicationCreateApplicantTypeDefault::isFizickoLiceRezident($userType, $residentialStatus);
                             $preferredApplicantType = $preferredApplicantType ?? null;
                             $defaultType = \App\Support\ApplicationCreateApplicantTypeDefault::forUser(
@@ -561,7 +561,7 @@
 
             <!-- Izbor tipa prijave za Fizičko lice (Rezident) -->
             @php
-                $userType = auth()->user()->user_type ?? '';
+                $userType = $subjectIdentity->userType ?? '';
                 $isFizickoLiceRezident = ($userType === 'Fizičko lice' || $userType === 'Rezident');
             @endphp
             <div class="form-card conditional-field no-print" id="fizickoLiceBusinessStage" style="display: none;">
@@ -643,7 +643,7 @@
                                 type="text" 
                                 name="preduzetnik_jmbg" 
                                 class="form-control @error('preduzetnik_jmbg') error @enderror @error('applicant_jmbg') error @enderror"
-                                value="{{ old('preduzetnik_jmbg', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_jmbg : null) ?? auth()->user()->jmb) }}"
+                                value="{{ old('preduzetnik_jmbg', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_jmbg : null) ?? $subjectIdentity->jmb) }}"
                                 maxlength="13"
                                 pattern="[0-9]{13}"
                                 placeholder="13 cifara"
@@ -663,7 +663,7 @@
                                 type="tel" 
                                 name="preduzetnik_phone" 
                                 class="form-control @error('preduzetnik_phone') error @enderror"
-                                value="{{ old('preduzetnik_phone', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->phone : auth()->user()->phone) }}"
+                                value="{{ old('preduzetnik_phone', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->phone : $subjectIdentity->phone) }}"
                                 maxlength="50"
                                 placeholder="Npr. +382 67 123 456"
                             >
@@ -726,7 +726,7 @@
                                 if (empty($defaultRegistrationForm) && isset($existingApplication) && $existingApplication && $existingApplication->registration_form) {
                                     $defaultRegistrationForm = $existingApplication->registration_form;
                                 }
-                                $userType = auth()->user()->user_type ?? '';
+                                $userType = $subjectIdentity->userType ?? '';
                                 $defaultApplicantType = old('applicant_type', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_type : null) ?? $defaultType ?? '');
                                 
                                 // Ako nema old value, koristi user_type ako postoji i nije "Fizičko lice"
@@ -911,7 +911,7 @@
                                 type="text" 
                                 name="doo_jmbg" 
                                 class="form-control @error('doo_jmbg') error @enderror @error('applicant_jmbg') error @enderror"
-                                value="{{ old('doo_jmbg', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_jmbg : null) ?? auth()->user()->jmb) }}"
+                                value="{{ old('doo_jmbg', (isset($existingApplication) && $existingApplication ? $existingApplication->applicant_jmbg : null) ?? $subjectIdentity->jmb) }}"
                                 maxlength="13"
                                 pattern="[0-9]{13}"
                                 placeholder="13 cifara"
@@ -931,7 +931,7 @@
                                 type="tel" 
                                 name="doo_phone" 
                                 class="form-control @error('doo_phone') error @enderror"
-                                value="{{ old('doo_phone', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->phone : auth()->user()->phone) }}"
+                                value="{{ old('doo_phone', isset($existingApplication) && $existingApplication && $existingApplication->user ? $existingApplication->user->phone : $subjectIdentity->phone) }}"
                                 maxlength="50"
                                 placeholder="Npr. +382 67 123 456"
                             >
@@ -991,7 +991,7 @@
                             @php
                                 // Automatski postavi na osnovu tipa prijave ili user_type iz registracije
                                 $defaultRegistrationForm1b = old('registration_form', '');
-                                $userType = auth()->user()->user_type ?? '';
+                                $userType = $subjectIdentity->userType ?? '';
                                 $defaultApplicantType = old('applicant_type', $defaultType ?? '');
                                 
                                 // Ako nema old value, koristi user_type ako postoji i nije "Fizičko lice"
@@ -1250,7 +1250,7 @@
                                 type="tel" 
                                 name="physical_person_phone" 
                                 class="form-control @error('physical_person_phone') error @enderror"
-                                value="{{ old('physical_person_phone', isset($existingApplication) && $existingApplication ? $existingApplication->physical_person_phone : auth()->user()->phone) }}"
+                                value="{{ old('physical_person_phone', isset($existingApplication) && $existingApplication ? $existingApplication->physical_person_phone : $subjectIdentity->phone) }}"
                                 maxlength="50"
                                 placeholder="Npr. +382 67 123 456"
                             >
@@ -1491,7 +1491,7 @@
     //        'doo' = Društvo sa ograničenom odgovornošću (automatski is_registered = true)
     //        'ostalo' = Ostali pravni subjekti (automatski is_registered = true)
     @php
-        $userType = auth()->user()->user_type ?? '';
+        $userType = $subjectIdentity->userType ?? '';
         $isFizickoLiceRezident = ($userType === 'Fizičko lice' || $userType === 'Rezident');
     @endphp
 </script>
@@ -1835,7 +1835,7 @@
         // VAŽNO: Ne prepisuj vrednosti ako postoje iz existingApplication
         function setRegistrationForm() {
             const selectedType = document.querySelector('input[name="applicant_type"]:checked')?.value;
-            const userRegistrationForm = '{{ auth()->user()->user_type ?? "" }}';
+            const userRegistrationForm = '{{ $subjectIdentity->userType ?? "" }}';
             
             // Proveri da li postoji existingApplication
             const hasExistingApplication = {{ isset($existingApplication) && $existingApplication ? 'true' : 'false' }};

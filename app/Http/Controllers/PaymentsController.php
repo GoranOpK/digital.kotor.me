@@ -7,6 +7,8 @@ use App\Http\Requests\StorePaymentAmountRequest;
 use App\Models\PaymentTransaction;
 use App\Models\PaymentType;
 use App\Services\Payments\EpModuleSettings;
+use App\Identity\Runtime\EpIdentityFlowGuard;
+use App\Identity\Runtime\IdentityMutationDeniedException;
 use App\Services\Payments\FakePaymentGatewayUnavailableException;
 use App\Services\Payments\PaymentAvailabilityService;
 use App\Services\Payments\PaymentConfirmationAssembler;
@@ -33,6 +35,7 @@ class PaymentsController extends Controller
         private readonly PaymentAvailabilityService $availability,
         private readonly PaymentDraftService $drafts,
         private readonly EpModuleSettings $module,
+        private readonly EpIdentityFlowGuard $epIdentityFlows,
         private readonly PaymentStartService $starts,
         private readonly PaymentConfirmationAssembler $confirmations,
         private readonly PaymentConfirmationPdfRenderer $confirmationPdf,
@@ -43,7 +46,7 @@ class PaymentsController extends Controller
 
     public function index(Request $request): View|RedirectResponse
     {
-        if (! $this->module->newPaymentsEnabled()) {
+        if (! $this->epIdentityFlows->enabled() || ! $this->module->newPaymentsEnabled()) {
             return view('payments.disabled', [
                 'newPaymentsEnabled' => false,
             ]);
@@ -206,7 +209,7 @@ class PaymentsController extends Controller
 
         try {
             $transaction = $this->starts->launch($request);
-        } catch (PaymentResultRejectedException) {
+        } catch (PaymentResultRejectedException|IdentityMutationDeniedException) {
             return redirect()
                 ->route('payments.index')
                 ->with('error', 'Plaćanje nije moglo biti pokrenuto. Počnite ponovo.');
@@ -275,7 +278,7 @@ class PaymentsController extends Controller
 
     private function guardNewPayment(Request $request): View|RedirectResponse|null
     {
-        if (! $this->module->newPaymentsEnabled()) {
+        if (! $this->epIdentityFlows->enabled() || ! $this->module->newPaymentsEnabled()) {
             $this->drafts->clear($request);
 
             return redirect()->route('payments.index');

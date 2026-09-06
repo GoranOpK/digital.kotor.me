@@ -77,6 +77,7 @@ class SwitchOffWriteZeroTest extends TestCase
 
     public function test_d10_residential_declaration_does_not_write_canonical_identity(): void
     {
+        $this->enableEpIdentityFlows();
         $user = $this->makeKorisnik(['residential_status' => null]);
         $type = \App\Models\PaymentType::factory()->create([
             'code' => 'syn-step2-d10',

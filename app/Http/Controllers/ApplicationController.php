@@ -8,6 +8,8 @@ use App\Models\ApplicationDocument;
 use App\Models\UserDocument;
 use App\Rules\KotorMunicipalityAddress;
 use App\Support\KotorAddress;
+use App\Identity\Runtime\CurrentIdentityResolver;
+use App\Identity\Runtime\IdentityUseGateException;
 use App\Support\Pib;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -27,6 +29,16 @@ class ApplicationController extends Controller
         $competition->load('upNumber');
         $user = Auth::user();
         $roleName = $user->role ? $user->role->name : null;
+        $identityResolver = app(CurrentIdentityResolver::class);
+
+        if (! $request->has('application_id') && $identityResolver->gatesSubjectFlows()) {
+            try {
+                $identityResolver->requireCurrentSubject($user);
+            } catch (IdentityUseGateException $e) {
+                return redirect()->route('competitions.show', $competition)
+                    ->withErrors(['error' => $e->getMessage()]);
+            }
+        }
         
         // Provjeri da li je ovo read-only pristup za člana komisije
         $readOnly = false;
@@ -202,6 +214,13 @@ class ApplicationController extends Controller
     {
         $user = Auth::user();
         $roleName = $user->role ? $user->role->name : null;
+        if (app(CurrentIdentityResolver::class)->gatesSubjectFlows()) {
+            try {
+                app(CurrentIdentityResolver::class)->requireCurrentSubject($user);
+            } catch (IdentityUseGateException $e) {
+                return back()->withErrors(['error' => $e->getMessage()])->withInput();
+            }
+        }
         // Blokiraj članove komisije od podnošenja prijave NA KONKURSE za koje su imenovani kao članovi
         if ($roleName === 'komisija') {
             $isCommissionMemberForThisCompetition = false;
@@ -269,7 +288,7 @@ class ApplicationController extends Controller
         // Dodatna pravila za fizičko lice BEZ registrovane djelatnosti
         if ($request->applicant_type === 'fizicko_lice' && !$isDraft) {
             // Ako je korisnik "Fizičko lice (Rezident)", business_stage je obavezno
-            $userType = auth()->user()->user_type ?? '';
+            $userType = app(CurrentIdentityResolver::class)->viewFor(auth()->user())->userType ?? '';
             if ($userType === 'Fizičko lice' || $userType === 'Rezident') {
                 $rules['business_stage'] = 'required|in:započinjanje,razvoj';
             }
@@ -1039,7 +1058,8 @@ class ApplicationController extends Controller
             return;
         }
 
-        $profileAddress = $request->user()->formattedAddress();
+        $identity = app(CurrentIdentityResolver::class)->viewFor($request->user());
+        $profileAddress = \App\Support\KotorAddress::formatStreetAndCity($identity->address, $identity->city);
         if ($profileAddress === '') {
             return;
         }
@@ -1088,7 +1108,7 @@ class ApplicationController extends Controller
             }
         }
 
-        $userJmb = $request->user()->jmb;
+        $userJmb = app(CurrentIdentityResolver::class)->viewFor($request->user())->jmb;
         if (filled($userJmb)) {
             $request->merge(['applicant_jmbg' => trim((string) $userJmb)]);
         }
@@ -1100,7 +1120,8 @@ class ApplicationController extends Controller
             return 'Nije moguće učitati adresu iz profila.';
         }
 
-        $profileAddress = $user->formattedAddress();
+        $identity = app(CurrentIdentityResolver::class)->viewFor($user);
+        $profileAddress = KotorAddress::formatStreetAndCity($identity->address, $identity->city);
         if ($profileAddress === '') {
             return 'Popunite ulicu i grad u svom profilu prije nastavka prijave.';
         }

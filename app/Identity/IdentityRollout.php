@@ -4,7 +4,7 @@ namespace App\Identity;
 
 /**
  * Rollout authorization checks. Not a silent no-op wrapper around writer/reader.
- * Step 2 runtime does not consult this in HTTP flows.
+ * Flags default OFF. Deploy alone cannot switch authority.
  */
 final class IdentityRollout
 {
@@ -16,5 +16,15 @@ final class IdentityRollout
     public function writesCanonical(): bool
     {
         return (bool) config('identity.canonical_write');
+    }
+
+    public function identityWriteFrozen(): bool
+    {
+        return (bool) config('identity.identity_write_freeze');
+    }
+
+    public function epIdentityFlowsEnabled(): bool
+    {
+        return (bool) config('identity.ep_identity_flows');
     }
 }

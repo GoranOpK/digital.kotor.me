@@ -6,6 +6,7 @@ use App\Enums\PaymentAvailabilityOutcome;
 use App\Models\PaymentAccount;
 use App\Models\PaymentType;
 use App\Models\User;
+use App\Identity\Runtime\EpIdentityFlowGuard;
 use Illuminate\Support\Collection;
 
 /**
@@ -14,12 +15,21 @@ use Illuminate\Support\Collection;
  */
 class PaymentAvailabilityService
 {
+    public function __construct(
+        private readonly EpIdentityFlowGuard $epIdentityFlows = new EpIdentityFlowGuard,
+    ) {
+    }
+
     /**
      * Type-level gate only (active type + matching type rule).
      * Does not require a usable account.
      */
     public function evaluateType(User $user, PaymentType $type): PaymentAvailabilityOutcome
     {
+        if (! $this->epIdentityFlows->enabled()) {
+            return PaymentAvailabilityOutcome::NotAvailable;
+        }
+
         $type->loadMissing('availabilities');
 
         return PaymentAvailabilityEvaluation::evaluateType(
@@ -33,6 +43,10 @@ class PaymentAvailabilityService
      */
     public function evaluateAccount(User $user, PaymentAccount $account): PaymentAvailabilityOutcome
     {
+        if (! $this->epIdentityFlows->enabled()) {
+            return PaymentAvailabilityOutcome::NotAvailable;
+        }
+
         $account->loadMissing(['paymentType.availabilities', 'availabilities']);
 
         $type = $account->paymentType;

@@ -28,7 +28,7 @@
                     <dd class="text-sm text-gray-900">{{ $user->email }}</dd>
 
                     <dt class="text-sm font-medium text-gray-500">Telefon</dt>
-                    <dd class="text-sm text-gray-900">{{ $user->phone ?? 'N/A' }}</dd>
+                    <dd class="text-sm text-gray-900">{{ $subjectIdentity->phone ?? 'N/A' }}</dd>
 
                     <dt class="text-sm font-medium text-gray-500">Uloga</dt>
                     <dd class="text-sm text-gray-900">
@@ -50,10 +50,10 @@
                 <h3 class="text-lg font-semibold mb-4">Dodatni podaci</h3>
                 <dl class="space-y-2">
                     <dt class="text-sm font-medium text-gray-500">Tip korisnika</dt>
-                    <dd class="text-sm text-gray-900">{{ $user->user_type ?? 'N/A' }}</dd>
+                    <dd class="text-sm text-gray-900">{{ $subjectIdentity->userType ?? 'N/A' }}</dd>
 
                     <dt class="text-sm font-medium text-gray-500">Status prebivališta</dt>
-                    <dd class="text-sm text-gray-900">{{ $user->residential_status ?? 'N/A' }}</dd>
+                    <dd class="text-sm text-gray-900">{{ $subjectIdentity->residentialStatus ?? 'N/A' }}</dd>
 
                     <dt class="text-sm font-medium text-gray-500">Email verifikovan</dt>
                     <dd class="text-sm text-gray-900">

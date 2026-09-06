@@ -20,6 +20,7 @@ use Throwable;
  * Step 2 runtime never invokes it.
  * createForUser() preserves Step 4 create-only semantics.
  * updatePhysicalPersonGraph() is the narrow Step 7 same-branch FL updater.
+ * updateLiveGraph() is the Step 8 same-subject live updater for HTTP profile/admin.
  */
 final class CanonicalIdentityWriter
 {
@@ -139,6 +140,138 @@ final class CanonicalIdentityWriter
         } catch (Throwable $e) {
             throw new CanonicalIdentityWriteException('Canonical identity update failed.', 0, $e);
         }
+    }
+
+    /**
+     * Same-subject in-place live update for HTTP profile/admin.
+     * Refuses branch destruction/rebuild (FL ↔ PL ↔ DSPD).
+     */
+    public function updateLiveGraph(User $user, IdentitySnapshot $snapshot): PlatformIdentity
+    {
+        if ($snapshot->userId !== $user->id) {
+            throw new CanonicalIdentityWriteException('Snapshot user id does not match the target user.');
+        }
+
+        if (! $snapshot->isRegisteredSubject) {
+            throw new CanonicalIdentityWriteException('Canonical update requires a registered subject.');
+        }
+
+        if ($snapshot->legacyFacts !== null) {
+            throw new CanonicalIdentityWriteException('Canonical update does not accept legacy facts.');
+        }
+
+        try {
+            return DB::transaction(function () use ($user, $snapshot) {
+                $platform = PlatformIdentity::query()
+                    ->where('user_id', $user->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($platform === null) {
+                    throw new CanonicalIdentityWriteException('Platform identity does not exist for this user.');
+                }
+
+                if ($platform->subject_type !== $snapshot->subjectType) {
+                    throw new CanonicalIdentityWriteException('Canonical update refuses subject-type transitions.');
+                }
+
+                $platform->mobile_phone = $snapshot->mobilePhone;
+                $platform->save();
+
+                return match ($snapshot->subjectType) {
+                    PlatformIdentity::SUBJECT_PHYSICAL_PERSON => $this->updateLivePhysicalPerson($platform, $snapshot),
+                    PlatformIdentity::SUBJECT_LEGAL_ENTITY => $this->updateLiveLegalEntity($platform, $snapshot),
+                    default => throw new CanonicalIdentityWriteException('Canonical live update does not support this subject type.'),
+                };
+            });
+        } catch (CanonicalIdentityWriteException $e) {
+            throw $e;
+        } catch (Throwable $e) {
+            throw new CanonicalIdentityWriteException('Canonical identity live update failed.', 0, $e);
+        }
+    }
+
+    private function updateLivePhysicalPerson(PlatformIdentity $platform, IdentitySnapshot $snapshot): PlatformIdentity
+    {
+        $this->assertPhysicalPerson($snapshot);
+        $person = $snapshot->physicalPerson;
+        $this->assertOptionalIdentifier($person->jmb);
+        $this->assertOptionalPib($person->pib);
+        $this->assertOptionalCrps($person->crpsNumber);
+        $this->assertOptionalCountry($person->residenceCountryCode);
+
+        $fl = PhysicalPersonIdentity::query()
+            ->where('platform_identity_id', $platform->id)
+            ->lockForUpdate()
+            ->first();
+
+        if ($fl === null) {
+            throw new CanonicalIdentityWriteException('Physical person identity does not exist for this platform.');
+        }
+
+        $fl->first_name = $person->firstName;
+        $fl->last_name = $person->lastName;
+        $fl->residential_status = $person->residentialStatus;
+        $fl->id_document_type = $person->idDocumentType;
+        $fl->jmb = $person->jmb;
+        $fl->passport_number = $person->passportNumber;
+        $fl->residence_country_code = $person->residenceCountryCode;
+        $fl->is_entrepreneur = $person->isEntrepreneur;
+        $fl->entrepreneur_business_name = $person->entrepreneurBusinessName;
+        $fl->pib = $person->pib;
+        $fl->crps_number = $person->crpsNumber;
+        $fl->street_and_number = $person->streetAndNumber;
+        $fl->city = $person->city;
+        $fl->save();
+
+        return $platform->refresh();
+    }
+
+    private function updateLiveLegalEntity(PlatformIdentity $platform, IdentitySnapshot $snapshot): PlatformIdentity
+    {
+        $this->assertLegalEntity($snapshot);
+        $legal = $snapshot->legalEntity;
+        $this->assertOptionalIdentifier($legal->authorizedPerson?->jmb);
+        $this->assertOptionalPib($legal->pib);
+        $this->assertOptionalCrps($legal->crpsNumber);
+        $this->assertOptionalCountry($legal->authorizedPerson?->passportIssuingCountryCode);
+
+        $pl = LegalEntityIdentity::query()
+            ->where('platform_identity_id', $platform->id)
+            ->lockForUpdate()
+            ->first();
+
+        if ($pl === null) {
+            throw new CanonicalIdentityWriteException('Legal entity identity does not exist for this platform.');
+        }
+
+        $pl->legal_form = $legal->legalForm;
+        $pl->legal_name = $legal->legalName;
+        $pl->pib = $legal->pib;
+        $pl->crps_number = $legal->crpsNumber;
+        $pl->street_and_number = $legal->streetAndNumber;
+        $pl->city = $legal->city;
+        $pl->save();
+
+        $person = $legal->authorizedPerson;
+        $authorized = LegalEntityAuthorizedPerson::query()
+            ->where('legal_entity_identity_id', $pl->id)
+            ->lockForUpdate()
+            ->first();
+
+        if ($authorized === null || $person === null) {
+            throw new CanonicalIdentityWriteException('Legal entity identity is missing authorized person.');
+        }
+
+        $authorized->first_name = $person->firstName;
+        $authorized->last_name = $person->lastName;
+        $authorized->id_document_type = $person->idDocumentType;
+        $authorized->jmb = $person->jmb;
+        $authorized->passport_number = $person->passportNumber;
+        $authorized->passport_issuing_country_code = $person->passportIssuingCountryCode;
+        $authorized->save();
+
+        return $platform->refresh();
     }
 
     private function assertSameBranchFlUpdateSnapshot(User $user, IdentitySnapshot $snapshot): void

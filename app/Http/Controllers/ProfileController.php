@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Identity\CanonicalIdentityWriteException;
+use App\Identity\Runtime\CanonicalHttpIdentityService;
+use App\Identity\Runtime\IdentityMutationDeniedException;
+use App\Identity\Runtime\IdentityUseGateException;
 use App\Support\PhoneNumber;
 use App\Support\UserType;
 use Illuminate\Http\RedirectResponse;
@@ -29,7 +33,28 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
-        
+        $service = app(CanonicalHttpIdentityService::class);
+
+        try {
+            $service->updateProfileIdentity($user, $request);
+        } catch (IdentityMutationDeniedException $e) {
+            abort(403, $e->getMessage());
+        } catch (IdentityUseGateException $e) {
+            return back()->withErrors(['user_type' => $e->getMessage()])->withInput();
+        } catch (CanonicalIdentityWriteException $e) {
+            return back()->withErrors(['user_type' => 'Ažuriranje identiteta nije uspjelo.'])->withInput();
+        }
+
+        if ($service->usesCanonicalWrites()) {
+            if ($user->email !== $request->email) {
+                $user->email = strtolower($request->email);
+                $user->email_verified_at = null;
+                $user->save();
+            }
+
+            return redirect()->route('dashboard')->with('success', 'Profil je uspješno ažuriran.');
+        }
+
         // Ažuriraj osnovne podatke
         $user->first_name = $request->first_name;
         $user->last_name = $request->last_name;

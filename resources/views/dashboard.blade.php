@@ -252,9 +252,9 @@
     $isSuperAdmin = $user->role && $user->role->name === 'superadmin';
     $isCompetitionAdmin = $user->role && $user->role->name === 'konkurs_admin';
     $isKomisija = isset($isKomisija) ? $isKomisija : ($user->role && $user->role->name === 'komisija');
-    $isPhysicalPerson = $user->isNaturalPerson();
-    $isResident = $user->residential_status === 'resident';
-    $isNonResident = $user->residential_status === 'non-resident';
+    $isPhysicalPerson = \App\Support\UserType::isNaturalPerson($subjectIdentity->userType ?? $user->user_type);
+    $isResident = ($subjectIdentity->residentialStatus ?? $user->residential_status) === 'resident';
+    $isNonResident = ($subjectIdentity->residentialStatus ?? $user->residential_status) === 'non-resident';
     $isLegalEntity = $user->isLegalEntity();
     
     // Određivanje tipa korisnika za prikaz
@@ -267,14 +267,14 @@
         $userTypeLabel = $positionLabel . ' komisije';
     } elseif ($isKomisija) {
         $userTypeLabel = 'Član komisije';
-    } elseif ($user->isEntrepreneur()) {
+    } elseif (\App\Support\UserType::isEntrepreneur($subjectIdentity->userType ?? $user->user_type)) {
         $userTypeLabel = 'Preduzetnik';
     } elseif ($isPhysicalPerson && $isResident) {
         $userTypeLabel = 'Fizičko lice (Rezident)';
     } elseif ($isPhysicalPerson && $isNonResident) {
         $userTypeLabel = 'Fizičko lice (Nerezident)';
     } else {
-        $userTypeLabel = $user->user_type ?? 'Pravno lice';
+        $userTypeLabel = $subjectIdentity->userType ?? $user->user_type ?? 'Pravno lice';
     }
     
     // Izračunaj korišćen prostor za dokumente
@@ -343,15 +343,15 @@
                     </div>
                     <div class="info-item">
                         <span class="info-label">Broj telefona</span>
-                        <span class="info-value">{{ $user->phone ?? 'N/A' }}</span>
+                        <span class="info-value">{{ $subjectIdentity->phone ?? 'N/A' }}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Adresa</span>
-                        <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
+                        <span class="info-value">{{ $subjectIdentity->address ?? 'N/A' }}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Grad</span>
-                        <span class="info-value">{{ $user->city ?? 'N/A' }}</span>
+                        <span class="info-value">{{ $subjectIdentity->city ?? 'N/A' }}</span>
                     </div>
                 </div>
             </div>
@@ -389,26 +389,26 @@
                     </div>
                     <div class="info-item">
                         <span class="info-label">Broj telefona</span>
-                        <span class="info-value">{{ $user->phone ?? 'N/A' }}</span>
+                        <span class="info-value">{{ $subjectIdentity->phone ?? 'N/A' }}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Adresa</span>
-                        <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
+                        <span class="info-value">{{ $subjectIdentity->address ?? 'N/A' }}</span>
                     </div>
                     <div class="info-item">
                         <span class="info-label">Grad</span>
-                        <span class="info-value">{{ $user->city ?? 'N/A' }}</span>
+                        <span class="info-value">{{ $subjectIdentity->city ?? 'N/A' }}</span>
                     </div>
-                    @if($user->jmb)
+                    @if($subjectIdentity->jmb)
                         <div class="info-item">
                             <span class="info-label">JMB</span>
-                            <span class="info-value">{{ $user->jmb }}</span>
+                            <span class="info-value">{{ $subjectIdentity->jmb }}</span>
                         </div>
                     @endif
-                    @if($user->pib)
+                    @if($subjectIdentity->pib)
                         <div class="info-item">
                             <span class="info-label">PIB</span>
-                            <span class="info-value">{{ $user->pib }}</span>
+                            <span class="info-value">{{ $subjectIdentity->pib }}</span>
                         </div>
                     @endif
                 </div>
@@ -620,15 +620,15 @@
                         </div>
                         <div class="info-item">
                             <span class="info-label">Broj telefona</span>
-                            <span class="info-value">{{ $user->phone ?? 'N/A' }}</span>
+                            <span class="info-value">{{ $subjectIdentity->phone ?? 'N/A' }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Adresa</span>
-                            <span class="info-value">{{ $user->address ?? 'N/A' }}</span>
+                            <span class="info-value">{{ $subjectIdentity->address ?? 'N/A' }}</span>
                         </div>
                         <div class="info-item">
                             <span class="info-label">Grad</span>
-                            <span class="info-value">{{ $user->city ?? 'N/A' }}</span>
+                            <span class="info-value">{{ $subjectIdentity->city ?? 'N/A' }}</span>
                         </div>
                     </div>
                 </div>

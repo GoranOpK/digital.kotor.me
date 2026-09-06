@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
+use App\Identity\Runtime\CurrentIdentityResolver;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,6 +28,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        View::composer([
+            'profile.edit',
+            'dashboard',
+            'applications.create',
+            'admin.users.show',
+            'admin.users.edit',
+        ], function ($view) {
+            $user = $view->getData()['user'] ?? auth()->user();
+            if ($user) {
+                $view->with('subjectIdentity', app(CurrentIdentityResolver::class)->viewFor($user));
+            }
+        });
+
         RateLimiter::for('ep-admin-inquiry', function (Request $request) {
             return Limit::perMinute(20)->by(
                 'ep-admin-inquiry:'.(string) ($request->user()?->id ?? $request->ip())

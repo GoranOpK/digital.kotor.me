@@ -46,6 +46,7 @@ class SwitchOffReadZeroTest extends TestCase
 
     public function test_ep_availability_uses_legacy_user_type_while_canonical_differs(): void
     {
+        $this->enableEpIdentityFlows();
         $user = $this->makeKorisnik([
             'user_type' => UserType::PHYSICAL_PERSON,
             'residential_status' => 'resident',
