@@ -118,4 +118,55 @@ class CountryCatalogTest extends TestCase
         $this->assertArrayNotHasKey('citizenship', $entry);
         $this->assertTrue($entry['iso_3166_1_alpha_2']);
     }
+
+    public function test_catalog_cardinality_and_complete_label_coverage(): void
+    {
+        $ordinary = CountryCatalog::ordinaryIso31661Alpha2Codes();
+        $exceptions = CountryCatalog::documentedExceptionCodes();
+        $all = CountryCatalog::codes();
+        $entries = CountryCatalog::entries();
+
+        $this->assertCount(249, $ordinary);
+        $this->assertCount(1, $exceptions);
+        $this->assertCount(250, $all);
+        $this->assertCount(250, $entries);
+
+        foreach ($entries as $code => $entry) {
+            $this->assertSame($code, $entry['code']);
+            $this->assertIsString($entry['label']);
+            $this->assertNotSame('', $entry['label']);
+            $this->assertSame($entry['label'], CountryCatalog::label($code));
+        }
+    }
+
+    public function test_adopted_montenegrin_display_labels(): void
+    {
+        $this->assertSame('Crna Gora', CountryCatalog::label('ME'));
+        $this->assertSame('Njemačka', CountryCatalog::label('DE'));
+        $this->assertSame('Bjelorusija', CountryCatalog::label('BY'));
+        $this->assertSame('Sjeverna Makedonija', CountryCatalog::label('MK'));
+        $this->assertSame('Švajcarska', CountryCatalog::label('CH'));
+        $this->assertSame('Jermenija', CountryCatalog::label('AM'));
+        $this->assertSame('Češka', CountryCatalog::label('CZ'));
+        $this->assertSame('Nizozemska', CountryCatalog::label('NL'));
+        $this->assertSame('Mijanmar', CountryCatalog::label('MM'));
+        $this->assertSame('Ruska Federacija', CountryCatalog::label('RU'));
+        $this->assertSame('Sjedinjene Američke Države', CountryCatalog::label('US'));
+        $this->assertSame('Kosovo', CountryCatalog::label('XK'));
+        $this->assertSame('Palestina', CountryCatalog::label('PS'));
+        $this->assertSame('Sveta Jelena, Asension i Tristan da Kunja', CountryCatalog::label('SH'));
+        $this->assertSame('Udaljena ostrva Sjedinjenih Američkih Država', CountryCatalog::label('UM'));
+    }
+
+    public function test_catalog_labels_reject_ekavian_forms(): void
+    {
+        $labels = array_map(static fn (array $entry): string => $entry['label'], CountryCatalog::entries());
+
+        $this->assertNotContains('Nemačka', $labels);
+        $this->assertNotContains('Severna Makedonija', $labels);
+        $this->assertNotContains('Belorusija', $labels);
+        $this->assertContains('Njemačka', $labels);
+        $this->assertContains('Sjeverna Makedonija', $labels);
+        $this->assertContains('Bjelorusija', $labels);
+    }
 }

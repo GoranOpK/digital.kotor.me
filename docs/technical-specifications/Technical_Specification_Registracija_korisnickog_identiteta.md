@@ -6,7 +6,7 @@
 **Naziv:** Tehnička specifikacija registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.1
+**Verzija:** 1.0.2
 **Datum:** 2026-09-06
 
 Povezani dokumenti:
@@ -27,7 +27,7 @@ Ovaj dokument **ne** uvodi nova poslovna ni funkcionalna pravila.
 
 Ovaj dokument **ne** tvrdi da je opisano ponašanje već usklađeno sa `DK-FS-002` u runtime-u.
 
-Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje D15 Step 8 (capability i logički cutover) je evidentirano u v1.0.1 / §14.1 kao **CLOSED / PRODUCTION PASS**. D1–D15 **nisu** reotvorene. Kasnije D15 faze (stabilizacija, mirror OFF, CONTRACT, fizički DROP) **ostaju otvorene**.
+Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje D15 Step 8 (capability i logički cutover) je evidentirano u v1.0.1 / §14.1 kao **CLOSED / PRODUCTION PASS**. Implementacija lokalizacije kanonskog kataloga država je evidentirana u v1.0.2 / §14.2. D1–D15 **nisu** reotvorene. Kasnije D15 faze (stabilizacija, mirror OFF, CONTRACT, fizički DROP) **ostaju otvorene**.
 
 ---
 
@@ -60,6 +60,7 @@ Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **n
 | 0.1.22 | 2026-09-05 | PO usvojio OPEN TECHNICAL DECISION 15: rollout / transition / cutover / rollback; OPTION 3 — SHADOW-FIRST HYBRID / REFINED; reader capability prije writer authority; isti logički cutover; bez opšteg dual-write-a; raw legacy nije current replica; rollback rizik od aktivacije kanonskog pisca; Foundation hard non-representability; NEW BUSINESS RULE REQUIRED: NO. Poglavlja 6, 7, 9, 10, 12, 13 i 14. Decisions 1–15 CLOSED / PO USVOJENO. Otvorenih tehničkih odluka: 0. Status dokumenta ostaje U IZRADI. Usvajanje D15 **ne** autorizuje produkcioni deploy, census, backfill ni DROP. |
 | 1.0.0 | 2026-09-05 | Finalno PO usvajanje DK-TS-002 kao cjeline. Status dokumenta: USVOJENO. D1–D15 CLOSED / PO USVOJENO. OPEN TECHNICAL DECISIONS: NONE. Otvorenih odluka: 0. Finalization Review: PASS. BM → FS sljedivost: PASS. FS → TS sljedivost: PASS. D1–D15 fully integrated: YES. Real contradictions: 0. Finalization blockers: 0. Normativni sadržaj D1–D15 nije mijenjan. Usvajanje specifikacije **nije** izvršenje implementacije, census, backfill, migracije, produkcionog rollout-a, fizičkog DROP-a legacy kolona ni deploy-a. |
 | 1.0.1 | 2026-09-06 | Status-only production closeout D15 Step 8. Capability i logički cutover = PO USVOJENO / CLOSED / PRODUCTION PASS. GATE 1 CLOSED / PASS. GATE 2 CLOSED / PASS. Kanonski identitet je produkcioni autoritet. R1 ACTIVE. D1–D15 nijesu reotvorene. Normativni sadržaj Poglavlja 1–13 nije mijenjan. BM/FS KEEP. Kasnije D15 faze ostaju otvorene. |
+| 1.0.2 | 2026-09-06 | Implementaciona evidencija lokalizacije kanonskog kataloga država: 249 ISO + XK; crnogorski display label; identitet ostaje code-based; shared display-label source za registracioni phone picker; calling-code identitet ostaje odvojen; bez DB migracije/backfill/reconcile; D1–D15 nijesu reotvorene; Step 8 autoritet i Step 9 observation model neizmijenjeni. BM/FS KEEP. DK-RG-001 KEEP. |
 
 Napomena:
 
@@ -133,7 +134,7 @@ Istorijski redovi verzija 0.1.0–0.1.22 koji navode U IZRADI ili OPEN odluke op
 
 Usvajanje DK-TS-002 v1.0.0 **ne** autorizuje implementaciju, data census, pristup bazi, backfill, izvršenje migracije, produkcioni rollout, fizički DROP legacy kolona ni deploy. Naredna implementaciona faza mora posebno slijediti usvojene D14/D15 kapije.
 
-Produkcioni D15 Step 8 closeout (capability i logički cutover) je evidentiran u v1.0.1 / §14.1. To **ne** mijenja značenje usvajanja v1.0.0, **ne** reotvara D1–D15 i **ne** zatvara kasnije D15 faze (stabilizacija, preostala kompatibilnost, mirror OFF, CONTRACT, fizički DROP).
+Produkcioni D15 Step 8 closeout (capability i logički cutover) je evidentiran u v1.0.1 / §14.1. Lokalizacija kanonskog kataloga država je evidentirana u v1.0.2 / §14.2. To **ne** mijenja značenje usvajanja v1.0.0, **ne** reotvara D1–D15 i **ne** zatvara kasnije D15 faze (stabilizacija, preostala kompatibilnost, mirror OFF, CONTRACT, fizički DROP).
 
 ---
 
@@ -3964,7 +3965,7 @@ Implementacija mora slijediti usvojena normativna Poglavlja 1–13. Postojeća r
 
 Tehničke odluke 1–15 iz §12 su **CLOSED / PO USVOJENO**. Usvajanje odluke 15 **ne** autorizuje produkcioni deploy, census, backfill ni DROP. Fizički storage obrazac identiteta usvojen je odlukom 1 (Poglavlje 6.15). Obrazac kompatibilnosti `users.user_type` usvojen je odlukom 2 (Poglavlje 6.17). Semantičko mapiranje legacy `users.user_type` usvojeno je odlukom 3 (Poglavlje 6.18). Kompatibilnost KN `applicant_type` usvojena je odlukom 4 (Poglavlje 6.19). Kompatibilnost EP availability usvojena je odlukom 5 (Poglavlje 6.20). Kanonski katalog država usvojen je odlukom 6 (Poglavlje 6.21). Arhitektura JMB/PIB validatora usvojena je odlukom 7 (Poglavlje 6.22). Tehnička validacija CRPS registracionog broja usvojena je odlukom 8 (Poglavlje 6.23). Kanonski katalog validacionih poruka usvojen je odlukom 9 (Poglavlje 6.24). Dopuna postojećeg korisnika usvojena je odlukom 10 (Poglavlje 6.25). Lokalizacija korisničkog sadržaja verification e-maila usvojena je odlukom 11 (Poglavlje 6.26). Tehnički mehanizam e-mail verifikacije usvojen je odlukom 12 (Poglavlje 6.27). Tehnička realizacija uklanjanja Kotor ograničenja Grada usvojena je odlukom 13 (Poglavlje 6.28). Migracija / backfill usvojena je odlukom 14 (Poglavlje 6.29). Rollout / cutover / rollback usvojeni su odlukom 15 (Poglavlje 6.30).
 
-Implementacioni redoslijed izvršenja (census, backfill, deploy) **nije** nalog ovog poglavlja. D15 **odluka** closeout u v1.0.0 je dokumentacioni i **nije** izvršenje. Finalno PO usvajanje DK-TS-002 v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje Step 8 je evidentirano u §14.1.
+Implementacioni redoslijed izvršenja (census, backfill, deploy) **nije** nalog ovog poglavlja. D15 **odluka** closeout u v1.0.0 je dokumentacioni i **nije** izvršenje. Finalno PO usvajanje DK-TS-002 v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje Step 8 je evidentirano u §14.1. Lokalizacija kanonskog kataloga država je evidentirana u §14.2.
 
 ## 14.1 D15 Step 8 — production closeout (nenormativno; 2026-09-06)
 
@@ -4066,6 +4067,25 @@ Prema D15 redoslijedu, nakon logičkog cutover-a ostaje **OPEN**:
 
 Te faze **ne** drže Step 8 otvorenim.
 
+## 14.2 Country catalog localization (nenormativno; 2026-09-06)
+
+Ovo podpoglavlje je **strogo nenormativno**. Evidencija je IMPLEMENTATION. **Ne** mijenja D1–D15. **Ne** uvodi novo poslovno pravilo. **Ne** reotvara Step 4, Step 5, Step 7, Step 8 ni kanonski identity cutover. **Ne** mijenja Step 9 observation model.
+
+**PO odluka:** kompletna lokalizacija display labela kanonskog kataloga država = **PO USVOJENO**.
+
+Realizovano:
+
+- kompletan `CountryCatalog` display set: **249** ISO 3166-1 alpha-2 + dokumentovani izuzetak **XK** = **250**;
+- kanonski identitet države ostaje **code-based** (ISO alpha-2 / XK); label je isključivo display vrijednost;
+- korisnički nazivi su crnogorski, prema usvojenoj 250/250 mapi, uključujući PO override: `PS` = Palestina; `SH` = Sveta Jelena, Asension i Tristan da Kunja; `UM` = Udaljena ostrva Sjedinjenih Američkih Država;
+- zaključani oblici ostaju: Crna Gora, Njemačka, Bjelorusija, Sjeverna Makedonija, Švajcarska, Jermenija, Češka, Nizozemska, Mijanmar, Ruska Federacija, Sjedinjene Američke Države, Kosovo;
+- registracioni phone picker koristi **shared display-label source** (`CountryCatalog::label`); calling prefix / E.164 ostaje odvojen od country identity;
+- calling code vrijednosti nijesu mijenjane;
+- DB migracija, seeder, `countries` tabela, identity backfill i Step 7 reconcile **nisu** izvršeni i **nisu** potrebni;
+- produkcioni identity flagovi i kanonski autoritet iz §14.1 **neizmijenjeni**.
+
+Ova evidencija **nije** nova numerisana tehnička odluka. Odluka 6 ostaje CLOSED / PO USVOJENO.
+
 ---
 
-**Kraj dokumenta DK-TS-002 v1.0.1**
+**Kraj dokumenta DK-TS-002 v1.0.2**
