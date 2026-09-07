@@ -6,8 +6,8 @@
 **Naziv:** Tehnička specifikacija registracije i korisničkog identiteta Platforme Digital Kotor
 **Namespace / vlasništvo:** DK-* (platformski sloj Digital Kotora)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.2
-**Datum:** 2026-09-06
+**Verzija:** 1.0.3
+**Datum:** 2026-09-07
 
 Povezani dokumenti:
 
@@ -27,7 +27,7 @@ Ovaj dokument **ne** uvodi nova poslovna ni funkcionalna pravila.
 
 Ovaj dokument **ne** tvrdi da je opisano ponašanje već usklađeno sa `DK-FS-002` u runtime-u.
 
-Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje D15 Step 8 (capability i logički cutover) je evidentirano u v1.0.1 / §14.1 kao **CLOSED / PRODUCTION PASS**. Implementacija lokalizacije kanonskog kataloga država je evidentirana u v1.0.2 / §14.2. D1–D15 **nisu** reotvorene. Kasnije D15 faze (stabilizacija, mirror OFF, CONTRACT, fizički DROP) **ostaju otvorene**.
+Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje D15 Step 8 (capability i logički cutover) je evidentirano u v1.0.1 / §14.1 kao **CLOSED / PRODUCTION PASS**. Implementacija lokalizacije kanonskog kataloga država je evidentirana u v1.0.2 / §14.2. Implementacija post-cutover dopune postojećih poslovnih subjekata je evidentirana u v1.0.3 / §14.3. D1–D15 **nisu** reotvorene. Kasnije D15 faze (stabilizacija, mirror OFF, CONTRACT, fizički DROP) **ostaju otvorene**. Step 9 **ostaje OPEN**.
 
 ---
 
@@ -61,6 +61,7 @@ Dokument kao cjelina ima status **USVOJENO**. Usvajanje specifikacije v1.0.0 **n
 | 1.0.0 | 2026-09-05 | Finalno PO usvajanje DK-TS-002 kao cjeline. Status dokumenta: USVOJENO. D1–D15 CLOSED / PO USVOJENO. OPEN TECHNICAL DECISIONS: NONE. Otvorenih odluka: 0. Finalization Review: PASS. BM → FS sljedivost: PASS. FS → TS sljedivost: PASS. D1–D15 fully integrated: YES. Real contradictions: 0. Finalization blockers: 0. Normativni sadržaj D1–D15 nije mijenjan. Usvajanje specifikacije **nije** izvršenje implementacije, census, backfill, migracije, produkcionog rollout-a, fizičkog DROP-a legacy kolona ni deploy-a. |
 | 1.0.1 | 2026-09-06 | Status-only production closeout D15 Step 8. Capability i logički cutover = PO USVOJENO / CLOSED / PRODUCTION PASS. GATE 1 CLOSED / PASS. GATE 2 CLOSED / PASS. Kanonski identitet je produkcioni autoritet. R1 ACTIVE. D1–D15 nijesu reotvorene. Normativni sadržaj Poglavlja 1–13 nije mijenjan. BM/FS KEEP. Kasnije D15 faze ostaju otvorene. |
 | 1.0.2 | 2026-09-06 | Implementaciona evidencija lokalizacije kanonskog kataloga država: 249 ISO + XK; crnogorski display label; identitet ostaje code-based; shared display-label source za registracioni phone picker; calling-code identitet ostaje odvojen; bez DB migracije/backfill/reconcile; D1–D15 nijesu reotvorene; Step 8 autoritet i Step 9 observation model neizmijenjeni. BM/FS KEEP. DK-RG-001 KEEP. |
+| 1.0.3 | 2026-09-07 | Implementaciona evidencija PO-usvojene post-cutover dopune postojećih poslovnih subjekata bez kanonskog grafa (12 legacy DOO + 1 legacy Preduzetnik). REQUIRE-ON-USE; `CanonicalIdentityWriter::createForUser()`; bez novog writera; bez globalnog login/dashboard gate-a; CRPS mark 5/1; AP user-supplied; Corrective 01: `DerivedUserTypeMirror` ostaje `final`. D1–D15 nijesu reotvorene. Step 9 ostaje OPEN. BM/FS KEEP. DK-RG-001 KEEP. |
 
 Napomena:
 
@@ -134,7 +135,7 @@ Istorijski redovi verzija 0.1.0–0.1.22 koji navode U IZRADI ili OPEN odluke op
 
 Usvajanje DK-TS-002 v1.0.0 **ne** autorizuje implementaciju, data census, pristup bazi, backfill, izvršenje migracije, produkcioni rollout, fizički DROP legacy kolona ni deploy. Naredna implementaciona faza mora posebno slijediti usvojene D14/D15 kapije.
 
-Produkcioni D15 Step 8 closeout (capability i logički cutover) je evidentiran u v1.0.1 / §14.1. Lokalizacija kanonskog kataloga država je evidentirana u v1.0.2 / §14.2. To **ne** mijenja značenje usvajanja v1.0.0, **ne** reotvara D1–D15 i **ne** zatvara kasnije D15 faze (stabilizacija, preostala kompatibilnost, mirror OFF, CONTRACT, fizički DROP).
+Produkcioni D15 Step 8 closeout (capability i logički cutover) je evidentiran u v1.0.1 / §14.1. Lokalizacija kanonskog kataloga država je evidentirana u v1.0.2 / §14.2. Post-cutover dopuna postojećih poslovnih subjekata je evidentirana u v1.0.3 / §14.3. To **ne** mijenja značenje usvajanja v1.0.0, **ne** reotvara D1–D15 i **ne** zatvara kasnije D15 faze (stabilizacija, preostala kompatibilnost, mirror OFF, CONTRACT, fizički DROP). Step 9 **ostaje OPEN**.
 
 ---
 
@@ -3965,7 +3966,7 @@ Implementacija mora slijediti usvojena normativna Poglavlja 1–13. Postojeća r
 
 Tehničke odluke 1–15 iz §12 su **CLOSED / PO USVOJENO**. Usvajanje odluke 15 **ne** autorizuje produkcioni deploy, census, backfill ni DROP. Fizički storage obrazac identiteta usvojen je odlukom 1 (Poglavlje 6.15). Obrazac kompatibilnosti `users.user_type` usvojen je odlukom 2 (Poglavlje 6.17). Semantičko mapiranje legacy `users.user_type` usvojeno je odlukom 3 (Poglavlje 6.18). Kompatibilnost KN `applicant_type` usvojena je odlukom 4 (Poglavlje 6.19). Kompatibilnost EP availability usvojena je odlukom 5 (Poglavlje 6.20). Kanonski katalog država usvojen je odlukom 6 (Poglavlje 6.21). Arhitektura JMB/PIB validatora usvojena je odlukom 7 (Poglavlje 6.22). Tehnička validacija CRPS registracionog broja usvojena je odlukom 8 (Poglavlje 6.23). Kanonski katalog validacionih poruka usvojen je odlukom 9 (Poglavlje 6.24). Dopuna postojećeg korisnika usvojena je odlukom 10 (Poglavlje 6.25). Lokalizacija korisničkog sadržaja verification e-maila usvojena je odlukom 11 (Poglavlje 6.26). Tehnički mehanizam e-mail verifikacije usvojen je odlukom 12 (Poglavlje 6.27). Tehnička realizacija uklanjanja Kotor ograničenja Grada usvojena je odlukom 13 (Poglavlje 6.28). Migracija / backfill usvojena je odlukom 14 (Poglavlje 6.29). Rollout / cutover / rollback usvojeni su odlukom 15 (Poglavlje 6.30).
 
-Implementacioni redoslijed izvršenja (census, backfill, deploy) **nije** nalog ovog poglavlja. D15 **odluka** closeout u v1.0.0 je dokumentacioni i **nije** izvršenje. Finalno PO usvajanje DK-TS-002 v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje Step 8 je evidentirano u §14.1. Lokalizacija kanonskog kataloga država je evidentirana u §14.2.
+Implementacioni redoslijed izvršenja (census, backfill, deploy) **nije** nalog ovog poglavlja. D15 **odluka** closeout u v1.0.0 je dokumentacioni i **nije** izvršenje. Finalno PO usvajanje DK-TS-002 v1.0.0 **nije** izvršenje implementacije. Produkciono izvršenje Step 8 je evidentirano u §14.1. Lokalizacija kanonskog kataloga država je evidentirana u §14.2. Post-cutover dopuna postojećih poslovnih subjekata je evidentirana u §14.3.
 
 ## 14.1 D15 Step 8 — production closeout (nenormativno; 2026-09-06)
 
@@ -4086,6 +4087,62 @@ Realizovano:
 
 Ova evidencija **nije** nova numerisana tehnička odluka. Odluka 6 ostaje CLOSED / PO USVOJENO.
 
+## 14.3 Post-cutover existing business subjects remediation (nenormativno; 2026-09-07)
+
+Ovo podpoglavlje je **strogo nenormativno**. Evidencija je IMPLEMENTATION. **Ne** mijenja D1–D15. **Ne** uvodi D16. **Ne** uvodi novo poslovno pravilo. **Ne** reotvara Step 4, Step 7 ni Step 8. **Ne** zatvara Step 9. **Ne** aktivira EP identity tokove. **Ne** tvrdi produkcionu verifikaciju ovog toka niti da je bilo koji od 13 korisnika već dopunio identitet u produkciji.
+
+**PO odluka:** POST-CUTOVER EXISTING BUSINESS SUBJECTS REMEDIATION = **PO USVOJENO**. Corrective 01 = PASS / prihvaćen kao dio implementacije.
+
+Obuhvat: **12** postojećih legacy DOO naloga bez kanonskog grafa i **1** postojeći legacy Preduzetnik nalog bez kanonskog grafa. Pet običnih legacy Fizičkih lica i staff nalozi **nisu** u ovom implementacionom obuhvatu. Produkcijski identitetski podaci se ovdje **ne** navode.
+
+### Realizacija
+
+1. Postojeći nalog se zadržava. Novi `users` red se **ne** kreira.
+2. Nedostajući kanonski graf se kreira isključivo postojećim `CanonicalIdentityWriter::createForUser()`. Novi kanonski writer **ne** postoji.
+3. Legacy `users.user_type` se koristi samo za deterministički izbor grane dopune dok kanonski graf **nije** prisutan. Nakon uspješne dopune kanonski graf je current identity SSOT.
+4. Okidač je D10 REQUIRE-ON-USE. **Nema** globalnog login/dashboard completion gate-a.
+5. Namjenski tok: **Dopunite podatke o subjektu** (`GET/POST /identitet/dopuna-subjekta`; `identity.completion.create` / `identity.completion.store`).
+6. Zaključana mapiranja: DOO → `legal_entity` + `doo`; Preduzetnik → `physical_person` + `is_entrepreneur=true`. Korisnik **ne** može reklasifikovati subjekt u ovom toku.
+7. Completeness ovog prolaza zahtijeva CRPS. Očekivana identifikaciona oznaka: DOO = **5**; Preduzetnik = **1**.
+8. Podaci ovlašćenog lica DOO su user-supplied. Nosioc naloga se **ne** pretpostavlja tiho kao ovlašćeno lice. Legacy `users.residential_status` za DOO se ignoriše.
+9. Nema tihog defaulta države `ME`. Nema tihe `+382` normalizacije/defaulta. Pozivni broj se bira eksplicitno. Calling-code identitet ostaje odvojen od ISO country identiteta.
+10. Kanonski create i izvedeni `users.user_type` mirror su atomični. `DerivedUserTypeMirror` ostaje `final`. Nema legacy identity dual-write-a osim već usvojenog izvedenog `users.user_type` mirror-a.
+11. Malformed postojeći kanonski graf fail-closed. Drugi CURRENT POST je isključivo idempotentni uspjeh; **ne** postaje `updateLiveGraph` i **ne** overlay-uje identitet.
+
+### REQUIRE-ON-USE integracija
+
+`requireCurrentSubject` **nije** oslabljen niti globalno izmijenjen.
+
+KN integracija postoji samo u `ApplicationController::create` i `ApplicationController::store`. Ako subject gate padne i autentikovani korisnik pripada ovoj kohorti dopune: čuva se sigurna KN return putanja, redirect na `identity.completion.create`, nakon uspjeha povratak na dozvoljenu KN destinaciju. Ako korisnik nije eligible, ostaje postojeće fail-closed ponašanje.
+
+Pregled konkursa, login, dashboard, KK i profile GET **nisu** completion okidači. `applications.submit` **nije** dio ovog slice-a. EP **nije** aktiviran.
+
+### Validacija
+
+DOO: zaključano `legal_entity` / `doo`; obavezan puni naziv; kanonski PIB; obavezan CRPS sa mark **5**; adresa i grad nijesu Kotor-restricted; obavezno ovlašćeno lice; identifikacija JMB **ili** pasoš + država izdavanja; bez residential status.
+
+Preduzetnik: zaključano `physical_person` / `is_entrepreneur=true`; residential status se primjenjuje; usvojena JMB/pasoš grana zadržana; kanonski PIB; obavezan CRPS sa mark **1**; nerezidentna država prebivališta kroz `CountryCatalog`; bez defaulta `ME`.
+
+### Transakcija / bezbjednost
+
+Cilj je uvijek autentikovani tekući korisnik. `user_id` iz rute/tijela **nije** autoritet. Kreira se tačno jedan kanonski graf. Malformed postojeći graf se ovim create path-om **ne** popravlja. Outer transakcija pokriva `CanonicalIdentityWriter::createForUser()` + `DerivedUserTypeMirror::sync()`. Pad mirror-a rollback-uje kreirani graf. Produkciona apstrakcija **nije** dodata samo radi rollback testa.
+
+### Test evidencija (prihvaćena)
+
+Remediation testovi: **30** passed, **0** failed, **228** assertions.
+
+Relevantni identity regression: **97** passed, **0** failed, **2231** assertions.
+
+Najširi lokalni suite: **2136** passed, **6** failed, **2** skipped, **17469** assertions. Šest padova je `FakePaymentGatewayTest` (payment preview očekivao 200, dobio 302). Klasifikovano kao uočeni nevezani/pre-existing payment/EP regression iz implementacionog pregleda. **Nijesu** popravljeni. Cijeli suite **nije** PASS.
+
+### Step 9
+
+**STEP 9 = OPEN.**
+
+Ova implementacija **ne** zatvara Step 9. Može dati dodatni real-use stabilization dokaz tek kada produkcioni korisnici stvarno iskoriste tok dopune. **Ne** tvrdi se da je bilo koji od 13 korisnika već završio dopunu u produkciji. **Ne** tvrdi se produkciona verifikacija ovog novog toka.
+
+Ova evidencija **nije** nova numerisana tehnička odluka. Odluka 10 ostaje CLOSED / PO USVOJENO. Odluka 15 ostaje CLOSED / PO USVOJENO. Step 8 ostaje CLOSED / PRODUCTION PASS.
+
 ---
 
-**Kraj dokumenta DK-TS-002 v1.0.2**
+**Kraj dokumenta DK-TS-002 v1.0.3**

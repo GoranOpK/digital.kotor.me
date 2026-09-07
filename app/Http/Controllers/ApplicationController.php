@@ -9,6 +9,8 @@ use App\Models\UserDocument;
 use App\Rules\KotorMunicipalityAddress;
 use App\Support\KotorAddress;
 use App\Identity\Runtime\CurrentIdentityResolver;
+use App\Identity\Runtime\ExistingSubjectIdentityEligibility;
+use App\Identity\Runtime\ExistingSubjectIdentityReturnTo;
 use App\Identity\Runtime\IdentityUseGateException;
 use App\Support\Pib;
 use Illuminate\Http\Request;
@@ -35,6 +37,12 @@ class ApplicationController extends Controller
             try {
                 $identityResolver->requireCurrentSubject($user);
             } catch (IdentityUseGateException $e) {
+                if (app(ExistingSubjectIdentityEligibility::class)->isEligible($user)) {
+                    app(ExistingSubjectIdentityReturnTo::class)->rememberFromRequest($request);
+
+                    return redirect()->route('identity.completion.create');
+                }
+
                 return redirect()->route('competitions.show', $competition)
                     ->withErrors(['error' => $e->getMessage()]);
             }
@@ -218,6 +226,12 @@ class ApplicationController extends Controller
             try {
                 app(CurrentIdentityResolver::class)->requireCurrentSubject($user);
             } catch (IdentityUseGateException $e) {
+                if (app(ExistingSubjectIdentityEligibility::class)->isEligible($user)) {
+                    app(ExistingSubjectIdentityReturnTo::class)->rememberFromRequest($request);
+
+                    return redirect()->route('identity.completion.create');
+                }
+
                 return back()->withErrors(['error' => $e->getMessage()])->withInput();
             }
         }

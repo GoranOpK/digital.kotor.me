@@ -78,6 +78,8 @@ Route::middleware(['auth', 'verified', 'module_access_restrict'])->group(functio
     Route::patch('/newsletter', [\App\Http\Controllers\NewsletterSubscriptionController::class, 'update'])->name('newsletter.update');
     Route::post('/newsletter/odjava', [\App\Http\Controllers\NewsletterSubscriptionController::class, 'unsubscribe'])->name('newsletter.unsubscribe');
 
+    require __DIR__.'/identity.php';
+
     // Biblioteka dokumenata
     Route::get('/documents', [DocumentController::class, 'index'])->name('documents.index');
     Route::post('/documents', [DocumentController::class, 'store'])->name('documents.store');
