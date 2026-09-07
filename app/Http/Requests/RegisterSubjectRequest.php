@@ -39,6 +39,7 @@ class RegisterSubjectRequest extends FormRequest
         $rules = [
             'user_type' => ['required', 'in:'.implode(',', [
                 UserType::PHYSICAL_PERSON,
+                UserType::REGISTRATION_GROUP_LEGAL_ENTITY,
                 UserType::REGISTRATION_GROUP_BUSINESS,
                 UserType::FOREIGN_BRANCH,
             ])],
@@ -55,6 +56,10 @@ class RegisterSubjectRequest extends FormRequest
 
         if ($userType === UserType::PHYSICAL_PERSON || $this->isEntrepreneur()) {
             $rules = array_merge($rules, $this->naturalPersonRules($countryCodes));
+        }
+
+        if ($userType === UserType::REGISTRATION_GROUP_LEGAL_ENTITY) {
+            $rules['business_type'] = ['required', 'in:'.implode(',', UserType::canonicalLegalEntityStorageValues())];
         }
 
         if ($userType === UserType::REGISTRATION_GROUP_BUSINESS) {
@@ -158,6 +163,10 @@ class RegisterSubjectRequest extends FormRequest
     {
         if ($this->input('user_type') === UserType::FOREIGN_BRANCH) {
             return UserType::FOREIGN_BRANCH;
+        }
+
+        if ($this->isEntrepreneur()) {
+            return UserType::ENTREPRENEUR;
         }
 
         if ($this->input('user_type') === UserType::PHYSICAL_PERSON) {
@@ -375,15 +384,47 @@ class RegisterSubjectRequest extends FormRequest
 
     private function isEntrepreneur(): bool
     {
+        if ($this->input('user_type') === UserType::PHYSICAL_PERSON) {
+            return $this->affirmativeEntrepreneurChoice($this->input('registers_as_entrepreneur'));
+        }
+
         return $this->input('user_type') === UserType::REGISTRATION_GROUP_BUSINESS
             && $this->input('business_type') === UserType::ENTREPRENEUR;
     }
 
     private function isLegalEntityBranch(): bool
     {
-        return $this->input('user_type') === UserType::REGISTRATION_GROUP_BUSINESS
-            && is_string($this->input('business_type'))
-            && UserType::isLegalEntity((string) $this->input('business_type'));
+        $group = $this->input('user_type');
+
+        if (! in_array($group, [
+            UserType::REGISTRATION_GROUP_LEGAL_ENTITY,
+            UserType::REGISTRATION_GROUP_BUSINESS,
+        ], true)) {
+            return false;
+        }
+
+        $businessType = $this->input('business_type');
+
+        return is_string($businessType)
+            && UserType::isLegalEntity($businessType)
+            && $businessType !== UserType::ENTREPRENEUR;
+    }
+
+    private function affirmativeEntrepreneurChoice(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_int($value)) {
+            return $value === 1;
+        }
+
+        if (! is_string($value)) {
+            return false;
+        }
+
+        return in_array(strtolower(trim($value)), ['1', 'da', 'yes', 'true'], true);
     }
 
     private function isNaturalPersonBranch(): bool

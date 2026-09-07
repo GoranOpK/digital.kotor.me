@@ -157,7 +157,7 @@ class HomeController extends Controller
         }
 
         return view('auth.register', [
-            'businessTypeOptions' => UserType::registrationBusinessOptions(),
+            'businessTypeOptions' => UserType::registrationLegalEntityOptions(),
             'countryOptions' => $countryOptions,
             'phonePickerEntries' => PhoneCallingCodeCatalog::pickerEntries(),
             'crpsRequiredForms' => [

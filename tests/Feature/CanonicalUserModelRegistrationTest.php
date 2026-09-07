@@ -44,10 +44,14 @@ class CanonicalUserModelRegistrationTest extends TestCase
         $html = $this->get('/register')->assertOk()->getContent();
 
         $this->assertStringContainsString('value="Fizičko lice"', $html);
-        $this->assertStringContainsString('value="Registrovan privredni subjekt"', $html);
+        $this->assertStringContainsString('value="Pravno lice"', $html);
         $this->assertStringContainsString('value="Dio stranog privrednog društva"', $html);
+        $this->assertStringContainsString('Da li se registrujete kao preduzetnik?', $html);
+        $this->assertStringContainsString('name="registers_as_entrepreneur"', $html);
+        $this->assertStringNotContainsString('value="Registrovan privredni subjekt"', $html);
+        $this->assertStringNotContainsString('value="Preduzetnik"', $html);
 
-        foreach (UserType::registrationBusinessStorageValues() as $value) {
+        foreach (UserType::canonicalLegalEntityStorageValues() as $value) {
             $this->assertStringContainsString('value="'.$value.'"', $html);
         }
 
@@ -83,12 +87,62 @@ class CanonicalUserModelRegistrationTest extends TestCase
         $this->assertSame('non_resident', PhysicalPersonIdentity::query()->value('residential_status'));
     }
 
+    public function test_entrepreneur_resident_can_register_from_physical_person_ui_choice(): void
+    {
+        $this->post('/register', $this->registrationHttpPayload('ent.ui@example.com', [
+            'user_type' => UserType::PHYSICAL_PERSON,
+            'registers_as_entrepreneur' => '1',
+            'jmb' => $this->validJmb(3),
+            'entrepreneur_business_name' => 'Radnja UI',
+            'pib' => $this->validPib(13),
+            'crps_number' => $this->validCrps(1, 3),
+        ]))->assertRedirect(route('verification.notice', absolute: false));
+
+        $entrepreneur = User::query()->where('email', 'ent.ui@example.com')->firstOrFail();
+        $this->assertSame(UserType::ENTREPRENEUR, $entrepreneur->user_type);
+        $fl = PhysicalPersonIdentity::query()->firstOrFail();
+        $this->assertTrue($fl->is_entrepreneur);
+        $this->assertSame(PhysicalPersonIdentity::query()->where('is_entrepreneur', true)->count(), 1);
+        $this->assertTrue($entrepreneur->isNaturalPerson());
+        $this->assertFalse($entrepreneur->isLegalEntity());
+    }
+
+    public function test_legal_entity_registration_from_pravno_lice_ui_group(): void
+    {
+        $this->post('/register', $this->registrationHttpPayload('doo.ui@legal.example.com', [
+            'user_type' => UserType::REGISTRATION_GROUP_LEGAL_ENTITY,
+            'business_type' => UserType::LIMITED_LIABILITY_COMPANY,
+            'first_name' => null,
+            'last_name' => null,
+            'residential_status' => null,
+            'jmb' => null,
+            'legal_name' => 'DOO UI',
+            'pib' => $this->validPib(88),
+            'crps_number' => $this->validCrps(5, 9),
+            'authorized_first_name' => 'Marko',
+            'authorized_last_name' => 'Marković',
+            'authorized_id_document_type' => 'jmb',
+            'authorized_jmb' => $this->validJmb(80),
+        ]))->assertRedirect(route('verification.notice', absolute: false));
+
+        $user = User::query()->where('email', 'doo.ui@legal.example.com')->firstOrFail();
+        $this->assertSame(UserType::LIMITED_LIABILITY_COMPANY, $user->user_type);
+        $this->assertTrue($user->isLegalEntity());
+        $this->assertFalse($user->isNaturalPerson());
+    }
+
     public function test_entrepreneur_resident_requires_pib_and_crps(): void
     {
         $this->post('/register', $this->registrationHttpPayload('ent.missing@example.com', [
             'user_type' => UserType::REGISTRATION_GROUP_BUSINESS,
             'business_type' => UserType::ENTREPRENEUR,
             'jmb' => $this->validJmb(2),
+        ]))->assertSessionHasErrors(['pib', 'crps_number', 'entrepreneur_business_name']);
+
+        $this->post('/register', $this->registrationHttpPayload('ent.ui.missing@example.com', [
+            'user_type' => UserType::PHYSICAL_PERSON,
+            'registers_as_entrepreneur' => '1',
+            'jmb' => $this->validJmb(4),
         ]))->assertSessionHasErrors(['pib', 'crps_number', 'entrepreneur_business_name']);
     }
 

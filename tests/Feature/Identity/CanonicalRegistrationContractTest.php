@@ -419,7 +419,11 @@ class CanonicalRegistrationContractTest extends TestCase
     {
         $html = $this->get('/register')->assertOk()->getContent();
         $this->assertStringContainsString('value="Dio stranog privrednog društva"', $html);
+        $this->assertStringContainsString('value="Pravno lice"', $html);
+        $this->assertStringContainsString('Da li se registrujete kao preduzetnik?', $html);
         $this->assertStringContainsString('value="Nevladina fondacija"', $html);
+        $this->assertStringNotContainsString('value="Preduzetnik"', $html);
+        $this->assertStringNotContainsString('value="Registrovan privredni subjekt"', $html);
         $this->assertStringContainsString('name="phone_calling_code"', $html);
         $this->assertStringContainsString('umjesto', $html);
         $this->assertStringNotContainsString('Opštine Kotor', $html);

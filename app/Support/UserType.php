@@ -31,6 +31,8 @@ final class UserType
 
     public const REGISTRATION_GROUP_BUSINESS = 'Registrovan privredni subjekt';
 
+    public const REGISTRATION_GROUP_LEGAL_ENTITY = 'Pravno lice';
+
     public const LEGACY_FOREIGN_BRANCH = 'Dio stranog društva (predstavništvo ili poslovna jedinica)';
 
     public const LEGACY_ASSOCIATION_BUNDLE = 'Udruženje (nvo, fondacije, sportske organizacije)';
@@ -243,6 +245,22 @@ final class UserType
     {
         $options = [];
         foreach (self::registrationBusinessStorageValues() as $value) {
+            $options[$value] = self::displayLabel($value);
+        }
+
+        return $options;
+    }
+
+    /**
+     * Legal-entity forms offered under the Pravno lice registration branch.
+     * Preduzetnik is not a legal form.
+     *
+     * @return array<string, string>
+     */
+    public static function registrationLegalEntityOptions(): array
+    {
+        $options = [];
+        foreach (self::canonicalLegalEntityStorageValues() as $value) {
             $options[$value] = self::displayLabel($value);
         }
 

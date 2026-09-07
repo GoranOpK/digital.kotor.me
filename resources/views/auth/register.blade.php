@@ -63,10 +63,20 @@
                     <select name="user_type" id="user_type" class="form-control" required>
                         <option value="">Izaberite vrstu subjekta</option>
                         <option value="Fizičko lice" @selected(old('user_type') === 'Fizičko lice')>Fizičko lice</option>
-                        <option value="Registrovan privredni subjekt" @selected(old('user_type') === 'Registrovan privredni subjekt')>Registrovan privredni subjekt</option>
+                        <option value="Pravno lice" @selected(old('user_type') === 'Pravno lice')>Pravno lice</option>
                         <option value="Dio stranog privrednog društva" @selected(old('user_type') === 'Dio stranog privrednog društva')>Dio stranog privrednog društva</option>
                     </select>
                     <div class="form-error" id="user_type_error"></div>
+                </div>
+
+                <div class="form-group conditional-field" id="entrepreneur_choice_group">
+                    <label for="registers_as_entrepreneur" class="form-label">Da li se registrujete kao preduzetnik? <span class="required">*</span></label>
+                    <select name="registers_as_entrepreneur" id="registers_as_entrepreneur" class="form-control">
+                        <option value="">Izaberite</option>
+                        <option value="0" @selected((string) old('registers_as_entrepreneur') === '0')>Ne</option>
+                        <option value="1" @selected((string) old('registers_as_entrepreneur') === '1')>Da</option>
+                    </select>
+                    <div class="form-error" id="registers_as_entrepreneur_error"></div>
                 </div>
 
                 <div class="form-group conditional-field" id="business_type_group">
@@ -346,6 +356,7 @@
             const authorizedIdType = document.getElementById('authorized_id_document_type');
             const representativeIdType = document.getElementById('representative_id_document_type');
             const crpsRequiredForms = @json($crpsRequiredForms ?? []);
+            const registersAsEntrepreneur = document.getElementById('registers_as_entrepreneur');
 
             function toggleField(fieldId, show) {
                 const field = document.getElementById(fieldId);
@@ -354,14 +365,15 @@
             }
 
             function isPhysical() { return userType.value === 'Fizičko lice'; }
-            function isBusiness() { return userType.value === 'Registrovan privredni subjekt'; }
+            function isLegalEntityGroup() { return userType.value === 'Pravno lice'; }
             function isDspd() { return userType.value === 'Dio stranog privrednog društva'; }
-            function isEntrepreneur() { return isBusiness() && businessType.value === 'Preduzetnik'; }
-            function isLegal() { return isBusiness() && businessType.value && businessType.value !== 'Preduzetnik'; }
-            function isNatural() { return isPhysical() || isEntrepreneur(); }
+            function isEntrepreneur() { return isPhysical() && registersAsEntrepreneur && registersAsEntrepreneur.value === '1'; }
+            function isLegal() { return isLegalEntityGroup() && businessType.value; }
+            function isNatural() { return isPhysical(); }
 
             function updateVisibility() {
-                toggleField('business_type_group', isBusiness());
+                toggleField('entrepreneur_choice_group', isPhysical());
+                toggleField('business_type_group', isLegalEntityGroup());
                 toggleField('residential_status_group', isNatural());
                 toggleField('person_name_group', isNatural());
                 toggleField('person_last_name_group', isNatural());
@@ -400,7 +412,7 @@
                 return k === parseInt(value[12], 10);
             }
 
-            ['user_type', 'business_type', 'residential_status', 'id_document_type', 'authorized_id_document_type', 'representative_id_document_type'].forEach(function (id) {
+            ['user_type', 'registers_as_entrepreneur', 'business_type', 'residential_status', 'id_document_type', 'authorized_id_document_type', 'representative_id_document_type'].forEach(function (id) {
                 const el = document.getElementById(id);
                 if (el) el.addEventListener('change', updateVisibility);
             });
