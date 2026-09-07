@@ -6,8 +6,8 @@
 **Modul:** Konkursi
 **Vlasništvo:** cjelina Konkursi (`KN`)
 **Status dokumenta:** USVOJENO
-**Verzija:** 1.0.10
-**Datum:** 2026-09-04
+**Verzija:** 1.0.11
+**Datum:** 2026-09-07
 
 ---
 
@@ -60,7 +60,7 @@ Tipovi i obaveznost preuzeti su iz DK-DS-001 §3. Ovaj registar ih ne proširuje
 | **RG** | Registar skraćenica i oznaka | Kreiran: KN-RG-001 (ovaj dokument) |
 | **PRO** | Pravni okvir (novi moduli) | Kreiran: KN-PRO-001 — NACRT |
 | **BM** | Poslovni model | Kanonski: KN-BM-001 — USVOJENO. Sačuvani profili/framework: KN-BM-002, KN-BM-003, KN-BM-004 (vidi §5.1; nijesu trenutni Odluka SSOT). |
-| **FS** | Funkcionalna specifikacija | Kanonski: KN-FS-001 — USVOJENO. Sačuvani profil: KN-FS-003; planiran profil: KN-FS-002 (vidi §5.1; nijesu trenutni Odluka SSOT). |
+| **FS** | Funkcionalna specifikacija | Kanonski: KN-FS-001 — USVOJENO. Sačuvani profili: KN-FS-002, KN-FS-003 (vidi §5.1; nijesu trenutni Odluka SSOT). |
 | **TS** | Tehnička specifikacija | Kreiran: KN-TS-001 — NACRT |
 | **UC** | Use Cases | CONDITIONAL / ONLY WHEN NEEDED — **NOT YET CREATED** |
 | **FR** | Feature Registry | CONDITIONAL / ONLY WHEN NEEDED — **NOT YET CREATED** |
@@ -121,7 +121,7 @@ Kolona „Status u izvornom zaglavlju“ čuva metapodatak izvornog dokumenta; *
 | **KN-BM-002** | Poslovni profil konkursa za podršku preduzetništvu mladih | `docs/business-model/Business_Model_Konkursi_Mladi.md` | Sačuvani poslovni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.2) |
 | **KN-BM-003** | Poslovni profil: Konkurs za podršku ženskom preduzetništvu | `docs/business-model/Business_Model_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani poslovni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.9) |
 | **KN-BM-004** | Zajednički poslovni model modula Konkursi | `docs/business-model/Business_Model_Konkursi_Zajednicki.md` | Sačuvani remote zajednički/framework BM; **nije** trenutni kanonski poslovni SSOT | USVOJEN (v1.0.1) |
-| **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Planirani funkcionalni profil (mladi); fajl nije kreiran u ovoj fuzi | planiran |
+| **KN-FS-002** | Funkcionalni profil konkursa za podršku preduzetništvu mladih | `docs/functional-specifications/Functional-Specification_Konkursi_Mladi.md` | Sačuvani funkcionalni profil (mladi); nije univerzalni KN SSOT | USVOJEN (v1.0.0) |
 | **KN-FS-003** | Funkcionalna specifikacija: Konkurs za podršku ženskom preduzetništvu | `docs/functional-specifications/Functional-Specification_Konkursi_Zensko_Preduzetnistvo.md` | Sačuvani funkcionalni profil (žensko preduzetništvo); nije univerzalni KN SSOT | USVOJEN (v1.0.0) |
 
 Interne oznake remote profila (`BM-KN-*`, `BM-ML-*` i slične) ostaju u matičnim profil/framework dokumentima. Ovaj registar ih **ne** elevira u univerzalna KN pravila i **ne** dodjeljuje im nova Document ID značenja.
@@ -189,7 +189,7 @@ KEEP CURRENT TYPE-BASED STRUCTURE (DK-DS-001 §14). KN dokumenti stoje u postoje
 
 # 11. Legacy, profili i žensko preduzetništvo
 
-Postojeći tok ženskog preduzetništva i omladinski profil predstavljaju sačuvanu dokumentacionu/implementacionu građu cjeline Konkursi (`KN-BM-003` / `KN-FS-003`, `KN-BM-002`; vidi §5.1). Biće predmet posebnog naknadnog dokumentacionog usklađivanja. Do završetka tog procesa **ne** predstavljaju automatski kanonski izvor poslovnih pravila za tekući Odluka SSOT (`KN-BM-001` / `KN-FS-001` / `KN-TS-001`).
+Postojeći tok ženskog preduzetništva i omladinski profil predstavljaju sačuvanu dokumentacionu/implementacionu građu cjeline Konkursi (`KN-BM-003` / `KN-FS-003`, `KN-BM-002` / `KN-FS-002`; vidi §5.1). Biće predmet posebnog naknadnog dokumentacionog usklađivanja. Do završetka tog procesa **ne** predstavljaju automatski kanonski izvor poslovnih pravila za tekući Odluka SSOT (`KN-BM-001` / `KN-FS-001` / `KN-TS-001`).
 
 `KN-BM-004` je sačuvani remote zajednički/framework BM i **nije** trenutni kanonski poslovni SSOT.
 
@@ -221,7 +221,8 @@ Zabranjene / deprecated oznake u KN kanonskim dokumentima:
 | 1.0.8 | 2026-09-03 | Administrativno: evidentiran izdati `KN-PATCH-BM-003` (§6; KN-BM-001 v0.2.10 / živi pokazivač na KN-FS-001 v0.2.12 USVOJENO). Bez izmjene poslovnog/funkcionalnog sadržaja. Bez `KN-PATCH-REG`. |
 | 1.0.9 | 2026-09-03 | Administrativno: evidentirani izdati `KN-PATCH-BM-004` i `KN-PATCH-FS-006` (§6; KN-BM-001 v0.2.11 / KN-FS-001 v0.2.13 — PO-HYBRID-1…5). Bez `KN-PATCH-REG`. Bez dodjele Document ID-a za youth/women profile. |
 | 1.0.10 | 2026-09-04 | Kontrolisana remote integracija (Phase 3B): sačuvani Document ID-evi `KN-BM-002`, `KN-BM-003`, `KN-BM-004`, `KN-FS-002` (planiran), `KN-FS-003` (§5.1). Kanonski lanac `KN-PRO-001` / `KN-BM-001` / `KN-FS-001` / `KN-TS-001` nepromijenjen. `KN-BM-004` → `Business_Model_Konkursi_Zajednicki.md` (nije SSOT). Kanonski PATCH `KN-PATCH-BM-001`…`004` i `KN-PATCH-FS-001`…`006` sačuvani bez novih PATCH zapisa. Bez elevacije profilnih pravila u univerzalni SSOT. Bez `KN-PATCH-REG`. |
+| 1.0.11 | 2026-09-07 | Evidentirano usvajanje KN-FS-002 v1.0.0, funkcionalne specifikacije profila konkursa za podršku preduzetništvu mladih, sa razradom Poglavlja 1–28 i funkcionalnom primjenom BM-ML-001–BM-ML-058; nove interne funkcionalne oznake nijesu uvedene. |
 
 ---
 
-**Kraj dokumenta KN-RG-001 v1.0.10**
+**Kraj dokumenta KN-RG-001 v1.0.11**
