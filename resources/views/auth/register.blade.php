@@ -69,18 +69,15 @@
                     <div class="form-error" id="user_type_error"></div>
                 </div>
 
-                <div class="form-group conditional-field" id="entrepreneur_choice_group">
-                    <label for="registers_as_entrepreneur" class="form-label">Da li se registrujete kao preduzetnik? <span class="required">*</span></label>
+                <div class="form-group conditional-field" id="business_type_group">
+                    <label for="registers_as_entrepreneur" class="form-label" id="entrepreneur_choice_label">Da li se registrujete kao preduzetnik? <span class="required">*</span></label>
                     <select name="registers_as_entrepreneur" id="registers_as_entrepreneur" class="form-control">
                         <option value="">Izaberite</option>
                         <option value="0" @selected((string) old('registers_as_entrepreneur') === '0')>Ne</option>
                         <option value="1" @selected((string) old('registers_as_entrepreneur') === '1')>Da</option>
                     </select>
                     <div class="form-error" id="registers_as_entrepreneur_error"></div>
-                </div>
-
-                <div class="form-group conditional-field" id="business_type_group">
-                    <label for="business_type" class="form-label">Pravni oblik <span class="required">*</span></label>
+                    <label for="business_type" class="form-label" id="business_type_label">Pravni oblik <span class="required">*</span></label>
                     <select name="business_type" id="business_type" class="form-control">
                         <option value="">Izaberite pravni oblik</option>
                         @foreach(($businessTypeOptions ?? []) as $value => $label)
@@ -364,6 +361,12 @@
                 field.classList.toggle('show', !!show);
             }
 
+            function toggleDisplay(id, show) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.style.display = show ? '' : 'none';
+            }
+
             function isPhysical() { return userType.value === 'Fizičko lice'; }
             function isLegalEntityGroup() { return userType.value === 'Pravno lice'; }
             function isDspd() { return userType.value === 'Dio stranog privrednog društva'; }
@@ -372,8 +375,13 @@
             function isNatural() { return isPhysical(); }
 
             function updateVisibility() {
-                toggleField('entrepreneur_choice_group', isPhysical());
-                toggleField('business_type_group', isLegalEntityGroup());
+                toggleField('business_type_group', isPhysical() || isLegalEntityGroup());
+                toggleDisplay('entrepreneur_choice_label', isPhysical());
+                toggleDisplay('registers_as_entrepreneur', isPhysical());
+                toggleDisplay('registers_as_entrepreneur_error', isPhysical());
+                toggleDisplay('business_type_label', isLegalEntityGroup());
+                toggleDisplay('business_type', isLegalEntityGroup());
+                toggleDisplay('business_type_error', isLegalEntityGroup());
                 toggleField('residential_status_group', isNatural());
                 toggleField('person_name_group', isNatural());
                 toggleField('person_last_name_group', isNatural());
