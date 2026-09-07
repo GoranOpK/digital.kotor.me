@@ -12,25 +12,52 @@
         :root { --primary:#0B3D91; --primary-dark:#0A347B; --secondary:#B8860B; }
         html, body { height:100%; margin:0; padding:0; }
         body { font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; background:#f9fafb; }
-        .container { max-width: 900px; margin: 40px auto; padding: 16px; }
+        .container { width: 40%; max-width: 560px; margin: 40px auto; padding: 16px; box-sizing: border-box; }
         .register-card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:32px; box-shadow:0 1px 3px rgba(0,0,0,.1); }
         .register-title { font-size:28px; color:#111827; margin:0 0 8px; font-weight:700; }
         .register-subtitle { color:#6b7280; margin:0 0 24px; font-size:14px; }
         .form-group { margin-bottom:20px; }
         .form-label { display:block; font-weight:600; color:#374151; margin-bottom:8px; font-size:14px; }
         .form-label .required { color:#dc2626; }
-        .form-control { width:100%; padding:10px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; transition:border-color .2s; }
+        .form-control { width:100%; padding:10px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; transition:border-color .2s; box-sizing: border-box; }
         .form-control:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(11,61,145,.1); }
         .form-control.error { border-color:#dc2626; }
         .form-control.uppercase { text-transform:uppercase; }
         .form-error { color:#dc2626; font-size:12px; margin-top:4px; display:none; }
         .form-error.show { display:block; }
         .form-note { color:#6b7280; font-size:12px; margin-top:4px; }
-        .phone-wrapper { display:flex; gap:8px; }
-        .phone-flag { position:relative; }
-        .phone-flag-select { width:80px; padding:10px 14px; border:1px solid #d1d5db; border-radius:8px; font-size:14px; cursor:pointer; background:#fff; }
-        .phone-flag-select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(11,61,145,.1); }
-        .phone-input { flex:1; }
+        .phone-wrapper { display:flex; gap:8px; align-items:stretch; }
+        .phone-flag { position:relative; flex-shrink:0; }
+        .phone-flag-trigger {
+            display:flex; align-items:center; gap:8px;
+            min-width:108px; height:100%; padding:10px 12px;
+            border:1px solid #d1d5db; border-radius:8px; background:#fff;
+            cursor:pointer; font-size:14px; color:#111827; box-sizing:border-box;
+        }
+        .phone-flag-trigger:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px rgba(11,61,145,.1); }
+        .phone-flag-trigger[aria-expanded="true"] { border-color:var(--primary); }
+        .phone-flag-img { width:20px; height:15px; object-fit:cover; border-radius:2px; flex-shrink:0; box-shadow:0 0 0 1px rgba(0,0,0,.08); }
+        .phone-flag-code { font-variant-numeric:tabular-nums; white-space:nowrap; }
+        .phone-flag-caret { margin-left:auto; color:#6b7280; font-size:10px; line-height:1; }
+        .phone-flag-dropdown {
+            display:none; position:absolute; z-index:40; top:calc(100% + 4px); left:0;
+            width:min(320px, 80vw); max-height:280px; overflow:auto;
+            margin:0; padding:6px 0; list-style:none;
+            background:#fff; border:1px solid #e5e7eb; border-radius:10px;
+            box-shadow:0 10px 25px rgba(0,0,0,.12);
+        }
+        .phone-flag-dropdown.open { display:block; }
+        .phone-flag-option {
+            display:flex; align-items:center; gap:10px;
+            width:100%; padding:8px 12px; border:0; background:transparent;
+            cursor:pointer; text-align:left; font-size:14px; color:#111827;
+        }
+        .phone-flag-option:hover,
+        .phone-flag-option:focus { background:#f3f4f6; outline:none; }
+        .phone-flag-option.is-selected { background:#eff6ff; }
+        .phone-flag-option-name { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+        .phone-flag-option-code { color:#6b7280; font-variant-numeric:tabular-nums; flex-shrink:0; }
+        .phone-input { flex:1; min-width:0; }
         .btn { display:inline-block; padding:12px 24px; border-radius:8px; font-weight:600; text-decoration:none; border:1px solid transparent; cursor:pointer; font-size:14px; transition:background-color .2s; }
         .btn-primary { background:var(--primary); color:#fff; border:none; }
         .btn-primary:hover { background:var(--primary-dark); }
@@ -40,9 +67,13 @@
         .form-footer { margin-top:24px; padding-top:24px; border-top:1px solid #e5e7eb; text-align:center; }
         .conditional-field { display:none; }
         .conditional-field.show { display:block; }
+        @media (max-width: 900px) {
+            .container { width: 100%; max-width: 560px; }
+        }
         @media (max-width: 640px) {
             .phone-wrapper { flex-direction:column; }
-            .phone-flag-select { width:100%; }
+            .phone-flag-trigger { width:100%; }
+            .phone-flag-dropdown { width:100%; }
         }
     </style>
     <meta name="theme-color" content="#0B3D91">
@@ -187,162 +218,188 @@
                 <div class="form-group">
                     <label for="phone" class="form-label">Broj mobilnog telefona <span class="required">*</span></label>
                     <div class="phone-wrapper">
-                        <div class="phone-flag">
-                            <select id="phone_country" class="phone-flag-select" required>
-                                @php
-                                $countries = [
-                                    ['code' => '+382', 'flag' => '🇲🇪', 'name' => 'Crna Gora'],
-                                    ['code' => '+381', 'flag' => '🇷🇸', 'name' => 'Srbija'],
-                                    ['code' => '+387', 'flag' => '🇧🇦', 'name' => 'Bosna i Hercegovina'],
-                                    ['code' => '+386', 'flag' => '🇸🇮', 'name' => 'Slovenija'],
-                                    ['code' => '+385', 'flag' => '🇭🇷', 'name' => 'Hrvatska'],
-                                    ['code' => '+383', 'flag' => '🇽🇰', 'name' => 'Kosovo'],
-                                    ['code' => '+389', 'flag' => '🇲🇰', 'name' => 'Severna Makedonija'],
-                                    ['code' => '+355', 'flag' => '🇦🇱', 'name' => 'Albanija'],
-                                    ['code' => '+359', 'flag' => '🇧🇬', 'name' => 'Bugarska'],
-                                    ['code' => '+40', 'flag' => '🇷🇴', 'name' => 'Rumunija'],
-                                    ['code' => '+36', 'flag' => '🇭🇺', 'name' => 'Mađarska'],
-                                    ['code' => '+421', 'flag' => '🇸🇰', 'name' => 'Slovačka'],
-                                    ['code' => '+420', 'flag' => '🇨🇿', 'name' => 'Češka'],
-                                    ['code' => '+48', 'flag' => '🇵🇱', 'name' => 'Poljska'],
-                                    ['code' => '+49', 'flag' => '🇩🇪', 'name' => 'Nemačka'],
-                                    ['code' => '+43', 'flag' => '🇦🇹', 'name' => 'Austrija'],
-                                    ['code' => '+41', 'flag' => '🇨🇭', 'name' => 'Švajcarska'],
-                                    ['code' => '+39', 'flag' => '🇮🇹', 'name' => 'Italija'],
-                                    ['code' => '+33', 'flag' => '🇫🇷', 'name' => 'Francuska'],
-                                    ['code' => '+32', 'flag' => '🇧🇪', 'name' => 'Belgija'],
-                                    ['code' => '+31', 'flag' => '🇳🇱', 'name' => 'Holandija'],
-                                    ['code' => '+44', 'flag' => '🇬🇧', 'name' => 'Ujedinjeno Kraljevstvo'],
-                                    ['code' => '+353', 'flag' => '🇮🇪', 'name' => 'Irska'],
-                                    ['code' => '+45', 'flag' => '🇩🇰', 'name' => 'Danska'],
-                                    ['code' => '+46', 'flag' => '🇸🇪', 'name' => 'Švedska'],
-                                    ['code' => '+47', 'flag' => '🇳🇴', 'name' => 'Norveška'],
-                                    ['code' => '+358', 'flag' => '🇫🇮', 'name' => 'Finska'],
-                                    ['code' => '+354', 'flag' => '🇮🇸', 'name' => 'Island'],
-                                    ['code' => '+351', 'flag' => '🇵🇹', 'name' => 'Portugalija'],
-                                    ['code' => '+34', 'flag' => '🇪🇸', 'name' => 'Španija'],
-                                    ['code' => '+30', 'flag' => '🇬🇷', 'name' => 'Grčka'],
-                                    ['code' => '+357', 'flag' => '🇨🇾', 'name' => 'Kipar'],
-                                    ['code' => '+356', 'flag' => '🇲🇹', 'name' => 'Malta'],
-                                    ['code' => '+352', 'flag' => '🇱🇺', 'name' => 'Luksemburg'],
-                                    ['code' => '+423', 'flag' => '🇱🇮', 'name' => 'Lihtenštajn'],
-                                    ['code' => '+377', 'flag' => '🇲🇨', 'name' => 'Monako'],
-                                    ['code' => '+376', 'flag' => '🇦🇩', 'name' => 'Andora'],
-                                    ['code' => '+378', 'flag' => '🇸🇲', 'name' => 'San Marino'],
-                                    ['code' => '+39', 'flag' => '🇻🇦', 'name' => 'Vatikan'],
-                                    ['code' => '+7', 'flag' => '🇷🇺', 'name' => 'Rusija'],
-                                    ['code' => '+7', 'flag' => '🇰🇿', 'name' => 'Kazahstan'],
-                                    ['code' => '+380', 'flag' => '🇺🇦', 'name' => 'Ukrajina'],
-                                    ['code' => '+375', 'flag' => '🇧🇾', 'name' => 'Belorusija'],
-                                    ['code' => '+370', 'flag' => '🇱🇹', 'name' => 'Litvanija'],
-                                    ['code' => '+371', 'flag' => '🇱🇻', 'name' => 'Latvija'],
-                                    ['code' => '+372', 'flag' => '🇪🇪', 'name' => 'Estonija'],
-                                    ['code' => '+373', 'flag' => '🇲🇩', 'name' => 'Moldavija'],
-                                    ['code' => '+374', 'flag' => '🇦🇲', 'name' => 'Jermenija'],
-                                    ['code' => '+995', 'flag' => '🇬🇪', 'name' => 'Gruzija'],
-                                    ['code' => '+994', 'flag' => '🇦🇿', 'name' => 'Azerbejdžan'],
-                                    ['code' => '+90', 'flag' => '🇹🇷', 'name' => 'Turska'],
-                                    ['code' => '+1', 'flag' => '🇺🇸', 'name' => 'SAD'],
-                                    ['code' => '+1', 'flag' => '🇨🇦', 'name' => 'Kanada'],
-                                    ['code' => '+52', 'flag' => '🇲🇽', 'name' => 'Meksiko'],
-                                    ['code' => '+54', 'flag' => '🇦🇷', 'name' => 'Argentina'],
-                                    ['code' => '+55', 'flag' => '🇧🇷', 'name' => 'Brazil'],
-                                    ['code' => '+56', 'flag' => '🇨🇱', 'name' => 'Čile'],
-                                    ['code' => '+57', 'flag' => '🇨🇴', 'name' => 'Kolumbija'],
-                                    ['code' => '+51', 'flag' => '🇵🇪', 'name' => 'Peru'],
-                                    ['code' => '+58', 'flag' => '🇻🇪', 'name' => 'Venecuela'],
-                                    ['code' => '+591', 'flag' => '🇧🇴', 'name' => 'Bolivija'],
-                                    ['code' => '+593', 'flag' => '🇪🇨', 'name' => 'Ekvador'],
-                                    ['code' => '+595', 'flag' => '🇵🇾', 'name' => 'Paragvaj'],
-                                    ['code' => '+598', 'flag' => '🇺🇾', 'name' => 'Urugvaj'],
-                                    ['code' => '+592', 'flag' => '🇬🇾', 'name' => 'Gvajana'],
-                                    ['code' => '+597', 'flag' => '🇸🇷', 'name' => 'Surinam'],
-                                    ['code' => '+594', 'flag' => '🇬🇫', 'name' => 'Francuska Gvajana'],
-                                    ['code' => '+86', 'flag' => '🇨🇳', 'name' => 'Kina'],
-                                    ['code' => '+81', 'flag' => '🇯🇵', 'name' => 'Japan'],
-                                    ['code' => '+82', 'flag' => '🇰🇷', 'name' => 'Južna Koreja'],
-                                    ['code' => '+84', 'flag' => '🇻🇳', 'name' => 'Vijetnam'],
-                                    ['code' => '+66', 'flag' => '🇹🇭', 'name' => 'Tajland'],
-                                    ['code' => '+65', 'flag' => '🇸🇬', 'name' => 'Singapur'],
-                                    ['code' => '+60', 'flag' => '🇲🇾', 'name' => 'Malezija'],
-                                    ['code' => '+62', 'flag' => '🇮🇩', 'name' => 'Indonezija'],
-                                    ['code' => '+63', 'flag' => '🇵🇭', 'name' => 'Filipini'],
-                                    ['code' => '+64', 'flag' => '🇳🇿', 'name' => 'Novi Zeland'],
-                                    ['code' => '+61', 'flag' => '🇦🇺', 'name' => 'Australija'],
-                                    ['code' => '+91', 'flag' => '🇮🇳', 'name' => 'Indija'],
-                                    ['code' => '+92', 'flag' => '🇵🇰', 'name' => 'Pakistan'],
-                                    ['code' => '+880', 'flag' => '🇧🇩', 'name' => 'Bangladeš'],
-                                    ['code' => '+94', 'flag' => '🇱🇰', 'name' => 'Šri Lanka'],
-                                    ['code' => '+95', 'flag' => '🇲🇲', 'name' => 'Mjanmar'],
-                                    ['code' => '+855', 'flag' => '🇰🇭', 'name' => 'Kambodža'],
-                                    ['code' => '+856', 'flag' => '🇱🇦', 'name' => 'Laos'],
-                                    ['code' => '+673', 'flag' => '🇧🇳', 'name' => 'Brunej'],
-                                    ['code' => '+20', 'flag' => '🇪🇬', 'name' => 'Egipat'],
-                                    ['code' => '+212', 'flag' => '🇲🇦', 'name' => 'Maroko'],
-                                    ['code' => '+213', 'flag' => '🇩🇿', 'name' => 'Alžir'],
-                                    ['code' => '+216', 'flag' => '🇹🇳', 'name' => 'Tunis'],
-                                    ['code' => '+218', 'flag' => '🇱🇾', 'name' => 'Libija'],
-                                    ['code' => '+220', 'flag' => '🇬🇲', 'name' => 'Gambija'],
-                                    ['code' => '+221', 'flag' => '🇸🇳', 'name' => 'Senegal'],
-                                    ['code' => '+222', 'flag' => '🇲🇷', 'name' => 'Mauritanija'],
-                                    ['code' => '+223', 'flag' => '🇲🇱', 'name' => 'Mali'],
-                                    ['code' => '+224', 'flag' => '🇬🇳', 'name' => 'Gvineja'],
-                                    ['code' => '+225', 'flag' => '🇨🇮', 'name' => 'Obala Slonovače'],
-                                    ['code' => '+226', 'flag' => '🇧🇫', 'name' => 'Burkina Faso'],
-                                    ['code' => '+227', 'flag' => '🇳🇪', 'name' => 'Niger'],
-                                    ['code' => '+228', 'flag' => '🇹🇬', 'name' => 'Togo'],
-                                    ['code' => '+229', 'flag' => '🇧🇯', 'name' => 'Benin'],
-                                    ['code' => '+230', 'flag' => '🇲🇺', 'name' => 'Mauricijus'],
-                                    ['code' => '+231', 'flag' => '🇱🇷', 'name' => 'Liberija'],
-                                    ['code' => '+232', 'flag' => '🇸🇱', 'name' => 'Sijera Leone'],
-                                    ['code' => '+233', 'flag' => '🇬🇭', 'name' => 'Gana'],
-                                    ['code' => '+234', 'flag' => '🇳🇬', 'name' => 'Nigerija'],
-                                    ['code' => '+235', 'flag' => '🇹🇩', 'name' => 'Čad'],
-                                    ['code' => '+236', 'flag' => '🇨🇫', 'name' => 'Centralnoafrička Republika'],
-                                    ['code' => '+237', 'flag' => '🇨🇲', 'name' => 'Kamerun'],
-                                    ['code' => '+238', 'flag' => '🇨🇻', 'name' => 'Zelenortska Ostrva'],
-                                    ['code' => '+239', 'flag' => '🇸🇹', 'name' => 'Sao Tome i Principe'],
-                                    ['code' => '+240', 'flag' => '🇬🇶', 'name' => 'Ekvatorijalna Gvineja'],
-                                    ['code' => '+241', 'flag' => '🇬🇦', 'name' => 'Gabon'],
-                                    ['code' => '+242', 'flag' => '🇨🇬', 'name' => 'Kongo'],
-                                    ['code' => '+243', 'flag' => '🇨🇩', 'name' => 'DR Kongo'],
-                                    ['code' => '+244', 'flag' => '🇦🇴', 'name' => 'Angola'],
-                                    ['code' => '+245', 'flag' => '🇬🇼', 'name' => 'Gvineja Bisau'],
-                                    ['code' => '+246', 'flag' => '🇮🇴', 'name' => 'Britanska Teritorija Indijskog Okeana'],
-                                    ['code' => '+248', 'flag' => '🇸🇨', 'name' => 'Sejšeli'],
-                                    ['code' => '+249', 'flag' => '🇸🇩', 'name' => 'Sudan'],
-                                    ['code' => '+250', 'flag' => '🇷🇼', 'name' => 'Ruanda'],
-                                    ['code' => '+251', 'flag' => '🇪🇹', 'name' => 'Etiopija'],
-                                    ['code' => '+252', 'flag' => '🇸🇴', 'name' => 'Somalija'],
-                                    ['code' => '+253', 'flag' => '🇩🇯', 'name' => 'Džibuti'],
-                                    ['code' => '+254', 'flag' => '🇰🇪', 'name' => 'Kenija'],
-                                    ['code' => '+255', 'flag' => '🇹🇿', 'name' => 'Tanzanija'],
-                                    ['code' => '+256', 'flag' => '🇺🇬', 'name' => 'Uganda'],
-                                    ['code' => '+257', 'flag' => '🇧🇮', 'name' => 'Burundi'],
-                                    ['code' => '+258', 'flag' => '🇲🇿', 'name' => 'Mozambik'],
-                                    ['code' => '+260', 'flag' => '🇿🇲', 'name' => 'Zambija'],
-                                    ['code' => '+261', 'flag' => '🇲🇬', 'name' => 'Madagaskar'],
-                                    ['code' => '+262', 'flag' => '🇷🇪', 'name' => 'Reunion'],
-                                    ['code' => '+263', 'flag' => '🇿🇼', 'name' => 'Zimbabve'],
-                                    ['code' => '+264', 'flag' => '🇳🇦', 'name' => 'Namibija'],
-                                    ['code' => '+265', 'flag' => '🇲🇼', 'name' => 'Malavi'],
-                                    ['code' => '+266', 'flag' => '🇱🇸', 'name' => 'Lesoto'],
-                                    ['code' => '+267', 'flag' => '🇧🇼', 'name' => 'Bocvana'],
-                                    ['code' => '+268', 'flag' => '🇸🇿', 'name' => 'Esvatini'],
-                                    ['code' => '+269', 'flag' => '🇰🇲', 'name' => 'Komori'],
-                                    ['code' => '+27', 'flag' => '🇿🇦', 'name' => 'Južna Afrika'],
-                                    ['code' => '+290', 'flag' => '🇸🇭', 'name' => 'Sveta Jelena'],
-                                    ['code' => '+291', 'flag' => '🇪🇷', 'name' => 'Eritreja'],
-                                    ['code' => '+297', 'flag' => '🇦🇼', 'name' => 'Aruba'],
-                                    ['code' => '+298', 'flag' => '🇫🇴', 'name' => 'Farska Ostrva'],
-                                    ['code' => '+299', 'flag' => '🇬🇱', 'name' => 'Grenland'],
-                                    ['code' => '+350', 'flag' => '🇬🇮', 'name' => 'Gibraltar'],
-                                ];
-                                @endphp
+                        @php
+                        $countries = [
+                            ['code' => '+382', 'iso' => 'me', 'name' => 'Crna Gora'],
+                            ['code' => '+381', 'iso' => 'rs', 'name' => 'Srbija'],
+                            ['code' => '+387', 'iso' => 'ba', 'name' => 'Bosna i Hercegovina'],
+                            ['code' => '+386', 'iso' => 'si', 'name' => 'Slovenija'],
+                            ['code' => '+385', 'iso' => 'hr', 'name' => 'Hrvatska'],
+                            ['code' => '+383', 'iso' => 'xk', 'name' => 'Kosovo'],
+                            ['code' => '+389', 'iso' => 'mk', 'name' => 'Severna Makedonija'],
+                            ['code' => '+355', 'iso' => 'al', 'name' => 'Albanija'],
+                            ['code' => '+359', 'iso' => 'bg', 'name' => 'Bugarska'],
+                            ['code' => '+40', 'iso' => 'ro', 'name' => 'Rumunija'],
+                            ['code' => '+36', 'iso' => 'hu', 'name' => 'Mađarska'],
+                            ['code' => '+421', 'iso' => 'sk', 'name' => 'Slovačka'],
+                            ['code' => '+420', 'iso' => 'cz', 'name' => 'Češka'],
+                            ['code' => '+48', 'iso' => 'pl', 'name' => 'Poljska'],
+                            ['code' => '+49', 'iso' => 'de', 'name' => 'Nemačka'],
+                            ['code' => '+43', 'iso' => 'at', 'name' => 'Austrija'],
+                            ['code' => '+41', 'iso' => 'ch', 'name' => 'Švajcarska'],
+                            ['code' => '+39', 'iso' => 'it', 'name' => 'Italija'],
+                            ['code' => '+33', 'iso' => 'fr', 'name' => 'Francuska'],
+                            ['code' => '+32', 'iso' => 'be', 'name' => 'Belgija'],
+                            ['code' => '+31', 'iso' => 'nl', 'name' => 'Holandija'],
+                            ['code' => '+44', 'iso' => 'gb', 'name' => 'Ujedinjeno Kraljevstvo'],
+                            ['code' => '+353', 'iso' => 'ie', 'name' => 'Irska'],
+                            ['code' => '+45', 'iso' => 'dk', 'name' => 'Danska'],
+                            ['code' => '+46', 'iso' => 'se', 'name' => 'Švedska'],
+                            ['code' => '+47', 'iso' => 'no', 'name' => 'Norveška'],
+                            ['code' => '+358', 'iso' => 'fi', 'name' => 'Finska'],
+                            ['code' => '+354', 'iso' => 'is', 'name' => 'Island'],
+                            ['code' => '+351', 'iso' => 'pt', 'name' => 'Portugalija'],
+                            ['code' => '+34', 'iso' => 'es', 'name' => 'Španija'],
+                            ['code' => '+30', 'iso' => 'gr', 'name' => 'Grčka'],
+                            ['code' => '+357', 'iso' => 'cy', 'name' => 'Kipar'],
+                            ['code' => '+356', 'iso' => 'mt', 'name' => 'Malta'],
+                            ['code' => '+352', 'iso' => 'lu', 'name' => 'Luksemburg'],
+                            ['code' => '+423', 'iso' => 'li', 'name' => 'Lihtenštajn'],
+                            ['code' => '+377', 'iso' => 'mc', 'name' => 'Monako'],
+                            ['code' => '+376', 'iso' => 'ad', 'name' => 'Andora'],
+                            ['code' => '+378', 'iso' => 'sm', 'name' => 'San Marino'],
+                            ['code' => '+39', 'iso' => 'va', 'name' => 'Vatikan'],
+                            ['code' => '+7', 'iso' => 'ru', 'name' => 'Rusija'],
+                            ['code' => '+7', 'iso' => 'kz', 'name' => 'Kazahstan'],
+                            ['code' => '+380', 'iso' => 'ua', 'name' => 'Ukrajina'],
+                            ['code' => '+375', 'iso' => 'by', 'name' => 'Belorusija'],
+                            ['code' => '+370', 'iso' => 'lt', 'name' => 'Litvanija'],
+                            ['code' => '+371', 'iso' => 'lv', 'name' => 'Latvija'],
+                            ['code' => '+372', 'iso' => 'ee', 'name' => 'Estonija'],
+                            ['code' => '+373', 'iso' => 'md', 'name' => 'Moldavija'],
+                            ['code' => '+374', 'iso' => 'am', 'name' => 'Jermenija'],
+                            ['code' => '+995', 'iso' => 'ge', 'name' => 'Gruzija'],
+                            ['code' => '+994', 'iso' => 'az', 'name' => 'Azerbejdžan'],
+                            ['code' => '+90', 'iso' => 'tr', 'name' => 'Turska'],
+                            ['code' => '+1', 'iso' => 'us', 'name' => 'SAD'],
+                            ['code' => '+1', 'iso' => 'ca', 'name' => 'Kanada'],
+                            ['code' => '+52', 'iso' => 'mx', 'name' => 'Meksiko'],
+                            ['code' => '+54', 'iso' => 'ar', 'name' => 'Argentina'],
+                            ['code' => '+55', 'iso' => 'br', 'name' => 'Brazil'],
+                            ['code' => '+56', 'iso' => 'cl', 'name' => 'Čile'],
+                            ['code' => '+57', 'iso' => 'co', 'name' => 'Kolumbija'],
+                            ['code' => '+51', 'iso' => 'pe', 'name' => 'Peru'],
+                            ['code' => '+58', 'iso' => 've', 'name' => 'Venecuela'],
+                            ['code' => '+591', 'iso' => 'bo', 'name' => 'Bolivija'],
+                            ['code' => '+593', 'iso' => 'ec', 'name' => 'Ekvador'],
+                            ['code' => '+595', 'iso' => 'py', 'name' => 'Paragvaj'],
+                            ['code' => '+598', 'iso' => 'uy', 'name' => 'Urugvaj'],
+                            ['code' => '+592', 'iso' => 'gy', 'name' => 'Gvajana'],
+                            ['code' => '+597', 'iso' => 'sr', 'name' => 'Surinam'],
+                            ['code' => '+594', 'iso' => 'gf', 'name' => 'Francuska Gvajana'],
+                            ['code' => '+86', 'iso' => 'cn', 'name' => 'Kina'],
+                            ['code' => '+81', 'iso' => 'jp', 'name' => 'Japan'],
+                            ['code' => '+82', 'iso' => 'kr', 'name' => 'Južna Koreja'],
+                            ['code' => '+84', 'iso' => 'vn', 'name' => 'Vijetnam'],
+                            ['code' => '+66', 'iso' => 'th', 'name' => 'Tajland'],
+                            ['code' => '+65', 'iso' => 'sg', 'name' => 'Singapur'],
+                            ['code' => '+60', 'iso' => 'my', 'name' => 'Malezija'],
+                            ['code' => '+62', 'iso' => 'id', 'name' => 'Indonezija'],
+                            ['code' => '+63', 'iso' => 'ph', 'name' => 'Filipini'],
+                            ['code' => '+64', 'iso' => 'nz', 'name' => 'Novi Zeland'],
+                            ['code' => '+61', 'iso' => 'au', 'name' => 'Australija'],
+                            ['code' => '+91', 'iso' => 'in', 'name' => 'Indija'],
+                            ['code' => '+92', 'iso' => 'pk', 'name' => 'Pakistan'],
+                            ['code' => '+880', 'iso' => 'bd', 'name' => 'Bangladeš'],
+                            ['code' => '+94', 'iso' => 'lk', 'name' => 'Šri Lanka'],
+                            ['code' => '+95', 'iso' => 'mm', 'name' => 'Mjanmar'],
+                            ['code' => '+855', 'iso' => 'kh', 'name' => 'Kambodža'],
+                            ['code' => '+856', 'iso' => 'la', 'name' => 'Laos'],
+                            ['code' => '+673', 'iso' => 'bn', 'name' => 'Brunej'],
+                            ['code' => '+20', 'iso' => 'eg', 'name' => 'Egipat'],
+                            ['code' => '+212', 'iso' => 'ma', 'name' => 'Maroko'],
+                            ['code' => '+213', 'iso' => 'dz', 'name' => 'Alžir'],
+                            ['code' => '+216', 'iso' => 'tn', 'name' => 'Tunis'],
+                            ['code' => '+218', 'iso' => 'ly', 'name' => 'Libija'],
+                            ['code' => '+220', 'iso' => 'gm', 'name' => 'Gambija'],
+                            ['code' => '+221', 'iso' => 'sn', 'name' => 'Senegal'],
+                            ['code' => '+222', 'iso' => 'mr', 'name' => 'Mauritanija'],
+                            ['code' => '+223', 'iso' => 'ml', 'name' => 'Mali'],
+                            ['code' => '+224', 'iso' => 'gn', 'name' => 'Gvineja'],
+                            ['code' => '+225', 'iso' => 'ci', 'name' => 'Obala Slonovače'],
+                            ['code' => '+226', 'iso' => 'bf', 'name' => 'Burkina Faso'],
+                            ['code' => '+227', 'iso' => 'ne', 'name' => 'Niger'],
+                            ['code' => '+228', 'iso' => 'tg', 'name' => 'Togo'],
+                            ['code' => '+229', 'iso' => 'bj', 'name' => 'Benin'],
+                            ['code' => '+230', 'iso' => 'mu', 'name' => 'Mauricijus'],
+                            ['code' => '+231', 'iso' => 'lr', 'name' => 'Liberija'],
+                            ['code' => '+232', 'iso' => 'sl', 'name' => 'Sijera Leone'],
+                            ['code' => '+233', 'iso' => 'gh', 'name' => 'Gana'],
+                            ['code' => '+234', 'iso' => 'ng', 'name' => 'Nigerija'],
+                            ['code' => '+235', 'iso' => 'td', 'name' => 'Čad'],
+                            ['code' => '+236', 'iso' => 'cf', 'name' => 'Centralnoafrička Republika'],
+                            ['code' => '+237', 'iso' => 'cm', 'name' => 'Kamerun'],
+                            ['code' => '+238', 'iso' => 'cv', 'name' => 'Zelenortska Ostrva'],
+                            ['code' => '+239', 'iso' => 'st', 'name' => 'Sao Tome i Principe'],
+                            ['code' => '+240', 'iso' => 'gq', 'name' => 'Ekvatorijalna Gvineja'],
+                            ['code' => '+241', 'iso' => 'ga', 'name' => 'Gabon'],
+                            ['code' => '+242', 'iso' => 'cg', 'name' => 'Kongo'],
+                            ['code' => '+243', 'iso' => 'cd', 'name' => 'DR Kongo'],
+                            ['code' => '+244', 'iso' => 'ao', 'name' => 'Angola'],
+                            ['code' => '+245', 'iso' => 'gw', 'name' => 'Gvineja Bisau'],
+                            ['code' => '+246', 'iso' => 'io', 'name' => 'Britanska Teritorija Indijskog Okeana'],
+                            ['code' => '+248', 'iso' => 'sc', 'name' => 'Sejšeli'],
+                            ['code' => '+249', 'iso' => 'sd', 'name' => 'Sudan'],
+                            ['code' => '+250', 'iso' => 'rw', 'name' => 'Ruanda'],
+                            ['code' => '+251', 'iso' => 'et', 'name' => 'Etiopija'],
+                            ['code' => '+252', 'iso' => 'so', 'name' => 'Somalija'],
+                            ['code' => '+253', 'iso' => 'dj', 'name' => 'Džibuti'],
+                            ['code' => '+254', 'iso' => 'ke', 'name' => 'Kenija'],
+                            ['code' => '+255', 'iso' => 'tz', 'name' => 'Tanzanija'],
+                            ['code' => '+256', 'iso' => 'ug', 'name' => 'Uganda'],
+                            ['code' => '+257', 'iso' => 'bi', 'name' => 'Burundi'],
+                            ['code' => '+258', 'iso' => 'mz', 'name' => 'Mozambik'],
+                            ['code' => '+260', 'iso' => 'zm', 'name' => 'Zambija'],
+                            ['code' => '+261', 'iso' => 'mg', 'name' => 'Madagaskar'],
+                            ['code' => '+262', 'iso' => 're', 'name' => 'Reunion'],
+                            ['code' => '+263', 'iso' => 'zw', 'name' => 'Zimbabve'],
+                            ['code' => '+264', 'iso' => 'na', 'name' => 'Namibija'],
+                            ['code' => '+265', 'iso' => 'mw', 'name' => 'Malavi'],
+                            ['code' => '+266', 'iso' => 'ls', 'name' => 'Lesoto'],
+                            ['code' => '+267', 'iso' => 'bw', 'name' => 'Bocvana'],
+                            ['code' => '+268', 'iso' => 'sz', 'name' => 'Esvatini'],
+                            ['code' => '+269', 'iso' => 'km', 'name' => 'Komori'],
+                            ['code' => '+27', 'iso' => 'za', 'name' => 'Južna Afrika'],
+                            ['code' => '+290', 'iso' => 'sh', 'name' => 'Sveta Jelena'],
+                            ['code' => '+291', 'iso' => 'er', 'name' => 'Eritreja'],
+                            ['code' => '+297', 'iso' => 'aw', 'name' => 'Aruba'],
+                            ['code' => '+298', 'iso' => 'fo', 'name' => 'Farska Ostrva'],
+                            ['code' => '+299', 'iso' => 'gl', 'name' => 'Grenland'],
+                            ['code' => '+350', 'iso' => 'gi', 'name' => 'Gibraltar'],
+                        ];
+                        $oldPhoneFull = old('phone_full');
+                        $selectedCountry = $countries[0];
+                        if ($oldPhoneFull) {
+                            foreach ($countries as $country) {
+                                if (str_starts_with($oldPhoneFull, $country['code'])) {
+                                    $selectedCountry = $country;
+                                    break;
+                                }
+                            }
+                        }
+                        @endphp
+                        <div class="phone-flag" id="phone_country_picker">
+                            <button type="button" class="phone-flag-trigger" id="phone_country_btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Izaberite pozivni broj države">
+                                <img class="phone-flag-img" id="phone_country_flag" src="https://flagcdn.com/w40/{{ $selectedCountry['iso'] }}.png" width="20" height="15" alt="">
+                                <span class="phone-flag-code" id="phone_country_label">{{ $selectedCountry['code'] }}</span>
+                                <span class="phone-flag-caret" aria-hidden="true">▾</span>
+                            </button>
+                            <input type="hidden" id="phone_country" value="{{ $selectedCountry['code'] }}" data-iso="{{ $selectedCountry['iso'] }}" data-name="{{ $selectedCountry['name'] }}">
+                            <ul class="phone-flag-dropdown" id="phone_country_list" role="listbox" hidden>
                                 @foreach($countries as $country)
-                                    <option value="{{ $country['code'] }}" data-flag="{{ $country['flag'] }}" @selected(old('phone_full') && str_starts_with(old('phone_full'), $country['code']))>{{ $country['flag'] }} {{ $country['name'] }} ({{ $country['code'] }})</option>
+                                    <li role="option"
+                                        class="phone-flag-option{{ $country['iso'] === $selectedCountry['iso'] ? ' is-selected' : '' }}"
+                                        tabindex="-1"
+                                        data-code="{{ $country['code'] }}"
+                                        data-iso="{{ $country['iso'] }}"
+                                        data-name="{{ $country['name'] }}"
+                                        aria-selected="{{ $country['iso'] === $selectedCountry['iso'] ? 'true' : 'false' }}">
+                                        <img class="phone-flag-img" src="https://flagcdn.com/w40/{{ $country['iso'] }}.png" width="20" height="15" alt="" loading="lazy">
+                                        <span class="phone-flag-option-name">{{ $country['name'] }}</span>
+                                        <span class="phone-flag-option-code">{{ $country['code'] }}</span>
+                                    </li>
                                 @endforeach
-                            </select>
+                            </ul>
                         </div>
                         <input type="tel" name="phone" id="phone" class="form-control phone-input" required autocomplete="tel" placeholder="Unesite broj telefona">
                     </div>
@@ -823,21 +880,78 @@
                                 '+350': '57123456'
             };
 
+            const phoneCountryBtn = document.getElementById('phone_country_btn');
+            const phoneCountryList = document.getElementById('phone_country_list');
+            const phoneCountryFlag = document.getElementById('phone_country_flag');
+            const phoneCountryLabel = document.getElementById('phone_country_label');
+            const phoneCountryOptions = phoneCountryList
+                ? Array.from(phoneCountryList.querySelectorAll('.phone-flag-option'))
+                : [];
+
+            function setPhoneCountryOpen(isOpen) {
+                if (!phoneCountryBtn || !phoneCountryList) return;
+                phoneCountryBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+                phoneCountryList.classList.toggle('open', isOpen);
+                phoneCountryList.hidden = !isOpen;
+            }
+
+            function selectPhoneCountry(option) {
+                if (!option || !phoneCountry) return;
+                const code = option.dataset.code;
+                const iso = option.dataset.iso;
+                const name = option.dataset.name;
+
+                phoneCountry.value = code;
+                phoneCountry.dataset.iso = iso;
+                phoneCountry.dataset.name = name;
+                phoneCountryFlag.src = `https://flagcdn.com/w40/${iso}.png`;
+                phoneCountryFlag.alt = name || '';
+                phoneCountryLabel.textContent = code;
+
+                phoneCountryOptions.forEach((item) => {
+                    const selected = item === option;
+                    item.classList.toggle('is-selected', selected);
+                    item.setAttribute('aria-selected', selected ? 'true' : 'false');
+                });
+
+                setPhoneCountryOpen(false);
+                updatePhonePlaceholder();
+                updatePhoneFull();
+            }
+
             function updatePhonePlaceholder() {
                 const prefix = phoneCountry.value;
                 const example = phoneExamples[prefix] || '123456789';
                 phone.placeholder = `Primjer: ${example}`;
-                
-                // Ažuriraj obaveštenje
-                const selectedOption = phoneCountry.options[phoneCountry.selectedIndex];
-                const countryName = selectedOption ? selectedOption.text.split(' ')[1] : 'odabranoj državi';
                 phoneFormatNote.textContent = `Format: Unesite broj bez nacionalnog prefiksa ${prefix} i bez vodeće nule. Primjer: ${example}`;
             }
 
-            phoneCountry.addEventListener('change', function() {
-                updatePhonePlaceholder();
-                updatePhoneFull();
-            });
+            if (phoneCountryBtn && phoneCountryList) {
+                phoneCountryBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const isOpen = phoneCountryBtn.getAttribute('aria-expanded') === 'true';
+                    setPhoneCountryOpen(!isOpen);
+                });
+
+                phoneCountryOptions.forEach((option) => {
+                    option.addEventListener('click', function() {
+                        selectPhoneCountry(option);
+                    });
+                });
+
+                document.addEventListener('click', function(e) {
+                    const picker = document.getElementById('phone_country_picker');
+                    if (picker && !picker.contains(e.target)) {
+                        setPhoneCountryOpen(false);
+                    }
+                });
+
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        setPhoneCountryOpen(false);
+                    }
+                });
+            }
 
             phone.addEventListener('input', function() {
                 // Ukloni sve što nije broj
